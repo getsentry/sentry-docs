@@ -1,0 +1,135 @@
+---
+title: Solución de problemas
+sidebar_order: 5503
+description: "Soluciona y resuelve problemas comunes con iOS Session Replay."
+notSupported:
+  - apple.macos
+  - apple.watchos
+  - apple.tvos
+  - apple.visionos
+---
+
+<PlatformSection notSupported={["apple.ios"]}>
+  <Include name="apple-session-replay-support-alert" />
+</PlatformSection>
+
+<PlatformSection notSupported={["apple", "apple.macos", "apple.tvos", "apple.watchos", "apple.visionos"]}>
+  <Expandable title="¿Por qué Session Replay no funciona en iOS 26.0?" permalink>
+    Debido a posibles problemas de enmascaramiento introducidos por los cambios de renderizado Liquid Glass de Apple en iOS 26.0, Session Replay ahora se <strong>deshabilita automáticamente</strong> en apps que ejecutan iOS 26.0+ cuando se compilan con Xcode 26.0 o posterior, a partir de Sentry Cocoa <strong>8.57.0</strong>. Esta es una medida preventiva para proteger la privacidad de los usuarios y evitar posibles filtraciones de PII hasta que el enmascaramiento sea confiable. Las versiones anteriores del SDK no incluyen esta protección y pueden verse afectadas por un enmascaramiento poco confiable en iOS 26.0 cuando se compilan con Xcode 26.0 (Liquid Glass). Recomendamos actualizar a la 8.57.0 o superior o, si no puedes actualizar el SDK, deshabilitar Session Replay manualmente.
+
+    Session Replay funcionará con normalidad si:
+
+    * Tu app se ejecuta en versiones de iOS anteriores a la 26.0, O
+    * Tu app se compila con Xcode anterior a la 26.0, O
+    * Tu app establece explícitamente <code>UIDesignRequiresCompatibility</code> en <code>YES</code> en <code>Info.plist</code>
+
+    Si comprendes los riesgos de PII y aun así quieres habilitar Session Replay, puedes anular este comportamiento:
+
+    ```swift
+    options.experimental.enableSessionReplayInUnreliableEnvironment = true
+    ```
+
+    Esta opción experimental de anulación se eliminará en una versión menor futura una vez que se resuelvan los problemas de enmascaramiento.
+
+    Puedes seguir el trabajo en curso para corregir el enmascaramiento en iOS 26.0 (Liquid Glass) en el <a href="https://github.com/getsentry/sentry-cocoa/issues/6390">issue de GitHub #6390</a>.
+  </Expandable>
+
+  <Expandable title="¿Funciona Session Replay con UIKit, SwiftUI o AppKit?" permalink>
+    Session Replay es compatible con UIKit y SwiftUI.
+  </Expandable>
+
+  <Expandable title="¿Funciona Session Replay en macOS, watchOS, tvOS y visionOS?" permalink>
+    No impedimos activamente que uses Session Replay en estas plataformas, pero solo [lo admitimos oficialmente en iOS](/es/platforms/apple/guides/ios/session-replay/). En consecuencia, no podemos garantizar su funcionamiento y rendimiento en otras plataformas.
+  </Expandable>
+
+  <Expandable title="¿Por qué algunas partes de mi reproducción no están ocultas?" permalink>
+    Las vistas de texto, las vistas de entrada, las imágenes, los reproductores de vídeo y las webviews se enmascaran de forma predeterminada. Las imágenes con recursos empaquetados no se enmascaran porque es poco probable que esos recursos contengan PII. Si te encuentras con una vista que debería enmascararse de forma predeterminada, considera abrir un [issue en GitHub](https://github.com/getsentry/sentry-cocoa/issues).
+  </Expandable>
+
+  <Expandable title="¿Cuál es la versión mínima de iOS que se admite?" permalink>
+    La grabación de Session Replay funciona incluso en la versión mínima compatible con el SDK de Sentry, lo cual está alineado con el soporte de la tienda de aplicaciones.
+  </Expandable>
+
+  <Expandable title="¿Por qué a mi incidencia le falta una reproducción?" permalink>
+    Es posible que falte la repetición de un issue porque el dispositivo del usuario estaba [sin conexión](/es/product/explore/session-replay/mobile#frequently-asked-questions) cuando se especificó `sessionSampleRate`, porque tu proyecto u organización alcanzó el límite de tasa, o (en casos raros) porque el dispositivo no pudo capturar el video de la repetición.
+  </Expandable>
+
+  <Expandable title="Las vistas y capas de AVFoundation no se representan" permalink>
+    Session Replay actualmente no puede capturar contenido de vistas y capas de AVFoundation. Esto incluye:
+
+    * `AVPlayerLayer` y otros contenidos de vídeo basados en AVFoundation
+    * `AVCaptureVideoPreviewLayer` usado para vistas previas de cámara
+    * Cualquier contenido multimedia renderizado con componentes de AVFoundation
+
+    Como resultado, las vistas de cámara, los reproductores de vídeo y otros elementos de la interfaz basados en AVFoundation no aparecerán en las reproducciones de sesión, incluso al usar la configuración `unmaskedViewClasses`.
+
+    Somos conscientes de esta limitación y estamos explorando posibles soluciones para admitir contenido de AVFoundation en futuras versiones.
+
+    Puedes seguir el progreso en este problema de GitHub: [https://github.com/getsentry/sentry-cocoa/issues/5835](https://github.com/getsentry/sentry-cocoa/issues/5835).
+  </Expandable>
+
+  <Expandable title="Session Replay no graba con una configuración de ventana personalizada" permalink>
+    Si tienes una configuración de ventanas personalizada (por ejemplo, varias instancias de `UIWindow`), debes asegurarte de que el SDK de Sentry pueda encontrar la ventana correcta.
+
+    Si usas escenas de ventana, asegúrate de asignar la ventana principal en la [propiedad `window`](https://developer.apple.com/documentation/uikit/uiwindowscenedelegate/window) de tu `UIWindowSceneDelegate`.
+
+    ```swift
+    final class SceneDelegate: NSObject, UIWindowSceneDelegate {
+
+        var window: UIWindow?
+
+        func scene(
+            _ scene: UIScene,
+            willConnectTo session: UISceneSession,
+            options connectionOptions: UIScene.ConnectionOptions
+        ) {
+            guard let scene = scene as? UIWindowScene else { return }
+
+            // Configura tus ventanas aquí, p. ej.:
+            let mainWindow = UIWindow(windowScene: scene)
+            mainWindow.rootViewController = UIViewController()
+            mainWindow.makeKeyAndVisible()
+
+            // No olvides asignar la ventana a la propiedad window de SceneDelegate:
+            self.window = mainWindow
+        }
+    }
+    ```
+
+    Como alternativa, también puedes crear una variable de proxy personalizada para la ventana:
+
+    ```swift
+    final class SceneDelegate: NSObject, UIWindowSceneDelegate {
+
+        var mainWindow: UIWindow?
+
+        func scene(
+            _ scene: UIScene,
+            willConnectTo session: UISceneSession,
+            options connectionOptions: UIScene.ConnectionOptions
+        ) {
+            guard let scene = scene as? UIWindowScene else { return }
+
+            // Configura tus ventanas aquí, por ejemplo:
+            let mainWindow = UIWindow(windowScene: scene)
+            mainWindow.rootViewController = UIViewController()
+            mainWindow.makeKeyAndVisible()
+
+            // No olvides asignar la ventana a la propiedad window de SceneDelegate:
+            self.window = mainWindow
+        }
+
+        // Esto es necesario para asegurarse de que el SDK de Sentry pueda encontrar la ventana correcta:
+
+        var window: UIWindow? {
+            get {
+                return mainWindow
+            }
+            set {
+                mainWindow = newValue
+            }
+        }
+    }
+    ```
+  </Expandable>
+</PlatformSection>

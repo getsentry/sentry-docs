@@ -1,0 +1,37 @@
+---
+title: Solución de problemas
+sidebar_order: 9000
+description: "Si necesitas ayuda para resolver problemas con el SDK de Sentry para Rust, puedes consultar los casos especiales documentados a continuación."
+---
+
+Para empezar a depurar cualquier problema del SDK, habilita el modo de depuración estableciendo `debug: true` en la estructura `ClientOptions` que pasas a `sentry::init`.
+Esto hará que el SDK registre información de depuración adicional en stderr.
+
+A continuación encontrarás una lista de problemas comunes y cómo solucionarlos.
+
+<div id="general">
+  ## General
+</div>
+
+<Expandable title="Pánico al inicializar el SDK">
+  Se han reportado pánicos al inicializar el SDK al usar la función `debug-images` en máquinas con ciertas plataformas Linux.
+
+  Si te afecta, abre un [issue](https://github.com/getsentry/sentry-rust/issues/new/choose) en GitHub e incluye tu versión del sistema operativo y del kernel.
+</Expandable>
+
+<Expandable title="Marcos de pila duplicados">
+  Existe un problema por el cual en Sentry pueden aparecer marcos de pila duplicados respecto al rastro real.
+  Como actualmente hay un límite estricto de 200 marcos en la ingesta, esto puede provocar que falten marcos cuando se supera ese límite.
+  Esto ocurre cuando el rastro de pila ya está simbolicado en el cliente (porque hay información de depuración en tiempo de ejecución) pero se vuelve a simbolicar en el servidor.
+
+  Hay dos formas alternativas de abordar este problema:
+
+  * mantener la información de depuración en el binario, pero desactivar la función `debug-images` del crate `sentry`;
+  * eliminar (strip) la información de depuración del binario y [cargar los archivos de depuración](/es/platforms/rust/source-context/#compile-and-create-debug-information-files) por separado.
+</Expandable>
+
+<Expandable title="Error «This frame has an unknown problem and can not be symbolicated» en la interfaz para marcos de la pila de la aplicación">
+  Esto puede ocurrir cuando tu ejecutable no tiene un ID de compilación y, por lo tanto, el backend de Sentry no puede asociar los marcos de pila con ningún archivo de depuración.
+
+  Para asegurarte de que `cargo` inserte un ID de compilación en tu binario, establece la siguiente variable de entorno al compilar: `RUSTFLAGS="-Clink-args=-Wl,--build-id"`.
+</Expandable>

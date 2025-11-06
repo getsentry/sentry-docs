@@ -1,0 +1,171 @@
+---
+title: Manifiesto de Privacidad de Apple
+description: "Soluciona y resuelve problemas comunes con el Manifiesto de Privacidad de Apple y el SDK Sentry React Native."
+sidebar_order: 50
+---
+
+<Alert>
+Esta guía requiere [@sentry/react-native@5.22.1](https://github.com/getsentry/sentry-react-native/releases/tag/5.22.1) o una versión posterior.
+</Alert>
+
+Los SDK de Sentry proporcionan supervisión de errores y rendimiento para aplicaciones móviles que se ejecutan en dispositivos Apple. Para ello, el SDK necesita acceder a cierta información sobre el dispositivo y la aplicación. Algunas de las API necesarias para esto se consideran relevantes para la privacidad por parte de Apple. Para enviar apps al App Store, Apple requiere que todas las apps —y las bibliotecas usadas dentro de ellas— proporcionen archivos de manifiesto de privacidad que indiquen qué API se usan y con qué razones permitidas. Para más detalles, consulta las directrices de Apple sobre [Describing use of required reason API](https://developer.apple.com/documentation/bundleresources/privacy_manifest_files/describing_use_of_required_reason_api).
+
+<Alert>
+La información y los pasos de esta guía aún están en desarrollo y podrían cambiar debido a nuevas herramientas o a requisitos actualizados de [Apple](https://developer.apple.com/documentation/bundleresources/privacy_manifest_files).
+</Alert>
+
+Si usas frameworks vinculados dinámicamente, Apple procesará automáticamente el manifiesto de privacidad del SDK. Si usas bibliotecas vinculadas estáticamente, que es el valor predeterminado para aplicaciones de React Native, debes proporcionar tú el manifiesto de privacidad. Esta guía te ayudará a crear el manifiesto de privacidad para tus aplicaciones de React Native y Expo.
+
+<div id="before-you-start">
+  ## Antes de empezar
+</div>
+
+Ten en cuenta que el manifiesto de privacidad de la aplicación abarca todos los usos de datos (mediante `NSPrivacyCollectedDataTypes`) y los usos de API (mediante `NSPrivacyAccessedAPITypes`) de toda la aplicación y de todas las bibliotecas incluidas. Los ejemplos a continuación reflejan los requisitos actuales solo para los SDK de Sentry. Si usas otras bibliotecas que acceden a APIs relevantes para la privacidad, también debes incluirlas en el manifiesto de privacidad.
+
+<div id="create-privacy-manifest-in-xcode">
+  ## Crear el manifiesto de privacidad en Xcode
+</div>
+
+Primero, debes crear un archivo de manifiesto de privacidad en tu proyecto de Xcode. Este archivo debe llamarse `PrivacyInfo.xcprivacy` y colocarse en la raíz del proyecto de Xcode. Sigue la guía de Apple [Privacy manifest files](https://developer.apple.com/documentation/bundleresources/privacy_manifest_files#4284009) para crear el archivo.
+
+```xml {filename:PrivacyInfo.xcprivacy}
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>NSPrivacyCollectedDataTypes</key>
+	<array>
+		<dict>
+			<key>NSPrivacyCollectedDataType</key>
+			<string>NSPrivacyCollectedDataTypeCrashData</string>
+			<key>NSPrivacyCollectedDataTypeLinked</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypeTracking</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypePurposes</key>
+			<array>
+				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+			</array>
+		</dict>
+		<dict>
+			<key>NSPrivacyCollectedDataType</key>
+			<string>NSPrivacyCollectedDataTypePerformanceData</string>
+			<key>NSPrivacyCollectedDataTypeLinked</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypeTracking</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypePurposes</key>
+			<array>
+				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+			</array>
+		</dict>
+		<dict>
+			<key>NSPrivacyCollectedDataType</key>
+			<string>NSPrivacyCollectedDataTypeOtherDiagnosticData</string>
+			<key>NSPrivacyCollectedDataTypeLinked</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypeTracking</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypePurposes</key>
+			<array>
+				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+			</array>
+		</dict>
+	</array>
+	<key>NSPrivacyAccessedAPITypes</key>
+	<array>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>CA92.1</string>
+			</array>
+		</dict>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategorySystemBootTime</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>35F9.1</string>
+			</array>
+		</dict>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryFileTimestamp</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>C617.1</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>
+```
+
+
+<div id="create-privacy-manifest-in-expo">
+  ## Crear el Privacy Manifest en Expo
+</div>
+
+Según la configuración de tu aplicación en Expo, si usas Continuous Native Generation ([CNG](https://docs.expo.dev/workflow/continuous-native-generation/)), puede que necesites agregar el Privacy Manifest al archivo `app.json`. De lo contrario, puedes añadirlo con Xcode.
+
+```json {filename:app.json}
+{
+  "expo": {
+    "name": "Mi aplicación",
+    "slug": "my-app",
+    "ios": {
+      "privacyManifests": {
+        "NSPrivacyCollectedDataTypes": [
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeCrashData",
+            "NSPrivacyCollectedDataTypeLinked": false,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": ["NSPrivacyCollectedDataTypePurposeAppFunctionality"]
+          },
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypePerformanceData",
+            "NSPrivacyCollectedDataTypeLinked": false,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": ["NSPrivacyCollectedDataTypePurposeAppFunctionality"]
+          },
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeOtherDiagnosticData",
+            "NSPrivacyCollectedDataTypeLinked": false,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": ["NSPrivacyCollectedDataTypePurposeAppFunctionality"]
+          }
+        ],
+        "NSPrivacyAccessedAPITypes": [
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryUserDefaults",
+            "NSPrivacyAccessedAPITypeReasons": ["CA92.1"]
+          },
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategorySystemBootTime",
+            "NSPrivacyAccessedAPITypeReasons": ["35F9.1"]
+          },
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryFileTimestamp",
+            "NSPrivacyAccessedAPITypeReasons": ["C617.1"]
+          }
+        ]
+      }
+    }
+  }
+}
+```
+
+
+<div id="troubleshooting">
+  ## Solución de problemas
+</div>
+
+- Para obtener más información sobre cómo generar el manifiesto de privacidad con Expo, consulta la guía de Expo [Privacy manifests](https://docs.expo.dev/guides/apple-privacy/).
+
+- Las API enumeradas son necesarias para que el SDK funcione correctamente y no es posible excluirlas.
+
+- Si usas una versión anterior del SDK, puede que necesites actualizar a la versión [5.22.1](https://github.com/getsentry/sentry-react-native/releases/tag/5.22.1) o posterior para incluir automáticamente el manifiesto de privacidad para frameworks enlazados dinámicamente.
+
+- Para verificar que el manifiesto de privacidad esté incluido correctamente en tu app, compila y envía tu app a App Store o TestFlight para pruebas externas. Si falta el manifiesto, recibirás un correo de Apple con el asunto “The uploaded build for YourAppName has one or more issues” que enumera las declaraciones de API faltantes.

@@ -1,0 +1,195 @@
+---
+title: Instrumentación automática
+description: "Descubre qué spans se capturan después de habilitar el tracing."
+sidebar_order: 10
+notSupported:
+  - javascript.cordova
+---
+
+<Alert>
+  Para capturar spans, primero debes <PlatformLink to="/tracing/">configurar el tracing en tu app</PlatformLink> si aún no lo has hecho.
+</Alert>
+
+<PlatformContent includePath="performance/automatic-instrumentation-intro" />
+
+<div id="what-our-instrumentation-provides">
+  ## Lo que ofrece nuestra instrumentación
+</div>
+
+<PlatformContent includePath="performance/what-instrumentation-provides" />
+
+<div id="enable-instrumentation">
+  ## Activar la instrumentación
+</div>
+
+<PlatformContent includePath="performance/enable-automatic-instrumentation" />
+
+<div id="configuration-options">
+  ## Opciones de configuración
+</div>
+
+<PlatformSection supported={["javascript.nextjs"]} notSupported={["javascript"]}>
+  Aunque la integración `BrowserTracing` se habilita automáticamente en `@sentry/nextjs`, para personalizar sus opciones debes incluirla en tu `Sentry.init` en `instrumentation-client.js`:
+
+  ```javascript
+  import * as Sentry from "@sentry/nextjs";
+
+  Sentry.init({
+    dsn: "___PUBLIC_DSN___",
+
+    integrations: [Sentry.browserTracingIntegration()],
+
+    tracesSampleRate: 1.0,
+    // Define `tracePropagationTargets` para controlar en qué URLs se habilita el trazado distribuido
+    tracePropagationTargets: [
+      "localhost",
+      /^\//,
+      /^https:\/\/yourserver\.io\/api/,
+    ],
+  });
+  ```
+</PlatformSection>
+
+Opciones disponibles:
+
+<SdkOption name="tracePropagationTargets" type="Array<string | RegExp>" defaultValue={'[\'localhost\', /^\\\/$/]'}>
+  <Alert>
+    La opción `tracingOrigins` pasó a llamarse `tracePropagationTargets` y quedó obsoleta en la [versión `7.19.0`](https://github.com/getsentry/sentry-javascript/releases/tag/7.19.0) del SDK de JavaScript. `tracingOrigins` se eliminará en la versión 8.
+  </Alert>
+
+  Una lista de cadenas y expresiones regulares. El SDK de JavaScript adjuntará las cabeceras `sentry-trace` y `baggage` a todas las solicitudes XHR/fetch salientes cuyo destino contenga una cadena de la lista o coincida con una expresión regular de la lista. Si tu frontend realiza solicitudes a un dominio diferente, tendrás que añadirlo ahí para propagar las cabeceras `sentry-trace` y `baggage` a los servicios de backend, lo cual es necesario para vincular spans como parte de un único trace.
+
+  **La opción `tracePropagationTargets` compara la URL completa de la solicitud, no solo el dominio. Usar expresiones regulares más estrictas para hacer coincidir ciertas partes de la URL garantiza que las solicitudes no lleven cabeceras adicionales innecesarias.**
+
+  El valor predeterminado de `tracePropagationTargets` es `['localhost', /^\//]`. Esto significa que, de forma predeterminada, las cabeceras de trazado solo se adjuntan a solicitudes que contienen `localhost` en su URL o a solicitudes cuya URL comienza con `'/'` (por ejemplo, `GET /api/v1/users`).
+
+  <PlatformContent includePath="performance/tracePropagationTargets-example" />
+
+  Necesitarás configurar el [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Headers) de tu servidor web para permitir las cabeceras `sentry-trace` y `baggage`. La configuración podría ser algo como `"Access-Control-Allow-Headers: sentry-trace"` y `"Access-Control-Allow-Headers: baggage"`, pero depende de tu configuración. Si no permites estas dos cabeceras, la solicitud podría bloquearse.
+</SdkOption>
+
+<SdkOption name="beforeStartSpan" type="(options: StartSpanOptions) => StartSpanOptions">
+  `beforeStartSpan` se ejecuta al inicio de cada span de `pageload` o `navigation` y recibe un objeto con datos sobre el span que se va a iniciar. Con `beforeStartSpan` puedes modificar esos datos.
+
+  <PlatformContent includePath="performance/beforeNavigate-example" />
+</SdkOption>
+
+<Alert>
+  Si usas React, lee nuestra documentación para aprender cómo configurar nuestra [integración de React Router](/es/platforms/javascript/guides/react/configuration/integrations/react-router/).
+</Alert>
+
+<SdkOption name="shouldCreateSpanForRequest" type="(url: string) => boolean">
+  Esta función se puede usar para filtrar spans no deseados, como XHR que ejecutan
+  health checks o algo similar.
+
+  <PlatformContent includePath="performance/filter-span-example" />
+
+  De forma predeterminada, se crearán spans para todas las solicitudes.
+</SdkOption>
+
+<SdkOption name="onRequestSpanStart" type="(span: Span, requestInformation: { headers?: WebFetchHeaders }): void">
+  Este callback se invoca justo después de iniciar un span para una solicitud fetch o XHR saliente.
+  Puedes usarlo para anotar el span con datos o atributos adicionales, por ejemplo, estableciendo atributos en función de las cabeceras de la solicitud proporcionada.
+</SdkOption>
+
+<SdkOption name="idleTimeout" type="number" defaultValue="1000">
+  El tiempo de inactividad, en ms, a esperar hasta que finalice el span de pageload/navigation si no hay spans pendientes. El span de pageload/navigation usará la marca de tiempo de finalización del último span terminado como hora de finalización.
+</SdkOption>
+
+<SdkOption name="finalTimeout" type="number" defaultValue="30000">
+  La duración máxima del span de pageload/navigation, en ms. Si la duración supera el valor de `finalTimeout`, se finalizará.
+</SdkOption>
+
+<SdkOption name="childSpanTimeout" type="number" defaultValue="15000">
+  El tiempo, en ms, que puede ejecutarse un span hijo. Si el último span hijo iniciado sigue ejecutándose más tiempo que este valor, se finalizará el span de pageload/navegación.
+</SdkOption>
+
+<SdkOption name="instrumentNavigation" type="boolean" defaultValue="true">
+  Este indicador habilita o deshabilita la creación del span `navigation` en los cambios del historial.
+</SdkOption>
+
+<SdkOption name="instrumentPageLoad" type="boolean" defaultValue="true">
+  Este indicador habilita o deshabilita la creación del span `pageload` en la primera carga de la página.
+</SdkOption>
+
+<SdkOption name="enableReportPageLoaded" type="boolean" defaultValue="false" availableSince="10.13.0">
+  Esta opción determina si la <PlatformLink to="/apis/#reportPageLoaded">función `Sentry.reportPageLoaded()`</PlatformLink> está habilitada.
+</SdkOption>
+
+<SdkOption name="markBackgroundSpans" type="boolean" defaultValue="true">
+  Esta opción marca con &quot;cancelled&quot; los spans de pageload/navegación cuando las pestañas pasan a segundo plano. Dado que la temporización en pestañas en segundo plano no es adecuada para mediciones precisas y puede afectar tus estadísticas de forma no determinista, recomendamos mantener esta opción habilitada.
+</SdkOption>
+
+<SdkOption name="enableLongTask" type="boolean" defaultValue="true">
+  Esta opción determina si los spans de tareas largas se crean automáticamente.
+</SdkOption>
+
+<SdkOption name="enableLongAnimationFrame" type="boolean" defaultValue="true" availableSince="8.18.0">
+  Esta opción determina si los spans de cuadros de animación largos se crean automáticamente. Si tanto `enableLongAnimationFrame` como [`enableLongTask`](#enableLongTask) están habilitados, Sentry enviará cuadros de animación largos y, si el navegador no los admite, recurrirá a tareas largas.
+</SdkOption>
+
+<SdkOption name="enableInp" type="boolean" defaultValue="true" availableSince="7.104.0" defaultNote="See note">
+  Esta opción determina si los spans de interacciones se crean automáticamente cuando se detecta un evento de [Interaction to Next Paint (INP)](/es/product/insights/web-vitals/web-vitals-concepts/#interaction-to-next-paint-inp). Las interacciones se puntúan y se muestran en el módulo [Web Vitals](/es/product/insights/web-vitals/).
+
+  El valor predeterminado es `true` a partir de la versión `8.x` del SDK y `false` en `7.x`.
+
+  <Alert>
+    Actualmente, habilitar muestras de INP no tiene costo en Sentry. Las muestras básicas contienen información limitada, como el objetivo de la interacción, la latencia y el usuario. Es posible que quieras enriquecer tus muestras de INP configurando [Session Replays](/es/platforms/javascript/session-replay/) y/o la instrumentación de [Browser Profiling](/es/platforms/javascript/profiling/) alrededor de tus elementos interactivos para obtener más información sobre tus interacciones más lentas.
+
+    Ten en cuenta que cualquier Session Replays y Browser Profiles usados de esta manera incurrirán en su [costo estándar](/es/pricing/#per-category-pricing) según tu plan y están sujetos a las tasas de muestreo configuradas.
+  </Alert>
+
+  <PlatformContent includePath="performance/enable-inp-example" />
+</SdkOption>
+
+<SdkOption name="interactionsSampleRate" type="number" defaultValue="1.0">
+  Esta opción determina la tasa de muestreo de los spans de INP. `interactionsSampleRate` se aplica además de `tracesSampleRate`; por lo tanto, si tu `interactionsSampleRate` está configurado en `0.5` y tu `tracesSampleRate` en `0.1`, el resultado será `0.05`.
+
+  El valor predeterminado es `1.0`.
+</SdkOption>
+
+<SdkOption name="ignoreResourceSpans" type="Array<string>" defaultValue="[]" availableSince="9.23.0">
+  Esta opción determina qué categorías o spans de recursos deben ignorarse. Las categorías de recursos son los `op` del span (por ejemplo, `resource.script` o `resource.img`).
+
+  ```JavaScript
+  Sentry.init({
+    // ...
+    integrations: [
+      Sentry.browserTracingIntegration({
+        ignoreResourceSpans: ['resource.css', 'resource.script'],
+      }),
+    ],
+  });
+  ```
+
+  De forma predeterminada, se capturan todos los spans de recursos.
+</SdkOption>
+
+<SdkOption name="ignorePerformanceApiSpans" type="Array<string | RegExp>" defaultValue="[]" availableSince="9.23.0">
+  Esta opción te permite ignorar ciertos spans creados a partir de las siguientes APIs de rendimiento del navegador:
+
+  * [`performance.mark(...)`](https://developer.mozilla.org/en-US/docs/Web/API/Performance/mark)
+  * [`performance.measure(...)`](https://developer.mozilla.org/en-US/docs/Web/API/Performance/measure)
+
+  Cualquier entrada de mark o measure que coincida con las cadenas o expresiones regulares del arreglo proporcionado no se emitirá como spans de `mark` o `measure`.
+
+  ```JavaScript
+  Sentry.init({
+    integrations: [
+      Sentry.browserTracingIntegration({
+        ignorePerformanceApiSpans: ['myMeasurement', /myMark/],
+      }),
+    ],
+  });
+
+  // no se crearán spans para estos:
+  performance.mark('myMark');
+  performance.measure('myMeasurement');
+
+  // se crearán spans para estos:
+  performance.mark('authenticated');
+  performance.measure('input-duration', ...);
+  ```
+
+  De forma predeterminada, se capturan todos los spans de la API de rendimiento.
+</SdkOption>

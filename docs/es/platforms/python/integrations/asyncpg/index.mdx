@@ -1,0 +1,60 @@
+---
+title: asyncpg
+description: "Aprende a importar la integración asyncpg y cómo captura consultas de asyncpg."
+---
+
+La `AsyncPGIntegration` captura consultas de
+[asyncpg](https://github.com/MagicStack/asyncpg), que pueden verse en la página **Performance** de Sentry.
+
+<div id="install">
+  ## Instalación
+</div>
+
+Para empezar, instala `sentry-sdk` desde PyPI.
+
+```bash {tabTitle:pip}
+pip install "sentry-sdk[asyncpg]"
+```
+
+```bash {tabTitle:uv}
+uv add "sentry-sdk[asyncpg]"
+```
+
+
+<div id="configure">
+  ## Configuración
+</div>
+
+Si tienes el paquete `asyncpg` en tus dependencias, la integración de asyncpg se habilitará automáticamente al inicializar el SDK de Sentry.
+
+<PlatformContent includePath="getting-started-config" />
+
+<div id="verify">
+  ## Verifica
+</div>
+
+```python
+import asyncpg
+
+async def main():
+    sentry_sdk.init(...)  # mismo que arriba
+
+    with sentry_sdk.start_transaction(name="testing_sentry"):
+        conn = await asyncpg.connect(DATABASE_URL)
+        await conn.fetch("SELECT * FROM pg_catalog.pg_tables;")
+        await conn.close()
+
+asyncio.run(main())
+```
+
+Esto creará una transacción llamada `testing_sentry` en la sección Performance de [sentry.io](https://sentry.io) y generará spans para las operaciones `connect` y `SELECT`.
+
+Los datos pueden tardar unos momentos en aparecer en [sentry.io](https://sentry.io).
+
+
+<div id="supported-versions">
+  ## Versiones compatibles
+</div>
+
+- asyncpg: 0.23+
+- Python: 3.7+

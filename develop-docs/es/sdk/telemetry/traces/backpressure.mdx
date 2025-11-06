@@ -1,0 +1,77 @@
+---
+title: Gestión de backpressure
+og_image: /og-images/sdk-telemetry-traces-backpressure.png
+---
+
+Se espera que los SDK de backend, normalmente usados en entornos de servidor, implementen un componente de gestión de backpressure.
+
+Este componente examina periódicamente el SDK para medir el rendimiento y, si es demasiado alto, reduce dinámicamente el muestreo de transacciones, recortando temporalmente a la mitad la tasa de muestreo.
+Una vez que el sistema vuelva a un estado estable, el SDK restaurará la tasa de muestreo configurada por el usuario.
+
+![Backpressure](backpressure.png)
+
+<div id="configuration">
+  ## Configuración
+</div>
+
+El SDK debe exponer un parámetro de configuración booleano llamado `enable_backpressure_handling` que determine si esta lógica está activa o no.
+
+<div id="design">
+  ## Diseño
+</div>
+
+El componente de backpressure tiene dos responsabilidades principales:
+
+* Programar periódicamente una [**comprobación de estado**](#health-check-monitor) de forma asíncrona y actualizar el estado de “no saludable”.
+* Usar ese estado de “no saludable” para reducir dinámicamente a la mitad la tasa de muestreo efectiva de las transacciones antes de tomar la decisión inicial de muestreo.
+
+<div id="health-check-monitor">
+  ## Monitor de comprobación de estado
+</div>
+
+<div id="interval">
+  ### Intervalo
+</div>
+
+La comprobación de estado se realiza normalmente una vez cada **10 segundos** de forma predeterminada. Si lo deseas, puedes exponer este intervalo como un parámetro de configuración en tu SDK.
+
+<div id="conditions">
+  ### Condiciones
+</div>
+
+La comprobación de estado en la mayoría de los SDK actualmente evalúa las siguientes condiciones:
+
+* si la cola del proceso en segundo plano está llena
+  * si hay límites de tasa activos
+
+Puedes añadir más condiciones de **alto rendimiento** o **trabajo desperdiciado** si están disponibles y son fácilmente medibles en tu plataforma.
+
+<div id="implementation">
+  ### Implementación
+</div>
+
+El monitor debe funcionar de forma asíncrona.
+Esto puede ser un nuevo hilo si el lenguaje lo admite, o un `setTimeout` en lenguajes sin hilos como Node.js.
+
+Consulta la [implementación en Python](https://github.com/getsentry/sentry-python/blob/d9d87998029fb0ef2bfe933cea0b69bfee60ed51/sentry_sdk/monitor.py#L16-L123) como referencia.
+
+<div id="downsampling">
+  ## Reducción de muestreo
+</div>
+
+El monitor debe actualizar su estado interno de salud y exponer un `downsample_factor` que se duplica cada 10 segundos hasta que el sistema esté en estado no saludable.
+Por lo general, solo lo duplicamos como máximo 10 veces porque, para entonces, el valor ya es demasiado pequeño.
+
+Esto genera un comportamiento de espera exponencial (exponential backoff) y reduce la carga en la canalización de transacciones.
+
+En tus SDK, en `set_initial_sampling_decision`, que se invoca como parte de la API `start_transaction`, debes usar este `downsample_factor` justo antes de tomar la decisión de muestreo basada en un número aleatorio.
+
+Consulta la [implementación en Python](https://github.com/getsentry/sentry-python/blob/d9d87998029fb0ef2bfe933cea0b69bfee60ed51/sentry_sdk/tracing.py#L888-L889) como referencia.
+
+<div id="client-report">
+  ### Informe del cliente
+</div>
+
+Si es posible, en `transaction.finish` registra también un informe del cliente con el motivo `backpressure` en lugar de `sample_rate` cuando se descarte la transacción, para que podamos seguir estas estadísticas de resultados por backpressure.
+
+Consulta la [implementación en Python](https://github.com/getsentry/sentry-python/blob/d9d87998029fb0ef2bfe933cea0b69bfee60ed51/sentry_sdk/tracing.py#L705-L711) como referencia.

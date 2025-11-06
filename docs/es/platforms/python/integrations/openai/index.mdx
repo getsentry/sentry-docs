@@ -1,0 +1,126 @@
+---
+title: OpenAI
+description: "Aprende a usar Sentry con OpenAI."
+---
+
+Esta integración conecta Sentry con el [SDK de OpenAI para Python](https://github.com/openai/openai-python).
+
+Una vez que instales este SDK, podrás usar Sentry AI Agents Monitoring, un panel de Sentry que te ayuda a entender qué ocurre con tus solicitudes de IA.
+
+Sentry AI Monitoring recopilará automáticamente información sobre prompts, herramientas, tokens y modelos. Más información en el [AI Agents Dashboard](/es/product/insights/ai/agents).
+
+<div id="install">
+  ## Instalar
+</div>
+
+Instala `sentry-sdk` desde PyPI con el extra `openai`:
+
+```bash {tabTitle:pip}
+pip install "sentry-sdk[openai]"
+```
+
+```bash {tabTitle:uv}
+uv add "sentry-sdk[openai]"
+```
+
+<div id="configure">
+  ## Configuración
+</div>
+
+Si tienes el paquete `openai` entre tus dependencias, la integración de OpenAI se habilitará automáticamente al inicializar el SDK de Sentry.
+
+Se requiere una dependencia adicional, `tiktoken`, si deseas calcular el consumo de tokens en respuestas de chat por streaming.
+
+<PlatformContent includePath="getting-started-config" />
+
+<div id="verify">
+  ## Verificar
+</div>
+
+Comprueba que la integración funciona realizando una solicitud de chat a OpenAI.
+
+```python
+import sentry_sdk
+from openai import OpenAI
+
+sentry_sdk.init(...)  # igual que arriba
+
+client = OpenAI(api_key="(your OpenAI key)")
+
+def my_llm_stuff():
+    with sentry_sdk.start_transaction(
+        name="Resultado de la inferencia de IA",
+        op="ai-inference",
+    ):
+      print(
+          client.chat.completions.create(
+              model="gpt-3.5", messages=[{"role": "system", "content": "di hola"}]
+          )
+          .choices[0]
+          .message.content
+      )
+```
+
+Después de ejecutar este script, los datos resultantes deberían aparecer en la pestaña &quot;AI Spans&quot; de la página &quot;Explore&quot; &gt; &quot;Traces&quot; en Sentry.io.
+
+Si creaste manualmente un <PlatformLink to="/tracing/instrumentation/custom-instrumentation/ai-agents-module/#invoke-agent-span">Invoke Agent Span</PlatformLink> (no se hizo en el ejemplo anterior), los datos también aparecerán en el [AI Agents Dashboard](/es/product/insights/ai/agents).
+
+Es posible que los datos tarden unos instantes en aparecer en [sentry.io](https://sentry.io).
+
+<div id="behavior">
+  ## Comportamiento
+</div>
+
+* La integración de OpenAI conectará automáticamente Sentry con todos los métodos de OpenAI compatibles.
+
+* Se reportan todas las excepciones que derivan en una `OpenAIException`.
+
+* Los módulos actualmente compatibles son `responses.create`, `chat.completions.create` y `embeddings.create`.
+
+* Sentry considera las entradas y salidas de modelos LLM y del tokenizador como PII (información de identificación personal) y no incluye PII de forma predeterminada. Si quieres incluir estos datos, establece `send_default_pii=True` en la llamada a `sentry_sdk.init()`. Para excluir explícitamente los prompts y las salidas a pesar de `send_default_pii=True`, configura la integración con `include_prompts=False` como se muestra en la [sección Opciones](#options) a continuación.
+
+<div id="options">
+  ## Opciones
+</div>
+
+Al agregar explícitamente `OpenAIIntegration` a tu llamada a `sentry_sdk.init()`, puedes configurar opciones de `OpenAIIntegration` para modificar su comportamiento:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.openai import OpenAIIntegration
+
+sentry_sdk.init(
+    # ...
+    # Agrega datos como entradas y respuestas;
+    # consulta https://docs.sentry.io/platforms/python/data-management/data-collected/ para más información
+    send_default_pii=True,
+    integrations=[
+        OpenAIIntegration(
+            include_prompts=False,  # Las entradas/salidas del LLM/tokenizador no se enviarán a Sentry, a pesar de send_default_pii=True
+            tiktoken_encoding_name="cl100k_base",
+        ),
+    ],
+)
+```
+
+Puedes pasar los siguientes argumentos con nombre a `OpenAIIntegration()`:
+
+* `include_prompts`:
+
+  Indica si se deben enviar a Sentry las entradas y salidas del LLM y del tokenizador. Sentry considera estos datos como información de identificación personal (PII) de forma predeterminada. Si deseas incluirlos, establece `send_default_pii=True` en la llamada a `sentry_sdk.init()`. Para excluir explícitamente los prompts y las salidas a pesar de `send_default_pii=True`, configura la integración con `include_prompts=False`.
+
+  El valor predeterminado es `True`.
+
+* `tiktoken_encoding_name`:
+
+  Si deseas calcular el uso de tokens para respuestas de chat en streaming, necesitas tener instalada la dependencia adicional [tiktoken](https://pypi.org/project/tiktoken/) y especificar el `tiktoken_encoding_name` que utilizas para la tokenización. Consulta el [OpenAI Cookbook](https://cookbook.openai.com/examples/how_to_count_tokens_with_tiktoken) para ver los valores posibles.
+
+  El valor predeterminado es `None`.
+
+<div id="supported-versions">
+  ## Versiones compatibles
+</div>
+
+* OpenAI: 1.0+
+* tiktoken: 0.6.0+
+* Python: 3.9+

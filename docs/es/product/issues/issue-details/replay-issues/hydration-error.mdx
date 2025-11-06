@@ -1,0 +1,107 @@
+---
+title: Error de hidratación
+sidebar_order: 50
+description: Conoce los errores de hidratación en Session Replay.
+og_image: /og-images/product-issues-issue-details-replay-issues-hydration-error.gif
+---
+
+Los errores de hidratación son un problema específico de React que ocurre cuando la interfaz inicial en el cliente no coincide con lo que se renderizó en el servidor. Pueden provocar trabajo adicional para el navegador y una carga de la página más lenta para los usuarios.
+
+<div id="prerequisites-for-seeing-hydration-error-diff-tools">
+  ## Requisitos para ver las herramientas de comparación (diff) de errores de hidratación
+</div>
+
+Los errores de hidratación pueden aparecer en tu flujo de incidencias como eventos de error normales, o detectarse dentro de una reproducción y convertirse en una incidencia por parte del servidor. Lee más sobre
+[la configuración de los errores de hidratación](/es/platforms/javascript/session-replay/issue-types/) para conocer las diferencias.
+
+Si la instancia del evento de error de hidratación tiene una reproducción asociada, verás herramientas de comparación (diff) en la página **Issue Details** para facilitar la depuración del error de hidratación.
+
+<div id="debugging-hydration-errors">
+  ## Depuración de errores de hidratación
+</div>
+
+Los errores de hidratación indican una discrepancia entre el HTML renderizado en el servidor y el renderizado en el cliente. Por eso conviene comparar el estado de una página antes y después para entender qué cambió y decidir cómo hacer que ambos estados coincidan. Para ello, ofrecemos algunas herramientas de diff para ver las diferencias, tanto visualmente como inspeccionando el propio HTML renderizado.
+
+En general, las herramientas visuales son un buen punto de partida para identificar el problema, pero ten en cuenta que a veces las diferencias pueden aparecer por debajo del pliegue o en nodos o atributos ocultos del DOM, así que inspeccionar el HTML también es importante.
+
+<div id="example-error">
+  #### Error de ejemplo
+</div>
+
+En el siguiente ejemplo veremos un error de hidratación y cómo cada herramienta ayuda a depurar el problema.
+
+El problema es que las barras laterales izquierda y derecha contienen contenido dinámico que se inserta en el cliente, pero no se renderiza en el servidor.
+
+<div id="image-slider">
+  ### Control deslizante de imágenes
+</div>
+
+La herramienta de control deslizante permite comparar los dos estados de la página superponiendo las imágenes. Haz clic y arrastra la línea morada para revelar una u otra imagen.
+
+![image slider tool](./img/hydration-error-image-slider-tool.gif)
+
+<div id="side-by-side-image">
+  ### Imágenes en paralelo
+</div>
+
+Visualiza imágenes en paralelo para detectar grandes secciones de la página que pueden diferir.
+
+![herramienta de comparación en paralelo](./img/hydration-error-side-by-side-image-tool.png)
+
+<div id="tree-compare">
+  ### Comparación de árbol
+</div>
+
+Usa la herramienta de comparación de árbol para enumerar exactamente qué nodos del DOM se agregaron, se eliminaron o tuvieron cambios en sus atributos.
+
+Puedes ver cada cambio en la página y cuándo ocurrió en el contexto del error de hidratación. En este caso, una mutación ocurrió en la marca de tiempo `1732089574790`, que correspondía a un desplazamiento temporal de `1790`, es decir, 1,7 segundos desde el inicio de la reproducción capturada. En esa mutación se agregaron 39 nodos, 2 nodos tuvieron cambios en algunos atributos y se eliminaron 4 nodos.
+
+Mostramos un selector CSS para cada nodo del árbol para facilitar la identificación del componente modificado. Ten en cuenta que algunos nodos modificados pueden existir fuera de tu árbol de renderizado de React y no causar errores de hidratación.
+
+![tree compare tool](./img/hydration-error-tree-compare-tool.png)
+
+<div id="html-diff">
+  ### Diff de HTML
+</div>
+
+La herramienta de diff de HTML realiza una comparación básica de HTML. Es útil si el error de hidratación lo provocan nodos ocultos del DOM, atributos distintos en un nodo del DOM o contenido que no coincide por debajo del pliegue.
+
+![html diff tool](./img/hydration-error-html-diff-tool.png)
+
+<div id="faq">
+  ## Preguntas frecuentes
+</div>
+
+<div id="the-diff-is-blank-or-there-are-no-changes">
+  ### El diff está en blanco o no hay cambios
+</div>
+
+A veces, el diff que muestra Sentry no contiene cambios visibles. Esta es una limitación al depurar React en modo producción. ¡Aun así, tienes un error de hidratación que corregir, incluso si el diff está en blanco!
+
+Para facilitar la depuración, ajusta los límites del diff para mostrar más cambios antes o después de que se detectó el error. Haz clic en el ícono en la esquina superior derecha de la pantalla y selecciona marcas de tiempo más alejadas del error en el centro. Esto mostrará más cambios que podrían haber contribuido al error de hidratación.
+
+![herramienta de diff de HTML](./img/hydration-error-adjust-bounds.png)
+
+<div id="the-html-view-shows-extra-changes-that-do-not-impact-the-html-rendering">
+  ### La vista HTML muestra cambios adicionales que no afectan el renderizado del HTML
+</div>
+
+A veces verás cambios en el HTML, como eliminación de atributos, cambios en el orden, eliminación de espacios o clases extrañas como `:hover` que aparecen. Estas partes del diff no afectan el HTML que ve el usuario y a menudo no son la causa del error de hidratación.
+
+Esto es esperado y es un efecto secundario de cómo capturamos datos de depuración después de que se ha producido un error de hidratación.
+
+Algunos ejemplos comunes:
+
+![html diff tool](./img/hydration-diff-hover.png)
+
+Se eliminó el atributo `xmlns="http://www.w3.org/2000/svg"`. Este es un atributo XML y no es necesario dentro de una página HTML válida, por lo que React no lo incluyó en el renderizado.
+
+![html diff tool](./img/hydration-diff-xmlns.png)
+
+El nombre de clase `:hover` fue agregado por Session Replay cuando serializó la página; React no vio esta clase y no tiene impacto en la hidratación. Esto significa que el usuario estaba pasando el cursor e interactuando con la página antes de que React terminara de hidratar (ese es el propósito de la hidratación: hacer que la página responda a la interacción antes). Para cuando la hidratación se completó, el usuario había movido el mouse, así que la clase :hover cambió.
+
+<div id="privacy">
+  ## Privacidad
+</div>
+
+Todas las herramientas de diff se basan en datos de reproducción, por lo que cualquier información personal (PII) presente en la página web se enmascara o bloquea antes de enviarse al servidor de forma predeterminada. Obtén más información sobre [cómo proteger la privacidad del usuario en Session Replay](/es/security-legal-pii/scrubbing/protecting-user-privacy/) y [cómo configurar Session Replay para mantener la privacidad del usuario](/es/platforms/javascript/session-replay/privacy/).

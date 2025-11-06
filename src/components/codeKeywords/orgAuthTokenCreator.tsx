@@ -24,6 +24,8 @@ import {
 } from './styles';
 import {dropdownPopperOptions} from './utils';
 
+import { useGT, T } from 'gt-next';
+
 type TokenState =
   | {status: 'none'}
   | {status: 'loading'}
@@ -31,6 +33,7 @@ type TokenState =
   | {status: 'error'};
 
 export function OrgAuthTokenCreator() {
+  const gt = useGT();
   const [tokenState, setTokenState] = useState<TokenState>({status: 'none'});
   const [isOpen, setIsOpen] = useState(false);
   const [referenceEl, setReferenceEl] = useState<HTMLSpanElement | null>(null);
@@ -115,16 +118,18 @@ export function OrgAuthTokenCreator() {
   }
 
   if (tokenState.status === 'error') {
-    return <Fragment>There was an error while generating your token.</Fragment>;
+    return <T><Fragment>There was an error while generating your token.</Fragment></T>;
   }
 
   if (tokenState.status === 'loading') {
-    return <Fragment>Generating token...</Fragment>;
+    return <T><Fragment>Generating token...</Fragment></T>;
   }
 
   const selector = isOpen && (
     <PositionWrapper style={styles.popper} ref={setDropdownEl} {...attributes.popper}>
-      <DropdownHeader>Select an organization:</DropdownHeader>
+      <T>
+        <DropdownHeader>Select an organization:</DropdownHeader>
+      </T>
       <AnimatedContainer>
         <Dropdown dark={isDarkMode}>
           <Arrow
@@ -168,7 +173,7 @@ export function OrgAuthTokenCreator() {
       <KeywordDropdown
         ref={setReferenceEl}
         role="button"
-        title="Click to generate token (DO NOT commit)"
+        title={gt('Click to generate token (DO NOT commit)')}
         tabIndex={0}
         onClick={() => {
           handlePress();

@@ -1,0 +1,140 @@
+---
+title: Detección de bloqueo del Event Loop
+sidebar_order: 70
+description: Supervisa los event loops bloqueados en aplicaciones Node.js
+supported:
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.hono
+  - javascript.koa
+  - javascript.nestjs
+  - javascript.electron
+  - javascript.nextjs
+  - javascript.nuxt
+  - javascript.solidstart
+  - javascript.sveltekit
+  - javascript.remix
+  - javascript.react-router
+  - javascript.astro
+  - javascript.tanstackstart-react
+keywords:
+  - bloqueo del event loop
+  - anr
+  - Application Not Responding
+  - Event Loop Blocked
+  - Event Loop Stalls
+og_image: /og-images/platforms-javascript-common-configuration-event-loop-block.png
+---
+
+La detección de bloqueo del Event Loop supervisa cuándo el event loop del hilo principal de Node.js está bloqueado durante más tiempo que un umbral especificado. El SDK de Node reporta estos eventos a Sentry con rastreos de pila capturados automáticamente para ayudar a identificar el código que causa el bloqueo.
+
+<Include name="feature-stage-beta.mdx" />
+
+<Alert>
+
+La detección de bloqueo del event loop no es compatible con los [clusters de Node.js](https://nodejs.org/api/cluster.html).
+
+</Alert>
+
+<div id="event-loop-block-integration-recommended">
+  ## Integración de bloqueo del Event Loop (recomendada)
+</div>
+
+Para obtener el mejor rendimiento y una monitorización completa, recomendamos usar la [`eventLoopBlockIntegration`](../integrations/event-loop-block) del paquete `@sentry/node-native`. Las trazas de pila se capturan automáticamente cuando se detecta un bloqueo. Esta integración puede monitorizar todos los hilos de tu aplicación de Node.js y ofrece un mejor rendimiento en comparación con la integración ANR en desuso.
+
+```javascript
+import * as Sentry from "@sentry/node";
+import { eventLoopBlockIntegration } from "@sentry/node-native";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [eventLoopBlockIntegration({ threshold: 1000 })],
+});
+```
+
+Para obtener instrucciones de uso detalladas y opciones de configuración, consulta la documentación de [`eventLoopBlockIntegration`](../integrations/event-loop-block).
+
+
+<div id="deprecated-application-not-responding-anr-integration">
+  ## Integración de Application Not Responding (ANR) obsoleta
+</div>
+
+<Alert type="warning">
+  **Obsoleto**: `anrIntegration` está obsoleta. Usa [`eventLoopBlockIntegration`](../integrations/event-loop-block) en su lugar para un mejor rendimiento y una supervisión más completa.
+</Alert>
+
+*(Disponible a partir de la versión 7.91.0 y posteriores)*
+
+La integración ANR anterior sigue disponible, pero está obsoleta. Si la usas actualmente, te recomendamos migrar a la nueva `eventLoopBlockIntegration`.
+
+<Alert>
+  La detección de ANR requiere Node 16 o superior y solo puede usarse en el entorno de ejecución de Node.js.
+</Alert>
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [Sentry.anrIntegration({ captureStackTrace: true })],
+});
+```
+
+![Ejemplo de evento de error ANR](./img/anr-node-example.png)
+
+
+<div id="legacy-anr-configuration-options">
+  ### Opciones de configuración ANR (legadas)
+</div>
+
+La integración ANR en desuso admite las siguientes opciones de configuración:
+
+```ts
+interface Options {
+  /**
+   * Intervalo para enviar mensajes de heartbeat al hilo ANR.
+   *
+   * Por defecto es 50ms.
+   */
+  pollInterval: number;
+  /**
+   * Umbral en milisegundos para activar un evento ANR.
+   *
+   * Por defecto es 5000ms.
+   */
+  anrThreshold: number;
+  /**
+   * Indica si se debe capturar un stack trace cuando se activa el evento ANR.
+   *
+   * Por defecto es `false`.
+   *
+   * Esto utiliza el depurador de node que habilita la API del inspector.
+   */
+  captureStackTrace: boolean;
+}
+```
+
+
+<div id="legacy-anr-implementation-and-overhead">
+  ### Implementación heredada de ANR y sobrecarga
+</div>
+
+La detección de ANR con el SDK heredado de Node usa un hilo de trabajo para supervisar el event loop
+en el hilo principal de la app. El hilo principal de la app envía un mensaje de latido (heartbeat) al hilo de trabajo de ANR
+cada 50 ms. Si el hilo de trabajo de ANR no recibe un latido
+durante 5 segundos, desencadena un evento de ANR. Si la opción `captureStackTrace` está
+habilitada, el hilo de trabajo de ANR usa el módulo `inspector` para capturar trazas de pila mediante la [API del inspector de v8](https://nodejs.org/api/inspector.html).
+
+Una vez que se informa un evento de ANR, el hilo de trabajo de ANR finaliza para evitar
+eventos duplicados y el hilo principal de la app seguirá ejecutándose con normalidad.
+
+La sobrecarga del seguimiento de ANR en Node.js debería ser mínima. Si no se detecta ANR, la
+única sobrecarga en el hilo principal de la app es consultar al hilo de trabajo de ANR por IPC cada 50 ms por
+defecto. El hilo de trabajo de ANR consume alrededor de 10–20 MB de RAM para llevar el seguimiento de
+la consulta. Una vez detectado un ANR, el hilo principal se pausa brevemente
+en el depurador para capturar los frames de la traza de pila. A esas alturas, el event loop
+lleva bloqueado varios segundos, por lo que la sobrecarga de depuración es insignificante.

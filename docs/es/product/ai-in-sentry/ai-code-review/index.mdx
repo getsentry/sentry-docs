@@ -1,0 +1,76 @@
+---
+title: Revisión de código con IA
+sidebar_order: 30
+description: >-
+  Obtén predicciones de errores, revisiones de código y nuevas pruebas para
+  mejorar el código y la cobertura.
+og_image: /og-images/product-ai-in-sentry-ai-code-review.png
+---
+
+La revisión de código con IA te ayuda a generar nuevas pruebas para el código sin cubrir y revisa tus cambios, anticipando errores y ofreciendo sugerencias de mejora antes de fusionar los pull requests.
+
+<Alert>
+  La revisión de código con IA está actualmente en <strong>beta</strong>. Las funciones beta
+  aún están en desarrollo y pueden presentar errores. Únete a la [conversación en Discord](https://discord.com/channels/621778831602221064/1385700674557444190)
+  para compartir tus comentarios.
+</Alert>
+
+<div id="getting-started">
+  ## Primeros pasos
+</div>
+
+Para habilitar AI Code Review en tu organización de GitHub o en repositorios específicos, debes instalar la [aplicación de GitHub Seer by Sentry](/es/organization/integrations/source-code-mgmt/github/#installing-the-seer-github-app). Esto permite que el asistente analice pull requests, ofrezca información y escriba pruebas. **También debes tener habilitada la [integración de Sentry con GitHub](/es/organization/integrations/source-code-mgmt/github/).**
+
+1. Instala la [aplicación de GitHub Seer by Sentry](/es/organization/integrations/source-code-mgmt/github/#installing-the-seer-github-app) en tu organización de GitHub o en repositorios específicos.
+2. Habilita estos ajustes obligatorios en la [configuración de la organización](https://sentry.io/orgredirect/settings/:orgslug/) de Sentry:
+   * `Show Generative AI Features`
+   * `Enable AI Code Review`
+
+Si no eres administrador, comparte el enlace de la integración de la aplicación de GitHub Seer by Sentry con el administrador o propietario de tu organización para que la instale.
+
+<div id="ai-code-review-commands">
+  ## Comandos de revisión de código con IA
+</div>
+
+Después de instalar la aplicación, la Revisión de código con IA puede ayudarte de tres maneras:
+
+1. **Predicción de errores**: cuando creas un pull request y lo marcas como `Ready for Review`, la Revisión de código con IA buscará errores en tu código. Si no se encuentra ninguno, verás el emoji 🎉 como reacción a la descripción de tu PR. De lo contrario, la Revisión de código con IA añadirá comentarios a tu PR. **Nota:** omitimos la revisión si configuras tu PR como `draft` al crearlo.
+
+2. **`@sentry review`**: usa este comando en un comentario del PR y el asistente revisará el PR, predecirá errores y hará sugerencias.
+
+3. **`@sentry generate-test`**: usa este comando en un comentario del PR y el asistente generará pruebas para tu PR.
+
+Una vez que agregues un comentario, el asistente responderá confirmando la solicitud. Para las revisiones de código, verás comentarios añadidos a tu PR. Para la generación de pruebas, verás un comentario con un enlace a las pruebas generadas.
+
+![Sentry Prevent AI Overview =900x](./img/prevent-ai-response.png)
+
+<div id="frequently-asked-questions">
+  ## Preguntas frecuentes
+</div>
+
+* **¿A qué datos necesita acceso AI Code Review para funcionar y qué información se envía a proveedores de IA de terceros?**
+
+  AI Code Review necesita acceso a tus pull requests, incluidos los metadatos del PR, la información del repositorio, los nombres de archivos, las estructuras de directorios y los diffs de código. Solo los nombres de archivos, los diffs de código y las descripciones del PR se envían al proveedor de IA para su análisis.
+
+* **¿AI Code se ejecuta fuera de GitHub o en segundo plano?**
+
+  AI Code Review solo se ejecuta en GitHub. Se ejecuta una vez cuando un PR se marca como `ready for review` (ya sea al crear el PR o al sacarlo de borrador) y, por lo demás, solo corre cuando lo activa un comentario.
+
+  Puedes obtener más información sobre la privacidad y seguridad de la IA [aquí](/es/product/ai-in-sentry/ai-privacy-and-security/).
+
+* **¿Por qué no funcionan los comandos de `@sentry`?**
+
+  AI Code Review responderá con un mensaje para habilitar las opciones `Show Generative AI Features` y `Enable PR Review and Test Generation` en la [configuración de tu organización](https://sentry.io/orgredirect/settings/:orgslug/) si aún no las has habilitado. Una vez habilitadas, prueba de nuevo con `@sentry review` o `@sentry generate-test` para ejecutar AI Code Review.
+
+* **¿Está disponible AI Code Review en la región de la UE?**
+
+  Por ahora no, aunque estamos trabajando en ello.
+
+* **¿Cuándo se ejecuta Error Prediction?**
+
+Error Prediction se activa automáticamente por los siguientes eventos del webhook `pull_request` de GitHub:
+
+* `opened`: cuando abres un nuevo pull request (omitimos los que se abren en estado `draft`)
+  * `ready_for_review`: cuando un pull request en borrador se marca como “Ready for review”
+
+Para ejecutar manualmente la predicción de errores y obtener una revisión general, comenta `@sentry review` en el PR.

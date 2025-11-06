@@ -11,6 +11,8 @@ import styles from './style.module.scss';
 
 import {VersionBanner} from '../versionBanner';
 
+import { useGT, T, Var } from 'gt-next';
+
 function sortVersions(versions: string[]) {
   return versions.sort((a, b) => {
     const aMajor = parseInt(a.split('.')[0], 10);
@@ -35,6 +37,7 @@ function sortVersions(versions: string[]) {
 }
 
 export function VersionSelector({versions, sdk}: {sdk: string; versions: string[]}) {
+  const gt = useGT();
   const availableVersions = ['latest', ...sortVersions([...versions])];
   const router = useRouter();
   const pathname = usePathname();
@@ -114,8 +117,8 @@ export function VersionSelector({versions, sdk}: {sdk: string; versions: string[
       )}
       <RadixSelect.Root value={selectedVersion} onValueChange={handleVersionChange}>
         <RadixSelect.Trigger aria-label="Version" className={styles.select}>
-          <RadixSelect.Value placeholder="Version">
-            <span className="text-sm">SDK version: {selectedVersion}</span>
+          <RadixSelect.Value placeholder={gt('Version')}>
+            <T><span className="text-sm">SDK version: <Var name='version'>{selectedVersion}</Var></span></T>
           </RadixSelect.Value>
           <RadixSelect.Icon>
             <ChevronDownIcon />
@@ -123,7 +126,7 @@ export function VersionSelector({versions, sdk}: {sdk: string; versions: string[
         </RadixSelect.Trigger>
         <RadixSelect.Content
           role="dialog"
-          aria-label="Versions"
+          aria-label='Versions'
           position="popper"
           className={styles.popover}
         >

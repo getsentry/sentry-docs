@@ -1,0 +1,76 @@
+---
+title: Configurar la generación de perfiles
+sidebar_title: Generación de perfiles
+description: "Descubre cómo habilitar la generación de perfiles en tu app si aún no está configurada."
+sidebar_order: 5000
+---
+
+<PlatformContent includePath="profiling/index/why-profiling" />
+
+<div id="enable-tracing">
+  ## Habilitar el tracing
+</div>
+
+La generación de perfiles depende de que el producto Tracing de Sentry esté habilitado previamente. Para habilitar el tracing en el SDK:
+
+```javascript
+Sentry.init({
+  dsn: "___DSN___",
+  // Establece tracesSampleRate en 1.0 para capturar el 100% de las transacciones para rastreo.
+  // Recomendamos ajustar este valor en producción.
+  // Más información en
+  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+  tracesSampleRate: 1.0,
+});
+```
+
+Consulta la <PlatformLink to="/tracing/">documentación de configuración de tracing</PlatformLink> para obtener información más detallada sobre cómo configurar el muestreo. Establecer la tasa de muestreo en 1.0 significa que se capturarán todas las transacciones.
+
+
+<div id="enable-profiling">
+  ## Activar la generación de perfiles
+</div>
+
+<Alert>
+  La generación de perfiles para React Native está disponible a partir de la versión `5.32.0` del SDK.
+</Alert>
+
+Para activarla, configura `profilesSampleRate`:
+
+```javascript
+Sentry.init({
+  dsn: "___DSN___",
+  // Establece tracesSampleRate en 1.0 para capturar el 100% de las transacciones para el rastreo.
+  // Recomendamos ajustar este valor en producción.
+  // Más información en
+  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+  tracesSampleRate: 1.0,
+  // profilesSampleRate es relativo a tracesSampleRate.
+  // Aquí, capturaremos perfiles para el 100% de las transacciones.
+  profilesSampleRate: 1.0,
+});
+```
+
+
+<div id="options">
+  ### Opciones
+</div>
+
+Para cambiar las opciones de perfilado de React Native, agrega `hermesProfilingIntegration` a las integraciones en `Sentry.init`.
+
+```javascript
+Sentry.init({
+  integrations: [
+    Sentry.hermesProfilingIntegration({
+      platformProfilers: false,
+    }),
+  ],
+});
+```
+
+
+<div id="platformprofilers">
+  #### platformProfilers
+</div>
+
+Valor predeterminado: `true`; los perfiladores de la plataforma están habilitados. De forma predeterminada, tanto el código JS de React Native ejecutado en el motor Hermes como el código específico de la plataforma (Swift, Objective-C, Kotlin, Java) se perfilan con sus respectivos perfiladores. Establecer `platformProfilers` en `false` deshabilitará el perfilado del código específico de la plataforma y solo se perfilará el código JS ejecutado en Hermes. Esta opción está disponible desde la versión del SDK [5.33.0](https://github.com/getsentry/sentry-react-native/releases/tag/5.33.0).

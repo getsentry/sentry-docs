@@ -1,0 +1,173 @@
+---
+title: Opciones
+description: "Obtén más información sobre cómo configurar el SDK mediante opciones. Estas se pasan a la función init y, por lo tanto, se definen cuando el SDK se inicializa por primera vez."
+sidebar_order: 1
+---
+
+<PlatformContent includePath="configuration/config-intro" />
+
+<div id="available-options">
+  ## Opciones disponibles
+</div>
+
+<TableOfContents ignoreIds={["available-options"]} />
+
+<div id="core-options">
+  ## Opciones principales
+</div>
+
+Las opciones que pueden leerse desde una variable de entorno (`SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`) se leen automáticamente.
+
+<SdkOption name="Dsn" type="string" envVar="SENTRY_DSN">
+  El DSN le indica al SDK adónde enviar los eventos. Si no se proporciona este valor, el SDK intentará leerlo de la variable de entorno `SENTRY_DSN`. Si esa variable tampoco existe, el SDK simplemente no enviará ningún evento.
+
+  En entornos de ejecución sin variables de proceso (como el navegador), esa alternativa no aplica.
+
+  Más información sobre el [uso del DSN](/es/product/sentry-basics/dsn-explainer/#dsn-utilization).
+</SdkOption>
+
+<SdkOption name="Debug" type="bool" defaultValue="false">
+  Activa o desactiva el modo de depuración. Si la depuración está habilitada, el SDK intentará imprimir información útil de depuración si algo sale mal al enviar el evento. El valor predeterminado siempre es `false`. Por lo general, no se recomienda activarlo en producción, aunque habilitar el modo `debug` no supone problemas de seguridad.
+</SdkOption>
+
+<SdkOption name="Release" type="string" envVar="SENTRY_RELEASE">
+  Establece la release. Algunos SDK intentarán configurarla automáticamente desde el principio, pero es mejor establecerla manualmente para garantizar que la release esté sincronizada con tus integraciones de despliegue o cargas de source maps. Los nombres de release son cadenas, pero Sentry detecta algunos formatos y podría mostrarlos de forma diferente. Obtén más información sobre cómo enviar datos de release para que Sentry pueda informarte sobre regresiones entre versiones e identificar la posible fuente en [la documentación de releases](/es/product/releases/) o en el <SandboxLink scenario="releases">sandbox</SandboxLink>.
+
+  De forma predeterminada, el SDK intentará leer este valor de la variable de entorno `SENTRY_RELEASE` si no se establece explícitamente en la configuración del plugin. De lo contrario, el nombre de la release se deriva automáticamente del nombre y la versión del proyecto actual para coincidir con el formato `<ProjectName>@<Version>`.
+</SdkOption>
+
+<SdkOption name="Environment" type="string" envVar="SENTRY_ENVIRONMENT">
+  Establece el entorno. Esta cadena es de formato libre y no se establece de forma predeterminada. Una release puede asociarse con más de un entorno para separarlos en la interfaz (piensa en `staging` frente a `prod` o similar).
+
+  De forma predeterminada, el SDK intentará leer este valor de la variable de entorno `SENTRY_ENVIRONMENT` si no se establece explícitamente en la configuración del plugin. De lo contrario, el entorno predeterminado es la configuración de compilación de la aplicación actual, es decir, `Editor` o `Development`.
+</SdkOption>
+
+<SdkOption name="Dist" type="string">
+  Establece la distribución de la aplicación. Las distribuciones se usan para desambiguar variantes de compilación o despliegue de la misma release de una aplicación. Por ejemplo, la dist puede ser el número de compilación de un build de Xcode o el código de versión de un build de Android. La dist tiene una longitud máxima de 64 caracteres.
+</SdkOption>
+
+<SdkOption name="SampleRate" type="float" defaultValue="1.0">
+  Configura la tasa de muestreo para eventos de error, en el rango de `0.0` a `1.0`. El valor predeterminado es `1.0`, lo que significa que se enviará el 100% de los eventos de error. Si se establece en `0.1`, solo se enviará el 10% de los eventos de error. Los eventos se seleccionan aleatoriamente.
+</SdkOption>
+
+<SdkOption name="MaxBreadcrumbs" type="int" defaultValue="100">
+  Esta variable controla la cantidad total de breadcrumbs que deben capturarse. El valor predeterminado es `100`, pero puedes establecerlo en cualquier número. Sin embargo, debes tener en cuenta que Sentry tiene un [tamaño máximo de carga útil](https://develop.sentry.dev/sdk/data-model/envelopes/#size-limits) y cualquier evento que exceda ese tamaño se descartará.
+</SdkOption>
+
+<SdkOption name="AutomaticBreadcrumbs" type="struct" defaultNote="all fields default to false">
+  Configura si se agregan automáticamente breadcrumbs para eventos específicos dentro del juego. Esta es una estructura que contiene campos booleanos para distintos tipos de eventos:
+
+  * `bOnMapLoadingStarted` - cuando comienza la carga del mapa
+  * `bOnMapLoaded` - cuando el mapa se ha cargado
+  * `bOnGameStateClassChanged` - cuando cambia el estado del juego
+  * `bOnGameSessionIDChanged` - cuando cambia el ID de la sesión de juego
+  * `bOnUserActivityStringChanged` - cuando cambia la cadena de actividad del usuario
+</SdkOption>
+
+<SdkOption name="AutomaticBreadcrumbsForLogs" type="struct" defaultNote="enabled for Fatal, Error, and Warning">
+  Configura si se deben agregar automáticamente breadcrumbs a los mensajes de registro en niveles específicos de verbosidad. Es una estructura que contiene campos booleanos para distintos niveles de log:
+
+  * `bOnFatalLog` - valor predeterminado `true`
+  * `bOnErrorLog` - valor predeterminado `true`
+  * `bOnWarningLog` - valor predeterminado `true`
+  * `bOnInfoLog` (Display/Log) - valor predeterminado `false`
+  * `bOnDebugLog` (Verbose/VeryVerbose) - valor predeterminado `false`
+</SdkOption>
+
+<SdkOption name="AttachStacktrace" type="bool" defaultValue="false">
+  Cuando está habilitada, las trazas de pila se adjuntan automáticamente a todos los mensajes registrados. Las trazas de pila siempre se adjuntan a las excepciones; sin embargo, cuando esta opción está activa, también se envían junto con los mensajes. Esta opción, por ejemplo, hace que las trazas de pila aparezcan junto a todos los mensajes de log.
+
+  Esta opción está desactivada de forma predeterminada.
+
+  El agrupamiento en Sentry difiere entre eventos con y sin traza de pila. Como resultado, obtendrás grupos nuevos al habilitar o deshabilitar este indicador para ciertos eventos.
+</SdkOption>
+
+<SdkOption name="SendDefaultPii" type="bool" defaultValue="false">
+  Si este indicador está habilitado, ciertas informaciones de identificación personal (PII) se agregan mediante integraciones activas. De forma predeterminada, no se envía este tipo de datos.
+
+  <Alert>
+    Si usas Sentry en tu app móvil, consulta nuestras [preguntas frecuentes sobre privacidad de datos móviles](/es/security-legal-pii/security/mobile-privacy/) para ayudarte con los requisitos de privacidad de apps en Apple App Store y Google Play.
+  </Alert>
+
+  Esta opción está desactivada de forma predeterminada.
+
+  Si habilitas esta opción, asegúrate de eliminar manualmente lo que no quieras enviar usando nuestras funciones para gestionar [*datos sensibles*](../../data-management/sensitive-data/).
+</SdkOption>
+
+<SdkOption name="AttachScreenshot" type="bool" defaultValue="false">
+  Toma una captura de pantalla de la aplicación cuando ocurre un error y la incluye como archivo adjunto.
+  Obtén más información sobre cómo enriquecer eventos con capturas de pantalla en nuestra <PlatformLink to="/enriching-events/screenshots/">documentación sobre capturas de pantalla</PlatformLink>.
+
+  <Alert>
+    Actualmente, no se admite adjuntar capturas de pantalla a eventos de bloqueo en Android.
+  </Alert>
+</SdkOption>
+
+<SdkOption name="AttachGameLog" type="bool" defaultValue="false">
+  Cuando está habilitada, el archivo de log del juego se adjunta automáticamente a todos los eventos capturados si la configuración de compilación actual permite el registro.
+
+  Esta opción está desactivada de forma predeterminada.
+</SdkOption>
+
+<SdkOption name="AttachGpuDump" type="bool" defaultValue="true">
+  Cuando está habilitada, el archivo minidump de [Nsight Aftermath](https://developer.nvidia.com/nsight-aftermath) se adjunta automáticamente a los eventos de bloqueo de GPU capturados.
+
+  Esta opción está activada de forma predeterminada.
+
+  <Alert>
+    Actualmente, esta función solo es compatible con GPUs de Nvidia.
+  </Alert>
+
+  <Alert>
+    En Windows, capturar bloqueos de GPU requiere [modificar el código fuente de Unreal Engine](https://github.com/getsentry/sentry-unreal/issues/673).
+  </Alert>
+</SdkOption>
+
+<SdkOption name="CrashpadWaitForUpload" type="bool" defaultValue="false">
+  Cuando está habilitada, el cierre de la aplicación se retrasa hasta que se complete la carga del informe de bloqueo. Esto es útil para el despliegue en entornos `Docker` (contenedores de Linux y Windows) donde el ciclo de vida de todos los procesos está ligado al proceso raíz (normalmente, la aplicación que se está monitorizando).
+
+  Esta opción está desactivada de forma predeterminada.
+
+  <Alert>
+    Esta función solo es compatible con el backend Crashpad en Windows y Linux (predeterminado para el paquete del plugin `github`).
+  </Alert>
+</SdkOption>
+
+<div id="hooks">
+  ## Hooks
+</div>
+
+Estas opciones pueden usarse para conectar el SDK de varias maneras y personalizar el envío de eventos.
+
+Los callbacks que configures como hooks se ejecutarán en el hilo donde ocurrió el evento. Si el evento sucede en un hilo que no es el del juego durante la recolección de basura, no se invocará el callback.
+
+<Alert>
+  Si la clase de tu manejador de callbacks forma parte de otro plugin, asegúrate de que ese plugin se cargue antes que el SDK de Sentry. De lo contrario, el manejador no se encontrará durante la deserialización de la configuración de Sentry al iniciar el motor y no se ejecutará.
+</Alert>
+
+<SdkOption name="BeforeSend" type="function">
+  Esta función se llama con un mensaje específico del SDK o un objeto de evento de error, y puede devolver un objeto de evento modificado, o `null` para omitir el envío del evento. Esto puede usarse, por ejemplo, para eliminar manualmente PII antes de enviar.
+
+  Para cuando se ejecuta <PlatformIdentifier name="BeforeSend" />, todos los datos del scope ya se han aplicado al evento. Cualquier modificación posterior del scope no tendrá efecto.
+</SdkOption>
+
+<SdkOption name="BeforeBreadcrumb" type="function">
+  Esta función se llama con un objeto breadcrumb específico del SDK antes de que el breadcrumb se agregue al scope. Si la función no devuelve nada, el breadcrumb se descarta. Para dejar pasar el breadcrumb, devuelve el primer argumento, que contiene el objeto del breadcrumb.
+  El callback normalmente recibe un segundo argumento (llamado &quot;hint&quot;) que contiene el objeto original a partir del cual se creó el breadcrumb, para personalizar aún más cómo debería verse el breadcrumb.
+
+  <Alert>
+    Actualmente, los hints solo se admiten en Android.
+  </Alert>
+</SdkOption>
+
+<div id="tracing-options">
+  ## Opciones de trazas
+</div>
+
+<SdkOption name="TracesSampleRate" type="float">
+  Un número entre `0` y `1` que controla el porcentaje de probabilidad de que una transacción determinada se envíe a Sentry. (`0` representa el 0% y `1` representa el 100%.) Se aplica por igual a todas las transacciones creadas en la aplicación. Para habilitar las trazas, debe definirse este o <PlatformIdentifier name="TracesSampler" />.
+</SdkOption>
+
+<SdkOption name="TracesSampler" type="function">
+  Una función que determina el porcentaje de probabilidad de que una transacción determinada se envíe a Sentry. Recibirá automáticamente información sobre la transacción y el contexto en el que se crea, y debe devolver un número entre `0` (0% de probabilidad de envío) y `1` (100% de probabilidad de envío). También puede usarse para filtrar transacciones, devolviendo 0 para las no deseadas. Para habilitar las trazas, debe definirse este o <PlatformIdentifier name="TracesSampleRate" />.
+</SdkOption>

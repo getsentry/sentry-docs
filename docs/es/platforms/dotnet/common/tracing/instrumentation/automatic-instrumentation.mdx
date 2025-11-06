@@ -1,0 +1,51 @@
+---
+title: Instrumentación automática
+description: "Descubre qué transacciones se capturan después de habilitar el tracing."
+sidebar_order: 20
+---
+
+<div id="propagating-a-trace">
+  ## Propagar una traza
+</div>
+
+<Alert>
+  Si usas la integración de Sentry para ASP.NET Core, la propagación de trazas se habilita automáticamente en todos los clientes creados por una fábrica de clientes HTTP. Lee más al respecto <Link to="/platforms/dotnet/guides/aspnetcore/tracing/instrumentation/automatic-instrumentation">aquí</Link>.
+</Alert>
+
+El SDK de Sentry proporciona un controlador HTTP personalizado, `SentryHttpMessageHandler`. Este controlador puede usarse dentro de `HttpClient` para propagar trazas automáticamente y crear spans que rastreen las solicitudes salientes.
+
+Para usarlo, crea una instancia de `HttpClient` pasando una instancia de `SentryHttpMessageHandler` como parámetro del constructor:
+
+```csharp
+var httpHandler = new SentryHttpMessageHandler();
+var httpClient = new HttpClient(httpHandler);
+
+var response = await httpClient.GetStringAsync("https://example.com");
+```
+
+Al enviar una solicitud a `https://example.com`, el cliente HTTP instrumentado:
+
+* Completará el Header `sentry-trace` en la solicitud. Esto permite que el servicio homólogo inicie una transacción vinculándola con la actual (suponiendo que también esté instrumentado con Sentry).
+* Iniciará un span llamado `GET https://example.com` que registrará la operación HTTP correspondiente en la transacción actual.
+
+Para evitar agotar la cuota de rendimiento, Sentry solo creará spans de solicitud si hay una transacción activa en el alcance. Si no hay una transacción activa, deberás crear una antes de hacer una solicitud HTTP para que el rastreo de solicitudes funcione:
+
+```csharp
+  var transaction = SentrySdk.StartTransaction("tutorial", "example");
+  SentrySdk.ConfigureScope(scope => scope.Transaction = transaction);
+
+  // El SentryHttpMessageHandler creará automáticamente un span para la petición
+  var response = await httpClient.GetStringAsync("https://example.com");
+
+  transaction.Finish();
+```
+
+Además, `SentryHttpMessageHandler` hereda también de `DelegatingHandler`, lo que te permite encadenarlo con otros controladores. Por ejemplo:
+
+```csharp
+var innerHttpHandler = new HttpClientHandler();
+var sentryHttpHandler = new SentryHttpMessageHandler(innerHttpHandler);
+var httpClient = new HttpClient(sentryHttpHandler);
+```
+
+<PlatformContent includePath="performance/automatic-instrumentation-integrations" />

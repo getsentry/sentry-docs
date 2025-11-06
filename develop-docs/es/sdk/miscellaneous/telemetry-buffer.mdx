@@ -1,0 +1,248 @@
+---
+title: Búfer de telemetría
+sidebar_order: 35
+---
+
+<div id="telemetry-buffer-layer-prioritized-bounded-rate-aware-envelope-delivery">
+  ## Capa de búfer de telemetría: entrega de sobres prioritaria, acotada y sensible a la tasa
+</div>
+
+<div id="current-state">
+  ### Estado actual
+</div>
+
+La implementación de transporte actual de la mayoría de los SDK utiliza una cola FIFO simple que procesa todos los tipos de “envelopes” con la misma prioridad. A medida que nuestros SDK recopilan cada vez más telemetría de distintos tipos, puede convertirse en un problema que la telemetría crítica (como errores/fallos) se retrase y pierda prioridad porque otra telemetría (traces, replays, logs) ocupa la cola. Esto es especialmente relevante con replays, logs y continuous profiling, que volcamos periódicamente en la cola.
+
+<div id="proposal">
+  ### Propuesta
+</div>
+
+Introducir una capa de buffer por tipo de telemetría entre `Client` y `Transport` para:
+
+- Agrupar la telemetría cuando el protocolo lo permita (todos los tipos, no solo registros)
+- Aplicar limitación de tasa temprana (no encolar cuando esté limitada)
+- Garantizar memoria acotada mediante buffers circulares de capacidad fija
+- Priorizar la entrega según la criticidad de la telemetría mediante round-robin ponderado
+- Mantener sin cambios la semántica actual de transporte/caché sin conexión (podría cambiar)
+- (Ampliación) Usar una conexión HTTP por tipo de telemetría (solo SDKs de backend)
+
+<div id="architecture-overview">
+  ### Visión general de la arquitectura
+</div>
+
+```
+┌───────────────────────────────────────────────────────────────────────────┐
+│                              Cliente                                      │
+│   captureEvent / captureTransaction / captureReplay / captureLogs / ...   │
+└───────────────────────────────────────────────────────────────────────────┘
+                               │
+                               ▼
+┌───────────────────────────────────────────────────────────────────────────┐
+│                          TelemetryBuffer                                  │
+│  - Mantiene buffers por categoría                                         │
+│  - Verificación temprana de límite de velocidad (RateLimiter compartido)  │
+│  - Envío basado en método a buffers por categoría                         │
+└───────────────────────────────────────────────────────────────────────────┘
+                               │
+               ┌───────────────┼────────────────────────────────┐
+               ▼               ▼                                ▼
+┌───────────────────────┐ ┌───────────────────────┐ ┌───────────────────────┐
+│  Errors/Feedback      │ │  Sessions/CheckIns    │ │  Log                  │
+│  (CRÍTICO)            │ │  (ALTO)               │ │  (MEDIO)              │
+│  RingBuffer + Batcher │ │  RingBuffer + Batcher │ │  RingBuffer + Batcher │
+└───────────────────────┘ └───────────────────────┘ └───────────────────────┘
+               │               │                                │
+               ▼               ▼                                ▼
+┌───────────────────────────────────────────────────────────────────────────┐
+│                    EnvelopeScheduler (Weighted RR)                        │
+│  - Selección entre buffers por prioridad (5..1)                           │
+│  - Vuelve a verificar RateLimiter antes de enviar                         │
+│  - Envía envelopes al transporte                                          │
+└───────────────────────────────────────────────────────────────────────────┘
+                               │
+                               ▼
+┌───────────────────────────────────────────────────────────────────────────┐
+│                        Transport (sin cambios)                            │
+│   - Worker único, caché en disco, reintento offline, reportes del cliente │
+└───────────────────────────────────────────────────────────────────────────┘
+```
+
+
+<div id="priorities-tbd">
+  ### Prioridades (por definir)
+</div>
+
+- CRÍTICA: Error, Feedback
+- ALTA: Session, CheckIn
+- MEDIA: Log, ClientReport, Span
+- BAJA: Transaction, Profile, ProfileChunk
+- MÍNIMA: Replay
+
+Configurable mediante ponderaciones.
+
+<div id="components">
+  ### Componentes
+</div>
+
+- **Client**
+  - Gestiona búferes por categoría y es el único punto de entrada para todas las rutas de captura.
+  - Consulta `RateLimiter` de forma temprana; si hay limitación de tasa activa, no encola y registra `DiscardReason.RATELIMIT_BACKOFF`.
+  - Envía elementos desde los métodos de captura al búfer correspondiente por categoría.
+
+- **TelemetryBuffer\<T\>** (por DataCategory)
+  - Búfer circular de capacidad fija (memoria acotada).
+  - Almacena elementos en bruto (previos al sobre/envelope).
+  - Política de agrupación con reconocimiento de tipo (por tamaño y/o tiempo). Ejemplos:
+    - Errors/Feedback/Sessions/CheckIns: normalmente de un solo elemento; permitir lotes pequeños si es seguro para el protocolo.
+    - Logs: basado en tamaño/tiempo (reutiliza la semántica de `LoggerBatchProcessor`).
+    - Spans: basado en trazas.
+    - Transactions/Profiles/Replay: por defecto, de un solo elemento.
+  - Política de desbordamiento: descartar el más antiguo (predeterminado). Registrar `DiscardReason.QUEUE_OVERFLOW`.
+
+- **EnvelopeScheduler**
+  - Un único worker; round-robin ponderado entre prioridades: pesos 5,4,3,2,1.
+  - Extrae lotes listos de los búferes; construye envelopes a partir de los lotes; vuelve a comprobar `RateLimiter` en el momento del envío.
+  - Envía envelopes a `ITransport`. Si el transporte está inestable o ha rechazado recientemente, aplica una breve espera de backoff.
+
+- **Rate Limiting**
+  - El `RateLimiter` compartido es la fuente de verdad.
+  - Se comprueba tanto en la entrada del búfer (para evitar encolar) como en la salida (para evitar el envío).
+
+- **Transport and Offline Cache**
+  - Sin cambios. El almacenamiento en disco, la lógica de reintentos y el registro de informes del cliente permanecen en el transporte.
+  - Los búferes son solo en memoria (por ahora).
+
+<div id="configuration-new-options">
+  ### Configuración (opciones nuevas)
+</div>
+
+- `bufferCapacityByCategory`: map\<DataCategory, int\> (valores predeterminados ajustados según el volumen)
+- `priorityWeights`: CRITICAL..LOWEST (predeterminado: 5,4,3,2,1)
+- `overflowPolicy`: `drop_oldest` | `drop_newest` (predeterminado: `drop_oldest`)
+- `preemptLowerPriorityForCritical`: boolean (predeterminado: false)
+- `scheduler`:
+  - `backoffMsOnTransportUnhealthy` (p. ej., 250–1000 ms para control de retropresión)
+  - `maxQueueSize` (límite suave; predeterminado derivado de la cola de transporte)
+
+<div id="pseudocode-kotlin-ish">
+  ### Pseudocódigo (tipo Kotlin)
+</div>
+
+```kotlin
+enum class EnvelopePriority(val weight: Int) {
+  CRITICAL(5), HIGH(4), MEDIUM(3), LOW(2), LOWEST(1)
+}
+
+interface TelemetryBuffer<T> {
+  val category: DataCategory
+  val priority: EnvelopePriority
+  fun offer(item: T): OfferResult // puede descartar; registra informe del cliente
+  fun nextBatchReady(nowMs: Long): Boolean
+  fun drainBatch(maxItems: Int, nowMs: Long): List<T>
+  fun size(): Int
+}
+
+class Client(
+  private val buffers: Map<DataCategory, TelemetryBuffer<Any>>,
+  private val rateLimiter: RateLimiter,
+  private val clientReports: ClientReportRecorder
+) {
+  fun captureEvent(event: Any) = submit(DataCategory.Error, event)
+  fun captureTransaction(tx: Any) = submit(DataCategory.Transaction, tx)
+  fun captureReplay(replay: Any) = submit(DataCategory.Replay, replay)
+  fun captureLog(log: Any) = submit(DataCategory.Log, log)
+  // ... otros métodos de captura ...
+
+  private fun submit(category: DataCategory, item: Any) {
+    if (rateLimiter.isRateLimitActive(category)) {
+      clientReports.recordLostEvent(DiscardReason.RATELIMIT_BACKOFF, category)
+      return
+    }
+    val res = buffers[category]?.offer(item)
+    if (res is OfferResult.Dropped) {
+      clientReports.recordLostEvent(DiscardReason.QUEUE_OVERFLOW, category, res.count)
+    }
+  }
+}
+
+class EnvelopeScheduler(
+  private val buffersByPriority: Map<EnvelopePriority, List<TelemetryBuffer<*>>,
+  private val transport: ITransport,
+  private val rateLimiter: RateLimiter,
+  private val clientReports: ClientReportRecorder,
+  private val weights: Map<EnvelopePriority, Int>,
+  private val backoffMs: Long
+) : Thread("TelemetryEnvelopeScheduler") {
+  override fun run() {
+    val order = generatePriorityCycle(weights) // p. ej., [CRITICAL×5, HIGH×4, ...]
+    while (true) {
+      var sentSomething = false
+      for (p in order) {
+        val buf = selectReadyBuffer(buffersByPriority[p])
+        if (buf != null) {
+          val cat = buf.category
+          val batch = buf.drainBatch(maxItemsFor(cat), nowMs())
+          if (batch.isNotEmpty()) {
+            if (!rateLimiter.isRateLimitActive(cat)) {
+              val envelopes = buildEnvelopes(cat, batch)
+              for (env in envelopes) {
+                transport.send(env)
+              }
+              sentSomething = true
+            } else {
+              clientReports.recordLostEvent(DiscardReason.RATELIMIT_BACKOFF, cat, batch.size)
+            }
+          }
+        }
+      }
+      if (!sentSomething) sleep(backoffMs)
+    }
+  }
+
+  private fun buildEnvelopes(category: DataCategory, batch: List<Any>): List<Envelope> {
+    // Aplica la versión del SDK, el contexto de rastreo si se proporciona, y las restricciones de tamaño
+    // Devuelve uno o más envelopes construidos a partir del lote
+    TODO()
+  }
+}
+```
+
+Semántica del ring buffer (por búfer):
+
+* Capacidad fija N; al insertar cuando está lleno:
+  * `drop_oldest`: expulsar 1 desde el inicio y encolar el nuevo; registrar informe de desbordamiento de cola del cliente
+  * `drop_newest`: rechazar el entrante; registrar informe de desbordamiento de cola del cliente
+
+Ejemplos de políticas de agrupación:
+
+* Logs: agrupar hasta 100 elementos o 5 s; dividir si se alcanza el límite de tamaño del contenedor
+* Spans: agrupar por traza
+* Errors/Feedback: tamaño de lote 1 (predeterminado)
+* Sessions/CheckIns: lotes pequeños si es seguro (p. ej., 10 o 1 s)
+* Transactions/Profiles/Replay: predeterminado 1
+
+
+<div id="observability">
+  ### Observabilidad
+</div>
+
+- Contadores por categoría: enqueued, sent, queue_overflow, rate_limited
+  - Crea un panel por categoría con los motivos de los eventos descartados
+- Estado: incluye la salud del búfer en `Client.isHealthy()` junto con la del transporte
+
+<div id="defaults-and-safety">
+  ### Valores predeterminados y seguridad
+</div>
+
+- Activado por defecto con capacidades y ponderaciones conservadoras
+- Sin cambios en el formato del sobre, el transporte o la caché en disco
+
+<div id="open-questions">
+  ### Preguntas abiertas
+</div>
+
+- Capacidades predeterminadas por categoría (especialmente logs/replay vs. críticas)
+- Pesos por categoría (los logs y los spans tendrán un alto volumen, así que quizá queramos enviarlos con más frecuencia)
+- Agrupación segura entre categorías más allá de logs/informes del cliente
+  - ¿Deberíamos adaptar Relay para aceptar varios elementos de “nivel superior” (como errores o transacciones) en un solo envelope?
+- Varias conexiones HTTP por tipo de telemetría

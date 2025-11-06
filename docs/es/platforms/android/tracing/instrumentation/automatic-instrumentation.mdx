@@ -1,0 +1,504 @@
+---
+title: Instrumentación automática
+sidebar_order: 10
+description: Aprende qué transacciones se capturan después de habilitar el tracing.
+og_image: >-
+  /og-images/platforms-android-tracing-instrumentation-automatic-instrumentation.png
+---
+
+<Alert>
+  Para capturar transacciones, primero debes <PlatformLink to="/tracing/">configurar el tracing</PlatformLink> si aún no lo has hecho.
+
+  Compatible con la versión `4.3.0` y posteriores del SDK de Android de Sentry.
+</Alert>
+
+<div id="activity-instrumentation">
+  ### Instrumentación de Activity
+</div>
+
+La instrumentación de la Activity, una vez habilitada, captura transacciones en cada inicio de una Activity. El SDK establece el nombre de la transacción como el de la Activity, por ejemplo, `MainActivity`, y la operación de la transacción como `ui.load`.
+
+La transacción comienza antes de que se invoque el método `onCreate` de cada Activity.
+
+*La instrumentación de la Activity está habilitada de forma predeterminada, pero puedes deshabilitarla estableciendo:*
+
+```xml {filename:AndroidManifest.xml}
+<application>
+    <meta-data android:name="io.sentry.traces.activity.enable" android:value="false" />
+</application>
+```
+
+La transacción finaliza después de que se dibuje el primer fotograma de cada Activity.
+
+*La transacción finaliza automáticamente, pero puedes desactivarla configurando:*
+
+```xml {filename:AndroidManifest.xml}
+<application>
+    <meta-data android:name="io.sentry.traces.activity.auto-finish.enable" android:value="false" />
+</application>
+```
+
+Ofrecemos la opción de finalizar la transacción manualmente. Por ejemplo, quizá quieras finalizarla después de una llamada a la API activada en el `onCreate` de la Activity y de haber mostrado los datos al usuario. Para lograrlo, puedes hacer lo siguiente:
+
+```java
+import io.sentry.Sentry;
+
+ISpan span = Sentry.getSpan();
+if (span != null) {
+  span.finish();
+}
+```
+
+```kotlin
+import io.sentry.Sentry
+
+val span = Sentry.getSpan()
+span?.finish()
+```
+
+En caso de que el usuario haya salido de esta Activity antes de que terminaras la transacción manualmente, el SDK finaliza la transacción automáticamente cuando se llama al método `onDestroy`.
+
+Las transacciones siempre se vinculan automáticamente al Scope si no hay ninguno establecido. Por ello, puedes crear spans con instrumentación personalizada, y esos spans se asociarán automáticamente con la transacción en ejecución de la Activity.
+
+```java
+import java.lang.Exception;
+
+import io.sentry.ISpan;
+import io.sentry.Sentry;
+import io.sentry.SpanStatus;
+
+void displayUserData() {
+  ISpan span = Sentry.getSpan();
+  if (span != null) {
+    ISpan innerSpan = span.startChild("displayUserData");
+      // se omitió código
+      // omitted code
+    } catch (Exception e) {
+      innerSpan.setThrowable(e);
+      innerSpan.setStatus(SpanStatus.NOT_FOUND);
+      throw e;
+    } finally {
+      innerSpan.finish();
+    }
+  }
+}
+```
+
+```kotlin
+import java.lang.Exception
+
+import io.sentry.Sentry
+import io.sentry.SpanStatus
+
+fun displayUserData() {
+  val span = Sentry.getSpan()
+  span?.let {
+    val innerSpan = it.startChild("displayUserData")
+
+    try {
+      // se omitió código
+    } catch (e: Exception) {
+      innerSpan.throwable = e
+      innerSpan.status = SpanStatus.NOT_FOUND
+      throw e
+    } finally {
+      innerSpan.finish()
+    }
+  }
+}
+```
+
+Si aún no has terminado la transacción y comienzas una nueva Activity, el SDK siempre finaliza automáticamente la transacción de la Activity anterior. Esto se debe a que solo puede haber una transacción a la vez asociada al Scope. Para evitarlo, puedes crear transacciones manualmente usando la instrumentación personalizada y su instancia para iniciar spans en lugar de la Static API.
+
+<div id="fragment-instrumentation">
+  ### Instrumentación de Fragments
+</div>
+
+Una vez habilitada, la instrumentación de fragments inicia un span para cada inicio de un fragment. El SDK establece la operación del span como `ui.load` y la descripción del span como el nombre del fragment, por ejemplo, `LoginFragment`.
+
+El span comienza después de que se llama al método `onCreate` de cada fragment y antes de que se llame a su método `onCreateView`.
+
+El span finaliza después de que se ejecuta el método `onResume` de cada fragment.
+
+La instrumentación de fragments depende de tener una transacción activa vinculada al scope y, idealmente, se usaría junto con la [instrumentación de Activities](/es/platforms/android/tracing/instrumentation/automatic-instrumentation/#activity-instrumentation), que inicia una transacción y la vincula al scope automáticamente.
+
+Obtén más información en nuestra [documentación de Fragments](/es/platforms/android/integrations/fragment/).
+
+<div id="app-start-instrumentation">
+  ### Instrumentación del inicio de la app
+</div>
+
+La instrumentación del inicio de la app ofrece información sobre cuánto tarda tu aplicación en arrancar. Agrega un span desde el lanzamiento de la aplicación hasta la primera transacción de UI generada automáticamente.
+
+El SDK distingue entre inicio en frío e inicio en caliente, pero no registra inicios/reanudaciones en caliente (hot starts/resumes).
+
+* **Inicio en frío**: Un inicio en frío es cuando la app arranca desde cero: hasta ese momento, el sistema no había creado el proceso de la app. Ocurre, por ejemplo, cuando tu app se abre por primera vez desde que se encendió el dispositivo o desde que el sistema la finalizó.
+* **Inicio en caliente**: Un inicio en caliente abarca un subconjunto de las operaciones de un inicio en frío y, al mismo tiempo, supone más sobrecarga que un inicio “en caliente” inmediato (hot start). Por ejemplo: el sistema expulsa tu app de la memoria y el usuario la vuelve a abrir. Es necesario reiniciar el proceso y la actividad, pero la tarea puede beneficiarse del estado de instancia guardado que se pasa a `onCreate()`.
+
+<Alert>
+  La instrumentación del inicio de la app de Sentry busca ser lo más completa y representativa posible de la experiencia del usuario y se ajusta a las directrices de los proveedores de la plataforma. Por este motivo, los inicios de la app que informa Sentry podrían ser más largos que lo que ves en otras herramientas.
+
+  Por ejemplo, Sentry mide la duración desde el inicio del proceso —incluido el tiempo que tardan en completarse todos los Content Providers— hasta que se renderiza el primer frame para el usuario.
+</Alert>
+
+El SDK establece la operación del span en `app.start.cold` para el inicio en frío y `app.start.warm` para el inicio en caliente.
+
+El SDK utiliza el momento de creación de `SentryPerformanceProvider` (ContentProvider) como comienzo del inicio de la app y el primer frame dibujado como el final.
+
+<Alert>
+  El inicio de la app solo se mide si el proceso tiene la importancia [RunningAppProcessInfo.IMPORTANCE&#95;FOREGROUND](https://developer.android.com/reference/android/app/ActivityManager.RunningAppProcessInfo#IMPORTANCE_FOREGROUND), lo que significa que el proceso está ejecutando la interfaz en primer plano.
+</Alert>
+
+Puedes desactivar la instrumentación de Activity y la instrumentación del inicio de la app mediante opciones:
+
+```xml {filename:AndroidManifest.xml}
+<application>
+    <meta-data android:name="io.sentry.traces.activity.enable" android:value="false" />
+</application>
+```
+
+El arranque en frío y en caliente son Mobile Vitals, sobre los que puedes aprender en la [documentación completa](/es/product/insights/mobile/mobile-vitals).
+
+<div id="slow-and-frozen-frames">
+  ### Fotogramas lentos y congelados
+</div>
+
+<Alert>
+  Compatible con Android OS versión `7.0` y posteriores.
+</Alert>
+
+Una interfaz poco responsiva y los tirones en las animaciones molestan a los usuarios y empeoran la experiencia. Dos métricas para medir estos casos son los *fotogramas lentos* y los *fotogramas congelados*. Si quieres que tu app funcione con fluidez, deberías intentar evitar ambos. El SDK añade estas dos métricas a las transacciones de [Activity](/es/platforms/android/tracing/instrumentation/automatic-instrumentation/#activity-instrumentation).
+
+Los fotogramas lentos y congelados forman parte de Mobile Vitals, sobre lo cual puedes aprender más en la [documentación completa](/es/product/insights/mobile/mobile-vitals).
+
+<div id="trace-propagation-targets">
+  ### Destinos de propagación de trazas
+</div>
+
+Sentry añade un encabezado adicional con el ID de traza en las solicitudes HTTP salientes para continuar la transacción en el backend.
+Puedes configurar la opción `tracePropagationTarget` para filtrar a qué solicitudes Sentry añade el encabezado adicional.
+Por ejemplo, para asegurarte de que solo el backend de tu app reciba el ID de traza.
+
+```java
+import io.sentry.android.core.SentryAndroid;
+
+SentryAndroid.init(this, options -> {
+    final List<String> targets = new ArrayList<>();
+    targets.add("myapp.com");
+    options.setTracePropagationTargets(targets);
+});
+```
+
+```kotlin
+import io.sentry.android.core.SentryAndroid
+
+SentryAndroid.init(this) { options ->
+    options.setTracePropagationTargets(listOf("myapp.com"))
+}
+```
+
+La opción puede contener una lista de cadenas (incluidas expresiones regulares) que se comparan con las URL de las solicitudes salientes. Si alguna de las entradas de la lista coincide con la URL de una solicitud saliente, se adjuntarán datos de traza a dicha solicitud. Las entradas de tipo cadena no tienen que ser coincidencias exactas; es decir, la URL de una solicitud se considera coincidente cuando contiene una cadena proporcionada mediante la opción.
+Si no se proporciona `tracePropagationTargets`, se adjuntarán datos de traza a todas las solicitudes salientes del cliente instrumentado.
+
+<div id="androidx-support">
+  #### Compatibilidad con AndroidX
+</div>
+
+Sentry utiliza la biblioteca `androidx.core` para detectar [fotogramas lentos y congelados](#slow-and-frozen-frames). Esto es necesario para obtener resultados precisos en todas las versiones de Android.
+
+Comprobamos su disponibilidad en tiempo de ejecución, así que si no usas `androidx.core`, puedes eliminarla de las dependencias transitivas de Sentry.
+
+```Groovy
+implementation ('io.sentry:sentry-android:{{@inject packages.version('sentry.java.android', '4.2.0') }}') {
+    exclude group: 'androidx.core', module: 'core'
+}
+```
+
+Ten en cuenta que, al eliminar esta dependencia transitiva, no se registrarán los fotogramas lentos ni los congelados.
+
+<div id="okhttp-library-instrumentation">
+  ### Instrumentación de la biblioteca OkHttp
+</div>
+
+La instrumentación de OkHttp, una vez añadido el `SentryOkHttpInterceptor`, inicia un span a partir del span activo vinculado al scope para cada solicitud HTTP. El SDK establece la `operation` del span en `http.client` y la `description` en la solicitud `$METHOD $url`; por ejemplo, `GET https://sentry.io`.
+
+El span finaliza una vez que se ha ejecutado la solicitud. El `status` del span depende del `code` de la respuesta HTTP o de `SpanStatus.INTERNAL_ERROR` si el `code` no coincide con ninguno de los `SpanStatus` de Sentry.
+
+Cuando la solicitud HTTP lanza una `IOException`, el SDK de Sentry asocia esta excepción al span en ejecución. Si no has configurado el SDK para ingerir la excepción y capturarla, el span y el SentryEvent estarán vinculados al verlo en la página de **Detalles del issue** en sentry.io.
+
+Para obtener más información, consulta nuestra [integración de OkHttp](/es/platforms/android/integrations/okhttp/).
+
+<div id="apollo-graphql-instrumentation">
+  ### Instrumentación de Apollo GraphQL
+</div>
+
+La instrumentación de Apollo, una vez agregado el `SentryApolloInterceptor`, inicia un span a partir del span activo asociado al scope para cada solicitud de GraphQL. El SDK establece la propiedad `operation` del span con el nombre de la operación de GraphQL y `description` con `$operation.type and $operation.name`; por ejemplo, `query LaunchDetails`.
+
+El span finaliza una vez que se ha ejecutado la solicitud. El `status` del span depende del `code` de la respuesta HTTP o será `SpanStatus.INTERNAL_ERROR` si el `code` no coincide con ningún `SpanStatus` de Sentry.
+
+Cuando la solicitud de Apollo lanza una `ApolloException`, el SDK de Sentry asocia esta excepción al span en ejecución. Si no has configurado el SDK para suprimir la excepción y capturarla, el span y el SentryEvent aparecerán vinculados al verlo en la página **Issue Details** en sentry.io.
+
+Para más información, consulta nuestra [integración de Apollo](/es/platforms/android/integrations/apollo/).
+
+<div id="sqlite-and-room-instrumentation">
+  ### Instrumentación de SQLite y Room
+</div>
+
+El [Sentry Android Gradle Plugin](/es/platforms/android/configuration/gradle/) realiza la auto-instrumentación de trazas mediante manipulación de bytecode para las bibliotecas `androidx.sqlite` y `androidx.room`.
+
+El plugin inyecta un fragmento de código que inicia un span a partir del span activo vinculado al scope para cada operación `CRUD`. El SDK establece la propiedad `operation` del span en `db` y `description` en la consulta SQL, si está disponible.
+
+El span finaliza una vez que la operación se ha ejecutado. La propiedad `status` del span se establece en `SpanStatus.OK` si se ejecuta correctamente o en `SpanStatus.INTERNAL_ERROR` si ocurre algún error.
+
+Cuando la operación lanza una `Exception`, el SDK de Sentry asocia esa excepción al span en ejecución. Si no has configurado el SDK para tragar la excepción y capturarla, el span y el SentryEvent aparecerán vinculados al verlo en la página **Issue Details** en sentry.io.
+
+Para más información, consulta nuestra [integración de Room y SQLite](/es/platforms/android/integrations/room-and-sqlite/).
+
+<div id="file-io-instrumentation">
+  ### Instrumentación de E/S de archivos
+</div>
+
+El [Sentry Android Gradle Plugin](/es/platforms/android/configuration/gradle/) realiza la auto-instrumentación de trazas mediante manipulación de bytecode para `java.io.FileInputStream`, `java.io.FileOutputStream`, `java.io.FileReader` y `java.io.FileWriter`.
+
+El plugin reemplaza las clases mencionadas con implementaciones personalizadas específicas de Sentry.
+
+La implementación de E/S de archivos específica de Sentry inicia un span a partir del span activo, vinculado al scope para cada operación de E/S de archivos. El SDK establece la `operation` del span en `file.write`/`file.read` y la `description` en `filename (pretty-printed file size)`, p. ej., `file.txt (123 kB)`.
+
+Además, el span contiene otra información útil, como `file.size` (número de bytes sin procesar) y `file.path` (ruta absoluta del archivo), como parte del payload de `data`.
+
+El span finaliza una vez que se ha ejecutado la operación. El `status` del span se establece en `SpanStatus.OK` si fue exitosa o en `SpanStatus.INTERNAL_ERROR` si hubo algún error.
+
+Cuando la operación lanza una `Exception`, el SDK de Sentry asocia esta excepción al span en ejecución. Si no has configurado el SDK para tragar la excepción y capturarla, el span y el SentryEvent estarán vinculados al verlo en la página **Issue Details** en sentry.io.
+
+Para obtener más información, consulta nuestra [integración de E/S de archivos](/es/platforms/android/integrations/file-io/).
+
+<div id="user-interaction-instrumentation">
+  ### Instrumentación de interacción del usuario
+</div>
+
+La instrumentación de la IU, una vez habilitada, captura transacciones de distintas interacciones del usuario, como clics, desplazamientos y deslizamientos. La instrumentación de interacciones del usuario está disponible tanto para las vistas clásicas de Android como para Jetpack Compose.
+
+Esta función está desactivada de forma predeterminada, pero puedes habilitarla configurando:
+
+```xml {filename:AndroidManifest.xml}
+<application>
+    <meta-data android:name="io.sentry.traces.user-interaction.enable" android:value="true" />
+</application>
+```
+
+<div id="user-interaction-instrumentation-for-classic-android-view-system">
+  #### Instrumentación de interacciones de usuario para el sistema clásico de vistas de Android
+</div>
+
+*(Nuevo en la versión 6.0.0)*
+
+El SDK compone el nombre de la transacción a partir de la `Activity` anfitriona y del `id` de la vista que capturó la interacción del usuario; por ejemplo, `LoginActivity.login_button`. La operación de la transacción se establece como `ui.action` más el tipo de interacción (uno de `click`, `scroll` o `swipe`).
+
+<Alert>
+  Si la vista no tiene asignado un `id`, la transacción no se capturará porque no puede identificarse de manera única.
+</Alert>
+
+<div id="user-interaction-instrumentation-for-jetpack-compose">
+  #### Instrumentación de interacciones de usuario para Jetpack Compose
+</div>
+
+*(Nuevo en la versión 6.10.0)*
+
+El SDK forma el nombre de la transacción a partir de la `Activity` anfitriona y del `tag` definido mediante el `Modifier.sentryTag("<tag>")` del `Composable` (por ejemplo, `LoginActivity.login_button`).
+La operación de la transacción se establece como `ui.action` más el tipo de interacción (uno de `click`, `scroll` o `swipe`).
+
+```kotlin
+import io.sentry.compose.sentryTag
+
+@Composable
+fun LoginScreen() {
+  Column {
+    // ...
+    Button(
+        modifier = Modifier.sentryTag("button_login"),
+        onClick = { TODO() }) {
+        Text(text = "Acceder")
+    }
+  }
+}
+```
+
+<Alert>
+  Si el `@Composable` no tiene un modificador `sentryTag` aplicado, la transacción no se capturará porque no puede identificarse de manera única.
+  Para capturar una transacción del `@Composable`, debes agregar un modificador `sentryTag` o habilitar el etiquetado automático de `@Composable`.
+</Alert>
+
+<div id="automatic-composable-tagging-using-the-sentry-kotlin-compiler-plugin">
+  ##### Etiquetado automático de `@Composable` con el Sentry Kotlin Compiler Plugin
+</div>
+
+<Alert>
+  El complemento Sentry Kotlin Compiler se considera *experimental*. Pruébalo y comparte tus primeras impresiones [en GitHub](https://github.com/getsentry/sentry-android-gradle-plugin).
+</Alert>
+
+El <PlatformLink to="/enhance-errors/kotlin-compiler-plugin/">Sentry Kotlin Compiler Plugin</PlatformLink> puede enriquecer automáticamente tus funciones `@Composable` durante la compilación con una etiqueta,
+basada en el nombre de la función `@Composable`.
+Para usar esta función, el complemento Sentry Kotlin Compiler debe aplicarse a todos los módulos que contengan elementos `@Composable`.
+
+```groovy {filename:app/build.gradle}
+plugins {
+  id "io.sentry.kotlin.compiler.gradle" version "{{@inject packages.version('sentry.kotlin.compiler-plugin', '3.7.0') }}"
+}
+```
+
+```kotlin {filename:app/build.gradle.kts}
+plugins {
+  id("io.sentry.kotlin.compiler.gradle") version "{{@inject packages.version('sentry.kotlin.compiler-plugin', '3.7.0') }}"
+}
+```
+
+<div id="transaction-lifetime">
+  #### Duración de la transacción
+</div>
+
+La transacción finaliza automáticamente cuando alcanza el [idleTimeout](/es/platforms/android/configuration/options/#idleTimeout) especificado y todos sus spans secundarios han terminado, o cuando alcanza el [deadlineTimeout](/es/platforms/android/configuration/options/#deadlineTimeout) especificado, incluso si aún hay spans secundarios en ejecución.
+
+El `idleTimeout` es de `3000` milisegundos (tres segundos) de forma predeterminada, y el `deadlineTimeout` es de `30000` milisegundos (treinta segundos). También puedes desactivar el tiempo de inactividad y el tiempo límite estableciéndolos en `null`, pero en ese caso la transacción debe finalizarse manualmente.
+
+Para cambiar los tiempos de espera, puedes:
+
+```xml {filename:AndroidManifest.xml}
+<application>
+    <meta-data android:name="io.sentry.traces.idle-timeout" android:value="10000" />
+    <meta-data android:name="io.sentry.traces.deadline-timeout" android:value="0" /> <!-- 0 desactiva el tiempo de espera por límite -->
+</application>
+```
+
+```java
+import io.sentry.android.core.SentryAndroid;
+
+SentryAndroid.init(this, options -> {
+    options.setIdleTimeout(null); // desactivar el tiempo de espera por inactividad
+    options.setDeadlineTimeout(0); // desactivar el tiempo límite
+});
+```
+
+```kotlin
+import io.sentry.android.core.SentryAndroid
+
+SentryAndroid.init(this) { options ->
+    options.idleTimeout = null // desactivar el tiempo de espera por inactividad
+    options.deadlineTimeout = 0 // desactivar el tiempo límite
+}
+```
+
+<Alert>
+  Si a la transacción de la UI no se le agregó ningún span hijo, se descartará.
+</Alert>
+
+Para finalizar la transacción manualmente, puedes:
+
+```java
+import io.sentry.Sentry;
+
+ISpan span = Sentry.getSpan();
+if (span != null) {
+  span.finish();
+}
+```
+
+```kotlin
+import io.sentry.Sentry
+
+val span = Sentry.getSpan()
+span?.finish()
+```
+
+Si la `Activity` anfitriona pasa a un estado no interactivo (por ejemplo, `onPause`), la transacción de UI se programará para finalizar automáticamente (en cuanto todas sus spans hijas hayan terminado).
+
+Las transacciones siempre se vinculan al `Scope` automáticamente si no hay ninguno establecido. Por ello, puedes crear spans usando instrumentación personalizada, y esos spans se asociarán automáticamente con la transacción de UI en ejecución.
+
+```java
+import java.lang.Exception;
+
+import io.sentry.ISpan;
+import io.sentry.Sentry;
+import io.sentry.SpanStatus;
+
+void loadUserDataOnClick() {
+  ISpan span = Sentry.getSpan();
+  if (span != null) {
+    ISpan innerSpan = span.startChild("loadUserData");
+    // código omitido
+    innerSpan.finish();
+  }
+}
+```
+
+```kotlin
+import java.lang.Exception
+
+import io.sentry.Sentry
+import io.sentry.SpanStatus
+
+fun loadUserDataOnClick() {
+  val span = Sentry.getSpan()
+  span?.let {
+    val innerSpan = it.startChild("loadUserData")
+    // código omitido
+    innerSpan.finish()
+  }
+}
+```
+
+Cuando la transacción de la UI aún no ha finalizado y el usuario realiza una nueva interacción, el SDK finaliza automáticamente la transacción de UI anterior. Esto se debe a que solo puede haber una transacción asociada al scope a la vez. Sin embargo, si se vuelve a interactuar con la misma vista (por ejemplo, se desplaza un `RecyclerView` nuevamente dentro de la ventana de `idleTimeout`), el temporizador de inactividad se reiniciará y la duración de la transacción se ampliará en el valor de `idleTimeout`.
+
+<div id="time-to-initial-display">
+  ### Tiempo hasta la visualización inicial
+</div>
+
+*(Nuevo en la versión 6.10.0)*
+
+Al agregar un span por cada lanzamiento de una actividad, el tiempo hasta la visualización inicial (TTID) ofrece información sobre cuánto tardan tus actividades en iniciarse y dibujar su primer fotograma de UI. El SDK establece la operación del span en `ui.load.initial-display` y la descripción del span con el nombre de la actividad, seguido de `initial display`; por ejemplo, `MainActivity initial display`.
+
+El span comienza cuando se lanza cada Activity, lo cual se define como el lanzamiento de la aplicación para la primera Activity y como el método `onPause` de la Activity anterior para cada Activity posterior que se lance.
+
+El span finaliza después de que la Activity dibuja su primer fotograma.
+
+El tiempo hasta la visualización inicial depende de tener una transacción activa vinculada al scope. Idealmente, debe usarse junto con la [instrumentación de Activity](/es/platforms/android/tracing/instrumentation/automatic-instrumentation/#activity-instrumentation), que inicia una transacción y la vincula al scope automáticamente.
+
+El siguiente gráfico muestra cómo el tiempo hasta la visualización inicial (TTID) y el [tiempo hasta la visualización completa (TTFD)](#time-to-full-display) se correlacionan con las transiciones entre actividades:
+
+![](./img/ttid-ttfd-concept.png)
+
+<div id="time-to-full-display">
+  ### Tiempo hasta la visualización completa
+</div>
+
+*(Nuevo en la versión 6.14.0)*
+
+Al agregar un span para cada lanzamiento de una actividad, el tiempo hasta la visualización completa (TTFD) ofrece información sobre cuánto tardan tus actividades en iniciarse y cargar todo su contenido. El SDK establece la operación del span como `ui.load.full-display` y la descripción del span como el nombre de la actividad seguido de `full display`; por ejemplo, `MainActivity full display`.
+
+El span comienza cuando se lanza cada Activity, lo cual se define como el lanzamiento de la aplicación para la primera Activity y el método `onPause` de la Activity anterior para cada Activity posterior lanzada.
+
+*El tiempo hasta la visualización completa está deshabilitado de forma predeterminada, pero puedes habilitarlo configurando:*
+
+```xml {filename:AndroidManifest.xml}
+<application>
+    <meta-data android:name="io.sentry.traces.time-to-full-display.enable" android:value="true" />
+</application>
+```
+
+*El span debe cerrarse manualmente, usando:*
+
+```java
+import io.sentry.Sentry;
+
+Sentry.reportFullyDisplayed();
+```
+
+```kotlin
+import io.sentry.Sentry
+
+Sentry.reportFullyDisplayed()
+```
+
+El tiempo hasta la visualización completa depende de tener una transacción activa vinculada al scope. Idealmente, debería usarse junto con [Activity Instrumentation](/es/platforms/android/tracing/instrumentation/automatic-instrumentation/#activity-instrumentation), que inicia una transacción y la vincula automáticamente al scope.
+
+Si el span finaliza a través de la API, su `status` se establece en `SpanStatus.OK`. Si el span no finaliza después de 25 segundos, el SDK lo finaliza automáticamente y su `status` se establece en `SpanStatus.DEADLINE_EXCEEDED`.
+Si el span finaliza antes de que la Activity se dibuje y se muestre por primera vez, según lo medido por el `Time to initial display`, el tiempo informado se ajustará al tiempo medido de `Time to initial display`.

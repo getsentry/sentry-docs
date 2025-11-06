@@ -1,0 +1,232 @@
+---
+title: Conceptos básicos de los comentarios de usuarios
+sidebar_order: 2
+description: >-
+  Aprende a configurar y desplegar el widget de User Feedback de Sentry para
+  captar información cualitativa de tus usuarios.
+og_image: /og-images/product-sentry-basics-user-feedback-basics.png
+---
+
+El [User Feedback Widget](/es/product/user-feedback/) de Sentry es una herramienta potente para captar información cualitativa de usuarios reales y resulta especialmente valiosa durante el lanzamiento de funciones nuevas o en beta. También puede usarse para recopilar comentarios de tus compañeros de equipo durante un lanzamiento interno.
+
+Si tratas los comentarios de usuarios como una señal fundamental en el desarrollo de producto, especialmente para betas y programas para early adopters, tu producto final ofrecerá una mejor experiencia de usuario. Una vez que hayas configurado los comentarios, recomendamos incorporar revisiones de feedback en la planificación, los stand-ups o las retros para ayudar a orientar la dirección del producto y las decisiones del roadmap.
+
+Esta guía de 4 pasos te ayudará a implementar e instrumentar User Feedback en tu aplicación.
+
+<div id="1-embed-the-widget-contextually">
+  ## 1. Inserta el widget de forma contextual
+</div>
+
+Acerca el widget al usuario, en lugar de obligarlo a buscarlo.
+
+Inserta el widget de comentarios directamente en áreas de funciones experimentales o de alto impacto. Por ejemplo, en tu pantalla de pago:
+
+![Widget de comentarios en la página de pago =650x](feedback-img/img/feedback-on-checkout-page.png)
+
+<div id="basic-implementation">
+  ### Implementación básica
+</div>
+
+Antes de implementar, asegúrate de haber configurado la integración de User Feedback para tu plataforma. Consulta la [documentación de configuración de User Feedback](/es/product/user-feedback/setup/) para obtener instrucciones de instalación específicas para tu plataforma.
+
+Aquí tienes un ejemplo sencillo de cómo abrir el formulario de comentarios al hacer clic en un botón. Este ejemplo muestra una implementación en React. El código específico variará según tu plataforma.
+
+**Ejemplo de JavaScript: Button de comentarios simple**
+
+```javascript
+import * as Sentry from "@sentry/react";
+
+function FeedbackButton() {
+  const feedback = Sentry.getFeedback();
+
+  if (!feedback) {
+    return null;
+  }
+
+  return (
+    <button
+      onClick={async () => {
+        const form = await feedback.createForm();
+        form.appendToDom();
+        form.open();
+      }}
+    >
+      Enviar comentarios
+    </button>
+  );
+}
+```
+
+<div id="2-customize-placeholder-text">
+  ## 2. Personaliza el texto del marcador de posición
+</div>
+
+Las indicaciones personalizadas generan mejores comentarios. Adapta el texto del marcador de posición al contexto de la función.
+
+Puedes personalizar el texto de la indicación que se muestra a los usuarios en el formulario de comentarios. La opción de configuración varía según la plataforma. Suele ser `messagePlaceholder` en los SDK de frontend o `labelComments` en los modales de informes de fallos en backend.
+
+<details>
+  <summary>**Ejemplo en JavaScript**</summary>
+
+  ```javascript
+  const form = await feedback.createForm({
+    messagePlaceholder: '¿Cómo fue tu experiencia con el proceso de pago?',
+  });
+  ```
+</details>
+
+Estos son ejemplos de textos de marcador de posición para guiar a los usuarios:
+
+> ¿Cómo fue tu experiencia con [el nombre de tu función]?
+
+> ¿Cómo podemos mejorar tu experiencia?
+
+> Aún estamos desarrollando [el nombre de tu función]; ¿cómo podemos mejorarla?
+
+Lo ideal es personalizar tus indicaciones para que sean específicas y claras; esto guiará a la persona usuaria a aportar información útil. Usa un lenguaje cercano para fomentar comentarios honestos y espontáneos.
+
+<div id="3-add-custom-tags-to-feedback-submissions-for-better-routing">
+  ## 3. Agrega etiquetas personalizadas a las solicitudes de comentarios para mejorar el enrutamiento
+</div>
+
+Si tienes varios botones de comentarios en tu aplicación integrados en distintas funciones, las etiquetas son clave para acelerar el enrutamiento de alertas y la asignación al equipo adecuado.
+
+Puedes aplicar etiquetas automáticamente según la ubicación del widget. Por ejemplo, usa una etiqueta personalizada como `feedback.source:checkout`. Esto permite el enrutamiento en Slack y el filtrado en los paneles. Recomendamos definir y estandarizar las etiquetas usando una única clave, como `feedback.source`.
+
+<div id="4-set-up-alerts-to-relevant-channels">
+  ## 4. Configura alertas para los canales adecuados
+</div>
+
+La retroalimentación solo es útil si la ven las personas correctas.
+
+Puedes enviar User Feedback directamente al canal del equipo correspondiente, ya uses Slack, Microsoft Teams o Discord (consulta la [lista completa de integraciones](/es/product/alerts/create-alerts/routing-alerts/#integrations)). Por ejemplo, puedes etiquetar la retroalimentación con `feedback.source:checkout` y hacer que siempre vaya a tu canal `#proj-billing` en Slack. Con este flujo de trabajo, los ingenieros ven los comentarios casi en tiempo real y asumen la responsabilidad.
+
+Sigue estos pasos para configurar alertas de retroalimentación en los canales pertinentes:
+
+1. Crea una [New Alert Rule](https://sentry.io/alerts/new/issue/) en Sentry.
+2. Desplázate a la sección &quot;Set conditions&quot; y establece el filtro &quot;IF&quot; en `The issue's category is equal to… "Feedback"` y `The event's tags match... [your custom tag]`.
+3. En el filtro “THEN”, selecciona `Send a [your integration] notification` y luego agrega los detalles del canal al que quieres enviar la retroalimentación. También puedes agregar etiquetas que quieras ver en la alerta de retroalimentación. Por ejemplo, `user.email`.
+4. Agrega un nombre y un responsable a la alerta.
+
+![Condiciones de la alerta de retroalimentación =700x](feedback-img/img/feedback-alert-conditions.png)
+
+Una vez configurada, así se ve una alerta de ejemplo:
+
+![Ejemplo de alerta de retroalimentación =600x](feedback-img/img/feedback-example-alert.png)
+
+<div id="example-use-cases">
+  ## Ejemplos de casos de uso
+</div>
+
+<Alert level="info">
+  Los siguientes ejemplos y personalizaciones están disponibles en plataformas que admiten el **User Feedback Widget** (como JavaScript, React Native, Flutter, Android y iOS). Si usas un SDK de backend, es posible que las opciones de personalización sean más limitadas. Consulta la [documentación de tu plataforma](/es/product/user-feedback/setup/) para ver las funciones y capacidades específicas.
+</Alert>
+
+<div id="thumbs-updown-buttons">
+  ### Botones de pulgar arriba/abajo
+</div>
+
+Una opción que puedes usar es colocar, de forma contextual dentro de la funcionalidad, botones de pulgar arriba/abajo que abran el formulario de comentarios. Puedes hacer un seguimiento de si alguien hizo clic en 👍 o 👎 para cada comentario con [etiquetas personalizadas](/es/platforms/javascript/enriching-events/tags/). La etiqueta aparecerá en la página Detalles de comentarios de usuario y, opcionalmente, en la alerta de comentarios tras enviar el formulario.
+
+**Personalizaciones para los botones de pulgar arriba/abajo:**
+
+* Usa textos distintos en `messagePlaceholder` para comentarios positivos y negativos («¿Qué te gustó más?» vs. «¿Cómo podemos mejorar?»)
+* Agrega etiquetas personalizadas como `feedback.type:positive` o `feedback.type:negative` para filtrar fácilmente el sentimiento
+* Personaliza `successMessageText` para incentivar acciones específicas («¡Gracias! ¿Quieres compartir más?» o «¡Gracias por ayudarnos a mejorar!»)
+* Oculta los campos de nombre/correo (`showName: false`, `showEmail: false`) para obtener comentarios rápidos y sin fricciones
+
+![Botones de comentarios de pulgar arriba/abajo =600x](feedback-img/img/feedback-thumbs-up-down.png)
+
+<details>
+  <summary>**Ver ejemplo de fragmento de código JavaScript**</summary>
+
+  ```javascript
+  "use client";
+
+  import * as Sentry from "@sentry/react";
+  import { Fragment } from "react";
+
+  export default function ThumbsUpDownButtons({source}: {source: string) {
+    const feedback = Sentry.getFeedback();
+
+    return (
+      <Fragment>
+        <strong>Was this helpful?</strong>
+        <button
+          title="I like this"
+          onClick={async () =>{
+            const form = await feedback?.createForm({
+              messagePlaceholder: 'What did you like most?',
+              tags: {
+                component: 'ThumbsUpDownButtons',
+                'feedback.source': source,
+                'feedback.type': 'positive',
+              }
+            });
+            form?.appendToDom();
+            form?.open();
+          }}
+        >
+          Yes 👍
+        </button>
+
+        <button
+          title="I don't like this"
+          onClick={async () =>{
+            const form = await feedback?.createForm({
+              messagePlaceholder: 'How can we improve?',
+              tags: {
+                component: 'ThumbsUpDownButtons',
+                'feedback.source': source,
+                'feedback.type': 'negative',
+              }
+            });
+            form?.appendToDom();
+            form?.open();
+          }}
+        >
+          No 👎
+        </button>
+      </Fragment>
+    );
+  }
+  ```
+</details>
+
+<br />
+
+<div id="beta-feature-feedback">
+  ### Comentarios sobre funciones beta
+</div>
+
+Al implementar una función nueva o experimental, agrega un botón de comentarios directamente en la interfaz de la función. Usa etiquetas personalizadas para identificar a qué función beta se refieren los comentarios, lo que facilita agregar información valiosa y seguir las tendencias de comentarios con el tiempo.
+
+**Personalizaciones para comentarios de la beta:**
+
+* Habilita las capturas de pantalla (`enableScreenshot: true`) para que los usuarios puedan mostrar problemas específicos de la interfaz o sugerencias
+* Autocompleta la información del usuario (`useSentryUser`) para reducir la fricción en usuarios con sesión iniciada
+* Personaliza la etiqueta del Button (`triggerLabel: "Give Feedback on [Feature Name]"`) para que sea específica de la función
+* Usa `colorScheme` o CSS personalizado para alinear la marca de tu función beta
+* Agrega un callback (`onSubmitSuccess`) para mostrar un mensaje personalizado: &quot;¡Gracias por ser tester beta!&quot;
+
+**Ejemplo de implementación:**
+Agrega un Button o enlace &quot;Give Feedback&quot; dentro de la interfaz de tu función beta, etiquetado con `feedback.source:beta-feature-name` y `feedback.type:beta`. Esto garantiza que todos los comentarios lleguen al canal dedicado del equipo de producto.
+
+<div id="post-transaction-feedback">
+  ### Comentarios posteriores a la transacción
+</div>
+
+Activa un aviso de comentarios después de que los usuarios completen acciones clave como el pago, el registro o la incorporación. Así capturas su experiencia inmediata mientras la tienen fresca. Usa etiquetas para diferenciar entre tipos de transacciones.
+
+**Personalizaciones para comentarios posteriores a la transacción:**
+
+* Personaliza `formTitle` y `messagePlaceholder` para que coincidan con la transacción (&quot;¿Cómo fue el pago?&quot; vs. &quot;¿Cómo fue el registro?&quot;)
+* Establece `isEmailRequired: true` en los comentarios posteriores a la transacción para poder dar seguimiento a los problemas
+* Usa `successMessageText` para reforzar la acción completada (&quot;¡Gracias! Tu pedido va en camino&quot;)
+* Agrega el callback `onFormClose` para redirigir a los usuarios a una página de confirmación o al siguiente paso
+* Ajusta los colores de tu marca con variables CSS personalizadas (`--accent-background`, `--foreground`)
+
+**Ejemplo de implementación:**
+Tras un pago exitoso, muestra un aviso de comentarios discreto que pregunte &quot;¿Cómo fue tu experiencia de pago?&quot; Etiquétalo con `feedback.source:checkout` y `feedback.type:post-transaction` para dirigirlo a tu equipo de facturación o de checkout.
+
+<PageGrid />

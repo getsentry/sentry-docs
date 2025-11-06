@@ -1,0 +1,95 @@
+---
+title: Tornado
+description: "Aprende a usar Sentry con Tornado."
+---
+
+La integración de Tornado añade compatibilidad con el [framework web Tornado](https://www.tornadoweb.org/).
+
+<div id="install">
+  ## Instalar
+</div>
+
+Instala `sentry-sdk` desde PyPI con el extra `tornado`:
+
+```bash {tabTitle:pip}
+pip install "sentry-sdk[tornado]"
+```
+
+```bash {tabTitle:uv}
+uv add "sentry-sdk[tornado]"
+```
+
+Si usas Python 3.6, también necesitas el paquete `aiocontextvars`:
+
+```bash {tabTitle:pip}
+pip install "aiocontextvars"
+```
+
+```bash {tabTitle:uv}
+uv add "aiocontextvars"
+```
+
+<div id="configure">
+  ## Configuración
+</div>
+
+Si tienes el paquete `tornado` en tus dependencias, la integración con Tornado se habilitará automáticamente al inicializar el SDK de Sentry.
+
+<PlatformContent includePath="getting-started-config" />
+
+<div id="verify">
+  ## Verifica
+</div>
+
+```python
+import asyncio
+import tornado
+
+sentry_sdk.init(...)  # igual que antes
+
+class MainHandler(tornado.web.RequestHandler):
+    def get(self):
+        1 / 0  # provoca un error
+        self.write("Hola, mundo")
+
+def make_app():
+    return tornado.web.Application([
+        (r"/", MainHandler),
+    ])
+
+async def main():
+    app = make_app()
+    app.listen(8888)
+    await asyncio.Event().wait()
+
+asyncio.run(main())
+```
+
+Cuando abras [http://localhost:8888/](http://localhost:8888/) en tu navegador, se creará una transacción en la sección de Performance de [sentry.io](https://sentry.io). Además, se enviará un evento de error a [sentry.io](https://sentry.io) y quedará asociado a la transacción.
+
+Los datos pueden tardar unos instantes en aparecer en [sentry.io](https://sentry.io).
+
+<div id="behavior">
+  ## Comportamiento
+</div>
+
+* La integración de Tornado se instalará para todas tus apps y controladores.
+
+* Se reportan todas las excepciones que generan un error interno del servidor.
+
+* Los datos de la solicitud se adjuntan a todos los eventos: **método HTTP, URL, encabezados, datos de formulario, cargas JSON**. Sentry excluye cuerpos sin procesar y cargas de archivos multipart. Sentry también excluye información de identificación personal (como IDs de usuario, nombres de usuario, cookies, encabezados de autorización, direcciones IP) a menos que configures `send_default_pii` en `True`.
+
+* Cada solicitud tiene un alcance independiente. Los cambios en el alcance dentro de una vista, por ejemplo, establecer una etiqueta, solo se aplicarán a los eventos enviados como parte de la solicitud que se está procesando.
+
+* Registrar con cualquier logger creará breadcrumbs cuando
+  la integración de [Logging](/es/platforms/python/integrations/logging/)
+  esté habilitada (habilitada por defecto).
+
+<div id="supported-versions">
+  ## Versiones compatibles
+</div>
+
+* Tornado: 6+
+* Python: 3.8+
+
+<Include name="python-use-older-sdk-for-legacy-support.mdx" />

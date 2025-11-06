@@ -1,0 +1,101 @@
+---
+title: Capa de AWS Lambda
+description: Aprende a configurar Sentry manualmente con una capa
+sidebar_order: 1000
+og_image: /og-images/platforms-python-integrations-aws-lambda-manual-layer.png
+---
+
+Esta guía te explica cómo agregar Sentry a tu función de AWS Lambda añadiendo la capa de Sentry para AWS Lambda. Este método puede instrumentarse desde el producto de Sentry por quienes tienen acceso a la infraestructura de AWS y no requiere que hagas cambios directos en el código.
+
+También puedes configurar esta función de una de las dos maneras descritas a continuación:
+
+* **Sin tocar tu código:**
+  Este método puede instrumentarse desde el producto de Sentry por quienes tienen acceso a la infraestructura de AWS y no requiere que hagas cambios directos en el código. Consulta la [guía de AWS Lambda](/es/organization/integrations/cloud-monitoring/aws-lambda/).
+* **Añadiendo manualmente la capa de Sentry para Lambda a tu función:**
+  Aunque es una forma rápida de agregar Sentry a tu función de AWS Lambda, ofrece posibilidades limitadas de configuración mediante variables de entorno. Consulta <PlatformLink to="/integrations/aws-lambda/manual-layer/">Capa de AWS Lambda</PlatformLink>.
+
+<div id="install-the-layer">
+  ## Instalar la capa
+</div>
+
+Ve a tu función Lambda:
+
+![](./img/lambda-function-detail.png)
+
+Desplázate hasta la sección **Layers** y haz clic en **Add a Layer**:
+
+![](./img/lambda-function-detail-layer.png)
+
+Selecciona la pestaña **Specify an ARN** como se muestra:
+
+Primero, establece la región y copia el ARN proporcionado:
+
+<LambdaLayerDetail canonical="aws-layer:python" />
+
+Ahora pega ese ARN en el cuadro de texto:
+
+![](./img/lambda-function-add-layer.png)
+
+<div id="configure-the-sentry-sdk">
+  ## Configura el SDK de Sentry
+</div>
+
+Para que Sentry instrumente tu función Lambda, debes cambiar el controlador (handler) de tu función y establecer el DSN de Sentry mediante variables de entorno.
+
+<div id="set-the-sentry-handler">
+  ### Configura el handler de Sentry
+</div>
+
+La capa de Sentry envolverá el handler de tu función para inicializar el SDK de Sentry dentro de ella.
+
+En tu función Lambda, ve a **Runtime settings** y haz clic en **Edit**:
+
+![](./img/lambda-function-runtime-settings.png)
+
+Toma nota de tu **Handler** actual y cámbialo a: `sentry_sdk.integrations.init_serverless_sdk.sentry_lambda_handler`
+
+![](./img/runtime-settings-handler.png)
+
+Después de guardar, abre la pestaña &quot;Configuration&quot; de tu función Lambda y establece `SENTRY_INITIAL_HANDLER` con el handler que anotaste antes:
+
+![](./img/lambda-function-configuration.png)
+
+<div id="configuration-options">
+  ### Opciones de configuración
+</div>
+
+Asegúrate, como mínimo, de que `SENTRY_DSN` y `SENTRY_INITIAL_HANDLER` estén definidos en tu entorno. Consulta la sección [&quot;Configurar el controlador de Sentry&quot;](#set-the-sentry-handler) más arriba para obtener más información.
+
+Puedes configurar Sentry estableciendo las opciones de configuración disponibles mediante variables de entorno. Consulta las [Opciones comunes](/es/platforms/python/configuration/options/#common-options) para saber más.
+
+Además, puedes definir estas variables de entorno para tu función de AWS Lambda:
+
+* `SENTRY_INITIAL_HANDLER`: La función controladora (handler) de tu función de AWS Lambda.
+* `SENTRY_TRACES_SAMPLE_RATE`: Define la [tasa de muestreo](/es/platforms/python/configuration/sampling/#sampling-transaction-events) para las transacciones.
+
+<div id="verify">
+  ## Verifica
+</div>
+
+Introduce un error en tu función y ejecútala. Si todo funciona correctamente, debería capturarse y enviarse a Sentry.io.
+
+<div id="troubleshooting">
+  ## Solución de problemas
+</div>
+
+* **Error:** `"Unable to import module 'lambda_function': urllib3 v2.0 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'OpenSSL 1.0.2k-fips  26 Jan 2017'. See: https://github.com/urllib3/urllib3/issues/2168"`
+
+  Este error significa que tienes `urllib3>=2.0` en tus dependencias. El entorno de ejecución de Python usado en AWS Lambda no es compatible con la versión 2 de urllib3, porque aún utiliza OpenSSL 1.0.
+
+  **Solución:** Hay dos formas de resolver este error:
+
+  * Usa un entorno de ejecución de Python más reciente para tu función Lambda. La versión 2+ de `urllib3` es compatible en AWS Lambda desde el runtime de Python 3.9 en adelante.
+  * O fija la dependencia de urllib3 a `urllib3<1.27` para que funcione con los entornos de ejecución de Python 3.7 y 3.8 usados en AWS Lambda.
+
+<div id="supported-versions">
+  ## Versiones compatibles
+</div>
+
+* Capa de Lambda hasta la versión 63: Python 3.6, 3.7, 3.8, 3.9
+* Capa de Lambda a partir de la versión 64: Python 3.9, 3.10, 3.11
+* Capa de Lambda a partir de la versión 77: Python 3.7, 3.8, 3.9, 3.10, 3.11

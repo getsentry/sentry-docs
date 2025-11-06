@@ -1,0 +1,263 @@
+---
+title: Alcances
+description: "En la mayoría de los casos, el SDK gestionará automáticamente los alcances por ti en las integraciones del framework. Aprende qué es un alcance y cómo puedes sacarle provecho."
+---
+
+Cuando se captura un evento y se envía a Sentry, los SDK combinan esos datos del evento con información adicional del alcance actual. En la mayoría de los casos, el SDK gestionará automáticamente los alcances por ti en las integraciones del framework y no tendrás que preocuparte por ellos. Sin embargo, deberías saber qué es un alcance y cómo puedes sacarle provecho.
+
+<div id="whats-a-scope">
+  ## ¿Qué es un scope?
+</div>
+
+Los scopes contienen información útil que se envía junto con el
+evento. Por ejemplo, los [contexts](../context/) y los
+[breadcrumbs](../breadcrumbs/) se almacenan en
+el scope. Cuando se bifurca un scope, hereda todos los datos de su scope padre.
+
+Las integraciones predeterminadas del SDK bifurcan los scopes de manera inteligente. Por
+ejemplo, las integraciones de frameworks web bifurcan los scopes alrededor de tus
+rutas o handlers de solicitudes.
+
+<div id="how-scopes-work">
+  ## Cómo funcionan los scopes
+</div>
+
+Los scopes son básicamente pilas de datos que se adjuntan a los eventos. Cuando se captura un evento, el SDK fusiona los datos de los scopes activos en el evento. Esto te permite adjuntar datos a los eventos que sean relevantes para el contexto en el que se capturó el evento.
+
+Un scope suele ser válido dentro de un callback o de un contexto de ejecución. Esto significa que varias partes de tu aplicación pueden tener distintos scopes activos al mismo tiempo. Por ejemplo, un servidor web podría gestionar varias solicitudes a la vez, y cada solicitud puede tener diferentes datos de scope que aplicar a sus eventos.
+
+Cuando llamas a una función global como `Sentry.captureException`, Sentry detecta automáticamente los scopes activos y los aplica al capturar el evento.
+
+<div id="different-kinds-of-scopes">
+  ## Diferentes tipos de ámbitos
+</div>
+
+El SDK de Sentry tiene tres tipos de ámbitos:
+
+- [Ámbito global](#global-scope)
+- [Ámbito de aislamiento](#isolation-scope)
+- [Ámbito actual](#current-scope)
+
+<div id="global-scope">
+  ### Alcance global
+</div>
+
+El alcance global se aplica a _todos_ los eventos, sin importar de dónde se originen. Puedes usarlo para almacenar datos que deban aplicarse a todos los eventos, como información del entorno.
+
+Puedes acceder al alcance global mediante `Sentry.getGlobalScope()` o `Sentry.configureScope(ScopeType.GLOBAL, globalScope -> { ... })`.
+
+<div id="isolation-scope">
+  ### Ámbito de aislamiento
+</div>
+
+El ámbito de aislamiento se utiliza para separar los eventos entre sí. Por ejemplo, cada solicitud en un servidor web podría tener su propio ámbito de aislamiento, de modo que los eventos de una solicitud no interfieran con los de otra. En la mayoría de los casos, querrás colocar en el ámbito de aislamiento los datos que deban aplicarse a tus eventos; por eso todos los métodos `Sentry.setXXX`, como `Sentry.setTag()`, escribirán datos en el ámbito de aislamiento activo. Un ejemplo clásico de datos que pertenecen al ámbito de aislamiento es el usuario: cada solicitud puede tener un usuario distinto, así que debes asegurarte de configurarlo en el ámbito de aislamiento.
+
+Puedes modificar el ámbito de aislamiento mediante `Sentry.configureScope(ScopeType.ISOLATION, isolationScope -> { ... })`, pero normalmente usarás los métodos `Sentry.setXXX` para establecer datos en el ámbito de aislamiento activo:
+
+```java
+Sentry.setTag("my-tag", "my value");
+// Es idéntico a:
+Sentry.configureScope(ScopeType.ISOLATION, scope -> {
+  scope.setTag("my-tag", "my value");
+});
+```
+
+```kotlin
+Sentry.setTag("my-tag", "my value")
+// Es idéntico a:
+Sentry.configureScope(ScopeType.ISOLATION) { scope ->
+  scope.setTag("my-tag", "my value")
+}
+```
+
+
+<div id="current-scope">
+  ### Alcance actual
+</div>
+
+El alcance actual es el alcance local que está activo en este momento. A diferencia del alcance de aislamiento, que rara vez se ramifica, el alcance actual puede ramificarse con mayor frecuencia y de forma interna. Puede usarse para almacenar datos que solo deban aplicarse a eventos específicos. En la mayoría de los casos, no deberías acceder directamente a este alcance, sino usar `Sentry.withScope` para crear un nuevo alcance que solo esté activo para una parte específica de tu código:
+
+```java
+Sentry.withScope(scope -> {
+  // scope es el ámbito actual dentro de esta función callback
+  scope.setTag("my-tag", "my value");
+  // esta etiqueta solo se aplicará a los eventos capturados dentro de esta función callback
+  // el siguiente evento tendrá la etiqueta:
+  Sentry.captureException(new Exception("my error"));
+});
+// este evento no tendrá la etiqueta:
+Sentry.captureException(new Exception("my other error"));
+```
+
+```kotlin
+Sentry.withScope { scope ->
+  // scope es el ámbito actual dentro de este callback
+  scope.setTag("my-tag", "my value")
+  // esta etiqueta solo se aplicará a los eventos capturados dentro de este callback
+  // el siguiente evento tendrá la etiqueta:
+  Sentry.captureException(Exception("my error"))
+}
+// este evento no tendrá la etiqueta:
+Sentry.captureException(Exception("my other error"))
+```
+
+Puedes modificar el alcance actual con `Sentry.configureScope(ScopeType.CURRENT, scope -> { ... })`, pero por lo general deberías usar `Sentry.withScope()` para interactuar con alcances locales.
+
+
+<div id="how-scope-data-is-applied-to-events">
+  ## Cómo se aplican los datos de Scope a los eventos
+</div>
+
+El scope global, el scope de aislamiento y el scope actual se combinan antes de que un evento (como un error o una transacción) se envíe a Sentry.
+En la mayoría de los casos, establecer algo en el scope actual reemplaza lo que se haya configurado en el scope de aislamiento o en el scope global. Si no se ha establecido en el scope actual, el valor del scope de aislamiento tiene prioridad sobre el del scope global. Si tampoco hay ningún valor en el scope de aislamiento, se usa el del scope global si está presente.
+
+Nota: hay excepciones, en las que los valores de todos los scopes se fusionan. Este es el caso de breadcrumbs, tags, extras, contexts, attachments y event processors.
+
+```java
+Sentry.configureScope(ScopeType.GLOBAL, scope -> {
+  scope.setExtra("shared", "global");
+  scope.setExtra("global", "data");
+});
+
+Sentry.configureScope(ScopeType.ISOLATION, scope -> {
+  scope.setExtra("shared", "isolation");
+  scope.setExtra("isolation", "data");
+});
+
+Sentry.configureScope(ScopeType.CURRENT, scope -> {
+  scope.setExtra("shared", "current");
+  scope.setExtra("current", "data");
+});
+
+Sentry.captureException(new Exception("my error"));
+// --> Tendrá los siguientes extras:
+// { shared: 'current', global: 'data', isolation: 'data', current: 'data' }
+```
+
+```kotlin
+Sentry.configureScope(ScopeType.GLOBAL) { scope ->
+  scope.setExtra("shared", "global")
+  scope.setExtra("global", "data")
+}
+
+Sentry.configureScope(ScopeType.ISOLATION) { scope ->
+  scope.setExtra("shared", "isolation")
+  scope.setExtra("isolation", "data")
+}
+
+Sentry.configureScope(ScopeType.CURRENT) { scope ->
+  scope.setExtra("shared", "current")
+  scope.setExtra("current", "data")
+}
+
+Sentry.captureException(Exception("mi error"))
+// --> Tendrá los siguientes extras:
+// { shared: 'current', global: 'data', isolation: 'data', current: 'data' }
+```
+
+
+<div id="configuring-the-scope">
+  ## Configurar el alcance
+</div>
+
+Hay dos formas principales de interactuar con el alcance. Puedes modificar el alcance actual mediante `Sentry.configureScope(ScopeType.CURRENT, scope -> { ... })` y usar setters en el alcance resultante, o puedes usar métodos globales como `Sentry.setTag()` directamente, que establecerán el valor en el alcance correspondiente internamente (que será el alcance de aislamiento).
+
+Puedes, por ejemplo, añadir etiquetas personalizadas o informar a Sentry sobre el usuario que está autenticado actualmente.
+
+<PlatformContent includePath="enriching-events/scopes/configure-scope" />
+
+También puedes aplicar esta configuración al desasignar un usuario al cerrar sesión:
+
+<PlatformContent includePath="enriching-events/unset-user" />
+
+Para conocer qué información útil puede asociarse con los alcances, consulta
+[contexto](../context/), [etiquetas](../tags), [usuarios](../identify-user) y [breadcrumbs](../breadcrumbs/).
+
+### Uso de <PlatformIdentifier name="with-scope" />
+
+En el siguiente ejemplo usamos <PlatformIdentifier name="with-scope" /> para adjuntar un `level` y un `tag` a un único error específico:
+
+<PlatformContent includePath="enriching-events/scopes/with-scope" />
+
+Aunque este ejemplo se parece a <PlatformIdentifier name="configure-scope" />, en realidad es muy diferente.
+Las llamadas a <PlatformIdentifier name="configure-scope" /> cambian el alcance activo; todas las llamadas posteriores a <PlatformIdentifier name="configure-scope" /> conservarán los cambios establecidos previamente, a menos que se deshagan explícitamente.
+
+Por otro lado, <PlatformIdentifier name="with-scope" /> crea un clon del alcance actual, y los cambios
+realizados permanecerán aislados dentro de la función de callback de <PlatformIdentifier name="with-scope" />. Esto te permite
+aislar más fácilmente partes de la información de contexto en ubicaciones específicas de tu código o
+incluso llamar a <PlatformIdentifier name="clear" /> para eliminar temporalmente toda la información de contexto.
+
+<div id="using-withisolationscope">
+  ## Uso de `withIsolationScope`
+</div>
+
+`withIsolationScope` funciona básicamente igual que `withScope`, pero bifurca el ámbito de aislamiento en lugar del ámbito actual. En general, el ámbito de aislamiento se bifurca con menos frecuencia que el ámbito actual y, en la mayoría de los casos, el SDK se encargará de esto automáticamente por ti.
+
+Sin embargo, si quieres aislar un proceso que no sea una solicitud (por ejemplo, un trabajo en segundo plano), puedes usar `withIsolationScope` para crear un nuevo ámbito de aislamiento que solo esté activo durante la ejecución del callback:
+
+<PlatformContent includePath="enriching-events/scopes/with-isolation-scope" />
+
+<div id="using-scope-callback-parameter">
+  ### Uso del parámetro de callback de Scope
+</div>
+
+En el siguiente ejemplo usamos el parámetro de callback de scope, disponible en todos los métodos `capture`, para adjuntar un `level` y un `tag` a un único error específico:
+
+<PlatformContent includePath="enriching-events/scopes/scope-callback-param" />
+
+Antes de que se invoque el callback, el SDK crea un clon del scope actual, y los cambios
+realizados permanecerán aislados dentro de la función de callback. Esto te permite
+aislar más fácilmente partes de la información de contexto en ubicaciones específicas de tu código o
+incluso llamar a `clear` para eliminar temporalmente toda la información de contexto.
+
+<Alert title="Importante">
+
+Cualquier excepción que ocurra dentro de la función de callback para configurar un scope local no será
+capturada, y todos los errores que ocurran se ignorarán silenciosamente y **no** se reportarán.
+
+</Alert>
+
+<div id="kotlin-coroutines">
+  ## Coroutines de Kotlin
+</div>
+
+El SDK de Sentry para Java almacena el scope y el contexto en una variable local del hilo (thread-local). Para asegurarte de que una coroutine tenga acceso al contexto correcto de Sentry, debes proporcionar una instancia de `SentryContext` al iniciarla.
+
+<div id="installation">
+  ### Instalación
+</div>
+
+```xml {tabTitle:Maven}
+<dependency>
+    <groupId>io.sentry</groupId>
+    <artifactId>sentry-kotlin-extensions</artifactId>
+    <version>{{@inject packages.version('sentry.java.kotlin-extensions', '5.0.0') }}</version>
+</dependency>
+```
+
+```groovy {tabTitle:Gradle}
+implementation 'io.sentry:sentry-kotlin-extensions:{{@inject packages.version('sentry.java.kotlin-extensions', '5.0.0') }}'
+```
+
+```scala {tabTitle: SBT}
+libraryDependencies += "io.sentry" % "sentry-kotlin-extensions" % "{{@inject packages.version('sentry.java.kotlin-extensions', '5.0.0') }}"
+```
+
+
+<div id="usage">
+  ### Uso
+</div>
+
+```kotlin
+import io.sentry.kotlin.SentryContext
+import io.sentry.Sentry
+
+launch(SentryContext()) {
+  // la etiqueta definida en la corrutina padre es visible para la corrutina hija
+  Sentry.setTag("parent-tag", "value")
+  launch() {
+    // la etiqueta definida en la corrutina hija no es visible en la corrutina padre
+    Sentry.setTag("child-tag", "value")
+  }
+}
+```

@@ -1,0 +1,89 @@
+---
+title: "Depuración de datos sensibles"
+description: "Aprende a filtrar o depurar datos sensibles dentro del SDK para que no se envíen con el evento. También puedes configurar la depuración del lado del servidor para asegurarte de que los datos no se almacenen."
+sidebar_order: 100
+keywords:
+  - pii
+  - gdpr
+  - "personally identifiable data"
+  - compliance
+---
+
+Como con cualquier servicio de terceros, es importante entender qué datos se envían a Sentry y, cuando corresponda, asegurarte de que los datos sensibles nunca lleguen a los servidores de Sentry o, como mínimo, que no se almacenen.
+
+Estos son algunos buenos ejemplos de depuración de datos que toda empresa debería considerar:
+
+* PII (información de identificación personal), como el nombre o el correo electrónico de un usuario, que tras el GDPR debería estar en la mente de todas las empresas.
+* Credenciales de autenticación, como tu contraseña o clave de AWS.
+* Propiedad intelectual (IP) confidencial, como tu color favorito o tus próximos planes para la dominación mundial.
+
+Ofrecemos las siguientes opciones según tus necesidades legales y operativas:
+
+* filtrar o depurar datos sensibles dentro del SDK, para que los datos *no se envíen* a Sentry. Los distintos SDK tienen diferentes capacidades y los cambios de configuración requieren volver a desplegar tu aplicación.
+* [configurar la depuración del lado del servidor](/es/security-legal-pii/scrubbing/server-side-scrubbing/) para asegurarte de que Sentry *no almacene* datos. Los cambios de configuración se realizan en la interfaz de Sentry y se aplican de inmediato a los nuevos eventos.
+* [ejecutar un Relay local](/es/product/relay/) en tu propio servidor entre el SDK y Sentry, de modo que los datos *no se envíen* a Sentry mientras la configuración puede seguir aplicándose sin desplegar.
+
+<Alert>
+  Asegúrate de que tu equipo conozca la política de tu empresa sobre qué se puede y qué no se puede enviar a Sentry. Recomendamos definir esta política al inicio de la implementación, comunicarla y hacerla cumplir mediante revisión de código.
+
+  Si usas Sentry en tu app móvil, lee nuestras [preguntas frecuentes sobre privacidad de datos móviles](/es/security-legal-pii/security/mobile-privacy/) para ayudarte con los detalles de privacidad de apps en Apple App Store y Google Play.
+</Alert>
+
+<div id="personally-identifiable-information-pii">
+  ## Información de identificación personal (PII)
+</div>
+
+Nuestros SDK más recientes no envían PII deliberadamente para mantenerse en el lado seguro. Este comportamiento se controla con una opción llamada [`send-default-pii`](../../configuration/options/#SendDefaultPii).
+
+Activar esta opción es necesario para que ciertas funciones de Sentry operen, pero también significa que tendrás que ser aún más cuidadoso con los datos que se envían a Sentry (usando las opciones de abajo).
+
+Si no deseas usar el comportamiento predeterminado respecto a la PII, también puedes optar por identificar a los usuarios de una manera más controlada, usando nuestro [contexto de identidad de usuario](../../enriching-events/identify-user/).
+
+<div id="scrubbing-data">
+  ## Limpieza de datos
+</div>
+
+### <PlatformIdentifier name="before-send" /> y <PlatformIdentifier name="before-send-transaction" />
+
+Los SDK ofrecen un hook <PlatformIdentifier name="before-send" />, que se invoca antes de enviar un evento de error o mensaje y puede usarse para modificar los datos del evento y eliminar información sensible. Algunos SDK también ofrecen un hook <PlatformIdentifier name="before-send-transaction" /> que hace lo mismo para las transacciones. Recomendamos usar <PlatformIdentifier name="before-send" /> y <PlatformIdentifier name="before-send-transaction" /> en los SDK para **limpiar cualquier dato antes de enviarlo**, y así asegurarte de que los datos sensibles nunca salgan del entorno local.
+
+<PlatformContent includePath="configuration/before-send/" />
+
+Los datos sensibles pueden aparecer en las siguientes áreas:
+
+* Stack-locals → Algunos SDK (Python, PHP y Node) capturan valores de variables dentro del stack trace. Estos pueden limpiarse, o bien desactivar por completo este comportamiento si es necesario.
+* Breadcrumbs → Algunos SDK (por ejemplo, JavaScript y las integraciones de logging de Java) capturan registros ejecutados previamente. **No registres PII** si usas esta función e incluyes registros como breadcrumbs en el evento. Algunos SDK de backend también registran consultas a la base de datos, que podrían necesitar limpieza. La mayoría de los SDK añadirán la cadena de consulta HTTP y el fragmento como atributo de datos al breadcrumb, lo que puede requerir limpieza.
+* User context → El comportamiento automatizado se controla mediante <PlatformIdentifier name="send-default-pii" />.
+* HTTP context → En algunos frameworks pueden capturarse cadenas de consulta como parte del contexto de la solicitud HTTP.
+* Transaction Names → En ciertas situaciones, los nombres de transacción pueden contener datos sensibles. Por ejemplo, una transacción de carga de página del navegador podría tener como nombre una URL en bruto como `/users/1234/details` (donde `1234` es un id de usuario que puede considerarse PII). En la mayoría de los casos, nuestros SDK pueden parametrizar correctamente las URL y las rutas, es decir, convertir `/users/1234/details` en `/users/:userid/details`. Sin embargo, según el framework, tu configuración de enrutamiento, condiciones de carrera y otros factores, es posible que los SDK no puedan parametrizar por completo todas tus URL.
+* HTTP Spans → La mayoría de los SDK incluirán la cadena de consulta HTTP y el fragmento como atributo de datos, por lo que el span HTTP podría requerir limpieza.
+
+Para más detalles e instrucciones de filtrado de datos, consulta <PlatformLink to="/configuration/filtering/">Filtrado de eventos</PlatformLink>.
+
+<div id="examples">
+  ### Ejemplos
+</div>
+
+**Información contextual**
+
+En lugar de enviar información confidencial en texto plano, considera aplicar un hash:
+
+<PlatformContent includePath="sensitive-data/set-tag" />
+
+Esto te permitirá correlacionarla en tus sistemas internos si es necesario, pero mantenerla confidencial para Sentry.
+
+**Detalles del usuario**
+
+Es posible que tu organización determine que los correos electrónicos no se consideran confidenciales, pero si lo son, considera enviar tu identificador interno en su lugar:
+
+<PlatformContent includePath="sensitive-data/set-user" />
+
+Al hacerlo, seguirás beneficiándote de las funciones relacionadas con el impacto en el usuario.
+
+**Integraciones de registro**
+
+Como buena práctica, siempre debes evitar registrar información confidencial. Si tienes sistemas heredados con los que necesitas lidiar, considera lo siguiente:
+
+* Anonimiza la información confidencial en las entradas de registro (por ejemplo, sustituye direcciones de correo electrónico por identificadores internos)
+* Usa <PlatformIdentifier name="before-breadcrumb" /> para filtrarla de las breadcrumbs antes de que se adjunten
+* Desactiva la integración de breadcrumbs de registro (por ejemplo, como se describe [aquí](/es/platforms/javascript/configuration/integrations/breadcrumbs/))

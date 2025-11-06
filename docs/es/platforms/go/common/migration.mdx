@@ -1,0 +1,458 @@
+---
+title: Guía de migración
+sidebar_order: 8000
+description: "Obtén más información sobre cómo migrar desde el SDK Raven en desuso."
+---
+
+<div id="how-to-move-from-raven-go-to-sentry-go">
+  ## Cómo migrar de `raven-go` a `sentry-go`
+</div>
+
+<div id="installation">
+  ### Instalación
+</div>
+
+raven-go
+
+```bash
+go get github.com/getsentry/raven-go
+```
+
+sentry-go
+
+```bash
+go get github.com/getsentry/sentry-go
+```
+
+<div id="configuration">
+  ### Configuración
+</div>
+
+raven-go
+
+```go
+import "github.com/getsentry/raven-go"
+
+func main() {
+	raven.SetDSN("___PUBLIC_DSN___")
+}
+```
+
+sentry-go
+
+```go
+import (
+	"fmt"
+	"github.com/getsentry/sentry-go"
+)
+
+func main() {
+	err := sentry.Init(sentry.ClientOptions{
+		Dsn: "___PUBLIC_DSN___",
+		// Agrega encabezados de solicitud e IP de los usuarios,
+        // visita: https://docs.sentry.io/platforms/go/data-management/data-collected/ para más información
+        SendDefaultPII: true,
+	})
+
+	if err != nil {
+		fmt.Printf("Error al inicializar Sentry: %v\n", err)
+	}
+}
+```
+
+raven-go
+
+```go
+SetDSN()
+SetDefaultLoggerName()
+SetDebug()
+SetEnvironment()
+SetRelease()
+SetSampleRate()
+SetIgnoreErrors()
+SetIncludePaths()
+```
+
+sentry-go
+
+```go
+sentry.Init(sentry.ClientOptions{
+	Dsn: "___PUBLIC_DSN___",
+	DebugWriter: os.Stderr,
+	Debug: true,
+	Environment: "entorno",
+	Release: "mi-proyecto@1.0.0",
+	SampleRate: 0.5,
+	// IgnoreErrors: A definir,
+	// IncludePaths: A definir
+})
+```
+
+Opciones disponibles: consulta la sección [Configuración](/es/platforms/go/configuration/options/).
+
+<div id="providing-ssl-certificates">
+  #### Proporcionar certificados SSL
+</div>
+
+De forma predeterminada, TLS utiliza el conjunto de autoridades certificadoras raíz del host. Si no cuentas con `ca-certificates` (que debería ser tu forma principal de solucionar la falta de certificados) y quieres usar `gocertifi` en su lugar, puedes proporcionar archivos de certificados precargados como una de las opciones en la llamada a `sentry.Init`:
+
+```go
+package main
+
+import (
+	"log"
+
+	"github.com/certifi/gocertifi"
+	"github.com/getsentry/sentry-go"
+)
+
+sentryClientOptions := sentry.ClientOptions{
+	Dsn: "___PUBLIC_DSN___",
+}
+
+rootCAs, err := gocertifi.CACerts()
+if err != nil {
+	log.Println("No se pudieron cargar los certificados CA: %v\n", err)
+} else {
+	sentryClientOptions.CaCerts = rootCAs
+}
+
+sentry.Init(sentryClientOptions)
+```
+
+<div id="usage">
+  ### Uso
+</div>
+
+<div id="capturing-errors">
+  #### Captura de errores
+</div>
+
+raven-go
+
+```go
+f, err := os.Open("nombre_archivo.ext")
+if err != nil {
+	raven.CaptureError(err, nil)
+}
+```
+
+sentry-go
+
+```go
+f, err := os.Open("archivo.ext")
+if err != nil {
+	sentry.CaptureException(err)
+}
+```
+
+<div id="capturing-panics">
+  #### Capturar pánicos
+</div>
+
+raven-go
+
+```go
+raven.CapturePanic(func() {
+	// haz todas las cosas peligrosas aquí
+}, nil)
+```
+
+sentry-go
+
+```go
+func() {
+	defer sentry.Recover()
+	// haz todas las cosas arriesgadas aquí
+}()
+```
+
+<div id="capturing-messages">
+  #### Captura de mensajes
+</div>
+
+raven-go
+
+```go
+raven.CaptureMessage("Algo malo ocurrió y me gustaría saberlo")
+```
+
+sentry-go
+
+```go
+sentry.CaptureMessage("Algo malo ocurrió y me gustaría saberlo")
+```
+
+<div id="capturing-events">
+  #### Captura de eventos
+</div>
+
+raven-go
+
+```go
+packet := &raven.Packet{
+	Message: "Evento creado a mano",
+	Extra: &raven.Extra{
+		"runtime.Version": runtime.Version(),
+		"runtime.NumCPU": runtime.NumCPU(),
+	},
+}
+raven.Capture(packet)
+```
+
+sentry-go
+
+```go
+event := sentry.NewEvent()
+event.Message = "Evento creado a mano"
+event.Extra["runtime.Version"] = runtime.Version()
+event.Extra["runtime.NumCPU"] = runtime.NumCPU()
+
+sentry.CaptureEvent(event)
+```
+
+<div id="additional-data">
+  #### Datos adicionales
+</div>
+
+Consulta la sección Contexto.
+
+<div id="event-sampling">
+  #### Muestreo de eventos
+</div>
+
+raven-go
+
+```go
+raven.SetSampleRate(0.25)
+```
+
+sentry-go
+
+```go
+sentry.Init(sentry.ClientOptions{
+	// ...
+	SampleRate: 0.25,
+})
+```
+
+<div id="awaiting-the-response-not-recommended">
+  #### En espera de respuesta (no recomendado)
+</div>
+
+```go
+raven.CaptureMessageAndWait("Algo malo ocurrió y me gustaría saberlo")
+```
+
+sentry-go
+
+```go
+sentry.CaptureMessage("Ocurrió algo malo y me gustaría saberlo")
+
+if sentry.Flush(time.Second * 2) {
+	// evento enviado
+} else {
+	// se agotó el tiempo de espera
+}
+```
+
+<div id="context">
+  ### Contexto
+</div>
+
+<div id="per-event">
+  #### Por evento
+</div>
+
+raven-go
+
+```go
+raven.CaptureError(err, map[string]string{"browser": "Firefox"}, &raven.Http{
+	Method: "GET",
+	URL: "https://example.com/raven-go"
+})
+```
+
+sentry-go
+
+```go
+sentry.WithScope(func(scope *sentry.Scope) {
+	scope.SetTag("browser", "Firefox")
+	scope.SetContext("Request", map[string]string{
+		"Method": "GET",
+		"URL": "https://example.com/raven-go",
+	})
+	sentry.CaptureException(err)
+})
+```
+
+<div id="globally">
+  #### A nivel global
+</div>
+
+<div id="sethttpcontext">
+  ##### SetHttpContext
+</div>
+
+raven-go
+
+```go
+raven.SetHttpContext(&raven.Http{
+	Method: "GET",
+	URL: "https://example.com/raven-go",
+})
+```
+
+sentry-go
+
+```go
+sentry.ConfigureScope(func(scope *sentry.Scope) {
+	scope.SetContext("Request", map[string]string{
+		"Method": "GET",
+		"URL": "https://example.com/raven-go",
+	})
+})
+```
+
+<div id="settagscontext">
+  ##### SetTagsContext
+</div>
+
+raven-go
+
+```go
+t := map[string]string{"day": "viernes", "sport": "halterofilia"}
+raven.SetTagsContext(map[string]string{"day": "viernes", "sport": "halterofilia"})
+```
+
+sentry-go
+
+```go
+sentry.ConfigureScope(func(scope *sentry.Scope) {
+	scope.SetTags(map[string]string{"day": "Viernes", "sport": "Levantamiento de pesas"})
+})
+```
+
+<div id="setusercontext">
+  ##### SetUserContext
+</div>
+
+raven-go
+
+```go
+raven.SetUserContext(&raven.User{
+	ID: "1337",
+	Username: "kamilogorek",
+	Email: "kamil@sentry.io",
+	IP: "127.0.0.1",
+})
+```
+
+sentry-go
+
+```go
+sentry.ConfigureScope(func(scope *sentry.Scope) {
+	scope.SetUser(sentry.User{
+		ID: "1337",
+		Username: "kamilogorek",
+		Email: "kamil@sentry.io",
+		IPAddress: "127.0.0.1",
+	})
+})
+```
+
+<div id="clearcontext">
+  ##### ClearContext
+</div>
+
+raven-go
+
+```go
+raven.ClearContext()
+```
+
+sentry-go
+
+```go
+sentry.ConfigureScope(func(scope *sentry.Scope) {
+	scope.Clear()
+})
+```
+
+<div id="wrapwithextra">
+  ##### WrapWithExtra
+</div>
+
+raven-go
+
+```go
+path := "filename.ext"
+f, err := os.Open(path)
+if err != nil {
+	err = raven.WrapWithExtra(err, map[string]string{"path": path, "cwd": os.Getwd()})
+	raven.CaptureError(err, nil)
+}
+```
+
+sentry-go
+
+```go
+// usa `sentry.WithScope`; consulta la "Sección Contexto por evento"
+path := "filename.ext"
+f, err := os.Open(path)
+if err != nil {
+	sentry.WithScope(func(scope *sentry.Scope) {
+		scope.SetExtras(map[string]interface{}{"path": path, "cwd": os.Getwd()})
+		sentry.CaptureException(err)
+	})
+}
+```
+
+<div id="integrations">
+  ### Integraciones
+</div>
+
+<div id="nethttp">
+  #### net/http
+</div>
+
+raven-go
+
+```go
+mux := http.NewServeMux
+http.Handle("/", raven.Recoverer(mux))
+
+// o
+
+func root(w http.ResponseWriter, r *http.Request) {}
+http.HandleFunc("/", raven.RecoveryHandler(root))
+```
+
+sentry-go
+
+```bash
+go get github.com/getsentry/sentry-go/http
+```
+
+<Break />
+
+```go
+import sentryhttp "github.com/getsentry/sentry-go/http"
+```
+
+<Break />
+
+```go
+sentryHandler := sentryhttp.New(sentryhttp.Options{
+	Repanic: false,
+	WaitForDelivery: true,
+})
+
+mux := http.NewServeMux
+http.Handle("/", sentryHandler.Handle(mux))
+
+// o bien
+
+func root(w http.ResponseWriter, r *http.Request) {}
+http.HandleFunc("/", sentryHandler.HandleFunc(root))
+```

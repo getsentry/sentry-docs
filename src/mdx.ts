@@ -42,6 +42,7 @@ import remarkVariables from './remark-variables';
 import {FrontMatter, Platform, PlatformConfig} from './types';
 import {isNotNil} from './utils';
 import {isVersioned, VERSION_INDICATOR} from './versioning';
+import { getLocale, getDefaultLocale, getLocales } from 'gt-next/server';
 
 type SlugFile = {
   frontMatter: Platform & {slug: string};
@@ -227,6 +228,10 @@ async function getAllFilesFrontMatter(): Promise<FrontMatter[]> {
   const files = await getAllFilesRecursively(docsPath);
   const allFrontMatter: FrontMatter[] = [];
 
+  // Build a set of locale folder names to ignore inside docs (we index canonical English paths)
+  // This allows placing translations under `docs/{locale}/...` without duplicating routes.
+  const localeDirs = new Set<string>(getLocales());
+
   await Promise.all(
     files.map(
       limitFunction(
@@ -237,6 +242,12 @@ async function getAllFilesFrontMatter(): Promise<FrontMatter[]> {
           }
 
           if (fileName.indexOf('/common/') !== -1) {
+            return;
+          }
+
+          // Skip files under a localized folder like `docs/es/...`
+          const firstSegment = fileName.split('/')[0];
+          if (localeDirs.has(firstSegment)) {
             return;
           }
 
@@ -434,8 +445,33 @@ export const addVersionToFilePath = (filePath: string, version: string) => {
 };
 
 export async function getFileBySlug(slug: string): Promise<SlugFile> {
+  // If this is a docs page and we're on a non-default locale, try the localized path first.
+  // Example: slug 'docs/platforms/js/index' -> try 'docs/es/platforms/js/index' when locale is 'es'.
+  const trySlugs: string[] = [slug];
+  if (slug.startsWith('docs/')) {
+    try {
+      const [locale, defaultLocale] = await Promise.all([
+        getLocale(),
+        Promise.resolve(getDefaultLocale()),
+      ]);
+      if (locale && defaultLocale && locale !== defaultLocale) {
+        const localized = path.posix.join(
+          'docs',
+          locale,
+          slug.slice('docs/'.length)
+        );
+        // Try localized first, then fallback to canonical
+        trySlugs.unshift(localized);
+      }
+    } catch {
+      // if we can't determine locale, just use canonical slug
+    }
+  }
+
+  let lastError: unknown = undefined;
+  for (const candidateSlug of trySlugs) {
   // no versioning on a config file
-  const configPath = path.join(root, slug.split(VERSION_INDICATOR)[0], 'config.yml');
+  const configPath = path.join(root, candidateSlug.split(VERSION_INDICATOR)[0], 'config.yml');
 
   let configFrontmatter: PlatformConfig | undefined;
   try {
@@ -447,14 +483,14 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
     }
   }
 
-  let mdxPath = path.join(root, `${slug}.mdx`);
-  let mdxIndexPath = path.join(root, slug, 'index.mdx');
-  let versionedMdxIndexPath = getVersionedIndexPath(root, slug, '.mdx');
-  let mdPath = path.join(root, `${slug}.md`);
-  let mdIndexPath = path.join(root, slug, 'index.md');
+  let mdxPath = path.join(root, `${candidateSlug}.mdx`);
+  let mdxIndexPath = path.join(root, candidateSlug, 'index.mdx');
+  let versionedMdxIndexPath = getVersionedIndexPath(root, candidateSlug, '.mdx');
+  let mdPath = path.join(root, `${candidateSlug}.md`);
+  let mdIndexPath = path.join(root, candidateSlug, 'index.md');
 
   if (
-    slug.startsWith('docs/platforms/') &&
+    candidateSlug.startsWith('docs/platforms/') &&
     (
       await Promise.allSettled(
         [mdxPath, mdxIndexPath, mdPath, mdIndexPath, versionedMdxIndexPath].map(p =>
@@ -464,7 +500,7 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
     ).every(r => r.status === 'rejected')
   ) {
     // Try the common folder.
-    const slugParts = slug.split('/');
+    const slugParts = candidateSlug.split('/');
     const commonPath = path.join(slugParts.slice(0, 3).join('/'), 'common');
     let commonFilePath: string | undefined;
     if (
@@ -495,10 +531,13 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
   }
 
   // check if a versioned index file exists
-  if (isVersioned(slug)) {
+  if (isVersioned(candidateSlug)) {
     try {
       await access(mdxIndexPath);
-      mdxIndexPath = addVersionToFilePath(mdxIndexPath, slug.split(VERSION_INDICATOR)[1]);
+      mdxIndexPath = addVersionToFilePath(
+        mdxIndexPath,
+        candidateSlug.split(VERSION_INDICATOR)[1]
+      );
     } catch (err) {
       // pass, the file does not exist
       if (err.code !== 'ENOENT') {
@@ -521,9 +560,11 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
     }
   }
   if (source === undefined || sourcePath === undefined) {
-    throw new Error(
-      `Failed to find a valid source file for slug "${slug}". Tried:\n${sourcePaths.join('\n')}\nErrors:\n${errors.map(e => e.message).join('\n')}`
+    // try next candidate slug, capture the last error for reporting
+    lastError = new Error(
+      `Failed to find a valid source file for slug "${candidateSlug}". Tried:\n${sourcePaths.join('\n')}\nErrors:\n${errors.map(e => e.message).join('\n')}`
     );
+    continue;
   }
 
   let cacheKey: string | null = null;
@@ -725,6 +766,13 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
   }
 
   return resultObj;
+  }
+
+  // none of the candidate slugs worked
+  if (lastError) {
+    throw lastError;
+  }
+  throw new Error(`Failed to resolve source for slug: ${slug}`);
 }
 
 const fileBySlugCache = new Map<string, Promise<SlugFile>>();
@@ -737,11 +785,25 @@ const fileBySlugCache = new Map<string, Promise<SlugFile>>();
 export const getFileBySlugWithCache: (slug: string) => Promise<SlugFile> =
   process.env.NODE_ENV === 'development'
     ? getFileBySlug
-    : (slug: string) => {
-        let cached = fileBySlugCache.get(slug);
+    : async (slug: string) => {
+        // include locale in cache key to avoid cross-locale collisions
+        let cacheKey = slug;
+        try {
+          const [locale, defaultLocale] = await Promise.all([
+            getLocale(),
+            Promise.resolve(getDefaultLocale()),
+          ]);
+          if (locale && defaultLocale && locale !== defaultLocale) {
+            cacheKey = `${locale}:${slug}`;
+          }
+        } catch {
+          // ignore locale resolution errors
+        }
+
+        let cached = fileBySlugCache.get(cacheKey);
         if (!cached) {
           cached = getFileBySlug(slug);
-          fileBySlugCache.set(slug, cached);
+          fileBySlugCache.set(cacheKey, cached);
         }
         return cached;
       };

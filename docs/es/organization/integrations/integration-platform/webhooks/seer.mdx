@@ -1,0 +1,312 @@
+---
+title: Seer
+sidebar_order: 7
+description: "Obtén más información sobre los webhooks de la plataforma de integraciones Seer de Sentry para notificaciones del análisis de corrección de issues."
+---
+
+Las integraciones de Sentry suscritas a los webhooks de Seer pueden recibir notificaciones sobre el proceso de [Issue Fix](/es/product/ai-in-sentry/seer/issue-fix/) de Seer. Estos webhooks te permiten seguir el progreso del análisis automatizado de la causa raíz, la generación de soluciones y las correcciones de código.
+
+<div id="sentry-hook-resource-header">
+  ## Sentry-Hook-Resource Header
+</div>
+
+`'Sentry-Hook-Resource': 'seer'`
+
+<div id="webhook-types">
+  ## Tipos de webhook
+</div>
+
+Los webhooks de Seer admiten siete tipos de eventos que cubren todo el ciclo de vida de la resolución de incidencias con IA:
+
+<div id="root-cause-analysis">
+  ### Análisis de la causa raíz
+</div>
+
+* `seer.root_cause_started` - Se activa cuando comienza el análisis de la causa raíz
+* `seer.root_cause_completed` - Se activa cuando el análisis de la causa raíz finaliza con resultados
+
+<div id="solution-generation">
+  ### Generación de soluciones
+</div>
+
+* `seer.solution_started` - Se activa cuando comienza la generación de la solución
+* `seer.solution_completed` - Se activa cuando se ha generado la solución
+
+<div id="code-generation">
+  ### Generación de código
+</div>
+
+* `seer.coding_started` - Se activa cuando comienza la generación o corrección de código
+* `seer.coding_completed` - Se activa cuando los cambios de código están listos
+* `seer.pr_created` - Se activa cuando se crean las solicitudes de extracción (pull requests)
+
+<div id="common-attributes">
+  ## Atributos comunes
+</div>
+
+Todos los webhooks de Seer comparten estos atributos:
+
+<div id="action">
+  ### action
+</div>
+
+* type: string
+* description: El evento específico de Seer que se produjo (p. ej., `root_cause_started`, `solution_completed`)
+
+### data[&#39;run&#95;id&#39;]
+
+* tipo: entero
+* descripción: Identificador único de esta ejecución de análisis de Seer
+
+### data[&#39;group&#95;id&#39;]
+
+* tipo: entero
+* descripción: ID de la incidencia de Sentry que se está analizando
+
+<div id="event-specific-payloads">
+  ## Cargas útiles específicas de eventos
+</div>
+
+<div id="root-cause-started">
+  ### Análisis de causa raíz iniciado
+</div>
+
+Payload mínimo que indica que el análisis ha comenzado:
+
+```json
+{
+  "action": "root_cause_started",
+  "actor": {
+    "id": "sentry",
+    "name": "Sentry",
+    "type": "application"
+  },
+  "data": {
+    "run_id": 12345,
+    "group_id": 1170820242
+  },
+  "installation": {
+    "uuid": "a8e5d37a-696c-4c54-adb5-b3f28d64c7de"
+  }
+}
+```
+
+<div id="root-cause-completed">
+  ### Causa raíz completada
+</div>
+
+Incluye la causa raíz identificada:
+
+```json
+{
+  "action": "root_cause_completed",
+  "actor": {
+    "id": "sentry",
+    "name": "Sentry",
+    "type": "application"
+  },
+  "data": {
+    "run_id": 12345,
+    "group_id": 1170820242,
+    "root_cause": {
+      "description": "Vaya, aquí hay un bug.",
+      "steps": [
+        {
+          "title": "El usuario navega a la página del panel, lo que inicia la carga.",
+          "code_snippet_and_analysis": "El navegador del usuario envía una solicitud GET a `/dashboard`. Este es el punto de entrada del problema.",
+          "timeline_item_type": "human_action",
+          "relevant_code_file": {
+            "file_path": "N/A",
+            "repo_name": "N/A"
+          },
+          "is_most_important_event": false
+        },
+        {
+          "title": "El servidor de Next.js renderiza la ruta /dashboard.",
+          "code_snippet_and_analysis": "El servidor de Next.js procesa la solicitud y se topa con el bug"
+          "timeline_item_type": "internal_code",
+          "relevant_code_file": {
+            "file_path": "src/app/page.ts",
+            "repo_name": "owner/repo"
+          },
+          "is_most_important_event": true
+        }
+      ]
+    }
+  },
+  "installation": {
+    "uuid": "a8e5d37a-696c-4c54-adb5-b3f28d64c7de"
+  }
+}
+```
+
+<div id="solution-started">
+  ### Solución iniciada
+</div>
+
+Carga mínima que indica que se ha iniciado la generación de la solución:
+
+```json
+{
+  "action": "solución_iniciada",
+  "actor": {
+    "id": "sentry",
+    "name": "Sentry",
+    "type": "aplicación"
+  },
+  "data": {
+    "run_id": 12345,
+    "group_id": 1170820242
+  },
+  "installation": {
+    "uuid": "a8e5d37a-696c-4c54-adb5-b3f28d64c7de"
+  }
+}
+```
+
+<div id="solution-completed">
+  ### Solución completada
+</div>
+
+Incluye los detalles de la solución generada:
+
+```json
+{
+  "action": "solution_completed",
+  "actor": {
+    "id": "sentry",
+    "name": "Sentry",
+    "type": "application"
+  },
+  "data": {
+    "run_id": 12345,
+    "group_id": 1170820242,
+    "solution": {
+      "description": "Esto hay que arreglarlo sí o sí.",
+      "steps": [
+        {
+          "title": "Ponte a arreglarlo",
+        },
+        {
+          "title": "Luego arregla esta otra cosa.",
+        },
+      ],
+      
+    }
+  },
+  "installation": {
+    "uuid": "a8e5d37a-696c-4c54-adb5-b3f28d64c7de"
+  }
+}
+```
+
+<div id="coding-started">
+  ### Inicio de la codificación
+</div>
+
+Carga mínima que indica que se ha iniciado la generación de código:
+
+```json
+{
+  "action": "coding_started",
+  "actor": {
+    "id": "sentry",
+    "name": "Sentry",
+    "type": "application"
+  },
+  "data": {
+    "run_id": 12345,
+    "group_id": 1170820242
+  },
+  "installation": {
+    "uuid": "a8e5d37a-696c-4c54-adb5-b3f28d64c7de"
+  }
+}
+```
+
+<div id="coding-completed">
+  ### Codificación completada
+</div>
+
+Incluye detalles sobre los cambios de código realizados:
+
+```json
+{
+  "action": "coding_completed",
+  "actor": {
+    "id": "sentry",
+    "name": "Sentry",
+    "type": "application"
+  },
+  "data": {
+    "run_id": 12345,
+    "group_id": 1170820242,
+    "changes": [
+      {
+        "repo_name": "my-app",
+        "repo_external_id": "12345",
+        "title": "fix: Inicializar variable no definida",
+        "description": "Este cambio inicializa la variable 'blooopy' antes de usarla para evitar ReferenceError",
+        "diff": "<el diff como string>",
+        "branch_name": "seer/fix-this-thing",
+      }
+    ]
+  },
+  "installation": {
+    "uuid": "a8e5d37a-696c-4c54-adb5-b3f28d64c7de"
+  }
+}
+```
+
+<div id="pr-created">
+  ### PR creado
+</div>
+
+Incluye detalles del pull request; puede haber más de uno si hay varios repositorios:
+
+```json
+{
+  "action": "pr_created",
+  "actor": {
+    "id": "sentry",
+    "name": "Sentry",
+    "type": "application"
+  },
+  "data": {
+    "run_id": 12345,
+    "group_id": 1170820242,
+    "pull_requests": [
+      {
+        "pull_request": {
+          "pr_number": 123,
+          "pr_url": "https://github.com/owner/repo/pull/123",
+          "pr_id": 456789
+        },
+        "repo_name": "my-app",
+        "provider": "github"
+      }
+    ]
+  },
+  "installation": {
+    "uuid": "a8e5d37a-696c-4c54-adb5-b3f28d64c7de"
+  }
+}
+```
+
+<div id="use-cases">
+  ## Casos de uso
+</div>
+
+Los webhooks de Seer te permiten:
+
+1. **Seguir el progreso**: Supervisar en tiempo real el estado de Seer Issue Fix
+2. **Crear notificaciones**: Enviar notificaciones personalizadas cuando las correcciones estén listas
+3. **Trazabilidad**: Mantener un registro de todas las correcciones de Seer para tus incidencias
+4. **Integraciones personalizadas**: Crear herramientas a medida que reaccionen a los resultados del análisis de Seer
+
+<div id="best-practices">
+  ## Mejores prácticas
+</div>
+
+* Guarda el `run_id` para correlacionar eventos de webhook relacionados
+* Usa el `group_id` para vincular los webhooks al issue original de Sentry

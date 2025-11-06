@@ -1,0 +1,117 @@
+---
+title: Google Cloud Functions
+description: "Obtén información sobre cómo usar Sentry con Google Cloud Functions."
+---
+
+<div id="install">
+  ## Instalación
+</div>
+
+Añade el SDK de Sentry a tu `requirements.txt`:
+
+```text {filename:requirements.txt}
+ sentry-sdk>=0.17.1
+```
+
+<Alert>
+  Actualmente, la integración de GCP solo es compatible con el entorno de ejecución de Python `3.7`. Si intentas ejecutarla con una versión más reciente (como `3.9`), se mostrará un mensaje de error (con el modo de depuración activado).
+
+  Hay compatibilidad limitada de Sentry en runtimes de Python más recientes habilitando directamente las [integraciones para frameworks compatibles](/es/platforms/python/integrations) y/o usando la [integración genérica para serverless](/es/platforms/python/integrations/serverless/).
+</Alert>
+
+<div id="configure">
+  ## Configurar
+</div>
+
+Puedes usar la integración de Google Cloud Functions para el SDK de Python de la siguiente manera:
+
+Además de capturar errores, puedes supervisar las interacciones entre varios servicios o aplicaciones [habilitando el tracing](/es/concepts/key-terms/tracing/). También puedes recopilar y analizar perfiles de rendimiento de usuarios reales con [profiling](/es/product/explore/profiling/).
+
+Selecciona qué funcionalidades de Sentry quieres instalar además de Error Monitoring para obtener a continuación las instrucciones correspondientes de instalación y configuración.
+
+<OnboardingOptionButtons
+  options={[
+'error-monitoring',
+'performance',
+'profiling',
+]}
+/>
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.gcp import GcpIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    # Agrega datos como encabezados de solicitud e IP de usuarios, si aplica;
+    # consulta https://docs.sentry.io/platforms/python/data-management/data-collected/ para más información
+    send_default_pii=True,
+    # ___PRODUCT_OPTION_START___ performance
+    # Establece traces_sample_rate en 1.0 para capturar el 100%
+    # de las transacciones para el rastreo.
+    traces_sample_rate=1.0,
+    # ___PRODUCT_OPTION_END___ performance
+    # ___PRODUCT_OPTION_START___ profiling
+    # Para recopilar perfiles de todas las sesiones de perfilado,
+    # establece `profile_session_sample_rate` en 1.0.
+    profile_session_sample_rate=1.0,
+    # Los perfiles se recopilarán automáticamente mientras
+    # haya un span activo.
+    profile_lifecycle="trace",
+    # ___PRODUCT_OPTION_END___ profiling
+    integrations=[
+        GcpIntegration(),
+    ],
+)
+
+def http_function_entrypoint(request):
+    # ...
+```
+
+<Alert title="Nota">
+  Si usas un framework web dentro de tu Cloud Function, es posible que el framework capture esas excepciones antes de que podamos verlas. Asegúrate de habilitar también la integración específica del framework, si existe. Consulta [*la página principal de Python*](/es/platforms/python/) para más información.
+</Alert>
+
+<div id="timeout-warning">
+  ### Advertencia de tiempo de espera
+</div>
+
+La advertencia de tiempo de espera informa de un problema cuando el tiempo de ejecución de la función está cerca del [límite de tiempo configurado](https://cloud.google.com/functions/docs/concepts/exec#timeout).
+
+Para habilitar la advertencia, actualiza la inicialización del SDK para establecer `timeout_warning` en `true`:
+
+```python
+sentry_sdk.init(
+    # ...
+    integrations=[
+        GcpIntegration(
+            timeout_warning=True
+        ),
+    ],
+)
+```
+
+La advertencia de tiempo de espera se envía solo si el tiempo de espera en la configuración de la Cloud Function está establecido en un valor superior a un segundo.
+
+<div id="behavior">
+  ## Comportamiento
+</div>
+
+Con la integración de Google Cloud Functions habilitada, el SDK de Python:
+
+* Informará automáticamente todos los eventos de tus Cloud Functions
+
+* Puedes <PlatformLink to="/configuration/filtering/">modificar la tasa de muestreo de transacciones</PlatformLink> usando `traces_sample_rate`.
+
+* Los informes de incidencias incluyen automáticamente:
+
+  * Un enlace a los registros de Stackdriver
+  * Detalles de la función
+  * `sys.argv` de la función
+  * Tiempo de ejecución de la función (en milisegundos)
+  * Tiempo de configuración de la función (en segundos)
+  * Puedes añadir más datos como se describe <PlatformLink to="/enriching-events/">aquí</PlatformLink>
+
+* Los datos de la solicitud se adjuntan a todos los eventos: **método HTTP, URL, cabeceras, datos de formulario, cargas JSON**. Sentry excluye los cuerpos sin procesar y las cargas de archivos multiparte. Sentry también excluye la información de identificación personal (como IDs de usuario, nombres de usuario, cookies, cabeceras de autorización, direcciones IP) a menos que configures `send_default_pii` en `True`.
+
+* Cada solicitud tiene un ámbito independiente. Los cambios en el ámbito dentro de una vista —por ejemplo, establecer una etiqueta— solo se aplicarán a los eventos enviados como parte de la solicitud que se está atendiendo.

@@ -1,0 +1,68 @@
+---
+title: React Native Navigation
+description: "Aprende a usar la instrumentación de React Native Navigation de Sentry."
+sidebar_order: 61
+---
+
+El paquete del SDK de Sentry para React Native incluye instrumentación para [React Native Navigation](https://github.com/wix/react-native-navigation). Esto te permite ver el rendimiento de tus transiciones de navegación y los errores que ocurren durante ellas. Esta página te guiará para configurar la instrumentación y adaptarla a tus necesidades.
+
+<div id="initialization">
+  ## Inicialización
+</div>
+
+Debes pasar el objeto `Navigation` importado de la librería para inicializar nuestra instrumentación de enrutamiento. Se recomienda inicializar nuestro SDK y la instrumentación de enrutamiento lo antes posible en el ciclo de vida de tu app; idealmente, antes de inicializar las pantallas.
+
+```javascript {7-9} {filename: index.js}
+import * as Sentry from "@sentry/react-native";
+import { Navigation } from 'react-native-navigation';
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.reactNativeNavigationIntegration({
+      navigation: Navigation,
+    }),
+  ],
+})
+```
+
+
+<div id="options">
+  ## Opciones
+</div>
+
+Puedes configurar la instrumentación pasando un objeto de opciones al constructor:
+
+```javascript
+Sentry.reactNativeNavigationIntegration({
+  navigation: Navigation, // Navigation de `react-native-navigation`
+  routeChangeTimeoutMs: 1_000, // predeterminado: 1_000
+  enableTabsInstrumentation: true, // predeterminado: false
+  ignoreEmptyBackNavigationTransactions: true, // predeterminado: true
+});
+```
+
+
+<div id="navigation">
+  ### navigation
+</div>
+
+Esta opción es obligatoria y debe ser el objeto `Navigation` importado de la librería de navegación.
+
+<div id="routechangetimeoutms">
+  ### routeChangeTimeoutMs
+</div>
+
+Esta opción especifica cuánto tiempo esperará la instrumentación a que la ruta se monte tras iniciar un cambio, antes de descartar la transacción. El valor predeterminado es `1_000`.
+
+<div id="enabletabsinstrumentation">
+  ### enableTabsInstrumentation
+</div>
+
+Esta instrumentación creará una transacción al cambiar de pestaña. De forma predeterminada, solo las acciones de navegación crean transacciones. El valor predeterminado es `false`.
+
+<div id="ignoreemptybacknavigationtransactions">
+  ### ignoreEmptyBackNavigationTransactions
+</div>
+
+Esto garantiza que las transacciones provenientes de rutas ya visitadas y que no tienen spans no se muestren. Esto elimina mucho ruido, de modo que la mayoría de las transacciones de navegación hacia atrás ahora se ignoran. El valor predeterminado es `true`.

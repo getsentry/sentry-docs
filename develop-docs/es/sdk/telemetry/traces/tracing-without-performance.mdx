@@ -1,0 +1,150 @@
+---
+title: Trazas sin rendimiento
+---
+
+Si los SDK de Sentry no están configurados para enviar spans (o transacciones), deberían recurrir a un modo en el que aún gestionen la continuación y la propagación de las trazas.
+Internamente, llamamos a este modo “Tracing without Performance” o, en abreviatura, “TwP” ([más información](#historical-context)).
+El modo TwP garantiza que los eventos de error y otras señales sigan conectados mediante una traza, incluso si los usuarios deciden no enviar spans o datos de rendimiento.
+
+<div id="behavior">
+  ## Comportamiento
+</div>
+
+El tracing sin Performance es el comportamiento predeterminado de los SDK cuando los usuarios [no especifican ninguna opción de tracing](#configuration).
+
+Esto significa que los SDK, de forma predeterminada, siempre:
+
+* continúan los trazados entrantes
+* adjuntan el contexto `event.contexts.trace` a los eventos (p. ej., errores, check-ins, replays)
+* adjuntan el encabezado de sobre `trace` a los sobres de Sentry, rellenado a partir del contexto de muestreo dinámico
+* propagan los datos de trazado (`sentry-trace`, `baggage`) por los canales habituales (p. ej., encabezados HTTP, elementos HTML `<meta>`, etc.), con la [decisión de muestreo](#sampling-decision) correcta
+
+<div id="configuration">
+  ## Configuración
+</div>
+
+TwP está activo de forma predeterminada si los usuarios no especifican opciones de muestreo que habiliten la recopilación y el envío de spans (es decir, el [trazado regular](#enable-regular-tracing)).
+Por ejemplo, la siguiente configuración mínima del SDK (nota la ausencia de opciones de muestreo) habilita TwP:
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+});
+```
+
+Se sale del modo TwP configurando el SDK para el [trazado normal](#enable-regular-tracing) o se desactiva parcialmente al [excluir la propagación de trazas](#disable-trace-propagation).
+
+<Alert>
+  Ten en cuenta que algunos SDK, como el SDK de JavaScript para navegador, requieren integraciones adicionales para habilitar el trazado por completo.
+  Esto está bien siempre que haya una buena razón para requerir configuración adicional (como mantener bajo control el tamaño del bundle en JS).
+</Alert>
+
+<div id="enable-regular-tracing">
+  ### Habilitar el rastreo normal
+</div>
+
+En cuanto los usuarios especifiquen una opción de rastreo en la configuración del SDK, los SDK usarán el modo de rastreo normal, lo que implica recopilar y enviar spans (o transacciones), además de continuar y propagar las trazas.
+
+Esto puede lograrse especificando `tracesSampleRate` o `tracesSampler`, o cualquier otra opción equivalente en la configuración del SDK:
+
+```js
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 0.1,
+  // o
+  tracesSampler: () => {
+    /*...*/
+  },
+});
+```
+
+Es importante tener en cuenta que establecer `tracesSampleRate: 0` no implica volver al modo TwP, sino que las decisiones de muestreo siempre serán negativas y que propagamos el trazo con una decisión de muestreo negativa.
+
+<div id="disable-trace-propagation">
+  ### Deshabilitar la propagación de trazas
+</div>
+
+Para dejar de propagar una traza, los usuarios pueden pasar un arreglo vacío (o el parámetro equivalente en su lenguaje) a la opción [`tracePropagationTargets`](/es/sdk/telemetry/traces/#tracepropagationtargets). Esto evitará que el SDK siga propagando la información de la traza.
+
+```js
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracePropagationTargets: [],
+});
+```
+
+Ten en cuenta que, en las solicitudes entrantes con encabezados de traza, los SDK deben continuar esa traza, pero no propagarla más.
+
+<div id="implementation">
+  ## Implementación
+</div>
+
+Los SDK que implementen el modo TwP deben ajustarse al comportamiento descrito en esta sección.
+Todo lo demás (p. ej., cómo almacenar los datos de trazas y las opciones específicas de trazado) se considera un detalle de implementación y puede implementarse según sea necesario.
+
+<div id="continuing-incoming-traces">
+  ### Continuación de trazas entrantes
+</div>
+
+Los SDK en modo TwP deben continuar las trazas entrantes (por ejemplo, de solicitudes HTTP entrantes) cuando estén disponibles y adjuntar los datos de la traza continuada a cualquier evento creado durante la vida útil de esa traza.
+Además, deben propagar la traza continuada como de costumbre en todas las solicitudes salientes.
+Esto significa que la continuación de trazas debería funcionar igual que en el modo de trazado normal (con spans).
+
+En el momento de redactar este documento, no hay forma de optar por no continuar las trazas entrantes en modo TwP, a menos que los usuarios inicien manualmente una nueva traza.
+
+<div id="starting-a-new-trace">
+  ### Iniciar un nuevo trace
+</div>
+
+Si un SDK en modo TwP no recibe un trace entrante, debe iniciar un nuevo trace.
+En este caso, el nuevo trace no se somete a muestreo (es decir, no hay una decisión de muestreo, ni positiva ni negativa).
+En su lugar, la decisión de muestreo se *aplaza* al siguiente SDK downstream.
+
+Esto significa que:
+
+* el SDK no debe incluir un indicador de muestreo en el [`sentry-trace` header](../#header-sentry-trace), lo que significa que el header tiene el formato `<traceId>-<spanId>`.
+  Más detalles sobre el [indicador sampled](../#the-sampled-value).
+* el [dynamic sampling context](https://develop.sentry.dev/sdk/telemetry/traces/dynamic-sampling-context/), propagado vía `baggage`, no debe contener la clave `sentry-sampled`.
+
+<div id="attaching-trace-data-to-events-and-envelopes">
+  ### Adjuntar datos de traza a eventos y sobres
+</div>
+
+Cualquier evento creado por un SDK en modo TwP debe incluir el [`trace` context](/es/sdk/event-payloads/contexts/#trace-context).
+Este contexto debe contener los datos de la traza actual, si están disponibles, igual que en el modo de trazas normal.
+
+Además, el [`trace` envelope header](/es/sdk/telemetry/traces/dynamic-sampling-context/#envelope-header) (obtenido del contexto de muestreo dinámico) debe adjuntarse a cualquier sobre de evento saliente.
+
+<div id="trace-duration-and-storage">
+  ### Duración y almacenamiento de las trazas
+</div>
+
+Las trazas en modo TwP deben tener la misma duración que las trazas normales.
+Por ejemplo, una traza TwP para un servidor backend debería, por lo general, durar lo mismo que una solicitud individual.
+Esto suele corresponderse con la vida útil de un [ámbito de aislamiento](/es/sdk/miscellaneous/hub_and_scope_refactoring/#scope) (o el ámbito actual creado dentro del ámbito de aislamiento).
+
+Los SDK en modo TwP deben almacenar los datos de la traza de forma que puedan adjuntarse a eventos y propagarse a solicitudes salientes.
+El mecanismo de almacenamiento exacto depende de la implementación del SDK, pero recomendamos usar el mismo mecanismo que para las trazas normales.
+Por lo general, esto significa almacenar los datos en el scope en un campo llamado `propagationContext`, como se [recomienda aquí](/es/sdk/telemetry/traces/distributed-tracing/).
+
+Relacionado con esto, el `propagationContext` debe rellenarse con un `traceId` y un `spanId` aleatorios si no hay una traza entrante.
+Esto —en combinación con la [especificación del encabezado `sentry-trace`](/es/sdk/telemetry/traces/#header-sentry-trace), que requiere un `spanId`— tiene una implicación importante en el producto de Sentry:
+Un `spanId` inexistente se propagará junto con la traza y se adjuntará a los eventos.
+Aunque no es lo ideal, aceptamos esta limitación, ya que el producto de Sentry puede y debe manejar spans (padre) inexistentes de todos modos.
+
+Como en el modo de trazas normal, para los SDK que inician una nueva traza, el [Dynamic Sampling Context](/es/sdk/telemetry/traces/dynamic-sampling-context/) debe rellenarse de forma diferida y congelarse durante la duración de la traza.
+Dado que no hay ningún span disponible en modo TwP, el DSC no contendrá ninguna clave relacionada con spans (`transaction`, `sample_rate` o `sampled`).
+
+En los SDK que adaptan las capacidades de trazas de OpenTelemetry ([POTel](/es/sdk/hub_and_scope_refactoring/#f-use-otel-for-performance-instrumentation-potel)), los datos de la traza en TwP también podrían almacenarse en un span no grabable.
+Por ejemplo, el SDK de Node también inicia spans de Otel no grabables en modo TwP y toma de ellos los datos de la traza. En caso de que no se inicie ningún span (p. ej., un script de Node sin manejo de solicitudes), recurre al contexto de propagación en el scope.
+Ten en cuenta que, en el caso de usar el span no grabable, el span tampoco se somete a muestreo, lo que significa que la decisión de muestreo aún debe posponerse [al iniciar una nueva traza](#starting-a-new-trace).
+
+<div id="historical-context">
+  ## Contexto histórico
+</div>
+
+El modo TwP se introdujo después de que los SDK ya podían enviar spans y transacciones. Antes de TwP, los SDK solo gestionaban trazas si el envío de spans estaba habilitado. De lo contrario, no se adjuntaban datos de trazas a ningún evento ni se propagaban las trazas más abajo en la cadena.
+
+La motivación principal de TwP fue garantizar que los errores a través de los límites de aplicaciones o servicios siguieran conectados si ocurrían en la misma traza.
+
+El nombre “Tracing without Performance” se eligió porque, en el momento de su introducción, asociábamos los spans exclusivamente con el monitoreo del rendimiento. Hoy, asociamos los spans con el “Tracing” en general, y solo (algunos de) los datos de los spans con el monitoreo del rendimiento. Por eso, desde la perspectiva actual, el nombre resulta un poco engañoso. Como modelo mental, piensa en TwP como “propagación y continuación de trazas sin spans”.

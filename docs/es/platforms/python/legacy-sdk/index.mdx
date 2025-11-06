@@ -1,0 +1,103 @@
+---
+draft: true
+categories: []
+toc: true
+title: SDK heredado
+sidebar_order: 12
+noindex: true
+tags: []
+---
+
+<Alert level="warning" title="Aviso de obsolescencia">
+  Un nuevo SDK de Python ha reemplazado esta versión obsoleta. Sentry conserva esta documentación para clientes que usan el cliente antiguo. Recomendamos usar el [SDK de Python actualizado](/es/platforms/python/) para proyectos nuevos.
+</Alert>
+
+Para integrar Sentry con Python, puedes usar la biblioteca Raven for Python (raven-python). Es el cliente oficial de Python independiente para Sentry. Puede utilizarse con cualquier intérprete moderno de Python, ya sea CPython 2.x o 3.x, PyPy o Jython. Es un proyecto de código abierto y está disponible bajo una licencia BSD muy permisiva.
+
+<div id="installation">
+  ## Instalación
+</div>
+
+Si aún no lo has hecho, empieza por descargar Raven. La forma más fácil es con *pip*:
+
+```bash
+pip install raven --upgrade
+```
+
+<div id="configuring-the-client">
+  ## Configuración del cliente
+</div>
+
+La configuración se define durante la inicialización del cliente. El cliente es una clase que puede instanciarse con una configuración específica y, a partir de entonces, todos los reportes pueden realizarse desde esa instancia. Por lo general, se crea una instancia de forma global y luego se importa según sea necesario. Para empezar, lo único que necesitas es tu DSN:
+
+```python
+from raven import Client
+client = Client('___DSN___')
+```
+
+<div id="capture-an-error">
+  ## Capturar un error
+</div>
+
+El uso más básico de raven es registrar un error específico que ocurre:
+
+```python
+from raven import Client
+
+cliente = Client('___DSN___')
+
+try:
+    1 / 0
+except ZeroDivisionError:
+    client.captureException()
+```
+
+<div id="adding-context">
+  ## Añadir contexto
+</div>
+
+Gran parte de la utilidad de Sentry proviene de los datos de contexto adicionales que acompañan a los eventos. El cliente de Python lo facilita proporcionando métodos para establecer datos de contexto locales al hilo, que luego se envían automáticamente con todos los eventos. Por ejemplo, puedes usar [`user_context()`](/es/platforms/python/legacy-sdk/api/#raven.Client.user_context "raven.Client.user_context") para definir la información del usuario actual:
+
+```python
+def manejar_solicitud(request):
+    cliente.contexto_de_usuario({
+        'email': request.user.email
+    })
+```
+
+<div id="deep-dive">
+  ## Análisis en profundidad
+</div>
+
+Sin embargo, Raven Python es más que eso. Si quieres profundizar en qué hace, cómo funciona y cómo se integra con otros sistemas, aquí tienes más para explorar:
+
+* [Uso básico](/es/platforms/python/legacy-sdk/usage/)
+* [Uso avanzado](/es/platforms/python/legacy-sdk/advanced/)
+* [Registro de breadcrumbs](/es/platforms/python/legacy-sdk/breadcrumbs/)
+* [Integraciones](/es/platforms/python/legacy-sdk/integrations/)
+  * [Bottle](/es/platforms/python/legacy-sdk/integrations/#bottle)
+  * [Celery](/es/platforms/python/legacy-sdk/integrations/#celery)
+  * [Django](/es/platforms/python/legacy-sdk/integrations/#django)
+  * [Flask](/es/platforms/python/legacy-sdk/integrations/#flask)
+  * [Amazon Web Services Lambda](/es/platforms/python/legacy-sdk/integrations/#amazon-web-services-lambda)
+  * [Logbook](/es/platforms/python/legacy-sdk/integrations/#logbook)
+  * [Logging](/es/platforms/python/legacy-sdk/integrations/#logging)
+  * [Pylons](/es/platforms/python/legacy-sdk/integrations/#pylons)
+  * [Pyramid](/es/platforms/python/legacy-sdk/integrations/#pyramid)
+  * [RQ](/es/platforms/python/legacy-sdk/integrations/#rq)
+  * [Tornado](/es/platforms/python/legacy-sdk/integrations/#tornado)
+  * [Middleware WSGI](/es/platforms/python/legacy-sdk/integrations/#wsgi-middleware)
+  * [Configuración de logging con ZConfig](/es/platforms/python/legacy-sdk/integrations/#zconfig-logging-configuration)
+  * [ZeroRPC](/es/platforms/python/legacy-sdk/integrations/#zerorpc)
+  * [Zope/Plone](/es/platforms/python/legacy-sdk/integrations/#zopeplone)
+* [Transporte](/es/platforms/python/legacy-sdk/transports/)
+* [Plataformas compatibles](/es/platforms/python/legacy-sdk/platform-support/)
+* [Referencia de la API](/es/platforms/python/legacy-sdk/api/)
+
+Recursos:
+
+* [Documentación](/es/platforms/python/legacy-sdk/)
+* [Rastreador de errores](https://github.com/getsentry/raven-python/issues)
+* [Código](https://github.com/getsentry/raven-python)
+* [Lista de correo](https://groups.google.com/group/getsentry)
+* IRC (irc.freenode.net, #sentry)

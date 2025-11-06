@@ -13,6 +13,8 @@ import {ApiExamples} from '../apiExamples/apiExamples';
 import {DocPage} from '../docPage';
 import {SmartLink} from '../smartLink';
 
+import { T } from 'gt-next';
+
 function Params({params}) {
   return (
     <dl className="api-params">
@@ -30,14 +32,14 @@ function Params({params}) {
                   </em>
                 )}
               </div>
-              {!!param.required && <div className="required">REQUIRED</div>}
+              {!!param.required && <T><div className="required">REQUIRED</div></T>}
             </dt>
 
             {!!param.description && (
               <dd>
                 {param.schema?.enum && (
                   <Fragment>
-                    <b>choices</b>:
+                    <T><b>choices</b>:</T>
                     <ul>
                       <code>
                         {param.schema?.enum.map(e => {
@@ -49,7 +51,7 @@ function Params({params}) {
                 )}
                 {param.schema?.items?.enum && (
                   <Fragment>
-                    <b>choices</b>:
+                    <T><b>choices</b>:</T>
                     <ul>
                       <code>
                         {param.schema?.items?.enum.map(e => {
@@ -144,39 +146,47 @@ export function ApiPage({api}: Props) {
           {api.descriptionMarkdown && parseMarkdown(api.descriptionMarkdown)}
 
           {!!api.pathParameters.length && (
-            <div className="api-info-row">
-              <h3>Path Parameters</h3>
-              <Params params={api.pathParameters} />
-            </div>
+            <T>
+              <div className="api-info-row">
+                <h3>Path Parameters</h3>
+                <Params params={api.pathParameters} />
+              </div>
+            </T>
           )}
 
           {!!api.queryParameters.length && (
-            <div className="api-info-row">
-              <h3>Query Parameters:</h3>
-              <Params params={api.queryParameters} />
-            </div>
+            <T>
+              <div className="api-info-row">
+                <h3>Query Parameters:</h3>
+                <Params params={api.queryParameters} />
+              </div>
+            </T>
           )}
 
           {!!api.bodyParameters.length && (
-            <div className="api-info-row">
-              <h3>Body Parameters</h3>
-              <Params params={api.bodyParameters} />
-            </div>
+            <T>
+              <div className="api-info-row">
+                <h3>Body Parameters</h3>
+                <Params params={api.bodyParameters} />
+              </div>
+            </T>
           )}
 
           {api.security?.length && (
             <div className="api-info-row">
-              <h3>Scopes</h3>
+              <T><h3>Scopes</h3></T>
 
-              <div>
+              <T>
                 <div>
-                  {'You need to '}
-                  <SmartLink to="/api/auth">
-                    authenticate via bearer auth token.
-                  </SmartLink>
+                  <div>
+                    You need to
+                    <SmartLink to="/api/auth">
+                      authenticate via bearer auth token.
+                    </SmartLink>
+                  </div>
+                  <code>{'<auth_token>'}</code> requires one of the following scopes:
                 </div>
-                <code>{'<auth_token>'}</code> requires one of the following scopes:
-              </div>
+              </T>
 
               <ul>
                 {getScopes(api, 'auth_token').map(scope => (

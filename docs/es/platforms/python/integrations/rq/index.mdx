@@ -1,0 +1,221 @@
+---
+title: RQ (Redis Queue)
+description: "Aprende a usar Sentry con RQ."
+---
+
+La integración de RQ agrega compatibilidad con el [sistema de colas de tareas RQ](https://python-rq.org/).
+
+<div id="install">
+  ## Instalación
+</div>
+
+Instala `sentry-sdk` desde PyPI con el extra `rq`:
+
+```bash {tabTitle:pip}
+pip install "sentry-sdk[rq]"
+```
+
+```bash {tabTitle:uv}
+uv add "sentry-sdk[rq]"
+```
+
+<div id="configure">
+  ## Configurar
+</div>
+
+Si tienes el paquete `rq` en tus dependencias, la integración de RQ se habilitará automáticamente al inicializar el SDK de Sentry.
+
+Crea un archivo llamado `mysettings.py` con el siguiente contenido:
+
+Además de capturar errores, puedes supervisar las interacciones entre varios servicios o aplicaciones [habilitando el trazado](/es/concepts/key-terms/tracing/). También puedes recopilar y analizar perfiles de rendimiento de usuarios reales con el [perfilado](/es/product/explore/profiling/).
+
+Selecciona qué funciones de Sentry quieres instalar, además del monitoreo de errores, para obtener a continuación las instrucciones correspondientes de instalación y configuración.
+
+<OnboardingOptionButtons
+  options={[
+'error-monitoring',
+'performance',
+'profiling',
+]}
+/>
+
+```python {filename:mysettings.py}
+# mysettings.py
+import sentry_sdk
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    # Agrega datos como encabezados de solicitud e IP de los usuarios, si corresponde;
+    # consulta https://docs.sentry.io/platforms/python/data-management/data-collected/ para obtener más información
+    send_default_pii=True,
+    # ___PRODUCT_OPTION_START___ performance
+    # Establece traces_sample_rate en 1.0 para capturar el 100 %
+    # de las transacciones para el rastreo.
+    traces_sample_rate=1.0,
+    # ___PRODUCT_OPTION_END___ performance
+    # ___PRODUCT_OPTION_START___ profiling
+    # Para recopilar perfiles de todas las sesiones de perfil,
+    # establece `profile_session_sample_rate` en 1.0.
+    profile_session_sample_rate=1.0,
+    # Los perfiles se recopilarán automáticamente mientras
+    # haya un tramo activo.
+    profile_lifecycle="trace",
+    # ___PRODUCT_OPTION_END___ profiling
+)
+```
+
+Inicia tu proceso worker con:
+
+```shell
+rq worker \
+    -c mysettings \  # nombre del módulo mysettings.py
+    --sentry-dsn="___PUBLIC_DSN___"  # solo necesario para RQ < 1.0
+```
+
+La integración informará automáticamente los errores de todos los trabajos de RQ.
+
+En general, asegúrate de que **la llamada a `init` se cargue al iniciar el worker**, y no solo en el módulo donde se definen tus trabajos. De lo contrario, la inicialización ocurrirá demasiado tarde y es posible que los eventos no se reporten.
+
+Además, asegúrate de que **`init` se llame solo una vez** en tu aplicación. Por ejemplo, si tienes una aplicación de `Flask` y un worker que depende de ella, recomendamos inicializar Sentry solo una vez. Ten en cuenta que, como la integración de Flask se habilita automáticamente, no necesitas cambiar la configuración mostrada arriba.
+
+```python {filename:app.py}
+# app.py
+import sentry_sdk
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    # Agrega datos como encabezados de solicitud e IP de usuarios, si corresponde;
+    # consulta https://docs.sentry.io/platforms/python/data-management/data-collected/ para más información
+    send_default_pii=True,
+    # ___PRODUCT_OPTION_START___ performance
+    # Establece traces_sample_rate en 1.0 para capturar el 100%
+    # de las transacciones para el rastreo.
+    traces_sample_rate=1.0,
+    # ___PRODUCT_OPTION_END___ performance
+    # ___PRODUCT_OPTION_START___ profiling
+    # Para recopilar perfiles de todas las sesiones de perfilado,
+    # establece `profile_session_sample_rate` en 1.0.
+    profile_session_sample_rate=1.0,
+    # Los perfiles se recopilarán automáticamente mientras
+    # haya un span activo.
+    profile_lifecycle="trace",
+    # ___PRODUCT_OPTION_END___ profiling
+)
+```
+
+La configuración del worker en `mysettings.py` queda así:
+
+```python {filename:mysettings.py}
+# mysettings.py
+# Esta importación inicializa el SDK de Sentry
+import app
+```
+
+<div id="verify">
+  ## Verificar
+</div>
+
+Para verificarlo, crea un script `main.py` que encole una función en RQ y luego inicia un worker de RQ para ejecutar la función:
+
+<div id="job-definition">
+  ### Definición del trabajo:
+</div>
+
+```python {filename:jobs.py}
+# jobs.py
+def hello(name):
+    1 / 0  # genera un error
+    return "¡Hola, %s!" % name
+```
+
+<div id="settings-for-worker">
+  ### Configuración del worker
+</div>
+
+```python {filename:mysettings.py}
+# mysettings.py
+import sentry_sdk
+
+# Configuración de Sentry para procesos worker de RQ
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    # Agrega datos como encabezados de solicitud e IP de usuarios, si aplica;
+    # consulta https://docs.sentry.io/platforms/python/data-management/data-collected/ para más información
+    send_default_pii=True,
+    # ___PRODUCT_OPTION_START___ performance
+    # Establece traces_sample_rate en 1.0 para capturar el 100%
+    # de las transacciones para rastreo.
+    traces_sample_rate=1.0,
+    # ___PRODUCT_OPTION_END___ performance
+    # ___PRODUCT_OPTION_START___ profiling
+    # Para recopilar perfiles de todas las sesiones de perfilado,
+    # establece `profile_session_sample_rate` en 1.0.
+    profile_session_sample_rate=1.0,
+    # Los perfiles se recopilarán automáticamente mientras
+    # haya un span activo.
+    profile_lifecycle="trace",
+    # ___PRODUCT_OPTION_END___ profiling
+)
+```
+
+<div id="main-python-script">
+  ### Script principal de Python
+</div>
+
+```python {filename:main.py}
+# main.py
+from redis import Redis
+from rq import Queue
+
+from jobs import hello
+
+import sentry_sdk
+
+# Configuración de Sentry para el proceso main.py
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    # Agrega datos como encabezados de solicitud e IP de usuarios, si aplica;
+    # consulta https://docs.sentry.io/platforms/python/data-management/data-collected/ para más información
+    send_default_pii=True,
+    # ___PRODUCT_OPTION_START___ performance
+    # Establece traces_sample_rate en 1.0 para capturar el 100%
+    # de las transacciones para el rastreo.
+    traces_sample_rate=1.0,
+    # ___PRODUCT_OPTION_END___ performance
+    # ___PRODUCT_OPTION_START___ profiling
+    # Para recopilar perfiles de todas las sesiones de perfilado,
+    # establece `profile_session_sample_rate` en 1.0.
+    profile_session_sample_rate=1.0,
+    # Los perfiles se recopilarán automáticamente mientras
+    # haya un span activo.
+    profile_lifecycle="trace",
+    # ___PRODUCT_OPTION_END___ profiling
+)
+
+q = Queue(connection=Redis())
+with sentry_sdk.start_transaction(name="testing_sentry"):
+    result = q.enqueue(hello, "World")
+```
+
+Cuando ejecutes `python main.py`, se creará una transacción llamada `testing_sentry` en la sección Performance de [sentry.io](https://sentry.io) y se generarán spans para la operación de encolado.
+
+Si ejecutas el worker de RQ con `rq worker -c mysettings`, se creará una transacción para la ejecución de `hello()`. Además, se enviará un evento de error a [sentry.io](https://sentry.io) y se asociará a la transacción.
+
+Los datos pueden tardar unos instantes en aparecer en [sentry.io](https://sentry.io).
+
+<div id="the-sentry-dsn-cli-option">
+  ## La opción de CLI `--sentry-dsn`
+</div>
+
+Pasar `--sentry-dsn=""` a RQ desactiva por la fuerza [el atajo de RQ para usar Sentry](https://python-rq.org/patterns/sentry/). En las versiones de RQ anteriores a la 1.0 esto es necesario para evitar conflictos, porque en ese entonces RQ intentaba usar el paquete `raven` en lugar de este SDK. Desde RQ 1.0 es posible usar esta opción de CLI y la configuración correspondiente de RQ para inicializar el SDK.
+
+Aun así, desaconsejamos usar esos atajos porque dificultaría proporcionar opciones al SDK más adelante. Consulta [el issue de GitHub sobre la integración de Sentry en RQ](https://github.com/rq/rq/issues/1003) para más información.
+
+<div id="supported-versions">
+  ## Versiones compatibles
+</div>
+
+* RQ: 0.6+
+* Python: 3.6+
+
+<Include name="python-use-older-sdk-for-legacy-support.mdx" />

@@ -1,0 +1,112 @@
+---
+title: Observabilidad de Cloudflare Workers
+sidebar_order: 75
+description: Aprende a configurar la observabilidad de Cloudflare Workers para enviar registros y trazas a Sentry.
+---
+
+Cloudflare Workers es compatible con la [exportación de datos conforme a OpenTelemetry (OTEL)](https://developers.cloudflare.com/workers/observability/exporting-opentelemetry-data/) para enviar registros y trazas a Sentry.
+
+- Registros: Registros de la aplicación, incluido el output de `console.log()` y los generados por el sistema
+- Trazas: Trazas que muestran el flujo de solicitudes a través de tu Worker y los servicios conectados
+
+<div id="prerequisites">
+  ## Requisitos previos
+</div>
+
+Antes de comenzar, asegúrate de contar con:
+
+- Un Worker desplegado que quieras monitorear
+- Un proyecto de Sentry al que quieras enviar datos
+
+<div id="step-1-set-up-destination-in-the-cloudflare-dashboard">
+  ## Paso 1: Configurar el destino en el panel de Cloudflare
+</div>
+
+Para configurar un destino en el panel de Cloudflare, ve a la sección [Workers Observability](https://dash.cloudflare.com/?to=/:account/workers-and-pages/observability/pipelines) de tu cuenta de Cloudflare. Luego, haz clic en **Add destination** y configura un destino de trazas o de logs.
+
+<div id="logs-destination">
+  ### Destino de registros
+</div>
+
+Para configurar el destino de tus registros, haz clic en **Add destination** y configura lo siguiente:
+
+1. Nombre del destino: `sentry-logs` (o cualquier nombre descriptivo)
+2. Tipo de destino: selecciona Logs
+3. Endpoint OTLP: tu endpoint de registros OTLP de Sentry (p. ej., `https://{HOST}/api/{PROJECT_ID}/integration/otlp/v1/logs`)
+
+```
+___OTLP_LOGS_URL___
+```
+
+4. Encabezados personalizados: Añade el encabezado de autenticación de Sentry:
+   * Nombre del encabezado: `x-sentry-auth`
+   * Valor del encabezado: `sentry sentry_key={SENTRY_PUBLIC_KEY}`, donde `{SENTRY_PUBLIC_KEY}` es la clave pública de tu proyecto en Sentry
+
+```
+sentry sentry_key=___PUBLIC_KEY___
+```
+
+Puedes encontrar tu endpoint de registros OTLP de Sentry y el valor del encabezado de autenticación en tus [Sentry Project Settings](https://sentry.io/settings/projects/), en **Client Keys (DSN)** &gt; **OpenTelemetry (OTLP)**, en la sección **OTLP Logs Endpoint**.
+
+
+<div id="traces-destination">
+  ### Destino de trazas
+</div>
+
+Para configurar el destino de trazas, haz clic en **Add destination** y configura lo siguiente:
+
+1. Nombre del destino: `sentry-traces` (o cualquier nombre descriptivo)
+2. Tipo de destino: Selecciona Traces
+3. Endpoint OTLP: Tu endpoint de trazas OTLP de Sentry (p. ej., `https://{HOST}/api/{PROJECT_ID}/integration/otlp/v1/traces`)
+
+```
+___OTLP_TRACES_URL___
+```
+
+4. Encabezados personalizados: Añade el encabezado de autenticación de Sentry:
+   * Nombre del encabezado: `x-sentry-auth`
+   * Valor del encabezado: `sentry sentry_key={SENTRY_PUBLIC_KEY}`, donde `{SENTRY_PUBLIC_KEY}` es la clave pública de tu proyecto de Sentry
+
+```
+sentry sentry_key=___PUBLIC_KEY___
+```
+
+Puedes encontrar el endpoint de trazas OTLP de Sentry y el valor del encabezado de autenticación en tus [Sentry Project Settings](https://sentry.io/settings/projects/), en **Client Keys (DSN)** &gt; **OpenTelemetry (OTLP)**, dentro de la sección **OTLP Traces Endpoint**.
+
+
+<div id="step-2-configure-your-worker">
+  ## Paso 2: Configura tu Worker
+</div>
+
+Con tus destinos creados en el panel de Cloudflare, actualiza la configuración de tu Worker para habilitar la exportación de telemetría.
+
+```toml {filename:wrangler.toml}
+[observability.traces]
+enabled = true
+# Debe coincidir con el nombre del destino en el panel de control
+destinations = [ "sentry-traces" ]
+
+[observability.logs]
+enabled = true
+# Debe coincidir con el nombre del destino en el panel de control
+destinations = [ "sentry-logs" ]
+```
+
+```jsonc {filename:wrangler.jsonc}
+{
+  "observability": {
+    "traces": {
+      "enabled": true,
+      // Debe coincidir con el nombre de destino en el dashboard
+      "destinations": ["sentry-traces"],
+    },
+    "logs": {
+      "enabled": true,
+      // Debe coincidir con el nombre de destino en el dashboard
+      "destinations": ["sentry-logs"],
+    },
+  },
+}
+```
+
+Después de actualizar tu configuración, despliega tu Worker para que los cambios surtan efecto.

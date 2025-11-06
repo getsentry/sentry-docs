@@ -1,0 +1,216 @@
+---
+title: Logrus
+description: "Logrus es un logger estructurado para Go, usado para registrar mensajes en diferentes formatos y niveles. Esta guía muestra cómo integrar Logrus con Sentry para capturar y enviar tanto registros como eventos a Sentry."
+---
+
+Como referencia rápida, hay un [ejemplo completo](https://github.com/getsentry/sentry-go/tree/master/_examples/logrus) en el repositorio del código fuente del SDK de Go.
+
+También está disponible la documentación de la API de Go para el [paquete `sentrylogrus`](https://pkg.go.dev/github.com/getsentry/sentry-go/logrus).
+
+<div id="requirements">
+  ## Requisitos
+</div>
+
+El registro estructurado de Logrus es compatible en el SDK de Sentry para Go a partir de la versión `0.34.0`.
+
+<div id="install">
+  ## Instalación
+</div>
+
+```bash
+go get github.com/getsentry/sentry-go
+go get github.com/getsentry/sentry-go/logrus
+```
+
+<div id="configure">
+  ## Configuración
+</div>
+
+<div id="initialize-the-sentry-sdk">
+  ### Inicializa el SDK de Sentry
+</div>
+
+<PlatformContent includePath="getting-started-include-logs-config" />
+
+<div id="options">
+  ### Opciones
+</div>
+
+`sentrylogrus` proporciona dos tipos de hooks para configurar la integración con Sentry. Ambos hooks aceptan estas opciones:
+
+* **Levels**: Un slice de `logrus.Level` que especifica qué niveles de registro se capturarán
+* **ClientOptions**: `sentry.ClientOptions` estándar para la configuración
+
+<div id="verify">
+  ## Verificar
+</div>
+
+Para integrar Sentry con Logrus, puedes configurar tanto hooks de log como hooks de eventos para capturar distintos tipos de datos en varios niveles de log.
+
+```go
+// Inicializar el SDK de Sentry
+if err := sentry.Init(sentry.ClientOptions{
+    Dsn: "___PUBLIC_DSN___",
+    EnableLogs:       true,
+}); err != nil {
+    log.Fatalf("Error al inicializar Sentry: %v", err)
+}
+
+logger := logrus.New()
+logger.Level = logrus.DebugLevel
+logger.Out = os.Stderr
+
+// Obtener el cliente de Sentry del hub actual
+hub := sentry.CurrentHub()
+client := hub.Client()
+if client == nil {
+    log.Fatalf("El cliente de Sentry es nil")
+}
+
+// Crear hook de log para enviar logs en nivel Info
+logHook := sentrylogrus.NewLogHookFromClient(
+    []logrus.Level{logrus.InfoLevel},
+    client,
+)
+
+// Crear hook de evento para enviar eventos en niveles Error, Fatal y Panic
+eventHook := sentrylogrus.NewEventHookFromClient(
+    []logrus.Level{
+        logrus.ErrorLevel,
+        logrus.FatalLevel,
+        logrus.PanicLevel,
+    },
+    client,
+)
+
+defer eventHook.Flush(5 * time.Second)
+defer logHook.Flush(5 * time.Second)
+logger.AddHook(eventHook)
+logger.AddHook(logHook)
+
+// Vacía antes de llamar os.Exit(1) al usar logger.Fatal
+// (de lo contrario, no se ejecutan los defers y Sentry no tiene tiempo de enviar el evento)
+logrus.RegisterExitHandler(func() {
+    eventHook.Flush(5 * time.Second)
+    logHook.Flush(5 * time.Second)
+})
+
+// El nivel Info se envía como un log a Sentry
+logger.Infof("La aplicación ha iniciado")
+
+// Ejemplo de logging con atributos
+logger.WithField("user", "test-user").Error("Ocurrió un error")
+
+// El nivel Error se envía como un evento de error a Sentry
+logger.Errorf("¡oh no!")
+
+// El nivel Fatal se envía como un evento de error a Sentry y termina la aplicación
+logger.Fatalf("no se puede continuar...")
+```
+
+<div id="loghook">
+  ### LogHook
+</div>
+
+Tienes dos formas de crear un nuevo `LogHook`: usando `sentrylogrus.NewLogHook()` y pasando `sentry.ClientOptions`, o
+usando `sentrylogrus.NewLogHookFromClient()` y pasando un `sentry.Client` ya creado. Estos hooks capturan entradas de registro y
+las envían al sistema de registro estructurado de Sentry.
+
+<div id="newloghook">
+  #### NewLogHook
+</div>
+
+```go
+logHook, err := sentrylogrus.NewLogHook(
+    []logrus.Level{logrus.InfoLevel, logrus.WarnLevel},
+    sentry.ClientOptions{
+        Dsn: "___PUBLIC_DSN___",
+        EnableLogs: true, // Necesario para las entradas de registro
+    },
+)
+```
+
+<div id="newloghookfromclient">
+  #### NewLogHookFromClient
+</div>
+
+Usa `NewLogHookFromClient` si ya inicializaste el SDK de Sentry.
+
+```go
+if err := sentry.Init(sentry.ClientOptions{
+    Dsn:        "___PUBLIC_DSN___",
+    EnableLogs: true,
+}); err != nil {
+    log.Fatalf("Error al inicializar Sentry: %v", err)
+}
+hub := sentry.CurrentHub()
+client := hub.Client()
+if client != nil {
+    logHook := sentrylogrus.NewLogHookFromClient(
+        []logrus.Level{logrus.InfoLevel, logrus.WarnLevel},
+        client,
+    )
+} else {
+    log.Fatalf("Error al inicializar Sentrylogrus: cliente nil")
+}
+```
+
+<div id="eventhook">
+  ### EventHook
+</div>
+
+Tienes dos formas de crear un nuevo `EventHook`: usando `sentrylogrus.NewEventHook()` y pasando `sentry.ClientOptions`, o
+usando `sentrylogrus.NewEventFromClient()` y pasando un `sentry.Client` ya creado. Estos hooks capturan entradas de log y
+las envían como eventos. Esto resulta útil para el seguimiento de errores y la generación de alertas.
+
+<div id="neweventhook">
+  #### NewEventHook
+</div>
+
+```go
+eventHook, err := sentrylogrus.NewEventHook(
+    []logrus.Level{logrus.ErrorLevel, logrus.FatalLevel, logrus.PanicLevel},
+    sentry.ClientOptions{
+        Dsn: "___PUBLIC_DSN___",
+        Debug: true,
+        AttachStacktrace: true,
+    },
+)
+```
+
+<div id="neweventhookfromclient">
+  #### NewEventHookFromClient
+</div>
+
+Usa `NewEventHookFromClient` si ya has inicializado el SDK de Sentry.
+
+```go
+if err := sentry.Init(sentry.ClientOptions{
+    Dsn:        "https://examplePublicKey@o0.ingest.sentry.io/0",
+    EnableLogs: true,
+}); err != nil {
+    log.Fatalf("Error al inicializar Sentry: %v", err)
+}
+hub := sentry.CurrentHub()
+client := hub.Client()
+if client != nil {
+    eventHook := sentrylogrus.NewEventHookFromClient(
+        []logrus.Level{logrus.InfoLevel, logrus.WarnLevel},
+        client,
+    )
+} else {
+    log.Fatalf("Error al inicializar Sentrylogrus: cliente nulo")
+}
+```
+
+<Alert>
+  Si usas ambos hooks, asegúrate de vaciarlos antes de que la aplicación termine y registra manejadores de salida para los registros fatales a fin de no perder eventos pendientes.
+</Alert>
+
+<Include name="logs/go-ctx-usage-alert.mdx" />
+
+<div id="logs">
+  ## Registros
+</div>
+
+Para una configuración completa de logging con Logrus, incluidas opciones avanzadas y buenas prácticas, consulta la [documentación de logs de Go](/es/platforms/go/logs/). La integración de Logrus mostrada arriba ofrece una integración fluida con las funciones de logging estructurado de Sentry.

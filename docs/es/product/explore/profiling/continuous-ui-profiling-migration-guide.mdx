@@ -1,0 +1,77 @@
+---
+title: Guía de migración a Continuous y UI Profiling
+sidebar_order: 150
+description: "Aprende a migrar de la API de perfilado basada en transacciones a las nuevas APIs de Continuous y UI Profiling."
+---
+
+Para obtener más información sobre la diferencia conceptual entre el producto anterior basado en transacciones y los nuevos Continuous Profiling y UI Profiling, consulta [la documentación Transaction vs Continuous Profiling](/es/product/explore/profiling/transaction-vs-continuous-profiling/). En resumen, las diferencias clave son:
+
+* El perfilado basado en transacciones estaba ligado al ciclo de vida de un trace. El perfilado solo ocurría durante una transacción o un root span y no podía iniciarse de forma independiente. **Continuous y UI Profiling admiten tanto un modo de ciclo de vida ligado a un trace como un modo manual que te permite controlar directamente el profiler con APIs de start/stop**.
+* Los perfiles basados en transacciones estaban limitados a 30 segundos de duración. **Continuous y UI Profiling admiten perfiles de duración arbitraria.**
+
+Esta guía se centra en cómo migrar tu instrumentación del perfilado basado en transacciones a Continuous Profiling y UI Profiling, y explica las implicaciones de facturación de la migración. Planeamos desaprobar la API basada en transacciones, por lo que te recomendamos migrar a las nuevas APIs lo antes posible.
+
+Para el resto de este documento, puedes asumir que, cuando se haga referencia a “Continuous/UI Profiling”, la misma guía aplica tanto a Continuous Profiling (orientado al backend) como a UI Profiling (orientado al frontend), aunque estén dirigidos a casos de uso diferentes.
+
+<div id="availability">
+  ## Disponibilidad
+</div>
+
+Continuous Profiling es compatible con los siguientes SDK:
+
+* [Python](/es/platforms/python/profiling/) `2.24.1`
+* [Node.js](/es/platforms/javascript/guides/node/profiling/) `9.8.0`
+
+UI Profiling es compatible con los siguientes SDK:
+
+* [iOS y macOS](/es/platforms/apple/profiling/) `8.49.0`
+* [Android (solo Java y Kotlin)](/es/platforms/android/profiling/) `8.5.0`
+
+Si estás utilizando cualquier otro SDK que actualmente admite el profiling basado en transacciones, esos SDK aún no son compatibles con Continuous Profiling ni con UI Profiling. Iremos incorporando compatibilidad para más SDK con el tiempo.
+
+<div id="identifying-current-api-usage">
+  ## Identificar el uso actual de la API
+</div>
+
+Si especificas las opciones de configuración `profiles_sample_rate` o `profiles_sampler`, estás utilizando el perfilado basado en transacciones.
+
+Si especificas las opciones de configuración `profile_session_sample_rate` y/o `profile_lifecycle`, estás utilizando Continuous Profiling o UI Profiling.
+
+<div id="migrating-to-continuousui-profiling">
+  ## Migración a Continuous/UI Profiling
+</div>
+
+<div id="1-replace-the-profiles_sample_rate-and-profiles_sampler-sdk-configuration-options-with-profile_session_sample_rate">
+  ### 1. Reemplaza las opciones de configuración del SDK `profiles_sample_rate` y `profiles_sampler` por `profile_session_sample_rate`
+</div>
+
+Hay una distinción importante en cómo se implementa el muestreo en el cliente entre el basado en transacciones y el Continuous/UI Profiling. `profiles_sample_rate` y `profiles_sampler` se usaban para evaluar si el perfil se muestrearía en cada transacción. En otras palabras, si `profiles_sample_rate` estaba configurado en 0.5, el 50% de todas las transacciones tendrían perfiles asociados. `profiles_sampler` funcionaba de manera similar; la única diferencia era que podías implementar lógica de muestreo personalizada (en lugar de una tasa fija) basada en el contexto de la transacción que se estaba muestreando.
+
+En cambio, Continuous/UI Profiling usa muestreo en el cliente con ámbito de sesión, configurado mediante el nuevo parámetro `profile_session_sample_rate`. El muestreo se evalúa una vez al inicio de cada sesión, no cada vez que se recopilan datos de perfilado. Dado que el ámbito en el que se aplica el muestreo es diferente, no puedes simplemente trasladar directamente el valor anterior de `profiles_sample_rate` a `profile_session_sample_rate`.
+
+Para controlar el comportamiento de muestreo en el cliente, establece el parámetro de configuración `profile_session_sample_rate` a un valor de 0.0–1.0 (el valor predeterminado es 0.0) para controlar la cantidad de sesiones de perfilado que se muestrean. La forma en que se aplica esta tasa de muestreo depende del contexto:
+
+* **Para Continuous Profiling**: la sesión comienza cuando se inicializa el Sentry SDK y se detiene cuando el servicio o proceso termina. El muestreo solo se evalúa una vez durante la vida del proceso (durante la inicialización).
+  * Por ejemplo, si usas Continuous Profiling con un servicio backend donde hay N instancias del mismo servicio desplegadas (como N contenedores, pods, etc.), `profile_session_sample_rate` controla el porcentaje de esas instancias que tendrán el perfilado habilitado. 0.5 significaría que un 50% aleatorio de las N instancias tendría el perfilado habilitado.
+  * El muestreo solo se volverá a evaluar cuando una instancia se reinicie o se vuelva a desplegar.
+* **Para UI Profiling:** la sesión de usuario inicial comienza cuando se inicializa el Sentry SDK, y el muestreo se evalúa por primera vez en ese punto. La sesión de usuario terminará al finalizar la aplicación o, según la plataforma, pueden existir otros eventos que finalicen una sesión de usuario (por ejemplo, enviar una aplicación móvil a segundo plano). La tasa de muestreo se volverá a evaluar en cada nueva sesión de usuario.
+  * Por ejemplo, en el navegador, la sesión del usuario comienza cuando se abre la pestaña y termina cuando se cierra. El muestreo se evaluará una vez al inicio de cada sesión, así que si `profile_session_sample_rate` está configurado en 0.5, entonces el 50% de las veces que tu aplicación se abra en una pestaña, el perfilado estará activo durante la vida de esa pestaña.
+  * En dispositivos móviles, la sesión del usuario comienza cuando la aplicación se inicia o pasa a primer plano, y termina cuando la aplicación se cierra o pasa a segundo plano. El muestreo se evaluará una vez al inicio de cada sesión, así que si `profile_session_sample_rate` está configurado en 0.5, entonces el 50% de las veces que el usuario abra tu app móvil, el perfilado estará activo hasta que el usuario envíe la app a segundo plano o la cierre.
+
+<div id="2-set-the-new-profile_lifecycle-sdk-configuration-option">
+  ### 2. Configura la nueva opción de configuración `profile_lifecycle` del SDK
+</div>
+
+Continuous/UI Profiling admite dos modos de ciclo de vida: `manual` y `trace`.
+
+**`manual` es el modo predeterminado** y te permite controlar más directamente cuándo se ejecuta el perfilador llamando a las funciones `start_profile_session` y `stop_profile_session`. Si decides usar este modo, debes agregar estas llamadas de inicio/detención en cualquier parte del código donde quieras que el perfilado esté activo. Si no se llama a `start_profile_session`, no se realizará perfilado. Ten en cuenta que esto respeta `profile_session_sample_rate`: si la sesión no es muestreada, no se recopilarán datos de perfilado incluso si se llama a `start_profile_session`.
+
+**Si quieres un comportamiento de perfilado más automatizado, análogo al anterior basado en transacciones, puedes usar el modo de ciclo de vida `trace`.** En este modo, no necesitas llamar manualmente a `start_profile_session` y `stop_profile_session` porque el perfilado se iniciará y detendrá automáticamente siempre que haya una transacción activa o un span raíz. Este modo respeta `profile_session_sample_rate`, igual que el modo `manual`, pero también respeta `traces_sample_rate` y `traces_sampler`: para que se realice el perfilado, la sesión de perfilado debe ser muestreada y la traza también debe ser muestreada.
+
+<div id="updating-your-subscription">
+  ## Actualizar tu suscripción
+</div>
+
+El acceso a Continuous/UI Profiling solo está disponible a través de tu presupuesto de pago por uso (PAYG). Para configurar un presupuesto PAYG o realizar cambios en el existente, ve a tu página de [**Settings**](https://sentry.io/orgredirect/organizations/:orgslug/settings/) y haz clic en &quot;Subscription&quot; (en &quot;Usage &amp; Billing&quot;). Consulta nuestra [**pricing docs**](/es/pricing/) para obtener más información.
+
+Puedes ver la cantidad de horas de Continuous y/o UI Profile de tus perfiles basados en transacciones visitando la página de Stats, lo que te ayudará a estimar las horas de profiling que necesitarás al migrar.

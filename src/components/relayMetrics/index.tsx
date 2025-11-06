@@ -7,6 +7,8 @@ import styles from './styles.module.scss';
 
 import {Alert} from '../alert';
 
+import { T } from 'gt-next';
+
 export function RelayMetrics() {
   const metricsWithMarkdown = metrics.map(metric => ({
     ...metric,
@@ -24,10 +26,12 @@ export function RelayMetrics() {
 function RelayFeatures({features}) {
   if (Array.isArray(features) && features.includes('processing')) {
     return (
-      <Alert title="Note">
-        This metric is emitted only when Relay runs as internal Sentry service for event
-        ingestion (<code>processing</code> feature).
-      </Alert>
+      <T>
+        <Alert title="Note">
+          This metric is emitted only when Relay runs as internal Sentry service for event
+          ingestion (<code>processing</code> feature).
+        </Alert>
+      </T>
     );
   }
 

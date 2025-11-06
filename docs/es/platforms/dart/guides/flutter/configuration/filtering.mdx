@@ -1,0 +1,120 @@
+---
+title: Filtrado
+sidebar_order: 60
+description: "Obtén más información sobre cómo configurar tu SDK para filtrar los eventos enviados a Sentry."
+---
+
+Cuando integras Sentry en tu app, obtienes mucha información valiosa sobre errores y rendimiento. Y mucha información es buena, siempre y cuando sea la correcta y en una cantidad razonable.
+
+Los SDK de Sentry ofrecen varias opciones de configuración para ayudarte a filtrar eventos.
+
+También ofrecemos [Filtros de entrada](/es/concepts/data-management/filtering/) para filtrar eventos en sentry.io. Aun así, recomendamos filtrar a nivel del cliente, porque evita la sobrecarga de enviar eventos que en realidad no quieres. Obtén más información sobre los [campos disponibles en un evento](https://develop.sentry.dev/sdk/data-model/event-payloads/).
+
+<div id="filtering-error-events">
+  ## Filtrado de eventos de error
+</div>
+
+Configura tu SDK para filtrar eventos de error usando la devolución de llamada <PlatformIdentifier name="before-send" /> y configurando, habilitando o deshabilitando integraciones.
+
+### Uso de <PlatformIdentifier name="before-send" />
+
+Todos los SDK de Sentry admiten el método de callback <PlatformIdentifier name="before-send" />. Como se ejecuta inmediatamente antes de enviar el evento al servidor, esta es tu última oportunidad para decidir no enviar los datos o editarlos. <PlatformIdentifier name="before-send" /> recibe el objeto del evento como parámetro, que puedes usar para modificar los datos del evento o descartarlo por completo devolviendo `null`, según tu lógica personalizada y los datos disponibles en el evento.
+
+<PlatformContent includePath="configuration/before-send/" />
+
+Ten en cuenta también que los breadcrumbs se pueden filtrar, como se explica en [nuestra documentación de Breadcrumbs](/es/product/error-monitoring/breadcrumbs/).
+
+<div id="event-hints">
+  #### Sugerencias de eventos
+</div>
+
+El callback <PlatformIdentifier name="before-send" /> recibe tanto el `event` como un segundo argumento, `hint`, que contiene una o más sugerencias.
+
+Por lo general, un `hint` incluye la excepción original para poder extraer datos adicionales o influir en el agrupamiento. En este ejemplo, la huella digital se fuerza a un valor común si se captura una excepción de cierto tipo:
+
+<PlatformContent includePath="configuration/before-send-hint" />
+
+Cuando el SDK crea un evento o breadcrumb para su envío, normalmente lo genera a partir de algún tipo de objeto de origen. Por ejemplo, un evento de error suele crearse a partir de un registro de logs o de una instancia de excepción. Para una mejor personalización, los SDK envían estos objetos a ciertos callbacks (<PlatformIdentifier name="before-send" />, <PlatformIdentifier name="before-breadcrumb" /> o al sistema de procesadores de eventos en el SDK).
+
+<div id="using-hints">
+  ### Uso de hints
+</div>
+
+Los hints están disponibles en dos lugares:
+
+1. <PlatformIdentifier name="before-send" /> / <PlatformIdentifier name="before-breadcrumb" />
+2. `eventProcessors`
+
+Los `hints` de eventos y breadcrumbs son objetos que contienen diversa información usada para construir un evento o un breadcrumb. Por lo general, los `hints` conservan la excepción original para extraer datos adicionales o influir en el agrupamiento.
+
+Para los eventos, los hints incluyen propiedades como `event_id`, `originalException`, `syntheticException` (usada internamente para generar un stack trace más limpio) y cualquier otro `data` arbitrario que adjuntes.
+
+En el caso de los breadcrumbs, el uso de los `hints` depende de la implementación. Para solicitudes XHR, el hint contiene el propio objeto xhr; para interacciones de usuario, el hint contiene el elemento del DOM, el nombre del evento, y así sucesivamente.
+
+<PlatformContent includePath="configuration/before-send-fingerprint">
+  En este ejemplo, la fingerprint se fuerza a un valor común si se captura una excepción de cierto tipo:
+</PlatformContent>
+
+<div id="hints-for-events">
+  #### Sugerencias para eventos
+</div>
+
+`originalException`
+
+La excepción original que hizo que el SDK de Sentry creara el evento. Esto es útil para cambiar cómo el SDK de Sentry agrupa los eventos o para extraer información adicional.
+
+`syntheticException`
+
+Cuando se lanza una cadena o un objeto que no es un error, Sentry crea una excepción sintética para que puedas obtener un stack trace básico. Esta excepción se guarda aquí para extraer más datos.
+
+<div id="hints-for-breadcrumbs">
+  #### Sugerencias para migas de pan
+</div>
+
+<PlatformContent includePath="configuration/breadcrumb-hints" />
+
+<div id="using-allowurls-web-only">
+  #### Uso de `allowUrls` (solo Web)
+</div>
+
+Según la URL, puedes determinar si los eventos deben enviarse a Sentry.
+Con `allowUrls`, los eventos solo se envían si la URL coincide con el patrón especificado en `allowUrls`.
+`allowUrls` acepta expresiones regulares.
+
+Si se utiliza en una plataforma que no sea Web, esta configuración se ignorará.
+
+<PlatformContent includePath="configuration/allow-urls" />
+
+<div id="using-denyurls-web-only">
+  #### Uso de `denyUrls` (solo Web)
+</div>
+
+Puedes excluir eventos enviados a Sentry según la URL.
+Con `denyUrls`, los eventos se ignoran si la URL coincide con el patrón especificado en `denyUrls`.
+`denyUrls` admite expresiones regulares.
+
+Cuando se usa junto con `allowUrls`, puedes bloquear subdominios específicos de los dominios incluidos en `allowUrls`.
+
+Si se utiliza en una plataforma distinta de Web, esta configuración se ignorará.
+
+<PlatformContent includePath="configuration/deny-urls" />
+
+<div id="filtering-transaction-events">
+  ## Filtrado de eventos de transacción
+</div>
+
+Para impedir que ciertas transacciones se envíen a Sentry, usa la opción de configuración <PlatformIdentifier name="traces-sampler" /> o <PlatformIdentifier name="before-send-transaction" />, que te permite definir una función para evaluar la transacción actual y descartarla si no te interesa.
+
+### Uso de <PlatformIdentifier name="traces-sampler" />
+
+**Nota:** Las opciones de configuración <PlatformIdentifier name="traces-sampler" /> y <PlatformIdentifier name="traces-sample-rate" /> son mutuamente excluyentes. Si defines un <PlatformIdentifier name="traces-sampler" /> para filtrar ciertas transacciones, también debes manejar el caso de las transacciones no filtradas devolviendo la tasa a la que quieres muestrearlas.
+
+En su forma más simple, usada solo para filtrar la transacción, luce así:
+
+<PlatformContent includePath="performance/traces-sampler-as-filter" />
+
+También te permite muestrear distintas transacciones a diferentes tasas.
+
+Si la transacción que se está procesando actualmente tiene una transacción principal (proveniente de un servicio ascendente que llama a este servicio), la decisión de muestreo de la transacción principal (ascendente) siempre se incluirá en los datos del contexto de muestreo, para que tu <PlatformIdentifier name="traces-sampler" /> pueda decidir si y cuándo heredar esa decisión. En la mayoría de los casos, heredar es lo adecuado para evitar romper trazas distribuidas. Una traza rota no incluirá todos tus servicios. Consulta <PlatformLink to="/configuration/sampling/#inheritance">Heredar la decisión de muestreo del padre</PlatformLink> para obtener más información.
+
+Más información sobre <PlatformLink to="/configuration/sampling/">configurar la tasa de muestreo</PlatformLink>.

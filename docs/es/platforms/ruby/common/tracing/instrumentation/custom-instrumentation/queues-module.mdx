@@ -1,0 +1,97 @@
+---
+title: Colas e instrumentación
+sidebar_order: 3000
+description: "Aprende a instrumentar manualmente tu código para usar el módulo Queues de Sentry. "
+---
+
+Sentry incluye instrumentación automática para los sistemas de colas de mensajería más comunes. Si el tuyo no está admitido, aún puedes instrumentar spans y transacciones personalizadas en torno a tus productores y consumidores de colas para asegurarte de contar con datos de rendimiento sobre tus colas de mensajería.
+
+<div id="producer-instrumentation">
+  ## Instrumentación del productor
+</div>
+
+Para empezar a capturar métricas de rendimiento, usa la función `Sentry.with_child_span` para envolver los eventos del productor de la cola. El `op` del span debe establecerse en `queue.publish`. Incluye los siguientes datos del span para enriquecer tus spans de productor con métricas de la cola:
+
+| Atributo de datos | Tipo | Descripción |
+|:--|:--|:--|
+| `messaging.message.id ` | string | Identificador del mensaje |
+| `messaging.destination.name` | string | Nombre de la cola o del tópico |
+| `messaging.message.body.size` | int | Tamaño del cuerpo del mensaje en bytes |
+
+Asegúrate de que haya una transacción en ejecución cuando crees los spans. Si estás usando un framework web como Rails, esas transacciones se crearán automáticamente. Consulta <PlatformLink to="/tracing/">Monitoreo del rendimiento</PlatformLink> para más información.
+
+También debes incluir los encabezados de propagación de trazas (`sentry-trace` y `baggage`) usando el helper `Sentry.get_trace_propagation_headers` en tu mensaje para que los consumidores puedan continuar tu traza una vez que se procese tu mensaje.
+
+```ruby
+connection = my_custom_queue.connect
+
+# El mensaje que deseas enviar a la cola
+queue = 'messages'
+message = '¡Hola Mundo!'
+message_id = 'abc123'
+
+Sentry.with_child_span(op: 'queue.publish', description: 'queue_producer') do |span|
+  # Establecer datos del span
+  span.set_data('messaging.message.id', message_id)
+  span.set_data('messaging.destination.name', queue)
+  span.set_data('messaging.message.body.size', message.size)
+
+  # Publicar el mensaje en la cola (incluyendo información de rastreo y timestamp actual)
+  connection.publish(
+    queue: queue,
+    body: message,
+    timestamp: Time.now.utc,
+    headers: Sentry.get_trace_propagation_headers
+  )
+end
+```
+
+
+<div id="consumer-instrumentation">
+  ## Instrumentación del consumidor
+</div>
+
+Para empezar a capturar métricas de rendimiento, usa la función `Sentry.with_child_span` para envolver tus consumidores de colas. El `op` del span debe establecerse en `queue.process`. Incluye los siguientes datos del span para enriquecer los spans de tus consumidores con métricas de la cola:
+
+| Data Attribute | Type | Description |
+|:--|:--|:--|
+| `messaging.message.id ` | string | El identificador del mensaje |
+| `messaging.destination.name` | string | El nombre de la cola o del tema |
+| `messaging.message.body.size` | number | Tamaño del cuerpo del mensaje en bytes |
+| `messaging.message.retry.count ` | number | La cantidad de veces que se intentó procesar un mensaje |
+| `messaging.message.receive.latency ` | number | El tiempo en milisegundos que un mensaje esperó en cola antes de ser procesado |
+
+Usa `Sentry.continue_trace(trace_propagation_headers)` para iniciar una transacción y conectar los spans de tus consumidores con sus spans de productores asociados, y `span.set_status` para marcar el rastreo de tu mensaje como correcto o fallido.
+
+```ruby
+connection = my_custom_queue.connect
+
+# Obtener mensaje de las colas
+queue = 'messages'
+message = connection.consume(queue: queue)
+
+# Calcular latencia (opcional, pero valioso)
+now = Time.now.utc
+message_time = Time.new(message[:timestamp])
+latency = now - message_time
+
+# Continuar el rastreo iniciado en el productor e iniciar una transacción
+transaction = sentry_sdk.continue_trace(message[:headers], op: 'function', name: 'queue_consumer_transaction')
+Sentry.start_transaction(transaction)
+Sentry.get_current_scope.set_span(transaction)
+
+# Iniciar el span queue.process
+Sentry.with_child_span(op: 'queue.process', description: 'queue_consumer') do |span|
+  # Establecer datos del span
+  span.set_data('messaging.message.id', message[:message_id])
+  span.set_data('messaging.destination.name', queue)
+  span.set_data('messaging.message.body.size', message[:body].size)
+  span.set_data('messaging.message.receive.latency', latency)
+  span.set_data('messaging.message.retry.count', 0)
+
+  process_message(message)
+rescue
+  # En caso de error, establecer el estado como 'internal_error'
+  span.set_status('internal_error')
+end
+```

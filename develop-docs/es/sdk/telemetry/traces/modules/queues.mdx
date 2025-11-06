@@ -1,0 +1,79 @@
+---
+title: Módulo de colas
+---
+
+La integración de colas del SDK es independiente del motor subyacente que se utilice. En la mayoría de los casos, el SDK instrumenta las abstracciones de colas existentes en determinados frameworks o bibliotecas.
+
+<div id="span-conventions">
+  ## Convenciones de span
+</div>
+
+<div id="span-operations">
+  ### Operaciones de spans
+</div>
+
+| Operación de span | Descripción |
+|:--|:--|
+| `queue.publish` | Se proporcionan uno o más mensajes para publicarlos en un intermediario. Si se publica un único mensaje, el contexto del span “Publish” puede usarse como contexto de creación y no es necesario crear un span “Create”. |
+| `queue.create` | Se crea un mensaje. Los spans “Create” siempre se refieren a un único mensaje y se utilizan para proporcionar un contexto de creación único en escenarios de publicación por lotes. |
+| `queue.receive` | Un consumidor solicita uno o más mensajes. Esta operación se refiere a escenarios basados en extracción (pull), donde los consumidores llaman explícitamente a métodos de los SDK de mensajería para recibir mensajes. |
+| `queue.process` | Uno o más mensajes se entregan a, o son procesados por, un consumidor. |
+| `queue.settle` | Se concluye el procesamiento de uno o más mensajes (settlement). |
+
+<div id="span-data">
+  ### Datos de span
+</div>
+
+Los siguientes atributos de datos deben configurarse tanto en los spans del consumidor como del productor.
+
+| Clave de datos | Tipo | Descripción | Condiciones
+|:--|:--|:--|:--|
+| `messaging.message.id ` | string | identificador del mensaje |
+| `messaging.destination.name` | string | nombre del destino desde el que se consume el mensaje, p. ej., el nombre de la cola o del tópico |
+| `messaging.system` | string | nombre del sistema de mensajería, p. ej., `kafka`, `aws_sqs ` |
+
+Los siguientes atributos de datos solo deben configurarse si los expone la abstracción de colas instrumentada o pueden obtenerse con una sobrecarga mínima. Cuando sea posible, estos atributos deben configurarse tanto en los spans del productor como del consumidor.
+
+| Clave de datos | Tipo | Descripción | Condiciones
+|:--|:--|:--|:--|
+| `messaging.message.retry.count ` | int | reintentos/intentos al procesar un mensaje |
+| `messaging.message.envelope.size` | int | tamaño del cuerpo del mensaje y los metadatos en bytes |
+| `messaging.message.body.size` | int | tamaño del cuerpo del mensaje en bytes |
+| `messaging.message.receive.latency ` | float | diferencia de tiempo en milisegundos entre la publicación de un mensaje y su recepción por un consumidor (sin incluir el tiempo de procesamiento en el consumidor) |
+
+<div id="instrumentation">
+  ## Instrumentación
+</div>
+
+Según se use un sistema de mensajería síncrono o asíncrono, el span del consumidor podría convertirse en una transacción independiente.
+
+```
+Queue::publish(job)
+
+// en algún consumidor
+
+Queue::pop()->process()
+```
+
+Esto debería dar como resultado los siguientes intervalos.
+
+```
+<span op:"queue.publish" description:"nombre-del-trabajo" ...>
+
+<span op:"queue.process" description:"nombre-del-trabajo" ...>
+```
+
+Si corresponde, cualquier `span` creado por la instrumentación del motor subyacente debe ser un hijo directo de cada `span` de `queue`.
+
+```
+<span op:"queue.publish" description:"trabajo" ...>
+	<span op:"db.sql.query" description:"insertar en jobs" ...></span>
+</span>
+```
+
+
+<div id="distributed-tracing">
+  ### Seguimiento distribuido
+</div>
+
+Cuando corresponde, intentamos continuar el seguimiento del productor al consumidor. Para ello, inyectamos tanto el trace parent (`sentry-trace`) como `baggage` en la carga del mensaje y lo recogemos en el consumidor.

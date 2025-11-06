@@ -1,0 +1,39 @@
+---
+title: Usuarios
+description: "Aprende a configurar el SDK para capturar al usuario y obtener información clave que permita construir una identidad única en Sentry."
+---
+
+Para asociar el usuario a tus eventos, puedes establecer sus datos en el scope:
+
+<PlatformContent includePath="enriching-events/set-user" />
+
+También puedes borrar el usuario actualmente establecido:
+
+<PlatformContent includePath="enriching-events/unset-user" />
+
+Los usuarios constan de algunas piezas de información clave que construyen una identidad única en Sentry. Cada una es opcional, pero una **debe** estar presente para que el SDK de Sentry capture al usuario:
+
+<DefinitionList>
+  ### `id`
+
+  Tu identificador interno del usuario.
+
+  ### `username`
+
+  El nombre de usuario. Normalmente se usa como una mejor etiqueta que el id interno.
+
+  ### `email`
+
+  Una alternativa o un complemento al nombre de usuario. Sentry reconoce las direcciones de correo electrónico y puede mostrar cosas como Gravatars y habilitar capacidades de mensajería.
+
+  ### `ip_address`
+
+  La dirección IP del usuario. Si el usuario no está autenticado, Sentry usa la dirección IP como identificador único del usuario.
+  Los SDK del lado del servidor que instrumentan solicitudes entrantes intentarán obtener la dirección IP de los datos de la solicitud HTTP (campo `request.env.REMOTE_ADDR` en JSON), si está disponible. Eso podría requerir <PlatformIdentifier name="send-default-pii" /> configurado en `true` en las opciones del SDK.
+
+  Si se omite el campo, el valor predeterminado es `null`.
+
+  Para no almacenar las direcciones IP de los usuarios en los datos de tus eventos, ve a la configuración de tu proyecto, haz clic en &quot;Security &amp; Privacy&quot; y habilita &quot;Prevent Storing of IP Addresses&quot;, o usa la depuración de [server-side data](/es/security-legal-pii/scrubbing/) de Sentry para eliminar `$user.ip_address`. Agregar una regla así anula cualquier otra lógica.
+</DefinitionList>
+
+Además, puedes proporcionar pares clave/valor arbitrarios más allá de los nombres reservados, y el SDK de Sentry los almacenará junto con el usuario.

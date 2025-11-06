@@ -1,0 +1,72 @@
+---
+title: Configuración manual
+sidebar_order: 1
+description: "Aprende a configurar el SDK de forma manual."
+---
+
+Si no puedes (o prefieres no) usar la [configuración automática](/es/platforms/android/#install), sigue las instrucciones a continuación para configurar tu aplicación de forma manual.
+
+<div id="installation">
+  ## Instalación
+</div>
+
+La manera más sencilla de empezar es instalar el plugin de Gradle de Sentry para Android en el archivo `build.gradle` del módulo de tu app.
+
+```groovy {filename:app/build.gradle}
+plugins {
+  id "com.android.application"
+  id "io.sentry.android.gradle" version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.0.0') }}"
+}
+```
+
+```kotlin {filename:app/build.gradle.kts}
+plugins {
+  id("com.android.application")
+  id("io.sentry.android.gradle") version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.0.0') }}"
+}
+```
+
+La versión `{{@inject packages.version('sentry.java.android.gradle-plugin', '3.0.0') }}` del complemento añadirá automáticamente el SDK de Sentry para Android (versión `{{@inject packages.version('sentry.java.android', '4.2.0') }}`) a tu app.
+
+<div id="configuration">
+  ## Configuración
+</div>
+
+La configuración se realiza a través del archivo `AndroidManifest.xml`. Aquí tienes un ejemplo de configuración para empezar:
+
+```xml {filename:AndroidManifest.xml}
+<application>
+  <!-- Obligatorio: configura el identificador (DSN) de tu proyecto en sentry.io -->
+  <meta-data android:name="io.sentry.dsn" android:value="___PUBLIC_DSN___" />
+
+  <!-- Agrega datos como encabezados de la solicitud, la dirección IP del usuario y el nombre del dispositivo; consulta https://docs.sentry.io/platforms/android/data-management/data-collected/ para más información -->
+  <meta-data android:name="io.sentry.send-default-pii" android:value="true" />
+
+  <!-- habilita breadcrumbs automáticos para las interacciones del usuario (clics, deslizamientos, desplazamientos) -->
+  <meta-data android:name="io.sentry.traces.user-interaction.enable" android:value="true" />
+  <!-- habilita la captura de pantalla en caso de fallos -->
+  <meta-data android:name="io.sentry.attach-screenshot" android:value="true" />
+  <!-- habilita la jerarquía de vistas en caso de fallos -->
+  <meta-data android:name="io.sentry.attach-view-hierarchy" android:value="true" />
+
+  <!-- habilita la API de rendimiento estableciendo una tasa de muestreo; ajusta en el entorno de producción -->
+  <meta-data android:name="io.sentry.traces.sample-rate" android:value="1.0" />
+
+  <!-- Habilita el perfilado de la IU; ajusta en el entorno de producción. Esto se evalúa solo una vez por sesión -->
+  <meta-data android:name="io.sentry.traces.profiling.session-sample-rate" android:value="1.0" />
+  <!-- Establece el modo de perfilado. Para más información, consulta https://docs.sentry.io/platforms/android/profiling/#enabling-ui-profiling -->
+  <meta-data android:name="io.sentry.traces.profiling.lifecycle" android:value="trace" />
+  <!-- Habilita el perfilado al inicio de la app. El perfil de inicio se detendrá automáticamente cuando finalice el span raíz de inicio de la app -->
+  <meta-data android:name="io.sentry.traces.profiling.start-on-app-start" android:value="true" />
+
+  <!-- registra reproducciones de sesión para el 100% de los errores y el 10% de las sesiones -->
+  <meta-data android:name="io.sentry.session-replay.on-error-sample-rate" android:value="1.0" />
+  <meta-data android:name="io.sentry.session-replay.session-sample-rate" android:value="0.1" />
+</application>
+```
+
+Detrás de escena, Sentry utiliza un `ContentProvider` para inicializar el SDK según los valores indicados arriba. Así, el SDK puede capturar fallos y métricas importantes desde el inicio de la app.
+
+Puedes encontrar opciones adicionales <PlatformLink to="/configuration/options/">en nuestra página específica de opciones</PlatformLink>.
+
+Si quieres personalizar el comportamiento de inicialización del SDK, aún puedes usar el <PlatformLink to="/configuration/manual-init/">método de inicialización manual</PlatformLink>.

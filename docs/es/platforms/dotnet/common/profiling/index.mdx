@@ -1,0 +1,73 @@
+---
+title: Configurar el perfilado de .NET
+sidebar_title: Perfilado
+description: "Aprende a habilitar el perfilado en tu app si aún no está configurado."
+sidebar_order: 5000
+notSupported:
+  - dotnet.uwp
+  - dotnet.aws-lambda
+  - dotnet.azure-functions-worker
+  - dotnet.blazor-webassembly
+  - dotnet.aspnet
+  - dotnet.entityframework
+  - dotnet.google-cloud-functions
+---
+
+<PlatformContent includePath="profiling/index/preface" />
+
+Con el [perfilado](/es/product/explore/profiling/), Sentry te permite recopilar y analizar perfiles de rendimiento de dispositivos reales de usuarios en producción para ofrecerte una visión completa de cómo se comporta tu aplicación en diversos entornos.
+
+<Alert>
+  El perfilado de Sentry para .NET está disponible en *Alpha* en .NET 8.0+ para:
+
+  * Windows
+  * Linux
+  * macOS
+  * iOS
+  * Mac Catalyst
+</Alert>
+
+<div id="enable-profiling">
+  ## Habilitar el perfilado
+</div>
+
+Para habilitar el perfilado, configura `ProfilesSampleRate`.
+Además, en todas las plataformas excepto iOS/Mac Catalyst, debes agregar una dependencia al paquete NuGet `Sentry.Profiling`.
+
+```shell {tabTitle:.NET CLI}
+dotnet add package Sentry.Profiling
+```
+
+El perfilado depende de que el producto de trazado de Sentry esté habilitado previamente. Para habilitar el trazado en el SDK, establece la opción `TracesSampleRate` en el valor deseado.
+
+```csharp
+SentrySdk.Init(options =>
+{
+    // ... opciones de configuración habituales omitidas para mayor claridad (consulta Primeros Pasos) ...
+
+    // Tasa de muestreo para tus transacciones, por ejemplo, el valor 0.1 significa que queremos reportar el 10% de las transacciones.
+    // Establecer 1.0 significa que se perfilan todas las transacciones.
+    // Recomendamos ajustar este valor en producción.
+    options.TracesSampleRate = 1.0;
+
+    // Tasa de muestreo para el perfilado, aplicada sobre TracesSampleRate,
+    // por ejemplo, 0.2 significa que queremos perfilar el 20% de las transacciones capturadas.
+    // Recomendamos ajustar este valor en producción.
+    options.ProfilesSampleRate = 1.0;
+
+    // Adjunta la integración de perfilado.
+    options.AddProfilingIntegration();
+
+    // En Windows, Linux y macOS, el perfilador se inicializa de forma asíncrona por defecto.
+    // Alternativamente, puedes cambiar a inicialización síncrona añadiendo un argumento de tiempo de espera.
+    // El SDK espera hasta el tiempo de espera especificado a que el perfilador del runtime de .NET se inicie antes de continuar.
+    // por ejemplo, options.AddProfilingIntegration(TimeSpan.FromMilliseconds(500));
+    // Nota: el tiempo de espera no tiene efecto en iOS y MacCatalyst, que usan perfilado nativo y siempre se inician de forma síncrona.
+});
+```
+
+###
+
+Consulta la <PlatformLink to="/tracing/">documentación de configuración de tracing</PlatformLink> para obtener información más detallada sobre cómo configurar el muestreo.
+Establecer la tasa de muestreo de traces en 1.0 significa que se capturarán todas las transacciones.
+Establecer la tasa de muestreo de profiles en 1.0 significa que se perfilarán todas las transacciones capturadas.

@@ -1,0 +1,102 @@
+---
+title: Seguimiento de componentes en Svelte
+description: "Aprende cómo el SDK de Svelte de Sentry te permite supervisar el rendimiento de renderizado de tu aplicación y sus componentes."
+---
+
+El SDK de Svelte de Sentry incluye una función para supervisar el rendimiento de tus componentes de Svelte: el seguimiento de componentes. Al habilitarla, verás spans en tus transacciones que muestran los ciclos de inicialización y actualización de tus componentes de Svelte. Esto te ofrece una vista detallada de cómo se comportan tus componentes para que puedas, por ejemplo, identificar inicializaciones lentas o actualizaciones frecuentes, que podrían afectar el rendimiento de tu aplicación.
+
+<div id="usage">
+  ## Uso
+</div>
+
+<Alert>
+  Para habilitar el seguimiento de componentes, debes configurar el tracing. Para más información sobre cómo hacerlo, consulta nuestra [documentación de tracing](/es/platforms/javascript/guides/svelte/tracing/).
+</Alert>
+
+Para empezar, envuelve la configuración de tu app de Svelte en `svelte.config.js` con nuestra función `withSentryConfig`:
+
+```javascript {tabTitle: svelte.config.js}
+import { withSentryConfig } from "@sentry/svelte";
+
+const config = {
+  // Tu configuración de Svelte
+  compilerOptions: {...},
+};
+
+export default withSentryConfig(config);
+```
+
+Este contenedor insertará el preprocesador de seguimiento de componentes de Sentry en tu configuración. El preprocesador inserta una llamada a una función del SDK de Sentry en la etiqueta `<script>` de tus componentes antes de que tu aplicación se compile y se genere el paquete.
+
+<div id="configuration">
+  ### Configuración
+</div>
+
+Una vez que envuelvas tu configuración de Svelte con `withSentryConfig`, nuestro SDK rastreará todos tus componentes de forma predeterminada. Si quieres personalizar qué componentes o eventos del ciclo de vida se deben rastrear, puedes pasar opciones adicionales a `withSentryConfig`:
+
+```javascript {tabTitle: svelte.config.js}
+import { withSentryConfig } from "@sentry/svelte";
+
+const config = {
+  // Tu configuración de Svelte
+  compilerOptions: {...},
+};
+
+const sentryOptions = {
+  // Agrupa todas las opciones relacionadas con el seguimiento de componentes
+  // (opcional)
+  componentTracking: {
+    // Añade a este array los componentes que quieres que se registren.
+    // Indica `true` para registrar todos los componentes o `false` para desactivar
+    // el seguimiento por completo
+    // (opcional, por defecto `true`)
+    trackComponents: ["Navbar", "PrimaryButton", "LoginForm"],
+    // Para desactivar los spans de inicialización de componentes, establece esto en `false`.
+    // (opcional, por defecto `true`)
+    trackInit: true,
+    // Para desactivar los spans de actualización de componentes, establece esto en `false`
+    // (opcional, por defecto `true`)
+    trackUpdates: false,
+  },
+};
+
+export default withSentryConfig(config, sentryOptions);
+```
+
+<div id="component-tracking-spans">
+  ## Spans de seguimiento de componentes
+</div>
+
+Esta función agrega los siguientes spans a la transacción en curso:
+
+`ui.svelte.init`
+
+Un span que representa el tiempo transcurrido entre la creación de la instancia de un componente y la llamada al hook de ciclo de vida `onMount`.
+
+`ui.svelte.update`
+
+Un span que representa el tiempo transcurrido entre las llamadas a los hooks de ciclo de vida `beforeUpdate` y `afterUpdate` de un componente.
+
+<div id="alternative-usage">
+  ## Uso alternativo
+</div>
+
+Si no quieres usar nuestro envoltorio `withSentryConfig` para instrumentar automáticamente tus componentes en tiempo de compilación, puedes llamar a la función de seguimiento manualmente en cada componente que quieras rastrear:
+
+```javascript {tabTitle: MyComponent.svelte}
+<script>
+  import * as Sentry from "@sentry/svelte";
+  Sentry.trackComponent({
+    // Para desactivar los spans de inicialización del componente, ponlo en `false`.
+    // (por defecto es `true`)
+    trackInit: true,
+    // Para desactivar los spans de actualización del componente, ponlo en `false`
+    // (por defecto es `true`)
+    trackUpdates: false,
+    // Especifica un nombre personalizado que se mostrará en la descripción del span
+    // (por defecto se usa el nombre del componente detectado automáticamente)
+    componentName: 'MyAwesomeComponent'
+  })
+  // resto de tu código
+</script>
+```

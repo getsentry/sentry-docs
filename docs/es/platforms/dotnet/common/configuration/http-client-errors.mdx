@@ -1,0 +1,109 @@
+---
+title: Errores del cliente HTTP
+sidebar_order: 25
+description: "Esta función, una vez habilitada, captura automáticamente errores del cliente HTTP, como códigos de respuesta no válidos, como eventos de error y los reporta a Sentry."
+---
+
+Una vez habilitada, esta función captura automáticamente errores del cliente HTTP, como códigos de respuesta no válidos, como eventos de error y los reporta a Sentry. El evento de error incluirá información de la solicitud y la respuesta HTTP, como `url`, `status_code` y otros.
+
+Para habilitarla:
+
+```csharp
+// Añade esto al callback de inicialización del SDK
+options.CaptureFailedRequests = true;
+```
+
+```fsharp
+// Añade esto al callback de inicialización del SDK
+options.CaptureFailedRequests <- true
+```
+
+Los errores del cliente HTTP se capturarán en cualquier solicitud realizada por el SDK de Sentry. Para capturar errores del cliente HTTP en las solicitudes salientes de tu propia aplicación, pasa `SentryHttpMessageHandler` como controlador interno al crear tu `HttpClient`:
+
+```csharp
+using var httpClient = new HttpClient(new SentryHttpMessageHandler());
+```
+
+```fsharp
+let httpClient = new HttpClient(new SentryHttpMessageHandler())
+```
+
+<Alert title="Consejo">
+  Puedes omitir el paso anterior cuando uses cualquiera de los SDK de Sentry .NET registrados mediante inyección de dependencias (`Sentry.AspNetCore`, `Sentry.Maui`, `Sentry.Extensions.Logging`, etc.).
+
+  En su lugar, crea tu `HttpClient` con el patrón `IHttpClientFactory`, como se describe en [la documentación de Microsoft](https://learn.microsoft.com/aspnet/core/fundamentals/http-requests). `SentryHttpMessageHandler` se añadirá automáticamente a la fábrica durante la inicialización, por lo que no hace falta ninguna configuración adicional.
+</Alert>
+
+De forma predeterminada, solo se capturan como eventos de error los errores del cliente HTTP con un código de respuesta entre `500` y `599`, pero puedes cambiar este comportamiento modificando la opción `FailedRequestStatusCodes`:
+
+```csharp
+options.FailedRequestStatusCodes.Add((400, 499));
+```
+
+```fsharp
+options.FailedRequestStatusCodes.Add(HttpStatusCodeRange(400, 599))
+```
+
+Los errores del cliente HTTP de cualquier destino (expresión regular `.*`) se capturan automáticamente, pero puedes cambiar este comportamiento actualizando la opción `FailedRequestTargets` con expresiones regulares o cadenas de texto. Una cadena de texto debe contener al menos uno de los elementos de la lista. Las cadenas de texto no tienen que coincidir por completo; es decir, la URL de una solicitud se considera coincidente cuando contiene una subcadena proporcionada mediante la opción:
+
+```csharp
+options.FailedRequestTargets.Add("foo");      // subcadena
+options.FailedRequestTargets.Add("foo.*bar"); // regex
+```
+
+```fsharp
+options.FailedRequestTargets.Add("foo")      // subcadena
+options.FailedRequestTargets.Add("foo.*bar") // expresión regular
+```
+
+Cuando la opción `SendDefaultPii` está habilitada, los eventos de error pueden contener datos personales (PII) como `Headers` y `Cookies`. Sentry ya realiza limpieza de datos de forma predeterminada, pero también puedes limpiar cualquier dato antes de enviarlo. Obtén más información en [Scrubbing Sensitive Data](/es/platforms/dotnet/data-management/sensitive-data/).
+
+Estos eventos se pueden buscar y puedes configurar alertas para ellos si usas las propiedades `http.url` y `http.status_code`. Obtén más información en nuestra documentación completa sobre [Searchable Properties](/es/concepts/search/searchable-properties/).
+
+<div id="customize-or-drop-the-error-event">
+  ### Personaliza o descarta el evento de error
+</div>
+
+El evento de error capturado se puede personalizar o descartar con `beforeSend`:
+
+```csharp
+options.SetBeforeSend((@event, hint) =>
+{
+    if (hint.Items.TryGetValue(HintTypes.HttpResponseMessage, out var responseHint))
+    {
+        var response = (HttpResponseMessage)responseHint!;
+        var request = response.RequestMessage!;
+
+        // Haz algo con la solicitud y/o respuesta... por ejemplo, podrías añadir
+        // contexto personalizado al evento para escenarios específicos
+        var statusCode = response.StatusCode;
+        if (statusCode == HttpStatusCode.Unauthorized)
+        {
+            @event.Contexts["Unauthorized"] = request.RequestUri.GetComponents(
+                UriComponents.HttpRequestUrl, UriFormat.SafeUnescaped
+                );
+        }
+    }
+
+    // devuelve el evento modificado
+    return @event;
+});
+```
+
+```fsharp
+options.SetBeforeSend(fun event hint ->
+    let (isHint, responseHint) = hint.Items.TryGetValue(HintTypes.HttpResponseMessage)
+    if isHint then
+        let response = responseHint :?> HttpResponseMessage
+        let request = response.RequestMessage :> HttpRequestMessage
+
+        // Haz algo con la solicitud y/o respuesta... por ejemplo, podrías añadir
+        // contexto personalizado al evento para escenarios específicos
+        let statusCode = response.StatusCode
+        if statusCode = HttpStatusCode.Unauthorized then
+            event.Contexts.["Unauthorized"] <- request.RequestUri.GetComponents(UriComponents.HttpRequestUrl, UriFormat.SafeUnescaped)
+
+    // devolver el evento modificado
+    event
+)
+```

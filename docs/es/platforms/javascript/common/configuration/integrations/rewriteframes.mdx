@@ -1,0 +1,53 @@
+---
+title: RewriteFrames
+description: "Te permite aplicar una transformación a cada fotograma del stack trace."
+---
+
+_Nombre de importación: `Sentry.rewriteFramesIntegration`_
+
+Esta integración te permite aplicar una transformación a cada fotograma del stack trace. En el caso más sencillo, puede usarse para cambiar el nombre del archivo del que proviene el fotograma, o puedes pasarle una función iteradora para aplicar cualquier transformación arbitraria.
+
+En equipos con Windows, debes usar rutas tipo Unix y omitir la letra de la unidad en la opción `root` para habilitarlo. Por ejemplo, `C:\\Program Files\\Apache\\www` no funcionará; en cambio, `/Program Files/Apache/www` sí.
+
+<PlatformContent includePath="configuration/rewrite-frames" />
+
+<div id="options">
+  ## Opciones
+</div>
+
+<div id="root">
+  ### `root`
+</div>
+
+_Tipo: `string`_
+
+Ruta raíz que la función iteradora predeterminada quitará del nombre de archivo del frame actual si el nombre de archivo es una ruta absoluta.
+
+<div id="prefix">
+  ### `prefix`
+</div>
+
+_Tipo: `string`_
+
+Un prefijo personalizado que usará la función iteradora predeterminada.
+Predeterminado: `app://`
+
+<div id="iteratee">
+  ### `iteratee`
+</div>
+
+_Tipo: `(frame) => frame`_
+
+Función que recibe el frame, aplica una transformación y lo retorna.
+
+<div id="usage-examples">
+  ## Ejemplos de uso
+</div>
+
+Por ejemplo, si la ruta completa de tu archivo es `/www/src/app/file.js`:
+
+| Uso                                           | Ruta en el stack trace   | Descripción                                                                                                                    |
+| -------------------------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| `rewriteFramesIntegration()`                 | `app:///file.js`         | El comportamiento predeterminado es reemplazar la ruta absoluta, excepto el nombre del archivo, y anteponerle el prefijo predeterminado (`app:///`). |
+| `rewriteFramesIntegration({prefix: 'foo/'})` | `foo/file.js`            | Se usa el prefijo `foo/` en lugar del prefijo predeterminado `app:///`.                                                       |
+| `rewriteFramesIntegration({root: '/www'})`   | `app:///src/app/file.js` | `root` se define como `/www`, por lo que solo se recorta esa parte al inicio de la ruta.                                      |

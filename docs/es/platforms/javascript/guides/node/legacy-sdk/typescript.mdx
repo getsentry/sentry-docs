@@ -1,0 +1,108 @@
+---
+draft: true
+categories: []
+toc: true
+title: TypeScript
+sidebar_order: 3
+noindex: true
+tags: []
+---
+
+<Alert level="warning" title="Aviso de deprecación">
+  Un nuevo SDK de Node ha reemplazado esta versión obsoleta. Sentry conserva esta documentación para clientes que usan el cliente antiguo. Recomendamos usar el [SDK de Node actualizado](/es/platforms/javascript/guides/node/) para tus proyectos.
+</Alert>
+
+Lee primero la [documentación sobre Source Maps](/es/platforms/javascript/guides/node/legacy-sdk/sourcemaps/) para aprender a configurar el SDK de Raven, cargar artefactos en nuestros servidores o usar webpack (si piensas usar *ts-loader* para compilar TypeScript).
+
+Usar Raven y Source Maps con TypeScript, desafortunadamente, requiere un poco más de configuración.
+
+Hay dos razones principales para esto:
+
+1. TypeScript compila y genera todos los archivos por separado
+2. SourceRoot está configurado por defecto al directorio de origen, lo que requeriría cargar artefactos desde 2 directorios distintos y modificar los propios source maps
+
+Aun así, podemos hacerlo funcionar con dos pasos adicionales, así que hagámoslo.
+
+El primero es configurar el compilador de TypeScript de forma que sobrescribamos *sourceRoot* y combinemos las fuentes originales con los mapas correspondientes. Lo primero no es obligatorio, pero ayudará a Sentry a mostrar rutas de archivo correctas, p. ej., */lib/utils/helper.ts* en lugar de una completa como */Users/Sentry/Projects/TSExample/lib/utils/helper.ts*. Puedes omitir esta opción si te parece bien usar nombres tan largos.
+
+Suponiendo que ya tienes un archivo *tsconfig.json* similar a este:
+
+```json
+{
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "allowJs": true,
+    "moduleResolution": "node",
+    "outDir": "dist"
+  },
+  "include": ["./src/**/*"]
+}
+```
+
+crea uno nuevo llamado *tsconfig.production.json* y pega el siguiente fragmento:
+
+```json
+{
+  "extends": "./tsconfig",
+  "compilerOptions": {
+    "sourceMap": true,
+    "inlineSources": true,
+    "sourceRoot": "/"
+  }
+}
+```
+
+A partir de ahora, cuando quieras ejecutar el build de producción que se vaya a subir, especifica esta misma configuración, p. ej., *tsc -p tsconfig.production.json*. Esto creará los source maps necesarios y adjuntará las fuentes originales a ellos, en lugar de tener que subirlas y modificar a mano las rutas de las fuentes en nuestros mapas.
+
+El segundo paso es cambiar los frames de eventos para que Sentry pueda vincular los stack traces con los archivos fuente correctos.
+
+Esto se puede hacer usando *dataCallback*, de una manera muy similar a como lo hacemos con un único punto de entrada, tal y como se describe en la documentación de Source Maps, con una diferencia muy importante: en lugar de usar *basename*, tenemos que detectar y pasar de alguna forma el directorio raíz de nuestro proyecto.
+
+Lamentablemente, Node es muy frágil en ese aspecto y no tiene una forma realmente fiable de hacerlo. La manera más sencilla y fiable que encontramos es guardar *&#95;&#95;dirname* o *process.cwd()* en una variable global y usarlo en otros lugares de tu aplicación. Esto *tiene que hacerse* como lo primero en tu código y desde el punto de entrada; de lo contrario, la ruta será incorrecta.
+
+Si quieres, puedes establecer este valor manualmente a algo como */var/www/html/some-app* si puedes obtenerlo de alguna fuente externa o sabes que nunca cambiará.
+
+```typescript
+// Inserta lo siguiente en un archivo dentro de tu directorio raíz
+global.__rootdir__ = __dirname || process.cwd();
+
+// Esto permite que TypeScript detecte nuestro valor global
+declare global {
+  var __rootdir__: string;
+}
+```
+
+```javascript
+// Inserta lo siguiente en un archivo dentro de tu directorio raíz
+global.__rootdir__ = __dirname || process.cwd();
+```
+
+Lo mismo puede lograrse creando un archivo aparte llamado *root.js* (o similar) que se colocará en el directorio raíz de tu proyecto y exportando el valor obtenido en lugar de definirlo de forma global.
+
+Después, según tu enfoque, puedes usar la variable definida globalmente o la variable exportada para reescribir los frames de la pila:
+
+```javascript
+import * as path from "path";
+const root = global.__rootdir__;
+
+Raven.config("your-dsn", {
+  // el resto de la configuración
+
+  dataCallback: function (data) {
+    var stacktrace = data.exception && data.exception[0].stacktrace;
+
+    if (stacktrace && stacktrace.frames) {
+      stacktrace.frames.forEach(function (frame) {
+        if (frame.filename.startsWith("/")) {
+          frame.filename = "app:///" + path.relative(root, frame.filename);
+        }
+      });
+    }
+
+    return data;
+  },
+}).install();
+```
+
+Esta configuración debería bastar para que todo funcione y para usar TypeScript con Node, sin perder la capacidad de que Sentry procese todas las fuentes originales.

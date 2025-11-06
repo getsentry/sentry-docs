@@ -1,0 +1,262 @@
+---
+draft: true
+categories: []
+toc: true
+title: Configuración
+noindex: true
+tags: []
+---
+
+<Alert level="warning" title="Aviso de obsolescencia">
+  Un nuevo SDK de Node ha sustituido esta versión obsoleta. Sentry conserva esta documentación para quienes aún usan el cliente anterior. Te recomendamos usar el [SDK de Node actualizado](/es/platforms/javascript/guides/node/) para tus proyectos.
+</Alert>
+
+Para empezar, debes configurar Raven para usar tu DSN de Sentry:
+
+```javascript
+var Raven = require("raven");
+Raven.config("___PUBLIC_DSN___").install();
+```
+
+En este punto, Raven está listo para capturar cualquier excepción no controlada.
+
+Ten en cuenta que el método `install` puede, opcionalmente, aceptar una función de callback que se invoca si se produce un error fatal no recuperable. Puedes usar este callback para realizar cualquier limpieza necesaria antes de que el proceso de Node finalice.
+
+```javascript
+Raven.config("___PUBLIC_DSN___").install(function (err, initialErr, eventId) {
+  console.error(err);
+  process.exit(1);
+});
+```
+
+<div id="optional-settings">
+  ## Opciones opcionales
+</div>
+
+`Raven.config()` puede recibir, de forma opcional, un argumento adicional para configuración extra:
+
+```javascript
+Raven.config("___PUBLIC_DSN___", {
+  release: "1.3.0",
+}).install();
+```
+
+Esas opciones de configuración se describen a continuación:
+
+`logger`
+
+El nombre del registrador utilizado por Sentry.
+
+```javascript
+{
+  logger: "default";
+}
+```
+
+`name`
+
+Configura el nombre del servidor que usará el cliente. Predeterminado: `require('os').hostname()`. También puedes usar la variable de entorno `SENTRY_NAME`.
+
+```javascript
+{
+  name: "primary";
+}
+```
+
+`release`
+
+Haz un seguimiento de la versión de tu aplicación en Sentry. Opcionalmente, usa la variable de entorno `SENTRY_RELEASE`.
+
+```javascript
+{
+  release: "721e41770371db95eee98ca2707686226b993eda";
+}
+```
+
+Suele ser un hash SHA de Git, que puede obtenerse con varios paquetes de npm, p. ej.:
+
+```javascript
+var git = require("git-rev-sync");
+
+{
+  // esto devolverá un hash de 40 caracteres de longitud
+  // ej. '75bf4eea9aa1a7fd6505d0d0aa43105feafa92ef'
+  release: git.long();
+}
+```
+
+`environment`
+
+Registra el nombre del entorno en Sentry. Opcionalmente, utiliza la variable de entorno `SENTRY_ENVIRONMENT`.
+
+```javascript
+{
+  environment: "staging";
+}
+```
+
+`tags`
+
+Etiquetas adicionales que asignar a cada evento.
+
+```javascript
+{
+  tags: {
+    git_commit: "c0deb10c4";
+  }
+}
+```
+
+`extra`
+
+Datos arbitrarios que se asociarán con el evento.
+
+```javascript
+{
+  extra: {
+    planet: {
+      name: "Tierra";
+    }
+  }
+}
+```
+
+`parseUser`
+
+Controla cómo Raven intenta extraer el contexto de usuario al analizar un objeto de solicitud.
+
+Un array de cadenas determina qué campos tomar de `req.user`. `true` recopilará todas las claves de `req.user`. `false` no recopilará nada.
+
+Valor predeterminado: `['id', 'username', 'email']`.
+
+Además, se puede proporcionar una función para un análisis totalmente personalizado:
+
+```javascript
+{
+    parseUser: function (req) {
+        // lógica personalizada de análisis de usuario
+        return {
+            username: req.specialUserField.username,
+            id: req.specialUserField.getId()
+        };
+    }
+}
+```
+
+`sampleRate`
+
+Una frecuencia de muestreo que se aplica a los eventos. Un valor de 0,0 no enviará ningún evento y un valor de 1,0 enviará todos los eventos (valor predeterminado).
+
+```javascript
+{
+  sampleRate: 0.5; // envía el 50% de los eventos, descarta la otra mitad
+}
+```
+
+`sendTimeout`
+
+Tiempo máximo, en segundos, para conectarse al servidor o recibir una respuesta al capturar una excepción.
+
+Si se excede, el transporte considerará la solicitud fallida y devolverá un error de tiempo de espera.
+
+El valor predeterminado es 1 segundo. Auméntalo si tienes problemas de tiempo de espera al enviar excepciones a Sentry.
+
+```javascript
+{
+  sendTimeout: 5; // esperar 5 segundos antes de considerar que la captura falló
+}
+```
+
+`dataCallback`
+
+Una función que permite modificar la carga de datos justo antes de enviarla a Sentry.
+
+```javascript
+{
+    dataCallback: function(data) {
+        // añadir un contexto de usuario
+        data.user = {
+            id: 1337,
+            name: 'janedoe',
+            email: 'janedoe@example.com'
+        };
+        return data;
+    }
+}
+```
+
+`shouldSendCallback`
+
+Una función de callback que te permite aplicar tus propios filtros para determinar si el evento debe enviarse a Sentry.
+
+```javascript
+{
+    shouldSendCallback: function (data) {
+        // omitir aleatoriamente la mitad de los eventos
+        return Math.random() > 0.5;
+    }
+}
+```
+
+`autoBreadcrumbs`
+
+Activa/desactiva la recopilación automática de breadcrumbs. Los valores posibles son:
+
+* *false* - desactiva toda la recopilación automática de breadcrumbs (valor predeterminado)
+* *true* - activa toda la recopilación automática de breadcrumbs
+* Un diccionario con tipos individuales de breadcrumbs que se pueden activar/desactivar:
+
+```javascript
+autoBreadcrumbs: {
+    'console': false,  // registro en consola
+    'http': true,     // solicitudes http y https
+}
+```
+
+`maxBreadcrumbs`
+
+Raven captura hasta 30 breadcrumbs de forma predeterminada. Puedes aumentarlo hasta 100, o reducirlo si 30 te resulta demasiado ruidoso, configurando *maxBreadcrumbs*.
+
+Ten en cuenta que, en situaciones de muy alta concurrencia en las que podrías tener un gran número de contextos de larga duración, cada uno con muchos breadcrumbs asociados, existe la posibilidad de un uso de memoria significativo. 10 000 contextos con 10 kB de datos de breadcrumb cada uno usarán alrededor de 120 MB de memoria. La mayoría de las aplicaciones estarán muy lejos de cualquiera de estos valores, pero si la tuya pudiera acercarse, puedes usar el parámetro *maxBreadcrumbs* para limitar la cantidad de datos de breadcrumb que cada contexto conservará.
+
+`transport`
+
+Sobrescribe el controlador predeterminado de transporte de datos HTTP.
+
+```javascript
+{
+    transport: function (options) {
+        // enviar datos
+    }
+}
+```
+
+Consulta el código fuente de raven-node para ver [cómo se implementan los transports](https://github.com/getsentry/sentry-javascript/blob/master/packages/raven-node/lib/transports.js).
+
+`maxReqQueueCount`
+
+Controla cuántas solicitudes pueden ponerse en cola como máximo antes de interrumpir y emitir un error. El valor predeterminado es *100*.
+
+`stacktrace`
+
+Adjunta el rastro de pila a las llamadas de *captureMessage* generando un objeto de error “sintético” y extrayendo todos los fotogramas.
+
+<div id="environment-variables">
+  ## Variables de entorno
+</div>
+
+`SENTRY_DSN`
+
+Opcionalmente declara el DSN que usará el cliente a través de las variables de entorno. Inicializar el cliente en tu aplicación no requerirá configurar el DSN.
+
+`SENTRY_NAME`
+
+Opcionalmente establece el nombre del servidor que usará el cliente.
+
+`SENTRY_RELEASE`
+
+Opcionalmente establece la versión de la aplicación que usará el cliente; por lo general es un hash SHA de Git.
+
+`SENTRY_ENVIRONMENT`
+
+Opcionalmente establece el nombre del entorno, p. ej., “staging”, “production”. Sentry usará por defecto el valor de *NODE&#95;ENV*, si está presente.

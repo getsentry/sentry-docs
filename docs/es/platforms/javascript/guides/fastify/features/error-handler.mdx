@@ -1,0 +1,68 @@
+---
+title: Manejador de errores de Fastify
+description: "Conoce el manejador de errores del SDK de Fastify de Sentry y cómo configurarlo."
+---
+
+La integración del manejador de errores de Fastify captura automáticamente los errores en tu aplicación de Fastify y los envía a Sentry. De forma predeterminada, captura todos los errores con códigos de estado 5xx y superiores, así como los errores con códigos de estado 2xx e inferiores.
+
+<div id="configuration">
+  ## Configuración
+</div>
+
+Puedes configurar el gestor de errores con la función `setupFastifyErrorHandler`:
+
+```javascript
+import * as Sentry from "@sentry/node";
+import { setupFastifyErrorHandler } from "@sentry/fastify";
+
+const app = fastify();
+
+// Inicializar Sentry
+Sentry.init({
+  dsn: "tu-dsn",
+});
+
+// Configurar el manejador de errores
+setupFastifyErrorHandler(app);
+```
+
+
+<div id="options">
+  ## Opciones
+</div>
+
+La función `setupFastifyErrorHandler` acepta un objeto de opciones opcional que puede usarse para personalizar el controlador de errores.
+
+* `shouldHandleError` *versión 9.9.0+*
+
+Una función que determina si un error debe capturarse.
+
+```typescript
+declare function shouldHandleError(
+  error: Error,
+  request: FastifyRequest,
+  reply: FastifyReply
+): boolean;
+```
+
+```javascript
+setupFastifyErrorHandler(app, {
+  shouldHandleError(error, request, reply) {
+    return reply.statusCode >= 500 || reply.statusCode <= 399;
+  },
+});
+```
+
+Si usas TypeScript, puedes convertir la solicitud y la respuesta para obtener una seguridad de tipos completa.
+
+```typescript
+import { FastifyRequest, FastifyReply } from "fastify";
+
+setupFastifyErrorHandler(app, {
+  shouldHandleError(error, minimalRequest, minimalReply) {
+    const request = minimalRequest as FastifyRequest;
+    const reply = minimalReply as FastifyReply;
+    return reply.statusCode >= 500 || reply.statusCode <= 399;
+  },
+});
+```

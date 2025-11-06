@@ -1,0 +1,1112 @@
+---
+title: Interfaz de Contextos
+sidebar_order: 9
+---
+
+La Interfaz de Contextos proporciona datos de contexto adicionales. Por lo general, se trata de datos relacionados con el usuario actual y el entorno, como el dispositivo o la versión de la aplicación. Su nombre canónico es `contexts`.
+
+El tipo `contexts` puede usarse para definir datos contextuales arbitrarios en el evento. Acepta un objeto de pares clave/valor. La clave es el “alias” del contexto y puede elegirse libremente. Sin embargo, según la política, debe coincidir con el tipo del contexto, a menos que haya dos valores para un mismo tipo. Puedes omitir `type` si el nombre de la clave es el tipo.
+
+Al agregar datos adicionales al modelo de datos del evento, los contextos son una buena opción cuando tienes todos los datos disponibles en un único momento. Los contextos no son adecuados para datos que se recopilan con el tiempo, ya que las interfaces del SDK para contextos no permiten fusionar datos.
+
+Los datos desconocidos en los contextos se muestran como una lista de clave/valor.
+
+En el producto Sentry, ciertos contextos se muestran de una manera especial para facilitar su lectura. Puedes encontrar más detalles en el [código de contexts en la Sentry UI](https://github.com/getsentry/sentry/tree/master/static/app/components/events/contexts).
+
+Para obtener más información sobre cómo enviar datos adicionales con tu evento, consulta la [documentación completa sobre datos adicionales](https://docs.sentry.io/platform-redirect/?next=/enriching-events/context/).
+
+<div id="device-context">
+  ## Contexto del dispositivo
+</div>
+
+El contexto del dispositivo describe el dispositivo que provocó el evento. Es más apropiado para aplicaciones móviles.
+
+El `type` y la clave predeterminada es `"device"`.
+
+`name`
+
+: **Obligatorio**. El nombre del dispositivo. Por lo general, es un nombre de host.
+
+`family`
+
+: *Opcional*. La familia del dispositivo. Suele ser la parte común de los nombres de modelo a lo largo de varias generaciones. Por ejemplo, `iPhone` sería una familia razonable, al igual que `Samsung Galaxy`.
+
+`model`
+
+: *Opcional*. El nombre del modelo. Por ejemplo, puede ser `Samsung Galaxy S3`.
+
+`model_id`
+
+: *Opcional*. Una revisión interna de hardware para identificar el dispositivo con exactitud.
+
+`arch`
+
+: *Opcional*. La arquitectura de la CPU.
+
+`battery_level`
+
+: *Opcional*. Si el dispositivo tiene batería, puede ser un valor de punto flotante que indique el nivel de batería (en el rango 0-100).
+
+`battery_temperature`
+
+: *Opcional*. Si el dispositivo tiene batería, puede ser un valor de punto flotante que indique la temperatura de la batería en grados Celsius.
+
+`orientation`
+
+: *Opcional*. Puede ser la cadena `portrait` o `landscape` para definir la orientación del dispositivo.
+
+`manufacturer`
+
+: *Opcional*. El fabricante del dispositivo.
+
+`brand`
+
+: *Opcional*. La marca del dispositivo.
+
+`screen_resolution`
+
+: *Opcional*. La resolución de la pantalla (p. ej., 800x600, 3040x1444).
+
+`screen_height_pixels`
+
+: *Opcional*. La altura de la pantalla.
+
+`screen_width_pixels`
+
+: *Opcional*. El ancho de la pantalla.
+
+`screen_density`
+
+: *Opcional*. Un número de punto flotante que indica la densidad de la pantalla.
+
+`screen_dpi`
+
+: *Opcional*. Un valor decimal que refleja la densidad en DPI (puntos por pulgada).
+
+`online`
+
+: *Opcional*. Si el dispositivo estaba en línea o no.
+
+`charging`
+
+: *Opcional*. Si el dispositivo se estaba cargando o no.
+
+`low_memory`
+
+: *Opcional*. Si el dispositivo tenía poca memoria.
+
+`simulator`
+
+: *Opcional*. Un indicador que señala si este dispositivo es un simulador o un dispositivo real.
+
+`memory_size`
+
+: *Opcional*. Memoria total del sistema disponible en bytes.
+
+`free_memory`
+
+: *Opcional*. Memoria libre del sistema en bytes.
+
+`usable_memory`
+
+: *Opcional*. Memoria utilizable para la app en bytes.
+
+`storage_size`
+
+: *Opcional*. Almacenamiento total del dispositivo en bytes.
+
+`free_storage`
+
+: *Opcional*. Almacenamiento libre del dispositivo en bytes.
+
+`external_storage_size`
+
+: *Opcional*. Tamaño total de un almacenamiento externo conectado en bytes (por ejemplo, tarjeta SD de Android).
+
+`external_free_storage`
+
+: *Opcional*. Tamaño libre de un almacenamiento externo conectado en bytes (por ejemplo, tarjeta SD de Android).
+
+`boot_time`
+
+: *Opcional*. Una marca de tiempo UTC formateada que indica cuándo se inició el sistema. Por ejemplo, `"2018-02-08T12:52:12Z"`.
+
+`timezone`
+
+: *Opcional*. La zona horaria del dispositivo. Por ejemplo, `Europe/Vienna`. Este campo está en desuso; usa `timezone` del [contexto de cultura](#culture-context) en su lugar.
+
+`language`
+
+: *Opcional*. El idioma del dispositivo. Por ejemplo, `en`. Este campo está en desuso; usa `locale` del [contexto de cultura](#culture-context) en su lugar.
+
+`processor_count`
+
+: *Opcional*. Número de &quot;procesadores lógicos&quot;. Por ejemplo, `8`.
+
+`cpu_description`
+
+: *Opcional*. Descripción de la CPU. Por ejemplo, `Intel(R) Core(TM)2 Quad CPU Q6600 @ 2.40GHz`.
+
+`processor_frequency`
+
+: *Opcional*. Frecuencia del procesador en MHz. Ten en cuenta que la frecuencia real de la CPU puede variar según la carga y las condiciones de energía actuales, especialmente en dispositivos de baja potencia como teléfonos y portátiles.
+
+`device_type`
+
+: *Opcional*. Tipo de dispositivo en el que se ejecuta la aplicación. Por ejemplo, `Unknown, Handheld, Console, Desktop`.
+
+`battery_status`
+
+: *Opcional*. Estado de la batería del dispositivo. Por ejemplo, `Unknown, Charging, Discharging, NotCharging, Full`.
+
+`device_unique_identifier`
+
+: *Opcional*. Identificador único del dispositivo. Este valor solo podría usarse si `sendDefaultPii` está habilitado.
+
+`supports_vibration`
+
+: *Opcional*. ¿La vibración está disponible en el dispositivo?
+
+`supports_accelerometer`
+
+: *Opcional*. ¿El acelerómetro está disponible en el dispositivo?
+
+`supports_gyroscope`
+
+: *Opcional*. ¿El giroscopio está disponible en el dispositivo?
+
+`supports_audio`
+
+: *Opcional*. ¿El audio está disponible en el dispositivo?
+
+`supports_location_service`
+
+: *Opcional*. ¿El dispositivo puede informar su ubicación?
+
+<div id="os-context">
+  ## Contexto del SO
+</div>
+
+El contexto del SO bajo la clave predeterminada `"os"` describe el sistema operativo en el que
+ocurrió el bloqueo/se creó el evento.
+
+El `type` y la clave predeterminada es `"os"`. Sin embargo, dado que los contextos pueden establecerse
+varias veces bajo diferentes claves, históricamente ha habido mucha
+confusión sobre qué contexto de SO representa qué. Aquí van algunos ejemplos:
+
+* En eventos enviados desde un backend web en Python/ASP.NET/Rails, el contexto del SO
+  bajo la clave predeterminada `"os"` es el sistema operativo del servidor y lo establece
+  el SDK (si acaso).
+
+  Además, el servidor de Sentry intentará analizar el encabezado `User-Agent`
+  de la [Request Interface](/es/sdk/data-model/event-payloads/request/) del evento y crear un contexto de SO *secundario*
+  bajo la clave no predeterminada `"client_os"`.
+
+* En eventos enviados desde un frontend web en JS, el SDK normalmente no envía
+  contexto de SO.
+
+  Sin embargo, el servidor sabe, al observar la plataforma (`"javascript"`), que el
+  User-Agent entrante solo puede provenir del dispositivo que falló, y crea el
+  contexto de SO basado en el User-Agent bajo la clave predeterminada `"os"`.
+
+Para resumir:
+
+* Clave `"os"` para el dispositivo que genera el evento.
+* Clave `"client_os"` para el SO de un dispositivo cliente adyacente (que *no* es el
+  dispositivo que crea el evento) si es relevante. El servidor de Sentry establece esto como parte del
+  análisis del User-Agent, pero los SDK también pueden establecerlo directamente.
+* En caso de duda, envía `"os"`. Cualquier otra clave no es buscable en el
+  producto y no se resaltará visualmente con íconos, por lo que usar algo
+  como `"server_os"` para aclarar lo que querías decir probablemente
+  resulte contraproducente para la experiencia general del producto.
+
+  Bajo el modelo mental existente, una clave hipotética `"server_os"`
+  en realidad significaría que estás informando el sistema operativo de un dispositivo “upstream”
+  adyacente con el que se está comunicando el dispositivo que falló.
+
+  Como dijo Kurt Tucholsky: «El contrario de lo bueno no es el mal, sino las buenas intenciones».
+
+`name`
+
+: *Recomendado*. El nombre del sistema operativo. Podría derivarse de `raw_description`. Es **obligatorio** si no se proporciona `raw_description`.
+
+`version`
+
+: *Opcional*. La versión del sistema operativo.
+
+`build`
+
+: *Opcional*. La revisión interna de compilación del sistema operativo.
+
+`kernel_version`
+
+: *Opcional*. Una cadena independiente de la versión del kernel. Normalmente es la salida completa de la syscall `uname`.
+
+`rooted`
+
+: *Opcional*. Un indicador que señala si el SO ha sido liberado (jailbroken) o rooteado.
+
+`theme`
+
+: *Opcional*. `light` o `dark`. Indica si el SO se ejecuta en modo oscuro o no.
+
+`raw_description`
+
+: *Opcional*. Una cadena de descripción sin procesar obtenida por el sistema operativo. Para algunos entornos de ejecución bien conocidos, Sentry intentará extraer `name` y `version` de esta cadena, si no se proporcionan explícitamente.
+
+`distribution_name`
+
+: *Opcional*. Un nombre estable para cada distribución. Se corresponde con `ID` en [`/etc/os-release`](https://www.freedesktop.org/software/systemd/man/latest/os-release.html#ID=) (ejemplos: `ubuntu`, `rhel`, `alpine`; hay una lista completa de identificadores probados en el [repositorio del SDK nativo](https://github.com/getsentry/sentry-native/blob/master/tests/fixtures/os_releases/distribution_names.txt)).
+
+`distribution_version`
+
+: *Opcional*. Normalmente identifica al menos el número de versión principal. Se corresponde con `VERSION_ID` en [`/etc/os-release`](https://www.freedesktop.org/software/systemd/man/latest/os-release.html#VERSION_ID=). Las distribuciones con lanzamientos continuos (rolling) no proporcionarán una versión.
+
+`distribution_pretty_name`
+
+: *Opcional*. Normalmente proporciona el nombre completo, la versión completa y el alias de la versión. Se corresponde con `PRETTY_NAME` en [`/etc/os-release`](https://www.freedesktop.org/software/systemd/man/latest/os-release.html#PRETTY_NAME=) (ejemplos: `Ubuntu 22.04.4 LTS`, `Raspian GNU/Linux 10 (buster)`).
+
+**Ejemplo de contexto del SO**
+
+El contexto del SO para los 3 principales sistemas operativos debería verse así:
+
+```json
+{
+  "windows": {
+    "type": "os",
+    "name": "Windows",
+    "version": "10.0.19041",
+    "build": "662"
+  },
+  "mac": {
+    "type": "os",
+    "name": "macOS",
+    "version": "11.1.0",
+    "build": "20C69",
+    "kernel_version": "20.2.0"
+  },
+  "linux": {
+    "type": "os",
+    "name": "Linux",
+    "version": "6.1.82(99.168.amzn2023.x86_64)",
+    "distribution_name": "amzn",
+    "distribution_version": "2023",
+    "distribution_pretty_name": "Amazon Linux 2023.4.20240401"
+    }
+  }
+}
+```
+
+<div id="runtime-context">
+  ## Contexto de ejecución
+</div>
+
+El contexto de ejecución describe un entorno de ejecución con más detalle. Por lo general, este contexto se usa varias veces si hay múltiples entornos involucrados (por ejemplo, si tienes una aplicación de JavaScript ejecutándose sobre la JVM).
+
+El `type` y la clave predeterminada es `"runtime"`.
+
+`name`
+
+: *Recomendado*. El nombre del entorno de ejecución. Puede derivarse de `raw_description`. Es **obligatorio** si no se proporciona `raw_description`.
+
+`version`
+
+: *Opcional*. El identificador de versión del entorno de ejecución.
+
+`raw_description`
+
+: *Opcional*. Una cadena de descripción sin procesar obtenida por el entorno de ejecución. Para algunos entornos de ejecución bien conocidos, Sentry intentará extraer `name` y `version` de esta cadena si no se proporcionan explícitamente.
+
+<div id="app-context">
+  ## Contexto de la app
+</div>
+
+El contexto de la app describe la aplicación. A diferencia del entorno de ejecución, esta es la
+aplicación real que estaba ejecutándose y contiene metadatos sobre la sesión
+actual.
+
+El `type` y la clave predeterminada es `"app"`.
+
+`app_start_time`
+
+: *Opcional*. Marca de tiempo UTC con formato que indica cuándo la persona usuaria inició la aplicación.
+
+`device_app_hash`
+
+: *Opcional*. Identificador de dispositivo específico de la aplicación.
+
+`build_type`
+
+: *Opcional*. Cadena que identifica el tipo de compilación. Por ejemplo, `testflight`.
+
+`app_identifier`
+
+: *Opcional*. Identificador de la aplicación independiente de la versión, a menudo un ID de paquete con puntos.
+
+`app_name`
+
+: *Opcional*. Nombre de la aplicación legible por personas, tal como aparece en la plataforma.
+
+`app_version`
+
+: *Opcional*. Versión de la aplicación legible por personas, tal como aparece en la plataforma.
+
+`app_build`
+
+: *Opcional*. Identificador interno de la compilación, tal como aparece en la plataforma.
+
+`app_memory`
+
+: *Opcional*. Cantidad de memoria utilizada por la aplicación en bytes.
+
+`app_arch`
+
+: *Opcional*. La arquitectura de CPU de la aplicación. Esto puede diferir de la arquitectura de CPU del dispositivo.
+
+`in_foreground`
+
+: *Opcional*. Indicador que señala si la app está en primer plano o no. Una app está en primer plano cuando es visible para la persona usuaria.
+
+`permissions`
+
+: *Opcional*. Un diccionario de permisos que utiliza la aplicación. Cada entrada del diccionario sigue la siguiente estructura: `<permission_name>: 'granted|denied|not_granted'`.
+Si una plataforma no proporciona capacidades para identificar si un permiso ha sido `denied`, entonces se puede usar `not_granted`.
+
+`view_names`
+
+: *Opcional*. Una lista de pantallas de la interfaz visibles en el momento actual.
+
+`start_type`
+
+: *Opcional*. La forma en que el sistema operativo inició la app. Por ejemplo, `cold`, `warm`, `cold.prewarmed` o `warm.prewarmed`.
+
+<div id="browser-context">
+  ## Contexto del navegador
+</div>
+
+El contexto del navegador contiene información sobre el navegador o el agente de usuario para errores relacionados con la web. Puede ser el navegador en el que ocurrió este evento o el agente de usuario de una solicitud web que activó el evento.
+
+El `type` y la clave predeterminada es `"browser"`.
+
+`name`
+
+: **Obligatorio**. Nombre visible de la aplicación del navegador.
+
+`version`
+
+: *Opcional*. Cadena de versión del navegador.
+
+<div id="gpu-context">
+  ## Contexto de GPU
+</div>
+
+El contexto de GPU describe la GPU del dispositivo.
+
+`name`
+
+: **Obligatorio**. El nombre del dispositivo gráfico.
+
+`version`
+
+: *Opcional*. La versión del dispositivo gráfico.
+
+`id`
+
+: *Opcional*. El identificador PCI del dispositivo gráfico.
+
+`vendor_id`
+
+: *Opcional*. El identificador de proveedor PCI del dispositivo gráfico.
+
+`vendor_name`
+
+: *Opcional*. El nombre del proveedor según lo informa el dispositivo gráfico.
+
+`memory_size`
+
+: *Opcional*. La memoria total de la GPU disponible en megabytes.
+
+`api_type`
+
+: *Opcional*. El tipo de API de bajo nivel del dispositivo.
+
+Ejemplos: `"Apple Metal"` o `"Direct3D11"`
+
+`driver_version`
+
+: *Opcional*. La versión del controlador del dispositivo gráfico.
+
+`multi_threaded_rendering`
+
+: *Opcional*. Indica si la GPU admite renderizado multihilo.
+
+`npot_support`
+
+: *Opcional*. La compatibilidad con texturas de tamaño no potencia de dos (NPOT).
+
+`max_texture_size`
+
+: *Opcional*. El tamaño máximo de textura que admite el hardware gráfico. Por ejemplo, `16384`.
+
+`graphics_shader_level`
+
+: *Opcional*. Nivel aproximado de “capacidad de shader” del dispositivo gráfico. Por ejemplo, `Shader Model 2.0, OpenGL ES 3.0, Metal / OpenGL ES 3.1, 27 (unknown)`.
+
+`supports_draw_call_instancing`
+
+: *Opcional*. ¿Se admite la instanciación de draw calls en la GPU?
+
+`supports_ray_tracing`
+
+: *Opcional*. ¿Está disponible el ray tracing en el dispositivo?
+
+`supports_compute_shaders`
+
+: *Opcional*. ¿Están disponibles los compute shaders en el dispositivo?
+
+`supports_geometry_shaders`
+
+: *Opcional*. ¿Están disponibles los geometry shaders en el dispositivo?
+
+**Ejemplo de contexto de GPU**
+
+```json
+{
+  "contexts": {
+    "gpu": {
+      "name": "AMD Radeon Pro 560",
+      "vendor_name": "Apple",
+      "memory_size": 4096,
+      "api_type": "Metal",
+      "multi_threaded_rendering": true,
+      "version": "Metal",
+      "npot_support": "Full"
+    }
+  }
+}
+```
+
+<div id="state-context">
+  ## Contexto de estado
+</div>
+
+El contexto de estado describe el estado de la aplicación (p. ej., el objeto del store de Redux).
+
+La clave y el `type` predeterminados es `"state"`.
+
+`state`
+
+: **Obligatorio**. Objeto con dos claves: `type` *opcional* para indicar la biblioteca de estado (p. ej., Redux, MobX, Vuex) y `value` **obligatoria** que contiene el objeto de estado.
+
+**Ejemplo de contexto de estado**
+
+```json
+{
+  "contexts": {
+    "state": {
+      "state": {
+        "type": "MobX",
+        "value": {
+          "flights": [],
+          "airports": [],
+          "showModal": false
+        }
+      }
+    }
+  }
+}
+```
+
+<div id="culture-context">
+  ## Contexto cultural
+</div>
+
+El contexto cultural describe ciertas propiedades de la cultura en la que
+se utiliza el software.
+
+El `type` y la clave predeterminada es `"culture"`.
+
+`calendar`
+
+: *Opcional*. Por ejemplo, `GregorianCalendar`. Cadena de texto libre.
+
+`display_name`
+
+: *Opcional*. Nombre legible por humanos de la cultura. Por ejemplo, `English (United States)`.
+
+`locale`
+
+: *Opcional*. El identificador de nombre, generalmente conforme a RFC 4646. Por ejemplo, `en-US` o `pt-BR`.
+
+`is_24_hour_format`
+
+: *Opcional*. Booleano; `true` o `false`.
+
+`timezone`
+
+: *Opcional*. La zona horaria de la configuración regional. Por ejemplo, `Europe/Vienna`.
+
+<div id="cloud-resource-context">
+  ## Contexto de recursos en la nube
+</div>
+
+El contexto de recursos en la nube describe ciertas propiedades del proveedor de nube donde se ejecuta el software.
+Los datos de este contexto cumplen con las convenciones semánticas de [Cloud](https://opentelemetry.io/docs/reference/specification/resource/semantic_conventions/cloud/) y [Host](https://opentelemetry.io/docs/reference/specification/resource/semantic_conventions/host/) de OpenTelemetry.
+
+El `type` y la clave predeterminada es `"cloud_resource"`.
+
+`cloud.provider`
+
+: *Opcional*. Nombre del proveedor de nube.
+
+* Lista de valores conocidos. Si aplica uno de ellos, se DEBE usar el valor correspondiente; de lo contrario, se PUEDE usar un valor personalizado:
+  * `alibaba_cloud` - Alibaba Cloud
+  * `aws` - Amazon Web Services
+  * `azure` - Microsoft Azure
+  * `gcp` - Google Cloud Platform
+  * `ibm_cloud` - IBM Cloud
+  * `tencent_cloud` - Tencent Cloud
+* Ejemplo: `aws`
+
+`cloud.account.id`
+
+: *Opcional*. ID de la cuenta de nube a la que está asignado el recurso.
+
+* Ejemplo: `111111111111`
+
+`cloud.region`
+
+: *Opcional*. La región geográfica donde se ejecuta el recurso.
+
+* Ejemplo: `us-central1` o `us-east-1`
+
+`cloud.availability_zone`
+
+: *Opcional*. Las regiones de la nube suelen tener múltiples ubicaciones aisladas conocidas como zonas para aumentar la disponibilidad. La zona de disponibilidad representa la zona donde se ejecuta el recurso.
+
+* Ejemplo: `us-east-1c`
+
+`cloud.platform`
+
+: *Opcional*. La plataforma de nube en uso. El prefijo del servicio DEBE coincidir con el especificado en `cloud.provider`.
+
+* Ejemplo: `aws_ecs`
+
+`host.id`
+
+: *Opcional*. ID único del host.
+
+* Ejemplo: `3635354529892309001`
+
+`host.type`
+
+: *Opcional*. Tipo de máquina del host.
+
+* Ejemplo: `t4g.medium`
+
+**Ejemplo de contexto de recursos en la nube**
+
+El siguiente ejemplo ilustra la parte de contextos del <Link to="/sdk/data-model/event-payloads/">payload del evento</Link> y omite otros atributos por simplicidad.
+
+```json
+{
+  "contexts": {
+    "cloud_resource": {
+      "cloud.provider": "aws",
+      "cloud.platform": "aws_ec2",
+      "cloud.account.id": "499517922981",
+      "cloud.region": "us-east-1",
+      "cloud.availability_zone": "us-east-1e",
+      "host.id": "i-07d3301208fe0a55a",
+      "host.type": "t2.large"
+    }
+  }
+}
+```
+
+<div id="memory-info-context">
+  ## Contexto de información de memoria
+</div>
+
+El contexto de información de memoria recopila información detallada sobre el uso de memoria y las métricas del recolector de basura de una aplicación en el momento en que ocurre un evento. Es especialmente útil para diagnosticar problemas relacionados con la memoria en entornos de tiempo de ejecución administrados.
+
+El `type` y la clave predeterminada es `"memory_info"`.
+
+`allocated_bytes`
+
+: Memoria asignada actualmente.
+
+`compacted`
+
+: Booleano que indica si la memoria se compactó.
+
+`concurrent`
+
+: Booleano que indica si se realizó recolección de basura concurrente.
+
+`finalization_pending_count`
+
+: Número de objetos pendientes de finalización.
+
+`fragmented_bytes`
+
+: Memoria fragmentada que no se puede usar.
+
+`heap_size_bytes`
+
+: Tamaño total del montón (heap).
+
+`high_memory_load_threshold_bytes`
+
+: Umbral para la detección de alta carga de memoria.
+
+`index`
+
+: Índice de generación del GC.
+
+`memory_load_bytes`
+
+: Carga de memoria actual.
+
+`pause_durations`
+
+: Lista de duraciones de pausas del GC en milisegundos.
+
+`pause_time_percentage`
+
+: Porcentaje de tiempo dedicado a pausas del GC.
+
+`pinned_objects_count`
+
+: Número de objetos anclados en memoria.
+
+`promoted_bytes`
+
+: Bytes promovidos a una generación superior.
+
+`total_allocated_bytes`
+
+: Memoria total asignada desde el inicio.
+
+`total_available_memory_bytes`
+
+: Memoria total disponible para la aplicación.
+
+`total_committed_bytes`
+
+: Memoria virtual total reservada/comprometida.
+
+**Ejemplo de contexto de información de memoria**
+
+```json
+{
+  "contexts": {
+    "memory_info": {
+      "type": "memory_info",
+      "allocated_bytes": 1048576,           // 1 MiB
+      "total_allocated_bytes": 9437184,     // 9 MiB
+      "heap_size_bytes": 3145728,           // 3 MiB
+      "pinned_objects_count": 150,
+      "pause_time_percentage": 25.5,
+      "compacted": true,
+      "concurrent": true,
+      "pause_durations": [10, 5, 3]
+    }
+  }
+}
+```
+
+<div id="thread-pool-info-context">
+  ## Contexto de información del grupo de subprocesos
+</div>
+
+El contexto de información del grupo de subprocesos recopila métricas detalladas sobre el estado del grupo en el momento en que ocurre un evento. Este contexto es útil para investigar cuellos de botella de rendimiento, inanición de subprocesos y problemas de contención de recursos en aplicaciones multihilo.
+
+El `type` y la clave predeterminada es `"threadpool_info"`.
+
+`available_worker_threads`
+
+: Número de subprocesos de trabajo disponibles actualmente en el grupo de subprocesos. Los subprocesos de trabajo se usan para ejecutar código de la aplicación y manejar tareas intensivas en CPU.
+
+`available_completion_port_threads`
+
+: Número de subprocesos de puerto de finalización (también conocidos como subprocesos de puerto de finalización de E/S) disponibles actualmente. Estos subprocesos manejan operaciones de E/S y devoluciones de llamada asincrónicas.
+
+`max_worker_threads`
+
+: Número máximo de subprocesos de trabajo que puede tener el grupo de subprocesos. Esto representa el límite superior para la asignación de subprocesos de trabajo.
+
+`max_completion_port_threads`
+
+: Número máximo de subprocesos de puerto de finalización que puede mantener el grupo de subprocesos. Esto establece el techo para la asignación de subprocesos de puerto de finalización de E/S.
+
+`min_worker_threads`
+
+: Número mínimo de subprocesos de trabajo que mantiene el grupo de subprocesos. El grupo de subprocesos siempre conservará al menos esta cantidad de subprocesos de trabajo activos.
+
+`min_completion_port_threads`
+
+: Número mínimo de subprocesos de puerto de finalización que mantiene el grupo de subprocesos. Esto garantiza una cantidad base de subprocesos disponibles para operaciones de E/S.
+
+**Ejemplo de contexto de información del grupo de subprocesos**
+
+```json
+{
+  "contexts": {
+    "threadpool_info": {
+      "available_worker_threads": 1022,
+      "available_completion_port_threads": 1000,
+      "max_worker_threads": 1023,
+      "max_completion_port_threads": 1000,
+      "min_worker_threads": 1,
+      "min_completion_port_threads": 1
+    }
+  }
+}
+```
+
+<div id="trace-context">
+  ## Contexto de trazas
+</div>
+
+Información adicional que permite a Sentry vincular varias transacciones, spans y/o errores en una sola traza. Importante: si falta el contexto de traza, relay descartará la transacción.
+
+`trace_id`
+
+: Obligatorio. El ID de la traza. Determina a qué `trace` pertenece el span o la transacción. El valor debe ser 16 bytes aleatorios codificados como una cadena hexadecimal (32 caracteres).
+
+* Ejemplo: `"8f431b7aa08441bbbd5a0100fd91f9fe"`
+
+`span_id`
+
+: Obligatorio. El ID del span o de la transacción. Para eventos que no son transacciones, y si el monitoreo de rendimiento está deshabilitado, puede seguir interesando adjuntar eventos a una traza mediante un ID de traza. En estos casos, igualmente debes proporcionar un ID de span. Este ID de span puede ser completamente aleatorio y no tiene por qué estar relacionado con un span real; no obstante, se recomienda usar el mismo ID de span para varios eventos dentro de la misma unidad de ejecución (p. ej., una solicitud). Consulta la documentación de TwP [/sdk/telemetry/traces/tracing-without-performance/#attaching-trace-data-to-events-and-envelopes](/es/sdk/telemetry/traces/tracing-without-performance/#attaching-trace-data-to-events-and-envelopes) para más detalles.
+
+* Ejemplo: `"bb8f278130535c3c"`
+
+`parent_span_id`
+
+: Opcional. El ID del span que contiene este span.
+
+* Ejemplo: `null` o `"a8972eefa820e2ff"`
+
+`op`
+
+: Opcional. Código corto que identifica el tipo de operación que mide el span. Para más detalles, consulta [las convenciones de Sentry sobre operaciones de span](/es/sdk/performance/span-operations/).
+
+* Ejemplo: `"http.server"`
+
+`status`
+
+: Opcional. Indica si la traza falló o tuvo éxito. Actualmente solo se usa para indicar el estado de transacciones individuales.
+
+* Ejemplo: `"ok"`
+
+* Lista de estados disponibles y su descripción:
+
+  | Estado                        | Descripción                                                                                                     | Código de estado HTTP equivalente |
+  | ----------------------------- | --------------------------------------------------------------------------------------------------------------- | --------------------------------- |
+  | `ok`                          | No es un error; se devuelve cuando la operación tiene éxito                                                     | Códigos HTTP 200 y 2XX            |
+  | `cancelled`                   | La operación fue cancelada, normalmente por quien la invocó                                                     | 499                               |
+  | `unknown` o `unknown_error`   | Error desconocido generado por APIs que no devuelven suficiente información de error                            | 500                               |
+  | `invalid_argument`            | El cliente especificó un argumento no válido                                                                     | 400                               |
+  | `deadline_exceeded`           | El plazo expiró antes de que la operación pudiera completarse con éxito                                         | 504                               |
+  | `not_found`                   | No se encontró el contenido o se denegó la solicitud para toda una clase de usuarios                            | 404                               |
+  | `already_exists`              | La entidad que se intentó crear ya existe                                                                        | 409                               |
+  | `permission_denied`           | Quien invoca no tiene permiso para ejecutar la operación especificada                                           | 403                               |
+  | `resource_exhausted`          | El recurso se ha agotado; p. ej., cuota por usuario agotada, sistema de archivos sin espacio                    | 429                               |
+  | `failed_precondition`         | El cliente no debería reintentar hasta que el estado del sistema se haya gestionado explícitamente              | 400                               |
+  | `aborted`                     | La operación fue abortada                                                                                       | 409                               |
+  | `out_of_range`                | La operación se intentó fuera del rango válido; p. ej., buscar más allá del final de un archivo                 | 400                               |
+  | `unimplemented`               | La operación no está implementada o no es compatible/está habilitada para esta operación                        | 501                               |
+  | `internal_error`              | Se han infringido algunas invariantes esperadas por el sistema subyacente. Este código se reserva para errores graves | 500                               |
+  | `unavailable`                 | El servicio no está disponible actualmente; p. ej., debido a una condición transitoria                          | 503                               |
+  | `data_loss`                   | Pérdida o corrupción de datos irrecuperable                                                                     | 500                               |
+  | `unauthenticated`             | Quien realiza la solicitud no tiene credenciales de autenticación válidas para la operación                     | 401                               |
+
+`origin`
+
+: Opcional. El origen de la traza indica qué creó la traza. Para más detalles, consulta [trace origin](/es/sdk/performance/trace-origin/).
+
+`data`
+
+: Opcional. El mapa de datos personalizados proporcionados. Actualmente los SDK de Sentry pueden establecer los siguientes campos:
+
+| Campo            | Tipo              | Descripción                                   |
+| ---------------- | ----------------- | --------------------------------------------- |
+| `route`          | `string` o `map`  | La ruta actual en la aplicación.              |
+| `previous_route` | `string` o `map`  | La ruta anterior que el usuario estaba visitando en la aplicación. |
+
+Actualmente, `route` admite los siguientes campos predefinidos si es un mapa:
+
+| Campo    | Tipo     | Descripción                                   |
+| -------- | -------- | --------------------------------------------- |
+| `name`   | `string` | El nombre de la ruta en la aplicación del usuario. |
+| `params` | `map`    | Parámetros asignados a esta ruta.             |
+
+Si la ruta se define como una cadena (p. ej., `"route": "foo"`), se normalizará a un mapa (p. ej., `"route": {"name": "foo"}`) en el servidor.
+
+**Ejemplo de contexto de rastreo**
+
+```json
+{
+  "contexts": {
+    "trace": {
+      "trace_id": "12312012123120121231201212312012",
+      "span_id": "0415201309082013",
+      "parent_span_id": null,
+      "description": "<OrganizationContext>",
+      "op": "http.server",
+      "origin": "auto.http.http_client_5",
+      "data": {
+        "route": {
+          "name": "HomeRoute"
+        }
+      }
+    }
+  }
+}
+```
+
+<div id="unity-context">
+  ## Contexto de Unity
+</div>
+
+El contexto de Unity captura detalles del entorno del motor de juego Unity para diagnosticar problemas específicos de Unity. Este contexto es útil para investigar problemas gráficos, de rendimiento, compatibilidad de versiones y comportamiento específico de cada plataforma en aplicaciones de Unity.
+
+El `type` y la clave predeterminada es `"unity"`.
+
+`copy_texture_support`
+
+: Capacidades de copia de texturas gráficas.
+
+`editor_version`
+
+: Versión del Editor de Unity.
+
+`install_mode`
+
+: Método de distribución.
+
+`rendering_threading_mode`
+
+: Configuración de la canalización de renderizado.
+
+`target_frame_rate`
+
+: Configuración de FPS objetivo.
+
+**Ejemplo de contexto de Unity**
+
+```json
+{
+  "contexts": {
+    "unity": {
+      "copy_texture_support": "Básico, Copy3D, DifferentTypes, TextureToRT, RTToTexture",
+      "editor_version": "2022.1.23f1",
+      "install_mode": "Store",
+      "rendering_threading_mode": "LegacyJobified",
+      "target_frame_rate": "-1",
+    }
+  }
+}
+```
+
+<div id="replay-context">
+  ## Contexto de reproducción
+</div>
+
+El contexto de reproducción contiene el replay&#95;id de la reproducción asociada al evento.
+
+El único campo obligatorio es `replay_id`.
+
+En la mayoría de los casos, los SDK no deberían enviar esto, ya que el Dynamic Sampling Context se extraerá en relay,
+pero en las versiones actuales de Python y PHP estos SDK enviarán este contexto porque actualmente no admiten
+el endpoint de envelope.
+
+`replay_id`
+
+: **Obligatorio**. El replay&#95;id asociado al evento.
+
+**Ejemplo de contexto de reproducción**
+
+```json
+{
+  "contexts": {
+    "replay": {
+      "replay_id": "12312012123120121231201212312012"
+    }
+  }
+}
+```
+
+<div id="page-context">
+  ## Contexto de la página
+</div>
+
+El contexto de la página contiene información sobre la página en la que ocurrió el evento.
+
+`url`
+
+: **Obligatorio.** La URL de la página en la que ocurrió el evento, excluyendo los parámetros de consulta y el fragmento.
+
+* Ejemplo: `https://sentry.io/issues`
+
+`http.query`
+
+: **Opcional.** Los parámetros de consulta de la página en la que ocurrió el evento.
+
+* Ejemplo: `?page=1`
+
+`http.fragment`
+
+: **Opcional.** El fragmento de la página en la que ocurrió el evento.
+
+* Ejemplo: `#123`
+
+`referer`
+
+: *Opcional*. El referer de la página en la que ocurrió el evento.
+
+* Ejemplo: `https://sentry.io/`
+
+**Ejemplo de contexto de la página**
+
+```json
+{
+  "contexts": {
+    "page": {
+      "url": "https://sentry.io/issues",
+      "http.query": "?page=1",
+      "http.fragment": "#123",
+      "referer": "https://sentry.io/"
+    }
+  }
+}
+```
+
+<div id="response-context">
+  ## Contexto de la respuesta
+</div>
+
+El contexto de la respuesta contiene información sobre la respuesta HTTP asociada al evento.
+
+Esto se establece principalmente en transacciones en un entorno de servidor web, donde una transacción representa un ciclo de solicitud/respuesta HTTP.
+
+`cookies`
+
+: *Opcional*. Los valores de las cookies. Se pueden pasar, sin procesar, como una cadena, como un diccionario o como una lista de tuplas.
+
+* Ejemplo: `{ "PHPSESSID": "12345", "csrftoken": "1234567" }`
+
+`headers`
+
+: *Opcional*. Un diccionario de encabezados enviados. Si un encabezado aparece varias veces, debe combinarse conforme al estándar HTTP para la combinación de encabezados. Sentry trata los nombres de encabezados como no sensibles a mayúsculas y minúsculas.
+
+* Ejemplo: `{ "Content-Type": "text/plain" }`
+
+`status_code`
+
+: **Obligatorio.** El código de estado entero de la respuesta HTTP asociada al evento.
+
+* Ejemplo: `200`
+
+`body_size`
+
+: *Opcional*. Tamaño del cuerpo de la respuesta HTTP en bytes.
+
+* Ejemplo: `1000`
+
+`data`
+
+: *Opcional*. Datos de la respuesta en el formato que corresponda. Los SDK deben descartar por defecto los cuerpos grandes y binarios. Se puede proporcionar como una cadena o como datos estructurados en cualquier formato.
+
+* Ejemplo: `"Invalid request"`
+
+**Ejemplo de contexto de respuesta**
+
+```json
+{
+  "contexts": {
+    "response": {
+      "cookies": {
+        "PHPSESSID": "12345",
+        "csrftoken": "1234567"
+      },
+      "headers": {
+        "Content-Type": "text/plain"
+      },
+      "status_code": 500,
+      "body_size": 1000,
+      "data": "Solicitud inválida"
+    }
+  }
+}
+```
+
+<div id="missing-instrumentation-context">
+  ## Contexto de instrumentación ausente
+</div>
+
+El contexto contiene información sobre instrumentación de OTEL ausente o fallida.
+
+El campo obligatorio es `package`, que debe contener el paquete o framework donde se detectó una instrumentación ausente.
+
+`package`
+
+: **Obligatorio.** El paquete o framework donde se detectó una instrumentación ausente.
+
+* Ejemplo: `express`
+
+`javascript.is_cjs`
+
+: *Opcional*. Booleano que indica si el contexto se añadió desde un módulo CommonJS.
+
+* Ejemplo: `true`
+
+**Ejemplo de contexto de respuesta**
+
+```json
+{
+  "contexts": {
+    "missing_instrumentation": {
+      "package": "express",
+      "javascript.is_cjs": true
+    }
+  }
+}
+```
+
+<div id="feature-flag-context">
+  ## Contexto de feature flags
+</div>
+
+El contexto de feature flags contiene información sobre las flags evaluadas antes de que ocurriera un error. Los resultados de la evaluación de flags se colocan en la clave `values`, que es un arreglo de 0 o más objetos de resultados de evaluación de flags.
+
+`flag`
+
+: **Obligatorio.** El nombre de la flag que fue evaluada.
+
+* Ejemplo: `"feature-is-enabled"`
+
+`result`
+
+: **Obligatorio.** El resultado booleano de la evaluación de la flag.
+
+* Ejemplo: `false`
+
+**Ejemplo de contexto de feature flags**
+
+```json
+{
+  "contexts": {
+    "flags": {
+      "values": [
+        {
+          "flag": "mi_nombre_de_bandera",
+          "result": true
+        }
+      ]
+    }
+  }
+}
+```

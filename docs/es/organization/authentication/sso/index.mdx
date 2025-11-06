@@ -1,0 +1,212 @@
+---
+title: "Inicio de sesión único (SSO)"
+sidebar_order: 20
+description: "Descubre qué es el inicio de sesión único (SSO) y cómo ayuda a administrar tu organización."
+---
+
+El inicio de sesión único (o SSO) te permite administrar a todos los miembros de tu organización mediante un proveedor externo.
+
+<div id="preface">
+  ## Prefacio
+</div>
+
+Antes de activar SSO, ten en cuenta que, una vez habilitado, todos los usuarios existentes tendrán que vincular su cuenta para poder seguir usando Sentry. Por eso recomendamos coordinarlo con tu equipo en horas de menor actividad. Dicho esto, vincular cuentas es muy rápido, así que no lo consideramos un verdadero inconveniente.
+
+<div id="getting-started">
+  ## Primeros pasos
+</div>
+
+Con eso resuelto, ve a la página principal de tu organización. Verás un enlace “Auth” en la barra lateral si tienes acceso a SSO. Empieza haciendo clic ahí y luego continúa con el enlace “Configure” junto al proveedor que quieras configurar.
+
+Además, enviaremos automáticamente a cada miembro existente un correo con instrucciones para vincular su cuenta. Esto sucederá en cuanto SSO se haya configurado correctamente. Incluso si no hacen clic en el enlace, la próxima vez que intenten acceder a cualquier página dentro de la organización les pediremos que vinculen su cuenta (con el mismo flujo de autenticación por el que acabas de pasar).
+
+<div id="default-membership">
+  ## Membresía predeterminada
+</div>
+
+Cada persona que cree una nueva cuenta mediante SSO recibirá acceso global a la organización con el rol de miembro. Esto significa que podrá acceder a eventos de cualquier equipo, pero no podrá crear proyectos nuevos ni administrar los existentes.
+
+<div id="security">
+  ## Seguridad
+</div>
+
+Nuestra implementación de SSO prioriza la seguridad. Supervisamos de forma proactiva las cuentas vinculadas y las desactivaremos si hay cualquier indicio razonable de que se haya revocado su acceso. Por lo general, esto será transparente para ti; sin embargo, si el proveedor se comporta de forma inesperada, es posible que veas solicitudes de reautorización con más frecuencia.
+
+Las sesiones tienen [la duración predeterminada de Django](https://docs.djangoproject.com/en/1.11/topics/http/sessions/#using-cookie-based-sessions), que es de dos semanas.
+
+<div id="providers">
+  ## Proveedores
+</div>
+
+<div id="google-business-app">
+  ### Aplicación de Google Business
+</div>
+
+<Include name="feature-available-for-plan-trial-team.mdx" />
+
+Al habilitar la integración con Google, se te pedirá que te autentiques con una cuenta de Google Apps. Una vez hecho, la pertenencia se limitará a los miembros del dominio de Apps especificado (p. ej., `sentry.io`).
+
+<Alert>
+  Si necesitas permitir que usuarios de varios domininios accedan a tu organización o cambiar tu dominio de Google, ponte en contacto con nuestro equipo de soporte.
+</Alert>
+
+<div id="github-organizations">
+  ### Organizaciones de GitHub
+</div>
+
+<Include name="feature-available-for-plan-trial-team.mdx" />
+
+La integración con GitHub se autenticará frente a todas las organizaciones y, una vez finalizado, te pedirá que elijas la organización por la que deseas restringir el acceso.
+
+<div id="saml2-identity-providers">
+  ### Proveedores de identidad SAML2
+</div>
+
+<Include name="feature-available-for-plan-business-no-trial.mdx" />
+
+Sentry ofrece [autenticación basada en SAML2](https://en.wikipedia.org/wiki/SAML_2.0), que puede configurarse manualmente con el proveedor genérico de SAML2 o con alguno de los siguientes proveedores, que incluyen valores predeterminados específicos de cada uno:
+
+* [AuthO](/es/organization/authentication/sso/#auth0)
+* [Azure Active Directory](/es/organization/authentication/sso/#azure-active-directory)
+* [Okta](/es/organization/authentication/sso/#okta)
+* [OneLogin](/es/organization/authentication/sso/#onelogin)
+* [Rippling](/es/organization/authentication/sso/#rippling)
+* [Jumpcloud](/es/organization/authentication/sso/#jumpcloud)
+
+Sentry admite los siguientes servicios SAML:
+
+* SSO iniciado por el Proveedor de Identidad o por el Proveedor de Servicio
+* SLO (cierre de sesión único) iniciado por el Proveedor de Identidad
+
+El Servicio de Consumidor de Aserciones de Sentry usa enlaces HTTP-POST.
+
+<Alert level="warning">
+  Si cambias el slug de tu organización, tendrás que realizar la misma actualización en los pasos donde ingreses los valores de configuración de SSO/SAML.
+</Alert>
+
+Los endpoints SAML de Sentry son los siguientes, donde se sustituye `[organization_slug]` por el slug de tu organización:
+
+<table class="table">
+  <tbody valign="top">
+    <tr>
+      <th>ACS:</th>
+
+      <td>
+        <code class="docutils literal">
+          https://sentry.io/saml/acs/[organization&#95;slug]/
+        </code>
+      </td>
+    </tr>
+
+    <tr>
+      <th>SLS:</th>
+
+      <td>
+        <code class="docutils literal">
+          https://sentry.io/saml/sls/[organization&#95;slug]/
+        </code>
+      </td>
+    </tr>
+
+    <tr>
+      <th>Metadata:</th>
+
+      <td>
+        <code class="docutils literal">
+          https://sentry.io/saml/metadata/[organization&#95;slug]/
+        </code>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<div id="auth0">
+  #### Auth0
+</div>
+
+En tu panel de Auth0, busca la aplicación Sentry en la página SSO Integrations y agrégala a tu organización.
+
+Como parte de la configuración de SSO con Auth0, debes proporcionar a Sentry los metadatos del proveedor de identidad de Auth0. Esta URL está disponible en la pestaña Tutorial de la integración de SSO de Sentry.
+
+Puedes consultar la [documentación de Auth0](https://auth0.com/docs/integrations/sso/sentry) para obtener instrucciones de configuración más detalladas.
+
+<div id="azure-active-directory">
+  #### Azure Active Directory
+</div>
+
+En el panel de Azure AD, busca la aplicación Sentry en Enterprise Applications y agrégala a tu organización.
+
+Puedes consultar [nuestra documentación](/es/organization/authentication/sso/azure-sso/) para obtener instrucciones de configuración más detalladas.
+
+<div id="okta">
+  #### Okta
+</div>
+
+En tu panel de administración de Okta, busca la aplicación Sentry en la Okta Application Network y agrégala a tu organización.
+
+Como parte de la configuración de SSO de Okta, debes proporcionar a Sentry los metadatos del proveedor de identidad (Identity Provider) de Okta. Esta URL se encuentra en el panel de configuración de SAML2 en Sign-On Methods; busca el enlace “Identity Provider metadata”, sobre el que puedes hacer clic derecho para copiar la dirección del enlace.
+
+Puedes consultar [nuestra documentación](/es/organization/authentication/sso/okta-sso/) para obtener instrucciones de configuración más detalladas.
+
+<div id="onelogin">
+  #### OneLogin
+</div>
+
+En tu panel de OneLogin, encuentra la aplicación Sentry en el catálogo de aplicaciones y añádela a tu organización.
+
+Como parte de la configuración de SSO de OneLogin, debes proporcionar a Sentry la URL del emisor del proveedor de identidad de OneLogin. Esta URL es específica de tu cuenta de OneLogin y se encuentra en la pestaña “SSO” de la página de configuración de la aplicación Sentry en OneLogin.
+
+Puedes consultar la [documentación de OneLogin](https://onelogin.service-now.com/support?id=kb_article\&sys_id=1d199dcfdbdc5700d5505eea4b96196a) para obtener instrucciones de configuración más detalladas.
+
+<div id="rippling">
+  #### Rippling
+</div>
+
+En tu panel de administración de Rippling, busca la aplicación de Sentry en la lista de aplicaciones sugeridas y selecciónala.
+
+Cuando se te solicite la URL de metadatos de Rippling, cópiala en la configuración del proveedor de Rippling en Sentry. Deberás completar la configuración de la aplicación en Rippling antes de finalizar la configuración del proveedor en Sentry.
+
+<div id="jumpcloud">
+  #### Jumpcloud
+</div>
+
+En tu portal de administración de Jumpcloud:
+
+1. Ve a **User Authentication &gt; SSO**.
+2. Agrega una nueva aplicación de SSO y busca Sentry.
+3. Haz clic en &quot;Configure&quot;.
+4. En el menú de SSO, actualiza el SP Entity ID y las ACS URLs de tu tenant. Deben tener el formato descrito [aquí](/es/organization/authentication/sso/saml2/#register-sentry-with-idp).
+5. Haz clic en &quot;save&quot;.
+
+Asegúrate de haberte asignado a la aplicación de Sentry en Jumpcloud antes de intentar los siguientes pasos.
+
+1. En [sentry.io](https://sentry.io), ve a **Settings &gt; Auth** en tu organización.
+2. Haz clic en &quot;Configure&quot; en el proveedor Jumpcloud.
+3. Ve a &quot;XML&quot; dentro de la página de registro.
+4. Descarga tus metadatos de Jumpcloud en la pestaña &quot;SSO&quot; de tu aplicación Jumpcloud Sentry SSO haciendo clic en &quot;Export Metadata&quot;.
+5. Pega tus metadatos XML en el campo de texto y haz clic en &quot;Parse Metadata&quot;.
+6. En la página &quot;Map Identity Provider&quot;, completa &#39;uniqueID&#39;, &#39;email&#39;, &#39;firstname&#39; y &#39;lastname&#39; si dejaste tus atributos de Jumpcloud con los valores predeterminados para la aplicación de Sentry. Copia estos atributos de la columna &quot;Service Provider Attribute Name&quot;, no de &quot;JumpCloud Attribute Name&quot;.
+
+Ahora, Sentry debería estar configurado para el SSO de Jumpcloud.
+
+<div id="custom-saml2-integration">
+  #### Integración personalizada de SAML2
+</div>
+
+Para otros proveedores de SSO con SAML2 no incluidos arriba, Sentry ofrece conectores genéricos para la [autenticación basada en SAML2](/es/organization/authentication/sso/saml2/) que pueden configurarse manualmente.
+
+<div id="scim-provisioning">
+  ## Aprovisionamiento SCIM
+</div>
+
+<Include name="feature-available-for-plan-business-no-trial.mdx" />
+
+<Alert level="warning">
+  Si cambias el slug de tu organización, tendrás que hacer la misma actualización en los lugares donde ingreses los valores de configuración al configurar SCIM.
+</Alert>
+
+El System for Cross-Domain Identity Management ([SCIM](http://www.simplecloud.info/)) es un estándar implementado por los proveedores de identidad y las aplicaciones para facilitar la gestión automatizada de identidades. Sentry admite un subconjunto de la especificación para aprovisionar miembros y equipos de la organización. Consulta la documentación relevante para tu caso:
+
+* [Configuración de SCIM en Okta](/es/organization/authentication/sso/okta-sso/okta-scim/)
+* [Configuración de SCIM en Azure AD](/es/organization/authentication/sso/azure-sso/#scim-integration)
+* Si tu proveedor no aparece aquí, es posible que SCIM esté disponible, ya que es un estándar común. Si tienes problemas, ponte en contacto con nuestro equipo de soporte.

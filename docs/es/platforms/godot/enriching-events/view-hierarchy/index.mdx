@@ -1,0 +1,49 @@
+---
+title: Árbol de escenas
+description: >-
+  Obtén más información sobre cómo capturar datos del árbol de escenas durante errores y fallos. Sentry
+  proporciona una representación visual del árbol de escenas de tu juego en el momento del
+  fallo, brindándote información adicional sobre los problemas.
+og_image: /og-images/platforms-godot-enriching-events-view-hierarchy.png
+---
+
+Sentry captura una representación JSON del árbol de escenas del motor durante errores y fallos y la añade al evento como un archivo adjunto. Esta función también se conoce en Sentry como View Hierarchy.
+
+<Alert title="Nota">
+  Este proceso solo puede ejecutarse en el hilo principal, por lo que podría no estar disponible durante eventos que ocurran en hilos distintos al principal. Además, si se produce un error antes de que se inicialice el árbol de escenas, no se podrá capturar esta información. En esencia, esta función debe considerarse una solución de mejor esfuerzo.
+</Alert>
+
+<div id="enabling-scene-tree-attachments">
+  ## Activar los adjuntos del árbol de escenas
+</div>
+
+La captura del árbol de escenas es una función opcional. Para adjuntar información del árbol de escenas a tus eventos, ve a **Project Settings &gt; Sentry &gt; Options** y activa la opción **Attach Scene Tree**:
+
+![Project Settings Screenshot](./img/project-settings.png)
+
+O, así, si estás <PlatformLink to="/configuration/options/">configurando cosas por código</PlatformLink>:
+
+```GDScript
+SentrySDK.init(func(options: SentryOptions) -> void:
+	options.attach_scene_tree = true
+)
+```
+
+<div id="viewing-scene-tree-attachments">
+  ## Ver adjuntos del árbol de escenas
+</div>
+
+La información del árbol de escenas se adjunta como el archivo `view-hierarchy.json`. Puedes encontrarlo en la pestaña &quot;Attachments&quot;, donde puedes ver todos los adjuntos y los eventos asociados. Haz clic en el ID del evento para abrir la página [Issue Details](/es/product/issues/issue-details) de ese evento.
+
+<Include name="common-imgs/viewhierarchy-list-example" />
+
+En la página **Issue Details**, puedes interactuar con el adjunto del árbol de escenas en una sección llamada &quot;Scene Tree&quot;. Esta sección representa el estado de tu árbol de escenas en el momento del error. Hay dos vistas: una vista en árbol y una vista detallada del nodo seleccionado. Puedes seleccionar nodos en el árbol para ver las propiedades recopiladas por el SDK. El SDK informa las siguientes claves para cada nodo en la vista:
+
+* `name`: Nombre del nodo.
+* `class`: Clase integrada del nodo.
+* `script`: Ruta del archivo del script adjunto al nodo. Solo los nodos con un script adjunto incluyen esta propiedad.
+* `scene`: Ruta del archivo de la escena original, si el nodo se ha instanciado desde un archivo PackedScene. Solo los nodos raíz de la escena incluyen esta propiedad.
+
+Esta función ofrece una instantánea de la estructura del árbol de escenas del juego en el momento del error, lo que facilita identificar qué nodos estaban activos y comprender mejor la relación entre ellos.
+
+![Ejemplo de árbol de escenas](./img/scene-tree-example.png)

@@ -1,0 +1,32 @@
+---
+title: "Formatos de archivos de depuración"
+description: "Conoce los formatos de archivos específicos de cada plataforma y la información de depuración que contienen."
+sidebar_order: 1
+---
+
+Sentry distingue cuatro tipos de información de depuración:
+
+* **Información de depuración:** Proporciona nombres de funciones, rutas a archivos fuente, números de línea y frames en línea. El proceso de resolver esta información a partir de direcciones de instrucción se llama &quot;symbolication&quot;. Esta información es relativamente voluminosa en comparación con el ejecutable y normalmente se coloca en un archivo separado. En Sentry, estos archivos se designan como *debug companions* y muestran la etiqueta `debug`.
+
+* **Tablas de símbolos:** Si no hay información de depuración disponible para una determinada biblioteca, Sentry puede usar tablas de símbolos como alternativa para recuperar nombres de funciones. Las tablas de símbolos suelen incluirse tanto en el ejecutable como en los archivos de acompañamiento de depuración. Sin embargo, no contienen suficiente información para resolver funciones en línea ni nombres de archivos y números de línea. La etiqueta `symtab` indica tablas de símbolos.
+
+* **Código fuente:** Por lo general, el código fuente no forma parte de los archivos habituales de información de depuración. Sentry CLI puede empaquetar el código fuente de tu aplicación y subirlo para mostrar el contexto de código en los stack traces en Sentry. Estos paquetes aparecen con la etiqueta `sources`.
+
+* **Información de desenrollado:** Permite a Sentry extraer stack traces de minidumps y otros formatos binarios de fallos en compilaciones optimizadas. Este proceso se conoce como &quot;stack unwinding&quot; o &quot;stack walking&quot;. Dado que esto también es necesario al lanzar excepciones en C++, esta información suele incluirse en el ejecutable o la biblioteca. Si un archivo subido contiene esta información, mostrará la etiqueta `unwind`. Ten en cuenta que en algunas plataformas no se realiza un desenrollado real. Por ejemplo, WebAssembly actualmente no tiene el equivalente de minidumps, lo que significa que no requerimos ese tipo de información en esos casos.
+
+Los compiladores colocan la información de depuración anterior en distintos archivos según la plataforma de destino, la arquitectura, las banderas de compilación o el nivel de optimización. En consecuencia, Sentry podría no necesitar toda la información anterior para procesar informes de fallos. Aun así, siempre es buena idea proporcionar toda la información de depuración disponible.
+
+`sentry-cli` se puede usar para listar propiedades de los archivos de depuración compatibles y validar su contenido. Consulta [*Archivos de información de depuración en sentry-cli*](/es/cli/dif/) para más información.
+
+<PlatformContent includePath="debug-file-formats-mach-o-dsym" />
+
+<div id="wasm">
+  ## WASM
+</div>
+
+Para WebAssembly, ofrecemos compatibilidad con [DWARF en contenedores WASM](https://yurydelendik.github.io/webassembly-dwarf/).
+Ten en cuenta que no admitimos los source maps, que también son un formato usado para la depuración de WASM, pero tienen limitaciones que los hacen poco prácticos para una herramienta de informes de fallos como Sentry.
+
+Dado que WASM todavía no especifica IDs de depuración/compilación, proporcionamos una herramienta aparte para añadir IDs de compilación y dividir archivos, llamada [wasm-split](https://github.com/getsentry/symbolicator/blob/master/crates/wasm-split), que te ayuda a crear un archivo complementario de depuración listo para subir a Sentry, a la vez que elimina toda la información de depuración del binario de la versión.
+
+<PlatformContent includePath="debug-file-formats-proguard-mappings" />

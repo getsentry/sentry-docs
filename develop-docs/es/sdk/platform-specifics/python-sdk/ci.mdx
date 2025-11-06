@@ -1,0 +1,26 @@
+---
+title: CI
+description: Nuestra configuración de pruebas y cómo se generan nuestros archivos de CI.
+sidebar_order: 20
+---
+
+Los archivos de workflow de GitHub para probar grupos específicos de integraciones (como IA, frameworks web, bases de datos, etc.) se generan mediante [este script](https://github.com/getsentry/sentry-python/blob/master/scripts/split-tox-gh-actions/split-tox-gh-actions.py). Básicamente, el script analiza nuestro `tox.ini` y genera los archivos YAML de CI de pruebas por grupo en `.github/workflows`.
+
+Hay varios componentes involucrados:
+
+* `tox.ini` es de donde se lee la configuración (qué probar y qué versiones)
+* `scripts/split-tox-gh-actions/split-tox-gh-actions.py` es el script que define los [grupos de prueba](https://github.com/getsentry/sentry-python/blob/0f3e5db0c8aabcad0baf0e8b2d3e31e27e839b3e/scripts/split-tox-gh-actions/split-tox-gh-actions.py#L57) y genera los archivos YAML resultantes
+* `scripts/split-tox-gh-actions/templates` contiene los fragmentos de plantillas de Jinja2 usados para generar los archivos YAML
+* `.github/workflows/test-integrations-*.yml` son los YAML de configuración de workflows resultantes
+
+Si actualizas cualquiera de los componentes sin mantener el resto sincronizado, por ejemplo haciendo un cambio en uno de los archivos `test-integrations-*.yml` que no se refleje en las plantillas de `scripts/split-tox-gh-actions/templates`, la CI fallará porque comprueba que todo esté sincronizado; es decir, ejecuta el script `split-tox-gh-actions.py` y compara el resultado con los YAML confirmados.
+
+<div id="aws-lambda-test-suite">
+  ## Suite de pruebas de AWS Lambda
+</div>
+
+La suite de pruebas de AWS Lambda fallará de forma predeterminada en los PR nuevos. Si eres un colaborador externo, no tienes que preocuparte por esto, a menos que hayas realizado cambios que realmente afecten la integración con AWS Lambda. Es una medida de seguridad por nuestra parte.
+
+Las suites de pruebas sensibles (actualmente solo AWS Lambda) requieren la revisión de un mantenedor para garantizar que las pruebas no comprometan nuestros secretos. Esta revisión debe repetirse después de cualquier cambio en el código.
+
+Antes de ejecutar suites de pruebas sensibles, los mantenedores deben revisar cuidadosamente el PR. Luego aplicarán la etiqueta `Trigger: tests using secrets`. La etiqueta se retirará después de cualquier cambio de código para hacer cumplir nuestra política que exige que los mantenedores revisen todas las revisiones de código antes de ejecutar pruebas sensibles.

@@ -1,0 +1,212 @@
+---
+title: Mensajes de commit
+description: Tenemos reglas muy precisas sobre cómo deben formatearse nuestros mensajes de commit en Git. Esto se traduce en mensajes más legibles y fáciles de seguir al revisar el historial del proyecto.
+sidebar_order: 10
+---
+
+<div id="general-rules">
+  ### Reglas generales
+</div>
+
+1.  Separa el asunto del cuerpo con una línea en blanco
+2.  Limita el asunto a 70 caracteres
+3.  Escribe el asunto con mayúscula inicial
+4.  No termines el asunto con punto
+5.  Usa el modo imperativo en el asunto
+6.  Usa el cuerpo para explicar el qué y el porqué, no el cómo
+7.  Cada commit debe ser un cambio único y estable
+
+<div id="merge-vs-rebase">
+  ### Merge vs Rebase
+</div>
+
+Sentry utiliza un flujo de trabajo basado en rebase. Eso significa que cada commit, por sí solo, debe ser un cambio claro, funcional y estable. Esto implica que, cuando estés desarrollando una nueva funcionalidad, deberías intentar dividirla en pasos funcionales y, cuando eso no sea razonable, el parche final debería ser un único commit. Esto contrasta con abrir un Pull Request que incluya “fix [unmerged] behavior”. Esos commits deberían compactarse (squash), y el parche final, al integrarse, debería hacerse rebase.
+
+Recuerda: cada commit debe seguir el formato del mensaje de commit y ser estable (build en verde).
+
+<div id="rebase-and-merge">
+  #### Rebase y Merge
+</div>
+
+La interfaz de GitHub ofrece una opción de “Rebase and Merge” que, si tus commits ya siguen las pautas de commits, es una excelente manera de incorporar tu cambio a la base de código.
+
+<div id="squashing">
+  #### Squashing
+</div>
+
+Cuando haces squash en tu rama, es importante asegurarte de actualizar el mensaje del commit. Si usas la interfaz de GitHub, de forma predeterminada creará un nuevo mensaje de commit que combina todos los commits y **no sigue las pautas de commits**.
+
+Si estás trabajando localmente, a menudo puede ser útil `--amend` a un commit o usar `rebase -i` para reordenar, hacer squash y reescribir tus commits.
+
+<div id="commit-message-format">
+  ### Formato del mensaje de commit
+</div>
+
+Cada mensaje de commit consta de un **encabezado**, un **cuerpo** y, opcionalmente, un **pie**.
+
+El encabezado tiene un formato específico que incluye un tipo, un ámbito y un asunto:
+
+```
+<tipo>(<ámbito>): <asunto> (<linear-id>)
+<LÍNEA EN BLANCO>
+<cuerpo>
+<LÍNEA EN BLANCO>
+<pie de página>
+```
+
+El **Header** es obligatorio y el **scope** del header es opcional. Si tienes un issue de Jira al que enlazar, agrega el **jira-id** al que pertenece el commit. Esto ayuda a vincular los cambios con los tickets de Jira.
+
+Ninguna línea del mensaje de commit debe superar los 100 caracteres. Esto facilita la lectura del mensaje en GitHub y en varias herramientas de git.
+
+El footer debe incluir una referencia de cierre a un issue, así como un issue relevante de Sentry, si lo hay.
+
+Por ejemplo:
+
+```
+feat(stream): Añade acción «resolver en la próxima versión»
+
+Expone una nueva acción llamada «resolver en la próxima versión». Usa el comportamiento
+de la API existente y envía la carga útil «inNextRelease=true».
+
+Soluciona GH-1234
+```
+
+Además de:
+
+```
+fix(stream): Manejar referencia vacía en acción de resolver
+
+Manejar correctamente cuando un usuario no ha seleccionado ningún issue e intenta completar
+la acción de resolver en la interfaz.
+
+Fixes GH-1234
+Fixes SENTRY-1234
+```
+
+
+<div id="revert">
+  #### Revertir
+</div>
+
+Si el commit revierte uno anterior, debe comenzar con `revert:`, seguido del Header del commit revertido. En el cuerpo debe decir: `This reverts commit <hash>.`, donde el hash es el SHA del commit que se está revirtiendo.
+
+<div id="type">
+  #### Tipo
+</div>
+
+Debe ser uno de los siguientes:
+
+<table className="table">
+  <tbody valign="top">
+    <tr>
+      <th>build:</th>
+      <td>
+        Cambios que afectan al sistema de compilación o a las dependencias externas (ámbitos de ejemplo: webpack, python, npm)
+      </td>
+    </tr>
+    <tr>
+      <th>ci:</th>
+      <td>
+        Cambios en nuestros archivos y scripts de configuración de CI (ámbitos de ejemplo:
+        travis, zeus)
+      </td>
+    </tr>
+    <tr>
+      <th>docs:</th>
+      <td>Solo cambios en la documentación</td>
+    </tr>
+    <tr>
+      <th>feat:</th>
+      <td>Una nueva funcionalidad</td>
+    </tr>
+    <tr>
+      <th>fix:</th>
+      <td>Una corrección de errores</td>
+    </tr>
+    <tr>
+      <th>perf:</th>
+      <td>Un cambio de código que mejora el rendimiento</td>
+    </tr>
+    <tr>
+      <th>ref:</th>
+      <td>
+        Un cambio de código que no corrige errores ni agrega funcionalidades (refactorización)
+      </td>
+    </tr>
+    <tr>
+      <th>chore:</th>
+      <td>Cambios necesarios para mejoras cualitativas que no afectan la funcionalidad, p. ej., actualizar dependencias o agregar instrumentación</td>
+    </tr>
+    <tr>
+      <th>style:</th>
+      <td>
+        Cambios que no afectan el significado del código (espacios en blanco,
+        formato, puntos y coma faltantes, etc.)
+      </td>
+    </tr>
+    <tr>
+      <th>test:</th>
+      <td>Agregar pruebas faltantes o corregir pruebas existentes</td>
+    </tr>
+    <tr>
+      <th>meta:</th>
+      <td>
+        Cambios en alguna información meta del repositorio (ámbitos de ejemplo: archivos de propietario,
+        configuración del editor, etc.)
+      </td>
+    </tr>
+    <tr>
+      <th>license:</th>
+      <td>Cambios en las licencias</td>
+    </tr>
+  </tbody>
+</table>
+
+<div id="scope">
+  #### Alcance
+</div>
+
+El alcance debe ser el nombre del componente principal afectado (tal como lo percibiría alguien que lea el changelog generado a partir de los mensajes de commit). Es decir, debe ser el sistema impactado, no el archivo modificado literalmente. Por ejemplo, si el código afecta principalmente a la facturación, usarías el alcance _billing_, incluso si los cambios están en archivos utilitarios o en el esquema de la base de datos.
+
+Esta es la lista de alcances sugeridos:
+
+- **api**
+- **auth**
+- **billing**
+- **dashboards**
+- **discover**
+- **integrations**
+- **ui**
+- **workflow**
+
+También es aceptable usar el nombre de la funcionalidad/proyecto como alcance.
+
+<div id="subject">
+  #### Asunto
+</div>
+
+El asunto contiene una descripción concisa del cambio:
+
+- Usa el imperativo en presente: “change”, no “changed” ni “changes”
+- Escribe la primera letra en mayúscula
+- Sin punto final (.)
+
+<div id="body">
+  #### Cuerpo
+</div>
+
+Al igual que en el **asunto**, usa el imperativo en presente: “change”, no “changed” ni “changes”. El cuerpo debe incluir la motivación del cambio y contrastarla con el comportamiento previo.
+
+<div id="footer">
+  #### Pie de página
+</div>
+
+El pie de página debe incluir cualquier información sobre los **Breaking Changes** y también es el lugar para referenciar los issues de GitHub que este commit **cierra**.
+
+Los Breaking Changes deben comenzar con la palabra `BREAKING CHANGE:` seguida de un espacio o de dos saltos de línea. El resto del mensaje del commit se utiliza para esto.
+
+Referencias
+
+- [https://chris.beams.io/posts/git-commit/](https://chris.beams.io/posts/git-commit/)
+- [https://conventionalcommits.org/](https://conventionalcommits.org/)
+- [https://github.com/angular/angular/blob/master/CONTRIBUTING.md](https://github.com/angular/angular/blob/master/CONTRIBUTING.md)

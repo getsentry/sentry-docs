@@ -1,0 +1,186 @@
+---
+title: RPC entre regiones
+sidebar_order: 30
+---
+
+Cuando Sentry se ejecuta en un despliegue multirregional (como sentry.io), hay muchos escenarios y flujos de trabajo en los que un silo de región necesita información que está almacenada en el Silo de Control. De manera similar, hay flujos en los que las operaciones del Silo de Control necesitan leer o modificar el estado almacenado en las regiones.
+
+Cuando es necesario leer datos o modificarlos de forma sincrónica, usamos llamadas a procedimiento remoto (RPC).
+
+<div id="design-context">
+  ## Contexto de diseño
+</div>
+
+Antes de entrar en detalles, conviene comprender los requisitos bajo los que se diseñó el sistema. Necesitábamos los siguientes atributos en nuestra solución:
+
+- Debe mantener tipos de parámetros y de retorno coherentes en desarrollo local, CI y producción multirregional.
+- Las cuestiones de serialización y transporte deben quedar ocultas para la mayor parte de la lógica de la aplicación, dado que el transporte depende de cómo se implemente la aplicación.
+- Sólida compatibilidad con el tipado de Python
+- Sólida compatibilidad con la generación de esquemas y las herramientas de validación.
+
+<div id="components-of-the-rpc-framework">
+  ## Componentes del framework RPC
+</div>
+
+El framework de RPC entre regiones se compone de varios servicios y modelos RPC. Cada servicio RPC ofrece un conjunto de métodos para distintos dominios de producto. Por ejemplo, `organizations`, `users` e `integrations` son servicios RPC independientes.
+
+Cada servicio RPC consta de una interfaz de servicio y una implementación local.
+
+```python
+from sentry.hybridcloud.rpc.resolvers import ByOrganizationSlug
+from sentry.hybridcloud.rpc import RpcService, regional_rpc_method
+from sentry.silo.base import SiloMode
+
+class OrganizationService(RpcService):
+    key = "organization"
+    local_mode = SiloMode.REGION
+
+    @classmethod
+    def get_local_implementation(cls) -> RpcService:
+        from sentry.organizations.services.organization.impl import (
+          DatabaseBackedOrganizationService
+        )
+
+        return DatabaseBackedOrganizationService()
+
+    @regional_rpc_method(
+      resolve=ByOrganizationSlug(),
+      return_none_if_mapping_not_found=True
+    )
+    @abstractmethod
+    def get_org_by_slug(
+        self,
+        *,
+        slug: str,
+        user_id: int | None = None,
+    ) -> RpcOrganizationSummary | None:
+        ...
+```
+
+Las clases de servicio actúan como stubs que definen la interfaz de un servicio. En el ejemplo anterior, vemos algunas partes importantes de la maquinaria de RPC:
+
+* `key` define el nombre del servicio que se usa en las URL y como clave al construir índices de métodos.
+* `local_mode` define en qué modo de silo este servicio usa su “implementación local”. Los servicios pueden tener implementaciones locales en cualquiera de los modos de silo.
+* `get_local_implementation` es usado por la maquinaria de RPC para encontrar la implementación del servicio cuando el modo de silo coincide o es `MONOLITH`.
+
+Los métodos de RPC como `get_org_by_slug` deben definirse como `abstractmethod` y deben tener aplicado `rpc_method` o `regional_rpc_method`. Si un método tiene `local_mode = REGION`, debe usar `regional_rpc_method` con un “resolver”. Hay varios resolvers que admiten una variedad de firmas de llamadas de método:
+
+* `ByOrganizationSlug` extrae el parámetro `organization_slug` y lo usa para ubicar la región usando `sentry_organizationmapping`.
+* `ByOrganizationId` extrae el parámetro `organization_id` y lo usa para ubicar la región de la organización usando `sentry_organizationmapping`.
+* `ByRegionName` usa el parámetro `region_name` para elegir una región de destino.
+* `ByOrganizationIsAttribute(param)` extrae `organization_id` de `param` para resolver la región.
+
+La implementación de `get_org_by_slug` es:
+
+```python
+from sentry.organizations.services.organization.service import OrganizationService
+from sentry.organizations.services.organization.model import RpcOrganizationSummary
+from sentry.models.organization import Organization, OrganizationStatus
+
+class DatabaseBackedOrganizationService(OrganizationService):
+
+    def get_org_by_slug(
+        self,
+        *,
+        slug: str,
+        user_id: int | None = None,
+    ) -> RpcOrganizationSummary | None:
+        query = Organization.objects.filter(slug=slug)
+        if user_id is not None:
+            query = query.filter(
+                status=OrganizationStatus.ACTIVE,
+                member_set__user_id=user_id,
+            )
+        try:
+            return serialize_organization_summary(query.get())
+        except Organization.DoesNotExist:
+            return None
+```
+
+Las implementaciones de métodos RPC son métodos de Python sencillos, pero hay algunas reglas que se deben seguir:
+
+1. Todos los parámetros y valores de retorno deben ser valores simples o instancias de `RpcModel`. Esto garantiza que las solicitudes y las respuestas se puedan serializar.
+2. Los valores de respuesta deben ser escalares o instancias de `RpcModel`. Evita las tuplas o listas que no sean secuencias de objetos.
+
+
+<div id="rpc-authentication">
+  ### Autenticación de RPC
+</div>
+
+Todas las solicitudes RPC entre regiones se envían a un único endpoint: `/api/0/internal/rpc/:service/:method`. El endpoint de RPC utiliza una comparación de firmas basada en HMAC para validar la autenticidad. Antes de realizar una solicitud, se genera una firma HMAC del cuerpo usando un secreto compartido por las instancias de los silos de región y de control.
+
+Cuando se recibe un mensaje RPC, el encabezado de la firma se compara con un HMAC generado localmente usando el secreto del receptor. La solicitud solo se procesa si las sumas de verificación coinciden.
+
+<div id="rpc-serialization-and-transport">
+  ### Serialización y transporte de RPC
+</div>
+
+El RPC entre regiones utiliza Pydantic y OpenAPI para ofrecer parámetros y respuestas con anotaciones de tipo y cumplir nuestros requisitos de generación y validación de esquemas. El comportamiento de los métodos RPC varía según la configuración de la aplicación.
+
+<div id="in-monolith-mode">
+  #### En modo monolítico
+</div>
+
+- Los métodos RPC se invocan de manera síncrona en el servicio que implementa la funcionalidad.
+
+<div id="in-tests">
+  #### En pruebas
+</div>
+
+- Durante las pruebas emulamos la mayor parte posible de la pila RPC.
+- Los cuerpos de las solicitudes y las respuestas se serializan como JSON.
+- Las solicitudes se realizan con `django.test.Client` al endpoint RPC.
+
+<div id="in-siloed-mode">
+  #### En modo silo
+</div>
+
+- Si un servicio está en modo de silo local, no se realiza ninguna serialización ni solicitudes de red.
+- Los cuerpos de las solicitudes y las respuestas se serializan como JSON.
+- Las solicitudes se realizan con `requests` y la configuración de región.
+
+<div id="adding-and-changing-rpc-methods">
+  ## Añadir y cambiar métodos RPC
+</div>
+
+Los métodos RPC deben mantener compatibilidad hacia atrás entre despliegues. Como los despliegues no son atómicos y actualizar todas las regiones lleva tiempo, hacer cambios en los métodos RPC requiere especial cuidado.
+
+<div id="adding-rpc-methods">
+  ### Agregar métodos RPC
+</div>
+
+No puedes agregar un método RPC y llamarlo en la misma pull request o despliegue. Hacerlo puede provocar que los clientes se actualicen antes de que el lado receptor haya sido actualizado. En su lugar, haz lo siguiente:
+
+1. Despliega el nuevo método RPC en todas las regiones.
+2. Despliega a los clientes del nuevo método RPC.
+
+<div id="adding-parameters-to-rpc-methods">
+  ### Agregar parámetros a métodos RPC
+</div>
+
+No puedes agregar nuevos parámetros obligatorios a métodos RPC existentes. Para agregar un nuevo parámetro a un método RPC, haz lo siguiente:
+
+1. Despliega el nuevo parámetro con un valor predeterminado.
+2. Actualiza todos los puntos de invocación para proporcionar un valor para el parámetro. Despliega esos cambios.
+3. Haz que el parámetro sea obligatorio eliminando el valor predeterminado.
+
+<div id="removing-an-rpc-method">
+  ### Eliminar un método RPC
+</div>
+
+1. Elimina todas las llamadas al método RPC. Despliega esos cambios.
+2. Cuando ya no haya llamadas, puedes eliminar el método RPC con seguridad.
+
+<div id="removing-parameters-from-an-rpc-method">
+  ### Eliminar parámetros de un método RPC
+</div>
+
+1. Vuelve opcional el parámetro. Despliega ese cambio.
+2. Elimina todos los usos del parámetro. Despliega esos cambios.
+3. Elimina el parámetro.
+
+<div id="renaming-rpc-methods-or-parameters">
+  ### Cambiar el nombre de métodos o parámetros de RPC
+</div>
+
+Cambiar el nombre de métodos y parámetros implica añadir un método nuevo, trasladar las llamadas al nuevo método y eliminar el método anterior.

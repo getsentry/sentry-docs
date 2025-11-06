@@ -1,0 +1,46 @@
+---
+title: Telemetry Drains de Heroku
+sidebar_order: 75
+description: Aprende a configurar los Telemetry Drains de Heroku para enviar registros y trazas a Sentry.
+---
+
+La telemetría de Heroku admite la [exportación compatible con OpenTelemetry (OTEL)](https://devcenter.heroku.com/articles/heroku-telemetry) para enviar registros y trazas a Sentry. El envío de métricas aún no está admitido.
+
+<Alert level="warning">
+
+Los Telemetry Drains de Heroku solo están disponibles para apps y espacios de la generación [Fir](https://devcenter.heroku.com/articles/generations#fir). Estamos haciendo seguimiento al soporte para apps y espacios de la generación Cedar en [este issue](https://github.com/getsentry/sentry/issues/91727).
+
+</Alert>
+
+<div id="prerequisites">
+  ## Requisitos previos
+</div>
+
+Antes de comenzar, asegúrate de contar con:
+
+- Una aplicación de Heroku que quieras monitorear
+- Un proyecto de Sentry al que quieras enviar datos
+
+<div id="adding-a-telemetry-drain">
+  ## Añadir un telemetry drain
+</div>
+
+Para añadir un telemetry drain a una app o a un espacio, usa el comando `heroku telemetry:add`. Para más detalles, consulta la [documentación de Heroku Telemetry](https://devcenter.heroku.com/articles/working-with-heroku-telemetry-drains#add-a-telemetry-drain).
+
+Al usar el comando `heroku telemetry:add`, tendrás que proporcionar la URL del endpoint OTLP de tu proyecto de Sentry y un encabezado `x-sentry-auth` con la clave pública. Puedes encontrarlo en la [configuración de tu proyecto en Sentry](https://sentry.io/settings/projects/) en **Client Keys (DSN)** &gt; **OpenTelemetry (OTLP)**.
+
+```bash
+heroku telemetry:add ___OTLP_URL___ --app myapp --signals logs,traces --transport http --headers '{"x-sentry-auth":"sentry sentry_key=___PUBLIC_KEY___"}'
+```
+
+Para agregar un sumidero de telemetría a todo el espacio:
+
+```bash
+heroku telemetry:add ___OTLP_URL___ --space myspace --signals logs,traces --headers '{"x-sentry-auth":"sentry sentry_key=___PUBLIC_KEY___"}'
+```
+
+Puedes usar la opción `--signals` para especificar las señales que quieres enviar a Sentry. Solo se admiten `logs` y `traces`.
+
+<Alert level="warning">
+  Sentry solo admite la opción `--transport` con `http`.
+</Alert>

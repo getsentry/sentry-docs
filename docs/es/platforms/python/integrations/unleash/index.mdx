@@ -1,0 +1,74 @@
+---
+title: Unleash
+description: "Aprende a usar Sentry con Unleash."
+---
+
+La integración de [Unleash](https://www.getunleash.io/) registra las evaluaciones de los feature flags generadas por el SDK de Unleash. Estas evaluaciones se mantienen en memoria y se envían a Sentry cuando ocurren eventos de error y de transacción. **Por ahora, solo admitimos evaluaciones booleanas de flags mediante el método is_enabled de Unleash.**
+
+<div id="install">
+  ## Instalar
+</div>
+
+Instala `sentry-sdk` desde PyPI con el extra `unleash`.
+
+```bash {tabTitle:pip}
+pip install "sentry-sdk[unleash]"
+```
+
+```bash {tabTitle:uv}
+uv add "sentry-sdk[unleash]"
+```
+
+
+<div id="configure">
+  ## Configuración
+</div>
+
+Agrega `UnleashIntegration` a tu lista de `integrations`:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.unleash import UnleashIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    # Agrega datos como encabezados de solicitud e IP de usuarios, si aplica;
+    # consulta https://docs.sentry.io/platforms/python/data-management/data-collected/ para más información
+    send_default_pii=True,
+    integrations=[UnleashIntegration()],
+)
+```
+
+Para obtener más información sobre cómo usar Unleash, consulta la [referencia de Python](https://docs.getunleash.io/reference/sdks/python) de Unleash y la [guía de inicio rápido](https://docs.getunleash.io/quickstart).
+
+
+<div id="verify">
+  ## Verificar
+</div>
+
+Prueba la integración evaluando una bandera de características con tu SDK de Unleash antes de capturar una excepción.
+
+```python
+import sentry_sdk
+from UnleashClient import UnleashClient
+
+unleash = UnleashClient(...)  # Ver guía de inicio rápido de Unleash.
+unleash.initialize_client()
+
+test_flag_enabled = unleash.is_enabled("test-flag")
+sentry_sdk.capture_exception(Exception("¡Algo salió mal!"))
+```
+
+Visita el [sitio web de Sentry](https://sentry.io/issues/) y confirma que tu evento de error
+ha registrado la feature flag &quot;test-flag&quot; y que su valor es `test_flag_enabled`.
+
+
+<div id="supported-versions">
+  ## Versiones compatibles
+</div>
+
+- UnleashClient >= 6.0.1
+- sentry-sdk >= 2.20.0
+- Python >= 3.8
+
+<PlatformContent includePath="feature-flags/next-steps" />

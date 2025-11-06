@@ -1,0 +1,136 @@
+---
+title: React Native
+description: Aprende a configurar el SDK de React Native de Sentry.
+sdk: sentry.javascript.react-native
+fallbackPlatform: javascript
+caseStyle: camelCase
+supportLevel: production
+categories:
+  - mobile
+---
+
+Sigue leyendo para saber cómo configurar el SDK de React Native de Sentry, que reportará automáticamente errores y excepciones en tu aplicación. Si prefieres seguir instrucciones en video, consulta [How to Install the Sentry React Native SDK in 60 Seconds](https://vimeo.com/899369012).
+
+<Alert>
+  Si aún no tienes una cuenta y un proyecto en Sentry, ve a [sentry.io](https://sentry.io/signup/) y luego regresa a esta página.
+</Alert>
+
+<div id="features">
+  ## Funciones
+</div>
+
+Además de capturar errores, puedes supervisar las interacciones entre varios servicios o aplicaciones [habilitando el trazado](/es/concepts/key-terms/tracing/). También puedes recopilar y analizar perfiles de rendimiento de usuarios reales con [perfilado](/es/product/explore/profiling/).
+
+Selecciona qué funciones de Sentry quieres instalar, además de la monitorización de errores, para obtener a continuación las instrucciones correspondientes de instalación y configuración.
+
+<div id="install">
+  ## Instalar
+</div>
+
+Sentry captura datos usando un SDK en el entorno de ejecución de tu aplicación. Estos SDK son específicos de cada plataforma y permiten que Sentry comprenda en profundidad cómo funciona tu aplicación.
+
+Para instalarlo, ejecuta `@sentry/wizard`:
+
+```bash {tabTitle:npm}
+npx @sentry/wizard@latest -i reactNative
+```
+
+[Sentry Wizard](https://github.com/getsentry/sentry-wizard) aplicará los cambios necesarios a tu proyecto; si lo prefieres, puedes [hacer la configuración manual](/es/platforms/react-native/manual-setup/manual-setup/). Solo necesitas aplicar estos cambios una vez. Luego puedes agregar los archivos modificados a tu sistema de control de versiones.
+
+<Expandable title="Sentry Wizard realizará las siguientes tareas">
+  * Instalar el paquete `@sentry/react-native`.
+  * Agregar `@sentry/react-native/metro` a la configuración de Metro en **metro.config.js**.
+  * Agregar `@sentry/react-native/expo` a la configuración de Expo en **app.json**.
+  * Habilitar el paso de compilación Gradle de Sentry React Native para Android para cargar automáticamente los source maps y los símbolos de depuración generados.
+  * Envolver el script de la fase de compilación de Xcode *Bundle React Native code and images* para subir los source maps generados y recopilar los módulos de Node incluidos en el paquete.
+  * Agregar la fase de compilación de Xcode *Upload Debug Symbols to Sentry*.
+  * Ejecutar `pod install`.
+  * Guardar las credenciales de compilación en **ios/sentry.properties**, **android/sentry.properties** y **env.local**.
+  * Configurar Sentry con el DSN proporcionado en tu archivo **layout.tsx**/&#95;*App.tsx*&#95;.
+</Expandable>
+
+Si usas Expo, [lee nuestra documentación](/es/platforms/react-native/manual-setup/expo/) para aprender a agregar Sentry a tu proyecto de Expo. Este SDK funciona tanto en proyectos administrados como en bare.
+
+<div id="configure">
+  ## Configuración
+</div>
+
+<OnboardingOptionButtons
+  options={[
+'error-monitoring',
+'performance',
+'profiling',
+'session-replay',
+"logs",
+]}
+/>
+
+Para capturar todos los errores, inicializa el SDK de Sentry para React Native lo antes posible.
+
+```javascript {filename:App.js}
+import * as Sentry from "@sentry/react-native";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  // Añade más datos de contexto a los eventos (dirección IP, cookies, usuario, etc.)
+  // Para más información, visita: https://docs.sentry.io/platforms/react-native/data-management/data-collected/
+  sendDefaultPii: true,
+  // ___PRODUCT_OPTION_START___ performance
+  // Establece tracesSampleRate en 1.0 para capturar el 100% de las transacciones para el rastreo.
+  // Recomendamos ajustar este valor en producción.
+  // Más información en
+  // https://docs.sentry.io/platforms/react-native/configuration/options/#traces-sample-rate
+  tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+  // ___PRODUCT_OPTION_START___ logs
+  // Habilita el envío de logs a Sentry
+  // Más información en https://docs.sentry.io/platforms/react-native/logs/
+  enableLogs: true,
+  // ___PRODUCT_OPTION_END___ logs
+  // ___PRODUCT_OPTION_START___ profiling
+  // profilesSampleRate es relativo a tracesSampleRate.
+  // Aquí capturaremos perfiles para el 100% de las transacciones.
+  profilesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ profiling
+  // ___PRODUCT_OPTION_START___ session-replay
+  // Graba repeticiones de sesión para el 100% de los errores y el 10% de las sesiones
+  replaysOnErrorSampleRate: 1.0,
+  replaysSessionSampleRate: 0.1,
+   integrations: [Sentry.mobileReplayIntegration()],
+  // ___PRODUCT_OPTION_END___ session-replay
+});
+```
+
+<OnboardingOption optionId="performance">
+  #### Envuelve tu app
+
+  Para instrumentar automáticamente tu app con [seguimiento de eventos táctiles](/es/platforms/react-native/configuration/touchevents/) y [trazado automático](/es/platforms/react-native/tracing/instrumentation/automatic-instrumentation/), envuélvela con `Sentry.wrap`:
+
+  ```javascript {filename:App.js}
+  export default Sentry.wrap(App);
+  ```
+
+  Esto no es necesario si tu app no tiene un único componente principal &quot;App&quot;.
+</OnboardingOption>
+
+<div id="verify">
+  ## Verificar
+</div>
+
+Confirma que tu app esté enviando eventos a Sentry añadiendo el siguiente fragmento, que incluye un error intencional. Deberías ver el error informado en Sentry en unos minutos.
+
+```javascript {tabTitle:Throw Error}
+throw new Error("¡Mi primer error de Sentry!");
+```
+
+```javascript {tabTitle:Native Crash}
+Sentry.nativeCrash();
+```
+
+<div id="next-steps">
+  ## Próximos pasos
+</div>
+
+* <PlatformLink to="/features">Conoce las características del SDK de React Native de Sentry</PlatformLink>
+* <PlatformLink to="/sourcemaps/">Agrega trazas de pila legibles a los errores</PlatformLink>
+* <PlatformLink to="/data-management/apple-privacy-manifest">Agrega el manifiesto de privacidad de Apple</PlatformLink>

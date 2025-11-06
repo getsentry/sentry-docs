@@ -1,0 +1,101 @@
+---
+title: Datos recopilados
+description: "Consulta qué datos recopila el SDK de Sentry."
+sidebar_order: 1
+---
+
+Sentry se toma muy en serio la privacidad de los datos y ofrece configuraciones predeterminadas que priorizan la seguridad de la información, especialmente cuando se trata de datos de identificación personal (PII). Al agregar el SDK de Sentry a tu aplicación, autorizas la recopilación de datos y su envío a Sentry durante la ejecución de tu aplicación.
+
+Los tipos de categorías y la cantidad de datos recopilados varían según las integraciones que tengas habilitadas en el SDK de Sentry. A continuación, encontrarás una lista de las categorías de datos que recopila el SDK de Sentry para Python:
+
+<div id="http-headers">
+  ## Encabezados HTTP
+</div>
+
+De forma predeterminada, el SDK de Sentry envía los encabezados HTTP a Sentry, pero filtra aquellos que contienen datos sensibles. (Consulta la [lista de encabezados](https://github.com/getsentry/sentry-python/blob/master/sentry_sdk/integrations/_wsgi_common.py#L28-L35) que se filtran).
+
+Para enviar todos los encabezados HTTP, establece `send_default_pii=True` en la llamada a `sentry_sdk.init()`.
+
+Además, un [limpiador de datos](/es/platforms/python/data-management/sensitive-data/) elimina los datos sensibles de los encabezados (y de muchos otros campos) justo antes de enviar la información a Sentry.
+
+<div id="cookies">
+  ## Cookies
+</div>
+
+De forma predeterminada, el SDK de Sentry no envía cookies. Sentry intenta eliminar cualquier cookie que contenga información confidencial, como las cookies de Session ID y CSRF Token en Django.
+
+Si quieres enviar cookies, configura `send_default_pii=True` en la llamada a `sentry_sdk.init()`.
+
+Además, un [data scrubber](/es/platforms/python/data-management/sensitive-data/) elimina datos confidenciales de las cookies (y de muchos otros campos) justo antes de enviar los datos a Sentry.
+
+<div id="information-about-logged-in-user">
+  ## Información sobre el usuario autenticado
+</div>
+
+De forma predeterminada, el SDK de Sentry no envía información del usuario autenticado, como la dirección de correo, el ID de usuario o el nombre de usuario. Incluso si se habilita, el tipo de información de usuario que podrás enviar depende de las integraciones que actives en el SDK de Sentry. La mayoría de las integraciones no enviarán ninguna información de usuario. Algunas solo establecerán el ID de usuario, pero hay algunas que establecerán el ID de usuario, el nombre de usuario y la dirección de correo.
+
+Para empezar a enviar información del usuario autenticado, configura `send_default_pii=True` en la llamada a `sentry_sdk.init()`.
+
+<div id="users-ip-address">
+  ## Dirección IP de los usuarios
+</div>
+
+De forma predeterminada, el SDK de Sentry no envía la dirección IP del usuario. Incluso si se habilita, que puedas enviar o no la dirección IP del usuario dependerá de las integraciones que actives en el SDK de Sentry. La mayoría de las integraciones no establecerán la dirección IP del usuario en absoluto.
+
+Para habilitar el envío de la dirección IP del usuario, establece `send_default_pii=True` en la llamada a `sentry_sdk.init()`.
+
+<div id="request-url">
+  ## URL de la solicitud
+</div>
+
+La URL completa de las solicitudes HTTP salientes y entrantes **siempre se envía a Sentry**. Dependiendo de tu aplicación, podría contener datos personales (PII).
+
+<div id="request-query-string">
+  ## Cadena de consulta de la solicitud
+</div>
+
+La cadena de consulta completa de las solicitudes HTTP salientes y entrantes **siempre se envía a Sentry**. Dependiendo de tu aplicación, podría incluir datos personales (PII).
+
+<div id="request-body">
+  ## Cuerpo de la solicitud
+</div>
+
+El cuerpo de las solicitudes HTTP entrantes puede enviarse a Sentry. Si se envía o no depende del tipo y del tamaño del cuerpo de la solicitud, como se describe a continuación:
+
+* **Tipo de cuerpo de la solicitud:**
+  * Se envían los cuerpos JSON y de formularios
+  * Los cuerpos de solicitud sin procesar siempre se eliminan
+  * Los archivos cargados en los cuerpos de la solicitud nunca se envían a Sentry
+* **Tamaño del cuerpo de la solicitud:** Existe una opción [&quot;max&#95;request&#95;body&#95;size&quot;](/es/platforms/python/configuration/options/#max-request-body-size) que está configurada en `medium` de forma predeterminada. Esto significa que los cuerpos de solicitud de mayor tamaño no se envían a Sentry.
+
+Si quieres impedir por completo que se envíen cuerpos a Sentry, configura `max_request_body_size` en `"never"`.
+
+<div id="source-context">
+  ## Contexto del código fuente
+</div>
+
+Cuando se envía a Sentry una excepción no manejada, se adjunta una instantánea del código fuente que rodea la línea donde se originó el error.
+
+Para dejar de enviar este contexto de código fuente a Sentry, establece `include_source_context` en `False`.
+
+<div id="local-variables-in-stack-trace">
+  ## Variables locales en la traza de pila
+</div>
+
+Cuando se envían a Sentry errores y excepciones no controlados, los nombres y valores de las variables locales establecidas en el momento en que ocurrieron se envían junto con ellos.
+
+Puedes dejar de enviar variables locales a Sentry configurando `include_local_variables=False` en la llamada a `sentry_sdk.init()`.
+
+<div id="sql-queries">
+  ## Consultas SQL
+</div>
+
+Aunque se envían consultas SQL a Sentry, nunca se enviará ni la consulta completa (`UPDATE app_user SET password='supersecret' WHERE id=1;`) ni los valores de sus parámetros. En su lugar, se envía una versión parametrizada de la consulta (`UPDATE app_user SET password='%s' WHERE id=%s;`).
+
+<div id="llm-inputs-and-responses">
+  ## Entradas y respuestas de LLM
+</div>
+
+Cuando uses Sentry en tus apps de IA, el SDK no añadirá por defecto datos como las entradas y respuestas de LLM a los spans. Para empezar a registrarlos, añade `send_default_pii=True` a la llamada a `sentry_sdk.init()`.
+
+La mayoría de las integraciones de IA tienen un parámetro adicional para controlar si se deben incluir los prompts, llamado `include_prompts`. Consulta la <PlatformLink to="/integrations/#ai">documentación del framework de IA específico</PlatformLink> para más información.

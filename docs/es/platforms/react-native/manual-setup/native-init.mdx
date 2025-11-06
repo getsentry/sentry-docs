@@ -1,0 +1,49 @@
+---
+title: Inicialización nativa
+sidebar_order: 4
+description: "Aprende a inicializar manualmente los SDK nativos."
+---
+
+De forma predeterminada, el SDK de React Native inicializa el SDK nativo desde el método `init` que se ejecuta en la capa de JS. Como consecuencia, el SDK actualmente no captura los fallos nativos que ocurren antes de que se llame a `init` en la capa de JS. Puedes inicializar tú mismo los SDK nativos para superar esta limitación o si quieres proporcionar opciones personalizadas más allá de lo que el SDK de React Native ofrece actualmente.
+
+Para hacerlo, establece [autoInitializeNativeSdk](/es/platforms/react-native/configuration/options/#autoInitializeNativeSdk) en `false` en las opciones de `init`:
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  autoInitializeNativeSdk: false,
+});
+```
+
+Esto evitará que el SDK de React Native inicialice automáticamente el SDK nativo.
+
+<Alert level="info" title="Deshabilitar por completo la capa nativa">
+  No uses `autoInitializeNativeSdk` para deshabilitar la capa nativa; en su lugar, usa [enableNative](/es/platforms/react-native/configuration/options/#enableNative)
+</Alert>
+
+A continuación, inicializa los SDK nativos para Android, como se indica más abajo, o para iOS siguiendo la [guía de configuración para inicializar el SDK Sentry Cocoa](/es/platforms/apple/guides/ios/#configure). Ten en cuenta que no necesitas instalar los SDK nativos, ya que vienen incluidos con el SDK de React Native.
+
+<div id="ios-configuration">
+  ## Configuración de iOS
+</div>
+
+Para habilitar la instrumentación del inicio de la app y los fotogramas lentos y congelados en iOS al inicializar manualmente el SDK de Sentry Cocoa,
+debes [configurar la tasa de muestreo](/es/platforms/apple/tracing/#configure-the-sample-rate/).
+
+<div id="android-configuration">
+  ## Configuración de Android
+</div>
+
+<Alert>
+  Al inicializar con este método se utiliza un Content Provider. Como el motor de JavaScript de React Native también se inicializa mediante un Content Provider, no podemos garantizar que Sentry siempre se inicie antes que el motor de JavaScript.
+</Alert>
+
+Para usar la autoinicialización, agrega lo siguiente a tu `AndroidManifest.xml`:
+
+```xml
+<meta-data android:name="io.sentry.auto-init" tools:replace="android:value" android:value="true" />
+```
+
+Luego, sigue [la guía para inicializar Android](/es/platforms/android/#configure).
+
+Si quieres inicializar manualmente el SDK de Android sin usar el content provider, puedes [seguir la guía de inicialización manual](/es/platforms/android/configuration/manual-init/#manual-initialization) sin tener que agregar la etiqueta, ya que el SDK de React Native establece `io.sentry.auto-init` en `false`.

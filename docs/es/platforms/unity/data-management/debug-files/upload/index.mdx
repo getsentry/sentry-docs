@@ -1,0 +1,66 @@
+---
+title: Carga de archivos
+description: "Aprende a cargar archivos de información de depuración en Sentry."
+sidebar_order: 3
+---
+
+<Alert>
+  El SDK de Sentry para Unity carga automáticamente los archivos de depuración en tiempo de compilación. Eso significa que no necesitas usar `sentry-cli` directamente.
+  Puedes encontrar más información al respecto en la [documentación de soporte nativo de Unity](/es/platforms/unity/native-support/).
+</Alert>
+
+La forma más sencilla de proporcionar a Sentry un archivo de información de depuración es
+cargarlo con `sentry-cli`. Según tu flujo de trabajo, quizá quieras
+cargarlo como parte de tu pipeline de compilación o al desplegar y publicar tu
+aplicación:
+
+<Include name="common-imgs/debug-files-workflow" />
+
+<Alert>
+  Según el tipo de aplicación, la plataforma de destino y la configuración de compilación, el
+  soporte de Sentry para .NET puede requerir cargar archivos de depuración para mostrar una
+  traza de pila completa, incluidos nombres de archivo y números de línea. Esto es especialmente
+  cierto para apps móviles dirigidas a Android o iOS, como las desarrolladas con
+  .NET MAUI.
+
+  Para facilitar esto, el paquete `Sentry` de NuGet (desde la versión 3.26.1) incluye
+  Sentry CLI como una herramienta integrada y lo invocará al compilar
+  tu proyecto si la propiedad de msbuild `SentryUploadSymbols` está establecida en true (de forma predeterminada, false).
+  Consulta la [configuración de msbuild](/es/platforms/dotnet/configuration/msbuild) para más detalles.
+
+  El resto de la información en esta página describe cómo invocar Sentry CLI manualmente.
+</Alert>
+
+<PlatformContent includePath="debug-files">
+  Los archivos se pueden cargar con el comando `debug-files upload`. Este comando escaneará una
+  carpeta de forma recursiva en busca de archivos y los cargará en Sentry:
+</PlatformContent>
+
+Para ver todas las opciones disponibles y más información, consulta [*Carga de información de depuración*](/es/cli/dif/#uploading-files).
+
+Los archivos de depuración deben cargarse antes de desplegar o publicar tu
+aplicación para que se puedan procesar los informes de fallos. Para pruebas manuales, usa
+`sentry-cli debug-files upload --wait` antes de enviar el primer fallo o error nativo.
+
+Si cargas un archivo que Sentry informó previamente como faltante en un
+informe de fallo, Sentry puede tardar hasta una hora en empezar a usar ese archivo para nuevos
+informes de fallos. Los eventos e incidencias existentes no se reprocesan.
+
+En Sentry, tus archivos cargados se asocian con proyectos. Puedes ver y
+gestionar las cargas en **Project Settings &gt; Debug Files**. Esta pantalla muestra las
+propiedades más importantes de los archivos de depuración:
+
+1. El identificador de depuración. Puede haber varias entradas que compartan el mismo
+   identificador si la información de depuración está dividida entre varios archivos.
+2. El nombre del archivo de depuración. Sentry usa el nombre del sistema de archivos al
+   cargar el archivo con `sentry-cli`.
+3. La arquitectura y el tipo de archivo. Esto se puede usar para distinguir entre archivos
+   ejecutables y acompañantes de depuración si sus identificadores de depuración y nombres
+   coinciden.
+4. La información de depuración disponible en estos archivos. Esto puede incluir `unwind`,
+   `debug`, `symtab` y `sources`.
+5. Metadatos como el tamaño y la hora de carga.
+
+Si varios proyectos requieren el mismo archivo, será necesario volver a cargarlo. Sentry
+no accede a archivos de depuración almacenados en otros proyectos para simbolizar informes
+de fallos.

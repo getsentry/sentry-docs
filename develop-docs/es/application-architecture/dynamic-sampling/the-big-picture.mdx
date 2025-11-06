@@ -1,0 +1,98 @@
+---
+title: La visión general
+description: >-
+  El ciclo de vida de un evento en Sentry es un proceso complejo que involucra
+  muchos componentes. Dynamic Sampling es uno de ellos, y es importante
+  entender cómo encaja en el panorama general.
+sidebar_order: 1
+og_image: /og-images/application-architecture-dynamic-sampling-the-big-picture.png
+---
+
+![Secuenciación](./images/sequencing.png)
+
+<Alert title="💡 Nota">
+  Dynamic Sampling actualmente opera sobre spans o transactions para medir el caudal de datos. Esto está controlado por el feature flag `organizations:dynamic-sampling-spans` y suele configurarse según cómo se facture la suscripción de la organización. En entornos de desarrollo, actualmente el valor predeterminado es transactions.
+  La lógica entre ambas categorías de datos es idéntica, por lo que la mayor parte de esta documentación se mantiene a un nivel general y las diferencias importantes se señalan explícitamente.
+</Alert>
+
+<div id="sequencing">
+  ## Secuenciación
+</div>
+
+El muestreo dinámico (Dynamic Sampling) ocurre en el perímetro de nuestra canalización de ingesta, específicamente en [Relay](https://github.com/getsentry/relay).
+
+Cuando llegan los eventos, en un modelo simplificado, pasan por estos pasos:
+
+1. **Filtros de datos de entrada**: cada evento pasa por los filtros configurados en los ajustes del proyecto, como navegadores antiguos o versiones (releases) denegadas. Los eventos descartados aquí no cuentan para la cuota y no se incluyen en los datos de &quot;eventos totales&quot;.
+2. **Aplicación de cuotas**: Sentry cobra por todos los eventos que siguen llegando antes de enviarlos al muestreo dinámico.
+3. **Extracción de métricas**: tras pasar las cuotas, Sentry extrae métricas del total de eventos entrantes. Estas métricas ofrecen cifras granulares sobre el rendimiento y la frecuencia de cada evento.
+4. **Muestreo dinámico (Dynamic Sampling)**: según un conjunto interno de reglas, Relay determina una tasa de muestreo para cada evento entrante. Un generador de números aleatorios decide finalmente si se conserva o se descarta la carga útil.
+5. **Limitación de tasa**: los eventos muestreados por el muestreo dinámico se almacenan e indexan. Para proteger la infraestructura, se aplican límites internos de tasa en este punto. En condiciones normales, este **límite de tasa nunca se alcanza** porque el muestreo dinámico ya reduce el volumen de eventos almacenados.
+
+<Alert title="💡 Ejemplo">
+  Un cliente envía 1000 eventos por segundo a Sentry:
+
+  1. 100 eventos por segundo provienen de navegadores antiguos y se descartan mediante un filtro de datos de entrada.
+  2. Los 900 eventos por segundo restantes aparecen como eventos totales en Sentry.
+  3. Su tasa de muestreo general actual es del 20%, lo que, estadísticamente, muestrea 180 eventos por segundo.
+  4. Como esto supera el límite de 100/s, se descartan aleatoriamente unos 80 eventos por segundo y el resto se almacena.
+</Alert>
+
+<div id="rate-limiting-and-total-events">
+  ## Limitación de velocidad y eventos totales
+</div>
+
+El pipeline de ingesta tiene dos tipos de límites de velocidad que se comportan de manera diferente en comparación con las organizaciones sin muestreo dinámico:
+
+1. **Límites de solicitudes de alto nivel en los balanceadores de carga**: estos límites no diferencian qué datos envían los clientes y descartan solicitudes en cuanto el caudal desde los clientes alcanza el límite.
+2. **Límites específicos por categoría de datos en Relay**: estos límites se aplican una vez que las solicitudes han sido analizadas y han pasado por el manejo básico (consulta [Secuenciación](#sequencing) arriba).
+
+<Alert title="✨️ Nota">
+  Existe un límite de velocidad específico para los eventos almacenados después de los filtros de entrada y el muestreo dinámico. Sin embargo, no afecta a los eventos totales, ya que la fidelidad disminuye con mayores volúmenes de eventos totales y no se espera que este límite de velocidad se active, dado que el muestreo dinámico ya reduce el caudal de eventos almacenados.
+</Alert>
+
+<div id="rate-limiting-and-trace-completeness">
+  ## Limitación de tasa y completitud de trazas
+</div>
+
+El muestreo dinámico garantiza trazas completas al conservar todos los eventos asociados a una traza si se preserva el evento inicial.
+
+Aunque el muestreo dinámico proporciona trazas completas, pueden seguir faltando eventos u otros elementos (errores, reproducciones, etc.) en una traza cuando la limitación de tasa descarta uno o más de ellos. La limitación de tasa descarta elementos sin tener en cuenta la traza, tomando cada decisión de forma independiente y pudiendo resultar en trazas incompletas.
+
+<Alert title="💡 Ejemplo">
+  Por ejemplo, si hay una traza de `Project A` a `Project B` y `Project B` está sujeto a limitación de tasa o a cuotas, se pierden los eventos de `Project B` en la traza iniciada por `Project A`.
+</Alert>
+
+<div id="client-side-sampling-and-dynamic-sampling">
+  ## Muestreo del lado del cliente y muestreo dinámico
+</div>
+
+Los clientes tienen su propia [tasa de muestreo de trazas](https://docs.sentry.io/platforms/javascript/tracing/#configure). La tasa de muestreo del cliente es un número en el rango `[0.0, 1.0]` (del 0% al 100%) que controla **cuántos eventos llegan a Sentry**. Aunque la documentación suele sugerir una tasa de `1.0`, para algunos casos de uso podría ser mejor reducirla.
+
+El muestreo dinámico reduce aún más cuántos eventos se almacenan internamente. **Si bien la mayoría de los gráficos y cifras en Sentry se basan en métricas**, acceder a spans y tags requiere eventos almacenados. Las tasas de muestreo se aplican de forma acumulativa.
+
+A continuación se muestra un ejemplo de muestreo del lado del cliente y muestreo dinámico que parte de 100k eventos y resulta en 15k eventos almacenados:
+
+![Client and Dynamic Sampling](./images/clientAndDynamicSampling.png)
+
+<div id="total-transactions">
+  ## Transacciones totales
+</div>
+
+Para recopilar información sin muestreo de las transacciones “totales” en Performance, Alerts y Dashboards, Relay extrae [métricas](https://getsentry.github.io/relay/relay_metrics/index.html) de spans y transacciones. En resumen, estas métricas incluyen:
+
+* Recuentos y duraciones de todos los eventos.
+* Una distribución (histograma) de todas las mediciones, especialmente las web vitals.
+* La cantidad de usuarios únicos (conjunto).
+
+Cada una de estas métricas se puede filtrar y agrupar por varias etiquetas predefinidas, [implementadas en Relay](https://github.com/getsentry/relay/blob/master/relay-server/src/metrics_extraction/transactions/types.rs#L142-L157).
+
+Para consultas más granulares, **se necesitan eventos almacenados**. *El propósito del muestreo dinámico aquí es garantizar que siempre haya suficientes eventos de muestra representativos.*
+
+<Alert title="💡 Ejemplo">
+  Si Sentry aplica una tasa de muestreo dinámico del 1%, aún puedes obtener eventos por minuto precisos (SPM o TPM, según el tipo de evento) y cuantiles de web vitals a partir de los datos de eventos totales respaldados por métricas. También hay un desglose de cada uno de estos valores por transacción.
+
+  Cuando entras al explorador de trazas o a Discover, quizá quieras dividir los datos por una etiqueta personalizada que hayas agregado a tus eventos. Esta granularidad no la ofrecen las métricas, así que **estas consultas deben usar eventos almacenados**.
+</Alert>
+
+Si quieres aprender más sobre Dynamic Sampling, continúa a la [siguiente página](/es/dynamic-sampling/fidelity-and-biases/).

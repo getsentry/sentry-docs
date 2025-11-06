@@ -1,0 +1,152 @@
+---
+title: Configurar el muestreo
+description: "Aprende a configurar el muestreo en tu app."
+sidebar_order: 30
+---
+
+La funcionalidad de tracing de Sentry te ayuda a supervisar el rendimiento de la aplicación al capturar trazas distribuidas, agregar atributos y medir el rendimiento de los spans en toda tu aplicación. Sin embargo, capturar trazas para cada transacción puede generar grandes volúmenes de datos. El muestreo te permite controlar cuántos spans se envían a Sentry desde tu aplicación.
+
+El SDK de JavaScript ofrece dos opciones principales para controlar la tasa de muestreo:
+
+1. [Tasa de muestreo uniforme](#uniform-sample-rate-tracessamplerate) (recomendado)
+2. [Función de muestreo](#sampling-function-tracessampler)
+
+<div id="uniform-sample-rate-tracessamplerate">
+  ## Tasa de muestreo uniforme (`tracesSampleRate`)
+</div>
+
+`tracesSampleRate` es un valor de punto flotante entre 0.0 y 1.0 que controla la probabilidad de muestrear una transacción.
+
+<PlatformContent includePath="/tracing/sample-rate" />
+
+Con `tracesSampleRate` establecido en `0.25`, cada transacción de tu aplicación se muestrea aleatoriamente con una probabilidad del 25%, por lo que puedes esperar que una de cada cuatro transacciones se envíe a Sentry.
+
+<div id="sampling-function-tracessampler">
+  ## Función de muestreo (`tracesSampler`)
+</div>
+
+Para un control más granular, proporciona una función `tracesSampler`. Este enfoque te permite:
+
+- Aplicar distintas tasas de muestreo a diferentes tipos de transacciones
+- Filtrar por completo transacciones específicas
+- Tomar decisiones de muestreo basadas en los datos de la transacción
+- Controlar la herencia de las decisiones de muestreo en trazas distribuidas
+
+<PlatformContent includePath="/tracing/traces-sampler" />
+
+<div id="the-sampling-context-object">
+  ### El objeto de contexto de muestreo
+</div>
+
+Cuando se invoca la función `tracesSampler`, esta recibe un objeto `samplingContext` con información valiosa para ayudar a tomar decisiones de muestreo:
+
+```typescript
+interface SamplingContext {
+  // Nombre del span/transacción
+  name: string;
+
+  // Atributos iniciales del span/transacción
+  attributes: SpanAttributes | undefined;
+
+  // Si el span padre fue muestreado (undefined si no hay trace entrante)
+  parentSampled: boolean | undefined;
+
+  // Tasa de muestreo del trace entrante (undefined si no hay trace entrante)
+  parentSampleRate: number | undefined;
+
+  // Función de utilidad para heredar la decisión del padre o usar un valor alternativo
+  inheritOrSampleWith: (fallbackRate: number) => number;
+}
+```
+
+
+<div id="traces-sampler-examples">
+  ### Ejemplos del muestreador de trazas
+</div>
+
+1. Priorización de flujos de usuario críticos
+
+```javascript
+tracesSampler: (samplingContext) => {
+  const { name, attributes, inheritOrSampleWith } = samplingContext;
+
+  // Muestrear todas las transacciones de pago
+  if (name.includes('/checkout') || attributes?.flow === 'checkout') {
+    return 1.0;
+  }
+
+  // Muestrear el 50% de las transacciones de inicio de sesión
+  if (name.includes('/login') || attributes?.flow === 'login') {
+    return 0.5;
+  }
+
+  // Muestrear el 10% de todo lo demás
+  return inheritOrSampleWith(0.1);
+}
+```
+
+2. Gestión de distintos entornos
+
+```javascript
+tracesSampler: (samplingContext) => {
+    const { inheritOrSampleWith } = samplingContext;
+
+  // Muestrear todas las transacciones en desarrollo
+  if (process.env.NODE_ENV === 'development') {
+    return 1.0;
+  }
+
+  // Muestrear el 5% en producción
+  if (process.env.NODE_ENV === 'production') {
+    return 0.05;
+  }
+
+  // Muestrear el 20% en staging
+  return inheritOrSampleWith(0.2);
+}
+```
+
+3. Control del muestreo según propiedades del usuario o de la transacción
+
+```javascript
+tracesSampler: (samplingContext) => {
+  const { attributes, inheritOrSampleWith } = samplingContext;
+
+  // Siempre muestrear para usuarios premium
+  if (attributes?.userTier === 'premium') {
+    return 1.0;
+  }
+
+  // Muestrear más transacciones para usuarios con errores recientes
+  if (attributes?.hasRecentErrors === true) {
+    return 0.8;
+  }
+
+  // Muestrear menos para rutas de alto volumen y bajo valor
+  if (attributes?.path?.includes('/api/metrics')) {
+    return 0.01;
+  }
+
+  // Tasa de muestreo predeterminada
+  return inheritOrSampleWith(0.2);
+}
+```
+
+
+<div id="sampling-decision-precedence">
+  ## Precedencia de decisiones de muestreo
+</div>
+
+Cuando podrían aplicarse varios mecanismos de muestreo, Sentry sigue este orden de precedencia:
+
+- Si se define `tracesSampler`, se usa su decisión. Aunque `tracesSampler` puede anular la decisión de muestreo del padre, la mayoría de los usuarios querrán asegurarse de que su `tracesSampler` la respete.
+- Si no se define `tracesSampler`, pero existe una decisión de muestreo del padre proveniente de un trace distribuido entrante, usamos la decisión del padre.
+- Si no aplica ninguno de los anteriores, se usa `tracesSampleRate`.
+- Si `tracesSampleRate` se establece en 0, no se muestreará ningún span y tampoco se muestrearán los spans descendentes, ya que heredan la decisión del padre.
+- Si no aplica ninguno de los anteriores, no se muestrearán transacciones y el tracing se deshabilitará.
+
+<div id="conclusion">
+  ## Conclusión
+</div>
+
+Un muestreo eficaz es clave para obtener el máximo valor del monitoreo de rendimiento de Sentry y, al mismo tiempo, minimizar la sobrecarga. La función `tracesSampler` te brinda un control preciso sobre qué transacciones registrar, lo que te permite enfocarte en las partes más importantes de tu aplicación.

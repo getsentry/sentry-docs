@@ -1,0 +1,149 @@
+---
+title: Entornos compartidos / Extensiones del navegador
+sidebar_order: 50
+description: Aprende a usar Sentry en entornos compartidos (por ejemplo, en extensiones del navegador o de VSCode).
+notSupported:
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.hono
+  - javascript.koa
+  - javascript.nestjs
+keywords:
+  [
+    "BrowserClient",
+    "NodeClient",
+    "entorno compartido",
+    "Extensión del navegador",
+    "Extensión de VSCode",
+    "Widgets",
+  ]
+---
+
+<Alert>
+  Recomendamos usar el SDK de JavaScript `8.x` o superior cuando lo utilices en entornos compartidos. Consulta nuestra [documentación de migración](/es/platforms/javascript/migration/) para actualizar desde una versión anterior del SDK a `8.x` o superior.
+</Alert>
+
+Estas prácticas recomendadas aplican si configuras Sentry en alguno de los siguientes casos de uso:
+
+* Extensiones del navegador
+* Extensiones de VSCode
+* Widgets de terceros
+* Arquitectura de plugins
+* Bibliotecas
+* Cualquier otro escenario en el que puedas tener varias instancias de Sentry ejecutándose en el mismo entorno
+
+<Alert level="warning">
+  Al configurar Sentry en un entorno compartido donde pueden ejecutarse varias instancias de Sentry, **no uses `Sentry.init()`**, ya que contaminará el estado global. Si tu extensión del navegador usa `Sentry.init()` y un sitio web también usa Sentry, la extensión podría enviar eventos al proyecto de Sentry del sitio web, o viceversa.
+</Alert>
+
+<div id="shared-environment-setup">
+  ## Configuración del entorno compartido
+</div>
+
+Para los casos de uso mencionados arriba, configura un cliente manualmente como se muestra en el ejemplo a continuación.
+Además, evita agregar integraciones que utilicen estado global, como `Breadcrumbs` o `GlobalHandlers`.
+Asimismo, algunas integraciones predeterminadas que usan estado global deben filtrarse como en el ejemplo a continuación.
+En estos escenarios, es una buena práctica evitar usar integraciones y confiar en la captura manual de errores.
+
+```javascript
+import {
+  BrowserClient,
+  defaultStackParser,
+  getDefaultIntegrations,
+  makeFetchTransport,
+  Scope,
+} from "@sentry/browser";
+
+// filtra las integraciones que usan la variable global
+const integrations = getDefaultIntegrations({}).filter((defaultIntegration) => {
+  return !["BrowserApiErrors", "Breadcrumbs", "GlobalHandlers"].includes(
+    defaultIntegration.name
+  );
+});
+
+const client = new BrowserClient({
+  dsn: "___PUBLIC_DSN___",
+  transport: makeFetchTransport,
+  stackParser: defaultStackParser,
+  integrations: integrations,
+});
+
+const scope = new Scope();
+scope.setClient(client);
+
+client.init(); // la inicialización debe hacerse después de asignar el cliente al scope
+
+// Puedes capturar excepciones manualmente para este cliente así:
+scope.captureException(new Error("ejemplo"));
+```
+
+Para hacerlo un poco más simple pero sin dejar de mantener, de algún modo, “Deja que Sentry gestione los errores no controlados”, puedes usar el siguiente código:
+
+```javascript
+// Inicializa Sentry como se muestra arriba
+
+try {
+  // Tu código va aquí
+  // como importar y ejecutar tu código aquí
+  // y si ocurre un error, Sentry lo capturará
+} catch (error) {
+  scope.captureException(error);
+}
+```
+
+<div id="sending-logs-from-shared-environments">
+  ## Envío de registros desde entornos compartidos
+</div>
+
+Puedes pasar el scope directamente a los métodos de la API del logger para que los entornos compartidos funcionen.
+
+```js
+const scope = new Scope();
+scope.setClient(client);
+
+client.init(); // la inicialización debe hacerse después de establecer el cliente en el scope
+
+Sentry.logger.info("mi mensaje de registro", {}, { scope });
+```
+
+<div id="browser-extension-filter">
+  ## Filtro de la extensión del navegador
+</div>
+
+Si notas que Sentry no está capturando eventos de error de la extensión del navegador, es posible que haya un filtro de entrada activo.
+Puedes desactivarlo yendo a **Project Settings &gt; Inbound Filters** y deshabilitando el filtrado de errores que se sabe que son causados por extensiones del navegador.
+
+Obtén más información sobre los filtros de entrada en la documentación del producto en [Inbound filters](/es/concepts/data-management/filtering/#inbound-data-filters).
+
+<div id="skipping-the-browser-extension-check">
+  ## Omitir la verificación de la extensión del navegador
+</div>
+
+*Disponible en todos los SDK basados en navegador desde la versión `8.37.0`*
+
+Si por algún motivo el SDK detecta erróneamente que se ha inicializado en una extensión del navegador, puedes omitir la verificación especificando la opción `skipBrowserExtensionCheck` al inicializar el SDK:
+
+```javascript
+import * as Sentry from "@sentry/browser";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  skipBrowserExtensionCheck: true,
+  // ...
+});
+```
+
+<Alert level="warning">
+  No deberías usar esta opción si en realidad estás utilizando el SDK en una extensión del navegador u otro entorno compartido.
+  Inicializar el SDK mediante `Sentry.init` no ofrece ventajas frente a configurar manualmente el cliente y el ámbito tal como se describe en esta página.
+  Al hacerlo, te arriesgas a aumentos de cuota por incidencias no accionables, interferencias con otros SDK de Sentry y filtraciones de datos.
+</Alert>
+
+Esta opción está pensada únicamente como una salida de emergencia si nuestra comprobación de extensiones del navegador detecta erróneamente una.
+Un ejemplo de ello podría ser un framework de aplicaciones multiplataforma que exponga API globales similares a las de las extensiones del navegador.

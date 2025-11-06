@@ -1,0 +1,129 @@
+---
+title: Seguimiento de eventos táctiles
+sidebar_order: 80
+description: "Obtén más información sobre cómo habilitar el seguimiento de eventos táctiles."
+---
+
+Usa la versión `1.5.0` o posterior para hacer seguimiento de eventos táctiles con el SDK de React Native de Sentry. También deberás envolver tu app con `TouchEventBoundary`.
+
+<div id="wrapping-with-toucheventboundary">
+  ## Envolver con `TouchEventBoundary`
+</div>
+
+En la raíz de tu app, generalmente en `App.js`, envuelve el componente de la app con `Sentry.TouchEventBoundary`:
+
+```javascript
+import * as Sentry from "@sentry/react-native";
+
+const App = () => {
+  return (
+    <Sentry.TouchEventBoundary>
+      <RestOfTheApp />
+    </Sentry.TouchEventBoundary>
+  );
+};
+
+export default AppRegistry.registerComponent("Tu app increíble", () => App);
+```
+
+<div id="using-the-withtoucheventboundary-higher-order-component">
+  ## Uso del componente de orden superior `withTouchEventBoundary`
+</div>
+
+En la raíz de tu aplicación, normalmente en `App.js`, envuelve el componente de la aplicación con `Sentry.withTouchEventBoundary`:
+
+```javascript
+import * as Sentry from "@sentry/react-native";
+
+const App = () => {
+  return <RestOfTheApp />;
+};
+
+export default AppRegistry.registerComponent("Tu increíble aplicación", () =>
+  Sentry.withTouchEventBoundary(App)
+);
+```
+
+<Alert level="warning" title="Múltiples límites">
+  Aunque puedes rastrear secciones específicas de tu app envolviendo cada sección con el límite, no las anides o los toques podrían registrarse varias veces y producir un comportamiento indefinido.
+</Alert>
+
+<div id="automatic-touch-tracking">
+  ## Seguimiento automático de toques
+</div>
+
+Cada evento de toque se registra automáticamente como un breadcrumb y se muestra en el panel cuando ocurre, junto con el árbol de componentes en el que tuvo lugar el toque. Este árbol de componentes se registra usando la propiedad `name` de un componente. De forma predeterminada, React Native asigna esta propiedad automáticamente a los componentes.
+
+<div id="tracking-specific-components">
+  ## Seguimiento de componentes específicos
+</div>
+
+Puedes indicarle a Sentry qué componentes rastrear específicamente pasando la prop `sentry-label`. Si Sentry detecta un componente con `sentry-label` dentro del árbol de componentes de una interacción táctil, se registrará en el panel como ocurrido en ese componente. Si Sentry no encuentra un componente con esa etiqueta, recurrirá a la prop `labelName` si está especificada; de lo contrario, usará `displayName`.
+
+```javascript
+const YourCoolComponent = (props) => {
+  return (
+    <View sentry-label="CardContainer">
+      <Text sentry-label="CoolText">Sos genial</Text>
+    </View>
+  );
+};
+```
+
+<Alert>
+  No tienes que preocuparte por errores de TypeScript al pasar la prop `sentry-label`. [TypeScript no generará un error en props con el carácter &#39;-&#39;](https://www.typescriptlang.org/docs/handbook/jsx.html#attribute-type-checking).
+</Alert>
+
+<div id="options">
+  ## Opciones
+</div>
+
+Puedes pasar opciones específicas para configurar el límite, ya sea como props al componente `Sentry.TouchEventBoundary` o como segundo argumento del componente de orden superior (HOC) `Sentry.withTouchEventBoundary`.
+
+```javascript {tabTitle:Default}
+<Sentry.TouchEventBoundary
+  ignoreNames={["BadComponent", /^Connect\(/, /^LibraryComponent$/]}
+  labelName="etiquetaPrueba"
+>
+  <RestOfTheApp />
+</Sentry.TouchEventBoundary>
+```
+
+```javascript {tabTitle:HOC}
+Sentry.withTouchEventBoundary(App, { maxComponentTreeSize: 15, labelName: "testLabel" });
+```
+
+```javascript {tabTitle:Sentry.wrap()}
+Sentry.wrap(App, {
+  touchEventBoundaryProps: {
+    ignoreNames: ["BadComponent", /^Connect\(/, /^LibraryComponent$/]
+    labelName: 'accessibilityLabel',
+  },
+}
+```
+
+`breadcrumbCategory`
+
+*String*. La categoría asignada al breadcrumb que registra el evento táctil.
+
+`breadcrumbType`
+
+*String*. El tipo asignado al breadcrumb que registra el evento táctil.
+
+`maxComponentTreeSize`
+
+*número, valor predeterminado: 20*. El número/profundidad máximos de componentes que mostrar al registrar el árbol de componentes de un toque.
+
+`ignoreNames`
+
+*Array&lt;string | RegExp&gt;, acepta cadenas y expresiones regulares*. Nombres de componentes que se deben ignorar al registrar el evento táctil. Esto evita registros poco útiles como “Evento táctil dentro del elemento: View”, donde aun así no se puede saber en qué `View` ocurrió.
+
+`labelName`
+
+*String*. El nombre de la prop que se debe buscar al determinar la etiqueta de un componente. Si no se encuentra la prop, Sentry usará como alternativa el `displayName` del componente.
+
+<div id="minified-names-in-production">
+  ## Nombres minificados en producción
+</div>
+
+Al generar el bundle para producción, React Native minificará los nombres de clases y funciones para reducir su tamaño. Esto significa que **no verás los nombres originales completos de los componentes en las migas de eventos táctiles** y, en su lugar, aparecerán nombres minificados. Consulta nuestra [guía de solución de problemas para bundles de producción minificados](/es/platforms/react-native/troubleshooting/#minified-names-in-production) para resolverlo.

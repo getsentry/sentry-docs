@@ -1,0 +1,436 @@
+---
+title: Formato de Muestra V1
+description: Perfilado basado en transacciones.
+sidebar_order: 1
+---
+
+Para el *Formato de Muestra V1*, un perfil siempre debe estar asociado a una transacción y debe enviarse
+en el mismo contenedor que la transacción asociada.
+
+<div id="data-model">
+  ## Modelo de datos
+</div>
+
+<div id="example">
+  ### Ejemplo
+</div>
+
+```json
+{
+  "debug_meta": {
+    "images": [
+      {
+        "debug_id": "32420279-25E2-34E6-8BC7-8A006A8F2425",
+        "image_addr": "0x000000010258c000",
+        "code_file": "/private/var/containers/Bundle/Application/C3511752-DD67-4FE8-9DA2-ACE18ADFAA61/TrendingMovies.app/TrendingMovies",
+        "type": "macho",
+        "image_size": 1720320,
+        "image_vmaddr": "0x0000000100000000"
+      }
+    ]
+  },
+  "device": {
+    "architecture": "arm64e",
+    "is_emulator": true,
+    "locale": "en_US",
+    "manufacturer": "Apple",
+    "model": "iPhone14,8"
+  },
+  "environment": "development",
+  "event_id": "41fed0925670468bb0457f61a74688ec",
+  "measurements": { ... },
+  "os": {
+    "build_number": "20D47",
+    "name": "iOS",
+    "version": "16.3",
+  },
+  "platform": "cocoa",
+  "release": "1.0 (9999)",
+  "runtime": {
+    "name": "",
+    "version": ""
+  },
+  "timestamp": "2023-01-01T00:00:00.000Z",
+  "transaction": {
+    "active_thread_id": "259",
+    "id": "30976f2ddbe04ac9b6bffe6e35d4710c",
+    "name": "example_ios_movies_sources.MoviesViewController",
+    "trace_id": "4b25bc58f14243d8b208d1e22a054164",
+  },
+  "version": "1",
+  "profile": {
+    "samples": [
+      {
+        "elapsed_since_start_ns": 1234567890,
+        "stack_id": 0,
+        "thread_id": "259"
+      }
+    ],
+    "stacks": [
+      [ 0 ]
+    ],
+    "frames": [
+      {
+        "instruction_addr": "0xa722447ffffffffc"
+      }
+    ],
+    "thread_metadata": {
+      "259": {
+        "priority": 31
+      }
+    }
+  },
+}
+```
+
+<div id="profile-metadata">
+  ### Metadatos del perfil
+</div>
+
+`debug_meta`
+
+: *Objeto, obligatorio en plataformas nativas.* Contiene la misma carga útil que la [interfaz `debug_meta`](/es/sdk/data-model/event-payloads/sdk/).
+Es necesario en plataformas nativas para realizar la simbolización. En plataformas no nativas, puedes omitirlo.
+
+`device`
+
+: *Objeto, obligatorio.* Contiene varios campos que describen el dispositivo en el que se está ejecutando el generador de perfiles.
+
+Puede incluir los siguientes atributos:
+
+* `architecture`: *Cadena, obligatorio.*
+* `is_emulator`: *Booleano, opcional.* Indica si la aplicación se está ejecutando en un emulador. Por lo general, solo se establece para plataformas móviles.
+* `locale`: *Cadena, opcional.* Contiene la configuración regional del sistema. Por lo general, solo se establece para plataformas móviles.
+* `manufacturer`: *Cadena, opcional.* Contiene el fabricante del dispositivo. Por lo general, solo se establece para plataformas móviles.
+* `model`: *Cadena, opcional.* Contiene el modelo del dispositivo. Por lo general, solo se establece para plataformas móviles.
+
+```json
+{
+  "device": {
+    "architecture": "arm64e",
+    "is_emulator": true,
+    "locale": "en_US",
+    "manufacturer": "Apple",
+    "model": "iPhone14,8"
+  }
+}
+```
+
+`environment`
+
+: *Cadena, recomendado.* El nombre del entorno, como `production` o `staging`. El valor predeterminado es `production`.
+
+`event_id`
+
+: *Cadena, obligatorio.* Cadena hexadecimal que representa un valor uuid4. La longitud debe ser exactamente de 32 caracteres. No se permiten guiones ni letras mayúsculas.
+
+`measurements`
+
+: *Objeto, opcional.* Este campo contiene varias métricas registradas durante la recopilación del perfil.
+
+Una medición es un conjunto de valores de medición y una unidad para esos valores.
+Solo se mostrará en la interfaz si está integrada. Por ahora, solo
+admitimos 2 métricas:
+
+* `frozen_frame_renders`: cuando se detecta un fotograma congelado.
+* `slow_frame_renders`: cuando se detecta un fotograma lento.
+
+Un valor de medición puede contener los siguientes atributos:
+
+* `elapsed_since_start_ns`: número de nanosegundos desde el inicio del perfil
+  (almacenado en `timestamp`). Debe ser tiempo de reloj (wall time).
+* `value`: valor de la medición, como `float64`. También aceptamos `float64`
+  formateado como `string`.
+
+Estos son los valores aceptados para `unit`:
+
+* `nanosecond`
+* `ns`
+* `hertz`
+* `hz`
+* `byte`
+* `percent`
+
+```json
+{
+  "cpu_0": {
+    "unit": "percent",
+    "values": {
+      "elapsed_since_start_ns: "1234567890",
+      "value": 12.64,
+    }
+  }
+}
+```
+
+`os`
+
+: *Objeto, obligatorio.* Contiene información sobre el sistema operativo.
+
+Puede tener los siguientes atributos:
+
+* `name`: *Cadena, obligatoria.* Contiene el nombre del sistema operativo.
+* `version`: *Cadena, obligatoria.* Contiene la versión del sistema operativo.
+* `build_number`: *Cadena, opcional.* Solo establécelo para la plataforma `cocoa`.
+
+```json
+{
+ "os": {
+    "build_number": "20D47",
+    "name": "iOS",
+    "version": "16.3",
+  }
+}
+```
+
+`platform`
+
+: *String, obligatorio.* Este valor representa la plataforma desde la que el SDK envía datos.
+
+Los valores aceptables son:
+
+* `cocoa`
+* `node`
+* `python`
+* `rust`
+
+`profile`
+
+: *Object, obligatorio.* Contiene todos los datos sin procesar recopilados durante el perfilado. Consulta [datos de perfil](#profile-data).
+
+`release`
+
+: *String, obligatorio.* La versión de la aplicación.
+
+**Las versiones de lanzamiento deben ser únicas en todos los proyectos de tu organización**.
+Este valor puede ser el SHA de git del proyecto en cuestión o un identificador de producto
+con una versión semántica (formato sugerido: `my-project-name@1.0.0`).
+
+`runtime`
+
+: *Object, opcional.* Contiene información sobre el runtime. Normalmente solo se usa en plataformas que permiten varios runtimes.
+
+Puede tener los siguientes atributos:
+
+* `name`
+* `version`
+
+```json
+{
+  "runtime": {
+    "name": "CPython",
+    "version": "3.11.2"
+  }
+}
+```
+
+`timestamp`
+
+: *String, recomendado.* La marca de tiempo en la que el SDK capturó el perfil,
+en formato [RFC 3339](https://tools.ietf.org/html/rfc3339). Esto sirve como
+referencia para todas las marcas de tiempo relativas capturadas para el perfil.
+
+Idealmente, coincidirá con el campo `start_timestamp` de la transacción,
+para que todas las marcas de tiempo relativas de la transacción y del perfil
+partan del mismo punto de referencia y no tengamos que corregirlas.
+
+Si por algún motivo la implementación del generador de perfiles no lo permite, establécelo en el momento más cercano al inicio del generador de perfiles (o en el valor que este te proporcione como marca de tiempo de inicio del perfil) y se usará para alinearlo con la transacción más adelante.
+
+`transaction`
+
+: *Objeto, obligatorio.* Contiene información sobre la transacción con la que está asociada.
+
+Puede tener los siguientes atributos:
+
+* `id`: *Cadena, obligatorio.* Contiene el ID de la transacción.
+* `name`: *Cadena, obligatorio.* Contiene el nombre de la transacción.
+* `trace_id`: *Cadena, obligatorio.* Contiene el ID de traza del que forma parte la transacción.
+* `active_thread_id`: *Cadena, obligatorio.* Contiene el ID del hilo en el que se inició la transacción como `uint64` convertido a cadena. En dispositivos móviles, normalmente es el hilo principal.
+
+`version`
+
+: *Cadena, obligatorio.* Representa la versión del formato Sample.
+
+Los valores aceptables son:
+
+* `"1"`
+
+<div id="profile-data">
+  ### Datos del perfil
+</div>
+
+Los datos del perfil constan de
+
+* sample, que especifica la hora de inicio, su hilo correspondiente y una pila,
+* stacks, que son listas de frames,
+* frames, que identifican la función y/o la línea de código de cada elemento en un stacktrace,
+* metadatos de hilo, con información sobre los hilos.
+
+El formato elegido busca mantener al mínimo la cantidad de datos que transferimos al servidor.
+
+```json
+{
+  "profile": {
+    "samples": [
+      { ... },
+      ...
+    ],
+    "stacks": [
+      [ ... ],
+      ...
+    ],
+    "frames": [
+      { ... },
+      ...
+    ],
+    "thread_metadata": {
+      "259": {
+        ...
+      }
+    }
+  }
+}
+```
+
+Al recopilar un rastro de pila, debes:
+
+1. Capturar el rastro de pila.
+2. Capturar una marca de tiempo relativa al inicio del perfil (establecida en el
+   campo `timestamp`).
+3. Capturar el ID del hilo donde se capturó este rastro de pila.
+4. Crear una lista de índices para cada frame (añádelo a la lista de frames si es necesario
+   o usa el índice del frame existente).
+5. Comprobar si esa pila existe en la lista de pilas y, si no, añadirla a la lista de pilas.
+6. Crear una muestra que contenga el ID del hilo, la marca de tiempo relativa y el
+   ID de la pila.
+
+Debes recopilar muestras a una frecuencia de 101 Hz, o aproximadamente una vez cada 10
+milisegundos.
+
+<Alert title="Nota">
+  La cifra de 101 Hz no es un error tipográfico. Se eligió intencionalmente, ligeramente distinta de 100 Hz, para evitar una condición
+  llamada &quot;muestreo en lockstep&quot; donde las muestras de perfilado ocurren a la misma frecuencia que un bucle en la
+  aplicación. Idealmente, las muestras deberían ser mucho más frecuentes que cualquier ciclo en la aplicación, o
+  a intervalos aleatorios, de modo que la probabilidad de que ocurran en una operación concreta sea proporcional a la
+  cantidad de tiempo que tarda esa operación. Pero esto a menudo no es factible, así que lo siguiente mejor es usar
+  una tasa de muestreo que no coincida con la frecuencia probable de los ciclos del programa.
+
+  También elegimos 101 por ser un número primo, mientras que el 1 por debajo de 100—99—es divisible de manera uniforme por varios
+  números más pequeños, lo que podría conducir a un comportamiento en lockstep similar.
+
+  Esta explicación es un extracto de [esta excelente respuesta en StackOverflow](https://stackoverflow.com/a/45471031/1181370)
+  que ofrece más detalles y una buena analogía sobre el problema.
+</Alert>
+
+`samples`
+
+: *Lista, obligatorio* Contiene una lista de objetos de muestra capturados durante la ejecución.
+Cada muestra puede contener los siguientes atributos:
+
+* `elapsed_since_start_ns`: *String, obligatorio.* Contiene la marca de tiempo relativa
+  en nanosegundos desde el valor contenido en el campo `timestamp` cuando se
+  capturó la muestra. Debe ser un `uint64` formateado como `string`; no se
+  aceptará un `float`. Debe ser tiempo de reloj.
+* `stack_id`: *Integer, obligatorio.* Contiene el índice de la pila de la lista `stacks`.
+* `thread_id`: *String, obligatorio.* Contiene el ID del hilo en el que se capturó la muestra.
+
+```json
+{
+  "elapsed_since_start_ns": "1234567890",
+  "stack_id": 1,
+  "thread_id": "259",
+}
+```
+
+`stacks`
+
+: *Lista, obligatorio*. Contiene una lista de índices de frames que conforman un stack trace.
+
+Los frames en un stack deben estar ordenados de hoja a raíz. Esto significa que tu frame principal
+debe ir al final de la lista.
+
+Se recomienda deduplicar los stacks almacenándolos una sola vez y haciendo referencia al mismo
+`stack_id` para cada muestra que lo necesite.
+
+`frames`
+
+: *Lista, obligatorio*. Contiene una lista de objetos de frame (consulta [Frame Attributes](/es/sdk/data-model/event-payloads/stacktrace/#frame-attributes)).
+
+Cada objeto debe incluir al menos un atributo `filename`, `function` o
+`instruction_addr`. Todos los atributos son opcionales, pero recomendados.
+
+Para plataformas nativas (`cocoa` o `rust`, por ejemplo), `instruction_addr` es
+obligatorio para poder simbolicar y obtener más información sobre el frame.
+
+Para el resto de plataformas, lo que se proporcione aquí se enviará al
+frontend y lo disponible podrá usarse para mostrar más o menos información.
+
+Usaremos `module` o `package` (en ese orden) para agrupar frames cuando sea necesario.
+
+Por el momento, algunos atributos no se utilizan:
+
+* `raw_function`
+* `pre_context`
+* `post_context`
+* `stack_start`
+* `vars`
+* `addr_mode`
+* `platform`
+
+`thread_metadata`
+
+: *Objeto, obligatorio.* Contiene un objeto con un campo para cada ID de hilo detectado durante la ejecución.
+
+Este objeto puede contener estos atributos:
+
+* `name`: nombre del hilo.
+* `priority`: prioridad del hilo.
+
+Esta información se usará en el flamechart para habilitar el selector de hilos.
+
+```json
+{
+  "thread_metadata": {
+    "259": {
+      "name": "com.apple.main-thread",
+      "priority": 31
+    }
+  }
+}
+```
+
+<div id="validation">
+  ## Validación
+</div>
+
+Rechazaremos un perfil en Relay por varias razones:
+
+* faltan datos del perfil (sin frame, sin muestra, sin stack)
+* no hay suficientes muestras (necesitamos al menos 2 muestras)
+* no hay ninguna transacción asociada al perfil
+* falta alguno de los metadatos requeridos
+* el tamaño del perfil supera los 50 MB
+* un perfil supera los 30 segundos (diferencia entre la última y la primera marca de tiempo de la muestra)
+
+Se sugiere validar estas condiciones antes de enviar el perfil.
+
+Se sugiere eliminar datos innecesarios, como datos de hilo sin muestras, de
+`thread_metadata`.
+
+<div id="ingestion">
+  ## Ingesta
+</div>
+
+Una vez generado este payload, serialízalo como JSON, inclúyelo en el mismo
+[Envelope](/es/sdk/data-model/envelopes/) que la transacción asociada con el tipo de elemento
+[`profile`](/es/sdk/data-model/envelope-items/#profile) y envíalo a Relay.
+
+Este envelope debería verse así:
+
+```json
+{"event_id":"a229377b82ad4898be7c3a6272d052d9"}
+{"type":"transaction"}
+{ /* payload JSON de transacción */ }
+{"type":"profile"}
+{ /* payload JSON de perfil */}
+```

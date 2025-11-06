@@ -1,0 +1,122 @@
+---
+title: Maven
+description: "Obtén información sobre cómo usar el plugin Sentry Maven."
+sidebar_order: 105
+---
+
+El [Sentry Maven Plugin](https://github.com/getsentry/sentry-maven-plugin) es un complemento del SDK principal de Java y ofrece una integración fluida con el sistema de compilación Maven. Es compatible con las siguientes funciones:
+
+- Instalación automática del SDK de Sentry para Java y de las integraciones pertinentes
+- Carga de Source Context
+
+<div id="setup">
+  ## Configuración
+</div>
+
+<div id="install">
+  ### Instalación
+</div>
+
+Usa Maven en el `pom.xml` del módulo de tu aplicación y agrega:
+
+```xml
+<project>
+  ...
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>io.sentry</groupId>
+        <artifactId>sentry-maven-plugin</artifactId>
+        <version>{{@inject packages.version('sentry.java.maven-plugin', '0.0.2') }}</version>
+        <!-- Necesario para permitir la instalación automática del SDK de Sentry y de las integraciones -->
+        <extensions>true</extensions>
+      </plugin>
+      ...
+    </plugins>
+    ...
+  </build>
+...
+</project>
+```
+
+
+<div id="configure">
+  ### Configuración
+</div>
+
+Ponemos a disposición los siguientes valores de configuración añadiendo una sección `<configuration>` al plugin en `pom.xml`:
+
+```xml
+<project>
+  ...
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>io.sentry</groupId>
+        <artifactId>sentry-maven-plugin</artifactId>
+        <version>{{@inject packages.version('sentry.java.maven-plugin', '0.0.2') }}</version>
+        <!-- Necesario para permitir la instalación automática del SDK de Sentry y de las integraciones -->
+        <extensions>true</extensions>
+        <configuration>
+          <!-- para mostrar la salida de sentry-cli -->
+          <debugSentryCli>true</debugSentryCli>
+
+          <!--  Desactivar el plugin -->
+          <skip>false</skip>
+
+          <!--  Desactivar el contexto del código fuente -->
+          <skipSourceBundle>false</skipSourceBundle>
+
+          <!--  Desactivar la instalación automática del SDK y las integraciones -->
+          <skipAutoInstall>false</skipAutoInstall>
+
+          <!--  Desactivar la validación de la consistencia de las versiones de dependencias del SDK -->
+          <skipValidateSdkDependencyVersions>false</skipValidateSdkDependencyVersions>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <!--  Genera un paquete de código fuente y lo carga en Sentry. -->
+              <!--  Esto habilita el contexto del código fuente, permitiéndote ver tu código -->
+              <!--  como parte de tus trazas de pila en Sentry. -->
+              <goal>uploadSourceBundle</goal>
+
+              <!--  Valida las versiones de dependencias del SDK de Sentry. -->
+              <!--  Mezclar versiones de dependencias del SDK puede provocar errores de compilación o de ejecución. -->
+              <!--  Si se detectan versiones mezcladas, la compilación fallará. -->
+              <goal>validateSdkDependencyVersions</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      ...
+    </plugins>
+    ...
+  </build>
+  ...
+</project>
+```
+
+
+<div id="auto-installation">
+  ## Instalación automática
+</div>
+
+El plugin añade automáticamente el SDK de Java de Sentry y las integraciones de Sentry disponibles como dependencias si detecta una biblioteca compatible. Por ejemplo, si tu proyecto depende de `graphql-java`, el plugin añadirá automáticamente `sentry-graphql` como una dependencia adicional.
+
+<div id="source-context">
+  ## Contexto de origen
+</div>
+
+Consulta nuestra documentación sobre <PlatformLink to="/source-context/">Contexto de origen</PlatformLink>.
+
+De forma predeterminada, todas las raíces de código incluidas como parte de tu build se envían a Sentry para el contexto de origen.
+
+Para especificar manualmente directorios adicionales que deben incluirse en el paquete de origen, usa la siguiente configuración dentro de la etiqueta `plugin` de `io.sentry:sentry-maven-plugin`:
+
+```xml
+<additionalSourceDirsForSourceContext>
+  <value>src/main/algúnDirectorio</value>
+  <value>src/main/algúnOtroDirectorio</value>
+</additionalSourceDirsForSourceContext>
+```

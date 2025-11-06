@@ -1,0 +1,132 @@
+---
+title: Configurar comentarios de usuarios
+sidebar_title: Comentarios de usuarios
+description: >-
+  Obtén más información sobre cómo recopilar comentarios de usuarios cuando ocurre un evento. Sentry asocia
+  los comentarios con el evento original, ofreciéndote información adicional sobre
+  los problemas.
+sidebar_order: 6000
+og_image: /og-images/platforms-dart-guides-flutter-user-feedback.png
+---
+
+Cuando un usuario experimenta un error, Sentry permite recopilar comentarios adicionales. Puedes recopilar comentarios según el método que admita el SDK.
+
+<div id="user-feedback-api">
+  ## API de comentarios de usuarios
+</div>
+
+La API de comentarios de usuarios te permite recopilar opiniones mientras usas tu propia interfaz. Sentry vincula los comentarios con el evento original, brindándote información adicional sobre los problemas. Sentry necesita el `associatedEventId` para poder asociar los comentarios del usuario con el evento correspondiente. Hay varias formas de obtener el `associatedEventId`:
+
+- usa {<PlatformLink to="/configuration/options/#before-send"><PlatformIdentifier name="before-send" /></PlatformLink>}
+- usa el valor de retorno de cualquier método que capture un evento.
+- usa `Sentry.lastEventId` para obtener el ID del último evento enviado.
+
+<PlatformContent includePath="user-feedback/sdk-api-example/" />
+
+<div id="sentryfeedbackwidget">
+  ## SentryFeedbackWidget
+</div>
+
+Usa `SentryFeedbackWidget` para permitir que los usuarios envíen comentarios a Sentry.
+
+El widget solicita y recopila el nombre del usuario, su dirección de correo electrónico y una descripción de lo ocurrido. Cuando se proporciona un identificador de evento, Sentry vincula el comentario con el evento original, ofreciéndote información adicional sobre los problemas.
+
+Los usuarios también pueden hacer una captura de pantalla de la interfaz de su app. Además, puedes proporcionar una captura de pantalla desde el código. Obtén más información sobre cómo habilitar capturas de pantalla en nuestra <PlatformLink to="/enriching-events/screenshots/">documentación de capturas de pantalla</PlatformLink>.
+
+La imagen a continuación muestra un ejemplo del widget, aunque el tuyo puede diferir según tu personalización:
+
+|Comentarios de usuario en iOS  |Comentarios de usuario en Android        |
+|:-----------------------------:|:---------------------------------------: |
+|![User Feedback Widget on Flutter iOS =500x](./img/user-feedback-flutter-ios-widget.png)  |![User Feedback Widget on Flutter Android =500x](./img/user-feedback-flutter-android-widget.png) |
+
+<div id="integration">
+  ### Integración
+</div>
+
+Una posible forma de usar `SentryFeedbackWidget` es escuchar eventos específicos de Sentry en el callback `beforeSend` y mostrar el widget a los usuarios. Los usuarios también pueden tomar una captura de pantalla de la interfaz de la app si `SentryWidget` envuelve el widget principal de la app.
+
+```dart
+// El ejemplo usa `NavigatorState` para presentar el widget. Adáptalo según sea necesario a tu pila de navegación.
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+...
+
+Future<void> main() async {
+  await SentryFlutter.init(
+    (options) {
+      options.navigatorKey = navigatorKey; // Necesario para que el widget pueda presentarse.
+      options.beforeSend = (event, hint) async {
+        // Filtra aquí qué tipo de eventos quieres que los usuarios te envíen comentarios.
+
+        final screenshot = await SentryFlutter.captureScreenshot();
+
+        final context = navigatorKey.currentContext;
+        if (context != null && context.mounted) {
+          SentryFeedbackWidget.show(
+            context,
+            associatedEventId: event.eventId,
+            screenshot: screenshot,
+          );
+        }
+      };
+    },
+    appRunner: () => runApp(
+      SentryWidget(
+        child: MyApp(),
+      ),
+    ),
+  );
+}
+```
+
+
+<div id="customization">
+  ### Personalización
+</div>
+
+Puedes personalizar el `SentryFeedbackWidget` según tus necesidades modificando la clase `SentryFeedbackOptions`, que se proporciona en las opciones de `SentryFlutter.init`.
+
+```dart
+SentryFlutter.init((options) {
+  options.feedback.title = 'Informar de un error';
+  options.feedback.isNameRequired = false;
+  options.feedback.showName = true;
+  options.feedback.isEmailRequired = false;
+  options.feedback.showEmail = true;
+  options.feedback.useSentryUser = true;
+  options.feedback.showBranding = true;
+});
+```
+
+La siguiente tabla enumera todas las opciones que puedes personalizar para cambiar el comportamiento de `SentryFeedbackWidget`.
+
+| Option | Type | Default | Description |
+| - | - | - | - |
+| title | String | &#39;Report a Bug&#39; | El título del formulario de comentarios. |
+| isNameRequired | Bool | false | Exige que el campo de nombre del formulario de comentarios esté completo. |
+| showName | Bool | true | Muestra el campo de nombre en el formulario de comentarios. Se ignora si isNameRequired es true. |
+| isEmailRequired | Bool | false | Exige que el campo de correo electrónico del formulario de comentarios esté completo. |
+| showEmail | Bool | true | Muestra el campo de correo electrónico en el formulario de comentarios. Se ignora si isEmailRequired es true. |
+| useSentryUser | Bool | true | Define los campos de correo electrónico y nombre a partir de los campos de usuario del Sentry SDK establecidos con SentrySDK.setUser. |
+| showBranding | Bool | true | Muestra el logotipo de Sentry dentro del formulario. |
+| showCaptureScreenshot | Bool | true | Muestra el botón para capturar una captura de pantalla en el formulario de comentarios. |
+
+También puedes proporcionar etiquetas diferentes o localización para el widget de comentarios:
+
+| Option | Type | Default | Description |
+| - | - | - | - |
+| formTitle | String | &#39;Report a Bug&#39; | El título del formulario de comentarios. |
+| messageLabel | String | &#39;Description&#39; | La etiqueta del campo de entrada de la descripción del comentario. |
+| messagePlaceholder | String | &#39;What&#39;s the bug? What did you expect?&#39; | El texto del marcador de posición en el campo de descripción del comentario. |
+| isRequiredLabel | String | &#39; (Required)&#39; | El texto que se adjunta a la etiqueta de título para un campo obligatorio. |
+| successMessageText | String | &#39;Thank you for your report!&#39; | El mensaje que se muestra después de enviar un comentario correctamente. |
+| nameLabel | String | &#39;Name&#39; | La etiqueta junto al campo de entrada de nombre. |
+| namePlaceholder | String | &#39;Your Name&#39; | El texto del marcador de posición en el campo de nombre. |
+| emailLabel | String | &#39;Email&#39; | La etiqueta junto al campo de entrada de correo electrónico. |
+| emailPlaceholder | String | &#39;your.email@example.org&#39; | El texto del marcador de posición en el campo de correo electrónico. |
+| submitButtonLabel | String | &#39;Send Bug Report&#39; | La etiqueta del botón de envío. |
+| cancelButtonLabel | String | &#39;Cancel&#39; | La etiqueta del botón de cancelar. |
+| validationErrorLabel | String | &#39;Can&#39;t be empty&#39; | La etiqueta del mensaje de error de validación. |
+| captureScreenshotButtonLabel | String | &#39;Capture a screenshot&#39; | La etiqueta del botón para capturar una captura de pantalla. |
+| removeScreenshotButtonLabel | String | &#39;Remove screenshot&#39; | La etiqueta del botón para eliminar la captura de pantalla. |
+| takeScreenshotButtonLabel | String | &#39;Take Screenshot&#39; | La etiqueta del botón para tomar una captura de pantalla que se muestra fuera del widget de comentarios. |

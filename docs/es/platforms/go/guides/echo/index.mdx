@@ -1,0 +1,155 @@
+---
+title: Echo
+description: "Echo es un framework web de alto rendimiento para crear aplicaciones robustas y escalables en Go. Aprende a configurarlo con Sentry."
+---
+
+Como referencia rápida, hay un [ejemplo completo](https://github.com/getsentry/sentry-go/tree/master/_examples/echo) en el repositorio del código fuente del SDK de Go.
+
+También está disponible la [documentación de la API al estilo Go Dev](https://pkg.go.dev/github.com/getsentry/sentry-go/echo).
+
+<div id="install">
+  ## Instalación
+</div>
+
+```bash
+go get github.com/getsentry/sentry-go
+go get github.com/getsentry/sentry-go/echo
+```
+
+<Break />
+
+
+<div id="configure">
+  ## Configuración
+</div>
+
+<div id="initialize-the-sentry-sdk">
+  ### Inicializa el SDK de Sentry
+</div>
+
+<PlatformContent includePath="getting-started-config" />
+
+<div id="options">
+  ### Opciones
+</div>
+
+`sentryecho` acepta una estructura `Options` que te permite configurar el comportamiento del controlador.
+
+```go
+// Repanic configura si Sentry debe volver a generar el pánico después de la recuperación; en la mayoría de los casos debería establecerse en true,
+// ya que Echo incluye su propio middleware Recover que gestiona las respuestas HTTP.
+Repanic bool
+// WaitForDelivery configura si deseas bloquear la solicitud antes de continuar con la respuesta.
+// Dado que el handler `Recover` de Echo no reinicia la aplicación,
+// es seguro omitir esta opción o configurarla en `false`.
+WaitForDelivery bool
+// Tiempo de espera para las solicitudes de envío de eventos.
+Timeout time.Duration
+```
+
+<Break />
+
+```go
+app := echo.New()
+app.Use(sentryecho.New(sentryecho.Options{
+    // puedes modificar estas opciones
+    Repanic:         true,
+    WaitForDelivery: false,
+    Timeout:         5 * time.Second,
+}))
+```
+
+
+<div id="verify">
+  ## Verifica
+</div>
+
+```go
+app := echo.New()
+app.Use(middleware.Logger())
+app.Use(middleware.Recover())
+
+// Añade el handler de sentryecho como uno de tus middlewares
+app.Use(sentryecho.New(sentryecho.Options{
+// especifica las opciones aquí...
+}))
+
+// Configura las rutas
+app.GET("/", func(ctx echo.Context) error {
+    // captura un error intencionalmente para simular el uso
+    sentry.CaptureMessage("¡Funciona!")
+
+	return ctx.String(http.StatusOK, "¡Hola, mundo!")
+})
+
+app.Logger.Fatal(app.Start(":3000"))
+```
+
+
+<div id="usage">
+  ## Uso
+</div>
+
+`sentryecho` adjunta una instancia de `*sentry.Hub` (https://pkg.go.dev/github.com/getsentry/sentry-go#Hub) a `echo.Context`, lo que la hace disponible durante el resto del ciclo de vida de la solicitud.
+Puedes acceder a ella usando el método `sentryecho.GetHubFromContext()` sobre el propio contexto en cualquiera de tus middlewares y rutas posteriores.
+Debe usarse en lugar de las llamadas globales `sentry.CaptureMessage`, `sentry.CaptureException` o cualquier otras, ya que mantiene la separación de datos entre solicitudes.
+
+**Ten en cuenta que `*sentry.Hub` no estará disponible en middlewares adjuntos antes de `sentryecho`.**
+
+```go
+app := echo.New()
+
+app.Use(middleware.Logger())
+app.Use(middleware.Recover())
+
+app.Use(sentryecho.New(sentryecho.Options{
+	Repanic: true,
+}))
+
+app.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(ctx echo.Context) error {
+		if hub := sentryecho.GetHubFromContext(ctx); hub != nil {
+			hub.Scope().SetTag("someRandomTag", "quizáLoNecesites")
+		}
+		return next(ctx)
+	}
+})
+
+app.GET("/", func(ctx echo.Context) error {
+	if hub := sentryecho.GetHubFromContext(ctx); hub != nil {
+		hub.WithScope(func(scope *sentry.Scope) {
+			scope.SetExtra("unwantedQuery", "quizáAlgúnDatoDe la Consulta")
+			hub.CaptureMessage("El usuario proporcionó una cadena de consulta no deseada, pero nos recuperamos sin problemas")
+		})
+	}
+	return ctx.String(http.StatusOK, "¡Hola, mundo!")
+})
+
+app.GET("/foo", func(ctx echo.Context) error {
+	// el manejador de sentryecho lo capturará sin problema. Además, como adjuntamos "someRandomTag"
+	// en el middleware antes, también se enviará
+	panic("¿y eso?")
+})
+
+app.Logger.Fatal(app.Start(":3000"))
+```
+
+
+<div id="accessing-request-in-beforesend-callback">
+  ### Acceder a la solicitud en el callback `BeforeSend`
+</div>
+
+```go
+sentry.Init(sentry.ClientOptions{
+	Dsn: "___PUBLIC_DSN___",
+	BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
+		if hint.Context != nil {
+			if req, ok := hint.Context.Value(sentry.RequestContextKey).(*http.Request); ok {
+				// Tienes acceso a la solicitud original aquí
+			}
+		}
+
+		return event
+	},
+})
+```

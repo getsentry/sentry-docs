@@ -1,0 +1,105 @@
+---
+title: Colas instrumentadas
+sidebar_order: 3000
+description: "Aprende a instrumentar manualmente tu código para usar el módulo de colas de Sentry."
+---
+
+Sentry incluye un [panel de monitoreo de colas](https://sentry.io/orgredirect/organizations/:orgslug/insights/backend/queues/) que puede instrumentarse automáticamente con nuestro [SDK para Laravel](/es/platforms/php/guides/laravel/).
+
+Si usas otra tecnología, puedes instrumentar manualmente tus productores y consumidores de colas para asegurarte de contar con datos de rendimiento sobre tus colas de mensajería.
+
+<div id="producer-instrumentation">
+  ## Instrumentación del productor
+</div>
+
+Envuelve el código de tu productor de cola en un span. El `op` del span debe establecerse en `queue.publish`. Incluye los siguientes datos del span para enriquecer tus spans de productor con métricas adicionales:
+
+| Atributo de datos | Tipo | Descripción |
+|:--|:--|:--|
+| `messaging.message.id ` | string | Identificador del mensaje |
+| `messaging.destination.name` | string | Nombre de la cola o del tema |
+| `messaging.message.body.size` | int | Tamaño del cuerpo del mensaje en bytes |
+
+Asegúrate de que haya una transacción en ejecución cuando crees los spans. Consulta <PlatformLink to="/tracing/">Tracing</PlatformLink> para obtener más información.
+
+También debes incluir los encabezados de traza de Sentry (`sentry-trace` y `baggage`) en la carga del trabajo de tu cola para que tus consumidores puedan continuar la traza una vez que se recoja el trabajo.
+
+```php
+$parentSpan = \Sentry\SentrySdk::getCurrentHub()->getSpan();
+
+if ($parentSpan !== null) {
+    $context = \Sentry\Tracing\SpanContext::make()
+        ->setOp('queue.publish')
+        ->setDescription('App\Jobs\MyJob');
+
+    $span = $parentSpan->startChild($context);
+
+    \Sentry\SentrySdk::getCurrentHub()->setSpan($span);
+
+    // Publicar el trabajo en la cola
+    Queue::push($job, [
+        'publish_time' => microtime(true),
+        'sentry_trace' => \Sentry\getTraceparent(),
+        'baggage' => \Sentry\getBaggage(),
+    ]);
+    
+    $span
+        ->setData([
+            'messaging.message.id' => $job->getId(),
+            'messaging.destination.name' => $job->getQueue(),
+            'messaging.message.body.size' => $job->getSize(),
+        ])
+        ->finish();
+
+    \Sentry\SentrySdk::getCurrentHub()->setSpan($parentSpan);
+}
+```
+
+<div id="consumer-instrumentation">
+  ## Instrumentación del consumidor
+</div>
+
+Envuelve el código de tu consumidor de colas en un span. El `op` del span debe establecerse en `queue.process`. Incluye los siguientes datos del span para enriquecer los spans del consumidor con métricas adicionales:
+
+| Data Attribute | Type | Description |
+|:--|:--|:--|
+| `messaging.message.id ` | string | Identificador del mensaje |
+| `messaging.destination.name` | string | Nombre de la cola o del tema |
+| `messaging.message.body.size` | number | Tamaño del cuerpo del mensaje en bytes |
+| `messaging.message.retry.count ` | number | Número de veces que se intentó procesar un mensaje |
+| `messaging.message.receive.latency ` | number | Tiempo en milisegundos que un mensaje esperó para ser procesado en la cola |
+
+Asegúrate de que haya una transacción en ejecución cuando crees los spans. Consulta <PlatformLink to="/tracing/">Tracing</PlatformLink> para más información.
+
+Usa `\Sentry\continueTrace()` para conectar la transacción de tu consumidor con los spans del productor asociados y `$transaction->setStatus()` para marcar el rastro de tu mensaje como correcto o como fallido.
+
+```php
+$context = \Sentry\continueTrace(
+    $job->getMetadata('sentry_trace'),
+    $job->getMetadata('baggage')
+)
+    ->setOp('queue.process')
+    ->setName('App\Jobs\MyJob');
+
+$transaction = \Sentry\startTransaction($context);
+
+\Sentry\SentrySdk::getCurrentHub()->setSpan($transaction);
+
+$job = Queue::pop();
+
+try {
+    // Continuar con el procesamiento del job...
+} catch (\Throwable $e) {
+    $transaction->setStatus(\Sentry\Tracing\SpanStatus::internalError());
+}
+
+$transaction
+    ->setData([
+        'messaging.message.id' => $job->getId(),
+        'messaging.destination.name' => $job->getQueue(),
+        'messaging.message.body.size' => $job->getSize(),
+        'messaging.message.receive.latency' =>  microtime(true) - $job->getMetadata('publish_time'),
+        'messaging.message.retry.count' => $job->getRetryCount(),
+    ])
+    ->finish();
+```

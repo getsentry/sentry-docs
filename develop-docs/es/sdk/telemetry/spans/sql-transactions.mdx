@@ -1,0 +1,34 @@
+---
+title: Transacciones SQL
+---
+
+<Alert>
+  Este documento utiliza palabras clave como "MUST", "SHOULD" y "MAY", tal como se definen en [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt), para indicar niveles de requisito.
+</Alert>
+
+El SDK SHOULD instrumentar automáticamente todas las transacciones de bases de datos SQL como PostgreSQL y MySQL.
+Cada BEGIN, COMMIT y ROLLBACK, o una instrucción equivalente en el sistema de base de datos, MUST dar lugar a un span individual.
+Se RECOMMENDED spans para otras instrucciones a nivel de transacción, como SAVEPOINT y, cuando se implementen, MUST también corresponder a una instrucción SQL individual.
+Las instrucciones de transacción SHOULD producir spans tanto si se emiten a través de un controlador de base de datos como a través de un ORM.
+
+<div id="span-data">
+  ### Datos de spans
+</div>
+
+Consulta las <Link to="https://getsentry.github.io/sentry-conventions/generated/attributes/db.html">convenciones de datos de spans de base de datos</Link> para ver la lista completa de atributos que deberían tener los spans de base de datos.
+El SDK DEBERÍA establecer los atributos
+
+- db.system.name
+- db.operation.name
+
+para los spans de sentencias de transacción.
+Se PUEDEN usar atributos equivalentes en desuso para mantener compatibilidad con versiones anteriores, pero DEBERÍAN marcarse como obsoletos.
+
+Los nombres de operación para las sentencias BEGIN, COMMIT y ROLLBACK DEBEN ser "BEGIN", "COMMIT" y "ROLLBACK", respectivamente.
+Para sinónimos, como BEGIN TRANSACTION para BEGIN, el nombre de la operación PUEDE reflejar el sinónimo. En este ejemplo, se PUEDE usar "BEGIN TRANSACTION".
+Algunas sentencias, como SAVEPOINT, ROLLBACK TO SAVEPOINT y RELEASE SAVEPOINT, aceptan argumentos.
+El nombre de la operación para sentencias que aceptan argumentos DEBE ser la sentencia sin los argumentos. En los ejemplos anteriores, los nombres de operación son "SAVEPOINT", "ROLLBACK TO SAVEPOINT" y "RELEASE SAVEPOINT", respectivamente.
+
+Para otras sentencias a nivel de transacción, como START TRANSACTION de MySQL, el SDK DEBERÍA representar la sentencia literal lo más fielmente posible, omitiendo caracteres de control de flujo como los puntos y coma.
+Las sentencias de transacción de SQLite pueden incluir modificadores. Por ejemplo, BEGIN DEFERRED es una variante de BEGIN. En este caso, el nombre de la operación PUEDE ser "BEGIN" o "BEGIN DEFERRED".
+La misma regla se aplica a sentencias modificadas análogas.

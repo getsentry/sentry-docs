@@ -1,0 +1,126 @@
+---
+title: Google Gen AI
+description: "Aprende a usar Sentry con Google Gen AI."
+---
+
+Esta integración conecta Sentry con el [Google Gen AI Python SDK](https://github.com/googleapis/python-genai).
+
+Una vez que hayas instalado este SDK, puedes usar Sentry AI Agents Monitoring, un panel de Sentry que te ayuda a entender qué ocurre con tus solicitudes de IA.
+
+Sentry AI Monitoring recopilará automáticamente información sobre indicaciones (prompts), herramientas, tokens y modelos. Obtén más información sobre el [AI Agents Dashboard](/es/product/insights/ai/agents).
+
+<div id="install">
+  ## Instalación
+</div>
+
+Instala `sentry-sdk` desde PyPI con el extra `google-genai`:
+
+```bash {tabTitle:pip}
+pip install "sentry-sdk[google-genai]"
+```
+
+```bash {tabTitle:uv}
+uv add "sentry-sdk[google-genai]"
+```
+
+<div id="configure">
+  ## Configurar
+</div>
+
+Añade `GoogleGenAIIntegration()` a tu lista de `integrations`:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.google_genai import GoogleGenAIIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    # Establece traces_sample_rate en 1.0 para capturar el 100 %
+    # de las transacciones en el trazado.
+    traces_sample_rate=1.0,
+    # Incluye datos como entradas y respuestas;
+    # consulta https://docs.sentry.io/platforms/python/data-management/data-collected/ para obtener más información
+    send_default_pii=True,
+    integrations=[
+        GoogleGenAIIntegration(),
+    ],
+)
+```
+
+<div id="verify">
+  ## Verificar
+</div>
+
+Verifica que la integración funcione realizando una solicitud de chat a Google Gen AI.
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.google_genai import GoogleGenAIIntegration
+from google.genai import Client
+
+sentry_sdk.init(...)  # igual que antes
+
+client = Client(api_key="(your Google API key)")
+
+def my_llm_stuff():
+    with sentry_sdk.start_transaction(name="Resultado de la inferencia de IA"):
+        response = client.models.generate_content(
+            model="gemini-2.0-flash-exp",
+            contents="di hola"
+        )
+        print(response.text)
+```
+
+Después de ejecutar este script, los datos resultantes deberían aparecer en la pestaña &quot;AI Spans&quot; de la página &quot;Explore&quot; &gt; &quot;Traces&quot; en Sentry.io.
+
+Si creaste manualmente un <PlatformLink to="/tracing/instrumentation/custom-instrumentation/ai-agents-module/#invoke-agent-span">Invoke Agent Span</PlatformLink> (algo que no se hizo en el ejemplo anterior), los datos también aparecerán en el [AI Agents Dashboard](/es/product/insights/ai/agents).
+
+Puede que los datos tarden unos instantes en aparecer en [sentry.io](https://sentry.io).
+
+<div id="behavior">
+  ## Comportamiento
+</div>
+
+* La integración de Google Gen AI conectará Sentry automáticamente con los métodos compatibles de Google Gen AI.
+
+* La función actualmente compatible es `models.generate_content` (tanto síncrona como asíncrona).
+
+* Sentry considera las entradas y salidas de los LLM como PII (información de identificación personal) y no incluye PII de forma predeterminada. Si quieres incluirla, establece `send_default_pii=True` en la llamada a `sentry_sdk.init()`. Para excluir explícitamente los prompts y las salidas incluso con `send_default_pii=True`, configura la integración con `include_prompts=False`, como se muestra en la [sección Opciones](#options) a continuación.
+
+<div id="options">
+  ## Opciones
+</div>
+
+Puedes establecer opciones para `GoogleGenAIIntegration` y así cambiar su comportamiento:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.google_genai import GoogleGenAIIntegration
+
+sentry_sdk.init(
+    # ...
+    # Agrega datos como entradas y respuestas;
+    # consulta https://docs.sentry.io/platforms/python/data-management/data-collected/ para más información
+    send_default_pii=True,
+    integrations=[
+        GoogleGenAIIntegration(
+            include_prompts=False,  # Las entradas/salidas del LLM no se enviarán a Sentry, a pesar de send_default_pii=True
+        ),
+    ],
+)
+```
+
+Puedes pasar los siguientes argumentos con nombre a `GoogleGenAIIntegration()`:
+
+* `include_prompts`:
+
+  Indica si las entradas y salidas del LLM deben enviarse a Sentry. De forma predeterminada, Sentry considera estos datos como información de identificación personal (PII). Si quieres incluirlos, establece `send_default_pii=True` en la llamada a `sentry_sdk.init()`. Para excluir explícitamente las indicaciones y salidas aunque `send_default_pii=True`, configura la integración con `include_prompts=False`.
+
+  El valor predeterminado es `True`.
+
+<div id="supported-versions">
+  ## Versiones compatibles
+</div>
+
+* google-genai: 1.4.0+
+* Python: 3.9+

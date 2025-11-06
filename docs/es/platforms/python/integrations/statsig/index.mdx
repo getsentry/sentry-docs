@@ -1,0 +1,78 @@
+---
+title: Statsig
+description: "Aprende a usar Sentry con Statsig."
+---
+
+La integración de [Statsig](https://www.statsig.com/) realiza el seguimiento de las evaluaciones de flags de funciones generadas por el SDK de servidor de Statsig para Python. Estas evaluaciones se mantienen en memoria y se envían a Sentry cuando ocurren eventos de error y de transacción. **Por ahora, solo admitimos evaluaciones de flags booleanos de la función `check_gate` de Statsig.** Obtén más información sobre los [feature gates de Statsig](https://docs.statsig.com/feature-flags/working-with/).
+
+<div id="install">
+  ## Instalar
+</div>
+
+Instala `sentry-sdk` desde PyPI con el extra `statsig`.
+
+```bash {tabTitle:pip}
+pip install "sentry-sdk[statsig]"
+```
+
+```bash {tabTitle:uv}
+uv add "sentry-sdk[statsig]"
+```
+
+
+<div id="configure">
+  ## Configuración
+</div>
+
+Añade `StatsigIntegration` a tu lista de `integrations`:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.statsig import StatsigIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    # Agrega datos como los encabezados de la solicitud y la IP de los usuarios, si corresponde;
+    # consulta https://docs.sentry.io/platforms/python/data-management/data-collected/ para más información
+    send_default_pii=True,
+    integrations=[StatsigIntegration()],
+)
+```
+
+Para más información sobre cómo usar Statsig, consulta la [referencia de Python](https://docs.statsig.com/server/pythonSDK) de Statsig y la [guía de inicio rápido](https://docs.statsig.com/guides/first-feature).
+
+
+<div id="verify">
+  ## Verificar
+</div>
+
+Prueba la integración evaluando un flag de características con tu SDK de Statsig antes de capturar una excepción.
+
+```python
+import sentry_sdk
+from statsig.statsig_user import StatsigUser
+from statsig import statsig
+
+import time
+
+statsig.initialize("server-secret-key")
+while not statsig.is_initialized():
+    time.sleep(0.2)
+
+result = statsig.check_gate(StatsigUser("mi-id-de-usuario"), "mi-feature-gate")
+sentry_sdk.capture_exception(Exception("¡Algo salió mal!"))
+```
+
+Visita el [sitio web de Sentry](https://sentry.io/issues/) y confirma que tu evento de error
+registró la feature flag «my-feature-gate» y que su valor es igual a `result`.
+
+
+<div id="supported-versions">
+  ## Versiones compatibles
+</div>
+
+- statsig >= 0.55.3
+- sentry-sdk >= 2.22.0
+- python >= 3.7
+
+<PlatformContent includePath="feature-flags/next-steps" />

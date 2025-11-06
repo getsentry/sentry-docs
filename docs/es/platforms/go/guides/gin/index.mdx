@@ -1,0 +1,149 @@
+---
+title: Gin
+description: "Gin es un framework web HTTP de alto rendimiento escrito en Golang. Aprende a configurarlo con Sentry."
+---
+
+Para una consulta rápida, hay un [ejemplo completo](https://github.com/getsentry/sentry-go/tree/master/_examples/gin) en el repositorio del código fuente del SDK de Go.
+
+También está disponible la [documentación de la API al estilo Go Dev](https://pkg.go.dev/github.com/getsentry/sentry-go/gin).
+
+<div id="install">
+  ## Instalación
+</div>
+
+```bash
+go get github.com/getsentry/sentry-go
+go get github.com/getsentry/sentry-go/gin
+```
+
+<Break />
+
+
+<div id="configure">
+  ## Configuración
+</div>
+
+<div id="initialize-the-sentry-sdk">
+  ### Inicializa el SDK de Sentry
+</div>
+
+<PlatformContent includePath="getting-started-config" />
+
+<div id="options">
+  ### Opciones
+</div>
+
+`sentrygin` acepta una estructura `Options` que te permite configurar cómo se comportará el controlador.
+
+```go
+// Si Sentry debe volver a generar el pánico después de la recuperación; en la mayoría de los casos debe establecerse en true,
+// ya que gin.Default incluye su propio middleware de Recovery que maneja las respuestas http.
+Repanic bool
+// Si deseas bloquear la solicitud antes de continuar con la respuesta.
+// Dado que el manejador `Recovery` predeterminado de Gin no reinicia la aplicación,
+// es seguro omitir esta opción o establecerla en `false`.
+WaitForDelivery bool
+// Tiempo de espera para las solicitudes de entrega de eventos.
+Timeout time.Duration
+```
+
+<Break />
+
+```go
+app := gin.Default()
+app.Use(sentrygin.New(sentrygin.Options{
+    // puedes modificar estas opciones
+    Repanic:         true,
+    WaitForDelivery: false,
+    Timeout:         5 * time.Second,
+}))
+```
+
+
+<div id="verify">
+  ## Verifica
+</div>
+
+```go
+app := gin.Default()
+
+// puedes adjuntar el controlador como uno de tus middlewares
+app.Use(sentrygin.New(sentrygin.Options{
+// especifica las opciones aquí...
+}))
+
+// Configura las rutas
+app.GET("/", func(ctx *gin.Context) {
+	// capturamos un error intencionalmente para simular el uso
+	sentry.CaptureMessage("¡Funciona!")
+	
+	ctx.String(http.StatusOK, "¡Hola, mundo!")
+})
+
+// Y ejecútalo
+app.Run(":3000")
+```
+
+
+<div id="usage">
+  ## Uso
+</div>
+
+`sentrygin` adjunta una instancia de `*sentry.Hub` (https://pkg.go.dev/github.com/getsentry/sentry-go#Hub) a `*gin.Context`, lo que la hace disponible durante el resto del ciclo de vida de la solicitud.
+Puedes acceder a ella usando el método `sentrygin.GetHubFromContext()` en el propio contexto, en cualquiera de tus middleware y rutas posteriores.
+Debe usarse en lugar de las llamadas globales `sentry.CaptureMessage`, `sentry.CaptureException` o cualquier otra, ya que mantiene la separación de datos entre solicitudes.
+
+**Ten en cuenta que `*sentry.Hub` no estará disponible en middleware adjunto antes de `sentrygin`!**
+
+```go
+app := gin.Default()
+
+app.Use(sentrygin.New(sentrygin.Options{
+	Repanic: true,
+}))
+
+app.Use(func(ctx *gin.Context) {
+	if hub := sentrygin.GetHubFromContext(ctx); hub != nil {
+		hub.Scope().SetTag("someRandomTag", "maybeYouNeedIt")
+	}
+	ctx.Next()
+})
+
+app.GET("/", func(ctx *gin.Context) {
+	if hub := sentrygin.GetHubFromContext(ctx); hub != nil {
+		hub.WithScope(func(scope *sentry.Scope) {
+			scope.SetExtra("unwantedQuery", "someQueryDataMaybe")
+			hub.CaptureMessage("El usuario proporcionó una cadena de consulta no deseada, pero nos recuperamos sin problemas")
+		})
+	}
+	ctx.Status(http.StatusOK)
+})
+
+app.GET("/foo", func(ctx *gin.Context) {
+	// el controlador de sentrygin lo capturará sin problemas. Además, como adjuntamos "someRandomTag"
+	// en el middleware anterior, también se enviará
+	panic("¿y por qué?")
+})
+
+app.Run(":3000")
+```
+
+
+<div id="accessing-request-in-beforesend-callback">
+  ### Acceder a la solicitud en la devolución de llamada `BeforeSend`
+</div>
+
+```go
+sentry.Init(sentry.ClientOptions{
+	Dsn: "___PUBLIC_DSN___",
+	BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
+		if hint.Context != nil {
+			if req, ok := hint.Context.Value(sentry.RequestContextKey).(*http.Request); ok {
+				// Tienes acceso a la solicitud original aquí
+			}
+		}
+
+		return event
+	},
+})
+```

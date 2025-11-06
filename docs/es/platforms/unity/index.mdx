@@ -1,0 +1,104 @@
+---
+title: Unity
+caseStyle: PascalCase
+supportLevel: production
+sdk: sentry.dotnet.unity
+fallbackPlatform: dotnet
+categories:
+  - mobile
+  - browser
+  - desktop
+  - console
+  - gaming
+og_image: /og-images/platforms-unity.png
+---
+
+Nuestro SDK de Unity se basa en el [.NET SDK](/es/platforms/dotnet/) y lo amplía con funciones específicas de Unity. Te ofrece pistas útiles sobre dónde y por qué pudo haberse producido un error o un problema de rendimiento.
+
+**Funciones:**
+
+* [Captura automáticamente errores de C#](/es/platforms/unity/usage/automatic-error-capture/) en varias plataformas, incluidas Android, iOS, macOS, Linux, Windows y WebGL
+* Números de línea para [excepciones en compilaciones IL2CPP](/es/platforms/unity/configuration/il2cpp/) de C#
+* [Compatibilidad nativa](/es/platforms/unity/native-support/) para el seguimiento automático de errores por bloqueo en:
+  * Android mediante el [Android SDK](/es/platforms/android/) con soporte para Java, Kotlin, C y C++
+  * iOS mediante el [iOS SDK](/es/platforms/apple/guides/ios/) con soporte para Objective-C, Swift, C y C++
+  * Windows y Linux mediante el [Native SDK](/es/platforms/native/) con soporte para C y C++ con minidumps
+  * macOS mediante el [macOS SDK](/es/platforms/apple/guides/macos/) con soporte para Objective-C, Swift, C y C++
+  * [PlayStation](/es/platforms/playstation/), [Xbox](/es/platforms/xbox/) y [Nintendo Switch](/es/platforms/nintendo-switch/)
+* [Archivos adjuntos de capturas de pantalla](/es/platforms/unity/enriching-events/screenshots/) para errores
+* [Archivos adjuntos de ViewHierarchy](/es/platforms/unity/enriching-events/view-hierarchy/) para errores
+* [Caché sin conexión](/es/platforms/unity/configuration/options/#InitCacheFlushTimeout) que guarda los datos de eventos en disco si el dispositivo no está en línea
+* [Estado de la versión (Release Health)](/es/platforms/unity/configuration/releases/) para hacer seguimiento de usuarios y sesiones sin bloqueos
+* [Adición automática de breadcrumbs](/es/platforms/unity/enriching-events/breadcrumbs/#automatic-breadcrumbs) para:
+  * `Debug.Log` y `Debug.LogWarning` de Unity
+  * Carga, descarga y cambio de escena activa
+* [Atenuación de eventos (Event debouncing)](/es/platforms/unity/configuration/event-debouncing/) para manejar grandes volúmenes de registros, p. ej., durante `Update`
+
+En esta página te ayudamos a empezar con el SDK de Sentry.
+
+¿Aún no tienes una cuenta ni un proyecto de Sentry? Ve a [sentry.io](https://sentry.io/signup/) y luego vuelve a esta página.
+
+<div id="install">
+  ## Instalar
+</div>
+
+Instala el paquete mediante el [Unity Package Manager usando una URL de Git](https://docs.unity3d.com/Manual/upm-ui-giturl.html) desde el repositorio del SDK de Sentry:
+
+```
+https://github.com/getsentry/unity.git
+```
+
+Para usar una versión específica del SDK, añade `#{{@inject packages.version('sentry.dotnet.unity', '0.0.5') }}` a la URL.
+
+<div id="configure">
+  ## Configurar
+</div>
+
+La instalación del SDK agregará una entrada al menú superior de Unity: `Tools` &gt; `Sentry`. La primera vez que abras el menú, un asistente te guiará para asociar tu juego con un proyecto de Sentry y configurará los ajustes iniciales por ti. La configuración mínima requerida es el [DSN](/es/product/sentry-basics/dsn-explainer/) de tu proyecto.
+
+```json {tabTitle: Public DSN}
+{
+  "public-dsn": "___PUBLIC_DSN___"
+}
+```
+
+Sentry puede configurarse aún más desde la ventana de configuración de Sentry o [de forma programática](/es/platforms/unity/configuration/options/).
+
+![Ventana de Sentry](./img/unity-sentry-window.png)
+
+Sentry guarda la configuración en `Assets/Resources/Sentry/SentryOptions.asset` y la lee desde allí tanto en tiempo de compilación como en tiempo de ejecución.
+
+<div id="verify">
+  ## Verifica
+</div>
+
+Este fragmento incluye un error intencional para que puedas comprobar que todo funciona en cuanto lo configures.
+
+```csharp
+using UnityEngine;
+
+public class TestMonoBehaviour : MonoBehaviour
+{
+    private GameObject testObject = null;
+
+    void Start()
+    {
+        Debug.Log("Captured Log");              // Añade un Breadcrumb
+        Debug.LogWarning("Captured Warning");   // Añade un Breadcrumb
+        Debug.LogError("Captured Error");       // Se captura como Error por defecto
+
+        // Esto lanzará un 'NullReferenceException' sin manejar
+        testObject.GetComponent<Transform>();   // Se captura como Error
+    }
+}
+```
+
+Además, el paquete también incluye un ejemplo llamado &quot;Unity of Bugs&quot; que puedes importar en tu proyecto a través del Package Manager. Los ejemplos contienen una variedad de errores comunes, incluidos errores nativos, para que no tengas que crearlos tú mismo.
+
+![Import Samples](./img/unity-package-samples.png)
+
+<Alert>
+  Obtén más información sobre cómo capturar manualmente un error o mensaje en nuestra [documentación de uso](/es/platforms/unity/usage/).
+</Alert>
+
+Para ver y resolver el error registrado, inicia sesión en [sentry.io](https://sentry.io) y selecciona tu proyecto. Al hacer clic en el título del error, se abrirá una página donde puedes ver información detallada y marcarlo como resuelto.

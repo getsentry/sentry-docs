@@ -1,0 +1,159 @@
+---
+title: OpenAI
+description: "Añade instrumentación para la API de OpenAI."
+supported:
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.hono
+  - javascript.koa
+  - javascript.nestjs
+  - javascript.electron
+  - javascript.nextjs
+  - javascript.nuxt
+  - javascript.solidstart
+  - javascript.sveltekit
+  - javascript.react-router
+  - javascript.remix
+  - javascript.astro
+  - javascript.bun
+  - javascript.tanstackstart-react
+  - javascript.cloudflare
+---
+
+<Alert>
+
+Esta integración funciona en los entornos de ejecución de Node.js, Cloudflare Workers y Vercel Edge Functions. Requiere la versión `10.2.0` o superior del SDK.
+
+</Alert>
+
+_Nombre de importación: `Sentry.openAIIntegration`_
+
+La integración `openAIIntegration` añade instrumentación para la API de `openai` para capturar spans, envolviendo automáticamente las llamadas del cliente de OpenAI y registrando las interacciones con LLM con una grabación de entradas/salidas configurable.
+
+<PlatformSection notSupported={["javascript.cloudflare", "javascript.nextjs"]}>
+Está habilitada de forma predeterminada y capturará automáticamente spans de las llamadas a los métodos de la API de OpenAI. Puedes optar por capturar entradas y salidas definiendo `recordInputs` y `recordOutputs` en la configuración de la integración:
+
+```javascript
+Sentry.init({
+  dsn: "____PUBLIC_DSN____",
+  tracesSampleRate: 1.0,
+  integrations: [
+    Sentry.openAIIntegration({
+      recordInputs: true,
+      recordOutputs: true,
+    }),
+  ],
+});
+```
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.cloudflare"]}>
+Para Cloudflare Workers, debes instrumentar manualmente el cliente de OpenAI usando el helper `instrumentOpenAiClient`:
+
+```javascript
+import * as Sentry from "@sentry/cloudflare";
+import OpenAI from "openai";
+
+const openai = new OpenAI();
+const client = Sentry.instrumentOpenAiClient(openai, {
+  recordInputs: true,
+  recordOutputs: true,
+});
+
+// Usa el cliente envuelto en lugar de la instancia original de openai
+const response = await client.chat.completions.create({
+  model: "gpt-4o",
+  messages: [{ role: "user", content: "Hello!" }],
+});
+```
+
+</PlatformSection>
+
+<div id="options">
+  ## Opciones
+</div>
+
+<div id="recordinputs">
+  ### `recordInputs`
+</div>
+
+*Tipo: `boolean`*
+
+Registra las entradas en las llamadas a métodos de la API de OpenAI (como indicaciones y mensajes).
+
+Es `true` de forma predeterminada si `sendDefaultPii` es `true`.
+
+```javascript
+Sentry.init({
+  integrations: [Sentry.openAIIntegration({ recordInputs: true })],
+});
+```
+
+
+<div id="recordoutputs">
+  ### `recordOutputs`
+</div>
+
+*Tipo: `boolean`*
+
+Registra los resultados de las llamadas a métodos de la API de OpenAI (como el texto generado y las respuestas).
+
+De forma predeterminada es `true` si `sendDefaultPii` es `true`.
+
+```javascript
+Sentry.init({
+  integrations: [Sentry.openAIIntegration({ recordOutputs: true })],
+});
+```
+
+
+<div id="configuration">
+  ## Configuración
+</div>
+
+De forma predeterminada, esta integración agrega compatibilidad con trazas a las llamadas a métodos de la API de OpenAI, incluyendo:
+
+- `chat.completions.create()` - Solicitudes de finalización de chat
+- `responses.create()` - Solicitudes a la API de respuestas
+
+La integración detectará automáticamente las solicitudes con y sin streaming y las gestionará adecuadamente.
+
+<PlatformSection supported={['javascript.nextjs']}>
+
+<div id="edge-runtime">
+  ## Runtime de Edge
+</div>
+
+Esta integración se instrumenta automáticamente en el runtime de Node.js. Para aplicaciones de Next.js que usan el runtime de Edge, debes instrumentar manualmente el cliente de OpenAI:
+
+```javascript
+import * as Sentry from "@sentry/nextjs";
+import OpenAI from "openai";
+
+const openai = new OpenAI();
+const client = Sentry.instrumentOpenAiClient(openai, {
+  recordInputs: true,
+  recordOutputs: true,
+});
+
+// Usa el cliente envuelto en lugar de la instancia original de openai
+const response = await client.chat.completions.create({
+  model: "gpt-4o",
+  messages: [{ role: "user", content: "Hello!" }],
+});
+```
+
+</PlatformSection>
+
+<div id="supported-versions">
+  ## Versiones compatibles
+</div>
+
+- `openai`: `>=4.0.0 <6`

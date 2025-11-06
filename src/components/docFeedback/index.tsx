@@ -6,11 +6,14 @@ import * as Sentry from '@sentry/browser';
 
 import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
 
+import {useGT, T } from 'gt-next';
+
 type Props = {
   pathname: string;
 };
 
 export function DocFeedback({pathname}: Props) {
+  const gt = useGT();
   const {emit} = usePlausibleEvent();
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
@@ -64,26 +67,28 @@ export function DocFeedback({pathname}: Props) {
           </div>
         ) : (
           <Fragment>
-            <div className="flex items-center gap-4 text-sm mt-8">
-              <span className="font-medium">Was this helpful?</span>
-              <div className="flex">
-                <button
-                  onClick={() => handleFeedback(true)}
-                  className="py-1 px-2 gap-4 hover:bg-[var(--gray-3)] rounded flex items-center justify-center"
-                  aria-label="Yes, this was helpful"
-                >
-                  Yes 👍
-                </button>
-                <button
-                  onClick={() => handleFeedback(false)}
-                  className="py-1 px-2 gap-4 hover:bg-[var(--gray-3)] rounded flex items-center justify-center"
-                  aria-label="No, this wasn't helpful"
-                >
-                  No 👎
-                </button>
+            <T>
+              <div className="flex items-center gap-4 text-sm mt-8">
+                <span className="font-medium">Was this helpful?</span>
+                <div className="flex">
+                  <button
+                    onClick={() => handleFeedback(true)}
+                    className="py-1 px-2 gap-4 hover:bg-[var(--gray-3)] rounded flex items-center justify-center"
+                    aria-label="Yes, this was helpful"
+                  >
+                    Yes 👍
+                  </button>
+                  <button
+                    onClick={() => handleFeedback(false)}
+                    className="py-1 px-2 gap-4 hover:bg-[var(--gray-3)] rounded flex items-center justify-center"
+                    aria-label="No, this wasn't helpful"
+                  >
+                    No 👎
+                  </button>
+                </div>
               </div>
-            </div>
-
+            </T>
+            
             <div
               className={`overflow-hidden transition-all duration-300 ease-in-out ${
                 showFeedback ? 'max-h-[300px] opacity-100' : 'max-h-0 opacity-0'
@@ -93,8 +98,8 @@ export function DocFeedback({pathname}: Props) {
                 <div>
                   <label htmlFor="comments" className="block text-sm font-medium mb-4">
                     {feedbackType === 'helpful'
-                      ? 'What did you like about this page?'
-                      : 'How can we improve this page?'}
+                      ? gt('What did you like about this page?')
+                      : gt('How can we improve this page?')}
                   </label>
                   <textarea
                     id="comments"
@@ -102,16 +107,18 @@ export function DocFeedback({pathname}: Props) {
                     required
                     rows={2}
                     className="w-[calc(100%-4px)] ml-[2px] px-3 py-2 border border-[var(--gray-6)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent)] bg-transparent text-sm"
-                    placeholder="Please share your thoughts..."
+                    placeholder={gt('Please share your thoughts...')}
                   />
                 </div>
-                <Button
-                  type="submit"
-                  className="px-4 py-2 text-sm rounded-lg bg-[var(--accent-purple)]"
-                  size={'3'}
-                >
-                  Submit feedback
-                </Button>
+                <T>
+                  <Button
+                    type="submit"
+                    className="px-4 py-2 text-sm rounded-lg bg-[var(--accent-purple)]"
+                    size={'3'}
+                  >
+                    Submit feedback
+                  </Button>
+                </T>
               </form>
             </div>
           </Fragment>

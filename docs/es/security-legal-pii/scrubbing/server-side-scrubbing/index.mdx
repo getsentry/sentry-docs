@@ -1,0 +1,112 @@
+---
+title: "Depuración de datos del lado del servidor"
+sidebar_order: 1
+keywords: ["pii", "gdpr", "personally identifiable data", "compliance"]
+description: "Obtén información sobre la depuración de datos que Sentry habilita de forma predeterminada."
+---
+
+Si no puedes o no quieres <PlatformLink to="/data-management/sensitive-data/">depurar datos en el SDK</PlatformLink>, puedes elegir entre varias opciones de depuración de datos en la app de Sentry a nivel de organización o de proyecto. La depuración de datos está habilitada de forma predeterminada y te recomendamos encarecidamente mantenerla así.
+
+Para configurar reglas de depuración de datos para toda tu organización, ve a **[Settings] &gt; Security &amp; Privacy** y desplázate hasta la sección &quot;DATA SCRUBBING&quot;.
+
+Para configurarlas por proyecto, ve a **[Settings] &gt; Projects**, selecciona un proyecto, haz clic en &quot;Security &amp; Privacy&quot; y desplázate hasta la sección &quot;DATA SCRUBBING&quot;. Si existen configuraciones a nivel de organización, estas tendrán prioridad sobre las del proyecto, así que asegúrate de deshabilitarlas primero.
+
+Con esta opción habilitada, Sentry depurará lo siguiente:
+
+* Valores que parezcan contener tarjetas de crédito (usando una expresión regular básica)
+* Valores que contengan, o cuyos nombres de clave contengan, cualquiera de las siguientes cadenas:
+  * password
+  * secret
+  * passwd
+  * api&#95;key
+  * apikey
+  * auth
+  * credentials
+  * mysql&#95;pwd
+  * privatekey
+  * private&#95;key
+  * token
+  * bearer
+* Valores que contengan cadenas, o cuyos nombres de clave estén listados, en [Project] &gt; Settings &gt; Security &amp; Privacy en &quot;Additional Sensitive Fields&quot;.
+  * Una entrada en &quot;Additional Sensitive Fields&quot;, como `mysekret`, por ejemplo, provocará la eliminación de cualquier campo llamado `mysekret`, pero también eliminará cualquier *valor* de campo que contenga `mysekret`. Sentry hace esto para proteger contra la filtración de datos sensibles como parte de datos estructurados que se han enviado como una sola cadena a Sentry (como un objeto JSON que se convierte en cadena y se incrusta como cadena JSON en otra estructura JSON).
+  * Como ejemplo extremo en el que este comportamiento puede resultar sorprendente, la cadena `"Unexpected error"` se eliminará de los eventos si la entrada `exp` está en &quot;Additional Sensitive Fields&quot;.
+
+Sentry redactará arreglos y valores literales, pero también objetos completos. Por ejemplo:
+
+```javascript
+credentials = {
+  username: 'jane',
+  cats: ['pancake', 'maple', 'hellboy'],
+  password: 'p4ssw0rd!',
+  lastLogin: 'ayer',
+  ...
+}
+```
+
+Usar las opciones predeterminadas hará que el *objeto* `credentials` se establezca en `null`, y el propio objeto no se incluirá. Para evitarlo, agrega el nombre de la clave a Safe Fields (en este caso, `credentials`). Esto mantendrá intacto el objeto `credentials`, mientras que todas sus entradas quedarán sujetas al “scrubbing” (enmascarado).
+Así, `password` se ocultará de forma predeterminada, y al agregar `cats`, `username` y/o `lastLogin` a la lista de campos adicionales, esos valores también se ocultarán.
+
+<Alert>
+  Puedes ampliar las claves que el servidor depura y también impedir que se almacenen direcciones IP. Esto último es especialmente importante si te preocupa la PII y usas nuestro Browser JavaScript SDK.
+</Alert>
+
+Solo se depuran algunos campos específicos. Puedes encontrar la lista de los campos que se depurarán en [Event PII Fields](/es/data-management-settings/event-pii-fields/).
+
+Además, ofrecemos la función [*Advanced Data Scrubbing*](/es/security-legal-pii/scrubbing/advanced-datascrubbing/) que permite un mayor control sobre cómo se aplican los filtros.
+
+<div id="geographic-information">
+  ## Información geográfica
+</div>
+
+La información geográfica se obtiene de la dirección IP del usuario. Esto ocurre incluso si está activada la opción para dejar de almacenar direcciones IP.
+
+Para eliminar datos geográficos, es necesario agregar una regla de [*Advanced Data Scrubbing*](/es/security-legal-pii/scrubbing/advanced-datascrubbing/).
+Por ejemplo, la regla `[Remove] [Anything] from [$user.geo.**]` eliminará toda la información geográfica.
+
+<div id="removing-data">
+  ## Eliminación de datos
+</div>
+
+Si enviaste accidentalmente datos sensibles al servidor, probablemente no quieras dejarlos allí. Ten en cuenta lo siguiente al eliminarlos:
+
+* Si enviaste los datos como un valor etiquetado, eliminar el evento no basta. Visita **Project Settings &gt; Tags** para eliminar permanentemente cualquier dato relacionado con una etiqueta específica.
+* Aunque no puedes eliminar un solo evento, puedes eliminar el issue en el que se encuentra el evento haciendo clic en el ícono de papelera en la página **Issue Details**.
+* Si una gran cantidad de eventos únicos —que representan varios issues— contienen los datos, puede que necesites eliminar y volver a crear el proyecto para limpiar el sistema de forma eficaz.
+
+<div id="safe-fields">
+  ## Campos seguros
+</div>
+
+Los campos seguros se usan para excluir campos y datos del scrubbing. Por ejemplo, considera la siguiente carga útil del evento:
+
+```json
+{
+  "user": {
+    "id": "4111111111111111"
+  },
+  "extra": {
+    "id": "sensitive",
+    "sys.argv": ["script.py", "password"],
+    "credentials": { "username": "jane", "password": "p4ssw0rd!" }
+  }
+}
+```
+
+Cuando el scrubbing está habilitado y se agrega `id` como campo sensible, la cadena `password` en `extra.'sys.argv'`,
+ambos campos `id` (`user.id` y `extra.id`), así como todo el objeto `credentials`, se depurarán.
+
+Para permitir un filtrado más preciso, los Safe Fields admiten la misma sintaxis que las
+[Advanced Datascrubbing Sources](/es/security-legal-pii/scrubbing/advanced-datascrubbing/#sources).
+
+Si quieres dejar intacto el campo `user.id`, puedes configurar `id` como Safe Field, pero esto también
+marcará `extra.id` como Safe Field. Para seleccionar específicamente el id del usuario, usa la ruta completa `user.id`.
+
+Marcar elementos de un array como seguros requiere un selector comodín, por ejemplo `'sys.argv'.*`. Se puede usar un comodín profundo
+para marcar todos los elementos contenidos dentro de un objeto. Los dos selectores `extra.credentials` y
+`extra.credentials.**` marcarán el objeto `credentials` y todos sus miembros como seguros.
+
+<div id="known-limitations">
+  ## Limitaciones conocidas
+</div>
+
+Actualmente no es posible evitar el saneamiento de datos en [breadcrumbs](/es/product/issues/issue-details/breadcrumbs/) agregando el nombre de la categoría en &quot;Safe Fields&quot;. Solo el mensaje y los datos en los breadcrumbs se utilizan para el saneamiento de datos. Además, si se proporcionan datos JSON personalizados, los campos se sanearán según las reglas configuradas y las entradas en &quot;Safe Fields&quot;.

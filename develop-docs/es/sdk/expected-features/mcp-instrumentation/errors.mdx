@@ -1,0 +1,116 @@
+---
+title: Errores del servidor MCP
+sidebar_title: Errores
+---
+
+La instrumentación de errores del servidor MCP garantiza que todos los errores que se produzcan dentro del servidor del Model Context Protocol (MCP) se registren y se envíen a Sentry, **sin interferir en ningún momento con el funcionamiento del propio servicio MCP**. 
+
+<div id="goals-and-philosophy">
+  ## Objetivos y filosofía
+</div>
+
+- **Contexto completo:** Los errores siempre se asocian con el span activo de Sentry, para que obtengas todo el contexto (método, herramienta, argumentos, etc.) en Sentry.
+- **Errores categorizados:** Los errores se etiquetan por tipo (p. ej., `validation`, `timeout`, `tool_execution`, `resource_operation`, `prompt_execution`, `transport`, etc.) para facilitar su filtrado y análisis en Sentry.
+- **Envoltura de handlers:** Todos los handlers del servidor MCP (`tool`, `resource`, `prompt`) se envuelven para garantizar que los errores se capturen y se correlacionen con el span de la solicitud correcto.
+- **Seguimiento del estado del span:** Cuando ocurren errores, el estado del span activo se establece automáticamente en error para mejorar la correlación de trazas.
+
+<div id="safe-error-capture">
+  ## Captura segura de errores
+</div>
+
+La utilidad principal es una función para capturar errores:
+
+```ts
+import { getClient } from '../../currentScopes';
+import { captureException } from '../../exports';
+import { SPAN_STATUS_ERROR } from '../../tracing';
+import { getActiveSpan } from '../../utils/spanUtils';
+import type { McpErrorType } from './types';
+
+export function captureError(error: Error, errorType?: McpErrorType, extraData?: Record<string, unknown>): void {
+  try {
+    const client = getClient();
+    if (!client) return;
+
+    const activeSpan = getActiveSpan();
+    if (activeSpan?.isRecording()) {
+      activeSpan.setStatus({
+        code: SPAN_STATUS_ERROR,
+        message: 'internal_error',
+      });
+    }
+
+    captureException(error, {
+      mechanism: {
+        type: 'mcp_server',
+        handled: false,
+        data: {
+          error_type: errorType || 'handler_execution',
+          ...extraData,
+        },
+      },
+    });
+  } catch {
+    // Ignora silenciosamente los errores de captura para que nunca afecten la operación de MCP
+  }
+}
+```
+
+* **Nunca provoca una excepción:** Toda la captura de errores está envuelta en un try/catch y nunca lanzará una excepción.
+* **Categorización basada en el mecanismo:** Los metadatos del error se adjuntan mediante el objeto `mechanism`.
+* **Contexto flexible:** Se puede proporcionar contexto adicional a través de `extraData`, y se incluirá en los datos del mecanismo.
+
+
+<div id="handler-wrapping-for-error-capture">
+  ## Encapsulado de controladores para la captura de errores
+</div>
+
+Todos los controladores de métodos del servidor MCP (`tool`, `resource`, `prompt`) se encapsulan para:
+
+- Correlacionar la ejecución del controlador con el span correcto de Sentry (usando datos de la solicitud/sesión)
+- Capturar errores tanto sincrónicos como asincrónicos
+- Clasificar los errores por tipo de controlador y naturaleza del error
+- Establecer el estado del span en error para las operaciones fallidas
+
+<div id="error-categorization">
+  ### Categorización de errores
+</div>
+
+Los errores se categorizan mediante el campo de datos del mecanismo según el controlador y el tipo de error:
+
+- **Errores del controlador de herramientas:**
+  - `validation` (p. ej., errores de protocolo/validación)
+  - `timeout` (p. ej., tiempos de espera del servidor)
+  - `tool_execution` (todos los demás errores de herramientas)
+- **Errores del controlador de recursos:**
+  - `resource_operation`
+- **Errores del controlador de prompts:**
+  - `prompt_execution`
+- **Errores de transporte:**
+  - `transport`
+- **Errores de protocolo:**
+  - `protocol`
+
+El enfoque del mecanismo garantiza que la información de clasificación de errores esté disponible en la interfaz de Sentry para depuración y análisis.
+
+Nota: estos datos del mecanismo no se indexan, por lo que no se pueden buscar.
+
+<div id="span-correlation">
+  ## Correlación de spans
+</div>
+
+Todos los errores se capturan en el contexto del span activo de Sentry, por lo que puedes:
+
+- Ver qué método, herramienta o recurso de MCP provocó el error
+- Consultar todos los argumentos y el contexto de la solicitud fallida
+- Correlacionar los errores con trazas y datos de rendimiento
+
+<div id="transport-layer-error-instrumentation">
+  ## Instrumentación de errores en la capa de transporte
+</div>
+
+La capa de transporte de MCP también está instrumentada para:
+
+- Crear spans para mensajes entrantes y salientes
+- Capturar errores en los manejadores de eventos de transporte (p. ej., `onerror`)
+- Correlacionar errores de protocolo con la solicitud/respuesta correcta

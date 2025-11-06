@@ -1,0 +1,107 @@
+---
+title: Envío de métricas de spans
+description: "Aprende a agregar atributos a los spans para monitorear el rendimiento y depurar aplicaciones "
+sidebar_order: 10
+---
+
+<Alert>
+
+Para usar métricas de spans, primero debes <PlatformLink to="/tracing/">configurar el tracing</PlatformLink> en tu aplicación.
+
+</Alert>
+
+Las métricas de spans te permiten ampliar las métricas predeterminadas que recopila el tracing y hacer un seguimiento de datos de rendimiento personalizados e información de depuración dentro de los trazas de tu aplicación. Hay dos enfoques principales para instrumentar métricas:
+
+1. [Agregar métricas a spans existentes](#adding-metrics-to-existing-spans)
+2. [Crear spans dedicados con métricas personalizadas](#creating-dedicated-metric-spans)
+
+<div id="adding-metrics-to-existing-spans">
+  ## Agregar métricas a spans existentes
+</div>
+
+Puedes enriquecer spans existentes con métricas personalizadas añadiendo atributos. Esto es útil cuando quieres complementar la instrumentación automática o agregar datos contextuales a spans que ya creaste.
+
+```javascript
+const span = Sentry.getActiveSpan();
+if (span) {
+  // Añadir métricas individuales
+  span.setAttribute("database.rows_affected", 42);
+  span.setAttribute("cache.hit_rate", 0.85);
+
+  // Añadir múltiples métricas a la vez
+  span.setAttributes({
+    "memory.heap_used": 1024000,
+    "queue.length": 15,
+    "processing.duration_ms": 127,
+  });
+}
+```
+
+
+<div id="best-practices-for-span-attributes">
+  ### Mejores prácticas para atributos de span
+</div>
+
+Al agregar métricas como atributos de span:
+
+- Usa convenciones de nombres consistentes (por ejemplo, `category.metric_name`)
+- Mantén los nombres de los atributos concisos pero descriptivos
+- Usa tipos de datos adecuados (string, number, boolean o un array que contenga solo uno de estos tipos)
+
+<div id="creating-dedicated-metric-spans">
+  ## Creación de spans de métricas dedicados
+</div>
+
+Para operaciones, tareas o seguimiento de procesos más detallados, puedes crear spans dedicados personalizados que se centren en métricas o atributos específicos que quieras monitorear. Este enfoque mejora la capacidad de descubrimiento y permite configuraciones de spans más precisas; sin embargo, también puede generar más ruido en tu diagrama en cascada de trazas.
+
+```javascript
+Sentry.startSpan(
+  {
+    name: "Database Query Metrics",
+    op: "db.metrics",
+    attributes: {
+      "db.query_type": "SELECT",
+      "db.table": "users",
+      "db.execution_time_ms": 45,
+      "db.rows_returned": 100,
+      "db.connection_pool_size": 5,
+    },
+  },
+  () => {
+    // Tu operación de base de datos aquí
+  }
+);
+```
+
+Para ver ejemplos detallados de cómo implementar métricas de spans en escenarios comunes, consulta nuestra guía <PlatformLink to="/tracing/span-metrics/examples/">Ejemplos de métricas de spans</PlatformLink>.
+
+
+<div id="adding-metrics-to-all-spans">
+  ## Añadir métricas a todos los spans
+</div>
+
+Para añadir métricas de forma coherente en todos los spans de tu aplicación, puedes usar el callback `beforeSendSpan`:
+
+```javascript
+Sentry.init({
+  beforeSendSpan(span) {
+    span.data = {
+      ...span.data,
+      "app.version": "1.2.3",
+      "environment.region": "us-west-2",
+    };
+
+    return span;
+  },
+});
+```
+
+Para ver ejemplos detallados sobre cómo implementar métricas de spans en escenarios comunes, consulta nuestra guía <PlatformLink to="/tracing/span-metrics/examples/">Ejemplos de métricas de spans</PlatformLink>.
+
+
+<div id="span-metrics-vs-measurements">
+  ## Métricas de spans vs. mediciones
+</div>
+
+Anteriormente, Sentry permitía añadir métricas a las transacciones mediante la API `Sentry.setMeasurement()`.
+Este enfoque está en desuso; en su lugar, usa atributos de span.

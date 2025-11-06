@@ -1,0 +1,102 @@
+---
+title: Integración con Microsoft Teams
+sidebar_title: Microsoft Teams
+og_image: /og-images/integrations-msteams.png
+---
+
+<Alert title="Privilegios de administrador">
+
+Necesitarás ser administrador de Microsoft Teams para completar algunos de los pasos necesarios.
+
+</Alert>
+
+<div id="create-the-sentry-app">
+  ## Crear la app de Sentry
+</div>
+
+1. Visita el [Developer Portal](https://dev.teams.microsoft.com/apps). Nota: Es posible que tengas que registrarte en el [MS 365 Developer Program](https://developer.microsoft.com/en-us/microsoft-365/dev-program) si tienes problemas para acceder.
+2. Haz clic en "New App".
+3. Asigna un nombre a tu app (si eres empleado, añade tu nombre, `{Your Name}'s Sentry`).
+4. En "Basic Information" usa los siguientes valores (todos los demás campos son opcionales y pueden dejarse en blanco):
+
+| Setting                   | Value                       |
+| ------------------------- | --------------------------- |
+| Short description         | enter anything              |
+| Long description          | enter anything              |
+| Developer or company name | Sentry                      |
+| Website                   | https://sentry.io           |
+| Privacy policy            | https://sentry.io/privacy/  |
+| Terms of use              | https://sentry.io/terms/    |
+
+5. Haz clic en **Save** al final de la página.
+6. En la barra lateral izquierda, haz clic en **App features** >> **Bot** >> **Create a new bot** >> **New bot**. Puedes nombrarlo como quieras.
+7. Introduce la dirección del endpoint del bot como `{YOUR_DOMAIN}/extensions/msteams/webhook/` y haz clic en "Save". Toma nota del ID de tu bot (aparece en la URL, por ejemplo, https://dev.teams.microsoft.com/bots/{BOT-ID}/configure).
+8. Ve a **Client secrets** y crea un secreto. Copia el secreto porque lo usaremos más adelante.
+9. Para regresar, haz clic en **Apps** >> _Your App Name_ >> **App features** >> **Bot**. Luego elige el bot que acabas de crear en el menú desplegable "Select an existing bot".
+10. Habilita tu bot en "Only send notification" y selecciona "Personal" y "Team" como ámbitos.
+
+![Microsoft Teams Bot Settings](./bot-settings.png)
+
+11. Haz clic en **Create your first activity bot command**. Si eres empleado, usa un nombre de comando único como `/{name}-sentry`; de lo contrario, `/sentry` está bien. Escribe una descripción para tu comando, selecciona *Personal* y *Team* como ámbitos y luego haz clic en **Add**.
+
+![Microsoft Teams Bot Add a Command](./add-bot-command.png)
+
+12. Haz clic en "Save" al final de la página.
+
+<div id="set-up-configyml">
+  ## Configurar config.yml
+</div>
+
+Toma los valores anteriores y añádelos al archivo `config.yml` como se muestra a continuación:
+
+```yml
+# Microsoft Teams #
+msteams.client-id: 'tu-id-de-cliente-del-bot'
+msteams.client-secret: 'tu-secreto-del-bot'
+```
+
+
+<div id="installation">
+  ## Instalación
+</div>
+
+<Alert title="Nota">
+
+Hemos tenido problemas recientes con este método de instalación. Para una experiencia más fluida, consulta la sección de solución de problemas para ver pasos alternativos.
+
+</Alert>
+
+1. En la esquina superior derecha de la pantalla, haz clic en "Preview in Teams".
+2. Selecciona "Add to a team" en la ventana emergente y elige los equipos en los que quieres instalar la aplicación.
+
+Deberías ver un mensaje en el canal General que diga "Welcome to Sentry for Microsoft Teams". Si no recibes este mensaje, significa que algo salió mal y tendrás que desinstalarla, solucionar el problema y volver a instalarla.
+
+Consulta nuestra [documentación sobre el uso de la integración de Microsoft Teams](https://docs.sentry.io/organization/integrations/notification-incidents/msteams/) para usar la integración.
+
+<div id="troubleshooting">
+  ## Solución de problemas
+</div>
+
+Si tienes problemas con la instalación, prueba a seguir estos pasos:
+
+1. Haz clic en "Publish to org" en la barra lateral.
+2. Visita la [página de administración de aplicaciones](https://admin.teams.microsoft.com/policies/manage-apps) y encuentra tu aplicación en la lista ordenando por "Custom App".
+3. Haz clic en el título de tu aplicación, en este caso "Sentry".
+4. Publícala en el catálogo de aplicaciones para toda la organización.
+5. Después de publicarla, tú o el administrador de tu organización de MS Teams tendrán que aprobar la aplicación antes de poder instalarla en MS Teams. Ve a la página [Manage apps](https://admin.teams.microsoft.com/policies/manage-apps) y busca la aplicación (p. ej., "Sentry").
+6. Haz clic en el título de tu aplicación, en este caso "Sentry", y luego en "Publish".
+7. Ahora deberías poder ver la aplicación personalizada publicada en la sección "Built for your org" de la tienda de aplicaciones de MS Teams.
+
+<div id="uninstallation">
+  ## Desinstalación
+</div>
+
+Para desinstalar la integración, hazlo desde Teams en lugar de hacerlo desde Sentry.
+
+1. Busca tu equipo en Teams
+2. Haz clic en los tres puntos a la derecha de tu equipo
+3. Haz clic en "Administrar equipo"
+![Manage Team](./manage-team.png)
+4. Haz clic en "Aplicaciones"
+5. Haz clic en el icono de la papelera a la derecha de tu aplicación personalizada
+6. Haz clic en "Desinstalar" en la ventana emergente

@@ -1,0 +1,97 @@
+---
+title: Actix Web
+description: "Aprende a supervisar tu aplicación de Actix Web con Sentry."
+---
+
+El SDK de Sentry ofrece un middleware para el framework [Actix Web](https://actix.rs/) que permite:
+
+* Capturar los errores del servidor que devuelven los servicios de Actix Web.
+* Iniciar una [transacción](/es/concepts/key-terms/tracing/) para cada ciclo de solicitud-respuesta.
+
+<div id="install">
+  ## Instalación
+</div>
+
+Para agregar Sentry con la integración de Actix Web a tu proyecto de Rust, añade una nueva dependencia en tu `Cargo.toml`:
+
+```toml {filename:Cargo.toml}
+[dependencies]
+actix-web = "4.11.0"
+sentry = { version = "{{@inject packages.version('sentry.rust') }}", features = ["actix"] }
+```
+
+<div id="configure">
+  ## Configurar
+</div>
+
+Inicializa y configura el cliente de Sentry. Esto habilitará un conjunto de integraciones predeterminadas, como el reporte de pánicos.
+Luego, inicializa Actix Web con el middleware de Sentry.
+El middleware de Sentry asocia correctamente las solicitudes y las trazas con cualquier error o pánico capturado, por lo que debe ser el primero en procesar la solicitud; es decir, debe ir al final de tu cadena de llamadas a `wrap`.
+
+<Alert level="warning">
+  Las macros como `#[tokio::main]` y `#[actix_web::main]` no son compatibles. El cliente de Sentry debe inicializarse antes de iniciar el runtime asíncrono, como se muestra a continuación.
+</Alert>
+
+```rust {filename:main.rs}
+use std::io;
+
+use actix_web::{get, App, Error, HttpRequest, HttpServer};
+
+#[get("/")]
+async fn failing(_req: HttpRequest) -> Result<String, Error> {
+    Err(io::Error::new(io::ErrorKind::Other, "Se produjo un error aquí").into())
+}
+
+fn main() -> io::Result<()> {
+    let _guard = sentry::init((
+        "___PUBLIC_DSN___",
+        sentry::ClientOptions {
+            release: sentry::release_name!(),
+            // Captura todas las trazas y spans. Usa un valor menor en producción
+            traces_sample_rate: 1.0,
+            // Captura las IP de los usuarios y encabezados potencialmente sensibles cuando se usan integraciones de servidor HTTP
+            // consulta https://docs.sentry.io/platforms/rust/data-management/data-collected para obtener más información
+            send_default_pii: true,
+            // Captura todos los cuerpos de las solicitudes HTTP, sin importar su tamaño
+            max_request_body_size: sentry::MaxRequestBodySize::Always,
+            ..Default::default()
+        },
+    ));
+
+    actix_web::rt::System::new().block_on(async {
+        HttpServer::new(|| {
+            App::new()
+                .wrap(
+                    sentry::integrations::actix::Sentry::builder()
+                        .capture_server_errors(true) // Captura errores del servidor
+                        .start_transaction(true) // Inicia una transacción (span raíz de Sentry) por cada solicitud
+                        .finish(),
+                )
+                .service(failing)
+        })
+        .bind("127.0.0.1:3001")?
+        .run()
+        .await
+    })?;
+
+    Ok(())
+}
+```
+
+<div id="verify">
+  ## Verificar
+</div>
+
+El fragmento anterior configura un servicio que siempre falla, para que puedas comprobar que todo funciona en cuanto lo pongas en marcha.
+
+Envía una solicitud a la aplicación. Sentry capturará el error de la respuesta.
+
+```bash
+curl http://localhost:3001/
+```
+
+<Alert>
+  Obtén más información sobre cómo capturar manualmente un error o un mensaje en nuestra <PlatformLink to="/usage/">documentación de uso</PlatformLink>.
+</Alert>
+
+Para ver y resolver el error registrado, inicia sesión en [sentry.io](https://sentry.io) y selecciona tu proyecto. Al hacer clic en el título del error, se abrirá una página donde podrás ver información detallada y marcarlo como resuelto.

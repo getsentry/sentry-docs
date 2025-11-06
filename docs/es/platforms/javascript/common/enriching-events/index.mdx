@@ -1,0 +1,102 @@
+---
+title: Enriquecer eventos
+description: Agrega datos adicionales a tus eventos para facilitar su depuración.
+sidebar_order: 5
+---
+
+Además de los datos que el SDK de Sentry captura automáticamente, puedes añadir más información a los eventos para facilitar su depuración.
+
+<div id="adding-additional-event-data">
+  ## Agregar datos adicionales a los eventos
+</div>
+
+Hay muchas formas de enriquecer los eventos con información adicional:
+
+<div id="identifying-users">
+  ### Identificación de usuarios
+</div>
+
+Puedes añadir información del usuario a los eventos para ayudarte a identificar al usuario que está experimentando un problema.
+Consulta <PlatformLink to="/apis/#setUser">setUser</PlatformLink> para aprender cómo establecer el usuario en los eventos de Sentry.
+
+<div id="setting-tags">
+  ### Configurar etiquetas
+</div>
+
+Las etiquetas son una forma de añadir metadatos adicionales a los eventos. Pueden usarse para filtrar eventos en la interfaz de Sentry. Consulta <PlatformLink to="/enriching-events/tags/">Tags</PlatformLink> para saber más sobre las etiquetas, o <PlatformLink to="/apis/#setTag">setTag</PlatformLink> y <PlatformLink to="/apis/#setTags">setTags</PlatformLink> para aprender cómo configurar etiquetas en eventos de Sentry.
+
+<div id="setting-context">
+  ### Configuración del contexto
+</div>
+
+El contexto es una manera de añadir metadatos adicionales a los eventos.
+Aunque no puedes filtrar por contextos en la interfaz de Sentry, la información de contexto se muestra en los detalles del evento.
+Consulta <PlatformLink to="/apis/#setContext">setContext</PlatformLink> para aprender cómo establecer datos de contexto en eventos de Sentry.
+
+<div id="adding-breadcrumbs">
+  ### Agregar breadcrumbs
+</div>
+
+Los breadcrumbs son una forma de añadir información sobre los pasos que ocurrieron antes de un evento.
+Consulta <PlatformLink to="/enriching-events/breadcrumbs/">Breadcrumbs</PlatformLink> para aprender cómo añadir breadcrumbs a los eventos de Sentry.
+
+<div id="adding-attachments">
+  ### Añadir archivos adjuntos
+</div>
+
+Los archivos adjuntos son una forma de incorporar archivos adicionales a los eventos.
+Consulta <PlatformLink to="/enriching-events/attachments/">Archivos adjuntos</PlatformLink> para saber cómo añadir archivos adjuntos a los eventos de Sentry.
+
+<div id="event-processors">
+  ### Procesadores de eventos
+</div>
+
+Los procesadores de eventos permiten modificar los eventos antes de enviarlos a Sentry.
+Consulta <PlatformLink to='/enriching-events/event-processors'>Procesadores de eventos</PlatformLink> para aprender a usarlos.
+
+<div id="adding-additional-event-data-to-certain-events-only">
+  ## Agregar datos adicionales solo a determinados eventos
+</div>
+
+<PlatformCategorySection supported={["server", "serverless"]}>
+  Todas las API descritas arriba anexarán datos a todos los eventos de la solicitud
+  actual.
+</PlatformCategorySection>
+
+<PlatformCategorySection notSupported={["server", "serverless"]}>
+  Todas las API descritas arriba anexarán datos a todos los eventos de la página
+  actual.
+</PlatformCategorySection>
+
+Si solo quieres anexar datos a determinados eventos, puedes usar <PlatformLink to="/enriching-events/scopes/#using-withscope">withScope</PlatformLink> para crear un nuevo alcance y anexar datos solo a ese alcance.
+
+<div id="custom-fingerprinting">
+  ## Huella digital personalizada
+</div>
+
+Todos los eventos tienen una huella digital. Los eventos con la misma huella digital se agrupan en un issue. Si la agrupación predeterminada para un tipo específico de evento no te funciona, puedes personalizarla estableciendo una huella digital personalizada. Consulta <PlatformLink to="/enriching-events/fingerprinting/">Huella digital de eventos</PlatformLink> para saber cómo configurar una huella digital personalizada.
+
+<div id="scopes">
+  ## Ámbitos
+</div>
+
+Cuando se captura un evento y se envía a Sentry, los SDK combinan los datos del evento con información adicional del ámbito actual. Por lo general, los SDK administran automáticamente los ámbitos por ti en las integraciones del framework y no tienes que preocuparte por ellos. Sin embargo, si quieres entender mejor cómo funcionan los ámbitos y cómo aprovecharlos en tu caso de uso, puedes <PlatformLink to="/enriching-events/scopes/">obtener más información sobre los ámbitos</PlatformLink>.
+
+<PlatformCategorySection supported={["server"]}>
+<PlatformSection notSupported={["javascript.bun", "javascript.deno", "javascript.aws-lambda", "javascript.azure-functions", "javascript.gcp-functions", "javascript.cloudflare"]}>
+<div id="request-isolation">
+  ## Aislamiento de solicitudes
+</div>
+
+Obtén más información sobre cómo <PlatformLink to="/enriching-events/request-isolation/">aislar solicitudes</PlatformLink>
+para garantizar que los datos establecidos no se filtren entre solicitudes.
+</PlatformSection>
+</PlatformCategorySection>
+
+<div id="size-limitations">
+  ## Limitaciones de tamaño
+</div>
+
+Al enviar contexto, _ten en cuenta los límites de tamaño del payload_. Sentry no recomienda enviar todo el estado de la aplicación ni grandes blobs de datos en los contextos. Si superas el tamaño máximo del payload, Sentry responderá con el error HTTP `413 Payload Too Large` y rechazará el evento. Cuando se usa `keepalive: true`, la solicitud también puede quedar pendiente indefinidamente.
+
+El SDK de Sentry hará todo lo posible por adaptarse a los datos que envíes y recortar payloads de contexto grandes. Algunos SDK pueden truncar partes del evento; para más detalles, consulta la [documentación para desarrolladores sobre el manejo de datos del SDK](https://develop.sentry.dev/sdk/expected-features/data-handling/).

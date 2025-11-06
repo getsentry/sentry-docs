@@ -1,0 +1,384 @@
+---
+title: Formato de muestras V2
+description: Perfilado continuo.
+sidebar_order: 2
+---
+
+El *formato de muestras V2* está diseñado para su uso en el perfilado continuo. Por lo tanto, un perfil puede existir de forma independiente y enviarse en el contenedor por sí solo.
+
+<div id="data-model">
+  ## Modelo de datos
+</div>
+
+<div id="example">
+  ### Ejemplo
+</div>
+
+```json
+{
+  "debug_meta": {
+    "images": [
+      {
+        "debug_id": "5819FF25-01CB-3D32-B84F-0634B37D3BBC",
+        "image_addr": "0x00000001023a8000",
+        "type": "macho",
+        "image_size": 16384,
+        "code_file": "/Library/Developer/CoreSimulator/Volumes/iOS_21C62/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 17.2.simruntime/Contents/Resources/RuntimeRoot/usr/lib/libLogRedirect.dylib"
+      }
+    ]
+  },
+  "profiler_id": "71bba98d90b545c39f2ae73f702d7ef4",
+  "chunk_id": "3e11a5c9831f4e49939c0a81944ea2cb",
+  "client_sdk": {
+    "name": "sentry.cocoa",
+    "version": "8.36.0"
+  },
+  "measurements": { ... },
+  "platform": "cocoa",
+  "release": "io.sentry.sample.iOS-Swift@8.36.0+1",
+  "environment": "simulator",
+  "version": "2",
+  "profile": {
+    "samples": [
+      {
+        "thread_id": "259",
+        "stack_id": 0,
+        "timestamp": 1724777211.5037799
+      }
+    ],
+    "stacks": [
+      [ 0 ]
+    ],
+    "frames": [
+      {
+        "instruction_addr": "0x000000010232d144",
+        "function": "_ZNK5dyld311MachOLoaded17findClosestSymbolEyPPKcPy"
+      }
+    ],
+    "thread_metadata": {
+      "259": {
+        "name": "main"
+      }
+    }
+  }
+}
+```
+
+<div id="profile-metadata">
+  ### Metadatos del perfil
+</div>
+
+`debug_meta`
+
+: *Objeto, obligatorio en plataformas nativas.* Lleva la misma carga útil que la [interfaz `debug_meta`](/es/sdk/data-model/event-payloads/sdk/).
+Es obligatorio en plataformas nativas para poder simbolicar; de lo contrario, puedes omitirlo.
+En plataformas no nativas, puedes omitirlo.
+
+`profiler_id`
+
+: *Cadena, obligatoria.* Cadena hexadecimal que representa un valor uuid4. La longitud debe ser exactamente de 32 caracteres. No se permiten guiones ni letras mayúsculas. UUID aleatorio para cada sesión del profiler.
+
+`chunk_id`
+
+: *Cadena, obligatoria.* Cadena hexadecimal que representa un valor uuid4. La longitud debe ser exactamente de 32 caracteres. No se permiten guiones ni letras mayúsculas. Es un UUID aleatorio que identifica un fragmento.
+
+`client_sdk`
+
+: *Objeto, obligatorio.* Contiene información sobre el cliente *SDK*.
+
+Tiene los siguientes atributos:
+
+* `name`
+* `version`
+
+`measurements`
+
+: *Objeto, opcional.* Este campo contiene varias métricas medidas durante la recopilación del perfil.
+
+Una medición es un conjunto de valores de medición y una unidad para esos valores.
+Solo se mostrará en la interfaz si está integrada. Por ahora, solo
+admitimos 2 métricas:
+
+* `frozen_frame_renders`: cuando se detecta un fotograma congelado.
+* `slow_frame_renders`: cuando se detecta un fotograma lento.
+
+Un valor de medición puede contener los siguientes atributos:
+
+* `timestamp`: marca de tiempo UNIX en segundos con precisión de microsegundos como `float64`.
+* `value`: valor de la medición, como `float64`. También aceptamos `float64`
+  formateado como `string`.
+
+Estos son los valores aceptados para `unit`:
+
+* `nanosecond`
+* `ns`
+* `hertz`
+* `hz`
+* `byte`
+* `percent`
+
+```json
+{
+  "cpu_0": {
+    "unit": "percent",
+    "values": {
+      "timestamp": 1724777211.6403089,
+      "value": 12.64,
+    }
+  }
+}
+```
+
+`platform`
+
+: *String, required.* Este valor representa la plataforma desde la que el SDK envía los datos.
+
+`release`
+
+: *String, required.* La versión de lanzamiento de la aplicación.
+
+**Las versiones de lanzamiento deben ser únicas en todos los proyectos de tu organización**.
+Este valor puede ser el SHA de git del proyecto en cuestión o un identificador de producto
+con una versión semántica (formato sugerido `my-project-name@1.0.0`).
+
+`environment`
+
+: *String, recommended.* El nombre del entorno, como `production` o `staging`. El valor predeterminado es `production`.
+
+`version`
+
+: *String, required.* Representa la versión del formato Sample.
+
+Los valores aceptables son:
+
+* `"2"`
+
+`profile`
+
+: *Object, required.* Contiene todos los datos sin procesar recopilados durante el perfilado. Consulta [profile data](#profile-data).
+
+<div id="profile-data">
+  ### Datos del perfil
+</div>
+
+Los datos del perfil consisten en:
+
+* sample, que especifica la hora de inicio, su hilo correspondiente y una pila,
+* stacks, que son listas de marcos (frames),
+* frames, que identifican la función y/o la línea de código de cada elemento en un stack trace,
+* metadatos de hilo, con información sobre los hilos.
+
+El formato elegido intenta mantener al mínimo la cantidad de datos que transferimos al servidor.
+
+```json
+{
+  "profile": {
+    "samples": [
+      { ... },
+      ...
+    ],
+    "stacks": [
+      [ ... ],
+      ...
+    ],
+    "frames": [
+      { ... },
+      ...
+    ],
+    "thread_metadata": {
+      "259": {
+        ...
+      }
+    }
+  }
+}
+```
+
+Al recopilar un stack trace, usted:
+
+1. Capture el stack trace.
+2. Capture una marca de tiempo absoluta del momento en que se “capturó” el stack trace.
+3. Capture el ID del hilo en el que se capturó este stack trace.
+4. Cree una lista de índices para cada frame (agréguelo a la lista de frames si es necesario
+   o use el índice del frame existente).
+5. Verifique si ese stack existe en la lista de stacks y, si no, agréguelo a la lista de stacks.
+6. Cree una muestra que contenga el ID del hilo, la marca de tiempo y el
+   ID del stack.
+
+Debe recopilar muestras a una frecuencia de 101 Hz, o aproximadamente una vez cada 10
+milisegundos.
+
+`samples`
+
+: *Lista, requerido* Contiene una lista de objetos de muestra capturados durante la ejecución.
+Cada muestra puede contener los siguientes atributos:
+
+* `timestamp`: *Flotante de 64 bits, requerido.* Contiene la marca de tiempo Unix en segundos con precisión de microsegundos del momento en que se capturó la muestra.
+* `stack_id`: *Entero, requerido.* Contiene el índice del stack de la lista `stacks`.
+* `thread_id`: *Cadena, requerido.* Contiene el ID del hilo en el que se capturó la muestra.
+
+```json
+    {
+        "timestamp": 1724762625.5756555,
+        "thread_id": "6154596352",
+        "stack_id": 0
+    }
+```
+
+`stacks`
+
+: *Lista, obligatorio*. Contiene una lista de índices de frames que forman un stack trace.
+
+Los frames en un stack deben estar ordenados de hoja a raíz. Esto significa que tu frame principal
+debe estar al final de la lista.
+
+Se recomienda evitar duplicados en los stacks almacenándolos una sola vez y haciendo referencia al mismo
+`stack_id` para cada muestra que lo necesite.
+
+`frames`
+
+: *Lista, obligatorio*. Contiene una lista de objetos de frame (consulta [Frame Attributes](/es/sdk/data-model/event-payloads/stacktrace/#frame-attributes)).
+
+Cada objeto debe contener al menos un atributo `filename`, `function` o
+`instruction_addr`. Todos los valores son opcionales, pero recomendables.
+
+Para plataformas nativas (por ejemplo, `cocoa`), `instruction_addr` es
+obligatorio para poder simbolicar y obtener más información sobre el frame.
+
+Para el resto de las plataformas, lo que se envíe aquí llegará al
+frontend y lo disponible podrá usarse para mostrar más o menos información.
+
+Usaremos `module` o `package` (en ese orden) para agrupar frames cuando sea necesario.
+
+Algunos atributos no se usan por el momento:
+
+* `raw_function`
+* `pre_context`
+* `post_context`
+* `stack_start`
+* `vars`
+* `addr_mode`
+* `platform`
+
+`thread_metadata`
+
+: *Objeto, obligatorio.* Contiene un objeto con un campo para cada ID de thread detectado durante la ejecución.
+
+Este objeto puede contener estos atributos:
+
+* `name`: nombre del thread.
+* `priority`: prioridad del thread.
+
+Esta información se usará en el flame chart para habilitar el selector de threads.
+
+```json
+{
+  "thread_metadata": {
+    "259": {
+      "name": "com.apple.main-thread",
+      "priority": 31
+    }
+  }
+}
+```
+
+<div id="validation">
+  ## Validación
+</div>
+
+Rechazaremos un chunk (perfil) en Relay por varias razones:
+
+* faltan datos del chunk (sin frames, sin samples, sin stacks)
+* falta alguno de los metadatos requeridos
+* el tamaño del chunk supera los 50 MB
+
+Se recomienda validar estas condiciones antes de enviar el chunk.
+
+Se recomienda eliminar datos innecesarios, como hilos sin samples, de
+`thread_metadata`.
+
+<div id="ingestion">
+  ## Ingesta
+</div>
+
+Después de generar este payload, serialízalo como JSON, empaquétalo en un
+
+[Envelope](/es/sdk/data-model/envelopes/) con el tipo de elemento [`profile_chunk`](/es/sdk/data-model/envelope-items/#profile-chunk) y envíalo
+
+a Relay.
+
+Este envelope debería verse así:
+
+```json
+{"event_id":"a229377b82ad4898be7c3a6272d052d9"}
+{"type":"profile_chunk"}
+{ /* payload JSON de profile_chunk */}
+```
+
+<div id="modifying-transactions-payload">
+  ## Modifying Transactions Payload
+</div>
+
+Es necesario adjuntar contexto adicional a las cargas de *transactions/spans* para conectar el perfilado continuo con el rastreo.
+
+1. Profile Context:
+
+El contexto de perfil de una transacción debe actualizarse para incluir el ID del profiler, de modo que pueda asociarse de nuevo a la transacción.
+El contexto en `.contexts.profile` debería verse así:
+
+```json
+{
+  "profiler_id": "42928c7ee9174231956f077581145489"
+}
+```
+
+2. Contexto de traza
+
+El contexto de traza para una transacción debe actualizarse para incluir el `thread id` activo, así sabremos qué hilo está asociado con la transacción. A menudo se implementa como el hilo en el que se inició la transacción.
+
+El contexto en `.contexts.trace` debería verse así:
+
+```json
+{
+	"data": {
+		"thread.id": "id del hilo",
+		"thread.name": "nombre del hilo",
+	},
+	// contexto de traza existente
+}
+```
+
+`thread.id`
+
+*Cadena, obligatorio.* Debe ser una cadena que coincida con el identificador del hilo en el *thread&#95;metadata* del fragmento de perfil.
+
+`thread.name`
+
+*Cadena, opcional.* Debe ser una cadena que coincida con el nombre del hilo en el *thread&#95;metadata* del fragmento de perfil.
+
+3. Datos de span
+
+Los datos de span deben actualizarse para que un span contenga el *id del hilo* activo, de modo que sepamos qué hilo está asociado con la transacción.
+A menudo se implementa como el hilo en el que se inició la transacción.
+
+Los datos en `.spans[].data` deberían tener el siguiente aspecto:
+
+```json
+{
+  "thread.id": "ID del hilo",
+	"thread.name": "Nombre del hilo"
+	"profiler_id": "42928c7ee9174231956f077581145489"
+}
+```
+
+`thread.id`
+
+*String, obligatorio.* Debe ser una cadena que coincida con el ID del hilo en el *thread&#95;metadata* del fragmento de perfil.
+
+`thread.name`
+
+*String, opcional.* Debe ser una cadena que coincida con el nombre del hilo en el *thread&#95;metadata* del fragmento de perfil.
+
+`profiler_id`
+
+*String, opcional.* Para reemplazar el del contexto de la traza, pero no debería ser necesario.

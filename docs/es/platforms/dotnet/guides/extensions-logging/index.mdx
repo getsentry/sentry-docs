@@ -1,0 +1,206 @@
+---
+title: Microsoft.Extensions.Logging
+sdk: sentry.dotnet.extensions.logging
+description: "Obtén información sobre la integración de Sentry con .NET y Microsoft.Extensions.Logging."
+---
+
+Sentry cuenta con una integración con `Microsoft.Extensions.Logging` a través del [paquete NuGet Sentry.Extensions.Logging](https://www.nuget.org/packages/Sentry.Extensions.Logging).
+
+<div id="overview-of-the-features">
+  ## Descripción general de las funciones
+</div>
+
+- Almacenar mensajes de registro como breadcrumbs
+- Enviar eventos a Sentry
+- Enviar registros estructurados a Sentry
+
+Dos configuraciones independientes definen el nivel mínimo de registro para conservar la entrada como `Breadcrumb` y para enviar un `Event` a Sentry. Los eventos incluyen cualquier breadcrumb almacenado en ese [scope](enriching-events/scopes/).
+
+De forma predeterminada, cualquier mensaje con nivel `Information` o superior se conservará como `Breadcrumb`.
+
+El valor predeterminado para informar una entrada de registro como evento a Sentry es `Error`.
+
+Esto significa que, de forma predeterminada, cualquier llamada a `LogError` creará un `Event` que incluirá todos los mensajes de nivel `Information`, `Warning`, así como `Error` y `Critical`.
+
+Además, cuando está habilitado, los mensajes de registro se envían a Sentry como [Structured Logs](logs/).
+
+<div id="install">
+  ## Instalación
+</div>
+
+Añade la dependencia de Sentry:
+
+```powershell {tabTitle:Package Manager}
+Install-Package Sentry.Extensions.Logging -Version {{@inject packages.version('sentry.dotnet.extensions.logging') }}
+```
+
+```shell {tabTitle:.NET Core CLI}
+dotnet add package Sentry.Extensions.Logging -v {{@inject packages.version('sentry.dotnet.extensions.logging') }}
+```
+
+Este paquete amplía el SDK principal de `Sentry`. Esto significa que, además de las funciones relacionadas con el registro, con este paquete también tendrás acceso a toda la API y a las características disponibles en el SDK principal de `Sentry`.
+
+<Alert>
+  Los mensajes registrados desde ensamblados cuyo nombre empiece por `Sentry` no generarán eventos.
+</Alert>
+
+
+<div id="configure">
+  ## Configuración
+</div>
+
+Hay dos formas de agregar esta integración a tu proyecto. En ambos casos implica llamar a un método de extensión. Los lugares donde está disponible son:
+
+- `ILoggingBuilder`
+- `ILoggerFactory`
+
+La extensión de `ILoggingBuilder` es útil al usar un `WebHostBuilder` o un `HostBuilder`, también conocido como _host genérico_. Esta extensión la utiliza la integración de ASP.NET Core internamente para hacerlo de forma automática.
+
+La extensión para `ILoggerFactory` es una opción conveniente cuando solo se usa `LoggerFactory`, sin ninguna integración con un framework.
+
+En ambos casos, la llamada al método es:
+
+**AddSentry()**
+
+<div id="example-configuration">
+  ### Ejemplo de configuración
+</div>
+
+<div id="through-iloggingbuilder">
+  #### Mediante `ILoggingBuilder`
+</div>
+
+```csharp
+public static Task Main()
+    => new HostBuilder()
+        .ConfigureHostConfiguration(c =>
+        {
+            c.SetBasePath(Directory.GetCurrentDirectory());
+            c.AddJsonFile("appsettings.json", optional: false);
+        })
+        .ConfigureLogging((c, l) =>
+        {
+            l.AddConfiguration(c.Configuration);
+            // Agregando integración de Sentry a Microsoft.Extensions.Logging
+            l.AddSentry();
+        })
+        .Build();
+```
+
+En este ejemplo, se crea un *host genérico* y se agrega la integración de MEL con Sentry mediante `ConfigureLogging`. El ejemplo también muestra cómo enlazar la configuración de `appsettings.json` para poner los valores a disposición de la integración de Sentry.
+
+Con este enfoque, opciones como `Dsn`, `SendDefaultPii`, `MinimumBreadcrumbLevel`, entre otras, pueden configurarse en `appsettings.json`.
+
+Ejemplo con `appsettings.json`:
+
+```json
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Debug"
+    }
+  },
+  "Sentry": {
+    "Dsn": "___PUBLIC_DSN___",
+    "SendDefaultPii": true,
+    "MinimumBreadcrumbLevel": "Debug",
+    "MinimumEventLevel": "Warning",
+    "MaxBreadcrumbs": 50
+  }
+}
+```
+
+Más arriba configuramos el nivel mínimo de registro de toda la aplicación en `Debug`. La configuración específica de Sentry se define en la propiedad `Sentry`. Las opciones se describen a continuación.
+
+
+<div id="through-iloggerfactory">
+  #### Mediante `ILoggerFactory`
+</div>
+
+```csharp
+using (var loggerFactory = new LoggerFactory()
+            .AddConsole(LogLevel.Trace)
+            .AddSentry(o => o.Dsn = "___PUBLIC_DSN___"))
+{
+    var logger = loggerFactory.CreateLogger<Program>();
+}
+```
+
+Este enfoque no incluye ningún componente del sistema de configuración del framework. Dado que el DSN se proporciona como parámetro, el SDK se inicializará.
+Se pueden pasar más ajustes mediante la función de callback que configura las `SentryOptions`.
+
+
+<div id="options-and-initialization">
+  ## Opciones e inicialización
+</div>
+
+Cuando se llama a `AddSentry` sin argumentos, conviene tener en cuenta que existe una sobrecarga en la que se pueden configurar las `SentryOptions`, igual que si se hubiera llamado a `SentrySdk.Init`.
+
+<Alert>
+  El SDK solo debe inicializarse una vez. Si el `DSN` está disponible para esta integración, de forma predeterminada **sí** inicializará el SDK. Si no deseas inicializar el SDK mediante esta configuración, establece la opción `InitializeSdk` en **false**. No proporcionar un DSN o dejarlo como una *cadena vacía* deshabilitará el SDK.
+</Alert>
+
+Por ejemplo:
+
+```csharp
+using (var loggerFactory = new LoggerFactory()
+            .AddSentry(o => o.InitializeSdk = false))
+{ }
+```
+
+
+<div id="options">
+  ### Opciones
+</div>
+
+<div id="minimumbreadcrumblevel">
+  #### MinimumBreadcrumbLevel
+</div>
+
+Un `LogLevel` que indica el nivel mínimo que debe tener un mensaje de registro para incluirse como migaja (breadcrumb). De forma predeterminada, este valor es `Information`.
+
+<div id="minimumeventlevel">
+  #### MinimumEventLevel
+</div>
+
+Un `LogLevel` que indica el nivel mínimo que debe tener un mensaje de registro para enviarse a Sentry como evento. De forma predeterminada, este valor es `Error`.
+
+<div id="initializesdk">
+  #### InitializeSdk
+</div>
+
+Indica si esta integración debe inicializar el SDK. Si planeas invocar `SentrySdk.Init` por tu cuenta, establece este indicador en `false`.
+
+<div id="filters">
+  #### Filtros
+</div>
+
+Una lista de filtros que se invocan antes de procesar cualquier mensaje de registro. Esto te permite inspeccionar los detalles de la entrada del registro antes de que se convierta en un `Breadcrumb` o un `Event`, con acceso completo a los datos de `Microsoft.Extensions.Logging`.
+
+<div id="tagfilters">
+  #### TagFilters
+</div>
+
+Una lista de filtros que se invocan antes de procesar cualquier mensaje de registro para excluir etiquetas no deseadas.
+
+Por ejemplo, para eliminar todas las etiquetas que comienzan con `PROC_`, añade un filtro de etiquetas a tus `SentryOptions` al inicializar el SDK.
+
+```csharp
+options.TagFilters.Add("PROC_");
+```
+
+
+<div id="verify">
+  ## Verificar
+</div>
+
+Este fragmento incluye un error intencional para que puedas comprobar que todo funciona en cuanto lo configures.
+
+<PlatformContent includePath="getting-started-verify" />
+
+<div id="samples">
+  ## Ejemplos
+</div>
+
+- Un [ejemplo sencillo](https://github.com/getsentry/sentry-dotnet/tree/main/samples/Sentry.Samples.ME.Logging) que usa la `LoggerFactory`.
+- Un [ejemplo](https://github.com/getsentry/sentry-dotnet/tree/main/samples/Sentry.Samples.GenericHost) que usa el _host genérico_.

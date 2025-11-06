@@ -1,0 +1,488 @@
+---
+title: GitHub
+sidebar_order: 1
+description: >-
+  Obtén más información sobre la integración de GitHub de Sentry y cómo puede
+  detectar y resolver errores más rápido usando datos de tus commits en GitHub,
+  y agilizar tu proceso de priorización creando una incidencia en GitHub
+  directamente desde Sentry.
+og_image: /og-images/organization-integrations-source-code-mgmt-github.png
+---
+
+Hay tres tipos de integraciones de GitHub; asegúrate de elegir la correcta:
+
+* [GitHub](#installing-github) - Para usuarios u organizaciones individuales de GitHub (así como la mayoría de los clientes de GitHub Enterprise Cloud), siempre que estén alojados en `github.com`. Sigue las instrucciones de “[Installing GitHub](#installing-github)”. **Comienza la instalación desde Sentry**.
+
+* [GitHub Enterprise](#installing-github-enterprise) - Para instancias de GitHub Enterprise que **no son accesibles desde `github.com`**. Por lo general, tendrán un dominio personalizado; por ejemplo:
+
+  * `https://github.example.com`
+  * `https://ghe.example.com/`
+
+  Para estas cuentas, sigue las instrucciones de “[Installing GitHub Enterprise](#installing-github-enterprise)”.
+
+* [Seer GitHub App](#installing-the-seer-github-app) - Para que [Seer](/es/product/ai-in-sentry/seer) cree Pull Requests para correcciones de incidencias y para que [AI Code Review](/es/product/ai-in-sentry/ai-code-review) analice tus Pull Requests.
+
+<div id="check-your-domain">
+  ### Verifica tu dominio
+</div>
+
+Para determinar qué integración usar, ingresa tu dominio de GitHub a continuación:
+
+<GitHubDomainChecker />
+
+<br />
+
+<Alert>
+  Para instalar esta integración se requieren permisos de propietario, responsable o administrador en Sentry, y permisos de propietario en GitHub.
+</Alert>
+
+<div id="installing-github">
+  ## Instalación de GitHub
+</div>
+
+1. En Sentry, ve a **Settings &gt; Integrations &gt; [GitHub](https://sentry.io/orgredirect/organizations/:orgslug/settings/integrations/github)**.
+
+   ![Instalar la integración de GitHub](./img/github-install-page.png)
+
+2. Si tienes instalada la integración heredada de GitHub, usa el botón junto a GitHub para **Actualizar**. Si no la tienes instalada, usa el botón para **Instalar**.
+
+3. En el modal que aparece, haz clic en &quot;Add Installation&quot;.
+
+4. Se abrirá una ventana de instalación de GitHub. Haz clic en &quot;Install&quot;.
+
+5. Selecciona a qué repositorios debe tener acceso Sentry (o selecciona todos los repositorios).
+
+6. A continuación, deberías ser redirigido a la página de Integrations de Sentry.
+
+7. En tu nueva instancia de GitHub en Sentry, haz clic en &quot;Configure&quot;.
+
+8. Todos tus repositorios se agregarán de forma predeterminada; solo tienes que actualizar la pantalla. Para agregar solo repositorios específicos, elígelos en la lista desplegable. *Asegúrate de haber dado a Sentry acceso a estos repositorios en GitHub en los pasos anteriores.*
+
+   ![Agregar repositorio](./img/github-global-add-repo.png)
+
+9. Ahora puedes [configurar](#configure) la integración.
+
+La integración de GitHub está disponible para todos los proyectos de tu organización de Sentry. Puedes conectar varias organizaciones de GitHub a una organización de Sentry. Conectar una organización de GitHub a varias organizaciones de Sentry es compatible en organizaciones de Sentry con planes Business o Enterprise (no compatible con GitHub Enterprise Server).
+
+Aunque puedes instalar la integración de GitHub desde [GitHub](https://github.com/apps/sentry), recomendamos instalarla desde Sentry para un proceso más ágil.
+
+<div id="github-permissions">
+  ### Permisos de GitHub
+</div>
+
+Se requieren los siguientes permisos para que la integración con GitHub funcione correctamente. Debes aceptar por completo estos permisos para usar la aplicación. Todos los permisos enumerados son a nivel de repositorio, salvo que se indique lo contrario.
+
+| Categoría de permiso | Nivel de acceso | Por qué Sentry los necesita |
+|--------------------|---------------|-----------------------------------------------------------------------------------------------------------------------------------|
+| Administración     | Solo lectura  | Para respetar las reglas de protección de ramas, determinar las ramas predeterminadas y mejorar la automatización.               |
+| Checks             | Lectura y escritura | Para mostrar resultados detallados de aprobación/fallo (por ejemplo, cobertura de pruebas, estado de lanzamientos) como GitHub Checks en PR o commits. |
+| Commit Statuses    | Lectura y escritura | Para publicar comprobaciones de estado (por ejemplo, datos de analítica de pruebas) en commits en GitHub e integrarse con las reglas de protección de ramas. |
+| Contents           | Solo lectura  | Para obtener archivos fuente, commits y datos de blame para Suspect Commits, y rastrear archivos en Releases.                    |
+| Issues             | Lectura y escritura | Para crear issues de GitHub a partir de eventos de Sentry y actualizar issues vinculados.                                        |
+| <span>Members<br /><em>*[Org-level]*</em></span>          | Solo lectura  | Para asociar usuarios de la organización con identidades de GitHub y mejorar la atribución de issues y la colaboración.          |
+| Metadata           | Solo lectura  | Para identificar la estructura del repositorio, los nombres, las ramas predeterminadas y la visibilidad.                         |
+| Pull Requests      | Lectura y escritura | Para escribir comentarios en pull requests sobre (1) issues causados por el pull request y (2) resaltar issues existentes en el diff del código. |
+| Webhooks           | Lectura y escritura | Para suscribirse a actualizaciones en tiempo real como eventos de push, PR e issues.
+
+Ocasionalmente, Sentry solicitará permisos adicionales a tu cuenta de GitHub a medida que se introduzcan nuevas funciones. Negar o ignorar la solicitud de actualización no afectará tu uso actual de Sentry, pero puede impedir el acceso a funciones futuras.
+
+<div id="installing-github-enterprise">
+  ## Instalación de GitHub Enterprise
+</div>
+
+<div id="add-new-github-app">
+  ### Agregar una nueva GitHub App
+</div>
+
+1. Confirma que [los rangos de IP de Sentry](/es/security-legal-pii/security/ip-ranges/) estén permitidos en tu instancia de GitHub Enterprise.
+2. En la organización de GitHub Enterprise, ve a Settings &gt; Developer settings &gt; **GitHub Apps** y haz clic para agregar una **nueva GitHub App**.
+
+   ![Crear GitHub App para Enterprise](./img/github-e-new-app.png)
+
+<div id="register-new-github-app">
+  ### Registrar una nueva GitHub App
+</div>
+
+1. Primero, debes generar un secreto para el webhook. Por ejemplo, en la terminal:
+
+   ```
+   openssl rand -base64 500 | tr -dc 'a-zA-Z0-9' | fold -w 64 | head -n 1
+   ```
+
+2. Luego, en GitHub, completa el formulario como sigue y haz clic en &quot;Create GitHub App&quot;.
+
+   <table>
+     <tbody>
+       <tr>
+         <th>Nombre de la GitHub App </th>
+         <td>sentry-app </td>
+       </tr>
+
+       <tr>
+         <th>URL de la página principal </th>
+         <td>https://sentry.io </td>
+       </tr>
+
+       <tr>
+         <th>URL de callback de autorización de usuario </th>
+         <td>https://sentry.io/extensions/github-enterprise/setup/ </td>
+       </tr>
+
+       <tr>
+         <th>URL de configuración </th>
+         <td>https://sentry.io/extensions/github-enterprise/setup/ </td>
+       </tr>
+
+       <tr>
+         <th>URL del webhook </th>
+         <td>https://sentry.io/extensions/github-enterprise/webhook/ </td>
+       </tr>
+
+       <tr>
+         <th>Secreto del webhook </th>
+         <td>`Ingresa el secreto del paso anterior` </td>
+       </tr>
+
+       <tr>
+         <th>Administración del repositorio </th>
+         <td>Solo lectura </td>
+       </tr>
+
+       <tr>
+         <th>Estados de commit </th>
+         <td>Sin acceso </td>
+       </tr>
+
+       <tr>
+         <th>Despliegues </th>
+         <td>Sin acceso </td>
+       </tr>
+
+       <tr>
+         <th>Issues </th>
+         <td>Lectura y escritura </td>
+       </tr>
+
+       <tr>
+         <th>Páginas </th>
+         <td>Sin acceso </td>
+       </tr>
+
+       <tr>
+         <th>Pull Requests </th>
+         <td>Lectura y escritura </td>
+       </tr>
+
+       <tr>
+         <th>Contenido del repositorio </th>
+         <td>Lectura y escritura </td>
+       </tr>
+
+       <tr>
+         <th>Archivo único </th>
+         <td>Sin acceso </td>
+       </tr>
+
+       <tr>
+         <th>Proyectos del repositorio </th>
+         <td>Sin acceso </td>
+       </tr>
+
+       <tr>
+         <th>Miembros de la organización </th>
+         <td>Solo lectura </td>
+       </tr>
+
+       <tr>
+         <th>Proyectos de la organización </th>
+         <td>Sin acceso </td>
+       </tr>
+     </tbody>
+   </table>
+
+   **Suscribirse a eventos**
+
+   <table>
+     <tbody>
+       <tr>
+         <th>Pull Request </th>
+         <td>Sí </td>
+       </tr>
+
+       <tr>
+         <th>Push </th>
+         <td>Sí </td>
+       </tr>
+     </tbody>
+   </table>
+
+<div id="install-your-github-app">
+  ### Instala tu app de GitHub
+</div>
+
+1. En Sentry, ve a Organization Settings &gt; **Integrations**.
+
+2. Junto a GitHub Enterprise, haz clic en &quot;Install&quot;.
+
+   ![Instalar la integración de GitHub Enterprise](./img/github-e-install.png)
+
+3. Haz clic en &quot;Add Installation&quot;.
+
+   ![Agregar instalación](./img/github-e-add-installation.png)
+
+4. Completa el siguiente formulario con la información de la página de configuración de tu app de GitHub. La URL de instalación debe poder resolverse en Internet.
+
+   ![Formulario de configuración de GitHub Enterprise](./img/github-e-form.png)
+
+   Deberás generar una clave privada en la página de configuración de tu app de GitHub y pegar el contenido completo en el campo **GitHub App Private Key**.
+
+   ![Generar clave privada](./img/github-e-generate-private-key.png)
+
+   Por ejemplo, en la terminal:
+
+   ```
+   cat <YOUR_PRIVATE_KEY_FILE> | pbcopy
+   ```
+
+5. Haz clic en &quot;Configure&quot; y se abrirá una ventana de instalación de GitHub. Selecciona a qué repositorios debe tener acceso Sentry (o selecciona todos los repositorios) y haz clic en &quot;Install&quot;.
+
+   ![Modal de confirmación de instalación de GitHub Enterprise](./img/github-e-repo-access.png)
+
+6. Luego serás redirigido a Sentry. En tu nueva instancia de GitHub Enterprise, haz clic en &quot;Configure&quot;.
+
+   ![Configurar GitHub Enterprise](./img/github-e-configure.png)
+
+7. Agrega los repositorios de los que quieres recopilar datos de commits. *Asegúrate de haberle dado a Sentry acceso a estos repositorios en GitHub en los pasos anteriores.*
+   ![Agregar repositorio de GitHub Enterprise](./img/github-e-add-repo.png)
+
+GitHub Enterprise ahora debería estar habilitado para todos los proyectos de tu organización en Sentry.
+
+<div id="installing-the-seer-github-app">
+  ## Instalación de la aplicación de GitHub Seer
+</div>
+
+La [aplicación de GitHub Seer](https://github.com/apps/seer-by-sentry) es utilizada por [Seer](/es/product/ai-in-sentry/seer) para crear pull requests de corrección de issues y para que [AI Code Review](/es/product/ai-in-sentry/ai-code-review) analice tus pull requests.
+
+Para instalar la aplicación de GitHub Seer, simplemente sigue los pasos de instalación para añadir la aplicación de GitHub a la organización o a los repositorios que necesites. Puedes encontrar la aplicación de GitHub Seer [aquí](https://github.com/apps/seer-by-sentry).
+
+* Para [Issue Fix](/es/product/ai-in-sentry/seer#issue-fix), ahora podrás crear pull requests en las ubicaciones donde se instaló.
+
+* Para [AI Code Review](/es/product/ai-in-sentry/ai-code-review), continúa con las instrucciones en la documentación de [Sentry Prevent AI](/es/product/ai-in-sentry/sentry-prevent-ai#getting-started).
+
+<div id="configure">
+  ## Configurar
+</div>
+
+Usa GitHub para [hacer seguimiento de los commits](#commit-tracking), identificar [commits sospechosos](#suspect-commits-and-suggested-assignees), [resolver mediante commit o PR](#resolve-via-commit-or-pull-request) y [gestionar issues](#issue-management).
+
+<div id="commit-tracking">
+  ### Seguimiento de commits
+</div>
+
+El seguimiento de commits te permite detectar commits problemáticos. Más información sobre [el seguimiento de commits](/es/product/releases/setup/release-automation/).
+
+<div id="suspect-commits-and-suggested-assignees">
+  ### Commits sospechosos y personas sugeridas para asignación
+</div>
+
+Cuando configures el seguimiento de commits, podrás ver los cambios más recientes en los archivos que aparecen en la traza de pila del issue, junto con los commits sospechosos.
+
+En los issues donde los archivos de la traza de pila coincidan con archivos incluidos en commits enviados a Sentry, verás el commit sospechoso con un enlace al propio commit.
+
+![Commits sospechosos](./img/github-global-suspect-commits.png)
+
+También verás que el autor del commit sospechoso aparecerá como persona sugerida para asignar este issue. Para asignar el issue a la persona sugerida, haz clic en su icono.
+
+<div id="issue-management">
+  ### Gestión de incidencias
+</div>
+
+El seguimiento de incidencias te permite crear issues de GitHub desde Sentry y vincular
+incidencias de Sentry a issues de GitHub existentes.
+
+<Alert title="Nota" level="info">
+  <p>
+    La gestión manual de incidencias está disponible para organizaciones con planes Team, Business o
+    Enterprise.
+  </p>
+
+  <p>
+    La gestión automática de incidencias está disponible para organizaciones con planes Business o Enterprise.
+  </p>
+</Alert>
+
+La gestión de incidencias puede configurarse de dos maneras: automática o manual.
+
+<div id="automatically">
+  #### Automáticamente
+</div>
+
+Para configurar la gestión de incidencias de forma automática, crea una [**Alerta de incidencia**](/es/product/alerts-notifications/issue-alerts/). Al seleccionar la [**acción**](/es/product/alerts/create-alerts/issue-alert-config/#then-conditions-actions), elige **Create a new GitHub issue**.
+
+![Acción de la regla de alerta para crear una incidencia en GitHub](./img/github-ticket-rule.png)
+
+Se creará automáticamente una incidencia en GitHub cuando se active la alerta.
+
+<div id="manually">
+  #### Manualmente
+</div>
+
+Para configurar la gestión de incidencias manualmente, una vez que hayas abierto una incidencia específica de Sentry, encontrarás la sección **Linked Issues** en el panel derecho.
+
+![Vincular una incidencia de GitHub desde una incidencia de Sentry](./img/github-global-link-issue.png)
+
+Aquí podrás crear o vincular incidencias de GitHub.
+
+![Formulario para crear una incidencia de GitHub](./img/github-create-issue.png)
+
+<div id="resolve-via-commit-or-pull-request">
+  ### Resolver mediante commit o pull request
+</div>
+
+Una vez que envíes datos de commits, puedes empezar a resolver incidencias incluyendo `fixes <SENTRY-SHORT-ID>` en tus mensajes de commit. Por ejemplo, un mensaje de commit podría verse así:
+
+```
+Prevenir consultas vacías en usuarios
+
+Corrige MYAPP-317
+```
+
+También puedes resolver incidencias con pull requests si incluyes `fixes <SENTRY-SHORT-ID>` en el título o la descripción.
+
+Cuando Sentry detecte esto, anotaremos automáticamente la incidencia correspondiente con una referencia al commit o pull request y, más adelante, cuando ese commit o pull request forme parte de una versión, marcaremos la incidencia como resuelta. El commit debe estar asociado a una versión. De lo contrario, si el commit se aplasta (squash), Sentry no sabrá cuándo se ha publicado el commit y es posible que la incidencia nunca se marque como una regresión. Con GitHub, recomendamos usar `fixes <SENTRY-SHORT-ID>` en el cuerpo del pull request que se va a fusionar en la rama principal.
+
+<div id="get-sentry-comments-on-pull-requests">
+  ### Comentarios de Sentry en pull requests
+</div>
+
+Sentry puede comentar en pull requests abiertos y fusionados. Estas funciones se habilitan automáticamente una vez que hayas configurado la integración con GitHub. Para desactivarlas, ve a **Settings &gt; Integrations &gt; GitHub** y apaga el interruptor.
+
+![Cómo desactivar los comentarios de Sentry en los pull requests de GitHub](./img/github-org-settings.png)
+
+<div id="merged-pull-request-comments">
+  #### Comentarios en pull requests fusionados
+</div>
+
+Si se sospecha que un pull request fusionado recientemente está causando un problema, Sentry comentará en él para destacarlo, como se muestra en el ejemplo a continuación.
+
+![Comentario de Sentry en un pull request sospechoso en GitHub](./img/sentry-github-pr-comment.png)
+
+Sentry solo comentará en pull requests de menos de dos semanas de antigüedad que estén asociados con commits sospechosos. El comentario se actualizará continuamente con hasta cinco incidencias que se sospecha que el pull request ha provocado.
+
+<div id="open-pull-request-comments">
+  #### Comentarios en pull requests abiertos
+</div>
+
+Cuando se abre un pull request, Sentry analizará los nombres de archivo y de función modificados en el pull request a partir del diff del PR para encontrar incidencias recientes sin gestionar y sin resolver asociadas con tu pull request.
+
+![Comentario de Sentry en un pull request abierto en GitHub](./img/sentry-github-open-pr-comment.png)
+
+Sentry comentará en el pull request con hasta cinco incidencias por archivo que se hayan detectado por primera vez en los últimos 90 días y cuya última detección haya sido en los últimos 14 días.
+
+Esta función requiere [code mappings](/es/product/issues/suspect-commits/#2-set-up-code-mappings) y actualmente solo es compatible con archivos de Python, JavaScript/TypeScript, PHP y Ruby. Si usas otro lenguaje, [cuéntanoslo en este ticket de GitHub](https://github.com/getsentry/sentry/issues/69824). Para JavaScript/TypeScript, asegúrate de haber desminificado tu código [configurando source maps](/es/platforms/javascript/sourcemaps/).
+
+<div id="missing-member-detection">
+  ### Detección de miembros ausentes
+</div>
+
+Si hay usuarios que hacen commits en repositorios de GitHub vinculados a Sentry y no son miembros de tu organización, Sentry los detecta como miembros ausentes. Una vez al mes, Sentry envía a los propietarios y administradores de la organización un correo recordándoles que inviten a esos usuarios a unirse a su organización. Sentry también muestra un banner para invitar a los miembros ausentes en la página **Settings &gt; Members**.
+
+![Banner de invitación para miembros ausentes de GitHub](./img/github-missing-members-banner.png)
+
+El banner muestra a los 5 colaboradores más activos que aún no están en la organización. Para ver a todos los miembros ausentes (hasta 50), haz clic en &quot;View All&quot; en el banner. Para posponer el banner, haz clic en elipsis y luego selecciona &quot;Hide Missing Members&quot;.
+
+Al hacer clic en &quot;View All&quot; en el banner de invitación, se mostrará la ventana modal de invitación. Desde aquí, puedes seleccionar varios usuarios y asignar roles y equipos antes de invitarlos.
+
+![Ventana modal de invitación para miembros ausentes de GitHub](./img/github-missing-members-modal.png)
+
+De forma predeterminada, esta función se habilita automáticamente una vez que se haya configurado tu integración de GitHub. Para deshabilitarla, ve a **Settings &gt; Integrations &gt; GitHub** y desactívala.
+
+![Cómo deshabilitar la detección de miembros ausentes](./img/github-org-settings.png)
+
+<div id="stack-trace-linking">
+  ### Vinculación del seguimiento de pila
+</div>
+
+<Alert>
+  Sentry intentará configurar automáticamente las asignaciones de código en C#, Clojure, Go, Groovy, Java, JavaScript, PHP, Python, Ruby y Scala para las organizaciones con la integración de GitHub instalada. Si tu proyecto usa un SDK diferente, puedes agregar las asignaciones de código manualmente.
+</Alert>
+
+La vinculación del seguimiento de pila te lleva desde un archivo en el seguimiento de pila de Sentry a ese mismo archivo en tu código fuente. Si tienes el seguimiento de commits configurado en Sentry, podemos llevarte a la versión exacta (usando el commit asociado con el evento) del código fuente cuando ocurrió el error. De lo contrario, te llevaremos al estado actual del código fuente (usando la **branch** predeterminada).
+
+1. Ve a **Settings &gt; Integrations &gt; GitHub &gt; Configurations**.
+
+2. Haz clic en el Button &quot;Configure&quot; junto a tu instancia de GitHub.
+
+3. Haz clic en la pestaña **Code Mappings**.
+
+4. Configura una asignación de código para cada proyecto en el que quieras habilitar la vinculación del seguimiento de pila. Para crear una nueva asignación de código, haz clic en **Add Mapping**.
+
+5. Completa el formulario y luego haz clic en **Save Changes**. Cada campo del formulario se describe a continuación:
+
+   * **Project** (obligatorio): Este es el proyecto de Sentry.
+   * **Repo** (obligatorio): Este es el repositorio de GitHub asociado con el proyecto de Sentry anterior. Si usas más de un repositorio de GitHub por proyecto de Sentry, necesitarás varias asignaciones de código.
+   * **Branch** (obligatorio): Esta es la branch predeterminada de tu código a la que recurrimos si no tienes configurado el seguimiento de commits.
+   * **Stack Trace Root** y **Source Code Root** (opcional): Consulta a continuación cómo determinar estos valores.
+
+<div id="stack-trace-root-and-source-code-root">
+  #### Raíz del stack trace y raíz del código fuente
+</div>
+
+<Alert>
+  La siguiente información solo es válida para plataformas que usan rutas de archivos tradicionales. Las plataformas con nombres de paquetes requieren pasos adicionales. Para **Java**, consulta más en la [página sobre el contexto de código fuente](/es/platforms/java/source-context#setting-up-code-mappings).
+</Alert>
+
+Primero, ve a un stack trace que quieras mapear. Busca un frame **In App**, indicado por una burbuja en el lado derecho del frame. El nombre del archivo aparece como el primer texto en el lado izquierdo del encabezado del frame. En este ejemplo, es `src/main.py`.
+
+<Include name="common-imgs/code-mappings-stacktrace" />
+
+En ciertas plataformas nativas, el stack trace se verá diferente. En casos como estos, puedes encontrar la ruta absoluta al pasar el cursor sobre el nombre del archivo.
+
+![Resaltando dónde en la interfaz encontrar la ruta del archivo para stack traces nativos](./img/code-mappings-stacktrace-native.png)
+
+Si no estás seguro, puedes ver el JSON del evento haciendo clic en el botón `{}` en el encabezado del evento. Busca el texto en `filename` o `abs_path` del frame.
+
+<Include name="common-imgs/code-mappings-event-json" />
+
+A continuación, localiza el archivo que aparece en el stack trace con tu proveedor de código fuente (por ejemplo, GitHub). En este ejemplo, la ruta es `flask/src/main.py` (`empower` se ignora porque es el nombre del repositorio).
+
+<Include name="common-imgs/code-mappings-source-file" />
+
+Compara la ruta del archivo del stack trace con la ruta que se encuentra en tu repositorio de código fuente. En este ejemplo, la carpeta `src/` en el stack trace coincide con la carpeta `flask/src` en el código fuente. Con esa información, establece **Stack Trace Root** en `src/` y **Source Code Root** en `flask/src/`. Esto le indica a Sentry que reemplace todas las rutas de archivo que comiencen con `src/` por `flask/src/` al buscar el código fuente.
+
+Para obtener mejores resultados, recomendamos proporcionar siempre un valor no vacío para **Stack Trace Root** cuando sea posible.
+
+<Include name="common-imgs/code-mappings-configure-modal" />
+
+<div id="code-owners">
+  ### Code Owners
+</div>
+
+<Include name="feature-available-for-plan-business.mdx" />
+
+Importa tus archivos CODEOWNERS de GitHub para asignar automáticamente incidencias de Sentry y dirigir las alertas a las personas y equipos responsables.
+
+Para más información, consulta la documentación completa de [Code Owners](/es/product/issues/ownership-rules/#code-owners).
+
+<div id="github-single-sign-on">
+  ### Inicio de sesión único de GitHub
+</div>
+
+El inicio de sesión único (SSO) te permite gestionar a todos los miembros de tu organización a través de un proveedor externo.
+
+Para más información, consulta la documentación completa sobre [inicio de sesión único](/es/organization/authentication/sso/).
+
+<div id="troubleshooting">
+  ## Solución de problemas
+</div>
+
+Si tienes problemas para agregar un repositorio de GitHub:
+
+* Asegúrate de ser el propietario de tu organización de GitHub.
+* [Desconecta](https://sentry.io/account/settings/identities/) y luego [vuelve a conectar](https://sentry.io/account/settings/social/associate/github/) tu identidad de GitHub.
+
+Si tienes problemas para configurar Sentry con tu integración local (on‑premises), verifica lo siguiente:
+
+* La URL de instalación proporcionada es un nombre de dominio completamente calificado (FQDN) que se puede resolver en Internet.
+* Las direcciones IP que Sentry usa para realizar solicitudes salientes están [permitidas](/es/security-legal-pii/security/ip-ranges/).
+* El acceso de Sentry a tu URL de instalación no está restringido por la ruta.

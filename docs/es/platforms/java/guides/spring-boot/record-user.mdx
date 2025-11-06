@@ -1,0 +1,93 @@
+---
+title: Registrar información de usuario
+sidebar_order: 7
+description: "Aprende cómo registrar o personalizar la captura de información de usuario."
+---
+
+<Alert>
+  La grabación de información de usuario solo está disponible en la integración con Spring MVC.
+</Alert>
+
+Registra información de usuario desde una solicitud HTTP o registrando un bean de Spring para capturarla de forma personalizada.
+
+<div id="recording-user-information-from-http-request">
+  ## Registrar información del usuario desde la solicitud HTTP
+</div>
+
+Para registrar la dirección IP del usuario y `Principal#name` como nombre de usuario, establece el indicador de información personal en `true`.
+
+```properties {tabTitle:application.properties}
+sentry.send-default-pii=true
+```
+
+```yaml {tabTitle:application.yml}
+sentry:
+  send-default-pii: true
+```
+
+
+<div id="recording-custom-user-information">
+  ## Registrar información de usuario personalizada
+</div>
+
+Para registrar información de usuario personalizada, puedes registrar un bean que implemente la interfaz `SentryUserProvider`.
+
+```java {tabTitle:Java (Spring Boot 2)}
+import org.springframework.stereotype.Component;
+import io.sentry.protocol.User;
+import io.sentry.spring.SentryUserProvider;
+
+@Component
+class CustomSentryUserProvider implements SentryUserProvider {
+  public User provideUser() {
+    User user = new User();
+    // ... configurar la información del usuario
+    return user
+  }
+}
+```
+
+```java {tabTitle:Java (Spring Boot 3)}
+import org.springframework.stereotype.Component;
+import io.sentry.protocol.User;
+import io.sentry.spring.jakarta.SentryUserProvider;
+
+@Component
+class CustomSentryUserProvider implements SentryUserProvider {
+  public User provideUser() {
+    User user = new User();
+    // ... configurar la información del usuario
+    return user
+  }
+}
+```
+
+```kotlin {tabTitle:Kotlin (Spring Boot 2)}
+import org.springframework.stereotype.Component
+import io.sentry.protocol.User
+import io.sentry.spring.SentryUserProvider
+
+@Component
+class CustomSentryUserProvider : SentryUserProvider {
+  override fun provideUser(): User? {
+    val user = User()
+    // ... configurar información del usuario
+    return user
+  }
+}
+```
+
+```kotlin {tabTitle:Kotlin (Spring Boot 3)}
+import org.springframework.stereotype.Component
+import io.sentry.protocol.User
+import io.sentry.spring.jakarta.SentryUserProvider
+
+@Component
+class CustomSentryUserProvider : SentryUserProvider {
+  override fun provideUser(): User? {
+    val user = User()
+    // ... configurar información del usuario
+    return user
+  }
+}
+```

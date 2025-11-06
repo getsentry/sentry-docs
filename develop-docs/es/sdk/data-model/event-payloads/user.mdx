@@ -1,0 +1,95 @@
+---
+title: Interfaz de usuario
+sidebar_order: 7
+---
+
+Una interfaz que describe al usuario autenticado de una solicitud.
+
+Debes proporcionar al menos uno de `id`, `email`, `ip_address` o
+`username` para que Sentry pueda indicarte, por ejemplo, cuántos usuarios
+se ven afectados por un problema. Enviar un usuario que no tenga
+ninguno de estos atributos y solo atributos personalizados es válido, pero no es tan útil.
+
+<Alert title="Nota" level="warning">
+  Estas claves distinguen entre mayúsculas y minúsculas; cualquier clave mal escrita se procesará como un atributo personalizado.
+</Alert>
+
+## Atributos
+
+`id`
+
+: El identificador interno específico de la aplicación para el usuario.
+
+`username`
+
+: El nombre de usuario. Suele usarse como una etiqueta más adecuada que el id interno.
+
+`email`
+
+: Una alternativa o un complemento del nombre de usuario. Sentry reconoce las direcciones de correo electrónico y puede mostrar elementos como Gravatars y habilitar funciones de mensajería.
+
+`ip_address`
+
+: La dirección IP del usuario. Si el usuario no está autenticado, Sentry usa la dirección IP como identificador único del usuario. Establécelo en `"{{auto}}"` para permitir que Sentry deduzca la dirección IP a partir de la conexión.
+
+Todas las demás claves se almacenan como información adicional, pero no son procesadas específicamente por
+Sentry.
+
+<Alert title="Nota">
+  Los títulos de estos atributos conocidos se muestran con un formato más legible en la interfaz. Por ejemplo, `ip_address` aparece como `IP Address`. Las demás claves se muestran tal como se enviaron, con el prefijo `data.`.
+</Alert>
+
+`geo`
+
+: Un objeto opcional que describe la [ubicación geográfica](#geographical-location) del usuario final o del dispositivo; si se proporciona `ip_address`, Relay infiere automáticamente este objeto.
+
+<div id="geographical-location">
+  ## Ubicación geográfica
+</div>
+
+Ubicación geográfica aproximada del usuario final o del dispositivo.
+
+<div id="attributes">
+  ### Atributos
+</div>
+
+`city`
+
+: Nombre de la ciudad legible para humanos.
+
+`country_code`
+
+: Código de país de dos letras (ISO 3166-1 alfa-2).
+
+`region`
+
+: Nombre o código de la región legible para humanos.
+
+<div id="automatic-ip-addresses">
+  ## Direcciones IP automáticas
+</div>
+
+Los SDK que se ejecutan en plataformas del lado del cliente, como navegadores y aplicaciones móviles,
+deberían establecer `ip_address = "{{auto}}"` de forma predeterminada. Los SDK del lado del servidor deberían
+rellenar la [Request Interface](/es/sdk/data-model/event-payloads/request/). Sentry
+emplea varios mecanismos de respaldo para completar la dirección IP:
+
+1. Usar `user.ip_address`, si se establece directamente.
+2. Recurrir a `http.env.REMOTE_ADDR`, si está disponible.
+3. La dirección IP de la conexión tal como la ve Sentry, si se usó `{{auto}}`.
+
+<div id="examples">
+  ## Ejemplos
+</div>
+
+```json
+{
+  "user": {
+    "id": "unique_id",
+    "username": "my_user",
+    "email": "foo@example.com",
+    "ip_address": "127.0.0.1",
+    "subscription": "basic"
+  }
+}
+```

@@ -1,0 +1,73 @@
+---
+title: Caché sin conexión
+description: "Aprende a almacenar en caché eventos de Sentry cuando no hay conexión."
+sidebar_order: 400
+notSupported:
+  - javascript.capacitor
+  - javascript.cordova
+  - javascript.electron
+  - javascript.wasm
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.hono
+  - javascript.koa
+  - javascript.nestjs
+---
+
+Si tu aplicación JavaScript está diseñada para seguir funcionando sin conexión,
+perder eventos cuando no hay conexión disponible y dejar de registrar
+eventos ocurridos sin conexión podría significar que te estás perdiendo información importante.
+
+Para habilitar la caché de eventos sin conexión, usa `makeBrowserOfflineTransport` para envolver los transportes existentes y encolar eventos
+usando el almacenamiento IndexedDB del navegador. Cuando tu aplicación vuelva a estar en línea, todos los eventos se enviarán juntos.
+
+<PlatformContent includePath="configuration/offline" />
+
+Estas son algunas propiedades opcionales que puedes agregar a `transportOptions`:
+
+```javascript
+transportOptions:{
+  /**
+   * Nombre de la base de datos de IndexedDB para almacenar eventos
+   * Valor predeterminado: 'sentry-offline'
+   */
+  dbName: string;
+  /**
+   * Nombre del almacén de objetos de IndexedDB para almacenar eventos
+   * Valor predeterminado: 'queue'
+   */
+  storeName: string;
+  /**
+   * Número máximo de eventos que se almacenarán
+   * Valor predeterminado: 30
+   */
+  maxQueueSize: number;
+  /**
+   * Vaciar el almacén poco después del inicio.
+   * Valor predeterminado: false
+   */
+  flushAtStartup: boolean;
+  /**
+   * Se ejecuta antes de almacenar un evento.
+   * Devuelve false para descartar el sobre en lugar de almacenarlo.
+   *
+   * @param envelope El sobre que no se pudo enviar.
+   * @param error El error que se produjo.
+   * @param retryDelay El retraso de reintento actual en milisegundos.
+   */
+  shouldStore: (envelope: Envelope, error: Error, retryDelay: number) => boolean | Promise<boolean>;
+}
+```
+
+
+<div id="browser-support">
+  #### Compatibilidad con navegadores
+</div>
+
+La caché sin conexión no es compatible en IE debido a la falta de funciones de IndexedDB.

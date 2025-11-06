@@ -1,0 +1,72 @@
+---
+title: Migas de pan
+description: >-
+  Obtén más información sobre cómo Sentry crea un rastro de eventos
+  (migas de pan) que ocurrieron antes de un problema.
+og_image: /og-images/platforms-unreal-enriching-events-breadcrumbs.png
+---
+
+Sentry usa *migas de pan* para crear un rastro de eventos que ocurrieron antes de un problema. Estos eventos son muy similares a los registros tradicionales, pero pueden capturar datos estructurados más completos.
+
+Esta página ofrece una introducción al registro manual de migas de pan y a su personalización. Obtén más información sobre lo que se muestra en la página de **Detalles del problema** y cómo filtrar las migas de pan para resolver incidencias rápidamente en [Uso de migas de pan](/es/product/error-monitoring/breadcrumbs).
+
+<Alert title="Aprende sobre el uso del SDK">
+  Los desarrolladores que quieran modificar la interfaz de migas de pan pueden consultar nuestra [documentación para desarrolladores sobre la interfaz de migas de pan](https://develop.sentry.dev/sdk/data-model/event-payloads/breadcrumbs/).
+</Alert>
+
+<div id="manual-breadcrumbs">
+  ## Migas de pan manuales
+</div>
+
+Puedes añadir migas de pan manualmente cuando ocurra algo relevante. Por ejemplo, podrías registrar una miga de pan manual si el usuario se autentica o si se produce otro cambio de estado.
+
+Registrar una miga de pan manualmente:
+
+```cpp
+USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
+
+TMap<FString, FSentryVariant> AdditionalData;
+AdditionalData.Add("SomeKey", "SomeValue");
+
+SentrySubsystem->AddBreadcrumb("Mensaje", "Categoría", "Tipo", AdditionalData, ESentryLevel::Info);
+```
+
+El mismo resultado puede lograrse llamando a la función correspondiente en el Blueprint:
+
+![Add breadcrumb](./img/unreal_breadcrumb.png)
+
+<div id="automatic-breadcrumbs">
+  ## Breadcrumbs automáticos
+</div>
+
+El SDK de Unreal Engine puede capturar automáticamente ciertos tipos de breadcrumbs. Puedes habilitarlos desde la ventana de configuración de Sentry en **Project Settings &gt; Plugins &gt; Sentry**.
+
+![Breadcrumbs automáticos de Sentry](./img/unreal_automatic_breadcrumbs.png)
+
+<div id="customize-breadcrumbs">
+  ## Personalizar breadcrumbs
+</div>
+
+Los SDK permiten personalizar los breadcrumbs mediante el hook <PlatformIdentifier name="before-breadcrumb" /> (la clase manejadora correspondiente se puede establecer en la configuración del plugin).
+
+Este hook recibe un breadcrumb ya creado y, en algunos SDK, una sugerencia opcional. La función puede modificar el breadcrumb o decidir descartarlo por completo devolviendo `nullptr`:
+
+```cpp
+UCLASS()
+class UCustomBeforeBreadcrumbHandler : public USentryBeforeBreadcrumbHandler
+{
+	GENERATED_BODY()
+
+public:
+	virtual USentryBreadcrumb* HandleBeforeBreadcrumb_Implementation(USentryBreadcrumb* Breadcrumb, USentryHint* Hint)
+    {
+        if (Breadcrumb->GetCategory() == "Spammy.Logger")
+        {
+            // Descartar breadcrumb
+            return nullptr;
+        }
+
+        return Breadcrumb;
+    }
+};
+```

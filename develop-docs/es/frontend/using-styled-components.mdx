@@ -1,0 +1,225 @@
+---
+title: Uso de Styled Components
+sidebar_order: 30
+---
+
+Para aplicar estilos a HTML, usamos una biblioteca CSS-in-JS llamada [Emotion](https://emotion.sh/). Esto nos permite definir estilos en el mismo archivo donde se define y se usa el componente. Los estilos están acotados para evitar selectores globales y tener que especificar manualmente nombres de clase como cadenas. También puedes aprovechar el objeto `theme` para hacer referencia a valores y utilidades comunes.
+
+Los mejores estilos son los que no escribes: siempre que sea posible, usa componentes existentes.
+
+<div id="basics">
+  ## Conceptos básicos
+</div>
+
+Para usar Style Components, importa `styled` desde `@emotion/styled` y aplica CSS personalizado. Para mantener un espaciado consistente, también deberías usar `space()`:
+
+```tsx
+import styled from '@emotion/styled';
+import {space} from 'sentry/styles/space';
+
+export default ExampleComponent() {
+  return (
+    <SideBySide>
+      <p>un número: <Numeric>1</Numeric></p>
+      <p>y otro: <Numeric>2</Numeric></p>
+    </SideBySide>
+  )
+}
+
+const Numeric = styled('span')`
+  font-variant-numeric: tabular-nums;
+`;
+
+const SideBySide = styled('div')`
+  display: flex;
+  gap: ${space(2)};
+  flex-wrap: wrap;
+  align-items: flex-start;
+`;
+
+```
+
+
+<div id="theme">
+  ## Tema
+</div>
+
+Toma las constantes (z-index, rellenos, colores) de [props.theme](https://github.com/getsentry/sentry/blob/master/static/app/utils/theme.tsx)
+
+```tsx
+import styled from '@emotion/styled';
+import {space} from 'sentry/styles/space';
+
+const SomeComponent = styled('div')`
+  border-radius: 1.45em;
+  font-weight: bold;
+  z-index: ${p => p.theme.zIndex.modal};
+  padding: ${space(1)} ${space(2)};
+  border: 1px solid ${p => p.theme.borderLight};
+  color: ${p => p.theme.purple};
+  box-shadow: ${p => p.theme.dropShadowHeavy};
+`;
+```
+
+
+<div id="dynamic-properties">
+  ## Propiedades dinámicas
+</div>
+
+<Alert>
+  ¡La mayoría de las veces no hacen falta propiedades dinámicas!
+</Alert>
+
+Puedes pasar props personalizados a tu componente y usarlos para definir estilos. Esto añade overhead en tiempo de ejecución y conviene evitarlo. A continuación tienes un ejemplo de cómo pasar props personalizados y cómo evitarlo.
+
+<div id="avoid-dynamic-props">
+  ### Evita las props dinámicas
+</div>
+
+```tsx
+import styled from '@emotion/styled';
+
+// ❌ Intenta evitar esto
+const Label = styled('label')<{isDisabled: boolean; isError: boolean}>`
+  color: ${p => p.isDisabled
+    ? p.theme.gray200
+    : p.isError
+    ? p.theme.error400
+    : inherit
+  };
+`;
+
+return <Label disabled={false} isError={true}>Se produjo un error</Label>;
+```
+
+Elige una de las estrategias de abajo.
+
+
+<div id="use-data-selectors">
+  ### Usa selectores de datos
+</div>
+
+Los selectores de datos pueden ser una forma sencilla de aplicar estilos según un estado simple o predefinido. Al definir estos atributos, no olvides que los navegadores incluyen selectores integrados como `:disabled`, `:focus`, `:first-child`, entre otros.
+
+```tsx
+import styled from '@emotion/styled';
+
+// ✅ Usa un atributo de datos para pasar el estado y aprovecha los selectores de CSS:
+const Label = styled('label')`
+  color: inherit;
+  &[data-is-error="true"] {
+    color: ${p => p.theme.error400};
+  }
+
+  &:disabled {
+    color: ${p => p.theme.gray200};
+  }
+`;
+
+return <Label disabled={false} data-is-error={true}>Se produjo un error</Label>;
+```
+
+
+<div id="use-style-css-attributes">
+  ### Usa los atributos Style y CSS
+</div>
+
+Se pueden usar los atributos `style` y `css`, pero los valores de `style` no se validan con el linter. Evita configurar demasiados valores a la vez para mantener la legibilidad.
+
+```tsx
+import styled from '@emotion/styled';
+import {css} from '@emotion/react';
+import {space} from 'sentry/styles/space';
+
+// ✅ No tengas miedo de usar estilos en línea para valores únicos
+const Grid = styled('div')`
+  display: grid;
+  grid-template-areas:
+    'logo search'
+    'sidebar main';
+
+  gap: var(--grid-gap, 0px);
+
+  @media (max-width: ${p => p.theme.breakpoints.small}) {
+    grid-template:
+        'logo' auto
+        'search' auto
+        'main' auto / 1fr;
+
+    /* Ocultar barra lateral, que está en una columna automática */
+    grid-auto-columns: 0px;
+  }
+`;
+
+return (
+  <Grid css={css`--grid-gap: ${space(1)};`}>
+    <HomeLink style={{gridArea: 'logo'}} />
+    <SearchForm style={{gridArea: 'search'}} />
+    <Navigation style={{gridArea: 'sidebar'}} />
+    <DataTable style={{gridArea: 'main'}} />
+  </Grid>
+);
+```
+
+
+<div id="imperatively-set-styles">
+  ### Establecer estilos de forma imperativa
+</div>
+
+Para valores que cambian con frecuencia, conviene usar una referencia al componente y establecer los valores de forma imperativa. Esto puede hacerse sin involucrar a React, lo que puede dar lugar a actualizaciones mucho más eficientes.
+
+Ten en cuenta que puedes establecer valores CSS directamente o, si el componente lee una variable CSS, usar `elem.style.setProperty('--foo', 'value')` en su lugar.
+
+```tsx
+import styled from '@emotion/styled';
+import {useRef} from 'react';
+
+const Area = styled('div')`
+  width: 500px;
+  height: 500px;
+  position: relative;
+`;
+const MovingCircle = styled('div')`
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  background: black;
+  border-radius: 50%;
+`;
+
+const ref = useRef<HTMLDivElement>(null);
+
+return (
+  <Area
+    onMouseMove={event => {
+      if (!ref.current) {
+        return;
+      }
+      // ✅ Establece valores de forma imperativa que cambian frecuentemente para evitar re-renderizados de React
+      ref.current.style.top = event.clientY + 'px';
+      ref.current.style.left = event.clientX + 'px';
+    }}
+  >
+    <MovingCircle ref={ref} />
+  </Area>
+);
+```
+
+
+<div id="stylelint-errors">
+  ## Errores de `stylelint`
+</div>
+
+#### &quot;No hay selectores duplicados&quot;
+
+Esto sucede cuando usas un styled component como selector; debemos indicarle a stylelint que lo que estamos interpolando es un selector usando comentarios para ayudar al linter. p. ej.
+
+```tsx
+const ButtonBar = styled("div")`
+  ${/* sc-selector */Button) {
+     border-radius: 0;
+  }
+`;
+```
+
+Consulta https://styled-components.com/docs/tooling#interpolation-tagging para otras etiquetas y más información.

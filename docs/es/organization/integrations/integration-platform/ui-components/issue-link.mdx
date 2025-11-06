@@ -1,0 +1,146 @@
+---
+title: Enlace de incidencia
+sidebar_order: 1
+description: Obtén información sobre el componente de UI para enlazar incidencias.
+og_image: >-
+  /og-images/organization-integrations-integration-platform-ui-components-issue-link.png
+---
+
+Con un componente de interfaz para enlazar incidencias, puedes conectar incidencias de Sentry con una tarea en tu sistema de gestión de proyectos. Esta funcionalidad permite usar cualquier herramienta de gestión de proyectos que utilices o desarrolles.
+
+El componente de enlace de incidencias se muestra con el texto &quot;Link &lt;Service&gt; Issue&quot; en la barra lateral de **Detalles de la incidencia**:
+
+![Barra lateral de enlace de incidencias que muestra el icono de Shortcut.](./img/issue-sidebar-icons.png)
+
+Al hacer clic en el enlace, se abre un modal que permite crear o enlazar la incidencia a una tarea en el servicio externo:
+![Modal de Sentry que crea una Shortcut Story enlazada a una incidencia de Sentry.](./img/shortcut_create_story_with_issue.png)
+
+Cuando se crea o se enlaza una incidencia externa en [sentry.io](https://sentry.io), se muestra un nombre para mostrar que enlaza de vuelta al servicio donde se creó o se enlazó. El nombre para mostrar se compone de dos partes: el `project` y el `identifier`. Un símbolo de almohadilla (#) conecta cada parte. Aquí tienes un ejemplo de cómo se ve en [sentry.io](https://sentry.io):
+
+![Botón de la barra lateral de Sentry que indica que una incidencia está enlazada.](./img/shortcut_story_in_linked_issues_82.png)
+
+<div id="schema">
+  ## Esquema
+</div>
+
+```json {filename:schema.json}
+{
+  "elements": [
+    {
+      "type": "issue-link",
+      "link": {
+        "uri": <String>,
+        "required_fields": <Array<FormField>>,
+        "optional_fields": <Array<FormField>>
+      },
+      "create": {
+        // Mismo esquema que "link"
+      }
+    }
+  ]
+}
+```
+
+## Atributos
+
+* `uri` - (Obligatorio) La URI que se solicitará cuando el usuario envíe el formulario Link/Create Issue. Consulta nuestra documentación de [URI Guidelines](/es/organization/integrations/integration-platform/ui-components/#uri-guidelines) para obtener ayuda con el formato.
+* `required_fields` - (Obligatorio) Lista de componentes [FormField](/es/organization/integrations/integration-platform/ui-components/formfield) que el usuario debe completar.
+* `optional_fields` - (Opcional) Lista de componentes [FormField](/es/organization/integrations/integration-platform/ui-components/formfield) que el usuario puede completar.
+
+<div id="example">
+  ## Ejemplo
+</div>
+
+```json {filename:schema.json}
+{
+  "elements": [
+    {
+      "type": "issue-link",
+      "link": {
+        "uri": "/sentry/issues/link",
+        "required_fields": [
+          {
+            "type": "select",
+            "label": "Problema",
+            "name": "issue_id",
+            "uri": "/sentry/issues"
+          }
+        ]
+      },
+      "create": {
+        "uri": "/sentry/issues/create",
+        "required_fields": [
+          {
+            "type": "text",
+            "label": "Título",
+            "name": "title"
+          }
+        ],
+        "optional_fields": [
+          {
+            "type": "select",
+            "label": "Propietario",
+            "name": "owner",
+            "uri": "/sentry/members",
+            "async": true
+          }
+        ]
+      }
+    }
+  ]
+}
+```
+
+<div id="request-format">
+  ## Formato de la solicitud
+</div>
+
+Cuando un usuario intenta crear o enlazar un issue, enviaremos una solicitud a tu servicio según la `uri` proporcionada. Enviamos una solicitud `POST`, así que toda la información va en el cuerpo.
+
+```json
+{
+  "fields": <Object>,
+  "installationId": <String>,
+  "issueId": <String>,
+  "webUrl": <String>,
+  "project": {"slug": <String>, "id": <String>},
+  "actor": {"type": "user", "name": <String>, "id": <String>},
+}
+```
+
+<div id="attributes">
+  ### Atributos
+</div>
+
+* `fields` - Pares clave–valor de los datos en los campos del formulario
+* `installationId` - El ID de la instalación asociada con la solicitud
+* `issueId` - El ID de la incidencia en Sentry
+* `webUrl` - La URL de la incidencia en Sentry
+* `project`
+  * `slug` - El identificador (slug) del proyecto en Sentry
+  * `id` - El ID del proyecto en Sentry
+* `actor`
+  * `name` - El nombre del usuario en Sentry
+  * `id` - El ID del usuario en Sentry
+
+<div id="response-format">
+  ## Formato de respuesta
+</div>
+
+Al crear o enlazar un issue, el formato de la respuesta *debe* seguir el siguiente esquema:
+
+```json
+{
+  "webUrl": <String>,
+  "project": <String>,
+  "identifier": <String>,
+}
+```
+
+<div id="attributes">
+  ### Atributos
+</div>
+
+* `webUrl` - La URL de la incidencia enlazada en tu sistema de gestión de proyectos
+* `project` - La primera parte de la incidencia mostrada, que probablemente debería estar asociada a un proyecto en tu sistema
+* `identifier` - La segunda parte de la incidencia mostrada, que debería ser única dentro del proyecto

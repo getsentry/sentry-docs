@@ -1,0 +1,73 @@
+---
+title: Integración de Azure DevOps
+sidebar_title: Azure DevOps
+og_image: /og-images/integrations-azuredevops.png
+---
+
+<div id="create-an-azure-application">
+  ## Crear una aplicación de Azure
+</div>
+
+Inicia sesión en tu cuenta de Azure DevOps o crea una nueva, y asegúrate de tener un proyecto configurado.
+
+Asegúrate de que la organización tenga habilitado el acceso de terceros mediante OAuth en la configuración de la organización.
+![3p-oauth](./3p-oauth.png)
+
+Para usar la integración de Azure DevOps, tendrás que crear una aplicación.
+
+Para comenzar, necesitarás acceso al [portal de administración de Microsoft Entra](https://entra.microsoft.com/#home)
+
+![Register App](./register-app.png)
+
+Al configurar la aplicación, usa los siguientes valores:
+
+| Configuración                   | Valor                                                                                              |
+| ------------------------------- | -------------------------------------------------------------------------------------------------- |
+| Tipos de cuenta admitidos       | Cuentas en cualquier directorio organizacional |
+| URI de redirección              | `{YOUR_DOMAIN}/extensions/vsts/setup`                                                              |
+
+<Alert>
+  Toma nota del ID de la aplicación, ya que lo necesitaremos más adelante.
+  ![App ID](./app-id.png)
+</Alert>
+
+A continuación, ve a Manager -&gt; API Permissions para añadir los siguientes permisos:
+
+* Azure DevOps (`vso.code`, `vso.graph`, `vso.work_item`, `vso.service_endpoint`)
+* Microsoft Graph (`User.Read`) (Esto debería añadirse por defecto)
+
+![Permissions](./perms.png)
+
+Ve a la pestaña &quot;Certificates &amp; secrets&quot; y crea un nuevo secreto de cliente (client secret). Asegúrate de copiar el secreto, ya que lo necesitaremos más adelante.
+
+![Client Secret](./client-secret.png)
+
+Añade el ID de la aplicación y el secreto de cliente a `devlocal.py` de esta manera:
+
+```python
+# Azure DevOps #
+SENTRY_OPTIONS["vsts_new.client-id"] = tu-id-de-aplicación
+SENTRY_OPTIONS["vsts_new.client-secret"] = tu-secreto-de-cliente
+```
+
+También puedes añadir el App ID y el Client Secret a `config.yml` así:
+
+```yml
+# Azure DevOps #
+vsts_new.client-id: tu-id-de-aplicación
+vsts_new.client-secret: tu-secreto-de-cliente
+```
+
+También deberás habilitar la feature flag para usar la nueva integración de Azure DevOps.
+Habilita la feature flag `migrate-azure-devops-integration` en tu organización.
+Añade lo siguiente a tu archivo `devlocal.py`:
+
+```python
+SENTRY_FEATURES["organizations:migrate-azure-devops-integration"] = True
+```
+
+<Alert title="Feature Flag">
+  Esta es una medida temporal hasta que completemos la migración a la nueva integración de Azure DevOps y eliminemos las referencias a la anterior.
+</Alert>
+
+Consulta nuestra [documentación para instalar y configurar la integración de Azure DevOps](https://docs.sentry.io/organization/integrations/source-code-mgmt/azure-devops/) para finalizar la instalación y empezar a usarla.

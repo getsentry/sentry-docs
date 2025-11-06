@@ -1,0 +1,749 @@
+---
+title: Registros
+sidebar_order: 3
+---
+
+<Alert title="Nota" level="warning">
+  La función Sentry Logs está en desarrollo activo. La información de este documento puede cambiar.
+</Alert>
+
+Este documento define el formato que utiliza Sentry para incorporar registros, así como la API del SDK y el comportamiento que crean y envían registros a Sentry.
+
+<div id="logs-protocol">
+  ## Protocolo de registros
+</div>
+
+Hay dos formas de enviar registros a Sentry: mediante el sobre `log` y el protocolo de registros de Sentry (recomendado), o mediante el sobre `otel_log` y el protocolo de registros de OpenTelemetry.
+
+Todos los SDK deben enviar registros mediante el sobre `log` y el protocolo de registros de Sentry. El sobre `otel_log` y el protocolo de registros de OpenTelemetry se documentan únicamente para completar la información y servir de referencia a autores de SDK. Consulta el [Apéndice B](#appendix-b-otel_log-envelope-item-payload) para ver la carga útil del elemento del sobre `otel_log`.
+
+<div id="log-envelope-item">
+  ### Elemento de sobre `log`
+</div>
+
+El elemento de sobre `log` es un objeto que contiene una matriz de cargas de registro codificadas en JSON. Esto permite enviar varias cargas de registro en un solo elemento de sobre. Para más detalles sobre el elemento de sobre `log`, consulta la documentación de [Elemento de sobre log](/es/sdk/data-model/envelope-items/#log). Consulta el [Apéndice A](#appendix-a-log-envelope-item-payload) para ver un ejemplo de sobre `log`.
+
+```json
+{
+	"type": "log",
+	"item_count": 5,
+	"content_type": "application/vnd.sentry.items.log+json"
+}
+{
+	"items": [{..log..}, {..log..}, {..log..}, {..log..}, {..log..}]
+}
+```
+
+<div id="log-envelope-item-payload">
+  ### `log` Elemento de carga útil del sobre
+</div>
+
+La carga útil del elemento de sobre `log` es un objeto JSON que representa un registro de Sentry.
+
+```json
+{
+  "timestamp": 1544719860.0,
+  "trace_id": "5b8efff798038103d269b633813fc60c",
+  "span_id": "b0e6f15b45c36b12",
+  "level": "info",
+  "body": "¡John ha iniciado sesión!",
+  "attributes": {
+    "sentry.message.template": {
+      "value": "¡%s ha iniciado sesión!",
+      "type": "string"
+    },
+    "sentry.message.parameter.0": {
+      "value": "John",
+      "type": "string"
+    },
+    "sentry.environment": {
+      "value": "producción"
+      "type": "string"
+    },
+    "sentry.release": {
+      "value": "1.0.0",
+      "type": "string"
+    }
+  }
+}
+```
+
+Consiste en los siguientes campos:
+
+`timestamp`
+
+: **Número, obligatorio**. La marca de tiempo del registro en segundos desde la época Unix.
+
+`trace_id`
+
+: **Cadena, obligatorio**. El id de traza del registro. El valor debe ser 16 bytes aleatorios codificados como una cadena hexadecimal (32 caracteres). El id de traza debe obtenerse del contexto de propagación actual en el SDK.
+
+`span_id`
+
+: **Cadena, opcional**. El id del span que estaba activo cuando se recopiló el registro. El valor debe ser 8 bytes aleatorios codificados como una cadena hexadecimal (16 caracteres). El id de span debe obtenerse del span activo actual en el SDK.
+
+`level`
+
+: **Cadena, obligatorio**. El nivel de severidad del registro. Uno de `trace`, `debug`, `info`, `warn`, `error`, `fatal` (en orden de menor a mayor).
+
+`body`
+
+: **Cadena, obligatorio**. El cuerpo/mensaje del registro.
+
+`attributes`
+
+: **Objeto, opcional**. Un diccionario de pares clave-valor con datos arbitrarios adjuntos al registro. Los atributos también deben declarar el tipo del valor. Se admiten los siguientes tipos: `string`, `boolean`, `integer`, `double`. En el futuro se admitirán arreglos (`string[]`, `boolean[]`, `integer[]`, `double[]`).
+
+Los enteros deben ser enteros con signo de 64 bits, mientras que los double deben ser números de punto flotante de 64 bits. Para enteros sin signo de 64 bits, usa el tipo `string` para evitar problemas de desbordamiento. Asegúrate de convertir siempre los enteros sin signo de 64 bits a cadenas, independientemente de si están dentro o fuera del rango con signo de 64 bits. En el futuro admitiremos el envío de enteros sin signo de 64 bits sin convertirlos a cadenas.
+
+Ejemplo:
+
+```json
+{
+  "attributes": {
+    "db.namespace": {
+      "value": "projects",
+      "type": "string"
+    },
+    "db.response.returned_rows": {
+      "value": 123,
+      "type": "integer"
+    },
+    "db_query_processing_time": {
+      "value": 123.456,
+      "type": "double"
+    },
+    "is_production_db": {
+      "value": false,
+      "type": "boolean"
+    }
+  }
+}
+```
+
+`severity_number`
+
+: **Entero, opcional**. El nivel de gravedad del registro. Consulta [Número de gravedad del registro](#log-severity-number) para más información. Se infiere a partir de `level`, a menos que se establezca explícitamente.
+
+<div id="log-severity-level">
+  ### Nivel de gravedad del registro
+</div>
+
+El nivel de gravedad del registro es una cadena que indica la gravedad del registro. El nivel de gravedad de registro predeterminado de Sentry coincide exactamente con el [campo de texto de gravedad de OpenTelemetry](https://opentelemetry.io/docs/specs/otel/logs/data-model/#field-severitytext) en la especificación de registros de OpenTelemetry.
+
+* `trace`
+* `debug`
+* `info`
+* `warn`
+* `error`
+* `fatal`
+
+<div id="log-severity-number">
+  ### Número de gravedad del registro
+</div>
+
+El número de gravedad del registro es un entero que representa la gravedad del registro. El número de gravedad predeterminado de Sentry se corresponde exactamente con el [campo Severity number de OpenTelemetry](https://opentelemetry.io/docs/specs/otel/logs/data-model/#field-severitynumber) en la especificación de OpenTelemetry Logs.
+
+| Rango de SeverityNumber | Nombre del rango | Significado                                                                                 |
+| ----------------------- | ---------------- | ------------------------------------------------------------------------------------------- |
+| 1-4                     | Trace            | Un evento de depuración de grano fino. Normalmente deshabilitado en configuraciones predeterminadas. |
+| 5-8                     | Debug            | Un evento de depuración.                                                                    |
+| 9-12                    | Info             | Un evento informativo. Indica que ocurrió un evento.                                        |
+| 13-16                   | Warn             | Un evento de advertencia. No es un error, pero probablemente sea más importante que un evento informativo. |
+| 17-20                   | Error            | Un evento de error. Algo salió mal.                                                         |
+| 21-24                   | Fatal            | Un error fatal, como un fallo de la aplicación o del sistema.                               |
+
+La API pública predeterminada del SDK debe establecer el número de gravedad más bajo para un nivel de gravedad dado. Por ejemplo, los registros con nivel de gravedad `warn` recopilados por la API del SDK deben usar el número de gravedad `13`.
+
+<div id="public-api">
+  ## API pública
+</div>
+
+En términos de API, los SDK deben exponer métodos de registro definidos en un módulo o espacio de nombres `logger`. Los SDK también deben incluir opciones de inicialización para configurar el comportamiento de los registros en el SDK.
+
+<div id="initialization-options">
+  ### Opciones de inicialización
+</div>
+
+Los SDK deben exponer las siguientes opciones de configuración:
+
+* `enableLogs`/`enable_logs`: Un indicador booleano para controlar si se generarán y enviarán sobres de logs a Sentry mediante las API de logging del SDK de Sentry. Si este indicador se establece en `false`, el SDK no debe enviar logs a Sentry. De forma predeterminada es `false`.
+
+* `beforeSendLog`/`before_send_log`: Una función que recibe un objeto de log y devuelve un objeto de log. Esta función se ejecuta antes de enviar el log a Sentry. Puede usarse para modificar el objeto de log o para evitar que se envíe a Sentry. Esta función es opcional.
+
+Mientras la funcionalidad de logs de un SDK esté en estado experimental, los SDK deben ubicar estas opciones de configuración en un espacio de nombres experimental para evitar cambios incompatibles.
+
+```js
+Sentry.init({
+  _experiments: { enableLogs: true },
+});
+```
+
+<div id="logger-module">
+  ### Módulo de logging
+</div>
+
+Como mínimo, el SDK debe implementar los métodos `Sentry.logger.X` (donde `X` es el nivel de log). Los niveles de log son `trace`, `debug`, `info`, `warn`, `error` y `fatal`, definidos por el [protocolo siguiente](#log-severity-level).
+
+* `Sentry.logger.trace`
+* `Sentry.logger.debug`
+* `Sentry.logger.info`
+* `Sentry.logger.warn`
+* `Sentry.logger.error`
+* `Sentry.logger.fatal`
+
+Estos métodos aceptan una plantilla de cadena y sus parámetros para que el SDK pueda realizar logging estructurado. Opcionalmente, estos métodos aceptan atributos arbitrarios, pero no todos los lenguajes permiten combinar de forma sencilla una plantilla parametrizada y atributos.
+
+```js
+// Debes usar la función auxiliar `fmt` en JavaScript para el registro estructurado.
+Sentry.logger.info(Sentry.logger.fmt`Agregando elemento ${itemId} para el usuario ${userId}`);
+
+Sentry.logger.warn("El usuario %s realizó la acción %s", [userId, actionName], {
+  extra: "123",
+});
+```
+
+Además de aceptar atributos, estos métodos pueden sobrecargarse para aceptar un nivel de severidad u otros parámetros si el lenguaje o la plataforma lo requieren. El Hub/Scope DEBE ofrecer los mismos métodos que la API estática `Sentry.logger.X`, lo cual es útil para usuarios avanzados que desean usar múltiples Hubs/Scopes. El Cliente DEBERÍA ofrecer solo un método genérico que acepte el objeto de log y el Scope, como `captureLog(log, scope)`.
+
+Más allá de los métodos especificados, los SDK son libres de añadir cualquier helper adicional que consideren necesario. Por ejemplo, podrían optar por añadir decoradores especializados o utilidades para la creación de plantillas de cadenas.
+
+A continuación se muestran algunas implementaciones de SDK de ejemplo para ayudarte a comenzar. Estas no son versiones definitivas de la API y los autores de cada SDK deben asegurarse de que las APIs de logging se adapten lo mejor posible a sus plataformas. Cuando un SDK implemente la API de logging, esta sección deberá actualizarse con la implementación específica de ese SDK.
+
+<div id="javascript">
+  #### JavaScript
+</div>
+
+```jsx
+// JavaScript en el navegador: se deben usar plantillas literales etiquetadas para la interpolación de cadenas
+Sentry.logger.info(Sentry.logger.fmt`Agregando ítem ${itemId} para el usuario ${userId}`);
+
+// En el servidor (Node.js, Bun, Deno) con sintaxis estilo printf
+Sentry.logger.info("Agregando ítem %s para el usuario %s", [itemId, userId], {
+  extra: 123,
+});
+```
+
+<div id="python">
+  #### Python
+</div>
+
+```python
+# Con sintaxis tipo f-string
+Sentry.logger.info('Agregando elemento {item} para el usuario {user}', item=item_id, user=user_id, attributes={ 'extra': 123 });
+```
+
+<div id="php">
+  #### PHP
+</div>
+
+```php
+use function Sentry\logger;
+
+logger()->info('Agregando elemento %s para el usuario %s', [$item_id, $user_id], ['extra' => 123]);
+```
+
+<div id="java">
+  #### Java
+</div>
+
+```java
+import io.sentry.Sentry;
+
+Sentry.logger().info("Adding item %s for user %s", itemId, userId);
+
+// Kotlin
+Sentry.logger().info("Adding item %s for user %s", itemId, userId)
+```
+
+<div id="apple">
+  #### Apple
+</div>
+
+```swift
+// Swift
+SentrySDK.logger
+  .info(message: "Agregando el elemento %s para el usuario %s",
+    params: [itemId, userId],
+    attributes: ["extra": @"123"]
+  )
+```
+
+<div id="threading-and-concurrency-considerations">
+  #### Consideraciones sobre subprocesos y concurrencia
+</div>
+
+Tanto `Sentry.logger.X` como `Sentry.logger.emit` son métodos de tipo fire-and-forget (no devuelven ningún valor). Esto significa que el SDK puede optar por ejecutarlos en un subproceso independiente o encolarlos para procesarlos más tarde. Esto incluye evaluar la plantilla de cadenas y ejecutar cualquier hook interno (como `beforeSendLog`). El SDK debe garantizar que los registros se envíen en el mismo orden en que se reciben.
+
+Es importante señalar que enviar todo de inmediato a un subproceso en segundo plano tiene la desventaja de perder registros que ocurren justo antes de un fallo. Esto se presentará en los SDK para móviles. Por lo tanto, será necesario un mecanismo más robusto si se utiliza un subproceso separado. Este mecanismo variará según la plataforma, y cada SDK deberá determinar el enfoque más adecuado para la suya.
+
+<div id="sdk-behavior">
+  ## Comportamiento del SDK
+</div>
+
+En general, el procesamiento de logs debe seguir este orden:
+
+1. Captura el log mediante [APIs públicas](#logger-module) (p. ej., `Sentry.logger.info`) o mediante [integraciones del SDK](#sdk-integrations).
+2. Verifica si el logging está habilitado según la configuración `enableLogs`/`enable_logs`; si no, omite el resto de los pasos.
+3. Pasa el log al Hub/Scope, que DEBE ofrecer los mismos métodos que la API estática `Sentry.logger.X`. Esto es útil para usuarios avanzados que quieran usar varios Hubs/Scopes.
+4. Pasa el log al Client, mediante un método genérico que acepte el objeto de log y el `scope`, como `captureLog(log, scope)`.
+5. Procesa el log capturado (adjunta atributos según los [atributos predeterminados](#default-attributes)).
+6. Ejecuta `beforeSendLog`/`before_send_log` para filtrar o modificar el log.
+7. Agrega el log al buffer/procesador por lotes como se detalla en [buffering](#buffering).
+8. Al vaciar el buffer, envía el array de logs a Sentry mediante el sobre `log`, aplicando limitación de tasa según la [categoría de datos y limitación de tasa](#data-category-and-rate-limiting).
+
+<Alert title="Nota" level="warning">
+  Un SDK debe implementar [Tracing without Performance](/es/sdk/telemetry/traces/tracing-without-performance) antes de agregar soporte para logs. Esto es necesario para garantizar que los logs estén asociados con trazas y que se envíe a Sentry el contexto de traza correcto.
+</Alert>
+
+<div id="default-attributes">
+  ### Atributos predeterminados
+</div>
+
+De forma predeterminada, el SDK debe adjuntar los siguientes atributos a un registro:
+
+1. `sentry.environment`: El entorno configurado en el SDK, si está definido.
+2. `sentry.release`: La versión (release) configurada en el SDK, si está definida.
+3. `sentry.sdk.name`: El nombre del SDK que envió el registro.
+4. `sentry.sdk.version`: La versión del SDK que envió el registro.
+5. `sentry.replay_id`: El ID de la reproducción que estaba activa cuando se recopiló el registro. No debe establecerse si no había una reproducción activa.
+
+```json
+{
+  "sentry.environment": "production",
+  "sentry.release": "1.0.0",
+  "sentry.sdk.name": "sentry.javascript.node",
+  "sentry.sdk.version": "9.11.0",
+  "sentry.replay_id": "36b75d9fa11f45459412a96c41bdf691"
+}
+```
+
+Si el registro estaba parametrizado, el SDK debería adjuntar lo siguiente:
+
+1. `sentry.message.template`: La cadena de plantilla parametrizada
+2. `sentry.message.parameter.X`: Los parámetros de la cadena de plantilla. X puede ser el número que representa la posición del parámetro en la cadena de plantilla (`sentry.message.parameter.0`, `sentry.message.parameter.1`, etc.) o el nombre del parámetro (`sentry.message.parameter.item_id`, `sentry.message.parameter.user_id`, etc.)
+
+```json
+{
+  "sentry.message.template": "Añadiendo el elemento %s para el usuario %s",
+  "sentry.message.parameter.0": "item_id",
+  "sentry.message.parameter.1": "user_id"
+}
+```
+
+Si el registro no incluye atributos `sentry.message.parameter.X`, el SDK NO DEBE adjuntar el atributo `sentry.message.template`. Esto es importante porque reduce contenido duplicado en el registro y facilita mucho el tratamiento de PII en Sentry, ya que no tenemos que duplicar el procesamiento entre el mensaje del registro y el atributo `sentry.message.template`.
+
+<div id="sdk-integration-attributes">
+  #### Atributos de integración del SDK
+</div>
+
+Si un registro es generado por una integración del SDK, el SDK también debe establecer el atributo `sentry.origin`, según la documentación de [Trace Origin](/es/sdk/telemetry/traces/trace-origin/).
+
+Los registros se pueden generar de tres maneras:
+
+1. El usuario llama directamente a la API de logging de Sentry: los SDK NO DEBEN enviar `sentry.origin`. Como los registros se facturan por tamaño, queremos minimizar su tamaño y **nos desviamos intencionalmente** de la documentación original de [Trace Origin](/es/sdk/telemetry/traces/trace-origin/).
+
+2. Capturados desde una biblioteca de logging: usar el formato `auto.log.<name>`, donde `<name>` es la integración correspondiente. Por ejemplo, la biblioteca .NET Serilog emite:
+
+```json
+{ "sentry.origin": "auto.log.serilog" }
+```
+
+3. Registros generados automáticamente por otros sistemas instrumentados: Usa el formato `auto.<category>.<integration-name>` según se describe en la documentación de [Trace Origin](/es/sdk/telemetry/traces/trace-origin/).
+
+```json
+{ "sentry.origin": "auto.db.prisma" }
+```
+
+<div id="user-attributes">
+  #### Atributos de usuario
+</div>
+
+1. `user.id`: ID de usuario. Se corresponde con `id` en el payload de [User](/es/sdk/data-model/event-payloads/user/).
+2. `user.name`: Nombre de usuario. Se corresponde con `username` en el payload de [User](/es/sdk/data-model/event-payloads/user/).
+3. `user.email`: Dirección de correo electrónico. Se corresponde con `email` en el payload de [User](/es/sdk/data-model/event-payloads/user/).
+
+```json
+{
+  "user.id": "123",
+  "user.name": "john.doe",
+  "user.email": "john.doe@example.com"
+}
+```
+
+<div id="user-agent-parsing">
+  #### Análisis del agente de usuario
+</div>
+
+De forma predeterminada, Relay analiza el agente de usuario adjunto a un sobre de registro entrante para extraer la información de `browser` y `os` de los registros. Estos atributos deberían ser añadidos por Relay, pero los SDK pueden incluirlos si no reenvían un agente de usuario al enviar registros a Sentry.
+
+1. `browser.name`: Nombre visible de la aplicación del navegador. Se corresponde con `name` en la carga útil de [Contexts](/es/sdk/data-model/event-payloads/contexts/#browser-context).
+2. `browser.version`: Cadena de versión del navegador. Se corresponde con `version` en la carga útil de [Contexts](/es/sdk/data-model/event-payloads/contexts/#browser-context).
+
+```json
+{
+  "browser.name": "Chrome",
+  "browser.version": "120.0"
+}
+```
+
+<div id="backend-sdks">
+  #### SDKs de backend
+</div>
+
+Para los SDKs de backend (Node.js, Python, PHP, etc.), los SDKs deben adjuntar lo siguiente:
+
+1. `server.address`: La dirección del servidor que envió el log. Equivale a [`server_name`](sdk/data-model/event-payloads/#optional-attributes), que adjuntamos a errores y transacciones.
+
+```json
+{
+  "server.address": "foo.example.com"
+}
+```
+
+<div id="mobile-desktop-and-native-sdks">
+  #### SDKs para móviles, escritorio y nativos
+</div>
+
+Para SDKs para móviles, escritorio y nativos (Android, Apple, Electron, etc.), los SDK deben adjuntar lo siguiente:
+
+1. `os.name`: El nombre del sistema operativo. Corresponde a `name` en la carga útil de [Contexts](/es/sdk/data-model/event-payloads/contexts/#os-context).
+2. `os.version`: La versión del sistema operativo. Corresponde a `version` en la carga útil de [Contexts](/es/sdk/data-model/event-payloads/contexts/#os-context).
+3. `device.brand`: La marca del dispositivo. Corresponde a `brand` en la carga útil de [Contexts](/es/sdk/data-model/event-payloads/contexts/#device-context).
+4. `device.model`: El modelo del dispositivo. Corresponde a `model` en la carga útil de [Contexts](/es/sdk/data-model/event-payloads/contexts/#device-context).
+5. `device.family`: La familia del dispositivo. Corresponde a `family` en la carga útil de [Contexts](/es/sdk/data-model/event-payloads/contexts/#device-context).
+
+```json
+{
+  "os.name": "iOS",
+  "os.version": "17.0",
+  "device.brand": "Apple",
+  "device.model": "iPhone 15 Pro Max",
+  "device.family": "iPhone"
+}
+```
+
+<div id="future-default-attributes">
+  #### Atributos predeterminados futuros
+</div>
+
+Los SDK deben procurar minimizar la cantidad de atributos predeterminados adjuntos a un log. Los logs están pensados para ser livianos, y queremos mantener el tamaño promedio en bytes de un log lo más pequeño posible, ya que se cobrará a los usuarios por los bytes de los logs enviados.
+
+Buscamos equilibrar la capacidad de depuración con un menor tamaño en bytes de los logs, por lo que los nuevos atributos predeterminados solo deberían añadirse tras recibir comentarios sustanciales de los usuarios y discutirlo internamente con los equipos del SDK y de ingesta. No hay una regla estricta sobre qué atributos exactamente están permitidos; cada nuevo atributo propuesto se evaluará caso por caso.
+
+<div id="data-category-and-rate-limiting">
+  ### Categoría de datos y limitación de tasa
+</div>
+
+Se añadió a Relay una nueva categoría de datos para logs, `log_item`. Tanto el sobre `log` como el sobre `otel_log` están cubiertos por esta categoría de datos. Esto deberá implementarse en el SDK. La limitación de tasa se aplica como de costumbre; no hay una cuota especial ni un comportamiento de limitación específico para los logs. Con esta categoría de datos, los SDK deben registrar los resultados del cliente para medir con qué frecuencia los logs son descartados por el SDK.
+
+<div id="buffering">
+  ### Buffering
+</div>
+
+Los registros deben almacenarse en búfer antes de enviarse. Los SDK deben mantener un búfer de registros en el cliente (de modo que puedas tener registros de múltiples trazas en el búfer) que se vacíe según alguna condición. Recomendamos seguir la [especificación del procesador por lotes](/es/sdk/telemetry/spans/batch-processor/) en la documentación de desarrollo, pero deberías elegir el enfoque que mejor funcione para tu plataforma. Al iniciar el desarrollo del SDK puedes optar por un enfoque sencillo para el búfer, como vaciar los registros si el tamaño del búfer supera los 100 elementos o si han pasado 5 segundos.
+
+Los SDK NO deben ofrecer capacidades de registro a los usuarios si no se ha añadido una implementación de almacenamiento en búfer a su SDK al incorporar las API de registro.
+
+<div id="sdk-integrations">
+  ### Integraciones de SDK
+</div>
+
+Los SDK deberían procurar que las integraciones de consola/registro generen logs según el nivel correspondiente si `enableLogs`/`enable_logs` está establecido en true. Entre los ejemplos se incluyen el objeto `console` de JavaScript y la biblioteca estándar `logging` de Python.
+
+Si los autores del SDK lo consideran necesario, también pueden introducir opciones adicionales más allá de `enableLogs`/`enable_logs` para controlar esta funcionalidad. Por ejemplo, una opción para gestionar los appenders de logs añadidos mediante configuración externa, como con `Log4j` en el SDK de Java.
+
+<div id="behaviour-with-other-sentry-telemetry">
+  ### Comportamiento con otras telemetrías de Sentry
+</div>
+
+<div id="tracing">
+  #### Trazas
+</div>
+
+Los logs deberían asociarse a las trazas siempre que sea posible. Si se registra un log durante un span activo, el SDK debe establecer la propiedad `span_id` del log con el ID del span que estaba activo cuando se recopiló el log.
+
+<div id="replays">
+  #### Replays
+</div>
+
+Los registros deben asociarse con replays siempre que sea posible. Si se registra un log durante un replay activo, el SDK debe establecer el atributo `sentry.replay_id` con el ID del replay que estaba activo cuando se recopiló el log.
+
+<div id="other">
+  ### Otros
+</div>
+
+Si `debug` se establece en `true` durante la inicialización del SDK, las llamadas a la API del logger de Sentry también deberían mostrarse en la consola con el nivel de registro correspondiente. Esto ayudará a depurar la configuración de los registros.
+
+<div id="appendix-a-example-log-envelope">
+  ## Apéndice A: Ejemplo de sobre de `log`
+</div>
+
+```json
+{ "sdk": { "name": "sentry.javascript.browser", "version": "9.15.0" } }
+{
+  "type": "log",
+  "item_count": 6,
+  "content_type": "application/vnd.sentry.items.log+json"
+}
+{
+  "items": [
+    {
+      "timestamp": 1746456149.0191,
+      "level": "trace",
+      "body": "Rendimiento de la animación del modal: tiempo de apertura=120 ms, tiempo de cierre=85 ms, fps=60",
+      "trace_id": "624f66e93a04469f9992c7e9f1485056",
+      "severity_number": 1,
+      "attributes": {
+        "modalId": { "value": "product_details", "type": "string" },
+        "animationType": { "value": "slide-up", "type": "string" },
+        "devicePixelRatio": { "value": 2, "type": "integer" },
+        "browser": { "value": "Chrome", "type": "string" },
+        "memoryUsage": { "value": "45MB", "type": "string" },
+        "sentry.sdk.name": {
+          "value": "sentry.javascript.browser",
+          "type": "string"
+        },
+        "sentry.sdk.version": { "value": "9.15.0", "type": "string" },
+        "sentry.message.template": {
+          "value": "Rendimiento de la animación del modal: tiempo de apertura=%s ms, tiempo de cierre=%s ms, fps=%s",
+          "type": "string"
+        },
+        "sentry.message.parameter.0": { "value": 120, "type": "integer" },
+        "sentry.message.parameter.1": { "value": 85, "type": "integer" },
+        "sentry.message.parameter.2": { "value": 60, "type": "integer" }
+      }
+    },
+    {
+      "timestamp": 1746456149.0191998,
+      "level": "debug",
+      "body": "El componente ProductCard se representó 3 veces",
+      "trace_id": "624f66e93a04469f9992c7e9f1485056",
+      "severity_number": 5,
+      "attributes": {
+        "props": { "value": "{\"productId\":\"prod_123\"}", "type": "string" },
+        "renderTime": { "value": 45, "type": "integer" },
+        "sentry.sdk.name": {
+          "value": "sentry.javascript.browser",
+          "type": "string"
+        },
+        "sentry.sdk.version": { "value": "9.15.0", "type": "string" },
+        "sentry.message.template": {
+          "value": "El componente %s se representó %s veces",
+          "type": "string"
+        },
+        "sentry.message.parameter.0": {
+          "value": "ProductCard",
+          "type": "string"
+        },
+        "sentry.message.parameter.1": { "value": 3, "type": "integer" }
+      }
+    },
+    {
+      "timestamp": 1746456149.0191998,
+      "level": "info",
+      "body": "El formulario checkout_form se envió correctamente con 8 campos",
+      "trace_id": "624f66e93a04469f9992c7e9f1485056",
+      "severity_number": 9,
+      "attributes": {
+        "step": { "value": "payment_details", "type": "string" },
+        "timeSpent": { "value": 120, "type": "integer" },
+        "sentry.sdk.name": {
+          "value": "sentry.javascript.browser",
+          "type": "string"
+        },
+        "sentry.sdk.version": { "value": "9.15.0", "type": "string" },
+        "sentry.message.template": {
+          "value": "El formulario %s se envió correctamente con %s campos",
+          "type": "string"
+        },
+        "sentry.message.parameter.0": {
+          "value": "checkout_form",
+          "type": "string"
+        },
+        "sentry.message.parameter.1": { "value": 8, "type": "integer" }
+      }
+    },
+    {
+      "timestamp": 1746456149.0192997,
+      "level": "warn",
+      "body": "El tiempo de respuesta del endpoint de la API /api/products, de 2500 ms, supera el umbral de 1000 ms",
+      "trace_id": "624f66e93a04469f9992c7e9f1485056",
+      "severity_number": 13,
+      "attributes": {
+        "userAgent": { "value": "Mozilla/5.0...", "type": "string" },
+        "connectionType": { "value": "4g", "type": "string" },
+        "sentry.sdk.name": {
+          "value": "sentry.javascript.browser",
+          "type": "string"
+        },
+        "sentry.sdk.version": { "value": "9.15.0", "type": "string" },
+        "sentry.message.template": {
+          "value": "El tiempo de respuesta del endpoint de la API %s, de %s ms, supera el umbral de %s ms",
+          "type": "string"
+        },
+        "sentry.message.parameter.0": {
+          "value": "/api/products",
+          "type": "string"
+        },
+        "sentry.message.parameter.1": { "value": 2500, "type": "integer" },
+        "sentry.message.parameter.2": { "value": 1000, "type": "integer" }
+      }
+    },
+    {
+      "timestamp": 1746456149.0192997,
+      "level": "error",
+      "body": "No se pudieron cargar las imágenes de los productos prod_123, prod_456",
+      "trace_id": "624f66e93a04469f9992c7e9f1485056",
+      "severity_number": 17,
+      "attributes": {
+        "error": { "value": "NetworkError", "type": "string" },
+        "statusCode": { "value": 404, "type": "integer" },
+        "retryAttempts": { "value": 2, "type": "integer" },
+        "browser": { "value": "Chrome", "type": "string" },
+        "version": { "value": "120.0", "type": "string" },
+        "sentry.sdk.name": {
+          "value": "sentry.javascript.browser",
+          "type": "string"
+        },
+        "sentry.sdk.version": { "value": "9.15.0", "type": "string" },
+        "sentry.message.template": {
+          "value": "No se pudieron cargar las imágenes de los productos %s",
+          "type": "string"
+        },
+        "sentry.message.parameter.0": {
+          "value": "prod_123, prod_456",
+          "type": "string"
+        }
+      }
+    },
+    {
+      "timestamp": 1746456149.0192997,
+      "level": "fatal",
+      "body": "Se detectó corrupción del estado en el componente ShoppingCart durante la acción UPDATE_CART",
+      "trace_id": "624f66e93a04469f9992c7e9f1485056",
+      "severity_number": 21,
+      "attributes": {
+        "error": { "value": "ReduxStateError", "type": "string" },
+        "previousState": { "value": "valid", "type": "string" },
+        "currentState": { "value": "invalid", "type": "string" },
+        "sentry.sdk.name": {
+          "value": "sentry.javascript.browser",
+          "type": "string"
+        },
+        "sentry.sdk.version": { "value": "9.15.0", "type": "string" },
+        "sentry.message.template": {
+          "value": "Se detectó corrupción del estado en el componente %s durante la acción %s"
+          "type": "string"
+        },
+        "sentry.message.parameter.0": {
+          "value": "ShoppingCart",
+          "type": "string"
+        },
+        "sentry.message.parameter.1": {
+          "value": "UPDATE_CART",
+          "type": "string"
+        }
+      }
+    }
+  ]
+}
+```
+
+<div id="appendix-b-otel_log-envelope-item-payload">
+  ## Apéndice B: payload del elemento de sobre `otel_log`
+</div>
+
+<Expandable title="Haz clic para expandir o contraer los detalles del payload del elemento de sobre `otel_log`.">
+  El payload del elemento de sobre `otel_log` es un objeto JSON que representa un log de OpenTelemetry. Se pueden enviar múltiples elementos de sobre `otel_log` en un único sobre. Esta es una implementación del [modelo de datos de logs de OpenTelemetry](https://opentelemetry.io/docs/specs/otel/logs/data-model/).
+
+  ```json
+  {
+    "severity_text": "info",
+    "body": {
+      "string_value": "User John has logged in!"
+    },
+    "attributes": [
+      {
+        "key": "sentry.message.template",
+        "value": { "string_value": "User %s has logged in!" }
+      },
+      {
+        "key": "sentry.message.parameters.0",
+        "value": { "string_value": "John" }
+      }
+    ],
+    "time_unix_nano": "1741191250694000000",
+    "trace_id": "edec519707974fc8bfccb5a017e17394",
+    "severity_number": 9
+  }
+  ```
+
+  Consta de los siguientes campos:
+
+  `severity_text`
+
+  : **String, obligatorio**. El nivel de gravedad del log. Uno de `trace`, `debug`, `info`, `warn`, `error`, `fatal` (de menor a mayor).
+
+  `severity_number`
+
+  : **Integer, opcional**. El número de gravedad del log. Consulta [Log Severity Number](#log-severity-number) para más información.
+
+  `trace_id`
+
+  : **Integer, opcional**. [ALTAMENTE RECOMENDADO] El ID de traza del log. Los SDK deberían intentar establecerlo si es posible. Se utiliza para vincular logs con trazas y errores en Sentry.
+
+  `body`
+
+  : **Object, obligatorio**. El cuerpo/mensaje del log.
+
+  Ejemplo:
+
+  ```json
+  {
+    "string_value": "Added item to shopping cart"
+  }
+  ```
+
+  `attributes`
+
+  : **Array&lt;Object&gt;, opcional**. Un diccionario de pares clave-valor con datos arbitrarios adjuntos al log. Los atributos también deben declarar el tipo del valor. Se admiten los siguientes tipos: `string`, `number`, `boolean`, `integer`, `double`.
+
+  Nota: `intValue` es una cadena porque JSON solo reconoce los números como valores de punto flotante.
+
+  Ejemplo:
+
+  ```json
+  {
+    "attributes": [
+      {
+        "key": "string_item",
+        "value": {
+          "stringValue": "value"
+        }
+      },
+      {
+        "key": "integer_item",
+        "value": {
+          "intValue": "123"
+        }
+      },
+      {
+        "key": "boolean_value",
+        "value": {
+          "boolValue": false
+        }
+      },
+      {
+        "key": "double_item",
+        "value": {
+          "doubleValue": "value"
+        }
+      }
+    ]
+  }
+  ```
+
+  `time_unix_nano`
+
+  : **String, opcional**. La marca de tiempo en que se creó el log en nanosegundos Unix. Si no se establece, el SDK debería configurarla con la hora actual.
+</Expandable>

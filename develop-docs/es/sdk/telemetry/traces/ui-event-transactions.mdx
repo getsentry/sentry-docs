@@ -1,0 +1,179 @@
+---
+title: Transacciones de eventos de UI
+---
+
+Recomendamos implementar esta funcionalidad para SDK móviles y de escritorio.
+
+Las transacciones de eventos de UI se habilitan configurando la opción del SDK `enableUserInteractionTracing`,
+que recomendamos activar de forma predeterminada. Recuerda que esta función generará muchas
+transacciones, lo que puede afectar significativamente al consumo de la cuota. Por lo tanto, podría ser más seguro
+desactivar esta función de forma predeterminada al incorporarla y activarla por defecto en una próxima
+versión principal del SDK.
+
+Las transacciones de eventos de UI buscan capturar transacciones basadas en interacciones del usuario, como clics,
+eventos de desplazamiento, pellizcos, etc. Los eventos de UI a los que el SDK puede enlazarse pueden variar según la
+plataforma. Las transacciones de eventos de UI son una ampliación de las transacciones generadas automáticamente por
+el SDK, a las que en este documento se hace referencia como transacciones autogeneradas.
+
+Crear transacciones para un único evento de UI sin spans sería inútil. En su lugar, el
+SDK debe usar un evento de UI como punto de entrada a una transacción potencialmente significativa. Debe
+esperar para ver si puede añadir spans autogenerados a la transacción. Si puede, debe conservar
+y enviar la transacción. Si no, el SDK debe descartar la transacción vacía. Se necesita una combinación de
+dos conceptos para implementar la lógica de esperar y ver: __transacciones inactivas__ y
+__esperar a los hijos__. Consulta la especificación a continuación para ver cómo estos dos conceptos funcionan
+juntos y cubren múltiples casos límite. La siguiente descripción está drásticamente simplificada:
+
+* __Transacciones inactivas__: El SDK programa un tiempo de inactividad para la transacción al iniciarla.
+Cuando la transacción o cualquiera de sus spans inicia un nuevo span, se restablece el temporizador. El SDK finaliza
+la transacción cuando se cumple el tiempo de espera.
+* __Esperar a los hijos__: Una transacción espera a que todos sus spans hijo finalicen antes de finalizar ella misma.
+
+Antes de entrar en la especificación con todos los casos límite, veamos dos ejemplos sencillos:
+
+1. El usuario hace clic en un botón que desencadena algunas solicitudes al backend y almacena datos en la
+base de datos local. En ese caso, el SDK puede crear una transacción significativa.
+2. El usuario hace clic en un botón que solo valida algunos datos de un formulario y no desencadena nada que el
+SDK pueda instrumentar automáticamente. El SDK solo podría crear una transacción sin spans, lo cual sería
+inútil.
+
+<div id="specification">
+  # Especificación
+</div>
+
+Los usuarios pueden cambiar `idleTimeout` mediante las opciones de configuración del SDK. El valor predeterminado es de 3,0 segundos.
+
+La especificación está escrita con la [sintaxis de Gherkin](https://cucumber.io/docs/gherkin/reference/).
+
+```Gherkin
+Scenario: Iniciar transacciones de eventos de UI
+    Given un evento de UI instrumentable
+    Then el SDK inicia una transacción de evento de UI
+    And programa finalizar la UIEventTransaction con
+     el tiempo de espera por inactividad de las opciones
+
+Scenario: Esperar a los hijos al iniciar un span
+    Given una transacción de evento de UI
+    When el SDK inicia un span hijo
+    Then el SDK cancela el tiempo de espera por inactividad
+    And espera a que el hijo termine
+
+Scenario: Programar el tiempo de espera por inactividad cuando termina el último span
+    Given una transacción de evento de UI
+    And la transacción tiene uno o varios spans hijo en ejecución
+    And la transacción está esperando que sus hijos terminen
+    When el SDK termina el último span hijo
+    Then el SDK programa el tiempo de espera por inactividad
+
+Scenario: Descartar transacciones de eventos de UI sin spans hijo
+    Given una transacción de evento de UI
+    And la transacción no tiene spans hijo
+    When el tiempo de espera por inactividad expira
+    Then el SDK descarta la transacción
+
+Scenario: Establecer la hora del último span hijo finalizado
+    Given una transacción de evento de UI
+    And la transacción tiene un span hijo finalizado
+    And la transacción tiene un span hijo en ejecución
+    When el span hijo en ejecución finaliza
+    Then el SDK programa el tiempo de espera por inactividad
+    And el SDK finaliza la transacción después del tiempo de espera por inactividad
+    And ajusta la hora de fin de la transacción a la del último
+        span hijo finalizado
+
+Scenario: No sobrescribir el estado existente de las transacciones de eventos de UI
+    Given una transacción de evento de UI
+    And la transacción de evento de UI tiene un estado
+    When el SDK finaliza la transacción de evento de UI
+    Then mantiene el estado
+    And no lo sobrescribe
+
+# Si tu SDK vincula transacciones autogeneradas al scope, consulta la vinculación
+# al scope
+Scenario: Evento en el mismo elemento de UI con spans hijo
+    Given una transacción de evento de UI en curso
+    When el usuario dispara el mismo elemento de UI con un nuevo evento
+    Or el usuario dispara un elemento de UI diferente
+    Then el SDK finaliza la transacción en curso
+    And establece el estado en OK
+    And espera a que los hijos terminen
+    And cancela el tiempo de espera por inactividad
+    And inicia una nueva transacción
+
+Scenario: Evento en el mismo elemento de UI sin spans hijo
+    Given una transacción de evento de UI en curso
+    When el usuario dispara el mismo elemento de UI con un nuevo evento
+    Or el usuario dispara un elemento de UI diferente
+    Then el SDK descarta la transacción
+    And inicia una nueva transacción
+```
+
+
+<div id="binding-to-scope">
+  ## Vinculación al scope
+</div>
+
+En plataformas que interactúan principalmente con la API estática, como en dispositivos móviles, es común vincular las transacciones autogeneradas al scope para que los usuarios puedan acceder a ellas mediante la API estática. Recomendamos vincular las transacciones de eventos de UI al scope en estas plataformas. Se aplican las siguientes reglas adicionales, ya que las transacciones de eventos de UI podrían interferir con otras transacciones autogeneradas.
+
+El SDK agrega spans autogenerados a la transacción vinculada al scope. Las transacciones de eventos de UI requieren que esos spans autogenerados no estén vacíos. Por lo tanto, el SDK no debería iniciar una transacción de evento de UI si ya hay en curso una transacción de carga/navegación de pantalla o una transacción vinculada al scope por el usuario.
+
+```Gherkin
+Escenario: Mismo elemento de UI con un evento diferente
+    Dado que hay una transacción de evento de UI en curso
+    Cuando el usuario interactúa con el mismo elemento de UI con un evento diferente
+    O el usuario interactúa con un elemento de UI diferente
+    Entonces el SDK finaliza la transacción en curso
+    Y establece el estado en OK
+    Y espera a que terminen los elementos secundarios
+    Y cancela el tiempo de espera por inactividad
+    Y elimina la transacción en curso del scope
+    Y inicia una nueva transacción
+    Y coloca la nueva transacción en el scope
+
+Escenario: Evento de UI activado pero transacción finalizada
+    Dada una transacción autogenerada a partir de cualquier evento de UI
+    Y la transacción ya ha finalizado
+    Cuando el usuario activa el mismo evento de UI
+    Entonces el SDK inicia una nueva transacción de evento de UI
+
+Escenario: Transacción creada manualmente vinculada al scope
+    Dada una transacción creada manualmente en curso por el usuario y vinculada al
+        scope
+    Cuando el usuario activa un evento de UI
+    Entonces el SDK no inicia una transacción de evento de UI
+```
+
+
+<div id="screen-loadnavigation-transactions">
+  ### Transacciones de carga/navegación de pantalla
+</div>
+
+Esta sección trata específicamente sobre las transacciones autogeneradas para la carga de pantallas. Si tu SDK cuenta con
+otros tipos de transacciones autogeneradas, actualiza aquí la especificación.
+
+```Gherkin
+Escenario: Transacción de evento de UI en curso
+    Dado una transacción de evento de UI en curso
+    Cuando el SDK crea una nueva transacción de carga de pantalla
+    Entonces el SDK finaliza la transacción de evento de UI en curso
+    Y la elimina del scope
+    Y establece el estado en cancelado
+    Y espera a que sus elementos secundarios finalicen
+
+Escenario: Transacción de carga/navegación de pantalla en curso
+    Dado una transacción de carga/navegación de pantalla en curso
+    Cuando el usuario dispara un evento de UI
+    Entonces el SDK no inicia una transacción de evento de UI
+```
+
+
+<div id="transaction-name">
+  ## Nombre de la transacción
+</div>
+
+El usuario debería poder identificar a qué elemento de la interfaz de usuario pertenece la transacción de evento de la UI y en qué pantalla,
+con solo mirar el nombre de la transacción. Elige lo que mejor funcione para tu plataforma específica. Ten
+cuidado de no usar ningún dato personal (PII) en el nombre de la transacción. Una recomendación es
+`nombre de pantalla + identificador de vista`. En Android, esto se correspondería con
+`LoginActivity.login_button`, y en Cocoa, con `YourApp.LoginViewController.loginButton`. Si el elemento de la UI
+no tiene un identificador de vista, es aceptable que el SDK no inicie una transacción de evento de la UI y registre
+una advertencia para informar al usuario. El SDK de Cocoa usa el método que invoca el elemento de la UI como identificador de vista.

@@ -1,0 +1,61 @@
+---
+title: HTTP consecutivo
+sidebar_order: 30
+description: Obtén más información sobre los problemas de HTTP consecutivo y cómo diagnosticarlos y solucionarlos.
+og_image: >-
+  /og-images/product-issues-issue-details-performance-issues-consecutive-http.png
+---
+
+Los problemas de HTTP consecutivo se generan cuando se pueden ahorrar al menos 2000 ms al paralelizar un mínimo de 3 llamadas HTTP consecutivas que, de otro modo, se ejecutarían de forma secuencial.
+
+<div id="detection-criteria">
+  ## Criterios de detección
+</div>
+
+<Alert>
+
+Este problema actualmente solo está disponible para los SDK de backend y móviles.
+
+</Alert>
+
+El detector de este problema de rendimiento busca un conjunto de spans HTTP secuenciales y no superpuestos. Ignora intencionalmente los spans que no son HTTP porque el navegador suele realizar otras operaciones asíncronas, como cargar recursos entre spans HTTP.
+
+Una vez encontrada esta secuencia, lo siguiente debe cumplirse para cada span HTTP:
+
+- El método HTTP debe ser GET, POST, DELETE, PUT o PATCH
+- La URL HTTP no debe contener `\_next/static/`, `\_next/data/` o `googleapis.com`
+
+Una vez encontrados estos spans, también debe cumplirse lo siguiente:
+
+- El tiempo mínimo ahorrado por paralelización debe superar los `2000 ms`
+- La duración de cada span HTTP debe superar un umbral de `500 ms`.
+- El tiempo entre cada span HTTP no debe superar un umbral de `500 ms`.
+- El número de spans HTTP consecutivos debe superar un umbral de `3`.
+
+Si Sentry no detecta un problema de HTTP consecutivos donde esperabas uno, probablemente sea porque la transacción no cumplió alguno de los criterios anteriores.
+
+Puedes configurar los umbrales del detector para problemas de HTTP consecutivos en **Project Settings > Performance**:
+
+![Consecutive HTTP detector threshold settings](./img/consecutive-http-threshold-settings.png)
+
+<div id="span-evidence">
+  ## Evidencia de spans
+</div>
+
+Puedes encontrar información adicional sobre tu problema de HTTP consecutivos revisando dos aspectos principales en la sección "Evidencia de spans":
+
+- **Nombre de la transacción**
+- **Spans HTTP secuenciales**
+
+![Evidencia de spans de HTTP consecutivos](./img/span-evidence.png)
+
+Puedes ver la evidencia de spans yendo a la página **Issues** en Sentry, seleccionando tu proyecto, seleccionando el error de Consecutive HTTP Queries que quieres examinar y luego desplazándote hasta la sección "Evidencia de spans" en la pestaña "Details".
+
+<div id="fixing-consecutive-http-issues">
+  ## Solución de problemas de HTTP consecutivos
+</div>
+
+Las causas de los problemas de HTTP consecutivos varían, pero aquí tienes algunas sugerencias para ayudarte a resolverlos:
+
+- Si tus spans de HTTP son independientes, considera paralelizarlos para que no sean secuenciales.
+- Si tienes control sobre el backend, considera optimizar tus endpoints para este caso de uso específico. Puedes analizar las transacciones correspondientes en el backend para identificar posibles mejoras.

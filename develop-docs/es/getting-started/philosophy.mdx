@@ -1,0 +1,102 @@
+---
+title: Filosofía de desarrollo
+description: Este documento establece pautas sobre cómo abordamos el desarrollo de software en Sentry.
+sidebar_title: Filosofía
+sidebar_order: 1
+---
+
+Estas pautas son el resultado de más de 10 años de experiencia: lo que nos funcionó, lo que no y cómo evolucionó nuestra comprensión. A medida que nuevos desarrolladores se familiaricen con la base de código, contar con este contexto será valioso para entender cómo abordar las cosas.
+
+Esta guía solo se aplica parcialmente a los SDK, donde rigen reglas ligeramente distintas. Para eso, consulta la [Filosofía de desarrollo de SDK](/es/sdk/philosophy/).
+
+<div id="beware-of-fancy-code">
+  ## Cuidado con el código rebuscado
+</div>
+
+Todos somos ingenieros y nos enorgullecemos de lo que creamos. Pero no somos artistas cuyo acto de creación satisface al observador. Nuestro trabajo existe para resolver problemas de los clientes. El código más pulcro no nos gana ningún premio. Eso significa que, mientras trabajamos para resolver problemas, nuestra forma de pensar debe enfocarse en mantenernos ágiles a la vez que entregamos un producto estable y de alta calidad.
+
+Puede ser difícil elegir entre una buena abstracción y una solución “a base de cinta”, y quizá necesites ayuda con esa decisión. Incluso los mejores desarrolladores a veces no toman la decisión correcta en ese momento, así que siempre deberías considerar pedir una segunda opinión a alguien con experiencia, incluso si tú mismo tienes un nivel de ingeniería senior. A veces esa segunda opinión, imparcial, es todo lo que se necesita para tomar la mejor decisión.
+
+<div id="correctness-can-be-a-trap">
+  ## La corrección puede ser una trampa
+</div>
+
+Siempre queremos apuntar a soluciones correctas, pero a veces esa corrección se convierte en una trampa. El principio de robustez (“sé conservador con lo que envías; sé liberal con lo que aceptas”) es un buen modelo mental para la línea de base que nuestras prácticas de ingeniería intentan replicar, incluso para código no relacionado con protocolos. Nosotros, como desarrolladores, somos una parte integral de la máquina que creamos, ya que somos quienes implementamos los cambios. Modelamos el entorno operativo y de ingeniería de los demás, y ese es un proceso inherentemente desordenado. Ser “demasiado correctos” en algo puede cargarnos hasta el punto de inhibir el cambio futuro o disminuir nuestra satisfacción como ingenieros al desplegar cambios.
+
+Muchas herramientas que son realmente útiles pueden volverse una carga cuando se aplican mal. Un buen ejemplo es el tipado en Python. A todos nos encantan los sistemas de tipos; en particular, los ingenieros de Sentry que están acostumbrados a Rust y TypeScript probablemente caerán rápidamente en la “trampa” de esperar la misma experiencia en Python. Python no es un lenguaje fuertemente tipado y, a veces, el deseo de lograr un resultado similar tiene consecuencias desastrosas para la productividad a cambio de una corrección percibida. Además, un tipado que no aporta valor puede tener el efecto contrario.
+
+El equilibrio es delicado y cambia con el tiempo. A veces las herramientas se ponen al día y hacen que ideales antes difíciles de alcanzar sean más accesibles; otras veces las herramientas se degradan y lo que antes era viable deja de ser la opción correcta. Existe un escenario en el que el tipado en la base de código de Sentry salga mejor, pero hasta entonces no te sientas presionado a añadir tipos a las interfaces como parte de tus cambios.
+
+<div id="embrace-the-duct-tape">
+  ## Abraza la cinta americana
+</div>
+
+La cinta americana es una gran herramienta para probar cosas nuevas, y no deberíamos tener miedo de usarla. A veces, una cinta bien aplicada puede durar más que la propia funcionalidad; otras veces, es una gran solución para ayudarnos a explorar qué es lo que realmente queremos construir.
+
+<div id="foundation-building">
+  ## Creación de cimientos
+</div>
+
+No puedes construir todo un negocio con cinta adhesiva. La forma de escalar esa idea es con una base sólida. No nos da miedo asumir proyectos de ingeniería de varios años si eso nos ayuda a fortalecer nuestra base tecnológica. Toma como buen ejemplo nuestra canalización de simbolización: no empiezas construyendo algo como un servicio de simbolización a medida. La primera versión del soporte nativo de Sentry hacía fork a `llvm-symbolizer` y se comunicaba por stdin/stdout.
+
+Hoy ya no trabajamos así, pero existe un mundo alternativo en el que habríamos descubierto que invertir más que eso no tenía sentido. Ahora, sin embargo, estamos comprometidos y hemos construido una base sólida sobre symbolicator que nos permite innovar rápidamente y añadir cosas nuevas que no habríamos podido construir sobre `llvm-symbolizer`, como compatibilidad con il2cpp o un procesamiento de sourcemaps de JavaScript de última generación.
+
+<div id="build-for-inclusion">
+  ## Diseña para la inclusión
+</div>
+
+El código excesivamente ingenioso casi nunca es apropiado. La base de código de Sentry es antigua; con el tiempo se ha perdido mucho contexto y no todas las personas que han contribuido siguen en la empresa. Hay mucho código que hemos creado a lo largo de los años del que nos sentimos muy orgullosos. Pero con el paso del tiempo, lo que quedaba de ese sentimiento de logro y orgullo a menudo se transformó en confusión y en un obstáculo para el refactorizado. Intenta escribir código pensando en una versión de ti que regresa después de meses en otro proyecto, o en una versión de ti, estresada, que bajo la presión de un incidente crítico intenta descifrar qué se suponía que debía hacer algo.
+
+<div id="embrace-the-shared-turf">
+  ## Adopta el terreno compartido
+</div>
+
+Hay equipos que son dueños de su base de código, y eso es más que aceptable. Tenemos algunos servicios críticos y no deberían aplicarse cambios sin la aprobación de esos equipos. Sin embargo, ningún equipo tiene autoridad para inventar procesos que bloqueen contribuciones. En Sentry, todos tienen permiso explícito para enviar un pull request a cualquier otro repositorio, y se espera que el entorno de desarrollo que encuentren los desarrolladores sea similar.
+
+<div id="make-yourself-uncomfortable">
+  ## Sal de tu zona de confort
+</div>
+
+El código está a tu alcance, aunque no formes parte del equipo. Si quieres que `sentry-cli` haga algo distinto, abre un PR. Incluso si no conoces el lenguaje o no perteneces al proyecto. Aunque tenemos barreras de revisión de código, no ponemos barreras a las contribuciones. Pide orientación, pero no pidas permiso para contribuir.
+
+<div id="python-rust-and-typescript">
+  ## Python, Rust y TypeScript
+</div>
+
+Estos son nuestros lenguajes. Encontrarás algunos otros en nuestro código. Si empiezas desde cero, quizá no serían los que elegirías. Pero son los lenguajes que tenemos y con los que contamos con experiencia. También son los lenguajes para los que tenemos infraestructura, y sabemos cuándo usarlos y, lo que es más importante, cuándo no usarlos. En el futuro puede que haya más; quién sabe.
+
+Estos lenguajes se eligieron cuando la empresa estaba en un momento determinado, con un tamaño concreto y ciertos tipos de problemas. No son lenguajes perfectos, ni mucho menos, pero nos funcionan bien: tenemos experiencia con ellos y sabemos cómo usarlos. Cuantos más añadimos, más complejidad incorporamos al proceso.
+
+Sentry es una empresa multilenguaje debido a nuestros SDK y, como resultado, encontrarás casi de todo en Sentry: desde Objective-C y Kotlin hasta Elixir o Perl. Si te apetece, quizá quieras aportar mejoras ahí para probar algo nuevo.
+
+<div id="databases-and-state">
+  ## Bases de datos y estado
+</div>
+
+Tradicionalmente hemos evitado depender de bases de datos propietarias. En parte porque somos una empresa de código abierto, así que usar almacenes de datos de código abierto nos resulta natural, pero también porque no queremos depender de un servicio del que no podamos salir por nuestra cuenta. Usamos deliberadamente BigTable como sustituto de Riak, que utilizábamos antes, y también porque podemos cambiar sin dificultad a otra solución en un plazo de 90 días si es necesario.
+
+Aunque reevaluamos periódicamente nuestras opciones de bases de datos, no queremos usar más de las que ya tenemos. Sabemos cómo operar y escalar lo que tenemos, y eso establece un límite superior a la complejidad de lo que queremos poner en producción hoy.
+
+<div id="dependencies-cost">
+  ## Costo de las dependencias
+</div>
+
+Las dependencias tienen un costo, y es alto. Cada dependencia que usamos aumenta la superficie de nuestro sistema y añade más preocupaciones en torno a licencias, mantenimiento y seguridad. Entendemos que las dependencias son necesarias para el desarrollo de software moderno, pero conllevan costos. Entre ellos, la limitada capacidad de influir en lo que ocurre internamente, el costo de posibles actualizaciones y los riesgos que implica una dependencia si la persona desarrolladora detrás decide cambiar de rumbo.
+
+Consulta también [Micropackages and Open Source Trust Scaling](https://lucumr.pocoo.org/2016/3/24/open-source-trust-scaling/)
+
+Obviamente no podemos deshacernos de las dependencias, así que creemos que nuestra postura por defecto respecto a una dependencia debería ser no actualizar. Hay excepciones evidentes, pero en general animamos a los desarrolladores a quedarse con versiones más antiguas de una biblioteca en lugar de ir a la última novedad. Eso no significa que no actualicemos, pero reconocemos que esto tiene un costo y debe sopesarse.
+
+Para los SDK somos aún más estrictos. Para ello, consulta la [Filosofía de desarrollo de SDK](/es/sdk/philosophy/).
+
+<div id="branches-and-pull-requests">
+  ## Ramas y Pull Requests
+</div>
+
+Tenemos un modelo de ramas muy simple: hay una rama principal (`master` o `main`, según el repositorio) y el desarrollo de funcionalidades ocurre en ramas de feature. Hay una regla, y es la más importante de todas: **la rama principal siempre debe estar en verde**. Cualquier commit que llegue a la rama principal se desplegará.
+
+<div id="bring-your-own-ci">
+  ## Trae tu propio CI
+</div>
+
+No somos una empresa donde los equipos externalizan sus herramientas a otros. Contamos con un equipo de productividad de desarrolladores que puede ayudar a poner las herramientas al día, pero cada equipo es responsable de su propia productividad. Eso significa que el CI es, fundamentalmente, responsabilidad de todos los que hacen commits regularmente en un repositorio.

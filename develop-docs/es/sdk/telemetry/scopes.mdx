@@ -1,0 +1,131 @@
+---
+title: Ámbitos
+og_image: /og-images/sdk-telemetry-scopes.png
+---
+
+<Alert>
+  Este documento utiliza palabras clave como &quot;MUST&quot;, &quot;SHOULD&quot; y &quot;MAY&quot;, según se definen en la [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt), para indicar niveles de obligatoriedad.
+</Alert>
+
+La implementación en cada SDK MUST consistir en tres tipos de ámbitos:
+
+* El ámbito global
+* El ámbito de aislamiento
+* El ámbito actual
+
+Los usuarios MUST poder añadir datos como `tags`, `breadcrumbs` y `context` a cualquier ámbito, independientemente de su tipo.
+
+<div id="choosing-the-right-scope">
+  ## Elegir el alcance adecuado
+</div>
+
+<div id="global-scope">
+  ### Alcance global
+</div>
+
+El alcance global funciona como una variable global persistente durante la ejecución de la aplicación. Cualquier dato asignado a este alcance se aplica automáticamente a **todos** los eventos emitidos por el SDK.
+
+Suele utilizarse para almacenar datos a nivel de aplicación, como `release`, `environment` y otros contextos similares.
+
+<div id="isolation-scope">
+  ### Alcance de aislamiento
+</div>
+
+El alcance de aislamiento DEBE contener datos específicos del contexto de ejecución actual: una sola solicitud (en un servidor), una sola pestaña (en un navegador) o una sola sesión de usuario (en móvil). Las API del SDK de nivel superior, como `sentry.setTag()` y `sentry.setContext()`, DEBEN escribir en el alcance de aislamiento.
+
+El alcance de aislamiento DEBERÍA implementarse usando una variable de contexto, almacenamiento local de hilos, almacenamiento local asíncrono o un mecanismo equivalente apropiado para la plataforma.
+
+Las integraciones del SDK DEBEN gestionar automáticamente la ramificación de los alcances de aislamiento. Los usuarios NO DEBEN tener que gestionar ni preocuparse por los detalles del aislamiento del alcance ni su proceso de ramificación.
+
+<div id="current-scope">
+  ### Alcance actual
+</div>
+
+El alcance actual DEBE mantener los datos del span activo. Cuando se inicia un nuevo span, el alcance actual del span padre se bifurca (es decir, se duplica), transfiriendo todos los datos del span padre al nuevo span. Esto permite realizar modificaciones o adiciones específicas para el nuevo span sin afectar al span padre. Este comportamiento se ajusta a un modelo de &quot;copy-on-write&quot;.
+
+Cualquier cambio realizado en el alcance actual después de la bifurcación NO DEBE afectar al alcance bifurcado.
+
+El alcance actual DEBERÍA implementarse usando una variable de contexto, almacenamiento local de hilo, almacenamiento local asíncrono o un mecanismo equivalente apropiado para la plataforma.
+
+Los usuarios PUEDEN bifurcar el alcance actual explícitamente invocando `sentry.withScope()` o implícitamente al iniciar un nuevo span.
+
+<div id="applying-scope-data-to-events">
+  ## Aplicación de datos de ámbito a eventos
+</div>
+
+Los datos de los tres tipos de ámbito DEBEN combinarse en un orden específico antes de aplicarlos a un evento. El proceso es el siguiente:
+
+1. los datos del ámbito global se...
+2. combinan con los datos del ámbito de aislamiento, que...
+3. se combinan con los datos del ámbito actual, que ...
+4. se aplican al evento
+
+![Herencia de ámbitos](scope-inheritance.png)
+
+<div id="scope-methods">
+  ## Métodos de alcance
+</div>
+
+<div id="setting-attributes">
+  ### Configuración de atributos
+</div>
+
+Los usuarios DEBEN poder adjuntar atributos a cualquier ámbito mediante un método específico (p. ej., `scope.setAttributes()` o `scope.setAttribute()`). Estos atributos siguen la estructura definida en el [Span Protocol](/es/sdk/telemetry/spans/span-protocol/#attribute-object-properties).
+
+Los atributos son pares clave-valor, donde cada valor es un objeto que contiene:
+
+* `type`: El tipo de datos (`"string"`, `"integer"`, `"double"`, `"boolean"`, `"string[]"`, `"integer[]"` y `"double[]"`)
+* `value`: El valor del atributo, que DEBE coincidir con el tipo especificado
+* `unit` (opcional): La unidad de medida (p. ej., `"ms"`, `"s"`, `"bytes"`, `"count"`, `"percent"`)
+
+<div id="example-usage">
+  #### Ejemplo de uso
+</div>
+
+```javascript
+Sentry.getGlobalScope().setAttributes({
+  "app.feature_flag.enabled": true,
+  "app.session_duration": {
+    type: "integer",
+    value: 3600,
+    unit: "s"
+  }
+});
+```
+
+```python
+sentry_sdk.get_global_scope().set_attributes({
+    "app.feature_flag.enabled": True,
+    "app.session_duration": {
+        "type": "integer",
+        "value": 3600,
+        "unit": "s"
+    }
+})
+```
+
+<div id="method-signature">
+  #### Firma del método
+</div>
+
+El método DEBERÍA aceptar un diccionario/mapa/objeto en el que:
+
+* Las claves sean nombres de atributo (cadenas)
+* Los valores sean objetos de atributo con las propiedades `type`, `value` y, opcionalmente, `unit`
+
+<div id="behavior">
+  #### Comportamiento
+</div>
+
+* Los atributos establecidos en el ámbito global DEBEN aplicarse a todos los registros
+* Los atributos establecidos en el ámbito de aislamiento DEBEN aplicarse a todos los registros en ese contexto de ejecución
+* Los atributos establecidos en el ámbito actual DEBEN aplicarse solo al registro actual
+* Cuando la misma clave de atributo existe en múltiples ámbitos, el valor del ámbito más específico tiene prioridad (actual &gt; aislamiento &gt; global)
+
+Consulta [Span Protocol - Common Attribute Keys](/es/sdk/telemetry/spans/span-protocol/#common-attribute-keys) para ver una lista de atributos estándar y [Sentry Conventions](https://github.com/getsentry/sentry-conventions/) para el registro completo de atributos.
+
+<div id="related-documents">
+  ## Documentos relacionados
+</div>
+
+Este documento ofrece un resumen conciso de [Hub &amp; Scope Refactoring](/es/sdk/miscellaneous/hub_and_scope_refactoring/), con foco en los detalles de implementación y las funcionalidades previstas. El documento original permanece sin cambios y ofrece contexto histórico adicional y estrategias de migración.

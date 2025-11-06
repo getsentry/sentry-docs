@@ -1,0 +1,200 @@
+---
+title: Opciones
+description: "Obtén más información sobre cómo configurar el SDK mediante opciones. Estas se pasan a la función init y, por lo tanto, se establecen cuando el SDK se inicializa por primera vez."
+sidebar_order: 1
+---
+
+<PlatformContent includePath="configuration/config-intro" />
+
+<div id="core-options">
+  ## Opciones básicas
+</div>
+
+<TableOfContents ignoreIds={["core-options"]} />
+
+Las opciones que pueden leerse desde una variable de entorno (`SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`) se leen automáticamente.
+
+<SdkOption name="dsn" type="string" envVar="SENTRY_DSN">
+  El DSN le indica al SDK adónde enviar los eventos. Si no se proporciona este valor, el SDK intentará leerlo de la variable de entorno `SENTRY_DSN`. Si esa variable tampoco existe, el SDK simplemente no enviará eventos.
+
+  En entornos de ejecución sin variables de proceso (como el navegador), esa alternativa no aplica.
+
+  Más información sobre la [utilización del DSN](/es/product/sentry-basics/dsn-explainer/#dsn-utilization).
+</SdkOption>
+
+<SdkOption name="debug" type="bool" defaultValue="false">
+  Activa o desactiva el modo de depuración. Si `debug` está habilitado, el SDK intentará imprimir información útil de depuración si algo sale mal al enviar el evento. El valor predeterminado siempre es `false`. En general, no se recomienda activarlo en producción, aunque habilitar el modo `debug` no supone riesgos de seguridad.
+</SdkOption>
+
+<SdkOption name="diagnosticLevel" type="enum" defaultValue="warning">
+  Habilitar el modo `debug` hace que el SDK genere la mayor cantidad posible de datos de diagnóstico. Sin embargo, si prefieres reducir la verbosidad de los registros de diagnóstico del SDK de Sentry, configura esta opción para establecer el nivel adecuado:
+
+  * `warning`: **predeterminado** Advertencia de que algo podría no estar bien
+  * `debug`: El modo más detallado
+  * `info`: Mensajes informativos
+  * `error`: Solo se imprimen errores internos del SDK
+  * `fatal`: Solo se imprimen errores críticos
+</SdkOption>
+
+<SdkOption name="dist" type="string">
+  Establece la distribución de la aplicación. Las distribuciones se usan para diferenciar variantes de compilación o despliegue de la misma versión de una aplicación. Por ejemplo, la distribución puede ser el número de compilación de una build de Xcode o el código de versión de una build de Android. La distribución tiene una longitud máxima de 64 caracteres.
+</SdkOption>
+
+<SdkOption name="release" type="string" envVar="SENTRY_RELEASE">
+  Establece la versión. Algunos SDK intentarán configurar una versión automáticamente desde el inicio, pero es mejor establecerla manualmente para garantizar que la versión esté sincronizada con tus integraciones de despliegue o cargas de source maps. Los nombres de versión son cadenas, pero Sentry detecta algunos formatos y podría mostrarlos de manera diferente. Obtén más información sobre cómo enviar datos de versiones para que Sentry pueda informarte sobre regresiones entre versiones e identificar la posible fuente en [la documentación de versiones](/es/product/releases/) o en el <SandboxLink scenario="releases">sandbox</SandboxLink>.
+
+  De forma predeterminada, el SDK intentará leer este valor de la variable de entorno `SENTRY_RELEASE` (en el SDK del navegador, se leerá de `window.SENTRY_RELEASE.id` si está disponible).
+</SdkOption>
+
+<SdkOption name="environment" type="string" envVar="SENTRY_ENVIRONMENT">
+  Establece el entorno. Esta cadena es de formato libre y no se establece de forma predeterminada. Una versión puede asociarse con más de un entorno para separarlos en la interfaz (piensa en `staging` frente a `prod` o similar).
+
+  De forma predeterminada, el SDK intentará leer este valor de la variable de entorno `SENTRY_ENVIRONMENT` (excepto en el SDK del navegador, donde esto no aplica).
+</SdkOption>
+
+<SdkOption name="sampleRate" type="float" defaultValue="1.0">
+  Configura la tasa de muestreo para eventos de error, en el rango de `0.0` a `1.0`. El valor predeterminado es `1.0`, lo que significa que se enviará el 100% de los eventos de error. Si se establece en `0.1`, solo se enviará el 10% de los eventos de error. Los eventos se seleccionan aleatoriamente.
+</SdkOption>
+
+<SdkOption name="maxBreadcrumbs" type="int" defaultValue="100">
+  Esta variable controla la cantidad total de breadcrumbs que deben capturarse. El valor predeterminado es `100`, pero puedes establecer cualquier número. Sin embargo, debes tener en cuenta que Sentry tiene un [tamaño máximo de carga útil](https://develop.sentry.dev/sdk/data-model/envelopes/#size-limits) y cualquier evento que exceda ese tamaño se descartará.
+</SdkOption>
+
+<SdkOption name="attachStacktrace" type="bool" defaultValue="false">
+  Cuando está habilitado, las trazas de pila se adjuntan automáticamente a todos los mensajes registrados. Las trazas de pila siempre se adjuntan a las excepciones; sin embargo, cuando esta opción está establecida, las trazas de pila también se envían con los mensajes. Esta opción, por ejemplo, hace que las trazas de pila aparezcan junto a todos los mensajes de registro.
+
+  Esta opción está desactivada de forma predeterminada.
+
+  El agrupamiento en Sentry difiere entre eventos con y sin trazas de pila. Como resultado, obtendrás grupos nuevos al activar o desactivar este indicador para ciertos eventos.
+</SdkOption>
+
+<SdkOption name="sendDefaultPii" type="bool" defaultValue="false">
+  Si se habilita este indicador, las integraciones activas agregarán cierta información de identificación personal (PII). De forma predeterminada, no se envía ningún dato de este tipo.
+
+  <Alert>
+    Si usas Sentry en tu app móvil, consulta nuestras [preguntas frecuentes sobre privacidad de datos móviles](/es/security-legal-pii/security/mobile-privacy/) para ayudarte con los detalles de privacidad de apps en Apple App Store y Google Play.
+  </Alert>
+
+  Esta opción está desactivada de forma predeterminada.
+
+  Si habilitas esta opción, asegúrate de eliminar manualmente lo que no quieras enviar usando nuestras funciones para gestionar [*datos sensibles*](../../data-management/sensitive-data/).
+</SdkOption>
+
+<SdkOption name="serverName" type="string">
+  Esta opción puede usarse para proporcionar un nombre de servidor. Cuando se especifica, el nombre del servidor se envía y se conserva en el evento. En muchas integraciones, el nombre del servidor corresponde al hostname del dispositivo, incluso cuando la máquina no es realmente un servidor.
+
+  La mayoría de los SDK intentarán detectar este valor automáticamente.
+</SdkOption>
+
+<SdkOption name="considerInAppFramesByDefault" type="boolean" defaultValue="true">
+  Configura si los frames de la traza de pila se consideran como frames &quot;in app&quot; de forma predeterminada.
+  Puedes usar esto para convertir `inAppIncludes` o `inAppExcludes` en una lista de permitidos o de bloqueados.
+  Este valor se usa solo si Sentry no puede encontrar el origen del frame.
+
+  * Si `considerInAppFramesByDefault` está establecido en `true`, solo necesitas mantener `inAppExcludes`.
+  * Por el contrario, si `considerInAppFramesByDefault` está establecido en `false`, solo necesitas mantener `inAppIncludes`.
+</SdkOption>
+
+<SdkOption name="inAppInclude" type="array">
+  Una lista de prefijos de cadena de nombres de módulos que pertenecen a la app. Esta opción tiene prioridad sobre `in-app-exclude`.
+
+  Sentry diferencia los frames de la pila que están directamente relacionados con tu aplicación (&quot;en la aplicación&quot;) de los que provienen de otros paquetes como la biblioteca estándar, frameworks u otras dependencias. El paquete de la aplicación se marca automáticamente como `inApp`. La diferencia es visible en [sentry.io](https://sentry.io), donde solo los frames &quot;en la aplicación&quot; se muestran de forma predeterminada.
+</SdkOption>
+
+<SdkOption name="inAppExclude" type="array">
+  Una lista de prefijos de cadena de nombres de módulos que no pertenecen a la app, sino a paquetes de terceros. Los módulos considerados fuera de la app se ocultarán de las trazas de pila de forma predeterminada.
+
+  Esta opción puede anularse con <PlatformIdentifier name="inAppInclude" />.
+</SdkOption>
+
+<SdkOption name="sendClientReports" type="boolean" defaultValue="true" availableSince="6.6.0">
+  Configura este booleano en `false` para desactivar el envío de informes del cliente. Los informes del cliente son una función del protocolo que permite a los clientes enviar a Sentry informes de estado sobre sí mismos. Actualmente se usan principalmente para emitir resultados de eventos que nunca se enviaron.
+
+  *(Nuevo en la versión 6.6.0)*
+</SdkOption>
+
+<SdkOption name="captureFailedRequests" type="boolean" defaultValue="true" availableSince="7.0.0">
+  Cuando está habilitada, esta función captura automáticamente errores del cliente HTTP, como códigos de respuesta incorrectos, como eventos de error y los informa a Sentry.
+
+  *(Nuevo en la versión 7.0.0)*
+</SdkOption>
+
+<SdkOption name="maxRequestBodySize" type="enum" defaultValue="never">
+  Este parámetro controla si las integraciones deben capturar los cuerpos de las solicitudes HTTP. Puede configurarse con uno de los siguientes valores:
+
+  * `never`: valor predeterminado. Nunca se envían cuerpos de solicitud.
+  * `small`: Solo se capturarán cuerpos de solicitud pequeños. El umbral para &quot;small&quot; depende del SDK (normalmente 4 KB).
+  * `medium`: Se capturarán solicitudes medianas y pequeñas (normalmente 10 KB).
+  * `always`: El SDK siempre capturará el cuerpo de la solicitud siempre que Sentry pueda interpretarlo.
+</SdkOption>
+
+<div id="integration-configuration">
+  ## Configuración de integraciones
+</div>
+
+En muchos SDK de plataforma, las integraciones pueden configurarse junto con ellos. En algunas plataformas eso ocurre como parte de la llamada a `init()`, y en otras se aplican patrones diferentes.
+
+<SdkOption name="integrations" type="array" />
+
+En algunos SDK, las integraciones se configuran mediante este parámetro durante la inicialización de la librería. Para más información, consulta la documentación de la integración específica.
+
+<PlatformSection notSupported={["java", "dart"]}>
+  <SdkOption name="defaultIntegrations" type="bool" />
+
+  Esto puede usarse para desactivar las integraciones que se añaden de forma predeterminada. Cuando se establece en `false`, no se añade ninguna integración predeterminada.
+</PlatformSection>
+
+<PlatformSection supported={["python"]}>
+  <SdkOption name="autoEnablingIntegrations" type="bool" />
+
+  Esto puede usarse para desactivar las integraciones que se habilitan de forma predeterminada si el SDK detecta que el framework o la librería correspondiente está instalado. Cuando se establece en `false`, ninguna de estas integraciones se habilitará de forma predeterminada, incluso si se detecta el framework/librería correspondiente.
+</PlatformSection>
+
+<div id="hooks">
+  ## Hooks
+</div>
+
+Estas opciones se pueden usar para integrar el SDK de varias maneras y personalizar el informe de eventos.
+
+<SdkOption name="beforeSend" type="function">
+  Esta función se llama con un mensaje específico del SDK o un objeto de evento de error, y puede devolver un objeto de evento modificado, o `null` para omitir el envío del evento. Esto se puede usar, por ejemplo, para eliminar PII manualmente antes de enviar.
+
+  Para cuando <PlatformIdentifier name="beforeSend" /> se ejecuta, todos los datos del scope ya se han aplicado al evento. Cualquier modificación posterior del scope no tendrá efecto.
+</SdkOption>
+
+<SdkOption name="beforeBreadcrumb" type="function">
+  Esta función se llama con un objeto breadcrumb específico del SDK antes de que el breadcrumb se agregue al scope. Cuando la función no devuelve nada, el breadcrumb se descarta. Para dejar pasar el breadcrumb, devuelve el primer argumento, que contiene el objeto breadcrumb.
+  La callback normalmente recibe un segundo argumento (llamado &quot;hint&quot;) que contiene el objeto original a partir del cual se creó el breadcrumb para personalizar más cómo debería verse el breadcrumb.
+</SdkOption>
+
+<div id="transport-options">
+  ## Opciones de transporte
+</div>
+
+Los transportes se usan para enviar eventos a Sentry. Se pueden personalizar hasta cierto punto para adaptarse mejor a implementaciones muy específicas.
+
+<SdkOption name="transport" type="function">
+  Sustituye el transporte utilizado para enviar eventos. Su funcionamiento depende del SDK. Por ejemplo, puede emplearse para capturar eventos en pruebas unitarias o para enviarlos mediante una configuración más compleja que requiera autenticación de un proxy.
+</SdkOption>
+
+<div id="tracing-options">
+  ## Opciones de trazas
+</div>
+
+<SdkOption name="tracesSampleRate" type="float">
+  Un número entre `0` y `1` que controla la probabilidad (en porcentaje) de que una transacción determinada se envíe a Sentry. (`0` representa el 0% y `1` el 100%.) Se aplica por igual a todas las transacciones creadas en la aplicación. Debe definirse esta opción o <PlatformIdentifier name="tracesSampler" /> para habilitar las trazas.
+</SdkOption>
+
+<SdkOption name="tracesSampler" type="function">
+  Una función responsable de determinar la probabilidad (en porcentaje) de que una transacción determinada se envíe a Sentry. Recibirá automáticamente información sobre la transacción y el contexto en el que se crea, y debe devolver un número entre `0` (0% de probabilidad de envío) y `1` (100% de probabilidad de envío). También puede usarse para filtrar transacciones, devolviendo 0 para aquellas que no se deseen. Debe definirse esta opción o <PlatformIdentifier name="tracesSampleRate" /> para habilitar las trazas.
+</SdkOption>
+
+<SdkOption name="tracePropagationTargets" type="array">
+  Una propiedad opcional que controla qué servicios downstream reciben datos de trazas, en forma de los encabezados `sentry-trace` y `baggage` adjuntos a cualquier solicitud HTTP saliente.
+
+  La opción puede contener una lista de cadenas o expresiones regulares con las que se comparan las URL de las solicitudes salientes.
+  Si una de las entradas de la lista coincide con la URL de una solicitud saliente, se adjuntarán datos de trazas a esa solicitud.
+  Las entradas de tipo cadena no tienen que ser coincidencias exactas; la URL de una solicitud coincide cuando *contiene* una cadena proporcionada mediante la opción.
+
+  Si no se proporciona <PlatformIdentifier name="tracePropagationTargets" />, se adjuntan datos de trazas a cada solicitud saliente del cliente instrumentado.
+</SdkOption>

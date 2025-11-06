@@ -1,0 +1,204 @@
+---
+title: Aprovisionamiento SCIM de Okta
+sidebar_order: 3
+description: Configura la integración SCIM de Okta para el aprovisionamiento de miembros y equipos
+og_image: /og-images/organization-authentication-sso-okta-sso-okta-scim.png
+---
+
+<Alert>
+  Esta función solo está disponible si tu organización tiene un plan Business o Enterprise.
+</Alert>
+
+<Alert level="warning">
+  Si cambias el slug de tu organización, también tendrás que actualizarlo en la sección &quot;Auth&quot; de los &quot;Organization Settings&quot; en Sentry.
+</Alert>
+
+<div id="supported-features">
+  ### Funciones compatibles
+</div>
+
+* Crear usuarios
+* Desactivar usuarios
+* Sincronizar grupos
+* Importar grupos
+* Configurar roles a nivel de organización
+* Actualizar atributos de usuario (solo roles a nivel de organización)
+
+<div id="requirements">
+  ### Requisitos
+</div>
+
+El aprovisionamiento SCIM de Okta requiere:
+
+* Una suscripción al plan Sentry Business o superior.
+* Configurar SAML SSO para Okta [según lo documentado aquí](/es/organization/authentication/sso/okta-sso/) o usar la pestaña Sign On de tu aplicación de Sentry en Okta para configurar SAML.
+* **Seleccionar Email como formato del nombre de usuario de la aplicación** en la pestaña Sign On de la aplicación en Okta.
+  ![Configuración del nombre de usuario de Okta](./img/scim-username-config.png)
+
+<div id="sentry-configuration">
+  ### Configuración de Sentry
+</div>
+
+1. Inicia sesión en [sentry.io](https://sentry.io). Ve a **Settings &gt; Auth**
+   ![Página de Sentry Okta SCIM Auth](./img/scim-settings-auth.png)
+2. En General Settings, activa &quot;Enable SCIM&quot; y luego haz clic en &quot;Save Settings&quot;.
+   ![Instrucción para habilitar SCIM en Sentry](./img/scim-enable-sentry.png)
+   Sentry mostrará &quot;SCIM Information&quot;, que incluye tu Auth Token y el SCIM Base URL.
+   ![Campos de credenciales SCIM](./img/scim-sentry-fields.png)
+
+<div id="okta-configuration">
+  ### Configuración de Okta
+</div>
+
+1. Inicia sesión en tu organización de Okta con tu cuenta de administrador. En la barra lateral de la consola de administración, selecciona Applications &gt; Applications y luego selecciona la aplicación existente de Sentry.
+
+2. Selecciona la pestaña &quot;Provisioning&quot; y luego &quot;Configure API integration&quot;.
+   ![Okta configure SCIM API](./img/scim-okta-configure.png)
+
+3. Selecciona &quot;Enable API Integration&quot; y luego introduce la SCIM URL de la página de configuración de autenticación en el campo Base URL.
+
+4. Para el API Token, copia el valor de Auth Token de la página de configuración de autenticación.
+
+5. Selecciona &quot;Test API Credentials&quot;. Deberías ver el mensaje &quot;the app was verified successfully&quot;.
+
+6. Selecciona &quot;Save&quot; para ir a la configuración de la app SCIM.
+
+7. En la página de Provisioning, selecciona &quot;To App&quot; y luego &quot;edit&quot;:
+   ![Okta Save SCIM Settings](./img/scim-okta-edit.png)
+
+8. Habilita &quot;Create Users&quot; y &quot;Deactivate Users&quot;, luego haz clic en el Button &quot;Save&quot;.
+   ![Okta Create and Deactivate Users](./img/okta-user-sync.png)
+
+Una vez realizados estos cambios, los usuarios recién asignados recibirán un correo de invitación. Si a un usuario se le quita la asignación, se eliminará de su organización en Sentry.
+
+Puedes usar &quot;Push Groups&quot; para sincronizar y asignar grupos en Okta; se reflejarán en los equipos de Sentry.
+
+<Alert>
+  Si usas Okta para gestionar la membresía de la organización, no podrás hacer cambios de membresía desde Sentry y tendrás que seguir usando Okta. Para eliminar a estos usuarios, desprovisiónalos en Okta.
+</Alert>
+
+![Okta Provisioned User Unable to Leave](./img/okta-provisioned-unable-to-leave.png)
+
+<div id="configuring-organization-level-roles">
+  ### Configuración de roles a nivel de organización
+</div>
+
+Así es como asignar un rol a nivel de organización a un grupo de Okta:
+
+1. Agrega un nuevo atributo personalizado al perfil de tu aplicación de Okta
+
+   1. Ve a la configuración de tu aplicación en Okta
+
+   2. En la pestaña &quot;Provisioning&quot;, selecciona &quot;Go to Profile Editor&quot;
+      ![Página de aprovisionamiento de Okta](./img/okta-go-to-profile.png)
+
+   3. Selecciona &quot;+ Add Attribute&quot;
+      ![Agregar atributo en Okta](./img/okta-add-attribute.png)
+
+   4. Completa el formulario con la siguiente configuración (puedes establecer cualquier valor que quieras para cualquier ajuste no listado a continuación):
+
+      * Data Type: `string`
+      * Display Name: `Org Role`
+      * Variable Name: `sentryOrgRole`
+      * External name: `sentryOrgRole`
+      * External namespace: `urn:ietf:params:scim:schemas:core:2.0:User`
+      * Attribute type: `Group`
+
+      ![Atributo personalizado de Okta](./img/okta-custom-attribute-values.png)
+
+2. Asigna un grupo a tu aplicación de Okta
+   ![Asignar grupo en Okta](./img/okta-assign-group.png)
+
+3. En el formulario, ingresa la cadena del rol a nivel de organización
+   ![Configurar rol en Okta](./img/okta-set-group-attribute.png)
+
+* Si el campo `sentryOrgField` se deja en blanco, los miembros del grupo se aprovisionarán con el rol predeterminado a nivel de organización. Este rol predeterminado puede configurarse en Sentry, en Settings -&gt; Organization -&gt; Auth. De lo contrario, el rol debe ser uno de los siguientes:
+  * Admin
+  * Manager
+  * Billing
+  * Member
+* Los nombres de rol no válidos impedirán que se aprovisionen los miembros del grupo. Para intentarlo de nuevo, primero tendrás que eliminar el grupo.
+* Por razones de seguridad, el rol &quot;Owner&quot; no puede aprovisionarse a través de SCIM. Sin embargo, <i>sí</i> puedes desaprovisionar a usuarios que tengan el rol &quot;Owner&quot; en Sentry, pero que no estén aprovisionados a través de SCIM.
+  * Para usuarios autohospedados con roles personalizados, esto se extiende a cualquier rol con el permiso `org:admin`
+
+<Alert>
+  Si un usuario es miembro de varios grupos de Okta, solo se usarán los atributos establecidos por el primer grupo.
+</Alert>
+
+<Alert>
+  Si usas Okta para asignar roles a nivel de organización, no podrás realizar cambios de membresía a través de Sentry y tendrás que seguir usando Okta. Para cambiar el rol a nivel de organización de un usuario, tendrás que desaprovisionarlo y luego volver a aprovisionarlo con el nuevo rol.
+</Alert>
+
+Los usuarios a quienes se les hayan asignado roles a través de Okta solo podrán realizar cambios de membresía mediante Okta.
+
+![Selección de rol restringido por Okta en Sentry](./img/okta-role-restricted-sentry-role-select.png)
+
+<div id="updating-user-attributes">
+  ### Actualización de atributos de usuario
+</div>
+
+Actualmente, Sentry solo permite actualizar atributos de usuario para roles a nivel de organización. Podrás editar el atributo de los usuarios asignados a tu aplicación una vez que hayas agregado el atributo `sentryOrgRole` al perfil de tu aplicación en Okta.
+
+![Okta Edit Attribute](./img/okta-edit-sentryOrgRole-attribute.png)
+
+El rol del usuario en Sentry reflejará su rol a nivel de organización en tu configuración de autenticación. Esto significa que si dejas en blanco el atributo de un usuario, su rol a nivel de organización se eliminará de Sentry.
+
+<div id="troubleshooting">
+  ## Solución de problemas
+</div>
+
+### Aparece el error &quot;Matching user not found&quot; en Okta al aprovisionar un usuario.
+
+Asegúrate de que `Create User` y `Deactivate User` estén activados en la pestaña &quot;Provisioning&quot; de tu aplicación de Sentry en Okta [(consulta el paso 7 de la configuración de Okta)](#okta-configuration).
+
+<div id="i-assigned-sentry-to-a-group-but-no-team-was-created">
+  ### Asigné Sentry a un grupo, pero no se creó ningún equipo.
+</div>
+
+Asignar Sentry a un grupo en Okta es lo mismo que asignar Sentry a cada miembro de ese grupo. En la práctica, esto aprovisiona a cada miembro del grupo en Sentry, pero no crea un equipo. Para crear un equipo, envía el grupo a Sentry desde la pestaña `Push Groups` de tu aplicación de Sentry en Okta.
+
+<div id="i-pushed-a-group-to-sentry-but-the-team-is-empty">
+  ### Envié un grupo a Sentry, pero el equipo está vacío.
+</div>
+
+Al enviar un grupo mediante Okta, Sentry crea un equipo nuevo con el mismo nombre que el grupo de Okta. Solo se añadirán al equipo de Sentry los usuarios que ya hayan sido aprovisionados como miembros de ese grupo. Asegúrate de que tu grupo en Okta incluya a los usuarios adecuados y de que ya hayan sido aprovisionados.
+
+<div id="i-pushed-a-group-to-sentry-but-am-receiving-a-user-not-found-error">
+  ### Envié un grupo a Sentry, pero aparece el error “User not found”.
+</div>
+
+Si es posible, identifica al(los) usuario(s) que están causando el error. Luego, elimínalos de Sentry y vuelve a aprovisionarlos con Okta.
+
+<div id="im-unable-to-use-the-sentry-application-to-remove-a-member-whose-membership-is-managed-by-an-identity-provider">
+  ### No puedo usar la aplicación de Sentry para eliminar a un miembro cuya pertenencia está gestionada por un proveedor de identidad.
+</div>
+
+Cuando la pertenencia al equipo está gestionada por un proveedor de identidad (como Okta), solo se puede actualizar o revocar desde ese proveedor de identidad.
+
+<div id="im-unable-to-use-the-sentry-application-to-add-or-remove-members-from-my-team">
+  ### No puedo usar la aplicación de Sentry para añadir o eliminar miembros de mi equipo.
+</div>
+
+Si usas Okta para asignar miembros a un equipo, no podrás hacer cambios de membresía desde Sentry y tendrás que seguir usando Okta.
+
+<div id="i-used-okta-to-remove-a-user-from-sentry-but-theyre-still-showing-up-in-my-sentry-organization">
+  ### Usé Okta para eliminar a un usuario de Sentry, pero sigue apareciendo en mi organización de Sentry.
+</div>
+
+Asegúrate de que `Deactivate User` esté habilitado en la pestaña &quot;Provisioning&quot; de tu aplicación de Sentry en Okta. Vuelve a aprovisionar al usuario y, después, elimínalo de nuevo.
+
+<div id="how-do-i-remove-the-organization-level-role-for-a-user-that-i-set-via-okta">
+  ### ¿Cómo elimino el rol a nivel de organización de un usuario que configuré mediante Okta?
+</div>
+
+Deja en blanco el atributo de rol del usuario.
+
+<div id="known-issues">
+  ## Problemas conocidos
+</div>
+
+* La función Import Users no está disponible actualmente porque la API SCIM de Sentry no admite por ahora los campos del atributo de usuario `name`: `firstName` y `lastName`. Por compatibilidad, se devuelven como valores `N/A`.
+* Si el campo `active` se establece en `false` para un usuario determinado, se elimina su registro como miembro de la organización.
+* La única operación de filtro admitida para los recursos es `eq`.
+* Al aprovisionar un equipo nuevo, Sentry normaliza y convierte el `displayName` del equipo de mayúsculas a minúsculas y transforma los espacios en guiones.
+* El endpoint GET /Groups no puede devolver más de 10 000 miembros en un grupo; consulta la [documentación de la API SCIM](/es/api/scim/) para obtener más información.

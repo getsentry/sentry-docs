@@ -1,0 +1,193 @@
+---
+title: Agrupación
+sidebar_order: 100
+---
+
+Sentry cuenta con un sistema de agrupación muy completo ([documentación pública](https://docs.sentry.io/product/sentry-basics/grouping-and-fingerprints/)),
+que puede personalizarse [en el cliente](https://docs.sentry.io/platforms/python/usage/sdk-fingerprinting/)
+y en el servidor mediante [reglas de huella (fingerprint)](https://docs.sentry.io/product/data-management-settings/event-grouping/fingerprint-rules/)
+y [reglas de traza de pila (stack trace)](https://docs.sentry.io/product/data-management-settings/event-grouping/stack-trace-rules/).
+
+Esta documentación intenta explicar cómo funciona actualmente el sistema y cuáles son sus limitaciones actuales.
+
+<div id="basics">
+  # Conceptos básicos
+</div>
+
+En el nivel más básico, cuando un evento llega a Relay, este ya asocia al evento la versión actual de la configuración de agrupación. Esto significa que, desde el primer momento en que un evento entra en la infraestructura, ya se ha decidido qué versión del algoritmo de agrupación se utilizará.
+
+Cuando el evento llega al sistema central de procesamiento de eventos listo para guardarse y el cliente aún no ha establecido una huella (fingerprint), comienzan a operar tres sistemas:
+
+1. Primero, las trazas de pila (stack traces) se procesan mediante un sistema llamado `normalize_stacktraces_for_grouping`, donde se aplican las reglas de trazas para revisar las marcas "in app" de los frames. Esto, por ejemplo, permite que el código de agrupación activo marque frames como fuera de la app o dentro del ámbito de la app. El valor original de la marca `in_app` también se conserva en el evento. Esto permite que el sistema “revierte” a los valores originales si las reglas de agrupación deben ejecutarse de nuevo (por ejemplo, para reprocesamiento o similar).
+2. A continuación, se ejecutan las reglas de fingerprinting del lado del servidor. Estas pueden sobrescribir la huella predeterminada que, de otro modo, generaría el código de agrupación. La salida del código de fingerprinting puede ser una lista de cadenas que se convertirán en hash para la huella, o también puede incluir el marcador de posición `{{ default }}`, en cuyo caso el código de agrupación original seguirá ejecutándose y se integrará en la huella para subdividir aún más el grupo.
+3. Por último, el algoritmo de agrupación como tal se ejecuta solo si la huella aún no se ha establecido o si utiliza el valor especial `{{ default }}`.
+
+Es importante saber que el algoritmo de agrupación puede producir más de un hash de huella. Estos hashes se recopilan y se asocian con incidencias. Hay dos tipos de hashes que se pueden crear:
+
+* flat hashes: son hashes tradicionales en los que todos los hashes son equivalentes. Si cualquiera de estos hashes existe en un grupo, se asocia con él y cualquier hash que aún no esté asociado al grupo se agrega.
+* hierarchical hashes: son hashes secundarios que pueden usarse para subdividir un grupo en la pestaña de agrupación.
+
+<div id="issue-group-creation">
+  # Creación de issues / grupos
+</div>
+
+Internamente, en Sentry los issues se llaman "Groups" o "grouped messages" y están representados por el
+modelo [`Group`](https://github.com/getsentry/sentry/blob/master/src/sentry/models/group.py).
+
+Después de calcular las huellas digitales, Sentry decide si reutiliza un grupo existente
+o si crea uno nuevo. Esto se hace mediante el modelo [`GroupHash`](https://github.com/getsentry/sentry/blob/master/src/sentry/models/grouphash.py).
+Lo más importante: si hay que crear un grupo, se crea de inmediato. Aunque el modelo de datos
+admite eventos sin issues, la interfaz de usuario realmente no lo contempla para varias cosas que
+el usuario espera. Esto significa que, por el momento, el 100% de los eventos están asociados a un grupo.
+
+Cuando el grupo se ha creado o encontrado, el evento se asocia a ese `group_id`. Esto significa que el
+evento, a medida que avanza por el sistema camino a Snuba, está asociado a ese grupo,
+lo que también implica que el grupo se persiste en Snuba junto con el evento.
+
+Al crear un grupo, se ejecuta código adicional, como el disparo de alertas, la detección de regresiones y más.
+Por lo tanto, crear un grupo resulta relativamente costoso debido a la cantidad de acciones adicionales que pueden
+desencadenarse a partir de él.
+
+<div id="merges-and-splits">
+  # Fusiones y divisiones
+</div>
+
+El sistema no lidia especialmente bien con las fusiones y divisiones porque los eventos en Snuba generalmente se consideran inmutables. Cuando un usuario inicia una fusión, se emite una tarea que pone en marcha ese proceso. Una fusión también puede deshacerse parcialmente, pero una división no logra reconstruir por completo el estado original, ya que se perdió cierta información (como los conteos originales de más de 90 días) durante el proceso. Además, fusionar es costoso y las fusiones frecuentes pueden provocar una acumulación significativa en la cola de tareas de Snuba.
+
+<div id="grouping-theories">
+  # Teorías de agrupación
+</div>
+
+Sentry aplica algunos principios generales al agrupamiento para reunir los tipos adecuados de eventos.
+Sin embargo, el sistema actual tiene restricciones: Sentry debe encontrar “un único grupo”, ya que un evento
+solo puede pertenecer a uno. Para entender cómo Sentry interpreta los grupos, es importante comprender que,
+para dar con el grupo correcto, hay que tener en cuenta que el problema es fundamentalmente subjetivo y, de hecho, depende
+del origen del error.
+
+<div id="stack-traces">
+  ## Trazas de pila
+</div>
+
+La forma principal de agrupación de Sentry es la traza de pila. Las trazas de pila equivalentes (con el mismo tipo de error)
+indican el mismo error. Sin embargo, existe una variación fundamental en las trazas de pila, por lo que crear
+una huella digital de la traza de pila conlleva ciertos desafíos.
+
+Una traza de pila consta de múltiples frames y cada frame contribuye a la huella digital. Qué partes
+lo hacen y cuáles no depende en gran medida de la plataforma y de las diferentes reglas que aplicamos.
+
+<div id="example-platform-behavior">
+  ### Ejemplo de comportamiento de la plataforma
+</div>
+
+En **Python**, por ejemplo, cada frame aporta el nombre de `module`, el nombre de `function` y la `context-line` (es decir,
+el código fuente de la línea a la que apuntaba el puntero del frame, con los espacios en blanco iniciales y finales eliminados).
+La motivación es la siguiente: los módulos y las funciones son indicadores relativamente generales y una función
+a menudo puede fallar desde distintas ramas, por lo que tener en cuenta además el código fuente reduce la probabilidad
+de agrupar en exceso. Sin embargo, esto también implica que, cuando se realiza una refactorización en una línea que no cambia
+la funcionalidad pero sí el código fuente, puede provocar que se cree un grupo nuevo innecesariamente. La otra
+consecuencia es que requerimos que el código fuente esté disponible para el agrupamiento. Esto funciona bien en
+Python, ya que el SDK de Python generalmente envía el código fuente junto, pero, por ejemplo, no podemos usar la misma
+regla en C++, donde la disponibilidad del código fuente no está garantizada y una versión puede
+incluirlo, mientras que otra podría no hacerlo.
+
+Por otro lado, para **JavaScript** necesitamos aplicar reglas diferentes. En primer lugar, actualmente tenemos
+dificultades para determinar un nombre de función confiable debido a limitaciones de los source maps. Esto puede provocar
+que a veces aparezcan nombres de función minificados, inestables entre compilaciones. Por ello, en su lugar
+aportamos el nombre de `module`, `filename` (es decir, el nombre base de la ruta, convertido a minúsculas) y también
+la `context-line`. Esto de nuevo es arriesgado, ya que la `context-line` puede cambiar ligeramente con el tiempo. Una complicación
+adicional con JavaScript es que la traza de pila proporcionada por el navegador no es necesariamente
+estable. Diferentes navegadores se comportan de forma muy distinta en cómo se ve la traza de pila cuando se involucran
+funciones nativas del navegador. Por ejemplo, el uso de `Array.forEach` puede producir trazas de pila muy diferentes
+entre navegadores. Algunos mostrarán `Array.forEach` como un frame de la pila; otros no. Por ello, el algoritmo de agrupamiento
+hace todo lo posible por descartar de forma coherente los frames que otros navegadores no pueden producir.
+Sin embargo, hay limitaciones y el mismo error puede producir trazas de pila diferentes en distintos navegadores.
+
+Las **plataformas nativas** son las más difíciles de acertar. Aquí trabajamos con limitaciones de la
+información de depuración subyacente al crear trazas de pila. El primer nivel de complicación es que un lenguaje
+compilado de forma nativa probablemente insertará (inline) código fuente en la función llamante. En algunas plataformas, esto
+cambiará fundamentalmente la información disponible. Por ejemplo, un compilador de Microsoft proporcionará el nombre
+completo desofuscado para una función no insertada, pero solo proporciona el nombre local para una función insertada
+(esa es una explicación muy simplificada; la diferencia real es más matizada). Además, distintos compiladores
+ofuscan y formatean los nombres de manera muy diferente. Esto, por ejemplo, puede hacer que el mismo error tenga huellas
+muy diferentes cuando se compila y ejecuta en Linux frente a macOS. Además, el código fuente generalmente no está disponible,
+así que no dependemos de él. En gran medida, entonces, solo aportamos nombres de `function` al algoritmo de agrupamiento,
+aplicando una limpieza intensa (p. ej., eliminamos genéricos, parámetros y valores de retorno del nombre desofuscado
+antes de pasarlo al código de agrupamiento).
+
+<div id="frame-hiding">
+  ### Ocultación de frames
+</div>
+
+Dado que, a partir de la huella, solo podemos crear un único grupo, nos esforzamos por eliminar al máximo el
+ruido innecesario entre pilas. En gran medida, esto se consigue eliminando frames completos de la
+pila para el agrupamiento. Hay dos formas de eliminar frames: o bien se excluyen del agrupamiento
+por completo, o se marcan como "fuera de la app", lo que significa que contienen código no relacionado con la
+aplicación creada por el desarrollador. Por ejemplo, si usas el framework Django,
+marcaremos los frames del framework como código que no es de la aplicación, por lo que se "ignoran" para el agrupamiento.
+
+La diferencia entre código que no es de la aplicación y código eliminado por completo del agrupamiento es que el primero
+sigue generando un hash secundario que también asociamos con grupos. Sin embargo, dado que ese hash contiene
+“más información” que el otro, por lo general no se usa para el agrupamiento salvo como una forma de fusión
+implícita. Para entenderlo mejor, considera un stack trace con tres frames “A1 B1 A2 A3”. Al principio,
+todos se consideran en app, por lo que todos contribuyen a la huella `[A1, B1, A2, A3]`. Más adelante,
+ya sea por una actualización del SDK o un cambio en la configuración del servidor, se marca `B1` como fuera de la app. El
+algoritmo de agrupamiento, si ignorara por completo el frame `B1`, crearía un nuevo hash que no se encontraría
+en los grupos existentes y crearía un grupo nuevo. Sin embargo, como de todos modos seguimos generando el hash completo,
+el nuevo evento que llegue seguirá encontrando el grupo ya existente. Los hashes creados son `[A1, B1, A2, A3]`
+y `[A1, A2, A3]`. Del mismo modo, si más tarde también quitas `A3` de en app, se crearían los hashes
+`[A1, B1, A2, A3]` y ahora `[A1, A2]`, y el primer hash seguiría coincidiendo con un grupo ya
+existente.
+
+<div id="stack-lengths">
+  ### Longitudes de pila
+</div>
+
+Actualmente, Sentry incluye la pila completa en el grupo. Hay una forma de limitar la cantidad de fotogramas
+aportados a un conjunto más pequeño estableciendo un número máximo de fotogramas que deban considerarse. Esto
+tiene una ventaja hipotética cuando se trabaja con distintas rutas que conducen a un error, pero con la consecuencia
+de que se pueden crear grupos muy grandes. Crear grupos más grandes es más complicado en Sentry ya que, sin
+agrupación jerárquica, no hay buenas maneras de profundizar en las distintas pilas dentro de una incidencia.
+
+<div id="fallback-grouping">
+  ## Agrupación de respaldo
+</div>
+
+Cuando no hay un stack trace disponible, el sistema debe recurrir a algún método alternativo de agrupación. A este respaldo lo llamamos "agrupación basada en mensajes" y es un método bastante limitado. Tomamos la primera línea del mensaje y aplicamos cierta lógica de limpieza. Por ejemplo, si se encuentran números, se reemplazan por un marcador de posición estático. Lo mismo con marcas de tiempo conocidas, UUID y elementos similares. Sin embargo, en muchos casos el origen de estas cadenas es imposible de normalizar, por lo que la agrupación de respaldo muy probablemente generará una gran cantidad de grupos independientes.
+
+<div id="theory-on-issue-sources">
+  ## Teoría sobre las fuentes de los problemas
+</div>
+
+Sentry tiende, en general, a agrupar por separado las distintas rutas que llevan a un problema. Incluso si el algoritmo de agrupación fuera perfecto, consideraría diferentes maneras de llegar a un error como problemas independientes. Tomemos una función hipotética `get_current_user`. Imaginemos que esta función tiene un bug por el cual ahora empieza a fallar con una excepción `DataConsistencyError`. Si esta función se usa en muchos lugares de la aplicación, cada uno de esos llamadores creará un grupo distinto. Por tanto, podemos pensar en la agrupación como un problema del origen del error. En cualquier momento puede surgir la pregunta de si la fuente del error está “en cómo llamamos a una función” (error del llamador) o “en la función” (error del llamado). Tomar esta decisión es imposible de forma general, pero con el tiempo puede volverse más fácil decidir.
+
+Sentry tiene un sistema de agrupación experimental llamado “agrupación jerárquica”, donde permitimos profundizar en las distintas rutas hacia un bug, priorizando agrupar de más y luego proporcionando una pestaña de agrupación que puede mostrar los diferentes caminos por los que llegamos al error. Sin embargo, la limitación de esto con el sistema de grupos actual es que, dado que el grupo ya se ha creado y no hay forma de dividirlo, puedes acabar con un grupo mucho más grande de lo que querías.
+
+<div id="paths-forward">
+  # Caminos a seguir
+</div>
+
+El sistema de agrupación, tal como está implementado, está muy estrechamente ligado al flujo de trabajo que se establece con los grupos que se crean. Es quien crea los grupos y, como tal, determina gran parte de la experiencia del usuario que se deriva de ello. Si creara un único issue por evento o un único issue para todos los eventos, nada en Sentry funcionaría correctamente. Por lo tanto, es nuestro primer punto para equilibrar la calidad del flujo de trabajo. Lamentablemente, con las herramientas disponibles hoy, estamos en una situación bastante complicada a la hora de agrupar. Si nos equivocamos, es probable que el usuario se quede bloqueado.
+
+Los siguientes caminos generales a seguir son los actualmente previstos:
+
+<div id="groups-of-groups">
+  ## Grupos de grupos
+</div>
+
+Las consecuencias de crear demasiados grupos hoy son el aluvión de alertas y la imposibilidad de trabajar con múltiples
+incidencias a la vez. Si Sentry dejara de alertar sobre todos los grupos nuevos y existieran herramientas para trabajar
+con varios grupos a la vez, surgirían más oportunidades. En particular, el algoritmo de agrupación podría seguir
+generando la huella del stack trace, pero un proceso secundario podría ejecutarse periódicamente y reunir huellas
+relacionadas en un grupo más grande. Si tomamos el ejemplo de `get_current_user`, la creación de 50 grupos independientes
+no es gran problema si no se activan alertas. Si después de 5 minutos el sistema detecta que en realidad están
+todos muy relacionados (por ejemplo, el bug está “en `get_current_user`”), podría dejar los 50 grupos generados
+como están, pero crear un grupo nuevo que vincule a los otros 50, ocultar o despriorizar los 50 grupos individuales en
+la interfaz y permitir que el usuario trabaje con el grupo más grande en su lugar.
+
+<div id="evaluate-hierarchical-grouping">
+  ## Evaluar la agrupación jerárquica
+</div>
+
+También contamos con el prototipo de agrupación jerárquica que intenta agrupar con menos datos de entrada. Este sistema tiene
+algunas limitaciones, pero es menos probable que cree muchos grupos. Lamentablemente, la experiencia de usuario no está
+bien resuelta, ya que no es posible trabajar con partes del grupo.

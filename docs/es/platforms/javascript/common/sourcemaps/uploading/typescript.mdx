@@ -1,0 +1,74 @@
+---
+title: TypeScript (tsc)
+description: "Sube tus source maps con tsc y Sentry CLI."
+sidebar_order: 2
+notSupported:
+  - javascript.svelte
+  - javascript.sveltekit
+---
+
+En esta guía aprenderás a subir correctamente los source maps de TypeScript usando nuestra herramienta `sentry-cli`.
+
+<Include name="debug-id-requirement.mdx" />
+
+<Alert>
+
+Esta guía solo aplica si usas `tsc` para compilar tu proyecto. Si usas otra herramienta (como webpack) junto con TypeScript, probablemente te convenga seguir esa otra guía.
+
+</Alert>
+
+<div id="automatic-setup">
+  ## Configuración automática
+</div>
+
+La forma más sencilla de configurar la carga de mapas de origen con `tsc` y `sentry-cli` es usando el asistente de Sentry:
+
+<Include name="sourcemaps-wizard-instructions.mdx" />
+
+Si prefieres configurar los mapas de origen manualmente, sigue los pasos a continuación.
+
+<div id="manual-setup">
+  ## Configuración manual
+</div>
+
+<div id="1-generate-source-maps">
+  ### 1. Generar mapas de fuentes
+</div>
+
+Primero, configura el compilador de TypeScript para generar mapas de fuentes:
+
+```json {filename:tsconfig.json}
+{
+  "compilerOptions": {
+    "sourceMap": true,
+    "inlineSources": true,
+
+    // Establece `sourceRoot` en "/" para quitar el prefijo de la ruta de compilación de
+    // las referencias al código fuente generado. Esto mejorará la agrupación de issues en Sentry.
+    "sourceRoot": "/"
+  }
+}
+```
+
+<Alert>
+  Generar sourcemaps puede exponerlos públicamente y filtrar tu código fuente. Puedes evitarlo configurando el servidor para bloquear el acceso a archivos `.js.map` o eliminando los sourcemaps antes de desplegar la aplicación.
+</Alert>
+
+<Include name="sentry-cli-sourcemaps.mdx" />
+
+
+<div id="dealing-with-tslib">
+  ## Cómo manejar TSLib
+</div>
+
+Durante la compilación, TypeScript inyecta algunas de sus dependencias de tiempo de ejecución en los archivos de salida que genera, si es necesario. Puede incluir cosas como polyfills para generadores o APIs que quizás no estén disponibles en todos los entornos. Sin embargo, al no existir fuentes originales, es imposible relacionar los frames del código compilado con las fuentes originales.
+
+Como solución, tendrás que indicarle al compilador de TypeScript que use `tslib`, su propio paquete de terceros (que internamente forma parte del compilador), en lugar de inyectar dependencias de tiempo de ejecución. Solo necesitas cambiar lo que está dentro del archivo de configuración de TypeScript, no tu código fuente. Así:
+
+1. Asegúrate de que `tslib` figure como dependencia en tu archivo `package.json`.
+2. Una vez hecho, agrega dos entradas en la sección `compilerOptions` de tu `tsconfig.json`:
+
+- `"noEmitHelpers": true` y
+- `"importHelpers": true`.
+
+¡Eso es todo! Ahora deberías poder mapear correctamente los source maps de todos los frames de tu stack trace, incluidos los fragmentos de código internos del compilador de TypeScript.

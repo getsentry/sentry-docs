@@ -1,0 +1,39 @@
+---
+title: Aislamiento de solicitudes
+description: "Obtén más información sobre cómo funciona el aislamiento de solicitudes (o aislamiento de procesos) en el SDK de Sentry."
+supported:
+  - javascript.nextjs
+  - javascript.node
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.hapi
+  - javascript.hono
+  - javascript.koa
+  - javascript.nestjs
+  - javascript.nuxt
+  - javascript.solidstart
+  - javascript.sveltekit
+  - javascript.astro
+  - javascript.remix
+  - javascript.tanstackstart-react
+  - javascript.react-router
+notSupported:
+  - javascript
+---
+
+En entornos del lado del servidor, el <PlatformLink to="/enriching-events/scopes">ámbito de aislamiento</PlatformLink> se separa automáticamente en los límites de cada solicitud. Esto lo gestiona automáticamente el SDK. Como resultado, cada solicitud tiene su propio ámbito de aislamiento y los datos definidos en ese ámbito solo se aplican a los eventos capturados durante esa solicitud.
+
+Sin embargo, también hay otras situaciones en las que puede interesarte aislar, por ejemplo, en trabajos en segundo plano o cuando quieres aislar una parte específica de tu código. En estos casos, puedes usar `Sentry.withIsolationScope()` para crear un nuevo ámbito de aislamiento válido dentro del callback que le pases. Obtén más información sobre cómo usar [withIsolationScope](../scopes/#using-withisolationscope).
+
+El siguiente ejemplo muestra cómo usar `withIsolationScope` para adjuntar datos a la ejecución de un trabajo específico:
+
+```javascript
+async function job(jobId) {
+  return Sentry.withIsolationScope(async () => {
+    // Solo válido para eventos en esta función de callback
+    Sentry.setTag("jobId", jobId);
+    await doSomething();
+  });
+}
+```

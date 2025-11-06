@@ -1,0 +1,100 @@
+---
+title: Laravel Lumen
+description: "Aprende a usar Sentry con Laravel Lumen."
+sidebar_order: 400
+---
+
+Laravel es compatible mediante un paquete nativo: [sentry-laravel](https://github.com/getsentry/sentry-laravel).
+
+Esta guía es para Laravel Lumen 5+. También ofrecemos instrucciones para [la versión más reciente de Laravel](/es/platforms/php/guides/laravel/) y para [otras versiones](/es/platforms/php/guides/laravel/other-versions/).
+
+<div id="install">
+  ## Instalación
+</div>
+
+Instala el paquete `sentry/sentry-laravel`:
+
+```bash
+composer require sentry/sentry-laravel
+```
+
+Registra Sentry en `bootstrap/app.php`:
+
+```php {filename:bootstrap/app.php}
+$app->register('Sentry\Laravel\ServiceProvider');
+
+// Para habilitar Sentry Tracing, el `TracingServiceProvider` debe registrarse adicionalmente:
+// $app->register('Sentry\Laravel\Tracing\ServiceProvider');
+
+// Sentry debe registrarse antes de incluir las rutas
+require __DIR__ . '/../app/Http/routes.php';
+```
+
+Añade el reporte de Sentry a `app/Exceptions/Handler.php`:
+
+```php {filename:app/Exceptions/Handler.php}
+public function report(Throwable $exception)
+{
+    if (app()->bound('sentry') && $this->shouldReport($exception)) {
+        app('sentry')->captureException($exception);
+    }
+
+    parent::report($exception);
+}
+```
+
+<div id="configure">
+  ## Configurar
+</div>
+
+Copia el archivo de configuración de Sentry desde el directorio vendor:
+
+```bash
+cp vendor/sentry/sentry-laravel/config/sentry.php config/sentry.php
+```
+
+Luego, agrega tu DSN a `.env`:
+
+```shell {filename:.env}
+SENTRY_LARAVEL_DSN=___PUBLIC_DSN___
+```
+
+<div id="verify">
+  ## Verifica
+</div>
+
+<div id="verify-with-artisan">
+  ### Verificar con Artisan
+</div>
+
+Puedes probar tu configuración con el comando de Artisan `sentry:test`:
+
+```shell
+php artisan sentry:test
+```
+
+<div id="verify-with-code">
+  ### Verificar con código
+</div>
+
+Puedes comprobar que Sentry está capturando errores en tu aplicación de Laravel creando una ruta que genere una excepción:
+
+```php {filename:routes/web.php}
+Route::get('/debug-sentry', function () {
+    throw new Exception('My first Sentry error!');
+});
+```
+
+Al visitar esta ruta se desencadenará una excepción que Sentry registrará.
+
+<div id="local-development-and-testing">
+  ## Desarrollo local y pruebas
+</div>
+
+Cuando Sentry está instalado en tu aplicación, también estará activo mientras desarrollas o ejecutas pruebas.
+
+Probablemente no quieras que se envíen errores a Sentry durante el desarrollo o las pruebas. Para evitarlo, establece el valor de DSN en `null` para desactivar el envío de errores a Sentry.
+
+También puedes lograrlo no definiendo `SENTRY_LARAVEL_DSN` en tu `.env` o definiéndolo como `SENTRY_LARAVEL_DSN=null`.
+
+Si dejas Sentry habilitado mientras desarrollas o ejecutas pruebas, podría afectar negativamente el rendimiento de tu aplicación o de tu suite de pruebas.

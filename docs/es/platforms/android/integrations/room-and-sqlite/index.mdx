@@ -1,0 +1,225 @@
+---
+title: Room y SQLite
+caseStyle: camelCase
+supportLevel: production
+sdk: sentry.java.android.sqlite
+description: >-
+  Obtén más información sobre las integraciones de Sentry con Room y AndroidX
+  SQLite para el SDK de Android.
+categories:
+  - mobile
+og_image: /og-images/platforms-android-integrations-room-and-sqlite.png
+---
+
+<Alert>
+  Compatible con la versión `4.0.0` y posteriores del SDK de Android de Sentry.
+
+  Compatible con la versión `3.0.0` y posteriores del complemento Sentry Android Gradle.
+
+  La instrumentación personalizada es compatible en el SDK de Android de Sentry a partir de la versión `6.21.0`.
+</Alert>
+
+<div id="auto-installation-with-the-sentry-android-gradle-plugin">
+  ## Instalación automática con el Sentry Android Gradle Plugin
+</div>
+
+El [Sentry Android Gradle Plugin](/es/platforms/android/configuration/gradle/) ofrece compatibilidad con Room y AndroidX SQLite mediante manipulación de bytecode. El código fuente está disponible [en GitHub](https://github.com/getsentry/sentry-android-gradle-plugin/tree/main/plugin-build/src/main/kotlin/io/sentry/android/gradle/instrumentation).
+
+En esta página te ayudamos a empezar con la integración de Room y SQLite de Sentry, para que se inicie automáticamente un span desde una transacción activa vinculada al ámbito de cada consulta sqlite/dao.
+
+<div id="install">
+  ### Instalación
+</div>
+
+Para usar la integración de Room y AndroidX SQLite, agrega el complemento Sentry Android Gradle y el SDK de Sentry para Android (versión `4.0.0` o posterior) en `build.gradle`:
+
+```groovy
+plugins {
+  id "io.sentry.android.gradle" version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.0.0') }}"
+}
+
+dependencies {
+  implementation 'io.sentry:sentry-android:{{@inject packages.version('sentry.java.android', '5.0.0') }}'
+}
+```
+
+```kotlin
+plugins {
+  id("io.sentry.android.gradle") version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.0.0') }}"
+}
+
+dependencies {
+  implementation("io.sentry:sentry-android:{{@inject packages.version('sentry.java.android', '5.0.0') }}")
+}
+```
+
+<Alert>
+  Asegúrate de que [tracing](/es/platforms/android/tracing/#configure-the-sample-rate) esté activado.
+</Alert>
+
+<div id="configure">
+  ### Configuración
+</div>
+
+Por lo general, no se necesita ninguna configuración adicional, ya que la autoinstrumentación está habilitada de forma predeterminada. Si quieres desactivar la instrumentación de bases de datos, ofrecemos una opción de configuración para ello:
+
+```groovy
+import io.sentry.android.gradle.extensions.InstrumentationFeature
+
+sentry {
+  tracingInstrumentation {
+    enabled = true
+    features = EnumSet.allOf(InstrumentationFeature) - InstrumentationFeature.DATABASE
+  }
+}
+```
+
+```kotlin
+import java.util.EnumSet
+import io.sentry.android.gradle.extensions.InstrumentationFeature
+
+sentry {
+  tracingInstrumentation {
+    enabled.set(true)
+    features.set(EnumSet.allOf(InstrumentationFeature::class.java) - InstrumentationFeature.DATABASE)
+  }
+}
+```
+
+<div id="manual-installation">
+  ## Instalación manual
+</div>
+
+<Alert>
+  Compatible con el SDK de Android de Sentry a partir de la versión `6.21.0`.
+</Alert>
+
+<div id="install">
+  ### Instalación
+</div>
+
+Sentry captura datos al envolver un `SupportSQLiteOpenHelper.Factory`. Para añadir la integración de SQLite, inicializa el [SDK de Android](/es/platforms/android/) y luego añade la dependencia `sentry-android-sqlite` usando Gradle:
+
+```groovy
+implementation 'io.sentry:sentry-android:{{@inject packages.version('sentry.java.android', '6.21.0') }}'
+implementation 'io.sentry:sentry-android-sqlite:{{@inject packages.version('sentry.java.android.sqlite', '6.21.0') }}'
+```
+
+### Configurar
+
+No se requiere configuración. Solo envuelve tu instancia de `SupportSQLiteOpenHelper` en `SentrySupportSQLiteOpenHelper`.
+
+```kotlin
+import io.sentry.android.sqlite.SentrySupportSQLiteOpenHelper
+
+private val myOpenHelper = MyOpenHelper()
+private val instrumentedOpenHelper = SentrySupportSQLiteOpenHelper.create(myOpenHelper)
+```
+
+```java
+import io.sentry.android.sqlite.SentrySupportSQLiteOpenHelper;
+
+private final SupportSQLiteOpenHelper myOpenHelper = new MyOpenHelper();
+private final SupportSQLiteOpenHelper instrumentedOpenHelper = SentrySupportSQLiteOpenHelper.create(myOpenHelper);
+```
+
+Room es compatible cuando se usa el `FrameworkSQLiteOpenHelperFactory` predeterminado proporcionado por el paquete `androidx.sqlite`, pero puede utilizarse cualquier `SupportSQLiteOpenHelper` personalizado.
+
+```kotlin
+import androidx.room.Room
+import io.sentry.android.sqlite.SentrySupportSQLiteOpenHelper
+
+val database = Room.databaseBuilder(context, MyDatabase::class.java, "dbName")
+    .openHelperFactory { configuration ->
+        SentrySupportSQLiteOpenHelper.create(FrameworkSQLiteOpenHelperFactory().create(configuration))
+    }
+    .build()
+```
+
+```java
+import androidx.room.Room;
+import io.sentry.android.sqlite.SentrySupportSQLiteOpenHelper;
+
+final MyDatabase database = Room.databaseBuilder(context, MyDatabase.class, "dbName")
+    .openHelperFactory (configuration ->
+        SentrySupportSQLiteOpenHelper.create(new FrameworkSQLiteOpenHelperFactory().create(configuration))
+    )
+    .build();
+```
+
+<div id="verify">
+  ## Verificar
+</div>
+
+Supongamos que tienes el siguiente fragmento de código (simplificado) que realiza una consulta a la base de datos en un DAO de Room:
+
+```kotlin
+import android.os.Bundle
+import android.widget.Button
+import androidx.activity.ComponentActivity
+import androidx.room.Database
+import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.RoomDatabase
+import io.sentry.Sentry
+import io.sentry.SpanStatus
+import kotlinx.coroutines.withContext
+
+@Dao
+abstract class TracksDao {
+  @Insert(onConflict = OnConflictStrategy.REPLACE)
+  abstract suspend fun insert(track: Track): Long
+}
+
+@Database(
+  entities = [Track::class],
+  version = 1,
+  exportSchema = false
+)
+abstract class TracksDatabase : RoomDatabase() {
+    abstract fun tracksDao(): TracksDao
+}
+
+class EditActivity : ComponentActivity() {
+  private lateinit var database: TracksDatabase
+
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    database = TODO("inicializar base de datos...")
+
+    findViewById<Button>(R.id.editTrack).setOnClickListener {
+      val transaction = Sentry.startTransaction(
+        name = "Interacción con pista",
+        operation = "ui.action.edit",
+        bindToScope = true
+      )
+
+      val newTrack = Track(/* completar valores de la pista */)
+
+      withContext(Dispatchers.IO) {
+        database.tracksDao().insert(newTrack)
+        transaction.finish(SpanStatus.OK)
+      }
+    }
+  }
+}
+```
+
+Para ver la transacción registrada, inicia sesión en [sentry.io](https://sentry.io) y abre tu proyecto. Al hacer clic en **Performance** se abrirá una página con transacciones, donde puedes seleccionar la transacción recién registrada llamada `Track Interaction`. El evento se verá parecido a esto:
+
+![Instrumentación de rendimiento de Room y AndroidX SQLite](./img/room-sqlite-instrumentation.png)
+
+<Alert>
+  El plugin de Gradle de Sentry para Android informará consultas SQL para cualquier `SupportSQLiteOpenHelper.Factory` a partir de la versión `3.11.0`.
+
+  Las versiones anteriores solo admiten el uso estándar de `androidx.room` y no informarán consultas SQL para ningún `SupportSQLiteOpenHelper.Factory` que no sea [androidx.sqlite](https://github.com/androidx/androidx/tree/androidx-main/sqlite).
+
+  Si tienes problemas con este SDK, queremos saberlo. Crea un [issue en GitHub](https://github.com/getsentry/sentry-android-gradle-plugin/issues) y cuéntanos tu experiencia.
+</Alert>
+
+<Alert>
+  Si estás usando directamente los métodos [SupportSQLiteDatabase#query](https://developer.android.com/reference/androidx/sqlite/db/SupportSQLiteDatabase#query\(java.lang.String\)) o [SupportSQLiteDatabase#execSQL](https://developer.android.com/reference/androidx/sqlite/db/SupportSQLiteDatabase#execSQL\(java.lang.String\)) a través del SQLiteOpenHelper de Room, considera cambiar a sus alternativas que aceptan `bindArgs` como segundo parámetro.
+
+  Como Sentry captura las consultas SQL como descripción del span, existe el riesgo de exponer datos sensibles si no usas una cadena SQL con marcadores de posición.
+</Alert>

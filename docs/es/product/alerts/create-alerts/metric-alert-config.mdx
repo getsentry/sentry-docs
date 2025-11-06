@@ -1,0 +1,227 @@
+---
+title: Configuración de alertas de métricas
+sidebar_order: 20
+description: Más información sobre las opciones para configurar una alerta de métricas.
+og_image: /og-images/product-alerts-create-alerts-metric-alert-config.png
+---
+
+Sentry ofrece varias opciones de configuración para crear una alerta de métricas según las necesidades de tu organización.
+
+<div id="metric-type-function-time-interval">
+  ## Métrica (Tipo + Función + Intervalo de tiempo)
+</div>
+
+Para crear una alerta de métrica, primero debes elegir un tipo de métrica. En algunos tipos de alerta, la función está integrada en la alerta y, en otros, puedes elegir funciones y parámetros para aplicarlos. Por ejemplo, si seleccionas “Users Experiencing Errors”, eso corresponde a la función `count_unique(user.id)`. Dado que editar esta función cambiaría la naturaleza de la alerta, no es editable y, por lo tanto, está oculta. Por otro lado, si seleccionas “Largest Contentful Paint”, la medición utilizada es `measurement.lcp`; también debes elegir una función, p. ej., `p75()`, para obtener una función de métrica combinada de `p75(measurement.lcp)`.
+
+<Alert>
+  Al crear nuevas alertas de métricas, el filtro `is:unresolved` se agrega de forma predeterminada. Este filtro excluye eventos de incidencias archivadas y resueltas. Si quieres que tus alertas de métricas incluyan incidencias archivadas, puedes eliminar manualmente `is:unresolved` de tus [filtros](#filters).
+</Alert>
+
+<div id="metrics-types-for-alerting">
+  ### Tipos de métricas para alertamiento
+</div>
+
+<div id="errors">
+  #### Errores
+</div>
+
+* Número de errores
+* Usuarios que experimentan errores
+
+<div id="sessions">
+  #### Sesiones
+</div>
+
+* Tasa de sesiones sin bloqueos
+* Tasa de usuarios sin bloqueos
+
+<div id="performance">
+  #### Rendimiento
+</div>
+
+* Rendimiento
+* Duración de la transacción
+* Apdex
+* Tasa de errores
+* Largest Contentful Paint (LCP)
+* First Input Delay (FID)
+* Cumulative Layout Shift (CLS)
+* Medición personalizada
+
+<div id="metrics">
+  #### Métricas
+</div>
+
+* Métrica personalizada
+
+<div id="functions-for-metric-types">
+  ### Funciones para tipos de métricas
+</div>
+
+* `count()`
+* `count_unique(...)`
+* `avg(...)`
+* `percentile(...)`
+* `failure_rate()`
+* `apdex(...)`
+* `count()`
+* `p50()`
+* `p75()`
+* `p95()`
+* `p99()`
+* `p100()`
+
+<div id="time-interval">
+  ### Intervalo de tiempo
+</div>
+
+Elige el periodo de tiempo durante el cual evaluar tu métrica. Puedes seleccionar desde un minuto hasta un día. Sentry evalúa la ventana especificada cada minuto. Por ejemplo, si especificas una ventana de una hora, Sentry evalúa:
+
+* A las 3:00 p. m.: 2:00 p. m. - 3:00 p. m.
+* A las 3:01 p. m.: 2:01 p. m. - 3:01 p. m.
+* A las 3:02 p. m.: 2:02 p. m. - 3:02 p. m.
+* ...
+
+<div id="filters">
+  ## Filtros
+</div>
+
+El siguiente conjunto de filtros se convierte en una [consulta de Discover](/es/product/explore/discover-queries/) que se muestra en el gráfico en la parte superior de la página de configuración de alertas.
+
+<div id="project">
+  ### Proyecto
+</div>
+
+Especifica qué proyecto usará esta regla de alerta en particular. La regla de alerta creada solo procesará eventos de ese proyecto.
+
+<div id="environment">
+  ### Entorno
+</div>
+
+Especifica qué <PlatformLink to="/configuration/environments/">entorno(s)</PlatformLink> usarán esta regla de alerta en particular. Este control filtra por la etiqueta `environment` en tus eventos. Este filtro es útil porque la urgencia y los flujos de trabajo que aplicas a las alertas de producción pueden diferir de los que aplicas a las alertas que se originan en tu entorno de QA, por ejemplo.
+
+La lista desplegable “Environment” aquí incluye los mismos entornos disponibles para el proyecto seleccionado en el filtro común “Environment” (esto no incluye los entornos ocultos). Seleccionar “All Environments” equivale a no aplicar ningún filtro de entorno.
+
+<div id="event-type">
+  ### Tipo de evento
+</div>
+
+En algunas alertas de métricas, puedes elegir el tipo de evento sobre el que quieres recibir avisos en el menú desplegable “Events”:
+
+* `event.type:error` O `event.type:default`
+* `event.type:default`
+* `event.type:error`
+
+<div id="tags-properties">
+  ### Etiquetas y propiedades
+</div>
+
+Añade filtros en el campo proporcionado para acotar sobre qué recibirás alertas, como etiquetas u otras propiedades de eventos. Las propiedades disponibles dependen del tipo de alerta:
+
+* Para eventos de **error**, todas las propiedades de error están disponibles. Consulta [Propiedades buscables](/es/concepts/search/searchable-properties/events/#searchable-properties) para ver la lista completa.
+* Para eventos de **transacción**, generalmente están disponibles las siguientes propiedades básicas: `release`, `transaction`, `transaction.status`, `transaction.op`, `http.method`, `http.status_code`, `os.name`, `browser.name` y `geo.country_code`.
+
+<div id="advanced-filters-for-transactions">
+  #### Filtros avanzados para transacciones
+</div>
+
+<Alert>
+  Esta función solo está disponible para organizaciones con un plan Business o Enterprise.
+</Alert>
+
+Además de las propiedades básicas mencionadas arriba, hay una mayor variedad de campos y etiquetas disponibles para que puedas crear condiciones de filtrado más avanzadas. Sin embargo, Sentry solo empieza a recopilar estas métricas después de guardar la alerta. Si se utiliza este tipo de filtro, Sentry ofrece una estimación de la métrica para el período anterior durante la creación de la alerta. En ciertos planes heredados, se permite un máximo de 50 alertas con filtros avanzados por proyecto.
+
+![Filtros avanzados para transacciones](./img/alerts-advanced-filters.png)
+
+<div id="invalid-filters">
+  #### Filtros no válidos
+</div>
+
+Aunque Sentry no te permitirá crear nuevas alertas con propiedades no válidas o no disponibles, las alertas existentes con campos no disponibles no se verán afectadas. Pero si necesitas editarlas o duplicarlas, tendrás que eliminar las propiedades no disponibles.
+
+<div id="thresholds">
+  ## Umbrales
+</div>
+
+Hay tres tipos de umbrales:
+
+* **Estático**: Un umbral numérico fijo que defines tú. (Por ejemplo, si hay 100 errores en un periodo de tiempo determinado).
+* **Cambio porcentual**: Un umbral basado en porcentaje, como cuando hay un 10% más de errores en un periodo comparado con el anterior. A estos también se les denomina [Alertas de cambio](#change-alerts-percent-change).
+* **Anomalía**: Un umbral dinámico gestionado por Sentry que detecta anomalías cuando los valores quedan fuera de los límites esperados.
+
+De forma predeterminada, las alertas de métricas usan un umbral fijo.
+
+<div id="change-alerts-percent-change">
+  ### Alertas de cambio (cambio porcentual)
+</div>
+
+<Include name="feature-available-for-plan-trial-business.mdx" />
+
+Las alertas de cambio, o alertas que usan un umbral de cambio porcentual, son útiles cuando quieres saber si una métrica es significativamente diferente de lo habitual. Para ello, tendrás que elegir un intervalo de la métrica (al seleccionar el tipo de métrica) y un periodo con el que compararla. Por ejemplo, puedes comparar la cantidad de errores de la última hora con el mismo periodo de hace una semana. Si en la última hora hay un 25% más de errores que en el mismo periodo de hace una semana, se activará una alerta.
+
+![Cuando se selecciona la opción de cambio porcentual.](./img/percent-change.png)
+
+<div id="anomaly-alerts">
+  ### Alertas de anomalías
+</div>
+
+<Include name="feature-available-for-plan-trial-business.mdx" />
+
+Las alertas de anomalías detectan automáticamente tendencias fuera de los valores esperados. Son especialmente útiles para datos con picos o estacionales que resultan demasiado ruidosos para umbrales estáticos o basados en porcentaje. Sentry analizará los datos históricos de la métrica indicada y determinará si los datos actuales son anómalos. Ciertas métricas, como Apdex, actualmente no son compatibles con las alertas de anomalías.
+
+Detrás de bastidores, las alertas de anomalías utilizan una combinación de dos algoritmos de código abierto —[Matrix Profile](https://stumpy.readthedocs.io/en/latest/index.html) y [Prophet Forecasting](https://facebook.github.io/prophet/)— para detectar patrones inusuales y pronosticar tendencias esperadas. Al combinar estos enfoques, Sentry puede distinguir mejor las verdaderas anomalías de las fluctuaciones normales, reduciendo los falsos positivos y los falsos negativos.
+
+Hay tres opciones para la sensibilidad de la alerta: baja, media y alta. Si eliges una sensibilidad baja, la alerta se activará con menos frecuencia pero con mayor confianza. Si eliges una sensibilidad alta, la alerta se activará con mayor frecuencia, con una mayor probabilidad de falsos positivos. Recomendamos empezar con sensibilidad media, nuestra opción predeterminada, y ajustar la sensibilidad según los resultados que observes.
+
+Otra configuración es definir la dirección de la alerta: por encima y/o por debajo de los límites esperados. Esta opción puede ayudar a aumentar la señal de tu regla de alerta.
+
+![Cuando se selecciona el umbral dinámico.](./img/dynamic-threshold.png)
+
+<div id="set-threshold-to-trigger-alert">
+  ### Establecer el umbral para activar la alerta
+</div>
+
+Puedes definir el estado de una regla de alerta cuando se alcanza un umbral usando las etiquetas:
+
+* Crítico
+* Advertencia
+* Resuelto
+
+Debes configurar el umbral de “Advertencia” para que se active antes que el de “Crítico”. Cuando Sentry evalúa una alerta, su estado se actualiza al disparador de mayor severidad que aplique. Si no configuras un umbral de “Resuelto”, la alerta se resuelve automáticamente cuando ya no incumple las condiciones de “Crítico” o “Advertencia”. También puedes resolver las alertas manualmente.
+
+<Alert>
+  Nota: Los umbrales de las alertas por anomalías los controla Sentry y no pueden configurarse manualmente.
+</Alert>
+
+<div id="auto-resolve">
+  ### Resolución automática
+</div>
+
+De forma predeterminada, las alertas de métricas se resuelven automáticamente cuando la métrica especificada deja de incumplir las condiciones de “Critical” o “Warning”. Sin embargo, puedes establecer un umbral de resolución diferente. Por ejemplo, supongamos que un nivel normal de errores para tu app es inferior a 2000/minuto y quieres recibir una alerta cuando supere 5000/minuto. Quizá quieras que la alerta se resuelva solo si el nivel de errores vuelve a estar por debajo de 2000/minuto, no de 5000/minuto. Al establecer así el umbral “Resolved”, si el nivel de errores baja únicamente a 4000/minuto, lo cual considerarías problemático aunque esté por debajo de tu umbral de alerta, la alerta no se resolverá.
+
+<div id="actions">
+  ## Acciones
+</div>
+
+Las acciones definen cómo tú y tu equipo recibirán alertas:
+
+* Enviar un correo electrónico a una persona o a un equipo. Si se envía a una persona, se ignorarán sus preferencias personales para no recibir alertas del proyecto.
+* Enviar una notificación de [Slack](/es/organization/integrations/notification-incidents/slack/).
+* Enviar una notificación de [Discord](/es/organization/integrations/notification-incidents/discord/).
+* Desencadenar un incidente en [PagerDuty](/es/organization/integrations/notification-incidents/pagerduty/).
+* Enviar una notificación de [Microsoft Teams](/es/organization/integrations/notification-incidents/msteams/).
+* Enviar una solicitud mediante las [integraciones de Sentry](/es/organization/integrations/integration-platform/#alerts).
+
+Más información sobre [cómo enrutar alertas con integraciones](/es/product/alerts/create-alerts/routing-alerts/).
+
+<div id="rule-name">
+  ## Nombre de la regla
+</div>
+
+Asigna a tu alerta un nombre descriptivo que indique, por ejemplo, el equipo afectado y el tema de la alerta. Por ejemplo: &quot;Latencia de frontend&quot;, &quot;Tasa de errores de backend&quot; o &quot;Apdex de facturación&quot;. Este nombre debe ser **único a nivel de organización**; es decir, ninguna otra alerta de métricas creada en tu organización puede tener el mismo nombre de regla.
+
+<div id="team">
+  ## Equipo
+</div>
+
+Puedes elegir un equipo con el que asociar una alerta, para que los miembros de ese equipo puedan editarla. Ten en cuenta que solo podrás hacer esta asociación si eres miembro del equipo. Si no se selecciona ningún equipo, cualquiera podrá editar la alerta.

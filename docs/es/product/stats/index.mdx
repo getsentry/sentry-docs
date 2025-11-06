@@ -1,0 +1,217 @@
+---
+title: Estadísticas
+description: >-
+  La página de Estadísticas de Sentry muestra métricas importantes como Uso e
+  Incidencias que ayudan a los equipos a seguir la salud del proyecto. Aprende
+  cómo empezar aquí.
+sidebar_order: 130
+og_image: /og-images/product-stats.png
+---
+
+La página de [**Estadísticas**](https://sentry.io/orgredirect/organizations/:orgslug/stats/) ofrece una vista general de los datos de uso que Sentry recibe en toda tu organización. Te permite detectar proyectos que hayan tenido picos recientes de actividad o que estén mostrando más errores que otros y que puedan requerir un análisis más detallado. También puedes ajustar el rango de fechas mostrado, lo que te permite acotar a un periodo específico o ampliar para una vista más general.
+![Resumen de la página de Estadísticas de Uso](./img/usage-stats-page-errors.png)
+
+Con los menús desplegables en la parte superior de la página, puedes definir si se muestran estadísticas de errores, transacciones o adjuntos, así como el rango de fechas. Con el selector de fechas, el periodo puede establecerse desde una hora hasta un máximo de 90 días, y todos los elementos de la página cambian dinámicamente cuando actualizas esta configuración.
+
+<Alert>
+  Esta página no incluye datos sobre sesiones porque no son un tipo de evento
+  facturable.
+</Alert>
+
+Hay tres pestañas disponibles en la página: [Uso](#usage-stats), [Incidencias](#issue-stats) y [Salud](#health-stats).
+
+La pestaña &quot;Uso&quot; muestra el uso de eventos y adjuntos de tu organización, además de proporcionar una vista general de alto nivel sobre cómo distintos proyectos están usando Sentry. La pestaña &quot;Incidencias&quot; muestra un desglose de las incidencias asignadas a tu equipo y cómo las triaron, mientras que la pestaña &quot;Salud&quot; ofrece una vista general de la salud de los proyectos de tu equipo.
+
+<div id="usage-stats">
+  ## Estadísticas de uso
+</div>
+
+La pestaña &quot;Uso&quot; ofrece una vista general de los eventos (errores y transacciones) y de los archivos adjuntos que Sentry ha recibido en toda tu organización. Incluye un desglose detallado del consumo de cada proyecto, categorizado como *Aceptados*, *Filtrados*, *Limitados por tasa*, *Inválidos* o *Descartados por el cliente*.
+
+<div id="accepted">
+  ### Aceptados
+</div>
+
+Eventos y adjuntos que se procesaron y almacenaron correctamente.
+
+<div id="filtered">
+  ### Filtrados
+</div>
+
+Eventos y adjuntos filtrados e intencionalmente excluidos según la configuración definida. Algunos motivos habituales son:
+
+* **Extensiones del navegador**: Filtrados por una extensión del navegador.
+* **Errores de carga de fragmentos**: Filtrados cuando no se encuentran fragmentos de código en el servidor.
+* **Hash descartado**: Filtrados según las huellas de incidencias previamente eliminadas y descartadas.
+* **Mensaje de error**: Filtrados en función de mensajes de error específicos.
+* **Transacción filtrada**: Filtrados porque fue una llamada a una transacción filtrada.
+* **CSP no válida**: Filtrados debido a una política de Content Security Policy (CSP) no válida.
+* **Dirección IP**: Filtrados por dirección IP.
+* **Navegadores antiguos**: Filtrados por ciertas versiones antiguas de navegadores que se sabe causan problemas.
+* **Localhost**: Filtrados debido a una restricción de localhost.
+* **Versión de lanzamiento**: Filtrados por nombre de versión (release).
+* **Errores de hidratación de React**: Filtrados debido a una discrepancia entre la interfaz de usuario renderizada en el servidor y la inicial del cliente.
+* **Rastreadores web**: Identificados como rastreadores web conocidos.
+
+Para más detalles, consulta la documentación de [Inbound Filters](/es/concepts/data-management/filtering/).
+
+<div id="rate-limited">
+  ### Límite de tasa
+</div>
+
+Eventos y archivos adjuntos descartados debido a límites de tasa o de cuota. Actualmente se contemplan los siguientes motivos:
+
+* **Deshabilitado**: Se recibieron datos para una función o característica que no está disponible para tu organización.
+* **Límite de DSN**: El tráfico superó un límite de tasa definido en la clave de cliente (DSN). Consulta [Límites de tasa](/es/pricing/quotas/#rate-limits) para más información.
+* **Límite global**: El tráfico superó un límite de tasa a nivel de organización o de proyecto. Esta configuración ya no está disponible para la mayoría de las organizaciones.
+* **Cuota**: La cuota mensual de tu suscripción se agotó y no queda presupuesto de pago por uso. Consulta [Ajustar tu cuota](/es/pricing/quotas/#adjusting-your-quota) para más información.
+* **Protección contra picos**: Activada para proteger frente a un aumento repentino en el volumen de eventos. Consulta [Protección contra picos](/es/pricing/quotas/spike-protection/) para más información.
+* **Límite interno**: Sentry aplicó un límite de tasa por volumen excesivo. Estos límites no son configurables.
+
+<div id="invalid">
+  ### No válido
+</div>
+
+Es posible que se descarten eventos y adjuntos si no coinciden con el formato esperado o contienen datos que no pueden procesarse. Actualmente se contemplan los siguientes motivos:
+
+* **Dominio no permitido**: Se envió a Sentry una solicitud desde un origen no permitido. Revisa la configuración del proyecto para definir los dominios permitidos.
+* **Duplicado**: Ya se procesó un evento con el mismo id para este proyecto. Sentry no permite eventos duplicados y solo almacena el primero.
+* **Vacío**: Se envió una solicitud vacía o una solicitud sin su componente principal de datos.
+* **Datos no válidos**: Los datos enviados por el SDK no eran válidos y no cumplen con el esquema básico. Esto probablemente indica un error en la implementación del SDK. Informa un bug si este problema persiste.
+* **Solicitud no válida**: El envío HTTP no era válido o faltaba información requerida. Es probable que se deba a un problema en la implementación del SDK. Informa un bug si este problema persiste.
+* **Minidump**: Faltaba el minidump en una solicitud de carga de minidump o no era válido. Consulta la [documentación de Minidumps](/es/platforms/native/guides/minidumps/) para obtener detalles sobre cómo cargar minidumps.
+* **Payload**: El envío HTTP estaba incompleto y no pudo procesarse. Es probable que se deba a un fallo de red.
+* **Proyecto faltante**: El proyecto de Sentry especificado está deshabilitado o la información del proyecto en la solicitud enviada fue inconcluyente.
+* **Muestreo**: Datos de trazado descartados durante el muestreo.
+* **Informe de seguridad**: Se envió un informe de seguridad no válido o no compatible. Si este informe proviene de un navegador actualizado, informa un bug a Sentry. Consulta [Security Policy Reporting](/es/security-legal-pii/security/security-policy-reporting/) para más información.
+* **Demasiado grande**: El envío HTTP o los datos incluidos superan los límites de tamaño. Si está disponible, se puede indicar exactamente qué los superó como &quot;Too Large &lt;what&gt;&quot;, donde &lt;what&gt; especifica el límite de tamaño concreto que se superó (p. ej., &quot;Too Large Event&quot;); de lo contrario, &quot;Too Large Other&quot;. Para conocer los límites de tamaño exactos, consulta [este documento](https://develop.sentry.dev/sdk/data-model/envelopes/#size-limits)
+* **Unreal**: Se envió un informe de bloqueo de Unreal Engine no compatible o no válido. Si esta solicitud proviene de una versión reciente o de desarrollo de Unreal Engine, informa un bug a Sentry. Consulta [Unreal Engine](/es/platforms/unreal/) para más información.
+* **Interno**: Un problema interno en Sentry impidió el procesamiento o almacenamiento normal de la información enviada.
+
+<div id="client-discard">
+  ### Descarte del cliente
+</div>
+
+Eventos y adjuntos descartados por el SDK. Actualmente se contemplan los siguientes motivos:
+
+* **Desbordamiento de la cola**: Una cola interna del SDK (por ejemplo, una cola de transporte) se desbordó.
+* **Desbordamiento de la caché**: Una caché interna del SDK (por ejemplo, una caché de eventos sin conexión) se desbordó.
+* **Backoff por límite de tasa**: El SDK descartó eventos porque un límite de tasa previo indicó que debía reducir el envío.
+* **Error de red**: Los eventos se descartaron debido a errores de red y no se reintentaron.
+* **Tasa de muestreo**: Se descartó un evento debido a la tasa de muestreo configurada.
+* **Before Send**: Se descartó un evento en `before_send`.
+* **Procesador de eventos**: Un procesador de eventos descartó un evento; esto también puede usarse para excepciones/errores ignorados.
+* **Error de envío**: Se descartó un evento debido a un error al enviarlo (por ejemplo, una respuesta 400).
+* **Error interno del SDK**: Se descartó un evento debido a un error interno del SDK (por ejemplo, un bloqueo de un web worker).
+* **Datos insuficientes**: Se descartó un evento por falta de datos en el evento (por ejemplo, muestras insuficientes en un perfil).
+* **Backpressure**: Se descartó un evento debido a una reducción del muestreo causada por carga del sistema.
+
+Para más detalles, consulta la documentación de [Client Reports](https://develop.sentry.dev/sdk/telemetry/client-reports/#envelope-item-payload).
+
+<div id="usage-cards">
+  ### Tarjetas de uso
+</div>
+
+Las tarjetas de la página muestran estadísticas generales sobre eventos y archivos adjuntos, incluido el número total de cada uno en el período de tiempo especificado. También puedes ver cuáles fueron aceptados, filtrados, sujetos a limitación de tasa o inválidos.
+
+<div id="summary-chart">
+  ### Gráfico de resumen
+</div>
+
+El gráfico de esta página muestra un desglose de eventos y archivos adjuntos para el rango de fechas seleccionado. Según el rango que elijas, cada barra del gráfico representa un intervalo de tiempo distinto. Por ejemplo, si configuras el gráfico para mostrar siete días, cada barra representa una hora; pero si lo configuras para mostrar 90 días, cada barra representa un día. También puedes usar el menú desplegable “Type” para indicar si el gráfico muestra un recuento acumulado de eventos o archivos adjuntos, o un recuento diario (u horario).
+
+Cuando estableces un rango de fechas que da como resultado intervalos de un día o más, la zona horaria se muestra en UTC para garantizar la coherencia entre personas en distintas zonas horarias. Para periodos con intervalos de menos de 24 horas, la zona horaria se basa en tu configuración de &quot;Timezone&quot; en **User Settings &gt; Account Details**.
+
+<div id="project-usage-stats-table">
+  ### Tabla de estadísticas de uso del proyecto
+</div>
+
+La tabla “Proyecto” ofrece información sobre el uso por proyecto de tus errores, transacciones y adjuntos a lo largo del tiempo. La tabla muestra el total de errores, transacciones o adjuntos, desglosados en las categorías aceptados, filtrados y descartados.
+
+Cada proyecto de la tabla tiene ajustes propios, a los que puedes acceder haciendo clic en el icono de configuración (rueda dentada) junto al nombre del proyecto. Por ejemplo, puedes ir a la configuración del proyecto para limitar la cuota consumida por sus DSN. Al hacer clic en el nombre del proyecto, accederás a la página **[Project Details](/es/product/projects/project-details/)**.
+
+La tabla muestra solo los proyectos de los equipos a los que perteneces, a menos que tengas permisos para ver todos los proyectos.
+
+<div id="issues-stats">
+  ## Estadísticas de incidencias
+</div>
+
+<Include name="feature-available-for-plan-business.mdx" />
+
+La pestaña &quot;Issues&quot; muestra la actividad de las incidencias asignadas a tu equipo: cuántas incidencias nuevas se detectaron, cuántas incidencias resueltas volvieron a aparecer y cómo se clasificaron.
+
+![La página de Estadísticas de incidencias](./img/issues-stats.png)
+
+<div id="all-unresolved-issues">
+  #### Todos los issues sin resolver
+</div>
+
+El gráfico y la tabla &quot;Todos los issues sin resolver&quot; muestran los issues nuevos y recurrentes por proyecto en los últimos siete días, así como aquellos que no se han resuelto ni archivado anteriormente.
+
+<div id="new-and-returning-issues">
+  #### Problemas nuevos y recurrentes
+</div>
+
+El gráfico y la tabla de &quot;Problemas nuevos y recurrentes&quot; muestran los problemas nuevos, recurrentes y en aumento que se asignaron a tu equipo.
+
+<div id="issues-triaged">
+  #### Incidencias clasificadas
+</div>
+
+El gráfico y la tabla de &quot;Incidencias clasificadas&quot; muestran cuántas incidencias nuevas y recurrentes revisó tu equipo cada semana. Revisar una incidencia incluye marcarla como revisada, resolverla, asignarla a otro equipo o eliminarla.
+
+<div id="age-of-unresolved-issues">
+  #### Antigüedad de los issues sin resolver
+</div>
+
+El gráfico y la tabla “Antigüedad de los issues sin resolver” muestran cuánto tiempo ha pasado desde que se crearon por primera vez los siete issues sin resolver más antiguos en los proyectos de tu equipo, ordenados por antigüedad.
+
+<div id="time-to-resolution">
+  #### Tiempo de resolución
+</div>
+
+El gráfico “Tiempo de resolución” muestra el tiempo medio que tardó tu equipo en resolver los problemas cada semana.
+
+<div id="health-stats">
+  ## Estadísticas de estado
+</div>
+
+<Include name="feature-available-for-plan-business.mdx" />
+
+La pestaña “Estado” muestra información sobre el estado general de tus proyectos: las sesiones sin fallos, el nivel de insatisfacción de los usuarios en las transacciones clave de tu equipo, la cantidad de alertas activadas por las reglas de alerta de tu equipo y la cantidad de versiones por proyecto.
+
+![La página de Estadísticas de estado](./img/health-stats.png)
+
+<div id="crash-free-sessions">
+  #### Sesiones sin fallos
+</div>
+
+La tabla &quot;Sesiones sin fallos&quot; muestra el porcentaje de sesiones que no provocaron un fallo en el intervalo de fechas seleccionado.
+
+<div id="user-misery">
+  #### Miseria del usuario
+</div>
+
+La tabla “Miseria del usuario” muestra las transacciones en las que los usuarios tuvieron tiempos de carga cuatro veces superiores al umbral configurado del proyecto, junto con la cantidad de usuarios únicos de cada una de esas transacciones.
+
+<div id="metric-alerts-triggered">
+  #### Alertas de métricas activadas
+</div>
+
+El gráfico y la tabla “Alertas de métricas activadas” muestran las reglas de alerta que se han activado para los proyectos que administra tu equipo.
+
+<div id="number-of-releases">
+  #### Número de lanzamientos
+</div>
+
+El gráfico y la tabla “Número de lanzamientos” muestran los lanzamientos creados para cada uno de los proyectos de tu equipo.
+
+<div id="continuous-profiling-stats">
+  ## Estadísticas de perfilado continuo
+</div>
+
+<div id="dropped-profile-hours">
+  #### Horas de perfiles descartados
+</div>
+
+[Relay](/es/product/relay/) calcula las duraciones de los perfiles para los resultados aceptados en lugar de para cada fragmento de perfil recibido. Tanto las horas de perfil como las estadísticas de horas de perfil en la IU se derivan de esos fragmentos de perfil aceptados o de los fragmentos de perfil de la IU, respectivamente, sin almacenar datos de duración para los resultados descartados (que solo se contabilizan). Cada fragmento de perfil tiene una duración máxima de 66 segundos. Según datos de pruebas internas, los percentiles 10 y 25 de las duraciones de los fragmentos de perfil aceptados son de aproximadamente 9,9 segundos. Esta métrica se usó para seleccionar 9,0 segundos como multiplicador de estimación para cada fragmento de perfil descartado.

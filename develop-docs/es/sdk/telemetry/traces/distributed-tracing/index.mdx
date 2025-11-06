@@ -1,0 +1,33 @@
+---
+title: Trazabilidad distribuida
+---
+
+Este documento describe cómo un SDK debe propagar información entre distintos servicios para conectar toda la telemetría (errores, perfiles, reproducciones, transacciones, check-ins, ...) de esos servicios en un solo rastro.
+
+Para una visión general, consulta [Trazabilidad distribuida](https://docs.sentry.io/product/performance/distributed-tracing/) en la documentación del producto.
+
+Sentry utiliza tres contenedores para mantener la información del rastro: [`sentry-trace`](/es/sdk/performance/#header-sentry-trace), [`baggage`](/es/sdk/performance/dynamic-sampling-context/#baggage-header) y, opcionalmente, [`traceparent`](/es/sdk/performance/distributed-tracing/#w3c-trace-context-header).
+
+Con estos contenedores puedes propagar un rastro a un servicio downstream ya sea:
+
+* agregando los encabezados HTTP `sentry-trace` y `baggage` (al realizar solicitudes HTTP salientes),
+* agregando `sentry-trace` y `baggage` como metadatos (al poner tareas en una cola; los detalles son específicos de la cola que quieras admitir), o
+* configurando variables de entorno (al invocar otro proceso). En este caso, las variables de entorno deben llamarse `SENTRY_TRACE` y `SENTRY_BAGGAGE`.
+
+El SDK que se ejecuta en el servicio receptor debe asegurarse de captar la información de rastro entrante mediante:
+
+* la lectura de los encabezados `sentry-trace` y `baggage` para cada solicitud HTTP entrante,
+* la lectura de los metadatos `sentry-trace` y `baggage` al recuperar un elemento de una cola, o
+* la lectura de las variables de entorno `SENTRY_TRACE` y `SENTRY_BAGGAGE` al inicio.
+
+Esta información de rastro debe almacenarse en el &quot;contexto de propagación&quot; del alcance actual. Esto garantiza que toda la telemetría que emita el servicio receptor a Sentry incluya la información de rastro correcta.
+
+<div id="w3c-trace-context-header">
+  ## Encabezado W3C Trace Context
+</div>
+
+Para interoperar con servicios de OpenTelemetry (OTel), los SDK pueden enviar opcionalmente el encabezado HTTP `traceparent` de W3C Trace Context en las solicitudes salientes, además de los encabezados propios de Sentry `sentry-trace` y `baggage`. Esto permite que las trazas originadas en un SDK de Sentry continúen en componentes que solo usan la propagación OTel/W3C.
+
+El encabezado `traceparent` solo debe enviarse cuando [`propagateTraceparent`](/es/sdk/telemetry/traces/#propagatetraceparent) es `true` y la solicitud coincide con `tracePropagationTargets` (la misma condición que para `sentry-trace`/`baggage`).
+
+La especificación completa está disponible en el documento [W3C Trace Context](https://www.w3.org/TR/trace-context/).

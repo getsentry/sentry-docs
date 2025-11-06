@@ -6,6 +6,8 @@ import {isNotNil} from 'sentry-docs/utils';
 
 import styles from './style.module.scss';
 
+import { T } from 'gt-next';
+
 interface TocItem {
   depth: number;
   element: Element;
@@ -189,7 +191,7 @@ export function SidebarTableOfContents() {
 
   return (
     <div className={styles['doc-toc']}>
-      {!!tocItems.length && <h2 className={styles['doc-toc-title']}>On this page</h2>}
+      {!!tocItems.length && <T><h2 className={styles['doc-toc-title']}>On this page</h2></T>}
       <ul className={styles['section-nav']}>{recursiveRender(buildTocTree(tocItems))}</ul>
     </div>
   );

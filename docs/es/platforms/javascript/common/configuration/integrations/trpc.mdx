@@ -1,0 +1,74 @@
+---
+title: trpcMiddleware
+description: "Captura spans y errores para los handlers de tRPC."
+supported:
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.hono
+  - javascript.koa
+  - javascript.nestjs
+  - javascript.electron
+  - javascript.nextjs
+  - javascript.nuxt
+  - javascript.solidstart
+  - javascript.sveltekit
+  - javascript.remix
+  - javascript.react-router
+  - javascript.astro
+  - javascript.deno
+  - javascript.bun
+  - javascript.cloudflare
+  - javascript.tanstackstart-react
+---
+
+<Alert>
+  Esta integración solo funciona en entornos de servidor (Node.js, Bun, Deno).
+</Alert>
+
+*Nombre de la importación: `Sentry.trpcMiddleware`*
+
+El middleware de tRPC de Sentry crea spans por ti y mejora la captura de errores en los handlers de tRPC.
+
+`trpcMiddleware` no es una integración tradicional del SDK, en el sentido de que **no** debes agregarlo a la opción `integrations`.
+En su lugar, añádelo como middleware a tu router de tRPC.
+
+```javascript
+import * as Sentry from "@sentry/node";
+import { initTRPC } from "@trpc/server";
+
+const t = initTRPC.context().create();
+
+const sentryMiddleware = t.middleware(
+  Sentry.trpcMiddleware({
+    attachRpcInput: true,
+  })
+);
+
+const sentrifiedProcedure = t.procedure.use(sentryMiddleware);
+```
+
+
+<div id="options">
+  ## Opciones
+</div>
+
+<div id="attachrpcinput">
+  ### `attachRpcInput`
+</div>
+
+_Tipo: `boolean`_
+
+El valor predeterminado es `false`. Si se habilita, la entrada RPC se capturará en los eventos de error como contexto `trpc`.
+
+<Alert level="info" title="Entrada truncada">
+
+Si observas que los objetos anidados en el contexto `trpc` aparecen truncados como "`[Object]`", puedes definir un <PlatformLink to="/configuration/options/#normalizeDepth">valor de `normalizeDepth`</PlatformLink> para permitir objetos con un nivel de anidación más profundo en el contexto.
+Ten en cuenta que la profundidad predeterminada para el contexto `trpc` es 5.
+
+</Alert>

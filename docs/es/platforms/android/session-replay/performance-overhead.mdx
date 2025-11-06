@@ -1,0 +1,76 @@
+---
+title: Sobrecarga de rendimiento
+sidebar_order: 5502
+notSupported:
+description: "Conoce cómo habilitar Session Replay afecta el rendimiento de tu aplicación."
+---
+
+Si estás pensando en habilitar Session Replay, primero es importante entender el posible impacto en el rendimiento de tu app. Aunque las métricas precisas requieren pruebas realistas en las que apliques patrones de uso típicos y correlaciones los resultados con tus métricas empresariales, para ofrecer una referencia medimos la sobrecarga usando la app de código abierto [Pocket Casts](https://github.com/Automattic/pocket-casts-android).
+
+Puedes obtener más información sobre las distintas optimizaciones implementadas en el SDK de Replay para Android en la documentación de [Sobrecarga de rendimiento de Replay](/es/product/explore/session-replay/mobile/performance-overhead/).
+
+<div id="benchmarking-the-android-replay-sdk">
+  ## Benchmarking del Android Replay SDK
+</div>
+
+La app de Pocket Casts ofrece una combinación diversa de componentes, incluidos Fragments, Activities y pantallas de Jetpack Compose, lo que la convierte en una candidata ideal para las pruebas. Así se llevaron a cabo los benchmarks:
+
+* **Configuración:** Se habilitó el enmascaramiento completo y se usaron compilaciones de release optimizadas.
+* **Flujo de usuario:** El mismo flujo se ejecutó 10 veces para garantizar la consistencia.
+* **Representación del mundo real:** Este enfoque refleja de forma muy cercana el rendimiento en escenarios reales.
+
+Los benchmarks se ejecutaron en un Pixel 2 XL con Android 11.
+
+<div id="results">
+  ### Resultados
+</div>
+
+A continuación se muestran los resultados de las pruebas de rendimiento, presentados como valores medianos para reflejar la sobrecarga típica.
+
+| Métrica                          | Solo Sentry SDK | Sentry + Replay SDK |
+| -------------------------------- | --------------- | ------------------- |
+| FPS                              | 55 fps          | 54 fps              |
+| Memoria                          | 255 MB          | 265 MB              |
+| CPU                              | 36%             | 42%                 |
+| Tiempo de inicio de la app (en frío) | 1533.35 ms      | 1539.55 ms          |
+| Tiempo del hilo principal        | n/d             | 20 ms               |
+| Ancho de banda de red            | n/d             | 7 KB/s de grabación |
+
+<Alert>
+  Las jerarquías de vistas de Jetpack Compose pueden ser más lentas de capturar inicialmente debido a las optimizaciones de ART, en comparación con el sistema tradicional de vistas de Android. Sin embargo, su rendimiento mejora a medida que avanza la ejecución.
+</Alert>
+
+<div id="reducing-performance-overhead">
+  ## Reducción de la sobrecarga de rendimiento
+</div>
+
+Para minimizar el impacto en el rendimiento del Replay SDK, considera los siguientes pasos:
+
+<div id="change-replay-quality">
+  ### Cambiar la calidad de Replay
+</div>
+
+Reducir la calidad de las capturas de pantalla y los vídeos puede disminuir significativamente el uso de CPU, memoria y ancho de banda de red. Aquí te mostramos cómo hacerlo:
+
+```kotlin
+SentryAndroid.init(context) { options ->
+  // esto reducirá la compresión de capturas de pantalla a 10 y la tasa de bits a 50kbps
+  options.sessionReplay.quality = SentryReplayQuality.LOW // por defecto MEDIUM
+}
+```
+
+<div id="disable-replay-for-low-end-devices">
+  ### Desactivar Replay en dispositivos de gama baja
+</div>
+
+Si el SDK de Replay provoca problemas de rendimiento en dispositivos de gama baja (por ejemplo, [aquí](https://github.com/getsentry/relay/blob/695b459e03481f7d799f07b2b901b140e5d5753d/relay-event-schema/src/protocol/device_class.rs#L21-L37) se muestra cómo Sentry determina la clase de dispositivo), puedes desactivarlo específicamente para esos dispositivos:
+
+```kotlin
+SentryAndroid.init(context) { options ->
+  options.dsn = "___PUBLIC_DSN___"
+  options.isDebug = true
+
+  options.sessionReplay.onErrorSampleRate = if (isLowEnd()) 0.0 else 1.0
+  options.sessionReplay.sessionSampleRate = if (isLowEnd()) 0.0 else 0.1
+}
+```

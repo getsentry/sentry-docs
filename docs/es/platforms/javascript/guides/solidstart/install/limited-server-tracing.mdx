@@ -1,0 +1,48 @@
+---
+title: Rastreo de servidor limitado
+sidebar_order: 2
+description: "Aprende a configurar el SDK de SolidStart con rastreo de servidor limitado añadiendo una importación de nivel superior al resultado de la compilación."
+---
+
+<div id="understanding-limited-server-tracing">
+  ## Comprender el rastreo limitado en el servidor
+</div>
+
+Sentry debe inicializarse antes de que se ejecute el resto de la aplicación.
+Si la forma predeterminada de agregar la <PlatformLink to="/install/cli-import">flag de CLI `--import`</PlatformLink> no funciona para ti,
+habilita el SDK para que agregue un `import` de nivel superior.
+
+El `import` de nivel superior agregado automáticamente importará la configuración de Sentry del lado del servidor al inicio del archivo de entrada del servidor de SolidStart.
+En este caso, Sentry no se inicializa antes de que la app se inicie, pero se configura lo antes posible.
+
+<Alert level="warning" title="Restricciones de este método de instalación">
+
+Este método de instalación tiene la restricción fundamental de que solo se pueden instrumentar las API nativas de Node.js (como `fetch` y el módulo `http`).
+Como resultado, el SDK de Sentry no capturará datos de llamadas a bases de datos, colas, ORMs, bibliotecas de terceros u otros datos específicos del framework.
+
+Recomendamos usar esto solo si la flag `--import` no es una opción para ti.
+
+</Alert>
+
+<div id="initializing-sentry-with-a-top-level-import">
+  ## Inicializar Sentry con un `import` de nivel superior
+</div>
+
+Activa el `import` de nivel superior configurando `autoInjectServerSentry`:
+
+```typescript {filename:app.config.ts} {8}
+import { defineConfig } from "@solidjs/start/config";
+import { withSentry } from "@sentry/solidstart";
+
+export default defineConfig(
+  withSentry(
+    {},
+    {
+      autoInjectServerSentry: "top-level-import",
+    }
+  )
+);
+```
+
+De forma predeterminada, el SDK añadirá el archivo de instrumentación del servidor de Sentry a la salida de la compilación (normalmente, `.output/server/instrument.server.mjs`).
+A continuación, el SDK importará automáticamente este archivo al principio del archivo de entrada del servidor de SolidStart en la salida de la compilación.

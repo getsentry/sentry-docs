@@ -1,0 +1,420 @@
+---
+title: Uso de React Testing Library
+sidebar_order: 70
+---
+
+Nuestras pruebas están escritas con React Testing Library. En esta guía encontrarás consejos para seguir las mejores prácticas y evitar errores comunes.
+
+Contamos con dos reglas de ESLint para ayudarte con esto:
+
+- [eslint-plugin-jest-dom](https://github.com/testing-library/eslint-plugin-jest-dom)
+- [eslint-plugin-testing-library](https://github.com/testing-library/eslint-plugin-testing-library)
+
+Procuramos escribir pruebas de una forma que se parezca lo más posible a cómo se usa nuestra aplicación.
+
+En lugar de interactuar con instancias de componentes renderizados, consultamos el DOM del mismo modo que lo haría el usuario. Buscamos los elementos de formulario por su etiqueta (igual que haría un usuario) y los enlaces y botones por su texto (como haría un usuario).
+
+Como parte de este objetivo, evitamos probar detalles de implementación para que las refactorizaciones (cambios en la implementación pero no en la funcionalidad) no rompan las pruebas.
+
+En general, preferimos la cobertura por casos de uso frente a la cobertura de código.
+
+<div id="use-our-built-in-contexts">
+  ## Usa nuestros contextos integrados
+</div>
+
+De forma predeterminada, `render()` viene con algunos contextos ya configurados. El contexto de organización se establece en `OrganizationFixture()` y el contexto del enrutador incluye algunos parámetros por defecto como orgId y projectId. Puedes sobrescribirlos pasando una propiedad como segundo argumento de la función `render()`.
+
+Ejemplo de cómo sobrescribir las funcionalidades y el acceso predeterminados de la organización:
+
+```tsx
+import {OrganizationFixture} from 'sentry-fixture/organization';
+import {render, screen} from "sentry-test/reactTestingLibrary";
+
+const organization = OrganizationFixture({access: ['org:admin'], features: ['my-feature-flag']});
+// useOrganization ahora usará la organización anterior
+render(<Example />, {organization});
+```
+
+
+<div id="add-extra-providers">
+  ### Agrega proveedores adicionales
+</div>
+
+Si tu componente necesita más contexto, pasa un `additionalWrapper` a `render()` para incorporar proveedores adicionales dentro de nuestros proveedores de prueba predeterminados.
+
+```tsx
+import {render, screen} from "sentry-test/reactTestingLibrary";
+
+function MyExtraProviders({children}: {children: React.ReactNode}) {
+  return <SomeContext.Provider value={{}}>{children}</SomeContext.Provider>;
+}
+
+render(<Example />, {additionalWrapper: MyExtraProviders});
+
+expect(screen.getByText(/example/i)).toBeInTheDocument();
+```
+
+
+<div id="testing-route-changes">
+  ## Probar cambios de ruta
+</div>
+
+Al usar `render()`, se emplea un enrutador en memoria que reaccionará a las navegaciones con `useNavigate()` o a interacciones con componentes `Link`. Si tu componente depende de la URL, puedes definir el estado inicial en `initialRouterConfig`. Puedes acceder al estado actual del enrutador haciendo referencia a la instancia `router` que se devuelve, y también navegar de forma programática con `router.navigate()`.
+
+```tsx
+const {router} = render(<TestComponent />, {
+  initialRouterConfig: {
+    location: {
+      pathname: '/foo/',
+      query: {page: '1'},
+    },
+  },
+});
+
+// Usa la configuración para establecer la ubicación inicial
+expect(router.location.pathname).toBe('/foo');
+expect(router.location.query.page).toBe('1');
+
+// Al hacer clic en los enlaces, se navega a la ubicación correcta
+await userEvent.click(screen.getByRole('link', {name: 'Ir a /bar/'}));
+
+// Puedes comprobar la ruta actual en el router devuelto
+expect(router.location.pathname).toBe('/bar/');
+
+// Puedes probar cambios de ruta manuales con router.navigate
+router.navigate('/new/path/');
+router.navigate(-1); // Simula hacer clic en el botón Atrás
+```
+
+
+<div id="route-param-values">
+  ### Valores de parámetros de ruta
+</div>
+
+Si necesitas probar valores de parámetros de ruta (como en `useParams()`), debes proporcionar la `route` en la configuración:
+
+```tsx
+function TestComponent() {
+  const {id} = useParams();
+  return <div>{id}</div>;
+}
+
+const {router} = render(<TestComponent />, {
+  initialRouterConfig: {
+    location: {
+      pathname: '/foo/123/',
+    },
+    route: '/foo/:id/',
+  }
+});
+
+expect(screen.getByText('123')).toBeInTheDocument();
+```
+
+
+<div id="outlet-context">
+  ### Contexto de Outlet
+</div>
+
+Si necesitas probar los valores de los parámetros del outlet (como en `useOutletContext()`), puedes pasarlos dentro del objeto `initialRouterConfig`.
+
+```tsx
+function TestComponent() {
+  const { id } = useOutletContext();
+  return <div>{id}</div>;
+}
+
+const { router } = render(<TestComponent />, {
+  initialRouterConfig: {
+    outletContext: { id: '123' },
+  },
+});
+
+expect(screen.getByText('123')).toBeInTheDocument();
+```
+
+
+<div id="nested-routes">
+  ### Rutas anidadas
+</div>
+
+Si establecer directamente el contexto del outlet no es suficiente y más bien quieres renderizar algunas rutas anidadas, ¡también puedes hacerlo!
+
+Supón que routes.tsx define algunas rutas anidadas como:
+
+```tsx
+{
+  path: 'configuración/',
+  component: SettingsWrapper,
+  children: [
+    {index: true, component: SettingsIndex},
+    {path: ':projectId/', component: ProjectSettings},
+  ]
+}
+```
+
+Podemos configurar el enrutador en memoria para que conozca únicamente el árbol de rutas que necesitas. Recuerda renderizar el propio componente contenedor; los componentes hijos del enrutador y las rutas se renderizarán automáticamente.
+
+```tsx
+// settingsWrapper.tsx
+interface OutletContext {
+  name: string;
+}
+
+export function useCustomOutletContext() {
+  return useOutletContext<OutletContext>();
+}
+
+export default function SettingsWrapper() {
+  const context: OutletContext = {name: "Predeterminado"};
+  return <Outlet context={context} />;
+}
+
+// settingsIndex.tsx
+function SettingsIndex() {
+  const {name} = useCustomOutletContext();
+  return <div>Configuración > {name}</div>;
+}
+
+// projectSettings.tsx
+function ProjectSettings() {
+  const {name} = useCustomOutletContext();
+  const {projectId} = useParams();
+  return <div>Configuración > {name} > Proyecto: {projectId}</div>;
+}
+
+// settingsIndex.spec.tsx
+render(<SettingsWrapper />, {
+  initialRouterConfig: {
+    location: {
+      pathname: '/settings/',
+    },
+    route: '/settings/',
+    children: [
+      {
+        index: true,
+        element: <SettingsIndex />,
+      },
+    ],
+  },
+});
+expect(screen.getByText('Configuración > Predeterminado')).toBeInTheDocument();
+
+// projectSettings.spec.tsx
+render(<SettingsWrapper />, {
+  initialRouterConfig: {
+    location: {
+      pathname: '/settings/123/',
+    },
+    route: '/settings/:projectId',
+    children: [
+      {
+        path: ':projectId/',
+        element: <ProjectSettings />,
+      },
+    ],
+  },
+});
+expect(screen.getByText('Configuración > Predeterminado > Proyecto: 123')).toBeInTheDocument();
+```
+
+
+<div id="querying">
+  ## Consultas
+</div>
+
+- usa `getBy...` tanto como sea posible
+- usa `queryBy...` solo para comprobar la inexistencia
+- usa `await findBy...` solo cuando esperes que un elemento aparezca después de un cambio en el DOM que podría no ocurrir de inmediato
+
+Para asegurarnos de que las pruebas se parezcan a cómo las personas interactúan con nuestro código, recomendamos la siguiente prioridad para las consultas:
+
+1. `getByRole` - Debería ser el selector de referencia para casi todo. Como ventaja adicional, con este selector nos aseguramos de que nuestra app sea accesible. Lo más probable es que se use junto con la opción de nombre `getByRole('button', {name: /save/i})`. El nombre suele ser la etiqueta de un elemento de formulario, el contenido de texto de un botón o el valor del atributo aria-label. Si no estás seguro, usa la función [logRoles](https://testing-library.com/docs/dom-testing-library/api-accessibility/#logroles) o consulta la [lista de roles disponibles](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/ARIA_Techniques#roles).
+2. `getByLabelText`/`getByPlaceholderText` - Las personas encuentran los elementos de formulario usando el texto de la etiqueta, por lo tanto esta opción es preferible al probar formularios.
+3. `getByText` - Fuera de los formularios, el contenido de texto es la manera principal en que las personas encuentran elementos. Este método se puede usar para encontrar elementos no interactivos (como divs, spans y párrafos).
+4. `getByTestId` - Como esto no refleja cómo las personas interactúan con la app, solo se recomienda para casos en los que no puedas usar ningún otro selector.
+
+Si aún tienes problemas para decidir qué consulta usar, visita [testing-playground.com](https://testing-playground.com/) junto con `screen.logTestingPlaygroundURL()` y su [extensión del navegador](https://chrome.google.com/webstore/detail/testing-playground/hejbmebodbijjdhflfknehhcgaklhano).
+
+No olvides que puedes colocar `screen.debug()` en cualquier parte de tu prueba para ver el DOM actual.
+
+Lee más sobre las consultas en la [documentación oficial](https://testing-library.com/docs/queries/about/).
+
+<div id="tips">
+  ## Consejos
+</div>
+
+Evita desestructurar las funciones de consulta en el método de render; usa `screen` en su lugar ([ejemplos](https://github.com/getsentry/sentry/pull/29312)).
+Así no tendrás que mantener al día la desestructuración de la llamada a render a medida que agregas o quitas las consultas que necesitas. Solo tienes que escribir `screen` y dejar que el autocompletado de tu editor se encargue del resto.
+
+```javascript
+import { render, screen } from "sentry-test/reactTestingLibrary";
+
+// ❌
+const { getByRole } = render(<Example />);
+const errorMessageNode = getByRole("alert");
+
+// ✅
+render(<Example />);
+const errorMessageNode = screen.getByRole("alert");
+```
+
+Evita usar `queryBy...` para cualquier cosa que no sea comprobar la ausencia ([ejemplos](https://github.com/getsentry/sentry/pull/29517)).
+Las variantes `getBy...` y `findBy...` mostrarán un mensaje de error más útil si no se encuentra ningún elemento.
+
+```javascript
+import { render, screen } from "sentry-test/reactTestingLibrary";
+
+// ❌
+render(<Example />);
+expect(screen.queryByRole("alert")).toBeInTheDocument();
+
+// ✅
+render(<Example />);
+expect(screen.getByRole("alert")).toBeInTheDocument();
+expect(screen.queryByRole("button")).not.toBeInTheDocument();
+```
+
+Evita usar `waitFor` para esperar a que algo aparezca; usa `findBy...` en su lugar ([ejemplos](https://github.com/getsentry/sentry/pull/29544)).
+Ambos son básicamente equivalentes (`findBy...` incluso usa `waitFor` internamente), pero `findBy...` es más simple y el mensaje de error que obtendremos será mejor.
+
+```javascript
+import {render, screen, waitFor} from "sentry-test/reactTestingLibrary";
+
+// ❌
+render(<Example />);
+await waitFor(() => {
+  expect(screen.getByRole("alert")).toBeInTheDocument();
+});
+
+// ✅
+render(<Example />);
+expect(await screen.findByRole("alert")).toBeInTheDocument();
+```
+
+Evita usar `waitFor` para esperar a que algo desaparezca; usa `waitForElementToBeRemoved` en su lugar ([ejemplos](https://github.com/getsentry/sentry/pull/29547)).
+Este último utiliza `MutationObserver`, que es más eficiente que consultar el DOM a intervalos regulares con `waitFor`.
+
+```javascript
+import {
+  render,
+  screen,
+  waitFor,
+  waitForElementToBeRemoved,
+} from "sentry-test/reactTestingLibrary";
+
+// ❌
+render(<Example />);
+await waitFor(() =>
+  expect(screen.queryByRole("alert")).not.toBeInTheDocument()
+);
+
+// ✅
+render(<Example />);
+await waitForElementToBeRemoved(() => screen.getByRole("alert"));
+```
+
+Prefiere usar las aserciones de jest-dom ([ejemplos](https://github.com/getsentry/sentry/pull/29508)). Las ventajas de usar estas aserciones recomendadas son mejores mensajes de error, una semántica más clara, coherencia y uniformidad.
+
+```javascript
+import {render, screen} from "sentry-test/reactTestingLibrary";
+
+// ❌
+render(<Example />);
+expect(screen.getByRole("alert")).toBeTruthy();
+expect(screen.getByRole("alert").textContent).toEqual("abc");
+expect(screen.queryByRole("button")).toBeFalsy();
+expect(screen.queryByRole("button")).toBeNull();
+
+// ✅
+render(<Example />);
+expect(screen.getByRole("alert")).toBeInTheDocument();
+expect(screen.getByRole("alert")).toHaveTextContent("abc");
+expect(screen.queryByRole("button")).not.toBeInTheDocument();
+```
+
+Prefiere usar expresiones regulares que no distingan mayúsculas y minúsculas al buscar por texto. Esto hará que las pruebas sean un poco más resistentes a los cambios.
+
+```javascript
+import {render, screen} from "sentry-test/reactTestingLibrary";
+
+// ❌
+render(<Example />);
+expect(screen.getByText("Hola, mundo")).toBeInTheDocument();
+
+// ✅
+render(<Example />);
+expect(screen.getByText(/hola, mundo/i)).toBeInTheDocument();
+```
+
+Usa `userEvent` en lugar de `fireEvent` siempre que sea posible.
+`userEvent` proviene del paquete `@testing-library/user-event`, que está construido sobre `fireEvent`, pero ofrece varios métodos que se asemejan más a las interacciones reales del usuario.
+
+```javascript
+// ❌
+import {render, screen, fireEvent} from "sentry-test/reactTestingLibrary";
+render(<Example />);
+fireEvent.change(screen.getByLabelText("Buscar por nombre"), {
+  target: { value: "sentry" },
+});
+
+// ✅
+import {render, screen, userEvent} from "sentry-test/reactTestingLibrary";
+render(<Example />);
+userEvent.type(screen.getByLabelText("Buscar por nombre"), "sentry");
+```
+
+
+<div id="testing-hooks-with-providers">
+  ## Probar hooks con proveedores
+</div>
+
+Usa `renderHookWithProviders()` para probar hooks con los mismos proveedores integrados que `render()` (organización, tema, cliente de consultas y un router en memoria). Devuelve el resultado habitual de `renderHook` más un helper `router` que puedes usar para inspeccionar la ubicación y navegar.
+
+Establece la URL inicial y define los patrones de ruta mediante `initialRouterConfig` (usa `route` para una sola ruta o `routes` para varias):
+
+```tsx
+import {useParams} from 'react-router-dom';
+import {renderHookWithProviders, waitFor} from 'sentry-test/reactTestingLibrary';
+
+function useRouteId() {
+  const {id} = useParams();
+  return id;
+}
+
+const {result, router} = renderHookWithProviders(useRouteId, {
+  initialRouterConfig: {
+    location: {pathname: '/foo/123/'},
+    route: '/foo/:id/',
+  },
+});
+
+expect(result.current).toBe('123');
+
+// Navegar programáticamente
+router.navigate('/foo/456/');
+
+await waitFor(() => expect(result.current).toBe('456'));
+```
+
+También puedes proporcionar proveedores adicionales o sustituir la organización predeterminada mediante opciones:
+
+```tsx
+import {OrganizationFixture} from 'sentry-fixture/organization';
+import {renderHookWithProviders} from 'sentry-test/reactTestingLibrary';
+
+function useFeatureFlag() {
+  // implementación en prueba
+}
+
+function MyExtraProviders({children}: {children: React.ReactNode}) {
+  return <SomeContext.Provider value={{}}>{children}</SomeContext.Provider>;
+}
+
+const organization = OrganizationFixture({features: ['my-feature-flag']});
+
+const {result} = renderHookWithProviders(useFeatureFlag, {
+  organization,
+  additionalWrapper: MyExtraProviders,
+});
+```

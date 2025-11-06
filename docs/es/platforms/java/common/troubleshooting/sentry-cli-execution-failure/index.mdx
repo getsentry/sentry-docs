@@ -1,0 +1,50 @@
+---
+title: Fallo de ejecución de Sentry CLI al usar el complemento Sentry Maven
+description: "Soluciona los fallos de ejecución de Sentry CLI al usar el complemento Sentry Maven."
+sidebar_order: 1001
+---
+
+El complemento Sentry Maven puede fallar al ejecutar Sentry CLI en ciertos entornos.
+
+<div id="symptoms">
+  ## Síntomas
+</div>
+
+* Una compilación que usa `sentry-maven-plugin` falla durante la ejecución de `sentry-cli` (por ejemplo, al recopilar y cargar un paquete de código fuente).
+* Activar los registros de depuración de `sentry-cli` no muestra errores relevantes del propio `sentry-cli`.
+
+Para activar los registros de depuración, establece
+
+```xml
+<debug>false</debug>
+<debugSentryCli>true</debugSentryCli>
+```
+
+en tu `<configuration>` de `sentry-maven-plugin`.
+
+Podrías ver líneas similares en los registros:
+
+```
+[ERROR] Error al intentar ejecutar Sentry CLI:
+org.apache.maven.plugin.MojoExecutionException: Se ha producido una Ant BuildException: La ejecución falló: java.io.IOException: No se puede ejecutar el programa "/bin/sh" [...]
+```
+
+
+<div id="solution">
+  ## Solución
+</div>
+
+Añade la siguiente opción de la JVM para cambiar el mecanismo de lanzamiento del proceso a `vfork`:
+
+```bash
+-Djdk.lang.Process.launchMechanism=vfork
+```
+
+
+<div id="related-issue">
+  ## Problema relacionado
+</div>
+
+Para más detalles sobre este problema y el proceso de investigación, consulta el [issue de GitHub #169](https://github.com/getsentry/sentry-maven-plugin/issues/169).
+
+Si esto no resuelve el problema, [abre un nuevo issue en GitHub](https://github.com/getsentry/sentry-maven-plugin/issues/new/choose).

@@ -1,0 +1,94 @@
+---
+title: Socket
+description: "Conoce la integración de Socket y cómo añade soporte para acciones de red."
+---
+
+Usa esta integración para crear spans de resoluciones DNS y de creación de conexiones de socket.
+
+<div id="install">
+  ## Instalación
+</div>
+
+Instala `sentry-sdk` desde PyPI.
+
+```bash {tabTitle:pip}
+pip install "sentry-sdk"
+```
+
+```bash {tabTitle:uv}
+uv add "sentry-sdk"
+```
+
+<div id="configure">
+  ## Configuración
+</div>
+
+Agrega `SocketIntegration()` a tu lista de `integrations`:
+
+Además de capturar errores, puedes supervisar las interacciones entre varios servicios o aplicaciones [habilitando el tracing](/es/concepts/key-terms/tracing/). También puedes recopilar y analizar perfiles de rendimiento de usuarios reales con [profiling](/es/product/explore/profiling/).
+
+Selecciona qué funciones de Sentry quieres instalar, además de Error Monitoring, para obtener a continuación las instrucciones correspondientes de instalación y configuración.
+
+<OnboardingOptionButtons
+  options={[
+'error-monitoring',
+'performance',
+'profiling',
+]}
+/>
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.socket import SocketIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    # Agrega datos como encabezados de la solicitud e IP de los usuarios, si corresponde;
+    # consulta https://docs.sentry.io/platforms/python/data-management/data-collected/ para obtener más información
+    send_default_pii=True,
+    # ___PRODUCT_OPTION_START___ performance
+    # Establece traces_sample_rate en 1.0 para capturar el 100 %
+    # de las transacciones para el seguimiento.
+    traces_sample_rate=1.0,
+    # ___PRODUCT_OPTION_END___ performance
+    # ___PRODUCT_OPTION_START___ profiling
+    # Para recopilar perfiles de todas las sesiones de perfil,
+    # establece `profile_session_sample_rate` en 1.0.
+    profile_session_sample_rate=1.0,
+    # Los perfiles se recopilarán automáticamente mientras
+    # haya un span activo.
+    profile_lifecycle="trace",
+    # ___PRODUCT_OPTION_END___ profiling
+    integrations=[
+        SocketIntegration(),
+    ],
+)
+```
+
+<div id="verify">
+  ## Verifica
+</div>
+
+```python
+import socket
+
+def main():
+    sentry_init(...)  # igual que antes
+    with sentry_sdk.start_transaction(name="testing_sentry"):
+        timeout = 10
+        socket.getaddrinfo("sentry.io", 443)
+        socket.create_connection(("sentry.io", 443), timeout, None)
+main()
+```
+
+Este ejemplo creará una transacción llamada `testing_sentry` en la sección Performance de [sentry.io](https://sentry.io) y generará spans para los comandos de socket.
+
+Los datos tardan un momento en aparecer en [sentry.io](https://sentry.io).
+
+<div id="supported-versions">
+  ## Versiones compatibles
+</div>
+
+* Python: 3.6+
+
+<Include name="python-use-older-sdk-for-legacy-support.mdx" />

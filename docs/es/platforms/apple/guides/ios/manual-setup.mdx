@@ -1,0 +1,91 @@
+---
+title: Configuración manual
+sidebar_order: 2
+description: "Aprende a configurar el SDK manualmente."
+---
+
+Si no puedes (o prefieres no) realizar la [configuración automática](/es/platforms/apple/guides/ios/#install), sigue las instrucciones a continuación para configurar tu aplicación manualmente.
+
+<div id="installation">
+  ## Instalación
+</div>
+
+La versión mínima requerida para iOS es la 11.0.
+
+Recomendamos instalar el SDK con CocoaPods, pero también ofrecemos [métodos de instalación alternativos](/es/platforms/apple/guides/ios/install/). Para integrar Sentry en tu proyecto de Xcode, especifícalo en tu `Podfile`:
+
+```ruby {filename:Podfile}
+platform :ios, '11.0'
+use_frameworks! # Es importante
+
+target 'YourApp' do
+  pod 'Sentry', :git => 'https://github.com/getsentry/sentry-cocoa.git', :tag => '{{@inject packages.version('sentry.cocoa') }}'
+end
+```
+
+Luego, ejecuta `pod install`.
+
+<div id="configuration">
+  ## Configuración
+</div>
+
+Recomendamos inicializar el SDK en el hilo principal lo antes posible; por ejemplo, en el método `application:didFinishLaunchingWithOptions` del AppDelegate:
+
+```swift {tabTitle:Swift}
+import Sentry // Asegúrate de importar Sentry
+
+// ....
+
+func application(_ application: UIApplication,
+    didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+
+    SentrySDK.start { options in
+        options.dsn = "___PUBLIC_DSN___"
+        options.debug = true // Activar el modo de depuración tras la instalación inicial siempre resulta útil
+
+        // Establece tracesSampleRate en 1.0 para capturar el 100% de las transacciones para el monitoreo del rendimiento.
+        // Recomendamos ajustar este valor en producción.
+        options.tracesSampleRate = 1.0
+    }
+
+    return true
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+
+    [SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+        options.dsn = @"___PUBLIC_DSN___";
+        options.debug = YES; // Activar la depuración al instalar por primera vez siempre ayuda
+
+        // Configura tracesSampleRate en 1.0 para capturar el 100 % de las transacciones para el monitoreo del rendimiento.
+        // Recomendamos ajustar este valor en producción.
+        options.tracesSampleRate = @1.0;
+    }];
+
+    return YES;
+}
+```
+
+Si usas SwiftUI y tu app no implementa un app delegate, inicializa el SDK en el [inicializador del tipo que conforma App](https://developer.apple.com/documentation/swiftui/app/main\(\)):
+
+```swift
+import Sentry
+
+@main
+struct SwiftUIApp: App {
+    init() {
+        SentrySDK.start { options in
+            options.dsn = "___PUBLIC_DSN___"
+            options.debug = true // Habilitar debug al instalar por primera vez siempre es útil
+
+            // Establece tracesSampleRate en 1.0 para capturar el 100% de las transacciones para el monitoreo de rendimiento.
+            // Recomendamos ajustar este valor en producción.
+            options.tracesSampleRate = 1.0
+        }
+    }
+}
+```

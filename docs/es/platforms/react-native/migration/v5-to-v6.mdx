@@ -1,0 +1,278 @@
+---
+title: Migrar de 5.x a 6.x
+sidebar_order: 100
+description: "Aprende a migrar de la versión 5 a la versión 6 del SDK de Sentry React Native"
+---
+
+El objetivo principal de la versión 6 del SDK de Sentry React Native es brindar compatibilidad con Sentry JavaScript 8 y mejorar nuestras API e integraciones de monitorización del rendimiento. Esta versión introduce cambios incompatibles debido a la actualización de la dependencia del SDK de JavaScript a la versión 8 y a que hemos eliminado API en desuso y reestructurado el contenido de los paquetes de npm.
+
+<div id="important-changes-in-dependencies">
+  ## Cambios importantes en las dependencias
+</div>
+
+El SDK de Sentry para React Native se distribuye con el SDK de Sentry para JavaScript como dependencia. El SDK de Sentry para JavaScript se actualizó a la versión 8, que introduce varios cambios incompatibles. Sigue [las guías de migración de JavaScript](/es/platforms/javascript/migration/) para completar la actualización.
+
+La versión inicial `@sentry/react-native@6.0.0` se envía con `@sentry/core@8.31.0`. Usa siempre esa versión exacta del SDK de JavaScript si lo agregas manualmente a tu proyecto. Cualquier otra versión podría no ser compatible con el SDK de React Native.
+
+<div id="performance-monitoring-api-changes">
+  ### Cambios en la API de monitoreo de rendimiento
+</div>
+
+El principal objetivo de la versión 8 del SDK de Sentry para JavaScript es mejorar nuestras API de monitoreo de rendimiento. Por eso, los cambios en la API de Tracing se detallan en una guía independiente. Sigue la guía [Cambios en la API de Tracing](/es/platforms/javascript/migration/v7-to-v8/v8-new-performance-api/) para completar la actualización.
+
+<div id="general-api-changes">
+  ### Cambios generales de la API
+</div>
+
+Otros cambios generales de la versión 8 del SDK de JavaScript se describen en la [guía de migración del SDK de JavaScript de la versión 7.x a la 8.x](/es/platforms/javascript/migration/v7-to-v8/).
+
+<div id="important-react-native-sdk-6x-changes">
+  ## Cambios importantes del SDK de React Native `6.x`
+</div>
+
+Esta sección describe los cambios de la API del SDK de Sentry para React Native, versión 6.
+
+<div id="react-native-tracing-options-moved-to-sentryinit-options">
+  ### Opciones de React Native Tracing trasladadas a las opciones de `Sentry.init`
+</div>
+
+Para cambiar las siguientes opciones, ya no necesitas crear una instancia de React Native Tracing. En su lugar, puedes pasarlas directamente a las opciones de `Sentry.init`.
+
+```javascript diff
+import * as Sentry from '@sentry/react-native';
+
+Sentry.init({
+  tracesSampleRate: 1.0,
++  enableAppStartTracking: true,
++  enableNativeFramesTracking: true,
++  enableStallTracking: true,
++  enableUserInteractionTracing: true,
+-  integrations: [new Sentry.ReactNativeTracing({
+-    enableAppStartTracking: true,
+-    enableNativeFramesTracking: true,
+-    enableStallTracking: true,
+-    enableUserInteractionTracing: true,
+-  })],
+});
+```
+
+<div id="navigation-instrumentations-are-now-standalone-integrations">
+  ### Las instrumentaciones de navegación ahora son integraciones independientes
+</div>
+
+Las instrumentaciones de navegación ahora son integraciones independientes. Deberás añadirlas al array `integrations` en las opciones de `Sentry.init`.
+
+```javascript {tabTitle:Expo Router} diff
+import Sentry from '@sentry/react-native';
+import { useNavigationContainerRef } from 'expo-router';
+
+- const reactNavigationIntegration = new Sentry.ReactNavigationInstrumentation();
++ const reactNavigationIntegration =  Sentry.reactNavigationIntegration();
+
+Sentry.init({
+  tracesSampleRate: 1.0,
+  integrations: [
+-    new Sentry.ReactNativeTracing({ routingInstrumentation }),
++    reactNavigationIntegration,
+  ],
+});
+```
+
+```javascript {tabTitle:React Navigation} diff
+import Sentry from '@sentry/react-native';
+import { NavigationContainer } from '@react-navigation/native';
+
+- const reactNavigationIntegration = new Sentry.ReactNavigationInstrumentation();
++ const reactNavigationIntegration =  Sentry.reactNavigationIntegration();
+
+Sentry.init({
+  tracesSampleRate: 1.0,
+  integrations: [
+-    new Sentry.ReactNativeTracing({ routingInstrumentation }),
++    reactNavigationIntegration,
+  ],
+});
+```
+
+```javascript {tabTitle:React Native Navigation} diff
+import Sentry from '@sentry/react-native';
+import { Navigation } from 'react-native-navigation';
+
+Sentry.init({
+  tracesSampleRate: 1.0,
+  integrations: [
+-    new Sentry.ReactNativeTracing({
+-      routingInstrumentation: new Sentry.ReactNativeNavigationInstrumentation(
+-        Navigation,
+-      ),
+-    }),
++    new Sentry.reactNativeNavigationIntegration({
++      navigation: Navigation,
++    }),
+  ],
+});
+```
+
+<div id="react-navigation-version-4-is-not-supported">
+  ### La versión 4 de React Navigation no es compatible
+</div>
+
+`ReactNavigationV4Instrumentation` se eliminó en la versión 6 del SDK. Si usas React Navigation versión 4, deberás actualizar a la versión 5 o posterior.
+
+<div id="routinginstrumentation-for-custom-navigation-was-removed">
+  ### Se eliminó RoutingInstrumentation para la navegación personalizada
+</div>
+
+`RoutingInstrumentation` se eliminó en la versión 6 del SDK. Si usas navegación personalizada, usa la función `startIdleNavigationSpan`.
+
+```javascript {tabTitle:Direct} diff
+- const routingInstrumentation = new Sentry.RoutingInstrumentation();
+
+Sentry.init({
+  tracesSampleRate: 1.0,
+  integrations: [
+-    new Sentry.ReactNativeTracing({
+-      routingInstrumentation,
+-    }),
+  ],
+})
+
+const App = () => {
+  <SomeNavigationLibrary
+    onRouteWillChange={(newRoute) => {
+-      routingInstrumentation.onRouteWillChange({
++      Sentry.startIdleNavigationSpan({
+        name: newRoute.name,
+        op: 'navigation'
+      });
+    }}
+  />
+};
+```
+
+```javascript {tabTitle:Integration} diff
+// Antes
+import Sentry from '@sentry/react-native';
+
+-class CustomInstrumentation extends Sentry.RoutingInstrumentation {
+-  constructor(navigator) {
+-    super();
+-
+-    this.navigator.registerRouteChangeListener(
+-      this.routeListener.bind(this),
+-    );
+-  }
+-
+-  routeListener(newRoute) {
+-    this.onRouteWillChange({
++const customNavigationIntegration = ({navigator}) => {
++  navigator.registerRouteChangeListener((newRoute) => {
++    Sentry.startIdleNavigationSpan({
+      name: newRoute.name,
+      op: "navigation",
+-    });
+-  }
+-}
++    })
++  });
++
++  return {
++    name: "CustomNavigation",
++  };
++};
+
+Sentry.init({
+  tracesSampleRate: 1.0,
+  integrations: [
+-    new Sentry.ReactNativeTracing({
+-      routingInstrumentation: new CustomInstrumentation(navigator),
+-    }),
++    customNavigationIntegration({navigator}),
+  ],
+});
+```
+
+<div id="beforenavigate-replaced-by-beforestartspan">
+  ### `beforeNavigate` reemplazado por `beforeStartSpan`
+</div>
+
+La opción `beforeNavigate` se eliminó en la versión 6 del SDK. Usa la opción `beforeStartSpan` en su lugar. La opción `beforeStartSpan` es una función que se ejecuta antes de iniciar un span de navegación. Esta función no puede impedir que el span se inicie, pero puede modificar las opciones de inicio del span antes de que comience.
+
+```javascript diff
+Sentry.init({
+  tracesSampleRate: 1.0,
+  integrations: [
+-    new Sentry.ReactNativeTracing({
+-      beforeNavigate: (context) => {
++    Sentry.reactNativeTracingIntegration({
++      beforeStartSpan: (options) => {
+         return {
+           ...options,
+            op: 'navigation',
+         };
+       },
+    }),
+  ],
+});
+```
+
+<div id="enablespotlight-and-spotlightsidecarurl-replaced-by-spotlight">
+  ### `enableSpotlight` y `spotlightSidecarUrl` reemplazadas por `spotlight`
+</div>
+
+Las opciones `enableSpotlight` y `spotlightSidecarUrl` se eliminaron en la versión 6 del SDK. Usa la opción `spotlight` en su lugar.
+
+```javascript diff
+import * as Sentry from '@sentry/react-native';
+
+Sentry.init({
+  tracesSampleRate: 1.0,
+-  enableSpotlight: true,
+-  spotlightSidecarUrl: 'http://localhost:8969/stream',
++  spotlight: true // o 'http://localhost:8969/stream',
+});
+```
+
+<div id="react-native-tracing-idletimeout-and-maxtransactionduration-options-were-removed">
+  ### Se eliminaron las opciones `idleTimeout` y `maxTransactionDuration` de React Native Tracing
+</div>
+
+Las opciones `idleTimeout` y `maxTransactionDuration` se eliminaron en la versión 6 del SDK. En su lugar, usa las opciones `idleTimeoutMs` y `finalTimeoutMs` del SDK de JavaScript.
+
+```javascript diff
+import * as Sentry from '@sentry/react-native';
+
+Sentry.init({
+  tracesSampleRate: 1.0,
+  integrations: [
+-    new Sentry.ReactNativeTracing({
+-      idleTimeout: 1_000,
+-      maxTransactionDuration: 5_000,
++    Sentry.reactNativeTracingIntegration({
++      idleTimeoutMs: 1_000,
++      finalTimeoutMs: 5_000,
+    }),
+  ],
+});
+```
+
+<div id="updated-behavior-of-tracepropagationtargets-in-react-native">
+  ### Comportamiento actualizado de `tracePropagationTargets` en React Native
+</div>
+
+Hemos actualizado el comportamiento de los SDK cuando no se define la opción `tracePropagationTargets`. Como recordatorio, puedes proporcionar una lista de cadenas o expresiones regulares que se compararán con las URL para indicar al SDK a qué solicitudes salientes se les deben adjuntar encabezados HTTP de trazado. Estos encabezados de trazado se usan para el trazado distribuido.
+
+Anteriormente, en el navegador y en React Native, cuando no se definía `tracePropagationTargets`, su valor predeterminado era el siguiente:
+`['localhost', /^\/(?!\/)/]`. Esto significaba que todos los destinos de solicitud que tuvieran &quot;localhost&quot; en la URL o que comenzaran con una
+`/` llevaban encabezados de trazado. Este valor predeterminado se eligió para evitar errores de CORS en tus aplicaciones del navegador. Sin embargo, tenía algunos inconvenientes.
+
+De ahora en adelante, cuando la opción `tracePropagationTargets` no esté configurada:
+
+* se adjuntarán encabezados de trazado a todas las solicitudes salientes en React Native
+* también se adjuntarán encabezados de trazado a todas las solicitudes salientes en el mismo origen que el navegador (incluidas las WebViews)
+
+Por ejemplo, si estás en `https://example.com/` y envías una solicitud a
+`https://example.com/api`, la solicitud se rastreará (en otras palabras, tendrá encabezados de trazado). Las solicitudes enviadas a `https://api.example.com/`, en cambio, no se rastrearán porque están en un origen diferente. Lo mismo aplica para todas las aplicaciones que se ejecutan en `localhost`.
+
+Cuando proporciones una opción `tracePropagationTargets`, todas las entradas que definas ahora se compararán
+con la URL completa de la solicitud saliente. Anteriormente, solo se comparaban con lo que usaras al llamar a las API de solicitudes. Por ejemplo, si hacías una solicitud como `fetch("/api/posts")`, los `tracePropagationTargets` proporcionados solo se comparaban con `"/api/posts"`.

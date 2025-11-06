@@ -1,0 +1,40 @@
+---
+title: Solución de problemas
+description: "Aprende a solucionar problemas de tu configuración de perfiles."
+sidebar_order: 9000
+notSupported:
+  - dotnet.uwp
+  - dotnet.aws-lambda
+  - dotnet.azure-functions-worker
+  - dotnet.blazor-webassembly
+  - dotnet.aspnet
+  - dotnet.entityframework
+  - dotnet.google-cloud-functions
+---
+
+<div id="profiles-are-not-showing-up">
+  ### Los perfiles no se muestran
+</div>
+
+Si no ves datos de perfiles en [sentry.io](https://sentry.io), puedes intentar lo siguiente:
+
+- Asegúrate de que <PlatformLink to="/tracing/">Tracing esté habilitado</PlatformLink>.
+- Asegúrate de que la instrumentación automática esté enviando datos de rendimiento a Sentry yendo a la página **Performance** en [sentry.io](https://sentry.io).
+- Si la instrumentación automática no está enviando datos de rendimiento, intenta usar <PlatformLink to="/tracing/instrumentation/custom-instrumentation">instrumentación personalizada</PlatformLink>.
+- Habilita el <PlatformLink to="/configuration/options/#debug">modo de depuración</PlatformLink> en el SDK y revisa los registros.
+- Si las transacciones ocurren demasiado pronto después de `Sentry.Init()`, puede que aún no se hayan capturado.
+  Esto se debe a que `ProfilingIntegration()` del paquete NuGet `Sentry.Profiling` se inicializa de forma asíncrona de manera predeterminada.
+  Si deseas inicializarla de forma sincrónica, establece el argumento de tiempo de espera deseado, por ejemplo `options.AddProfilingIntegration(TimeSpan.FromMilliseconds(500))` para esperar hasta 500 ms a que el generador de perfiles se inicie.
+  Nota: esto no aplica a iOS y Mac Catalyst, que usan perfiles nativos, se inicializan de forma sincrónica y se ignora el argumento de tiempo de espera.
+- Es posible que estés intentando capturar perfiles en una plataforma que actualmente **no** es compatible, en particular:
+  - .NET Framework; solo admitimos .NET 8.0+
+  - Native AOT: solo es compatible con iOS y Mac Catalyst (junto con el AOT estándar de Mono)
+  - Android: actualmente no es compatible en absoluto
+  - Blazor WebAssembly
+
+<div id="unknown-frames">
+  ### `Unknown` frames
+</div>
+
+Algunos frames aparecerán como `unknown` en la UI. Esto se debe a que el SDK no tiene información sobre el stack frame.
+Por lo general, se trata de métodos auxiliares anónimos generados por JIT y que aparecen entre los stack frames de `System`.

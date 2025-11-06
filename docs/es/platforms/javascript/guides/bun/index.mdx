@@ -1,0 +1,116 @@
+---
+title: Bun
+sdk: sentry.javascript.bun
+categories:
+  - javascript
+  - server
+  - server-edge
+  - serverless
+---
+
+<PlatformContent includePath="getting-started-prerequisites" />
+
+<div id="install">
+  ## Instalación
+</div>
+
+Además de capturar errores, puedes monitorear las interacciones entre varios servicios o aplicaciones al [habilitar el tracing](/es/concepts/key-terms/tracing/).
+
+Selecciona qué funcionalidades de Sentry quieres instalar, además de Error Monitoring, para obtener a continuación las instrucciones correspondientes de instalación y configuración.
+
+<OnboardingOptionButtons options={["error-monitoring", "performance", "logs"]} />
+
+Sentry recopila datos mediante un SDK dentro del entorno de ejecución de tu aplicación.
+
+```bash {tabTitle:Bun}
+bun add @sentry/bun
+```
+
+<div id="configure">
+  ## Configurar
+</div>
+
+La configuración debe realizarse lo antes posible en el ciclo de vida de tu aplicación.
+
+Sentry debe inicializarse lo antes posible en tu app. Es esencial que llames a `Sentry.init` antes de importar cualquier otro módulo en tu aplicación; de lo contrario, la autoinstrumentación de esos módulos *no* funcionará.
+
+Una vez hecho esto, el SDK de Bun de Sentry capturará las excepciones no controladas y también los datos de trazado de tu aplicación.
+
+Debes crear un archivo llamado `instrument.js` que importe e inicialice Sentry:
+
+```javascript {filename: instrument.js}
+import * as Sentry from "@sentry/bun";
+
+// ¡Asegúrate de llamar a esto antes de importar cualquier otro módulo!
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // Añade encabezados de solicitud e IP para usuarios, para más información visita:
+  // https://docs.sentry.io/platforms/javascript/guides/bun/configuration/options/#sendDefaultPii
+  sendDefaultPii: true,
+  // ___PRODUCT_OPTION_START___ performance
+
+  // Añade Monitoreo de Rendimiento estableciendo tracesSampleRate
+  // Establece tracesSampleRate en 1.0 para capturar el 100% de las transacciones
+  // Recomendamos ajustar este valor en producción
+  // Más información en
+  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+  tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+});
+```
+
+Una vez que estableces un `tracesSampleRate`, la instrumentación de rendimiento se habilita automáticamente. Consulta <PlatformLink to="/tracing/instrumentation/automatic-instrumentation">Instrumentación automática</PlatformLink> para conocer todo lo que el SDK instrumenta automáticamente por ti.
+
+También puedes capturar datos de rendimiento manualmente; consulta <PlatformLink to="/tracing/instrumentation/custom-instrumentation">Instrumentación personalizada</PlatformLink> para más detalles.
+
+<PlatformContent includePath="getting-started-sourcemaps" />
+
+<div id="use">
+  ## Uso
+</div>
+
+<Alert level="warning">
+  Importa `instrument.js` antes que cualquier otro módulo para que Sentry se inicialice cuanto antes. Si lo inicializas más tarde, la auto-instrumentación y módulos como el monitoreo de bases de datos, el monitoreo del agente y el trazado podrían no funcionar.
+</Alert>
+
+```javascript {filename: app.js}
+// ¡Importa esto primero!
+import "./instrument";
+
+// Ahora importa otros módulos
+import http from "http";
+
+// Tu código de aplicación va aquí
+```
+
+<div id="verify">
+  ## Verifica
+</div>
+
+Este snippet incluye un error intencional para que puedas comprobar que todo funciona en cuanto lo configures.
+
+```javascript
+// ___PRODUCT_OPTION_START___ performance
+Sentry.startSpan({
+  op: "test",
+  name: "Mi Primera Transacción de Prueba",
+// ___PRODUCT_OPTION_END___ performance
+}, () => {
+  setTimeout(() => {
+    try {
+      foo();
+    } catch (e) {
+      Sentry.captureException(e);
+    }
+  }, 99);
+// ___PRODUCT_OPTION_START___ performance
+});
+// ___PRODUCT_OPTION_END___ performance
+```
+
+<Alert>
+  Obtén más información sobre cómo capturar manualmente un error o un mensaje en nuestra <PlatformLink to="/usage/">documentación de uso</PlatformLink>.
+</Alert>
+
+Para ver y resolver el error registrado, inicia sesión en [sentry.io](https://sentry.io) y selecciona tu proyecto. Al hacer clic en el título del error, se abrirá una página donde podrás ver información detallada y marcarlo como resuelto.

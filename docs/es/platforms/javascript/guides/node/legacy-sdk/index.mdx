@@ -1,0 +1,163 @@
+---
+draft: true
+categories: []
+toc: true
+title: SDK heredado
+sidebar_order: 9
+noindex: true
+tags: []
+---
+
+<Alert level="warning" title="Aviso de obsolescencia">
+  Un nuevo SDK de Node ha reemplazado esta versión obsoleta. Sentry conserva esta documentación para quienes aún usan el cliente antiguo. Recomendamos usar el [SDK de Node actualizado](/es/platforms/javascript/guides/node/) en tus proyectos.
+</Alert>
+
+<Alert level="warning" title="Nota">
+  Si usas JavaScript en el navegador, necesitarás [sentry-javascript](/es/platforms/javascript/).
+</Alert>
+
+{/* <!-- Instalación de WIZARD --> */}
+
+<div id="installation">
+  ## Instalación
+</div>
+
+Raven se distribuye a través de `npm`:
+
+```bash
+npm install raven --save
+```
+
+{/* <!-- configuración de WIZARD --> */}
+
+<div id="configuring-the-client">
+  ## Configuración del cliente
+</div>
+
+A continuación, debes inicializar el cliente de Raven y configurarlo para usar tu DSN de Sentry:
+
+```javascript
+var Raven = require("raven");
+Raven.config("___PUBLIC_DSN___").install();
+```
+
+En este punto, Raven está configurado para capturar y reportar cualquier excepción no manejada.
+
+Opcionalmente, puedes pasar un objeto de opciones de configuración como segundo argumento a *Raven.config*. Para más información, consulta [*Configuration*](/es/platforms/javascript/guides/node/legacy-sdk/config/).
+
+{/* <!-- WIZARD informe-de-errores --> */}
+
+<div id="reporting-errors">
+  ## Informar errores
+</div>
+
+El método `install` de Raven configura un manejador global para capturar automáticamente cualquier excepción no controlada. También puedes reportar errores manualmente con `try...catch` y una llamada a `captureException`:
+
+```javascript
+try {
+  doSomething(a[0]);
+} catch (e) {
+  Raven.captureException(e);
+}
+```
+
+También puedes usar `wrap` y `context` para que Raven envuelva una función y capture automáticamente cualquier excepción que esta arroje:
+
+```javascript
+Raven.context(function () {
+  doSomething(a[0]);
+});
+```
+
+Para obtener más información sobre cómo reportar errores, consulta [*Uso*](/es/platforms/javascript/guides/node/legacy-sdk/usage/).
+
+<div id="adding-context">
+  ## Añadir contexto
+</div>
+
+El código ejecutado con `wrap` o `context` tiene un conjunto de datos de contexto asociado, y Raven ofrece métodos para gestionarlos.
+
+Lo usarás principalmente para asociar al usuario actual con una excepción:
+
+```javascript
+Raven.context(function () {
+  Raven.setContext({
+    user: {
+      email: "matt@example.com",
+      id: "123",
+    },
+  });
+  // los errores que se lancen aquí se asociarán con matt
+});
+// los errores que se lancen aquí no se asociarán con matt
+```
+
+Esto también puede usarse para establecer las claves `tags` y `extra` para etiquetas asociadas y datos adicionales.
+
+Puedes actualizar los datos de contexto con `mergeContext` o obtenerlos con `getContext`. Cuando un contenedor capture una excepción, el estado actual del contexto se pasará como opciones a `captureException`.
+
+Consulta [context/wrap](/es/platforms/javascript/guides/node/legacy-sdk/usage/#raven-node-additional-context) para más información.
+
+<div id="breadcrumbs">
+  ## Migas de pan
+</div>
+
+Las migas de pan son registros de eventos del servidor y del ciclo de vida de la aplicación que ayudan a entender el estado de la aplicación antes de un fallo.
+
+Podemos capturar migas de pan, asociarlas a un contexto y enviarlas junto con cualquier error capturado en ese contexto:
+
+```javascript
+Raven.context(function () {
+  Raven.captureBreadcrumb({
+    message: "Confirmación de pago recibida",
+    category: "payment",
+    data: {
+      amount: 312,
+    },
+  });
+  // los errores lanzados aquí tendrán la ruta de navegación adjunta
+});
+```
+
+Raven puede configurarse para capturar automáticamente breadcrumbs para ciertos eventos, entre ellos:
+
+> * solicitudes HTTP/HTTPS
+> * registros de consola
+> * consultas de PostgreSQL
+
+Para obtener más información, consulta [Recording Breadcrumbs](/es/platforms/javascript/guides/node/legacy-sdk/usage/#raven-recording-breadcrumbs).
+
+<div id="dealing-with-minified-source-code">
+  ## Cómo gestionar el código fuente minimizado
+</div>
+
+Raven y Sentry admiten [source maps](https://web.dev/articles/source-maps). Si proporcionas source maps junto con tus archivos minimizados, esa información estará disponible en Sentry. Para más información, consulta [Source Maps](/es/platforms/javascript/guides/node/legacy-sdk/sourcemaps/).
+
+<div id="middleware-and-integrations">
+  ## Middleware e integraciones
+</div>
+
+Si usas Node.js con un framework o biblioteca de servidor web como Connect, Express o Koa, te recomendamos configurar alguna de las integraciones de middleware de servidor de Raven. Consulta [*Integrations*](/es/platforms/javascript/guides/node/legacy-sdk/integrations/).
+
+<div id="deep-dive">
+  ## Análisis en profundidad
+</div>
+
+Si quieres información más detallada sobre cómo sacar el máximo partido de Raven, hay documentación adicional que cubre el resto:
+
+* [Configuración](/es/platforms/javascript/guides/node/legacy-sdk/config/)
+* [Uso](/es/platforms/javascript/guides/node/legacy-sdk/usage/)
+* [Integraciones](/es/platforms/javascript/guides/node/legacy-sdk/integrations/)
+  * [Connect](/es/platforms/javascript/guides/node/legacy-sdk/integrations/#connect)
+  * [Express](/es/platforms/javascript/guides/node/legacy-sdk/integrations/#express)
+  * [Koa](/es/platforms/javascript/guides/node/legacy-sdk/integrations/#koa)
+  * [Loopback](/es/platforms/javascript/guides/node/legacy-sdk/integrations/#loopback)
+  * [Sails](/es/platforms/javascript/guides/node/legacy-sdk/integrations/#sails)
+* [Mapas de origen](/es/platforms/javascript/guides/node/legacy-sdk/sourcemaps/)
+* [TypeScript](/es/platforms/javascript/guides/node/legacy-sdk/typescript/)
+* [CoffeeScript](/es/platforms/javascript/guides/node/legacy-sdk/coffeescript/)
+
+Recursos:
+
+* [Rastreador de errores](https://github.com/getsentry/sentry-javascript/issues)
+* [Proyecto en GitHub](https://github.com/getsentry/sentry-javascript)

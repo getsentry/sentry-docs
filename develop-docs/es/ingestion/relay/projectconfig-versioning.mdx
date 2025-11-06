@@ -1,0 +1,153 @@
+---
+title: Patrones de nombres y versionado en la configuración del proyecto
+sidebar_order: 20
+---
+
+<div id="internal-vs-external-relay">
+  ## ¿Relay interno vs. externo?
+</div>
+
+Relay obtiene la configuración del proyecto desde un “upstream”. Ese upstream puede ser Sentry u otro Relay; ambos tienen su propia implementación del mismo endpoint.
+
+Tu configuración fluirá desde Sentry hacia:
+
+- Relay interno
+
+- Relays externos (los ejecutan los clientes; prácticamente no tenemos una política de deprecación para versiones antiguas)
+
+El Relay interno puede reenviar tu configuración a:
+
+- Relays PoP
+
+En general, todos ellos deben poder manejar los cambios que realices en el esquema de configuración del proyecto.
+
+<div id="naming-conventions">
+  ## Convenciones de nombres
+</div>
+
+Todos los campos deben emitirse en camelCase. Al definir tipos nuevos en Relay, asegúrate de agregar `#[serde(rename_all = "camelCase")]` en la parte superior del tipo:
+
+```rust
+#[derive(Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct Foo {
+    ops_breakdown: ...
+}
+```
+
+
+<div id="adding-new-fields-in-projectconfig-endpoints">
+  ## Agregar campos nuevos en los endpoints de projectconfig
+</div>
+
+El endpoint está implementado tanto por Sentry como por Relay. Cuando Sentry recibe una solicitud de configuración de proyecto, diferencia entre Relays de confianza operados por Sentry y Relays no confiables operados por clientes. Los Relays no confiables reciben solo un subconjunto de los campos:
+
+- En Sentry, esto se gestiona con un [early return](https://github.com/getsentry/sentry/blob/b1434710fff9d8f90c99668bcc958ed1ee52b66e/src/sentry/relay/config.py#L165-L167) para dejar de completar el objeto de configuración.
+- En Relay, esto se implementa con dos tipos separados para la configuración de proyecto de confianza vs. restringida: `ProjectConfig` (consumido por Relays de confianza) o `LimitedProjectConfig` (consumido por Relays no confiables).
+
+Mientras tu nueva funcionalidad esté en desarrollo, se recomienda emitir campos nuevos o diferentes solo para Relays de confianza.
+
+<div id="defining-new-structs-in-relay">
+  ## Definir nuevas structs en Relay
+</div>
+
+- usa `#[serde(rename_all = "camelCase")]`, incluso si todos los campos son palabras de una sola palabra.
+- nunca especifiques `deny_unknown_fields`
+
+Se permite que las nuevas structs contengan campos obligatorios sin valor predeterminado.
+
+<div id="defining-new-enums">
+  ## Definir nuevos enums
+</div>
+
+Hay dos tipos de enums:
+
+* Enumeraciones de cadenas simples. El valor de la cadena determina la variante de la enumeración.
+* Enumeraciones con etiqueta interna. Son estructuras (objetos JSON) con un campo discriminador que indica la variante.
+* Enumeraciones sin etiqueta. Cuando el tipo del campo puede variar, esto permite serializar la primera variante que coincida. Esto se usa, por ejemplo, si un campo puede ser una cadena o un número.
+
+A diferencia de los structs, Relay no ignora implícitamente las variantes desconocidas. Al definir una enumeración, añade *siempre* una variante para capturar variantes desconocidas usando `#[serde(other)]`. Por ejemplo:
+
+```rust
+#[derive(Deserialize, Serialize)]
+#[serde(tag = "type", rename_all = "camelCase")]
+enum BreakdownConfig {
+    SpanOperations { ... },
+    #[serde(other)]
+    Unsupported,
+}
+```
+
+Antes de añadir una nueva variante en Sentry, verifica que Relay la implemente correctamente. Si no es así, procede reemplazando el campo igual que cuando cambias el tipo de un campo. Nunca añadas variantes a un enum que no tenga una variante unknown.
+
+Es aceptable que Relay no reenvíe variantes de enum desconocidas y descarte el valor original, como en el enfoque anterior.
+
+
+<div id="adding-top-level-fields">
+  ## Agregar campos de nivel superior
+</div>
+
+Si estás desarrollando una función nueva, probablemente quieras agregar datos completamente nuevos a la configuración del proyecto y no tocar las structs existentes. Aquí tienes una breve lista de verificación además de todo lo demás:
+
+- Verifica que el campo esté en `camelCase`.
+- Asegúrate de que el nombre del campo no se haya usado en una versión anterior de Relay. `git log -G field_name` es una forma sencilla de buscar en el historial de Git cadenas que aparecen en los diffs.
+- Asegúrate de que el campo sea opcional o tenga un valor predeterminado.
+- No serialices cuando el campo sea `None` o el valor predeterminado mediante `serde(skip_serializing_if)`.
+- Usa `ErrorBoundary` alrededor del tipo del campo mientras tu nueva función esté en pre-GA y pueda cambiar su definición. Esto garantiza que, si la definición del campo es incorrecta, Relay contenga el error y siga analizando el resto de la configuración del proyecto.
+- No uses tipos con comportamiento específico de la plataforma, como `usize`.
+
+  Puede ser tentador usar `usize` si por alguna razón el valor máximo de tu campo depende de la plataforma (es decir, si el Relay que deserializa se ejecuta actualmente en un sistema operativo de 32 bits). Esto puede darse si tu campo es un índice en algún array/vec. Incluso en esos casos, rara vez compensa. Ten en cuenta que no solo el Relay actual necesita usar ese número como índice de arreglo, sino también los Relays posteriores.
+
+<div id="adding-subfields">
+  ## Agregar subcampos
+</div>
+
+En principio, es posible agregar nuevos campos en cualquier momento. Relay ignora los campos adicionales, por lo que las definiciones de campos de una struct pueden implementarse y desplegarse más adelante. Por ejemplo, una struct como esta se deserializará sin problemas a partir de un mensaje JSON con campos adicionales:
+
+```rust
+struct Foo {
+    foo: u64,
+}
+
+// compatible con: {"foo": 123}, {"foo": 123, "bar": 456}, {"foo": 123, ...}
+// incompatible con: {"foo": "123"}
+```
+
+Hay dos consideraciones:
+
+* Como se mostró arriba, cambiar los tipos *no* es seguro. Consulta más abajo las instrucciones para cambiarlos.
+* Asegúrate de que el nombre del campo no se haya usado antes. Podría haberse implementado con otros tipos o provocar comportamientos no deseados en versiones anteriores de Relay.
+* Ten en cuenta que agregar variantes de enum requiere un enfoque distinto.
+
+
+<div id="renaming-fields">
+  ## Cambiar el nombre de campos
+</div>
+
+No cambies el nombre de un campo para funciones que están generalmente disponibles para Relays externos. Cambiar el nombre de un campo lo vuelve invisible para Relays antiguos. Esto hace inviable cambiar nombres de campos por razones estéticas (puede estar bien si tu función está en etapa previa a EA), pero por la misma razón [es un mecanismo útil para la gestión de versiones](#breaking-changes-and-actual-versioning)
+
+<div id="changing-field-types">
+  ## Cambiar tipos de campos
+</div>
+
+Si tu campo se expone a Relays externos, **cambiar su tipo rara vez es posible**. Incluso para Relays internos, cambiar el tipo de un campo solo es posible si ambos tipos tienen un comportamiento de serialización/deserialización idéntico. Esto es poco probable y tan difícil de determinar que exigimos que siempre [renombres el campo](#breaking-changes-and-actual-versioning) además.
+
+<div id="deployment-monitoring">
+  ## Implementación y monitoreo
+</div>
+
+Habla con el equipo de ingesta para la implementación y el monitoreo.
+
+<div id="breaking-changes-and-actual-versioning">
+  ## Cambios incompatibles y versionado real
+</div>
+
+En su mayoría hemos hablado de cosas que no queremos que hagas, ya que provocarían incidentes.
+
+Si necesitas realizar cambios más grandes en el esquema, o quieres hacer una gran cantidad de cambios pequeños y crees que garantizar la compatibilidad retroactiva para todos ellos es demasiado difícil, considera renombrar el campo de nivel superior `x` a `x_v2`.
+
+Esto ocultará efectivamente el campo para Relays más antiguos, por lo que el campo `x` debe ser opcional desde el principio.
+
+Para ciertos cambios del protocolo existe una ["versión del estado del proyecto"](https://github.com/getsentry/relay/blob/3933cd6ccd59c3270f56853ffbc8678b219e44e6/relay-server/src/actors/project_upstream.rs#L25-L34)
+en Relay que se podría incrementar. Se usó una vez para implementar un cambio mayor en
+el protocolo.

@@ -1,0 +1,327 @@
+---
+title: Servidor MCP de Sentry
+sidebar_order: 120
+description: >-
+  Habilita la conectividad segura entre los problemas de Sentry, los datos de
+  depuración y los clientes de LLM, mediante un servidor del Model Context Protocol (MCP).
+og_image: /og-images/product-sentry-mcp.png
+---
+
+<Alert>
+  El servidor MCP de Sentry se ha lanzado para producción; sin embargo, MCP es
+  una tecnología en desarrollo y es de esperar que haya cambios. Habrá errores.
+  Ponte en contacto en [GitHub](https://github.com/getsentry/sentry-mcp/issues)
+  si tienes comentarios o inquietudes.
+</Alert>
+
+<div id="overview">
+  ## Descripción general
+</div>
+
+El [Sentry MCP Server](https://mcp.sentry.dev) ofrece una forma segura de incorporar el contexto completo de las incidencias de Sentry en sistemas que pueden aprovechar el [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction). Sentry hospeda y gestiona un servidor MCP remoto al que puedes conectarte y usar de forma centralizada. Con MCP, puedes:
+
+* Acceder a incidencias y errores de Sentry
+* Buscar errores en archivos específicos
+* Consultar proyectos y organizaciones
+* Listar y crear DSN de Sentry para proyectos
+* Invocar Seer para corregir automáticamente incidencias y obtener el estado y los detalles de una corrección
+
+El Sentry MCP Server incluye compatibilidad con funciones modernas de MCP:
+
+* **Hospedado de forma remota (preferido) o modo STDIO local** - La versión hospedada reduce la fricción y siempre incluye la funcionalidad y estabilidad más recientes
+* **Compatibilidad con OAuth** - Autentícate con tu organización de Sentry existente para un acceso fluido a tus proyectos
+* **HTTP transmisible con retroceso elegante a SSE** - El retroceso automático garantiza la compatibilidad en diferentes clientes
+* **Más de 16 llamadas de herramientas y prompts** - Conjunto de herramientas completo para llevar el contexto de Sentry a interacciones con LLM
+
+<VimeoEmbed id="1080588938?h=1e437d4874" />
+
+<div id="getting-started">
+  ## Introducción
+</div>
+
+<div id="oauth-configuration-recommended">
+  ### Configuración de OAuth (recomendada)
+</div>
+
+Para los clientes que admiten OAuth, puedes usar la configuración simplificada que ofrece autenticación automática:
+
+```json
+{
+  "mcpServers": {
+    "Sentry": {
+      "url": "https://mcp.sentry.dev/mcp"
+    }
+  }
+}
+```
+
+Esta configuración:
+
+* Habilita la autenticación OAuth con tu organización de Sentry
+* Usa transporte HTTP con streaming y con retroceso automático a SSE
+* Ofrece acceso a más de 16 herramientas disponibles
+* Gestiona automáticamente la autenticación y las sesiones
+
+Con la configuración de OAuth, se te pedirá:
+
+1. Aceptar la autorización de OAuth
+2. Iniciar sesión con tu organización de Sentry existente
+3. Conceder los permisos necesarios
+
+<Alert>
+  Si te has unido a una nueva organización de Sentry, cierra sesión en la integración MCP de tu LLM
+  y vuelve a iniciar sesión para actualizar el acceso.
+</Alert>
+
+Una vez autenticado, verás que las herramientas estarán disponibles en tu cliente MCP.
+
+![Herramientas de Sentry MCP disponibles](./img/mcp-tools.png)
+
+<div id="remote-mcp-configuration-legacy">
+  ### Configuración remota de MCP (heredada)
+</div>
+
+Para los clientes que no admiten OAuth, puedes seguir usando la configuración existente del endpoint remoto de MCP:
+
+```json
+{
+  "mcpServers": {
+    "Sentry": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote@latest", "https://mcp.sentry.dev/mcp"]
+    }
+  }
+}
+```
+
+<div id="local-stdio-mode">
+  ### Modo STDIO local
+</div>
+
+Como alternativa, si no quieres usar el servidor Remote-MCP, puedes ejecutar el MCP Server localmente en modo STDIO siguiendo las instrucciones del [README](https://github.com/getsentry/sentry-mcp). Esto es especialmente útil para instalaciones de Sentry autohospedadas.
+
+Para usar el modo STDIO, necesitarás un Sentry User Auth Token con los siguientes permisos:
+
+* `org:read`
+* `project:read`
+* `project:write`
+* `team:read`
+* `team:write`
+* `event:write`
+
+Inicia el transporte STDIO:
+
+```bash
+npx @sentry/mcp-server@latest --access-token=sentry-user-token --host=sentry.example.com
+```
+
+También puedes utilizar variables de entorno:
+
+```bash
+SENTRY_ACCESS_TOKEN=tu-token
+SENTRY_HOST=tu-host-de-sentry
+```
+
+<div id="mcpsentrydev-live-demo">
+  ### mcp.sentry.dev (demo en vivo)
+</div>
+
+La [página de Sentry MCP](https://mcp.sentry.dev) ofrece una manera sencilla de configurar y probar el servidor MCP. Desde este cliente web puedes autenticarte con tu organización en Sentry y acceder a un servidor MCP alojado para realizar pruebas.
+
+![Demo en vivo de Sentry MCP](./img/mcpdev.png)
+
+<div id="available-tools">
+  ## Herramientas disponibles
+</div>
+
+El servidor MCP de Sentry ofrece un conjunto de herramientas completo para interactuar con los datos de Sentry:
+
+<div id="core-tools">
+  ### Herramientas principales
+</div>
+
+* **Organizations**: Listar y consultar información de organizaciones
+* **Projects**: Buscar, listar y crear proyectos
+* **Teams**: Administrar y consultar información de equipos
+* **Issues**: Acceder a detalles de incidencias, buscar y analizar problemas
+* **DSNs**: Listar y crear nombres de origen de datos para proyectos
+
+<div id="analysis-tools">
+  ### Herramientas de análisis
+</div>
+
+* **Búsqueda de errores**: Encuentra errores en archivos específicos o en proyectos completos
+* **Análisis de incidencias**: Investigación detallada de incidencias con contexto
+* **Integración con Seer**: Invoca el agente de IA de Sentry para análisis de la causa raíz y correcciones automáticas
+
+<div id="advanced-features">
+  ### Funciones avanzadas
+</div>
+
+* **Gestión de versiones**: Consulta y analiza información de versiones
+* **Supervisión del rendimiento**: Accede a datos de transacciones y rendimiento
+* **Consultas personalizadas**: Ejecuta búsquedas complejas en los datos de Sentry
+
+<div id="example-usage">
+  ## Ejemplo de uso
+</div>
+
+Aquí tienes algunos prompts de ejemplo que puedes usar con Sentry MCP:
+
+* Cuéntame sobre los problemas en mi `project-name`
+* Revisa Sentry para encontrar errores en `components/UserProfile.tsx` y propone soluciones
+* Diagnostica el problema `PROJECT-123` y propone soluciones
+* Crea un nuevo proyecto en Sentry para `new-service-name` y configura la instrumentación local
+* Usa Seer de Sentry para analizar y proponer una solución para el problema `PROJECT-456`
+* Muéstrame las versiones más recientes de mi organización
+* Encuentra todos los bloqueos sin resolver en mi app de React Native
+
+![Sentry MCP using Autofix](./img/mcp-autofix1.png)
+
+<div id="verified-clients">
+  ## Clientes verificados
+</div>
+
+Se ha verificado que Sentry MCP Server funciona en:
+
+<div id="claude-for-desktop">
+  ### Claude para escritorio
+</div>
+
+Accede a las herramientas para desarrolladores con `CMD + ,` → `Developer` → `Edit Config` → edita el archivo `claude_desktop_config.json`
+
+<div id="claudeai">
+  ### Claude.ai
+</div>
+
+Ve a `Settings` → `Profile` → desplázate hasta `Integrations`, selecciona `Add More` y añade la URL del servidor MCP de Sentry `https://mcp.sentry.dev/mcp`
+
+<div id="claude-code">
+  ### Claude Code
+</div>
+
+Desde que llegó recientemente a la versión 1.0, Claude Code incluye compatibilidad nativa con servidores MCP alojados de forma remota. Desde tu CLI, ejecuta `claude mcp add --transport http sentry https://mcp.sentry.dev/mcp` y luego accede a Claude Code con `claude`.
+
+Una vez dentro, se te pedirá que te autentiques en Sentry mediante OAuth.
+
+<div id="codex">
+  ### Codex
+</div>
+
+Desde tu CLI, ingresa `codex mcp add sentry -- npx -y mcp-remote@latest https://mcp.sentry.dev/mcp` y luego accede a Codex con `codex`.
+
+Una vez dentro, se te pedirá que te autentiques en Sentry mediante OAuth.
+
+<div id="cursor">
+  ### Cursor
+</div>
+
+Disponible en `Cursor` → `Settings` → `Cursor Settings` → `MCP`, siguiendo las indicaciones para configurar Sentry MCP. Cursor 1.0+ incluye compatibilidad mejorada con MCP, con OAuth y HTTP transmitible.
+
+También puedes editar el archivo `mcp.json` manualmente si lo prefieres.
+
+<div id="amp">
+  ### Amp
+</div>
+
+Agrega desde la pantalla de configuración de la extensión Amp para VS Code o actualizando tu archivo settings.json:
+
+```json
+"amp.mcpServers": {
+    "sentry": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "mcp-remote@latest",
+          "https://mcp.sentry.dev/mcp"
+        ]
+      }
+}
+```
+
+**Configuración de Amp CLI:**
+
+Añádelo con el comando `amp mcp add` que aparece a continuación
+
+```bash
+amp mcp add sentry -- npx -y mcp-remote@latest https://mcp.sentry.dev/mcp
+```
+
+<div id="vs-code-and-github-copilot">
+  ### VS Code y GitHub Copilot
+</div>
+
+Añade el servidor con `CMD+Shift+P` y selecciona `MCP: Add Server`
+
+<div id="warp">
+  ### Warp
+</div>
+
+Disponible en `Settings` -&gt; `MCP Servers` -&gt; `Manage MCP Servers` -&gt; `Add MCP Server` -&gt; `Sentry` -&gt; `https://mcp.sentry.dev/mcp`.
+
+```json
+{
+  "Sentry": {
+    "command": "npx",
+    "args": ["-y", "mcp-remote@latest", "https://mcp.sentry.dev/mcp"],
+    "env": {},
+    "working_directory": null
+  }
+}
+```
+
+<div id="windsurf">
+  ### Windsurf
+</div>
+
+Configura desde la opción `Configure MCP` en Cascade (CMD + L)
+
+<div id="other-clients">
+  ### Otros clientes
+</div>
+
+El servidor MCP de Sentry sigue los protocolos estándar de MCP y debería funcionar con cualquier cliente que sea compatible con:
+
+* Autenticación OAuth (recomendado)
+* Servidores MCP remotos
+* Transporte SSE o HTTP por streaming
+
+<div id="integration-with-seer">
+  ## Integración con Seer
+</div>
+
+El Sentry MCP Server ofrece una integración perfecta con [Seer](/es/product/ai-in-sentry/seer/), el agente de IA de Sentry. Puedes:
+
+* **Activar el análisis de Seer**: Iniciar un análisis automatizado de causas raíz de los problemas
+* **Obtener recomendaciones de corrección**: Recibir soluciones generadas por IA para errores y problemas de rendimiento
+* **Supervisar el estado de las correcciones**: Seguir el progreso del análisis y la implementación de Seer
+
+**Nota**: MCP y Seer son herramientas complementarias. MCP lleva el contexto de Sentry a tu LLM, mientras que Seer está diseñado específicamente para un análisis profundo de problemas y depuración automatizada. Puedes usar MCP para invocar Seer en flujos de trabajo de depuración complejos.
+
+<div id="troubleshooting">
+  ## Resolución de problemas
+</div>
+
+<div id="common-issues">
+  ### Problemas comunes
+</div>
+
+**Problemas de autenticación con OAuth**
+
+* Asegúrate de que tu cliente sea compatible con la autenticación mediante OAuth
+* Prueba la configuración heredada de Remote MCP si OAuth no funciona
+* Verifica que tengas los permisos necesarios en tu organización de Sentry
+
+**Problemas de conexión**
+
+* Verifica que la URL del servidor MCP sea correcta: `https://mcp.sentry.dev/mcp`
+* Para configuraciones heredadas, usa: `https://mcp.sentry.dev/sse`
+* Revisa la sintaxis de la configuración MCP de tu cliente
+
+**Herramientas no disponibles**
+
+* Asegúrate de que la autenticación se haya completado correctamente
+* Verifica tu acceso a la organización de Sentry
+* Revisa si hay mensajes de error en la consola de tu cliente
+
+Para obtener soporte adicional, visita el [repositorio de GitHub](https://github.com/getsentry/sentry-mcp) o contacta con el soporte de Sentry.

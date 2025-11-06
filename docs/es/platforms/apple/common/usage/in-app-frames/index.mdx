@@ -1,0 +1,56 @@
+---
+title: "Frames en la app"
+description: "Aprende cómo tu SDK marca los frames como en la app."
+sidebar_order: 40
+---
+
+El ejecutable principal y los frameworks dentro del paquete de la aplicación se marcarán como `inApp`, mientras que frameworks conocidos y públicos como UIKitCore, CoreFoundation, GraphicsServices y otros se marcarán como `not inApp`.
+
+Para ajustar este comportamiento, define [reglas de stack trace](/es/concepts/data-management/event-grouping/stack-trace-rules/#stack-trace-rules) para tu proyecto. Esto te permitirá marcar frameworks específicos como `inApp` o `not inApp`, según si los consideras parte de tu lógica de negocio o dependencias de terceros. Como referencia, puedes consultar las [reglas de stack trace predeterminadas](https://github.com/getsentry/sentry/blob/20b05fc91a4ad6783bff1875327f4570bcfb5d00/src/sentry/grouping/enhancer/enhancement-configs/newstyle%402023-01-11.txt#L4).
+
+{/*
+
+  NOTA: comentamos lo siguiente para facilitar la referencia: cuando abordemos una solución a medio o largo plazo, como se discutió en https://github.com/getsentry/sentry-cocoa/issues/5252, esto volverá a ser relevante/correcto.
+
+  Si no estás familiarizado con estos términos, puedes obtener más información:
+
+  - [CFBundleExecutable](https://developer.apple.com/documentation/bundleresources/information_property_list/cfbundleexecutable)
+  - [Dynamic Library Programming Topics](https://developer.apple.com/library/archive/documentation/DeveloperTools/Conceptual/DynamicLibraries/000-Introduction/Introduction.html)
+
+  ## Frameworks dinámicos
+
+  Si usas frameworks dinámicos como Sentry, el SDK de Sentry los marcará como `not inApp`. Si tienes un framework privado que debería marcarse como `inApp`, usa en SentryOptions [`inAppInclude`](/platforms/apple/configuration/options/#inAppInclude) o [`inAppExclude`](/platforms/apple/configuration/options/#inAppExclude).
+
+
+  ```swift {tabTitle:Swift}
+  import Sentry
+
+  SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+
+    // El SDK marca todos los frameworks que comienzan con MyBusinessLogic como inApp
+    options.add(inAppInclude: "MyBusinessLogic")
+
+    // El SDK marca todos los frameworks que comienzan con MyFramework como not inApp
+    options.add(inAppExclude: "MyFramework")
+  }
+  ```
+
+  ```objc {tabTitle:Objective-C}
+  @import Sentry;
+
+  [SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+
+    // El SDK marca todos los frameworks que comienzan con MyBusinessLogic como inApp
+    [options addInAppInclude:@"MyBusinessLogic"];
+
+    // El SDK marca todos los frameworks que comienzan con MyFramework como not inApp
+    [options addInAppExclude:@"MyFramework"];
+  }];
+  ```
+
+  ## Frameworks estáticos
+
+  Como los frameworks estáticos terminan en el ejecutable principal, si estás usando uno, el SDK de Sentry no podrá detectar si un frame del ejecutable principal
+  se origina en tu aplicación o en un framework privado y marcará todos los frames como `inApp`. Para solucionarlo, indica a Sentry qué frames deben marcarse como `not inApp` usando [reglas de trazas de pila](/concepts/data-management/event-grouping/stack-trace-rules/#stack-trace-rules) en el servidor. */}

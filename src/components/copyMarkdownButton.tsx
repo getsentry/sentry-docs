@@ -9,11 +9,14 @@ import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
 import Chevron from 'sentry-docs/icons/Chevron';
 import Markdown from 'sentry-docs/icons/Markdown';
 
+import { useGT, T } from 'gt-next';
+
 interface CopyMarkdownButtonProps {
   pathname: string;
 }
 
 export function CopyMarkdownButton({pathname}: CopyMarkdownButtonProps) {
+  const gt = useGT();
   const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState(false);
@@ -136,7 +139,7 @@ export function CopyMarkdownButton({pathname}: CopyMarkdownButtonProps) {
             disabled={isLoading}
           >
             <Clipboard size={16} />
-            <span>{error ? 'Failed to copy' : copied ? 'Copied!' : 'Copy page'}</span>
+            <span>{error ? gt('Failed to copy') : copied ? gt('Copied!') : gt('Copy page')}</span>
           </button>
 
           <div className="w-px h-full bg-gray-200 dark:bg-[var(--gray-6)]" />
@@ -175,12 +178,12 @@ export function CopyMarkdownButton({pathname}: CopyMarkdownButtonProps) {
                 </div>
                 <div className="flex-1">
                   <div className={`font-medium text-sm leading-5`}>
-                    {error ? 'Failed to copy' : 'Copy page'}
+                    {error ? gt('Failed to copy') : gt('Copy page')}
                   </div>
                   <div className="text-xs leading-4 text-gray-500 dark:text-[var(--foreground-secondary)]">
                     {error
-                      ? 'Network error - please try again'
-                      : 'Copy page as Markdown for LLMs'}
+                      ? gt('Network error - please try again')
+                      : gt('Copy page as Markdown for LLMs')}
                   </div>
                 </div>
               </button>
@@ -195,14 +198,16 @@ export function CopyMarkdownButton({pathname}: CopyMarkdownButtonProps) {
                 <div className={iconContainerClass}>
                   <Markdown width={14} height={14} />
                 </div>
-                <div className="flex-1">
-                  <div className="font-medium text-sm leading-5 text-gray-900 dark:text-[var(--foreground)]">
-                    View as Markdown
+                <T>
+                  <div className="flex-1">
+                    <div className="font-medium text-sm leading-5 text-gray-900 dark:text-[var(--foreground)]">
+                      View as Markdown
+                    </div>
+                    <div className="text-xs leading-4 text-gray-500 dark:text-[var(--foreground-secondary)]">
+                      View this page as plain text
+                    </div>
                   </div>
-                  <div className="text-xs leading-4 text-gray-500 dark:text-[var(--foreground-secondary)]">
-                    View this page as plain text
-                  </div>
-                </div>
+                </T>
               </Link>
             </div>
           </div>,

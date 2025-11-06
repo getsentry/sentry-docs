@@ -1,0 +1,78 @@
+---
+title: Consultas de BD consecutivas
+sidebar_order: 30
+description: Aprende más sobre las Consultas de BD consecutivas y cómo diagnosticarlas y solucionarlas.
+og_image: >-
+  /og-images/product-issues-issue-details-performance-issues-consecutive-db-queries.png
+---
+
+Las Consultas de BD consecutivas son una secuencia de spans de base de datos en la que uno o varios se han identificado como paralelizables; en otras palabras, spans que pueden adelantarse al inicio de la secuencia. Esto suele ocurrir cuando una consulta de BD no aplica ningún filtro a los datos, por ejemplo, una consulta sin cláusula WHERE.
+
+<div id="detection-criteria">
+  ## Criterios de detección
+</div>
+
+El detector de este problema de rendimiento busca un conjunto de spans de base de datos secuenciales y no superpuestos. Dentro de ese conjunto, busca consultas que puedan ejecutarse en paralelo, lo cual se cumple cuando la consulta:
+
+- No contiene una cláusula `WHERE`
+- Es una consulta `SELECT`
+- No tiene parámetros
+- No es la primera consulta en un conjunto de spans secuenciales
+
+Una vez que se encuentran estos spans, también debe cumplirse lo siguiente:
+
+- El tiempo máximo ahorrado por paralelización debe superar el umbral de 100 ms
+- La proporción entre el tiempo máximo ahorrado y la duración de los spans secuenciales debe superar el umbral de 0.1
+- La duración total de cada span paralelizable debe superar el umbral de 30 ms
+
+Si Sentry no detecta un problema de consultas a la base de datos consecutivas donde lo esperas, probablemente sea porque la transacción no cumplió alguno de los criterios anteriores.
+
+Puedes configurar los umbrales del detector para problemas de Consecutive DB Queries en **Project Settings > Performance**:
+
+![Consecutive DB Queries detector threshold settings](./img/consecutive-db-detector-settings.png)
+
+<div id="span-evidence">
+  ## Evidencia de spans
+</div>
+
+Puedes identificar un problema de Consecutive DB Queries por cuatro aspectos principales en la sección "Evidencia de spans":
+
+- Nombre de la transacción
+- Span inicial: el primer span en un conjunto de spans consecutivos
+- Spans paralelizables: los spans que se pueden paralelizar
+- Impacto en la duración: la fracción de tiempo añadida al tiempo total de la transacción como resultado de que los spans no se ejecuten en paralelo
+
+![Evidencia de spans de Consecutive DB Queries](./img/span-evidence.png)
+
+Velo yendo a la página de **Issues** en Sentry, seleccionando tu proyecto, haciendo clic en el error de Consecutive DB Queries que quieras examinar y luego desplazándote hacia abajo hasta la sección "Evidencia de spans" en la pestaña "Details".
+
+<div id="example">
+  ## Ejemplo
+</div>
+
+Considera usar este código de Node.js para contar y obtener todos los usuarios de una base de datos
+
+```javascript
+const result = await db.query("SELECT * FROM USERS");
+const count = await db.query("SELECT COUNT(*) FROM USERS");
+processMyData({ result, count });
+```
+
+Esto provoca un problema de rendimiento consecutivo en la base de datos. Notarás que estas consultas se realizan de forma secuencial en el árbol de spans,
+pero no son interdependientes porque el resultado de una no afecta al de la otra. Por lo tanto, pueden ejecutarse en paralelo.
+
+![Ejemplo de consultas consecutivas a la base de datos](./img/consecutive-example.png)
+
+Para solucionar este problema de rendimiento, puedes usar Promise.all():
+
+```javascript
+const [result, count] = await Promise.all([
+  db.query("SELECT * FROM USERS"),
+  db.query("SELECT COUNT(*) FROM USERS"),
+]);
+processMyData({ result, count });
+```
+
+Esto hace que las consultas se ejecuten en paralelo, lo que en este caso redujo la duración de la transacción a casi la mitad.
+
+![Consultas consecutivas a la base de datos resueltas](./img/parallel-example.png)

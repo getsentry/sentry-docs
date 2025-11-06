@@ -1,0 +1,40 @@
+---
+title: Solución de problemas
+sidebar_order: 9000
+description: >-
+  Obtén más información sobre cómo resolver problemas comunes con el SDK de
+  EntityFramework.
+og_image: /og-images/platforms-dotnet-guides-entityframework-troubleshooting.png
+---
+
+<div id="tracing-instrumentation-issues">
+  ## Problemas con la instrumentación de trazas
+</div>
+
+<div id="spans-generated-for-dbconnection-and-dbquery-are-disconnected">
+  ### Los spans generados para `db.connection` y `db.query` están desconectados
+</div>
+
+El SDK mantiene, por diseño, los spans generados automáticamente para `db.connection` y `db.query` bajo el mismo span padre. Considera el siguiente fragmento:
+
+```csharp
+var transaction = SentrySdk.StartTransaction("Program Main", "function");
+
+await db.Blogs.OrderBy(b => b.BlogId).ToListAsync();
+
+var span = transaction.StartChild("task", "algunas cosas personalizadas");
+await Task.Delay(100);
+span.Finish();
+
+await db.Blogs.OrderBy(b => b.BlogId).ToListAsync();
+
+transaction.Finish();
+```
+
+Esto daría lugar al siguiente gráfico de cascada
+
+![Gráfico de cascada en Sentry](./img/dotnet-db.png)
+
+donde una tarea no relacionada intentaría anidarse dentro del span `db.connection`. Como la tarea no tiene `db.connection` definido como padre, se agrega al final. Pero como ocurrió mientras la conexión estaba abierta, se interpretaría como una instrumentación ausente.
+
+También tiene sentido desde la perspectiva de que los spans padre e hijo mantengan algún tipo de relación causal. `db.query.compile`, `db.connection`, `db.query` y la `task` personalizada fueron acciones provocadas por la implementación de la función. Las consultas no fueron causadas por la conexión; simplemente usaron la conexión.

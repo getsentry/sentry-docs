@@ -1,0 +1,130 @@
+---
+title: Integración con Slack
+sidebar_title: Slack
+og_image: /og-images/integrations-slack.png
+---
+
+<div id="create-a-slack-app">
+  ## Crea una app de Slack
+</div>
+
+Para usar la integración de Slack de Sentry, necesitas crear una app de Slack. Ve a [Your Apps](https://api.slack.com/apps/) y haz clic en **Create New App**.
+
+![Create](./create.png)
+
+Después de asignarle un nombre a tu app y conectar tu espacio de trabajo, ve a **Basic Information**. Allí encontrarás tu Client ID, Client Secret y Verification Token, que permiten que tu app acceda a la Slack API.
+
+Aquí es donde conectarás tu instancia de Sentry autogestionada con tu app de Slack recién creada.
+
+Copia tu Client ID, Client Secret y Signing Secret y pégalos en `~/.sentry/config.yml` o `~/.sentry/sentry.conf.py`.
+
+```yaml
+slack.client-id: <ID de cliente>
+slack.client-secret: <secreto del cliente>
+slack.signing-secret: <secreto de firma>
+```
+
+Si eres empleado de Sentry, puedes configurar `slack.client-id` y `slack.client-secret` en `devlocal.py` dentro de `getsentry`.
+
+**NOTA**: Si estás desarrollando Sentry localmente, debes usar ngrok e instalar la integración de Slack desde el subdominio de ngrok; de lo contrario, la instalación fallará. Consulta [Desarrollo con Ngrok](https://develop.sentry.dev/development-infrastructure/ngrok/) para obtener más información.
+
+Después de actualizar `config.yml`, `sentry.conf.py` o `devlocal.py`, debes reiniciar tu servidor de Sentry para seguir configurando la app de Slack.
+
+<Alert title="Nota (para usuarios self-hosted)">
+  Después de cambiar los archivos de configuración, vuelve a ejecutar el script <code>./install.sh</code> para reconstruir y reiniciar los contenedores. Consulta la <Link to="/self-hosted/#configuration">sección de configuración</Link> para obtener más información.
+</Alert>
+
+Ahora que has creado tu app y actualizado tu configuración de Sentry, puedes ir a **Interactivity &amp; Shortcuts** en **Features**.
+
+Activa **Interactivity &amp; Shortcuts**.
+
+Ahora podrás ingresar tu **Request URL** (la ubicación de tu Sentry self-hosted) y **Options Load URL**:
+
+```
+URL de solicitud: {YOUR_DOMAIN}/extensions/slack/action/
+URL de carga de opciones: {YOUR_DOMAIN}/extensions/slack/options-load/
+```
+
+Ve a **OAuth &amp; Permissions** para configurar las URL de redirección.
+
+![OAuth](./oauth.png)
+
+Haz clic en **Add a new Redirect URL**, introduce la URL y luego haz clic en **Add**. Configura la URL en:
+
+```
+{YOUR_DOMAIN}/extensions/slack/setup/
+```
+
+Haz clic en **Save URLs**.
+
+En la misma página, en **Scopes**, tendrás que agregar **Bot Scopes** y **User Scopes**.
+
+Agrega los siguientes scopes a **Bot Scopes**:
+
+* `channels:read`
+* `chat:write`
+* `chat:write.customize`
+* `chat:write.public`
+* `commands`
+* `groups:read`
+* `im:history`
+* `im:read`
+* `links:read`
+* `links:write`
+* `team:read`
+* `users:read`
+
+Agrega los siguientes scopes a **User Scopes**:
+
+* `links:read`
+* `users:read`
+* `users:read.email`
+
+<Alert>
+  Tienes la opción de configurar “Restrict API Token Usage” en esta página si quieres limitar el uso de los tokens OAuth de tu app a una lista de direcciones y rangos de IP que proporciones.
+</Alert>
+
+Navega a **Event Subscriptions** y activa “On”. Aquí ingresarás otra Request URL: `{YOUR_DOMAIN}/extensions/slack/event/`
+
+Verás “Verified” cuando hayas ingresado la URL correcta.
+
+![Events](./events.png)
+
+<Alert>
+  Cuando ingreses la “Request URL”, Slack intentará verificarla. La solicitud fallará si no configuraste las claves/secreto del cliente y reiniciaste Sentry para asegurarte de que se aplicaran esos cambios de configuración. Si no se valida, primero asegúrate de que tu instancia de Sentry esté en ejecución y que Slack pueda comunicarse con ella (Slack <Link to="https://twitter.com/slackapi/status/567110311476350976?lang=en">no tiene un rango de IP</Link>).
+</Alert>
+
+Aún en la página **Event Subscription**, ve a **Subscribe to bot events** y agrega los siguientes eventos de bot:
+
+* `link_shared`
+* `message.im`
+
+Luego ve a **Subscribe to events on behalf of users** y agrega el siguiente evento:
+
+* `link_shared`
+
+Por último, aún en esa página, ve a **App Unfurl Domains**, haz clic en **Add Domain** para ingresar tu dominio y haz clic en Done.
+
+Al final de la página, haz clic en **Save Changes**.
+
+Navega a **App Home**, en **Features**. Aquí puedes editar el nombre para mostrar de tu bot (este es el nombre que se mostrará cuando se activen las alertas).
+
+![Bot](./bot.png)
+
+
+Si planeas enviar alertas de Slack a usuarios específicos (`@person`) además de a canales, activa la __pestaña Messages__ en __Show Tabs__ en la página __App Home__.
+
+Ve a __Slash Commands__ en __Features__. Haz clic en __Create New Command__ e introduce los siguientes valores:
+
+| Setting                         | Value                                         |
+| ------------------------------- | --------------------------------------------- |
+| Command                         | `/{yourname}-sentry`                          |
+| Request URL                     | `{YOUR_DOMAIN}/extensions/slack/commands/`    |
+
+<Alert title="Nota">
+    Si eres empleado de Sentry, al crear el comando de barra diagonal evita usar `/sentry`; prueba algo como `/{your_name}-sentry`. Si se instalan varias apps con el mismo comando, la más reciente tendrá prioridad.
+</Alert>
+
+Al final de la página, haz clic en __Save__.
+
+¡Ahora puedes usar Slack con Sentry! Consulta nuestra [documentación sobre cómo instalar y configurar la integración de Slack para tus proyectos](https://docs.sentry.io/product/integrations/notification-incidents/slack/) para aprovechar el enrutamiento de alertas multicanal.

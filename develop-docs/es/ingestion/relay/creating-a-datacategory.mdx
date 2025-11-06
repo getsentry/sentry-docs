@@ -1,0 +1,45 @@
+---
+title: Creación de una nueva categoría de datos
+sidebar_order: 40
+---
+
+Para agregar una nueva categoría de datos a Sentry, es necesario modificar [Relay](https://github.com/getsentry/relay).
+Relay proporciona la biblioteca de Python `sentry-relay`, que debe actualizarse antes de poder importar una nueva categoría de datos en Sentry.
+
+<div id="adding-the-new-data-category-to-relay">
+  ## Agregar la nueva categoría de datos a Relay
+</div>
+
+Debes poder desarrollar en Relay; el [README](https://github.com/getsentry/relay?tab=readme-ov-file#development)
+describe cómo configurar un entorno de desarrollo local para Relay.
+
+1. Modifica `relay-base-schema/src/data_category.rs` y agrega tu categoría de datos. Asegúrate de ponerle un buen nombre
+y de documentar el propósito de la categoría de datos. No olvides completar `DataCategory::name` y `DataCategory::from_name`.
+2. Define cómo se debe limitar la tasa para tu categoría de datos en `relay-quotas/src/quota.rs`, modificando `CategoryUnit::from`.
+3. Actualiza `sentry-relay` ejecutando `make header` en el directorio `relay-cabi/`.
+4. Agrega tu categoría de datos al `CHANGELOG.md` de Relay.
+5. Agrega tu categoría de datos al `py/CHANGELOG.md` de Python.
+
+También puedes usar este [PR de ejemplo](https://github.com/getsentry/relay?tab=readme-ov-file#development) como referencia.
+
+<div id="creating-a-sentry-relay-release">
+  ## Creación de una versión de `sentry-relay`
+</div>
+
+Para publicar una nueva versión de `sentry-relay`, debes ejecutar el flujo de trabajo [Release Library](https://github.com/getsentry/relay/actions/workflows/release_library.yml)
+con la siguiente versión.
+
+Las nuevas categorías de datos siempre se publican como una versión de parche. Por ejemplo, si la versión actual es `0.7.12`,
+deberías ejecutar el flujo de trabajo con la versión `0.7.13`.
+
+<Alert level="warning" title="Importante">
+Verifica la versión dos o tres veces antes de ejecutar el flujo de trabajo.
+</Alert>
+
+<div id="updating-sentry">
+  ## Actualizar Sentry
+</div>
+
+Una vez publicada la biblioteca, puedes actualizar `sentry-relay` en Sentry y usar tu nueva categoría de datos.
+
+[PR de ejemplo en Sentry](https://github.com/getsentry/sentry/pull/88919/files).

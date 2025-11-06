@@ -1,0 +1,149 @@
+---
+title: Alcances
+description: "Los SDK suelen gestionar automáticamente los alcances por ti en las integraciones del framework. Descubre qué es un alcance y cómo puedes sacarle partido."
+---
+
+Cuando se captura un evento y se envía a Sentry, los SDK combinan esos datos del evento con información adicional del alcance actual. Los SDK suelen gestionar automáticamente los alcances por ti en las integraciones del framework y no necesitas preocuparte por ellos. Sin embargo, conviene saber qué es un alcance y cómo puedes sacarle partido.
+
+<div id="whats-a-scope">
+  ## ¿Qué es un scope?
+</div>
+
+Los scopes contienen información útil que se envía junto con el evento. Por ejemplo, [contexts](../context/) y [breadcrumbs](../breadcrumbs/) se almacenan en el scope. Cuando se bifurca un scope, hereda todos los datos de su scope padre.
+
+<div id="how-scopes-work">
+  ## Cómo funcionan los scopes
+</div>
+
+Los scopes son básicamente pilas de datos que se adjuntan a los eventos. Cuando se captura un evento, el SDK combinará los datos de los scopes activos en el evento. Esto te permite adjuntar datos a los eventos que sean relevantes para el contexto en el que se capturó el evento.
+
+Cuando llamas a una función global como `Sentry.captureException`, Sentry detecta automáticamente los scopes activos y los aplica al capturar el evento.
+
+<div id="different-kinds-of-scopes">
+  ## Diferentes tipos de scopes
+</div>
+
+El SDK de Sentry tiene tres tipos de scopes:
+
+- [Global scope](#global-scope)
+- [Isolation scope](#isolation-scope)
+- [Current scope](#current-scope)
+
+El SDK de Android no crea scopes por sí mismo, así que puedes establecer datos en cualquiera de ellos. El SDK de Android escribe en el [current scope](#current-scope) de forma predeterminada al usar APIs de alto nivel como `Sentry.setTag`.
+
+<div id="global-scope">
+  ### Alcance global
+</div>
+
+El alcance global se aplica a _todos_ los eventos, sin importar de dónde provengan. Puedes usarlo para almacenar datos que deban aplicarse a todos los eventos, como información del entorno.
+
+<div id="isolation-scope">
+  ### Alcance de aislamiento
+</div>
+
+El alcance de aislamiento se utiliza para aislar los eventos entre sí. Por ejemplo, cada solicitud en un servidor web podría tener su propio alcance de aislamiento, de modo que los eventos de una solicitud no interfieran con los de otra.
+
+<div id="current-scope">
+  ### Alcance actual
+</div>
+
+El alcance actual es el alcance local que está activo en este momento. Puedes modificar el alcance actual mediante `Sentry.configureScope(scope -> { ... })`.
+
+<div id="how-scope-data-is-applied-to-events">
+  ## Cómo se aplican los datos de alcance a los eventos
+</div>
+
+El alcance global, el alcance de aislamiento y el alcance actual se combinan antes de que un evento (como un error o una transacción) se envíe a Sentry.
+En la mayoría de los casos, definir algo en el alcance actual sustituye lo que se haya definido en el alcance de aislamiento o en el global. Si no se ha definido en el alcance actual, el valor del alcance de aislamiento tiene prioridad sobre el del alcance global. Si tampoco hay ningún valor en el alcance de aislamiento, se utiliza el del alcance global si está presente.
+
+Ten en cuenta que hay excepciones a esto, en las que los valores de todos los alcances se fusionan. Este es el caso de breadcrumbs, tags, extras, contexts, attachments y event processors.
+
+```java
+Sentry.configureScope(ScopeType.GLOBAL, scope -> {
+  scope.setExtra("shared", "global");
+  scope.setExtra("global", "data");
+});
+
+Sentry.configureScope(ScopeType.ISOLATION, scope -> {
+  scope.setExtra("shared", "isolation");
+  scope.setExtra("isolation", "data");
+});
+
+Sentry.configureScope(ScopeType.CURRENT, scope -> {
+  scope.setExtra("shared", "current");
+  scope.setExtra("current", "data");
+});
+
+Sentry.captureException(new Exception("mi error"));
+// --> Tendrá los siguientes extras:
+// { shared: 'current', global: 'data', isolation: 'data', current: 'data' }
+```
+
+```kotlin
+Sentry.configureScope(ScopeType.GLOBAL) { scope ->
+  scope.setExtra("shared", "global")
+  scope.setExtra("global", "data")
+}
+
+Sentry.configureScope(ScopeType.ISOLATION) { scope ->
+  scope.setExtra("shared", "isolation")
+  scope.setExtra("isolation", "data")
+}
+
+Sentry.configureScope(ScopeType.CURRENT) { scope ->
+  scope.setExtra("shared", "current")
+  scope.setExtra("current", "data")
+}
+
+Sentry.captureException(Exception("mi error"))
+// --> Tendrá los siguientes extras:
+// { shared: 'current', global: 'data', isolation: 'data', current: 'data' }
+```
+
+
+<div id="configuring-the-scope">
+  ## Configuración del scope
+</div>
+
+Hay dos formas principales de interactuar con el scope. Puedes modificar el scope actual mediante `Sentry.configureScope(scope -> { ... })` y usar los setters en el scope resultante, o puedes usar métodos globales como `Sentry.setTag()` directamente, que establecerán los valores en el scope correspondiente internamente (que será el scope de aislamiento).
+
+Por ejemplo, puedes agregar etiquetas personalizadas o informar a Sentry sobre el usuario actualmente autenticado.
+
+<PlatformContent includePath="enriching-events/scopes/configure-scope" />
+
+También puedes aplicar esta configuración al desasignar un usuario al cerrar sesión:
+
+<PlatformContent includePath="enriching-events/unset-user" />
+
+<PlatformContent includePath="enriching-events/scopes/scope-synchronization" />
+
+Para saber qué información útil se puede asociar a los scopes, consulta
+[contexto](../context/), [etiquetas](../tags), [usuarios](../identify-user) y [breadcrumbs](../breadcrumbs/).
+
+<div id="local-scopes">
+  ## Ámbitos locales
+</div>
+
+También admitimos enviar y configurar un ámbito en una sola llamada. Esto suele
+llamarse <PlatformIdentifier name="with-scope" />, <PlatformIdentifier name="push-scope" /> o implementarse como un parámetro de función en los métodos de captura, según el SDK. Es muy útil si
+solo quieres enviar datos para un evento específico.
+
+<div id="using-scope-callback-parameter">
+  ### Uso del parámetro de callback de scope
+</div>
+
+En el siguiente ejemplo usamos el parámetro de callback de scope, disponible para todos los métodos `capture`, para adjuntar un `level` y una `tag` a un único error específico:
+
+<PlatformContent includePath="enriching-events/scopes/scope-callback-param" />
+
+Antes de que se invoque el callback, el SDK crea un clon del scope actual y los cambios
+realizados permanecerán aislados dentro de la función de callback. Esto te permite
+aislar más fácilmente fragmentos de información de contexto en ubicaciones específicas de tu código o
+incluso llamar a `clear` para eliminar temporalmente toda la información de contexto.
+
+<Alert title="Importante">
+
+Cualquier excepción que ocurra dentro de la función de callback al configurar un scope local no será
+capturada, y todos los errores que ocurran se ignorarán silenciosamente y **no** se reportarán.
+
+</Alert>

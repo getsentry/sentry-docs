@@ -1,0 +1,59 @@
+---
+title: Módulo de Assets
+---
+
+Los SDK del navegador deberían auto-instrumentar los recursos de JavaScript, hojas de estilo e imágenes con las operaciones `resource.script`, `resource.css` y `resource.img`, respectivamente. El módulo de Assets es independiente de la tecnología; solo le importan las propiedades de datos del span.
+
+<div id="span-conventions">
+  ## Convenciones de rango
+</div>
+
+<div id="span-description">
+  ### Descripción del span
+</div>
+
+La descripción de un span de recurso debe ser la URL completa del recurso, p. ej., `https://cdn.com/main.hash123.js?q=11274713`.
+
+<div id="span-data">
+  ### Datos del span
+</div>
+
+Se deben proporcionar los siguientes datos para cada span de recurso
+
+| Data Key                               | Type     | Description                                                                       | Notes                                                                                         |
+| :------------------------------------- | :------- | :-------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------- |
+| `http.response_content_length`         | `int`    | tamaño codificado del recurso en `bytes` (lo que se envía por la red)             | obligatorio en todas las operaciones con recursos                                             |
+| `http.decoded_response_content_length` | `int`    | tamaño decodificado del recurso en `bytes`                                        | recomendado; si no se proporciona, aparecerá como 0 en el gráfico de resumen del tamaño del recurso |
+| `http.response_transfer_size`          | `int`    | tamaño del recurso codificado más las cabeceras de la respuesta en `bytes`        | recomendado; si no se proporciona, aparecerá como 0 en el gráfico de resumen del tamaño del recurso |
+| `resource.render_blocking_status`      | `string` | indica si el recurso bloquea el renderizado de la interfaz; valores: "non-blocking" o "blocking" | recomendado; si no se proporciona, no se podrá filtrar el recurso por su estado de bloqueo de renderizado |
+
+<div id="instrumentation-example">
+  ## Ejemplo de instrumentación
+</div>
+
+El SDK debería crear un span por cada recurso que el navegador recupere.
+
+Considera un archivo HTML básico que recupera un único script:
+
+```html
+<head>
+  <script src="https://cdn.com/main.hash123.js"></script>
+</head>
+```
+
+Debería generar el siguiente span, suponiendo que la solicitud se haya realizado correctamente:
+
+```json
+{
+  "description": "https://cdn.com/main.hash123.js",
+  "op": "resource.script",
+  "data": {
+    "http.decoded_response_content_length": 123,
+    "http.response_content_length": 123,
+    "http.response_transfer_size": 123,
+    "resource.render_blocking_status": "blocking",
+    "server.address": "cdn.com",
+    ... otras propiedades del span
+  }
+}
+```

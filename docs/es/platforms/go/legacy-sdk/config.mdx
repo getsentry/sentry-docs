@@ -1,0 +1,102 @@
+---
+draft: true
+categories: []
+toc: true
+title: Configuración
+sidebar_order: 1
+noindex: true
+tags: []
+---
+
+<Alert level="warning" title="Aviso de obsolescencia">
+  Un [nuevo SDK de Go](/es/platforms/go/) ha reemplazado esta versión obsoleta. Sentry conserva esta documentación para clientes que usan el cliente antiguo `raven-go`. Obtén más información sobre el proyecto en [GitHub](https://github.com/getsentry/sentry-go) y consulta nuestra [guía de migración](/es/platforms/go/migration/).
+</Alert>
+
+El SDK de Go de Sentry ofrece varias opciones de configuración que pueden mejorar tu experiencia de uso y ayudarte a optimizar el seguimiento de errores.
+
+<div id="setdsn">
+  ### `SetDSN`
+</div>
+
+El DSN indica al SDK a dónde enviar los eventos. Esta opción siempre es obligatoria
+y los SDK de Sentry para Go pueden obtenerlo de una variable de entorno (`SENTRY_DSN`).
+Si se establece como una cadena vacía, el SDK no enviará eventos a Sentry y todos los métodos `Capture*`
+actuarán, en la práctica, como no-ops.
+
+```go
+raven.SetDSN("___PUBLIC_DSN___")
+```
+
+<div id="setdefaultloggername">
+  ### `SetDefaultLoggerName`
+</div>
+
+El nombre del logger que se utiliza para los eventos.
+
+```go
+raven.SetDefaultLoggerName("nombre_de_logger")
+```
+
+<div id="setdebug">
+  ### `SetDebug`
+</div>
+
+Muestra algunos registros de depuración para la captura y el envío de eventos.
+
+```go
+raven.SetDebug(true)
+```
+
+<div id="setenvironment">
+  ### `SetEnvironment`
+</div>
+
+Configura el entorno. Esta cadena es libre y no se establece de forma predeterminada. Una versión puede asociarse
+con varios entornos para diferenciarlos en la interfaz de usuario (piensa en `staging` vs `prod` o similar).
+
+```go
+raven.SetEnvironment("staging")
+```
+
+<div id="setrelease">
+  ### `SetRelease`
+</div>
+
+Configura la versión. Los nombres de versión son solo cadenas, pero el SDK de Sentry puede reconocer ciertos formatos,
+y estos podrían representarse de forma distinta.
+Para más información, consulta [la documentación sobre versiones](/es/product/releases/).
+
+```go
+raven.SetRelease("mi-proyecto@1.0.0")
+```
+
+<div id="setsamplerate">
+  ### `SetSampleRate`
+</div>
+
+Configura la tasa de muestreo como el porcentaje de eventos que se enviarán, en un rango de `0.0` a `1.0`. El valor predeterminado es `1.0`, lo que significa que el SDK envía el 100% de los eventos. Si se establece en `0.1`, solo se enviará el 10% de los eventos. El SDK de Sentry elige los eventos de forma aleatoria.
+
+```go
+raven.SetSampleRate(0.2)
+```
+
+<div id="setignoreerrors">
+  ### `SetIgnoreErrors`
+</div>
+
+Una lista de mensajes que se filtrarán antes de enviarse a Sentry. Esta lista formará una expresión regular (RegExp)
+que comprobará si hay una coincidencia parcial, ya sea con el mensaje del error o con el mensaje pasado directamente por el usuario.
+
+```go
+raven.SetIgnoreErrors([]string{"ServicioDeTercerosNoDisponible", "Otro error que queremos ignorar"})
+```
+
+<div id="setincludepaths">
+  ### `SetIncludePaths`
+</div>
+
+Una lista de prefijos de cadena de nombres de módulos que pertenecen a la aplicación. Esta opción se usará para determinar si el SDK de Sentry debe marcar el frame como del usuario o como código nativo/externo.
+
+```go
+raven.SetIncludePaths([]string{"/some/path", "other/path"})
+```

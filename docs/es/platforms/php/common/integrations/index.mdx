@@ -1,0 +1,118 @@
+---
+title: Integraciones
+description: "Descubre las integraciones automáticas que ofrece Sentry y cómo configurarlas."
+sidebar_order: 500
+---
+
+<div id="default-integrations">
+  ## Integraciones predeterminadas
+</div>
+
+Estas integraciones están habilitadas de forma predeterminada y se integran en la
+biblioteca estándar o en el propio intérprete. Están documentadas para que sepas qué hacen y puedas deshabilitarlas si causan problemas.
+
+Para deshabilitar las integraciones del sistema, establece `default_integrations => false` al llamar a `\Sentry\init()`.
+
+<div id="exceptionlistenerintegration">
+  ### ExceptionListenerIntegration
+</div>
+
+Esta integración captura todas las excepciones globales no controladas y emite eventos cuando se produce un error.
+
+Para ello, se asegura de que el `ErrorHandler` de Sentry esté registrado y añade una función de retorno de llamada como oyente de excepciones.
+
+<div id="errorlistenerintegration">
+  ### ErrorListenerIntegration
+</div>
+
+Esta integración se conecta al `error_handler` global de PHP y emite eventos cuando ocurre un error.
+
+Para hacerlo, se asegura de que el `ErrorHandler` de Sentry esté registrado y añade una devolución de llamada como oyente de errores. De forma predeterminada, el `ErrorHandler` reserva 16 KiB de memoria para manejar errores fatales. Al manejar errores por falta de memoria, el `ErrorHandler` además aumenta el [`memory_limit`](https://www.php.net/manual/en/ini.core.php#ini.memory-limit) en 5 MiB adicionales para contar con espacio suficiente y enviar el evento de falta de memoria a Sentry. Este cambio se realiza solo una vez y solo afecta el manejo del error de falta de memoria.
+
+Para cambiar la cantidad de memoria reservada para el manejo de errores fatales o la cantidad en la que se incrementa el `memory_limit` al manejar un error por falta de memoria, puedes registrar tú mismo el manejador de errores fatales antes de llamar a `\Sentry\init(...)`:
+
+```php
+// La cantidad de memoria reservada por cada solicitud (en bytes); debe ser un número entero positivo de bytes. Valor predeterminado: 16 KiB
+$errorHandler = \Sentry\ErrorHandler::registerOnceFatalErrorHandler(16 * 1024);
+// La cantidad de memoria (en bytes) a la que se aumentará `memory_limit` al manejar un error por falta de memoria; también se puede establecer en `null` para desactivar el aumento de `memory_limit`. Valor predeterminado: 5 MiB
+$errorHandler->setMemoryLimitIncreaseOnOutOfMemoryErrorInBytes(5 * 1024 * 1024);
+```
+
+Para algunos frameworks o proyectos, existen integraciones específicas, tanto oficiales como de terceros, que registran automáticamente los manejadores de errores. Consulta su documentación.
+
+De forma predeterminada, la opción error*types usa el valor que devuelve la función `error_reporting()`, que puede cambiar en tiempo de ejecución. Como alternativa, puedes fijar la opción a un valor concreto estableciéndolo como una máscara de bits de las constantes de PHP `E*\*` en `\Sentry\init()`. En ese caso, Sentry registrará solo errores de esos tipos específicos, independientemente del nivel de notificación actual.
+
+
+<div id="fatalerrorlistenerintegration">
+  ### FatalErrorListenerIntegration
+</div>
+
+Esta integración captura todos los errores fatales y emite los eventos correspondientes.
+
+Para ello, se asegura de que el `ErrorHandler` de Sentry esté registrado y añade una función de devolución de llamada como oyente de errores fatales.
+
+<div id="requestintegration">
+  ### RequestIntegration
+</div>
+
+Esta integración añade a los datos de la solicitud del evento:
+
+- Método HTTP
+- URL (incluida la cadena de consulta)
+- Cuerpo (por defecto, solo si el cuerpo es de 10 KB o menos)
+
+Si la [opción `send_default_pii`](../configuration/options/#send-default-pii) está habilitada, también enviará los siguientes datos personales (PII):
+
+- Dirección IP
+- Cookies
+- Encabezados
+
+<div id="transactionintegration">
+  ### TransactionIntegration
+</div>
+
+Esta integración establece el atributo `transaction` del evento en el valor encontrado en la carga útil del evento sin procesar o, si está presente, en el valor de la variable del servidor `PATH_INFO`.
+
+<div id="framecontextifierintegration">
+  ### FrameContextifierIntegration
+</div>
+
+Esta integración lee fragmentos de código en torno a la línea donde se originó un error.
+
+<div id="environmentintegration">
+  ### EnvironmentIntegration
+</div>
+
+Esta integración enriquece los datos del evento con información del entorno de ejecución de PHP y del sistema operativo del servidor.
+
+<div id="modulesintegration">
+  ### ModulesIntegration
+</div>
+
+Esta integración registra todas las versiones de los paquetes instalados con Composer junto con los detalles del evento; también se incluye el proyecto raíz.
+
+<div id="custom-integrations">
+  ## Integraciones personalizadas
+</div>
+
+Puedes personalizar la lista de integraciones sin desactivar la integración predeterminada usando la opción `integrations`. Puedes pasar una función invocable para necesidades avanzadas, aunque una lista fija de integraciones funcionará en la mayoría de los casos.
+
+En el siguiente ejemplo, todas las integraciones están habilitadas excepto `ExceptionListenerIntegration`.
+
+```php
+\Sentry\init([
+    'dsn' => '___PUBLIC_DSN___',
+    'integrations' => static function (array $integrations) {
+        $integrations = array_filter($integrations, static function (\Sentry\Integration\IntegrationInterface $integration) {
+            // Comprueba si la integración es una instancia del listener de excepciones y devuelve false para eliminarla del array
+            if ($integration instanceof \Sentry\Integration\ExceptionListenerIntegration) {
+                return false;
+            }
+
+            return true;
+        });
+
+        return $integrations;
+    },
+]);
+```

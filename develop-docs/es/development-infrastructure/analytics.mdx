@@ -1,0 +1,365 @@
+---
+title: Analítica
+description: Esta guía te explica paso a paso cómo instrumentar tu código con la infraestructura de analítica de terceros de Sentry.
+sidebar_order: 90
+---
+
+<div id="big-query">
+  ## BigQuery
+</div>
+
+[BigQuery](https://cloud.google.com/bigquery/) es un almacén de datos de Google donde residen muchos de nuestros datos. Esto incluye todos nuestros datos de analítica y algunos (no todos) datos de producción que pueden ser útiles cuando se necesitan joins para responder preguntas más ricas y complejas. Desde sentry/getsentry, nuestros datos pasan por [reload](https://github.com/getsentry/reload), nuestro ETL para BigQuery.
+
+Como regla general, no añadas un evento de analítica si puede activarse más de 1,000,000 veces al día. Si se supera este umbral, puede provocar que el servicio de analítica falle. Si no estás seguro de la frecuencia con la que se activará el evento de analítica, añádelo primero como una [métrica](https://develop.sentry.dev/analytics/#metrics) de Datadog.
+
+<div id="amplitude">
+  ## Amplitude
+</div>
+
+[Amplitude](https://amplitude.com/) es una herramienta de analítica de producto que utilizamos para medir el comportamiento de los usuarios. Usamos Amplitude para registrar eventos como cuando un usuario ve una página, hace clic en un Button o realiza una búsqueda.
+
+<div id="backend-analytics">
+  ## Analítica de backend
+</div>
+
+<div id="step-1-create-your-analytics-events">
+  ### Paso 1: ¡Crea tus eventos de Analytics!
+</div>
+
+Por convención, los eventos de analytics se guardan en un archivo llamado `analytics` dentro de la carpeta del código que supervisan. Por ejemplo: `sentry/integrations/analytics.py` para los eventos de analytics de Integrations y `sentry/api/analytics.py` para los eventos de analytics de la API.
+
+Las clases de Event se ven así:
+
+```python
+import abc
+
+from sentry import analytics
+
+
+# si tenemos varios eventos con atributos comunes, podemos definir una clase base
+# que no está pensada para ser instanciada directamente. Para asegurarnos de que no se instancie,
+# también heredamos de `abc.ABC`.
+@analytics.eventclass()
+class BaseExampleTutorialEvent(analytics.Event, abc.ABC):
+    # estos son atributos obligatorios, que también se heredan en las clases hijas
+    id: int
+    user_id: int
+
+
+@analytics.eventclass('example_tutorial.created')
+class ExampleTutorialCreatedEvent(BaseExampleTutorialEvent):
+    # si no tenemos atributos adicionales, simplemente podemos usar "pass" aquí
+    pass
+
+
+@analytics.eventclass('example_tutorial.deleted')
+class ExampleTutorialDeletedEvent(BaseExampleTutorialEvent):
+    reason: str | None = None  # este es un atributo adicional y opcional
+
+
+# solo registramos las clases concretas, no la clase base
+analytics.register(ExampleTutorialCreatedEvent)
+analytics.register(ExampleTutorialDeletedEvent)
+```
+
+Tus clases de eventos heredarán de [`analytics.Event`](https://github.com/getsentry/sentry/blob/master/src/sentry/analytics/event.py) como se muestra arriba y deben usar el decorador `analytics.eventclass`. Si el evento es una clase base abstracta, puede usarse sin argumentos. Si va a registrarse, se le debe pasar una cadena de tipo de evento única. Esta cadena de tipo describe qué es el evento, y este nombre debe ser único en todas las clases de eventos de analytics.
+
+Se pueden declarar atributos adicionales en la clase con la sintaxis de tipado adecuada. Esto es similar a cómo declararías atributos en un [`dataclass`](https://docs.python.org/3/library/dataclasses.html) (que de hecho se usa internamente). Si un atributo es opcional, puede declararse con un valor predeterminado; de lo contrario, es obligatorio y siempre se debe proporcionar un valor.
+
+Finalmente, registra tus clases de eventos para que el [event&#95;manager](https://github.com/getsentry/sentry/blob/master/src/sentry/analytics/event_manager.py) de analytics las detecte. Esto solo es necesario si quieres `record` tu evento de analytics usando la cadena de tipo como se explica a continuación.
+
+<div id="step-2-add-it-to-the-code-you-want-to-track">
+  ### Paso 2: Añádelo al código que quieres monitorizar
+</div>
+
+Vas a añadir código en alguna parte visible para el usuario, como un endpoint de API.
+
+```python
+from sentry import analytics
+from sentry.examples.analytics import ExampleTutorialCreatedEvent
+
+class ExampleEndpoint(Endpoint):
+    def post(self, request):
+        example = Example.objects.create(...)
+        analytics.record(
+            ExampleTutorialCreatedEvent(
+                id=example.id,
+                user_id=request.user.id,
+            )
+        )
+        return Response(serialize(example, request.user))
+```
+
+Haz lo que harías normalmente con el endpoint y luego utiliza el método `analytics.record` para recopilar la información que necesitas. Ten en cuenta que acepta una entrada con el siguiente formato:
+
+```python
+analytics.record(
+    <EventClass>(
+        <nombre_atributo_0>=<valor>,
+          ....
+        <nombre_atributo_n>=<valor>,
+    )
+)
+```
+
+Existe una forma más antigua y en desuso de registrar eventos de analítica usando el `type` pasado en el decorador `eventclass`:
+
+```python
+analytics.record(
+    'tipo_de_evento_como_string',
+    <nombre_de_atributo_0>=<valor>,
+      ....
+    <nombre_de_atributo_n>=<valor>,
+)
+```
+
+<Alert level="warning">
+  Esta forma de registrar eventos de analítica está en desuso y se eliminará en una versión futura, ya que presenta varias desventajas. Por ejemplo, deja de lado la comprobación estática de tipos y no puede garantizar los atributos enviados.
+</Alert>
+
+Ejecuta las pruebas que ejercen el endpoint para asegurarte de que todo funciona.
+
+<div id="step-3">
+  ### Paso 3:
+</div>
+
+De forma predeterminada, un nuevo tipo de evento se agrega y se envía a Amplitude siempre que el evento incluya un `user_id`. Si quieres enviar eventos sin agregación, consulta [nuestra documentación sobre agregación en Amplitude](https://github.com/getsentry/etl/blob/master/documentation/amplitude_analytics.md)
+
+<div id="route-based-frontend-analytics">
+  ## Analítica de frontend basada en rutas
+</div>
+
+Todas las cargas de páginas dentro de la aplicación generan eventos de analítica de forma predeterminada (tanto en Reload como en Amplitude). Toda la analítica relacionada con la carga de páginas debe gestionarse dentro del sistema de analítica basado en rutas, en lugar de instrumentar manualmente eventos del frontend. Los nombres predeterminados se basan en la ruta parametrizada y llevan el prefijo `Page View`. Aquí tienes un ejemplo de nombre de evento:
+
+```
+Vista de página: :OrgId :ProjectId Lanzamientos
+```
+
+Cualquier campo que tenga un `:` al inicio es un campo parametrizado. El valor del campo será el valor del parámetro. Por ejemplo, el campo `:OrgId` tomará el valor del parámetro `orgId` (en realidad, el `slug`).
+
+<div id="customization">
+  ### Personalización
+</div>
+
+La analítica basada en rutas se puede personalizar para usar distintos nombres de evento y parámetros. Para componentes funcionales, puedes usar los siguientes hooks:
+
+* `useDisableRouteAnalytics`: Desactiva la analítica basada en rutas para el componente.
+* `useRouteAnalyticsEventNames`: Personaliza el nombre del evento. El primer argumento es el `eventKey` de Reload y el segundo es el `eventName` de Amplitude.
+* `useRouteAnalyticsParams`: Personaliza los parámetros.
+
+Ejemplo:
+
+```tsx
+export default function SpanDetailsContentWrapper(props: Props) {
+  const {location, project,} = props;
+
+  // personalizar el evento de análisis de ruta que enviamos
+  useRouteAnalyticsEventNames(
+    'performance_views.span_summary.view',
+    'Vistas de rendimiento: Página de resumen de span visualizada'
+  );
+  useRouteAnalyticsParams({
+    project_platforms: project ? getSelectedProjectPlatforms(location, [project]) : '',
+  });
+
+```
+
+El objetivo principal de personalizar los nombres de eventos es crear nombres más legibles que no cambien si cambia la ruta subyacente.
+
+Para componentes basados en clases, se pueden usar las siguientes funciones:
+
+* `setDisableRouteAnalytics`: Desactiva la analítica basada en rutas para el componente.
+* `setEventNames`: Personaliza el nombre del evento. El primer argumento es el `eventKey` de Reload y el segundo es el `eventName` de Amplitude.
+* `setRouteAnalyticsParams`: Personaliza los parámetros.
+
+Debes importar tanto `withRouteAnalytics` como `WithRouteAnalyticsProps`. Debes añadir `WithRouteAnalyticsProps` a las Props de la clase. Las funciones se pueden acceder a través de las Props. `withRouteAnalytics` se invoca al exportar la clase.
+
+Ejemplo:
+
+```tsx
+class Monitors extends AsyncView<Props, State> {
+  componentDidMount() {
+    this.props.setEventNames('monitors.page_viewed', 'Monitors: Página vista');
+  }
+
+```
+
+<div id="button-click-analytics">
+  ## Analítica de clics en Button
+</div>
+
+De forma predeterminada, todos los clics en botones dentro de la aplicación generarán eventos de analítica para Reload. Por ahora, no se envían automáticamente a Amplitude, pero puedes configurarlo para que los eventos se envíen allí.
+
+De fábrica, cada clic en un botón registrará el `text` (aria-label), `priority`, `href` y `parameterized_path` del botón. Es posible que te encuentres con un problema donde algunos de los datos aparezcan como una cadena vacía; es un error conocido. El nombre del evento se basará en la ruta parametrizada, similar a la analítica basada en rutas (consulta arriba para más información), pero llevará el prefijo `button_click`.
+
+<div id="customization">
+  ### Personalización
+</div>
+
+Hay varias formas de personalizar la analítica de los clics del botón:
+
+* `analyticsEventName` - Permite enviar el evento a Amplitude con el nombre de evento indicado. Si no se establece, el evento no se enviará a Amplitude.
+* `analyticsEventKey` - Sustituye la clave de evento predeterminada basada en la ruta parametrizada por la clave de evento indicada. A menos que también se establezca `analyticsEventName`, esto seguirá enviando eventos solo a Reload, pero utilizando la nueva clave de evento. La ruta parametrizada seguirá enviándose como parte del evento, pero no será la clave del evento.
+* `analyticsParams` - Añade parámetros adicionales que se registrarán con cada clic del botón.
+
+Ejemplo:
+
+```tsx
+<RestartButton
+  analyticsEventName="Growth: Guided Tour Restart"
+  analyticsEventKey="growth.guided_tour_restart"
+  analyticsParams={{ tour: "issues" }}
+/>
+```
+
+En este ejemplo, al hacer clic en este botón se enviará un evento a Amplitude con `analyticsEventName`, se enviará un evento a Reload con el nuevo `analyticsEventKey`, y se añadirá `tour` como parámetro en cada evento.
+
+<div id="for-frontend-events">
+  ## Para eventos de frontend
+</div>
+
+Para los eventos de analítica que ocurren en Sentry, se debe usar la función `trackAnalytics`. Para Getsentry, se debe usar `trackGetsentryAnalytics`.
+
+<div id="step-1-add-the-typescript-definition">
+  ### Paso 1: Agrega la definición de TypeScript
+</div>
+
+Primero, agrega la definición de TypeScript del evento en un archivo de eventos de analítica dentro del directorio `analytics`, como [issueAnalyticsEvents.tsx](https://github.com/getsentry/sentry/blob/master/static/app/utils/analytics/issueAnalyticsEvents.tsx). Esto tiene dos partes:
+
+1. Define los parámetros del evento que se exportarán
+
+```tsx
+export type ExampleTutorialEventParameters = {
+  "example_tutorial.created": {
+    source: string;
+  };
+  "example_tutorial.viewed": {
+    source: string;
+  };
+};
+```
+
+2. Define la asignación de nombres de Reload a Amplitude. Si el valor es `null`, el evento no se enviará a Amplitude. Esto suele hacerse solo para eventos de volumen muy alto.
+
+```tsx
+export const exampleTutorialEventMap: Record<
+  keyof ExampleTutorialEventParameters,
+  string | null
+> = {
+  "example_tutorial.created": "Tutorial de ejemplo creado",
+  "example_tutorial.viewed": null, // no enviar a Amplitude
+};
+```
+
+<div id="step-2-add-the-event-in-code">
+  ### Paso 2: Agregar el evento en el código
+</div>
+
+Ahora puedes usar el evento en el código con `trackAnalytics` o `trackGetsentryAnalytics`. Ambas funciones aceptan los siguientes argumentos:
+
+* `eventKey`: Describe la clave utilizada en el propio sistema de analítica de Sentry (Reload). Se asignará a un nombre de Amplitude según lo determinado en el paso 1.
+
+* `analyticsParams`: Este objeto contendrá toda la información que te interesa medir. Por lo general, siempre se pasa un objeto `Organization`, a menos que el evento no esté vinculado a una organización específica. En getsentry, también debes pasar `Subscription`. Algunos campos, como el rol y el plan, se extraerán de esas entidades y se agregarán a la carga útil del evento.
+
+* `options`: Este campo permite pasar los siguientes campos opcionales:
+  * `mapValuesFn`: Una función arbitraria para transformar los parámetros en nuevos parámetros
+  * `startSession`: Si es true, inicia una sesión de analítica. Esta sesión puede usarse para construir embudos. El inicio del embudo debería tener `startSession` establecido en `true`.
+  * `time`: Marca de tiempo de Unix opcional.
+
+<div id="typing-and-mapping">
+  ### Tipado y mapeo
+</div>
+
+Todos los eventos deben estar tipados para especificar cuál debe ser la carga útil. También definimos un mapeo del nombre del evento en Reload al nombre del evento en Amplitude.
+
+<div id="naming-convention">
+  ### Convención de nomenclatura
+</div>
+
+Nuestra convención de nomenclatura actual para eventos de Reload es `descriptor.action`, por ejemplo, lo que tenemos arriba con `example_tutorial.created` y `example_tutorial.deleted`. Debes hacerlos lo suficientemente específicos para capturar la acción de interés, pero no tan específicos como para acabar con un millón de eventos con nombres distintos que contengan información que podría capturarse en el objeto de datos. Por ejemplo, si puedes crear tu tutorial de ejemplo desde varios lugares, resiste la tentación de incluir el origen como parte del descriptor; es decir, `example_tutorial_onboarding.created` y `example_tutorial_settings.created`. Tu yo del futuro, cuando haga análisis, te lo agradecerá. Los nombres de eventos de Amplitude deben ser similares al nombre del evento de Reload, salvo que debes escribir cada palabra con mayúscula inicial y usar espacios en lugar de guiones bajos.
+
+<div id="testing-your-analytics-event">
+  ### Probar tu evento de Analytics
+</div>
+
+Es importante probar los eventos de analítica para asegurarte de que los datos que ves sean precisos. Cualquier evento de analítica nuevo debe probarse antes de hacer merge para confirmar que los eventos se activen correctamente (con los valores adecuados en el momento correcto). Un problema común cuando se omiten las pruebas es que los eventos se activan varias veces cuando deberían hacerlo solo una.
+
+Al desarrollar en local, los eventos de analítica no se enviarán a Reload ni a Amplitude. Para verificar si tu evento se está enviando como esperas y con los datos correctos, puedes establecer &quot;DEBUG&#95;ANALYTICS&quot; en &quot;1&quot; en el almacenamiento local de tu navegador. Así, se registrarán los datos del evento de analítica en la consola cada vez que se hubiera enviado un evento de analítica, lo que te permitirá comprobar tu analítica localmente.
+
+**getsentry**
+
+```jsx
+import React from "react";
+
+import { trackAnalytics } from "getsentry/utils/analytics";
+
+class ExampleComponent extends React.Component {
+  componentDidMount() {
+    trackAnalytics("example_tutorial.created", {
+      organization,
+      subscription,
+      source: "wakanda",
+    });
+  }
+
+  render() {
+    return <h1> ¡HOLA! </h1>;
+  }
+}
+```
+
+**sentry**
+
+Lo único que necesitas es importar analytics desde utils y llamarlo donde sea necesario. Ten en cuenta cómo afectan los ciclos de vida de React a tus datos. En este caso, solo queremos enviar un evento cuando el componente se monte, así que lo colocamos en `componentDidMount`.
+
+```jsx
+import React from "react";
+
+import { trackAnalytics } from "getsentry/utils/analytics";
+
+class ExampleComponent extends React.Component {
+  componentDidMount() {
+    trackAnalytics("example_tutorial.deleted", {
+      organization,
+      source: "wakanda",
+    });
+  }
+  render() {
+    return <h1> ¡HOLA! </h1>;
+  }
+}
+```
+
+Después de desplegar tus cambios, puedes abrir las DevTools en tu navegador y, en la pestaña &quot;Network&quot;, buscar la solicitud `event/`. Esto mostrará los eventos que se envían a Reload y Amplitude.
+
+<div id="debugging">
+  ## Depuración
+</div>
+
+Si tus analíticas no aparecen después de agregarlas, no encuentras un evento que esperabas ver o algo más sale mal, hay algunos pasos de diagnóstico que puedes probar:
+
+* Sigue los pasos [anteriores](https://docs.sentry.io/development-infrastructure/analytics/#testing-your-analytics-event) para confirmar que tu evento de analíticas se envía correctamente, con los parámetros adecuados.
+* Revisa en Amplitude si hay eventos bloqueados: en Amplitude, ve a la sección &quot;Data&quot; en la barra lateral. Luego, navega a &quot;Events&quot; y busca el nombre de tu evento. Si está bloqueado, aparecerá con el estado &quot;Blocked&quot;, lo que significa que no se mostrará. Algunos eventos pueden estar bloqueados en favor de analíticas automáticas de rutas o de botones.
+* Para las analíticas de rutas, confirma que el evento de analíticas no esté siendo bloqueado con `useDisableRouteAnalytics`. Algunos componentes ya tenían un evento de analíticas, por lo que se deshabilitaron las analíticas de rutas.
+* Revisa los tipos de datos que estás enviando. No se recomienda enviar arreglos como tipos de datos (pueden ser difíciles de consultar y producir comportamientos inesperados). Intenta eliminarlos si los estás usando.
+* Recuerda que siempre habrá cierta discrepancia. Los bloqueadores de anuncios, por ejemplo, pueden impedir que se envíen eventos. Esto podría explicar por qué algunos números no cuadran.
+
+<div id="metrics">
+  ## Métricas
+</div>
+
+Haz un seguimiento de estadísticas agregadas con [Metrics](/es/backend/metrics/). Por ejemplo, esto puede usarse para registrar códigos de respuesta agregados de un endpoint.
+
+Importa la biblioteca de métricas y usa la función `metrics.inc`. La clave debe ser única.
+
+```python
+from sentry.utils import metrics
+
+metrics.incr(
+    "codeowners.create.http_response", # debe ser único
+    sample_rate=1.0,
+    tags={"status": status},
+)
+```
+
+Si no especificas una tasa de muestreo, recibirás 1 de cada 10 eventos. Si se espera que el servicio tenga poco tráfico, podemos empezar con una tasa de muestreo de 1.

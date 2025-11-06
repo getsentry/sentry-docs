@@ -1,0 +1,48 @@
+---
+title: La categoría de resultado “Indexado”
+sidebar_order: 4
+---
+
+Los tipos de datos sujetos a muestreo dinámico se representan en dos categorías de resultados diferentes: “total” e “indexed”. Puedes pensar en la categoría “total” como el recuento de elementos que se almacenan de forma _agregada_, es decir, como métricas. La categoría “indexed” cuenta elementos que se almacenan individualmente.
+
+Si un elemento se descarta _antes_ de la extracción de métricas y del muestreo dinámico, aparecerá como un resultado en ambas categorías (por ejemplo, `"transaction"` y `"transaction_indexed"`). Si un elemento se descarta _mediante_ muestreo dinámico, aparecerá como un resultado "filtered" en la categoría “indexed”, pero seguirá existiendo en forma de métricas, para las cuales emitimos un resultado "accepted" en la categoría “total”.
+
+<div id="illustration">
+  ## Ilustración
+</div>
+
+Estos gráficos muestran el flujo de categorías de datos para las transacciones:
+
+Para una transacción de ejemplo:
+
+```mermaid
+flowchart LR
+  SDK --transaction--> Relay
+  Relay --transaction--> DS[Muestreo Dinámico]
+  Relay --transaction_indexed--> DS
+  DS --transaction-->Store
+  DS --transaction_indexed-->Store
+```
+
+Para una transacción filtrada mediante muestreo dinámico:
+
+```mermaid
+flowchart LR
+  SDK --transacción--> Relay
+  Relay --transacción--> DS[Muestreo Dinámico]
+  Relay --transaction_indexed--> DS
+  DS --transacción-->Store
+  DS --transaction_indexed-->Reject
+  style Reject stroke:#f00
+```
+
+
+<div id="data-types">
+  ## Tipos de datos
+</div>
+
+Las siguientes categorías de datos tienen una categoría correspondiente `"*_indexed"`:
+
+* transacciones
+* spans
+* perfiles

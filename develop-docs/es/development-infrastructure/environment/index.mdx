@@ -1,0 +1,328 @@
+---
+title: Entorno
+description: Esta guía te guía paso a paso para configurar un entorno de desarrollo local del servidor de Sentry en macOS.
+sidebar_order: 2
+---
+
+Principalmente admitimos el desarrollo en macOS (solo arm64), pero en Linux (amd64) también debería ser posible.
+Si tienes algún problema en cualquiera de las dos plataformas, abre un issue en [devenv](https://github.com/getsentry/devenv/).
+
+<div id="setup">
+  ## Configuración
+</div>
+
+Comienza instalando la herramienta `devenv` siguiendo [estas instrucciones](https://github.com/getsentry/devenv#install).
+
+Después de la instalación, deberías poder ejecutar `devenv bootstrap`, que te guiará en el resto del proceso.
+
+Cuando termines la configuración, también conviene revisar el <Link to="/development/workflow/">flujo de trabajo de desarrollo</Link>.
+
+<div id="keeping-your-environment-up-to-date">
+  ## Mantener tu entorno actualizado
+</div>
+
+Primero, asegúrate de que tu rama esté rebasada o fusionada con la `master` más reciente.
+
+Ejecutar `devenv sync` (que ejecuta `devenv/sync.py`) pondrá tu entorno al día (dependencias, migraciones, etc.).
+
+También puede que necesites ejecutar `direnv allow` si aún no lo has hecho (a veces es fácil pasar por alto el aviso).
+
+¿Problemas? Consulta la [sección de solución de problemas](#troubleshooting).
+
+<div id="running-the-development-server">
+  ## Ejecución del servidor de desarrollo
+</div>
+
+Los `devservices` garantizan que tengas en marcha todos los servicios necesarios para el desarrollo local. Consulta la [documentación de devservices](/es/development/devservices/) para obtener más información sobre cómo administrar los servicios.
+Al configurar `sentry`, ejecuta el siguiente comando en la carpeta `sentry`:
+
+```shell
+devservices up
+```
+
+Después de eso, puedes iniciar el servidor de desarrollo en la carpeta `sentry`:
+
+```shell
+devservices serve
+```
+
+Accede en [http://dev.getsentry.net:8000](http://dev.getsentry.net:8000) (tendrás que esperar un poco a que webpack termine).
+Durante el proceso de bootstrap se debería haber creado una cuenta de superusuario para ti: `admin@sentry.io` con la contraseña `admin`.
+Puedes crear otros usuarios con `sentry createuser`.
+
+<Alert title="Nota">
+  Cuando se te pida la dirección raíz del servidor, asegúrate de usar
+  [http://dev.getsentry.net:8000](http://dev.getsentry.net:8000), ya que tanto
+  el protocolo *como* el puerto son obligatorios para que el DNS y las URL de algunas páginas
+  se muestren correctamente.
+</Alert>
+
+<div id="frontend-only-backend-only">
+  ### Solo frontend y solo backend
+</div>
+
+Consulta [Servidor de desarrollo de frontend](/es/frontend/development-server/) y [Servidor de desarrollo de backend](/es/backend/development-server/) para otras formas de iniciar la interfaz de Sentry.
+
+<div id="enabling-https">
+  ### Habilitar HTTPS
+</div>
+
+Opcionalmente, quizá quieras ejecutar el servidor de desarrollo mediante HTTPS en ciertas situaciones (como probar APIs de JS que requieren un contexto seguro).
+
+Primero usaremos [mkcert](https://github.com/FiloSottile/mkcert) para crear e instalar un certificado de desarrollo de confianza local y [Caddy](https://caddyserver.com/) como proxy inverso.
+
+```shell
+brew install mkcert
+brew install nss # si usas Firefox
+brew install caddy
+pnpm mkcert-localhost
+```
+
+Luego ejecutaremos el proxy inverso cuando sea necesario:
+
+```shell
+pnpm https-proxy
+```
+
+Después de que el servidor esté en ejecución, podemos acceder al servidor de desarrollo usando `https` en el puerto `:8003` en lugar de `http` en `:8000`.
+
+<Alert title="HTTP Strict-Transport-Security">
+  Podrías encontrarte con que [HSTS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security) esté habilitado para tu dominio y ya no puedas acceder mediante `http`.
+
+  Para borrar HSTS, visita `chrome://net-internals/#hsts` en navegadores basados en Chrome y usa el formulario &quot;Delete domain security policies&quot;.
+</Alert>
+
+<div id="ingestion-pipeline-relay-aka-sending-events-to-your-dev-environment">
+  ### Canal de ingesta (Relay), también llamado enviar eventos a tu entorno de desarrollo
+</div>
+
+<Link to="/relay/">Relay</Link> y los workers de ingesta no se inician de forma predeterminada. Sigue las instrucciones a continuación para ponerlos en marcha y poder enviar eventos a tu instancia de Sentry en el entorno de desarrollo:
+
+* Define `SENTRY_USE_RELAY = True` en `~/.sentry/sentry.conf.py`.
+* Ejecuta `devservices up --mode ingest` para iniciar los servicios que Relay necesita (por ejemplo, Kafka).
+* Inicia tu servidor de desarrollo (p. ej., `devservices serve`).
+
+<div id="running-the-getsentry-development-server">
+  ## Ejecutar el servidor de desarrollo de Getsentry
+</div>
+
+<Alert title="Solo para empleados" level="warning">
+  Solo los empleados de Sentry tienen acceso a getsentry.
+</Alert>
+
+Consulta también: <Link to="/application/sentry-vs-getsentry/">Sentry vs Getsentry</Link>
+
+Para configurar y mantener getsentry al día, debes ejecutar `devenv sync` dentro de `sentry` antes de ejecutar `devenv sync` dentro de `getsentry`.
+
+`getsentry` depende del commit al que esté checkouteado `../sentry`, así que es importante mantener tu repositorio de sentry actualizado.
+
+Al igual que al ejecutar `sentry` (ver arriba), puedes iniciar los `devservices` con el siguiente comando en el repositorio de `getsentry`:
+
+```shell
+devservices up
+```
+
+Para ejecutar tareas, también deberás iniciar taskbroker:
+
+```shell
+# iniciar solo taskbroker
+devservices up --mode=taskbroker
+
+# iniciar taskbroker y un trabajador en segundo plano
+devservices up --mode=taskworker
+```
+
+Si usas la opción `--mode` de devservices, cualquier modo que antes iniciaba workers de Celery ahora iniciará taskbroker y un taskworker.
+
+Después de eso, puedes iniciar el servidor de desarrollo dentro de la carpeta `getsentry`:
+
+```shell
+devservices serve
+```
+
+<Alert title="Nota">
+  **No** puedes tener los servidores de desarrollo de sentry y getsentry ejecutándose al mismo tiempo.
+</Alert>
+
+Cuando el servidor haya arrancado, accede a [http://dev.getsentry.net:8000](http://dev.getsentry.net:8000/). Usar localhost no funcionará. Ten en cuenta que se utiliza el protocolo **http**, no **https**. Si encuentras un error de certificado al acceder localmente, puede deberse a que tu navegador recuerda que `dev.getsentry.net` usó anteriormente el protocolo https (posiblemente al ejecutar `pnpm dev-ui`) y ahora redirige todas las solicitudes http a https. Para solucionarlo, abre el sitio en una **ventana de incógnito** del navegador.
+
+Si necesitas sobrescribir opciones de configuración para tu entorno
+local, puedes crear `getsentry/conf/settings/devlocal.py` y colocar allí las
+anulaciones de opciones de configuración. Este módulo se importará automáticamente
+por `dev.py` si existe.
+
+Para habilitar los workers de ingesta, sigue los pasos descritos <Link to="#ingestion-pipeline-relay">aquí</Link> y ejecuta
+
+```shell
+devservices serve
+```
+
+<div id="running-siloed-instances">
+  ## Ejecutar instancias aisladas
+</div>
+
+De forma predeterminada, `sentry devserver` ejecuta un servidor de aplicaciones en modo monolítico. También puedes ejecutar `devserver` con instancias de aplicación aisladas. Antes de hacerlo, debes <Link to="/backend/database-migrations/#cloning-a-monolith-database">crear bases de datos de silos separados</Link>.
+
+El comando `devserver` admite la opción `--silo`, que te permite crear instancias aisladas. Cualquier worker, consumer o proceso de celery-beat se iniciará con el mismo modo de silo.
+
+```shell
+# Iniciar los servidores del silo de control
+devservices serve --silo=control --celery-beat
+
+# Iniciar los servidores del silo de región
+devservices serve --silo=region --celery-beat
+```
+
+Los servidores aislados tienen las siguientes asignaciones de puertos:
+
+* 8000 - Webpack
+* 8010 - Servidor web del silo de región
+* 8001 - Servidor web del silo de control
+
+En la configuración anterior, tu entorno local usará dominios de slug de organización y enviará solicitudes a `us.dev.getsentry.net` (silo de región) y `dev.getsentry.net` (silo de control). Todas las solicitudes serán canalizadas por webpack y reenviadas al servidor correspondiente según el nombre de host.
+
+<div id="ngrok-and-siloed-servers">
+  ### Ngrok y servidores aislados
+</div>
+
+Consulta la <Link to="/development/ngrok/">documentación de ngrok</Link>.
+
+<div id="siloed-django-shell">
+  ### Shell de Django en modo silo
+</div>
+
+Si quieres usar un REPL con los modos de silo activados:
+
+```shell
+# Iniciar un shell del silo de control
+SENTRY_SILO_DEVSERVER=1 SENTRY_SILO_MODE=CONTROL getsentry django shell
+
+# Iniciar un shell del silo de región
+SENTRY_SILO_DEVSERVER=1 SENTRY_SILO_MODE=REGION SENTRY_REGION=us getsentry django shell
+```
+
+***
+
+**Problema:** `DoesNotExist: Subscription matching query does not exist` al ejecutar el devserver de getsentry
+
+**Solución:**
+
+```shell
+./bin/mock-subscription
+```
+
+También puedes configurar la organización de tu instancia local para usar un plan empresarial ejecutando lo siguiente en getsentry:
+
+```shell
+./bin/mock-subscription <org_slug> --plan mm2_a_500k
+```
+
+***
+
+**Problema:** `Error response from daemon: driver failed programming external connectivity on endpoint sentry-postgres-1 (e9e631ff7f32bd00052c25064c56609794a3b96da0dc04742f558e3ae659fa66): Bind for 127.0.0.1:5432 failed: port is already allocated`
+
+**Solución:**
+
+Hay otro proceso usando el puerto. Prueba a ejecutar `docker ps`. Si estás ejecutando servicios con `sentry devservices`, tendrás que detenerlos.
+
+```shell
+sentry devservices down
+devservices up
+```
+
+De lo contrario, comprueba si hay otro proceso usando el puerto asignado.
+
+```shell
+lsof -i :5432
+```
+
+Luego, termina el proceso o elimínalo si es necesario.
+
+***
+
+**Problema:** Aparece un error que menciona algo como `pkg_resources.DistributionNotFound: The 'some_dependency<0.6.0,>=0.5.5' distribution was not found and is required by sentry`
+
+**Solución:** Tu virtualenv necesita actualizarse. Ejecuta `devenv sync`.
+
+***
+
+**Problema:** Ves `Error occured while trying to proxy to: dev.getsentry.net:8000/`
+
+**Solución:** Probablemente debas actualizar tus dependencias de Python. Ve al directorio raíz del repositorio y ejecuta `make install-py-dev`.
+
+***
+
+**Problema:** `Module not found: Error: Can't resolve 'integration-docs-platforms'`
+
+**Solución:**
+
+```shell
+make build-platform-assets
+```
+
+***
+
+**Problema:** Aparece `SessionNotCreatedException: Message: session not created: This version of ChromeDriver only supports Chrome version 76`
+
+O:
+
+```shell
+Rastreo (última llamada reciente):
+  File "/Users/joshua.li/dev/sentry/sentry/src/sentry/utils/pytest/selenium.py", line 344, in browser
+    driver = start_chrome(**chrome_args)
+  File "/Users/joshua.li/dev/sentry/sentry/src/sentry/utils/retries.py", line 41, in execute_with_retry
+    return retrier(functools.partial(fn, *args, **kwargs))
+  File "/Users/joshua.li/dev/sentry/sentry/src/sentry/utils/retries.py", line 85, in __call__
+error,
+RetryException: No se pudo ejecutar correctamente <functools.partial object at 0x10f31e7e0> en 15.830 segundos (12 intentos).
+```
+
+**Solución:**
+
+Es necesario actualizar ChromeDriver.
+
+```shell
+brew upgrade --cask chromedriver
+```
+
+***
+
+**Problema:** Ves `DoesNotExist: Subscription matching query does not exist`
+
+**Solución:** En getsentry, ejecuta lo siguiente para crear una suscripción simulada:
+
+```shell
+./bin/mock-subscription <slug_de_la_org>
+```
+
+***
+
+**Problema:** Ves algo como `Error: No such container: sentry-postgres-1`, o no aparecen `snuba-snuba-1`, `redis-redis-1`, `snuba-clickhouse-1` y `kafka-kafka-1` en la lista bajo `COMMAND NAMES`.
+
+**Solución:**
+
+```shell
+devservices up
+```
+
+***
+
+**Problema:** Ves algo como `Error 61 connecting to 127.0.0.1:6379. Connection refused.` al ejecutar tu servidor de desarrollo.
+
+**Solución:** Asegúrate de que tus servicios de Docker estén ejecutándose:
+
+```shell
+docker ps
+```
+
+***
+
+**Problema:** Usas un emulador de Android con un DSN que apunta a localhost y los eventos no aparecen en tu instancia local de Sentry.
+
+**Solución:** Cambia `localhost` por `10.0.2.2`. Por ejemplo, cambia http://d895df97e1cb4a33b4dff8af3e78da09@localhost:8000/2 a http://d895df97e1cb4a33b4dff8af3e78da09@10.0.2.2:8000/2. Esto se debe a que localhost o `127.0.0.1` hace referencia a la interfaz de loopback del propio emulador, no a la de la máquina anfitriona. Para más información, consulta https://developer.android.com/studio/run/emulator-networking.
+
+***
+
+**Problema:** Al cambiar de Docker Desktop a Colima aparece el error `Failed to start service: Credentials store error: StoreError('docker-credential-desktop not installed or not available in PATH')`
+
+**Solución:** Elimina la clave `credsStore` de tu archivo `~/.docker/config.json`.

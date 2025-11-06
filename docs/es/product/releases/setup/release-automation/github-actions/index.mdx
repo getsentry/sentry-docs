@@ -1,0 +1,86 @@
+---
+title: GitHub Actions
+description: >-
+  Aprende cómo Sentry y GitHub Actions automatizan la gestión de versiones, suben mapas de origen y ayudan a identificar commits sospechosos.
+og_image: /og-images/product-releases-setup-release-automation-github-actions.png
+---
+
+La [Sentry Release GitHub Action](https://github.com/marketplace/actions/sentry-release) automatiza la gestión de versiones de Sentry en GitHub con un solo paso. Después de enviar la información de la versión de Sentry, podrás asociar commits con versiones. Además, puedes subir mapas de origen para ver el código fuente original sin minificar.
+
+Para más detalles sobre los conceptos de gestión de versiones de Sentry, consulta la documentación completa sobre [releases](/es/product/releases/).
+
+<div id="prerequisites">
+  ## Requisitos previos
+</div>
+
+Para que la acción de GitHub Sentry Release se comunique de forma segura con Sentry, debes configurar un [Organization Token](https://sentry.io/orgredirect/organizations/:orgslug/settings/auth-tokens/).
+
+También debes establecer los slugs de tu organización y proyecto y, si usas una instancia autogestionada de Sentry, proporcionar la URL para conectarte a Sentry mediante `SENTRY_URL`.
+
+<OrgAuthTokenNote />
+
+```bash
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+SENTRY_ORG=___ORG_SLUG___
+SENTRY_PROJECT=___PROJECT_SLUG___
+# Para instalaciones autohospedadas
+# SENTRY_URL=https://my-sentry-url
+```
+
+Recomendamos almacenarlos como [secretos cifrados](https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions) en tu repositorio.
+
+Para configurar secretos del repositorio, haz clic en **Settings ①** de tu repositorio, selecciona **Secrets and variables ②** en la barra lateral y haz clic en **Actions ③**. Haz clic en **New repository secret ④** y añade los secretos **`SENTRY_AUTH_TOKEN` ⑤**, **`SENTRY_ORG` ⑥** y **`SENTRY_PROJECT` ⑦**.
+
+![Añadir secretos cifrados del repositorio en GitHub](../../../img/github_secrets.png)
+
+<div id="releases">
+  ## Lanzamientos
+</div>
+
+Puedes crear un nuevo lanzamiento de Sentry definiendo la opción `version`. De forma predeterminada, la acción de GitHub “Sentry Release” usará el SHA de GitHub que activó el flujo de trabajo de GitHub.
+
+```yml
+- uses: actions/checkout@v4
+  with:
+    fetch-depth: 0
+
+- name: Crear release de Sentry
+  uses: getsentry/action-release@v3
+  env:
+    SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+    SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+    SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+  with:
+    environment: producción
+    version: 'v1.3.4'
+```
+
+<div id="source-maps">
+  ## Mapas fuente
+</div>
+
+Si tu aplicación está escrita en JavaScript, probablemente despliegues código minificado. Para obtener trazas de pila legibles en tus errores de Sentry, necesitas subir los mapas fuente a Sentry.
+
+Proporciona la(s) ruta(s) a tus mapas fuente mediante la opción `sourcemaps` para garantizar una desminificación adecuada de tus trazas de pila.
+Visita [¿Qué son los Debug IDs?](/es/platforms/javascript/sourcemaps/troubleshooting_js/debug-ids/) si quieres saber más.
+
+```yml
+- uses: actions/checkout@v4
+  with:
+    fetch-depth: 0
+
+- name: Crear release de Sentry
+  uses: getsentry/action-release@v3
+  env:
+    SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+    SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+    SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+  with:
+    environment: production
+    sourcemaps: './dist'
+```
+
+<Alert>
+  Es importante que las GitHub Actions de Sentry Release se ejecuten después de cualquier paso de compilación en tu pipeline, pero antes del despliegue, y
+  que implementes los archivos generados después de que la acción se ejecute, para que Sentry pueda desofuscar correctamente las trazas de pila por ti.
+</Alert>

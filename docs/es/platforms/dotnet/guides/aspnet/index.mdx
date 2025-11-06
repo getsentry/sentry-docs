@@ -1,0 +1,146 @@
+---
+title: ASP.NET
+sdk: sentry.dotnet
+description: "Aprende sobre la integración de Sentry con .NET en ASP.NET."
+---
+
+Sentry ofrece una integración con ASP.NET a través del [paquete NuGet Sentry.AspNet](https://www.nuget.org/packages/Sentry.AspNet).
+
+<div id="features">
+  ## Funciones
+</div>
+
+Además de capturar errores, puedes supervisar las interacciones entre varios servicios o aplicaciones [habilitando el tracing](/es/concepts/key-terms/tracing/).
+
+Selecciona qué funciones de Sentry te gustaría instalar, además de Error Monitoring, para obtener a continuación las instrucciones de instalación y configuración correspondientes.
+
+<div id="install">
+  ## Instalación
+</div>
+
+<OnboardingOptionButtons options={['error-monitoring', 'performance']} />
+
+Agrega la dependencia de Sentry:
+
+```powershell {tabTitle:Package Manager}
+Install-Package Sentry.AspNet -Version {{@inject packages.version('sentry.dotnet.aspnet') }}
+```
+
+```shell {tabTitle:.NET Core CLI}
+dotnet add package Sentry.AspNet  -v {{@inject packages.version('sentry.dotnet.aspnet') }}
+```
+
+Puedes combinar esta integración con una biblioteca de logging como `log4net`, `NLog` o `Serilog` para incluir tanto los datos de la solicitud como tus logs como breadcrumbs. Las integraciones de logging también capturan eventos cuando se registra un error.
+
+<div id="configure">
+  ## Configuración
+</div>
+
+Configura el SDK en `Global.asax.cs`:
+
+```csharp
+using System;
+using System.Web;
+using Sentry.AspNet;
+using Sentry.EntityFramework; // Si también instalaste Sentry.EntityFramework
+using Sentry.Extensibility;
+
+public class MvcApplication : HttpApplication
+{
+    private IDisposable _sentry;
+
+    protected void Application_Start()
+    {
+        // Inicializa Sentry para capturar excepciones no controladas del AppDomain y más.
+        _sentry = SentrySdk.Init(options =>
+        {
+            options.Dsn = "___PUBLIC_DSN___";
+            // Al configurar por primera vez, para ver qué está haciendo el SDK:
+            options.Debug = true;
+            // Agrega URL de solicitud y encabezados, IP y nombre de usuarios, etc.
+            options.SendDefaultPii = true;
+
+            // ___PRODUCT_OPTION_START___ performance
+            // Establece traces_sample_rate en 1.0 para capturar el 100% de las transacciones para el monitoreo de rendimiento.
+            // Recomendamos ajustar este valor en producción.
+            options.TracesSampleRate = 1.0;
+            // ___PRODUCT_OPTION_END___ performance
+
+            // Si también instalaste el paquete Sentry.EntityFramework
+            options.AddEntityFramework();
+            options.AddAspNet();
+        });
+    }
+
+    // Capturador global de errores
+    protected void Application_Error() => Server.CaptureLastError();
+
+    // ___PRODUCT_OPTION_START___ performance
+    protected void Application_BeginRequest()
+    {
+        Context.StartSentryTransaction();
+    }
+
+    protected void Application_EndRequest()
+    {
+        Context.FinishSentryTransaction();
+    }
+    // ___PRODUCT_OPTION_END___ performance
+
+    protected void Application_End()
+    {
+        // Envía los eventos pendientes antes de cerrar.
+        _sentry?.Dispose();
+    }
+}
+```
+
+<div id="capturing-the-affected-user">
+  ### Captura del usuario afectado
+</div>
+
+Al activar [SendDefaultPii](#senddefaultpii), el SDK leerá automáticamente al usuario de la solicitud inspeccionando `HttpContext.User`. Se utilizarán valores de claims predeterminados, como `NameIdentifier`, para el *Id*.
+
+```csharp
+options.AddAspNet();
+options.Dsn = "___PUBLIC_DSN___";
+// Activar el envío de datos como UserId y UserName si un usuario ha iniciado sesión
+options.SendDefaultPii = true;
+```
+
+<div id="senddefaultpii">
+  ### SendDefaultPii
+</div>
+
+Aunque esta configuración forma parte del paquete de [Sentry](/es/platforms/dotnet/), en el contexto de ASP.NET Core implica informar al usuario leyendo `HttpContext.User` del framework. La estrategia para crear el `SentryUser` se puede personalizar.
+
+<div id="includerequestpayload">
+  ### IncludeRequestPayload
+</div>
+
+Ayuda a depurar un problema en la API cuando se registra el payload que llegó al endpoint.
+Opta por enviar el cuerpo de la solicitud a Sentry:
+
+```csharp
+options.AddAspNet(RequestSize.Always);
+```
+
+<div id="verify">
+  ## Verificar
+</div>
+
+Este fragmento incluye un error intencional para que puedas comprobar que todo funciona en cuanto lo configures.
+
+<PlatformContent includePath="getting-started-verify" />
+
+<div id="troubleshooting">
+  ## Solución de problemas
+</div>
+
+Para más información, visita la página de [solución de problemas](troubleshooting).
+
+<div id="samples">
+  ## Ejemplos
+</div>
+
+* Un [ejemplo con ASP.NET y EF 6](https://github.com/getsentry/examples/tree/master/dotnet/AspNetMvc5Ef6) y ejemplos adicionales de los [SDK de .NET](https://github.com/getsentry/examples/tree/master/dotnet)

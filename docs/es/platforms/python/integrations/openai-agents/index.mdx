@@ -1,0 +1,142 @@
+---
+title: Agentes de OpenAI
+description: "Aprende a usar Sentry con el SDK de OpenAI Agents."
+---
+
+<Alert title="Beta">
+
+El soporte para **OpenAI Agents SDK** está en fase beta. Prueba localmente antes de usarlo en producción.
+
+</Alert>
+
+Esta integración conecta Sentry con el [SDK de Python de OpenAI](https://openai.github.io/openai-agents-python/).
+Se ha confirmado que la integración funciona con OpenAI Agents versión 0.0.19.
+
+Una vez que instales este SDK, puedes usar [Sentry AI Agents Insights](https://sentry.io/orgredirect/organizations/:orgslug/insights/ai/agents/), un panel de Sentry que te ayuda a entender qué sucede con tus agentes de IA.
+
+La monitorización de Sentry AI Agents recopilará automáticamente información sobre agentes, herramientas, prompts, tokens y modelos.
+
+<div id="install">
+  ## Instalación
+</div>
+
+Instala `sentry-sdk` desde PyPI:
+
+```bash {tabTitle:pip}
+pip install "sentry-sdk"
+```
+
+```bash {tabTitle:uv}
+uv add "sentry-sdk"
+```
+
+
+<div id="configure">
+  ## Configuración
+</div>
+
+Si tienes el paquete `agents` en tus dependencias, la integración de OpenAI Agents se habilitará automáticamente al inicializar el SDK de Sentry.
+
+<PlatformContent includePath="getting-started-config" />
+
+<div id="verify">
+  ## Verificar
+</div>
+
+Comprueba que la integración funciona ejecutando un agente de IA. Los datos resultantes deberían aparecer en tu panel de Insights de AI Agents.
+
+```python
+import asyncio
+import random
+
+import sentry_sdk
+import agents
+from pydantic import BaseModel  # installed by openai-agents
+
+@agents.function_tool
+def random_number(max: int) -> int:
+    return random.randint(0, max)
+
+class FinalResult(BaseModel):
+    number: int
+
+random_number_agent = agents.Agent(
+    name="Agente de Números Aleatorios",
+    instructions="Genera un número aleatorio.",
+    tools=[random_number, ],
+    output_type=FinalResult,
+    model="gpt-4o-mini",
+)
+
+async def main() -> None:
+    sentry_sdk.init(
+        dsn="___PUBLIC_DSN___",
+        traces_sample_rate=1.0,
+        # Añade datos como entradas/salidas de LLM y herramientas;
+        # consulta https://docs.sentry.io/platforms/python/data-management/data-collected/ para más info
+        send_default_pii=True,
+    )
+
+    await agents.Runner.run(
+        random_number_agent,
+        input=f"Genera un número aleatorio entre 0 y {10}.",
+    )
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+Es posible que los datos tarden unos instantes en aparecer en [sentry.io](https://sentry.io).
+
+
+<div id="behavior">
+  ## Comportamiento
+</div>
+
+Se recopilarán datos sobre lo siguiente:
+
+- invocaciones de agentes de IA
+- ejecución de herramientas
+- número de tokens de entrada y salida utilizados
+- uso de modelos LLM
+
+Sentry considera las entradas y salidas de LLM y herramientas como PII y no incluye datos de PII de forma predeterminada. Si quieres incluir estos datos, establece `send_default_pii=True` en la llamada a `sentry_sdk.init()`. Para excluir explícitamente las indicaciones (prompts) y las salidas a pesar de `send_default_pii=True`, configura la integración con `include_prompts=False` como se muestra en la [sección de opciones](#options) a continuación.
+
+<div id="options">
+  ## Opciones
+</div>
+
+Al agregar explícitamente `OpenAIAgentsIntegration` a tu llamada a `sentry_sdk.init()`, puedes configurar opciones para `OpenAIAgentsIntegration` y cambiar su comportamiento:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.openai_agents import OpenAIAgentsIntegration
+
+sentry_sdk.init(
+    # ...
+    # Agrega datos como entradas y respuestas;
+    # consulta https://docs.sentry.io/platforms/python/data-management/data-collected/ para más información
+    send_default_pii=True,
+    integrations=[
+        OpenAIAgentsIntegration(
+            include_prompts=False,  # Las entradas/salidas de LLM y herramientas no se enviarán a Sentry, a pesar de send_default_pii=True
+        ),
+    ],
+)
+```
+
+Puedes pasar los siguientes argumentos con nombre a `OpenAIAgentsIntegration()`:
+
+* `include_prompts`:
+
+  Indica si las entradas y salidas del LLM y de las herramientas deben enviarse a Sentry. Sentry considera estos datos como información de identificación personal (PII) de forma predeterminada. Si quieres incluir los datos, establece `send_default_pii=True` en la llamada a `sentry_sdk.init()`. Para excluir explícitamente los prompts y las salidas a pesar de `send_default_pii=True`, configura la integración con `include_prompts=False`.
+
+  El valor predeterminado es `True`.
+
+
+<div id="supported-versions">
+  ## Versiones compatibles
+</div>
+
+- SDK de OpenAI Agents: 0.0.19+
+- Python: 3.9+

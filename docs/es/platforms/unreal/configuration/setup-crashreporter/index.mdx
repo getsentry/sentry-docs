@@ -1,0 +1,227 @@
+---
+title: Cliente de Crash Reporter
+description: Conoce la integración de Sentry con Unreal Engine mediante Crash Reporter Client.
+og_image: /og-images/platforms-unreal-configuration-setup-crashreporter.png
+---
+
+No es necesario instalar un SDK de Sentry para capturar los bloqueos de tu
+aplicación o juego de Unreal Engine, porque Sentry es compatible con el *UE Crash Reporter*.
+
+Para integrar tu juego o aplicación de UE con Sentry, sigue estos pasos:
+
+1. Incluye el *UE Crash Reporter* en tu juego o aplicación.
+2. Incluye información de depuración en los informes de bloqueo.
+3. Agrega el endpoint de Unreal Engine al archivo de configuración correspondiente.
+4. Sube los símbolos de tu juego para que Sentry pueda mostrar nombres de funciones y números de línea.
+5. Opcionalmente, habilita Event Attachments para tu proyecto de Sentry.
+
+A continuación, desglosamos cada paso en detalle.
+
+<div id="ue-crash-reporter">
+  ## UE Crash Reporter
+</div>
+
+UE Crash Reporter viene incluido de serie por Epic Games. Puede recopilar información relevante
+sobre el bloqueo y enviarla a un servicio como Sentry para su procesamiento.
+
+<Alert>
+  Epic Games solo proporciona el cliente Crash Reporter en equipos de escritorio (Windows, Mac, Linux). Para capturar bloqueos en móviles y consolas, debes usar el SDK de Sentry, que admite todas las plataformas, incluidos los equipos de escritorio.
+</Alert>
+
+Añadirlo a tu juego implica que, si se produce un bloqueo, se mostrará el siguiente cuadro de diálogo
+a la persona usuaria:
+
+![UE Crash Reporter](./img/ue-crash-reporter.png)
+
+<div id="using-the-ue-crash-reporter-on-windows">
+  ### Uso de UE Crash Reporter en Windows
+</div>
+
+UE Crash Reporter funciona si el Sentry SDK está instalado. Sentry SDK puede ayudar a configurar UE Crash Reporter, subir símbolos de depuración y enriquecer los informes de fallos con datos personalizados. **A partir de UE 5.2**, los usuarios deben elegir entre los dos mecanismos disponibles para capturar fallos: UE Crash Reporter o la biblioteca `sentry-native` integrada en el plugin de Sentry. De forma predeterminada, se usa la biblioteca `sentry-native` en lugar de UE Crash Reporter. (Consulta “Enable automatic crash capturing (Windows, UE 5.2+)” en la configuración del plugin). Estas dos soluciones son mutuamente excluyentes y no pueden usarse simultáneamente.
+
+<div id="sentry-sdk-and-ue-crash-reporter-feature-comparison">
+  ## Comparación de funciones entre Sentry SDK y UE Crash Reporter
+</div>
+
+Sentry SDK puede integrarse con UE Crash Reporter, pero también ofrece funciones adicionales más allá de las de la herramienta integrada. La siguiente tabla resume las principales diferencias de funciones:
+
+| Función                      | Sentry SDK                 | Crash Reporter         |
+|------------------------------|----------------------------|------------------------|
+| Versiones del motor compatibles | Todas las de UE 5 y UE 4.27 | Herramienta integrada del motor |
+| Plataformas compatibles      | Escritorio, móvil, consolas| Escritorio             |
+| Captura de fallos *          | Compatible **              | Compatible             |
+| Contexto adicional del evento| Compatible                 | Compatible             |
+| Breadcrumbs automáticos      | Compatible                 | No compatible          |
+| Adjuntar capturas de pantalla| Compatible ***             | No compatible          |
+| Filtrado de eventos de fallos| Compatible                 | No compatible          |
+| Supervisión de la salud de la versión | Compatible       | No compatible          |
+| Información sobre el rendimiento | Compatible            | No compatible          |
+
+Leyenda:
+`*`: En Windows, los mecanismos subyacentes de captura de fallos utilizados en Sentry SDK y UE Crash Reporter son mutuamente excluyentes.
+`**`: En Windows, la captura de fallos es compatible de forma predeterminada a partir de UE 5.2.
+`***`: Actualmente, esta [función](https://github.com/getsentry/sentry-unreal/issues/567) solo es compatible en Windows/Linux.
+
+<div id="using-sentry-sdk-and-ue-crash-reporter-together">
+  ### Usar Sentry SDK y UE Crash Reporter juntos
+</div>
+
+Agregar contexto a los eventos (p. ej., etiquetas, breadcrumbs personalizados o información de usuario) siempre puede hacerse a través de la interfaz unificada de Sentry SDK. Aunque solo puede estar activo un mecanismo de captura de fallos a la vez, ambas soluciones pueden usarse juntas para enriquecer el contexto y mejorar el proceso de depuración.
+
+Funciones como el filtrado de eventos de fallos, la adjunta de capturas de pantalla y el monitoreo de la salud de la versión requieren que Sentry SDK esté habilitado para que la captura de fallos funcione correctamente.
+
+<div id="include-the-ue-crash-reporter">
+  ## Incluir el UE Crash Reporter
+</div>
+
+Puedes añadir el *Crash Reporter Client* a tu juego en la sección *Project Settings*.
+
+La forma más sencilla es buscar la opción: `Crash Reporter`:
+
+![Include UE Crash Reporter](./img/ue-include-crash-reporter.png)
+
+La opción se encuentra en el menú *Project &gt; Packaging*; luego selecciona *Show Advanced* y
+marca la casilla: `Include Crash Reporter`.
+
+<div id="configure-the-crash-reporter-endpoint">
+  ## Configurar el endpoint del Crash Reporter
+</div>
+
+Ahora que el *Crash Reporter* está incluido, UE necesita saber adónde enviar el
+crash. Para ello, debemos agregar el *Unreal Engine Endpoint* de Sentry desde la página de configuración de *Client Keys* al archivo de configuración del juego. Esto permitirá incluir el proyecto de Sentry para el que quieras ver fallos en tiempo real. Esto se logra configurando `CrashReportClient` en el archivo *DefaultEngine.ini*. Necesitarás modificar el engine para que esto funcione.
+
+Edita el archivo:
+
+> engine-dir\Engine\Programs\CrashReportClient\Config\DefaultEngine.ini
+
+Agrega la sección de configuración:
+
+```ini {filename:DefaultEngine.ini}
+[CrashReportClient]
+CrashReportClientVersion=1.0
+DataRouterUrl="___UNREAL_URL___"
+```
+
+<Alert>
+  Si ya existe una sección `[CrashReportClient]`, basta con cambiar el valor de `DataRouterUrl`.
+</Alert>
+
+Como alternativa, el endpoint puede añadirse automáticamente al archivo *DefaultEngine.ini*
+usando la ventana de configuración de Sentry.
+
+![The UE Crash Reporter settings](./img/ue-crash-reporter-settings.png)
+
+Ve al menú del editor **Project Settings &gt; Plugins &gt; Sentry**, establece el *Unreal Engine Endpoint* de Sentry en el campo de entrada correspondiente y haz clic en el **Update global settings** Button para aplicar los cambios. El valor predeterminado del endpoint puede restaurarse haciendo clic en el **Reset** Button cuando ya no se necesite el *Crash Reporter*.
+
+<div id="configure-the-crash-reporter-attributes">
+  ## Configurar los atributos del Crash Reporter
+</div>
+
+Puedes reconfigurar los atributos básicos proporcionando datos especiales del juego al
+crash reporter. Hazlo estableciendo la clave de datos del juego `__sentry` con un valor JSON que contenga
+atributos específicos de Sentry:
+
+```cpp
+#include "GenericPlatform/GenericPlatformCrashContext.h"
+#include "Dom/Json.h"
+
+void ConfigureCrashReporter()
+{
+    TSharedPtr<FJsonObject> config = MakeShareable(new FJsonObject);
+
+    // los atributos específicos de sentry van aquí
+    config->SetStringField("release", "my-project-name@2.3.12");
+    config->SetStringField("environment", "production");
+
+    TSharedPtr<FJsonObject> tags = MakeShareable(new FJsonObject);
+    tags->SetStringField("tag1", "value1");
+    tags->SetStringField("tag2", "value2");
+    config->SetObjectField("tags", tags);
+
+    TSharedPtr<FJsonObject> user = MakeShareable(new FJsonObject);
+    user->SetStringField("ip_address", "{{auto}}");
+    user->SetStringField("email", "jane.doe@example.com");
+    config->SetObjectField("user", user);
+
+    TSharedPtr<FJsonObject> character = MakeShareable(new FJsonObject);
+    character->SetStringField("name", "Luchador Poderoso");
+    character->SetNumberField("age", 19.0);
+    TSharedPtr<FJsonObject> contexts = MakeShareable(new FJsonObject);
+    contexts->SetObjectField("character", character);
+    config->SetObjectField("contexts", contexts);
+
+    FString jsonConfig;
+    TSharedRef<TJsonWriter<>> jsonWriter = TJsonWriterFactory<>::Create(&jsonConfig);
+    FJsonSerializer::Serialize(config.ToSharedRef(), jsonWriter);
+
+    FGenericCrashContext::SetGameData(TEXT("__sentry"), jsonConfig);
+}
+```
+
+Debes llamar a `ConfigureCrashReporter` en algún momento después de que tu juego se inicie. Puedes configurar cualquier [atributo de evento](https://develop.sentry.dev/sdk/data-model/event-payloads/).
+
+<Alert>
+  Debes configurar los atributos de Crash Reporter antes de inicializar el SDK de Sentry. De lo contrario, parte de la información podría sobrescribirse y perderse.
+</Alert>
+
+<Alert>
+  El SDK de Sentry también proporciona una API que te permite configurar atributos de Crash Reporter.
+</Alert>
+
+Según la versión de Unreal Engine que estés usando, es posible que tengas que añadir compatibilidad con JSON al script de compilación (`MyProject.build.cs`):
+
+```csharp
+PublicDependencyModuleNames.AddRange(new string[] { ..., "Json" });
+```
+
+<div id="upload-debug-symbols">
+  ## Cargar símbolos de depuración
+</div>
+
+Para permitir que Sentry procese por completo los fallos nativos y te proporcione
+trazas de pila simbolizadas, debes cargar *archivos de información de depuración*
+(también llamados *símbolos de depuración* o simplemente *símbolos*). Recomendamos
+cargar la información de depuración durante tu proceso de compilación o publicación.
+
+<Alert>
+  El SDK de Sentry puede encargarse de cargar automáticamente los [símbolos de depuración](/es/platforms/unreal/configuration/debug-symbols/) en tiempo de compilación.
+</Alert>
+
+Para todas las bibliotecas para las que quieras recibir simbolización, **debes
+proporcionar información de depuración**. Esto incluye las dependencias y las bibliotecas del
+sistema operativo.
+
+Además de los archivos de información de depuración, Sentry necesita *Call Frame Information*
+(CFI) para extraer trazas de pila precisas de los minidumps de compilaciones de publicación
+optimizadas. La CFI suele formar parte de los ejecutables y no se copia a los símbolos de depuración.
+A menos que estés cargando símbolos de Breakpad, asegúrate de incluir también los binarios
+cuando cargues archivos a Sentry.
+
+Para obtener más información sobre cómo cargar información de depuración y sus formatos compatibles,
+consulta [Archivos de información de depuración](/es/platforms/unreal/data-management/debug-files/).
+
+<div id="size-limits">
+  ## Límites de tamaño
+</div>
+
+La ingestión de eventos impone límites de tamaño a los informes de fallos de UE. Estos límites
+están sujetos a cambios y actualmente se definen como:
+
+* *20 MB* para una solicitud comprimida
+* *100 MB* para el informe de fallo completo tras la descompresión
+
+<div id="issues-with-the-crash-reporter">
+  ## Problemas con el Crash Reporter
+</div>
+
+Consulta este [hilo creado por la comunidad en el foro de Sentry](https://forum.sentry.io/t/unreal-engine-crash-reporter-cant-get-it-to-work/7643) para obtener consejos y soluciones de diagnóstico del Crash Reporter de UE.
+
+<div id="store-minidumps-as-attachments">
+  ## Guardar minidumps como archivos adjuntos
+</div>
+
+<Include name="store-minidumps-as-attachments-intro" />
+
+<Alert>☝ Esta función está disponible en Windows, Linux y Android.</Alert>
+
+<Include name="store-minidumps-as-attachments-configuration" />

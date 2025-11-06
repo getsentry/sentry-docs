@@ -1,0 +1,243 @@
+---
+title: Opciones
+description: "Obtén más información sobre cómo configurar el SDK mediante opciones. Estas se pasan a la función init y, por lo tanto, se establecen cuando el SDK se inicializa por primera vez."
+sidebar_order: 1
+---
+
+<PlatformContent includePath="configuration/config-intro" />
+
+<div id="available-options">
+  ## Opciones disponibles
+</div>
+
+<TableOfContents ignoreIds={["available-options"]} />
+
+<div id="core-options">
+  ## Opciones principales
+</div>
+
+Las opciones que se pueden leer desde una variable de entorno (`SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`) se leen automáticamente.
+
+<SdkOption name="dsn" type="string" envVar="SENTRY_DSN">
+  El DSN le indica al SDK adónde enviar los eventos. Si no se proporciona este valor, el SDK intentará leerlo de la variable de entorno `SENTRY_DSN`. Si esa variable tampoco existe, el SDK simplemente no enviará ningún evento.
+
+  Más información sobre el [uso del DSN](/es/product/sentry-basics/dsn-explainer/#dsn-utilization).
+</SdkOption>
+
+<SdkOption name="logger" type="LoggerInterface" defaultValue="null">
+  Si está habilitado, el SDK imprime información de depuración sobre si algo salió mal al enviar eventos.
+  No se recomienda usar esto en producción.
+
+  <PlatformContent includePath="configuration/logger/" />
+</SdkOption>
+
+<SdkOption name="release" type="string" envVar="SENTRY_RELEASE">
+  Configura la release. Algunos SDK intentan configurarla automáticamente desde el principio, pero es mejor establecerla manualmente para garantizar que esté sincronizada con tus integraciones de despliegue o cargas de source maps. Los nombres de la release son cadenas, pero Sentry detecta algunos formatos y podría mostrarlos de manera diferente. Más información sobre cómo enviar datos de la release para que Sentry te informe sobre regresiones entre versiones e identifique la fuente potencial en [la documentación de releases](/es/product/releases/) o el <SandboxLink scenario="releases">sandbox</SandboxLink>.
+
+  De forma predeterminada, el SDK intentará leer este valor de la variable de entorno `SENTRY_RELEASE`.
+</SdkOption>
+
+<SdkOption name="environment" type="string" defaultValue="production" envVar="SENTRY_ENVIRONMENT">
+  Configura el entorno. Esta cadena es de formato libre y está definida como `production` de forma predeterminada. Una release puede asociarse con más de un entorno para separarlos en la interfaz (piensa en `staging` vs `production` o similar).
+
+  <PlatformContent includePath="set-environment" />
+</SdkOption>
+
+<SdkOption name="max_breadcrumbs" type="int" defaultValue="100">
+  Esta variable controla la cantidad total de breadcrumbs que deben capturarse. El valor predeterminado es `100`, pero puedes establecer cualquier número. Sin embargo, ten en cuenta que Sentry tiene un [tamaño máximo de payload](https://develop.sentry.dev/sdk/data-model/envelopes/#size-limits) y cualquier evento que exceda ese tamaño se descartará.
+</SdkOption>
+
+<SdkOption name="attach_stacktrace" type="bool" defaultValue="false">
+  Cuando está habilitado, los stack traces se adjuntan automáticamente a todos los mensajes registrados. Los stack traces siempre se adjuntan a las excepciones; sin embargo, cuando esta opción está activada, los stack traces también se envían con los mensajes. Esta opción, por ejemplo, hace que los stack traces aparezcan junto a todos los mensajes de log.
+
+  El agrupamiento en Sentry es diferente para eventos con y sin stack trace. Como resultado, obtendrás nuevos grupos al habilitar o deshabilitar esta bandera para ciertos eventos.
+</SdkOption>
+
+<SdkOption name="send_default_pii" type="bool" defaultValue="false">
+  Si esta bandera está habilitada, cierta información de identificación personal (PII) se añade mediante integraciones activas.
+
+  Esta opción está desactivada de forma predeterminada.
+
+  Si habilitas esta opción, asegúrate de eliminar manualmente lo que no quieras enviar usando nuestras funciones para gestionar [*datos confidenciales*](../../data-management/sensitive-data/).
+</SdkOption>
+
+<SdkOption name="server_name" type="string" defaultValue="gethostname()">
+  Esta opción se puede usar para proporcionar un nombre de servidor. Cuando se proporciona, el nombre del servidor se envía y se guarda en el evento. Para muchas integraciones, el nombre del servidor en realidad corresponde al hostname del dispositivo, incluso cuando la máquina no es realmente un servidor.
+</SdkOption>
+
+<SdkOption name="in_app_include" type="string[]" defaultValue="[]">
+  Lista de prefijos de cadena de nombres de módulos que pertenecen a la app. Esta opción tiene prioridad sobre `in_app_exclude`.
+
+  Sentry diferencia los frames de la pila que están directamente relacionados con tu aplicación (&quot;en la aplicación&quot;) de los que provienen de otros paquetes como la biblioteca estándar, frameworks u otras dependencias. El paquete de la aplicación se marca automáticamente como `inApp`. La diferencia es visible en [sentry.io](https://sentry.io), donde solo los frames &quot;en la aplicación&quot; se muestran de forma predeterminada.
+</SdkOption>
+
+<SdkOption name="in_app_exclude" type="string[]" defaultValue="[]">
+  Lista de prefijos de cadena de nombres de módulos que no pertenecen a la app, sino a paquetes de terceros. Los módulos considerados fuera de la app se ocultarán de los stack traces de forma predeterminada.
+
+  Esta opción se puede anular con `in_app_include`.
+</SdkOption>
+
+<SdkOption name="prefixes" type="string[]" defaultValue="[]">
+  Una lista de prefijos que deben quitarse de los nombres de archivo de las trazas de pila capturadas para hacerlos relativos. Esto ayuda a normalizar las rutas de archivo en diferentes entornos.
+
+  Por ejemplo, si tu código se implementa en ubicaciones distintas según el entorno (p. ej., `/var/www/app` en producción y `/home/user/projects/app` en desarrollo), puedes usar esta opción para quitar esos prefijos y hacer que las rutas sean coherentes.
+
+  ```php
+  \Sentry\init([
+      'dsn' => '___DSN___',
+      'prefixes' => [
+          '/var/www/',
+          '/home/user/projects/',
+      ],
+  ]);
+  ```
+</SdkOption>
+
+<SdkOption name="max_request_body_size" type="string" defaultValue="medium">
+  Este parámetro controla si las integraciones deben capturar los cuerpos de las solicitudes HTTP. Se puede establecer en uno de los siguientes valores:
+
+  * `never`: Nunca se envían los cuerpos de las solicitudes.
+  * `small`: Solo se capturarán cuerpos de solicitud pequeños. El límite para small depende del SDK (normalmente 4 KB).
+  * `medium`: Se capturarán solicitudes medianas y pequeñas (normalmente 10 KB).
+  * `always`: El SDK siempre capturará el cuerpo de la solicitud siempre que Sentry pueda interpretarlo.
+</SdkOption>
+
+<SdkOption name="max_value_length" type="int" defaultValue="1024">
+  La cantidad de caracteres a partir de la cual se truncarán los valores que contengan texto en la carga útil del evento.
+
+  <Alert>
+    Si el valor que configuras para esto es excepcionalmente grande, el evento puede exceder 1
+    MiB y Sentry lo descartará.
+  </Alert>
+</SdkOption>
+
+<SdkOption name="before_breadcrumb" type="function (Breadcrumb $breadcrumb): Breadcrumb">
+  Esta función se invoca con un objeto breadcrumb específico del SDK antes de añadirlo al alcance (scope). Si la función no devuelve nada, el breadcrumb se descarta. Para permitir que pase, devuelve el primer argumento, que contiene el objeto breadcrumb.
+
+  La función de retorno de llamada normalmente recibe un segundo argumento (llamado “hint”), que contiene el objeto original a partir del cual se creó el breadcrumb, para personalizar aún más su aspecto.
+</SdkOption>
+
+<div id="error-monitoring-options">
+  ## Opciones de monitorización de errores
+</div>
+
+<SdkOption name="sample_rate" type="float" defaultValue="1.0">
+  Configura la tasa de muestreo de los eventos de error, en un rango de `0.0` a `1.0`. El valor predeterminado es `1.0`, lo que significa que se enviará el 100% de los eventos de error. Si se establece en `0.1`, solo se enviará el 10% de los eventos. Los eventos se seleccionan aleatoriamente.
+</SdkOption>
+
+<SdkOption name="before_send" type="function (Event $event): Event">
+  Esta función se invoca con un mensaje específico del SDK o un objeto de evento de error, y puede devolver un objeto de evento modificado, o `null` para omitir el envío del evento. Puede usarse, por ejemplo, para eliminar manualmente datos personales (PII) antes de enviar.
+
+  Cuando se ejecuta `before_send`, todos los datos del scope ya se han aplicado al evento. Cualquier modificación posterior del scope no tendrá efecto.
+</SdkOption>
+
+<SdkOption name="ignore_exceptions" type="string[]">
+  Una lista de nombres de clase que coincide con excepciones que no deben enviarse a Sentry.
+  Comprueba si el nombre de clase proporcionado es de un tipo o subtipo dado.
+</SdkOption>
+
+<SdkOption name="error_types" type="int" defaultValue="error_reporting()">
+  Define qué errores se informan. Acepta los mismos valores que el parámetro de configuración de PHP [`error_reporting`](https://www.php.net/manual/errorfunc.configuration.php#ini.error-reporting).
+
+  De forma predeterminada, los tipos de error informados vienen determinados por el valor que devuelve la función `error_reporting()`.
+</SdkOption>
+
+<SdkOption name="context_lines" type="int" defaultValue="5">
+  El número de líneas de contexto por cada frame en el stack trace al cargar un archivo.
+</SdkOption>
+
+<div id="tracing-options">
+  ## Opciones de trazas
+</div>
+
+<SdkOption name="traces_sample_rate" type="float" defaultValue="null">
+  Un número entre `0` y `1` que controla el porcentaje de probabilidad de que una transacción determinada se envíe a Sentry. (`0` representa el 0% y `1` representa el 100%.) Se aplica por igual a todas las transacciones creadas en la aplicación.
+
+  Para habilitar las trazas, debe definirse esta opción o `traces_sampler`.
+</SdkOption>
+
+<SdkOption name="traces_sampler" type="function" defaultValue="null">
+  Una función responsable de determinar el porcentaje de probabilidad de que una transacción determinada se envíe a Sentry. Recibirá automáticamente información sobre la transacción y el contexto en el que se está creando, y debe devolver un número entre `0` (0% de probabilidad de envío) y `1` (100% de probabilidad de envío). También puede usarse para filtrar transacciones devolviendo `0` para aquellas que no se deseen.
+
+  Para habilitar las trazas, debe definirse esta opción o `traces_sample_rate`.
+</SdkOption>
+
+<SdkOption name="ignore_transactions" type="string[]">
+  Una lista de cadenas que coinciden con nombres de transacción que no deben enviarse a Sentry.
+</SdkOption>
+
+<SdkOption name="before_send_transaction" type="function (Event $transaction): Event">
+  Esta función se invoca con un objeto de evento de transacción específico del SDK y puede devolver un objeto de evento de transacción modificado, o `null` para omitir el envío del evento. Un posible uso es eliminar manualmente PII antes de enviarlo.
+</SdkOption>
+
+<SdkOption name="trace_propagation_targets" type="string[]" defaultValue="null">
+  Una propiedad opcional que controla qué servicios de destino reciben datos de trazas, en forma de un encabezado `sentry-trace` y uno `baggage` adjuntos a cualquier solicitud HTTP saliente.
+
+  La opción puede contener una lista de cadenas contra las cuales se comparan los hosts de las solicitudes salientes.
+  Si una de las entradas de la lista coincide con el host de una solicitud saliente, se adjuntarán los datos de trazas a esa solicitud.
+
+  Si no se proporciona `trace_propagation_targets` (o se establece en `null`), los datos de trazas se adjuntan a cada solicitud saliente del [cliente instrumentado](../../tracing/instrumentation/requests-module/).
+  Para deshabilitar el envío de datos de trazas a cualquier servicio de destino, establece esta opción en un arreglo vacío (`[]`).
+</SdkOption>
+
+<div id="cron-monitoring-options">
+  ## Opciones de monitoreo de cron
+</div>
+
+<SdkOption name="before_send_check_in" type="function (Event $checkIn): Event">
+  Esta función se invoca con un objeto de evento de check-in específico del SDK y puede devolver un objeto de evento de check-in modificado, o `null` para omitir el informe del evento.
+</SdkOption>
+
+<div id="logs-options">
+  ## Opciones de logs
+</div>
+
+<SdkOption name="enable_logs" type="bool" defaultValue="false">
+  Esta opción habilita la integración de logs, lo que permite que el SDK capture logs y los envíe a Sentry. Está deshabilitada de forma predeterminada.
+</SdkOption>
+
+<SdkOption name="before_send_log" type="function (\Sentry\Logs\Log $log): ?\Sentry\Logs\Log">
+  Esta función se invoca con un objeto de log específico del SDK y puede devolver un objeto de evento de log modificado, o `null` para omitir el informe del evento.
+</SdkOption>
+
+<div id="transport-options">
+  ## Opciones de transporte
+</div>
+
+Los transportes se usan para enviar eventos a Sentry. Pueden personalizarse hasta cierto punto para adaptarse mejor a implementaciones muy específicas.
+
+<SdkOption name="transport" type="TransportInterface" defaultValue="null">
+  Sustituye el transporte utilizado para enviar eventos. Por ejemplo, puede usarse para capturar eventos en pruebas unitarias.
+</SdkOption>
+
+<SdkOption name="http_client" type="HttpClientInterface" defaultValue="null">
+  Sustituye el cliente HTTP que usa el transporte del SDK.
+</SdkOption>
+
+<SdkOption name="http_proxy" type="string" defaultValue="null">
+  Permite configurar un proxy que se usará para las solicitudes salientes. También se aplica a solicitudes HTTPS.
+</SdkOption>
+
+<SdkOption name="http_proxy_authentication" type="string" defaultValue="null">
+  Configura la autenticación del proxy al usar `http_proxy`.
+</SdkOption>
+
+<SdkOption name="http_connect_timeout" type="int" defaultValue="2">
+  Número máximo de segundos de espera al intentar conectarse a un servidor.
+</SdkOption>
+
+<SdkOption name="http_timeout" type="int" defaultValue="5">
+  Tiempo máximo de ejecución, en segundos, para la solicitud y la respuesta en su conjunto. El valor también debe incluir el tiempo de la fase de conexión, por lo que debe ser mayor que el valor definido para la opción `http_connect_timeout`.
+</SdkOption>
+
+<SdkOption name="http_ssl_verify_peer" type="bool" defaultValue="true">
+  Controla la verificación del par SSL para las solicitudes salientes.
+</SdkOption>
+
+<SdkOption name="http_ssl_native_ca" type="bool" defaultValue="false">
+  Cuando está habilitado, el SDK usará el depósito/almacén de certificados nativo del sistema operativo.
+</SdkOption>
+
+<SdkOption name="http_compression" type="bool" defaultValue="true">
+  Cuando está habilitado, las cargas útiles de las solicitudes se comprimen con gzip si la extensión `zlib` está disponible.
+</SdkOption>

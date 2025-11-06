@@ -1,0 +1,41 @@
+---
+title: Uso de Sentry dentro de un SDK
+description: "Aprende a usar el SDK de Sentry en un entorno compartido, como otro SDK."
+sidebar_order: 2000
+---
+
+<Alert>
+  Usar el SDK de Sentry dentro de otro SDK está [desaconsejado](/es/platforms/). Esto puede provocar comportamientos inesperados y posibles fugas de datos. SentrySDK usa estado global y, por lo tanto, **no** puede inicializarse varias veces en paralelo. Si usas SentrySDK en tu SDK, entrará en conflicto con las apps que usen Sentry y tu SDK. Si necesitas usar Sentry dentro de otro SDK, sigue las prácticas recomendadas que se indican a continuación.
+</Alert>
+
+<Alert>
+  Al configurar Sentry dentro de una biblioteca, la app consumidora también podría usar el SDK de Sentry; por lo tanto, **no debes usar `SentrySDK.start()`**, ya que contaminará el estado global.
+</Alert>
+
+Para evitar conflictos con otras instancias de Sentry, debes usar la API de `Hub` para crear una nueva instancia de Sentry. La API de Hub funciona de forma similar a la instancia global de Sentry, pero no es global y puede usarse dentro de tu componente.
+
+```swift
+import Sentry
+
+let options = Options()
+options.dsn = "___PUBLIC_DSN___"
+
+let client = SentryClient(options: options)
+
+// No necesitas pasar un scope. El hub creará automáticamente un nuevo scope por ti.
+// Además, el SDK lo enriquece automáticamente con algunos contextos, como los de la app, el sistema operativo y
+// el dispositivo.
+let hub = SentryHub(client: client, andScope: nil)
+
+hub.capture(message: "¡Hola desde tu SDK!")
+```
+
+Si tu SDK puede abrirse y cerrarse varias veces, también deberías cerrar el `Hub` cuando termines:
+
+```swift
+hub.close()
+```
+
+La captura de fallos, terminaciones por watchdog o bloqueos de la app no es compatible con la API de `Hub`, porque dependen de la instancia global de Sentry.
+
+Para simbolicar las trazas de pila de tus eventos, Sentry requiere dSYMs (archivos de información de depuración). Según tu configuración, puede que no puedas obtenerlos; si puedes, visita <PlatformLink to="/dsym/">Subir símbolos de depuración</PlatformLink> para más información sobre cómo subirlos.

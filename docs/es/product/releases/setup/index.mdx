@@ -1,0 +1,84 @@
+---
+title: Configuración
+sidebar_order: 1
+description: "Aprende a configurar tu SDK para habilitar las Releases y monitorear la salud de las versiones."
+---
+
+Configurar tu aplicación para enviar por completo los datos de releases de Sentry es un proceso de varios pasos y se adapta a las necesidades de tu organización.
+
+Si estás usando una de nuestras opciones de [automatización de releases](/es/product/releases/setup/release-automation/), se automatizarán los pasos 3.2 y 4 de este proceso. Si gestionas tus releases manualmente, entonces deberías seguir todos los pasos a continuación.
+
+<div id="1-configure-your-sdk">
+  ## 1. Configura tu SDK
+</div>
+
+Con tu SDK configurado para proporcionar un identificador de versión y habilitar el seguimiento de sesiones, puedes monitorear tanto las [versiones](/es/product/releases/) como el [estado de la versión](/es/product/releases/health/). Consulta la documentación de tu plataforma para [configurar el SDK](/es/platform-redirect/?next=/configuration/releases/).
+
+<Alert>
+  Debes tener el entorno [configurado en tu SDK](/es/platform-redirect/?next=/configuration/environments/) para usar esta función.
+</Alert>
+
+<div id="release-health">
+  ### Estado de la versión
+</div>
+
+El estado de la versión está disponible para los siguientes SDK:
+
+* [Android](/es/platforms/android/configuration/releases/#release-health)
+* [Flutter](/es/platforms/dart/guides/flutter/configuration/releases/#release-health)
+* [iOS](/es/platforms/apple/configuration/releases/#release-health)
+* [JavaScript (navegador)](/es/platforms/javascript/configuration/releases/#release-health)
+* [JavaScript (Node)](/es/platforms/javascript/guides/node/configuration/releases/#release-health)
+* [Electron](/es/platforms/javascript/guides/electron/configuration/releases/#release-health)
+* [Nativo (C/C++)](/es/platforms/native/configuration/releases/#release-health)
+* [PHP](/es/platforms/php/configuration/releases/)
+* [Python](/es/platforms/python/configuration/releases/#release-health)
+* [React Native](/es/platforms/react-native/configuration/releases/#release-health)
+* [Rust](/es/platforms/rust/configuration/releases/#release-health)
+* [.NET](/es/platforms/dotnet/configuration/releases/#release-health)
+* [Unity](/es/platforms/unity/configuration/releases/#release-health)
+
+<div id="2-upload-source-maps-or-other-debug-files">
+  ## 2. Sube mapas de origen u otros archivos de depuración
+</div>
+
+Cuando tu código se procesa —se empaqueta, minimiza, transpila, compila o se ofusca de algún otro modo con herramientas como webpack, Terser o el compilador de C++— los mapas de origen (u otros archivos de depuración) son necesarios para que Sentry muestre el código fuente en tus trazas de pila en su forma original, sin transformaciones. Configurar los mapas de origen también es necesario antes de poder habilitar los [commits sospechosos](#3-associate-commits). Consulta la documentación de nuestro SDK para encontrar instrucciones de configuración de mapas de origen u otros archivos de depuración para tu plataforma específica si no aparece en la lista siguiente:
+
+* [Android](/es/platforms/android/configuration/using-ndk/#symbolicate-stack-traces)
+* [Flutter](/es/platforms/dart/guides/flutter/upload-debug/)
+* [iOS](/es/platforms/apple/guides/ios/dsym/)
+* [JavaScript](/es/platforms/javascript/sourcemaps/)
+* [Node.js](/es/platforms/javascript/guides/node/sourcemaps/)
+
+<div id="3-associate-commits">
+  ## 3. Asociar commits
+</div>
+
+[Asociar commits](/es/product/releases/associate-commits/) a una versión te permite identificar más fácilmente qué cambios pueden ser responsables de un problema determinado. Para configurarlo:
+
+1. [Instala una integración de repositorio](/es/organization/integrations/source-code-mgmt/) para que Sentry pueda acceder a tu historial de commits. (También puedes cargar datos de commits manualmente a través de nuestra API si no quieres usar una integración).
+2. Configura tu script de gestión de versiones para [asociar commits con cada versión](/es/product/releases/associate-commits/). Si estás usando una de nuestras opciones de [automatización de versiones](/es/product/releases/setup/release-automation/), esto se hará por ti.
+
+Obtén más información sobre los beneficios de hacer seguimiento de commits en [Asociar commits](/es/product/releases/associate-commits/).
+
+<div id="4-notify-sentry">
+  ## 4. Notificar a Sentry
+</div>
+
+Si no usas una de nuestras opciones de [automatización de releases](/es/product/releases/setup/release-automation/), avísale a Sentry que implementaste tu release enviando una solicitud adicional después de crearla:
+
+```bash
+sentry-cli releases --org ORGANIZATION_SLUG deploys VERSION new -e ENVIRONMENT
+```
+
+<Alert>
+  Asegúrate de tener un [token](/es/cli/configuration/) correctamente configurado.
+</Alert>
+
+Por lo general, una release equivale a un deployment, pero si tienes varios entornos en los que quieres desplegar una release, este paso también te permite crear esos deployments de forma individual.
+
+También puedes usar nuestra [API](/es/api/releases/create-a-deploy/) para crear un deployment.
+
+Cuando informes a Sentry que has desplegado una release en un nuevo entorno, podemos enviar automáticamente un correo electrónico a los usuarios de Sentry que hayan hecho commits en esa release que se está desplegando.
+
+Si [finalizar la release](/es/cli/releases/#finalizing-releases) aún no forma parte de tu proceso de automatización de releases, asegúrate de hacerlo. Para más información, consulta nuestra [documentación de la CLI](/es/cli/releases/).

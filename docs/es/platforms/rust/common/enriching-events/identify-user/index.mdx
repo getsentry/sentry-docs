@@ -1,0 +1,35 @@
+---
+title: "Usuarios"
+description: "Aprende a configurar el SDK para capturar al usuario y obtener información clave que conforma una identidad única en Sentry."
+---
+
+Los usuarios se definen por algunas piezas de información fundamentales que conforman una identidad única en Sentry. Cada una es opcional, pero **debe** haber al menos una para que el SDK de Sentry capture al usuario:
+
+<DefinitionList>
+  ### `id`
+
+  Tu identificador interno del usuario.
+
+  ### `username`
+
+  El nombre de usuario. Suele usarse como una etiqueta más clara que el id interno.
+
+  ### `email`
+
+  Una alternativa, o complemento, al nombre de usuario. Sentry reconoce direcciones de correo electrónico y puede mostrar elementos como Gravatars y habilitar funciones de mensajería.
+
+  ### `ip_address`
+
+  La dirección IP del usuario. Si el usuario no está autenticado, Sentry usa la dirección IP como identificador único.
+  El SDK intentará obtener la dirección IP de los datos de la petición HTTP en solicitudes entrantes (campo `request.env.REMOTE_ADDR` en JSON), si está disponible. Para ello, se requiere <PlatformIdentifier name="send-default-pii" /> configurado en `true` en las opciones del SDK.
+
+  Si el `ip_address` del usuario está establecido en `"{{auto}}"`, Sentry inferirá la dirección IP a partir de la conexión entre tu aplicación y el servidor de Sentry. Si se omite el campo, el valor predeterminado es `null`.
+
+  Para dejar de almacenar las direcciones IP de los usuarios en los datos de tus eventos, ve a la configuración del proyecto, haz clic en &quot;Security &amp; Privacy&quot; y habilita &quot;Prevent Storing of IP Addresses&quot;, o utiliza el [proceso de limpieza de datos del lado del servidor](/es/security-legal-pii/scrubbing/) de Sentry para eliminar `$user.ip_address`. Agregar esa regla anula cualquier otra lógica.
+</DefinitionList>
+
+Además, puedes proporcionar pares clave/valor arbitrarios más allá de los nombres reservados, y el SDK de Sentry los almacenará junto con el usuario.
+
+Para identificar al usuario:
+
+<PlatformContent includePath="enriching-events/set-user" />

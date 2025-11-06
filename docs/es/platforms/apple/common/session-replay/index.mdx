@@ -1,0 +1,126 @@
+---
+title: Configurar Session Replay
+sidebar_title: Session Replay
+sidebar_order: 5500
+description: "Aprende a habilitar Session Replay en tu app móvil."
+notSupported:
+---
+
+<PlatformSection notSupported={["apple.ios"]}>
+  <Include name="apple-session-replay-support-alert" />
+</PlatformSection>
+
+<PlatformSection notSupported={["apple", "apple.macos", "apple.tvos", "apple.watchos", "apple.visionos"]}>
+  <Alert level="warning" title="Todas las personas desarrolladoras de iOS">
+    Antes de habilitar Session Replay en producción, verifica tu configuración de enmascaramiento para asegurarte de que no se capture información sensible. Nuestra configuración predeterminada enmascara de forma agresiva datos potencialmente sensibles, pero si modificas estas configuraciones o actualizas frameworks de UI o SDK del sistema, debes probar tu aplicación a fondo. Si encuentras problemas de enmascaramiento o datos sensibles que deberían estar enmascarados pero no lo están, por favor [crea un issue en GitHub](https://github.com/getsentry/sentry-cocoa/issues/new/choose) y evita implementar en producción con Session Replay habilitado hasta que se resuelva el problema.
+  </Alert>
+
+  <Alert level="warning" title="iOS 26.0+ - Cristal líquido">
+    <strong>Session Replay está desactivado de forma predeterminada en iOS 26.0+ con Xcode 26.0+ para evitar posibles filtraciones de PII</strong>
+
+    Debido a posibles problemas de enmascaramiento introducidos por los cambios de renderizado Liquid Glass de Apple en iOS 26.0, Session Replay ahora se <strong>desactiva automáticamente</strong> en apps que ejecutan iOS 26.0+ cuando se compilan con Xcode 26.0 o posterior, a partir de Sentry Cocoa <strong>8.57.0</strong>. Es una medida preventiva para proteger la privacidad de las personas usuarias y evitar posibles filtraciones de PII hasta que el enmascaramiento sea fiable. Las versiones anteriores del SDK no incluyen esta protección y pueden verse afectadas por un enmascaramiento poco fiable en iOS 26.0 cuando se compilan con Xcode 26.0 (Liquid Glass). Recomendamos actualizar a la versión 8.57.0 o superior o, si no puedes actualizar el SDK, desactivar Session Replay manualmente.
+
+    Session Replay funcionará con normalidad si:
+
+    * Tu app se ejecuta en versiones de iOS anteriores a la 26.0, O
+    * Tu app se compila con una versión de Xcode anterior a la 26.0, O
+    * Tu app establece explícitamente <code>UIDesignRequiresCompatibility</code> en <code>YES</code> en <code>Info.plist</code>
+
+    <strong>Forzar (usar con precaución):</strong> Si entiendes los riesgos de PII y aun así quieres habilitar Session Replay, puedes configurar:
+
+    ```swift
+    options.experimental.enableSessionReplayInUnreliableEnvironment = true
+    ```
+
+    Esta opción experimental de reemplazo se eliminará en una versión menor futura una vez que se resuelvan los problemas de enmascaramiento.
+
+    Sigue el progreso de la corrección del enmascaramiento en iOS 26.0 (Liquid Glass) en el <a href="https://github.com/getsentry/sentry-cocoa/issues/6390">issue de GitHub #6390</a>.
+  </Alert>
+
+  [Session Replay](/es/product/explore/session-replay/) te ayuda a identificar más rápido la causa de un error o un problema de latencia al ofrecerte una reproducción de lo que ocurría en el dispositivo del usuario antes, durante y después del problema. Puedes retroceder y reproducir el estado de tu aplicación y ver interacciones clave del usuario, como toques, deslizamientos, solicitudes de red y mensajes de la consola, en una única interfaz.
+
+  Por defecto, nuestro SDK de Session Replay enmascara todo el contenido de texto, imágenes y entradas del usuario, brindándote mayor confianza de que ningún dato sensible saldrá del dispositivo. Para obtener más información, consulta la [documentación del producto](/es/product/explore/session-replay/).
+
+  ## Requisitos previos
+
+  Asegúrate de que tu versión del SDK de Sentry Cocoa sea al menos la 8.31.1
+
+  ## Instalación
+
+  Si ya tienes instalado el SDK, puedes actualizarlo a la última versión con:
+
+  ```swift {tabTitle:SPM}
+  .package(url: "https://github.com/getsentry/sentry-cocoa", from: "{{@inject packages.version('sentry.cocoa') }}"),
+  ```
+
+  ```ruby {tabTitle:CocoaPods}
+  pod update
+  ```
+
+  ```ruby {tabTitle:Carthage}
+  github "getsentry/sentry-cocoa" "{{@inject packages.version('sentry.cocoa') }}"
+  ```
+
+  ## Configuración
+
+  Para configurar la integración, añade lo siguiente a la inicialización de Sentry.
+
+  ```swift
+  SentrySDK.start(configureOptions: { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.debug = true
+
+    options.sessionReplay.onErrorSampleRate = 1.0
+    options.sessionReplay.sessionSampleRate = 0.1
+  })
+  ```
+
+  ## Verificar
+
+  Mientras estés probando, te recomendamos establecer `sessionSampleRate` en `1.0`. Esto garantiza que todas las sesiones de usuario se envíen a Sentry.
+
+  Una vez completadas las pruebas, **recomendamos reducir este valor en producción**. Aun así, recomendamos mantener `onErrorSampleRate` configurado en `1.0`.
+
+  ## Sesión del usuario
+
+  Una sesión de usuario comienza cuando se inicializa el SDK de Sentry o cuando la aplicación pasa a primer plano. La sesión registrará transiciones de pantalla, navegación, toques y otros eventos hasta que la aplicación se envíe a segundo plano. Si la aplicación vuelve a primer plano dentro de 30 segundos (de forma predeterminada), se usará el mismo `replay_id` y la sesión continuará.
+
+  La sesión finalizará si la aplicación permanece en segundo plano más de 30 segundos o cuando se alcance la duración máxima de 60 minutos. Puedes ajustar el [intervalo de seguimiento de sesiones](/es/platforms/apple/guides/ios/configuration/releases/#sessions) para ampliar o acortar la duración de una sola reproducción, según tus necesidades.
+
+  ### Capturar Repeticiones Solo en Caso de Errores
+
+  Si prefieres no grabar una sesión completa, puedes optar por capturar una repetición solo si ocurre un error. En ese caso, la integración almacenará en búfer hasta un minuto de eventos anteriores a que se produzca el error. Continuará grabando la sesión, siguiendo las reglas anteriores sobre la duración y la actividad de la sesión. Consulta la sección de [muestreo](#sampling) para ver opciones de configuración.
+
+  ## Muestreo
+
+  El muestreo te permite controlar qué porcentaje del tráfico de tu aplicación generará una Session Replay. Hay dos tasas de muestreo que puedes ajustar para obtener las reproducciones relevantes para ti:
+
+  1. `sessionSampleRate` - La tasa de muestreo de las reproducciones que empiezan a grabarse de inmediato y abarcan toda la sesión del usuario.
+  2. `onErrorSampleRate` - La tasa de muestreo para las reproducciones que se registran cuando ocurre un error. Este tipo de reproducción registrará hasta un minuto de eventos anteriores al error y seguirá grabando hasta que finalice la sesión.
+
+  El muestreo comienza en cuanto inicia una sesión. Primero se evalúa `sessionSampleRate`. Si se incluye en la muestra, comenzará la grabación del replay. De lo contrario, se evalúa `onErrorSampleRate` y, si se incluye en la muestra, la integración empezará a almacenar en búfer el replay y solo lo subirá a Sentry si ocurre un error. El resto del replay se comportará de forma similar a un replay de sesión completa.
+
+  ## Privacidad
+
+  El SDK está grabando y enmascarando de forma agresiva todo el texto, imágenes, visores de PDF y webviews por defecto. Si tu aplicación tiene datos sensibles, solo debes desactivar el enmascaramiento predeterminado después de haber enmascarado explícitamente los datos sensibles, utilizando las APIs descritas a continuación.
+  Si quieres enmascarar manualmente partes de los datos de tu aplicación, consulta nuestra guía sobre [enmascaramiento personalizado](/es/platforms/apple/guides/ios/session-replay/customredact).
+
+  <Alert>
+    Si detectas que algunos datos no se redactan con la configuración predeterminada, háznoslo saber mediante un [issue en GitHub](https://github.com/getsentry/sentry-cocoa/issues/new?assignees=\&labels=Platform%3A+Cocoa%2CType%3A+Bug\&projects=\&template=bug.yml).
+  </Alert>
+
+  Para desactivar la redacción por completo (no debe usarse en aplicaciones con datos sensibles):
+
+  ```swift
+  options.sessionReplay.maskAllText = false
+  options.sessionReplay.maskAllImages = false
+  ```
+
+  ## Error de Enlace
+
+  Los errores que ocurren mientras se ejecuta una repetición se vincularán a esa repetición, lo que permite alternar entre incidencias y repeticiones relacionadas. Sin embargo, es **posible** que en algunos casos el recuento de errores que aparece en la página **Detalles de la repetición** no coincida con los errores reales que se han capturado. Esto se debe a que algunos errores pueden perderse y, aunque es poco común, hay varias razones por las que podría ocurrir:
+
+  * La repetición alcanzó el límite de velocidad y no pudo ser aceptada.
+  * La reproducción fue eliminada por un miembro de tu organización.
+  * Se produjeron errores de red y la reproducción no se guardó.
+</PlatformSection>

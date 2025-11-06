@@ -1,0 +1,151 @@
+---
+title: Vercel
+sidebar_order: 1
+description: >-
+  Obtén más información sobre las integraciones de Vercel de Sentry y cómo sincronizar
+  implementaciones de versiones y la carga de mapas de origen, así como la
+  integración de Vercel Marketplace.
+og_image: /og-images/organization-integrations-deployment-vercel.png
+---
+
+<div id="releases-and-source-map-integration">
+  ## Lanzamientos e integración de mapas de origen
+</div>
+
+<Alert level="warning">
+  Si cambias el slug de tu organización, tendrás que actualizar la configuración de esta integración. Obtén más información en nuestra [guía de solución de problemas](/es/organization/integrations/troubleshooting).
+</Alert>
+
+Conecta tus proyectos de Sentry y Vercel para notificar automáticamente a Sentry cada implementación y cargar los mapas de origen de tu aplicación Next.js.
+Para saber más sobre cómo usar Sentry en tu app de Next.js, consulta el [SDK de Next.js](/es/platforms/javascript/guides/nextjs/).
+
+<div id="install">
+  ### Instalar
+</div>
+
+<Alert>
+  Para instalar esta integración, necesitas permisos de propietario, manager o administrador de Sentry.
+</Alert>
+
+1. Visita [https://vercel.com/integrations/sentry](https://vercel.com/integrations/sentry)
+
+2. Haz clic en &quot;Add Integration&quot; y sigue los pasos para elegir el alcance de Vercel, los proyectos de Vercel y revisar los permisos de la aplicación.
+
+   ![Modal de Sentry que muestra la instalación de Vercel](./img/vercel_install.png)
+
+   <Alert title="Importante" level="warning">
+     La instalación creó una integración interna para generar un token de autenticación
+     usado al crear releases. Si se elimina la integración interna de Vercel,
+     tu integración de Vercel dejará de funcionar.
+   </Alert>
+
+   ![Modal de Sentry que muestra la integración interna de Vercel](./img/vercel_internal_integration.png)
+
+<div id="configure">
+  ### Configurar
+</div>
+
+Usa Vercel para [vincular proyectos](#project-linking), subir los mapas de código fuente (source maps) y notificar a Sentry sobre el despliegue de la versión.
+
+<div id="project-linking">
+  #### Vinculación del proyecto
+</div>
+
+1. Cuando el instalador te lo solicite, selecciona un proyecto de Sentry y un proyecto de Vercel para vincularlos.
+
+   ![Sentry modal showing linking Sentry project to Vercel project](./img/vercel_link_project.png)
+
+   * Este paso generará variables de entorno en el proyecto de Vercel seleccionado. Tenerlas definidas te permite omitir el [paso de configuración de la CLI](https://github.com/getsentry/sentry-webpack-plugin#cli-configuration) en la configuración del plugin de webpack de Sentry. Puedes verlas en Vercel en **Project Settings &gt; General &gt; Environment Variables**.
+
+   ![Sentry modal showing linking Sentry project to Vercel project](./img/vercel_env_vars.png)
+
+   * `SENTRY_ORG` - el nombre de tu organización de Sentry
+   * `SENTRY_PROJECT` - el nombre de tu proyecto de Sentry vinculado
+   * `SENTRY_AUTH_TOKEN` - el token de autenticación de la Integración interna de Vercel que se creó durante la instalación
+   * `NEXT_PUBLIC_SENTRY_DSN` - el DSN del proyecto de Sentry vinculado para usar en el SDK de Next.js
+
+2. Vuelve a implementar tu proyecto de Vercel para activar una versión.
+
+<div id="usage">
+  ### Uso
+</div>
+
+* Si aún no lo has hecho, [instrumenta tu código con Sentry](/es/platforms/javascript/).
+* Asegúrate de haber [instalado una integración de repositorio](/es/product/releases/setup/release-automation/) y de haber añadido el repositorio correspondiente.
+* Añade un plugin de Sentry a la configuración de tu bundler ([plugin para webpack](https://www.npmjs.com/package/@sentry/webpack-plugin), [plugin para Vite](https://www.npmjs.com/package/@sentry/vite-plugin), [plugin para Esbuild](https://www.npmjs.com/package/@sentry/esbuild-plugin), [plugin para Rollup](https://www.npmjs.com/package/@sentry/rollup-plugin)). Si usas los SDK de Next.js o SvelteKit de Sentry, esto ya estará hecho por ti.
+* Si ya tienes un proyecto de Vercel integrado con Sentry, asegúrate de vincular el proyecto de Sentry que ya usas para reportar errores.
+
+<div id="uninstallation">
+  ### Desinstalación
+</div>
+
+1. Puedes desinstalar la integración desde Vercel o Sentry. Para hacerlo en Sentry, ve a **Settings &gt; Integrations &gt; Vercel &gt; Configurations**, haz clic en &quot;Uninstall&quot; y confirma.
+
+2. Elimina la integración interna que se creó yendo a **Settings &gt; Developer Settings** y haciendo clic en el ícono de la papelera junto a &quot;Vercel Internal Integration&quot;. Se te pedirá confirmar la eliminación ingresando una cadena proporcionada en el modal. Ingresa la cadena y haz clic en &quot;Confirm&quot; para finalizar la eliminación:
+
+   ![Modal de Sentry que muestra la desinstalación de la integración de Vercel](./img/vercel_delete_internal_integration.png)
+
+<div id="troubleshooting">
+  ### Resolución de problemas
+</div>
+
+<div id="failed-to-fetch">
+  #### Error al obtener datos
+</div>
+
+![Mensaje de error «Failed to fetch»](./img/vercel_failed_to_fetch.png)
+
+Este problema suele ocurrir si un bloqueador de anuncios impide la comunicación entre Vercel y Sentry durante la configuración. Para solucionarlo, desactiva el bloqueador de anuncios y repite el proceso de instalación.
+
+<div id="vercel-marketplace">
+  ## Vercel Marketplace
+</div>
+
+La integración de Vercel Marketplace permite a los usuarios existentes de Vercel empezar a usar Sentry con un flujo de trabajo de un solo clic. Esta configuración está pensada para **nuevos usuarios de Sentry** y unifica la facturación dentro de la plataforma de Vercel.
+
+No hay una opción para que las organizaciones de Sentry existentes utilicen la integración de Vercel Marketplace.
+
+Cuando configures Sentry usando Vercel Marketplace, podrás definir el nombre de tu nueva organización de Sentry (denominada “Installation” en Vercel) y de los proyectos (Resources/Products en Vercel) durante el proceso de configuración.
+
+<div id="billing-settings">
+  ### Configuración de facturación
+</div>
+
+Al usar la integración nativa de Vercel Marketplace, los usuarios pueden modificar la información de facturación de sus organizaciones desde la plataforma de Vercel o directamente en Sentry. La configuración de la tarjeta de crédito solo puede modificarse en Vercel.
+
+La configuración de la suscripción solo puede modificarse en Sentry. Durante la configuración, las organizaciones pueden elegir entre los planes Developer, Team o Business. Los presupuestos de pago por uso pueden configurarse después de completar la configuración inicial.
+
+<div id="user-access">
+  ### Acceso de usuarios
+</div>
+
+<Alert>
+  Solo la persona que configure Sentry mediante el flujo de trabajo de un clic tendrá una cuenta de usuario de Sentry creada para ella. Para habilitar el inicio de sesión único desde Vercel para otros usuarios, deberán ser invitados a la organización de Sentry.
+</Alert>
+
+Los usuarios de Vercel tendrán acceso con inicio de sesión único a Sentry usando el botón &quot;Open in Sentry&quot; dentro de Vercel y podrán crear proyectos nuevos tanto en Vercel como en Sentry.
+
+Los usuarios también podrán iniciar sesión directamente en su organización de Sentry, sin usar el inicio de sesión único de Vercel, con las credenciales que configuraron durante la puesta en marcha. Para los usuarios sin inicio de sesión social (Google, GitHub, etc.), Sentry solicitará la creación de una contraseña.
+
+<div id="automatically-configured-environment-variables">
+  ### Variables de entorno configuradas automáticamente
+</div>
+
+Para cada proyecto configurado, se establecerán las siguientes variables de entorno en el despliegue de Vercel:
+
+* **SENTRY&#95;PROJECT**
+* **SENTRY&#95;AUTH&#95;TOKEN**
+* **NEXT&#95;PUBLIC&#95;SENTRY&#95;DSN**
+* **SENTRY&#95;ORG**
+
+<div id="integration-deletion">
+  ### Eliminación de la integración
+</div>
+
+Si se elimina la integración en Vercel, la organización de Sentry **no** se eliminará. La eliminación quitará permanentemente la conexión entre la cuenta de Vercel y la cuenta de Sentry, y es **irreversible**.
+
+Conservar la organización de Sentry permite que los equipos sigan accediendo a los datos históricos en Sentry, incluso si ya no envían datos de monitoreo.
+
+Si se elimina la integración nativa, los equipos aún pueden usar la integración no nativa de Vercel descrita al inicio de este documento. Solo puede haber una integración activa a la vez.
+
+Para obtener más información, consulta la [entrada del blog “Introducing the Vercel Marketplace”](https://vercel.com/blog/introducing-the-vercel-marketplace).

@@ -1,0 +1,251 @@
+---
+title: SolidStart
+description: SolidStart es un framework para aplicaciones web full stack y sitios web. Aprende a configurarlo con Sentry.
+sdk: sentry.javascript.solidstart
+categories:
+  - browser
+  - server
+---
+
+<div id="install">
+  ## Instalación
+</div>
+
+Sentry recopila datos mediante un SDK dentro del entorno de ejecución de tu aplicación.
+
+```bash {tabTitle:npm}
+npm install @sentry/solidstart --save
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/solidstart
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/solidstart
+```
+
+
+<div id="configure">
+  ## Configurar
+</div>
+
+Configura lo antes posible en el ciclo de vida de tu aplicación.
+
+Inicializa el SDK de Sentry en el archivo `src/entry-client.tsx`.
+
+Si usas Solid Router, añade `solidRouterBrowserTracingIntegration` para recopilar datos de rendimiento útiles sobre la salud de las cargas de página y las solicitudes asociadas.
+
+```jsx {filename:src/entry-client.tsx}
+import * as Sentry from "@sentry/solidstart";
+import { solidRouterBrowserTracingIntegration } from "@sentry/solidstart/solidrouter";
+import { mount, StartClient } from "@solidjs/start/client";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // Agrega encabezados de solicitud e IP para usuarios, para más información visita:
+  // https://docs.sentry.io/platforms/javascript/guides/solidstart/configuration/options/#sendDefaultPii
+  sendDefaultPii: true,
+
+  integrations: [solidRouterBrowserTracingIntegration()],
+  tracesSampleRate: 1.0, //  Captura el 100% de las transacciones
+});
+
+mount(() => <StartClient />, document.getElementById("app"));
+```
+
+<Alert>
+  Según la configuración de tu proyecto de SolidStart, la estructura de archivos puede diferir del código que aparece en esta página.
+  Por ejemplo, en proyectos de JavaScript, los archivos terminan en `.js` y `.jsx`, mientras que aquí usamos fragmentos de TypeScript que terminan en `.ts` y `.tsx`.
+</Alert>
+
+
+<div id="server-side-setup">
+  ### Configuración del lado del servidor
+</div>
+
+Crea un archivo de instrumentación `instrument.server.ts` en la carpeta `src`. En este archivo, inicializa el SDK de Sentry para el servidor.
+
+```javascript {filename:src/instrument.server.ts}
+import * as Sentry from "@sentry/solidstart";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // Agrega encabezados de la solicitud y la IP de los usuarios. Para más información, visita:
+  // https://docs.sentry.io/platforms/javascript/guides/solidstart/configuration/options/#sendDefaultPii
+  sendDefaultPii: true,
+
+  tracesSampleRate: 1.0, // Captura el 100 % de las transacciones
+});
+```
+
+Envuelve tu configuración de SolidStart con `withSentry` para que este archivo se incluya en el resultado de la compilación. Con el preset de servidor predeterminado, puedes encontrarlo aquí: `.output/server/instrument.server.mjs`.
+
+```javascript {filename:app.config.ts} {5-12}
+import { withSentry } from "@sentry/solidstart";
+import { defineConfig } from "@solidjs/start/config";
+
+export default defineConfig(
+  withSentry(
+    {
+      /* Tu configuración de SolidStart */
+    },
+    {
+      /* Tu configuración de Sentry en tiempo de compilación (por ejemplo, opciones para subir mapas de origen) */
+    }
+  )
+);
+```
+
+
+<div id="instrumentation">
+  ### Instrumentación
+</div>
+
+El SDK de Sentry proporciona controladores del [ciclo de vida del middleware](https://docs.solidjs.com/solid-start/advanced/middleware) para mejorar los datos que Sentry recopila en el lado del servidor al habilitar el rastreo distribuido entre el cliente y el servidor.
+
+Completa la configuración agregando `sentryBeforeResponseMiddleware` a tu archivo `src/middleware.ts`. Si aún no tienes ese archivo, créalo:
+
+```typescript {filename:src/middleware.ts} {6}
+import { sentryBeforeResponseMiddleware } from "@sentry/solidstart";
+import { createMiddleware } from "@solidjs/start/middleware";
+
+export default createMiddleware({
+  onBeforeResponse: [
+    sentryBeforeResponseMiddleware(),
+    // Añade tus otros controladores de middleware después de `sentryBeforeResponseMiddleware`
+  ],
+});
+```
+
+Y especifica `src/middleware.ts` en `app.config.ts`:
+
+```typescript {filename:app.config.ts} {7}
+import { withSentry } from "@sentry/solidstart";
+import { defineConfig } from "@solidjs/start/config";
+
+export default defineConfig(
+  withSentry({
+    // otras opciones de configuración de SolidStart...
+    middleware: "./src/middleware.ts",
+  })
+);
+```
+
+Si anteriormente añadiste la integración `solidRouterBrowserTracingIntegration` a `Sentry.init` en `src/entry-client.tsx`, envuelve tu Solid Router con `withSentryRouterRouting`.
+Esto crea un componente de orden superior que permitirá a Sentry recopilar spans de navegación.
+
+```tsx {filename:app.tsx} {5,9,11}
+import { Router } from "@solidjs/router";
+import { FileRoutes } from "@solidjs/start/router";
+import { withSentryRouterRouting } from "@sentry/solidstart/solidrouter";
+
+const SentryRouter = withSentryRouterRouting(Router);
+
+export default function App() {
+  return (
+    <SentryRouter>
+      <FileRoutes />
+    </SentryRouter>
+  );
+}
+```
+
+
+<div id="run-your-application">
+  ### Ejecuta tu aplicación
+</div>
+
+Añade la opción `--import` directamente o a la variable de entorno `NODE_OPTIONS` donde ejecutes tu aplicación para importar `.output/server/instrument.server.mjs`.
+
+Por ejemplo, actualiza los scripts en `package.json`.
+
+```json {filename:package.json}
+{
+  "scripts": {
+    "start:vinxi": "NODE_OPTIONS='--import ./.output/server/instrument.server.mjs ' vinxi start",
+    "start:node": "node --import ./.output/server/instrument.server.mjs .output/server/index.mjs"
+  }
+}
+```
+
+<Alert level="warning">
+  Si tienes algún problema durante la configuración en el servidor, revisa los
+  diferentes <PlatformLink to="/install">métodos de instalación</PlatformLink>
+  o consulta la{" "}
+  <PlatformLink to="/troubleshooting">guía de resolución de problemas</PlatformLink>.
+</Alert>
+
+
+<div id="add-readable-stack-traces-to-errors">
+  ## Añade trazas de pila legibles a los errores
+</div>
+
+Para cargar mapas de origen, debes pasar un token de autenticación a `withSentry` explícitamente mediante la opción `authToken`. Recomendamos encarecidamente guardar este token en una variable de entorno por seguridad. También puedes usar la variable de entorno `SENTRY_AUTH_TOKEN` o tener un archivo `.env.sentry-build-plugin` en el directorio de trabajo al compilar tu proyecto.
+
+Actualiza tu `app.config.ts`:
+
+```TypeScript {filename:app.config.ts}
+import { withSentry } from '@sentry/solidstart';
+import { defineConfig } from '@solidjs/start/config';
+
+export default defineConfig(
+  withSentry(
+    {
+      /* Tu configuración de SolidStart */
+    },
+    {
+      org: "___ORG_SLUG___",
+      project: "___PROJECT_SLUG___",
+      // guarda tu token de autenticación en una variable de entorno
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+    }
+  ),
+);
+```
+
+Guarda tu token en una variable de entorno:
+
+<OrgAuthTokenNote />
+
+```bash {filename:.env}
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
+o crea un archivo `.env.sentry-build-plugin`:
+
+```bash {filename:.env.sentry-build-plugin}
+SENTRY_ORG="___ORG_SLUG___"
+SENTRY_PROJECT="___PROJECT_SLUG___"
+SENTRY_AUTH_TOKEN="___ORG_AUTH_TOKEN___"
+```
+
+Recomendamos añadir el token de autenticación a tu entorno de CI/CD como variable de entorno.
+
+
+<div id="verify">
+  ## Verificar
+</div>
+
+Este fragmento incluye un error intencional para que puedas comprobar que todo funciona en cuanto lo configures.
+
+```javascript
+<button
+  type="button"
+  onClick={() => {
+    throw new Error("Error de frontend de Sentry");
+  }}
+>
+  Provocar error
+</button>
+```
+
+Este fragmento añade un Button que provoca un error en un componente de Solid.
+
+<Alert>
+  Más información sobre cómo capturar manualmente un error o un mensaje en nuestra <PlatformLink to="/usage/">documentación de uso</PlatformLink>.
+</Alert>
+
+Para ver y resolver el error registrado, inicia sesión en [sentry.io](https://sentry.io) y selecciona tu proyecto. Al hacer clic en el título del error, se abrirá una página donde podrás ver información detallada y marcarlo como resuelto.

@@ -1,0 +1,215 @@
+---
+draft: true
+categories: []
+toc: true
+title: Consejos y trucos
+sidebar_order: 4
+noindex: true
+tags: []
+---
+
+Estas son algunas recomendaciones y consejos generales para sacarle el máximo provecho a Raven.js y Sentry.
+
+<div id="decluttering-sentry">
+  ## Poner en orden Sentry
+</div>
+
+Lo primero es considerar limitar las excepciones a las que se generen desde una lista de dominios permitidos.
+
+Si tus scripts se cargan desde `cdn.example.com` y tu sitio es `example.com`, sería razonable establecer `whitelistUrls` en:
+
+```javascript
+whitelistUrls: [/https?:\/\/((cdn|www)\.)?example\.com/];
+```
+
+Dado que esto acepta una expresión regular, capturaría cualquier *.example.com o exactamente example.com. Consulta también: [Config: whitelistUrls](/es/platforms/javascript/legacy-sdk/config/#config-whitelist-urls).
+
+A continuación, revisa la lista de [integrations](/es/platforms/javascript/legacy-sdk/integrations/) que ofrecemos y verifica cuáles aplican en tu caso.
+
+La comunidad ha recopilado una lista de reglas de ignorar comunes para elementos habituales, como Facebook, extensiones de Chrome, etc. Por ello, se recomienda al menos revisarlas y ver si aplican a tu caso. [Consulta el gist original](https://gist.github.com/Chocksy/e9b2cdd4afc2aadc7989762c4b8b495a).
+
+```javascript
+const sentryOptions = {
+  ignoreErrors: [
+    // Plugins/extensiones aleatorios
+    "top.GLOBALS",
+    // Ver: http://blog.errorception.com/2012/03/tale-of-unfindable-js-error.html
+    "originalCreateNotification",
+    "canvas.contentDocument",
+    "MyApp_RemoveAllHighlights",
+    "http://tt.epicplay.com",
+    "Can't find variable: ZiteReader",
+    "jigsaw is not defined",
+    "ComboSearch is not defined",
+    "http://loading.retry.widdit.com/",
+    "atomicFindClose",
+    // Facebook con problemas
+    "fb_xd_fragment",
+    // Proxy "optimizador" del ISP - `Cache-Control: no-transform` parece reducir esto. (gracias @acdha)
+    // Ver http://stackoverflow.com/questions/4113268/how-to-stop-javascript-injection-from-vodafone-proxy
+    "bmi_SafeAddOnload",
+    "EBCallBackMessageReceived",
+    // Ver http://toolbar.conduit.com/Developer/HtmlAndGadget/Methods/JSInjection.aspx
+    "conduitPage",
+    // Código de error genérico de errores fuera del sandbox de seguridad
+    // Puedes eliminar esto si usas raven.js > 1.0, que ignora estos automáticamente.
+    "Script error.",
+    // Error de extensión Avast
+    "_avast_submit",
+  ],
+  denyUrls: [
+    // Google Adsense
+    /pagead\/js/i,
+    // Problemas con Facebook
+    /graph\.facebook\.com/i,
+    // Facebook bloqueado
+    /connect\.facebook\.net\/en_US\/all\.js/i,
+    // Problemas con Woopra
+    /eatdifferent\.com\.woopra-ns\.com/i,
+    /static\.woopra\.com\/js\/woopra\.js/i,
+    // Extensiones de Chrome
+    /extensions\//i,
+    /^chrome:\/\//i,
+    /^chrome-extension:\/\//i,
+    // Otros plugins
+    /127\.0\.0\.1:4001\/isrunning/i, // Cacaoweb
+    /webappstoolbarba\.texthelp\.com\//i,
+    /metrics\.itunes\.apple\.com\.edgesuite\.net\//i,
+  ],
+};
+```
+
+<div id="sampling-data">
+  ## Muestreo de datos
+</div>
+
+A menudo, los errores enviados desde tu frontend pueden resultar abrumadores. Una solución es enviar solo una muestra de los eventos que ocurren. Puedes hacerlo con la configuración `shouldSendCallback`:
+
+```javascript
+shouldSendCallback: function(data) {
+    // enviar solo el 10% de los errores
+    var sampleRate = 10;
+    return (Math.random() * 100 <= sampleRate);
+}
+```
+
+<div id="jquery-ajax-error-reporting">
+  ## Informe de errores de jQuery AJAX
+</div>
+
+Para reportar automáticamente errores de AJAX en jQuery, los siguientes consejos pueden ser útiles; sin embargo, según el tipo de solicitud, es posible que debas hacer algunas cosas de forma ligeramente distinta.
+
+<div id="same-origin">
+  ## Mismo origen
+</div>
+
+Cada vez que una solicitud Ajax termina con un error, jQuery desencadena el evento `ajaxError`, pasando el objeto `event`, el objeto `jqXHR` (antes de jQuery 1.5, el objeto `XHR`) y el objeto `settings` que se usó para crear la solicitud. Cuando se produce un error HTTP, el cuarto argumento (`thrownError`) recibe la parte textual del estado HTTP, como “Not Found” o “Internal Server Error”.
+
+Puedes usar este evento para gestionar globalmente los errores de Ajax:
+
+```javascript
+$(document).ajaxError(function (event, jqXHR, ajaxSettings, thrownError) {
+  Raven.captureMessage(thrownError || jqXHR.statusText, {
+    extra: {
+      type: ajaxSettings.type,
+      url: ajaxSettings.url,
+      data: ajaxSettings.data,
+      status: jqXHR.status,
+      error: thrownError || jqXHR.statusText,
+      response: jqXHR.responseText.substring(0, 100),
+    },
+  });
+});
+```
+
+<Alert level="warning" title="Nota">
+  * Este controlador no se invoca para solicitudes de script entre dominios ni para solicitudes JSONP entre dominios.
+  * Si se llama a `$.ajax()` o `$.ajaxSetup()` con la opción `global` establecida en `false`, el método `.ajaxError()` no se ejecutará.
+  * A partir de jQuery 1.8, el método `.ajaxError()` solo debe adjuntarse a document.
+</Alert>
+
+<div id="cross-origin">
+  ## Origen cruzado
+</div>
+
+Por motivos de seguridad, la mayoría de los navegadores web no permiten acceder a los mensajes de error de scripts de otros dominios. Esto no es un problema de jQuery, sino una limitación general de JavaScript.
+
+Según tu situación, ahora tienes distintas opciones:
+
+<div id="when-you-control-the-backend">
+  ### Cuando controlas el backend
+</div>
+
+Si tienes acceso al sistema de backend al que llamas, puedes configurar los encabezados de respuesta para permitir llamadas entre dominios:
+
+```yaml
+Access-Control-Allow-Origin: *
+```
+
+Las etiquetas de script ahora tienen un nuevo atributo no estándar llamado `crossorigin` ([más información](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script#attr-crossorigin)). El valor más seguro para este atributo es `anonymous`. Por lo tanto, deberás modificar tus etiquetas de script para que queden de la siguiente manera:
+
+```html
+<script src="http://sub.domain.com/script.js" crossorigin="anonymous"></script>
+```
+
+<div id="when-you-have-no-access-to-the-backend">
+  ### Cuando no tienes acceso al backend
+</div>
+
+Si no tienes acceso al backend, puedes probar un atajo que básicamente consiste en añadir un tiempo de espera a la llamada Ajax. Sin embargo, es una solución muy poco elegante y fallará con conexiones lentas o tiempos de respuesta largos:
+
+```javascript
+$.ajax({
+    url: 'http://mysite/leaflet.js',
+    success: function() { ... },
+    error: function() { ... },
+    timeout: 2000, // 2 segundos de espera antes de llamar a la función de error
+    dataType: 'script',
+    crossDomain: true
+});
+```
+
+<div id="raven-test-kit">
+  ## Raven Test Kit
+</div>
+
+Al crear pruebas para tu aplicación, quieres comprobar que se esté enviando el seguimiento de flujo correcto o el error a *Sentry*, **pero** sin enviarlo realmente al sistema de *Sentry*. Así evitarás saturarlo con reportes falsos durante la ejecución de pruebas y otras operaciones de CI.
+
+[Raven Test Kit](https://github.com/wix/raven-testkit) permite que Raven funcione de forma nativa en tu aplicación, pero reemplaza el mecanismo de transporte predeterminado de Raven para que el reporte no se envíe realmente, sino que se registre localmente. De este modo, los reportes registrados pueden recuperarse más tarde para verificar su uso u otros fines que puedas tener en tu entorno de pruebas.
+
+<div id="installation">
+  ### Instalación
+</div>
+
+```shell
+npm install raven-testkit --save-dev
+```
+
+<div id="how-to-use">
+  ### Cómo usar
+</div>
+
+Luego puedes crear una instancia de `testkit` y validar tus reportes frente a ella de la siguiente manera:
+
+```javascript
+import testKitInitializer from "raven-testkit";
+
+const testKit = testKitInitializer(Raven);
+
+// cualquier escenario que deba llamar Raven.catchException(...)
+
+expect(testKit.reports()).to.have.lengthOf(1);
+const report = testKit.reports()[0];
+expect(report).to.have.property("release").to.equal("test");
+```
+
+Además, puedes proporcionar tu propia lógica de `shouldSendCallback`
+
+```javascript
+const shouldSendCallback = (data) => {
+  return; /* tu propia lógica */
+};
+const testKit = testKitInitializer(Raven, shouldSendCallback);
+```
+
+Puedes encontrar otras API útiles, más ejemplos de uso y actualizaciones en [Raven Test Kit](https://github.com/wix/raven-testkit)

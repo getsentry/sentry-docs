@@ -1,0 +1,62 @@
+---
+title: Captura automática de errores
+sidebar_order: 10
+description: >-
+  Obtén más información sobre cómo el SDK captura errores automáticamente y los
+  envía a Sentry.
+og_image: /og-images/platforms-unity-usage-automatic-error-capture.png
+---
+
+El SDK de Sentry para Unity ofrece capacidades de captura de errores automáticas y manuales en todas las capas de tu aplicación. Esta página se centra en la **captura automática de errores**. Para obtener información sobre cómo capturar errores y mensajes manualmente, consulta la [documentación de uso](/es/platforms/unity/usage/).
+
+<div id="automatic-error-capture-through-unitys-logging-system">
+  ## Captura automática de errores mediante el sistema de registro de Unity
+</div>
+
+El SDK de Unity utiliza dos integraciones para capturar errores automáticamente: `UnityLogHandlerIntegration` y `UnityApplicationLoggingIntegration`. Aunque suenen similares, cumplen funciones diferentes.
+
+<div id="unityloghandlerintegration">
+  ### UnityLogHandlerIntegration
+</div>
+
+El SDK utiliza `UnityLogHandlerIntegration` para integrarse con el sistema de registros de Unity. Desde ahí recibe todos los mensajes registrados mediante los métodos `Debug.Log`, `Debug.LogWarning` y `Debug.LogError`. De forma predeterminada, el SDK agrega estos mensajes como breadcrumbs a eventos futuros. El SDK también captura automáticamente los mensajes registrados mediante `Debug.LogError` como eventos de error y los envía a Sentry. Este comportamiento se puede desactivar desmarcando la captura automática de `Debug.LogError` en la pestaña Logging del editor (Tools-&gt;Sentry), o de forma programática, estableciendo la opción `CaptureLogErrorEvents` en `false` en el [configure callback](/es/platforms/unity/configuration/options/programmatic-configuration).
+
+<div id="stack-trace-support-line-numbers">
+  #### Compatibilidad con trazas de pila y números de línea
+</div>
+
+Si está [configurado](https://docs.unity3d.com/6000.0/Documentation/Manual/stack-trace.html), Unity incluirá las trazas de pila en los mensajes de registro como cadenas sin procesar. El SDK puede analizar y mostrar esta traza de pila en la página de detalles de la incidencia.
+
+Si usas Unity 6 o una versión posterior, puedes habilitar los números de línea del código fuente en la [configuración del reproductor](https://docs.unity3d.com/6000.0/Documentation/Manual/il2cpp-managed-stack-traces.html). Estos números de línea pasan a formar parte de la traza de pila convertida en cadena y serán analizados por el SDK.
+
+<Alert>
+  Limitación conocida: En versiones anteriores a Unity 6, el SDK no puede proporcionar números de línea para eventos capturados mediante `Debug.LogError`. El SDK solo dispone de la traza de pila en formato de cadena proporcionada por Unity con la que trabajar y, dado que no hay una excepción nativa disponible en el momento del registro, Sentry tampoco puede simbolizar la traza de pila en el servidor.
+</Alert>
+
+<div id="unityapplicationloggingintegration">
+  ### UnityApplicationLoggingIntegration
+</div>
+
+El SDK usa `UnityApplicationLoggingIntegration` para añadir su propio controlador de registros justo antes del sistema de registro de Unity. Después, reenvía los registros a Unity. Esto permite que el SDK capture errores mediante el método `Application.logMessageReceived`. Todas las excepciones controladas —como las capturadas con llamadas a `Log.LogException`— y las excepciones no controladas llegan a esa llamada y son capturadas por el SDK. Estos mensajes contienen el objeto de excepción real. Esto permite que el SDK llame al backend de IL2CPP y vincule esta excepción administrada con la excepción nativa, habilitando la simbolización del lado del servidor. Puedes leer más sobre cómo funciona la integración de errores de IL2CPP [aquí](/es/platforms/unity/configuration/il2cpp).
+
+<div id="automatic-error-capture-on-the-native-layer">
+  ## Captura automática de errores en la capa nativa
+</div>
+
+El SDK de Unity también admite la captura automática de errores en la capa nativa. Esta opción está habilitada de forma predeterminada y funciona a través de los SDK nativos correspondientes para cada plataforma.
+
+Para obtener más información sobre cómo configurar el SDK nativo, consulta la [documentación del SDK nativo](/es/platforms/unity/native-support/).
+
+<div id="connecting-errors-captured-on-different-layers">
+  ## Conectar errores capturados en diferentes capas
+</div>
+
+Los SDK de Sentry ya pueden vincular eventos en un sistema distribuido mediante el uso de un trace. Puedes leer más sobre cómo funciona en la [documentación de tracing](/es/platforms/unity/tracing/).
+
+El SDK de Unity añade contexto de trace (incluido un ID de traza) a los errores y comparte esta información con los SDK nativos subyacentes. Esto permite que Sentry conecte automáticamente eventos relacionados entre diferentes capas cuando ocurren errores.
+
+En la página de detalles de los issues, verás esto como errores conectados dentro del Trace Preview. El siguiente ejemplo se tomó de un juego que se ejecuta en Android y muestra un error de C# vinculado a una excepción en Kotlin y a un bloqueo en C.
+
+![Trace Preview](./img/trace-preview.png)
+
+El SDK de Sentry regenera el ID de traza cada vez que el juego recupera el foco o cambia la escena activa. Esto crea grupos de traces más pequeños y enfocados en lugar de una traza continua desde el inicio hasta el cierre, lo que te ayuda a identificar errores realmente relacionados.

@@ -1,0 +1,200 @@
+---
+title: Configurar comentarios de los usuarios
+sidebar_order: 6900
+description: "Obtén información sobre los campos generales de configuración de comentarios de los usuarios."
+fullWidth: true
+---
+
+<PlatformSection notSupported={["apple.macos", "apple.tvos", "apple.watchos", "apple.visionos"]}>
+  ## Widget de Opiniones del Usuario
+
+  El widget de comentarios de usuarios ofrece muchas opciones de personalización y, si las opciones disponibles no son suficientes, puedes [usar tu propia interfaz](#bring-your-own-widget).
+
+  ### General
+
+  Las siguientes opciones de la integración se pueden configurar en `SentryUserFeedbackConfiguration`:
+
+  | Opción                   | Tipo            | Predeterminado | Descripción                                                                                                                                                |
+  | ------------------------ | --------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+  | `animations`             | `Bool`          | `true`        | Si mostrar animaciones o no, por ejemplo, al presentar y cerrar el formulario.                                                                             |
+  | `useShakeGesture`        | `Bool`          | `false`       | Usar el gesto de sacudir para mostrar el formulario.                                                                                                       |
+  | `showFormForScreenshots` | `Bool`          | `false`       | Cada vez que un usuario haga una captura de pantalla, abrir el formulario con la captura adjunta.                                                          |
+  | `tags`                   | `[String: Any]` | `nil`         | Etiquetas para asignar al evento de comentarios. Es un diccionario donde las claves son cadenas y los valores pueden ser distintos tipos de datos como `NSNumber`, `NSString`, etc. |
+
+  Hay varios hooks disponibles para que puedas reaccionar cuando el usuario abra o cierre el formulario, cuando lo envíe correctamente o cuando ocurra un error:
+
+  | Hook              | Type                      | Descripción                                                              |
+  | ----------------- | ------------------------- | ------------------------------------------------------------------------ |
+  | `onFormOpen`      | `() -> Void`              | Se llama cuando se abre el formulario de comentarios.                    |
+  | `onFormClose`     | `() -> Void`              | Se llama cuando se cierra el formulario de comentarios.                  |
+  | `onSubmitSuccess` | `([String: Any]) -> Void` | Se llama cuando los comentarios se envían correctamente mediante el formulario preparado.    |
+  | `onSubmitError`   | `(Error) -> Void`         | Se llama cuando se produce un error al enviar comentarios mediante el formulario preparado. |
+
+  `onSubmitSuccess` devuelve un diccionario con las siguientes claves:
+
+  * `message`: El mensaje que el usuario introdujo en el formulario de comentarios.
+  * `name`: El nombre que el usuario introdujo en el formulario de comentarios.
+  * `email`: El correo electrónico que el usuario introdujo en el formulario de comentarios.
+  * `attachments`: Una lista de archivos adjuntos que se incluirán con los comentarios; por ahora solo se admite una captura de pantalla.
+
+  Ejemplo:
+
+  ```swift
+  SentrySDK.start { options in
+      options.showFormForScreenshots = true
+      options.configureUserFeedback { config in
+          config.onSubmitSuccess = { data in
+              print("Comentarios enviados correctamente de \(data["name"]) a \(data["email"]): \(data["message"])")
+          }
+      }
+  }
+  ```
+
+  ### Widget
+
+  Las siguientes opciones pueden configurarse para la integración en `SentryUserFeedbackWidgetConfiguration`:
+
+  | Opción           | Tipo                      | Predeterminado              | Descripción                                                                                                                                                                                                        |
+  | ---------------- | ------------------------- | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+  | `location`       | `[NSDirectionalRectEdge]` | `[.bottom, .trailing]`      | La ubicación del widget en la pantalla.                                                                                                                                                                           |
+  | `autoInject`     | `Bool`                    | `true`                      | Inserta el widget de Feedback en la aplicación cuando se agrega la integración. Establece `autoInject: false` si quieres llamar a `SentrySDK.feedback.showWidget()` directamente, p. ej., para mostrar el widget en ciertas vistas. |
+  | `customButton`   | `UIButton?`               | `nil`                       | Instala un hook para el botón especificado que muestre el formulario al presionarlo. Si se establece, se ignora `configureWidget`.                                                                                |
+  | `windowLevel`    | `UIWindow.Level`          | `UIWindow.Level.normal + 1` | El nivel de la ventana del widget.                                                                                                                                                                                |
+  | `showIcon`       | `Bool`                    | `true`                      | Si se muestra el icono del widget.                                                                                                                                                                                |
+  | `labelText`      | `String?`                 | `"Report a Bug"`            | El texto de la etiqueta del widget. Si es `nil`, solo se muestra el icono. Es un error establecer `labelText` en `nil` y `showIcon` en `false` a la vez.                                                         |
+  | `layoutUIOffset` | `UIOffset`                | `UIOffset.zero`             | El desplazamiento del widget respecto al/los borde(s) de la pantalla especificados en `location`.                                                                                                                |
+
+  ### Configuración de formulario
+
+  Puedes personalizar qué elementos del formulario se muestran, si son obligatorios e incluso prellenar algunos datos en `SentryUserFeedbackFormConfiguration`:
+
+  | Opción                        | Tipo     | Predeterminado                           | Descripción                                                                                                                |
+  | ----------------------------- | -------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+  | `showBranding`                | `Bool`   | `true`                                   | Muestra el logotipo de Sentry dentro del formulario                                                                        |
+  | `formTitle`                   | `String` | `"Report a Bug"`                         | El título del formulario de comentarios.                                                                                   |
+  | `messageLabel`                | `String` | `"Description"`                          | La etiqueta del campo de descripción del comentario.                                                                       |
+  | `messagePlaceholder`          | `String` | `"What's the bug? What did you expect?"` | El texto de ayuda del campo de descripción del comentario.                                                                 |
+  | `isRequiredLabel`             | `String` | `"(Required)"`                           | El texto que se adjunta a la etiqueta del título para indicar un campo obligatorio.                                        |
+  | `successMessageText`          | `String` | `"Screenshot"`                           | La etiqueta del botón de captura de pantalla.                                                                              |
+  | `removeScreenshotButtonLabel` | `String` | `"Remove Screenshot"`                    | La etiqueta del botón para eliminar la captura de pantalla.                                                                |
+  | `isNameRequired`              | `Bool`   | `false`                                  | Requiere que se complete el campo de nombre en el formulario de comentarios.                                               |
+  | `showName`                    | `Bool`   | `true`                                   | Muestra el campo de nombre en el formulario de comentarios. Se ignora si `isNameRequired` es `true`.                       |
+  | `nameLabel`                   | `String` | `"Name"`                                 | La etiqueta junto al campo de nombre.                                                                                      |
+  | `namePlaceholder`             | `String` | `"Your Name"`                            | El texto de ayuda del campo de nombre.                                                                                     |
+  | `isEmailRequired`             | `Bool`   | `false`                                  | Requiere que se complete el campo de correo electrónico en el formulario de comentarios.                                   |
+  | `showEmail`                   | `Bool`   | `true`                                   | Muestra el campo de correo electrónico en el formulario de comentarios. Se ignora si `isEmailRequired` es `true`.          |
+  | `emailLabel`                  | `String` | `"Email"`                                | La etiqueta junto al campo de correo electrónico.                                                                          |
+  | `emailPlaceholder`            | `String` | `"your.email@example.org"`               | El texto de ayuda del campo de correo electrónico.                                                                         |
+  | `submitButtonLabel`           | `String` | `"Send Bug Report"`                      | La etiqueta del botón de enviar.                                                                                           |
+  | `cancelButtonLabel`           | `String` | `"Cancel"`                               | La etiqueta del botón Cancel.                                                                                              |
+  | `useSentryUser`               | `Bool`   | `true`                                   | Establece los campos `email` y `name` con los datos de usuario correspondientes del SDK de Sentry establecidos con `SentrySDK.setUser`. |
+  | `isRequiredText`              | `String` | `(required)`                             | El texto que se muestra junto a un campo obligatorio.                                                                      |
+
+  Ejemplo:
+
+  ```swift
+  SentrySDK.start { options in
+      options.configureUserFeedback { config in
+          config.configureForm { form in
+              form.isRequiredText = "*"
+              form.title = "¡Queremos saber de ti!"
+              form.useSentryUser = false
+          }
+      }
+  }
+  ```
+
+  ### Personalización del tema
+
+  Los colores se pueden personalizar mediante el objeto de configuración de nivel superior, para los temas claro y oscuro.
+
+  | Opción             | Claro                                       | Oscuro                                      | Descripción                                                  |
+  | ------------------ | ------------------------------------------- | ------------------------------------------- | ------------------------------------------------------------ |
+  | `background`       | `rgb(255, 255, 255)`                        | `rgb(41, 35, 47)`                           | Color de fondo del widget y del formulario.                  |
+  | `foreground`       | `rgb(43, 34, 51)`                           | `rgb(235, 230, 239)`                        | Color de texto del primer plano del widget y del formulario. |
+  | `submitForeground` | `rgb(255, 255, 255)`                        | `rgb(255, 255, 255)`                        | Color del texto del botón de enviar del formulario.          |
+  | `submitBackground` | `rgb(88, 74, 192)`                          | `rgb(88, 74, 192)`                          | Color de fondo del botón de enviar del formulario.           |
+  | `buttonForeground` | Igual que `foreground`                      | Igual que `foreground`                      | Color del texto de los botones Cancelar y Captura de pantalla.      |
+  | `buttonBackground` | `UIColor.clear`                             | `UIColor.clear`                             | Color de fondo de los botones Cancelar y Captura de pantalla del formulario. |
+  | `errorColor`       | `rgb(223, 51, 56)`                          | `rgb(245, 84, 89)`                          | Color usado en componentes relacionados con errores.         |
+  | `inputBackground`  | `UIColor.`<br />`secondarySystemBackground` | `UIColor.`<br />`secondarySystemBackground` | Color de fondo de los campos del formulario.                 |
+  | `inputForeground`  | `UIColor.darkText`                          | `UIColor.lightText`                         | Color del texto de los campos del formulario.                |
+
+  Los contornos de los elementos de formulario pueden configurarse mediante la propiedad `outlineStyle`. De forma predeterminada, el color es `rgb(204, 204, 204)`, el ancho es `0.5` y el radio de las esquinas es `5.0`.
+
+  Las fuentes pueden personalizarse directamente, pero de forma predeterminada se escalarán según el tamaño de texto preferido del usuario usando estilos tipográficos predefinidos:
+
+  | Option       | Default Text Style          | Description                                                                 |
+  | ------------ | --------------------------- | --------------------------------------------------------------------------- |
+  | `font`       | `"UIFontTextStyleCallout"`  | La familia tipográfica que se usará para los campos de entrada del formulario y la etiqueta del botón del widget. |
+  | `headerFont` | `"UIFontTextStyleTitle1"`   | La familia tipográfica que se usará para el título principal del Header del formulario de comentarios.      |
+  | `titleFont`  | `"UIFontTextStyleHeadline"` | La familia tipográfica que se usará para los títulos de los campos de texto y los botones del formulario.   |
+
+  Aún puedes configurar la opción `fontFamily` y solicitaremos al sistema una fuente con la escala adecuada.
+
+  Aquí tienes un ejemplo de cómo personalizar únicamente el color de fondo del tema claro usando la configuración del constructor de Feedback:
+
+  ```swift
+  SentrySDK.start { options in
+      options.configureUserFeedback { config in
+          // configureTheme se utiliza para los temas claros en versiones de iOS que admiten el modo oscuro, y como la única configuración de tema en versiones anteriores de iOS que no lo admiten
+          config.theme { theme in
+              theme.background = .init(color: .yellow)
+          }
+          config.darkTheme { theme in
+              theme.background = .init(color: .darkGray)
+          }
+      }
+  }
+  ```
+
+  ### Accesibilidad
+
+  El widget de comentarios está diseñado para ser accesible e incluye un conjunto de etiquetas de accesibilidad predeterminadas que se pueden personalizar. Para garantizar la accesibilidad del widget, se establecen los siguientes atributos:
+
+  #### `ConfiguraciónDelWidgetDeComentariosDeUsuarioDeSentry`
+
+  | Clave de configuración     | Valor predeterminado                              |
+  | -------------------------- | -------------------------------------------------- |
+  | `widgetAccessibilityLabel` | `labelText` o, si este es `nil`, `"Informar un error"` |
+
+  #### `ConfiguraciónFormularioComentariosUsuarioSentry`
+
+  | Clave de configuración                     | Valor predeterminado          |
+  | ------------------------------------------ | ----------------------------- |
+  | `messageTextViewAccessibilityLabel`        | `messagePlaceholder`          |
+  | `removeScreenshotButtonAccessibilityLabel` | `removeScreenshotButtonLabel` |
+  | `nameTextFieldAccessibilityLabel`          | `namePlaceholder`             |
+  | `emailTextFieldAccessibilityLabel`         | &quot;Tu dirección de correo&quot;      |
+  | `submitButtonAccessibilityLabel`           | `submitButtonLabel`           |
+  | `cancelButtonAccessibilityLabel`           | `cancelButtonLabel`           |
+
+  Ejemplo:
+
+  ```swift
+  SentrySDK.start { options in
+      options.configureUserFeedback { config in
+          config.configureWidget { widget in
+              widget.widgetAccessibilityLabel = "Reportar un problema" // default: "Reportar un error"
+          }
+          config.configureForm { form in
+              form.messageTextViewAccessibilityLabel = "¿Qué ocurrió?" // default: "¿Cuál es el error? ¿Qué esperabas?"
+          }
+      }
+  }
+  ```
+
+  ### Usa tu propio widget
+
+  También puedes usar tus propios componentes de UI para recopilar feedback y pasar el objeto de datos de feedback a la función `SentrySDK.capture(feedback: SentryFeedback)`.
+
+  ```swift
+  SentrySDK.capture(feedback: .init(
+      message: "Este es un ejemplo de comentario", // obligatorio
+      name: "Jane Doe", // opcional
+      email: "email@ejemplo.org", // opcional
+      source: .custom,
+      screenshot: somePngImageData // opcional
+  ));
+  ```
+</PlatformSection>

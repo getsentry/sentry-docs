@@ -1,0 +1,83 @@
+---
+title: GraphQL
+description: "Añade instrumentación para GraphQL. (predeterminado)"
+supported:
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.hono
+  - javascript.koa
+  - javascript.nestjs
+  - javascript.electron
+  - javascript.nextjs
+  - javascript.nuxt
+  - javascript.solidstart
+  - javascript.sveltekit
+  - javascript.remix
+  - javascript.react-router
+  - javascript.astro
+  - javascript.bun
+  - javascript.tanstackstart-react
+---
+
+<Alert>
+  Esta integración solo funciona en los entornos de ejecución de Node.js y Bun.
+</Alert>
+
+*Nombre de importación: `Sentry.graphqlIntegration`*
+
+Esta integración se activa de forma predeterminada cuando el monitoreo de rendimiento está habilitado. Si deseas modificar tus integraciones predeterminadas, lee [esto](./../#modifying-default-integrations).
+
+La `graphqlIntegration` añade instrumentación para la biblioteca `graphql` a fin de capturar spans usando [`@opentelemetry/instrumentation-graphql`](https://www.npmjs.com/package/@opentelemetry/instrumentation-graphql).
+
+```JavaScript
+Sentry.init({
+  integrations: [Sentry.graphqlIntegration()],
+});
+```
+
+
+<div id="supported-versions">
+  ## Versiones compatibles
+</div>
+
+- `graphql`: `>=14.0.0 <17`
+
+<div id="options">
+  ## Opciones
+</div>
+
+<div id="ignoreresolvespans">
+  ### `ignoreResolveSpans`
+</div>
+
+_Tipo: `boolean`_
+
+Si no se deben crear spans para las funciones de resolución. El valor predeterminado es `true`.
+
+<div id="ignoretrivalresolvespans">
+  ### `ignoreTrivalResolveSpans`
+</div>
+
+_Tipo: `boolean`_
+
+Si no se deben crear spans para la ejecución del resolvedor predeterminado en propiedades de objetos. El valor predeterminado es `true`.
+
+Cuando no se define una función de resolvedor en el esquema para un campo, GraphQL usará el resolvedor predeterminado, que simplemente busca una propiedad con ese nombre en el objeto. Si la propiedad no es una función, rastrearla no aporta gran cosa. Esta opción puede reducir el ruido y la cantidad de spans creados.
+
+<div id="useoperationnameforrootspan">
+  ### `useOperationNameForRootSpan`
+</div>
+
+_Tipo: `boolean`_
+
+De forma predeterminada, esta opción es `true`.
+
+Con esta configuración habilitada, la instrumentación de GraphQL actualiza dinámicamente el nombre del span raíz `http.server` añadiendo los nombres de las operaciones. En lugar de nombres de span genéricos como `POST /graphql`, los nombres de los spans serán más descriptivos, como `POST /graphql (query MyQuery)`. Para solicitudes que contienen varias operaciones, los nombres de los spans agregarán los nombres de las operaciones, por ejemplo: `POST /graphql (query Query1, query Query2)`.
+
+Establece la opción en `false` para conservar el nombre de span predeterminado de `http.server` sin este contexto adicional.

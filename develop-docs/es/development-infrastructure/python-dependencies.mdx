@@ -1,0 +1,57 @@
+---
+title: Dependencias de Python
+sidebar_order: 100
+---
+
+A diferencia de nuestro enfoque con JavaScript en el frontend, donde por lo general estamos muy cómodos incorporando dependencias, en el backend somos mucho más conservadores. Cualquier dependencia que agreguemos podría requerir que eventualmente (aunque sea temporalmente) hagamos un fork y la incluyamos como vendorizada si el proyecto upstream deja de dar soporte a nuestra versión de Python.
+
+Además, todas estas dependencias se ejecutan en el servidor, lo que las hace más arriesgadas, ya que tienen acceso directo a los datos de los clientes si resultan ser maliciosas.
+
+<div id="adding-or-updating-a-dependency">
+  ## Agregar o actualizar una dependencia
+</div>
+
+Cualquier dependencia nueva debe revisarse minuciosamente y ser aprobada por [owners-python-build](https://github.com/orgs/getsentry/teams/owners-python-build/members). Este grupo se etiqueta automáticamente en tu PR a `sentry` o `getsentry` en cuanto edites los archivos relevantes. En otros repositorios, quizá debas hacerlo manualmente.
+
+Las dependencias deben:
+
+- estar en [internal pypi](https://github.com/getsentry/pypi)
+- no agregarse a los repositorios como requisitos sin especificador (consulta `tools/lint_requirements.py` de sentry)
+
+Para agregar o actualizar una dependencia:
+
+1. Clona https://github.com/getsentry/pypi/.
+2. Entra al directorio de tu clon con `cd` y ejecuta `python3 -m add_pkg PKGNAME` (o `python3 -m add_pkg PKGNAME==PKGVERSION` si quieres una versión distinta a la más reciente).
+3. Haz commit de los cambios resultantes en una rama, abre un PR en `getsentry/pypi` y etiqueta a alguien de tu equipo (cualquier ingeniero puede aprobar PRs en este repositorio).
+4. Cuando tu PR se fusione, vuelve al repositorio principal cuyas dependencias quieres cambiar (`sentry`, `getsentry`, etc.).
+5. En ese repositorio, agrega o actualiza la dependencia en `pyproject.toml` (o `requirements*.txt` si el repositorio aún no [usa `uv`](https://www.notion.so/Standard-Spec-python-uv-2248b10e4b5d8045b8fff30f8b8b67ca)).
+
+- En sentry, puedes hacerlo con la [acción bump-version](https://github.com/getsentry/sentry/actions/workflows/bump-version.yml).
+  - Haz clic en el menú desplegable **Run workflow**.
+  - Completa el nombre y la versión de tu paquete.
+  - Haz clic en el botón **Run workflow**.
+
+<Alert level="warning" title="Nota">
+Las dependencias deben fijarse con un límite inferior `>=` para fomentar la actualización a las versiones más recientes.
+</Alert>
+
+6. Ejecuta `make freeze-requirements` (o `uv lock`). Es posible que debas esperar unos minutos a que se desplieguen los cambios de `getsentry/pypi` antes de que esto funcione sin errores.
+7. Haz commit de tus cambios (que deberían incluir modificaciones tanto en uno de los archivos `requirements` como en su lockfile correspondiente) en una rama y abre un PR en el repositorio correspondiente. Si no es evidente, explica por qué estás agregando o actualizando la dependencia. Etiqueta a `owners-python-build` si aún no se han autoetiquetado.
+8. Fusiona tu PR, haz pull de `master` y ejecuta `devenv sync`.
+
+<div id="depending-on-forks">
+  ## Dependencias basadas en forks
+</div>
+
+Si necesitas modificar una dependencia y desplegar el resultado
+antes de que sea aceptado upstream, debes hacer un fork de la dependencia y publicarlo en PyPI y en el PyPI interno.
+
+1. Haz un fork en la organización `getsentry` y realiza tus cambios.
+2. Agrega la configuración de Craft para publicar en PyPI + PyPI interno ([ejemplo](https://github.com/getsentry/sentry-forked-djangorestframework-stubs/pull/1)).
+3. Agrega la dependencia a tu repositorio.
+
+<div id="unclear">
+  ## ¿No está claro?
+</div>
+
+Si tienes preguntas sobre dependencias, consulta a [owners-python-build](https://github.com/orgs/getsentry/teams/owners-python-build/members) o en #discuss-dev-infra.

@@ -1,0 +1,170 @@
+---
+title: Privacidad
+sidebar_order: 5501
+notSupported: null
+description: Aprende a enmascarar partes de los datos de tu app en Session Replay.
+og_image: /og-images/platforms-android-session-replay-privacy.jpg
+---
+
+<Alert level="warning">
+  Las opciones de enmascarado a continuación solo se aplican cuando se usa la estrategia predeterminada `PixelCopy`. Si configuras la estrategia en [Canvas](/es/platforms/android/session-replay/#screenshot-strategy), esas opciones se ignorarán y todo el contenido sensible (textos, campos de entrada, imágenes) estará **siempre** enmascarado.
+</Alert>
+
+<Alert level="warning">
+  Antes de habilitar Session Replay en producción, verifica tu configuración de enmascarado para asegurarte de que no se capture información sensible. Nuestra configuración predeterminada enmascara de forma agresiva los datos potencialmente sensibles, pero si modificas estos ajustes o actualizas frameworks de UI o SDKs del sistema, debes probar tu aplicación exhaustivamente. Si encuentras cualquier problema de enmascarado o datos sensibles que deberían enmascararse pero no lo están, por favor [crea un issue en GitHub](https://github.com/getsentry/sentry-java/issues/new/choose) y evita desplegar a producción con Session Replay habilitado hasta que se resuelva el problema.
+</Alert>
+
+De forma predeterminada, nuestro SDK de Session Replay enmascara todo el contenido de texto, imágenes, webviews y la entrada del usuario. Esto ayuda a garantizar que no se exponga información sensible. También puedes elegir manualmente qué partes de los datos de tu app quieres enmascarar usando las diferentes opciones que se muestran a continuación.
+
+Para deshabilitar el comportamiento de enmascarado predeterminado (no debe usarse en aplicaciones con datos sensibles):
+
+```kotlin
+options.sessionReplay.maskAllText = false
+options.sessionReplay.maskAllImages = false
+```
+
+```XML {filename:AndroidManifest.xml}
+<meta-data android:name="io.sentry.session-replay.mask-all-text" android:value="false" />
+<meta-data android:name="io.sentry.session-replay.mask-all-images" android:value="false" />
+```
+
+|Reproducción de sesiones sin enmascarar        |  Reproducción de sesiones enmascarada                   |
+|:-----------------------------:|:---------------------------------------: |
+|![reproducción de sesiones sin enmascarar](./img/session-replay.jpg)  |![reproducción de sesiones enmascarada](./img/session-replay-redacted.jpg) |
+
+*Asegúrate de que la versión de tu Sentry Android SDK sea, como mínimo, la 7.20.0.*
+
+<div id="mask-by-view-class">
+  ## Enmascarar por clase de vista
+</div>
+
+Puedes elegir qué tipo de vista quieres enmascarar o des enmascarar usando las opciones `addMaskViewClass` o `addUnmaskViewClass`.
+
+Supongamos que tienes:
+
+* Una vista personalizada que quieres enmascarar
+* Una subclase de `TextView` (que normalmente se enmascararía) que no quieres enmascarar
+
+Puedes configurar las opciones así:
+
+```kotlin
+options.sessionReplay.addMaskViewClass("com.example.MyCustomView")
+options.sessionReplay.addUnmaskViewClass("com.example.MyCustomTextView")
+```
+
+<Alert>
+  Si usas una herramienta de ofuscación de código (R8/ProGuard), ajusta las reglas de ProGuard para que los nombres de tus clases de vistas personalizadas no se reduzcan.
+</Alert>
+
+<div id="class-hierarchy">
+  ### Jerarquía de clases
+</div>
+
+El comportamiento de enmascaramiento se aplica a las clases y sus subclases. Esto significa que, si agregas una vista mediante `addMaskViewClass` (por ejemplo, `TextView`, que es el comportamiento predeterminado), sus subclases correspondientes (`RadioButton`, `CheckBox`, `EditText`, etc.) también se enmascararán. Por ejemplo, puedes hacer lo siguiente:
+
+```kotlin
+options.sessionReplay.addMaskViewClass("android.widget.TextView") // enmascarar TextView y todas sus subclases
+options.sessionReplay.addUnmaskViewClass("android.widget.RadioButton") // pero desenmascarar RadioButton y todas sus subclases
+```
+
+<div id="mask-by-view-instance">
+  ## Enmascarar por instancia de vista
+</div>
+
+También puedes optar por enmascarar o desenmascarar una instancia específica de la vista usando etiquetas como estas:
+
+```xml
+<View
+  android:id="@+id/my_view"
+  android:layout_width="wrap_content"
+  android:layout_height="wrap_content"
+  android:tag="sentry-mask|sentry-unmask"
+/>
+```
+
+```kotlin
+view.tag = "sentry-mask|sentry-unmask"
+```
+
+Si tu vista ya tiene una etiqueta asignada, puedes establecer la etiqueta de enmascaramiento mediante un ID específico de Sentry:
+
+```xml
+<View
+  android:id="@+id/my_view"
+  android:layout_width="wrap_content"
+  android:layout_height="wrap_content">
+
+  <tag android:id="@id/sentry_privacy" android:value="mask|unmask"/>
+</View>
+```
+
+```kotlin
+  view.setTag(io.sentry.android.replay.R.id.sentry_privacy, "enmascarar|mostrar")
+```
+
+También ofrecemos prácticas funciones de extensión para Kotlin:
+
+```kotlin
+view.sentryReplayMask()
+// o
+view.sentryReplayUnmask()
+```
+
+<div id="jetpack-compose">
+  ## Jetpack Compose
+</div>
+
+Solo admitimos enmascarar composables específicos en Jetpack Compose. Dado que los composables son funciones, no clases, no es posible enmascarar por clase de vista.
+
+En el siguiente ejemplo, queremos que el mensaje &quot;Hello&quot; se registre en la reproducción, pero no el composable personalizado. (De forma predeterminada, todos los composables de texto se enmascaran).
+
+```kotlin
+import io.sentry.android.replay.sentryReplayMask
+import io.sentry.android.replay.sentryReplayUnmask
+
+Column(
+  verticalArrangement = Arrangement.Center,
+  horizontalAlignment = Alignment.CenterHorizontally,
+  modifier = Modifier.fillMaxSize()
+) {
+  MyCustomComposable(
+    modifier = Modifier.fillMaxWidth().sentryReplayMask()
+    ...
+  )
+  Text("Hola", modifier = Modifier.sentryReplayUnmask())
+}
+```
+
+Actualmente no admitimos aplicar máscaras a nada dentro de vistas de Android incrustadas (`AndroidView`), pero aún puedes enmascarar la vista completa de la siguiente manera:
+
+```kotlin
+import io.sentry.android.replay.sentryReplayMask
+
+AndroidView(
+  modifier = Modifier.sentryReplayMask(),
+  factory = { context -> ... }
+)
+```
+
+<div id="general-masking-rules">
+  ## Reglas generales de enmascaramiento
+</div>
+
+<div id="view-groups">
+  ### Grupos de vistas
+</div>
+
+* Si un `ViewGroup` está marcado como enmascarado, **todas sus vistas secundarias también se enmascararán**, incluso si algunas normalmente no lo estarían. Esto prioriza la seguridad y garantiza que no se exponga información sensible por accidente.
+
+* Si un `ViewGroup` está marcado como sin enmascarar, **sus vistas secundarias no heredan automáticamente este comportamiento**. Deberás marcar explícitamente cada vista secundaria como sin enmascarar si quieres que aparezcan en la reproducción.
+
+<div id="masking-priority">
+  ### Prioridad de enmascaramiento
+</div>
+
+Las reglas de enmascaramiento y desenmascaramiento se aplican en el siguiente orden:
+
+1. Comprueba si una vista está marcada como `unmasked` mediante una etiqueta/extensión o una función/modificador.
+2. Comprueba si una vista está marcada como `masked` mediante una etiqueta/extensión o una función/modificador.
+3. Comprueba si la clase de una vista está marcada como desenmascarada mediante `addUnmaskViewClass`.
+4. Comprueba si la clase de una vista está marcada como enmascarada mediante `addMaskViewClass`.

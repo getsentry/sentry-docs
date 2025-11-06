@@ -1,0 +1,323 @@
+---
+title: Cargas útiles de eventos
+sidebar_order: 3
+---
+
+Los eventos son los datos fundamentales que los clientes, a menudo mediante un SDK, envían
+al servidor de Sentry.
+
+Los eventos se empaquetan en [envelopes](/es/sdk/data-model/envelopes/) y se envían al endpoint de la API `/api/{PROJECT_ID}/envelope/`.
+
+El envío de cargas útiles de eventos al endpoint de la API `/api/{PROJECT_ID}/store/` está en desuso.
+
+<Alert title="Nota sobre la compatibilidad con versiones anteriores">
+  <markdown>
+    Nos esforzamos por documentar el formato canónico de un evento y sus interfaces adicionales. Sin embargo, por compatibilidad con versiones anteriores, el servidor también
+    admite eventos que no están en el formato canónico descrito a lo largo de la
+    documentación.
+
+    Los SDK existentes pueden estar usando un formato histórico que no se recomienda para código nuevo.
+  </markdown>
+</Alert>
+
+<Alert title="¿Encontraste un problema?" level="warning">
+  <markdown>
+    Si la documentación es insuficiente o está desactualizada, avísanos [abriendo un issue](https://github.com/getsentry/develop/issues/new).
+
+    A los desarrolladores de SDK puede resultarles útil consultar la [documentación](https://getsentry.github.io/relay/relay_event_schema/protocol/index.html) y el [código fuente](https://github.com/getsentry/relay/tree/master/relay-event-schema/src/protocol) que definen el protocolo tal como lo entiende el servidor.
+  </markdown>
+</Alert>
+
+<div id="required-attributes">
+  ## Atributos obligatorios
+</div>
+
+Los atributos son datos simples que Sentry utiliza para proporcionar la información más básica
+sobre los eventos. Incluyen cosas como el ID único de un evento o el
+momento en que ocurrió.
+
+Los siguientes atributos son obligatorios para todos los eventos.
+
+`event_id`
+
+*Obligatorio*. Cadena hexadecimal que representa un valor uuid4. La longitud es exactamente de 32
+caracteres. No se permiten guiones. Debe estar en minúsculas.
+
+```json
+  {
+    "event_id": "fc6d8c0c43fc4630ad850ee518f1b9d0"
+  }
+```
+
+`timestamp`
+
+: Indica cuándo se creó el evento en el SDK de Sentry. El formato puede ser una
+cadena según lo definido en [RFC 3339](https://tools.ietf.org/html/rfc3339) o un
+valor numérico (entero o de coma flotante) que representa el [número de segundos
+transcurridos desde la época Unix](https://en.wikipedia.org/wiki/Unix_time).
+
+```json
+{
+  "marca_de_tiempo": "2011-05-02T17:41:36Z"
+}
+```
+
+o:
+
+```json
+{
+  "marcaDeTiempo": 1304358096.0
+}
+```
+
+`platform`
+
+: Una cadena que indica la plataforma desde la que el SDK realiza el envío. La interfaz de Sentry la usará para personalizar diversos componentes de la interfaz.
+
+```json
+{
+  "platform": "python"
+}
+```
+
+Para ver la lista completa de valores permitidos, consulta `platforms.tsx` en el [código fuente de Sentry](https://github.com/getsentry/sentry/blob/master/static/app/data/platforms.tsx).
+
+<div id="optional-attributes">
+  ## Atributos opcionales
+</div>
+
+Además, hay varios valores opcionales que Sentry reconoce y que son
+muy recomendables:
+
+`level`
+
+: La gravedad del registro.
+
+De forma predeterminada, es `error`.
+
+El valor debe ser uno de los valores de cadena de nivel admitidos.
+
+```json
+{
+  "level": "advertencia"
+}
+```
+
+Los valores aceptables son:
+
+* `fatal`
+* `error`
+* `warning`
+* `info`
+* `debug`
+
+`logger`
+
+: El nombre del registrador que creó el registro.
+
+```json
+{
+  "logger": "mi.logger.nombre"
+}
+```
+
+`transaction`
+
+: El nombre de la transacción que provocó esta excepción.
+
+Por ejemplo, en una aplicación web, podría ser el nombre de la ruta.
+
+```json
+{
+  "transaction": "/users/<nombre_de_usuario>/"
+}
+```
+
+`server_name`
+
+: Identifica el servidor desde el que se registró el evento.
+
+```json
+{
+  "server_name": "foo.example.com"
+}
+```
+
+`release`
+
+: La versión de publicación de la aplicación.
+
+**Las versiones de publicación deben ser únicas en todos los proyectos de tu organización**.
+Este valor puede ser el SHA de git del proyecto en cuestión, o un identificador de producto
+con una versión semántica (formato sugerido: `my-project-name@1.0.0`).
+
+```json
+{
+  "release": "my-project-name@1.0.0"
+}
+```
+
+```json
+{
+  "release": "721e41770371db95eee98ca2707686226b993eda"
+}
+```
+
+`dist`
+
+: La distribución de la aplicación.
+
+Las distribuciones se utilizan para diferenciar variantes de compilación o de implementación de la misma versión de una aplicación. Por ejemplo, el dist puede ser el número de compilación en un build de Xcode o el código de versión en un build de Android.
+
+```json
+{
+  "release": "721e41770371db95eee98ca2707686226b993eda",
+  "dist": "14G60"
+}
+```
+
+`tags`
+
+*Opcional*. Un mapa o una lista de etiquetas para este evento. Las etiquetas deben tener valores de tipo cadena, y cada etiqueta debe tener menos de 200 caracteres.
+
+```json
+  {
+    "tags": {
+      "ios_version": "4.0",
+      "context": "producción"
+    }
+  }
+```
+
+`environment`
+
+: El nombre del entorno, como `production` o `staging`. El valor predeterminado debe ser `production`.
+
+```json
+{
+  "environment": "producción"
+}
+```
+
+`modules`
+
+: Lista de módulos relevantes y sus versiones.
+
+```json
+{
+  "modules": {
+    "my.module.name": "1.0"
+  }
+}
+```
+
+`extra`
+
+: Un mapa arbitrario de metadatos adicionales que se almacenarán con el evento.
+
+```json
+{
+  "extra": {
+    "my_key": 1,
+    "some_other_value": "foo bar"
+  }
+}
+```
+
+`fingerprint`
+
+: Una lista de cadenas que se utiliza para determinar la desduplicación de este evento.
+
+```json
+{
+  "fingerprint": ["myrpc", "POST", "/foo.bar"]
+}
+```
+
+```json
+{
+  "huella": ["{{ predeterminado }}", "http://example.com/my.url"]
+}
+```
+
+Para obtener información sobre cómo modificar la agrupación, consulta [Personalizar la agrupación con Fingerprints](https://docs.sentry.io/data-management/event-grouping/).
+
+`errors`
+
+: Una lista de errores al capturar o gestionar este evento. Esto proporciona metadatos
+sobre la captura y el procesamiento del evento en sí, no sobre el error o la
+transacción que el evento representa.
+
+Esta lista la completa principalmente Sentry al recibir y procesar el
+evento. Solo se recomienda a los SDK agregar entradas aquí si existen condiciones
+graves que Sentry no pueda detectar inspeccionando el resto de la carga útil.
+
+Los errores deben contener un campo obligatorio `type`, que puede ser uno de los tipos
+declarados en el modelo [EventError] de Sentry. Si no hay ninguna variante de tipo aplicable,
+considera [abrir un issue] para sugerir la incorporación.
+
+Aparte de los tipos, cualquier atributo es válido. Existen convenciones para la
+semántica de atributos de error comunes, si se incluyen:
+
+* `name`: Una cadena que indica la ruta al campo de la carga útil que causa o
+  presenta el error. Por ejemplo, `modules[0].name`.
+* `value`: El valor original de un campo que causa o presenta el error.
+
+```json
+{
+  "errors": [
+    {
+      "type": "unknown_error",
+      "path": "/var/logs/errors.log.1",
+      "details": "No se pudo leer el adjunto"
+    }
+  ]
+}
+```
+
+[eventerror]: https://github.com/getsentry/sentry/blob/master/src/sentry/models/eventerror.py
+
+[abrir un informe]: https://github.com/getsentry/sentry/issues/new/choose
+
+<div id="size-limits">
+  ## Límites de tamaño
+</div>
+
+La recopilación de eventos impone límites al tamaño de los eventos.
+Consulta [Límites de tamaño del sobre](/es/sdk/data-model/envelopes/#size-limits) para más información.
+
+<div id="core-interfaces">
+  ## Interfaces principales
+</div>
+
+Todos los valores de la carga útil del evento que no sean atributos básicos son
+interfaces de datos. La clave es el nombre corto canónico de la interfaz y el valor son
+los datos que espera la interfaz (generalmente un diccionario).
+
+En su mayor parte, las interfaces son una parte en evolución de Sentry. Al igual que con
+los atributos, se espera que los SDK asuman que se agregarán más interfaces en
+cualquier momento en el futuro.
+
+Las interfaces de datos principales son:
+
+* [Interfaz de excepciones](exception/)
+* [Interfaz de mensajes](message/)
+* [Interfaz de traza de pila](stacktrace/)
+* [Interfaz de plantillas](template/)
+
+<div id="scope-interfaces">
+  ## Interfaces de Scope
+</div>
+
+* [Interfaz de Breadcrumbs](breadcrumbs/)
+* [Interfaz de usuario](user/)
+* [Interfaz de solicitud](request/)
+* [Interfaz de contextos](contexts/)
+* [Interfaz de threads](threads/)
+
+<div id="other-interfaces">
+  ## Otras interfaces
+</div>
+
+* [Interfaz de Debug Meta](debugmeta/)
+* [Interfaz de SDK](sdk/)

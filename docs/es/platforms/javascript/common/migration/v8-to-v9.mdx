@@ -1,0 +1,665 @@
+---
+title: Migrar de 8.x a 9.x
+sidebar_order: 8900
+description: "Aprende a migrar del Sentry JavaScript SDK 8.x a 9.x"
+notSupported:
+  - javascript.capacitor
+  - javascript.cordova
+  - javascript.electron
+  - javascript.tanstackstart-react
+---
+
+<PlatformSection supported={["javascript"]}>
+<Alert title="¿Usas un framework?" level="info">
+
+Asegúrate de seleccionar tu framework en el menú desplegable de la esquina superior izquierda de la página.
+
+</Alert>
+</PlatformSection>
+
+La versión 9 del Sentry JavaScript SDK introduce principalmente una depuración de la API y cambios en la compatibilidad de versiones.
+
+Esta actualización incluye cambios de comportamiento que no serán detectados por comprobadores de tipos, linters o tests, por lo que recomendamos leer detenidamente toda la guía de migración en lugar de depender de herramientas automáticas.
+
+La versión 9 del SDK es compatible con Sentry autohospedado a partir de la versión 24.4.2 (sin cambios respecto a v8).
+Las versiones anteriores pueden seguir funcionando, pero quizá no admitan todas las funcionalidades.
+
+<div id="version-support-changes">
+  ## Cambios en la compatibilidad de versiones:
+</div>
+
+La versión 9 del SDK de Sentry introduce nuevos rangos de compatibilidad para entornos de ejecución y frameworks.
+
+<div id="general-runtime-support-changes">
+  ### Cambios generales en la compatibilidad del tiempo de ejecución
+</div>
+
+<div id="minimum-compatible-ecmascript-version">
+  #### Versión mínima compatible de ECMAScript
+</div>
+
+Todo el código JavaScript en los paquetes del SDK de Sentry ahora puede incluir características de ECMAScript 2020.
+Esto incluye características como Nullish Coalescing (`??`), Optional Chaining (`?.`), `String.matchAll()`, operadores de asignación lógica (`&&=`, `||=`, `??=`) y `Promise.allSettled()`.
+
+Si observas fallos debido a la sintaxis o a las características mencionadas arriba, puede indicar que tu entorno de ejecución actual no admite ES2020.
+Si tu entorno no admite ES2020, recomendamos transpilar el SDK con Babel u herramientas similares.
+
+<PlatformCategorySection supported={['server']}>
+
+<div id="nodejs">
+  #### Node.js
+</div>
+
+La versión mínima de Node.js compatible es **18.0.0** (lanzada el 19 de abril de 2022), excepto para los SDK únicamente ESM (`@sentry/astro`, `@sentry/nuxt`, `@sentry/sveltekit`), que requieren la versión **18.19.1** de Node.js (lanzada el 14 de febrero de 2024) o superior.
+
+</PlatformCategorySection >
+
+<PlatformCategorySection supported={['browser']}>
+
+<div id="browsers">
+  #### Navegadores
+</div>
+
+Dado que el código del SDK ahora incluye características de ES2020, la lista mínima de navegadores compatibles es la siguiente:
+
+- Chrome 80 (lanzado el 5 de febrero de 2020)
+- Edge 80 (lanzado el 7 de febrero de 2020)
+- Safari 14, iOS Safari 14.4 (lanzado el 16 de septiembre de 2020)
+- Firefox 74 (lanzado el 10 de marzo de 2020)
+- Opera 67 (lanzado el 12 de marzo de 2020)
+- Samsung Internet 13.0 (lanzado el 20 de noviembre de 2020)
+
+Si necesitas compatibilidad con navegadores más antiguos, recomendamos transpilar tu código con SWC, Babel o herramientas similares.
+
+</PlatformCategorySection >
+
+<PlatformSection supported={["javascript.deno"]}>
+
+<div id="deno">
+  #### Deno
+</div>
+
+La versión mínima de Deno compatible ahora es **2.0.0**.
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.remix"]}>
+
+<div id="framework">
+  ### Framework
+</div>
+
+- La versión `1.x` de Remix ya no es compatible.
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.deno"]}>
+
+<div id="framework">
+  ### Framework
+</div>
+
+- SvelteKit versión 1.x ya no es compatible.
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.ember"]}>
+
+<div id="framework">
+  ### Framework
+</div>
+
+- Ember.js versión `3.x` y anteriores ya no es compatible (la versión mínima compatible es `4.x`).
+
+</PlatformSection>
+
+<div id="typescript-version-policy">
+  ### Política de versiones de TypeScript
+</div>
+
+De cara a la v2 del SDK de OpenTelemetry, la versión mínima requerida de TypeScript pasa a ser la `5.0.4`.
+
+Además, al igual que el SDK de OpenTelemetry, el SDK de JavaScript de Sentry seguirá la [política de soporte de versiones de DefinitelyTyped](https://github.com/DefinitelyTyped/DefinitelyTyped#support-window), que establece un periodo de soporte de 2 años para cualquier versión publicada de TypeScript.
+
+Las versiones antiguas de TypeScript _pueden_ seguir siendo compatibles, pero no se garantiza.
+
+<PlatformCategorySection supported={['server']}>
+
+<div id="packages">
+  ### Paquetes
+</div>
+
+- Las versiones de Prisma `5.x` y anteriores ya no son compatibles (la versión mínima compatible es `6.x`).
+
+</PlatformCategorySection >
+
+<PlatformSection supported={["javascript.react"]}>
+
+<div id="packages">
+  ### Paquetes
+</div>
+
+- Las versiones de TanStack Router `1.63.0` y anteriores ya no son compatibles (aplicable al usar `tanstackRouterBrowserTracingIntegration`).
+
+</PlatformSection>
+
+<div id="behavior-changes">
+  ## Cambios de comportamiento
+</div>
+
+Los cambios descritos en esta sección explican de qué manera el SDK puede comportarse de forma diferente después de actualizar:
+
+- Ya no es posible descartar spans en el hook `beforeSendSpan`.
+  Esto significa que ya no puedes devolver `null` desde el hook `beforeSendSpan`.
+  Este hook está pensado para agregar datos adicionales a los spans o eliminar atributos no deseados (por ejemplo, para eliminar PII).
+  Para controlar qué spans se registran, recomendamos configurar <PlatformLink to="/configuration/integrations/">integrations</PlatformLink> en su lugar.
+
+- El hook `beforeSendSpan` ahora recibe el span raíz, así como los spans hijos.
+  Recomendamos revisar tu `beforeSendSpan` para tener en cuenta este cambio.
+
+- Se eliminó la propiedad `request` del argumento `samplingContext` pasado a las opciones `tracesSampler` y `profilesSampler`.
+  En su lugar se puede usar `samplingContext.normalizedRequest`.
+  Ten en cuenta que el tipo de `normalizedRequest` difiere del de `request`.
+
+- Cambió el comportamiento de `startSpan` si pasas un `scope` personalizado:
+  Mientras que en la v8 el scope pasado se activaba directamente, en la v9 el scope se clona. Este cambio de comportamiento no se aplica a `@sentry/node`, donde el scope ya se clonaba.
+  Este cambio se hizo para garantizar que el span solo permanezca activo dentro del callback y para alinear el comportamiento entre `@sentry/node` y todos los demás SDK.
+  Como resultado, la jerarquía de spans debería ser más precisa.
+  Sin embargo, modificar el scope (por ejemplo, establecer tags) dentro del callback de `startSpan` ahora se comporta de forma un poco diferente.
+
+  ```javascript
+  startSpan({ name: "example", scope: customScope }, () => {
+    // Esta etiqueta solo permanecerá dentro del callback.
+    getCurrentScope().setTag("tag-a", "a");
+
+    // Establece la etiqueta directamente en customScope, además,
+    // si quieres que la etiqueta persista fuera del callback.
+    customScope.setTag("tag-a", "a");
+  });
+  ```
+
+- Pasar `undefined` como valor de la opción `tracesSampleRate` ahora se tratará igual que si el atributo no estuviera definido en absoluto.
+  En versiones anteriores, se comprobaba si existía la propiedad `tracesSampleRate` en las opciones del SDK para decidir si se debían propagar datos de traza para tracing.
+  En consecuencia, esto a veces hacía que el SDK propagara decisiones de muestreo negativas cuando se pasaba `tracesSampleRate: undefined`.
+  Ya no es el caso y las decisiones de muestreo se delegarán a los SDK downstream para el tracing distribuido.
+  Esto es más una corrección de error que un cambio rompedor; sin embargo, dependiendo de la configuración de tus SDK, puede observarse un aumento en las trazas muestreadas.
+
+- Si usas la integración opcional `captureConsoleIntegration` y estableces `attachStacktrace: true` en tu llamada a `Sentry.init`, los mensajes de consola ya no se marcarán como no manejados (`handled: false`), sino como manejados (`handled: true`).
+  Si quieres seguir enviándolos como no manejados, configura la opción `handled` al agregar la integración:
+
+  ```javascript
+  Sentry.init({
+    integrations: [Sentry.captureConsoleIntegration({ handled: false })],
+    attachStacktrace: true,
+  });
+  ```
+
+<PlatformCategorySection supported={['browser']}>
+
+- El SDK ya no indica por defecto al backend de Sentry que infiera automáticamente direcciones IP.
+  Dependiendo de la versión del backend de Sentry (self-hosted), esto puede provocar que las direcciones IP dejen de mostrarse en Sentry y que los eventos se agrupen como "anonymous users".
+  En el momento de escribir esto, la solución SaaS de Sentry seguirá infiriendo direcciones IP, pero esto cambiará en un futuro cercano.
+  Establece `sendDefaultPii: true` en `Sentry.init()` para indicar al backend de Sentry que siempre infiera direcciones IP.
+
+</PlatformCategorySection>
+
+<PlatformCategorySection supported={['server']}>
+<PlatformSection notSupported={["javascript.deno", "javascript.bun", "javascript.cloudflare", "javascript.wasm"]}>
+
+- El hook `tracesSampler` ya no se llamará para _cada_ span.
+  Sin embargo, los spans raíz pueden recibir datos de trazas de otro servicio, por ejemplo, al usar trazas distribuidas.
+
+- La integración `requestDataIntegration` ya no establecerá automáticamente el usuario desde `request.user` cuando se use `express`.
+  A partir de la v9, tendrás que llamar manualmente a `Sentry.setUser()`, por ejemplo, en un middleware, para establecer el usuario en los eventos de Sentry.
+
+- `processThreadBreadcrumbIntegration` se renombró a `childProcessIntegration`.
+
+- El valor `name` de `childProcessIntegration` (antes `processThreadBreadcrumbIntegration`) cambió de `"ProcessAndThreadBreadcrumbs"` a `"ChildProcess"`.
+  Cualquier lógica de filtrado para integraciones registradas debe actualizarse para reflejar el cambio de nombre.
+
+- El valor `name` de `vercelAIIntegration` cambió de `"vercelAI"` a `"VercelAI"` (con mayúscula).
+  Cualquier lógica de filtrado para integraciones registradas debe actualizarse para reflejar el cambio de nombre.
+
+- La integración de Prisma ya no es compatible con Prisma v5 y admite Prisma v6 de forma predeterminada. Conforme a Prisma v6, la opción del generador de cliente `previewFeatures = ["tracing"]` en tu Prisma Schema ya no es necesaria para usar trazas con la integración de Prisma.
+
+  Para la instrumentación de rendimiento usando otras versiones de Prisma o versiones anteriores:
+
+  1. Instala el paquete `@prisma/instrumentation` con la versión deseada.
+  1. Pasa una instancia de `new PrismaInstrumentation()`, exportada desde `@prisma/instrumentation`, a la opción `prismaInstrumentation` de esta integración:
+
+     ```js
+     import { PrismaInstrumentation } from "@prisma/instrumentation";
+     Sentry.init({
+       integrations: [
+         prismaIntegration({
+           // Sobrescribe la instrumentación predeterminada que usa Sentry
+           prismaInstrumentation: new PrismaInstrumentation(),
+         }),
+       ],
+     });
+     ```
+
+     La instancia de instrumentación proporcionada sobrescribirá la instancia predeterminada que usaría la integración, mientras que `prismaIntegration` seguirá garantizando la compatibilidad de datos entre las distintas versiones de Prisma.
+
+  1. Según tu versión de Prisma (anterior a la versión 6), agrega `previewFeatures = ["tracing"]` al bloque del generador del cliente de tu Prisma Schema:
+
+     ```
+     generator client {
+       provider = "prisma-client-js"
+       previewFeatures = ["tracing"]
+     }
+     ```
+
+- Cuando se configure `skipOpenTelemetrySetup: true`, `httpIntegration({ spans: false })` se aplicará de forma predeterminada.
+  Ya no tienes que especificarlo manualmente.
+  Con este cambio, no se emitirán spans una vez que se configure `skipOpenTelemetrySetup: true`, sin necesidad de ninguna otra configuración.
+
+</PlatformSection >
+</PlatformCategorySection>
+
+<PlatformSection supported={["javascript.nextjs", "javascript.nuxt", "javascript.sveltekit", "javascript.astro", "javascript.solidstart"]}>
+
+- Los SDK ya no transforman los valores proporcionados por el usuario para la generación de source maps en configuraciones de build (como la configuración de Vite, la de Rollup o `next.config.js`).
+
+  Si los source maps están deshabilitados explícitamente, el SDK no los habilitará. Si están habilitados explícitamente, el SDK no cambiará cómo se emiten. Sin embargo, el SDK tampoco eliminará los source maps después de subirlos. Si la generación de source maps no está configurada, el SDK la activará y los eliminará después de la subida.
+
+  Para personalizar qué archivos se eliminan después de la subida, define el arreglo `filesToDeleteAfterUpload` con globs.
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.nextjs", "javascript.react", "javascript.gatsby", "javascript.remix"]}>
+
+- El campo `componentStack` en el componente `ErrorBoundary` ahora está tipado como `string` en lugar de `string | null | undefined` para los métodos del ciclo de vida `onError` y `onReset`. Esto se ajusta mejor al comportamiento real de React, que siempre devuelve un `string` cuando hay una pila de componentes disponible.
+
+  En el método del ciclo de vida `onUnmount`, el campo `componentStack` ahora está tipado como `string | null`. `componentStack` es `null` cuando no se ha lanzado ningún error en el momento del desmontaje.
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.nextjs"]}>
+
+- De forma predeterminada, los mapas de origen del lado del cliente ahora se eliminarán automáticamente después de cargarse en Sentry durante la compilación.
+  Puedes desactivar este comportamiento estableciendo explícitamente `sourcemaps.deleteSourcemapsAfterUpload` en `false` en tu configuración de Sentry.
+
+- El SDK de Sentry para Next.js ya no usará el Build ID de Next.js como identificador de respaldo para las versiones (releases).
+  El SDK seguirá intentando leer variables de entorno específicas del proveedor de CI y el SHA actual de git para determinar automáticamente un nombre de versión (release).
+  Si ves que ya no se crean versiones en Sentry, se recomienda proporcionar manualmente un nombre de versión a `withSentryConfig` mediante la opción `release.name`.
+
+  Este comportamiento cambió porque el Build ID de Next.js no es determinista, lo que hace que los artefactos de compilación tampoco lo sean, ya que el nombre de la versión se inyecta en los bundles del cliente.
+
+- Los mapas de origen ahora se habilitan automáticamente tanto para compilaciones del cliente como del servidor, a menos que se deshabiliten explícitamente mediante `sourcemaps.disable`.
+  Las compilaciones del cliente usan `hidden-source-map`, mientras que las del servidor usan `source-map` como su `devtool` de webpack, a menos que ya se haya asignado algún valor distinto de `false` o `undefined`.
+
+- La propiedad `sentry` en el objeto de configuración de Next.js se ha descontinuado oficialmente.
+  Pasa las opciones directamente a `withSentryConfig`.
+
+</PlatformSection>
+
+<div id="package-removals">
+  ## Eliminación de paquetes
+</div>
+
+El paquete `@sentry/utils` dejará de publicarse.
+
+El paquete `@sentry/types` seguirá publicándose; sin embargo, está en desuso y su API no se ampliará.
+No se incluirá en futuras versiones principales.
+
+Todas las exportaciones y APIs de `@sentry/utils` y `@sentry/types` (excepto las que esta guía de migración indica explícitamente que se eliminarán) se han trasladado al paquete `@sentry/core`.
+
+<div id="removed-apis">
+  ## APIs eliminadas
+</div>
+
+Los cambios descritos en esta sección detallan APIs en desuso que ahora se han eliminado.
+
+- **La API de métricas se ha eliminado del SDK.**
+
+  La beta de métricas de Sentry ha finalizado y la API de métricas se ha eliminado del SDK. Obtén más información en la [documentación del centro de ayuda](https://sentry.zendesk.com/hc/en-us/articles/26369339769883-Metrics-Beta-Ended-on-October-7th) de Sentry.
+
+- Se ha eliminado la propiedad `transactionContext` del argumento `samplingContext` pasado a las opciones `tracesSampler` y `profilesSampler`.
+  Todos los atributos del objeto están disponibles en el nivel superior de `samplingContext`:
+
+  ```javascript {diff}
+  Sentry.init({
+    // Custom traces sampler
+    tracesSampler: samplingContext => {
+  -   if (samplingContext.transactionContext.name === '/health-check') {
+  +   if (samplingContext.name === '/health-check') {
+        return 0;
+      } else {
+        return 0.5;
+      }
+    },
+
+    // Custom profiles sampler
+    profilesSampler: samplingContext => {
+  -   if (samplingContext.transactionContext.name === '/health-check') {
+  +   if (samplingContext.name === '/health-check') {
+        return 0;
+      } else {
+        return 0.5;
+      }
+    },
+  })
+  ```
+
+- Se eliminó la opción `enableTracing`.
+  En su lugar, configura `tracesSampleRate: 1` o `tracesSampleRate: 0`.
+
+- Se eliminó la opción `autoSessionTracking`.
+
+  Para habilitar el seguimiento de sesiones, asegúrate de que, en entornos de navegador, se agregue `browserSessionIntegration`, o que en entornos de servidor se agregue `httpIntegration` (ambas se agregan de forma predeterminada).
+
+  Para deshabilitar el seguimiento de sesiones, elimina `browserSessionIntegration` en entornos de navegador o, en entornos de servidor, configura `httpIntegration` con la opción `trackIncomingRequestsAsSessions` establecida en `false`.
+  Además, en entornos Node.js, se creaba automáticamente una sesión para cada proceso de Node cuando `autoSessionTracking` se configuraba en `true`. Este comportamiento ha sido reemplazado por `processSessionIntegration`, que se configura de forma predeterminada.
+
+- Se han eliminado las APIs `getCurrentHub()`, `Hub` y `getCurrentHubShim()`. Estaban en soporte de compatibilidad desde el lanzamiento de la v8 y ahora se han eliminado por completo del SDK.
+
+- Se ha eliminado el método `addOpenTelemetryInstrumentation`. Usa la opción `openTelemetryInstrumentations` en `Sentry.init()` o en tu cliente personalizado de Sentry.
+
+  ```js
+  import * as Sentry from "@sentry/node";
+
+  // before
+  Sentry.addOpenTelemetryInstrumentation(new GenericPoolInstrumentation());
+
+  // after
+  Sentry.init({
+    openTelemetryInstrumentations: [new GenericPoolInstrumentation()],
+  });
+  ```
+
+- Se ha eliminado `debugIntegration`. Para registrar eventos salientes, usa <PlatformLink to="/configuration/options/#hooks">Hook Options</PlatformLink> (`beforeSend`, `beforeSendTransaction`, ...).
+
+- Se ha eliminado `sessionTimingIntegration`. Para capturar la duración de las sesiones junto con los eventos, usa <PlatformLink to="/enriching-events/context/">Context</PlatformLink> (`Sentry.setContext()`).
+
+<PlatformCategorySection supported={['server']}>
+<PlatformSection notSupported={["javascript.deno", "javascript.bun", "javascript.cloudflare", "javascript.wasm"]}>
+
+- Se eliminó el método `addOpenTelemetryInstrumentation`.
+  Usa la opción `openTelemetryInstrumentations` en `Sentry.init()` o en tu cliente personalizado de Sentry.
+
+- `registerEsmLoaderHooks` ahora solo acepta `true | false | undefined`.
+  El SDK envolverá de forma predeterminada los módulos que se usan como parte de la instrumentación de OpenTelemetry.
+
+- Se eliminó `nestIntegration`.
+  Usa el SDK de NestJS (`@sentry/nestjs`) en su lugar.
+
+- Se eliminó `setupNestErrorHandler`.
+  Usa el SDK de NestJS (`@sentry/nestjs`) en su lugar.
+
+</PlatformSection>
+</PlatformCategorySection>
+
+<PlatformCategorySection supported={['browser']}>
+
+- Se ha eliminado el método `captureUserFeedback`.
+  Usa el método `captureFeedback` en su lugar y actualiza el campo `comments` a `message`.
+
+</PlatformCategorySection>
+
+<PlatformSection supported={["javascript.nextjs"]}>
+
+- Se eliminó la opción `hideSourceMaps` sin reemplazos.
+  El SDK emite sourcemaps ocultos de forma predeterminada.
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.solidstart"]}>
+
+- El plugin `sentrySolidStartVite` ya no se exporta. En su lugar, envuelve la configuración de SolidStart con `withSentry` y
+  proporciona las opciones de Sentry como segundo parámetro.
+
+  ```typescript
+  // app.config.ts
+  import { defineConfig } from "@solidjs/start/config";
+  import { withSentry } from "@sentry/solidstart";
+
+  export default defineConfig(
+    withSentry(
+      {
+        /* Configuración de SolidStart */
+      },
+      {
+        /* Configuración de Sentry en tiempo de compilación (como project y org) */
+      }
+    )
+  );
+  ```
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.nestjs"]}>
+
+- Se eliminó el decorador `@WithSentry`.
+  Usa el decorador `@SentryExceptionCaptured` como reemplazo directo.
+
+- Se eliminó `SentryService`.
+
+  - Si usas `@sentry/nestjs`, puedes eliminar con seguridad cualquier referencia a `SentryService`.
+  - Si usas otro paquete, migra a `@sentry/nestjs` y elimina `SentryService` después.
+
+- Se eliminó `SentryTracingInterceptor`.
+
+  - Si usas `@sentry/nestjs`, puedes eliminar con seguridad cualquier referencia a `SentryTracingInterceptor`.
+  - Si usas otro paquete, migra a `@sentry/nestjs` y elimina `SentryTracingInterceptor` después.
+
+- Se eliminó `SentryGlobalGenericFilter`.
+  Usa `SentryGlobalFilter` como reemplazo directo.
+
+- Se eliminó `SentryGlobalGraphQLFilter`.
+  Usa `SentryGlobalFilter` como reemplazo directo.
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.react"]}>
+
+- Se eliminó el método `wrapUseRoutes`.
+  Según la versión de React Router que uses, utiliza los métodos `wrapUseRoutesV6` o `wrapUseRoutesV7`.
+
+- Se eliminó el método `wrapCreateBrowserRouter`.
+  Según la versión de React Router que uses, utiliza los métodos `wrapCreateBrowserRouterV6` o `wrapCreateBrowserRouterV7`.
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.vue"]}>
+
+- Las opciones `tracingOptions`, `trackComponents`, `timeout`, `hooks` se han eliminado en todas partes salvo en la opción `tracingOptions` de `vueIntegration()`.
+
+  Ahora estas opciones deben configurarse así:
+
+  ```js
+  import * as Sentry from "@sentry/vue";
+
+  Sentry.init({
+    integrations: [
+      Sentry.vueIntegration({
+        tracingOptions: {
+          trackComponents: true,
+          timeout: 1000,
+          hooks: ["mount", "update", "unmount"],
+        },
+      }),
+    ],
+  });
+  ```
+
+- Se eliminó la opción `logErrors` en `vueIntegration`. El manejador de errores de Sentry para Vue siempre propagará el error a un manejador de errores definido por el usuario o volverá a lanzar el error (lo que registrará el error sin modificarlo).
+
+- La opción `stateTransformer` en `createSentryPiniaPlugin()` ahora recibe el estado completo de todas las stores como parámetro.
+  Las claves de nivel superior del objeto de estado son los IDs de las stores.
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.nuxt"]}>
+
+- La opción `tracingOptions` en `Sentry.init()` se eliminó en favor de pasar `vueIntegration()` a `Sentry.init({ integrations: [...] })` y configurar `tracingOptions` allí.
+
+- La opción `stateTransformer` en `piniaIntegration` ahora recibe el estado completo de todas las stores como parámetro.
+  Las claves de nivel superior del objeto de estado son los IDs de las stores.
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.nuxt", "javascript.vue"]}>
+
+- Cuando el seguimiento de componentes está habilitado, ya no se crean spans de "update" de forma predeterminada.
+
+  Agrega un elemento `"update"` a la opción `tracingOptions.hooks` mediante `vueIntegration()` para restaurar este comportamiento.
+
+  ```ts
+  Sentry.init({
+    integrations: [
+      Sentry.vueIntegration({
+        tracingOptions: {
+          trackComponents: true,
+          hooks: [
+            "mount",
+            "update", // agrega esta línea para volver a habilitar los spans de update
+            "unmount",
+          ],
+        },
+      }),
+    ],
+  });
+  ```
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.remix"]}>
+
+- Se eliminó la opción `autoInstrumentRemix`.
+  El SDK ahora siempre se comporta como si la opción estuviera establecida en `true`.
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.sveltekit"]}>
+
+- La opción `fetchProxyScriptNonce` en `sentryHandle()` se eliminó por razones de seguridad.
+  Si antes usabas esta opción en tu política CSP, especifica un <PlatformLink to="/manual-setup/#configure-csp-for-client-side-fetch-instrumentation">hash de script</PlatformLink> en tu configuración de CSP o <PlatformLink to="/manual-setup/#disable-client-side-fetch-proxy-script">desactiva</PlatformLink> por completo la inyección del script.
+
+</PlatformSection>
+
+<div id="build-changes">
+  ## Cambios de compilación
+</div>
+
+- El código CJS del SDK ahora solo incluye declaraciones de compatibilidad CJS/ESM en los módulos que tienen exportaciones predeterminadas:
+
+  ```js
+  Object.defineProperty(exports, "__esModule", { value: true });
+  ```
+
+  Cuéntanos si esto te causa problemas en tu configuración abriendo un issue en GitHub.
+
+- `@sentry/deno` ya no se publica en el registro de `deno.land`, así que tendrás que importar el SDK desde npm:
+
+  ```javascript
+  import * as Sentry from "npm:@sentry/deno";
+
+  Sentry.init({
+    dsn: "__DSN__",
+    // ...
+  });
+  ```
+
+<div id="type-changes">
+  ## Cambios en los tipos
+</div>
+
+- Los usos de `Scope` ahora siempre esperan instancias de `Scope`.
+
+- Los usos de `Client` ahora siempre esperan instancias de `BaseClient`.
+  La clase abstracta `Client` se eliminó.
+  Las clases de cliente ahora deben extender de `BaseClient`.
+
+Estos cambios no deberían afectar a la mayoría de los usuarios, a menos que se apoyaran en pasar objetos con una forma similar a métodos internos.
+
+En la v8, las interfaces se exportaron desde `@sentry/types`, mientras que las implementaciones se exportaron desde otros paquetes.
+
+<div id="other-changes">
+  ## Otros cambios
+</div>
+
+Es poco probable que los siguientes cambios afecten a los usuarios del SDK. Se incluyen aquí solo por completitud y para alertar a los usuarios que puedan depender de comportamientos internos.
+
+<div id="removals-in-sentrycore">
+  ### Eliminaciones en `@sentry/core`
+</div>
+
+- Ahora se requiere un campo `sampleRand` en `PropagationContext`. Esto es relevante si usabas `scope.setPropagationContext(...)`.
+
+- Se eliminó la constante `DEFAULT_USER_INCLUDES`. No hay reemplazo.
+
+- Se eliminó la exportación `BAGGAGE_HEADER_NAME`. En su lugar, usa directamente la cadena `"baggage"`.
+
+- Se eliminó el método `extractRequestData`. Extrae manualmente los datos relevantes de los objetos de la solicitud.
+
+- Se eliminó el método `addRequestDataToEvent`. Usa `httpRequestToRequestData` y coloca el objeto resultante directamente en `event.request`.
+
+- Se eliminó el método `addNormalizedRequestDataToEvent`. Usa `httpRequestToRequestData` y coloca el objeto resultante directamente en `event.request`.
+
+- Se eliminó el método `generatePropagationContext()`.
+  Usa `generateTraceId()` directamente.
+
+- Se eliminó el campo `spanId` en `propagationContext`.
+  Se reemplazó por el campo **opcional** `propagationSpanId`, con la misma semántica, pero que solo se define cuando una unidad de ejecución debe asociarse con un ID de span concreto.
+
+- Se eliminó el método `initSessionFlusher` en `ServerRuntimeClient` sin reemplazo.
+  Cualquier mecanismo que cree sesiones se vaciará por sí mismo.
+
+- Se eliminó el tipo `IntegrationClass`.
+  En su lugar, usa `Integration` o `IntegrationFn`.
+
+- Se eliminaron las siguientes exportaciones sin reemplazo:
+
+  - `getNumberOfUrlSegments`
+  - `validSeverityLevels`
+  - `makeFifoCache`
+  - `arrayify`
+  - `flatten`
+  - `urlEncode`
+  - `getDomElement`
+  - `memoBuilder`
+  - `extractPathForTransaction`
+  - `_browserPerformanceTimeOriginMode`
+  - `addTracingHeadersToFetchRequest`
+  - `SessionFlusher`
+
+- Se eliminaron los siguientes tipos sin reemplazo:
+
+  - `Request`
+    `RequestEventData`
+  - `TransactionNamingScheme`
+  - `RequestDataIntegrationOptions`
+  - `SessionFlusherLike`
+  - `RequestSession`
+  - `RequestSessionStatus`
+
+<PlatformCategorySection supported={['server']}>
+<PlatformSection notSupported={["javascript.deno", "javascript.bun", "javascript.cloudflare", "javascript.wasm"]}>
+
+<div id="removals-in-sentryopentelemetry">
+  ### Eliminaciones en `@sentry/opentelemetry`
+</div>
+
+- Se eliminó `getPropagationContextFromSpan` sin reemplazo.
+
+- Se eliminó `generateSpanContextForPropagationContext` sin reemplazo.
+
+</PlatformSection>
+</PlatformCategorySection>
+
+- Ahora `client._prepareEvent()` requiere pasar `currentScope` e `isolationScope` como argumentos.
+
+- `client.recordDroppedEvent()` ya no acepta un `event` como tercer argumento.
+  El evento ya no se usaba desde hace tiempo; en su lugar, puedes (opcionalmente) pasar un recuento de eventos descartados como tercer argumento.
+
+<div id="version-support-timeline">
+  ## Cronograma de compatibilidad de versiones
+</div>
+
+Los cronogramas de compatibilidad de versiones resultan estresantes para quienes usan el SDK, así que no definiremos uno.
+En su lugar, aplicaremos correcciones de errores y nuevas funciones a versiones anteriores mientras haya demanda.
+
+Además, asumimos la responsabilidad por cualquier problema de seguridad; si se detectan vulnerabilidades, en casi todos los casos las incorporaremos mediante backport.
+Ten en cuenta que las decisiones de backport se toman caso por caso.
+Si necesitas una corrección o una función en una versión anterior del SDK, comunícate a través de un Issue en GitHub.

@@ -2,6 +2,8 @@ import {DoubleArrowLeftIcon, DoubleArrowRightIcon} from '@radix-ui/react-icons';
 
 import {PaginationNavNode} from 'sentry-docs/types/paginationNavNode';
 
+import { useMessages } from 'gt-next';
+
 export function PaginationNav({
   node,
   title,
@@ -9,6 +11,7 @@ export function PaginationNav({
   node: PaginationNavNode;
   title: 'Previous' | 'Next';
 }) {
+  const m = useMessages();
   return (
     <a href={`/${node.path}`} className="no-underline">
       <div
@@ -24,7 +27,7 @@ export function PaginationNav({
         >
           {title === 'Previous' && <DoubleArrowLeftIcon />}
 
-          {node.title}
+          {m(node.title)}
 
           {title === 'Next' && <DoubleArrowRightIcon />}
         </div>

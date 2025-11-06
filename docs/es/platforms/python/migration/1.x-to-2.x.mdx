@@ -1,0 +1,197 @@
+---
+title: Migrar de 1.x a 2.x
+sidebar_order: 8998
+description: "Aprende a migrar de sentry-python 1.x a 2.x"
+---
+
+Esta guía describe los patrones comunes al migrar a la versión 2.x del SDK de `sentry-python`.
+
+Aunque la API de nivel superior se mantiene en gran medida, hay varias funcionalidades en desuso y cambios incompatibles en `2.0`. Esta guía reúne los cambios principales que afectarán a la mayoría de las personas usuarias y las actualizaciones correspondientes que deberán realizar para migrar. Para ver la lista completa de cambios, consulta la [guía de migración detallada en el repositorio](https://github.com/getsentry/sentry-python/blob/master/MIGRATION_GUIDE.md).
+
+<div id="python-version-support">
+  ## Compatibilidad de versiones de Python
+</div>
+
+El SDK de Sentry para Python `2.0` ahora solo es compatible con Python 3.6 y superiores. Si usas Python 2.7 o 3.5 o anteriores, deberás quedarte en la versión `1.x`.
+
+<div id="configuration-options">
+  ## Opciones de configuración
+</div>
+
+Las opciones `profiles_sample_rate` y `profiler_mode` ya no son experimentales y se pueden usar directamente. Configurarlas mediante `_experiments` está obsoleto y se eliminará en el futuro.
+
+Las opciones `with_locals` y `request_bodies`, ahora obsoletas, se han eliminado en favor de sus nuevas equivalentes: `include_local_variables` y `max_request_body_size`, respectivamente.
+
+**Estos son los posibles cambios que debes aplicar a tu init**:
+
+```python diff
+import sentry_sdk
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+
+    # Sustituir with_locals
+-   with_locals=False,
++   include_local_variables=False,
+
+    # Sustituir request_bodies
+-   request_bodies="always",
++   max_request_body_size="always",
+
+    # Sustituir _experiments["profiles_sample_rate"]
+    # Sustituir _experiments["profiler_mode"]
+-   _experiments={
+-       "profiles_sample_rate": 1.0,
+-       "profiler_mode": "thread",
+-   },
++   profiles_sample_rate=1.0,
++   profiler_mode="thread",
+)
+```
+
+La firma de la función de devolución de llamada experimental de Sentry Metrics configurada con `before_emit_metric` cambió de `before_emit_callback(key, tags)` a `before_emit_callback(key, value, unit, tags)`.
+
+<div id="api">
+  ## API
+</div>
+
+La función de la API `last_event_id()` se eliminó en la versión 2.0.0, pero se reintrodujo a petición del público en la 2.2.0. El último ID de evento lo devuelven `capture_event()`, `capture_exception()` y `capture_message()` en todas las versiones del SDK.
+
+<div id="custom-instrumentation">
+  ## Instrumentación personalizada
+</div>
+
+Las API basadas en hub, así como algunas API basadas en scope (como `configure_scope()` y `push_scope()`), ahora están obsoletas como consecuencia de la [revisión](/es/platforms/python/enriching-events/scopes/) de la forma en que el SDK guarda y propaga los datos internamente. En su lugar, el SDK 2.0 introduce el concepto de scope global, de aislamiento y actual. En resumen:
+
+* El **scope global** contiene datos que no cambian mientras tu aplicación está en ejecución (por ejemplo, la versión actual).
+* El **scope de aislamiento** acompaña una unidad básica de tu programa, como un ciclo de solicitud-respuesta o una tarea en una cola de tareas, y contiene los datos relacionados con ella. En la mayoría de los casos, el ciclo de vida de un scope de aislamiento se corresponde con el ciclo de vida de una transacción.
+* El **scope actual** abarca una parte más pequeña del código, a menudo algo que está siendo rastreado por un único span.
+
+El SDK se encargará de decidir qué datos pertenecen a cada scope siempre que utilices la API de nivel superior. Por ejemplo, puedes usar `sentry_sdk.set_tag()` y dejar que el SDK gestione los datos por ti, en lugar de configurarlos manualmente con `scope.set_tag()`.
+
+Las API antiguas seguirán funcionando en la versión 2.0, pero recomendamos migrar a sus nuevas alternativas lo antes posible, ya que se eliminarán en la próxima versión principal.
+
+<div id="activating-a-custom-hub">
+  ### Activar un hub personalizado
+</div>
+
+Si usabas un hub personalizado para aislar datos de eventos, te recomendamos usar un ámbito de aislamiento personalizado en su lugar. Para activarlo, debes pasar explícitamente el ámbito de aislamiento a `use_isolation_scope`, que crea un gestor de contexto que activa dicho ámbito. Aquí tienes un ejemplo de cómo adaptar tu código para que funcione:
+
+```python diff
+  import sentry_sdk
++ import sentry_sdk.scope
+
+- with my_hub:
++ with sentry_sdk.scope.use_isolation_scope(my_isolation_scope):
+      sentry_sdk.capture_message("Estoy aislado")
+```
+
+<div id="cloning-a-hub">
+  ### Clonar un Hub
+</div>
+
+Si anteriormente clonaste un hub pasando un hub al constructor de `Hub`, ahora deberías bifurcar un ámbito de aislamiento llamando al método `fork()` del ámbito, así:
+
+```python diff
+- import sentry_sdk
+
+- my_cloned_hub = sentry_sdk.Hub(my_hub)
++ my_cloned_isolation_scope = my_isolation_scope.fork()
+```
+
+Puedes seguir las instrucciones de la sección anterior para activar el ámbito de aislamiento clonado.
+
+<div id="activating-current-hub-clone">
+  ### Activación del clon del Hub actual
+</div>
+
+Si antes utilizabas `with sentry_sdk.Hub(sentry_sdk.Hub.current)` para clonar el Hub actual y activar el clon, ahora debes usar `with sentry_sdk.isolation_scope()`, así:
+
+```python diff
+  import sentry_sdk
+
+- with sentry_sdk.Hub(sentry_sdk.Hub.current) as hub:
++ with sentry_sdk.isolation_scope() as scope:
+      sentry_sdk.capture_message("¡Estoy aislado!")
+```
+
+`sentry_sdk.isolation_scope` es un administrador de contexto que crea un nuevo ámbito de aislamiento al bifurcar el ámbito de aislamiento actual. El ámbito bifurcado se activa mientras dure el administrador de contexto, proporcionando dentro de este un nivel de aislamiento similar al del enfoque anterior basado en `Hub`.
+
+Ten en cuenta que usar `sentry_sdk.isolation_scope()` equivale a `sentry_sdk.scope.use_isolation_scope(sentry_sdk.get_isolation_scope().fork())`.
+
+<div id="scope-configuring">
+  ### Configuración del scope
+</div>
+
+En el caso de `configure_scope()`, deberás modificar el scope de aislamiento
+o el scope actual, según si el cambio que estás haciendo en el scope
+debe afectar a toda la transacción (un ciclo solicitud-respuesta, una ejecución de
+una tarea, etc.) o solo a una parte específica del código.
+
+Si quieres que tu cambio de scope afecte a una unidad de código más pequeña, como un span, usa el scope actual.
+
+```python diff
+- with sentry_sdk.configure_scope() as scope:
+-     # haz algo con el scope
++ scope = sentry_sdk.get_current_scope()
++ # haz algo con el scope
+```
+
+Si quieres que el cambio de alcance afecte a toda la transacción, usa el ámbito de aislamiento.
+
+```python diff
+- with sentry_sdk.configure_scope() as scope:
+-     # hacer algo con el scope
++ scope = sentry_sdk.get_isolation_scope()
++ # hacer algo con el scope
+```
+
+Además, ya no necesitas usar `configure_scope` para modificar una transacción. En su lugar, simplemente obtén el scope actual para modificarla. Aquí tienes una guía sobre cómo cambiar tu código para que funcione:
+
+```python diff
+transaction = sentry_sdk.transaction(...)
+
+# más adelante durante la ejecución del código:
+
+- with sentry_sdk.configure_scope() as scope:
+-     scope.set_transaction_name("new-transaction-name")
+
++ scope = sentry_sdk.get_current_scope()
++ scope.set_transaction_name("new-transaction-name")
+```
+
+<div id="scope-pushing">
+  ### Propagación de alcance
+</div>
+
+La propagación de alcance equivale a crear (bifurcar) un scope en `2.0`. Puedes bifurcar el scope actual o el de aislamiento, según cuánto tiempo deba estar activo el nuevo scope. Si debe abarcar toda la transacción, bifurca el scope de aislamiento; de lo contrario, bifurca el scope actual.
+
+Si solo quieres aplicar algo a una parte más pequeña y localizada del código, bifurca el scope actual con `new_scope()`:
+
+```python diff
+- with sentry_sdk.push_scope() as scope:
+-     # hacer algo
++ with sentry_sdk.new_scope() as scope:
++     # hacer algo
+```
+
+Si vas a abarcar todo un ciclo de solicitud-respuesta o la ejecución completa de una tarea, crea un fork del ámbito de aislamiento:
+
+```python diff
+- with sentry_sdk.push_scope() as scope:
+-     # hacer algo
++ with sentry_sdk.isolation_scope() as scope:
++     # hacer algo
+```
+
+<div id="self-hosted">
+  ## Autohospedado
+</div>
+
+Sentry Python `2.0` ahora solo es compatible con Sentry autohospedado `v20.6.0` y posteriores, ya que el SDK ahora envía todos los eventos al endpoint de la API `/envelope`. Los usuarios de Sentry autohospedado deben actualizar su instancia autohospedada a una versión compatible. No se requiere ninguna acción para los usuarios de SaaS ni para los usuarios autohospedados que ya ejecutan una versión compatible de Sentry.
+
+<div id="transport">
+  ## Transporte
+</div>
+
+Si usas un transporte personalizado, `sentry_sdk.transport.Transport.capture_event` está en desuso. Usa `sentry_sdk.transport.Transport.capture_envelope` en su lugar. Además, ahora todos los transportes personalizados deben implementarse como subclases de `sentry_sdk.transport.Transport`, ya que las funciones de transporte están en desuso.

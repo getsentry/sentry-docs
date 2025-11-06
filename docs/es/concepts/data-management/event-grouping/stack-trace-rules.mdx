@@ -1,0 +1,308 @@
+---
+title: "Reglas de rastreo de pila"
+sidebar_order: 30
+description: "Aprende a usar reglas de rastreo de pila para agrupar eventos entrantes según criterios de coincidencia."
+---
+
+<Include name="only-error-issues-note.mdx" />
+
+Las reglas de rastreo de pila mejoran el seguimiento de incidencias al garantizar un agrupamiento preciso y una mejor clasificación de los marcos de pila como de la app o del sistema. Esto ayuda a enfocarse en el código relevante, reduce el ruido y minimiza los falsos positivos. Al adaptar las reglas a tu proyecto, puedes agilizar la depuración y mantener la coherencia entre equipos o múltiples aplicaciones.
+
+Cuando configuras reglas de rastreo de pila (antes conocidas como *grouping enhancements*) para el agrupamiento en Sentry, estas influyen en los datos que se introducen en el algoritmo de agrupación. Estas reglas se pueden configurar por proyecto en **Project Settings &gt; Issue Grouping &gt; Stack Trace Rules**.
+
+Ten en cuenta lo siguiente sobre las reglas de rastreo de pila:
+
+* Cada regla se escribe en una sola línea.
+* Las reglas constan de una o más expresiones de coincidencia seguidas de una o más acciones que se activan cuando todas las expresiones coinciden.
+* Las reglas se aplican secuencialmente, de arriba hacia abajo, en todos los marcos de la pila.
+
+Además, las reglas de rastreo de pila que usan los siguientes criterios y acciones también se pueden aplicar a perfiles entrantes para mejorar la clasificación de marcos (por ejemplo, app vs sistema).
+
+Criterios permitidos:
+
+* `stack.abs_path`
+  * `stack.module`
+  * `stack.function`
+  * `stack.package`
+
+Acciones permitidas:
+
+* `+app`
+  * `-app`
+
+La sintaxis de las reglas de rastreo de pila es similar a:
+
+```bash {tabTitle: Enhancement Rules}
+nombre-comparador:expresión otro-comparador:expresión ... acción1 acción2 ...
+```
+
+Si quieres negar la coincidencia, antepone a la expresión un signo de exclamación (`!`). Si una línea comienza con una almohadilla (`#`), se ignora y se considera un comentario.
+
+A continuación tienes un ejemplo práctico de cómo queda:
+
+```bash {tabTitle: Enhancement Rules}
+# marcar todas las funciones en el espacio de nombres std como externas a la app
+family:native stack.function:std::*       -app
+
+# marcar todo el código en node modules como externo a la app
+stack.abs_path:**/node_modules/**         -app
+
+# eliminar todo el código javascript generado de toda agrupación
+stack.abs_path:**/generated/**.js         -group
+```
+
+<div id="matchers">
+  ## Matchers
+</div>
+
+Se pueden definir varios matchers en una línea. Están disponibles los siguientes matchers:
+
+<DefinitionList>
+  ### `family`
+
+  Coincide con la familia de plataforma general, que actualmente incluye `javascript`, `native` y `other`. Separa las reglas con comas para aplicarlas a varias plataformas.
+
+  ```bash {tabTitle:Match multiple}
+  family:javascript,native stack.abs_path:**/generated/**  -group
+  ```
+
+  ```bash {tabTitle:Match only JavaScript}
+  family:javascript stack.abs_path:**/generated/**  -group
+  ```
+
+  ```bash {tabTitle:Match only native}
+  family:native stack.abs_path:**/generated/**  -group
+  ```
+
+  ### `stack.abs_path`
+
+  alias: `path`
+
+  Este matcher no distingue mayúsculas de minúsculas y usa el comportamiento de globs de Unix sobre una ruta en un stack trace. Los separadores de ruta se normalizan a `/`. Como regla especial, si el nombre de archivo es relativo, aun así coincide con `**/`.
+
+  ```bash {tabTitle:Enhancement Rules}
+  # coincide con todos los archivos bajo `project` con extensión `.c`
+  stack.abs_path:**/project/**.c +app
+
+  # coincide con vendor/foo sin subcarpetas
+  stack.abs_path:**/vendor/foo/*.c -app
+
+  # coincide con `foo.gen.c` y también con `foo/bar.gen.c`.
+  stack.abs_path:**/*.gen.c -group
+  ```
+
+  ### `stack.module`
+
+  alias: `module`
+
+  Module es similar a `path`, pero coincide con el `module`. No se usa para Native, pero sí para JavaScript, Python y plataformas similares. Las coincidencias distinguen mayúsculas y minúsculas, y el globbing normal está disponible. Ten en cuenta que los módulos no son paquetes, lo cual puede resultar confuso en entornos Native.
+
+  ### `stack.function`
+
+  alias: `function`
+
+  Coincide con una función en un stack trace y distingue mayúsculas y minúsculas con globbing normal.
+
+  ```bash {tabTitle:Enhancement Rules}
+  stack.function:myproject_* +app
+  stack.function:malloc      -group
+  ```
+
+  ### `stack.package`
+
+  alias: `package`
+
+  Coincide con un paquete en un stack trace. El paquete es el contenedor que incluye una función o un módulo. Puede ser un `.jar`, un `.dylib` o similar. Se aplican las mismas reglas de coincidencia que para `path`. Por ejemplo, suele ser una ruta absoluta.
+
+  ```bash {tabTitle:Enhancement Rules}
+  stack.package:**/libcurl.dylib -group
+  ```
+
+  ### `app`
+
+  Coincide con el estado actual del indicador in-app de un frame del stack trace. `yes` significa que el frame es in-app, `no` significa que no lo es.
+
+  ### `category`
+
+  Coincide con una [categoría integrada](#built-in-categories) o una categoría de frame definida por el usuario.
+  Consulta [acciones de variables](#variable-actions) para ver cómo establecer una categoría.
+
+  ```bash {tabTitle:Category Match}
+  category:telemetry -group
+  ```
+
+  #### Categorías integradas
+
+  La categorización de frames se usa mucho en nuestro algoritmo de agrupación más reciente. Puedes hacer coincidir una variedad de categorías, entre ellas:
+
+  * `system` - bibliotecas del sistema detectadas
+  * `std` - bibliotecas estándar detectadas
+  * `ui` - frameworks de UI
+  * `driver` - controladores gráficos, y así sucesivamente
+  * `telemetry` - frameworks de informes de fallos y analítica
+
+  Consulta [nuestro código fuente](https://github.com/getsentry/sentry/blob/master/src/sentry/grouping/enhancer/enhancement-configs/mobile%402021-04-02.txt) para obtener la lista completa de categorías integradas.
+</DefinitionList>
+
+<div id="matching-sibling-frames">
+  ### Coincidencia de frames hermanos
+</div>
+
+Si necesitas información sobre los frames circundantes para aplicar una regla a un frame, usa la sintaxis de coincidencia caller/callee. Por ejemplo:
+
+```bash {tabTitle:Sibling matches}
+# Ignorar frames de la app si son llamados por telemetría
+[ category:telemetry ] | app:yes -group
+
+# Ignorar frames del sistema si llaman a frames de la app
+category:system | [ app:yes ] -group
+```
+
+<div id="actions">
+  ## Acciones
+</div>
+
+Hay dos tipos de **acciones**: marcar (flag) y configuración de variables.
+
+<div id="flag-actions">
+  ### Acciones de flags
+</div>
+
+Un *flag* identifica la acción que se llevará a cabo si todos los matchers coinciden y utiliza estos prefijos:
+
+* `+` establece el flag
+* `-` quita el flag
+* `^` se aplica a los frames por encima del frame coincidente (hacia el crash)
+* `v` se aplica a los frames por debajo del frame coincidente (alejándose del crash)
+
+Por ejemplo, `-group ^-group` quita el frame coincidente y todos los frames por encima de él del agrupamiento.
+
+* `app`: marca o desmarca un frame como in-app
+* `group`: añade o quita un frame del agrupamiento
+
+<div id="variable-actions">
+  ### Acciones de variables
+</div>
+
+Se puede definir un conjunto limitado de *variables* (`variable=valor`):
+
+* `max-frames`: Define la cantidad total de frames a considerar para el agrupamiento. El valor predeterminado es `0`, que significa “todos los frames”. Si se establece en `3`, solo se toman en cuenta los tres primeros frames.
+
+{/*<!--
+  - `category`: Establece una categoría personalizada para el frame.
+
+  - Las categorías personalizadas sustituyen a las [categorías predefinidas](#built-in-categories).
+  - Si varias reglas que asignan categorías coinciden con un frame, solo se mantiene la categoría definida en la regla más inferior.
+  -->*/}
+
+<div id="example">
+  ### Ejemplo
+</div>
+
+```bash {tabTitle:Enhancement Rules}
+stack.abs_path:**/node_modules/** -group
+stack.abs_path:**/app/utils/requestError.jsx -group
+stack.abs_path:**src/getsentry/src/getsentry/** +app
+
+family:native max-frames=3
+
+stack.function:fetchSavedSearches v-group
+stack.abs_path:**/app/views/**.jsx stack.function:fetchData ^-group
+
+family:native stack.function:SpawnThread v-app -app
+family:native stack.function:_NSRaiseError ^-group -app
+family:native stack.function:std::* -app
+family:native stack.function:core::* -app
+```
+
+<div id="recommendations">
+  ## Recomendaciones
+</div>
+
+Estas recomendaciones mejorarán notablemente tu experiencia de agrupación desde el primer momento.
+
+<div id="mark-in-app-frames">
+  ### Marcar marcos en la aplicación
+</div>
+
+Para mejorar tu experiencia de forma proactiva, ayuda a Sentry a determinar qué marcos en tu rastro de pila son “en la aplicación” (parte de tu propia aplicación) y cuáles no. El SDK define las reglas predeterminadas, pero en muchos casos esto también puede mejorarse en el servidor. En particular, para lenguajes donde se requiere procesamiento del lado del servidor (por ejemplo, C nativo, C++ o JavaScript), es mejor sobrescribir esto en el servidor.
+
+Por ejemplo, lo siguiente marca como “en la aplicación” todos los marcos que están bajo un espacio de nombres específico de C++:
+
+```bash {tabTitle:Enhancement Rules}
+stack.function:myapplication::* +app
+```
+
+Consulta [cuadros in‑app para Apple](/es/platforms/apple/usage/in-app-frames) para saber cómo el SDK `sentry-cocoa` marca los cuadros como in‑app.
+
+<div id="stack-trace-rules">
+  #### Reglas de la traza de pila
+</div>
+
+Lo siguiente marca como `inApp` los frames de libdispatch que comienzan con `_dispatch_`.
+
+```bash {tabTitle:Enhancement Rules}
+stack.function:_dispatch_*  +app
+```
+
+También puedes obtener el mismo resultado marcando otros frames como &quot;not in-app&quot;. Sin embargo, en ese caso, asegúrate primero de que todos los frames estén configurados como &quot;in-app&quot; para anular los valores predeterminados:
+
+```bash {tabTitle:Enhancement Rules}
+app:no                   +app
+stack.function:std::*    -app
+stack.function:boost::*  -app
+```
+
+<Alert>
+  Primero debes forzar que todos los frames estén como in-app porque es posible que el SDK del cliente o un procesamiento previo ya haya establecido algunos valores predeterminados.
+</Alert>
+
+Si usas el SDK `sentry-cocoa`, también puedes obtener el mismo resultado marcando otros frames como `not inApp`. El siguiente ejemplo marca funciones de las clases `DataRequest` y `DownloadRequest` como `not inApp`.
+
+```bash {tabTitle:Enhancement Rules}
+stack.function:DataRequest*  -app
+stack.function:DownloadRequest*  -app
+```
+
+<div id="cut-stack-traces">
+  ### Recortar trazas de pila
+</div>
+
+En muchos casos, querrás eliminar la parte superior o inferior de la traza de pila. Por ejemplo, muchos proyectos usan una función común para generar un error. En ese caso, la infraestructura de manejo de errores aparecerá como parte de la traza de pila.
+
+Por ejemplo, si usas Rust, probablemente querrás eliminar algunos fotogramas relacionados con el manejo de panic:
+
+```bash {tabTitle:Enhancement Rules}
+stack.function:std::panicking::begin_panic       ^-app -app ^-group -group
+stack.function:core::panicking::begin_panic      ^-app -app ^-group -group
+```
+
+Aquí le indicamos al sistema que todos los frames desde `begin-panic` hasta la ubicación del fallo no forman parte de la aplicación (incluido el propio frame de pánico). Todos los frames por encima son, en cualquier caso, irrelevantes para el agrupamiento.
+
+Del mismo modo, también puedes eliminar la base de una traza de pila. Esto es especialmente útil si tienes diferentes bucles principales que controlan una aplicación:
+
+```bash {tabTitle:Enhancement Rules}
+stack.function:myapp::LinuxMainLoop         v-group -group
+stack.function:myapp::MacMainLoop           v-group -group
+stack.function:myapp::WinMainLoop           v-group -group
+```
+
+<div id="stack-trace-frame-limits">
+  ### Límites de frames en el stack trace
+</div>
+
+Esto no es útil para *todos* los proyectos, pero puede funcionar bien para aplicaciones grandes con muchos fallos. La estrategia predeterminada es considerar que la mayor parte del stack trace es relevante para la agrupación. Esto significa que cada stack trace diferente que lleve a una función que se bloquea hará que se cree un grupo distinto. Si no quieres eso, puedes hacer que los grupos sean mucho más grandes limitando cuántos frames deben considerarse.
+
+Por ejemplo, si alguno de los frames en el stack trace hace referencia a una biblioteca externa común, podrías indicar al sistema que solo considere los N frames superiores:
+
+```bash {tabTitle:Enhancement Rules}
+# siempre considerar solo el frame superior para todos los eventos nativos
+family:native max-frames=1
+
+# si el bug está en proprietarymodule.so, solo considerar los 2 frames superiores
+family:native stack.package:**/proprietarymodule.so  max-frames=2
+
+# estas son funciones para las que queremos considerar mucho más del stack trace
+family:native stack.function:KnownBadFunction1  max-frames=5
+family:native stack.function:KnownBadFunction2  max-frames=5
+```

@@ -1,0 +1,77 @@
+---
+title: Seguimiento de componentes
+description: "Aprende cómo el SDK de React de Sentry te permite monitorear el rendimiento de renderizado de tu aplicación y sus componentes."
+---
+
+El SDK de React de Sentry ofrece una función para monitorear el rendimiento de tus componentes de React: seguimiento de componentes. El SDK exporta un componente de orden superior `withProfiler` que anexa spans relacionados con React a la transacción activa en el scope. Esto te permite obtener una vista detallada del comportamiento de tus componentes para, por ejemplo, identificar montajes lentos o actualizaciones frecuentes, que podrían afectar el rendimiento de tu aplicación.
+
+<Alert>
+  Para configurar el seguimiento de componentes, primero debes habilitar el tracing. Para ver cómo hacerlo, consulta nuestra [documentación de tracing](/es/platforms/javascript/guides/react/tracing/).
+</Alert>
+
+En el siguiente ejemplo, se utiliza el componente de orden superior `withProfiler` para instrumentar un componente de la aplicación.
+
+```javascript
+import React from "react";
+import * as Sentry from "@sentry/react";
+
+class App extends React.Component {
+  render() {
+    return (
+      <FancyComponent>
+        <NestedComponent someProp={2} />
+        <AnotherComponent />
+      </FancyComponent>
+    );
+  }
+}
+
+export default Sentry.withProfiler(App);
+```
+
+El React Profiler actualmente genera spans con tres tipos de códigos de operación: `ui.react.mount`, `ui.react.render` y `ui.react.update`.
+
+`ui.react.mount`
+
+El span que representa cuánto tardó en montarse el componente perfilado.
+
+`ui.react.render`
+
+El span que representa cuánto tiempo estuvo el componente perfilado en una página. Este span solo se genera si el componente perfilado se monta y se desmonta mientras ocurre una transacción.
+
+`ui.react.update`
+
+El span que representa cuándo se actualizó el componente perfilado. Este span solo se genera si el componente perfilado ya se ha montado.
+
+<Alert>
+  En [React Strict Mode](https://reactjs.org/docs/strict-mode.html), ciertos métodos de los componentes se [invocan dos veces](https://reactjs.org/docs/strict-mode.html#detecting-unexpected-side-effects). Esto puede ocasionar que aparezcan spans duplicados de `ui.react.mount` en una transacción. React Strict Mode solo se ejecuta en modo de desarrollo, por lo que no tendrá impacto en tus trazas de producción.
+</Alert>
+
+<div id="profiler-options">
+  ### Opciones de Profiler
+</div>
+
+El componente de orden superior `withProfiler` ofrece varias opciones para una personalización adicional. Puedes pasarlas como segundo argumento de la función `withProfiler`.
+
+```javascript
+export default Sentry.withProfiler(App, { name: "CustomAppName" });
+```
+
+`name` (string)
+
+El nombre del componente que se está perfilando. De forma predeterminada, se toma de la propiedad `displayName` del componente o de su propiedad `name`.
+
+`includeRender` (boolean)
+
+Si el Profiler debe crear un span `ui.react.render`. Es true de forma predeterminada.
+
+`includeUpdates` (boolean)
+
+Si el Profiler debe crear spans `react.update`. Es true de forma predeterminada. Recomendamos establecer esta prop en false para componentes que se vuelven a renderizar con frecuencia (por ejemplo, campos de texto), ya que los spans resultantes pueden generar mucho ruido.
+
+<div id="next-steps">
+  ## Próximos pasos:
+</div>
+
+* [Volver a **Primeros pasos**](../../)
+* [Volver a **Características de React**](../)

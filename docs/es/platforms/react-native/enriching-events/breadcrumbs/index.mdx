@@ -1,0 +1,52 @@
+---
+title: Migas de pan
+description: "Conoce cómo Sentry crea un rastro de eventos (migas de pan) que ocurrieron antes de un problema."
+---
+
+Sentry utiliza *migas de pan* para crear un rastro de eventos que ocurrieron antes de un problema. Estos eventos son similares a los registros tradicionales, pero pueden capturar datos estructurados más ricos.
+
+Esta página ofrece una descripción general del registro manual de migas de pan y su personalización. Obtén más información sobre lo que se muestra en la página **Detalles del problema** y cómo filtrar las migas de pan para resolver incidencias rápidamente en [Uso de migas de pan](/es/product/error-monitoring/breadcrumbs).
+
+<Alert title="Obtén información sobre el uso del SDK">
+  Los desarrolladores que quieran modificar la interfaz de migas de pan pueden obtener más información en nuestra [documentación para desarrolladores sobre la interfaz de migas de pan](https://develop.sentry.dev/sdk/data-model/event-payloads/breadcrumbs/).
+</Alert>
+
+<div id="manual-breadcrumbs">
+  ## Migas manuales
+</div>
+
+Puedes añadir migas manualmente cuando ocurra algo interesante. Por ejemplo, podrías registrar una miga manualmente si el usuario se autentica o si se produce otro cambio de estado.
+
+Primero, necesitas importar el SDK, como de costumbre:
+
+<PlatformContent includePath="enriching-events/import" />
+
+Registra una miga manualmente:
+
+<PlatformContent includePath="enriching-events/breadcrumbs/breadcrumbs-example" />
+
+Las claves de miga disponibles son `type`, `category`, `message`, `level`, `timestamp` (que muchos SDK establecerán automáticamente por ti) y `data`, que es donde puedes incluir cualquier información adicional que quieras que la miga contenga. Usar claves distintas de estas seis no generará un error, pero hará que los datos se descarten cuando Sentry procese el evento.
+
+Puedes elegir entre los siguientes niveles de registro de migas: &quot;fatal&quot;, &quot;critical&quot;, &quot;error&quot;, &quot;warning&quot;, &quot;log&quot;, &quot;info&quot; y &quot;debug&quot;.
+
+<div id="automatic-breadcrumbs">
+  ## Migas de navegación automáticas
+</div>
+
+<PlatformContent includePath="enriching-events/breadcrumbs/automatic-breadcrumbs" />
+
+<div id="customize-breadcrumbs">
+  ## Personalizar breadcrumbs
+</div>
+
+Los SDK te permiten personalizar los breadcrumbs mediante el hook <PlatformIdentifier name="before-breadcrumb" />.
+
+Primero, tendrás que importar el SDK, como de costumbre:
+
+<PlatformContent includePath="enriching-events/import" />
+
+Este hook recibe un breadcrumb ya armado y, en algunos SDK, una hint opcional. La función puede modificar el breadcrumb o decidir descartarlo por completo devolviendo `null`:
+
+<PlatformContent includePath="enriching-events/breadcrumbs/before-breadcrumb" />
+
+Para obtener información sobre lo que se puede hacer con la hint, consulta <PlatformLink to="/configuration/filtering/#using-hints">Filtrado de eventos</PlatformLink>.

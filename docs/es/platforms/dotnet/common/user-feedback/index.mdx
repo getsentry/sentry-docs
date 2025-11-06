@@ -1,0 +1,49 @@
+---
+title: Configurar la retroalimentación de usuarios
+sidebar_title: Retroalimentación de usuarios
+description: "Obtén más información sobre cómo recopilar la retroalimentación de los usuarios cuando ocurre un evento. Sentry asocia la retroalimentación con el evento original, brindándote información adicional sobre los problemas."
+sidebar_order: 6000
+---
+
+Cuando un usuario encuentra un error, Sentry permite recopilar retroalimentación adicional. Puedes recopilarla según el método que admita el SDK.
+
+<div id="use-the-net-sdk">
+  ## Usa el SDK de .NET
+</div>
+
+<Alert>
+  Los comentarios de usuario para **[ASP.NET](/es/platforms/dotnet/guides/aspnet/user-feedback/#integration)** o **[ASP.NET Core](/es/platforms/dotnet/guides/aspnetcore/user-feedback/#integration)** incluyen integraciones específicas para esos SDK.
+</Alert>
+
+Puedes crear un formulario en tu framework preferido para recopilar la información del usuario y usar la API del SDK para enviarla a Sentry. También puedes usar el widget, como se describe a continuación. Si prefieres una alternativa al widget o no tienes un frontend web, puedes usar esta API:
+
+```csharp {tabTitle:C#}
+var eventId = SentrySdk.CaptureMessage("Un evento que recibirá comentarios de usuarios.");
+
+// El evento asociado es opcional
+SentrySdk.CaptureFeedback("Se ha roto.", "user@example.com", "La persona usuaria", associatedEventId: eventId);
+```
+
+<Alert type="info">
+  Ten en cuenta que Sentry rechazará y descartará cualquier evento de comentarios cuyo correo electrónico no sea válido. Para evitarlo, el SDK de Sentry para .NET elimina las direcciones de correo electrónico no válidas antes de enviar los comentarios. Lo ideal es validar la dirección de correo electrónico antes de llamar a esta API.
+</Alert>
+
+<div id="crash-report-modal">
+  ## Modal de informe de fallos
+</div>
+
+Nuestro modal de informe de fallos, integrable y basado en JavaScript, es útil cuando normalmente mostrarías una página de error simple (la clásica `500.html`) en tu sitio web.
+
+Para recopilar comentarios, el modal de informe de fallos solicita y reúne el nombre del usuario, su dirección de correo electrónico y una descripción de lo ocurrido. Cuando se proporcionan comentarios, Sentry los asocia con el evento original, ofreciéndote información adicional sobre los problemas.
+
+La captura de pantalla a continuación muestra un ejemplo del modal de informe de fallos, aunque el tuyo puede variar según tu personalización:
+
+<Include name="common-imgs/user_feedback_widget" />
+
+<div id="integration">
+  ### Integración
+</div>
+
+El modal se autentica con tu DSN público y luego transmite el ID del evento que se generó en tu backend.
+
+<PlatformContent includePath="user-feedback/example-widget/" />

@@ -1,0 +1,72 @@
+---
+title: Banners
+noindex: true
+sidebar_order: 80
+---
+
+Puedes añadir banners arbitrarios en la parte superior de una página agregando una entrada al arreglo `BANNERS` en
+el archivo `banner/index.tsx`. El arreglo `BANNERS` es un array de objetos con las siguientes propiedades:
+
+```typescript {filename:banner/index.tsx}
+type BannerType = {
+  /** Esta es una matriz de strings o RegExp para pasar a new RegExp() */
+  appearsOn: (string | RegExp)[];
+  /** La etiqueta del botón de llamada a la acción */
+  linkText: string;
+  /** La URL de destino del botón de llamada a la acción */
+  linkURL: string;
+  /** El texto principal del banner */
+  text: string;
+  /** Cadena de fecha ISO opcional que ocultará el banner después de esta fecha sin necesidad de volver a compilar */
+  expiresOn?: string;
+};
+```
+
+Puedes añadir tantos banners como quieras. Si necesitas desactivar todos los banners, simplemente elimínalos del arreglo.
+
+Cada banner se evalúa en orden y se mostrará el primero que coincida.
+
+Ejemplos:
+
+```typescript {filename:banner/index.tsx}
+// ...
+// appearsOn = [];              // Esto está desactivado
+// appearsOn = ['^/$'];         // Esto está activado en la página de inicio
+// appearsOn = ['^/welcome/'];  // Esto está activado en la página "/welcome"
+// ...
+
+const BANNERS = [
+  // Este tendrá prioridad sobre el último banner del array
+  // (que coincide con todas las páginas /platforms), porque coincide primero.
+  {
+    appearsOn: ['^/platforms/javascript/guides/astro/'],
+    text: 'Este banner aparece en la guía de Astro',
+    linkURL: 'https://sentry.io/thought-leadership',
+    linkText: 'Obtener webinarly',
+  },
+
+  // Este coincidirá con la página /welcome y todas las páginas /for
+  {
+    appearsOn: ['^/$', '^/platforms/'],
+    text: 'Este banner aparece en la página de inicio y en todas las páginas /platforms',
+    linkURL: 'https://sentry.io/thought-leadership',
+    linkText: 'Obtener webinarly',
+  },
+];
+
+```
+
+Opcionalmente, puedes añadir la propiedad `expiresOn` a un banner para ocultarlo después de una fecha determinada sin necesidad de volver a compilar ni de eliminarlo manualmente.
+La cadena de fecha ISO debe tener el formato `YYYY-MM-DDTHH:MM:SSZ` para analizarse correctamente y considerar las zonas horarias.
+
+```typescript {filename:banner/index.tsx}
+const BANNERS = [
+  {
+    appearsOn: ['^/$'],
+    text: 'Este banner de la página principal desaparecerá después del 2024-12-06',
+    linkURL: 'https://sentry.io/party',
+    linkText: 'Confirmar asistencia',
+    expiresOn: '2024-12-06T00:00:00Z',
+  },
+];
+```

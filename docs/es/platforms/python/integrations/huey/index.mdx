@@ -1,0 +1,63 @@
+---
+title: huey
+description: "Aprende a importar y usar la integración de huey."
+---
+
+La integración de huey agrega compatibilidad con la
+[biblioteca de colas de tareas huey](https://huey.readthedocs.io/en/latest/).
+
+<div id="install">
+  ## Instalar
+</div>
+
+Para empezar, instala `sentry-sdk` desde PyPI.
+
+```bash {tabTitle:pip}
+pip install "sentry-sdk"
+```
+
+```bash {tabTitle:uv}
+uv add "sentry-sdk"
+```
+
+
+<div id="configure">
+  ## Configuración
+</div>
+
+La integración con Huey se habilita automáticamente si tienes instalado el paquete `huey`.
+
+<PlatformContent includePath="getting-started-config" />
+
+<div id="verify">
+  ## Verifica
+</div>
+
+```python
+from huey import SqliteHuey
+
+sentry_sdk.init(...)  # igual que antes
+
+huey = SqliteHuey(filename='demo.db')
+
+@huey.task()
+def add(a, b):
+    return a + b
+
+with sentry_sdk.start_transaction(name="prueba_huey"):
+    result = add(1, 2)
+```
+
+Al ejecutar esto se creará una nueva transacción llamada `testing_huey` en la
+sección Performance de [sentry.io](https://sentry.io). Es posible que
+la transacción tarde unos momentos en aparecer.
+
+
+<div id="supported-versions">
+  ## Versiones compatibles
+</div>
+
+- huey: 2.0+
+- Python: 3.6+
+
+<Include name="python-use-older-sdk-for-legacy-support.mdx" />

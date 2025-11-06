@@ -1,0 +1,129 @@
+---
+title: Compatibilidad nativa
+description: "Aprende cómo el SDK de Unity gestiona la compatibilidad nativa."
+sidebar_order: 100
+---
+
+El SDK de Sentry admite errores de C# y fallos nativos en Android, iOS, Windows, macOS y Linux. La compatibilidad está habilitada de forma predeterminada.
+Para consolas, el SDK admite errores de C#. Aunque Sentry admite fallos nativos en consolas, la compatibilidad para ello a través del SDK de Unity está en desarrollo. Ponte en contacto a través de GitHub para la plataforma que te interese: [PlayStation](https://github.com/getsentry/sentry-unity/issues/2050), [Switch](https://github.com/getsentry/sentry-unity/issues/2052) y [Xbox](https://github.com/getsentry/sentry-unity/issues/2051)
+
+<div id="mobile">
+  ## Móvil
+</div>
+
+La compatibilidad con bloqueos nativos en Android e iOS se ofrece añadiendo SDK específicos de cada plataforma a los proyectos de Xcode y Gradle generados durante la compilación.
+
+<div id="initialization-of-the-native-sdks">
+  ### Inicialización de los SDK nativos
+</div>
+
+El [SDK de iOS](/es/platforms/apple/guides/ios/) y el [SDK de Android](/es/platforms/android/) pueden inicializarse por sí mismos antes de que se inicie el motor de Unity. Esto nos permite capturar errores y fallos que ocurren dentro del propio motor.
+Hay dos tipos de inicialización:
+
+* `NativeInitializationType.Runtime`: los SDK nativos se inicializan en tiempo de ejecución junto con el SDK de C#
+* `NativeInitializationType.BuildTime`: los SDK nativos se inicializan antes de que se inicie el motor de Unity
+
+<div id="runtime-initialization-default">
+  ### Inicialización en tiempo de ejecución (predeterminada)
+</div>
+
+Con la inicialización en tiempo de ejecución, los SDK nativos se inicializan en ese momento junto con el SDK de C#. Esto permite configurar todas las opciones de forma dinámica mediante código C# durante la ejecución.
+
+<div id="android">
+  #### Android
+</div>
+
+Durante la compilación, el SDK modifica el proyecto de Gradle generado para incluir el SDK de Android, pero configura `io.sentry.auto-init` en el `AndroidManifest.xml` como `false`. Luego, el SDK de Unity inicializará el SDK de Android cuando se inicialice.
+
+<div id="ios">
+  #### iOS
+</div>
+
+Durante la compilación, el SDK modifica el proyecto de Xcode generado para incluir el SDK de iOS, pero no modificará el archivo `main.m` ni escribirá las opciones en un archivo. Luego, el SDK de Unity inicializará el SDK de iOS cuando se inicialice.
+
+<div id="build-time-initialization">
+  ### Inicialización en tiempo de compilación
+</div>
+
+Cuando se usa la inicialización en tiempo de compilación, los SDK nativos se configuran durante la compilación y se inicializan antes de que se inicie el motor de Unity. Esto significa que las opciones quedan incorporadas en los proyectos generados y no se pueden modificar en tiempo de ejecución mediante código C#. Los cambios en propiedades como `Release` y `Environment` no se aplicarán a los eventos generados por los SDK nativos.
+
+<div id="android">
+  #### Android
+</div>
+
+El SDK modifica el proyecto de Gradle generado para incluir el SDK de Android. En el momento de la compilación, también escribirá las opciones en el `AndroidManifest.xml`. Estas opciones no se pueden cambiar en tiempo de ejecución. Los cambios en las opciones dentro del callback de configuración no afectarán al SDK de Android.
+
+<div id="ios">
+  #### iOS
+</div>
+
+El SDK modifica el proyecto de Xcode generado para incluir el SDK de iOS. Agrega el código de inicialización a `main.m` y genera las opciones proporcionadas por la ventana de configuración del editor en `SentryOptions.m`. El SDK también copia `SentryNativeBridge`, que permite que la capa de C# se comunique con el SDK de iOS. Esto significa que no es necesario usar la función de [informes de errores integrada](https://docs.unity3d.com/ScriptReference/CrashReport.html) de Unity.
+
+El [SDK de iOS](/es/platforms/apple/guides/ios/) admite la captura de excepciones de Objective-C, que están deshabilitadas de forma predeterminada en el proyecto de Xcode generado. Considera habilitarlas en la pestaña “Build Settings” configurando `GCC_ENABLE_OBJC_EXCEPTIONS` en true.
+
+<div id="desktop">
+  ## Escritorio
+</div>
+
+La compatibilidad nativa se configura y habilita lo antes posible desde la capa de C#, justo después de que se inicia el motor de Unity. Esto es ligeramente diferente que en móviles, donde inyectamos código nativo de inicialización que se ejecuta antes de que arranque el motor de Unity.
+
+<div id="windows">
+  ### Windows
+</div>
+
+En Windows, el SDK de Unity incluye el [SDK nativo](/es/platforms/native/) con el backend de Crashpad. Los bloqueos nativos de Windows se capturan automáticamente mediante minidumps. Para subirlos a Sentry, el SDK copia `crashpad_handler.exe` en el directorio de salida de la compilación al final del proceso de compilación. Este ejecutable debe incluirse al distribuir tu juego.
+
+<div id="macos">
+  ### macOS
+</div>
+
+La compatibilidad nativa en macOS se basa en el [SDK de macOS](/es/platforms/apple/guides/macos/). El stackwalking se realiza dentro del proceso.
+
+<div id="linux">
+  ### Linux
+</div>
+
+En Linux, el SDK de Unity incluye el [SDK nativo](/es/platforms/native/) con el backend Breakpad. Se crea un minidump dentro del proceso y no se requiere ningún ejecutable de controlador.
+
+<div id="debug-symbols">
+  ## Símbolos de depuración
+</div>
+
+Sentry requiere [archivos de información de depuración](/es/platforms/unity/data-management/debug-files/) para simbolicar tus bloqueos. El SDK de Unity ofrece una función de carga automática para esos archivos de símbolos que depende de [sentry-cli](/es/cli/). Esto se hace de forma transparente, por lo que no es necesario ejecutar `sentry-cli` manualmente. La carga de símbolos ocurre durante el proceso de compilación de Unity en el editor. Hemos incluido los ejecutables para Windows, macOS y Linux como parte del paquete del SDK de Unity.
+
+La carga automática de símbolos de depuración está habilitada de forma predeterminada, pero requiere configuración. Ve a **Tools &gt; Sentry &gt; Editor** para ingresar el [Auth Token](https://sentry.io/orgredirect/organizations/:orgslug/settings/auth-tokens/), el Organization Slug y el Project Name. Ten en cuenta que el SDK de Unity crea un archivo en `Assets/Plugins/Sentry/SentryCliOptions.asset` para almacenar la configuración, que **no** debe hacerse público.
+
+<div id="ios-dsym">
+  ### iOS - dSYM
+</div>
+
+En la plataforma iOS, los archivos de información de depuración se llaman dSYM.
+
+Para que Sentry pueda simbolicar tus registros de fallos, necesitamos dos tipos de archivos:
+
+1. Archivos `dSYM` que la carga automática de símbolos detectará al final del proceso de compilación sin requerir acciones adicionales.
+2. Archivos `BCSymbolMap` que se crean durante el proceso de archivado.
+
+La carga automática de símbolos se encargará de los archivos `BCSymbolMap` procesándolos durante el proceso de archivado.
+
+<div id="manual-upload-using-sentry-cli">
+  ### Carga manual con sentry-cli
+</div>
+
+Si no quieres depender de la carga automática de símbolos, puedes ejecutar `sentry-cli` desde la línea de comandos. Para ello, puedes usar los ejecutables incluidos en el paquete o seguir la [documentación de sentry-cli](/es/cli/installation/) para instalarlo de forma global. Para cargar símbolos de depuración, ejecútalo con:
+
+<OrgAuthTokenNote />
+
+```bash
+sentry-cli --auth-token ___ORG_AUTH_TOKEN___ debug-files upload --org ___ORG_SLUG___ --project ___PROJECT_SLUG___ PATH_TO_SYMBOLS
+```
+
+<div id="store-minidumps-as-attachments">
+  ## Guardar minidumps como archivos adjuntos
+</div>
+
+<Include name="store-minidumps-as-attachments-intro" />
+
+<Alert>☝ Esta función es compatible con Windows, Linux y Android.</Alert>
+
+<Include name="store-minidumps-as-attachments-configuration" />

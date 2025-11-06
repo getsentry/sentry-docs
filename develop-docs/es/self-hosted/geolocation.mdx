@@ -1,0 +1,52 @@
+---
+title: Geolocalización autogestionada
+sidebar_title: Geolocalización
+sidebar_order: 50
+description: Configura la geolocalización por IP para tu instalación autogestionada de Sentry usando la base de datos GeoLite2 de MaxMind
+---
+
+Sentry puede usar la [base de datos gratuita `GeoLite2-City` de MaxMind](https://dev.maxmind.com/geoip/geoip2/geolite2/) para geolocalizar direcciones IP, proporcionando contexto adicional para eventos de error en los que se conoce la dirección IP del usuario final y para el historial de sesiones de los usuarios que inician sesión en tu instalación de Sentry. Incluimos la herramienta [`geoipupdate` de MaxMind](https://hub.docker.com/r/maxmindinc/geoipupdate) para este propósito.
+
+<Alert title="Warning" level="warning">
+  Para aprovechar la geolocalización de direcciones IP del lado del servidor, primero debes enviar direcciones IP a Sentry. <a href="https://docs.sentry.io/platforms/python/data-management/sensitive-data/#personally-identifiable-information-pii">Los SDK más recientes no lo hacen de forma predeterminada</a>.
+</Alert>
+
+Para habilitar la geolocalización de direcciones IP del lado del servidor, [regístrate para obtener una cuenta gratuita de MaxMind](https://www.maxmind.com/en/geolite2/signup) y luego indica a Sentry tus credenciales colocando tu archivo de configuración de MaxMind en `geoip/GeoIP.conf`.
+
+```
+AccountID 012345
+LicenseKey foobarbazbuz
+EditionIDs GeoLite2-City
+```
+
+Con este archivo de configuración, las ejecuciones posteriores de `install.sh` de Sentry actualizarán la base de datos de geolocalización de direcciones IP. La próxima vez que reinicies tu instancia autogestionada de Sentry (en particular, los servicios `relay` y `web`), deberías empezar a ver los datos más recientes. Así puedes confirmar que está funcionando:
+
+1. Para el servicio `relay`: **Dashboards &gt; Errors by Country** debería mostrar algo de color morado.
+
+2. Para el servicio `web`: **User Settings &gt; Security &gt; Session History** debería mostrar el código de país y la región (por ejemplo, &quot;US (CA)&quot;) debajo de las direcciones IP en la tabla.
+
+Si alguna vez necesitas actualizar manualmente la base de datos de geolocalización de direcciones IP, puedes ejecutar el siguiente comando:
+
+```bash
+./install/geoip.sh
+```
+
+
+<div id="upgrading">
+  ## Actualización
+</div>
+
+Los servicios que consumen el archivo `GeoLite2-City.mmdb` necesitan saber dónde encontrarlo. En las instalaciones nuevas esto se configura automáticamente, pero si estás actualizando tendrás que establecer manualmente lo siguiente antes de reiniciar Sentry.
+
+En `relay/config.yml` ([ejemplo](https://github.com/getsentry/self-hosted/blob/master/relay/config.example.yml)):
+
+```yaml
+procesamiento:
+  geoip_path: "/geoip/GeoLite2-City.mmdb"
+```
+
+En `sentry/sentry.conf.py` ([ejemplo](https://github.com/getsentry/self-hosted/blob/master/sentry/sentry.conf.example.py)):
+
+```py
+GEOIP_PATH_MMDB = '/geoip/GeoLite2-City.mmdb'
+```

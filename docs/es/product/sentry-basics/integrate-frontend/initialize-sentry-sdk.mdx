@@ -1,0 +1,138 @@
+---
+title: Agrega el SDK de Sentry a tu proyecto
+sidebar_order: 2
+description: Aprende a agregar el SDK de Sentry a tu código frontend.
+og_image: /og-images/product-sentry-basics-integrate-frontend-initialize-sentry-sdk.png
+---
+
+Esta sección te guía para importar la aplicación de ejemplo en tu entorno de desarrollo local, agregar el SDK de Sentry e inicializarlo.
+
+Si estás usando tu propio código, puedes omitir esta sección. En su lugar:
+
+* Selecciona tu [plataforma](/es/platforms/) y sigue su guía de **Primeros pasos** para agregar el SDK de Sentry a tu código.
+* Luego, pasa al [siguiente paso](/es/guides/integrate-frontend/generate-first-error/).
+
+<div id="1-clone-the-sample-application">
+  ## 1. Clona la aplicación de ejemplo
+</div>
+
+La aplicación de ejemplo es una aplicación básica de solo frontend que usa React y webpack.
+
+1. Haz un fork del [repositorio de la aplicación de ejemplo](https://github.com/getsentry/frontend-tutorial) en GitHub.
+
+2. Clona el repositorio bifurcado en tu entorno local:
+
+   ```bash
+   git clone git@github.com:<your_username>/frontend-tutorial.git
+   ```
+
+3. Abre el proyecto `frontend-tutorial` en tu editor de código preferido.
+
+<div id="2-add-the-sentry-react-sdk">
+  ## 2. Agrega el SDK de Sentry para React
+</div>
+
+Sentry captura datos mediante un SDK específico de la plataforma que se agrega al tiempo de ejecución de tu aplicación. Para usar el SDK, impórtalo y configúralo en tu código fuente. Este proyecto de demostración usa el [SDK de React de Sentry](https://github.com/getsentry/sentry-javascript/tree/develop/packages/react).
+
+1. Instala el SDK de Sentry para React usando NPM.
+
+   Asegúrate de estar en la carpeta del proyecto `frontend-tutorial`.
+
+   ```bash {tabTitle:npm}
+   npm install @sentry/react --save
+   ```
+
+   ```bash {tabTitle:yarn}
+   yarn add @sentry/react
+   ```
+
+   ```bash {tabTitle:pnpm}
+   pnpm add @sentry/react
+   ```
+
+2. Importa e inicializa el SDK.
+
+   Abre `src/index.js` y agrega las siguientes líneas de código debajo de la última declaración de import:
+
+   ```javascript {filename:src/index.js}
+   import * as Sentry from "@sentry/react";
+
+   Sentry.init({
+     dsn: "<your_DSN_key>",
+     integrations: [Sentry.browserTracingIntegration(), Sentry.replayIntegration()],
+
+     // Establece tracesSampleRate en 1.0 para capturar el 100 %
+     // de las transacciones para el monitoreo de rendimiento.
+     // Más información en
+     // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+     tracesSampleRate: 1.0,
+
+     // Captura Replay en el 10 % de todas las sesiones,
+     // y en el 100 % de las sesiones con un error
+     // Más información en
+     // https://docs.sentry.io/platforms/javascript/session-replay/configuration/#general-integration-configuration
+     replaysSessionSampleRate: 0.1,
+     replaysOnErrorSampleRate: 1.0,
+     ${<Include name="code-comments/javascript/trace-sample-rate" />}
+   });
+   ```
+
+   Es importante importar e inicializar el SDK lo antes posible en el ciclo de vida de tu aplicación para que Sentry pueda capturar errores durante todo el ciclo. <Include name="platforms/configuration/options/js-config-options" />
+
+3. Agrega tu clave DSN a la configuración del SDK de Sentry.
+
+   Pega el valor de la clave DSN que copiaste del proyecto creado en la [sección anterior](/es/product/sentry-basics/integrate-frontend/create-new-project/).
+
+   ```javascript {filename:src/index.js}
+   Sentry.init({
+     dsn: "<your_DSN_key>",
+     // ...
+   });
+   ```
+
+4. Guarda el archivo.
+
+Las opciones establecidas en `Sentry.init()` constituyen la configuración del SDK. La única opción de configuración obligatoria es el DSN. No obstante, el SDK admite muchas otras opciones de configuración. Obtén más información en nuestra documentación de [Configuración](/es/platforms/javascript/guides/react/configuration/).
+
+La configuración anterior habilita la monitorización de errores de Sentry, así como sus funciones de [Rendimiento](/es/platforms/javascript/guides/react/performance) (tracing) y [Reproducción de sesión](/es/platforms/javascript/guides/react/session-replay).
+
+<div id="3-build-and-run-the-sample-application">
+  ## 3. Compila y ejecuta la aplicación de ejemplo
+</div>
+
+En la carpeta del proyecto `frontend-tutorial`:
+
+1. Instala las dependencias del proyecto.
+
+   ```bash
+   npm install
+   ```
+
+2. Inicia la aplicación en modo desarrollo.
+
+   ```bash
+   npm start
+   ```
+
+   Una vez que la aplicación se inicie, verás en tu terminal un mensaje de confirmación similar a este:
+
+   ```bash
+   <i> [webpack-dev-server] Project is running at:
+   <i> [webpack-dev-server] Loopback: http://localhost:3000/
+   ...
+   webpack 5.87.0 compiled successfully in 1306 ms
+   ```
+
+   > Consejo de solución de problemas: si la aplicación no inicia debido a errores de sintaxis o por dependencias/módulos faltantes, asegúrate de usar Node 18+ e instala las dependencias de nuevo. Ejecuta `nvm use 18` y luego `npm install`.
+
+3. Abre la aplicación de ejemplo en tu navegador.
+
+   La app de ejemplo debería estar ejecutándose en [http://localhost:3000/](http://localhost:3000/) o en la URL que apareció en tu terminal en el paso anterior.
+
+   ![Interfaz de la app de ejemplo que muestra una tienda de ferretería en línea](./img/FE-tutorial-demo-app.png)
+
+<div id="next">
+  ## Siguiente
+</div>
+
+En este punto, ya tienes una aplicación de React de ejemplo en ejecución con el SDK de Sentry inicializado. Ahora, [captura tu primer error](/es/product/sentry-basics/integrate-frontend/generate-first-error/) para empezar a usar la función de supervisión de errores de Sentry.

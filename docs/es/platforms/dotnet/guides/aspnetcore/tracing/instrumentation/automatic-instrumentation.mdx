@@ -1,0 +1,93 @@
+---
+title: Instrumentación automática
+sidebar_order: 20
+description: "Descubre qué transacciones se capturan después de habilitar el tracing."
+---
+
+<Alert>
+
+Para capturar transacciones, primero debes <PlatformLink to="/tracing/">configurar el tracing</PlatformLink> si aún no lo has hecho. También deberás habilitar la <PlatformLink to="/">integración base de Sentry para ASP.NET Core</PlatformLink>.
+
+</Alert>
+
+<div id="server-integration">
+  ### Integración con el servidor
+</div>
+
+La integración de Sentry para ASP.NET Core incluye un middleware que captura automáticamente cada solicitud HTTP entrante y la convierte en una transacción.
+
+Los nombres de las transacciones siguen el patrón `<HTTP method> <Route>`; por ejemplo, una solicitud a la siguiente acción creará una transacción llamada `GET /person/{id}`:
+
+```csharp
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+
+public class HomeController : Controller
+{
+    [HttpGet("/person/{id}")]
+    public IActionResult Person(string id) { /* ... */ }
+}
+```
+
+Las transacciones creadas por esta integración se añaden automáticamente al alcance actual. Si quieres iniciar tus propios spans a partir de la transacción creada automáticamente, puedes usar el siguiente enfoque:
+
+```csharp
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+
+public class HomeController : Controller
+{
+    private readonly IHub _sentryHub;
+
+    public HomeController(IHub sentryHub) => _sentryHub = sentryHub;
+
+    [HttpGet("/person/{id}")]
+    public IActionResult Person(string id)
+    {
+        var childSpan = _sentryHub.GetSpan()?.StartChild("additional-work");
+        try
+        {
+            // Hacer el trabajo que se mide.
+
+            childSpan?.Finish(SpanStatus.Ok);
+        }
+        catch (Exception e)
+        {
+            childSpan?.Finish(SpanStatus.InternalError);
+            throw;
+        }
+    }
+}
+```
+
+
+<div id="http-client-integration">
+  ### Integración del cliente HTTP
+</div>
+
+Sentry también proporciona un filtro personalizado para el HTTP client factory, comúnmente usado en aplicaciones ASP.NET Core. Este filtro agrega un controlador de mensajes adicional que inyecta automáticamente el encabezado de traza de Sentry y realiza el seguimiento de las solicitudes HTTP salientes en spans independientes adjuntas a la transacción actual.
+
+Para habilitar esta integración, debes tener habilitado el HTTP client factory dentro de tu aplicación:
+
+```csharp
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.DependencyInjection;
+
+public class Startup
+{
+    public void ConfigureServices(IServiceCollection services)
+    {
+        /* ... */
+
+        services.AddRouting();
+
+        // Esto es necesario para la integración de cliente HTTP
+        services.AddHttpClient();
+    }
+}
+```
+
+Si ya tienes `AddHttpClient()` en tu colección de servicios (probablemente sea el caso), no tienes que hacer nada.
+
+<PlatformContent includePath="performance/automatic-instrumentation-integrations" />

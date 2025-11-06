@@ -1,0 +1,120 @@
+---
+title: Integración con Reactor
+description: "Aprende a capturar errores, migas de pan (breadcrumbs) y trazas en tus aplicaciones reactivas."
+---
+
+La integración de Sentry con [Reactor](https://projectreactor.io/) proporciona un conjunto de utilidades para usar Sentry con Reactor.
+
+Al usar estas utilidades, tus errores y trazas siempre se enriquecerán con el contexto y las migas de pan (breadcrumbs) correctos.
+Debido a cómo funciona Reactor internamente, si no utilizas esta integración, podrías encontrarte con problemas, como migas de pan no relacionadas que aparecen en los eventos enviados a Sentry dentro del contexto de Reactive Streams.
+
+Si usas Spring Boot WebFlux, solo necesitas instalar nuestro [SDK de Spring Boot](/es/platforms/java/guides/spring-boot/) y la integración con Reactor se configurará y habilitará automáticamente tras bambalinas.
+
+De lo contrario, sigue leyendo para saber cómo instalar y usar la integración de Sentry para Reactor.
+
+<div id="installation">
+  ## Instalación
+</div>
+
+Para instalar, utiliza:
+
+```groovy {tabTitle:Gradle}
+implementation 'io.sentry:sentry-reactor:{{@inject packages.version('sentry.java.reactor', '8.3.0') }}'
+```
+
+```xml {tabTitle:Maven}
+<dependency>
+    <groupId>io.sentry</groupId>
+    <artifactId>sentry-reactor</artifactId>
+    <version>{{@inject packages.version('sentry.java.reactor', '8.3.0') }}</version>
+</dependency>
+```
+
+```scala {tabTitle: SBT}
+libraryDependencies += "io.sentry" % "sentry-reactor" % "{{@inject packages.version('sentry.java.reactor', '8.3.0') }}"
+```
+
+Para otros gestores de dependencias, consulta el [repositorio central de Maven](https://search.maven.org/artifact/io.sentry/sentry-reactor).
+
+Asegúrate de que tus dependencias incluyan `io.micrometer:context-propagation` en la versión `1.0.2` o posterior y `io.projectreactor:reactor-core` en la versión `3.5.3` o posterior, ya que son necesarias para que la integración funcione.
+
+<div id="set-up">
+  ## Configuración
+</div>
+
+Activa la propagación automática del contexto:
+
+```java
+import reactor.core.publisher.Hooks;
+// ...
+Hooks.enableAutomaticContextPropagation();
+```
+
+```kotlin
+import reactor.core.publisher.Hooks
+// ...
+Hooks.enableAutomaticContextPropagation()
+```
+
+<div id="usage">
+  ## Uso
+</div>
+
+Envuelve tus objetos `Mono` y `Flux` con la función `SentryReactorUtils.withSentry` para habilitar la captura correcta de errores, breadcrumbs y trazas en el contexto de tus flujos reactivos.
+Esto ejecutará tu publisher en el contexto de *scopes actuales bifurcados*, que debería ser el comportamiento predeterminado para la mayoría de los casos de uso.
+
+Por ejemplo:
+
+```java
+import reactor.core.publisher.Mono;
+import io.sentry.Sentry;
+import io.sentry.ISpan;
+import io.sentry.ITransaction;
+import io.sentry.TransactionOptions;
+
+TransactionOptions txOptions = new TransactionOptions();
+txOptions.setBindToScope(true);
+ITransaction tx = Sentry.startTransaction("Transaction", "op", txOptions);
+ISpan child = tx.startChild("Fuera de Mono", "op")
+Sentry.captureMessage("Mensaje fuera de Mono")
+child.finish()
+String result = SentryReactorUtils.withSentry(
+  Mono.just("hola")
+    .map({ (it) ->
+      ISpan span = Sentry.getCurrentScopes().transaction.startChild("Dentro de Mono", "map");
+      Sentry.captureMessage("Mensaje dentro de Mono");
+      span.finish();
+      return it;
+    })
+).block();
+System.out.println(result);
+tx.finish();
+```
+
+```kotlin
+import reactor.core.publisher.Mono
+import io.sentry.Sentry
+import io.sentry.TransactionOptions
+
+val tx = Sentry.startTransaction("Transacción de Mono", "op", TransactionOptions().also { it.isBindToScope = true })
+val child = tx.startChild("Fuera de Mono", "op")
+Sentry.captureMessage("Mensaje fuera de Mono")
+child.finish()
+val result = SentryReactorUtils.withSentry(
+  Mono.just("hola")
+    .map { it ->
+      val span = Sentry.getCurrentScopes().transaction?.startChild("Dentro de Mono", "map")
+      Sentry.captureMessage("Mensaje dentro de Mono")
+      span?.finish()
+      it
+    }
+).block()
+println(result)
+tx.finish()
+```
+
+Para casos de uso más complejos, también puedes usar `SentryReactorUtils.withSentryForkedRoots` para bifurcar los ámbitos raíz o `SentryReactorUtils.withSentryScopes` para envolver la operación en ámbitos arbitrarios.
+
+Para obtener más información sobre los ámbitos y la bifurcación de ámbitos, consulta nuestra [documentación sobre ámbitos](/es/platforms/java/enriching-events/scopes).
+
+También puedes consultar nuestro repositorio de GitHub para ver ejemplos prácticos de cómo usar nuestra integración de Reactor con Spring WebFlux con [Spring Boot 2](https://github.com/getsentry/sentry-java/tree/main/sentry-samples/sentry-samples-spring-boot-webflux) y [Spring Boot 3](https://github.com/getsentry/sentry-java/tree/main/sentry-samples/sentry-samples-spring-boot-webflux-jakarta).

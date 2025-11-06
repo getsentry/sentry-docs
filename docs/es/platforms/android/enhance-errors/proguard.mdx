@@ -1,0 +1,29 @@
+---
+title: ProGuard y DexGuard
+sidebar_order: 100
+description: "Aprende a usar el complemento de Gradle de Sentry o sentry-cli para subir los mapeos de ProGuard/R8 y DexGuard a Sentry."
+---
+
+Si quieres ver trazas de pila desofuscadas, debes usar [ProGuard](https://www.guardsquare.com/proguard) con Sentry. Para ello, sube los archivos de mapeo de ProGuard mediante el método recomendado con nuestra [integración con Gradle](/es/platforms/android/configuration/gradle/) o manualmente con [sentry-cli](/es/cli/dif/#proguard-mapping-upload).
+
+Funciona igual en ambos casos. Se generará un UUID (aleatorio) o tendrás que generarlo y colocarlo en el `AndroidManifest.xml`. El mismo UUID debe usarse para subir los archivos de mapeo. Si se produce un bloqueo en la app, el SDK de Sentry para Android enviará el UUID junto con la traza de pila a la instancia del servidor de Sentry. Sentry desofuscará entonces la traza de pila buscando el archivo de mapeo asociado con ese mismo UUID.
+
+Si [Source Context](/es/platforms/android/enhance-errors/source-context) está habilitado, Sentry puede mostrar fragmentos de código (*source context*) alrededor de la ubicación de los frames de la pila, lo que ayuda a identificar rápidamente el código problemático.
+
+La compatibilidad con ProGuard de Guardsquare y [DexGuard](https://www.guardsquare.com/dexguard) se añadió en la versión 3.0.0 del [complemento de Gradle de Sentry para Android](/es/platforms/android/configuration/gradle/).
+
+<Alert>
+  El SDK de Android incluye reglas de ProGuard definidas automáticamente; no se necesita ninguna configuración adicional.
+</Alert>
+
+<div id="in-app-frames">
+  ## Frames en la app
+</div>
+
+Si tienes una compilación desofuscada, el SDK de Android configurará automáticamente todos los frames que provengan de la app como “in-app”, basándose en el `applicationId/packageName`. Esto no es posible en el cliente para compilaciones ofuscadas. Sin embargo, puedes definir reglas del lado del servidor para identificar los frames in‑app, por ejemplo:
+
+```bash {tabTitle:Enhancement Rules}
+stack.module:com.mycompany.** +app
+```
+
+Para más información, consulta [Reglas de StackTrace](/es/concepts/data-management/event-grouping/stack-trace-rules/#mark-in-app-frames).

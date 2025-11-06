@@ -1,0 +1,594 @@
+---
+title: Compatibilidad con OpenTelemetry
+---
+
+<Alert level="warning">
+
+Esta página está en desarrollo activo. Las especificaciones no son definitivas y pueden cambiar.
+
+"Proof is in the progress" — Drake
+
+</Alert>
+
+Este documento describe el trabajo de Sentry para integrar y ofrecer compatibilidad con [OpenTelemetry](https://opentelemetry.io/), el estándar abierto para métricas, trazas y registros. En particular, se centra en la integración entre [el producto de supervisión del rendimiento de Sentry](https://docs.sentry.io/product/insights/overview/) y [la especificación de trazas de OpenTelemetry](https://opentelemetry.io/docs/concepts/signals/traces/).
+
+<div id="background">
+  ## Antecedentes
+</div>
+
+Cuando se introdujo por primera vez el monitoreo de rendimiento de Sentry, OpenTelemetry estaba en una fase temprana. Esto nos llevó a adoptar un modelo ligeramente diferente al de OpenTelemetry; en particular, tenemos el concepto de transacciones, que OpenTelemetry no contempla. Lo hemos explicado, junto con más contexto histórico, en nuestro <Link to="/sdk/research/performance/">documento de investigación sobre monitoreo de rendimiento</Link>.
+
+<div id="approach">
+  ## Enfoque
+</div>
+
+Para transformar datos del SDK de OpenTelemetry en datos de Sentry, nos basamos en el [OpenTelemetry SpanProcessor](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/sdk.md#span-processor) y la [OpenTelemetry Propagator API](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/context/api-propagators.md).
+
+Queremos que las y los usuarios usen Sentry para la funcionalidad de muestreo, por lo que deben usar el muestreador predeterminado de OpenTelemetry y realizar el muestreo mediante las opciones `traces_sampler` y `traces_sample_rate` de Sentry.
+
+Para clasificarse como totalmente compatible con OpenTelemetry, la instrumentación de OpenTelemetry debe admitir las siguientes características:
+
+1. Vinculación de errores y transacciones mediante el contexto `trace`.
+2. Propagación de los encabezados `sentry-trace` y `baggage` (esto se realiza mediante SentryPropagator).
+3. Los ID de span/trace deben coincidir entre Sentry y OpenTelemetry.
+4. No se deben registrar en Sentry los spans que representen solicitudes a Sentry.
+
+Para habilitar la compatibilidad con OpenTelemetry en tu SDK, sigue estos pasos.
+
+<div id="step-1-implement-the-sentryspanprocessor-on-your-sdk">
+  ### Paso 1: Implementa SentrySpanProcessor en tu SDK
+</div>
+
+A continuación, hemos escrito un SpanProcessor personalizado que convertirá los spans de OpenTelemetry en spans de Sentry.
+
+Esto se basa en un par de supuestos clave.
+
+1. La propagación de Hub/Scope funciona correctamente en tu plataforma. Esto significa que el hub usado en `onStart` es el mismo hub usado en `onEnd` y que los hubs se bifurcan correctamente en contextos asíncronos.
+2. El SDK se inicializa antes de que se inicialice el SDK de OpenTelemetry.
+3. Solo habrá una transacción a la vez. Esta es una limitación del diseño actual del SDK.
+
+```ts
+import { SpanProcessor } from '@opentelemetry/sdk-trace-base';
+import { Span as OpenTelemetrySpan, trace } from '@opentelemetry/api';
+import { Span as SentrySpan } from '@sentry/tracing';
+
+const MAP = Map<SentrySpan['spanId'], SentrySpan> = new Map<SentrySpan['spanId'], SentrySpan>();
+
+class SentrySpanProcessor implements SpanProcessor {
+  constructor() {
+    Sentry.addGlobalEventProcessor(event => {
+      const otelSpan = trace.getActiveSpan();
+      if (!otelSpan) {
+        return event;
+      }
+
+      // Si el evento ya tiene configurado el contexto `trace`, usa ese.
+      event.contexts = {
+        trace: {
+          trace_id: otelSpan.spanContext().traceId,
+          span_id: otelSpan.spanContext().spanId,
+        },
+        ...event.contexts
+      };
+      return event;
+    });
+  }
+
+  onStart(otelSpan: OpenTelemetrySpan): void {
+    const hub = Sentry.getCurrentHub();
+    if (!hub) return;
+
+    const otelSpanId = otelSpan.spanContext().spanId;
+    const otelParentSpanId = otelSpan.parentSpanId;
+
+    // Otel permite tener múltiples spans no anidados al mismo tiempo
+    // así que no podemos usar hub.getSpan(), ya que no podemos confiar en que este sea el span actual
+    const sentryParentSpan = otelParentSpanId && MAP.get(otelParentSpanId);
+
+    if (sentryParentSpan) {
+      const sentryChildSpan = sentryParentSpan.startChild({
+        description: otelSpan.name,
+        instrumenter: 'otel',
+        startTimestamp: convertOtelTimeToSeconds(otelSpan.startTime),
+        spanId: otelSpanId,
+      });
+
+      MAP.set(otelSpanId, sentryChildSpan);
+    } else {
+      const traceCtx = getTraceData(otelSpan);
+      const transaction = hub.startTransaction({
+        name: otelSpan.name,
+        ...traceCtx,
+        instrumenter: 'otel',
+        startTimestamp: convertOtelTimeToSeconds(otelSpan.startTime),
+        spanId: otelSpanId,
+      });
+
+      MAP.set(otelSpanId, transaction);
+    }
+  }
+
+  onEnd(otelSpan: OpenTelemetrySpan): void {
+    const otelSpanId = otelSpan.spanContext().spanId;
+    const sentrySpan = MAP.get(otelSpanId);
+
+     // La definición de la función se explica en el Paso 2
+    if isSentryRequest(otelSpanId) {
+      // Esta es una solicitud a Sentry, así que no queremos finalizar la transacción/span (para que no se envíe a Sentry)
+      MAP.delete(otelSpanId);
+      return;
+    }
+
+    generateSentryErrorsFromOtelSpan(otelSpan);
+
+    if (sentrySpan instanceof Transaction) {
+      updateTransactionWithOtelData(sentrySpan, otelSpan);
+      finishTransactionWithContextFromOtelData(sentrySpan, otelSpan);
+    } else {
+      updateSpanWithOtelData(sentrySpan, otelSpan);
+      sentrySpan.finish(convertOtelTimeToSeconds(otelSpan.endTime));
+    }
+
+    MAP.delete(otelSpanId);
+  }
+}
+```
+
+Los usuarios deben agregar este `SentrySpanProcessor` a la lógica de inicialización de su SDK de OpenTelemetry para que esto funcione, así: Las implementaciones específicas de cada SDK pueden variar ligeramente.
+
+```ts
+import {NodeSDK} from '@opentelemetry/sdk-node';
+import {Resource} from '@opentelemetry/resources';
+import * as Sentry from '@sentry/node';
+import {SentrySpanProcessor} from '@sentry/opentelemetry-node';
+
+Sentry.init({
+  /// ...
+});
+
+const sdk = new NodeSDK({
+  resource: new Resource({
+    'service.name': 'my-service',
+    'service.version': '1.0.0',
+  }),
+  spanProcessor: new SentrySpanProcessor(),
+});
+```
+
+
+<div id="step-2-implement-the-sentrypropagator-on-your-sdk-add-sentrypropagator">
+  ### Paso 2: Implementa SentryPropagator en tu SDK Agrega SentryPropagator
+</div>
+
+`SentryPropagator` se utiliza para inyectar y extraer las cabeceras `sentry-trace` y `baggage`, de modo que la propagación de trazas y el muestreo dinámico funcionen correctamente.
+
+```ts
+import {Context, TextMapPropagator} from '@opentelemetry/api';
+import {SpanContext} from '@opentelemetry/api';
+
+export class SentryPropagator implements TextMapPropagator {
+  inject(context: Context, carrier: unknown, setter: TextMapSetter): void {
+    const spanContext = getSpanContext(context);
+    if (isSentryRequest(spanContext)) {
+      return;
+    }
+
+    const sentryTrace = generateSentryTrace(spanContext);
+    setSentryTraceHeader(carrier, sentryTrace, setter);
+
+    const baggage = generateBaggageFromContext(context);
+    setBaggageHeader(carrier, baggage, setter);
+  }
+
+  extract(context: Context, carrier: unknown, getter: TextMapGetter): Context {
+    const sentryTraceParent = extractSentryTraceFromCarrier(carrier, getter);
+    setSentryTraceInfoOnSpanContext(context, sentryTraceParent);
+
+    const dynamicSamplingContext = extractBaggageFromCarrier(carrier, getter);
+    setDynamicSamplingContextOnSpanContext(context, dynamicSamplingContext);
+
+    return context;
+  }
+}
+```
+
+
+<div id="step-3-define-issentryrequest">
+  ### Paso 3: Define `isSentryRequest`
+</div>
+
+Queremos asegurarnos de no crear spans de Sentry para las solicitudes dirigidas a Sentry.
+
+```ts
+import {Span as OtelSpan} from '@opentelemetry/sdk-trace-base';
+import {SemanticAttributes} from '@opentelemetry/semantic-conventions';
+import {getCurrentHub} from '@sentry/core';
+
+export function isSentryRequestSpan(otelSpan: OtelSpan): boolean {
+  const {attributes} = otelSpan;
+
+  const httpUrl = attributes[SemanticAttributes.HTTP_URL];
+
+  if (!httpUrl) {
+    return false;
+  }
+
+  return isSentryRequestUrl(httpUrl.toString());
+}
+
+function isSentryRequestUrl(url: string): boolean {
+  const dsn = getCurrentHub().getClient()?.getDsn();
+  return dsn ? url.includes(dsn.host) : false;
+}
+```
+
+Nota: En algunos entornos (p. ej., JavaScript), no tienes acceso a los atributos en el hook `onStart` de SpanProcessor.
+En ese caso, siempre crearemos transacciones/spans, pero nunca las cerraremos si se identifican como solicitudes de Sentry en `onEnd`.
+
+
+<div id="step-3-define-gettracedata">
+  ### Paso 3: Define `getTraceData`
+</div>
+
+```ts
+function getTraceData(otelSpan: OtelSpan): Partial<TransactionContext> {
+  const spanContext = otelSpan.spanContext();
+  const traceId = spanContext.traceId;
+  const spanId = spanContext.spanId;
+
+  const parentSpanId = otelSpan.parentSpanId;
+  return {spanId, traceId, parentSpanId};
+}
+```
+
+Si el usuario está usando el `SentryPropagator`, la información de `sentry-trace` debería adjuntarse automáticamente a los spans entrantes. Esto debería implicar que no necesitamos leer explícitamente el Header. El `SentryPropagator` también debería colocar el Dynamic Sampling Context del baggage header en el OpenTelemetry Context, que luego puede usarse en `getTraceData` para inyectar el DSC durante la creación de la transacción.
+
+
+<div id="step-4-define-updatespanwithoteldata">
+  ### Paso 4: Define `updateSpanWithOtelData`
+</div>
+
+Queremos actualizar el span y la transacción de Sentry con los datos de OpenTelemetry. Esto incluye la operación del span, la descripción y los atributos de recurso.
+
+La descripción del span de Sentry debe provenir del nombre del span de OpenTelemetry. La operación del span de Sentry debe provenir de una combinación del nombre, el tipo (kind) y los atributos del span de OpenTelemetry.
+
+Para simplificar, solo define operaciones para spans de `db` y `http`. No implementes ninguna otra lógica adicional; esto se hará en Relay en el futuro.
+
+```ts
+function updateSpanWithOtelData(sentrySpan: SentrySpan, otelSpan: OtelSpan): void {
+  const {attributes, kind} = otelSpan;
+
+  sentrySpan.setStatus(mapOtelStatus(otelSpan));
+  sentrySpan.setData('otel.kind', kind.valueOf());
+
+  Object.keys(attributes).forEach(prop => {
+    const value = attributes[prop];
+    sentrySpan.setData(prop, value);
+  });
+
+  const {op, description} = parseSpanDescription(otelSpan);
+  sentrySpan.op = op;
+  sentrySpan.description = description;
+}
+
+function updateTransactionWithOtelData(
+  transaction: Transaction,
+  otelSpan: OtelSpan
+): void {
+  transaction.setStatus(mapOtelStatus(otelSpan));
+
+  const {op, description} = parseSpanDescription(otelSpan);
+  transaction.op = op;
+  transaction.name = description;
+}
+```
+
+Puedes encontrar una implementación de referencia para analizar las descripciones de spans de OTEL [aquí](https://github.com/getsentry/sentry-javascript/blob/master/packages/opentelemetry/src/utils/parseSpanDescription.ts).
+
+
+<div id="step-5-add-opentelemetry-context">
+  ### Paso 5: Añadir contexto de OpenTelemetry
+</div>
+
+Todos los SDK deben añadir contexto del evento con la clave `otel` a los eventos generados por el SpanProcessor. Esto se detalla en <Link to="./#opentelemetry-context">nuestra especificación del Context</Link>. El OpenTelemetryContext debe generarse a partir de la información del Span de OpenTelemetry.
+
+Recomendamos hacerlo añadiendo un método `transaction.setContext()` a tu SDK.
+
+```ts
+function finishTransactionWithContextFromOtelData(
+  transaction: Transaction,
+  otelSpan: OtelSpan
+): void {
+  transaction.setContext('otel', {
+    attributes: otelSpan.attributes,
+    resource: otelSpan.resource.attributes,
+  });
+
+  transaction.finish(convertOtelTimeToSeconds(otelSpan.endTime));
+}
+```
+
+Ejemplo:
+
+```json
+{
+  "contexts": {
+    "otel": {
+      "attributes": {
+        "http.method": "GET",
+        "http.url": "https://example.com",
+        "http.status_code": 200
+      },
+      "resource": {
+        "service.name": "my-service",
+        "service.version": "1.0.0",
+        "telemetry.sdk.name": "opentelemetry-node",
+        "telemetry.sdk.version": "4.0.0"
+      }
+      // ...
+    }
+  }
+}
+```
+
+
+<div id="step-6-add-instrumenter-option-to-sentry-sdk">
+  ### Paso 6: Agregar la opción de instrumentador al SDK de Sentry
+</div>
+
+Queremos evitar instrumentar dos veces la misma biblioteca. Para lograrlo, agregaremos una opción al SDK de Sentry que desactive la instrumentación de rendimiento de Sentry (automática y manual) cuando OpenTelemetry esté habilitado. Por ahora, los usuarios tendrán que añadir manualmente esta opción al código de inicialización de su SDK, pero en el futuro podremos hacerlo automáticamente (detectando si OpenTelemetry está presente).
+
+```ts
+Sentry.init({
+  // ...
+  instrumenter: 'otel',
+});
+```
+
+Tienes dos opciones para esto:
+
+1. Agrega una salida anticipada en `Sentry.startTransaction()` y `Sentry.trace()` (un método auxiliar) si la opción `instrumenter` está establecida en `otel`. Esto puede requerir cambios en el SDK, ya que `Sentry.trace()` no forma parte de la API unificada.
+
+```ts
+class Hub implements HubInterface {
+  // ...
+  startTransaction(this: Hub, context: TransactionContext): Transaction | undefined {
+    // ...
+    if (this.instrumenter !== context.instrumenter) {
+      return;
+    }
+    // ...
+  }
+
+  // Nota: esto no forma parte de la API unificada.
+  // Se está proponiendo como parte de:
+  // https://github.com/getsentry/rfcs/issues/28
+  // ver: https://github.com/getsentry/develop/issues/720
+  trace<T>(this: Hub, context: SpanContext, callback: (span?: Span) => T): T {
+    // ...
+    if (this.instrumenter !== context.instrumenter) {
+      return callback();
+    }
+    // ...
+  }
+}
+```
+
+2. Agrega condicionales if alrededor de todos los puntos de invocación donde estés usando `Sentry.startTransaction` y `span.startChild` en el código del SDK de Sentry. Esto requiere un poco más de trabajo, pero no implica ningún cambio en el SDK para la API unificada.
+
+```ts
+if (instrumenter === 'otel') {
+  span.startChild({
+    // ...
+  });
+}
+```
+
+Tienes libertad para hacer ambas cosas, o usar otro método; el único requisito es que no dupliquemos la instrumentación.
+
+
+<div id="step-7-define-generatesentryerrorsfromotelspan">
+  ### Paso 7: Define `generateSentryErrorsFromOtelSpan`
+</div>
+
+En OpenTelemetry, los spans pueden tener [eventos de excepción](https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/exceptions/). Estos incluyen un stack trace, un mensaje y un tipo. Queremos convertirlos en errores de Sentry y anexarlos a la traza.
+
+```ts
+function generateSentryErrorsFromOtelSpan(otelSpan) {
+  otelSpan.events.forEach(event => {
+    // Convertir solo eventos de excepción a errores de Sentry.
+    if (event.name !=== 'exception') {
+      return;
+    }
+
+    const attributes = event.attributes;
+
+    const message = attributes[SemanticAttributes.EXCEPTION_MESSAGE];
+    const syntheticError = new Error(message);
+    syntheticError.stack = attributes[SemanticAttributes.EXCEPTION_STACKTRACE];
+    syntheticError.name = attributes[SemanticAttributes.EXCEPTION_TYPE];
+
+    Sentry.captureException(syntheticError, {
+      contexts: {
+        otel: {
+          attributes: otelSpan.attributes,
+          resource: otelSpan.resource.attributes,
+        },
+        trace: {
+          trace_id: otelSpan.spanContext().traceId,
+          span_id: otelSpan.spanContext().spanId,
+          parent_span_id: otelSpan.parentSpanId,
+        },
+      },
+    });
+  });
+}
+```
+
+
+<div id="span-protocol">
+  ## Protocolo de span
+</div>
+
+A continuación se describen las transformaciones entre un span de OpenTelemetry y un span de Sentry. Relacionado: [la interfaz de un span de Sentry](https://develop.sentry.dev/sdk/data-model/event-payloads/span/), [la especificación de Relay para un span de Sentry](https://github.com/getsentry/relay/blob/master/relay-event-schema/src/protocol/span.rs) y la especificación de un [span de OpenTelemetry](https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L80-L256).
+
+Esto se basa en un mapeo realizado como parte del trabajo en el [OpenTelemetry Sentry Exporter](https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/main/exporter/sentryexporter/docs/transformation.md).
+
+| OpenTelemetry Span                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Sentry Span                                                                                                                                | Notas                                                                                                                                                                                                                                                            |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [trace&#95;id](https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L81-L89)                                                                                                                                                                                                                                                                                                                                     | [trace&#95;id](https://github.com/getsentry/relay/blob/7fb4ef6546cbe27c2b6e101dc46fd36cbe273d57/relay-general/src/protocol/span.rs#L37)        |                                                                                                                                                                                                                                                                  |
+| [span&#95;id](https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L91-L99)                                                                                                                                                                                                                                                                                                                                      | [span&#95;id](https://github.com/getsentry/relay/blob/7fb4ef6546cbe27c2b6e101dc46fd36cbe273d57/relay-general/src/protocol/span.rs#L30)         |                                                                                                                                                                                                                                                                  |
+| [parent&#95;span&#95;id](https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L106-L108)                                                                                                                                                                                                                                                                                                                             | [parent&#95;span&#95;id](https://github.com/getsentry/relay/blob/7fb4ef6546cbe27c2b6e101dc46fd36cbe273d57/relay-general/src/protocol/span.rs#L33)  | Si un span no tiene un ID de span padre, es un span raíz. Para un span raíz: <ul><li>Si hay una transacción activa en Sentry, añádelo a esa transacción</li><li>Si no hay una transacción activa en Sentry, crea una nueva transacción a partir de ese span</li></ul> |
+| [name](https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L110-L121)                                                                                                                                                                                                                                                                                                                                       | [description](https://github.com/getsentry/relay/blob/7fb4ef6546cbe27c2b6e101dc46fd36cbe273d57/relay-general/src/protocol/span.rs#L22)     |                                                                                                                                                                                                                                                                  |
+| [name](https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L110-L121), [attributes](https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L174-L186), [kind](https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L153-L156) | [op](https://github.com/getsentry/relay/blob/d7c5698888a2148799697d5427b37bfbe3b895bc/relay-general/src/protocol/span.rs#L26)              |                                                                                                                                                                                                                                                                  |
+| [attributes](https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L174-L186), [kind](https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L153-L156)                                                                                                                                                                 | [data](https://github.com/getsentry/relay/blob/d7c5698888a2148799697d5427b37bfbe3b895bc/relay-general/src/protocol/span.rs#L48)            |                                                                                                                                                                                                                                                                  |
+| [attributes](https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L174-L186), [status](https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L253-L255)                                                                                                                                                               | [status](https://github.com/getsentry/relay/blob/d7c5698888a2148799697d5427b37bfbe3b895bc/relay-general/src/protocol/span.rs#L40)          | Consulta [estado del span](./#span-status) para más detalles                                                                                                                                                                                                      |
+| [start&#95;time&#95;unix&#95;nano](https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L158-L164)                                                                                                                                                                                                                                                                                                                       | [start&#95;timestamp](https://github.com/getsentry/relay/blob/d7c5698888a2148799697d5427b37bfbe3b895bc/relay-general/src/protocol/span.rs#L14) |                                                                                                                                                                                                                                                                  |
+| [end&#95;time&#95;unix&#95;nano](https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L166-L172)                                                                                                                                                                                                                                                                                                                         | [timestamp](https://github.com/getsentry/relay/blob/d7c5698888a2148799697d5427b37bfbe3b895bc/relay-general/src/protocol/span.rs#L10)       |                                                                                                                                                                                                                                                                  |
+| [event](https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L193-L214)                                                                                                                                                                                                                                                                                                                                      |                                                                                                                                            | Consulta [eventos del span](./#span-events) para más detalles                                                                                                                                                                                                     |
+
+Actualmente no existe una especificación sobre cómo debería mostrarse [Span.link en OpenTelemetry](https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L220-L247) en Sentry.
+
+<div id="span-status">
+  ### Estado de span
+</div>
+
+En OpenTelemetry, [el estado de span es un enum de 3 valores](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/api.md#set-status), mientras que [el estado de span de Sentry es un enum de 17 valores](https://github.com/getsentry/relay/blob/ed3a521f773ecd4bf9a2aefd7af80080d56d0841/relay-common/src/constants.rs#L200-L286) que se mapean a los [códigos de estado de gRPC](https://github.com/grpc/grpc/blob/master/doc/statuscodes.md). Cada uno de los códigos de estado de span de Sentry también se mapea a códigos HTTP. Sentry adoptó su especificación de estado de span de OpenTelemetry, [que usaba la especificación de códigos de estado de gRPC](https://github.com/open-telemetry/opentelemetry-specification/blob/8fb6c14e4709e75a9aaa64b0dbbdf02a6067682a/specification/api-tracing.md#status), pero más tarde cambió a la especificación actual que utiliza hoy.
+
+Para mapear desde el estado de span de OpenTelemetry, debes basarte tanto en [el estado de span](https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L253-L255) como en los [atributos de span](https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L174-L186) de OpenTelemetry. Este enfoque se adaptó de un PR del usuario de GitHub [@anguisa](https://github.com/anguisa) para el [OpenTelemetry Sentry Exporter](https://github.com/open-telemetry/opentelemetry-collector-contrib/pull/13407).
+
+```ts
+// El estado de un span de OpenTelemetry puede ser Unset, Ok o Error. Los códigos HTTP y gRPC incluidos en las etiquetas pueden aportar más detalle.
+
+import {Span as OtelSpan} from '@opentelemetry/sdk-trace-base';
+import {SemanticAttributes} from '@opentelemetry/semantic-conventions';
+import {SpanStatusType as SentryStatus} from '@sentry/tracing';
+
+// canonicalCodesHTTPMap asigna algunos códigos HTTP a estados de span de Sentry. Consulta el posible mapeo en https://develop.sentry.dev/sdk/data-model/event-payloads/span/
+const canonicalCodesHTTPMap: Record<string, SentryStatus> = {
+  '400': 'failed_precondition',
+  '401': 'unauthenticated',
+  '403': 'permission_denied',
+  '404': 'not_found',
+  '409': 'aborted',
+  '429': 'resource_exhausted',
+  '499': 'cancelled',
+  '500': 'internal_error',
+  '501': 'unimplemented',
+  '503': 'unavailable',
+  '504': 'deadline_exceeded',
+} as const;
+
+// canonicalCodesGrpcMap asigna algunos códigos gRPC a estados de span de Sentry. Consulta la descripción en la documentación de gRPC.
+const canonicalCodesGrpcMap: Record<string, SentryStatus> = {
+  '1': 'cancelled',
+  '2': 'unknown_error',
+  '3': 'invalid_argument',
+  '4': 'deadline_exceeded',
+  '5': 'not_found',
+  '6': 'already_exists',
+  '7': 'permission_denied',
+  '8': 'resource_exhausted',
+  '9': 'failed_precondition',
+  '10': 'aborted',
+  '11': 'out_of_range',
+  '12': 'unimplemented',
+  '13': 'internal_error',
+  '14': 'unavailable',
+  '15': 'data_loss',
+  '16': 'unauthenticated',
+} as const;
+
+export function mapOtelStatus(otelSpan: OtelSpan): SentryStatus {
+  const {status, attributes} = otelSpan;
+
+  const statusCode = status.code;
+
+  if (statusCode < 0 || statusCode > 2) {
+    return 'unknown_error';
+  }
+
+  if (statusCode === 0 || statusCode === 1) {
+    return 'ok';
+  }
+
+  const httpCode = attributes[SemanticAttributes.HTTP_STATUS_CODE];
+  const grpcCode = attributes[SemanticAttributes.RPC_GRPC_STATUS_CODE];
+
+  if (typeof httpCode === 'string') {
+    const sentryStatus = canonicalCodesHTTPMap[httpCode];
+    if (sentryStatus) {
+      return sentryStatus;
+    }
+  }
+
+  if (typeof grpcCode === 'string') {
+    const sentryStatus = canonicalCodesGrpcMap[grpcCode];
+    if (sentryStatus) {
+      return sentryStatus;
+    }
+  }
+
+  return 'unknown_error';
+}
+```
+
+
+<div id="span-events">
+  ### Eventos de spans
+</div>
+
+OpenTelemetry tiene el concepto de [eventos de span](https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L193-L214). Según la especificación:
+
+> Un evento es un mensaje legible por humanos en un span que representa “algo que sucede” durante su vida útil.
+
+En Sentry, tenemos dos opciones sobre cómo tratar los eventos de span. Primero, podemos agregarlos como breadcrumbs a la transacción a la que pertenece el span. Segundo, podemos crear un span artificial “puntual” (un span con duración 0) y añadirlo al árbol de spans. TODO sobre qué enfoque tomamos aquí.
+
+En el caso especial de que el evento de span sea una excepción, [donde el `name` del evento de span es `exception`](https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/exceptions/), también tenemos la posibilidad de generar un error de Sentry a partir de dicha excepción. En este caso, podemos crear esta [excepción en función de los atributos del evento](https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/exceptions/#attributes), que incluyen el mensaje de error y el stacktrace. Esta excepción también puede heredar todos los demás atributos del evento de span y del span como tags en el evento. Esto se aborda en el Paso 7, donde agregas `generateSentryErrorsFromOtelSpan` a la pipeline de `SpanProcessor`.
+
+En el exportador de Sentry para OpenTelemetry, hemos usado esta [estrategia para generar errores de Sentry](https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/8eda2f80b6dbd5aea03ca699c3ad1454714156d0/exporter/sentryexporter/sentry_exporter.go#L169-L196).
+
+<div id="transaction-protocol">
+  ## Protocolo de transacciones
+</div>
+
+En OpenTelemetry no existe el concepto de transacción, así que recurrimos a promover spans para que se conviertan en transacciones. La `description` del span pasa a ser el `name` de la transacción, y el `op` del span pasa a ser el `op` de la transacción. Por lo tanto, los spans de OpenTelemetry deben mapearse a spans de Sentry antes de poder promoverlos a transacción.
+
+**No debemos establecer tags en las transacciones. En su lugar, debemos completar el campo `attributes` en el contexto `otel`, <Link to="./#opentelemetry-context">ver más abajo</Link>**
+
+<div id="opentelemetry-context">
+  ## Contexto de OpenTelemetry
+</div>
+
+Además de la información de spans y transacciones, OpenTelemetry incluye metadatos sobre el SDK, el recurso y el servicio que generaron los spans. Para rastrear esta información, generamos un nuevo contexto de evento de OpenTelemetry.
+
+La presencia de este contexto en un evento (transacción o error) es lo que permite al backend de Sentry identificar que el evento entrante es de OpenTelemetry.
+
+Utiliza el siguiente esquema:
+
+```ts
+type Primitive = number | string | boolean | bigint;
+
+interface Attributes<T extends Primitive> {
+  [key: string]: T | Array<T> | Record<string, T>;
+}
+
+interface OpenTelemetryContext {
+  type?: 'otel';
+
+  // https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L174-L186
+  attributes?: Attributes;
+
+  // https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/resource/v1/resource.proto
+  // Información del recurso.
+  resource?: Attributes;
+}
+```
+
+
+<div id="sdk-spec">
+  ## Especificación del SDK
+</div>
+
+- SpanProcessor: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/sdk.md#span-processor
+- Propagator: https://opentelemetry.io/docs/reference/specification/context/api-propagators/

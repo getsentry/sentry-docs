@@ -1,0 +1,86 @@
+---
+title: Datos recopilados
+description: "Consulta qué datos recopila el SDK de Sentry."
+sidebar_order: 1
+---
+
+En Sentry nos tomamos muy en serio la privacidad de los datos y contamos con configuraciones predeterminadas que priorizan su seguridad, especialmente cuando se trata de datos de información de identificación personal (PII). Al agregar el SDK de Sentry a tu aplicación, permites que recopile datos y los envíe a Sentry durante el tiempo de ejecución de tu aplicación.
+
+Tanto las categorías como la cantidad de datos recopilados varían según las integraciones que hayas habilitado en el SDK de Sentry. A continuación encontrarás una lista de las categorías de datos que recopila el SDK de Sentry para Rust.
+La recopilación de datos PII generalmente se habilita con la opción `send_default_pii`, que está deshabilitada de forma predeterminada.
+
+<div id="http-headers">
+  ## Encabezados HTTP
+</div>
+
+Los `sentry-actix` y `sentry-tower` (con la característica `http` habilitada) pueden capturar los encabezados de las solicitudes HTTP entrantes y enviarlos a Sentry.
+De forma predeterminada, el SDK filtra encabezados potencialmente sensibles, como los que incluyen datos de autorización, cookies o la dirección IP del usuario.
+Para capturar todos los encabezados, establece `send_default_pii` en `true` en las opciones de `sentry::init`.
+
+<div id="cookies">
+  ## Cookies
+</div>
+
+`sentry-actix` y `sentry-tower` (con la característica `http` habilitada) pueden capturar las cookies de las solicitudes HTTP entrantes y enviarlas a Sentry.
+De forma predeterminada, el SDK no captura ninguna cookie.
+Para capturar las cookies de las solicitudes, establece `send_default_pii` en `true` en las opciones de `sentry::init`.
+Existen reglas de depuración del lado del servidor que filtrarán ciertas cookies que se sabe que contienen datos sensibles.
+
+<div id="information-about-logged-in-user">
+  ## Información sobre el usuario autenticado
+</div>
+
+De forma predeterminada, el SDK de Sentry no envía ninguna información sobre el usuario autenticado, como la dirección de correo electrónico, el ID de usuario o el nombre de usuario.
+Puedes capturar la información del usuario manualmente llamando a `scope.set_user` y proporcionando los datos de usuario correspondientes.
+
+<div id="users-ip-address">
+  ## Dirección IP de los usuarios
+</div>
+
+De forma predeterminada, el SDK de Sentry no envía la dirección IP del usuario.
+Para habilitar la recopilación automática de direcciones IP en `sentry-actix`, establece `send_default_pii` en `true` en las opciones de `sentry::init`.
+La IP del usuario puede capturarse manualmente llamando a `scope.set_user` y proporcionando su dirección IP.
+
+<div id="request-url">
+  ## URL de la solicitud
+</div>
+
+La URL completa de la solicitud de las peticiones HTTP entrantes capturadas por `sentry-actix` y `sentry-tower` (con la característica `http` habilitada) **siempre se envía a Sentry**. Dependiendo de tu aplicación, esto podría incluir datos personales (PII).
+
+<div id="request-query-string">
+  ## Cadena de consulta de la solicitud
+</div>
+
+La cadena de consulta de la solicitud capturada por `sentry-actix` y `sentry-tower` (con la función `http` habilitada) **siempre se envía a Sentry**.
+Según tu aplicación, esto podría contener datos personales (PII).
+
+<div id="request-body">
+  ## Cuerpo de la solicitud
+</div>
+
+De forma predeterminada, el cuerpo de las solicitudes HTTP entrantes no se envía a Sentry.
+Al usar `sentry-actix`, el SDK de Sentry puede capturar el cuerpo de la solicitud. Como requisito previo, debes configurar `send_default_pii` en `true` en las opciones de `sentry::init`.
+Luego, que el cuerpo de la solicitud se envíe o no dependerá del tipo y del tamaño del cuerpo, como se describe a continuación:
+
+* **Tipo de cuerpo de la solicitud:**
+  * Se envían los cuerpos JSON y de formularios
+  * Los cuerpos sin procesar siempre se omiten
+  * Los archivos cargados en el cuerpo de la solicitud nunca se envían a Sentry
+* **Tamaño del cuerpo de la solicitud:** Hay una opción [`max_request_body_size`](/es/platforms/rust/configuration/options/#max_request_body_size), cuyo valor predeterminado es `MaxRequestBodySize::Medium`, que define el tamaño máximo de los cuerpos de solicitud que se envían a Sentry.
+
+Si quieres evitar por completo que se envíen cuerpos de solicitud a Sentry, configura `max_request_body_size` en `MaxRequestBodySize::None`.
+
+<div id="debug-images">
+  ## Imágenes de depuración
+</div>
+
+Al usar la integración [Sentry Debug Images](https://crates.io/crates/sentry-debug-images), se envía a Sentry cierta metadatos sobre las bibliotecas compartidas y los ejecutables que el proceso en ejecución tiene cargados en memoria.
+Esta integración está habilitada de forma predeterminada cuando se utiliza el crate `sentry` mediante la marca de característica `debug-images`.
+Puedes desactivar esta función excluyendo la característica `debug-images` de las marcas de características de `sentry` en tu `Cargo.toml`.
+
+<div id="source-code">
+  ## Código fuente
+</div>
+
+Cuando utilizas [Source Context](/es/platforms/rust/source-context/), subes explícitamente tu código fuente a Sentry.
+Es totalmente opcional y no está controlado por el SDK de Sentry.

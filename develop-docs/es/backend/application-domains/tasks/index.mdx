@@ -1,0 +1,378 @@
+---
+title: Tareas asíncronas
+sidebar_order: 70
+---
+
+Sentry incluye un framework para programar y ejecutar tareas que se llevan a cabo
+de forma asíncrona en un proceso de trabajo en segundo plano. El framework de tareas de Sentry
+se inspira en [Celery](https://docs.celeryproject.org), ya que originalmente
+se construyó con Celery.
+
+<div id="defining-tasks">
+  ## Definición de tareas
+</div>
+
+Las tareas de Sentry se configuran con el decorador `instrumented_task`, que
+incluye funciones como el trazado automático y la recopilación de métricas, además de la aplicación del silo multirregional.
+
+```python
+from sentry.tasks.base import instrumented_task
+from sentry.taskworker.namespaces import issues_tasks
+from sentry.taskworker.retry import Retry
+
+@instrumented_task(
+    name="sentry.widgets.tasks.do_work",
+    namespace=issues_tasks,
+    retry=Retry(times=3, on=(ConnectionError,)),
+    processing_deadline_duration=60
+)
+def do_work(organization_id: int, issue_id: int, **kwargs) -> None:
+    ...
+```
+
+Al definir tareas hay algunas restricciones:
+
+* Todas las tareas *deben* tener nombre. El nombre de la tarea se serializa en un
+  mensaje de ‘activación’ que se persiste en Kafka. Los nombres de las tareas deben ser estables
+  entre despliegues para evitar la pérdida de tareas.
+
+* Los parámetros de la tarea *deben* ser serializables a JSON. No puedes pasar objetos
+  arbitrarios de Python a través de los parámetros de la tarea.
+
+* Las tareas *deben* definir una ‘fecha límite de procesamiento’. Una vez que haya transcurrido
+  la fecha límite de procesamiento de una tarea, el entorno de ejecución del worker la finalizará.
+  Las tareas finalizadas por exceder la duración de ejecución no se reintentan automáticamente.
+
+* Todas las tareas deben asignarse a un ‘namespace’. Un namespace es un grupo de tareas
+  relacionadas que se operan juntas y comparten un backlog.
+
+* El valor de retorno de una tarea no se almacena y los workers lo ignoran.
+
+* El módulo que contiene una tarea *debe* añadirse a `TASKWORKER_IMPORTS` en
+  `src/sentry/conf/server.py`
+
+
+<div id="scheduling-tasks">
+  ## Programación de tareas
+</div>
+
+Con la tarea definida, podemos programar una tarea (también llamada “activación”):
+
+```python
+from sentry.widgets.tasks import do_work
+
+# Puede llamar a la tarea de forma síncrona como una función normal
+do_work(organization_id=org.id, issue_id=issue.id)
+
+# Use .delay() para programar una tarea que se ejecute en el futuro lo antes posible
+do_work.delay(organization_id=org.id, issue_id=issue.id)
+
+# Use .apply_async() cuando necesite definir headers, countdown o expires
+# para su tarea. Aquí programamos una tarea para que se ejecute en 5 minutos (300 segundos)
+do_work.apply_async(
+  kwargs={"organization_id": org.id, "issue_id": issue.id},
+	countdown=300
+)
+```
+
+Cuando se ejecutan las tareas, la carga de parámetros se deserializa y se llama a la
+función de la tarea. Las tareas se completan correctamente si no generan un
+error. Si una tarea genera un error o vence su fecha límite, la tarea se considera un fallo y debe volver a intentarse, enviarse a una cola de mensajes no entregados (dead-letter) o descartarse, según la tarea y el fallo.
+
+
+<div id="retries">
+  ## Reintentos
+</div>
+
+Al definir tareas, puedes establecer una política de reintentos con el parámetro `retry`.
+Cuando un worker ejecuta una activación con una política de reintentos, cualquier resultado
+no satisfactorio hará que se evalúe la política de reintentos. Si la tarea aún tiene
+reintentos disponibles y el error capturado es recuperable, el worker envía
+un estado de reintento al broker del worker. El taskbroker se encargará de marcar
+la activación actual como completada y de generar una nueva activación para
+procesarla más tarde.
+
+Si una tarea no define una política de reintentos, heredará la política de reintentos
+del espacio de nombres de la tarea.
+
+```python
+@instrumented_task(
+    name="sentry.issues.tasks.deliver_issue_webhook",
+    namespace=issues_tasks,
+    retry=Retry(times=3, times_exceeded=LastAction.Deadletter),
+)
+def deliver_issue_webhook(organization_id: int, group_id: int) -> None:
+   ...
+```
+
+
+<div id="conditional-retries">
+  ### Reintentos condicionales
+</div>
+
+Los reintentos pueden ser condicionales según el tipo de excepción:
+
+```python
+retry=Retry(on=(IntegrationError,), times=3, times_exceeded=LastAction.Discard)
+```
+
+
+<div id="retry-delays">
+  ### Reintentos con retraso
+</div>
+
+De forma predeterminada, los reintentos se ejecutan en cuanto se consumen. Si una tarea necesita escalonarlos, puede usar un reintento con retraso.
+
+```python
+@instrumented_task(
+    name="sentry.integrations.fetch_commits",
+    namespace=issues_tasks,
+    retry=Retry(times=3, on=(IntegrationError, ), delay=30)
+)
+def fetch_commits(repository_id: int) -> None:
+    ...
+```
+
+Con la configuración anterior, cada reintento se procesará al menos 30 segundos
+después del intento anterior. El retraso entre reintentos podría ser superior a 30
+segundos, pero no será inferior.
+
+
+<div id="processing-deadlines">
+  ## Plazos de procesamiento
+</div>
+
+Cada tarea tiene un “plazo de procesamiento”, que es el tiempo máximo de ejecución previsto para dicha tarea. Si
+una tarea no define un plazo de procesamiento, heredará el plazo
+definido en el espacio de nombres de la tarea o usará el valor predeterminado de **10 segundos**. Los
+plazos de las tareas están pensados para ser holgados y evitar que los workers se vean
+saturados por tareas que se ejecutan durante un tiempo indefinido.
+
+```python
+@instrumented_task(
+    name="sentry.integrations.fetch_commits",
+    namespace=issues_tasks,
+    # Ampliado desde el valor predeterminado de 10
+    processing_deadline_duration=60
+)
+def fetch_commits(repository_id: int) -> None:
+    ...
+```
+
+Después de que una tarea se haya ejecutado durante todo su plazo de procesamiento, será
+interrumpida por `SIGALRM`, lo que lanzará un error `ProcessingDeadlineExceeded` que
+interrumpirá la lógica de tu tarea.
+
+
+<div id="resolving-deadline-issues">
+  ### Resolver problemas con los plazos
+</div>
+
+En la mayoría de los casos, la solución más sencilla es ampliar el plazo de una tarea.
+Esta es la opción recomendada hasta superar los 20 min de duración. A partir de
+ese punto, la probabilidad de que tu tarea sea interrumpida por un deploy aumenta
+rápidamente. En lugar de seguir ampliando el plazo, deberías replantear la
+lógica y dividir la carga de trabajo en lotes más pequeños o en trabajos individuales que
+puedan procesarse de forma independiente. En vez de mapear todos los proyectos en una sola
+tarea, lanza varias tareas.
+
+<div id="expiration-deadlines">
+  ## Plazos de expiración
+</div>
+
+La hora de expiración de una tarea define el momento a partir del cual se considera expirada y no debe ejecutarse. Este mecanismo permite omitir tareas si están obsoletas y sus resultados ya no son relevantes.
+
+```python
+@instrumented_tasks(
+    name="sentry.issues.tasks.deliver_issue_webhook",
+    namespace=issues_tasks,
+    expires=timedelta("5 minutes"),
+)
+def deliver_issue_webhook(organization_id: int, group_id: int):
+    ...
+```
+
+Los tiempos de vencimiento pueden expresarse como objetos `timedelta` o como un número de segundos.
+Las tareas que hayan superado su vencimiento no se enviarán a los workers. En su lugar,
+se descartarán o se enviarán a la cola de dead-letter según la configuración de la tarea.
+
+
+<div id="future-schedules">
+  ## Programaciones futuras
+</div>
+
+Las tareas pueden programarse para ejecutarse hasta con una hora de antelación usando el parámetro `countdown`.
+
+```jsx
+deliver_issue_webhook.apply_async(countdown=timedelta(minutes=10))
+```
+
+Las tareas con temporizador serán procesadas y retenidas por taskbroker hasta que
+el conteo haya finalizado. Una vez transcurrido el retraso del temporizador, la tarea
+estará disponible para los workers.
+
+
+## Idempotencia (at&#95;most&#95;once)
+
+Las tareas se procesan con garantías de al menos una vez. Una tarea puede intentarse
+varias veces si se superan los plazos de procesamiento. Para evitar ejecuciones múltiples,
+las tareas pueden habilitar `at_most_once`, lo que permite una ejecución como máximo una vez.
+
+```python
+@instrumented_task(
+    name="sentry.issues.tasks.deliver_issue_webhook",
+    namespace=issues_tasks,
+    at_most_once=True,
+)
+def deliver_issue_webhook(organization_id: int, group_id: int) -> None:
+   ...
+
+```
+
+Si una tarea idempotente supera el plazo de procesamiento, *no* se volverá a intentar.
+
+
+<div id="task-aliasing">
+  ## Alias de tareas
+</div>
+
+Los alias de tareas te permiten cambiar el nombre de las tareas o moverlas a distintos espacios de nombres mientras mantienes la compatibilidad con las activaciones de tareas existentes en Kafka. Esto resulta útil al refactorizar la organización de tareas o renombrarlas sin perder las tareas en cola. Los alias de tareas heredan la misma política de reintentos, el plazo de procesamiento y otras configuraciones de la definición de la tarea principal.
+
+<div id="renaming-a-task">
+  ### Cambiar el nombre de una tarea
+</div>
+
+Al cambiar el nombre de una tarea, usa el parámetro `alias` para indicar el nombre anterior de la tarea:
+
+```python
+@instrumented_task(
+    name="sentry.widgets.tasks.do_work_v2",  # Nuevo nombre de la tarea
+    namespace=issues_tasks,
+    alias="sentry.widgets.tasks.do_work",    # Nombre anterior de la tarea
+)
+def do_work() -> None:
+    ...
+```
+
+Las nuevas activaciones se crearán usando `name`. No obstante, ambos nombres de tarea se registrarán y podrán procesar activaciones. Los workers gestionarán las tareas enviadas a `do_work_v2` o `do_work` con la misma función.
+
+
+<div id="moving-to-a-different-namespace">
+  ### Cambiar a un espacio de nombres diferente
+</div>
+
+Para mover una tarea de un espacio de nombres a otro, usa el parámetro `alias_namespace`:
+
+```python
+from sentry.taskworker.namespaces import issues_tasks, integrations_tasks
+
+@instrumented_task(
+    name="sentry.widgets.tasks.do_work",
+    namespace=integrations_tasks,  # Espacio de nombres nuevo
+    alias_namespace=issues_tasks,  # Espacio de nombres antiguo
+)
+def do_work() -> None:
+    ...
+```
+
+La tarea se registrará tanto en `performance_tasks` como en `issues_tasks` con el mismo nombre de tarea `sentry.widgets.tasks.do_work`, permitiendo que las activaciones en curso en el espacio de nombres anterior se procesen.
+
+
+<div id="renaming-and-moving-together">
+  ### Renombrar y mover a la vez
+</div>
+
+Puedes combinar `alias` y `alias_namespace` para cambiarle el nombre a una tarea y moverla a otro espacio de nombres al mismo tiempo:
+
+```python
+@instrumented_task(
+    name="sentry.widgets.tasks.do_work_v2",   # Nombre nuevo
+    namespace=integrations_tasks,             # Namespace nuevo
+    alias="sentry.widgets.tasks.do_work",     # Nombre anterior
+    alias_namespace=issues_tasks,             # Namespace anterior
+)
+def do_work() -> None:
+    ...
+```
+
+Esto registra la tarea como:
+
+* `integrations_tasks:sentry.widgets.tasks.do_work_v2` (nuevo)
+* `issues_tasks:sentry.widgets.tasks.do_work` (anterior)
+
+
+<div id="testing-tasks">
+  ## Pruebas de tareas
+</div>
+
+Las tareas pueden probarse de varias maneras. La primera es con el administrador de contexto
+`self.tasks()` o `TaskRunner`. Cuando se entra en estos administradores de contexto,
+las tareas se ejecutan de forma *sincrónica*, lo que te permite validar los efectos
+colaterales de tus tareas y comprobar que los parámetros de tu tarea sean compatibles con JSON:
+
+```python
+def test_action_with_tasks(self):
+    with self.tasks():
+        self.client.get("/organizations/slug/do-thing/")
+        # puedes hacer aserciones sobre los efectos secundarios de las tareas generadas por el endpoint.
+```
+
+Las tareas también pueden probarse con `mock.patch`:
+
+```python
+@patch("sentry.hybridcloud.tasks.deliver_webhooks.drain_mailbox")
+def test_schedule_task(self, mock_deliver: MagicMock) -> None:
+    # Realizar trabajo para activar la tarea
+    # Verificar que la tarea fue programada
+    mock_deliver.delay.assert_called_with(webhook_one.id)
+```
+
+<Alert type="warning">
+  Las tareas de mocking no comprobarán que los parámetros sean compatibles con JSON ni capturarán TypeErrors por discrepancias en la firma.
+</Alert>
+
+
+<div id="task-namespaces">
+  ## Espacios de nombres de tareas
+</div>
+
+Los espacios de nombres de tareas se definen en el código, y la configuración se asocia al
+espacio de nombres cuando se declara.
+
+```python
+# in sentry.taskworker.namespaces
+from sentry.taskworker.config import taskregistry
+from sentry.taskworker.retry import LastAction, Retry
+
+issues_tasks = taskregistry.create_namespace(
+    "issues",
+    retry=Retry(times=3, times_exceeded=LastAction.Discard)
+)
+
+# registrar tareas dentro de un espacio de nombres
+@instrumented_task(name="tasks.do_work", namespace=issues_tasks)
+def do_work(**kwargs):
+   ...
+```
+
+Los espacios de nombres pueden definir el comportamiento predeterminado de `retry`, `processing_deadline` y
+`expires` para las tareas que contienen. Sin un enrutamiento explícito, cualquier espacio de nombres
+se ejecutará en nuestros grupos de trabajo `default`. Si el espacio de nombres de tus tareas va a tener
+alto volumen (más de 1500 tareas por segundo), considera aprovisionar
+un grupo dedicado para tus tareas.
+
+
+<div id="periodically-scheduled-tasks">
+  ## Tareas programadas periódicamente
+</div>
+
+Las tareas también pueden configurarse para ejecutarse de forma periódica. Para ello, simplemente actualiza la configuración `TASKWORKER_SCHEDULE` que se encuentra en `src/sentry/conf/server.py` con el espacio de nombres, la tarea y la programación correspondiente. Taskworker admite los tipos de programación `timedelta` y `crontab`:
+
+```python
+TASKWORKER_REGION_SCHEDULES: ScheduleConfigMap = {
+    "send-beacon": {
+        "task": "selfhosted:sentry.tasks.send_beacon",
+        "schedule": task_crontab("0", "*/1", "*", "*", "*"),
+    },
+}
+```

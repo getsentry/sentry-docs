@@ -1,0 +1,313 @@
+---
+title: "Reglas de huella digital"
+sidebar_order: 20
+description: "Conoce las reglas de huella digital, los comparadores para la identificación por huella, cómo combinar comparadores y cómo usar variables para la huella digital."
+---
+
+<Include name="only-error-issues-note.mdx" />
+
+Las reglas de huella digital (antes conocidas como *server-side fingerprinting*) se configuran con una configuración similar a las [reglas de stack trace](../stack-trace-rules/), pero la sintaxis es ligeramente diferente. Los comparadores son los mismos, pero en lugar de activar indicadores, se asigna una huella digital que reemplaza por completo la agrupación predeterminada. Asignar una huella digital también puede afinar la agrupación predeterminada, en lugar de reemplazarla, si la huella digital incluye el valor `{{ default }}`.
+
+Estas reglas se pueden configurar por proyecto en **Project Settings &gt; Issue Grouping &gt; Fingerprint Rules**. Este ajuste tiene campos donde puedes escribir reglas de huella digital personalizadas. Para actualizar una regla:
+
+1. Identifica la lógica de coincidencia para agrupar incidencias.
+2. Define la lógica de coincidencia y la huella digital correspondiente.
+
+La sintaxis de las reglas de huella digital es similar a la sintaxis de las consultas en [**Discover**](/es/concepts/search/#syntax). Para negar una coincidencia, agrega un signo de exclamación (`!`) al inicio de la expresión. Consulta la gramática completa [aquí](https://github.com/getsentry/sentry/blob/90f5cdfa9ebaf0bfdea63852812a6efc90f13691/src/sentry/grouping/fingerprinting/__init__.py#L36-L73).
+
+Sentry intenta hacer coincidir todos los valores configurados en la huella digital. En el caso de los stack traces, se consideran todos los frames. Si los datos del evento coinciden con todos los valores de una línea para un comparador y una expresión, se aplica la huella digital. Cuando varias reglas coinciden con el evento, se aplica la primera regla coincidente de la lista.
+
+```bash {tabTitle:Fingerprinting Config}
+# Puedes usar comentarios para explicar las reglas. Las reglas siguen la
+# siguiente sintaxis:
+matcher:expresión -> lista de valores
+# La lista de valores puede ser hardcodeada o contener valores sustituidos.
+```
+
+A continuación se muestra un ejemplo práctico que agrupa excepciones de un tipo específico:
+
+```bash {tabTitle:Fingerprinting Config}
+error.type:DatabaseUnavailable -> system-down
+error.type:ConnectionError -> system-down
+
+error.value:"connection error: *" -> connection-error, {{ transaction }}
+```
+
+Ahora, todos los eventos con el tipo de error `DatabaseUnavailable` o `ConnectionError` se agruparán en una incidencia con el tipo `system-down`. Además, todos los eventos con el valor de error `connection error` se agruparán por su nombre de transacción. Por ejemplo, si tus transacciones `/api/users/foo/` y `/api/events/foo/`—ambas con el valor `connection error`—fallan de la misma manera, Sentry creará dos incidencias, sin importar el rastreo de pila ni ningún otro método de agrupación predeterminado.
+
+<div id="matchers">
+  ## Coincidencias
+</div>
+
+Las coincidencias te permiten usar [patrones glob](https://en.wikipedia.org/wiki/Glob_\(programming\)).
+
+Si quieres crear una regla que incluya corchetes `[ ]`, llaves `{ }` o un `*` literal, escápalos con una barra invertida; es decir, `\[`, `\]`, `\{`, `\}` o `\*`.
+
+Están disponibles las siguientes coincidencias:
+
+<DefinitionList>
+  ### `error.type`
+
+  alias: `type`
+
+  Coincide con un tipo de excepción (nombre de la excepción). La coincidencia se realiza con un glob que distingue mayúsculas y minúsculas.
+
+  ```bash {tabTitle:Fingerprinting Config}
+  error.type:ZeroDivisionError -> zero-division
+  error.type:ConnectionError -> connection-error
+  ```
+
+  ### `error.value`
+
+  alias: `value`
+
+  Coincide con el valor de la excepción. Los errores o excepciones suelen tener descripciones legibles por humanos (valores) asociadas. Esta coincidencia permite una comparación que no distingue mayúsculas de minúsculas.
+
+  ```bash {tabTitle:Fingerprinting Config}
+  error.value:"connection error (code: *)" -> connection-error
+  error.value:"could not connect (*)" -> connection-error
+  ```
+
+  ### `level`
+
+  Coincide con el nivel de registro. La coincidencia no distingue mayúsculas de minúsculas.
+
+  ```bash {tabTitle:Fingerprinting Config}
+  logger:"com.myapp.FooLogger" level:"error" -> mylogger-error
+  ```
+
+  ### `logger`
+
+  Coincide con el nombre del logger, lo cual es útil para agrupar todos los mensajes de un mismo logger. Esta coincidencia distingue mayúsculas de minúsculas.
+
+  ```bash {tabTitle:Fingerprinting Config}
+  logger:"com.myapp.mypackage.*" -> mypackage-logger
+  ```
+
+  ### `message`
+
+  Coincide con un mensaje de registro. También comprobará automáticamente el valor adicional de la excepción, ya que puede ser difícil distinguirlos. La coincidencia no distingue mayúsculas de minúsculas.
+
+  ```bash {tabTitle:Fingerprinting Config}
+  message:"system encountered a fatal problem: *" -> fatal-log
+  ```
+
+  ### `stack.abs_path`
+
+  alias: `path`
+
+  Coincide con la ruta de un evento y no distingue mayúsculas de minúsculas. Usa la semántica de globbing de rutas, lo que significa que `*` no coincide con una barra, pero `**` sí. Ten en cuenta que esta coincidencia aplica tanto a `abs_path` como a `filename`, ya que los SDK pueden ser bastante inconsistentes en cómo admiten estos valores. Si el glob coincide con cualquiera de estos valores, se considera una coincidencia.
+
+  ```bash {tabTitle:Fingerprinting Config}
+  stack.abs_path:"**/my-utils/*.js" -> my-utils, {{ error.type }}
+  ```
+
+  ### `stack.function`
+
+  alias: `function`
+
+  Comprueba si alguna de las funciones en el stack trace coincide con el glob. La coincidencia distingue mayúsculas de minúsculas:
+
+  ```bash {tabTitle:Fingerprinting Config}
+  stack.function:"my_assertion_failed" -> my-assertion-failed
+  ```
+
+  ### `stack.module`
+
+  alias: `module`
+
+  Similar a `stack.abs_path`, pero coincide con el nombre del módulo. La coincidencia distingue mayúsculas de minúsculas y se aplican las reglas habituales de globbing (`*` también coincide con barras).
+
+  ```bash {tabTitle:Fingerprinting Config}
+  stack.module:"*/my-utils/*" -> my-utils, {{ error.type }}
+  ```
+
+  ### `stack.package`
+
+  alias: `package`
+
+  Coincide con el “paquete” de un frame. Normalmente es el nombre del archivo de símbolos/objeto de depuración que contiene un frame. Si cualquiera de los frames coincide con este archivo de objeto, entonces coincide.
+
+  ```bash {tabTitle:Fingerprinting Config}
+  stack.package:"**/libcurl.dylib" -> libcurl
+  stack.package:"**/libcurl.so" -> libcurl
+  ```
+
+  ### `tags.tag_name`
+
+  Coincide con el valor de la etiqueta `tag_name`. Esto puede ser útil para filtrar ciertos tipos de eventos. Por ejemplo, puedes separar eventos causados por un servidor específico:
+
+  ```bash {tabTitle:Fingerprinting Config}
+  tags.server_name:"canary-*.mycompany.internal" -> canary-events
+  ```
+
+  Además, están disponibles las siguientes coincidencias de utilidad:
+
+  ### `app`
+
+  Comprueba si el frame está en la app o no. Es especialmente útil cuando se combina con otra coincidencia. Los valores posibles son `yes` y `no`:
+
+  ```bash {tabTitle:Fingerprinting Config}
+  app:yes stack.function:"assert" -> assert
+  ```
+
+  ### `family`
+
+  Se utiliza para acotar el alcance de la coincidencia. Existen las siguientes familias: `javascript` para cualquier tipo de evento de JavaScript, `native` para cualquier tipo de evento nativo. Cualquier otra plataforma se denomina `other`.
+
+  ```bash {tabTitle:Fingerprinting Config}
+  family:native !stack.module:"myproject::*" -> not-from-my-project
+  ```
+</DefinitionList>
+
+<div id="combining-matchers">
+  ## Combinación de comparadores
+</div>
+
+Cuando se combinan varios comparadores, todos deben coincidir. Los comparadores que operan sobre frames deben aplicarse todos al mismo frame; de lo contrario, no se considera que haya coincidencia.
+
+Por ejemplo, si comparas tanto por el nombre de la función como por el del módulo, solo habrá coincidencia si un frame coincide con *ambos*: el nombre de la función y el del módulo. No basta con que un frame coincida solo con el nombre de la función, incluso si otro frame coincidiera por separado con el nombre del módulo.
+
+```bash {tabTitle:Fingerprinting Config}
+# esto coincide si existe un frame con una función y módulo específicos
+# y también se lanza un tipo de error específico
+error.type:ConnectionError stack.function:"connect" stack.module:"bot" -> bot-error
+```
+
+<div id="variables">
+  ## Variables
+</div>
+
+En el lado derecho de la huella, puedes usar valores constantes y variables. Las variables se sustituyen automáticamente y tienen el mismo nombre que los matchers, pero pueden rellenarse de forma diferente. Estas variables también pueden usarse al asignar huellas con los SDK de Sentry.
+
+Las variables se encierran entre llaves dobles (`{{ variable_name }}`).
+
+<DefinitionList>
+  ### `{{ default }}`
+
+  Rellena la huella predeterminada que produciría la operación de agrupación normal. Es útil si quieres subdividir un grupo ya existente por otra cosa:
+
+  ```bash {tabTitle:Fingerprinting Config}
+  stack.function:"query_database" -> {{ default }}, {{ transaction }}
+  ```
+
+  ### `{{ error.type }}`
+
+  alias: `{{ type }}`
+
+  Rellena el nombre del error que ocurrió. Cuando se usan excepciones encadenadas, será el error lanzado más recientemente. Esto forzará la creación de un grupo por tipo de error:
+
+  ```bash {tabTitle:Fingerprinting Config}
+  stack.function:"evaluate_script" -> script-evaluation, {{ error.type }}
+  ```
+
+  ### `{{ error.value }}`
+
+  alias: `{{ value }}`
+
+  Rellena el valor convertido a cadena del error que ocurrió. Cuando se usan excepciones encadenadas, será el error lanzado más recientemente. Ten en cuenta que esto puede producir grupos muy deficientes cuando los valores del error cambian con frecuencia.
+
+  ```bash {tabTitle:Fingerprinting Config}
+  error.type:"ScriptError" -> script-evaluation, {{ error.value }}
+  ```
+
+  ### `{{ level }}`
+
+  Rellena el nombre del nivel de registro que se usó para crear un evento.
+
+  ```bash {tabTitle:Fingerprinting Config}
+  message:"connection error*" -> connection-error, {{ logger }}, {{ level }}
+  ```
+
+  ### `{{ logger }}`
+
+  Rellena el nombre del registrador que causó un evento.
+
+  ```bash {tabTitle:Fingerprinting Config}
+  message:"critical connection error*" -> connection-error, {{ logger }}
+  ```
+
+  ### `{{ message }}`
+
+  Rellena el mensaje del evento (similar a `error.value` pero para
+  mensajes capturados). Ten en cuenta que esto puede producir grupos con baja calidad de datos si
+  los mensajes cambian con frecuencia:
+
+  ```bash {tabTitle:Fingerprinting Config}
+  logger:"com.foo.auditlogger.*" -> audit-log, {{ message }}
+  ```
+
+  ### `{{ stack.abs_path }}`
+
+  alias: `{{ path }}`
+
+  Rellena la ruta del “frame con fallo”, también conocido como el frame superior del código de la aplicación.
+
+  ```bash {tabTitle:Fingerprinting Config}
+  error.type:"ScriptError" -> script-evaluation, {{ stack.abs_path }}
+  ```
+
+  ### `{{ stack.filename }}`
+
+  Es como `stack.abs_path`, pero solo rellenará el nombre de archivo relativo:
+
+  ```bash {tabTitle:Fingerprinting Config}
+  error.type:"ScriptError" -> script-evaluation, {{ stack.filename }}
+  ```
+
+  ### `{{ stack.function }}`
+
+  alias: `{{ function }}`
+
+  Rellena el nombre de la función del “frame con fallo”, también conocido como el frame superior del código de la aplicación.
+
+  ```bash {tabTitle:Fingerprinting Config}
+  error.type:"ScriptError" -> script-evaluation, {{ stack.function }}
+  ```
+
+  ### `{{ stack.module }}`
+
+  alias: `{{ module }}`
+
+  Rellena el nombre del módulo del “frame con fallo”, también conocido como el frame superior del código de la aplicación.
+
+  ```bash {tabTitle:Fingerprinting Config}
+  error.type:"ScriptError" -> script-evaluation, {{ stack.module }}
+  ```
+
+  ### `{{ stack.package }}`
+
+  alias: `{{ package }}`
+
+  Rellena el nombre del paquete (archivo objeto) del “frame con fallo”, también conocido como el frame superior del código de la aplicación.
+
+  ```bash {tabTitle:Fingerprinting Config}
+  stack.function:"assert" -> assertion, {{ stack.package }}
+  ```
+
+  ### `{{ tags.tag_name }}`
+
+  Rellena en la huella el valor de una etiqueta, que puede usarse, por ejemplo, para dividir eventos por nombre de servidor o algo similar.
+
+  ```bash {tabTitle:Fingerprinting Config}
+  message:"connection error*" -> connection-error, {{ tags.server_name }}
+  ```
+
+  ### `{{ transaction }}`
+
+  Rellena en la huella el nombre de la transacción. Forzará la creación de un grupo por transacción:
+
+  ```bash {tabTitle:Fingerprinting Config}
+  error.type:"ApiError" -> api-error, {{ transaction }}
+  ```
+</DefinitionList>
+
+<div id="custom-titles">
+  ## Títulos personalizados
+</div>
+
+Cuando usas el fingerprinting para agrupar eventos, a veces también conviene cambiar el título predeterminado del evento. Normalmente, el título del evento es el tipo y el valor de la excepción (o los nombres de las funciones más externas en ciertas plataformas). Al agrupar con reglas personalizadas, este título puede resultar confuso. Por ejemplo, si agrupas los eventos de un logger, quizá quieras nombrar el grupo según ese logger. Esto se puede lograr configurando el atributo `title` así:
+
+```bash {tabTitle:Fingerprinting Config}
+logger:my.package.* level:error -> error-logger, {{ logger }} title="Error del registrador {{ logger }}"
+```

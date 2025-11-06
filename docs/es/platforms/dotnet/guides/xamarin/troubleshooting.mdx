@@ -1,0 +1,118 @@
+---
+title: Solución de problemas
+sidebar_order: 9000
+description: Obtén más información sobre cómo solucionar problemas comunes con el SDK de Xamarin.
+og_image: /og-images/platforms-dotnet-guides-xamarin-troubleshooting.png
+---
+
+Si necesitas ayuda para resolver problemas con el SDK de Xamarin de Sentry, puedes consultar aquí los casos excepcionales documentados. Si necesitas ayuda adicional, puedes [preguntar en GitHub](https://github.com/getsentry/sentry-xamarin/issues/new/choose). Los clientes con un plan de pago también pueden contactar al equipo de soporte.
+
+<div id="offline-caching-information">
+  ## Información sobre el caché sin conexión
+</div>
+
+En Xamarin iOS, el caché sin conexión puede provocar este problema.
+
+<div id="eventtransaction-capture">
+  ### Captura de eventos/transacciones
+</div>
+
+`Failed to send cached envelope: System.MissingMethodException: Method not found: System.Text.Json.JsonDocument`
+
+O
+
+`Attempting to JIT compile method 'System.Text.Json.JsonElement Sentry.Internal.Json:Parse (byte[])' while running in aot-only mode.`
+
+Para ayudarte a depurar el problema, agrega la siguiente línea a tu proyecto de iOS:
+
+```csharp
+    _ = new byte[2].AsMemory();
+```
+
+Notarás un conflicto de ensamblados con la extensión AsMemory; lo mismo ocurre con el SDK de Sentry, pero el problema solo se manifiesta en tiempo de ejecución.
+
+![Conflicto de System.Memory](./img/system-memory-conflict.png)
+
+Para solucionarlo, sigue estos pasos:
+
+1. Edita el archivo ‘csproj’ de iOS
+
+* `Visual Studio (Mac)`: Haz clic derecho en tu proyecto de iOS y, al final, selecciona la opción `Edit Project File`.
+* `Visual Studio (Windows)`: Haz clic derecho en tu proyecto de iOS y selecciona la opción `Unload Project`. Al hacerlo, se abrirá tu solución del proyecto en bruto; de lo contrario, haz clic derecho en tu proyecto de iOS y selecciona la opción `Edit project file`.
+
+<Alert>
+  También puedes usar un editor de texto externo u otro IDE para editar tu
+  proyecto de iOS.
+</Alert>
+
+2. Ubica el `ItemGroup` que contiene `PackageReference`.
+
+![ItemGroup con PackageReference](./img/finding-package-reference.png)
+
+3. Agrega un nuevo `PackageReference` como se muestra en el fragmento:
+
+```csharp
+<PackageReference Include="System.Memory" Version="4.5.4" IncludeAssets="None" />
+```
+
+<Alert>
+  Es importante agregar `IncludeAssets` como `None`, o esta corrección no
+  funcionará.
+</Alert>
+
+<Alert>Using Reference no funcionará; debe ser PackageReference.</Alert>
+
+4. Guarda el archivo `csproj` editado y vuelve a cargar tu proyecto si se descargó:
+
+* `Visual Studio (Windows)`: Haz clic derecho en tu proyecto iOS y selecciona la opción `Reload Project`.
+
+5. Si la extensión `AsMemory` sigue mostrando el conflicto, tendrás que reiniciar tu IDE para asegurarte de que se apliquen los cambios.
+6. Espera a que el IDE restaure los paquetes. Una vez finalizado, intenta capturar una excepción o transacción.
+7. Si la extensión `AsMemory` sigue apareciendo en conflicto, verifica nuevamente si ejecutaste el paso 3 exactamente como se muestra.
+8. Con el problema resuelto, ya no necesitarás el código de prueba en tu solución.
+
+Puedes encontrar más información sobre este problema aquí: https://github.com/mono/mono/issues/20805
+
+
+<div id="android">
+  ## Android
+</div>
+
+<div id="eventtransaction-not-sent">
+  ### Evento/transacción no enviada
+</div>
+
+Puedes encontrarte con el siguiente problema al enviar eventos o sobres (envelopes):
+
+`The SSL connection could not be established, CERTIFICATE_VERIFY_FAILED`
+
+Una solución es modificar tu DSN; para hacerlo, elimina los valores entre `@` y `sentry.io` en tu DSN.
+
+- Antes: `https://abc@1234.ingest.sentry.io/1234`
+- Después: `https://abc@sentry.io/1234`
+
+Más información aquí: https://github.com/xamarin/xamarin-android/issues/6351
+
+<div id="tvos">
+  ## tvOS
+</div>
+
+Es posible que te encuentres con el siguiente problema en un proyecto de tvOS:
+
+<div id="build-issues">
+  ### Problemas de compilación
+</div>
+
+`linker command failed with exit code 1 (use -v to see invocation)`
+`MTOUCH : error MT5216: Native linking failed for '.../libSystem.Reflection.Metadata.dll.dylib'. Please file a bug report at https://github.com/xamarin/xamarin-macios/issues/new`
+
+Si este mensaje aparece en la ventana de compilación al compilar tu solución de tvOS, necesitarás un argumento adicional de mtouch en las opciones de compilación de iOS del proyecto (para todas las configuraciones de dispositivos).
+
+1. Abre las propiedades de tu proyecto de iOS.
+2. En `tvOS Build`, localiza la entrada `Additional mtouch arguments`.
+3. Añade la siguiente línea:
+
+`--dlsym:System.Reflection.Metadata.dll`
+
+4. Asegúrate de que el `additional mtouch argument` se aplique a todas las configuraciones y plataformas.
+   ![argumentos de mtouch del proyecto iOS](./img/tvos-metadata.jpg)

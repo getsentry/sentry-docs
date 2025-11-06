@@ -1,0 +1,154 @@
+---
+title: Captura de errores
+sidebar_order: 3
+description: >-
+  Aprende cómo Sentry captura errores no controlados y controlados para enriquecer
+  tus datos de eventos.
+og_image: /og-images/product-sentry-basics-integrate-backend-capturing-errors.png
+---
+
+Una vez inicializado en tu código, el SDK de Sentry capturará errores y varios tipos de eventos para notificarte en tiempo real, según las reglas de alerta que hayas configurado. Con la aplicación de Django ya en ejecución en tu [localhost](http://localhost:8000/), pongámoslo a prueba.
+
+<Alert>
+  Si estás usando tu propio código fuente, sigue las instrucciones de [Introducción](/es/platforms/python/integrations/django/) para provocar un error en tu aplicación.
+</Alert>
+
+<div id="unhandled-errors">
+  ## Errores no controlados
+</div>
+
+El SDK de Sentry capturará y enviará automáticamente cualquier *error no controlado* que se produzca en el tiempo de ejecución de tu aplicación, sin configuración adicional ni manejo explícito. En general, los errores no controlados son aquellos que no están atrapados por una cláusula `try/except`.
+
+Para provocar un error no controlado:
+
+1. Ejecuta la app local de Django.
+
+2. Ve en tu navegador a `http://localhost:8000/unhandled`.
+
+3. Si configuraste una [regla de alerta](/es/product/alerts/create-alerts/), deberías recibir una notificación sobre el error. De lo contrario, abre la página de [**Issues**](https://sentry.io/orgredirect/organizations/:orgslug/issues/) en tu cuenta de Sentry.
+
+4. Deberías ver la excepción no controlada en la lista de issues.
+
+   ![Unhandled Issue](./img/unhandled_issue.png)
+
+5. Haz clic en el issue para abrir la página de **Detalles del issue**.
+
+   ![Issue Details Page](./img/error_with_all_tags.png)
+
+6. Observa que el evento:
+
+   * Está etiquetado con las opciones `environment` y `release` que configuramos en el tutorial anterior, junto con la etiqueta `handled:no`, lo que marca este evento como un error no controlado.
+   * Contiene un commit sospechoso, posible gracias a la función de seguimiento de commits que habilitamos anteriormente.
+   * Contiene el breadcrumb personalizado que agregamos a través del SDK.
+
+     ![Unhandled Breadcrumbs](./img/unhandled_issue_breadcrumbs.png)
+
+<div id="handled-errors">
+  ## Errores gestionados
+</div>
+
+El SDK de Sentry incluye varios métodos que puedes usar para reportar **explícitamente** errores, eventos y mensajes personalizados en cláusulas `except`, áreas críticas de tu código, etc.
+
+<div id="capture-exception">
+  ### Capturar excepción
+</div>
+
+1. Abre el archivo `views.py`. Observa que importamos la librería `sentry_sdk`, que contiene el método `capture_exception`:
+
+   ```python {filename: myapp/views.py}
+   import sentry_sdk
+   ```
+
+2. Este método se utiliza para capturar la excepción gestionada por la cláusula `except` en `HandledErrorView`:
+
+   ```python {filename: myapp/views.py}
+   class HandledErrorView(APIView):
+      def get(self, request):
+         ...
+         try:
+             '2' + 2
+         except Exception as err:
+             sentry_sdk.capture_exception(err)
+
+         return Response()
+   ```
+
+3. Para probarlo en tu entorno local, invoca el siguiente endpoint: `http://localhost:8000/handled`.
+
+4. Igual que hicimos con el error no controlado, abre la página de detalles de la nueva incidencia.
+
+5. Observa que el evento está etiquetado con las mismas opciones de configuración `environment` y `release`. Pasa el cursor sobre el icono “i” en la etiqueta de release para ver la información de la release y los commits asociados.
+
+   ![Handled release](./img/handled_release.png)
+
+6. Haz clic en el icono “i” de la release para ir a la página de la release.
+
+<div id="capture-message">
+  ### Capturar mensaje
+</div>
+
+Por lo general, `capture_message` no se emite, pero hay ocasiones en que un desarrollador puede querer agregar un mensaje simple en su app con fines de depuración, y `capture_message` es ideal para eso.
+
+1. En el archivo `views.py`, el método `capture_message` está disponible mediante la importación de la librería `sentry_sdk`.
+
+2. Puedes usarlo en cualquier parte de tu app. En nuestro ejemplo, creamos una clase de vista dedicada, `CaptureMessageView`, para disparar y capturar un mensaje que queremos rastrear:
+
+   ```python {filename: myapp/views.py}
+   sentry_sdk.capture_message("You caught me!")
+   ```
+
+3. Para probarlo en tu localhost, ejecuta el siguiente endpoint: `http://localhost:8000/message`.
+
+4. Como antes, abre la página de detalles del nuevo issue desde la página **Issues**.
+
+   <Alert>
+     Necesitarás quitar el filtro `"issue.priority is high or medium"` del campo &quot;Custom Search&quot; en la página [**Issues**](https://sentry.io/orgredirect/organizations/:orgslug/issues/) para ver todos los tipos de issues en la lista.
+   </Alert>
+
+   ![Import and Configure SDK](./img/capture_message.png)
+
+   > De forma predeterminada, los mensajes capturados se marcan con una etiqueta de nivel de gravedad `level:info`, como se refleja en la sección de etiquetas. Sin embargo, los métodos `capture_message` aceptan un parámetro de nivel de gravedad **opcional**.
+
+5. En el archivo `views.py`, cambia el método `capture_message` a:
+
+   ```python {filename: myapp/views.py}
+   sentry_sdk.capture_message("You caught me!", "fatal")
+   ```
+
+6. Guarda los cambios y vuelve a ejecutar el endpoint `/message`. Los cambios deberían aplicarse de inmediato mediante `StateReloader`.
+
+7. Observa que la etiqueta de nivel de gravedad en el nuevo evento ahora muestra `level:fatal`.
+
+<div id="enriching-your-event-data">
+  ## Enriquecer tus datos de eventos
+</div>
+
+Puedes enriquecer tus datos de eventos y errores con el SDK de Sentry agregando etiquetas personalizadas y atributos de contexto de usuario. Además de aportar más contexto a tus errores, los datos enriquecidos ampliarán tus opciones para buscar, filtrar y consultar tus metadatos de eventos. Obtén más información sobre las ventajas de enriquecer tus datos en [Event Data](/es/product/sentry-basics/enrich-data/).
+
+Para enriquecer los datos de los eventos de mensaje que capturamos con `capture_message`:
+
+1. En el archivo `views.py`, ubica la línea que invoca `sentry_sdk.capture_message`.
+
+2. Reemplaza esa línea por el siguiente código:
+
+   ```python {filename: myapp/views.py}
+   sentry_sdk.set_tag("my-tag", "my value")
+   sentry_sdk.user = { "email" : "my.email@your.domain.com" }
+   sentry_sdk.set_extra("someVariable", "some data")
+
+   sentry_sdk.capture_message("You caught me!", "fatal")
+   ```
+
+3. Guarda los cambios y vuelve a activar el endpoint `/message`.
+
+4. Abre la página de detalle del issue desde la página [**Issues**](https://sentry.io/orgredirect/organizations/:orgslug/issues/).
+
+5. Observa que:
+
+   * El **correo del usuario** ahora se muestra en la página de detalle y la cantidad de usuarios únicos afectados por este evento se refleja en el encabezado del issue.
+
+   * La **etiqueta personalizada** ahora está disponible (y se puede buscar) en la lista de etiquetas.
+     ![Enriched Event Data](./img/enriched_data_1.png)
+
+   * Los **datos adicionales** que configuramos en el SDK se reflejan en el contexto &quot;ADDITIONAL DATA&quot;.
+     ![Enriched Event Data 2](./img/enriched_data_2.png)

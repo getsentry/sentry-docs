@@ -1,0 +1,91 @@
+---
+title: Resúmenes de notificaciones
+sidebar_order: 130
+---
+
+Sentry ofrece un servicio que recopila las notificaciones a medida que se producen y programa su envío como notificaciones de “resumen” agregadas.
+
+<div id="configuration">
+  ## Configuración
+</div>
+
+Aunque el sistema de resúmenes viene con un conjunto razonable de opciones predeterminadas, la opción de configuración `SENTRY_DIGESTS_OPTIONS` se puede usar para afinar el comportamiento del backend de resúmenes según las necesidades de tu instalación. Todos los backends comparten un conjunto común de opciones que se detallan a continuación, y algunos también pueden definir opciones adicionales específicas de sus implementaciones.
+
+`minimum_delay`
+
+: La opción `minimum_delay` define el tiempo mínimo predeterminado (en segundos) que se debe esperar entre programaciones de resúmenes para su entrega después de la programación inicial. Esto se puede anular por proyecto en la Configuración de notificaciones.
+
+`maximum_delay`
+
+: La opción `maximum_delay` define el tiempo máximo predeterminado (en segundos) que se debe esperar entre programaciones de resúmenes para su entrega. Esto se puede anular por proyecto en la Configuración de notificaciones.
+
+`increment_delay`
+
+: La opción `increment_delay` define cuánto tiempo cada observación de un evento debe retrasar la programación hasta alcanzar el `maximum_delay` después de la última vez que se procesó un resumen.
+
+`capacity`
+
+: La opción `capacity` define el número máximo de elementos que debe contener una línea de tiempo. Si esto es un límite estricto o flexible depende del backend; consulta la opción `truncation_chance`.
+
+`truncation_chance`
+
+: La opción `truncation_chance` define la probabilidad de que una operación `add` desencadene una truncación de la línea de tiempo para mantener su tamaño cercano a la capacidad definida. Un valor de 1 hará que la línea de tiempo se trunque en cada operación `add` (convirtiéndolo efectivamente en un límite estricto), mientras que una probabilidad menor aumentará la posibilidad de que la línea de tiempo crezca más allá de su capacidad prevista, pero mejora el rendimiento de las operaciones `add` al evitar la truncación, que es una operación potencialmente costosa, especialmente en conjuntos de datos grandes.
+
+<div id="backends">
+  ## Backends
+</div>
+
+<div id="dummy-backend">
+  ### Backend ficticio
+</div>
+
+El backend ficticio desactiva la programación de resúmenes y todas las notificaciones se envían a medida que ocurren (sujetas a límites de tasa). Este es el backend de resúmenes predeterminado para las instalaciones creadas antes de la versión 8.
+
+El backend ficticio puede especificarse mediante la configuración `SENTRY_DIGESTS`:
+
+```python
+SENTRY_DIGESTS = 'sentry.digests.backends.dummy.DummyBackend'
+```
+
+
+<div id="redis-backend">
+  ### Backend de Redis
+</div>
+
+El backend de Redis utiliza Redis para almacenar la programación y los datos de notificaciones pendientes. Este es el backend de resúmenes predeterminado para las instalaciones creadas a partir de la versión 8.
+
+El backend de Redis se puede especificar mediante la configuración `SENTRY_DIGESTS`:
+
+```python
+SENTRY_DIGESTS = 'sentry.digests.backends.redis.RedisBackend'
+```
+
+El backend de Redis acepta varias opciones además del conjunto básico, proporcionadas mediante `SENTRY_DIGESTS_OPTIONS`:
+
+`cluster`
+
+: La opción `cluster` define el clúster de Redis que se usará para el almacenamiento. Si no se especifica ningún clúster, se utiliza el clúster `default`.
+
+<Alert level="warning" title="Importante">
+  Cambiar el valor de `cluster` o la configuración del clúster después de que se hayan
+  escrito datos en el backend de digests puede provocar efectos inesperados; en concreto,
+  puede generar pérdida de datos durante cambios en el tamaño del clúster. Esta opción
+  debe ajustarse con cuidado en sistemas en ejecución.
+</Alert>
+
+`ttl`
+
+: La opción `ttl` define el tiempo de vida (en segundos) de los registros, cronologías y digests. Este valor puede (y debería) ser relativamente alto, ya que las cronologías, los digests y los registros deberían eliminarse tras ser procesados; esto es principalmente para asegurar que los datos obsoletos no permanezcan demasiado tiempo en caso de un error de configuración. Este valor debe ser mayor que el retraso máximo de programación para evitar que los datos se eliminen demasiado pronto.
+
+
+<div id="example-configuration">
+  ### Ejemplo de configuración
+</div>
+
+```python
+SENTRY_DIGESTS = 'sentry.digests.backends.redis.RedisBackend'
+SENTRY_DIGESTS_OPTIONS = {
+    'capacity': 100,
+    'cluster': 'digests',
+}
+```

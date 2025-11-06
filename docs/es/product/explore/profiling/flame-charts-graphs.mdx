@@ -1,0 +1,70 @@
+---
+title: Flame graphs y flame graphs agregados
+sidebar_order: 100
+description: Aprende a interpretar los flame graphs y los flame graphs agregados.
+og_image: /og-images/product-explore-profiling-flame-charts-graphs.png
+---
+
+Los datos de perfilado permiten identificar qué métodos y líneas de tu código son lentos. Pero lograr este tipo de información requiere comprender cómo se representan y visualizan los datos de perfilado. Sentry utiliza tanto flame graphs como flame graphs agregados para visualizar los datos de perfiles. A continuación, te explicamos cómo leerlos.
+
+<div id="what-are-flame-graphs">
+  ## ¿Qué son los flame graphs?
+</div>
+
+Los flame graphs muestran muestras de la pila en orden cronológico durante un único perfil. Cada rectángulo de la visualización representa un frame de la pila. El eje X de un flame graph representa el tiempo, mientras que el eje Y muestra la pila de ejecución en ese momento. Esto permite ver qué estaba ejecutando tu programa en cualquier punto mientras se recopilaba el perfil.
+
+![Página de detalles del perfil con un flame graph](./img/profile-flame-chart.png)
+
+Al interpretar flame graphs, lo más importante que debes observar es el **color** y el **ancho** del rectángulo que representa cada frame en la pila.
+
+<div id="color">
+  ### Color
+</div>
+
+Los esquemas de color varían, pero de forma predeterminada en Sentry, las funciones del sistema aparecen en rojo y las funciones de la aplicación en azul.
+
+Si tu código es lento debido a frames de sistema en rojo, por lo general no hay mucho que puedas hacer para acelerarlo. Sin embargo, sí puedes influir en la ejecución de cualquier frame de aplicación en azul en tu código.
+
+Por ejemplo, considera una función llamada `readFile` que lee un archivo del disco. Aunque no puedes modificar la llamada al sistema del kernel `open()` que se invoca, puedes cambiar el código de tu aplicación para llamar a esa función solo una vez y reutilizar el contenido del archivo después. Esto reduciría el I/O de disco (un cuello de botella de rendimiento común).
+
+<div id="width">
+  ### Ancho
+</div>
+
+El ancho del rectángulo de cada marco de la pila representa el tiempo dedicado a esa función. Al observar un gráfico de llamas (flame graph), podemos ver dos datos clave: **tiempo total de la función** y **tiempo propio de la función**.
+
+El tiempo total de la función se refiere a cuánto tarda en ejecutarse una función _y todas sus funciones hijas_. El tiempo propio de la función se refiere a cuánto tarda en ejecutarse la función en sí, excluyendo el tiempo dedicado a las funciones hijas.
+
+Veamos un ejemplo para entender la diferencia.
+
+![Un gráfico de llamas de Sentry](./img/flame-chart.png)
+
+Esta imagen muestra una sección de un gráfico de llamas, empezando por la función `OffsetPaginator.get_result`, que tarda 2.14 s en ejecutarse. 2.14 s es el **tiempo total** de la función. Si miras más abajo en la pila, verás que casi los 2.14 s completos los consume la función hija `CursorWrapper.execute`, que ejecuta una consulta de base de datos lenta.
+
+En este ejemplo, el **tiempo propio** de la función padre, `OffsetPaginator.get_result`, está cerca de 0 ms, mientras que tanto el **tiempo propio** _como_ el **tiempo total** de `CursorWrapper.execute` están cerca de 2.14 s.
+
+<div id="what-are-aggregated-flame-graphs">
+  ## ¿Qué son los gráficos de llamas agregados?
+</div>
+
+Mientras que los gráficos de llamas se usan para representar muestras de pila de un único perfil en orden cronológico, los gráficos de llamas agregados representan las _poblaciones_ de pilas de tu programa perfilado. Están optimizados para fusionar pilas y mostrar duraciones agregadas de funciones.
+
+Al igual que en los gráficos de llamas, cada rectángulo representa un frame de la pila, pero en los gráficos de llamas agregados, el eje X no representa el tiempo; en su lugar, muestra todos los perfiles de pila, ordenados alfabéticamente. Cuanto más ancho es un frame, más _a menudo_ apareció en una pila.
+
+Agregar pilas de esta manera te ayuda a encontrar optimizaciones de rendimiento al visualizar el código que con mayor frecuencia ocupa la pila de llamadas de tu programa.
+
+![A flame graph showing a program that generates the fibonacci sequence](./img/fib-flame-chart.png)
+
+![An aggregated flame graph showing a program that generates the fibonacci sequence](./img/fib-flame-graph.png)
+
+_Los mismos datos de perfil, visualizados en un gráfico de llamas agregado arriba y en un gráfico de llamas abajo._
+
+<Alert>
+
+El primer gráfico de llamas agregado de arriba se muestra con las “llamas hacia abajo”, y el segundo gráfico de llamas agregado se muestra con las “llamas hacia arriba”. Ver un gráfico de llamas agregado con las llamas hacia arriba o hacia abajo es cuestión de preferencia personal. La información es idéntica.
+
+</Alert>
+
+En sentry.io, los gráficos de llamas agregados se muestran en tu página de resumen del perfil. Los gráficos de llamas agregados de esta página se crean usando datos de muchos perfiles diferentes para que puedas ver los cuellos de botella de rendimiento más comunes en tu programa.
+
+![The aggregated flame graph view](./img/aggregated-flame-graph-view.png)

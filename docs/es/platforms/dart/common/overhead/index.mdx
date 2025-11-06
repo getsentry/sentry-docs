@@ -1,0 +1,47 @@
+---
+title: Sobrecarga del SDK
+description: "Conoce la sobrecarga del SDK de Dart de Sentry y cómo adaptar tu configuración para minimizarla."
+sidebar_order: 7500
+---
+
+Agregar nuevas funcionalidades o dependencias a tu aplicación conlleva costos adicionales de recursos: tiempo de CPU, uso de memoria y ancho de banda de red, entre otros. Los SDK de Sentry no son la excepción. Este documento aporta transparencia sobre la posible sobrecarga que puede introducir el uso de nuestro SDK y te ayuda a encontrar el conjunto de funcionalidades y configuraciones que mejor se adapten a tus necesidades.
+
+<div id="general-approach">
+  ## Enfoque general
+</div>
+
+El SDK está diseñado para tener un impacto mínimo o nulo en la experiencia del usuario. Para lograrlo, utilizamos una variedad de herramientas para medir y optimizar continuamente el rendimiento de nuestras implementaciones.
+
+También empleamos diversas técnicas para asegurarnos de no cargar los recursos del sistema en la ruta crítica. En dispositivos móviles, esto suele significar que delegamos algunas tareas a implementaciones nativas, usamos debounce cuando corresponde o posponemos el procesamiento para más adelante si es posible.
+
+Si descubres (por ejemplo, mediante un perfilado local o usando Sentry para mejorar el rendimiento de tu app) que el SDK no opera dentro de las pautas mencionadas a continuación, por favor [abre un issue](https://github.com/getsentry/sentry-dart/issues/new/choose) en nuestro repositorio del SDK y asegúrate de proporcionar tanto contexto como puedas.
+
+<div id="error-monitoring">
+  ## Supervisión de errores
+</div>
+
+Durante el funcionamiento normal, la supervisión de errores conlleva poca o ninguna sobrecarga. Cuando se produce un error o un bloqueo, la experiencia del usuario se ve afectada y cualquier rutina de manejo de fallos opera bajo las restricciones de tiempo impuestas por el sistema. Esto significa que estas implementaciones están muy optimizadas para realizar el trabajo necesario lo más rápido posible.
+
+El SDK también proporciona métodos para capturar eventos manualmente: <PlatformLink to="/usage/#capturing-errors">`captureError`</PlatformLink> y <PlatformLink to="/usage/#capturing-messages">`captureMessage`</PlatformLink>. Estos métodos realizan operaciones complejas, como capturar información de la traza de la pila, y aunque también están muy optimizados, se debe evitar llamarlos en bucles muy cerrados.
+
+<div id="breadcrumbs">
+  ## Breadcrumbs
+</div>
+
+<PlatformLink to="/enriching-events/breadcrumbs">Breadcrumbs</PlatformLink> se recopilan mediante integraciones automatizadas o agregándolos manualmente. Para tenerlos disponibles en cada evento generado por el SDK, se persisten de forma continua y se gestionan en un búfer de alto rendimiento. Esto no debería afectar la experiencia del usuario.
+
+Capturar una cantidad excesiva de breadcrumbs (por ejemplo, crear breadcrumbs para todos los mensajes de registro) puede generar una sobrecarga de rendimiento considerable. Para mitigarlo, revisa y adapta el uso de breadcrumbs en tu app. Por ejemplo, aumenta el nivel mínimo de los mensajes de registro que crean breadcrumbs de `warn` a `error`.
+
+Ten en cuenta que aumentar el número máximo de breadcrumbs **no** mejora el rendimiento e incluso puede tener un efecto perjudicial.
+
+<div id="tracing-and-performance-monitoring">
+  ## Rastreo y monitoreo del rendimiento
+</div>
+
+Como se indica en nuestra <Link to="/product/insights/performance-overhead">documentación del producto sobre este tema</Link>, el rastreo añade cierta sobrecarga, pero debería tener un impacto mínimo en el rendimiento de tu aplicación. En escenarios típicos, la sobrecarga esperada es inferior al 3% del uso de recursos de la app.
+
+<div id="sdk-size">
+  ## Tamaño del SDK
+</div>
+
+El SDK de Sentry para Dart añade aproximadamente 1–1,5 MB al tamaño del binario de una app. El impacto exacto depende de varios factores, incluida la arquitectura del dispositivo.

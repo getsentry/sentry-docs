@@ -1,0 +1,260 @@
+Sentry platform---
+title: &quot;API de aprovisionamiento de cuentas&quot;
+description: &quot;Aprende a aprovisionar automáticamente organizaciones de Sentry para tus clientes con nuestra API de aprovisionamiento.&quot;
+sidebar&#95;order: 1
+--------------------
+
+<div id="account-provisioning-api">
+  # API de aprovisionamiento de cuentas
+</div>
+
+La API de aprovisionamiento de Sentry permite que las plataformas asociadas creen automáticamente organizaciones de Sentry para sus clientes. Esto posibilita una incorporación fluida de tus usuarios a la monitorización de errores y a los análisis de rendimiento de Sentry.
+
+<div id="overview">
+  ## Descripción general
+</div>
+
+Cuando llamas por primera vez a la API de aprovisionamiento de Sentry en nombre de tu cliente, este recibe:
+
+* **Una organización de Sentry** con el mismo nombre que su organización en tu plataforma
+* **Un equipo predeterminado** para colaborar dentro de la organización
+* **Propiedad de la organización** asignada a la dirección de correo electrónico proporcionada
+* **Un plan de suscripción** según tu acuerdo de colaboración
+* **Proyectos preconfigurados** (opcional) que especifiques
+* **Un token de integración** (opcional) para gestionar la organización de forma programática
+
+<div id="api-endpoint">
+  ## Endpoint de la API
+</div>
+
+```
+POST https://sentry.io/remote/channel-provision/account/
+```
+
+<div id="authentication">
+  ## Autenticación
+</div>
+
+La API requiere un encabezado personalizado `X-Request-Signature` con una firma HMAC-SHA256. La firma se genera usando tu `API_SECRET_KEY` y el cuerpo de la solicitud.
+
+<div id="signature-generation">
+  ### Generación de firmas
+</div>
+
+```python
+import hmac
+import hashlib
+import json
+
+def generar_firma(datos, clave_secreta):
+    clave_secreta_bytes = clave_secreta.encode("utf-8")
+    datos_json = json.dumps(datos)
+    datos_bytes = datos_json.encode("utf-8")
+    firma = hmac.new(
+        key=clave_secreta_bytes, 
+        msg=datos_bytes, 
+        digestmod=hashlib.sha256
+    ).hexdigest()
+    return firma
+```
+
+<div id="request-parameters">
+  ## Parámetros de la solicitud
+</div>
+
+| Parámetro | Tipo | Obligatorio | Descripción |
+|-----------|------|-------------|-------------|
+| `channel` | string | Sí | Nombre de tu partner (no distingue mayúsculas) |
+| `email` | string | Sí | Correo electrónico del cliente (pasa a ser propietario de la organización) |
+| `organizationName` | string | Sí | Nombre de la organización del cliente (máx. 50 caracteres) |
+| `organizationID` | string | Sí | ID único de la organización del cliente en tu plataforma |
+| `hasAgreedTerms` | boolean | Sí | Confirmación de que el cliente acepta los términos de Sentry |
+| `timestamp` | integer | Sí | Marca de tiempo actual para la caducidad de la solicitud |
+| `url` | string | Sí | Debe ser `https://sentry.io/remote/channel-provision/account/` |
+| `projects` | array | No | Lista de proyectos a crear |
+| `region` | string | No | Residencia de datos (`us` o `de`, valor predeterminado: `us`) |
+| `isTest` | boolean | No | Establécelo en `true` para pruebas (valor predeterminado: `false`) |
+
+<div id="project-object-structure">
+  ### Estructura del objeto Project
+</div>
+
+```json
+{
+  "name": "project-name",
+  "platform": "java"
+}
+```
+
+<div id="supported-platforms">
+  ### Plataformas compatibles
+</div>
+
+El campo `platform` es compatible con todos los [identificadores de plataforma de Sentry](/es/platforms/), incluidos:
+
+* `javascript`, `python`, `java`, `csharp`, `php`, `ruby`, `go`, `rust`, `swift`, `kotlin`, `dart` y más
+
+<div id="example-request">
+  ## Ejemplo de solicitud
+</div>
+
+```python
+import requests
+import json
+import time
+
+URL = "https://sentry.io/remote/channel-provision/account/"
+API_SECRET_KEY = "your-partner-specific-secret-key"
+
+DATA = {
+    "channel": "Nombre de tu plataforma",
+    "organizationName": "Customer Corp",
+    "organizationID": "id-único-del-cliente",
+    "email": "cliente@ejemplo.com",
+    "projects": [
+        {"name": "aplicación-web", "platform": "javascript"},
+        {"name": "servicio-api", "platform": "python"}
+    ],
+    "hasAgreedTerms": True,
+    "timestamp": int(time.time()),
+    "url": URL,
+    "isTest": False
+}
+
+# Generar la firma
+signature = generate_signature(DATA, API_SECRET_KEY)
+
+# Realizar la solicitud
+response = requests.post(
+    URL, 
+    data=json.dumps(DATA), 
+    headers={"X-Request-Signature": signature}
+)
+
+print(response.json())
+```
+
+<div id="response">
+  ## Respuesta
+</div>
+
+<div id="success-200">
+  ### Correcto (200)
+</div>
+
+```json
+{
+  "email": "customer@example.com",
+  "organization": {
+    "id": "123",
+    "slug": "customer-corp",
+    "name": "Customer Corp"
+  },
+  "projects": [
+    {
+      "dsn": "https://...@sentry.io/123",
+      "project": {
+        "id": "456",
+        "slug": "web-app",
+        "name": "web-app",
+        "platform": "javascript"
+      }
+    }
+  ],
+  "integration_api_token": "tu token de integración"
+}
+```
+
+<div id="error-responses">
+  ### Respuestas de error
+</div>
+
+* **400 Bad Request**: Parámetros inválidos (consulta el cuerpo de la respuesta para más detalles)
+* **401 Unauthorized**: Firma inválida (verifica tu API&#95;SECRET&#95;KEY)
+* **500 Server Error**: Error interno del servidor (consulta el cuerpo de la respuesta para más detalles)
+
+<div id="additional-operations">
+  ## Operaciones adicionales
+</div>
+
+<div id="adding-projects">
+  ### Agregar proyectos
+</div>
+
+Vuelve a llamar a la API con nuevos proyectos para agregarlos a una organización existente:
+
+```python
+DATA = {
+    # ... parámetros existentes ...
+    "projects": [
+        {"name": "new-service", "platform": "go"}
+    ]
+}
+```
+
+<div id="adding-managers">
+  ### Agregar administradores
+</div>
+
+Añade usuarios adicionales como administradores de la organización:
+
+```python
+DATA = {
+    # ... existing parameters ...
+    "email": "manager@example.com"  # Nuevo correo del administrador
+}
+```
+
+<div id="customer-experience">
+  ## Experiencia del cliente
+</div>
+
+<div id="welcome-email">
+  ### Correo de bienvenida
+</div>
+
+Cuando aprovisiones una organización, el cliente recibirá:
+
+* Un correo de bienvenida con detalles de la organización
+* Instrucciones para gestionar su organización de Sentry
+* Información sobre tu integración de socio
+* Información de contacto para soporte
+
+<div id="partner-specific-features">
+  ### Funciones específicas del socio
+</div>
+
+Según tu acuerdo de asociación, puedes habilitar:
+
+* **Presencia del socio**: Mostrar tu plataforma como miembro de la organización
+* **Plan permanente**: Permitir que los clientes cambien de plan de forma independiente
+* **Visibilidad de cuotas**: Controlar la visibilidad de las cuotas de uso
+
+<div id="integration-token">
+  ## Token de integración
+</div>
+
+La respuesta incluye un `integration_api_token` que te permite:
+
+* Crear y gestionar proyectos
+* Gestionar a los miembros de la organización
+* Acceder a las API de Sentry en nombre del cliente
+
+Los permisos del token se definen en tu acuerdo de colaboración.
+
+<div id="best-practices">
+  ## Mejores prácticas
+</div>
+
+1. **Almacena los mapeos de organizaciones**: Lleva un registro de la relación entre tus IDs de cliente y los IDs de organización de Sentry
+2. **Maneja los errores correctamente**: Implementa un manejo de errores adecuado para los casos de aprovisionamiento fallido
+3. **Usa el modo de prueba**: Configura `isTest: true` durante el desarrollo y las pruebas
+4. **Respeta los límites de velocidad**: Implementa retrasos adecuados entre las solicitudes
+5. **Protege tu clave secreta**: Almacena tu API&#95;SECRET&#95;KEY de forma segura y nunca la expongas en código del lado del cliente
+
+<div id="support">
+  ## Soporte
+</div>
+
+Si tienes preguntas sobre la API de aprovisionamiento o la integración de partners, contáctanos:
+**Correo:** partnership-platform@sentry.io

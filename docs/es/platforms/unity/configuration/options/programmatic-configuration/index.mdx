@@ -1,0 +1,76 @@
+---
+title: Configuración programática
+description: Obtén más información sobre cómo configurar el SDK de Unity de forma programática.
+sidebar_order: 20
+og_image: >-
+  /og-images/platforms-unity-configuration-options-programmatic-configuration.png
+---
+
+Hemos añadido `Sentry Options Configuration` a la pestaña `Options Config` en la ventana del editor de Sentry para ofrecer una forma de modificar las opciones de forma programática.
+
+![Options Configuration](./img/unity-options-configuration.png)
+
+<div id="programmatic-configuration">
+  ## Configuración mediante código
+</div>
+
+El SDK de Sentry para Unity incluye SDK específicos de plataforma (es decir, nativos) como [platform-specific (that is, Native)](/es/platforms/unity/native-support/), [Android](/es/platforms/android/), [Apple](/es/platforms/apple/guides/ios/), y [Native](/es/platforms/native/) para ofrecer compatibilidad con bloqueos nativos. Estos SDK comparten las opciones con las que se inicializan.
+
+La capa de C# se inicializa automáticamente mediante [SubsystemRegistration RuntimeInitializeOnLoadMethodAttribute](https://docs.unity3d.com/ScriptReference/RuntimeInitializeLoadType.SubsystemRegistration.html).
+
+![Flujo de inicialización](./img/initialization-flow.png)
+
+Si está presente, el `Option Configuration Script` se ejecuta en cada inicio de la aplicación. Primero se usan estas opciones para inicializar los SDK nativos y después el SDK administrado (C#). Esto significa que las opciones que configures en tu callback `Configure` también se aplicarán en la capa nativa. Por ejemplo:
+
+```csharp
+public override void Configure(SentryUnityOptions options)
+{
+    // BeforeSend está actualmente limitado a código C#. Los errores nativos —como bloqueos en código C/C++— los capturan los SDK nativos, pero estos no invocan este callback.
+    // los capturan los SDK nativos, pero los SDK nativos no invocarán este callback.
+    options.SetBeforeSend((sentryEvent, _) =>
+    {
+        if (sentryEvent.Tags.ContainsKey("SomeTag"))
+        {
+            // No enviar eventos con la etiqueta "SomeTag" a Sentry
+            return null;
+        }
+
+        return sentryEvent;
+    });
+
+    // Opciones de temporización de la inicialización del SDK nativo:
+    // Inicialización en tiempo de compilación:
+    //   + Puede capturar errores del motor de Unity
+    //   - Las opciones quedan fijas en tiempo de compilación
+    // Inicialización en tiempo de ejecución:
+    //   + Permite configuración dinámica
+    //   - Puede perder algunos errores tempranos
+#if UNITY_ANDROID
+    options.AndroidNativeInitializationType = NativeInitializationType.Runtime;
+#elif UNITY_IOS
+    options.IosNativeInitializationType = NativeInitializationType.Runtime;
+#endif
+}
+```
+
+<div id="initialize-native-sdks-first-when-targeting-ios-or-android">
+  ### Inicializa primero los SDK nativos al dirigirte a iOS o Android
+</div>
+
+En móviles, el SDK de Unity modifica automáticamente el proyecto de Xcode y Gradle generado para que también incluya los SDK de Cocoa y Java, respectivamente. Estos SDK pueden auto‑inicializarse antes de que se inicie el motor de Unity. Esto nos permite capturar errores y fallos que ocurren dentro del propio motor.
+Hay dos tipos de inicialización:
+
+* `NativeInitializationType.Runtime`: los SDK nativos se inicializan en tiempo de ejecución junto con el SDK de C#
+* `NativeInitializationType.BuildTime`: los SDK nativos se inicializan antes de que se inicie el motor de Unity
+
+<div id="runtime-initialization-default">
+  ### Inicialización en tiempo de ejecución (predeterminada)
+</div>
+
+Con la inicialización en tiempo de ejecución, los SDK nativos se inicializan en ese momento junto con el SDK de C#. Esto permite configurar todas las opciones de manera dinámica mediante código C# durante la ejecución.
+
+<div id="build-time-initialization">
+  ### Inicialización en tiempo de compilación
+</div>
+
+Cuando se usa la inicialización en tiempo de compilación, los SDK nativos se configuran durante la compilación y se inicializan antes de que se inicie el motor de Unity. Esto significa que las opciones quedan integradas en los proyectos generados y no pueden modificarse en tiempo de ejecución mediante código C#. Los cambios en propiedades como `Release` y `Environment` no se aplicarán a los eventos generados por los SDK nativos.

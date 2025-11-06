@@ -1,0 +1,97 @@
+---
+title: Integraciones
+description: "Sentry ofrece integraciones adicionales diseñadas para modificar la configuración o añadir instrumentación a tu aplicación."
+sidebar_order: 40
+---
+
+El SDK de Sentry utiliza integraciones para conectarse con la funcionalidad de frameworks y bibliotecas populares, con el fin de instrumentar tu aplicación automáticamente y ofrecerte los mejores datos desde el primer momento.
+
+Algunas de nuestras integraciones están disponibles como gems independientes, mientras que otras vienen como parches que pueden habilitarse desde la gem `sentry-ruby`. A continuación encontrarás un resumen de todas las integraciones disponibles.
+
+<div id="gems">
+  ## Gems
+</div>
+
+La siguiente tabla enumera todas las integraciones disponibles como gems.
+
+Simplemente añade las gems pertinentes a tu Gemfile y ejecuta `bundle install` para instalarlas.
+
+|                     Integración                                                                                                               | `Gemfile`                    |
+| ---------------------------------------------------------------------------------------------------------------------                         | :--------------:             |
+| <LinkWithPlatformIcon platform="ruby.rails" label="Rails" url="/platforms/ruby/guides/rails" />                           | `gem "sentry-rails"`         |
+| <LinkWithPlatformIcon platform="ruby.sidekiq" label="Sidekiq" url="/platforms/ruby/guides/sidekiq" />                         | `gem "sentry-sidekiq"`       |
+| <LinkWithPlatformIcon platform="ruby.delayed_job" label="Delayed Job" url="/platforms/ruby/guides/delayed_job/" />                    | `gem "sentry-delayed_job"`   |
+| <LinkWithPlatformIcon platform="ruby.resque" label="Resque" url="/platforms/ruby/guides/resque" />                          | `gem "sentry-resque"`        |
+| <LinkWithPlatformIcon platform="ruby.opentelemetry" label="OpenTelemetry" url="/platforms/ruby/tracing/instrumentation/opentelemetry" />  | `gem "sentry-opentelemetry"` |
+
+<div id="patches">
+  ## Parches
+</div>
+
+La siguiente tabla muestra todas las integraciones disponibles como parches y cuáles están habilitadas de forma predeterminada.
+
+Puedes usar [`config.enabled_patches`](/es/platforms/ruby/configuration/options/#enabled-patches) para habilitarlas o deshabilitarlas.
+
+```ruby
+# habilitar parche :faraday
+config.enabled_patches << :faraday
+
+# deshabilitar parche :puma
+config.enabled_patches.delete(:puma)
+```
+
+|                     Parche  | **Activado automáticamente** |
+| ----------------------------|:----------------------------:|
+| `:http`                     |               ✓              |
+| `:redis`                    |               ✓              |
+| `:puma`                     |               ✓              |
+| `:faraday`                  |                              |
+| `:graphql`                  |                              |
+
+<div id="features">
+  ## Características
+</div>
+
+<div id="rails">
+  ### Rails
+</div>
+
+La integración de Rails es una integración con muchas funciones que:
+
+* captura errores en cualquier parte de tu aplicación Rails
+* crea transacciones para las solicitudes HTTP entrantes
+* registra spans en esas transacciones para varias operaciones importantes como:
+  * consultas a la base de datos (realizadas con `activerecord`)
+  * renderizado de vistas
+
+<div id="queues">
+  ### Colas
+</div>
+
+Las distintas integraciones de colas para Sidekiq, Delayed Job y Resque crean trazas distribuidas que conectan tareas que se ejecutan en segundo plano de forma asíncrona.
+
+La integración de Rails también incluye esta funcionalidad para `ActiveJob`.
+
+<div id="opentelemetry">
+  ### OpenTelemetry
+</div>
+
+La integración de OpenTelemetry se utiliza para exportar a Sentry los spans instrumentados por un SDK de OpenTelemetry. Consulta las instrucciones de [configuración de OpenTelemetry](/es/platforms/ruby/tracing/instrumentation/opentelemetry) para más detalles.
+
+<div id="http-requests">
+  ### Solicitudes HTTP
+</div>
+
+Las solicitudes HTTP salientes se instrumentan como spans mediante los parches `:http` (para solicitudes realizadas con `Net::HTTP`) y `:faraday`.
+
+<div id="graphql">
+  ### GraphQL
+</div>
+
+Las operaciones de GraphQL se instrumentan como Spans mediante el parche `:graphql`.
+
+<div id="puma">
+  ### Puma
+</div>
+
+El parche `:puma` captura excepciones de bajo nivel fuera del stack de tu aplicación.

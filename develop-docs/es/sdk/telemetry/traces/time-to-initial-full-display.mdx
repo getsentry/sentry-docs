@@ -1,0 +1,98 @@
+---
+title: Tiempo hasta la visualización inicial/completa
+---
+
+Recomendamos implementar esta función para los SDK móviles y de escritorio.
+
+Los tiempos actuales de las transacciones de carga de pantalla no son fiables para entender el tiempo dedicado a la creación de la pantalla.
+Esto se debe a que esperan cualquier `span` creado, incluidas las operaciones de E/S de archivos o las solicitudes de red.
+Tiempo hasta la visualización inicial y Tiempo hasta la visualización completa son `spans` añadidos a las transacciones de carga de pantalla,
+que pueden utilizarse para mostrar información más precisa sobre el tiempo dedicado a la creación de la pantalla.
+Al ser `spans`, no afectan a la cuota de usuario.
+
+El SDK los inicia en cuanto se crea una nueva pantalla, siempre que haya una transacción activa para la carga de la pantalla.
+Nota: Cuando la app se inicia, el SDK alinea la marca de tiempo de inicio de Tiempo hasta la visualización inicial y Tiempo hasta la visualización completa con la marca de tiempo de inicio de la app.
+
+<div id="time-to-initial-display">
+  ## Tiempo hasta la visualización inicial
+</div>
+
+El tiempo hasta la visualización inicial es un span con la operación `ui.load.initial_display`, que finaliza automáticamente
+cuando la pantalla dibuja su primer fotograma. Está controlado automáticamente por el SDK y no
+requiere intervención manual por parte del usuario.
+
+Los SDK establecen el tiempo hasta la visualización inicial como una medición de la transacción, con `time_to_initial_display` como clave y la duración del span como valor.
+Nota: La medición solo debe establecerse si el span finaliza con el estado `OK`. En caso de que una pantalla se use únicamente como
+enrutador para iniciar otras pantallas, podría finalizar antes de dibujar un fotograma.
+
+<div id="time-to-full-display">
+  ## Tiempo hasta la visualización completa
+</div>
+
+Tiempo hasta la visualización completa es un span con la operación `ui.load.full_display` que se finaliza manualmente mediante la API estática `Sentry.reportFullyDisplayed`. Esta función debe habilitarse estableciendo la opción de configuración del SDK `enableTimeToFullDisplayTracing`. Recuerda que las transacciones de carga de pantalla esperan a que los spans finalicen, por lo que la transacción se ejecutará hasta que el usuario invoque la API. Por ello, recomendamos que esta función esté deshabilitada de forma predeterminada. También se registra como una medición de la transacción, con `time_to_full_display` como clave y la duración del span como valor.
+
+La siguiente sección explica los posibles escenarios de Tiempo hasta la visualización completa.
+
+La especificación está escrita en la [sintaxis de Gherkin](https://cucumber.io/docs/gherkin/reference/).
+
+```Gherkin
+Escenario: Opción deshabilitada
+    Dado una transacción de carga de pantalla/navegación en curso
+    Entonces el SDK no inicia el span de Full Display
+    Cuando el usuario llama a la API manual `reportFullyDisplayed`
+    Entonces el SDK ignora la llamada
+
+Escenario: Opción habilitada
+    Dado que la opción enableTimeToFullDisplay está habilitada
+    Cuando el SDK crea una nueva transacción de carga de pantalla
+    Entonces se inicia el span de Full Display
+
+Escenario: App iniciada
+    Dado que la opción enableTimeToFullDisplay está habilitada
+    Cuando la app se inicia
+    Entonces el SDK establece la marca de tiempo de inicio de los spans de Time to Initial Display y Time to Full Display con la marca de tiempo de inicio de la app
+    Y el SDK actualiza las mediciones `time_to_initial_display` y `time_to_full_display` en consecuencia
+
+Escenario: Pantalla mostrada
+    Dado un span de Full Display en curso
+    Y el SDK finalizó el span de Initial Display
+    Cuando el usuario llama a la API `reportFullyDisplayed`
+    Entonces el SDK finaliza el span
+    Y establece el estado como ok
+
+Escenario: API no llamada
+    Dado un span de Full Display en curso
+    Cuando el usuario no llama a la API `reportFullyDisplayed` en 30 segundos
+    Entonces el SDK finaliza el span
+    Y establece el estado como deadline_exceeded
+    Y establece la marca de tiempo con la marca de tiempo del span de Initial Display
+    Y el SDK actualiza la medición `time_to_full_display` en consecuencia
+
+Escenario: API llamada
+    Dado un span de Full Display en curso
+    Cuando el usuario llama a la API `reportFullyDisplayed`
+    Entonces el SDK finaliza el span de Full Display
+    Y establece el estado como ok
+
+Escenario: API llamada demasiado pronto
+    Dado un span de Initial Display en curso
+    Y el usuario llamó a la API `reportFullyDisplayed`
+    Cuando el SDK finaliza el span de Initial Display
+    Entonces el SDK establece el estado como ok
+    Y el SDK ajusta la marca de tiempo de finalización del span de Full Display con la marca de tiempo de finalización del span de Initial Display
+    Y el SDK actualiza la medición `time_to_full_display` en consecuencia
+
+Escenario: Ocurre otra transacción de carga de pantalla/navegación
+    Dado un span de Full Display en curso
+    Cuando se inicia una nueva transacción de carga de pantalla/navegación
+    Entonces el SDK finaliza el span de Full Display
+    Y el SDK establece el estado como deadline_exceeded
+    Y el SDK establece la marca de tiempo de finalización con la marca de tiempo de finalización del span de Initial Display
+    Y el SDK actualiza la medición `time_to_full_display` en consecuencia
+
+Escenario: Sin transacción de carga de pantalla en curso
+    Dado que no hay una transacción de carga de pantalla activa
+    Cuando el usuario llama a la API manual `reportFullyDisplayed`
+    Entonces el SDK ignora la llamada
+
+```

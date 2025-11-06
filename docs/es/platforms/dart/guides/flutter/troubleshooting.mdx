@@ -1,0 +1,343 @@
+---
+title: Solución de problemas
+description: "Soluciona casos límite y resuelve situaciones relacionadas con limitaciones conocidas y el empaquetado."
+sidebar_order: 9000
+---
+
+Si necesitas ayuda para resolver problemas con el SDK de Flutter de Sentry, puedes revisar aquí los casos límite documentados. Si necesitas ayuda adicional, puedes [preguntar en GitHub](https://github.com/getsentry/sentry-dart/issues/new/choose). Los clientes con un plan de pago también pueden contactar al soporte.
+
+<div id="not-enough-stack-frames-captured-or-the-captured-frames-are-unhelpful-for-debugging">
+  ## No se capturaron suficientes fotogramas de la pila o los capturados no ayudan en la depuración
+</div>
+
+<div id="whats-the-problem">
+  ### ¿Cuál es el problema?
+</div>
+
+Cuando se producen errores en tu app de Flutter, puede que notes que algunos informes en Sentry no muestran el rastro de pila completo que llevó al error. Esta información faltante puede dificultar identificar con precisión dónde se originó el problema en tu código.
+
+<div id="when-this-problem-occurs">
+  ### Cuándo ocurre este problema
+</div>
+
+Sentry captura automáticamente los detalles del error y las trazas de pila utilizando el manejo de errores integrado de Flutter y Dart, como `FlutterError.onError`. Sin embargo, a veces la información de la traza de pila no está disponible o queda incompleta, especialmente al usar `async` y `await` en tu código.
+
+Cuando esto sucede, Sentry hace lo posible por darte *algo* de información para depurar, por ejemplo, llamando a `StackTrace.current` si el hook `onError` no proporciona ninguna, pero puede que no te ofrezca una imagen completa.
+
+<div id="example-of-the-problem">
+  ### Ejemplo del problema
+</div>
+
+Aquí tienes un ejemplo sencillo que ilustra este problema:
+
+```dart
+Future<void> tryCatch() async {
+  await foo();
+
+  try {
+    throw StateError('try catch');
+  } catch (error) {
+    // Esto es solo un ejemplo, no debes hacer esto en tu código
+    FlutterError.reportError(FlutterErrorDetails(exception: error));
+  }
+}
+
+Future<void> foo() async {
+  bar();
+}
+
+void bar() {
+  // ...
+}
+```
+
+Si ejecutas este código, verás que el error que capturamos automáticamente es el siguiente:
+
+```
+StateError: Bad state: try catch
+  #0      FlutterError.reportError (package:flutter/src/foundation/assertions.dart:1204:14)
+  #1      tryCatch (package:sentry_flutter_example/main.dart:769:18)
+```
+
+Como puedes ver, faltan las funciones `foo` y `bar` en el rastreo de pila.
+Esto ocurre porque la implementación de async/await de Dart puede hacer que se pierda información del rastreo de pila durante operaciones asíncronas. Esta es una limitación conocida del propio tiempo de ejecución de Dart, no un problema de Sentry. Puedes obtener más información en [este problema de Dart](https://github.com/dart-lang/sdk/issues/46318).
+
+<div id="what-can-you-do">
+  ### ¿Qué puedes hacer?
+</div>
+
+Para obtener mejor información de depuración en estos casos, puedes:
+
+* Agregar contexto relevante a tus eventos de Sentry usando [etiquetas personalizadas](/es/platforms/dart/guides/flutter/data-management/tags/) y [breadcrumbs](/es/platforms/dart/guides/flutter/data-management/breadcrumbs/) en las rutas críticas de tu aplicación
+* Considerar usar los [registros estructurados de Sentry](/es/platforms/dart/logs/) para capturar datos de depuración adicionales junto con tus errores
+
+<div id="support-16-kb-page-sizes-on-android">
+  ## Compatibilidad con tamaños de página de 16 KB en Android
+</div>
+
+A partir de Android 15, AOSP admite dispositivos con un tamaño de página de 16 KB. Si tu app usa bibliotecas NDK (directamente o a través de un SDK), tendrás que recompilarla para que sea compatible con estos dispositivos.
+
+Actualiza al Sentry Flutter SDK en la versión `8.11.0` o superior para admitir tamaños de página de 16 KB en dispositivos Android.
+
+Lee la [documentación para desarrolladores de Android](https://developer.android.com/guide/practices/page-sizes) para actualizar y probar tu app con compatibilidad con tamaños de página de 16 KB.
+
+## &quot;Declaración de API ausente&quot; tras la revisión de App Store
+
+A partir del 1 de mayo de 2024, Apple exige que todas las apps enviadas a la App Store proporcionen una lista de las API relacionadas con la privacidad que utilizan, incluida la justificación de su uso. Si recibiste un correo electrónico de Apple con el mensaje &quot;ITMS-91053: Missing API declaration&quot;, tu app no cumple con los requisitos. Para solucionarlo, sigue nuestra guía [Apple Privacy Manifest](/es/platforms/dart/guides/flutter/data-management/apple-privacy-manifest).
+
+<div id="known-limitations">
+  ## Limitaciones conocidas
+</div>
+
+* Si habilitas las funciones `split-debug-info` y `obfuscate`, debes subir [símbolos de depuración](/es/platforms/dart/guides/flutter/upload-debug/).
+* Los títulos de los issues podrían estar ofuscados (o minificados en la web) porque dependemos de `runtimeType`, por lo que puede que no sean legibles para las personas. En iOS y Android, sigue la [guía del Sentry Dart Plugin](/es/platforms/dart/guides/flutter/upload-debug/) para configurar el mapa de ofuscación que nos permite desofuscar el título del issue. Actualmente estamos explorando una solución para Web.
+* Los errores relacionados con el layout solo los captura [FlutterError.onError](https://api.flutter.dev/flutter/foundation/FlutterError/onError.html) en modo de depuración. En modo de release, el framework de Flutter los elimina. Consulta [Flutter build modes](https://flutter.dev/docs/testing/build-modes).
+* Usa [filtros de entrada](/es/concepts/data-management/filtering/) para excluir errores no controlados que se capturan fuera de tu aplicación en compilaciones de release. El SDK no puede filtrarlos directamente debido a las trazas de pila ofuscadas.
+* Si tu app se ejecuta en Windows y usa una versión de Flutter anterior a `3.3.0`, debes establecer la versión y el número de compilación manualmente; consulta [este issue en GitHub](https://github.com/flutter/flutter/issues/73652). Para hacerlo:
+  * Usa Dart defines para compilar la app: `flutter build windows --dart-define=SENTRY_RELEASE=my_app@1.0.0+1`
+  * O establece el release en SentryOptions con `options.release = 'my_app@1.0.0+1'` durante la inicialización del SDK.
+
+<div id="building-specific-abi-on-android">
+  ## Compilar un ABI específico en Android
+</div>
+
+El SDK de Sentry para Flutter incluye el SDK de Sentry para Android, que incorpora varias bibliotecas nativas para múltiples ABI.
+Compilar una app de Flutter para un ABI específico usando el argumento `--target-platform` (por ejemplo, un APK ARM de 32 bits) se hace así, y también debería incluir la opción `--split-per-abi`:
+
+```bash
+flutter build apk --target-platform=android-arm --split-per-abi
+```
+
+<div id="running-sentry-within-an-isolate">
+  ## Ejecutar Sentry dentro de un Isolate
+</div>
+
+Si tienes una instancia de Sentry ejecutándose en un [Isolate](https://dart.dev/language/isolates) independiente, debes llamar a `Sentry.close()` antes de que el Isolate termine; de lo contrario, el Isolate no se cerrará correctamente.
+
+<div id="native-symbolication-on-android">
+  ## Simbolización nativa en Android
+</div>
+
+La configuración de la simbolización de eventos nativos (C/C++) está documentada en nuestro contenido sobre el [Android Native Development Kit](/es/platforms/android/configuration/using-ndk/). Si tienes problemas con la simbolización en Flutter, comprueba que tu configuración sea correcta, como se explica en nuestro contenido de Flutter sobre [carga para Android NDK](/es/platforms/dart/guides/flutter/upload-debug/#uploading-for-android-ndk).
+
+<div id="native-symbolication-on-iosmacos">
+  ## Simbolización nativa en iOS/macOS
+</div>
+
+Las opciones de Flutter `split-debug-info` y `obfuscate` son compatibles en iOS/macOS. Requieren compilar tu app con Flutter, versión `3.7.0` o posterior, y con el Sentry Flutter SDK, versión `6.10.0` o posterior.
+
+<div id="source-context">
+  ## Contexto de origen
+</div>
+
+El soporte para Source Context requiere compilar tu app usando el parámetro de compilación `split-debug-info` en Flutter `3.10.0` o superior. También debes cargar [símbolos de depuración](/es/platforms/dart/guides/flutter/upload-debug/) con la opción `upload_sources` habilitada.
+
+<div id="sentry-dart-plugin">
+  ## Plugin de Sentry para Dart
+</div>
+
+Si usas el plugin de Sentry para Dart para cargar [símbolos de depuración](/es/platforms/dart/guides/flutter/upload-debug/#automatically-upload-debug-symbols), consulta los puntos a continuación para resolver posibles problemas.
+
+Puedes generar un `auth_token` de Sentry en la página de configuración de [Organization Tokens](https://sentry.io/orgredirect/organizations/:orgslug/settings/auth-tokens/).
+
+La opción `--obfuscate` de Dart debe usarse junto con `--split-debug-info` para generar un mapa de símbolos. Consulta la [documentación de Dart](https://github.com/flutter/flutter/wiki/Obfuscating-Dart-Code) para más información.
+
+La opción `--split-debug-info` requiere definir un directorio de salida. El directorio debe ser una carpeta dentro de la carpeta del proyecto. Consulta la [documentación de Flutter](https://docs.flutter.dev/deployment/obfuscate#obfuscate-your-app) para más información.
+
+El comando `build web` de Flutter requiere establecer el parámetro `--source-maps` para generar mapas de origen. Consulta el [issue de Flutter en GitHub](https://github.com/flutter/flutter/issues/72150#issuecomment-755541599) para más información.
+
+<div id="issues-with-native-crashes-on-linux-andor-windows">
+  ## Problemas con fallos nativos en Linux y/o Windows
+</div>
+
+De forma predeterminada, el SDK de Sentry para Flutter habilita los informes de fallos nativos en Linux y Windows con `crashpad`.
+La única excepción es Windows ARM64, que usa `breakpad`.
+Si tienes algún problema, puedes establecer la variable de entorno `SENTRY_NATIVE_BACKEND` como una cadena vacía para desactivar los informes de fallos nativos.
+
+<div id="crashpad-compile-error">
+  ### Error de compilación de Crashpad
+</div>
+
+En Linux, compilar tu app de Flutter Desktop con el backend de Crashpad puede fallar si tu cadena de herramientas de clang está desactualizada.
+
+* Actualiza clang al menos a la versión 13 y vuelve a intentarlo.
+* Si aún tienes errores, por favor reporta un issue en nuestro [repositorio de Sentry Dart en GitHub](https://github.com/getsentry/sentry-dart/issues/).
+
+<div id="java-or-jni-errors-when-compiling-on-flutter-desktop">
+  ### Errores de Java o JNI al compilar en Flutter Desktop
+</div>
+
+Desde la versión `9.0.0` de Sentry Flutter SDK, mejoramos el funcionamiento del SDK en Android al cambiar de method channels a JNI (Java Native Interface) para ciertas operaciones.
+
+Sin embargo, existe una limitación actual: Flutter compila automáticamente el complemento de Dart JNI para todas las plataformas (iOS, Android, etc.), incluso cuando solo compilas para una de ellas.
+
+Por ejemplo, en Windows compilará componentes como `dartjni.dll`, lo que requiere tener instalado un JDK (Java Development Kit) en tu sistema.
+
+Idealmente, sería posible compilar solo para la plataforma de destino elegida para evitar trabajo innecesario, pero actualmente esto está bloqueado por [este problema de Dart JNI](https://github.com/dart-lang/native/issues/1023).
+
+Si tienes problemas, asegúrate de tener un JDK instalado en tu equipo. Recomendamos usar la versión 17.
+
+<Alert level="info">
+  Esto no afecta a tus usuarios finales. Como solo usamos código JNI en Android, los usuarios en otras plataformas no necesitan tener Java instalado.
+  El JDK solo es necesario para ti como desarrollador porque las herramientas de Flutter compilarán el complemento de Dart JNI para todas las plataformas.
+</Alert>
+
+<div id="sentryflutterinit-throws-a-sentry_init-failed-error">
+  ### `SentryFlutter.init` lanza el error `sentry_init failed`
+</div>
+
+En Linux, `SentryFlutter.init` intenta usar automáticamente el backend Crashpad.
+En algunos casos, las herramientas de Flutter cambian los permisos del binario de Crashpad, lo que hace que la inicialización falle.
+
+Para resolverlo:
+
+1. Busca el siguiente bloque de código en tu archivo `linux/CMakeLists.txt`:
+
+```cmake {filename:<your-app>/linux/CMakeLists.txt}
+# Encuentra este bloque de código
+if(PLUGIN_BUNDLED_LIBRARIES)
+  install(FILES "${PLUGIN_BUNDLED_LIBRARIES}"
+    DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
+    COMPONENT Runtime)
+endif()
+```
+
+2. Una vez que lo encuentres, sustitúyelo por el siguiente bloque de código:
+
+```cmake {filename:<your-app>/linux/CMakeLists.txt}
+foreach(biblioteca_incluida ${PLUGIN_BUNDLED_LIBRARIES})
+  if("${biblioteca_incluida}" STREQUAL "$<TARGET_FILE:crashpad_handler>")
+    install(PROGRAMS "${biblioteca_incluida}"
+      DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
+      COMPONENT Runtime)
+  else()
+    install(FILES "${biblioteca_incluida}"
+      DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
+      COMPONENT Runtime)
+  endif()
+endforeach()
+```
+
+Esto permite que CMake use el comando de instalación correcto `install(PROGRAMS ..)` en lugar de `install(FILES ..)`, que elimina el bit de ejecutable.
+
+<div id="sentry-android-gradle-plugin-circular-dependency">
+  ## Dependencia circular en el Sentry Android Gradle Plugin
+</div>
+
+Si aparece un error de dependencia circular al compilar tu app de Android con el Sentry Android Gradle Plugin, normalmente se debe a que estás usando una versión anterior del Android Gradle Plugin (AGP).
+
+<div id="error-example">
+  ### Ejemplo de error
+</div>
+
+Es posible que veas un error similar a:
+
+```
+Dependencia circular entre las siguientes tareas:
+:app:compileReleaseJavaWithJavac
+:app:generateSentryProguardUuidProductionRelease
+```
+
+<div id="solution">
+  ### Solución
+</div>
+
+Actualiza el complemento de Gradle para Android a la versión **7.4** o superior. En tu archivo `android/build.gradle` (a nivel de proyecto):
+
+```groovy {filename:android/build.gradle}
+buildscript {
+    dependencies {
+        classpath("com.android.tools.build:gradle:7.4.0") // o superior
+    }
+}
+```
+
+O, si usas el bloque plugins en tu `android/app/build.gradle`:
+
+```groovy {filename:android/app/build.gradle}
+plugins {
+    id "com.android.application" version "7.4.0" // o posterior
+}
+```
+
+AGP 7.4+ introdujo nuevas APIs para inyectar en los assets que utiliza el Sentry Android Gradle Plugin para evitar esta dependencia circular. Dado que AGP 7.4 se lanzó en 2023, recomendamos actualizar a la última versión estable.
+
+Para obtener más información, consulta el [issue de GitHub #756](https://github.com/getsentry/sentry-android-gradle-plugin/issues/756).
+
+<div id="zone-mismatch-error-on-web">
+  ## Error de desajuste de zona en la web
+</div>
+
+De forma predeterminada, el SDK de Sentry para Flutter crea una zona personalizada en la web para el seguimiento automático de errores y breadcrumbs. Esto puede provocar errores de desajuste de zona cuando tu aplicación llama a `WidgetsBinding.ensureInitialized()` antes de inicializar Sentry.
+
+Para resolver este problema, usa el método `Sentry.runZonedGuarded` para inicializar tanto tu aplicación como Sentry dentro de la misma zona. Este enfoque garantiza una consistencia adecuada de zona en toda tu aplicación:
+
+```dart
+import 'package:flutter/widgets.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+
+Future<void> main() async {
+  Sentry.runZonedGuarded(() async {
+    WidgetsBinding.ensureInitialized();
+
+    await SentryFlutter.init(
+      (options) {
+        // tu configuración...
+      },
+      appRunner: () => runApp(
+        SentryWidget(
+          child: MyApp(),
+        ),
+      ),
+    );
+  }, (error, stackTrace) {
+    // Nota: Los errores en esta zona ya se envían a Sentry automáticamente.
+    // Este callback te permite agregar tu propio manejo de errores (como registro)
+    // además de los informes de Sentry.
+  });
+}
+```
+
+<div id="using-flutter-multi-view-for-web">
+  ## Uso de Flutter Multi‑view para la web
+</div>
+
+La inserción de varias vistas se introdujo en Flutter 3.24. Encontrarás una guía detallada en la [documentación de Flutter](https://docs.flutter.dev/platform-integration/web/embedding-flutter-web).
+
+Usar Sentry en una aplicación con varias vistas es posible, pero hay algunas limitaciones que debes tener en cuenta.
+Actualmente, las siguientes funciones no son compatibles con varias vistas:
+
+* Capturas de pantalla mediante `SentryScreenshotWidget` (que forma parte de `SentryWidget`)
+* Integración de interacción del usuario mediante `SentryUserInteractionWidget` (que forma parte de `SentryWidget`)
+* Eventos de ventana y de dispositivo mediante `WidgetsBindingIntegration`
+
+Para evitar que `WidgetsBindingIntegration` se cargue de forma predeterminada, tendrás que quitar la integración como se muestra a continuación:
+
+```dart
+// ignore: implementation_imports
+import 'package:sentry_flutter/src/integrations/widgets_binding_integration.dart';
+...
+SentryFlutter.init(
+  (options) {
+    ...
+    final integration = options.integrations
+        .firstWhere((element) => element is WidgetsBindingIntegration);
+    options.removeIntegration(integration);
+  },
+  // Inicializa tu app.
+  appRunner: appRunner,
+);
+```
+
+<div id="example-application">
+  ### Aplicación de ejemplo
+</div>
+
+Copia el archivo `main.dart` en la carpeta `lib` de tu proyecto existente. Este archivo ya contiene el código de `multi_view_app.dart` de la [documentación de Flutter](https://docs.flutter.dev/platform-integration/web/embedding-flutter-web#handling-view-changes-from-dart).
+Luego, copia los archivos `flutter_bootstrap.js` e `index.html` en la carpeta `web`.
+
+Asegúrate de usar **Flutter 3.24** o una versión posterior y ejecuta la aplicación.
+
+Ahora deberías poder ver **dos** instancias de la misma aplicación, una junto a la otra, con distintos **ViewIds** en el `body`.
+
+<Include name="troubleshooting/flutter/enable_multi_view.mdx" />

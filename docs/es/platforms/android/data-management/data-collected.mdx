@@ -1,0 +1,101 @@
+---
+title: Datos recopilados
+description: "Consulta qué datos recopila el SDK de Sentry."
+sidebar_order: 1
+---
+
+Sentry se toma muy en serio la privacidad de los datos y cuenta con configuraciones predeterminadas que priorizan la seguridad de la información, especialmente cuando se trata de datos de identificación personal (PII). Al agregar el SDK de Sentry a tu aplicación, permites que recopile datos y los envíe a Sentry durante la ejecución de tu aplicación.
+
+Los tipos de categorías y la cantidad de datos recopilados varían según las integraciones que hayas habilitado en el SDK de Sentry. En esta página se enumeran las categorías de datos que recopila el SDK de Sentry para Android.
+
+Muchas de las categorías aquí mencionadas requieren que habilites la <PlatformLink to="/configuration/options/#sendDefaultPii">opción sendDefaultPii</PlatformLink>.
+
+<div id="http-headers">
+  ## Encabezados HTTP
+</div>
+
+De forma predeterminada, el SDK de Sentry no envía encabezados en las solicitudes HTTP salientes. Incluso cuando el envío de encabezados HTTP está habilitado, contamos con una [lista de bloqueo](https://github.com/getsentry/sentry-java/blob/main/sentry/src/main/java/io/sentry/util/HttpUtils.java#L21-L34) que filtra cualquier encabezado que contenga datos sensibles.
+
+Para empezar a enviar encabezados HTTP, configura <PlatformLink to="/configuration/options/#sendDefaultPii">`sendDefaultPii=true`</PlatformLink>.
+
+<div id="cookies">
+  ## Cookies
+</div>
+
+De forma predeterminada, el SDK de Sentry no envía cookies. Sentry intenta eliminar cualquier cookie que contenga información sensible, como las cookies de ID de sesión y de token CSRF.
+
+Si quieres enviar cookies, configura <PlatformLink to="/configuration/options/#send-default-pii">`sendDefaultPii=true`</PlatformLink>.
+
+<div id="information-about-logged-in-user">
+  ## Información sobre el usuario autenticado
+</div>
+
+De forma predeterminada, el SDK de Sentry no envía ninguna información del usuario autenticado, como la dirección de correo electrónico, el ID de usuario o el nombre de usuario. Incluso si lo habilitas, el tipo de información del usuario autenticado que podrás enviar depende de las integraciones que actives en el SDK de Sentry. La mayoría de las integraciones no enviarán información de usuario. Algunas solo establecerán el ID de usuario, pero hay algunas que sí establecerán el ID de usuario, el nombre de usuario y la dirección de correo electrónico.
+
+Para empezar a enviar información del usuario autenticado, configura <PlatformLink to="/configuration/options/#send-default-pii">`sendDefaultPii=true`</PlatformLink>.
+
+<div id="users-ip-addresses">
+  ## Direcciones IP de los usuarios
+</div>
+
+De forma predeterminada, el SDK de Sentry no envía la dirección IP del usuario. Una vez habilitado, los servicios de backend de Sentry inferirán la dirección IP del usuario a partir de la solicitud entrante, a menos que ciertas integraciones que puedes habilitar reemplacen este comportamiento.
+
+Para habilitar el envío de la dirección IP del usuario, establece <PlatformLink to="/configuration/options/#send-default-pii">`sendDefaultPii=true`</PlatformLink>.
+
+<div id="request-url">
+  ## URL de solicitud
+</div>
+
+La URL completa de las solicitudes HTTP salientes y entrantes **siempre se envía a Sentry**. Según tu aplicación, esto podría incluir datos personales (PII).
+
+<div id="request-query-string">
+  ## Cadena de consulta de la solicitud
+</div>
+
+La cadena de consulta completa de las solicitudes HTTP salientes y entrantes **siempre se envía a Sentry**. Según tu aplicación, esto podría incluir datos personales (PII).
+
+<div id="request-body">
+  ## Cuerpo de la solicitud
+</div>
+
+El cuerpo de las solicitudes HTTP entrantes puede enviarse a Sentry. Que se envíe o no depende del tipo y del tamaño del cuerpo de la solicitud, como se describe a continuación:
+
+- **Tipo de cuerpo de la solicitud:**
+  - Se envían los cuerpos JSON y de formularios
+- **Tamaño del cuerpo de la solicitud:** Existe la opción <PlatformLink to="/configuration/options/#maxRequestBodySize">maxRequestBodySize</PlatformLink>, cuyo valor predeterminado es `NONE`. Esto significa que, por defecto, no se envía ningún cuerpo de solicitud a Sentry.
+
+<div id="source-context">
+  ## Contexto de código fuente
+</div>
+
+Nuestros plugins de compilación para Gradle y Maven pueden subir tu código fuente a Sentry, que luego puede usarse para mostrar las líneas de código donde ocurrió un error en la página de detalles del issue.
+
+Para activar el envío de este contexto de código fuente a Sentry, debes habilitar la función como se describe en <PlatformLink to="/source-context/">la documentación de Source Context</PlatformLink>.
+
+<div id="file-io">
+  ## E/S de archivos
+</div>
+
+De forma predeterminada, el SDK de Sentry no envía el nombre ni la ruta de los archivos al instrumentar la E/S de archivos.
+
+Si deseas enviar nombres y rutas de archivos, establece <PlatformLink to="/configuration/options/#send-default-pii">`sendDefaultPii=true`</PlatformLink>.
+
+<div id="device-information">
+  ## Información del dispositivo
+</div>
+
+De forma predeterminada, el SDK de Sentry no envía el nombre del dispositivo (teléfono Android).
+
+Si quieres enviar el nombre del dispositivo, configura <PlatformLink to="/configuration/options/#send-default-pii">`sendDefaultPii=true`</PlatformLink>.
+
+<div id="sql-queries">
+  ## Consultas SQL
+</div>
+
+Aunque las consultas SQL se envían a Sentry, ni la consulta SQL completa (`UPDATE app_user SET password='supersecret' WHERE id=1;`) ni los valores de sus parámetros se envían nunca. En su lugar, se envía una versión parametrizada de la consulta (`UPDATE app_user SET password=? WHERE id=?;`).
+
+<div id="session-replay">
+  ## Reproducción de sesiones
+</div>
+
+De forma predeterminada, nuestro SDK de Reproducción de sesiones oculta todo el contenido de texto, las imágenes, las vistas web y la entrada del usuario. Esto ayuda a garantizar que no se expongan datos sensibles. Puedes encontrar <PlatformLink to="/session-replay/privacy/">más detalles en la documentación de Reproducción de sesiones</PlatformLink>.

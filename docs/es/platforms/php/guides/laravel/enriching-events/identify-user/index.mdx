@@ -1,0 +1,63 @@
+---
+title: Usuarios
+description: "Aprende a configurar el SDK para capturar al usuario y obtener información clave que construya una identidad única en Sentry."
+---
+
+Si el SDK está configurado con <PlatformLink to="/configuration/options/#send_default_pii">send&#95;default&#95;pii</PlatformLink> en `true`, adjuntamos automáticamente al usuario autenticado a todos tus eventos enviados a Sentry.
+
+Si prefieres adjuntar manualmente al usuario a tus eventos, te recomendamos escuchar el evento `\Illuminate\Auth\Events\Authenticated` de Laravel:
+
+```php {filename:app/Providers/AppServiceProvider.php}
+/**
+* Inicializa los servicios de la aplicación.
+*/
+public function boot(): void
+{
+    \Illuminate\Support\Facades\Event::listen(function (\Illuminate\Auth\Events\Authenticated $event) {
+        $user = $event->user;
+
+        \Sentry\Laravel\Integration::configureScope(static function (\Sentry\State\Scope $scope) use ($user): void {
+            $scope->setUser([
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+            ]);
+        });
+    });
+}
+```
+
+También puedes borrar el usuario que está establecido actualmente:
+
+```php
+\Sentry\Laravel\Integration::configureScope(static function (\Sentry\State\Scope $scope): void {
+    $scope->removeUser();
+});
+```
+
+Los usuarios se definen por algunos elementos de información clave que conforman una identidad única en Sentry. Cada uno es opcional, pero debe haber al menos uno para que el SDK de Sentry capture al usuario:
+
+<DefinitionList>
+  ### `id`
+
+  Tu identificador interno del usuario.
+
+  ### `username`
+
+  El nombre de usuario. Suele usarse como una etiqueta más clara que el id interno.
+
+  ### `email`
+
+  Una alternativa o un complemento al nombre de usuario. Sentry reconoce las direcciones de correo electrónico y puede mostrar elementos como Gravatars y habilitar funciones de mensajería.
+
+  ### `ip_address`
+
+  La dirección IP del usuario. Si el usuario no está autenticado, Sentry usa la dirección IP como identificador único del usuario.
+  Los SDK del lado del servidor que instrumentan solicitudes entrantes intentarán obtener la dirección IP de los datos de la solicitud HTTP (campo `request.env.REMOTE_ADDR` en JSON), si está disponible. Esto podría requerir que <PlatformLink to="/configuration/options/#send_default_pii">send&#95;default&#95;pii</PlatformLink> esté configurado en `true` en las opciones del SDK.
+
+  Si se omite el campo, el valor predeterminado es `null`.
+
+  Para no almacenar direcciones IP de los usuarios en los datos de tus eventos, ve a la configuración de tu proyecto, haz clic en &quot;Security &amp; Privacy&quot; y habilita &quot;Prevent Storing of IP Addresses&quot;, o utiliza el [depurado de datos del lado del servidor](/es/security-legal-pii/scrubbing/) de Sentry para eliminar `$user.ip_address`. Agregar esa regla prevalece sobre cualquier otra lógica.
+</DefinitionList>
+
+Además, puedes proporcionar pares arbitrarios de clave/valor más allá de los nombres reservados, y el SDK de Sentry los almacenará junto con el usuario.

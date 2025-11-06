@@ -1,0 +1,120 @@
+---
+title: Monitoreo autoalojado
+sidebar_title: Monitoreo
+sidebar_order: 10
+---
+
+<Alert title="Importante" level="warning">
+    Estos son documentos aportados por la comunidad. Sentry no ofrece soporte oficial para configuraciones autoalojadas más allá de la instalación predeterminada.
+</Alert>
+
+Esta página se considera experimental porque cada quien tendrá configuraciones y requisitos diferentes para su sistema de monitoreo. También es preferible usar tu sistema de monitoreo actual e intentar integrar Sentry con él, en lugar de poner en marcha uno nuevo.
+
+La mayoría de los contenedores incluyen un cliente de `statsd` que puedes apuntar a tu sistema de monitoreo. Si tienes una instancia nativa del servidor `statsd`, puedes usarla directamente. Si no, quizá te convenga agregar algún tipo de conversor que transforme el formato `statsd` ingerido al tuyo. Por ejemplo, si usas Prometheus, puedes usar [prometheus-statsd-exporter](https://github.com/prometheus/statsd_exporter) para cubrir esa brecha.
+
+Si usas DataDog como sistema de monitoreo, se recomienda utilizar [DogStatsD](https://docs.datadoghq.com/developers/dogstatsd/?tab=hostagent) como colector.
+
+Recomendamos [el servidor `statsd` original creado por Etsy](https://github.com/statsd/statsd) u otros de la lista de [reimplementaciones de servidor](https://github.com/statsd/statsd/blob/master/docs/server_implementations.md).
+
+Sentry no envía alertas si tu instancia anfitriona tiene pocos recursos, como memoria libre o espacio en disco. Deberás configurar esto por tu cuenta según tus necesidades. Es fundamental que supervises el espacio en disco, ya que, una vez que se llene, será mucho más difícil recuperarse.
+
+<Alert title="Nota">
+    Después de cambiar archivos de configuración, no olvides reiniciar los contenedores con `docker compose restart`. Consulta la <Link to="/self-hosted/#configuration">sección de configuración</Link> para obtener más información.
+</Alert>
+
+<div id="sentry-related-configurations">
+  ## Configuraciones relacionadas con Sentry
+</div>
+
+Esta documentación supone `100.100.123.123` como la dirección IP del host de `statsd`. En la mayoría de los servicios, se recomienda usar una dirección IP para el host como esta, en lugar de un nombre de dominio como `statsd.yourcompany.com`.
+
+<div id="sentry">
+  ### Sentry
+</div>
+
+Puedes configurar Sentry para enviar métricas a un servidor StatsD editando el archivo `sentry/sentry.conf.py`:
+
+```python
+SENTRY_METRICS_BACKEND = 'sentry.metrics.statsd.StatsdMetricsBackend'
+SENTRY_METRICS_OPTIONS: dict[str, Any] = {
+    'host': '100.100.123.123', # Se recomienda usar la dirección IP en lugar del nombre de dominio
+    'port': 8125,
+}
+# SENTRY_METRICS_SAMPLE_RATE = 1.0   # Ajusta esto según tus necesidades; el valor por defecto es 1.0
+# SENTRY_METRICS_PREFIX = "sentry."  # Ajusta esto según tus necesidades; el valor por defecto es "sentry."
+```
+
+
+<div id="snuba">
+  ### Snuba
+</div>
+
+Puedes configurar Snuba para enviar métricas a un servidor StatsD ajustando tu archivo `docker-compose.yml`:
+
+```yaml
+# El resto de tu archivo de Docker Compose
+
+x-snuba-defaults: &snuba_defaults
+  <<: *restart_policy
+  depends_on:
+    clickhouse:
+      <<: *depends_on-healthy
+    kafka:
+      <<: *depends_on-healthy
+    redis:
+      <<: *depends_on-healthy
+  image: "$SNUBA_IMAGE"
+  environment:
+    SNUBA_SETTINGS: self_hosted
+    CLICKHOUSE_HOST: clickhouse
+    DEFAULT_BROKERS: "kafka:9092"
+    REDIS_HOST: redis
+    UWSGI_MAX_REQUESTS: "10000"
+    UWSGI_DISABLE_LOGGING: "true"
+    # Deja el valor vacío para pasar lo que esté definido
+    # en el sistema host (o en el archivo .env)
+    SENTRY_EVENT_RETENTION_DAYS:
+    SNUBA_STATSD_HOST: "100.100.123.123" # Debe ser una dirección IP, no un nombre de dominio
+    SNUBA_STATSD_PORT: 8125
+
+# El resto de tu archivo de Docker Compose
+```
+
+
+<div id="relay">
+  ### Relay
+</div>
+
+Puedes configurar Relay para enviar métricas a un servidor StatsD editando tu archivo `relay/config.yml`:
+
+```yaml
+# El resto de tu archivo config.yml
+metrics:
+  statsd: "100.100.123.123:8125" # Se recomienda usar la dirección IP en lugar del nombre de dominio
+  # prefix: "sentry.relay" # Ajusta esto según tus necesidades; el valor predeterminado es "sentry.relay"
+  # sample_rate: 1.0 # Ajusta esto según tus necesidades; el valor predeterminado es 1.0
+  # `periodic_secs` es el intervalo de las métricas periódicas emitidas por Relay.
+  # Establecerlo en `0` segundos desactiva las métricas periódicas.
+  # periodic_secs: 5
+```
+
+
+<div id="symbolicator">
+  ### Symbolicator
+</div>
+
+Puedes configurar Symbolicator para enviar métricas a un servidor StatsD editando el archivo `symbolicator/config.yml`:
+
+```yaml
+# El resto de tu archivo config.yml
+metrics:
+  statsd: "100.100.123.123:8125" # Se recomienda usar la dirección IP en lugar del nombre de dominio
+  prefix: "sentry.symbolicator" # Ajusta esto según tus necesidades; el valor predeterminado es "symbolicator"
+```
+
+
+<div id="sentry-dependencies">
+  ## Dependencias de Sentry
+</div>
+
+No proporcionamos configuraciones para las dependencias de Sentry, como PostgreSQL, Kafka, Redis, Memcached y ClickHouse, que vienen incluidas con el archivo de Docker Compose. Deberás proporcionar tú mismo la configuración de monitoreo para esos servicios, ajustada a tus necesidades.

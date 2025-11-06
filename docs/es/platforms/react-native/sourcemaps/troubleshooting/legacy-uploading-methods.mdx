@@ -1,0 +1,87 @@
+---
+title: Métodos de carga antiguos
+description: "Aprende a cargar mapas de código fuente con SDK antiguos y herramientas de Sentry."
+sidebar_order: 5
+---
+
+Esta página describe cómo cargar mapas de código fuente para SDK antiguos de React Native. Si usas la versión más reciente del SDK, [sigue estas instrucciones](/es/platforms/react-native/sourcemaps).
+
+<div id="legacy-instructions-for-preparing-source-maps-for-a-release">
+  ## Instrucciones heredadas para preparar mapas de origen para una versión
+</div>
+
+Debes generar y cargar los mapas de origen en el momento de la compilación para **cada versión** de tu app, para que los eventos enviados se desofusquen correctamente. Para hacerlo, sigue estos pasos:
+
+<div id="1-configure-cli">
+  ### 1. Configurar la CLI
+</div>
+
+Configura la CLI consultando la [guía de configuración](/es/cli/configuration/) de los comandos de la CLI.
+
+<div id="2-generate-the-bundle-and-source-maps">
+  ### 2. Genera el paquete y los mapas de código fuente
+</div>
+
+<Alert level="warning" title="Hermes">
+  Si usas el **motor Hermes**, deberás [seguir esta guía para compilar mapas de código fuente para Hermes](/es/platforms/react-native/manual-setup/hermes/#custom-source-maps).
+</Alert>
+
+Puedes usar la CLI de React Native para generar el paquete de JavaScript y los mapas de código fuente de tu app:
+
+```bash {tabTitle:Android}
+react-native bundle \
+  --dev false \
+  --platform android \
+  --entry-file index.android.js \
+  --reset-cache \
+  --bundle-output index.android.bundle \
+  --sourcemap-output index.android.bundle.map
+```
+
+```bash {tabTitle:iOS}
+react-native bundle \
+  --dev false \
+  --platform ios \
+  --entry-file index.ios.js \
+  --reset-cache \
+  --bundle-output main.jsbundle \
+  --sourcemap-output main.jsbundle.map
+```
+
+[Más información sobre el comando bundle de React Native CLI](https://github.com/react-native-community/cli/blob/master/docs/commands.md#bundle).
+
+<div id="21-pass-your-entry-file">
+  #### 2.1 Indica tu archivo de entrada
+</div>
+
+Proporciona tu archivo de entrada a `--entry-file` para Android o iOS, respectivamente. De forma predeterminada, este archivo suele llamarse `index.js`. A menudo se llama `index.android.js` para Android o `index.ios.js` para iOS.
+
+<div id="22-output-your-bundle-files-and-source-maps">
+  #### 2.2 Genera los archivos del bundle y los mapas de código fuente
+</div>
+
+Estos comandos producirán el bundle y sus mapas de código fuente. De forma predeterminada, se llaman `index.android.bundle` e `index.android.bundle.map` en Android y `main.jsbundle` y `main.jsbundle.map` en iOS.
+
+<Alert>
+  El mapa de código fuente debe llamarse igual que el bundle con la extensión `.map` para que se detecte correctamente.
+</Alert>
+
+<div id="3-upload-the-bundle-and-source-maps">
+  ### 3. Sube el bundle y los mapas de origen
+</div>
+
+```bash {tabTitle:Android}
+node_modules/@sentry/cli/bin/sentry-cli sourcemaps upload \
+    --release <release> \
+    --dist <dist> \
+    --strip-prefix /path/to/project/root \
+    index.android.bundle index.android.bundle.map
+```
+
+```bash {tabTitle:iOS}
+node_modules/@sentry/cli/bin/sentry-cli sourcemaps upload \
+    --release <release> \
+    --dist <dist> \
+    --strip-prefix /path/to/project/root \
+    main.jsbundle main.jsbundle.map
+```

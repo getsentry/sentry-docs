@@ -1,0 +1,149 @@
+---
+title: Inicio de sesión único (SSO) con Azure Active Directory
+sidebar_order: 1
+description: Configura el inicio de sesión único (SSO) con Azure Active Directory en Sentry.
+og_image: /og-images/organization-authentication-sso-azure-sso.png
+---
+
+<div id="installation">
+  ## Instalación
+</div>
+
+<Alert level="warning">
+
+Si cambias el slug de tu organización, tendrás que hacer la misma actualización en los pasos donde ingreses los valores de configuración de SAML.
+
+</Alert>
+
+1. Inicia sesión en el [portal de Azure](https://portal.azure.com/).
+
+1. En "Manage Azure Active Directory" (el icono del escudo), haz clic en "View". Esto te llevará a la página **Organization Overview**.
+
+1. Si no necesitas un grupo de permisos para Sentry, salta al paso 5.
+
+1. En la barra de búsqueda, busca "Groups" y navega hasta allí. Desde ahí, crea un grupo nuevo y añade un propietario y miembros al grupo. Configura "Group type" como Office 365. Para más detalles sobre la creación de grupos, consulta la [documentación de Azure](https://docs.microsoft.com/en-us/azure/active-directory/fundamentals/active-directory-groups-create-azure-portal).
+
+1. Vuelve a la página **Overview**. En la barra de búsqueda, ingresa `Enterprise Applications` y navega hasta allí. Haz clic en "+ New application". Busca `Sentry` para crear la aplicación.
+
+   ![Sentry en la Galería de Azure](./img/azure-search-sentry.png)
+
+1. Una vez creada la aplicación, se te dirigirá a **Sentry - Overview**.
+
+   ![Resumen de Sentry](./img/azure-sentry-overview.png)
+
+1. Haz clic en "1. Assign users and groups", luego en "+ Add user". Añádete a ti y al grupo que creaste a la aplicación de Sentry. Haz clic en "Assign".
+
+1. Vuelve a **Overview**, haz clic en "2. Set up single sign-on" y luego selecciona SAML como método de inicio de sesión único.
+
+1. En la Sección (1), llamada "Basic SAML Configuration", ingresa los siguientes datos en cada campo y guarda los cambios.
+
+   - Identifier (Entity ID): `https://sentry.io/saml/metadata/YOUR_ORG_SLUG/` <Alert level="warning">Asegúrate de que la URL incluya una barra final para evitar que Azure arroje un error de configuración (AADSTS650056).</Alert>
+
+   - Reply URL (Assertion Consumer Service URL): `https://sentry.io/saml/acs/YOUR_ORG_SLUG/`
+
+   - Sign on URL: `https://sentry.io/auth/login/YOUR_ORG_SLUG/`
+
+   - Relay State: `https://sentry.io/organizations/YOUR_ORG_SLUG/`
+
+   - Logout URL: `https://sentry.io/saml/sls/YOUR_ORG_SLUG/`
+
+   ![Configuración SAML](./img/azure-basic-saml-configuration.png)
+
+1. En la Sección (3), llamada "SAML Signing Certificate", copia la "App Federation Metadata URL".
+
+   ![Certificado de firma SAML](./img/azure-saml-signing-certificate.png)
+
+1. Ve a tus **Org Settings > Auth** (o a `https://sentry.io/settings/YOUR_ORG_SLUG/auth/`) y haz clic en "Configure" para Active Directory.
+
+1. Pega la App Federation Metadata URL anterior y haz clic en "Get Metadata".
+
+1. En la página siguiente, ingresa las siguientes claves en sus campos correspondientes para mapear los atributos de AzureAD a Sentry y luego guárdalos.
+
+   - IdP User ID: `http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name`
+
+   - User Email: `http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress`
+
+   - First Name: `http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname`
+
+   - Last Name: `http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname`
+
+   Para más detalles sobre mapeos para configuraciones personalizadas, consulta [The Role of Claims](https://docs.microsoft.com/en-us/windows-server/identity/ad-fs/technical-reference/the-role-of-claims).
+
+   ![Mapear identidad con atributos del proveedor](./img/azure-map-identity-provider-attributes.png)
+
+1. Sentry intentará autenticar y vincular tu cuenta con Azure. Tras una autenticación exitosa, se te redirigirá a la página de configuración de SSO de Sentry, donde podrás realizar las siguientes acciones:
+
+   - Puedes compartir el valor de "Login URL", que se usará para SSO iniciado por el SP, con los usuarios de tu organización.
+
+   - Desplázate hasta el final y asegúrate de que "Require SSO" esté marcado si quieres exigir el inicio de sesión con Azure Active Directory.
+
+   - Establece un "Default Role" para los nuevos usuarios de SSO. Seleccionar "Member" debería cubrir la mayoría de los casos de uso.
+
+   - Si hiciste cambios, haz clic en "Save Settings" para completar la configuración.
+
+<div id="scim-integration">
+  ## Integración SCIM
+</div>
+
+<Alert>
+
+Esta función solo está disponible si tu organización tiene un plan Business o Enterprise; no está disponible en los planes de prueba.
+
+</Alert>
+
+<Alert level="warning">
+
+Si cambias el slug de tu organización, tendrás que realizar la misma actualización en los pasos donde introduzcas los valores de configuración de SCIM.
+
+</Alert>
+
+Los usuarios de Sentry pueden gestionar el aprovisionamiento en Azure mediante SCIM. Debes tener Azure SSO ya configurado para tu organización. Sentry admite el aprovisionamiento de usuarios y grupos con Azure.
+
+<div id="sentry-configuration">
+  ### Configuración de Sentry
+</div>
+
+1. Inicia sesión en [sentry.io](https://sentry.io). Ve a **Settings > Auth**
+
+   ![Página de autenticación SCIM de Sentry Okta](./img/scim-settings-auth.png)
+
+1. En General Settings, selecciona “Enable SCIM” y luego “Save Settings”.
+
+   ![Instrucción para habilitar SCIM en Sentry](./img/scim-enable-sentry.png)
+
+   - Sentry mostrará “SCIM Information”, que contiene tu Auth Token y el SCIM Base URL.
+
+     ![Campos de credenciales de SCIM](./img/scim-sentry-fields.png)
+
+<div id="azure-configuration">
+  ### Configuración de Azure
+</div>
+
+1. Inicia sesión en el [portal de Azure](https://portal.azure.com/).
+
+1. En tu portal de Azure, ve a **Enterprise applications** en la barra lateral.
+
+1. Selecciona la aplicación de Sentry existente.
+
+1. En el menú "Manage", selecciona "Provisioning".
+   ![Selección de aprovisionamiento de Azure](./img/azure-scim-provisioning.png)
+
+1. Configura "Provisioning Mode" en "Automatic".
+
+1. Con los valores de tu configuración SCIM de Sentry, introduce tu SCIM URL en el campo "Tenant URL" y tu token de autenticación SCIM en el campo "Secret Token".
+
+1. Selecciona "Test Connection" y espera el mensaje que confirme que las credenciales están autorizadas para habilitar el aprovisionamiento.
+
+   ![Prueba de conexión SCIM de Azure](./img/azure-scim-test-connection.png)
+
+Te recomendamos seleccionar la opción "Send an email notification when a failure occurs".
+
+Como resultado de estos cambios, se enviará un correo de invitación a los usuarios asignados. Cuando un usuario deje de estar asignado, su objeto de pertenencia en Sentry se eliminará.
+
+Puedes usar Group Provisioning para sincronizar y asignar grupos en Azure; se reflejarán en los equipos de Sentry.
+
+<Alert>
+
+Consulta el [tutorial de Microsoft AD](https://docs.microsoft.com/en-us/azure/active-directory/saas-apps/sentry-provisioning-tutorial) para obtener más información sobre la configuración de aprovisionamiento de Azure. Si usas una aplicación empresarial personalizada, **debes** seguir las instrucciones para habilitar únicamente las asignaciones de atributos que Sentry admite (Paso 5).
+
+</Alert>

@@ -1,0 +1,136 @@
+---
+title: Create React App
+description: "Carga mapas de origen con Create React App y Sentry CLI."
+sidebar_order: 7
+supported:
+  - javascript.react
+---
+
+En esta guía, aprenderás a cargar mapas de origen para Create React App con nuestra herramienta `sentry-cli`.
+
+<Include name="debug-id-requirement.mdx" />
+
+<div id="automatic-setup">
+  ## Configuración automática
+</div>
+
+La forma más fácil de configurar la carga de mapas de origen con Sentry CLI es usar el asistente de Sentry:
+
+<Include name="sourcemaps-wizard-instructions.mdx" />
+
+Si prefieres configurar manualmente la carga de mapas de origen con la CLI, sigue los pasos a continuación.
+
+<div id="manual-setup">
+  ## Configuración manual
+</div>
+
+<div id="1-generate-source-maps">
+  ### 1. Genera mapas de origen (source maps)
+</div>
+
+Verifica que estés generando mapas de origen al compilar tu app de React.
+Esto ya debería ser así, a menos que hayas establecido la variable de entorno `GENERATE_SOURCEMAPS` en &quot;false&quot;.
+
+**Asegúrate de ejecutar una compilación de producción.**
+En los siguientes pasos modificaremos y subiremos los artefactos generados durante la compilación.
+Ejecutar una compilación de desarrollo no generará los archivos necesarios.
+
+<div id="2-configure-sentry-cli">
+  ### 2. Configurar Sentry CLI
+</div>
+
+Instala Sentry CLI como una dependencia de desarrollo con el gestor de paquetes de tu preferencia:
+
+```bash {tabTitle:npm}
+npm install @sentry/cli --save-dev
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/cli --dev
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/cli --save-dev
+```
+
+<Alert>
+  Para obtener más información sobre la configuración de `sentry-cli`, visita la [documentación de configuración de Sentry CLI](/es/cli/configuration/).
+</Alert>
+
+Usa las siguientes variables de entorno para asegurarte de que `sentry-cli` esté configurado para tu proyecto:
+
+<OrgAuthTokenNote />
+
+```bash {filename:.env}
+SENTRY_ORG=___ORG_SLUG___
+SENTRY_PROJECT=___PROJECT_SLUG___
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
+<div id="3-inject-debug-ids-into-build-artifacts">
+  ### 3. Inyecta Debug IDs en los artefactos de compilación
+</div>
+
+Los Debug IDs se usan para asociar el marco de pila de un evento con su código minificado correspondiente y su archivo de source map.
+Visita [What are Debug IDs](/es/platforms/javascript/sourcemaps/troubleshooting_js/debug-ids/) si quieres aprender más sobre los Debug IDs.
+
+Para inyectar Debug IDs, usa el siguiente comando **cada vez que compiles tu aplicación**:
+
+```bash
+sentry-cli sourcemaps inject /path/to/build
+```
+
+Asegúrate de reemplazar `/path/to/build` por la ruta real donde se genera el resultado de tu compilación.
+En una aplicación creada con Create React App, suele ser la carpeta `build`.
+
+<div id="verify-debug-ids-were-injected-into-build-artifacts">
+  #### Verifica que se hayan inyectado los IDs de depuración en los artefactos de compilación
+</div>
+
+Después de ejecutar el comando `sentry-cli sourcemaps inject`, los archivos fuente minificados deberían contener un comentario `debugId` al final:
+
+```javascript {filename:exampleMinifiedFile.js}
+...
+//# debugId=<debug_id>
+//# sourceMappingURL=<sourcemap_url>
+```
+
+Los mapas fuente ahora deberían incluir un campo llamado `debug_id`:
+
+```json {filename:exampleSourceMap.js.map}
+{
+    ...
+    "debug_id":"<debug_id>",
+    ...
+}
+```
+
+<div id="4-upload-artifacts">
+  ### 4. Cargar artefactos
+</div>
+
+Después de inyectar Debug IDs en tus artefactos, súbelos con el siguiente comando:
+
+```bash
+sentry-cli sourcemaps upload /ruta/al/build
+```
+
+<div id="verify-that-artifact-bundles-were-uploaded">
+  #### Verifica que los Artifact Bundles se hayan cargado
+</div>
+
+Abre Sentry y ve a **Project Settings &gt; Source Maps**.
+Si seleccionas “Artifact Bundles” en la navegación por pestañas, verás todos los artifact bundles que se han cargado correctamente en Sentry.
+
+<div id="5-deploy-your-application">
+  ### 5. Despliega tu aplicación
+</div>
+
+Si estás siguiendo esta guía desde tu máquina local, entonces has logrado:
+
+1. Generar archivos minificados y mapas de origen (artefactos) ejecutando el proceso de compilación de tu aplicación
+2. Inyectar Debug IDs en los artefactos que acabas de generar
+3. Subir esos artefactos a Sentry con nuestro comando de subida
+
+El último paso es desplegar una nueva versión de tu aplicación usando los artefactos generados en el paso uno.
+**Recomendamos encarecidamente ejecutar todo lo que configuraste arriba dentro de tu pipeline de CI/CD** para asegurar que cada despliegue posterior tenga trazas de pila legibles en los eventos de error de Sentry.

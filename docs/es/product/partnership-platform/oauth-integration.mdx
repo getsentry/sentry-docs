@@ -1,0 +1,372 @@
+---
+title: "Integración de OAuth"
+description: "Aprende a integrar OAuth de Sentry para que los clientes existentes conecten sus cuentas de Sentry a tu plataforma."
+sidebar_order: 2
+---
+
+<div id="oauth-integration">
+  # Integración de OAuth
+</div>
+
+La integración de OAuth de Sentry te permite conectar a los clientes de Sentry que ya existen con tu plataforma. Así, los usuarios pueden vincular sus organizaciones de Sentry con tu producto y acceder sin fricciones al monitoreo de errores y a los datos de rendimiento.
+
+<div id="overview">
+  ## Descripción general
+</div>
+
+El flujo de OAuth permite:
+
+* **Vinculación de cuentas** entre tu plataforma y organizaciones específicas de Sentry
+* **Acceso basado en permisos** con ámbitos de API configurables
+* **Permisos controlados por el usuario** con revocación sencilla
+* **Autenticación fluida** sin requerir que los usuarios compartan credenciales
+
+<div id="user-experience-flow">
+  ## Flujo de experiencia de usuario
+</div>
+
+<div id="1-account-linking">
+  ### 1. Vinculación de cuenta
+</div>
+
+Los usuarios inician sesión en tu plataforma y ven un Button &quot;Connect to Sentry&quot; con información sobre los permisos que tendrá tu producto.
+
+<div id="2-sentry-authentication">
+  ### 2. Autenticación en Sentry
+</div>
+
+Al hacer clic en el Button, se abre un modal de inicio de sesión de Sentry donde los usuarios se autentican con su cuenta de Sentry.
+
+<div id="3-permission-confirmation">
+  ### 3. Confirmación de permisos
+</div>
+
+Después de iniciar sesión, los usuarios verán detalles sobre:
+
+* Los permisos necesarios para tu plataforma
+* La organización de Sentry específica que se conectará
+* Qué acciones puede realizar tu plataforma
+
+<div id="4-connection-complete">
+  ### 4. Conexión completada
+</div>
+
+Una vez confirmado, tu plataforma recibe un código de autorización que puede canjearse por tokens de API.
+
+<div id="implementation-steps">
+  ## Pasos de implementación
+</div>
+
+<div id="1-partner-registration">
+  ### 1. Registro de socios
+</div>
+
+Antes de implementar OAuth, Sentry debe registrar tu aplicación. Ponte en contacto con nuestro equipo de alianzas con:
+
+* **Client Name**: El nombre de tu plataforma
+* **Redirect URIs**: Tus URL de retorno de OAuth
+* **Allowed Origins**: Tus dominios
+* **Home Page URL**: La página de inicio de tu plataforma
+* **Privacy Policy URL**: Tu política de privacidad
+* **Terms and Conditions URL**: Tus términos del servicio
+* **Required Scopes**: Las API a las que tu plataforma necesita acceder. Consulta [Permisos y alcances](/es/api/permissions/) para ver la lista de scopes.
+
+<div id="2-authorization-request">
+  ### 2. Solicitud de autorización
+</div>
+
+Dirige a los usuarios al punto de acceso (endpoint) de autorización de Sentry:
+
+```
+https://sentry.io/oauth/authorize/?client_id=TU_CLIENT_ID&response_type=code&scope=SCOPE1%20SCOPE2
+```
+
+**Parámetros:**
+
+* `client_id`: Tu ID de cliente registrado
+* `response_type`: Siempre `code`
+* `scope`: Lista de permisos separados por espacios
+
+**Ejemplo:**
+
+```
+https://sentry.io/oauth/authorize/?client_id=0895306f2d310a075e82dff03cae9604c07e2c9465d4b990cc3f4c3010bb31d6&response_type=code&scope=project:read%20project:write
+```
+
+<div id="3-handle-authorization-code">
+  ### 3. Manejar el código de autorización
+</div>
+
+Después de que el usuario lo apruebe, Sentry redirige a tu URL de callback con un código de autorización:
+
+```
+https://tu-plataforma.com/oauth/sentry/callback?code=2767ac2e734ce35fe648a5f7b831bbb82776e384bb172fbcea42c292dc195e20
+```
+
+<div id="4-exchange-code-for-token">
+  ### 4. Intercambiar código por token
+</div>
+
+Haz una solicitud POST para canjear el código de autorización por un token de acceso:
+
+```python
+import requests
+
+TOKEN_URL = "https://sentry.io/oauth/token/"
+
+token_data = {
+    "client_id": "TU_ID_DE_CLIENTE",
+    "client_secret": "TU_SECRETO_DE_CLIENTE",
+    "grant_type": "authorization_code",
+    "code": "CÓDIGO_DE_AUTORIZACIÓN"
+}
+
+response = requests.post(TOKEN_URL, data=token_data)
+tokens = response.json()
+```
+
+**Respuesta:**
+
+```json
+{
+  "access_token": "8923f2eb3ec0fb9b328ccba6280e48debe119f5b5220273ffa13fb659b2d014a",
+  "refresh_token": "74dbc60782aed64814513804e75e5efa6aaa67e3163744c083c0eb77478edb8b",
+  "expires_in": 2591999,
+  "expires_at": "2024-11-27T23:20:21.054320Z",
+  "token_type": "bearer",
+  "scope": "org:read project:read",
+  "user": {
+    "id": "2",
+    "name": "usuario 1",
+    "email": "user1@test.com"
+  }
+}
+```
+
+<div id="5-refresh-tokens">
+  ### 5. Tokens de refresco
+</div>
+
+Los tokens de acceso expiran cada 8 horas. Usa el token de refresco para obtener nuevos tokens:
+
+```python
+refresh_data = {
+    "client_id": "TU_CLIENT_ID",
+    "client_secret": "TU_CLIENT_SECRET",
+    "grant_type": "refresh_token",
+    "refresh_token": "TU_REFRESH_TOKEN"
+}
+
+response = requests.post(TOKEN_URL, data=refresh_data)
+new_tokens = response.json()
+```
+
+<div id="api-scopes">
+  ## Ámbitos de la API
+</div>
+
+[Los ámbitos](/es/api/permissions/) definen los permisos de tu aplicación. Algunos ámbitos comunes incluyen:
+
+* `org:read` - Leer información de la organización
+* `org:write` - Modificar la configuración de la organización
+* `project:read` - Leer datos del proyecto
+* `project:write` - Crear y modificar proyectos
+* `member:read` - Leer miembros de la organización
+* `member:write` - Administrar miembros de la organización
+
+Los ámbitos requeridos dependen de tu caso de uso y están documentados en nuestra [documentación de la API](/es/api/).
+
+<div id="using-access-tokens">
+  ## Uso de tokens de acceso
+</div>
+
+Incluye el token de acceso en las solicitudes a la API usando el encabezado Authorization:
+
+```python
+headers = {
+    "Authorization": f"Bearer {access_token}",
+    "Content-Type": "application/json"
+}
+
+response = requests.get(
+    "https://sentry.io/api/0/organizations/",
+    headers=headers
+)
+```
+
+<div id="organization-scoping">
+  ## Alcance por organización
+</div>
+
+Un usuario de Sentry puede pertenecer a varias organizaciones. El token de acceso solo concede acceso a la organización específica que el usuario seleccionó durante el flujo de OAuth.
+
+Para obtener la organización conectada:
+
+```python
+# Listar organizaciones accesibles con este token
+response = requests.get(
+    "https://sentry.io/api/0/organizations/",
+    headers=headers
+)
+organizations = response.json()
+
+# La respuesta solo incluirá la organización que el usuario conectó
+```
+
+<div id="error-handling">
+  ## Gestión de errores
+</div>
+
+<div id="permission-errors-403">
+  ### Errores de permisos (403)
+</div>
+
+Si tu aplicación solicita permisos que el usuario no tiene:
+
+```python
+if response.status_code == 403:
+    # Manejar permisos insuficientes
+    # Puede que necesites solicitar ámbitos adicionales o manejarlo de forma elegante
+```
+
+<div id="token-expiration">
+  ### Expiración del token
+</div>
+
+Gestiona los tokens vencidos renovándolos:
+
+```python
+if response.status_code == 401:
+    # Token expirado, actualizarlo
+    new_tokens = refresh_access_token(refresh_token)
+    # Reintentar la solicitud original con el nuevo token
+```
+
+<div id="user-management">
+  ## Administración de usuarios
+</div>
+
+<div id="revoking-access">
+  ### Revocación de acceso
+</div>
+
+Los usuarios pueden revocar el acceso de tu aplicación en cualquier momento desde la configuración de su cuenta de Sentry (Settings → Account → Authorized Applications).
+
+<div id="handling-revoked-access">
+  ### Gestión de accesos revocados
+</div>
+
+Supervisa las respuestas 401 y manéjalas correctamente:
+
+```python
+if response.status_code == 401:
+    # El token puede haber sido revocado
+    # Solicita al usuario reconectarse o maneja la situación apropiadamente
+```
+
+<div id="security-best-practices">
+  ## Mejores prácticas de seguridad
+</div>
+
+1. **Almacena los tokens de forma segura**: Cifra los tokens en tu base de datos
+2. **Usa HTTPS**: Utiliza siempre HTTPS para los flujos de OAuth
+3. **Valida los URI de redirección**: Asegúrate de que los URI de redirección coincidan con las URL registradas
+4. **Gestiona la expiración de los tokens**: Implementa la renovación automática de tokens
+5. **Supervisa las revocaciones**: Gestiona los casos en los que los usuarios revocan el acceso
+
+<div id="example-implementation">
+  ## Implementación de ejemplo
+</div>
+
+Aquí tienes un ejemplo completo de cómo gestionar el flujo de OAuth:
+
+```python
+from flask import Flask, request, redirect, session
+import requests
+
+app = Flask(__name__)
+app.secret_key = 'your-secret-key'
+
+CLIENT_ID = 'your-client-id'
+CLIENT_SECRET = 'your-client-secret'
+REDIRECT_URI = 'https://your-platform.com/oauth/sentry/callback'
+
+@app.route('/connect-sentry')
+def connect_sentry():
+    auth_url = (
+        f"https://sentry.io/oauth/authorize/"
+        f"?client_id={CLIENT_ID}"
+        f"&response_type=code"
+        f"&scope=org:read%20project:read"
+        f"&redirect_uri={REDIRECT_URI}"
+    )
+    return redirect(auth_url)
+
+@app.route('/oauth/sentry/callback')
+def oauth_callback():
+    code = request.args.get('code')
+    
+    # Intercambiar código por token
+    token_data = {
+        "client_id": CLIENT_ID,
+        "client_secret": CLIENT_SECRET,
+        "grant_type": "authorization_code",
+        "code": code
+    }
+    
+    response = requests.post("https://sentry.io/oauth/token/", data=token_data)
+    tokens = response.json()
+    
+    # Almacenar tokens de forma segura
+    session['sentry_access_token'] = tokens['access_token']
+    session['sentry_refresh_token'] = tokens['refresh_token']
+    
+    return "¡Conectado exitosamente a Sentry!"
+
+@app.route('/sentry-data')
+def get_sentry_data():
+    access_token = session.get('sentry_access_token')
+    
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json"
+    }
+    
+    # Obtener datos de la organización
+    response = requests.get(
+        "https://sentry.io/api/0/organizations/",
+        headers=headers
+    )
+    
+    if response.status_code == 401:
+        # Token expirado, renovarlo
+        refresh_token = session.get('sentry_refresh_token')
+        new_tokens = refresh_access_token(refresh_token)
+        session['sentry_access_token'] = new_tokens['access_token']
+        
+        # Reintentar solicitud
+        response = requests.get(
+            "https://sentry.io/api/0/organizations/",
+            headers={"Authorization": f"Bearer {new_tokens['access_token']}"}
+        )
+    
+    return response.json()
+
+def refresh_access_token(refresh_token):
+    refresh_data = {
+        "client_id": CLIENT_ID,
+        "client_secret": CLIENT_SECRET,
+        "grant_type": "refresh_token",
+        "refresh_token": refresh_token
+    }
+    
+    response = requests.post("https://sentry.io/oauth/token/", data=refresh_data)
+    return response.json()
+```
+
+<div id="support">
+  ## Soporte
+</div>
+
+Para consultas sobre la integración de OAuth o la configuración de la alianza, contacta a:
+**Correo electrónico:** partnership-platform@sentry.io

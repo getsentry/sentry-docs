@@ -1,0 +1,72 @@
+---
+title: ZodErrors
+description: "Agrega datos adicionales a los errores de validación de Zod."
+---
+
+*Nombre de importación: `Sentry.zodErrorsIntegration`*
+
+La integración Zod Errors mejora la generación de informes de errores en aplicaciones que utilizan la validación de esquemas de [Zod](https://zod.dev/).
+Cuando falla la validación de Zod, esta integración captura errores de validación detallados (instancias de `ZodError`) y los adjunta
+como datos adicionales a los eventos de Sentry.
+
+La integración Zod Errors no está habilitada de forma predeterminada. Debes agregarla a tu configuración de Sentry:
+
+```javascript
+Sentry.init({
+  integrations: [
+    Sentry.zodErrorsIntegration(),
+  ],
+});
+```
+
+
+<div id="options">
+  ## Opciones
+</div>
+
+`zodErrorsIntegration` acepta las siguientes opciones:
+
+<div id="limit">
+  ### `limit`
+</div>
+
+_Tipo: `number`_
+_Predeterminado: `10`_
+
+Limita la cantidad de errores de Zod incluidos en cada evento de Sentry.
+
+<div id="savezodissuesasattachment">
+  ### `saveZodIssuesAsAttachment`
+</div>
+
+_Tipo: `boolean`_
+_Predeterminado: `false`_
+
+Guarda la lista completa de incidencias de Zod como un adjunto JSON en Sentry.
+
+<div id="example-additional-error-data">
+  ## Ejemplo de datos de error adicionales
+</div>
+
+Cuando se produce un error de validación de Zod, verás información de error ampliada en Sentry como esta:
+
+```json
+[
+  {
+    "code": "too_small",
+    "path": ["name"],
+    "message": "El nombre es obligatorio",
+    "minimum": 1,
+    "type": "string",
+    "inclusive": true,
+    "received": ""
+  },
+  {
+    "code": "invalid_string",
+    "path": ["email"],
+    "message": "Formato de correo electrónico no válido",
+    "validation": "email",
+    "received": "invalid-email"
+  }
+]
+```

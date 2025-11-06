@@ -1,0 +1,75 @@
+---
+title: Genérico
+sidebar_order: 6
+description: Obtén más información sobre las integraciones genéricas de feature flags de Sentry.
+---
+
+<div id="evaluation-tracking">
+  ## Seguimiento de evaluaciones
+</div>
+
+Sentry puede hacer un seguimiento de las evaluaciones de flags a medida que ocurren en tu aplicación. Las evaluaciones de flags aparecerán en la sección &quot;Feature Flag&quot; de la página de detalles del issue como una tabla, con las predicciones de flags marcadas como &quot;suspect&quot; resaltadas en amarillo. Obtén más información sobre cómo interactuar con la información de feature flags en la interfaz de Sentry leyendo la [documentación de la página de detalles del issue](/es/product/issues/issue-details/#feature-flags).
+
+<div id="set-up-evaluation-tracking">
+  ### Configurar el seguimiento de evaluaciones
+</div>
+
+Para configurar el seguimiento de evaluaciones, visita la [página de exploración](/es/product/explore/feature-flags/) y elige el idioma y el SDK que prefieras. ¿No usas un SDK compatible? No hay problema. Ofrecemos soluciones genéricas para tu sistema actual.
+
+Para configurar el seguimiento genérico de evaluaciones, visita una de las páginas de nuestros lenguajes compatibles:
+
+* [JavaScript](/es/platforms/javascript/configuration/integrations/featureflags/)
+* [Python](/es/platforms/python/feature-flags/#generic-api)
+
+<div id="change-tracking">
+  ## Seguimiento de cambios
+</div>
+
+Sentry puede rastrear cambios en las definiciones de feature flags y reportar ediciones sospechosas de feature flags.
+
+Para el caso general, debes escribir un webhook que cumpla con nuestra API. A continuación encontrarás instrucciones sobre cómo hacerlo.
+
+<div id="set-up-change-tracking">
+  ### Configurar el seguimiento de cambios
+</div>
+
+Habilitar el seguimiento de cambios es un proceso de cuatro pasos. Para comenzar, visita la [página de configuración de feature flags](https://sentry.io/orgredirect/organizations/:orgslug/settings/feature-flags/change-tracking/) en una pestaña nueva. Luego, sigue los pasos que se indican a continuación.
+
+1. **Haz clic en el botón &quot;Add New Provider&quot;.**
+   * Solo se puede registrar un secreto de webhook por tipo de proveedor.
+   * Selecciona Generic en el menú desplegable que dice &quot;Select a provider&quot;.
+2. **Guarda la URL del webhook**.
+   * Copia la URL del webhook desde la configuración de Sentry y guárdala para el paso 4.
+3. **Configura el Signing Secret**.
+   * En la interfaz de tu sistema de feature flags, encuentra o crea un &quot;Signing Secret&quot; para este webhook. Si estás creando tu propio webhook, los secretos deben tener entre 10 y 64 caracteres (recomendamos al menos 32).
+   * Copia el signing secret y pégalo en el campo junto a &quot;Secret&quot; en la configuración de Sentry.
+   * Guarda el secreto haciendo clic en &quot;Add Provider&quot; en la configuración de Sentry.
+4. **Crea tu propio webhook**.
+   * Configura tu sistema para hacer POST a la URL del webhook siempre que cambie la definición de un feature flag.
+   * Firma las cargas útiles de tu webhook con el Signing Secret del paso 3.
+   * Consulta [#api-documentation](/es/organization/integrations/feature-flag/generic/#api-documentation) para más detalles.
+
+<div id="api-documentation">
+  ### Documentación de la API
+</div>
+
+Esta sección describe nuestros procedimientos de autenticación, así como los campos y la estructura del recurso.
+
+<div id="authentication">
+  #### Autenticación
+</div>
+
+La autenticación se realiza mediante un “signing secret”. Este “signing secret” debe usarse para firmar la carga útil del webhook en tu sistema de feature flags. Firmar la carga útil con tu secreto produce una “signature”. Sentry necesita esta signature para poder comparar los resultados de nuestra función de firma con los tuyos. Ambas partes deben usar la misma función de firma. Sentry utiliza un HMAC SHA256 con digest hexadecimal de la carga útil del webhook. En Python, esta función se ve así:
+
+```python
+def hmac_sha256_hex_digest(secret: str, message: bytes):
+    return hmac.new(secret.encode(), message, hashlib.sha256).hexdigest()
+```
+
+El resultado de esta función debe enviarse a Sentry como un encabezado: `X-Sentry-Signature signature_result`.
+
+<div id="api-blueprint">
+  #### Plano de la API
+</div>
+
+[Hay un plano de la API disponible en este enlace permanente](https://github.com/getsentry/sentry/blob/ed324708947ca26392d6579ed76b93fc94a61ab6/src/sentry/flags/docs/api.md#create-generic-flag-log-post). Nos esforzamos por mantener esta página actualizada. Asegúrate de revisar la rama principal (master) más reciente para ver nuevas versiones del protocolo. Siempre mantendremos la compatibilidad con versiones anteriores, así que no hay problema en implementar una versión antigua. Sin embargo, las versiones nuevas podrían introducir funciones adicionales.

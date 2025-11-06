@@ -1,0 +1,201 @@
+---
+title: Azure DevOps
+sidebar_order: 1
+description: >-
+  Obtén más información sobre la integración de Azure DevOps de Sentry y cómo puede
+  acelerar la detección y resolución de errores utilizando datos de tus commits de Azure DevOps.
+og_image: /og-images/organization-integrations-source-code-mgmt-azure-devops.png
+---
+
+Azure DevOps se conocía anteriormente como Visual Studio Team Services (VSTS).
+
+<div id="install">
+  ## Instalar
+</div>
+
+<Alert title="Nota">
+  <p>
+    Recomendamos crear una cuenta de servicio dedicada en Azure DevOps al instalar esta integración, en lugar de usar una cuenta de usuario personal.
+  </p>
+
+  <p>
+    Dado que la integración utiliza tokens de acceso personal para la autenticación, actividades como comentar y crear elementos de trabajo se atribuirán al usuario de Azure DevOps que creó los tokens.
+  </p>
+
+  <p>
+    Usar una cuenta de servicio ayuda a mantener un control de acceso adecuado, evita interrupciones cuando los miembros del equipo se van y garantiza una atribución coherente para todas las funciones en toda tu organización.
+  </p>
+
+  <p>
+    Después de crear la cuenta de servicio de Azure DevOps, deberás iniciar sesión en Sentry con una cuenta de usuario que tenga permisos de propietario, gerente o administrador para instalar la integración.
+  </p>
+</Alert>
+
+1. Para instalar esta integración, necesitas tener permisos de propietario, gerente o administrador de la organización de Sentry, así como permisos de propietario de la organización de Azure, o ser usuario del grupo Project Collections Administrators.
+
+2. Ve a la configuración de tu organización de Azure para asegurarte de que el acceso de terceros mediante OAuth esté habilitado: navega a **Organization Settings &gt; Security &gt; Policies** y habilita &quot;Third-party application access via OAuth&quot;.
+
+3. En [Sentry.io](https://sentry.io/orgredirect/organizations/:orgslug/settings/organization/), navega a **Settings &gt; Integrations &gt; Azure DevOps** y haz clic en &quot;Add Installation&quot;.
+
+   ![Install Azure DevOps integration](./img/azure-devops-install.png)
+
+4. Debería aparecer una ventana de instalación de Azure DevOps. Selecciona la cuenta de Azure DevOps que quieres vincular con Sentry y haz clic en **Submit**.
+
+   ![Configure Azure DevOps](./img/azure-global-installed.png)
+
+Azure DevOps ahora debería estar habilitado para todos los proyectos de tu organización de Sentry, pero tendrás que configurar las funciones indicadas a continuación.
+
+<div id="configure">
+  ## Configuración
+</div>
+
+Usa Azure DevOps para [hacer seguimiento de los commits](#commit-tracking) y [gestionar los issues](#issue-management).
+
+<div id="commit-tracking">
+  ### Seguimiento de commits
+</div>
+
+El seguimiento de commits te permite centrarte en los commits problemáticos. Identifica qué commits probablemente causaron un problema y permite que tu equipo lo resuelva haciendo referencia al número del issue en el mensaje del commit.
+
+Para más detalles, consulta la documentación completa sobre [seguimiento de commits y versiones](/es/product/releases/setup/).
+
+También verás que el autor del commit sospechoso aparecerá como asignatario sugerido para este issue. Para asignar el issue al asignatario sugerido, haz clic en su icono.
+
+<div id="issue-management">
+  ### Gestión de incidencias
+</div>
+
+El seguimiento de incidencias te permite crear incidencias de Azure DevOps desde Sentry y vincular incidencias de Sentry a incidencias de Azure DevOps existentes.
+
+<Alert title="Nota">
+  <p>
+    La gestión manual de incidencias está disponible para organizaciones con los planes Team, Business y Enterprise.
+  </p>
+
+  <p>
+    La gestión automática de incidencias está disponible para organizaciones que incluyan transacciones en sus planes Business y Enterprise.
+  </p>
+</Alert>
+
+La gestión de incidencias se puede configurar de dos maneras: automática o manual.
+
+<div id="automatically">
+  #### Automáticamente
+</div>
+
+Para configurar la gestión de incidencias automáticamente, crea una [**alerta de incidencia**](/es/product/alerts-notifications/issue-alerts/). Al seleccionar la [**acción**](/es/product/alerts/create-alerts/issue-alert-config/#then-conditions-actions), elige **Create a new Azure DevOps work item**.
+
+![Crear un elemento de trabajo de Azure DevOps como acción de la regla de alerta](./img/azure-ticket-rule.png)
+
+Se creará automáticamente un elemento de trabajo de Azure DevOps cuando se active la alerta.
+
+<div id="manually">
+  #### Manualmente
+</div>
+
+Una vez que hayas abierto un incidente específico, encontrarás la sección **Linked Issues** en el panel de la derecha. Desde ahí podrás crear o vincular incidentes de Azure DevOps.
+
+![Vincular un elemento de trabajo de Azure DevOps a un incidente de Sentry](./img/azure-global-link-issue.png)
+
+<div id="issue-sync">
+  ### Sincronización de incidencias
+</div>
+
+Sincroniza comentarios, responsables y actualizaciones de estado de las incidencias de Sentry con Azure DevOps para minimizar duplicaciones. Cuando asignes una incidencia a un responsable o actualices un estado en Azure DevOps, los cambios también se reflejarán en Sentry. Cuando resuelvas una incidencia en Sentry, su estado se actualizará automáticamente en Azure DevOps.
+
+<Alert title="Note">
+  La sincronización de incidencias está disponible para organizaciones en los planes Team, Business y
+  Enterprise.
+</Alert>
+
+Para configurar la sincronización de incidencias, ve a **Organization Settings &gt; Integrations** y haz clic en &quot;Configure&quot; junto a tu instancia de Azure DevOps. En la página siguiente verás opciones para elegir qué información quieres sincronizar entre Sentry y Azure DevOps.
+
+![Sync issue status](./img/azure-global-issue-sync.png)
+
+<div id="resolve-in-commit">
+  ### Resolver en el commit
+</div>
+
+Una vez que envíes datos de commits, puedes empezar a resolver incidencias incluyendo `fixes <SENTRY-SHORT-ID>` en tus mensajes de commit. Por ejemplo, un mensaje de commit podría verse así:
+
+```
+Prevenir consultas vacías en usuarios
+
+Corrige MYAPP-317
+```
+
+Cuando Sentry detecte esto, anotaremos automáticamente la incidencia correspondiente con una referencia al commit y, más adelante, cuando ese commit forme parte de una versión, marcaremos la incidencia como resuelta. El commit debe estar asociado a una versión. De lo contrario, si el commit se hace squash, Sentry no sabrá cuándo se ha incluido el commit en una versión y es posible que la incidencia nunca se marque como regresión.
+
+<div id="stack-trace-linking">
+  ### Vinculación de trazas
+</div>
+
+La vinculación de trazas te lleva de un archivo en la traza de Sentry a ese mismo archivo en tu código fuente. Si tienes el seguimiento de commits configurado en Sentry, podemos llevarte a la versión exacta (usando el commit asociado con el evento) del código fuente cuando ocurrió el error. De lo contrario, te enlazaremos al estado actual del código (usando la rama predeterminada).
+
+1. Ve a **Settings &gt; Integrations &gt; Azure DevOps &gt; Configurations**.
+
+2. Haz clic en &quot;Configure&quot; (el ícono de engranaje) junto a tu instancia de Azure DevOps.
+
+3. Haz clic en la pestaña &quot;Code Mappings&quot;.
+
+4. Configura un mapeo de código para cada proyecto en el que quieras habilitar la vinculación de trazas. Para crear un nuevo mapeo, haz clic en &quot;Add Mapping&quot;.
+
+5. Completa el formulario y luego haz clic en &quot;Save Changes&quot;. Cada campo del formulario se describe a continuación:
+
+   * **Project** (obligatorio): Este es el proyecto de Sentry.
+   * **Repo** (obligatorio): Este es el proyecto de Azure DevOps asociado con el proyecto de Sentry anterior. Si usas más de un proyecto de Azure DevOps por proyecto de Sentry, necesitarás varios mapeos de código.
+   * **Branch** (obligatorio): Esta es la rama predeterminada de tu código a la que recurrimos si no tienes configurado el seguimiento de commits.
+   * **Stack Trace Root** y **Source Code Root** (opcional): Consulta abajo para obtener información sobre cómo determinar estos valores.
+
+<div id="stack-trace-root-and-source-code-root">
+  #### Raíz del stack trace y raíz del código fuente
+</div>
+
+<Alert>
+  La siguiente información solo es válida para plataformas que usan rutas de archivos tradicionales. Las plataformas con nombres de paquetes requieren pasos adicionales. Para **Java**, lee más en la [página sobre el contexto del código fuente](/es/platforms/java/source-context#setting-up-code-mappings).
+</Alert>
+
+Primero, ve a un stack trace que quieras mapear. Busca un frame **In App**, indicado por una burbuja en el lado derecho del frame. El nombre del archivo aparece como el primer texto en el lado izquierdo del encabezado del frame. En este ejemplo, es `src/main.py`.
+
+<Include name="common-imgs/code-mappings-stacktrace" />
+
+En ciertas plataformas nativas, el stack trace se verá diferente. En casos como estos, puedes encontrar la ruta absoluta pasando el cursor sobre el nombre del archivo.
+
+![Resaltando dónde en la interfaz encontrar la ruta del archivo para stack traces nativos](./img/code-mappings-stacktrace-native.png)
+
+Si no estás seguro, puedes ver el JSON del evento haciendo clic en el botón `{}` en el encabezado del evento. Busca el texto en `filename` o `abs_path` del frame.
+
+<Include name="common-imgs/code-mappings-event-json" />
+
+A continuación, localiza el archivo que aparece en el stack trace con tu proveedor de código fuente (por ejemplo, GitHub). En este ejemplo, la ruta es `flask/src/main.py` (`empower` se ignora porque es el nombre del repositorio).
+
+<Include name="common-imgs/code-mappings-source-file" />
+
+Compara la ruta del archivo del stack trace con la ruta encontrada en tu repositorio de código fuente. En este ejemplo, la carpeta `src/` en el stack trace coincide con la carpeta `flask/src` en el código fuente. Con esa información, establece **Stack Trace Root** en `src/` y **Source Code Root** en `flask/src/`. Esto le indica a Sentry que reemplace todas las rutas de archivos que comiencen con `src/` por `flask/src/` al buscar el código fuente.
+
+Para obtener mejores resultados, recomendamos proporcionar siempre un valor no vacío para **Stack Trace Root** cuando sea posible.
+
+<Include name="common-imgs/code-mappings-configure-modal" />
+
+<div id="troubleshooting">
+  ## Resolución de problemas
+</div>
+
+<div id="no-accounts-during-installation">
+  ### No hay cuentas durante la instalación
+</div>
+
+![](./img/azure-add-account-no-accounts.png)
+
+Si llegas a la página de selección de cuentas durante el proceso de instalación de Azure DevOps (paso 4 de las instrucciones anteriores) y ves que no hay cuentas disponibles para seleccionar, revisa lo siguiente:
+
+* Asegúrate de haber iniciado sesión con la cuenta vinculada a tu organización de Azure DevOps.
+* Verifica que tu cuenta sea una Microsoft Account (MSA).
+* Para el inicio de sesión único, consulta [Azure Active Directory SSO](/es/organization/authentication/sso/azure-sso/).
+* Si tienes varias cuentas en Azure DevOps, abre [este enlace a Azure DevOps](https://aex.dev.azure.com) en otra pestaña, selecciona la cuenta correcta y luego vuelve a instalar.
+
+<Alert>
+  Si volver a instalar resuelve el problema, por favor vota por [esa solución en
+  GitHub](https://github.com/getsentry/sentry/issues/14357), que es donde
+  estamos siguiendo esta mejora.
+</Alert>

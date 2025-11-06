@@ -1,0 +1,156 @@
+---
+title: Google Gen AI
+description: "Añade instrumentación para el SDK de Google Gen AI."
+supported:
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.hono
+  - javascript.koa
+  - javascript.nestjs
+  - javascript.electron
+  - javascript.nextjs
+  - javascript.nuxt
+  - javascript.solidstart
+  - javascript.sveltekit
+  - javascript.react-router
+  - javascript.remix
+  - javascript.astro
+  - javascript.bun
+  - javascript.tanstackstart-react
+  - javascript.cloudflare
+---
+
+<Alert>
+
+Esta integración funciona en los entornos de ejecución de Node.js, Cloudflare Workers y Vercel Edge Functions. Requiere la versión `10.14.0` del SDK o superior.
+
+</Alert>
+
+_Nombre de importación: `Sentry.googleGenAIIntegration`_
+
+La `googleGenAIIntegration` añade instrumentación para el SDK `@google/genai` a fin de capturar spans envolviendo automáticamente las llamadas del cliente de Google Gen AI y registrando interacciones con LLM, con grabación de entradas/salidas configurable.
+
+<PlatformSection notSupported={["javascript.cloudflare", "javascript.nextjs"]}>
+Está habilitada de forma predeterminada y capturará automáticamente spans de las llamadas a métodos del SDK de Google Gen AI. Puedes optar por capturar entradas y salidas configurando `recordInputs` y `recordOutputs` en la configuración de la integración:
+
+```javascript
+Sentry.init({
+  dsn: "____PUBLIC_DSN____",
+  tracesSampleRate: 1.0,
+  integrations: [
+    Sentry.googleGenAIIntegration({
+      recordInputs: true,
+      recordOutputs: true,
+    }),
+  ],
+});
+```
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.cloudflare"]}>
+Para Cloudflare Workers, debes instrumentar manualmente el cliente de Google Gen AI usando el helper `instrumentGoogleGenAIClient`:
+
+```javascript
+import * as Sentry from "@sentry/cloudflare";
+import { GoogleGenAI } from "@google/genai";
+
+const genAI = new GoogleGenAI(process.env.API_KEY);
+const client = Sentry.instrumentGoogleGenAIClient(genAI, {
+  recordInputs: true,
+  recordOutputs: true,
+});
+
+// Usa el cliente envuelto en lugar de la instancia original de genAI
+const result = await client.models.generateContent("Hello!");
+```
+
+</PlatformSection>
+
+<div id="options">
+  ## Opciones
+</div>
+
+<div id="recordinputs">
+  ### `recordInputs`
+</div>
+
+*Tipo: `boolean`*
+
+Registra las entradas en las llamadas a métodos del SDK de Google Gen AI (como indicaciones y mensajes).
+
+De forma predeterminada, es `true` si `sendDefaultPii` es `true`.
+
+```javascript
+Sentry.init({
+  integrations: [Sentry.googleGenAIIntegration({ recordInputs: true })],
+});
+```
+
+
+<div id="recordoutputs">
+  ### `recordOutputs`
+</div>
+
+*Tipo: `boolean`*
+
+Registra los resultados de las llamadas a métodos del SDK de Google Gen AI (como el texto generado y las respuestas).
+
+De manera predeterminada, es `true` si `sendDefaultPii` es `true`.
+
+```javascript
+Sentry.init({
+  integrations: [Sentry.googleGenAIIntegration({ recordOutputs: true })],
+});
+```
+
+
+<div id="configuration">
+  ## Configuración
+</div>
+
+De forma predeterminada, esta integración añade compatibilidad con trazas a las llamadas a métodos del SDK de Google Gen AI, incluidas:
+
+- `models.generateContent()` - Realiza una solicitud a la API para generar contenido con un modelo determinado.
+- `models.generateContentStream()` - Realiza una solicitud a la API para generar contenido con un modelo determinado y entrega la respuesta por partes.
+- `chats.create()` - Crea sesiones de chat.
+- `sendMessage()` - Envía mensajes en sesiones de chat.
+- `sendMessageStream()` - Transmite mensajes en sesiones de chat.
+
+La integración detectará automáticamente si las solicitudes son con transmisión o sin transmisión y las gestionará adecuadamente.
+
+<PlatformSection supported={['javascript.nextjs']}>
+
+<div id="edge-runtime">
+  ## Runtime de Edge
+</div>
+
+Esta integración se instrumenta automáticamente en el runtime de Node.js. Para aplicaciones de Next.js que usan el runtime de Edge, debes instrumentar manualmente el cliente de Google Gen AI:
+
+```javascript
+import * as Sentry from "@sentry/nextjs";
+import { GoogleGenAI } from "@google/genai";
+
+const genAI = new GoogleGenAI(process.env.API_KEY);
+const client = Sentry.instrumentGoogleGenAIClient(genAI, {
+  recordInputs: true,
+  recordOutputs: true,
+});
+
+// Usa el cliente envuelto en lugar de la instancia original de genAI
+const result = await client.models.generateContent("Hello!");
+```
+
+</PlatformSection>
+
+<div id="supported-versions">
+  ## Versiones compatibles
+</div>
+
+- `@google/genai`: `>=0.10.0 <2`

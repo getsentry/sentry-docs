@@ -1,0 +1,761 @@
+---
+draft: true
+categories: []
+toc: true
+title: Integraciones
+noindex: true
+tags: []
+---
+
+<Alert level="warning" title="Nota">
+  Un nuevo SDK de JavaScript ha sustituido a esta versión en desuso. Sentry conserva esta documentación para los clientes que usan el cliente antiguo. Recomendamos usar el [SDK de JavaScript actualizado](/es/platforms/javascript/) para proyectos nuevos.
+</Alert>
+
+Las integraciones amplían la funcionalidad de Raven.js para cubrir automáticamente bibliotecas y entornos comunes mediante complementos sencillos.
+
+<div id="what-are-plugins">
+  ## ¿Qué son los plugins?
+</div>
+
+En Raven.js, los plugins son pequeños fragmentos de código que amplían la funcionalidad para una aplicación o un framework específicos. Te recomendamos revisar la lista de plugins y usar los que se ajusten a tu proyecto.
+
+Para mantener el núcleo ligero, hemos optado por incluir solo la funcionalidad más básica de forma predeterminada, y puedes elegir qué plugins te resultan pertinentes.
+
+<div id="why-are-plugins-needed-at-all">
+  ## ¿Por qué hacen falta los plugins?
+</div>
+
+JavaScript es bastante restrictivo en cuanto al manejo de excepciones, y hay varios factores que dificultan obtener información relevante. Por eso es importante inyectar código y envolver ciertas cosas “mágicamente” para poder extraer lo que necesitamos. Consulta [*Uso*](/es/platforms/javascript/legacy-sdk/usage/) para ver algunos consejos al respecto.
+
+## Instalación
+
+Para instalar un plugin, simplemente inclúyelo **después** de que Raven se haya cargado y se haya registrado la variable global Raven. Esto ocurre automáticamente si instalas desde un CDN con los plugins necesarios en la URL.
+
+<div id="angularjs">
+  ## AngularJS
+</div>
+
+Para usar Sentry con tu aplicación AngularJS (1.x), necesitarás emplear tanto Raven.js (el SDK de JavaScript para navegador de Sentry) como el plugin de AngularJS para Raven.js.
+
+Por sí solo, Raven.js reportará cualquier excepción no capturada que se produzca en tu aplicación. Para ejemplos de uso avanzado de Raven.js, consulta [*Raven.js usage*](/es/platforms/javascript/legacy-sdk/usage/).
+
+Además, el plugin de AngularJS para Raven.js capturará cualquier excepción específica de AngularJS reportada a través de la interfaz `$exceptionHandler` de AngularJS.
+
+<Alert title="Nota">
+  Esta documentación corresponde a Angular 1.x. Consulta también: [*Angular 2.x*](#angular).
+</Alert>
+
+{/* <!-- ASISTENTE de AngularJS --> */}
+
+<div id="installation">
+  ### Instalación
+</div>
+
+Raven.js y el complemento de Raven.js para Angular se distribuyen mediante varios métodos.
+
+<div id="using-our-cdn">
+  #### Uso de nuestro CDN
+</div>
+
+Para mayor comodidad, nuestro CDN ofrece un único archivo JavaScript minimizado que incluye tanto Raven.js como el complemento de Raven.js para AngularJS. Debe incluirse **después** de Angular, pero **antes** del código de tu aplicación.
+
+Ejemplo:
+
+```html
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular.min.js"></script>
+<script
+  src="https://cdn.ravenjs.com/3.26.4/angular/raven.min.js"
+  crossorigin="anonymous"
+></script>
+<script>
+  Raven.config("___PUBLIC_DSN___").install();
+</script>
+```
+
+Ten en cuenta que esta versión del CDN inicializa automáticamente el complemento de Angular.
+
+<div id="using-package-managers">
+  #### Uso de gestores de paquetes
+</div>
+
+Las distribuciones precompiladas de Raven.js y del complemento Raven.js para AngularJS están disponibles tanto en Bower como en npm.
+
+<div id="bower">
+  ##### Bower
+</div>
+
+```shell
+bower install raven-js --save
+```
+
+```html
+<script src="/bower_components/angular/angular.js"></script>
+<script src="/bower_components/raven-js/dist/raven.js"></script>
+<script src="/bower_components/raven-js/dist/plugins/angular.js"></script>
+<script>
+  Raven.config("___PUBLIC_DSN___").addPlugin(Raven.Plugins.Angular).install();
+</script>
+```
+
+<div id="npm">
+  ##### npm
+</div>
+
+```shell
+npm install raven-js --save
+```
+
+```html
+<script src="/node_modules/angular/angular.js"></script>
+<script src="/node_modules/raven-js/dist/raven.js"></script>
+<script src="/node_modules/raven-js/dist/plugins/angular.js"></script>
+<script>
+  Raven.config("___PUBLIC_DSN___").addPlugin(Raven.Plugins.Angular).install();
+</script>
+```
+
+Estos ejemplos asumen que AngularJS se exporta globalmente como *window.angular*. También puedes pasar directamente una referencia al objeto *angular* como segundo argumento de *addPlugin*:
+
+```javascript
+Raven.addPlugin(Raven.Plugins.Angular, angular);
+```
+
+<div id="module-loaders-commonjs">
+  #### Cargadores de módulos (CommonJS)
+</div>
+
+Raven y el complemento de AngularJS para Raven se pueden cargar con un cargador de módulos como Browserify o webpack.
+
+```javascript
+var angular = require("angular");
+var Raven = require("raven-js");
+
+Raven.config("___PUBLIC_DSN___")
+  .addPlugin(require("raven-js/plugins/angular"), angular)
+  .install();
+```
+
+Ten en cuenta que, al usar importaciones al estilo CommonJS, debes pasar una referencia a *angular* como segundo argumento de *addPlugin*.
+
+<div id="angularjs-configuration">
+  ### Configuración de AngularJS
+</div>
+
+En el módulo principal de tu aplicación AngularJS, debes declarar *ngRaven* como una dependencia del módulo:
+
+```javascript
+var myApp = angular.module("myApp", [
+  "ngRaven",
+  "ngRoute",
+  "myAppControllers",
+  "myAppFilters",
+]);
+```
+
+<div id="module-loaders-commonjs">
+  #### Cargadores de módulos (CommonJS)
+</div>
+
+El módulo Raven para Angular puede cargarse con un cargador de módulos como Browserify o webpack.
+
+```javascript
+var angular = require("angular");
+var ngRaven = require("raven-js/plugins/angular").moduleName;
+var ngRoute = require("angular-route");
+
+var myAppFilters = require("./myAppFilters");
+var myAppControllers = require("./myAppControllers");
+var moduleName = "myApp";
+var moduleName = "miApp";
+angular.module(moduleName, [ngRaven, ngRoute, myAppControllers, myAppFilters]);
+
+module.exports = moduleName;
+```
+
+{/* <!-- TODO-AÑADIR EJEMPLO DE VERIFICACIÓN --> */}
+
+<div id="angular">
+  ## Angular
+</div>
+
+En este documento, “Angular” se refiere a Angular 2+. Raven.js, por sí solo, reportará cualquier excepción no controlada que se produzca en tu aplicación. Para ver ejemplos avanzados de uso de Raven.js, consulta [*Raven.js usage*](/es/platforms/javascript/legacy-sdk/usage/).
+
+Además, puedes configurar Raven.js para capturar cualquier excepción específica de Angular (2.x) que se reporte a través del componente [@angular/core/ErrorHandler](https://angular.io/api/core/ErrorHandler).
+
+<div id="typescript-support">
+  ### Compatibilidad con TypeScript
+</div>
+
+Raven.js incluye un [archivo de declaración de TypeScript](https://github.com/getsentry/raven-js/blob/master/packages/raven-js/typescript/raven.d.ts) que ayuda a comprobar estáticamente la corrección de las llamadas a la API de Raven.js y facilita el autocompletado en IDE compatibles con TypeScript como Visual Studio Code.
+
+{/* <!-- ASISTENTE angular --> */}
+
+<div id="installation">
+  ### Instalación
+</div>
+
+Raven.js debe instalarse con npm.
+
+```shell
+npm install raven-js --save
+```
+
+<div id="configuration">
+  ### Configuración
+</div>
+
+La configuración depende del cargador o empaquetador de módulos que utilices para compilar tu aplicación Angular.
+
+A continuación encontrarás instrucciones para [SystemJS](https://github.com/systemjs/systemjs), seguidas de instrucciones para [webpack](https://webpack.github.io/), Angular CLI y otros cargadores o empaquetadores de módulos.
+
+<div id="systemjs">
+  #### SystemJS
+</div>
+
+Primero, configura SystemJS para ubicar el paquete Raven.js:
+
+```javascript
+System.config({
+  packages: {
+    /* ... paquetes existentes más arriba ... */
+    "raven-js": {
+      main: "dist/raven.js",
+    },
+  },
+  paths: {
+    /* ... rutas existentes más arriba ... */
+    "raven-js": "node_modules/raven-js",
+  },
+});
+```
+
+Luego, en tu archivo de módulo principal (donde se invoca `@NgModule`, p. ej., app.module.ts):
+
+```javascript
+import Raven = require('raven-js');
+import { BrowserModule } from '@angular/platform-browser';
+import { NgModule, ErrorHandler } from '@angular/core';
+import { AppComponent } from './app.component';
+import { environment } from '../environments/environment';
+
+Raven
+  .config('___PUBLIC_DSN___')
+  .install();
+
+export class RavenErrorHandler implements ErrorHandler {
+  handleError(err:any) : void {
+    Raven.captureException(err.originalError || err);
+    if(!environment.production) {
+      super.handleError(err);
+    }
+  }
+}
+
+@NgModule({
+  imports: [ BrowserModule ],
+  declarations: [ AppComponent ],
+  bootstrap: [ AppComponent ],
+  providers: [ { provide: ErrorHandler, useClass: RavenErrorHandler } ]
+})
+export class AppModule { }
+```
+
+Cuando completes estos dos pasos, habrás terminado.
+
+<div id="angular-cli">
+  #### Angular CLI
+</div>
+
+Angular CLI ahora usa webpack para compilar en lugar de SystemJS. Lo único que tienes que hacer es modificar tu archivo de módulo principal (donde se invoca `@NgModule`, por ejemplo, app.module.ts):
+
+```javascript
+import * as Raven from "raven-js";
+import { BrowserModule } from "@angular/platform-browser";
+import { NgModule, ErrorHandler } from "@angular/core";
+import { AppComponent } from "./app.component";
+
+Raven.config("___PUBLIC_DSN___").install();
+
+export class RavenErrorHandler implements ErrorHandler {
+  handleError(err: any): void {
+    Raven.captureException(err);
+  }
+}
+
+@NgModule({
+  imports: [BrowserModule],
+  declarations: [AppComponent],
+  bootstrap: [AppComponent],
+  providers: [{ provide: ErrorHandler, useClass: RavenErrorHandler }],
+})
+export class AppModule {}
+```
+
+Una vez que completes ese paso, habrás terminado.
+
+{/* <!-- TODO-AGREGAR-EJEMPLO-DE-VERIFICACIÓN --> */}
+
+<div id="backbone">
+  ## Estructura principal
+</div>
+
+{/* <!-- Estructura principal del WIZARD --> */}
+
+<div id="installation">
+  ### Instalación
+</div>
+
+Empieza por añadir la etiqueta de script `raven.js` a tu página. Debe cargarse lo antes posible.
+
+```html
+<script
+  src="https://cdn.ravenjs.com/3.26.4/raven.min.js"
+  crossorigin="anonymous"
+></script>
+```
+
+<div id="configuring-the-client">
+  ### Configuración del cliente
+</div>
+
+A continuación, configura Raven.js para usar tu DSN de Sentry:
+
+```javascript
+Raven.config("___PUBLIC_DSN___").install();
+```
+
+En este punto, Raven está listo para capturar cualquier excepción no detectada.
+
+{/* <!-- PENDIENTE: AÑADIR EJEMPLO DE VERIFICACIÓN --> */}
+
+<div id="ember">
+  ## Ember
+</div>
+
+Para usar Sentry con tu aplicación de Ember, necesitarás emplear tanto Raven.js (el SDK de JavaScript para navegadores de Sentry) como el complemento de Raven.js para Ember.
+
+Por sí solo, Raven.js informará cualquier excepción no capturada que se origine en tu aplicación. Para ver ejemplos de uso avanzado de Raven.js, consulta [*Uso de Raven.js*](/es/platforms/javascript/legacy-sdk/usage/).
+
+Además, el complemento de Raven.js para Ember capturará cualquier excepción específica de Ember reportada mediante el hook [onerror](https://guides.emberjs.com/v3.2.0/configuring-ember/debugging/#toc_implement-an-ember-onerror-hook-to-log-all-errors-in-production) de Ember y cualquier [promesa RSVP](https://guides.emberjs.com/v3.2.0/configuring-ember/debugging/#toc_errors-within-an-code-rsvp-promise-code) que de otro modo quedaría silenciada.
+
+{/* <!-- ASISTENTE ember --> */}
+
+<div id="installation">
+  ### Instalación
+</div>
+
+Raven.js y el plugin de Raven.js para Ember se distribuyen de varias formas.
+
+<div id="using-our-cdn">
+  #### Uso de nuestro CDN
+</div>
+
+Para mayor comodidad, nuestro CDN ofrece un único archivo JavaScript minificado que incluye tanto Raven.js como el complemento de Raven.js para Ember. Debe incluirse **después** de Ember, pero **antes** del código de tu aplicación.
+
+Ejemplo:
+
+```html
+<script src="http://builds.emberjs.com/tags/v2.3.1/ember.prod.js"></script>
+<script
+  src="https://cdn.ravenjs.com/3.26.4/ember/raven.min.js"
+  crossorigin="anonymous"
+></script>
+<script>
+  Raven.config("___PUBLIC_DSN___").install();
+</script>
+```
+
+Ten en cuenta que esta compilación de la CDN inicializa automáticamente el complemento de Ember.
+
+### Uso de gestores de paquetes
+
+Las distribuciones precompiladas de Raven.js y del complemento Raven.js para Ember están disponibles tanto en Bower como en npm para importarlas en tu archivo `ember-cli-build.js`.
+
+<div id="bower">
+  ##### Bower
+</div>
+
+```shell
+bower install raven-js --save
+```
+
+```javascript
+app.import("bower_components/raven-js/dist/raven.js");
+app.import("bower_components/raven-js/dist/plugins/ember.js");
+```
+
+```html
+<script src="assets/vendor.js"></script>
+<script>
+  Raven.config("___PUBLIC_DSN___").addPlugin(Raven.Plugins.Ember).install();
+</script>
+<script src="assets/your-app.js"></script>
+```
+
+<div id="npm">
+  ##### npm
+</div>
+
+```shell
+npm install raven-js --save
+```
+
+```javascript
+app.import("node_modules/raven-js/dist/raven.js");
+app.import("node_modules/raven-js/dist/plugins/ember.js");
+```
+
+```html
+<script src="assets/vendor.js"></script>
+<script>
+  Raven.config("___PUBLIC_DSN___").addPlugin(Raven.Plugins.Ember).install();
+</script>
+<script src="assets/tu-app.js"></script>
+```
+
+Estos ejemplos suponen que Ember se exporta globalmente como `window.Ember`. Como alternativa, puedes pasar una referencia al objeto `Ember` directamente como segundo argumento de `addPlugin`:
+
+```javascript
+Raven.addPlugin(Raven.Plugins.Ember, Ember);
+```
+
+<div id="react">
+  ## React
+</div>
+
+{/* <!-- WIZARD react --> */}
+
+<div id="installation">
+  ### Instalación
+</div>
+
+Empieza por añadir la etiqueta de script `raven.js` a tu página. Debe cargarse lo antes posible, antes de tu paquete principal de JavaScript.
+
+```html
+<script
+  src="https://cdn.ravenjs.com/3.26.4/raven.min.js"
+  crossorigin="anonymous"
+></script>
+```
+
+<div id="configuring-the-client">
+  ### Configuración del cliente
+</div>
+
+A continuación, configura Raven.js para usar tu DSN de Sentry:
+
+```javascript
+Raven.config("___PUBLIC_DSN___").install();
+```
+
+En este punto, Raven está listo para capturar cualquier excepción no manejada.
+
+<div id="expanded-usage">
+  ### Uso avanzado
+</div>
+
+Si usas React 16 o superior, los [Error Boundaries](https://reactjs.org/blog/2017/07/26/error-handling-in-react-16.html) son una herramienta importante para definir el comportamiento de tu aplicación ante errores. Asegúrate de enviar a Sentry los errores que detecten usando `Raven.captureException`. Además, opcionalmente, es una buena oportunidad para recopilar [comentarios de usuarios](/es/platforms/javascript/user-feedback/).
+
+```javascript
+class ExampleBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { error: null };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    this.setState({ error });
+    Raven.captureException(error, { extra: errorInfo });
+  }
+
+  render() {
+    if (this.state.error) {
+      //mostrar la interfaz de respaldo
+      return (
+        <div
+          className="snap"
+          onClick={() => Raven.lastEventId() && Raven.showReportDialog()}
+        >
+          <img src={oops} />
+          <p>Lo sentimos: algo salió mal.</p>
+          <p>Nuestro equipo ya fue avisado, pero haz clic aquí para enviar un informe.</p>
+        </div>
+      );
+    } else {
+      //cuando no hay un error, renderiza los children tal cual
+      return this.props.children;
+    }
+  }
+}
+```
+
+```html
+<div>
+  <ExampleBoundary>
+    <h2>Barra lateral</h2>
+    <Widget />
+  </ExampleBoundary>
+  <p>Este contenido no se desmontará cuando Widget arroje un error.</p>
+</div>
+```
+
+Algo importante a tener en cuenta sobre el comportamiento de los límites de error en modo desarrollo es que React volverá a relanzar los errores que atrapen. Esto hará que los errores se informen dos veces a Sentry con la configuración anterior, pero no ocurrirá en la build de producción.
+
+Lee más sobre los límites de error [en esta entrada del blog](https://blog.sentry.io/2017/09/28/react-16-error-boundaries).
+
+<div id="redux">
+  ### Redux
+</div>
+
+Si usas [Redux](https://github.com/reactjs/redux), hay algunos paquetes de middleware mantenidos por la comunidad que resultan útiles para agregar a los informes de errores información valiosa, como el estado de la store y las acciones recientes:
+
+* [captbaritone/raven-for-redux](https://github.com/captbaritone/raven-for-redux)
+* [ngokevin/redux-raven-middleware](https://github.com/ngokevin/redux-raven-middleware)
+
+<div id="redux-sagas-middleware">
+  ### Middleware de Redux Saga
+</div>
+
+Si usas [Redux Saga](https://github.com/redux-saga/redux-saga), ten en cuenta que no propaga los errores al controlador de excepciones no capturadas del navegador.
+
+Puedes especificar un controlador de errores que capture las excepciones de las sagas pasando una función `onError` en las opciones de `createSagaMiddleware`, y llamar a `Raven.captureException` dentro de ese callback. Consulta la [documentación de Redux Saga](https://redux-saga.js.org/docs/api/#createsagamiddlewareoptions) para más detalles.
+
+<div id="vuejs-20">
+  ## Vue.js (2.0)
+</div>
+
+<Alert level="warning" title="Soporte">
+  Este plugin solo funciona con Vue 2.0 o versiones posteriores.
+</Alert>
+
+Para usar Sentry con tu aplicación de Vue, necesitarás usar tanto Raven.js (el SDK de JavaScript para navegadores de Sentry) como el plugin de Raven.js para Vue.
+
+Por sí solo, Raven.js informará cualquier excepción no controlada que se produzca en tu aplicación. Para ver ejemplos avanzados de uso de Raven.js, consulta [*Uso de Raven.js*](/es/platforms/javascript/legacy-sdk/usage/).
+
+Además, el plugin de Raven.js para Vue capturará el nombre y el estado de las props del componente activo donde se produjo el error. Esto se informa mediante el hook *config.errorHandler* de Vue.
+
+{/* <!-- ASISTENTE vue --> */}
+
+<div id="installation">
+  ### Instalación
+</div>
+
+Raven.js y el complemento de Raven.js para Vue se distribuyen de varias maneras.
+
+<div id="using-our-cdn">
+  #### Uso de nuestro CDN
+</div>
+
+Para mayor comodidad, nuestro CDN ofrece un único archivo JavaScript minificado que incluye tanto Raven.js como el complemento de Raven.js para Vue. Debe incluirse **después** de Vue, pero **antes** del código de tu aplicación.
+
+Ejemplo:
+
+```html
+<script src="https://cdn.jsdelivr.net/vue/2.0.0-rc/vue.min.js"></script>
+<script
+  src="https://cdn.ravenjs.com/3.26.4/vue/raven.min.js"
+  crossorigin="anonymous"
+></script>
+<script>
+  Raven.config("___PUBLIC_DSN___").install();
+</script>
+```
+
+Ten en cuenta que esta versión del CDN inicializa automáticamente el plugin de Vue.
+
+<div id="using-package-managers">
+  #### Uso de gestores de paquetes
+</div>
+
+Tanto Raven.js como el plugin de Raven.js para Vue se pueden instalar con npm y Bower.
+
+<div id="npm">
+  ##### npm
+</div>
+
+```shell
+npm install raven-js --save
+```
+
+```html
+<script src="/node_modules/vue/dist/vue.js"></script>
+<script src="/node_modules/raven-js/dist/raven.js"></script>
+<script src="/node_modules/raven-js/dist/plugins/vue.js"></script>
+<script>
+  Raven.config("___PUBLIC_DSN___").addPlugin(Raven.Plugins.Vue).install();
+</script>
+```
+
+<div id="bower">
+  ##### Bower
+</div>
+
+```shell
+bower install raven-js --save
+```
+
+```html
+<script src="/bower_components/vue/dist/vue.js"></script>
+<script src="/bower_components/raven-js/dist/raven.js"></script>
+<script src="/bower_components/raven-js/dist/plugins/vue.js"></script>
+<script>
+  Raven.config("___PUBLIC_DSN___").addPlugin(Raven.Plugins.Vue).install();
+</script>
+```
+
+Estos ejemplos asumen que Vue se exporta globalmente como *window.Vue*. Como alternativa, puedes pasar una referencia al objeto *Vue* directamente como segundo argumento de *addPlugin*:
+
+```javascript
+Raven.addPlugin(Raven.Plugins.Vue, Vue);
+```
+
+<div id="module-loaders">
+  #### Cargadores de módulos
+</div>
+
+En el archivo principal de tu aplicación, importa y configura tanto Raven.js como el complemento de Raven.js para Vue de la siguiente manera:
+
+```javascript
+import Vue from "vue";
+import Raven from "raven-js";
+import RavenVue from "raven-js/plugins/vue";
+
+Raven.config("___PUBLIC_DSN___").addPlugin(RavenVue, Vue).install();
+```
+
+<div id="deprecated-react-native">
+  ## React Native obsoleto
+</div>
+
+El plugin obsoleto “React Native for Raven.js” es una solución de reporte de errores escrita íntegramente en JavaScript. El plugin reportará errores que se originen en el motor de JavaScript de React Native (p. ej., errores de programación como “x is undefined”), pero podría no detectar errores que provengan del sistema operativo subyacente (iOS/Android), a menos que se transmitan al controlador global de errores de React Native.
+
+**No uses este plugin para código nuevo; utiliza en su lugar la nueva integración del cliente :ref:`react-native`**.
+
+<Alert level="warning" title="Nota">
+  A menos que tengas razones específicas para no hacerlo, se recomienda usar el nuevo cliente [React Native](/es/clients/react-native/), que admite fallos nativos y de JavaScript, además de ofrecer una integración mejorada en el proceso de compilación de Xcode.
+</Alert>
+
+<div id="installation">
+  ### Instalación
+</div>
+
+En la raíz de tu proyecto de React Native, instala raven-js con npm:
+
+```bash
+npm install raven-js --save
+```
+
+En la parte superior del archivo principal de tu aplicación (p. ej., index.ios.js y/o index.android.js), agrega el siguiente código:
+
+```javascript
+var React = require("react");
+
+var Raven = require("raven-js");
+require("raven-js/plugins/react-native")(Raven);
+```
+
+<div id="configuring-the-client">
+  ### Configuración del cliente
+</div>
+
+Ahora necesitamos configurar Raven.js para que use tu DSN de Sentry:
+
+```javascript
+Raven.config("___PUBLIC_DSN___", { release: RELEASE_ID }).install();
+```
+
+RELEASE&#95;ID es una cadena que representa la “versión” de la compilación que estás a punto de distribuir. Puede ser el SHA del HEAD de tu repositorio de Git. También puede ser un número de versión semántica (p. ej., “1.1.2”), obtenido del archivo package.json de tu proyecto. Más abajo encontrarás más información.
+
+<div id="about-releases">
+  ### Acerca de las versiones
+</div>
+
+Cada vez que compiles y distribuyas una nueva versión de tu app de React Native, querrás crear una nueva versión en Sentry. Esto es por dos razones importantes:
+
+* Puedes asociar los errores que Sentry rastrea con una compilación específica
+* Puedes almacenar en Sentry los archivos fuente y los mapas de origen generados para cada compilación
+
+A diferencia de una aplicación web normal, donde tus archivos JavaScript (y los mapas de origen) se sirven y alojan desde un servidor web, tu código de React Native se sirve desde el sistema de archivos del dispositivo de destino. Por lo tanto, deberás subir tanto tu **código fuente** como tus **mapas de origen** directamente a Sentry, para que podamos generar rastreos de pila útiles cuando examines las excepciones que se produzcan en tu aplicación.
+
+<div id="generating-and-uploading-source-filessource-maps">
+  ### Generación y carga de archivos fuente/mapas de origen
+</div>
+
+Para generar tanto el archivo JavaScript de la aplicación (main.jsbundle) como el mapa de origen de tu proyecto (main.jsbundle.map), usa la herramienta de línea de comandos de React Native (CLI):
+
+```bash
+react-native bundle \
+  --dev false \
+  --platform ios \
+  --entry-file index.ios.js \
+  --reset-cache \
+  --bundle-output main.jsbundle \
+  --sourcemap-output main.jsbundle.map
+```
+
+Esto generará tanto main.jsbundle como main.jsbundle.map en el directorio actual. Luego, deberás [crear una nueva versión y subir estos archivos como artefactos de la versión](/es/platforms/javascript/legacy-sdk/sourcemaps/).
+
+<div id="naming-your-artifacts">
+  #### Asignar nombres a tus artefactos
+</div>
+
+En Sentry, los artefactos están pensados para “nombrarse” con la URL completa o la ruta en la que se encuentra ese artefacto (por ejemplo, *https://example.org/app.js* o */path/to/file.js/*). Como las aplicaciones de React Native se instalan en el dispositivo del usuario, en una ruta que incluye identificadores únicos del dispositivo (y por lo tanto distinta para cada usuario), el complemento de React Native elimina toda la ruta hasta la raíz de tu aplicación.
+
+Esto significa que, aunque tu código pueda estar en la siguiente ruta:
+
+```
+/var/containers/Bundle/Application/{DEVICE_ID}/HelloWorld.app/main.jsbundle
+```
+
+El complemento de React Native reducirá esto a:
+
+```
+/main.jsbundle
+```
+
+Por lo tanto, en este ejemplo deberías nombrar tus artefactos como “/main.jsbundle” y “/main.jsbundle.map”.
+
+<div id="source-maps-with-the-simulator">
+  ### Mapas de código fuente con el simulador
+</div>
+
+Al desarrollar con el simulador, no es necesario generar los mapas de código fuente manualmente, ya que se crean automáticamente bajo demanda.
+
+Sin embargo, ten en cuenta que los nombres de los artefactos son completamente diferentes cuando se usa el simulador. Esto se debe a que, en lugar de que esos archivos existan en una ruta del dispositivo, se sirven por HTTP a través del [empaquetador de React Native](https://github.com/facebook/metro).
+
+Por lo general, los recursos del simulador se sirven en las siguientes URL:
+
+* Paquete: [http://localhost:8081/index.ios.bundle?platform=ios&amp;dev=true](http://localhost:8081/index.ios.bundle?platform=ios\&dev=true)
+* Mapa de código fuente: [http://localhost:8081/index.ios.map?platform=ios&amp;dev=true](http://localhost:8081/index.ios.map?platform=ios\&dev=true)
+
+Si quieres evaluar la compatibilidad de Sentry con los mapas de código fuente usando el simulador, tendrás que obtener estos recursos en esas URL (mientras el empaquetador de React Native esté en ejecución) y subirlos a Sentry como artefactos. Deben nombrarse usando la URL completa en la que se encuentran, incluida la cadena de consulta.
+
+<div id="expanded-usage">
+  ### Uso avanzado
+</div>
+
+Es probable que te encuentres en situaciones en las que quieras manejar los errores de forma elegante. Un buen patrón para esto sería configurar un helper llamado logError:
+
+```javascript
+function registrarExcepcion(ex, contexto) {
+  Raven.captureException(ex, {
+    extra: contexto,
+  });
+  /*eslint no-console:0*/
+  window.console && console.error && console.error(ex);
+}
+```
+
+Ahora, en tus componentes (o en cualquier otro lugar), puedes manejar los fallos de forma elegante:
+
+```javascript
+var Component = React.createClass({
+  render() {
+    try {
+      // ..
+    } catch (ex) {
+      logException(ex);
+    }
+  },
+});
+```

@@ -1,0 +1,126 @@
+---
+title: Opciones
+description: "Obtén más información sobre cómo configurar el SDK mediante opciones. Estas se pasan a la función init y, por lo tanto, se establecen cuando el SDK se inicializa por primera vez."
+sidebar_order: 1
+---
+
+<PlatformContent includePath="configuration/config-intro" />
+
+<div id="available-options">
+  ## Opciones disponibles
+</div>
+
+<TableOfContents ignoreIds={["available-options"]} />
+
+<div id="core-options">
+  ## Opciones principales
+</div>
+
+Las opciones que pueden leerse desde una variable de entorno (`SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`) se cargan automáticamente.
+
+<SdkOption name="dsn" type="string" envVar="SENTRY_DSN">
+  El DSN indica al SDK dónde enviar los eventos. Si no se proporciona este valor, el SDK intentará leerlo de la variable de entorno `SENTRY_DSN`. Si esa variable tampoco existe, el SDK simplemente no enviará eventos.
+
+  Más información sobre la [utilización del DSN](/es/product/sentry-basics/dsn-explainer/#dsn-utilization).
+</SdkOption>
+
+<SdkOption name="release" type="string" envVar="SENTRY_RELEASE">
+  Configura la versión (release). Algunos SDK intentan configurarla automáticamente desde el principio, pero es mejor establecerla manualmente para garantizar que la versión esté sincronizada con tus integraciones de despliegue o las cargas de source maps. Los nombres de las versiones son cadenas, pero Sentry detecta algunos formatos y podría mostrarlos de forma diferente. Obtén más información sobre cómo enviar datos de versiones para que Sentry pueda informarte sobre regresiones entre versiones e identificar la posible fuente en [la documentación de versiones](/es/product/releases/) o en el <SandboxLink scenario="releases">sandbox</SandboxLink>.
+
+  De forma predeterminada, el SDK intentará leer este valor de la variable de entorno `SENTRY_RELEASE`.
+</SdkOption>
+
+<SdkOption name="environment" type="string" envVar="SENTRY_ENVIRONMENT">
+  Configura el entorno. Esta cadena es de formato libre y no se establece de forma predeterminada. Una versión puede asociarse con más de un entorno para separarlos en la interfaz (piensa en `staging` vs `prod` o similar).
+
+  De forma predeterminada, el SDK intentará leer este valor de la variable de entorno `SENTRY_ENVIRONMENT`.
+</SdkOption>
+
+<SdkOption name="sample_rate" type="float" defaultValue="1.0">
+  Configura la tasa de muestreo de eventos de error, en el rango de `0.0` a `1.0`. El valor predeterminado es `1.0`, lo que significa que se enviará el 100% de los eventos de error. Si se establece en `0.1`, solo se enviará el 10% de los eventos de error. Los eventos se seleccionan aleatoriamente.
+</SdkOption>
+
+<SdkOption name="max_breadcrumbs" type="integer" defaultValue="100">
+  Esta variable controla la cantidad total de breadcrumbs que deben capturarse. El valor predeterminado es `100`, pero puedes establecerlo en cualquier número. Sin embargo, ten en cuenta que Sentry tiene un [tamaño máximo de carga útil](https://develop.sentry.dev/sdk/data-model/envelopes/#size-limits) y cualquier evento que supere ese tamaño se descartará.
+</SdkOption>
+
+<SdkOption name="server_name" type="string">
+  Esta opción puede usarse para proporcionar un nombre de servidor. Cuando se proporciona, el nombre del servidor se envía y se conserva en el evento. En muchas integraciones, el nombre del servidor corresponde al nombre de host del dispositivo, incluso cuando la máquina no es realmente un servidor.
+
+  La mayoría de los SDK intentarán detectar este valor automáticamente.
+</SdkOption>
+
+<div id="hooks">
+  ## Hooks
+</div>
+
+Estas opciones pueden usarse para integrar el SDK de distintas maneras y personalizar el envío de eventos.
+
+<SdkOption name="before_send" type="function">
+  Esta función se invoca con un mensaje específico del SDK o un objeto de evento de error, y puede devolver un objeto de evento modificado, o `null` para omitir el envío del evento. Esto puede usarse, por ejemplo, para eliminar manualmente datos personales (PII) antes de enviar.
+
+  Cuando se ejecuta <PlatformIdentifier name="before_send" />, todos los datos del scope ya se han aplicado al evento. Cualquier modificación posterior del scope no tendrá efecto.
+</SdkOption>
+
+<SdkOption name="after_send_event" type="function">
+  Esta función se invoca con un evento y el resultado de enviarlo. Es útil para registrar resultados de envío, instrumentar llamadas a Sentry, etc.
+</SdkOption>
+
+<div id="transport-options">
+  ## Opciones de transporte
+</div>
+
+Los transports se utilizan para enviar eventos a Sentry. Pueden personalizarse hasta cierto punto para adaptarse mejor a implementaciones muy específicas.
+
+<SdkOption name="send_result" defaultValue=":none">
+  Controla si los eventos se envían a Sentry de forma *sincrónica* (si se establece en `:sync`) o *asincrónica* (si se establece en `:none`).
+</SdkOption>
+
+<SdkOption name="send_max_attempts" type="integer" defaultValue="4">
+  El número máximo de intentos para enviar un evento a Sentry.
+</SdkOption>
+
+<SdkOption name="client" defaultValue="Sentry.HackneyClient">
+  El cliente HTTP que se usará para enviar eventos a Sentry. Debe ser un módulo que implemente el comportamiento [`Sentry.HTTPClient`](https://hexdocs.pm/sentry/Sentry.HTTPClient.html). De forma predeterminada, es `Sentry.HackneyClient`, que se basa en el cliente HTTP [Hackney](https://hexdocs.pm/hackney).
+</SdkOption>
+
+<SdkOption name="hackney_opts" defaultValue="[pool: :sentry_pool]">
+  Opciones que se pasarán a Hackney. Solo se aplica si `client` está configurado en `Sentry.HackneyClient`.
+</SdkOption>
+
+<SdkOption name="hackney_pool_max_connections" type="integer" defaultValue="50">
+  El número máximo de conexiones que se mantendrán en el pool. Solo se aplica si `client` está configurado en `Sentry.HackneyClient`.
+</SdkOption>
+
+<SdkOption name="hackney_pool_timeout" type="integer" defaultValue="5000">
+  El tiempo máximo de espera (en milisegundos) para que una conexión quede disponible. Solo se aplica si `client` está configurado en `Sentry.HackneyClient`.
+</SdkOption>
+
+<div id="tracing-options">
+  ## Opciones de trazas
+</div>
+
+<SdkOption name="traces_sample_rate" type="float" defaultValue="nil">
+  Un número entre `0.0` y `1.0` que determina el porcentaje de transacciones que se enviarán a Sentry. Para habilitar las trazas, debes definir este o `traces_sampler`.
+
+  ```elixir
+  config :sentry,
+    traces_sample_rate: 0.2  # Muestra el 20% de las transacciones
+  ```
+</SdkOption>
+
+<SdkOption name="traces_sampler" type="function">
+  Una función que determina la tasa de muestreo para eventos de transacción. Esta función recibe un mapa de contexto de muestreo y debe devolver un booleano o un número de coma flotante entre `0.0` y `1.0`.
+
+  ```elixir
+  config :sentry,
+    traces_sampler: fn sampling_context ->
+      case sampling_context.transaction_context.op do
+        "http.server" -> 0.1  # Muestra el 10% de las solicitudes HTTP
+        _ -> 0.05             # Muestra el 5% de las demás operaciones
+      end
+    end
+  ```
+
+  Si se configuran ambos `:traces_sampler` y `:traces_sample_rate`, `:traces_sampler` tiene prioridad.
+</SdkOption>

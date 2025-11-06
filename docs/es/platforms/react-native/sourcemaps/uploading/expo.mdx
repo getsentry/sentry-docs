@@ -1,0 +1,74 @@
+---
+title: Expo
+description: "Sube mapas de origen para compilaciones nativas de Expo y EAS Update."
+---
+
+El SDK de React Native de Sentry funciona de forma inmediata con aplicaciones de Expo. Para ver rastreos de pila legibles en el producto, debes subir mapas de origen a Sentry. Esta guía explica cómo subir mapas de origen para aplicaciones de Expo.
+
+<div id="prerequisities">
+  ## Requisitos previos
+</div>
+
+* [Crea una cuenta](https://sentry.io/signup/)
+* [Migra de `sentry-expo` a `@sentry/react-native`](/es/platforms/react-native/migration/sentry-expo/)
+* [Configura el SDK de Sentry para React Native](/es/platforms/react-native/manual-setup/expo/), versión 5.16.0-alpha.4 o posterior
+
+<OrgAuthTokenNote />
+
+<Include name="react-native-sourcemaps-expo-common-instructions.mdx" />
+
+<div id="automatic-upload-for-release">
+  ## Carga automática para la versión
+</div>
+
+Cuando agregas el Sentry Expo Plugin `@sentry/react-native/expo` y el Sentry Metro Plugin a la configuración de tu aplicación, los mapas de origen para las compilaciones nativas se suben automáticamente durante EAS Builds y al compilar localmente la versión nativa de la aplicación con `npx expo prebuild`. Como la simbolización ya la gestiona el servidor de desarrollo de Metro, la subida automática de mapas de origen para compilaciones de depuración está deshabilitada.
+
+<div id="manual-upload-for-eas-updates">
+  ## Carga manual para EAS Updates
+</div>
+
+Para subir los source maps de EAS Updates y `npx expo export`, configura el Sentry Expo plugin, el Sentry Metro plugin y ejecuta el comando `sentry-expo-upload-sourcemaps`.
+
+<div id="create-update">
+  ### Crear una actualización
+</div>
+
+Para crear una actualización de la aplicación, usa el siguiente comando:
+
+```bash
+# npx expo export --dump-sourcemap
+eas update
+```
+
+<div id="upload-source-maps">
+  ### Subir mapas de origen
+</div>
+
+Para subir mapas de origen en todas las plataformas, usa el siguiente comando:
+
+```bash
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___ \
+npx sentry-expo-upload-sourcemaps dist
+```
+
+Para cargar los source maps sin el plugin de Expo (bare workflow):
+
+```bash
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___ \
+SENTRY_PROJECT=___PROJECT_SLUG___ \
+SENTRY_ORG=___ORG_SLUG___ \
+SENTRY_URL=https://sentry.io/ \
+npx sentry-expo-upload-sourcemaps dist
+```
+
+<div id="notes">
+  #### Notas
+</div>
+
+* `dist` es el directorio de salida predeterminado de `eas update`.
+* Sentry Org, Sentry Project y Sentry URL se cargarán desde la configuración del plugin de Expo (app.json / app.config.js) si no se establece la variable de entorno.
+* Los source maps cargados no tienen versiones asociadas. Esto es esperado, ya que las actualizaciones pueden aplicarse a varias versiones.
+
+## Notas
+
+Para obtener una guía sobre cómo cargar manualmente mapas de origen para las versiones de aplicaciones de Expo, consulta la documentación de mapas de origen de [Expo (avanzado)](/es/platforms/react-native/sourcemaps/uploading/expo-advanced/).

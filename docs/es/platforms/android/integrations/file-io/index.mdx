@@ -1,0 +1,123 @@
+---
+title: E/S de archivos
+caseStyle: camelCase
+supportLevel: production
+description: Obtén más información sobre la integración de E/S de archivos de Sentry para el SDK de Android.
+categories:
+  - mobile
+og_image: /og-images/platforms-android-integrations-file-io.png
+---
+
+<Alert>
+  Compatible con la versión `5.5.0` y posteriores del SDK de Android de Sentry.
+
+  Compatible con la versión `3.0.0` y posteriores del Sentry Android Gradle Plugin.
+</Alert>
+
+El [Sentry Android Gradle Plugin](/es/platforms/android/configuration/gradle/) ofrece compatibilidad con E/S de archivos mediante manipulación de bytecode. El código fuente está disponible [en GitHub](https://github.com/getsentry/sentry-android-gradle-plugin/tree/main/plugin-build/src/main/kotlin/io/sentry/android/gradle/instrumentation).
+
+En esta página te ayudamos a empezar con la integración de E/S de archivos de Sentry, para que inicie automáticamente un span desde una transacción activa vinculada al ámbito de cada operación de flujo de entrada/salida de archivos.
+
+<div id="install">
+  ## Instalación
+</div>
+
+Para usar la integración de E/S de archivos, agrega el complemento de Sentry para Android en Gradle en `build.gradle`:
+
+```groovy
+plugins {
+  id "io.sentry.android.gradle" version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.0.0') }}"
+}
+```
+
+```kotlin
+plugins {
+  id("io.sentry.android.gradle") version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.0.0') }}"
+}
+```
+
+<Alert>
+  Asegúrate de que [tracing](/es/platforms/android/tracing/#configure-the-sample-rate) esté habilitado.
+</Alert>
+
+<div id="configure">
+  ## Configuración
+</div>
+
+Por lo general, no se necesita ninguna configuración adicional, ya que la auto-instrumentación está habilitada de forma predeterminada. Si quieres desactivar la instrumentación de E/S de archivos, ofrecemos una opción de configuración para ello:
+
+```groovy
+import io.sentry.android.gradle.extensions.InstrumentationFeature
+
+sentry {
+  tracingInstrumentation {
+    enabled = true
+    features = EnumSet.allOf(InstrumentationFeature) - InstrumentationFeature.FILE_IO
+  }
+}
+```
+
+```kotlin
+import java.util.EnumSet
+import io.sentry.android.gradle.extensions.InstrumentationFeature
+
+sentry {
+  tracingInstrumentation {
+    enabled.set(true)
+    features.set(EnumSet.allOf(InstrumentationFeature::class.java) - InstrumentationFeature.FILE_IO)
+  }
+}
+```
+
+<div id="verify">
+  ## Verificar
+</div>
+
+Suponiendo que tienes el siguiente fragmento de código (reducido) que realiza una operación de E/S de archivos:
+
+```kotlin
+import android.os.Bundle
+import android.widget.Button
+import android.widget.TextView
+import androidx.activity.ComponentActivity
+import io.sentry.Sentry
+import io.sentry.SpanStatus
+import java.io.File
+
+class LyricsActivity : ComponentActivity() {
+
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    findViewById<Button>(R.id.load_lyrics).setOnClickListener {
+      val transaction = Sentry.startTransaction(
+        name = "Interacción de canción",
+        operation = "ui.action.lyrics",
+        bindToScope = true
+      )
+
+      val file = File(context.filesDir, "lyrics.txt")
+
+      val lyricsTextView = findViewById<TextView>(R.id.lyrics)
+      lyricsTextView.setText(file.readText())
+
+      transaction.finish(SpanStatus.OK)
+    }
+  }
+}
+```
+
+Para ver la transacción registrada, inicia sesión en [sentry.io](https://sentry.io) y abre tu proyecto. Al hacer clic en **Performance** se abrirá una página con transacciones, donde puedes seleccionar la transacción recién registrada con el nombre `Track Interaction`. El evento se verá similar a esto:
+
+![Instrumentación del rendimiento de E/S de archivos](./img/file-io-instrumentation.png)
+
+<Alert>
+  Por el momento, solo admitimos las clases `java.io.FileInputStream`, `java.io.FileOutputStream`, `java.io.FileReader` y `java.io.FileWriter` para la auto-instrumentación.
+</Alert>
+
+<div id="optional-custom-instrumentation">
+  ## (Opcional) Instrumentación personalizada
+</div>
+
+Como alternativa, si no usas nuestro plugin de Gradle, el SDK de Android permite instrumentar manualmente las operaciones de E/S de archivos mediante implementaciones personalizadas específicas de Sentry.
+
+<PlatformContent includePath="performance/file-io-instrumentation" />

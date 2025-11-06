@@ -1,0 +1,176 @@
+---
+title: "Administra tu cuota de Performance Units (antes del 11 de junio de 2024)"
+sidebar_hidden: true
+sidebar_order: 40
+description: >-
+  Aprende a usar las herramientas que Sentry ofrece para controlar el tipo y la
+  cantidad de performance units por las que pagas.
+og_image: /og-images/pricing-quotas-legacy-manage-transaction-quota.png
+---
+
+<Alert>
+  Esta información solo se aplica a planes de pago que se activaron **antes del 11 de junio de 2024** y que no se han actualizado desde entonces.
+
+  Si estás en un plan gratuito o de pago que se activó el 11 de junio de 2024 o después, consulta la [página actual sobre cómo administrar tu cuota de spans](/es/pricing/quotas/manage-transaction-quota/).
+</Alert>
+
+En la mayoría de los casos, enviar todos los eventos de Transaction y Transaction with Profiling a Sentry podría generar más datos de rendimiento de los que resultan útiles y podría agotar tus performance units demasiado rápido. Sentry ofrece herramientas para controlar el *tipo* y la *cantidad* de transacciones y transacciones con perfilado que se supervisan. Esto te permite contar con datos de rendimiento prácticos y significativos, y administrar tu cuota.
+
+Aplicar la configuración adecuada del SDK es un proceso iterativo y continuo, pero estos consejos te mostrarán cómo aprovechar mejor las herramientas de Sentry para sacar el máximo partido de tus eventos de transacción y transacciones con perfilado. Estos consejos están ordenados de lo más fácil o menos laborioso a lo más desafiante o potencialmente laborioso. Las dos primeras opciones son cosas que puedes hacer en [sentry.io](https://sentry.io), mientras que las restantes se realizan en el SDK.
+
+<div id="before-you-begin-check-your-quota-usage">
+  ## Antes de comenzar: revisa el uso de tu cuota
+</div>
+
+<Alert title="Nota">
+  La pestaña &quot;Usage Stats&quot; solo es visible si tienes un plan Team, Business o Enterprise.
+</Alert>
+
+Puedes consultar tus eventos de forma agregada en la pestaña &quot;Usage Stats&quot; de **Stats**. Esta información te ayudará a responder preguntas clave sobre la distribución de tus eventos entrantes y qué proyectos están consumiendo tu cuota. Las respuestas a estas preguntas pueden ayudarte a identificar dónde necesitas afinar los filtros y la configuración de tu SDK.
+
+Esta página es accesible para todos los miembros de tu organización, por lo que los Owners de tu organización de Sentry pueden compartirla con los desarrolladores directamente responsables de un proyecto determinado. Además, puedes volver a esta página para comprobar si los cambios que has realizado están teniendo el efecto esperado.
+
+<div id="how-can-i-see-a-breakdown-of-incoming-events">
+  ### ¿Cómo puedo ver un desglose de los eventos entrantes?
+</div>
+
+La pestaña [Usage Stats](/es/product/stats/#usage-stats) muestra detalles sobre el volumen total de datos que Sentry ha recibido en toda tu organización durante un periodo de hasta 90 días. La página desglosa los eventos (por proyecto) en tres categorías: *aceptados*, *descartados* o *filtrados*. Solo los eventos aceptados afectan tu cuota:
+
+![Página de Usage Stats que muestra transacciones](./img/usage-stats-transactions.png)
+
+<div id="what-are-my-busiest-projects">
+  ### ¿Cuáles son mis proyectos con más actividad?
+</div>
+
+La tabla &quot;Project&quot; en la pestaña &quot;Usage Stats&quot; de **Stats** desglosa tus eventos por proyecto para que puedas ver cuáles están consumiendo tu cuota. Al hacer clic en el ícono de configuración junto al nombre de un proyecto en la tabla, se abrirá la configuración del proyecto, donde puedes administrar sus [filtros de entrada](#2-inbound-data-filters).
+
+<div id="which-transactions-are-consuming-my-quota">
+  ### ¿Qué transacciones están consumiendo mi cuota?
+</div>
+
+<Alert>
+  Solo puedes actualizar las columnas de la tabla de Resultados en **Discover** si tu organización está en un plan Business.
+</Alert>
+
+Puedes configurar [una consulta](https://sentry.io/orgredirect/organizations/:orgslug/discover/results/?field=title\&field=project\&field=count\(\)\&name=All+Events\&query=event.type%3Atransaction\&sort=-count\&statsPeriod=14d\&yAxis=count\(\)) en **Discover** para ver qué transacciones, incluidas las que tienen profiling, recibes con mayor frecuencia y decidir si quieres ajustarlo. Al crear la consulta, busca `event.type:transaction` y luego establece las columnas en `title`, `project` y `count`, como se muestra a continuación:
+
+![Proyectos con más actividad](./img/manage-trans-quota-01.png)
+
+Una vez aplicados los cambios, ordena la tabla &quot;Results&quot; por la columna &quot;COUNT()&quot; para mostrar tus transacciones con más actividad:
+
+![Incidencias con más actividad](./img/manage-trans-quota-02.png)
+
+Puedes buscar transacciones con profiling usando `has:profile.id`. Agregar una columna `profile.id` a la consulta te dará un enlace al perfil.
+
+<div id="adjusting-quotas">
+  ## Ajuste de cuotas
+</div>
+
+<Alert>
+  Las cuotas solo pueden actualizarse por un miembro con rol de Facturación o Propietario de tu organización de Sentry.
+</Alert>
+
+Cuando el volumen de tus unidades de rendimiento se acerque o supere la cuota, los miembros con el permiso de organización &quot;Propietario&quot; recibirán correos electrónicos de [notificación](/es/product/alerts/notifications/#quota-notifications). Luego puedes elegir [aumentar](#increasing-quotas) o [disminuir](#decreasing-quotas) tu cuota.
+
+<div id="increasing-quotas">
+  ### Aumento de cuotas
+</div>
+
+Si estás descartando eventos que quieres conservar porque has superado tu cuota, puedes aumentarla en cualquier momento durante tu periodo de facturación, incrementando tu cuota [reservada](#reserved-volume) o [bajo demanda](#on-demand-budget).
+
+Cuando superas tu umbral de cuota, el servidor responde con el código de estado HTTP 429, que indica a los SDK y a los clientes que dejen de enviar eventos. Este código incluye un encabezado `Retry-After` que señala durante cuánto tiempo estará activo este límite de velocidad. Sin embargo, los clientes no deben reintentar enviar los eventos, sino descartarlos hasta que el límite expire, para evitar acumulaciones en la cola. Ten en cuenta que, dado que la ingesta de eventos y la limitación de velocidad ocurren de forma asíncrona, el código 429 siempre llega con un ligero retraso.
+
+Para aumentar tu cuota, ve a **Settings &gt; Subscription** y haz clic en el botón &quot;Manage Subscription&quot; para acceder a tus opciones de suscripción. Al aumentar tu cuota, el cambio entra en vigor de inmediato.
+
+Si estás en un plan Developer y quieres aumentar tu cuota, deberás actualizar a un plan Team o Business. En estos planes puedes prepagar más volumen de unidades de rendimiento y comprar volumen bajo demanda, según sea necesario. Obtén más información sobre los planes de Sentry en nuestra [página de precios](https://sentry.io/pricing/).
+
+<Alert>
+  Si actualizas de Team a Business a mitad del periodo de facturación, tu precio bajo demanda cambia retroactivamente.
+</Alert>
+
+<div id="reserved-volume">
+  ### Volumen reservado
+</div>
+
+Si el número de eventos que necesitas está aumentando de forma sostenida, quizá quieras incrementar tu capacidad o volumen reservado. El volumen reservado es menos costoso que el volumen bajo demanda, ya que se paga por adelantado. También te permite elegir de antemano la cantidad de unidades de rendimiento que quieres tener disponibles, en lugar de simplemente fijar un presupuesto arbitrario bajo demanda. Obtén más información sobre el [volumen reservado](/es/pricing/#prepaid-reserved-capacity) en nuestra documentación de precios.
+
+No deberías aumentar tu volumen reservado si crees que tu necesidad de más eventos es temporal, ya que [reducir tu volumen reservado está vinculado a tu periodo de facturación](#decreasing-quotas).
+
+<div id="on-demand-budget">
+  ### Presupuesto bajo demanda
+</div>
+
+Si necesitas aumentar temporalmente tu cuota de unidades de rendimiento, te recomendamos agregar o incrementar el presupuesto bajo demanda. Es ideal para situaciones como el despliegue de una nueva versión de tu aplicación, cuando anticipas más eventos durante el mes. Para agregar capacidad o volumen bajo demanda, ingresa un presupuesto máximo mensual, ya sea de forma compartida o por categoría (errores, unidades de rendimiento, reproducciones y archivos adjuntos). Obtén más información sobre el [volumen bajo demanda](/es/pricing/#on-demand-capacity) en nuestra documentación de precios.
+
+<div id="decreasing-quotas">
+  ### Reducción de cuotas
+</div>
+
+Las degradaciones de plan y las reducciones del volumen reservado se procesan al final de tu período de facturación, y el volumen restante no se puede reembolsar. Por ejemplo, si tienes un período de facturación mensual que comienza el día 5 de cada mes y reduces tu volumen reservado el 20 de junio, este cambio se procesará el 4 de julio. El período de facturación que comienza el 5 de julio reflejará tu nuevo volumen reservado.
+
+<Alert level="warning">
+  Si tienes un período de facturación anual, las degradaciones de plan y las reducciones del volumen reservado entran en vigor al comienzo de tu **próximo año de facturación.**
+</Alert>
+
+Los cambios en el volumen bajo demanda normalmente entran en vigor de inmediato y se garantiza que lo hagan en un plazo de 24 horas. Sin embargo, no puedes reducir tu presupuesto bajo demanda por debajo de lo que has consumido en el período actual.
+
+Para reducir tu cuota, ve a **Settings &gt; Subscription** y haz clic en &quot;Manage Subscriptions&quot;. Cuando llegues al paso &quot;Review &amp; Confirm&quot;, se mostrará la fecha en la que estos cambios entrarán en vigor:
+
+![El paso Review & Confirm de una actualización de suscripción.](./img/review-subscription.png)
+
+<Alert>
+  Te recomendamos encarecidamente que realices cambios en la suscripción **antes** del último día de tu período de facturación. Dependiendo de tu zona horaria, en algunos casos, los cambios realizados el último día del período de facturación no entrarán en vigor hasta el siguiente período de facturación.
+</Alert>
+
+<div id="inbound-filters">
+  ## Filtros de entrada
+</div>
+
+Si bien la configuración del SDK requiere cambios en tu código y depende de tu próximo despliegue, los filtros del lado del servidor se pueden configurar fácilmente por proyecto en la sección “Data Filters” de **[Project] &gt; Settings &gt; Inbound Filters**.
+
+Una vez aplicados, puedes consultar los eventos filtrados (cantidad y causa) usando la gráfica disponible en la parte superior de la página “Inbound Filters”.
+
+![Filtros de entrada integrados](./img/manage-event-stream-03.png)
+
+<Alert>
+  La página **Inbound Data Filters** en [sentry.io](https://sentry.io) solo menciona errores, pero también se aplica a transacciones, transacciones con profiling y adjuntos.
+</Alert>
+
+Sentry ofrece varios métodos para filtrar todos los eventos y adjuntos en el servidor, que se aplican antes de verificar posibles límites de tasa. Los filtros de entrada incluyen:
+
+* Errores comunes de extensiones del navegador
+* Eventos provenientes de `localhost`
+* Errores conocidos de navegadores antiguos
+* Rastreadores web conocidos
+* Versiones específicas (release) de tu código
+* Ciertas direcciones IP
+
+Las primeras cuatro opciones anteriores son ajustes que simplemente activas o desactivas. Cómo configurar las otras se explica más abajo.
+
+Después de procesar estas comprobaciones, los eventos y adjuntos que no se descarten según estos filtros cuentan para tu cuota. Se aceptan en Sentry, donde se conservan y almacenan.
+
+<div id="ip-filters">
+  ### Filtros de IP
+</div>
+
+Si tienes un cliente malicioso, Sentry permite bloquear una IP para que no envíe datos. Ve a **[Project] &gt; Settings &gt; Inbound Filters** para añadir las direcciones IP (o subredes) en el campo &quot;IP Addresses&quot;.
+
+<div id="filter-by-release">
+  ### Filtrar por versión
+</div>
+
+<Include name="feature-available-for-plan-business.mdx" />
+
+Si detectas una versión problemática que genere demasiado ruido, Sentry permite ignorar todos los eventos y archivos adjuntos de esa versión. Ve a **[Project] &gt; Settings &gt; Inbound Filters** y agrega la versión en el campo &quot;Releases&quot;.
+
+<div id="sdk-filtering-beforesendtransaction">
+  ## Filtrado del SDK: beforeSendTransaction
+</div>
+
+Algunos SDK de Sentry admiten el método de devolución de llamada `beforeSendTransaction`. Una vez implementado, este método se invoca cuando el SDK captura un evento de transacción, justo antes de enviarlo a tu cuenta de Sentry. Como recibe el objeto del evento de transacción como parámetro, puedes usarlo para modificar los datos del evento o descartar el evento por completo (devolviendo `null`) según tu propia lógica y los datos disponibles en el evento, como *tags*, *environment*, *release version*, *transaction name*, etc. Ten en cuenta que solo los eventos de transacción pasan por `beforeSendTransaction`. Los eventos de error y de mensaje tienen un método aparte, `beforeSend`, que está disponible en todos los SDK. Obtén más información sobre ambos métodos en [Filtering Events](/es/platform-redirect/?next=/configuration/filtering/).
+
+<div id="sdk-configuration-tracing-options">
+  ## Configuración del SDK: Opciones de trazabilidad
+</div>
+
+Cuando configuras el SDK, puedes controlar cuántas transacciones se envían a Sentry ajustando las [opciones de trazabilidad](/es/platform-redirect/?next=/configuration/options/%23tracing-options), ya sea definiendo una tasa de muestreo o proporcionando una función de muestreo. También puedes configurar [instrumentación personalizada](/es/platform-redirect/?next=/tracing/instrumentation/custom-instrumentation/) para el monitoreo del rendimiento y capturar determinados tipos de transacciones.

@@ -1,0 +1,93 @@
+---
+title: Manejador de errores de Angular
+description: "Conoce el Error Handler del SDK de Angular de Sentry y cómo configurarlo."
+---
+
+Angular suele envolver los errores en sus propias clases, lo que dificulta que Sentry extraiga correctamente la información importante sin un manejador de errores personalizado; ahí es donde el `ErrorHandler` del SDK de Angular de Sentry puede ayudar. En esta página, aprenderás a personalizar el `ErrorHandler` del SDK para adaptarlo a tu caso de uso.
+
+<div id="using-the-sentry-errorhandler">
+  ## Uso del `ErrorHandler` de Sentry
+</div>
+
+Para empezar, registra el `ErrorHandler` de Sentry en los providers de tu aplicación Angular. Recomendamos hacerlo en tu archivo principal `app.config.ts` o `app.module.ts` para asegurarte de que el `ErrorHandler` esté disponible en toda tu aplicación.
+
+```typescript {tabTitle:App Config} {filename:app.config.ts} {3,8-11}
+import { ApplicationConfig, ErrorHandler } from "@angular/core";
+
+import * as Sentry from "@sentry/angular";
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    // ...
+    {
+      provide: ErrorHandler,
+      useValue: Sentry.createErrorHandler(),
+    },
+  ],
+};
+export class AppModule {}
+```
+
+```typescript {tabTitle:NGModule Config} {filename:app.module.ts} {3,8-11}
+import { ErrorHandler, NgModule } from "@angular/core";
+
+import * as Sentry from "@sentry/angular";
+
+@NgModule({
+  // ...
+  providers: [
+    {
+      provide: ErrorHandler,
+      useValue: Sentry.createErrorHandler(),
+    },
+  ],
+})
+export class AppModule {}
+```
+
+
+<div id="options">
+  ### Opciones
+</div>
+
+Como alternativa, puedes configurar el comportamiento de `ErrorHandler` pasando un objeto a la función `createErrorHandler`. Las siguientes opciones están disponibles:
+
+<div id="logerrors">
+  #### `logErrors`
+</div>
+
+_Tipo: `boolean` Valor predeterminado: `true`_
+
+Permite registrar errores en la consola. De forma predeterminada es `true` para mantener la coherencia con el comportamiento predeterminado de Angular.
+
+<div id="extractor">
+  #### `extractor`
+</div>
+
+_Tipo: `function` Predeterminado: `undefined`_
+
+Permite extraer el objeto de error sin procesar que llega. El SDK utiliza su propia lógica de extracción de forma predeterminada, pero puedes reemplazarla proporcionando tu propia función.
+
+<div id="multiple-error-handlers">
+  ## Múltiples manejadores de errores
+</div>
+
+Angular no permite definir múltiples instancias de `ErrorHandler` en la misma aplicación Angular en `app.config.ts` o `app.module.ts`.
+Por lo tanto, si usas tu propio manejador de errores o quieres agregar lógica adicional al `ErrorHandler` de Sentry, debes extender el `ErrorHandler` de Sentry como en el ejemplo a continuación:
+
+```typescript
+import * as Sentry from "@sentry/angular";
+
+export class CustomErrorHandler extends Sentry.SentryErrorHandler {
+  constructor() {
+    // Pasa opciones al ErrorHandler de Sentry aquí. Por ejemplo:
+    super({ logErrors: false });
+  }
+
+  handleError(error: any): void {
+    // Tu lógica personalizada para el manejo de errores
+    // Llama al manejador de errores de Sentry para capturar los errores:
+    super.handleError(error);
+  }
+}
+```

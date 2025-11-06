@@ -1,0 +1,111 @@
+---
+title: Ariadne
+description: "Aprende a importar la integración de Ariadne para GraphQL y cómo captura errores de GraphQL."
+---
+
+La integración de Ariadne captura errores de la
+[biblioteca de GraphQL Ariadne](https://ariadnegraphql.org/), los cuales luego pueden verse
+en [Sentry](https://sentry.io).
+
+<div id="install">
+  ## Instalación
+</div>
+
+Para empezar, instala `sentry-sdk` desde PyPI.
+
+```bash {tabTitle:pip}
+pip install "sentry-sdk"
+```
+
+```bash {tabTitle:uv}
+uv add "sentry-sdk"
+```
+
+<div id="configure">
+  ## Configuración
+</div>
+
+Si tienes el paquete `ariadne` entre tus dependencias, la integración de Ariadne se habilitará automáticamente al inicializar el SDK de Sentry.
+
+<PlatformContent includePath="getting-started-config" />
+
+<div id="verify">
+  ## Verificar
+</div>
+
+Crea un archivo llamado `app.py` con el siguiente contenido:
+
+```python
+from ariadne import QueryType, gql, make_executable_schema
+from ariadne.asgi import GraphQL
+
+sentry_sdk.init(...)  # igual que antes
+
+type_defs = gql(
+    """
+    type Query {
+        hello: String!
+    }
+"""
+)
+
+query = QueryType()
+
+@query.field("hello")
+def resolve_hello(*_):
+    1 / 0
+    return "¡Hola!"
+
+schema = make_executable_schema(type_defs, query)
+app = GraphQL(schema, debug=True)
+```
+
+Asegúrate de tener instalado `uvicorn`:
+
+```bash
+pip install uvicorn
+```
+
+Por último, ejecuta tu servidor web de GraphQL con:
+
+```bash
+uvicorn app:app
+```
+
+Abre [http://127.0.0.1:8000](http://127.0.0.1:8000) en tu navegador. Deberías
+ver la interfaz gráfica de GraphiQL.
+
+Escribe `{ hello }` en el campo de consulta y luego pulsa el botón &quot;Execute query&quot;. Tu
+aplicación web recibirá la consulta y se encontrará con el error `ZeroDivisionError` que
+hemos introducido en la función del resolver `resolve_hello`.
+
+Esto creará un `GraphQLError` correspondiente en la sección Issues de
+[sentry.io](https://sentry.io). Los datos tardarán unos momentos en aparecer en [Sentry](https://sentry.io).
+
+<div id="options">
+  ## Opciones
+</div>
+
+La integración de Ariadne puede capturar los payloads de solicitud y respuesta para cada error de GraphQL que ocurra. Como estos pueden contener datos sensibles, el SDK debe inicializarse con la opción [send&#95;default&#95;pii](/es/platforms/python/configuration/options/#send-default-pii) establecida en `True`.
+
+De forma predeterminada, no se adjuntarán datos de solicitud ni de respuesta.
+
+```python
+sentry_sdk.init(
+    # mismas opciones que antes
+    send_default_pii=True,
+)
+```
+
+<Alert level="warning" title="Nota">
+  Dado que `send_default_pii` es una opción global del SDK, establecerla en `True` afectará a todas las integraciones, no solo a Ariadne. Asegúrate de
+  [sanear datos sensibles](/es/platforms/python/data-management/sensitive-data/)
+  de los eventos antes de habilitar esta opción.
+</Alert>
+
+<div id="supported-versions">
+  ## Versiones compatibles
+</div>
+
+* ariadne: 0.20+
+* Python: 3.8+

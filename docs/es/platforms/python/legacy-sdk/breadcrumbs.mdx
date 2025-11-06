@@ -1,0 +1,116 @@
+---
+draft: true
+categories: []
+toc: true
+title: Registro de breadcrumbs
+sidebar_order: 2
+noindex: true
+tags: []
+---
+
+<Alert level="warning" title="Aviso de obsolescencia">
+  Un nuevo SDK de Python ha sustituido esta versión obsoleta. Sentry conserva esta documentación para clientes que usan el cliente antiguo. Recomendamos usar el [SDK de Python actualizado](/es/platforms/python/) para proyectos nuevos.
+</Alert>
+
+Las versiones más recientes de Sentry admiten el registro de breadcrumbs además de los errores. Esto significa que, cada vez que se envía un error u otro evento de Sentry al sistema, los breadcrumbs registrados previamente se adjuntan para facilitar la reproducción de lo que condujo al error.
+
+Con la configuración predeterminada, el cliente de Python instrumenta el framework de logging y algunas bibliotecas populares para emitir crumbs.
+
+No obstante, también puedes emitir eventos manualmente si lo deseas. Hay varias maneras de hacerlo.
+
+Los breadcrumbs están habilitados de forma predeterminada, pero a partir de Raven 5.15 puedes deshabilitarlos por cliente pasando `enable_breadcrumbs=False` al constructor del cliente.
+
+<div id="enabling-disabling-instrumentation">
+  ## Activar/desactivar la instrumentación
+</div>
+
+Cuando se crea un cliente de Sentry, la biblioteca raven, de forma predeterminada, instrumenta automáticamente algunas bibliotecas populares. Esto se puede controlar de varias maneras pasando parámetros al constructor del cliente:
+
+`install_logging_hook`:
+
+Si este argumento con nombre se establece en *False*, el sistema de logging de Python no se instrumentará. Ten en cuenta que esta es una instrumentación global, por lo que si estás usando varios clientes de Sentry a la vez necesitas desactivarla en todos ellos.
+
+`hook_libraries`:
+
+Es una lista de bibliotecas que quieres enganchar. El valor predeterminado es enganchar todas las bibliotecas para las que tenemos integraciones. Si se establece en una lista vacía, no se engancha ninguna biblioteca.
+
+Actualmente se admiten las siguientes bibliotecas:
+
+* `'requests'`: engancha la biblioteca requests de Python.
+* `'httplib'`: engancha la biblioteca http de la stdlib (también engancha urllib en el proceso)
+
+Además, la integración con frameworks enganchará más cosas automáticamente. Por ejemplo, cuando usas Django, se registrarán las consultas a la base de datos.
+
+Otra opción para controlar lo que sucede es registrar manejadores especiales para el sistema de logging o desactivar por completo los loggers. Para ello puedes usar las funciones [`ignore_logger()`](#raven.breadcrumbs.ignore_logger "raven.breadcrumbs.ignore_logger") y [`register_special_log_handler()`](#raven.breadcrumbs.register_special_log_handler "raven.breadcrumbs.register_special_log_handler"):
+
+<a name="raven.breadcrumbs.ignore_logger" />
+
+`raven.breadcrumbs.ignore_logger(name_or_logger, allow_level=None)`
+
+Si se llama con el nombre de un logger, se ignorarán todos los mensajes que provengan de ese logger. Por ejemplo, si tienes un logger muy ruidoso puedes desactivarlo de esta manera.
+
+<a name="raven.breadcrumbs.register_special_log_handler" />
+
+`raven.breadcrumbs.register_special_log_handler(name_or_logger, callback)`
+
+Registra un callback para el manejo de logs. El callback se invoca con los argumentos *logger*, *level*, *msg*, *args* y *kwargs*, que son los valores pasados al sistema de logging. Si el callback devuelve un valor verdadero, se desactiva el manejo predeterminado. Solo se puede registrar un callback por nombre de logger. No se recorre el árbol de loggers, por lo que llamar a este método con el argumento *spammy&#95;module* no silenciará los mensajes de *spammy&#95;module.child*.
+
+Normalmente tiene sentido invocar [`record()`](#raven.breadcrumbs.record "raven.breadcrumbs.record") desde ahí, a menos que quieras silenciar un mensaje en función de atributos distintos a *level*.
+
+<a name="raven.breadcrumbs.register_logging_handler" />
+
+`raven.breadcrumbs.register_logging_handler(callback)`
+
+Es similar a [`register_special_log_handler()`](#raven.breadcrumbs.register_special_log_handler), pero añade un callback global que se invoca para todas las entradas de log. Por lo demás funciona igual, pero se pueden registrar varios manejadores.
+
+<div id="manually-emitting-breadcrumbs">
+  ## Emisión manual de breadcrumbs
+</div>
+
+Si quieres registrar breadcrumbs manualmente, la forma más conveniente de hacerlo es usar la función `record()`, que registrará automáticamente los breadcrumbs con los clientes que estén trabajando con el hilo actual. Esto es más cómodo que llamar al método *captureBreadcrumb* en el propio cliente, ya que tendrías que mantener una referencia a este.
+
+<a name="raven.breadcrumbs.record" />
+
+`raven.breadcrumbs.record(**options)`
+
+Esta función acepta argumentos con nombre que coinciden con los atributos de un breadcrumb. Para más información, consulta [*Event Payloads*](https://develop.sentry.dev/sdk/data-model/event-payloads/). Además, se puede pasar un callback de *processor* que se invocará para procesar los datos si el breadcrumb no fue rechazado.
+
+Los parámetros más importantes:
+
+*message*:
+
+el mensaje que debe registrarse.
+
+*data*:
+
+un diccionario de datos que debe registrarse con el evento.
+
+*category*:
+
+La categoría para este error. Puede ser un nombre de módulo o simplemente una cadena que identifique claramente el breadcrumb (p. ej., *http*, *rpc*, etc.).
+
+*type*:
+
+permite sobrescribir el tipo si se debe enviar un tipo especial a Sentry.
+
+Ejemplo:
+
+```python
+from raven import breadcrumbs
+
+breadcrumbs.record(message='Este es un mensaje importante',
+                   category='my_module', level='warning')
+```
+
+Como las migas se guardan en un búfer circular, a menudo conviene aplazar el procesamiento de operaciones costosas hasta que la miga sea realmente necesaria. Para ello, puedes pasar un procesador al que se le proporcionará el diccionario de datos para realizar modificaciones:
+
+```python
+from raven.breadcrumbs import record
+
+def process_crumb(data):
+    data['data'] = compute_expensive_data()
+
+record(message='Este es un mensaje importante',
+       category='my_module', level='warning',
+       processor=process_crumb)
+```

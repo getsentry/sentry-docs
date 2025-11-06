@@ -1,0 +1,101 @@
+---
+title: Opciones
+description: "Obtén más información sobre cómo configurar el SDK mediante opciones. Estas se pasan a la función init y, por lo tanto, se definen cuando el SDK se inicializa por primera vez."
+sidebar_order: 1
+---
+
+<PlatformContent includePath="configuration/config-intro" />
+
+<div id="core-options">
+  ## Opciones principales
+</div>
+
+<TableOfContents ignoreIds={["core-options"]} />
+
+Las opciones que pueden leerse desde una variable de entorno (`SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`) se leen automáticamente.
+
+<SdkOption name="dsn" type="string" envVar="SENTRY_DSN">
+  El DSN le indica al SDK adónde enviar los eventos. Si no se proporciona este valor, el SDK intentará leerlo de la variable de entorno `SENTRY_DSN`. Si esa variable tampoco existe, el SDK simplemente no enviará eventos.
+
+  Más información sobre la [utilización del DSN](/es/product/sentry-basics/dsn-explainer/#dsn-utilization).
+</SdkOption>
+
+<SdkOption name="database_path" type="string" defaultValue=".sentry-native">
+  Permite especificar una ruta a la base de datos local de eventos y fallos del SDK nativo. De forma predeterminada, esta ruta será `.sentry-native` relativa al directorio de trabajo actual (`CWD`). Aunque es una configuración conveniente para desarrollo, te recomendamos encarecidamente proporcionar una ruta de base de datos explícita para los despliegues en producción. En muchos escenarios de despliegue, la ruta relativa al `CWD` no será escribible. Por esta razón, debes almacenar la base de datos en el directorio de datos/caché específico del usuario de tu aplicación (por ejemplo, en `%AppData%\Local` en Windows, `~/Library/Application Support` en macOS o `XDG_CACHE_HOME` en Linux).
+</SdkOption>
+
+<SdkOption name="debug" type="bool" envVar="SENTRY_DEBUG" defaultValue="false">
+  Activa o desactiva el modo de depuración. Si `debug` está habilitado, el SDK intentará imprimir información útil de depuración si algo sale mal. Si ejecutas una compilación de depuración (no se define `NDEBUG`), el valor predeterminado será `true`; de lo contrario, siempre será `false`. Puedes proporcionar una variable de entorno `SENTRY_DEBUG` con `"0"` o `"1"` para “apagado” y “encendido”, respectivamente, que anulará los valores predeterminados. Por lo general, no se recomienda activarlo en producción, aunque habilitar el modo `debug` no ocasionará problemas de seguridad. Puedes limitar la salida configurando `logger_level` a un nivel apropiado para tu caso de uso en producción.
+</SdkOption>
+
+<SdkOption name="release" type="string" envVar="SENTRY_RELEASE">
+  Configura la versión (release). Los nombres de versión son cadenas, pero Sentry detecta algunos formatos y podría mostrarlos de forma diferente. Obtén más información sobre cómo enviar datos de versiones para que Sentry pueda informarte sobre regresiones entre versiones e identificar la fuente potencial en [la documentación de versiones](/es/product/releases/) o la <SandboxLink scenario="releases">sandbox</SandboxLink>.
+
+  De forma predeterminada, el SDK intentará leer este valor de la variable de entorno `SENTRY_RELEASE`.
+</SdkOption>
+
+<SdkOption name="environment" type="string" defaultValue="production" envVar="SENTRY_ENVIRONMENT">
+  Configura el entorno. Esta cadena es de formato libre y se establece de forma predeterminada. Una versión puede asociarse con más de un entorno para separarlos en la interfaz (piensa en `staging` vs `prod` o similar).
+
+  De forma predeterminada, el SDK intentará leer este valor de la variable de entorno `SENTRY_ENVIRONMENT`. De lo contrario, el entorno predeterminado es `production`.
+</SdkOption>
+
+<SdkOption name="sample_rate" type="float" defaultValue="1.0">
+  Configura la tasa de muestreo de los eventos de error, en el rango de `0.0` a `1.0`. El valor predeterminado es `1.0`, lo que significa que se enviará el 100% de los eventos de error. Si se establece en `0.1`, solo se enviará el 10% de los eventos de error. Los eventos se seleccionan aleatoriamente.
+</SdkOption>
+
+<SdkOption name="max_breadcrumbs" type="int" defaultValue="100">
+  Esta variable controla la cantidad total de breadcrumbs que deben capturarse. El valor predeterminado es `100`, pero puedes establecerlo en cualquier número. Sin embargo, debes tener en cuenta que Sentry tiene un [tamaño máximo de carga útil](https://develop.sentry.dev/sdk/data-model/envelopes/#size-limits) y cualquier evento que supere ese tamaño de carga se descartará.
+</SdkOption>
+
+<SdkOption name="crashpad_wait_for_upload" type="bool" defaultValue="false">
+  Indica si Crashpad debe retrasar el cierre de la aplicación hasta que se complete la carga del informe de fallo en `crashpad_handler`. Esto es útil para despliegues en `Docker` (contenedores de Linux y Windows) o `systemd`, donde el ciclo de vida de todos los procesos está ligado al proceso raíz (normalmente la aplicación supervisada).
+</SdkOption>
+
+<SdkOption name="propagate_traceparent" type="bool" defaultValue="false" availableSince="0.11.3">
+  Determina si el SDK debe propagar el encabezado HTTP W3C `traceparent` junto con el encabezado `sentry-trace` para el [rastreo distribuido](https://docs.sentry.io/platforms/native/tracing/trace-propagation/custom-instrumentation/).
+</SdkOption>
+
+<div id="hooks">
+  ## Hooks
+</div>
+
+Estas opciones se pueden usar para integrar el SDK de varias maneras y personalizar el envío de eventos.
+
+<SdkOption name="before_send" type="function">
+  Esta función se invoca con un mensaje específico del SDK o un objeto de evento de error, y puede devolver un objeto de evento modificado, o `sentry_value_new_null()` para omitir el envío del evento. Esto puede usarse, por ejemplo, para eliminar manualmente PII antes de enviar.
+
+  Para cuando se ejecuta <PlatformIdentifier name="before_send" />, todos los datos del scope ya se han aplicado al evento. Cualquier modificación posterior del scope no tendrá efecto.
+</SdkOption>
+
+<SdkOption name="on_crash" type="function">
+  Esta función se invoca con un objeto de evento específico del backend y puede devolver un objeto de evento modificado o nada para omitir el envío del evento. A diferencia de `before_send`, solo se llama cuando ocurre un crash. Puedes encontrar información detallada sobre su uso en [Filtering](/es/platforms/native/configuration/filtering/#using-on_crash).
+</SdkOption>
+
+<SdkOption name="before_transaction" type="function">
+  Esta función se invoca con un objeto de evento de transacción específico del SDK y puede devolver un objeto de evento de transacción modificado, o `sentry_value_new_null()` para omitir el envío del evento. Una forma de usarla es eliminar manualmente PII antes de enviar.
+</SdkOption>
+
+<div id="tracing-options">
+  ## Opciones de trazado
+</div>
+
+<SdkOption name="traces_sample_rate" type="float" defaultValue="0.0">
+  Un número entre `0.0` y `1.0` que controla el porcentaje de probabilidad de que una transacción determinada se envíe a Sentry. (`0.0` representa el 0% y `1.0` representa el 100%.) Se aplica por igual a todas las transacciones creadas en la aplicación. Para habilitar el trazado, debe definirse este parámetro o <PlatformIdentifier name="traces_sampler" />.
+</SdkOption>
+
+<SdkOption name="traces_sampler" type="function">
+  Una función encargada de determinar el porcentaje de probabilidad de que una transacción determinada se envíe a Sentry. Recibirá automáticamente información sobre la transacción y el contexto en el que se crea, y debe devolver un número entre `0` (0% de probabilidad de envío) y `1` (100% de probabilidad de envío). También puede usarse para filtrar transacciones, devolviendo 0 para aquellas que no se desean. Para habilitar el trazado, debe definirse esta función o <PlatformIdentifier name="traces_sample_rate" />. Puedes encontrar un ejemplo en la sección [Muestreo](/es/platforms/native/configuration/sampling/#setting-a-sampling-function).
+</SdkOption>
+
+<div id="logs-options">
+  ## Opciones de registros
+</div>
+
+<SdkOption name="enable_logs" type="bool" defaultValue="false">
+  Esta opción habilita la [integración de registros](/es/platforms/native/logs), lo que permite que el SDK capture registros y los envíe a Sentry.
+</SdkOption>
+
+<SdkOption name="before_send_log" type="function">
+  Esta función se invoca con un objeto de registro específico del SDK y puede devolver un objeto de registro modificado o `sentry_value_new_null()` para descartar el registro.
+</SdkOption>

@@ -1,0 +1,220 @@
+---
+title: "Gestión de versiones"
+sidebar_order: 2
+description: "La interfaz de línea de comandos de Sentry puede usarse para la gestión de versiones. La CLI te permite crear, editar y eliminar versiones, así como cargar artefactos de una versión."
+---
+
+La herramienta `sentry-cli` puede usarse para la gestión de versiones en Sentry. Te permite crear, editar y eliminar versiones, así como cargar artefactos de una versión. Ten en cuenta que las versiones son globales a nivel de organización. Si quieres que las versiones en distintos proyectos se traten como entidades independientes, haz que el nombre de la versión sea único en toda la organización. Por ejemplo, si tienes projectA y projectB que comparten números de versión, puedes nombrar las versiones `projectA-1.0` y `projectB-1.0`, respectivamente.
+
+<Alert>
+  Como las versiones se gestionan por proyecto, necesitarás especificar la organización y el proyecto con los que estás trabajando. Para más información, consulta [Trabajar con proyectos](/es/cli/configuration/#sentry-cli-working-with-projects).
+</Alert>
+
+<div id="creating-releases">
+  ## Creación de versiones
+</div>
+
+Las versiones se crean con el comando `sentry-cli releases new`. Como mínimo, requiere un identificador de versión que distinga de forma única la versión.
+
+```bash
+#!/bin/sh
+sentry-cli releases new "$VERSION"
+```
+
+Existen algunas restricciones y convenciones sobre los nombres de las releases que debes tener en cuenta. [Más información sobre cómo nombrar releases](/es/product/releases/naming-releases/).
+
+Las releases también pueden crearse automáticamente desde distintos sistemas; por ejemplo, al cargar un source map, o por algunos clientes cuando se ingiere un evento etiquetado con una release. Por lo tanto, es importante establecer el nombre de la release al compilar y desplegar tu aplicación. Obtén más información en nuestra documentación de [Releases](/es/platform-redirect/?next=/configuration/releases/).
+
+<div id="finalizing-releases">
+  ## Finalización de versiones
+</div>
+
+De forma predeterminada, una versión se crea como “sin finalizar”. Finalizar una versión significa que agregamos una segunda marca de tiempo en el registro de la versión, que tiene prioridad sobre `date_created` al ordenar versiones en [sentry.io](https://sentry.io). La finalización de la versión (y la marca de tiempo) también afecta a:
+
+* Qué se considera “la siguiente versión” para resolver incidencias
+* Qué versión se usa como base para asociar commits si usas `--auto`
+
+Además, crea una entrada en el feed de **Activity**.
+
+Puedes cambiar esto pasando `--finalize` al comando `new`, que finalizará la versión de inmediato, o llamando por separado a `sentry-cli releases finalize VERSION` más adelante, lo cual es útil si gestionas versiones como parte de un proceso de compilación. Por ejemplo:
+
+```bash
+#!/bin/sh
+sentry-cli releases new "$VERSION"
+# realiza aquí tus pasos de compilación
+# cuando termines, finaliza
+sentry-cli releases finalize "$VERSION"
+```
+
+También puedes optar por finalizar la versión cuando la hayas publicado (cuando la hayas desplegado en tus máquinas, habilitado en la App Store, etc.).
+
+Si usas git, puedes pedirle a Sentry que determine `$VERSION`:
+
+```bash
+#!/bin/sh
+VERSION=`sentry-cli releases propose-version`
+```
+
+<div id="commit-integration">
+  ## Integración de commits
+</div>
+
+Si tienes [repositorios configurados](/es/product/releases/setup/release-automation/) en tu organización de Sentry, puedes asociar commits a tu versión de forma automática o manual. Si no tienes instalada una integración de código fuente, aún puedes enviar información de commits a Sentry. Consulta [Alternativa: sin una integración de repositorio](#alternatively-without-a-repository-integration) para asociar commits usando el árbol de git de tu repositorio local.
+
+Para integrar commits automáticamente, debes hacer el despliegue desde un repositorio de git que sentry-cli pueda detectar desde tu directorio de trabajo actual y establecer los commits con la opción `--auto`:
+
+```bash
+sentry-cli releases set-commits "$VERSION" --auto
+```
+
+Si realizas un despliegue sin acceso al repositorio de Git, puedes especificar los commits manualmente. Para ello, pasa el parámetro `--commit` al comando `set-commits` con el formato `REPO_NAME@REVISION`. Puedes repetirlo para tantos repositorios como necesites:
+
+```bash {tabTitle:bash (one repo)}
+sentry-cli releases set-commits "$VERSION" --commit "repo-owner/repo-name@deadbeef"
+```
+
+```bash {tabTitle:bash (many repos)}
+sentry-cli releases set-commits "$VERSION" --commit "repo-owner/repo-name@deadbeef" --commit "repo-owner/repo-name@deadbeef2" --commit "repo-owner/repo-name@deadbeef3"
+```
+
+Para ver qué repositorios están disponibles para la organización, puedes ejecutar `sentry-cli repos list`, lo que devolverá una lista de repositorios configurados.
+
+Ten en cuenta que, para hacer referencia a lanzamientos, necesitas usar el SHA de confirmación completo. Si quieres referirte a etiquetas o referencias (como *HEAD*), el repositorio debe estar clonado y ser accesible desde la ruta desde la que invocas *sentry-cli*.
+
+Si también quieres establecer una confirmación anterior en lugar de dejar que el servidor use el lanzamiento anterior como punto de base, puedes hacerlo definiendo un rango de confirmaciones. Reemplaza `<commit_of_previous_release>` y `<commit_of_current_release>` por la última confirmación del lanzamiento anterior y la del lanzamiento que estás creando, respectivamente.
+
+```bash
+sentry-cli releases set-commits "$VERSION" --commit "repo-owner/repo-name@<commit_of_previous_release>..<commit_of_current_release>"
+```
+
+<div id="alternatively-without-a-repository-integration">
+  ### Alternativamente: sin integración de repositorio
+</div>
+
+Puedes seguir usando la opción `--auto`, y la CLI usará automáticamente el árbol de git de tu repositorio local y asociará los commits entre el commit de la versión anterior y el commit head actual con la versión. Si es la primera versión, Sentry usará los últimos 20 commits. Este comportamiento se puede configurar con la opción `--initial-depth`.
+
+Puedes usar la opción `--local` para habilitar este comportamiento de forma predeterminada.
+
+```bash
+sentry-cli releases set-commits "$VERSION" --local
+```
+
+Si recibes un correo electrónico titulado «Unable to Fetch Commits», consulta nuestro [artículo del centro de ayuda](https://sentry.zendesk.com/hc/en-us/articles/23968845267739-Why-am-I-receiving-the-email-Unable-to-Fetch-Commits).
+
+<div id="dealing-with-missing-commits">
+  ### Cómo manejar commits faltantes
+</div>
+
+Hay situaciones en las que tus repositorios pueden no tener commits que se usaron previamente en la versión.
+Esto puede suceder cuando modificas el commit en cuestión, por ejemplo, enmendándolo, haciendo rebase o combinando varios commits (squash).
+En ese caso, Sentry CLI no podrá encontrarlo y mostrará un error indicando que no se puede encontrar el commit.
+
+Cuando ocurra esto, puedes pasar la opción adicional `--ignore-missing`. Esto permitirá que el comando vuelva al comportamiento predeterminado,
+que es crear una versión con una cantidad especificada de commits (consulta la sección anterior).
+
+```bash
+sentry-cli releases set-commits "$VERSION" --auto --ignore-missing
+```
+
+<div id="upload-source-maps">
+  ## Cargar mapas de código fuente
+</div>
+
+Puedes cargar sourcemaps con el comando `sentry-cli sourcemaps upload`:
+
+```bash
+sentry-cli sourcemaps upload /ruta/a/los-sourcemaps
+```
+
+Este comando ofrece varias opciones e intenta realizar la mayor autodetección posible. De forma predeterminada, escaneará la ruta proporcionada en busca de archivos y los subirá con el nombre de su ruta y un prefijo `~/`. También intentará determinar las referencias entre archivos minificados y mapas de código fuente según el nombre del archivo. Así, si tienes un archivo llamado `foo.min.js`, que es un JavaScript minificado, y, por ejemplo, un mapa de código fuente llamado `foo.min.map`, enviará un encabezado `Sourcemap` para asociarlos. Esto funciona para archivos en los que el sistema puede detectar una relación.
+
+De forma predeterminada, `sentry-cli` reescribe los mapas de origen antes de cargarlos:
+
+1. Aplana los source maps indexados. Esto tiene la ventaja de que a veces puede comprimir los source maps, lo que podría mejorar los tiempos de procesamiento, y permite trabajar con herramientas que incrustan rutas locales en las referencias de source maps, las cuales no funcionarían en el servidor. Esto es especialmente útil al trabajar con source maps con fines de desarrollo.
+2. Las referencias a archivos locales en los mapas de origen (source maps) para los contenidos de origen se incrustan en línea. Esto funciona especialmente bien con proyectos de React Native, que pueden referenciar miles de archivos que probablemente no quieras subir por separado.
+3. Valida automáticamente los source maps antes de subirlos con gran precisión, lo que puede detectar errores que de otro modo no encontrarías hasta que ocurra un evento. Es una versión mejorada de lo que hace `--validate`.
+
+Estas opciones permiten cambiar el comportamiento del comando de carga:
+
+`--dist`
+
+Establece el identificador de distribución para los archivos subidos. Este identificador se usa para distinguir entre varios archivos con el mismo nombre dentro de una misma versión. `dist` puede usarse para diferenciar variantes de compilación o de implementación. Por ejemplo, `dist` puede ser el número de compilación de un build de Xcode o el código de versión de un build de Android.
+
+`--no-sourcemap-reference`
+
+Esto impide la detección automática de referencias a mapas de origen. No se recomienda usar esta opción, ya que el sistema de todos modos termina sin emitir una referencia. Sin embargo, resulta útil si agregas manualmente comentarios `sourceMapURL` a los archivos minificados y sabes que son más correctos que la autodetección.
+
+`--no-rewrite`
+
+Desactiva la reescritura de los source maps coincidentes. De forma predeterminada, la herramienta vuelve a escribir las sources, de modo que los mapas indexados se aplanan y las fuentes faltantes se incrustan en línea cuando es posible. Esto cambia fundamentalmente el proceso de carga para basarse exclusivamente en source maps y archivos minificados, y resulta útil para configuraciones como React Native que generan source maps que, de otro modo, no funcionarían con Sentry.
+
+`--strip-prefix` / `--strip-common-prefix`
+
+A menos que se especifique `--no-rewrite`, esto eliminará un prefijo de todas las referencias de fuentes dentro de los mapas de origen subidos. Por ejemplo, puedes usarlo para quitar una ruta específica de la máquina de compilación. La versión con prefijo común intentará adivinar automáticamente cuál es el prefijo común y eliminarlo automáticamente.
+Esto no modificará las rutas de las fuentes subidas. Para hacerlo, apunta el comando `sourcemaps upload` a un directorio más preciso.
+
+`--validate`
+
+Esto intenta validar los sourcemaps antes de la carga cuando la reescritura no está habilitada. Detectará diversos problemas con los sourcemaps y cancelará la carga si se encuentra alguno. No es la opción predeterminada, ya que puede provocar falsos positivos.
+
+`--url-prefix`
+
+Esto establece un prefijo de URL delante de todos los archivos. De forma predeterminada es `~/`, pero quizá quieras configurarlo con la URL completa. Esto también resulta útil si tus archivos están almacenados en una subcarpeta. p. ej.: `--url-prefix '~/static/js'`
+
+`--ext`
+
+Sobrescribe la lista de extensiones de archivo que se subirán. De forma predeterminada, se procesan las siguientes extensiones: `js`, `map`, `jsbundle` y `bundle`. La herramienta detectará automáticamente el tipo de archivo según su contenido (p. ej., código fuente, código minificado y mapas de origen) y actuará en consecuencia. Para varias extensiones debes repetir la opción, por ejemplo: `--ext js --ext map`.
+
+`--ignore`
+
+Especifica uno o varios patrones de archivos y carpetas que se deben ignorar. Sobrescribe los patrones definidos en el archivo de ignorados. Consulta `--ignore-file` para obtener más información. Ten en cuenta que, a diferencia de `--ignore-file`, este argumento se interpreta de forma relativa al argumento de ruta especificado.
+
+`--ignore-file`
+
+Especifica un archivo que contiene patrones de archivos y carpetas que se ignorarán durante el análisis. Los patrones de exclusión siguen las reglas de [gitignore](https://git-scm.com/docs/gitignore#_pattern_format) y se evalúan en relación con la ubicación del archivo de exclusión. Se asume que el archivo está en el directorio de trabajo actual o en cualquiera de sus directorios superiores.
+
+`--strict`
+
+Falla con un código de salida distinto de cero si no hay sourcemaps para subir en el directorio indicado. Sin este argumento, el comando se considera exitoso si no hay sourcemaps para subir.
+
+Algunos ejemplos:
+
+```bash
+# Reescribe y sube todos los mapas de origen en /path/to/sourcemaps
+sentry-cli sourcemaps upload /path/to/sourcemaps
+
+# Anteponer ~/static/js a todas las rutas para que coincidan con la ubicación de las fuentes alojadas en línea
+sentry-cli sourcemaps upload /path/to/sourcemaps --url-prefix '~/static/js'
+
+# Quitar un prefijo común si todos los mapas de origen están en un subdirectorio
+sentry-cli sourcemaps upload /path/to/sourcemaps --url-prefix '~/static/js' \
+  --strip-common-prefix
+
+# Omitir todos los archivos especificados en .sentryignore
+sentry-cli sourcemaps upload /path/to/sourcemaps --ignore-file .sentryignore
+```
+
+<div id="creating-deploys">
+  ## Creación de despliegues
+</div>
+
+También puedes asociar los despliegues con las versiones. Para crear un despliegue, primero crea una versión y luego un despliegue para ella. Como mínimo, debes indicar el entorno al que se envía el despliegue (producción, staging, etc.). Puedes definirlo libremente:
+
+```bash
+sentry-cli deploys new --release "$VERSION" -e ENVIRONMENT
+```
+
+Opcionalmente, también puedes indicar cuánto tardó el despliegue:
+
+```bash
+start=$(date +%s)
+...
+now=$(date +%s)
+sentry-cli deploys new --release "$VERSION" -e ENVIRONMENT -t $((now-start))
+```
+
+También se pueden listar los despliegues (pero no se pueden eliminar):
+
+```bash
+sentry-cli deploys list --release "$VERSION"
+```

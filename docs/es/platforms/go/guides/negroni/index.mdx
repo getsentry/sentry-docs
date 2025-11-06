@@ -1,0 +1,185 @@
+---
+title: Negroni
+description: "Negroni es un enfoque idiomático para el middleware web en Go. Aprende a configurarlo con Sentry."
+---
+
+Para una referencia rápida, hay un [ejemplo completo](https://github.com/getsentry/sentry-go/tree/master/_examples/negroni) en el repositorio del código fuente del SDK de Go.
+
+También está disponible la [documentación de la API con el estilo de Go Dev](https://pkg.go.dev/github.com/getsentry/sentry-go/negroni).
+
+<div id="install">
+  ## Instalación
+</div>
+
+```bash
+go get github.com/getsentry/sentry-go
+go get github.com/getsentry/sentry-go/negroni
+```
+
+<Break />
+
+
+<div id="configure">
+  ## Configuración
+</div>
+
+<div id="initialize-the-sentry-sdk">
+  ### Inicializa el SDK de Sentry
+</div>
+
+<PlatformContent includePath="getting-started-config" />
+
+<div id="options">
+  ### Opciones
+</div>
+
+`sentrynegroni` acepta una estructura `Options` que te permite configurar el comportamiento del handler.
+
+```go
+// Si Sentry debe volver a entrar en pánico tras la recuperación; en la mayoría de los casos debería establecerse en true,
+// ya que negroni.Classic incluye su propio middleware de Recovery que gestiona las respuestas HTTP.
+Repanic bool
+// Si deseas bloquear la solicitud antes de continuar con la respuesta.
+// Dado que el controlador `Recovery` predeterminado de Negroni no reinicia la aplicación,
+// es seguro omitir esta opción o establecerla en `false`.
+WaitForDelivery bool
+// Tiempo de espera para las solicitudes de envío de eventos.
+Timeout time.Duration
+```
+
+<Break />
+
+```go
+app := negroni.Classic()
+
+app.Use(sentrynegroni.New(sentrynegroni.Options{
+    // modifica tus opciones de configuración
+    Repanic:         true,
+    WaitForDelivery: false,
+    Timeout:         5 * time.Second,
+}))
+```
+
+
+<div id="verify">
+  ## Verifica
+</div>
+
+```go
+app := negroni.Classic()
+
+app.Use(sentrynegroni.New(sentrynegroni.Options{
+// especifica las opciones aquí...
+}))
+
+// Configura las rutas
+mux := http.NewServeMux()
+
+mux.HandleFunc("/", func(rw http.ResponseWriter, r *http.Request) {
+	// capturando un error intencionalmente para simular el uso
+	sentry.CaptureMessage("¡Funciona!")
+	
+	fmt.Fprintf(rw, "¡Hola, mundo!")
+})
+
+app.UseHandler(mux)
+
+// Y ejecútalo
+http.ListenAndServe(":3000", app)
+```
+
+
+<div id="usage">
+  ## Uso
+</div>
+
+`sentrynegroni` adjunta una instancia de `*sentry.Hub` (https://pkg.go.dev/github.com/getsentry/sentry-go#Hub) al contexto de la solicitud, lo que la deja disponible durante el resto del ciclo de vida de dicha solicitud.
+Puedes acceder a ella usando el método `sentry.GetHubFromContext()` en la propia solicitud, en cualquiera de tus middlewares y rutas posteriores.
+Debe usarse en lugar de las llamadas globales `sentry.CaptureMessage`, `sentry.CaptureException` u otras, ya que mantiene separados los datos entre solicitudes.
+
+**Ten en cuenta que `*sentry.Hub` no estará disponible en el middleware adjunto antes de `sentrynegroni`!**
+
+```go
+app := negroni.Classic()
+
+app.Use(sentrynegroni.New(sentrynegroni.Options{
+	Repanic: true,
+}))
+
+app.Use(negroni.HandlerFunc(func(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	hub := sentry.GetHubFromContext(r.Context())
+	hub.Scope().SetTag("someRandomTag", "maybeYouNeedIt")
+	next(rw, r)
+}))
+
+mux := http.NewServeMux()
+
+mux.HandleFunc("/", func(rw http.ResponseWriter, r *http.Request) {
+	hub := sentry.GetHubFromContext(r.Context())
+	hub.WithScope(func(scope *sentry.Scope) {
+		scope.SetExtra("unwantedQuery", "someQueryDataMaybe")
+		hub.CaptureMessage("El usuario envió una cadena de consulta no deseada, pero nos recuperamos sin problemas")
+	})
+	rw.WriteHeader(http.StatusOK)
+})
+
+mux.HandleFunc("/foo", func(rw http.ResponseWriter, r *http.Request) {
+	// el controlador de sentrynagroni lo detectará sin problemas. Además, como adjuntamos "someRandomTag"
+	// en el middleware antes, también se enviará
+	panic("¿por qué, tho?")
+})
+
+app.UseHandler(mux)
+
+http.ListenAndServe(":3000", app)
+```
+
+
+<div id="accessing-request-in-beforesend-callback">
+  ### Acceder a la petición en el callback `BeforeSend`
+</div>
+
+```go
+sentry.Init(sentry.ClientOptions{
+	Dsn: "___PUBLIC_DSN___",
+	BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
+		if hint.Context != nil {
+			if req, ok := hint.Context.Value(sentry.RequestContextKey).(*http.Request); ok {
+				// Aquí tienes acceso a la petición original
+			}
+		}
+
+		return event
+	},
+})
+```
+
+
+<div id="using-negronis-panichandlerfunc-option">
+  ## Uso de la opción `PanicHandlerFunc` de Negroni
+</div>
+
+Negroni ofrece una opción llamada `PanicHandlerFunc`, que te permite “enchufarte” a su middleware `Recovery` predeterminado.
+
+`sentrynegroni` exporta una implementación muy básica que la aprovecha; si no necesitas nada más que informar los panics a Sentry,
+puedes usarla en su lugar, ¡es solo una línea de código!
+
+Aun así puedes usar `BeforeSend` y los procesadores de eventos para modificar los datos antes de enviarlos a Sentry con este método.
+
+```go
+app := negroni.New()
+
+recovery := negroni.NewRecovery()
+recovery.PanicHandlerFunc = sentrynegroni.PanicHandlerFunc
+
+app.Use(recovery)
+
+mux := http.NewServeMux()
+mux.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
+	panic("¿y eso?")
+})
+
+app.UseHandler(mux)
+
+http.ListenAndServe(":3000", app)
+```

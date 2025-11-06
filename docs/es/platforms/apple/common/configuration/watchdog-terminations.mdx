@@ -1,0 +1,78 @@
+---
+title: Terminaciones por Watchdog
+sidebar_order: 10
+description: "Aprende a desactivar el seguimiento de las terminaciones por Watchdog"
+---
+
+<Alert>
+  Esta integración está disponible desde la versión 8.0.0 del Sentry Apple SDK. Se
+  llamaba{" "}
+  <PlatformLink to="/configuration/out-of-memory/">Out of Memory</PlatformLink>{" "}
+  antes del lanzamiento de la 8.0.0.
+</Alert>
+
+Esta integración realiza un seguimiento de las [terminaciones por watchdog](https://developer.apple.com/documentation/xcode/addressing-watchdog-terminations) basadas en heurísticas. Esta función está disponible para iOS, tvOS y Mac Catalyst, funciona solo si la aplicación estaba en primer plano y no realiza seguimiento de terminaciones por watchdog en pruebas unitarias.
+
+Cuando ocurre un error típico no controlado, el Apple SDK escribe un informe en disco antes de que la app termine. Incluye el estado actual de tu aplicación con detalles como el stack trace, etiquetas, breadcrumbs, etc.
+
+El watchdog finaliza tu app sin aviso, lo que significa que el SDK no puede escribir un informe en disco.
+Un motivo común por el que el watchdog finaliza tu app es un problema de Out Of Memory.
+
+Ten en cuenta que hay algunos tipos de fallos relacionados con la seguridad en los que el SO finaliza la app de inmediato. Estos suelen ser poco frecuentes e incluyen desbordamientos de búfer de pila o excepciones con un motivo de terminación relacionado con la firma de código. Bibliotecas de terceros como Sentry no pueden informar estos incidentes.
+
+No obstante, a veces esos tipos de fallos pueden ser visibles en el [Xcode Organizer](https://developer.apple.com/documentation/xcode/acquiring-crash-reports-and-diagnostic-logs).
+Si la app se finaliza porque se cuelga, no crearemos un evento de terminación por watchdog. En su lugar, se creará un evento `AppHangs`.
+
+Por ello, en el Apple SDK, hacemos seguimiento de las terminaciones por watchdog durante el inicio de la app basándonos en heurísticas, pero obtener el estado de la app cuando ocurre una terminación por watchdog es complicado. El SDK agrega breadcrumbs a los eventos de terminación por watchdog anexándolos a un archivo abierto, lo que debería tener un impacto marginal en el rendimiento de tu app. Aun así, omite agregar algunos contextos que cambian con frecuencia para evitar E/S adicional, como memoria libre, almacenamiento libre, orientación del dispositivo, estado de carga, nivel de batería, etc.
+
+Cuando un usuario abre la app, el SDK verifica lo siguiente e informa una terminación por watchdog si todo es verdadero:
+
+* La app no se bloqueó en la ejecución anterior.
+* La app estaba en primer plano/activa.
+* El usuario abrió la app al menos una vez. Si tu app fue finalizada por el watchdog durante el primer inicio, el SDK no puede detectarlo.
+* No había un depurador adjunto al proceso de la app. (De haberlo, nuestra lógica informaría falsamente terminaciones por watchdog cada vez que reinicies la app en desarrollo).
+* La app no se estaba ejecutando en un simulador.
+* El SO no actualizó tu app.
+* El usuario no actualizó el SO de su dispositivo.
+* El usuario no finalizó la app manualmente, ni tampoco lo hizo el SO.
+
+Si te interesan los detalles de implementación, puedes revisar [el código](https://github.com/getsentry/sentry-cocoa/blob/main/Sources/Sentry/SentryWatchdogTerminationLogic.m) para saber más.
+
+Si deseas desactivar esta función, puedes hacerlo mediante opciones:
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.enableWatchdogTerminationTracking = false
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.enableWatchdogTerminationTracking = NO;
+}];
+```
+
+Si desactivas la opción `enableCrashHandler`, el SDK deshabilitará el seguimiento de terminaciones por watchdog. Esto evitará reportes de terminaciones por watchdog con falsos positivos en cada fallo.
+
+
+<div id="faq">
+  #### Preguntas frecuentes
+</div>
+
+**¿Las terminaciones por watchdog incluyen las debidas a alta presión de memoria?**
+
+Sí. Si el watchdog finaliza tu app por uso excesivo de memoria, el SDK de Apple no lo registrará como un bloqueo. En su lugar, informará un evento de terminación por watchdog la próxima vez que se inicie tu app.
+
+**¿Las terminaciones por watchdog incluyen terminaciones forzadas por parte del usuario?**
+
+No, las terminaciones por watchdog no incluyen las terminaciones forzadas por parte del usuario, porque cuando el usuario fuerza el cierre de tu app, esta pasa por el proceso de terminación normal mediante el método delegado [applicationWillTerminate](https://developer.apple.com/documentation/uikit/uiapplicationdelegate/applicationwillterminate(_:)), al que también se suscribe el SDK de Apple. Si el usuario fuerza el cierre de tu app mientras está bloqueada, el SDK lo notificará como un bloqueo fatal de la app si has habilitado <PlatformLink to="/configuration/app-hangs/#app-hangs-v2">App Hangs V2</PlatformLink>.
+
+**¿Las terminaciones por watchdog incluyen bloqueos fatales de la app?**
+
+No, las terminaciones por watchdog no incluyen bloqueos fatales de la app.

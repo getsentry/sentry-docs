@@ -1,0 +1,31 @@
+---
+title: Solución de problemas
+sidebar_order: 9000
+description: "Obtén más información sobre cómo solucionar problemas de rendimiento con el SDK de ASP.NET."
+---
+
+## Las transacciones se agrupan como `GET /*/*`.
+
+El SDK crea el nombre de la transacción de la siguiente manera
+
+```csharp
+var method = httpContext.Request.HttpMethod;
+var path = httpContext.Request.Path;
+
+var transactionName = $"{method} {path}";
+
+// Dado que el nombre se deriva de la ruta y puede contener identificadores, se marca como tal
+transactionContext.NameSource = TransactionNameSource.Url;
+```
+
+Dado que la `URL` puede contener identificadores, como `GET /users/123`, el backend intenta eliminar valores con alta variabilidad, quedando como `GET /users/*`. A veces, cuando hay muchas rutas, puede terminar en `GET /*/*`.
+Es posible evitar esto y aun así apoyarse en la instrumentación automática del rendimiento. Puedes acceder a la transacción activa y sobrescribir `Name` y `NameSource`, especificando el nombre exacto de la transacción sin variables. Siguiendo el ejemplo anterior, quedaría así:
+
+```csharp
+if (SentrySdk.GetSpan()?.GetTransaction() is TransactionTracer transactionTracer)
+{
+    transactionTracer.NameSource = TransactionNameSource.Custom;
+    transactionTracer.Name = "GET /users/{id}";
+}
+
+```

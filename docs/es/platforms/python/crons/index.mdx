@@ -1,0 +1,104 @@
+---
+title: Configurar Crons
+sidebar_title: Crons
+description: "Sentry Crons te permite supervisar la disponibilidad y el rendimiento de cualquier tarea programada y recurrente en tu aplicación."
+sidebar_order: 5750
+---
+
+Una vez implementado, te permitirá recibir alertas y métricas para ayudarte a solucionar errores, detectar timeouts y prevenir interrupciones en tu servicio.
+
+<div id="requirements">
+  ## Requisitos
+</div>
+
+<PlatformContent includePath="crons/requirements" />
+
+<PlatformContent includePath="crons/setup" />
+
+<div id="configuring-cron-monitors">
+  ## Configuración de monitores Cron
+</div>
+
+Puedes crear y actualizar tus monitores de forma programática con código en lugar de [crearlos y configurarlos en Sentry.io](https://sentry.io/issues/alerts/new/crons/). Si el monitor aún no existe en Sentry, se creará.
+
+Para crear o actualizar un monitor, usa `monitor` como se indicó arriba y pasa la configuración de tu monitor como `monitor_config`. Esto requiere la versión `1.45.0` o posterior del SDK.
+
+```python
+# Todas las claves excepto `schedule` son opcionales
+monitor_config = {
+    "schedule": {"type": "crontab", "value": "0 0 * * *"},
+    "timezone": "Europe/Vienna",
+    # Si un check-in esperado no llega en `checkin_margin`
+    # minutos, se considerará como perdido
+    "checkin_margin": 10,
+    # El check-in puede ejecutarse durante `max_runtime` minutos
+    # antes de considerarse como fallido
+    "max_runtime": 10,
+    # Se necesitarán `failure_issue_threshold` check-ins fallidos consecutivos
+    # para crear un issue
+    "failure_issue_threshold": 5,
+    # Se necesitarán `recovery_threshold` check-ins OK para resolver
+    # un issue
+    "recovery_threshold": 5,
+}
+
+@monitor(monitor_slug='<monitor-slug>', monitor_config=monitor_config)
+def tell_the_world():
+    print('Mi tarea programada...')
+```
+
+Si usas [check-ins manuales](#check-ins), puedes pasar tu `monitor_config` a la llamada `capture_checkin`:
+
+```python
+check_in_id = capture_checkin(
+    monitor_slug='<monitor-slug>',
+    status=MonitorStatus.IN_PROGRESS,
+    monitor_config=monitor_config,
+)
+```
+
+<div id="manual-check-ins">
+  ## Check-ins manuales
+</div>
+
+El monitoreo de check-ins te permite seguir el progreso de una tarea capturando dos check-ins: uno al inicio y otro al final. Este proceso en dos pasos permite a Sentry avisarte si la tarea no comenzó cuando se esperaba (missed) o si superó su tiempo máximo de ejecución (failed).
+
+Si usas el decorador/administrador de contexto `monitor`, el SDK creará automáticamente los check-ins para el código envuelto.
+
+```python
+from sentry_sdk.crons import capture_checkin
+from sentry_sdk.crons.consts import MonitorStatus
+
+check_in_id = capture_checkin(
+    monitor_slug='<monitor-slug>',
+    status=MonitorStatus.IN_PROGRESS,
+)
+
+# Ejecuta tu tarea aquí...
+
+capture_checkin(
+    monitor_slug='<monitor-slug>',
+    check_in_id=check_in_id,
+    status=MonitorStatus.OK,
+)
+```
+
+<div id="alerts">
+  ## Alertas
+</div>
+
+Cuando tu tarea recurrente no realiza el check-in (omitida), se ejecuta más allá del tiempo máximo configurado (fallida) o informa manualmente un fallo, Sentry creará un evento de error con una etiqueta para tu monitor.
+
+Para recibir alertas sobre estos eventos:
+
+1. Ve a **Alerts** en la barra lateral.
+2. Crea una nueva alerta y selecciona &quot;Issues&quot; en &quot;Errors&quot; como tipo de alerta.
+3. Configura tu alerta y define un filtro de coincidencia para usar: `The event's tags match {key} {match} {value}`.
+
+Ejemplo: `The event's tags match monitor.slug equals my-monitor-slug-here`
+
+<Include name="common-imgs/crons-alerts-example" />
+
+Obtén más información en [Configuración de alertas de incidencias](/es/product/alerts/create-alerts/issue-alert-config/).
+
+<Include name="crons-rate-limits" />

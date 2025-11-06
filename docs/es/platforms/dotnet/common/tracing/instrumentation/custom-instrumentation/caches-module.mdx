@@ -1,0 +1,113 @@
+---
+title: Instrumentación de cachés
+sidebar_order: 1000
+description: "Aprende a instrumentar manualmente tu código para usar el módulo Caches de Sentry. "
+---
+
+Una caché puede usarse para acelerar la recuperación de datos y mejorar así el rendimiento de la aplicación. En lugar de obtener datos de una capa potencialmente lenta, tu aplicación los obtendrá de la memoria (en el mejor de los casos). El almacenamiento en caché puede acelerar cargas de trabajo con muchas lecturas en aplicaciones como portales de preguntas y respuestas, juegos, compartición de medios y redes sociales.
+
+Sentry ofrece un [panel de monitorización de cachés](https://sentry.io/orgredirect/organizations/:orgslug/insights/backend/caches/) para obtener una visión general de las cachés de tu aplicación.
+
+Para que Sentry pueda darte una visión general del rendimiento de tu caché, tendrás que crear dos spans: uno que indique que se está guardando algo en la caché y otro que indique que se está recuperando algo de la caché.
+
+Asegúrate de que haya una transacción en ejecución cuando crees los spans. Si usas un framework web como ASP.NET Core, esas transacciones se crearán automáticamente. Consulta <PlatformLink to='/tracing/'>Monitorización del rendimiento</PlatformLink> para más información.
+
+Para obtener información detallada sobre qué datos pueden configurarse, consulta la [Especificación del módulo de cachés para desarrolladores](https://develop.sentry.dev/sdk/performance/modules/caches/).
+
+<div id="manual-instrumentation">
+  ## Instrumentación manual
+</div>
+
+Sigue estos pasos para asegurarte de que los spans relacionados con la caché lleguen correctamente a Sentry.
+
+<div id="add-span-when-putting-data-into-the-cache">
+  ### Agrega un span al guardar datos en la caché
+</div>
+
+1. Establece el valor en la caché con la biblioteca de caché que estés utilizando.
+2. Rodea la parte de tu aplicación que usa el valor en caché con `Sentry.with_child_span { |span| ... }`
+3. Establece `op` en `cache.put`.
+4. Establece `cache.item_size` con un entero que represente el tamaño del elemento en caché.
+
+<div id="add-span-when-retrieving-data-from-the-cache">
+  ### Agregar un span al recuperar datos de la caché
+</div>
+
+1. Obtén el valor almacenado en caché con la biblioteca de caché que estés usando.
+2. Envuelve la parte de tu aplicación que use ese valor en caché con `Sentry.with_child_span { |span| ... }`.
+3. Configura `op` como `cache.get`.
+4. Configura `cache.hit` con un valor booleano que indique si el valor se obtuvo correctamente de la caché.
+5. Configura `cache.item_size` con un entero que indique el tamaño del elemento en caché.
+
+<div id="example">
+  ### Ejemplo
+</div>
+
+Considera el siguiente servicio de ejemplo que usa `IMemoryCache` y te permite `SetInCache` y `GetFromCache`.
+
+```csharp
+using Microsoft.Extensions.Caching.Memory;
+
+public class MyCachingService
+{
+    private readonly IMemoryCache _cache;
+
+    public MyCachingService(IMemoryCache cache)
+    {
+        _cache = cache;
+    }
+
+    public void SetInCache(string cacheKey, object value)
+    {
+        var cacheSpan = SentrySdk.GetSpan()?.StartChild("cache.put");
+
+        // Describe el servidor de caché al que estás accediendo
+        cacheSpan?.SetData("network.peer.address", "cache.example.com/supercache");
+        cacheSpan?.SetData("network.peer.port", 9000);
+
+        // Establece la clave que usarás para añadir a la caché
+        cacheSpan?.SetData("cache.key", cacheKey);
+
+        // Opcional: también puedes indicar el tamaño del elemento en caché
+        // cacheSpan?.SetData("cache.item_size", /* tamaño del elemento en bytes */);
+
+        // Añade un elemento a tu caché
+        _cache.Set(cacheKey, value);
+
+        cacheSpan?.Finish();
+    }
+
+    public object? GetFromCache(string cacheKey)
+    {
+        var cacheSpan = SentrySdk.GetSpan()?.StartChild("cache.get");
+
+        // Describe el servidor de caché al que estás accediendo
+        cacheSpan?.SetData("network.peer.address", "cache.example.com/supercache");
+        cacheSpan?.SetData("network.peer.port", 9000);
+
+        // Establece la clave que usarás para recuperar desde la caché
+        cacheSpan?.SetData("cache.key", cacheKey);
+
+        // Intenta recuperar el elemento almacenado en caché
+        if (_cache.TryGetValue(cacheKey, out var cachedValue))
+        {
+            // Si recuperaste un valor, hubo un acierto de caché (cache hit)
+            cacheSpan?.SetData("cache.hit", true);
+
+            // Opcional: también puedes indicar el tamaño del elemento en caché
+            // cacheSpan.SetData("cache.item_size", /* tamaño del elemento en bytes */);
+
+            cacheSpan?.Finish();
+
+            return cachedValue;
+        }
+
+        // Si no pudiste recuperar un valor, fue un fallo de caché (miss)
+        cacheSpan?.SetData("cache.hit", false);
+        cacheSpan?.Finish();
+        return null;
+    }
+}
+```
+
+Ahora deberías tener los spans correctos en su lugar. Ve al [panel de caché](https://sentry.io/orgredirect/organizations/:orgslug/insights/backend/caches/) para ver cómo está rindiendo tu caché.

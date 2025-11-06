@@ -1,0 +1,60 @@
+---
+title: AWS Lambda
+description: AWS Lambda es un servicio de computación sin servidor que forma parte de Amazon Web Services. Aprende a configurarlo con Sentry.
+sdk: sentry.javascript.aws-serverless
+fallbackGuide: javascript.node
+categories:
+  - javascript
+  - server
+  - server-node
+  - serverless
+---
+
+<Alert>
+  ¿Buscas instrucciones para agregar Sentry sin modificar tu código? [Consulta esta documentación](/es/organization/integrations/cloud-monitoring/aws-lambda/).
+</Alert>
+
+En esta página encontrarás una descripción general de cómo instalar, configurar y usar Sentry en tus funciones de AWS Lambda. Una vez configurado, nuestro SDK enviará automáticamente datos de errores y rendimiento desde tus funciones Lambda. Los issues en Sentry incluirán automáticamente datos de CloudWatch, detalles de la función y mediciones del tiempo de ejecución.
+
+<div id="installation">
+  ## Instalación
+</div>
+
+Según tus preferencias, puedes instalar Sentry en tus funciones Lambda usando la [capa de Sentry para AWS Lambda](./install/layer) (recomendado) o el [paquete de Sentry para AWS en NPM](./install/npm).
+
+<div id="should-i-use-the-lambda-layer-or-the-npm-package">
+  ### ¿Debería usar la capa de Lambda o el paquete de NPM?
+</div>
+
+Por lo general, recomendamos usar la capa de Lambda, ya que no requiere que despliegues ninguna dependencia de Sentry junto con tu función.
+Con la capa, puedes lograr el mismo nivel de personalización que con el paquete de NPM.
+Aun así, hay dos motivos por los que podrías preferir usar el paquete de NPM:
+
+1. Quieres minimizar el tamaño de la función Lambda y aplicar tree shaking a las partes del código del SDK que no necesitas. Un motivo relacionado podría ser que estés transpilando tu código y quieras transpilar también tus dependencias.
+2. Ya usas paquetes de NPM y despliegas `node_modules` con tu función, y no quieres añadir una (u otra) capa de Lambda a tus funciones.
+
+<div id="configuration">
+  ## Configuración
+</div>
+
+Después de instalar el SDK, quizá quieras configurar algunos parámetros. Además de la [configuración común del SDK](./configuration/), también puedes [configurar el wrapper del handler de funciones Lambda de Sentry](./configuration/lambda-wrapper) para optimizar la sobrecarga en tiempo de ejecución de la función y las advertencias por timeout.
+
+<div id="verify">
+  ## Verificar
+</div>
+
+Una vez configurado, comprueba que Sentry esté reportando errores correctamente lanzando un error de prueba en una de tus funciones:
+
+```javascript {filename:index.js}{tabTitle:CommonJS}{2}
+exports.handler = async (event, context) => {
+  throw new Error("Este es un error de prueba");
+};
+```
+
+```javascript {filename:index.mjs}{tabTitle:ESM}{4}
+import * as Sentry from "@sentry/aws-serverless";
+
+export const handler = Sentry.wrapHandler(async (event, context) => {
+  throw new Error("Este es un error de prueba");
+}));
+```

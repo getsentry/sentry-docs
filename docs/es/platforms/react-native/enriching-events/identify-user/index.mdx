@@ -1,0 +1,47 @@
+---
+title: Usuarios
+description: "Aprende a configurar el SDK para capturar al usuario y obtener información clave que permita construir una identidad única en Sentry."
+---
+
+Los usuarios se componen de algunas piezas de información clave que conforman una identidad única en Sentry. Cada una es opcional, pero una **debe** estar presente para que el SDK de Sentry capture al usuario:
+
+<DefinitionList>
+  ### `id`
+
+  Tu identificador interno del usuario.
+
+  ### `username`
+
+  El nombre de usuario. Suele usarse como una etiqueta más útil que el id interno.
+
+  ### `email`
+
+  Una alternativa o complemento al nombre de usuario. Sentry reconoce direcciones de correo electrónico y puede mostrar, por ejemplo, Gravatars y habilitar funciones de mensajería.
+
+  ### `ip_address`
+
+  La dirección IP del usuario. Si el usuario no está autenticado, Sentry utiliza la dirección IP como identificador único del usuario.
+  Los SDK del lado del servidor que instrumentan solicitudes entrantes intentarán obtener la dirección IP de los datos de la solicitud HTTP (campo `request.env.REMOTE_ADDR` en JSON), si está disponible. Esto requiere que establezcas la opción `include.ip` en `true` en la integración [`RequestData`](/es/platforms/javascript/guides/connect/configuration/integrations/requestdata/).
+
+  Si el `ip_address` del usuario se establece en `"{{auto}}"`, Sentry inferirá la dirección IP a partir de la conexión entre tu aplicación y el servidor de Sentry.
+
+  Si se omite el campo, el valor predeterminado es `null`. Sin embargo, por motivos de compatibilidad retroactiva, ciertas plataformas (en particular JavaScript) tienen un valor predeterminado diferente para `"{{auto}}"`. Los SDK y otros clientes no deben depender de este comportamiento y deben establecer direcciones IP o `"{{auto}}"` explícitamente.
+
+  Para no almacenar las direcciones IP de los usuarios en los datos de tus eventos, ve a la configuración de tu proyecto, haz clic en “Security &amp; Privacy” y habilita “Prevent Storing of IP Addresses”, o usa el [retocado de datos del lado del servidor](/es/security-legal-pii/scrubbing/) de Sentry para eliminar `$user.ip_address`. Agregar una regla así anula cualquier otra lógica.
+</DefinitionList>
+
+Además, puedes proporcionar pares clave/valor arbitrarios más allá de los nombres reservados, y el SDK de Sentry los almacenará con el usuario.
+
+De forma predeterminada, no aplicamos la identificación de usuario proporcionada al SDK a través de la API. En su lugar, usamos el ID de instalación generado con el primer uso de la aplicación. Este ID no contiene datos privados ni públicos de tus usuarios, ni datos públicos o compartidos de su dispositivo.
+
+Primero tendrás que importar el SDK, como de costumbre:
+
+<PlatformContent includePath="enriching-events/import" />
+
+Para identificar al usuario:
+
+<PlatformContent includePath="enriching-events/set-user" />
+
+También puedes borrar el usuario actualmente establecido:
+
+<PlatformContent includePath="enriching-events/unset-user" />

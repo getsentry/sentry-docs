@@ -1,0 +1,161 @@
+---
+title: Gestión de la cuota de facturación
+sidebar_order: 70
+description: Aprende qué se incluye en tu cuota y cómo gestionarla.
+og_image: /og-images/pricing-quotas.png
+---
+
+Los datos y las cuotas están interrelacionados en Sentry. Cuando te [suscribes a Sentry](https://sentry.io/pricing/), pagas por la cantidad de datos —eventos (errores, reproducciones, spans o transacciones y perfiles), logs y archivos adjuntos— que se van a recopilar. Cada categoría de datos tiene su propia cuota que puedes ajustar. Cuando Sentry registra un evento, un log o un archivo adjunto, ese elemento cuenta para tu cuota de ese tipo de datos.
+
+Para ver qué proyectos están consumiendo tu cuota, puedes revisar la pestaña &quot;Usage&quot; de **Stats**. Cualquier miembro de tu organización puede ver esta página. Además, puedes volver a esta página para comprobar si los cambios que has realizado están teniendo el efecto deseado:
+
+![Overview of Usage Stats page](./img/usage-stats-errors.png)
+
+También puedes descargar un informe desglosado por proyecto en la pestaña &quot;Usage History&quot; de **Settings &gt; Subscriptions** (solo accesible para los miembros con roles Owner y Billing de tu organización de Sentry).
+
+La flexibilidad de Sentry te permite controlar con gran detalle qué eventos y archivos adjuntos cuentan para tu cuota. Esta página te ofrece información general sobre estrategias para gestionar tu cuota, pero puedes obtener información más detallada en:
+
+* [Spike Protection](/es/pricing/quotas/spike-protection/)
+* [Manage Your Error Quota](/es/pricing/quotas/manage-event-stream-guide/)
+* [Manage Your Span Quota](/es/pricing/quotas/manage-transaction-quota/)
+* [Manage Your Replay Quota](/es/pricing/quotas/manage-replay-quota/)
+* [Manage Your Attachments Quota](/es/pricing/quotas/manage-attachments-quota/)
+* [Manage Your Logs Quota](/es/pricing/quotas/manage-logs-quota/)
+
+<div id="how-to-manage-your-quota">
+  ## Cómo administrar tu cuota
+</div>
+
+Hay varias cosas que puedes hacer para administrar tu cuota, como se muestra en la tabla a continuación. Las acciones están ordenadas de las más fáciles y rápidas a las más complejas y potencialmente más lentas. Las marcas de verificación indican si la acción ayuda a gestionar errores, spans, replays, adjuntos, logs o alguna combinación de estos.
+
+Las primeras 6 acciones de la lista pueden realizarse en [sentry.io](https://sentry.io), mientras que el resto deben hacerse en un SDK.
+
+{/*<!-- prettier-ignore-start -->*/}
+
+| Acción | Errores | Spans | Replays | Archivos adjuntos | Registros |
+| ------ | ------ | ------------ | ----------- | ----------- | ---- |
+| [Asegúrate de tener habilitada la protección contra picos](#spike-protection) | ✓ | ✓ |  | ✓ |  |
+| [Ajusta tu cuota](#adjusting-your-quota) | ✓ | ✓ | ✓ | ✓ | ✓ |
+| [Limita la tasa de tus eventos o archivos adjuntos](#rate-limits) | ✓ |  |  | ✓ |  |
+| [Revisa los eventos repetidos](#event-repetition) | ✓ |  |  |  |  |
+| [Filtra tus eventos](#inbound-filters) | ✓ | ✓ |  | ✓ | ✓ |
+| [Actualiza la tasa de muestreo de tu SDK](#sdk-sample-rate) | ✓ | ✓ |  |  | ✓ |
+| [Aplica filtros en el SDK](#sdk-filtering-beforesend-and-beforesendtransaction) | ✓ | ✓ |  |  | ✓ |
+| [Actualiza la configuración de tu SDK](#sdk-configuration) | ✓ | ✓ |  |  | ✓ |
+| [Gestiona el tamaño de los datos](#size-limits) | ✓ | ✓ |  | ✓ | ✓ |
+
+{/*<!-- prettier-ignore-end -->*/}
+
+<div id="what-counts-towards-your-quota">
+  ## Qué cuenta para tu cuota
+</div>
+
+Sentry realiza una evaluación exhaustiva de cada evento para determinar si cuenta para tu cuota, como se describe en esta descripción general. La documentación detallada de cada evaluación está enlazada a lo largo del texto.
+
+Antes de completar cualquiera de estas evaluaciones, Sentry confirma que cada evento incluya un DSN y un proyecto válidos, y que el evento pueda analizarse. Además, para los eventos de error, Sentry verifica que el evento contenga información de huella digital válida. Si falta alguno de estos elementos o es incorrecto, el evento se rechaza.
+
+<Alert>
+  Esta lista está ordenada de lo más fácil o menos laborioso a lo más complejo o potencialmente más laborioso.
+</Alert>
+
+<div id="spike-protection">
+  ### Protección contra picos
+</div>
+
+La protección contra picos protege a los usuarios frente a aumentos repentinos en el volumen de eventos. Por lo general, estos picos se deben a anomalías y pueden agotar rápidamente tu volumen disponible de eventos. Tu consumo de referencia se usa para calcular un umbral y la protección contra picos se activa si el volumen de eventos lo supera. Cuando se activa, los eventos empiezan a descartarse para que no se te cobre por el volumen excedente.
+
+La protección contra picos se puede habilitar por proyecto en tu organización por cualquier miembro del equipo con **permisos de Facturación o de Propietario**. Para seleccionar en qué proyecto configurarla, ve a **Settings &gt; Spike Protection**. Podrás activarla para proyectos individuales o hacer clic en “Enable All” para configurarla en todos tus proyectos a la vez. Obtén más información sobre cómo funciona la protección contra picos y cómo gestionar los picos en [Spike Protection](/es/pricing/quotas/spike-protection/).
+
+<div id="adjusting-your-quota">
+  ### Ajustar tu cuota
+</div>
+
+Los eventos y archivos adjuntos que superen tu cuota no se aceptarán, así que quizá quieras aumentarla. Por el contrario, podrías querer reducirla o ajustar tus cuotas reservadas y de pago por uso para controlar mejor el gasto. Aprende a ajustar tu cuota en [Administrar tu cuota de errores](/es/pricing/quotas/manage-event-stream-guide/#adjusting-quotas), [Administrar tu cuota de spans](/es/pricing/quotas/manage-transaction-quota/), [Administrar tu cuota de Replay](/es/pricing/quotas/manage-replay-quota/), [Administrar tu cuota de archivos adjuntos](/es/pricing/quotas/manage-attachments-quota/#adjusting-quotas) y [Administrar tu cuota de logs](/es/pricing/quotas/manage-logs-quota/#adjusting-payg-budget).
+
+<div id="rate-limits">
+  ### Límites de velocidad
+</div>
+
+Puedes establecer límites para los eventos de error por proyecto en **[Project] &gt; Settings &gt; SDK Setup &gt; Client Keys (DSN)**. Si se supera el límite de eventos de un proyecto y tu suscripción lo permite, el evento no se contabilizará. También puedes limitar los adjuntos a nivel de organización en **Settings &gt; Security &amp; Privacy**. Obtén más información en [Administra tu cuota de errores](/es/pricing/quotas/manage-event-stream-guide/#rate-limiting) y [Administra tu cuota de adjuntos](/es/pricing/quotas/manage-attachments-quota/#rate-limiting).
+
+<div id="event-repetition">
+  ### Repetición de eventos
+</div>
+
+En algunos casos, los eventos repetidos pueden descontarse de tu cuota, por lo que es importante saber cómo se maneja la repetición de eventos en Sentry. Más información en [Administra tu cuota de errores](/es/pricing/quotas/manage-event-stream-guide/#review-event-repetition).
+
+<div id="inbound-filters">
+  ### Filtros de entrada
+</div>
+
+Si se aplica un filtro de entrada para un tipo de error, transacción/span o archivo adjunto, y tu suscripción lo permite, no se contabilizará. Puedes gestionarlos en **[Project] &gt; Settings &gt; Inbound Filters**. Más información en [Gestiona tu cuota de errores](/es/pricing/quotas/manage-event-stream-guide/#inbound-data-filters), [Gestiona tu cuota de spans](/es/pricing/quotas/manage-transaction-quota/#inbound-filters), [Gestiona tu cuota de Replay](/es/pricing/quotas/manage-replay-quota/), [Gestiona tu cuota de adjuntos](/es/pricing/quotas/manage-attachments-quota/#inbound-data-filters) y [Gestiona tu cuota de logs](/es/pricing/quotas/manage-logs-quota/#logs-filtering).
+
+<div id="sdk-sample-rate">
+  ### Tasa de muestreo del SDK
+</div>
+
+Si se define una tasa de muestreo para el SDK, este evalúa si un evento debe enviarse como una fracción representativa del total, limitando efectivamente la cantidad de errores y transacciones/spans que envías a Sentry. Para los registros (logs), muchos SDK admiten muestreo para reducir el volumen enviado. La configuración de la tasa de muestreo está documentada [para cada SDK](/es/platform-redirect/?next=/configuration/sampling/), y también puedes obtener más información en [Administra tu cuota de errores](/es/pricing/quotas/manage-event-stream-guide/#sdk-sample-rate), [Administra tu cuota de spans](/es/pricing/quotas/manage-transaction-quota/#sdk-configuration-tracing-options/), y [Administra tu cuota de logs](/es/pricing/quotas/manage-logs-quota/#sdk-configuration).
+
+<div id="sdk-filtering-beforesend-and-beforesendtransaction">
+  ### Filtrado del SDK: `beforeSend` y `beforeSendTransaction`
+</div>
+
+Todos los SDK de Sentry son compatibles con el método de callback `beforeSend`, que puedes usar para modificar los datos de un evento de error o descartarlo por completo. Muchos también admiten `beforeSendTransaction`. Para logs, muchos SDK admiten `beforeSendLog` para filtrar entradas de log. Más información en [Administra tu cuota de errores](/es/pricing/quotas/manage-event-stream-guide/#sdk-filtering-beforesend), [Administra tu cuota de spans](/es/pricing/quotas/manage-transaction-quota/#sdk-filtering-beforesendtransaction) y [Administra tu cuota de logs](/es/pricing/quotas/manage-logs-quota/#sdk-configuration).
+
+<div id="sdk-configuration">
+  ### Configuración del SDK
+</div>
+
+La configuración del SDK determina si un evento se envía a Sentry o se filtra. La configuración está documentada [para cada SDK](/es/platform-redirect/?next=/configuration/filtering/), pero también puedes obtener más información en [Administra tu cuota de errores](/es/pricing/quotas/manage-event-stream-guide/#sdk-configuration), [Administra tu cuota de spans](/es/pricing/quotas/manage-transaction-quota/#sdk-configuration-tracing-options) y [Administra tu cuota de logs](/es/pricing/quotas/manage-logs-quota/#sdk-configuration).
+
+<div id="size-limits">
+  ### Límites de tamaño
+</div>
+
+Sentry impone límites a varios campos dentro de un evento, así como al tamaño de los eventos completos y de las solicitudes en las que se envían, lo que puede afectar tu cuota de archivos adjuntos. Más información en [Gestiona tu cuota de archivos adjuntos](/es/pricing/quotas/manage-attachments-quota/#attachments-size).
+
+<div id="what-counts-toward-your-quota-quick-guide">
+  ## Qué cuenta para tu cuota - Guía rápida
+</div>
+
+Usa esta tabla como referencia rápida de qué cuenta y qué no cuenta para tu cuota:
+
+{/*<!-- prettier-ignore-start -->*/}
+
+| Escenario | Sí, estos datos cuentan |
+|----------|------------------------|
+| Se alcanzó el umbral de activación de la [protección contra picos](#spike-protection) (errores) |  |
+| La [protección contra picos](/es/pricing/quotas/spike-protection/#how-sentry-detects-spikes) ya no está activa (errores) | ✓ |
+| No has alcanzado tu [cuota](#increasing-quotas) | ✓ |
+| Has excedido tu [cuota](#increasing-quotas) |  |
+| Se aplicó un [límite de tasa](#rate-limits) a un proyecto (errores, adjuntos) |  |
+| Este es un [evento repetido](/es/pricing/quotas/manage-event-stream-guide/#review-event-repetition) para el cual previamente se configuró Eliminar y descartar (errores) |  |
+| Este es un [evento repetido](/es/pricing/quotas/manage-event-stream-guide/#review-event-repetition) de un issue previamente resuelto (errores) | ✓ |
+| Este es un [evento repetido](/es/pricing/quotas/manage-event-stream-guide/#review-event-repetition) de un issue que configuraste como Ignorar | ✓ |
+| El evento coincide con [filtros de entrada](#inbound-filters) configurados en sentry.io |  |
+| El evento se envía después de que se haya excedido la [tasa de muestreo del SDK](#sdk-sample-rate) |  |
+| El evento no se envía según [filtros del SDK](#sdk-filtering-beforesend-and-beforesendtransaction) |  |
+| El evento no se envía según la [configuración del SDK](#sdk-configuration) |  |
+| El log se filtra por el [filtrado de logs](#inbound-filters) configurado en sentry.io |  |
+| Se han excedido los [límites de tamaño](#size-limits) |  |
+
+{/*<!-- prettier-ignore-end -->*/}
+
+Sentry agrupa los errores y spans aceptados en incidencias. Las propias incidencias no cuentan para tu cuota, pero los errores y spans que componen una incidencia sí cuentan. Los registros (logs) se contabilizan individualmente y no se agrupan en incidencias.
+
+<div id="key-terms">
+  ## Términos clave
+</div>
+
+Aclaremos algunos términos:
+
+* **Attachment** - Los adjuntos son archivos adicionales almacenados, como archivos de configuración, archivos de registro o minidumps almacenados, relacionados con un evento de error. A menos que la opción para almacenar informes de fallos esté habilitada, Sentry usará estos archivos solo para crear un evento y luego los descartará.
+* **Cron Monitor** - Un Cron Monitor representa un conjunto de configuraciones para una tarea programada y recurrente, como una tarea de &quot;Data Backup&quot; que se ejecuta diariamente en producción y desarrollo.
+* **Data** - Cualquier cosa que envíes a Sentry. Esto incluye eventos (errores, spans o replays), logs, adjuntos y metadatos de eventos.
+* **Error** - Lo que cuenta como un error varía según la plataforma, pero en general, si hay algo que parece una excepción, puede capturarse como un error en Sentry. Sentry captura automáticamente errores, excepciones no controladas y rechazos no manejados, así como otros tipos de errores, según la plataforma. Un agrupamiento de errores similares conforma [un issue](/es/product/issues/).
+* **Event** - Un evento es una instancia de envío de datos a Sentry, excluyendo adjuntos. Generalmente, estos datos son un error o una transacción/span.
+* **Logs** - Entradas de registro estructuradas enviadas desde tus aplicaciones que proporcionan visibilidad del comportamiento de la aplicación, información de depuración e interacciones de los usuarios.
+* **Replay** - Las Session Replays son reproducciones tipo video de las sesiones de los usuarios mientras navegan por tu app o sitio web.
+* **Span** - Una unidad de facturación en Sentry que corresponde al uso de spans. También es la unidad básica de la que están compuestas las [traces](/es/concepts/key-terms/tracing/distributed-tracing/). Varios spans conforman un trace en Sentry y comparten un trace&#95;id.
+* **Profile** - Una instantánea del uso de recursos de tu código obtenida capturando periódicamente la pila de llamadas mientras tu aplicación se ejecuta.
+* **Quota** - Tu cuota es la cantidad de datos (errores, spans, replays, logs, adjuntos) que pagas a Sentry para rastrear.

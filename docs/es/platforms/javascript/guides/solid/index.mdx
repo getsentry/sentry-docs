@@ -1,0 +1,152 @@
+---
+title: Solid
+sdk: sentry.javascript.solid
+categories:
+  - javascript
+  - navegador
+---
+
+<PlatformContent includePath="getting-started-prerequisites" />
+
+<div id="features">
+  ## Funciones
+</div>
+
+Además de capturar errores, puedes supervisar las interacciones entre varios servicios o aplicaciones [habilitando el tracing](/es/concepts/key-terms/tracing/). También puedes llegar más rápido a la causa de un error o problema de rendimiento viendo una reproducción en video de una sesión de usuario con [session replay](/es/product/explore/session-replay/web/getting-started/).
+
+Selecciona qué funciones de Sentry te gustaría instalar además de Error Monitoring para obtener a continuación las instrucciones correspondientes de instalación y configuración.
+
+<div id="install">
+  ## Instalación
+</div>
+
+<OnboardingOptionButtons
+  options={[
+"error-monitoring",
+"performance",
+"session-replay",
+"user-feedback",
+"logs",
+]}
+/>
+
+Sentry captura datos usando un SDK en el entorno de ejecución de tu aplicación.
+
+```bash {tabTitle:npm}
+npm install @sentry/solid --save
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/solid
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/solid
+```
+
+<div id="configure">
+  ## Configuración
+</div>
+
+La configuración debe realizarse lo antes posible en el ciclo de vida de tu aplicación.
+
+Para usar el SDK, inicialízalo en el punto de entrada de Solid antes de arrancar tu app. En un proyecto típico de Solid, ese suele ser el archivo `index.jsx`.
+
+<Alert>Actualmente compatibilizamos Solid 1.8.4 y versiones posteriores.</Alert>
+
+```javascript {filename: index.jsx}
+import * as Sentry from "@sentry/solid";
+// ___PRODUCT_OPTION_START___ performance
+import { solidRouterBrowserTracingIntegration } from "@sentry/solid/solidrouter";
+// ___PRODUCT_OPTION_END___ performance
+import { render } from "solid-js/web";
+import { DEV } from "solid-js";
+import App from "./app";
+
+// esto solo inicializará tu cliente de Sentry en compilaciones de producción.
+if (!DEV) {
+  Sentry.init({
+    dsn: "___PUBLIC_DSN___",
+
+    // Agrega encabezados de solicitud e IP de los usuarios; para más información, visita:
+    // https://docs.sentry.io/platforms/javascript/guides/solid/configuration/options/#sendDefaultPii
+    sendDefaultPii: true,
+
+    integrations: [
+      // ___PRODUCT_OPTION_START___ performance
+      solidRouterBrowserTracingIntegration(),
+      // ___PRODUCT_OPTION_END___ performance
+      // ___PRODUCT_OPTION_START___ session-replay
+      Sentry.replayIntegration(),
+      // ___PRODUCT_OPTION_END___ session-replay
+      // ___PRODUCT_OPTION_START___ user-feedback
+      Sentry.feedbackIntegration({
+        // Additional SDK configuration goes in here, for example:
+        colorScheme: "system",
+      }),
+      // ___PRODUCT_OPTION_END___ user-feedback
+    ],
+    // ___PRODUCT_OPTION_START___ logs
+
+    // Enable logs to be sent to Sentry
+    enableLogs: true,
+    // ___PRODUCT_OPTION_END___ logs
+
+    // ___PRODUCT_OPTION_START___ performance
+    // Establece tracesSampleRate en 1.0 para capturar el 100 %
+    // de las transacciones para el rastreo.
+    // Te recomendamos ajustar este valor en producción
+    // Más información en
+    // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+    tracesSampleRate: 1.0,
+
+    // Establece `tracePropagationTargets` para controlar en qué URLs se debe habilitar la propagación de trazas
+    tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+    // ___PRODUCT_OPTION_END___ performance
+    // ___PRODUCT_OPTION_START___ session-replay
+
+    // Captura Replay para el 10 % de todas las sesiones,
+    // más el 100 % de las sesiones con un error
+    // Más información en
+    // https://docs.sentry.io/platforms/javascript/session-replay/configuration/#general-integration-configuration
+    replaysSessionSampleRate: 0.1,
+    replaysOnErrorSampleRate: 1.0,
+    // ___PRODUCT_OPTION_END___ session-replay
+  });
+}
+
+const app = document.getElementById("app");
+
+if (!app) throw new Error("No se encontró el elemento #app en el DOM.");
+
+render(() => <App />, app);
+```
+
+Una vez que hayas hecho esto, el SDK capturará automáticamente los errores no controlados y los rechazos de promesas, y supervisará el rendimiento en el cliente. También puedes [capturar errores manualmente](/es/platforms/javascript/guides/solid/usage).
+
+<PlatformContent includePath="getting-started-sourcemaps" />
+
+<div id="verify">
+  ## Verificar
+</div>
+
+Este fragmento incluye un error intencional para que puedas comprobar que todo funciona en cuanto lo configures.
+
+```javascript
+<button
+  type="button"
+  onClick={() => {
+    throw new Error("Error de frontend de Sentry");
+  }}
+>
+  Generar error
+</button>
+```
+
+Este fragmento agrega un Button que genera un error en un componente de Solid.
+
+<Alert>
+  Obtén más información sobre cómo capturar manualmente un error o un mensaje en nuestra <PlatformLink to="/usage/">documentación de uso</PlatformLink>.
+</Alert>
+
+Para ver y resolver el error registrado, inicia sesión en [sentry.io](https://sentry.io) y selecciona tu proyecto. Al hacer clic en el título del error, se abrirá una página donde podrás ver información detallada y marcarlo como resuelto.

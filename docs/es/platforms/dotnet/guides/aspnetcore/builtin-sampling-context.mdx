@@ -1,0 +1,29 @@
+---
+title: Contexto de muestreo integrado
+description: "Conoce los datos de muestreo personalizados integrados que Sentry proporciona para aplicaciones ASP.NET Core."
+---
+
+Puedes muestrear transacciones proporcionando un delegado que tome una decisión en función del contexto proporcionado. La integración de ASP.NET Core de Sentry expone automáticamente datos útiles como parte de ese contexto.
+
+Por ejemplo, así puedes muestrear una transacción en función de la ruta solicitada:
+
+```csharp
+// Agrega esto al callback de inicialización del SDK
+options.TracesSampler = context =>
+{
+    var requestPath = context.TryGetHttpPath();
+
+    // Nos interesa más la página de pago que las demás
+    if (string.Equals(requestPath, "/checkout", StringComparison.OrdinalIgnoreCase))
+    {
+        return 0.8; // Muestrea el 80 % de las transacciones de pago
+    }
+
+    // Muestrea solo el 5 % del resto
+    return 0.05;
+};
+```
+
+Además de `context.TryGetHttpPath()`, también puedes usar `context.TryGetHttpRoute()` para obtener el nombre de la ruta (si está disponible) y `context.TryGetHttpMethod()` para obtener el método HTTP utilizado para ejecutar la solicitud.
+
+Ten en cuenta que todos estos métodos pueden devolver `null`. Esto puede ocurrir si la propiedad correspondiente no está disponible o si no se ha habilitado el tracing.

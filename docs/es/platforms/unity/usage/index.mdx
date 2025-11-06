@@ -1,0 +1,68 @@
+---
+title: Uso
+description: "Usa el SDK para capturar manualmente errores y otros eventos."
+sidebar_order: 10
+---
+
+El SDK de Sentry se integra con el motor del juego y notifica automáticamente errores, excepciones no controladas y otros tipos de errores según la plataforma.
+
+<Alert>
+  Términos clave:
+
+  * Un *evento* es una instancia de envío de datos a Sentry. Generalmente, estos datos corresponden a un error o una excepción.
+  * Un *issue* es un agrupamiento de eventos similares.
+  * El envío de un evento se denomina *captura*.
+    Cuando se captura un evento, se envía a Sentry.
+</Alert>
+
+De forma predeterminada, el SDK de Sentry para Unity captura automáticamente errores a través del sistema de registro de Unity. Para más detalles, consulta la [documentación sobre la captura automática de errores](/es/platforms/unity/usage/automatic-error-capture/).
+
+Además de la captura automática, puedes capturar manualmente errores, excepciones y mensajes como se describe a continuación.
+
+<div id="capturing-errors">
+  ## Captura de errores
+</div>
+
+La forma más común de captura es la de errores. En código C# de Unity, puedes usar `SentrySdk.CaptureException(exception)` para informar excepciones explícitamente y marcarlas como `handled`.
+
+```csharp
+try
+{
+    AFunctionThatMightFail();
+}
+catch (Exception e)
+{
+    SentrySdk.CaptureException(e);
+}
+```
+
+Mientras capturas un evento, estos también se registran como breadcrumbs que llevan al siguiente evento. Los breadcrumbs son distintos de los eventos: no crean un evento en Sentry, sino que se almacenan en búfer hasta que se envía el siguiente evento. Obtén más información sobre los breadcrumbs en nuestra <PlatformLink to="/enriching-events/breadcrumbs/">documentación de Breadcrumbs</PlatformLink>.
+
+<div id="ignoring-errors">
+  ### Ignorar errores
+</div>
+
+Puedes ignorar excepciones por tipo al inicializar el SDK:
+
+```csharp
+// Agrega esto al callback de inicialización del SDK
+options.AddExceptionFilterForType<OperationCanceledException>();
+```
+
+Esto modifica el comportamiento de [toda la cadena de herencia](https://docs.microsoft.com/en-us/dotnet/csharp/tutorials/inheritance#background-what-is-inheritance). Como resultado, el código de ejemplo también filtrará `TaskCanceledException`, ya que deriva de `OperationCanceledException`.
+
+<div id="capturing-messages">
+  ## Captura de mensajes
+</div>
+
+Otra operación común es capturar un mensaje simple. Un mensaje es información textual que debe enviarse a Sentry. El SDK [capturará automáticamente los mensajes](/es/platforms/unity/usage/automatic-error-capture/) creados mediante `Debug.LogError()`. Puedes desactivar este comportamiento en la pestaña `Logging` del editor (Tools-&gt;Sentry).
+
+Los mensajes aparecen como incidencias en tu flujo de incidencias, con el mensaje como nombre de la incidencia.
+
+```csharp
+SentrySdk.CaptureMessage("Algo salió mal");
+```
+
+<Alert>
+  De forma predeterminada, el SDK solo incluye un rastreo de pila para las excepciones capturadas. Para incluir un rastreo de pila en eventos de mensaje, ya sea capturados mediante `SentrySdk.CaptureMessage` o `Debug.LogError`, debes configurar `AttachStacktrace` en `true` en la pestaña `Logging` del editor (Tools-&gt;Sentry).
+</Alert>

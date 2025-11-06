@@ -1,0 +1,109 @@
+---
+title: Corrección de incidencias
+description: >-
+  Usa la corrección de incidencias de Seer para encontrar automáticamente la causa raíz de las incidencias y
+  generar correcciones de código.
+sidebar_order: 20
+og_image: /og-images/product-ai-in-sentry-seer-issue-fix.png
+---
+
+**Corrección de incidencias** es el flujo de trabajo colaborativo de Seer para encontrar la causa raíz y la solución de las incidencias. Utiliza el contexto de Sentry (detalles de la incidencia, datos de trazado, registros y perfiles), tus bases de código (integradas con GitHub) y sus interacciones contigo para identificar y razonar sobre problemas en tu código.
+
+La corrección de incidencias puede automatizarse, lo que le permite completar análisis de causa raíz, proponer soluciones e incluso crear pull requests a medida que se producen las incidencias.
+
+<Alert>
+  La corrección de incidencias se basa en las capacidades anteriormente conocidas como Autofix.
+</Alert>
+
+<div id="how-issue-fix-works">
+  ## Cómo funciona la corrección de incidencias
+</div>
+
+El flujo de corrección de incidencias de Seer sigue un proceso de tres pasos:
+
+1. [Análisis de la causa raíz](#root-cause-analysis): Analiza la incidencia usando el contexto de Sentry y tu base de código para determinar la causa raíz
+2. [Identificación de la solución](#solution-identification): Identifica una solución a partir del análisis
+3. [Generación de código](#code-generation): Genera una corrección de código y abre un PR
+
+Cuando empieces a depurar una incidencia con Seer, verás una pantalla como esta, que incluye un resumen general de la incidencia y un botón para iniciar el flujo de corrección:
+
+![Pantalla de inicio de corrección de incidencias](../img/issue-fix-start-screen.png)
+
+<div id="root-cause-analysis">
+  ### Análisis de causa raíz
+</div>
+
+Luego, Seer analizará el problema y el código pertinente para identificar la causa raíz y proponer una solución. Verás, en tiempo real, una transmisión del proceso de razonamiento de Seer mientras trabaja en el problema. Seer compartirá ideas clave a medida que surjan y tendrás la opción de ampliar cada una. Verás los datos de eventos y el código que respaldan las conclusiones de Seer, estableciendo una cadena de razonamiento clara hasta la causa raíz.
+
+Mientras Seer razona sobre tu problema, puedes intervenir para agregar contexto o comentarios; la colaboración suele ofrecer los mejores resultados. Si Seer encuentra lagunas en su comprensión, te pedirá tu aporte.
+
+El análisis final de causa raíz te mostrará la secuencia de eventos que llevó al problema y un análisis detallado del posible responsable. Este análisis incluye anotaciones útiles, como enlaces a las líneas exactas de código o a la telemetría de Sentry relevantes para el análisis.
+
+![Captura de pantalla del análisis de causa raíz completado por Seer](../img/rca.png)
+
+<div id="solution-identification">
+  ### Identificación de la solución
+</div>
+
+Una vez que Seer haya completado su análisis de causa raíz, empezará a buscar una solución. El proceso te resultará familiar: verás aparecer una cadena de razonamiento a medida que vaya abordando el problema, y podrás colaborar con Seer en cualquier momento.
+
+Cuando termine, verás la solución recomendada. Desde aquí, puedes:
+
+1. Eliminar cualquier paso o acción con la que no estés de acuerdo
+2. Añadir pasos o instrucciones adicionales; por ejemplo, solicitar pruebas unitarias adicionales para evitar regresiones del error original
+
+Cuando estés listo para continuar, puedes seleccionar &quot;Code It Up&quot; para generar el código que resuelve el error.
+
+<div id="code-generation">
+  ### Generación de código
+</div>
+
+Durante la etapa de codificación, Seer identificará el parche de código (o parches) necesario para implementar la solución. Cuando termine, verás una vista previa con los diffs sugeridos en todo tu código. Si la corrección implica dependencias de servicios, es posible que veas cambios que abarcan varios repositorios.
+
+Desde aquí, puedes optar por crear un borrador de PR o extraer los cambios de código en tu entorno local para seguir iterando. Si decides extraer el código localmente, Seer creará una nueva rama para ti.
+
+![Screenshot of Seer showing code it generated](../img/coding-step.png)
+
+<div id="what-issue-fix-uses">
+  ## Qué utiliza Issue Fix
+</div>
+
+Seer es un potente agente de depuración, con acceso a una amplia variedad de fuentes de datos y herramientas. Mientras depura problemas, puede examinar:
+
+* **Detalles del issue**: Mensajes de error, trazas de pila y metadatos de eventos de tus [Issues](/es/product/issues/)
+* **Datos de trazabilidad**: [Traces](/es/concepts/key-terms/tracing/#whats-a-trace) distribuidos e información de spans
+* **Registros**: [Logs](/es/product/explore/logs/) estructurados de tu aplicación (beta)
+* **Tus bases de código**: Código relevante de repositorios vinculados en GitHub, con soporte para múltiples repositorios en servicios distribuidos
+* **Datos de rendimiento**: Perfiles y métricas de rendimiento
+* **Comentarios interactivos**: Tu aporte y guía durante el proceso
+
+Este contexto es crucial para las capacidades de Seer y le permite, por ejemplo, investigar un servicio de backend que pueda ser la verdadera causa raíz de un error de frontend que estás intentando diagnosticar.
+
+<div id="settings">
+  ## Configuración
+</div>
+
+El comportamiento predeterminado de Issue Fix se puede personalizar de varias formas:
+
+1. Puedes personalizar manualmente los repositorios a los que tiene acceso
+2. Puedes definir la rama predeterminada que debe usar en cada repositorio
+3. Puedes agregar contexto personalizado adicional que sea útil dentro del alcance de cada repositorio
+
+<Alert>
+  Seer ya analiza automáticamente archivos de reglas de [Cursor](https://docs.cursor.com/context/rules), [Windsurf](https://windsurf.com/editor/directory), [Cline](https://docs.cline.bot/features/cline-rules) y [Claude Code](https://docs.anthropic.com/en/docs/claude-code/tutorials#create-an-effective-claude-md-file)
+</Alert>
+
+![Captura de pantalla de la página de configuración del repositorio](../img/repo-settings.png)
+
+<div id="best-practices">
+  ## Mejores prácticas
+</div>
+
+* Configura la integración con GitHub para que Seer pueda acceder a tu código y generar correcciones. Al habilitar la integración con GitHub, Seer podrá ofrecer mejores resultados. Consulta la [integración de GitHub de Sentry](/es/organization/integrations/source-code-mgmt/github/) para saber cómo hacerlo.
+* Configura la integración de Seer con GitHub, para que Seer pueda crear PR por ti.
+* Cuanto más contexto de Sentry tengas, mejor podrá ayudarte Seer: considera instrumentar tu aplicación para recopilar trazas, perfiles y registros, y enviarlos a Sentry.
+* Para proyectos de JavaScript/TypeScript que se minifican en producción, sube los [source maps](/es/platforms/javascript/sourcemaps/) a Sentry para obtener los mejores resultados.
+
+<Alert>
+  Actualmente, GitHub es el único SCM compatible con Seer. Estamos trabajando para añadir compatibilidad con otros servicios, incluidos GitLab y Bitbucket.
+</Alert>

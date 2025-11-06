@@ -4,11 +4,14 @@ import {DynamicNav, toTree} from './dynamicNav';
 import {PlatformSidebarProps} from './types';
 import {getNavNodes} from './utils';
 
+import { useGT } from 'gt-next';
+
 export function PlatformSidebar({
   rootNode,
   platformName,
   guideName,
 }: PlatformSidebarProps) {
+  const gt = useGT();
   const docNodeToPlatformSidebarNode = (n: DocNode) => {
     if (n.frontmatter.draft) {
       return undefined;
@@ -48,7 +51,7 @@ export function PlatformSidebar({
       <DynamicNav
         root={pathRoot}
         tree={tree}
-        title={`Sentry for ${(guide || platform).title}`}
+        title={gt(`Sentry for {title}`, {title: (guide || platform).title})}
         exclude={[`/${pathRoot}/guides/`]}
       />
     </ul>

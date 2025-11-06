@@ -1,0 +1,104 @@
+---
+title: Errores del cliente HTTP
+sidebar_order: 13
+description: "Una vez habilitada, esta función captura automáticamente los errores del cliente HTTP, como códigos de respuesta inválidos, como eventos de error y los reporta a Sentry"
+---
+
+Una vez habilitada, esta función captura automáticamente los errores del cliente HTTP, como códigos de respuesta inválidos, como eventos de error y los reporta a Sentry. El evento de error incluirá los datos de `request` y `response`, como `url`, `status_code`, etc. Dependiendo de cómo esté configurada tu solicitud HTTP, puede que el stack trace de estos eventos no señale la ubicación exacta de la solicitud en tu código. Si es así, puedes revisar la información de la solicitud HTTP del issue, que incluye elementos como la URL y los encabezados HTTP.
+
+Desde la versión 8.0.0, esta función está habilitada de forma predeterminada. Para deshabilitarla:
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.enableCaptureFailedRequests = false
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.enableCaptureFailedRequests = NO;
+}];
+```
+
+De forma predeterminada, solo se registran como eventos de error las respuestas HTTP con códigos entre `500` y `599`, pero puedes cambiar este comportamiento configurando la opción `failedRequestStatusCodes`:
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    let httpStatusCodeRange = HttpStatusCodeRange(min: 400, max: 599)
+    options.failedRequestStatusCodes = [ httpStatusCodeRange ]
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    SentryHttpStatusCodeRange *httpStatusCodeRange =
+            [[SentryHttpStatusCodeRange alloc] initWithMin:400 max:599];
+    options.failedRequestStatusCodes = @[ httpStatusCodeRange ];
+}];
+```
+
+Los errores del cliente HTTP de cualquier destino (expresión regular `.*`) se capturan automáticamente, pero puedes cambiar este comportamiento configurando la opción `failedRequestTargets` con una expresión regular o con una cadena (`String`) simple. Una cadena simple debe contener al menos uno de los elementos de la lista. Las cadenas simples no tienen que ser coincidencias exactas, lo que significa que la URL de una solicitud coincide cuando contiene una cadena proporcionada mediante la opción:
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.failedRequestTargets = [ "www.example.com" ]
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.failedRequestTargets = @[ @"www.example.com" ];
+}];
+```
+
+Los eventos de error pueden contener datos de PII, como `Headers` y `Cookies`. Sentry ya realiza limpieza de datos de forma predeterminada, pero puedes limpiar cualquier dato antes de enviarlo. Más información en [Scrubbing Sensitive Data](/es/platforms/apple/guides/ios/data-management/sensitive-data/).
+
+Estos eventos se pueden buscar y puedes configurar alertas para ellos si usas las propiedades `http.url` y `http.status_code`. Más información en nuestra documentación completa de [Searchable Properties](/es/concepts/search/searchable-properties/).
+
+<div id="customize-or-drop-the-error-event">
+  ### Personaliza o descarta el evento de error
+</div>
+
+El evento de error capturado puede personalizarse o descartarse con `beforeSend`:
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.beforeSend = { event in
+        // modifica el evento aquí o devuelve nil para descartarlo
+        return event
+    }
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.beforeSend = ^SentryEvent * _Nullable(SentryEvent * _Nonnull event) {
+        // modifica el evento aquí o devuelve nil para descartarlo
+        return event;
+    }
+}];
+```

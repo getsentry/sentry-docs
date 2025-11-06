@@ -1,0 +1,68 @@
+---
+title: La app no responde (ANR)
+sidebar_order: 20
+description: Aprende a desactivar o configurar ANR.
+og_image: /og-images/platforms-unity-configuration-app-not-responding.png
+---
+
+Los errores de Application Not Responding (ANR) se producen cuando el hilo de Unity del juego permanece bloqueado durante más de cinco segundos. El SDK de Unity informa los ANR como eventos de Sentry.
+
+<div id="anr-implementation-details">
+  ## Detalles de la implementación de ANR
+</div>
+
+La detección de ANR en el SDK de Unity funciona de manera diferente según si la plataforma de destino admite multihilo:
+
+<div id="platforms-with-multi-threading-support">
+  ### Plataformas con soporte para multitarea con múltiples hilos
+</div>
+
+En las plataformas que admiten múltiples hilos, la detección de ANR funciona en dos partes:
+
+1. Una corrutina restablece periódicamente un contador
+2. Un hilo en segundo plano incrementa y supervisa este contador. Informa de un evento ANR cuando se supera el umbral definido en `options.AnrTimeout`
+
+<div id="platforms-without-multi-threading-support-webgl">
+  ### Plataformas sin soporte de multihilo - WebGL
+</div>
+
+En plataformas sin soporte de multihilo como WebGL, la detección de ANR usa un enfoque ligeramente diferente:
+
+* Una única corrutina que utiliza un `Stopwatch` para medir el tiempo transcurrido
+* Cuando la corrutina detecta que ha pasado más tiempo que el tiempo de espera de ANR, informa el evento de ANR
+
+La desventaja aquí es que la detección de ANR depende de que el juego se recupere del estado de no respuesta para poder informar el evento.
+
+Ambas implementaciones son sensibles a la pérdida y recuperación del foco de la app y se pausan en consecuencia. También usan `WaitForSecondsRealtime`, por lo que pausar tu juego modificando `Time.timeScale` no generará falsos informes de ANR.
+
+<div id="stack-trace-support">
+  ### Compatibilidad con el seguimiento de pila
+</div>
+
+Como la integración de ANR crea una excepción en un hilo en segundo plano, debido a que una corrutina no se restablece a tiempo, el seguimiento de pila no mostrará el del hilo principal.
+
+<div id="line-number-support">
+  ### Compatibilidad con números de línea
+</div>
+
+Dado que la [compatibilidad con números de línea](/es/platforms/unity/configuration/il2cpp) de los SDK de Unity está limitada a las excepciones que realmente se lanzan, la integración no te proporciona números de línea en los incidentes de ANR capturados.
+
+<div id="configuration">
+  ## Configuración
+</div>
+
+La detección de ANR está activada de forma predeterminada en Sentry, pero puedes desactivarla desde la ventana del editor yendo a `Tools -> Sentry -> Advanced -> ANR Detection`. Allí también puedes configurar el tiempo de espera de ANR.
+
+![Detección de ANR](./img/unity-anr.png)
+
+También puedes desactivarla deshabilitando la integración.
+
+```csharp
+options.DisableAnrIntegration();
+```
+
+Para establecer el tiempo de espera, usa el siguiente fragmento.
+
+```csharp
+options.AnrTimeout = TimeSpan.FromSeconds(5);
+```

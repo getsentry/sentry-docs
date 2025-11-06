@@ -1,0 +1,82 @@
+---
+title: CircleCI
+description: >-
+  Aprende cómo Sentry y CircleCI automatizan la gestión de versiones y ayudan a identificar
+  commits sospechosos.
+og_image: /og-images/product-releases-setup-release-automation-circleci.png
+---
+
+Esta guía te lleva paso a paso por el proceso de automatizar la gestión de versiones de Sentry y las notificaciones de despliegue en CircleCI. Después de desplegar en CircleCI, podrás asociar commits con versiones. También podrás aplicar source maps para ver el código original en Sentry.
+
+Antes de comenzar, confirma que tu proyecto de Sentry está correctamente configurado para rastrear metadatos de commits [instalando una integración de repositorio](/es/product/releases/setup/release-automation/). Una vez instalada y agregado tu repositorio, vuelve a esta guía. Si ya has instalado una integración de repositorio, estás listo para continuar.
+
+<div id="create-a-sentry-internal-integration">
+  ## Crear una integración interna de Sentry
+</div>
+
+Para que CircleCI se comunique de forma segura con Sentry, debes crear una nueva integración interna. En Sentry, ve a **Settings &gt; Developer Settings &gt; New Internal Integration**.
+
+Asigna un nombre a tu nueva integración (por ejemplo, “CircleCI Deploy Integration”) y especifica los permisos necesarios. En este caso, necesitas acceso de administrador para “Release” y acceso de lectura para “Organization”.
+
+Para más detalles sobre los permisos (scopes) y los endpoints de la API, consulta la documentación completa sobre [API Permissions](/es/api/permissions/).
+
+![Vista de los permisos de la integración interna.](./img/internal-integration-permissions.png)
+
+Haz clic en “Save” y guarda tu token, que necesitarás en la siguiente sección.
+
+<div id="setting-environment-variables-in-circleci">
+  ## Configuración de variables de entorno en CircleCI
+</div>
+
+A continuación, necesitarás algunas variables de entorno para configurar Sentry CLI:
+
+* `SENTRY_AUTH_TOKEN` - Tu token de integración interna
+* `SENTRY_ORG` - El slug de tu organización en Sentry
+* `SENTRY_PROJECT` - El slug de tu proyecto en Sentry
+
+Para acceder de forma segura a tu token de integración interna, guárdalo como una [variable de entorno en tu proyecto](https://circleci.com/docs/2.0/env-vars/#setting-an-environment-variable-in-a-project):
+
+1. En la aplicación de CircleCI, ve a la configuración de tu proyecto haciendo clic en el ícono de engranaje en la página Pipelines o en los tres puntos en otras páginas de la aplicación.
+2. Haz clic en Environment Variables.
+3. Agrega una nueva variable haciendo clic en el Button &quot;Add Variable&quot; e ingresa `SENTRY_AUTH_TOKEN` como nombre y tu token de integración interna como valor.
+
+![Vista de las variables de entorno de CircleCI.](./img/project-settings-env-var.png)
+
+Las otras variables no contienen información confidencial, por lo que usarás la clave de entorno para definirlas como variables de entorno en tu archivo config.yml.
+
+<div id="create-release-and-notify-sentry-of-deployment">
+  ## Crear una versión y notificar a Sentry del despliegue
+</div>
+
+Para automatizar tu proceso de gestión de versiones en Sentry, agrega el paso `Create release and notify Sentry of deploy` que aparece a continuación después de tu paso de despliegue, ya sea en un job nuevo o al final de tu job de despliegue existente:
+
+```yaml
+notify-sentry-deploy:
+  executor:
+  # Especifica el ejecutor para ejecutar la tarea de despliegue
+  environment:
+    SENTRY_ORG: sample-organization-slug
+    SENTRY_PROJECT: sample-project-slug
+    SENTRY_ENVIRONMENT: production
+  steps:
+    - checkout
+    # ...
+    - run:
+        name: Crear una versión y notificar a Sentry del despliegue
+        command: |
+          curl -sL https://sentry.io/get-cli/ | bash
+          export SENTRY_RELEASE=$(sentry-cli releases propose-version)
+          sentry-cli releases new -p $SENTRY_PROJECT $SENTRY_RELEASE
+          sentry-cli releases set-commits $SENTRY_RELEASE --auto
+          sentry-cli sourcemaps upload --release $SENTRY_RELEASE path-to-sourcemaps-if-applicable
+          sentry-cli releases finalize $SENTRY_RELEASE
+          sentry-cli deploys new -e $SENTRY_ENVIRONMENT
+```
+
+Para obtener más detalles sobre los conceptos de gestión de versiones del fragmento anterior, consulta la documentación completa sobre [gestión de versiones](/es/cli/releases/).
+
+**Notas**:
+
+* Si no estás implementando un proyecto que requiera source maps o ya enviaste los source maps a Sentry mediante otro método, omite la línea `sourcemaps upload`.
+* Si no puedes instalar una integración de repositorio, envía los metadatos de commits usando el [endpoint de creación de releases](/es/product/releases/associate-commits/#using-the-api) o omite la línea `set-commits`.
+* `sentry-cli releases propose-version` usa de forma predeterminada el SHA del commit que se está implementando. Para establecerlo en una versión diferente, ajusta `SENTRY_RELEASE` a la versión deseada.

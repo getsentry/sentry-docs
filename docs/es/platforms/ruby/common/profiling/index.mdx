@@ -1,0 +1,84 @@
+---
+title: Configurar la generación de perfiles
+sidebar_title: Generación de perfiles
+description: "Aprende a habilitar la generación de perfiles en tu aplicación si aún no está configurada."
+sidebar_order: 5000
+---
+
+<PlatformContent includePath="profiling/index/preface" />
+
+<PlatformContent includePath="profiling/index/why-profiling" />
+
+<div id="enable-profiling-using-stackprof">
+  ## Habilitar la generación de perfiles con StackProf
+</div>
+
+<Alert>
+  La versión beta de perfilado con StackProf está disponible a partir de la versión `5.9.0` del SDK.
+</Alert>
+
+Usamos la gema [`stackprof`](https://github.com/tmm1/stackprof) para recopilar perfiles en Ruby.
+
+Primero agrega `stackprof` a tu `Gemfile` y asegúrate de cargarla antes de `sentry-ruby`.
+
+```ruby
+# Gemfile
+
+gem 'stackprof'
+gem 'sentry-ruby'
+```
+
+Luego, asegúrate de que tanto `traces_sample_rate` como `profiles_sample_rate` estén configurados y tengan un valor distinto de cero en tu inicializador de Sentry.
+
+```ruby
+# config/initializers/sentry.rb
+
+Sentry.init do |config|
+  config.dsn = "___PUBLIC_DSN___"
+  config.traces_sample_rate = 1.0
+  config.profiles_sample_rate = 1.0
+end
+```
+
+<Alert>
+  La configuración de <PlatformIdentifier name="profiles_sample_rate" /> es *relativa* a la de <PlatformIdentifier name="traces_sample_rate" />.
+
+  Para que el perfilado funcione, primero debes habilitar el tracing de Sentry mediante `traces_sample_rate` (como en el ejemplo anterior). Lee nuestra <PlatformLink to="/tracing/">documentación de configuración de tracing</PlatformLink> para aprender a configurar el muestreo. Si estableces la tasa de muestreo en 1.0, se capturarán todas las transacciones.
+</Alert>
+
+
+<div id="enable-profiling-using-vernier">
+  ## Habilitar el perfilado con Vernier
+</div>
+
+<Alert>
+  La beta de perfilado de Vernier está disponible a partir de la versión `5.21.0` del SDK.
+</Alert>
+
+<Alert>
+  Vernier requiere Ruby 3.2.1 o superior
+</Alert>
+
+Ahora puedes obtener perfiles mucho mejores si usas servidores multihilo como Puma gracias a Vernier.
+
+Primero, agrega `vernier` a tu `Gemfile` y asegúrate de que se cargue antes de `sentry-ruby`.
+
+```ruby
+# Gemfile
+
+gem 'vernier'
+gem 'sentry-ruby'
+```
+
+Luego, configura `profiles_sample_rate` y la nueva opción `profiler_class` en tu inicializador de Sentry para usar el nuevo generador de perfiles.
+
+```ruby
+# config/initializers/sentry.rb
+
+Sentry.init do |config|
+  config.dsn = "___PUBLIC_DSN___"
+  config.profiles_sample_rate = 1.0
+  config.traces_sample_rate = 1.0
+  config.profiler_class = Sentry::Vernier::Profiler
+end
+```

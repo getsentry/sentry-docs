@@ -1,0 +1,306 @@
+---
+title: Micro Frontends
+sidebar_order: 200
+description: Aprende a identificar el origen de los errores y a dirigir eventos a distintos proyectos de Sentry cuando uses micro frontends o module federation.
+notSupported:
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.hono
+  - javascript.koa
+  - javascript.nestjs
+keywords:
+  [
+    "micro frontend",
+    "multiplexed transport",
+    "module federation",
+    "module metadata",
+  ]
+---
+
+<Alert>
+  Para asegurarte de que el SDK de Sentry para JavaScript funcione con tus micro frontends, verifica que
+  todos los micro frontends que importen desde un paquete `@sentry/*` [usen la misma
+  versión del SDK de Sentry](#sdk-version-alignment).
+</Alert>
+
+Si tu app usa micro frontends, es muy útil poder rastrear de cuál proviene un error. Para hacerlo con Sentry, puedes configurar un enfoque automático o manual y enviar eventos a proyectos de Sentry separados que representen cada uno de tus micro frontends. Esto facilita ver qué está fallando y dónde, ayudándote a rastrear problemas y resolverlos más rápido, especialmente en arquitecturas de frontend complejas.
+
+A continuación encontrarás instrucciones de configuración tanto para la forma automática como para la manual de dirigir errores a distintos proyectos de Sentry.
+
+<Alert>
+  En todos los casos, `Sentry.init()` no debe llamarse más de una vez; hacerlo
+  dará lugar a un comportamiento indefinido.
+</Alert>
+
+<div id="automatically-route-errors-to-different-projects">
+  ## Enruta automáticamente los errores a diferentes proyectos
+</div>
+
+`ModuleMetadata` y `makeMultiplexedTransport` se pueden usar juntos para enrutar automáticamente los eventos a proyectos específicos de Sentry que representen tus micro frontends. Los eventos se enrutarán una vez identificado el servicio donde ocurrió el error, garantizando que se registren en el proyecto correcto.
+
+<Alert>
+  <ul>
+    <li>
+      Requiere la versión `2.18.0` o superior de `@sentry/webpack-plugin`,
+      `@sentry/rollup-plugin`, `@sentry/vite-plugin` o
+      `@sentry/esbuild-plugin`.
+    </li>
+
+    <li>Requiere la versión `7.59.0` o superior del SDK.</li>
+  </ul>
+</Alert>
+
+Para identificar el origen de un error, primero debes inyectar metadatos que ayuden a identificar
+qué bundles fueron responsables del error. Puedes hacerlo con cualquiera de los
+plugins de empaquetado de Sentry habilitando la opción `moduleMetadata`. El ejemplo
+a continuación es para Webpack, pero esto también es compatible con Vite, Rollup y esbuild.
+
+**Instala el siguiente fragmento de código en tu micro frontend:**
+
+```javascript
+// webpack.config.js
+const { sentryWebpackPlugin } = require("@sentry/webpack-plugin");
+
+module.exports = {
+  devtool: "source-map",
+  plugins: [
+    sentryWebpackPlugin({
+      moduleMetadata: ({ release }) => ({ dsn: "__MODULE_DSN__", release }),
+    }),
+  ],
+};
+```
+
+<Alert>
+  **Reemplaza `__MODULE_DSN__` por el DSN real de tu proyecto de Sentry.** Puedes encontrar tu DSN en la configuración de tu proyecto de Sentry, en Client Keys (DSN).
+</Alert>
+
+Una vez que se hayan inyectado metadatos en los módulos, la integración `moduleMetadataIntegration`
+puede usarse para consultar esos metadatos y adjuntarlos a los frames de la pila con
+nombres de archivo coincidentes. Estos metadatos estarán disponibles en el callback `beforeSend`
+como la propiedad `module_metadata` de cada `StackFrame`. Esto puede usarse para identificar
+qué bundles podrían ser responsables de un error. Una vez determinado el destino, puedes
+almacenarlo como una lista de pares DSN-release en `event.extra[MULTIPLEXED_TRANSPORT_EXTRA_KEY]`
+para que el transporte multiplexado los use como referencia para el enrutamiento.
+
+**Instala el siguiente fragmento de código en tu host:**
+
+```javascript {tabTitle:NPM}{index.js}
+import {
+  init,
+  makeFetchTransport,
+  moduleMetadataIntegration,
+  makeMultiplexedTransport,
+} from "@sentry/browser";
+
+const EXTRA_KEY = "ROUTE_TO";
+
+const transport = makeMultiplexedTransport(makeFetchTransport, (args) => {
+  const event = args.getEvent();
+  if (
+    event &&
+    event.extra &&
+    EXTRA_KEY in event.extra &&
+    Array.isArray(event.extra[EXTRA_KEY])
+  ) {
+    return event.extra[EXTRA_KEY];
+  }
+  return [];
+});
+
+init({
+  dsn: "__DEFAULT_DSN__",
+  integrations: [moduleMetadataIntegration()],
+  transport,
+  beforeSend: (event) => {
+    if (event?.exception?.values?.[0].stacktrace.frames) {
+      const frames = event.exception.values[0].stacktrace.frames;
+      // Busca el último frame con metadatos del módulo que contengan un DSN
+      const routeTo = frames
+        .filter((frame) => frame.module_metadata && frame.module_metadata.dsn)
+        .map((v) => v.module_metadata)
+        .slice(-1); // usando solo el frame superior; quizá quieras personalizarlo según tus necesidades
+
+      if (routeTo.length) {
+        event.extra = {
+          ...event.extra,
+          [EXTRA_KEY]: routeTo,
+        };
+      }
+    }
+
+    return event;
+  },
+});
+```
+
+
+```html {tabTitle:CDN/Loader Bundle}{filename:index.html}
+<script
+  src="https://browser.sentry-cdn.com/{{@inject packages.version('sentry.javascript.browser') }}/bundle.min.js"
+  integrity="sha384-{{@inject packages.checksum('sentry.javascript.browser', 'bundle.min.js', 'sha384-base64') }}"
+  crossorigin="anonymous"
+></script>
+
+<script
+  src="https://browser.sentry-cdn.com/{{@inject packages.version('sentry.javascript.browser') }}/multiplexedtransport.min.js"
+  integrity="sha384-{{@inject packages.checksum('sentry.javascript.browser', 'multiplexedtransport.min.js', 'sha384-base64') }}"
+  crossorigin="anonymous"
+></script>
+
+<script
+  src="https://browser.sentry-cdn.com/{{@inject packages.version('sentry.javascript.browser') }}/modulemetadata.min.js"
+  integrity="sha384-{{@inject packages.checksum('sentry.javascript.browser', 'modulemetadata.min.js', 'sha384-base64') }}"
+  crossorigin="anonymous"
+></script>
+
+<script>
+  const EXTRA_KEY = "ROUTE_TO";
+
+  const transport = Sentry.makeMultiplexedTransport(
+    Sentry.makeFetchTransport,
+    (args) => {
+      const event = args.getEvent();
+      if (
+        event &&
+        event.extra &&
+        EXTRA_KEY in event.extra &&
+        Array.isArray(event.extra[EXTRA_KEY])
+      ) {
+        return event.extra[EXTRA_KEY];
+      }
+      return [];
+    }
+  );
+
+  Sentry.init({
+    dsn: "__DEFAULT_DSN__",
+    integrations: [Sentry.moduleMetadataIntegration()],
+    transport,
+    beforeSend: (event) => {
+      if (event?.exception?.values?.[0].stacktrace.frames) {
+        const frames = event.exception.values[0].stacktrace.frames;
+        // Encuentra el último frame con metadatos de módulo que contenga un DSN
+        const routeTo = frames
+          .filter((frame) => frame.module_metadata && frame.module_metadata.dsn)
+          .map((v) => v.module_metadata)
+          .slice(-1); // usando solo el frame superior - puedes personalizarlo según tus necesidades
+
+        if (routeTo.length) {
+          event.extra = {
+            ...event.extra,
+            [EXTRA_KEY]: routeTo,
+          };
+        }
+      }
+
+      return event;
+    },
+  });
+</script>
+```
+
+<Alert>
+  **Reemplaza `__DEFAULT_DSN__` por el DSN real de tu proyecto de Sentry.** Debe ser el DSN de tu proyecto de Sentry predeterminado/de respaldo. Puedes encontrarlo en la configuración de tu proyecto de Sentry, en Client Keys (DSN).
+</Alert>
+
+Una vez configurado, los errores, tanto controlados como no controlados, se enviarán automáticamente al proyecto correcto.
+
+<Alert>
+  De forma predeterminada, `args.getEvent` devuelve solo eventos de error. Puedes hacer coincidir otros tipos de eventos así: `args.getEvent(['event', 'transaction', 'replay_event'])`. Este fragmento de `getEvent`
+  devolverá coincidencias para errores, transacciones y reproducciones.
+</Alert>
+
+
+<div id="manually-route-errors-to-different-projects">
+  ## Enrutar errores manualmente a distintos proyectos
+</div>
+
+Si quieres tener más control para especificar explícitamente el destino de cada `captureException`,
+puedes usar la interfaz más avanzada que ofrece el transporte multiplexado.
+
+<Alert>Requiere la versión `7.59.0` o superior del SDK.</Alert>
+
+El siguiente ejemplo usa una etiqueta `feature` para determinar a qué proyecto de Sentry
+enviar el evento. Si el evento no tiene una etiqueta `feature`, lo enviamos al
+DSN de respaldo definido en `Sentry.init`.
+
+```js
+import {
+  captureException,
+  init,
+  makeFetchTransport,
+  makeMultiplexedTransport,
+} from "@sentry/browser";
+
+init({
+  dsn: "__FALLBACK_DSN__",
+  transport: makeMultiplexedTransport(makeFetchTransport, ({ getEvent }) => {
+    const event = getEvent();
+
+    // Enviar a diferentes DSN, según la carga útil del evento
+    if (event?.tags?.feature === "cart") {
+      return [{ dsn: "__CART_DSN__", release: "cart@1.0.0" }];
+    } else if (event?.tags?.feature === "gallery") {
+      return [{ dsn: "__GALLERY_DSN__", release: "gallery@1.2.0" }];
+    } else {
+      return [];
+    }
+  }),
+});
+```
+
+<Alert>
+  **Reemplaza los valores de marcador de posición de DSN por los DSN reales de tu proyecto de Sentry:**
+
+  * Reemplaza `__FALLBACK_DSN__` por el DSN de tu proyecto de Sentry de respaldo/predeterminado
+  * Reemplaza `__CART_DSN__` por el DSN del proyecto de Sentry del micro frontend del carrito
+  * Reemplaza `__GALLERY_DSN__` por el DSN del proyecto de Sentry del micro frontend de la galería
+
+  Puedes encontrar tus DSN en la configuración de cada proyecto de Sentry, en Client Keys (DSN).
+</Alert>
+
+Luego puedes establecer etiquetas/contextos en los eventos de micro-frontends individuales para decidir a qué proyecto de Sentry enviar el evento, de la siguiente manera:
+
+<Alert>
+  Es importante usar siempre un ámbito local al establecer la etiqueta (ya sea como
+  se muestra a continuación o usando{" "}
+
+  <PlatformLink to="/enriching-events/scopes/#local-scopes">
+    documentación de withScope{" "}
+  </PlatformLink>
+
+  ). Usar un ámbito global, por ejemplo, mediante `Sentry.setTag()`, hará que
+  todos los eventos posteriores se dirijan al mismo DSN sin importar de dónde
+  se originaron.
+</Alert>
+
+```typescript
+captureException(new Error("¡Oh no!"), (scope) => {
+  scope.setTag("feature", "cart");
+  return scope;
+});
+```
+
+
+<div id="sdk-version-alignment">
+  ## Alineación de versiones del SDK
+</div>
+
+A partir de la versión [8.7.0](https://github.com/getsentry/sentry-javascript/releases/tag/8.7.0), si tienes varios SDK de Sentry JavaScript en la misma página, [solo interactúan entre sí](https://github.com/getsentry/sentry-javascript/pull/12206) si usan la misma versión. Esto evita interacciones no deseadas entre SDK, donde llamadas o accesos a API del SDK agregadas recientemente o ya eliminadas podrían provocar errores. Un ejemplo clásico son las extensiones del navegador o los scripts de terceros que usan Sentry cuando la aplicación host también usa Sentry.
+
+Sin embargo, para casos como micro frontends, donde podrías querer interacción del SDK entre varios micro frontends o aplicaciones hijas, tendrás que asegurarte de que todos los SDK usen la misma versión.
+Por ejemplo, si inicializas el SDK en una aplicación host o esqueleto, pero realizas llamadas al SDK de Sentry (como `Sentry.captureException` o `Sentry.setTag`) en aplicaciones hijas de micro frontend, debes asegurarte de que los paquetes del SDK en la aplicación host y en las aplicaciones hijas estén alineados a la misma versión.
+
+<Alert>
+
+Si no puedes alinear todos tus micro frontends en la misma versión del SDK, puedes [seguir esta solución alternativa](https://github.com/getsentry/sentry-javascript/discussions/10576#discussioncomment-11446422).
+Sin embargo, no se garantiza la interoperabilidad y podrías encontrarte con comportamientos inesperados.
+
+</Alert>

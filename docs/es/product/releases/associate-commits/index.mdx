@@ -1,0 +1,235 @@
+---
+title: Asociar commits
+sidebar_order: 2
+description: "Aprende a asociar commits a una versión."
+---
+
+<Include name="only-error-issues-note.mdx" />
+
+En tu proceso de lanzamiento, puedes añadir un paso para crear una versión en Sentry y asociarla con commits de tu repositorio vinculado. Cuando lo hayas hecho, podrás ver los commits asociados a una versión en la página de **Detalles de la versión**.
+
+Si estás usando una de nuestras opciones de [automatización de lanzamientos](/es/product/releases/setup/release-automation/), este paso se realizará automáticamente.
+
+Sin embargo, si no tienes instalada una integración de repositorio, puedes enviar a Sentry los metadatos sin procesar de tus commits usando la [Sentry CLI](#using-the-cli) o [nuestra API](#using-the-api).
+
+<div id="associate-commits-with-a-release">
+  ## Asociar commits con una versión
+</div>
+
+Cuando hayas asociado commits, podremos vincular los commits en la versión, incluidos:
+
+* Archivos modificados por esos commits
+* Archivos presentes en la traza de pila
+* Autores de esos archivos
+* Incidencias resueltas por esos commits
+
+<div id="using-the-cli">
+  ### Uso de la CLI
+</div>
+
+En este ejemplo de la CLI:
+
+* Las variables de entorno configuran la CLI (consulta [Trabajar con proyectos](/es/cli/configuration/#sentry-cli-working-with-projects) para ver alternativas)
+* El subcomando `propose-version` determina automáticamente un ID de versión
+* Se crea una versión etiquetada como `VERSION` para la organización `my-org` y los proyectos `project1` y `project2`
+* Gracias a la opción `--auto`, el nombre del repositorio se determina automáticamente y los commits entre el head de la versión anterior y el head actual se asocian con la versión.
+
+<OrgAuthTokenNote />
+
+```bash
+# Supone que estás en un repositorio de git
+export SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+export SENTRY_ORG=___ORG_SLUG___
+VERSION=$(sentry-cli releases propose-version)
+
+# Crear un release
+sentry-cli releases new -p project1 -p project2 $VERSION
+
+# Asociar commits al release
+sentry-cli releases set-commits --auto $VERSION
+```
+
+Si no tienes una integración basada en repositorio asociada a tu organización de Sentry, la opción `--auto` usará automáticamente el árbol de git de tu repositorio local y asociará a la versión los commits entre el head commit de la versión anterior y el head commit actual. Si se trata de la primera versión, Sentry usará los últimos 10 a 20 commits, según la integración. Este comportamiento se puede configurar con la opción `--initial-depth`.
+
+Como alternativa, puedes usar la opción `--local` para habilitar este comportamiento de forma predeterminada:
+
+```bash
+sentry-cli releases set-commits --local $VERSION
+```
+
+Para tener más control sobre qué commits asociar, o si no puedes ejecutar el comando dentro del repositorio, puedes especificar manualmente un repositorio y un rango.
+
+El siguiente ejemplo asocia commits (o refs) entre `from` y `to` con la versión actual, donde `from` es el commit de la versión anterior. El commit `from` es opcional; si se omite, usaremos el commit de la versión anterior como referencia:
+
+```bash
+sentry-cli releases set-commits --commit "mi-repo@from..to" $VERSION
+```
+
+<Alert>
+  El nombre del repositorio `my-repo` debe coincidir con el que ingresaste al vincular
+  el repositorio y debe tener el formato `owner-name/repo-name`.
+</Alert>
+
+<div id="using-the-api">
+  ### Uso de la API
+</div>
+
+Para enviar a Sentry los metadatos de tus commits mediante la API, usa el [endpoint de creación de lanzamientos](/es/api/releases/create-a-new-release-for-an-organization/).
+
+Usa el siguiente formato para tus commits:
+
+```json
+{
+  "commits": [
+    {
+      "patch_set": [
+        { "path": "path/to/added-file.html", "type": "A" },
+        { "path": "path/to/modified-file.html", "type": "M" },
+        { "path": "path/to/deleted-file.html", "type": "D" }
+      ],
+      "repository": "owner-name/repo-name",
+      "author_name": "Author Name",
+      "author_email": "author_email@example.com",
+      "timestamp": "2018-09-20T11:50:22+03:00",
+      "message": "Este es el mensaje del commit."
+      "id": "8371445ab8a9facd271df17038ff295a48accae7"
+    }
+  ]
+}
+```
+
+`patch_set`
+
+Una lista de los archivos que han cambiado en el commit. Especificar el `patch_set` es necesario para identificar commits sospechosos y sugerir asignados. Consta de dos partes:
+
+`path`
+: La ruta del archivo. Se admiten barras diagonales normales y invertidas (`'/' '\\'`).
+
+`type`
+: Los tipos de cambios que ocurrieron en ese commit. Las opciones son:
+
+* `Add (A)`
+  * `Modify (M)`
+  * `Delete (D)`
+
+`repository`
+
+El nombre completo del repositorio al que pertenece el commit. Si no se proporciona este campo, Sentry generará un nombre con el formato: `u'organization-<organization_id>'` (es decir, si el id de la organización es `123`, el nombre de repositorio generado será `u'organization-123`).
+
+`author_email`
+
+Se requiere el correo electrónico del autor del commit para habilitar la función de asignado sugerido.
+
+`author_name`
+
+También se puede incluir el nombre del autor del commit.
+
+`timestamp`
+
+La marca de tiempo del commit se utiliza para ordenar los commits proporcionados. Si no se incluye una marca de tiempo, los commits permanecerán en el orden dado.
+
+`message`
+
+El mensaje del commit.
+
+`id`
+
+El ID del commit.
+
+<div id="create-the-release-with-patch-data">
+  #### Crear la versión con datos de parche
+</div>
+
+Aquí tienes un ejemplo de una solicitud que usa datos de parche:
+
+<Alert>
+  Asegúrate de usar [Auth Tokens](/es/api/auth/#auth-tokens), **no** [API Keys](/es/api/auth/#api-keys), que están obsoletas.
+</Alert>
+
+```bash
+curl https://sentry.io/api/0/organizations/your-organization-name/releases/ \
+  -X POST \
+  -H 'Authorization: Bearer <Token>' \
+  -H 'Content-Type: application/json' \
+  -d '
+ {
+ "version": "2.0rc2",
+ "projects":["project-1","project-2"],
+ "commits":[
+     {
+        "patch_set": [
+            {"path": "ruta/a/archivo-agregado.html", "type": "A"},
+            {"path": "ruta/a/archivo-modificado.html", "type": "M"},
+            {"path": "ruta/a/archivo-eliminado.html", "type": "D"}
+        ],
+        "repository": "owner-name/repo-name",
+        "author_name": "Nombre del autor",
+        "author_email": "author_email@example.com",
+        "timestamp": "2018-09-20T11:50:22+03:00",
+        "message": "Este es el mensaje del commit.",
+        "id": "8371445ab8a9facd271df17038ff295a48accae7"
+    }
+ ]
+ }
+ '
+```
+
+Si quieres tener más control sobre el orden en que aparecen los commits, puedes enviarnos una lista de todos ellos. Podría verse así:
+
+```python
+import subprocess
+import requests
+
+SENTRY_API_TOKEN = <my_api_token>
+sha_of_previous_release = <previous_sha>
+
+log = subprocess.Popen([
+    'git',
+    '--no-pager',
+    'log',
+    '--no-merges',
+    '--no-color',
+    '--pretty=%H',
+    '%s..HEAD' % (sha_of_previous_release,),
+], stdout=subprocess.PIPE)
+
+commits = log.stdout.read().strip().split('\n')
+
+data = {
+    'commits': [{'id': c, 'repository': 'mi-repo'} for c in commits],
+    'version': commits[0],
+    'projects': ['mi-proyecto', 'mi-otro-proyecto'],
+}
+
+res = requests.post(
+    'https://sentry.io/api/0/organizations/mi-org/releases/',
+    json=data,
+    headers={'Authorization': 'Bearer {}'.format(SENTRY_API_TOKEN)},
+)
+```
+
+Para obtener más información, consulta la [referencia de la API](/es/api/releases/create-a-new-release-for-an-organization/).
+
+<Alert>
+  Si recibes un correo electrónico con el asunto &quot;Unable to Fetch Commits&quot;, consulta nuestro [artículo del centro de ayuda](https://sentry.zendesk.com/hc/en-us/articles/23968845267739-Why-am-I-receiving-the-email-Unable-to-Fetch-Commits).
+</Alert>
+
+<div id="resolve-issues-by-commit">
+  ## Resolver incidencias por commit
+</div>
+
+Además, cuando empieces a asociar commits con una versión, podrás resolver incidencias incluyendo el ID de la incidencia en el mensaje del commit. Puedes encontrar el ID en la parte superior de la página de **Detalles de la incidencia**, junto al menú desplegable de la persona asignada.
+
+Por ejemplo, un mensaje de commit podría verse así:
+
+```bash
+Evitar consultas vacías para usuarios
+
+Corrige SENTRY-317
+```
+
+Cuando Sentry detecte este commit, lo referenciará en el issue y, cuando crees una release en Sentry, marcaremos el issue como resuelto en esa release. También puedes resolver issues con pull requests si incluyes `fixes <SENTRY-SHORT-ID>` en el título o la descripción.
+
+<Alert>
+  Si usas GitHub, puede que tengas activada una opción de privacidad que impide que Sentry identifique la dirección de correo electrónico real del usuario. Para usar la función de suggested owners, desmarca “Keep my email address private” en la [configuración de cuenta](https://github.com/settings/emails) de GitHub.
+</Alert>

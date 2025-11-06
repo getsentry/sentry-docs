@@ -7,18 +7,20 @@ import {SidebarLink, SidebarSeparator} from './sidebarLink';
 import {NavNode} from './types';
 import {docNodeToNavNode, getNavNodes} from './utils';
 
+import { useGT, msg, useMessages } from 'gt-next';
+
 const devDocsMenuItems: {root: string; title: string}[] = [
-  {root: 'getting-started', title: 'Getting Started'},
-  {root: 'engineering-practices', title: 'Engineering Practices'},
-  {root: 'application-architecture', title: 'Application Architecture'},
-  {root: 'development-infrastructure', title: 'Development Infrastructure'},
-  {root: 'backend', title: 'Backend'},
-  {root: 'frontend', title: 'Frontend'},
-  {root: 'services', title: 'Services'},
-  {root: 'integrations', title: 'Integrations'},
-  {root: 'ingestion', title: 'Ingestion'},
-  {root: 'sdk', title: 'SDKs'},
-  {root: 'self-hosted', title: 'Self-Hosted Sentry'},
+  {root: 'getting-started', title: msg('Getting Started')},
+  {root: 'engineering-practices', title: msg('Engineering Practices')},
+  {root: 'application-architecture', title: msg('Application Architecture')},
+  {root: 'development-infrastructure', title: msg('Development Infrastructure')},
+  {root: 'backend', title: msg('Backend')},
+  {root: 'frontend', title: msg('Frontend')},
+  {root: 'services', title: msg('Services')},
+  {root: 'integrations', title: msg('Integrations')},
+  {root: 'ingestion', title: msg('Ingestion')},
+  {root: 'sdk', title: msg('SDKs')},
+  {root: 'self-hosted', title: msg('Self-Hosted Sentry')},
 ];
 
 export function DevelopDocsSidebar({
@@ -29,6 +31,8 @@ export function DevelopDocsSidebar({
   rootNode: DocNode;
   sidebarToggleId: string;
 }) {
+  const gt = useGT();
+  const m = useMessages();
   const getNavTree = (root: string) => {
     const apiNodes: NavNode[] = getNavNodes(
       [nodeForPath(rootNode, root)!],
@@ -47,7 +51,7 @@ export function DevelopDocsSidebar({
               <DynamicNav
                 key={root}
                 root={root}
-                title={title}
+                title={m(title)}
                 tree={getNavTree(root)}
                 collapsible
               />
@@ -57,9 +61,9 @@ export function DevelopDocsSidebar({
           <ul data-sidebar-tree>
             <SidebarLink
               href="https://open.sentry.io/code-of-conduct/"
-              title="Code of Conduct"
+              title={gt('Code of Conduct')}
             />
-            <SidebarLink href="https://docs.sentry.io" title="User Documentation" />
+            <SidebarLink href="https://docs.sentry.io" title={gt('User Documentation')} />
           </ul>
         </div>
       </div>

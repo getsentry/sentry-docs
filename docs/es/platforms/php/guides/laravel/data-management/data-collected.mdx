@@ -1,0 +1,83 @@
+---
+title: Datos recopilados
+description: "Consulta qué datos recopila el SDK de Sentry."
+sidebar_order: 1
+---
+
+Sentry se toma muy en serio la privacidad de los datos y cuenta con configuraciones predeterminadas que priorizan la seguridad de la información, especialmente en lo referente a datos de carácter personal (PII). Al añadir el SDK de Sentry a tu aplicación, permites que recopile datos y los envíe a Sentry durante la ejecución de tu aplicación.
+
+Los tipos de categorías y la cantidad de datos recopilados varían según las integraciones que tengas habilitadas en el SDK de Sentry. A continuación, encontrarás una lista de las categorías de datos que recopila el SDK de Sentry para PHP:
+
+<div id="http-headers">
+  ## Encabezados HTTP
+</div>
+
+De forma predeterminada, el SDK de Sentry no envía ningún encabezado HTTP.
+
+Para empezar a enviar encabezados HTTP, configura la <PlatformLink to="/configuration/options/#send_default_pii">opción send_default_pii</PlatformLink> en `true`.
+
+<div id="cookies">
+  ## Cookies
+</div>
+
+De forma predeterminada, el SDK de Sentry no envía cookies. Sentry intenta eliminar cualquier cookie que contenga información sensible (como las cookies Laravel Session, Remember Token y CSRF Token).
+
+Si quieres enviar cookies, establece la opción <PlatformLink to="/configuration/options/#send_default_pii">send_default_pii</PlatformLink> en `true`.
+
+<div id="information-about-logged-in-user">
+  ## Información sobre el usuario autenticado
+</div>
+
+De forma predeterminada, el SDK de Sentry no envía ninguna información sobre el usuario autenticado (como la dirección de correo electrónico, el ID de usuario o el nombre de usuario).
+
+Para empezar a enviar información del usuario autenticado, configura la opción <PlatformLink to="/configuration/options/#send_default_pii">send_default_pii</PlatformLink> en `true`.
+
+<div id="users-ip-address">
+  ## Dirección IP de los usuarios
+</div>
+
+De forma predeterminada, el SDK de Sentry no envía la dirección IP del usuario.
+
+Para habilitar el envío de la dirección IP del usuario, establece la opción <PlatformLink to="/configuration/options/#send_default_pii">send_default_pii</PlatformLink> en `true`.
+
+<div id="request-url">
+  ## URL de la solicitud
+</div>
+
+La URL completa de las solicitudes HTTP salientes y entrantes **siempre se envía a Sentry**. Según tu aplicación, esto podría incluir datos personales (PII).
+
+<div id="request-query-string">
+  ## Cadena de consulta de la solicitud
+</div>
+
+La cadena de consulta completa de las solicitudes HTTP salientes y entrantes **siempre se envía a Sentry**. Dependiendo de tu aplicación, esto podría incluir datos personales (PII).
+
+<div id="request-body">
+  ## Cuerpo de la solicitud
+</div>
+
+El cuerpo de las solicitudes HTTP entrantes puede enviarse a Sentry. Si se envía o no depende del tipo y el tamaño del cuerpo de la solicitud, como se describe a continuación:
+
+- **Tipo de cuerpo de la solicitud:**
+  - Se envían los cuerpos JSON y de formulario
+  - Los cuerpos sin procesar siempre se eliminan
+  - Los archivos cargados en los cuerpos de la solicitud nunca se envían a Sentry
+- **Tamaño del cuerpo de la solicitud:** Existe una <PlatformLink to="/configuration/options/#max_request_body_size">opción max_request_body_size</PlatformLink> que está establecida en `medium` de forma predeterminada. Esto significa que los cuerpos de solicitud más grandes no se envían a Sentry.
+
+Si quieres evitar por completo que se envíen cuerpos a Sentry, establece `max_request_body_size` en `'never'`.
+
+<div id="source-context">
+  ## Contexto del código fuente
+</div>
+
+Cuando se envía a Sentry una excepción no controlada, se adjunta una captura del código fuente que rodea la línea donde se origina el error.
+
+Para dejar de enviar este contexto de código fuente a Sentry, establece la opción <PlatformLink to="/configuration/options/#context_lines">context_lines</PlatformLink> en `0`.
+
+<div id="local-variables-in-stack-trace">
+  ## Variables locales en el seguimiento de la pila
+</div>
+
+Cuando se envían a Sentry errores y excepciones no controlados, los nombres y valores de las variables locales que estaban definidas cuando ocurrieron los errores se envían al mismo tiempo.
+
+Puedes dejar de enviar variables locales a Sentry configurando `zend.exception_ignore_args=1` en tu `php.ini`. En algunas distribuciones, este parámetro ya está establecido en `1` de forma predeterminada y, si quieres incluir variables locales, configura `zend.exception_ignore_args=0` en su lugar.

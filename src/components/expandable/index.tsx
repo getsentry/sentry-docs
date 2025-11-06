@@ -6,6 +6,8 @@ import * as Sentry from '@sentry/nextjs';
 
 import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
 
+import { useGT } from 'gt-next';
+
 // explicitly not using CSS modules here
 // because there's some prerendered content that depends on these exact class names
 import '../callout/styles.scss';
@@ -39,6 +41,7 @@ export function Expandable({
   copy,
   hideFromMd = false,
 }: Props) {
+  const gt = useGT();
   const id = permalink ? slugify(title) : undefined;
 
   const [isExpanded, setIsExpanded] = useState(false);
@@ -175,8 +178,8 @@ export function Expandable({
             onClick={copyContentOnClick}
             type="button" // Important for buttons in summaries
           >
-            {!copied && 'Copy Rules'}
-            {copied && 'Copied!'}
+            {!copied && gt('Copy Rules')}
+            {copied && gt('Copied!')}
           </button>
         )}
       </summary>

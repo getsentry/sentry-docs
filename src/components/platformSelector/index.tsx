@@ -22,6 +22,8 @@ import styles from './style.module.scss';
 
 import {SidebarLink, SidebarSeparator} from '../sidebar/sidebarLink';
 
+import { useGT } from 'gt-next';
+
 export function PlatformSelector({
   platforms,
   currentPlatform,
@@ -29,6 +31,7 @@ export function PlatformSelector({
   platforms: Array<Platform>;
   currentPlatform?: Platform | PlatformGuide;
 }) {
+  const gt = useGT();
   // humanize the title for a more natural sorting
   const humanizeTitle = (title: string) =>
     title.replaceAll('.', ' ').replaceAll(/ +/g, ' ').trim();
@@ -154,7 +157,7 @@ export function PlatformSelector({
           setValue={v => startTransition(() => setSearchValue(v))}
         >
           <RadixSelect.Trigger aria-label="Platform" className={styles.select}>
-            <RadixSelect.Value placeholder="Choose your SDK" />
+            <RadixSelect.Value placeholder={gt('Choose your SDK')} />
             <RadixSelect.Icon className={styles['select-icon']}>
               <CaretSortIcon />
             </RadixSelect.Icon>
@@ -171,7 +174,7 @@ export function PlatformSelector({
               </div>
               <Combobox
                 autoSelect
-                placeholder="Search platforms"
+                placeholder={gt('Search platforms', {$context:'as in searching for a platform, not a platform for search'})}
                 className={styles.combobox}
                 // Ariakit's Combobox manually triggers a blur event on virtually
                 // blurred items, making them work as if they had actual DOM
@@ -246,7 +249,7 @@ export function PlatformSelector({
         <div className="mt-3">
           <SidebarLink
             href={storedPlatform.url}
-            title={`Sentry for ${storedPlatform.title ?? storedPlatform.key}`}
+            title={gt("Sentry for {platform}", {platform: storedPlatform.title ?? storedPlatform.key})}
             collapsible
             topLevel
           />

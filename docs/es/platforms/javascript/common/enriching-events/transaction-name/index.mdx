@@ -1,0 +1,142 @@
+---
+title: Nombre de transacción
+description: "Aprende a configurar o reemplazar nombres de transacción para mejorar el agrupamiento de incidencias y trazas."
+supported:
+  - javascript
+notSupported:
+  - javascript.cordova
+  - javascript.nextjs
+---
+
+El SDK de Sentry utiliza un *nombre de transacción de error* para marcar dónde ocurrió un problema en un evento de error. Si usas <PlatformLink to="/tracing/">Tracing</PlatformLink>, Sentry usa el nombre de tu span raíz como *nombre de transacción del span raíz*, que agrupará las trazas en torno a ese nombre.
+
+Esto significa que, en realidad, hay dos nombres de transacción:
+
+1. El *nombre de transacción de error*, que se aplica a los eventos de error
+2. El *nombre de transacción del span raíz*, que es el nombre del span raíz en el árbol de spans de tu aplicación.
+
+Ambos se utilizan para anotar y agrupar, respectivamente, los eventos de error y de traza, y por lo general los establece automáticamente el SDK o una integración.
+
+<PlatformCategorySection supported={['browser']}>
+  Para establecer automáticamente los nombres de transacción, añade `browserTracingIntegration` al inicializar el SDK.
+</PlatformCategorySection>
+
+Dado que los nombres determinados automáticamente son un buen mecanismo de agrupación, a menos que tengas un caso de uso especial, **no necesitarás configurar ni reemplazar manualmente los nombres de transacción.**
+
+<div id="whats-a-good-transaction-name">
+  ## ¿Qué es un “buen” nombre de transacción?
+</div>
+
+El nombre de tu transacción puede hacer referencia a la ruta actual de la aplicación web o del servidor, a la pantalla o actividad móvil, o a la tarea que se está ejecutando.
+Por ejemplo:
+
+* `GET /api/{version}/users/`
+* `UserListView`
+* `myapp.tasks.renew_all_subscriptions`
+
+Un buen nombre de transacción no debe incluir demasiadas variables (como IDs de usuario), pero aun así debe ser lo bastante único como para ayudarte a identificar fácilmente la parte del código que te interesa.
+Por ejemplo, en lugar de llamar a una transacción `'GET /api/users/123/details'`, llámala `'GET /api/users/:id/details'`.
+Esto agrupará todos los errores y trazas de las solicitudes a la misma ruta.
+
+<div id="when-to-set-the-transaction-name">
+  ### Cuándo establecer el nombre de la transacción
+</div>
+
+Por lo general, es mejor dejar que el SDK asigne el nombre de la transacción automáticamente. Sin embargo, si no puede o el nombre no se ajusta a tus necesidades, puedes establecerlo manualmente.
+
+Recomendamos hacerlo *lo antes posible* en el código de tu aplicación, idealmente cuando comience la operación que quieres rastrear. Esto garantiza que los errores que se produzcan temprano en el ciclo de vida de la aplicación se anoten correctamente y mantiene las trazas consistentes si usas [trazabilidad distribuida](/es/concepts/key-terms/tracing/distributed-tracing/).
+
+Por ejemplo, en una aplicación de servidor, puedes establecer el nombre de la transacción en el middleware antes de atender una solicitud.
+En una aplicación web, puedes hacerlo al navegar a una nueva ruta, como en un enrutador de SPA.
+
+<div id="setting-the-error-transaction-name">
+  ## Configurar el nombre de la transacción de error
+</div>
+
+Hay varias formas de establecer el nombre de la transacción para los eventos de error enviados a Sentry. Este nombre aparecerá como la ubicación de la incidencia junto al título de la incidencia.
+
+<div id="setting-the-name-on-the-scope">
+  ### Definir el nombre en el scope
+</div>
+
+Define el nombre de la transacción en el scope actual cuando comience la operación que quieres agrupar:
+
+```javascript
+Sentry.getCurrentScope().setTransactionName("UserListView");
+```
+
+El nombre de la transacción en el scope solo se aplica a eventos de error, no al span raíz activo. Del mismo modo, si se produce un error durante un span activo, el nombre del span no se aplicará al nombre de la transacción del error.
+
+<div id="setting-the-name-on-the-event">
+  ### Definir el nombre del evento
+</div>
+
+Puedes usar `beforeSend` para asignar el nombre de la transacción al evento:
+
+```javascript {3}
+Sentry.init({
+  beforeSend(event) {
+    event.transaction = "UserListView";
+    return event;
+  },
+});
+```
+
+<div id="setting-the-root-span-name">
+  ## Configuración del nombre del span raíz
+</div>
+
+Hay varias opciones para anular el nombre del span raíz (este nombre aparece en la interfaz de Sentry, por ejemplo, al buscar trazas o en los análisis de rendimiento):
+
+<PlatformCategorySection supported={['browser']}>
+  ### Al iniciar el span raíz
+
+  La integración `browserTracingIntegration` de Sentry establece automáticamente el nombre de la transacción según la ruta o la URL actual para todas las transacciones de `pageload` y `navigation`.
+  Para anular el nombre de la transacción, usa el <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#beforestartspan">callback `beforeStartSpan`</PlatformLink> de la integración.
+</PlatformCategorySection>
+
+<div id="while-the-root-span-is-active">
+  ### Mientras el span raíz está activo
+</div>
+
+*Disponible a partir de la v8.47.0*
+
+A veces (por ejemplo, si tienes un enrutador que solo emite el cambio de ruta después de que ocurre) puede que no puedas establecer el nombre definitivo del span raíz al iniciarlo. En ese caso, puedes actualizar el nombre del span raíz mientras el span está activo:
+
+```javascript
+const activeSpan = Sentry.getActiveSpan();
+const rootSpan = activeSpan && Sentry.getRootSpan(activeSpan);
+
+Sentry.updateSpanName(rootSpan, "UserListView");
+```
+
+Más información sobre cómo <PlatformLink to="/tracing/instrumentation/custom-instrumentation/#updating-the-span-name">actualizar el nombre del span</PlatformLink>.
+
+<div id="after-the-root-span-has-finished">
+  ### Después de que el span raíz haya finalizado
+</div>
+
+Si no puedes determinar el nombre del span raíz antes de que termine, podrás cambiarlo retroactivamente en `beforeSendTransaction`:
+
+```javascript
+Sentry.init({
+  beforeSendTransaction(event) {
+    event.transaction = "UserListView";
+    return event;
+  },
+});
+```
+
+<Alert>
+  Haz esto solo si no puedes establecer antes el nombre del span raíz usando otras opciones.
+</Alert>
+
+<div id="further-information">
+  ## Más información
+</div>
+
+Quizá te preguntes por qué hay dos nombres de transacción y por qué se configuran de forma independiente. Esto se debe principalmente a la historia y evolución de Sentry. El nombre de transacción de error existía antes de que Sentry ofreciera tracing y se usaba únicamente para agrupar eventos de error. Cuando se introdujo el tracing, el span raíz en un árbol de spans también se llamó “transacción”, con su propio nombre.
+
+En iteraciones posteriores, Sentry cambió el foco en la interfaz de “transacciones” a “spans” y “traces”, pero los conceptos anteriores siguen presentes en partes de la interfaz. Los SDK adaptaron sus API, alejándose de diseños basados en transacciones. Por ejemplo, la API `setTransactionName` en el `Scope` se refiere a nombres de transacción de error, no a spans. De manera similar, el nombre de un span no se aplica automáticamente a los eventos de error, manteniendo ambos conceptos [separados](https://github.com/getsentry/sentry-javascript/issues/10846).
+
+A medida que Sentry continúa evolucionando, se espera que la ambigüedad entre estos términos disminuya a medida que el producto vaya dejando de asociar las “transacciones” con el tracing y los spans.

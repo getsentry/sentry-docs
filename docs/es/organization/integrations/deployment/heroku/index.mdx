@@ -1,0 +1,79 @@
+---
+title: Heroku (legado)
+sidebar_order: 1
+description: >-
+  Obtén más información sobre la integración de Sentry con Heroku, que permite crear
+  versiones en Sentry cuando se implementa tu aplicación de Heroku.
+og_image: /og-images/organization-integrations-deployment-heroku.png
+---
+
+<div id="deprecation-warning">
+  ## Aviso de obsolescencia
+</div>
+
+La integración de Heroku en Sentry está obsoleta y se retirará el 28 de octubre de 2025. Este complemento registraba automáticamente las versiones y los despliegues de tus apps de Heroku en Sentry, vinculándolos con el seguimiento de errores y el monitoreo del rendimiento.
+Aún puedes instalar el complemento de Sentry en Heroku y usar Sentry con Heroku configurando tú mismo [Releases](/es/product/releases/). La integración de Heroku en Sentry dejará de estar disponible.
+
+<div id="register-the-add-on">
+  ### Registrar el complemento
+</div>
+
+Sentry ofrece un complemento nativo para Heroku. Aunque no es obligatorio, te permitirá mantener la facturación consolidada dentro de Heroku y facilitará la configuración de tus credenciales de Sentry.
+
+Para añadir Sentry a una aplicación de Heroku existente, visita la página del [complemento de Sentry para Heroku](https://elements.heroku.com/addons/sentry).
+
+Cuando termines, podrás confirmar que las credenciales de Sentry estén disponibles en tu configuración:
+
+```bash
+heroku config:get SENTRY_DSN
+```
+
+<Alert>
+  Si no usas el complemento, puedes igualmente vincular la variable de entorno `SENTRY_DSN`, que el SDK detectará automáticamente.
+</Alert>
+
+<div id="install-the-sdk">
+  ### Instala el SDK
+</div>
+
+Lo uses o no el complemento, igual necesitarás [instalar el SDK](/es/platforms) según nuestras instrucciones estándar específicas de la plataforma.
+
+<div id="configure-releases">
+  ### Configurar versiones
+</div>
+
+Ya sea que uses el complemento o configures Sentry por tu cuenta, probablemente quieras otorgar acceso a los metadatos de tu dyno, lo que permitirá que Sentry detecte automáticamente el SHA de Git de la versión que está ejecutando tu dyno.
+
+Para ello, habilita la función `runtime-dyno-metadata`:
+
+```bash
+heroku labs:enable runtime-dyno-metadata -a <nombre de la aplicación>
+```
+
+Esto expone la variable de entorno `HEROKU_SLUG_COMMIT`, que la mayoría de los SDK de Sentry detectarán automáticamente y usarán para la configuración.
+
+A continuación, querrás agregar tu repositorio y configurar un webhook de la app:
+
+1. Comienza conectando tu repositorio a tu organización de Sentry para que obtengamos automáticamente tus datos de commits. Busca la integración de tu repositorio (por ejemplo, GitHub, GitLab, Bitbucket) en **Settings &gt; Integrations**. En la pestaña Configurations, haz clic en &quot;Configure&quot;.
+
+   ![Configurar la integración de Heroku](./img/heroku-configure-repo-integration.png)
+
+   En la página Configure, haz clic en &quot;Add Repository&quot; y luego selecciona el repositorio que quieres usar.
+
+   ![Agregar repositorios](./img/heroku-repo-add.png)
+
+2. Busca la integración de Heroku en **Settings &gt; Integrations**, haz clic en &quot;Add to Project&quot; y luego selecciona el proyecto que quieres usar con Heroku.
+
+   ![Página de detalles de la integración de Heroku](./img/heroku-integration-detail.png)
+
+3. En la configuración de la integración de Heroku, especifica qué repositorio y entorno de despliegue se asociarán con tu proyecto de Sentry.
+
+   ![Configuración del proyecto de Heroku](./img/heroku-project-config.png)
+
+4. Ve a la configuración de Release de tu proyecto y copia el comando de la CLI de Heroku del webhook de la app en tu configuración de Heroku.
+
+   ![Configuración de release de Heroku](./img/heroku-config.png)
+
+5. Después de ejecutar el comando de la CLI de Heroku, verás un Webhooks Signing Secret. Copia y pega esto en el campo &quot;Webhook Secret&quot; en Sentry.
+
+Empezarás a recibir información detallada de commits y correos de despliegue con cada nueva release, además de un seguimiento de en qué release se observaron los issues.

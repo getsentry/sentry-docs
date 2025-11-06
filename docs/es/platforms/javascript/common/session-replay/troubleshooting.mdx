@@ -1,0 +1,191 @@
+---
+title: Solución de problemas
+sidebar_order: 9000
+notSupported:
+  - javascript.cordova
+  - javascript.wasm
+  - javascript.bun
+  - javascript.deno
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.hono
+  - javascript.koa
+  - javascript.nestjs
+  - javascript.cloudflare
+excerpt: ""
+description: "Solución de problemas específicos de Session Replay"
+---
+
+<Expandable title="El Replay no coincide con mi aplicación" permalink>
+  Hay algunos casos en los que la reproducción no coincidirá con el aspecto de tu aplicación. A continuación, encontrarás algunas causas y soluciones comunes si te ocurre esto.
+
+  ### Elementos que no aparecen en el replay
+
+  * Puede que estés usando elementos no compatibles y/o obsoletos, como `<frame>` (no confundir con `<iframe>`).
+  * Es posible que el elemento esté bloqueado por la [configuración de privacidad](/es/platforms/javascript/session-replay/privacy/#blocking) (de forma predeterminada, los elementos con la clase `sentry-block` o el atributo `data-sentry-block`).
+
+  ### CSS incorrecto o ausente
+
+  * Puede haber casos límite con selectores CSS complejos que rompan los estilos. [Abre un issue en GitHub](https://github.com/getsentry/sentry-javascript/issues) si te ocurre.
+</Expandable>
+
+<Expandable title="Mis elementos `canvas` no se están capturando" permalink>
+  Canvas es compatible a partir de las versiones del SDK &gt;= `7.98.0`. Consulta la <PlatformLink to="/session-replay/#canvas-recording">documentación de configuración de canvas</PlatformLink> para empezar con las grabaciones de canvas.
+
+  Si estás en una versión compatible del SDK y tus elementos `canvas` aún no se capturan, verifica si tienes imágenes o videos cargados desde orígenes externos dentro de tu `canvas`. Cualquier dato cargado desde un origen sin aprobación CORS no se considera seguro y generará un `SecurityError` al intentar usar la integración de canvas de Replay. Para solucionar este problema, establece `crossorigin="anonymous"` en tus imágenes o videos. Esto permitirá que las imágenes cargadas desde orígenes externos se usen en `canvas` como si se hubieran cargado desde el origen actual. Consulta la [documentación de CORS](https://developer.mozilla.org/en-US/docs/Web/HTML/CORS_enabled_image#security_and_tainted_canvases) para obtener más información sobre el acceso entre orígenes.
+</Expandable>
+
+<Expandable title="El Replay está ralentizando mi `canvas`" permalink>
+  La integración necesita habilitar `preserveDrawingBuffer` para exportar imágenes de canvases 3D y WebGL. Esto puede afectar negativamente el rendimiento del canvas. Si tu aplicación de canvas se ve afectada al habilitar `preserveDrawingBuffer`, deberás <PlatformLink to="/session-replay/#canvas-recording-performance">habilitar la captura manual de snapshots</PlatformLink> y llamar al método `snapshot()` dentro de tu bucle de repintado.
+</Expandable>
+
+<Expandable title="Mi CSS/imágenes/fuentes/medios personalizados no aparecen cuando veo el Replay" permalink>
+  El “video” del replay es en realidad una reproducción tipo video del HTML de tu sitio web. Esto significa que todos los recursos externos que usa tu sitio (CSS/Imágenes/Fuentes) se renderizarán mediante las etiquetas correspondientes &lt;style&gt;, &lt;img&gt; y &lt;video&gt; en tu sitio. Agrega `sentry.io` a tu política de CORS para que el iframe alojado en sentry.io pueda obtener y mostrar estos recursos.
+
+  Ten en cuenta que solo los videos estáticos y públicos (por ejemplo, `src="./my-video.mp4"`) pueden capturarse con Replay. Los videos en streaming y similares no son compatibles.
+
+  <Alert>
+    Debido a [limitaciones del navegador](https://developer.mozilla.org/en-US/docs/Web/SVG/Element/use), los SVG que contienen etiquetas `<use>` con enlaces a tu dominio no pueden accederse desde otros orígenes, incluso si agregas `sentry.io` a tu política de CORS. Este es un problema conocido y estamos trabajando en una solución.
+  </Alert>
+</Expandable>
+
+<Expandable title="¿Por qué veo demasiados o muy pocos rage clicks?" permalink>
+  Puede haber menos rage clicks de los que esperas si el usuario dejó de esperar la respuesta del sitio antes del umbral de 7 segundos. Por eso los problemas de rage click que sí ves son tan valiosos: el usuario que hizo clic al menos 3 veces y siguió esperando al menos 7 segundos a que el sitio respondiera probablemente está muy frustrado.
+
+  También podrías ver más rage clicks de los que esperabas en botones que no desencadenan una mutación del DOM ni un desplazamiento de página (como los botones “Print” y “Download”). No hay una forma confiable para que el SDK detecte que se inició una descarga o una impresión, por lo que se podría generar un slow click incluso si el botón no está realmente “muerto”. Para estos casos, puedes configurar el SDK mediante `slowClickIgnoreSelectors`; consulta [Configuration](/es/platforms/javascript/session-replay/configuration/) para más detalles.
+
+  Por ejemplo, para ignorar la detección de dead y rage clicks en enlaces de descarga de tu aplicación:
+
+  ```javascript
+  Sentry.replayIntegration({
+    slowClickIgnoreSelectors: [
+      ".download",
+      // Any link with a label including "download" (case-insensitive)
+      'a[label*="download" i]',
+    ],
+  });
+  ```
+</Expandable>
+
+<Expandable title="¿Por qué no puedo ver el cuerpo completo de la solicitud HTTP o todos los headers?" permalink>
+  De forma predeterminada, Replay capturará información básica sobre todas las solicitudes fetch y XHR salientes en tu aplicación. Esto incluye la URL, el tamaño del cuerpo de la solicitud y de la respuesta, el método y el código de estado.
+  La intención es limitar la posibilidad de recopilar datos privados. Puedes <PlatformLink to="/session-replay/configuration/">configurar el SDK para capturar cuerpos y headers adicionales</PlatformLink>.
+
+  Otra razón por la que podrías no ver el cuerpo es que el formato no sea compatible. Solo capturamos cuerpos basados en texto, incluidos JSON, XML, FormData y tipos de datos similares. Cualquier cuerpo capturado se truncará a 150 k caracteres. Cuando identificamos el cuerpo como JSON, intentaremos truncarlo manteniendo el payload como JSON válido. No se capturan cuerpos de tipos byte, file o media.
+
+  Puedes encontrar más detalles sobre esta función en la <PlatformLink to="/session-replay/configuration/">página de configuración</PlatformLink>.
+</Expandable>
+
+<Expandable title="El SDK está ralentizando mi sitio web." permalink>
+  Si estás experimentando ralentizaciones en tu sitio web, primero asegúrate de usar la versión más reciente de nuestro SDK, que incluye las correcciones de errores y mejoras de rendimiento más actuales.
+
+  Hemos identificado dos posibles razones principales del impacto en el rendimiento y, como resultado, hemos añadido varias salvaguardas contra la degradación del rendimiento. Los dos culpables son los sitios web con un gran número de mutaciones (lee la entrada de abajo para saber más) y los mensajes de consola muy grandes.
+
+  Para mitigar estos problemas, la versión 7.54.0 del SDK [truncará los mensajes de consola](https://github.com/getsentry/sentry-javascript/pull/7917) y deshabilitará las grabaciones de Replay en páginas que tengan un gran número de mutaciones.
+
+  Si tienes algún problema con la versión más reciente del SDK, queremos saberlo. Abre un [issue en GitHub](https://github.com/getsentry/sentry-javascript/issues/new?assignees=\&labels=Type%3A+Bug\&projects=\&template=bug.yml) y describe tu situación.
+</Expandable>
+
+<Expandable title="Usar Session Replay aumenta el tamaño del bundle de mi aplicación." permalink>
+  Debido a la complejidad del entorno del navegador, se necesita una cantidad significativa de código para que Session Replay funcione. Y aunque habilitar Session Replay añadirá alrededor de 50 kB (gzipped) al bundle de tu aplicación, creemos que los beneficios superarán el costo.
+
+  Siempre estamos trabajando en formas de reducir el tamaño del bundle. Además, hay medidas que puedes tomar para reducir el tamaño de Session Replay según tu caso de uso específico. Consulta [Tree Shaking](../../configuration/tree-shaking/) para más información.
+</Expandable>
+
+<Expandable title="Veo el mensaje: &#x22;Se detectó un gran número de mutaciones (N). Esto puede ralentizar el SDK de Replay y afectar a tus clientes.&#x22;" permalink>
+  El SDK de Sentry intenta minimizar la [sobrecarga de rendimiento](/es/product/explore/session-replay/performance-overhead/#how-is-session-replay-optimized) de varias maneras. Por ejemplo, lleva la cuenta del número de mutaciones del DOM que ocurren y desactiva la grabación cuando se detecta una gran cantidad de cambios. Muchas mutaciones simultáneas pueden ralentizar una página web, tengas o no Session Replay instalado, pero cuando se producen muchas mutaciones, el cliente de Replay puede sufrir una ralentización adicional porque registra cada cambio.
+
+  Si ves el mensaje &quot;A large number of mutations was detected&quot; mientras miras una repetición, significa que tu página podría optimizarse. Por ejemplo, una lista desplegable con miles de entradas podría refactorizarse para virtualizar las filas, de modo que solo las visibles se representen en el DOM. Otra posible solución es paginar los resultados y obtener más datos a medida que el usuario se desplaza. El SDK tiene una <PlatformLink to="/session-replay/configuration/#mutation-limits">configuración</PlatformLink> que te permite establecer los límites antes de que la grabación se detenga.
+</Expandable>
+
+<Expandable title="El texto en el iframe no está enmascarado" permalink>
+  Nuestra lógica de enmascaramiento no se ejecuta sobre contenido de iframes que se proporciona usando el atributo `srcdoc`, en lugar de cargarse mediante `src`.
+
+  Para ocultar este contenido, bloquea el iframe, como se describe en nuestra documentación de <PlatformLink to="/session-replay/privacy/#blocking">Privacidad</PlatformLink> de Session Replay.
+</Expandable>
+
+<Expandable title="Estoy recibiendo el error: Blocked a frame with origin '...' from accessing a frame with origin '...'. Protocols, domains, and ports must match." permalink>
+  El SDK de Replay intentó acceder a un frame de otro origen, pero no se le permitió. Deberás bloquear el iframe para detener los errores:
+
+  ```javascript
+  Sentry.init({
+    dsn: "...",
+    replaysSessionSampleRate: 1,
+    integrations: [
+      Sentry.replayIntegration({
+        block: ["iframe"],
+      }),
+    ],
+  })
+  ```
+</Expandable>
+
+<Expandable title="Replay en mi extensión de navegador no funciona" permalink>
+  Este no es un caso de uso compatible. El paquete de Replay está creado para funcionar en un sitio web y no como un script cargado externamente mediante una extensión del navegador u otro mecanismo. De hecho, el producto Session Replay de Sentry puede ayudar a los desarrolladores a detectar cuando una extensión de Chrome de terceros provoca problemas con su sitio web que de otro modo serían difíciles de depurar o reproducir.
+</Expandable>
+
+<Expandable title="Los datos de respuesta de las solicitudes de red de Apollo GraphQL Client no se capturan" permalink>
+  Apollo Client envía una señal de cancelación mediante `AbortController` cuando una consulta se completa, para limpiar y cancelar todas las consultas en curso.
+  Cuando esto ocurre, Replay no puede capturar el cuerpo de la respuesta porque la solicitud se trata como cancelada antes de que Replay pueda acceder a la respuesta.
+
+  Para evitarlo, desactiva este comportamiento de Apollo Client configurando tu propia señal de cancelación:
+
+  ```javascript
+  const abortController = new AbortController();
+
+  const httpLink = createHttpLink({
+    // ... other options
+    fetchOptions: {
+      signal: abortController.signal, // overwrite the default abort signal
+    },
+  });
+  ```
+
+  Con esta configuración, Replay puede capturar los cuerpos de respuesta de las solicitudes de Apollo Client.
+</Expandable>
+
+<Expandable title="Las llamadas a `console` están activando grabaciones de replays" permalink>
+  Usar la
+  [`captureConsoleIntegration`](/es/platforms/javascript/configuration/integrations/captureconsole/)
+  puede hacer que los replays se graben como si hubieras desencadenado una excepción. Puedes usar
+  [`beforeErrorSampling`](/es/platforms/javascript/guides/sveltekit/session-replay/understanding-sessions/#ignore-certain-errors-for-error-sampling)
+  para evitar este comportamiento.
+</Expandable>
+
+<Expandable title="Los clics están resultando incorrectamente en un dead click o un rage click" permalink>
+  Hay ciertos casos (como hacer clic en un Button para reproducir un clip de audio) en los que Sentry registra incorrectamente un clic como un dead click (nota: los rage clicks son un subconjunto de los dead clicks). Como solución temporal, puedes usar la opción de configuración [`slowClickIgnoreSelector`](/es/platforms/javascript/session-replay/configuration/#general-integration-configuration) para ignorar dead clicks en selectores específicos.
+
+  Si quieres desactivar por completo los [rage click issues](/es/product/issues/issue-details/replay-issues/), puedes hacerlo yendo a la página de **Settings** en Sentry, haciendo clic en &quot;Projects&quot; y seleccionando el proyecto para el que quieres desactivar los rage clicks. Desde allí, selecciona &quot;Replays&quot; bajo el encabezado &quot;PROCESSING&quot; y desactiva &quot;Create Rage Click Issues&quot;.
+</Expandable>
+
+<Expandable title="Los clics aparecen en el lugar equivocado" permalink>
+  Los clics en las reproducciones pueden aparecer en el lugar equivocado debido a diferencias de renderizado entre tu aplicación y el reproductor. Un caso común es el renderizado de texto: si las fuentes personalizadas no se cargan correctamente en el reproductor, puede provocar que la altura de los elementos difiera entre producción y la reproducción. Esto significa que la posición de desplazamiento será incorrecta y hará que los clics del ratón aparezcan en el lugar equivocado. Si alojas tus propias fuentes, configura los encabezados `Access-Control-Allow-Origin` para permitir que el host `sentry.io` cargue tus fuentes; de lo contrario, el reproductor no podrá cargarlas debido a CORS.
+
+  El enmascaramiento de texto con fuentes de ancho variable también puede provocar esto porque el tamaño del carácter de máscara (&quot;*&quot;) no tendrá necesariamente las mismas dimensiones que el carácter original al que sustituye. Actualmente no hay una solución; por favor, [sigue este Issue de GitHub](https://github.com/getsentry/sentry-javascript/issues/15449) para ver las novedades.
+</Expandable>
+
+<Expandable title="No estoy recibiendo ninguna reproducción" permalink>
+  Si no estás recibiendo datos de Session Replay, probablemente se deba a restricciones de Content Security Policy (CSP). Esto puede ocurrir en cualquier aplicación que establezca explícitamente valores de CSP. La integración de Session Replay usa web workers para procesar los datos de reproducción, lo que requiere permisos específicos en la CSP.
+
+  Para resolver este problema, asegúrate de incluir `worker-src 'self' blob:` en tu encabezado o metaetiqueta `Content-Security-Policy`. Esta directiva permite que la integración cree y use web workers desde el mismo origen (`'self'`) y desde URL de tipo blob (`blob:`), necesarios para que la funcionalidad de reproducción funcione correctamente.
+
+  Por ejemplo, si estás configurando la CSP mediante una metaetiqueta:
+
+  ```html
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; worker-src 'self' blob:; ...">
+  ```
+
+  O si la estás configurando mediante un encabezado HTTP:
+
+  ```
+  Content-Security-Policy: default-src 'self'; worker-src 'self' blob:; ...
+  ```
+
+  Sin la directiva `worker-src` adecuada, el navegador bloqueará la creación del web worker, impidiendo que Session Replay funcione correctamente en tu aplicación.
+</Expandable>

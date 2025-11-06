@@ -1,0 +1,181 @@
+---
+title: Configurar los comentarios de los usuarios
+sidebar_title: Comentarios de los usuarios
+description: Aprende a habilitar los comentarios de los usuarios en tu app de Cocoa.
+sidebar_order: 6000
+og_image: /og-images/platforms-apple-common-user-feedback.png
+---
+
+<PlatformSection notSupported={["apple.macos", "apple.tvos", "apple.watchos", "apple.visionos"]}>
+  La función de Comentarios de Usuario te permite recopilar comentarios de los usuarios desde cualquier lugar de tu aplicación en cualquier momento, sin necesidad de que ocurra primero un evento de error.
+
+  <Alert>
+    Si usas una instancia de Sentry autohospedada, deberás estar en la versión
+    24.4.2 o superior para aprovechar todas las funciones de la característica User Feedback.
+    Las versiones anteriores pueden tener funcionalidades limitadas.
+  </Alert>
+
+  ## Widget de Opiniones del Usuario
+
+  El widget de comentarios permite a los usuarios enviar opiniones desde cualquier lugar de tu aplicación.
+
+  ![Un ejemplo del widget de comentarios de usuario en iOS =350x](./img/user-feedback-apple-widget.png)
+
+  ### Requisitos previos
+
+  Asegúrate de que tu proyecto esté configurado con Sentry y de que hayas añadido el SDK de Sentry Cocoa a tu proyecto.
+
+  ### Instalación
+
+  1. Instala el SDK de Sentry para Cocoa con CocoaPods, Carthage o Swift Package Manager.
+  2. Asegúrate de usar la versión 8.46.0 o posterior del SDK para acceder a las últimas funciones.
+
+  ### Configuración
+
+  Para empezar a usar el widget de comentarios de usuario en tu aplicación de Cocoa, proporciona una configuración de comentarios en tus `SentryOptions` al iniciar el SDK:
+
+  ```swift
+  SentrySDK.start { options in
+       options.configureUserFeedback = { config in
+            config.onSubmitSuccess = { data in
+                 print("Comentarios enviados correctamente: \(data)")
+            }
+            config.onSubmitError = { error in
+                 print("No se pudieron enviar los comentarios: \(error)")
+            }
+       }
+   }
+  ```
+
+  Esta configuración insertará el widget en la jerarquía de vistas de tu app. Por defecto, aparece en la esquina inferior derecha de la pantalla, pero puedes personalizar completamente su apariencia y comportamiento.
+
+  #### SwiftUI
+
+  Las aplicaciones SwiftUI actualmente no admiten la inyección automática de widgets cuando se inicia el SDK. Existen varias opciones para mostrar el formulario de feedback:
+
+  ##### Usa tu propio Button
+
+  Añade un `UIButton` a tu aplicación y luego proporciona la referencia a la configuración de feedback en las opciones de inicio del SDK:
+
+  ```swift
+  import Sentry
+  import SwiftUI
+  import UIKit
+
+  @main
+  struct SwiftUIApp: App {
+      // un botón que se muestra en algún lugar de tu app
+      public let feedbackButton = {
+          let button = UIButton(type: .custom)
+          button.setTitle("Comentarios BYOB", for: .normal)
+          return button
+      }()
+
+      init() {
+          // inicia el SentrySDK como siempre, lo antes posible en la secuencia de inicio de tu app
+          SentrySDK.start { options in
+              options.configureUserFeedback { config in
+                  config.customButton = feedbackButton
+              }
+
+              // tus otras opciones del SDK
+          }
+      }
+  }
+  ```
+
+  ##### Mostrar manualmente el widget desde un `UIWindowSceneDelegate` conectado
+
+  Debes configurar un `UIApplicationDelegateAdaptor`, conectar un `UIScene` a tu app y llamar manualmente a `SentrySDK.feedback.showWidget()`:
+
+  ```swift
+  import Sentry
+  import SwiftUI
+
+  @main
+  struct SwiftUIApp: App {
+      @UIApplicationDelegateAdaptor private var appDelegate: MyAppDelegate
+
+      init() {
+          // inicia SentrySDK como de costumbre, lo antes posible en la secuencia de arranque de tu app
+          SentrySDK.start { options in
+              options.configureUserFeedback { config in
+                  // configura los comentarios de los usuarios y cualquier otra opción del SDK
+              }
+          }
+      }
+
+      var body: some Scene {
+          WindowGroup {
+              ContentView()
+          }
+      }
+  }
+
+  class MyAppDelegate: NSObject, UIApplicationDelegate, ObservableObject {
+      func application(_ application: UIApplication, configurationForConnecting connectingSceneSession: UISceneSession, options: UIScene.ConnectionOptions) -> UISceneConfiguration {
+          let configuration = UISceneConfiguration(
+              name: nil,
+              sessionRole: connectingSceneSession.role)
+          if connectingSceneSession.role == .windowApplication {
+              configuration.delegateClass = MySceneDelegate.self
+          }
+          return configuration
+      }
+  }
+
+  class MySceneDelegate: NSObject, UIWindowSceneDelegate, ObservableObject {
+      var initializedSentry = false
+      func sceneDidBecomeActive(_ scene: UIScene) {
+          guard !initializedSentry else { return }
+
+          // muestra el widget de comentarios
+          SentrySDK.feedback.showWidget()
+
+          initializedSentry = true
+      }
+  }
+  ```
+
+  ##### Mostrar manualmente el widget desde un modificador de vista `onAppear`
+
+  Puedes llamar manualmente a `SentrySDK.feedback.showWidget()` desde un modificador de vista `onAppear`. Lo ideal es llamarlo desde la vista raíz de tu aplicación, para que el widget se muestre en cuanto se inicie la app y solo se invoque una vez.
+
+  ```swift
+  import Sentry
+  import SwiftUI
+
+  @main
+  struct SwiftUIApp: App {
+
+      var body: some Scene {
+          WindowGroup {
+              ContentView()
+                  .onAppear {
+                      SentrySDK.feedback.showWidget()
+                  }
+          }
+      }
+  }
+  ```
+
+  ### Reproducción de Sesión
+
+  El widget de comentarios de usuario se integra a la perfección con Session Replay. Al abrir el widget, el SDK de Replay almacena hasta 30 segundos de la sesión del usuario. Si se envía un comentario, esa reproducción se envía junto con el comentario, lo que te permite ver tanto el comentario como las acciones del usuario previas al envío.
+</PlatformSection>
+
+<div id="user-feedback-api">
+  ### API de comentarios de usuario
+</div>
+
+La API de comentarios de usuario te permite recopilar comentarios mientras usas tus propios componentes de la interfaz de usuario. Puedes enviar comentarios directamente con el método `SentrySDK.capture(feedback:)`:
+
+```swift
+SentrySDK.capture(feedback: .init(
+    message: "Encontré un error mientras usaba la aplicación.",
+    name: "John Doe",
+    email: "john.doe@example.com",
+    source: .custom,
+    screenshot: somePngImageData // opcional
+))
+```

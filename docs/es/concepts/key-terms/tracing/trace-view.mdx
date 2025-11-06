@@ -1,0 +1,123 @@
+---
+title: Vista de trazas
+sidebar_order: 30
+redirect_from:
+  - /concepts/key-terms/tracing/trace-view/
+description: >-
+  Obtén más información sobre la página Vista de trazas, donde puedes profundizar
+  en los detalles de una sola traza para depurar servicios lentos, identificar
+  errores relacionados y encontrar otros cuellos de botella.
+og_image: /og-images/concepts-key-terms-tracing-trace-view.png
+---
+
+La página Vista de trazas está diseñada para ser tu centro único para depurar problemas de rendimiento o errores. Te brinda todo el contexto sobre lo que estaba ocurriendo cuando se produjo un error o un problema de rendimiento, todo en un mismo lugar. La Vista de trazas en formato cascada te permite ver todo lo que pudo haber ocurrido durante una traza, incluidos errores, problemas de rendimiento y cualquier perfil que se haya recopilado.
+
+Además, la Vista de trazas te permite profundizar en una única traza para visualizar las transacciones y los spans de alto nivel que tuvieron lugar dentro de ella. Esto facilita y acelera la depuración de servicios lentos, la identificación de errores relacionados y la detección de cuellos de botella, ya que ya no tienes que navegar por múltiples páginas del producto Sentry.
+
+<div id="product-walkthrough-trace-view-page">
+  ## Recorrido del producto: página de vista de trazas
+</div>
+
+La visualización predeterminada de una traza en Sentry es una estructura en forma de cascada, donde las entradas (transacciones y spans) de la lista se organizan cronológicamente y por jerarquía (los spans secundarios se ubican bajo sus respectivos principales). Esto te permite seguir el orden de las operaciones y profundizar en suboperaciones.
+
+A la izquierda hay una lista de operaciones y, a la derecha, su duración y cualquier evento, como errores, que haya podido ocurrir en ese periodo.
+
+De forma predeterminada, la vista de cascada muestra una lista de transacciones. Si necesitas datos más granulares y también quieres ver spans, haz clic en “+” a la izquierda de una transacción para expandir la cascada. La vista de cascada ayuda a detectar problemas de rendimiento o perfiles recopilados durante un periodo determinado.
+
+<br />
+
+<div
+  style={{
+  height: "0px",
+  paddingBottom: "calc(66.66% + 41px)",
+  position: "relative",
+  width: "100%",
+}}
+>
+  <iframe
+    src="https://demo.arcade.software/25H9paIDvBOQp5T3pFeW?embed&show_copy_link=true"
+    frameborder="0"
+    loading="lazy"
+    webkitallowfullscreen
+    mozallowfullscreen
+    allowfullscreen
+    allow="clipboard-write; fullscreen;"
+    style={{
+    colorScheme: "light",
+    height: "100%",
+    left: "0px",
+    position: "absolute",
+    top: "0px",
+    width: "100%",
+  }}
+  />
+</div>
+
+<br />
+
+<div id="previous-and-next-traces">
+  ### Trazas anteriores y siguientes
+</div>
+
+A medida que los usuarios interactúan con una aplicación, generan múltiples trazas. Por ejemplo, cuando un usuario carga una página en su navegador y luego navega a otra, se crean dos trazas independientes: una para la carga inicial de la página y otra para la navegación posterior. De forma predeterminada, Sentry enlazará estas trazas.
+
+Si hay trazas enlazadas disponibles, verás botones “Anterior” y “Siguiente” debajo de la vista de cascada. Estos botones te permiten desplazarte entre las trazas que ocurrieron antes o después de la actual.
+
+![Enlaces a traza anterior y siguiente](./img/trace-view-links.png)
+
+<div id="helpful-tips">
+  ### Consejos útiles
+</div>
+
+Como la depuración suele involucrar a varias personas o equipos, hemos facilitado resaltar áreas específicas del rastro y compartir un enlace que muestre a tus colegas exactamente lo que has destacado. Para hacerlo, haz clic en la fila a la que quieras llamar la atención y comparte la URL resultante. Tu colega verá exactamente lo que quieres que vea.
+
+Todo lo que resaltes también se guardará si sales de la página y seguirá ahí cuando uses los botones de retroceso y avance del navegador.
+
+Si estás comparando y quieres una forma sencilla de alternar entre zonas destacadas de interés en tu rastro, puedes fijar las pestañas. Cuando una pestaña está fijada, la vista se mantiene durante toda la sesión.
+
+<br />
+
+<Arcade src="https://demo.arcade.software/yP3PFytK0ckfetjJTe52?embed&show_copy_link=true" />
+
+<br />
+
+A veces, los intervalos de duración entre entradas pueden ser pequeños, pero cruciales para la depuración. Por eso, la vista de trazas te permite acercarte a áreas concretas del rastro, ya sea haciendo doble clic en elementos de fila (lo que acerca esa fila) o usando la rueda del ratón.
+
+<br />
+
+<Arcade src="https://demo.arcade.software/U8JbMjFJR1KRiP4G4j4E?embed&show_copy_link=true" />
+
+<br />
+
+La vista de trazas tiene otras funciones, como buscar, que facilita visualizar los spans coincidentes y recorrerlos con las flechas arriba o abajo. También puedes adaptar el diseño a tu gusto.
+
+Seguiremos añadiendo funciones que te ayuden a investigar con eficacia los problemas que puedas encontrar. Si tienes comentarios o solicitudes, compártelos con nosotros. Nos encantará saber cómo podemos facilitarte el trabajo y hacer más felices a tus usuarios.
+
+<div id="troubleshooting">
+  ## Solución de problemas
+</div>
+
+<div id="orphan-traces-and-broken-subtraces">
+  ### Trazas huérfanas y subtrazas interrumpidas
+</div>
+
+En un sistema completamente instrumentado, un span en un servicio se conecta con una transacción en un servicio posterior. Por diversas razones, una transacción en un servicio puede no llegar a Sentry. Cuando Sentry encuentra este tipo de transacciones dentro de una traza, las vincula con una línea discontinua, ya que ya no pueden conectarse directamente con la raíz, lo que crea una traza huérfana.
+
+Además, pueden producirse subtrazas interrumpidas cuando Sentry recibe un error de una traza, pero la transacción correspondiente no existe. Estos errores se enlazan con líneas discontinuas y, al hacer clic en la fila, irás a la página de **Detalles del issue** correspondiente.
+
+También, en estos casos puedes hacer clic en &quot;Open In Discover&quot; para ver todos los eventos de la traza.
+
+Las subtrazas interrumpidas pueden deberse a:
+
+* Muestreo del SDK. Configurar una tasa de muestreo demasiado baja puede impedir que el SDK envíe una transacción. Recomendamos [enviarnos todos tus datos de transacciones](/es/organization/dynamic-sampling/#deciding-on-your-sdk-sample-rate).
+* Los [bloqueadores de anuncios](/es/platforms/javascript/troubleshooting/#dealing-with-ad-blockers) pueden impedir que se envíen transacciones en navegadores, pero las solicitudes HTTP a proyectos de backend seguirán creando transacciones hijas.
+* El [rate limiting](/es/product/accounts/quotas/#limiting-events) de un proyecto puede hacer que solo algunos eventos se envíen a Sentry.
+* Los [permisos del proyecto](/es/product/accounts/membership/#restricting-access) pueden implicar que no tengas acceso a transacciones en otro proyecto.
+* [Diferencias en los límites de cuota](/es/product/accounts/quotas/) entre transacciones y errores. Cuando se alcanza un límite de cuota —por ejemplo, para transacciones— se recibe un error, pero no la transacción correspondiente.
+* Superar el límite de spans. Las transacciones se asocian a través de los spans hijos de la transacción principal, pero si el número de spans supera el límite, no puede establecerse la asociación.
+
+<div id="multiple-roots">
+  ### Múltiples raíces
+</div>
+
+Cada ID de traza debería tener una sola raíz: una transacción sin ningún padre. La instrumentación automática debería evitar múltiples raíces; sin embargo, si el ID de traza de tus transacciones se establece mediante instrumentación personalizada, podrías encontrarte con múltiples raíces.

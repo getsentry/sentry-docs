@@ -1,0 +1,249 @@
+---
+title: Opciones
+sidebar_order: 0
+description: "Obtén más información sobre cómo configurar el SDK mediante opciones. Estas se pasan a la función init y, por lo tanto, se establecen cuando el SDK se inicializa por primera vez."
+---
+
+<PlatformContent includePath="configuration/config-intro" />
+
+<div id="core-options">
+  ## Opciones principales
+</div>
+
+Las opciones que pueden leerse desde una variable de entorno (`SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`) se leen automáticamente.
+
+<SdkOption name="Dsn" type="string" envVar="SENTRY_DSN">
+  El DSN le indica al SDK adónde enviar los eventos. Si no se proporciona este valor, el SDK intentará leerlo de la variable de entorno `SENTRY_DSN`. Si eso también falta, no se enviarán eventos.
+
+  Más información sobre el [uso del DSN](/es/product/sentry-basics/dsn-explainer/#dsn-utilization).
+</SdkOption>
+
+<SdkOption name="Debug" type="bool" defaultValue="false">
+  Si el modo de depuración está habilitado, el SDK intentará imprimir información útil de depuración si algo sale mal al enviar el evento. Siempre es `false` de forma predeterminada y, por lo general, no se recomienda en entornos de producción, aunque es seguro usarlo.
+</SdkOption>
+
+<SdkOption name="Release" type="string" envVar="SENTRY_RELEASE">
+  Establece la versión (release). Algunas funciones de Sentry se basan en la información de la versión, por lo que informar versiones puede ayudar a mejorar la experiencia general. Consulta [la documentación de versiones](/es/product/releases/).
+
+  Si no se establece Release, el SDK intentará derivar un valor predeterminado a partir de variables de entorno o del repositorio Git en el directorio de trabajo.
+
+  Si distribuyes un binario compilado, se recomienda establecer el valor de Release explícitamente en tiempo de compilación. Por ejemplo, puedes usar:
+
+  ```go
+  go build -ldflags='-X main.release=VALUE'
+  ```
+
+  Eso establecerá el valor de una variable predeclarada &#39;release&#39; en el paquete &#39;main&#39; en &#39;VALUE&#39;. Luego, usa esa variable al inicializar el SDK:
+
+  ```go
+  sentry.Init(ClientOptions{Release: release})
+  ```
+
+  Consulta https://golang.org/cmd/go/ y https://golang.org/cmd/link/ para la documentación oficial de -ldflags y -X, respectivamente.
+</SdkOption>
+
+<SdkOption name="Dist" type="string">
+  Establece la distribución de la aplicación. Las distribuciones se utilizan para diferenciar variantes de compilación o despliegue de la misma versión de una aplicación. Por ejemplo, la dist puede ser el número de compilación de un build de Xcode o el código de versión de un build de Android. La dist tiene una longitud máxima de 64 caracteres.
+</SdkOption>
+
+<SdkOption name="Environment" type="string" envVar="SENTRY_ENVIRONMENT">
+  Establece el entorno. Esta cadena es de formato libre y no se establece de forma predeterminada. Una versión (release) puede asociarse con más de un entorno para separarlos en la interfaz (piensa en `staging` vs `prod` o similar).
+
+  De forma predeterminada, el SDK intentará leer este valor de la variable de entorno `SENTRY_ENVIRONMENT`.
+
+  Los entornos indican dónde ocurrió un error, ya sea en tu sistema de producción, en tu servidor de staging o en otro lugar. Sentry crea automáticamente un entorno cuando recibe un evento con el parámetro de entorno definido.
+</SdkOption>
+
+<SdkOption name="SampleRate" type="float64" defaultValue="1.0">
+  Configura la tasa de muestreo para eventos de error, en el rango de `0.0` a `1.0`. El valor predeterminado es `1.0`, lo que significa que se enviará el 100% de los eventos de error. Si se establece en `0.1`, solo se enviará el 10% de los eventos de error. Los eventos se seleccionan aleatoriamente.
+
+  Como caso especial histórico, la tasa de muestreo `0.0` se trata como si fuera `1.0`. Para descartar todos los eventos, establece el DSN en una cadena vacía.
+</SdkOption>
+
+<SdkOption name="MaxBreadcrumbs" type="int" defaultValue="100">
+  Esta variable controla la cantidad total de breadcrumbs que deben capturarse. Sin embargo, ten en cuenta que Sentry tiene un [tamaño máximo de carga útil](https://develop.sentry.dev/sdk/data-model/envelopes/#size-limits) y cualquier evento que exceda ese tamaño se descartará.
+
+  Si MaxBreadcrumbs recibe un valor negativo, se ignoran los breadcrumbs.
+</SdkOption>
+
+<SdkOption name="AttachStacktrace" type="bool" defaultValue="false">
+  Cuando está habilitada, las trazas de pila se adjuntan automáticamente a todos los mensajes registrados. Las trazas de pila siempre se adjuntan a los errores; sin embargo, cuando esta opción está activada, las trazas de pila también se envían con los mensajes. Esta opción, por ejemplo, hace que las trazas de pila aparezcan junto a todos los mensajes de registro.
+
+  Esta opción está desactivada de forma predeterminada.
+
+  La agrupación en Sentry es diferente para eventos con y sin trazas de pila. Como resultado, obtendrás grupos nuevos a medida que habilites o deshabilites esta opción para ciertos eventos.
+</SdkOption>
+
+<SdkOption name="SendDefaultPII" type="bool" defaultValue="false">
+  Si esta opción está habilitada, ciertas informaciones de identificación personal (PII) son añadidas por las integraciones activas. De forma predeterminada, no se envía ningún dato de este tipo.
+
+  Si habilitas esta opción, asegúrate de eliminar manualmente lo que no quieras enviar usando nuestras funciones para gestionar [*datos sensibles*](../../data-management/sensitive-data/).
+</SdkOption>
+
+<SdkOption name="ServerName" type="string">
+  Proporciona un nombre de servidor. Cuando se especifica, el nombre del servidor se envía y se conserva en el evento. En muchas integraciones, el nombre del servidor corresponde al nombre de host del dispositivo, incluso cuando la máquina no es realmente un servidor.
+</SdkOption>
+
+<SdkOption name="IgnoreErrors" type="[]string">
+  Una lista de cadenas de expresiones regulares usadas para hacer coincidir el mensaje de un evento y, cuando corresponda, el tipo o valor de un error capturado. Si se encuentra una coincidencia, se descarta todo el evento.
+
+  De forma predeterminada, no se ignora ningún error.
+</SdkOption>
+
+<SdkOption name="MaxErrorDepth" type="int" defaultValue="100">
+  Este es el número máximo de errores informados en una cadena de errores. Esto protege al SDK de una cadena arbitrariamente larga de errores anidados.
+
+  En la práctica, informar cadenas muy largas suele aportar poco valor al depurar problemas en producción, ya que la interfaz de Sentry no está optimizada para ellas. El error de nivel superior y su traza de pila suelen contener la información más relevante.
+</SdkOption>
+
+<div id="logging-options">
+  ## Opciones de logging
+</div>
+
+<SdkOption name="EnableLogs" type="bool" defaultValue="false">
+  Configura esta opción en `true` para habilitar la captura de logs en Sentry. El SDK solo capturará y enviará mensajes de log a Sentry si esta opción está habilitada.
+</SdkOption>
+
+<div id="tracing-options">
+  ## Opciones de tracing
+</div>
+
+<SdkOption name="EnableTracing" type="bool" defaultValue="false">
+  Habilita el tracing de rendimiento. Cuando está habilitado, el SDK creará transacciones y spans para medir el rendimiento.
+</SdkOption>
+
+<SdkOption name="TracesSampleRate" type="float64" defaultValue="0.0" envVar="SENTRY_TRACES_SAMPLE_RATE">
+  Un número entre `0.0` y `1.0` que controla la probabilidad de que una transacción determinada se envíe a Sentry (`0.0` representa 0% y `1.0` representa 100%). Se aplica por igual a todas las transacciones creadas en la app. Para habilitar el tracing, se debe definir este valor o `traces-sampler`.
+</SdkOption>
+
+<SdkOption name="TracesSampler" type="TracesSampler">
+  Se usa para personalizar el muestreo de traces y reemplaza `TracesSampleRate`. Es una función responsable de determinar la probabilidad de que una transacción determinada se envíe a Sentry. Recibirá automáticamente información sobre la transacción y el contexto en el que se está creando, y debe devolver un número entre `0` (0% de probabilidad de envío) y `1` (100% de probabilidad de envío). También puede usarse para filtrar transacciones devolviendo 0 para las no deseadas. Para habilitar el tracing, se debe definir este valor o `TracesSampleRate`.
+</SdkOption>
+
+<SdkOption name="MaxSpans" type="int" defaultValue="1000">
+  Número máximo de spans que se pueden asociar a una transacción.
+
+  Consulta https://develop.sentry.dev/sdk/data-model/envelopes/#size-limits para conocer los límites de tamaño aplicados durante la ingesta de eventos. Es posible que los eventos que superen estos límites se descarten.
+</SdkOption>
+
+<SdkOption name="IgnoreTransactions" type="[]string">
+  Una lista de expresiones regulares (regexp) que se usarán para hacer coincidir el nombre de una transacción. Si hay coincidencia, la transacción se descartará.
+
+  De forma predeterminada, no se ignora ninguna transacción.
+</SdkOption>
+
+<div id="hooks">
+  ## Hooks
+</div>
+
+Estas opciones permiten enganchar el SDK de varias maneras para personalizar el informe de eventos.
+
+<SdkOption name="BeforeSend" type="func(event *Event, hint *EventHint) *Event">
+  Esta función se invoca con un objeto de evento y puede devolver un objeto de evento modificado o `nil` para omitir el informe del evento. Puede usarse, por ejemplo, para eliminar PII manualmente antes de enviar.
+
+  Cuando se ejecuta `BeforeSend`, todos los datos del scope ya se han aplicado al evento. Cualquier modificación posterior del scope no tendrá efecto.
+</SdkOption>
+
+<SdkOption name="BeforeSendTransaction" type="func(event *Event, hint *EventHint) *Event">
+  Esta función se invoca con un objeto de transacción y puede devolver un objeto de transacción modificado o `nil` para omitir el informe de la transacción. Una forma de usarla es para eliminar PII manualmente antes de enviar.
+</SdkOption>
+
+<SdkOption name="BeforeBreadcrumb" type="func(breadcrumb *Breadcrumb, hint *BreadcrumbHint) *Breadcrumb">
+  Esta función se invoca con un objeto breadcrumb antes de que el breadcrumb se agregue al scope. Cuando la función devuelve `nil`, el breadcrumb se descarta. Para dejar pasar el breadcrumb, devuelve el primer argumento, que contiene el objeto breadcrumb.
+  El callback normalmente recibe un segundo argumento (llamado &quot;hint&quot;) que proporciona el objeto original usado para crear el breadcrumb. Puedes usarlo para personalizar más el contenido o la apariencia del breadcrumb.
+</SdkOption>
+
+<div id="integration-configuration">
+  ## Configuración de integraciones
+</div>
+
+<SdkOption name="Integrations" type="func([]Integration) []Integration">
+  Integraciones que se instalarán en el cliente actual; recibe las integraciones predeterminadas. Esta función puede utilizarse para agregar integraciones adicionales o eliminar las predeterminadas. Para obtener más información, consulta la documentación de la integración específica.
+
+  Consulta la sección [Eliminación de integraciones predeterminadas](#removing-default-integrations) a continuación para ver un ejemplo.
+</SdkOption>
+
+<SdkOption name="DebugWriter" type="io.Writer">
+  Implementación de `io.Writer` que debe usarse con el modo de depuración. Esto permite redirigir la salida de depuración a un writer personalizado en lugar de stdout.
+</SdkOption>
+
+<div id="transport-options">
+  ## Opciones de transporte
+</div>
+
+Los transports se usan para enviar eventos a Sentry. Se pueden personalizar en cierta medida para adaptarse mejor a implementaciones muy específicas.
+
+<SdkOption name="Transport" type="Transport">
+  El transport a usar. De forma predeterminada, es `HTTPTransport`. Sustituye el transport utilizado para enviar eventos. Su funcionamiento depende del SDK. Por ejemplo, puede usarse para capturar eventos en pruebas unitarias o para enviarlos mediante una configuración más compleja que requiera autenticación de proxy.
+</SdkOption>
+
+<SdkOption name="HTTPClient" type="*http.Client">
+  Un puntero opcional a `http.Client` que se usará con un HTTPTransport predeterminado. Usar tu propio client hará que se ignoren las opciones HTTPTransport, HTTPProxy, HTTPSProxy y CaCerts.
+</SdkOption>
+
+<SdkOption name="HTTPTransport" type="http.RoundTripper">
+  Un puntero opcional a http.Transport que se usará con un HTTPTransport predeterminado. Usar tu propio transport hará que se ignoren las opciones HTTPProxy, HTTPSProxy y CaCerts.
+</SdkOption>
+
+<SdkOption name="HTTPProxy" type="string" envVar="HTTP_PROXY">
+  Si se establece, se puede configurar un proxy que se usará para las solicitudes salientes. También se usa para solicitudes HTTPS, a menos que se configure un `HTTPSProxy` por separado.
+
+  De forma predeterminada, usará la variable de entorno HTTP&#95;PROXY.
+</SdkOption>
+
+<SdkOption name="HTTPSProxy" type="string" envVar="HTTPS_PROXY">
+  Configura un proxy independiente para solicitudes HTTPS salientes. Si no se proporciona esta opción pero sí `HTTPProxy`, entonces `HTTPProxy` también se usará para solicitudes HTTPS.
+
+  De forma predeterminada, usará la variable de entorno HTTPS&#95;PROXY. HTTPS&#95;PROXY tiene prioridad sobre HTTP&#95;PROXY para las solicitudes HTTPS.
+</SdkOption>
+
+<SdkOption name="CaCerts" type="*x509.CertPool">
+  Un conjunto opcional de certificados SSL para usar. Consulta la sección [Proporcionar certificados SSL](#providing-ssl-certificates) a continuación para ver un ejemplo.
+</SdkOption>
+
+<div id="providing-ssl-certificates">
+  ### Provisión de certificados SSL
+</div>
+
+De forma predeterminada, TLS utiliza el conjunto de CA raíz del host. Si no tienes `ca-certificates` (que debería ser tu forma principal de solucionar el problema de certificados ausentes) y quieres usar `gocertifi` en su lugar, puedes proporcionar archivos de certificados precargados como una de las opciones en la llamada a `sentry.Init`:
+
+```go
+sentryClientOptions := sentry.ClientOptions{
+	Dsn: "___PUBLIC_DSN___",
+}
+
+rootCAs, err := gocertifi.CACerts()
+if err != nil {
+	log.Println("No se pudieron cargar los certificados de CA: %v\n", err)
+} else {
+	sentryClientOptions.CaCerts = rootCAs
+}
+
+sentry.Init(sentryClientOptions)
+```
+
+<div id="removing-default-integrations">
+  ### Eliminación de integraciones predeterminadas
+</div>
+
+El SDK `sentry-go` incluye algunas integraciones integradas que enriquecen los eventos con información adicional o los gestionan de distintas maneras.
+
+Si quieres leer más sobre ellas, consulta directamente el [código fuente](https://github.com/getsentry/sentry-go/blob/master/integrations.go).
+
+Sin embargo, hay casos en los que quizá quieras desactivar algunas. Para hacerlo, puedes usar la opción de configuración `Integrations` y filtrar las integraciones no deseadas. Por ejemplo:
+
+```go
+sentry.Init(sentry.ClientOptions{
+	// ...
+	Integrations: func(integrations []sentry.Integration) []sentry.Integration {
+		var filteredIntegrations []sentry.Integration
+		for _, integration := range integrations {
+			if integration.Name() == "ContextifyFrames" {
+				continue
+			}
+			filteredIntegrations = append(filteredIntegrations, integration)
+		}
+		return filteredIntegrations
+	},
+})
+```

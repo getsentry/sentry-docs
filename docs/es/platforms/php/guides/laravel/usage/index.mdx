@@ -1,0 +1,271 @@
+---
+title: Uso
+sidebar_order: 7
+excerpt: ""
+description: "Obtén más información sobre cómo reportar automáticamente errores, excepciones y rechazos, así como cómo capturar errores manualmente y habilitar la captura de mensajes."
+---
+
+El SDK de Sentry se integra en tu entorno de ejecución y reporta automáticamente errores, excepciones y rechazos.
+
+La forma más común de captura es la de errores. Qué puede capturarse como error varía según la plataforma. En general, si tienes algo que parece una excepción, se puede capturar. En algunos SDK también puedes omitir el argumento de `capture_exception` y Sentry intentará capturar la excepción actual. También puede ser útil reportar manualmente errores o mensajes a Sentry.
+
+Además de la captura, también puedes registrar las migas de pan (breadcrumbs) que conducen a un evento. Las migas de pan son diferentes de los eventos: no crearán un evento en Sentry, sino que se almacenarán en búfer hasta que se envíe el siguiente evento. Obtén más información sobre las migas de pan en nuestra <PlatformLink to="/enriching-events/breadcrumbs/">documentación sobre Breadcrumbs</PlatformLink>.
+
+<div id="capturing-errors">
+  ## Captura de errores
+</div>
+
+En Laravel, puedes pasar un objeto de error a `captureException()` para que se capture como un evento. También es posible lanzar cadenas como errores, en cuyo caso no se puede registrar ningún rastro de pila.
+
+<PlatformContent includePath="capture-error" />
+
+<div id="capturing-messages">
+  ## Captura de mensajes
+</div>
+
+Otra operación común es capturar un mensaje sin contexto adicional. Un mensaje es información textual que debe enviarse a Sentry. Normalmente, nuestros SDK no capturan mensajes automáticamente, pero puedes capturarlos manualmente.
+
+Los mensajes aparecen como problemas en tu flujo de problemas, con el propio mensaje como nombre del problema.
+
+<PlatformContent includePath="capture-message" />
+
+<div id="customization">
+  ## Personalización
+</div>
+
+<div id="decorating-the-client-builder">
+  ### Decorar el constructor de cliente
+</div>
+
+A partir de la versión [`1.5.0`](https://github.com/getsentry/sentry-laravel/releases/tag/1.5.0) de [sentry-laravel](https://github.com/getsentry/sentry-laravel) puedes personalizar cómo se construye el cliente del SDK de PHP modificando el constructor de cliente.
+
+Quizá quieras hacerlo, por ejemplo, para reemplazar el transporte o cambiar las opciones del serializador, que solo pueden modificarse al construir el cliente.
+
+El fragmento a continuación debe colocarse en el método `register` de un proveedor de servicios (por ejemplo, tu `AppServiceProvider`).
+
+En este ejemplo aumentamos `maxDepth` a 5 para el serializador predeterminado.
+
+```php
+use Sentry\Serializer\Serializer;
+use Sentry\ClientBuilderInterface;
+
+$this->app->extend(ClientBuilderInterface::class, function (ClientBuilderInterface $clientBuilder) {
+    $clientBuilder->setSerializer(new Serializer($clientBuilder->getOptions(), 5));
+
+    return $clientBuilder;
+});
+```
+
+
+<div id="user-context">
+  ### Contexto del usuario
+</div>
+
+A partir de Laravel 5.3, podemos añadir automáticamente el ID del usuario autenticado al scope si la opción `send_default_pii` está configurada en `true` en tu `config/sentry.php`.
+
+El mecanismo para añadir más contexto de usuario al scope variará según la versión de Laravel que utilices, pero el enfoque general es el mismo: encuentra un buen punto de entrada en tu aplicación donde el contexto que quieras añadir esté disponible, idealmente al inicio del proceso.
+
+En el siguiente ejemplo, usaremos un middleware para añadir la información del usuario si hay un usuario autenticado:
+
+```php
+namespace App\Http\Middleware;
+
+use Closure;
+use Sentry\State\Scope;
+
+class SentryContext
+{
+    /**
+     * Gestiona una solicitud entrante.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param \Closure                 $next
+     *
+     * @return mixed
+     */
+    public function handle($request, Closure $next)
+    {
+        if (auth()->check() && app()->bound('sentry')) {
+            \Sentry\configureScope(function (Scope $scope): void {
+                $scope->setUser([
+                    'id' => auth()->user()->id,
+                    'email' => auth()->user()->email,
+                ]);
+            });
+        }
+
+        return $next($request);
+    }
+}
+```
+
+
+<div id="log-channels">
+  ### Canales de registro
+</div>
+
+<Alert title="Nota">
+  Si usas canales de registro para registrar excepciones y además estás enviando excepciones a Sentry desde tu manejador de excepciones, es posible que las excepciones aparezcan en Sentry dos veces.
+</Alert>
+
+Para configurar Sentry como canal de registro, agrega la siguiente configuración a la sección `channels` en `config/logging.php`.
+Si este archivo no existe, ejecuta `php artisan config:publish logging` para generarlo.
+
+```php {filename:config/logging.php}
+'channels' => [
+    // ...
+    'sentry' => [
+        'driver' => 'sentry',
+    ],
+],
+```
+
+Después de configurar el canal de registro de Sentry, puedes ajustar tu aplicación para que registre tanto en un archivo de registro como en Sentry modificando la pila de registros:
+
+```bash {filename:.env}
+# ...
+LOG_CHANNEL=stack
+LOG_STACK=single,sentry
+# ...
+```
+
+Opcionalmente, puedes configurar el [nivel de registro](https://laravel.com/docs/8.x/logging#log-levels) y si los eventos deben propagarse en el controlador:
+
+```php {filename:config/logging.php}
+'channels' => [
+    // ...
+    'sentry' => [
+        'driver' => 'sentry',
+        // El nivel mínimo de registro a partir del cual se activará este controlador
+        // Niveles disponibles: debug, info, notice, warning, error, critical, alert, emergency
+        'level' => env('LOG_LEVEL', 'error'),
+        'bubble' => true, // Indica si los mensajes gestionados pueden propagarse por la pila o no
+    ],
+],
+```
+
+
+<div id="queue-jobs">
+  ### Trabajos en cola
+</div>
+
+Cuando defines un método `failed` en tu clase de trabajo ([documentación](https://laravel.com/docs/8.x/queues#cleaning-up-after-failed-jobs)), ese método actúa como si tu trabajo se ejecutara dentro de un `try {} catch (\Exception $e) {}`. Esto evitará que se informe la excepción, por lo que el fallo del trabajo no se reportará a Sentry.
+
+Esto puede ser lo esperado, ya que a veces tu trabajo falla porque una API no está disponible u ocurren otros fallos previstos. Si aun así quieres que la excepción se reporte a Sentry, puedes implementar lo siguiente en tu método `failed`:
+
+```php
+/**
+ * El trabajo no se pudo procesar.
+ *
+ * @param \Exception $exception
+ *
+ * @return void
+ */
+public function failed(\Exception $exception)
+{
+    // Enviar notificación de error al usuario, etc...
+
+    if (app()->bound('sentry')) {
+        app('sentry')->captureException($exception);
+    }
+}
+```
+
+
+<div id="naming-your-log-channels">
+  #### Asignar nombres a tus canales de registro
+</div>
+
+Para filtrar varios canales de registro en Sentry, puedes añadir el atributo `name` al canal de registro.
+Aparecerá en Sentry como la etiqueta `logger`, que es filtrable.
+
+Por ejemplo:
+
+```php {filename:config/logging.php}
+'channels' => [
+    'my_stacked_channel' => [
+        'driver' => 'stack',
+        'channels' => ['single', 'sentry'],
+        'name' => 'my-channel'
+    ],
+    //...
+],
+```
+
+Como resultado, puedes enviar los errores a tu canal:
+
+```php
+\Log::channel('my_stacked_channel')->error('Mi error');
+```
+
+Ahora la etiqueta `logger` de Sentry incluye el `name` del canal. Puedes filtrar por el valor &quot;my-channel&quot;.
+
+
+<div id="resolve-name-conflicts">
+  ### Resolver conflictos de nombres
+</div>
+
+Si tienes otros paquetes que también se llamen Sentry, necesitarás crear tu propio proveedor de servicios que extienda el nuestro para evitar conflictos de nombres.
+
+```php
+<?php
+
+namespace App\Support;
+
+class SentryLaravelServiceProvider extends \Sentry\Laravel\ServiceProvider
+{
+    public static $abstract = 'sentry-laravel';
+}
+```
+
+Luego puedes agregar este proveedor de servicios a `config/app.php`.
+
+```php {filename:config/app.php}
+'providers' => array(
+    // ...
+    App\Support\SentryLaravelServiceProvider::class,
+)
+```
+
+Opcionalmente, si quieres usar la fachada, también necesitas extender o crear una nueva fachada.
+
+```php
+<?php
+
+namespace App\Support;
+
+class SentryLaravelFacade extends \Sentry\Laravel\Facade
+{
+    protected static function getFacadeAccessor()
+    {
+        return 'sentry-laravel';
+    }
+}
+```
+
+Y añade esa fachada a tu `config/app.php`.
+
+```php {filename:config/app.php}
+'aliases' => array(
+    // ...
+    'SentryLaravel' => App\Support\SentryLaravelFacade::class,
+)
+```
+
+Después de agregar tu propio proveedor de servicios, ejecutar `php artisan vendor:publish --provider="App\Support\SentryLaravelServiceProvider"` publica el archivo de configuración de Sentry con el nombre que elijas (en el ejemplo anterior, `config/sentry-laravel.php`), evitando conflictos con un archivo de configuración `config/sentry.php` que podría estar usando el otro paquete.
+
+Si seguiste las instrucciones de instalación habituales de arriba (deberías), asegúrate de reemplazar `app('sentry')` por `app('sentry-laravel')`.
+
+El espacio de nombres `\App\Support` puede ser cualquiera que quieras en los ejemplos anteriores.
+
+<Alert level="warning" title="Nota">
+  Si estás en Laravel 5.5+ es probable que Laravel detecte automáticamente el paquete Sentry. Para solucionarlo, agrega o completa la sección `extra` en tu archivo `composer.json` y luego ejecuta composer update/install.
+</Alert>
+
+```json {filename:composer.json}
+"extra": {
+    "laravel": {
+        "dont-discover": ["sentry/sentry-laravel"]
+    }
+}
+```

@@ -1,0 +1,354 @@
+---
+draft: true
+categories: []
+toc: true
+title: Uso
+sidebar_order: 2
+noindex: true
+tags: []
+---
+
+De forma predeterminada, Raven intenta por varios medios capturar trazas de pila lo más útiles posible, pero los navegadores lo complican bastante.
+
+La solución más sencilla es evitar que el error siga propagándose por la pila hasta llegar a `window`.
+
+<div id="reporting-errors-correctly">
+  ## Informar errores correctamente
+</div>
+
+Hay distintas formas de reportar errores, y todo depende un poco de las circunstancias.
+
+<div id="try-catch">
+  ### try … catch
+</div>
+
+La forma más simple es intentar capturar y notificar explícitamente el código potencialmente problemático con un bloque `try...catch` y `Raven.captureException`.
+
+```javascript
+try {
+  doSomething(a[0]);
+} catch (e) {
+  Raven.captureException(e);
+}
+```
+
+No arrojes cadenas. Siempre arroja un objeto `Error` real. Por ejemplo:
+
+```javascript
+throw new Error("broken"); // bien
+throw "broken"; // mal
+```
+
+Es imposible obtener un stack trace a partir de una cadena. Si esto ocurre, Raven envía el error como un mensaje sin formato.
+
+<div id="contextwrap">
+  ### context/wrap
+</div>
+
+`Raven.context` te permite envolver cualquier función para ejecutarla de inmediato. Tras bambalinas, Raven simplemente envuelve tu código en un bloque `try...catch` para registrar la excepción antes de volver a lanzarla.
+
+```javascript
+Raven.context(function () {
+  doSomething(a[0]);
+});
+```
+
+`Raven.wrap` envuelve una función de manera similar a `Raven.context`, pero en lugar de ejecutarla, devuelve otra función. Esto resulta especialmente útil al pasar un callback.
+
+```javascript
+var doIt = function () {
+  // haciendo cosas interesantes
+};
+
+setTimeout(Raven.wrap(doIt), 1000);
+```
+
+<div id="tracking-users">
+  ## Seguimiento de usuarios
+</div>
+
+Mientras un usuario esté autenticado, puedes indicarle a Sentry que asocie los errores con los datos del usuario.
+
+```javascript
+Raven.setUserContext({
+  email: "matt@example.com",
+  id: "123",
+});
+```
+
+Si en algún momento el usuario deja de estar autenticado, puedes llamar a `Raven.setUserContext()` sin argumentos para eliminar sus datos. *Esto solo resulta realmente útil en una aplicación web grande donde el usuario inicia o cierra sesión sin recargar la página.*
+
+Estos datos generalmente se envían con cada error o mensaje y te permiten identificar qué usuarios se ven afectados por los problemas.
+
+<div id="capturing-messages">
+  ## Captura de mensajes
+</div>
+
+```javascript
+Raven.captureMessage("¡Roto!");
+```
+
+<div id="passing-additional-data">
+  ## Pasar datos adicionales
+</div>
+
+Las funciones `captureMessage`, `captureException`, `context` y `wrap` permiten pasar datos adicionales para adjuntarlos al error.
+
+`level`
+
+El nivel de log asociado a este evento. Valor predeterminado: `error`
+
+```javascript
+Raven.captureMessage("Something happened", {
+  level: "info", // puede ser 'info', 'warning' o 'error'
+});
+```
+
+`logger`
+
+El nombre del logger utilizado para registrar este evento. Predeterminado: `javascript`
+
+```javascript
+Raven.captureException(new Error("¡Ups!"), {
+  logger: "my.module",
+});
+```
+
+Ten en cuenta que también se puede configurar `logger` de forma global mediante `Raven.config`.
+
+`tags`
+
+[Etiquetas](/es/platforms/javascript/enriching-events/tags/) para asignar al evento.
+
+```javascript
+Raven.wrap(
+  {
+    tags: { git_commit: "c0deb10c4" },
+  },
+  function () {
+    /* ... */
+  }
+);
+
+// NOTA: Raven.wrap y Raven.context aceptan opciones como primer argumento
+```
+
+También puedes definir etiquetas a nivel global para que se incorporen a futuros eventos de excepciones mediante `Raven.config` o `Raven.setTagsContext`:
+
+```javascript
+Raven.setTagsContext({ key: "value" });
+```
+
+Las etiquetas proporcionadas en `setTagsContext` se fusionan con las etiquetas existentes. Si necesitas eliminar una etiqueta, usa `getContext` para obtener el valor de contexto actual, llama a `setTagsContext` sin parámetros para eliminar todos los datos de contexto de etiquetas y luego vuelve a llamar a `setTagsContext` con las etiquetas que quieras conservar.
+
+```javascript
+const context = Raven.getContext(); // Nota: No modifiques el contexto directamente.
+const tags = { ...context.tags };
+delete tags["TagNameToDelete"];
+Raven.setTagsContext(); // Limpia todas las etiquetas actuales del contexto.
+Raven.setTagsContext(tags); // Vuelve a agregar las etiquetas que deseas conservar.
+```
+
+**Ten en cuenta el tamaño máximo de la carga** - Hay ocasiones en las que quizá quieras enviar todo el estado de la aplicación como datos adicionales.
+Esto puede ser un objeto bastante grande que fácilmente supere el tamaño máximo de carga de un solo evento que puedes enviar a Sentry.
+Cuando esto ocurra, recibirás un mensaje `HTTP Error 413 Payload Too Large` como respuesta del servidor o (si `keepalive: true` está definido como parámetro de `fetch`), la solicitud permanecerá en estado `pending` indefinidamente (p. ej., en Chrome).
+
+`extra`
+
+Datos arbitrarios para asociar con el evento.
+
+```javascript
+Raven.context(
+  {
+    extra: { planet: { name: "Earth" } },
+  },
+  function () {
+    /* ... */
+  }
+);
+
+// NOTA: Raven.wrap y Raven.context aceptan opciones como primer argumento
+```
+
+También puedes configurar datos adicionales globales para que se combinen con eventos futuros mediante `setExtraContext`:
+
+```javascript
+Raven.setExtraContext({ foo: "bar" });
+```
+
+Los datos que pases a `setExtraContext` se combinan con los datos adicionales existentes. Si necesitas eliminar un campo del contexto adicional, usa `getContext` para obtener el valor actual del contexto, llama a `setExtraContext` sin parámetros para eliminar todos los datos adicionales y luego vuelve a llamar a `setExtraContext` con los datos adicionales que quieres conservar.
+
+```javascript
+const context = Raven.getContext(); // Nota: No modifiques el contexto directamente.
+const extra = { ...context.extra };
+delete extra["FieldKeyToDelete"];
+Raven.setExtraContext(); // Limpia todos los datos adicionales del contexto.
+Raven.setExtraContext(extra); // Agrega nuevamente los datos adicionales que deseas conservar.
+```
+
+<div id="recording-breadcrumbs">
+  ## Registro de breadcrumbs
+</div>
+
+Los breadcrumbs son eventos del navegador y del ciclo de vida de la aplicación que ayudan a entender el estado de la aplicación antes de un fallo.
+
+De forma predeterminada, Raven.js instrumenta componentes integrados del navegador y eventos del DOM para recopilar automáticamente algunos breadcrumbs útiles:
+
+> * XMLHttpRequests
+> * Cambios en la URL / barra de direcciones
+> * Clics de la UI y eventos de pulsación de teclas del DOM
+> * Mensajes de la consola
+> * Errores anteriores
+
+También puedes registrar tus propios breadcrumbs:
+
+```javascript
+Raven.captureBreadcrumb({
+  message: "Artículo añadido al carrito",
+  category: "action",
+  data: {
+    isbn: "978-1617290541",
+    cartSize: "3",
+  },
+});
+```
+
+Para obtener más información sobre qué tipos de datos pueden recopilarse mediante breadcrumbs, consulta la [especificación de la API de cliente de breadcrumbs](/es/platforms/javascript/enriching-events/breadcrumbs/).
+
+Ten en cuenta que también puedes desactivar por completo la recopilación automática de breadcrumbs o desactivar colectores específicos:
+
+```javascript
+Raven.config("___PUBLIC_DSN___", {
+  autoBreadcrumbs: {
+    xhr: false,
+  },
+});
+```
+
+Para más información sobre cómo configurar los breadcrumbs, consulta [*Configuración*](/es/platforms/javascript/legacy-sdk/config/).
+
+<div id="getting-back-an-event-id">
+  ## Recuperar un ID de evento
+</div>
+
+Un ID de evento es un identificador global único del evento que se acaba de enviar. Este ID de evento se puede usar para encontrar ese evento exacto dentro de Sentry.
+
+A menudo se utiliza para mostrárselo al usuario y para informar un error al servicio de atención al cliente.
+
+```javascript
+Raven.lastEventId();
+```
+
+`Raven.lastEventId()` será undefined hasta que se envíe un evento. Después de que se envíe un evento, contendrá el id de tipo string.
+
+```javascript
+Raven.captureMessage("¡Roto!");
+alert(Raven.lastEventId());
+```
+
+<div id="user-feedback">
+  ## Comentarios de usuarios
+</div>
+
+A menudo querrás recopilar comentarios adicionales de los usuarios. Sentry lo admite mediante un widget incrustable.
+
+```javascript
+try {
+    handleRouteChange(...)
+} catch (err) {
+    Raven.captureException(err);
+    Raven.showReportDialog();
+}
+```
+
+Para obtener más información sobre esta función, consulta la [*guía de comentarios de usuarios*](/es/platforms/javascript/user-feedback/).
+
+<div id="verify-raven-setup">
+  ## Verificar la configuración de Raven
+</div>
+
+Si necesitas comprobar de forma condicional si hace falta inicializar Raven o no, puedes usar la función *isSetup*. Devolverá *true* si Raven ya está inicializado:
+
+```javascript
+Raven.isSetup();
+```
+
+<div id="dealing-with-minified-source-code">
+  ## Cómo gestionar código minificado
+</div>
+
+Raven y Sentry son compatibles con los [source maps](https://web.dev/articles/source-maps).
+
+Para obtener más información, consulta la [documentación sobre source maps](/es/platforms/javascript/legacy-sdk/sourcemaps/).
+
+Puedes usar [Source Map Validator](https://sourcemaps.io/) para verificar que todo esté correcto.
+
+<div id="cors">
+  ## CORS
+</div>
+
+Si alojas tus scripts en otro dominio y Raven no captura todo, es probable que el error termine en `window.onerror`. Si esto sucede, el error mostrará un poco útil `Script error` y Raven lo descartará, ya que no le sirve a nadie.
+
+Para mitigar esto, podemos indicarle al navegador que estos scripts son seguros y que permitimos que nos expongan sus errores.
+
+En tu etiqueta `&lt;script&gt;`, especifica el atributo `crossorigin`:
+
+```html
+<script src="//cdn.example.com/script.js" crossorigin="anonymous"></script>
+```
+
+Y establece un encabezado HTTP `Access-Control-Allow-Origin` en ese archivo.
+
+```
+Access-Control-Allow-Origin: *
+```
+
+<Alert level="warning" title="Nota">
+  Debes completar ambos pasos; de lo contrario, es posible que tus scripts ni siquiera se ejecuten
+</Alert>
+
+<div id="promises">
+  ## Promesas
+</div>
+
+De forma predeterminada, Raven.js captura los rechazos de promesas no controlados, según lo descrito en el estándar oficial ECMAScript 6.
+
+Sin embargo, la mayoría de las bibliotecas de Promises tienen un hook global para capturar errores no controlados. Es posible que quieras desactivar el comportamiento predeterminado estableciendo la opción `captureUnhandledRejections` en `false` y conectarte manualmente a ese manejador de eventos para llamar directamente a `Raven.captureException` o `Raven.captureMessage`.
+
+Por ejemplo, la [biblioteca RSVP.js](https://github.com/tildeio/rsvp.js/) (utilizada por Ember.js) permite vincular un manejador a un [evento global de error](https://github.com/tildeio/rsvp.js#error-handling):
+
+```javascript
+RSVP.on("error", function (reason) {
+  Raven.captureException(reason);
+});
+```
+
+[Bluebird](http://bluebirdjs.com/) y otras bibliotecas de promesas informan los rechazos no controlados mediante un evento global del DOM, `unhandledrejection`. En este caso, no necesitas hacer nada; ya estás cubierto con la configuración predeterminada `captureUnhandledRejections: true`.
+
+Consulta la documentación de tu biblioteca de promesas para saber cómo integrarte con su controlador global de rechazos no controlados, si es que expone uno.
+
+<div id="custom-grouping-behavior">
+  ## Comportamiento de agrupación personalizado
+</div>
+
+En algunos casos, puedes encontrarte con que Sentry agrupa varios eventos cuando deberían tratarse como entidades separadas. En otros, Sentry simplemente no agrupa eventos porque son tan esporádicos que nunca se parecen.
+
+Ambos problemas pueden resolverse especificando el atributo `fingerprint`.
+
+Por ejemplo, si tienes errores HTTP 404 (Página no encontrada) y prefieres que se desduplicuen teniendo en cuenta la URL:
+
+```javascript
+Raven.captureException(ex, {
+  fingerprint: ["{{ default }}", "http://mi-url/"],
+});
+```
+
+Para obtener más información, consulta [Personalizar la agrupación con huellas](/es/concepts/data-management/event-grouping/).
+
+<div id="preventing-abuse">
+  ## Prevención de abuso
+</div>
+
+De forma predeterminada, el servidor de Sentry acepta errores de cualquier host. Esto puede dar lugar a un abuso en el que un actor malicioso provoque errores de JavaScript desde otro sitio web que sean aceptados por tu proyecto de Sentry. Para evitarlo, se recomienda limitar la lista de hosts conocidos donde se ejecuta tu código JavaScript.
+
+Esta configuración se encuentra en la página **Project Settings** de Sentry. Deberás agregar cada dominio desde el que planeas enviar informes en el cuadro **Allowed Domains**. Cuando Raven.js recopile un error y lo envíe a Sentry, Sentry verificará las cabeceras `Origin` y/o `Referer` de la solicitud HTTP para confirmar que coinciden con uno de tus hosts permitidos.

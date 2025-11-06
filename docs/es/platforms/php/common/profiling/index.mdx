@@ -1,0 +1,107 @@
+---
+title: Configurar el perfilado
+sidebar_title: Perfilado
+description: "Obtén más información sobre cómo configurar nuestra integración de perfilado y empezar a perfilar tu código."
+sidebar_order: 5000
+---
+
+<Alert>
+  El perfilado para PHP es compatible a partir de la versión `3.15.0` del Sentry PHP SDK.
+</Alert>
+
+Con [profiling](/es/product/explore/profiling/), Sentry te permite recopilar y analizar perfiles de rendimiento de usuarios reales en producción para ofrecerte una visión completa de cómo se comporta tu aplicación en distintos entornos.
+
+Internamente, usamos el generador de perfiles por muestreo de Wikipedia, [Excimer](https://github.com/wikimedia/mediawiki-php-excimer).
+La extensión de PHP Excimer es compatible con PHP 7.2 y versiones posteriores.
+
+<Alert>
+  Excimer requiere Linux o macOS y no es compatible con Windows.
+</Alert>
+
+<div id="installation">
+  ## Instalación
+</div>
+
+Aquí te mostramos cómo instalar Excimer con un gestor de paquetes de Linux, con PECL o compilándolo desde el código fuente.
+
+<div id="linux-package-manager">
+  ### Gestor de paquetes de Linux
+</div>
+
+```bash
+apt-get install php-excimer
+```
+
+Consulta https://www.mediawiki.org/wiki/Excimer para obtener distribuciones adicionales.
+
+<div id="pecl">
+  ### PECL
+</div>
+
+```bash
+pecl install excimer
+```
+
+Consulta https://pecl.php.net/package/excimer para más información.
+
+<div id="build-from-source">
+  ### Compilar desde el código fuente
+</div>
+
+```bash
+git clone https://github.com/wikimedia/mediawiki-php-excimer.git
+
+cd excimer/
+phpize && ./configure && make && sudo make install
+```
+
+Según tu entorno, es posible que después debas habilitar la extensión Excimer.
+
+```
+phpenmod -s fpm excimer
+# o
+phpenmod -s apache2 excimer
+```
+
+<div id="enable-tracing">
+  ## Habilitar el tracing
+</div>
+
+El producto de tracing de Sentry debe estar habilitado para que el profiling funcione.
+Para empezar a capturar datos de perfiles, primero debes iniciar una transacción.
+Consulta la documentación de <PlatformLink to="/tracing/">configuración de rendimiento</PlatformLink> y de <PlatformLink to="/tracing/instrumentation/custom-instrumentation/">instrumentación personalizada</PlatformLink> para obtener información más detallada.
+
+```php
+\Sentry\init([
+    'dsn' => '___PUBLIC_DSN___',
+    'traces_sample_rate' => 1.0,
+]);
+```
+
+<div id="enabling-profiling">
+  ## Habilitar la creación de perfiles
+</div>
+
+```php
+\Sentry\init([
+    'dsn' => '___PUBLIC_DSN___',
+    'traces_sample_rate' => 1.0,
+    // Define una tasa de muestreo para la creación de perfiles; es relativa a traces_sample_rate
+    'profiles_sample_rate' => 1.0,
+]);
+```
+
+<div id="improve-response-time">
+  ## Mejora el tiempo de respuesta
+</div>
+
+El tiempo de respuesta puede verse afectado cuando usas las funcionalidades de rendimiento en tu aplicación PHP (según el `traces_sample_rate` que hayas configurado). Esto se debe a la naturaleza de PHP, donde las solicitudes suelen enviarse como parte del mismo proceso con el que entregas la respuesta a tus usuarios. Esto incide en el tiempo que tarda en enviarse una solicitud a Sentry porque se suma al tiempo de respuesta de tus servidores.
+
+Para compensarlo y que el impacto sea casi nulo, ejecuta [Relay](/es/product/relay/getting-started/) localmente en la misma máquina o en una red local que pueda actuar como proxy/agente. De este modo, el proceso de PHP enviará solicitudes a tu Relay local, que luego las reenviará a Sentry, en lugar de enviarlas directamente a Sentry.
+
+Para empezar a usar Relay, consulta nuestra documentación de [inicio](/es/product/relay/getting-started/).
+Recomendamos usar Relay en modo `managed` (predeterminado).
+
+Sigue las instrucciones en la documentación de Relay para enviar un evento de prueba a Sentry a través de Relay.
+No olvides actualizar tu `DSN` para que apunte a la instancia de Relay que esté en ejecución.
+Después de configurar Relay, deberías notar una mejora considerable en el impacto sobre tu servidor.

@@ -1,0 +1,157 @@
+---
+title: Crons
+description: "Aprende a configurar Sentry Crons para Celery"
+---
+
+Sentry Crons te permite supervisar la disponibilidad y el rendimiento de cualquier tarea programada y recurrente. Una vez implementado, podrás recibir alertas y métricas que te ayuden a resolver errores, detectar tiempos de espera y prevenir interrupciones en tu servicio.
+
+<div id="celery-beat-auto-discovery">
+  ## Detección automática de Celery Beat
+</div>
+
+Usa la integración de Celery para supervisar tus [tareas periódicas de Celery](https://docs.celeryq.dev/en/stable/userguide/periodic-tasks.html) y recibir notificaciones cuando se omita una tarea (o no se inicie cuando se espera), si falla por un problema en tiempo de ejecución (como un error) o si falla por exceder su tiempo máximo de ejecución.
+
+<Alert>
+  Ten en cuenta que el monitor de cron solo se creará la primera vez que se ejecute tu tarea.
+</Alert>
+
+Comienza configurando tu programa de Celery Beat:
+
+```python {filename:tasks.py}
+# tasks.py
+from celery import Celery
+from celery.schedules import crontab
+
+app = Celery('tasks', broker='...')
+app.conf.beat_schedule = {
+    'set-in-beat-schedule': {
+        'task': 'tasks.tell_the_world',
+        'schedule': crontab(hour='10', minute='15'),
+        'args': ("¡Un mensaje importante!", ),
+    },
+}
+```
+
+<Alert>
+  Ten en cuenta que solo los cron programados que pueda interpretar crontab se
+  actualizarán o insertarán correctamente.
+</Alert>
+
+A continuación, inicializa Sentry. Dónde hacerlo depende de cómo ejecutes beat:
+
+* Si beat se está ejecutando en tu proceso de worker (es decir, ejecutas el worker con la opción `-B`/`--beat`), inicializa Sentry en la señal `celeryd_init` o `beat_init`.
+* Si beat se está ejecutando en un proceso aparte, debes inicializar Sentry en *ambas* señales: `celeryd_init` y `beat_init`.
+
+Asegúrate también de establecer `monitor_beat_tasks=True` en `CeleryIntegration`.
+
+Si has establecido `monitor_beat_tasks=True`, asegúrate de no realizar un monitoreo manual de tareas con el decorador `@sentry_sdk.monitor`, ya que esto provocará instrumentación doble.
+
+Además de capturar errores, puedes monitorear las interacciones entre varios servicios o aplicaciones [habilitando el tracing](/es/concepts/key-terms/tracing/). También puedes recopilar y analizar perfiles de rendimiento de usuarios reales con el [profiling](/es/product/explore/profiling/).
+
+Selecciona qué funcionalidades de Sentry te gustaría instalar además de Error Monitoring para obtener a continuación las instrucciones correspondientes de instalación y configuración.
+
+<OnboardingOptionButtons options={["error-monitoring", "performance", "profiling"]} />
+
+```python {diff} {filename:tasks.py}
+# tasks.py
+from celery import signals
+
+import sentry_sdk
+from sentry_sdk.integrations.celery import CeleryIntegration
+
+@signals.beat_init.connect   # omite esta línea si ejecutas beat directamente dentro de tu proceso de worker
+@signals.celeryd_init.connect
+def init_sentry(**kwargs):
+    sentry_sdk.init(
+        dsn='___PUBLIC_DSN___',
+        # Agrega datos como encabezados de la solicitud y la IP de los usuarios, si corresponde;
+        # consulta https://docs.sentry.io/platforms/python/data-management/data-collected/ para obtener más información
+        send_default_pii=True,
+        # ___PRODUCT_OPTION_START___ performance
+        # Establece traces_sample_rate en 1.0 para capturar el 100%
+        # de las transacciones de trazado.
+        traces_sample_rate=1.0,
+        # ___PRODUCT_OPTION_END___ performance
+        # ___PRODUCT_OPTION_START___ profiling
+        # Para recopilar perfiles de todas las sesiones de perfil,
+        # establece `profile_session_sample_rate` en 1.0.
+        profile_session_sample_rate=1.0,
+        # Los perfiles se recopilarán automáticamente mientras
+        # haya un span activo.
+        profile_lifecycle="trace",
+        # ___PRODUCT_OPTION_END___ profiling
++       integrations=[
++           CeleryIntegration(
++               monitor_beat_tasks=True
++           )
++       ],
+        environment="local.dev.grace",
+        release="v1.0",
+    )
+```
+
+Una vez que configures Sentry Crons, las tareas en tu programación de Celery Beat se detectarán automáticamente y se capturarán datos de telemetría cuando una tarea se inicie, termine o falle.
+
+Inicia tus servicios de Celery Beat y worker y observa cómo se supervisan tus tareas en [https://sentry.io/insights/crons](https://sentry.io/insights/crons/).
+
+Además del planificador predeterminado de Celery Beat, también compatible con [Redbeat](https://redbeat.readthedocs.io/en/latest).
+
+<Alert>
+  No necesitas crear Cron Monitors para tus tareas en Sentry.io; nosotros lo haremos por ti.
+</Alert>
+
+<div id="excluding-celery-beat-tasks-from-auto-discovery">
+  ### Excluir tareas de Celery Beat de la detección automática
+</div>
+
+Puedes excluir las tareas de Celery Beat de la autoinstrumentación. Para hacerlo, agrega una lista de tareas que quieras excluir como opción `exclude_beat_tasks` al crear `CeleryIntegration`. La lista puede contener cadenas simples con el nombre completo de la tarea, tal como se especifica en la programación de Celery Beat, o expresiones regulares para hacer coincidir varias tareas.
+
+```python {diff}
+    sentry_sdk.init(
+        # ...
+        integrations=[
+            CeleryIntegration(
+                monitor_beat_tasks=True,
++               exclude_beat_tasks=[
++                   "some-task-a",
++                   "payment-check-.*",
++               ]
+            ),
+        ],
+    )
+```
+
+En este ejemplo, se ignorará la tarea `some-task-a` y todas las tareas cuyo nombre comience con `payment-check-`.
+
+Para más información, consulta la documentación de <PlatformLink to="/#options">opciones de CeleryIntegration</PlatformLink>.
+
+<div id="manual-task-monitoring">
+  ## Monitoreo manual de tareas
+</div>
+
+Ofrecemos un decorador liviano para facilitar el monitoreo de tareas individuales. Para usarlo, añade `@sentry_sdk.monitor` a tu tarea de Celery (o a cualquier función) y luego indica un `monitor_slug` de un monitor creado previamente en Sentry.io. Una vez hecho esto, cada vez que se ejecute la tarea (o la función) se capturarán datos de telemetría cuando la tarea se inicie, cuando finalice y cuando falle.
+
+<Alert>
+  Asegúrate de que el decorador de Sentry `@sentry_sdk.monitor` esté debajo del decorador `@app.task` de Celery.
+</Alert>
+
+```python {diff} {filename:tasks.py}
+# tasks.py
+from celery import Celery, signals
+
+import sentry_sdk
+from sentry_sdk.integrations.celery import CeleryIntegration
+
+app = Celery('tasks', broker='...')
+
+@signals.celeryd_init.connect
+def init_sentry(**kwargs):
+    sentry_sdk.init(
+        # mismo que arriba
+    )
+
+@app.task
++@sentry_sdk.monitor(monitor_slug='<monitor-slug>')
+def tell_the_world(msg):
+    print(msg)
+```

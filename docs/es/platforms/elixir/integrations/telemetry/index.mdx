@@ -1,0 +1,29 @@
+---
+title: Telemetría
+description: "Sentry permite supervisar los errores de los controladores de Telemetry y reportarlos."
+sidebar_order: 40
+---
+
+La integración de [Telemetry](https://github.com/beam-telemetry/telemetry) permite:
+
+* Capturar los errores que se producen en los controladores de Telemetry y reportarlos.
+
+Esta integración viene incluida en el SDK de Sentry a partir de la *v10.10.0*.
+
+<div id="configure">
+  ## Configurar
+</div>
+
+Puedes configurar la integración de Telemetry en la configuración de Sentry, en la clave `:integrations`:
+
+```elixir {filename:config/config.exs} {diff}
+config :sentry,
+  # ...,
+  integrations: [
++    telemetry: [
++      report_handler_failures: true,
++    ]
+  ]
+```
+
+Esta configuración reportará a Sentry los errores del controlador de Telemetry que fallen. Por lo general, es importante informar estos errores, ya que Telemetry *desconecta* los controladores que fallan. Si no supervisas estos errores, puede que no sepas que un controlador falló y que no volverá a ejecutarse hasta que se vuelva a adjuntar (normalmente cuando la aplicación se reinicia).

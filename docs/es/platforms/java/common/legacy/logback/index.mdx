@@ -1,0 +1,287 @@
+---
+title: Logback
+sidebar_order: 30
+---
+
+<Alert level="warning" title="Nota">
+  Un nuevo SDK de Java ha sustituido esta versión en desuso. Sentry conserva esta documentación para clientes que usan el cliente antiguo. Recomendamos usar el [SDK de Java actualizado](/es/platforms/java/) para proyectos nuevos.
+</Alert>
+
+La biblioteca `sentry-logback` ofrece compatibilidad con [Logback](http://logback.qos.ch/) para Sentry mediante un [Appender](https://logback.qos.ch/manual/appenders.html) que envía a Sentry las excepciones registradas. Una vez configurada esta integración, *también* puedes usar la API estática de Sentry, [como se muestra en la página de uso](/es/platforms/java/legacy/usage), para hacer cosas como registrar breadcrumbs, establecer el usuario actual o enviar eventos manualmente.
+
+El código fuente está disponible [en GitHub](https://github.com/getsentry/sentry-java/tree/master/sentry-logback).
+
+<div id="installation">
+  ### Instalación
+</div>
+
+```xml {tabTitle:Maven}
+<dependency>
+    <groupId>io.sentry</groupId>
+    <artifactId>sentry-logback</artifactId>
+    <version>1.7.30</version>
+</dependency>
+```
+
+```groovy {tabTitle:Gradle}
+implementation 'io.sentry:sentry-logback:1.7.30'
+```
+
+```scala {tabTitle: SBT}
+libraryDependencies += "io.sentry" % "sentry-logback" % "1.7.30"
+```
+
+Para otros administradores de dependencias, consulta el [repositorio central de Maven](https://search.maven.org/artifact/io.sentry/sentry-logback).
+
+<div id="usage">
+  ### Uso
+</div>
+
+El siguiente ejemplo configura un `ConsoleAppender` que escribe en la salida estándar con nivel `INFO` y un `SentryAppender` que envía registros al servidor de Sentry con nivel `WARN`. El `ConsoleAppender` se incluye únicamente como ejemplo de un appender que no es de Sentry y que está configurado con un umbral de logging diferente, similar a uno que quizá ya tengas en tu proyecto.
+
+Ejemplo de configuración con el formato `logback.xml`:
+
+```xml
+<configuration>
+    <!-- Configurar el appender de consola -->
+    <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Configurar el appender de Sentry, reemplazando el umbral de registro al nivel WARN -->
+    <appender name="Sentry" class="io.sentry.logback.SentryAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>WARN</level>
+        </filter>
+        <!-- Opcionalmente, agregar un encoder -->
+        <encoder>
+           <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Habilitar los appenders de consola y Sentry. Console se proporciona como ejemplo
+ de un logger ajeno a Sentry que está configurado con un umbral de registro diferente -->
+    <root level="INFO">
+        <appender-ref ref="Console" />
+        <appender-ref ref="Sentry" />
+    </root>
+</configuration>
+```
+
+A continuación, **deberás configurar tu DSN** (clave de cliente) y, opcionalmente, otros valores como `environment` y `release`. [Consulta la página de configuración](/es/platforms/java/legacy/configuration/#setting-the-dsn) para conocer las formas de hacerlo.
+
+{/* <!-- TODO-AGREGAR-EJEMPLO-DE-VERIFICACIÓN --> */}
+
+<div id="additional-data">
+  ### Datos adicionales
+</div>
+
+Es posible añadir datos adicionales a los eventos gracias al [sistema MDC proporcionado por Logback](http://logback.qos.ch/manual/mdc.html).
+
+<div id="mapped-tags">
+  #### Etiquetas asignadas
+</div>
+
+De forma predeterminada, todos los parámetros de MDC se almacenan en la pestaña “Additional Data” de Sentry. Al especificar la opción `mdctags` en tu configuración, puedes elegir qué claves de MDC enviar como etiquetas, lo que permite usarlas como filtros dentro de la interfaz de Sentry.
+
+```java
+void logWithExtras() {
+  // Extras de MDC
+  MDC.put("Environment", "Development");
+  MDC.put("OS", "Linux");
+
+  // Esto envía un evento donde los valores de Environment y OS del MDC se establecen como datos adicionales
+  logger.error("This is a test");
+}
+```
+
+```kotlin
+fun logWithExtras() {
+  // Extras de MDC
+  MDC.put("Environment", "Development")
+  MDC.put("OS", "Linux")
+
+  // Esto envía un evento donde los valores de MDC Environment y OS se establecen como datos adicionales
+  logger.error("Esta es una prueba")
+}
+```
+
+<div id="global-tags">
+  #### Etiquetas globales
+</div>
+
+A veces es útil añadir etiquetas y datos adicionales a todos los eventos de registro.
+Puedes añadir etiquetas y datos adicionales a los registros de forma global (no vinculados al hilo) agregando entradas a LoggerContext.
+Las etiquetas se distinguen mediante la propiedad de configuración existente mdcTags descrita arriba.
+
+```java
+  LoggerContext context = (LoggerContext)LoggerFactory.getILoggerFactory();
+  context.putProperty("global", "valor");
+```
+
+```kotlin
+  val context: LoggerContext = LoggerFactory.getILoggerFactory() as LoggerContext
+  context.putProperty("global", "value")
+```
+
+Las entradas de registro globales también pueden añadirse mediante codificadores de terceros
+(*sin embargo, si dichas entradas pueden distinguirse como etiquetas o como entradas depende de la implementación del codificador*).
+Por ejemplo, `net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder` tiene una opción `customFields`:
+
+```java
+  <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+    <customFields>{"appname":"myWebservice","roles":["customerorder","auth"]}</customFields>
+  </encoder>
+```
+
+En caso de conflicto de nombres, las etiquetas MDC más específicas tendrán prioridad.
+
+<div id="in-practice">
+  ### En la práctica
+</div>
+
+```java
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
+import org.slf4j.MarkerFactory;
+
+public class MyClass {
+  private static final Logger logger = LoggerFactory.getLogger(MyClass.class);
+  private static final Marker MARKER = MarkerFactory.getMarker("myMarker");
+
+  void logSimpleMessage() {
+    // Esto envía un evento sencillo a Sentry
+    logger.error("Esto es una prueba");
+  }
+
+  void logWithBreadcrumbs() {
+    // Registra un breadcrumb que se enviará con el/los próximo(s) evento(s);
+    // por defecto se conservan los últimos 100 breadcrumbs.
+    Sentry.record(
+        new BreadcrumbBuilder().setMessage("El usuario realizó una acción").build()
+    );
+
+    // Esto envía un evento sencillo a Sentry
+    logger.error("Esto es una prueba");
+  }
+
+  void logWithTag() {
+    // Esto envía a Sentry un evento con una etiqueta llamada 'logback-Marker'
+    logger.error(MARKER, "Esto es una prueba");
+  }
+
+  void logWithExtras() {
+    // Extras de MDC
+    MDC.put("extra_key", "extra_value");
+    // Esto envía a Sentry un evento con datos adicionales
+    logger.error("Esto es una prueba");
+  }
+
+  void logWithGlobalTag() {
+    LoggerContext context = (LoggerContext)LoggerFactory.getILoggerFactory();
+    // Esto agrega una etiqueta llamada 'logback-Marker' a cada evento de Sentry posterior
+    context.putProperty(MARKER, "Esto es una prueba");
+
+    // Esto envía un evento a Sentry y se agregará una etiqueta llamada 'logback-Marker'.
+    logger.info("Esto es una prueba");
+  }
+
+  void addGlobalExtras() {
+    LoggerContext context = (LoggerContext)LoggerFactory.getILoggerFactory();
+    // Esto agrega datos adicionales a cada evento de Sentry posterior
+    context.putProperty("extra_key", "extra_value");
+
+    // Esto envía un evento a Sentry y se agregarán datos adicionales ("extra_key", "extra_value").
+    logger.info("Esto es una prueba");
+  }
+
+  void logException() {
+    try {
+      unsafeMethod();
+    } catch (Exception e) {
+      // Esto envía un evento de excepción a Sentry
+      logger.error("Excepción capturada", e);
+    }
+  }
+
+  void unsafeMethod() {
+    throw new UnsupportedOperationException("¡No deberías llamar a esto!");
+  }
+}
+```
+
+```kotlin
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import org.slf4j.MDC
+import org.slf4j.MarkerFactory
+
+class MyClass {
+  fun logSimpleMessage() {
+    // Esto envía un evento simple a Sentry
+    logger.error("Esto es una prueba")
+  }
+
+  fun logWithBreadcrumbs() {
+    // Registra una breadcrumb que se enviará con el/los próximo(s) evento(s);
+    // por defecto se conservan las últimas 100.
+    Sentry.record(
+      BreadcrumbBuilder().setMessage("El usuario realizó una acción").build()
+    )
+
+    // Esto envía un evento simple a Sentry
+    logger.error("Esto es una prueba")
+  }
+
+  fun logWithTag() {
+    // Esto envía a Sentry un evento con una etiqueta llamada 'logback-Marker'
+    logger.error(MARKER, "Esto es una prueba")
+  }
+
+  fun logWithExtras() {
+    // Extras de MDC
+    MDC.put("extra_key", "extra_value")
+    // Esto envía a Sentry un evento con datos adicionales
+    logger.error("Esto es una prueba")
+  }
+
+  fun logWithGlobalTag() {
+    val context: LoggerContext = LoggerFactory.getILoggerFactory() as LoggerContext
+    // Esto agrega una etiqueta llamada 'logback-Marker' a cada evento posterior de Sentry
+    context.putProperty(MARKER, "Esto es una prueba")
+
+    // Esto envía un evento a Sentry y se agregará una etiqueta llamada 'logback-Marker'.
+    logger.info("Esto es una prueba")
+  }
+
+  fun addGlobalExtras() {
+    val context: LoggerContext = LoggerFactory.getILoggerFactory() as LoggerContext
+    // Esto agrega datos adicionales a cada evento posterior de Sentry
+    context.putProperty("extra_key", "extra_value")
+
+    // Esto envía un evento a Sentry y se agregarán datos adicionales ("extra_key", "extra_value").
+    logger.info("Esto es una prueba")
+  }
+
+  fun logException() {
+    try {
+      unsafeMethod()
+    } catch (e: Exception) {
+      // Esto envía a Sentry un evento de excepción
+      logger.error("Excepción capturada", e)
+    }
+  }
+
+  fun unsafeMethod() {
+    throw UnsupportedOperationException("¡No deberías llamar a esto!")
+  }
+
+  companion object {
+    private val logger: Logger = LoggerFactory.getLogger(MyClass::class.java)
+    private val MARKER: Marker = MarkerFactory.getMarker("myMarker")
+  }
+}
+```

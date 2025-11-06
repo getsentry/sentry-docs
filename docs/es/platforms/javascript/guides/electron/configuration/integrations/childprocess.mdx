@@ -1,0 +1,42 @@
+---
+title: ChildProcess
+excerpt: ""
+description: "Captura breadcrumbs y eventos cuando los procesos hijo terminan o fallan. (predeterminado)"
+sidebar_order: 10
+---
+
+Captura breadcrumbs y eventos cuando los procesos hijo terminan o fallan.
+
+```typescript
+type ExitReason =
+  | "clean-exit"
+  | "abnormal-exit"
+  | "killed"
+  | "crashed"
+  | "oom"
+  | "launch-failed"
+  | "integrity-failure";
+
+interface ChildProcessOptions {
+  /** Eventos del proceso secundario que generan breadcrumbs de Sentry */
+  breadcrumbs: ExitReason[];
+  /** Eventos del proceso secundario que generan eventos de Sentry */
+  events: ExitReason[];
+}
+```
+
+Por ejemplo, para desactivar la captura de migas de pan (breadcrumbs) y capturar solo eventos de fallos por falta de memoria (Out-Of-Memory):
+
+```javascript
+import * as Sentry from "@sentry/electron/main";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.childProcessIntegration({
+      breadcrumbs: [],
+      events: ["oom"],
+    }),
+  ],
+});
+```

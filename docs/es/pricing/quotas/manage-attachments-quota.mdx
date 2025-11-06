@@ -1,0 +1,116 @@
+---
+title: Administra tu cuota de adjuntos
+keywords:
+  - buenas prácticas
+sidebar_order: 60
+description: >-
+  Aprende a usar las herramientas que Sentry ofrece para controlar el tipo
+  y la cantidad de adjuntos por los que pagas.
+og_image: /og-images/pricing-quotas-manage-attachments-quota.png
+---
+
+Enviar todos tus adjuntos de errores a Sentry puede consumir tu cuota demasiado rápido, así que ofrecemos herramientas para controlar el *tipo* y la *cantidad* de adjuntos que se almacenan.
+
+Estos consejos te ayudarán a administrar tu cuota de adjuntos y están ordenados de lo más fácil (o menos laborioso) a lo más desafiante (o potencialmente más laborioso). Los tres primeros pueden hacerse en [sentry.io](https://sentry.io). El último lo harás en tu SDK.
+
+<div id="before-you-begin-check-your-quota-usage">
+  ## Antes de comenzar: revisa el uso de tu cuota
+</div>
+
+Puedes ver tus adjuntos de forma agregada en la pestaña &quot;Usage Stats&quot; de **Stats**. Esta información te ayudará a responder preguntas clave sobre la distribución de tus adjuntos entrantes y qué proyectos están consumiendo tu cuota. Las respuestas a estas preguntas pueden ayudarte a determinar dónde necesitas afinar aún más los filtros y la configuración del SDK.
+
+Esta página está disponible para todos los miembros de tu organización, por lo que los propietarios (Owners) de tu organización de Sentry pueden compartirla con los desarrolladores directamente responsables de un proyecto determinado. Además, puedes volver a esta página para evaluar si los cambios que has realizado están teniendo el efecto deseado.
+
+<div id="how-can-i-see-a-breakdown-of-incoming-attachments">
+  ### ¿Cómo puedo ver un desglose de los adjuntos entrantes?
+</div>
+
+La pestaña [Usage Stats](/es/product/stats/#usage-stats) muestra detalles sobre la cantidad total de datos que Sentry ha recibido en toda tu organización durante un máximo de 90 días. La página desglosa los eventos (por proyecto) en tres categorías: *accepted*, *dropped* o *filtered*. Solo los adjuntos aceptados afectan a tu cuota:
+
+![Vista general de la página Usage Stats](./img/usage-stats-attachments.png)
+
+<div id="what-are-my-busiest-projects">
+  ### ¿Cuáles son mis proyectos con más actividad?
+</div>
+
+La tabla &quot;Project&quot; en la pestaña &quot;Usage Stats&quot; de **Stats** desglosa tus datos por proyecto, para que puedas ver cuáles están consumiendo tu cuota. Al hacer clic en el ícono de configuración junto al nombre de un proyecto en la tabla, se abrirá la página de configuración del proyecto, donde puedes gestionar sus filtros de entrada y límites de tasa.
+
+<div id="adjusting-quotas">
+  ## Ajuste de cuotas
+</div>
+
+<Alert>
+  Las cuotas solo pueden ser actualizadas por un miembro con rol de Billing (Facturación) o Owner (Propietario) de tu organización de Sentry.
+</Alert>
+
+Cuando el volumen de tus archivos adjuntos se acerque o haya superado la cuota, los miembros con el permiso de organización &quot;Owner&quot; recibirán correos de [notificación](/es/product/alerts/notifications/#quota-notifications). Luego puedes optar por [aumentar](#increasing-quotas) o [reducir](#decreasing-quotas) tu cuota.
+
+<div id="increasing-quotas">
+  ### Aumentar las cuotas
+</div>
+
+Si estás descartando adjuntos que quieres conservar porque has superado tu cuota, puedes aumentarla en cualquier momento durante tu período de facturación incrementando tu presupuesto de [volumen reservado o pago por uso](/es/pricing/#pricing-how-it-works).
+
+Cuando superas el umbral de tu cuota, el servidor responde con el código de estado HTTP 429, que indica a los SDK y a los clientes que dejen de enviar eventos y, por ende, sus adjuntos asociados. Este código de estado incluye un encabezado `Retry-After` que indica durante cuánto tiempo estará activo este límite de frecuencia. Sin embargo, los clientes no deben reintentar enviar los eventos; en su lugar, deben descartarlos hasta que caduque el límite para evitar acumulaciones en la cola. Ten en cuenta que, como la ingesta de eventos y la limitación de frecuencia ocurren de forma asíncrona, el código de estado HTTP 429 siempre se emite con un ligero retraso.
+
+Para aumentar tu cuota, ve a **Settings &gt; Subscription** y haz clic en el botón &quot;Manage Subscription&quot; para acceder a tus opciones de suscripción. Cuando aumentes tu cuota, el cambio entra en vigor de inmediato.
+
+Si estás en el plan Developer y quieres aumentar tu cuota, tendrás que pasar al plan Team o Business. En estos planes puedes prepagar más volumen de adjuntos y adquirir presupuesto de pago por uso, según sea necesario. Conoce los planes de Sentry en nuestra [página de precios](https://sentry.io/pricing/).
+
+<Alert>
+  Si actualizas de Team a Business a mitad del período de facturación, tu precio de pago por uso cambia con carácter retroactivo.
+</Alert>
+
+<div id="reserved-volume">
+  ### Volumen reservado
+</div>
+
+Si la cantidad de datos que necesitas para adjuntos va en aumento, quizá quieras ampliar tu capacidad o volumen reservado. El volumen reservado es más económico que el pago por uso, ya que se paga por adelantado. Obtén más información sobre el [volumen reservado](/es/pricing/#pricing-how-it-works) en nuestra documentación de precios.
+
+No deberías aumentar tu volumen reservado si crees que tu necesidad de más eventos es temporal, ya que [reducir el volumen reservado está vinculado a tu periodo de facturación](#decreasing-quotas).
+
+<div id="pay-as-you-go-budget">
+  ### Presupuesto de pago por uso
+</div>
+
+Si necesitas aumentar temporalmente tu cuota de archivos adjuntos, te recomendamos añadir o ampliar tu presupuesto de pago por uso. Es ideal para casos como el lanzamiento de una nueva versión de tu aplicación, cuando prevés recibir más datos ese mes. Obtén más información sobre nuestro modelo de precios [aquí](/es/pricing/#pricing-how-it-works).
+
+<div id="decreasing-quotas">
+  ### Reducción de cuotas
+</div>
+
+Las degradaciones de plan y las reducciones del volumen reservado se procesan al final de tu periodo de facturación, y el volumen restante no se puede reembolsar. Por ejemplo, si tienes un periodo de facturación mensual que comienza el día 5 y reduces tu volumen reservado el 20 de junio, este cambio se procesará el 4 de julio. El periodo de facturación que comienza el 5 de julio reflejará tu nuevo volumen reservado.
+
+<Alert level="warning">
+  Si tienes un periodo de facturación anual, las degradaciones de plan y las reducciones del volumen reservado entran en vigor al inicio de tu **próximo año de facturación.**
+</Alert>
+
+Los cambios en el presupuesto de pago por uso normalmente entran en vigor de inmediato y se garantiza que lo harán en un plazo máximo de 24 horas. Sin embargo, no puedes reducir tu presupuesto de pago por uso por debajo de lo que has consumido en el periodo actual.
+
+Para reducir tu cuota, ve a **Settings &gt; Subscription** y haz clic en &quot;Manage Subscriptions&quot;. Cuando llegues al paso &quot;Review &amp; Confirm&quot;, se mostrará la fecha en que estos cambios entrarán en vigor.
+
+<Alert>
+  Te recomendamos encarecidamente realizar los cambios de suscripción **antes** del último día de tu periodo de facturación. Según tu zona horaria, en algunos casos los cambios realizados el último día del periodo de facturación no entrarán en vigor hasta el siguiente periodo.
+</Alert>
+
+<div id="rate-limiting">
+  ## Limitación de solicitudes
+</div>
+
+Si has habilitado el almacenamiento de informes de fallos, puedes establecer límites para el número máximo de informes de fallos que se guardarán por incidencia. Para configurar estos límites, ve a **Settings &gt; Security &amp; Privacy** y selecciona una opción en el menú desplegable &quot;Store Native Crash Reports&quot;. Esta configuración se aplica a toda tu organización.
+
+<div id="inbound-data-filters">
+  ## Filtros de datos de entrada
+</div>
+
+La configuración del SDK requiere cambios en tu código fuente y depende de tu próximo despliegue, pero los filtros del lado del servidor se pueden configurar fácilmente por proyecto en la sección &quot;Data Filters&quot; de **[Project] &gt; Settings &gt; Inbound Filters**.
+
+Aunque no puedes configurar filtros para los adjuntos directamente, al definir filtros de entrada para eventos de error, sus adjuntos asociados se filtran indirectamente. Obtén más información sobre cómo configurar filtros de datos para eventos de error en [Manage Your Error Quota](/es/pricing/quotas/manage-event-stream-guide/).
+
+<div id="attachments-size">
+  ## Tamaño de los adjuntos
+</div>
+
+Para evitar agotar tu cuota de adjuntos (basada en el tamaño y no en la cantidad enviada) o que el adjunto se descarte por completo, considera limitar el tamaño de los valores que envías a las API de Sentry. Por ejemplo, si tu aplicación adjunta el estado de la aplicación o cuerpos de solicitud a los eventos de Sentry, trúncalos primero.
+
+Para obtener más información, consulta nuestra guía de [Límites de tamaño](/es/concepts/data-management/size-limits).

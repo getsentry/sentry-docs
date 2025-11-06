@@ -1,0 +1,109 @@
+---
+title: Eloquent
+description: "Aprende a habilitar el SDK de Laravel de Sentry para capturar infracciones de modelos Eloquent."
+---
+
+<div id="violation-reporters">
+  ## Informes de infracciones
+</div>
+
+Si quieres habilitar el SDK de Laravel de Sentry para capturar infracciones en modelos de Eloquent, puedes configurar la integración para que Eloquent lance excepciones solo cuando se cumplan ciertas condiciones. En la mayoría de los casos no querrás que estas excepciones se lancen en producción, pero quizá sí quieras capturarlas en Sentry para saber que están ocurriendo.
+
+Cuando habilitas cualquiera de los métodos `Model::handle*ViolationUsing` como se describe a continuación, Eloquent dejará de lanzar excepciones y las infracciones solo se reportarán a Sentry. Si además quieres escribir en un log o realizar alguna otra acción cuando ocurra una infracción, puedes pasar un closure como primer argumento al método `Integration::*ViolationReporter`, por ejemplo:
+
+```php
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
+use Sentry\Laravel\Integration;
+
+Model::handleLazyLoadingViolationUsing(
+    Integration::lazyLoadingViolationReporter(function ($model, $relation) {
+        Log::warning('Violación de carga perezosa', ['model' => $model, 'relation' => $relation]);
+    })
+);
+```
+
+De forma predeterminada, los registradores suprimirán las infracciones duplicadas por solicitud y las enviarán a Sentry cuando la solicitud haya finalizado. Puedes configurar este comportamiento así:
+
+```php
+use Illuminate\Database\Eloquent\Model;
+use Sentry\Laravel\Integration;
+
+Model::handleLazyLoadingViolationUsing(
+    Integration::lazyLoadingViolationReporter(
+        reportAfterResponse: true, // establecer en false para enviar la violación de inmediato
+        suppressDuplicateReports: true, // establecer en false para enviar todas las violaciones, incluso si ya se reportaron en la misma solicitud
+    )
+);
+```
+
+
+<div id="lazy-loading">
+  ### Carga diferida
+</div>
+
+<Alert>
+  Obtén más información sobre cómo evitar la carga diferida en la [documentación de Laravel](https://laravel.com/docs/11.x/eloquent-relationships#preventing-lazy-loading).
+</Alert>
+
+Para detectar infracciones de carga diferida, agrega el siguiente código al método `boot` de tu `AppServiceProvider`:
+
+```php
+use Illuminate\Database\Eloquent\Model;
+use Sentry\Laravel\Integration;
+
+Model::preventLazyLoading();
+
+// Solo suprime las violaciones de lazy loading en producción, permite que se lancen en otros entornos
+if (app()->isProduction()) {
+  Model::handleLazyLoadingViolationUsing(
+      Integration::lazyLoadingViolationReporter()
+  );
+}
+```
+
+
+<div id="silently-discarding-attributes-mass-assignment-protection">
+  ### Descartar atributos silenciosamente (protección contra asignación masiva)
+</div>
+
+<Alert>
+  Obtén más información sobre cómo evitar el descarte silencioso de atributos en la [documentación de Laravel](https://laravel.com/docs/11.x/eloquent#configuring-eloquent-strictness).
+</Alert>
+
+Para detectar violaciones por atributos descartados silenciosamente, agrega el siguiente código al método `boot` de tu `AppServiceProvider`:
+
+```php
+use Illuminate\Database\Eloquent\Model;
+use Sentry\Laravel\Integration;
+
+Model::preventSilentlyDiscardingAttributes();
+
+// Solo suprimir violaciones de atributos descartados silenciosamente en producción, permitir que se lancen en otros entornos
+if (app()->isProduction()) {
+  Model::handleDiscardedAttributeViolationUsing(
+      Integration::discardedAttributeViolationReporter()
+  );
+}
+```
+
+
+<div id="missing-attributes">
+  ### Atributos ausentes
+</div>
+
+Para detectar infracciones por atributos ausentes, añade el siguiente código al método `boot` de tu `AppServiceProvider`:
+
+```php
+use Illuminate\Database\Eloquent\Model;
+use Sentry\Laravel\Integration;
+
+Model::preventAccessingMissingAttributes();
+
+// Solo suprimir violaciones de atributos faltantes en producción, permitir que se lancen en otros entornos
+if (app()->isProduction()) {
+  Model::handleMissingAttributeViolationUsing(
+      Integration::missingAttributeViolationReporter()
+  );
+}
+```

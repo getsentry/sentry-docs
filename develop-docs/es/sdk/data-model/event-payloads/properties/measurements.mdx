@@ -1,0 +1,45 @@
+`measurements`
+
+: *Opcional*. Objeto que contiene mediciones estándar o personalizadas, con claves que representan el nombre de cada medición.
+
+* Las claves de mediciones estándar admitidas actualmente provienen de la siguiente lista tomada de [aquí](https://github.com/getsentry/sentry/blob/a8c960a933d2ded5225841573d8fc426a482ca9c/static/app/utils/discover/fields.tsx#L654-L676).
+
+```json
+[
+  // Web
+  "fp",
+  "fcp",
+  "lcp",
+  "fid",
+  "cls",
+  "ttfb",
+  "ttfb.requesttime",
+
+  // Móvil
+  "app_start_cold",
+  "app_start_warm",
+  "frames_total",
+  "frames_slow",
+  "frames_frozen",
+
+  // React Native
+  "frames_slow_rate",
+  "frames_frozen_rate",
+  "stall_count",
+  "stall_total_time",
+  "stall_longest_time",
+  "stall_percentage"
+]
+```
+
+* Para las mediciones conocidas enumeradas arriba, Sentry infiere automáticamente las unidades. Las mediciones personalizadas necesitan que se especifiquen las unidades; si faltan, Relay las establecerá en `"none"` de forma predeterminada. La lista completa de unidades compatibles se define en [`MetricUnit` de Relay](https://getsentry.github.io/relay/relay_metrics/enum.MetricUnit.html). La ingesta de eventos de Sentry admite unidades personalizadas arbitrarias, pero muchos SDK no ofrecen una interfaz genérica para unidades definidas por el usuario.
+
+```json
+{
+  "measurements": {
+    "lcp": { "value": 100 },
+    "fp": { "value": 123 },
+    "my.custom.metric": { "value": 456, "unit": "milisegundos" }
+  }
+}
+```

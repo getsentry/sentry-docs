@@ -1,0 +1,138 @@
+---
+title: Contexto
+description: "Los contextos personalizados te permiten adjuntar datos arbitrarios (cadenas, listas, diccionarios) a un evento."
+---
+
+Los contextos personalizados te permiten adjuntar datos arbitrarios a un evento. A menudo, este contexto se comparte entre cualquier incidencia capturada durante su ciclo de vida. No puedes buscar estos datos, pero se pueden ver en la página de la incidencia:
+
+<Include name="common-imgs/additional_data" />
+
+<Alert>
+
+Si necesitas poder buscar datos personalizados, [usa etiquetas](../tags).
+
+</Alert>
+
+<div id="structured-context">
+  ## Contexto estructurado
+</div>
+
+La mejor manera de adjuntar datos personalizados es con un contexto estructurado. Un contexto siempre debe ser un objeto y sus valores pueden ser arbitrarios.
+
+Primero, debes importar el SDK, como de costumbre:
+
+<PlatformContent includePath="enriching-events/import" />
+
+Luego, usa <PlatformIdentifier name="set-context" /> y asigna al contexto un nombre único:
+
+<PlatformContent includePath="enriching-events/set-context" />
+
+No hay restricciones para el nombre del contexto. En el objeto de contexto, todas las claves están permitidas excepto `type`, que se usa internamente.
+
+De forma predeterminada, los SDK de Sentry normalizan los datos de contexto estructurado anidados hasta tres niveles de profundidad. Cualquier dato más allá de esta profundidad se truncará y se marcará usando su tipo. Para ajustar este valor predeterminado, usa la opción del SDK <PlatformLink to="/configuration/options#normalize-depth">`normalizeDepth`</PlatformLink>.
+
+Obtén más información sobre las convenciones para contextos comunes en la [documentación para desarrolladores de la interfaz de contexts](https://develop.sentry.dev/sdk/data-model/event-payloads/contexts/).
+
+<div id="size-limitations">
+  ## Limitaciones de tamaño
+</div>
+
+Al enviar contexto, _ten en cuenta los límites de tamaño del payload_. Sentry no recomienda enviar todo el estado de la aplicación ni blobs de datos grandes en los contextos. Si superas el tamaño máximo del payload, Sentry responderá con el error HTTP `413 Payload Too Large` y rechazará el evento. Cuando se usa `keepalive: true`, la solicitud también puede quedarse pendiente indefinidamente.
+
+El SDK de Sentry hará todo lo posible por adaptarse a los datos que envíes y recortar payloads de contexto grandes. Algunos SDK pueden truncar partes del evento; para más detalles, consulta la [documentación para desarrolladores sobre el manejo de datos en el SDK](https://develop.sentry.dev/sdk/expected-features/data-handling/).
+
+<div id="passing-context-directly">
+  ## Pasar contexto directamente
+</div>
+
+Algunos datos contextuales pueden proporcionarse directamente en las llamadas a `captureException` y `captureMessage`. Los datos proporcionados se combinarán con los que ya estén almacenados en el scope actual, a menos que se limpien explícitamente usando un método de callback.
+
+Esta funcionalidad funciona de tres maneras:
+
+1.  Objeto simple que contiene atributos actualizables
+2.  Instancia de Scope de la cual extraeremos los atributos
+3.  Función de callback que recibirá el scope actual como argumento y permitirá modificaciones
+
+Permitimos pasar las siguientes claves de contexto: `tags`, `extra`, `contexts`, `user`, `level`, `fingerprint`.
+
+<div id="example-usages">
+  ### Ejemplos de uso
+</div>
+
+```javascript
+Sentry.captureException(new Error("algo salió mal"), {
+  tags: {
+    section: "articles",
+  },
+});
+```
+
+Aclara explícitamente lo que ya se ha almacenado en el ámbito:
+
+```javascript
+Sentry.captureException(new Error("limpio como nunca"), (scope) => {
+  scope.clear();
+  scope.setTag("clean", "slate");
+  return scope;
+});
+```
+
+Usa una instancia de Scope para pasar los datos (sus atributos seguirán fusionándose con el ámbito global):
+
+```javascript
+const scope = new Sentry.Scope();
+scope.setTag("section", "articles");
+Sentry.captureException(new Error("algo salió mal"), scope);
+```
+
+Usa una instancia de Scope para pasar los datos y omitir los atributos de Scope configurados globalmente:
+
+```javascript
+const scope = new Sentry.Scope();
+scope.setTag("section", "articles");
+Sentry.captureException(new Error("algo salió mal"), () => scope);
+```
+
+
+<div id="clearing-context">
+  ## Borrar el contexto
+</div>
+
+El contexto se mantiene en el ámbito actual y, por lo tanto, se borra cuando se quita el ámbito (“pop”). Puedes hacer “push” y “pop” de tus propios ámbitos para aplicar datos de contexto a un bloque de código o función específicos.
+
+Sentry admite dos maneras de restablecer/eliminar el contexto:
+
+1. Modificar, sobrescribir o borrar valores en el ámbito actual.
+2. Crear un ámbito temporal para capturar excepciones.
+
+Con el siguiente fragmento, el contexto de `user` se actualizará para todos los eventos futuros en el ámbito actual:
+
+```javascript
+Sentry.setUser(someUser);
+```
+
+Si quieres eliminar todos los datos del ámbito actual, puedes llamar a:
+
+```javascript
+Sentry.getCurrentScope().clear();
+```
+
+Lo siguiente solo configurará el contexto de `user` para el error capturado dentro del callback de `withScope`. Después, el contexto se restaurará automáticamente a su estado anterior:
+
+```javascript
+Sentry.withScope(function (scope) {
+  scope.setUser(someUser);
+  Sentry.captureException(error);
+});
+```
+
+Para obtener más información sobre cómo configurar el Scope, consulta nuestra documentación sobre [Scopes y Hubs](../scopes/).
+
+
+<div id="additional-data">
+  ## Datos adicionales
+</div>
+
+**Datos adicionales está en desuso** en favor de los contextos estructurados.
+
+Sentry solía permitir agregar “datos adicionales” no estructurados mediante <PlatformIdentifier name="set-extra" />.

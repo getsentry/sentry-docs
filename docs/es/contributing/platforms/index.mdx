@@ -1,0 +1,145 @@
+---
+title: Plataformas y guías
+noindex: true
+sidebar_order: 3
+---
+
+El contenido de las plataformas se encuentra en `docs/platforms` y sigue algunas reglas específicas para generar contenido. Se renderiza con las mismas capacidades que el resto de [páginas](../), pero ofrece funcionalidades adicionales para clonar contenido y encapsular plataformas como portales.
+
+La estructura de directorios tiene un significado dentro del directorio de plataformas y se ve más o menos así:
+
+```
+[platformName]/
+  child.mdx
+  childTwo/
+    index.mdx
+  common/
+    aSharedPage.mdx
+  guides/
+    [guideName]/
+      uniqueChild.mdx
+      childTwo/
+        index.mdx
+```
+
+Las plataformas generarán una lista de “guías” que heredarán todo el contenido de common. Siguiendo el ejemplo anterior, obtenemos una variedad de URL semiduplicadas:
+
+```
+/platforms/platformName/
+/platforms/platformName/config.yml
+/platforms/platformName/child/
+/platforms/platformName/childTwo/
+/platforms/platformName/aSharedPage/
+/platforms/platformName/guides/guideName/
+/platforms/platformName/guides/guideName/config.yml
+/platforms/platformName/guides/guideName/child/
+/platforms/platformName/guides/guideName/uniqueChild/
+/platforms/platformName/guides/guideName/childTwo/
+/platforms/platformName/guides/guideName/aSharedPage/
+```
+
+Esto se genera heredando todo el contenido del directorio `common/`, y luego agregando (o sobrescribiendo) contenido de los elementos hermanos (o “hijos”, como los llamaríamos). En el ejemplo anterior, verás que `aSharedPage` se carga en dos URL diferentes, y `childTwo` es reemplazado por `guideName`.
+
+La barra lateral en las páginas de plataforma (gestionada por `<PlatformSidebar>`) se generará con la Guía, o con la Plataforma base como sección principal, además de una lista de otras guías disponibles en una sección debajo. Esto significa que todo el contenido se centra en la guía actual (generalmente un framework) en la que se encuentran, garantizando una navegación sencilla.
+
+
+<div id="configuration">
+  ## Configuración
+</div>
+
+La configuración se lee (en orden) desde `[namespace]/index.mdx` y `[namespace]/config.yml`. Esto significa que el índice de una plataforma puede renderizarse por completo a través de una página común.
+
+Los atributos de configuración válidos son:
+
+`title`
+
+El nombre para mostrar de una plataforma.
+
+`supportLevel`
+
+El nivel de soporte: `production` (predeterminado) o `community`.
+
+`caseStyle`
+
+El estilo de escritura de los ejemplos de código: `canonical` (predeterminado), `camelCase`, `snake_case` o `PascalCase`.
+
+`categories`
+
+Una lista de categorías para compatibilidad futura. Los valores conocidos son `browser`, `mobile`, `desktop` y `server`.
+
+`fallbackPlatform`
+
+La clave que se usará para los valores predeterminados. Puede usar la sintaxis de clave completa `platformName` o `platformName.guideName`.
+
+`sdk`
+
+El nombre del SDK, si está disponible. Se usa para insertar información del SDK en las páginas.
+
+`aliases`
+
+Una lista de alias para esta plataforma. Por ejemplo, "Cocoa" podría aplicar a Apple, o "C#" podría aplicar a .NET.
+
+`showIntegrationsInSearch`
+
+Si se deben mostrar las integraciones en los resultados de búsqueda en la página de inicio.
+
+**Nota:** Esto solo aplica a plataformas que no tienen guías, como Python.
+
+<div id="shared-content">
+  ## Contenido compartido
+</div>
+
+El contenido compartido (duplicado) dentro de un SDK (plataforma) está disponible en la carpeta `src/platforms/[platformName]/common/`.
+
+Todo este contenido se duplicará automáticamente en cada guía. Esto utiliza componentes como `PlatformContent`, que pueden sustituir el contenido de forma automática.
+
+<div id="page-visibility">
+  ### Visibilidad de la página
+</div>
+
+A veces, una página puede no tener sentido dentro del contexto de una guía concreta. Para controlar esto, puedes usar el frontmatter `supported` y `notSupported` en las páginas comunes de las plataformas.
+
+<Alert>
+  La visibilidad de la página funciona de forma similar a los atributos `supported`/`notSupported` en otros componentes de la plataforma (como `PlatformSection`).
+</Alert>
+
+Por ejemplo, si quisieras ocultar el contenido de una plataforma de forma predeterminada, pero habilitarlo para una guía, puedes hacerlo así:
+
+```markdown
+---
+supported:
+  - native.wasm
+notSupported:
+  - native
+---
+```
+
+Si la página que ocultas de forma condicional tiene subpáginas, también debes añadir las anotaciones `supported`/`notSupported` a esas subpáginas.
+
+
+<div id="platform-specific-components">
+  ## Componentes específicos de la plataforma
+</div>
+
+Hay varios componentes que facilitan el desarrollo de páginas específicas de una plataforma y que también se comportan de manera diferente cuando hay una plataforma activa. Para más información, consulta [componentes](../pages/components/).
+
+<div id="delineation">
+  ## Delimitación
+</div>
+
+Distinguimos las plataformas por lenguaje y por la interacción del desarrollador. Un SDK de nivel superior se considera una plataforma. Una plataforma puede tener guías para los frameworks que admite, y estas guías a menudo heredan gran parte de su contenido de su plataforma principal.
+
+En general, usa este árbol de decisiones:
+
+- ¿Es un nuevo lenguaje de programación? -> nueva plataforma
+- ¿Requiere un SDK independiente o una forma distinta de enviar datos a Sentry? -> nueva plataforma
+- ¿Se considera una “plataforma”? -> nueva plataforma
+- De lo contrario -> agrégalo como una guía a una plataforma existente
+
+<div id="example">
+  ### Ejemplo
+</div>
+
+JavaScript es un SDK de nivel superior porque los frameworks que admite comparten gran parte del contenido.
+
+Por otro lado, Android y Java tienen muy poca superposición. Como resultado, ambos son plataformas de nivel superior.

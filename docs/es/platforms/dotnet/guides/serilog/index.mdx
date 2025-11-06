@@ -1,0 +1,114 @@
+---
+title: Serilog
+sdk: sentry.dotnet.serilog
+description: "Obtén más información sobre la integración de Sentry con Serilog en .NET."
+---
+
+Sentry ofrece una integración con `Serilog` a través del [paquete NuGet Sentry.Serilog](https://www.nuget.org/packages/Sentry.Serilog).
+
+<div id="overview-of-the-features">
+  ## Descripción general de las funcionalidades
+</div>
+
+- Almacenar mensajes de registro como breadcrumbs
+- Enviar eventos a Sentry
+- Enviar registros estructurados a Sentry
+
+Dos configuraciones independientes definen el nivel mínimo de registro para conservar la entrada como un `Breadcrumb` y para enviar un `Event` a Sentry. Los eventos incluyen cualquier breadcrumb almacenado en ese [scope](enriching-events/scopes/).
+
+De forma predeterminada, cualquier mensaje con nivel de registro `Information` o superior se conservará como un `Breadcrumb`.
+
+El valor predeterminado para informar una entrada de registro como un evento a Sentry es `Error`.
+
+Esto significa que, de forma predeterminada, cualquier llamada a `LogError` creará un `Event` que incluirá todos los mensajes de registro de nivel `Information`, `Warning`, así como `Error` y `Critical`.
+
+Además, cuando está habilitado, los mensajes de registro se envían a Sentry como [registros estructurados](logs/).
+
+<div id="install">
+  ## Instalación
+</div>
+
+Añade la dependencia de Sentry:
+
+```powershell {tabTitle:Package Manager}
+Install-Package Sentry.Serilog -Version {{@inject packages.version('sentry.dotnet.serilog') }}
+```
+
+```shell {tabTitle:.NET Core CLI}
+dotnet add package Sentry.Serilog -v {{@inject packages.version('sentry.dotnet.serilog') }}
+```
+
+Este paquete amplía el SDK principal de `Sentry`. Esto significa que, además de las funciones relacionadas con el logging, con este paquete también tendrás acceso a todas las API y funciones disponibles en el SDK principal de `Sentry`.
+
+<Alert level="warning" title="Nota">
+  Los mensajes registrados desde ensamblajes cuyo nombre comience por `Sentry` no generarán eventos.
+</Alert>
+
+
+<div id="configure">
+  ## Configurar
+</div>
+
+Puedes configurar el sink de Sentry para Serilog de la siguiente manera:
+
+```csharp
+Log.Logger = new LoggerConfiguration()
+  .WriteTo.Sentry(o =>
+  {
+    // Debug y niveles superiores se almacenan como breadcrumbs (por defecto es Information)
+    o.MinimumBreadcrumbLevel = LogEventLevel.Debug;
+    // Warning y niveles superiores se envían como evento (por defecto es Error)
+    o.MinimumEventLevel = LogEventLevel.Warning;
+  })
+  .CreateLogger();
+```
+
+También puedes inicializar el SDK mediante la integración con Serilog. Esto es útil cuando Serilog es la única integración que se utiliza en tu aplicación. Para inicializar el SDK de Sentry a través de la integración con Serilog, proporciónale el DSN:
+
+```csharp
+Log.Logger = new LoggerConfiguration()
+  .WriteTo.Sentry(o => o.Dsn = "___PUBLIC_DSN___")
+  .CreateLogger();
+```
+
+<Alert>
+  El SDK solo necesita inicializarse una vez. Si se proporciona un `DSN` a esta integración, de forma predeterminada **sí** inicializará el SDK. Si no deseas inicializar el SDK mediante esta integración, establece el indicador `InitializeSdk` en **false**. No proporcionar un DSN o dejarlo como `null` indica a la integración que no inicialice el SDK y, a menos que otra integración lo inicialice o llames a `SentrySdk.Init`, el SDK permanecerá deshabilitado.
+</Alert>
+
+
+<div id="options">
+  ### Opciones
+</div>
+
+<div id="minimumbreadcrumblevel">
+  #### MinimumBreadcrumbLevel
+</div>
+
+Un `LogLevel` que indica el nivel mínimo que debe tener un mensaje de registro para incluirse como migaja de pan (breadcrumb). De forma predeterminada, este valor es `Information`.
+
+<div id="minimumeventlevel">
+  #### MinimumEventLevel
+</div>
+
+Un `LogLevel` que indica el nivel mínimo que debe tener un mensaje de registro para enviarse a Sentry como evento. De forma predeterminada, este valor es `Error`.
+
+<div id="initializesdk">
+  #### InitializeSdk
+</div>
+
+Indica si esta integración debe inicializar el SDK. Si piensas llamar a `SentrySdk.Init` por tu cuenta, establece este indicador en «false».
+
+<div id="verify">
+  ## Verificar
+</div>
+
+Este fragmento incluye un error intencional para que puedas comprobar que todo funciona en cuanto lo configures.
+
+<PlatformContent includePath="getting-started-verify" />
+
+<div id="samples">
+  ## Ejemplos
+</div>
+
+- Un [ejemplo sencillo](https://github.com/getsentry/sentry-dotnet/tree/main/samples/Sentry.Samples.Serilog).
+- Un [ejemplo con ASP.NET Core](https://github.com/getsentry/sentry-dotnet/tree/main/samples/Sentry.Samples.AspNetCore.Serilog).

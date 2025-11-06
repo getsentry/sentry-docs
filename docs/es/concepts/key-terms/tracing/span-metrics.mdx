@@ -1,0 +1,333 @@
+---
+title: Métricas de spans
+description: "Descubre cómo adjuntar atributos a los spans ofrece un monitoreo del rendimiento más completo y una depuración más eficaz."
+sidebar_order: 10
+---
+
+Las métricas de spans te permiten adjuntar atributos definidos por el usuario a los spans, que pueden incluir métricas de la aplicación o contexto de depuración importante dentro de los trazas de tu aplicación. Este enfoque ofrece un monitoreo del rendimiento con contexto enriquecido al vincular los atributos directamente con las operaciones que los generan.
+
+Estos atributos te permiten enriquecer los spans de trazas con información que representa distintos tipos de datos de medición:
+
+* Atributos de rendimiento (uso de memoria, tiempo de procesamiento, latencia)
+* Métricas de negocio (valor de transacción, tasas de interacción de usuarios)
+* Indicadores técnicos (profundidad de cola, tasas de aciertos de caché)
+* Contexto de depuración (parámetros de entrada, estados del proceso)
+
+Al adjuntar atributos directamente a los spans, creas una vista unificada tanto de la ruta de ejecución como de sus datos de rendimiento asociados.
+
+```javascript
+// Agregar métricas de rendimiento a un span de base de datos
+// Consulta simple a la base de datos con atributos dinámicos
+Sentry.startSpan(
+  {
+    name: "Consulta a la base de datos",
+    op: "db.query",
+  },
+  (span) => {
+    // Ejecutar la consulta y agregar los resultados al span
+    const result = executeQuery("SELECT * FROM users WHERE active = true");
+
+    // Definir atributos con los datos de los resultados
+    span.setAttribute("db.rows_returned", result.length);
+    span.setAttribute("db.execution_time_ms", result.executionTime);
+
+    return result;
+  }
+);
+```
+
+<div id="benefits-of-configuring-span-attributes">
+  ## Beneficios de configurar atributos de span
+</div>
+
+<div id="contextual-observability">
+  ### Observabilidad contextual
+</div>
+
+Los atributos de los spans proporcionan datos contextuales que vinculan el flujo de ejecución con métricas específicas importantes para los desarrolladores o con mediciones de rendimiento. Al investigar un problema, puedes ver tanto lo que ocurrió (la traza) como las características de rendimiento en una sola vista.
+
+<div id="unified-telemetry">
+  ### Telemetría unificada
+</div>
+
+Al integrar estos atributos en el trazado, puedes mantener una única canalización de telemetría en lugar de gestionar sistemas separados para trazas y métricas, lo que simplifica la instrumentación y hace el monitoreo más eficiente.
+
+```javascript
+// Añadir contexto de negocio a un span de procesamiento de pagos
+Sentry.startSpan(
+  {
+    name: "Procesar pago",
+    op: "payment.process",
+    attributes: {
+      "payment.amount": 99.99,
+      "payment.currency": "USD",
+      "payment.method": "credit_card",
+      "customer.type": "returning",
+    },
+  },
+  async () => {
+    // Implementación del procesamiento de pagos
+  }
+);
+```
+
+<div id="accelerated-troubleshooting">
+  ### Resolución de problemas acelerada
+</div>
+
+Cuando surgen problemas de rendimiento, estos atributos brindan el contexto necesario para identificar rápidamente los cuellos de botella. Por ejemplo, al investigar un proceso de pago lento, puedes ver de inmediato qué componente específico (pasarela de pago, consulta a la base de datos, API de terceros) está causando la demora.
+
+<div id="technical-business-correlation">
+  ### Correlación técnico‑empresarial
+</div>
+
+Los atributos de span permiten correlacionar el rendimiento técnico con los resultados del negocio al vincular métricas como el tiempo de respuesta o la tasa de errores directamente con métricas empresariales como la tasa de conversión o los ingresos.
+
+<div id="implementation-approaches">
+  ## Enfoques de implementación
+</div>
+
+Hay dos métodos principales para implementar atributos en los spans:
+
+<div id="1-enhancing-existing-spans">
+  ### 1. Mejora de los spans existentes
+</div>
+
+Enriquece los spans creados automáticamente o definidos manualmente con atributos adicionales:
+
+```javascript
+// Añadir métricas a un span de carga de archivos existente
+const span = Sentry.getActiveSpan();
+if (span) {
+  // Contexto del usuario
+  span.setAttribute("user.subscription_tier", "premium");
+
+  // Varias métricas en una sola operación
+  span.setAttributes({
+    "memory.heap_used": 1024000,
+    "processing.total_steps": 5,
+  });
+}
+```
+
+<div id="2-creating-dedicated-metric-spans">
+  ### 2. Creación de spans de métricas dedicados
+</div>
+
+Crea spans específicamente para agrupar atributos o métricas relacionados; resulta especialmente útil en operaciones complejas:
+
+```javascript
+// Creación de un span para supervisar el uso de una API externa
+Sentry.startSpan(
+  {
+    name: "Uso de API de terceros",
+    op: "external.api",
+    attributes: {
+      // Métricas de rendimiento
+      "api.response_time_ms": 245,
+
+      // Datos de contexto
+      "feature.using_api": "image_recognition",
+      "user.plan": "enterprise",
+    },
+  },
+  async () => {
+    // Implementación de la llamada a la API
+  }
+);
+```
+
+<div id="implementation-use-cases">
+  ## Casos de uso de la implementación
+</div>
+
+Los siguientes ejemplos muestran cómo aplicar atributos a escenarios habituales de aplicaciones:
+
+<div id="user-interface-performance">
+  ### Rendimiento de la interfaz de usuario
+</div>
+
+Supervisa las métricas de rendimiento del lado del cliente relacionadas con la experiencia del usuario:
+
+```javascript
+// Monitoreo del rendimiento de la interfaz
+Sentry.startSpan(
+  {
+    name: "Interacción de la página",
+    op: "ui.interaction",
+    attributes: {
+      "ui.first_input_delay_ms": 24,
+      "ui.time_to_interactive_ms": 320,
+      "ui.frames_dropped": 0,
+      "user.device_type": "mobile",
+      "feature.being_used": "image_carousel",
+    },
+  },
+  async () => {
+    // Manejo de la interacción de la UI
+  }
+);
+```
+
+<div id="database-operation-monitoring">
+  ### Monitoreo de operaciones de base de datos
+</div>
+
+Monitorea las características de rendimiento de la base de datos y su impacto en el comportamiento de la aplicación:
+
+```javascript
+// Monitoreo de consultas a la base de datos
+Sentry.startSpan(
+  {
+    name: "Consulta de búsqueda de productos",
+    op: "db.query",
+    attributes: {
+      "db.query_type": "SELECT",
+      "db.table": "products",
+      "db.execution_time_ms": 145,
+      "db.rows_returned": 87,
+      "db.index_used": "product_category_idx",
+      "business.search_term": "chaqueta de invierno",
+      "business.search_filters_applied": 3,
+    },
+  },
+  async () => {
+    // Ejecución de la consulta a la base de datos
+  }
+);
+```
+
+<div id="file-processing-operations">
+  ### Operaciones de procesamiento de archivos
+</div>
+
+Supervisa el manejo de archivos en toda tu pila de aplicaciones:
+
+```javascript
+// Monitoreo del procesamiento de archivos
+Sentry.startSpan(
+  {
+    name: "Procesar imagen cargada",
+    op: "file.process",
+    attributes: {
+      // Métricas técnicas
+      "file.size_bytes": 2500000,
+      "file.type": "image/jpeg",
+
+      // Métricas de procesamiento
+      "processing.steps_completed": ["virus_scan", "resize", "compress"],
+      "processing.total_time_ms": 850,
+
+      // Datos de contexto
+      "feature.using_upload": "user_avatar",
+      "subscription.allows_hd": true,
+    },
+  },
+  async () => {
+    // Implementación del procesamiento de la imagen
+  }
+);
+```
+
+<div id="external-service-integration">
+  ### Integración con servicios externos
+</div>
+
+Supervisa el rendimiento y la confiabilidad de las interacciones con servicios de terceros:
+
+```javascript
+// Monitoreo del gateway de pagos
+Sentry.startSpan(
+  {
+    name: "Gateway de pagos",
+    op: "payment.gateway",
+    attributes: {
+      // Métricas de rendimiento
+      "gateway.response_time_ms": 980,
+      "gateway.retry_count": 0,
+
+      // Datos de la transacción
+      "order.total_amount": 159.99,
+      "order.items_count": 3,
+
+      // Métricas del servicio
+      "gateway.fee_amount": 4.5,
+      "gateway.fee_percent": 0.029,
+    },
+  },
+  async () => {
+    // Integración con el gateway de pagos
+  }
+);
+```
+
+<div id="implementation-guidelines">
+  ## Directrices de implementación
+</div>
+
+<div id="best-practices">
+  ### Buenas prácticas
+</div>
+
+<div id="metric-selection-and-design">
+  #### Selección y diseño de métricas
+</div>
+
+Elige métricas que ofrezcan información accionable para depurar o monitorear el rendimiento. Piensa qué datos te ayudarían a diagnosticar problemas o a tomar decisiones informadas sobre tu aplicación.
+
+<div id="naming-conventions">
+  #### Convenciones de nombres
+</div>
+
+Mantén patrones de nombres coherentes siguiendo el formato `category.metric_name` para asegurar que las métricas sean fáciles de descubrir y comprender en toda tu organización.
+
+<div id="data-type-selection">
+  #### Selección de tipos de datos
+</div>
+
+Elige tipos de datos adecuados para tus métricas:
+
+* Valores numéricos para medidas (`response_time_ms`: 250)
+* Valores booleanos para indicadores de estado (`cache.hit`: true)
+* Valores de texto para datos categóricos (`user.subscription`: &#39;premium&#39;)
+* Listas/arrays para datos con múltiples valores (`processing.steps_completed`: [&#39;download&#39;, &#39;process&#39;, &#39;upload&#39;])
+
+<div id="performance-considerations">
+  #### Consideraciones sobre el rendimiento
+</div>
+
+Ten en cuenta el impacto en el rendimiento al recopilar métricas, especialmente en operaciones de alto volumen:
+
+* Considera aplicar muestreo en operaciones de alta frecuencia
+* Prioriza las métricas con mayor valor analítico
+* Evita métricas redundantes o estrechamente correlacionadas
+
+<div id="migrating-from-standalone-metrics">
+  ## Migración desde Metrics independiente
+</div>
+
+Si actualmente usas el producto Metrics independiente de Sentry, migrar a atributos de span ofrece varias ventajas:
+
+* **Más contexto**: Los atributos están vinculados directamente a las operaciones que los generan
+* **Implementación más eficiente**: Una única API coherente para trazas y métricas
+* **Mejor correlación**: Asociación directa entre atributos, trazas y errores
+
+Proceso de migración:
+
+1. Identifica tus puntos actuales de instrumentación de métricas
+2. Localiza los spans correspondientes en tu aplicación
+3. Transfiere tus métricas a atributos de span
+4. Actualiza cualquier panel o alerta para que haga referencia a las nuevas fuentes de métricas
+
+<div id="additional-resources">
+  ## Recursos adicionales
+</div>
+
+Para ver ejemplos de implementación más detallados, consulta estas guías:
+
+* [Caso de uso de comercio electrónico](/es/platforms/javascript/tracing/span-metrics/examples/#e-commerce-transaction-flow)
+* [Supervisión de la integración con LLM](/es/platforms/javascript/tracing/span-metrics/examples/#llm-integration-monitoring)
+* [Subida y procesamiento de archivos](/es/platforms/javascript/tracing/span-metrics/examples/#file-upload-and-processing-pipeline)
+* [Planificación y procesamiento de tareas](/es/platforms/javascript/tracing/span-metrics/examples/#job-scheduling-and-processing-pipeline)
+
+Estos ejemplos muestran cómo implementar un seguimiento integral de atributos en sistemas distribuidos, ofreciendo visibilidad de extremo a extremo del rendimiento y el comportamiento de la aplicación.

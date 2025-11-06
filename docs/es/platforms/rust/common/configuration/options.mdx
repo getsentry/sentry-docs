@@ -1,0 +1,176 @@
+---
+title: Opciones
+sidebar_order: 1
+description: "Más información sobre cómo configurar el SDK mediante opciones. Estas se pasan a la función init y, por lo tanto, se establecen cuando el SDK se inicializa por primera vez."
+---
+
+<PlatformContent includePath="configuration/config-intro" />
+
+<div id="available-options">
+  ## Opciones disponibles
+</div>
+
+<TableOfContents ignoreIds={["available-options"]} />
+
+<div id="core-options">
+  ## Opciones principales
+</div>
+
+Las opciones que pueden leerse desde una variable de entorno (`SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`) se leen automáticamente.
+
+<SdkOption name="dsn" type="string" envVar="SENTRY_DSN">
+  El DSN le indica al SDK adónde enviar los eventos. Si no se proporciona este valor, el SDK intentará leerlo de la variable de entorno `SENTRY_DSN`. Si esa variable tampoco existe, el SDK simplemente no enviará eventos.
+
+  Obtén más información sobre el [uso del DSN](/es/product/sentry-basics/dsn-explainer/#dsn-utilization).
+</SdkOption>
+
+<SdkOption name="debug" type="bool" defaultValue="false">
+  Activa o desactiva el modo de depuración. Si la depuración está habilitada, el SDK intentará imprimir información útil de diagnóstico si algo sale mal al enviar el evento. Aunque por lo general no se recomienda activar el modo de depuración en producción, no supone ningún riesgo de seguridad.
+</SdkOption>
+
+<SdkOption name="release" type="string" envVar="SENTRY_RELEASE">
+  Configura la release. Este string es de formato libre y no se establece de forma predeterminada. Sentry detecta algunos formatos y podría mostrarlos de forma diferente. Obtén más información sobre cómo enviar datos de release para que Sentry pueda informarte sobre regresiones entre versiones e identificar la posible fuente en [la documentación de releases](/es/product/releases/) o en el <SandboxLink scenario="releases">sandbox</SandboxLink>.
+</SdkOption>
+
+<SdkOption name="environment" type="string" envVar="SENTRY_ENVIRONMENT">
+  Configura el entorno. Este string es de formato libre y no se establece de forma predeterminada. Una release puede asociarse con más de un entorno para separarlos en la interfaz (piensa en `staging` vs `prod` o similar).
+
+  De forma predeterminada, el SDK intentará leer este valor de la variable de entorno `SENTRY_ENVIRONMENT`. Si no está presente, este valor se establecerá en `development` si las aserciones de depuración están habilitadas; de lo contrario, en `production`.
+</SdkOption>
+
+<SdkOption name="max_breadcrumbs" type="usize" defaultValue="100">
+  Esta variable controla la cantidad total de breadcrumbs que se deben capturar. El valor predeterminado es `100`, pero puedes establecer cualquier número. No obstante, ten en cuenta que Sentry tiene un [tamaño máximo de carga útil](https://develop.sentry.dev/sdk/data-model/envelopes/#size-limits) y cualquier evento que lo exceda se descartará.
+</SdkOption>
+
+<SdkOption name="attach_stacktrace" type="bool" defaultValue="false">
+  Cuando está habilitado, los stack traces se adjuntan automáticamente a todos los mensajes registrados. Los stack traces siempre se adjuntan a las excepciones; sin embargo, cuando esta opción está activada, también se envían con los mensajes. Esta opción, por ejemplo, hace que los stack traces aparezcan junto a todos los mensajes de registro.
+
+  Esta opción está desactivada de forma predeterminada.
+
+  La agrupación en Sentry es diferente para eventos con y sin stack traces. Como resultado, se crearán grupos nuevos al habilitar o deshabilitar este indicador para ciertos eventos.
+</SdkOption>
+
+<SdkOption name="send_default_pii" type="bool" defaultValue="false">
+  Si este indicador está habilitado, ciertas informaciones de identificación personal (PII) son agregadas por las integraciones activas. De forma predeterminada, no se envía este tipo de datos.
+
+  Si habilitas esta opción, asegúrate de eliminar manualmente lo que no deseas enviar usando nuestras funciones para gestionar [*datos confidenciales*](../../data-management/sensitive-data/).
+</SdkOption>
+
+<SdkOption name="in_app_include" type="Vec<&'static str>">
+  Una lista de prefijos de string de nombres de módulos que pertenecen a la aplicación. Esta opción tiene prioridad sobre `in_app_exclude`.
+
+  Sentry diferencia los frames de la pila directamente relacionados con tu aplicación (“in application”) de los que provienen de otros paquetes, como la biblioteca estándar, frameworks u otras dependencias. El paquete de la aplicación se marca automáticamente como `inApp`. La diferencia es visible en [sentry.io](https://sentry.io), donde solo los frames “in application” se muestran de forma predeterminada.
+</SdkOption>
+
+<SdkOption name="in_app_exclude" type="Vec<&'static str>">
+  Una lista de prefijos de string de nombres de módulos que no pertenecen a la aplicación, sino a paquetes de terceros. Los módulos considerados fuera de la aplicación se ocultarán de los stack traces de forma predeterminada.
+
+  Esta opción puede anularse usando `in_app_include`.
+</SdkOption>
+
+<SdkOption name="server_name" type="string">
+  El nombre del servidor que se debe informar. Si no se configura, el nombre del servidor no se envía con los eventos.
+</SdkOption>
+
+<SdkOption name="user_agent" type="string" defaultValue="sentry.rust/<version>">
+  El user agent que se debe informar al enviar eventos a Sentry.
+</SdkOption>
+
+<SdkOption name="before_breadcrumb" type="Fn">
+  Esta función se llama con una estructura de breadcrumb antes de que el breadcrumb se agregue al alcance (scope). Si la función devuelve `None`, el breadcrumb se descarta. Para dejarlo pasar, devuelve el propio breadcrumb.
+</SdkOption>
+
+<SdkOption name="max_request_body_size" type="MaxRequestBodySize" defaultValue="MaxRequestBodySize::Medium">
+  Esta opción controla el tamaño máximo de los cuerpos de solicitud que las integraciones de servidor HTTP envían a Sentry.
+  El valor predeterminado `MaxRequestBodySize::Medium` capturará cuerpos de solicitud de hasta 10 kB.
+</SdkOption>
+
+<SdkOption name="shutdown_timeout" type="Duration" defaultValue="Duration::from_secs(2)">
+  El tiempo de espera al liberar el cliente para drenar eventos durante el apagado. Controla cuánto tiempo esperará el SDK a que se envíen los eventos pendientes al cerrarse.
+</SdkOption>
+
+<SdkOption name="integrations" type="Vec<Arc<dyn Integration>>">
+  Una lista de integraciones para habilitar. Te permite elegir manualmente qué integraciones activar.
+  De forma predeterminada, solo se habilitan las integraciones predeterminadas.
+</SdkOption>
+
+<SdkOption name="default_integrations" type="bool" defaultValue="true">
+  Si se deben agregar integraciones predeterminadas. Cuando se establece en `false`, no se agregarán automáticamente.
+  La lista de integraciones predeterminadas depende de los flags de características del crate `sentry` que estén activos.
+</SdkOption>
+
+<div id="error-monitoring-options">
+  ## Opciones de monitorización de errores
+</div>
+
+<SdkOption name="sample_rate" type="f32" defaultValue="1.0">
+  Configura la tasa de muestreo de los eventos de error, en un rango de `0.0` a `1.0`. El valor predeterminado es `1.0`, lo que significa que se enviará el 100% de los eventos de error. Si se establece en `0.1`, solo se enviará el 10% de los eventos de error. Los eventos se seleccionan al azar.
+</SdkOption>
+
+<SdkOption name="before_send" type="Fn">
+  Esta función se invoca con la carga del evento y puede devolver una estructura de evento modificada o `None` para omitir el envío del evento. Puede usarse, por ejemplo, para eliminar PII manualmente antes de enviarlo.
+
+  Para cuando se ejecuta `before_send`, ya se han aplicado todos los datos del ámbito (scope) al evento. Cualquier modificación posterior del ámbito no tendrá efecto.
+</SdkOption>
+
+<div id="tracing-options">
+  ## Opciones de trazas
+</div>
+
+<SdkOption name="traces_sample_rate" type="f32" defaultValue="0.0">
+  Un número entre `0.0` y `1.0` que controla la probabilidad (en porcentaje) de que una transacción dada se envíe a Sentry (`0.0` representa 0% y `1.0` representa 100%). Se aplica por igual a todas las transacciones creadas en la aplicación.
+</SdkOption>
+
+<SdkOption name="traces_sampler" type="Fn">
+  Si se proporciona, se invoca con un `SamplingContext` para cada transacción para determinar la tasa de muestreo. Devuelve una tasa de muestreo entre `0.0` y `1.0` para la transacción en cuestión. Tiene prioridad sobre `traces_sample_rate`.
+</SdkOption>
+
+<div id="transport-options">
+  ## Opciones de transporte
+</div>
+
+<SdkOption name="http_proxy" type="string" envVar="HTTP_PROXY">
+  Cuando se establece, permite configurar un proxy que se usará para las solicitudes salientes. También se usa para solicitudes HTTPS, a menos que se configure un `https_proxy` por separado. Sin embargo, no todos los SDK admiten un proxy HTTPS independiente. Cuando sea posible, los SDK intentarán usar por defecto el proxy configurado a nivel del sistema. Por ejemplo, en sistemas Unix se detectará la variable de entorno `HTTP_PROXY`.
+</SdkOption>
+
+<SdkOption name="https_proxy" type="string" envVar="HTTPS_PROXY">
+  Configura un proxy independiente para solicitudes HTTPS salientes. Si no se proporciona esta opción pero sí `http_proxy`, entonces `http_proxy` también se usará para solicitudes HTTPS.
+</SdkOption>
+
+<SdkOption name="accept_invalid_certs" type="bool" envVar="SSL_VERIFY" defaultValue="false">
+  Configurar esto en `true` desactiva la validación de certificados SSL al enviar solicitudes salientes a Sentry. Nunca debe habilitarse al usar el SDK en tu base de código real ni al manejar cualquier tipo de información sensible o de identificación personal, ya que podría exponerse a posibles atacantes.
+</SdkOption>
+
+<SdkOption name="transport" type="Arc<dyn TransportFactory>">
+  El transporte que se usará para enviar envelopes a Sentry.
+  Normalmente es una función boxed que toma las opciones del cliente por referencia y devuelve un `Transport`, un `Arc<Transport>` boxed o, alternativamente, el `DefaultTransportFactory`.
+  De forma predeterminada, el SDK utiliza un transporte basado en el crate `reqwest` que se ejecuta en un hilo en segundo plano.
+</SdkOption>
+
+<div id="logging-options">
+  ## Opciones de logging
+</div>
+
+Las siguientes funciones y opciones solo están disponibles cuando la feature `logs` del crate `sentry` está habilitada. No está habilitada de forma predeterminada.
+
+<SdkOption name="enable_logs" type="bool" defaultValue="true">
+  Determina si los logs estructurados capturados deben enviarse a Sentry.
+</SdkOption>
+
+<SdkOption name="before_send_log" type="Fn">
+  Callback que se ejecuta para cada log capturado. Si la función devuelve `None`, el registro de log se descarta. Para dejar pasar el registro, devuelve el propio registro.
+</SdkOption>
+
+<div id="session-tracking-options">
+  ## Opciones de seguimiento de sesiones
+</div>
+
+Las siguientes funciones y opciones solo están disponibles cuando la característica `release-health` del crate `sentry` está habilitada. Es una característica predeterminada.
+
+<SdkOption name="auto_session_tracking" type="bool" defaultValue="false">
+  Habilita el seguimiento de sesiones de Release Health. Cuando el seguimiento automático de sesiones está habilitado, se inicia una nueva sesión en &quot;modo usuario&quot; en el momento de `sentry::init` y se mantiene durante toda la vida de la aplicación.
+</SdkOption>
+
+<SdkOption name="session_mode" type="SessionMode" defaultValue="SessionMode::Application">
+  Define cómo se rastrean las sesiones. Controla el modo de seguimiento de sesiones cuando `auto_session_tracking` está habilitado.
+</SdkOption>

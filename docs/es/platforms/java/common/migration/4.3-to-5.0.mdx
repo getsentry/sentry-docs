@@ -1,0 +1,46 @@
+---
+title: Migrar de la versión 4.3 a la 5.0
+sidebar_order: 998
+description: "Aprende a migrar de la versión 4.3.0 a la 5.0.0"
+---
+
+<div id="migrating-from-iosentrysentry-430-to-iosentrysentry-500">
+  ## Migración de `io.sentry:sentry` `4.3.0` a `io.sentry:sentry` `5.0.0`
+</div>
+
+De forma predeterminada, `Sentry#startTransaction` no vincula la transacción creada al ámbito. Para iniciar una transacción vinculándola al ámbito, usa uno de los nuevos métodos sobrecargados de `startTransaction` que aceptan el parámetro `bindToScope` y configúralo en `true`. La transacción vinculada se puede recuperar con `Sentry#getSpan`.
+
+Todos los métodos del SDK han sido anotados con [JetBrains Annotations](https://github.com/JetBrains/java-annotations): `@Nullable` y `@NotNull`. El compilador de Kotlin respeta estas anotaciones y, como resultado, en código Kotlin, algunos campos que se consideraban no nulos ahora son anulables, y viceversa.
+
+`SentryBaseEvent#getOriginThrowable` se ha marcado como obsoleto en favor de `SentryBaseEvent#getThrowable`, y `SentryBaseEvent#getThrowable` ahora devuelve la excepción (throwable) sin envolver.
+
+`ShutdownHookIntegration` ahora vacía (flush) el SDK en lugar de cerrarlo.
+
+`SentryOptions#getCacheDirSize` se ha marcado como obsoleto en favor de `SentryOptions#getMaxCacheItems`.
+
+Se ha eliminado `InvalidDsnException`. Se reemplaza por `IllegalArgumentException`.
+
+La interfaz `EventProcessor` tiene un nuevo método `default` que podría romper la instanciación cuando se usan lambdas finales (trailing lambdas).
+
+*Antiguo*:
+
+```kotlin
+SentryOptions#addEventProcessor { event, _ -> event }
+```
+
+*Novedad:*
+
+```kotlin
+SentryOptions#addEventProcessor(object : EventProcessor {
+    override fun process(evento: SentryEvent, hint: Hint): SentryEvent? {
+        return evento
+    }
+})
+```
+
+
+<div id="spring-boot">
+  ### Spring Boot
+</div>
+
+La propiedad `sentry.enable-tracing` está obsoleta. Para habilitar el tracing, simplemente establece `sentry.traces-sample-rate` o crea un bean que implemente `TracesSamplerCallback`.

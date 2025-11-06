@@ -1,0 +1,47 @@
+---
+title: Instrumentación automática
+description: "Descubre qué transacciones se capturan después de habilitar el rastreo."
+sidebar_order: 10
+---
+
+<Alert>
+  Para capturar transacciones, primero debes <PlatformLink to="/tracing/">configurar el rastreo</PlatformLink>, si aún no lo has hecho.
+</Alert>
+
+<div id="httpclient-library-instrumentation">
+  ### Instrumentación de la biblioteca http.Client
+</div>
+
+La instrumentación de `http.Client`, una vez que agregas `SentryHttpClient` y habilitas la función de [rendimiento](/es/platforms/dart/tracing/), inicia un span a partir del span activo asociado al scope para cada solicitud HTTP. El SDK establece la `operation` del span como `http.client` y la `description` como `$METHOD $url`; por ejemplo, `GET https://sentry.io`.
+
+El span finaliza cuando se ejecuta la solicitud. El `status` del span depende del `code` de la respuesta HTTP o será `SpanStatus.internalError()` si el `code` no coincide con ninguno de los `SpanStatus` de Sentry.
+
+Cuando la solicitud HTTP lanza una `Exception`, el SDK de Sentry asocia esa excepción con el span en ejecución. Si no configuraste el SDK para tragar la excepción y capturarla, el span y el `SentryEvent` aparecerán vinculados al verlo en la página **Issue Details** en sentry.io.
+
+Para más información, consulta nuestra [integración de SentryHttpClient](/es/platforms/dart/integrations/http-integration/#performance-monitoring-for-http-requests).
+
+<div id="dio-http-library-instrumentation">
+  ### Instrumentación de la biblioteca HTTP Dio
+</div>
+
+La instrumentación de Dio inicia un span a partir del span activo vinculado al scope para cada solicitud HTTP. El SDK establece `operation` del span en `http.client` y `description` en `$METHOD $url`. Por ejemplo, `GET https://sentry.io`.
+
+El span finaliza una vez ejecutada la solicitud. El `status` del span depende del `code` de la respuesta HTTP o de `SpanStatus.internalError()` si el `code` no coincide con ninguna de las opciones de `SpanStatus` de Sentry.
+
+Cuando la solicitud HTTP lanza una `Exception`, el SDK de Sentry asocia esa excepción al span en ejecución. Si no has configurado el SDK para suprimir la excepción y capturarla, el span y el `SentryEvent` aparecerán vinculados al verlo en la página **Issue Details** en [sentry.io](https://sentry.io).
+
+Obtén más información en nuestra [documentación sobre la integración de Dio](/es/platforms/dart/integrations/dio/#performance-monitoring-for-http-requests).
+
+<div id="file-io-instrumentation">
+  ### Instrumentación de E/S de archivos
+</div>
+
+La implementación de E/S de archivos específica de Sentry inicia un span a partir del span activo y lo vincula al scope para cada operación de E/S de archivos. El SDK establece la propiedad `operation` del span en `file.copy`, `file.write`, `file.delete`, `file.open`, `file.read` o `file.rename`, y `description` en `filename` (por ejemplo, `file.txt`).
+
+Además, el span incluye otra información útil como `file.size` (cantidad de bytes), `file.path` (una ruta absoluta al archivo) y `file.async` (`true` si el método invocado devuelve un `Future`, o `false` si es una llamada `Sync`), como parte de la carga útil `data`.
+
+El span finaliza una vez que se ejecuta la operación. Luego, la propiedad `status` del span se establece en `SpanStatus.ok` si fue exitosa, o en `SpanStatus.internalError` si hubo un error.
+
+Cuando la operación lanza una `Exception`, el SDK de Sentry la asocia con el span en ejecución. Si no has configurado el SDK para tragar y capturar la excepción, el span y el `SentryEvent` aparecerán como vinculados en la página **Issue Details** en [sentry.io](https://sentry.io).
+
+Para obtener más información, consulta nuestra [integración de E/S de archivos](/es/platforms/dart/integrations/file/).

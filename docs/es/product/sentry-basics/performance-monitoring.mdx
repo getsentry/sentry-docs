@@ -1,0 +1,99 @@
+---
+title: "Monitoreo del rendimiento"
+sidebar_order: 1
+description: "Comprende y monitorea cómo se comporta tu aplicación en producción. Haz seguimiento de métricas clave, analiza cuellos de botella y soluciona problemas de rendimiento con trazabilidad distribuida, datos detallados de transacciones y detección automática de incidencias."
+---
+
+En muchas herramientas, el monitoreo del rendimiento se limita a seguir unas cuantas métricas clave en tus páginas web. Sentry adopta un enfoque diferente. Al configurar el [tracing](/es/concepts/key-terms/tracing/), Sentry captura datos de rendimiento detallados para cada transacción en toda tu pila de aplicaciones y los presenta automáticamente en una variedad de funciones fáciles de usar pero potentes, para que puedas identificar y resolver rápidamente los problemas de rendimiento a medida que ocurren, todo en un solo lugar.
+
+<Alert>
+  Configura el [trazado distribuido](/es/product/sentry-basics/tracing/) para habilitar el monitoreo del rendimiento.
+</Alert>
+
+<div id="ways-to-monitor-performance-in-sentry">
+  ## Formas de supervisar el rendimiento en Sentry
+</div>
+
+Sentry ofrece varias herramientas para supervisar el rendimiento, útiles para distintos aspectos de tus necesidades de supervisión y depuración:
+
+<div id="1-insights-opinionated-views-of-performance-data-for-each-layer-of-your-stack">
+  ### 1: Insights: Opiniones fundamentadas sobre los datos de rendimiento de cada capa de tu stack
+</div>
+
+Después de activar el trazado distribuido (Distributed Tracing), verás automáticamente un conjunto de páginas de [Insights](/es/product/insights/) que te ofrecen una vista de alto nivel de los datos de rendimiento de cada capa de tu stack. Esto es muy útil para detectar rápidamente valores atípicos importantes que requieren optimización o para seguir posibles regresiones a lo largo del tiempo, entornos, versiones, etc.
+
+* [**Frontend Insights**](/es/product/insights/frontend) te ofrece una forma sencilla pero potente de profundizar en problemas comunes de rendimiento del frontend con elementos como Core Web Vitals, así como en el rendimiento de transacciones con métricas como la duración y la tasa de errores.
+* [**Backend Insights**](/es/product/insights/backend/) muestra el rendimiento de las transacciones de tu backend, incluyendo consultas a bases de datos, llamadas a API externas, cachés, colas, tareas programadas (cron) y más.
+* [**Mobile Insights**](/es/product/insights/mobile/) hace seguimiento de métricas de rendimiento clave para tus apps móviles, incluidos los tiempos de inicio en frío y en caliente, TTID y TTFD, y el tiempo de carga o renderizado de pantallas clave en toda tu app.
+* [**AI Insights**](/es/product/insights/ai/) te ofrece una vista del rendimiento de tus LLM. Actualmente está en beta y solo disponible para ciertas integraciones.
+
+Mira el video de demostración a continuación para un recorrido rápido por las páginas de Insights:
+
+<Arcade src="https://demo.arcade.software/BTvUjriSDjaHiVqPvIFP?embed&embed_mobile=tab&embed_desktop=inline&show_copy_link=true" />
+
+<br />
+
+Todas las cuentas tienen acceso a las páginas de insights de nivel superior. Al actualizar al [plan Team](https://sentry.io/signup/?original_referrer=https%3A%2F%2Fwww.google.com%2F\&period=annual\&plan=am1_team_auf\&trial) o superior, obtendrás acceso a páginas de insights más específicas para casos de uso comunes de monitoreo.
+
+<div id="2-performance-issues-automatically-identify-full-stack-bottlenecks">
+  ### 2: Problemas de rendimiento: identifica automáticamente cuellos de botella full stack
+</div>
+
+Además de los [problemas de error](/es/product/issues/issue-details/error-issues/) habituales, Sentry detecta automáticamente problemas de rendimiento comunes y los agrupa como [problemas de rendimiento](/es/product/issues/issue-details/performance-issues/). Por ejemplo:
+
+* Problemas de consultas N+1 y llamadas a API que indican idas y vueltas innecesarias a tu backend
+* Consultas consecutivas a la base de datos o solicitudes HTTP que podrían agruparse para mejorar el rendimiento
+* Consultas a la base de datos o E/S de archivos ejecutándose en el hilo principal, lo que puede bloquear el hilo de la interfaz y causar problemas de rendimiento
+* Y muchos más, documentados [aquí](/es/product/issues/performance-issues/)
+
+<Arcade src="https://demo.arcade.software/t8kZ9OeigLNrH3fLynIu?embed&embed_mobile=tab&embed_desktop=inline&show_copy_link=true" />
+
+<br />
+
+<div id="3-trace-explorer-find-root-causes-common-patterns-for-performance-issues">
+  ### 3: Trace Explorer: Encuentra las causas raíz y patrones comunes de los problemas de rendimiento
+</div>
+
+Si bien Performance Issues e Insights te ofrecen una vista de alto nivel de los datos de rendimiento, el [Trace Explorer](/es/product/explore/traces/) te permite segmentar y analizar todos tus datos por cualquier atributo. Es una herramienta extremadamente potente para encontrar causas raíz y patrones comunes de regresiones de rendimiento o posibles optimizaciones. Por ejemplo, puedes obtener la duración p95 de todos los spans en el endpoint `GET /users/:id`, o identificar todas las páginas que se están ralentizando debido a un middleware en particular.
+
+La versión más reciente de Trace Explorer también te permite calcular rápidamente métricas a partir de tus datos de spans, como las duraciones p50, p95 y p99, y luego agruparlas por cualquier atributo. Esto te permite ver rápidamente si hay endpoints, versiones, grupos de usuarios, etc., específicos que están rindiendo mal. Para una explicación más detallada sobre cómo usar el nuevo Trace Explorer y Span Metrics, echa un vistazo a nuestra [entrada del blog](https://blog.sentry.io/find-and-fix-performance-bottlenecks-with-sentrys-trace-explorer/) más reciente.
+
+<Alert>
+  Esta demo muestra una [nueva versión](/es/product/explore/new-trace-explorer/) de Trace Explorer disponible para todas las organizaciones de autoservicio en el programa Early Adopter. Activa el flag de EA en la [configuración de tu organización](https://sentry.io/orgredirect/settings/:orgslug/) para acceder a Span Metrics, Group By, Create Widgets y Alerts.
+</Alert>
+
+<Arcade src="https://demo.arcade.software/E04YSJpq1w8bpk18Q5Kp" />
+
+<br />
+
+<div id="4-metrics-alerts-and-dashboards-build-custom-views-of-performance-data">
+  ### 4: Métricas, alertas y paneles: Crea vistas personalizadas de datos de rendimiento
+</div>
+
+De forma predeterminada, Sentry realiza automáticamente el seguimiento de un conjunto de [métricas de rendimiento](/es/platforms/javascript/tracing/span-metrics/) para cada traza. Estas se usan para alimentar los paneles de Insights, pero también puedes utilizarlas para crear [paneles](/es/product/dashboards/) y [alertas](/es/product/alerts/) personalizados.
+
+Inscribirte en el programa de [Early Adopter](https://sentry.io/orgredirect/settings/:orgslug/) para Trace Explorer también te da acceso a la nueva función de [Span Metrics](/es/product/explore/new-trace-explorer/#span-metrics/), que te permite calcular métricas personalizadas basadas en tus datos de spans. Esto es muy útil para crear paneles y alertas respaldados por datos reales de trazado de rendimiento, de modo que puedas depurar rápidamente problemas de rendimiento.
+
+<div id="how-to-set-up-performance-monitoring">
+  ## Cómo configurar el monitoreo del rendimiento
+</div>
+
+Para un monitoreo básico del rendimiento en frontend o backend, simplemente activa el tracing en el SDK correspondiente. Esto rastreará automáticamente cada solicitud de red y te proporcionará un conjunto básico de métricas de rendimiento. Sin embargo, para asegurarte de que Sentry capture datos de rendimiento precisos y completos, debes configurar el [tracing distribuido](/es/product/sentry-basics/distributed-tracing/). Next.js, Laravel, Ruby on Rails y algunos otros ofrecen un sólido soporte listo para usar para el tracing distribuido, pero en aplicaciones más complejas o multilenguaje tendrás que configurarlo manualmente. Obtén más información sobre la propagación de trazas [aquí](/es/platforms/javascript/tracing/distributed-tracing/).
+
+<div id="how-performance-monitoring-works-under-the-hood">
+  ## Cómo funciona Performance Monitoring bajo el capó
+</div>
+
+En lugar de instrumentar las cargas de página con métricas específicas en intervalos fijos, como `onLoad`, `onUnload`, `onError`, etc., Sentry procura instrumentar automáticamente las bibliotecas en las que confías, proporcionando telemetría detallada para Web Vitals, E/S de archivos, solicitudes de red y más. Esto te permite ver el impacto en el rendimiento de cada solicitud y cualquier error que ocurra durante esa solicitud.
+
+Esto difiere sustancialmente de otras herramientas de monitoreo de rendimiento que solo capturan métricas *predefinidas* con mucha menos granularidad. Todas tus métricas holísticas en Sentry están respaldadas por datos de trazas en bruto, por lo que puedes profundizar en cualquier solicitud u operación específica para obtener una vista detallada de su rendimiento.
+
+Estas métricas de rendimiento son enviadas por el SDK de Sentry como parte de cada [Span](/es/concepts/key-terms/tracing/#whats-a-span), que es la unidad de trabajo más pequeña en una [Trace](/es/concepts/key-terms/tracing/). Las trazas se ensamblan en el backend de Sentry y luego se extrapolan para alimentar todas las herramientas que tenemos para monitorear el rendimiento.
+
+Esto difiere sustancialmente de otras herramientas de monitoreo de rendimiento que solo capturan métricas en puntos específicos de tu aplicación. En su lugar, todas tus métricas holísticas están respaldadas por datos de trazas en bruto, por lo que puedes profundizar en cualquier solicitud u operación específica para obtener una vista detallada de su rendimiento.
+
+<div id="learn-more">
+  ## Más información
+</div>
+
+<PageGrid />

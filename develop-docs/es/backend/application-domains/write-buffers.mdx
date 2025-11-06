@@ -1,0 +1,39 @@
+---
+title: Buffers de escritura
+sidebar_order: 80
+---
+
+Sentry gestiona la contención de filas en la base de datos almacenando temporalmente las escrituras y aplicando cambios en bloque a la base de datos durante un periodo de tiempo. Esto es especialmente útil si tienes alta concurrencia, sobre todo cuando a menudo se trata del mismo evento.
+
+Por ejemplo, si recibes 100.000 eventos por segundo y el 10% de ellos informan de un problema de conexión con la base de datos (donde se agruparían), habilitar un backend de buffer hará que cada actualización del contador se envíe a una cola y que todas las actualizaciones se realicen al ritmo al que la cola pueda procesarlas.
+
+<div id="configuration">
+  ## Configuración
+</div>
+
+Para especificar un backend, basta con modificar los valores de `SENTRY_BUFFER` y `SENTRY_BUFFER_OPTIONS` en tu configuración:
+
+```python
+SENTRY_BUFFER = 'sentry.buffer.base.Buffer'
+```
+
+
+<div id="redis">
+  ### Redis
+</div>
+
+Configurar el backend de Redis **requiere usar la cola**; de lo contrario no verás mejoras (de hecho, solo perjudicará el rendimiento).
+
+La configuración es sencilla:
+
+```python
+SENTRY_BUFFER = 'sentry.buffer.redis.RedisBuffer'
+```
+
+De forma predeterminada, esto utilizará el clúster de Redis denominado `default`. Para usar un clúster distinto, proporciona la opción `cluster`, de la siguiente manera:
+
+```python
+SENTRY_BUFFER_OPTIONS = {
+    'cluster': 'buffer',
+}
+```

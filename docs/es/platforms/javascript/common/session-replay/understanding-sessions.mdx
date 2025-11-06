@@ -1,0 +1,275 @@
+---
+title: Comprender las sesiones
+sidebar_order: 4400
+notSupported:
+  - javascript.cordova
+  - javascript.wasm
+  - javascript.bun
+  - javascript.deno
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.hono
+  - javascript.koa
+  - javascript.nestjs
+  - javascript.cloudflare
+description: "Aprende a personalizar las sesiones con el SDK de Session Replay."
+---
+
+En la mayoría de los casos, configurar las tasas de muestreo de Replay será suficiente para empezar a capturar los datos de grabación que te interesan.
+Para casos más complejos, es útil entender cómo funcionan las sesiones y cómo controlarlas manualmente.
+
+<div id="default-session-initialization">
+  ## Inicialización predeterminada de la sesión
+</div>
+
+De forma predeterminada, Replay iniciará una sesión de inmediato cuando la instancia de la integración `replayIntegration()` se agregue al cliente del SDK. La sesión estará en modo `session` o `buffer`, según tus `replaysSessionSampleRate` y `replaysOnErrorSampleRate`.
+
+Cuando se inicializa Replay, comprobamos `replaysSessionSampleRate`. Si entra en la muestra, comenzaremos a grabar y enviar datos de Replay de inmediato.
+
+Si `replaysOnErrorSampleRate > 0`, comenzaremos a grabar en modo búfer y seguiremos comprobando `replaysOnErrorSampleRate` cada vez que ocurra un error. Una vez que detectemos que entra en la muestra, subiremos el Replay a Sentry y continuaremos grabando con normalidad.
+
+Si tanto `replaysSessionSampleRate` como `replaysOnErrorSampleRate` son `0`, la grabación no se iniciará, pero podrás <PlatformLink to="/session-replay/understanding-sessions/#manually-starting-replay">grabar manualmente</PlatformLink>.
+
+<div id="session-mode">
+  ## Modo de sesión
+</div>
+
+En el modo `session`, Replay registrará y enviará datos a Sentry de forma continua. Tras 15 minutos de inactividad del usuario, o un máximo de 60 minutos de duración, la sesión finalizará y se iniciará una nueva según las reglas de la sección anterior.
+
+<div id="buffer-mode">
+  ## Modo buffer
+</div>
+
+En el modo `buffer`, Replay registrará datos de forma continua, pero no enviará ninguno. En su lugar, conservará en memoria hasta los últimos 60 segundos. Cuando ocurra un error, se comprobará `replaysOnErrorSampleRate` y, si se selecciona en el muestreo, la repetición se cargará en Sentry y continuará grabando con normalidad. Tras 15 minutos de inactividad del usuario, o una duración máxima de 60 minutos, la sesión terminará y la repetición se detendrá.
+
+<div id="manually-add-replay-integration">
+  ## Agregar la integración de Replay manualmente
+</div>
+
+También es posible diferir la inicialización y la carga de la integración de Replay. Esto ayuda a desacoplar la inicialización del SDK de la configuración de Replay. Por ejemplo, si cuentas con un servicio de muestreo externo que no está disponible de inmediato.
+
+```javascript
+async function init(sessionSampleRate, errorSampleRate) {
+  const client = Sentry.getClient();
+  const options = client.getOptions();
+  options.replaysSessionSampleRate = sessionSampleRate;
+  options.replaysOnErrorSampleRate = errorSampleRate;
+
+  const replay = Sentry.replayIntegration({
+    maskAllText: true,
+    // configuración adicional del SDK; consulta https://docs.sentry.io/platforms/javascript/session-replay/configuration/
+  });
+
+  client.addIntegration(replay);
+}
+```
+
+<div id="manually-starting-replay">
+  ## Iniciar Replay manualmente
+</div>
+
+Puedes iniciar manualmente una sesión de Replay con:
+
+```javascript
+Sentry.init({
+  dsn: "...",
+  // Esto inicializa Replay sin iniciar ninguna sesión
+  replaysSessionSampleRate: 0,
+  replaysOnErrorSampleRate: 0,
+  integrations: [Sentry.replayIntegration()],
+});
+
+// Puedes acceder a la instancia activa de Replay desde cualquier parte de tu código así:
+const replay = Sentry.getReplay();
+
+// Esto se inicia en modo `session`, sin importar las tasas de muestreo
+replay.start();
+
+// O
+
+// Esto se inicia en modo `buffer`, sin importar las tasas de muestreo
+replay.startBuffering();
+```
+
+Si tanto `replaysSessionSampleRate` como `replaysOnErrorSampleRate` son `0`, tendrás que iniciar manualmente una reproducción de sesión, como se muestra arriba. Esto también es útil si previamente detuviste una sesión y quieres iniciar una nueva (ver abajo). Si una sesión está en curso, `start()` y `startBuffering()` son seguros y no tienen efecto. En ese caso, [registrarán un mensaje de depuración](/es/platforms/javascript/configuration/options/#debug).
+
+<div id="manually-stopping-replay">
+  ## Detener la reproducción manualmente
+</div>
+
+Siempre puedes detener una sesión en curso con:
+
+```javascript
+await replay.stop();
+```
+
+Esto guardará cualquier dato de grabación pendiente, detendrá la reproducción y finalizará la sesión.
+
+<div id="manually-flushing-recording-data">
+  ## Vaciar manualmente los datos de la grabación
+</div>
+
+Puedes vaciar cualquier dato de la grabación pendiente con:
+
+```javascript
+await replay.flush();
+```
+
+En el modo `session`, se subirá a Sentry cualquier dato de grabación pendiente. En el modo `buffer`, se subirá a Sentry cualquier dato de grabación pendiente y luego se continuará grabando, igual que cuando se toma una muestra de un error con `replaysOnErrorSampleRate`.
+
+Llamar a `flush()` mientras Session Replay está detenido iniciará una nueva grabación de la sesión.
+
+<div id="examples-of-custom-sampling">
+  ## Ejemplos de muestreo personalizado
+</div>
+
+Hay maneras de habilitar el muestreo personalizado si te interesa hacer seguimiento de una acción o grupo en particular; por ejemplo, un segmento específico de usuarios o una URL problemática.
+
+<div id="replays-for-specific-users">
+  ### Replays para usuarios específicos
+</div>
+
+Puedes configurar que los replays se graben automáticamente para un grupo de usuarios en particular. Aquí tienes un ejemplo en el que queremos grabar replays por sesión para todos los usuarios que son empleados. El objeto `user` tiene un campo `isEmployee` que indica si es empleado.
+
+```javascript
+const replay = Sentry.replayIntegration();
+
+/**
+ * Inicializa el SDK de Sentry con normalidad.
+ *
+ * `replaysSessionSampleRate` está configurado en su valor predeterminado "0.1", de modo que solo ~10% de los usuarios se muestrean
+ * `replaysOnErrorSampleRate` está configurado en su valor predeterminado "1.0" para registrar siempre una repetición cuando ocurra un error
+ */
+Sentry.init({
+  dsn: "...",
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+  integrations: [replay],
+});
+
+// ...
+// Después de autenticar a un usuario, verifica si es empleado
+// Si lo es, llamaremos a `replay.flush()` para enviar la repetición con normalidad si es una repetición basada en sesión, o, si está en búfer debido al muestreo por errores, el vaciado enviará el primer segmento de la repetición.
+
+// Dado que `replaysOnErrorSampleRate` es > 0, sabemos que hay una repetición en búfer y que `flush()` vaciará el contenido de ese búfer. Si solo `replaysSessionSampleRate` es > 0, existe la posibilidad de que no se haya estado grabando/almacenando en búfer una repetición.
+// En este caso, puedes comprobar que `replay.getReplayId()` devuelve un valor; si lo hace, significa que la repetición está activa y puedes llamar a `replay.flush()`, de lo contrario llama a `replay.start()` para empezar a grabar una nueva repetición.
+// ...
+
+// Comprueba si el usuario es empleado; si lo es, registra siempre una repetición
+if (loggedInUser.isEmployee) {
+  // Puedes obtener una referencia a la integración de Sentry Replay de esta forma:
+  const replay = Sentry.getReplay();
+
+  replay.flush();
+}
+```
+
+<div id="replays-on-specific-urls">
+  ### Reproducciones en URLs específicas
+</div>
+
+También puedes optar por grabar una reproducción cada vez que un usuario llegue a una URL específica. Esto puede ayudar a los desarrolladores a depurar páginas problemáticas. Para hacerlo, usa la [API de navegación](https://developer.mozilla.org/en-US/docs/Web/API/Navigation_API), que puede escuchar eventos de navegación para una URL concreta y comenzar la grabación de la reproducción.
+
+```javascript
+const replay = Sentry.replayIntegration();
+
+/**
+ * Inicializa el SDK de Sentry como de costumbre.
+ *
+ * `replaysSessionSampleRate` y `replaysOnErrorSampleRate` están ambas configuradas en
+ * "0" para que tengamos control manual sobre las repeticiones basadas en sesiones
+ */
+Sentry.init({
+  dsn: "...",
+  replaysSessionSampleRate: 0,
+  replaysOnErrorSampleRate: 0,
+  integrations: [replay],
+});
+
+// Escucha los eventos de navegación cuando los usuarios lleguen a nuestra URL defectuosa, acertadamente llamada: "/buggy-page/"
+// y luego empieza a grabar una repetición.
+navigation.addEventListener("navigate", (event) => {
+  const url = new URL(event.destination.url);
+
+  if (url.pathname.startsWith("/buggy-page/")) {
+    // El usuario navega a la página defectuosa, empecemos a grabar
+    replay.start();
+  }
+});
+```
+
+<div id="ignore-certain-errors-for-error-sampling">
+  ### Ignorar ciertos errores para el muestreo de errores
+</div>
+
+Al usar `replaysOnErrorSampleRate`, “nos la jugamos” con cualquier error que se capture y se envíe a Sentry.
+Si quieres omitir la captura de una reproducción para ciertos errores, puedes usar la devolución de llamada `beforeErrorSampling`:
+
+```javascript
+replayIntegration({
+  beforeErrorSampling: (event) => {
+    // Devuelve false para no capturar un Replay de este error
+    return !event.exception?.values?.[0]?.value?.includes("descártame");
+  },
+});
+```
+
+Si este método devuelve `false` para un error determinado, no comprobaremos la tasa de muestreo de ese error.
+Si devuelve `true`, seguiremos comprobando la tasa de muestreo del error con normalidad.
+Ten en cuenta que este hook solo se ejecuta en modo `buffer`, ya que el modo `session` registra de forma continua independientemente de los errores.
+
+<div id="connect-replays-with-support-software">
+  ### Conectar Replays con software de soporte
+</div>
+
+Los Replays no tienen que estar vinculados a un error de la aplicación; también pueden usarse para complementar tus tickets de soporte.
+Según el nivel de personalización que ofrezca tu widget de soporte, es posible enviar un replay a
+Sentry cuando tus usuarios abran el widget de soporte. Ten en cuenta que [User Feedback](/es/product/user-feedback/#user-feedback-widget) de Sentry
+ofrece esta funcionalidad de forma predeterminada. Luego puedes enviar el ID del replay junto con el ticket de soporte que tu
+usuario envíe. El ID puede usarse para hacer referencia al replay en Sentry. Alternativamente, puedes buscar
+replays por un identificador de usuario, como el correo electrónico.
+
+El siguiente ejemplo proporciona una plantilla de cómo podrías conectar Replay con tu widget de soporte.
+
+```javascript
+/**
+ * Inicializa el SDK de Sentry como de costumbre.
+ *
+ * `replaysOnErrorSampleRate` debe ser > 0 para que las repeticiones estén siempre en búfer y solo se envíen cuando sea necesario
+ */
+Sentry.init({
+  dsn: "...",
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 0.5,
+  integrations: [Sentry.replayIntegration()],
+});
+
+/**
+ * Tu widget necesitará un evento/hook para activar el vaciado (flush) de la repetición en
+ * Sentry.
+ */
+MySupportWidget.on("open", () => {
+  const replay = Sentry.getReplay();
+  // Enviar la repetición a Sentry
+  replay.flush();
+  // Obtén el ID de la repetición que se guardó y añádelo a tu widget de soporte
+  const replayId = replay.getReplayId();
+  MySupportWidget.setTag("replayId", replayId);
+});
+
+/**
+ * Si tu aplicación de soporte te permite enviar datos personalizados con el
+ * ticket, quizá quieras incluir un enlace a la URL de la repetición en Sentry. De ese
+ * modo, podrás abrir la repetición directamente desde el propio ticket.
+ * Las URL de repetición tienen el siguiente formato:
+ *
+ *   https://<org-slug>.sentry.io/replays/<replay-id>/
+ *
+ */
+```

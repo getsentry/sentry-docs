@@ -1,0 +1,110 @@
+---
+title: API de Continuous/UI Profiling
+description: APIs para Continuous Profiling y UI Profiling
+sidebar_order: 3
+---
+
+Este documento describe la API de Continuous Profiling y UI Profiling.
+
+<div id="public-api">
+  ## API pública
+</div>
+
+El SDK debe exponer las siguientes funciones para controlar el generador de perfiles:
+
+<div id="start_profiler">
+  ### `start_profiler()`
+</div>
+
+Inicia el generador de perfiles (profiler). Esta función no realiza ninguna acción si se cumple cualquiera de las siguientes condiciones:
+
+- La sesión de perfilado es parte de una muestra (según `profile_session_sample_rate`) y el profiler ya está en ejecución.
+- La sesión de perfilado no forma parte de la muestra.
+- `profile_lifecycle` está configurado en `'trace'`. En este modo, el ciclo de vida del profiler está ligado a la recopilación de trazas, por lo que no se permite el control manual.
+
+<Alert level="info">
+  Los SDK deberían registrar una advertencia en modo `debug` si se llama a esta función pero resulta en una operación sin efecto.
+</Alert>
+
+<div id="stop_profiler">
+  ### `stop_profiler()`
+</div>
+
+Detiene el profiler. El comportamiento de esta función depende de la configuración `profile_lifecycle`:
+
+- **`'manual'`**: Detiene la sesión de perfilado actual. El profiler se puede volver a iniciar llamando a `start_profiler()`.
+- **`'trace'`**: No realiza ninguna acción. En este modo, el profiler se detiene automáticamente cuando no hay spans raíz activos.
+
+<Alert level="info">
+  Los SDK deberían registrar una advertencia en modo `debug` si se llama a esta función cuando `profile_lifecycle` es `'trace'`.
+</Alert>
+
+<div id="configuration">
+  ## Configuración
+</div>
+
+Puedes pasar las siguientes opciones a `Sentry.init()` para configurar el generador de perfiles.
+
+```ts {tabTitle:Options}
+interface SentryOptions {
+  // ...
+  profile_session_sample_rate?: number;
+  profile_lifecycle?: 'trace' | 'manual';
+  start_profiler_on_app_start?: boolean; // Solo para móvil
+}
+```
+
+
+<div id="profile_session_sample_rate">
+  ### `profile_session_sample_rate`
+</div>
+
+- **Tipo**: `number`
+- **Predeterminado**: `0` (`nil` en dispositivos móviles)
+- **Descripción**: Determina la tasa de muestreo de toda la sesión de perfilado. La decisión de muestreo se toma una sola vez al inicializar el SDK.
+
+La definición de una sesión de perfilado depende del tipo de perfilado:
+
+- **Perfilado continuo**: La sesión comienza cuando se configura el SDK de Sentry y termina cuando finaliza el servicio. `profile_session_sample_rate` controla el porcentaje de instancias del servicio con el perfilado habilitado. El muestreo se vuelve a evaluar al reiniciar o volver a desplegar el servicio.
+- **Perfilado de UI**: La sesión corresponde a una sesión de usuario. Una sesión de usuario comienza con una nueva inicialización del SDK. Finaliza cuando se cierra la pestaña del navegador o, alternativamente, bajo las mismas condiciones que ponen fin a una [sesión de Replay](https://docs.sentry.io/product/explore/session-replay/). `profile_session_sample_rate` establece el porcentaje de sesiones de usuario para las que el perfilado está habilitado. Por lo tanto, esta decisión de muestreo se toma una sola vez al inicializar el SDK.
+  - **En dispositivos móviles**: Enviar la app a segundo plano y volverla a primer plano inicia una nueva sesión de usuario, y el muestreo se vuelve a evaluar. Si hay un trace activo cuando la app vuelve a primer plano, la sesión de perfilado existente continúa hasta que finaliza el último root span de ese trace. La nueva tasa de muestreo solo surtirá efecto la próxima vez que se inicie el profiler.
+
+<Alert level="warning">
+  Si `profiles_sample_rate` o `profiles_sampler` están configurados para el perfilado basado en transacciones, `profile_session_sample_rate` no tiene efecto. En este caso, los SDK deberían registrar una advertencia.
+</Alert>
+
+<div id="profile_lifecycle">
+  ### `profile_lifecycle`
+</div>
+
+- **Tipo**: `'trace' | 'manual'`
+- **Predeterminado**: `'manual'`
+- **Descripción**: Determina si el profiler se controla manualmente o automáticamente según el ciclo de vida del trace.
+
+Estos son los dos modos:
+
+- **`'manual'`**: El profiler se controla mediante las funciones `start_profiler()` y `stop_profiler()`. En este modo, el perfilado solo respeta `profile_session_sample_rate` (independiente de los spans). Si la sesión es muestreada, `start_profiler()` iniciará el profiler.
+- **`'trace'`**:  **Este modo requiere que el tracing esté habilitado.** El profiler se inicia automáticamente cuando hay al menos un root span activo y se detiene cuando no hay root spans activos (permitiendo que el bloque actual termine por completo).
+  - El perfilado respeta **tanto** `profile_session_sample_rate` como la configuración de muestreo de tracing (`traces_sample_rate` o `traces_sampler`).
+  - Primero se verifica `profile_session_sample_rate`. Si la sesión no está muestreada, no se realizará perfilado.
+  - Si la sesión está muestreada, `traces_sample_rate` / `traces_sampler` se evalúa para cada root span para determinar si debe perfilarse.
+  - El profiler se ejecuta mientras haya al menos un root span **muestreado**. Si varios root spans se superponen, el perfilado continúa hasta que finaliza el último root span muestreado.
+
+<Alert level="warning">
+  Los SDK deberían registrar una advertencia si `profile_lifecycle` está establecido en `'trace'` pero el tracing está deshabilitado.
+</Alert>
+
+<div id="start_profiler_on_app_start-mobile-only">
+  ### `start_profiler_on_app_start` (solo móvil)
+</div>
+
+- **Tipo**: `boolean`
+- **Predeterminado**: `false`
+- **Plataforma**: Solo móvil
+- **Descripción**: Si es `true`, el perfilado comienza lo antes posible durante el arranque de la app, antes de que se pueda llamar manualmente a `start_profiler()`. Es **una forma automatizada de invocar `start_profiler()`**.
+  El `profile_session_sample_rate` para el perfilado del arranque de la app se evalúa en el lanzamiento **anterior** de la app y se aplica en el **siguiente**, ya que no podemos evaluar la tasa de muestreo en el momento del inicio.
+
+Comportamiento con `profile_lifecycle`:
+
+- **`'manual'`**: El perfilado comienza en el arranque. El desarrollador debe llamar manualmente a `stop_profiler()` para finalizar el perfilado del arranque de la app cuando este se complete.
+- **`'trace'`**: El perfilado comienza en el arranque y se detiene automáticamente cuando finaliza el span raíz asociado con el arranque de la app.
