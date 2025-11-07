@@ -209,7 +209,7 @@ export function CopyMarkdownButton({pathname}: CopyMarkdownButtonProps) {
               </Link>
 
               <a
-                href={`https://chatgpt.com/?hints=search&prompt=Read+from+${window.location.href}+so+I+can+ask+questions+about+its+contents`}
+                href={`https://chatgpt.com/?hints=search&prompt=${encodeURIComponent('Read from ' + window.location.href + ' so I can ask questions about its contents')}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`${dropdownItemClass} no-underline`}
@@ -228,7 +228,7 @@ export function CopyMarkdownButton({pathname}: CopyMarkdownButtonProps) {
               </a>
 
               <a
-                href={`https://claude.ai/new?q=${encodeURI('Read from ' + window.location.href + ' so I can ask questions about its contents')}`}
+                href={`https://claude.ai/new?q=${encodeURIComponent('Read from ' + window.location.href + ' so I can ask questions about its contents')}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`${dropdownItemClass} no-underline`}
