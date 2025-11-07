@@ -230,7 +230,7 @@ export function CopyMarkdownButton({pathname}: CopyMarkdownButtonProps) {
                 </div>
                 <div className="flex-1">
                   <div className="font-medium text-sm leading-5 text-gray-900 dark:text-[var(--foreground)]">
-                    Open in ChatGPT <ExternalLink />
+                    Open in ChatGPT <ExternalLink aria-hidden="true" />
                   </div>
                   <div className="text-xs leading-4 text-gray-500 dark:text-[var(--foreground-secondary)]">
                     Ask ChatGPT questions about this page
@@ -250,7 +250,7 @@ export function CopyMarkdownButton({pathname}: CopyMarkdownButtonProps) {
                 </div>
                 <div className="flex-1">
                   <div className="font-medium text-sm leading-5 text-gray-900 dark:text-[var(--foreground)]">
-                    Open in Claude <ExternalLink />
+                    Open in Claude <ExternalLink aria-hidden="true" />
                   </div>
                   <div className="text-xs leading-4 text-gray-500 dark:text-[var(--foreground-secondary)]">
                     Ask Claude questions about this page
