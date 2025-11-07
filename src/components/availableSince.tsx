@@ -9,13 +9,10 @@ type AvailableSinceProps = {
  *
  * @param version - The version number (e.g., "10.0.0", "8.5.0")
  */
-export function AvailableSince({
-  version,
-}: AvailableSinceProps) {
+export function AvailableSince({version}: AvailableSinceProps) {
   return (
     <p className="italic">
       Available since: <code>v{version.replace(/^v/, '')}</code>
     </p>
   );
 }
-
