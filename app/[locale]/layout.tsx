@@ -2,7 +2,7 @@ import {getLocales} from 'gt-next/server';
 
 export const dynamicParams = false;
 
-export async function generateStaticParams() {
+export function generateStaticParams() {
   const locales = getLocales();
   return locales.map(locale => ({locale}));
 }
