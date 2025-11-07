@@ -209,7 +209,7 @@ export function CopyMarkdownButton({pathname}: CopyMarkdownButtonProps) {
               </Link>
 
               <a
-                href={`https://chatgpt.com/?hints=search&prompt=${encodeURIComponent('Read from ' + window.location.href + ' so I can ask questions about its contents')}`}
+                href={`https://chatgpt.com/?hints=search&q=${encodeURIComponent('Read from ' + window.location.href + ' so I can ask questions about its contents')}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`${dropdownItemClass} no-underline`}
