@@ -194,6 +194,58 @@ result = await agents.Runner.run(
 
 ```
 
+### .NET - Microsoft.Extensions.AI SDK
+
+The Sentry .NET SDK supports AI agent monitoring through the Microsoft.Extensions.AI integration, which automatically captures spans for your AI agent workflows using the library's built-in telemetry.
+
+#### Supported Platforms
+
+- <LinkWithPlatformIcon
+    platform="dotnet"
+    label="Microsoft.Extensions.AI"
+    url="/platforms/dotnet/tracing/instrumentation/ai-agents-module/"
+  />
+
+#### Quick Start with Microsoft.Extensions.AI
+
+```csharp
+// Wrap your IChatClient with Sentry instrumentation
+var openAiClient = new OpenAI.Chat.ChatClient("gpt-4o-mini", apiKey)
+    .AsIChatClient()
+    .AddSentry(options =>
+    {
+        options.Experimental.RecordInputs = true;
+        options.Experimental.RecordOutputs = true;
+        options.Experimental.AgentName = "MyAgent";
+    });
+
+// Wrap your client with FunctionInvokingChatClient
+var chatClient = new ChatClientBuilder(openAiClient)
+    .UseFunctionInvocation()
+    .Build();
+
+// Create chat options with tools and add Sentry instrumentation
+var options = new ChatOptions
+{
+    ModelId = "gpt-4o-mini",
+    MaxOutputTokens = 1024,
+    Tools =
+    [
+        // Sample Tool
+        AIFunctionFactory.Create(async (string location) =>
+        {
+            await Task.Delay(500);
+            return $"The weather in {location} is sunny";
+        }, "GetWeather", "Gets the current weather for a location")
+    ]
+}.AddSentryToolInstrumentation();
+
+var response = await chatClient.GetResponseAsync(
+    "What's the weather in New York?",
+    options);
+```
+
+
 <Alert title="Don't see your SDK?">
 
 You can also instrument AI agents manually by following our [manual instrumentation guides](/platforms/python/tracing/instrumentation/custom-instrumentation/ai-agents-module).
