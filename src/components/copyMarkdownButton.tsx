@@ -69,6 +69,16 @@ export function CopyMarkdownButton({pathname}: CopyMarkdownButtonProps) {
     setIsOpen(false);
   };
 
+  const handleOpenChatGPTClick = () => {
+    emit('Open in ChatGPT', {props: {page: pathname, source: 'chatgpt_link'}});
+    setIsOpen(false);
+  };
+
+  const handleOpenClaudeClick = () => {
+    emit('Open in Claude', {props: {page: pathname, source: 'claude_link'}});
+    setIsOpen(false);
+  };
+
   const handleDropdownToggle = () => {
     setIsOpen(!isOpen);
     if (!isOpen) {
@@ -213,6 +223,7 @@ export function CopyMarkdownButton({pathname}: CopyMarkdownButtonProps) {
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`${dropdownItemClass} no-underline`}
+                onClick={handleOpenChatGPTClick}
               >
                 <div className={iconContainerClass}>
                   <ChatGPT width={14} height={14} />
@@ -232,6 +243,7 @@ export function CopyMarkdownButton({pathname}: CopyMarkdownButtonProps) {
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`${dropdownItemClass} no-underline`}
+                onClick={handleOpenClaudeClick}
               >
                 <div className={iconContainerClass}>
                   <Claude width={14} height={14} />
