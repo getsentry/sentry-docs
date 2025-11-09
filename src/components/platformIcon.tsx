@@ -78,6 +78,7 @@ import JavascriptSVG from 'platformicons/svg/javascript.svg';
 import KoaSVG from 'platformicons/svg/koa.svg';
 import KotlinSVG from 'platformicons/svg/kotlin.svg';
 import LangchainSVG from 'platformicons/svg/langchain.svg';
+import LanggraphSVG from 'platformicons/svg/langgraph.svg';
 import LaravelSVG from 'platformicons/svg/laravel.svg';
 import LinuxSVG from 'platformicons/svg/linux.svg';
 import LitestarSVG from 'platformicons/svg/litestar.svg';
@@ -131,6 +132,7 @@ import SymfonySVG from 'platformicons/svg/symfony.svg';
 import TanstackSVG from 'platformicons/svg/tanstack.svg';
 import TokioSVG from 'platformicons/svg/tokio.svg';
 import TornadoSVG from 'platformicons/svg/tornado.svg';
+import TracingSVG from 'platformicons/svg/tracing.svg';
 import TrytonSVG from 'platformicons/svg/tryton.svg';
 import UnitySVG from 'platformicons/svg/unity.svg';
 import UnoSVG from 'platformicons/svg/uno.svg';
@@ -221,6 +223,7 @@ import JavascriptSVGLarge from 'platformicons/svg_80x80/javascript.svg';
 import KoaSVGLarge from 'platformicons/svg_80x80/koa.svg';
 import KotlinSVGLarge from 'platformicons/svg_80x80/kotlin.svg';
 import LangchainSVGLarge from 'platformicons/svg_80x80/langchain.svg';
+import LanggraphSVGLarge from 'platformicons/svg_80x80/langgraph.svg';
 import LaravelSVGLarge from 'platformicons/svg_80x80/laravel.svg';
 import LinuxSVGLarge from 'platformicons/svg_80x80/linux.svg';
 import LitestarSVGLarge from 'platformicons/svg_80x80/litestar.svg';
@@ -275,6 +278,7 @@ import SymfonySVGLarge from 'platformicons/svg_80x80/symfony.svg';
 import TanstackSVGLarge from 'platformicons/svg_80x80/tanstack.svg';
 import TokioSVGLarge from 'platformicons/svg_80x80/tokio.svg';
 import TornadoSVGLarge from 'platformicons/svg_80x80/tornado.svg';
+import TracingSVGLarge from 'platformicons/svg_80x80/tracing.svg';
 import TrytonSVGLarge from 'platformicons/svg_80x80/tryton.svg';
 import UnitySVGLarge from 'platformicons/svg_80x80/unity.svg';
 import UnoSVGLarge from 'platformicons/svg_80x80/uno.svg';
@@ -612,6 +616,10 @@ const formatToSVG = {
     sm: LangchainSVG,
     lg: LangchainSVGLarge,
   },
+  langgraph: {
+    sm: LanggraphSVG,
+    lg: LanggraphSVGLarge,
+  },
   laravel: {
     sm: LaravelSVG,
     lg: LaravelSVGLarge,
@@ -825,6 +833,10 @@ const formatToSVG = {
     sm: TornadoSVG,
     lg: TornadoSVGLarge,
   },
+  tracing: {
+    sm: TracingSVG,
+    lg: TracingSVGLarge,
+  },
   tryton: {
     sm: TrytonSVG,
     lg: TrytonSVGLarge,
@@ -969,6 +981,7 @@ export const PLATFORM_TO_ICON = {
   kotlin: 'kotlin',
   'kotlin-android': 'android',
   langchain: 'langchain',
+  langgraph: 'langgraph',
   linux: 'linux',
   native: 'nativec',
   'native-qt': 'qt',
@@ -1039,6 +1052,7 @@ export const PLATFORM_TO_ICON = {
   'ruby-sinatra': 'sinatra',
   rust: 'rust',
   'rust-actix-web': 'actix',
+  'rust-tracing': 'tracing',
   'rust-axum': 'axum',
   scala: 'scala',
   stride3d: 'stride3d',

@@ -1,7 +1,10 @@
 ---
-title: "Trace Explorer With Span Metrics"
+title: Trace Explorer With Span Metrics
 sidebar_order: 31
-description: "Learn how to use Sentry's Trace Explorer to search span data, find distributed traces, and debug performance issues across your entire application stack."
+description: >-
+  Learn how to use Sentry's Trace Explorer to search span data, find distributed
+  traces, and debug performance issues across your entire application stack.
+og_image: /og-images/product-explore-trace-explorer.png
 ---
 
 The [**Trace Explorer**](https://sentry.io/orgredirect/organizations/:orgslug/traces/) in Sentry is designed to make performance investigation easier and more intuitive. You can now explore span samples, visualize span attributes, and aggregate your data with flexible queries and filters. This guide will walk you through the key concepts and features of the Trace Explorer.
@@ -185,7 +188,7 @@ Similarly, Sentry incorporates the weight into **sum**:
 
 Trace Explorer will display **Sum: 1.4ms**.
 
-### Averages and percentiles
+### Averages and Percentiles
 
 Averages and percentiles are **weighted**. You don't just average the 2 spans -- Sentry accounts for the fact that they represent a larger dataset. For example, the weighted average works like this:
 
@@ -199,8 +202,27 @@ Sentry treats this as a representation of the average across all 12 estimated sp
 
 If your sampling rate is **too low** for an accurate extrapolation (for example, keeping less than 5% of an already low number of spans), Sentry may show a **low sampling rate warning**. This lets you know that extrapolation might be less reliable, especially for more restrictive queries.
 
-![Trace Explorer Screenshot](./img/Trace_explorer_low_samples.png)
+<div style={{width: '450px'}}>
+![Trace Explorer Warning](./img/Trace_explorer_low_samples.png)
+</div>
 
 Even if you sample your spans, **Trace Explorer's extrapolation gives you reasonably accurate answers** for counts, averages, and percentiles -- without you needing to do anything extra.
+
+### When to Turn Off Extrapolation
+While extrapolation is usually helpful, if you are exclusively looking to confirm your sampling usage or look exclusively at sampled data, you can turn off extrapolation.
+
+You can disable extrapolation using the settings icon above charts in tools like Trace Explorer.
+
+### How to Tweak Client Side Sampling to Find More Samples
+
+While you can set a uniform sampling rate with `tracesSampleRate`, the `tracesSampler` function gives you fine-grained control over sampling decisions. With `tracesSampler`, you can:
+
+- **Apply different sample rates to different transactions**: Sample critical endpoints at 100% while sampling less important ones at a lower rate.
+- **Use contextual information**: Make sampling decisions based on transaction name, attributes, or other context like user information or request properties.
+- **Filter out unwanted transactions**: Return `0` for transactions you don't want to capture at all.
+
+For example, you might sample your checkout flow at 100% to catch any issues, while sampling your health check endpoint at only 1% to reduce noise. This targeted approach helps you capture the data that matters most while staying within your volume budget.
+
+To configure `tracesSampler` for your SDK, see the tracing options in your SDK's [configuration documentation](/platform-redirect/?next=/configuration/options/).
 
 With these tools, the new Trace Explorer gives you powerful ways to understand your application’s performance, identify bottlenecks, and make informed optimizations.
