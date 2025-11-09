@@ -289,16 +289,17 @@ app.post('/api/upload', async (req: Request<{}, {}, UploadRequest>, res: Respons
       const { 'sentry-trace': sentryTrace, baggage: sentryBaggage } = Sentry.getTraceData();
       
       // Store job with trace headers for async processing
-      await enqueueJob({
+      const enrichedJob = {
         ...job,
         sentryTrace,
         sentryBaggage,
         enqueuedAt: Date.now(),
-      });
+      };
+      await enqueueJob(enrichedJob);
 
       // Start async processing
       setImmediate(async () => {
-        await processMedia(job);
+        await processMedia(enrichedJob);
       });
 
       // Respond immediately with job ID
