@@ -70,4 +70,3 @@ export function SplitSection({children}: SplitSectionProps) {
 // Attach Text and Code as properties of SplitSection for dot notation usage
 SplitSection.Text = SplitSectionText;
 SplitSection.Code = SplitSectionCode;
-

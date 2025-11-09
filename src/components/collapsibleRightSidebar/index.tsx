@@ -45,7 +45,11 @@ export function CollapsibleRightSidebar({children}: CollapsibleRightSidebarProps
         className={`${styles.collapseToggle} ${isPinned ? styles.pinned : ''}`}
         onClick={handleTogglePin}
         aria-label={isPinned ? 'Unpin sidebar' : 'Pin sidebar'}
-        title={isPinned ? 'Unpin sidebar (auto-collapse on hover out)' : 'Pin sidebar (keep expanded)'}
+        title={
+          isPinned
+            ? 'Unpin sidebar (auto-collapse on hover out)'
+            : 'Pin sidebar (keep expanded)'
+        }
       >
         {isPinned ? '📌' : '←'}
       </button>
@@ -53,4 +57,3 @@ export function CollapsibleRightSidebar({children}: CollapsibleRightSidebarProps
     </aside>
   );
 }
-
