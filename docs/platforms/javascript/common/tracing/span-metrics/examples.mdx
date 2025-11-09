@@ -757,10 +757,17 @@ app.post('/api/ai/chat', async (req: Request, res: Response) => {
               }
             );
           }
+          
+          // Step 3: Synthesize final response from tool results
+          const synthesis = await synthesizeResponse(llmResponse, toolsUsed);
+          finalResponse = synthesis.message;
+          totalTokens += synthesis.usage.total_tokens;
+        } else {
+          // No tools used - use original message content
+          finalResponse = llmResponse.choices[0].message.content;
         }
         
         // Set final agent attributes
-        finalResponse = llmResponse.choices[0].message.content;
         const resolutionStatus = toolsUsed.length > 0 ? 'resolved' : 'answered';
         
         agentSpan.setAttribute('gen_ai.response.text', finalResponse);
