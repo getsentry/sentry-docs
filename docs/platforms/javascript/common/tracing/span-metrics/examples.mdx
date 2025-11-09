@@ -319,17 +319,17 @@ app.post('/api/upload', async (req: Request<{}, {}, UploadRequest>, res: Respons
 // Async media processing (runs in background via setImmediate)
 export async function processMedia(job: ProcessingJob): Promise<void> {
   // Continue trace from producer using stored trace headers
-  Sentry.continueTrace(
+  await Sentry.continueTrace(
     { sentryTrace: job.sentryTrace, baggage: job.sentryBaggage },
-    () => {
+    async () => {
       // Parent span for the consumer transaction
-      Sentry.startSpan(
+      await Sentry.startSpan(
         {
           name: 'media_processing_consumer',
         },
-        (parentSpan) => {
+        async (parentSpan) => {
           // Consumer span: Process the queued job
-          Sentry.startSpan(
+          await Sentry.startSpan(
             {
               op: 'queue.process',
               name: 'queue_consumer',
