@@ -12,6 +12,7 @@ import './type.scss';
 import {Banner} from '../banner';
 import {Breadcrumbs} from '../breadcrumbs';
 import {CodeContextProvider} from '../codeContext';
+import {CollapsibleRightSidebar} from '../collapsibleRightSidebar';
 import {CopyMarkdownButton} from '../copyMarkdownButton';
 import {DocFeedback} from '../docFeedback';
 import {GitHubCTA} from '../githubCTA';
@@ -117,15 +118,10 @@ export function DocPage({
           </div>
         </main>
         {hasToc && (
-          <aside
-            data-layout-anchor="right"
-            className="sticky h-[calc(100vh-var(--header-height))] top-[var(--header-height)] overflow-y-auto hidden toc:block flex-none w-[250px] min-w-[250px]"
-          >
-            <div className="sidebar">
-              <SidebarTableOfContents />
-              <PlatformSdkDetail />
-            </div>
-          </aside>
+          <CollapsibleRightSidebar>
+            <SidebarTableOfContents />
+            <PlatformSdkDetail />
+          </CollapsibleRightSidebar>
         )}
       </section>
       <style>{`:root { --doc-content-w: 1200px; } #doc-content { max-width: var(--doc-content-w); box-sizing: border-box; }`}</style>
