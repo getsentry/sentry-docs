@@ -693,7 +693,6 @@ app.post('/api/ai/chat', async (req: Request, res: Response) => {
         let totalTokens = 0;
         let toolsUsed: string[] = [];
         let finalResponse = '';
-        let resolutionStatus = 'in_progress';
         
         // Step 1: Call custom LLM for initial reasoning
         const llmResponse = await Sentry.startSpan(
@@ -762,15 +761,20 @@ app.post('/api/ai/chat', async (req: Request, res: Response) => {
         
         // Set final agent attributes
         finalResponse = llmResponse.choices[0].message.content;
+        const resolutionStatus = toolsUsed.length > 0 ? 'resolved' : 'answered';
+        
         agentSpan.setAttribute('gen_ai.response.text', finalResponse);
+        agentSpan.setAttribute('gen_ai.response.id', llmResponse.id);
         agentSpan.setAttribute('gen_ai.usage.total_tokens', totalTokens);
         agentSpan.setAttribute('conversation.tools_used', JSON.stringify(toolsUsed));
-        agentSpan.setAttribute('conversation.resolution_status', toolsUsed.length > 0 ? 'resolved' : 'answered');
+        agentSpan.setAttribute('conversation.resolution_status', resolutionStatus);
         
         res.json({
           message: finalResponse,
+          responseId: llmResponse.id,
           totalTokens,
           toolsUsed,
+          resolutionStatus,
         });
         
       } catch (error) {
