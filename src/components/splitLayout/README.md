@@ -15,35 +15,28 @@ A two-column layout component designed for getting started guides that places ex
 
 **Note:** MDX requires direct component names, not dot notation.
 
-```mdx
+````mdx
 <SplitLayout>
   <SplitSection>
     <SplitSectionText>
-      ### Your Heading
-      
-      Explanatory text goes here. You can use any markdown:
-      - Lists
-      - **Bold text**
-      - Links
-      
-      This content appears on the left side.
+      ### Your Heading Explanatory text goes here. You can use any markdown: -
+      Lists - **Bold text** - Links This content appears on the left side.
     </SplitSectionText>
-    
+
     <SplitSectionCode>
-      ```javascript
-      // Your code sample goes here
-      const example = "This appears on the right";
-      ```
+      ```javascript // Your code sample goes here const example = "This appears
+      on the right"; ```
     </SplitSectionCode>
+
   </SplitSection>
 </SplitLayout>
-```
+````
 
 ### Multiple Sections
 
 You can stack multiple split sections within one layout:
 
-```mdx
+````mdx
 <SplitLayout>
   <SplitSection>
     <SplitSectionText>
@@ -69,7 +62,7 @@ You can stack multiple split sections within one layout:
     </SplitSectionCode>
   </SplitSection>
 </SplitLayout>
-```
+````
 
 ## Component Structure
 
@@ -81,6 +74,7 @@ You can stack multiple split sections within one layout:
 ## Styling
 
 The component uses CSS Grid for layout and is fully responsive:
+
 - **Desktop (>1024px)**: Two columns (50/50 split)
 - **Mobile (≤1024px)**: Single column (stacked)
 
@@ -97,5 +91,5 @@ The code section uses `position: sticky` on desktop to keep code visible while s
 ## Examples in Use
 
 See it in action:
-- [Next.js Getting Started - Essential Configuration](/platforms/javascript/guides/nextjs/getting-started/#essential-configuration)
 
+- [Next.js Getting Started - Essential Configuration](/platforms/javascript/guides/nextjs/getting-started/#essential-configuration)
