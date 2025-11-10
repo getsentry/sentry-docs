@@ -14,23 +14,35 @@ export interface FrontMatter {
    */
   title: string;
   /**
+   * Set this to true to show a "beta" badge next to the title in the sidebar
+   */
+  beta?: boolean;
+  /**
    * A description to use in the <meta> header, as well as in auto generated page grids.
    */
   customCanonicalTag?: string;
+
   /**  Add this if you want to add a canonical tag (without this it will default to the page url). Should be a relative path without the domain (e.g. `/platforms/react/options/`) */
   description?: string;
+
   /**
    * Set this to true to mark this page as a draft, and hide it from various other components (such as the PageGrid).
    */
   draft?: boolean;
+
   /**
    * Set this to true to take all the available width for the page content.
    */
   fullWidth?: boolean;
+
   /**
    * A list of keywords for indexing with search.
    */
   keywords?: string[];
+  /**
+   * Set this to true to show a "new" badge next to the title in the sidebar
+   */
+  new?: boolean;
 
   /**
    * The next page in the bottom pagination navigation.
@@ -68,6 +80,11 @@ export interface FrontMatter {
    * The previous page in the bottom pagination navigation.
    */
   previousPage?: PaginationNavNode;
+
+  /**
+   * Set this to true to show a separator/divider below this item in the sidebar
+   */
+  section_end_divider?: boolean;
 
   /**
    * The next page in the sidebar navigation.

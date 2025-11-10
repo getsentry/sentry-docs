@@ -11,6 +11,8 @@ type Node = {
   [key: string]: any;
   context: {
     [key: string]: any;
+    beta?: boolean;
+    new?: boolean;
     sidebar_hidden?: boolean;
     sidebar_order?: number;
     sidebar_title?: string;
@@ -63,7 +65,7 @@ export const renderChildren = (
   showDepth: number = 0,
   depth: number = 0
 ): React.ReactNode[] => {
-  return sortPages(
+  const sortedChildren = sortPages(
     children.filter(
       ({name, node}) =>
         node &&
@@ -73,23 +75,32 @@ export const renderChildren = (
         !node.context.sidebar_hidden
     ),
     ({node}) => node!
-  ).map(({node, children: nodeChildren}) => {
+  );
+
+  const result: React.ReactNode[] = [];
+
+  sortedChildren.forEach(({node, children: nodeChildren}) => {
     // will not be null because of the filter above
     if (!node) {
-      return null;
+      return;
     }
-    return (
+
+    result.push(
       <CollapsibleSidebarLink
         to={node.path}
         key={node.path}
         title={node.context.sidebar_title || node.context.title!}
         collapsed={depth >= showDepth}
         path={path}
+        beta={node.context.beta}
+        isNew={node.context.new}
       >
         {renderChildren(nodeChildren, exclude, path, showDepth, depth + 1)}
       </CollapsibleSidebarLink>
     );
   });
+
+  return result;
 };
 
 type ChildrenProps = {
