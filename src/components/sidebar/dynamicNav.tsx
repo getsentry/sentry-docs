@@ -11,6 +11,8 @@ type Node = {
   [key: string]: any;
   context: {
     [key: string]: any;
+    beta?: boolean;
+    new?: boolean;
     section_end_divider?: boolean;
     sidebar_hidden?: boolean;
     sidebar_order?: number;
@@ -91,6 +93,8 @@ export const renderChildren = (
         title={node.context.sidebar_title || node.context.title!}
         collapsed={depth >= showDepth}
         path={path}
+        beta={node.context.beta}
+        isNew={node.context.new}
       >
         {renderChildren(nodeChildren, exclude, path, showDepth, depth + 1)}
       </CollapsibleSidebarLink>
