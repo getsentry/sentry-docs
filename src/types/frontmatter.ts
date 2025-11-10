@@ -89,7 +89,7 @@ export interface FrontMatter {
   /**
    * The next page in the sidebar navigation.
    */
-/**
+  /**
    * Set this to true to hide from the sidebar
    */
   sidebar_hidden?: boolean;
