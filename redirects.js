@@ -1119,6 +1119,22 @@ const userDocsRedirects = [
     destination: '/platforms/javascript/guides/:guide/profiling/',
   },
   {
+    source: '/platforms/javascript/apis/',
+    destination: '/platforms/javascript/configuration/apis/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/apis/',
+    destination: '/platforms/javascript/guides/:guide/configuration/apis/',
+  },
+  {
+    source: '/platforms/javascript/configuration/sampling/',
+    destination: '/platforms/javascript/sampling/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/configuration/sampling/',
+    destination: '/platforms/javascript/guides/:guide/sampling/',
+  },
+  {
     source: '/platforms/javascript/guides/:guide/profiling/node-profiling/',
     destination: '/platforms/javascript/guides/:guide/profiling/',
   },
