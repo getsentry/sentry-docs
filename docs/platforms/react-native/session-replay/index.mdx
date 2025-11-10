@@ -94,6 +94,14 @@ Sampling begins as soon as a session starts. <PlatformIdentifier name="replays-s
 
 ## Privacy
 
+<Alert level="warning">
+
+<strong>Potential masking issues introduced when using Apple's Liquid Glass rendering in iOS 26.0</strong>
+
+If you are using Apple's Liquid Glass we recommend that you disable Session Replay on iOS to prevent potential PII leaks. [Please refer to our iOS documentation for more details on the issue](/platforms/apple/guides/ios/session-replay/) and follow the progress on fixing masking for iOS 26.0 (Liquid Glass) in <a href="https://github.com/getsentry/sentry-cocoa/issues/6390">GitHub issue #6390</a>
+
+</Alert>
+
 The SDK is recording and aggressively masking all text, images, and webviews by default. If your app has any sensitive data, you should only turn the default masking off after explicitly masking out any sensitive data, using the APIs described below.
 However, if you're working on a mobile app that doesn't contain any PII or private data, you can opt out of the default text and image-masking settings. To learn more about Session Replay privacy, [read our docs](/platforms/react-native/session-replay/privacy/).
 
@@ -141,6 +149,33 @@ integrations: (integrations) => {
 If you encounter any data not being redacted with the default settings, please let us know through a [GitHub issue](https://github.com/getsentry/sentry-react-native/issues/new?assignees=&labels=Platform%3A+React-Native%2CType%3A+%F0%9F%AA%B2+Bug&projects=&template=BUG_REPORT.md).
 
 </Alert>
+
+### Screenshot Strategy (Android only)
+
+_Available in version 7.5.0 of the React Native SDK_
+
+The SDK offers two strategies for recording replays on Android: `PixelCopy` and `Canvas`.
+
+`PixelCopy` uses Android's [PixelCopy](https://developer.android.com/reference/android/view/PixelCopy) API to capture screenshots of the current screen and takes a snapshot of the view hierarchy within the same frame. The view hierarchy is then used to find the position of controls such as text boxes, images, labels, and buttons and mask them with a block that's drawn over these controls. This strategy has slightly lower performance overhead but may result in masking misalignments due to the asynchronous nature of the PixelCopy API. We recommend using this strategy for apps that do not have strict PII requirements or do not require masking functionality.
+
+`Canvas` uses Android's custom [Canvas](https://developer.android.com/reference/android/graphics/Canvas) API to redraw the screen contents onto a bitmap, masking all `drawText` and `drawBitmap` operations in the process to produce a masked screenshot. This strategy has a slightly higher performance overhead but provides more reliable masking. We recommend using this strategy for apps with strict PII requirements.
+
+<Alert level="warning">
+
+The `Canvas` screenshot strategy is currently experimental and does **not** support any masking options. When the screenshot strategy is set to `Canvas`, it will **always** mask all texts, input fields and images, disregarding any masking options set. If you need more flexibility with masking, switch back to `PixelCopy`.
+
+</Alert>
+
+You can change the strategy as follows:
+
+```javascript {tabTitle:Mobile}
+integrations: [
+  // You can pass options to the mobileReplayIntegration function during init:
+  Sentry.mobileReplayIntegration({
+    screenshotStrategy: 'canvas' // or 'pixelCopy' (default)
+  }),
+]
+```
 
 ## React Component Names
 
