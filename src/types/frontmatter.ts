@@ -14,16 +14,16 @@ export interface FrontMatter {
    */
   title: string;
   /**
-   * A description to use in the <meta> header, as well as in auto generated page grids.
-   */
-  customCanonicalTag?: string;
-  /**  Add this if you want to add a canonical tag (without this it will default to the page url). Should be a relative path without the domain (e.g. `/platforms/react/options/`) */
-  description?: string;
-
-  /**
    * Set this to true to show a "beta" badge next to the title in the sidebar
    */
   beta?: boolean;
+  /**
+   * A description to use in the <meta> header, as well as in auto generated page grids.
+   */
+  customCanonicalTag?: string;
+
+  /**  Add this if you want to add a canonical tag (without this it will default to the page url). Should be a relative path without the domain (e.g. `/platforms/react/options/`) */
+  description?: string;
 
   /**
    * Set this to true to mark this page as a draft, and hide it from various other components (such as the PageGrid).
@@ -36,13 +36,13 @@ export interface FrontMatter {
   fullWidth?: boolean;
 
   /**
-   * Set this to true to show a "new" badge next to the title in the sidebar
-   */
-  new?: boolean;
-  /**
    * A list of keywords for indexing with search.
    */
   keywords?: string[];
+  /**
+   * Set this to true to show a "new" badge next to the title in the sidebar
+   */
+  new?: boolean;
 
   /**
    * The next page in the bottom pagination navigation.
@@ -82,9 +82,14 @@ export interface FrontMatter {
   previousPage?: PaginationNavNode;
 
   /**
+   * Set this to true to show a separator/divider below this item in the sidebar
+   */
+  section_end_divider?: boolean;
+
+  /**
    * The next page in the sidebar navigation.
    */
-  /**
+/**
    * Set this to true to hide from the sidebar
    */
   sidebar_hidden?: boolean;
@@ -93,11 +98,6 @@ export interface FrontMatter {
    * The order of this page in auto generated sidebars and grids.
    */
   sidebar_order?: number;
-
-  /**
-   * Set this to true to show a separator/divider below this item in the sidebar
-   */
-  section_end_divider?: boolean;
 
   /**
    * optional sidebar title
