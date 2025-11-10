@@ -105,11 +105,6 @@ export interface FrontMatter {
   sidebar_title?: string;
 
   /**
-   * Set this to true to show a separator/divider below this item in the sidebar
-   */
-  section_end_divider?: boolean;
-
-  /**
    * filesystem path to the source file, generated during build time
    */
   sourcePath?: string;
