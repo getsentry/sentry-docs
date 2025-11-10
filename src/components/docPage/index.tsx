@@ -68,10 +68,10 @@ export function DocPage({
         {sidebar ?? (
           <Sidebar path={unversionedPath.split('/')} versions={frontMatter.versions} />
         )}
-        <main className="main-content flex w-full mt-[var(--header-height)] flex-1 mx-auto">
+        <main className="main-content flex mt-[var(--header-height)] flex-1 min-w-0 mx-auto">
           <div
             className={[
-              'mx-auto pt-6 px-6 prose dark:prose-invert max-w-full text-[var(--gray-12)] prose-a:no-underline hover:prose-a:underline',
+              'mx-auto pt-6 pl-6 pr-3 prose dark:prose-invert max-w-full text-[var(--gray-12)] prose-a:no-underline hover:prose-a:underline',
               'prose-code:font-normal prose-code:font-mono marker:text-[var(--accent)] prose-li:my-1',
               'prose-headings:mt-0 prose-headings:font-medium prose-headings:relative prose-headings:text-[var(--gray-12)]',
               'prose-blockquote:font-normal prose-blockquote:border-l-[3px] prose-em:font-normal prose-blockquote:text-[var(--gray-12)]',
@@ -124,7 +124,7 @@ export function DocPage({
           </CollapsibleRightSidebar>
         )}
       </section>
-      <style>{`:root { --doc-content-w: 1200px; } #doc-content { max-width: var(--doc-content-w); box-sizing: border-box; }`}</style>
+      <style>{`:root { --doc-content-w: 1200px; } #doc-content { box-sizing: border-box; }`}</style>
       <style>{`
         @media (min-width: 2057px) {
           :root {

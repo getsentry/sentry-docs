@@ -22,6 +22,9 @@ export function PlatformSidebar({
         sidebar_order: n.frontmatter.sidebar_order,
         sidebar_title: n.frontmatter.sidebar_title,
         sidebar_hidden: n.frontmatter.sidebar_hidden,
+        section_end_divider: n.frontmatter.section_end_divider,
+        beta: n.frontmatter.beta,
+        new: n.frontmatter.new,
       },
       path: '/' + n.path + '/',
     };

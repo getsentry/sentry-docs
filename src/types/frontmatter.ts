@@ -23,6 +23,16 @@ export interface FrontMatter {
    * Set this to true to mark this page as a draft, and hide it from various other components (such as the PageGrid).
    */
   draft?: boolean;
+
+  /**
+   * Set this to true to show a "beta" badge next to the title in the sidebar
+   */
+  beta?: boolean;
+
+  /**
+   * Set this to true to show a "new" badge next to the title in the sidebar
+   */
+  new?: boolean;
   /**
    * Set this to true to take all the available width for the page content.
    */
@@ -86,6 +96,11 @@ export interface FrontMatter {
    * optional sidebar title
    */
   sidebar_title?: string;
+
+  /**
+   * Set this to true to show a separator/divider below this item in the sidebar
+   */
+  section_end_divider?: boolean;
 
   /**
    * filesystem path to the source file, generated during build time
