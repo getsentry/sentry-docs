@@ -69,3 +69,18 @@ Some known paths where you may see this error:
 * _static/dist/sentry/entrypoints/app.js
 
 To fix this, you can disable the auto optimization performed by your CDN.
+
+## Relay rejects envelope events
+
+If you're seeing the following error in your Relay logs:
+```
+ERROR relay_server::services::projects::cache::service: failed to fetch project from source: Fetch { project_key: ProjectKey("00000000000000000000000000000000"), previous_fetch: None, initiated: Instant { tv_sec: 16838910, tv_nsec: 923025932 }, when: Some(Instant { tv_sec: 16839069, tv_nsec: 382950946 }), revision: Revision(None) } tags.project_key="00000000000000000000000000000000" tags.has_revision=false error=upstream error failed to send message to service error.sources=[failed to send message to service]
+```
+
+This means Relay is unable to fetch the project configuration from Redis. This can happen if the worker (in the `taskworker` container) is lagging behind, making it unable to write new project configurations to Redis, which Relay then cannot fetch.
+
+To fix this, you can trigger a manual project configuration invalidation by running the following command. Warning: This will temporarily halt event ingestion until the project configurations are written to Redis again.
+
+```bash
+docker compose exec web ./bin/invalidate-project-configs
+```
