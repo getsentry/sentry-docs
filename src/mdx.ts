@@ -685,7 +685,8 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
 
       // Set write to false to prevent esbuild from writing files automatically.
       // We'll handle writing manually to gracefully handle read-only filesystems (e.g., Lambda runtime)
-      options.write = !!process.env.CI;
+      // In local dev, we need write=true to avoid images being embedded as binary data
+      options.write = process.env.NODE_ENV === 'development' || !!process.env.CI;
 
       return options;
     },
