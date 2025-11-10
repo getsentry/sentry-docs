@@ -699,7 +699,6 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
   // This only happens during build time (when filesystem is writable)
   // At runtime (Lambda), files already exist from build time
 
-
   const {code, frontmatter} = result;
 
   let mergedFrontmatter = frontmatter;
