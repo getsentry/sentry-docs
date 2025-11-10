@@ -33,7 +33,9 @@ export function SidebarLink({
       }`}
       data-sidebar-link
     >
-      <div>{title}</div>
+      <div className={styles['sidebar-link-content']}>
+        <span>{title}</span>
+      </div>
       {collapsible && <NavChevron direction={isActive ? 'down' : 'right'} />}
     </LinkComponent>
   );
