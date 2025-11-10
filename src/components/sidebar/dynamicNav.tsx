@@ -78,7 +78,7 @@ export const renderChildren = (
 
   const result: React.ReactNode[] = [];
 
-  sortedChildren.forEach(({node, children: nodeChildren}, index) => {
+  sortedChildren.forEach(({node, children: nodeChildren}) => {
     // will not be null because of the filter above
     if (!node) {
       return;
