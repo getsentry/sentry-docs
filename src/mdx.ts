@@ -4,7 +4,7 @@ import yaml from 'js-yaml';
 import {bundleMDX} from 'mdx-bundler';
 import {BinaryLike, createHash} from 'node:crypto';
 import {createReadStream, createWriteStream, mkdirSync} from 'node:fs';
-import {access, cp, mkdir, opendir, readFile} from 'node:fs/promises';
+import {access, cp, mkdir, opendir, readFile, writeFile} from 'node:fs/promises';
 import path from 'node:path';
 // @ts-expect-error ts(2305) -- For some reason "compose" is not recognized in the types
 import {compose, Readable} from 'node:stream';
@@ -683,8 +683,9 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
       // for this specific slug easily
       options.outdir = assetsCacheDir || outdir;
 
-      // Set write to true so that esbuild will output the files.
-      options.write = true;
+      // Set write to false to prevent esbuild from writing files automatically.
+      // We'll handle writing manually to gracefully handle read-only filesystems (e.g., Lambda runtime)
+      options.write = false;
 
       return options;
     },
@@ -693,6 +694,26 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
     console.error('Error occurred during MDX compilation:', e.errors);
     throw e;
   });
+
+  // Manually write output files from esbuild when available
+  // This only happens during build time (when filesystem is writable)
+  // At runtime (Lambda), files already exist from build time
+  if (result.outputFiles && result.outputFiles.length > 0) {
+    // Only attempt to write during build time (when CI is set)
+    // At runtime in Lambda, the filesystem is read-only but files already exist
+    if (process.env.CI) {
+      try {
+        await Promise.all(
+          result.outputFiles.map(async file => {
+            await writeFile(file.path, file.contents);
+          })
+        );
+      } catch (e) {
+        // If writing fails (e.g., read-only filesystem), continue anyway
+        // Images should already exist from build time
+      }
+    }
+  }
 
   const {code, frontmatter} = result;
 
