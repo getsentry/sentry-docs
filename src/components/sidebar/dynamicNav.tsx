@@ -5,7 +5,7 @@ import {sortPages} from 'sentry-docs/utils';
 import {getUnversionedPath, VERSION_INDICATOR} from 'sentry-docs/versioning';
 
 import {CollapsibleSidebarLink} from './collapsibleSidebarLink';
-import {SidebarLink} from './sidebarLink';
+import {SidebarLink, SidebarSeparator} from './sidebarLink';
 
 type Node = {
   [key: string]: any;
@@ -13,6 +13,7 @@ type Node = {
     [key: string]: any;
     beta?: boolean;
     new?: boolean;
+    section_end_divider?: boolean;
     sidebar_hidden?: boolean;
     sidebar_order?: number;
     sidebar_title?: string;
@@ -98,6 +99,11 @@ export const renderChildren = (
         {renderChildren(nodeChildren, exclude, path, showDepth, depth + 1)}
       </CollapsibleSidebarLink>
     );
+
+    // Add separator after this item if section_end_divider is true
+    if (node.context.section_end_divider && depth === 0) {
+      result.push(<SidebarSeparator key={`separator-${node.path}`} />);
+    }
   });
 
   return result;

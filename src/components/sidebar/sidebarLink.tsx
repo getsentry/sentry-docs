@@ -48,5 +48,5 @@ export function SidebarLink({
 }
 
 export function SidebarSeparator() {
-  return <hr className={styles['sidebar-separator']} />;
+  return <hr className={`${styles['sidebar-separator']} mt-3 mb-3`} />;
 }
