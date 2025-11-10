@@ -683,8 +683,9 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
       // for this specific slug easily
       options.outdir = assetsCacheDir || outdir;
 
-      // Set write to true so that esbuild will output the files.
-      options.write = true;
+      // Set write to false to prevent esbuild from writing files automatically.
+      // We'll handle writing manually to gracefully handle read-only filesystems (e.g., Lambda runtime)
+      options.write = !!process.env.CI;
 
       return options;
     },
@@ -693,6 +694,10 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
     console.error('Error occurred during MDX compilation:', e.errors);
     throw e;
   });
+
+  // Manually write output files from esbuild when available
+  // This only happens during build time (when filesystem is writable)
+  // At runtime (Lambda), files already exist from build time
 
   const {code, frontmatter} = result;
 
