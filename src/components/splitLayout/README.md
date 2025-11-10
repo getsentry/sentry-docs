@@ -27,6 +27,7 @@ A two-column layout component designed for getting started guides that places ex
       ```javascript // Your code sample goes here const example = "This appears
       on the right"; ```
     </SplitSectionCode>
+
   </SplitSection>
 </SplitLayout>
 ````
