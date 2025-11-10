@@ -698,22 +698,7 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
   // Manually write output files from esbuild when available
   // This only happens during build time (when filesystem is writable)
   // At runtime (Lambda), files already exist from build time
-  if (result.outputFiles && result.outputFiles.length > 0) {
-    // Only attempt to write during build time (when CI is set)
-    // At runtime in Lambda, the filesystem is read-only but files already exist
-    if (process.env.CI) {
-      try {
-        await Promise.all(
-          result.outputFiles.map(async file => {
-            await writeFile(file.path, file.contents);
-          })
-        );
-      } catch (e) {
-        // If writing fails (e.g., read-only filesystem), continue anyway
-        // Images should already exist from build time
-      }
-    }
-  }
+
 
   const {code, frontmatter} = result;
 
