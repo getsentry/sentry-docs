@@ -46,3 +46,7 @@ export function SidebarLink({
     </LinkComponent>
   );
 }
+
+export function SidebarSeparator() {
+  return <hr className={styles['sidebar-separator']} />;
+}

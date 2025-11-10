@@ -16,6 +16,12 @@ interface SidebarLinkProps {
    */
   title: string;
   to: string;
+
+  /**
+   * Shows a beta badge next to the title
+   */
+  beta?: boolean;
+
   /**
    * Children represent the additional links nested under this sidebar link
    */
@@ -26,11 +32,6 @@ interface SidebarLinkProps {
    * Indicates that the links are currently hidden. Overridden by isActive
    */
   collapsed?: boolean | null;
-
-  /**
-   * Shows a beta badge next to the title
-   */
-  beta?: boolean;
 
   /**
    * Shows a new badge next to the title

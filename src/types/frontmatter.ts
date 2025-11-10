@@ -19,10 +19,6 @@ export interface FrontMatter {
   customCanonicalTag?: string;
   /**  Add this if you want to add a canonical tag (without this it will default to the page url). Should be a relative path without the domain (e.g. `/platforms/react/options/`) */
   description?: string;
-  /**
-   * Set this to true to mark this page as a draft, and hide it from various other components (such as the PageGrid).
-   */
-  draft?: boolean;
 
   /**
    * Set this to true to show a "beta" badge next to the title in the sidebar
@@ -30,14 +26,19 @@ export interface FrontMatter {
   beta?: boolean;
 
   /**
-   * Set this to true to show a "new" badge next to the title in the sidebar
+   * Set this to true to mark this page as a draft, and hide it from various other components (such as the PageGrid).
    */
-  new?: boolean;
+  draft?: boolean;
 
   /**
    * Set this to true to take all the available width for the page content.
    */
   fullWidth?: boolean;
+
+  /**
+   * Set this to true to show a "new" badge next to the title in the sidebar
+   */
+  new?: boolean;
   /**
    * A list of keywords for indexing with search.
    */
@@ -94,14 +95,14 @@ export interface FrontMatter {
   sidebar_order?: number;
 
   /**
-   * optional sidebar title
-   */
-  sidebar_title?: string;
-
-  /**
    * Set this to true to show a separator/divider below this item in the sidebar
    */
   section_end_divider?: boolean;
+
+  /**
+   * optional sidebar title
+   */
+  sidebar_title?: string;
 
   /**
    * filesystem path to the source file, generated during build time
