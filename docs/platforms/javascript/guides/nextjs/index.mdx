@@ -29,17 +29,19 @@ Select which Sentry features you'd like to install in addition to Error Monitori
   ]}
 />
 
-## Step 1: Install
-
-To install Sentry using the installation wizard, run the following command within your project:
-
-```bash
-npx @sentry/wizard@latest -i nextjs
-```
-
-The wizard then guides you through the setup process, asking you to enable additional (optional) Sentry features for your application beyond error monitoring.
-
 <PlatformContent includePath="getting-started-features-expandable" />
+
+<StepComponent>
+
+## Install
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+To install Sentry using the installation wizard, run the command on the right within your project directory.
+
+The wizard guides you through the setup process, asking you to enable additional (optional) Sentry features for your application beyond error monitoring.
 
 This guide assumes that you enable all features and allow the wizard to create an example page and route. You can add or remove features at any time, but setting them up now will save you the effort of configuring them manually later.
 
@@ -54,11 +56,44 @@ This guide assumes that you enable all features and allow the wizard to create a
 
 </Expandable>
 
-## Step 2: Configure
+</SplitSectionText>
+<SplitSectionCode>
+
+```bash
+npx @sentry/wizard@latest -i nextjs
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+## Configure
 
 If you prefer to configure Sentry manually, here are the configuration files the wizard would create:
 
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
 ### Client-Side Configuration
+
+The wizard creates a client configuration file that initializes the Sentry SDK in your browser.
+
+The configuration includes your DSN (Data Source Name), which connects your app to your Sentry project, and enables the features you selected during installation.
+
+Key configuration options:
+
+- **`sendDefaultPii`** - Adds request headers and user IP for better debugging
+- **`integrations`** - Enables features like Session Replay and User Feedback
+- **`enableLogs`** - Forwards console logs to Sentry
+- **`tracesSampleRate`** - Controls performance monitoring sampling (1.0 = 100%)
+- **`replaysSessionSampleRate`** - Captures 10% of all sessions
+- **`replaysOnErrorSampleRate`** - Captures 100% of sessions with errors
+
+The `onRouterTransitionStart` export enables automatic performance tracking for Next.js page transitions.
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```javascript {tabTitle:Client} {filename:instrumentation-client.(js|ts)}
 import * as Sentry from "@sentry/nextjs";
@@ -111,7 +146,31 @@ export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
 // ___PRODUCT_OPTION_END___ performance
 ```
 
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
 ### Server-Side Configuration
+
+The wizard also creates a server configuration file for Node.js and Edge runtimes.
+
+This configuration captures errors from:
+- API routes
+- Server components
+- Server actions
+- Middleware
+- Edge functions
+
+The server configuration is simpler than the client configuration because some features (like Session Replay and User Feedback) are client-only.
+
+**Note:** Make sure `sendDefaultPii` is set to `true` if you want to capture user context with server-side errors.
+
+For more advanced configuration options or to set up Sentry manually, check out our [manual setup guide](/platforms/javascript/guides/nextjs/manual-setup/).
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```javascript {tabTitle:Server} {filename:sentry.server.config.(js|ts)}
 import * as Sentry from "@sentry/nextjs";
@@ -139,9 +198,11 @@ Sentry.init({
 });
 ```
 
-For detailed manual setup instructions, see our [manual setup guide](/platforms/javascript/guides/nextjs/manual-setup/).
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
-## Step 3: Verify Your Setup
+## Verify Your Setup
 
 <Include name="nextjs-turbopack-warning-expandable.mdx" />
 
@@ -188,3 +249,5 @@ Our next recommended steps for you are:
 - [Get support](https://sentry.zendesk.com/hc/en-us/)
 
 </Expandable>
+
+</StepComponent>
