@@ -1,5 +1,4 @@
-import {Fragment} from 'react';
-import type {ReactElement, ReactNode} from 'react';
+import {Fragment, type ReactElement, type ReactNode} from 'react';
 
 type Props = {
   children: ReactNode;
