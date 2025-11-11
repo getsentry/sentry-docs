@@ -32,7 +32,7 @@ export function makeHighlightBlocks(
       const updatedChild = cloneElement(
         child as ReactElement,
         element.props,
-        makeHighlightBlocks((child as ReactElement).props.children, language)
+        makeHighlightBlocks(element.props.children as React.ReactNode, language)
       );
       arr.push(updatedChild);
       return arr;
