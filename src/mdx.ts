@@ -1,5 +1,6 @@
 import matter from 'gray-matter';
 import {getDefaultLocale, getLocale, getLocales} from 'gt-next/server';
+import {serverContext} from './serverContext';
 import {s} from 'hastscript';
 import yaml from 'js-yaml';
 import {bundleMDX} from 'mdx-bundler';
@@ -450,10 +451,13 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
   const trySlugs: string[] = [slug];
   if (slug.startsWith('docs/')) {
     try {
-      const [locale, defaultLocale] = await Promise.all([
-        getLocale(),
+      const ctx = serverContext();
+      const [runtimeLocale, defaultLocale] = await Promise.all([
+        // Prefer locale from server context (set by app route for SSG)
+        Promise.resolve(ctx.locale ?? ''),
         Promise.resolve(getDefaultLocale()),
       ]);
+      const locale = runtimeLocale || (await getLocale().catch(() => '')); 
       if (locale && defaultLocale && locale !== defaultLocale) {
         const localized = path.posix.join('docs', locale, slug.slice('docs/'.length));
         // Try localized first, then fallback to canonical
@@ -795,12 +799,11 @@ export const getFileBySlugWithCache: (slug: string) => Promise<SlugFile> =
         // include locale in cache key to avoid cross-locale collisions
         let cacheKey = slug;
         try {
-          const [locale, defaultLocale] = await Promise.all([
-            getLocale(),
-            Promise.resolve(getDefaultLocale()),
-          ]);
-          if (locale && defaultLocale && locale !== defaultLocale) {
-            cacheKey = `${locale}:${slug}`;
+          const ctxLocale = serverContext().locale;
+          const defaultLocale = getDefaultLocale();
+          const resolvedLocale = ctxLocale || (await getLocale().catch(() => ''));
+          if (resolvedLocale && defaultLocale && resolvedLocale !== defaultLocale) {
+            cacheKey = `${resolvedLocale}:${slug}`;
           }
         } catch {
           // ignore locale resolution errors

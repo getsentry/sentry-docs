@@ -1,9 +1,6 @@
 import './globals.css';
 
 import {Theme} from '@radix-ui/themes';
-import {getLocaleDirection} from 'generaltranslation';
-import {GTProvider} from 'gt-next';
-import {getLocale} from 'gt-next/server';
 import type {Metadata} from 'next';
 import {Rubik} from 'next/font/google';
 import Script from 'next/script';
@@ -33,15 +30,13 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({children}: {children: React.ReactNode}) {
-  const lang = await getLocale();
   return (
-    <html lang={lang} dir={getLocaleDirection(lang)} suppressHydrationWarning>
+    <html lang="en" dir="ltr" suppressHydrationWarning>
       <head>
         <PlausibleProvider taggedEvents domain="docs.sentry.io,rollup.sentry.io" />
       </head>
       <body className={rubik.variable} suppressHydrationWarning>
-        <GTProvider locale={lang}>
-          <ThemeProvider
+        <ThemeProvider
             attribute="class"
             defaultTheme="system"
             enableSystem
@@ -51,7 +46,6 @@ export default async function RootLayout({children}: {children: React.ReactNode}
               {children}
             </Theme>
           </ThemeProvider>
-        </GTProvider>
         <Script
           async
           src="https://widget.kapa.ai/kapa-widget.bundle.js"

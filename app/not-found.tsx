@@ -2,7 +2,6 @@
 
 import {useEffect, useState} from 'react';
 import {Button} from '@radix-ui/themes';
-import {T} from 'gt-next';
 
 import {Header} from 'sentry-docs/components/header';
 import {Search} from 'sentry-docs/components/search';
@@ -17,8 +16,7 @@ export default function NotFound() {
   const brokenUrl = `${host}${pathname}`;
   const reportUrl = `https://github.com/getsentry/sentry-docs/issues/new?template=issue-platform-404.yml&title=🔗 404 Error&url=${brokenUrl}`;
   return (
-    <T>
-      <div className="tw-app">
+    <div className="tw-app">
         <Header pathname="/" searchPlatforms={[]} noSearch />
         <main className="px-8 pt-28">
           <h1 className="font-medium text-3xl mb-4">Page Not Found</h1>
@@ -52,6 +50,5 @@ export default function NotFound() {
           </div>
         </main>
       </div>
-    </T>
   );
 }

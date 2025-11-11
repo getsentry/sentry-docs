@@ -42,7 +42,7 @@ export async function generateStaticParams() {
 
 // Only render paths returned by generateStaticParams
 export const dynamicParams = false;
-// export const dynamic = 'force-static';
+export const dynamic = 'force-static';
 
 const mdxComponentsWithWrapper = mdxComponents(
   {Include, PlatformContent},
@@ -63,7 +63,7 @@ function MDXLayoutRenderer({mdxSource, ...rest}) {
   return <MDXLayout components={mdxComponentsWithWrapper} {...rest} />;
 }
 
-export default async function Page(props: {params: Promise<{path?: string[]}>}) {
+export default async function Page(props: {params: Promise<{path?: string[]; locale: string}>}) {
   const params = await props.params;
   // get frontmatter of all docs in tree
   const rootNode = await getDocsRootNode();
@@ -71,6 +71,7 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
   setServerContext({
     rootNode,
     path: params.path ?? [],
+    locale: params.locale,
   });
 
   if (!params.path && !isDeveloperDocs) {

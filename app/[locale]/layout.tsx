@@ -1,4 +1,5 @@
 import {getLocales} from 'gt-next/server';
+import {GTProvider} from 'gt-next';
 
 export const dynamicParams = false;
 
@@ -14,7 +15,6 @@ export default async function LocaleLayout({
   children: React.ReactNode;
   params: Promise<{locale: string}>;
 }) {
-  // Provider is applied at the root layout; just render children here
-  await params; // maintain async signature consistent with app typing
-  return children;
+  const {locale} = await params;
+  return <GTProvider locale={locale}>{children}</GTProvider>;
 }

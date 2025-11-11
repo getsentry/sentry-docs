@@ -34,7 +34,7 @@ const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
         '**/*.pdf',
       ],
       '\\[\\[\\.\\.\\.path\\]\\]': [
-        // Do not exclude 'docs/**/*' here; the dynamic docs route reads from the docs folder at runtime.
+        'docs/**/*',
         'node_modules/prettier/plugins',
         'node_modules/rollup/dist',
         'public/og-images/**/*',
@@ -129,4 +129,5 @@ const sentryConfig = withSentryConfig(nextConfig, {
 
 export default withGTConfig(sentryConfig, {
   loadTranslationsPath: './src/loadTranslations.ts',
+  getLocalePath: './src/getLocale.ts',
 });
