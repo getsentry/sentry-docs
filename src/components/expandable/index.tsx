@@ -1,6 +1,14 @@
 'use client';
 
-import {ReactNode, useCallback, useEffect, useRef, useState} from 'react';
+import {
+  ReactNode,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ToggleEvent,
+  type ToggleEventHandler,
+} from 'react';
 import {ChevronDownIcon, ChevronRightIcon} from '@radix-ui/react-icons';
 import * as Sentry from '@sentry/nextjs';
 import {useGT} from 'gt-next';
@@ -136,7 +144,7 @@ export function Expandable({
     [emit, title]
   );
 
-  function toggleIsExpanded(event: React.MouseEvent<HTMLDetailsElement>) {
+  const toggleIsExpanded: ToggleEventHandler<HTMLDetailsElement> = event => {
     const newVal = event.currentTarget.open;
     setIsExpanded(newVal);
 
