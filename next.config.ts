@@ -34,7 +34,7 @@ const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
         '**/*.pdf',
       ],
       '\\[\\[\\.\\.\\.path\\]\\]': [
-        'docs/**/*',
+        // Do not exclude 'docs/**/*' here; the dynamic docs route reads from the docs folder at runtime.
         'node_modules/prettier/plugins',
         'node_modules/rollup/dist',
         'public/og-images/**/*',
