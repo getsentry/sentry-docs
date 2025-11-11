@@ -3,7 +3,7 @@ import {Fragment, useEffect, useState} from 'react';
 import {CheckIcon as Check} from '@radix-ui/react-icons';
 import {Button} from '@radix-ui/themes';
 import * as Sentry from '@sentry/browser';
-import {T,useGT} from 'gt-next';
+import {T, useGT} from 'gt-next';
 
 import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
 

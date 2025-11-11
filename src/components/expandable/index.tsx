@@ -2,12 +2,12 @@
 
 import {
   ReactNode,
+  type ToggleEvent,
+  type ToggleEventHandler,
   useCallback,
   useEffect,
   useRef,
   useState,
-  type ToggleEvent,
-  type ToggleEventHandler,
 } from 'react';
 import {ChevronDownIcon, ChevronRightIcon} from '@radix-ui/react-icons';
 import * as Sentry from '@sentry/nextjs';
@@ -159,7 +159,7 @@ export function Expandable({
         window.history.pushState({}, '', '#');
       }
     }
-  }
+  };
 
   return (
     <details
