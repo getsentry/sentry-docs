@@ -16,10 +16,11 @@ export function makeKeywordsClickable(children: React.ReactNode) {
 
   return items.reduce((arr: ChildrenItem[], child) => {
     if (typeof child !== 'string') {
+      const element = child as ReactElement<{children?: React.ReactNode}>;
       const updatedChild = cloneElement(
         child as ReactElement,
         {},
-        makeKeywordsClickable((child as ReactElement).props.children)
+        makeKeywordsClickable(element.props.children as React.ReactNode)
       );
       arr.push(updatedChild);
       return arr;
