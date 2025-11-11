@@ -2,7 +2,6 @@
 
 import {
   ReactNode,
-  type ToggleEvent,
   type ToggleEventHandler,
   useCallback,
   useEffect,
