@@ -529,23 +529,23 @@ const userDocsRedirects = [
   },
   {
     source: '/platforms/javascript/configuration/draining/',
-    destination: '/platforms/javascript/apis/#flush',
+    destination: '/platforms/javascript/configuration/apis/#flush',
   },
   {
     source: '/platforms/javascript/guides/:guide/configuration/draining/',
-    destination: '/platforms/javascript/guides/:guide/apis/#flush',
+    destination: '/platforms/javascript/guides/:guide/configuration/apis/#flush',
   },
   {
     source: '/platforms/javascript/enriching-events/identify-user/',
-    destination: '/platforms/javascript/apis/#setUser',
+    destination: '/platforms/javascript/configuration/apis/#setUser',
   },
   {
     source: '/platforms/javascript/guides/:guide/enriching-events/identify-user/',
-    destination: '/platforms/javascript/guides/:guide/apis/#setUser',
+    destination: '/platforms/javascript/guides/:guide/configuration/apis/#setUser',
   },
   {
     source: '/platforms/javascript/enriching-events/context/',
-    destination: '/platforms/javascript/apis/',
+    destination: '/platforms/javascript/configuration/apis/',
   },
   {
     source: '/platforms/javascript/guides/:guide/enriching-events/context/',
