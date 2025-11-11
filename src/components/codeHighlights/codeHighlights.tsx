@@ -15,7 +15,7 @@ export function makeHighlightBlocks(
 ) {
   const items = Children.toArray(children);
 
-  let highlightedLineElements: ReactElement[] = [];
+  let highlightedLineElements: ReactElement<{className?: string; children?: React.ReactNode}>[] = [];
   let highlightElementGroupCounter = 0;
 
   return items.reduce((arr: ChildrenItem[], child, index) => {
@@ -24,7 +24,7 @@ export function makeHighlightBlocks(
       return arr;
     }
 
-    const element = child as ReactElement;
+    const element = child as ReactElement<{className?: string; children?: React.ReactNode}>;
     const classes = element.props.className;
 
     const isCodeLine = classes && classes.includes('code-line');
