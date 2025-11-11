@@ -1,14 +1,10 @@
 ---
 title: Self-Hosted Monitoring
 sidebar_title: Monitoring
-sidebar_order: 10
+sidebar_order: 2
 ---
 
-<Alert title="Important" level="warning">
-    These are community-contributed docs. Sentry does not officially provide support for self-hosted configurations beyond the default install.
-</Alert>
-
-This page is considered experimental because everyone will have different setup and requirements for their monitoring system. It is also best to use your existing monitoring system, and try to integrate Sentry with it, instead of spinning up a new one.
+Everyone will have different setup and requirements for their monitoring system, it is best to use your existing monitoring system, and try to integrate Sentry with it, instead of spinning up a new one.
 
 Most containers have a `statsd` client that you can point to your monitoring system. If you have a native `statsd` server instance, you can directly use it. If you don't, you might want to add some kind of converter that converts the ingested `statsd` format into your own. For example, if you are using Prometheus, you can use [prometheus-statsd-exporter](https://github.com/prometheus/statsd_exporter) to bridge the gap.
 
@@ -19,7 +15,7 @@ We recommend [the original `statsd` server made by Etsy](https://github.com/stat
 Sentry does not provide any alerts if your host instance is low on resources such as free memory or disk space. You will need to configure this own your own relative to your needs. It is critical for you to monitor the disk space as once it gets full, it will be much harder to recover from there.
 
 <Alert title="Note">
-    After changing configuration files, don't forget to restart the containers with `docker compose restart`. See the <Link to="/self-hosted/#configuration">configuration section</Link> for more information.
+    After changing configuration files, re-run the <code>./install.sh</code> script, to rebuild and restart the containers. See the <Link to="/self-hosted/#configuration">configuration section</Link> for more information.
 </Alert>
 
 ## Sentry-related configurations
@@ -88,6 +84,8 @@ metrics:
   # periodic_secs: 5
 ```
 
+Defined metric keys are specified on [statsd.rs file](https://github.com/getsentry/relay/blob/master/relay-server/src/statsd.rs).
+
 ### Symbolicator
 
 You can configure Symbolicator to send metrics to Statsd server by configuring your `symbolicator/config.yml` file:
@@ -97,6 +95,32 @@ You can configure Symbolicator to send metrics to Statsd server by configuring y
 metrics:
   statsd: "100.100.123.123:8125" # It's recommended to use IP address instead of domain name
   prefix: "sentry.symbolicator" # Adjust this to your needs, default is "symbolicator"
+```
+
+### Uptime Checker
+
+You can configure Uptime Checker to send metrics to Statsd server by configuring your `docker-compose.yml` file:
+
+```yaml
+services:
+  # Other services
+  uptime-checker:
+    # ...
+    environment:
+      UPTIME_CHECKER_STATSD_ADDR: "100.100.123.123:8125" # It's recommended to use IP address instead of domain name
+```
+
+### Taskbroker
+
+You can configure Taskbroker to send metrics to Statsd server by configuring your `docker-compose.yml` file:
+
+```yaml
+services:
+  # Other services
+  taskbroker:
+    # ...
+    environment:
+      TASKBROKER_STATSD_ADDR: "100.100.123.123:8125" # It's recommended to use IP address instead of domain name
 ```
 
 ## Sentry dependencies

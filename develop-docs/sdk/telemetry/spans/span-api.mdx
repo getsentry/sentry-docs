@@ -120,7 +120,7 @@ const checkoutSpan = Sentry.startSpan({ name: 'on-checkout-click', attributes: {
 const validationSpan = Sentry.startSpan({ name: 'validate-shopping-cart'})
 startFormValidation().then((result) => {
   validationSpan.setAttribute('valid-form-data', result.success);
-  processSpan.end();
+  validationSpan.end();
 })
 
 const processSpan = Sentry.startSpan({ name: 'process-order', parentSpan: checkoutSpan});
@@ -129,7 +129,7 @@ processOrder().then((result) => {
   processSpan.end();
 }).catch((error) => {
   processSpan.setStatus('error');
-  processSpan.setAttribute('error', error.message);
+  processSpan.setAttribute('order-processed', 'error');
   processSpan.end();
 });
 
