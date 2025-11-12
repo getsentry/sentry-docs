@@ -85,6 +85,11 @@ export function CodeBlock({filename, language, children}: CodeBlockProps) {
 
   useCleanSnippetInClipboard(codeRef, {language});
 
+  // Mermaid blocks should not be processed by CodeBlock - they need special client-side rendering
+  if (language === 'mermaid') {
+    return <div className="language-mermaid">{children}</div>;
+  }
+
   async function copyCodeOnClick() {
     if (codeRef.current === null) {
       return;
