@@ -57,10 +57,13 @@ export function CodeBlock({filename, language, children}: CodeBlockProps) {
   // Show the copy button after js has loaded
   // otherwise the copy button will not work
   const [showCopyButton, setShowCopyButton] = useState(false);
+  // Track if component is mounted to prevent hydration mismatch with keyword interpolation
+  const [isMounted, setIsMounted] = useState(false);
   const {emit} = usePlausibleEvent();
 
   useEffect(() => {
     setShowCopyButton(true);
+    setIsMounted(true);
     // prevent .no-copy elements from being copied during selection Right click copy or / Cmd+C
     const noCopyElements = codeRef.current?.querySelectorAll<HTMLSpanElement>('.no-copy');
     const handleSelectionChange = () => {
@@ -102,6 +105,15 @@ export function CodeBlock({filename, language, children}: CodeBlockProps) {
     }
   }
 
+  // Process children to add highlighting
+  const highlightedChildren = makeHighlightBlocks(children, language);
+
+  // Only apply keyword interpolation after component mounts to prevent hydration mismatch
+  // Server and client both render raw text initially, then client upgrades after mount
+  const processedChildren = isMounted
+    ? makeKeywordsClickable(highlightedChildren)
+    : highlightedChildren;
+
   return (
     <div className={styles['code-block']}>
       <div className={styles['code-actions']}>
@@ -119,9 +131,7 @@ export function CodeBlock({filename, language, children}: CodeBlockProps) {
       >
         Copied
       </div>
-      <div ref={codeRef}>
-        {makeKeywordsClickable(makeHighlightBlocks(children, language))}
-      </div>
+      <div ref={codeRef}>{processedChildren}</div>
     </div>
   );
 }
