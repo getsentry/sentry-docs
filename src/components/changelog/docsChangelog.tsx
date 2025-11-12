@@ -1,5 +1,7 @@
-import {T} from 'gt-next';
-import {getGT} from 'gt-next/server';
+'use client';
+
+import {useEffect, useState} from 'react';
+import {T, useGT} from 'gt-next';
 
 interface ChangelogEntry {
   author: string;
@@ -15,28 +17,31 @@ interface ChangelogEntry {
   };
 }
 
-async function getChangelogEntries(): Promise<ChangelogEntry[]> {
-  try {
-    const res = await fetch('https://sentry-content-dashboard.sentry.dev/api/docs', {
-      next: {revalidate: 3600}, // Cache for 1 hour
-    });
+export function DocsChangelog() {
+  const gt = useGT();
+  const [entries, setEntries] = useState<ChangelogEntry[]>([]);
 
-    if (!res.ok) {
-      throw new Error(`Failed to fetch changelog: ${res.status} ${res.statusText}`);
-    }
-
-    return res.json();
-  } catch (error) {
-    // eslint-disable-next-line no-console
-    console.error('Error fetching changelog:', error);
-    // Error fetching changelog - return empty array
-    return [];
-  }
-}
-
-export async function DocsChangelog() {
-  const gt = await getGT();
-  const entries = await getChangelogEntries();
+  useEffect(() => {
+    let cancelled = false;
+    const fetchEntries = async () => {
+      try {
+        const res = await fetch('https://sentry-content-dashboard.sentry.dev/api/docs');
+        if (!res.ok) {
+          throw new Error(`Failed to fetch changelog: ${res.status} ${res.statusText}`);
+        }
+        const data = (await res.json()) as ChangelogEntry[];
+        if (!cancelled) setEntries(data);
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error('Error fetching changelog:', error);
+        if (!cancelled) setEntries([]);
+      }
+    };
+    fetchEntries();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   if (entries.length === 0) {
     return (
