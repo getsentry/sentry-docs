@@ -37,7 +37,9 @@ export function GradleUploadInstructions({feature}: Props) {
           </p>
           <OrgAuthTokenNote />
           <CodeBlock language="bash">
-            <pre>{codeToJsx(`export SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___`, 'bash')}</pre>
+            <pre>
+              {codeToJsx(`export SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___`, 'bash')}
+            </pre>
           </CodeBlock>
         </li>
 
