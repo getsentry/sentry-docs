@@ -4,13 +4,12 @@ import {Metadata} from 'next';
 import {notFound} from 'next/navigation';
 
 import {apiCategories} from 'sentry-docs/build/resolveOpenAPI';
-import {Alert} from 'sentry-docs/components/alert';
 import {ApiCategoryPage} from 'sentry-docs/components/apiCategoryPage';
 import {ApiPage} from 'sentry-docs/components/apiPage';
+import {ChangelogMdx} from 'sentry-docs/components/changelog/mdxChangelogClient';
 import {DocPage} from 'sentry-docs/components/docPage';
 import {Home} from 'sentry-docs/components/home';
 import {Include} from 'sentry-docs/components/include';
-import {MdxClient} from 'sentry-docs/components/mdxClient';
 import {PlatformContent} from 'sentry-docs/components/platformContent';
 import {
   DocNode,
@@ -185,7 +184,7 @@ export default async function Page(props: {
         fullWidth={pageNode.frontmatter.fullWidth}
       >
         {/* Render MDX on the client with a minimal, client-safe component map */}
-        <MdxClient code={mdxSource} components={{Alert}} />
+        <ChangelogMdx code={mdxSource} />
       </DocPage>
     );
   }
