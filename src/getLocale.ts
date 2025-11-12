@@ -2,7 +2,7 @@ import {getDefaultLocale} from 'gt-next/server';
 
 import {serverContext} from './serverContext';
 
-export default async function getLocale(): Promise<string> {
+export default function getLocale(): string {
   try {
     const ctx = serverContext();
     if (ctx.locale) {
