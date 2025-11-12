@@ -14,10 +14,9 @@ export function GradleUploadInstructions({feature}: Props) {
   return (
     <Fragment>
       <p>
-        The Gradle plugin automatically detects build metadata from your git
-        repository. On GitHub Actions, all metadata is automatically detected. On other
-        CI systems, you may need to manually set some values using the{' '}
-        <code>vcsInfo</code> extension.
+        The Gradle plugin automatically detects build metadata from your git repository.
+        On GitHub Actions, all metadata is automatically detected. On other CI systems,
+        you may need to manually set some values using the <code>vcsInfo</code> extension.
       </p>
 
       <ol>
@@ -65,8 +64,8 @@ export function GradleUploadInstructions({feature}: Props) {
 
         <li>
           <p>
-            After an upload has successfully processed, confirm the metadata is correct
-            in the Sentry UI
+            After an upload has successfully processed, confirm the metadata is correct in
+            the Sentry UI
           </p>
           <img
             src="/platforms/android/build-distribution/images/android-metadata.png"
@@ -79,10 +78,9 @@ export function GradleUploadInstructions({feature}: Props) {
       <h3>Overriding Metadata</h3>
 
       <p>
-        The Gradle plugin automatically detects build metadata from your git
-        repository. On GitHub Actions, all metadata is automatically detected. On other
-        CI systems, you may need to manually set some values using the{' '}
-        <code>vcsInfo</code> extension.
+        The Gradle plugin automatically detects build metadata from your git repository.
+        On GitHub Actions, all metadata is automatically detected. On other CI systems,
+        you may need to manually set some values using the <code>vcsInfo</code> extension.
       </p>
 
       <p>Configure overrides in your Gradle build configuration:</p>
