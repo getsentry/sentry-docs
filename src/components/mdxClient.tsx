@@ -1,12 +1,12 @@
 'use client';
 
-import {getMDXComponent} from 'mdx-bundler/client';
 import {useMemo} from 'react';
+import {getMDXComponent} from 'mdx-bundler/client';
 
 type Props = {
-  code: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
+  code: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   components?: Record<string, any>;
 };

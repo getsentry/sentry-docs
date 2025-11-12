@@ -1,7 +1,7 @@
+import {useMemo} from 'react';
 import {getMDXComponent} from 'mdx-bundler/client';
 import {Metadata} from 'next';
 import {notFound} from 'next/navigation';
-import {useMemo} from 'react';
 
 import {apiCategories} from 'sentry-docs/build/resolveOpenAPI';
 import {Alert} from 'sentry-docs/components/alert';
@@ -66,7 +66,7 @@ function MDXLayoutRenderer({mdxSource, ...rest}) {
 }
 
 export default async function Page(props: {
-  params: Promise<{locale: string, path?: string[];}>;
+  params: Promise<{locale: string; path?: string[]}>;
 }) {
   const params = await props.params;
   // get frontmatter of all docs in tree
