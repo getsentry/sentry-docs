@@ -88,19 +88,16 @@ export interface FrontMatter {
   section_end_divider?: boolean;
 
   /**
+   * Set this to true to hide from the sidebar
+   */
+  sidebar_hidden?: boolean;
+
+  /**
    * Which sidebar section this page belongs to (for platform docs).
    * Options: 'features' | 'configuration'
    * Defaults to 'features' if not specified.
    */
   sidebar_section?: 'features' | 'configuration';
-
-  /**
-   * The next page in the sidebar navigation.
-   */
-  /**
-   * Set this to true to hide from the sidebar
-   */
-  sidebar_hidden?: boolean;
 
   /**
    * The order of this page in auto generated sidebars and grids.
