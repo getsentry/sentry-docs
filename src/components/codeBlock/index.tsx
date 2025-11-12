@@ -54,11 +54,6 @@ export function CodeBlock({filename, language, children}: CodeBlockProps) {
   const [showCopied, setShowCopied] = useState(false);
   const codeRef = useRef<HTMLDivElement>(null);
 
-  // Mermaid blocks should not be processed by CodeBlock - they need special client-side rendering
-  if (language === 'mermaid') {
-    return <>{children}</>;
-  }
-
   // Show the copy button after js has loaded
   // otherwise the copy button will not work
   const [showCopyButton, setShowCopyButton] = useState(false);
@@ -89,6 +84,11 @@ export function CodeBlock({filename, language, children}: CodeBlockProps) {
   }, []);
 
   useCleanSnippetInClipboard(codeRef, {language});
+
+  // Mermaid blocks should not be processed by CodeBlock - they need special client-side rendering
+  if (language === 'mermaid') {
+    return <div className="language-mermaid">{children}</div>;
+  }
 
   async function copyCodeOnClick() {
     if (codeRef.current === null) {
