@@ -1,5 +1,5 @@
-import {Metadata} from 'next';
 import {getDefaultLocale} from 'gt-next/server';
+import {Metadata} from 'next';
 import {redirect} from 'next/navigation';
 
 import {Alert} from 'sentry-docs/components/alert';
