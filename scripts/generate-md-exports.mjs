@@ -18,6 +18,7 @@ import {
   createBrotliCompress,
   createBrotliDecompress,
 } from 'node:zlib';
+import pLimit from 'p-limit';
 import rehypeParse from 'rehype-parse';
 import rehypeRemark from 'rehype-remark';
 import remarkGfm from 'remark-gfm';
@@ -64,7 +65,7 @@ let globalUsedCacheFiles = null;
 function taskFinishHandler({id, success, failedTasks, usedCacheFiles}) {
   // Collect cache files used by this worker into the global set
   if (usedCacheFiles && globalUsedCacheFiles) {
-    console.log(`🔍 Worker[${id}]: returned ${usedCacheFiles.length} cache files.`);
+    console.log(`🔍 Worker[${id}]: returned ${usedCacheFiles.size} cache files.`);
     usedCacheFiles.forEach(file => globalUsedCacheFiles.add(file));
   } else {
     console.warn(
@@ -103,11 +104,12 @@ async function createWork() {
   const CACHE_DIR = path.join(root, '.next', 'cache', 'md-exports');
   console.log(`💰 Cache directory: ${CACHE_DIR}`);
   const noCache = !existsSync(CACHE_DIR);
+  let initialCacheFiles = [];
   if (noCache) {
     console.log(`ℹ️ No cache directory found, this will take a while...`);
     await mkdir(CACHE_DIR, {recursive: true});
   } else {
-    const initialCacheFiles = await readdir(CACHE_DIR);
+    initialCacheFiles = await readdir(CACHE_DIR);
     console.log(
       `📦 Cache directory has ${initialCacheFiles.length} files from previous build`
     );
@@ -216,27 +218,27 @@ async function createWork() {
   // Clean up unused cache files to prevent unbounded growth
   if (!noCache) {
     try {
-      const allFiles = await readdir(CACHE_DIR);
-      const filesToDelete = allFiles.filter(file => !globalUsedCacheFiles.has(file));
-      const overlaps = allFiles.filter(file => globalUsedCacheFiles.has(file));
+      const filesToDelete = initialCacheFiles.filter(
+        file => !globalUsedCacheFiles.has(file)
+      );
+      const overlaps = initialCacheFiles.filter(file => globalUsedCacheFiles.has(file));
 
       console.log(`📊 Cache tracking stats:`);
-      console.log(`   - Files in cache dir (after build): ${allFiles.length}`);
+      console.log(`   - Files in cache dir (after build): ${initialCacheFiles.length}`);
       console.log(`   - Files tracked as used: ${globalUsedCacheFiles.size}`);
       console.log(`   - Files that existed and were used: ${overlaps.length}`);
       console.log(`   - Files to delete (old/unused): ${filesToDelete.length}`);
       console.log(`   - Expected after cleanup: ${overlaps.length} files`);
 
       if (filesToDelete.length > 0) {
+        const limit = pLimit(50);
         await Promise.all(
-          filesToDelete.map(file => rm(path.join(CACHE_DIR, file), {force: true}))
+          filesToDelete.map(file =>
+            limit(() => rm(path.join(CACHE_DIR, file), {force: true}))
+          )
         );
         console.log(`🧹 Cleaned up ${filesToDelete.length} unused cache files`);
       }
-
-      // Verify cleanup worked
-      const remainingFiles = await readdir(CACHE_DIR);
-      console.log(`✅ Cache directory now has ${remainingFiles.length} files`);
     } catch (err) {
       console.warn('Failed to clean unused cache files:', err);
     }
@@ -430,7 +432,7 @@ async function processTaskList({id, tasks, cacheDir, noCache, usedCacheFiles}) {
     id,
     success,
     failedTasks,
-    usedCacheFiles: Array.from(usedCacheFiles),
+    usedCacheFiles,
   };
 }
 
