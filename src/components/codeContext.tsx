@@ -16,6 +16,7 @@ type ProjectCodeKeywords = {
   ORG_SLUG: string;
   OTLP_LOGS_URL: string;
   OTLP_TRACES_URL: string;
+  OTLP_URL: string;
   PROJECT_ID: number;
   PROJECT_SLUG: string;
   PUBLIC_DSN: string;
@@ -89,6 +90,7 @@ export const DEFAULTS: CodeKeywords = {
       MINIDUMP_URL:
         'https://o0.ingest.sentry.io/api/0/minidump/?sentry_key=examplePublicKey',
       UNREAL_URL: 'https://o0.ingest.sentry.io/api/0/unreal/examplePublicKey/',
+      OTLP_URL: 'https://o0.ingest.sentry.io/api/0/integration/otlp',
       OTLP_TRACES_URL: 'https://o0.ingest.sentry.io/api/0/integration/otlp/v1/traces',
       OTLP_LOGS_URL: 'https://o0.ingest.sentry.io/api/0/integration/otlp/v1/logs',
       VERCEL_LOG_DRAIN_URL: 'https://o0.ingest.sentry.io/api/0/integration/vercel/logs/',
@@ -143,16 +145,24 @@ const formatUnrealEngineURL = ({scheme, host, pathname, publicKey}: Dsn) => {
   return `${scheme}${host}/api${pathname}/unreal/${publicKey}/`;
 };
 
-const formatVercelLogDrainUrl = ({scheme, host, pathname}: Dsn) => {
-  return `${scheme}${host}/api${pathname}/integration/vercel/logs/`;
+const formatIntegrationUrl = ({scheme, host, pathname}: Dsn) => {
+  return `${scheme}${host}/api${pathname}/integration/`;
 };
 
-const formatOtlpTracesUrl = ({scheme, host, pathname}: Dsn) => {
-  return `${scheme}${host}/api${pathname}/integration/otlp/v1/traces`;
+const formatOtlpUrl = (dsn: Dsn) => {
+  return `${formatIntegrationUrl(dsn)}otlp`;
 };
 
-const formatOtlpLogsUrl = ({scheme, host, pathname}: Dsn) => {
-  return `${scheme}${host}/api${pathname}/integration/otlp/v1/logs`;
+const formatOtlpTracesUrl = (dsn: Dsn) => {
+  return `${formatOtlpUrl(dsn)}/v1/traces`;
+};
+
+const formatOtlpLogsUrl = (dsn: Dsn) => {
+  return `${formatOtlpUrl(dsn)}/v1/logs`;
+};
+
+const formatVercelLogDrainUrl = (dsn: Dsn) => {
+  return `${formatIntegrationUrl(dsn)}vercel/logs/`;
 };
 
 const formatApiUrl = ({scheme, host}: Dsn) => {
@@ -247,6 +257,7 @@ export async function fetchCodeKeywords(): Promise<CodeKeywords> {
           parsedDsn.host ?? `o${project.organizationId}.ingest.sentry.io`,
         MINIDUMP_URL: formatMinidumpURL(parsedDsn),
         UNREAL_URL: formatUnrealEngineURL(parsedDsn),
+        OTLP_URL: formatOtlpUrl(parsedDsn),
         VERCEL_LOG_DRAIN_URL: formatVercelLogDrainUrl(parsedDsn),
         OTLP_TRACES_URL: formatOtlpTracesUrl(parsedDsn),
         OTLP_LOGS_URL: formatOtlpLogsUrl(parsedDsn),

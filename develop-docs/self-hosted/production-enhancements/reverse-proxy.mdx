@@ -1,12 +1,8 @@
 ---
 title: Self-Hosted Reverse Proxy
 sidebar_title: Reverse Proxy
-sidebar_order: 80
+sidebar_order: 1
 ---
-
-<Alert title="Important" level="warning">
-    These are community-contributed docs. Sentry does not officially provide support for self-hosted configurations beyond the default install.
-</Alert>
 
 Adding a reverse proxy in front of your Sentry deployment is strongly recommended for one big reason: you can fine tune every configuration to fit your current setup. A dedicated reverse proxy that does SSL/TLS termination that also forwards the client IP address as Docker Compose internal network (as this is [close to impossible to get otherwise](https://github.com/getsentry/self-hosted/issues/554)) would give you the best Sentry experience.
 
@@ -22,13 +18,29 @@ We recommend TLS termination to be done on your own dedicated load balancer or p
 
 Certain self-hosted deployments requires the dashboard to be accessed only via internal network. But, they also need to provide public Sentry ingestion endpoint for client devices such as mobile and desktop apps. You can expose some of these endpoints publicly:
 
-- `/api/[0-9]+/envelope/` - Main endpoint for submitting event from SDK
-- `/api/[0-9]+/minidump/` - Endpoint for submitting minidump from native SDKs
-- `/api/[0-9]+/security/` - Endpoint for submitting security-related such as CSP errors
-- `/api/[0-9]+/store/` - Old endpoint for submitting event from SDK, it is deprecated.
-- `/api/[0-9]+/unreal/` - Endpoint for submitting crash report from Unreal Engine SDK
+- `/api/{project_id}/envelope/` - Main endpoint for submitting event from SDK.
+- `/api/{project_id}/store/` - Legacy endpoint for submitting event from SDK, it is deprecated.
+- `/api/{project_id}/security/` - Endpoint for submitting security-related reports.
+- `/api/{project_id}/csp-report/` - Endpoint for submitting [CSP (Content Security Policy) reports](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP).
+- `/api/{project_id}/nel/` - Endpoint for submitting [NEL (Network Error Logging)](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/NEL) reports.
+- `/api/{project_id}/minidump/` and `/api/{project_id}/minidump` - Endpoint for submitting minidump from native SDKs.
+- `/api/{project_id}/events/{event_id}/attachments/` - Endpoint for submitting attachments.
+- `/api/{project_id}/unreal/{sentry_key}` - Endpoint for submitting crash report from Unreal Engine SDK.
+- `/api/{project_id}/cron` - Endpoint for submitting cron monitors from APIs. For more specific endpoints:
+  - `/api/{project_id}/cron/{monitor_slug}/{sentry_key}/`
+  - `/api/{project_id}/cron/{monitor_slug}/{sentry_key}`
+  - `/api/{project_id}/cron/{monitor_slug}/`
+  - `/api/{project_id}/cron/{monitor_slug}`
+- `/api/{project_id}/integration/otlp` - Endpoint for submitting native OTLP dataset (traces, logs and metrics). For more specific endpoints:
+  - `/api/{project_id}/integration/otlp/v1/traces` - Endpoint for submitting native OTLP dataset (traces).
+  - `/api/{project_id}/integration/otlp/v1/traces/` - Endpoint for submitting native OTLP dataset (traces).
+  - `/api/{project_id}/integration/otlp/v1/logs` - Endpoint for submitting native OTLP dataset (logs).
+  - `/api/{project_id}/integration/otlp/v1/logs/` - Endpoint for submitting native OTLP dataset (logs).
 
-The `[0-9]+` is a regular expression string that is acquired from the project DSN.
+
+The `{project_id}` placeholder should resolve to `[0-9]+` regular expression.
+
+The `{event_id}`, `{monitor_slug}` and `{sentry_key}` placeholders should resolve to `[A-Za-z0-9-_+=]+` regular expression.
 
 ## Rate Limiting
 
@@ -41,6 +53,10 @@ For self-hosted deployment, it is recommended to have a rate limiter on your ded
 Endpoint for health checks is available on `/_health/` endpoint using HTTP protocol. This will return a 200 if Sentry is up or a 500 with the list of problems.
 
 ## Reverse Proxy Examples
+
+<Alert title="Note">
+  If you run your reverse proxy as a Docker container, and place it on the same Docker Compose network as your Sentry instance, make sure to target `nginx:80` instead of `web:9000` in the examples below.
+</Alert>
 
 ### NGINX
 
@@ -75,7 +91,7 @@ server {
     # You can also only expose the ingest endpoints only,
     # by removing the other `location` directive.
     #
-    # It is recomended to put a rate limiter on the ingest endpoints.
+    # It is recommended to put a rate limiter on the ingest endpoints.
     location ~ ^/api/[0-9]+/(envelope|minidump|security|store|unreal)/ {
         add_header Access-Control-Allow-Origin * always;
         add_header Access-Control-Allow-Credentials false always;
@@ -126,7 +142,7 @@ sentry.yourcompany.com {
     # You can also only expose the ingest endpoints only,
     # by removing the other `handle` directive.
     #
-    # It is recomended to put a rate limiter on the ingest endpoints.
+    # It is recommended to put a rate limiter on the ingest endpoints.
     @ingest_endpoint path_regexp ^/api/[0-9]+/(envelope|minidump|security|store|unreal)/
 
     handle @ingest_endpoint {
@@ -180,7 +196,7 @@ For detailed documentation on Caddyfile configuration, see [Caddy documentation]
 
 ### Traefik
 
-[Traefik](https://doc.traefik.io/traefik/) is another reverse proxy that provides a lot of plugin and integrations out of the box. It automatically handles TLS certificate management via ACME, too. After you [install Traefik](https://doc.traefik.io/traefik/getting-started/install-traefik/), add a configuration to Traefik as follows (this example is using the YAML file provider, convert to your prefered configuration provider as needed).
+[Traefik](https://doc.traefik.io/traefik/) is another reverse proxy that provides a lot of plugin and integrations out of the box. It automatically handles TLS certificate management via ACME, too. After you [install Traefik](https://doc.traefik.io/traefik/getting-started/install-traefik/), add a configuration to Traefik as follows (this example is using the YAML file provider, convert to your preferred configuration provider as needed).
 
 The configuration below is intended for Traefik v3 with a File Provider.
 
@@ -191,7 +207,7 @@ http:
     # You can also only expose the ingest endpoints only,
     # by removing the other `handle` directive.
     #
-    # It is recomended to put a rate limiter on the ingest endpoints.
+    # It is recommended to put a rate limiter on the ingest endpoints.
     sentry-ingest:
       entryPoints:
         - web       # Assuming this your HTTP entrypoint
@@ -306,7 +322,7 @@ frontend https_bind
     # You can also only expose the ingest endpoints only,
     # by removing the other `handle` directive.
     #
-    # It is recomended to put a rate limiter on the ingest endpoints.
+    # It is recommended to put a rate limiter on the ingest endpoints.
     use_backend sentry_ingest if sentry_domain ingest_endpoint
 
     use_backend sentry if sentry_domain

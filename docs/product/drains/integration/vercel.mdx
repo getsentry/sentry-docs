@@ -1,22 +1,33 @@
 ---
 title: Vercel Drains
-sidebar_order: 75
+sidebar_order: 50
 description: Learn how to set up Vercel drains to send forward logs and traces data to Sentry.
 ---
+
+Vercel Drains let you forward traces and logs from applications running on Vercel to Sentry.
+
+## Prerequisites
+
+Before you begin, ensure you have:
+
+- A Vercel project that you want to monitor
+- A Sentry project you want to send data to
+
+## Set up a Drain
 
 To set up a Drain in Vercel you'll need to create a new Drain in the Vercel settings. For more information on Vercel Drains, please see the [Vercel drain documentation](https://vercel.com/docs/drains).
 
 1. From the Vercel dashboard, go to **Team Settings > Drains** and click **Add Drain**.
 2. Choose a data type. Currently only Logs and Traces are supported.
 
-- [Logs](#log-drains)
-- [Traces](#trace-drains)
+- [Logs](#log-drains): Runtime, build, and static logs from your deployments (supports custom endpoints and native integrations)
+- [Traces](#trace-drains): Distributed tracing data in OpenTelemetry format (supports custom endpoints and native integrations)
 
-## Log Drains
+### Log Drains
 
 <Alert>
 
-Vercel Log Drains support is currently in closed alpha. Please reach out to [feedback-logging@sentry.io](mailto:feedback-logging@sentry.io) if you have feedback or questions. Features in alpha are still in-progress and may have bugs. We recognize the irony.
+This feature is available only if you're in the <a href="/organization/early-adopter-features/" target="_blank">Early Adopter program</a>. Please reach out to [feedback-logging@sentry.io](mailto:feedback-logging@sentry.io) if you have feedback or questions. Features available to Early Adopters are still in-progress and may have bugs. We recognize the irony.
 
 </Alert>
 
@@ -34,13 +45,13 @@ After selecting the Logs data type, you'll need to configure the drain to send d
 - **Firewall**: Outputs log data from requests denied by [Vercel Firewall](https://vercel.com/docs/vercel-firewall) rules
 
 4. Select which environments to drain from. You can choose to drain from all environments or select specific ones.
-5. Under the custom endpoint tab add the Sentry Vercel Log Drain Endpoint in the URL field. You can find the endpoint in your Sentry Project Settings under **Client Keys (DSN)** > **Vercel**. You can select either JSON or NDJSON encoding.
+5. Under the custom endpoint tab add the Sentry Vercel Log Drain Endpoint in the URL field. You can find the endpoint in your [Sentry Project Settings](https://sentry.io/settings/projects/) under **Client Keys (DSN)** > **Vercel**. You can select either JSON or NDJSON encoding.
 
-```URL
+```bash
 ___VERCEL_LOG_DRAIN_URL___
 ```
 
-6. Click the Custom Headers toggle and add the Sentry Authentication Header. You'll also find the header value in your Sentry Project Settings under **Client Keys (DSN)** > **Vercel**.
+6. Click the Custom Headers toggle and add the Sentry Authentication Header. You'll also find the header value in your [Sentry Project Settings](https://sentry.io/settings/projects/) under **Client Keys (DSN)** > **Vercel**.
 
 ```
 x-sentry-auth: sentry sentry_key=___PUBLIC_KEY___
@@ -48,19 +59,25 @@ x-sentry-auth: sentry sentry_key=___PUBLIC_KEY___
 
 7. To test that the log drain is working, you can send a test log to your drain by clicking the Test button.
 
-## Trace Drains
+<Alert level="warning">
+
+Vercel Log Drains have some known limitations. This is being tracked in [this GitHub issue](https://github.com/getsentry/sentry/issues/103095).
+
+</Alert>
+
+### Trace Drains
 
 After selecting the Traces data type, you'll need to configure the drain to send data to Sentry.
 
 1. Provide a name for your drain and select which projects should send data to your endpoint. You can choose all projects or select specific ones.
 2. Configure the sampling rate to control the volume of data sent to your drain. We recommend sampling 100% of the data to ensure you get all the data you need.
-3. Under the custom endpoint tab add the Sentry Vercel Log Drain Endpoint in the URL field. You can find the endpoint in your Sentry Project Settings under **Client Keys (DSN)** > **OpenTelemetry (OTLP)** under the **OTLP Traces Endpoint** section.
+3. Under the custom endpoint tab add the Sentry Vercel Log Drain Endpoint in the URL field. You can find the endpoint in your [Sentry Project Settings](https://sentry.io/settings/projects/) under **Client Keys (DSN)** > **OpenTelemetry (OTLP)** under the **OTLP Traces Endpoint** section.
 
-```URL
+```bash
 ___OTLP_TRACES_URL___
 ```
 
-4. Click the Custom Headers toggle and add the Sentry Authentication Header. You'll also find the header value in your Sentry Project Settings under **Client Keys (DSN)** > **OpenTelemetry (OTLP)** under the **OTLP Traces Endpoint Headers** section.
+4. Click the Custom Headers toggle and add the Sentry Authentication Header. You'll also find the header value in your [Sentry Project Settings](https://sentry.io/settings/projects/) under **Client Keys (DSN)** > **OpenTelemetry (OTLP)** under the **OTLP Traces Endpoint Headers** section.
 
 ```
 x-sentry-auth: sentry sentry_key=___PUBLIC_KEY___
