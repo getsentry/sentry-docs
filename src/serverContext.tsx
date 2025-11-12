@@ -5,9 +5,9 @@ import {cache} from 'react';
 import {DocNode} from 'sentry-docs/docTree';
 
 interface ServerContext {
+  locale: string;
   path: string[];
   rootNode: DocNode;
-  locale: string;
 }
 
 export const serverContext = cache(() => {

@@ -1,6 +1,5 @@
 import matter from 'gray-matter';
 import {getDefaultLocale, getLocale, getLocales} from 'gt-next/server';
-import {serverContext} from './serverContext';
 import {s} from 'hastscript';
 import yaml from 'js-yaml';
 import {bundleMDX} from 'mdx-bundler';
@@ -41,6 +40,7 @@ import remarkImageResize from './remark-image-resize';
 import remarkImageSize from './remark-image-size';
 import remarkTocHeadings, {TocNode} from './remark-toc-headings';
 import remarkVariables from './remark-variables';
+import {serverContext} from './serverContext';
 import {FrontMatter, Platform, PlatformConfig} from './types';
 import {isNotNil} from './utils';
 import {isVersioned, VERSION_INDICATOR} from './versioning';
@@ -457,7 +457,7 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
         Promise.resolve(ctx.locale ?? ''),
         Promise.resolve(getDefaultLocale()),
       ]);
-      const locale = runtimeLocale || (await getLocale().catch(() => '')); 
+      const locale = runtimeLocale || (await getLocale().catch(() => ''));
       if (locale && defaultLocale && locale !== defaultLocale) {
         const localized = path.posix.join('docs', locale, slug.slice('docs/'.length));
         // Try localized first, then fallback to canonical

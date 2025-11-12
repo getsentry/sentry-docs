@@ -1,5 +1,5 @@
-import {getLocales} from 'gt-next/server';
 import {GTProvider} from 'gt-next';
+import {getLocales} from 'gt-next/server';
 
 export const dynamicParams = false;
 

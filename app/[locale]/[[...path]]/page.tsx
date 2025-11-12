@@ -63,7 +63,9 @@ function MDXLayoutRenderer({mdxSource, ...rest}) {
   return <MDXLayout components={mdxComponentsWithWrapper} {...rest} />;
 }
 
-export default async function Page(props: {params: Promise<{path?: string[]; locale: string}>}) {
+export default async function Page(props: {
+  params: Promise<{locale: string, path?: string[];}>;
+}) {
   const params = await props.params;
   // get frontmatter of all docs in tree
   const rootNode = await getDocsRootNode();

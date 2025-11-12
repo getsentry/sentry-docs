@@ -37,15 +37,15 @@ export default async function RootLayout({children}: {children: React.ReactNode}
       </head>
       <body className={rubik.variable} suppressHydrationWarning>
         <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <Theme accentColor="iris" grayColor="sand" radius="large" scaling="95%">
-              {children}
-            </Theme>
-          </ThemeProvider>
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <Theme accentColor="iris" grayColor="sand" radius="large" scaling="95%">
+            {children}
+          </Theme>
+        </ThemeProvider>
         <Script
           async
           src="https://widget.kapa.ai/kapa-widget.bundle.js"
