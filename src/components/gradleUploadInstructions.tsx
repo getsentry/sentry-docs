@@ -1,7 +1,9 @@
 import {Fragment} from 'react';
 
 import {CodeBlock} from './codeBlock';
+import {CodeTabs} from './codeTabs';
 import {GradleFeatureConfig} from './gradleFeatureConfig';
+import {codeToJsx} from './highlightCode';
 import {OrgAuthTokenNote} from './orgAuthTokenNote';
 
 type Props = {
@@ -35,9 +37,7 @@ export function GradleUploadInstructions({feature}: Props) {
           </p>
           <OrgAuthTokenNote />
           <CodeBlock language="bash">
-            <pre>
-              <code className="language-bash">{`export SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___`}</code>
-            </pre>
+            <pre>{codeToJsx(`export SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___`, 'bash')}</pre>
           </CodeBlock>
         </li>
 
@@ -50,16 +50,14 @@ export function GradleUploadInstructions({feature}: Props) {
           <p>
             Invoke the following Gradle tasks to build your app and trigger the upload.
           </p>
-          <CodeBlock language="bash" filename="aab">
-            <pre>
-              <code className="language-bash">{`./gradlew bundleRelease`}</code>
-            </pre>
-          </CodeBlock>
-          <CodeBlock language="bash" filename="apk">
-            <pre>
-              <code className="language-bash">{`./gradlew assembleRelease`}</code>
-            </pre>
-          </CodeBlock>
+          <CodeTabs>
+            <CodeBlock language="aab" filename="aab">
+              <pre>{codeToJsx(`./gradlew bundleRelease`, 'bash')}</pre>
+            </CodeBlock>
+            <CodeBlock language="apk" filename="apk">
+              <pre>{codeToJsx(`./gradlew assembleRelease`, 'bash')}</pre>
+            </CodeBlock>
+          </CodeTabs>
         </li>
 
         <li>
@@ -85,9 +83,11 @@ export function GradleUploadInstructions({feature}: Props) {
 
       <p>Configure overrides in your Gradle build configuration:</p>
 
-      <CodeBlock language="kotlin" filename="build.gradle.kts">
-        <pre>
-          <code className="language-kotlin">{`sentry {
+      <CodeTabs>
+        <CodeBlock language="kotlin" filename="build.gradle.kts">
+          <pre>
+            {codeToJsx(
+              `sentry {
   ${feature} {
     enabled = providers.environmentVariable("GITHUB_ACTIONS").isPresent
   }
@@ -102,13 +102,16 @@ export function GradleUploadInstructions({feature}: Props) {
     baseRef.set("main")
     prNumber.set(42)
   }
-}`}</code>
-        </pre>
-      </CodeBlock>
+}`,
+              'kotlin'
+            )}
+          </pre>
+        </CodeBlock>
 
-      <CodeBlock language="groovy" filename="build.gradle">
-        <pre>
-          <code className="language-groovy">{`sentry {
+        <CodeBlock language="groovy" filename="build.gradle">
+          <pre>
+            {codeToJsx(
+              `sentry {
   ${feature} {
     enabled = providers.environmentVariable("GITHUB_ACTIONS").present
   }
@@ -123,9 +126,12 @@ export function GradleUploadInstructions({feature}: Props) {
     baseRef = 'main'
     prNumber = 42
   }
-}`}</code>
-        </pre>
-      </CodeBlock>
+}`,
+              'groovy'
+            )}
+          </pre>
+        </CodeBlock>
+      </CodeTabs>
 
       <p>
         Available <code>vcsInfo</code> properties:
