@@ -29,6 +29,8 @@ import {mdxComponents} from 'sentry-docs/mdxComponents';
 import {setServerContext} from 'sentry-docs/serverContext';
 import {PaginationNavNode} from 'sentry-docs/types/paginationNavNode';
 import {stripVersion} from 'sentry-docs/versioning';
+import {MdxClient} from 'sentry-docs/components/mdxClient';
+import {Alert} from 'sentry-docs/components/alert';
 
 export async function generateStaticParams() {
   const docs = await (isDeveloperDocs ? getDevDocsFrontMatter() : getDocsFrontMatter());
@@ -169,7 +171,26 @@ export default async function Page(props: {
   const allFm = await getDocsFrontMatter();
   const versions = getVersionsFromDoc(allFm, pageNode.path);
 
-  // pass frontmatter tree into sidebar, rendered page + fm into middle, headers into toc.
+  // Special-case the changelog page to avoid importing server-only modules
+  // through the MDX wrapper during prerender.
+  if (params.path?.[0] === 'changelog') {
+    const {slug: _omit, ...fmRest} = pageNode.frontmatter;
+    const fm = {...fmRest, versions};
+    return (
+      <DocPage
+        // pageNode.frontmatter conforms to FrontMatter; omit slug for DocPage
+        frontMatter={fm}
+        nextPage={nextPage}
+        previousPage={previousPage}
+        fullWidth={pageNode.frontmatter.fullWidth}
+      >
+        {/* Render MDX on the client with a minimal, client-safe component map */}
+        <MdxClient code={mdxSource} components={{Alert}} />
+      </DocPage>
+    );
+  }
+
+  // Default: pass frontmatter tree into sidebar, rendered page + fm into middle, headers into toc.
   return (
     <MDXLayoutRenderer
       mdxSource={mdxSource}
