@@ -1,14 +1,16 @@
-import {useMemo} from 'react';
 import {getMDXComponent} from 'mdx-bundler/client';
 import {Metadata} from 'next';
 import {notFound} from 'next/navigation';
+import {useMemo} from 'react';
 
 import {apiCategories} from 'sentry-docs/build/resolveOpenAPI';
+import {Alert} from 'sentry-docs/components/alert';
 import {ApiCategoryPage} from 'sentry-docs/components/apiCategoryPage';
 import {ApiPage} from 'sentry-docs/components/apiPage';
 import {DocPage} from 'sentry-docs/components/docPage';
 import {Home} from 'sentry-docs/components/home';
 import {Include} from 'sentry-docs/components/include';
+import {MdxClient} from 'sentry-docs/components/mdxClient';
 import {PlatformContent} from 'sentry-docs/components/platformContent';
 import {
   DocNode,
@@ -29,8 +31,6 @@ import {mdxComponents} from 'sentry-docs/mdxComponents';
 import {setServerContext} from 'sentry-docs/serverContext';
 import {PaginationNavNode} from 'sentry-docs/types/paginationNavNode';
 import {stripVersion} from 'sentry-docs/versioning';
-import {MdxClient} from 'sentry-docs/components/mdxClient';
-import {Alert} from 'sentry-docs/components/alert';
 
 export async function generateStaticParams() {
   const docs = await (isDeveloperDocs ? getDevDocsFrontMatter() : getDocsFrontMatter());
