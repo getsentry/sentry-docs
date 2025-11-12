@@ -83,8 +83,16 @@ export interface FrontMatter {
 
   /**
    * Set this to true to show a separator/divider below this item in the sidebar
+   * @deprecated Use sidebar_section instead
    */
   section_end_divider?: boolean;
+
+  /**
+   * Which sidebar section this page belongs to (for platform docs).
+   * Options: 'features' | 'configuration'
+   * Defaults to 'features' if not specified.
+   */
+  sidebar_section?: 'features' | 'configuration';
 
   /**
    * The next page in the sidebar navigation.
