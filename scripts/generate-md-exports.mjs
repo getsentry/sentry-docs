@@ -256,7 +256,8 @@ async function genMDFromHTML(source, target, {cacheDir, noCache}) {
                 value: node.children[0].value,
               },
             ],
-          }),f 
+          }),
+          f,
         },
       })
       .use(RemarkLinkRewrite, {
