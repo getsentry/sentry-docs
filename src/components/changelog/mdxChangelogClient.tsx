@@ -10,4 +10,3 @@ type Props = {
 export function ChangelogMdx({code}: Props) {
   return <MdxClient code={code} components={{Alert}} />;
 }
-
