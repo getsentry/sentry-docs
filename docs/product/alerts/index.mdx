@@ -1,79 +1,60 @@
 ---
 title: Alerts
-sidebar_order: 90
-description: "With Sentry Alerts, you can get real-time visibility into your code to quickly resolve errors & update personal notifications to enhance the error and performance monitoring experience for you and your team. Learn how to get started here."
+description: Create custom Alerts to pair with Monitors.
+sidebar_order: 60
 ---
 
-Alerts provide real-time visibility into problems with your code and the impact on your users. There are several types of alerts available with customizable thresholds and integrations.
+Sentry's Alerts help you take action when issues occur in your project. When an issue changes state, is created, or passes a threshold, an alert is triggered to perform external actions like sending notifications, creating tickets, or calling webhooks and integrations. Alerts must be paired with [Monitors](/product/monitors/) to run. 
 
-From the **Alerts** page in [sentry.io](https://sentry.io), you can create new alert rules and manage existing ones. The “Alert Rules” tab displays your existing alert rules, along with their current status, project, team, and creation date. By default, the list is filtered so that only alerts associated with the teams you're a member of, as well as ones that aren't associated with any team, are displayed. You can change this using the filter button.
+### Some examples of when you could use an Alert
+- Send a notification to your team's Slack channel when a new error occurs in an existing issue
+- Create a ticket in JIRA when an issue is created and a team member is assigned
+- Call a webhook or integration when an issue is created
 
-![A list of alert rules, along with their status, project, team, and creation date.](./img/alert-listing.png)
+[!alert-config](./img/alert-config.png)
 
-The **Alerts** page also displays a “History” tab where you can find a list of metric alerts with information like when it was triggered and how long it was active.
+## Creating an Alert
 
-## Issue Alerts
+To create an Alert, navigate to the [Alerts](https://sentry.io/issues/alerts/new/) page and click **Create Alert**.
 
-[Issue alerts](/product/alerts/alert-types/#issue-alerts) trigger whenever any issue in a project matches specified criteria. You can create alerts for issue-level changes, such as:
+{/* <Arcade src="https://demo.arcade.software/YOUR_ARCADE_ID?embed" /> */}
 
-- New issues
-- Issue frequency increasing
-- Resolved and archived issues becoming unresolved
+### Set Triggers
 
-You can find a full list of issue alert triggers in [Issue Alert Configuration](/product/alerts/create-alerts/issue-alert-config/#when-conditions-triggers).
+A trigger is an action that must occur for the Alert to run. All trigger actions are issue state based. For example, you may want to send a notification to your team's Slack channel _when an issue is created_. You can select multiple triggers in a single Alert. They will run under an `ANY` condition, meaning that if any one of the triggers happen, the Alert will run. 
 
-## Metric Alerts for Errors & Performance
+### Set Filters 
 
-[Metric alerts](/product/alerts/alert-types/#metric-alerts) trigger when a [metric](/product/insights/overview/metrics/) is breached for either error or transaction events. Use metric alerts to monitor a finite and known set of metrics and components you care about, such as error frequency or performance metrics in your entire project, on important pages, or with specific tags.
+Filters are conditions that must be met for the Alert to run. For example, you may want to create a ticket _only for issues that are assigned to a specific team_ and _at a certain severity_. You can create multiple filters in a single Alert, and group them under either `ANY` or `ALL` conditions. For `ANY` conditions, if any one of the filters are true, the Alert will run. For `ALL` conditions, only if all of the filters are true, the Alert will run.
 
-Create alerts to monitor specific metrics, such as:
+### Add Actions
 
-- Total errors in your project
-- [Latency](/product/insights/overview/metrics/#latency): min, max, average, percentile
-- [Failure rate](/product/insights/overview/metrics/#failure-rate)
-- Crash free session or user rate for monitoring release health
-- Custom metrics
+Actions are the events that will be executed when the Alert is run. You can send notifications on any channel you're integrated with, create tickets, for example, in JIRA, or call a webhook or integration. You can set multiple actions in a single Alert. Learn more about Sentry's [integrations](/organization/integrations/).
 
-You can find a full list of available metric alerts in [Metric Alerts](/product/alerts/alert-types/#metric-alerts).
+## Connecting Alerts to Monitors
 
-## Uptime Monitoring Alerts
+In order for Alerts to run, you need to connect them to Monitors. To do so, navigate to the [Monitors](https://sentry.io/issues/monitors/) page and click on the monitor you want to connect the Alert to. Scroll to the **Alerts** section and click **Connect Alert**. You can select the Alert you want to connect to the Monitor, or create a new one. 
 
-[Uptime alerts](/product/uptime-monitoring/) are triggered when an uptime HTTP check request fails to meet our
-[uptime check criteria](/product/uptime-monitoring/#uptime-check-criteria).
-You can use uptime alerts to make sure a specific URL is constantly available, even during periods of low or no traffic.
+**Note**: If you set particular Environments as a filter in your Alert, it will only run for issues in those Environments, even if the Alert is connected to a Monitor that is filtered to different environments.
 
-## Creating Alerts
+[!monitor-alerts](./img/monitor-alerts.png)
 
-When you create a new project in [sentry.io](https://sentry.io), you can select a default issue alert. However, you can also [create your own alerts](/product/alerts/create-alerts/) to suit your team’s needs, using these [alert best practices](/product/alerts/best-practices/) as a guide.
+## Managing Alerts
 
-## Muting Alerts
-
-Alerts should notify you when there's an important problem with your application. But they shouldn't be too noisy, because that can lead to alert fatigue. Muting alerts is one way to reduce noise, but we recommend following these [alert best practices](/product/alerts/best-practices/) to help you create relevant alerts that notify the people equipped to fix the problem.
+You can see a list of all your Alerts on the [Alerts](https://sentry.io/issues/alerts/) page. By default, Alerts are filtered down to your projects. 
 
 <Alert>
 
-Any user can mute alerts for their entire organization by default, but users with manager or owner-level permissions can update the minimum role requirement by going to **Settings > General Settings > Let Members Create and Edit Alerts**.
+Alerts are an Organization-level feature. By default, only owners, managers, and team admins can create, update, and delete Alerts.
 
 </Alert>
 
-### Muting Issue Alerts
+By clicking on an Alert, you can view the details, edit the Alert, or turn it on or off.
 
-Issue alerts can be muted on the **Alerts** details page by clicking the "Mute" button. This will keep the alert from notifying you until you click "Unmute". If you want to keep the alert from firing entirely, select "Mute for everyone" from the dropdown. If there's just one alert rule and it's set up to notify an entire integration, the only muting option will be "Mute for everyone". If there are multiple alert rules and they're set to notify both an integration and a user or a team, selecting "Mute for me" will only silence the alert for you, not the rest of the team.
+The details page will show a high level chart of how often the Alert has run, a list of the most recent runs, the configuration, and connected monitors. 
 
-### Muting Metric Alerts
-
-Metric alerts work in the same way as Issue alerts and can be muted on the **Alerts** details page by clicking the "Mute" button.
-
-## Disabled Alerts
-
-Sentry has disabled duplicate alerts and alerts with no actions.
-
-Anyone with [alert edit access](/organization/membership/) can re-enable an alert by editing its conditions and re-saving it. Alerts need to pass Sentry’s checks before they can be saved. See [best practices](/product/alerts/best-practices/) for guidance on writing useful alerts.
+[!alert-details](./img/alert-details.png)
 
 ## Notifications
 
-Besides alerts, Sentry sends you notifications about various things like [issue state changes](/product/issues/states-triage/), [release deploys](/product/releases/), and [quota usage](/pricing/quotas/). You can fine-tune these notifications, as well as your personal alert settings, in **User Settings > Notifications**. Learn more about notifications and adjusting their associated settings in [the full documentation](/product/alerts/notifications/).
-
-## Learn more
-
-<PageGrid />
+Besides Alerts, Sentry sends you notifications about various things like [issue state changes](/product/issues/states-triage/), [release deploys](/product/releases/), and [quota usage](/pricing/quotas/). You can fine-tune these notifications, as well as your personal alert settings, in **User Settings > Notifications**. Learn more about notifications and adjusting their associated settings in [the full documentation](/product/alerts/notifications/).
