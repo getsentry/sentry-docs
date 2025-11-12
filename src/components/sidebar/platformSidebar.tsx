@@ -25,6 +25,7 @@ export function PlatformSidebar({
         beta: n.frontmatter.beta,
         new: n.frontmatter.new,
         section_end_divider: n.frontmatter.section_end_divider,
+        sidebar_section: n.frontmatter.sidebar_section,
       },
       path: '/' + n.path + '/',
     };

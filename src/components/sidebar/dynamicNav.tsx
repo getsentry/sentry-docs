@@ -7,6 +7,14 @@ import {getUnversionedPath, VERSION_INDICATOR} from 'sentry-docs/versioning';
 import {CollapsibleSidebarLink} from './collapsibleSidebarLink';
 import {SidebarLink, SidebarSeparator} from './sidebarLink';
 
+// Section configuration for sidebar organization
+const SECTION_LABELS: Record<string, string> = {
+  features: 'Features',
+  configuration: 'Configuration',
+};
+
+const SECTION_ORDER = ['features', 'configuration'] as const;
+
 type Node = {
   [key: string]: any;
   context: {
@@ -16,6 +24,7 @@ type Node = {
     section_end_divider?: boolean;
     sidebar_hidden?: boolean;
     sidebar_order?: number;
+    sidebar_section?: 'features' | 'configuration';
     sidebar_title?: string;
     title?: string;
   };
@@ -80,31 +89,121 @@ export const renderChildren = (
 
   const result: React.ReactNode[] = [];
 
-  sortedChildren.forEach(({node, children: nodeChildren}) => {
-    // will not be null because of the filter above
-    if (!node) {
-      return;
-    }
+  // Only group by sections at the top level (depth === 0)
+  if (depth === 0) {
+    // Group children by section
+    const sectioned: Record<string, EntityTree[]> = {};
+    const unsectioned: EntityTree[] = [];
 
-    result.push(
-      <CollapsibleSidebarLink
-        to={node.path}
-        key={node.path}
-        title={node.context.sidebar_title || node.context.title!}
-        collapsed={depth >= showDepth}
-        path={path}
-        beta={node.context.beta}
-        isNew={node.context.new}
-      >
-        {renderChildren(nodeChildren, exclude, path, showDepth, depth + 1)}
-      </CollapsibleSidebarLink>
-    );
+    sortedChildren.forEach(item => {
+      const section = item.node?.context.sidebar_section;
+      if (section && SECTION_ORDER.includes(section)) {
+        if (!sectioned[section]) {
+          sectioned[section] = [];
+        }
+        sectioned[section].push(item);
+      } else {
+        // Items without a section appear at the top
+        unsectioned.push(item);
+      }
+    });
 
-    // Add separator after this item if section_end_divider is true
-    if (node.context.section_end_divider && depth === 0) {
-      result.push(<SidebarSeparator key={`separator-${node.path}`} />);
-    }
-  });
+    // First, render unsectioned items (fallback behavior)
+    unsectioned.forEach(({node, children: nodeChildren}) => {
+      if (!node) {
+        return;
+      }
+
+      result.push(
+        <CollapsibleSidebarLink
+          to={node.path}
+          key={node.path}
+          title={node.context.sidebar_title || node.context.title!}
+          collapsed={depth >= showDepth}
+          path={path}
+          beta={node.context.beta}
+          isNew={node.context.new}
+        >
+          {renderChildren(nodeChildren, exclude, path, showDepth, depth + 1)}
+        </CollapsibleSidebarLink>
+      );
+
+      // Keep backwards compatibility with section_end_divider
+      if (node.context.section_end_divider) {
+        result.push(<SidebarSeparator key={`separator-${node.path}`} />);
+      }
+    });
+
+    // Then render sections in order
+    SECTION_ORDER.forEach((sectionKey, sectionIndex) => {
+      const sectionItems = sectioned[sectionKey];
+      if (!sectionItems || sectionItems.length === 0) {
+        return;
+      }
+
+      // Add separator before section (add even before first section if there are unsectioned items)
+      if (sectionIndex > 0 || unsectioned.length > 0) {
+        result.push(<SidebarSeparator key={`sep-${sectionKey}`} />);
+      }
+
+      // Add section header
+      result.push(
+        <li
+          key={`header-${sectionKey}`}
+          className="sidebar-section-header text-xs font-semibold text-gray-11 uppercase tracking-wider px-2 py-2 mt-2"
+        >
+          {SECTION_LABELS[sectionKey]}
+        </li>
+      );
+
+      // Render items in this section
+      sectionItems.forEach(({node, children: nodeChildren}) => {
+        if (!node) {
+          return;
+        }
+
+        result.push(
+          <CollapsibleSidebarLink
+            to={node.path}
+            key={node.path}
+            title={node.context.sidebar_title || node.context.title!}
+            collapsed={depth >= showDepth}
+            path={path}
+            beta={node.context.beta}
+            isNew={node.context.new}
+          >
+            {renderChildren(nodeChildren, exclude, path, showDepth, depth + 1)}
+          </CollapsibleSidebarLink>
+        );
+
+        // Keep backwards compatibility with section_end_divider
+        if (node.context.section_end_divider) {
+          result.push(<SidebarSeparator key={`separator-${node.path}`} />);
+        }
+      });
+    });
+  } else {
+    // For nested items (depth > 0), render normally without sections
+    sortedChildren.forEach(({node, children: nodeChildren}) => {
+      if (!node) {
+        return;
+      }
+
+      result.push(
+        <CollapsibleSidebarLink
+          to={node.path}
+          key={node.path}
+          title={node.context.sidebar_title || node.context.title!}
+          collapsed={depth >= showDepth}
+          path={path}
+          beta={node.context.beta}
+          isNew={node.context.new}
+        >
+          {renderChildren(nodeChildren, exclude, path, showDepth, depth + 1)}
+        </CollapsibleSidebarLink>
+      );
+    });
+  }
 
   return result;
 };
