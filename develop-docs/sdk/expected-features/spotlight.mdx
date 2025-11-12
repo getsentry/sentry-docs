@@ -3,13 +3,15 @@ title: Spotlight
 sidebar_order: 5
 ---
 
-[Sentry Spotlight](https://spotlightjs.com/) is a local development tool that provides real-time observability for errors, traces, logs, and performance data during development. SDKs should implement support for Spotlight to enable developers to see their Sentry data locally without sending it to Sentry's servers.
+[Sentry Spotlight](https://spotlightjs.com/) is a local development tool that provides real-time observability for errors, traces, logs, and performance data during development. SDKs should implement support for Spotlight to unlock the power of Sentry for local development.
 
 ## Configuration Options
 
 SDKs should support Spotlight configuration through one of two approaches:
 
 ### Single Attribute Approach (Recommended)
+
+This approach MUST be used if the SDK language allows for a single configuration attribute to have 2 different types (`boolean` and `string`).
 
 The SDK accepts a single `spotlight` configuration attribute that can be:
 
@@ -155,6 +157,7 @@ When Spotlight is enabled, SDKs must implement the following data collection beh
 
 - Send a copy of **every envelope** to the Spotlight server
 - This includes errors, transactions, sessions, profiles, replays, and all other envelope types
+- The Spotlight server HTTP semantics are the same as the Sentry server HTTP semantics (e.g. use POST to send envelopes)
 
 ### Sampling
 
@@ -320,9 +323,6 @@ sentry_sdk.init(
 ```typescript
 interface SpotlightOptions {
   spotlight?: boolean | string;
-  // or alternative:
-  // spotlight?: boolean;
-  // spotlightUrl?: string;
 }
 
 function init(options: SpotlightOptions) {
