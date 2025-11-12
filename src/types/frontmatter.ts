@@ -93,16 +93,16 @@ export interface FrontMatter {
   sidebar_hidden?: boolean;
 
   /**
+   * The order of this page in auto generated sidebars and grids.
+   */
+  sidebar_order?: number;
+
+  /**
    * Which sidebar section this page belongs to (for platform docs).
    * Options: 'features' | 'configuration'
    * Defaults to 'features' if not specified.
    */
   sidebar_section?: 'features' | 'configuration';
-
-  /**
-   * The order of this page in auto generated sidebars and grids.
-   */
-  sidebar_order?: number;
 
   /**
    * optional sidebar title
