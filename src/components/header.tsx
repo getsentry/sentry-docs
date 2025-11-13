@@ -9,10 +9,10 @@ import SentryLogoSVG from 'sentry-docs/logos/sentry-logo-dark.svg';
 
 import sidebarStyles from './sidebar/style.module.scss';
 
+import {LocaleSwitcher} from './localeSelector';
 import {MobileMenu} from './mobileMenu';
 import {NavLink} from './navlink';
 import {Search} from './search';
-import {LocaleSwitcher} from './localeSelector';
 import {ThemeToggle} from './theme-toggle';
 
 export const sidebarToggleId = sidebarStyles['navbar-menu-toggle'];

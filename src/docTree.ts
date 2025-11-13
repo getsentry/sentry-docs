@@ -1,11 +1,12 @@
 import matter from 'gray-matter';
+import {getDefaultLocale} from 'gt-next/server';
 import {access, readFile} from 'node:fs/promises';
 import path from 'node:path';
-import {getDefaultLocale} from 'gt-next/server';
+
 import {isDeveloperDocs} from './isDeveloperDocs';
 import {getDevDocsFrontMatter, getDocsFrontMatter} from './mdx';
-import {serverContext} from './serverContext';
 import {platformsData} from './platformsData';
+import {serverContext} from './serverContext';
 import {
   FrontMatter,
   Platform,

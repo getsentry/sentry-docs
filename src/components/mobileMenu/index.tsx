@@ -9,8 +9,8 @@ import {Search} from 'sentry-docs/components/search';
 
 import styles from './styles.module.scss';
 
-import {ThemeToggle} from '../theme-toggle';
 import {LocaleSwitcher} from '../localeSelector';
+import {ThemeToggle} from '../theme-toggle';
 
 type Props = {
   pathname: string;

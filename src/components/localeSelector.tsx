@@ -27,7 +27,11 @@ export function LocaleSwitcher() {
           const raw = props.nativeNameWithRegionCode || loc;
           const label = capitalizeFirst(raw);
           return (
-            <option key={loc} value={loc} className="bg-[var(--gray-1)] text-[var(--foreground)]">
+            <option
+              key={loc}
+              value={loc}
+              className="bg-[var(--gray-1)] text-[var(--foreground)]"
+            >
               {label}
             </option>
           );
