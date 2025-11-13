@@ -1,6 +1,6 @@
 'use client';
 
-import {RefObject, useEffect, useRef, useState} from 'react';
+import {RefObject, useEffect, useLayoutEffect, useRef, useState} from 'react';
 import {Clipboard} from 'react-feather';
 
 import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
@@ -61,9 +61,14 @@ export function CodeBlock({filename, language, children}: CodeBlockProps) {
   const [isMounted, setIsMounted] = useState(false);
   const {emit} = usePlausibleEvent();
 
+  // Use useLayoutEffect to set isMounted synchronously before browser paints
+  // This ensures keyword interpolation happens before the user sees anything
+  useLayoutEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   useEffect(() => {
     setShowCopyButton(true);
-    setIsMounted(true);
     // prevent .no-copy elements from being copied during selection Right click copy or / Cmd+C
     const noCopyElements = codeRef.current?.querySelectorAll<HTMLSpanElement>('.no-copy');
     const handleSelectionChange = () => {
