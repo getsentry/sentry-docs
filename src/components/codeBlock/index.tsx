@@ -1,14 +1,16 @@
 'use client';
 
-import {RefObject, useEffect, useRef, useState} from 'react';
+import {RefObject, useContext, useEffect, useLayoutEffect, useRef, useState} from 'react';
 import {Clipboard} from 'react-feather';
 
 import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
 
 import styles from './code-blocks.module.scss';
 
+import {CodeContext} from '../codeContext';
 import {makeHighlightBlocks} from '../codeHighlights';
 import {makeKeywordsClickable} from '../codeKeywords';
+import {updateElementsVisibilityForOptions} from '../onboarding';
 
 export interface CodeBlockProps {
   children: React.ReactNode;
@@ -25,9 +27,17 @@ function getCopiableText(element: HTMLDivElement) {
   let text = '';
   const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, {
     acceptNode: function (node) {
-      // Skip if parent has .no-copy class
-      if (node.parentElement?.classList.contains('no-copy')) {
-        return NodeFilter.FILTER_REJECT;
+      let parent = node.parentElement;
+      // Walk up the tree to check if any parent has .no-copy, .hidden, or data-onboarding-option-hidden
+      while (parent && parent !== element) {
+        if (
+          parent.classList.contains('no-copy') ||
+          parent.classList.contains('hidden') ||
+          parent.hasAttribute('data-onboarding-option-hidden')
+        ) {
+          return NodeFilter.FILTER_REJECT;
+        }
+        parent = parent.parentElement;
       }
       return NodeFilter.FILTER_ACCEPT;
     },
@@ -45,14 +55,18 @@ function getCopiableText(element: HTMLDivElement) {
 export function CodeBlock({filename, language, children}: CodeBlockProps) {
   const [showCopied, setShowCopied] = useState(false);
   const codeRef = useRef<HTMLDivElement>(null);
+  const codeContext = useContext(CodeContext);
 
   // Show the copy button after js has loaded
   // otherwise the copy button will not work
   const [showCopyButton, setShowCopyButton] = useState(false);
+  // Track if component is mounted to prevent hydration mismatch with keyword interpolation
+  const [isMounted, setIsMounted] = useState(false);
   const {emit} = usePlausibleEvent();
 
   useEffect(() => {
     setShowCopyButton(true);
+    setIsMounted(true);
     // prevent .no-copy elements from being copied during selection Right click copy or / Cmd+C
     const noCopyElements = codeRef.current?.querySelectorAll<HTMLSpanElement>('.no-copy');
     const handleSelectionChange = () => {
@@ -72,7 +86,21 @@ export function CodeBlock({filename, language, children}: CodeBlockProps) {
     };
   }, []);
 
+  // Re-sync onboarding visibility after keyword interpolation recreates DOM nodes.
+  // makeKeywordsClickable clones elements, losing .hidden classes. useLayoutEffect
+  // corrects this synchronously before paint to prevent visible flicker.
+  useLayoutEffect(() => {
+    if (isMounted && codeContext?.onboardingOptions) {
+      updateElementsVisibilityForOptions(codeContext.onboardingOptions, false);
+    }
+  }, [isMounted, codeContext?.onboardingOptions]);
+
   useCleanSnippetInClipboard(codeRef, {language});
+
+  // Mermaid blocks should not be processed by CodeBlock - they need special client-side rendering
+  if (language === 'mermaid') {
+    return <div className="language-mermaid">{children}</div>;
+  }
 
   async function copyCodeOnClick() {
     if (codeRef.current === null) {
@@ -94,6 +122,15 @@ export function CodeBlock({filename, language, children}: CodeBlockProps) {
     }
   }
 
+  // Process children to add highlighting
+  const highlightedChildren = makeHighlightBlocks(children, language);
+
+  // Only apply keyword interpolation after component mounts to prevent hydration mismatch
+  // Server and client both render raw text initially, then client upgrades after mount
+  const processedChildren = isMounted
+    ? makeKeywordsClickable(highlightedChildren)
+    : highlightedChildren;
+
   return (
     <div className={styles['code-block']}>
       <div className={styles['code-actions']}>
@@ -111,9 +148,7 @@ export function CodeBlock({filename, language, children}: CodeBlockProps) {
       >
         Copied
       </div>
-      <div ref={codeRef}>
-        {makeKeywordsClickable(makeHighlightBlocks(children, language))}
-      </div>
+      <div ref={codeRef}>{processedChildren}</div>
     </div>
   );
 }

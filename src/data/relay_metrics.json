@@ -24,6 +24,22 @@
     "features": []
   },
   {
+    "type": "Counter",
+    "name": "attachment.upload",
+    "description": "The number of times an upload of an attachment occurs.\n\nThis metric is tagged with:\n- `result`: `success` or the failure reason.",
+    "features": [
+      "processing"
+    ]
+  },
+  {
+    "type": "Gauge",
+    "name": "attachment.upload.concurrent",
+    "description": "Number of attachment uploads currently in flight.",
+    "features": [
+      "processing"
+    ]
+  },
+  {
     "type": "Gauge",
     "name": "buffer.disk_used",
     "description": "The used disk for the buffer.",
@@ -168,12 +184,6 @@
     "features": []
   },
   {
-    "type": "Timer",
-    "name": "envelope.span_v2_expansion",
-    "description": "The time in milliseconds it takes to expand a Span V2 container into Spans V1.",
-    "features": []
-  },
-  {
     "type": "Counter",
     "name": "event.accepted",
     "description": "Number of envelopes accepted in the current time slot.\n\nThis represents requests that have successfully passed rate limits and filters, and have\nbeen sent to the upstream.\n\nThis metric is tagged with:\n- `handling`: Either `\"success\"` if the envelope was handled correctly, or `\"failure\"` if\nthere was an error or bug.",
@@ -284,7 +294,7 @@
   {
     "type": "Timer",
     "name": "event_processing.rate_limiting",
-    "description": "Time in milliseconds spent checking for organization, project, and DSN rate limits.\n\nNot all events reach this point. After an event is rate limited for the first time, the rate\nlimit is cached. Events coming in after this will be discarded earlier in the request queue\nand do not reach the processing queue.",
+    "description": "Time in milliseconds spent checking for organization, project, and DSN rate limits.\n\nNot all events reach this point. After an event is rate limited for the first time, the rate\nlimit is cached. Events coming in after this will be discarded earlier in the request queue\nand do not reach the processing queue.\n\nThis metric is tagged with:\n- `type`: The type of limiter executed, `cached` or `consistent`.",
     "features": []
   },
   {
@@ -943,6 +953,12 @@
     "features": []
   },
   {
+    "type": "Counter",
+    "name": "sampling.decision",
+    "description": "The number of times a sampling decision was made.\n\nThis metric is tagged with:\n- `item`: what item the decision is taken for (transaction vs span).",
+    "features": []
+  },
+  {
     "type": "Timer",
     "name": "scrubbing.attachments.duration",
     "description": "Time spend on attachment scrubbing.\n\nThis represents the total time spent on evaluating the scrubbing rules for an\nattachment and the attachment scrubbing itself, regardless of whether any rules were\napplied.  Note that minidumps which failed to be parsed (status=\"error\" in\nscrubbing.minidumps.duration) will be scrubbed as plain attachments and count\ntowards this.\n\nThis metric is tagged with:\n\n- `attachment_type`: The type of attachment, e.g. \"minidump\".",
@@ -1006,6 +1022,14 @@
     "type": "Timer",
     "name": "store.message.duration",
     "description": "Timing in milliseconds for processing a message in the metric store service.\n\nThis metric is tagged with:\n- `message`: The type of message that was processed.",
+    "features": [
+      "processing"
+    ]
+  },
+  {
+    "type": "Counter",
+    "name": "store.produced.span_v2",
+    "description": "Number of spans produced in the new format.",
     "features": [
       "processing"
     ]

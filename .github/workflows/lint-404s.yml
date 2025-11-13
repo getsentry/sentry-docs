@@ -7,7 +7,7 @@ on:
     branches: [master]
 
 jobs:
-  index:
+  lint-404:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -36,14 +36,13 @@ jobs:
             ${{ github.workspace }}/node_modules
             ${{ github.workspace }}/.next/cache
             ${{ github.workspace }}/.eslintcache
-          key: node-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+          key: node-${{ runner.os }}-${{ steps.setup-node.outputs.node-version }}-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
-            node-${{ runner.os }}-
+            node-${{ runner.os }}-${{ steps.setup-node.outputs.node-version }}-
 
       - run: yarn install --frozen-lockfile
-        if: steps.cache.outputs.cache-hit != 'true'
 
-      - run: yarn build
+      - run: yarn next build
         if: steps.filter.outputs.docs == 'true'
         env:
           SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
