@@ -33,6 +33,21 @@ const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
         'public/og-images/**/*',
         '**/*.pdf',
       ],
+      // Make sure the catch-all docs page does not bundle the entire docs tree
+      // or heavy public assets into the Serverless Function bundle.
+      '/[locale]/[[...path]]': [
+        'docs/**/*',
+        'develop-docs/**/*',
+        'public/mdx-images/**/*',
+        'public/og-images/**/*',
+        'node_modules/prettier/plugins',
+        'node_modules/rollup/dist',
+        'node_modules/@esbuild/*',
+        '**/*.map',
+        '**/*.gif',
+        '**/*.pdf',
+        '**/*.png',
+      ],
       '\\[\\[\\.\\.\\.path\\]\\]': [
         'docs/**/*',
         'node_modules/prettier/plugins',
