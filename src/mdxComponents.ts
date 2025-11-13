@@ -44,6 +44,12 @@ import {SdkApi} from './components/sdkApi';
 import {SdkOption} from './components/sdkOption';
 import {SignInNote} from './components/signInNote';
 import {SmartLink} from './components/smartLink';
+import {
+  SplitLayout,
+  SplitSection,
+  SplitSectionCode,
+  SplitSectionText,
+} from './components/splitLayout';
 import {StepComponent, StepConnector} from './components/stepConnector';
 import {TableOfContents} from './components/tableOfContents';
 import {VersionRequirement} from './components/version-requirement';
@@ -98,6 +104,10 @@ export function mdxComponents(
     RelayMetrics,
     SandboxLink,
     SignInNote,
+    SplitLayout,
+    SplitSection,
+    SplitSectionText,
+    SplitSectionCode,
     StepComponent,
     StepConnector,
     VimeoEmbed,
