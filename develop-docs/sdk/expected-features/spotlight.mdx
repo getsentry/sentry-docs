@@ -3,17 +3,19 @@ title: Spotlight
 sidebar_order: 5
 ---
 
-[Sentry Spotlight](https://spotlightjs.com/) is a local development tool that provides real-time observability for errors, traces, logs, and performance data during development. SDKs should implement support for Spotlight to unlock the power of Sentry for local development.
+The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in [RFC 2119](https://ietf.org/rfc/rfc2119.txt).
+
+[Sentry Spotlight](https://spotlightjs.com/) is a local development tool that provides real-time observability for errors, traces, logs, and performance data during development. SDKs SHOULD implement support for Spotlight to unlock the power of Sentry for local development.
 
 ## Configuration Options
 
-SDKs should support Spotlight configuration through one of two approaches:
+SDKs MUST support Spotlight configuration through one of two approaches:
 
 ### Single Attribute Approach (Recommended)
 
 This approach MUST be used if the SDK language allows for a single configuration attribute to have 2 different types (`boolean` and `string`).
 
-The SDK accepts a single `spotlight` configuration attribute that can be:
+The SDK MUST accept a single `spotlight` configuration attribute that can be:
 
 - `false` or `undefined`/`null`: Spotlight is disabled
 - `true`: Spotlight is enabled using the default URL (`http://localhost:8969/stream`)
@@ -34,12 +36,12 @@ spotlight: "http://localhost:3000/stream"
 
 ### Two-Attribute Approach (Alternative)
 
-The SDK accepts two separate configuration attributes:
+The SDK MUST accept two separate configuration attributes:
 
 - `spotlight: Optional[boolean]`: Enable or disable Spotlight
 - `spotlightUrl: Optional[string]`: Specify the Spotlight backend URL
 
-**Important:** If `spotlightUrl` is set to any truthy string value, it implies `spotlight: true` unless `spotlight` is explicitly set to `false`.
+**Important:** If `spotlightUrl` is set to any truthy string value, it MUST imply `spotlight: true` unless `spotlight` is explicitly set to `false`.
 
 **Example:**
 
@@ -60,11 +62,11 @@ spotlightUrl: "http://localhost:3000/stream"  # Ignored
 
 ## Environment Variable Handling
 
-SDKs must support the `SENTRY_SPOTLIGHT` environment variable. The value should be parsed according to the following rules:
+SDKs MUST support the `SENTRY_SPOTLIGHT` environment variable. The value MUST be parsed according to the following rules:
 
 ### Truthy Values
 
-The following values should be treated as `spotlight: true` (enabling Spotlight with the default URL):
+The following values MUST be treated as `spotlight: true` (enabling Spotlight with the default URL):
 
 - `"true"`
 - `"t"`
@@ -75,7 +77,7 @@ The following values should be treated as `spotlight: true` (enabling Spotlight 
 
 ### Falsy Values
 
-The following values should be treated as `spotlight: false` (disabling Spotlight):
+The following values MUST be treated as `spotlight: false` (disabling Spotlight):
 
 - `"false"`
 - `"f"`
@@ -86,7 +88,7 @@ The following values should be treated as `spotlight: false` (disabling Spotligh
 
 ### URL String Values
 
-Any other string value should be treated as a Spotlight backend URL, enabling Spotlight with that URL.
+Any other string value MUST be treated as a Spotlight backend URL, enabling Spotlight with that URL.
 
 **Example parsing logic (Python reference):**
 
@@ -111,19 +113,17 @@ def parse_spotlight_env(env_value):
 
 ## Precedence Rules
 
-The interaction between configuration options and environment variables follows these precedence rules:
+The interaction between configuration options and environment variables MUST follow these precedence rules:
 
-1. **Config option takes precedence over env var**, except:
-   - If `spotlight: true` (boolean, no URL specified) AND `SENTRY_SPOTLIGHT` is set to a URL string → use the env var URL
-   - This allows developers to enable Spotlight via config but override the URL via environment variable
+1. **Config option MUST take precedence over env var**, except:
+   - If `spotlight: true` (boolean, no URL specified) AND `SENTRY_SPOTLIGHT` is set to a URL string → MUST use the env var URL
+     This allows developers to enable Spotlight via config but override the URL via environment variable
 
-2. **If `spotlight` is set to a string URL** → it overrides the env var completely
+2. **If `spotlight` is set to a string URL** → it MUST override the env var completely
 
 3. **If using two-attribute approach:**
-   - If `spotlightUrl` config and env var are both set → prefer config value (`spotlightUrl`)
-   - If `spotlight: false` is explicitly set → ignore `spotlightUrl` value and the env var
-
-4. **If `spotlight: false` explicitly set** → ignore env var and any URL configuration
+   - If `spotlightUrl` config and env var are both set → MUST use config value (`spotlightUrl`)
+   - If `spotlight: false` is explicitly set → MUST ignore `spotlightUrl` value, the env var, and any URL configuration
 
 **Precedence Examples:**
 
@@ -151,32 +151,32 @@ The interaction between configuration options and environment variables follows 
 
 ## Data Collection Behavior
 
-When Spotlight is enabled, SDKs must implement the following data collection behavior:
+When Spotlight is enabled, SDKs MUST implement the following data collection behavior:
+
+**General Requirements:**
+- SDKs SHOULD use a **separate pipeline** for Spotlight that does not affect upstream Sentry behavior
+- All Spotlight-specific settings (sample rates, PII collection, etc.) MUST NOT affect upstream Sentry configuration
+- Fallback: If a separate pipeline is not feasible, SDKs SHOULD enable Spotlight-specific settings manually if no DSN is configured in development mode
 
 ### Envelope Transmission
 
-- Send a copy of **every envelope** to the Spotlight server
+- MUST send a copy of **every envelope** to the Spotlight server
 - This includes errors, transactions, sessions, profiles, replays, and all other envelope types
 - The Spotlight server HTTP semantics are the same as the Sentry server HTTP semantics (e.g. use POST to send envelopes)
 
 ### Sampling
 
-- Enable **100% sample rate** for the Spotlight pipeline
-- This **MUST NOT affect** the upstream Sentry sample rates
-- The ideal implementation uses a **separate pipeline** that ignores sampling settings
-- Fallback: If separate pipeline is not feasible, enable sampling manually if no DSN is configured in development mode
+- MUST enable **100% sample rate** for all telemetry types for the Spotlight pipeline
 
 ### PII Data Collection
 
-- Enable **all PII data collection** for Spotlight (equivalent to `sendDefaultPii: true`)
-- This should **not affect** upstream Sentry PII settings
+- MUST enable **all PII data collection** for Spotlight (equivalent to `sendDefaultPii: true`)
 - Spotlight is intended for local development, so full data visibility is expected
 
 ### Profiling and Logs
 
-- Enable profiling data transmission to Spotlight
-- Enable log data transmission to Spotlight
-- These should be sent regardless of upstream Sentry configuration
+- MUST enable profiling to Spotlight
+- MUST enable log collection to Spotlight
 
 ### Pipeline Architecture
 
@@ -219,29 +219,28 @@ The default Spotlight backend URL is:
 http://localhost:8969/stream
 ```
 
-This URL should be used when:
-- `spotlight: true` is set (boolean, no URL specified)
-- `SENTRY_SPOTLIGHT` is set to a truthy value (not a URL string)
+This URL MUST be used when:
+- `spotlight: true` is set (boolean, no URL specified) and `SENTRY_SPOTLIGHT` is not set
+- `SENTRY_SPOTLIGHT` is set to a truthy value (not a URL string) and `spotlight` config is not set
 
 ### Default Behavior
 
-- Spotlight is **disabled by default**
-- SDKs MUST only enable Spotlight when explicitly configured or when the environment variable is set.
+- Spotlight MUST be **disabled by default** and MUST only be enabled when explicitly configured or when the environment variable is set.
 
 ## Error Handling
 
-SDKs must handle Spotlight server connectivity issues gracefully:
+SDKs MUST handle Spotlight server connectivity issues gracefully:
 
 ### Unreachable Server
 
-- If the Spotlight server is unreachable, SDKs should:
-  - Log an error message (ideally once, not per-envelope)
-  - Implement exponential backoff retry logic
-  - Continue normal Sentry operation without interruption
+- If the Spotlight server is unreachable, SDKs:
+  - SHOULD log an error message (ideally once, not per-envelope)
+  - SHOULD implement exponential backoff retry logic
+  - MUST continue normal Sentry operation without interruption
 
 ### Retry Logic
 
-**Recommended retry strategy:**
+**RECOMMENDED retry strategy:**
 
 ```python
 import time
@@ -284,15 +283,15 @@ class SpotlightTransport:
 
 ### Logging
 
-- Log errors at the appropriate level (typically `ERROR` or `WARNING`)
-- Avoid logging errors for every failed envelope to prevent log spam
-- Consider logging once per connection failure, then periodically if failures persist
+- SHOULD log errors at the appropriate level (typically `ERROR` or `WARNING`)
+- MUST avoid logging errors for every failed envelope to prevent log spam
+- MAY consider logging once per connection failure, then periodically if failures persist
 
 ### Non-Blocking Behavior
 
-- Spotlight transmission must **never block** normal Sentry operation
-- If Spotlight is unavailable, the SDK should continue sending data to Sentry normally
-- Spotlight failures should not affect event capture, transaction recording, or any other SDK functionality
+- Spotlight transmission MUST **never block** normal Sentry operation
+- If Spotlight is unavailable, the SDK MUST continue sending data to Sentry normally
+- Spotlight failures MUST NOT affect event capture, transaction recording, or any other SDK functionality
 
 ## Implementation Examples
 
