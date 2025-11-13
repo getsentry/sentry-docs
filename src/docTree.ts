@@ -1,7 +1,7 @@
 import matter from 'gray-matter';
 import {getDefaultLocale} from 'gt-next/server';
 import {access, readFile} from 'node:fs/promises';
-import path from 'node:path';
+import nodePath from 'node:path';
 
 import {isDeveloperDocs} from './isDeveloperDocs';
 import {getDevDocsFrontMatter, getDocsFrontMatter} from './mdx';
@@ -64,12 +64,12 @@ async function overlayLocalizedFrontmatter(frontmatter: FrontMatter[], locale: s
   const root = process.cwd();
 
   async function readLocalized(slug: string) {
-    const base = path.join(root, 'docs', locale, slug);
+    const base = nodePath.join(root, 'docs', locale, slug);
     const candidates = [
       `${base}.mdx`,
-      path.join(base, 'index.mdx'),
+      nodePath.join(base, 'index.mdx'),
       `${base}.md`,
-      path.join(base, 'index.md'),
+      nodePath.join(base, 'index.md'),
     ];
     for (const p of candidates) {
       try {
