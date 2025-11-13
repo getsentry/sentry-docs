@@ -12,6 +12,7 @@ import sidebarStyles from './sidebar/style.module.scss';
 import {MobileMenu} from './mobileMenu';
 import {NavLink} from './navlink';
 import {Search} from './search';
+import {LocaleSwitcher} from './localeSelector';
 import {ThemeToggle} from './theme-toggle';
 
 export const sidebarToggleId = sidebarStyles['navbar-menu-toggle'];
@@ -89,6 +90,7 @@ export function Header({
             >
               Get Started
             </NavLink>
+            <LocaleSwitcher />
             <ThemeToggle />
           </div>
         </T>

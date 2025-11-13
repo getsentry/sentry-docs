@@ -1,5 +1,10 @@
+import matter from 'gray-matter';
+import {access, readFile} from 'node:fs/promises';
+import path from 'node:path';
+import {getDefaultLocale} from 'gt-next/server';
 import {isDeveloperDocs} from './isDeveloperDocs';
 import {getDevDocsFrontMatter, getDocsFrontMatter} from './mdx';
+import {serverContext} from './serverContext';
 import {platformsData} from './platformsData';
 import {
   FrontMatter,
@@ -28,20 +33,72 @@ function slugWithoutIndex(slug: string): string[] {
   return parts;
 }
 
-let getDocsRootNodeCache: Promise<DocNode> | undefined;
+const docsRootNodeCache = new Map<string, Promise<DocNode>>();
 
 export function getDocsRootNode(): Promise<DocNode> {
-  if (getDocsRootNodeCache) {
-    return getDocsRootNodeCache;
+  const currentLocale = serverContext()?.locale || 'en';
+  let cached = docsRootNodeCache.get(currentLocale);
+  if (!cached) {
+    cached = getDocsRootNodeUncached(currentLocale);
+    docsRootNodeCache.set(currentLocale, cached);
   }
-  getDocsRootNodeCache = getDocsRootNodeUncached();
-  return getDocsRootNodeCache;
+  return cached;
 }
 
-async function getDocsRootNodeUncached(): Promise<DocNode> {
-  return frontmatterToTree(
-    await (isDeveloperDocs ? getDevDocsFrontMatter() : getDocsFrontMatter())
-  );
+async function getDocsRootNodeUncached(locale: string): Promise<DocNode> {
+  const baseFrontmatter = await (isDeveloperDocs
+    ? getDevDocsFrontMatter()
+    : getDocsFrontMatter());
+
+  // Overlay localized frontmatter (titles, sidebar titles, description) for non-default locales
+  const defaultLocale = getDefaultLocale();
+  if (locale && defaultLocale && locale !== defaultLocale) {
+    const localized = await overlayLocalizedFrontmatter(baseFrontmatter, locale);
+    return frontmatterToTree(localized);
+  }
+  return frontmatterToTree(baseFrontmatter);
+}
+
+async function overlayLocalizedFrontmatter(frontmatter: FrontMatter[], locale: string) {
+  const root = process.cwd();
+
+  async function readLocalized(slug: string) {
+    const base = path.join(root, 'docs', locale, slug);
+    const candidates = [
+      `${base}.mdx`,
+      path.join(base, 'index.mdx'),
+      `${base}.md`,
+      path.join(base, 'index.md'),
+    ];
+    for (const p of candidates) {
+      try {
+        await access(p);
+        const src = await readFile(p, 'utf8');
+        const {data} = matter(src);
+        return data as FrontMatter;
+      } catch (e) {
+        // try next candidate
+      }
+    }
+    return null;
+  }
+
+  const updated: FrontMatter[] = [];
+  for (const fm of frontmatter) {
+    const localized = await readLocalized(fm.slug);
+    if (localized) {
+      updated.push({
+        ...fm,
+        // prefer localized labels when available
+        title: localized.title || fm.title,
+        sidebar_title: localized.sidebar_title || fm.sidebar_title,
+        description: localized.description || fm.description,
+      });
+    } else {
+      updated.push(fm);
+    }
+  }
+  return updated;
 }
 
 const sidebarOrderSorter = (a: FrontMatter, b: FrontMatter) => {

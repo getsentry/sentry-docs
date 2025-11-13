@@ -10,6 +10,7 @@ import {Search} from 'sentry-docs/components/search';
 import styles from './styles.module.scss';
 
 import {ThemeToggle} from '../theme-toggle';
+import {LocaleSwitcher} from '../localeSelector';
 
 type Props = {
   pathname: string;
@@ -19,6 +20,7 @@ type Props = {
 export function MobileMenu({pathname, searchPlatforms}: Props) {
   return (
     <div className="flex gap-6 items-center">
+      <LocaleSwitcher />
       <ThemeToggle />
       <Popover.Root>
         <Popover.Trigger asChild>

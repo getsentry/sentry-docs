@@ -69,14 +69,15 @@ export default async function Page(props: {
   params: Promise<{locale: string; path?: string[]}>;
 }) {
   const params = await props.params;
-  // get frontmatter of all docs in tree
-  const rootNode = await getDocsRootNode();
-
+  // set locale early so tree building can localize titles
   setServerContext({
-    rootNode,
     path: params.path ?? [],
     locale: params.locale,
   });
+  // get frontmatter of all docs in tree (now localized where available)
+  const rootNode = await getDocsRootNode();
+
+  setServerContext({rootNode});
 
   if (!params.path && !isDeveloperDocs) {
     return <Home />;

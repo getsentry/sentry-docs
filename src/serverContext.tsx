@@ -30,8 +30,8 @@ export const serverContext = cache(() => {
   return context;
 });
 
-export const setServerContext = (data: ServerContext) => {
-  serverContext().rootNode = data.rootNode;
-  serverContext().path = data.path;
-  serverContext().locale = data.locale;
+export const setServerContext = (data: Partial<ServerContext>) => {
+  if (data.rootNode) serverContext().rootNode = data.rootNode;
+  if (data.path) serverContext().path = data.path;
+  if (data.locale) serverContext().locale = data.locale;
 };
