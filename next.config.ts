@@ -62,6 +62,9 @@ const nextConfig = {
   pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx', 'mdx'],
   trailingSlash: true,
   serverExternalPackages: ['rehype-preset-minify'],
+  // Increase the per-page static generation timeout beyond the default 60s.
+  // Large translated MDX pages can exceed the default.
+  staticPageGenerationTimeout: 300,
   outputFileTracingExcludes,
   images: {
     contentDispositionType: 'inline', // "open image in new tab" instead of downloading
