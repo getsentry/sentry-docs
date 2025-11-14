@@ -1,14 +1,16 @@
 'use client';
 
-import {RefObject, useEffect, useRef, useState} from 'react';
+import {RefObject, useContext, useEffect, useLayoutEffect, useRef, useState} from 'react';
 import {Clipboard} from 'react-feather';
 
 import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
 
 import styles from './code-blocks.module.scss';
 
+import {CodeContext} from '../codeContext';
 import {makeHighlightBlocks} from '../codeHighlights';
 import {makeKeywordsClickable} from '../codeKeywords';
+import {updateElementsVisibilityForOptions} from '../onboarding';
 
 export interface CodeBlockProps {
   children: React.ReactNode;
@@ -53,6 +55,7 @@ function getCopiableText(element: HTMLDivElement) {
 export function CodeBlock({filename, language, children}: CodeBlockProps) {
   const [showCopied, setShowCopied] = useState(false);
   const codeRef = useRef<HTMLDivElement>(null);
+  const codeContext = useContext(CodeContext);
 
   // Show the copy button after js has loaded
   // otherwise the copy button will not work
@@ -82,6 +85,15 @@ export function CodeBlock({filename, language, children}: CodeBlockProps) {
       document.removeEventListener('selectionchange', handleSelectionChange);
     };
   }, []);
+
+  // Re-sync onboarding visibility after keyword interpolation recreates DOM nodes.
+  // makeKeywordsClickable clones elements, losing .hidden classes. useLayoutEffect
+  // corrects this synchronously before paint to prevent visible flicker.
+  useLayoutEffect(() => {
+    if (isMounted && codeContext?.onboardingOptions) {
+      updateElementsVisibilityForOptions(codeContext.onboardingOptions, false);
+    }
+  }, [isMounted, codeContext?.onboardingOptions]);
 
   useCleanSnippetInClipboard(codeRef, {language});
 
