@@ -1,12 +1,18 @@
 'use client';
 
-import {ReactNode, useCallback, useEffect, useRef, useState} from 'react';
+import {
+  ReactNode,
+  type ToggleEventHandler,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import {ChevronDownIcon, ChevronRightIcon} from '@radix-ui/react-icons';
 import * as Sentry from '@sentry/nextjs';
+import {useGT} from 'gt-next';
 
 import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
-
-import { useGT } from 'gt-next';
 
 // explicitly not using CSS modules here
 // because there's some prerendered content that depends on these exact class names
@@ -137,7 +143,7 @@ export function Expandable({
     [emit, title]
   );
 
-  function toggleIsExpanded(event: React.MouseEvent<HTMLDetailsElement>) {
+  const toggleIsExpanded: ToggleEventHandler<HTMLDetailsElement> = event => {
     const newVal = event.currentTarget.open;
     setIsExpanded(newVal);
 
@@ -152,7 +158,7 @@ export function Expandable({
         window.history.pushState({}, '', '#');
       }
     }
-  }
+  };
 
   return (
     <details

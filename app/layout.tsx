@@ -7,10 +7,6 @@ import Script from 'next/script';
 import PlausibleProvider from 'next-plausible';
 
 import {ThemeProvider} from 'sentry-docs/components/theme-provider';
-import { GTProvider } from 'gt-next';
-
-import { getLocale } from 'gt-next/server';
-import { getLocaleDirection } from 'generaltranslation';
 
 const rubik = Rubik({
   weight: ['400', '500', '700'],
@@ -33,26 +29,23 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function RootLayout({children}: {children: React.ReactNode}) {
-  const lang = await getLocale();
+export default function RootLayout({children}: {children: React.ReactNode}) {
   return (
-    <html lang={lang} dir={getLocaleDirection(lang)} suppressHydrationWarning>
+    <html lang="en" dir="ltr" suppressHydrationWarning>
       <head>
         <PlausibleProvider taggedEvents domain="docs.sentry.io,rollup.sentry.io" />
       </head>
       <body className={rubik.variable} suppressHydrationWarning>
-        <GTProvider locale={lang}>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <Theme accentColor="iris" grayColor="sand" radius="large" scaling="95%">
-              {children}
-            </Theme>
-          </ThemeProvider>
-        </GTProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <Theme accentColor="iris" grayColor="sand" radius="large" scaling="95%">
+            {children}
+          </Theme>
+        </ThemeProvider>
         <Script
           async
           src="https://widget.kapa.ai/kapa-widget.bundle.js"

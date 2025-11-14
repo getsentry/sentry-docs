@@ -1,3 +1,4 @@
+import {getDefaultLocale} from 'gt-next/server';
 import {Metadata} from 'next';
 import {redirect} from 'next/navigation';
 
@@ -75,7 +76,7 @@ export default async function Page(props: {
   };
 
   // make the Sidebar aware of the current path
-  setServerContext({rootNode, path: ['platform-redirect']});
+  setServerContext({rootNode, path: ['platform-redirect'], locale: getDefaultLocale()});
 
   return (
     <DocPage frontMatter={frontMatter}>

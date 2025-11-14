@@ -2,6 +2,7 @@
 import {useCallback, useEffect, useState} from 'react';
 import {ChevronDownIcon} from '@radix-ui/react-icons';
 import * as RadixSelect from '@radix-ui/react-select';
+import {T, useGT, Var} from 'gt-next';
 import {usePathname, useRouter} from 'next/navigation';
 
 import {stripTrailingSlash} from 'sentry-docs/utils';
@@ -10,8 +11,6 @@ import {getLocalStorageVersionKey, VERSION_INDICATOR} from 'sentry-docs/versioni
 import styles from './style.module.scss';
 
 import {VersionBanner} from '../versionBanner';
-
-import { useGT, T, Var } from 'gt-next';
 
 function sortVersions(versions: string[]) {
   return versions.sort((a, b) => {
@@ -118,7 +117,11 @@ export function VersionSelector({versions, sdk}: {sdk: string; versions: string[
       <RadixSelect.Root value={selectedVersion} onValueChange={handleVersionChange}>
         <RadixSelect.Trigger aria-label="Version" className={styles.select}>
           <RadixSelect.Value placeholder={gt('Version')}>
-            <T><span className="text-sm">SDK version: <Var name='version'>{selectedVersion}</Var></span></T>
+            <T>
+              <span className="text-sm">
+                SDK version: <Var name="version">{selectedVersion}</Var>
+              </span>
+            </T>
           </RadixSelect.Value>
           <RadixSelect.Icon>
             <ChevronDownIcon />
@@ -126,7 +129,7 @@ export function VersionSelector({versions, sdk}: {sdk: string; versions: string[
         </RadixSelect.Trigger>
         <RadixSelect.Content
           role="dialog"
-          aria-label='Versions'
+          aria-label="Versions"
           position="popper"
           className={styles.popover}
         >

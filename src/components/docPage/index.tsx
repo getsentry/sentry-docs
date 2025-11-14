@@ -1,4 +1,5 @@
 import {ReactNode} from 'react';
+import {msg} from 'gt-next';
 
 import {getCurrentGuide, getCurrentPlatform, nodeForPath} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
@@ -22,8 +23,6 @@ import {PlatformSdkDetail} from '../platformSdkDetail';
 import {Sidebar} from '../sidebar';
 import {SidebarTableOfContents} from '../sidebarTableOfContents';
 import {ReaderDepthTracker} from '../track-reader-depth';
-
-import { msg } from 'gt-next';
 
 type Props = {
   children: ReactNode;
@@ -105,7 +104,9 @@ export function DocPage({
 
               <div className="grid grid-cols-2 gap-4 not-prose mt-16">
                 <div className="col-span-1">
-                  {previousPage && <PaginationNav node={previousPage} title={msg('Previous')} />}
+                  {previousPage && (
+                    <PaginationNav node={previousPage} title={msg('Previous')} />
+                  )}
                 </div>
                 <div className="col-span-1">
                   {nextPage && <PaginationNav node={nextPage} title={msg('Next')} />}

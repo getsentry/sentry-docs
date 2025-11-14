@@ -3,10 +3,9 @@ import {Fragment, useEffect, useState} from 'react';
 import {CheckIcon as Check} from '@radix-ui/react-icons';
 import {Button} from '@radix-ui/themes';
 import * as Sentry from '@sentry/browser';
+import {T, useGT} from 'gt-next';
 
 import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
-
-import {useGT, T } from 'gt-next';
 
 type Props = {
   pathname: string;
@@ -88,7 +87,7 @@ export function DocFeedback({pathname}: Props) {
                 </div>
               </div>
             </T>
-            
+
             <div
               className={`overflow-hidden transition-all duration-300 ease-in-out ${
                 showFeedback ? 'max-h-[300px] opacity-100' : 'max-h-0 opacity-0'

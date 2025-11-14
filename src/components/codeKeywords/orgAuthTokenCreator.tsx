@@ -4,6 +4,7 @@ import {Fragment, useContext, useState} from 'react';
 import {createPortal} from 'react-dom';
 import {usePopper} from 'react-popper';
 import {AnimatePresence} from 'framer-motion';
+import {T, useGT} from 'gt-next';
 import {useTheme} from 'next-themes';
 
 import {useOnClickOutside} from 'sentry-docs/clientUtils';
@@ -23,8 +24,6 @@ import {
   Selections,
 } from './styles';
 import {dropdownPopperOptions} from './utils';
-
-import { useGT, T } from 'gt-next';
 
 type TokenState =
   | {status: 'none'}
@@ -118,11 +117,19 @@ export function OrgAuthTokenCreator() {
   }
 
   if (tokenState.status === 'error') {
-    return <T><Fragment>There was an error while generating your token.</Fragment></T>;
+    return (
+      <T>
+        <Fragment>There was an error while generating your token.</Fragment>
+      </T>
+    );
   }
 
   if (tokenState.status === 'loading') {
-    return <T><Fragment>Generating token...</Fragment></T>;
+    return (
+      <T>
+        <Fragment>Generating token...</Fragment>
+      </T>
+    );
   }
 
   const selector = isOpen && (

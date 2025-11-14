@@ -4,7 +4,7 @@ type ClickOutsideCallback = (event: MouseEvent) => void;
 
 interface UseClickOutsideOpts<E extends HTMLElement> {
   handler: ClickOutsideCallback;
-  ref: React.RefObject<E>;
+  ref: {current: E | null};
   enabled?: boolean;
 }
 

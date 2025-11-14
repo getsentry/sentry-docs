@@ -45,7 +45,8 @@ const showSigninNote = (children: ReactNode) => {
     if (typeof node === 'string') {
       return KEYWORDS_REGEX.test(node) || ORG_AUTH_TOKEN_REGEX.test(node);
     }
-    return showSigninNote((node as ReactElement).props.children);
+    const element = node as ReactElement<{children?: React.ReactNode}>;
+    return showSigninNote(element.props.children);
   });
 };
 

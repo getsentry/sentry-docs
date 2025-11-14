@@ -1,7 +1,7 @@
 import * as Sentry from '@sentry/nextjs';
+import {createNextMiddleware} from 'gt-next/middleware';
 import type {NextRequest} from 'next/server';
 import {NextResponse} from 'next/server';
-import { createNextMiddleware } from 'gt-next/middleware';
 
 // This env var is set in next.config.js based on the `NEXT_PUBLIC_DEVELOPER_DOCS` env var at build time
 // a workaround edge middleware not having access to env vars
@@ -15,7 +15,8 @@ export const config = {
     // - _next/static (static files)
     // - _next/image (image optimization files)
     // - favicon.ico (favicon file)
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+    // - assets, mdx-images, og-images, md-exports, pdfs (public static assets)
+    '/((?!api|_next/static|_next/image|favicon.ico|assets/|mdx-images/|og-images/|md-exports/|pdfs/).*)',
   ],
 };
 

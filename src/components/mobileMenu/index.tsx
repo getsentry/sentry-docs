@@ -2,15 +2,15 @@
 import {TriangleRightIcon} from '@radix-ui/react-icons';
 import * as Popover from '@radix-ui/react-popover';
 import {Box, Button, Theme} from '@radix-ui/themes';
+import {T} from 'gt-next';
 import Link from 'next/link';
 
 import {Search} from 'sentry-docs/components/search';
 
 import styles from './styles.module.scss';
 
+import {LocaleSwitcher} from '../localeSelector';
 import {ThemeToggle} from '../theme-toggle';
-
-import { T } from 'gt-next';
 
 type Props = {
   pathname: string;
@@ -20,6 +20,7 @@ type Props = {
 export function MobileMenu({pathname, searchPlatforms}: Props) {
   return (
     <div className="flex gap-6 items-center">
+      <LocaleSwitcher />
       <ThemeToggle />
       <Popover.Root>
         <Popover.Trigger asChild>

@@ -28,10 +28,9 @@
  */
 
 import {useEffect, useMemo, useRef, useState} from 'react';
+import {T} from 'gt-next';
 
 import styles from './style.module.scss';
-
-import { T } from 'gt-next';
 
 type Persistence = 'session' | 'none';
 

@@ -5,6 +5,7 @@ import {cache} from 'react';
 import {DocNode} from 'sentry-docs/docTree';
 
 interface ServerContext {
+  locale: string;
   path: string[];
   rootNode: DocNode;
 }
@@ -12,6 +13,7 @@ interface ServerContext {
 export const serverContext = cache(() => {
   const context: ServerContext = {
     path: [],
+    locale: 'en',
 
     rootNode: {
       path: '/',
@@ -28,7 +30,8 @@ export const serverContext = cache(() => {
   return context;
 });
 
-export const setServerContext = (data: ServerContext) => {
-  serverContext().rootNode = data.rootNode;
-  serverContext().path = data.path;
+export const setServerContext = (data: Partial<ServerContext>) => {
+  if (data.rootNode) serverContext().rootNode = data.rootNode;
+  if (data.path) serverContext().path = data.path;
+  if (data.locale) serverContext().locale = data.locale;
 };

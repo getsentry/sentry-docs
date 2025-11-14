@@ -3,6 +3,7 @@ import {useMemo, useState} from 'react';
 import * as Collapsible from '@radix-ui/react-collapsible';
 import {TriangleRightIcon} from '@radix-ui/react-icons';
 import classNames from 'classnames';
+import {T} from 'gt-next';
 import {matchSorter, rankings} from 'match-sorter';
 import Link from 'next/link';
 
@@ -12,8 +13,6 @@ import {splitToChunks, uniqByReference} from 'sentry-docs/utils';
 import styles from './style.module.scss';
 
 import {PlatformIcon} from '../platformIcon';
-
-import { T } from 'gt-next';
 
 const mostViewedPlatforms: {icon: string; key: string; title: string; url: string}[] = [
   {

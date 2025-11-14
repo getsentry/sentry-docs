@@ -1,6 +1,7 @@
 'use client';
 
 import {HamburgerMenuIcon} from '@radix-ui/react-icons';
+import {T} from 'gt-next';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -8,12 +9,11 @@ import SentryLogoSVG from 'sentry-docs/logos/sentry-logo-dark.svg';
 
 import sidebarStyles from './sidebar/style.module.scss';
 
+import {LocaleSwitcher} from './localeSelector';
 import {MobileMenu} from './mobileMenu';
 import {NavLink} from './navlink';
 import {Search} from './search';
 import {ThemeToggle} from './theme-toggle';
-
-import { T } from 'gt-next';
 
 export const sidebarToggleId = sidebarStyles['navbar-menu-toggle'];
 
@@ -90,6 +90,7 @@ export function Header({
             >
               Get Started
             </NavLink>
+            <LocaleSwitcher />
             <ThemeToggle />
           </div>
         </T>
