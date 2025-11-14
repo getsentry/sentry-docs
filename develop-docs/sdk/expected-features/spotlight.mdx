@@ -62,7 +62,14 @@ spotlightUrl: "http://localhost:3000/stream"  # Ignored
 
 ## Environment Variable Handling
 
-SDKs MUST support the `SENTRY_SPOTLIGHT` environment variable. The value MUST be parsed according to the following rules:
+SDKs MUST support the `SENTRY_SPOTLIGHT` environment variable. This is to enable `spotlight run` to be used as a development server,
+which is the preferred way to run Spotlight. In this mode Spotlight runs your development command for you, with a fresh, unique Spotlight
+server running on a random port. To enable Spotlight on the target application, it sets the `SENTRY_SPOTLIGHT` environment variable to the
+URL of the Spotlight server. It also does some accomodations based on the target application, such as altering the host value for Docker Compose
+while keeping the front-end ones the same. It will also support emulator-based development enviroments and will set the host value accordingly in
+the near future.
+
+The value MUST be parsed according to the following rules:
 
 ### Truthy Values
 
@@ -172,6 +179,7 @@ When Spotlight is enabled, SDKs MUST implement the following data collection beh
 
 - MUST enable **all PII data collection** for Spotlight (equivalent to `sendDefaultPii: true`)
 - Spotlight is intended for local development, so full data visibility is expected
+- To achieve this, the RECOMMENDED approach is to collect all PII data and then scrub it locally before sending it to Sentry while keeping it for Spotlight.
 
 ### Profiling and Logs
 
@@ -234,7 +242,8 @@ SDKs MUST handle Spotlight server connectivity issues gracefully:
 ### Unreachable Server
 
 - If the Spotlight server is unreachable, SDKs:
-  - SHOULD log an error message (ideally once, not per-envelope)
+  - MUST log an error message at least once
+  - MUST NOT log an error message for every failed envelope
   - SHOULD implement exponential backoff retry logic
   - MUST continue normal Sentry operation without interruption
 
