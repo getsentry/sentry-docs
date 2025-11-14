@@ -1,3 +1,4 @@
+import {getGT} from 'gt-next/server';
 import {DocNode} from 'sentry-docs/docTree';
 
 import styles from './style.module.scss';
@@ -8,13 +9,17 @@ type BreadcrumbsProps = {
   leafNode: DocNode;
 };
 
-export function Breadcrumbs({leafNode}: BreadcrumbsProps) {
+export async function Breadcrumbs({leafNode}: BreadcrumbsProps) {
+  const gt = await getGT();
   const breadcrumbs: {title: string; to: string}[] = [];
 
   for (let node: DocNode | undefined = leafNode; node; node = node.parent) {
     if (node && !node.missing) {
       const to = node.path === '/' ? node.path : `/${node.path}/`;
-      const title = node.frontmatter.sidebar_title ?? node.frontmatter.title;
+      const title =
+        node.path === '/'
+          ? gt('Home')
+          : node.frontmatter.sidebar_title ?? node.frontmatter.title;
 
       breadcrumbs.unshift({
         to,
