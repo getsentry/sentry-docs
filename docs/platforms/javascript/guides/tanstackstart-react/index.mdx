@@ -4,7 +4,7 @@ title: TanStack Start React
 
 <Alert>
 
-This SDK is currently in **ALPHA**. Alpha features are still in progress, may have bugs and might include breaking changes.
+This SDK is compatible with TanStack Start 1.0 RC and is currently in **ALPHA**. Alpha features are still in progress, may have bugs and might include breaking changes.
 Please reach out on [GitHub](https://github.com/getsentry/sentry-javascript/issues/new/choose) if you have any feedback or concerns.
 
 </Alert>
@@ -50,69 +50,71 @@ pnpm add @sentry/tanstackstart-react
 
 ### Configure Client-Side Sentry
 
-Create a `src/client.tsx` file (if you don't already have one) and initialize Sentry:
+Initialize Sentry in your `src/router.tsx` file:
 
-```tsx {filename:src/client.tsx}
-import { hydrateRoot } from "react-dom/client";
-import { StartClient } from "@tanstack/react-start";
-import { createRouter } from "./router";
+```tsx {diff} {filename:src/router.tsx}
++import * as Sentry from "@sentry/tanstackstart-react";
+ import { createRouter } from '@tanstack/react-router'
 
-import * as Sentry from "@sentry/tanstackstart-react";
+// Create a new router instance
+export const getRouter = () => {
+  const router = createRouter();
 
-const router = createRouter();
-
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-
-  // Adds request headers and IP for users, for more info visit:
-  // https://docs.sentry.io/platforms/javascript/guides/tanstackstart-react/configuration/options/#sendDefaultPii
-  sendDefaultPii: true,
-
-  integrations: [
-    // ___PRODUCT_OPTION_START___ performance
-    Sentry.tanstackRouterBrowserTracingIntegration(router),
-    // ___PRODUCT_OPTION_END___ performance
-    // ___PRODUCT_OPTION_START___ session-replay
-    Sentry.replayIntegration(),
-    // ___PRODUCT_OPTION_END___ session-replay
-    // ___PRODUCT_OPTION_START___ user-feedback
-    Sentry.feedbackIntegration({
-      // Additional SDK configuration goes in here, for example:
-      colorScheme: "system",
-    }),
-    // ___PRODUCT_OPTION_END___ user-feedback
-  ],
-  // ___PRODUCT_OPTION_START___ logs
-
-  // Enable logs to be sent to Sentry
-  enableLogs: true,
-  // ___PRODUCT_OPTION_END___ logs
-
-  // ___PRODUCT_OPTION_START___ performance
-  // Set tracesSampleRate to 1.0 to capture 100%
-  // of transactions for tracing.
-  // We recommend adjusting this value in production.
-  // Learn more at https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
-  tracesSampleRate: 1.0,
-  // ___PRODUCT_OPTION_END___ performance
-  // ___PRODUCT_OPTION_START___ session-replay
-
-  // Capture Replay for 10% of all sessions,
-  // plus for 100% of sessions with an error.
-  // Learn more at https://docs.sentry.io/platforms/javascript/session-replay/configuration/#general-integration-configuration
-  replaysSessionSampleRate: 0.1,
-  replaysOnErrorSampleRate: 1.0,
-  // ___PRODUCT_OPTION_END___ session-replay
-});
-
-hydrateRoot(document, <StartClient router={router} />);
++ if (!router.isServer) {
++   Sentry.init({
++     dsn: "___PUBLIC_DSN___",
++
++     // Adds request headers and IP for users, for more info visit:
++     // https://docs.sentry.io/platforms/javascript/guides/tanstackstart-react/configuration/options/#sendDefaultPii
++     sendDefaultPii: true,
++
++     integrations: [
++       // ___PRODUCT_OPTION_START___ performance
++       Sentry.tanstackRouterBrowserTracingIntegration(router),
++       // ___PRODUCT_OPTION_END___ performance
++       // ___PRODUCT_OPTION_START___ session-replay
++       Sentry.replayIntegration(),
++       // ___PRODUCT_OPTION_END___ session-replay
++       // ___PRODUCT_OPTION_START___ user-feedback
++       Sentry.feedbackIntegration({
++         // Additional SDK configuration goes in here, for example:
++         colorScheme: "system",
++       }),
++       // ___PRODUCT_OPTION_END___ user-feedback
++     ],
++     // ___PRODUCT_OPTION_START___ logs
++
++     // Enable logs to be sent to Sentry
++     enableLogs: true,
++     // ___PRODUCT_OPTION_END___ logs
++
++     // ___PRODUCT_OPTION_START___ performance
++     // Set tracesSampleRate to 1.0 to capture 100%
++     // of transactions for tracing.
++     // We recommend adjusting this value in production.
++     // Learn more at https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
++     tracesSampleRate: 1.0,
++     // ___PRODUCT_OPTION_END___ performance
++     // ___PRODUCT_OPTION_START___ session-replay
++
++     // Capture Replay for 10% of all sessions,
++     // plus for 100% of sessions with an error.
++     // Learn more at https://docs.sentry.io/platforms/javascript/session-replay/configuration/#general-integration-configuration
++     replaysSessionSampleRate: 0.1,
++     replaysOnErrorSampleRate: 1.0,
++     // ___PRODUCT_OPTION_END___ session-replay
++   });
+  }
+  
+  return router;
+}
 ```
 
-### Configure Server-Side Sentry
+### Configure Server-side Sentry
 
-Next, import and initialize Sentry in `src/server.tsx`:
+Create an instrument file `instrument.server.mjs` in the root of your project. In this file, initialize the Sentry SDK for your server:
 
-```tsx {filename:src/server.tsx}
+```tsx {filename:instrument.server.mjs}
 import * as Sentry from "@sentry/tanstackstart-react";
 
 Sentry.init({
@@ -138,79 +140,48 @@ Sentry.init({
 });
 ```
 
-<OnboardingOption optionId="performance">
+#### Moving the Sentry server config file for production usage
 
-### Apply Tracing to SSR
+For production monitoring, you need to move the Sentry server config file to your build output. Since [TanStack Start is designed to work with any hosting provider](https://tanstack.com/start/latest/docs/framework/react/guide/hosting), the exact location will depend on where your build artifacts are deployed (for example, `"/dist"`, `".output/server"` or a platform-specific directory).
 
-Wrap `createRootRoute` with `wrapCreateRootRouteWithSentry` in `src/routes/__root.tsx` to apply tracing to Server-Side Rendering (SSR):
+For example, when using [Nitro](https://nitro.build/), copy the instrumentation file to `".output/server"`:
 
-```tsx {filename:src/routes/__root.tsx} {3,6}
-import type { ReactNode } from "react";
-import { createRootRoute } from "@tanstack/react-router";
-import { wrapCreateRootRouteWithSentry } from "@sentry/tanstackstart-react";
-
-// (Wrap `createRootRoute`, not its return value!)
-export const Route = wrapCreateRootRouteWithSentry(createRootRoute)({
-  // ...
-});
+```json {diff}  {filename:package.json}
+{
+  "scripts": {
+-     "build": "vite build",
++     "build": "vite build && cp instrument.server.mjs .output/server",
+  }
+}
 ```
 
-</OnboardingOption>
+#### Load Instrumentation on Startup
+
+Add a `--import` flag directly or to the `NODE_OPTIONS` environment variable wherever you run your application to import `instrument.server.mjs`.
+
+```json {diff} {filename:package.json}
+{
+  "scripts": {
+     "build": "vite build && cp instrument.server.mjs .output/server",
+-       "dev": "vite dev --port 3000",
+-       "start": "node .output/server/index.mjs",
++       "dev": "NODE_OPTIONS='--import ./instrument.server.mjs' vite dev --port 3000",
++       "start": "node --import ./.output/server/instrument.server.mjs .output/server/index.mjs",
+  }
+}
+```
 
 ## Step 3: Capture TanStack Start React Errors
 
-### Instrument Server Requests
-
-Wrap the default stream handler with `wrapStreamHandlerWithSentry` in `src/server.tsx` to instrument requests to your server:
-
-```tsx {filename:src/server.tsx} {12}
-import {
-  createStartHandler,
-  defaultStreamHandler,
-} from "@tanstack/react-start/server";
-import { getRouterManifest } from "@tanstack/react-start/router-manifest";
-import { createRouter } from "./router";
-import * as Sentry from "@sentry/tanstackstart-react";
-
-export default createStartHandler({
-  createRouter,
-  getRouterManifest,
-})(Sentry.wrapStreamHandlerWithSentry(defaultStreamHandler));
-```
-
-### Instrument Server Functions
-
-Add the Sentry middleware handler to your global middlewares in `src/global-middleware.ts` to instrument your server function invocations:
-
-<Alert level="info">
-
-If you haven't created `src/global-middleware.ts` file, follow the [TanStack Start documentation for Global Middleware](https://tanstack.com/start/latest/docs/framework/react/middleware#global-middleware) to set it up.
-
-</Alert>
-
-```ts {filename:src/global-middleware.ts}
-import {
-  createMiddleware,
-  registerGlobalMiddleware,
-} from "@tanstack/react-start";
-import * as Sentry from "@sentry/tanstackstart-react";
-
-registerGlobalMiddleware({
-  middleware: [
-    createMiddleware({ type: "function" }).server(
-      Sentry.sentryGlobalServerMiddlewareHandler()
-    ),
-  ],
-});
-```
-
-### Capturing Errors in Error Boundaries and Components (Optional)
+### Instrument Server Requests and Server Functions
 
 <Alert level="info">
   Automatic error monitoring is not yet supported on the server side of TanStack
   Start. Use `captureException` to manually capture errors in your server-side
   code.
 </Alert>
+
+### Capturing Errors in Error Boundaries and Components (Optional)
 
 Sentry automatically captures unhandled client-side errors. Errors caught by your own error boundaries aren't captured unless you report them manually:
 
@@ -287,18 +258,26 @@ To verify that Sentry captures errors and creates issues in your Sentry project,
 <OnboardingOption optionId="performance">
 ### Tracing
 
-To test tracing, create a new file like `src/routes/sentry-example.ts` to create a test route `/sentry-example`:
+To test tracing, create a new file like `src/routes/api/sentry-example.ts` to create a test route `/api/sentry-example`:
 
-```typescript {filename:src/routes/sentry-example.ts}
-import { createServerFileRoute } from "@tanstack/react-start/server";
+```typescript {filename:src/routes/api/sentry-example.ts}
+import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@tanstack/react-start";
 
-export const ServerRoute = createServerFileRoute("/sentry-example").methods({
-  GET: async ({ request }) => {
-    throw new Error("Sentry Example Route Error");
-    return json({ message: "Testing Sentry Error..." });
+export const Route = createFileRoute('/api/sentry-example')({
+  server: {
+    handlers: {
+      GET: () => {
+        throw new Error("Sentry Example Route Error");
+        return new Response(JSON.stringify({ message: "Testing Sentry Error..." }), {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
+      },
+    },
   },
-});
+})
 ```
 
 Next, update your test button to call this route and throw an error if the response isn't `ok`:
@@ -313,7 +292,7 @@ Next, update your test button to call this route and throw an error if the respo
         op: "test",
       },
       async () => {
-        const res = await fetch("/sentry-example");
+        const res = await fetch("/api/sentry-example");
         if (!res.ok) {
           throw new Error("Sentry Example Frontend Error");
         }

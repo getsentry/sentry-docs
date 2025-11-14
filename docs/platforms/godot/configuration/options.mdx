@@ -122,6 +122,24 @@ This option is turned off by default.
 
 </SdkOption>
 
+<SdkOption name="app_hang_tracking" type="bool" defaultValue="false">
+
+If `true`, enables automatic detection and reporting of application hangs. The SDK will monitor the main thread and report hang events when it becomes unresponsive for longer than the duration specified in `app_hang_timeout_sec`. This helps identify performance issues where the application becomes frozen or unresponsive.
+
+<Alert title="Note">
+
+This feature is only supported on Android, iOS, and macOS platforms.
+
+</Alert>
+
+</SdkOption>
+
+<SdkOption name="app_hang_timeout_sec" type="float" defaultValue="5.0">
+
+Specifies the timeout duration in seconds after which the application is considered to have hanged. When `app_hang_tracking` is enabled, if the main thread is blocked for longer than this duration, it will be reported as an application hang event to Sentry.
+
+</SdkOption>
+
 ## GUI-only Options
 
 These options are only available in the **Project Settings** window.
@@ -246,9 +264,11 @@ func _before_send(event: SentryEvent) -> SentryEvent:
 	if event.environment.contains("editor"):
 		# Discard event if running from the editor.
 		return null
-	if event.message.contains("Bruno"):
+	var error_message: String = event.get_exception_value(0)
+	if error_message.contains("Bruno"):
 		# Remove sensitive information from the event.
-		event.message = event.message.replace("Bruno", "REDACTED")
+		var redacted_message := error_message.replace("Bruno", "REDACTED")
+		event.set_exception_value(0, redacted_message)
 	return event
 ```
 
