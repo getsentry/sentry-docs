@@ -1,0 +1,39 @@
+---
+title: Hono
+description: "Reports Hono errors to Sentry. (default)"
+---
+
+_Import name: `Sentry.honoIntegration`_
+
+This integration is enabled by default. If you'd like to modify your default integrations, read [this](./../#modifying-default-integrations).
+
+The `honoIntegration` automatically captures errors from Hono's `onError` function and sends them to Sentry. By default, the integration doesn't capture errors that have a 3xx or 4xx HTTP status code.
+
+## Options
+
+You can configure the `honoIntegration` by passing an options object to the function.
+
+### `shouldHandleError`
+
+This option allows you to provide a function that determines whether an error should be captured, giving you full control over which errors are sent to Sentry.
+
+The function receives the error as an argument and should return `true` if the error should be reported, and `false` otherwise.
+
+For example, to report all errors except for 404s, add this to the integrations array when initializing Sentry:
+
+```javascript
+integrations: [
+  honoIntegration({
+    shouldHandleError(error) {
+      // return true // Would report all errors
+
+      if (error instanceof HTTPException && error.status === 404) {
+        // Don't report 404s
+        return false;
+      }
+      // Report all other errors
+      return true;
+    },
+  }),
+]
+```

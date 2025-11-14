@@ -25,15 +25,22 @@ const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
         'develop-docs/**/*',
         'node_modules/@esbuild/*',
       ],
-      '/platform-redirect': ['**/*.gif', 'public/mdx-images/**/*', '**/*.pdf'],
+      '/platform-redirect': [
+        '**/*.gif',
+        'public/mdx-images/**/*',
+        'public/og-images/**/*',
+        '**/*.pdf',
+      ],
       '\\[\\[\\.\\.\\.path\\]\\]': [
         'docs/**/*',
         'node_modules/prettier/plugins',
         'node_modules/rollup/dist',
+        'public/og-images/**/*',
       ],
       'sitemap.xml': [
         'docs/**/*',
         'public/mdx-images/**/*',
+        'public/og-images/**/*',
         '**/*.gif',
         '**/*.pdf',
         '**/*.png',
