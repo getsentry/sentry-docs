@@ -18,11 +18,17 @@ Sentry does not provide any alerts if your host instance is low on resources suc
     After changing configuration files, re-run the <code>./install.sh</code> script, to rebuild and restart the containers. See the <Link to="/self-hosted/#configuration">configuration section</Link> for more information.
 </Alert>
 
-## Sentry-related configurations
+## Configuration
 
 This documentation assumes `100.100.123.123` as your statsd host IP address. On most services, it is recommended to provide an IP address for the host like this, instead of a domain name like `statsd.yourcompany.com`.
 
-### Sentry
+To start, simply uncomment and change the value of `STATSD_ADDR` on your `.env` or `.env.custom` file to your statsd host IP address.
+
+### Manual Configuration
+
+If you don't have the liberty of using the `.env` file, or you want to be very specific about the configuration, you can configure it manually too.
+
+#### Sentry
 
 You can configure Sentry to send metrics to Statsd server by configuring your `sentry/sentry.conf.py` file:
 
@@ -36,7 +42,7 @@ SENTRY_METRICS_OPTIONS: dict[str, Any] = {
 # SENTRY_METRICS_PREFIX = "sentry."  # Adjust this to your needs, default is "sentry."
 ```
 
-### Snuba
+#### Snuba
 
 You can configure Snuba to send metrics to Statsd server by configuring your `docker-compose.yml` file:
 
@@ -69,7 +75,7 @@ x-snuba-defaults: &snuba_defaults
 # The rest of your Docker Compose file
 ```
 
-### Relay
+#### Relay
 
 You can configure Relay to send metrics to Statsd server by configuring your `relay/config.yml` file:
 
@@ -86,7 +92,7 @@ metrics:
 
 Defined metric keys are specified on [statsd.rs file](https://github.com/getsentry/relay/blob/master/relay-server/src/statsd.rs).
 
-### Symbolicator
+#### Symbolicator
 
 You can configure Symbolicator to send metrics to Statsd server by configuring your `symbolicator/config.yml` file:
 
@@ -97,7 +103,7 @@ metrics:
   prefix: "sentry.symbolicator" # Adjust this to your needs, default is "symbolicator"
 ```
 
-### Uptime Checker
+#### Uptime Checker
 
 You can configure Uptime Checker to send metrics to Statsd server by configuring your `docker-compose.yml` file:
 
@@ -110,7 +116,7 @@ services:
       UPTIME_CHECKER_STATSD_ADDR: "100.100.123.123:8125" # It's recommended to use IP address instead of domain name
 ```
 
-### Taskbroker
+#### Taskbroker
 
 You can configure Taskbroker to send metrics to Statsd server by configuring your `docker-compose.yml` file:
 
@@ -123,6 +129,28 @@ services:
       TASKBROKER_STATSD_ADDR: "100.100.123.123:8125" # It's recommended to use IP address instead of domain name
 ```
 
-## Sentry dependencies
+## Notable Metric Keys
+
+You can query these keys on your statsd server to get a better understanding of what is happening in your Sentry instance.
+
+**API request volume**
+
+- `sentry.view.response` - has tags for url-name and method. Which gives visibility into what API requests are being made to Sentry (`web` container), and what endpoints are being used.
+- `sentry.view.duration` - has the same tags as `sentry.view.response`, but gives duration for API requests.
+
+**Task throughput**
+
+- `sentry.taskworker.registry.send_task.scheduled` - has tags for taskname, gives throughput of tasks being created.
+- `sentry.taskworker.worker.execute_task` - has tags for taskname, gives throughput of tasks being completed.
+- `sentry.taskworker.worker.execution_duration` - has tags for taskname, gives task execution duration.
+
+**Error processing**
+
+- `sentry.relay.event.accepted` - The event volume Relay is accepting.
+- `sentry.relay.event.items` - has tag for item_type which maps to event categories. Measures the volume of event items being handled by Relay.
+- `sentry.event_manager.save_error_events.count` - The number of events being processed.
+- `sentry.events.since_received` - has tags for each major step in the pipeline, and measures duration between the event being received by Relay and reaching each stage.
+
+## Other Sentry dependencies
 
 We don't provide configurations for Sentry's dependencies such as PostgreSQL, Kafka, Redis, Memcached and ClickHouse that are bundled with the Docker Compose file. You will need to provide monitoring configuration for those service yourself adjusted to your needs.
