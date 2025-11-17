@@ -61,7 +61,8 @@ Users MUST be able to attach attributes to any scope using a dedicated method (e
 Attributes are key-value pairs where each value is either a primitive value or an object containing:
 
 - `value`: The actual attribute value, which MUST match the specified type
-- `unit` (optional): The unit of measurement (e.g., `"ms"`, `"s"`, `"bytes"`, `"count"`, `"percent"`)
+- `unit` (optional): The unit of measurement (e.g., `"ms"`, `"s"`, `"bytes"`, `"count"`, `"percent"` or any other string value). SDKs MAY refrain from supporting units for the moment.
+- `type` (optional): The type of the attribute. SDKs SHOULD NOT expose this to users if they can reliably infer the type from the value. If not, SDKs MAY allow or require users to set the `type` explicitly.
 
 #### Example Usage
 
@@ -89,8 +90,7 @@ sentry_sdk.get_global_scope().set_attributes({
 
 The method SHOULD accept a dictionary/map/object where:
 - Keys are attribute names (strings)
-- Values are attribute objects with `value`, and optionally `unit` properties. 
-- For convenience, the SDK MAY also accept primitive values directly (see exampe), i.e. create a unit-less attribute.
+- Values are either directly values or attribute objects/dictionaries with `value`, and optionally `unit` properties (see [example](#example-usage)). 
 - The SDK SHOULD infer the `type` of the attribute at serialization time to spare users from setting a (potentially incorrect) `type`. Depending on platform or constraints, the SDK MAY instead also allow or require users to set the `type` explicitly.
 
 #### Behavior
