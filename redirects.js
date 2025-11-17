@@ -1246,6 +1246,11 @@ const userDocsRedirects = [
     source: '/platforms/dotnet/guides/uwp/profiling/:path*',
     destination: '/platforms/dotnet/profiling/',
   },
+  // General .NET redirects for UWP (deprecated)
+  {
+    source: '/platforms/dotnet/guides/uwp/:path*',
+    destination: '/platforms/dotnet/guides/maui/',
+  },
   {
     source: '/platforms/dotnet/guides/aws-lambda/profiling/:path*',
     destination: '/platforms/dotnet/profiling/',

@@ -1,6 +1,7 @@
 'use client';
 
-import {ReactNode, useContext, useEffect, useReducer, useState} from 'react';
+// eslint-disable-next-line no-restricted-imports -- Required for JSX in test environment
+import React, {ReactNode, useContext, useEffect, useReducer, useState} from 'react';
 import {QuestionMarkCircledIcon} from '@radix-ui/react-icons';
 import * as Tooltip from '@radix-ui/react-tooltip';
 import {Button, Checkbox, Theme} from '@radix-ui/themes';
