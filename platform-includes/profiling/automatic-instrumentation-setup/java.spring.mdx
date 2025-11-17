@@ -60,7 +60,52 @@ Sentry.startProfiler()
 Sentry.stopProfiler()
 ```
 
+### Profiling with OpenTelemetry
+When running our OpenTelemetry Agent in <PlatformLink to="/opentelemetry/setup/agent/auto-init">Agent Auto-Init</PlatformLink> mode. The `SentryProfilerConfiguration` needs to be setup. This is due to the fact that the profiler is not yet on the classpath when the agent initializes `Sentry`. Therefore the profiler needs to be initialized when `Spring` starts.
+
 <Alert level="warning">
 If you are using our OpenTelemetry Agent, profiling when running in the <PlatformLink to="/opentelemetry/setup/agent/auto-init">Agent Auto-Init</PlatformLink> mode is supported from version `8.26.0` onwards.
 </Alert>
+
+In order to set this up, import `SentryProfilerConfiguration` in one of your `@Configuration` classes:
+
+```java {tabTitle:Java (Spring 5)} {diff}
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
++import io.sentry.spring.SentryProfilerConfiguration;
+
++@Import(SentryProfilerConfiguration.class)
+class SentryConfig {
+}
+```
+
+```java {tabTitle:Java (Spring 6)} {diff}
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
++import io.sentry.spring.jakarta.SentryProfilerConfiguration;
+
++@Import(SentryProfilerConfiguration.class)
+class SentryConfig {
+}
+```
+
+```kotlin {tabTitle:Kotlin (Spring 5)} {diff}
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Import
++import io.sentry.spring.SentryProfilerConfiguration;
+
++@Import(SentryProfilerConfiguration::class)
+class SentryConfig {
+}
+```
+
+```kotlin {tabTitle:Kotlin (Spring 6)} {diff}
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Import
++import io.sentry.spring.jakarta.SentryProfilerConfiguration;
+
++@Import(SentryProfilerConfiguration::class)
+class SentryConfig {
+}
+```
 
