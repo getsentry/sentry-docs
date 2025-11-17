@@ -13,6 +13,40 @@ import styles from './style.module.scss';
 
 import {PlatformIcon} from '../platformIcon';
 
+const mostViewedPlatforms: {icon: string; key: string; title: string; url: string}[] = [
+  {
+    url: '/platforms/javascript/guides/nextjs/',
+    key: 'javascript-nextjs',
+    icon: 'javascript-nextjs',
+    title: 'Next.js',
+  },
+  {
+    url: '/platforms/javascript/guides/react/',
+    key: 'javascript-react',
+    icon: 'javascript-react',
+    title: 'React',
+  },
+  {
+    url: '/platforms/php/guides/laravel/',
+    key: 'php-laravel',
+    icon: 'php-laravel',
+    title: 'Laravel',
+  },
+  {
+    url: '/platforms/javascript/guides/node/',
+    key: 'node',
+    icon: 'javascript-node',
+    title: 'Node.js',
+  },
+  {url: '/platforms/python/', key: 'python', icon: 'python', title: 'Python'},
+  {
+    url: '/platforms/react-native/',
+    key: 'react-native',
+    icon: 'react-native',
+    title: 'React Native',
+  },
+];
+
 export function PlatformFilterClient({platforms}: {platforms: Platform[]}) {
   const platformsAndGuides = platforms
     .map(p => [

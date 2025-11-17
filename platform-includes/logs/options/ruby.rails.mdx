@@ -1,0 +1,111 @@
+### before_send_log
+
+To filter logs before they are sent to Sentry, use the `before_send_log` callback. Return `nil` to skip a log, or return the log object to send it.
+
+<PlatformContent includePath="configuration/before-send-log" />
+
+### Structured Logging Subscribers
+
+Structured logging is enabled by default when you set `enable_logs = true`. You can customize which Rails events are captured.
+
+**Default subscribers (enabled automatically):**
+- `active_record` - Database queries
+- `action_controller` - HTTP requests
+
+**Additional subscribers (opt-in):**
+- `active_job` - Background jobs
+- `action_mailer` - Email delivery
+
+**Enable additional subscribers:**
+
+```ruby
+Sentry.init do |config|
+  config.dsn = "___PUBLIC_DSN___"
+  config.enable_logs = true
+
+  config.rails.structured_logging.subscribers = {
+    active_record: Sentry::Rails::LogSubscribers::ActiveRecordSubscriber,
+    action_controller: Sentry::Rails::LogSubscribers::ActionControllerSubscriber,
+    active_job: Sentry::Rails::LogSubscribers::ActiveJobSubscriber,
+    action_mailer: Sentry::Rails::LogSubscribers::ActionMailerSubscriber
+  }
+end
+```
+
+**Disable default subscribers:**
+
+```ruby
+config.rails.structured_logging.subscribers = {
+  active_record: Sentry::Rails::LogSubscribers::ActiveRecordSubscriber
+  # ActionController disabled
+}
+```
+
+**Disable structured logging entirely:**
+
+```ruby
+config.rails.structured_logging.enabled = false
+```
+
+### Sensitive Data Filtering
+
+Structured logging automatically respects Rails' parameter filtering:
+
+```ruby {filename:config/application.rb}
+config.filter_parameters += [:password, :credit_card, :ssn]
+```
+
+This filters sensitive data from ActionController parameters, ActiveJob arguments, and ActionMailer parameters.
+
+### Custom Log Subscribers
+
+You can create custom subscribers to capture your own Rails instrumentation events:
+
+```ruby
+class MyCustomSubscriber < Sentry::Rails::LogSubscriber
+  attach_to :my_component
+
+  def my_event(event)
+    log_structured_event(
+      message: "Custom event occurred",
+      level: :info,
+      attributes: {
+        duration_ms: event.duration,
+        user_id: event.payload[:user_id]
+      }
+    )
+  end
+end
+```
+
+Register it in your configuration:
+
+```ruby
+config.rails.structured_logging.subscribers = {
+  active_record: Sentry::Rails::LogSubscribers::ActiveRecordSubscriber,
+  my_component: MyCustomSubscriber
+}
+```
+
+### Using `Rails.logger`
+
+If you want all Rails logs to go to Sentry, you can enable the `:logger` patch:
+
+```ruby
+Sentry.init do |config|
+  config.dsn = "___PUBLIC_DSN___"
+  config.enable_logs = true
+  config.enabled_patches = [:logger]
+end
+```
+
+This will send all `Rails.logger` calls to Sentry:
+
+```ruby
+Rails.logger.info("Processing user request")
+Rails.logger.error("Failed to save record")
+```
+
+<Alert level="warning">
+This captures ALL Rails framework logs as well as ANY OTHER logs produced by instances of the `Logger` class and this can be very noisy. We recommend using `Sentry.logger` for better control over what gets logged.
+</Alert>

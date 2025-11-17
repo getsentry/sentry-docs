@@ -1,5 +1,4 @@
 import {ReactNode} from 'react';
-import Link from 'next/link';
 
 import {
   extractPlatforms,
@@ -7,7 +6,6 @@ import {
   getCurrentPlatform,
   nodeForPath,
 } from 'sentry-docs/docTree';
-import Markdown from 'sentry-docs/icons/Markdown';
 import {serverContext} from 'sentry-docs/serverContext';
 import {FrontMatter} from 'sentry-docs/types';
 import {PaginationNavNode} from 'sentry-docs/types/paginationNavNode';
@@ -19,6 +17,7 @@ import './type.scss';
 import {Banner} from '../banner';
 import {Breadcrumbs} from '../breadcrumbs';
 import {CodeContextProvider} from '../codeContext';
+import {CopyMarkdownButton} from '../copyMarkdownButton';
 import {DocFeedback} from '../docFeedback';
 import {GitHubCTA} from '../githubCTA';
 import Header from '../header';
@@ -92,24 +91,20 @@ export function DocPage({
               'prose-blockquote:font-normal prose-blockquote:border-l-[3px] prose-em:font-normal prose-blockquote:text-[var(--gray-12)]',
               'prose-img:my-2',
               'prose-strong:text-[var(--gray-12)]',
-              fullWidth ? 'max-w-none w-full' : 'w-[75ch] xl:max-w-[calc(100%-250px)]',
+              // Allow flex item to shrink within layout; prevents long content from
+              // forcing the main column to grow and squeezing the ToC
+              fullWidth ? 'max-w-none w-full min-w-0' : 'w-full min-w-0',
             ].join(' ')}
+            id="doc-content"
           >
-            {leafNode && (
-              <div className="overflow-hidden">
-                <Breadcrumbs leafNode={leafNode} />{' '}
-                <Link
-                  rel="nofollow"
-                  className="float-right"
-                  href={`/${pathname}.md`}
-                  title="Markdown version of this page"
-                >
-                  <Markdown className="flex p-0 flex-wrap" width={24} height={24} />
-                </Link>
-              </div>
-            )}
             <div className="mb-4">
               <Banner />
+            </div>
+            <div className="flex items-center">
+              {leafNode && <Breadcrumbs leafNode={leafNode} />}{' '}
+              <div className="ml-auto hidden sm:block">
+                <CopyMarkdownButton pathname={pathname} />
+              </div>
             </div>
             <div>
               <hgroup>
@@ -135,17 +130,50 @@ export function DocPage({
               {hasGithub && <GitHubCTA />}
             </div>
           </div>
-
-          {hasToc && (
-            <aside className="sticky h-[calc(100vh-var(--header-height))] top-[var(--header-height)] overflow-y-auto hidden xl:block w-[250px]">
-              <div className="sidebar">
-                <SidebarTableOfContents />
-                <PlatformSdkDetail />
-              </div>
-            </aside>
-          )}
         </main>
+        {hasToc && (
+          <aside
+            data-layout-anchor="right"
+            className="sticky h-[calc(100vh-var(--header-height))] top-[var(--header-height)] overflow-y-auto hidden toc:block flex-none w-[250px] min-w-[250px]"
+          >
+            <div className="sidebar">
+              <SidebarTableOfContents />
+              <PlatformSdkDetail />
+            </div>
+          </aside>
+        )}
       </section>
+      <style>{`:root { --doc-content-w: 1200px; } #doc-content { max-width: var(--doc-content-w); box-sizing: border-box; }`}</style>
+      <style>{`
+        @media (min-width: 2057px) {
+          :root {
+            --doc-content-w: 1200px;
+            --toc-w: 250px;
+            --gap: 24px;
+          }
+          /* Cap content width and center (reinforced at this breakpoint) */
+          #doc-content {
+            max-width: var(--doc-content-w);
+            padding-left: 2rem;
+            padding-right: 2rem;
+          }
+          /* Cancel default push so content can center */
+          [data-layout-anchor="left"] + .main-content {
+            margin-left: 0 !important;
+            width: 100% !important;
+          }
+          /* Anchor sidebars to content edges */
+          [data-layout-anchor="left"] {
+            left: calc(50% - (var(--doc-content-w) / 2) - var(--gap) - var(--sidebar-width));
+          }
+          [data-layout-anchor="right"] {
+            position: fixed !important;
+            left: calc(50% + (var(--doc-content-w) / 2) + var(--gap));
+            width: var(--toc-w);
+          }
+        }
+      `}</style>
+
       <Mermaid />
       <ReaderDepthTracker />
     </div>

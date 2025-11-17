@@ -147,7 +147,7 @@ export async function Sidebar({path, versions}: SidebarProps) {
 
   // For all other sections, just show the sidebar navigation (no platform selector)
   return (
-    <aside className={`${styles.sidebar} py-3`}>
+    <aside className={`${styles.sidebar} py-3`} data-layout-anchor="left">
       <input type="checkbox" id={sidebarToggleId} className="hidden" />
       <style>{':root { --sidebar-width: 300px; }'}</style>
       <div

@@ -35,6 +35,7 @@ import remarkCodeTitles from './remark-code-title';
 import remarkComponentSpacing from './remark-component-spacing';
 import remarkExtractFrontmatter from './remark-extract-frontmatter';
 import remarkFormatCodeBlocks from './remark-format-code';
+import remarkImageResize from './remark-image-resize';
 import remarkImageSize from './remark-image-size';
 import remarkTocHeadings, {TocNode} from './remark-toc-headings';
 import remarkVariables from './remark-variables';
@@ -49,6 +50,7 @@ type SlugFile = {
   };
   mdxSource: string;
   toc: TocNode[];
+  firstImage?: string;
 };
 
 const root = process.cwd();
@@ -60,7 +62,9 @@ const root = process.cwd();
 const FILE_CONCURRENCY_LIMIT = 200;
 const CACHE_COMPRESS_LEVEL = 4;
 const CACHE_DIR = path.join(root, '.next', 'cache', 'mdx-bundler');
-mkdirSync(CACHE_DIR, {recursive: true});
+if (process.env.CI) {
+  mkdirSync(CACHE_DIR, {recursive: true});
+}
 
 const md5 = (data: BinaryLike) => createHash('md5').update(data).digest('hex');
 
@@ -512,29 +516,54 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
   let cacheKey: string | null = null;
   let cacheFile: string | null = null;
   let assetsCacheDir: string | null = null;
+
+  // Always use public/mdx-images during build
+  // During runtime (Lambda), this directory is read-only but images are already there from build
   const outdir = path.join(root, 'public', 'mdx-images');
-  await mkdir(outdir, {recursive: true});
 
+  try {
+    await mkdir(outdir, {recursive: true});
+  } catch (e) {
+    // If we can't create the directory (e.g., read-only filesystem),
+    // continue anyway - images should already exist from build time
+  }
+
+  // If the file contains content that depends on the Release Registry (such as an SDK's latest version), avoid using the cache for that file, i.e. always rebuild it.
+  // This is because the content from the registry might have changed since the last time the file was cached.
+  // If a new component that injects content from the registry is introduced, it should be added to the patterns below.
+  const skipCache =
+    source.includes('@inject') ||
+    source.includes('<PlatformSDKPackageName') ||
+    source.includes('<LambdaLayerDetail');
+
+  // Check cache in CI environments
   if (process.env.CI) {
-    cacheKey = md5(source);
-    cacheFile = path.join(CACHE_DIR, `${cacheKey}.br`);
-    assetsCacheDir = path.join(CACHE_DIR, cacheKey);
+    if (skipCache) {
+      // eslint-disable-next-line no-console
+      console.info(
+        `Not using cached version of ${sourcePath}, as its content depends on the Release Registry`
+      );
+    } else {
+      cacheKey = md5(source);
+      cacheFile = path.join(CACHE_DIR, `${cacheKey}.br`);
+      assetsCacheDir = path.join(CACHE_DIR, cacheKey);
 
-    try {
-      const [cached, _] = await Promise.all([
-        readCacheFile<SlugFile>(cacheFile),
-        cp(assetsCacheDir, outdir, {recursive: true}),
-      ]);
-      return cached;
-    } catch (err) {
-      if (
-        err.code !== 'ENOENT' &&
-        err.code !== 'ABORT_ERR' &&
-        err.code !== 'Z_BUF_ERROR'
-      ) {
-        // If cache is corrupted, ignore and proceed
-        // eslint-disable-next-line no-console
-        console.warn(`Failed to read MDX cache: ${cacheFile}`, err);
+      try {
+        const [cached, _] = await Promise.all([
+          readCacheFile<SlugFile>(cacheFile),
+          cp(assetsCacheDir, outdir, {recursive: true}),
+        ]);
+        return cached;
+      } catch (err) {
+        if (
+          err.code !== 'ENOENT' &&
+          err.code !== 'ABORT_ERR' &&
+          err.code !== 'Z_BUF_ERROR'
+        ) {
+          // If cache is corrupted, ignore and proceed
+          // eslint-disable-next-line no-console
+          console.warn(`Failed to read MDX cache: ${cacheFile}`, err);
+        }
       }
     }
   }
@@ -568,6 +597,7 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
         remarkFormatCodeBlocks,
         [remarkImageSize, {sourceFolder: cwd, publicFolder: path.join(root, 'public')}],
         remarkMdxImages,
+        remarkImageResize,
         remarkCodeTitles,
         remarkCodeTabs,
         remarkComponentSpacing,
@@ -640,8 +670,10 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
       // for this specific slug easily
       options.outdir = assetsCacheDir || outdir;
 
-      // Set write to true so that esbuild will output the files.
-      options.write = true;
+      // Set write to false to prevent esbuild from writing files automatically.
+      // We'll handle writing manually to gracefully handle read-only filesystems (e.g., Lambda runtime)
+      // In local dev, we need write=true to avoid images being embedded as binary data
+      options.write = process.env.NODE_ENV === 'development' || !!process.env.CI;
 
       return options;
     },
@@ -650,6 +682,10 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
     console.error('Error occurred during MDX compilation:', e.errors);
     throw e;
   });
+
+  // Manually write output files from esbuild when available
+  // This only happens during build time (when filesystem is writable)
+  // At runtime (Lambda), files already exist from build time
 
   const {code, frontmatter} = result;
 
@@ -668,8 +704,13 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
     },
   };
 
-  if (assetsCacheDir && cacheFile) {
-    await cp(assetsCacheDir, outdir, {recursive: true});
+  if (assetsCacheDir && cacheFile && !skipCache) {
+    try {
+      await cp(assetsCacheDir, outdir, {recursive: true});
+    } catch (e) {
+      // If copy fails (e.g., on read-only filesystem), continue anyway
+      // Images should already exist from build time
+    }
     writeCacheFile(cacheFile, JSON.stringify(resultObj)).catch(e => {
       // eslint-disable-next-line no-console
       console.warn(`Failed to write MDX cache: ${cacheFile}`, e);
@@ -686,12 +727,14 @@ const fileBySlugCache = new Map<string, Promise<SlugFile>>();
  *
  * This is useful for performance when rendering the same file multiple times.
  */
-export function getFileBySlugWithCache(slug: string): Promise<SlugFile> {
-  let cached = fileBySlugCache.get(slug);
-  if (!cached) {
-    cached = getFileBySlug(slug);
-    fileBySlugCache.set(slug, cached);
-  }
-
-  return cached;
-}
+export const getFileBySlugWithCache: (slug: string) => Promise<SlugFile> =
+  process.env.NODE_ENV === 'development'
+    ? getFileBySlug
+    : (slug: string) => {
+        let cached = fileBySlugCache.get(slug);
+        if (!cached) {
+          cached = getFileBySlug(slug);
+          fileBySlugCache.set(slug, cached);
+        }
+        return cached;
+      };

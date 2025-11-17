@@ -4,6 +4,42 @@ sidebar_order: 9000
 description: "Learn more about how to troubleshoot common issues with the .NET SDK. "
 ---
 
+<PlatformSection supported={["dotnet.maui", "dotnet.apple"]}>
+
+## Stack traces are not symbolicated on iOS, macOS and Mac Catalyst
+
+When building .NET MAUI applications in release mode for iOS, macOS, or Mac Catalyst, you may see unsymbolicated stack traces in Sentry, where function names appear as memory addresses instead of readable method names.
+
+This is due to **a problem in the .NET SDK** that affects how debug information is handled when building for Apple platforms in release mode. This issue has been reported to Microsoft and is being tracked in the .NET runtime repository.
+
+If this issue affects your application, please:
+1. Visit the [.NET runtime issue](https://github.com/dotnet/runtime/issues/118700)
+2. Add a reaction (👍) to indicate this affects you
+3. Consider adding a comment describing your use case
+
+This will help Microsoft prioritize the fix based on community impact.
+
+### Workarounds
+
+Until the issue is resolved properly, symbolication on Apple platforms is only possible by disabling stripping. For example, by adding the following to your `*.csproj` file(s):
+
+```xml
+<PropertyGroup>
+  <EnableAssemblyILStripping>false</EnableAssemblyILStripping>
+</PropertyGroup>
+```
+
+**Important Note**: This may significantly increase the size of your application.
+
+### Affected versions
+
+This issue affects:
+- .NET 9 applications targeting iOS, macOS, and Mac Catalyst
+- Applications built in release mode with trimming enabled
+- Specifically impacts the `net9.0-ios*` target frameworks
+
+</PlatformSection>
+
 ## Sentry CLI not configured
 
 The following message may appear in your build output:

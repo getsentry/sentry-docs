@@ -9,6 +9,47 @@ import {SidebarSeparator} from './sidebarLink';
 import {NavNode} from './types';
 import {docNodeToNavNode, getNavNodes} from './utils';
 
+/** a root of `"some-root"` maps to the `/some-root/` url */
+// todo: we should probably get rid of this
+const productSidebarItems = [
+  {
+    title: 'Account Settings',
+    root: 'account',
+  },
+  {
+    title: 'Organization Settings',
+    root: 'organization',
+  },
+  {
+    title: 'Product Walkthroughs',
+    root: 'product',
+  },
+  {
+    title: 'Pricing & Billing',
+    root: 'pricing',
+  },
+  {
+    title: 'Sentry CLI',
+    root: 'cli',
+  },
+  {
+    title: 'Sentry API',
+    root: 'api',
+  },
+  {
+    title: 'Security, Legal, & PII',
+    root: 'security-legal-pii',
+  },
+  {
+    title: 'Concepts & Reference',
+    root: 'concepts',
+  },
+  {
+    title: 'Documentation Changelog',
+    root: 'changelog',
+  },
+];
+
 export async function SidebarNavigation({path}: {path: string[]}) {
   const rootNode = await getDocsRootNode();
 

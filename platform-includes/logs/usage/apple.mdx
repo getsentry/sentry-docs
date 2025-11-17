@@ -1,0 +1,86 @@
+Once the feature is enabled on the SDK and the SDK is initialized, you can send logs using the `Sentry.logger` APIs.
+
+The `Sentry.logger` namespace exposes six methods that you can use to log messages at different log levels: `trace`, `debug`, `info`, `warn`, `error`, and `fatal`. Supported types for attributes are Strings, Int, Double, and Bool.
+
+```swift {tabTitle:Swift}
+import Sentry
+
+let logger = SentrySDK.logger
+
+// Log messages without attributes
+logger.trace("Starting database connection")
+logger.debug("Cache miss for user")
+logger.info("Updated profile")
+
+// Log messages with attributes
+logger.trace("Starting database connection", attributes: ["database": "users"])
+logger.debug("Cache miss for user", attributes: ["userId": 123])
+logger.info("Updated profile", attributes: ["profileId": 345])
+logger.warn("Rate limit reached for endpoint", attributes: [
+    "endpoint": "/api/results/",
+    "isEnterprise": false
+])
+logger.error("Failed to process payment", attributes: [
+    "orderId": "order_123",
+    "amount": 99.99
+])
+logger.fatal("Database connection pool exhausted", attributes: [
+    "database": "users",
+    "activeConnections": 100
+])
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+SentryLogger *logger = SentrySDK.logger;
+
+// Log messages without attributes
+[logger trace:@"Starting database connection"];
+[logger debug:@"Cache miss for user"];
+[logger info:@"Updated profile"];
+
+// Log messages with attributes
+[logger trace:@"Starting database connection" attributes:@{@"database": @"users"}];
+[logger debug:@"Cache miss for user" attributes:@{@"userId": @123}];
+[logger info:@"Updated profile" attributes:@{@"profileId": @345}];
+[logger warn:@"Rate limit reached for endpoint" attributes:@{
+    @"endpoint": @"/api/results/",
+    @"isEnterprise": @NO
+}];
+[logger error:@"Failed to process payment" attributes:@{
+    @"orderId": @"order_123",
+    @"amount": @99.99
+}];
+[logger fatal:@"Database connection pool exhausted" attributes:@{
+    @"database": @"users",
+    @"activeConnections": @100
+}];
+```
+
+### String Interpolation (Swift Only)
+
+Swift supports automatic extraction of interpolated values as attributes. When you use string interpolation in your log messages, supported types (Strings, Int, Double, and Bool) are automatically extracted and added as attributes with the key format `sentry.message.parameter.{index}`.
+
+```swift
+let userId = "user_123"
+let orderCount = 5
+let isPremium = true
+let totalAmount = 99.99
+
+// String interpolation automatically extracts values as attributes
+logger.info("User \(userId) placed \(orderCount) orders, premium: \(isPremium), total: $\(totalAmount)")
+
+// This is equivalent to manually specifying attributes:
+let message = "User \(userId) placed \(orderCount) orders, premium: \(isPremium), total: $\(totalAmount)"
+logger.info(
+  message,
+  attributes: [
+      "sentry.message.template": "User {0} placed {1} orders, premium: {2}, total: {3}",
+      "sentry.message.parameter.0": userId,
+      "sentry.message.parameter.1": orderCount,
+      "sentry.message.parameter.2": isPremium,
+      "sentry.message.parameter.3": totalAmount
+  ]
+)
+```
