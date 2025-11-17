@@ -64,7 +64,8 @@ Introduce a `Buffer` layer between the `Client` and the `Transport`. This `Buffe
 #### How the Buffer works
 
 - **Smart batching**: Logs are batched into single requests; errors, transactions, and monitors are sent immediately.
-- **Pre-send rate limiting**: The scheduler checks rate limits before dispatching, avoiding unnecessary requests while keeping items buffered.
+- **Pre-send rate limiting**: The scheduler checks rate limits before serialization to avoid unnecessary processing. When a telemetry is rate-limited the selected batch should
+be dropped, to avoid filling up the buffers.
 - **Category isolation**: Separate ring buffers for each telemetry type prevent head-of-line blocking.
 - **Weighted scheduling**: High-priority telemetry gets sent more frequently via round-robin selection.
 - **Transport compatibility**: Works with existing HTTP transport implementations without modification.
@@ -136,11 +137,20 @@ The scheduler runs as a background worker, coordinating the flow of telemetry fr
 
 #### Transport
 
-The transport layer handles HTTP communication with Sentry's ingestion endpoints:
+The transport layer handles HTTP communication with Sentry's ingestion endpoints.
+
+<Alert level="info">
+
+The only layer responsible for dropping events is the Buffer. In case that the transport is full, then the Buffer should drop the batch.
+
+</Alert>
 
 ### Configuration
 
-#### Buffer Options
+#### Transport Options
+- **Capacity**: 1000 items.
+
+#### Telemetry Buffer Options
 - **Capacity**: 100 items for errors and check-ins, 10*BATCH_SIZE for logs, 1000 for transactions.
 - **Overflow policy**: `drop_oldest`.
 - **Batch size**: 1 for errors and monitors (immediate send), 100 for logs.
@@ -258,13 +268,15 @@ func (s *Scheduler) processNextBatch() {
 
     // Find ready buffer for this priority
     for category, buffer := range s.buffers {
-        if buffer.Priority() == priority &&
-           !s.transport.IsRateLimited(category) &&
-           buffer.IsReadyToFlush() {
-            items := buffer.PollIfReady()
-            s.sendItems(category, items)
-            // only process one batch per tick
-            break
+        if buffer.Priority() == priority && buffer.IsReadyToFlush() {
+          items := buffer.PollIfReady()
+          if s.transport.IsRateLimited(category) {
+            // drop the batch and return
+            return
+          }
+          s.sendItems(category, items)
+          // only process one batch per tick
+          break
         }
     }
 }
@@ -276,7 +288,7 @@ func (s *Scheduler) processNextBatch() {
 ```go
 func (s *Scheduler) flush() {
   // should process all store buffers and send to transport
-	for category, buffer := range s.buffers {
+  for category, buffer := range s.buffers {
 		if !buffer.IsEmpty() {
 			s.processItems(buffer, category, true)
 		}
