@@ -76,7 +76,8 @@ await Sentry.startSpan(
     // Set request metadata
     span.setAttribute("mcp.request.id", "req_123abc");
     span.setAttribute("mcp.session.id", "session_xyz789");
-    span.setAttribute("mcp.transport", "pipe"); // or "tcp" for HTTP/WebSocket/SSE
+    span.setAttribute("mcp.transport", "stdio"); // or "http", "sse" for HTTP/WebSocket/SSE
+    span.setAttribute("network.transport", "pipe"); // or "tcp" for HTTP/SSE
 
     // Set tool arguments (optional, if send_default_pii=true)
     for (const [key, value] of Object.entries(toolArguments)) {
@@ -140,6 +141,7 @@ await Sentry.startSpan(
     span.setAttribute("mcp.request.id", "req_456def");
     span.setAttribute("mcp.session.id", "session_xyz789");
     span.setAttribute("mcp.transport", "http");
+    span.setAttribute("network.transport", "tcp");
 
     // Set prompt arguments (optional, if send_default_pii=true)
     for (const [key, value] of Object.entries(promptArguments)) {
@@ -192,24 +194,11 @@ await Sentry.startSpan(
     span.setAttribute("mcp.resource.uri", resourceUri);
     span.setAttribute("mcp.method.name", "resources/read");
 
-    // Extract and set protocol/scheme
-    try {
-      const parsedUri = new URL(resourceUri);
-      if (parsedUri.protocol) {
-        // Remove trailing colon from protocol
-        span.setAttribute(
-          "mcp.resource.protocol",
-          parsedUri.protocol.replace(":", "")
-        );
-      }
-    } catch (error) {
-      // If URL parsing fails, continue without protocol attribute
-    }
-
     // Set request metadata
     span.setAttribute("mcp.request.id", "req_789ghi");
     span.setAttribute("mcp.session.id", "session_xyz789");
     span.setAttribute("mcp.transport", "http");
+    span.setAttribute("network.transport", "tcp");
 
     // Access the resource
     const resourceData = readResource(resourceUri);
