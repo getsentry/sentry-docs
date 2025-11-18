@@ -1,0 +1,68 @@
+---
+title: FetchIntegration
+description: "A default integration that creates spans and attaches tracing headers to fetch requests in Cloudflare Workers."
+supported:
+  - javascript.cloudflare
+---
+
+<Alert>
+
+This integration only works inside the Cloudflare Workers runtime.
+
+</Alert>
+
+_Import name: `Sentry.fetchIntegration`_
+
+This integration is enabled by default. If you want to disable it, you can [modify your default integrations](./../#modifying-default-integrations).
+
+The `fetchIntegration` creates [spans](/concepts/key-terms/tracing/distributed-tracing/#traces-transactions-and-spans) and attaches tracing headers to fetch requests in Cloudflare Workers.
+
+```JavaScript
+Sentry.init({
+  integrations: [Sentry.fetchIntegration()],
+});
+```
+
+## Options
+
+### `breadcrumbs`
+
+_Type: `boolean`_
+
+If set to false, no breadcrumbs will be captured.
+
+### `shouldCreateSpanForRequest`
+
+_Type: `(url: string) => boolean`_
+
+Allows you to define a method to determine whether or not to create spans to track outgoing requests to the given URL. By default, spans will be created for all outgoing requests.
+
+```JavaScript
+Sentry.init({
+  integrations: [
+    Sentry.fetchIntegration({
+      shouldCreateSpanForRequest: (url) => {
+        // Only create spans for external API calls
+        return url.includes('api.example.com');
+      },
+    }),
+  ],
+});
+```
+
+## Usage
+
+The fetch integration automatically instruments all `fetch()` calls made within your Cloudflare Worker. This includes:
+
+- Creating performance spans for outgoing HTTP requests
+- Adding tracing headers to continue distributed traces
+- Capturing breadcrumbs for debugging purposes
+- Tracking request duration and response status
+
+The integration works with both the standard `fetch()` API and any libraries that use fetch under the hood.
+
+<Alert>
+
+**Note:** If you need to disable fetch instrumentation for specific requests, use the `shouldCreateSpanForRequest` option to filter out unwanted requests.
+
+</Alert>

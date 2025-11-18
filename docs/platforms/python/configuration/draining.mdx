@@ -4,7 +4,20 @@ sidebar_order: 80
 description: "Learn more about the default behavior of our SDK if the application shuts down unexpectedly."
 ---
 
-The default behavior of most SDKs is to send out events over the network
-asynchronously in the background. This means that some events might be lost if the application shuts down unexpectedly. The SDKs provide mechanisms to cope with this.
+By default the SDK sends out events over the network on a background thread. This means that some events might be lost if the application shuts down unexpectedly. The SDK provides mechanisms to cope with this.
 
-<PlatformContent includePath="configuration/drain-example" />
+The Python SDK automatically drains on shutdown unless the `AtexitIntegration` is removed or the `shutdown_timeout`
+config key is set to 0. If you need to manually drain, the client provides a `close` method:
+
+```python
+import sentry_sdk
+
+client = sentry_sdk.get_client()
+client.close(timeout=2.0)
+```
+
+After a call to `close`, the client  is disabled. It's important to
+only call `close` immediately before shutting down the application.
+
+Alternatively, the `flush` method drains the event queue while keeping the
+client enabled for continued use.

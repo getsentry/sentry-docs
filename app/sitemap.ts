@@ -5,7 +5,7 @@ import {getDevDocsFrontMatter, getDocsFrontMatter} from 'sentry-docs/mdx';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   if (isDeveloperDocs) {
-    const docs = getDevDocsFrontMatter();
+    const docs = await getDevDocsFrontMatter();
     const baseUrl = 'https://develop.sentry.dev';
     return docsToSitemap(docs, baseUrl);
   }

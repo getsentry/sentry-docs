@@ -36,7 +36,9 @@ sentry:
         ignore_exceptions:
             - "Symfony\\Component\\HttpKernel\\Exception\\BadRequestHttpException"
         ignore_transactions:
-            - "GET /helath"
+            - "GET /health"
+        enable_logs: true
+        before_send_log: "sentry.callback.before_send_log"
         before_send: "sentry.callback.before_send"
         before_send_transaction: "sentry.callback.before_send_transaction"
         trace_propagation_targets:
@@ -68,6 +70,7 @@ sentry:
     messenger:
         enabled: true
         capture_soft_fails: false
+        isolate_breadcrumbs_by_message: false
 
     tracing:
         enabled: true
@@ -87,8 +90,7 @@ sentry:
 ```
 
 The DSN option is the only required option: it sets the Sentry DSN, and so reports all events to the related project. If it's
-left empty, it disables Sentry reporting. Because Sentry enables the bundle in all environments, it's recommended to
-disable it in the `test` and `dev` environments.
+left empty, it disables Sentry reporting.
 
 All the possible configurations under the `options` key map directly to the correspondent options from the base SDK;
 you can read more about those in the [general configuration docs](../options/).

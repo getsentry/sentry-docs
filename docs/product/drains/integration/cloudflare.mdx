@@ -1,0 +1,100 @@
+---
+title: Cloudflare Workers Observability
+sidebar_order: 40
+description: Learn how to set up Cloudflare Workers Observability to send forward logs and traces data to Sentry.
+---
+
+Cloudflare Workers supports [exporting OpenTelemetry (OTEL)-compliant](https://developers.cloudflare.com/workers/observability/exporting-opentelemetry-data/) to send logs and traces to Sentry.
+
+- Logs: Application logs including `console.log()` output and system-generated logs
+- Traces: Traces showing request flows through your Worker and connected services
+
+## Prerequisites
+
+Before you begin, ensure you have:
+
+- A deployed Worker that you want to monitor
+- A Sentry project you want to send data to
+
+## Step 1: Set up destination in the Cloudflare dashboard
+
+To set up a destination in the Cloudflare dashboard, navigate to your Cloudflare account's [Workers Observability](https://dash.cloudflare.com/?to=/:account/workers-and-pages/observability/pipelines) section. Then click **Add destination** and configure either a traces or logs destination.
+
+### Logs Destination
+
+To configure your logs destination, click **Add destination** and configure the following:
+
+1. Destination Name: `sentry-logs` (or any descriptive name)
+2. Destination Type: Select Logs
+3. OTLP Endpoint: Your Sentry OTLP logs endpoint (e.g., `https://{HOST}/api/{PROJECT_ID}/integration/otlp/v1/logs`)
+
+```bash
+___OTLP_LOGS_URL___
+```
+
+4. Custom Headers: Add the Sentry authentication header:
+   - Header name: `x-sentry-auth`
+   - Header value: `sentry sentry_key={SENTRY_PUBLIC_KEY}` where `{SENTRY_PUBLIC_KEY}` is your Sentry project's public key
+
+```
+sentry sentry_key=___PUBLIC_KEY___
+```
+
+You can find your Sentry OTLP logs endpoint and authentication header value in your [Sentry Project Settings](https://sentry.io/settings/projects/) under **Client Keys (DSN)** > **OpenTelemetry (OTLP)** under the **OTLP Logs Endpoint** section.
+
+### Traces Destination
+
+To configure your traces destination, click **Add destination** and configure the following:
+
+1. Destination Name: `sentry-traces` (or any descriptive name)
+2. Destination Type: Select Traces
+3. OTLP Endpoint: Your Sentry OTLP traces endpoint (e.g., `https://{HOST}/api/{PROJECT_ID}/integration/otlp/v1/traces`)
+
+```bash
+___OTLP_TRACES_URL___
+```
+
+4. Custom Headers: Add the Sentry authentication header:
+   - Header name: `x-sentry-auth`
+   - Header value: `sentry sentry_key={SENTRY_PUBLIC_KEY}` where `{SENTRY_PUBLIC_KEY}` is your Sentry project's public key
+
+```
+sentry sentry_key=___PUBLIC_KEY___
+```
+
+You can find your Sentry OTLP traces endpoint and authentication header value in your [Sentry Project Settings](https://sentry.io/settings/projects/) under **Client Keys (DSN)** > **OpenTelemetry (OTLP)** under the **OTLP Traces Endpoint** section.
+
+## Step 2: Configure your Worker
+
+With your destinations created in the Cloudflare dashboard, update your Worker's configuration to enable telemetry export.
+
+```toml {filename:wrangler.toml}
+[observability.traces]
+enabled = true
+# Must match the destination name in the dashboard
+destinations = [ "sentry-traces" ]
+
+[observability.logs]
+enabled = true
+# Must match the destination name in the dashboard
+destinations = [ "sentry-logs" ]
+```
+
+```jsonc {filename:wrangler.jsonc}
+{
+  "observability": {
+    "traces": {
+      "enabled": true,
+      // Must match the destination name in the dashboard
+      "destinations": ["sentry-traces"],
+    },
+    "logs": {
+      "enabled": true,
+      // Must match the destination name in the dashboard
+      "destinations": ["sentry-logs"],
+    },
+  },
+}
+```
+
+After updating your configuration, deploy your Worker for the changes to take effect.

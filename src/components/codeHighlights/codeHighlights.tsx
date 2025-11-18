@@ -133,6 +133,7 @@ const HighlightBlockContainer = styled('div')`
   position: relative;
 
   border-left: 4px solid var(--accent-purple);
+  border-radius: 6px;
 
   .highlight-line {
     padding-left: 8px !important;

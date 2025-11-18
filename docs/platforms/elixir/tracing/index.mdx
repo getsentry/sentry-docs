@@ -1,0 +1,109 @@
+---
+title: Set Up Tracing
+sidebar_title: Tracing
+description: "Learn how to enable tracing in your app and discover valuable performance insights of your application."
+sidebar_order: 30
+---
+
+With [tracing](/product/insights/overview/), Sentry tracks your software performance, measuring metrics like throughput and latency, and displaying the impact of errors across multiple systems.
+
+<Alert>
+
+Tracing in Elixir SDK is available starting from 11.0.0 and it's currently in Beta.
+
+</Alert>
+
+## Install Dependencies
+
+Sentry's Elixir SDK uses OpenTelemetry for tracing. Add the required dependencies to your `mix.exs`:
+
+```elixir
+def deps do
+  [
+    # Sentry SDK
+    {:sentry, "~> 11.0"},
+
+    # OpenTelemetry core packages
+    {:opentelemetry, "~> 1.5"},
+    {:opentelemetry_api, "~> 1.4"},
+    {:opentelemetry_exporter, "~> 1.0"},
+    {:opentelemetry_semantic_conventions, "~> 1.27"},
+
+    # Instrumentation libraries (choose what you need)
+    {:opentelemetry_phoenix, "~> 2.0"},      # for Phoenix
+    {:opentelemetry_bandit, "~> 0.1"},       # for Bandit (Phoenix 1.7+)
+    {:opentelemetry_ecto, "~> 1.2"},         # for Ecto
+
+    # ... your other dependencies
+  ]
+end
+```
+
+## Configure Sentry
+
+Enable tracing in your Sentry configuration:
+
+```elixir
+# config/config.exs or config/dev.exs
+config :sentry,
+  dsn: "___PUBLIC_DSN___",
+  traces_sample_rate: 1.0  # Adjust for production
+```
+
+## Configure OpenTelemetry
+
+Set up OpenTelemetry to send traces to Sentry:
+
+```elixir
+# config/config.exs
+config :opentelemetry, span_processor: {Sentry.OpenTelemetry.SpanProcessor, []}
+
+config :opentelemetry, sampler: {Sentry.OpenTelemetry.Sampler, []}
+```
+
+## Set Up Phoenix Instrumentation
+
+In your `application.ex`, set up the OpenTelemetry instrumentation:
+
+```elixir
+# lib/my_app/application.ex
+defmodule MyApp.Application do
+  use Application
+
+  def start(_type, _args) do
+    # Set up OpenTelemetry instrumentation
+    OpentelemetryBandit.setup()           # for Bandit (Phoenix 1.7+)
+    # OR OpentelemetryPhoenix.setup(adapter: :cowboy2)  # for Cowboy
+
+    OpentelemetryPhoenix.setup(adapter: :bandit)
+    OpentelemetryEcto.setup([:my_app, :repo], db_statement: :enabled)
+
+    # Optional: Set up Oban instrumentation
+    # OpentelemetryOban.setup()
+
+    children = [
+      # ... your supervision tree
+    ]
+
+    opts = [strategy: :one_for_one, name: MyApp.Supervisor]
+    Supervisor.start_link(children, opts)
+  end
+end
+```
+
+## Advanced Sampling
+
+For more control over sampling, you can use a sampling function:
+
+```elixir
+config :sentry,
+  dsn: "___PUBLIC_DSN___",
+  traces_sampler: fn sampling_context ->
+    case sampling_context.transaction_context.op do
+      "http.server" -> 0.1  # Sample 10% of HTTP requests
+      _ -> 0.05             # Sample 5% of other operations
+    end
+  end
+```
+
+Learn more about tracing <PlatformLink to="/configuration/options/#tracing-options">options</PlatformLink>.
