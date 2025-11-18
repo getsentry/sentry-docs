@@ -1,13 +1,12 @@
 'use client';
 
-import {RefObject, useContext, useEffect, useLayoutEffect, useRef, useState} from 'react';
+import {RefObject, useEffect, useRef, useState} from 'react';
 import {Clipboard} from 'react-feather';
 
 import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
 
 import styles from './code-blocks.module.scss';
 
-import {CodeContext} from '../codeContext';
 import {makeHighlightBlocks} from '../codeHighlights';
 import {makeKeywordsClickable} from '../codeKeywords';
 
@@ -54,7 +53,6 @@ function getCopiableText(element: HTMLDivElement) {
 export function CodeBlock({filename, language, children}: CodeBlockProps) {
   const [showCopied, setShowCopied] = useState(false);
   const codeRef = useRef<HTMLDivElement>(null);
-  const codeContext = useContext(CodeContext);
 
   // Show the copy button after js has loaded
   // otherwise the copy button will not work
@@ -63,20 +61,9 @@ export function CodeBlock({filename, language, children}: CodeBlockProps) {
   const [isMounted, setIsMounted] = useState(false);
   const {emit} = usePlausibleEvent();
 
-  // Extract isLoading to avoid dependency array issues
-  const isContextLoading = codeContext?.isLoading ?? true;
-
-  // Use useLayoutEffect to set isMounted synchronously before browser paints
-  // This ensures keyword interpolation happens before the user sees anything
-  // Wait for codeKeywords to be loaded before enabling keyword interpolation
-  useLayoutEffect(() => {
-    if (codeContext && !isContextLoading) {
-      setIsMounted(true);
-    }
-  }, [codeContext, isContextLoading]);
-
   useEffect(() => {
     setShowCopyButton(true);
+    setIsMounted(true);
     // prevent .no-copy elements from being copied during selection Right click copy or / Cmd+C
     const noCopyElements = codeRef.current?.querySelectorAll<HTMLSpanElement>('.no-copy');
     const handleSelectionChange = () => {
