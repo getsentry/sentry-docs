@@ -1,0 +1,19 @@
+Mach-O binaries contain code signature data within the `LC_CODE_SIGNATURE` load command which itself contains `SHA1` and/or `SHA256` hashes of every page block. This means the size of this data will scale linearly with the size of your binary.
+
+By default Sentry calculates the size of this data as-is. You may notice differences when comparing against your app downloaded from the App Store. For example, Xcode 26 archives only codesign with `SHA256` hashes, but the App Store codesigns with both `SHA1` and `SHA256` hashes. In other words, App Store downloads of your app may be slightly larger than what's produced by Xcode. This App Store behavior is subject to change at any time.
+
+If you'd like to compare the impact of this on your app, you can re-sign each binary before uploading to Sentry:
+
+```bash
+# Inspect the current code signature
+codesign -dvvv '/path/to/your/binary'
+
+# Re-sign with a new code signature
+codesign --force \
+  --sign 'Apple Distribution: Your Team (team_id)' \
+  --digest-algorithm sha1 \
+  --digest-algorithm sha256 \
+  '/path/to/your/binary'
+```
+
+This will force both `SHA1` and `SHA256` hashes to be used.
