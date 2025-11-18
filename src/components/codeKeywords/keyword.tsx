@@ -5,7 +5,7 @@ import {MotionProps} from 'framer-motion';
 import {KeywordSpan} from './styles';
 
 export function Keyword({
-  initial = false, // Disable initial animation on mount to prevent flash
+  initial = {opacity: 1, y: 0, position: 'relative'},
   animate = {
     position: 'relative',
     opacity: 1,
