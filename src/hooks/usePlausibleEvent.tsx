@@ -4,6 +4,9 @@ import {ReadProgressMilestone} from 'sentry-docs/types/plausible';
 
 // Adding custom events here will make them available via the hook
 type PlausibleEventProps = {
+  ['Ask AI Referrer']: {
+    referrer: string;
+  };
   ['Copy Expandable Content']: {
     page: string;
     title: string;
@@ -24,6 +27,14 @@ type PlausibleEventProps = {
     page: string;
     title: string;
   };
+  ['Open in ChatGPT']: {
+    page: string;
+    source: string;
+  };
+  ['Open in Claude']: {
+    page: string;
+    source: string;
+  };
   ['Read Progress']: {
     page: string;
     readProgress: ReadProgressMilestone;
@@ -31,6 +42,9 @@ type PlausibleEventProps = {
   ['View Markdown']: {
     page: string;
     source: string;
+  };
+  ['copy sentry code']: {
+    page: string;
   };
 };
 

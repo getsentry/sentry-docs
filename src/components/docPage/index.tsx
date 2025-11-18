@@ -76,7 +76,9 @@ export function DocPage({
               'prose-blockquote:font-normal prose-blockquote:border-l-[3px] prose-em:font-normal prose-blockquote:text-[var(--gray-12)]',
               'prose-img:my-2',
               'prose-strong:text-[var(--gray-12)]',
-              fullWidth ? 'max-w-none w-full' : 'w-full',
+              // Allow flex item to shrink within layout; prevents long content from
+              // forcing the main column to grow and squeezing the ToC
+              fullWidth ? 'max-w-none w-full min-w-0' : 'w-full min-w-0',
             ].join(' ')}
             id="doc-content"
           >
@@ -117,7 +119,7 @@ export function DocPage({
         {hasToc && (
           <aside
             data-layout-anchor="right"
-            className="sticky h-[calc(100vh-var(--header-height))] top-[var(--header-height)] overflow-y-auto hidden toc:block w-[250px]"
+            className="sticky h-[calc(100vh-var(--header-height))] top-[var(--header-height)] overflow-y-auto hidden toc:block flex-none w-[250px] min-w-[250px]"
           >
             <div className="sidebar">
               <SidebarTableOfContents />

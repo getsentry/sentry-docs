@@ -75,6 +75,10 @@ const developerDocsRedirects = [
     destination: '/sdk/telemetry/replays/:path*',
   },
   {
+    source: '/sdk/telemetry/spans/batch-processor/',
+    destination: '/sdk/telemetry/telemetry-buffer/',
+  },
+  {
     source: '/sdk/setup-wizards/:path*',
     destination: '/sdk/expected-features/setup-wizards/:path*',
   },
@@ -219,8 +223,20 @@ const developerDocsRedirects = [
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const userDocsRedirects = [
   {
+    source: '/organization/integrations/rootly/',
+    destination: '/organization/integrations/notification-incidents/rootly/',
+  },
+  {
+    source: '/account/cli/configuration/',
+    destination: '/cli/configuration/',
+  },
+  {
     source: '/organization/integrations/telegram-alerts-bot/',
     destination: '/organization/integrations/notification-incidents/telegram-alerts-bot/',
+  },
+  {
+    source: '/platforms/python-fastapi/logs/',
+    destination: '/platforms/python/integrations/fastapi/',
   },
   {
     source: '/platforms/php/configuration/integrations/',
@@ -246,10 +262,30 @@ const userDocsRedirects = [
     source: '/product/dev-toolbar/:path*',
     destination: '/product/sentry-toolbar/:path*',
   },
-  
+  {
+    source: '/product/ai-in-sentry/sentry-prevent-ai/:path*',
+    destination: '/product/ai-in-sentry/ai-code-review/:path*',
+  },
+
   {
     source: '/organization/integrations/launchdarkly/',
     destination: '/organization/integrations/feature-flag/launchdarkly/',
+  },
+  {
+    source: '/platforms/javascript/guides/aws-lambda/layer__v9.x/',
+    destination: '/platforms/javascript/guides/aws-lambda/install/layer__v9.x/',
+  },
+  {
+    source: '/platforms/javascript/guides/aws-lambda/npm__v9.x/',
+    destination: '/platforms/javascript/guides/aws-lambda/install/npm__v9.x/',
+  },
+  {
+    source: '/platforms/javascript/guides/aws-lambda/esm-npm__v9.x/',
+    destination: '/platforms/javascript/guides/aws-lambda/install/esm-npm__v9.x/',
+  },
+  {
+    source: '/platforms/javascript/guides/aws-lambda/cjs-npm__v9.x/',
+    destination: '/platforms/javascript/guides/aws-lambda/install/cjs-npm__v9.x/',
   },
   {
     source: '/platforms/javascript/guides/nextjs/sourcemaps/uploading/',
@@ -738,11 +774,13 @@ const userDocsRedirects = [
   },
   {
     source: '/platforms/javascript/guides/remix/frameworks/hydrogen/',
-    destination: '/platforms/javascript/guides/cloudflare/frameworks/hydrogen-react-router/',
+    destination:
+      '/platforms/javascript/guides/cloudflare/frameworks/hydrogen-react-router/',
   },
   {
     source: '/platforms/javascript/guides/cloudflare/frameworks/hydrogen/',
-    destination: '/platforms/javascript/guides/cloudflare/frameworks/hydrogen-react-router/',
+    destination:
+      '/platforms/javascript/guides/cloudflare/frameworks/hydrogen-react-router/',
   },
   {
     source: '/product/metrics/:path*',
@@ -969,7 +1007,8 @@ const userDocsRedirects = [
   },
   {
     source: '/platforms/javascript/tracing/instrumentation/ai-agents-module',
-    destination: '/platforms/javascript/guides/node/tracing/instrumentation/ai-agents-module',
+    destination:
+      '/platforms/javascript/guides/node/tracing/instrumentation/ai-agents-module',
   },
   {
     source: '/product/insights/retention-priorities/',
@@ -1045,10 +1084,6 @@ const userDocsRedirects = [
     destination: '/product/issues/issue-details/feature-flags/:path*',
   },
   {
-    source: '/product/explore/metrics/:path*',
-    destination: '/concepts/key-terms/tracing/span-metrics/',
-  },
-  {
     source: '/product/tracing/:path*',
     destination: '/concepts/key-terms/tracing/:path*',
   },
@@ -1060,14 +1095,6 @@ const userDocsRedirects = [
   {
     source: '/platforms/javascript/tracing/trace-propagation/:path*',
     destination: '/platforms/javascript/tracing/distributed-tracing/:path*',
-  },
-  {
-    source: '/platforms/javascript/metrics/:path*',
-    destination: '/platforms/javascript/tracing/span-metrics/:path*',
-  },
-  {
-    source: '/platforms/javascript/guides/:guide/metrics/:path*',
-    destination: '/platforms/javascript/guides/:guide/tracing/span-metrics/:path*',
   },
   {
     source: '/platforms/javascript/tracing/instrumentation/performance-metrics/',
@@ -1203,6 +1230,11 @@ const userDocsRedirects = [
     source: '/platforms/dotnet/guides/uwp/profiling/:path*',
     destination: '/platforms/dotnet/profiling/',
   },
+  // General .NET redirects for UWP (deprecated)
+  {
+    source: '/platforms/dotnet/guides/uwp/:path*',
+    destination: '/platforms/dotnet/guides/maui/',
+  },
   {
     source: '/platforms/dotnet/guides/aws-lambda/profiling/:path*',
     destination: '/platforms/dotnet/profiling/',
@@ -1226,6 +1258,10 @@ const userDocsRedirects = [
   {
     source: '/platforms/dotnet/guides/google-cloud-functions/profiling/:path*',
     destination: '/platforms/dotnet/profiling/',
+  },
+  {
+    source: '/product/insights/mcp/',
+    destination: '/product/insights/ai/mcp/',
   },
 ];
 

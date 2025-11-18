@@ -14,23 +14,35 @@ export interface FrontMatter {
    */
   title: string;
   /**
+   * Set this to true to show a "beta" badge next to the title in the sidebar
+   */
+  beta?: boolean;
+  /**
    * A description to use in the <meta> header, as well as in auto generated page grids.
    */
   customCanonicalTag?: string;
+
   /**  Add this if you want to add a canonical tag (without this it will default to the page url). Should be a relative path without the domain (e.g. `/platforms/react/options/`) */
   description?: string;
+
   /**
    * Set this to true to mark this page as a draft, and hide it from various other components (such as the PageGrid).
    */
   draft?: boolean;
+
   /**
    * Set this to true to take all the available width for the page content.
    */
   fullWidth?: boolean;
+
   /**
    * A list of keywords for indexing with search.
    */
   keywords?: string[];
+  /**
+   * Set this to true to show a "new" badge next to the title in the sidebar
+   */
+  new?: boolean;
 
   /**
    * The next page in the bottom pagination navigation.
@@ -38,7 +50,7 @@ export interface FrontMatter {
   nextPage?: PaginationNavNode;
   /**
    * relative links to use in the "next steps" section of the page grid
-   * takes precendence over children when present
+   * takes precedence over children when present
    */
   next_steps?: string[];
   /**
@@ -57,9 +69,22 @@ export interface FrontMatter {
   notoc?: boolean;
 
   /**
+   * Custom Open Graph image for social sharing.
+   * Can be a relative path (e.g., './img/my-image.png'), absolute path (e.g., '/images/og.png'),
+   * or external URL. If not specified, the first image in the page content will be used,
+   * or falls back to the default OG image.
+   */
+  og_image?: string;
+
+  /**
    * The previous page in the bottom pagination navigation.
    */
   previousPage?: PaginationNavNode;
+
+  /**
+   * Set this to true to show a separator/divider below this item in the sidebar
+   */
+  section_end_divider?: boolean;
 
   /**
    * The next page in the sidebar navigation.
@@ -80,7 +105,7 @@ export interface FrontMatter {
   sidebar_title?: string;
 
   /**
-   * filesytem path to the source file, generated during build time
+   * filesystem path to the source file, generated during build time
    */
   sourcePath?: string;
 

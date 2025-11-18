@@ -12,15 +12,22 @@ Because workflows can be hibernated and lose all state, we use the workflows
 `instanceId` to generate the Sentry `trace_id` to link all steps together into a
 single trace. If `instanceId` is a UUID (with or without dashes), it will be
 used directly as the `trace_id`. If not, we SHA1 hash the `instanceId` to
-generate a deterministic `trace_id`. 
+generate a deterministic `trace_id`.
 
 We use the last 4 characters of the `trace_id` for sampling to ensure all steps
-have the same sampling decision. 
+have the same sampling decision.
 
 Because the `instanceId` is used for both the `trace_id` and for sampling
 decisions, you should ensure that the `instanceId` is unique for each workflow
 instance. If you are using custom UUIDs, you should ensure the last 4 digits are
 sufficiently random to ensure a good distribution of sampling decisions.
+
+<Alert level='warning'>
+  We recommend creating spans only inside `step.do()` callbacks. Due to the nature of Cloudflare Workflows, a workflow
+  can be hibernated and resumed at any point. When a workflow resumes, its `run` method is executed again from the beginning.
+  `step.do()` calls are idempotent and won't re-run completed steps, but any code outside of them will be re-executed.
+  This can lead to duplicated spans and unexpected behavior if you start spans at the top level of your `run` method.
+</Alert>
 
 ```typescript
 import { WorkflowEntrypoint, WorkflowStep, WorkflowEvent } from 'cloudflare:workers';
