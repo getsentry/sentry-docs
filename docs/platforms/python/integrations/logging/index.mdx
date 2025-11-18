@@ -3,7 +3,7 @@ title: Logging
 description: "Learn about logging with Python."
 ---
 
-The logging integration adds support for the `logging` framework from Python's standard library.
+The logging integration adds support for the `logging` framework from Python's standard library. Depending on your settings, logs can be captured as Sentry logs, as error events, or as breadcrumbs, or a combination of those.
 
 ## Install
 
@@ -35,6 +35,21 @@ sentry_sdk.init(
 
 ## Verify
 
+```python
+import logging
+
+def main():
+    sentry_sdk.init(...)  # same as above
+    logging.info("Logging some info")
+    logging.error("Logging an error")
+
+main()
+```
+
+This will capture both logs and send them to Sentry Logs. Additionally, an error event will be created from the `ERROR`-level log. In addition to that, a breadcrumb will be created from the `INFO`-level log.
+
+## Behavior
+
 As long as `enable_logs` is `True`, logs with a level of `INFO` and higher will be captured as Sentry logs. The threshold can be configured via the [`sentry_logs_level` option](#options).
 
 Additionally, the logging integration will create an error event from all `ERROR`-level logs. This feature is configurable via the [`event_level` integration option](#options).
@@ -42,8 +57,9 @@ Additionally, the logging integration will create an error event from all `ERROR
 `INFO` and above logs will also be captured as breadcrumbs. Use the [`level` integration option](#options) to adjust the threshold.
 
 ```python
+import logging
+
 import sentry_sdk
-from logging import logger
 
 sentry_sdk.init(
     ...,
@@ -51,16 +67,16 @@ sentry_sdk.init(
 )
 
 # The following will be captured as Sentry logs:
-logger.info("I'm an INFO log")
-logger.error("I'm an ERROR log", extra={"bar": 43})
-logger.exception("I'm an exception log")
+logging.info("I'm an INFO log")
+logging.error("I'm an ERROR log", extra={"bar": 43})
+logging.exception("I'm an exception log")
 
 # DEBUG-level logs won't be captured by default
-logger.debug("I'm a DEBUG log")
+logging.debug("I'm a DEBUG log")
 ```
 
 - All of the above logs except for the `DEBUG` level message will be sent to Sentry as logs.
-- An error event with the message `"I'm an exception log"` will be created.
+- An error event with the message `"I'm an ERROR log"` will be created.
 - `"I'm an INFO log"` will be attached as a breadcrumb to that event.
 - `bar` will end up in the `extra` attributes of that event.
 - `"I'm an exception log"` will send the current exception from `sys.exc_info()` with the stack trace to Sentry. If there's no exception, the current stack will be attached.
