@@ -59,11 +59,15 @@ export function CodeBlock({filename, language, children}: CodeBlockProps) {
   const [showCopyButton, setShowCopyButton] = useState(false);
   // Track if component is mounted to prevent hydration mismatch with keyword interpolation
   const [isMounted, setIsMounted] = useState(false);
+  // Force component to re-render after mount to ensure keyword interpolation happens
+  const [, forceUpdate] = useState({});
   const {emit} = usePlausibleEvent();
 
   useEffect(() => {
     setShowCopyButton(true);
     setIsMounted(true);
+    // Force a re-render to ensure processedChildren is recalculated with isMounted=true
+    forceUpdate({});
     // prevent .no-copy elements from being copied during selection Right click copy or / Cmd+C
     const noCopyElements = codeRef.current?.querySelectorAll<HTMLSpanElement>('.no-copy');
     const handleSelectionChange = () => {
