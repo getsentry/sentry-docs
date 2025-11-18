@@ -57,7 +57,7 @@ export default function Header({
         <Link
           href="/"
           title="Sentry error monitoring"
-          className="logo-slot flex flex-shrink-0 items-center text-lg font-medium text-[var(--foreground)] mr-2"
+          className="logo-slot flex flex-shrink-0 items-center text-lg font-medium text-[var(--foreground)] mr-4"
           style={{minWidth: 0}}
         >
           <div className="h-full pb-[2px] mr-2">
@@ -70,25 +70,29 @@ export default function Header({
           </div>
           <span className="text-base font-semibold tracking-tight">Docs</span>
         </Link>
+        {!noSearch && (
+          <div className="hidden sm:flex flex-shrink-0 items-center gap-2 mr-4">
+            <Search
+              path={pathname}
+              searchPlatforms={searchPlatforms}
+              showChatBot
+              useStoredSearchPlatforms={useStoredSearchPlatforms}
+            />
+          </div>
+        )}
         <div className="flex-1 min-w-0 flex items-center gap-4">
           <div className="hidden sm:block flex-1 min-w-0">
             <TopNavClient platforms={platforms} />
           </div>
           {!noSearch && (
-            <div className="hidden sm:flex flex-shrink-0 items-center gap-2 min-w-[320px] max-w-lg ml-4">
-              <Search
-                path={pathname}
-                searchPlatforms={searchPlatforms}
-                showChatBot
-                useStoredSearchPlatforms={useStoredSearchPlatforms}
-              />
+            <div className="hidden sm:flex flex-shrink-0 items-center gap-2" style={{marginLeft: '15px'}}>
               <Button
                 asChild
                 variant="ghost"
                 color="gray"
                 size="3"
                 radius="medium"
-                className="font-medium text-[var(--foreground)] py-2 px-3 uppercase cursor-pointer hidden md:flex mr-4"
+                className="font-medium text-[var(--foreground)] py-2 px-3 uppercase cursor-pointer whitespace-nowrap"
               >
                 <a href="https://sentry.io/" target="_blank" rel="noopener noreferrer">
                   Go to Sentry

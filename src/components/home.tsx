@@ -12,6 +12,7 @@ import CalculatorImage from 'sentry-docs/imgs/pricing.png';
 import RocketImage from 'sentry-docs/imgs/rocket.png';
 import SecurityImage from 'sentry-docs/imgs/security.png';
 import SupportImage from 'sentry-docs/imgs/support.png';
+import SquiggleSVG from 'sentry-docs/imgs/squiggle.svg';
 import YellowShape08 from 'sentry-docs/imgs/yellow-shape-08.png';
 
 import AskAiSearchParams from './askAiSearchParams';
@@ -52,229 +53,187 @@ export default async function Home() {
       <div className="mt-[var(--header-height)]">
         <Banner />
       </div>
-      {/* Slanted Banner with Welcome Header and Subheader */}
+      {/* Hero Banner with Two-Column Layout */}
       <div
-        className="flex flex-col items-center justify-center w-full relative"
+        className="w-full relative overflow-hidden"
         style={{
-          height: '270px',
-          backgroundImage: `url(${BgLinkedin.src})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-          width: '100%',
-          clipPath: 'polygon(0 0, 100% 0, 100% 85%, 0 100%)',
-          marginBottom: 0,
+          background: 'linear-gradient(to bottom, rgba(168, 139, 250, 0.15) 0%, rgba(255, 255, 255, 0) 100%), #ffffff',
+          minHeight: '500px',
         }}
       >
-        <h1
-          className="text-4xl font-bold mb-2 text-center"
+        {/* Single decorative squiggle at top right */}
+        <img
+          src={SquiggleSVG.src}
+          alt=""
+          className="pointer-events-none absolute"
           style={{
-            color: '#fff',
-            textShadow: '0 4px 16px #000, 0 0 8px #000, 0 0 2px #000',
+            right: 0,
+            top: 0,
+            width: '30%',
+            opacity: 0.1,
+            zIndex: 0,
           }}
-        >
-          Welcome to Sentry Docs
-        </h1>
-        <p
-          className="text-lg font-bold text-center max-w-2xl"
-          style={{
-            color: '#fff',
-            textShadow: '0 2px 8px rgba(0,0,0,0.7), 0 0 2px #000',
-            letterSpacing: '0.03em',
-          }}
-        >
-          Sentry provides end-to-end distributed tracing, enabling developers to identify
-          and debug performance issues and errors across their systems and services.
-        </p>
-      </div>
-      {/* Search + SDKs row, same width as Sentry Products */}
-      <div
-        className="max-w-screen-xl mx-auto px-6 lg:px-8 w-full"
-        style={{marginTop: 0, paddingTop: 0}}
-      >
-        <div
-          className="w-full flex flex-col md:flex-row items-stretch justify-between relative"
-          style={{marginTop: 0, marginBottom: 0}}
-        >
-          {/* Left column: Search Bar, left-aligned */}
-          <div className="flex-1 flex flex-col items-start justify-center w-full max-w-full relative">
-            <div className="home-search-bar w-full relative">
-              <Search path="/" searchPlatforms={[]} useStoredSearchPlatforms={false} />
-            </div>
-          </div>
-          {/* Decorative yellow-shape-08 line between search and SDKs */}
-          <img
-            src={YellowShape08.src}
-            alt="decorative line"
-            className="hidden md:block pointer-events-none"
-            style={{
-              position: 'absolute',
-              left: 'calc(20% + 90px)',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              width: '65%',
-              height: '120px',
-              zIndex: -1,
-              objectFit: 'contain',
-            }}
-          />
-          {/* Right column: Most Viewed SDKs, right-aligned */}
-          <div className="flex-1 flex flex-col items-end justify-end w-full self-stretch">
-            <div
-              className="bg-white dark:bg-[var(--gray-2)] rounded-xl shadow-md dark:shadow-none px-10 py-6 flex flex-col items-start"
-              style={{
-                width: '350px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginRight: 0,
-              }}
-            >
-              <h2 className="text-lg font-semibold mb-1 text-left w-full">
-                <span className="dark:text-white">Most Viewed Sentry SDKs</span>
-              </h2>
-              <p className="text-left text-gray-600 dark:text-[var(--foreground-secondary)] mb-4 w-full">
-                Get started by setting up Sentry in your app to capture your first errors
-              </p>
-              <div
+        />
+
+        {/* Content Container */}
+        <div className="max-w-screen-xl mx-auto px-3 py-16 relative z-10">
+          <div className="flex flex-col lg:flex-row items-start gap-24">
+            {/* Left Column: Welcome Text + Search */}
+            <div className="flex-1 flex flex-col items-start justify-center max-w-[600px]">
+              <h1
+                className="font-bold mb-6 text-left"
                 style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(3, 70px)',
-                  rowGap: '12px',
-                  columnGap: '18px',
-                  justifyContent: 'center',
-                  alignContent: 'center',
+                  color: '#1a1a1a',
+                  fontWeight: 700,
+                  fontSize: '50px',
+                  lineHeight: 1.1,
                 }}
               >
-                {mostViewedSDKs.map(platform => (
-                  <Tooltip content={platform.title} key={platform.key}>
+                Welcome to Sentry docs
+              </h1>
+              <p
+                className="mb-10 text-left"
+                style={{
+                  color: '#3f3f46',
+                  lineHeight: '1.6',
+                  fontWeight: 400,
+                  fontSize: '18px',
+                }}
+              >
+                Sentry provides end-to-end distributed tracing, enabling developers to
+                identify and debug performance issues and errors across their systems and
+                services.
+              </p>
+              <div className="home-search-bar w-full max-w-lg">
+                <Search path="/" searchPlatforms={[]} useStoredSearchPlatforms={false} />
+              </div>
+            </div>
+
+            {/* Right Column: SDK Section (no card background) */}
+            <div className="flex-shrink-0 w-full lg:w-auto lg:max-w-[500px]">
+              <div>
+                <h2
+                  className="text-2xl font-bold mb-3 text-center"
+                  style={{
+                    color: '#1a1a1a',
+                    fontWeight: 700,
+                  }}
+                >
+                  The SDKs you probably care about
+                </h2>
+                <p
+                  className="text-center mb-8"
+                  style={{
+                    color: '#6b7280',
+                    fontSize: '0.95rem',
+                    lineHeight: '1.5',
+                  }}
+                >
+                  Get started by setting up Sentry in your app to capture your first errors
+                </p>
+                <div
+                  className="grid gap-5 mb-8"
+                  style={{
+                    gridTemplateColumns: 'repeat(3, 1fr)',
+                  }}
+                >
+                  {mostViewedSDKs.map(platform => (
                     <a
+                      key={platform.key}
                       href={platform.url}
+                      className="flex flex-col items-center justify-center bg-white transition-transform hover:scale-105"
                       style={{
-                        width: 70,
-                        height: 80,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'flex-start',
                         textDecoration: 'none',
-                        padding: 0,
-                        margin: 0,
+                        padding: '24px 16px',
+                        borderRadius: '8px',
+                        boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+                        aspectRatio: '1.5 / 1',
                       }}
                     >
                       <PlatformIcon
                         platform={platform.key}
-                        size={50}
+                        size={56}
                         format="lg"
-                        style={{margin: 0, display: 'block'}}
+                        style={{margin: 0, display: 'block', marginBottom: '10px'}}
                       />
                       <span
                         style={{
-                          marginTop: 6,
-                          fontSize: '0.85rem',
-                          color: '#6b7280',
-                          textAlign: 'center',
-                          width: '100%',
+                          color: '#1a1a1a',
+                          fontSize: '0.875rem',
                           fontWeight: 500,
-                          letterSpacing: 0.1,
-                          lineHeight: 1.1,
-                          display: 'block',
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
+                          textAlign: 'center',
                         }}
                       >
                         {platform.title}
                       </span>
                     </a>
-                  </Tooltip>
-                ))}
+                  ))}
+                </div>
+                <a
+                  href="#all-sdks"
+                  className="hover:underline font-bold text-center block uppercase tracking-wider"
+                  style={{
+                    color: '#8b5cf6',
+                    fontSize: '0.875rem',
+                    letterSpacing: '0.05em',
+                  }}
+                >
+                  GO TO ALL SDKS
+                </a>
               </div>
-              <a
-                href="#all-sdks"
-                className="text-accent-purple hover:underline font-medium text-base text-left block mt-2 w-full"
-              >
-                See all SDKs
-              </a>
             </div>
           </div>
         </div>
       </div>
       <div className="hero max-w-screen-xl mx-auto px-6 lg:px-8 py-2">
-        {/* Sentry Products Header */}
-        <h2 className="text-2xl mt-16 mb-6 font-medium">Sentry Features</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 py-8 md:items-start">
-          {/* Column 1: Sentry */}
-          <div>
-            <div className="flex items-center mb-4 gap-2 min-h-[32px]">
-              <PlatformIcon platform="sentry" size={24} format="lg" />
-              <a
-                href="/product/sentry/"
-                className="text-xl font-medium text-accent-purple hover:underline align-middle"
-              >
-                <h2 className="inline font-medium align-middle">
-                  Sentry Error Monitoring
-                </h2>
-              </a>
-            </div>
-            <p className="text-base text-left text-[var(--gray-12)] dark:text-[var(--gray-12)] pl-2 pr-4">
-              Monitor, identify, and resolve errors and performance issues across your
-              applications using
-              <a
-                href="/product/issues/"
-                className="text-accent-purple hover:underline"
-              >
-                {' '}error monitoring
-              </a>
-              ,
-              <a
-                href="/product/explore/trace-explorer/"
-                className="text-accent-purple hover:underline"
-              >
-                {' '}tracing
-              </a>
-              ,
-              <a
-                href="/product/explore/session-replay/"
-                className="text-accent-purple hover:underline"
-              >
-                {' '}session replay
-              </a>
-              , and
-              <a href="/product/" className="text-accent-purple hover:underline">
-                {' '}more
-              </a>
-              .
+        {/* Sentry Features Header */}
+        <h2 className="text-2xl mt-16 mb-6 font-medium">Sentry features</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 py-8">
+          {/* Errors */}
+          <div className="bg-white dark:bg-[var(--gray-2)] rounded-lg p-6 shadow-sm">
+            <h3 className="text-xl font-semibold mb-3 text-[var(--gray-12)]">Errors</h3>
+            <p className="text-base text-[var(--gray-11)]">
+              Monitor, identify, and resolve errors and performance issues across your applications.
             </p>
           </div>
-          {/* Column 2: AI in Sentry */}
-          <div>
-            <div className="flex items-center mb-4 gap-2 min-h-[32px]">
-              <PlatformIcon platform="sentry" size={24} format="lg" />
-              <a
-                href="/product/ai-in-sentry/"
-                className="text-xl font-medium text-accent-purple hover:underline align-middle"
-              >
-                <h2 className="inline font-medium align-middle">AI in Sentry</h2>
-              </a>
-            </div>
-            <p className="text-base text-left text-[var(--gray-12)] dark:text-[var(--gray-12)] pl-2 pr-4">
-              Fix code faster by having{' '}
-              <a
-                href="/product/ai-in-sentry/seer/"
-                className="text-accent-purple hover:underline"
-              >
-                Seer
-              </a>{' '}
-              automatically find and remedy the root cause of your issues. Ask{' '}
-              <a
-                href="/product/ai-in-sentry/sentry-prevent-ai/"
-                className="text-accent-purple hover:underline"
-              >
-                Sentry Prevent AI
-              </a>{' '}
-              to review your PRs, suggest improvements, and build tests.
+
+          {/* Session Replay */}
+          <div className="bg-white dark:bg-[var(--gray-2)] rounded-lg p-6 shadow-sm">
+            <h3 className="text-xl font-semibold mb-3 text-[var(--gray-12)]">Session Replay</h3>
+            <p className="text-base text-[var(--gray-11)]">
+              Get a video-like reproduction of what was happening in the user's browser before, during, and after the issue.
+            </p>
+          </div>
+
+          {/* Tracing */}
+          <div className="bg-white dark:bg-[var(--gray-2)] rounded-lg p-6 shadow-sm">
+            <h3 className="text-xl font-semibold mb-3 text-[var(--gray-12)]">Tracing</h3>
+            <p className="text-base text-[var(--gray-11)]">
+              Measure metrics like throughput and latency, and display the impact of errors across multiple systems.
+            </p>
+          </div>
+
+          {/* Logs */}
+          <div className="bg-white dark:bg-[var(--gray-2)] rounded-lg p-6 shadow-sm">
+            <h3 className="text-xl font-semibold mb-3 text-[var(--gray-12)]">Logs</h3>
+            <p className="text-base text-[var(--gray-11)]">
+              Our scalable efficiency helps you streamline operations. Designed for scalability and seamless integration, it's the future of growth hacking.
+            </p>
+          </div>
+
+          {/* Seer */}
+          <div className="bg-white dark:bg-[var(--gray-2)] rounded-lg p-6 shadow-sm">
+            <h3 className="text-xl font-semibold mb-3 text-[var(--gray-12)]">Seer</h3>
+            <p className="text-base text-[var(--gray-11)]">
+              Sentry's AI debugging agent. It uses Sentry's rich context to help you troubleshoot and fix errors and performance issues faster.
+            </p>
+          </div>
+
+          {/* Agent Monitoring */}
+          <div className="bg-white dark:bg-[var(--gray-2)] rounded-lg p-6 shadow-sm">
+            <h3 className="text-xl font-semibold mb-3 text-[var(--gray-12)]">Agent Monitoring</h3>
+            <p className="text-base text-[var(--gray-11)]">
+              Trace and debug your AI agent workflows, including agent runs, tool calls, and model interactions.
             </p>
           </div>
         </div>

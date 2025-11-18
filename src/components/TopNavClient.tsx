@@ -32,14 +32,14 @@ const productSections = [
 ];
 
 const mainSections = [
+  {label: 'SDKS', href: '/platforms/'},
   {
-    label: 'Products',
+    label: 'PRODUCTS',
     href: '/product/',
     dropdown: productSections,
   },
-  {label: 'SDKs', href: '/platforms/'},
   {
-    label: 'Concepts & Reference',
+    label: 'CONCEPTS',
     href: '/concepts/',
     dropdown: [
       {label: 'Key Terms', href: '/concepts/key-terms/'},
@@ -50,7 +50,7 @@ const mainSections = [
     ],
   },
   {
-    label: 'Admin',
+    label: 'ADMIN',
     href: '/organization/',
     dropdown: [
       {label: 'Account Settings', href: '/account/'},
@@ -59,7 +59,7 @@ const mainSections = [
     ],
   },
   {label: 'API', href: '/api/'},
-  {label: 'Security, Legal, & PII', href: '/security-legal-pii/'},
+  {label: 'SECURITY, LEGAL, & PII', href: '/security-legal-pii/'},
 ];
 
 // Add a helper hook for portal dropdown positioning
