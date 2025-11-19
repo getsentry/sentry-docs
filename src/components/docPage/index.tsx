@@ -137,9 +137,9 @@ export function DocPage({
         /* At toc breakpoint (1490px), constrain content to leave room for TOC */
         @media (min-width: 1490px) {
           #doc-content {
-            /* Calculate max width: viewport - sidebar - TOC - gaps - padding */
+            /* Calculate max width: available space - sidebar - TOC - gaps - padding */
             /* Leave room for: sidebar (300px) + TOC (250px) + gaps (48px) + padding (96px) */
-            max-width: calc(100vw - 300px - 250px - 48px - 96px);
+            max-width: calc(100% - 300px - 250px - 48px - 96px);
           }
         }
         @media (min-width: 2057px) {
