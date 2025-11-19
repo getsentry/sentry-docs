@@ -5,7 +5,7 @@ import imgLinks from '@pondorasti/remark-img-links';
 import {selectAll} from 'hast-util-select';
 import {createHash} from 'node:crypto';
 import {createReadStream, createWriteStream, existsSync} from 'node:fs';
-import {mkdir, opendir, readFile, rm, writeFile} from 'node:fs/promises';
+import {mkdir, opendir, readdir, readFile, rm, writeFile} from 'node:fs/promises';
 import {cpus} from 'node:os';
 import * as path from 'node:path';
 import {compose, Readable} from 'node:stream';
@@ -18,6 +18,7 @@ import {
   createBrotliCompress,
   createBrotliDecompress,
 } from 'node:zlib';
+import pLimit from 'p-limit';
 import rehypeParse from 'rehype-parse';
 import rehypeRemark from 'rehype-remark';
 import remarkGfm from 'remark-gfm';
@@ -58,7 +59,20 @@ async function uploadToCFR2(s3Client, relativePath, data) {
   return;
 }
 
-function taskFinishHandler({id, success, failedTasks}) {
+// Global set to track which cache files are used across all workers
+let globalUsedCacheFiles = null;
+
+function taskFinishHandler({id, success, failedTasks, usedCacheFiles}) {
+  // Collect cache files used by this worker into the global set
+  if (usedCacheFiles && globalUsedCacheFiles) {
+    console.log(`🔍 Worker[${id}]: returned ${usedCacheFiles.size} cache files.`);
+    usedCacheFiles.forEach(file => globalUsedCacheFiles.add(file));
+  } else {
+    console.warn(
+      `⚠️ Worker[${id}]: usedCacheFiles=${!!usedCacheFiles}, globalUsedCacheFiles=${!!globalUsedCacheFiles}`
+    );
+  }
+
   if (failedTasks.length === 0) {
     console.log(`✅ Worker[${id}]: converted ${success} files successfully.`);
     return false;
@@ -90,10 +104,19 @@ async function createWork() {
   const CACHE_DIR = path.join(root, '.next', 'cache', 'md-exports');
   console.log(`💰 Cache directory: ${CACHE_DIR}`);
   const noCache = !existsSync(CACHE_DIR);
+  let initialCacheFiles = [];
   if (noCache) {
     console.log(`ℹ️ No cache directory found, this will take a while...`);
     await mkdir(CACHE_DIR, {recursive: true});
+  } else {
+    initialCacheFiles = await readdir(CACHE_DIR);
+    console.log(
+      `📦 Cache directory has ${initialCacheFiles.length} files from previous build`
+    );
   }
+
+  // Track which cache files are used during this build
+  globalUsedCacheFiles = new Set();
 
   // On a 16-core machine, 8 workers were optimal (and slightly faster than 16)
   const numWorkers = Math.max(Math.floor(cpus().length / 2), 2);
@@ -175,12 +198,14 @@ async function createWork() {
     });
   });
   // The main thread can also process tasks -- That's 65% more bullet per bullet! -Cave Johnson
+  const mainThreadUsedFiles = new Set();
   workerPromises.push(
     processTaskList({
       id: workerTasks.length - 1,
       tasks: workerTasks[workerTasks.length - 1],
       cacheDir: CACHE_DIR,
       noCache,
+      usedCacheFiles: mainThreadUsedFiles,
     }).then(data => {
       if (taskFinishHandler(data)) {
         throw new Error(`Worker[${data.id}] had some errors.`);
@@ -190,13 +215,42 @@ async function createWork() {
 
   await Promise.all(workerPromises);
 
+  // Clean up unused cache files to prevent unbounded growth
+  if (!noCache) {
+    try {
+      const filesToDelete = initialCacheFiles.filter(
+        file => !globalUsedCacheFiles.has(file)
+      );
+      const overlaps = initialCacheFiles.filter(file => globalUsedCacheFiles.has(file));
+
+      console.log(`📊 Cache tracking stats:`);
+      console.log(`   - Files in cache dir (after build): ${initialCacheFiles.length}`);
+      console.log(`   - Files tracked as used: ${globalUsedCacheFiles.size}`);
+      console.log(`   - Files that existed and were used: ${overlaps.length}`);
+      console.log(`   - Files to delete (old/unused): ${filesToDelete.length}`);
+      console.log(`   - Expected after cleanup: ${overlaps.length} files`);
+
+      if (filesToDelete.length > 0) {
+        const limit = pLimit(50);
+        await Promise.all(
+          filesToDelete.map(file =>
+            limit(() => rm(path.join(CACHE_DIR, file), {force: true}))
+          )
+        );
+        console.log(`🧹 Cleaned up ${filesToDelete.length} unused cache files`);
+      }
+    } catch (err) {
+      console.warn('Failed to clean unused cache files:', err);
+    }
+  }
+
   console.log(`📄 Generated ${numFiles} markdown files from HTML.`);
   console.log('✅ Markdown export generation complete!');
 }
 
 const md5 = data => createHash('md5').update(data).digest('hex');
 
-async function genMDFromHTML(source, target, {cacheDir, noCache}) {
+async function genMDFromHTML(source, target, {cacheDir, noCache, usedCacheFiles}) {
   const leanHTML = (await readFile(source, {encoding: 'utf8'}))
     // Remove all script tags, as they are not needed in markdown
     // and they are not stable across builds, causing cache misses
@@ -209,6 +263,11 @@ async function genMDFromHTML(source, target, {cacheDir, noCache}) {
         compose(createReadStream(cacheFile), createBrotliDecompress())
       );
       await writeFile(target, data, {encoding: 'utf8'});
+
+      // Track that we used this cache file
+      if (usedCacheFiles) {
+        usedCacheFiles.add(cacheKey);
+      }
 
       return {cacheHit: true, data};
     } catch (err) {
@@ -304,10 +363,20 @@ async function genMDFromHTML(source, target, {cacheDir, noCache}) {
     ).catch(err => console.warn('Error writing cache file:', err)),
   ]);
 
+  // Track that we created this cache file
+  if (usedCacheFiles) {
+    usedCacheFiles.add(cacheKey);
+  }
+
   return {cacheHit: false, data};
 }
 
-async function processTaskList({id, tasks, cacheDir, noCache}) {
+async function processTaskList({id, tasks, cacheDir, noCache, usedCacheFiles}) {
+  // Workers don't receive usedCacheFiles in workerData, so create a new Set
+  if (!usedCacheFiles) {
+    usedCacheFiles = new Set();
+  }
+
   const s3Client = getS3Client();
   const failedTasks = [];
   let cacheMisses = [];
@@ -318,6 +387,7 @@ async function processTaskList({id, tasks, cacheDir, noCache}) {
       const {data, cacheHit} = await genMDFromHTML(sourcePath, targetPath, {
         cacheDir,
         noCache,
+        usedCacheFiles,
       });
       if (!cacheHit) {
         cacheMisses.push(relativePath);
@@ -345,6 +415,11 @@ async function processTaskList({id, tasks, cacheDir, noCache}) {
       `📤 Worker[${id}]: Updated the following files on R2: \n${r2CacheMisses.map(n => ` - ${n}`).join('\n')}`
     );
   }
+  const cacheHits = success - cacheMisses.length;
+  console.log(
+    `📈 Worker[${id}]: Cache stats: ${cacheHits} hits, ${cacheMisses.length} misses (${((cacheMisses.length / success) * 100).toFixed(1)}% miss rate)`
+  );
+
   if (cacheMisses.length / tasks.length > 0.1) {
     console.warn(`⚠️ Worker[${id}]: More than 10% cache miss rate during build.`);
   } else if (cacheMisses.length > 0) {
@@ -357,6 +432,7 @@ async function processTaskList({id, tasks, cacheDir, noCache}) {
     id,
     success,
     failedTasks,
+    usedCacheFiles,
   };
 }
 
