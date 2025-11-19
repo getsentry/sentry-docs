@@ -9,39 +9,39 @@ sidebar_order: 4
 
 For the common specification for the telemetry buffer, refer to the [Telemetry Buffer](/sdk/telemetry/telemetry-buffer/) page. This page describes the mobile-specific implementation of the telemetry buffer. The most important difference is that the mobile telemetry buffer is designed to minimize data loss when sudden process terminations occur, such as crashes or watchdog terminations.
 
-Each SDK environment is unique. Therefore, SDKs have three options to choose from to minimize data loss. As their number increases, the options get more complex. The first option is the simplest, and the last option is the most complicated. SDKs SHOULD implement the least complex option that is suitable for their environment.
+Each SDK environment is unique. Therefore, SDKs have three options to choose from to minimize data loss. As their number increases, the options get more complex. The first option is the simplest, and the last option is the most complicated. SDKs **SHOULD** implement the least complex option that is suitable for their environment.
 
 ## 1. Flush All Data
 
-When the SDK detects a sudden process termination, it MUST put all remaining items in the telemetry buffer into one envelope and flush it. If your SDK has an offline cache, it MAY flush the envelope to disk and skip sending it to Sentry, if it ensures to send the envelope the next time the SDK starts. The telemetry buffer MUST keep its existing logic described in the [Telemetry Buffer Specification](/sdk/telemetry/telemetry-buffer/#specification) page.
+When the SDK detects a sudden process termination, it **MUST** put all remaining items in the telemetry buffer into one envelope and flush it. If your SDK has an offline cache, it **MAY** flush the envelope to disk and skip sending it to Sentry, if it ensures to send the envelope the next time the SDK starts. The telemetry buffer **MUST** keep its existing logic described in the [Telemetry Buffer Specification](/sdk/telemetry/telemetry-buffer/#specification) page.
 
-Suppose your SDK can't reliably detect sudden process terminations, or it can't reliably flush envelopes to Sentry or disk when a sudden process termination happens. In that case, it SHOULD implement the [FileStream Cache](#2-filestream-cache) or the [DoubleRotatingBuffer](#3-doublerotatingbuffer). It's acceptable to start with this option as a best effort interim solution before adding one of the more complex options.
+Suppose your SDK can't reliably detect sudden process terminations, or it can't reliably flush envelopes to Sentry or disk when a sudden process termination happens. In that case, it **SHOULD** implement the [FileStream Cache](#2-filestream-cache) or the [DoubleRotatingBuffer](#3-doublerotatingbuffer). It's acceptable to start with this option as a best effort interim solution before adding one of the more complex options.
 
 ## 2. FileStream Cache
 
-SDKs for which blocking the main thread is a nogo, such as Android and Apple, SDKs MUST NOT implement this option. They SHOULD implement the [DoubleRotatingBuffer](#3-doublerotatingbuffer).
+SDKs for which blocking the main thread is a nogo, such as Android and Apple, SDKs **MUST NOT** implement this option. They **SHOULD** implement the [DoubleRotatingBuffer](#3-doublerotatingbuffer).
 
-With this option, the telemetry buffer stores the data on the calling thread directly to disk. The SDK SHOULD store the telemetry buffer files in a folder that is a sibling of the `envelopes` or `replay` folder, named `telemetry-buffer`. This folder is scoped per DSN, so SDKs ensure not mixing up data for different DSNs. In the `telemetry-buffer` folder, the SDK MUST store two types of cache files:
+With this option, the telemetry buffer stores the data on the calling thread directly to disk. The SDK **SHOULD** store the telemetry buffer files in a folder that is a sibling of the `envelopes` or `replay` folder, named `telemetry-buffer`. This folder is scoped per DSN, so SDKs ensure not mixing up data for different DSNs. In the `telemetry-buffer` folder, the SDK **MUST** store two types of cache files:
 
 - **`cache`** - The file the processor is actively writing to
 - **`flushing`** - The file being converted to an envelope and sent to Sentry
 
-When the timeout expires or the cache file hits the size limit, the telemetry buffer renames the `cache` file to `flushing`, creates a new `cache` file for incoming data, converts the data in the `flushing` file to an envelope, sends it to Sentry, and then deletes the `flushing` file. When the SDK starts again, it MUST check if there are any cache files in the cache directory (both `cache` and `flushing`) and if so, it MUST load the data from the files and send it to Sentry.
+When the timeout expires or the cache file hits the size limit, the telemetry buffer renames the `cache` file to `flushing`, creates a new `cache` file for incoming data, converts the data in the `flushing` file to an envelope, sends it to Sentry, and then deletes the `flushing` file. When the SDK starts again, it **MUST** check if there are any cache files in the cache directory (both `cache` and `flushing`) and if so, it **MUST** load the data from the files and send it to Sentry.
 
 
 ## 3. DoubleRotatingBuffer
 
-SDKs should only consider implementing this option when options [1](#1-flush-all-data) or [2](#2-filestream-cache) are insufficient to prevent data loss within their ecosystem. We recommend this option only if SDKs are unable to reliably detect sudden process terminations or consistently store envelopes to disk during such terminations.
+SDKs **SHOULD** only consider implementing this option when options [1](#1-flush-all-data) or [2](#2-filestream-cache) are insufficient to prevent data loss within their ecosystem. We recommend this option only if SDKs are unable to reliably detect sudden process terminations or consistently store envelopes to disk during such terminations.
 
 The telemetry buffer uses two buffers to minimize data loss in the event of an abnormal process termination:
 * **Crash-Safe List**: A list stored in a crash-safe space to prevent data loss during detectable abnormal process terminations.
 * **Async IO Cache**: When a process terminates without the SDK being able to detect it, the crash-safe list loses all its elements. Therefore, the telemetry buffer uses a second buffer, the async IO cache, that stores elements to disk on a background thread to avoid blocking the calling thread, which ensures minimal data loss when such terminations occur.
 
-As the telemetry buffer MUST prevent data loss during flushing, it uses a double-buffering solution. The crash-safe list has two lists `crash-safe-list-1` and `crash-safe-list-2`, and the async IO cache has two files `async-io-cache-1` and `async-io-cache-2`. When `crash-safe-list-1` is full, the telemetry buffer stores any new incoming items in `crash-safe-list-2` until it successfully stores items from `crash-safe-list-1` to disk as an envelope. Then it can delete items in `crash-safe-list-1`. The same applies to the async IO cache.
+As the telemetry buffer **MUST** prevent data loss during flushing, it uses a double-buffering solution. The crash-safe list has two lists `crash-safe-list-1` and `crash-safe-list-2`, and the async IO cache has two files `async-io-cache-1` and `async-io-cache-2`. When `crash-safe-list-1` is full, the telemetry buffer stores any new incoming items in `crash-safe-list-2` until it successfully stores items from `crash-safe-list-1` to disk as an envelope. Then it can delete items in `crash-safe-list-1`. The same applies to the async IO cache.
 
 ### Telemetry Buffer Files
 
-The SDK SHOULD store the telemetry buffer files in a folder that is a sibling of the `envelopes` or `replay` folder, named `telemetry-buffer`. This folder is scoped per DSN, so SDKs ensure not mixing up data for different DSNs. The `telemetry-buffer` folder MAY contain the following files:
+The SDK **SHOULD** store the telemetry buffer files in a folder that is a sibling of the `envelopes` or `replay` folder, named `telemetry-buffer`. This folder is scoped per DSN, so SDKs ensure not mixing up data for different DSNs. The `telemetry-buffer` folder **MAY** contain the following files:
 
 - `async-io-cache-1` and `async-io-cache-2` - The async IO cache files.
 - `detected-termination-x` - The file containing items from the crash-safe list from a previous detected abnormal termination.
@@ -69,11 +69,11 @@ The telemetry buffer stores the `envelope-x` not directly in the envelope cache 
 
 ### Abnormal Process Termination
 
-When SDKs detect an abnormal process termination, they MUST write the items in both `crash-safe-list-1` and `crash-safe-list-2` to the `detected-termination-x` file where `x` is the an increasing index of the file starting from 0.
+When SDKs detect an abnormal process termination, they **MUST** write the items in both `crash-safe-list-1` and `crash-safe-list-2` to the `detected-termination-x` file where `x` is the an increasing index of the file starting from 0.
 
 When the process terminates abnormally and the SDKs can't detect it, the SDKs lose items from the crash-safe lists, which we consider preferable to blocking the calling thread, which could be the main thread. However, the SDKs don't lose items from the async IO cache.
 
-So the SDK MAY lose items due to undetectable abnormal process terminations that occur immediately after receiving an item, but it won't lose items due to detectable abnormal process terminations.
+So the SDK **MAY** lose items due to undetectable abnormal process terminations that occur immediately after receiving an item, but it won't lose items due to detectable abnormal process terminations.
 
 ```
 // SDKs keep this log
@@ -92,7 +92,7 @@ allocateAllMemory();
 
 ### SDK Initialization
 
-Whenever the SDKs initialize, they MUST check if there is any data in the telemetry buffer folder that needs to be recovered. They MUST perform the following steps when initializing:
+Whenever the SDKs initialize, they **MUST** check if there is any data in the telemetry buffer folder that needs to be recovered. They **MUST** perform the following steps when initializing:
 
 1. Load all items from `async-io-cache-1`, `async-io-cache-2` and `detected-termination-x` into memory if they exist. When the application terminates normally, these files don't exist.
 2. Deduplicate the items based on the IDs of the items and store the deduplicated items in the `envelope-x` file.
@@ -102,7 +102,7 @@ Whenever the SDKs initialize, they MUST check if there is any data in the teleme
 
 ### SDK Closes
 
-Whenever the users closes the SDK or the application terminates normally, the telemetry buffer MUST perform the steps described in the [Flushing](#flushing) section and the SDK MUST delete all items in the `async-io-cache-1` and `async-io-cache-2` files.
+Whenever the users closes the SDK or the application terminates normally, the telemetry buffer **MUST** perform the steps described in the [Flushing](#flushing) section and the SDK **MUST** delete all items in the `async-io-cache-1` and `async-io-cache-2` files.
 
 ## Miscellaneous
 
