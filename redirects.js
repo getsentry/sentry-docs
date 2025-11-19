@@ -76,7 +76,7 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/telemetry/spans/batch-processor/',
-    destination: '/sdk/telemetry/telemetry-buffer/',
+    destination: '/sdk/telemetry/telemetry-buffer/batch-processor/',
   },
   {
     source: '/sdk/setup-wizards/:path*',
