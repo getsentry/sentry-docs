@@ -266,13 +266,18 @@ export function DynamicNav({
   const {path} = serverContext();
   const isActive = path.join('/').indexOf(root) === 0;
   const linkPath = `/${path.join('/')}/`;
+  const unversionedPath = getUnversionedPath(path, false);
+
+  // For platform sidebars (SDK documentation), we want to show a "Quick Start" link
+  // instead of making the section header itself selectable
+  const isPlatformSidebar = root.startsWith('platforms/');
 
   const header = (
     <SidebarLink
       href={`/${root}/`}
       title={title}
       collapsible={collapsible}
-      isActive={getUnversionedPath(path, false) === root}
+      isActive={!isPlatformSidebar && unversionedPath === root}
       topLevel
       data-sidebar-link
     />
@@ -283,6 +288,17 @@ export function DynamicNav({
       {header}
       {(!collapsible || isActive) && entity.children && (
         <ul data-sidebar-tree className="pl-3">
+          {isPlatformSidebar && (
+            <CollapsibleSidebarLink
+              to={`/${root}/`}
+              title="Quick Start"
+              collapsed={false}
+              path={linkPath}
+              key={`${root}-quickstart`}
+            >
+              {[]}
+            </CollapsibleSidebarLink>
+          )}
           <Children
             tree={entity.children}
             exclude={exclude}
