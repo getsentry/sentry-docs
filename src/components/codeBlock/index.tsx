@@ -1,7 +1,7 @@
 'use client';
 
 import {RefObject, useContext, useEffect, useLayoutEffect, useRef, useState} from 'react';
-import {Clipboard} from 'react-feather';
+import {Clipboard, ExternalLink} from 'react-feather';
 
 import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
 
@@ -17,6 +17,7 @@ export interface CodeBlockProps {
   filename?: string;
   language?: string;
   title?: string;
+  externalLink?: string;
 }
 
 /**
@@ -52,7 +53,7 @@ function getCopiableText(element: HTMLDivElement) {
   return text.trim();
 }
 
-export function CodeBlock({filename, language, children}: CodeBlockProps) {
+export function CodeBlock({filename, language, children, externalLink}: CodeBlockProps) {
   const [showCopied, setShowCopied] = useState(false);
   const codeRef = useRef<HTMLDivElement>(null);
   const codeContext = useContext(CodeContext);
@@ -139,6 +140,17 @@ export function CodeBlock({filename, language, children}: CodeBlockProps) {
           <button className={styles.copy} onClick={copyCodeOnClick}>
             <Clipboard size={16} />
           </button>
+        )}
+        {externalLink && (
+          <a
+            href={externalLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles.copy}
+            title="View Github Source"
+          >
+            <ExternalLink size={16} />
+          </a>
         )}
       </div>
       <div
