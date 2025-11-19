@@ -14,6 +14,13 @@ const ignoreListFile = path.join(dirname(import.meta.url), './ignore-list.txt');
 
 const showProgress = process.argv.includes('--progress');
 
+// Get the path filter if specified
+const pathFilterIndex = process.argv.indexOf('--path');
+const pathFilter =
+  pathFilterIndex !== -1 && process.argv[pathFilterIndex + 1]
+    ? trimSlashes(process.argv[pathFilterIndex + 1])
+    : null;
+
 // Paths to skip
 const ignoreList: string[] = readFileSync(fileURLToPath(ignoreListFile), 'utf8')
   .split('\n')
@@ -34,10 +41,15 @@ async function main() {
   const slugs = [...sitemap.matchAll(/<loc>([^<]*)<\/loc>/g)]
     .map(l => l[1])
     .map(url => trimSlashes(new URL(url).pathname))
-    .filter(Boolean);
+    .filter(Boolean)
+    .filter(slug => (pathFilter ? slug.startsWith(pathFilter) : true));
   const allSlugsSet = new Set(slugs);
 
-  console.log('Checking 404s on %d pages', slugs.length);
+  if (pathFilter) {
+    console.log('Checking 404s on %d pages in /%s', slugs.length, pathFilter);
+  } else {
+    console.log('Checking 404s on %d pages', slugs.length);
+  }
 
   const all404s: {page404s: Link[]; slug: string}[] = [];
 
@@ -50,7 +62,7 @@ async function main() {
     return pathnameSlug === '' || allSlugsSet.has(pathnameSlug);
   };
 
-  function shoudlSkipLink(href: string) {
+  function shouldSkipLink(href: string) {
     const isExternal = (href_: string) =>
       href_.startsWith('http') || href_.startsWith('mailto:');
     const isLocalhost = (href_: string) =>
@@ -68,7 +80,7 @@ async function main() {
   }
 
   async function is404(link: Link, pageUrl: URL): Promise<boolean> {
-    if (shoudlSkipLink(link.href)) {
+    if (shouldSkipLink(link.href)) {
       return false;
     }
 
