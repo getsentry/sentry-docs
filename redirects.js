@@ -610,6 +610,10 @@ const userDocsRedirects = [
     destination: '/platforms/python/:path*',
   },
   {
+    source: '/platforms/python/configuration/sampling/',
+    destination: '/platforms/python/sampling/',
+  },
+  {
     source: '/platforms/php/guides/laravel/other-versions/laravel8-10/usage/:path*',
     destination: '/platforms/php/guides/laravel/usage/:path*',
   },
