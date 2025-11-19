@@ -2,8 +2,8 @@
 
 import {useEffect, useState} from 'react';
 
-import {CodeTabs} from './codeTabs';
 import {CodeBlock} from './codeBlock';
+import {CodeTabs} from './codeTabs';
 import {codeToJsx} from './highlightCode';
 
 interface GitHubCodePreviewProps {
@@ -18,11 +18,11 @@ interface GitHubCodePreviewProps {
 
 interface ParsedGitHubUrl {
   owner: string;
-  repo: string;
-  ref: string;
   path: string;
-  startLine?: number;
+  ref: string;
+  repo: string;
   endLine?: number;
+  startLine?: number;
 }
 
 function parseGitHubUrl(url: string): ParsedGitHubUrl | null {
@@ -85,7 +85,10 @@ function getLanguageFromPath(path: string): string {
 async function fetchGitHubContent(parsed: ParsedGitHubUrl): Promise<string | null> {
   try {
     // Use GitHub raw content URL - encode path segments to handle special characters
-    const encodedPath = parsed.path.split('/').map(segment => encodeURIComponent(segment)).join('/');
+    const encodedPath = parsed.path
+      .split('/')
+      .map(segment => encodeURIComponent(segment))
+      .join('/');
     const rawUrl = `https://raw.githubusercontent.com/${encodeURIComponent(parsed.owner)}/${encodeURIComponent(parsed.repo)}/${encodeURIComponent(parsed.ref)}/${encodedPath}`;
 
     const response = await fetch(rawUrl);

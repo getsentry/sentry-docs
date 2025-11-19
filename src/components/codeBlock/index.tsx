@@ -14,10 +14,10 @@ import {updateElementsVisibilityForOptions} from '../onboarding';
 
 export interface CodeBlockProps {
   children: React.ReactNode;
+  externalLink?: string;
   filename?: string;
   language?: string;
   title?: string;
-  externalLink?: string;
 }
 
 /**

@@ -3,10 +3,10 @@ import {jsx, jsxs} from 'react/jsx-runtime';
 import {toJsxRuntime} from 'hast-util-to-jsx-runtime';
 import {Nodes} from 'hastscript/lib/create-h';
 import bash from 'refractor/lang/bash.js';
-import json from 'refractor/lang/json.js';
 import javascript from 'refractor/lang/javascript.js';
-import typescript from 'refractor/lang/typescript.js';
+import json from 'refractor/lang/json.js';
 import python from 'refractor/lang/python.js';
+import typescript from 'refractor/lang/typescript.js';
 import {refractor} from 'refractor/lib/core.js';
 
 refractor.register(bash);
