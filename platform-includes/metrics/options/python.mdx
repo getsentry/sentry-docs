@@ -2,15 +2,19 @@
 
 To filter metrics, or update them before they are sent to Sentry, you can use the `before_send_metric` option.
 
+The `before_send_metric` argument is a callback function that is called before a metric is emitted. If the callback returns `None`, the metric is not emitted. Attributes can also be updated in the callback function.
+
 ```python
 import sentry_sdk
 from sentry_sdk.types import Metric, Hint
 from typing import Optional
 
-def before_metric(metric: Metric, _hint: Hint) -> Optional[Metric]:
-    # Filter out all failed checkouts on the acme tenant
-    if metric["name"] == "checkout.failed" and metric["attributes"].get("tenant") == "acme":
+def before_metric(metric: Metric, _hint: Hint) -> Optional[Metric]:t
+    if metric["name"] == "removed-metric":
         return None
+
+    metric["attributes"]["extra"] = "foo"
+    del metric["attributes"]["release"]
 
     return metric
 
