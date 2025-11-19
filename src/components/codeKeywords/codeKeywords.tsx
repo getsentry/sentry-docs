@@ -23,11 +23,11 @@ export function makeKeywordsClickable(children: React.ReactNode) {
       arr.push(updatedChild);
       return arr;
     }
-    
+
     // Reset regex lastIndex before testing to avoid stale state from previous matches
     ORG_AUTH_TOKEN_REGEX.lastIndex = 0;
     KEYWORDS_REGEX.lastIndex = 0;
-    
+
     if (ORG_AUTH_TOKEN_REGEX.test(child)) {
       makeOrgAuthTokenClickable(arr, child);
     } else if (KEYWORDS_REGEX.test(child)) {
