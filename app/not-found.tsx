@@ -17,11 +17,19 @@ export default function NotFound() {
     // Track 404 metric
     if (window.location.pathname) {
       const path = window.location.pathname.split('/').filter(Boolean);
-      const refererType = document.referrer
-        ? document.referrer.includes(window.location.host)
-          ? 'internal'
-          : 'external'
-        : 'direct';
+      let refererType = 'direct';
+      
+      if (document.referrer) {
+        try {
+          const referrerUrl = new URL(document.referrer);
+          const currentUrl = new URL(window.location.href);
+          // Compare origins for exact match
+          refererType = referrerUrl.origin === currentUrl.origin ? 'internal' : 'external';
+        } catch (e) {
+          // Invalid referrer URL
+          refererType = 'external';
+        }
+      }
 
       DocMetrics.pageNotFound(path, refererType);
     }
