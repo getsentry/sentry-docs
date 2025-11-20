@@ -159,4 +159,3 @@ export type PageType =
   | 'contributing' // Contributing to docs
   | 'home' // Homepage
   | 'unknown'; // Fallback for unrecognized paths
-

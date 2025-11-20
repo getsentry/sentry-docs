@@ -5,8 +5,8 @@ import {Check, Clipboard} from 'react-feather';
 import styled from '@emotion/styled';
 import * as Sentry from '@sentry/nextjs';
 
-import {cleanCodeSnippet, useCleanSnippetInClipboard} from '../codeBlock';
 import {DocMetrics} from '../../metrics';
+import {cleanCodeSnippet, useCleanSnippetInClipboard} from '../codeBlock';
 
 type ChildrenItem = ReturnType<typeof Children.toArray>[number] | React.ReactNode;
 
@@ -102,10 +102,10 @@ export function HighlightBlock({
       setCopied(false);
       await navigator.clipboard.writeText(code);
       setCopied(true);
-      
+
       // Track highlight block snippet copy
       DocMetrics.snippetCopy(window.location.pathname, language, undefined);
-      
+
       setTimeout(() => setCopied(false), 1200);
     } catch (error) {
       Sentry.captureException(error);

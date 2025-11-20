@@ -57,13 +57,13 @@ export function CopyMarkdownButton({pathname}: CopyMarkdownButtonProps) {
       await navigator.clipboard.writeText(content);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-      
+
       // Track successful copy
       DocMetrics.copyPage(pathname, true);
     } catch (err) {
       setError(true);
       setTimeout(() => setError(false), 3000);
-      
+
       // Track failed copy
       DocMetrics.copyPage(pathname, false);
     } finally {
