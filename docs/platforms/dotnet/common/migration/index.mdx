@@ -6,6 +6,40 @@ sidebar_order: 8000
 
 Upgrading includes both breaking changes and new features.
 
+## Migrating to 6.x
+
+### .NET Target Framework Changes
+
+This release adds support for .NET 10 and drops support for `net8.0-android`, `net8.0-ios`, `net8.0-maccatalyst` and `net8.0-windows10.0.19041.0` ([#4461](https://github.com/getsentry/sentry-dotnet/pull/4461)).
+
+This release also adds support for v3 of the Android AssemblyStore format, which is used when publishing apps targeting `net10.0-android`, and drops support for the original AssemblyStore format that was used in .NET 8 (since the Sentry SDK no longer supports .NET 8 mobile targets).
+
+UWP support has also been dropped. Future efforts will likely focus on WinUI 3, in line with Microsoft's recommendations for building Windows UI apps. ([#4686](https://github.com/getsentry/sentry-dotnet/pull/4686))
+
+### Significant Changes in Behavior
+
+- Backpressure handling is now enabled by default, meaning that the SDK will monitor system health and reduce the sampling rate of events and transactions when the system is under load. When the system is determined to be healthy again, the sampling rates are returned to their original levels. This can be overridden using the [EnableBackpressureHandling](https://docs.sentry.io/platforms/dotnet/guides/aspnetcore/configuration/options/#EnableBackpressureHandling) option.
+
+- Captured [Http Client Errors](https://docs.sentry.io/platforms/dotnet/guides/aspnet/configuration/http-client-errors/) on .NET 5+ now include a full stack trace in order to improve Issue grouping. See [PR#4724](https://github.com/getsentry/sentry-dotnet/pull/4724) for more details.
+
+### Breaking Changes
+
+#### Changed APIs
+
+- `BreadcrumbLevel.Critical` has been renamed to `BreadcrumbLevel.Fatal` for consistency with the other Sentry SDKs
+- Spans and Transactions now implement `IDisposable` so that they can be used with `using` statements/declarations that will automatically finish the span with a status of OK when it passes out of scope, if it has not already been finished, to be consistent with `Activity` classes when using OpenTelemetry
+- SpanTracer and TransactionTracer are now `sealed`
+- CaptureFeedback now returns a `SentryId` and a `CaptureFeedbackResult` out parameter that indicate whether feedback was captured successfully and what the reason for failure was otherwise
+- ScopeExtensions.Populate is now internal and cannot be used from user code anymore. It was never intended to be part of the public API.
+- `SentryOptions.IsEnvironmentUser` now defaults to false on MAUI. The means the User.Name will no longer be set, by default, to the name of the device, to respect privacy by default. You can override this to reinstate the previous behavior, if needed.
+
+#### Removed APIs
+
+- Deprecated `Sentry.Azure.Functions.Worker` has been deprecated as very few people were using it and the functionality can easily be replaced with OpenTelemetry. We've replaced our integration with a sample showing how to do this using our OpenTelemetry package instead: https://github.com/getsentry/sentry-dotnet/tree/main/samples/Sentry.Samples.OpenTelemetry.AzureFunctions
+- `SentrySdk.CaptureUserFeedback` and all associated members have been removed. You should use the newer `SentrySdk.CaptureFeedback` instead.
+- We also removed the unusual constructor from `Sentry.Maui.BreadcrumbEvent` that had been marked as obsolete. That constructor expected a `IEnumerable<(string Key, string Value)>[]` argument (i.e. an array of IEnumerable of tuples). If you were using this constructor, you should instead use the alternate/simpler constructor that expects just an IEnumerable of tuples: `IEnumerable<(string Key, string Value)>`.
+
+
 ## Migrating to 4.x
 
 ### .NET Target Framework Changes
@@ -262,7 +296,7 @@ To align with other SDKs, the option is now named: `DiagnosticLogger`
 
 `SentryOptions` now take a string for `Dsn`:
 
-Before: `options.Dsn = new Dsn("..");`  
+Before: `options.Dsn = new Dsn("..");`
 After: `options.Dsn = "..";`
 
 #### `LogEntry` Became `Message`
