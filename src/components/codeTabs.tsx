@@ -126,9 +126,7 @@ export function CodeTabs({children}: CodeTabProps) {
     <Container ref={containerRef}>
       {showSigninNote(codeBlocks[selectedTabIndex]) && <SignInNote />}
       <TabBar>{buttons}</TabBar>
-      <CodeBlockWrapper data-sentry-mask>
-        {codeBlocks[selectedTabIndex]}
-      </CodeBlockWrapper>
+      <CodeBlockWrapper data-sentry-mask>{codeBlocks[selectedTabIndex]}</CodeBlockWrapper>
     </Container>
   );
 }
