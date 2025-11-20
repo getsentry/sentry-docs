@@ -1,4 +1,4 @@
-import {useMemo} from 'react';
+import React, {useMemo} from 'react';
 import {getMDXComponent} from 'mdx-bundler/client';
 import {Metadata} from 'next';
 import {notFound} from 'next/navigation';
@@ -9,6 +9,7 @@ import {ApiPage} from 'sentry-docs/components/apiPage';
 import {DocPage} from 'sentry-docs/components/docPage';
 import {Home} from 'sentry-docs/components/home';
 import {Include} from 'sentry-docs/components/include';
+import {PageLoadMetrics} from 'sentry-docs/components/pageLoadMetrics';
 import {PlatformContent} from 'sentry-docs/components/platformContent';
 import {
   DocNode,
@@ -28,7 +29,6 @@ import {
 import {mdxComponents} from 'sentry-docs/mdxComponents';
 import {PageType} from 'sentry-docs/metrics';
 import {setServerContext} from 'sentry-docs/serverContext';
-import {PageLoadMetrics} from 'sentry-docs/components/pageLoadMetrics';
 import {PaginationNavNode} from 'sentry-docs/types/paginationNavNode';
 import {stripVersion} from 'sentry-docs/versioning';
 
@@ -77,10 +77,10 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
 
   if (!params.path && !isDeveloperDocs) {
     return (
-      <>
+      <React.Fragment>
         <PageLoadMetrics pageType="home" />
         <Home />
-      </>
+      </React.Fragment>
     );
   }
 
@@ -134,7 +134,7 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
     // pass frontmatter tree into sidebar, rendered page + fm into middle, headers into toc
     const pageType = (params.path?.[0] as PageType) || 'unknown';
     return (
-      <>
+      <React.Fragment>
         <PageLoadMetrics
           pageType={pageType}
           attributes={{is_developer_docs: true}}
@@ -145,7 +145,7 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
           nextPage={nextPage}
           previousPage={previousPage}
         />
-      </>
+      </React.Fragment>
     );
   }
 
@@ -156,20 +156,20 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
       if (params.path.length === 2) {
         // API category page
         return (
-          <>
+          <React.Fragment>
             <PageLoadMetrics
               pageType="api"
               attributes={{api_category: category.slug}}
             />
             <ApiCategoryPage category={category} />
-          </>
+          </React.Fragment>
         );
       }
       const api = category.apis.find(a => a.slug === params.path?.[2]);
       if (api) {
         // Specific API endpoint page
         return (
-          <>
+          <React.Fragment>
             <PageLoadMetrics
               pageType="api"
               attributes={{
@@ -178,7 +178,7 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
               }}
             />
             <ApiPage api={api} />
-          </>
+          </React.Fragment>
         );
       }
     }
@@ -205,7 +205,7 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
   // pass frontmatter tree into sidebar, rendered page + fm into middle, headers into toc.
   const pageType = (params.path?.[0] as PageType) || 'unknown';
   return (
-    <>
+    <React.Fragment>
       <PageLoadMetrics
         pageType={pageType}
         attributes={{
@@ -220,7 +220,7 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
         nextPage={nextPage}
         previousPage={previousPage}
       />
-    </>
+    </React.Fragment>
   );
 }
 
