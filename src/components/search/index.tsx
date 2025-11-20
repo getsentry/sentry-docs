@@ -401,7 +401,7 @@ export function Search({
               <button
                 className={styles['sgs-expand-results-button']}
                 onClick={() => setShowOffsiteResults(true)}
-                onMouseOver={() => searchFor(query, {searchAllIndexes: true})}
+                onMouseOver={() => searchFor(query, {searchAllIndexes: true, skipMetrics: true})}
               >
                 Search <em>{query}</em> across all Sentry sites
               </button>
