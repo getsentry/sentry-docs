@@ -5,6 +5,7 @@ import {Button} from '@radix-ui/themes';
 
 import {Header} from 'sentry-docs/components/header';
 import {Search} from 'sentry-docs/components/search';
+import {DocMetrics} from 'sentry-docs/metrics';
 
 export default function NotFound() {
   const [pathname, setPathname] = useState('');
@@ -12,6 +13,18 @@ export default function NotFound() {
   useEffect(() => {
     setPathname(window.location.pathname);
     setHost(window.location.host);
+
+    // Track 404 metric
+    if (window.location.pathname) {
+      const path = window.location.pathname.split('/').filter(Boolean);
+      const refererType = document.referrer
+        ? document.referrer.includes(window.location.host)
+          ? 'internal'
+          : 'external'
+        : 'direct';
+
+      DocMetrics.pageNotFound(path, refererType);
+    }
   }, []);
   const brokenUrl = `${host}${pathname}`;
   const reportUrl = `https://github.com/getsentry/sentry-docs/issues/new?template=issue-platform-404.yml&title=🔗 404 Error&url=${brokenUrl}`;

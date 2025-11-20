@@ -26,6 +26,7 @@ import {
   getVersionsFromDoc,
 } from 'sentry-docs/mdx';
 import {mdxComponents} from 'sentry-docs/mdxComponents';
+import {DocMetrics, PageType} from 'sentry-docs/metrics';
 import {setServerContext} from 'sentry-docs/serverContext';
 import {PaginationNavNode} from 'sentry-docs/types/paginationNavNode';
 import {stripVersion} from 'sentry-docs/versioning';
@@ -74,6 +75,7 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
   });
 
   if (!params.path && !isDeveloperDocs) {
+    DocMetrics.pageLoad('home');
     return <Home />;
   }
 
@@ -123,6 +125,13 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
       throw e;
     }
     const {mdxSource, frontMatter} = doc;
+
+    // Track developer docs page load
+    const pageType = (params.path?.[0] as PageType) || 'unknown';
+    DocMetrics.pageLoad(pageType, {
+      is_developer_docs: true,
+    });
+
     // pass frontmatter tree into sidebar, rendered page + fm into middle, headers into toc
     return (
       <MDXLayoutRenderer
@@ -139,10 +148,19 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
     const category = categories.find(c => c.slug === params?.path?.[1]);
     if (category) {
       if (params.path.length === 2) {
+        // API category page
+        DocMetrics.pageLoad('api', {
+          api_category: category.slug,
+        });
         return <ApiCategoryPage category={category} />;
       }
       const api = category.apis.find(a => a.slug === params.path?.[2]);
       if (api) {
+        // Specific API endpoint page
+        DocMetrics.pageLoad('api', {
+          api_category: category.slug,
+          api_endpoint: api.slug,
+        });
         return <ApiPage api={api} />;
       }
     }
@@ -165,6 +183,14 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
   // collect versioned files
   const allFm = await getDocsFrontMatter();
   const versions = getVersionsFromDoc(allFm, pageNode.path);
+
+  // Track standard docs page load
+  const pageType = (params.path?.[0] as PageType) || 'unknown';
+  DocMetrics.pageLoad(pageType, {
+    has_platform_content: params.path?.[0] === 'platforms',
+    is_versioned: pageNode.path.includes('__v'),
+    has_versions: versions && versions.length > 0,
+  });
 
   // pass frontmatter tree into sidebar, rendered page + fm into middle, headers into toc.
   return (
