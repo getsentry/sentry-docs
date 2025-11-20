@@ -1,13 +1,5 @@
 'use client';
-import {
-  Fragment,
-  Ref,
-  startTransition,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import {Fragment, Ref, useEffect, useMemo, useRef, useState} from 'react';
 import {Combobox, ComboboxItem, ComboboxList, ComboboxProvider} from '@ariakit/react';
 import {CaretRightIcon, CaretSortIcon, MagnifyingGlassIcon} from '@radix-ui/react-icons';
 import * as RadixSelect from '@radix-ui/react-select';
@@ -95,12 +87,21 @@ export function PlatformSelector({
 
   const router = useRouter();
   const onPlatformChange = (platformKey: string) => {
-    const platform_ = platformsAndGuides.find(
-      platform => platform.key === platformKey.replace('-redirect', '')
-    );
-    if (platform_) {
-      localStorage.setItem('active-platform', platform_.key);
-      router.push(platform_.url);
+    const cleanKey = platformKey.replace('-redirect', '');
+    let targetPlatform = platformsAndGuides.find(platform => platform.key === cleanKey);
+
+    // Special handling for JavaScript: when platform "javascript" is selected,
+    // redirect to the real browser guide "javascript.browser" instead
+    if (cleanKey === 'javascript' && targetPlatform?.type === 'platform') {
+      const browserGuide = platformsAndGuides.find(p => p.key === 'javascript.browser');
+      if (browserGuide) {
+        targetPlatform = browserGuide;
+      }
+    }
+
+    if (targetPlatform) {
+      localStorage.setItem('active-platform', targetPlatform.key);
+      router.push(targetPlatform.url);
     }
   };
 
@@ -114,9 +115,18 @@ export function PlatformSelector({
   }, [open]);
 
   const [storedPlatformKey, setStoredPlatformKey] = useState<string | null>(null);
-  const storedPlatform = platformsAndGuides.find(
+  let storedPlatform = platformsAndGuides.find(
     platform => platform.key === storedPlatformKey
   );
+
+  // Handle stored JavaScript platform: redirect to browser guide
+  if (storedPlatformKey === 'javascript' && storedPlatform?.type === 'platform') {
+    const browserGuide = platformsAndGuides.find(p => p.key === 'javascript.browser');
+    if (browserGuide) {
+      storedPlatform = browserGuide;
+    }
+  }
+
   useEffect(() => {
     if (currentPlatformKey) {
       localStorage.setItem('active-platform', currentPlatformKey);
@@ -142,7 +152,7 @@ export function PlatformSelector({
     <div>
       <RadixSelect.Root
         defaultValue={currentPlatformKey}
-        value={showStoredPlatform ? storedPlatformKey : undefined}
+        value={showStoredPlatform ? storedPlatform?.key : undefined}
         onValueChange={onPlatformChange}
         open={open}
         onOpenChange={setOpen}
@@ -151,7 +161,7 @@ export function PlatformSelector({
           open={open}
           setOpen={setOpen}
           includesBaseElement={false}
-          setValue={v => startTransition(() => setSearchValue(v))}
+          setValue={setSearchValue}
         >
           <RadixSelect.Trigger aria-label="Platform" className={styles.select}>
             <RadixSelect.Value placeholder="Choose your SDK" />
@@ -242,7 +252,7 @@ export function PlatformSelector({
           </RadixSelect.Content>
         </ComboboxProvider>
       </RadixSelect.Root>
-      {showStoredPlatform && (
+      {showStoredPlatform && storedPlatform && (
         <div className="mt-3">
           <SidebarLink
             href={storedPlatform.url}
