@@ -251,7 +251,7 @@ Write events to disk before attempting to send, so that they can be retried in t
 
 ### Dealing With Network Failures
 
-When SDKs receive an `HTTP 2xx` status code response from Sentry, they **MUST** consider it as a successful send. If Sentry returns a `HTTP 4xx or 5xx` status code, SDKs **MUST** discard the envelope and record a [client report](/sdk/telemetry/client-reports) with the discard reason `send_error`. SDKs **MAY** retry sending the envelope when a network error occurs, such as:
+When SDKs receive an `HTTP 2xx` status code response from Sentry, they **MUST** consider it as a successful send. If Sentry returns an `HTTP 4xx` (excluding `HTTP 429`) or `HTTP 5xx` status code, SDKs **MUST** discard the envelope and record a [client report](/sdk/telemetry/client-reports) with the discard reason `send_error`. For an `HTTP 429` response, SDKs **MUST** apply the [rate limiting](/sdk/expected-features/rate-limiting/) rules, discard the envelope without recording a client report, and drop any subsequent events during the backoff period with the [`ratelimit_backoff`](/sdk/telemetry/client-reports/#discard-reasons) discard reason. SDKs **MAY** retry sending the envelope when a network error occurs, such as:
 
 * Connection timeout
 * DSN resolution failure
