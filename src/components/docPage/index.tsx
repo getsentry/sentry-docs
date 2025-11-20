@@ -134,6 +134,19 @@ export function DocPage({
           max-width: none;
           box-sizing: border-box;
         }
+        /* Mobile responsive styles */
+        @media (max-width: 768px) {
+          .main-content {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: hidden;
+          }
+          #doc-content {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: hidden;
+          }
+        }
         /* At toc breakpoint (1490px), constrain content to leave room for TOC */
         @media (min-width: 1490px) {
           #doc-content {
