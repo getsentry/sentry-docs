@@ -10,3 +10,31 @@ To enable logging, you need to initialize the SDK with the `enable_logs` option 
 // Somewhere at the end of your execution, you should flush the logger to send pending logs to Sentry.
 \Sentry\logger()->flush();
 ```
+
+## Using with Monolog
+
+If you're already using [Monolog](https://github.com/Seldaek/monolog), you can use the `\Sentry\Monolog\LogsHandler` to send logs directly through your existing logging setup:
+
+```php
+use Monolog\Level;
+use Monolog\Logger;
+
+\Sentry\init([
+    'dsn' => '___PUBLIC_DSN___',
+    'enable_logs' => true,
+]);
+
+$log = new Logger('app');
+$log->pushHandler(new \Sentry\Monolog\LogsHandler(
+    hub: \Sentry\SentrySdk::getCurrentHub(),
+    level: Level::Info,
+));
+
+// Your existing Monolog usage will now send logs to Sentry
+$log->info('Application started');
+
+// Don't forget to flush
+\Sentry\logger()->flush();
+```
+
+For more details, see the [Monolog integration documentation](/platforms/php/integrations/monolog/#logs).
