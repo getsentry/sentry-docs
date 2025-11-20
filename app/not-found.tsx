@@ -18,13 +18,14 @@ export default function NotFound() {
     if (window.location.pathname) {
       const path = window.location.pathname.split('/').filter(Boolean);
       let refererType: 'internal' | 'external' | 'direct' = 'direct';
-      
+
       if (document.referrer) {
         try {
           const referrerUrl = new URL(document.referrer);
           const currentUrl = new URL(window.location.href);
           // Compare origins for exact match
-          refererType = referrerUrl.origin === currentUrl.origin ? 'internal' : 'external';
+          refererType =
+            referrerUrl.origin === currentUrl.origin ? 'internal' : 'external';
         } catch (e) {
           // Invalid referrer URL
           refererType = 'external';
