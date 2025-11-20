@@ -23,6 +23,8 @@ jobs:
               - 'docs/**'
               - 'includes/**'
               - 'platform-includes/**'
+              - 'scripts/lint-404s/**'
+              - 'app/api/source-map/**'
             dev-docs:
               - 'develop-docs/**'
       - uses: oven-sh/setup-bun@v2
@@ -30,26 +32,49 @@ jobs:
           bun-version: latest
 
       - uses: actions/cache@v4
-        id: cache
+        id: cache-node-modules
         with:
           path: |
             ${{ github.workspace }}/node_modules
-            ${{ github.workspace }}/.next/cache
             ${{ github.workspace }}/.eslintcache
-          key: node-${{ runner.os }}-${{ steps.setup-node.outputs.node-version }}-${{ hashFiles('**/yarn.lock') }}
+          key: node-modules-${{ runner.os }}-${{ steps.setup-node.outputs.node-version }}-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
-            node-${{ runner.os }}-${{ steps.setup-node.outputs.node-version }}-
+            node-modules-${{ runner.os }}-${{ steps.setup-node.outputs.node-version }}-
+
+      # Cache the Next.js build output to avoid rebuilding when docs content changes
+      # Separate caches for docs and dev-docs since they produce different outputs
+      - uses: actions/cache@v4
+        id: cache-nextjs-docs
+        if: steps.filter.outputs.docs == 'true'
+        with:
+          path: |
+            ${{ github.workspace }}/.next
+          key: nextjs-build-docs-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}-${{ hashFiles('src/**', 'app/**', 'next.config.ts', 'tsconfig.json', 'tailwind.config.mjs') }}
+          restore-keys: |
+            nextjs-build-docs-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}-
+            nextjs-build-docs-${{ runner.os }}-
+
+      - uses: actions/cache@v4
+        id: cache-nextjs-dev-docs
+        if: steps.filter.outputs.dev-docs == 'true'
+        with:
+          path: |
+            ${{ github.workspace }}/.next
+          key: nextjs-build-dev-docs-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}-${{ hashFiles('src/**', 'app/**', 'next.config.ts', 'tsconfig.json', 'tailwind.config.mjs') }}
+          restore-keys: |
+            nextjs-build-dev-docs-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}-
+            nextjs-build-dev-docs-${{ runner.os }}-
 
       - run: yarn install --frozen-lockfile
 
       - run: yarn next build
-        if: steps.filter.outputs.docs == 'true'
+        if: steps.filter.outputs.docs == 'true' && steps.cache-nextjs-docs.outputs.cache-hit != 'true'
         env:
           SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
           NEXT_PUBLIC_SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
 
       - run: yarn build:developer-docs
-        if: steps.filter.outputs.dev-docs == 'true'
+        if: steps.filter.outputs.dev-docs == 'true' && steps.cache-nextjs-dev-docs.outputs.cache-hit != 'true'
         env:
           SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
           NEXT_PUBLIC_SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
