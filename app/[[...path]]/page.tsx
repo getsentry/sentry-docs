@@ -26,8 +26,9 @@ import {
   getVersionsFromDoc,
 } from 'sentry-docs/mdx';
 import {mdxComponents} from 'sentry-docs/mdxComponents';
-import {DocMetrics, PageType} from 'sentry-docs/metrics';
+import {PageType} from 'sentry-docs/metrics';
 import {setServerContext} from 'sentry-docs/serverContext';
+import {PageLoadMetrics} from 'sentry-docs/components/pageLoadMetrics';
 import {PaginationNavNode} from 'sentry-docs/types/paginationNavNode';
 import {stripVersion} from 'sentry-docs/versioning';
 
@@ -75,8 +76,12 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
   });
 
   if (!params.path && !isDeveloperDocs) {
-    DocMetrics.pageLoad('home');
-    return <Home />;
+    return (
+      <>
+        <PageLoadMetrics pageType="home" />
+        <Home />
+      </>
+    );
   }
 
   const pageNode = nodeForPath(rootNode, params.path ?? '');
@@ -126,20 +131,21 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
     }
     const {mdxSource, frontMatter} = doc;
 
-    // Track developer docs page load
-    const pageType = (params.path?.[0] as PageType) || 'unknown';
-    DocMetrics.pageLoad(pageType, {
-      is_developer_docs: true,
-    });
-
     // pass frontmatter tree into sidebar, rendered page + fm into middle, headers into toc
+    const pageType = (params.path?.[0] as PageType) || 'unknown';
     return (
-      <MDXLayoutRenderer
-        mdxSource={mdxSource}
-        frontMatter={frontMatter}
-        nextPage={nextPage}
-        previousPage={previousPage}
-      />
+      <>
+        <PageLoadMetrics
+          pageType={pageType}
+          attributes={{is_developer_docs: true}}
+        />
+        <MDXLayoutRenderer
+          mdxSource={mdxSource}
+          frontMatter={frontMatter}
+          nextPage={nextPage}
+          previousPage={previousPage}
+        />
+      </>
     );
   }
 
@@ -149,19 +155,31 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
     if (category) {
       if (params.path.length === 2) {
         // API category page
-        DocMetrics.pageLoad('api', {
-          api_category: category.slug,
-        });
-        return <ApiCategoryPage category={category} />;
+        return (
+          <>
+            <PageLoadMetrics
+              pageType="api"
+              attributes={{api_category: category.slug}}
+            />
+            <ApiCategoryPage category={category} />
+          </>
+        );
       }
       const api = category.apis.find(a => a.slug === params.path?.[2]);
       if (api) {
         // Specific API endpoint page
-        DocMetrics.pageLoad('api', {
-          api_category: category.slug,
-          api_endpoint: api.slug,
-        });
-        return <ApiPage api={api} />;
+        return (
+          <>
+            <PageLoadMetrics
+              pageType="api"
+              attributes={{
+                api_category: category.slug,
+                api_endpoint: api.slug,
+              }}
+            />
+            <ApiPage api={api} />
+          </>
+        );
       }
     }
   }
@@ -184,22 +202,25 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
   const allFm = await getDocsFrontMatter();
   const versions = getVersionsFromDoc(allFm, pageNode.path);
 
-  // Track standard docs page load
-  const pageType = (params.path?.[0] as PageType) || 'unknown';
-  DocMetrics.pageLoad(pageType, {
-    has_platform_content: params.path?.[0] === 'platforms',
-    is_versioned: pageNode.path.includes('__v'),
-    has_versions: versions && versions.length > 0,
-  });
-
   // pass frontmatter tree into sidebar, rendered page + fm into middle, headers into toc.
+  const pageType = (params.path?.[0] as PageType) || 'unknown';
   return (
-    <MDXLayoutRenderer
-      mdxSource={mdxSource}
-      frontMatter={{...frontMatter, versions}}
-      nextPage={nextPage}
-      previousPage={previousPage}
-    />
+    <>
+      <PageLoadMetrics
+        pageType={pageType}
+        attributes={{
+          has_platform_content: params.path?.[0] === 'platforms',
+          is_versioned: pageNode.path.includes('__v'),
+          has_versions: versions && versions.length > 0,
+        }}
+      />
+      <MDXLayoutRenderer
+        mdxSource={mdxSource}
+        frontMatter={{...frontMatter, versions}}
+        nextPage={nextPage}
+        previousPage={previousPage}
+      />
+    </>
   );
 }
 

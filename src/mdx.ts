@@ -633,10 +633,31 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
       assetsCacheDir = path.join(CACHE_DIR, cacheKey);
 
       try {
+        const cacheStartTime = Date.now();
         const [cached, _] = await Promise.all([
           readCacheFile<SlugFile>(cacheFile),
           cp(assetsCacheDir, outdir, {recursive: true}),
         ]);
+
+        // Track cache hit metrics
+        if (typeof window === 'undefined') {
+          const cacheReadDuration = Date.now() - cacheStartTime;
+          const fileSizeKb = Buffer.byteLength(source, 'utf8') / 1024;
+          const hasImages =
+            source.includes('.png') ||
+            source.includes('.jpg') ||
+            source.includes('.jpeg') ||
+            source.includes('.svg') ||
+            source.includes('.gif');
+
+          DocMetrics.mdxCompile(cacheReadDuration, {
+            cached: true,
+            file_size_kb: Math.round(fileSizeKb),
+            has_images: hasImages,
+            slug_prefix: slug.split('/')[0],
+          });
+        }
+
         return cached;
       } catch (err) {
         if (
@@ -770,7 +791,7 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
     throw e;
   });
 
-  // Track MDX compilation metrics (server-side only)
+  // Track MDX compilation metrics for cache miss (server-side only)
   const compilationDuration = Date.now() - compilationStart;
   if (typeof window === 'undefined') {
     const fileSizeKb = Buffer.byteLength(source, 'utf8') / 1024;
@@ -782,7 +803,7 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
       source.includes('.gif');
 
     DocMetrics.mdxCompile(compilationDuration, {
-      cached: !!cacheFile,
+      cached: false, // This path only reached on cache miss
       file_size_kb: Math.round(fileSizeKb),
       has_images: hasImages,
       slug_prefix: slug.split('/')[0], // First path segment for grouping
