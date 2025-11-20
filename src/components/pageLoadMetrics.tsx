@@ -20,4 +20,3 @@ export function PageLoadMetrics({pageType, attributes = {}}: PageLoadMetricsProp
 
   return null;
 }
-

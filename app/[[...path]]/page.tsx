@@ -135,10 +135,7 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
     const pageType = (params.path?.[0] as PageType) || 'unknown';
     return (
       <Fragment>
-        <PageLoadMetrics
-          pageType={pageType}
-          attributes={{is_developer_docs: true}}
-        />
+        <PageLoadMetrics pageType={pageType} attributes={{is_developer_docs: true}} />
         <MDXLayoutRenderer
           mdxSource={mdxSource}
           frontMatter={frontMatter}
@@ -157,10 +154,7 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
         // API category page
         return (
           <Fragment>
-            <PageLoadMetrics
-              pageType="api"
-              attributes={{api_category: category.slug}}
-            />
+            <PageLoadMetrics pageType="api" attributes={{api_category: category.slug}} />
             <ApiCategoryPage category={category} />
           </Fragment>
         );
