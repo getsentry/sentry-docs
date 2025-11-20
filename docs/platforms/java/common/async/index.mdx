@@ -65,6 +65,32 @@ class AsyncWebMvcConfiguration implements WebMvcConfigurer {
 }
 ```
 
+```java {tabTitle:Java (Spring 7)}
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.task.AsyncTaskExecutor;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.web.servlet.config.annotation.AsyncSupportConfigurer;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+import io.sentry.spring7.SentryTaskDecorator;
+
+@Configuration
+class AsyncWebMvcConfiguration implements WebMvcConfigurer {
+
+    @Override
+    public void configureAsyncSupport(AsyncSupportConfigurer configurer) {
+        configurer.setTaskExecutor(asyncExecutor());
+    }
+
+    private AsyncTaskExecutor asyncExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setTaskDecorator(new SentryTaskDecorator());
+        executor.initialize();
+        return executor;
+    }
+}
+```
+
 ```kotlin {tabTitle:Kotlin (Spring 5)}
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.task.AsyncTaskExecutor
@@ -97,6 +123,30 @@ import org.springframework.web.servlet.config.annotation.AsyncSupportConfigurer
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 
 import io.sentry.spring.jakarta.SentryTaskDecorator
+
+@Configuration
+class AsyncWebMvcConfiguration : WebMvcConfigurer {
+    override fun configureAsyncSupport(configurer: AsyncSupportConfigurer) {
+        configurer.setTaskExecutor(asyncExecutor())
+    }
+
+    private fun asyncExecutor(): AsyncTaskExecutor {
+        val executor = ThreadPoolTaskExecutor()
+        executor.setTaskDecorator(SentryTaskDecorator())
+        executor.initialize()
+        return executor
+    }
+}
+```
+
+```kotlin {tabTitle:Kotlin (Spring 7)}
+import org.springframework.context.annotation.Configuration
+import org.springframework.core.task.AsyncTaskExecutor
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
+import org.springframework.web.servlet.config.annotation.AsyncSupportConfigurer
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
+
+import io.sentry.spring7.SentryTaskDecorator
 
 @Configuration
 class AsyncWebMvcConfiguration : WebMvcConfigurer {
@@ -149,6 +199,22 @@ class SentryConfig {
 }
 ```
 
+```java {tabTitle:Java (Spring 7)}
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import io.sentry.spring7.SentryTaskDecorator;
+
+@Configuration
+class SentryConfig {
+
+    @Bean
+    public SentryTaskDecorator sentryTaskDecorator() {
+        return new SentryTaskDecorator();
+    }
+}
+```
+
 ```kotlin {tabTitle:Kotlin (Spring 5)}
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -168,6 +234,20 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 import io.sentry.spring.jakarta.SentryTaskDecorator
+
+@Configuration
+class SentryConfig {
+
+    @Bean
+    fun sentryTaskDecorator() = SentryTaskDecorator()
+}
+```
+
+```kotlin {tabTitle:Kotlin (Spring 7)}
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+
+import io.sentry.spring7.SentryTaskDecorator
 
 @Configuration
 class SentryConfig {
@@ -225,6 +305,27 @@ class AsyncMethodConfiguration extends AsyncConfigurerSupport {
 }
 ```
 
+```java {tabTitle:Java (Spring 7)}
+import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.AsyncConfigurerSupport;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+
+import io.sentry.spring7.SentryTaskDecorator;
+
+import java.util.concurrent.Executor;
+
+@Configuration
+class AsyncMethodConfiguration extends AsyncConfigurerSupport {
+    @Override
+    public Executor getAsyncExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setTaskDecorator(new SentryTaskDecorator());
+        executor.initialize();
+        return executor;
+    }
+}
+```
+
 ```kotlin {tabTitle:Kotlin (Spring 5)}
 import org.springframework.context.annotation.Configuration
 import org.springframework.scheduling.annotation.AsyncConfigurerSupport
@@ -251,6 +352,26 @@ import org.springframework.scheduling.annotation.AsyncConfigurerSupport
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
 
 import io.sentry.spring.jakarta.SentryTaskDecorator
+
+import java.util.concurrent.Executor
+
+@Configuration
+class AsyncMethodConfiguration : AsyncConfigurerSupport() {
+    override fun getAsyncExecutor(): Executor {
+        val executor = ThreadPoolTaskExecutor()
+        executor.setTaskDecorator(SentryTaskDecorator())
+        executor.initialize()
+        return executor
+    }
+}
+```
+
+```kotlin {tabTitle:Kotlin (Spring 7)}
+import org.springframework.context.annotation.Configuration
+import org.springframework.scheduling.annotation.AsyncConfigurerSupport
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
+
+import io.sentry.spring7.SentryTaskDecorator
 
 import java.util.concurrent.Executor
 
