@@ -17,7 +17,7 @@ export default function NotFound() {
     // Track 404 metric
     if (window.location.pathname) {
       const path = window.location.pathname.split('/').filter(Boolean);
-      let refererType = 'direct';
+      let refererType: 'internal' | 'external' | 'direct' = 'direct';
       
       if (document.referrer) {
         try {
