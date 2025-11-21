@@ -160,17 +160,7 @@ You can pass the following keyword arguments to `LoggingIntegration()`:
 - `event_level` (default `ERROR`): The Sentry Python SDK will report log records with a level higher than or equal to `event_level` as events as long as the logger itself is set to output records of those log levels (see note below). If a value of `None` occurs, the SDK won't send log records as events.
 
 
-<Alert title="Note">
 
-The Sentry Python SDK will honor the configured level of each logger (set with `logger.setLevel(level)` or `logging.basicConfig(level=level)`). That means that you will not see any `INFO` or `DEBUG` events from a logger with the level set to `WARNING`, regardless of how you configure the integration. If not set explicitly, the logging level defaults to `WARNING`.
-
-</Alert>
-
-<Alert title="Logs are not sent to Sentry?">
-
-Some frameworks, such as `uvicorn`, may reset or override your `logging` configuration. To ensure your log level is applied and logs at or above the configured level are picked up by the SDK, you can use the `force=True` flag when configuring your log level. For example `logger.setLevel(level, force=True)` and `logging.basicConfig(level=level, force=True)`.
-
-</Alert>
 
 ## Ignoring a logger
 
@@ -195,3 +185,15 @@ Instead of using `LoggingIntegration`, you can use two regular logging `logging.
 **Usually, you don't need this.** You _can_ use this together with `default_integrations=False` if you want to opt into what the Sentry Python SDK captures. However, correctly setting up logging is difficult. Also, an opt-in approach to capture data will miss errors you may not think of on your own.
 
 See the [API documentation](https://getsentry.github.io/sentry-python/integrations.html#module-sentry_sdk.integrations.logging) for more information.
+
+## Troubleshooting
+
+<Expandable title="Logs not appearing in Sentry">
+
+  First, make sure you have the `enable_logs=True` option in your `sentry_sdk.init()` and you're on the latest version of the SDK.
+
+  The SDK will honor the configured level of each logger (set with `logger.setLevel(level)` or `logging.basicConfig(level=level)`). That means that you will not see any `INFO` or `DEBUG` events from a logger with the level set to `WARNING`, regardless of how you configure the integration. If not set explicitly, the logging level defaults to `WARNING`.
+
+  Some frameworks, such as `uvicorn`, may reset or override your `logging` configuration. To ensure your log level is applied and logs at or above the configured level are picked up by the SDK, you can use the `force=True` flag when configuring your log level. For example `logger.setLevel(level, force=True)` and `logging.basicConfig(level=level, force=True)`.
+
+</Expandable>
