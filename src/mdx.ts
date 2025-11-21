@@ -28,6 +28,7 @@ import getPackageRegistry from './build/packageRegistry';
 import {apiCategories} from './build/resolveOpenAPI';
 import getAllFilesRecursively from './files';
 import remarkDefList from './mdx-deflist';
+import {DocMetrics} from './metrics';
 import rehypeOnboardingLines from './rehype-onboarding-lines';
 import rehypeSlug from './rehype-slug.js';
 import remarkCodeTabs from './remark-code-tabs';
@@ -632,10 +633,31 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
       assetsCacheDir = path.join(CACHE_DIR, cacheKey);
 
       try {
+        const cacheStartTime = Date.now();
         const [cached, _] = await Promise.all([
           readCacheFile<SlugFile>(cacheFile),
           cp(assetsCacheDir, outdir, {recursive: true}),
         ]);
+
+        // Track cache hit metrics
+        if (typeof window === 'undefined') {
+          const cacheReadDuration = Date.now() - cacheStartTime;
+          const fileSizeKb = Buffer.byteLength(source, 'utf8') / 1024;
+          const hasImages =
+            source.includes('.png') ||
+            source.includes('.jpg') ||
+            source.includes('.jpeg') ||
+            source.includes('.svg') ||
+            source.includes('.gif');
+
+          DocMetrics.mdxCompile(cacheReadDuration, {
+            cached: true,
+            file_size_kb: Math.round(fileSizeKb),
+            has_images: hasImages,
+            slug_prefix: slug.split('/')[0],
+          });
+        }
+
         return cached;
       } catch (err) {
         if (
@@ -663,6 +685,9 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
 
   // cwd is how mdx-bundler knows how to resolve relative paths
   const cwd = path.dirname(sourcePath);
+
+  // Track MDX compilation timing
+  const compilationStart = Date.now();
 
   const result = await bundleMDX<Platform>({
     source,
@@ -765,6 +790,25 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
     console.error('Error occurred during MDX compilation:', e.errors);
     throw e;
   });
+
+  // Track MDX compilation metrics for cache miss (server-side only)
+  const compilationDuration = Date.now() - compilationStart;
+  if (typeof window === 'undefined') {
+    const fileSizeKb = Buffer.byteLength(source, 'utf8') / 1024;
+    const hasImages =
+      source.includes('.png') ||
+      source.includes('.jpg') ||
+      source.includes('.jpeg') ||
+      source.includes('.svg') ||
+      source.includes('.gif');
+
+    DocMetrics.mdxCompile(compilationDuration, {
+      cached: false, // This path only reached on cache miss
+      file_size_kb: Math.round(fileSizeKb),
+      has_images: hasImages,
+      slug_prefix: slug.split('/')[0], // First path segment for grouping
+    });
+  }
 
   // Manually write output files from esbuild when available
   // This only happens during build time (when filesystem is writable)

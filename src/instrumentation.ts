@@ -10,6 +10,19 @@ export function register() {
       environment: process.env.NODE_ENV === 'development' ? 'development' : undefined,
       spotlight: process.env.NODE_ENV === 'development',
       integrations: [Sentry.consoleLoggingIntegration()],
+
+      // Filter sensitive metric attributes (no PII in metrics)
+      beforeSendMetric: metric => {
+        // Remove any accidentally added PII attributes
+        if (metric.attributes) {
+          // Remove user queries if accidentally added
+          delete metric.attributes.user_query;
+          // Remove full URLs
+          delete metric.attributes.full_url;
+          delete metric.attributes.full_path;
+        }
+        return metric;
+      },
     });
   }
 
@@ -21,6 +34,20 @@ export function register() {
       debug: false,
       environment: process.env.NODE_ENV === 'development' ? 'development' : undefined,
       integrations: [Sentry.consoleLoggingIntegration()],
+
+      // Filter sensitive metric attributes (no PII in metrics)
+      beforeSendMetric: metric => {
+        // Remove any accidentally added PII attributes
+        if (metric.attributes) {
+          // Remove user queries if accidentally added
+          delete metric.attributes.user_query;
+          // Remove full URLs
+          delete metric.attributes.full_url;
+          delete metric.attributes.full_path;
+        }
+        return metric;
+      },
+
       // temporary change for investigating edge middleware tx names
       beforeSendTransaction(event) {
         if (
