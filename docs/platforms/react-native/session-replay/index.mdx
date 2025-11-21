@@ -92,6 +92,32 @@ Sampling allows you to control how much of your website's traffic will result in
 
 Sampling begins as soon as a session starts. <PlatformIdentifier name="replays-session-sample-rate" /> is evaluated first. If it's sampled, the replay recording will begin. Otherwise, <PlatformIdentifier name="replays-on-error-sample-rate" /> is evaluated and if it's sampled, the integration will begin buffering the replay and will only upload it to Sentry if an error occurs. The remainder of the replay will behave similarly to a whole-session replay.
 
+### Ignore Certain Errors from Error Sampling
+
+Once you've enabled <PlatformIdentifier name="replays-on-error-sample-rate" />, you can further customize which errors should trigger a replay capture by using the `beforeErrorSampling` callback. This is useful if you want to capture replays only for unhandled errors, or exclude certain error types from replay capture.
+
+The `beforeErrorSampling` callback is called when an error occurs and receives the event and hint as arguments. Returning `false` will prevent the replay from being captured for that specific error.
+
+```javascript {tabTitle:Mobile}
+import * as Sentry from "@sentry/react-native";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  replaysOnErrorSampleRate: 1.0,
+  integrations: [
+    Sentry.mobileReplayIntegration({
+      beforeErrorSampling: (event, hint) => {
+        // Only capture replays for unhandled errors
+        const isHandled = event.exception?.values?.some(
+          exception => exception.mechanism?.handled === true
+        );
+        return !isHandled;
+      },
+    }),
+  ],
+});
+```
+
 ## Privacy
 
 <Alert level="warning">
