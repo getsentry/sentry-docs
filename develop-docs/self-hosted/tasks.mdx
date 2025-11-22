@@ -128,7 +128,9 @@ tb-d --> w-d[default Worker]
 To achieve this work separation we need to make a few changes:
 
 1. Provision any additional topics. Topic names need to come from one of the
-   predefined topics in [`src/sentry/conf/types/kafka_definition.py`](https://github.com/getsentry/sentry/blob/master/src/sentry/conf/types/kafka_definition.py)
+   predefined topics in [`src/sentry/conf/types/kafka_definition.py`](https://github.com/getsentry/sentry/blob/master/src/sentry/conf/types/kafka_definition.py).
+   By default, any topics will automatically be created during `./install.sh`
+   process.
 2. Deploy the additional broker replicas. You can use the
    `TASKBROKER_KAFKA_TOPIC` environment variable to define the topic a
    taskbroker consumes from.
@@ -160,9 +162,11 @@ services:
     restart: "unless-stopped"
     image: "$TASKBROKER_IMAGE"
     environment:
+      TASKBROKER_KAFKA_TOPIC: "taskworker-ingest"
+      TASKBROKER_KAFKA_CONSUMER_GROUP: "taskworker-ingest"
       TASKBROKER_KAFKA_CLUSTER: "kafka:9092"
       TASKBROKER_KAFKA_DEADLETTER_CLUSTER: "kafka:9092"
-      TASKBROKER_DB_PATH: "/opt/sqlite/taskbroker-activations.sqlite"
+      TASKBROKER_DB_PATH: "/opt/sqlite/taskbroker-activations-ingest.sqlite"
     volumes:
       - sentry-taskbroker-ingest:/opt/sqlite
     depends_on:
