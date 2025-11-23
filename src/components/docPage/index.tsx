@@ -134,12 +134,24 @@ export function DocPage({
           max-width: none;
           box-sizing: border-box;
         }
+        /* Mobile responsive styles */
+        @media (max-width: 768px) {
+          .main-content {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: hidden;
+          }
+          #doc-content {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: hidden;
+          }
+        }
         /* At toc breakpoint (1490px), constrain content to leave room for TOC */
         @media (min-width: 1490px) {
           #doc-content {
-            /* Calculate max width: viewport - sidebar - TOC - gaps - padding */
-            /* Leave room for: sidebar (300px) + TOC (250px) + gaps (48px) + padding (96px) */
-            max-width: calc(100vw - 300px - 250px - 48px - 96px);
+            /* Calculate max width: viewport - sidebar - TOC */
+            max-width: calc(100vw - 300px - 250px);
           }
         }
         @media (min-width: 2057px) {
