@@ -1,4 +1,6 @@
 .code-block {
+  position: relative;
+
   & ::selection {
     background-color: rgba(106, 95, 193, 0.5);
   }
@@ -12,6 +14,7 @@
     white-space: pre;
     overflow-x: auto;
     max-width: 100%;
+    box-sizing: border-box;
     tab-size: 2;
   }
 
@@ -28,6 +31,37 @@
     /* Use horizontal scroll instead of wrapping */
     white-space: pre;
     overflow-x: auto;
+    box-sizing: border-box;
+
+    /* Custom scrollbar styling to match code block theme */
+    /* Firefox */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(148, 129, 164, 0.4) transparent;
+
+    /* WebKit (Chrome, Edge, Safari) */
+    &::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background-color: rgba(148, 129, 164, 0.4);
+      border-radius: 9999px;
+      border: 2px solid transparent;
+      background-clip: content-box;
+    }
+
+    &:hover::-webkit-scrollbar-thumb {
+      background-color: rgba(148, 129, 164, 0.6);
+    }
+
+    &::-webkit-scrollbar-thumb:active {
+      background-color: rgba(148, 129, 164, 0.8);
+    }
   }
 
   /**
@@ -107,22 +141,45 @@
     margin-left: -12px;
     width: calc(100% + 12px);
   }
+
+  overflow-y: visible; /* Allow copy button above to be visible */
+
+  /* Mobile responsive styles for screens smaller than 768px */
+  @media (max-width: 768px) {
+    overflow-x: hidden; /* Prevent container from scrolling */
+
+    pre {
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* Adjust diff highlighting for mobile - prevent overflow */
+    :global(.diff-inserted),
+    :global(.inserted),
+    :global(.diff-deleted),
+    :global(.deleted) {
+      width: 100%;
+      margin-left: 0;
+    }
+  }
 }
 
 .code-actions {
   display: grid;
   height: 32px;
-  grid-template-columns: max-content max-content;
-  grid-gap: 1rem;
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
   align-items: center;
   position: absolute;
   margin: 0 0.25rem;
   right: 0;
   top: -35px;
+  white-space: nowrap;
+  max-width: calc(100% - 0.5rem);
 }
 
 .filename {
   font-size: 0.75rem;
+  margin-right: 1rem;
   color: var(--white);
   font-weight: normal;
 }
