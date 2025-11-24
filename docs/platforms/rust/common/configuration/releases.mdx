@@ -13,11 +13,35 @@ A release is a version of your code that is deployed to an <PlatformLink to="/co
 
 <Include name="bind-release-version.mdx" />
 
+## Setup
+
+To use the Release Health features, you need to activate the `release-health` feature flag of the `sentry` crate (enabled by default).
+Additionally, you need to initialize the SDK by specifying additional options:
+
+```rust
+use sentry;
+
+let _guard = sentry::init(("___PUBLIC_DSN___", sentry::ClientOptions {
+    // The `sentry::release_name` macro automatically infers the release from the cargo metadata, and is the preferred way to set the release
+    release: sentry::release_name!(),
+    // OR, manually:
+    // release: Some("my-project-name@2.3.12".into()),
+
+    // Enables automatic session tracking, according to the configured `session_mode`.
+    // If the value of this option is set `false`, sessions need to be manually managed using `sentry::start_session` and `sentry::stop_session`.
+    auto_session_tracking: true,
+
+    // Sets the automatic session tracking mode.
+    // Possible values are `sentry::SessionMode::Application` and `sentry::SessionMode::Request`.
+    // `Application` should be used for user-attended programs, which typically have a single long running session that span the application's lifetime.
+    // `Request` should be used for servers, where each incoming request shall be considered as its own session.
+    session_mode: sentry::SessionMode::Application,
+
+    ..Default::default()
+}));
+```
+
 ## Setting a Release
-
-<PlatformContent includePath="set-release" notateUnsupported />
-
-How you make the release name (or version) available to your code is up to you. For example, you could use an environment variable that is set during the build process or during initial start-up.
 
 Setting the release name tags each event with that release name. We recommend that you tell Sentry about a new release before sending events with that release name, as this will unlock a few more features. Learn more in our [Releases](/product/releases/) documentation.
 
@@ -33,4 +57,4 @@ In order to monitor release health, the SDK sends session data.
 
 ### Sessions
 
-A session represents the interaction between the user and the application. Sessions contain a timestamp, a status (if the session was OK or if it crashed), and are always linked to a release. Most Sentry SDKs can manage sessions automatically.
+A session represents the interaction between the user and the application. Sessions contain a timestamp, a status (if the session was OK or if it crashed), and are always linked to a release.
