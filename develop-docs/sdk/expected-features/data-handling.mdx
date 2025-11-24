@@ -13,11 +13,22 @@ In the event that API returns data considered PII, we guard that behind a flag c
 This is an option in the SDK called [_send-default-pii_](https://docs.sentry.io/platforms/python/configuration/options/#send-default-pii)
 and is **disabled by default**. That means that data that is naturally sensitive is not sent by default.
 
-Some examples of data guarded by this flag:
+Handling sensitive data in the SDK regardless of the `send_default_pii` setting:
+
+- HTTP Headers: The keys of known sensitive headers (such as `Authorization` or `Cookie`) are added, while their values must be replaced with `"[Filtered]"`.
+
+<Expandable title="List of sensitive HTTP headers">
+
+  The SDK performs a **partial, case-insensitive match** against the following headers to determine if they are sensitive:
+
+  `['auth', 'token', 'secret', 'cookie', '-user', 'password', 'key', 'jwt', 'bearer', 'sso', 'saml']`
+
+</Expandable>
+
+Some examples of data guarded by `send_default_pii: false`:
 
 - When attaching data of HTTP requests and/or responses to events
   - Request Body: "raw" HTTP bodies (bodies which cannot be parsed as JSON or formdata) are removed
-  - HTTP Headers: known sensitive headers such as `Authorization` or `Cookie` are removed too.
   - _Note_ that if a user explicitly sets a request on the scope, nothing is stripped from that request. The above rules only apply to integrations that come with the SDK.
 - User-specific information (e.g. the current user ID according to the used web-framework) is not sent at all.
 - On desktop applications
