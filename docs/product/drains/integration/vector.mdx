@@ -1,0 +1,93 @@
+---
+title: Vector
+sidebar_order: 85
+description: Learn how to set up Vector to forward logs to Sentry via OpenTelemetry.
+---
+
+You can configure [Vector](https://vector.dev/) to forward logs to Sentry using its [OpenTelemetry sink](https://vector.dev/docs/reference/configuration/sinks/opentelemetry/).
+
+<Alert level="info">
+
+This integration requires Vector version [0.51.0](https://vector.dev/releases/0.51.0/) or higher, which introduced the `otlp` codec for encoding events in OpenTelemetry format.
+
+</Alert>
+
+## Prerequisites
+
+Before you begin, ensure you have:
+
+- Vector installed and running
+- A Sentry project you want to send data to
+
+## Configuration
+
+To send logs to Sentry, configure Vector with an OpenTelemetry sink that points to your Sentry OTLP logs endpoint. You can find your endpoint and authentication details in your [Sentry Project Settings](https://sentry.io/settings/projects/) under **Client Keys (DSN)** > **OpenTelemetry (OTLP)**.
+
+Add the following sink configuration to your Vector configuration file:
+
+```yaml {filename:vector.yaml}
+sinks:
+  sentry_logs:
+    inputs:
+      - your_source_id # Replace with your actual source ID
+    type: opentelemetry
+    protocol:
+      type: http
+      uri: ___OTLP_LOGS_URL___
+      headers:
+        x-sentry-auth: "sentry sentry_key=___PUBLIC_KEY___"
+    encoding:
+      codec: otlp
+```
+
+```toml {filename:vector.toml}
+[sinks.sentry_logs]
+inputs = ["your_source_id"]  # Replace with your actual source ID
+type = "opentelemetry"
+
+[sinks.sentry_logs.protocol]
+type = "http"
+uri = "___OTLP_LOGS_URL___"
+
+[sinks.sentry_logs.protocol.headers]
+x-sentry-auth = "sentry sentry_key=___PUBLIC_KEY___"
+
+[sinks.sentry_logs.encoding]
+codec = "otlp"
+```
+
+### Configuration Options
+
+- **inputs**: The source or transform IDs that feed data into this sink
+- **type**: Must be `opentelemetry` to use the OTLP sink
+- **protocol.type**: Use `http` for HTTP transport
+- **protocol.uri**: Your Sentry OTLP logs endpoint
+- **protocol.headers**: Authentication headers including the `x-sentry-auth` header with your Sentry public key
+- **encoding.codec**: Must be `otlp` for OpenTelemetry protocol encoding
+
+## Example: Forwarding File Logs
+
+Here's a complete example that reads logs from a file and forwards them to Sentry:
+
+```yaml {filename:vector.yaml}
+sources:
+  app_logs:
+    type: file
+    include:
+      - /var/log/app/*.log
+
+sinks:
+  sentry_logs:
+    inputs:
+      - app_logs
+    type: opentelemetry
+    protocol:
+      type: http
+      uri: ___OTLP_LOGS_URL___
+      headers:
+        x-sentry-auth: "sentry sentry_key=___PUBLIC_KEY___"
+    encoding:
+      codec: otlp
+```
+
+For more information on Vector configuration options, see the [Vector documentation](https://vector.dev/docs/reference/configuration/).
