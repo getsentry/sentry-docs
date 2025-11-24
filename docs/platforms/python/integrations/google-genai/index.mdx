@@ -1,0 +1,114 @@
+---
+title: Google Gen AI
+description: "Learn about using Sentry for Google Gen AI."
+---
+
+This integration connects Sentry with the [Google Gen AI Python SDK](https://github.com/googleapis/python-genai).
+
+Once you've installed this SDK, you can use the Sentry AI Agents Monitoring, a Sentry dashboard that helps you understand what's going on with your AI requests.
+
+Sentry AI Monitoring will automatically collect information about prompts, tools, tokens, and models. Learn more about the [AI Agents Dashboard](/product/insights/ai/agents).
+
+## Install
+
+Install `sentry-sdk` from PyPI with the `google-genai` extra:
+
+```bash {tabTitle:pip}
+pip install "sentry-sdk[google-genai]"
+```
+
+```bash {tabTitle:uv}
+uv add "sentry-sdk[google-genai]"
+```
+
+## Configure
+
+Add `GoogleGenAIIntegration()` to your `integrations` list:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.google_genai import GoogleGenAIIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for tracing.
+    traces_sample_rate=1.0,
+    # Add data like inputs and responses;
+    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    send_default_pii=True,
+    integrations=[
+        GoogleGenAIIntegration(),
+    ],
+)
+```
+
+## Verify
+
+Verify that the integration works by making a chat request to Google Gen AI.
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.google_genai import GoogleGenAIIntegration
+from google.genai import Client
+
+sentry_sdk.init(...)  # same as above
+
+client = Client(api_key="(your Google API key)")
+
+def my_llm_stuff():
+    with sentry_sdk.start_transaction(name="The result of the AI inference"):
+        response = client.models.generate_content(
+            model="gemini-2.0-flash-exp",
+            contents="say hello"
+        )
+        print(response.text)
+```
+
+After running this script, the resulting data should show up in the `"AI Spans"` tab on the `"Explore" > "Traces"` page on Sentry.io.
+
+If you manually created an <PlatformLink to="/tracing/instrumentation/custom-instrumentation/ai-agents-module/#invoke-agent-span">Invoke Agent Span</PlatformLink> (not done in the example above) the data will also show up in the [AI Agents Dashboard](/product/insights/ai/agents).
+
+It may take a couple of moments for the data to appear in [sentry.io](https://sentry.io).
+
+## Behavior
+
+- The Google Gen AI integration will connect Sentry with the supported Google Gen AI methods automatically.
+
+- The supported function is currently `models.generate_content` (both sync and async).
+
+- Sentry considers LLM inputs/outputs as PII (Personally identifiable information) and doesn't include PII data by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False` as shown in the [Options section](#options) below.
+
+## Options
+
+You can set options for `GoogleGenAIIntegration` to change its behavior:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.google_genai import GoogleGenAIIntegration
+
+sentry_sdk.init(
+    # ...
+    # Add data like inputs and responses;
+    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    send_default_pii=True,
+    integrations=[
+        GoogleGenAIIntegration(
+            include_prompts=False,  # LLM inputs/outputs will be not sent to Sentry, despite send_default_pii=True
+        ),
+    ],
+)
+```
+
+You can pass the following keyword arguments to `GoogleGenAIIntegration()`:
+
+- `include_prompts`:
+
+  Whether LLM inputs and outputs should be sent to Sentry. Sentry considers this data personal identifiable data (PII) by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False`.
+
+  The default is `True`.
+
+## Supported Versions
+
+- google-genai: 1.4.0+
+- Python: 3.9+

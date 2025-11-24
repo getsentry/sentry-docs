@@ -27,6 +27,14 @@ type PlausibleEventProps = {
     page: string;
     title: string;
   };
+  ['Open in ChatGPT']: {
+    page: string;
+    source: string;
+  };
+  ['Open in Claude']: {
+    page: string;
+    source: string;
+  };
   ['Read Progress']: {
     page: string;
     readProgress: ReadProgressMilestone;
@@ -34,6 +42,9 @@ type PlausibleEventProps = {
   ['View Markdown']: {
     page: string;
     source: string;
+  };
+  ['copy sentry code']: {
+    page: string;
   };
 };
 

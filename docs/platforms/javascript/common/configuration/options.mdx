@@ -18,20 +18,16 @@ sidebar_order: 1
 
 </SdkOption>
 
-<PlatformCategorySection supported={["server", "serverless"]}>
-  <SdkOption name="orgId" type='`${number}` | number'>
+<SdkOption name="orgId" type='`${number}` | number' categorySupported={["server", "serverless"]}>
 
-    The organization ID for your Sentry project.
+The organization ID for your Sentry project.
 
-    The SDK will try to extract the organization ID from the DSN. If it cannot be found, or if you need to override it,
-    you can provide the ID with this option. The organization ID is used for trace propagation and features like `strictTraceContinuation`.
+The SDK will try to extract the organization ID from the DSN. If it cannot be found, or if you need to override it,
+you can provide the ID with this option. The organization ID is used for trace propagation and features like `strictTraceContinuation`.
 
-    <Alert level="info">
-      The organization ID is used for features like <PlatformLink to="/configuration/options#strictTraceContinuation">strict trace continuation</PlatformLink>.
-    </Alert>
+The organization ID is used for features like <PlatformLink to="/configuration/options#strictTraceContinuation">strict trace continuation</PlatformLink>.
 
-  </SdkOption>
-</PlatformCategorySection>
+</SdkOption>
 
 <SdkOption name="debug" type='boolean' defaultValue='false'>
 
@@ -140,7 +136,7 @@ Sentry.init({
 
 </SdkOption>
 
-<SdkOption name="maxValueLength" type='number' defaultValue='250'>
+<SdkOption name="maxValueLength" type='number'>
 
 Maximum number of characters every string property on events sent to Sentry can have before it will be truncated.
 
@@ -175,7 +171,9 @@ Set this option to `false` to disable sending of client reports. Client reports 
 Set this option to `true` to add stack local variables to stack traces.
 
 <PlatformSection notSupported={["javascript.bun", "javascript.cloudflare", "javascript.deno"]}>
+
 For more advanced configuration options, see the documentation on the <PlatformLink to="/configuration/integrations/localvariables">Local Variables integration options</PlatformLink>.
+
 </PlatformSection>
 
 </SdkOption>
@@ -246,6 +244,21 @@ Options used to configure the transport. This is an object with the following po
 
 </PlatformCategorySection>
 
+<PlatformSection supported={["javascript.electron"]}>
+**Options for Electron offline support:**
+
+The Electron SDK provides built-in offline support that queues events when the app is offline and automatically sends them once the connection is restored. These options let you configure the following behavior:
+
+- `maxAgeDays`: The maximum number of envelopes to keep in the queue.
+- `maxQueueSize`: The maximum number of days to keep an envelope in the queue.
+- `flushAtStartup`: Whether the offline store should flush shortly after application startup. Defaults to `false`.
+- `shouldSend`: Called before the SDK attempts to send an envelope to Sentry. If this function returns false, `shouldStore` will be called to determine if the envelope should be stored. Defaults to `() => true`.
+- `shouldStore`: Called before an event is stored. Return `false` to drop the envelope rather than store it. Defaults to `() => true`.
+
+Check out the [Offline Support](/platforms/javascript/guides/electron/features/offline-support/) documentation for a complete example.
+
+</PlatformSection>
+
 </SdkOption>
 
 <SdkOption name="shutdownTimeout" type='number' defaultValue='2000' categorySupported={['server', 'serverless']}>
@@ -278,6 +291,23 @@ Available options are:
 - `IPCMode.Classic` - Configures Electron IPC modules
 - `IPCMode.Protocol` - Configures a custom protocol and `fetch`
 - `IPCMode.Both` (default) - Configures both modes for maximum compatibility
+
+</SdkOption>
+
+<SdkOption name="ipcNamespace" type='string'>
+
+Custom namespace for the inter-process communication (IPC) channels used by the Sentry Electron SDK. This is useful when your Electron application uses multiple IPC channels and you want to prevent potential conflicts between them.
+
+```javascript
+import * as Sentry from "@sentry/electron/main";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  ipcNamespace: "myCustomNamespace",
+});
+```
+
+When set, the IPC channels used by Sentry will be prefixed with the specified namespace. Note that you need to configure the same namespace in your main process, renderer processes, and preload scripts for proper communication. See the [Custom IPC Namespace section](/platforms/javascript/guides/electron/#custom-ipc-namespace) for complete setup instructions.
 
 </SdkOption>
 
@@ -394,22 +424,17 @@ If you want to disable trace propagation, you can set this option to `[]`.
 
 </SdkOption>
 
+<SdkOption name="strictTraceContinuation" type='boolean' defaultValue='false' categorySupported={["server", "serverless"]}>
 
-<PlatformCategorySection supported={["server", "serverless"]}>
-  <SdkOption name="strictTraceContinuation" type='boolean' defaultValue='false'>
+If set to `true`, the SDK will only continue a trace if the organization ID of the incoming trace found in the
+`baggage` header matches the organization ID of the current Sentry client.
 
-    If set to `true`, the SDK will only continue a trace if the organization ID of the incoming trace found in the
-    `baggage` header matches the organization ID of the current Sentry client.
+The client's organization ID is extracted from the DSN or can be set with the <PlatformLink to={'/configuration/options#orgId'}>`orgId` option</PlatformLink>.
 
-    The client's organization ID is extracted from the DSN or can be set with the <PlatformLink to={'/configuration/options#orgId'}>`orgId` option</PlatformLink>.
+If the organization IDs do not match, the SDK will start a new trace instead of continuing the incoming one.
+This is useful to prevent traces of unknown third-party services from being continued in your application.
 
-    If the organization IDs do not match, the SDK will start a new trace instead of continuing the incoming one.
-    This is useful to prevent traces of unknown third-party services from being continued in your application.
-
-  </SdkOption>
-</PlatformCategorySection>
-
-<PlatformCategorySection supported={['browser']}>
+</SdkOption>
 
 <SdkOption name="beforeSendTransaction" type='(event: TransactionEvent, hint: EventHint) => TransactionEvent | null'>
 
@@ -433,36 +458,77 @@ Please note that the `span` you receive as an argument is a serialized object, n
 
 </SdkOption>
 
-<SdkOption name="ignoreSpans" type='Array<string | RegExp | {name?: string | RegExp, op?: string | RegExp}>' defaultValue='[]'>
+<SdkOption name="ignoreSpans" type='Array<string | RegExp | {name?: string | RegExp, op?: string | RegExp}>' defaultValue='[]' availableSince='10.2.0'>
 
 A list of strings or regex patterns matching span names that shouldn't be sent to Sentry. When using strings, partial matches will be filtered out, so if you need to filter by exact match, use regex patterns instead. You can also provide an object with a `name` and `op` property to match both the span name and the operation name. Note that at least `name` or `op` must be provided.
 
-If a root span matches any of the specified patterns, the entire local trace will be dropped. If a child span matches, its children will be reparented to the dropped span's parent span. 
+If a root span matches any of the specified patterns, the entire local trace will be dropped. If a child span matches, its children will be reparented to the dropped span's parent span.
 
 By default, no spans are ignored.
 
+Here are some predefined matches for common spans to get you started:
+
+```javascript
+Sentry.init({
+  ignoreSpans: [
+    // Browser connection events
+    { op: /^browser\.(cache|connect|DNS)$/ },
+
+    // Fonts
+    { op: "resource.other", name: /.+\.(woff2|woff|ttf|eot)$/ },
+
+    // CSS files
+    { op: "resource.link", name: /.+\.css.*$/ },
+
+    // JS files
+    { op: /resource\.(link|script)/, name: /.+\.js.*$/ },
+
+    // Images
+    {
+      op: /resource\.(other|img)/,
+      name: /.+\.(png|svg|jpe?g|gif|bmp|tiff?|webp|avif|heic?|ico).*$/,
+    },
+
+    // Measure spans
+    { op: "measure" },
+  ],
+});
+```
+
 </SdkOption>
 
-<PlatformCategorySection supported={['browser']}>
-
-<SdkOption name="propagateTraceparent" type='boolean' defaultValue='false'>
-
-_Available since: `10.10.0`_
+<SdkOption name="propagateTraceparent" type='boolean' defaultValue='false' availableSince='10.10.0' categorySupported={['browser']}>
 
 If set to `true`, the SDK adds the [W3C `traceparent` header](https://www.w3.org/TR/trace-context/) to outgoing Http requests made via `fetch` or `XMLHttpRequest`.
 This header is attached in addition to the `sentry-trace` and `baggage` headers.
 Set this option to `true` if your backend services are instrumented with e.g. OpenTelemetry or other W3C Trace Context compatible libraries and you want to continue traces from the client.
+
+<PlatformSection notSupported={["javascript.cordova"]}>
 
 **Important:** Make sure that your backend services' CORS configuration allows the `traceparent` header.
 Otherwise, requests might be blocked.
 Use the [`tracePropagationTargets` option](#tracepropagationtargets) to control which requests the `traceparent` header is attached to.
 See <PlatformLink to="/tracing/distributed-tracing/dealing-with-cors-issues/">Dealing with CORS Issues</PlatformLink> for more information.
 
-Note that this option is only available for browser SDKs.
+</PlatformSection>
 
 </SdkOption>
 
-</PlatformCategorySection>
+<PlatformCategorySection supported={['browser']}>
+
+## Logs Options
+
+<SdkOption name="enableLogs" type='boolean' defaultValue='false'>
+
+Set this option to `true` to enable log capturing in Sentry. Only when this is enabled will the `logger` APIs actually send logs to Sentry.
+
+</SdkOption>
+
+<SdkOption name="beforeSendLog" type='(log: Log) => Log | null'>
+
+This function is called with a log object, and can return a modified log object, or `null` to skip sending this log to Sentry. This can be used, for instance, for manual PII stripping before sending, or to add custom attributes to all logs.
+
+</SdkOption>
 
 ## Session Replay Options
 
