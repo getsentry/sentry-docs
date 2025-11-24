@@ -1,0 +1,85 @@
+---
+title: LaunchDarkly
+description: "Learn how to use Sentry with LaunchDarkly."
+---
+
+The [LaunchDarkly](https://launchdarkly.com/) integration tracks feature flag evaluations produced by the LaunchDarkly SDK. These evaluations are held in memory and are sent to Sentry on error and transaction events. **At the moment, we only support boolean flag evaluations.**
+
+## Install
+
+To install use:
+
+```groovy {tabTitle:Gradle}
+implementation 'io.sentry:sentry-launchdarkly-server:{{@inject packages.version('sentry.java.launchdarkly.server', '8.27.0') }}'
+```
+
+```xml {tabTitle:Maven}
+<dependency>
+    <groupId>io.sentry</groupId>
+    <artifactId>sentry-launchdarkly-server</artifactId>
+    <version>{{@inject packages.version('sentry.java.launchdarkly.server', '8.27.0') }}</version>
+</dependency>
+```
+
+```scala {tabTitle: SBT}
+libraryDependencies += "io.sentry" % "sentry-launchdarkly-server" % "{{@inject packages.version('sentry.java.launchdarkly.server', '8.27.0') }}"
+```
+
+For other dependency managers, check out the [central Maven repository](https://search.maven.org/artifact/io.sentry/sentry-launchdarkly-server).
+
+Before using this integration, you need to install and instrument the [LaunchDarkly Java SDK](https://docs.launchdarkly.com/sdk/server-side/java) in your app.
+
+## Configure
+
+Add `SentryLaunchDarklyServerHook` to your LaunchDarkly setup:
+
+```java {5}
+import io.sentry.launchdarkly.server.SentryLaunchDarklyServerHook;
+
+LDConfig config = new LDConfig.Builder()
+    .hooks(Components.hooks()
+        .setHooks(Arrays.asList(new SentryLaunchDarklyServerHook())))
+    .build();
+LDClient client = new LDClient("sdk-key", config);
+```
+
+```kotlin {5}
+import io.sentry.launchdarkly.server.SentryLaunchDarklyServerHook
+
+val config: LDConfig = LDConfig.Builder()
+    .hooks(Components.hooks()
+        .setHooks(listOf(SentryLaunchDarklyServerHook())))
+    .build()
+val client: LDClient = LDClient("sdk-key", config)
+```
+
+## Verify
+
+The integration is tested by evaluating a feature flag using your LaunchDarkly SDK before capturing an exception.
+
+```java
+import com.launchdarkly.sdk.LDContext;
+import io.sentry.Sentry;
+
+LDContext context = LDContext.create("example-context-key");
+
+boolean flagValue = client.boolVariation("test-flag", context, false);
+
+Sentry.captureException(new Exception("Something went wrong!"));
+```
+
+```kotlin
+import com.launchdarkly.sdk.LDContext
+import io.sentry.Sentry
+
+val context: LDContext = LDContext.create("example-context-key")
+
+val flagValue: Boolean = client.boolVariation("test-flag", context, false)
+
+Sentry.captureException(Exception("Something went wrong!"))
+```
+
+Visit the Sentry website and confirm that your error event has recorded the feature flag "test-flag" and its value "false".
+
+<PlatformContent includePath="feature-flags/next-steps" />
+
