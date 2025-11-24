@@ -390,9 +390,11 @@ A new data category for logs has been added to Relay, `log_item`. Both the `log`
 
 ### Buffering
 
-Logs should be buffered before being sent. SDKs should keep a buffer of logs on the client (so you can have logs from multiple traces in the buffer) that flushes out based on some kind of condition. We recommend to follow the [telemetry buffer specification outlined](/sdk/telemetry/telemetry-buffer/) in the develop docs, but you should choose the approach that works best for your platform. When starting initial development on the SDK you can choose a simple approach to buffer like flushing logs if the buffer length exceeds 100 items, or if 5 seconds have passed.
+SDKs **MUST** buffer logs before sending them. SDKs should keep a buffer of logs and flush it when specific conditions are met. For initial implementation, a simple strategy is fine, for example: flushing logs if the buffer length exceeds 100 items or if 5 seconds have passed. To prevent data loss, the buffer SHOULD forward logs to the transport in the scenarios outlined in the [telemetry buffer data forwarding scenarios](/sdk/telemetry/telemetry-buffer/#data-forwarding-scenarios).
 
-SDKs must have a hard limit of 1000 log events queued up to avoid causing our customers applications going out of memory. Logs added once the hard limit has been reached are dropped.
+SDKs **MUST** also have a hard limit of 1000 log events queued up to avoid causing your customers' applications going out of memory. Logs added once this hard limit has been reached are dropped. Also, Relay has a hard limit of 1000 logs per envelope. SDKs **MUST** not exceed this limit. SDKs **SHOULD**  batch logs into envelopes of 100 or less.
+
+We used to recommend following the [BatchProcessor](/sdk/telemetry/telemetry-buffer/#batchprocessor-v0), but this page is currently under development. We currently working on a new [telemetry buffer specification](/sdk/telemetry/telemetry-buffer/) that will replace the BatchProcessor.
 
 SDKS should NOT release logging capabilities to users if a buffering implementation has not been added to their SDK when adding logging APIs.
 
@@ -687,3 +689,7 @@ Example:
 : **String, optional**. The time the log was created in Unix nanoseconds. If not set, the SDK should set this to the current time.
 
 </Expandable>
+
+## Client Reports
+
+SDKs must report count (`log_item`) and size in bytes (`log_byte`) of discarded log messages. An approximation of log size is sufficient (e.g. by counting as if serialized).
