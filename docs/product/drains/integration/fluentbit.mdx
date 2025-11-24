@@ -40,26 +40,17 @@ x-sentry-auth: sentry sentry_key=___PUBLIC_KEY___
 
 ## Step 2: Configure Fluent Bit
 
-Update your Fluent Bit configuration to use the OpenTelemetry output plugin. You can configure logs, traces, or both.
+Add the OpenTelemetry output plugin to your Fluent Bit configuration to forward data to Sentry.
 
 ### Logs Configuration
 
 To forward logs to Sentry, add the following output configuration:
 
 ```yaml {filename:fluent-bit.yaml}
-service:
-  flush: 1
-  log_level: info
-
 pipeline:
-  inputs:
-    - name: tail
-      tag: app.logs
-      path: /var/log/app/*.log
-
   outputs:
     - name: opentelemetry
-      match: "*.logs"
+      match: "*"
       host: ___ORG_INGEST_DOMAIN___
       port: 443
       logs_uri: /api/___PROJECT_ID___/integration/otlp/v1/logs
@@ -70,18 +61,9 @@ pipeline:
 ```
 
 ```text {filename:fluent-bit.conf}
-[SERVICE]
-    Flush        1
-    Log_level    info
-
-[INPUT]
-    Name         tail
-    Tag          app.logs
-    Path         /var/log/app/*.log
-
 [OUTPUT]
     Name                 opentelemetry
-    Match                *.logs
+    Match                *
     Host                 ___ORG_INGEST_DOMAIN___
     Port                 443
     Logs_uri             /api/___PROJECT_ID___/integration/otlp/v1/logs
@@ -95,15 +77,7 @@ pipeline:
 To forward traces to Sentry, add the following output configuration:
 
 ```yaml {filename:fluent-bit.yaml}
-service:
-  flush: 1
-  log_level: info
-
 pipeline:
-  inputs:
-    - name: event_type
-      type: traces
-
   outputs:
     - name: opentelemetry
       match: "*"
@@ -117,14 +91,6 @@ pipeline:
 ```
 
 ```text {filename:fluent-bit.conf}
-[SERVICE]
-    Flush        1
-    Log_level    info
-
-[INPUT]
-    Name         event_type
-    Type         traces
-
 [OUTPUT]
     Name                 opentelemetry
     Match                *
@@ -138,22 +104,10 @@ pipeline:
 
 ### Combined Logs and Traces Configuration
 
-To send both logs and traces to Sentry, you can combine the configurations:
+To send both logs and traces to Sentry, include both `logs_uri` and `traces_uri` in the output configuration:
 
 ```yaml {filename:fluent-bit.yaml}
-service:
-  flush: 1
-  log_level: info
-
 pipeline:
-  inputs:
-    - name: tail
-      tag: app.logs
-      path: /var/log/app/*.log
-
-    - name: event_type
-      type: traces
-
   outputs:
     - name: opentelemetry
       match: "*"
@@ -168,19 +122,6 @@ pipeline:
 ```
 
 ```text {filename:fluent-bit.conf}
-[SERVICE]
-    Flush        1
-    Log_level    info
-
-[INPUT]
-    Name         tail
-    Tag          app.logs
-    Path         /var/log/app/*.log
-
-[INPUT]
-    Name         event_type
-    Type         traces
-
 [OUTPUT]
     Name                 opentelemetry
     Match                *
