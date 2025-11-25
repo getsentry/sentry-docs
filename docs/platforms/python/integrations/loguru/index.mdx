@@ -174,6 +174,20 @@ sentry_sdk.init(
 
   Default: `ERROR`
 
+## Troubleshooting
+
+<Expandable title="Logs not appearing in Sentry">
+
+  First, make sure you have the `enable_logs=True` option in your `sentry_sdk.init()` and you're on the latest version of the SDK.
+
+  Your logs could be missing because of the logging level of the logger. The SDK will honor the configured level of each logger. That means that you won't see any `INFO` or `DEBUG` data in Sentry from a logger with the level set to `WARNING`, regardless of how you configure the integration.
+
+  It might also be the case that the SDK's Loguru setup is being overwritten in your app. Sentry plugs into Loguru by adding its own handlers when you call `sentry_sdk.init()`. If those handlers are later overridden, for example by calling `logger.configure(handlers=...)`, the integration won't work.
+
+  Another reason why you might not be seeing your logs in Sentry is because they were rejected client- or server-side. This could be due to them being too large, or because of reasons like rate limits or backpressure management. In Sentry, you can go to `Settings > Stats & Usage` and select `Logs` from the `Category` dropdown to see what logs were dropped.
+
+</Expandable>
+
 ## Supported Versions
 
 - Loguru: 0.5+
