@@ -10,10 +10,12 @@ import {DocMetrics} from 'sentry-docs/metrics';
 
 export default function NotFound() {
   const pathname = usePathname() || '';
-  const [host, setHost] = useState('');
-
+  const [brokenUrl, setBrokenUrl] = useState('');
+  
   useEffect(() => {
-    setHost(window.location.host);
+    // Construct URL synchronously from window.location
+    const fullUrl = `${window.location.host}${pathname}`;
+    setBrokenUrl(fullUrl);
 
     // Track 404 metric
     const path = pathname.split('/').filter(Boolean);
@@ -33,7 +35,7 @@ export default function NotFound() {
 
     DocMetrics.pageNotFound(path, refererType);
   }, [pathname]);
-  const brokenUrl = `${host}${pathname}`;
+  
   const reportUrl = `https://github.com/getsentry/sentry-docs/issues/new?template=issue-platform-404.yml&title=🔗 404 Error&url=${brokenUrl}`;
   return (
     <div className="tw-app">
