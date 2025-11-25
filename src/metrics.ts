@@ -30,7 +30,7 @@ export const DocMetrics = {
    * @param attributes - Context (cached, file_size_kb, has_images)
    */
   mdxCompile: (durationMs: number, attributes: Record<string, any> = {}) => {
-    Sentry.metrics.distribution('docs.mdx.compile_duration_ms', durationMs, {
+    Sentry.metrics.distribution('docs.mdx.compile_duration', durationMs, {
       attributes,
       unit: 'millisecond',
     });
