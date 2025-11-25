@@ -1,8 +1,8 @@
 'use client';
 
 import {useEffect, useState} from 'react';
-import {usePathname} from 'next/navigation';
 import {Button} from '@radix-ui/themes';
+import {usePathname} from 'next/navigation';
 
 import {Header} from 'sentry-docs/components/header';
 import {Search} from 'sentry-docs/components/search';
