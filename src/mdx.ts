@@ -637,7 +637,7 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
         const cacheStartTime = Date.now();
         const cached = await readCacheFile<SlugFile>(cacheFile);
         const cacheReadDuration = Date.now() - cacheStartTime;
-        
+
         // Track cache hit metrics immediately after cache read
         if (typeof window === 'undefined') {
           const fileSizeKb = Buffer.byteLength(source, 'utf8') / 1024;
