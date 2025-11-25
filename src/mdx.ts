@@ -633,15 +633,13 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
       assetsCacheDir = path.join(CACHE_DIR, cacheKey);
 
       try {
+        // Time only the cache read operation, not the asset copy
         const cacheStartTime = Date.now();
-        const [cached, _] = await Promise.all([
-          readCacheFile<SlugFile>(cacheFile),
-          cp(assetsCacheDir, outdir, {recursive: true}),
-        ]);
-
-        // Track cache hit metrics
+        const cached = await readCacheFile<SlugFile>(cacheFile);
+        const cacheReadDuration = Date.now() - cacheStartTime;
+        
+        // Track cache hit metrics immediately after cache read
         if (typeof window === 'undefined') {
-          const cacheReadDuration = Date.now() - cacheStartTime;
           const fileSizeKb = Buffer.byteLength(source, 'utf8') / 1024;
           const hasImages =
             source.includes('.png') ||
@@ -657,6 +655,9 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
             slug_prefix: slug.split('/')[0],
           });
         }
+
+        // Copy assets (wait for completion before returning)
+        await cp(assetsCacheDir, outdir, {recursive: true});
 
         return cached;
       } catch (err) {
