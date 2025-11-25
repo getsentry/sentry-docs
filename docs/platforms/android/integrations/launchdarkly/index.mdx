@@ -30,7 +30,7 @@ LDConfig config = new LDConfig.Builder(LDConfig.Builder.AutoEnvAttributes.Enable
         .setHooks(Arrays.asList(new SentryLaunchDarklyAndroidHook())))
     .build();
 LDContext context = LDContext.create("context-key-123abc");
-LDClient client = LDClient.init(this.getApplication(), config, context, 0);
+LDClient launchDarklyClient = LDClient.init(this.getApplication(), config, context, 0);
 ```
 
 ```kotlin {6}
@@ -42,7 +42,7 @@ val config: LDConfig = LDConfig.Builder(LDConfig.Builder.AutoEnvAttributes.Enabl
         .setHooks(listOf(SentryLaunchDarklyAndroidHook())))
     .build()
 val context: LDContext = LDContext.create("context-key-123abc")
-val client: LDClient = LDClient.init(this.application, config, context, 0)
+val launchDarklyClient: LDClient = LDClient.init(this.application, config, context, 0)
 ```
 
 ## Verify
@@ -50,23 +50,17 @@ val client: LDClient = LDClient.init(this.application, config, context, 0)
 The integration is tested by evaluating a feature flag using your LaunchDarkly SDK before capturing an exception.
 
 ```java
-import com.launchdarkly.sdk.LDContext;
 import io.sentry.Sentry;
 
-LDContext context = LDContext.create("example-context-key");
-
-boolean flagValue = client.boolVariation("test-flag", false);
+boolean flagValue = launchDarklyClient.boolVariation("test-flag", false);
 
 Sentry.captureException(new Exception("Something went wrong!"));
 ```
 
 ```kotlin
-import com.launchdarkly.sdk.LDContext
 import io.sentry.Sentry
 
-val context: LDContext = LDContext.create("example-context-key")
-
-val flagValue: Boolean = client.boolVariation("test-flag", false)
+val flagValue: Boolean = launchDarklyClient.boolVariation("test-flag", false)
 
 Sentry.captureException(Exception("Something went wrong!"))
 ```
