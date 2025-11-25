@@ -11,7 +11,7 @@ import {DocMetrics} from 'sentry-docs/metrics';
 export default function NotFound() {
   const pathname = usePathname() || '';
   const [host, setHost] = useState('');
-  
+
   useEffect(() => {
     setHost(window.location.host);
 
@@ -24,8 +24,7 @@ export default function NotFound() {
         const referrerUrl = new URL(document.referrer);
         const currentUrl = new URL(window.location.href);
         // Compare origins for exact match
-        refererType =
-          referrerUrl.origin === currentUrl.origin ? 'internal' : 'external';
+        refererType = referrerUrl.origin === currentUrl.origin ? 'internal' : 'external';
       } catch (e) {
         // Invalid referrer URL
         refererType = 'external';
