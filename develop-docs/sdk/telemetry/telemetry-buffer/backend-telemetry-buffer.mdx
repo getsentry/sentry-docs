@@ -260,24 +260,50 @@ func (b *BucketedBuffer[T]) PollIfReady() []T {
 #### Scheduler Processing
 
 ```go
-func (s *Scheduler) processNextBatch() {
-    // Select priority from weighted cycle
-    priority := s.currentCycle[s.cyclePos]
-    s.cyclePos = (s.cyclePos + 1) % len(s.currentCycle)
+func (s *Scheduler) run() {
+	for {
+		s.mu.Lock()
 
-    // Find ready buffer for this priority
-    for category, buffer := range s.buffers {
-        if buffer.Priority() == priority && buffer.IsReadyToFlush() {
-          items := buffer.PollIfReady()
-          if s.transport.IsRateLimited(category) {
-            // drop the batch and return
-            return
-          }
-          s.sendItems(category, items)
-          // only process one batch per tick
-          break
-        }
-    }
+		for !s.hasWork() && s.ctx.Err() == nil {
+		  // signal the scheduler to sleep till we receive a signal for an added item.
+			s.cond.Wait()
+		}
+
+		s.mu.Unlock()
+		s.processNextBatch()
+	}
+}
+
+func (s *Scheduler) hasWork() bool {
+	for _, buffer := range s.buffers {
+		if buffer.IsReadyToFlush() {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *Scheduler) processNextBatch() {
+	if len(s.currentCycle) == 0 {
+		return
+	}
+
+	priority := s.currentCycle[s.cyclePos]
+	s.cyclePos = (s.cyclePos + 1) % len(s.currentCycle)
+
+	var bufferToProcess Storage[protocol.EnvelopeItemConvertible]
+	var categoryToProcess ratelimit.Category
+	for category, buffer := range s.buffers {
+		if buffer.Priority() == priority && buffer.IsReadyToFlush() {
+			bufferToProcess = buffer
+			categoryToProcess = category
+			break
+		}
+	}
+
+	if bufferToProcess != nil {
+		s.processItems(bufferToProcess, categoryToProcess, false)
+	}
 }
 ```
 
@@ -295,7 +321,7 @@ func (s *Scheduler) flush() {
 }
 
 // The Buffer exposes the flush method that calls both
-func (b *Buffer) Flush(timeout time.Time) {
+func (b *Buffer) Flush(timeout time.Duration) {
   scheduler.flush()
   transport.flush(timeout)
 }
