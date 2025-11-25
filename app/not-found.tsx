@@ -9,7 +9,7 @@ import {Search} from 'sentry-docs/components/search';
 import {DocMetrics} from 'sentry-docs/metrics';
 
 export default function NotFound() {
-  const pathname = usePathname();
+  const pathname = usePathname() || '';
   const [host, setHost] = useState('');
   
   useEffect(() => {
