@@ -4,6 +4,7 @@ import {RefObject, useContext, useEffect, useLayoutEffect, useRef, useState} fro
 import {Clipboard, ExternalLink} from 'react-feather';
 
 import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
+import {DocMetrics} from 'sentry-docs/metrics';
 
 import styles from './code-blocks.module.scss';
 
@@ -116,6 +117,10 @@ export function CodeBlock({filename, language, children, externalLink}: CodeBloc
       await navigator.clipboard.writeText(code);
       setShowCopied(true);
       emit('copy sentry code', {props: {page: window.location.pathname}});
+
+      // Track snippet copy with metadata
+      DocMetrics.snippetCopy(window.location.pathname, language, filename);
+
       setTimeout(() => setShowCopied(false), 1200);
     } catch (error) {
       // eslint-disable-next-line no-console
