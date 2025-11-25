@@ -76,7 +76,7 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/telemetry/spans/batch-processor/',
-    destination: '/sdk/telemetry/telemetry-buffer/',
+    destination: '/sdk/telemetry/telemetry-buffer/batch-processor/',
   },
   {
     source: '/sdk/setup-wizards/:path*',
@@ -529,23 +529,23 @@ const userDocsRedirects = [
   },
   {
     source: '/platforms/javascript/configuration/draining/',
-    destination: '/platforms/javascript/apis/#flush',
+    destination: '/platforms/javascript/configuration/apis/#flush',
   },
   {
     source: '/platforms/javascript/guides/:guide/configuration/draining/',
-    destination: '/platforms/javascript/guides/:guide/apis/#flush',
+    destination: '/platforms/javascript/guides/:guide/configuration/apis/#flush',
   },
   {
     source: '/platforms/javascript/enriching-events/identify-user/',
-    destination: '/platforms/javascript/apis/#setUser',
+    destination: '/platforms/javascript/configuration/apis/#setUser',
   },
   {
     source: '/platforms/javascript/guides/:guide/enriching-events/identify-user/',
-    destination: '/platforms/javascript/guides/:guide/apis/#setUser',
+    destination: '/platforms/javascript/guides/:guide/configuration/apis/#setUser',
   },
   {
     source: '/platforms/javascript/enriching-events/context/',
-    destination: '/platforms/javascript/apis/',
+    destination: '/platforms/javascript/configuration/apis/',
   },
   {
     source: '/platforms/javascript/guides/:guide/enriching-events/context/',
@@ -608,6 +608,10 @@ const userDocsRedirects = [
   {
     source: '/platforms/python/guides/:guide/:path*',
     destination: '/platforms/python/:path*',
+  },
+  {
+    source: '/platforms/python/configuration/sampling/',
+    destination: '/platforms/python/sampling/',
   },
   {
     source: '/platforms/php/guides/laravel/other-versions/laravel8-10/usage/:path*',
@@ -1117,6 +1121,22 @@ const userDocsRedirects = [
   {
     source: '/platforms/javascript/guides/:guide/profiling/browser-profiling/',
     destination: '/platforms/javascript/guides/:guide/profiling/',
+  },
+  {
+    source: '/platforms/javascript/apis/',
+    destination: '/platforms/javascript/configuration/apis/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/apis/',
+    destination: '/platforms/javascript/guides/:guide/configuration/apis/',
+  },
+  {
+    source: '/platforms/javascript/configuration/sampling/',
+    destination: '/platforms/javascript/sampling/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/configuration/sampling/',
+    destination: '/platforms/javascript/guides/:guide/sampling/',
   },
   {
     source: '/platforms/javascript/guides/:guide/profiling/node-profiling/',

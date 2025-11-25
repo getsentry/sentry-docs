@@ -1,11 +1,46 @@
-```javascript
-setTimeout(() => {
-  throw new Error("Sentry Test Error");
-});
+Let's test your setup and confirm that data reaches your Sentry project.
+
+### Issues
+
+To verify that Sentry captures errors and creates issues in your Sentry project, add a button that throws an error when clicked:
+
+```html
+<script>
+  function triggerError() {
+    throw new Error("Sentry Test Error");
+  }
+</script>
+
+<button onclick="triggerError()">Break the World</button>
 ```
 
-<Alert>
+<OnboardingOption optionId="performance" hideForThisOption>
+  Open the page in a browser and click the button to throw an error.
+</OnboardingOption>
 
-Errors triggered from within Browser DevTools are sandboxed and won't trigger an error handler. Place the snippet directly in your code instead.
+<PlatformContent includePath="getting-started-browser-sandbox-warning" />
 
-</Alert>
+<OnboardingOption optionId="performance">
+### Tracing
+To test your tracing configuration, update the previous code to simulate a longer operation and start a trace:
+
+```html
+<script>
+  function triggerError() {
+       await Sentry.startSpan(
+        { name: "Example Frontend Span", op: "test" },
+        async () => {
+          await new Promise(resolve => setTimeout(resolve, 200));
+
+          throw new Error("Sentry Test Error");
+        },
+      );
+     }
+</script>
+
+<button onclick="triggerError()">Break the World</button>
+```
+
+Open the page in a browser and click the button to throw an error and create a trace.
+
+</OnboardingOption>

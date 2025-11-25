@@ -51,7 +51,8 @@ with sentry_sdk.start_span(
     # Set request metadata
     span.set_data("mcp.request.id", "req_123abc")
     span.set_data("mcp.session.id", "session_xyz789")
-    span.set_data("mcp.transport", "pipe")  # or "tcp" for HTTP/WebSocket/SSE
+    span.set_data("mcp.transport", "stdio")  # or "http", "sse" for HTTP/WebSocket/SSE
+    span.set_data("network.transport", "pipe")  # or "tcp" for HTTP/SSE
 
     # Set tool arguments (optional, if send_default_pii=True)
     for key, value in tool_arguments.items():
@@ -101,6 +102,7 @@ with sentry_sdk.start_span(
     span.set_data("mcp.request.id", "req_456def")
     span.set_data("mcp.session.id", "session_xyz789")
     span.set_data("mcp.transport", "http")
+    span.set_data("network.transport", "tcp")
 
     # Set prompt arguments (optional, if send_default_pii=True)
     for key, value in prompt_arguments.items():
@@ -131,7 +133,6 @@ with sentry_sdk.start_span(
 
 ```python
 import sentry_sdk
-from urllib.parse import urlparse
 
 sentry_sdk.init(...)
 
@@ -146,15 +147,11 @@ with sentry_sdk.start_span(
     span.set_data("mcp.resource.uri", resource_uri)
     span.set_data("mcp.method.name", "resources/read")
 
-    # Extract and set protocol/scheme
-    parsed_uri = urlparse(resource_uri)
-    if parsed_uri.scheme:
-        span.set_data("mcp.resource.protocol", parsed_uri.scheme)
-
     # Set request metadata
     span.set_data("mcp.request.id", "req_789ghi")
     span.set_data("mcp.session.id", "session_xyz789")
     span.set_data("mcp.transport", "http")
+    span.set_data("network.transport", "tcp")
 
     # Access the resource
     resource_data = read_resource(resource_uri)
