@@ -1,70 +1,53 @@
 ---
 title: Log and Trace Drains
 sidebar_order: 75
-description: Learn how to set up trace and log drains and forwarders to send data to Sentry.
+description: Learn how to set up drains and forwarders to send logs and traces to Sentry.
 ---
 
 ## Overview
 
-Log and trace drains allow you to forward logs and traces from your deployment platform's native logging and tracing systems directly into Sentry without modifying your application code. Drains capture platform-level telemetry—like build logs, runtime logs, and static asset logs—from deployment platforms such as Vercel, Cloudflare, Heroku, and Supabase.
+Drains and forwarders let you send [logs](/product/explore/logs/) and [traces](/product/explore/trace-explorer/) to Sentry without modifying your application code. They're ideal when:
 
-Drains are ideal when you want to capture platform-level observability from your hosting infrastructure or when you can't install Sentry SDKs directly in your application.
+- You want to capture **platform-level telemetry** from your hosting infrastructure (e.g., Vercel Build Logs, Cloudflare Workers Traces).
+- You **can't install Sentry SDKs** directly in your application (e.g., Nginx Traces, Postgres Logs)
+- You're already using an existing **log pipeline** and want to start routing data to Sentry.
 
 <Alert level="info">
-Error events are not currently supported through drains. To capture errors, use [Sentry SDKs](/product/explore/logs/getting-started/) instead.
+
+Sending error events via drains or forwarders is not currently supported. To capture errors you'll need to add the [Sentry SDK](/platforms/) to your application.
+
 </Alert>
+
+## Platform Drains
+
+**Platform drains** connect your hosting platform's native telemetry system directly to Sentry (e.g., Vercel, Cloudflare, Heroku)
+
+| Platform                                                          | Logs | Traces |
+| ----------------------------------------------------------------- | :--: | :----: |
+| [Vercel](/product/drains/integration/vercel/)                     |  ✅  |   ✅   |
+| [Cloudflare Workers](/product/drains/integration/cloudflare/)     |  ✅  |   ✅   |
+| [Heroku](/product/drains/integration/heroku/)                     |  ✅  |   ✅   |
+| [Supabase](/product/drains/integration/supabase/)                 |  ✅  |   ❌   |
+| [Shopify Hydrogen](/product/drains/integration/shopify-hydrogen/) |  ❌  |   ✅   |
+
 ## Forwarders
 
-- [Vector](/product/drains/integration/vector/)
-- [OpenTelemetry Collector](/product/drains/integration/opentelemetry-collector/)
-- [Fluent Bit](/product/drains/integration/fluentbit/)
+**Forwarders** collect logs and traces from various sources and route them to Sentry.
 
-## Drains
+| Platform                                                                                      | Logs | Traces |
+| --------------------------------------------------------------------------------------------- | :--: | :----: |
+| [OpenTelemetry Collector](/product/drains/integration/opentelemetry-collector/) (recommended) |  ✅  |   ✅   |
+| [Vector](/product/drains/integration/vector/)                                                 |  ✅  |   ❌   |
+| [Fluent Bit](/product/drains/integration/fluentbit/)                                          |  ✅  |   ✅   |
 
-## Supported Platforms
+## Learn More
 
-| Platform | Logs | Traces | Documentation |
-|----------|------|--------|---------------|
-| [Vercel](/product/drains/integration/vercel/) | ✅ | ✅ | Forward runtime, build, and static logs, plus distributed traces |
-| [Cloudflare](/product/drains/integration/cloudflare/) | ✅ | ✅ | Forward logs and traces from Cloudflare Workers |
-| [Heroku](/product/drains/integration/heroku/) | ✅ | ✅ | Forward logs and traces via Heroku Telemetry Drains |
-| [Supabase](/product/drains/integration/supabase/) | ✅ | ❌ | Forward logs from your Supabase stack |
-| [Shopify Hydrogen](/product/drains/integration/shopify-hydrogen/) | ❌ | ✅ | Forward traces from Hydrogen storefronts |
+- [Logs](/product/explore/logs/): View, search, and analyze logs in Sentry
+- [Trace Explorer](/product/explore/trace-explorer/): View, search, and analyze traces in Sentry
+- [OpenTelemetry Protocol](/concepts/otlp/): Learn about Sentry's OpenTelemetry support and how to export OTLP data to Sentry
 
-## Supported Data Types
+<Alert level="warning">
 
-Drains support forwarding **logs** from most supported platforms, with some platforms supporting **traces** as well:
+Sending [metrics](/product/explore/metrics/) via drains or forwarders is not currently supported. If you're interested this support for this please reach out on [GitHub](https://github.com/getsentry/sentry/issues/103486) or or email us at [feedback-metrics@sentry.io](mailto:feedback-metrics@sentry.io).
 
-- **Logs**: Application logs, runtime logs, build logs, and system-generated logs from your platform
-- **Traces**: Distributed tracing data showing request flows through your application and connected services (supported on Vercel, Cloudflare, Heroku, and Shopify Hydrogen)
-
-## How Drains Work
-
-Drains work by configuring your deployment platform's native telemetry export system to forward data to Sentry's ingestion endpoints. Most platforms support forwarding data via:
-
-- [**OpenTelemetry Protocol (OTLP)**](https://opentelemetry.io/docs/): The standard protocol for forwarding logs and traces
-- **Platform-specific endpoints**: Custom endpoints provided by Sentry for specific platforms (like Vercel's custom drain endpoint). Follow the [platform-specific link](/product/drains/#supported-platforms) to learn more. 
-
-Once configured, your platform automatically forwards logs and traces (where supported) to Sentry, where you can view, search, and analyze them alongside data from your Sentry SDKs.
-
-## Prerequisites
-
-Before setting up a drain, ensure you have:
-
-1. **A Sentry project**: Create a project in Sentry if you don't have one already
-2. **Your project credentials**: You'll need your Sentry project's OTLP endpoint URL and public key, which can be found in your [Sentry Project Settings](https://sentry.io/settings/projects/) under **Client Keys (DSN)** > **OpenTelemetry (OTLP)**
-3. **Platform access**: Admin or configuration access to your platform's telemetry settings
-
-## Getting Started
-
-1. Choose your platform from the [Supported Platforms](#supported-platforms) table above and follow the platform-specific setup guide
-2. Configure the drain in your platform's dashboard or via CLI using your Sentry project credentials (found in your [Sentry Project Settings](https://sentry.io/settings/projects/) under **Client Keys (DSN)** > **OpenTelemetry (OTLP)**)
-3. Verify data is flowing by checking your Sentry project's [Logs](/product/explore/logs/) or [Performance](/product/performance/) views
-
-Most drains use Sentry's [OpenTelemetry Protocol (OTLP)](/concepts/otlp/) endpoints. Some platforms, like Vercel, also support custom endpoints. You can find your OTLP endpoint URLs and authentication headers in your project settings.
-
-## Related Documentation
-
-- [Logs Overview](/product/explore/logs/): Learn how to view, search, and analyze logs in Sentry
-- [Performance Monitoring](/product/performance/): Understand distributed tracing and performance data
-- [OpenTelemetry Protocol](/concepts/otlp/): Learn more about OTLP and how to configure OpenTelemetry SDKs
+</Alert>
