@@ -52,21 +52,15 @@ async function getDocsRootNodeCached(): Promise<DocNode> {
     return getDocsRootNodeUncached();
   }
 
-  try {
-    const fs = await import('fs/promises');
-    const path = await import('path');
-    const root = process.cwd();
-    const treePath = path.join(root, '.next/doctree.json');
-    const treeData = await fs.readFile(treePath, 'utf-8');
-    const tree = JSON.parse(treeData);
-    // Reconstruct parent references for tree traversal functions
-    reconstructParentReferences(tree);
-    return tree;
-  } catch (error) {
-    // Fallback to building tree if JSON doesn't exist
-    console.warn('⚠️  Pre-computed doc tree not found, building from scratch');
-    return getDocsRootNodeUncached();
-  }
+  const fs = await import('fs/promises');
+  const path = await import('path');
+  const root = process.cwd();
+  const treePath = path.join(root, '.next/doctree.json');
+  const treeData = await fs.readFile(treePath, 'utf-8');
+  const tree = JSON.parse(treeData);
+  // Reconstruct parent references for tree traversal functions
+  reconstructParentReferences(tree);
+  return tree;
 }
 
 export async function getDocsRootNodeUncached(): Promise<DocNode> {
