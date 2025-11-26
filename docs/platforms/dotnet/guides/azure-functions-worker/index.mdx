@@ -20,12 +20,16 @@ Add the Sentry dependencies to your Azure Functions application:
 
 ```shell {tabTitle:.NET Core CLI}
 dotnet add package Sentry.Extensions.Logging -v {{@inject packages.version('sentry.dotnet') }}
+// ___PRODUCT_OPTION_START___ performance
 dotnet add package Sentry.OpenTelemetry -v {{@inject packages.version('sentry.dotnet') }}
+// ___PRODUCT_OPTION_END___
 ```
 
 ```powershell {tabTitle:Package Manager}
 Install-Package Sentry.Extensions.Logging -Version {{@inject packages.version('sentry.dotnet') }}
+// ___PRODUCT_OPTION_START___ performance
 Install-Package Sentry.OpenTelemetry -Version {{@inject packages.version('sentry.dotnet') }}
+// ___PRODUCT_OPTION_END___
 ```
 
 The [Sentry.Extensions.Logging](/platforms/dotnet/guides/extensions-logging/) package also provides access to the `ILogger<T>` integration and the other core features available in the [Sentry](/platforms/dotnet/) SDK.
@@ -34,18 +38,21 @@ The [Sentry.Extensions.Logging](/platforms/dotnet/guides/extensions-logging/) pa
 
 The core features of Sentry are enabled by calling `AddSentry` when configuring logging.
 
+<OnboardingOption optionId="performance">
 Performance tracing can be enabled by adding Sentry to the OpenTelemetry `TraceProviderBuilder` and then configuring Sentry itself to use OpenTelemetry.
+ </OnboardingOption>
 
 For example:
 
 ```csharp
 using Sentry.OpenTelemetry;
 
+// ___PRODUCT_OPTION_START___ performance
 using var tracerProvider = Sdk.CreateTracerProviderBuilder()
     .AddSentry() // <-- Configure OpenTelemetry to send traces to Sentry
     .AddHttpClientInstrumentation() // From OpenTelemetry.Instrumentation.Http... adds automatic tracing for outgoing HTTP requests
     .Build();
-
+// ___PRODUCT_OPTION_END___
 var host = new HostBuilder()
     .ConfigureFunctionsWorkerDefaults()
     .ConfigureLogging(logging =>
@@ -53,9 +60,11 @@ var host = new HostBuilder()
         logging.AddSentry(options =>
         {
             options.Dsn = "___PUBLIC_DSN___";
+            // ___PRODUCT_OPTION_START___ performance
             options.TracesSampleRate = 1.0;
             options.UseOpenTelemetry(); // <-- Configure Sentry to use open telemetry
             options.DisableSentryHttpMessageHandler = true; // So Sentry doesn't also create spans for outbound HTTP requests
+            // ___PRODUCT_OPTION_END___
             options.Debug = true;
         });
     })
