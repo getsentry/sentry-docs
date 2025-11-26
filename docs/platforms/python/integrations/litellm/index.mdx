@@ -1,0 +1,118 @@
+---
+title: LiteLLM
+description: "Learn about using Sentry for LiteLLM."
+---
+
+This integration connects Sentry with the [LiteLLM Python SDK](https://github.com/BerriAI/litellm).
+
+Once you've installed this SDK, you can use the Sentry AI Agents Monitoring, a Sentry dashboard that helps you understand what's going on with your AI requests.
+
+Sentry AI Monitoring will automatically collect information about prompts, tools, tokens, and models. Learn more about the [AI Agents Dashboard](/product/insights/ai/agents).
+
+## Install
+
+Install `sentry-sdk` from PyPI with the `litellm` extra:
+
+```bash {tabTitle:pip}
+pip install "sentry-sdk[litellm]"
+```
+
+```bash {tabTitle:uv}
+uv add "sentry-sdk[litellm]"
+```
+
+## Configure
+
+Add `LiteLLMIntegration()` to your `integrations` list:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.litellm import LiteLLMIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for tracing.
+    traces_sample_rate=1.0,
+    # Add data like inputs and responses;
+    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    send_default_pii=True,
+    integrations=[
+        LiteLLMIntegration(),
+    ],
+)
+```
+
+## Verify
+
+Verify that the integration works by making a chat completion request to LiteLLM.
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.litellm import LiteLLMIntegration
+import litellm
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    traces_sample_rate=1.0,
+    send_default_pii=True,
+    integrations=[
+        LiteLLMIntegration(),
+    ],
+)
+
+response = litellm.completion(
+    model="gpt-3.5-turbo",
+    messages=[{"role": "user", "content": "say hello"}],
+    max_tokens=100
+)
+print(response.choices[0].message.content)
+```
+
+After running this script, the resulting data should show up in the `"AI Spans"` tab on the `"Explore" > "Traces"` page on Sentry.io.
+
+If you manually created an <PlatformLink to="/tracing/instrumentation/custom-instrumentation/ai-agents-module/#invoke-agent-span">Invoke Agent Span</PlatformLink> (not done in the example above) the data will also show up in the [AI Agents Dashboard](/product/insights/ai/agents).
+
+It may take a couple of moments for the data to appear in [sentry.io](https://sentry.io).
+
+## Behavior
+
+- The LiteLLM integration will connect Sentry with the supported LiteLLM methods automatically.
+
+- The supported functions are currently `completion` and `embedding` (both sync and async).
+
+- Sentry considers LLM inputs/outputs as PII (Personally identifiable information) and doesn't include PII data by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False` as shown in the [Options section](#options) below.
+
+## Options
+
+By adding `LiteLLMIntegration` to your `sentry_sdk.init()` call explicitly, you can set options for `LiteLLMIntegration` to change its behavior:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.litellm import LiteLLMIntegration
+
+sentry_sdk.init(
+    # ...
+    # Add data like inputs and responses;
+    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    send_default_pii=True,
+    integrations=[
+        LiteLLMIntegration(
+            include_prompts=False,  # LLM inputs/outputs will be not sent to Sentry, despite send_default_pii=True
+        ),
+    ],
+)
+```
+
+You can pass the following keyword arguments to `LiteLLMIntegration()`:
+
+- `include_prompts`:
+
+  Whether LLM inputs and outputs should be sent to Sentry. Sentry considers this data personal identifiable data (PII) by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False`.
+
+  The default is `True`.
+
+## Supported Versions
+
+- LiteLLM: 1.77.0+
+- Python: 3.8+

@@ -149,7 +149,7 @@ Configures the sample rate for error events, in the range of `0.0` to `1.0`. The
 
 <SdkOption name="before_send" type='function (Event $event): Event'>
 
-This function is called with the event payload, and can return a modified event object, or `null` to skip reporting the event. This can be used, for instance, for manual PII stripping before sending.
+This function is called with an event object, and can return a modified event object, or `null` to skip reporting the event. This can be used, for instance, for manual PII stripping before sending.
 
 By the time `before_send` is executed, all scope data has already been applied to the event. Further modification of the scope won't have any effect.
 
@@ -247,13 +247,25 @@ Transports are used to send events to Sentry. Transports can be customized to so
 
 <SdkOption name="transport" type="TransportInterface" defaultValue='null'>
 
-Switches out the transport used to send events. It can, for instance, be used to capture events for unit-testing or to send it through some more complex setup that requires proxy authentication.
+Switches out the transport used to send events. It can, for instance, be used to capture events for unit testing.
+
+</SdkOption>
+
+<SdkOption name="http_client" type="HttpClientInterface" defaultValue="null">
+
+Switches out the HTTP client used by the SDKs transport.
 
 </SdkOption>
 
 <SdkOption name="http_proxy" type='string' defaultValue='null'>
 
-When set, a proxy can be configured that should be used for outbound requests. This is also used for HTTPS requests unless a separate `https_proxy` is configured. However, not all SDKs support a separate HTTPS proxy. SDKs will attempt to default to the system-wide configured proxy, if possible. For instance, on Unix systems, the `http_proxy` environment variable will be picked up.
+When set, a proxy can be configured that should be used for outbound requests. This is also used for HTTPS requests.
+
+</SdkOption>
+
+<SdkOption name="http_proxy_authentication" type="string" defaultValue="null">
+
+Sets proxy authentication when using `http_proxy`.
 
 </SdkOption>
 
@@ -266,5 +278,23 @@ The maximum number of seconds to wait while trying to connect to a server.
 <SdkOption name="http_timeout" type='int' defaultValue='5'>
 
 The maximum execution time, in seconds, for the request+response as a whole. The value should also include the time for the connect phase, so it should be greater than the value set for the `http_connect_timeout` option.
+
+</SdkOption>
+
+<SdkOption name="http_ssl_verify_peer" type="bool" defaultValue="true">
+
+Controls SSL peer verification for outbound requests.
+
+</SdkOption>
+
+<SdkOption name="http_ssl_native_ca" type="bool" defaultValue="false">
+
+When enabled, the SDK will use the native OS certificate store.
+
+</SdkOption>
+
+<SdkOption name="http_compression" type="bool" defaultValue="true">
+
+When enabled, request payloads are gzipped if the `zlib` extension is available.
 
 </SdkOption>

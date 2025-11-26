@@ -1,0 +1,100 @@
+The Gradle plugin automatically detects build metadata from your git repository. On GitHub Actions, all metadata is automatically detected. On other CI systems, you may need to manually set some values using the `vcsInfo` extension.
+
+1. Configure the [Sentry Android Gradle plugin](/platforms/android/configuration/gradle/) with at least version `6.0.0-beta.2`
+
+2. Set the auth token as an environment variable to be used when running your release build.
+
+   <OrgAuthTokenNote />
+
+   ```bash
+   export SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+   ```
+
+3. Enable uploading for size analysis for CI builds.
+
+   ```kotlin {filename:build.gradle.kts}
+   sentry {
+     sizeAnalysis {
+       enabled = providers.environmentVariable("GITHUB_ACTIONS").isPresent
+     }
+   }
+   ```
+
+   ```groovy {filename:build.gradle}
+   sentry {
+     sizeAnalysis {
+       enabled = providers.environmentVariable("GITHUB_ACTIONS").present
+     }
+   }
+   ```
+
+4. Invoke the following Gradle tasks to build your app and trigger the upload.
+
+   ```aab {filename:aab}
+   ./gradlew bundleRelease
+   ```
+
+   ```apk {filename:apk}
+   ./gradlew assembleRelease
+   ```
+
+5. After an upload has successfully processed, confirm the metadata is correct in the Sentry UI
+
+   ![Upload metadata =400x](./images/android-metadata.png)
+
+### Overriding Metadata
+
+The Gradle plugin automatically detects build metadata from your git repository. On GitHub Actions, all metadata is automatically detected. On other CI systems, you may need to manually set some values using the `vcsInfo` extension.
+
+Configure overrides in your Gradle build configuration:
+
+```kotlin {filename:build.gradle.kts}
+sentry {
+  sizeAnalysis {
+    enabled = providers.environmentVariable("GITHUB_ACTIONS").isPresent
+  }
+
+  vcsInfo {
+    headSha.set("abc123")
+    baseSha.set("def456")
+    vcsProvider.set("github")
+    headRepoName.set("organization/repository")
+    baseRepoName.set("organization/repository")
+    headRef.set("feature-branch")
+    baseRef.set("main")
+    prNumber.set(42)
+  }
+}
+```
+
+```groovy {filename:build.gradle}
+sentry {
+  sizeAnalysis {
+    enabled = providers.environmentVariable("GITHUB_ACTIONS").present
+  }
+
+  vcsInfo {
+    headSha = 'abc123'
+    baseSha = 'def456'
+    vcsProvider = 'github'
+    headRepoName = 'organization/repository'
+    baseRepoName = 'organization/repository'
+    headRef = 'feature-branch'
+    baseRef = 'main'
+    prNumber = 42
+  }
+}
+```
+
+Available `vcsInfo` properties:
+
+| Property       | Type   | Description                       |
+| -------------- | ------ | --------------------------------- |
+| `headSha`      | String | Current commit SHA                |
+| `baseSha`      | String | Base commit SHA (for comparison)  |
+| `vcsProvider`  | String | VCS provider (e.g., "github")     |
+| `headRepoName` | String | Repository name (org/repo format) |
+| `baseRepoName` | String | Base repository name              |
+| `headRef`      | String | Branch or tag name                |
+| `baseRef`      | String | Base branch name                  |
+| `prNumber`     | Int    | Pull request number               |
