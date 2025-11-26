@@ -47,6 +47,14 @@ const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
       ],
     };
 
+const outputFileTracingIncludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
+  ? {
+      '/**/*': ['.next/doctree.json'],
+    }
+  : {
+      '\\[\\[\\.\\.\\.path\\]\\]': ['.next/doctree.json'],
+    };
+
 if (process.env.NODE_ENV !== 'development' && !process.env.NEXT_PUBLIC_SENTRY_DSN) {
   throw new Error(
     'Missing required environment variable: NEXT_PUBLIC_SENTRY_DSN must be set in production'
@@ -59,6 +67,7 @@ const nextConfig = {
   trailingSlash: true,
   serverExternalPackages: ['rehype-preset-minify'],
   outputFileTracingExcludes,
+  outputFileTracingIncludes,
   images: {
     contentDispositionType: 'inline', // "open image in new tab" instead of downloading
     remotePatterns: REMOTE_IMAGE_PATTERNS,
