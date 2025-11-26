@@ -38,6 +38,13 @@ export function getDocsRootNode(): Promise<DocNode> {
   return getDocsRootNodeCache;
 }
 
+function reconstructParentReferences(node: DocNode, parent?: DocNode): void {
+  if (parent) {
+    node.parent = parent;
+  }
+  node.children.forEach(child => reconstructParentReferences(child, node));
+}
+
 async function getDocsRootNodeCached(): Promise<DocNode> {
   // At build time, use the uncached version (scans filesystem)
   // At runtime (serverless), load from pre-computed JSON to avoid ENOENT errors
@@ -51,7 +58,10 @@ async function getDocsRootNodeCached(): Promise<DocNode> {
     const root = process.cwd();
     const treePath = path.join(root, '.next/doctree.json');
     const treeData = await fs.readFile(treePath, 'utf-8');
-    return JSON.parse(treeData);
+    const tree = JSON.parse(treeData);
+    // Reconstruct parent references for tree traversal functions
+    reconstructParentReferences(tree);
+    return tree;
   } catch (error) {
     // Fallback to building tree if JSON doesn't exist
     console.warn('⚠️  Pre-computed doc tree not found, building from scratch');
