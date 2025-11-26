@@ -1791,10 +1791,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/concepts/key-terms/tracing/span-metrics/',
   },
   {
-    from: '/platforms/php/metrics/',
-    to: '/concepts/key-terms/tracing/span-metrics/',
-  },
-  {
     from: '/platforms/php/guides/laravel/metrics/',
     to: '/concepts/key-terms/tracing/span-metrics/',
   },
