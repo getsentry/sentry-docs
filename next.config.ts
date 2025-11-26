@@ -47,13 +47,9 @@ const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
       ],
     };
 
-const outputFileTracingIncludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
-  ? {
-      '/**/*': ['.next/doctree.json'],
-    }
-  : {
-      '\\[\\[\\.\\.\\.path\\]\\]': ['.next/doctree.json'],
-    };
+const outputFileTracingIncludes = {
+  '/**/*': ['.next/doctree.json'],
+};
 
 if (process.env.NODE_ENV !== 'development' && !process.env.NEXT_PUBLIC_SENTRY_DSN) {
   throw new Error(
