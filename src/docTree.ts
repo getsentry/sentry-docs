@@ -34,11 +34,32 @@ export function getDocsRootNode(): Promise<DocNode> {
   if (getDocsRootNodeCache) {
     return getDocsRootNodeCache;
   }
-  getDocsRootNodeCache = getDocsRootNodeUncached();
+  getDocsRootNodeCache = getDocsRootNodeCached();
   return getDocsRootNodeCache;
 }
 
-async function getDocsRootNodeUncached(): Promise<DocNode> {
+async function getDocsRootNodeCached(): Promise<DocNode> {
+  // At build time, use the uncached version (scans filesystem)
+  // At runtime (serverless), load from pre-computed JSON to avoid ENOENT errors
+  if (process.env.NODE_ENV === 'development' || process.env.CI) {
+    return getDocsRootNodeUncached();
+  }
+
+  try {
+    const fs = await import('fs/promises');
+    const path = await import('path');
+    const root = process.cwd();
+    const treePath = path.join(root, '.next/doctree.json');
+    const treeData = await fs.readFile(treePath, 'utf-8');
+    return JSON.parse(treeData);
+  } catch (error) {
+    // Fallback to building tree if JSON doesn't exist
+    console.warn('⚠️  Pre-computed doc tree not found, building from scratch');
+    return getDocsRootNodeUncached();
+  }
+}
+
+export async function getDocsRootNodeUncached(): Promise<DocNode> {
   return frontmatterToTree(
     await (isDeveloperDocs ? getDevDocsFrontMatter() : getDocsFrontMatter())
   );
