@@ -26,7 +26,9 @@ async function main() {
     await mkdir(nextDir, {recursive: true});
     await mkdir(publicDir, {recursive: true});
 
-    const treeJSON = JSON.stringify(tree, (key, value) => (key === 'parent' ? undefined : value));
+    const treeJSON = JSON.stringify(tree, (key, value) =>
+      key === 'parent' ? undefined : value
+    );
 
     // Save to .next for standalone builds
     const nextPath = path.join(nextDir, 'doctree.json');
