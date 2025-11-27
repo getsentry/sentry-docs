@@ -28,7 +28,7 @@ SDKs MUST NOT expose names like "segment span" (e.g. in APIs) to users and SHOUL
 
 SDKs' span implementations MUST at minimum implement the following span interface.
 
-```ts
+```ts {tabTitle:TypeScript}
 interface Span {
   private _spanId: string;
 	
@@ -49,6 +49,17 @@ interface Span {
 }
 ```
 
+```Python {tabTitle:Python}
+class Span:
+    span_id: str
+
+    def set_attribute(self, key: str, value: SpanAttributeValue) -> None: ...
+    def set_status(self, status: Literal["ok", "error"]) -> None: ...
+    def get_name(self) -> str: ...
+    def set_name(self) -> None: ...
+    def get_attributes(self) -> SpanAttributes: ...
+```
+
 When implementing the span interface, consider the following guidelines:
 
 - SDKs MAY implement additional APIs, such as getters/setters for properties (e.g. `span.getStatus()`), or additional methods for convenience (e.g. `Span::spanContext()`). 
@@ -63,7 +74,7 @@ SDKs MUST expose at least one API to start a span. SDKs MAY expose additional AP
 
 SDKs MUST expose a default `startSpan` API that takes options and returns a span:
 
-```ts
+```ts {tabTitle:TypeScript}
 function startSpan(options: StartSpanOptions): Span;
 
 interface StartSpanOptions {
@@ -72,6 +83,16 @@ interface StartSpanOptions {
   parentSpan?: Span | null;
   active?: boolean;
 }
+```
+
+```Python {tabTitle:Python}
+with start_span(
+    name,  # type: str
+    attributes,  # type: SpanAttributes
+    parent_span,  # type: Span
+    active,  # type: bool
+) as span:
+    ...
 ```
 
 SDKs MUST allow specifying the following options to be passed to `startSpan`:
@@ -113,7 +134,7 @@ SDKs MAY expose additional utility APIs for users, or internal usage to access c
 
 ## Example
 
-```ts
+```ts {tabTitle:TypeScript}
 
 const checkoutSpan = Sentry.startSpan({ name: 'on-checkout-click', attributes: { 'user.id': '123' } })
 
@@ -140,4 +161,23 @@ unrelatedSpan.end();
 on('checkout-finished', ({ timestamp }) => {
 	checkoutSpan.end(timestamp);
 })
+```
+
+```Python {tabTitle:Python}
+
+with sentry_sdk.start_span(name="checkout", attributes={"user.id": "123"}) as checkout_span:
+    with sentry_sdk.start_span(name="process-order") as process_order_span:
+        result = process()
+        process_order_span.set_attribute("order-status", result.message)
+
+    with sentry_sdk.start_span(name="process-payment") as process_payment_span:
+        try:
+            result = process_payment()
+            process_payment_span.set_attribute("order-status", result.message)
+        except:
+            process_payment_span.set_status("error")
+            process_payment_span.set_attribute("order-status", "error")
+
+    with sentry_sdk.start_span(name="log-order", parent_span=None) as unrelated_span:
+        log_order()
 ```
