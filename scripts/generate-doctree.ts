@@ -19,19 +19,24 @@ async function main() {
     // Generate the doc tree
     const tree = await getDocsRootNodeUncached();
 
-    // Create .next directory if it doesn't exist
+    // Save to both .next (for standalone) and public (for serverless)
     const nextDir = path.join(root, '.next');
+    const publicDir = path.join(root, 'public');
+
     await mkdir(nextDir, {recursive: true});
+    await mkdir(publicDir, {recursive: true});
 
-    // Save to JSON (remove parent references to avoid circular structure)
-    const outputPath = path.join(nextDir, 'doctree.json');
-    await writeFile(
-      outputPath,
-      JSON.stringify(tree, (key, value) => (key === 'parent' ? undefined : value)),
-      'utf-8'
-    );
+    const treeJSON = JSON.stringify(tree, (key, value) => (key === 'parent' ? undefined : value));
 
-    console.log(`✅ Doc tree saved to ${outputPath}`);
+    // Save to .next for standalone builds
+    const nextPath = path.join(nextDir, 'doctree.json');
+    await writeFile(nextPath, treeJSON, 'utf-8');
+
+    // Save to public for serverless (will be accessible as static file)
+    const publicPath = path.join(publicDir, 'doctree.json');
+    await writeFile(publicPath, treeJSON, 'utf-8');
+
+    console.log(`✅ Doc tree saved to ${nextPath} and ${publicPath}`);
   } catch (error) {
     console.error('❌ Error generating doc tree:', error);
     console.error(error);

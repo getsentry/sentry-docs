@@ -46,21 +46,38 @@ function reconstructParentReferences(node: DocNode, parent?: DocNode): void {
 }
 
 async function getDocsRootNodeCached(): Promise<DocNode> {
-  // At build time, use the uncached version (scans filesystem)
-  // At runtime (serverless), load from pre-computed JSON to avoid ENOENT errors
-  if (process.env.NODE_ENV === 'development' || process.env.CI) {
+  // In development, scan filesystem for hot reloading
+  // In production (including CI builds), load from pre-computed JSON
+  if (process.env.NODE_ENV === 'development') {
     return getDocsRootNodeUncached();
   }
 
   const fs = await import('fs/promises');
   const path = await import('path');
   const root = process.cwd();
-  const treePath = path.join(root, '.next/doctree.json');
-  const treeData = await fs.readFile(treePath, 'utf-8');
-  const tree = JSON.parse(treeData);
-  // Reconstruct parent references for tree traversal functions
-  reconstructParentReferences(tree);
-  return tree;
+
+  // Try public/ first (for serverless), then .next/ (for standalone)
+  const paths = [
+    path.join(root, 'public/doctree.json'),
+    path.join(root, '.next/doctree.json'),
+  ];
+
+  for (const treePath of paths) {
+    try {
+      const treeData = await fs.readFile(treePath, 'utf-8');
+      const tree = JSON.parse(treeData);
+      // Reconstruct parent references for tree traversal functions
+      reconstructParentReferences(tree);
+      return tree;
+    } catch (error) {
+      // Try next path
+      continue;
+    }
+  }
+
+  throw new Error(
+    'Pre-computed doc tree not found. Build may have failed or doctree.json was not generated.'
+  );
 }
 
 export async function getDocsRootNodeUncached(): Promise<DocNode> {
