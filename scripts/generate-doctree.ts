@@ -15,8 +15,8 @@ async function main() {
 
   try {
     // Dynamically import to respect NEXT_PUBLIC_DEVELOPER_DOCS at build time
-    const {getDocsRootNodeUncached} = await import('../src/docTree.ts');
-    const {isDeveloperDocs} = await import('../src/isDeveloperDocs.ts');
+    const {getDocsRootNodeUncached} = await import('../src/docTree');
+    const {isDeveloperDocs} = await import('../src/isDeveloperDocs');
 
     // Generate the doc tree
     const tree = await getDocsRootNodeUncached();
