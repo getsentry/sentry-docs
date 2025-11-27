@@ -60,10 +60,7 @@ async function getDocsRootNodeCached(): Promise<DocNode> {
   const filename = isDeveloperDocs ? 'doctree-dev.json' : 'doctree.json';
 
   // Try public/ first (for serverless), then .next/ (for standalone)
-  const paths = [
-    path.join(root, 'public', filename),
-    path.join(root, '.next', filename),
-  ];
+  const paths = [path.join(root, 'public', filename), path.join(root, '.next', filename)];
 
   for (const treePath of paths) {
     try {
