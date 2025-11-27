@@ -8,14 +8,16 @@
 import {mkdir, writeFile} from 'fs/promises';
 import path from 'path';
 
-import {getDocsRootNodeUncached} from '../src/docTree';
-
 const root = process.cwd();
 
 async function main() {
   console.log('🌲 Generating doc tree...');
 
   try {
+    // Dynamically import to respect NEXT_PUBLIC_DEVELOPER_DOCS at build time
+    const {getDocsRootNodeUncached} = await import('../src/docTree.ts');
+    const {isDeveloperDocs} = await import('../src/isDeveloperDocs.ts');
+
     // Generate the doc tree
     const tree = await getDocsRootNodeUncached();
 
@@ -30,15 +32,20 @@ async function main() {
       key === 'parent' ? undefined : value
     );
 
+    // Use different filename based on which docs we're building
+    const filename = isDeveloperDocs ? 'doctree-dev.json' : 'doctree.json';
+
     // Save to .next for standalone builds
-    const nextPath = path.join(nextDir, 'doctree.json');
+    const nextPath = path.join(nextDir, filename);
     await writeFile(nextPath, treeJSON, 'utf-8');
 
     // Save to public for serverless (will be accessible as static file)
-    const publicPath = path.join(publicDir, 'doctree.json');
+    const publicPath = path.join(publicDir, filename);
     await writeFile(publicPath, treeJSON, 'utf-8');
 
-    console.log(`✅ Doc tree saved to ${nextPath} and ${publicPath}`);
+    console.log(
+      `✅ Doc tree saved to ${nextPath} and ${publicPath} (isDeveloperDocs: ${isDeveloperDocs})`
+    );
   } catch (error) {
     console.error('❌ Error generating doc tree:', error);
     console.error(error);

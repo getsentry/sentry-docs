@@ -56,10 +56,13 @@ async function getDocsRootNodeCached(): Promise<DocNode> {
   const path = await import('path');
   const root = process.cwd();
 
+  // Load the correct tree based on whether this is developer docs or regular docs
+  const filename = isDeveloperDocs ? 'doctree-dev.json' : 'doctree.json';
+
   // Try public/ first (for serverless), then .next/ (for standalone)
   const paths = [
-    path.join(root, 'public/doctree.json'),
-    path.join(root, '.next/doctree.json'),
+    path.join(root, 'public', filename),
+    path.join(root, '.next', filename),
   ];
 
   for (const treePath of paths) {
@@ -76,7 +79,7 @@ async function getDocsRootNodeCached(): Promise<DocNode> {
   }
 
   throw new Error(
-    'Pre-computed doc tree not found. Build may have failed or doctree.json was not generated.'
+    `Pre-computed doc tree not found (${filename}). Build may have failed or doctree was not generated with matching NEXT_PUBLIC_DEVELOPER_DOCS flag.`
   );
 }
 
