@@ -290,9 +290,11 @@ Starting with iOS 18, tvOS 18, and macOS 15 the Swift classes `Data` and `FileMa
 
 ### Manual File/IO Tracing
 
+Starting with iOS 18.0, macOS 15.0, and tvOS 18.0, the Swift class `Data` can not be instrumented automatically anymore. Instead, you need to use Sentry-specific type extensions.
+
 Starting with version 8.48.0, the Sentry SDK offers extensions for the types `Data` and `FileManager` to track reading and writing data, as well as creating, moving, copying, and deleting files.
 
-The method signatures of the extension resemble the ones of the original types, but they add a span to the current transaction:
+The method signatures of these extensions resemble those of the original types, but they add a span to the current transaction:
 
 **Data Operations:**
 
@@ -342,11 +344,18 @@ We recommend you disable the swizzling of `NSData` and `NSFileManager` when usin
 import Sentry
 
 SentrySDK.start { options in
-    options.dsn = "___PUBLIC_DSN___";
+    options.dsn = "___PUBLIC_DSN___"
     options.enableFileIOTracing = true
     options.experimental.enableDataSwizzling = false
     options.experimental.enableFileManagerSwizzling = false
 }
+
+// Reading a file with tracing enabled:
+let url = URL(string: "path/to/file")
+let data = Data(contentsOfUrlWithSentryTracing: url, options: [.atomic])
+
+// Writing to a file with tracing enabled:
+try data.writeWithSentryTracing(to: url, options: [.atomic])
 ```
 
 ```objc {tabTitle:Objective-C}
@@ -358,6 +367,13 @@ SentrySDK.start { options in
     options.experimental.enableDataSwizzling = NO;
     options.experimental.enableFileManagerSwizzling = NO;
 }];
+
+// Reading a file with tracing enabled:
+NSURL *url = [NSURL URLWithString:@"path/to/file"];
+NSData *data = [NSData dataWithContentsOfUrlWithSentryTracing:url options:NSDataReadingAtomic error:nil];
+
+// Writing to a file with tracing enabled:
+[data writeWithSentryTracingToURL:url options:NSDataWritingAtomic error:nil];
 ```
 
 ## Core Data Tracing
