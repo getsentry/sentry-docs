@@ -4,7 +4,7 @@ description: Learn about our principles and processes when it comes to introduci
 sidebar_order: 4
 ---
 
-Code ages, features and APIs become obsolete. All of this is expected when working on a library for an extended period of time. Deciding what to drop, how, and when, is not straightforward. The developers' wishes to evolve a codebase inevitably clash with the user experience of the folks using the codebase.
+Code ages, features and APIs become obsolete. All of this is expected when working on a library for an extended period of time. Deciding what to drop, how, and when, is not straightforward. Our wishes as developers to evolve a codebase inevitably clash with the user experience of the folks using it.
 
 At Sentry, user experience is a core part of our [SDK development values](/sdk/philosophy). Evolving our SDKs is ultimately a balancing act between what we as engineers think is right (for us, for the health of the codebase, and for the users), and the ease of use on the user side.
 
@@ -44,8 +44,8 @@ Naturally, the language of your SDK and the community around it also affects wha
 We also need to be mindful of what the SDK change might cause in the product. Sometimes we're forcing users to make changes in their use of Sentry because we, for example, broke a dashboard by renaming a span attribute. However, we also don't want to be in a position where we can't fix an attribute name without releasing a new major version of the SDK. That's also not great UX.
 
 In general, we consider changes to the following product-side features breaking:
-- **Grouping:** An SDK change might result in error events being grouped differently, because we remove, add or change some of the data on the event that is used in the grouping algorithm on the server. The logic that governs grouping [lives in the monolith](https://github.com/getsentry/sentry/tree/742439ff2894dd187ada47cf96ee3f2f9d31e828/src/sentry/grouping). When you think a change might affect grouping, it's recommended to try the SDK with the change yourself and check in Sentry whether grouping is preserved.
-- **Dashboards:** A user dashboards set up that filter on specific data and we change that data. For instance, changing a span's `op` might mean a dashboard showing those spans will be empty after an SDK update.
+- **Grouping:** An SDK change might result in error events being grouped differently, because we remove, add or change some of the data on the event that is used in the grouping algorithm on the server. When you think a change might affect grouping, it's recommended to try the change yourself and check in Sentry to see if grouping is preserved.
+- **Dashboards:** A user has set up a dashboard that filters on specific data and we change that data. For instance, changing a span's `op` might mean a dashboard showing those spans will be empty after an SDK update.
 - **Alerts:** Alerts might stop firing because we've changed an attribute.
 
 Changes to grouping are always considered breaking and should be released in a major version. Changes to dashboards and alerts need closer inspection.
@@ -55,7 +55,11 @@ Changes to grouping are always considered breaking and should be released in a m
 
 In order to gauge the impact of the change, you can consult internal stats on how many alerts or dashboards are using the specific property:
 - You can reach out to the Data team.
-- If you have Redash access (which you can request via the IT helpdesk), you can execute the queries yourself. (TODO link/manual)
+- If you have Redash access (which you can request via the IT helpdesk), you can execute the queries yourself. The easiest way to do this is:
+  - Find an example dashboard that looks similar to what you need (for instance, https://redash.getsentry.net/dashboards/372-span-status-usage-in-widgets-and-alerts can be modified for checking span-related alerts)
+  - Navigate to a specific widget on the dashboard, open a dropdown and click on `View Query`
+  - Fork the query on the top right
+  - Modify as you need and execute
 
 If you find out only a small number of users is using the attribute you're about to change, you can consider releasing it in a minor version and reaching out to the folks affected directly. The Support team will be able to help.
 
@@ -67,6 +71,7 @@ The caveat to gauging impact this way is that self-hosted Sentries are not inclu
 There are also changes that technically don't require the user to adapt, but they might impact their UX significantly. These tend to be subtle and often need to be evaluated on a case-by-case basis. Be especially mindful of:
 
 - Changes that affect the user's quota. The SDK might, for instance, start sending much more spans because we auto-enabled an integration or changed an option from opt-in to on by default.
+- Changes that might result in events being dropped. We might, for instance, increase or remove a default trimming limit in the SDK, which might result in payloads big enough that they are rejected during ingestion.
 
 
 ## Introducing Breaking Changes
@@ -75,19 +80,14 @@ So you're considering introducing a potentially breaking change.
 
 Some of this is, again, dependent on your SDK's language. Some language communities are generally more open to new majors, while in others you can expect that introducing a new major release will create significant friction for folks to upgrade.
 
-In any case, introducing a new major release creates friction. The harder it is to upgrade, the less people will actually do it. We want to avoid folks staying on old releases because upgrading is too much of a hassle for them as much as we can.
+In any case, introducing a new major release creates friction. The harder it is to upgrade, the less people will actually do it. We want to avoid folks staying on old releases because upgrading is too much of a hassle for them.
 
-What increases friction:
-- Piling up breaking changes. Especially if you don't have major releases often, you might be tempted to queue a lot of breaking changes.
+**Factors increasing friction:**
+- Piling up breaking changes. Especially if you don't have major releases often, you might be tempted to queue a lot of breaking changes into one release.
 
-What lessens friction:
-- A great migration guide. Make sure to include copy-pastable before-after examples.
-- Deprecation warnings.
-- Trying to do the upgrade yourself (with the help of an LLM?).
-- An automated way of doing the upgrade (codemods?).
-- Call outs in docs and changelogs.
-
-
-## Recipes
-
-TODO
+**How to lessen friction:**
+- Call-outs in relevant places in the docs and in the changelog.
+- Deprecation warnings that a breaking change is coming.
+- A polished migration guide with a lot of easily copy-pastable examples.
+- Trying to do the upgrade yourself on a test app. Instruct an LLM to do the update using your migration guide and see how well it works.
+- Providing a tool that helps with the upgrade, for example using codemods.
