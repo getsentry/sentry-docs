@@ -267,6 +267,28 @@ import Sentry
 SentrySDK.start { options in
     options.dsn = "___PUBLIC_DSN___"
     options.enableFileIOTracing = true
+    options.enableFileManagerSwizzling = true
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = "___PUBLIC_DSN___"
+    options.enableFileIOTracing = YES;
+    options.enableFileManagerSwizzling = YES;
+}];
+```
+
+Before 9.0.0, this option was experimental:
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.enableFileIOTracing = true
     options.experimental.enableFileManagerSwizzling = true
 }
 ```
@@ -337,6 +359,30 @@ try fileManager.removeItemWithSentryTracing(atPath: path)
 ```
 
 We recommend you disable the swizzling of `NSData` and `NSFileManager` when using manual file I/O tracing, as the internal behavior of these classes differs between platform versions and can cause duplicate spans in your traces.
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___";
+    options.enableFileIOTracing = true
+    options.enableDataSwizzling = false
+    options.enableFileManagerSwizzling = false
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.enableFileIOTracing = YES;
+    options.enableDataSwizzling = NO;
+    options.enableFileManagerSwizzling = NO;
+}];
+```
+
+Before 9.0.0, these options were experimental:
 
 ```swift {tabTitle:Swift}
 import Sentry
