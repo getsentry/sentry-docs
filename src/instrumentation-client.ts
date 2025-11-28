@@ -35,6 +35,19 @@ Sentry.init({
     }),
     Sentry.consoleLoggingIntegration(),
   ],
+
+  // Filter sensitive metric attributes (no PII in metrics)
+  beforeSendMetric: metric => {
+    // Remove any accidentally added PII attributes
+    if (metric.attributes) {
+      // Remove user queries if accidentally added
+      delete metric.attributes.user_query;
+      // Remove full URLs
+      delete metric.attributes.full_url;
+      delete metric.attributes.full_path;
+    }
+    return metric;
+  },
 });
 
 if (process.env.NODE_ENV === 'development') {
