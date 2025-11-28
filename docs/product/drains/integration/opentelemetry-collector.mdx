@@ -1,0 +1,139 @@
+---
+title: OpenTelemetry Collector
+sidebar_order: 20
+description: Learn how to set up the OpenTelemetry Collector to forward logs and traces data to Sentry.
+---
+
+The [OpenTelemetry Collector](https://opentelemetry.io/docs/collector/) is a vendor-agnostic proxy that can receive, process, and export telemetry data. You can configure the Collector to forward logs and traces to Sentry using the `otlphttp` exporter.
+
+If you're looking to forward logs and traces from an OpenTelemetry SDK directly to Sentry, take a look at our [OpenTelemetry (OTLP) documentation](/concepts/otlp/) instead.
+
+## Prerequisites
+
+Before you begin, ensure you have:
+
+- OpenTelemetry Collector installed and running
+- A Sentry project you want to send data to
+
+## Step 1: Get Your Sentry OTLP Credentials
+
+You'll need your Sentry OTLP endpoint and authentication header. These can be found in your [Sentry Project Settings](https://sentry.io/settings/projects/) under **Client Keys (DSN)** > **OpenTelemetry (OTLP)**.
+
+### Logs Endpoint
+
+```bash
+___OTLP_LOGS_URL___
+```
+
+### Traces Endpoint
+
+```bash
+___OTLP_TRACES_URL___
+```
+
+### Combined Endpoint (for Logs and Traces)
+
+When configuring a combined pipeline, use the base OTLP endpoint. The OpenTelemetry Collector will automatically append the appropriate path (`/v1/logs` or `/v1/traces`) based on the signal type.
+
+```bash
+___OTLP_URL___
+```
+
+### Authentication Header
+
+```
+x-sentry-auth: sentry sentry_key=___PUBLIC_KEY___
+```
+
+## Step 2: Configure the Collector
+
+Update your OpenTelemetry Collector configuration to add the `otlphttp` exporter pointing to Sentry. You can configure logs, traces, or both.
+
+### Logs Configuration
+
+To forward logs to Sentry, add the following exporter configuration:
+
+```yaml {filename:otel-collector.yaml}
+exporters:
+  otlphttp/sentry:
+    logs_endpoint: ___OTLP_LOGS_URL___
+    headers:
+      x-sentry-auth: "sentry sentry_key=___PUBLIC_KEY___"
+    compression: gzip
+    encoding: proto
+```
+
+### Traces Configuration
+
+To forward traces to Sentry, add the following exporter configuration:
+
+```yaml {filename:otel-collector.yaml}
+exporters:
+  otlphttp/sentry:
+    traces_endpoint: ___OTLP_TRACES_URL___
+    headers:
+      x-sentry-auth: "sentry sentry_key=___PUBLIC_KEY___"
+    compression: gzip
+    encoding: proto
+```
+
+### Combined Logs and Traces Configuration
+
+To send both logs and traces to Sentry, you can combine the configurations:
+
+```yaml {filename:otel-collector.yaml}
+exporters:
+  otlphttp/sentry:
+    endpoint: ___OTLP_URL___
+    headers:
+      x-sentry-auth: "sentry sentry_key=___PUBLIC_KEY___"
+    compression: gzip
+    encoding: proto
+```
+
+## Routing to Multiple Sentry Projects
+
+Sentry's OTLP endpoints are project-specific. If you need to route telemetry from different services to different Sentry projects, you can use the [routing connector](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/connector/routingconnector).
+
+```yaml {filename:otel-collector.yaml}
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+
+connectors:
+  routing:
+    default_pipelines: [logs/project-a]
+    error_mode: ignore
+    table:
+      - statement: route() where attributes["service.name"] == "service-b"
+        pipelines: [logs/project-b]
+
+exporters:
+  otlphttp/project-a:
+    logs_endpoint: https://o00000.ingest.sentry.io/api/1111111/integration/otlp/v1/logs
+    headers:
+      x-sentry-auth: "sentry sentry_key=example-public-key-for-project-a"
+    compression: gzip
+    encoding: proto
+
+  otlphttp/project-b:
+    logs_endpoint: https://o00000.ingest.sentry.io/api/2222222/integration/otlp/v1/logs
+    headers:
+      x-sentry-auth: "sentry sentry_key=example-public-key-for-project-b"
+    compression: gzip
+    encoding: proto
+
+service:
+  pipelines:
+    logs:
+      receivers: [otlp]
+      exporters: [routing]
+    logs/project-a:
+      receivers: [routing]
+      exporters: [otlphttp/project-a]
+    logs/project-b:
+      receivers: [routing]
+      exporters: [otlphttp/project-b]
+```
