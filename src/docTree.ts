@@ -62,6 +62,7 @@ async function getDocsRootNodeCached(): Promise<DocNode> {
   // Try public/ first (for serverless), then .next/ (for standalone)
   const paths = [path.join(root, 'public', filename), path.join(root, '.next', filename)];
 
+  let lastError: Error | undefined;
   for (const treePath of paths) {
     try {
       const treeData = await fs.readFile(treePath, 'utf-8');
@@ -70,13 +71,25 @@ async function getDocsRootNodeCached(): Promise<DocNode> {
       reconstructParentReferences(tree);
       return tree;
     } catch (error) {
-      // Try next path
-      continue;
+      // Only continue to next path if file doesn't exist
+      // Other errors (corrupt JSON, parse failures) should fail immediately
+      if (
+        error &&
+        typeof error === 'object' &&
+        'code' in error &&
+        error.code === 'ENOENT'
+      ) {
+        lastError = error as Error;
+        continue;
+      }
+      // Re-throw non-ENOENT errors (JSON parse errors, corruption, etc.)
+      throw error;
     }
   }
 
   throw new Error(
-    `Pre-computed doc tree not found (${filename}). Build may have failed or doctree was not generated with matching NEXT_PUBLIC_DEVELOPER_DOCS flag.`
+    `Pre-computed doc tree not found (${filename}). Build may have failed or doctree was not generated with matching NEXT_PUBLIC_DEVELOPER_DOCS flag.`,
+    {cause: lastError}
   );
 }
 
