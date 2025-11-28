@@ -548,21 +548,50 @@ The sample rate for replays that are recorded when an error happens. This type o
 
 ## Profiling Options
 
+<PlatformSection supported={["javascript.electron"]}>
+
+<SdkOption name="profileSessionSampleRate" type='number' availableSince="7.4.0">
+
+A number between `0` and `1` that sets the percentage of how many sessions should have profiling enabled. `1.0` enables profiling in every session, `0.5` enables profiling for 50% of the sessions, and `0` enables it for none. The sampling decision is made once at the beginning of a session. This option is required to enable profiling.
+
+</SdkOption>
+
+<SdkOption name="profileLifecycle" type='"trace" | "manual"' defaultValue='"manual"' availableSince="7.4.0">
+
+Determines how profiling sessions are controlled. It has two modes:
+
+- `'manual'` (default): You control when profiling starts and stops using the `startProfiler()` and `stopProfiler()` functions. In this mode, profile sampling is only affected by `profileSessionSampleRate`. Read more about these functions in the <PlatformLink to="/profiling">profiling API documentation</PlatformLink>.
+- `'trace'`: Profiling starts and stops automatically with transactions, as long as tracing is enabled. The profiler runs as long as there is at least one sampled transaction. In this mode, profiling is affected by both `profileSessionSampleRate` and your tracing sample rate (`tracesSampleRate` or `tracesSampler`).
+
+</SdkOption>
+
+<SdkOption name="profilesSampleRate" type='number'>
+
+**Deprecated:** Use `profileSessionSampleRate` instead to configure continuous profiling from version `7.4.0` onwards.
+
+A number between `0` and `1`, controlling the percentage chance a given sampled transaction will be profiled. (`0` represents 0% while `1` represents 100%.) Applies equally to all transactions created in the app. This is relative to the tracing sample rate - e.g. `0.5` means 50% of sampled transactions will be profiled.
+
+</SdkOption>
+
+</PlatformSection>
+
+<PlatformSection notSupported={["javascript.electron"]}>
+
 <SdkOption name="profileSessionSampleRate" type='number' availableSince="10.27.0">
 
-  A number between `0` and `1` that sets the percentage of how many sessions should have profiling enabled. `1.0` enables profiling in every session, `0.5` enables profiling for 50% of the sessions, and `0` enables it for none. The sampling decision is made once at the beginning of a session. This option is required to enable profiling.
+A number between `0` and `1` that sets the percentage of how many sessions should have profiling enabled. `1.0` enables profiling in every session, `0.5` enables profiling for 50% of the sessions, and `0` enables it for none. The sampling decision is made once at the beginning of a session. This option is required to enable profiling.
 
-  <PlatformCategorySection categorySupported={["server", "serverless"]}>
-    In a server environment, a profiling session starts when the Sentry SDK is initialized and stops when the service terminates.
-    Therefore, the sampling decision is re-evaluated on service restart or redeployment.
-  </PlatformCategorySection>
+<PlatformCategorySection categorySupported={["server", "serverless"]}>
+  In a server environment, a profiling session starts when the Sentry SDK is
+  initialized and stops when the service terminates. Therefore, the sampling
+  decision is re-evaluated on service restart or redeployment.
+</PlatformCategorySection>
 
   <PlatformCategorySection supported={['browser']}>
     In a browser environment, a profiling session corresponds to a user session. A user session starts with a
     new SDK initialization on page load and ends when the browser tab is closed.
   </PlatformCategorySection>
 </SdkOption>
-
 
 <SdkOption name="profileLifecycle" type='"trace" | "manual"' defaultValue='"manual"' availableSince="10.27.0">
 
@@ -573,15 +602,13 @@ Determines how profiling sessions are controlled. It has two modes:
 
 </SdkOption>
 
-
 <SdkOption name="profilesSampleRate" type='number'>
 
-  **Deprecated:** Use `profileSessionSampleRate` instead to configure continuous profiling from version 10.27.0 onwards.
+**Deprecated:** Use `profileSessionSampleRate` instead to configure continuous profiling from version 10.27.0 onwards.
 
-  A number between `0` and `1`, controlling the percentage chance a given sampled transaction will be profiled. (`0` represents 0% while `1` represents 100%.) Applies equally to all transactions created in the app. This is relative to the tracing sample rate - e.g. `0.5` means 50% of sampled transactions will be profiled.
+A number between `0` and `1`, controlling the percentage chance a given sampled transaction will be profiled. (`0` represents 0% while `1` represents 100%.) Applies equally to all transactions created in the app. This is relative to the tracing sample rate - e.g. `0.5` means 50% of sampled transactions will be profiled.
 
 </SdkOption>
-
 
 <PlatformSection supported={["javascript.cordova", "javascript.capacitor"]}>
 
