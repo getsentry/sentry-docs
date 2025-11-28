@@ -294,51 +294,77 @@ Starting with iOS 18.0, macOS 15.0, and tvOS 18.0, the Swift class `Data` can no
 
 Starting with version 8.48.0, the Sentry SDK offers extensions for the types `Data` and `FileManager` to track reading and writing data, as well as creating, moving, copying, and deleting files.
 
-The method signatures of these extensions resemble those of the original types, but they add a span to the current transaction:
+The method signatures of these extensions resemble those of the original types, but they add a span to the current transaction. These methods can be used even when the Sentry SDK is not enabled—they will fall back to the original methods in that case.
+
+**Behavior:**
+- Spans are only created when there is an active transaction on the scope
+- Only file URLs are tracked (non-file URLs like HTTP URLs are ignored, as they are handled by network tracing)
+- File size is automatically tracked for read and write operations
+- Spans finish with `ok` status on success or `internalError` status if an exception is thrown
+- Exceptions thrown during operations are associated with the span
 
 **Data Operations:**
 
-- `Data.init(contentsOfUrlWithSentryTracing:)` for `Data(contentsOf:)`
-- `data.writeWithSentryTracing(to:options:)` for `data.write(to:)`
+- `Data.init(contentsOfWithSentryTracing:options:)` for `Data(contentsOf:options:)` - Creates spans with operation `file.read`
+- `data.writeWithSentryTracing(to:options:)` for `data.write(to:options:)` - Creates spans with operation `file.write`
 
 ```swift {tabTitle:Swift}
 // Read data from a file URL
-let data = Data(contentsOfUrlWithSentryTracing: url)
+let url = URL(fileURLWithPath: "/path/to/file.txt")
+let data = try Data(contentsOfWithSentryTracing: url)
+
+// Read with options
+let dataWithOptions = try Data(contentsOfWithSentryTracing: url, options: [.alwaysMapped])
 
 // Write data to a file URL
-data.writeWithSentryTracing(to: url)
+try data.writeWithSentryTracing(to: url)
+
+// Write with options
+try data.writeWithSentryTracing(to: url, options: [.atomic])
 ```
 
 **FileManager Operations:**
 
-- `FileManager.createFileWithSentryTracing(atPath:contents:attributes:)` for `FileManager.createFile(atPath:contents:attributes:)`
-- `FileManager.moveItemWithSentryTracing(at:to:)` for `FileManager.moveItem(at:to:)`
-- `FileManager.moveItemWithSentryTracing(atPath:toPath:)` for `FileManager.moveItem(atPath:toPath:)`
-- `FileManager.copyItemWithSentryTracing(at:to:)` for `FileManager.copyItem(at:to:)`
-- `FileManager.copyItemWithSentryTracing(atPath:toPath:)` for `FileManager.copyItem(atPath:toPath:)`
-- `FileManager.removeItemWithSentryTracing(at:)` for `FileManager.removeItem(at:)`
-- `FileManager.removeItemWithSentryTracing(atPath:)` for `FileManager.removeItem(atPath:)`
+- `FileManager.createFileWithSentryTracing(atPath:contents:attributes:)` for `FileManager.createFile(atPath:contents:attributes:)` - Creates spans with operation `file.write`
+- `FileManager.moveItemWithSentryTracing(at:to:)` for `FileManager.moveItem(at:to:)` - Creates spans with operation `file.rename`
+- `FileManager.moveItemWithSentryTracing(atPath:toPath:)` for `FileManager.moveItem(atPath:toPath:)` - Creates spans with operation `file.rename`
+- `FileManager.copyItemWithSentryTracing(at:to:)` for `FileManager.copyItem(at:to:)` - Creates spans with operation `file.copy`
+- `FileManager.copyItemWithSentryTracing(atPath:toPath:)` for `FileManager.copyItem(atPath:toPath:)` - Creates spans with operation `file.copy`
+- `FileManager.removeItemWithSentryTracing(at:)` for `FileManager.removeItem(at:)` - Creates spans with operation `file.delete`
+- `FileManager.removeItemWithSentryTracing(atPath:)` for `FileManager.removeItem(atPath:)` - Creates spans with operation `file.delete`
 
 ```swift {tabTitle:Swift}
 let fileManager = FileManager.default
 
 // Create a file with given content
+let path = "/path/to/file.txt"
+let data = "Hello, World!".data(using: .utf8)
 fileManager.createFileWithSentryTracing(atPath: path, contents: data)
 
+// Create with attributes
+let attributes: [FileAttributeKey: Any] = [
+    .posixPermissions: 0o644
+]
+fileManager.createFileWithSentryTracing(atPath: path, contents: data, attributes: attributes)
+
 // Move a file or directory
+let sourceUrl = URL(fileURLWithPath: "/path/to/source")
+let destinationUrl = URL(fileURLWithPath: "/path/to/destination")
 try fileManager.moveItemWithSentryTracing(at: sourceUrl, to: destinationUrl)
-try fileManager.moveItemWithSentryTracing(atPath: sourcePath, toPath: destinationPath)
+
+// Move using paths
+try fileManager.moveItemWithSentryTracing(atPath: "/path/to/source", toPath: "/path/to/destination")
 
 // Copy a file or directory
 try fileManager.copyItemWithSentryTracing(at: sourceUrl, to: destinationUrl)
-try fileManager.copyItemWithSentryTracing(atPath: sourcePath, toPath: destinationPath)
+try fileManager.copyItemWithSentryTracing(atPath: "/path/to/source", toPath: "/path/to/destination")
 
 // Remove a file or directory
 try fileManager.removeItemWithSentryTracing(at: url)
 try fileManager.removeItemWithSentryTracing(atPath: path)
 ```
 
-We recommend you disable the swizzling of `NSData` and `NSFileManager` when using manual file I/O tracing, as the internal behavior of these classes differs between platform versions and can cause duplicate spans in your traces.
+**Important:** We recommend you disable the swizzling of `NSData` and `NSFileManager` when using manual file I/O tracing, as the internal behavior of these classes differs between platform versions and can cause duplicate spans in your traces.
 
 ```swift {tabTitle:Swift}
 import Sentry
@@ -351,29 +377,11 @@ SentrySDK.start { options in
 }
 
 // Reading a file with tracing enabled:
-let url = URL(string: "path/to/file")
-let data = Data(contentsOfUrlWithSentryTracing: url, options: [.atomic])
+let url = URL(fileURLWithPath: "/path/to/file.txt")
+let data = try Data(contentsOfWithSentryTracing: url, options: [.atomic])
 
 // Writing to a file with tracing enabled:
 try data.writeWithSentryTracing(to: url, options: [.atomic])
-```
-
-```objc {tabTitle:Objective-C}
-@import Sentry;
-
-[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
-    options.dsn = @"___PUBLIC_DSN___";
-    options.enableFileIOTracing = YES;
-    options.experimental.enableDataSwizzling = NO;
-    options.experimental.enableFileManagerSwizzling = NO;
-}];
-
-// Reading a file with tracing enabled:
-NSURL *url = [NSURL URLWithString:@"path/to/file"];
-NSData *data = [NSData dataWithContentsOfUrlWithSentryTracing:url options:NSDataReadingAtomic error:nil];
-
-// Writing to a file with tracing enabled:
-[data writeWithSentryTracingToURL:url options:NSDataWritingAtomic error:nil];
 ```
 
 ## Core Data Tracing
