@@ -34,11 +34,66 @@ export function getDocsRootNode(): Promise<DocNode> {
   if (getDocsRootNodeCache) {
     return getDocsRootNodeCache;
   }
-  getDocsRootNodeCache = getDocsRootNodeUncached();
+  getDocsRootNodeCache = getDocsRootNodeCached();
   return getDocsRootNodeCache;
 }
 
-async function getDocsRootNodeUncached(): Promise<DocNode> {
+function reconstructParentReferences(node: DocNode, parent?: DocNode): void {
+  if (parent) {
+    node.parent = parent;
+  }
+  node.children.forEach(child => reconstructParentReferences(child, node));
+}
+
+async function getDocsRootNodeCached(): Promise<DocNode> {
+  // In development, scan filesystem for hot reloading
+  // In production (including CI builds), load from pre-computed JSON
+  if (process.env.NODE_ENV === 'development') {
+    return getDocsRootNodeUncached();
+  }
+
+  const fs = await import('fs/promises');
+  const path = await import('path');
+  const root = process.cwd();
+
+  // Load the correct tree based on whether this is developer docs or regular docs
+  const filename = isDeveloperDocs ? 'doctree-dev.json' : 'doctree.json';
+
+  // Try public/ first (for serverless), then .next/ (for standalone)
+  const paths = [path.join(root, 'public', filename), path.join(root, '.next', filename)];
+
+  let lastError: Error | undefined;
+  for (const treePath of paths) {
+    try {
+      const treeData = await fs.readFile(treePath, 'utf-8');
+      const tree = JSON.parse(treeData);
+      // Reconstruct parent references for tree traversal functions
+      reconstructParentReferences(tree);
+      return tree;
+    } catch (error) {
+      // Only continue to next path if file doesn't exist
+      // Other errors (corrupt JSON, parse failures) should fail immediately
+      if (
+        error &&
+        typeof error === 'object' &&
+        'code' in error &&
+        error.code === 'ENOENT'
+      ) {
+        lastError = error as Error;
+        continue;
+      }
+      // Re-throw non-ENOENT errors (JSON parse errors, corruption, etc.)
+      throw error;
+    }
+  }
+
+  throw new Error(
+    `Pre-computed doc tree not found (${filename}). Build may have failed or doctree was not generated with matching NEXT_PUBLIC_DEVELOPER_DOCS flag.`,
+    {cause: lastError}
+  );
+}
+
+export async function getDocsRootNodeUncached(): Promise<DocNode> {
   return frontmatterToTree(
     await (isDeveloperDocs ? getDevDocsFrontMatter() : getDocsFrontMatter())
   );
