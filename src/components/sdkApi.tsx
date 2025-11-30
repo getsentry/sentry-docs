@@ -4,6 +4,7 @@ import {getCurrentPlatform} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
 import {PlatformCategory} from 'sentry-docs/types';
 
+import {AvailableSince} from './availableSince';
 import {Expandable} from './expandable';
 import {codeToJsx} from './highlightCode';
 import {SdkDefinition} from './sdkDefinition';
@@ -54,11 +55,7 @@ export function SdkApi({
         <div className="italic text-sm">Only available on Server</div>
       )}
       <pre className="mt-2 mb-2 text-sm">{codeToJsx(signature, lang)}</pre>
-      {availableSince && (
-        <p className="italic">
-          Available Since: <code>{availableSince}</code>
-        </p>
-      )}
+      {availableSince && <AvailableSince version={availableSince} />}
       {parameters.length ? (
         <Expandable title="Parameters">
           <div className="space-y-3">
