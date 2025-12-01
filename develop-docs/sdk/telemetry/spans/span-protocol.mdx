@@ -52,8 +52,7 @@ The envelope item payload must contain an `items` array with span one and up to 
       "span_id": "438f40bd3b4a41ee",
       "name": "GET /users",
       "status": "ok",
-      "is_remote": true,
-      "kind": "server",
+      "is_segment": true,
       "start_timestamp": 1742921669.158209,
       "end_timestamp": 1742921669.180536,
       "attributes": {
@@ -92,6 +91,11 @@ The envelope item payload must contain an `items` array with span one and up to 
         "http.response.status_code": {
           "type": "integer",
           "value": 200
+        },
+        "session.duration": {
+          "type": "integer",
+          "value": 164,
+          "unit": "second"
         }
       },
       "links": [
@@ -114,8 +118,7 @@ The envelope item payload must contain an `items` array with span one and up to 
       "span_id": "f1196292f76e45c0",
       "name": "app.handle",
       "status": "ok",
-      "is_remote": false,
-      "kind": "server",
+      "is_segment": false,
       "start_timestamp": 1742921669.178306,
       "end_timestamp": 1742921669.180484,
       "attributes": {
@@ -148,39 +151,29 @@ The envelope item payload must contain an `items` array with span one and up to 
 | `parent_span_id` | string | No | 16-character hexadecimal string (a valid uuid4 without dashes) |
 | `name` | string | Yes | A low cardinality description of what the span represents (e.g., "GET /users", "database.query") |
 | `status` | string | Yes | Status of the span operation. Either `"ok"` or `"error"` |
-| `is_remote` | boolean | Yes | Whether the SpanContext creating the span was received from somewhere else or locally generated |
-| `kind` | string | Yes | The kind of span. Values: `"server"`, `"client"`, `"producer"`, `"consumer"`, `"internal"` |
+| `is_segment` | boolean | Yes | Whether the span is a segment span |
 | `start_timestamp` | number | Yes | Unix timestamp (with fractional microseconds) when the span was started |
 | `end_timestamp` | number | Yes | Unix timestamp (with fractional microseconds) when the span was ended |
 | `attributes` | object | No | Key-value pairs containing additional metadata about the span |
 | `links` | array | No | Array of links connecting this span to other spans or traces |
 
-### Attribute Object Properties
-
-Attributes are stored as key-value pairs where each value is an object with type information:
-
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| `type` | string | Yes | The data type of the attribute value. Values: `"string"`, `"integer"`, `"double"`, `"boolean"` |
-| `value` | any | Yes | The actual attribute value, must match the specified type |
-| `unit` | string | No | The unit of the attribute value. Example values: `"ms"`, `"s"`, `"bytes"`, `"count"`, `"percent"` |
-
 #### Common Attribute Keys
 
 All attributes mentioned below must be attached to every span being emitted from the SDK, depending on the platform.
-Empty attributes must be emitted.
+Empty attributes must be omitted.
 
 | Attribute Key | Type | Description |
 |---------------|------|-------------|
 | `sentry.release` | string | The release version of the application |
 | `sentry.environment` | string | The environment name (e.g., "production", "staging", "development") |
 | `sentry.segment.name` | string | The segment name (e.g., "GET /users") |
+| `sentry.segment.id` | string | The segment span id |
 | `os.name` | string | The operating system name (e.g., "Linux", "Windows", "macOS") |
 | `browser.name` | string | The browser name (e.g., "Chrome", "Firefox", "Safari") |
 | `user.id` | string | The user ID (gated by `sendDefaultPii`) |
 | `user.email` | string | The user email (gated by `sendDefaultPii`) |
 | `user.ip_address` | string | The user IP address (gated by `sendDefaultPii`) |
-| `user.username` | string | The user username (gated by `sendDefaultPii`) |
+| `user.name` | string | The user username (gated by `sendDefaultPii`) |
 | `thread.id` | string | The thread ID |
 | `thread.name` | string | The thread name |
 | `sentry.sdk.name` | string | Name of the Sentry SDK (e.g., "sentry.php", "sentry.javascript") |
@@ -222,3 +215,52 @@ Example:
 trace_id: "6cf173d587eb48568a9b2e12dcfbea52"
 span_id: "438f40bd3b4a41ee"
 ```
+
+## Span Attachments
+
+The SDK must implement a new "attachment v2" envelope item, which is used to emit span attachments to Sentry. A span attachment should be emitted in the same envelope as its owner span, so that it can be dropped when the span itself is filtered or rate limited.
+
+### Attachment v2 Envelope Item Header
+
+The envelope item header must contain the following properties:
+
+```json
+{
+  "type": "attachment",
+  "content_type": "application/vnd.sentry.attachment.v2",
+  "length": 212341234,
+  "meta_length": 123,
+  "span_id": "abcd1234" // or `null`
+}
+```
+
+- `meta_length` is the size of the metadata portion of the payload in bytes (see item description below).
+- `span_id` is the ID of the span that owns the attachment. `span_id: null` is treated as “owned by spans”, but not owned by a specific span. That is, the attachment can be dropped if the span quota is exceeded, but it will not be dropped with a specific span because of e.g. inbound filters.
+
+## Attachment v2 Envelope Item Payload
+
+The attachment item payload consists of JSON object containing metadata followed by the attachment body. For example, for a plain text attachment with the body "Hello World!", the item payload would look like this:
+
+```json
+{ // Attachment Metadata
+  "attachment_id": "019a72d07ffe77208c013ac888b38d9e",
+  "timestamp": 1760520026.781239,
+  "filename": "myfile.txt",
+  "content_type": "text/plain",
+	"attributes": {
+	  // Arbitrary key value pairs that will end up in EAP.
+		"foo": {"type": "string", "value": "bar"}
+	}
+}helloworld
+```
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `attachment_id` | string | Yes | 32-character hexadecimal string (a valid [Version 7](https://en.wikipedia.org/wiki/Universally_unique_identifier#Version_7_(timestamp_and_random)) or Version 4 UUID without dashes) |
+| `timestamp` | float | Yes | a UNIX timestamp corresponding to the attachment's occurrence. It may be the same as the start or end timestamp of the owner span. |
+| `filename` | string | No | The file name of the attachment. |
+| `content_type` | string | Yes | the content type of the attachment body (not to be confused with the content type of the envelope item, which is always `application/vnd.sentry.attachment.v2`). |
+| `attributes` | object | No | arbitrary attributes that will be queryable on the attachment trace item, similar to spans, logs, and trace metrics. |
+
+
+

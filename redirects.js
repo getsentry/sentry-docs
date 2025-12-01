@@ -75,6 +75,10 @@ const developerDocsRedirects = [
     destination: '/sdk/telemetry/replays/:path*',
   },
   {
+    source: '/sdk/telemetry/spans/batch-processor/',
+    destination: '/sdk/telemetry/telemetry-buffer/batch-processor/',
+  },
+  {
     source: '/sdk/setup-wizards/:path*',
     destination: '/sdk/expected-features/setup-wizards/:path*',
   },
@@ -266,6 +270,22 @@ const userDocsRedirects = [
   {
     source: '/organization/integrations/launchdarkly/',
     destination: '/organization/integrations/feature-flag/launchdarkly/',
+  },
+  {
+    source: '/platforms/javascript/guides/aws-lambda/layer__v9.x/',
+    destination: '/platforms/javascript/guides/aws-lambda/install/layer__v9.x/',
+  },
+  {
+    source: '/platforms/javascript/guides/aws-lambda/npm__v9.x/',
+    destination: '/platforms/javascript/guides/aws-lambda/install/npm__v9.x/',
+  },
+  {
+    source: '/platforms/javascript/guides/aws-lambda/esm-npm__v9.x/',
+    destination: '/platforms/javascript/guides/aws-lambda/install/esm-npm__v9.x/',
+  },
+  {
+    source: '/platforms/javascript/guides/aws-lambda/cjs-npm__v9.x/',
+    destination: '/platforms/javascript/guides/aws-lambda/install/cjs-npm__v9.x/',
   },
   {
     source: '/platforms/javascript/guides/nextjs/sourcemaps/uploading/',
@@ -509,23 +529,23 @@ const userDocsRedirects = [
   },
   {
     source: '/platforms/javascript/configuration/draining/',
-    destination: '/platforms/javascript/apis/#flush',
+    destination: '/platforms/javascript/configuration/apis/#flush',
   },
   {
     source: '/platforms/javascript/guides/:guide/configuration/draining/',
-    destination: '/platforms/javascript/guides/:guide/apis/#flush',
+    destination: '/platforms/javascript/guides/:guide/configuration/apis/#flush',
   },
   {
     source: '/platforms/javascript/enriching-events/identify-user/',
-    destination: '/platforms/javascript/apis/#setUser',
+    destination: '/platforms/javascript/configuration/apis/#setUser',
   },
   {
     source: '/platforms/javascript/guides/:guide/enriching-events/identify-user/',
-    destination: '/platforms/javascript/guides/:guide/apis/#setUser',
+    destination: '/platforms/javascript/guides/:guide/configuration/apis/#setUser',
   },
   {
     source: '/platforms/javascript/enriching-events/context/',
-    destination: '/platforms/javascript/apis/',
+    destination: '/platforms/javascript/configuration/apis/',
   },
   {
     source: '/platforms/javascript/guides/:guide/enriching-events/context/',
@@ -588,6 +608,10 @@ const userDocsRedirects = [
   {
     source: '/platforms/python/guides/:guide/:path*',
     destination: '/platforms/python/:path*',
+  },
+  {
+    source: '/platforms/python/configuration/sampling/',
+    destination: '/platforms/python/sampling/',
   },
   {
     source: '/platforms/php/guides/laravel/other-versions/laravel8-10/usage/:path*',
@@ -1064,10 +1088,6 @@ const userDocsRedirects = [
     destination: '/product/issues/issue-details/feature-flags/:path*',
   },
   {
-    source: '/product/explore/metrics/:path*',
-    destination: '/concepts/key-terms/tracing/span-metrics/',
-  },
-  {
     source: '/product/tracing/:path*',
     destination: '/concepts/key-terms/tracing/:path*',
   },
@@ -1079,14 +1099,6 @@ const userDocsRedirects = [
   {
     source: '/platforms/javascript/tracing/trace-propagation/:path*',
     destination: '/platforms/javascript/tracing/distributed-tracing/:path*',
-  },
-  {
-    source: '/platforms/javascript/metrics/:path*',
-    destination: '/platforms/javascript/tracing/span-metrics/:path*',
-  },
-  {
-    source: '/platforms/javascript/guides/:guide/metrics/:path*',
-    destination: '/platforms/javascript/guides/:guide/tracing/span-metrics/:path*',
   },
   {
     source: '/platforms/javascript/tracing/instrumentation/performance-metrics/',
@@ -1109,6 +1121,22 @@ const userDocsRedirects = [
   {
     source: '/platforms/javascript/guides/:guide/profiling/browser-profiling/',
     destination: '/platforms/javascript/guides/:guide/profiling/',
+  },
+  {
+    source: '/platforms/javascript/apis/',
+    destination: '/platforms/javascript/configuration/apis/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/apis/',
+    destination: '/platforms/javascript/guides/:guide/configuration/apis/',
+  },
+  {
+    source: '/platforms/javascript/configuration/sampling/',
+    destination: '/platforms/javascript/sampling/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/configuration/sampling/',
+    destination: '/platforms/javascript/guides/:guide/sampling/',
   },
   {
     source: '/platforms/javascript/guides/:guide/profiling/node-profiling/',
@@ -1221,6 +1249,11 @@ const userDocsRedirects = [
   {
     source: '/platforms/dotnet/guides/uwp/profiling/:path*',
     destination: '/platforms/dotnet/profiling/',
+  },
+  // General .NET redirects for UWP (deprecated)
+  {
+    source: '/platforms/dotnet/guides/uwp/:path*',
+    destination: '/platforms/dotnet/guides/maui/',
   },
   {
     source: '/platforms/dotnet/guides/aws-lambda/profiling/:path*',

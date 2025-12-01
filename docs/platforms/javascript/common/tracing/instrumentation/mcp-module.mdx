@@ -1,0 +1,211 @@
+---
+title: Instrument MCP Servers
+sidebar_order: 600
+description: "Learn how to manually instrument your code to use Sentry's MCP monitoring."
+supported:
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.hono
+  - javascript.koa
+  - javascript.nestjs
+  - javascript.bun
+  - javascript.deno
+  - javascript.nextjs
+  - javascript.nuxt
+  - javascript.astro
+  - javascript.solidstart
+  - javascript.sveltekit
+  - javascript.remix
+  - javascript.cloudflare
+  - javascript.tanstackstart-react
+---
+
+With Sentry's [MCP monitoring](/product/insights/ai/mcp/), you can track and debug MCP servers with full-stack context. You'll be able to monitor tool executions, prompt retrievals, resource access, and error rates. MCP monitoring data will be fully connected to your other Sentry data like logs, errors, and traces.
+
+As a prerequisite to setting up MCP monitoring with JavaScript, you'll need to first <PlatformLink to="/tracing/">set up tracing</PlatformLink>. Once this is done, the JavaScript SDK will automatically instrument MCP servers created with supported libraries. If that doesn't fit your use case, you can use custom instrumentation described below.
+
+## Automatic Instrumentation
+
+The JavaScript SDK supports automatic instrumentation for MCP servers. We recommend adding the MCP integration to your Sentry configuration to automatically capture spans for MCP operations.
+
+- <PlatformLink to="/integrations/mcp/">
+    MCP (Model Context Protocol)
+  </PlatformLink>
+
+## Manual Instrumentation
+
+For your MCP data to show up in Sentry, spans must be created with well-defined names and data attributes. See below for the different types of MCP operations you can instrument.
+
+The [Sentry.startSpan()](/platforms/javascript/tracing/instrumentation/custom-instrumentation/#starting-a-span) method can be used to create these spans.
+
+## Spans
+
+### Tool Execution Span
+
+<Include name="tracing/mcp-module/tool-execution-span" />
+
+#### Example Tool Execution Span:
+
+```javascript
+import * as Sentry from "@sentry/node";
+
+Sentry.init({
+  // ... your Sentry configuration
+});
+
+// Example tool execution
+const toolName = "get_weather";
+const toolArguments = { city: "San Francisco" };
+
+await Sentry.startSpan(
+  {
+    op: "mcp.server",
+    name: `tools/call ${toolName}`,
+  },
+  async (span) => {
+    // Set MCP-specific attributes
+    span.setAttribute("mcp.tool.name", toolName);
+    span.setAttribute("mcp.method.name", "tools/call");
+
+    // Set request metadata
+    span.setAttribute("mcp.request.id", "req_123abc");
+    span.setAttribute("mcp.session.id", "session_xyz789");
+    span.setAttribute("mcp.transport", "stdio"); // or "http", "sse" for HTTP/WebSocket/SSE
+    span.setAttribute("network.transport", "pipe"); // or "tcp" for HTTP/SSE
+
+    // Set tool arguments (optional, if send_default_pii=true)
+    for (const [key, value] of Object.entries(toolArguments)) {
+      span.setAttribute(`mcp.request.argument.${key}`, value);
+    }
+
+    // Execute the tool
+    try {
+      const result = executeTool(toolName, toolArguments);
+
+      // Set result data
+      span.setAttribute("mcp.tool.result.content", JSON.stringify(result));
+      span.setAttribute("mcp.tool.result.is_error", false);
+
+      // Set result content count if applicable
+      if (
+        Array.isArray(result) ||
+        (typeof result === "object" && result !== null)
+      ) {
+        span.setAttribute(
+          "mcp.tool.result.content_count",
+          Array.isArray(result) ? result.length : Object.keys(result).length
+        );
+      }
+    } catch (error) {
+      span.setAttribute("mcp.tool.result.is_error", true);
+      throw error;
+    }
+  }
+);
+```
+
+### Prompt Retrieval Span
+
+<Include name="tracing/mcp-module/prompt-retrieval-span" />
+
+#### Example Prompt Retrieval Span:
+
+```javascript
+import * as Sentry from "@sentry/node";
+
+Sentry.init({
+  // ... your Sentry configuration
+});
+
+// Example prompt retrieval
+const promptName = "code_review";
+const promptArguments = { language: "python" };
+
+await Sentry.startSpan(
+  {
+    op: "mcp.server",
+    name: `prompts/get ${promptName}`,
+  },
+  async (span) => {
+    // Set MCP-specific attributes
+    span.setAttribute("mcp.prompt.name", promptName);
+    span.setAttribute("mcp.method.name", "prompts/get");
+
+    // Set request metadata
+    span.setAttribute("mcp.request.id", "req_456def");
+    span.setAttribute("mcp.session.id", "session_xyz789");
+    span.setAttribute("mcp.transport", "http");
+    span.setAttribute("network.transport", "tcp");
+
+    // Set prompt arguments (optional, if send_default_pii=true)
+    for (const [key, value] of Object.entries(promptArguments)) {
+      span.setAttribute(`mcp.request.argument.${key}`, value);
+    }
+
+    // Retrieve the prompt
+    const promptResult = getPrompt(promptName, promptArguments);
+
+    // Set result data
+    const messages = promptResult.messages || [];
+    span.setAttribute("mcp.prompt.result.message_count", messages.length);
+
+    // For single-message prompts, set role and content
+    if (messages.length === 1) {
+      span.setAttribute("mcp.prompt.result.message_role", messages[0].role);
+      // Content is PII, only set if send_default_pii=true
+      span.setAttribute(
+        "mcp.prompt.result.message_content",
+        JSON.stringify(messages[0].content)
+      );
+    }
+  }
+);
+```
+
+### Resource Read Span
+
+<Include name="tracing/mcp-module/resource-read-span" />
+
+#### Example Resource Read Span:
+
+```javascript
+import * as Sentry from "@sentry/node";
+
+Sentry.init({
+  // ... your Sentry configuration
+});
+
+// Example resource access
+const resourceUri = "file:///path/to/resource.txt";
+
+await Sentry.startSpan(
+  {
+    op: "mcp.server",
+    name: `resources/read ${resourceUri}`,
+  },
+  async (span) => {
+    // Set MCP-specific attributes
+    span.setAttribute("mcp.resource.uri", resourceUri);
+    span.setAttribute("mcp.method.name", "resources/read");
+
+    // Set request metadata
+    span.setAttribute("mcp.request.id", "req_789ghi");
+    span.setAttribute("mcp.session.id", "session_xyz789");
+    span.setAttribute("mcp.transport", "http");
+    span.setAttribute("network.transport", "tcp");
+
+    // Access the resource
+    const resourceData = readResource(resourceUri);
+  }
+);
+```
+
+## Common Span Attributes
+
+<Include name="tracing/mcp-module/common-span-attributes" />

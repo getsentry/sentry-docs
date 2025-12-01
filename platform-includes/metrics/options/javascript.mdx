@@ -1,0 +1,54 @@
+The Sentry JavaScript SDK provides several options to configure how metrics are captured and sent to Sentry.
+
+### Filtering and Modifying Metrics
+
+Use the `beforeSendMetric` callback to filter or modify metrics before they're sent to Sentry. This is useful for:
+
+- Removing sensitive data from metric attributes
+- Dropping metrics you don't want to send
+- Adding or modifying attributes
+
+The callback receives a metric object and must return either a modified metric or `null` to drop it.
+
+```javascript
+Sentry.init({
+  // ...
+  beforeSendMetric: (metric) => {
+    // Drop metrics with specific attributes
+    if (metric.attributes?.dropMe === true) {
+      return null;
+    }
+
+    // Modify metric attributes
+    metric.attributes = {
+      ...metric.attributes,
+      processed: true,
+    };
+
+    return metric;
+  },
+});
+```
+
+### Disabling Metrics
+
+If you want to disable metrics collection entirely, you can do so by disabling the `enableMetrics` flag:
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  enableMetrics: false,
+});
+```
+
+
+### Flushing Metrics
+
+By default, metrics are buffered and flushed depending on buffer size and time. If you need to manually flush metrics before the automatic interval, you can use the `flush` method:
+
+```javascript
+await Sentry.flush();
+```
+
+This will flush all pending metrics and events to Sentry.
+

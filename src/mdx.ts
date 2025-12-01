@@ -28,6 +28,7 @@ import getPackageRegistry from './build/packageRegistry';
 import {apiCategories} from './build/resolveOpenAPI';
 import getAllFilesRecursively from './files';
 import remarkDefList from './mdx-deflist';
+import {DocMetrics} from './metrics';
 import rehypeOnboardingLines from './rehype-onboarding-lines';
 import rehypeSlug from './rehype-slug.js';
 import remarkCodeTabs from './remark-code-tabs';
@@ -67,6 +68,58 @@ if (process.env.CI) {
 }
 
 const md5 = (data: BinaryLike) => createHash('md5').update(data).digest('hex');
+
+// Worker-level registry cache to avoid fetching multiple times per worker
+let cachedRegistryHash: Promise<string> | null = null;
+
+/**
+ * Fetch registry data and compute its hash, with retry logic and exponential backoff.
+ * Retries up to maxRetries times with exponential backoff starting at initialDelayMs.
+ */
+async function getRegistryHashWithRetry(
+  maxRetries = 3,
+  initialDelayMs = 1000
+): Promise<string> {
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const [apps, packages] = await Promise.all([
+        getAppRegistry(),
+        getPackageRegistry(),
+      ]);
+      return md5(JSON.stringify({apps, packages}));
+    } catch (err) {
+      lastError = err as Error;
+
+      if (attempt < maxRetries) {
+        const delay = initialDelayMs * Math.pow(2, attempt);
+        // eslint-disable-next-line no-console
+        console.warn(
+          `Failed to fetch registry (attempt ${attempt + 1}/${maxRetries + 1}). Retrying in ${delay}ms...`,
+          err
+        );
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+
+  throw lastError || new Error('Failed to fetch registry after all retries');
+}
+
+/**
+ * Get the registry hash, using cached value if available.
+ * This ensures we only fetch the registry once per worker process.
+ * If the fetch fails, the error is cached so subsequent calls fail fast.
+ */
+function getRegistryHash(): Promise<string> {
+  if (!cachedRegistryHash) {
+    // eslint-disable-next-line no-console
+    console.info('Fetching registry hash for the first time in this worker');
+    cachedRegistryHash = getRegistryHashWithRetry();
+  }
+  return cachedRegistryHash;
+}
 
 async function readCacheFile<T>(file: string): Promise<T> {
   const reader = createReadStream(file);
@@ -541,31 +594,71 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
     // continue anyway - images should already exist from build time
   }
 
-  // If the file contains content that depends on the Release Registry (such as an SDK's latest version), avoid using the cache for that file, i.e. always rebuild it.
-  // This is because the content from the registry might have changed since the last time the file was cached.
-  // If a new component that injects content from the registry is introduced, it should be added to the patterns below.
-  const skipCache =
+  // Detect if file contains content that depends on the Release Registry
+  // If it does, we include the registry hash in the cache key so the cache
+  // is invalidated when the registry changes.
+  const dependsOnRegistry =
     source.includes('@inject') ||
     source.includes('<PlatformSDKPackageName') ||
     source.includes('<LambdaLayerDetail');
 
   // Check cache in CI environments
   if (process.env.CI) {
-    if (skipCache) {
-      // eslint-disable-next-line no-console
-      console.info(
-        `Not using cached version of ${sourcePath}, as its content depends on the Release Registry`
-      );
+    const sourceHash = md5(source);
+
+    // Include registry hash in cache key for registry-dependent files
+    if (dependsOnRegistry) {
+      try {
+        const registryHash = await getRegistryHash();
+        cacheKey = `${sourceHash}-${registryHash}`;
+        // eslint-disable-next-line no-console
+        console.info(
+          `Using registry-aware cache for ${sourcePath} (registry hash: ${registryHash.slice(0, 8)}...)`
+        );
+      } catch (err) {
+        // If we can't get registry hash, skip cache for this file
+        // eslint-disable-next-line no-console
+        console.warn(
+          `Failed to get registry hash for ${sourcePath}, skipping cache:`,
+          err
+        );
+        cacheKey = null;
+      }
     } else {
-      cacheKey = md5(source);
+      cacheKey = sourceHash;
+    }
+
+    if (cacheKey) {
       cacheFile = path.join(CACHE_DIR, `${cacheKey}.br`);
       assetsCacheDir = path.join(CACHE_DIR, cacheKey);
 
       try {
-        const [cached, _] = await Promise.all([
-          readCacheFile<SlugFile>(cacheFile),
-          cp(assetsCacheDir, outdir, {recursive: true}),
-        ]);
+        // Time only the cache read operation, not the asset copy
+        const cacheStartTime = Date.now();
+        const cached = await readCacheFile<SlugFile>(cacheFile);
+        const cacheReadDuration = Date.now() - cacheStartTime;
+
+        // Track cache hit metrics immediately after cache read
+        if (typeof window === 'undefined') {
+          const fileSizeKb = Buffer.byteLength(source, 'utf8') / 1024;
+          const hasImages =
+            source.includes('.png') ||
+            source.includes('.jpg') ||
+            source.includes('.jpeg') ||
+            source.includes('.svg') ||
+            source.includes('.gif');
+
+          DocMetrics.mdxCompile(cacheReadDuration, {
+            cached: true,
+            file_size_kb: Math.round(fileSizeKb),
+            has_images: hasImages,
+            slug_prefix: slug.split('/')[0],
+          });
+        }
+
+        // Copy assets (wait for completion before returning)
+        await cp(assetsCacheDir, outdir, {recursive: true});
+
         return cached;
       } catch (err) {
         if (
@@ -593,6 +686,9 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
 
   // cwd is how mdx-bundler knows how to resolve relative paths
   const cwd = path.dirname(sourcePath);
+
+  // Track MDX compilation timing
+  const compilationStart = Date.now();
 
   const result = await bundleMDX<Platform>({
     source,
@@ -683,8 +779,10 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
       // for this specific slug easily
       options.outdir = assetsCacheDir || outdir;
 
-      // Set write to true so that esbuild will output the files.
-      options.write = true;
+      // Set write to false to prevent esbuild from writing files automatically.
+      // We'll handle writing manually to gracefully handle read-only filesystems (e.g., Lambda runtime)
+      // In local dev, we need write=true to avoid images being embedded as binary data
+      options.write = process.env.NODE_ENV === 'development' || !!process.env.CI;
 
       return options;
     },
@@ -693,6 +791,29 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
     console.error('Error occurred during MDX compilation:', e.errors);
     throw e;
   });
+
+  // Track MDX compilation metrics for cache miss (server-side only)
+  const compilationDuration = Date.now() - compilationStart;
+  if (typeof window === 'undefined') {
+    const fileSizeKb = Buffer.byteLength(source, 'utf8') / 1024;
+    const hasImages =
+      source.includes('.png') ||
+      source.includes('.jpg') ||
+      source.includes('.jpeg') ||
+      source.includes('.svg') ||
+      source.includes('.gif');
+
+    DocMetrics.mdxCompile(compilationDuration, {
+      cached: false, // This path only reached on cache miss
+      file_size_kb: Math.round(fileSizeKb),
+      has_images: hasImages,
+      slug_prefix: slug.split('/')[0], // First path segment for grouping
+    });
+  }
+
+  // Manually write output files from esbuild when available
+  // This only happens during build time (when filesystem is writable)
+  // At runtime (Lambda), files already exist from build time
 
   const {code, frontmatter} = result;
 
@@ -711,7 +832,7 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
     },
   };
 
-  if (assetsCacheDir && cacheFile && !skipCache) {
+  if (assetsCacheDir && cacheFile && cacheKey) {
     try {
       await cp(assetsCacheDir, outdir, {recursive: true});
     } catch (e) {

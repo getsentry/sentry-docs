@@ -56,13 +56,14 @@ Data from all three scope types MUST be merged in a specific order before being 
 
 ### Setting Attributes
 
-Users MUST be able to attach attributes to any scope using a dedicated method (e.g., `scope.setAttributes()` or `scope.setAttribute()`). These attributes follow the structure defined in the [Span Protocol](/sdk/telemetry/spans/span-protocol/#attribute-object-properties).
+Users MUST be able to attach attributes to any scope using a dedicated method (e.g., `scope.setAttributes()` or `scope.setAttribute()`). These attributes follow the structure defined in the [Attributes](/sdk/telemetry/attributes) documentation.
 
-Attributes are key-value pairs where each value is an object containing:
+Attributes are key-value pairs where each value is either an attribute value or an object containing:
 
-- `type`: The data type (`"string"`, `"integer"`, `"double"`, `"boolean"`, `"string[]"`, `"integer[]"` and `"double[]"`)
 - `value`: The actual attribute value, which MUST match the specified type
-- `unit` (optional): The unit of measurement (e.g., `"ms"`, `"s"`, `"bytes"`, `"count"`, `"percent"`)
+- `unit` (optional): The unit of measurement. See [Units](/sdk/telemetry/attributes#units) for the full list of supported units.
+  - SDKs MAY delay adding support for units for the moment, but MUST be able to do so at a later date without a breaking change.
+- `type` (optional): The type of the attribute. See [Supported Types](/sdk/telemetry/attributes#supported-types) for the full list. SDKs SHOULD NOT expose this to users if they can reliably infer the type from the value. If not, SDKs MAY allow or require users to set the `type` explicitly.
 
 #### Example Usage
 
@@ -70,9 +71,8 @@ Attributes are key-value pairs where each value is an object containing:
 Sentry.getGlobalScope().setAttributes({
   "app.feature_flag.enabled": true,
   "app.session_duration": {
-    type: "integer",
     value: 3600,
-    unit: "s"
+    unit: "second"
   }
 });
 ```
@@ -81,7 +81,6 @@ Sentry.getGlobalScope().setAttributes({
 sentry_sdk.get_global_scope().set_attributes({
     "app.feature_flag.enabled": True,
     "app.session_duration": {
-        "type": "integer",
         "value": 3600,
         "unit": "s"
     }
@@ -92,16 +91,34 @@ sentry_sdk.get_global_scope().set_attributes({
 
 The method SHOULD accept a dictionary/map/object where:
 - Keys are attribute names (strings)
-- Values are attribute objects with `type`, `value`, and optionally `unit` properties
+- Values are either directly values or attribute objects/dictionaries with `value`, and optionally `unit` properties (see [example](#example-usage)).
+- The SDK SHOULD infer the `type` of the attribute at serialization time to spare users from setting a (potentially incorrect) `type`. Depending on platform or constraints, the SDK MAY instead also allow or require users to set the `type` explicitly.
 
 #### Behavior
 
-- Attributes set on the global scope MUST be applied to all logs
-- Attributes set on the isolation scope MUST be applied to all logs in that execution context
-- Attributes set on the current scope MUST be applied only to the current log
+- Attributes set on the global scope MUST be applied to all logs and metrics
+- Attributes set on the isolation scope MUST be applied to all logs and metrics in that execution context
+- Attributes set on the current scope MUST be applied only to the current log and current metric
 - When the same attribute key exists in multiple scopes, the more specific scope's value takes precedence (current > isolation > global)
+- When the same attribute key exists on the current log or metric, it MUST take precedence over an attribute with the same key set on any scope (log/metric > current > isolation > global)
+- The SDK SHOULD keep the attribute format consistent with the user-set format until user-provided processing callbacks like `before_send_log` have been called. This ensures compatibility with already existing callbacks and avoids unexpected changes to the attribute format.
+- Calling `scope.clear()` MUST remove all attributes from the corresponding scope.
 
-See [Span Protocol - Common Attribute Keys](/sdk/telemetry/spans/span-protocol/#common-attribute-keys) for a list of standard attributes and [Sentry Conventions](https://github.com/getsentry/sentry-conventions/) for the complete attribute registry.
+See [Attributes](/sdk/telemetry/attributes) for detailed information about attribute structure, supported types, units, and common attribute keys. Also see [Sentry Conventions](https://github.com/getsentry/sentry-conventions/) for the complete attribute registry.
+
+### Removing Attributes
+
+Users MUST be able to remove attributes set on any scope using a dedicated method, e.g. `scope.removeAttribute()`.
+
+#### Example Usage
+
+```javascript
+Sentry.getGlobalScope().removeAttribute('app.feature_flag.enabled');
+```
+
+```python
+sentry_sdk.get_global_scope().remove_attribute('app.feature_flag.enabled')
+```
 
 ## Related Documents
 

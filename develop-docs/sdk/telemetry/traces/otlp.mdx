@@ -1,0 +1,104 @@
+---
+title: OTLP Integration
+---
+
+This document outlines how to build a dedicated `OTLPIntegration` in SDKs that makes it easier for users using [OpenTelemetry](https://opentelemetry.io/) for instrumentation to send their spans and traces to Sentry's new [OTLP ingestion endpoint](https://docs.sentry.io/concepts/otlp/).
+
+## Background
+
+### Existing OpenTelemetry Support
+
+Some of our SDKs (Node, Java) already shipped a complete Performance powered by OpenTelemetry (POTEL) system following the [OpenTelemetry Support spec](../opentelemetry).
+
+Some other SDKs (Python, Ruby, Elixir) implement a simpler system with **only** the `SpanProcessor` and `Propagator` components.
+
+While building the POTEL prototype for Python, we questioned if the complexity we were adding was justified and the architecture was scalable and decided to stop with POTEL for other backend SDKs.
+
+### OTLP Ingestion Endpoint
+
+Concurrently to the above SDK work, we also shipped first-class support for ingesting OTLP Traces and Logs. This opened up the possibility of a much cleaner system that allows users to setup OpenTelemetry with Sentry seamlessly while preserving behavior - **Trace Connectedness** that makes Sentry valuable.
+
+## Integration Spec
+
+The new integration MUST be called `OTLPIntegration` with the following signature:
+
+```python
+OTLPIntegration(setup_otlp_traces_exporter=True, setup_propagator=True)
+```
+
+The arguments `setup_otlp_traces_exporter` and  `setup_propagator` MUST be booleans that default to `True` and can be turned off if needed by the user.
+
+It MUST consist of and setup the following components:
+
+* A `SpanExporter` that automatically configures the OTLP ingestion endpoint from the DSN
+* A `Propagator` that ensures Distributed Tracing works with other upstream and downstream services using Sentry SDKs
+  * Note that we use the `sentry-trace` (NOT `traceparent`) and `baggage` headers here
+* An `external_propagation_context` that extracts the active `trace_id` and `span_id` from the OpenTelemetry SDK
+
+### SpanExporter
+
+IF `setup_otlp_traces_exporter` is `True`, the integration MUST do the following:
+
+* Take the existing `TracerProvider` from OpenTelemetry if it exists, otherwise create a new one
+* Construct the OTLP Traces `endpoint` from the DSN
+  * The `endpoint` has the format - `https://o0.ingest.sentry.io/api/{project_id}/integration/otlp/v1/traces/`
+  * It is RECOMMENDED to centralize API endpoint generation from the DSN if your SDK doesn't already have that
+* Add the `X-Sentry-Auth` header to a `headers` dictionary
+* Instantiate a `OTLPSpanExporter` from OpenTelemetry with the `endpoint` and `headers`
+* Instantiate a `BatchSpanProcessor` with the above `OTLPSpanExporter`
+* Add the `BatchSpanProcessor` to the `TracerProvider`
+
+IF `setup_otlp_traces_exporter` is `False`, the integration MUST skip this entire step so users can configure their exporters OR collectors manually if they wish to do so.
+
+See the reference Python implementation:
+<GitHubCodePreview url="https://github.com/getsentry/sentry-python/blob/c68c3d6b5152b879bc107f76d9a9c78e95792235/sentry_sdk/integrations/otlp.py#L36-L55" />
+
+### Propagator
+
+The `Propagator` implementation is the same as in the earlier [OpenTelemetry Spec](../opentelemetry/#step-2-implement-the-sentrypropagator-on-your-sdk-add-sentrypropagator).
+
+IF `setup_propagator` is `True`, the integration MUST setup the `Propagator`.
+
+The way to setup the propagator is dependent on the language ecosystem. The Python implementation uses `set_global_textmap`.
+
+IF `setup_propagator` is `False`, the integration MUST skip setting up the `Propagator` and leave it to user to configure manually if they wish to do so.
+
+### External Propagation Context
+
+This specification introduces a new `external_propagation_context` concept that is a global function that adds a new source of `trace_id` and `span_id` to be used in other Sentry event payloads.
+
+This is to ensure that all other Sentry events such as Errors, Check-Ins, Logs and Metrics have the correct `TraceContext` (for Errors and Check-Ins) or `trace_id, span_id` attributes (for Logs and Metrics) and can be linked correctly to the relevant Trace and Span originating from OpenTelemetry.
+
+#### Scope
+
+The `Scope` implementation MUST add two new methods:
+
+* `register_external_propagation_context(fn)` that takes a function and stores it as a global
+* `get_external_propagation_context` that when called calls the above stored global function and returns a `(trace_id, span_id)` tuple or `None`
+
+Further, the scope's `get_trace_context` method should use this `get_external_propagation_context` in preference to the local `propagation_context` on the scope to fill in the `trace_id` and `span_id` in the respective event payloads.
+
+It is RECOMMENDED to centralize this logic for fetching the active `trace_id` and `span_id` for Logs and Metrics if that is not already the case in your SDK.
+
+See the reference Python implementation:
+<GitHubCodePreview url="https://github.com/getsentry/sentry-python/blob/c68c3d6b5152b879bc107f76d9a9c78e95792235/sentry_sdk/scope.py#L149-L165" />
+
+<GitHubCodePreview url="https://github.com/getsentry/sentry-python/blob/c68c3d6b5152b879bc107f76d9a9c78e95792235/sentry_sdk/scope.py#L587-L610" />
+
+#### Integration
+
+The Integration then MUST call `register_external_propagation_context` with a function that fetches the `(trace_id, span_id)` tuple from OpenTelemetry.
+
+See the reference Python implementation:
+<GitHubCodePreview url="https://github.com/getsentry/sentry-python/blob/c68c3d6b5152b879bc107f76d9a9c78e95792235/sentry_sdk/integrations/otlp.py#L23-L33" />
+<GitHubCodePreview url="https://github.com/getsentry/sentry-python/blob/c68c3d6b5152b879bc107f76d9a9c78e95792235/sentry_sdk/integrations/otlp.py#L70" />
+
+## Comparison to POTEL
+
+Note the difference in components above to the components in the POTEL implementation:
+
+* A `SpanProcessor` for processing and packaging the Spans that OpenTelemetry emits
+* A `Propagator` that ensures Distributed Tracing works with other upstream and downstream services using Sentry SDKs
+* A `Sampler` that works with Sentry's `traces_sample_rate` and `traces_sampler`
+  * Note that this implies users **need** to use OpenTelemetry sampling themselves for now if they need. We might revisit the sampling DX with OTLP later.
+* Bidirectional syncing between Sentry's `Scope`s and OpenTelemetry's `Context` so that spans can be started in either API and interleaved freely while preserving the span tree
