@@ -1,0 +1,310 @@
+---
+title: Auto-Update SDK
+sidebar_title: Auto-Update
+sidebar_order: 10
+description: Enable automatic update checks and installations for internal Android builds using the Sentry Auto-Update SDK.
+---
+
+<Include name="feature-available-for-user-group-early-adopter" />
+
+<Alert level="warning">
+
+The Auto-Update SDK is designed for **internal builds only** and should never be used in production builds distributed through the Google Play Store or other public app stores.
+
+</Alert>
+
+The Sentry Auto-Update SDK enables your internal Android builds to automatically check for and install newer versions distributed through Sentry's Build Distribution. This is particularly useful for distributing debug, staging, or beta builds to your internal teams.
+
+## Pre-requisites
+
+Make sure your Sentry Android SDK version is at least 8.0.0 and you have the Sentry Android Gradle Plugin configured for your project.
+
+You'll also need an [internal integration token](#create-an-integration-token) with Build Distribution permissions.
+
+## Create an Integration Token
+
+To use the Auto-Update SDK, you need to create an internal integration token with the appropriate permissions:
+
+1. Navigate to **Settings > Custom Integrations** in your Sentry organization
+2. Click **Create New Integration**
+3. Select **Internal Integration** and click **Next**
+4. Give your integration a name (e.g., "Build Distribution")
+5. Under **Permissions**, add the following scope:
+   - **Build Distribution**: Read & Write
+6. Click **Save Changes**
+7. Copy the generated token from the **Tokens** section
+
+Store this token securely as an environment variable:
+
+```bash
+export SENTRY_DISTRIBUTION_AUTH_TOKEN="your-token-here"
+```
+
+For more details on creating auth tokens, see the [Create a Sentry Authentication Token](/api/guides/create-auth-token/) guide.
+
+## Installation
+
+### Configure the Gradle Plugin
+
+Add the auto-update SDK configuration to your app's `build.gradle` or `build.gradle.kts` file:
+
+<SignInNote />
+
+```groovy {filename:build.gradle}
+sentry {
+  distribution {
+    // Enable build distribution uploads
+    enabled = true
+
+    // Specify which build variants should include the auto-update SDK
+    // These must be variants where the Sentry SDK is enabled (not in ignoredVariants)
+    updateSdkVariants = ["debug", "staging"]
+
+    // Auth token (defaults to SENTRY_DISTRIBUTION_AUTH_TOKEN env var)
+    authToken = System.getenv("SENTRY_DISTRIBUTION_AUTH_TOKEN")
+  }
+}
+```
+
+```kotlin {filename:build.gradle.kts}
+sentry {
+  distribution {
+    // Enable build distribution uploads
+    enabled.set(true)
+
+    // Specify which build variants should include the auto-update SDK
+    // These must be variants where the Sentry SDK is enabled (not in ignoredVariants)
+    updateSdkVariants.set(setOf("debug", "staging"))
+
+    // Auth token (defaults to SENTRY_DISTRIBUTION_AUTH_TOKEN env var)
+    authToken.set(System.getenv("SENTRY_DISTRIBUTION_AUTH_TOKEN"))
+  }
+}
+```
+
+### Configuration Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `enabled` | Controls whether builds are uploaded for distribution | `false` |
+| `updateSdkVariants` | Set of Android build variants that should have the auto-update SDK added | `[]` (empty set) |
+| `authToken` | Integration token for build distribution operations | `SENTRY_DISTRIBUTION_AUTH_TOKEN` env var |
+
+<Alert level="info">
+
+The `updateSdkVariants` configuration controls which variants get the auto-update SDK installed. The `enabled` option controls whether builds are uploaded. You can have builds uploaded without the auto-update SDK, or vice versa.
+
+</Alert>
+
+### Auto-Installation
+
+When you add a variant to `updateSdkVariants`, the Sentry Gradle Plugin automatically:
+
+1. Adds the `sentry-android-distribution` dependency to that variant
+2. Generates a `sentry-distribution.properties` file with your organization and project information
+3. Embeds the distribution auth token securely in the app
+
+No additional dependency declarations are needed.
+
+## Usage
+
+### Check for Updates
+
+Once configured, you can check for updates in your application code. This is typically done at app startup or when the user navigates to a settings screen.
+
+```kotlin
+import io.sentry.Sentry
+import io.sentry.UpdateStatus
+import java.util.concurrent.TimeUnit
+
+// Check for updates asynchronously
+val future = Sentry.distribution().checkForUpdate()
+
+// Process the result when it's ready
+future.get(10, TimeUnit.SECONDS).let { status ->
+    when (status) {
+        is UpdateStatus.NewRelease -> {
+            // A newer version is available
+            val info = status.info
+            println("Update available: ${info.buildVersion} (${info.buildNumber})")
+
+            // Show update dialog to user
+            showUpdateDialog(info)
+        }
+        is UpdateStatus.UpToDate -> {
+            // Current version is the latest
+            println("App is up to date")
+        }
+        is UpdateStatus.UpdateError -> {
+            // An error occurred while checking for updates
+            println("Update check failed: ${status.message}")
+        }
+        is UpdateStatus.NoNetwork -> {
+            // No network connection available
+            println("No network connection: ${status.message}")
+        }
+    }
+}
+
+// Or check synchronously (blocking)
+val status = Sentry.distribution().checkForUpdateBlocking()
+```
+
+### Download and Install Update
+
+When an update is available, you can trigger the download and installation:
+
+```kotlin
+import io.sentry.Sentry
+import io.sentry.UpdateStatus
+import java.util.concurrent.TimeUnit
+
+val future = Sentry.distribution().checkForUpdate()
+val status = future.get(10, TimeUnit.SECONDS)
+
+if (status is UpdateStatus.NewRelease) {
+    val info = status.info
+
+    // Download and install the update
+    // This opens the device's browser to download the APK
+    Sentry.distribution().downloadUpdate(info)
+}
+```
+
+### Example: Update Dialog
+
+Here's a complete example showing how to check for updates and prompt the user:
+
+```kotlin
+import android.app.AlertDialog
+import android.util.Log
+import androidx.appcompat.app.AppCompatActivity
+import io.sentry.Sentry
+import io.sentry.UpdateInfo
+import io.sentry.UpdateStatus
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.util.concurrent.TimeUnit
+
+class MainActivity : AppCompatActivity() {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+
+        // Check for updates on app start
+        checkForUpdates()
+    }
+
+    private fun checkForUpdates() {
+        // Run update check on a background thread
+        lifecycleScope.launch {
+            val status = withContext(Dispatchers.IO) {
+                try {
+                    val future = Sentry.distribution().checkForUpdate()
+                    future.get(10, TimeUnit.SECONDS)
+                } catch (e: Exception) {
+                    Log.e("Updates", "Failed to check for updates", e)
+                    null
+                }
+            }
+
+            // Handle result on main thread
+            when (status) {
+                is UpdateStatus.NewRelease -> {
+                    showUpdateDialog(status.info)
+                }
+                is UpdateStatus.UpToDate -> {
+                    Log.d("Updates", "App is up to date")
+                }
+                is UpdateStatus.UpdateError -> {
+                    Log.e("Updates", "Update check failed: ${status.message}")
+                }
+                is UpdateStatus.NoNetwork -> {
+                    Log.w("Updates", "No network connection")
+                }
+                null -> {
+                    Log.e("Updates", "Unexpected error during update check")
+                }
+            }
+        }
+    }
+
+    private fun showUpdateDialog(updateInfo: UpdateInfo) {
+        AlertDialog.Builder(this)
+            .setTitle("Update Available")
+            .setMessage(
+                "Version ${updateInfo.buildVersion} (${updateInfo.buildNumber}) " +
+                "is now available. Would you like to update?"
+            )
+            .setPositiveButton("Update") { _, _ ->
+                Sentry.distribution().downloadUpdate(updateInfo)
+            }
+            .setNegativeButton("Later", null)
+            .show()
+    }
+}
+```
+
+## How It Works
+
+1. **Build Time**: The Sentry Gradle Plugin generates a `sentry-distribution.properties` file containing your organization slug, project slug, auth token, and build configuration
+2. **Runtime**: The Auto-Update SDK reads these properties from the app's assets
+3. **Update Check**: The SDK makes an API request to Sentry's distribution endpoint with the current app version and build configuration
+4. **Response**: Sentry returns information about newer builds if available
+5. **Download**: If the user accepts the update, the SDK opens the device browser to download the APK from Sentry
+
+## Security Considerations
+
+- **Internal Use Only**: Never ship the auto-update SDK in production builds destined for public app stores
+- **Token Security**: The auth token is embedded in the app and can be extracted by reverse engineering. Only use tokens with minimal permissions (Build Distribution only)
+- **Build Variants**: Use separate build variants for internal builds vs. production builds to ensure the auto-update SDK is never included in store releases
+
+## Best Practices
+
+1. **Variant Separation**: Create dedicated build variants for internal distribution:
+   ```groovy
+   android {
+       buildTypes {
+           debug { /* ... */ }
+           staging { /* ... */ }
+           release { /* ... */ }
+       }
+   }
+
+   sentry {
+       distribution {
+           // Only enable for non-production variants
+           updateSdkVariants = ["debug", "staging"]
+       }
+   }
+   ```
+
+2. **Update Timing**: Check for updates at appropriate times:
+   - On app launch (for critical updates)
+   - In a settings/about screen (user-initiated)
+   - After completing a significant user action
+
+3. **User Experience**: Always allow users to defer updates unless it's a critical fix
+
+4. **Network Handling**: The SDK handles network errors gracefully, but you should handle the `NoNetwork` status appropriately in your UI
+
+## Troubleshooting
+
+### Updates Not Detected
+
+- Verify the auth token has Build Distribution Read permissions
+- Check that the variant is in `updateSdkVariants` and not in `ignoredVariants`
+- Ensure the `distribution.enabled` is set to `true` if you want builds uploaded
+- Verify builds are being uploaded successfully in your Sentry project's Build Distribution section
+
+### Build Fails with "Invalid configuration"
+
+This error occurs when a variant in `updateSdkVariants` is also in `ignoredVariants`. The auto-update SDK requires the Sentry SDK to be enabled for the variant.
+
+### Token Not Found
+
+If you see "Missing required distribution configuration" errors:
+- Ensure `SENTRY_DISTRIBUTION_AUTH_TOKEN` environment variable is set, or
+- Explicitly set `authToken` in the `distribution` configuration block
