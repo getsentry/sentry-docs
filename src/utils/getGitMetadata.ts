@@ -18,7 +18,9 @@ const gitMetadataCache = new Map<string, GitMetadata | null>();
 export function getGitMetadata(filePath: string): GitMetadata | null {
   // Check cache first
   if (gitMetadataCache.has(filePath)) {
-    return gitMetadataCache.get(filePath) ?? null;
+    const cached = gitMetadataCache.get(filePath);
+    // Return a NEW copy to avoid reference sharing
+    return cached ? { ...cached } : null;
   }
 
   try {
@@ -38,14 +40,23 @@ export function getGitMetadata(filePath: string): GitMetadata | null {
     const [commitHash, author, timestampStr] = logOutput.split('|');
     const timestamp = parseInt(timestampStr, 10);
 
+    // Create a fresh object for each call to avoid reference sharing
     const metadata: GitMetadata = {
       commitHash,
       author,
       timestamp,
     };
 
+    // Cache the metadata
     gitMetadataCache.set(filePath, metadata);
-    return metadata;
+    
+    // IMPORTANT: Return a NEW object, not the cached one
+    // This prevents all pages from sharing the same object reference
+    return {
+      commitHash: metadata.commitHash,
+      author: metadata.author,
+      timestamp: metadata.timestamp,
+    };
   } catch (error) {
     // Git command failed or file doesn't exist in git
     gitMetadataCache.set(filePath, null);
