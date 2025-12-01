@@ -133,7 +133,7 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
 
     // Fetch git metadata on-demand for this page only (faster in dev mode)
     let gitMetadata = pageNode.frontmatter.gitMetadata;
-    if (!gitMetadata && pageNode.frontmatter.sourcePath) {
+    if (!gitMetadata && pageNode.frontmatter.sourcePath?.startsWith('develop-docs/')) {
       // In dev mode or if not cached, fetch git metadata for current page only
       const {getGitMetadata} = await import('sentry-docs/utils/getGitMetadata');
       const metadata = getGitMetadata(pageNode.frontmatter.sourcePath);
