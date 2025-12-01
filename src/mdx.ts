@@ -253,11 +253,14 @@ export async function getDevDocsFrontMatterUncached(): Promise<FrontMatter[]> {
             const source = await readFile(file, 'utf8');
             const {data: frontmatter} = matter(source);
             const sourcePath = path.join(folder, fileName);
-          
+
             // In production builds, fetch git metadata for develop-docs pages only
             // In development, skip this and fetch on-demand per page (faster dev server startup)
             let gitMetadata: typeof frontmatter.gitMetadata = undefined;
-            if (process.env.NODE_ENV !== 'development' && sourcePath.startsWith('develop-docs/')) {
+            if (
+              process.env.NODE_ENV !== 'development' &&
+              sourcePath.startsWith('develop-docs/')
+            ) {
               const {getGitMetadata} = await import('./utils/getGitMetadata');
               const metadata = getGitMetadata(sourcePath);
               gitMetadata = metadata ?? undefined;
