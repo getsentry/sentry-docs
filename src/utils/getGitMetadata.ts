@@ -23,14 +23,11 @@ export function getGitMetadata(filePath: string): GitMetadata | null {
 
   try {
     // Get commit hash, author name, and timestamp
-    const logOutput = execSync(
-      `git log -1 --format="%H|%an|%at" -- "${filePath}"`,
-      {
-        encoding: 'utf8',
-        cwd: path.resolve(process.cwd()),
-        stdio: ['pipe', 'pipe', 'ignore'], // Suppress stderr
-      }
-    ).trim();
+    const logOutput = execSync(`git log -1 --format="%H|%an|%at" -- "${filePath}"`, {
+      encoding: 'utf8',
+      cwd: path.resolve(process.cwd()),
+      stdio: ['pipe', 'pipe', 'ignore'], // Suppress stderr
+    }).trim();
 
     if (!logOutput) {
       // No commits found for this file
@@ -55,4 +52,3 @@ export function getGitMetadata(filePath: string): GitMetadata | null {
     return null;
   }
 }
-

@@ -253,7 +253,7 @@ export async function getDevDocsFrontMatterUncached(): Promise<FrontMatter[]> {
             const source = await readFile(file, 'utf8');
             const {data: frontmatter} = matter(source);
             const sourcePath = path.join(folder, fileName);
-            
+
             // In production builds, fetch git metadata for all pages upfront
             // In development, skip this and fetch on-demand per page (faster dev server startup)
             let gitMetadata: typeof frontmatter.gitMetadata = undefined;
@@ -262,7 +262,7 @@ export async function getDevDocsFrontMatterUncached(): Promise<FrontMatter[]> {
               const metadata = getGitMetadata(sourcePath);
               gitMetadata = metadata ?? undefined;
             }
-            
+
             return {
               ...(frontmatter as FrontMatter),
               slug: fileName.replace(/\/index.mdx?$/, '').replace(/\.mdx?$/, ''),

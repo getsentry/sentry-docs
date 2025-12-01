@@ -99,4 +99,3 @@ export function LastUpdated({gitMetadata}: LastUpdatedProps) {
     </div>
   );
 }
-
