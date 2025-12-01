@@ -6,20 +6,18 @@ description: "Learn more about using one of our logging integrations with Sentry
 
 For the best experience, we recommend using Sentry's Spring Boot integration with one of the logging framework integrations as they work together seamlessly.
 
-### Logback
+<Alert level="warning" title="Logs over Breadcrumbs">
 
-To use Sentry Logback integration in Spring Boot application you must include a dependency to the `sentry-logback` module, then Sentry's Spring Boot Starter will auto-configure `SentryAppender`:
+By default these integrations capture logs as breadcrumbs and error events (great for error context!). But if you need to search and query your logs across your entire application, we recommend enabling the new logs feature. Logs at or above the `sentry.logging.minimum-level` are automatically sent as Sentry Logs when enabled.
 
-```xml {tabTitle:Maven}
-<dependency>
-    <groupId>io.sentry</groupId>
-    <artifactId>sentry-logback</artifactId>
-    <version>{{@inject packages.version('sentry.java.logback', '4.2.0') }}</version>
-</dependency>
-```
+</Alert>
 
-```groovy {tabTitle:Gradle}
-implementation 'io.sentry:sentry-logback:{{@inject packages.version('sentry.java.logback', '4.2.0') }}'
+## Spring Boot Configuration
+
+To send logs to Sentry and have them show up in the Logs section, you need to enable the feature:
+
+```properties
+sentry.logs.enabled=true
 ```
 
 Minimum logging levels for `SentryAppender` can be configured in `application.properties` or `application.yml` file.
@@ -36,16 +34,26 @@ The default values are:
 - `info` or higher will send a log message to Sentry and will show up in the Logs section.
 - `error` or higher will send an event to Sentry and will show up in the Issues section.
 
-To send logs to Sentry and have them show up in the Logs section, you need to enable the feature:
-
-```properties
-sentry.logs.enabled=true
-```
-
 When `SentryAppender` auto-configuration does not suit your needs, it can be turned off by setting:
 
 ```properties
 sentry.logging.enabled=false
+```
+
+### Logback
+
+To use Sentry Logback integration in Spring Boot application you must include a dependency to the `sentry-logback` module, then Sentry's Spring Boot Starter will auto-configure `SentryAppender`:
+
+```xml {tabTitle:Maven}
+<dependency>
+    <groupId>io.sentry</groupId>
+    <artifactId>sentry-logback</artifactId>
+    <version>{{@inject packages.version('sentry.java.logback', '4.2.0') }}</version>
+</dependency>
+```
+
+```groovy {tabTitle:Gradle}
+implementation 'io.sentry:sentry-logback:{{@inject packages.version('sentry.java.logback', '4.2.0') }}'
 ```
 
 If you decide to opt-out from the `application.properties` based Spring Boot logging configuration, and instead configure logging in the `logback-spring.xml` file, the `SentryAppender` can be configured as follows:
