@@ -131,6 +131,20 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
     }
     const {mdxSource, frontMatter} = doc;
 
+    // Fetch git metadata on-demand for this page only (faster in dev mode)
+    let gitMetadata = pageNode.frontmatter.gitMetadata;
+    if (!gitMetadata && pageNode.frontmatter.sourcePath) {
+      // In dev mode or if not cached, fetch git metadata for current page only
+      const {getGitMetadata} = await import('sentry-docs/utils/getGitMetadata');
+      gitMetadata = getGitMetadata(pageNode.frontmatter.sourcePath);
+    }
+
+    // Merge gitMetadata into frontMatter
+    const frontMatterWithGit = {
+      ...frontMatter,
+      gitMetadata,
+    };
+
     // pass frontmatter tree into sidebar, rendered page + fm into middle, headers into toc
     const pageType = (params.path?.[0] as PageType) || 'unknown';
     return (
@@ -138,7 +152,7 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
         <PageLoadMetrics pageType={pageType} attributes={{is_developer_docs: true}} />
         <MDXLayoutRenderer
           mdxSource={mdxSource}
-          frontMatter={frontMatter}
+          frontMatter={frontMatterWithGit}
           nextPage={nextPage}
           previousPage={previousPage}
         />
