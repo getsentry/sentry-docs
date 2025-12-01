@@ -20,7 +20,7 @@ export function getGitMetadata(filePath: string): GitMetadata | null {
   if (gitMetadataCache.has(filePath)) {
     const cached = gitMetadataCache.get(filePath);
     // Return a NEW copy to avoid reference sharing
-    return cached ? { ...cached } : null;
+    return cached ? {...cached} : null;
   }
 
   try {
@@ -49,7 +49,7 @@ export function getGitMetadata(filePath: string): GitMetadata | null {
 
     // Cache the metadata
     gitMetadataCache.set(filePath, metadata);
-    
+
     // IMPORTANT: Return a NEW object, not the cached one
     // This prevents all pages from sharing the same object reference
     return {
