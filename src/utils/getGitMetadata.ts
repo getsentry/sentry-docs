@@ -2,8 +2,8 @@ import {execSync} from 'child_process';
 import path from 'path';
 
 export interface GitMetadata {
-  commitHash: string;
   author: string;
+  commitHash: string;
   timestamp: number;
 }
 

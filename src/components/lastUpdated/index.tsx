@@ -3,8 +3,8 @@
 import Link from 'next/link';
 
 interface GitMetadata {
-  commitHash: string;
   author: string;
+  commitHash: string;
   timestamp: number;
 }
 
