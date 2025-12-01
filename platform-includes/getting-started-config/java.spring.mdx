@@ -1,6 +1,6 @@
 Configuration should happen as early as possible in your application's lifecycle.
 
-The `sentry-spring` and `sentry-spring-jakarta` libraries provide an `@EnableSentry` annotation that registers all required Spring beans. `@EnableSentry` can be placed on any class annotated with [@Configuration](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/context/annotation/Configuration.html) including the main entry class in Spring Boot applications annotated with [@SpringBootApplication](https://docs.spring.io/spring-boot/docs/current/api/org/springframework/boot/autoconfigure/SpringBootApplication.html).
+The `sentry-spring`, `sentry-spring-jakarta`, and `sentry-spring-7` libraries provide an `@EnableSentry` annotation that registers all required Spring beans. `@EnableSentry` can be placed on any class annotated with [@Configuration](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/context/annotation/Configuration.html) including the main entry class in Spring Boot applications annotated with [@SpringBootApplication](https://docs.spring.io/spring-boot/docs/current/api/org/springframework/boot/autoconfigure/SpringBootApplication.html).
 
 
 ```java {tabTitle:Java (Spring 5)}
@@ -33,6 +33,21 @@ class SentryConfiguration {
 }
 ```
 
+```java {tabTitle:Java (Spring 7)}
+import io.sentry.spring7.EnableSentry;
+// NOTE: Replace the test DSN below with YOUR OWN DSN to see the events from this app in your Sentry
+// project/dashboard
+@EnableSentry(
+  dsn = "___PUBLIC_DSN___",
+  // Add data like request headers and IP for users,
+  // see https://docs.sentry.io/platforms/java/guides/spring/data-management/data-collected/ for more info
+  sendDefaultPii = true
+)
+@Configuration
+class SentryConfiguration {
+}
+```
+
 ```kotlin {tabTitle:Kotlin (Spring 5)}
 import io.sentry.spring.EnableSentry
 // NOTE: Replace the test DSN below with YOUR OWN DSN to see the events from this app in your Sentry
@@ -49,6 +64,20 @@ class SentryConfiguration
 
 ```kotlin {tabTitle:Kotlin (Spring 6)}
 import io.sentry.spring.jakarta.EnableSentry
+// NOTE: Replace the test DSN below with YOUR OWN DSN to see the events from this app in your Sentry
+// project/dashboard
+@EnableSentry(
+  dsn = "___PUBLIC_DSN___",
+  // Add data like request headers and IP for users,
+  // see https://docs.sentry.io/platforms/java/guides/spring/data-management/data-collected/ for more info
+  sendDefaultPii = true
+)
+@Configuration
+class SentryConfiguration
+```
+
+```kotlin {tabTitle:Kotlin (Spring 7)}
+import io.sentry.spring7.EnableSentry
 // NOTE: Replace the test DSN below with YOUR OWN DSN to see the events from this app in your Sentry
 // project/dashboard
 @EnableSentry(
@@ -100,6 +129,22 @@ class SentryConfiguration {
 }
 ```
 
+```java {tabTitle:Java (Spring 7)}
+import io.sentry.spring7.EnableSentry;
+import org.springframework.core.Ordered;
+// NOTE: Replace the test DSN below with YOUR OWN DSN to see the events from this app in your Sentry
+// project/dashboard
+@EnableSentry(
+  dsn = "___PUBLIC_DSN___",
+  // Add data like request headers and IP for users,
+  // see https://docs.sentry.io/platforms/java/guides/spring/data-management/data-collected/ for more info
+  sendDefaultPii = true,
+  exceptionResolverOrder = Ordered.LOWEST_PRECEDENCE
+)
+class SentryConfiguration {
+}
+```
+
 ```kotlin {tabTitle:Kotlin (Spring 5)}
 import io.sentry.spring.EnableSentry
 import org.springframework.core.Ordered
@@ -130,11 +175,31 @@ import org.springframework.core.Ordered
 class SentryConfiguration
 ```
 
+```kotlin {tabTitle:Kotlin (Spring 7)}
+import io.sentry.spring7.EnableSentry
+import org.springframework.core.Ordered
+// NOTE: Replace the test DSN below with YOUR OWN DSN to see the events from this app in your Sentry
+// project/dashboard
+@EnableSentry(
+  dsn = "___PUBLIC_DSN___",
+  // Add data like request headers and IP for users,
+  // see https://docs.sentry.io/platforms/java/guides/spring/data-management/data-collected/ for more info
+  sendDefaultPii = true,
+  exceptionResolverOrder = Ordered.LOWEST_PRECEDENCE
+)
+class SentryConfiguration
+```
+
 <OnboardingOption optionId="performance">
 
 The SDK can be configured using a `sentry.properties` file:
 
 ```properties {filename:sentry.properties}
 traces-sample-rate=1.0
+// ___PRODUCT_OPTION_START___ profiling
+# Enable profiling
+profile-session-sample-rate=1.0
+profile-lifecycle=TRACE
+// ___PRODUCT_OPTION_END___ profiling
 ```
 </OnboardingOption>
