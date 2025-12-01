@@ -2,13 +2,19 @@
 
 To filter logs, or update them before they are sent to Sentry, you can use the `beforeSendLog` option.
 
+<Alert>
+
+Starting with version 9.0.0, structured logging is no longer experimental. The option moved from `options.experimental.enableLogs` to `options.enableLogs`.
+
+</Alert>
+
 ```swift {tabTitle:Swift}
 import Sentry
 
 SentrySDK.start { options in
     options.dsn = "___PUBLIC_DSN___"
-    options.experimental.enableLogs = true
-    
+    options.enableLogs = true
+
     options.beforeSendLog = { log in
         if log.level == .info {
             // Filter out all info logs
@@ -24,11 +30,45 @@ SentrySDK.start { options in
 
 [SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
     options.dsn = @"___PUBLIC_DSN___";
-    options.experimental.enableLogs = YES;
-    
+    options.enableLogs = YES;
+
     options.beforeSendLog = ^SentryLog* (SentryLog *log) {
-        if (log.level == SentryStructuredLogLevelInfo) {
+        if (log.level == SentryLogLevelInfo) {
             // Filter out all info logs
+            return nil;
+        }
+        return log;
+    };
+}];
+```
+
+Before 9.0.0:
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.experimental.enableLogs = true
+
+    options.beforeSendLog = { log in
+        if log.level == .info {
+            return nil
+        }
+        return log
+    }
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.experimental.enableLogs = YES;
+
+    options.beforeSendLog = ^SentryLog* (SentryLog *log) {
+        if (log.level == SentryLogLevelInfo) {
             return nil;
         }
         return log;
