@@ -115,7 +115,7 @@ export interface FrontMatter {
   sourcePath?: string;
 
   /**
-   * Git metadata for the last commit that modified this file
+   * Git metadata for the last commit & author that modified this file
    */
   gitMetadata?: {
     commitHash: string;

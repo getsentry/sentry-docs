@@ -136,7 +136,8 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
     if (!gitMetadata && pageNode.frontmatter.sourcePath) {
       // In dev mode or if not cached, fetch git metadata for current page only
       const {getGitMetadata} = await import('sentry-docs/utils/getGitMetadata');
-      gitMetadata = getGitMetadata(pageNode.frontmatter.sourcePath);
+      const metadata = getGitMetadata(pageNode.frontmatter.sourcePath);
+      gitMetadata = metadata ?? undefined;
     }
 
     // Merge gitMetadata into frontMatter
