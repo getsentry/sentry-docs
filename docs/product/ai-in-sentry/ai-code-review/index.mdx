@@ -26,6 +26,20 @@ To enable AI Code Review in your GitHub organization or on specific repositories
    - `Show Generative AI Features`
    - `Enable AI Code Review`
 
+### GitHub Permissions
+
+AI Code Review requires specific GitHub permissions to function properly. When you install or update the Sentry GitHub integration, you'll need to accept the following permissions:
+
+- **Pull Requests (Read & Write)**: To read PR content and write code review comments
+- **Checks (Read & Write)**: To create status checks that show the AI Code Review results on your PRs
+- **Commit Statuses (Read & Write)**: To post status checks to commits and integrate with branch protection rules
+
+If you have previously installed the GitHub integration, you may need to update your permissions to include these. GitHub will prompt you to accept updated permissions when Sentry requests them.
+
+<Alert level="info">
+  Denying or ignoring permission update requests won't affect your current Sentry usage, but will prevent AI Code Review and other features from working.
+</Alert>
+
 ## AI Code Review Commands
 
 Ways AI Code Review can help you:
@@ -37,6 +51,39 @@ Ways AI Code Review can help you:
 Once you have added a comment, the assistant will reply, acknowledging the request. For code reviews, you will then see comments added to your PR. 
 
 ![Sentry Prevent AI Overview =900x](./img/prevent-ai-response.png)
+
+## GitHub Status Checks
+
+AI Code Review creates GitHub status checks (also called "checks") on your pull requests to indicate whether the code review passed or found potential issues. These status checks appear in the PR's checks section and can be integrated with GitHub's branch protection rules.
+
+### Status Check Behavior
+
+- **Pass**: If AI Code Review doesn't find any errors or concerns in your code, the status check will pass (green checkmark).
+- **Neutral**: If AI Code Review runs successfully but has suggestions or comments, the status check will be neutral (gray) and won't block merging.
+- **Fail**: The status check only fails if there's an error running the AI Code Review itself (for example, if the feature is not enabled), not based on code quality.
+
+### Visibility
+
+Status checks from AI Code Review are visible to:
+- All users with read access to the repository
+- Anyone viewing the pull request on GitHub
+- GitHub Actions and other CI/CD tools that check PR status
+
+The detailed code review comments are also visible to all users with repository access, appearing as regular PR comments.
+
+### Using with Branch Protection
+
+You can optionally configure GitHub branch protection rules to require the AI Code Review status check before merging. To do this:
+
+1. Go to your GitHub repository Settings > Branches
+2. Add or edit a branch protection rule for your target branch (e.g., `main`)
+3. Enable "Require status checks to pass before merging"
+4. Search for and select the "Sentry AI Code Review" status check
+5. Save your changes
+
+<Alert level="warning">
+  Be aware that requiring the AI Code Review status check will block PR merges if the check fails due to configuration issues or service disruptions. We recommend monitoring the feature during beta before making it a required check.
+</Alert>
 
 ## Frequently Asked Questions
 
@@ -58,6 +105,19 @@ Once you have added a comment, the assistant will reply, acknowledging the reque
 
 Error Prediction is automatically triggered by the following GitHub pull_request webhook events:
   - `opened`: when you open a new pull request (we skip those opened in `draft` state)
-  - `ready_for_review`: when a draft pull request is marked as “Ready for review”
+  - `ready_for_review`: when a draft pull request is marked as "Ready for review"
 
   To manually run error prediction and get a general review, comment `@sentry review` in the PR.
+
+- **Why is the AI Code Review status check failing?**
+
+  The status check may fail if:
+  - The `Show Generative AI Features` or `Enable AI Code Review` settings are not enabled in your organization
+  - The GitHub integration doesn't have the required permissions (Pull Requests, Checks, and Commit Statuses)
+  - There's a temporary service issue
+  
+  The status check does not fail based on code quality issues found during review - those appear as comments and a neutral status.
+
+- **Can I disable status checks while keeping AI Code Review comments?**
+
+  Status checks are automatically created whenever AI Code Review runs. If you don't want them to appear or affect your workflow, simply don't add them as a required check in your branch protection rules. The checks will still appear on PRs but won't block merging.
