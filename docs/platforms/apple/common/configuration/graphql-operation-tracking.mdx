@@ -1,0 +1,65 @@
+---
+title: GraphQL Operation Tracking
+sidebar_order: 14
+description: "Enable tracking of GraphQL operation names in HTTP breadcrumbs and failed request events"
+---
+
+When enabled, the SDK extracts the GraphQL operation name from HTTP requests that have `Content-Type: application/json` and contain a JSON body with an `operationName` field. The operation name is then attached to:
+
+- HTTP breadcrumbs as `graphql_operation_name` (when network breadcrumbs are enabled)
+- Failed request events in the context as `graphql.operation_name` (when HTTP client error capture is enabled)
+
+This feature is disabled by default. To enable it:
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.enableGraphQLOperationTracking = true
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.enableGraphQLOperationTracking = YES;
+}];
+```
+
+## How It Works
+
+The SDK automatically detects GraphQL requests by checking:
+
+1. The HTTP request has `Content-Type: application/json` header
+2. The request body contains valid JSON
+3. The JSON body includes an `operationName` field
+
+When these conditions are met, the SDK extracts the `operationName` value and includes it in:
+
+- **HTTP Breadcrumbs**: When network breadcrumbs are enabled (default), the GraphQL operation name is added as `graphql_operation_name` in the breadcrumb data. This helps you identify which GraphQL operations were executed leading up to an error.
+
+- **Failed Request Events**: When HTTP client error capture is enabled (default since version 8.0.0), the GraphQL operation name is included in the event context as `graphql.operation_name`. This makes it easier to identify which GraphQL operation failed when debugging HTTP client errors.
+
+## Example GraphQL Request
+
+The SDK extracts the operation name from requests like this:
+
+```json
+{
+    "operationName": "GetUserProfile",
+    "variables": {
+        "id": "1234"
+    },
+    "query": "query GetUserProfile($id: ID!) { user(id: $id) { name email } }"
+}
+```
+
+In this example, `GetUserProfile` would be extracted and attached to breadcrumbs and error events.
+
+## Related Features
+
+- <PlatformLink to="/configuration/http-client-errors/">HTTP Client Errors</PlatformLink> - Learn about capturing HTTP client errors
+- <PlatformLink to="/enriching-events/breadcrumbs/">Breadcrumbs</PlatformLink> - Learn about breadcrumb tracking
