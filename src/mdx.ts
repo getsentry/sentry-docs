@@ -265,7 +265,7 @@ export async function getDevDocsFrontMatterUncached(): Promise<FrontMatter[]> {
               const metadata = getGitMetadata(sourcePath);
               // Ensure we create a completely new object to avoid any reference sharing
               gitMetadata = metadata ? {...metadata} : undefined;
-              
+
               // Log during build to debug Vercel issues
               if (process.env.CI || process.env.VERCEL) {
                 console.log(`[BUILD] Git metadata for ${sourcePath}:`, gitMetadata);
