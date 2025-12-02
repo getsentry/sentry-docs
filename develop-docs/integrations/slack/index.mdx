@@ -10,6 +10,87 @@ To use Sentry’s Slack integration you’ll need to create a Slack app. Navigat
 
 ![Create](./create.png)
 
+### Ways to Create a Slack App
+There will be two options: `From a manifest` and `From scratch`, we have provided a manifest template below for convenience.  
+**NOTE**: If you choose to use the manifest provided, you must still configure your sentry environment with the slack app's Client Secret, Client ID, and Signing Secret as directed in [From Scratch](#from-scratch)
+
+#### From Manifest
+Make sure to replace all instances of `{YOUR_DOMAIN}`!
+**NOTE**: For Sentry employee's we reccomend appending the your name to the end of the bot's name and slash command 
+<Expandable title="JSON Manifest for Slack App">
+<Alert title="Note">
+    If you're a Sentry employee, when creating the slash command and the bot names please append your name to the end(e.g `/sentry-{YOUR_NAME}`, `sentry-test-{YOUR_NAME} etc.).
+</Alert>
+```json
+{
+    "display_information": {
+        "name": "sentry-test"
+    },
+    "features": {
+        "bot_user": {
+            "display_name": "sentry-bot",
+            "always_online": true
+        },
+        "slash_commands": [
+            {
+                "command": "/sentry",
+                "url": "{YOUR_DOMAIN}/extensions/slack/commands/",
+                "description": "List all commands",
+                "should_escape": false
+            }
+        ]
+    },
+    "oauth_config": {
+        "redirect_urls": [
+            "{YOUR_DOMAIN}/extensions/slack/setup/"
+        ],
+        "scopes": {
+            "user": [
+                "links:read",
+                "users:read",
+                "users:read.email"
+            ],
+            "bot": [
+                "channels:read",
+                "chat:write",
+                "chat:write.customize",
+                "chat:write.public",
+                "commands",
+                "groups:read",
+                "im:history",
+                "im:read",
+                "links:read",
+                "links:write",
+                "team:read",
+                "users:read"
+            ]
+        }
+    },
+    "settings": {
+        "event_subscriptions": {
+            "request_url": "{YOUR_DOMAIN}/extensions/slack/event/",
+            "user_events": [
+                "link_shared"
+            ],
+            "bot_events": [
+                "link_shared",
+                "message.im"
+            ]
+        },
+        "interactivity": {
+            "is_enabled": true,
+            "request_url": "{YOUR_DOMAIN}/extensions/slack/action/",
+            "message_menu_options_url": "{YOUR_DOMAIN}/extensions/slack/options-load/"
+        },
+        "org_deploy_enabled": false,
+        "socket_mode_enabled": false,
+        "token_rotation_enabled": false
+    }
+}
+```
+</Expandable>
+
+#### From Scratch
 After naming your app and connecting your workspace, navigate to __Basic Information__. Here you’ll find your Client ID, Client Secret, and Verification token that lets your app access the Slack API.
 
 Here’s where you’ll connect your self-hosted Sentry instance to your newly created Slack app.
