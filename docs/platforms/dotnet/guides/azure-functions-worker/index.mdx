@@ -47,14 +47,20 @@ For example:
 ```csharp
 using Sentry.OpenTelemetry;
 
-// ___PRODUCT_OPTION_START___ performance
-using var tracerProvider = Sdk.CreateTracerProviderBuilder()
-    .AddSentry() // <-- Configure OpenTelemetry to send traces to Sentry
-    .AddHttpClientInstrumentation() // From OpenTelemetry.Instrumentation.Http... adds automatic tracing for outgoing HTTP requests
-    .Build();
-// ___PRODUCT_OPTION_END___
 var host = new HostBuilder()
     .ConfigureFunctionsWorkerDefaults()
+// ___PRODUCT_OPTION_START___ performance
+    .ConfigureServices(services =>
+    {
+        services.AddOpenTelemetry().WithTracing(builder =>
+        {
+            builder
+                .AddSentry() // <-- Configure OpenTelemetry to send traces to Sentry
+                .AddAspNetCoreInstrumentation() // From OpenTelemetry.Instrumentation.AspNetCore, instruments inbound HTTP requests
+                .AddHttpClientInstrumentation(); // From OpenTelemetry.Instrumentation.Http, instruments outgoing HTTP requests
+        });
+    })
+// ___PRODUCT_OPTION_END___
     .ConfigureLogging(logging =>
     {
         logging.AddSentry(options =>
