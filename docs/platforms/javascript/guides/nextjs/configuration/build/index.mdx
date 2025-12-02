@@ -182,50 +182,6 @@ Note: Enabling this option can lead to longer build times.
 
 </SdkOption>
 
-<SdkOption name="autoInstrumentServerFunctions" type="boolean" defaultValue="true">
-
-Automatically instrument Next.js data fetching methods and Next.js API routes with error and performance monitoring.
-
-</SdkOption>
-
-<SdkOption name="autoInstrumentMiddleware" type="boolean" defaultValue="true">
-
-Automatically instrument Next.js middleware with error and performance monitoring.
-
-</SdkOption>
-
-<SdkOption name="autoInstrumentAppDirectory" type="boolean" defaultValue="true">
-
-Automatically instrument components in the `app` directory with error monitoring.
-
-</SdkOption>
-
-<SdkOption name="excludeServerRoutes" type="Array<RegExp | string>">
-Exclude specific server-side API routes or pages from automatic Sentry instrumentation during build time.
-This option takes an array of strings or regular expressions and affects pages in the `pages` and `app` directories.
-
-When defining routes, note the following:
-
-- Specify pages as routes and not as file system paths. For example, write `/animals` instead of `pages/animals/index.js`.
-- Make sure that any provided string matches the route exactly, has a leading slash, and doesn't have a trailing slash.
-
-```javascript
-excludeServerRoutes: [
-  "/some/excluded/route",
-  "/excluded/route/with/[parameter]",
-  /^\/route\/beginning\/with\/some\/prefix/,
-  /\/routeContainingASpecificPathSegment\/?/,
-];
-```
-
-<Alert level="info">
-  If you're building your Next.js application with Turbopack, this option will
-  have no effect. The Sentry SDK will no longer apply build-time instrumentation
-  and will rely purely on Next.js telemetry features.
-</Alert>
-
-</SdkOption>
-
 <SdkOption name="tunnelRoute" type="string | boolean">
 <Alert level="info">
 This feature requires **Next.js version 11+** and doesn't currently work with self-hosted Sentry instances.
@@ -251,10 +207,69 @@ Learn more about tunneling in the <PlatformLink to="/troubleshooting/#dealing-wi
 
 </SdkOption>
 
-<SdkOption name="automaticVercelMonitors" type="boolean" defaultValue="false">
+<SdkOption name="webpack.autoInstrumentServerFunctions" type="boolean" defaultValue="true">
+
+Automatically instrument Next.js data fetching methods and Next.js API routes with error and performance monitoring.
+
+</SdkOption>
+
+<SdkOption name="webpack.autoInstrumentMiddleware" type="boolean" defaultValue="true">
+
+Automatically instrument Next.js middleware with error and performance monitoring.
+
+</SdkOption>
+
+<SdkOption name="webpack.autoInstrumentAppDirectory" type="boolean" defaultValue="true">
+
+Automatically instrument components in the `app` directory with error monitoring.
+
+</SdkOption>
+
+<SdkOption name="webpack.excludeServerRoutes" type="Array<RegExp | string>">
+Exclude specific server-side API routes or pages from automatic Sentry instrumentation during build time.
+This option takes an array of strings or regular expressions and affects pages in the `pages` and `app` directories.
+
+When defining routes, note the following:
+
+- Specify pages as routes and not as file system paths. For example, write `/animals` instead of `pages/animals/index.js`.
+- Make sure that any provided string matches the route exactly, has a leading slash, and doesn't have a trailing slash.
+
+```javascript
+excludeServerRoutes: [
+  "/some/excluded/route",
+  "/excluded/route/with/[parameter]",
+  /^\/route\/beginning\/with\/some\/prefix/,
+  /\/routeContainingASpecificPathSegment\/?/,
+];
+```
+
+<Alert level="info">
+  If you're building your Next.js application with Turbopack, this option will
+  have no effect. The Sentry SDK will no longer apply build-time instrumentation
+  and will rely purely on Next.js telemetry features.
+</Alert>
+
+</SdkOption>
+
+<SdkOption name="webpack.automaticVercelMonitors" type="boolean" defaultValue="false">
 
 Automatically create cron monitors in Sentry for your Vercel Cron Jobs if configured via `vercel.json`.
 
+</SdkOption>
+
+<SdkOption
+  name="webpack.unstable_sentryWebpackPluginOptions"
+  type="SentryWebpackPluginOptions"
+>
+  Pass configuration options directly to the [Sentry Webpack
+  Plugin](https://www.npmjs.com/package/@sentry/webpack-plugin) that ships with
+  the Sentry Next.js SDK. If `withSentryConfig` doesn't provide the option you
+  need to modify, you may override the `sentryWebpackPluginOptions` using this
+  option.
+  <Alert level="warning" title="Important">
+    This option is considered unstable, and its API may change in a breaking way
+    in any release.
+  </Alert>
 </SdkOption>
 
 <SdkOption name="disableManifestInjection" type="boolean|undefined" defaultValue="false">
@@ -272,13 +287,13 @@ The route manifest is a build-time generated mapping of your Next.js App Router 
 
 </SdkOption>
 
-<SdkOption name="reactComponentAnnotation.enabled" type="boolean" defaultValue="false">
+<SdkOption name="webpack.reactComponentAnnotation.enabled" type="boolean" defaultValue="false">
 
 Enables React component name tracking. When enabled, it annotates React components with data attributes that allow Sentry to track which components users interacted with in features like Session Replay and breadcrumbs.
 
 </SdkOption>
 
-<SdkOption name="reactComponentAnnotation.ignoredComponents" type="string[] | undefined">
+<SdkOption name="webpack.reactComponentAnnotation.ignoredComponents" type="string[] | undefined">
 
 A list of React component names to exclude from component annotation.
 
@@ -287,8 +302,8 @@ A list of React component names to exclude from component annotation.
 <SdkOption name="useRunAfterProductionCompileHook" type="boolean" defaultValue="false(webpack)|true(turbopack)">
 
 <Alert level="info" title="Version support">
-    You can use this option with Next.js version 15.4.1 and later.
-  </Alert>
+  You can use this option with Next.js version 15.4.1 and later.
+</Alert>
 
 Enables the use of the [`runAfterProductionCompile` hook from Next.js](https://nextjs.org/docs/architecture/nextjs-compiler#runafterproductioncompile) to upload sourcemaps after the build is completed.
 
@@ -297,21 +312,4 @@ Enables the use of the [`runAfterProductionCompile` hook from Next.js](https://n
 
 **Important:** Enabling this option will mutate your Next.js build output by injecting [Debug IDs](/platforms/javascript/guides/nextjs/sourcemaps/troubleshooting_js/debug-ids/) via the Sentry CLI. If you are relying on any sort of integrity hashes for your build artifacts, you will need to disable this option.
 
-
-
-</SdkOption>  
-
-<SdkOption
-  name="unstable_sentryWebpackPluginOptions"
-  type="SentryWebpackPluginOptions"
->
-  Pass configuration options directly to the [Sentry Webpack
-  Plugin](https://www.npmjs.com/package/@sentry/webpack-plugin) that ships with
-  the Sentry Next.js SDK. If `withSentryConfig` doesn't provide the option you
-  need to modify, you may override the `sentryWebpackPluginOptions` using this
-  option.
-  <Alert level="warning" title="Important">
-    This option is considered unstable, and its API may change in a breaking way
-    in any release.
-  </Alert>
 </SdkOption>
