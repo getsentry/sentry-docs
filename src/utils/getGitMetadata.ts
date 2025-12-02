@@ -31,6 +31,11 @@ export function getGitMetadata(filePath: string): GitMetadata | null {
       stdio: ['pipe', 'pipe', 'ignore'], // Suppress stderr
     }).trim();
 
+    // Log for debugging on Vercel
+    if (process.env.CI || process.env.VERCEL) {
+      console.log(`[getGitMetadata] File: ${filePath} -> Output: ${logOutput}`);
+    }
+
     if (!logOutput) {
       // No commits found for this file
       gitMetadataCache.set(filePath, null);
