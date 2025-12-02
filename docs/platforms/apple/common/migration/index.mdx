@@ -3,7 +3,141 @@ title: Migration Guide
 sidebar_order: 8000
 ---
 
-To upgrade from version 4.x of the SDK to version 8.x of the SDK, you must first migrate from 4.x to 5.x, then 5.x to 6.x, then 6.x to 7.x, and finally from 7.x to 8.x.
+To upgrade from version 4.x of the SDK to version 9.x of the SDK, you must first migrate from 4.x to 5.x, then 5.x to 6.x, then 6.x to 7.x, 7.x to 8.x, and finally from 8.x to 9.x.
+
+## Migrating From 8.x to 9.x
+
+Migrating to 9.x from 8.x includes several breaking changes. We provide this guide to help you update your SDK.
+
+### Changes to Minimum OS Versions and Xcode
+
+We bumped the minimum supported OS versions to:
+- **iOS**: 15.0 (previously 11.0)
+- **macOS**: 10.14 (previously 10.13)
+- **tvOS**: 15.0 (previously 11.0)
+- **visionOS**: 1.0 (unchanged)
+- **watchOS**: 8.0 (previously 4.0)
+
+We now build the precompiled XCFramework with **Xcode 16**. To submit to the App Store, Apple now requires Xcode 16. If you need a precompiled XCFramework built with Xcode 15, continue using Sentry SDK 8.x.x.
+
+Additionally, the Package.swift sets `swift-tools-version` to 6.0.
+
+### Carthage Support Dropped
+
+We dropped official support for Carthage in v9. If you're using Carthage, please migrate to <PlatformLink to="/install/swift-package-manager/">Swift Package Manager (SPM)</PlatformLink> or <PlatformLink to="/install/cocoapods/">CocoaPods</PlatformLink>.
+
+### Features Enabled by Default
+
+We now enabled the following features by default:
+
+- **Performance V2 is enabled by default**: The app start duration now finishes when the first frame is drawn instead of when the OS posts the `UIWindowDidBecomeVisibleNotification`. We removed the `enablePerformanceV2` option.
+- **Pre-warmed app start tracking**: The SDK now collects pre-warmed app starts by default via `enablePreWarmedAppStartTracing`.
+- <PlatformLink to="/configuration/app-hangs/#app-hangs-v2">App hang tracking V2</PlatformLink>: This is now the default and we removed the option to enable/disable it.
+
+### Disable App Hang Tracking for Extensions
+
+We now automatically disable app hang tracking for: Widgets, Live Activities, Action Extensions, (Siri) Intent Extensions, Share Extensions. These components run in separate processes or sandboxes with different execution characteristics, which can cause false positive app hang reports.
+
+### Structured Logging
+
+We moved structured logging out of experimental and made it part of the stable API. The `enableLogs` option moved from `options.experimental.enableLogs` to `options.enableLogs`. We added log APIs to `Hub` and `Client`, and logs now include a `sentry.replay_id` attribute.
+
+**Migration required:** Update your code from `options.experimental.enableLogs = true` to `options.enableLogs = true`. Logging is not enabled by default; you must explicitly set this option.
+
+#### HTTP Client Errors
+
+HTTP client errors now mark sessions as errored. This provides better visibility into failed network requests in your release health data.
+
+### Profiling Changes
+
+We removed all deprecated profiling APIs in version [9.0.0](https://github.com/getsentry/sentry-cocoa/releases/tag/9.0.0).
+
+<PlatformSection notSupported={["apple.tvos", "apple.watchos", "apple.visionos"]}>
+
+The only supported profiling method is now <PlatformLink to="/profiling/#enable-ui-profiling">UI Profiling</PlatformLink> (also known as continuous V2 profiling), which was introduced in [version 8.49.0](https://github.com/getsentry/sentry-cocoa/releases/tag/8.49.0).
+
+**Removed deprecated profiling options from `SentryOptions`:**
+- `profilesSampleRate` - used for transaction-based profiling (deprecated)
+- `profilesSampler` - used for transaction-based profiling (deprecated)
+- `enableAppLaunchProfiling` - used for launch profiling (deprecated)
+
+**Migration to UI Profiling:**
+
+If you were using any of the deprecated profiling options, you need to migrate to UI Profiling. Configure profiling by assigning a closure to `SentryOptions.configureProfiling`:
+
+```swift
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.configureProfiling = {
+        $0.sessionSampleRate = 1
+        $0.lifecycle = .manual // or .trace for trace-based lifecycle
+    }
+}
+```
+
+For more information, see the <PlatformLink to="/profiling/#enable-ui-profiling">UI Profiling documentation</PlatformLink>.
+
+</PlatformSection>
+
+### Breaking Changes
+
+#### Option Changes
+
+- `enableFileManagerSwizzling` is now a top-level non-experimental option and remains disabled by default.
+- `enableDataSwizzling` is now a top-level option and is enabled by default.
+- `enableLogs` is now a top-level non-experimental option and remains disabled by default (you must set it to `true` to enable logging).
+- We increased the maximum attachment size to 200MB (previously 20MB)
+- We removed the following methods and properties:
+  - `inAppExclude` (it had no effect)
+  - `integrations`
+  - `defaultIntegrations()`
+  - `enableTracing` (use `tracesSampleRate` or `tracesSampler` instead)
+  - `getStoreEndpoint()`
+  - `enablePerformanceV2` the behavior of this option is now enabled by default.
+
+#### Behavioral Breaking Changes
+
+- The default trace context status is now `ok` instead of `undefined`.
+- The `function` property on `SentryFrame` now defaults to `nil` instead of `"<redacted>"`
+- The `value` and `type` properties on `SentryException` are now nullable; when `NSException` has no reason, `type` is set to `nil`
+- We changed the type of the `http.response.status_code` attribute for spans to int
+
+#### Renamed APIs
+
+- We renamed `SentryStructuredLogLevel` to `SentryLogLevel`
+- We renamed `SentryStructuredLogAttribute` to `SentryLogAttribute`
+
+#### Removed APIs
+
+- We removed the `segment` property from `SentryTraceContext`, `SentryUser`, and `SentryBaggage`
+- We removed the initializers from `SentryTraceContext`
+- We removed `SentryDsn.getHash()`
+- We removed `SentryFrame.instruction`
+
+We removed the following deprecated APIs:
+
+- `SentrySpan.setExtraValue(_:forKey:)`
+- User feedback API (use the new <PlatformLink to="/user-feedback/">feedback API</PlatformLink> instead)
+- `Scope.useSpan()` (use `Scope.span` instead)
+- `SentryDebugMeta.uuid` (use `debugID` instead)
+- `SentryDebugMeta.name` (use `codeFile` instead)
+
+We made the following classes and APIs private:
+
+- `SentryEventDecoder` and `SentryEventDecodable`
+- `SentryEnvelopeItemHeader`
+- `SentryIntegrationProtocol`
+- `SentrySession`
+- `SentrySDKInfo`
+- `SentryDebugImageProvider`
+
+#### Other breaking changes
+
+- We made the following classes `final`: `PreviewRedactOptions`, `SentryProfileOptions`, `SentryRedactViewHelper`, `SentryViewScreenshotOptions`, `SentryReplayOptions`, `SentryUserFeedbackConfiguration`, `SentryUserFeedbackFormConfiguration`, `SentryUserFeedbackThemeConfiguration`, `SentryUserFeedbackWidgetConfiguration`, `SentryFeedback`, and `SentryExperimentalOptions`
+
+For a complete list of changes, see the [Changelog of version 9.0.0](https://github.com/getsentry/sentry-cocoa/releases/tag/9.0.0)
 
 ## Migrating From 7.x to 8.x
 
