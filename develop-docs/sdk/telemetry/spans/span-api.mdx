@@ -86,6 +86,9 @@ interface StartSpanOptions {
 ```
 
 ```Python {tabTitle:Python}
+# The context-manager way of starting a span. The span will be finished
+# automatically when exiting the context manager.
+
 with start_span(
     name,  # type: str
     attributes,  # type: SpanAttributes
@@ -93,6 +96,12 @@ with start_span(
     active,  # type: bool
 ) as span:
     ...
+
+# Alternative API without the use of a context manager, to allow for more
+# flexibility when to end the span:
+
+span = start_span(name, attributes, parent_span, active)
+span.end()
 ```
 
 SDKs MUST allow specifying the following options to be passed to `startSpan`:
@@ -178,6 +187,7 @@ with sentry_sdk.start_span(name="checkout", attributes={"user.id": "123"}) as ch
             process_payment_span.set_status("error")
             process_payment_span.set_attribute("order-status", "error")
 
-    with sentry_sdk.start_span(name="log-order", parent_span=None) as unrelated_span:
-        log_order()
+    span = sentry_sdk.start_span(name="log-order", parent_span=None)
+    log_order()
+    span.end()
 ```
