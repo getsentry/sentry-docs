@@ -22,7 +22,7 @@ In general, changes that the user needs to adapt to or changes that significantl
 
 ### SDK API Surface Changes
 
-The most obvious kind of breaking changes is changing the way the user interacts with the public API of the SDK, for instance:
+The most obvious kind of breaking changes are those that change the way the user interacts with the public API of the SDK, for instance:
 - Dropping or renaming part of the API
 - Dropping or renaming an argument to an API function
 - Changing the type of an argument to an API function and not accepting the previous type anymore
@@ -32,7 +32,8 @@ In general, it's good to explicitly point out which parts of the API are public 
 In some SDKs, the line between public and private API is unclear, in which case you need to be more mindful of users possibly using functions that weren't meant to be public. In these cases, you need to make a decision. If unsure, discuss with your teammates. Some pointers:
 - Is the API mentioned in the user-facing docs? Then it's highly likely public, and you should consider making changes to it in a major release.
 - Was the code you're changing solely created for an internal purpose? Is it a utility or a helper function? Then it's fine to change.
-- Have you seen the function used in user code, for example in issue reproduction examples in your repo?
+- Have you seen the function used in user code, for example, in issue reproduction examples in your repo?
+- Keep in mind that when users can use an API even if it is not documented at all and not meant for public use, most likely somebody **uses** the API. This doesn't mean it has to be a breaking change, but you must to point out such changes in the changelog.
 
 Naturally, the language of your SDK and the community around it also affects what is generally considered a breaking change. Some languages provide their own guidelines:
 - [.NET](https://learn.microsoft.com/en-gb/dotnet/core/compatibility/library-change-rules)
@@ -48,6 +49,7 @@ In general, we consider changes to the following product-side features potential
 - **Grouping:** An SDK change might result in error events being grouped differently, because we remove, add or change some of the data on the event that is used in the grouping algorithm on the server. When you think a change might affect grouping, it's recommended to try the change yourself and check in Sentry to see if grouping is preserved.
 - **Dashboards:** A user has set up a dashboard that filters on specific data and we change that data. For instance, changing a span's `op` might mean a dashboard showing those spans will be empty after an SDK update.
 - **Alerts:** Alerts might stop or start firing because we've changed an attribute.
+- **Insights:** Some users are closely monitoring data in the Insights module, such as Web or Mobile Vitals. Changes to the SDK can affect these metrics and cause unnecessary panic.
 
 Changes to grouping, dashboards and alerts need closer inspection. In order to make a good decision, you can try to estimate how many users are affected using our data analytics tools. It always needs a human/team to weigh in.
 
@@ -98,9 +100,8 @@ Fortunately, there is always a lot you can do (and not do) to make the upgrade p
 
 - Add call-outs in relevant places in the docs and in the changelog.
 - Add deprecation warnings that a breaking change is coming.
-- Support an intermediate period where both the old and the new way of doing things works.
-- Maintain deprecated APIs, if possible, for another major version.
-- Add an SDK option that acts as a feature flag to enable users to switch between the old and the new behavior.
+- Support a transitional phase where both the old and new ways function. You might consider providing an SDK option that serves as a feature flag to toggle between the two behaviors.
+- Maintain deprecated APIs, if possible, until another major version.
 - Write a polished migration guide with a lot of easily copy-pastable before-and-after examples.
 - Try to do the upgrade yourself on a test app. Instruct an LLM to do the update using your migration guide and see how well it works.
 - Provide a tool that helps with the upgrade, for example using codemods. (Caveat: This is tricky to get right so that it covers all possible usages of the SDK.)
