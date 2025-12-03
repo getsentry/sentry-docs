@@ -73,6 +73,30 @@ SentrySDK.start { options in
 }];
 ```
 
+### GraphQL Operation Tracking
+
+When `enableGraphQLOperationTracking` is enabled, the SDK extracts the GraphQL operation name from HTTP requests that have `Content-Type: application/json` and contain a JSON body with an `operationName` field. The operation name is then included in the error event's context as `graphql.operation_name`, making it easier to identify which GraphQL operation failed.
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.enableGraphQLOperationTracking = true
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.enableGraphQLOperationTracking = YES;
+}];
+```
+
+When enabled, GraphQL operation names are also added to HTTP breadcrumbs as `graphql_operation_name` (when network breadcrumbs are enabled).
+
 Error events may contain PII data, such as `Headers` and `Cookies`. Sentry already does data scrubbing by default, but you can scrub any data before it is sent. Learn more in [Scrubbing Sensitive Data](/platforms/apple/guides/ios/data-management/sensitive-data/).
 
 These events are searchable and you can set alerts on them if you use the `http.url` and `http.status_code` properties. Learn more in our full [Searchable Properties](/concepts/search/searchable-properties/) documentation.
