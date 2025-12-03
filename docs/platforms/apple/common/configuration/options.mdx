@@ -123,13 +123,15 @@ When set to `true`, the SDK will send session events to Sentry. This is supporte
 
 <SdkOption name="inAppInclude" type="array">
 
-A list of string prefixes of module names that belong to the app. This option takes precedence over `in-app-exclude`.
+A list of string prefixes of module names that belong to the app.
 
 Sentry differentiates stack frames that are directly related to your application ("in application") from stack frames that come from other packages such as the standard library, frameworks, or other dependencies. The application package is automatically marked as `inApp`. The difference is visible in [sentry.io](https://sentry.io), where only the "in application" frames are displayed by default.
 
 </SdkOption>
 
-<SdkOption name="inAppExclude" type="array">
+<SdkOption name="inAppExclude" type="array" removedSince="9.0.0">
+
+**Removed in version 9.0.0** - This option had no effect and was removed.
 
 A list of string prefixes of module names that do not belong to the app, but rather to third-party packages. Modules considered not part of the app will be hidden from stack traces by default.
 
@@ -208,17 +210,29 @@ Once enabled, this feature automatically captures HTTP client errors, like bad r
 
 </SdkOption>
 
+<SdkOption name="enableGraphQLOperationTracking" type="bool" defaultValue="false">
+
+When enabled, the SDK extracts the GraphQL operation name from HTTP requests that have `Content-Type: application/json` and contain a JSON body with an `operationName` field. The operation name is then attached to HTTP breadcrumbs and failed request events.
+
+This option defaults to `false`. Learn more in the <PlatformLink to="/configuration/graphql-operation-tracking/">GraphQL Operation Tracking</PlatformLink> documentation.
+
+</SdkOption>
+
 ## Integration Configuration
 
 For many platform SDKs integrations can be configured alongside it. On some platforms that happen as part of the `init()` call, in some others, different patterns apply.
 
-<SdkOption name="integrations" type="array" />
+<SdkOption name="integrations" type="array" removedSince="9.0.0" />
+
+**Removed in version 9.0.0** - Integrations are now automatically managed by the SDK. Use specific configuration options to control SDK features instead.
 
 In some SDKs, the integrations are configured through this parameter on library initialization. For more information, please see our documentation for a specific integration.
 
 <PlatformSection notSupported={["java", "dart"]}>
 
-<SdkOption name="defaultIntegrations" type="bool" />
+<SdkOption name="defaultIntegrations" type="bool" removedSince="9.0.0" />
+
+**Removed in version 9.0.0** - Integrations are now automatically managed by the SDK.
 
 This can be used to disable integrations that are added by default. When set to `false`, no default integrations are added.
 
@@ -274,6 +288,19 @@ If one of the entries in the list matches the URL of an outgoing request, trace 
 String entries do not have to be full matches, meaning the URL of a request is matched when it _contains_ a string provided through the option.
 
 If <PlatformIdentifier name="tracePropagationTargets" /> is not provided, trace data is attached to every outgoing request from the instrumented client.
+
+</SdkOption>
+
+
+<SdkOption name="enable-propagate-trace-parent" type="bool" defaultValue="false" availableSince="9.0.0">
+
+This option is available as of [version 9.0.0](https://github.com/getsentry/sentry-cocoa/blob/main/CHANGELOG.md#9000).
+
+If set to `true`, the SDK adds the [W3C `traceparent` header](https://www.w3.org/TR/trace-context/) to outgoing HTTP requests.
+This header is attached in addition to the `sentry-trace` and `baggage` headers.
+Set this option to `true` if your backend services are instrumented with a W3C Trace Context compatible library such as OpenTelemetry and you want to continue traces from the client.
+
+Use <PlatformIdentifier name="trace-propagation-targets" /> to control which requests the `traceparent` header is attached to.
 
 </SdkOption>
 

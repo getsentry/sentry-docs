@@ -128,14 +128,16 @@ tb-d --> w-d[default Worker]
 To achieve this work separation we need to make a few changes:
 
 1. Provision any additional topics. Topic names need to come from one of the
-   predefined topics in `src/sentry/conf/types/kafka_definition.py`
+   predefined topics in [`src/sentry/conf/types/kafka_definition.py`](https://github.com/getsentry/sentry/blob/master/src/sentry/conf/types/kafka_definition.py).
+   By default, any topics will automatically be created during `./install.sh`
+   process.
 2. Deploy the additional broker replicas. You can use the
    `TASKBROKER_KAFKA_TOPIC` environment variable to define the topic a
    taskbroker consumes from.
 3. Deploy additional workers that use the new brokers in their `rpc-host-list`
    CLI flag.
 4. Find the list of namespaces you want to shift to the new topic. The list of
-   task namespaces can be found in the `sentry.taskworker.namespaces` module.
+   task namespaces can be found in the [`sentry.taskworker.namespaces`](https://github.com/getsentry/sentry/blob/master/src/sentry/taskworker/namespaces.py) module.
 5. Update task routing option, defining the namespace -> topic mappings. e.g.
    ```yaml
    # in sentry/config.yml
@@ -143,3 +145,52 @@ To achieve this work separation we need to make a few changes:
       "ingest.errors": "taskworker-ingest"
       "ingest.transactions": "taskworker-ingest"
    ```
+
+### Separate Ingest Workers
+
+Having separate ingest `taskbroker` and `taskworker` is useful for high-throughput
+installations, therefore you can receive timely alerts and not have to wait for
+ingest-related tasks to finish. As an implementation of the above steps,
+you need to add a few new containers on your `docker-compose.override.yml` file:
+
+```yaml
+# Copy `x-sentry_defaults` and `file_healthcheck_defaults` section from
+# `docker-compose.yml` to `docker-compose.override.yml` first. Put it on the
+# top of the file.
+services:
+  taskbroker-ingest:
+    restart: "unless-stopped"
+    image: "$TASKBROKER_IMAGE"
+    environment:
+      TASKBROKER_KAFKA_TOPIC: "taskworker-ingest"
+      TASKBROKER_KAFKA_CONSUMER_GROUP: "taskworker-ingest"
+      TASKBROKER_KAFKA_CLUSTER: "kafka:9092"
+      TASKBROKER_KAFKA_DEADLETTER_CLUSTER: "kafka:9092"
+      TASKBROKER_DB_PATH: "/opt/sqlite/taskbroker-activations-ingest.sqlite"
+    volumes:
+      - sentry-taskbroker-ingest:/opt/sqlite
+    depends_on:
+      - kafka
+  taskworker-ingest:
+    <<: *sentry_defaults
+    command: run taskworker --concurrency=4 --rpc-host-list=taskbroker-ingest:50051 --health-check-file-path=/tmp/health.txt
+    healthcheck:
+      <<: *file_healthcheck_defaults
+
+volumes:
+  sentry-taskbroker-ingest: {}
+```
+
+On your `sentry/config.yml` file, you need to append the following to the
+bottom of the file:
+```yaml
+taskworker.route.overrides:
+  "ingest.errors": "taskworker-ingest"
+  "ingest.transactions": "taskworker-ingest"
+  "ingest.profiling": "taskworker-ingest"
+  "ingest.attachments": "taskworker-ingest"
+  "ingest.errors.postprocess": "taskworker-ingest"
+```
+
+Any other tasks that are not defined on the routes override above will be
+handled by the default `taskbroker` and `taskworker` service.
