@@ -31,7 +31,7 @@ If you're implementing Span-First (as a PoC) in your SDK, take an iterative appr
    - This new API MUST only be used in conjunction with the new `traceLifeCycle` option and therefore only emit new spans (no transactions).
    - This new API MUST NOT expose any old transaction properties or concepts like (`op`, `description`, `tags`, etc).
    - TBD: Some SDKs already have `startSpan` or similar APIs. The migration path is still TBD but a decision can be made at a later stage.
-5. Implment the `captureSpan` [single-span processing pipeline](#single-span-processing-pipeline)
+5. Implement the `captureSpan` [single-span processing pipeline](#single-span-processing-pipeline)
    - Either reuse existing heuristics (e.g. flush when segment span ends) or build a simple span buffer to flush spans (e.g. similar to the existing buffers for logs or metrics).
    - Implementing the more complex [Telemetry Buffer](./../telemetry-buffer/index) can happen at a later stage.
 6. Achieve data parity with the existing transaction events.
@@ -57,7 +57,7 @@ Here's a rough overview of what `captureSpan` should do in which order:
 
 1. Accept any span that already ended (i.e. has an `end_timestamp`)
 2. Obtain the current, isolation and global scopes and merge the scope data.
-3. Apply [common span attributes](../span-protocol/#common-attribute-keys) from the client and the methed scope data to every span.
+3. Apply [common span attributes](../span-protocol/#common-attribute-keys) from the client and the merged scope data to every span.
 4. Apply the merged scope data (including scope attributes) to the span IFF it is a segment span.
 5. Apply any span processing hooks (i.e. event processor replacements) to the span.
 6. Apply the `before_send_span` callback to the span.
@@ -65,7 +65,7 @@ Here's a rough overview of what `captureSpan` should do in which order:
 
 The `captureSpan` pipeline MUST NOT 
 - drop any span
-- buffer spans before enqueing them
+- buffer spans before enqueuing them
 
 ### [TMP solution] Span Filtering
 
@@ -77,7 +77,7 @@ We might revisit this, which could require changes to the single-span processing
 
 For now, this means though:
 - Whenever `ignore_spans` is applied, SDKs MUST NOT start an actual span. Instead, they SHOULD start a No-op ("non-recording") span, which has no influence on the trace hierarchy.
-- SDKS MUST record client outcomes for ingored spans
+- SDKS MUST record client outcomes for ignored spans
 - SDKs MUST apply `ignore_spans` to every span if at all possible (POTel SDKs are excepted, but encouraged to do so as well) 
 
 ### [TBD] Event Processors
@@ -85,13 +85,13 @@ For now, this means though:
 Given that spans no longer are events (as opposed to transactions), they don't go through our event processors, which are exensively used throughout the SDKs (clients, integrations) but also by users.
 Instead, we need to find another way for users or integrations to enrich and mutate spans.
 
-For user-facing migration, we should try to solve every use case with `ingore_spans` (for filtering) and `before_send_span` (for enrichment, data scrubbing and span mutation).
+For user-facing migration, we should try to solve every use case with `ignore_spans` (for filtering) and `before_send_span` (for enrichment, data scrubbing and span mutation).
 
 For SDK-internal processing, we're still evaluating the preferred approach but there are two main options:
 
 1. Expose new APIs for integrations (and secondarily users) to process a span. 
    For example via SDK lifecycle hooks (implemented in the JS SDK). 
-   Every intergration would have to listen to this hook and apply its logic to spans. 
+   Every integration would have to listen to this hook and apply its logic to spans. 
    SDKs need to add a subscriber to the hook everywhere where they currently add an event processor.
    - Pro: Clear separation and semantics
    - Pro: Easy to implement and maintain
