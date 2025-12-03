@@ -118,7 +118,7 @@ The Cocoa SDK creates the following app start spans:
 - **Runtime Init to Pre Main Initializers**: from runtime init to pre main initializers.
 - **UIKit Init**: from pre main initializers to the when starting the Sentry Cocoa SDK.
 - **Application Init**: this reflects the duration of your AppDelegate `application:didFinishLaunchingWithOptions` method or [App conformer's initializer](<https://developer.apple.com/documentation/swiftui/app/main()>) when using SwiftUI, which is from when starting the Cocoa SDK to the [`didFinishLaunchingNotification`][didfinishlaunching].
-- **Initial Frame Render**: from the [`didFinishLaunchingNotification`][didfinishlaunching] to [`UIWindowDidBecomeVisibleNotification`][uiwindow]. When enabling the option `enablePerformanceV2` this is from the [`didFinishLaunchingNotification`][didfinishlaunching] until the app renders its first frame.
+- **Initial Frame Render**: from the [`didFinishLaunchingNotification`][didfinishlaunching] until the app renders its first frame. **Starting with version 9.0.0, this is the default behavior.** In versions prior to 9.0.0, this measured until [`UIWindowDidBecomeVisibleNotification`][uiwindow] unless you enabled the `enablePerformanceV2` option.
 
 ![App Start Transaction](./img/app-start-transaction.png)
 
@@ -126,7 +126,7 @@ Cold and warm start are Mobile Vitals, which you can learn about in the [full do
 
 ### Prewarmed App Start Tracing
 
-Starting with iOS 15, the operating system might [prewarm](https://developer.apple.com/documentation/uikit/app_and_environment/responding_to_the_launch_of_your_app/about_the_app_launch_sequence#3894431) your app by creating the process before the user opens it. Enable the `enablePreWarmedAppStartTracing` feature to collect prewarmed app starts, which will be enabled by default in V9.
+Starting with iOS 15, the operating system might [prewarm](https://developer.apple.com/documentation/uikit/app_and_environment/responding_to_the_launch_of_your_app/about_the_app_launch_sequence#3894431) your app by creating the process before the user opens it. Starting with SDK version [9.0.0](https://github.com/getsentry/sentry-cocoa/releases/tag/9.0.0), the `enablePreWarmedAppStartTracing` is enabled by default.
 
 When the OS prewarms your app process, it already does some of the initialization steps of a normal app start before the user taps the app icon. This can be anywhere from seconds to minutes or hours before your app is fully launched. Therefore, the SDK doesn't add the **Pre Runtime Init** and the **Runtime Init to Pre Main Initializers** spans. This approach shortens the app start duration, but it represents the time from when a user clicks the app icon to when the app is responsive.
 
@@ -139,14 +139,14 @@ With this feature, the SDK differentiates between four different app start types
 
 You can filter for different app start types in [Discover](/product/explore/discover-queries/) with `app_start_type:cold.prewarmed`, `app_start_type:warm.prewarmed`, `app_start_type:cold`, and `app_start_type:warm`.
 
-To enable prewarmed app start tracing:
+To disable prewarmed app start tracing:
 
 ```swift {tabTitle:Swift}
 import Sentry
 
 SentrySDK.start { options in
     options.dsn = "___PUBLIC_DSN___"
-    options.enablePreWarmedAppStartTracing = true
+    options.enablePreWarmedAppStartTracing = false
 }
 ```
 
@@ -155,7 +155,7 @@ SentrySDK.start { options in
 
 [SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
     options.dsn = @"___PUBLIC_DSN___";
-    options.enablePreWarmedAppStartTracing = YES;
+    options.enablePreWarmedAppStartTracing = NO;
 }];
 ```
 
@@ -267,6 +267,28 @@ import Sentry
 SentrySDK.start { options in
     options.dsn = "___PUBLIC_DSN___"
     options.enableFileIOTracing = true
+    options.enableFileManagerSwizzling = true
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = "___PUBLIC_DSN___"
+    options.enableFileIOTracing = YES;
+    options.enableFileManagerSwizzling = YES;
+}];
+```
+
+Before 9.0.0, this option was experimental:
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.enableFileIOTracing = true
     options.experimental.enableFileManagerSwizzling = true
 }
 ```
@@ -290,53 +312,105 @@ Starting with iOS 18, tvOS 18, and macOS 15 the Swift classes `Data` and `FileMa
 
 ### Manual File/IO Tracing
 
+Starting with iOS 18.0, macOS 15.0, and tvOS 18.0, the Swift class `Data` can not be instrumented automatically anymore. Instead, you need to use Sentry-specific type extensions.
+
 Starting with version 8.48.0, the Sentry SDK offers extensions for the types `Data` and `FileManager` to track reading and writing data, as well as creating, moving, copying, and deleting files.
 
-The method signatures of the extension resemble the ones of the original types, but they add a span to the current transaction:
+The method signatures of these extensions resemble those of the original types, but they add a span to the current transaction. These methods can be used even when the Sentry SDK is not enabled—they will fall back to the original methods in that case.
+
+**Behavior:**
+- The SDK only creates spans when there is an active transaction on the scope
+- Only file URLs are tracked (non-file URLs like HTTP URLs are ignored, as they are handled by network tracing)
+- File size is automatically tracked for read and write operations
+- Spans finish with `ok` status on success or `internalError` status if an exception is thrown
+- Exceptions thrown during operations are associated with the span
 
 **Data Operations:**
 
-- `Data.init(contentsOfUrlWithSentryTracing:)` for `Data(contentsOf:)`
-- `data.writeWithSentryTracing(to:options:)` for `data.write(to:)`
+- `Data.init(contentsOfWithSentryTracing:options:)` for `Data(contentsOf:options:)` - Creates spans with operation `file.read`
+- `data.writeWithSentryTracing(to:options:)` for `data.write(to:options:)` - Creates spans with operation `file.write`
 
 ```swift {tabTitle:Swift}
 // Read data from a file URL
-let data = Data(contentsOfUrlWithSentryTracing: url)
+let url = URL(fileURLWithPath: "/path/to/file.txt")
+let data = try Data(contentsOfWithSentryTracing: url)
+
+// Read with options
+let dataWithOptions = try Data(contentsOfWithSentryTracing: url, options: [.alwaysMapped])
 
 // Write data to a file URL
-data.writeWithSentryTracing(to: url)
+try data.writeWithSentryTracing(to: url)
+
+// Write with options
+try data.writeWithSentryTracing(to: url, options: [.uncached])
 ```
 
 **FileManager Operations:**
 
-- `FileManager.createFileWithSentryTracing(atPath:contents:attributes:)` for `FileManager.createFile(atPath:contents:attributes:)`
-- `FileManager.moveItemWithSentryTracing(at:to:)` for `FileManager.moveItem(at:to:)`
-- `FileManager.moveItemWithSentryTracing(atPath:toPath:)` for `FileManager.moveItem(atPath:toPath:)`
-- `FileManager.copyItemWithSentryTracing(at:to:)` for `FileManager.copyItem(at:to:)`
-- `FileManager.copyItemWithSentryTracing(atPath:toPath:)` for `FileManager.copyItem(atPath:toPath:)`
-- `FileManager.removeItemWithSentryTracing(at:)` for `FileManager.removeItem(at:)`
-- `FileManager.removeItemWithSentryTracing(atPath:)` for `FileManager.removeItem(atPath:)`
+- `FileManager.createFileWithSentryTracing(atPath:contents:attributes:)` for `FileManager.createFile(atPath:contents:attributes:)` - Creates spans with operation `file.write`
+- `FileManager.moveItemWithSentryTracing(at:to:)` for `FileManager.moveItem(at:to:)` - Creates spans with operation `file.rename`
+- `FileManager.moveItemWithSentryTracing(atPath:toPath:)` for `FileManager.moveItem(atPath:toPath:)` - Creates spans with operation `file.rename`
+- `FileManager.copyItemWithSentryTracing(at:to:)` for `FileManager.copyItem(at:to:)` - Creates spans with operation `file.copy`
+- `FileManager.copyItemWithSentryTracing(atPath:toPath:)` for `FileManager.copyItem(atPath:toPath:)` - Creates spans with operation `file.copy`
+- `FileManager.removeItemWithSentryTracing(at:)` for `FileManager.removeItem(at:)` - Creates spans with operation `file.delete`
+- `FileManager.removeItemWithSentryTracing(atPath:)` for `FileManager.removeItem(atPath:)` - Creates spans with operation `file.delete`
 
 ```swift {tabTitle:Swift}
 let fileManager = FileManager.default
 
 // Create a file with given content
+let path = "/path/to/file.txt"
+let data = "Hello, World!".data(using: .utf8)
 fileManager.createFileWithSentryTracing(atPath: path, contents: data)
 
+// Create with attributes
+let attributes: [FileAttributeKey: Any] = [
+    .posixPermissions: 0o644
+]
+fileManager.createFileWithSentryTracing(atPath: path, contents: data, attributes: attributes)
+
 // Move a file or directory
+let sourceUrl = URL(fileURLWithPath: "/path/to/source")
+let destinationUrl = URL(fileURLWithPath: "/path/to/destination")
 try fileManager.moveItemWithSentryTracing(at: sourceUrl, to: destinationUrl)
-try fileManager.moveItemWithSentryTracing(atPath: sourcePath, toPath: destinationPath)
+
+// Move using paths
+try fileManager.moveItemWithSentryTracing(atPath: "/path/to/source", toPath: "/path/to/destination")
 
 // Copy a file or directory
 try fileManager.copyItemWithSentryTracing(at: sourceUrl, to: destinationUrl)
-try fileManager.copyItemWithSentryTracing(atPath: sourcePath, toPath: destinationPath)
+try fileManager.copyItemWithSentryTracing(atPath: "/path/to/source", toPath: "/path/to/destination")
 
 // Remove a file or directory
 try fileManager.removeItemWithSentryTracing(at: url)
 try fileManager.removeItemWithSentryTracing(atPath: path)
 ```
 
-We recommend you disable the swizzling of `NSData` and `NSFileManager` when using manual file I/O tracing, as the internal behavior of these classes differs between platform versions and can cause duplicate spans in your traces.
+**Important:** We recommend you disable the swizzling of `NSData` and `NSFileManager` when using manual file I/O tracing, as the internal behavior of these classes differs between platform versions and can cause duplicate spans in your traces.
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.enableFileIOTracing = true
+    options.enableDataSwizzling = false
+    options.enableFileManagerSwizzling = false
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.enableFileIOTracing = YES;
+    options.enableDataSwizzling = NO;
+    options.enableFileManagerSwizzling = NO;
+}];
+```
+
+Before 9.0.0, these options were experimental:
 
 ```swift {tabTitle:Swift}
 import Sentry
@@ -347,17 +421,13 @@ SentrySDK.start { options in
     options.experimental.enableDataSwizzling = false
     options.experimental.enableFileManagerSwizzling = false
 }
-```
 
-```objc {tabTitle:Objective-C}
-@import Sentry;
+// Reading a file with tracing enabled:
+let url = URL(fileURLWithPath: "/path/to/file.txt")
+let data = try Data(contentsOfWithSentryTracing: url, options: [.atomic])
 
-[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
-    options.dsn = @"___PUBLIC_DSN___";
-    options.enableFileIOTracing = YES;
-    options.experimental.enableDataSwizzling = NO;
-    options.experimental.enableFileManagerSwizzling = NO;
-}];
+// Writing to a file with tracing enabled:
+try data.writeWithSentryTracing(to: url, options: [.atomic])
 ```
 
 ## Core Data Tracing
@@ -447,12 +517,6 @@ When the user interaction transaction is not finished yet, but the user makes a 
 
 ## Time to Initial Display
 
-<Alert>
-
-This feature only works for UIViewControllers and not for SwiftUI.
-
-</Alert>
-
 By adding a span for a view controller when it's loaded, time to initial display (TTID) provides insight into how long it takes for your view controller to launch and draw its first UI frame. The SDK sets the span operation to `ui.load.initial-display` and the span description to the view controller's name, followed by `initial display` - for example, `MainViewController initial display`.
 
 The span starts when the view of a view controller is loaded, and there is no other view controller transaction happening at the moment. The span finishes after the view appeared on the screen. The following chart shows how time to initial display (TTID) and [time to full display (TTFD)](#time-to-full-display) correlate to transitions between activities:
@@ -461,17 +525,23 @@ The span starts when the view of a view controller is loaded, and there is no ot
 
 Since Cocoa SDK version 8.33.0, the SDK doesn't create time to initial display (TTID) and [time to full display (TTFD)](#time-to-full-display) spans for UIViewControllers presented in the background because the logic requires UI frames to be drawn.
 
-## Time to Full Display
-
 <Alert>
 
-This feature only works for UIViewControllers and not for SwiftUI.
+For SwiftUI views, see the [SwiftUI Instrumentation documentation](/platforms/apple/tracing/instrumentation/swiftui-instrumentation/#time-to-initial-display-and-time-to-full-display) for TTID and TTFD tracking.
 
 </Alert>
 
-By adding a span for a view controller when it's loaded, time to full display (TTFD) provides insight into how long it takes your view controller to launch and load all of its content. The span starts when the view of a view controller is loaded, and there is no other view controller transaction happening at the moment. The SDK sets the span operation to `ui.load.full-display` and the span description to the view controllers' name, followed by `full display` - for example, `MainActivity full display`.
+## Time to Full Display
+
+By adding a span for a view controller when it's loaded, time to full display (TTFD) provides insight into how long it takes your view controller to launch and load all of its content. The span starts when the view of a view controller is loaded, and there is no other view controller transaction happening at the moment. The SDK sets the span operation to `ui.load.full-display` and the span description to the view controllers' name, followed by `full display` - for example, `MainViewController full display`.
 
 Since Cocoa SDK version 8.33.0, the SDK doesn't create [time to initial display (TTID)](#time-to-initial-display) and time to full display (TTFD) spans for UIViewControllers presented in the background, because the logic requires UI frames to be drawn.
+
+<Alert>
+
+For SwiftUI views, see the [SwiftUI Instrumentation documentation](/platforms/apple/tracing/instrumentation/swiftui-instrumentation/#time-to-initial-display-and-time-to-full-display) for TTID and TTFD tracking.
+
+</Alert>
 
 _Time to full display is disabled by default, but you can enable it by setting:_
 
