@@ -1,0 +1,91 @@
+---
+title: Auto-Update SDK
+sidebar_title: Auto-Update SDK
+sidebar_order: 10
+description: Enable automatic update checks and installations for internal iOS builds using the Sentry Auto-Update SDK.
+---
+
+<Include name="feature-available-for-user-group-early-adopter" />
+
+<Alert level="warning">
+
+The Auto-Update SDK is designed for **internal builds only** and should never be used in production builds distributed through the App Store.
+
+</Alert>
+
+The Sentry Auto-Update SDK enables your internal iOS builds to automatically check for and install newer versions distributed through Sentry's Build Distribution. This is particularly useful for distributing nightly, alpha, or beta builds to your internal teams. It is not required to use the Sentry crash reporting SDK to use the iOS Auto-Update SDK.
+
+## Pre-requisites
+
+The SDK can only be installed using Swift Package Manager.
+
+You'll also need an [internal integration token](#create-an-integration-token) with Build Distribution permissions.
+
+<Include name="build-distribution/create-integration-token" />
+
+## Installation
+
+Add a dependency on the `SentryDistribution` target contained in the sentry-cocoa package (https://github.com/getsentry/sentry-cocoa)
+
+```swift {filename:Package.swift}
+.package(url: "https://github.com/getsentry/sentry-cocoa", from: "{{@inject packages.version('sentry.cocoa') }}"),
+
+.target(name: "MyTarget", dependencies: ["SentryDistribution"]),
+```
+
+## Usage
+
+Use the SDK by calling `Updater.checkForUpdate(params: )`. In addition to the access token, provide your Sentry org and project slug in the CheckForUpdateParams. For example:
+
+```swift {filename:MyView.swift}
+import SentryDistribution
+import SwiftUI
+
+struct MyView: View {
+  var body: some View {
+    Button("Check For Update") {
+      UpdateUtil.checkForUpdates()
+    }
+  }
+}
+
+enum UpdateUtil {
+  static func checkForUpdates() {
+    let params = CheckForUpdateParams(
+      accessToken: "MY_TOKEN",
+      organization: "MY_ORGANIZATION",
+      project: "MY_PROJECT")
+    Updater.checkForUpdate(params: params) { result in
+      handleUpdateResult(result: result)
+    }
+  }
+  
+  static func handleUpdateResult(result: Result<UpdateCheckResponse, Error>) {
+    guard case let .success(releaseInfo) = result else {
+      if case let .failure(error) = result {
+        print("Error checking for update: \(error)")
+      }
+      return
+    }
+    
+    guard let releaseInfo = releaseInfo.update else {
+      print("Already up to date")
+      return
+    }
+    
+    guard let url = Updater.buildUrlForInstall(releaseInfo.downloadUrl) else {
+      return
+    }
+    DispatchQueue.main.async {
+      Updater.install(url: url)
+    }
+  }
+}
+```
+
+## Security Considerations
+
+- **Internal Use Only**: Never ship the auto-update SDK in production builds destined for public app stores
+- **Token Security**: The distribution token is embedded in the app and can be extracted by reverse engineering. Use tokens with only the distribution read permission which is the minimum required permission for the auto-update SDK.
+
+
