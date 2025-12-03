@@ -1,0 +1,82 @@
+---
+title: Debugging Sentry Wizard
+sidebar_order: 110
+---
+
+Running the Sentry Setup Wizard locally alongside your local Sentry instance allows testing both the **Wizard UI** and **Wizard CLI** end-to-end. Follow these steps to get your local environment up and running, and keep it in sync while making changes.
+
+---
+
+#### 1. Set up your local `sentry-wizard`
+
+Clone the [`getsentry/sentry-wizard`](https://github.com/getsentry/sentry-wizard) repository if you haven't already:
+
+```bash
+git clone https://github.com/getsentry/sentry-wizard.git
+cd path/to/sentry-wizard
+```
+
+Install dependencies and build the wizard to make it usable locally:
+
+```bash
+yarn install
+yarn build
+```
+
+---
+
+#### 2. Link the wizard to your local Sentry repository
+
+Still in the `sentry-wizard` repository, link the wizard package to your local Sentry repository:
+
+```bash
+yarn link
+```
+
+Then, inside your local Sentry repository, link the wizard package:
+
+```bash
+cd path/to/sentry
+yarn link @sentry/wizard
+```
+
+This ensures the local Sentry instance uses your in-development wizard instead of fetching a published version.
+
+---
+
+#### 3. Automatically rebuild the wizard when changes are made
+
+While developing, keep the wizard up to date by running:
+
+```bash
+cd path/to/sentry-wizard
+yarn build:watch
+```
+
+This watches for code changes and rebuilds the wizard automatically, so your local Sentry always runs the latest version.
+
+---
+
+#### 4. Ensure your local Sentry instance is running
+
+Before running the wizard, make sure a local Sentry devserver is up and running:
+
+```bash
+cd path/to/sentry
+devservices up
+devservices serve
+```
+
+By default, the devserver runs at `http://dev.getsentry.net:8000`. Keep this terminal open while testing the wizard.
+
+---
+
+#### 5. Run the wizard against your local Sentry instance
+
+Still in the Sentry repository, run the wizard with the URL of your instance:
+
+```bash
+sentry-wizard --url http://dev.getsentry.net:8000
+```
+
+This allows you to test both the **Wizard UI** and **Wizard CLI** with your local setup.
