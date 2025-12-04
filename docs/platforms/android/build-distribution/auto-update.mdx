@@ -1,0 +1,172 @@
+---
+title: Auto-Update SDK
+sidebar_title: Auto-Update SDK
+sidebar_order: 10
+description: Enable automatic update checks and installations for internal Android builds using the Sentry Auto-Update SDK.
+---
+
+<Include name="feature-available-for-user-group-early-adopter" />
+
+<Alert level="warning">
+
+The Auto-Update SDK is designed for **internal builds only** and should never be used in production builds distributed through the Google Play Store or other public app stores.
+
+</Alert>
+
+The Sentry Auto-Update SDK enables your internal Android builds to automatically check for and install newer versions distributed through Sentry's Build Distribution. This is particularly useful for distributing nightly, alpha, or beta builds to your internal teams.
+
+## Pre-requisites
+
+Make sure your Sentry Java version is at least 8.27.0 and you have the [Sentry Android Gradle Plugin](/platforms/android/configuration/gradle/) configured for your project.
+
+You'll also need an [internal integration token](#create-an-integration-token) with Build Distribution permissions.
+
+## Create an Integration Token
+
+To use the Auto-Update SDK, you need to create an internal integration token with the appropriate permissions:
+
+1. Navigate to **Settings > Custom Integrations** in your Sentry organization
+2. Click **Create New Integration**
+  ![Create New Integration =800x](./images/create-new-integration.png)
+
+3. Select **Internal Integration** and click **Next**
+  ![Internal Integration =600x](./images/internal-integration.png)
+
+4. Give your integration a name (e.g., "Build Distribution")
+  ![Name token =800x](./images/name-token.png)
+5. Under **Permissions**, select **Read** next to the **Distribution** scope.
+  ![Set Permissions =800x](./images/set-permissions.png)
+6. Click **Save Changes**
+7. Scroll down to the Tokens section and click **New Token**
+   ![Create New Token =800x](./images/create-auth-token.png)
+8. Copy the generated token to your CI secrets as an environment `SENTRY_DISTRIBUTION_AUTH_TOKEN`
+
+## Installation
+
+### Configure the Gradle Plugin
+
+Add the auto-update SDK configuration to your app's `build.gradle` or `build.gradle.kts` file:
+
+```kotlin {filename:build.gradle.kts}
+sentry {
+  distribution {
+    // Enable build distribution uploads
+    enabled = providers.environmentVariable("GITHUB_ACTIONS").isPresent
+
+    // Specify which build variants should include the auto-update SDK
+    // These must be variants where the Sentry SDK is enabled (not in ignoredVariants)
+    updateSdkVariants.set(setOf("nightly", "beta"))
+
+    // Auth token (defaults to SENTRY_DISTRIBUTION_AUTH_TOKEN env var)
+    authToken.set(System.getenv("SENTRY_DISTRIBUTION_AUTH_TOKEN"))
+  }
+}
+```
+
+```groovy {filename:build.gradle}
+sentry {
+  distribution {
+    // Enable build distribution uploads
+    enabled = providers.environmentVariable("GITHUB_ACTIONS").present
+
+    // Specify which build variants should include the auto-update SDK
+    // These must be variants where the Sentry SDK is enabled (not in ignoredVariants)
+    updateSdkVariants = ["nightly", "beta"]
+
+    // Optionally configure the Distribution auth token (defaults to SENTRY_DISTRIBUTION_AUTH_TOKEN env var)
+    authToken = System.getenv("SENTRY_DISTRIBUTION_AUTH_TOKEN")
+  }
+}
+```
+
+### Configuration Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `enabled` | Controls whether variants are uploaded for distribution | `false` |
+| `updateSdkVariants` | Set of Android build variants that should have the auto-update SDK added | `[]` (empty set) |
+| `authToken` | Integration token for build distribution operations | `SENTRY_DISTRIBUTION_AUTH_TOKEN` env var |
+
+<Alert level="info">
+
+The `updateSdkVariants` configuration controls which variants get the auto-update SDK installed. The `enabled` option controls whether all builds are uploaded. You can have builds uploaded without the auto-update SDK, or vice versa.
+The enabled option when set to true will upload all variants that are not ignored via the Sentry `ignoreVariants`, `ignoredBuildTypes`, or `ignoredFlavors` options.
+
+</Alert>
+
+### Auto-Installation
+
+When you add a variant to `updateSdkVariants`, the Sentry Gradle Plugin automatically:
+
+1. Adds the `sentry-android-distribution` dependency to that variant
+2. Embeds the distribution auth token securely in the app
+
+No additional dependency declarations are needed.
+
+## Usage
+
+### Check for Updates
+
+Once configured, you can check for updates in your application code. This is typically done at app startup or when the user navigates to a settings screen.
+
+```kotlin
+import io.sentry.Sentry
+import io.sentry.UpdateStatus
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+
+// Check for updates using coroutines
+suspend fun checkForUpdate() {
+    val status = withContext(Dispatchers.IO) {
+        Sentry.distribution().checkForUpdateBlocking()
+    }
+
+    when (status) {
+        is UpdateStatus.NewRelease -> {
+            Sentry.distribution().downloadUpdate(status.info)
+        }
+        is UpdateStatus.UpToDate -> {
+            // Current version is the latest
+            Log.i("Sentry Distribution", "App is up to date")
+        }
+        is UpdateStatus.UpdateError -> {
+            // An error occurred while checking for updates
+            Log.i("Sentry Distribution", "Update check failed: ${status.message}")
+        }
+        is UpdateStatus.NoNetwork -> {
+            // No network connection available
+            Log.i("Sentry Distribution", "No network connection: ${status.message}")
+        }
+    }
+}
+```
+
+## Security Considerations
+
+- **Internal Use Only**: Never ship the auto-update SDK in production builds destined for public app stores
+- **Token Security**: The distribution token is embedded in the app and can be extracted by reverse engineering. Use tokens with only the distribution read permission which is the minimum required permission for the auto-update SDK.
+
+## Best Practices
+
+1. **Variant Separation**: Create dedicated build variants for internal distribution:
+   ```groovy
+   android {
+       buildTypes {
+           debug { /* ... */ }
+           nightly { /* ... */ }
+           beta { /* ... */ }
+           release { /* ... */ }
+       }
+   }
+
+   sentry {
+       distribution {
+           // Only enable for non-production variants
+           updateSdkVariants = ["nightly", "beta"]
+       }
+   }
+   ```
+
+2. **Update Timing**: Check for updates at appropriate times:
+   - On app launch automatically
+   - In a settings/about screen (user-initiated)
