@@ -2486,11 +2486,11 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/learn/data-forwarding/',
-    to: '/concepts/data-management/data-forwarding/',
+    to: '/organization/integrations/data-forwarding/',
   },
   {
     from: '/product/data-forwarding/',
-    to: '/concepts/data-management/data-forwarding/',
+    to: '/organization/integrations/data-forwarding/',
   },
   {
     from: '/data-management-settings/attachment-datascrubbing/',
