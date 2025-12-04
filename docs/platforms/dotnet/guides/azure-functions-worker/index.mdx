@@ -22,6 +22,10 @@ Add the Sentry dependencies to your Azure Functions application:
 dotnet add package Sentry.Extensions.Logging -v {{@inject packages.version('sentry.dotnet.extensions.logging') }}
 // ___PRODUCT_OPTION_START___ performance
 dotnet add package Sentry.OpenTelemetry -v {{@inject packages.version('sentry.dotnet.opentelemetry') }}
+dotnet add package OpenTelemetry
+dotnet add package OpenTelemetry.Extensions.Hosting
+dotnet add package OpenTelemetry.Instrumentation.Http
+
 // ___PRODUCT_OPTION_END___
 ```
 
@@ -39,12 +43,18 @@ The [Sentry.Extensions.Logging](/platforms/dotnet/guides/extensions-logging/) pa
 The core features of Sentry are enabled by calling `AddSentry` when configuring logging.
 
 <OnboardingOption optionId="performance">
-Performance tracing can be enabled by adding Sentry to the OpenTelemetry `TraceProviderBuilder` and then configuring Sentry itself to use OpenTelemetry.
- </OnboardingOption>
+Performance tracing can be enabled by adding Sentry to the OpenTelemetry `TracerProviderBuilder` and then configuring Sentry itself to use OpenTelemetry.
+</OnboardingOption>
 
 For example:
 
 ```csharp
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using OpenTelemetry;
+// ___PRODUCT_OPTION_START___ performance
+using OpenTelemetry.Trace;
+// ___PRODUCT_OPTION_END___
 using Sentry.OpenTelemetry;
 
 var host = new HostBuilder()
