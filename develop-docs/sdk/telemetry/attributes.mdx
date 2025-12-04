@@ -1,0 +1,89 @@
+---
+title: Attributes
+sidebar_order: 2
+---
+
+This document defines the format used by Sentry to represent attributes across different telemetry data types (Spans, Logs, Metrics).
+
+## Attribute Object Structure
+
+Attributes are stored as key-value pairs where each value is an object with type information.
+
+```json
+{
+  "my_attribute": {
+    "value": "some value",
+    "type": "string"
+  },
+  "response_time": {
+    "value": 123,
+    "unit": "millisecond",
+    "type": "integer"
+  }
+}
+```
+
+### Properties
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `type` | string | Yes | The data type of the attribute value. |
+| `value` | any | Yes | The actual attribute value, must match the specified type. |
+| `unit` | string | No | The unit of the attribute value. See [Units](#units) for a full list of supported units. |
+
+### Supported Types
+
+The following types are supported:
+
+- `string`
+- `boolean`
+- `integer` (64-bit signed integer)
+- `double` (64-bit floating point number)
+- `string[]`
+- `boolean[]`
+- `integer[]`
+- `double[]`
+
+**Note on Integers:** Integers should be 64-bit signed integers. For 64-bit unsigned integers, use the `string` type to avoid overflow issues until unsigned integers are natively supported.
+
+## Units
+
+The following units are [supported by Relay](https://getsentry.github.io/relay/relay_metrics/enum.MetricUnit.html).
+
+### Duration Units
+
+- `nanosecond`
+- `microsecond`
+- `millisecond`
+- `second`
+- `minute`
+- `hour`
+- `day`
+- `week`
+
+### Information Units
+
+- `bit`
+- `byte`
+- `kilobyte`
+- `kibibyte`
+- `megabyte`
+- `mebibyte`
+- `gigabyte`
+- `gibibyte`
+- `terabyte`
+- `tebibyte`
+- `petabyte`
+- `pebibyte`
+- `exabyte`
+- `exbibyte`
+
+### Fraction Units
+
+- `ratio`
+- `percent`
+
+## Semantic Conventions
+
+See [Sentry Conventions](https://github.com/getsentry/sentry-conventions/) for a full list of supported attributes.
+
