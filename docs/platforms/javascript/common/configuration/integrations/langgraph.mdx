@@ -46,7 +46,7 @@ Sentry.init({
   dsn: "____PUBLIC_DSN____",
   tracesSampleRate: 1.0,
   integrations: [
-    Sentry.langChainIntegration({
+    Sentry.langGraphIntegration({
       recordInputs: true,
       recordOutputs: true,
     }),
@@ -189,9 +189,42 @@ const result = await graph.invoke({
 
 </PlatformSection>
 
+## Options
+
+### `recordInputs`
+
+_Type: `boolean`_
+
+Records inputs to LangGraph operations (such as messages and state data passed to the graph).
+
+Defaults to `true` if `sendDefaultPii` is `true`.
+
+```javascript
+Sentry.init({
+  integrations: [Sentry.langGraphIntegration({ recordInputs: true })],
+});
+```
+
+### `recordOutputs`
+
+_Type: `boolean`_
+
+Records outputs from LangGraph operations (such as generated responses, agent outputs, and final state).
+
+Defaults to `true` if `sendDefaultPii` is `true`.
+
+```javascript
+Sentry.init({
+  integrations: [Sentry.langGraphIntegration({ recordOutputs: true })],
+});
+```
+
 ## Configuration
 
-For configuration options, runtime-specific setup, and detailed information, see the [LangChain integration documentation](/platforms/javascript/guides/node/configuration/integrations/langchain/).
+By default this integration adds tracing support for LangGraph operations including:
+
+- **Agent Creation** (`gen_ai.create_agent`) - Captures spans when compiling a StateGraph into an executable agent
+- **Agent Invocation** (`gen_ai.invoke_agent`) - Captures spans for agent execution via `invoke()`
 
 ## Supported Versions
 
