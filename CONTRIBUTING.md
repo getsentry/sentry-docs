@@ -9,8 +9,7 @@
 We use Next.js, `yarn` and `volta` to manage the environment.
 
 ```
-cp .env.example .env.development
-yarn
+make
 
 # Start dev server for user docs
 yarn dev
