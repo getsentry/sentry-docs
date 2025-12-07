@@ -20,16 +20,16 @@ This document provides guidelines for implementing Span-First in SDKs. This is p
 If you're implementing Span-First (as a PoC) in your SDK, take an iterative approach in which you implement the functionality incrementally. Here's a rough suggestion for iterations.
 
 1. Add the Span v2 Envelope (type), serialization logic and any utilities necessary to support sending a new envelope. See [Span Protocol](../span-protocol) for more details.
-2. Add the top-level `traceLifeCycle` (or `trace_life_cycle`) SDK init option which controls if traces should be sent as transactions or as spans (v2).
+2. Add the top-level `traceLifecycle` (or `trace_lifecycle`) SDK init option which controls if traces should be sent as transactions or as spans (v2).
    - The allowed values for this option MUST be `'static'` and `'strea'`.
    - By default, the SDK MUST send traces as transactions (`'static'`). Span-First MUST be an opt-in feature.
-   - Continue with adding Span-First logic which MUST only be applied if `traceLifeCycle` is set to `'stream'`.
+   - Continue with adding Span-First logic which MUST only be applied if `traceLifecycle` is set to `'stream'`.
 3. As an initial PoC, leave your current transaction APIs in place and convert the transaction event to a v2 spans array to be sent in the new envelope.
    - At this point, you can already start sending spans in batches (i.e. in multiple envelopes) to send more than 1000 spans at once. The maximum number of spans per envelope MUST be limited to 1000 and an envelope MUST only contain spans from one trace (as the trace envelope header is shared).
 4. If applicable to your SDK, add new Span APIs to start spans. See [Span API](../span-api) for more details.
    - Most importantly, add the simplest possible `start_span` API that leaves much control to users.
    - Follow up with optional, more convenient APIs later.
-   - This new API MUST only be used in conjunction with the new `traceLifeCycle` option and therefore only emit new spans (no transactions).
+   - This new API MUST only be used in conjunction with the new `traceLifecycle` option and therefore only emit new spans (no transactions).
    - This new API MUST NOT expose any old transaction properties or concepts like (`op`, `description`, `tags`, etc).
    - TBD: Some SDKs already have `startSpan` or similar APIs. The migration path is still TBD but a decision can be made at a later stage.
 5. Implement the `captureSpan` [single-span processing pipeline](#single-span-processing-pipeline)
@@ -123,7 +123,7 @@ Some rough pointers:
 
 The initial PoC implementation of Span-First **SHOULD** be released in a **minor version** of the SDK.
 
-- This feature is entirely opt-in via `traceLifeCycle = 'stream'` and therefore does **not** introduce breaking changes to existing users.
+- This feature is entirely opt-in via `traceLifecycle = 'stream'` and therefore does **not** introduce breaking changes to existing users.
 - The default tracing behavior (transaction-based) MUST remain unchanged until Span-First becomes the default in a future major release.
 - Release notes and user facing documentation SHOULD clearly describe:
   - the availability of Span-First behind the opt-in flag
