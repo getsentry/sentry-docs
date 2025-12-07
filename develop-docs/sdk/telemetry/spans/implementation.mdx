@@ -21,10 +21,11 @@ If you're implementing Span-First (as a PoC) in your SDK, take an iterative appr
 
 1. Add the Span v2 Envelope (type), serialization logic and any utilities necessary to support sending a new envelope. See [Span Protocol](../span-protocol) for more details.
 2. Add the top-level `traceLifeCycle` (or `trace_life_cycle`) SDK init option which controls if traces should be sent as transactions or as spans (v2).
-   - By default, the SDK MUST send traces as transactions. Span-First MUST be an opt-in feature.
+   - The allowed values for this option MUST be `'static'` and `'streamed'`.
+   - By default, the SDK MUST send traces as transactions (`'static'`). Span-First MUST be an opt-in feature.
    - Continue with adding Span-First logic which MUST only be applied if `traceLifeCycle` is set to `'streamed'`.
 3. As an initial PoC, leave your current transaction APIs in place and convert the transaction event to a v2 spans array to be sent in the new envelope.
-   - At this point, you can already start sending spans in batches (i..e in multiple envelopes) to send more than 1000 spans at once.
+   - At this point, you can already start sending spans in batches (i.e. in multiple envelopes) to send more than 1000 spans at once. The maximum number of spans per envelope MUST be limited to 1000 and an envelope MUST only contain spans from one trace (as the trace envelope header is shared).
 4. If applicable to your SDK, add new Span APIs to start spans. See [Span API](../span-api) for more details.
    - Most importantly, add the simplest possible `start_span` API that leaves much control to users.
    - Follow up with optional, more convenient APIs later.
@@ -35,7 +36,7 @@ If you're implementing Span-First (as a PoC) in your SDK, take an iterative appr
    - Either reuse existing heuristics (e.g. flush when segment span ends) or build a simple span buffer to flush spans (e.g. similar to the existing buffers for logs or metrics).
    - Implementing the more complex [Telemetry Buffer](./../../telemetry-buffer) can happen at a later stage.
 6. Achieve data parity with the existing transaction events.
-   - Ensure that the data added by integrations, event processors, etc to transaction events is also added to the spans (See [Event Processors](#tbd-event-processors)).
+   - Ensure that the data added by SDK integrations, event processors, etc. to transaction events is also added to the spans (see [Event Processors](#tbd-event-processors)).
    - Most additional data MUST only be added to the segment span. See [Common Attributes](../span-protocol/#common-attribute-keys) for attributes that MUST be added to every span.
    - Mental model: All data our SDKs _automatically_ add to a transaction, MUST also be added to the segment span.
 7. Implement the span telemetry buffer for proper, weighted span flushing. See [Span Buffer](#span-buffer) for more details.
@@ -118,4 +119,12 @@ Some rough pointers:
 - SDKs SHOULD follow one of the backend, mobile or browser telemetry buffer specifications. 
 - It is expected and fine to implement the proper, weighted buffering logic as a final step in the Span-First project. 
   Intermediate buffers MAY be simpler, for example disregard the priority logic and just buffer until a certain span length, size or time interval is reached.
-  
+## Release
+
+The initial PoC implementation of Span-First **SHOULD** be released in a **minor version** of the SDK.
+
+- This feature is entirely opt-in via `traceLifeCycle = 'streamed'` and therefore does **not** introduce breaking changes to existing users.
+- The default tracing behavior (transaction-based) MUST remain unchanged until Span-First becomes the default in a future major release.
+- Release notes and user facing documentation SHOULD clearly describe:
+  - the availability of Span-First behind the opt-in flag
+  - any known limitations
