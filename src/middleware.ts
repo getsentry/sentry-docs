@@ -1250,6 +1250,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/product/releases/setup/release-automation/bitbucket-pipelines/',
   },
   {
+    from: '/workflow/releases/release-automation/github-actions/',
+    to: '/product/releases/setup/release-automation/github-actions/',
+  },
+  {
     from: '/product/releases/setup/manual-setup-releases/',
     to: '/product/releases/associate-commits/',
   },
