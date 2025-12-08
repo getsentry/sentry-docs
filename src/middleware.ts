@@ -1255,7 +1255,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/workflow/releases/release-automation/github-actions/',
-    to: '/product/releases/setup/release-automation/github-deployment-gates/',
+    to: '/product/releases/setup/release-automation/github-actions/',
   },
   {
     from: '/product/releases/setup/manual-setup-releases/',
