@@ -34,7 +34,7 @@ export function Header({
       <style>{':root { --header-height: 80px; }'}</style>
       <nav className="nav-inner mx-auto px-3 py-2 flex items-center">
         {pathname !== '/' && (
-          <button className="lg:hidden mr-3">
+          <button className="lg-xl:hidden mr-3">
             <label
               htmlFor={sidebarToggleId}
               aria-label="Close"
@@ -53,7 +53,7 @@ export function Header({
         <Link
           href="/"
           title="Sentry error monitoring"
-          className="logo-slot flex flex-shrink-0 items-center lg:w-[calc(var(--sidebar-width,300px)-2rem)] text-2xl font-medium text-[var(--foreground)]"
+          className="logo-slot flex flex-shrink-0 items-center lg-xl:w-[calc(var(--sidebar-width,300px)-2rem)] text-2xl font-medium text-[var(--foreground)]"
         >
           <div className="h-full pb-[6px]">
             <Image
@@ -66,7 +66,7 @@ export function Header({
           Docs
         </Link>
         {!noSearch && (
-          <div className="hidden md:flex justify-center lg:justify-start w-full px-6">
+          <div className="hidden md:flex justify-center lg-xl:justify-start w-full px-6">
             <Search
               path={pathname}
               searchPlatforms={searchPlatforms}

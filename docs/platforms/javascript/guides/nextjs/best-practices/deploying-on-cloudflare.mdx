@@ -1,0 +1,65 @@
+---
+title: Deploying on Cloudflare Workers
+description: "Learn how to configure Sentry for your Next.js application deployed on Cloudflare Workers."
+sidebar_section: configuration
+---
+
+The Sentry Next.js SDK supports Next.js applications deployed on Cloudflare Workers, but requires additional configuration to run in this environment.
+
+## Prerequisites
+
+Before you begin, make sure you have:
+
+- A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/)
+- A [Cloudflare Workers project](https://dash.cloudflare.com/workers/overview)
+- A Next.js application configured for Cloudflare Workers with [OpenNext](https://opennext.js.org/cloudflare)
+- The Sentry SDK [installed and configured](/platforms/javascript/guides/nextjs/) in your Next.js application
+
+<Alert type="info">
+  If you haven't deployed a Next.js app to Cloudflare Workers before, follow
+  Cloudflare's [Next.js deployment
+  guide](https://developers.cloudflare.com/workers/framework-guides/web-apps/nextjs/)
+  to get started.
+</Alert>
+
+## Configure Wrangler
+
+Once you've set up Sentry in your Next.js application following the [installation guide](/platforms/javascript/guides/nextjs/), you'll need to configure Wrangler with the required compatibility settings.
+
+First, add the `nodejs_compat` [compatibility flag](https://developers.cloudflare.com/workers/runtime-apis/nodejs/) to configure the Cloudflare Workers runtime to provide the Node.js APIs required by the Sentry SDK.
+
+```json {tabTitle:wrangler.jsonc}
+{
+  "compatibility_flags": ["nodejs_compat"]
+}
+```
+
+```toml {tabTitle:wrangler.toml}
+compatibility_flags = ["nodejs_compat"]
+```
+
+Then, set the [compatibility date](https://developers.cloudflare.com/workers/configuration/compatibility-dates/) to `2025-08-16` or later. This is required to introduce `https.request` to the Cloudflare Workers runtime, which the Sentry SDK needs to send data.
+
+Your final configuration should look like this:
+
+```json {tabTitle:wrangler.jsonc}
+{
+  "compatibility_flags": ["nodejs_compat"],
+  "compatibility_date": "2025-08-16"
+}
+```
+
+```toml {tabTitle:wrangler.toml}
+compatibility_flags = ["nodejs_compat"]
+compatibility_date = "2025-08-16"
+```
+
+After adding these settings, build and deploy your Next.js application to Cloudflare Workers. You should start seeing error events, traces, and logs appear in Sentry.
+
+## Known Limitations
+
+### Server-Side Span Durations
+
+Server-side spans will display `0ms` for their durations due to a security measure Cloudflare Workers implements to prevent timing attacks. This is expected behavior in the Cloudflare Workers environment.
+
+For more information about this limitation, see the [Cloudflare Workers documentation on Performance APIs](https://developers.cloudflare.com/workers/runtime-apis/performance/).

@@ -7,6 +7,13 @@ The [Loguru](https://github.com/Delgan/loguru#readme) integration lets you captu
 
 The [`logging`](/platforms/python/integrations/logging) integration provides most of the Loguru functionality and most examples on that page work with Loguru.
 
+<Alert level="info" title="Sentry Logs for Loguru">
+
+Enable the Sentry Logs feature with `sentry_sdk.init(enable_logs=True)` to unlock Sentry's full logging power. With Sentry Logs, you can search, filter, and analyze logs from across your entire application in one place.
+
+</Alert>
+
+
 ## Install
 
 Install `sentry-sdk` from PyPI with the `loguru` extra.
@@ -21,7 +28,7 @@ uv add "sentry-sdk[loguru]"
 
 ## Configure
 
-If you have the `loguru` package in your dependencies, the Loguru integration will be enabled automatically when you initialize the Sentry SDK.
+To capture Loguru log records as [Sentry logs](/platforms/python/logs/), set `enable_logs` to `True`. The integration itself doesn't need to be added manually. If you have the `loguru` package in your dependencies, the Loguru integration will be enabled automatically when you initialize the Sentry SDK.
 
 ```python
 import sentry_sdk
@@ -31,6 +38,7 @@ sentry_sdk.init(
     # Add data like request headers and IP for users, if applicable;
     # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
     send_default_pii=True,
+    enable_logs=True,
 )
 ```
 
@@ -41,46 +49,50 @@ from loguru import logger
 
 def main():
     sentry_sdk.init(...)  # same as above
-    logger.debug("I am ignored")
-    logger.error("There was an error!")
+    logger.info("Logging some info")
+    logger.error("Logging an error")
 
 main()
 ```
 
-This will capture the `error` level log entry and send it as an error to Sentry.
+This will capture both logs and send them to Sentry Logs. Additionally, an error event will be created from the `ERROR`-level log. In addition to that, a breadcrumb will be created from the `INFO`-level log.
+
 
 ## Behavior
 
-By default, logs with a level of `INFO` or higher will be added as breadcrumbs to Sentry events. Sentry issue will be created for logs with a level of `ERROR` or higher:
+Logs with a level of `INFO` and higher will be captured as Sentry logs as long as `enable_logs` is `True` and the log level set in the `logging` module is `INFO` or below. The threshold can be configured via the [`sentry_logs_level` option](#options).
 
-```python
-from loguru import logger
+Additionally, the Loguru integration will create an error event from all `ERROR`-level logs. This feature is configurable via the [`event_level` integration option](#options).
 
-logger.debug("I am ignored")
-logger.info("I am a breadcrumb")
-logger.error("I am an event", extra=dict(bar=43))
-logger.exception("An exception happened")
-```
+`INFO` and above logs will also be captured as breadcrumbs. Use the [`level` integration option](#options) to adjust the threshold.
 
-- An error event with the message `"I am an event"` will be created.
-- `"I am a breadcrumb"` will be attached as a breadcrumb to that event.
-- `bar` will end up in the `extra` attributes of that event.
-- `"An exception happened"` will send the current exception from `sys.exc_info()` with the stack trace to Sentry. If there's no exception, the current stack will be attached.
-- The debug message `"I am ignored"` will not be captured by Sentry. To capture it, set `level` to `DEBUG` or lower in `LoguruIntegration`.
-
-Loguru log records can additionally also be captured as [Sentry logs](/platforms/python/logs/) as long as the `enable_logs` option is `True`.
+The following snippet demonstrates the default behavior:
 
 ```python
 import sentry_sdk
 from loguru import logger
 
 sentry_sdk.init(
-    # ...
+    ...,
     enable_logs=True,
 )
 
-logger.info("I will be sent to Sentry logs")
+# The following will be captured as Sentry logs:
+logger.info("I'm an INFO log")
+logger.error("I'm an ERROR log", extra={"bar": 43})
+logger.exception("I'm an exception log")
+
+# DEBUG-level logs won't be captured by default
+logger.debug("I'm a DEBUG log")
 ```
+
+- All of the above logs except for the `DEBUG`-level message will be sent to Sentry as logs.
+- An error event with the message `"I'm an ERROR log"` will be created.
+- `"I'm an INFO log"` will be attached as a breadcrumb to that event.
+- `bar` will end up in the `extra` attributes of that event.
+- `"I'm an exception log"` will send the current exception from `sys.exc_info()` with the stack trace to Sentry. If there's no exception, the current stack will be attached.
+- The debug message `"I'm a DEBUG log"` will not be captured by Sentry. See the [`sentry_logs_level` option](#option) to adjust which log levels should be sent to Sentry as logs, and the [`level` option](#option) to adjust the level for capturing breadcrumbs.
+
 
 ### Ignoring a logger
 
@@ -99,17 +111,17 @@ In `a.spammy.logger` module:
 
 ```python
 from loguru import logger
-logger.error("hi")  # No error is sent to Sentry
+logger.error("hi")  # Nothing is sent to Sentry
 ```
 
 This will work with `logging`'s logger too
 
 ```python
 logger = logging.getLogger("a.spammy.logger")
-logger.error("hi") # Again, no error sent to Sentry
+logger.error("hi") # Again, nothing is sent to Sentry
 ```
 
-You can also use `before-send` and `before-breadcrumb` to ignore only certain messages. See <PlatformLink to="/configuration/filtering/">Filtering Events</PlatformLink> for more information.
+You can also use `before_send_log` (for Sentry logs), `before_send` (for Sentry errors) and `before_breadcrumb` (for breadcrumbs) to ignore only certain messages. See <PlatformLink to="/configuration/filtering/">Filtering Events</PlatformLink> for more information.
 
 ## Options
 
@@ -126,25 +138,14 @@ sentry_sdk.init(
     # ...
     integrations=[
         LoguruIntegration(
+            sentry_logs_level=LoggingLevels.INFO.value,  # Capture INFO and above as logs
             level=LoggingLevels.INFO.value,              # Capture INFO and above as breadcrumbs
             event_level=LoggingLevels.ERROR.value,       # Send ERROR logs as events
-            sentry_logs_level=LoggingLevels.INFO.value,  # Capture INFO and above as logs
         )
     ],
 )
 ```
 
-- `level`
-
-  The Sentry Python SDK will record log records with a level higher than or equal to `level` as breadcrumbs. Inversely, the SDK ignores any log record with a level lower than this one. If set to `None`, the SDK won't send log records as breadcrumbs.
-
-  Default: `INFO`
-
-- `event_level`
-
-  The Sentry Python SDK will report log records with a level higher than or equal to `event_level` as events. If set to `None`, the SDK won't send log records as events.
-
-  Default: `ERROR`
 
 - `sentry_logs_level`
 
@@ -160,6 +161,32 @@ sentry_sdk.init(
   ```
 
   Default: `INFO`
+
+- `level`
+
+  The Sentry Python SDK will record log records with a level higher than or equal to `level` as breadcrumbs. Inversely, the SDK will not capture breadcrumbs for logs with a level lower than this one. If set to `None`, the SDK won't send log records as breadcrumbs.
+
+  Default: `INFO`
+
+- `event_level`
+
+  The Sentry Python SDK will report log records with a level higher than or equal to `event_level` as events. If set to `None`, the SDK won't send log records as events.
+
+  Default: `ERROR`
+
+## Troubleshooting
+
+<Expandable title="Logs not appearing in Sentry">
+
+  First, make sure you have the `enable_logs=True` option in your `sentry_sdk.init()` and you're on the latest version of the SDK.
+
+  Your logs could be missing because of the logging level of the logger. The SDK will honor the configured level of each logger. That means that you won't see any `INFO` or `DEBUG` data in Sentry from a logger with the level set to `WARNING`, regardless of how you configure the integration.
+
+  It might also be the case that the SDK's Loguru setup is being overwritten in your app. Sentry plugs into Loguru by adding its own handlers when you call `sentry_sdk.init()`. If those handlers are later overridden, for example by calling `logger.configure(handlers=...)`, the integration won't work.
+
+  Another reason why you might not be seeing your logs in Sentry is because they were rejected client- or server-side. This could be due to them being too large, or because of reasons like rate limits or backpressure management. In Sentry, you can go to `Settings > Stats & Usage` and select `Logs` from the `Category` dropdown to see what logs were dropped.
+
+</Expandable>
 
 ## Supported Versions
 

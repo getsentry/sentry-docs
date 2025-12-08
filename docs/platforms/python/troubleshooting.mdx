@@ -1,7 +1,8 @@
 ---
 title: Troubleshooting
 description: "While we don't expect most users of our SDK to run into these issues, we document edge cases here."
-sidebar_order: 9000
+sidebar_order: 18
+sidebar_section: configuration
 ---
 
 ## General
@@ -138,9 +139,9 @@ If you need more fine-grained control over the behavior of the socket, check out
 <PlatformLink to="/configuration/options/#socket-options">socket-options</PlatformLink>.
 </Expandable>
 
-<Expandable title="Multiprocessing deprecation after Python 3.12">
+<Expandable title="Multiprocessing deprecation in Python 3.12 and 3.13">
 
-If you're on Python version 3.12 or greater, you might see the following deprecation warning on Linux environments since the SDK spawns several threads.
+If you're on Python version 3.12 or 3.13, you might see the following deprecation warning on Linux environments since the SDK spawns several threads.
 
 ```
 DeprecationWarning: This process is multi-threaded, use of fork() may lead to deadlocks in the child.
@@ -157,10 +158,13 @@ import concurrent.futures
 sentry_sdk.init()
 
 if __name__ == "__main__":
-    multiprocessing.set_start_method("spawn")
+    multiprocessing.set_start_method("forkserver")  # or "spawn"
     pool = concurrent.futures.ProcessPoolExecutor()
     pool.submit(sentry_sdk.capture_message, "world")
 ```
+
+`fork` was the default start method on POSIX platforms on Python 3.13 and lower. In Python 3.14, the default start method on POSIX platforms was changed to `forkserver`. On Windows and macOS the default is `spawn`.
+
 </Expandable>
 
 <Expandable title="Why was my tag value truncated?">

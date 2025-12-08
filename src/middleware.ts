@@ -1251,7 +1251,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/workflow/releases/release-automation/github-actions/',
-    to: '/product/releases/setup/release-automation/github-deployment-gates/',
+    to: '/product/releases/setup/release-automation/github-actions/',
   },
   {
     from: '/product/releases/setup/manual-setup-releases/',
@@ -1771,10 +1771,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/concepts/key-terms/tracing/span-metrics/',
   },
   {
-    from: '/platforms/react-native/metrics/',
-    to: '/concepts/key-terms/tracing/span-metrics/',
-  },
-  {
     from: '/platforms/java/metrics/',
     to: '/concepts/key-terms/tracing/span-metrics/',
   },
@@ -1788,18 +1784,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/platforms/unity/metrics/',
-    to: '/concepts/key-terms/tracing/span-metrics/',
-  },
-  {
-    from: '/platforms/php/metrics/',
-    to: '/concepts/key-terms/tracing/span-metrics/',
-  },
-  {
-    from: '/platforms/php/guides/laravel/metrics/',
-    to: '/concepts/key-terms/tracing/span-metrics/',
-  },
-  {
-    from: '/platforms/php/guides/symfony/metrics/',
     to: '/concepts/key-terms/tracing/span-metrics/',
   },
   // END redirecting deprecated generic metrics docs to concepts

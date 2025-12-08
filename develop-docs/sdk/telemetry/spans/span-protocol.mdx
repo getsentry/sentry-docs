@@ -91,6 +91,11 @@ The envelope item payload must contain an `items` array with span one and up to 
         "http.response.status_code": {
           "type": "integer",
           "value": 200
+        },
+        "session.duration": {
+          "type": "integer",
+          "value": 164,
+          "unit": "second"
         }
       },
       "links": [
@@ -152,20 +157,10 @@ The envelope item payload must contain an `items` array with span one and up to 
 | `attributes` | object | No | Key-value pairs containing additional metadata about the span |
 | `links` | array | No | Array of links connecting this span to other spans or traces |
 
-### Attribute Object Properties
-
-Attributes are stored as key-value pairs where each value is an object with type information:
-
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| `type` | string | Yes | The data type of the attribute value. Values: `"string"`, `"integer"`, `"double"`, `"boolean"` |
-| `value` | any | Yes | The actual attribute value, must match the specified type |
-| `unit` | string | No | The unit of the attribute value. Example values: `"ms"`, `"s"`, `"bytes"`, `"count"`, `"percent"` |
-
 #### Common Attribute Keys
 
 All attributes mentioned below must be attached to every span being emitted from the SDK, depending on the platform.
-Empty attributes must be emitted.
+Empty attributes must be omitted.
 
 | Attribute Key | Type | Description |
 |---------------|------|-------------|
@@ -178,7 +173,7 @@ Empty attributes must be emitted.
 | `user.id` | string | The user ID (gated by `sendDefaultPii`) |
 | `user.email` | string | The user email (gated by `sendDefaultPii`) |
 | `user.ip_address` | string | The user IP address (gated by `sendDefaultPii`) |
-| `user.username` | string | The user username (gated by `sendDefaultPii`) |
+| `user.name` | string | The user username (gated by `sendDefaultPii`) |
 | `thread.id` | string | The thread ID |
 | `thread.name` | string | The thread name |
 | `sentry.sdk.name` | string | Name of the Sentry SDK (e.g., "sentry.php", "sentry.javascript") |
@@ -220,3 +215,10 @@ Example:
 trace_id: "6cf173d587eb48568a9b2e12dcfbea52"
 span_id: "438f40bd3b4a41ee"
 ```
+
+## Span Attachments
+
+To associate an attachment with a span, submit a [trace attachment](/sdk/data-model/envelope-items/#trace-attachment) item with an additional `span_id` item header. The trace attachment _should_ be submitted in the same envelope as the span itself.
+
+- `span_id` is the ID of the span that owns the attachment. If set, the attachment will be dropped with the span if the span is dropped by dynamic sampling, inbound filters or rate limits. That is, Relay treats `span_id` as the owner of the attachment.
+- The SDK _may_ set the `span_id` item header to an explicit `null` value. `span_id: null` is treated as “owned by spans”, but not owned by a specific span. That is, the attachment can be dropped if the span quota is exceeded, but it will not be dropped with a specific span because of e.g. inbound filters.
