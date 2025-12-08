@@ -1,4 +1,16 @@
-import 'server-only';
+// Block accidental client-side usage while keeping this module safe for build-time scripts.
+if (typeof window !== 'undefined') {
+  throw new Error('serverContext can only be used on the server');
+}
+
+// The `server-only` package throws when imported outside Next's server component
+// pipeline, so guard it to avoid crashing tooling like doctree generation.
+// eslint-disable-next-line @typescript-eslint/no-var-requires, import/no-extraneous-dependencies
+try {
+  require('server-only');
+} catch {
+  // ignore – we only need this hint when Next is evaluating server components
+}
 
 import {cache} from 'react';
 
