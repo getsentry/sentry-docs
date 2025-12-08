@@ -499,6 +499,44 @@ export const addVersionToFilePath = (filePath: string, version: string) => {
 };
 
 export async function getFileBySlug(slug: string): Promise<SlugFile> {
+  // Check if we should try localized version first
+  let localizedSlug = slug;
+  try {
+    const {serverContext} = await import('./serverContext');
+    const ctx = serverContext();
+    if (ctx.locale && ctx.locale !== 'en' && (slug.startsWith('docs/') || slug.startsWith('develop-docs/'))) {
+      const basePath = slug.split('/')[0];
+      const restPath = slug.slice(basePath.length + 1);
+      localizedSlug = `${basePath}/${ctx.locale}/${restPath}`;
+    }
+  } catch {
+    // If we can't get server context, continue with original slug
+  }
+
+  // Try localized version first (if different from original)
+  if (localizedSlug !== slug) {
+    try {
+      return await getFileBySlugInternal(localizedSlug);
+    } catch (err) {
+      // If it's an ENOENT error or the specific "Failed to find a valid source file" error, fall back
+      if (err.code !== 'ENOENT' && !err.message.includes('Failed to find a valid source file')) {
+        throw err;
+      }
+      // Fall back to original slug, but keep trying the localized version for common files
+      try {
+        return await getFileBySlugInternal(slug);
+      } catch (fallbackErr) {
+        // If the original also fails and we have a locale, the common file logic in getFileBySlugInternal
+        // should have tried the localized common files. Just re-throw the error.
+        throw fallbackErr;
+      }
+    }
+  }
+
+  return await getFileBySlugInternal(slug);
+}
+
+async function getFileBySlugInternal(slug: string): Promise<SlugFile> {
   // no versioning on a config file
   const configPath = path.join(root, slug.split(VERSION_INDICATOR)[0], 'config.yml');
 
@@ -530,7 +568,36 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
   ) {
     // Try the common folder.
     const slugParts = slug.split('/');
-    const commonPath = path.join(slugParts.slice(0, 3).join('/'), 'common');
+    
+    // Check if we should try localized common files first
+    let locale = '';
+    try {
+      const {serverContext} = await import('./serverContext');
+      const ctx = serverContext();
+      if (ctx.locale && ctx.locale !== 'en') {
+        locale = ctx.locale;
+      }
+    } catch {
+      // If we can't get server context, continue with original logic
+    }
+    
+    // Construct common path - if we have a locale, try localized common files first
+    let commonPath: string;
+    if (locale) {
+      // Always try localized common files when we have a locale context
+      // For a slug like "docs/platforms/javascript/guides/nextjs/user-feedback"
+      // we want "docs/es/platforms/javascript/common"
+      if (slug.includes(`/${locale}/`)) {
+        // Slug already has locale, use as-is
+        commonPath = path.join(slugParts.slice(0, 4).join('/'), 'common');
+      } else {
+        // Add locale to the common path: docs/platforms/javascript -> docs/es/platforms/javascript
+        commonPath = path.join(slugParts[0], locale, slugParts.slice(1, 3).join('/'), 'common');
+      }
+    } else {
+      commonPath = path.join(slugParts.slice(0, 3).join('/'), 'common');
+    }
+    
     let commonFilePath: string | undefined;
     if (
       slugParts.length >= 5 &&
