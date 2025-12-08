@@ -4,8 +4,10 @@ import {Metadata} from 'next';
 import {notFound} from 'next/navigation';
 
 import {apiCategories} from 'sentry-docs/build/resolveOpenAPI';
+import {Alert} from 'sentry-docs/components/alert';
 import {ApiCategoryPage} from 'sentry-docs/components/apiCategoryPage';
 import {ApiPage} from 'sentry-docs/components/apiPage';
+import {DocsChangelog} from 'sentry-docs/components/changelog/docsChangelog';
 import {DocPage} from 'sentry-docs/components/docPage';
 import {Home} from 'sentry-docs/components/home';
 import {Include} from 'sentry-docs/components/include';
@@ -199,6 +201,65 @@ export default async function Page(props: {
   // collect versioned files
   const allFm = await getDocsFrontMatter();
   const versions = getVersionsFromDoc(allFm, pageNode.path);
+
+  // Special-case the changelog page to avoid importing server-only modules
+  // through the MDX wrapper during prerender.
+  if (params.path?.[0] === 'changelog') {
+    const {slug: _omit, ...fmRest} = pageNode.frontmatter;
+    const fm = {...fmRest, versions};
+    return (
+      <DocPage
+        // pageNode.frontmatter conforms to FrontMatter; omit slug for DocPage
+        frontMatter={fm}
+        nextPage={nextPage}
+        previousPage={previousPage}
+        fullWidth={pageNode.frontmatter.fullWidth}
+      >
+        <h2>Recent Updates</h2>
+        <DocsChangelog />
+
+        <h2>Alternative Views</h2>
+        <ul>
+          <li>
+            <a
+              href="https://sentry-content-dashboard.sentry.dev/"
+              target="_blank"
+              rel="noreferrer noopener"
+            >
+              Full Content Dashboard
+            </a>{' '}
+            - View all Sentry content (blog, videos, docs, changelog)
+          </li>
+          <li>
+            <a
+              href="https://sentry-content-dashboard.sentry.dev/api/docs/feed"
+              target="_blank"
+              rel="noreferrer noopener"
+            >
+              RSS Feed
+            </a>{' '}
+            - Subscribe to doc updates in your RSS reader
+          </li>
+          <li>
+            <a
+              href="https://sentry-content-dashboard.sentry.dev/api/docs"
+              target="_blank"
+              rel="noreferrer noopener"
+            >
+              JSON API
+            </a>{' '}
+            - Programmatically access changelog data
+          </li>
+        </ul>
+
+        <Alert level="info">
+          The changelog updates automatically throughout the day. Summaries are generated
+          by AI to provide quick, user-friendly insights into each update from the
+          getsentry/sentry-docs repository.
+        </Alert>
+      </DocPage>
+    );
+  }
 
   // pass frontmatter tree into sidebar, rendered page + fm into middle, headers into toc.
   const pageType = (params.path?.[0] as PageType) || 'unknown';
