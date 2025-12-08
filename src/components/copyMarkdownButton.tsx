@@ -7,8 +7,12 @@ import {T, useGT} from 'gt-next';
 import Link from 'next/link';
 
 import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
+import ChatGPT from 'sentry-docs/icons/chatgpt';
 import Chevron from 'sentry-docs/icons/Chevron';
+import Claude from 'sentry-docs/icons/claude';
+import ExternalLink from 'sentry-docs/icons/external-link';
 import Markdown from 'sentry-docs/icons/Markdown';
+import {DocMetrics} from 'sentry-docs/metrics';
 
 interface CopyMarkdownButtonProps {
   pathname: string;
@@ -55,9 +59,15 @@ export function CopyMarkdownButton({pathname}: CopyMarkdownButtonProps) {
       await navigator.clipboard.writeText(content);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+
+      // Track successful copy
+      DocMetrics.copyPage(pathname, true);
     } catch (err) {
       setError(true);
       setTimeout(() => setError(false), 3000);
+
+      // Track failed copy
+      DocMetrics.copyPage(pathname, false);
     } finally {
       setIsLoading(false);
     }
@@ -65,6 +75,19 @@ export function CopyMarkdownButton({pathname}: CopyMarkdownButtonProps) {
 
   const handleViewMarkdownClick = () => {
     emit('View Markdown', {props: {page: pathname, source: 'view_link'}});
+    DocMetrics.copyPageDropdown(pathname, 'view_markdown');
+    setIsOpen(false);
+  };
+
+  const handleOpenChatGPTClick = () => {
+    emit('Open in ChatGPT', {props: {page: pathname, source: 'chatgpt_link'}});
+    DocMetrics.copyPageDropdown(pathname, 'open_chatgpt');
+    setIsOpen(false);
+  };
+
+  const handleOpenClaudeClick = () => {
+    emit('Open in Claude', {props: {page: pathname, source: 'claude_link'}});
+    DocMetrics.copyPageDropdown(pathname, 'open_claude');
     setIsOpen(false);
   };
 
@@ -72,6 +95,7 @@ export function CopyMarkdownButton({pathname}: CopyMarkdownButtonProps) {
     setIsOpen(!isOpen);
     if (!isOpen) {
       emit('Copy Page Dropdown', {props: {page: pathname, action: 'open'}});
+      DocMetrics.copyPageDropdown(pathname, 'open');
     }
   };
 
@@ -210,6 +234,46 @@ export function CopyMarkdownButton({pathname}: CopyMarkdownButtonProps) {
                   </div>
                 </T>
               </Link>
+
+              <a
+                href={`https://chatgpt.com/?hint=search&q=${encodeURIComponent('Read from ' + window.location.href + ' so I can ask questions about its contents')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`${dropdownItemClass} no-underline`}
+                onClick={handleOpenChatGPTClick}
+              >
+                <div className={iconContainerClass}>
+                  <ChatGPT width={14} height={14} />
+                </div>
+                <div className="flex-1">
+                  <div className="font-medium text-sm leading-5 text-gray-900 dark:text-[var(--foreground)]">
+                    Open in ChatGPT <ExternalLink aria-hidden="true" />
+                  </div>
+                  <div className="text-xs leading-4 text-gray-500 dark:text-[var(--foreground-secondary)]">
+                    Ask ChatGPT questions about this page
+                  </div>
+                </div>
+              </a>
+
+              <a
+                href={`https://claude.ai/new?q=${encodeURIComponent('Read from ' + window.location.href + ' so I can ask questions about its contents')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`${dropdownItemClass} no-underline`}
+                onClick={handleOpenClaudeClick}
+              >
+                <div className={iconContainerClass}>
+                  <Claude width={14} height={14} />
+                </div>
+                <div className="flex-1">
+                  <div className="font-medium text-sm leading-5 text-gray-900 dark:text-[var(--foreground)]">
+                    Open in Claude <ExternalLink aria-hidden="true" />
+                  </div>
+                  <div className="text-xs leading-4 text-gray-500 dark:text-[var(--foreground-secondary)]">
+                    Ask Claude questions about this page
+                  </div>
+                </div>
+              </a>
             </div>
           </div>,
           document.body

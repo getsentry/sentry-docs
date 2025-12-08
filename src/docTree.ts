@@ -1,12 +1,6 @@
-import matter from 'gray-matter';
-import {getDefaultLocale} from 'gt-next/server';
-import {access, readFile} from 'node:fs/promises';
-import nodePath from 'node:path';
-
 import {isDeveloperDocs} from './isDeveloperDocs';
 import {getDevDocsFrontMatter, getDocsFrontMatter} from './mdx';
 import {platformsData} from './platformsData';
-import {serverContext} from './serverContext';
 import {
   FrontMatter,
   Platform,
@@ -34,72 +28,75 @@ function slugWithoutIndex(slug: string): string[] {
   return parts;
 }
 
-const docsRootNodeCache = new Map<string, Promise<DocNode>>();
+let getDocsRootNodeCache: Promise<DocNode> | undefined;
 
 export function getDocsRootNode(): Promise<DocNode> {
-  const currentLocale = serverContext()?.locale || 'en';
-  let cached = docsRootNodeCache.get(currentLocale);
-  if (!cached) {
-    cached = getDocsRootNodeUncached(currentLocale);
-    docsRootNodeCache.set(currentLocale, cached);
+  if (getDocsRootNodeCache) {
+    return getDocsRootNodeCache;
   }
-  return cached;
+  getDocsRootNodeCache = getDocsRootNodeCached();
+  return getDocsRootNodeCache;
 }
 
-async function getDocsRootNodeUncached(locale: string): Promise<DocNode> {
-  const baseFrontmatter = await (isDeveloperDocs
-    ? getDevDocsFrontMatter()
-    : getDocsFrontMatter());
-
-  // Overlay localized frontmatter (titles, sidebar titles, description) for non-default locales
-  const defaultLocale = getDefaultLocale();
-  if (locale && defaultLocale && locale !== defaultLocale) {
-    const localized = await overlayLocalizedFrontmatter(baseFrontmatter, locale);
-    return frontmatterToTree(localized);
+function reconstructParentReferences(node: DocNode, parent?: DocNode): void {
+  if (parent) {
+    node.parent = parent;
   }
-  return frontmatterToTree(baseFrontmatter);
+  node.children.forEach(child => reconstructParentReferences(child, node));
 }
 
-async function overlayLocalizedFrontmatter(frontmatter: FrontMatter[], locale: string) {
+async function getDocsRootNodeCached(): Promise<DocNode> {
+  // In development, scan filesystem for hot reloading
+  // In production (including CI builds), load from pre-computed JSON
+  if (process.env.NODE_ENV === 'development') {
+    return getDocsRootNodeUncached();
+  }
+
+  const fs = await import('fs/promises');
+  const path = await import('path');
   const root = process.cwd();
 
-  async function readLocalized(slug: string) {
-    const base = nodePath.join(root, 'docs', locale, slug);
-    const candidates = [
-      `${base}.mdx`,
-      nodePath.join(base, 'index.mdx'),
-      `${base}.md`,
-      nodePath.join(base, 'index.md'),
-    ];
-    for (const p of candidates) {
-      try {
-        await access(p);
-        const src = await readFile(p, 'utf8');
-        const {data} = matter(src);
-        return data as FrontMatter;
-      } catch (e) {
-        // try next candidate
+  // Load the correct tree based on whether this is developer docs or regular docs
+  const filename = isDeveloperDocs ? 'doctree-dev.json' : 'doctree.json';
+
+  // Try public/ first (for serverless), then .next/ (for standalone)
+  const paths = [path.join(root, 'public', filename), path.join(root, '.next', filename)];
+
+  let lastError: Error | undefined;
+  for (const treePath of paths) {
+    try {
+      const treeData = await fs.readFile(treePath, 'utf-8');
+      const tree = JSON.parse(treeData);
+      // Reconstruct parent references for tree traversal functions
+      reconstructParentReferences(tree);
+      return tree;
+    } catch (error) {
+      // Only continue to next path if file doesn't exist
+      // Other errors (corrupt JSON, parse failures) should fail immediately
+      if (
+        error &&
+        typeof error === 'object' &&
+        'code' in error &&
+        error.code === 'ENOENT'
+      ) {
+        lastError = error as Error;
+        continue;
       }
+      // Re-throw non-ENOENT errors (JSON parse errors, corruption, etc.)
+      throw error;
     }
-    return null;
   }
 
-  const updated: FrontMatter[] = [];
-  for (const fm of frontmatter) {
-    const localized = await readLocalized(fm.slug);
-    if (localized) {
-      updated.push({
-        ...fm,
-        // prefer localized labels when available
-        title: localized.title || fm.title,
-        sidebar_title: localized.sidebar_title || fm.sidebar_title,
-        description: localized.description || fm.description,
-      });
-    } else {
-      updated.push(fm);
-    }
-  }
-  return updated;
+  throw new Error(
+    `Pre-computed doc tree not found (${filename}). Build may have failed or doctree was not generated with matching NEXT_PUBLIC_DEVELOPER_DOCS flag.`,
+    {cause: lastError}
+  );
+}
+
+export async function getDocsRootNodeUncached(): Promise<DocNode> {
+  return frontmatterToTree(
+    await (isDeveloperDocs ? getDevDocsFrontMatter() : getDocsFrontMatter())
+  );
 }
 
 const sidebarOrderSorter = (a: FrontMatter, b: FrontMatter) => {

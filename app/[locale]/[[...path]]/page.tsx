@@ -1,4 +1,4 @@
-import {useMemo} from 'react';
+import {Fragment, useMemo} from 'react';
 import {getMDXComponent} from 'mdx-bundler/client';
 import {Metadata} from 'next';
 import {notFound} from 'next/navigation';
@@ -11,6 +11,7 @@ import {DocsChangelog} from 'sentry-docs/components/changelog/docsChangelog';
 import {DocPage} from 'sentry-docs/components/docPage';
 import {Home} from 'sentry-docs/components/home';
 import {Include} from 'sentry-docs/components/include';
+import {PageLoadMetrics} from 'sentry-docs/components/pageLoadMetrics';
 import {PlatformContent} from 'sentry-docs/components/platformContent';
 import {
   DocNode,
@@ -28,6 +29,7 @@ import {
   getVersionsFromDoc,
 } from 'sentry-docs/mdx';
 import {mdxComponents} from 'sentry-docs/mdxComponents';
+import {PageType} from 'sentry-docs/metrics';
 import {setServerContext} from 'sentry-docs/serverContext';
 import {PaginationNavNode} from 'sentry-docs/types/paginationNavNode';
 import {stripVersion} from 'sentry-docs/versioning';
@@ -80,7 +82,12 @@ export default async function Page(props: {
   setServerContext({rootNode});
 
   if (!params.path && !isDeveloperDocs) {
-    return <Home />;
+    return (
+      <Fragment>
+        <PageLoadMetrics pageType="home" />
+        <Home />
+      </Fragment>
+    );
   }
 
   const pageNode = nodeForPath(rootNode, params.path ?? '');
@@ -129,14 +136,19 @@ export default async function Page(props: {
       throw e;
     }
     const {mdxSource, frontMatter} = doc;
+
     // pass frontmatter tree into sidebar, rendered page + fm into middle, headers into toc
+    const pageType = (params.path?.[0] as PageType) || 'unknown';
     return (
-      <MDXLayoutRenderer
-        mdxSource={mdxSource}
-        frontMatter={frontMatter}
-        nextPage={nextPage}
-        previousPage={previousPage}
-      />
+      <Fragment>
+        <PageLoadMetrics pageType={pageType} attributes={{is_developer_docs: true}} />
+        <MDXLayoutRenderer
+          mdxSource={mdxSource}
+          frontMatter={frontMatter}
+          nextPage={nextPage}
+          previousPage={previousPage}
+        />
+      </Fragment>
     );
   }
 
@@ -145,11 +157,29 @@ export default async function Page(props: {
     const category = categories.find(c => c.slug === params?.path?.[1]);
     if (category) {
       if (params.path.length === 2) {
-        return <ApiCategoryPage category={category} />;
+        // API category page
+        return (
+          <Fragment>
+            <PageLoadMetrics pageType="api" attributes={{api_category: category.slug}} />
+            <ApiCategoryPage category={category} />
+          </Fragment>
+        );
       }
       const api = category.apis.find(a => a.slug === params.path?.[2]);
       if (api) {
-        return <ApiPage api={api} />;
+        // Specific API endpoint page
+        return (
+          <Fragment>
+            <PageLoadMetrics
+              pageType="api"
+              attributes={{
+                api_category: category.slug,
+                api_endpoint: api.slug,
+              }}
+            />
+            <ApiPage api={api} />
+          </Fragment>
+        );
       }
     }
   }
@@ -172,73 +202,25 @@ export default async function Page(props: {
   const allFm = await getDocsFrontMatter();
   const versions = getVersionsFromDoc(allFm, pageNode.path);
 
-  // Special-case the changelog page to avoid importing server-only modules
-  // through the MDX wrapper during prerender.
-  if (params.path?.[0] === 'changelog') {
-    const {slug: _omit, ...fmRest} = pageNode.frontmatter;
-    const fm = {...fmRest, versions};
-    return (
-      <DocPage
-        // pageNode.frontmatter conforms to FrontMatter; omit slug for DocPage
-        frontMatter={fm}
+  // pass frontmatter tree into sidebar, rendered page + fm into middle, headers into toc.
+  const pageType = (params.path?.[0] as PageType) || 'unknown';
+  return (
+    <Fragment>
+      <PageLoadMetrics
+        pageType={pageType}
+        attributes={{
+          has_platform_content: params.path?.[0] === 'platforms',
+          is_versioned: pageNode.path.includes('__v'),
+          has_versions: versions && versions.length > 0,
+        }}
+      />
+      <MDXLayoutRenderer
+        mdxSource={mdxSource}
+        frontMatter={{...frontMatter, versions}}
         nextPage={nextPage}
         previousPage={previousPage}
-        fullWidth={pageNode.frontmatter.fullWidth}
-      >
-        <h2>Recent Updates</h2>
-        <DocsChangelog />
-
-        <h2>Alternative Views</h2>
-        <ul>
-          <li>
-            <a
-              href="https://sentry-content-dashboard.sentry.dev/"
-              target="_blank"
-              rel="noreferrer noopener"
-            >
-              Full Content Dashboard
-            </a>{' '}
-            - View all Sentry content (blog, videos, docs, changelog)
-          </li>
-          <li>
-            <a
-              href="https://sentry-content-dashboard.sentry.dev/api/docs/feed"
-              target="_blank"
-              rel="noreferrer noopener"
-            >
-              RSS Feed
-            </a>{' '}
-            - Subscribe to doc updates in your RSS reader
-          </li>
-          <li>
-            <a
-              href="https://sentry-content-dashboard.sentry.dev/api/docs"
-              target="_blank"
-              rel="noreferrer noopener"
-            >
-              JSON API
-            </a>{' '}
-            - Programmatically access changelog data
-          </li>
-        </ul>
-
-        <Alert level="info">
-          The changelog updates automatically throughout the day. Summaries are generated
-          by AI to provide quick, user-friendly insights into each update from the
-          getsentry/sentry-docs repository.
-        </Alert>
-      </DocPage>
-    );
-  }
-
-  // Default: pass frontmatter tree into sidebar, rendered page + fm into middle, headers into toc.
-  return (
-    <MDXLayoutRenderer
-      mdxSource={mdxSource}
-      frontMatter={{...frontMatter, versions}}
-      nextPage={nextPage}
-      previousPage={previousPage}
-    />
+      />
+    </Fragment>
   );
 }
 
@@ -299,7 +281,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
   const domain = isDeveloperDocs
     ? 'https://develop.sentry.dev'
     : 'https://docs.sentry.io';
-  // enable og iamge preview on preview deployments
+  // enable og image preview on preview deployments
   const previewDomain = process.env.VERCEL_URL
     ? `https://${process.env.VERCEL_URL}`
     : domain;

@@ -1,5 +1,4 @@
 import matter from 'gray-matter';
-import {getDefaultLocale, getLocale, getLocales} from 'gt-next/server';
 import {s} from 'hastscript';
 import yaml from 'js-yaml';
 import {bundleMDX} from 'mdx-bundler';
@@ -29,6 +28,7 @@ import getPackageRegistry from './build/packageRegistry';
 import {apiCategories} from './build/resolveOpenAPI';
 import getAllFilesRecursively from './files';
 import remarkDefList from './mdx-deflist';
+import {DocMetrics} from './metrics';
 import rehypeOnboardingLines from './rehype-onboarding-lines';
 import rehypeSlug from './rehype-slug.js';
 import remarkCodeTabs from './remark-code-tabs';
@@ -40,7 +40,6 @@ import remarkImageResize from './remark-image-resize';
 import remarkImageSize from './remark-image-size';
 import remarkTocHeadings, {TocNode} from './remark-toc-headings';
 import remarkVariables from './remark-variables';
-import {serverContext} from './serverContext';
 import {FrontMatter, Platform, PlatformConfig} from './types';
 import {isNotNil} from './utils';
 import {isVersioned, VERSION_INDICATOR} from './versioning';
@@ -69,6 +68,58 @@ if (process.env.CI) {
 }
 
 const md5 = (data: BinaryLike) => createHash('md5').update(data).digest('hex');
+
+// Worker-level registry cache to avoid fetching multiple times per worker
+let cachedRegistryHash: Promise<string> | null = null;
+
+/**
+ * Fetch registry data and compute its hash, with retry logic and exponential backoff.
+ * Retries up to maxRetries times with exponential backoff starting at initialDelayMs.
+ */
+async function getRegistryHashWithRetry(
+  maxRetries = 3,
+  initialDelayMs = 1000
+): Promise<string> {
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const [apps, packages] = await Promise.all([
+        getAppRegistry(),
+        getPackageRegistry(),
+      ]);
+      return md5(JSON.stringify({apps, packages}));
+    } catch (err) {
+      lastError = err as Error;
+
+      if (attempt < maxRetries) {
+        const delay = initialDelayMs * Math.pow(2, attempt);
+        // eslint-disable-next-line no-console
+        console.warn(
+          `Failed to fetch registry (attempt ${attempt + 1}/${maxRetries + 1}). Retrying in ${delay}ms...`,
+          err
+        );
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+
+  throw lastError || new Error('Failed to fetch registry after all retries');
+}
+
+/**
+ * Get the registry hash, using cached value if available.
+ * This ensures we only fetch the registry once per worker process.
+ * If the fetch fails, the error is cached so subsequent calls fail fast.
+ */
+function getRegistryHash(): Promise<string> {
+  if (!cachedRegistryHash) {
+    // eslint-disable-next-line no-console
+    console.info('Fetching registry hash for the first time in this worker');
+    cachedRegistryHash = getRegistryHashWithRetry();
+  }
+  return cachedRegistryHash;
+}
 
 async function readCacheFile<T>(file: string): Promise<T> {
   const reader = createReadStream(file);
@@ -229,10 +280,6 @@ async function getAllFilesFrontMatter(): Promise<FrontMatter[]> {
   const files = await getAllFilesRecursively(docsPath);
   const allFrontMatter: FrontMatter[] = [];
 
-  // Build a set of locale folder names to ignore inside docs (we index canonical English paths)
-  // This allows placing translations under `docs/{locale}/...` without duplicating routes.
-  const localeDirs = new Set<string>(getLocales());
-
   await Promise.all(
     files.map(
       limitFunction(
@@ -243,12 +290,6 @@ async function getAllFilesFrontMatter(): Promise<FrontMatter[]> {
           }
 
           if (fileName.indexOf('/common/') !== -1) {
-            return;
-          }
-
-          // Skip files under a localized folder like `docs/es/...`
-          const firstSegment = fileName.split('/')[0];
-          if (localeDirs.has(firstSegment)) {
             return;
           }
 
@@ -446,343 +487,365 @@ export const addVersionToFilePath = (filePath: string, version: string) => {
 };
 
 export async function getFileBySlug(slug: string): Promise<SlugFile> {
-  // If this is a docs page and we're on a non-default locale, try the localized path first.
-  // Example: slug 'docs/platforms/js/index' -> try 'docs/es/platforms/js/index' when locale is 'es'.
-  const trySlugs: string[] = [slug];
-  if (slug.startsWith('docs/')) {
-    try {
-      const ctx = serverContext();
-      const [runtimeLocale, defaultLocale] = await Promise.all([
-        // Prefer locale from server context (set by app route for SSG)
-        Promise.resolve(ctx.locale ?? ''),
-        Promise.resolve(getDefaultLocale()),
-      ]);
-      const locale = runtimeLocale || (await getLocale().catch(() => ''));
-      if (locale && defaultLocale && locale !== defaultLocale) {
-        const localized = path.posix.join('docs', locale, slug.slice('docs/'.length));
-        // Try localized first, then fallback to canonical
-        trySlugs.unshift(localized);
-      }
-    } catch {
-      // if we can't determine locale, just use canonical slug
+  // no versioning on a config file
+  const configPath = path.join(root, slug.split(VERSION_INDICATOR)[0], 'config.yml');
+
+  let configFrontmatter: PlatformConfig | undefined;
+  try {
+    configFrontmatter = yaml.load(await readFile(configPath, 'utf8')) as PlatformConfig;
+  } catch (err) {
+    // If the config file does not exist, we can ignore it.
+    if (err.code !== 'ENOENT') {
+      throw err;
     }
   }
 
-  let lastError: unknown = undefined;
-  for (const candidateSlug of trySlugs) {
-    // no versioning on a config file
-    const configPath = path.join(
-      root,
-      candidateSlug.split(VERSION_INDICATOR)[0],
-      'config.yml'
-    );
+  let mdxPath = path.join(root, `${slug}.mdx`);
+  let mdxIndexPath = path.join(root, slug, 'index.mdx');
+  let versionedMdxIndexPath = getVersionedIndexPath(root, slug, '.mdx');
+  let mdPath = path.join(root, `${slug}.md`);
+  let mdIndexPath = path.join(root, slug, 'index.md');
 
-    let configFrontmatter: PlatformConfig | undefined;
-    try {
-      configFrontmatter = yaml.load(await readFile(configPath, 'utf8')) as PlatformConfig;
-    } catch (err) {
-      // If the config file does not exist, we can ignore it.
-      if (err.code !== 'ENOENT') {
-        throw err;
-      }
-    }
-
-    let mdxPath = path.join(root, `${candidateSlug}.mdx`);
-    let mdxIndexPath = path.join(root, candidateSlug, 'index.mdx');
-    let versionedMdxIndexPath = getVersionedIndexPath(root, candidateSlug, '.mdx');
-    let mdPath = path.join(root, `${candidateSlug}.md`);
-    let mdIndexPath = path.join(root, candidateSlug, 'index.md');
-
-    if (
-      candidateSlug.startsWith('docs/platforms/') &&
-      (
-        await Promise.allSettled(
-          [mdxPath, mdxIndexPath, mdPath, mdIndexPath, versionedMdxIndexPath].map(p =>
-            access(p)
-          )
+  if (
+    slug.startsWith('docs/platforms/') &&
+    (
+      await Promise.allSettled(
+        [mdxPath, mdxIndexPath, mdPath, mdIndexPath, versionedMdxIndexPath].map(p =>
+          access(p)
         )
-      ).every(r => r.status === 'rejected')
+      )
+    ).every(r => r.status === 'rejected')
+  ) {
+    // Try the common folder.
+    const slugParts = slug.split('/');
+    const commonPath = path.join(slugParts.slice(0, 3).join('/'), 'common');
+    let commonFilePath: string | undefined;
+    if (
+      slugParts.length >= 5 &&
+      slugParts[1] === 'platforms' &&
+      slugParts[3] === 'guides'
     ) {
-      // Try the common folder.
-      const slugParts = candidateSlug.split('/');
-      const commonPath = path.join(slugParts.slice(0, 3).join('/'), 'common');
-      let commonFilePath: string | undefined;
-      if (
-        slugParts.length >= 5 &&
-        slugParts[1] === 'platforms' &&
-        slugParts[3] === 'guides'
-      ) {
-        commonFilePath = path.join(commonPath, slugParts.slice(5).join('/'));
-      } else if (slugParts.length >= 3 && slugParts[1] === 'platforms') {
-        commonFilePath = path.join(commonPath, slugParts.slice(3).join('/'));
-        versionedMdxIndexPath = getVersionedIndexPath(root, commonFilePath, '.mdx');
-      }
-      if (commonFilePath) {
-        try {
-          await access(commonPath);
-          mdxPath = path.join(root, `${commonFilePath}.mdx`);
-          mdxIndexPath = path.join(root, commonFilePath, 'index.mdx');
-          mdPath = path.join(root, `${commonFilePath}.md`);
-          mdIndexPath = path.join(root, commonFilePath, 'index.md');
-          versionedMdxIndexPath = getVersionedIndexPath(root, commonFilePath, '.mdx');
-        } catch (err) {
-          // If the common folder does not exist, we can ignore it.
-          if (err.code !== 'ENOENT') {
-            throw err;
-          }
-        }
-      }
+      commonFilePath = path.join(commonPath, slugParts.slice(5).join('/'));
+    } else if (slugParts.length >= 3 && slugParts[1] === 'platforms') {
+      commonFilePath = path.join(commonPath, slugParts.slice(3).join('/'));
+      versionedMdxIndexPath = getVersionedIndexPath(root, commonFilePath, '.mdx');
     }
-
-    // check if a versioned index file exists
-    if (isVersioned(candidateSlug)) {
+    if (commonFilePath) {
       try {
-        await access(mdxIndexPath);
-        mdxIndexPath = addVersionToFilePath(
-          mdxIndexPath,
-          candidateSlug.split(VERSION_INDICATOR)[1]
-        );
+        await access(commonPath);
+        mdxPath = path.join(root, `${commonFilePath}.mdx`);
+        mdxIndexPath = path.join(root, commonFilePath, 'index.mdx');
+        mdPath = path.join(root, `${commonFilePath}.md`);
+        mdIndexPath = path.join(root, commonFilePath, 'index.md');
+        versionedMdxIndexPath = getVersionedIndexPath(root, commonFilePath, '.mdx');
       } catch (err) {
-        // pass, the file does not exist
+        // If the common folder does not exist, we can ignore it.
         if (err.code !== 'ENOENT') {
           throw err;
         }
       }
     }
+  }
 
-    let source: string | undefined = undefined;
-    let sourcePath: string | undefined = undefined;
-    const sourcePaths = [
-      mdxPath,
-      mdxIndexPath,
-      mdPath,
-      versionedMdxIndexPath,
-      mdIndexPath,
-    ];
-    const errors: Error[] = [];
-    for (const p of sourcePaths) {
-      try {
-        source = await readFile(p, 'utf8');
-        sourcePath = p;
-        break;
-      } catch (e) {
-        errors.push(e);
+  // check if a versioned index file exists
+  if (isVersioned(slug)) {
+    try {
+      await access(mdxIndexPath);
+      mdxIndexPath = addVersionToFilePath(mdxIndexPath, slug.split(VERSION_INDICATOR)[1]);
+    } catch (err) {
+      // pass, the file does not exist
+      if (err.code !== 'ENOENT') {
+        throw err;
       }
     }
-    if (source === undefined || sourcePath === undefined) {
-      // try next candidate slug, capture the last error for reporting
-      lastError = new Error(
-        `Failed to find a valid source file for slug "${candidateSlug}". Tried:\n${sourcePaths.join('\n')}\nErrors:\n${errors.map(e => e.message).join('\n')}`
-      );
-      continue;
-    }
+  }
 
-    let cacheKey: string | null = null;
-    let cacheFile: string | null = null;
-    let assetsCacheDir: string | null = null;
-
-    // Always use public/mdx-images during build
-    // During runtime (Lambda), this directory is read-only but images are already there from build
-    const outdir = path.join(root, 'public', 'mdx-images');
-
+  let source: string | undefined = undefined;
+  let sourcePath: string | undefined = undefined;
+  const sourcePaths = [mdxPath, mdxIndexPath, mdPath, versionedMdxIndexPath, mdIndexPath];
+  const errors: Error[] = [];
+  for (const p of sourcePaths) {
     try {
-      await mkdir(outdir, {recursive: true});
+      source = await readFile(p, 'utf8');
+      sourcePath = p;
+      break;
     } catch (e) {
-      // If we can't create the directory (e.g., read-only filesystem),
-      // continue anyway - images should already exist from build time
+      errors.push(e);
     }
+  }
+  if (source === undefined || sourcePath === undefined) {
+    throw new Error(
+      `Failed to find a valid source file for slug "${slug}". Tried:\n${sourcePaths.join('\n')}\nErrors:\n${errors.map(e => e.message).join('\n')}`
+    );
+  }
 
-    // If the file contains content that depends on the Release Registry (such as an SDK's latest version), avoid using the cache for that file, i.e. always rebuild it.
-    // This is because the content from the registry might have changed since the last time the file was cached.
-    // If a new component that injects content from the registry is introduced, it should be added to the patterns below.
-    const skipCache =
-      source.includes('@inject') ||
-      source.includes('<PlatformSDKPackageName') ||
-      source.includes('<LambdaLayerDetail');
+  let cacheKey: string | null = null;
+  let cacheFile: string | null = null;
+  let assetsCacheDir: string | null = null;
 
-    // Check cache in CI environments
-    if (process.env.CI) {
-      if (skipCache) {
+  // Always use public/mdx-images during build
+  // During runtime (Lambda), this directory is read-only but images are already there from build
+  const outdir = path.join(root, 'public', 'mdx-images');
+
+  try {
+    await mkdir(outdir, {recursive: true});
+  } catch (e) {
+    // If we can't create the directory (e.g., read-only filesystem),
+    // continue anyway - images should already exist from build time
+  }
+
+  // Detect if file contains content that depends on the Release Registry
+  // If it does, we include the registry hash in the cache key so the cache
+  // is invalidated when the registry changes.
+  const dependsOnRegistry =
+    source.includes('@inject') ||
+    source.includes('<PlatformSDKPackageName') ||
+    source.includes('<LambdaLayerDetail');
+
+  // Check cache in CI environments
+  if (process.env.CI) {
+    const sourceHash = md5(source);
+
+    // Include registry hash in cache key for registry-dependent files
+    if (dependsOnRegistry) {
+      try {
+        const registryHash = await getRegistryHash();
+        cacheKey = `${sourceHash}-${registryHash}`;
         // eslint-disable-next-line no-console
         console.info(
-          `Not using cached version of ${sourcePath}, as its content depends on the Release Registry`
+          `Using registry-aware cache for ${sourcePath} (registry hash: ${registryHash.slice(0, 8)}...)`
         );
-      } else {
-        cacheKey = md5(source);
-        cacheFile = path.join(CACHE_DIR, `${cacheKey}.br`);
-        assetsCacheDir = path.join(CACHE_DIR, cacheKey);
+      } catch (err) {
+        // If we can't get registry hash, skip cache for this file
+        // eslint-disable-next-line no-console
+        console.warn(
+          `Failed to get registry hash for ${sourcePath}, skipping cache:`,
+          err
+        );
+        cacheKey = null;
+      }
+    } else {
+      cacheKey = sourceHash;
+    }
 
-        try {
-          const [cached, _] = await Promise.all([
-            readCacheFile<SlugFile>(cacheFile),
-            cp(assetsCacheDir, outdir, {recursive: true}),
-          ]);
-          return cached;
-        } catch (err) {
-          if (
-            err.code !== 'ENOENT' &&
-            err.code !== 'ABORT_ERR' &&
-            err.code !== 'Z_BUF_ERROR'
-          ) {
-            // If cache is corrupted, ignore and proceed
-            // eslint-disable-next-line no-console
-            console.warn(`Failed to read MDX cache: ${cacheFile}`, err);
-          }
+    if (cacheKey) {
+      cacheFile = path.join(CACHE_DIR, `${cacheKey}.br`);
+      assetsCacheDir = path.join(CACHE_DIR, cacheKey);
+
+      try {
+        // Time only the cache read operation, not the asset copy
+        const cacheStartTime = Date.now();
+        const cached = await readCacheFile<SlugFile>(cacheFile);
+        const cacheReadDuration = Date.now() - cacheStartTime;
+
+        // Track cache hit metrics immediately after cache read
+        if (typeof window === 'undefined') {
+          const fileSizeKb = Buffer.byteLength(source, 'utf8') / 1024;
+          const hasImages =
+            source.includes('.png') ||
+            source.includes('.jpg') ||
+            source.includes('.jpeg') ||
+            source.includes('.svg') ||
+            source.includes('.gif');
+
+          DocMetrics.mdxCompile(cacheReadDuration, {
+            cached: true,
+            file_size_kb: Math.round(fileSizeKb),
+            has_images: hasImages,
+            slug_prefix: slug.split('/')[0],
+          });
+        }
+
+        // Copy assets (wait for completion before returning)
+        await cp(assetsCacheDir, outdir, {recursive: true});
+
+        return cached;
+      } catch (err) {
+        if (
+          err.code !== 'ENOENT' &&
+          err.code !== 'ABORT_ERR' &&
+          err.code !== 'Z_BUF_ERROR'
+        ) {
+          // If cache is corrupted, ignore and proceed
+          // eslint-disable-next-line no-console
+          console.warn(`Failed to read MDX cache: ${cacheFile}`, err);
         }
       }
     }
+  }
 
-    process.env.ESBUILD_BINARY_PATH = path.join(
-      root,
-      'node_modules',
-      'esbuild',
-      'bin',
-      'esbuild'
-    );
+  process.env.ESBUILD_BINARY_PATH = path.join(
+    root,
+    'node_modules',
+    'esbuild',
+    'bin',
+    'esbuild'
+  );
 
-    const toc: TocNode[] = [];
+  const toc: TocNode[] = [];
 
-    // cwd is how mdx-bundler knows how to resolve relative paths
-    const cwd = path.dirname(sourcePath);
+  // cwd is how mdx-bundler knows how to resolve relative paths
+  const cwd = path.dirname(sourcePath);
 
-    const result = await bundleMDX<Platform>({
-      source,
-      cwd,
-      mdxOptions(options) {
-        // this is the recommended way to add custom remark/rehype plugins:
-        // The syntax might look weird, but it protects you in case we add/remove
-        // plugins in the future.
-        options.remarkPlugins = [
-          ...(options.remarkPlugins ?? []),
-          remarkExtractFrontmatter,
-          [remarkTocHeadings, {exportRef: toc}],
-          remarkGfm,
-          remarkDefList,
-          remarkFormatCodeBlocks,
-          [remarkImageSize, {sourceFolder: cwd, publicFolder: path.join(root, 'public')}],
-          remarkMdxImages,
-          remarkImageResize,
-          remarkCodeTitles,
-          remarkCodeTabs,
-          remarkComponentSpacing,
-          [
-            remarkVariables,
-            {
-              resolveScopeData: async () => {
-                const [apps, packages] = await Promise.all([
-                  getAppRegistry(),
-                  getPackageRegistry(),
-                ]);
+  // Track MDX compilation timing
+  const compilationStart = Date.now();
 
-                return {apps, packages};
-              },
+  const result = await bundleMDX<Platform>({
+    source,
+    cwd,
+    mdxOptions(options) {
+      // this is the recommended way to add custom remark/rehype plugins:
+      // The syntax might look weird, but it protects you in case we add/remove
+      // plugins in the future.
+      options.remarkPlugins = [
+        ...(options.remarkPlugins ?? []),
+        remarkExtractFrontmatter,
+        [remarkTocHeadings, {exportRef: toc}],
+        remarkGfm,
+        remarkDefList,
+        remarkFormatCodeBlocks,
+        [remarkImageSize, {sourceFolder: cwd, publicFolder: path.join(root, 'public')}],
+        remarkMdxImages,
+        remarkImageResize,
+        remarkCodeTitles,
+        remarkCodeTabs,
+        remarkComponentSpacing,
+        [
+          remarkVariables,
+          {
+            resolveScopeData: async () => {
+              const [apps, packages] = await Promise.all([
+                getAppRegistry(),
+                getPackageRegistry(),
+              ]);
+
+              return {apps, packages};
             },
-          ],
-        ];
-        options.rehypePlugins = [
-          ...(options.rehypePlugins ?? []),
-          rehypeSlug,
-          [
-            rehypeAutolinkHeadings,
-            {
-              behavior: 'wrap',
-              properties: {
-                ariaHidden: true,
-                tabIndex: -1,
-                className: 'autolink-heading',
-              },
-              content: [
-                s(
-                  'svg.anchorlink.before',
-                  {
-                    xmlns: 'http://www.w3.org/2000/svg',
-                    width: 16,
-                    height: 16,
-                    fill: 'currentColor',
-                    viewBox: '0 0 24 24',
-                  },
-                  s('path', {
-                    d: 'M9.199 13.599a5.99 5.99 0 0 0 3.949 2.345 5.987 5.987 0 0 0 5.105-1.702l2.995-2.994a5.992 5.992 0 0 0 1.695-4.285 5.976 5.976 0 0 0-1.831-4.211 5.99 5.99 0 0 0-6.431-1.242 6.003 6.003 0 0 0-1.905 1.24l-1.731 1.721a.999.999 0 1 0 1.41 1.418l1.709-1.699a3.985 3.985 0 0 1 2.761-1.123 3.975 3.975 0 0 1 2.799 1.122 3.997 3.997 0 0 1 .111 5.644l-3.005 3.006a3.982 3.982 0 0 1-3.395 1.126 3.987 3.987 0 0 1-2.632-1.563A1 1 0 0 0 9.201 13.6zm5.602-3.198a5.99 5.99 0 0 0-3.949-2.345 5.987 5.987 0 0 0-5.105 1.702l-2.995 2.994a5.992 5.992 0 0 0-1.695 4.285 5.976 5.976 0 0 0 1.831 4.211 5.99 5.99 0 0 0 6.431 1.242 6.003 6.003 0 0 0 1.905-1.24l1.723-1.723a.999.999 0 1 0-1.414-1.414L9.836 19.81a3.985 3.985 0 0 1-2.761 1.123 3.975 3.975 0 0 1-2.799-1.122 3.997 3.997 0 0 1-.111-5.644l3.005-3.006a3.982 3.982 0 0 1 3.395-1.126 3.987 3.987 0 0 1 2.632 1.563 1 1 0 0 0 1.602-1.198z',
-                  })
-                ),
-              ],
+          },
+        ],
+      ];
+      options.rehypePlugins = [
+        ...(options.rehypePlugins ?? []),
+        rehypeSlug,
+        [
+          rehypeAutolinkHeadings,
+          {
+            behavior: 'wrap',
+            properties: {
+              ariaHidden: true,
+              tabIndex: -1,
+              className: 'autolink-heading',
             },
-          ],
-          [rehypePrismPlus, {ignoreMissing: true}] as any,
-          rehypeOnboardingLines,
-          [rehypePrismDiff, {remove: true}] as any,
-          rehypePresetMinify,
-        ];
-        return options;
-      },
-      esbuildOptions: options => {
-        options.loader = {
-          ...options.loader,
-          '.js': 'jsx',
-          '.png': 'file',
-          '.gif': 'file',
-          '.jpg': 'file',
-          '.jpeg': 'file',
-          // inline svgs
-          '.svg': 'dataurl',
-        };
-        // Set the `outdir` to a public location for this bundle.
-        // this is where these images will be copied
-        // the reason we use the cache folder when it's
-        // enabled is because mdx-images is a dumping ground
-        // for all images, so we cannot filter it out only
-        // for this specific slug easily
-        options.outdir = assetsCacheDir || outdir;
+            content: [
+              s(
+                'svg.anchorlink.before',
+                {
+                  xmlns: 'http://www.w3.org/2000/svg',
+                  width: 16,
+                  height: 16,
+                  fill: 'currentColor',
+                  viewBox: '0 0 24 24',
+                },
+                s('path', {
+                  d: 'M9.199 13.599a5.99 5.99 0 0 0 3.949 2.345 5.987 5.987 0 0 0 5.105-1.702l2.995-2.994a5.992 5.992 0 0 0 1.695-4.285 5.976 5.976 0 0 0-1.831-4.211 5.99 5.99 0 0 0-6.431-1.242 6.003 6.003 0 0 0-1.905 1.24l-1.731 1.721a.999.999 0 1 0 1.41 1.418l1.709-1.699a3.985 3.985 0 0 1 2.761-1.123 3.975 3.975 0 0 1 2.799 1.122 3.997 3.997 0 0 1 .111 5.644l-3.005 3.006a3.982 3.982 0 0 1-3.395 1.126 3.987 3.987 0 0 1-2.632-1.563A1 1 0 0 0 9.201 13.6zm5.602-3.198a5.99 5.99 0 0 0-3.949-2.345 5.987 5.987 0 0 0-5.105 1.702l-2.995 2.994a5.992 5.992 0 0 0-1.695 4.285 5.976 5.976 0 0 0 1.831 4.211 5.99 5.99 0 0 0 6.431 1.242 6.003 6.003 0 0 0 1.905-1.24l1.723-1.723a.999.999 0 1 0-1.414-1.414L9.836 19.81a3.985 3.985 0 0 1-2.761 1.123 3.975 3.975 0 0 1-2.799-1.122 3.997 3.997 0 0 1-.111-5.644l3.005-3.006a3.982 3.982 0 0 1 3.395-1.126 3.987 3.987 0 0 1 2.632 1.563 1 1 0 0 0 1.602-1.198z',
+                })
+              ),
+            ],
+          },
+        ],
+        [rehypePrismPlus, {ignoreMissing: true}] as any,
+        rehypeOnboardingLines,
+        [rehypePrismDiff, {remove: true}] as any,
+        rehypePresetMinify,
+      ];
+      return options;
+    },
+    esbuildOptions: options => {
+      options.loader = {
+        ...options.loader,
+        '.js': 'jsx',
+        '.png': 'file',
+        '.gif': 'file',
+        '.jpg': 'file',
+        '.jpeg': 'file',
+        // inline svgs
+        '.svg': 'dataurl',
+      };
+      // Set the `outdir` to a public location for this bundle.
+      // this is where these images will be copied
+      // the reason we use the cache folder when it's
+      // enabled is because mdx-images is a dumping ground
+      // for all images, so we cannot filter it out only
+      // for this specific slug easily
+      options.outdir = assetsCacheDir || outdir;
 
-        // Set write to true so that esbuild will output the files.
-        options.write = true;
+      // Set write to false to prevent esbuild from writing files automatically.
+      // We'll handle writing manually to gracefully handle read-only filesystems (e.g., Lambda runtime)
+      // In local dev, we need write=true to avoid images being embedded as binary data
+      options.write = process.env.NODE_ENV === 'development' || !!process.env.CI;
 
-        return options;
-      },
-    }).catch(e => {
-      // eslint-disable-next-line no-console
-      console.error('Error occurred during MDX compilation:', e.errors);
-      throw e;
+      return options;
+    },
+  }).catch(e => {
+    // eslint-disable-next-line no-console
+    console.error('Error occurred during MDX compilation:', e.errors);
+    throw e;
+  });
+
+  // Track MDX compilation metrics for cache miss (server-side only)
+  const compilationDuration = Date.now() - compilationStart;
+  if (typeof window === 'undefined') {
+    const fileSizeKb = Buffer.byteLength(source, 'utf8') / 1024;
+    const hasImages =
+      source.includes('.png') ||
+      source.includes('.jpg') ||
+      source.includes('.jpeg') ||
+      source.includes('.svg') ||
+      source.includes('.gif');
+
+    DocMetrics.mdxCompile(compilationDuration, {
+      cached: false, // This path only reached on cache miss
+      file_size_kb: Math.round(fileSizeKb),
+      has_images: hasImages,
+      slug_prefix: slug.split('/')[0], // First path segment for grouping
     });
-
-    const {code, frontmatter} = result;
-
-    let mergedFrontmatter = frontmatter;
-    if (configFrontmatter) {
-      mergedFrontmatter = {...frontmatter, ...configFrontmatter};
-    }
-
-    const resultObj: SlugFile = {
-      matter: result.matter,
-      mdxSource: code,
-      toc,
-      frontMatter: {
-        ...mergedFrontmatter,
-        slug,
-      },
-    };
-
-    if (assetsCacheDir && cacheFile && !skipCache) {
-      try {
-        await cp(assetsCacheDir, outdir, {recursive: true});
-      } catch (e) {
-        // If copy fails (e.g., on read-only filesystem), continue anyway
-        // Images should already exist from build time
-      }
-      writeCacheFile(cacheFile, JSON.stringify(resultObj)).catch(e => {
-        // eslint-disable-next-line no-console
-        console.warn(`Failed to write MDX cache: ${cacheFile}`, e);
-      });
-    }
-
-    return resultObj;
   }
 
-  // none of the candidate slugs worked
-  if (lastError) {
-    throw lastError;
+  // Manually write output files from esbuild when available
+  // This only happens during build time (when filesystem is writable)
+  // At runtime (Lambda), files already exist from build time
+
+  const {code, frontmatter} = result;
+
+  let mergedFrontmatter = frontmatter;
+  if (configFrontmatter) {
+    mergedFrontmatter = {...frontmatter, ...configFrontmatter};
   }
-  throw new Error(`Failed to resolve source for slug: ${slug}`);
+
+  const resultObj: SlugFile = {
+    matter: result.matter,
+    mdxSource: code,
+    toc,
+    frontMatter: {
+      ...mergedFrontmatter,
+      slug,
+    },
+  };
+
+  if (assetsCacheDir && cacheFile && cacheKey) {
+    try {
+      await cp(assetsCacheDir, outdir, {recursive: true});
+    } catch (e) {
+      // If copy fails (e.g., on read-only filesystem), continue anyway
+      // Images should already exist from build time
+    }
+    writeCacheFile(cacheFile, JSON.stringify(resultObj)).catch(e => {
+      // eslint-disable-next-line no-console
+      console.warn(`Failed to write MDX cache: ${cacheFile}`, e);
+    });
+  }
+
+  return resultObj;
 }
 
 const fileBySlugCache = new Map<string, Promise<SlugFile>>();
@@ -795,24 +858,11 @@ const fileBySlugCache = new Map<string, Promise<SlugFile>>();
 export const getFileBySlugWithCache: (slug: string) => Promise<SlugFile> =
   process.env.NODE_ENV === 'development'
     ? getFileBySlug
-    : async (slug: string) => {
-        // include locale in cache key to avoid cross-locale collisions
-        let cacheKey = slug;
-        try {
-          const ctxLocale = serverContext().locale;
-          const defaultLocale = getDefaultLocale();
-          const resolvedLocale = ctxLocale || (await getLocale().catch(() => ''));
-          if (resolvedLocale && defaultLocale && resolvedLocale !== defaultLocale) {
-            cacheKey = `${resolvedLocale}:${slug}`;
-          }
-        } catch {
-          // ignore locale resolution errors
-        }
-
-        let cached = fileBySlugCache.get(cacheKey);
+    : (slug: string) => {
+        let cached = fileBySlugCache.get(slug);
         if (!cached) {
           cached = getFileBySlug(slug);
-          fileBySlugCache.set(cacheKey, cached);
+          fileBySlugCache.set(slug, cached);
         }
         return cached;
       };

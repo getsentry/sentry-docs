@@ -171,7 +171,9 @@ Set this option to `false` to disable sending of client reports. Client reports 
 Set this option to `true` to add stack local variables to stack traces.
 
 <PlatformSection notSupported={["javascript.bun", "javascript.cloudflare", "javascript.deno"]}>
+
 For more advanced configuration options, see the documentation on the <PlatformLink to="/configuration/integrations/localvariables">Local Variables integration options</PlatformLink>.
+
 </PlatformSection>
 
 </SdkOption>
@@ -241,6 +243,21 @@ Options used to configure the transport. This is an object with the following po
 - `fetchOptions`: An object containing options to be passed to the `fetch` call. Used by the SDK's fetch transport.
 
 </PlatformCategorySection>
+
+<PlatformSection supported={["javascript.electron"]}>
+**Options for Electron offline support:**
+
+The Electron SDK provides built-in offline support that queues events when the app is offline and automatically sends them once the connection is restored. These options let you configure the following behavior:
+
+- `maxAgeDays`: The maximum number of envelopes to keep in the queue.
+- `maxQueueSize`: The maximum number of days to keep an envelope in the queue.
+- `flushAtStartup`: Whether the offline store should flush shortly after application startup. Defaults to `false`.
+- `shouldSend`: Called before the SDK attempts to send an envelope to Sentry. If this function returns false, `shouldStore` will be called to determine if the envelope should be stored. Defaults to `() => true`.
+- `shouldStore`: Called before an event is stored. Return `false` to drop the envelope rather than store it. Defaults to `() => true`.
+
+Check out the [Offline Support](/platforms/javascript/guides/electron/features/offline-support/) documentation for a complete example.
+
+</PlatformSection>
 
 </SdkOption>
 
@@ -450,27 +467,31 @@ If a root span matches any of the specified patterns, the entire local trace wil
 By default, no spans are ignored.
 
 Here are some predefined matches for common spans to get you started:
+
 ```javascript
 Sentry.init({
   ignoreSpans: [
     // Browser connection events
-    {op: /^browser\.(cache|connect|DNS)$/},
+    { op: /^browser\.(cache|connect|DNS)$/ },
 
     // Fonts
-    {op: 'resource.other', name: /.+\.(woff2|woff|ttf|eot)$/},
+    { op: "resource.other", name: /.+\.(woff2|woff|ttf|eot)$/ },
 
     // CSS files
-    {op: 'resource.link', name: /.+\.css.*$/},
+    { op: "resource.link", name: /.+\.css.*$/ },
 
     // JS files
-    {op: /resource\.(link|script)/, name: /.+\.js.*$/},
+    { op: /resource\.(link|script)/, name: /.+\.js.*$/ },
 
     // Images
-    {op: /resource\.(other|img)/, name: /.+\.(png|svg|jpe?g|gif|bmp|tiff?|webp|avif|heic?|ico).*$/},
+    {
+      op: /resource\.(other|img)/,
+      name: /.+\.(png|svg|jpe?g|gif|bmp|tiff?|webp|avif|heic?|ico).*$/,
+    },
 
     // Measure spans
-    {op: 'measure'},
-  ]
+    { op: "measure" },
+  ],
 });
 ```
 
@@ -527,11 +548,69 @@ The sample rate for replays that are recorded when an error happens. This type o
 
 ## Profiling Options
 
+<PlatformSection supported={["javascript.electron"]}>
+
+<SdkOption name="profileSessionSampleRate" type='number' availableSince="7.4.0">
+
+A number between `0` and `1` that sets the percentage of how many sessions should have profiling enabled. `1.0` enables profiling in every session, `0.5` enables profiling for 50% of the sessions, and `0` enables it for none. The sampling decision is made once at the beginning of a session. This option is required to enable profiling.
+
+</SdkOption>
+
+<SdkOption name="profileLifecycle" type='"trace" | "manual"' defaultValue='"manual"' availableSince="7.4.0">
+
+Determines how profiling sessions are controlled. It has two modes:
+
+- `'manual'` (default): You control when profiling starts and stops using the `startProfiler()` and `stopProfiler()` functions. In this mode, profile sampling is only affected by `profileSessionSampleRate`.<PlatformSection notSupported={["javascript.bun", "javascript.cordova", "javascript.capacitor", "javascript.deno", "javascript.cloudflare"]}> Read more about these functions in the <PlatformLink to="/profiling">profiling API documentation</PlatformLink>.</PlatformSection>
+- `'trace'`: Profiling starts and stops automatically with transactions, as long as tracing is enabled. The profiler runs as long as there is at least one sampled transaction. In this mode, profiling is affected by both `profileSessionSampleRate` and your tracing sample rate (`tracesSampleRate` or `tracesSampler`).
+
+</SdkOption>
+
 <SdkOption name="profilesSampleRate" type='number'>
+
+**Deprecated:** Use `profileSessionSampleRate` instead to configure continuous profiling from version `7.4.0` onwards.
 
 A number between `0` and `1`, controlling the percentage chance a given sampled transaction will be profiled. (`0` represents 0% while `1` represents 100%.) Applies equally to all transactions created in the app. This is relative to the tracing sample rate - e.g. `0.5` means 50% of sampled transactions will be profiled.
 
 </SdkOption>
+
+</PlatformSection>
+
+<PlatformSection notSupported={["javascript.electron"]}>
+
+<SdkOption name="profileSessionSampleRate" type='number' availableSince="10.27.0">
+
+A number between `0` and `1` that sets the percentage of how many sessions should have profiling enabled. `1.0` enables profiling in every session, `0.5` enables profiling for 50% of the sessions, and `0` enables it for none. The sampling decision is made once at the beginning of a session. This option is required to enable profiling.
+
+<PlatformCategorySection categorySupported={["server", "serverless"]}>
+  In a server environment, a profiling session starts when the Sentry SDK is
+  initialized and stops when the service terminates. Therefore, the sampling
+  decision is re-evaluated on service restart or redeployment.
+</PlatformCategorySection>
+
+  <PlatformCategorySection supported={['browser']}>
+    In a browser environment, a profiling session corresponds to a user session. A user session starts with a
+    new SDK initialization on page load and ends when the browser tab is closed.
+  </PlatformCategorySection>
+</SdkOption>
+
+<SdkOption name="profileLifecycle" type='"trace" | "manual"' defaultValue='"manual"' availableSince="10.27.0">
+
+Determines how profiling sessions are controlled. It has two modes:
+
+- `'manual'` (default): You control when profiling starts and stops using the `startProfiler()` and `stopProfiler()` functions. In this mode, profile sampling is only affected by `profileSessionSampleRate`.<PlatformSection notSupported={["javascript.bun", "javascript.cordova", "javascript.capacitor", "javascript.deno", "javascript.cloudflare"]}> Read more about these functions in the <PlatformLink to="/profiling">profiling API documentation</PlatformLink>.</PlatformSection>
+- `'trace'`: Profiling starts and stops automatically with transactions, as long as tracing is enabled. The profiler runs as long as there is at least one sampled transaction. In this mode, profiling is affected by both `profileSessionSampleRate` and your tracing sample rate (`tracesSampleRate` or `tracesSampler`).
+
+</SdkOption>
+
+<SdkOption name="profilesSampleRate" type='number'>
+
+**Deprecated:** Use `profileSessionSampleRate` instead to configure continuous profiling from version 10.27.0 onwards.
+
+A number between `0` and `1`, controlling the percentage chance a given sampled transaction will be profiled. (`0` represents 0% while `1` represents 100%.) Applies equally to all transactions created in the app. This is relative to the tracing sample rate - e.g. `0.5` means 50% of sampled transactions will be profiled.
+
+</SdkOption>
+
+</PlatformSection>
 
 <PlatformSection supported={["javascript.cordova", "javascript.capacitor"]}>
 

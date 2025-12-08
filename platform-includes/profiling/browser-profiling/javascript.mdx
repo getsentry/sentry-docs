@@ -14,23 +14,24 @@ Note that since the profiling API is currently only exposed in Chromium, profile
 
 To get started with JavaScript browser profiling, you'll need to:
 
-- Install the <PlatformSdkPackageName fallback="@sentry/browser"/> SDK, minimum version 7.60.0
-- Configure the document response header to include `Document-Policy: js-profiling`
-- Configure the SDK to use the `BrowserProfilingIntegration` and set `profilesSampleRate`
-
-## Step 1: Install the <PlatformOrGuideName/> SDK
-
 <PlatformSection notSupported={["javascript.electron"]}>
 
-Install our <PlatformOrGuideName/> SDK using either `yarn` or `npm`, the minimum version that supports profiling is **7.60.0**.
+- Install the <PlatformSdkPackageName fallback="@sentry/browser"/> SDK, minimum version `10.27.0` (UI Profiling) or `7.60.0` (deprecated transaction-based Profiling)
 
 </PlatformSection>
 
 <PlatformSection supported={["javascript.electron"]}>
 
-Install our Electron SDK using either `yarn` or `npm`, the minimum version that supports profiling is **4.16.0**.
+- Install the <PlatformSdkPackageName fallback="@sentry/electron"/> SDK, minimum version `7.4.0` (UI Profiling) or `4.16.0` (deprecated transaction-based Profiling)
 
 </PlatformSection>
+
+- Configure the document response header to include `Document-Policy: js-profiling`
+- Configure the SDK to use the `browserProfilingIntegration` and set `profileSessionSampleRate` (UI Profiling) or `profilesSampleRate` (deprecated transaction-based Profiling)
+
+## Step 1: Install the <PlatformOrGuideName/> SDK
+
+Install our <PlatformOrGuideName/> SDK using either `npm`, `yarn`, or `pnpm`.
 
 <PlatformContent includePath="profiling/automatic-instrumentation-intro" />
 
@@ -45,6 +46,50 @@ For the JavaScript browser profiler to start, the document response header needs
 Configuration should happen as early as possible in your application's lifecycle. Once this is done, Sentry's JavaScript SDK will capture all unhandled exceptions and transactions.
 
 <PlatformContent includePath="profiling/automatic-instrumentation-setup" />
+
+<Alert level="warning" title="Local Profiling with Chrome DevTools">
+
+When you enable `browserProfilingIntegration` in your SDK configuration, Chrome will incorrectly attribute regular rendering work as “Profiling Overhead” if you are doing local profiling via the Chrome DevTools Performance panel. To avoid this, disable or remove the integration when profiling with Chrome DevTools.
+
+</Alert>
+
+## Profiling Modes
+
+Profiling supports two modes: `manual` and `trace`. These modes are mutually exclusive and cannot be used at the same time.
+
+In `manual` mode, you can manage the profiling data collection via calls to `Sentry.uiProfiler.startProfiler` and `Sentry.uiProfiler.stopProfiler`. You have full control over when the profiler runs.
+
+In `trace` mode, the profiler manages its own start and stop calls based on spans. It continues to run while at least one span is active, and stops when there are no active spans.
+
+### Manual Lifecycle Profiling
+
+Manual lifecycle profiling is the default mode and enables you to start and stop the profiler manually.
+
+After enabling the `browserProfilingIntegration` and setting a `profileSessionSampleRate`, you can start and stop the profiler with the following calls:
+
+```javascript {9}
+// All spans (unless those discarded by sampling) will have profiling data attached to them.
+Sentry.uiProfiler.startProfiler();
+// Code executed between these two calls will be profiled
+Sentry.uiProfiler.stopProfiler();
+```
+
+### Trace Lifecycle Profiling
+
+To enable trace lifecycle profiling, <PlatformLink to="/tracing">enable tracing</PlatformLink> and set `profileLifecycle` to `'trace'` in your SDK configuration.
+
+```javascript {9}
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.browserTracingIntegration(), // Enables tracing
+    Sentry.browserProfilingIntegration(),
+  ],
+  tracesSampleRate: 1.0, // Enables tracing
+  profileSessionSampleRate: 1.0,
+  profileLifecycle: "trace",
+});
+```
 
 ## The Difference Between DevTools & Sentry's JavaScript Browser Profiler
 

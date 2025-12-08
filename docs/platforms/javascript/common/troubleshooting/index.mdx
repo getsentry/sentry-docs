@@ -3,15 +3,16 @@ title: Troubleshooting
 description: >-
   If you need help solving issues with your Sentry JavaScript SDK integration,
   you can read the edge cases documented below.
+sidebar_section: configuration
 keywords:
   - adblocker
   - blocked
   - tunnel
   - non-Error exception
-  - '404'
+  - "404"
 notSupported:
   - javascript.capacitor
-sidebar_order: 9000
+sidebar_order: 20
 og_image: /og-images/platforms-javascript-common-troubleshooting.png
 ---
 
@@ -30,7 +31,7 @@ If you set up the Sentry SDK and it's not sending any data to Sentry:
 <PlatformSection supported={["javascript.nextjs"]}>
   - Check that you didn't set `sideEffects: false` in your `package.json`.
   Setting `sideEffects` to false in your `package.json` will cause Next.js to
-  tree shake the SDK code too agressively - effectively deleting any
+  tree shake the SDK code too aggressively - effectively deleting any
   `Sentry.init()` calls. Setting `sideEffects: false` is incorrect when you are
   using the Sentry SDK.
 </PlatformSection>
@@ -460,7 +461,7 @@ Remember to pass in `true` as the second parameter to `addEventListener()`. With
 <Expandable permalink title="SDK causes double invocations of `addEventListener` (e.g. duplicated click events)">
 
 In very rare cases, the SDK can cause callbacks added via `addEventListener` to an event target (such as a button) to be invoked twice.
-This is usually a sign of the SDK being intialized too late in the lifecycle of the page. If you can, try initializing the SDK earlier in your application.
+This is usually a sign of the SDK being initialized too late in the lifecycle of the page. If you can, try initializing the SDK earlier in your application.
 
 If this is not possible or doesn't apply to your use case, set the `unregisterOriginalCallbacks` option in the [`browserApiErrors` integration](../configuration/integrations/browserapierrors) to `true`.
 
@@ -480,7 +481,7 @@ This might be because the [`define`](https://vitejs.dev/config/shared-options.ht
 ```javascript {filename:vite.config.ts} {diff}
 export default defineConfig({
    build: {
-     sourcemap: true
+     sourcemap: 'hidden'
    },
 -  define: {
 -    global: {}
@@ -524,10 +525,10 @@ When using pnpm, you might encounter errors related to packages that can't be ex
 While adding these packages as direct dependencies might remove the warning messages, it often doesn't resolve the underlying functionality issues:
 
 ```bash
-pnpm add import-in-the-middle require-in-the-middle
+pnpm add import-in-the-middle@1 require-in-the-middle@7
 ```
 
-As a workaround, create or modify `.npmrc` in your project root. First, try to specifially hoist the dependencies in question:
+As a workaround, create or modify `.npmrc` in your project root. First, try to specifically hoist the dependencies in question:
 
 ```ini {filename:.npmrc}
 public-hoist-pattern[]=*import-in-the-middle*
@@ -685,7 +686,8 @@ shamefully-hoist=true
 
     In case you are using Session Replay and experience performance issues with the client instrumentation hook, you can try lazy-loading session replay as described [here](/platforms/javascript/guides/nextjs/session-replay/#lazy-loading-replay).
 
-    If you want to init the SDK itself at a later point, this will result in tracing data loosing accuracy and errors could happen before the SDK is initialized. This should be a tradeoff you make based on your use case, although we recommend initializing the SDK as early as possible.
+    If you want to init the SDK itself at a later point, this will result in tracing data losing accuracy and errors could happen before the SDK is initialized. This should be a tradeoff you make based on your use case, although we recommend initializing the SDK as early as possible.
+
   </Expandable>
 </PlatformSection>
 

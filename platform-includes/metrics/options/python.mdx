@@ -1,25 +1,26 @@
 #### before_send_metric
 
-To filter metrics, or update them before they are sent to Sentry, you can use the `before_send_metric` option.
+To filter metrics, or update them before they are sent to Sentry, you can use the `before_send_metric` option. If the callback returns `None`, the metric is not emitted. Attributes can also be updated in the callback function.
 
 ```python
 import sentry_sdk
 from sentry_sdk.types import Metric, Hint
 from typing import Optional
 
-def before_metric(metric: Metric, _hint: Hint) -> Optional[Metric]:
-    # Filter out all failed checkouts on the acme tenant
-    if metric["name"] == "checkout.failed" and metric["attributes"].get("tenant") == "acme":
+def before_metric(metric: Metric, hint: Hint) -> Optional[Metric]:
+    if metric["name"] == "removed-metric":
         return None
+
+    metric["attributes"]["extra"] = "foo"
+
+    if "browser" in metric["attributes"]:
+        del metric["attributes"]["browser"]
 
     return metric
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
-    _experiments={
-        "enable_metrics": True,
-        "before_send_metric": before_metric,
-    },
+    before_send_metric=before_metric,
 )
 ```
 
@@ -30,7 +31,8 @@ The metric dict has the following keys:
 - `name`: (`str`) The name of the metric.
 - `type`: (`str` - one of `counter`, `gauge`, `distribution`) The type of metric.
 - `value`: (`float`) The numeric value of the metric.
-- `unit`: (`int`) The unit of measurement for the metric value.
+- `unit`: (`Optional[str]`) The unit of measurement for the metric value.
 - `attributes`: (`dict[str, str | bool | float | int]`) Additional attributes to be sent with the metric.
 - `timestamp`: (`float`) Timestamp in seconds (epoch time) indicating when the metric was recorded.
 - `trace_id`: (`Optional[str]`) The trace ID of the trace this metric belongs to.
+- `span_id`: (`Optional[str]`) The span id of the span that was active when the metric was emitted.
