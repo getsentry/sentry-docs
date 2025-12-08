@@ -217,16 +217,24 @@ Minimum SDK version: **2.43.0**
     url="/platforms/python/guides/gcp-functions/metrics/"
   />
 
+### PHP
+
+- <LinkWithPlatformIcon platform="php" label="PHP" url="/platforms/php/metrics/" />
+- <LinkWithPlatformIcon
+  platform="php.symfony"
+  label="Symfony"
+  url="/platforms/php/guides/symfony/metrics/"
+  />
+- <LinkWithPlatformIcon
+  platform="php.laravel"
+  label="Laravel"
+  url="/platforms/php/guides/laravel/metrics/"
+  />
+
 ## Upcoming SDKs
 
 We're actively working on adding Metrics functionality to additional SDKs. Check out these GitHub issues for the latest updates:
 
-
-- <LinkWithPlatformIcon
-    platform="php"
-    label="PHP (incl. Laravel)"
-    url="https://github.com/getsentry/sentry-php/issues/1966"
-  />
 
 - <LinkWithPlatformIcon
     platform="ruby"
@@ -295,8 +303,8 @@ import * as Sentry from "@sentry/node"; // or your specific framework
 
 Sentry.init({
   dsn: '<your-dsn>',
-  _experiments: { 
-    enableMetrics: true 
+  _experiments: {
+    enableMetrics: true
   },
 });
 ```
@@ -364,22 +372,22 @@ Then use the metrics API to send counters, gauges, and distributions:
 ```python
 # Counter — increment a metric (defaults to +1)
 metrics.count(
-    "checkout.failed", 
-    1, 
+    "checkout.failed",
+    1,
     attributes={"route": "/checkout", "tenant": "acme"}
 )
 
 # Gauge — set a current value
 metrics.gauge(
-    "queue.depth", 
-    42, 
+    "queue.depth",
+    42,
     attributes={"queue": "emails"}
 )
 
 # Distribution — record numeric values to compute p95, avg, sum, etc.
 metrics.distribution(
-    "cart.amount_usd", 
-    187.5, 
+    "cart.amount_usd",
+    187.5,
     attributes={"currency": "USD", "tenant": "acme"}
 )
 ```
@@ -393,6 +401,49 @@ Each metric event includes:
 - **unit** (optional): Unit of measurement
 
 More details: [Python SDK Metrics Discussion](https://github.com/getsentry/sentry-python/discussions/5042)
+
+### PHP Example
+
+First, enable metrics in your Sentry initialization:
+
+```php
+\Sentry\init([
+  'dsn' => '___PUBLIC_DSN___'
+]);
+```
+
+Then use the metrics API to send counters, gauges, and distributions:
+
+```php
+# Counter — increment a metric
+\Sentry\trace_metrics()->count(
+    'checkout.failed',
+    1,
+    ['route' => '/checkout', 'tenant' => 'acme']
+);
+
+# Gauge — set a current value
+\Sentry\trace_metrics()->gauge(
+    'queue.depth',
+    42,
+    ['queue' => 'emails']
+);
+
+# Distribution — record numeric values to compute p95, avg, sum, etc.
+\Sentry\trace_metrics()->distribution(
+    'cart.amount_usd',
+    187.5,
+    ['currency' => 'USD', 'tenant' => 'acme']
+);
+```
+
+Each metric event includes:
+- **name**: The metric identifier
+- **kind**: counter, gauge, or distribution
+- **value**: The numeric value
+- **attributes**: Custom key-value pairs for grouping and filtering
+- **trace_id, span_id**: Automatically attached to link with traces
+- **unit** (optional): Unit of measurement
 
 ## Best Practices
 

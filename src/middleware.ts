@@ -1786,14 +1786,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     from: '/platforms/unity/metrics/',
     to: '/concepts/key-terms/tracing/span-metrics/',
   },
-  {
-    from: '/platforms/php/guides/laravel/metrics/',
-    to: '/concepts/key-terms/tracing/span-metrics/',
-  },
-  {
-    from: '/platforms/php/guides/symfony/metrics/',
-    to: '/concepts/key-terms/tracing/span-metrics/',
-  },
   // END redirecting deprecated generic metrics docs to concepts
   {
     from: '/learn/cli/configuration/',

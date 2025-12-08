@@ -218,6 +218,22 @@ const developerDocsRedirects = [
     source: '/services/emails/',
     destination: '/backend/emails/',
   },
+  {
+    source: '/self-hosted/custom-ca-roots/',
+    destination: '/self-hosted/configuration/custom-ca-roots/',
+  },
+  {
+    source: '/self-hosted/email/',
+    destination: '/self-hosted/configuration/email/',
+  },
+  {
+    source: '/self-hosted/geolocation/',
+    destination: '/self-hosted/configuration/geolocation/',
+  },
+  {
+    source: '/self-hosted/sso/',
+    destination: '/self-hosted/configuration/sso/',
+  },
 ];
 
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
