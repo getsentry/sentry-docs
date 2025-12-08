@@ -30,6 +30,8 @@ Sentry also provides default monitors that are automatically created for you whe
 - **Profile Monitor**: Once  you've configured [Profiling](/product/explore/profiling/), issues will be created via the Profile Monitor
 
 ## Creating a Monitor
+![create-monitor =800x](./img/create-monitor.png)
+
 To create a Monitor, navigate to the [Monitors](https://sentry.io/issues/monitors/new/) page and click **Create Monitor**. You can choose between the three types of Monitors (metric, cron, and uptime). Each one will have a separate configuration process.
 
 ### General Settings
@@ -40,9 +42,9 @@ Monitors are made of attributes that define when to create an issue, and actions
 - Select the project, and in some cases, the environment
 - Select attributes based on the Monitor type
 - Set priority based on attributes
-- Set the assignee
 - Set auto-resolve based on attributes
-- Connect [Custom Alerts](/product/automations/custom-automations/) like notifications and ticket creation
+- Set the assignee
+- Connect [Custom Alerts](/product/new-monitors-and-alerts/alerts/) like external notifications and ticket creation
 to pair with your Monitor
 
 <Alert type="note">
@@ -57,25 +59,39 @@ Assignees set by [ownership rules](/product/issues/ownership-rules/) will overri
 
 Metric Monitors are used to track errors based on span attributes and custom metrics. 
 
-[!metric-monitor-config](./img/metric-monitor-config.png)
-
 Choose the metric, the interval for how often to check, and the way you want to monitor for changes. You can choose an absolute number threshold, a percentage change, or dynamic anomaly detection.
+
+#### Issue Detection Settings
+
+**Fixed Thresholds**
+
+When setting an absolute number threshold, a percentage change, or dynamic anomaly detection, here are a few considerations:
+Use a fixed threshold or a percentage change threshold when you have a clear idea of what constitutes good or bad performance. Here are some examples:
+- When your app's crash rate exceeds 1%
+- When your app's transaction volume drops to zero
+- When any issue affects more than 100 enterprise users in a day
+- When the response time of a key transaction exceeds 500 ms
+
+**Dynamic Thresholds**
+
+Dynamic thresholds help you detect when a metric deviates significantly from its “normal” range. For example, the percentage of sessions affected by an issue in the last 24 hours is _20% greater than one week ago_, rather than the percentage of sessions affected is simply _greater than 20%_, which would be a fixed threshold.
+
+Dynamic thresholds are good for when it’s cumbersome to create fixed thresholds for every metric of interest, or when you don’t have an expected value for a metric, such as in the following scenarios:
+
+- **Seasonal fluctuations**: Seasonal metrics, such as number of transactions, are more accurately monitored by comparing them to the previous day or week, rather than a fixed value.
+- **Unpredictable growth**: Fixed-threshold alerts may require continuous manual adjustment as traffic patterns change, such as with a fast-growing app. Dynamic thresholds work regardless of changing traffic patterns.
 
 ### Cron Monitor Settings
 
 Cron Monitors are used to track the uptime and performance of any scheduled, recurring job. 
 
-[!cron-monitor-config](./img/cron-monitor-config.png)
-
-Choose the schedule for how often to check, set the check-in margin, the max runtime, and failure tolerance.
+Choose the schedule for how often to check, set the check-in margin, the max runtime, and failure tolerance. Learn how to set up a [Cron Monitor](/product/new-monitors-and-alerts/monitors/crons/getting-started/).
 
 ### Uptime Monitor Settings
 
 Uptime Monitors are used to track the uptime and performance of any HTTP request.
 
-[!uptime-monitor-config](./img/uptime-monitor-config.png)
-
-Choose the URL and HTTP request you wish to monitor. Set the interval, timeout, and any headers you wish to include.
+Choose the URL and HTTP request you wish to monitor. Set the interval, timeout, any headers you wish to include, and failure tolerance. Learn how to set up an [Uptime Monitor](/product/new-monitors-and-alerts/monitors/uptime-monitoring/).
 
 ## Managing Monitors
 
@@ -84,11 +100,9 @@ You can see a list of all your Monitors on the [Monitors](https://sentry.io/issu
 <Alert>
 
 Monitors are a Project-level feature, but the permission set is organization-level. By default, all members can create and edit Monitors. You can update this setting in [Organization Membership settings](https://sentry.io/settings/organization/).
-
+a
 </Alert>
 
 By clicking on a Monitor, you can view the details, edit the Monitor, or disable it.
 
 The details page will show a high level chart of the Monitor's performance, the configuration, created issue, and connected automations. 
-
-[!monitor-details](./img/monitor-details.png)
