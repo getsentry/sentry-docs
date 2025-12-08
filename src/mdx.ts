@@ -250,6 +250,12 @@ export async function getDevDocsFrontMatterUncached(): Promise<FrontMatter[]> {
               return undefined;
             }
 
+            // Skip generated locale directories (from gt-next translation)
+            // Match 2-letter language codes at the start of the path
+            if (/^[a-z]{2}\//.test(fileName)) {
+              return undefined;
+            }
+
             const source = await readFile(file, 'utf8');
             const {data: frontmatter} = matter(source);
             return {
@@ -290,6 +296,12 @@ async function getAllFilesFrontMatter(): Promise<FrontMatter[]> {
           }
 
           if (fileName.indexOf('/common/') !== -1) {
+            return;
+          }
+
+          // Skip generated locale directories (from gt-next translation)
+          // Match 2-letter language codes at the start of the path
+          if (/^[a-z]{2}\//.test(fileName)) {
             return;
           }
 
