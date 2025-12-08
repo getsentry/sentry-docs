@@ -29,10 +29,36 @@ Click on **Add Source**, and it should provide you with a write key you can copy
 
 ![Segment source configuration view](./img/segment-source-config.png)
 
-You may now modify any other settings on the Segment source as necessary. If you modify the Segment write key later on, you'll have to update the forwarder you've configured in Sentry as well, manually.
+Once you’ve filled in the required fields, and added any projects you'd like events forwarded for, click **Complete Setup**. These projects will now begin forwarding events to your Segment workspace!
+
+If you modify the Segment write key later on, you'll have to update the forwarder you've configured in Sentry as well, manually.
 
 If you wish to modify your forwarder configuration per project, you can do so by following the [Project Overrides documentation](/organization/integrations/data-forwarding/#project-overrides).
 
 ## Troubleshooting
 
 - Sentry rate limits its sending of events to Segment at approximately 200 requests per second per organization. This is separate from the rate limit Segment enforces. Keep that in mind if you are noticing inconsistencies in your data, or missing events.
+- Sentry will only forward error events to Segment when a [User ID](/platforms/:platform/enriching-events/identify-user/) is present in the event context.
+- Sentry uses a fixed event name of "Error Captured" for the event that is forwarded to Segment. At the moment, this cannot be modified. The general shape of the event will look roughly similar to:
+
+```json
+{
+  "userId": "1",
+  "event": "Error Captured",
+  "properties": {
+    "environment": "production",
+    "eventId": "002c8bbde8324dae9f12a0b96f5b1e51",
+    "exceptionType": "ValueError",
+    "release": "a2def1",
+    "transaction": "/api/0/users/{user}/",
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64; rv:54.0) Gecko/20100101 Firefox/54.0",
+    "page": {
+      "url": "https://sentry.io/api/0/users/{user}/",
+      "method": "GET",
+      "search": "",
+      "referer": "https://sentry.io/"
+    }
+  },
+  "timestamp": "2017-05-20T15:29:06Z"
+}
+```

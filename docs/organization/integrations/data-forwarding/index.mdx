@@ -15,7 +15,15 @@ Sentry provides the ability to forward processed error events to certain third-p
 This is often useful when you may want to analyze errors in relation to other datasets, empower teams outside of engineering, and other business intelligence use cases.
 Currently, only error events will be forwarded. Forwarding of other event types (such as spans or logs) is not supported.
 
+For more details on setup and troubleshooting with specific data forwarders, refer to the provider documentation below:
+ - [Splunk](/organization/integrations/data-forwarding/splunk/)
+ - [Amazon SQS](/organization/integrations/data-forwarding/amazon-sqs/)
+ - [Segment](/organization/integrations/data-forwarding/segment/)'
+
+Note: Grafana is not a first-party data forwarder, and must be configured separately. For more details, refer to the [these docs](/organization/integrations/data-forwarding/grafana/).
+
 ## Global Configuration
+
 <Alert>
 Sentry owner or manager permissions are required to setup/modify a global data forwarder.
 </Alert>
@@ -30,7 +38,7 @@ To setup a global forwarder, navigate to **Settings » Data Forwarding**, and st
 
 When creating a new forwarder, select the provider you'd like to forward events to and fill in the required fields. Each provider requires different configuration and permissions on that service, so please refer to the documentation below for more details on your specific provider. After a forwarder is created, you will not be able to switch providers, but you can modify the forwarding details at any time.
 
-![Data forwarding global configuration form](./img/df-global-form.png)
+![Data forwarding global configuration form](./splunk/img/sentry-config-form.png)
 
 You cannot create project-level overrides until you've setup the forwarder for the first time. Any projects you connect to the forwarder will begin forwarding (with the global configuration) as soon you complete the setup. You can also specify if new projects should automatically adopt the global configuration now.
 
@@ -41,6 +49,7 @@ After completing the setup, you will be redirected to the forwarder list page, w
 ![Data forwarding edit list page](./img/df-edit-page.png)
 
 ## Project Overrides
+
 <Alert>
 Sentry owner, manager, or admin permissions allow creating project-level overrides.
 
@@ -55,43 +64,12 @@ A project override will allow you to replace specified fields in the global conf
 
 Empty values (`""`) are permitted in the override form, so manually deleting an override will _not_ revert to the global configuration. If you wish to remove an override, be sure to click the **Clear Override** button at the bottom of the form. After saving, be sure to check the status of the override in the corner of it's form.
 
+## Troubleshooting
 
-## Amazon SQS
+For provider-specific troubleshooting, refer to the provider documentation below:
+ - [Splunk](/organization/integrations/data-forwarding/splunk/#troubleshooting)
+ - [Amazon SQS](/organization/integrations/data-forwarding/amazon-sqs/#troubleshooting)
+ - [Segment](/organization/integrations/data-forwarding/segment/#troubleshooting)
+ - [Grafana (Third-Party)](/organization/integrations/data-forwarding/grafana/)
+ 
 
-Integration with Amazon SQS makes it quick and easy to pipe exceptions back into your own systems.
-
-The payload for Amazon is identical to our standard API event payload, and will evolve over time. For more details on the format of this data, see our [API documentation](/api/events/retrieve-an-event-for-a-project/).
-
-## Segment
-
-The Segment integration will generate _Error Captured_ events within your data pipeline. These events will **only** be captured for `error` events, and only when an ID is present the user context. The general shape of the event will look roughly similar to:
-
-```json
-{
-  "userId": "1",
-  "event": "Error Captured",
-  "properties": {
-    "environment": "production",
-    "eventId": "002c8bbde8324dae9f12a0b96f5b1e51",
-    "exceptionType": "ValueError",
-    "release": "a2def1",
-    "transaction": "/api/0/users/{user}/",
-    "userAgent": "Mozilla/5.0 (X11; Linux x86_64; rv:54.0) Gecko/20100101 Firefox/54.0",
-    "page": {
-      "url": "https://sentry.io/api/0/users/{user}/",
-      "method": "GET",
-      "search": "",
-      "referer": "https://sentry.io/"
-    }
-  },
-  "timestamp": "2017-05-20T15:29:06Z"
-}
-```
-
-## Splunk
-
-For details on the Splunk integration, visit the dedicated [Splunk integration documentation](/organization/integrations/data-forwarding/splunk/).
-
-## Grafana (Third Party)
-
-The Grafana integration is developed by the team at [Grafana Labs](https://grafana.com/) and can be directly installed from the Integration Directory, separate from the other in-house data forwarding integrations. For more details, visit the dedicated [Grafana integration documentation](/organization/integrations/data-forwarding/grafana/).

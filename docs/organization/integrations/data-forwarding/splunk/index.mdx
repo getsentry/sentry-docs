@@ -1,40 +1,33 @@
 ---
-title: Splunk (Legacy)
+title: Splunk
 sidebar_order: 1
 description: >-
-  Learn more about Sentry's Splunk integration, which allows you to send Sentry
-  events to Splunk.
-og_image: /og-images/organization-integrations-data-visualization-splunk.png
+  Learn about Sentry's Splunk data forwarder, which enables collecting Sentry Errors in your Splunk Cloud instance through an HTTP Event Collector.
 ---
 <Alert>
-
-Splunk integration is deprecated and is not available to be installed on new projects. The following docs are relevant only to projects that already have the integration installed.
-
+Data Forwarding is currently in a limited preview, and may not be accessible to all organizations.
 </Alert>
 
-Connect Splunk to Sentry with the [Data Forwarding](/concepts/data-management/data-forwarding/) feature.
+Splunk is a popular business intelligence and analytics platform for collecting, storing and analyzing your data from whatever source you need, including Sentry. 
+
+Sentry supports Splunk as a first-party **Data Forwarder**, which currently only supports forwarding error events. For more details on Data Forwarding in general (including basic setup and overrides), check out the [Data Forwarding](/organization/integrations/data-forwarding/) documentation.
 
 <Alert>
-
 We only support Splunk Cloud plans. We do not support Splunk Enterprise plans. See the [Splunk documentation](https://dev.splunk.com/) for specific details on your Splunk installation.
-
 </Alert>
 
-This integration needs to be set up in each project for which you wish to use it. It is maintained and supported by the [Sentry community](https://open.sentry.io/).
+## Installation
 
-## Install and Configure
 
-<Alert>
+Navigate to **Settings » Data Forwarding** and add a new forwarder.
 
-Sentry owner, manager, or admin permissions are required to install this integration.
+Ensure you have selected _Splunk_ as the provider. All of the fields are required for splunk; **Instance URL**, **Index**, **Source**, and **Token**.
 
-</Alert>
+![Splunk data forwarder configuration form](./img/sentry-config-form.png)
 
-Navigate to **Settings > Integrations > Splunk**
+To fill out these values, you'll need your Splunk instance setup properly first.
 
-![Install Splunk integration](./img/splunk.png)
-
-### Enabling HEC
+### Enabling an HTTP Event Collector in Splunk
 
 To get started, you’ll need to first enable the HTTP Event Collector:
 
@@ -60,13 +53,13 @@ If you’re running Splunk in a privileged environment, you may need to expose t
 
 </Alert>
 
-### Creating a Sentry Input
+### Creating a Sentry Input in Splunk
 
 Under HTTP Event Collector, create a new Sentry input by clicking "New Token":
 
 ![Splunk Sentry input](./img/splunk-new-http-input.png)
 
-Enter a name (e.g. `Sentry`), and click "Next":
+Enter a name (e.g. `sentry`), and click "Next":
 
 ![Input a name in Splunk](./img/splunk-new-input-name.png)
 
@@ -82,24 +75,11 @@ The input has now been created, and you should be presented with the **Token Val
 
 ![Token has been successfully created in Splunk](./img/splunk-new-input-final.png)
 
-### Enabling Splunk Forwarding
+### Finish the Setup in Sentry
 
-To enable Splunk forwarding, you’ll need the following:
+Now, you can finish setting up the forwarder in Sentry.
 
-- Your instance URL (see note below)
-- The Sentry HEC token value
-
-In Sentry, navigate to the project you want to forward events from, and click "Project Settings".
-
-### Data Forwarding
-
-Configure [data forwarding](/organization/integrations/data-forwarding) in **[Organization] > Settings > Data Forwarding**.
-
-After navigating to **Data Forwarding**, setup a new forwarder for the Splunk integration:
-
-![Data forwarding settings page](./img/splunk-data-forwarding-setting.png)
-
-Your instance URL is going to vary based on the type of Splunk service you’re using. If you’re using self-service Splunk Cloud, the instance URL will be the URL of the Splunk instance running the HTTP Event Collector (HEC):
+Your **Instance URL** is going to vary based on the type of Splunk service you’re using. If you’re using self-service Splunk Cloud, the instance URL will be the URL of the Splunk instance running the HTTP Event Collector (HEC):
 
 ```
 https://<host>:8088
@@ -113,16 +93,16 @@ https://http-inputs-<host>:8088
 
 If you’re using Splunk behind your firewall, you’ll need to fill in the appropriate host.
 
-Once you’ve filled in the required fields and added the projects you want to enable splunk for, hit **Complete Setup**:
-
-![Splunk settings form](./img/splunk-data-forwarding-setting-complete.png)
-
-We’ll now begin forwarding all new events into your Splunk instance. You can enroll more projects by hitting **Edit** and adding more projects to Forwarding projects.
-
-<Alert>
-
-Sentry will internally limit the maximum number of events sent to your Splunk instance to 1000 per second.
-
-</Alert>
+Once you’ve filled in the required fields, and added any projects you'd like events forwarded for, click **Complete Setup**. These projects will now begin forwarding events to your Splunk instance!
 
 ![Splunk page showing Sentry data](./img/splunk-search-sentry.png)
+
+
+
+If you modify any of the above details from the Splunk console, you'll have to update the forwarder you've configured in Sentry as well, manually.
+
+If you wish to modify your forwarder configuration per project, you can do so by following the [Project Overrides documentation](/organization/integrations/data-forwarding/#project-overrides).
+
+## Troubleshooting
+
+- Sentry rate limits its sending of events to Splunk at approximately 1000 requests per second per _unique token_. This is separate from the rate limit Splunk enforces. Keep that in mind if you are noticing inconsistencies in your data, or missing events.
