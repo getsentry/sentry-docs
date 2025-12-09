@@ -1,4 +1,5 @@
 import {T,useGT,Var} from 'gt-next';
+
 import Image from 'next/image';
 
 import {Banner} from 'sentry-docs/components/banner';

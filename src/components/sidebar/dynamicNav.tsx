@@ -1,4 +1,5 @@
 import {Fragment} from 'react';
+
 import {msg,useMessages} from 'gt-next';
 
 import {serverContext} from 'sentry-docs/serverContext';
@@ -74,9 +75,9 @@ export const renderChildren = (
   exclude: string[],
   path: string,
   showDepth: number = 0,
-  depth: number = 0,
-  m: (msg: string) => string
+  depth: number = 0
 ): React.ReactNode[] => {
+  const m = useMessages();
   const sortedChildren = sortPages(
     children.filter(
       ({name, node}) =>
@@ -126,7 +127,7 @@ export const renderChildren = (
           beta={node.context.beta}
           isNew={node.context.new}
         >
-          {renderChildren(nodeChildren, exclude, path, showDepth, depth + 1, m)}
+          {renderChildren(nodeChildren, exclude, path, showDepth, depth + 1)}
         </CollapsibleSidebarLink>
       );
 
@@ -174,7 +175,7 @@ export const renderChildren = (
             beta={node.context.beta}
             isNew={node.context.new}
           >
-            {renderChildren(nodeChildren, exclude, path, showDepth, depth + 1, m)}
+            {renderChildren(nodeChildren, exclude, path, showDepth, depth + 1)}
           </CollapsibleSidebarLink>
         );
 
@@ -201,7 +202,7 @@ export const renderChildren = (
           beta={node.context.beta}
           isNew={node.context.new}
         >
-          {renderChildren(nodeChildren, exclude, path, showDepth, depth + 1, m)}
+          {renderChildren(nodeChildren, exclude, path, showDepth, depth + 1)}
         </CollapsibleSidebarLink>
       );
     });
@@ -218,8 +219,7 @@ type ChildrenProps = {
 };
 
 export function Children({tree, path, exclude = [], showDepth = 0}: ChildrenProps) {
-  const m = useMessages();
-  return <Fragment>{renderChildren(tree, exclude, path, showDepth, 0, m)}</Fragment>;
+  return <Fragment>{renderChildren(tree, exclude, path, showDepth)}</Fragment>;
 }
 
 type Props = {
