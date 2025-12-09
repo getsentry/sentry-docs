@@ -290,6 +290,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/organization/integrations/session-replay/jam/',
   },
   {
+    from: '/organization/integrations/cloud-monitoring/cloudflare-workers/',
+    to: '/platforms/javascript/guides/cloudflare/',
+  },
+  {
     from: '/product/crons/getting-started/cli/',
     to: '/cli/crons/',
   },
@@ -2041,7 +2045,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/integrations/cloudflare-workers/',
-    to: '/organization/integrations/cloud-monitoring/cloudflare-workers/',
+    to: '/platforms/javascript/guides/cloudflare/',
   },
   {
     from: '/product/integrations/vanta/',
