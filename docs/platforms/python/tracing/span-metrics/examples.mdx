@@ -75,7 +75,7 @@ with sentry_sdk.start_span(op="upload", name="Upload File") as span:
         span.set_data("upload.success", False)
         span.set_data("upload.error_type", error.__class__.__name__)
         span.set_data("upload.error_message", str(error))
-        span.set_status(sentry_sdk.SpanStatus.ERROR)
+        span.set_status(sentry_sdk.SpanStatus.INTERNAL_ERROR)
         raise
 ```
 
@@ -114,7 +114,7 @@ with sentry_sdk.start_span(
                          (time.time() - upload_start) * 1000)
     
     except Exception as e:
-        span.set_status(sentry_sdk.SpanStatus.ERROR)
+        span.set_status(sentry_sdk.SpanStatus.INTERNAL_ERROR)
         span.set_data("error.message", str(e))
         raise
 ```
@@ -183,7 +183,7 @@ def handle_llm_request():
             })
             
         except Exception as error:
-            span.set_status(sentry_sdk.SpanStatus.ERROR)
+            span.set_status(sentry_sdk.SpanStatus.INTERNAL_ERROR)
             span.set_data("error.type", error.__class__.__name__)
             span.set_data("error.message", str(error))
             return jsonify({"error": str(error)}), 500
@@ -248,7 +248,7 @@ def process_llm_request(request_data):
             # Check if it's a rate limit error
             is_rate_limit = "rate_limit" in str(error).lower()
             span.set_data("error.is_rate_limit", is_rate_limit)
-            span.set_status(sentry_sdk.SpanStatus.ERROR)
+            span.set_status(sentry_sdk.SpanStatus.INTERNAL_ERROR)
             
             raise
 ```
@@ -305,7 +305,7 @@ class CheckoutView(View):
                 return JsonResponse({"order_id": order_result["order_id"]})
                 
             except Exception as e:
-                span.set_status(sentry_sdk.SpanStatus.ERROR)
+                span.set_status(sentry_sdk.SpanStatus.INTERNAL_ERROR)
                 span.set_data("order.success", False)
                 span.set_data("error.message", str(e))
                 return JsonResponse({"error": str(e)}, status=500)
@@ -367,7 +367,7 @@ def process_order(order_data):
             }
             
         except Exception as e:
-            span.set_status(sentry_sdk.SpanStatus.ERROR)
+            span.set_status(sentry_sdk.SpanStatus.INTERNAL_ERROR)
             span.set_data("error.message", str(e))
             span.set_data("order.success", False)
             raise
@@ -421,7 +421,7 @@ def submit_processing_job(data_file_path, priority="medium"):
             }
             
         except Exception as e:
-            span.set_status(sentry_sdk.SpanStatus.ERROR)
+            span.set_status(sentry_sdk.SpanStatus.INTERNAL_ERROR)
             span.set_data("job.submission_success", False)
             span.set_data("error.message", str(e))
             raise
@@ -465,7 +465,7 @@ def process_data_file(file_path, priority="medium"):
             }
             
         except Exception as e:
-            span.set_status(sentry_sdk.SpanStatus.ERROR)
+            span.set_status(sentry_sdk.SpanStatus.INTERNAL_ERROR)
             span.set_data("outcome.status", "failed")
             span.set_data("error.message", str(e))
             span.set_data("error.stage", span.get_data("processing.current_stage"))
