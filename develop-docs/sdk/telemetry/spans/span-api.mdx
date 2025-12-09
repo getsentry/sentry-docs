@@ -195,3 +195,46 @@ with sentry_sdk.start_span(name="checkout", attributes={"user.id": "123"}) as ch
     log_order()
     span.end()
 ```
+
+```Dart {tabTitle:Dart}
+final checkoutSpan = Sentry.startSpan(
+  'on-checkout-click',
+  attributes: {
+    'user.id': SentryAttribute.string('123'),
+  },
+);
+
+final validationSpan = Sentry.startSpan('validate-shopping-cart');
+
+startFormValidation().then((result) {
+  validationSpan.setAttribute('valid-form-data', SentryAttribute.bool(result.success));
+  validationSpan.end();
+});
+
+final processSpan = Sentry.startSpan(
+  'process-order',
+  parentSpan: checkoutSpan,
+);
+
+processOrder().then((result) {
+  processSpan.setAttribute('order-processed', SentryAttribute.bool(result.success));
+  processSpan.end();
+}).catchError((error) {
+  processSpan.status = SpanV2Status.error;
+  processSpan.setAttribute('order-processed', SentryAttribute.string('error'));
+  processSpan.end();
+});
+
+final unrelatedSpan = Sentry.startSpan(
+  'log-order',
+  parentSpan: null,
+);
+
+logOrder();
+
+unrelatedSpan.end();
+
+on('checkout-finished', (timestamp) {
+  checkoutSpan.end(endTimestamp: timestamp);
+});
+```
