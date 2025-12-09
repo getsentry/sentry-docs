@@ -1,7 +1,5 @@
-import {getDefaultLocale} from 'gt-next/server';
-
 import {isDeveloperDocs} from './isDeveloperDocs';
-import getLocale from './getLocale';
+import getLocale, {getDefaultLocaleSafe} from './getLocale';
 import {getDevDocsFrontMatter, getDocsFrontMatter} from './mdx';
 import {platformsData} from './platformsData';
 import {
@@ -59,7 +57,7 @@ async function getDocsRootNodeCached(locale: string): Promise<DocNode> {
     return getDocsRootNodeUncached(locale);
   }
 
-  const defaultLocale = getDefaultLocale();
+  const defaultLocale = getDefaultLocaleSafe();
   if (locale !== defaultLocale) {
     return getDocsRootNodeUncached(locale);
   }

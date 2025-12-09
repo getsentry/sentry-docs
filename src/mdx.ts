@@ -1,4 +1,3 @@
-import {getDefaultLocale} from 'gt-next/server';
 import matter from 'gray-matter';
 import {s} from 'hastscript';
 import yaml from 'js-yaml';
@@ -24,6 +23,7 @@ import rehypePrismPlus from 'rehype-prism-plus';
 import remarkGfm from 'remark-gfm';
 import remarkMdxImages from 'remark-mdx-images';
 
+import getLocale, {getDefaultLocaleSafe} from './getLocale';
 import getAppRegistry from './build/appRegistry';
 import getPackageRegistry from './build/packageRegistry';
 import {apiCategories} from './build/resolveOpenAPI';
@@ -44,7 +44,6 @@ import remarkVariables from './remark-variables';
 import {FrontMatter, Platform, PlatformConfig} from './types';
 import {isNotNil} from './utils';
 import {isVersioned, VERSION_INDICATOR} from './versioning';
-import getLocale from './getLocale';
 
 type SlugFile = {
   frontMatter: Platform & {slug: string};
@@ -204,7 +203,7 @@ export const getVersionsFromDoc = (frontMatter: FrontMatter[], docPath: string) 
 };
 
 async function getDocsFrontMatterUncached(locale?: string): Promise<FrontMatter[]> {
-  const defaultLocale = getDefaultLocale();
+  const defaultLocale = getDefaultLocaleSafe();
   const currentLocale = locale ?? defaultLocale;
 
   const frontMatter = await getAllFilesFrontMatter(currentLocale);
@@ -307,7 +306,7 @@ export function getDevDocsFrontMatter(): Promise<FrontMatter[]> {
 }
 
 async function getAllFilesFrontMatter(locale?: string): Promise<FrontMatter[]> {
-  const defaultLocale = getDefaultLocale();
+  const defaultLocale = getDefaultLocaleSafe();
   const currentLocale = locale ?? defaultLocale;
   const isDefaultLocale = currentLocale === defaultLocale;
   const docsPath = isDefaultLocale
