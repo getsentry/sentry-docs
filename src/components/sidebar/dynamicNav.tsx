@@ -1,5 +1,5 @@
 import {Fragment} from 'react';
-import {msg} from 'gt-next';
+import {msg, useMessages} from 'gt-next';
 
 import {serverContext} from 'sentry-docs/serverContext';
 import {sortPages} from 'sentry-docs/utils';
@@ -15,6 +15,18 @@ const SECTION_LABELS: Record<string, string> = {
 };
 
 const SECTION_ORDER = ['features', 'configuration'] as const;
+
+// Component to translate section labels
+function SectionHeader({sectionKey}: {sectionKey: string}) {
+  const m = useMessages();
+  return (
+    <li
+      className="sidebar-section-header text-xs font-semibold text-gray-11 uppercase tracking-wider px-2 py-2 mt-2"
+    >
+      {m(SECTION_LABELS[sectionKey])}
+    </li>
+  );
+}
 
 type Node = {
   [key: string]: any;
@@ -149,12 +161,10 @@ export const renderChildren = (
 
       // Add section header
       result.push(
-        <li
+        <SectionHeader
           key={`header-${sectionKey}`}
-          className="sidebar-section-header text-xs font-semibold text-gray-11 uppercase tracking-wider px-2 py-2 mt-2"
-        >
-          {SECTION_LABELS[sectionKey]}
-        </li>
+          sectionKey={sectionKey}
+        />
       );
 
       // Render items in this section
