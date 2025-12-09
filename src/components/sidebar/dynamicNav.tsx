@@ -1,5 +1,4 @@
 import {Fragment} from 'react';
-
 import {msg,useMessages} from 'gt-next';
 
 import {serverContext} from 'sentry-docs/serverContext';

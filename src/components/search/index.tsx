@@ -3,6 +3,7 @@
 import {Fragment, useCallback, useEffect, useRef, useState} from 'react';
 import {ArrowRightIcon} from '@radix-ui/react-icons';
 import {Button} from '@radix-ui/themes';
+import {T,useGT,Var} from 'gt-next';
 import {captureException} from '@sentry/nextjs';
 import {
   Hit,
@@ -12,8 +13,6 @@ import {
 } from '@sentry-internal/global-search';
 import {usePathname} from 'next/navigation';
 import algoliaInsights from 'search-insights';
-
-import {T,useGT,Var} from 'gt-next';
 
 import {useOnClickOutside} from 'sentry-docs/clientUtils';
 import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
