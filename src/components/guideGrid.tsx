@@ -1,4 +1,5 @@
 import {Fragment} from 'react';
+import {T} from 'gt-next';
 
 import {getCurrentPlatform, getPlatform} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
@@ -27,7 +28,9 @@ export function GuideGrid({platform, className}: Props) {
 
   return (
     <Fragment>
-      <h2>Related Guides</h2>
+      <T>
+        <h2>Related Guides</h2>
+      </T>
       <ul className={className}>
         {currentPlatform.guides.map(guide => (
           <li key={guide.key}>
