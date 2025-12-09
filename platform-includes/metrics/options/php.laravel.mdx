@@ -3,17 +3,20 @@
 To filter metrics, or update them before they are sent to Sentry, you can use the `before_send_metric` option. If the callback returns `null`, the metric is not emitted. Attributes can also be updated in the callback function.
 
 ```php
-use \Sentry\Metrics\Types\Metric;
-
-\Sentry\init([
-    'dsn' => '___PUBLIC_DSN___',
-    'before_send_metric' => static function (Metric $metric): ?Metric {
-        if ($metric->getName() === 'removed-metric') {
-            return null;
-        }
-        return $metric;
+// ...
+'before_send_metric' => static function (\Sentry\Metrics\Types\Metric $metric): ?\Sentry\Metrics\Types\Metric {
+    if ($metric->getName() === 'removed-metric') {
+        return null;
     }
-]);
+    return $metric;
+},
+// ...
 ```
 
 The `before_send_metric` function receives a metric object, and should return the metric object if you want it to be sent to Sentry, or `null` if you want to discard it.
+
+<Alert>
+
+  Learn more in [Closures and Config Caching](/platforms/php/guides/laravel/configuration/laravel-options/#closures-and-config-caching).
+
+</Alert>
