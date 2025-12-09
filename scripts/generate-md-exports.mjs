@@ -298,7 +298,13 @@ async function genMDFromHTML(source, target, {cacheDir, noCache, usedCacheFiles}
           // HACK: Extract the canonical URL during parsing
           link: (_state, node) => {
             if (node.properties.rel.includes('canonical') && node.properties.href) {
-              baseUrl = node.properties.href;
+              // Normalize canonical href to an absolute URL so downstream URL parsing succeeds
+              try {
+                baseUrl = new URL(node.properties.href, DOCS_ORIGIN).toString();
+              } catch (_e) {
+                // Ignore malformed canonical and fall back to default base
+                baseUrl = DOCS_ORIGIN;
+              }
             }
           },
           // Remove buttons as they usually get confusing in markdown, especially since we use them as tab headers
@@ -322,7 +328,13 @@ async function genMDFromHTML(source, target, {cacheDir, noCache, usedCacheFiles}
         // There's a chance we might be changing absolute URLs here
         // We'll check the code base and fix that later
         replacer: url => {
-          const mdUrl = new URL(url, baseUrl);
+          let mdUrl;
+          try {
+            mdUrl = new URL(url, baseUrl);
+          } catch (_e) {
+            // Skip invalid URLs rather than failing the entire build
+            return url;
+          }
           if (mdUrl.origin !== DOCS_ORIGIN) {
             return url;
           }
