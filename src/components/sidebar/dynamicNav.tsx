@@ -1,5 +1,5 @@
 import {Fragment} from 'react';
-import {msg, useMessages} from 'gt-next';
+import {msg} from 'gt-next';
 
 import {serverContext} from 'sentry-docs/serverContext';
 import {sortPages} from 'sentry-docs/utils';
@@ -76,7 +76,6 @@ export const renderChildren = (
   showDepth: number = 0,
   depth: number = 0
 ): React.ReactNode[] => {
-  const m = useMessages();
   const sortedChildren = sortPages(
     children.filter(
       ({name, node}) =>
@@ -154,7 +153,7 @@ export const renderChildren = (
           key={`header-${sectionKey}`}
           className="sidebar-section-header text-xs font-semibold text-gray-11 uppercase tracking-wider px-2 py-2 mt-2"
         >
-          {m(SECTION_LABELS[sectionKey])}
+          {SECTION_LABELS[sectionKey]}
         </li>
       );
 
