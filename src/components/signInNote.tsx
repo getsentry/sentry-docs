@@ -1,8 +1,8 @@
 'use client';
 
+import {T} from 'gt-next';
 import Link from 'next/link';
 import {usePathname} from 'next/navigation';
-import {T} from 'gt-next';
 
 import {Alert} from './alert';
 import {SignedInCheck} from './signedInCheck';
