@@ -1,7 +1,7 @@
 'use client';
 
 import {HamburgerMenuIcon} from '@radix-ui/react-icons';
-import {T} from 'gt-next';
+import {T,useGT} from 'gt-next';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -30,6 +30,7 @@ export function Header({
   noSearch,
   useStoredSearchPlatforms,
 }: Props) {
+  const gt = useGT();
   return (
     <header className="bg-[var(--gray-1)] h-[var(--header-height)] w-full z-50 border-b border-[var(--gray-a3)] fixed top-0">
       {/* define a header-height variable for consumption by other components */}
@@ -55,7 +56,7 @@ export function Header({
         <T>
           <Link
             href="/"
-            title="Sentry error monitoring"
+            title={gt("Sentry error monitoring")}
             className="logo-slot flex flex-shrink-0 items-center lg-xl:w-[calc(var(--sidebar-width,300px)-2rem)] text-2xl font-medium text-[var(--foreground)]"
           >
             <div className="h-full pb-[6px]">
