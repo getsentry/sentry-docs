@@ -68,10 +68,10 @@ export function DocPage({
         {sidebar ?? (
           <Sidebar path={unversionedPath.split('/')} versions={frontMatter.versions} />
         )}
-        <main className="main-content flex w-full mt-[var(--header-height)] flex-1 mx-auto">
+        <main className="main-content flex mt-[var(--header-height)] flex-1">
           <div
             className={[
-              'mx-auto pt-6 px-6 prose dark:prose-invert max-w-full text-[var(--gray-12)] prose-a:no-underline hover:prose-a:underline',
+              'pt-6 px-6 prose dark:prose-invert max-w-full text-[var(--gray-12)] prose-a:no-underline hover:prose-a:underline',
               'prose-code:font-normal prose-code:font-mono marker:text-[var(--accent)] prose-li:my-1',
               'prose-headings:mt-0 prose-headings:font-medium prose-headings:relative prose-headings:text-[var(--gray-12)]',
               'prose-blockquote:font-normal prose-blockquote:border-l-[3px] prose-em:font-normal prose-blockquote:text-[var(--gray-12)]',
@@ -131,11 +131,35 @@ export function DocPage({
           </aside>
         )}
       </section>
-      <style>{`:root { --doc-content-w: 1200px; } #doc-content { max-width: var(--doc-content-w); box-sizing: border-box; }`}</style>
+      <style>{`:root { --doc-content-w: 1100px; }`}</style>
       <style>{`
+        #doc-content {
+          max-width: none;
+          box-sizing: border-box;
+        }
+        /* Mobile responsive styles */
+        @media (max-width: 768px) {
+          .main-content {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: hidden;
+          }
+          #doc-content {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: hidden;
+          }
+        }
+        /* At toc breakpoint (1490px), constrain content to leave room for TOC */
+        @media (min-width: 1490px) {
+          #doc-content {
+            /* Calculate max width: viewport - sidebar - TOC */
+            max-width: calc(100vw - 300px - 250px);
+          }
+        }
         @media (min-width: 2057px) {
           :root {
-            --doc-content-w: 1200px;
+            --doc-content-w: 1100px;
             --toc-w: 250px;
             --gap: 24px;
           }
@@ -144,6 +168,8 @@ export function DocPage({
             max-width: var(--doc-content-w);
             padding-left: 2rem;
             padding-right: 2rem;
+            margin-left: auto;
+            margin-right: auto;
           }
           /* Cancel default push so content can center */
           [data-layout-anchor="left"] + .main-content {

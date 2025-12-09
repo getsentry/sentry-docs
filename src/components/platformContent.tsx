@@ -4,6 +4,7 @@ import {cache, useMemo} from 'react';
 import {getMDXComponent} from 'mdx-bundler/client';
 
 import {getCurrentGuide, getDocsRootNode, getPlatform} from 'sentry-docs/docTree';
+import getLocale, {getDefaultLocaleSafe} from 'sentry-docs/getLocale';
 import {getFileBySlugWithCache} from 'sentry-docs/mdx';
 import {mdxComponents} from 'sentry-docs/mdxComponents';
 import {serverContext} from 'sentry-docs/serverContext';
@@ -49,6 +50,20 @@ const updatePathIfVersionedFileDoesNotExistWithCache = cache(
   updatePathIfVersionedFileDoesNotExist
 );
 
+const withLocalePrefix = (path: string): string => {
+  const locale = getLocale();
+  const defaultLocale = getDefaultLocaleSafe();
+  if (!locale || locale === defaultLocale) {
+    return path;
+  }
+  return path.replace(/^platform-includes/, `platform-includes/${locale}`);
+};
+
+const localizedCandidates = (path: string): string[] => {
+  const localized = withLocalePrefix(path);
+  return localized === path ? [path] : [localized, path];
+};
+
 function MDXLayoutRenderer({mdxSource: source, ...rest}) {
   const MDXLayout = useMemo(() => getMDXComponent(source), [source]);
   return <MDXLayout components={mdxComponentsWithWrapper} {...rest} />;
@@ -72,14 +87,15 @@ export async function PlatformContent({includePath, platform, noGuides}: Props) 
   let doc: Awaited<ReturnType<typeof getFileBySlugWithCache>> | undefined;
 
   if (guide) {
-    const guidePath = updatePathIfVersionedFileDoesNotExistWithCache(
-      `platform-includes/${includePath}/${guide}`
-    );
-
-    try {
-      doc = await getFileBySlugWithCache(guidePath);
-    } catch (e) {
-      // It's fine - keep looking.
+    const baseGuidePath = `platform-includes/${includePath}/${guide}`;
+    for (const candidate of localizedCandidates(baseGuidePath)) {
+      const guidePath = updatePathIfVersionedFileDoesNotExistWithCache(candidate);
+      try {
+        doc = await getFileBySlugWithCache(guidePath);
+        break;
+      } catch (e) {
+        // keep looking
+      }
     }
   }
 
@@ -87,28 +103,32 @@ export async function PlatformContent({includePath, platform, noGuides}: Props) 
     const rootNode = await getDocsRootNode();
     const guideObject = getCurrentGuide(rootNode, path);
 
-    const fallbackGuidePath = updatePathIfVersionedFileDoesNotExistWithCache(
-      `platform-includes/${includePath}/${guideObject?.fallbackGuide}${VERSION_INDICATOR}${getVersion(guide || '')}`
-    );
-
     if (guideObject?.fallbackGuide) {
-      try {
-        doc = await getFileBySlugWithCache(fallbackGuidePath);
-      } catch (e) {
-        // It's fine - keep looking.
+      const baseFallbackGuidePath = `platform-includes/${includePath}/${guideObject?.fallbackGuide}${VERSION_INDICATOR}${getVersion(guide || '')}`;
+      for (const candidate of localizedCandidates(baseFallbackGuidePath)) {
+        const fallbackGuidePath = updatePathIfVersionedFileDoesNotExistWithCache(
+          candidate
+        );
+        try {
+          doc = await getFileBySlugWithCache(fallbackGuidePath);
+          break;
+        } catch (e) {
+          // keep looking
+        }
       }
     }
   }
 
   if (!doc) {
-    try {
-      const platformPath = updatePathIfVersionedFileDoesNotExistWithCache(
-        `platform-includes/${includePath}/${platform}`
-      );
-
-      doc = await getFileBySlugWithCache(platformPath);
-    } catch (e) {
-      // It's fine - keep looking.
+    const basePlatformPath = `platform-includes/${includePath}/${platform}`;
+    for (const candidate of localizedCandidates(basePlatformPath)) {
+      const platformPath = updatePathIfVersionedFileDoesNotExistWithCache(candidate);
+      try {
+        doc = await getFileBySlugWithCache(platformPath);
+        break;
+      } catch (e) {
+        // keep looking
+      }
     }
   }
 
@@ -116,24 +136,33 @@ export async function PlatformContent({includePath, platform, noGuides}: Props) 
     const rootNode = await getDocsRootNode();
     const platformObject = getPlatform(rootNode, platform);
 
-    const fallbackPlatformPath = updatePathIfVersionedFileDoesNotExistWithCache(
-      `platform-includes/${includePath}/${platformObject?.fallbackPlatform}`
-    );
-
     if (platformObject?.fallbackPlatform) {
-      try {
-        doc = await getFileBySlugWithCache(fallbackPlatformPath);
-      } catch (e) {
-        // It's fine - keep looking.
+      const baseFallbackPlatformPath = `platform-includes/${includePath}/${platformObject?.fallbackPlatform}`;
+      for (const candidate of localizedCandidates(baseFallbackPlatformPath)) {
+        const fallbackPlatformPath = updatePathIfVersionedFileDoesNotExistWithCache(
+          candidate
+        );
+        try {
+          doc = await getFileBySlugWithCache(fallbackPlatformPath);
+          break;
+        } catch (e) {
+          // keep looking
+        }
       }
     }
   }
 
   if (!doc) {
-    try {
-      doc = await getFileBySlugWithCache(`platform-includes/${includePath}/_default`);
-    } catch (e) {
-      // Couldn't find anything.
+    const baseDefaultPath = `platform-includes/${includePath}/_default`;
+    for (const candidate of localizedCandidates(baseDefaultPath)) {
+      try {
+        doc = await getFileBySlugWithCache(candidate);
+        break;
+      } catch (e) {
+        // keep looking
+      }
+    }
+    if (!doc) {
       return null;
     }
   }

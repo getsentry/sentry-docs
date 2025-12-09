@@ -32,6 +32,8 @@ Add your auth token to your environment:
 SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
 ```
 
+and use it in the `sentryVitePlugin` configuration:
+
 ```javascript {filename:vite.config.ts}
 import { defineConfig } from "vite";
 import { sentryVitePlugin } from "@sentry/vite-plugin";
@@ -45,9 +47,6 @@ export default defineConfig({
       authToken: process.env.SENTRY_AUTH_TOKEN,
     }),
   ],
-  build: {
-    sourcemap: true,
-  },
 });
 ```
 
@@ -65,18 +64,29 @@ export default defineConfig({
       org: "___ORG_SLUG___",
       project: "___PROJECT_SLUG___",
       authToken: process.env.SENTRY_AUTH_TOKEN,
+
       sourcemaps: {
         assets: ["./dist/**/*"],
         ignore: ["**/node_modules/**"],
-        filesToDeleteAfterUpload: ["./dist/**/*.map"],
+        // As you're enabling client source maps, you probably want to delete them after they're uploaded to Sentry.
+        // Set the appropriate glob pattern for your output folder - some glob examples below:
+        filesToDeleteAfterUpload: ["./**/*.map", ".*/**/public/**/*.map", "./dist/**/client/**/*.map"]
       },
     }),
   ],
   build: {
-    sourcemap: true,
+    sourcemap: "hidden",
   },
 });
 ```
+
+<Alert level="warning">
+  Generating source maps **may expose them to the public**, potentially causing your
+  source code to be leaked. You can prevent this by configuring your server to deny access to `.js.map` files, or by
+  using [Sentry Vite Plugin's
+  `sourcemaps.filesToDeleteAfterUpload`](https://www.npmjs.com/package/@sentry/vite-plugin#sourcemapsfilestodeleteafterupload)
+  option to delete source maps after they've been uploaded to Sentry.
+</Alert>
 
 ### Alternative: Using Sentry CLI
 

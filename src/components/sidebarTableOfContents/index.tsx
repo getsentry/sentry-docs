@@ -45,7 +45,7 @@ function buildTocTree(toc: TocItem[]): TocItem[] {
   // Maintains our final constructed tree of TocItem's
   const items: TocItem[] = [];
 
-  // Used to aid in cosntructing our tree by maintaining the stack of items
+  // Used to aid in constructing our tree by maintaining the stack of items
   // ordered by depth.
   const stack: TocItem[] = [];
 
@@ -164,7 +164,7 @@ export function SidebarTableOfContents() {
     }
     // account for the header height
     const rootMarginTop = 100;
-    // element is consiered in view if it is in the top 1/3 of the screen
+    // element is considered in view if it is in the top 1/3 of the screen
     const rootMarginBottomRaw = (2 / 3) * innerHeight - rootMarginTop;
     const rootMarginBottom = Math.floor(rootMarginBottomRaw) * -1;
     const observerOptions = {

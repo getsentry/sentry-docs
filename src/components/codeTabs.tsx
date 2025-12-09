@@ -127,19 +127,37 @@ export function CodeTabs({children}: CodeTabProps) {
     <Container ref={containerRef}>
       {showSigninNote(codeBlocks[selectedTabIndex]) && <SignInNote />}
       <TabBar>{buttons}</TabBar>
-      <div className="relative" data-sentry-mask>
-        {codeBlocks[selectedTabIndex]}
-      </div>
+      <CodeBlockWrapper data-sentry-mask>{codeBlocks[selectedTabIndex]}</CodeBlockWrapper>
     </Container>
   );
 }
 
 const Container = styled('div')`
+  position: relative;
+  overflow-y: visible; /* Allow copy button to be visible */
+
   pre[class*='language-'] {
     padding: 10px 12px;
     border-radius: 0 0 6px 6px;
     border: 1px solid var(--accent-11);
     border-top: none;
+    margin-bottom: 1.5rem;
+  }
+
+  @media (max-width: 768px) {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+`;
+
+const CodeBlockWrapper = styled('div')`
+  position: relative;
+
+  @media (max-width: 768px) {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
   }
 `;
 
@@ -152,6 +170,10 @@ const TabBar = styled('div')`
   align-items: center;
   padding: 0 0.5rem;
   border-radius: 6px 6px 0 0;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden; /* Prevent any scrollbars */
+  flex-wrap: nowrap; /* Prevent tabs from wrapping */
 `;
 
 const TabButton = styled('button')`
@@ -164,6 +186,8 @@ const TabButton = styled('button')`
   background: none;
   outline: none;
   border-bottom: 3px solid transparent;
+  white-space: nowrap;
+  flex-shrink: 0;
 
   &:focus,
   &[data-active='true'] {

@@ -1,0 +1,290 @@
+---
+title: Forwarding Nginx Logs to Sentry via the OpenTelemetry Protocol (OTLP)
+sidebar_order: 200
+description: "Learn how to forward Nginx access logs to Sentry via the OpenTelemetry Protocol (OTLP)."
+keywords: ["otlp", "otel", "opentelemetry", "nginx", "logs", "web server"]
+---
+
+This guide shows you how to collect Nginx access logs and forward them to Sentry using the OpenTelemetry Collector with the [File Log Receiver](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/filelogreceiver).
+
+## Prerequisites
+
+Before you begin, ensure you have:
+
+- Nginx installed and running
+- Access to Nginx log files (typically at `/var/log/nginx/`)
+- A Sentry project to send data to
+
+## Step 1: Install the OpenTelemetry Collector
+
+The File Log Receiver is included in the [OpenTelemetry Collector Contrib](https://github.com/open-telemetry/opentelemetry-collector-releases/tree/main/distributions/otelcol-contrib) distribution. You'll need to download and install this version, as the standard `otelcol` binary does not include the File Log Receiver.
+
+Download the latest `otelcol-contrib` binary from the [OpenTelemetry Collector releases page](https://github.com/open-telemetry/opentelemetry-collector-releases/releases).
+
+## Step 2: Get Your Sentry OTLP Credentials
+
+You'll need your Sentry OTLP endpoint and authentication header. These can be found in your [Sentry Project Settings](https://sentry.io/settings/projects/) under **Client Keys (DSN)** > **OpenTelemetry (OTLP)**.
+
+### Logs Endpoint
+
+```bash
+___OTLP_LOGS_URL___
+```
+
+### Authentication Header
+
+```
+x-sentry-auth: sentry sentry_key=___PUBLIC_KEY___
+```
+
+## Step 3: Configure Nginx Logging
+
+Nginx logs are stored by default at `/var/log/nginx/access.log`. For better observability, configure Nginx to output structured JSON logs with trace context fields. This allows your Nginx logs to be correlated with distributed traces in Sentry.
+
+### JSON Logging with Trace Context (Recommended)
+
+To correlate Nginx logs with traces, you need to include trace context fields in your log format. This requires the [NGINX OpenTelemetry module](https://github.com/open-telemetry/opentelemetry-cpp-contrib/tree/main/instrumentation/nginx) to be installed, which provides the `$otel_trace_id`, `$otel_span_id`, and `$otel_trace_flags` variables.
+
+Add the following to your Nginx configuration (typically `/etc/nginx/nginx.conf`):
+
+```nginx {filename:nginx.conf}
+load_module modules/ngx_otel_module.so;
+
+http {
+    # Enable OpenTelemetry tracing
+    otel_exporter {
+        endpoint localhost:4317;
+    }
+    otel_trace on;
+
+    log_format json_combined escape=json
+      '{'
+        '"time_local":"$time_local",'
+        '"remote_addr":"$remote_addr",'
+        '"remote_user":"$remote_user",'
+        '"request":"$request",'
+        '"status":$status,'
+        '"body_bytes_sent":$body_bytes_sent,'
+        '"http_referer":"$http_referer",'
+        '"http_user_agent":"$http_user_agent",'
+        '"request_time":$request_time,'
+        '"trace_id":"$otel_trace_id",'
+        '"span_id":"$otel_span_id",'
+        '"trace_flags":"$otel_trace_flags"'
+      '}';
+
+    access_log /var/log/nginx/access.log json_combined;
+
+    # ... rest of your configuration
+}
+```
+
+The trace context fields enable Sentry to link your Nginx access logs directly to the corresponding traces, giving you full visibility into request flows.
+
+### Basic JSON Logging (Without Trace Context)
+
+If you don't have the OpenTelemetry module installed, you can still use structured JSON logging:
+
+```nginx {filename:nginx.conf}
+http {
+    log_format json_combined escape=json
+      '{'
+        '"time_local":"$time_local",'
+        '"remote_addr":"$remote_addr",'
+        '"remote_user":"$remote_user",'
+        '"request":"$request",'
+        '"status":$status,'
+        '"body_bytes_sent":$body_bytes_sent,'
+        '"http_referer":"$http_referer",'
+        '"http_user_agent":"$http_user_agent",'
+        '"request_time":$request_time'
+      '}';
+
+    access_log /var/log/nginx/access.log json_combined;
+
+    # ... rest of your configuration
+}
+```
+
+After modifying the configuration, validate and reload Nginx:
+
+```bash
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+## Step 4: Configure the Collector
+
+Create a configuration file with the File Log Receiver and the OTLP HTTP exporter configured to send logs to Sentry.
+
+For additional configuration options, see the [File Log Receiver Documentation](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/filelogreceiver).
+
+### Configuration with Trace Context (Recommended)
+
+If you configured Nginx with the OpenTelemetry module and JSON logging with trace context fields, use this configuration to parse the logs and extract trace correlation:
+
+```yaml {filename:config.yaml}
+receivers:
+  filelog:
+    include:
+      - /var/log/nginx/access.log
+    attributes:
+      service.name: nginx
+    operators:
+      - type: json_parser
+        timestamp:
+          parse_from: attributes.time_local
+          layout: "%d/%b/%Y:%H:%M:%S %z"
+      - type: trace_parser
+        trace_id:
+          parse_from: attributes.trace_id
+        span_id:
+          parse_from: attributes.span_id
+        trace_flags:
+          parse_from: attributes.trace_flags
+
+  filelog/error:
+    include:
+      - /var/log/nginx/error.log
+    attributes:
+      service.name: nginx
+      log.type: error
+
+processors:
+  batch:
+    send_batch_size: 1024
+    send_batch_max_size: 2048
+    timeout: "1s"
+
+exporters:
+  otlphttp/sentry:
+    logs_endpoint: ___OTLP_LOGS_URL___
+    headers:
+      x-sentry-auth: "sentry sentry_key=___PUBLIC_KEY___"
+    compression: gzip
+    encoding: proto
+
+service:
+  pipelines:
+    logs:
+      receivers:
+        - filelog
+        - filelog/error
+      processors:
+        - batch
+      exporters:
+        - otlphttp/sentry
+```
+
+The `trace_parser` operator extracts the trace ID, span ID, and trace flags from the parsed JSON attributes and sets them on the log record. This enables Sentry to correlate these logs with the corresponding traces.
+
+### Basic Configuration
+
+This configuration collects Nginx access and error logs:
+
+```yaml {filename:config.yaml}
+receivers:
+  filelog:
+    include:
+      - /var/log/nginx/access.log
+      - /var/log/nginx/error.log
+    attributes:
+      service.name: nginx
+
+processors:
+  batch:
+    send_batch_size: 1024
+    send_batch_max_size: 2048
+    timeout: "1s"
+
+exporters:
+  otlphttp/sentry:
+    logs_endpoint: ___OTLP_LOGS_URL___
+    headers:
+      x-sentry-auth: "sentry sentry_key=___PUBLIC_KEY___"
+    compression: gzip
+    encoding: proto
+
+service:
+  pipelines:
+    logs:
+      receivers:
+        - filelog
+      processors:
+        - batch
+      exporters:
+        - otlphttp/sentry
+```
+
+### Configuration with Multiple Nginx Instances
+
+If you have multiple Nginx instances or virtual hosts with separate log files:
+
+```yaml {filename:config.yaml}
+receivers:
+  filelog/site1:
+    include:
+      - /var/log/nginx/site1.access.log
+    attributes:
+      service.name: nginx
+      site: site1
+
+  filelog/site2:
+    include:
+      - /var/log/nginx/site2.access.log
+    attributes:
+      service.name: nginx
+      site: site2
+
+processors:
+  batch:
+    send_batch_size: 1024
+    send_batch_max_size: 2048
+    timeout: "1s"
+
+exporters:
+  otlphttp/sentry:
+    logs_endpoint: ___OTLP_LOGS_URL___
+    headers:
+      x-sentry-auth: "sentry sentry_key=___PUBLIC_KEY___"
+    compression: gzip
+    encoding: proto
+
+service:
+  pipelines:
+    logs:
+      receivers:
+        - filelog/site1
+        - filelog/site2
+      processors:
+        - batch
+      exporters:
+        - otlphttp/sentry
+```
+
+## Step 5: Run the Collector
+
+Start the OpenTelemetry Collector with your configuration:
+
+```bash
+./otelcol-contrib --config config.yaml
+```
+
+To run in the background:
+
+```bash
+./otelcol-contrib --config config.yaml &> otelcol-output.log &
+```
+
+## Troubleshooting
+
+- Verify the OpenTelemetry Collector has read permissions for the Nginx log files
+- Ensure the log file paths in the configuration match your Nginx setup
+- Check that Nginx is actively writing to the configured log files
+- If using JSON parsing, verify your Nginx log format matches the parser configuration
+
+## Additional Resources
+
+- [File Log Receiver Documentation](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/filelogreceiver)
+- [Sentry OpenTelemetry Collector Configuration](/product/drains/integration/opentelemetry-collector/)
+- [Sentry Logs](/product/explore/logs/)

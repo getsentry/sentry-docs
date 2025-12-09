@@ -1,17 +1,21 @@
 'use client';
 
-import {RefObject, useEffect, useRef, useState} from 'react';
-import {Clipboard} from 'react-feather';
+import {RefObject, useContext, useEffect, useLayoutEffect, useRef, useState} from 'react';
+import {Clipboard, ExternalLink} from 'react-feather';
 
 import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
+import {DocMetrics} from 'sentry-docs/metrics';
 
 import styles from './code-blocks.module.scss';
 
+import {CodeContext} from '../codeContext';
 import {makeHighlightBlocks} from '../codeHighlights';
 import {makeKeywordsClickable} from '../codeKeywords';
+import {updateElementsVisibilityForOptions} from '../onboarding';
 
 export interface CodeBlockProps {
   children: React.ReactNode;
+  externalLink?: string;
   filename?: string;
   language?: string;
   title?: string;
@@ -50,17 +54,21 @@ function getCopiableText(element: HTMLDivElement) {
   return text.trim();
 }
 
-export function CodeBlock({filename, language, children}: CodeBlockProps) {
+export function CodeBlock({filename, language, children, externalLink}: CodeBlockProps) {
   const [showCopied, setShowCopied] = useState(false);
   const codeRef = useRef<HTMLDivElement>(null);
+  const codeContext = useContext(CodeContext);
 
   // Show the copy button after js has loaded
   // otherwise the copy button will not work
   const [showCopyButton, setShowCopyButton] = useState(false);
+  // Track if component is mounted to prevent hydration mismatch with keyword interpolation
+  const [isMounted, setIsMounted] = useState(false);
   const {emit} = usePlausibleEvent();
 
   useEffect(() => {
     setShowCopyButton(true);
+    setIsMounted(true);
     // prevent .no-copy elements from being copied during selection Right click copy or / Cmd+C
     const noCopyElements = codeRef.current?.querySelectorAll<HTMLSpanElement>('.no-copy');
     const handleSelectionChange = () => {
@@ -80,7 +88,21 @@ export function CodeBlock({filename, language, children}: CodeBlockProps) {
     };
   }, []);
 
+  // Re-sync onboarding visibility after keyword interpolation recreates DOM nodes.
+  // makeKeywordsClickable clones elements, losing .hidden classes. useLayoutEffect
+  // corrects this synchronously before paint to prevent visible flicker.
+  useLayoutEffect(() => {
+    if (isMounted && codeContext?.onboardingOptions) {
+      updateElementsVisibilityForOptions(codeContext.onboardingOptions, false);
+    }
+  }, [isMounted, codeContext?.onboardingOptions]);
+
   useCleanSnippetInClipboard(codeRef, {language});
+
+  // Mermaid blocks should not be processed by CodeBlock - they need special client-side rendering
+  if (language === 'mermaid') {
+    return <div className="language-mermaid">{children}</div>;
+  }
 
   async function copyCodeOnClick() {
     if (codeRef.current === null) {
@@ -95,12 +117,25 @@ export function CodeBlock({filename, language, children}: CodeBlockProps) {
       await navigator.clipboard.writeText(code);
       setShowCopied(true);
       emit('copy sentry code', {props: {page: window.location.pathname}});
+
+      // Track snippet copy with metadata
+      DocMetrics.snippetCopy(window.location.pathname, language, filename);
+
       setTimeout(() => setShowCopied(false), 1200);
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error('Failed to copy:', error);
     }
   }
+
+  // Process children to add highlighting
+  const highlightedChildren = makeHighlightBlocks(children, language);
+
+  // Only apply keyword interpolation after component mounts to prevent hydration mismatch
+  // Server and client both render raw text initially, then client upgrades after mount
+  const processedChildren = isMounted
+    ? makeKeywordsClickable(highlightedChildren)
+    : highlightedChildren;
 
   return (
     <div className={styles['code-block']}>
@@ -111,6 +146,17 @@ export function CodeBlock({filename, language, children}: CodeBlockProps) {
             <Clipboard size={16} />
           </button>
         )}
+        {externalLink && (
+          <a
+            href={externalLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles.copy}
+            title="View Github Source"
+          >
+            <ExternalLink size={16} />
+          </a>
+        )}
       </div>
       <div
         data-mdast="ignore"
@@ -119,9 +165,7 @@ export function CodeBlock({filename, language, children}: CodeBlockProps) {
       >
         Copied
       </div>
-      <div ref={codeRef}>
-        {makeKeywordsClickable(makeHighlightBlocks(children, language))}
-      </div>
+      <div ref={codeRef}>{processedChildren}</div>
     </div>
   );
 }

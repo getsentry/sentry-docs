@@ -38,9 +38,23 @@ uv add "sentry-sdk[mcp]"
 
 ## Configure
 
-If you have the `mcp` package in your dependencies, the MCP integration will be enabled automatically when you initialize the Sentry SDK.
+Simply update your `sentry_sdk.init()` call to include the `MCPIntegration()`.
 
-<PlatformContent includePath="getting-started-config" />
+```python
+import sentry_sdk
+from sentry_sdk.integrations.mcp import MCPIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    traces_sample_rate=1.0,
+    # Add data like tool inputs/outputs;
+    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    send_default_pii=True,
+    integrations=[
+        MCPIntegration(),
+    ],
+)
+```
 
 ## Verify
 
@@ -63,6 +77,9 @@ sentry_sdk.init(
     # Add data like tool inputs/outputs;
     # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
     send_default_pii=True,
+    integrations=[
+        MCPIntegration(),
+    ],
 )
 
 # Create the MCP server
@@ -115,6 +132,9 @@ sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
     traces_sample_rate=1.0,
     send_default_pii=True,
+    integrations=[
+        MCPIntegration(),
+    ],
 )
 
 # Create the low-level MCP server
@@ -181,7 +201,7 @@ For each operation, the following span data attributes are captured:
 
 **General (all operations):**
 - `mcp.method.name`: The MCP method name (e.g., `tools/call`, `prompts/get`, `resources/read`)
-- `mcp.transport`: Transport type (`pipe` for stdio, `tcp` for HTTP)
+- `mcp.transport`: Transport type (`http` for Streamable HTTP, `sse` for Server-Sent Events or `stdio`)
 - `mcp.request_id`: Request identifier (when available)
 - `mcp.session_id`: Session identifier (when available)
 

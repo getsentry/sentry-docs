@@ -45,7 +45,7 @@ export function Home() {
               <Image
                 src={HeroImage}
                 alt="Sentry's hero image"
-                className="max-h-[200px] w-auto md:max-h-[390px]"
+                className="max-h-[100px] w-auto md:max-h-[195px]"
               />
             </div>
           </div>
@@ -168,8 +168,8 @@ export function Home() {
             </FooterLink>
           </div>
           <p className="px-3 text-sm">
-            © <Var name="trademarkYear">{new Date().getFullYear()}</Var> • Sentry is a
-            registered trademark of Functional Software, Inc.
+            © <Var>{new Date().getFullYear()}</Var> • Sentry is a registered trademark of
+            Functional Software, Inc.
           </p>
           <div className="bg-accent-purple max-w-max md:ml-auto ml-2 px-5">
             <SentryWordmarkLogo height={50} fill="#ffffff" />

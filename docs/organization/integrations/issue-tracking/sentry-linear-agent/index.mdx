@@ -9,7 +9,7 @@ og_image: /og-images/organization-integrations-issue-tracking-sentry-linear-agen
 
 <Alert title="Beta">
 
-**Sentry Agent for Linear** is in its beta phase. It is currently only available for US-based Sentry.io organizations. Changes to the UX and the agent functionality should be expected.
+**Sentry Agent for Linear** is in its beta phase. Changes to the UX and the agent functionality should be expected.
 
 </Alert>
 
@@ -24,7 +24,6 @@ This integration highly benefits from having [automation configured within Seer]
 Sentry owner, manager, or admin permissions are required to install this integration.
 
 Linear **won't** work with self-hosted Sentry.
-
 </Alert>
 
 Navigate to **Settings > Integrations > Linear (Sentry Agent)**, accept and install.
@@ -42,17 +41,52 @@ When the issue is delegated to the agent, the agent will automatically check for
 
 For comment based interactions, the integration accepts natural language. We attempt to parse the intent of the question and trigger the appropriate response. If it fails, we'll prompt the help command that will guide you through options.
 
-Currently the integration allows the user to run the following actions:
+Most actions are available via interactive buttons or natural language. Currently, the integration allows the user to run the following actions:
 
 - Issue Fix - Runs a Seer Issue Fix for the application.
 - Status - Updates the status of the issue.
 - Help - Displays the help command that will guide you through options.
+- Enable/Disable automatic Seer runs - Toggle whether Seer automatically runs (without confirmation) when issues are assigned in Linear.
+- Enable/Disable Seer PRs - Allow Seer to open pull requests automatically when fixes are ready.
+
+## Automation & Configuration
+
+When an issue is assigned to the Sentry Agent in Linear, the user will be prompted to link their account with Sentry. This creates the relationship between your Linear user and your Sentry user, and exposes the projects and Sentry resources the user has access to. 
+
+The OAuth consent screen shows what orgnaization is connecting to Linear as well as gives options that can be enabled to customize the Sentry Agent in Linear's behavior.
+
+<div style={{width: '50%'}}>
+
+![OAuth consent screen](./img/Linear-oauth-consent.png)
+
+</div>
+
+These options can also be managed within the agent interface after the account is linked through the `help` command and leveraging the select menu at the bottom.
+
+<div style={{width: '50%'}}>
+
+![Help command](./img/Linear-agent-help-options.png)
+
+</div>
+
+These options can also be enabled interactively during agent sessions. These options present themselves in the following ways: 
+
+- Via buttons after an issue is assigned:
+  - `Yes, run Seer RCA` runs Seer Root Cause Analysis (RCA) for the current issue
+  - `Yes, and run automatically in the future` enables automatic runs in the future for this workspace and starts Seer RCA for the current issue
+- Natural language controls:
+  - "enable automatic seer runs", "disable automatic seer runs"
+  - "enable Seer PRs", "disable Seer PRs"
 
 ## Assigning Sentry Agent to an Issue
 
 1. Navigate to an issue within Linear and select "Assign" from the dropdown menu in the right sidebar.
 
+   <div style={{width: '75%'}}>
+
    ![Select Sentry Agent for Linear](./img/Linear-Agent-Delegation.png)
+
+   </div>
 
 2. Select "Sentry" from the dropdown menu.
 
@@ -60,13 +94,34 @@ Currently the integration allows the user to run the following actions:
 
    ![Link Sentry Agent for Linear](./img/Linear-Linking-Auth.png)
 
-4. Once linked, you'll be asked if you want to run a Seer Issue Fix for the application. You can answer "Yes", or ask for "Help" to see more options.
+4. If auto-run is disabled, you'll see a prompt with buttons:
 
-   ![Run Seer in Linear](./img/Linear-Help.png)
+   - `Yes, run Seer RCA`
+   - `Yes, and run automatically in the future`
+   <div style={{width: '65%'}}>
+   ![Enable automatic Seer runs](./img/Linear-run-or-run-always.png)
+   </div>
 
-5. If you answer "Yes", the Agent will run a Seer Issue Fix for the application. **Note**: You may need to prompt it for "Status" to see the results.
+5. If auto-run is enabled, the Agent will start Seer automatically and confirm it's running. Use "status" to check progress or view results. If an analysis already exists, the Agent will post the latest status or Sentry issue details.
 
-   ![RCA from Sentry Seer in Linear](./img/Linear-Sentry-RCA-2.png)
+   <div style={{width: '65%'}}>
+
+   ![Seer RCA in Linear](./img/Linear-Sentry-RCA-2.png)
+
+   </div>
+
+   
+### Triage Rules 
+
+The Sentry Agent supports Linear's triage rules allowing you to tag issues with a custom label in Linear, and have it execute the Sentry Agent. Examples are below.
+
+#### Triage Configuration
+
+![Triage Configuration](./img/Linear-triage-rule.png)
+
+#### Triage Action
+
+![Triage Action](./img/Linear-triage-claim.png)
 
 ## Uninstalling the Integration
 

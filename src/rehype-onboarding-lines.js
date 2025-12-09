@@ -29,6 +29,10 @@ function visitor(node) {
   if (!node.properties.className?.includes('code-highlight')) {
     return;
   }
+  // ignore mermaid code blocks - they have special client-side rendering
+  if (node.properties.className?.includes('language-mermaid')) {
+    return;
+  }
   handle_inline_options(node);
 }
 
