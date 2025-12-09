@@ -18,7 +18,7 @@ export function PaginationNav({
           title === 'Previous' ? 'text-left' : 'text-right'
         }`}
       >
-        <div className="text-sm [color:var(--foreground)]">{title}</div>
+        <div className="text-sm [color:var(--foreground)]">{m(title)}</div>
         <div
           className={`flex items-center gap-1 font-[500] ${
             title === 'Previous' ? 'justify-start' : 'justify-end'

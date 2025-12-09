@@ -13,6 +13,8 @@ import {
 import {usePathname} from 'next/navigation';
 import algoliaInsights from 'search-insights';
 
+import {T,useGT,Var} from 'gt-next';
+
 import {useOnClickOutside} from 'sentry-docs/clientUtils';
 import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
 import {DocMetrics} from 'sentry-docs/metrics';
@@ -83,6 +85,7 @@ export function Search({
   searchPlatforms = [],
   useStoredSearchPlatforms = true,
 }: Props) {
+  const gt = useGT();
   const ref = useRef<HTMLDivElement>(null);
   const [query, setQuery] = useState(``);
   const [results, setResults] = useState([] as Result[]);
@@ -326,7 +329,7 @@ export function Search({
         <div className={styles['input-wrapper']}>
           <input
             type="text"
-            placeholder="Search Docs"
+            placeholder={gt('Search Docs')}
             aria-label="Search"
             className={styles['search-input']}
             value={query}
@@ -350,7 +353,7 @@ export function Search({
           >
             <div>
               <MagicIcon />
-              <span>Ask AI</span>
+              <T><span>Ask AI</span></T>
             </div>
           </Button>
         </Fragment>
@@ -371,15 +374,17 @@ export function Search({
               }}
             >
               <MagicIcon className="size-6 text-[var(--sgs-color-hit-highlight)] flex-shrink-0" />
-              <div className={styles['sgs-ai-button-content']}>
-                <div className={styles['sgs-ai-button-heading']}>
-                  Ask Sentry about{' '}
-                  <span>{query.length > 30 ? query.slice(0, 30) + '...' : query}</span>
+              <T>
+                <div className={styles['sgs-ai-button-content']}>
+                  <div className={styles['sgs-ai-button-heading']}>
+                    Ask Sentry about{' '}
+                    <Var name="query">{query.length > 30 ? query.slice(0, 30) + '...' : query}</Var>
+                  </div>
+                  <div className={styles['sgs-ai-hint']}>
+                    Get an AI-powered answer to your question
+                  </div>
                 </div>
-                <div className={styles['sgs-ai-hint']}>
-                  Get an AI-powered answer to your question
-                </div>
-              </div>
+              </T>
               <ArrowRightIcon className="size-5 text-[var(--sgs-color-hit-highlight)] ml-auto flex-shrink-0" />
             </button>
           </div>
@@ -405,7 +410,7 @@ export function Search({
                   searchFor(query, {searchAllIndexes: true, skipMetrics: true})
                 }
               >
-                Search <em>{query}</em> across all Sentry sites
+                <T>Search <Var><em>{query}</em></Var> across all Sentry sites</T>
               </button>
             </div>
           )}
