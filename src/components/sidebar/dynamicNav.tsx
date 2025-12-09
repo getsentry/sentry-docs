@@ -75,7 +75,7 @@ export const renderChildren = (
   path: string,
   showDepth: number = 0,
   depth: number = 0,
-  m: (str: string) => string
+  m: (msg: string) => string
 ): React.ReactNode[] => {
   const sortedChildren = sortPages(
     children.filter(
