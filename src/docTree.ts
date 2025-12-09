@@ -1,5 +1,5 @@
-import {isDeveloperDocs} from './isDeveloperDocs';
 import getLocale, {getDefaultLocaleSafe} from './getLocale';
+import {isDeveloperDocs} from './isDeveloperDocs';
 import {getDevDocsFrontMatter, getDocsFrontMatter} from './mdx';
 import {platformsData} from './platformsData';
 import {
