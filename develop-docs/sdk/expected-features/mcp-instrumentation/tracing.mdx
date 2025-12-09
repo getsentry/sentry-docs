@@ -174,3 +174,17 @@ Describes MCP notification messages (one-way messages that don't expect a respon
 - The `mcp.method.name` attribute MUST be set to the notification method. (e.g. `"notifications/cancelled"`)
 - All [Common Span Attributes](#common-span-attributes) SHOULD be set (all `required` common attributes MUST be set).
 
+## Distributed Tracing
+
+Traces should be continued when a client makes a tool call request to an MCP server and both the client and server are instrumented. To do so, we inject both the trace parent (sentry-trace) and baggage into the `_meta` field of the request, and pick these up on the server. The tracing metadata attached in the `_meta` field is the same as the metadata contained in HTTP headers in HTTP-based trace continuation.
+
+The SDK must respect any existing metadata in `_meta`. If previously empty, the `_meta` field must have the form
+
+```json
+"_meta": {
+    "sentry-trace": "...",
+    "baggage": "...",
+}
+```
+
+where "sentry-trace" is analogous to the [`sentry-trace` HTTP header](/sdk/telemetry/traces/#header-sentry-trace) and "baggage" is analogous to [`baggage` HTTP header](/sdk/telemetry/traces/dynamic-sampling-context/#baggage-header).
