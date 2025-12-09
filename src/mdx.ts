@@ -1,3 +1,4 @@
+import {getDefaultLocale} from 'gt-next/server';
 import matter from 'gray-matter';
 import {s} from 'hastscript';
 import yaml from 'js-yaml';
@@ -43,6 +44,7 @@ import remarkVariables from './remark-variables';
 import {FrontMatter, Platform, PlatformConfig} from './types';
 import {isNotNil} from './utils';
 import {isVersioned, VERSION_INDICATOR} from './versioning';
+import getLocale from './getLocale';
 
 type SlugFile = {
   frontMatter: Platform & {slug: string};
@@ -171,13 +173,14 @@ const isSupported = (
   return true;
 };
 
-let getDocsFrontMatterCache: Promise<FrontMatter[]> | undefined;
+const getDocsFrontMatterCache: Record<string, Promise<FrontMatter[]>> = {};
 
-export function getDocsFrontMatter(): Promise<FrontMatter[]> {
-  if (!getDocsFrontMatterCache) {
-    getDocsFrontMatterCache = getDocsFrontMatterUncached();
+export function getDocsFrontMatter(locale?: string): Promise<FrontMatter[]> {
+  const currentLocale = locale ?? getLocale();
+  if (!getDocsFrontMatterCache[currentLocale]) {
+    getDocsFrontMatterCache[currentLocale] = getDocsFrontMatterUncached(currentLocale);
   }
-  return getDocsFrontMatterCache;
+  return getDocsFrontMatterCache[currentLocale];
 }
 
 /**
@@ -200,8 +203,11 @@ export const getVersionsFromDoc = (frontMatter: FrontMatter[], docPath: string) 
   return [...new Set(versions)];
 };
 
-async function getDocsFrontMatterUncached(): Promise<FrontMatter[]> {
-  const frontMatter = await getAllFilesFrontMatter();
+async function getDocsFrontMatterUncached(locale?: string): Promise<FrontMatter[]> {
+  const defaultLocale = getDefaultLocale();
+  const currentLocale = locale ?? defaultLocale;
+
+  const frontMatter = await getAllFilesFrontMatter(currentLocale);
 
   const categories = await apiCategories();
   categories.forEach(category => {
@@ -233,7 +239,26 @@ async function getDocsFrontMatterUncached(): Promise<FrontMatter[]> {
     }
   });
 
-  return frontMatter;
+  if (currentLocale === defaultLocale) {
+    return frontMatter;
+  }
+
+  const defaultFrontMatter = await getDocsFrontMatter(defaultLocale);
+  const defaultFrontMatterMap = new Map(defaultFrontMatter.map(fm => [fm.slug, fm]));
+  const localizedFrontMatterMap = new Map(frontMatter.map(fm => [fm.slug, fm]));
+
+  const mergedFrontMatter = defaultFrontMatter.map(fm => {
+    const localized = localizedFrontMatterMap.get(fm.slug);
+    return localized ? {...fm, ...localized, slug: fm.slug} : fm;
+  });
+
+  frontMatter.forEach(fm => {
+    if (!defaultFrontMatterMap.has(fm.slug)) {
+      mergedFrontMatter.push(fm);
+    }
+  });
+
+  return mergedFrontMatter;
 }
 
 export async function getDevDocsFrontMatterUncached(): Promise<FrontMatter[]> {
@@ -281,9 +306,29 @@ export function getDevDocsFrontMatter(): Promise<FrontMatter[]> {
   return getDevDocsFrontMatterCache;
 }
 
-async function getAllFilesFrontMatter(): Promise<FrontMatter[]> {
-  const docsPath = path.join(root, 'docs');
-  const files = await getAllFilesRecursively(docsPath);
+async function getAllFilesFrontMatter(locale?: string): Promise<FrontMatter[]> {
+  const defaultLocale = getDefaultLocale();
+  const currentLocale = locale ?? defaultLocale;
+  const isDefaultLocale = currentLocale === defaultLocale;
+  const docsPath = isDefaultLocale
+    ? path.join(root, 'docs')
+    : path.join(root, 'docs', currentLocale);
+  const sourcePathRoot = isDefaultLocale ? 'docs' : path.join('docs', currentLocale);
+  let files: string[];
+  try {
+    files = await getAllFilesRecursively(docsPath);
+  } catch (err) {
+    if (
+      !isDefaultLocale &&
+      err &&
+      typeof err === 'object' &&
+      'code' in err &&
+      (err as {code?: string}).code === 'ENOENT'
+    ) {
+      return [];
+    }
+    throw err;
+  }
   const allFrontMatter: FrontMatter[] = [];
 
   await Promise.all(
@@ -310,7 +355,7 @@ async function getAllFilesFrontMatter(): Promise<FrontMatter[]> {
           allFrontMatter.push({
             ...(frontmatter as FrontMatter),
             slug: formatSlug(fileName),
-            sourcePath: path.join('docs', fileName),
+            sourcePath: path.join(sourcePathRoot, fileName),
           });
         },
         {concurrency: FILE_CONCURRENCY_LIMIT}
@@ -389,7 +434,7 @@ async function getAllFilesFrontMatter(): Promise<FrontMatter[]> {
               allFrontMatter.push({
                 ...frontmatter,
                 slug: formatSlug(slug),
-                sourcePath: 'docs/' + f.commonFileName.slice(docsPath.length + 1),
+                sourcePath: path.join(sourcePathRoot, f.commonFileName.slice(docsPath.length + 1)),
               });
             }
           },
@@ -453,7 +498,7 @@ async function getAllFilesFrontMatter(): Promise<FrontMatter[]> {
               allFrontMatter.push({
                 ...frontmatter,
                 slug: formatSlug(slug),
-                sourcePath: 'docs/' + f.commonFileName.slice(docsPath.length + 1),
+                sourcePath: path.join(sourcePathRoot, f.commonFileName.slice(docsPath.length + 1)),
               });
             },
             {concurrency: FILE_CONCURRENCY_LIMIT}

@@ -1,4 +1,7 @@
+import {getDefaultLocale} from 'gt-next/server';
+
 import {isDeveloperDocs} from './isDeveloperDocs';
+import getLocale from './getLocale';
 import {getDevDocsFrontMatter, getDocsFrontMatter} from './mdx';
 import {platformsData} from './platformsData';
 import {
@@ -28,14 +31,18 @@ function slugWithoutIndex(slug: string): string[] {
   return parts;
 }
 
-let getDocsRootNodeCache: Promise<DocNode> | undefined;
+const getDocsRootNodeCache = new Map<string, Promise<DocNode>>();
 
 export function getDocsRootNode(): Promise<DocNode> {
-  if (getDocsRootNodeCache) {
-    return getDocsRootNodeCache;
+  const locale = getLocale();
+  const cacheKey = `${isDeveloperDocs ? 'devdocs' : 'docs'}:${locale}`;
+  const cached = getDocsRootNodeCache.get(cacheKey);
+  if (cached) {
+    return cached;
   }
-  getDocsRootNodeCache = getDocsRootNodeCached();
-  return getDocsRootNodeCache;
+  const loader = getDocsRootNodeCached(locale);
+  getDocsRootNodeCache.set(cacheKey, loader);
+  return loader;
 }
 
 function reconstructParentReferences(node: DocNode, parent?: DocNode): void {
@@ -45,11 +52,16 @@ function reconstructParentReferences(node: DocNode, parent?: DocNode): void {
   node.children.forEach(child => reconstructParentReferences(child, node));
 }
 
-async function getDocsRootNodeCached(): Promise<DocNode> {
+async function getDocsRootNodeCached(locale: string): Promise<DocNode> {
   // In development, scan filesystem for hot reloading
   // In production (including CI builds), load from pre-computed JSON
   if (process.env.NODE_ENV === 'development') {
-    return getDocsRootNodeUncached();
+    return getDocsRootNodeUncached(locale);
+  }
+
+  const defaultLocale = getDefaultLocale();
+  if (locale !== defaultLocale) {
+    return getDocsRootNodeUncached(locale);
   }
 
   const fs = await import('fs/promises');
@@ -93,9 +105,9 @@ async function getDocsRootNodeCached(): Promise<DocNode> {
   );
 }
 
-export async function getDocsRootNodeUncached(): Promise<DocNode> {
+export async function getDocsRootNodeUncached(locale?: string): Promise<DocNode> {
   return frontmatterToTree(
-    await (isDeveloperDocs ? getDevDocsFrontMatter() : getDocsFrontMatter())
+    await (isDeveloperDocs ? getDevDocsFrontMatter() : getDocsFrontMatter(locale))
   );
 }
 

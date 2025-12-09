@@ -14,7 +14,7 @@ try {
 
 import {cache} from 'react';
 
-import {DocNode} from 'sentry-docs/docTree';
+import type {DocNode} from 'sentry-docs/docTree';
 
 interface ServerContext {
   locale: string;
