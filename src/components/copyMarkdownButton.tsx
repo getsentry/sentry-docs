@@ -245,14 +245,16 @@ export function CopyMarkdownButton({pathname}: CopyMarkdownButtonProps) {
                 <div className={iconContainerClass}>
                   <ChatGPT width={14} height={14} />
                 </div>
-                <div className="flex-1">
-                  <div className="font-medium text-sm leading-5 text-gray-900 dark:text-[var(--foreground)]">
-                    Open in ChatGPT <ExternalLink aria-hidden="true" />
+                <T>
+                  <div className="flex-1">
+                    <div className="font-medium text-sm leading-5 text-gray-900 dark:text-[var(--foreground)]">
+                      Open in ChatGPT <ExternalLink aria-hidden="true" />
+                    </div>
+                    <div className="text-xs leading-4 text-gray-500 dark:text-[var(--foreground-secondary)]">
+                      Ask ChatGPT questions about this page
+                    </div>
                   </div>
-                  <div className="text-xs leading-4 text-gray-500 dark:text-[var(--foreground-secondary)]">
-                    Ask ChatGPT questions about this page
-                  </div>
-                </div>
+                </T>
               </a>
 
               <a
@@ -265,14 +267,16 @@ export function CopyMarkdownButton({pathname}: CopyMarkdownButtonProps) {
                 <div className={iconContainerClass}>
                   <Claude width={14} height={14} />
                 </div>
-                <div className="flex-1">
-                  <div className="font-medium text-sm leading-5 text-gray-900 dark:text-[var(--foreground)]">
-                    Open in Claude <ExternalLink aria-hidden="true" />
+                <T>
+                  <div className="flex-1">
+                    <div className="font-medium text-sm leading-5 text-gray-900 dark:text-[var(--foreground)]">
+                      Open in Claude <ExternalLink aria-hidden="true" />
+                    </div>
+                    <div className="text-xs leading-4 text-gray-500 dark:text-[var(--foreground-secondary)]">
+                      Ask Claude questions about this page
+                    </div>
                   </div>
-                  <div className="text-xs leading-4 text-gray-500 dark:text-[var(--foreground-secondary)]">
-                    Ask Claude questions about this page
-                  </div>
-                </div>
+                </T>
               </a>
             </div>
           </div>,
