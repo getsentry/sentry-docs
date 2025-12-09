@@ -1,0 +1,197 @@
+---
+title: Span API
+---
+
+<Alert level="warning">
+  🚧 This document is work in progress.
+</Alert>
+
+<Alert level="info">
+  This document uses key words such as "MUST", "SHOULD", and "MAY" as defined in [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt) to indicate requirement levels. 
+</Alert>
+
+<Alert level="info">
+  The APIs specified in this document MUST be implemented by all SDKs that don't use OpenTelemetry as their underlying tracing implementation.
+  SDKs using OTel SHOULD follow their own already established span APIs but MAY orient themselves on this document if applicable.
+</Alert>
+
+Spans are measuring the duration of certain operations in an application.
+
+The topmost member of a (distributed) span tree is called the "Root Span". 
+This span has no parent span and groups together its children with a representative name for the entire operation, such as `GET /` in case of a request to a backend application.
+
+The topmost span within a service boundary is called the "Segment Span". 
+Segment spans have a `parent_span_id` pointing to a "remote" span from the parent service. 
+
+For example, a distributed trace from backend to frontend, would have a segment span for the backend, and a segment span for the frontend.
+The frontend segment span is also the root span of the entire span tree. 
+
+SDKs MUST NOT expose names like "segment span" (e.g. in APIs) to users and SHOULD NOT (read "avoid") exposing "root span" if possible.
+
+## Span Interface
+
+SDKs' span implementations MUST at minimum implement the following span interface.
+
+```ts {tabTitle:TypeScript}
+interface Span {
+  private _spanId: string;
+	
+  end(endTimestamp?: SpanTimeInput): void;
+
+  setAttribute(key: string, value: SpanAttributeValue | undefined): this;
+  setAttributes(attributes: SpanAttributes): this;
+
+  setStatus(status: 'ok' | 'error'): this;
+
+  setName(name: string): this;
+
+  addLink(link: SpanLink): this;
+  addLinks(links: SpanLink[]): this;
+  
+  getName(): string;
+  getAttributes(): Record<string, SpanAttributeValue>
+}
+```
+
+```Python {tabTitle:Python}
+class Span:
+    span_id: str
+
+    def set_attribute(self, key: str, value: SpanAttributeValue) -> None: ...
+    def set_status(self, status: Literal["ok", "error"]) -> None: ...
+    def get_name(self) -> str: ...
+    def set_name(self, name: str) -> None: ...
+    def get_attributes(self) -> SpanAttributes: ...
+```
+
+When implementing the span interface, consider the following guidelines:
+
+- SDKs MAY implement additional APIs, such as getters/setters for properties (e.g. `span.getStatus()`), or additional methods for convenience (e.g. `Span::spanContext()`). 
+- SDK implementers SHOULD disallow direct mutation (without setters) of span properties such as the span name, depending on the platform and the challenges involved.
+- SDK implementers MAY disallow direct read access to span properties, depending on the platform and the challenges involved.
+
+## Span Starting APIs
+
+SDKs MUST expose at least one API to start a span. SDKs MAY expose additional APIs, depending on the platform, language conventions and requirements.
+
+### Default `startSpan` API
+
+SDKs MUST expose a default `startSpan` API that takes options and returns a span:
+
+```ts {tabTitle:TypeScript}
+function startSpan(options: StartSpanOptions): Span;
+
+interface StartSpanOptions {
+  name: string;
+  attributes?: Record<string, SpanAttributeValue>;
+  parentSpan?: Span | null;
+  active?: boolean;
+}
+```
+
+```Python {tabTitle:Python}
+# The context-manager way of starting a span. The span will be finished
+# automatically when exiting the context manager.
+
+with start_span(
+    name,  # type: str
+    attributes,  # type: SpanAttributes
+    parent_span,  # type: Span
+    active,  # type: bool
+) as span:
+    ...
+
+# Alternative API without the use of a context manager, to allow for more
+# flexibility when to end the span:
+
+span = start_span(name, attributes, parent_span, active)
+span.end()
+```
+
+SDKs MUST allow specifying the following options to be passed to `startSpan`:
+
+| Option        | Required | Description                                  |
+|---------------|----------|----------------------------------------------|
+| `name`        | Yes      | The name of the span. MUST be set by users   |
+| `attributes`  | No       | Attributes to attach to the span.            |
+| `parentSpan`  | No       | The parent span. See description below for implications of allowed values |
+| `active`      | No       | Whether the started span should be _active_ (i.e. if spans started while this span is active should become children of the started span). |
+
+Behaviour:
+- Spans MUST be started as active by default. This means that any span started, while the initial span is active, MUST be attached as a child span of the active span. 
+- Only if users set `active: false`, the span will be started as inactive, meaning spans started while this span is not yet ended, will not become children, but siblings of the started span.
+- If a `Span` is passed via `parentSpan`, the span will be started as the child of the passed parent span. This has precedence over the currently active span.
+- If `null` is passed via `parentSpan`, the new span will be started as a root/segment span.
+- SDKs MUST NOT end the span automatically. This is the responsibility of the user.
+- `startSpan` MUST always return a span instance, even if the started span's trace is negatively sampled.
+
+
+### Additional Span Starting APIs
+
+SDKs MAY expose additional span starting APIs or variants of `startSpan` that make sense for the platform. 
+These could be decorators, annotations, or closure- or callback-based APIs. 
+Additional APIs MAY e.g. end spans automatically (for example, when a callback terminates, the span is ended automatically).
+Likewise, additional APIs MAY also adjust the span status based on errors thrown.
+
+### Explicitly creating a child span
+
+At this time, SDKs MUST NOT expose APIs like `Span::startChild` or similar functionality that explicitly creates a child span.
+This is still TBD but the `parentSpan` option should suffice to serve this use case.
+
+## Utility APIs
+
+SDKs MAY expose additional utility APIs for users, or internal usage to access certain spans. For example,
+
+- `Scope::getSpan()` - returns the currently active span.
+- `Scope::_INTERNAL_getSegmentSpan()` - returns the segment span of the currently active span (MUST NOT be documented for users)
+
+## Example
+
+```ts {tabTitle:TypeScript}
+
+const checkoutSpan = Sentry.startSpan({ name: 'on-checkout-click', attributes: { 'user.id': '123' } })
+
+const validationSpan = Sentry.startSpan({ name: 'validate-shopping-cart'})
+startFormValidation().then((result) => {
+  validationSpan.setAttribute('valid-form-data', result.success);
+  validationSpan.end();
+})
+
+const processSpan = Sentry.startSpan({ name: 'process-order', parentSpan: checkoutSpan});
+processOrder().then((result) => {
+  processSpan.setAttribute('order-processed', result.success);
+  processSpan.end();
+}).catch((error) => {
+  processSpan.setStatus('error');
+  processSpan.setAttribute('order-processed', 'error');
+  processSpan.end();
+});
+
+const unrelatedSpan = Sentry.startSpan({ name: 'log-order', parentSpan: null});
+logOrder()
+unrelatedSpan.end();
+
+on('checkout-finished', ({ timestamp }) => {
+	checkoutSpan.end(timestamp);
+})
+```
+
+```Python {tabTitle:Python}
+
+with sentry_sdk.start_span(name="checkout", attributes={"user.id": "123"}) as checkout_span:
+    with sentry_sdk.start_span(name="process-order") as process_order_span:
+        result = process()
+        process_order_span.set_attribute("order-status", result.message)
+
+    with sentry_sdk.start_span(name="process-payment") as process_payment_span:
+        try:
+            result = process_payment()
+            process_payment_span.set_attribute("order-status", result.message)
+        except:
+            process_payment_span.set_status("error")
+            process_payment_span.set_attribute("order-status", "error")
+
+    span = sentry_sdk.start_span(name="log-order", parent_span=None)
+    log_order()
+    span.end()
+```

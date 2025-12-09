@@ -5,14 +5,26 @@ import {sortPages} from 'sentry-docs/utils';
 import {getUnversionedPath, VERSION_INDICATOR} from 'sentry-docs/versioning';
 
 import {CollapsibleSidebarLink} from './collapsibleSidebarLink';
-import {SidebarLink} from './sidebarLink';
+import {SidebarLink, SidebarSeparator} from './sidebarLink';
+
+// Section configuration for sidebar organization
+const SECTION_LABELS: Record<string, string> = {
+  features: 'Features',
+  configuration: 'Configuration',
+};
+
+const SECTION_ORDER = ['features', 'configuration'] as const;
 
 type Node = {
   [key: string]: any;
   context: {
     [key: string]: any;
+    beta?: boolean;
+    new?: boolean;
+    section_end_divider?: boolean;
     sidebar_hidden?: boolean;
     sidebar_order?: number;
+    sidebar_section?: 'features' | 'configuration';
     sidebar_title?: string;
     title?: string;
   };
@@ -63,7 +75,7 @@ export const renderChildren = (
   showDepth: number = 0,
   depth: number = 0
 ): React.ReactNode[] => {
-  return sortPages(
+  const sortedChildren = sortPages(
     children.filter(
       ({name, node}) =>
         node &&
@@ -73,23 +85,127 @@ export const renderChildren = (
         !node.context.sidebar_hidden
     ),
     ({node}) => node!
-  ).map(({node, children: nodeChildren}) => {
-    // will not be null because of the filter above
-    if (!node) {
-      return null;
-    }
-    return (
-      <CollapsibleSidebarLink
-        to={node.path}
-        key={node.path}
-        title={node.context.sidebar_title || node.context.title!}
-        collapsed={depth >= showDepth}
-        path={path}
-      >
-        {renderChildren(nodeChildren, exclude, path, showDepth, depth + 1)}
-      </CollapsibleSidebarLink>
-    );
-  });
+  );
+
+  const result: React.ReactNode[] = [];
+
+  // Only group by sections at the top level (depth === 0)
+  if (depth === 0) {
+    // Group children by section
+    const sectioned: Record<string, EntityTree[]> = {};
+    const unsectioned: EntityTree[] = [];
+
+    sortedChildren.forEach(item => {
+      const section = item.node?.context.sidebar_section;
+      if (section && SECTION_ORDER.includes(section)) {
+        if (!sectioned[section]) {
+          sectioned[section] = [];
+        }
+        sectioned[section].push(item);
+      } else {
+        // Items without a section appear at the top
+        unsectioned.push(item);
+      }
+    });
+
+    // First, render unsectioned items (fallback behavior)
+    unsectioned.forEach(({node, children: nodeChildren}) => {
+      if (!node) {
+        return;
+      }
+
+      result.push(
+        <CollapsibleSidebarLink
+          to={node.path}
+          key={node.path}
+          title={node.context.sidebar_title || node.context.title!}
+          collapsed={depth >= showDepth}
+          path={path}
+          beta={node.context.beta}
+          isNew={node.context.new}
+        >
+          {renderChildren(nodeChildren, exclude, path, showDepth, depth + 1)}
+        </CollapsibleSidebarLink>
+      );
+
+      // Keep backwards compatibility with section_end_divider
+      if (node.context.section_end_divider) {
+        result.push(<SidebarSeparator key={`separator-${node.path}`} />);
+      }
+    });
+
+    // Then render sections in order
+    SECTION_ORDER.forEach((sectionKey, sectionIndex) => {
+      const sectionItems = sectioned[sectionKey];
+      if (!sectionItems || sectionItems.length === 0) {
+        return;
+      }
+
+      // Add separator before section (add even before first section if there are unsectioned items)
+      if (sectionIndex > 0 || unsectioned.length > 0) {
+        result.push(<SidebarSeparator key={`sep-${sectionKey}`} />);
+      }
+
+      // Add section header
+      result.push(
+        <li
+          key={`header-${sectionKey}`}
+          className="sidebar-section-header text-xs font-semibold text-gray-11 uppercase tracking-wider px-2 py-2 mt-2"
+        >
+          {SECTION_LABELS[sectionKey]}
+        </li>
+      );
+
+      // Render items in this section
+      sectionItems.forEach(({node, children: nodeChildren}) => {
+        if (!node) {
+          return;
+        }
+
+        result.push(
+          <CollapsibleSidebarLink
+            to={node.path}
+            key={node.path}
+            title={node.context.sidebar_title || node.context.title!}
+            collapsed={depth >= showDepth}
+            path={path}
+            beta={node.context.beta}
+            isNew={node.context.new}
+          >
+            {renderChildren(nodeChildren, exclude, path, showDepth, depth + 1)}
+          </CollapsibleSidebarLink>
+        );
+
+        // Keep backwards compatibility with section_end_divider
+        if (node.context.section_end_divider) {
+          result.push(<SidebarSeparator key={`separator-${node.path}`} />);
+        }
+      });
+    });
+  } else {
+    // For nested items (depth > 0), render normally without sections
+    sortedChildren.forEach(({node, children: nodeChildren}) => {
+      if (!node) {
+        return;
+      }
+
+      result.push(
+        <CollapsibleSidebarLink
+          to={node.path}
+          key={node.path}
+          title={node.context.sidebar_title || node.context.title!}
+          collapsed={depth >= showDepth}
+          path={path}
+          beta={node.context.beta}
+          isNew={node.context.new}
+        >
+          {renderChildren(nodeChildren, exclude, path, showDepth, depth + 1)}
+        </CollapsibleSidebarLink>
+      );
+    });
+  }
+
+  return result;
 };
 
 type ChildrenProps = {
@@ -150,13 +266,18 @@ export function DynamicNav({
   const {path} = serverContext();
   const isActive = path.join('/').indexOf(root) === 0;
   const linkPath = `/${path.join('/')}/`;
+  const unversionedPath = getUnversionedPath(path, false);
+
+  // For platform sidebars (SDK documentation), we want to show a "Quick Start" link
+  // instead of making the section header itself selectable
+  const isPlatformSidebar = root.startsWith('platforms/');
 
   const header = (
     <SidebarLink
       href={`/${root}/`}
       title={title}
       collapsible={collapsible}
-      isActive={getUnversionedPath(path, false) === root}
+      isActive={!isPlatformSidebar && unversionedPath === root}
       topLevel
       data-sidebar-link
     />
@@ -167,6 +288,17 @@ export function DynamicNav({
       {header}
       {(!collapsible || isActive) && entity.children && (
         <ul data-sidebar-tree className="pl-3">
+          {isPlatformSidebar && (
+            <CollapsibleSidebarLink
+              to={`/${root}/`}
+              title="Quick Start"
+              collapsed={false}
+              path={linkPath}
+              key={`${root}-quickstart`}
+            >
+              {[]}
+            </CollapsibleSidebarLink>
+          )}
           <Children
             tree={entity.children}
             exclude={exclude}

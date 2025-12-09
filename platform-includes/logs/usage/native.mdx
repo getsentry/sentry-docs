@@ -2,11 +2,47 @@ Once the feature is enabled on the SDK and the SDK is initialized, you can send 
 
 The API exposes six methods that you can use to log messages at different log levels: `trace`, `debug`, `info`, `warn`, `error`, and `fatal`.
 
+```c
+sentry_log_info("A simple log message");
+sentry_log_error("A %s log message", "formatted");
+```
+
+### Additional attributes
+
+In case you want to provide additional attributes directly to the logging functions, you must enable the `logs_with_attributes` option. Any `sentry_log_X()` calls will expect a `sentry_value_t` object of attributes as the first `varg` after the log message.
+
 These properties will be sent to Sentry, and can be searched from within the Logs UI, and even added to the Logs views as a dedicated column.
 
 ```c
-import io.sentry.Sentry;
+sentry_options_set_logs_with_attributes(options, true);
 
-sentry_log_info("A simple log message");
-sentry_log_error("A %s log message", "formatted");
+sentry_value_t attributes = sentry_value_new_object();
+sentry_value_t attr = sentry_value_new_attribute(sentry_value_new_string("my_attribute"), NULL);
+sentry_value_t attr_2 = sentry_value_new_attribute(sentry_value_new_int64(INT64_MAX), "fermions");
+sentry_value_t attr_3 = sentry_value_new_attribute(sentry_value_new_int64(INT64_MIN), "bosons");
+sentry_value_set_by_key(attributes, "my.custom.attribute", attr);
+sentry_value_set_by_key(attributes, "number.first", attr_2);
+sentry_value_set_by_key(attributes, "number.second", attr_3);
+
+sentry_log_debug("logging with %d custom attributes", attributes, 3);
+
+// if the option is enabled, but you want no additional attributes on a log, pass in an empty sentry_value_new_object()
+sentry_log_debug("logging with %s custom attributes", sentry_value_new_object(), "no");
+```
+
+<Alert level="warning">
+For now, logs can only take `bool`, `double`, `string` and signed `int` attributes. If you want to send unsigned integer values, you should convert these to strings before creating the attribute.
+</Alert>
+
+These additional attributes take precedence over the default attributes, except for `sentry.message.parameter.X` values; if you pass in a string with format specifiers, these are used for the message parameter values.
+
+```c
+sentry_value_t param_attributes = sentry_value_new_object();
+sentry_value_t param_attr = sentry_value_new_attribute(sentry_value_new_string("custom parameter"), NULL);
+sentry_value_t param_attr_2 = sentry_value_new_attribute(sentry_value_new_string("custom-sdk-name"), NULL);
+sentry_value_set_by_key(param_attributes, "sentry.message.parameter.0", param_attr);
+sentry_value_set_by_key(param_attributes, "sentry.sdk.name", param_attr_2);
+
+// will only have "custom-sdk-name" as an attribute value, but not "custom parameter" which gets overwritten by "and format-string"
+sentry_log_fatal("logging with a custom parameter %s attributes", param_attributes, "and format-string");
 ```
