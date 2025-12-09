@@ -11,11 +11,32 @@ SentrySDK.logger.error("Failed to save game state")
 SentrySDK.logger.fatal("Inventory data corrupted")
 ```
 
-<Alert level="info">
+The methods support string interpolation using Godot's format strings syntax. The log message can contain format placeholders (e.g., `%s`, `%d`), and the optional `parameters` array provides values to substitute into placeholders using Godot's format strings. These will be sent to Sentry as log attributes, and can be searched from within the Logs UI.
 
-Support for log attributes and string interpolation will be added in future releases.
+```GDScript
+# String interpolation automatically extracts parameters as log attributes
+SentrySDK.logger.info("Spawned %d enemies on level %s", [5, "forest_1"])
 
-</Alert>
+# This is equivalent to manually specifying attributes:
+var message := "Spawned %d enemies on level %s" % [5, "forest_1"]
+SentrySDK.logger.info(message, [], {
+	"sentry.message.template": "Spawned %d enemies on level %s",
+	"sentry.message.parameter.0": 5
+	"sentry.message.parameter.1": "forest_1"
+})
+```
+
+You can also use structured attributes to provide additional context for your logs. For example, you can add a `current_scene` attribute to log messages related to currently loaded scene.
+
+```GDScript
+# Adding custom attributes, that can be searched from within the Logs UI
+SentrySDK.logger.debug("Spawning %s with %d units", ["enemies", 5], {
+	"current_scene": get_tree().current_scene.scene_file_path,
+	"wave_id": "main_wave_3"
+})
+```
+
+Structured attributes support `bool`, `int`, `float`, and `String` data types. Other types will be converted to strings.
 
 ### Godot Logging Integration
 
