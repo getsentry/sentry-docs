@@ -3,7 +3,6 @@
 import {Fragment, useCallback, useEffect, useRef, useState} from 'react';
 import {ArrowRightIcon} from '@radix-ui/react-icons';
 import {Button} from '@radix-ui/themes';
-import {T,useGT,Var} from 'gt-next';
 import {captureException} from '@sentry/nextjs';
 import {
   Hit,
@@ -11,6 +10,7 @@ import {
   SentryGlobalSearch,
   standardSDKSlug,
 } from '@sentry-internal/global-search';
+import {T, useGT, Var} from 'gt-next';
 import {usePathname} from 'next/navigation';
 import algoliaInsights from 'search-insights';
 
@@ -352,7 +352,9 @@ export function Search({
           >
             <div>
               <MagicIcon />
-              <T><span>Ask AI</span></T>
+              <T>
+                <span>Ask AI</span>
+              </T>
             </div>
           </Button>
         </Fragment>
@@ -377,7 +379,9 @@ export function Search({
                 <div className={styles['sgs-ai-button-content']}>
                   <div className={styles['sgs-ai-button-heading']}>
                     Ask Sentry about{' '}
-                    <Var name="query">{query.length > 30 ? query.slice(0, 30) + '...' : query}</Var>
+                    <Var name="query">
+                      {query.length > 30 ? query.slice(0, 30) + '...' : query}
+                    </Var>
                   </div>
                   <div className={styles['sgs-ai-hint']}>
                     Get an AI-powered answer to your question
@@ -409,7 +413,13 @@ export function Search({
                   searchFor(query, {searchAllIndexes: true, skipMetrics: true})
                 }
               >
-                <T>Search <Var><em>{query}</em></Var> across all Sentry sites</T>
+                <T>
+                  Search{' '}
+                  <Var>
+                    <em>{query}</em>
+                  </Var>{' '}
+                  across all Sentry sites
+                </T>
               </button>
             </div>
           )}

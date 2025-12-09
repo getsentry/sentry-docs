@@ -1,6 +1,5 @@
+import {T, useGT, Var} from 'gt-next';
 import Image from 'next/image';
-
-import {T,useGT,Var} from 'gt-next';
 
 import {Banner} from 'sentry-docs/components/banner';
 import {SentryWordmarkLogo} from 'sentry-docs/components/wordmarkLogo';
@@ -60,7 +59,9 @@ export function Home() {
               image={RocketImage}
               imageAlt="Rocket image"
               title={gt('What is Sentry?')}
-              description={gt('Application monitoring and debugging software considered “not bad” by 4 million developers.')}
+              description={gt(
+                'Application monitoring and debugging software considered “not bad” by 4 million developers.'
+              )}
             />
 
             <Card
@@ -69,7 +70,9 @@ export function Home() {
               image={OrganizationImage}
               imageAlt="Organization image"
               title={gt('Organization settings')}
-              description={gt('Information for setting up your organization\'s Sentry account.')}
+              description={gt(
+                "Information for setting up your organization's Sentry account."
+              )}
             />
 
             <Card
@@ -165,8 +168,8 @@ export function Home() {
             </FooterLink>
           </div>
           <p className="px-3 text-sm">
-            © <Var>{new Date().getFullYear()}</Var> • Sentry is a registered trademark of Functional
-            Software, Inc.
+            © <Var>{new Date().getFullYear()}</Var> • Sentry is a registered trademark of
+            Functional Software, Inc.
           </p>
           <div className="bg-accent-purple max-w-max md:ml-auto ml-2 px-5">
             <SentryWordmarkLogo height={50} fill="#ffffff" />
