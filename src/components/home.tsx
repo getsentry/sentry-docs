@@ -1,6 +1,6 @@
-import {T,useGT,Var} from 'gt-next';
-
 import Image from 'next/image';
+
+import {T,useGT,Var} from 'gt-next';
 
 import {Banner} from 'sentry-docs/components/banner';
 import {SentryWordmarkLogo} from 'sentry-docs/components/wordmarkLogo';
