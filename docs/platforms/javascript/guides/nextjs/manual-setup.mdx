@@ -11,6 +11,8 @@ description: "Learn how to manually set up Sentry in your Next.js app and captur
 
 <PlatformContent includePath="getting-started-prerequisites" />
 
+<StepConnector selector="h2" showNumbers={true}>
+
 ## Step 1: Install
 
 Choose the features you want to configure, and this guide will show you how:
@@ -27,9 +29,17 @@ Choose the features you want to configure, and this guide will show you how:
 
 <PlatformContent includePath="getting-started-features-expandable" />
 
+<SplitLayout>
+
+<SplitSection>
+<SplitSectionText>
+
 ### Install the Sentry SDK
 
-Run the command for your preferred package manager to add the Sentry SDK to your application:
+Run the command for your preferred package manager to add the Sentry SDK to your application.
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```bash {tabTitle:npm}
 npm install @sentry/nextjs --save
@@ -43,11 +53,26 @@ yarn add @sentry/nextjs
 pnpm add @sentry/nextjs
 ```
 
+</SplitSectionCode>
+</SplitSection>
+
+</SplitLayout>
+
 ## Step 2: Configure
+
+<SplitLayout>
+
+<SplitSection>
+<SplitSectionText>
 
 ### Apply Instrumentation to Your App
 
-Extend your app's default Next.js options by adding `withSentryConfig` into your `next.config.(js|mjs)` file:
+Extend your app's default Next.js options by adding `withSentryConfig` into your `next.config.(js|mjs)` file.
+
+<Include name="nextjs-app-router-14-config" />
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```JavaScript {tabTitle:CJS} {filename:next.config.js}
 const { withSentryConfig } = require("@sentry/nextjs");
@@ -91,7 +116,11 @@ export default withSentryConfig(nextConfig, {
 });
 ```
 
-<Include name="nextjs-app-router-14-config" />
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
 
 ### Initialize Sentry Client-Side and Server-Side SDKs
 
@@ -102,12 +131,20 @@ Create three files in your application's root directory:
 - `instrumentation-client.(js|ts)`
   - If you previously had a file called `sentry.client.config.(js|ts)`, you can safely rename this to `instrumentation-client.(js|ts)` for all Next.js versions.
 
-Add the following initialization code into each respective file:
+Add the following initialization code into each respective file.
 
 <Alert level="info" title="Note">
   These files run in different environments (browser, server, edge) and are
   slightly different, so copy them carefully.
 </Alert>
+
+<Alert title="Tip">
+  Include your DSN directly in these files, or use a _public_ environment
+  variable like `NEXT_PUBLIC_SENTRY_DSN`.
+</Alert>
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```javascript {tabTitle:Client} {filename:instrumentation-client.(js|ts)}
 import * as Sentry from "@sentry/nextjs";
@@ -227,14 +264,27 @@ Sentry.init({
 });
 ```
 
-<Alert title="Tip">
-  Include your DSN directly in these files, or use a _public_ environment
-  variable like `NEXT_PUBLIC_SENTRY_DSN`.
-</Alert>
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
 
 ### Register Sentry Server-Side SDK Initialization
 
-Create a [Next.js Instrumentation file](https://nextjs.org/docs/app/building-your-application/optimizing/instrumentation) named `instrumentation.(js|ts)` in your project root or inside the `src` folder if you have one. Import your server and edge configurations, making sure that the imports point to your specific files:
+Create a [Next.js Instrumentation file](https://nextjs.org/docs/app/building-your-application/optimizing/instrumentation) named `instrumentation.(js|ts)` in your project root or inside the `src` folder if you have one. Import your server and edge configurations, making sure that the imports point to your specific files.
+
+<Expandable title="Opt out of Sentry SDK bundling on client- or server-side.">
+  If you want the Sentry SDK to be available on the server side and not on the
+  client side, simply delete `instrumentation-client.(js|ts)`. This will prevent
+  webpack from pulling in the Sentry-related files when generating the browser
+  bundle. Similarly, if you want to opt out of server-side SDK bundling, delete
+  the `sentry.server.config.js` and `sentry.edge.config.js` files. Make sure to
+  remove any imports of these files from `instrumentation.ts`.
+</Expandable>
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```javascript {filename:instrumentation.(js|ts)}
 export async function register() {
@@ -248,66 +298,84 @@ export async function register() {
 }
 ```
 
-<Expandable title="Opt out of Sentry SDK bundling on client- or server-side.">
-  If you want the Sentry SDK to be available on the server side and not on the
-  client side, simply delete `instrumentation-client.(js|ts)`. This will prevent
-  webpack from pulling in the Sentry-related files when generating the browser
-  bundle. Similarly, if you want to opt out of server-side SDK bundling, delete
-  the `sentry.server.config.js` and `sentry.edge.config.js` files. Make sure to
-  remove any imports of these files from `instrumentation.ts`.
-</Expandable>
+</SplitSectionCode>
+</SplitSection>
+
+</SplitLayout>
 
 ## Step 3: Capture React Render Errors
 
 To capture React render errors, you need to add error components for the App Router and the Pages Router.
 
+<SplitLayout>
+
+<SplitSection>
+<SplitSectionText>
+
 ### App Router
+
+Create or update the `global-error.(tsx|jsx)` file to define a custom Next.js GlobalError component. This component will automatically capture errors that occur anywhere in your App Router application and send them to Sentry.
+
+The `useEffect` hook ensures the error is captured when the component mounts, while the `NextError` component provides a user-friendly error UI.
+
+</SplitSectionText>
+<SplitSectionCode>
 
 <PlatformContent includePath="getting-started-capture-errors/nextjs/app-router-global-error" />
 
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
 #### Errors from Nested React Server Components
+
+To capture errors from nested React Server Components, use the `onRequestError` hook in your `instrumentation.(js|ts)` file. This ensures that errors occurring deep within your server component tree are properly captured by Sentry.
+
+<Alert type="info">
+  Requires `@sentry/nextjs` version `8.28.0` or higher and Next.js 15.
+</Alert>
+
+</SplitSectionText>
+<SplitSectionCode>
 
 <PlatformContent includePath="getting-started-capture-errors/nextjs/nested-server-components" />
 
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
 ### Pages Router
 
+For applications using the Pages Router, create or update the `_error.(tsx|jsx)` file to define a custom Next.js error page. This captures errors that occur during server-side rendering or in page components.
+
+The `getInitialProps` method captures the error asynchronously, ensuring Sentry has time to send the error before serverless functions terminate.
+
+</SplitSectionText>
+<SplitSectionCode>
+
 <PlatformContent includePath="getting-started-capture-errors/nextjs/pages-router-error" />
+
+</SplitSectionCode>
+</SplitSection>
+
+</SplitLayout>
 
 ## Step 4: Add Readable Stack Traces With Source Maps (Optional)
 
 Sentry can automatically provide readable stack traces for errors using source maps, requiring a Sentry auth token.
 
-Update your `next.config.(js|mjs)` file with the following options:
+<SplitLayout>
 
-```javascript {tabTitle:ESM} {filename:next.config.mjs}
-export default withSentryConfig(nextConfig, {
-  org: "___ORG_SLUG___",
-  project: "___PROJECT_SLUG___",
+<SplitSection>
+<SplitSectionText>
 
-  // Pass the auth token
-  authToken: process.env.SENTRY_AUTH_TOKEN,
-  // Upload a larger set of source maps for prettier stack traces (increases build time)
-  widenClientFileUpload: true,
-});
-```
+### Configure Source Maps
 
-```javascript {tabTitle:CJS} {filename:next.config.js}
-module.exports = withSentryConfig(nextConfig, {
-  org: "___ORG_SLUG___",
-  project: "___PROJECT_SLUG___",
-
-  // Pass the auth token
-  authToken: process.env.SENTRY_AUTH_TOKEN,
-  // Upload a larger set of source maps for prettier stack traces (increases build time)
-  widenClientFileUpload: true,
-});
-```
-
-Set the `SENTRY_AUTH_TOKEN` environment variable in your `.env` file:
-
-```sh {filename:.env}
-SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
-```
+Update your `next.config.(js|mjs)` file with the auth token option and set the `SENTRY_AUTH_TOKEN` environment variable in your `.env` file.
 
 <Alert level="warning" title="Important">
 
@@ -315,32 +383,57 @@ Make sure to keep your auth token secret and out of version control.
 
 </Alert>
 
-## Step 5: Avoid Ad Blockers With Tunneling (Optional)
-
-You can prevent ad blockers from blocking Sentry events using tunneling. Use the `tunnelRoute` option to add an API endpoint in your application that forwards Sentry events to Sentry servers.
-
-For better ad-blocker evasion, you can either:
-
-- Set `tunnelRoute: true` to automatically generate a random tunnel route for each build, making it harder for ad-blockers to detect and block monitoring requests
-- Set `tunnelRoute: "/my-tunnel-route"` to use a static route of your choosing
+</SplitSectionText>
+<SplitSectionCode>
 
 ```javascript {tabTitle:ESM} {filename:next.config.mjs}
 export default withSentryConfig(nextConfig, {
-  // Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
-  // This can increase your server load as well as your hosting bill.
-  // Note: Check that the configured route will not match with your Next.js middleware, otherwise reporting of client-side errors will fail.
-  tunnelRoute: true, // Generates a random route for each build (recommended)
+  org: "___ORG_SLUG___",
+  project: "___PROJECT_SLUG___",
+
+  // Pass the auth token
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  // Upload a larger set of source maps for prettier stack traces (increases build time)
+  widenClientFileUpload: true,
 });
 ```
 
 ```javascript {tabTitle:CJS} {filename:next.config.js}
 module.exports = withSentryConfig(nextConfig, {
-  // Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
-  // This can increase your server load as well as your hosting bill.
-  // Note: Check that the configured route will not match with your Next.js middleware, otherwise reporting of client-side errors will fail.
-  tunnelRoute: true, // Generates a random route for each build (recommended)
+  org: "___ORG_SLUG___",
+  project: "___PROJECT_SLUG___",
+
+  // Pass the auth token
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  // Upload a larger set of source maps for prettier stack traces (increases build time)
+  widenClientFileUpload: true,
 });
 ```
+
+```sh {filename:.env}
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+</SplitLayout>
+
+## Step 5: Avoid Ad Blockers With Tunneling (Optional)
+
+You can prevent ad blockers from blocking Sentry events using tunneling. Use the `tunnelRoute` option to add an API endpoint in your application that forwards Sentry events to Sentry servers.
+
+<SplitLayout>
+
+<SplitSection>
+<SplitSectionText>
+
+### Configure Tunnel Route
+
+For better ad-blocker evasion, you can either:
+
+- Set `tunnelRoute: true` to automatically generate a random tunnel route for each build, making it harder for ad-blockers to detect and block monitoring requests
+- Set `tunnelRoute: "/my-tunnel-route"` to use a static route of your choosing
 
 <Expandable level="warning" title="Using Next.js middleware on Turbopack">
   If you're using Turbopack, client-side event recording will fail if your
@@ -351,23 +444,44 @@ module.exports = withSentryConfig(nextConfig, {
   tunnel route in your middleware.
 </Expandable>
 
-## Step 6: Instrument Vercel Cron Jobs (Optional)
-
-You can automatically create [Cron Monitors](/product/crons/) in Sentry if you have configured [Vercel cron jobs](https://vercel.com/docs/cron-jobs).
-
-Update `withSentryConfig` in your `next.config.(js|mjs)` file with the following option:
+</SplitSectionText>
+<SplitSectionCode>
 
 ```javascript {tabTitle:ESM} {filename:next.config.mjs}
 export default withSentryConfig(nextConfig, {
-  automaticVercelMonitors: true,
+  // Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
+  // This can increase your server load as well as your hosting bill.
+  // Note: Check that the configured route will not match with your Next.js middleware, otherwise reporting of client-side errors will fail.
+  tunnelRoute: true, // Generates a random route for each build (recommended)
 });
 ```
 
 ```javascript {tabTitle:CJS} {filename:next.config.js}
 module.exports = withSentryConfig(nextConfig, {
-  automaticVercelMonitors: true,
+  // Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
+  // This can increase your server load as well as your hosting bill.
+  // Note: Check that the configured route will not match with your Next.js middleware, otherwise reporting of client-side errors will fail.
+  tunnelRoute: true, // Generates a random route for each build (recommended)
 });
 ```
+
+</SplitSectionCode>
+</SplitSection>
+
+</SplitLayout>
+
+## Step 6: Instrument Vercel Cron Jobs (Optional)
+
+You can automatically create [Cron Monitors](/product/crons/) in Sentry if you have configured [Vercel cron jobs](https://vercel.com/docs/cron-jobs).
+
+<SplitLayout>
+
+<SplitSection>
+<SplitSectionText>
+
+### Configure Cron Monitoring
+
+Update `withSentryConfig` in your `next.config.(js|mjs)` file with the `automaticVercelMonitors` option.
 
 <Alert>
 
@@ -375,10 +489,41 @@ Automatic Vercel cron jobs instrumentation currently only supports the Pages Rou
 
 </Alert>
 
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript {tabTitle:ESM} {filename:next.config.mjs}
+export default withSentryConfig(nextConfig, {
+  automaticVercelMonitors: true,
+});
+```
+
+```javascript {tabTitle:CJS} {filename:next.config.js}
+module.exports = withSentryConfig(nextConfig, {
+  automaticVercelMonitors: true,
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+</SplitLayout>
+
 ## Step 7: Capture React Component Names (Optional)
 
 You can capture React component names to see which component a user clicked on in Sentry features like Session Replay.
-Update `withSentryConfig` in your `next.config.(js|mjs)` file with the following option:
+
+<SplitLayout>
+
+<SplitSection>
+<SplitSectionText>
+
+### Configure Component Annotation
+
+Update `withSentryConfig` in your `next.config.(js|mjs)` file with the `reactComponentAnnotation` option.
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```javascript {tabTitle:ESM} {filename:next.config.mjs}
 export default withSentryConfig(nextConfig, {
@@ -396,13 +541,33 @@ module.exports = withSentryConfig(nextConfig, {
 });
 ```
 
+</SplitSectionCode>
+</SplitSection>
+
+</SplitLayout>
+
 ## Step 8: Verify
 
 Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
 
+<SplitLayout>
+
+<SplitSection>
+<SplitSectionText>
+
 ### Issues
 
-To verify that Sentry captures errors and creates issues in your Sentry project, add a test button to an existing page or create a new one:
+To verify that Sentry captures errors and creates issues in your Sentry project, add a test button to an existing page or create a new one.
+
+<OnboardingOption optionId="performance" hideForThisOption>
+  Open the page in a browser (for most Next.js applications, this will be at
+  localhost) and click the button to trigger a frontend error.
+</OnboardingOption>
+
+<PlatformContent includePath="getting-started-browser-sandbox-warning" />
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```jsx
 <button
@@ -415,19 +580,33 @@ To verify that Sentry captures errors and creates issues in your Sentry project,
 </button>
 ```
 
-<OnboardingOption optionId="performance" hideForThisOption>
-  Open the page in a browser (for most Next.js applications, this will be at
-  localhost) and click the button to trigger a frontend error.
-</OnboardingOption>
+</SplitSectionCode>
+</SplitSection>
 
-<PlatformContent includePath="getting-started-browser-sandbox-warning" />
+</SplitLayout>
 
 <OnboardingOption optionId="performance">
+
+<SplitLayout>
+
+<SplitSection>
+<SplitSectionText>
+
 ### Tracing
 
-To test tracing, create a test API route like `/api/sentry-example-api`:
+To test tracing, create a test API route like `/api/sentry-example-api` and update your test button to call this route and throw an error if the response isn't `ok`.
 
-```javascript
+Open the page in a browser (for most Next.js applications, this will be at localhost) and click the button to trigger two errors:
+
+- a frontend error
+- an error within the API route
+
+Additionally, this starts a performance trace to measure the time it takes for the API request to complete.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript {filename:app/api/sentry-example-api/route.js}
 import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 
@@ -437,8 +616,6 @@ export function GET() {
   return NextResponse.json({ data: "Testing Sentry Error..." });
 }
 ```
-
-Next, update your test button to call this route and throw an error if the response isn't `ok`:
 
 ```jsx
 <button
@@ -459,12 +636,10 @@ Next, update your test button to call this route and throw an error if the respo
 </button>;
 ```
 
-Open the page in a browser (for most Next.js applications, this will be at localhost) and click the button to trigger two errors:
+</SplitSectionCode>
+</SplitSection>
 
-- a frontend error
-- an error within the API route
-
-Additionally, this starts a performance trace to measure the time it takes for the API request to complete.
+</SplitLayout>
 
 </OnboardingOption>
 
@@ -475,6 +650,8 @@ Now, head over to your project on [Sentry.io](https://sentry.io) to view the col
 <PlatformContent includePath="getting-started-verify-locate-data" />
 
 <Include name="nextjs-turbopack-warning-expandable.mdx" />
+
+</StepConnector>
 
 ## Next Steps
 
