@@ -3,7 +3,7 @@ import {useMemo, useState} from 'react';
 import * as Collapsible from '@radix-ui/react-collapsible';
 import {TriangleRightIcon} from '@radix-ui/react-icons';
 import classNames from 'classnames';
-import {T} from 'gt-next';
+import {T,useGT} from 'gt-next';
 import {matchSorter, rankings} from 'match-sorter';
 import Link from 'next/link';
 
@@ -49,6 +49,7 @@ const mostViewedPlatforms: {icon: string; key: string; title: string; url: strin
 ];
 
 export function PlatformFilterClient({platforms}: {platforms: Platform[]}) {
+  const gt = useGT();
   const platformsAndGuides = platforms
     .map(p => [
       p,
@@ -134,7 +135,7 @@ export function PlatformFilterClient({platforms}: {platforms: Platform[]}) {
           </div>
           <div className="w-full flex justify-end">
             <input
-              placeholder="Search SDKs"
+              placeholder={gt("Search SDKs")}
               className={`${styles.input}`}
               value={filter}
               onChange={e => setFilter(e.target.value)}
