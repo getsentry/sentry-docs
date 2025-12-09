@@ -1,6 +1,5 @@
 import {NextResponse} from 'next/server';
 
-import {apiCategories} from 'sentry-docs/build/resolveOpenAPI';
 import {getDevDocsFrontMatter, getDocsFrontMatter} from 'sentry-docs/frontmatter';
 import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
 
@@ -10,26 +9,6 @@ import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
  */
 export async function GET() {
   const docs = await (isDeveloperDocs ? getDevDocsFrontMatter() : getDocsFrontMatter());
-
-  // For non-developer docs, add API-generated pages (they have undefined sourcePath)
-  if (!isDeveloperDocs) {
-    const categories = await apiCategories();
-    categories.forEach(category => {
-      docs.push({
-        title: category.name,
-        slug: `api/${category.slug}`,
-        sourcePath: undefined,
-      });
-
-      category.apis.forEach(api => {
-        docs.push({
-          title: api.name,
-          slug: `api/${category.slug}/${api.slug}`,
-          sourcePath: undefined,
-        });
-      });
-    });
-  }
 
   const sourceMap: Record<string, string | null> = {};
 

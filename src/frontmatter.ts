@@ -8,6 +8,7 @@ import {apiCategories} from './build/resolveOpenAPI';
 import getAllFilesRecursively from './files';
 import {FrontMatter, PlatformConfig} from './types';
 import {isNotNil} from './utils';
+import {VERSION_INDICATOR} from './versioning';
 
 const root = process.cwd();
 // We need to limit this as we have code doing things like Promise.all(allFiles.map(...))
@@ -252,6 +253,13 @@ async function getDocsFrontMatterUncached(): Promise<FrontMatter[]> {
     const trailingIndex = '/index';
     if (fm.slug.endsWith(trailingIndex)) {
       fm.slug = fm.slug.slice(0, fm.slug.length - trailingIndex.length);
+    }
+
+    //  versioned index files get appended to the path (e.g. /path/index__v1 becomes /path__v1)
+    const versionedIndexFileIndicator = `${trailingIndex}${VERSION_INDICATOR}`;
+    if (fm.slug.includes(versionedIndexFileIndicator)) {
+      const segments = fm.slug.split(versionedIndexFileIndicator);
+      fm.slug = `${segments[0]}${VERSION_INDICATOR}${segments[1]}`;
     }
   });
 
