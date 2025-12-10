@@ -1,0 +1,305 @@
+---
+title: Vector
+sidebar_order: 10
+description: Learn how to set up Vector to forward logs to Sentry via OpenTelemetry.
+---
+
+You can configure [Vector](https://vector.dev/) to forward logs to Sentry using its [OpenTelemetry sink](https://vector.dev/docs/reference/configuration/sinks/opentelemetry/).
+
+## Prerequisites
+
+Before you begin, ensure you have:
+
+- Vector installed and running (version 0.51.0 or higher for `otlp` codec support)
+- A Sentry project you want to send data to
+
+## Step 1: Get Your Sentry OTLP Credentials
+
+You'll need your Sentry OTLP endpoint and authentication header. These can be found in your [Sentry Project Settings](https://sentry.io/settings/projects/) under **Client Keys (DSN)** > **OpenTelemetry (OTLP)**.
+
+### Logs Endpoint
+
+```bash
+___OTLP_LOGS_URL___
+```
+
+### Authentication Header
+
+```
+x-sentry-auth: sentry sentry_key=___PUBLIC_KEY___
+```
+
+## Step 2: Configure Vector
+
+Choose your configuration based on your data source:
+
+- **Option A**: Forwarding existing OTLP data (simplest)
+- **Option B**: Transforming non-OTLP data (files, syslog, etc.)
+
+## Option A: Forwarding OTLP Data
+
+If you're receiving data that's already in OTLP format (from an OpenTelemetry SDK or collector), you can forward it directly to Sentry using the `otlp` codec without any transformation.
+
+```yaml {filename:vector.yaml}
+sources:
+  otel_source:
+    type: opentelemetry
+    grpc:
+      address: 0.0.0.0:4317
+    http:
+      address: 0.0.0.0:4318
+    use_otlp_decoding: true
+
+sinks:
+  sentry_logs:
+    inputs:
+      - otel_source.logs
+    type: opentelemetry
+    protocol:
+      type: http
+      uri: ___OTLP_LOGS_URL___
+      method: post
+      headers:
+        x-sentry-auth: "sentry sentry_key=___PUBLIC_KEY___"
+      encoding:
+        codec: otlp
+```
+
+<Alert level="info">
+
+The `otlp` codec requires Vector version [0.51.0](https://vector.dev/releases/0.51.0/) or higher. The `use_otlp_decoding` option was introduced in Vector [0.50.0](https://vector.dev/releases/0.50.0/).
+
+</Alert>
+
+## Option B: Transforming Non-OTLP Data
+
+If your logs come from non-OTLP sources (files, syslog, etc.), you need to use a [remap transform](https://vector.dev/docs/reference/configuration/transforms/remap/) with VRL (Vector Remap Language) to convert your data into the OTEL format before sending to Sentry.
+
+### Understanding the OTEL Log Format
+
+The OpenTelemetry log format requires a specific structure with `resourceLogs`, `scopeLogs`, and `logRecords`:
+
+```json
+{
+  "resourceLogs": [
+    {
+      "resource": {
+        "attributes": [
+          { "key": "service.name", "value": { "stringValue": "your-service" } }
+        ]
+      },
+      "scopeLogs": [
+        {
+          "scope": { "name": "scope-name" },
+          "logRecords": [
+            {
+              "timeUnixNano": 1234567890000000000,
+              "body": { "stringValue": "Your log message" },
+              "severityText": "INFO",
+              "attributes": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+### Example: Forwarding File Logs
+
+Here's a complete example that reads logs from a file and forwards them to Sentry:
+
+```yaml {filename:vector.yaml}
+sources:
+  app_logs:
+    type: file
+    include:
+      - /var/log/app/*.log
+
+transforms:
+  remap_to_otel:
+    inputs: ["app_logs"]
+    type: remap
+    source: |
+      # Get the current timestamp in nanoseconds
+      timestamp_nanos = to_unix_timestamp!(now(), unit: "nanoseconds")
+
+      # Build the OTEL resourceLogs structure
+      .resourceLogs = [{
+        "resource": {
+          "attributes": [
+            { "key": "source_type", "value": { "stringValue": .source_type } },
+            { "key": "service.name", "value": { "stringValue": "my-application" } },
+            { "key": "host.name", "value": { "stringValue": .host } }
+          ]
+        },
+        "scopeLogs": [{
+          "scope": {
+            "name": "vector"
+          },
+          "logRecords": [{
+            "timeUnixNano": timestamp_nanos,
+            "body": { "stringValue": .message },
+            "severityText": "INFO",
+            "attributes": [
+              { "key": "file", "value": { "stringValue": .file } }
+            ]
+          }]
+        }]
+      }]
+
+      # Clean up original fields
+      del(.message)
+      del(.timestamp)
+      del(.source_type)
+      del(.host)
+      del(.file)
+
+sinks:
+  sentry_logs:
+    inputs: ["remap_to_otel"]
+    type: opentelemetry
+    protocol:
+      type: http
+      uri: ___OTLP_LOGS_URL___
+      method: post
+      headers:
+        x-sentry-auth: "sentry sentry_key=___PUBLIC_KEY___"
+      encoding:
+        codec: otlp
+```
+
+### Example: Forwarding Syslog
+
+For syslog data, you can map severity levels to OTEL severity:
+
+```yaml {filename:vector.yaml}
+sources:
+  syslog_input:
+    type: syslog
+    address: "0.0.0.0:514"
+    mode: tcp
+
+transforms:
+  remap_syslog:
+    inputs: ["syslog_input"]
+    type: remap
+    source: |
+      # Map syslog severity to OTEL severity
+      severity_text = if includes(["emerg", "err", "crit", "alert"], .severity) {
+        "ERROR"
+      } else if .severity == "warning" {
+        "WARN"
+      } else if .severity == "debug" {
+        "DEBUG"
+      } else if includes(["info", "notice"], .severity) {
+        "INFO"
+      } else {
+        .severity
+      }
+
+      timestamp_nanos = to_unix_timestamp!(.timestamp, unit: "nanoseconds")
+
+      .resourceLogs = [{
+        "resource": {
+          "attributes": [
+            { "key": "source_type", "value": { "stringValue": .source_type } },
+            { "key": "service.name", "value": { "stringValue": .appname } },
+            { "key": "host.hostname", "value": { "stringValue": .hostname } }
+          ]
+        },
+        "scopeLogs": [{
+          "scope": {
+            "name": .msgid
+          },
+          "logRecords": [{
+            "timeUnixNano": timestamp_nanos,
+            "body": { "stringValue": .message },
+            "severityText": severity_text,
+            "attributes": [
+              { "key": "syslog.procid", "value": { "stringValue": to_string(.procid) } },
+              { "key": "syslog.facility", "value": { "stringValue": .facility } },
+              { "key": "syslog.version", "value": { "stringValue": to_string(.version) } }
+            ]
+          }]
+        }]
+      }]
+
+      del(.message)
+      del(.timestamp)
+      del(.source_type)
+      del(.severity)
+      del(.appname)
+      del(.hostname)
+      del(.msgid)
+      del(.procid)
+      del(.facility)
+      del(.version)
+
+sinks:
+  sentry_logs:
+    inputs: ["remap_syslog"]
+    type: opentelemetry
+    protocol:
+      type: http
+      uri: ___OTLP_LOGS_URL___
+      method: post
+      headers:
+        x-sentry-auth: "sentry sentry_key=___PUBLIC_KEY___"
+      encoding:
+        codec: otlp
+```
+
+## VRL Remap Reference
+
+Here are the key VRL functions you'll use when building OTEL log records:
+
+| Function               | Description                    | Example                                          |
+| ---------------------- | ------------------------------ | ------------------------------------------------ |
+| `to_unix_timestamp!()` | Convert timestamp to Unix time | `to_unix_timestamp!(now(), unit: "nanoseconds")` |
+| `to_string()`          | Convert value to string        | `to_string(.procid)`                             |
+| `includes()`           | Check if array contains value  | `includes(["error", "warn"], .level)`            |
+| `del()`                | Delete a field                 | `del(.message)`                                  |
+
+## Configuration Reference
+
+### Sink Options
+
+| Option                    | Description                                  | Required |
+| ------------------------- | -------------------------------------------- | -------- |
+| `type`                    | Must be `opentelemetry`                      | Yes      |
+| `inputs`                  | Source or transform IDs to receive data from | Yes      |
+| `protocol.type`           | Transport protocol (`http`)                  | Yes      |
+| `protocol.uri`            | Your Sentry OTLP logs endpoint               | Yes      |
+| `protocol.headers`        | HTTP headers including authentication        | Yes      |
+| `protocol.encoding.codec` | Must be `otlp` for OpenTelemetry encoding    | Yes      |
+
+### OTEL Log Record Fields
+
+| Field              | Description                                  | Required    |
+| ------------------ | -------------------------------------------- | ----------- |
+| `timeUnixNano`     | Timestamp in nanoseconds since Unix epoch    | Yes         |
+| `body.stringValue` | The log message body                         | Yes         |
+| `severityText`     | Log level (`DEBUG`, `INFO`, `WARN`, `ERROR`) | Recommended |
+| `attributes`       | Additional key-value metadata                | Optional    |
+
+## Troubleshooting
+
+### Logs Not Appearing in Sentry
+
+1. **Check Vector version**: The `otlp` codec requires Vector 0.51.0+. Run `vector --version` to verify.
+
+2. **Check the OTEL structure**: If using remap, ensure your transform creates the correct `resourceLogs` structure with all required nested fields.
+
+3. **Verify timestamps**: The `timeUnixNano` field must be a valid Unix timestamp in nanoseconds.
+
+4. **Enable Vector debug logging**: Run Vector with debug logging to see the transformed events:
+
+   ```bash
+   VECTOR_LOG=debug vector --config /path/to/vector.yaml
+   ```
+
+5. **Validate your VRL**: Use [Vector's VRL playground](https://playground.vrl.dev/) to test your remap logic.
+
+For more information on Vector configuration options, see the [Vector documentation](https://vector.dev/docs/reference/configuration/).

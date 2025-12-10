@@ -218,6 +218,22 @@ const developerDocsRedirects = [
     source: '/services/emails/',
     destination: '/backend/emails/',
   },
+  {
+    source: '/self-hosted/custom-ca-roots/',
+    destination: '/self-hosted/configuration/custom-ca-roots/',
+  },
+  {
+    source: '/self-hosted/email/',
+    destination: '/self-hosted/configuration/email/',
+  },
+  {
+    source: '/self-hosted/geolocation/',
+    destination: '/self-hosted/configuration/geolocation/',
+  },
+  {
+    source: '/self-hosted/sso/',
+    destination: '/self-hosted/configuration/sso/',
+  },
 ];
 
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
@@ -248,7 +264,7 @@ const userDocsRedirects = [
   },
   {
     source: '/organization/integrations/cloudflare-workers/',
-    destination: '/organization/integrations/cloud-monitoring/cloudflare-workers/',
+    destination: '/platforms/javascript/guides/cloudflare/',
   },
   {
     source: '/account/require-2fa/',
@@ -310,10 +326,6 @@ const userDocsRedirects = [
   {
     source: '/organization/integrations/goastai/',
     destination: '/organization/integrations/issue-tracking/goast/',
-  },
-  {
-    source: '/organization/integrations/github-deployment-gates/',
-    destination: '/product/releases/setup/release-automation/github-deployment-gates/',
   },
   {
     source: '/development/sdk-dev/:path*',

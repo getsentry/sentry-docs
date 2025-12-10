@@ -251,14 +251,26 @@ Write events to disk before attempting to send, so that they can be retried in t
 
 ### Dealing With Network Failures
 
-An `HTTP 2xx` status code response from Sentry is considered a successful send. It's important to note that retry is only considered in the event of a network failure. For example:
+When SDKs receive an `HTTP 2xx` status code response from Sentry, they **MUST** consider it as a successful send.
+
+If Sentry returns an `HTTP 4xx` or `HTTP 5xx` status code, SDKs:
+
+- **MUST** discard the envelope
+- **MUST** record a [client report](/sdk/telemetry/client-reports) with the discard reason `send_error`, except for `HTTP 429` responses, see below.
+
+For an `HTTP 429` response, SDKs:
+
+- **MUST** respect the [rate limiting rules](/sdk/expected-features/rate-limiting/), such as correctly parsing the retry-header.
+- **MUST** drop the envelope, but **MUST NOT** record a [client report](/sdk/telemetry/client-reports), because the backend already does this. Doing this would double-count dropped envelopes.
+- **MUST NOT** retry sending the envelope.
+
+SDKs **MAY** retry sending the envelope when a network error occurs, such as:
 
 * Connection timeout
 * DSN resolution failure
 * Connection reset by peer
 
-Other failures, like those caused by processing the file in the SDK itself, the payload should be discarded since those are likely to end up on an endless retry.
-If the event reached Sentry and an HTTP response status code was received, even in the event of an `HTTP 500` status code, the event should be discarded.
+When other failures occur, like those caused by processing the file in the SDK itself, SDKs **MUST** discard the envelope and record a [client report](/sdk/telemetry/client-reports) with the discard reason `internal_sdk_error`. Otherwise, the SDK might end up in an endless retry loop.
 
 
 #### Additional capabilities
