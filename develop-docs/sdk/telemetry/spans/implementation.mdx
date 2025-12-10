@@ -48,7 +48,24 @@ If you're implementing Span-First (as a PoC) in your SDK, take an iterative appr
 To do: This section needs a few guidelines and implementation hints, including:
 - how to set a span active and remove it from the scope once it ends
 - languages having to deal with async context management
-- edge cases (e.g. adding a span with an explicit parent span that already ended)
+
+### `parentSpan` option for `startSpan`
+
+SDKs MUST expose a `parentSpan` option on the `startSpan` API which allows users to explicitly set the parent span of the new span.
+
+The `parentSpan` parameter has three distinct states: `undefined`, `null` and a span instance. See the [Span API documentation](../span-api) for the semantics.
+
+For languages that do not support an `undefined` state, SDKs SHOULD model this three-state behavior using platform-appropriate mechanisms. 
+Prefer solutions that preserve the semantic distinction between `undefined` and `null`, such as:
+
+- method/constructor overloading (e.g., an overload without `parentSpan`, and another accepting `parentSpan: Span?`),
+- a default sentinel value/object representing `undefined`,
+- or other idiomatic platform mechanisms (e.g., enum types).
+
+### Edge Cases
+
+- If `parentSpan` references a span that has already ended, the SDK SHOULD still create the new span and send it as a child of `parentSpan`.
+  - Handling and presentation of these relationships is deferred to downstream processing and the frontend/UI.
 
 ## Single-Span Processing Pipeline
 
@@ -119,11 +136,12 @@ Some rough pointers:
 - SDKs SHOULD follow one of the backend, mobile or browser telemetry buffer specifications. 
 - It is expected and fine to implement the proper, weighted buffering logic as a final step in the Span-First project. 
   Intermediate buffers MAY be simpler, for example disregard the priority logic and just buffer until a certain span length, size or time interval is reached.
+
 ## Release
 
-The initial PoC implementation of Span-First **SHOULD** be released in a **minor version** of the SDK.
+The initial PoC implementation of Span-First SHOULD be released in a minor version of the SDK.
 
-- This feature is entirely opt-in via `traceLifecycle = 'stream'` and therefore does **not** introduce breaking changes to existing users.
+- This feature is entirely opt-in via `traceLifecycle = 'stream'` and therefore does not introduce breaking changes to existing users.
 - The default tracing behavior (transaction-based) MUST remain unchanged until Span-First becomes the default in a future major release.
 - Release notes and user facing documentation SHOULD clearly describe:
   - the availability of Span-First behind the opt-in flag

@@ -5,7 +5,11 @@ description: "Learn how to set up Sentry's Metrics feature using our supported S
 ---
 
 <Alert level="info">
-  Metrics is currently in Open Beta for non-Enterprise plans running the JavaScript or Python SDKs. If you'd like access, please comment with your org slug on [this GitHub discussion](https://github.com/getsentry/sentry/discussions/102275) or contact us at feedback-metrics@sentry.io.
+  Metrics is currently in Open Beta for non-Enterprise plans running the
+  JavaScript or Python SDKs. If you'd like access, please comment with your org
+  slug on [this GitHub
+  discussion](https://github.com/getsentry/sentry/discussions/102275) or contact
+  us at feedback-metrics@sentry.io.
 </Alert>
 
 To set up Sentry Metrics, use the links below for supported SDKs. After it's been set up, you'll be able to send counters, gauges, and distributions from your code and view them in Sentry with direct links to related traces.
@@ -13,8 +17,6 @@ To set up Sentry Metrics, use the links below for supported SDKs. After it's bee
 ## Supported SDKs
 
 ### JavaScript
-
-Minimum SDK version: **10.20.0**
 
 - <LinkWithPlatformIcon
     platform="javascript.browser"
@@ -174,8 +176,6 @@ Minimum SDK version: **10.20.0**
 
 ### Python
 
-Minimum SDK version: **2.43.0**
-
 - <LinkWithPlatformIcon
     platform="python"
     label="Python"
@@ -219,22 +219,25 @@ Minimum SDK version: **2.43.0**
 
 ### PHP
 
-- <LinkWithPlatformIcon platform="php" label="PHP" url="/platforms/php/metrics/" />
 - <LinkWithPlatformIcon
-  platform="php.symfony"
-  label="Symfony"
-  url="/platforms/php/guides/symfony/metrics/"
+    platform="php"
+    label="PHP"
+    url="/platforms/php/metrics/"
   />
 - <LinkWithPlatformIcon
-  platform="php.laravel"
-  label="Laravel"
-  url="/platforms/php/guides/laravel/metrics/"
+    platform="php.symfony"
+    label="Symfony"
+    url="/platforms/php/guides/symfony/metrics/"
+  />
+- <LinkWithPlatformIcon
+    platform="php.laravel"
+    label="Laravel"
+    url="/platforms/php/guides/laravel/metrics/"
   />
 
 ## Upcoming SDKs
 
 We're actively working on adding Metrics functionality to additional SDKs. Check out these GitHub issues for the latest updates:
-
 
 - <LinkWithPlatformIcon
     platform="ruby"
@@ -292,159 +295,6 @@ We're actively working on adding Metrics functionality to additional SDKs. Check
 
 If you don't see your platform listed above, please reach out to us on [GitHub](https://github.com/getsentry/sentry/discussions/102275), [Discord](https://discord.gg/sentry) or contact us at [feedback-metrics@sentry.io](mailto:feedback-metrics@sentry.io), we'll get it prioritized!
 
-## Quick Start Examples
-
-### JavaScript Example
-
-First, enable metrics in your Sentry initialization:
-
-```javascript
-import * as Sentry from "@sentry/node"; // or your specific framework
-
-Sentry.init({
-  dsn: '<your-dsn>',
-  _experiments: {
-    enableMetrics: true
-  },
-});
-```
-
-Then use the metrics API to send counters, gauges, and distributions:
-
-```javascript
-// Counter — increment a metric (defaults to +1)
-Sentry.metrics.count('checkout.failed', 1, {
-  attributes: {
-    route: '/checkout',
-    tenant: 'acme',
-    provider: 'stripe',
-  },
-});
-
-// Gauge — set a current value
-Sentry.metrics.gauge('queue.depth', 42, {
-  unit: 'items',
-  attributes: {
-    queue: 'emails',
-    region: 'us-east-1',
-  },
-});
-
-// Distribution — record numeric values to compute p95, avg, sum, etc.
-Sentry.metrics.distribution('cart.amount_usd', 187.5, {
-  unit: 'usd',
-  attributes: {
-    currency: 'USD',
-    tenant: 'acme',
-  },
-});
-```
-
-Each metric event includes:
-- **name**: The metric identifier
-- **kind**: counter, gauge, or distribution
-- **value**: The numeric value
-- **attributes**: Custom key-value pairs for grouping and filtering
-- **trace_id, span_id**: Automatically attached to link with traces
-- **unit** (optional): Unit of measurement
-- **byte_size** (optional): Size information
-
-More details: [JavaScript SDK Metrics Discussion](https://github.com/getsentry/sentry-javascript/discussions/18055)
-
-### Python Example
-
-First, enable metrics in your Sentry initialization:
-
-```python
-import sentry_sdk
-from sentry_sdk import metrics
-
-sentry_sdk.init(
-    dsn="___PUBLIC_DSN___",
-    _experiments={
-        "enable_metrics": True,
-    },
-)
-```
-
-Then use the metrics API to send counters, gauges, and distributions:
-
-```python
-# Counter — increment a metric (defaults to +1)
-metrics.count(
-    "checkout.failed",
-    1,
-    attributes={"route": "/checkout", "tenant": "acme"}
-)
-
-# Gauge — set a current value
-metrics.gauge(
-    "queue.depth",
-    42,
-    attributes={"queue": "emails"}
-)
-
-# Distribution — record numeric values to compute p95, avg, sum, etc.
-metrics.distribution(
-    "cart.amount_usd",
-    187.5,
-    attributes={"currency": "USD", "tenant": "acme"}
-)
-```
-
-Each metric event includes:
-- **name**: The metric identifier
-- **kind**: counter, gauge, or distribution
-- **value**: The numeric value
-- **attributes**: Custom key-value pairs for grouping and filtering
-- **trace_id, span_id**: Automatically attached to link with traces
-- **unit** (optional): Unit of measurement
-
-More details: [Python SDK Metrics Discussion](https://github.com/getsentry/sentry-python/discussions/5042)
-
-### PHP Example
-
-First, enable metrics in your Sentry initialization:
-
-```php
-\Sentry\init([
-  'dsn' => '___PUBLIC_DSN___'
-]);
-```
-
-Then use the metrics API to send counters, gauges, and distributions:
-
-```php
-# Counter — increment a metric
-\Sentry\trace_metrics()->count(
-    'checkout.failed',
-    1,
-    ['route' => '/checkout', 'tenant' => 'acme']
-);
-
-# Gauge — set a current value
-\Sentry\trace_metrics()->gauge(
-    'queue.depth',
-    42,
-    ['queue' => 'emails']
-);
-
-# Distribution — record numeric values to compute p95, avg, sum, etc.
-\Sentry\trace_metrics()->distribution(
-    'cart.amount_usd',
-    187.5,
-    ['currency' => 'USD', 'tenant' => 'acme']
-);
-```
-
-Each metric event includes:
-- **name**: The metric identifier
-- **kind**: counter, gauge, or distribution
-- **value**: The numeric value
-- **attributes**: Custom key-value pairs for grouping and filtering
-- **trace_id, span_id**: Automatically attached to link with traces
-- **unit** (optional): Unit of measurement
-
 ## Best Practices
 
 ### Naming Conventions
@@ -459,17 +309,18 @@ Use descriptive, dot-separated names that indicate the metric's purpose:
 Add attributes for any dimension you want to group or filter by:
 
 ```javascript
-Sentry.metrics.count('api.request', 1, {
+Sentry.metrics.count("api.request", 1, {
   attributes: {
-    endpoint: '/users',
-    method: 'GET',
-    status: '200',
-    region: 'us-west',
+    endpoint: "/users",
+    method: "GET",
+    status: "200",
+    region: "us-west",
   },
 });
 ```
 
 This allows you to query metrics like:
+
 - `sum(api.request)` grouped by `endpoint`
 - `sum(api.request)` where `status:500`
 - `sum(api.request)` grouped by `region` where `method:POST`
@@ -478,10 +329,8 @@ This allows you to query metrics like:
 
 Always specify units for clarity:
 
-- Time: `ms`, `seconds`
-- Size: `bytes`, `kb`, `mb`
-- Currency: `usd`, `eur`
-- Count: `items`, `requests`, `users`
+- Time: `millisecond`, `seconds`
+- Size: `byte`, `kilobyte`, `megabyte`
 
 ### When to Instrument
 

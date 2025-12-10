@@ -264,7 +264,7 @@ const userDocsRedirects = [
   },
   {
     source: '/organization/integrations/cloudflare-workers/',
-    destination: '/organization/integrations/cloud-monitoring/cloudflare-workers/',
+    destination: '/platforms/javascript/guides/cloudflare/',
   },
   {
     source: '/account/require-2fa/',
@@ -326,10 +326,6 @@ const userDocsRedirects = [
   {
     source: '/organization/integrations/goastai/',
     destination: '/organization/integrations/issue-tracking/goast/',
-  },
-  {
-    source: '/organization/integrations/github-deployment-gates/',
-    destination: '/product/releases/setup/release-automation/github-deployment-gates/',
   },
   {
     source: '/development/sdk-dev/:path*',
