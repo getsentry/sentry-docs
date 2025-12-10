@@ -163,7 +163,18 @@ This option is turned on by default.
 
 </SdkOption>
 
-## Error Logger Options
+## Logging Options
+
+<SdkOption name="enable_logs" type="bool" defaultValue="true">
+
+If `true`, enables Sentry structured logs functionality, allowing you to use dedicated logging APIs through
+`SentrySDK.logger`, and Godot's built-in log messages are automatically captured and sent to Sentry Logs.
+Use `logger_enabled` and other `logger_*` options to control how Godot's error messages and log output
+(including `print()` statements) are captured and processed by Sentry.
+
+</SdkOption>
+
+## Godot Logger Options
 
 <SdkOption name="logger_enabled" type="bool" defaultValue="true">
 
@@ -255,7 +266,7 @@ These options can be used to hook the SDK in various ways to customize the repor
 The callbacks you set as hooks will be called on the thread where the event happened. So you can only use
 thread-safe APIs and only use Godot-specific APIs after you've checked that you're on the main thread.
 
-<SdkOption name="before_send" type="function">
+<SdkOption name="before_send" type="Callable">
 
 If assigned, this callback runs before an event is sent to Sentry. You can only set it [programmatically](#programmatic-configuration). It takes `SentryEvent` as a parameter and returns either the same event object, with or without modifications, or `null` to skip reporting the event. This can be used, for instance, for stripping PII before sending.
 
@@ -274,7 +285,7 @@ func _before_send(event: SentryEvent) -> SentryEvent:
 
 </SdkOption>
 
-<SdkOption name="before_capture_screenshot" type="function">
+<SdkOption name="before_capture_screenshot" type="Callable">
 
 If assigned, this callback runs before a screenshot is captured. You can only set it [programmatically](#programmatic-configuration). It takes `SentryEvent` as a parameter and returns `false` to skip capturing the screenshot, or `true` to capture the screenshot.
 
@@ -283,6 +294,25 @@ func _before_capture_screenshot(event: SentryEvent) -> bool:
 	if is_showing_sensitive_info():
 		return false # Don't capture screenshot!
 	return true
+```
+
+</SdkOption>
+
+<SdkOption name="before_send_log" type="Callable">
+
+If assigned, this callback will be called before sending a log message to Sentry.
+It can be used to modify the log message or prevent it from being sent.
+
+```GDScript
+func _before_send_log(log_entry: SentryLog) -> SentryLog:
+	# Filter junk.
+	if log_entry.body == "Junk message":
+		return null
+	# Remove sensitive information from log messages.
+	log_entry.body = log_entry.body.replace("Bruno", "REDACTED")
+	# Add custom attributes.
+	log_entry.set_attribute("current_scene", current_scene.name)
+	return log_entry
 ```
 
 </SdkOption>
