@@ -161,13 +161,28 @@ class ModelSerializer(Serializer):
 ...
 ```
 
-**get_attrs Method**
+**Using get_attrs to avoid N+1 queries in bulk queries**
 
-Why do this when Django Rest Framework has similar functionality? The `get_attrs` method is the reason. It allows you to do a bulk query versus multiple queries. In our example, instead of calling `ExampleTypes.objects.get(...)` multiple items, I can filter for the ones I want and assign them to the item in question using python. In the case of `attr` dictionary, the `key` is the item itself. and the `value` is a dictionary with the name of the attribute you want to add and it's values.
+For API calls that involve serializing multiple objects (for example, several Organization instances), the top-level [`serialize` function](https://github.com/getsentry/sentry/blob/f5bb22601361802007d628a0b3652256c812c7b5/src/sentry/api/serializers/base.py#L30-L80) is designed to optimize database access and avoid N+1 query problems. The process works in two steps:
+
+1. **Batch calls in `get_attrs`**: The function calls the serializer's `get_attrs` method **once**, passing in the entire list of objects that need to be serialized. This is where you should perform any bulk queries. For example, if you need additional related data (like each object's owner), perform a single query here to fetch all the owners for the list of objects, rather than querying per object. Collect everything you need in advance and construct a mapping (dictionary) of attributes, like so: `attrs[item] = {'attribute_name': attribute}`.
+
+2. **Serialize each object**: Then, the `serialize` method is called once per object in the original list, each time receiving the current object and its corresponding attributes as prepared by `get_attrs`. This ensures no extra or repeated queries are made inside `serialize`—all extra data should already be available via the `attrs` mapping.
 
 ```python
-attrs[item] = {'attribute_name': attribute}
+# Top-level serialize function (from base.py)
+def serialize(objects, user=None, serializer=None, **kwargs):
+    # Step 1: get_attrs called ONCE with entire list
+    attrs = serializer.get_attrs(
+        item_list=[o for o in objects if o is not None],
+        user=user,
+        **kwargs,
+    )
+    
+    # Step 2: serialize called ONCE PER OBJECT
+    return [serializer(o, attrs=attrs.get(o, {}), user=user, **kwargs) for o in objects]
 ```
+This design is why Sentry uses its own serializer pattern instead of something like Django Rest Framework: the explicit use of `get_attrs` allows you to batch-fetch all related data up front, and pass it along efficiently to each per-object serialization call.
 
 **Serialize Method**
 
