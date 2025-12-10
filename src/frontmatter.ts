@@ -197,7 +197,8 @@ async function getDocsFrontMatterUncached(): Promise<FrontMatter[]> {
               allFrontMatter.push({
                 ...frontmatter,
                 slug: formatSlug(slug),
-                sourcePath: 'docs/' + commonFile.commonFileName.slice(docsPath.length + 1),
+                sourcePath:
+                  'docs/' + commonFile.commonFileName.slice(docsPath.length + 1),
               });
             }
           },
@@ -278,7 +279,8 @@ async function getDocsFrontMatterUncached(): Promise<FrontMatter[]> {
               allFrontMatter.push({
                 ...frontmatter,
                 slug: formatSlug(slug),
-                sourcePath: 'docs/' + commonFile.commonFileName.slice(docsPath.length + 1),
+                sourcePath:
+                  'docs/' + commonFile.commonFileName.slice(docsPath.length + 1),
               });
             },
             {concurrency: FILE_CONCURRENCY_LIMIT}
