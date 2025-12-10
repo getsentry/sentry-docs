@@ -143,7 +143,11 @@ async function getDocsFrontMatterUncached(): Promise<FrontMatter[]> {
     if (result.status === 'fulfilled') {
       platformConfigs.set(platformName, result.value.config);
     } else {
-      // Config file doesn't exist or has errors - use empty config
+      // If the file doesn't exist, use empty config; for other errors, throw
+      const err = result.reason;
+      if (err.code !== 'ENOENT') {
+        throw err;
+      }
       platformConfigs.set(platformName, {});
     }
   });
@@ -242,7 +246,11 @@ async function getDocsFrontMatterUncached(): Promise<FrontMatter[]> {
       if (result.status === 'fulfilled') {
         guideConfigs.set(guideName, result.value.config);
       } else {
-        // Config file doesn't exist or has errors - use null
+        // If the file doesn't exist, use null; for other errors, throw
+        const err = result.reason;
+        if (err.code !== 'ENOENT') {
+          throw err;
+        }
         guideConfigs.set(guideName, null);
       }
     });
