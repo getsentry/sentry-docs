@@ -1,6 +1,6 @@
 import matter from 'gray-matter';
 import yaml from 'js-yaml';
-import {access, opendir, readFile} from 'node:fs/promises';
+import {opendir, readFile} from 'node:fs/promises';
 import path from 'node:path';
 import {limitFunction} from 'p-limit';
 
@@ -27,17 +27,17 @@ const isSupported = (
 ): boolean => {
   const canonical = guideName ? `${platformName}.${guideName}` : platformName;
   if (frontmatter.supported && frontmatter.supported.length) {
-    if (frontmatter.supported.indexOf(canonical) !== -1) {
+    if (frontmatter.supported.includes(canonical)) {
       return true;
     }
-    if (frontmatter.supported.indexOf(platformName) === -1) {
+    if (!frontmatter.supported.includes(platformName)) {
       return false;
     }
   }
   if (
     frontmatter.notSupported &&
-    (frontmatter.notSupported.indexOf(canonical) !== -1 ||
-      frontmatter.notSupported.indexOf(platformName) !== -1)
+    (frontmatter.notSupported.includes(canonical) ||
+      frontmatter.notSupported.includes(platformName))
   ) {
     return false;
   }
@@ -58,6 +58,9 @@ async function getDocsFrontMatterUncached(): Promise<FrontMatter[]> {
   const files = await getAllFilesRecursively(docsPath);
   const allFrontMatter: FrontMatter[] = [];
 
+  // Create a Set of existing file paths for fast lookups
+  const existingFilesSet = new Set(files);
+
   // First, collect all non-common files
   await Promise.all(
     files.map(
@@ -68,7 +71,7 @@ async function getDocsFrontMatterUncached(): Promise<FrontMatter[]> {
             return;
           }
 
-          if (fileName.indexOf('/common/') !== -1) {
+          if (fileName.includes('/common/')) {
             return;
           }
 
@@ -103,31 +106,52 @@ async function getDocsFrontMatterUncached(): Promise<FrontMatter[]> {
 
   // Now process all common files for each platform and expand them into platform/guide pages
   const platformsPath = path.join(docsPath, 'platforms');
+
+  // Collect all platform names upfront by fully consuming the async iterator
+  const allPlatforms: string[] = [];
   for await (const platform of await opendir(platformsPath)) {
-    if (platform.isFile()) {
-      continue;
+    if (!platform.isFile()) {
+      allPlatforms.push(platform.name);
     }
-    const platformName = platform.name;
+  }
 
-    let platformFrontmatter: PlatformConfig = {};
-    const configPath = path.join(platformsPath, platformName, 'config.yml');
-    try {
-      platformFrontmatter = yaml.load(
-        await readFile(configPath, 'utf8')
-      ) as PlatformConfig;
-    } catch (err) {
-      // the file may not exist and that's fine, for anything else we throw
-      if (err.code !== 'ENOENT') {
-        throw err;
-      }
-    }
-
+  // Filter to only platforms that have common directories (check against existingFilesSet)
+  const platformNames = allPlatforms.filter(platformName => {
     const commonPath = path.join(platformsPath, platformName, 'common');
-    try {
-      await access(commonPath);
-    } catch (err) {
-      continue;
+    // Check if any files in existingFilesSet start with this common path
+    for (const filePath of existingFilesSet) {
+      if (filePath.startsWith(commonPath)) return true;
     }
+    return false;
+  });
+
+  // Batch read all platform config files in parallel
+  const platformConfigResults = await Promise.allSettled(
+    platformNames.map(platformName => {
+      const configPath = path.join(platformsPath, platformName, 'config.yml');
+      return readFile(configPath, 'utf8').then(content => ({
+        platformName,
+        config: yaml.load(content) as PlatformConfig,
+      }));
+    })
+  );
+
+  // Create a map of platform configs
+  const platformConfigs = new Map<string, PlatformConfig>();
+  platformConfigResults.forEach((result, index) => {
+    const platformName = platformNames[index];
+    if (result.status === 'fulfilled') {
+      platformConfigs.set(platformName, result.value.config);
+    } else {
+      // Config file doesn't exist or has errors - use empty config
+      platformConfigs.set(platformName, {});
+    }
+  });
+
+  // Process each platform
+  for (const platformName of platformNames) {
+    const platformFrontmatter = platformConfigs.get(platformName) || {};
+    const commonPath = path.join(platformsPath, platformName, 'common');
 
     const commonFileNames: string[] = (await getAllFilesRecursively(commonPath)).filter(
       p => path.extname(p) === '.mdx'
@@ -150,30 +174,30 @@ async function getDocsFrontMatterUncached(): Promise<FrontMatter[]> {
     await Promise.all(
       commonFiles.map(
         limitFunction(
-          async f => {
-            if (!isSupported(f.frontmatter, platformName)) {
+          commonFile => {
+            if (!isSupported(commonFile.frontmatter, platformName)) {
               return;
             }
 
-            const subpath = f.commonFileName.slice(commonPath.length + 1);
-            const slug = f.commonFileName
+            const subpath = commonFile.commonFileName.slice(commonPath.length + 1);
+            const slug = commonFile.commonFileName
               .slice(docsPath.length + 1)
               .replace(/\/common\//, '/');
-            const noFrontMatter = (
-              await Promise.allSettled([
-                access(path.join(docsPath, slug)),
-                access(path.join(docsPath, slug.replace('/index.mdx', '.mdx'))),
-              ])
-            ).every(r => r.status === 'rejected');
+            // Check if the file exists using the pre-computed Set
+            const noFrontMatter =
+              !existingFilesSet.has(path.join(docsPath, slug)) &&
+              !existingFilesSet.has(
+                path.join(docsPath, slug.replace('/index.mdx', '.mdx'))
+              );
             if (noFrontMatter) {
-              let frontmatter = f.frontmatter;
+              let frontmatter = commonFile.frontmatter;
               if (subpath === 'index.mdx') {
                 frontmatter = {...frontmatter, ...platformFrontmatter};
               }
               allFrontMatter.push({
                 ...frontmatter,
                 slug: formatSlug(slug),
-                sourcePath: 'docs/' + f.commonFileName.slice(docsPath.length + 1),
+                sourcePath: 'docs/' + commonFile.commonFileName.slice(docsPath.length + 1),
               });
             }
           },
@@ -184,39 +208,57 @@ async function getDocsFrontMatterUncached(): Promise<FrontMatter[]> {
 
     // Add common files for each guide under this platform
     const guidesPath = path.join(docsPath, 'platforms', platformName, 'guides');
+
+    // Collect all guide names upfront by fully consuming the async iterator
+    let guideNames: string[] = [];
     try {
-      await access(guidesPath);
+      const guidesDir = await opendir(guidesPath);
+      for await (const guide of guidesDir) {
+        if (!guide.isFile()) {
+          guideNames.push(guide.name);
+        }
+      }
     } catch (err) {
+      // No guides directory for this platform, skip
       continue;
     }
 
-    for await (const guide of await opendir(guidesPath)) {
-      if (guide.isFile()) {
-        continue;
-      }
-      const guideName = guide.name;
+    // Batch read all guide config files in parallel
+    const guideConfigResults = await Promise.allSettled(
+      guideNames.map(guideName => {
+        const guideConfigPath = path.join(guidesPath, guideName, 'config.yml');
+        return readFile(guideConfigPath, 'utf8').then(content => ({
+          guideName,
+          config: yaml.load(content) as FrontMatter,
+        }));
+      })
+    );
 
-      let guideFrontmatter: FrontMatter | null = null;
-      const guideConfigPath = path.join(guidesPath, guideName, 'config.yml');
-      try {
-        guideFrontmatter = yaml.load(
-          await readFile(guideConfigPath, 'utf8')
-        ) as FrontMatter;
-      } catch (err) {
-        if (err.code !== 'ENOENT') {
-          throw err;
-        }
+    // Create a map of guide configs
+    const guideConfigs = new Map<string, FrontMatter | null>();
+    guideConfigResults.forEach((result, index) => {
+      const guideName = guideNames[index];
+      if (result.status === 'fulfilled') {
+        guideConfigs.set(guideName, result.value.config);
+      } else {
+        // Config file doesn't exist or has errors - use null
+        guideConfigs.set(guideName, null);
       }
+    });
+
+    // Process each guide
+    for (const guideName of guideNames) {
+      const guideFrontmatter = guideConfigs.get(guideName) || null;
 
       await Promise.all(
         commonFiles.map(
           limitFunction(
-            async f => {
-              if (!isSupported(f.frontmatter, platformName, guideName)) {
+            commonFile => {
+              if (!isSupported(commonFile.frontmatter, platformName, guideName)) {
                 return;
               }
 
-              const subpath = f.commonFileName.slice(commonPath.length + 1);
+              const subpath = commonFile.commonFileName.slice(commonPath.length + 1);
               const slug = path.join(
                 'platforms',
                 platformName,
@@ -224,21 +266,19 @@ async function getDocsFrontMatterUncached(): Promise<FrontMatter[]> {
                 guideName,
                 subpath
               );
-              try {
-                await access(path.join(docsPath, slug));
+              // Check if file exists using pre-computed Set
+              if (existingFilesSet.has(path.join(docsPath, slug))) {
                 return;
-              } catch {
-                // pass
               }
 
-              let frontmatter = f.frontmatter;
+              let frontmatter = commonFile.frontmatter;
               if (subpath === 'index.mdx') {
                 frontmatter = {...frontmatter, ...guideFrontmatter};
               }
               allFrontMatter.push({
                 ...frontmatter,
                 slug: formatSlug(slug),
-                sourcePath: 'docs/' + f.commonFileName.slice(docsPath.length + 1),
+                sourcePath: 'docs/' + commonFile.commonFileName.slice(docsPath.length + 1),
               });
             },
             {concurrency: FILE_CONCURRENCY_LIMIT}
