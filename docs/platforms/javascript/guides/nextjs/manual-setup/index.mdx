@@ -16,11 +16,7 @@ This guide covers manual setup for **Next.js 15+ with Turbopack and App Router**
 
 <PlatformContent includePath="getting-started-prerequisites" />
 
-<StepConnector selector="h2" showNumbers={true}>
-
-## Install
-
-Choose the features you want to configure, and this guide will show you how:
+Choose the features you want to configure:
 
 <OnboardingOptionButtons
   options={[
@@ -32,7 +28,9 @@ Choose the features you want to configure, and this guide will show you how:
   ]}
 />
 
-<PlatformContent includePath="getting-started-features-expandable" />
+<StepConnector selector="h2" showNumbers={true}>
+
+## Install
 
 <SplitLayout>
 
@@ -235,16 +233,10 @@ export async function register() {
 </SplitSectionCode>
 </SplitSection>
 
-</SplitLayout>
-
-## Capture React Render Errors
-
-<SplitLayout>
-
 <SplitSection>
 <SplitSectionText>
 
-### Global Error Component
+### Capture React Render Errors
 
 Create `app/global-error.tsx` to capture errors that occur anywhere in your App Router application.
 
@@ -259,7 +251,7 @@ Create `app/global-error.tsx` to capture errors that occur anywhere in your App 
 <SplitSection>
 <SplitSectionText>
 
-### Nested React Server Component Errors
+### Capture Server Component Errors
 
 To capture errors from nested React Server Components, export the `onRequestError` hook from your `instrumentation.ts` file.
 
@@ -275,100 +267,44 @@ To capture errors from nested React Server Components, export the `onRequestErro
 </SplitSectionCode>
 </SplitSection>
 
-</SplitLayout>
-
-## Manually Capture Exceptions
-
-By default, Sentry captures errors automatically. For cases where you want to manually capture errors, use `Sentry.captureException()`.
-
-<SplitLayout>
-
 <SplitSection>
 <SplitSectionText>
 
-### Server-Side (API Routes & Server Actions)
+### Server Actions
 
-Capture errors in API route handlers and Server Actions.
+Wrap your Server Actions with `Sentry.withServerActionInstrumentation()`.
 
 </SplitSectionText>
 <SplitSectionCode>
-
-```typescript {filename:app/api/example/route.ts}
-import * as Sentry from "@sentry/nextjs";
-
-export async function GET() {
-  try {
-    // Your code that might throw
-    throw new Error("Failed to fetch data");
-  } catch (err) {
-    Sentry.captureException(err);
-    throw err; // Optionally re-throw
-  }
-}
-```
 
 ```typescript {filename:app/actions.ts}
 "use server";
 import * as Sentry from "@sentry/nextjs";
 
-export async function submitOrder(formData: FormData) {
-  try {
-    // ...perform work that might throw
-  } catch (err) {
-    Sentry.captureException(err);
-    throw err;
-  }
-}
-```
-
-</SplitSectionCode>
-</SplitSection>
-
-<SplitSection>
-<SplitSectionText>
-
-### Client-Side
-
-Capture errors from user interactions and client-side logic.
-
-</SplitSectionText>
-<SplitSectionCode>
-
-```tsx {filename:app/components/DangerousButton.tsx}
-"use client";
-import * as Sentry from "@sentry/nextjs";
-
-export function DangerousButton() {
-  const onClick = async () => {
-    try {
-      throw new Error("User action failed");
-    } catch (err) {
-      Sentry.captureException(err);
-      throw err; // Optional: trigger error boundaries
+export async function submitForm(formData: FormData) {
+  return Sentry.withServerActionInstrumentation(
+    "submitForm", // Action name for Sentry
+    {
+      recordResponse: true, // Include response data
+    },
+    async () => {
+      // Your server action logic
+      const result = await processForm(formData);
+      return { success: true, data: result };
     }
-  };
-
-  return <button onClick={onClick}>Do risky thing</button>;
+  );
 }
 ```
 
 </SplitSectionCode>
 </SplitSection>
 
-</SplitLayout>
-
-## Source Maps (Optional)
-
-Enable readable stack traces by uploading source maps to Sentry.
-
-<SplitLayout>
-
 <SplitSection>
 <SplitSectionText>
 
-### Configure Source Maps
+### Source Maps (Optional)
 
-Add the `authToken` option to your `next.config.ts` and set the `SENTRY_AUTH_TOKEN` environment variable.
+Add the `authToken` option to your `next.config.ts` to enable readable stack traces. Set the `SENTRY_AUTH_TOKEN` environment variable in your CI/CD.
 
 <Alert level="warning" title="Important">
   Keep your auth token secret and out of version control.
@@ -397,20 +333,12 @@ SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
 </SplitSectionCode>
 </SplitSection>
 
-</SplitLayout>
-
-## Tunneling (Optional)
-
-Prevent ad blockers from blocking Sentry events by routing them through your Next.js server.
-
-<SplitLayout>
-
 <SplitSection>
 <SplitSectionText>
 
-### Configure Tunnel Route
+### Tunneling (Optional)
 
-Set `tunnelRoute: true` to automatically generate a random tunnel route for each build.
+Prevent ad blockers from blocking Sentry events by routing them through your Next.js server.
 
 <Alert level="info">
   This increases server load. Consider the trade-off for your application.
@@ -434,41 +362,16 @@ export default withSentryConfig(nextConfig, {
 
 </SplitLayout>
 
-## React Component Names (Optional)
+## Error Monitoring
 
-Capture React component names to see which component a user clicked on in Session Replay.
-
-<SplitLayout>
-
-<SplitSection>
-<SplitSectionText>
-
-### Enable Component Annotation
-
-</SplitSectionText>
-<SplitSectionCode>
-
-```typescript {filename:next.config.ts}
-export default withSentryConfig(nextConfig, {
-  reactComponentAnnotation: {
-    enabled: true,
-  },
-});
-```
-
-</SplitSectionCode>
-</SplitSection>
-
-</SplitLayout>
-
-## Verify
-
-Test your setup by creating a button that throws an error:
+Test your error monitoring setup by throwing an error and viewing it in Sentry.
 
 <SplitLayout>
 
 <SplitSection>
 <SplitSectionText>
+
+### Throw a Test Error
 
 Add this button to any page and click it to trigger a test error.
 
@@ -493,19 +396,213 @@ Add this button to any page and click it to trigger a test error.
 
 </SplitLayout>
 
-Head over to your project on [Sentry.io](https://sentry.io) to view the captured error.
+### Verify
 
-<PlatformContent includePath="getting-started-verify-locate-data" />
+Open [**Issues**](https://sentry.io/orgredirect/organizations/:orgslug/issues/) in Sentry to see your test error. [Learn more about capturing errors](/platforms/javascript/guides/nextjs/usage/).
+
+<OnboardingOption optionId="session-replay">
+
+## Session Replay
+
+Session Replay is already configured in your `instrumentation-client.ts` file. The `replayIntegration()` captures video-like reproductions of user sessions.
+
+<SplitLayout>
+
+<SplitSection>
+<SplitSectionText>
+
+### Configuration
+
+Adjust sample rates in `Sentry.init()`. By default, Sentry masks all DOM text content, images, and user input, giving you heightened confidence that no sensitive data will leave the browser.
+
+You can customize masking behavior to unmask specific elements or mask additional sensitive content. See [Privacy Configuration](/platforms/javascript/guides/nextjs/session-replay/privacy/) for details.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {filename:instrumentation-client.ts}
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  integrations: [
+    Sentry.replayIntegration({
+      // Privacy settings (defaults shown)
+      maskAllText: true,
+      maskAllInputs: true,
+      blockAllMedia: true,
+
+      // Unmask specific elements
+      unmask: [".public-content"],
+    }),
+  ],
+
+  // Sample rates
+  replaysSessionSampleRate: 0.1, // Capture 10% of all sessions
+  replaysOnErrorSampleRate: 1.0, // Capture 100% of error sessions
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+</SplitLayout>
+
+### Verify
+
+Trigger an error or navigate around your app, then open [**Replays**](https://sentry.io/orgredirect/organizations/:orgslug/replays/) in Sentry to watch the session recording. [Learn more about Session Replay](/platforms/javascript/guides/nextjs/session-replay/).
+
+</OnboardingOption>
+
+<OnboardingOption optionId="performance">
+
+## Tracing
+
+Tracing is already configured in your SDK initialization files with `tracesSampleRate`. Your Next.js routes and API calls are automatically instrumented.
+
+<SplitLayout>
+
+<SplitSection>
+<SplitSectionText>
+
+### Configuration
+
+Adjust sample rates for production. We recommend starting with a lower rate and increasing as needed.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {filename:sentry.server.config.ts}
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // Capture 100% in dev, 10% in production
+  tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.1,
+
+  // Or use sampling function for more control
+  tracesSampler: ({ name, parentSampled }) => {
+    // Always trace errors
+    if (name.includes("error")) return 1.0;
+    // Use parent's sampling decision if available
+    if (parentSampled !== undefined) return parentSampled;
+    // Default sample rate
+    return 0.1;
+  },
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Custom Spans
+
+Add custom spans to trace specific operations in your code. See [Custom Instrumentation](/platforms/javascript/guides/nextjs/tracing/instrumentation/custom-instrumentation/) for more examples.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript
+import * as Sentry from "@sentry/nextjs";
+
+// Wrap a function with a span
+const result = await Sentry.startSpan(
+  { name: "expensive-operation", op: "function" },
+  async () => {
+    // Your code here
+    return await fetchDataFromAPI();
+  }
+);
+
+// Or create nested spans
+Sentry.startSpan({ name: "parent-operation" }, () => {
+  Sentry.startSpan({ name: "child-operation" }, () => {
+    // Nested work
+  });
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+</SplitLayout>
+
+### Verify
+
+Navigate to any page in your app, then open [**Traces**](https://sentry.io/orgredirect/organizations/:orgslug/explore/traces/) in Sentry to see the performance data. [Learn more about Tracing](/platforms/javascript/guides/nextjs/tracing/).
+
+</OnboardingOption>
+
+<OnboardingOption optionId="logs">
+
+## Logs
+
+Logs are enabled with `enableLogs: true` in your SDK configuration. Use the Sentry logger to send structured logs.
+
+<SplitLayout>
+
+<SplitSection>
+<SplitSectionText>
+
+### Send a Test Log
+
+Use the Sentry logger to send logs from anywhere in your application.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript
+import * as Sentry from "@sentry/nextjs";
+
+// Simple log message
+Sentry.logger.info("User clicked checkout button");
+
+// Log with parameters
+Sentry.logger.info("Order completed", {
+  orderId: "12345",
+  total: 99.99,
+});
+
+// Different log levels
+Sentry.logger.debug("Debug information");
+Sentry.logger.warn("Warning message");
+Sentry.logger.error("Error occurred");
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+</SplitLayout>
+
+### Verify
+
+Add a log statement to your code and trigger it, then open [**Logs**](https://sentry.io/orgredirect/organizations/:orgslug/explore/logs/) in Sentry. [Learn more about Logs](/platforms/javascript/guides/nextjs/logs/) or see available [Integrations](/platforms/javascript/guides/nextjs/logs/#integrations) to connect popular logging libraries.
+
+</OnboardingOption>
+
+<OnboardingOption optionId="user-feedback">
+
+## User Feedback
+
+User Feedback is configured with `feedbackIntegration()` in your `instrumentation-client.ts`. A feedback widget is automatically added to your application.
+
+### Verify
+
+Look for the feedback button in your app (usually bottom-right corner) and submit a test feedback. Open [**User Feedback**](https://sentry.io/orgredirect/organizations/:orgslug/feedback/) in Sentry to see the submission. [Learn more about User Feedback](/platforms/javascript/guides/nextjs/user-feedback/).
+
+</OnboardingOption>
 
 </StepConnector>
 
 ## Next Steps
 
-- [Structured Logs](/platforms/javascript/guides/nextjs/logs/) - Send logs to Sentry
-- [Session Replay](/platforms/javascript/guides/nextjs/session-replay/) - Configure replay options
-- [Distributed Tracing](/platforms/javascript/guides/nextjs/tracing/) - Set up tracing across services
-- [Enriching Events](/platforms/javascript/guides/nextjs/enriching-events/) - Add context to your events
-- [Configuration Options](/platforms/javascript/guides/nextjs/configuration/) - All configuration options
+You've successfully integrated Sentry into your Next.js application! Here's what to explore next:
+
+- [Source Maps](/platforms/javascript/guides/nextjs/sourcemaps/) - Upload source maps to see original source code in stack traces
+- [Metrics](/platforms/javascript/guides/nextjs/metrics/) - Track custom metrics and monitor application performance
+- [Connect GitHub + Seer](/organization/integrations/source-code-mgmt/github/#installing-github) - Enable AI-powered [root cause analysis](/product/ai-in-sentry/seer/) by connecting your GitHub repository
+- [Configuration Options](/platforms/javascript/guides/nextjs/configuration/) - Explore extended SDK configuration options
 
 <Expandable permalink={false} title="Are you having problems setting up the SDK?">
 

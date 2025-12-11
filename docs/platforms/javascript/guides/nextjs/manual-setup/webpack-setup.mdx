@@ -18,7 +18,7 @@ This guide covers the configuration differences for **Next.js applications using
 | ------------------------------- | ------------------------------- | ----------------------------------- |
 | Server function instrumentation | Automatic via Next.js telemetry | Build-time code injection           |
 | Middleware instrumentation      | Automatic via Next.js telemetry | Build-time code injection           |
-| Source map upload               | Post-build via CLI              | During build via Webpack plugin     |
+| Source map upload               | Post-build via CLI (default)    | During build via plugin (default)   |
 | Route exclusion                 | Not supported                   | Supported via `excludeServerRoutes` |
 
 ## Auto-Instrumentation Options
@@ -34,6 +34,8 @@ With Webpack, Sentry automatically instruments your server functions, middleware
 
 These options are enabled by default with Webpack. Disable them if you prefer manual instrumentation or experience build issues.
 
+**Note**: These options instrument Pages Router pages, API routes, and App Router components, but do NOT automatically instrument Server Actions. Server Actions require manual wrapping using `withServerActionInstrumentation()`.
+
 </SplitSectionText>
 <SplitSectionCode>
 
@@ -41,13 +43,13 @@ These options are enabled by default with Webpack. Disable them if you prefer ma
 import { withSentryConfig } from "@sentry/nextjs";
 
 export default withSentryConfig(nextConfig, {
-  // Instrument API routes and data fetching methods (default: true)
+  // Instrument Pages Router API routes and data fetching methods (default: true)
   autoInstrumentServerFunctions: true,
 
   // Instrument Next.js middleware (default: true)
   autoInstrumentMiddleware: true,
 
-  // Instrument app directory components (default: true)
+  // Instrument App Router components (default: true)
   autoInstrumentAppDirectory: true,
 });
 ```
@@ -97,19 +99,51 @@ export default withSentryConfig(nextConfig, {
 
 ## Source Map Upload
 
-Webpack uploads source maps during the build process using the Sentry Webpack Plugin, while Turbopack uploads them after the build completes.
+By default, Webpack uploads source maps **during the build process** using the Sentry Webpack Plugin. This happens separately for each build (client, server, edge), which can increase build time.
+
+For faster builds, you can use the post-build upload mode (available in Next.js 15.4.1+), which uploads all source maps in a single operation after all builds complete.
 
 <SplitLayout>
 
 <SplitSection>
 <SplitSectionText>
 
-### Webpack Plugin Options
+### Default: Upload During Build
 
-Pass options directly to the underlying Sentry Webpack Plugin for advanced configuration.
+The Sentry Webpack Plugin runs during each webpack compilation and uploads source maps as they're generated.
 
-<Alert level="warning">
-  The `unstable_sentryWebpackPluginOptions` API may change in future releases.
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {filename:next.config.ts}
+import { withSentryConfig } from "@sentry/nextjs";
+
+export default withSentryConfig(nextConfig, {
+  org: "___ORG_SLUG___",
+  project: "___PROJECT_SLUG___",
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+
+  // Default webpack behavior - uploads during build
+  useRunAfterProductionCompileHook: false,
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+</SplitLayout>
+
+<SplitLayout>
+
+<SplitSection>
+<SplitSectionText>
+
+### Option: Upload After Build (Next.js 15.4.1+)
+
+Enable post-build upload for faster builds. All source maps are uploaded once after all webpack builds complete.
+
+<Alert level="info">
+  This option requires Next.js 15.4.1 or later. Turbopack always uses this mode.
 </Alert>
 
 </SplitSectionText>
@@ -119,14 +153,51 @@ Pass options directly to the underlying Sentry Webpack Plugin for advanced confi
 import { withSentryConfig } from "@sentry/nextjs";
 
 export default withSentryConfig(nextConfig, {
-  // Standard options
+  org: "___ORG_SLUG___",
+  project: "___PROJECT_SLUG___",
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+
+  // Upload after all builds complete (faster)
+  useRunAfterProductionCompileHook: true,
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+</SplitLayout>
+
+<SplitLayout>
+
+<SplitSection>
+<SplitSectionText>
+
+### Advanced Webpack Plugin Options
+
+Pass options directly to the underlying Sentry Webpack Plugin for advanced configuration.
+
+<Alert level="warning">
+  The `unstable_sentryWebpackPluginOptions` API may change in future releases.
+</Alert>
+
+<Alert level="info">
+  These options only apply when `useRunAfterProductionCompileHook` is `false`
+  (the default).
+</Alert>
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {filename:next.config.ts}
+import { withSentryConfig } from "@sentry/nextjs";
+
+export default withSentryConfig(nextConfig, {
   org: "___ORG_SLUG___",
   project: "___PROJECT_SLUG___",
   authToken: process.env.SENTRY_AUTH_TOKEN,
 
   // Advanced Webpack plugin options
   unstable_sentryWebpackPluginOptions: {
-    // Custom source map settings
     sourcemaps: {
       assets: ["./build/**/*.js", "./build/**/*.map"],
       ignore: ["node_modules/**"],
@@ -142,7 +213,7 @@ export default withSentryConfig(nextConfig, {
 
 ## Server Actions with Webpack
 
-When using Webpack, Server Actions are instrumented automatically through the `autoInstrumentServerFunctions` option. However, you may want to add manual error capturing for better control:
+Server Actions (functions marked with `"use server"`) are **not automatically instrumented** by Webpack's build-time instrumentation. You must manually wrap them for error and performance monitoring.
 
 <SplitLayout>
 
@@ -151,7 +222,7 @@ When using Webpack, Server Actions are instrumented automatically through the `a
 
 ### Manual Server Action Instrumentation
 
-For more control over error handling in Server Actions, manually wrap them with `Sentry.captureException()`.
+Wrap Server Actions with `withServerActionInstrumentation()` to capture errors and performance data.
 
 </SplitSectionText>
 <SplitSectionCode>
@@ -161,19 +232,17 @@ For more control over error handling in Server Actions, manually wrap them with 
 import * as Sentry from "@sentry/nextjs";
 
 export async function submitForm(formData: FormData) {
-  try {
-    // Your server action logic
-    const result = await processForm(formData);
-    return { success: true, data: result };
-  } catch (err) {
-    // Capture with additional context
-    Sentry.captureException(err, {
-      extra: {
-        formFields: Object.fromEntries(formData),
-      },
-    });
-    return { success: false, error: "Submission failed" };
-  }
+  return Sentry.withServerActionInstrumentation(
+    "submitForm", // Action name for Sentry
+    {
+      recordResponse: true, // Include response data
+    },
+    async () => {
+      // Your server action logic
+      const result = await processForm(formData);
+      return { success: true, data: result };
+    }
+  );
 }
 ```
 
@@ -184,16 +253,16 @@ export async function submitForm(formData: FormData) {
 
 ## Tunneling with Webpack
 
-Unlike Turbopack, Webpack automatically configures your middleware to skip the tunnel route. You don't need to add manual exclusions.
+Tunneling works identically for both Webpack and Turbopack. Sentry automatically filters tunnel requests from middleware spans to prevent noise in your monitoring data.
 
 <SplitLayout>
 
 <SplitSection>
 <SplitSectionText>
 
-### Simple Tunnel Configuration
+### Configure Tunnel Route
 
-With Webpack, just enable the tunnel route and Sentry handles the middleware configuration automatically.
+Enable tunneling to bypass ad-blockers. Sentry automatically handles middleware span filtering for tunnel requests.
 
 </SplitSectionText>
 <SplitSectionCode>
@@ -219,8 +288,8 @@ export default withSentryConfig(nextConfig, {
 
 If you're upgrading to Turbopack:
 
-1. **Remove Webpack-specific options** - `excludeServerRoutes` and `unstable_sentryWebpackPluginOptions` have no effect with Turbopack
-2. **Update tunnel route configuration** - If using middleware, add a negative matcher to exclude your tunnel route
+1. **Remove webpack-only options** - `excludeServerRoutes` and `unstable_sentryWebpackPluginOptions` have no effect with Turbopack
+2. **Understand source map changes** - Turbopack always uses post-build upload (no plugin-based upload option)
 3. **Test auto-instrumentation** - Turbopack uses Next.js telemetry instead of build-time injection; verify your monitoring still works
 
 ```typescript {filename:next.config.ts}
@@ -230,15 +299,16 @@ export default withSentryConfig(nextConfig, {
   tunnelRoute: true,
 });
 
-// After (Turbopack) - excludeServerRoutes is not needed
+// After (Turbopack)
 export default withSentryConfig(nextConfig, {
-  tunnelRoute: "/monitoring", // Use fixed route with Turbopack
+  // excludeServerRoutes is not supported with Turbopack
+  tunnelRoute: "/monitoring",
 });
 ```
 
 ## Next Steps
 
-- [Main Manual Setup](/platforms/javascript/guides/nextjs/manual-setup/) - Complete setup guide
-- [Pages Router Setup](/platforms/javascript/guides/nextjs/manual-setup/pages-router/) - For Pages Router applications
-- [Build Options](/platforms/javascript/guides/nextjs/configuration/build/) - All build configuration options
-- [Troubleshooting](/platforms/javascript/guides/nextjs/troubleshooting/) - Common issues and solutions
+- [Source Maps](/platforms/javascript/guides/nextjs/sourcemaps/) - Upload source maps for readable stack traces
+- [Metrics](/platforms/javascript/guides/nextjs/metrics/) - Track custom metrics
+- [Connect GitHub + Seer](/organization/integrations/source-code-mgmt/github/#installing-github) - Enable AI-powered [root cause analysis](/product/ai-in-sentry/seer/)
+- [Configuration Options](/platforms/javascript/guides/nextjs/configuration/) - Explore extended SDK configuration
