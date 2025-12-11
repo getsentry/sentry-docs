@@ -140,37 +140,9 @@ The integration will automatically detect streaming vs non-streaming requests an
 
 <PlatformSection supported={['javascript.nextjs']}>
 
-## Node.js Runtime
+## Node.js and Edge Runtime
 
-Automatic instrumentation of the OpenAI SDK may not work as expected with certain Next.js configurations (especially with Turbopack and in Next.js 16). In these cases, manual instrumentation via `instrumentOpenAiClient` is recommended.
-
-For projects using Next.js 15 or earlier with Webpack, the following configuration can be applied in your `next.config.js` to ensure proper instrumentation:
-
-```javascript
-module.exports = {
-  webpack(config, { isServer }) {
-    if (isServer) {
-      // Force 'openai' to be required dynamically (not bundled)
-      // This allows Sentry to instrument the OpenAI SDK at runtime
-      config.externals = config.externals || [];
-      config.externals.push("openai");
-    }
-    return config;
-  },
-};
-```
-
-This ensures the package is externalized at runtime.
-
-<Alert>
-
-Note that this cannot be achieved using `serverExternalPackages: ['openai']`.
-
-</Alert>
-
-## Edge Runtime
-
-For Next.js applications using the Edge runtime, you need to manually instrument the OpenAI client:
+For Next.js applications, you need to manually instrument the OpenAI client:
 
 ```javascript
 import * as Sentry from "@sentry/nextjs";
