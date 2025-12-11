@@ -1,7 +1,13 @@
 ---
 title: "Manual Setup"
 sidebar_order: 1
-description: "Learn how to manually set up Sentry in your Next.js app with Turbopack and App Router."
+description: "Learn how to set up and configure Sentry in your Next.js application, capture your first errors, logs and traces and view them in Sentry"
+sdk: sentry.javascript.nextjs
+categories:
+  - javascript
+  - browser
+  - server
+  - server-node
 ---
 
 <Alert type="info">
@@ -21,12 +27,18 @@ Choose the features you want to configure:
 <OnboardingOptionButtons
   options={[
     "error-monitoring",
-    "performance",
+    { id: "performance", checked: true },
     "session-replay",
     "user-feedback",
-    "logs",
+    { id: "logs", checked: true },
   ]}
 />
+
+**How this guide works:**
+
+1. **Install** - Add the Sentry SDK to your project
+2. **Configure** - Set up SDK initialization files and Next.js configuration
+3. **Verify each feature** - For each feature you enabled, we'll show you how to test it and verify it's working in Sentry
 
 <StepConnector selector="h2" showNumbers={true}>
 
@@ -344,6 +356,26 @@ Prevent ad blockers from blocking Sentry events by routing them through your Nex
   This increases server load. Consider the trade-off for your application.
 </Alert>
 
+<Expandable title="Using Next.js middleware/proxy with tunneling">
+
+If you're using Next.js middleware (`middleware.ts`) or proxy (`proxy.ts`) that intercepts requests, you may need to exclude the tunnel route. When using `tunnelRoute: true`, Sentry generates a random route on each build. For compatibility, use a fixed route instead:
+
+```typescript {filename:next.config.ts}
+export default withSentryConfig(nextConfig, {
+  tunnelRoute: "/monitoring",
+});
+```
+
+Then exclude it in your middleware or proxy:
+
+```typescript {filename:middleware.ts or proxy.ts}
+export const config = {
+  matcher: ["/((?!monitoring|_next/static|_next/image|favicon.ico).*)"],
+};
+```
+
+</Expandable>
+
 </SplitSectionText>
 <SplitSectionCode>
 
@@ -595,12 +627,26 @@ Look for the feedback button in your app (usually bottom-right corner) and submi
 
 </StepConnector>
 
+## Hybrid Apps (App Router + Pages Router)
+
+If your application uses both the App Router and Pages Router:
+
+1. Follow this guide for App Router components
+2. Add a `pages/_error.tsx` file for Pages Router error handling (see [Pages Router Setup](/platforms/javascript/guides/nextjs/manual-setup/pages-router/))
+3. Both routers share the same Sentry configuration files
+
+<Alert type="info">
+  The Sentry SDK automatically detects which router is being used and applies
+  the appropriate instrumentation.
+</Alert>
+
 ## Next Steps
 
 You've successfully integrated Sentry into your Next.js application! Here's what to explore next:
 
-- [Source Maps](/platforms/javascript/guides/nextjs/sourcemaps/) - Upload source maps to see original source code in stack traces
-- [Metrics](/platforms/javascript/guides/nextjs/metrics/) - Track custom metrics and monitor application performance
+- [Logs Integrations](/platforms/javascript/guides/nextjs/logs/#integrations) - Connect popular logging libraries like Pino, Winston, and Bunyan
+- [Distributed Tracing](/platforms/javascript/guides/nextjs/tracing/distributed-tracing/) - Trace requests across services and microservices
+- [AI Agent Monitoring](/platforms/javascript/guides/nextjs/tracing/instrumentation/ai-agents-module/) - Monitor AI agents built with Vercel AI SDK, LangChain, and more
 - [Connect GitHub + Seer](/organization/integrations/source-code-mgmt/github/#installing-github) - Enable AI-powered [root cause analysis](/product/ai-in-sentry/seer/) by connecting your GitHub repository
 - [Configuration Options](/platforms/javascript/guides/nextjs/configuration/) - Explore extended SDK configuration options
 

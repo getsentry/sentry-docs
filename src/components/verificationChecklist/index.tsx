@@ -1,7 +1,7 @@
 'use client';
 
-import {useCallback, useEffect, useRef, useState} from 'react';
-import {ArrowRightIcon, CheckIcon} from '@radix-ui/react-icons';
+import {ReactNode, useCallback, useEffect, useRef, useState} from 'react';
+import {ArrowRightIcon, CheckIcon, ChevronDownIcon} from '@radix-ui/react-icons';
 
 import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
 
@@ -19,6 +19,8 @@ type ChecklistItem = {
   linkText?: string;
   /** Onboarding option ID - item will be hidden when this option is unchecked */
   optionId?: string;
+  /** Expandable content (code blocks, additional details) */
+  content?: ReactNode;
 };
 
 type Props = {
@@ -26,6 +28,8 @@ type Props = {
   checklistId?: string;
   /** Items to display in the checklist */
   items?: ChecklistItem[];
+  /** Troubleshooting link URL */
+  troubleshootingLink?: string;
 };
 
 const DEFAULT_ITEMS: ChecklistItem[] = [
@@ -53,8 +57,10 @@ function getStorageKey(checklistId: string): string {
 export function VerificationChecklist({
   checklistId = 'default',
   items = DEFAULT_ITEMS,
+  troubleshootingLink = '/platforms/javascript/guides/nextjs/troubleshooting/',
 }: Props) {
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
+  const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
   const [mounted, setMounted] = useState(false);
   const [visibleItemIds, setVisibleItemIds] = useState<Set<string>>(
     new Set(items.map(item => item.id))
@@ -174,6 +180,10 @@ export function VerificationChecklist({
     [checklistId, emit, visibleItems]
   );
 
+  const toggleExpanded = useCallback((itemId: string) => {
+    setExpandedItems(prev => ({...prev, [itemId]: !prev[itemId]}));
+  }, []);
+
   const handleLinkClick = useCallback(
     (itemId: string, linkText: string, link: string) => {
       emit('Checklist Link Click', {
@@ -208,71 +218,92 @@ export function VerificationChecklist({
       <ul className={styles.items} ref={listRef}>
         {items.map(item => {
           const isChecked = checkedItems[item.id] || false;
+          const isExpanded = expandedItems[item.id] || false;
+          const hasContent = !!item.content;
+
           return (
             <li
               key={item.id}
-              className={styles.item}
+              className={`${styles.item} ${hasContent ? styles.hasContent : ''}`}
               data-item-id={item.id}
               {...(item.optionId ? {'data-onboarding-option': item.optionId} : {})}
             >
-              <label className={`${styles.label} ${isChecked ? styles.checked : ''}`}>
-                <span className={styles.checkboxWrapper}>
-                  <input
-                    type="checkbox"
-                    checked={isChecked}
-                    onChange={() => toggleItem(item.id, item.label)}
-                    className={styles.checkbox}
-                  />
-                  <span
-                    className={`${styles.customCheckbox} ${isChecked ? styles.checked : ''}`}
-                  >
-                    {isChecked && <CheckIcon className={styles.checkIcon} />}
+              <div className={styles.itemHeader}>
+                <label className={`${styles.label} ${isChecked ? styles.checked : ''}`}>
+                  <span className={styles.checkboxWrapper}>
+                    <input
+                      type="checkbox"
+                      checked={isChecked}
+                      onChange={() => toggleItem(item.id, item.label)}
+                      className={styles.checkbox}
+                    />
+                    <span
+                      className={`${styles.customCheckbox} ${isChecked ? styles.checked : ''}`}
+                    >
+                      {isChecked && <CheckIcon className={styles.checkIcon} />}
+                    </span>
                   </span>
-                </span>
-                <span className={styles.content}>
-                  <span
-                    className={`${styles.labelText} ${isChecked ? styles.checked : ''}`}
-                  >
-                    {item.label}
+                  <span className={styles.content}>
+                    <span
+                      className={`${styles.labelText} ${isChecked ? styles.checked : ''}`}
+                    >
+                      {item.label}
+                    </span>
+                    <span className={styles.descriptionRow}>
+                      {item.description && (
+                        <span className={styles.description}>{item.description}</span>
+                      )}
+                      {item.link && (
+                        <a
+                          href={item.link}
+                          target={item.link.startsWith('http') ? '_blank' : undefined}
+                          rel={
+                            item.link.startsWith('http') ? 'noopener noreferrer' : undefined
+                          }
+                          className={styles.link}
+                          onClick={e => {
+                            e.stopPropagation();
+                            handleLinkClick(item.id, item.linkText || 'Open', item.link!);
+                          }}
+                        >
+                          {item.linkText || 'Open'}
+                          <ArrowRightIcon className={styles.arrowIcon} />
+                        </a>
+                      )}
+                    </span>
                   </span>
-                  <span className={styles.descriptionRow}>
-                    {item.description && (
-                      <span className={styles.description}>{item.description}</span>
-                    )}
-                    {item.link && (
-                      <a
-                        href={item.link}
-                        target={item.link.startsWith('http') ? '_blank' : undefined}
-                        rel={
-                          item.link.startsWith('http') ? 'noopener noreferrer' : undefined
-                        }
-                        className={styles.link}
-                        onClick={e => {
-                          e.stopPropagation();
-                          handleLinkClick(item.id, item.linkText || 'Open', item.link!);
-                        }}
-                      >
-                        {item.linkText || 'Open'}
-                        <ArrowRightIcon className={styles.arrowIcon} />
-                      </a>
-                    )}
-                  </span>
-                </span>
-              </label>
-              {item.docsLink && (
-                <a
-                  href={item.docsLink}
-                  className={styles.docsLink}
-                  onClick={() =>
-                    handleLinkClick(
-                      item.id,
-                      item.docsLinkText || 'Learn more',
-                      item.docsLink!
-                    )
-                  }
-                >
-                  {item.docsLinkText || 'Learn more'}
-                </a>
+                </label>
+                <div className={styles.itemActions}>
+                  {item.docsLink && (
+                    <a
+                      href={item.docsLink}
+                      className={styles.docsLink}
+                      onClick={() =>
+                        handleLinkClick(
+                          item.id,
+                          item.docsLinkText || 'Learn more',
+                          item.docsLink!
+                        )
+                      }
+                    >
+                      {item.docsLinkText || 'Learn more'}
+                    </a>
+                  )}
+                  {hasContent && (
+                    <button
+                      type="button"
+                      className={`${styles.expandButton} ${isExpanded ? styles.expanded : ''}`}
+                      onClick={() => toggleExpanded(item.id)}
+                      aria-expanded={isExpanded}
+                      aria-label={isExpanded ? 'Collapse details' : 'Expand details'}
+                    >
+                      <ChevronDownIcon className={styles.chevronIcon} />
+                    </button>
+                  )}
+                </div>
+              </div>
+              {hasContent && isExpanded && (
+                <div className={styles.expandedContent}>{item.content}</div>
               )}
             </li>
           );
@@ -285,6 +316,13 @@ export function VerificationChecklist({
           <span>All done! Sentry is successfully configured.</span>
         </div>
       )}
+
+      <div className={styles.troubleshooting}>
+        Something not working?{' '}
+        <a href={troubleshootingLink}>Check troubleshooting</a>
+        {' · '}
+        <a href="https://sentry.zendesk.com/hc/en-us/">Get support</a>
+      </div>
     </div>
   );
 }
