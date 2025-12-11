@@ -77,6 +77,28 @@ const response = await client.chat.completions.create({
 
 </PlatformSection>
 
+<PlatformSection supported={["javascript.nextjs"]}>
+For Next.js applications, you need to manually instrument the OpenAI client using the `instrumentOpenAiClient` helper:
+
+```javascript
+import * as Sentry from "@sentry/nextjs";
+import OpenAI from "openai";
+
+const openai = new OpenAI();
+const client = Sentry.instrumentOpenAiClient(openai, {
+  recordInputs: true,
+  recordOutputs: true,
+});
+
+// Use the wrapped client instead of the original openai instance
+const response = await client.chat.completions.create({
+  model: "gpt-4o",
+  messages: [{ role: "user", content: "Hello!" }],
+});
+```
+
+</PlatformSection>
+
 <PlatformSection supported={["javascript"]}>
 For browser applications, you need to manually instrument the OpenAI client using the `instrumentOpenAiClient` helper:
 
@@ -137,31 +159,6 @@ By default this integration adds tracing support to OpenAI API method calls incl
 - `responses.create()` - Response API requests
 
 The integration will automatically detect streaming vs non-streaming requests and handle them appropriately.
-
-<PlatformSection supported={['javascript.nextjs']}>
-
-## Node.js and Edge Runtime
-
-For Next.js applications, you need to manually instrument the OpenAI client:
-
-```javascript
-import * as Sentry from "@sentry/nextjs";
-import OpenAI from "openai";
-
-const openai = new OpenAI();
-const client = Sentry.instrumentOpenAiClient(openai, {
-  recordInputs: true,
-  recordOutputs: true,
-});
-
-// Use the wrapped client instead of the original openai instance
-const response = await client.chat.completions.create({
-  model: "gpt-4o",
-  messages: [{ role: "user", content: "Hello!" }],
-});
-```
-
-</PlatformSection>
 
 ## Supported Versions
 
