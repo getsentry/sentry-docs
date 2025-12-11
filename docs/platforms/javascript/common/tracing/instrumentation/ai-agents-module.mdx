@@ -35,10 +35,8 @@ As a prerequisite to setting up AI Agent Monitoring with JavaScript, you'll need
 The JavaScript SDK supports automatic instrumentation for some AI libraries. We recommend adding their integrations to your Sentry configuration to automatically capture spans for AI agents.
 
 - <PlatformLink to="/configuration/integrations/vercelai/">Vercel AI SDK</PlatformLink>
-- <PlatformLink to="/configuration/integrations/openai/"notSupported={["javascript.deno"]}>OpenAI</PlatformLink>
-- <PlatformLink
-    to="/configuration/integrations/anthropic/"
-  notSupported={["javascript.deno"]}>Anthropic</PlatformLink>
+- <PlatformLink to="/configuration/integrations/openai/" notSupported={["javascript.deno"]}>OpenAI</PlatformLink>
+- <PlatformLink to="/configuration/integrations/anthropic/" notSupported={["javascript.deno"]}>Anthropic</PlatformLink>
 - <PlatformLink to="/configuration/integrations/google-genai/" notSupported={["javascript.deno"]}>Google Gen AI SDK</PlatformLink>
 - <PlatformLink to="/configuration/integrations/langchain/" notSupported={["javascript.deno"]}>LangChain</PlatformLink>
 - <PlatformLink to="/configuration/integrations/langgraph/" notSupported={["javascript.deno"]}>LangGraph</PlatformLink>
@@ -49,21 +47,23 @@ If you're using a library that Sentry does not automatically instrument, you can
 
 ## Spans
 
-### LLM Call Span
+### AI Request Span
 
-<Expandable title="LLM Call span attributes">
+This span represents a request to a LLM model or service that generates a response based on the input prompt.
+
+<Expandable title="AI Request span attributes">
   <Include name="tracing/ai-agents-module/ai-client-span" />
 </Expandable>
 
-#### Example LLM Call Span
+#### Example AI Request Span
 
 ```javascript
 const messages = [{ role: "user", content: "Tell me a joke" }];
 
 await Sentry.startSpan(
   {
-    op: "gen_ai.chat",
-    name: "chat o3-mini",
+    op: "gen_ai.request",
+    name: "request o3-mini",
     attributes: {
       "gen_ai.system": "openai",
       "gen_ai.request.model": "o3-mini",
@@ -92,6 +92,8 @@ await Sentry.startSpan(
 ```
 
 ### Invoke Agent Span
+
+This span represents the execution of an AI agent, capturing the full lifecycle from receiving a task to producing a final response.
 
 <Expandable title="Invoke Agent span attributes">
   <Include name="tracing/ai-agents-module/invoke-agent-span" />
@@ -124,6 +126,8 @@ await Sentry.startSpan(
 
 ### Execute Tool Span
 
+This span represents the execution of a tool or function that was requested by an AI model, including the input arguments and resulting output.
+
 <Expandable title="Execute Tool span attributes">
   <Include name="tracing/ai-agents-module/execute-tool-span" />
 </Expandable>
@@ -151,6 +155,8 @@ await Sentry.startSpan(
 
 ### Handoff Span
 
+This span marks the transition of control from one agent to another, typically when the current agent determines another agent is better suited to handle the task.
+
 <Expandable title="Handoff span attributes">
   <Include name="tracing/ai-agents-module/handoff-span" />
 </Expandable>
@@ -171,6 +177,6 @@ await Sentry.startSpan(
 );
 ```
 
-<Expandable title="Common span attributes">
-  <Include name="tracing/ai-agents-module/common-span-attributes" />
-</Expandable>
+## Common Span Attributes
+
+<Include name="tracing/ai-agents-module/common-span-attributes" />
