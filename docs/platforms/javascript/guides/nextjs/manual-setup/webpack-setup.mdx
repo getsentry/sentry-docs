@@ -1,0 +1,244 @@
+---
+title: "Webpack Setup"
+sidebar_order: 3
+description: "Additional configuration for Next.js applications using Webpack instead of Turbopack."
+---
+
+This guide covers the configuration differences for **Next.js applications using Webpack** (the default bundler before Next.js 15). Complete the [main manual setup](/platforms/javascript/guides/nextjs/manual-setup/) first, then apply these Webpack-specific configurations.
+
+<Alert type="info">
+  If you're using Next.js 15+ with Turbopack (the default), you don't need this
+  guide. See the [main manual
+  setup](/platforms/javascript/guides/nextjs/manual-setup/) instead.
+</Alert>
+
+## Key Differences: Webpack vs Turbopack
+
+| Feature                         | Turbopack                       | Webpack                             |
+| ------------------------------- | ------------------------------- | ----------------------------------- |
+| Server function instrumentation | Automatic via Next.js telemetry | Build-time code injection           |
+| Middleware instrumentation      | Automatic via Next.js telemetry | Build-time code injection           |
+| Source map upload               | Post-build via CLI              | During build via Webpack plugin     |
+| Route exclusion                 | Not supported                   | Supported via `excludeServerRoutes` |
+
+## Auto-Instrumentation Options
+
+With Webpack, Sentry automatically instruments your server functions, middleware, and app directory components at build time. You can control this behavior:
+
+<SplitLayout>
+
+<SplitSection>
+<SplitSectionText>
+
+### Configure Auto-Instrumentation
+
+These options are enabled by default with Webpack. Disable them if you prefer manual instrumentation or experience build issues.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {filename:next.config.ts}
+import { withSentryConfig } from "@sentry/nextjs";
+
+export default withSentryConfig(nextConfig, {
+  // Instrument API routes and data fetching methods (default: true)
+  autoInstrumentServerFunctions: true,
+
+  // Instrument Next.js middleware (default: true)
+  autoInstrumentMiddleware: true,
+
+  // Instrument app directory components (default: true)
+  autoInstrumentAppDirectory: true,
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+</SplitLayout>
+
+## Exclude Routes from Instrumentation
+
+With Webpack, you can exclude specific routes from automatic instrumentation. This is useful for health check endpoints or routes that shouldn't be monitored.
+
+<Alert type="info">
+  This option has no effect when using Turbopack, as Turbopack relies on Next.js
+  telemetry features instead of build-time instrumentation.
+</Alert>
+
+<SplitLayout>
+
+<SplitSection>
+<SplitSectionText>
+
+### Configure Route Exclusions
+
+Specify routes as URL paths (not file system paths). Routes must have a leading slash and no trailing slash.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {filename:next.config.ts}
+import { withSentryConfig } from "@sentry/nextjs";
+
+export default withSentryConfig(nextConfig, {
+  excludeServerRoutes: [
+    "/api/health",
+    "/api/excluded/[parameter]",
+    /^\/internal\//, // Regex for all /internal/* routes
+  ],
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+</SplitLayout>
+
+## Source Map Upload
+
+Webpack uploads source maps during the build process using the Sentry Webpack Plugin, while Turbopack uploads them after the build completes.
+
+<SplitLayout>
+
+<SplitSection>
+<SplitSectionText>
+
+### Webpack Plugin Options
+
+Pass options directly to the underlying Sentry Webpack Plugin for advanced configuration.
+
+<Alert level="warning">
+  The `unstable_sentryWebpackPluginOptions` API may change in future releases.
+</Alert>
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {filename:next.config.ts}
+import { withSentryConfig } from "@sentry/nextjs";
+
+export default withSentryConfig(nextConfig, {
+  // Standard options
+  org: "___ORG_SLUG___",
+  project: "___PROJECT_SLUG___",
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+
+  // Advanced Webpack plugin options
+  unstable_sentryWebpackPluginOptions: {
+    // Custom source map settings
+    sourcemaps: {
+      assets: ["./build/**/*.js", "./build/**/*.map"],
+      ignore: ["node_modules/**"],
+    },
+  },
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+</SplitLayout>
+
+## Server Actions with Webpack
+
+When using Webpack, Server Actions are instrumented automatically through the `autoInstrumentServerFunctions` option. However, you may want to add manual error capturing for better control:
+
+<SplitLayout>
+
+<SplitSection>
+<SplitSectionText>
+
+### Manual Server Action Instrumentation
+
+For more control over error handling in Server Actions, manually wrap them with `Sentry.captureException()`.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {filename:app/actions.ts}
+"use server";
+import * as Sentry from "@sentry/nextjs";
+
+export async function submitForm(formData: FormData) {
+  try {
+    // Your server action logic
+    const result = await processForm(formData);
+    return { success: true, data: result };
+  } catch (err) {
+    // Capture with additional context
+    Sentry.captureException(err, {
+      extra: {
+        formFields: Object.fromEntries(formData),
+      },
+    });
+    return { success: false, error: "Submission failed" };
+  }
+}
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+</SplitLayout>
+
+## Tunneling with Webpack
+
+Unlike Turbopack, Webpack automatically configures your middleware to skip the tunnel route. You don't need to add manual exclusions.
+
+<SplitLayout>
+
+<SplitSection>
+<SplitSectionText>
+
+### Simple Tunnel Configuration
+
+With Webpack, just enable the tunnel route and Sentry handles the middleware configuration automatically.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {filename:next.config.ts}
+import { withSentryConfig } from "@sentry/nextjs";
+
+export default withSentryConfig(nextConfig, {
+  // Auto-generated random route (recommended)
+  tunnelRoute: true,
+
+  // Or use a fixed route
+  // tunnelRoute: "/monitoring",
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+</SplitLayout>
+
+## Migrating from Webpack to Turbopack
+
+If you're upgrading to Turbopack:
+
+1. **Remove Webpack-specific options** - `excludeServerRoutes` and `unstable_sentryWebpackPluginOptions` have no effect with Turbopack
+2. **Update tunnel route configuration** - If using middleware, add a negative matcher to exclude your tunnel route
+3. **Test auto-instrumentation** - Turbopack uses Next.js telemetry instead of build-time injection; verify your monitoring still works
+
+```typescript {filename:next.config.ts}
+// Before (Webpack)
+export default withSentryConfig(nextConfig, {
+  excludeServerRoutes: ["/api/health"],
+  tunnelRoute: true,
+});
+
+// After (Turbopack) - excludeServerRoutes is not needed
+export default withSentryConfig(nextConfig, {
+  tunnelRoute: "/monitoring", // Use fixed route with Turbopack
+});
+```
+
+## Next Steps
+
+- [Main Manual Setup](/platforms/javascript/guides/nextjs/manual-setup/) - Complete setup guide
+- [Pages Router Setup](/platforms/javascript/guides/nextjs/manual-setup/pages-router/) - For Pages Router applications
+- [Build Options](/platforms/javascript/guides/nextjs/configuration/build/) - All build configuration options
+- [Troubleshooting](/platforms/javascript/guides/nextjs/troubleshooting/) - Common issues and solutions

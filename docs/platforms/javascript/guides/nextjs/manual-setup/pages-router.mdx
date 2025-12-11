@@ -1,0 +1,155 @@
+---
+title: "Pages Router Setup"
+sidebar_order: 2
+description: "Additional setup steps for Next.js applications using the Pages Router."
+---
+
+This guide covers the additional configuration needed for **Next.js applications using the Pages Router**. Complete the [main manual setup](/platforms/javascript/guides/nextjs/manual-setup/) first, then follow these steps.
+
+<Alert type="info">
+  If you're using the App Router exclusively, you don't need this guide. See the
+  [main manual setup](/platforms/javascript/guides/nextjs/manual-setup/)
+  instead.
+</Alert>
+
+## Capture Pages Router Errors
+
+<SplitLayout>
+
+<SplitSection>
+<SplitSectionText>
+
+### Custom Error Page
+
+Create or update `pages/_error.tsx` to capture errors that occur during server-side rendering or in page components.
+
+The `getInitialProps` method captures the error asynchronously, ensuring Sentry has time to send the error before serverless functions terminate.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+<PlatformContent includePath="getting-started-capture-errors/nextjs/pages-router-error" />
+
+</SplitSectionCode>
+</SplitSection>
+
+</SplitLayout>
+
+## Manually Capture Exceptions
+
+<SplitLayout>
+
+<SplitSection>
+<SplitSectionText>
+
+### Pages Router API Routes
+
+Capture errors in Pages Router API routes using `Sentry.captureException()`.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {filename:pages/api/example.ts}
+import * as Sentry from "@sentry/nextjs";
+import type { NextApiRequest, NextApiResponse } from "next";
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  try {
+    // ...might throw
+    res.status(200).json({ ok: true });
+  } catch (err) {
+    Sentry.captureException(err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+}
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Client-Side Components
+
+Capture exceptions from event handlers and other client-side operations.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```tsx {filename:components/DangerousButton.tsx}
+import * as Sentry from "@sentry/nextjs";
+
+export function DangerousButton() {
+  const onClick = () => {
+    try {
+      throw new Error("Something went wrong");
+    } catch (err) {
+      Sentry.captureException(err);
+      throw err; // Optional: trigger error boundaries
+    }
+  };
+  return <button onClick={onClick}>Click me</button>;
+}
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+</SplitLayout>
+
+## Vercel Cron Jobs (Optional)
+
+Automatically create [Cron Monitors](/product/crons/) in Sentry for your [Vercel cron jobs](https://vercel.com/docs/cron-jobs).
+
+<SplitLayout>
+
+<SplitSection>
+<SplitSectionText>
+
+### Enable Automatic Cron Monitoring
+
+Add the `automaticVercelMonitors` option to your `next.config.ts`.
+
+<Alert level="warning">
+  Automatic Vercel cron jobs instrumentation currently only supports Pages
+  Router API routes. App Router route handlers are not yet supported.
+</Alert>
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {filename:next.config.ts}
+import { withSentryConfig } from "@sentry/nextjs";
+
+export default withSentryConfig(nextConfig, {
+  automaticVercelMonitors: true,
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+</SplitLayout>
+
+## Hybrid Apps (App Router + Pages Router)
+
+If your application uses both the App Router and Pages Router:
+
+1. Follow the [main manual setup](/platforms/javascript/guides/nextjs/manual-setup/) for App Router components
+2. Add the `pages/_error.tsx` file from this guide for Pages Router error handling
+3. Both routers will share the same Sentry configuration files
+
+<Alert type="info">
+  The Sentry SDK automatically detects which router is being used and applies
+  the appropriate instrumentation.
+</Alert>
+
+## Next Steps
+
+- [Main Manual Setup](/platforms/javascript/guides/nextjs/manual-setup/) - Complete setup guide
+- [Webpack Setup](/platforms/javascript/guides/nextjs/manual-setup/webpack-setup/) - For applications not using Turbopack
+- [Troubleshooting](/platforms/javascript/guides/nextjs/troubleshooting/) - Common issues and solutions
