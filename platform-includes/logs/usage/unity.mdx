@@ -1,0 +1,56 @@
+Once the feature is enabled and the SDK is initialized, you can manually send logs using the `SentrySdk.Logger` API.
+
+### Manual Logging
+
+The `SentrySdk.Logger` instance exposes six methods that you can use to log messages at different log levels: `Trace`, `Debug`, `Info`, `Warning`, `Error`, and `Fatal`.
+
+These properties will be sent to Sentry, and can be searched from within the Logs UI, and even added to the Logs views as a dedicated column.
+
+```csharp
+SentrySdk.Logger.LogInfo("A simple debug log message");
+SentrySdk.Logger.LogError("A {0} log message", "formatted");
+```
+
+### Automatic Logging Integration
+
+Because Unity's `LogType` does not match `SentryLogLevel`, the SDKs logging integration maps them as follows:
+
+| Unity LogLevel | Sentry Logs UI Severity |
+| --- | --- |
+| Debug | INFO |
+| Warning | WARN |
+| Assert | ERROR |
+| Error | ERROR |
+| Fatal | FATAL |
+
+```csharp
+// Standard Unity logging - automatically captured when severity levels are enabled
+Debug.Log("Player position updated.");
+Debug.Warning("Low memory warning.");
+Debug.Error("Failed to save game data.");
+```
+
+You can configure whether these logs are sent as:
+- **Structured Logs**: Full log entries with searchable attributes
+- **Breadcrumbs**: Contextual information attached to errors (useful for debugging)
+
+<Alert level="info">
+With **Structured Logs** enabled additional breadcrumb attachment to events needs to be explicitly enabled with `AddBreadcrumbsWithStructuredLogs = true`.
+</Alert>
+
+## Capture with Attributes
+
+```csharp
+SentrySdk.Logger.LogWarning(static log =>
+{
+    log.SetAttribute("my.attribute", "value");
+}, "A log message with additional attributes.");
+```
+
+Supported attribute types are:
+- Textual: `string` and `char`
+- Logical: `bool`
+- Integral: `sbyte`, `byte`, `short`, `ushort`, `int`, `uint`, `long` and `nint`
+- Floating-point: `float` and `double`
+
+Unsupported numeric types such as `ulong`, `nuint`, `decimal`, as well as all other types including `object`, are treated as `string` via `ToString()`.

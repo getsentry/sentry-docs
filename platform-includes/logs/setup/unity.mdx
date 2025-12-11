@@ -1,0 +1,82 @@
+To enable logging in your Unity game, you need to configure the Sentry SDK with structured logging enabled.
+
+### Project Settings Configuration
+
+1. Inside the editor open: **Tools > Sentry > Logging**
+2. Check the **Enable Structured Logging** option
+
+### Programmatic Configuration
+
+Alternatively, you can enable logging programmatically through the [configure callback](/platforms/unity/configuration/options/programmatic-configuration):
+
+```csharp
+public override void Configure(SentryUnityOptions options)
+{
+    options.EnableLogs = true;
+}
+```
+
+or if you're manually initializing the SDK:
+
+```csharp
+SentrySdk.Init(options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
+
+    // Enable logs to be sent to Sentry
+    options.EnableLogs = true;
+});
+```
+
+### Advanced Configuration Options
+
+In addition to enabling Structured Logging you can control the log capture behaviour through some additional options.
+
+#### Automatic Unity Log Forwarding
+
+You can configure the SDK to automatically forward Unity's Debug Logs to Sentry based on the enabled log level in the configuration window, or programmatically:
+
+```csharp
+// Configure automatic log forwarding programmatically
+options.EnableLogs = true;
+
+options.CaptureStructuredLogsForLogType[LogType.Log] = false;
+options.CaptureStructuredLogsForLogType[LogType.Warning] = true;
+options.CaptureStructuredLogsForLogType[LogType.Assert] = true;
+options.CaptureStructuredLogsForLogType[LogType.Error] = true;
+options.CaptureStructuredLogsForLogType[LogType.Exception] = true;
+
+options.AddBreadcrumbsWithStructuredLogs = false; // Send as structured logs instead of breadcrumbs
+```
+
+#### Before-Log Handler
+
+To filter logs, or update them before they are sent to Sentry, you can provide a custom `BeforeSendLog` callback:
+
+```csharp
+options.SetBeforeSendLog(log =>
+{
+    if (log.TryGetAttribute("Sensitive", out var attribute) && attribute is true)
+    {
+        return null;
+    }
+
+    // Set a custom attribute for all other logs sent to Sentry
+    log.SetAttribute("my.attribute", "value");
+
+    return log;
+});
+```
+
+The callback function set via `SetBeforeSendLog(Func<SentryLog, SentryLog?>)` receives a log object, and should return the log object if you want it to be sent to Sentry, or `null` if you want to discard it.
+
+The log object of type `SentryLog` has the following members:
+- `Timestamp` Property: (`DateTimeOffset`) The timestamp of the log.
+- `TraceId` Property: (`SentryId`) The trace id of the log.
+- `Level` Property: (`SentryLogLevel`) The severity level of the log. Either `Trace`, `Debug`, `Info`, `Warning`, `Error`, or `Fatal`.
+- `Message` Property: (`string`) The formatted log message.
+- `Template` Property: (`string?`) The parameterized template string.
+- `Parameters` Property: (`ImmutableArray<KeyValuePair<string, object>>`) The parameters to the template string.
+- `ParentSpanId` Property: (`SpanId?`) The span id of the span that was active when the log was collected.
+- `TryGetAttribute(string key, out object value)` Method: Gets the attribute value associated with the specified key. Returns `true` if the log contains an attribute with the specified key and it's value is not `null`, otherwise `false`.
+- `SetAttribute(string key, object value)` Method: Sets a key-value pair of data attached to the log. Supported types are `string`, `bool`, integers up to a size of 64-bit signed, and floating-point numbers up to a size of 64-bit.
