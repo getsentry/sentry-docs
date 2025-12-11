@@ -157,12 +157,16 @@ export function VerificationChecklist({
                     onChange={() => toggleItem(item.id, item.label)}
                     className={styles.checkbox}
                   />
-                  <span className={`${styles.customCheckbox} ${isChecked ? styles.checked : ''}`}>
+                  <span
+                    className={`${styles.customCheckbox} ${isChecked ? styles.checked : ''}`}
+                  >
                     {isChecked && <CheckIcon className={styles.checkIcon} />}
                   </span>
                 </span>
                 <span className={styles.content}>
-                  <span className={`${styles.labelText} ${isChecked ? styles.checked : ''}`}>
+                  <span
+                    className={`${styles.labelText} ${isChecked ? styles.checked : ''}`}
+                  >
                     {item.label}
                   </span>
                   {item.description && (
