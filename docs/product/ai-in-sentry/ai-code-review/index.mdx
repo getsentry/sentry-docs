@@ -32,7 +32,6 @@ AI Code Review requires specific GitHub permissions to function properly. When y
 
 - **Pull Requests (Read & Write)**: To read PR content and write code review comments
 - **Checks (Read & Write)**: To create status checks that show the AI Code Review results on your PRs
-- **Commit Statuses (Read & Write)**: To post status checks to commits and integrate with branch protection rules
 
 If you have previously installed the GitHub integration, you may need to update your permissions to include these. GitHub will prompt you to accept updated permissions when Sentry requests them.
 
@@ -59,10 +58,8 @@ AI Code Review creates GitHub status checks (also called "checks") on your pull 
 ### Status Check Behavior
 
 - **Success**: If AI Code Review completes successfully, the status check will show as successful (green checkmark). This happens regardless of whether issues were found - the check indicates the review completed, not that the code is error-free.
-- **Neutral**: If AI Code Review runs but has no specific pass/fail outcome.
-- **Error**: If there's an error running the AI Code Review itself, such as a service issue.
+- **Neutral**: If AI Code Review runs but has no specific pass/fail outcome, or if there's a service issue or timeout. We use neutral status for errors so users don't assume there's something wrong with their code when the issue is on our end.
 - **Cancelled**: If the review was cancelled, typically because a new commit was pushed and the previous review was superseded.
-- **Timed out**: If the review takes too long to complete.
 
 ### Visibility
 
@@ -84,7 +81,7 @@ You can optionally configure GitHub branch protection rules to require the AI Co
 5. Save your changes
 
 <Alert level="warning">
-  We recommend not making the AI Code Review status check a required check. Requiring it will block PR merges if the check fails due to service disruptions, and may conflict with future personal configuration options that allow users to opt out of code review.
+  We recommend making the AI Code Review status check an **optional** check. Requiring it will block PR merges if the check fails due to service disruptions, and may conflict with future personal configuration options that allow users to opt out of code review.
 </Alert>
 
 ## Frequently Asked Questions
@@ -111,9 +108,9 @@ Error Prediction is automatically triggered by the following GitHub pull_request
 
   To manually run error prediction and get a general review, comment `@sentry review` in the PR.
 
-- **Why is the AI Code Review status check showing an error?**
+- **Why is the AI Code Review status check showing as neutral?**
 
-  The status check may show an error if there's a temporary service issue or the review timed out. The status check does not fail based on code quality issues found during review - those appear as review comments on your PR.
+  The status check shows as neutral if there's a temporary service issue or the review timed out. We use neutral status (rather than error) so users don't assume there's something wrong with their code when the issue is on our end. The status check does not fail based on code quality issues found during review - those appear as review comments on your PR.
   
   If you don't see a status check at all, ensure that the `Show Generative AI Features` and `Enable AI Code Review` settings are enabled in your [organization settings](https://sentry.io/orgredirect/settings/:orgslug/), and that your GitHub integration has the required Checks permission.
 
