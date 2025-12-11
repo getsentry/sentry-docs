@@ -195,7 +195,9 @@ export function VerificationChecklist({
         <div className={styles.progressBar}>
           <div
             className={styles.progressFill}
-            style={{width: `${totalCount > 0 ? (completedCount / totalCount) * 100 : 0}%`}}
+            style={{
+              width: `${totalCount > 0 ? (completedCount / totalCount) * 100 : 0}%`,
+            }}
           />
         </div>
         <span className={styles.progressText}>
@@ -241,7 +243,9 @@ export function VerificationChecklist({
                       <a
                         href={item.link}
                         target={item.link.startsWith('http') ? '_blank' : undefined}
-                        rel={item.link.startsWith('http') ? 'noopener noreferrer' : undefined}
+                        rel={
+                          item.link.startsWith('http') ? 'noopener noreferrer' : undefined
+                        }
                         className={styles.link}
                         onClick={e => {
                           e.stopPropagation();
