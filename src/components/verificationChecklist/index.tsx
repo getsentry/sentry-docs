@@ -1,6 +1,6 @@
 'use client';
 
-import {useCallback, useEffect, useState} from 'react';
+import {useCallback, useEffect, useRef, useState} from 'react';
 import {ArrowRightIcon, CheckIcon} from '@radix-ui/react-icons';
 
 import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
@@ -11,8 +11,14 @@ type ChecklistItem = {
   id: string;
   label: string;
   description?: string;
+  /** Secondary link (usually to docs) */
+  docsLink?: string;
+  docsLinkText?: string;
+  /** Primary link (usually to Sentry UI) */
   link?: string;
   linkText?: string;
+  /** Onboarding option ID - item will be hidden when this option is unchecked */
+  optionId?: string;
 };
 
 type Props = {
@@ -50,6 +56,10 @@ export function VerificationChecklist({
 }: Props) {
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
   const [mounted, setMounted] = useState(false);
+  const [visibleItemIds, setVisibleItemIds] = useState<Set<string>>(
+    new Set(items.map(item => item.id))
+  );
+  const listRef = useRef<HTMLUListElement>(null);
   const {emit} = usePlausibleEvent();
 
   // Load checked items from localStorage on mount
@@ -77,9 +87,58 @@ export function VerificationChecklist({
     }
   }, [checkedItems, checklistId, mounted]);
 
-  const completedCount = Object.values(checkedItems).filter(Boolean).length;
-  const totalCount = items.length;
-  const allComplete = completedCount === totalCount;
+  // Watch for visibility changes on items with data-onboarding-option
+  useEffect(() => {
+    if (!listRef.current) {
+      return undefined;
+    }
+
+    const updateVisibleItems = () => {
+      const newVisibleIds = new Set<string>();
+      items.forEach(item => {
+        if (!item.optionId) {
+          // Items without optionId are always visible
+          newVisibleIds.add(item.id);
+        } else {
+          // Check if the item element is hidden
+          const element = listRef.current?.querySelector(`[data-item-id="${item.id}"]`);
+          if (element && !element.classList.contains('hidden')) {
+            newVisibleIds.add(item.id);
+          }
+        }
+      });
+      setVisibleItemIds(newVisibleIds);
+    };
+
+    // Initial check
+    updateVisibleItems();
+
+    // Set up MutationObserver to watch for class changes
+    const observer = new MutationObserver(mutations => {
+      const hasRelevantChange = mutations.some(
+        mutation =>
+          mutation.type === 'attributes' &&
+          mutation.attributeName === 'class' &&
+          (mutation.target as HTMLElement).hasAttribute('data-onboarding-option')
+      );
+      if (hasRelevantChange) {
+        updateVisibleItems();
+      }
+    });
+
+    observer.observe(listRef.current, {
+      attributes: true,
+      attributeFilter: ['class'],
+      subtree: true,
+    });
+
+    return () => observer.disconnect();
+  }, [items, mounted]);
+
+  const visibleItems = items.filter(item => visibleItemIds.has(item.id));
+  const completedCount = visibleItems.filter(item => checkedItems[item.id]).length;
+  const totalCount = visibleItems.length;
+  const allComplete = completedCount === totalCount && totalCount > 0;
 
   const toggleItem = useCallback(
     (itemId: string, itemLabel: string) => {
@@ -90,21 +149,21 @@ export function VerificationChecklist({
         // Emit event for checking/unchecking item
         emit('Checklist Item Toggle', {
           props: {
-            page: window.location.pathname,
+            checked: newChecked,
             checklistId,
             itemId,
             itemLabel,
-            checked: newChecked,
+            page: window.location.pathname,
           },
         });
 
-        // Check if all items are now complete
-        const newCompletedCount = Object.values(newState).filter(Boolean).length;
-        if (newCompletedCount === totalCount && newChecked) {
+        // Check if all visible items are now complete
+        const newCompletedCount = visibleItems.filter(item => newState[item.id]).length;
+        if (newCompletedCount === visibleItems.length && newChecked) {
           emit('Checklist Complete', {
             props: {
-              page: window.location.pathname,
               checklistId,
+              page: window.location.pathname,
             },
           });
         }
@@ -112,18 +171,18 @@ export function VerificationChecklist({
         return newState;
       });
     },
-    [checklistId, emit, totalCount]
+    [checklistId, emit, visibleItems]
   );
 
   const handleLinkClick = useCallback(
     (itemId: string, linkText: string, link: string) => {
       emit('Checklist Link Click', {
         props: {
-          page: window.location.pathname,
           checklistId,
           itemId,
-          linkText,
           link,
+          linkText,
+          page: window.location.pathname,
         },
       });
     },
@@ -136,7 +195,7 @@ export function VerificationChecklist({
         <div className={styles.progressBar}>
           <div
             className={styles.progressFill}
-            style={{width: `${(completedCount / totalCount) * 100}%`}}
+            style={{width: `${totalCount > 0 ? (completedCount / totalCount) * 100 : 0}%`}}
           />
         </div>
         <span className={styles.progressText}>
@@ -144,11 +203,16 @@ export function VerificationChecklist({
         </span>
       </div>
 
-      <ul className={styles.items}>
+      <ul className={styles.items} ref={listRef}>
         {items.map(item => {
           const isChecked = checkedItems[item.id] || false;
           return (
-            <li key={item.id} className={styles.item}>
+            <li
+              key={item.id}
+              className={styles.item}
+              data-item-id={item.id}
+              {...(item.optionId ? {'data-onboarding-option': item.optionId} : {})}
+            >
               <label className={`${styles.label} ${isChecked ? styles.checked : ''}`}>
                 <span className={styles.checkboxWrapper}>
                   <input
@@ -169,21 +233,41 @@ export function VerificationChecklist({
                   >
                     {item.label}
                   </span>
-                  {item.description && (
-                    <span className={styles.description}>{item.description}</span>
-                  )}
+                  <span className={styles.descriptionRow}>
+                    {item.description && (
+                      <span className={styles.description}>{item.description}</span>
+                    )}
+                    {item.link && (
+                      <a
+                        href={item.link}
+                        target={item.link.startsWith('http') ? '_blank' : undefined}
+                        rel={item.link.startsWith('http') ? 'noopener noreferrer' : undefined}
+                        className={styles.link}
+                        onClick={e => {
+                          e.stopPropagation();
+                          handleLinkClick(item.id, item.linkText || 'Open', item.link!);
+                        }}
+                      >
+                        {item.linkText || 'Open'}
+                        <ArrowRightIcon className={styles.arrowIcon} />
+                      </a>
+                    )}
+                  </span>
                 </span>
               </label>
-              {item.link && (
+              {item.docsLink && (
                 <a
-                  href={item.link}
-                  className={styles.link}
+                  href={item.docsLink}
+                  className={styles.docsLink}
                   onClick={() =>
-                    handleLinkClick(item.id, item.linkText || 'Learn more', item.link!)
+                    handleLinkClick(
+                      item.id,
+                      item.docsLinkText || 'Learn more',
+                      item.docsLink!
+                    )
                   }
                 >
-                  {item.linkText || 'Learn more'}
-                  <ArrowRightIcon className={styles.arrowIcon} />
+                  {item.docsLinkText || 'Learn more'}
                 </a>
               )}
             </li>
