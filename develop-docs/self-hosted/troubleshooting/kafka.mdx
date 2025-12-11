@@ -87,31 +87,41 @@ These solutions may result in data loss for the duration of your Kafka event ret
 
 #### Proper solution
 
-The _proper_ solution is as follows ([reported](https://github.com/getsentry/self-hosted/issues/478#issuecomment-666254392) by [@rmisyurev](https://github.com/rmisyurev)). This example uses `snuba-consumers` with `events` topic. Your consumer group name and topic name may be different.
+The _proper_ solution is as follows ([reported](https://github.com/getsentry/self-hosted/issues/478#issuecomment-666254392) by [@rmisyurev](https://github.com/rmisyurev)).
+
+This example assumes you found the error from the `snuba-errors-consumer` container. Your consumer group name and topic name may be different.
 
 1. Shutdown the corresponding Sentry/Snuba container that's using the consumer group (You can see the corresponding containers by inspecting the `docker-compose.yml` file):
-   ```shell
-   docker compose stop snuba-errors-consumer snuba-outcomes-consumer snuba-outcomes-billing-consumer
+   ```yaml
+   snuba-errors-consumer:
+     <<: *snuba_defaults
+     command: rust-consumer --storage errors --consumer-group snuba-consumers ...
    ```
-2. Receive consumers list:
+   According to the snippet above from `docker-compose.yml`, the consumer group is `snuba-consumers`. You need to find whether other containers are also using the same consumer group.
+   In this case, `snuba-errors-consumer`, `snuba-outcomes-consumer`, `snuba-outcomes-billing-consumer`, `snuba-replays-consumer`, `snuba-profiling-profiles-consumer`,
+   `snuba-profiling-functions-consumer` and `snuba-profiling-profile-chunks-consumer` are using the same consumer group, so you need to stop all of them:
+   ```shell
+   docker compose stop snuba-errors-consumer snuba-outcomes-consumer snuba-outcomes-billing-consumer snuba-replays-consumer snuba-profiling-profiles-consumer snuba-profiling-functions-consumer snuba-profiling-profile-chunks-consumer
+   ```
+2. Receive consumers list to make sure `snuba-consumers` is there:
    ```shell
    docker compose exec kafka kafka-consumer-groups --bootstrap-server kafka:9092 --list
    ```
-3. Get group info:
+3. Get group info for `snuba-consumers`. Here you will see the topics that the consumer group is subscribed to along with their partitions and current offset:
    ```shell
    docker compose exec kafka kafka-consumer-groups --bootstrap-server kafka:9092 --group snuba-consumers --describe
    ```
-4. Watching what is going to happen with offset by using dry-run (optional):
+4. Watch what is going to happen with the offset by using dry-run (optional). This example uses the `events` topic found from the previous step:
    ```shell
    docker compose exec kafka kafka-consumer-groups --bootstrap-server kafka:9092 --group snuba-consumers --topic events --reset-offsets --to-latest --dry-run
    ```
-5. Set offset to latest and execute:
+5. Set offset to latest and execute. Make sure to replace `events` with the topic you found from step 3:
    ```shell
    docker compose exec kafka kafka-consumer-groups --bootstrap-server kafka:9092 --group snuba-consumers --topic events --reset-offsets --to-latest --execute
    ```
 6. Start the previously stopped Sentry/Snuba containers:
    ```shell
-   docker compose start snuba-errors-consumer snuba-outcomes-consumer snuba-outcomes-billing-consumer
+   docker compose start snuba-errors-consumer snuba-outcomes-consumer snuba-outcomes-billing-consumer snuba-replays-consumer snuba-profiling-profiles-consumer snuba-profiling-functions-consumer snuba-profiling-profile-chunks-consumer
    ```
 <Alert level="info" title="Tips">
 * You can replace <code>snuba-consumers</code> with other consumer groups or <code>events</code> with other topics when needed.
@@ -133,7 +143,7 @@ Unlike the proper solution, this involves resetting the offsets of all consumer 
 #### Nuclear option
 
 <Alert level="warning" title="Warning">
-  The _nuclear option_ is removing all Kafka-related volumes and recreating them which _will_ cause data loss. Any data that was pending there will be gone upon deleting these volumes.
+  The _nuclear option_ is to remove all Kafka-related volumes and recreate them. **This will cause data loss.** You'll lose any unprocessed events from the last 24 hours. Events that have already been processed and persisted in ClickHouse will remain safe.
 </Alert>
 
 1. Stop the instance:
@@ -144,7 +154,6 @@ Unlike the proper solution, this involves resetting the offsets of all consumer 
    ```shell
    docker volume rm sentry-kafka
    ```
-
  3. Run the install script again:
     ```shell
     ./install.sh
