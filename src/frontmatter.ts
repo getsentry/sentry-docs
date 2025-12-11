@@ -119,8 +119,9 @@ async function getDocsFrontMatterUncached(): Promise<FrontMatter[]> {
   const platformNames = allPlatforms.filter(platformName => {
     const commonPath = path.join(platformsPath, platformName, 'common');
     // Check if any files in existingFilesSet start with this common path
+    // Use path.sep to ensure we only match files inside the 'common' directory
     for (const filePath of existingFilesSet) {
-      if (filePath.startsWith(commonPath)) return true;
+      if (filePath.startsWith(commonPath + path.sep)) return true;
     }
     return false;
   });
