@@ -1,0 +1,94 @@
+---
+title: Tree Shaking
+sidebar_order: 70
+description: "Learn how to reduce Sentry bundle size by tree shaking unused code."
+keywords: ["bundle size", "webpack", "Next.js", "debug"]
+---
+
+The Sentry Next.js SDK supports [tree shaking](https://developer.mozilla.org/en-US/docs/Glossary/Tree_shaking) for Webpack builds with some additional configurations.
+
+If you want to minimize the bundle size of the Sentry SDK, we recommend reading through this page and applying the tree shaking configurations as shown.
+
+<Alert>
+
+This guide is only relevant if you're using Webpack to build your Next.js application. Tree-shaking options are not supported for Turbopack builds at the moment.
+
+</Alert>
+
+## Tree Shaking Optional Code
+
+The Sentry SDK ships with code that is not strictly required for it to collect your errors. This includes code to debug your Sentry configuration or code to enable tracing, for example. While debug code can be very useful in development environments, it's not typically necessary to include it in your production bundles where it takes up valuable space. The JavaScript SDK includes special flags in its CommonJS and ESM distributions, which can be used to facilitate tree shaking (removal) of this kind of code during the build process.
+
+<Alert>
+  Anything that you don't import and use will <i>automatically</i> be tree
+  shaken away by Webpack. This means that optional integrations like Replay,
+  BrowserTracing, BrowserProfiling, and any unused utility methods won't be
+  included in your bundle unless you import and use them yourself. The rest of
+  this page relates to ways to tree shake internal SDK code, which isn't
+  strictly required unless you use certain features.
+</Alert>
+
+## Tree Shaking Options
+
+To tree shake Sentry debug code in Next.js projects, use `webpack.treeshake` options in your Next.js Sentry build configuration like in the example below:
+
+```javascript {filename:next.config.(js|mjs)}
+const nextConfig = {
+  // your next.js config
+};
+
+withSentryConfig(nextConfig, {
+  webpack: {
+    treeshake: {
+      // Tree shaking options...
+      removeDebugLogging: false,
+      removeTracing: false,
+      excludeReplayIframe: false,
+      excludeReplayShadowDOM: false,
+      excludeReplayCompressionWorker: false,
+    },
+  },
+});
+```
+
+For more information on custom webpack configurations in Next.js, see [Custom Webpack Config](https://nextjs.org/docs/api-reference/next.config.js/custom-webpack-config) in the Next.js docs.
+
+The following sections will cover each available tree shaking option and how to configure them.
+
+<SdkOption name="webpack.treeshake.removeDebugLogging" type="boolean" defaultValue="false">
+
+Setting this option to `true` will remove all debug logging code from the Sentry SDK. Note that it has nothing to do with `enableLogs` or Sentry's logs product.
+
+These logs can be useful to help debug your Sentry configuration or issues with the Sentry SDK.
+
+</SdkOption>
+
+<SdkOption name="webpack.treeshake.removeTracing" type="boolean" defaultValue="false">
+
+Setting this option to `true` will remove all code related to tracing and performance monitoring.
+
+Note that you should not use any tracing-related SDK features (for example, `Sentry.startSpan()`) when this option is enabled, also this option has no effect if you did not add `browserTracingIntegration`.
+
+</SdkOption>
+
+<SdkOption name="webpack.treeshake.excludeReplayIframe" type="boolean" defaultValue="false">
+
+Setting this option to `true` will tree shake any SDK code related to capturing iframe content with [Session Replay](/platforms/javascript/session-replay/). It's only relevant when using Session Replay. Enable this option if you don't want to record any iframes. This has no effect if you did not add `replayIntegration`.
+
+</SdkOption>
+
+<SdkOption name="webpack.treeshake.excludeReplayShadowDOM" type="boolean" defaultValue="false">
+
+Setting this option to `true` will tree shake any SDK code related to capturing shadow dom elements with [Session Replay](/platforms/javascript/session-replay/). It's only relevant when using Session Replay. Enable this flag if you don't want to record any shadow dom elements. This has no effect if you didn't add `replayIntegration`.
+
+</SdkOption>
+
+<SdkOption name="webpack.treeshake.excludeReplayCompressionWorker" type="boolean" defaultValue="false">
+
+Setting this option to `true` will tree shake any SDK code that's related to the included compression web worker for [Session Replay](/platforms/javascript/session-replay/). It's only relevant when using Session Replay. Enable this flag if you want to host a compression worker yourself. See Using a [Custom Compression Worker](/platforms/javascript/session-replay/configuration/#using-a-custom-compression-worker) for details. This has no effect if you did not add `replayIntegration`.
+
+**We don't recommend enabling this flag unless you provide a custom worker URL**.
+
+</SdkOption>
+
+If you want to learn more about the available tree shaking flags and how to set them manually with different bundlers, see the [tree shaking documentation](/platforms/javascript/common/configuration/tree-shaking/#tree-shaking-with-webpack) for the JavaScript SDK.
