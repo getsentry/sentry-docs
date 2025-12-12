@@ -24,19 +24,20 @@ supported:
   - javascript.bun
   - javascript.tanstackstart-react
   - javascript.cloudflare
+  - javascript
 ---
 
 <Alert>
 
-This integration works in the Node.js, Cloudflare Workers, Vercel Edge Functions runtimes. It requires SDK version `10.2.0` or higher.
+This integration works in the Node.js, Cloudflare Workers, Vercel Edge Functions, and browser runtimes. It requires SDK version `10.2.0` or higher.
 
 </Alert>
 
 _Import name: `Sentry.openAIIntegration`_
 
-The `openAIIntegration` adds instrumentation for the `openai` API to capture spans by automatically wrapping OpenAI client calls and recording LLM interactions with configurable input/output recording.
+The `openAIIntegration` adds instrumentation for the `openai` API to capture spans by wrapping OpenAI client calls and recording LLM interactions with configurable input/output recording.
 
-<PlatformSection notSupported={["javascript.cloudflare", "javascript.nextjs"]}>
+<PlatformSection notSupported={["javascript.cloudflare", "javascript.nextjs", "javascript"]}>
 It is enabled by default and will automatically capture spans for OpenAI API method calls. You can opt-in to capture inputs and outputs by setting `recordInputs` and `recordOutputs` in the integration config:
 
 ```javascript
@@ -76,12 +77,33 @@ const response = await client.chat.completions.create({
 
 </PlatformSection>
 
-<PlatformSection supported={['javascript.nextjs']}>
-
-This integration is automatically instrumented in the Node.js runtime. For Next.js applications using the Edge runtime, you need to manually instrument the OpenAI client:
+<PlatformSection supported={["javascript.nextjs"]}>
+For Next.js applications, you need to manually instrument the OpenAI client using the `instrumentOpenAiClient` helper:
 
 ```javascript
 import * as Sentry from "@sentry/nextjs";
+import OpenAI from "openai";
+
+const openai = new OpenAI();
+const client = Sentry.instrumentOpenAiClient(openai, {
+  recordInputs: true,
+  recordOutputs: true,
+});
+
+// Use the wrapped client instead of the original openai instance
+const response = await client.chat.completions.create({
+  model: "gpt-4o",
+  messages: [{ role: "user", content: "Hello!" }],
+});
+```
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript"]}>
+For browser applications, you need to manually instrument the OpenAI client using the `instrumentOpenAiClient` helper:
+
+```javascript
+import * as Sentry from "@sentry/browser";
 import OpenAI from "openai";
 
 const openai = new OpenAI();
@@ -140,4 +162,4 @@ The integration will automatically detect streaming vs non-streaming requests an
 
 ## Supported Versions
 
-- `openai`: `>=4.0.0 <6`
+- `openai`: `>=4.0.0 <7`

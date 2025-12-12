@@ -1,0 +1,114 @@
+---
+title: Breaking Changes
+description: Learn about our principles and processes when it comes to introducing breaking changes.
+sidebar_order: 4
+---
+
+Code ages, features and APIs become obsolete. All of this is expected when working on a library for an extended period of time. Deciding what to drop, how, and when, is not straightforward. Our wishes as developers to evolve a codebase inevitably clash with the user experience of the folks using it.
+
+At Sentry, user experience is a core part of our [SDK development values](/sdk/philosophy). Evolving our SDKs is ultimately a balancing act between what we as engineers think is right (for us, for the health of the codebase, and for the users), and the ease of use on the user side.
+
+This page aims to provide a basic set of guidelines how to think about this topic, to help drive discussions, and ultimately empower SDK engineers to make good decisions.
+
+Dealing with breaking changes (or even deciding what is one) is by no means an easy problem with a clear-cut solution, so discussing on a case-by-case basis with your teammates is always a good idea and very much encouraged.
+
+
+## Changes to Be Mindful Of
+
+Is something a change that should go out in a major release? Answering this question is often the hardest part of the process. Going strictly by semantic versioning rules, where we simply evaluate whether the API has undergone a backwards-incompatible change, doesn't cover all cases where we might be significantly altering a user's experience using Sentry.
+
+In general, changes that the user needs to adapt to or changes that significantly alter the behavior of the SDK require scrutiny.
+
+
+### SDK API Surface Changes
+
+The most obvious kind of breaking changes are those that change the way the user interacts with the public API of the SDK, for instance:
+- Dropping or renaming part of the API
+- Dropping or renaming an argument to an API function
+- Changing the type of an argument to an API function and not accepting the previous type anymore
+
+In general, it's good to explicitly point out which parts of the API are public using whatever way is conventional for your language (declaring them as such, prefixing private functions with `_`, adding a code comment, etc.). Keep in mind that when users can use an API even if it is not documented at all and not meant for public use, most likely somebody **uses** the API. This doesn't mean it has to be a breaking change, but you must to point out such changes in the changelog.
+
+In some SDKs, the line between public and private API is unclear, in which case you need to be more mindful of users possibly using functions that weren't meant to be public. In these cases, you need to make a decision. If unsure, discuss with your teammates. Some pointers:
+- Is the API mentioned in the user-facing docs? Then it's highly likely public, and you should consider making changes to it in a major release.
+- Was the code you're changing solely created for an internal purpose? Is it a utility or a helper function? Then it's fine to change.
+- Have you seen the function used in user code, for example, in issue reproduction examples in your repo?
+
+  GitHub code search can provide some insight here. You can use it to search all public repos for the function you want to remove. For example: https://github.com/search?q=sentry_sdk.capture_exception+language%3APython&type=code
+
+Naturally, the language of your SDK and the community around it also affects what is generally considered a breaking change. Some languages provide their own guidelines:
+- [.NET](https://learn.microsoft.com/en-gb/dotnet/core/compatibility/library-change-rules)
+
+
+### Changes in the Product
+
+We also need to be mindful of what the SDK change might cause in the product. Sometimes we're forcing users to make changes in their use of Sentry because we, for example, broke a dashboard by renaming a span attribute. However, we also don't want to be in a position where we can't fix an attribute name without releasing a new major version of the SDK. Having to adopt a new major version every month is also not great UX in most languages.
+
+An additional complicating factor is if removing an attribute or stopping to send certain spans is needed to fix a severe bug, like an SDK-induced app crash or hang. You should discuss with your teammates whether breaking SDK behavior as a knock-on effect from a bugfix warrants a major release.
+
+In general, we consider changes to the following product-side features potentially problematic:
+- **Grouping:** An SDK change might result in error events being grouped differently, because we remove, add or change some of the data on the event that is used in the grouping algorithm on the server. When you think a change might affect grouping, it's recommended to try the change yourself and check in Sentry to see if grouping is preserved.
+- **Dashboards:** A user has set up a dashboard that filters on specific data and we change that data. For instance, changing a span's `op` might mean a dashboard showing those spans will be empty after an SDK update.
+- **Alerts:** Alerts might stop or start firing because we've changed an attribute.
+- **Insights:** Some users are closely monitoring data in the Insights module, such as Web or Mobile Vitals. Changes to the SDK can affect these metrics and cause unnecessary panic.
+- **Issue detection:** Changing how or if certain spans are emitted can influence server-side issues (for example Performance issues like N+1 queries).
+
+Changes to the above need closer inspection. In order to make a good decision, you can try to estimate how many users are affected using our data analytics tools. In the end, it always needs a human/team to weigh in.
+
+
+#### Gauging the Impact in the Product
+
+In order to gauge the impact of the change, you can consult internal stats on how many alerts or dashboards are using the specific property:
+- You can reach out to the Data team.
+- If you have Redash access (which you can request via the IT helpdesk), you can execute the queries yourself. The easiest way to do this is:
+  - Find an example dashboard that looks similar to what you need (for instance, [this dashboard](https://redash.getsentry.net/dashboards/372-span-status-usage-in-widgets-and-alerts) can be adapted for checking span-related alerts)
+  - Navigate to a specific widget on the dashboard, open the dropdown menu and click on `View Query`
+  - Fork the query on the top right
+  - Modify as you need and execute
+
+If you find out only a small number of users is using the attribute you're about to change, you can consider releasing it in a minor version and reaching out to the folks affected directly. The Support team will be able to help.
+
+The caveat to gauging impact this way is that self-hosted Sentries are not included. However, it still provides a good baseline: attribute usage stats on SaaS are unlikely to be vastly different from those on self-hosted.
+
+
+### SDK Behavior Changes
+
+There are also changes that technically don't require the user to adapt, but they might impact their UX significantly. These tend to be subtle and often need to be evaluated on a case-by-case basis. Be especially mindful of:
+
+- Changes that affect the user's quota. The SDK might, for instance, start sending much more spans because we auto-enabled an integration or changed an option from opt-in to on by default.
+- Changes that might result in events being dropped. We might, for instance, increase or remove a default trimming limit in the SDK, which might result in payloads big enough that they are rejected during ingestion.
+
+
+### Dropping Support for Language or OS Versions
+
+In many SDKs, we generally drop support for old language or OS versions (if applicable) in a major release.
+
+
+## Introducing Breaking Changes
+
+So you're considering introducing a breaking change. How can you do this in a way that's least painful for the users?
+
+Some of this is, again, dependent on your SDK's language. Some language communities are generally more open to new majors, while in others you can expect that introducing a new major release will mean folks will be less likely to upgrade.
+
+In any case, introducing a new major release creates friction. The harder it is to upgrade, the less people will actually do it. We want to minimize the number of folks staying on old releases because upgrading is too much of a hassle for them.
+
+Fortunately, there is always a lot you can do (and not do) to make the upgrade process smoother.
+
+### Factors Increasing Friction
+
+- Piling up breaking changes. Especially if you don't have major releases often, you might be tempted to queue a lot of breaking changes into one release.
+
+  Consider whether you necessarily need to include all of the changes you've planned in the next major. Can you leave some of them out or provide a compatibility layer for the next release? Is each of the changes really necessary?
+
+  Can you make major releases more frequent to distribute the burden? Take into account the general attitude towards major releases in your language community. If major releases are no big deal, making smaller, more frequent major releases can be the way to go. If folks are generally wary of major releases, you need to weigh the benefits against the risk of more of the userbase remaining on an older version.
+
+
+### Ways to Lessen Friction
+
+- Add call-outs in relevant places in the docs and in the changelog.
+- Add deprecation warnings that a breaking change is coming.
+- Support a transitional phase where both the old and new ways function. You might consider providing an SDK option that serves as a feature flag to toggle between the two behaviors.
+- Maintain deprecated APIs, if possible, until another major version.
+- Write a polished migration guide with a lot of easily copy-pastable before-and-after examples.
+- Try to do the upgrade yourself on a test app. Instruct an LLM to do the update using your migration guide and see how well it works.
+- Provide a tool that helps with the upgrade, for example using codemods. (Caveat: This is tricky to get right so that it covers all possible usages of the SDK.)

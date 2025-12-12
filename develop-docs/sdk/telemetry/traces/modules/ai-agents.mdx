@@ -77,9 +77,9 @@ Additional attributes on the span:
 
 This span represents a request to an AI model or service that generates a response or requests a tool call based on the input prompt.
 
-- Span `op` MUST be `"gen_ai.{gen_ai.operation.name}"`. (e.g. `"gen_ai.chat"`)
+- Span `op` MUST be `"gen_ai.{gen_ai.operation.name}"`. (e.g. `"gen_ai.request"`)
 - Span `name` SHOULD be `{gen_ai.operation.name} {gen_ai.request.model}"`. (e.g. `"chat o3-mini"`)
-- Attribute `gen_ai.operation.name` MUST be the operation performed.[3] (e.g. `"chat"`.)
+- Attribute `gen_ai.operation.name` MUST be the operation performed.[3] (e.g. `"summarize"`.)
 - All [Common Span Attributes](#common-span-attributes) SHOULD be set (all `required` common attributes MUST be set).
 
 Additional attributes on the span:
@@ -154,7 +154,7 @@ Some attributes are common to all AI Agents spans:
 
 | Attribute               | Type   | Requirement Level | Description                                                                              | Example               |
 | :---------------------- | :----- | :---------------- | :--------------------------------------------------------------------------------------- | :-------------------- |
-| `gen_ai.operation.name` | string | required          | The name of the operation being performed. **[2]**                                       | `"chat"`              |
+| `gen_ai.operation.name` | string | required          | The name of the operation being performed. **[2]**                                       | `"summarize"`         |
 | `gen_ai.request.model`  | string | required          | The name of the AI model a request is being made to.                                     | `"gpt-4o"`            |
 | `gen_ai.response.model` | string | optional          | The name of the AI model the response was created with.                                  | `"gpt-4o-2024-08-06"` |
 | `gen_ai.agent.name`     | string | optional          | The name of the agent this span belongs to.                                              | `"Weather Agent"`     |
@@ -164,7 +164,7 @@ Some attributes are common to all AI Agents spans:
 
 | Value                | Description                                                             |
 | :------------------- | :---------------------------------------------------------------------- |
-| `"chat"`             | Chat completion operation such as OpenAI Chat API                       |
+| `"summarize"`        | Chat completion operation such as OpenAI Chat API                       |
 | `"responses"`        | OpenAI Responses API                                                    |
 | `"create_agent"`     | Create GenAI agent                                                      |
 | `"embeddings"`       | Embeddings operation such as OpenAI Create embeddings API               |
@@ -191,3 +191,9 @@ Some attributes are common to all AI Agents spans:
 | `"openai"`          | OpenAI                            |
 | `"perplexity"`      | Perplexity                        |
 | `"xai"`             | xAI                               |
+
+## Size Limits
+
+In addition to the [general size limits](https://docs.sentry.io/concepts/data-management/size-limits/) for events, spans, and attachments, there are specific size limits for AI integrations:
+
+- Input messages in AI integrations recorded in the span attribute `gen_ai.request.messages` are limited to 20kB per span. Messages are trimmed and truncated if they exceed the limit, retaining the most recent messages.

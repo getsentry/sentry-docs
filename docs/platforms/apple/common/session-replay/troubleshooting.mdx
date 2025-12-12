@@ -17,6 +17,28 @@ notSupported:
 
 <PlatformSection notSupported={["apple", "apple.macos", "apple.tvos", "apple.watchos", "apple.visionos"]}>
 
+<Expandable title="Why is Session Replay not running on iOS 26.0?" permalink>
+
+Due to potential masking issues introduced by Apple's Liquid Glass rendering changes in iOS 26.0, Session Replay is now <strong>automatically disabled</strong> on apps running iOS 26.0+ when built with Xcode 26.0 or later starting with Sentry Cocoa <strong>8.57.0</strong>. This is a defensive measure to protect user privacy and prevent potential PII leaks until masking is reliably supported. Earlier SDK versions do not include this safeguard and may be affected by unreliable masking on iOS 26.0 when built with Xcode 26.0 (Liquid Glass). We recommend upgrading to 8.57.0+ or, if you can't upgrade the SDK, disabling Session Replay manually.
+
+Session Replay will work normally if:
+
+- Your app runs on iOS versions prior to 26.0, OR
+- Your app is built with Xcode prior to 26.0, OR
+- Your app explicitly sets <code>UIDesignRequiresCompatibility</code> to <code>YES</code> in <code>Info.plist</code>
+
+If you understand the PII risks and want to enable Session Replay anyway, you can override this behavior:
+
+```swift
+options.experimental.enableSessionReplayInUnreliableEnvironment = true
+```
+
+This experimental override option will be removed in a future minor version once the masking issues are resolved.
+
+You can follow the ongoing work to fix masking for iOS 26.0 (Liquid Glass) in <a href="https://github.com/getsentry/sentry-cocoa/issues/6390">GitHub issue #6390</a>.
+
+</Expandable>
+
 <Expandable title="Does Session Replay work with UIKit, SwiftUI or AppKit?" permalink>
 
 Session Replay works with both UIKit and SwiftUI.
@@ -61,6 +83,15 @@ We are aware of this limitation and are exploring potential solutions to support
 
 You can follow the progress in [this GitHub issue](https://github.com/getsentry/sentry-cocoa/issues/5835).
 
+</Expandable>
+
+<Expandable title="Photo pickers and camera views are not captured" permalink>
+
+Session Replay cannot capture photo picker interfaces (`PHPickerViewController` and `UIImagePickerController`) or camera views due to iOS limitations. These pickers use a remote view rendering process rather than being rendered directly in your app's view hierarchy.
+
+On physical devices, photo pickers and camera views will not appear in session replays. On simulators, they may appear because simulators don't use the same remote rendering approach, but this behavior should not be relied upon.
+
+This limitation exists at the iOS system level and cannot be worked around by configuring `unmaskedViewClasses` or other Session Replay settings.
 </Expandable>
 
 <Expandable title="Session Replay is not recording with custom window setup" permalink>
@@ -127,6 +158,41 @@ final class SceneDelegate: NSObject, UIWindowSceneDelegate {
     }
 }
 ```
+
+</Expandable>
+
+<Expandable title="Masking limitations with AsyncDisplayKit/Texture" permalink>
+
+[AsyncDisplayKit](https://github.com/facebookarchive/AsyncDisplayKit) (now archived) and its successor [Texture](https://github.com/texturegroup/texture/) use a custom rendering pipeline that relies on layers rather than standard UIKit components. This architecture prevents Session Replay's default masking options (`maskAllImages` and `maskAllText`) from working correctly.
+
+### Why masking doesn't work
+
+Texture uses `_ASDisplayView` and `_ASDisplayLayer` classes that forward rendering to associated nodes, rather than using standard UIKit view hierarchies. The SDK's default masking mechanisms rely on identifying standard UIKit components (like `UIImageView` and `UILabel`), which don't exist in Texture's custom rendering pipeline. As a result, content rendered through Texture nodes may not be masked by default.
+
+For example, when inspecting the view hierarchy, you'll see views like `ButtonNode-View` with `_ASDisplayLayer` sublayers rather than standard UIKit components:
+
+```
+<SentryMaskingExample.ButtonNode-View: 0x103b35e80; node = <SentryMaskingExample.ButtonNode: 0x10483b600>; ...>
+   | <_ASDisplayLayer: 0x60000213ab20> (layer)
+   | <_ASDisplayLayer: 0x600002139900> (layer)
+```
+
+### Workaround: Mask by view instance
+
+You can work around this limitation by using [masking by view instance](/platforms/apple/guides/ios/session-replay/customredact/#mask-by-view-instance). Access the `view` property of your `ASDisplayNode` instances and apply masking to those specific views:
+
+```swift
+// Access the view from your ASDisplayNode
+let nodeView = myASDisplayNode.view
+SentrySDK.replay.maskView(view: nodeView)
+```
+
+Note that this approach masks entire nodes rather than individual subcomponents. If you need more granular control, you may need to mask parent nodes or use the `supernode` property to mask larger sections of your UI.
+
+### Other limitations
+
+- Swizzling is not supported. While method swizzling could theoretically intercept `ASImageNode` and `ASTextNode` rendering, Sentry does not support or recommend this approach due to stability and maintenance concerns.
+- Layer-backed nodes. Some layer-backed nodes may still not be properly masked even when using view instance masking, as they render directly to layers rather than views.
 
 </Expandable>
 
