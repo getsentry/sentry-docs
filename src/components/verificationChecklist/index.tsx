@@ -258,7 +258,9 @@ export function VerificationChecklist({
                           href={item.link}
                           target={item.link.startsWith('http') ? '_blank' : undefined}
                           rel={
-                            item.link.startsWith('http') ? 'noopener noreferrer' : undefined
+                            item.link.startsWith('http')
+                              ? 'noopener noreferrer'
+                              : undefined
                           }
                           className={styles.link}
                           onClick={e => {
@@ -318,8 +320,7 @@ export function VerificationChecklist({
       )}
 
       <div className={styles.troubleshooting}>
-        Something not working?{' '}
-        <a href={troubleshootingLink}>Check troubleshooting</a>
+        Something not working? <a href={troubleshootingLink}>Check troubleshooting</a>
         {' · '}
         <a href="https://sentry.zendesk.com/hc/en-us/">Get support</a>
       </div>
