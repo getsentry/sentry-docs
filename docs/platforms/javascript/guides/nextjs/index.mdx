@@ -35,9 +35,9 @@ It automatically creates and configures the following files:
 
 | File                          | Purpose                                                   |
 | ----------------------------- | --------------------------------------------------------- |
-| `sentry.server.config.ts`     | Server-side SDK initialization                            |
+| `instrumentation-client.ts`   | Client-side SDK initialization (browser)                  |
+| `sentry.server.config.ts`     | Server-side SDK initialization (Node.js)                  |
 | `sentry.edge.config.ts`       | Edge runtime SDK initialization                           |
-| `instrumentation-client.ts`   | Client-side SDK initialization                            |
 | `instrumentation.ts`          | Next.js instrumentation hook                              |
 | `next.config.ts`              | Updated with Sentry configuration                         |
 | `global-error.tsx`            | App Router error boundary                                 |
@@ -45,84 +45,11 @@ It automatically creates and configures the following files:
 | `app/api/sentry-example-api/` | Example API route                                         |
 | `.env.sentry-build-plugin`    | Auth token for source map uploads (added to `.gitignore`) |
 
-Here's what the instrumentation files look like:
+**Why multiple configuration files?** Next.js runs code in different environments, each requiring separate Sentry initialization:
 
-```typescript {tabTitle:Client} {filename:instrumentation-client.ts}
-import * as Sentry from "@sentry/nextjs";
-
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-
-  // Add optional integrations for additional features
-  integrations: [Sentry.replayIntegration()],
-
-  // Define how likely traces are sampled. Adjust this value in production.
-  tracesSampleRate: 1.0,
-
-  // Define how likely Replay events are sampled.
-  replaysSessionSampleRate: 0.1,
-  replaysOnErrorSampleRate: 1.0,
-
-  // Setting this option to true will print useful information to the console while you're setting up Sentry.
-  debug: false,
-
-  // Enable Sentry Logs
-  _experiments: {
-    enableLogs: true,
-  },
-});
-
-export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
-```
-
-```typescript {tabTitle:Server} {filename:sentry.server.config.ts}
-import * as Sentry from "@sentry/nextjs";
-
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-
-  // Define how likely traces are sampled. Adjust this value in production.
-  tracesSampleRate: 1.0,
-
-  // Setting this option to true will print useful information to the console while you're setting up Sentry.
-  debug: false,
-
-  // Enable Sentry Logs
-  _experiments: {
-    enableLogs: true,
-  },
-});
-```
-
-```typescript {tabTitle:Edge} {filename:sentry.edge.config.ts}
-import * as Sentry from "@sentry/nextjs";
-
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-
-  // Define how likely traces are sampled. Adjust this value in production.
-  tracesSampleRate: 1.0,
-
-  // Setting this option to true will print useful information to the console while you're setting up Sentry.
-  debug: false,
-});
-```
-
-```typescript {tabTitle:Server Instrumentation} {filename:instrumentation.ts}
-import * as Sentry from "@sentry/nextjs";
-
-export async function register() {
-  if (process.env.NEXT_RUNTIME === "nodejs") {
-    await import("./sentry.server.config");
-  }
-
-  if (process.env.NEXT_RUNTIME === "edge") {
-    await import("./sentry.edge.config");
-  }
-}
-
-export const onRequestError = Sentry.captureRequestError;
-```
+- **Client** (`instrumentation-client.ts`) — Runs in the browser, captures frontend errors, performance, and replay
+- **Server** (`sentry.server.config.ts`) — Runs in Node.js, captures backend errors and API route issues
+- **Edge** (`sentry.edge.config.ts`) — Runs in edge runtimes (middleware, edge API routes)
 
 </Expandable>
 
@@ -130,7 +57,7 @@ Prefer to set things up yourself? Check out the [Manual Setup](/platforms/javasc
 
 ## Verify
 
-Select the features you enabled in the wizard, then go through the checklist to verify your setup:
+Select the features you enabled in the wizard, then work through the checklist to verify everything is working:
 
 <OnboardingOptionButtons
   options={[
@@ -141,171 +68,104 @@ Select the features you enabled in the wizard, then go through the checklist to 
   ]}
 />
 
-<Expandable title="Didn't create the example page? Add a test button manually">
+<PlatformContent includePath="getting-started-browser-sandbox-warning" />
 
-If you skipped creating the example page during wizard setup, add this button to any page to test error capturing:
+<VerificationChecklist checklistId="nextjs-quickstart">
+<ChecklistItem id="verify-config" label="Verify your configuration">
+The wizard created these files. Check they exist and contain your DSN:
 
-```tsx
+```typescript {tabTitle:Client} {filename:instrumentation-client.ts}
 import * as Sentry from "@sentry/nextjs";
 
-<button
-  type="button"
-  onClick={() => {
-    Sentry.logger.info("User clicked the test button", {
-      page: "sentry-example-page",
-      timestamp: new Date().toISOString(),
-    });
-    throw new Error("Sentry Test Error");
-  }}
->
-  Throw Test Error
-</button>;
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  // ___PRODUCT_OPTION_START___ performance
+  tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+  // ___PRODUCT_OPTION_START___ session-replay
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ session-replay
+  // ___PRODUCT_OPTION_START___ logs
+  enableLogs: true,
+  // ___PRODUCT_OPTION_END___ logs
+  integrations: [
+    // ___PRODUCT_OPTION_START___ session-replay
+    Sentry.replayIntegration(),
+    // ___PRODUCT_OPTION_END___ session-replay
+  ],
+});
 ```
 
-Or create the full example page manually:
-
-```tsx {filename:app/sentry-example-page/page.tsx}
-"use client";
-
+```typescript {tabTitle:Server} {filename:sentry.server.config.ts}
 import * as Sentry from "@sentry/nextjs";
 
-export default function SentryExamplePage() {
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  // ___PRODUCT_OPTION_START___ performance
+  tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+  // ___PRODUCT_OPTION_START___ logs
+  enableLogs: true,
+  // ___PRODUCT_OPTION_END___ logs
+});
+```
+
+```typescript {tabTitle:Edge} {filename:sentry.edge.config.ts}
+import * as Sentry from "@sentry/nextjs";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  // ___PRODUCT_OPTION_START___ performance
+  tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+});
+```
+
+</ChecklistItem>
+<ChecklistItem id="trigger-error" label="Trigger a test error">
+Visit `/sentry-example-page` in your browser and click the "Throw Sample Error" button.
+
+If you don't have an example page, add this button to any page:
+
+```tsx
+"use client";
+import * as Sentry from "@sentry/nextjs";
+
+export function TestButton() {
   return (
-    <div style={{ padding: "2rem" }}>
-      <h1>Sentry Example Page</h1>
-      <p>Click the button to trigger a test error:</p>
-      <button
-        type="button"
-        onClick={async () => {
-          // Send a log message to Sentry
-          Sentry.logger.info("User clicked the test button", {
-            page: "sentry-example-page",
-            timestamp: new Date().toISOString(),
-          });
-
-          // Create a span for tracing
-          await Sentry.startSpan(
-            { name: "Example Frontend Span", op: "test" },
-            async () => {
-              Sentry.logger.debug("Starting API call within span");
-
-              // Call the example API (will throw an error)
-              const res = await fetch("/api/sentry-example-api");
-              if (!res.ok) {
-                Sentry.logger.warn("API returned an error response");
-              }
-            }
-          );
-
-          // Log before throwing the error
-          Sentry.logger.error("About to throw a frontend error");
-
-          // Throw a frontend error
-          throw new Error("Sentry Example Frontend Error");
-        }}
-      >
-        Throw Sample Error
-      </button>
-    </div>
+    <button
+      onClick={() => {
+        throw new Error("Sentry Test Error");
+      }}
+    >
+      Throw Test Error
+    </button>
   );
 }
 ```
 
-```ts {filename:app/api/sentry-example-api/route.ts}
-import * as Sentry from "@sentry/nextjs";
-import { NextResponse } from "next/server";
-
-export const dynamic = "force-dynamic";
-
-export function GET() {
-  Sentry.logger.info("API route called", { route: "/api/sentry-example-api" });
-  Sentry.logger.error("About to throw an API error");
-
-  throw new Error("Sentry Example API Error");
-  return NextResponse.json({ data: "Testing Sentry..." });
-}
-```
-
-</Expandable>
-
-<PlatformContent includePath="getting-started-browser-sandbox-warning" />
-
-<VerificationChecklist
-  checklistId="nextjs-quickstart"
-  items={[
-    {
-      id: "trigger-error",
-      label: "Trigger a test error",
-      description:
-        "Visit /sentry-example-page and click the button, or add a test button to your app",
-    },
-    {
-      id: "see-errors",
-      label: "See the errors in Sentry",
-      description: "Check your project's Issues page",
-      link: "https://sentry.io/orgredirect/organizations/:orgslug/issues/",
-      linkText: "Open Issues",
-      docsLink: "/platforms/javascript/guides/nextjs/usage/",
-      docsLinkText: "Learn more",
-    },
-    {
-      id: "see-traces",
-      label: "See Traces",
-      description: "View the performance trace from the button click",
-      link: "https://sentry.io/orgredirect/organizations/:orgslug/explore/traces/",
-      linkText: "Open Traces",
-      docsLink: "/platforms/javascript/guides/nextjs/tracing/",
-      docsLinkText: "Learn more",
-      optionId: "performance",
-    },
-    {
-      id: "see-replay",
-      label: "See Session Replay",
-      description: "Watch a video-like reproduction of the error",
-      link: "https://sentry.io/orgredirect/organizations/:orgslug/replays/",
-      linkText: "Open Replays",
-      docsLink: "/platforms/javascript/guides/nextjs/session-replay/",
-      docsLinkText: "Learn more",
-      optionId: "session-replay",
-    },
-    {
-      id: "see-logs",
-      label: "See Logs",
-      description: "View structured logs from your application",
-      link: "https://sentry.io/orgredirect/organizations/:orgslug/explore/logs/",
-      linkText: "Open Logs",
-      docsLink: "/platforms/javascript/guides/nextjs/logs/",
-      docsLinkText: "Learn more",
-      optionId: "logs",
-    },
-    {
-      id: "verify-sourcemaps",
-      label: "Verify Source Maps",
-      description:
-        "Run a production build, trigger an error, and check that stack traces show original source code",
-      link: "https://sentry.io/orgredirect/organizations/:orgslug/issues/",
-      linkText: "Open Issues",
-      docsLink: "/platforms/javascript/guides/nextjs/sourcemaps/",
-      docsLinkText: "Learn more",
-    },
-  ]}
+</ChecklistItem>
+<ChecklistItem
+  id="see-errors"
+  label="See the error in Sentry"
+  description="Open your project's Issues page and find the test error."
+  link="https://sentry.io/orgredirect/organizations/:orgslug/issues/"
+  linkText="Open Issues"
+  docsLink="/platforms/javascript/guides/nextjs/usage/"
+  docsLinkText="Learn more"
 />
-
-<Expandable title="Want to test manually? Here are some code examples">
-
-**Capture an exception manually:**
-
-```typescript
-import * as Sentry from "@sentry/nextjs";
-
-try {
-  riskyOperation();
-} catch (error) {
-  Sentry.captureException(error);
-}
-```
-
-**Create a custom span for tracing:**
+<ChecklistItem
+  id="see-traces"
+  label="See Traces"
+  description="View the performance trace from clicking the button."
+  link="https://sentry.io/orgredirect/organizations/:orgslug/explore/traces/"
+  linkText="Open Traces"
+  docsLink="/platforms/javascript/guides/nextjs/tracing/"
+  docsLinkText="Learn more"
+  optionId="performance"
+>
+You can also create custom spans to measure specific operations:
 
 ```typescript
 await Sentry.startSpan({ name: "my-operation", op: "task" }, async () => {
@@ -313,21 +173,37 @@ await Sentry.startSpan({ name: "my-operation", op: "task" }, async () => {
 });
 ```
 
-**Send structured logs:**
+</ChecklistItem>
+<ChecklistItem
+  id="see-replay"
+  label="See Session Replay"
+  description="Watch a video-like reproduction of the error."
+  link="https://sentry.io/orgredirect/organizations/:orgslug/replays/"
+  linkText="Open Replays"
+  docsLink="/platforms/javascript/guides/nextjs/session-replay/"
+  docsLinkText="Learn more"
+  optionId="session-replay"
+/>
+<ChecklistItem
+  id="see-logs"
+  label="See Logs"
+  description="View the log messages sent during the test."
+  link="https://sentry.io/orgredirect/organizations/:orgslug/explore/logs/"
+  linkText="Open Logs"
+  docsLink="/platforms/javascript/guides/nextjs/logs/"
+  docsLinkText="Learn more"
+  optionId="logs"
+>
+Send structured logs from anywhere in your application:
 
 ```typescript
-Sentry.logger.info("User completed checkout", {
-  cartId: "abc123",
-  total: 99.99,
-});
-Sentry.logger.warn("Slow API response", {
-  endpoint: "/api/data",
-  duration: 5000,
-});
-Sentry.logger.error("Payment failed", { reason: "insufficient_funds" });
+Sentry.logger.info("User action", { userId: "123" });
+Sentry.logger.warn("Slow response", { duration: 5000 });
+Sentry.logger.error("Operation failed", { reason: "timeout" });
 ```
 
-</Expandable>
+</ChecklistItem>
+</VerificationChecklist>
 
 ## Next Steps
 
