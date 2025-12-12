@@ -91,12 +91,12 @@ const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
 // - platform-redirect: dynamic route with searchParams
 // - [[...path]]: calls getDocsRootNode() during prerendering (even though force-static)
 // Additionally, [[...path]] needs source files for pages using ISR (Incremental Static Regeneration):
-// - changelog.mdx: uses ISR with 1-hour revalidation to fetch fresh content
+// - changelog.mdx: uses ISR with 1-hour revalidation to fetch fresh content (user docs only)
 // Other routes read frontmatter from source files instead of using doctree (sitemap, api/source-map)
 const outputFileTracingIncludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
   ? {
       '/platform-redirect': ['public/doctree-dev.json'],
-      '\\[\\[\\.\\.\\.path\\]\\]': ['public/doctree-dev.json', 'docs/changelog.mdx'],
+      '\\[\\[\\.\\.\\.path\\]\\]': ['public/doctree-dev.json'],
     }
   : {
       '/platform-redirect': ['public/doctree.json'],
