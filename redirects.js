@@ -280,7 +280,7 @@ const userDocsRedirects = [
   },
   {
     source: '/product/ai-in-sentry/sentry-prevent-ai/:path*',
-    destination: '/product/ai-in-sentry/ai-code-review/:path*',
+    destination: '/product/ai-in-sentry/seer/ai-code-review/:path*',
   },
 
   {
