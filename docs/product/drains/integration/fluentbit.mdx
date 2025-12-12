@@ -1,0 +1,146 @@
+---
+title: Fluent Bit
+sidebar_order: 30
+description: Learn how to set up Fluent Bit's OpenTelemetry output plugin to forward logs and traces data to Sentry.
+---
+
+[Fluent Bit](https://fluentbit.io/) supports [exporting OpenTelemetry (OTEL)-compliant](https://docs.fluentbit.io/manual/pipeline/outputs/opentelemetry) data to send logs and traces to Sentry.
+
+## Prerequisites
+
+Before you begin, ensure you have:
+
+- Fluent Bit installed and running
+- A Sentry project you want to send data to
+
+## Step 1: Get Your Sentry OTLP Credentials
+
+You'll need your Sentry OTLP endpoint and authentication header. These can be found in your [Sentry Project Settings](https://sentry.io/settings/projects/) under **Client Keys (DSN)** > **OpenTelemetry (OTLP)**.
+
+### Logs Endpoint
+
+```bash
+___OTLP_LOGS_URL___
+```
+
+### Traces Endpoint
+
+```bash
+___OTLP_TRACES_URL___
+```
+
+### Authentication Header
+
+```
+x-sentry-auth: sentry sentry_key=___PUBLIC_KEY___
+```
+
+## Step 2: Configure Fluent Bit
+
+Add the OpenTelemetry output plugin to your Fluent Bit configuration to forward data to Sentry.
+
+### Logs Configuration
+
+To forward logs to Sentry, add the following output configuration:
+
+```yaml {filename:fluent-bit.yaml}
+pipeline:
+  outputs:
+    - name: opentelemetry
+      match: "*"
+      host: ___ORG_INGEST_DOMAIN___
+      port: 443
+      logs_uri: /api/___PROJECT_ID___/integration/otlp/v1/logs
+      tls: on
+      tls.verify: on
+      header:
+        - x-sentry-auth sentry sentry_key=___PUBLIC_KEY___
+```
+
+```text {filename:fluent-bit.conf}
+[OUTPUT]
+    Name                 opentelemetry
+    Match                *
+    Host                 ___ORG_INGEST_DOMAIN___
+    Port                 443
+    Logs_uri             /api/___PROJECT_ID___/integration/otlp/v1/logs
+    Tls                  On
+    Tls.verify           On
+    Header               x-sentry-auth sentry sentry_key=___PUBLIC_KEY___
+```
+
+### Traces Configuration
+
+To forward traces to Sentry, add the following output configuration:
+
+```yaml {filename:fluent-bit.yaml}
+pipeline:
+  outputs:
+    - name: opentelemetry
+      match: "*"
+      host: ___ORG_INGEST_DOMAIN___
+      port: 443
+      traces_uri: /api/___PROJECT_ID___/integration/otlp/v1/traces
+      tls: on
+      tls.verify: on
+      header:
+        - x-sentry-auth sentry sentry_key=___PUBLIC_KEY___
+```
+
+```text {filename:fluent-bit.conf}
+[OUTPUT]
+    Name                 opentelemetry
+    Match                *
+    Host                 ___ORG_INGEST_DOMAIN___
+    Port                 443
+    Traces_uri           /api/___PROJECT_ID___/integration/otlp/v1/traces
+    Tls                  On
+    Tls.verify           On
+    Header               x-sentry-auth sentry sentry_key=___PUBLIC_KEY___
+```
+
+### Combined Logs and Traces Configuration
+
+To send both logs and traces to Sentry, include both `logs_uri` and `traces_uri` in the output configuration:
+
+```yaml {filename:fluent-bit.yaml}
+pipeline:
+  outputs:
+    - name: opentelemetry
+      match: "*"
+      host: ___ORG_INGEST_DOMAIN___
+      port: 443
+      logs_uri: /api/___PROJECT_ID___/integration/otlp/v1/logs
+      traces_uri: /api/___PROJECT_ID___/integration/otlp/v1/traces
+      tls: on
+      tls.verify: on
+      header:
+        - x-sentry-auth sentry sentry_key=___PUBLIC_KEY___
+```
+
+```text {filename:fluent-bit.conf}
+[OUTPUT]
+    Name                 opentelemetry
+    Match                *
+    Host                 ___ORG_INGEST_DOMAIN___
+    Port                 443
+    Logs_uri             /api/___PROJECT_ID___/integration/otlp/v1/logs
+    Traces_uri           /api/___PROJECT_ID___/integration/otlp/v1/traces
+    Tls                  On
+    Tls.verify           On
+    Header               x-sentry-auth sentry sentry_key=___PUBLIC_KEY___
+```
+
+## Optional Configuration
+
+Fluent Bit's OpenTelemetry output plugin supports additional options for fine-tuning your setup:
+
+| Option                 | Description                                      | Default |
+| ---------------------- | ------------------------------------------------ | ------- |
+| `batch_size`           | Maximum number of log records to flush at a time | `1000`  |
+| `compress`             | Payload compression (`gzip` or `zstd`)           | _none_  |
+| `log_response_payload` | Log the response payload for debugging           | `true`  |
+| `logs_body_key`        | Key to use for the log body                      | _none_  |
+| `retry_limit`          | Retry limit for failed deliveries                | `1`     |
+
+For a complete list of configuration options, see the [Fluent Bit OpenTelemetry documentation](https://docs.fluentbit.io/manual/pipeline/outputs/opentelemetry).

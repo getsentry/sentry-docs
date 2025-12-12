@@ -1,0 +1,32 @@
+---
+title: Span Trace Propagation
+---
+
+<Alert level="warning">
+  🚧 This document is work in progress.
+</Alert>
+
+<Alert level="info">
+  This document uses key words such as "MUST", "SHOULD", and "MAY" as defined in [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt) to indicate requirement levels.
+</Alert>
+
+## Continue an incoming trace
+
+To continue a trace from an upstream service, the SDK must expose a method to extract the traceparent and baggage information and apply these to the applicable scope.
+
+```js
+scope.setPropagationContext({
+    traceparent: request.headers.SENTRY_TRACE,
+    baggage: request.headers.SENTRY_BAGGAGE,
+})
+```
+Newly created root spans should now contain these properties, such as `trace_id` and `parent_span_id`.
+
+## Continue an outgoing trace
+
+To propagate a trace to a downstream service, the SDK must expose methods to fetch the required information to allow the next service to continue the trace.
+
+```js
+traceparent = scope.getTraceparent()
+baggage = scope.getBaggage()
+```

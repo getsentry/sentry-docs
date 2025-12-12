@@ -1,0 +1,132 @@
+---
+title: Insights
+sidebar_order: 5250
+description: Preview how Size Analysis reports highlight Android build trends.
+---
+
+Size Analysis Insights point out opportunities to reduce your Android app's size. They spot patterns like duplicate files, oversized media, or unneeded assets, and list exactly what to fix along with the estimated size savings.
+
+## Android Insights
+
+Below are a list of available insights for Android builds, followed by more details about each insight:
+
+| Insight                                                   | What it flags                                                         |
+| --------------------------------------------------------- | --------------------------------------------------------------------- |
+| [Duplicate Files](#duplicate-files)                       | Flags identical payloads so you can drop the duplicates               |
+| [Large Images](#large-images)                             | Surfaces oversized image assets worth recompressing or resizing.      |
+| [Large Videos](#large-videos)                             | Highlights video files that are bigger than typical delivery budgets. |
+| [WebP Optimization](#webp-optimization)                   | Tests PNG/JPEG bitmaps to see if lossless WebP would shrink them.     |
+| [Large Audio](#large-audio)                               | Surfaces hefty audio tracks that could be recompressed or trimmed.    |
+| [Hermes Debug Info (RN Only)](#hermes-debug-info-rn-only) | Points to bundled Hermes bytecode still carrying debugger metadata.   |
+| [Multiple Native Library Architectures](#multiple-native-library-architectures) | Detects when multiple native library architectures are packaged in an APK.   |
+
+### Duplicate Files
+
+**What it is**: Finds matching files or directories inside `assets/`, `res/`, or embedded libraries. Duplicate files are determined by examining the file hash, ensuring these are truly duplicates and not just similar files or the same file name.
+
+**How to fix**: Keep one copy and remove or dedupe the rest. For resource folders, consolidate the asset into a shared module or asset pack so the APK only bundles it once.
+
+### Large Images
+
+**What it is**: Flags image files larger than 10 MB.
+
+**How to fix**: Compress images with lossless WebP or resize them before bundling.
+
+
+**Options:**
+
+- Use Android Studio: right-click an image → **Convert to WebP** → select **Lossless**.
+- Use the command line:
+
+  ```bash
+  # Install cwebp
+  brew install webp
+
+  # Convert PNG to lossless WebP
+  cwebp -lossless input.png -o output.webp
+
+  # Convert JPEG to lossless WebP
+  cwebp -lossless input.jpg -o output.webp
+  ```
+
+Large hero images or splash screens may also load more efficiently if served over the network instead of being bundled with the app.
+
+### Large Videos
+
+**What it is**: Highlights bundled video assets above 10 MB.
+
+**How to fix**: Re-encode them to H.264 or HEVC with a lower bitrate, shorten the clip, or host the video remotely and stream it on demand. To shrink a clip in place, try FFmpeg:
+
+```bash
+ffmpeg -i input.mp4 -c:v libx264 -crf 23 -preset slow -c:a copy output.mp4
+```
+
+Lower the `-crf` value for higher quality (and larger files), or raise it for smaller files.
+
+### WebP Optimization
+
+**What it is**: Tests every PNG, BMP, JPG, or JPEG (excluding `.9.png`) against lossless WebP conversion. If the WebP variant saves at least 500 bytes, the insight lists the asset.
+
+**How to fix**: Convert the listed bitmap to lossless WebP and update its references. Pick one of the paths below.
+
+#### Option 1: Android Studio
+
+1. In Android Studio, right-click the image.
+2. Choose **Convert to WebP…**.
+3. Select **Lossless** (API 18+ supports it) and review the preview.
+
+#### Option 2: Command line
+
+```bash
+# Install cwebp
+brew install webp
+
+# Convert PNG to lossless WebP
+cwebp -lossless input.png -o output.webp
+
+# Convert JPEG to lossless WebP
+cwebp -lossless input.jpg -o output.webp
+```
+
+> Lossless WebP with alpha requires `minSdkVersion` ≥ 18. For older devices, keep PNG fallbacks for assets that rely on transparency.
+
+### Large Audio
+
+**What it is**: Surfaces audio files larger than 5 MB across `res/raw`, `assets`, or libraries.
+
+**How to fix**: Re-encode them at a lower bitrate or modern format using FFmpeg or your DAW, trim unused segments, or stream long-form media instead of bundling it. A quick FFmpeg recompress:
+
+```bash
+ffmpeg -i input.wav -c:a aac -b:a 128k output.m4a
+```
+
+You can tweak the bitrate (`b:a`) to balance quality vs. size. Higher bitrates (192k-256k) will be higher quality, but larger size. Lower bitrates (96k-128k) will be lower quality, but smaller size. If your audio file is voice-only, you can use a lower bitrate with little degradation in quality. Music files may benefit from a higher bitrate.
+
+### Hermes Debug Info (RN Only)
+
+**What it is**: Detects Hermes bytecode bundles that still contain debug info sections.
+
+**How to fix**: Build the React Native bundle in release mode (`react-native bundle --dev false` or the Gradle release task) so Hermes strips debug sections before packaging.
+
+### Multiple Native Library Architectures
+
+**What it is**: Detects when multiple native libraries are packaged in an APK supporting different architectures. End user devices will only use one architecture (usually arm64_v8a), so most can be removed.
+
+**How to fix**: Upload an AAB to the Play Store (Google will automatically pass the architecture the end user needs). We also recommend you upload an AAB for size analysis.
+
+If you ship an APK, the `split {}` block can be used to output split APKs manually. If configured to skip ABI splits, Android will package all native library architectures into the main split.
+
+Ensure your split Gradle dls config has the `isEnabled = true` field set for the `abi {}` block.
+
+```kotlin
+android {
+  splits {
+    ..
+
+    abi {
+      isEnabled.set(true)
+    }
+  }
+}
+```
+More information about the ABI configuration for manual APK splits can be found in the [Android developer documentation](https://developer.android.com/studio/build/configure-apk-splits#configure-abi-split).

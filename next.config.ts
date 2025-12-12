@@ -4,6 +4,11 @@ import {withSentryConfig} from '@sentry/nextjs';
 import {REMOTE_IMAGE_PATTERNS} from './src/config/images';
 import {redirects} from './redirects.js';
 
+// Exclude build-time-only dependencies from serverless function bundles to stay under
+// Vercel's 250MB limit. These packages (esbuild, mdx-bundler, sharp, etc.) are only
+// needed during the build process to compile MDX and optimize assets. The compiled
+// output is used at runtime, so bundling these ~150-200MB of dependencies would bloat
+// functions unnecessarily and cause deployment failures.
 const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
   ? {
       '/**/*': [
@@ -13,6 +18,24 @@ const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
         './.next/cache/mdx-bundler/**/*',
         './.next/cache/md-exports/**/*',
         'docs/**/*',
+        // Exclude heavy build dependencies
+        'node_modules/@esbuild/**/*',
+        'node_modules/esbuild/**/*',
+        'node_modules/@aws-sdk/**/*',
+        'node_modules/@google-cloud/**/*',
+        'node_modules/prettier/**/*',
+        'node_modules/@prettier/**/*',
+        'node_modules/sharp/**/*',
+        'node_modules/mermaid/**/*',
+        // Exclude MDX processing dependencies
+        'node_modules/mdx-bundler/**/*',
+        'node_modules/rehype-preset-minify/**/*',
+        'node_modules/rehype-prism-plus/**/*',
+        'node_modules/rehype-prism-diff/**/*',
+        'node_modules/remark-gfm/**/*',
+        'node_modules/remark-mdx-images/**/*',
+        'node_modules/unified/**/*',
+        'node_modules/rollup/**/*',
       ],
     }
   : {
@@ -23,21 +46,59 @@ const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
         './.next/cache/md-exports/**/*',
         './apps/**/*',
         'develop-docs/**/*',
-        'node_modules/@esbuild/*',
+        // Exclude heavy build dependencies
+        'node_modules/@esbuild/**/*',
+        'node_modules/esbuild/**/*',
+        'node_modules/@aws-sdk/**/*',
+        'node_modules/@google-cloud/**/*',
+        'node_modules/prettier/**/*',
+        'node_modules/@prettier/**/*',
+        'node_modules/sharp/**/*',
+        'node_modules/mermaid/**/*',
+        // Exclude MDX processing dependencies
+        'node_modules/mdx-bundler/**/*',
+        'node_modules/rehype-preset-minify/**/*',
+        'node_modules/rehype-prism-plus/**/*',
+        'node_modules/rehype-prism-diff/**/*',
+        'node_modules/remark-gfm/**/*',
+        'node_modules/remark-mdx-images/**/*',
+        'node_modules/unified/**/*',
+        'node_modules/rollup/**/*',
       ],
-      '/platform-redirect': ['**/*.gif', 'public/mdx-images/**/*', '**/*.pdf'],
+      '/platform-redirect': [
+        '**/*.gif',
+        'public/mdx-images/**/*',
+        'public/og-images/**/*',
+        '**/*.pdf',
+      ],
       '\\[\\[\\.\\.\\.path\\]\\]': [
         'docs/**/*',
         'node_modules/prettier/plugins',
         'node_modules/rollup/dist',
+        'public/og-images/**/*',
       ],
       'sitemap.xml': [
-        'docs/**/*',
         'public/mdx-images/**/*',
+        'public/og-images/**/*',
         '**/*.gif',
         '**/*.pdf',
         '**/*.png',
       ],
+    };
+
+// Explicitly include the pre-computed doc tree files for routes that need them at runtime.
+// Both platform-redirect and [[...path]] need the doctree at runtime:
+// - platform-redirect: dynamic route with searchParams
+// - [[...path]]: calls getDocsRootNode() during prerendering (even though force-static)
+// Other routes read frontmatter from source files instead of using doctree (sitemap, api/source-map)
+const outputFileTracingIncludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
+  ? {
+      '/platform-redirect': ['public/doctree-dev.json'],
+      '\\[\\[\\.\\.\\.path\\]\\]': ['public/doctree-dev.json'],
+    }
+  : {
+      '/platform-redirect': ['public/doctree.json'],
+      '\\[\\[\\.\\.\\.path\\]\\]': ['public/doctree.json'],
     };
 
 if (process.env.NODE_ENV !== 'development' && !process.env.NEXT_PUBLIC_SENTRY_DSN) {
@@ -50,8 +111,24 @@ if (process.env.NODE_ENV !== 'development' && !process.env.NEXT_PUBLIC_SENTRY_DS
 const nextConfig = {
   pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx', 'mdx'],
   trailingSlash: true,
-  serverExternalPackages: ['rehype-preset-minify'],
+  serverExternalPackages: [
+    'rehype-preset-minify',
+    'esbuild',
+    '@esbuild/darwin-arm64',
+    '@esbuild/darwin-x64',
+    '@esbuild/linux-arm64',
+    '@esbuild/linux-x64',
+    '@esbuild/win32-x64',
+    'mdx-bundler',
+    'sharp',
+    '@aws-sdk/client-s3',
+    '@google-cloud/storage',
+    'prettier',
+    '@prettier/plugin-xml',
+    'mermaid',
+  ],
   outputFileTracingExcludes,
+  outputFileTracingIncludes,
   images: {
     contentDispositionType: 'inline', // "open image in new tab" instead of downloading
     remotePatterns: REMOTE_IMAGE_PATTERNS,
@@ -87,6 +164,7 @@ const nextConfig = {
 module.exports = withSentryConfig(nextConfig, {
   org: 'sentry',
   project: process.env.NEXT_PUBLIC_DEVELOPER_DOCS ? 'develop-docs' : 'docs',
+  authToken: process.env.SENTRY_AUTH_TOKEN,
 
   // Suppresses source map uploading logs during build
   silent: !process.env.CI,
