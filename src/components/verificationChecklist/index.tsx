@@ -10,6 +10,8 @@ import styles from './style.module.scss';
 type ChecklistItem = {
   id: string;
   label: string;
+  /** Expandable content (code blocks, additional details) */
+  content?: ReactNode;
   description?: string;
   /** Secondary link (usually to docs) */
   docsLink?: string;
@@ -19,8 +21,6 @@ type ChecklistItem = {
   linkText?: string;
   /** Onboarding option ID - item will be hidden when this option is unchecked */
   optionId?: string;
-  /** Expandable content (code blocks, additional details) */
-  content?: ReactNode;
 };
 
 type Props = {
