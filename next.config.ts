@@ -86,6 +86,21 @@ const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
       ],
     };
 
+// Explicitly include the pre-computed doc tree files for routes that need them at runtime.
+// Both platform-redirect and [[...path]] need the doctree at runtime:
+// - platform-redirect: dynamic route with searchParams
+// - [[...path]]: calls getDocsRootNode() during prerendering (even though force-static)
+// Other routes read frontmatter from source files instead of using doctree (sitemap, api/source-map)
+const outputFileTracingIncludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
+  ? {
+      '/platform-redirect': ['public/doctree-dev.json'],
+      '\\[\\[\\.\\.\\.path\\]\\]': ['public/doctree-dev.json'],
+    }
+  : {
+      '/platform-redirect': ['public/doctree.json'],
+      '\\[\\[\\.\\.\\.path\\]\\]': ['public/doctree.json'],
+    };
+
 if (process.env.NODE_ENV !== 'development' && !process.env.NEXT_PUBLIC_SENTRY_DSN) {
   throw new Error(
     'Missing required environment variable: NEXT_PUBLIC_SENTRY_DSN must be set in production'
@@ -113,6 +128,7 @@ const nextConfig = {
     'mermaid',
   ],
   outputFileTracingExcludes,
+  outputFileTracingIncludes,
   images: {
     contentDispositionType: 'inline', // "open image in new tab" instead of downloading
     remotePatterns: REMOTE_IMAGE_PATTERNS,
