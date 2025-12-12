@@ -1257,6 +1257,10 @@ const userDocsRedirects = [
     source: '/product/ai-in-sentry/seer/seer-privacy-and-security',
     destination: '/product/ai-in-sentry/ai-privacy-and-security/',
   },
+  {
+    source: '/product/ai-in-sentry/seer/issue-fix/:path*',
+    destination: '/product/ai-in-sentry/seer/root-cause-analysis/:path*',
+  },
   // .NET profiling guide redirects - consolidate to main profiling page
   {
     source: '/platforms/dotnet/guides/uwp/profiling/:path*',
