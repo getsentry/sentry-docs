@@ -94,11 +94,11 @@ const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
 const outputFileTracingIncludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
   ? {
       '/platform-redirect': ['public/doctree-dev.json'],
-      '/[[...path]]': ['public/doctree-dev.json'],
+      '\\[\\[\\.\\.\\.path\\]\\]': ['public/doctree-dev.json'],
     }
   : {
       '/platform-redirect': ['public/doctree.json'],
-      '/[[...path]]': ['public/doctree.json'],
+      '\\[\\[\\.\\.\\.path\\]\\]': ['public/doctree.json'],
     };
 
 if (process.env.NODE_ENV !== 'development' && !process.env.NEXT_PUBLIC_SENTRY_DSN) {
