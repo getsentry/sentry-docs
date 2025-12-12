@@ -219,6 +219,10 @@ const developerDocsRedirects = [
     destination: '/backend/emails/',
   },
   {
+    source: '/backend/application-domains/asynchronous-workers/',
+    destination: '/backend/application-domains/tasks/',
+  },
+  {
     source: '/self-hosted/custom-ca-roots/',
     destination: '/self-hosted/configuration/custom-ca-roots/',
   },
