@@ -24,35 +24,66 @@ supported:
   - javascript.bun
   - javascript.tanstackstart-react
   - javascript.cloudflare
+  - javascript
 ---
 
 <Alert>
 
-This integration requires SDK version `10.25.0` or higher.
+This integration works in the Node.js, Cloudflare Workers, Vercel Edge Functions, and browser runtimes. It requires SDK version `10.25.0` or higher.
 
 </Alert>
 
-_Import name: `Sentry.langChainIntegration`_
+_Import name: `Sentry.langGraphIntegration`_
 
-LangGraph is instrumented via the [`langChainIntegration`](./langchain), which automatically captures spans for LangGraph operations including agent invocations, graph executions, and node operations.
+LangGraph is instrumented via the [`langGraphIntegration`](./langgraph), which automatically captures spans for LangGraph operations including agent invocations, graph executions, and node operations.
+
+<PlatformSection notSupported={["javascript.cloudflare", "javascript.nextjs", "javascript"]}>
+
+It is enabled by default and will automatically capture spans for LangGraph operations. You can opt-in to capture inputs and outputs by setting `recordInputs` and `recordOutputs` in the integration config:
+
+```javascript
+Sentry.init({
+  dsn: "____PUBLIC_DSN____",
+  tracesSampleRate: 1.0,
+  integrations: [
+    Sentry.langGraphIntegration({
+      recordInputs: true,
+      recordOutputs: true,
+    }),
+  ],
+});
+```
 
 ## Usage Example
 
 ```javascript
 import { ChatOpenAI } from "@langchain/openai";
-import { createReactAgent } from "@langchain/langgraph/prebuilt";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { StateGraph, MessagesAnnotation, START, END } from '@langchain/langgraph';
 
-// Create LLM and agent
+// Create LLM call
 const llm = new ChatOpenAI({
   modelName: "gpt-4o",
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-const agent = createReactAgent({ llm, tools: [] });
+async function callLLM(state) {
+  const response = await llm.invoke(state.messages);
+
+  return {
+    messages: [...state.messages, response],
+  };
+}
+
+// Create the agent
+const agent = new StateGraph(MessagesAnnotation)
+  .addNode('agent', callLLM)
+  .addEdge(START, 'agent')
+  .addEdge('agent', END);
+
+const compiledAgent = agent.compile({ name: 'my_agent' });
 
 // Invoke the agent - automatically instrumented
-const result = await agent.invoke({
+const result = await compiledAgent.invoke({
   messages: [
     new SystemMessage("You are a helpful assistant."),
     new HumanMessage("Hello!"),
@@ -60,9 +91,140 @@ const result = await agent.invoke({
 });
 ```
 
+</PlatformSection>
+
+<PlatformSection supported={["javascript.cloudflare"]}>
+
+For Cloudflare Workers, you need to manually instrument the LangGraph graph using the `instrumentLangGraph` helper:
+
+```javascript
+import * as Sentry from "@sentry/cloudflare";
+import { ChatOpenAI } from "@langchain/openai";
+import { StateGraph, MessagesAnnotation, START, END } from '@langchain/langgraph';
+
+// Create LLM call
+const llm = new ChatOpenAI({
+  modelName: "gpt-4o",
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+async function callLLM(state) {
+  const response = await llm.invoke(state.messages);
+
+  return {
+    messages: [...state.messages, response],
+  };
+}
+
+// Create the agent
+const agent = new StateGraph(MessagesAnnotation)
+  .addNode('agent', callLLM)
+  .addEdge(START, 'agent')
+  .addEdge('agent', END);
+
+const graph = agent.compile({ name: 'my_agent' });
+
+// Manually instrument the graph
+Sentry.instrumentLangGraph(graph, {
+  recordInputs: true,
+  recordOutputs: true,
+});
+
+// Invoke the agent
+const result = await graph.invoke({
+  messages: [
+    new SystemMessage("You are a helpful assistant."),
+    new HumanMessage("Hello!"),
+  ],
+});
+```
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript"]}>
+
+For browser applications, you need to manually instrument the LangGraph graph using the `instrumentLangGraph` helper:
+
+```javascript
+import * as Sentry from "@sentry/browser";
+import { ChatOpenAI } from "@langchain/openai";
+import { StateGraph, MessagesAnnotation, START, END } from '@langchain/langgraph';
+
+// Create LLM call
+const llm = new ChatOpenAI({
+  modelName: "gpt-4o",
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+async function callLLM(state) {
+  const response = await llm.invoke(state.messages);
+
+  return {
+    messages: [...state.messages, response],
+  };
+}
+
+// Create the agent
+const agent = new StateGraph(MessagesAnnotation)
+  .addNode('agent', callLLM)
+  .addEdge(START, 'agent')
+  .addEdge('agent', END);
+
+const graph = agent.compile({ name: 'my_agent' });
+
+// Manually instrument the graph
+Sentry.instrumentLangGraph(graph, {
+  recordInputs: true,
+  recordOutputs: true,
+});
+
+// Invoke the agent
+const result = await graph.invoke({
+  messages: [
+    new SystemMessage("You are a helpful assistant."),
+    new HumanMessage("Hello!"),
+  ],
+});
+```
+
+</PlatformSection>
+
+## Options
+
+### `recordInputs`
+
+_Type: `boolean`_
+
+Records inputs to LangGraph operations (such as messages and state data passed to the graph).
+
+Defaults to `true` if `sendDefaultPii` is `true`.
+
+```javascript
+Sentry.init({
+  integrations: [Sentry.langGraphIntegration({ recordInputs: true })],
+});
+```
+
+### `recordOutputs`
+
+_Type: `boolean`_
+
+Records outputs from LangGraph operations (such as generated responses, agent outputs, and final state).
+
+Defaults to `true` if `sendDefaultPii` is `true`.
+
+```javascript
+Sentry.init({
+  integrations: [Sentry.langGraphIntegration({ recordOutputs: true })],
+});
+```
+
 ## Configuration
 
-For configuration options, runtime-specific setup, and detailed information, see the [LangChain integration documentation](/platforms/javascript/guides/node/configuration/integrations/langchain/).
+By default this integration adds tracing support for LangGraph operations including:
+
+- **Agent Creation** (`gen_ai.create_agent`) - Captures spans when compiling a StateGraph into an executable agent
+- **Agent Invocation** (`gen_ai.invoke_agent`) - Captures spans for agent execution via `invoke()`
 
 ## Supported Versions
 

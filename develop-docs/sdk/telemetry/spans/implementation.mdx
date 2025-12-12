@@ -48,7 +48,24 @@ If you're implementing Span-First (as a PoC) in your SDK, take an iterative appr
 To do: This section needs a few guidelines and implementation hints, including:
 - how to set a span active and remove it from the scope once it ends
 - languages having to deal with async context management
-- edge cases (e.g. adding a span with an explicit parent span that already ended)
+
+### `parentSpan` option for `startSpan`
+
+SDKs MUST expose a `parentSpan` option on the `startSpan` API which allows users to explicitly set the parent span of the new span.
+
+The `parentSpan` parameter has three distinct states: `undefined`, `null` and a span instance. See the [Span API documentation](../span-api) for the semantics.
+
+For languages that do not support an `undefined` state, SDKs SHOULD model this three-state behavior using platform-appropriate mechanisms. 
+Prefer solutions that preserve the semantic distinction between `undefined` and `null`, such as:
+
+- method/constructor overloading (e.g., an overload without `parentSpan`, and another accepting `parentSpan: Span?`),
+- a default sentinel value/object representing `undefined`,
+- or other idiomatic platform mechanisms (e.g., enum types).
+
+### Edge Cases
+
+- If `parentSpan` references a span that has already ended, the SDK SHOULD still create the new span and send it as a child of `parentSpan`.
+  - Handling and presentation of these relationships is deferred to downstream processing and the frontend/UI.
 
 ## Single-Span Processing Pipeline
 
@@ -59,10 +76,11 @@ Here's a rough overview of what `captureSpan` should do in which order:
 1. Accept any span that already ended (i.e. has an `end_timestamp`)
 2. Obtain the current, isolation and global scopes and merge the scope data.
 3. Apply [common span attributes](../span-protocol/#common-attribute-keys) from the client and the merged scope data to every span.
-4. Apply the merged scope data (including scope attributes) to the span IFF it is a segment span.
-5. Apply any span processing hooks (i.e. event processor replacements) to the span.
-6. Apply the `before_send_span` callback to the span.
-7. Enqueue the span into the span buffer.
+4. Apply [scope attributes](../../scopes/#setting-attributes) from the merged scope data to every span.
+5. Apply `contexts` and `request` data from the merged scopes to the segment span only.
+6. Apply any span processing hooks (i.e. event processor replacements) to the span.
+7. Apply the `before_send_span` callback to the span.
+8. Enqueue the span into the span buffer.
 
 The `captureSpan` pipeline MUST NOT 
 - drop any span
@@ -119,11 +137,12 @@ Some rough pointers:
 - SDKs SHOULD follow one of the backend, mobile or browser telemetry buffer specifications. 
 - It is expected and fine to implement the proper, weighted buffering logic as a final step in the Span-First project. 
   Intermediate buffers MAY be simpler, for example disregard the priority logic and just buffer until a certain span length, size or time interval is reached.
+
 ## Release
 
-The initial PoC implementation of Span-First **SHOULD** be released in a **minor version** of the SDK.
+The initial PoC implementation of Span-First SHOULD be released in a minor version of the SDK.
 
-- This feature is entirely opt-in via `traceLifecycle = 'stream'` and therefore does **not** introduce breaking changes to existing users.
+- This feature is entirely opt-in via `traceLifecycle = 'stream'` and therefore does not introduce breaking changes to existing users.
 - The default tracing behavior (transaction-based) MUST remain unchanged until Span-First becomes the default in a future major release.
 - Release notes and user facing documentation SHOULD clearly describe:
   - the availability of Span-First behind the opt-in flag
