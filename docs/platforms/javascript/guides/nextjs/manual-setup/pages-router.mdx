@@ -1,0 +1,353 @@
+---
+title: "Pages Router Setup"
+sidebar_order: 2
+description: "Manual setup for Next.js applications using the Pages Router."
+---
+
+<Alert type="info">
+  For the fastest setup, we recommend using the [wizard
+  installer](/platforms/javascript/guides/nextjs).
+</Alert>
+
+This guide covers manual setup for **Next.js applications using the Pages Router**. For other setups, see:
+
+- [App Router Setup](/platforms/javascript/guides/nextjs/manual-setup/) - For applications using the App Router (Next.js 15+)
+- [Webpack Setup](/platforms/javascript/guides/nextjs/manual-setup/webpack-setup/) - For applications not using Turbopack
+
+<PlatformContent includePath="getting-started-prerequisites" />
+
+<StepConnector selector="h2" showNumbers={true}>
+
+## Install
+
+<SplitLayout>
+
+<SplitSection>
+<SplitSectionText>
+
+### Install the Sentry SDK
+
+Run the command for your preferred package manager to add the Sentry SDK to your application.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```bash {tabTitle:npm}
+npm install @sentry/nextjs --save
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/nextjs
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/nextjs
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+</SplitLayout>
+
+## Configure
+
+<SplitLayout>
+
+<SplitSection>
+<SplitSectionText>
+
+### Apply Instrumentation to Your App
+
+Extend your app's default Next.js options by adding `withSentryConfig` into your `next.config.ts` (or `next.config.js`) file.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {filename:next.config.ts}
+import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs";
+
+const nextConfig: NextConfig = {
+  // Your existing Next.js configuration
+};
+
+export default withSentryConfig(nextConfig, {
+  org: "___ORG_SLUG___",
+  project: "___PROJECT_SLUG___",
+
+  // Only print logs for uploading source maps in CI
+  silent: !process.env.CI,
+
+  // Automatically tree-shake Sentry logger statements to reduce bundle size
+  disableLogger: true,
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Initialize Sentry SDKs
+
+Create the following files in your application's root directory (or `src` folder if you have one):
+
+- `sentry.client.config.ts` - Client-side SDK initialization
+- `sentry.server.config.ts` - Server-side SDK initialization
+- `sentry.edge.config.ts` - Edge runtime SDK initialization (if using edge routes)
+
+<Alert title="Tip">
+  Include your DSN directly in these files, or use a _public_ environment
+  variable like `NEXT_PUBLIC_SENTRY_DSN`.
+</Alert>
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {tabTitle:Client} {filename:sentry.client.config.ts}
+import * as Sentry from "@sentry/nextjs";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // Set tracesSampleRate to 1.0 to capture 100% of transactions for tracing.
+  // We recommend adjusting this value in production
+  tracesSampleRate: 1.0,
+
+  // Capture Replay for 10% of all sessions,
+  // plus for 100% of sessions with an error
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+
+  integrations: [Sentry.replayIntegration()],
+});
+```
+
+```typescript {tabTitle:Server} {filename:sentry.server.config.ts}
+import * as Sentry from "@sentry/nextjs";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // Set tracesSampleRate to 1.0 to capture 100% of transactions for tracing.
+  // We recommend adjusting this value in production
+  tracesSampleRate: 1.0,
+});
+```
+
+```typescript {tabTitle:Edge} {filename:sentry.edge.config.ts}
+import * as Sentry from "@sentry/nextjs";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // Set tracesSampleRate to 1.0 to capture 100% of transactions for tracing.
+  // We recommend adjusting this value in production
+  tracesSampleRate: 1.0,
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Capture Pages Router Errors
+
+Create or update `pages/_error.tsx` to capture errors that occur during server-side rendering or in page components.
+
+The `getInitialProps` method captures the error asynchronously, ensuring Sentry has time to send the error before serverless functions terminate.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+<PlatformContent includePath="getting-started-capture-errors/nextjs/pages-router-error" />
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Source Maps (Optional)
+
+Add the `authToken` option to your `next.config.ts` to enable readable stack traces. Set the `SENTRY_AUTH_TOKEN` environment variable in your CI/CD.
+
+<Alert level="warning" title="Important">
+  Keep your auth token secret and out of version control.
+</Alert>
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {filename:next.config.ts}
+export default withSentryConfig(nextConfig, {
+  org: "___ORG_SLUG___",
+  project: "___PROJECT_SLUG___",
+
+  // Pass the auth token
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+
+  // Upload a larger set of source maps for prettier stack traces
+  widenClientFileUpload: true,
+});
+```
+
+```sh {filename:.env.local}
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+</SplitLayout>
+
+## Error Monitoring
+
+Test your error monitoring setup by throwing an error and viewing it in Sentry.
+
+<SplitLayout>
+
+<SplitSection>
+<SplitSectionText>
+
+### Throw a Test Error
+
+Add this button to any page and click it to trigger a test error.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```tsx {filename:pages/index.tsx}
+export default function Home() {
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        throw new Error("Sentry Test Error");
+      }}
+    >
+      Throw Test Error
+    </button>
+  );
+}
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+</SplitLayout>
+
+### Verify
+
+Open [**Issues**](https://sentry.io/orgredirect/organizations/:orgslug/issues/) in Sentry to see your test error. [Learn more about capturing errors](/platforms/javascript/guides/nextjs/usage/).
+
+## Manually Capture Exceptions
+
+<Alert type="info">
+  When using Webpack, Pages Router API routes can be auto-instrumented with the
+  `autoInstrumentServerFunctions` option. See [Webpack
+  Setup](/platforms/javascript/guides/nextjs/manual-setup/webpack-setup/) for
+  details.
+</Alert>
+
+<SplitLayout>
+
+<SplitSection>
+<SplitSectionText>
+
+### Pages Router API Routes
+
+For manual error capturing in API routes, use `Sentry.captureException()`.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {filename:pages/api/example.ts}
+import * as Sentry from "@sentry/nextjs";
+import type { NextApiRequest, NextApiResponse } from "next";
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  try {
+    // ...might throw
+    res.status(200).json({ ok: true });
+  } catch (err) {
+    Sentry.captureException(err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+}
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+</SplitLayout>
+
+## Vercel Cron Jobs (Optional)
+
+Automatically create [Cron Monitors](/product/crons/) in Sentry for your [Vercel cron jobs](https://vercel.com/docs/cron-jobs).
+
+<SplitLayout>
+
+<SplitSection>
+<SplitSectionText>
+
+### Enable Automatic Cron Monitoring
+
+Add the `automaticVercelMonitors` option to your `next.config.ts`.
+
+<Alert level="warning">
+  Automatic Vercel cron jobs instrumentation currently only supports Pages
+  Router API routes. App Router route handlers are not yet supported.
+</Alert>
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {filename:next.config.ts}
+import { withSentryConfig } from "@sentry/nextjs";
+
+export default withSentryConfig(nextConfig, {
+  automaticVercelMonitors: true,
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+</SplitLayout>
+
+</StepConnector>
+
+## Hybrid Apps (App Router + Pages Router)
+
+If your application uses both the App Router and Pages Router:
+
+1. Follow the [App Router Setup](/platforms/javascript/guides/nextjs/manual-setup/) for App Router components
+2. Add the `pages/_error.tsx` file from this guide for Pages Router error handling
+3. Both routers share the same Sentry configuration files
+
+<Alert type="info">
+  The Sentry SDK automatically detects which router is being used and applies
+  the appropriate instrumentation.
+</Alert>
+
+## Next Steps
+
+- [Logs Integrations](/platforms/javascript/guides/nextjs/logs/#integrations) - Connect popular logging libraries like Pino, Winston, and Bunyan
+- [Distributed Tracing](/platforms/javascript/guides/nextjs/tracing/distributed-tracing/) - Trace requests across services and microservices
+- [AI Agent Monitoring](/platforms/javascript/guides/nextjs/tracing/instrumentation/ai-agents-module/) - Monitor AI agents built with Vercel AI SDK, LangChain, and more
+- [Connect GitHub + Seer](/organization/integrations/source-code-mgmt/github/#installing-github) - Enable AI-powered [root cause analysis](/product/ai-in-sentry/seer/)
+- [Configuration Options](/platforms/javascript/guides/nextjs/configuration/) - Explore extended SDK configuration
+
+<Expandable permalink={false} title="Are you having problems setting up the SDK?">
+
+- Try the [installation wizard](/platforms/javascript/guides/nextjs/) for automatic setup
+- [Get support](https://sentry.zendesk.com/hc/en-us/)
+
+</Expandable>

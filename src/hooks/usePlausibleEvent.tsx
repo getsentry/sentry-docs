@@ -7,6 +7,24 @@ type PlausibleEventProps = {
   ['Ask AI Referrer']: {
     referrer: string;
   };
+  ['Checklist Complete']: {
+    checklistId: string;
+    page: string;
+  };
+  ['Checklist Item Toggle']: {
+    checked: boolean;
+    checklistId: string;
+    itemId: string;
+    itemLabel: string;
+    page: string;
+  };
+  ['Checklist Link Click']: {
+    checklistId: string;
+    itemId: string;
+    link: string;
+    linkText: string;
+    page: string;
+  };
   ['Copy Expandable Content']: {
     page: string;
     title: string;

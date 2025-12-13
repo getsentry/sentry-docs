@@ -92,4 +92,4 @@ The code section uses `position: sticky` on desktop to keep code visible while s
 
 See it in action:
 
-- [Next.js Getting Started - Essential Configuration](/platforms/javascript/guides/nextjs/getting-started/#essential-configuration)
+- [Next.js Manual Setup](/platforms/javascript/guides/nextjs/manual-setup/)

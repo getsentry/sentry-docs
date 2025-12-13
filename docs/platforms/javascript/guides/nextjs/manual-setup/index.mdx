@@ -1,0 +1,658 @@
+---
+title: "Manual Setup"
+sidebar_order: 1
+description: "Learn how to set up and configure Sentry in your Next.js application, capture your first errors, logs and traces and view them in Sentry"
+sdk: sentry.javascript.nextjs
+categories:
+  - javascript
+  - browser
+  - server
+  - server-node
+---
+
+<Alert type="info">
+  For the fastest setup, we recommend using the [wizard
+  installer](/platforms/javascript/guides/nextjs).
+</Alert>
+
+This guide covers manual setup for **Next.js 15+ with Turbopack and App Router**. For other setups, see:
+
+- [Pages Router Setup](/platforms/javascript/guides/nextjs/manual-setup/pages-router/) - For applications using the Pages Router
+- [Webpack Setup](/platforms/javascript/guides/nextjs/manual-setup/webpack-setup/) - For applications not using Turbopack
+
+<PlatformContent includePath="getting-started-prerequisites" />
+
+Choose the features you want to configure:
+
+<OnboardingOptionButtons
+  options={[
+    "error-monitoring",
+    { id: "performance", checked: true },
+    "session-replay",
+    "user-feedback",
+    { id: "logs", checked: true },
+  ]}
+/>
+
+**How this guide works:**
+
+1. **Install** - Add the Sentry SDK to your project
+2. **Configure** - Set up SDK initialization files and Next.js configuration
+3. **Verify each feature** - For each feature you enabled, we'll show you how to test it and verify it's working in Sentry
+
+<StepConnector selector="h2" showNumbers={true}>
+
+## Install
+
+<SplitLayout>
+
+<SplitSection>
+<SplitSectionText>
+
+### Install the Sentry SDK
+
+Run the command for your preferred package manager to add the Sentry SDK to your application.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```bash {tabTitle:npm}
+npm install @sentry/nextjs --save
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/nextjs
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/nextjs
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+</SplitLayout>
+
+## Configure
+
+<SplitLayout>
+
+<SplitSection>
+<SplitSectionText>
+
+### Apply Instrumentation to Your App
+
+Extend your app's default Next.js options by adding `withSentryConfig` into your `next.config.ts` file.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {filename:next.config.ts}
+import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs";
+
+const nextConfig: NextConfig = {
+  // Your existing Next.js configuration
+};
+
+export default withSentryConfig(nextConfig, {
+  org: "___ORG_SLUG___",
+  project: "___PROJECT_SLUG___",
+
+  // Only print logs for uploading source maps in CI
+  silent: !process.env.CI,
+
+  // Automatically tree-shake Sentry logger statements to reduce bundle size
+  disableLogger: true,
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Initialize Sentry SDKs
+
+Create the following files in your application's root directory (or `src` folder if you have one):
+
+- `instrumentation-client.ts` - Client-side SDK initialization
+- `sentry.server.config.ts` - Server-side SDK initialization
+- `sentry.edge.config.ts` - Edge runtime SDK initialization
+
+<Alert title="Tip">
+  Include your DSN directly in these files, or use a _public_ environment
+  variable like `NEXT_PUBLIC_SENTRY_DSN`.
+</Alert>
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {tabTitle:Client} {filename:instrumentation-client.ts}
+import * as Sentry from "@sentry/nextjs";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // Adds request headers and IP for users
+  sendDefaultPii: true,
+  // ___PRODUCT_OPTION_START___ performance
+
+  // Set tracesSampleRate to 1.0 to capture 100% of transactions for tracing.
+  // We recommend adjusting this value in production
+  tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+  integrations: [
+    // ___PRODUCT_OPTION_START___ session-replay
+    Sentry.replayIntegration(),
+    // ___PRODUCT_OPTION_END___ session-replay
+    // ___PRODUCT_OPTION_START___ user-feedback
+    Sentry.feedbackIntegration({
+      colorScheme: "system",
+    }),
+    // ___PRODUCT_OPTION_END___ user-feedback
+  ],
+  // ___PRODUCT_OPTION_START___ session-replay
+
+  // Capture Replay for 10% of all sessions,
+  // plus for 100% of sessions with an error
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ session-replay
+  // ___PRODUCT_OPTION_START___ logs
+
+  // Enable logs to be sent to Sentry
+  enableLogs: true,
+  // ___PRODUCT_OPTION_END___ logs
+});
+
+// ___PRODUCT_OPTION_START___ performance
+// This export will instrument router navigations
+export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
+// ___PRODUCT_OPTION_END___ performance
+```
+
+```typescript {tabTitle:Server} {filename:sentry.server.config.ts}
+import * as Sentry from "@sentry/nextjs";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // Adds request headers and IP for users
+  sendDefaultPii: true,
+  // ___PRODUCT_OPTION_START___ performance
+
+  // Set tracesSampleRate to 1.0 to capture 100% of transactions for tracing.
+  // We recommend adjusting this value in production
+  tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+  // ___PRODUCT_OPTION_START___ logs
+
+  // Enable logs to be sent to Sentry
+  enableLogs: true,
+  // ___PRODUCT_OPTION_END___ logs
+});
+```
+
+```typescript {tabTitle:Edge} {filename:sentry.edge.config.ts}
+import * as Sentry from "@sentry/nextjs";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // Adds request headers and IP for users
+  sendDefaultPii: true,
+  // ___PRODUCT_OPTION_START___ performance
+
+  // Set tracesSampleRate to 1.0 to capture 100% of transactions for tracing.
+  // We recommend adjusting this value in production
+  tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+  // ___PRODUCT_OPTION_START___ logs
+
+  // Enable logs to be sent to Sentry
+  enableLogs: true,
+  // ___PRODUCT_OPTION_END___ logs
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Register Server-Side SDK
+
+Create a [Next.js Instrumentation file](https://nextjs.org/docs/app/building-your-application/optimizing/instrumentation) named `instrumentation.ts` in your project root (or `src` folder). This file imports your server and edge configurations.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {filename:instrumentation.ts}
+export async function register() {
+  if (process.env.NEXT_RUNTIME === "nodejs") {
+    await import("./sentry.server.config");
+  }
+
+  if (process.env.NEXT_RUNTIME === "edge") {
+    await import("./sentry.edge.config");
+  }
+}
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Capture React Render Errors
+
+Create `app/global-error.tsx` to capture errors that occur anywhere in your App Router application.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+<PlatformContent includePath="getting-started-capture-errors/nextjs/app-router-global-error" />
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Capture Server Component Errors
+
+To capture errors from nested React Server Components, export the `onRequestError` hook from your `instrumentation.ts` file.
+
+<Alert type="info">
+  Requires `@sentry/nextjs` version `8.28.0` or higher and Next.js 15.
+</Alert>
+
+</SplitSectionText>
+<SplitSectionCode>
+
+<PlatformContent includePath="getting-started-capture-errors/nextjs/nested-server-components" />
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Server Actions
+
+Wrap your Server Actions with `Sentry.withServerActionInstrumentation()`.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {filename:app/actions.ts}
+"use server";
+import * as Sentry from "@sentry/nextjs";
+
+export async function submitForm(formData: FormData) {
+  return Sentry.withServerActionInstrumentation(
+    "submitForm", // Action name for Sentry
+    {
+      recordResponse: true, // Include response data
+    },
+    async () => {
+      // Your server action logic
+      const result = await processForm(formData);
+      return { success: true, data: result };
+    }
+  );
+}
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Source Maps (Optional)
+
+Add the `authToken` option to your `next.config.ts` to enable readable stack traces. Set the `SENTRY_AUTH_TOKEN` environment variable in your CI/CD.
+
+<Alert level="warning" title="Important">
+  Keep your auth token secret and out of version control.
+</Alert>
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {filename:next.config.ts}
+export default withSentryConfig(nextConfig, {
+  org: "___ORG_SLUG___",
+  project: "___PROJECT_SLUG___",
+
+  // Pass the auth token
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+
+  // Upload a larger set of source maps for prettier stack traces
+  widenClientFileUpload: true,
+});
+```
+
+```sh {filename:.env.local}
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Tunneling (Optional)
+
+Prevent ad blockers from blocking Sentry events by routing them through your Next.js server.
+
+<Alert level="info">
+  This increases server load. Consider the trade-off for your application.
+</Alert>
+
+<Expandable title="Using Next.js middleware/proxy with tunneling">
+
+If you're using Next.js middleware (`middleware.ts`) or proxy (`proxy.ts`) that intercepts requests, you may need to exclude the tunnel route. When using `tunnelRoute: true`, Sentry generates a random route on each build. For compatibility, use a fixed route instead:
+
+```typescript {filename:next.config.ts}
+export default withSentryConfig(nextConfig, {
+  tunnelRoute: "/monitoring",
+});
+```
+
+Then exclude it in your middleware or proxy:
+
+```typescript {filename:middleware.ts or proxy.ts}
+export const config = {
+  matcher: ["/((?!monitoring|_next/static|_next/image|favicon.ico).*)"],
+};
+```
+
+</Expandable>
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {filename:next.config.ts}
+export default withSentryConfig(nextConfig, {
+  // Generate a random route for each build (recommended)
+  tunnelRoute: true,
+
+  // Or use a fixed route
+  // tunnelRoute: "/monitoring",
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+</SplitLayout>
+
+## Error Monitoring
+
+Test your error monitoring setup by throwing an error and viewing it in Sentry.
+
+<SplitLayout>
+
+<SplitSection>
+<SplitSectionText>
+
+### Throw a Test Error
+
+Add this button to any page and click it to trigger a test error.
+
+<PlatformContent includePath="getting-started-browser-sandbox-warning" />
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```jsx
+<button
+  type="button"
+  onClick={() => {
+    throw new Error("Sentry Test Error");
+  }}
+>
+  Break the world
+</button>
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+</SplitLayout>
+
+### Verify
+
+Open [**Issues**](https://sentry.io/orgredirect/organizations/:orgslug/issues/) in Sentry to see your test error. [Learn more about capturing errors](/platforms/javascript/guides/nextjs/usage/).
+
+<OnboardingOption optionId="session-replay">
+
+## Session Replay
+
+Session Replay is already configured in your `instrumentation-client.ts` file. The `replayIntegration()` captures video-like reproductions of user sessions.
+
+<SplitLayout>
+
+<SplitSection>
+<SplitSectionText>
+
+### Configuration
+
+Adjust sample rates in `Sentry.init()`. By default, Sentry masks all DOM text content, images, and user input, giving you heightened confidence that no sensitive data will leave the browser.
+
+You can customize masking behavior to unmask specific elements or mask additional sensitive content. See [Privacy Configuration](/platforms/javascript/guides/nextjs/session-replay/privacy/) for details.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {filename:instrumentation-client.ts}
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  integrations: [
+    Sentry.replayIntegration({
+      // Privacy settings (defaults shown)
+      maskAllText: true,
+      maskAllInputs: true,
+      blockAllMedia: true,
+
+      // Unmask specific elements
+      unmask: [".public-content"],
+    }),
+  ],
+
+  // Sample rates
+  replaysSessionSampleRate: 0.1, // Capture 10% of all sessions
+  replaysOnErrorSampleRate: 1.0, // Capture 100% of error sessions
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+</SplitLayout>
+
+### Verify
+
+Trigger an error or navigate around your app, then open [**Replays**](https://sentry.io/orgredirect/organizations/:orgslug/replays/) in Sentry to watch the session recording. [Learn more about Session Replay](/platforms/javascript/guides/nextjs/session-replay/).
+
+</OnboardingOption>
+
+<OnboardingOption optionId="performance">
+
+## Tracing
+
+Tracing is already configured in your SDK initialization files with `tracesSampleRate`. Your Next.js routes and API calls are automatically instrumented.
+
+<SplitLayout>
+
+<SplitSection>
+<SplitSectionText>
+
+### Configuration
+
+Adjust sample rates for production. We recommend starting with a lower rate and increasing as needed.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {filename:sentry.server.config.ts}
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // Capture 100% in dev, 10% in production
+  tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.1,
+
+  // Or use sampling function for more control
+  tracesSampler: ({ name, parentSampled }) => {
+    // Always trace errors
+    if (name.includes("error")) return 1.0;
+    // Use parent's sampling decision if available
+    if (parentSampled !== undefined) return parentSampled;
+    // Default sample rate
+    return 0.1;
+  },
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Custom Spans
+
+Add custom spans to trace specific operations in your code. See [Custom Instrumentation](/platforms/javascript/guides/nextjs/tracing/instrumentation/custom-instrumentation/) for more examples.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript
+import * as Sentry from "@sentry/nextjs";
+
+// Wrap a function with a span
+const result = await Sentry.startSpan(
+  { name: "expensive-operation", op: "function" },
+  async () => {
+    // Your code here
+    return await fetchDataFromAPI();
+  }
+);
+
+// Or create nested spans
+Sentry.startSpan({ name: "parent-operation" }, () => {
+  Sentry.startSpan({ name: "child-operation" }, () => {
+    // Nested work
+  });
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+</SplitLayout>
+
+### Verify
+
+Navigate to any page in your app, then open [**Traces**](https://sentry.io/orgredirect/organizations/:orgslug/explore/traces/) in Sentry to see the performance data. [Learn more about Tracing](/platforms/javascript/guides/nextjs/tracing/).
+
+</OnboardingOption>
+
+<OnboardingOption optionId="logs">
+
+## Logs
+
+Logs are enabled with `enableLogs: true` in your SDK configuration. Use the Sentry logger to send structured logs.
+
+<SplitLayout>
+
+<SplitSection>
+<SplitSectionText>
+
+### Send a Test Log
+
+Use the Sentry logger to send logs from anywhere in your application.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript
+import * as Sentry from "@sentry/nextjs";
+
+// Simple log message
+Sentry.logger.info("User clicked checkout button");
+
+// Log with parameters
+Sentry.logger.info("Order completed", {
+  orderId: "12345",
+  total: 99.99,
+});
+
+// Different log levels
+Sentry.logger.debug("Debug information");
+Sentry.logger.warn("Warning message");
+Sentry.logger.error("Error occurred");
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+</SplitLayout>
+
+### Verify
+
+Add a log statement to your code and trigger it, then open [**Logs**](https://sentry.io/orgredirect/organizations/:orgslug/explore/logs/) in Sentry. [Learn more about Logs](/platforms/javascript/guides/nextjs/logs/) or see available [Integrations](/platforms/javascript/guides/nextjs/logs/#integrations) to connect popular logging libraries.
+
+</OnboardingOption>
+
+<OnboardingOption optionId="user-feedback">
+
+## User Feedback
+
+User Feedback is configured with `feedbackIntegration()` in your `instrumentation-client.ts`. A feedback widget is automatically added to your application.
+
+### Verify
+
+Look for the feedback button in your app (usually bottom-right corner) and submit a test feedback. Open [**User Feedback**](https://sentry.io/orgredirect/organizations/:orgslug/feedback/) in Sentry to see the submission. [Learn more about User Feedback](/platforms/javascript/guides/nextjs/user-feedback/).
+
+</OnboardingOption>
+
+</StepConnector>
+
+## Hybrid Apps (App Router + Pages Router)
+
+If your application uses both the App Router and Pages Router:
+
+1. Follow this guide for App Router components
+2. Add a `pages/_error.tsx` file for Pages Router error handling (see [Pages Router Setup](/platforms/javascript/guides/nextjs/manual-setup/pages-router/))
+3. Both routers share the same Sentry configuration files
+
+<Alert type="info">
+  The Sentry SDK automatically detects which router is being used and applies
+  the appropriate instrumentation.
+</Alert>
+
+## Next Steps
+
+You've successfully integrated Sentry into your Next.js application! Here's what to explore next:
+
+- [Logs Integrations](/platforms/javascript/guides/nextjs/logs/#integrations) - Connect popular logging libraries like Pino, Winston, and Bunyan
+- [Distributed Tracing](/platforms/javascript/guides/nextjs/tracing/distributed-tracing/) - Trace requests across services and microservices
+- [AI Agent Monitoring](/platforms/javascript/guides/nextjs/tracing/instrumentation/ai-agents-module/) - Monitor AI agents built with Vercel AI SDK, LangChain, and more
+- [Connect GitHub + Seer](/organization/integrations/source-code-mgmt/github/#installing-github) - Enable AI-powered [root cause analysis](/product/ai-in-sentry/seer/) by connecting your GitHub repository
+- [Configuration Options](/platforms/javascript/guides/nextjs/configuration/) - Explore extended SDK configuration options
+
+<Expandable permalink={false} title="Are you having problems setting up the SDK?">
+
+- Try the [installation wizard](/platforms/javascript/guides/nextjs/) for automatic setup
+- [Get support](https://sentry.zendesk.com/hc/en-us/)
+
+</Expandable>
