@@ -31,7 +31,7 @@ const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
         'node_modules/sharp/**/*',
         'node_modules/mermaid/**/*',
         // Exclude MDX processing dependencies (but keep mdx-bundler/client for runtime)
-        'node_modules/mdx-bundler/dist/!(client)*',
+        'node_modules/mdx-bundler/dist/!(client*)',
         'node_modules/mdx-bundler/node_modules/**/*',
         'node_modules/rehype-preset-minify/**/*',
         'node_modules/rehype-prism-plus/**/*',
@@ -60,7 +60,7 @@ const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
         'node_modules/sharp/**/*',
         'node_modules/mermaid/**/*',
         // Exclude MDX processing dependencies (but keep mdx-bundler/client for runtime)
-        'node_modules/mdx-bundler/dist/!(client)*',
+        'node_modules/mdx-bundler/dist/!(client*)',
         'node_modules/mdx-bundler/node_modules/**/*',
         'node_modules/rehype-preset-minify/**/*',
         'node_modules/rehype-prism-plus/**/*',
