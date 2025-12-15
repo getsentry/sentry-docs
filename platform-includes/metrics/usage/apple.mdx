@@ -1,0 +1,83 @@
+Once the SDK is initialized with metrics enabled, you can send metrics using the `SentrySDK.metrics` APIs.
+
+The `metrics` namespace exposes three methods that you can use to capture different types of metric information: `count`, `gauge` and `distribution`.
+
+<Alert>
+Objective-C support for metrics is not currently available. If you need Objective-C support, please [open an issue](https://github.com/getsentry/sentry-cocoa/issues) to show demand for this feature.
+</Alert>
+
+### Counter
+
+Use `count` to track an incrementing value, such as the number of times a button was clicked or a function was called.
+
+```swift
+import Sentry
+
+SentrySDK.metrics.count(key: "button_click", value: 1)
+```
+
+### Gauge
+
+Use `gauge` to track a value that can go up and down, such as the current memory usage or the number of items in a queue.
+
+```swift
+import Sentry
+
+SentrySDK.metrics.gauge(key: "queue_depth", value: 42.0)
+```
+
+### Distribution
+
+Use `distribution` to track the distribution of a value, such as the response time of a request.
+
+```swift
+import Sentry
+
+SentrySDK.metrics.distribution(key: "response_time", value: 187.5)
+```
+
+### Adding Attributes
+
+You can also pass additional attributes to any of the metric methods via the `attributes` parameter. Attributes allow you to filter and group metrics. Attributes use the `Attributable` protocol, which provides type safety by only allowing valid types.
+
+Supported attribute types:
+- **Scalar types**: `String`, `Bool`, `Int`, `Double`, `Float`
+- **Array types**: `[String]`, `[Bool]`, `[Int]`, `[Double]`
+
+```swift
+import Sentry
+
+SentrySDK.metrics.count(
+    key: "button_click",
+    value: 1,
+    unit: nil,
+    attributes: [
+        "browser": "Firefox",           // String
+        "app_version": "1.0.0",         // String
+        "build_number": 123,            // Int
+        "is_premium": true,             // Bool
+        "success_rate": 0.95,           // Double
+        "tags": ["production", "v2"]     // [String]
+    ]
+)
+```
+
+### Specifying Units
+
+For `gauge` and `distribution` metrics, you can specify a unit using the `unit` parameter. This helps Sentry display the metric value in a human-readable format.
+
+```swift
+import Sentry
+
+SentrySDK.metrics.distribution(
+    key: "response_time",
+    value: 187.5,
+    unit: "millisecond"
+)
+
+SentrySDK.metrics.gauge(
+    key: "memory_usage",
+    value: 1024.0,
+    unit: "byte"
+)
+```
