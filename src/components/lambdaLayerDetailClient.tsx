@@ -4,6 +4,8 @@ import {useState} from 'react';
 import Select from 'react-select';
 import styled from '@emotion/styled';
 
+import {CodeBlock} from './codeBlock';
+
 type RegionData = {region: string; version: string};
 type LayerData = {
   accountNumber: string;
@@ -27,18 +29,18 @@ export function LambdaLayerDetailClient({
   layerList: LayerData[];
 }) {
   const layer = layerList.find(l => l.canonical === canonical);
-  // if we don't find a matching layer, let the page blow up
-  // cause the page is useless without it
   if (!layer) {
     throw new Error(`Could not find layer for: ${canonical}`);
   }
 
   const {regions, layerName, accountNumber} = layer;
 
+  const defaultOption = regions.length > 0 ? toOption(regions[0]) : undefined;
+
   const [regionOption, setRegion] = useState<{
     label: string;
     value: string;
-  }>();
+  } | undefined>(defaultOption);
 
   let arn: string = '';
   if (regionOption) {
@@ -63,14 +65,17 @@ export function LambdaLayerDetailClient({
       {arn && (
         <ArnWrapper>
           <ArnLabel>ARN</ArnLabel>
-          <code>{arn}</code>
+          <CodeBlock language="text">
+            <pre className="language-text">
+              <code>{arn}</code>
+            </pre>
+          </CodeBlock>
         </ArnWrapper>
       )}
     </Wrapper>
   );
 }
 
-// need a min-height so we don't get cropped at the bottom of the page
 const Wrapper = styled('div')`
   min-height: 50px;
 `;
@@ -81,4 +86,5 @@ const ArnWrapper = styled('div')`
 
 const ArnLabel = styled('div')`
   font-weight: bold;
+  margin-bottom: 6px;
 `;
