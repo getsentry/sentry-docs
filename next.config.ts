@@ -112,8 +112,8 @@ const outputFileTracingIncludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
       '/platform-redirect': ['public/doctree.json'],
       '\\[\\[\\.\\.\\.path\\]\\]': [
         'public/doctree.json',
-        'docs/changelog.mdx',
-        'docs/platforms/index.mdx',
+        './docs/changelog.mdx',
+        './docs/platforms/index.mdx',
       ],
     };
 
@@ -135,7 +135,6 @@ const nextConfig = {
     '@esbuild/linux-arm64',
     '@esbuild/linux-x64',
     '@esbuild/win32-x64',
-    'mdx-bundler',
     'sharp',
     '@aws-sdk/client-s3',
     '@google-cloud/storage',
