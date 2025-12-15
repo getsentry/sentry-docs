@@ -14,12 +14,13 @@ This guide covers the configuration differences for **Next.js applications using
 
 ## Key Differences: Webpack vs Turbopack
 
-| Feature                         | Turbopack                       | Webpack                             |
-| ------------------------------- | ------------------------------- | ----------------------------------- |
-| Server function instrumentation | Automatic via Next.js telemetry | Build-time code injection           |
-| Middleware instrumentation      | Automatic via Next.js telemetry | Build-time code injection           |
-| Source map upload               | Post-build via CLI (default)    | During build via plugin (default)   |
-| Route exclusion                 | Not supported                   | Supported via `excludeServerRoutes` |
+| Feature                         | Turbopack                       | Webpack                                  |
+| ------------------------------- | ------------------------------- | ---------------------------------------- |
+| Server function instrumentation | Automatic via Next.js telemetry | Build-time code injection                |
+| Middleware instrumentation      | Automatic via Next.js telemetry | Build-time code injection                |
+| Source map upload               | Post-build via CLI (default)    | During build via plugin (default)        |
+| Route exclusion                 | Not supported                   | Supported via `excludeServerRoutes`      |
+| React component annotation      | Not supported                   | Supported via `reactComponentAnnotation` |
 
 ## Auto-Instrumentation Options
 
@@ -244,6 +245,70 @@ export async function submitForm(formData: FormData) {
     }
   );
 }
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+</SplitLayout>
+
+## React Component Annotation
+
+With Webpack, you can enable React component name tracking. This annotates React components with `data-sentry-*` attributes that allow Sentry to identify which components users interacted with in [Session Replay](/platforms/javascript/guides/nextjs/session-replay/) and [breadcrumbs](/platforms/javascript/guides/nextjs/enriching-events/breadcrumbs/).
+
+<Alert level="info">
+  This feature is only available with Webpack. Turbopack does not support React
+  component annotation.
+</Alert>
+
+<SplitLayout>
+
+<SplitSection>
+<SplitSectionText>
+
+### Enable Component Annotation
+
+Enable `reactComponentAnnotation` to track component names in your application. This is especially useful for debugging user interactions in Session Replay.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {filename:next.config.ts}
+import { withSentryConfig } from "@sentry/nextjs";
+
+export default withSentryConfig(nextConfig, {
+  reactComponentAnnotation: {
+    enabled: true,
+  },
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+</SplitLayout>
+
+<SplitLayout>
+
+<SplitSection>
+<SplitSectionText>
+
+### Exclude Specific Components
+
+If you have components you don't want annotated (for privacy or performance reasons), you can exclude them by name.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {filename:next.config.ts}
+import { withSentryConfig } from "@sentry/nextjs";
+
+export default withSentryConfig(nextConfig, {
+  reactComponentAnnotation: {
+    enabled: true,
+    ignoredComponents: ["SensitiveForm", "InternalDebugPanel"],
+  },
+});
 ```
 
 </SplitSectionCode>
