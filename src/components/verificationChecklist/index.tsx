@@ -57,8 +57,6 @@ type Props = {
   collapsible?: boolean;
   /** Auto-expand next item when current is checked (default: true) */
   sequential?: boolean;
-  /** Troubleshooting link URL */
-  troubleshootingLink?: string;
 };
 
 function getStorageKey(checklistId: string): string {
@@ -70,7 +68,6 @@ export function VerificationChecklist({
   checklistId = 'default',
   collapsible = true,
   sequential = true,
-  troubleshootingLink = '/platforms/javascript/guides/nextjs/troubleshooting/',
 }: Props) {
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
@@ -507,12 +504,6 @@ export function VerificationChecklist({
           <span>All done! Sentry is successfully configured.</span>
         </div>
       )}
-
-      <div className={styles.troubleshooting}>
-        Something not working? <a href={troubleshootingLink}>Check troubleshooting</a>
-        {' · '}
-        <a href="https://sentry.zendesk.com/hc/en-us/">Get support</a>
-      </div>
     </div>
   );
 }
