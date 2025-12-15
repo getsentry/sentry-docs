@@ -37,10 +37,13 @@ export function LambdaLayerDetailClient({
 
   const defaultOption = regions.length > 0 ? toOption(regions[0]) : undefined;
 
-  const [regionOption, setRegion] = useState<{
-    label: string;
-    value: string;
-  } | undefined>(defaultOption);
+  const [regionOption, setRegion] = useState<
+    | {
+        label: string;
+        value: string;
+      }
+    | undefined
+  >(defaultOption);
 
   let arn: string = '';
   if (regionOption) {
