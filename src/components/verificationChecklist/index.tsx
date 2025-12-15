@@ -44,8 +44,9 @@ function ChecklistItemComponent(_props: ChecklistItemProps) {
 }
 ChecklistItemComponent.displayName = 'ChecklistItem';
 // Static marker for identification
-(ChecklistItemComponent as unknown as {__checklistItemMarker: symbol}).__checklistItemMarker =
-  CHECKLIST_ITEM_MARKER;
+(
+  ChecklistItemComponent as unknown as {__checklistItemMarker: symbol}
+).__checklistItemMarker = CHECKLIST_ITEM_MARKER;
 
 export const ChecklistItem = ChecklistItemComponent;
 
@@ -197,7 +198,9 @@ export function VerificationChecklist({
         if (item.optionId && onboardingContainer) {
           // Find all Radix checkboxes in the onboarding options
           // The checkbox has data-state="checked" or data-state="unchecked"
-          const checkboxes = onboardingContainer.querySelectorAll('button[role="checkbox"]');
+          const checkboxes = onboardingContainer.querySelectorAll(
+            'button[role="checkbox"]'
+          );
 
           // Map option IDs to their display names
           const optionNameMap: Record<string, string> = {
