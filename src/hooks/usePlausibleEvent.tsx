@@ -41,6 +41,12 @@ type PlausibleEventProps = {
     helpful: boolean;
     page: string;
   };
+  ['Onboarding Option Toggle']: {
+    checked: boolean;
+    optionId: string;
+    optionName: string;
+    page: string;
+  };
   ['Open Expandable']: {
     page: string;
     title: string;
