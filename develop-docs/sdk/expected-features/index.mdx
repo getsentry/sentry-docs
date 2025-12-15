@@ -251,7 +251,20 @@ Write events to disk before attempting to send, so that they can be retried in t
 
 ### Dealing With Network Failures
 
-When SDKs receive an `HTTP 2xx` status code response from Sentry, they **MUST** consider it as a successful send. If Sentry returns an `HTTP 4xx` (excluding `HTTP 429`) or `HTTP 5xx` status code, SDKs **MUST** discard the envelope and record a [client report](/sdk/telemetry/client-reports) with the discard reason `send_error`. For an `HTTP 429` response, SDKs **MUST NOT** record a client report to comply with the [rate limiting](/sdk/expected-features/rate-limiting/) rules, because the backend already records a client report for the rate limit. SDKs **MAY** retry sending the envelope when a network error occurs, such as:
+When SDKs receive an `HTTP 2xx` status code response from Sentry, they **MUST** consider it as a successful send.
+
+If Sentry returns an `HTTP 4xx` or `HTTP 5xx` status code, SDKs:
+
+- **MUST** discard the envelope
+- **MUST** record a [client report](/sdk/telemetry/client-reports) with the discard reason `send_error`, except for `HTTP 429` responses, see below.
+
+For an `HTTP 429` response, SDKs:
+
+- **MUST** respect the [rate limiting rules](/sdk/expected-features/rate-limiting/), such as correctly parsing the retry-header.
+- **MUST** drop the envelope, but **MUST NOT** record a [client report](/sdk/telemetry/client-reports), because the backend already does this. Doing this would double-count dropped envelopes.
+- **MUST NOT** retry sending the envelope.
+
+SDKs **MAY** retry sending the envelope when a network error occurs, such as:
 
 * Connection timeout
 * DSN resolution failure
@@ -360,7 +373,7 @@ The HTTP Client integration should have 3 configuration options:
   - If the language has a `Range` type, it should be used instead of `HttpStatusCodeRange`.
 - `failedRequestTargets` defaults to (`.*`), this configuration option accepts a `List` of `String` that may be Regular expressions as well, similar to <Link to="/sdk/telemetry/traces/#tracepropagationtargets">tracePropagationTargets</Link>.
   - The SDK will only capture HTTP Client errors if the HTTP Request URL is a match for any of the `failedRequestsTargets`.
--  sensitive `headers` should only be set if `sendDefaultPii` is enabled, e.g. `Cookie` and `Set-Cookie`.
+-  While the keys of sensitive HTTP headers (e.g. `Authorization` and `Cookie`) are included, their values must be replaced with `"[Filtered]"` (also see <Link to="/sdk/expected-features/data-handling/#sensitive-data">Data Handling: Sensitive Data</Link>).
 
 The HTTP Client integration should capture error events with the following properties:
 

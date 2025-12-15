@@ -290,6 +290,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/organization/integrations/session-replay/jam/',
   },
   {
+    from: '/organization/integrations/cloud-monitoring/cloudflare-workers/',
+    to: '/platforms/javascript/guides/cloudflare/',
+  },
+  {
     from: '/product/crons/getting-started/cli/',
     to: '/cli/crons/',
   },
@@ -1251,7 +1255,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/workflow/releases/release-automation/github-actions/',
-    to: '/product/releases/setup/release-automation/github-deployment-gates/',
+    to: '/product/releases/setup/release-automation/github-actions/',
   },
   {
     from: '/product/releases/setup/manual-setup-releases/',
@@ -1893,31 +1897,55 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/workflow/integrations/amazon-sqs/',
-    to: '/organization/integrations/data-visualization/amazon-sqs/',
+    to: '/organization/integrations/data-forwarding/amazon-sqs/',
   },
   {
     from: '/workflow/integrations/legacy-integrations/amazon-sqs/',
-    to: '/organization/integrations/data-visualization/amazon-sqs/',
+    to: '/organization/integrations/data-forwarding/amazon-sqs/',
   },
   {
     from: '/product/integrations/amazon-sqs/',
-    to: '/organization/integrations/data-visualization/amazon-sqs/',
+    to: '/organization/integrations/data-forwarding/amazon-sqs/',
   },
   {
     from: '/product/integrations/segment/',
-    to: '/organization/integrations/data-visualization/segment/',
+    to: '/organization/integrations/data-forwarding/segment/',
   },
   {
     from: '/workflow/integrations/splunk/',
-    to: '/organization/integrations/data-visualization/splunk/',
+    to: '/organization/integrations/data-forwarding/splunk/',
   },
   {
     from: '/workflow/integrations/legacy-integrations/splunk/',
-    to: '/organization/integrations/data-visualization/splunk/',
+    to: '/organization/integrations/data-forwarding/splunk/',
   },
   {
     from: '/product/integrations/splunk/',
-    to: '/organization/integrations/data-visualization/splunk/',
+    to: '/organization/integrations/data-forwarding/splunk/',
+  },
+  {
+    from: '/organization/integrations/data-visualization/splunk/',
+    to: '/organization/integrations/data-forwarding/splunk/',
+  },
+  {
+    from: '/organization/integrations/data-visualization/segment/',
+    to: '/organization/integrations/data-forwarding/segment/',
+  },
+  {
+    from: '/organization/integrations/data-visualization/amazon-sqs/',
+    to: '/organization/integrations/data-forwarding/amazon-sqs/',
+  },
+  {
+    from: '/organization/integrations/data-visualization/grafana/',
+    to: '/organization/integrations/data-forwarding/grafana/',
+  },
+  {
+    from: '/organization/integrations/data-visualization/',
+    to: '/organization/integrations/data-forwarding/',
+  },
+  {
+    from: '/concepts/data-management/data-forwarding/',
+    to: '/organization/integrations/data-forwarding/',
   },
   {
     from: '/workflow/integrations/gitlab/',
@@ -2041,7 +2069,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/integrations/cloudflare-workers/',
-    to: '/organization/integrations/cloud-monitoring/cloudflare-workers/',
+    to: '/platforms/javascript/guides/cloudflare/',
   },
   {
     from: '/product/integrations/vanta/',
