@@ -22,6 +22,14 @@ Learn more about [DSN utilization](/product/sentry-basics/dsn-explainer/#dsn-uti
 
 </SdkOption>
 
+<SdkOption name="enabled" type="bool" defaultValue="true">
+
+Controls whether the SDK should send events to Sentry. When set to `false`, the SDK will not send any events to Sentry. The default is `true`.
+
+Note that setting this to `false` doesn't prevent all overhead from Sentry instrumentation. To disable Sentry completely, you may need to conditionally call `SentrySDK.start` based on your environment.
+
+</SdkOption>
+
 <SdkOption name="debug" type="bool" defaultValue="false">
 
 Turns debug mode on or off. If debug is enabled SDK will attempt to print out useful debugging information if something goes wrong with sending the event. The default is always `false`. It's generally not recommended to turn it on in production, though turning `debug` mode on will not cause any safety concerns.
@@ -99,6 +107,36 @@ It's crucial for developers to understand that the OS sends a SIGTERM to their a
 
 </SdkOption>
 
+<SdkOption name="enableCrashHandler" type="bool" defaultValue="true">
+
+When enabled, the SDK sends crashes to Sentry. This option defaults to `true`. If disabled, the SDK will not capture or report crash events.
+
+Note that disabling this option will also disable <PlatformLink to="/configuration/watchdog-terminations/">watchdog termination tracking</PlatformLink>, as it prevents false positive watchdog termination reporting for every crash.
+
+</SdkOption>
+
+<PlatformSection supported={["apple.macos"]}>
+
+<SdkOption name="enableUncaughtNSExceptionReporting" type="bool" defaultValue="false">
+
+When enabled, the SDK captures uncaught NSExceptions. As this feature uses swizzling, disabling `enableSwizzling` also disables this feature.
+
+This option registers the `NSApplicationCrashOnExceptions` UserDefault, so your macOS application crashes when an uncaught exception occurs. As the Cocoa Frameworks are generally not exception-safe on macOS, we recommend this approach because the application could otherwise end up in a corrupted state.
+
+**Warning:** Don't use this in combination with `SentryCrashExceptionApplication`. Either enable this feature or use the `SentryCrashExceptionApplication`. Having both enabled can lead to duplicated reports.
+
+The default is `false`. This option is available as of SDK version 8.40.0. Learn more in the <PlatformLink to="/usage/#capturing-uncaught-exceptions">capturing uncaught exceptions</PlatformLink> documentation.
+
+</SdkOption>
+
+</PlatformSection>
+
+<SdkOption name="shutdownTimeInterval" type="double" defaultValue="2.0">
+
+Controls the flush duration when calling `SentrySDK.close()`. This determines how long the SDK will wait for pending events to be sent before shutting down. The default is `2.0` seconds.
+
+</SdkOption>
+
 <SdkOption name="sendDefaultPii" type="bool" defaultValue="false">
 
 If this flag is enabled, certain personally identifiable information <PlatformLink to="/data-management/data-collected/">(PII)</PlatformLink> is added by active integrations. By default, no such data is sent.
@@ -115,9 +153,19 @@ If you enable this option, be sure to manually remove what you don't want to sen
 
 </SdkOption>
 
-<SdkOption name="autoSessionTracking" type="bool">
+<SdkOption name="enableAutoSessionTracking" type="bool" defaultValue="true">
 
 When set to `true`, the SDK will send session events to Sentry. This is supported in all browser SDKs, emitting one session per pageload and page navigation to Sentry. In mobile SDKs, when the app goes to the background for longer than 30 seconds, sessions are ended.
+
+The default is `true`.
+
+</SdkOption>
+
+<SdkOption name="sessionTrackingIntervalMillis" type="int" defaultValue="30000">
+
+The interval, measured in milliseconds, to end a session after the app goes to the background. The default is `30000` (30 seconds). When the app goes to the background and remains there for longer than this interval, the current session is ended.
+
+Learn more about session tracking in the <PlatformLink to="/configuration/releases/#sessions">releases documentation</PlatformLink>.
 
 </SdkOption>
 
@@ -196,6 +244,22 @@ The default is `3000`.
 
 </SdkOption>
 
+<SdkOption name="enableUIViewControllerTracing" type="bool" defaultValue="true">
+
+When enabled, the SDK tracks performance for UIViewController subclasses.
+
+The default is `true`. This feature is not available in `DebugWithoutUIKit` and `ReleaseWithoutUIKit` configurations even when targeting iOS or tvOS platforms. Learn more in the <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#uiviewcontroller-tracing">UIViewController Tracing</PlatformLink> documentation.
+
+</SdkOption>
+
+<SdkOption name="enableReportNonFullyBlockingAppHangs" type="bool" defaultValue="true">
+
+When enabled, the SDK reports non-fully-blocking app hangs. Non-fully-blocking app hangs occur when the app appears stuck to the user but can still render a few frames. Fully-blocking app hangs are when the main thread is stuck completely and the app can't render a single frame.
+
+This option defaults to `true`. Learn more in the <PlatformLink to="/configuration/app-hangs/">App Hangs</PlatformLink> documentation.
+
+</SdkOption>
+
 </PlatformSection>
 
 <SdkOption name="sendClientReports" type="bool">
@@ -211,9 +275,27 @@ When enabled, the SDK adds breadcrumbs for each network request. This feature us
 If you want to enable or disable network tracking for performance monitoring, use <PlatformLink to="/configuration/options/#enableNetworkTracking">`enableNetworkTracking`</PlatformLink> instead.
 </SdkOption>
 
-<SdkOption name="enableCaptureFailedRequests" type="bool">
+<SdkOption name="enableCaptureFailedRequests" type="bool" defaultValue="true">
 
 Once enabled, this feature automatically captures HTTP client errors, like bad response codes, as error events and reports them to Sentry.
+
+The default is `true` starting with SDK version 8.0.0. Learn more in the <PlatformLink to="/configuration/http-client-errors/">HTTP Client Errors</PlatformLink> documentation.
+
+</SdkOption>
+
+<SdkOption name="failedRequestStatusCodes" type="array" defaultValue="[500-599]">
+
+The SDK will only capture HTTP Client errors if the HTTP Response status code is within the defined range.
+
+The default is `500-599`. Learn more in the <PlatformLink to="/configuration/http-client-errors/">HTTP Client Errors</PlatformLink> documentation.
+
+</SdkOption>
+
+<SdkOption name="failedRequestTargets" type="array">
+
+An array of hosts or regexes that determines if HTTP Client errors will be automatically captured. This array can contain instances of `NSString` which should match the URL (using `contains`), and instances of `NSRegularExpression`, which will be used to check the whole URL.
+
+The default value automatically captures HTTP Client errors of all outgoing requests. Learn more in the <PlatformLink to="/configuration/http-client-errors/">HTTP Client Errors</PlatformLink> documentation.
 
 </SdkOption>
 
@@ -222,6 +304,22 @@ Once enabled, this feature automatically captures HTTP client errors, like bad r
 When enabled, the SDK extracts the GraphQL operation name from HTTP requests that have `Content-Type: application/json` and contain a JSON body with an `operationName` field. The operation name is then attached to HTTP breadcrumbs and failed request events.
 
 This option defaults to `false`. Learn more in the <PlatformLink to="/configuration/graphql-operation-tracking/">GraphQL Operation Tracking</PlatformLink> documentation.
+
+</SdkOption>
+
+<SdkOption name="enableLogs" type="bool" defaultValue="false">
+
+When enabled, the SDK sends logs to Sentry. Logging is disabled by default; you must explicitly set this option to `true` to enable log capturing.
+
+Learn more about structured logging in the <PlatformLink to="/logs/">logs documentation</PlatformLink>.
+
+</SdkOption>
+
+<SdkOption name="enableWatchdogTerminationTracking" type="bool" defaultValue="true">
+
+When enabled, the SDK tracks watchdog terminations based on heuristics. This feature is available for iOS, tvOS, and Mac Catalyst, works only if the application was in the foreground, and doesn't track watchdog terminations for unit tests.
+
+This option defaults to `true`. Learn more in the <PlatformLink to="/configuration/watchdog-terminations/">Watchdog Terminations</PlatformLink> documentation.
 
 </SdkOption>
 
@@ -269,6 +367,176 @@ By the time <PlatformIdentifier name="beforeSend" /> is executed, all scope data
 
 This function is called with an SDK-specific breadcrumb object before the breadcrumb is added to the scope. When nothing is returned from the function, the breadcrumb is dropped. To pass the breadcrumb through, return the first argument, which contains the breadcrumb object.
 The callback typically gets a second argument (called a "hint") which contains the original object from which the breadcrumb was created to further customize what the breadcrumb should look like.
+
+</SdkOption>
+
+<SdkOption name="beforeSendSpan" type="function">
+
+This function is called with a span object before it is sent to Sentry. You can return a modified span object, or `null` to skip sending the span. This can be used to filter or modify spans before they are sent.
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.beforeSendSpan = { span in
+        // Filter out spans with certain operations
+        if span.operation == "db.query" {
+            return nil
+        }
+        return span
+    }
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.beforeSendSpan = ^SentrySpan * _Nullable(SentrySpan * _Nonnull span) {
+        // Filter out spans with certain operations
+        if ([span.operation isEqualToString:@"db.query"]) {
+            return nil;
+        }
+        return span;
+    };
+}];
+```
+
+</SdkOption>
+
+<SdkOption name="beforeSendLog" type="function">
+
+This function is called with a log object before it is sent to Sentry. You can return a modified log object, or `null` to skip sending the log. This can be used to filter or modify logs before they are sent.
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.enableLogs = true
+    options.beforeSendLog = { log in
+        // Filter out info level logs
+        if log.level == .info {
+            return nil
+        }
+        return log
+    }
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.enableLogs = YES;
+    options.beforeSendLog = ^SentryLog * _Nullable(SentryLog * _Nonnull log) {
+        // Filter out info level logs
+        if (log.level == SentryLogLevelInfo) {
+            return nil;
+        }
+        return log;
+    };
+}];
+```
+
+Learn more about log filtering in the <PlatformLink to="/logs/">logs documentation</PlatformLink>.
+
+</SdkOption>
+
+<SdkOption name="beforeCaptureScreenshot" type="function">
+
+This function is called to decide if the SDK should capture a screenshot. Return `true` to allow screenshot capture, or `false` to prevent it.
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.attachScreenshot = true
+    options.beforeCaptureScreenshot = {
+        // Prevent screenshots in certain views
+        return !isSensitiveView()
+    }
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.attachScreenshot = YES;
+    options.beforeCaptureScreenshot = ^BOOL {
+        // Prevent screenshots in certain views
+        return !isSensitiveView();
+    };
+}];
+```
+
+</SdkOption>
+
+<SdkOption name="beforeCaptureViewHierarchy" type="function">
+
+This function is called to decide if the SDK should capture a view hierarchy. Return `true` to allow view hierarchy capture, or `false` to prevent it.
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.attachViewHierarchy = true
+    options.beforeCaptureViewHierarchy = {
+        // Prevent view hierarchy capture in certain views
+        return !isSensitiveView()
+    }
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.attachViewHierarchy = YES;
+    options.beforeCaptureViewHierarchy = ^BOOL {
+        // Prevent view hierarchy capture in certain views
+        return !isSensitiveView();
+    };
+}];
+```
+
+</SdkOption>
+
+<SdkOption name="onCrashedLastRun" type="function">
+
+A block called after SDK initialization when the last execution terminated with a crash. This callback is invoked synchronously during SDK initialization, so keep any work here minimal.
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.onCrashedLastRun = {
+        // Perform actions when a crash was detected on last run
+        print("App crashed on last run")
+    }
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.onCrashedLastRun = ^{
+        // Perform actions when a crash was detected on last run
+        NSLog(@"App crashed on last run");
+    };
+}];
+```
 
 </SdkOption>
 
@@ -320,6 +588,296 @@ This feature is experimental and may have bugs. It's available from [version 8.4
 
 </Alert>
 
-When enabled, the SDK finishes the ongoing transaction bound to the scope and links them to the crash event when your app crashes. The SDK skips adding profiles to increase the chance of keeping the transaction. This option defaults to `false`.
+When enabled, the SDK finishes the ongoing transaction bound to the scope and links them to the crash event when your app crashes. This allows you to see the performance data leading up to a crash, helping you understand what was happening when the crash occurred.
+
+The SDK skips adding profiles to increase the chance of keeping the transaction. This option defaults to `false`.
+
+This feature requires that tracing is enabled via <PlatformIdentifier name="tracesSampleRate" /> or <PlatformIdentifier name="tracesSampler" />.
+
+</SdkOption>
+
+## Screenshot Options
+
+Screenshot options allow you to configure how screenshots are captured and masked when attached to error events. These options are available under `options.screenshot`.
+
+<SdkOption name="screenshot.maskAllText" type="bool" defaultValue="true">
+
+When enabled, all text content in screenshots is masked. This helps ensure that no sensitive text data is exposed in screenshots sent to Sentry.
+
+The default is `true`. Learn more about screenshot options in the <PlatformLink to="/enriching-events/screenshots/">Screenshots documentation</PlatformLink>.
+
+</SdkOption>
+
+<SdkOption name="screenshot.maskAllImages" type="bool" defaultValue="true">
+
+When enabled, all images in screenshots are masked. This helps ensure that no sensitive image data is exposed in screenshots sent to Sentry.
+
+The default is `true`. Learn more about screenshot options in the <PlatformLink to="/enriching-events/screenshots/">Screenshots documentation</PlatformLink>.
+
+</SdkOption>
+
+<SdkOption name="screenshot.maskedViewClasses" type="array">
+
+A list of view class names that should be masked in screenshots. Views matching these class names will have their content masked.
+
+</SdkOption>
+
+<SdkOption name="screenshot.unmaskedViewClasses" type="array">
+
+A list of view class names that should not be masked in screenshots, even if other masking options are enabled. Views matching these class names will be shown without masking.
+
+</SdkOption>
+
+<SdkOption name="screenshot.enableViewRendererV2" type="bool" defaultValue="true">
+
+When enabled, uses the faster view renderer V2 for capturing screenshots. This renderer reduces the performance impact of screenshot capture.
+
+The default is `true` starting with SDK version 8.50.0.
+
+</SdkOption>
+
+<SdkOption name="screenshot.enableFastViewRendering" type="bool" defaultValue="false">
+
+When enabled, uses faster but potentially incomplete view rendering for screenshots. This can improve performance but may result in some views not being fully rendered.
+
+The default is `false`.
+
+</SdkOption>
+
+## Session Replay Options
+
+Session Replay options allow you to configure how session replays are recorded and sent to Sentry. These options are available under `options.sessionReplay`.
+
+<SdkOption name="sessionReplay.enableFastViewRendering" type="bool" defaultValue="false">
+
+When enabled, uses faster but potentially incomplete view rendering for session replays. This can improve performance but may result in some views not being fully rendered in the replay.
+
+The default is `false`. Learn more about session replay performance in the <PlatformLink to="/session-replay/performance-overhead/">Performance Overhead</PlatformLink> documentation.
+
+</SdkOption>
+
+## Profiling Options
+
+Profiling options allow you to configure how profiling data is collected. These options are available under `options.configureProfiling`.
+
+<SdkOption name="profiling.profileAppStarts" type="bool" defaultValue="false">
+
+When enabled, the profiler starts as early as possible during the app lifecycle, allowing you to profile app startup performance.
+
+The default is `false`. Learn more about profiling in the <PlatformLink to="/profiling/">Profiling documentation</PlatformLink>.
+
+</SdkOption>
+
+## Network & Performance Options
+
+<SdkOption name="isTracingEnabled" type="bool" readOnly="true">
+
+A read-only property that indicates whether tracing is enabled. This property is `true` when either <PlatformIdentifier name="tracesSampleRate" /> or <PlatformIdentifier name="tracesSampler" /> is configured.
+
+</SdkOption>
+
+<SdkOption name="enableAutoPerformanceTracing" type="bool" defaultValue="true">
+
+When enabled, the SDK tracks performance for UIViewController subclasses and HTTP requests automatically. It also measures the app start and slow and frozen frames.
+
+The default is `true`. Performance Monitoring must be enabled for this flag to take effect. Learn more about <PlatformLink to="/tracing/">Performance Monitoring</PlatformLink>.
+
+</SdkOption>
+
+<SdkOption name="enableUserInteractionTracing" type="bool" defaultValue="true">
+
+When enabled, the SDK creates transactions for UI events like button clicks, switch toggles, and other UI elements that use UIControl `sendAction:to:forEvent:`.
+
+The default is `true`. This feature is unavailable for SwiftUI. Learn more in the <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#user-interaction-tracing">User Interaction Tracing</PlatformLink> documentation.
+
+</SdkOption>
+
+<SdkOption name="enablePreWarmedAppStartTracing" type="bool" defaultValue="true">
+
+Report pre-warmed app starts by dropping the first app start spans if pre-warming paused during these steps. This approach will shorten the app start duration, but it represents the duration a user has to wait after clicking the app icon until the app is responsive.
+
+The default is `true` starting with SDK version 9.0.0. Learn more in the <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#prewarmed-app-start-tracing">Prewarmed App Start Tracing</PlatformLink> documentation.
+
+</SdkOption>
+
+<SdkOption name="enableNetworkTracking" type="bool" defaultValue="true">
+
+When enabled, the SDK tracks performance for HTTP requests if auto performance tracking and `enableSwizzling` are enabled.
+
+The default is `true`. Learn more in the <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#network-tracking">Network Tracking</PlatformLink> documentation.
+
+</SdkOption>
+
+<SdkOption name="enableFileIOTracing" type="bool" defaultValue="true">
+
+When enabled, the SDK tracks performance for file I/O reads and writes with NSData if auto performance tracking and `enableSwizzling` are enabled.
+
+The default is `true`. Learn more in the <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#file-io-tracing">File I/O Tracing</PlatformLink> documentation.
+
+</SdkOption>
+
+<SdkOption name="enableCoreDataTracing" type="bool" defaultValue="true">
+
+When enabled, the SDK tracks the performance of Core Data operations. It requires enabling performance monitoring.
+
+The default is `true`. Learn more in the <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#core-data-tracing">Core Data Tracing</PlatformLink> documentation.
+
+</SdkOption>
+
+<SdkOption name="enableTimeToFullDisplayTracing" type="bool" defaultValue="false">
+
+When enabled, every UIViewController tracing transaction will wait for a call to `SentrySDK.reportFullyDisplayed()`. Use this in conjunction with `enableUIViewControllerTracing`. If `SentrySDK.reportFullyDisplayed()` is not called, the transaction will finish automatically after 30 seconds and the `Time to full display` span will be finished with `DeadlineExceeded` status.
+
+The default is `false`. Learn more in the <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#time-to-full-display">Time to Full Display</PlatformLink> documentation.
+
+</SdkOption>
+
+<SdkOption name="urlSessionDelegate" type="object">
+
+Set as the delegate on the URLSession used for network tasks. This allows you to customize the URLSession behavior while still allowing Sentry to track network requests.
+
+</SdkOption>
+
+<SdkOption name="urlSession" type="object">
+
+Use a custom URLSession with your configuration for sending requests to Sentry. This allows you to use your own URLSession configuration, for example, to configure proxy settings or custom SSL certificates.
+
+</SdkOption>
+
+## Swizzling Options
+
+<SdkOption name="enableSwizzling" type="bool" defaultValue="true">
+
+Whether the SDK should use swizzling or not. When turned off the following features are disabled: breadcrumbs for touch events and navigation with UIViewControllers, automatic instrumentation for UIViewControllers, automatic instrumentation for HTTP requests, automatic instrumentation for file I/O with NSData, and automatically added sentry-trace header to HTTP requests for distributed tracing.
+
+The default is `true`. Learn more in the <PlatformLink to="/configuration/swizzling/">Swizzling</PlatformLink> documentation.
+
+</SdkOption>
+
+<SdkOption name="swizzleClassNameExcludes" type="array">
+
+A set of class names to ignore for swizzling. The SDK checks if a class name of a class to swizzle contains a class name of this array. For example, if you add `MyUIViewController` to this list, the SDK excludes the following classes from swizzling: `YourApp.MyUIViewController`, `YourApp.MyUIViewControllerA`, `MyApp.MyUIViewController`.
+
+The default is an empty set. This option is available with SDK version 8.23.0 and above. Learn more in the <PlatformLink to="/configuration/swizzling/">Swizzling</PlatformLink> documentation.
+
+</SdkOption>
+
+<SdkOption name="enableDataSwizzling" type="bool" defaultValue="true">
+
+When enabled, the SDK tracks performance for file I/O reads and writes with NSData if auto performance tracking and `enableSwizzling` are enabled.
+
+The default is `true`. Learn more in the <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#file-io-tracing">File I/O Tracing</PlatformLink> documentation.
+
+</SdkOption>
+
+<SdkOption name="enableFileManagerSwizzling" type="bool" defaultValue="false">
+
+When enabled, the SDK tracks performance for file I/O operations with NSFileManager if auto performance tracking and `enableSwizzling` are enabled.
+
+The default is `false`. This feature is currently experimental and disabled by default. Learn more in the <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#file-io-tracing">File I/O Tracing</PlatformLink> documentation.
+
+</SdkOption>
+
+## App Hang Options
+
+<SdkOption name="enableAppHangTracking" type="bool" defaultValue="true">
+
+When enabled, the SDK tracks when the application stops responding for a specific amount of time defined by the `appHangTimeoutInterval` option.
+
+On iOS, tvOS and visionOS, the SDK can differentiate between fully-blocking and non-fully-blocking app hangs. A fully-blocking app hang is when the main thread is stuck completely, and the app can't render a single frame. A non-fully-blocking app hang is when the app appears stuck to the user but can still render a few frames.
+
+The default is `true`. App Hang tracking is automatically disabled if a debugger is attached. Learn more in the <PlatformLink to="/configuration/app-hangs/">App Hangs</PlatformLink> documentation.
+
+</SdkOption>
+
+<SdkOption name="appHangTimeoutInterval" type="double" defaultValue="2.0">
+
+The minimum amount of time an app should be unresponsive to be classified as an App Hanging. The actual amount may be a little longer.
+
+Avoid using values lower than 100ms, which may cause a lot of app hangs events being transmitted.
+
+The default value is `2.0` seconds. Learn more in the <PlatformLink to="/configuration/app-hangs/">App Hangs</PlatformLink> documentation.
+
+</SdkOption>
+
+## MetricKit Options
+
+<SdkOption name="enableMetricKit" type="bool" defaultValue="false">
+
+When enabled, the SDK subscribes to MetricKit diagnostic reports and sends MXHangDiagnostic, MXDiskWriteExceptionDiagnostic, and MXCPUExceptionDiagnostic to Sentry.
+
+This feature is available on SDK version 8.14.0 and up. The SDK supports this feature from iOS 15 and up and macOS 12 and up because in these versions, MetricKit delivers diagnostic reports immediately, which allows the Sentry SDK to apply current data from the scope.
+
+The default is `false`. Learn more in the <PlatformLink to="/configuration/metric-kit/">MetricKit</PlatformLink> documentation.
+
+</SdkOption>
+
+<SdkOption name="enableMetricKitRawPayload" type="bool" defaultValue="false">
+
+When enabled, the SDK adds the raw MXDiagnosticPayloads as an attachment to the converted SentryEvent. You need to enable `enableMetricKit` for this flag to work.
+
+This feature is available on SDK version 8.29.0 and up.
+
+The default is `false`. Learn more in the <PlatformLink to="/configuration/metric-kit/">MetricKit</PlatformLink> documentation.
+
+</SdkOption>
+
+## Other Options
+
+<SdkOption name="enableAutoBreadcrumbTracking" type="bool" defaultValue="true">
+
+When enabled, the SDK adds breadcrumbs for various system events.
+
+The default is `true`.
+
+</SdkOption>
+
+<SdkOption name="maxAttachmentSize" type="int" defaultValue="209715200">
+
+The maximum size for each attachment in bytes.
+
+The default is 200 MiB (200 × 1024 × 1024 bytes). Please also check the maximum attachment size of relay to make sure your attachments don't get discarded there.
+
+</SdkOption>
+
+<SdkOption name="reportAccessibilityIdentifier" type="bool" defaultValue="true">
+
+If enabled, view hierarchy attachment will contain view `accessibilityIdentifier`. Set it to `false` if your project uses `accessibilityIdentifier` for PII.
+
+The default is `true`.
+
+</SdkOption>
+
+<SdkOption name="swiftAsyncStacktraces" type="bool" defaultValue="false">
+
+This feature is only available from Xcode 13 and from macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0.
+
+This is an experimental feature and may still have bugs. When enabled, stitches the call to Swift Async functions in one consecutive stack trace.
+
+The default is `false`. Learn more in the <PlatformLink to="/features/experimental-features/">Experimental Features</PlatformLink> documentation.
+
+</SdkOption>
+
+<SdkOption name="cacheDirectoryPath" type="string">
+
+The path where the SDK stores data (events, transactions, profiles, etc.). By default, the SDK uses `NSCachesDirectory`. You can specify a custom path if needed.
+
+We recommend only changing this when the default, e.g., in security environments, can't be accessed.
+
+</SdkOption>
+
+<SdkOption name="enableSpotlight" type="bool" defaultValue="false">
+
+Whether to enable Spotlight for local development. Spotlight is a local development tool that allows you to inspect Sentry events locally.
+
+The default is `false`. This option is primarily useful for local development and debugging.
+
+</SdkOption>
+
+<SdkOption name="spotlightUrl" type="string" defaultValue="http://localhost:8969/stream">
+
+The Spotlight URL for local development. The default is `"http://localhost:8969/stream"`.
+
+This option is only used when <PlatformIdentifier name="enableSpotlight" /> is set to `true`.
 
 </SdkOption>
