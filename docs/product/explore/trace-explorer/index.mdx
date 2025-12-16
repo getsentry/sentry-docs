@@ -93,6 +93,69 @@ Dive deeper into your data with aggregation capabilities in Trace Explorer.
 
 <Arcade src="https://demo.arcade.software/rgVB85wJiopGNPO3KFJS?embed" />
 
+## Compare Attributes (Beta)
+
+<Alert level="info">
+
+Attribute Breakdowns is currently in beta. To access this feature, enable the Early Adopter flag in your [organization settings](https://sentry.io/orgredirect/settings/:orgslug/).
+
+</Alert>
+
+When investigating performance issues, you often need to answer: *"What's different about this spike compared to normal behavior?"*. Sentry's compare attributes feature lets you analyze attribute distributions between a selected time range and your baseline data without writing additional queries.
+
+This helps you quickly identify whether a latency spike, error surge, or other anomaly is caused by a specific release, geographic region, browser, API endpoint, or any other attribute you've captured in your spans.
+
+### How to Use Attribute Comparison
+
+- On the Trace Explorer page, begin by dragging across a chart's timeline to narrow down to the time range that you want to compare. You will see an option to `Compare Attribute Breakdowns`. 
+
+- When you click on `Compare Attribute Breakdowns`, the attribute comparison charts below will load with the baseline and time range differences. Purple bars on the left are the time range values, and gray bars on the right are the baseline values. **Note:** Clicking anywhere else on the page while in *compare attributes* mode will stop the comparison and reset to baseline.
+
+![Attribute Comparison Screenshot =800x](./img/attribute_comparison.png)
+
+#### Reading the Percentage Badges
+
+Each widget displays two percentages, like `99.8% | 84.6%`:
+
+| Badge | Meaning |
+|-------|---------|
+| First percentage (Selection) | What % of spans in your **selected time range** have this attribute |
+| Second percentage (Baseline) | What % of spans in the **baseline** have this attribute |
+
+A large difference in these percentages can indicate that the attribute is more (or less) present during the anomaly.
+
+#### Reading the Bar Charts
+
+- **Taller bars** = higher frequency of that attribute value within its cohort
+- Compare the **shape** of colored bars vs. gray bars
+- If the distributions differ significantly, that attribute may explain the anomaly
+
+### Example: Debugging a Latency Spike
+
+Suppose your p95 duration chart shows a spike from 3s to 12s. To investigate:
+
+1. **Drag-select the spike** on the p95 chart
+2. **Right-click** and choose "Compare Attribute Breakdowns"
+3. **Review the breakdowns** to find attributes with different distributions:
+
+| Attribute | What to Look For |
+|-----------|-----------------|
+| `release` | Is a new release version overrepresented in the spike? |
+| `span.domain` | Is a specific external domain causing slowdowns? |
+| `user.geo.country_code` | Are users in certain regions more affected? |
+| `browser.name` | Is the issue browser-specific? |
+| `http.status_code` | Are there more errors (5xx) in the spike? |
+| `effectiveConnectionType` | Are slow network connections involved? |
+
+If you see that 80% of spans in your selection come from a specific `release` that only accounts for 20% of the baseline, you've likely found the culprit.
+
+### Best Practices
+
+- **Start broad, then narrow down**: Begin with your full query, identify suspect attributes, then add filters to investigate further.
+- **Look for the biggest differences**: Attributes where the selection and baseline distributions differ most are your best leads.
+- **Check coverage percentages**: Low coverage (e.g., `4.7% | 0.5%`) means the attribute isn't populated for most spans — take findings with caution.
+- **Use Group By together**: Combine attribute comparison with the Group By feature in Visualize to see trends broken down by your suspect attribute over time.
+
 ## Create Alerts and Dashboard Widgets From Queries or Compare Queries
 
 You can create Alerts and Dashboard widgets from your queries by clicking the "Save As" button:
