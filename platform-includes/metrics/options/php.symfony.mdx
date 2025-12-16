@@ -1,0 +1,44 @@
+#### before_send_metric
+
+To filter metrics, or update them before they are sent to Sentry, you can use the `before_send_metric` option. If the callback returns `null`, the metric is not emitted. Attributes can also be updated in the callback function.
+
+```yaml {filename:config/packages/sentry.yaml}
+sentry:
+  options:
+    before_send_metric: 'sentry.callback.before_send_metric'
+
+services:
+  sentry.callback.before_send_metric:
+    class: 'App\Service\Sentry'
+    factory: ['@App\Service\Sentry', 'getBeforeSendMetric']
+```
+
+The service needed for the `before_send_metric` option can be implemented as follows:
+
+```php {filename:src/Service/Sentry.php}
+<?php
+
+namespace App\Service;
+
+class Sentry
+{
+    public static function getBeforeSendMetric(): callable
+    {
+        return static function (\Sentry\Metrics\Types\Metric $metric): ?\Sentry\Metrics\Types\Metric {
+            if ('test-counter' === $metric->getName()) {
+                return null;
+            }
+
+            return $metric;
+        };
+    }
+}
+```
+
+<Alert>
+
+  Learn more in [Callables in Symfony Options](/platforms/php/guides/symfony/configuration/symfony-options/#callables).
+
+</Alert>
+
+The `before_send_metric` function receives a metric object, and should return the metric object if you want it to be sent to Sentry, or `null` if you want to discard it.

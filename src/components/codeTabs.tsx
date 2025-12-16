@@ -140,6 +140,7 @@ const Container = styled('div')`
     border-radius: 0 0 6px 6px;
     border: 1px solid var(--accent-11);
     border-top: none;
+    margin-bottom: 1.5rem;
   }
 
   @media (max-width: 768px) {

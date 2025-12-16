@@ -1,7 +1,7 @@
 import type {MetadataRoute} from 'next';
 
+import {getDevDocsFrontMatter, getDocsFrontMatter} from 'sentry-docs/frontmatter';
 import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
-import {getDevDocsFrontMatter, getDocsFrontMatter} from 'sentry-docs/mdx';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   if (isDeveloperDocs) {
