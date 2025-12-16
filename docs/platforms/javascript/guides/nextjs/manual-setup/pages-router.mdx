@@ -60,10 +60,16 @@ pnpm add @sentry/nextjs
 
 Extend your app's default Next.js options by adding `withSentryConfig` into your `next.config.ts` (or `next.config.js`) file.
 
+<Alert type="info">
+  Pages Router applications typically use Webpack. The Webpack configuration
+  includes auto-instrumentation options that automatically wrap your API routes
+  and page data fetching methods.
+</Alert>
+
 </SplitSectionText>
 <SplitSectionCode>
 
-```typescript {filename:next.config.ts}
+```typescript {tabTitle:Webpack} {filename:next.config.ts}
 import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
 
@@ -78,8 +84,36 @@ export default withSentryConfig(nextConfig, {
   // Only print logs for uploading source maps in CI
   silent: !process.env.CI,
 
-  // Automatically tree-shake Sentry logger statements to reduce bundle size
-  disableLogger: true,
+  // Webpack-specific options for Pages Router
+  webpack: {
+    // Auto-instrument API routes and data fetching methods (default: true)
+    autoInstrumentServerFunctions: true,
+
+    // Auto-instrument middleware (default: true)
+    autoInstrumentMiddleware: true,
+
+    // Tree-shake Sentry logger statements to reduce bundle size
+    treeshake: {
+      removeDebugLogging: true,
+    },
+  },
+});
+```
+
+```typescript {tabTitle:Turbopack} {filename:next.config.ts}
+import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs";
+
+const nextConfig: NextConfig = {
+  // Your existing Next.js configuration
+};
+
+export default withSentryConfig(nextConfig, {
+  org: "___ORG_SLUG___",
+  project: "___PROJECT_SLUG___",
+
+  // Only print logs for uploading source maps in CI
+  silent: !process.env.CI,
 });
 ```
 
@@ -111,6 +145,9 @@ import * as Sentry from "@sentry/nextjs";
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
 
+  // Adds request headers and IP for users
+  sendDefaultPii: true,
+
   // Capture 100% in dev, 10% in production
   // Adjust based on your traffic volume
   tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.1,
@@ -130,6 +167,9 @@ import * as Sentry from "@sentry/nextjs";
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
 
+  // Adds request headers and IP for users
+  sendDefaultPii: true,
+
   // Capture 100% in dev, 10% in production
   // Adjust based on your traffic volume
   tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.1,
@@ -141,6 +181,9 @@ import * as Sentry from "@sentry/nextjs";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
+
+  // Adds request headers and IP for users
+  sendDefaultPii: true,
 
   // Capture 100% in dev, 10% in production
   // Adjust based on your traffic volume

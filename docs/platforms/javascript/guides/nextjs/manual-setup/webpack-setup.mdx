@@ -6,6 +6,8 @@ description: "Additional configuration for Next.js applications using Webpack in
 
 This guide covers the configuration differences for **Next.js applications using Webpack** (the default bundler before Next.js 15). Complete the [main manual setup](/platforms/javascript/guides/nextjs/manual-setup/) first, then apply these Webpack-specific configurations.
 
+For a complete reference of all build configuration options, see the [Build Configuration](/platforms/javascript/guides/nextjs/configuration/build/) documentation.
+
 <Alert type="info">
   If you're using Next.js 15+ with Turbopack (the default), you don't need this
   guide. See the [main manual
@@ -14,13 +16,14 @@ This guide covers the configuration differences for **Next.js applications using
 
 ## Key Differences: Webpack vs Turbopack
 
-| Feature                         | Turbopack                       | Webpack                                  |
-| ------------------------------- | ------------------------------- | ---------------------------------------- |
-| Server function instrumentation | Automatic via Next.js telemetry | Build-time code injection                |
-| Middleware instrumentation      | Automatic via Next.js telemetry | Build-time code injection                |
-| Source map upload               | Post-build via CLI (default)    | During build via plugin (default)        |
-| Route exclusion                 | Not supported                   | Supported via `excludeServerRoutes`      |
-| React component annotation      | Not supported                   | Supported via `reactComponentAnnotation` |
+| Feature                         | Turbopack                       | Webpack                                              |
+| ------------------------------- | ------------------------------- | ---------------------------------------------------- |
+| Server function instrumentation | Automatic via Next.js telemetry | Build-time code injection                            |
+| Middleware instrumentation      | Automatic via Next.js telemetry | Build-time code injection                            |
+| Source map upload               | Post-compile during build       | During build via plugin (default)                    |
+| Route exclusion                 | Not supported                   | Supported via `webpack.excludeServerRoutes`          |
+| React component annotation      | Not supported                   | Supported via `webpack.reactComponentAnnotation`     |
+| Logger tree-shaking             | Not supported                   | Supported via `webpack.treeshake.removeDebugLogging` |
 
 ## Auto-Instrumentation Options
 
@@ -44,14 +47,21 @@ These options are enabled by default with Webpack. Disable them if you prefer ma
 import { withSentryConfig } from "@sentry/nextjs";
 
 export default withSentryConfig(nextConfig, {
-  // Instrument Pages Router API routes and data fetching methods (default: true)
-  autoInstrumentServerFunctions: true,
+  webpack: {
+    // Instrument Pages Router API routes and data fetching methods (default: true)
+    autoInstrumentServerFunctions: true,
 
-  // Instrument Next.js middleware (default: true)
-  autoInstrumentMiddleware: true,
+    // Instrument Next.js middleware (default: true)
+    autoInstrumentMiddleware: true,
 
-  // Instrument App Router components (default: true)
-  autoInstrumentAppDirectory: true,
+    // Instrument App Router components (default: true)
+    autoInstrumentAppDirectory: true,
+
+    // Tree-shake Sentry logger statements to reduce bundle size
+    treeshake: {
+      removeDebugLogging: true,
+    },
+  },
 });
 ```
 
@@ -85,11 +95,13 @@ Specify routes as URL paths (not file system paths). Routes must have a leading 
 import { withSentryConfig } from "@sentry/nextjs";
 
 export default withSentryConfig(nextConfig, {
-  excludeServerRoutes: [
-    "/api/health",
-    "/api/excluded/[parameter]",
-    /^\/internal\//, // Regex for all /internal/* routes
-  ],
+  webpack: {
+    excludeServerRoutes: [
+      "/api/health",
+      "/api/excluded/[parameter]",
+      /^\/internal\//, // Regex for all /internal/* routes
+    ],
+  },
 });
 ```
 
@@ -123,9 +135,6 @@ export default withSentryConfig(nextConfig, {
   org: "___ORG_SLUG___",
   project: "___PROJECT_SLUG___",
   authToken: process.env.SENTRY_AUTH_TOKEN,
-
-  // Default webpack behavior - uploads during build
-  useRunAfterProductionCompileHook: false,
 });
 ```
 
@@ -277,8 +286,10 @@ Enable `reactComponentAnnotation` to track component names in your application. 
 import { withSentryConfig } from "@sentry/nextjs";
 
 export default withSentryConfig(nextConfig, {
-  reactComponentAnnotation: {
-    enabled: true,
+  webpack: {
+    reactComponentAnnotation: {
+      enabled: true,
+    },
   },
 });
 ```
@@ -304,9 +315,11 @@ If you have components you don't want annotated (for privacy or performance reas
 import { withSentryConfig } from "@sentry/nextjs";
 
 export default withSentryConfig(nextConfig, {
-  reactComponentAnnotation: {
-    enabled: true,
-    ignoredComponents: ["SensitiveForm", "InternalDebugPanel"],
+  webpack: {
+    reactComponentAnnotation: {
+      enabled: true,
+      ignoredComponents: ["SensitiveForm", "InternalDebugPanel"],
+    },
   },
 });
 ```

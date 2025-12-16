@@ -271,54 +271,56 @@ export function VerificationChecklist({
 
   const toggleItem = useCallback(
     (itemId: string, itemLabel: string) => {
-      setCheckedItems(prev => {
-        const newChecked = !prev[itemId];
-        const newState = {...prev, [itemId]: newChecked};
+      // Get current state to calculate new values
+      const currentChecked = checkedItems[itemId] ?? false;
+      const newChecked = !currentChecked;
 
-        // Emit event for checking/unchecking item
-        emit('Checklist Item Toggle', {
-          props: {
-            checked: newChecked,
-            checklistId,
-            itemId,
-            itemLabel,
-            page: window.location.pathname,
-          },
-        });
+      // Update checked state (pure state update)
+      setCheckedItems(prev => ({...prev, [itemId]: newChecked}));
 
-        // If sequential and checking an item, expand the next unchecked item
-        if (sequential && newChecked) {
-          const currentIndex = items.findIndex(item => item.id === itemId);
-          if (currentIndex !== -1 && currentIndex < items.length - 1) {
-            // Find the next unchecked item
-            for (let i = currentIndex + 1; i < items.length; i++) {
-              if (!newState[items[i].id]) {
-                setExpandedItems(prevExpanded => ({
-                  ...prevExpanded,
-                  [itemId]: false, // Collapse current
-                  [items[i].id]: true, // Expand next
-                }));
-                break;
-              }
+      // Side effects happen after state update, outside the updater
+      // Emit event for checking/unchecking item
+      emit('Checklist Item Toggle', {
+        props: {
+          checked: newChecked,
+          checklistId,
+          itemId,
+          itemLabel,
+          page: window.location.pathname,
+        },
+      });
+
+      // If sequential and checking an item, expand the next unchecked item
+      if (sequential && newChecked) {
+        const currentIndex = items.findIndex(item => item.id === itemId);
+        if (currentIndex !== -1 && currentIndex < items.length - 1) {
+          // Find the next unchecked item
+          for (let i = currentIndex + 1; i < items.length; i++) {
+            if (!checkedItems[items[i].id]) {
+              setExpandedItems(prevExpanded => ({
+                ...prevExpanded,
+                [itemId]: false, // Collapse current
+                [items[i].id]: true, // Expand next
+              }));
+              break;
             }
           }
         }
+      }
 
-        // Check if all items are now complete
-        const newCompletedCount = items.filter(item => newState[item.id]).length;
-        if (newCompletedCount === items.length && newChecked) {
-          emit('Checklist Complete', {
-            props: {
-              checklistId,
-              page: window.location.pathname,
-            },
-          });
-        }
-
-        return newState;
-      });
+      // Check if all items are now complete
+      const newCompletedCount =
+        items.filter(item => (item.id === itemId ? newChecked : checkedItems[item.id])).length;
+      if (newCompletedCount === items.length && newChecked) {
+        emit('Checklist Complete', {
+          props: {
+            checklistId,
+            page: window.location.pathname,
+          },
+        });
+      }
     },
-    [checklistId, emit, items, sequential]
+    [checkedItems, checklistId, emit, items, sequential]
   );
 
   const toggleExpanded = useCallback((itemId: string) => {

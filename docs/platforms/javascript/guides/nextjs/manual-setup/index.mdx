@@ -101,9 +101,6 @@ export default withSentryConfig(nextConfig, {
 
   // Only print logs for uploading source maps in CI
   silent: !process.env.CI,
-
-  // Automatically tree-shake Sentry logger statements to reduce bundle size
-  disableLogger: true,
 });
 ```
 
@@ -231,12 +228,19 @@ The example above samples 100% of traces in development and 10% in production. M
 
 ### Register Server-Side SDK
 
-Create a [Next.js Instrumentation file](https://nextjs.org/docs/app/building-your-application/optimizing/instrumentation) named `instrumentation.ts` in your project root (or `src` folder). This file imports your server and edge configurations.
+Create a [Next.js Instrumentation file](https://nextjs.org/docs/app/building-your-application/optimizing/instrumentation) named `instrumentation.ts` in your project root (or `src` folder). This file imports your server and edge configurations and exports `onRequestError` to capture server-side errors.
+
+<Alert type="info">
+  The `onRequestError` hook requires `@sentry/nextjs` version `8.28.0` or higher
+  and Next.js 15.
+</Alert>
 
 </SplitSectionText>
 <SplitSectionCode>
 
 ```typescript {filename:instrumentation.ts}
+import * as Sentry from "@sentry/nextjs";
+
 export async function register() {
   if (process.env.NEXT_RUNTIME === "nodejs") {
     await import("./sentry.server.config");
@@ -246,6 +250,9 @@ export async function register() {
     await import("./sentry.edge.config");
   }
 }
+
+// Capture errors from Server Components, middleware, and proxies
+export const onRequestError = Sentry.captureRequestError;
 ```
 
 </SplitSectionCode>
@@ -262,25 +269,6 @@ Create `app/global-error.tsx` to capture errors that occur anywhere in your App 
 <SplitSectionCode>
 
 <PlatformContent includePath="getting-started-capture-errors/nextjs/app-router-global-error" />
-
-</SplitSectionCode>
-</SplitSection>
-
-<SplitSection>
-<SplitSectionText>
-
-### Capture Server Component Errors
-
-To capture errors from nested React Server Components, export the `onRequestError` hook from your `instrumentation.ts` file.
-
-<Alert type="info">
-  Requires `@sentry/nextjs` version `8.28.0` or higher and Next.js 15.
-</Alert>
-
-</SplitSectionText>
-<SplitSectionCode>
-
-<PlatformContent includePath="getting-started-capture-errors/nextjs/nested-server-components" />
 
 </SplitSectionCode>
 </SplitSection>
@@ -362,19 +350,11 @@ Prevent ad blockers from blocking Sentry events by routing them through your Nex
   This increases server load. Consider the trade-off for your application.
 </Alert>
 
-<Expandable title="Using Next.js middleware/proxy with tunneling">
+<Expandable title="Using Next.js middleware with tunneling">
 
-If you're using Next.js middleware (`middleware.ts`) or proxy (`proxy.ts`) that intercepts requests, you may need to exclude the tunnel route. When using `tunnelRoute: true`, Sentry generates a random route on each build. For compatibility, use a fixed route instead:
+If you're using Next.js middleware (`middleware.ts`) that intercepts requests, exclude the tunnel route:
 
-```typescript {filename:next.config.ts}
-export default withSentryConfig(nextConfig, {
-  tunnelRoute: "/monitoring",
-});
-```
-
-Then exclude it in your middleware or proxy:
-
-```typescript {filename:middleware.ts or proxy.ts}
+```typescript {filename:middleware.ts}
 export const config = {
   matcher: ["/((?!monitoring|_next/static|_next/image|favicon.ico).*)"],
 };
@@ -387,11 +367,8 @@ export const config = {
 
 ```typescript {filename:next.config.ts}
 export default withSentryConfig(nextConfig, {
-  // Generate a random route for each build (recommended)
-  tunnelRoute: true,
-
-  // Or use a fixed route
-  // tunnelRoute: "/monitoring",
+  // Use a fixed route (recommended)
+  tunnelRoute: "/monitoring",
 });
 ```
 
@@ -515,16 +492,6 @@ Sentry.init({
 
   // Capture 100% in dev, 10% in production
   tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.1,
-
-  // Or use sampling function for more control
-  tracesSampler: ({ name, parentSampled }) => {
-    // Always trace errors
-    if (name.includes("error")) return 1.0;
-    // Use parent's sampling decision if available
-    if (parentSampled !== undefined) return parentSampled;
-    // Default sample rate
-    return 0.1;
-  },
 });
 ```
 
