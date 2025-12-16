@@ -309,8 +309,9 @@ export function VerificationChecklist({
       }
 
       // Check if all items are now complete
-      const newCompletedCount =
-        items.filter(item => (item.id === itemId ? newChecked : checkedItems[item.id])).length;
+      const newCompletedCount = items.filter(item =>
+        item.id === itemId ? newChecked : checkedItems[item.id]
+      ).length;
       if (newCompletedCount === items.length && newChecked) {
         emit('Checklist Complete', {
           props: {
