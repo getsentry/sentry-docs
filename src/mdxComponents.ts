@@ -55,7 +55,6 @@ import {
 } from './components/splitLayout';
 import {StepComponent, StepConnector} from './components/stepConnector';
 import {TableOfContents} from './components/tableOfContents';
-import {ChecklistItem, VerificationChecklist} from './components/verificationChecklist';
 import {VersionRequirement} from './components/version-requirement';
 import {VimeoEmbed} from './components/video';
 
@@ -117,8 +116,6 @@ export function mdxComponents(
     SplitSectionCode,
     StepComponent,
     StepConnector,
-    VerificationChecklist,
-    ChecklistItem,
     VimeoEmbed,
     VersionRequirement,
     a: SmartLink,
