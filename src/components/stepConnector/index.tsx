@@ -109,9 +109,10 @@ export function StepComponent({
         btn.type = 'button';
         btn.className = styles.stepToggle;
         // Use appropriate aria-label based on whether step is numbered
-        const ariaLabel = currentStepNumber !== null
-          ? `Toggle completion for step ${currentStepNumber}`
-          : `Toggle completion for ${h.textContent?.trim() || 'this section'}`;
+        const ariaLabel =
+          currentStepNumber !== null
+            ? `Toggle completion for step ${currentStepNumber}`
+            : `Toggle completion for ${h.textContent?.trim() || 'this section'}`;
         btn.setAttribute('aria-label', ariaLabel);
         btn.setAttribute('aria-pressed', completed.has(h.id) ? 'true' : 'false');
         btn.addEventListener('click', () => {
