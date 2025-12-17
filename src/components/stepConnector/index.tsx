@@ -94,9 +94,11 @@ export function StepComponent({
     headings.forEach(h => {
       // Check if heading should be unnumbered (has data-no-number attribute in the MDX)
       const noNumber = h.hasAttribute('data-no-number');
+      let currentStepNumber: number | null = null;
       if (noNumber) {
         h.setAttribute('data-step', '');
       } else {
+        currentStepNumber = stepNumber;
         h.setAttribute('data-step', String(stepNumber));
         stepNumber++;
       }
@@ -106,7 +108,11 @@ export function StepComponent({
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = styles.stepToggle;
-        btn.setAttribute('aria-label', `Toggle completion for step ${stepNumber}`);
+        // Use appropriate aria-label based on whether step is numbered
+        const ariaLabel = currentStepNumber !== null
+          ? `Toggle completion for step ${currentStepNumber}`
+          : `Toggle completion for ${h.textContent?.trim() || 'this section'}`;
+        btn.setAttribute('aria-label', ariaLabel);
         btn.setAttribute('aria-pressed', completed.has(h.id) ? 'true' : 'false');
         btn.addEventListener('click', () => {
           setCompleted(prev => {
