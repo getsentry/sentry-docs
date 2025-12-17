@@ -13,6 +13,7 @@ const trimSlashes = (s: string) => s.replace(/(^\/|\/$)/g, '');
 const ignoreListFile = path.join(dirname(import.meta.url), './ignore-list.txt');
 
 const showProgress = process.argv.includes('--progress');
+const deduplicatePages = !process.argv.includes('--skip-deduplication');
 
 // Get the path filter if specified
 const pathFilterIndex = process.argv.indexOf('--path');
@@ -35,21 +36,73 @@ async function fetchWithFollow(url: URL | string): Promise<Response> {
   return r;
 }
 
+async function deduplicateSlugs(
+  allSlugs: string[]
+): Promise<{skippedCount: number; slugsToCheck: string[]}> {
+  try {
+    const sourceMap: Record<string, string | null> = await fetch(
+      `${baseURL}api/source-map`
+    ).then(r => r.json());
+
+    const checkedSources = new Set<string>();
+    const slugsToCheck: string[] = [];
+    let skippedCount = 0;
+
+    for (const slug of allSlugs) {
+      // Use same normalization as route.ts (remove leading and trailing slashes)
+      const normalizedSlug = slug.replace(/(^\/|\/$)/g, '');
+      const sourcePath = sourceMap[normalizedSlug];
+
+      // Always check API-generated pages (no source file)
+      if (!sourcePath) {
+        slugsToCheck.push(slug);
+        continue;
+      }
+
+      // Skip if we've already checked this source file
+      if (checkedSources.has(sourcePath)) {
+        skippedCount++;
+        continue;
+      }
+
+      // First time seeing this source file
+      checkedSources.add(sourcePath);
+      slugsToCheck.push(slug);
+    }
+
+    return {skippedCount, slugsToCheck};
+  } catch (error) {
+    console.warn('⚠️  Failed to fetch source map:', error.message);
+    console.warn('Falling back to checking all pages...\n');
+    return {skippedCount: 0, slugsToCheck: allSlugs};
+  }
+}
+
 async function main() {
   const sitemap = await fetch(`${baseURL}sitemap.xml`).then(r => r.text());
 
-  const slugs = [...sitemap.matchAll(/<loc>([^<]*)<\/loc>/g)]
+  const allSlugs = [...sitemap.matchAll(/<loc>([^<]*)<\/loc>/g)]
     .map(l => l[1])
     .map(url => trimSlashes(new URL(url).pathname))
     .filter(Boolean)
     .filter(slug => (pathFilter ? slug.startsWith(pathFilter) : true));
-  const allSlugsSet = new Set(slugs);
+  const allSlugsSet = new Set(allSlugs);
 
-  if (pathFilter) {
-    console.log('Checking 404s on %d pages in /%s', slugs.length, pathFilter);
-  } else {
-    console.log('Checking 404s on %d pages', slugs.length);
+  // Deduplicate pages with same source file (default behavior)
+  const {skippedCount, slugsToCheck} = deduplicatePages
+    ? await deduplicateSlugs(allSlugs)
+    : {skippedCount: 0, slugsToCheck: allSlugs};
+
+  if (skippedCount > 0) {
+    console.log(
+      'Deduplication: checking %d unique pages (skipped %d duplicates)\n',
+      slugsToCheck.length,
+      skippedCount
+    );
   }
+
+  const pathInfo = pathFilter ? ` in /${pathFilter}` : '';
+  console.log('Checking 404s on %d pages%s', slugsToCheck.length, pathInfo);
 
   const all404s: {page404s: Link[]; slug: string}[] = [];
 
@@ -100,7 +153,7 @@ async function main() {
     return false;
   }
 
-  for (const slug of slugs) {
+  for (const slug of slugsToCheck) {
     const pageUrl = new URL(slug, baseURL);
     const now = performance.now();
     const html = await fetchWithFollow(pageUrl.href).then(r => r.text());
@@ -134,7 +187,7 @@ async function main() {
   }
 
   if (all404s.length === 0) {
-    console.log('\n\n🎉 No 404s found');
+    console.log('\n🎉 No 404s found');
     return false;
   }
   const numberOf404s = all404s.map(x => x.page404s.length).reduce((a, b) => a + b, 0);

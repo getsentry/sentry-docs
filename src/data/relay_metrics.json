@@ -26,7 +26,7 @@
   {
     "type": "Counter",
     "name": "attachment.upload",
-    "description": "The number of times an upload of an attachment occurs.\n\nThis metric is tagged with:\n- `result`: `success` or the failure reason.",
+    "description": "The number of times an upload of an attachment occurs.\n\nThis metric is tagged with:\n- `result`: `success` or the failure reason.\n- `type`: `envelope` or `attachment_v2`",
     "features": [
       "processing"
     ]
@@ -35,6 +35,14 @@
     "type": "Gauge",
     "name": "attachment.upload.concurrent",
     "description": "Number of attachment uploads currently in flight.",
+    "features": [
+      "processing"
+    ]
+  },
+  {
+    "type": "Timer",
+    "name": "attachment.upload.duration",
+    "description": "Time needed to upload an attachment to objectstore.\n\nTagged by:\n- `type`: \"envelope\" or \"attachment_v2\".",
     "features": [
       "processing"
     ]
@@ -466,6 +474,12 @@
     "features": []
   },
   {
+    "type": "Counter",
+    "name": "logs.envelope",
+    "description": "Whether a logs envelope has a trace context header or not\n\nThis metric is tagged with:\n- `dsc`: yes or no\n- `sdk`: low-cardinality client name",
+    "features": []
+  },
+  {
     "type": "Timer",
     "name": "metrics.aggregator.message.duration",
     "description": "Timing in milliseconds for processing a task in the aggregator service.\n\nThis metric is tagged with:\n- `task`: The task being executed by the aggregator.\n- `aggregator`: The name of the aggregator.",
@@ -832,12 +846,6 @@
   },
   {
     "type": "Timer",
-    "name": "requests.body_read.duration",
-    "description": "Timing in milliseconds to the time it takes to read an HTTP body.",
-    "features": []
-  },
-  {
-    "type": "Timer",
     "name": "requests.duration",
     "description": "Total duration in milliseconds for handling inbound web requests until the HTTP response is\nreturned to the client.\n\nThis does **not** correspond to the full event ingestion time. Requests for events that are\nnot immediately rejected due to bad data or cached rate limits always return `200 OK`. Full\nvalidation and normalization occur asynchronously, which is reported by\n`event.processing_time`.\n\nThis metric is tagged with:\n- `method`: The HTTP method of the request.\n- `route`: Unique dashed identifier of the endpoint.",
     "features": []
@@ -1049,6 +1057,12 @@
     "features": [
       "processing"
     ]
+  },
+  {
+    "type": "Distribution",
+    "name": "trace_item.canonical_size",
+    "description": "Canonical size of a Trace Item.\n\nThis is not the size in bytes, this is using the same algorithm we're using for the logs\nbilling category.\n\nThis metric is tagged with:\n- `item`: the trace item type.\n- `too_large`: `true` or `false`, whether the item is bigger than the allowed size limit.",
+    "features": []
   },
   {
     "type": "Distribution",

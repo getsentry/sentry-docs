@@ -11,12 +11,12 @@ categories:
 
 Use this guide for general instructions on using the Sentry SDK with Cloudflare. If you're using any of the listed frameworks, follow their specific setup instructions:
 
-- **[Astro](frameworks/astro/)**
-- **[Hono](frameworks/hono/)**
-- **[Hydrogen](frameworks/hydrogen-react-router/)**
-- **[Nuxt](frameworks/nuxt/)**
-- **[Remix](frameworks/remix/)**
-- **[SvelteKit](frameworks/sveltekit/)**
+- **[Astro](/platforms/javascript/guides/cloudflare/frameworks/astro/)**
+- **[Hono](/platforms/javascript/guides/cloudflare/frameworks/hono/)**
+- **[Hydrogen](/platforms/javascript/guides/cloudflare/frameworks/hydrogen-react-router/)**
+- **[Nuxt](/platforms/javascript/guides/cloudflare/frameworks/nuxt/)**
+- **[Remix](/platforms/javascript/guides/cloudflare/frameworks/remix/)**
+- **[SvelteKit](/platforms/javascript/guides/cloudflare/frameworks/sveltekit/)**
 
 <PlatformContent includePath="getting-started-prerequisites" />
 
@@ -50,28 +50,6 @@ The main Sentry configuration should happen as early as possible in your app's l
   includePath="getting-started-config"
   platform="javascript.cloudflare.workers"
 />
-
-<Expandable title="Don't have access to onRequest?">
-If you don't have access to the `onRequest` middleware API, you can use the `wrapRequestHandler` API instead. For example:
-
-```javascript
-// hooks.server.js
-import * as Sentry from "@sentry/cloudflare";
-
-export const handle = ({ event, resolve }) => {
-  const requestHandlerOptions = {
-    options: {
-      dsn: event.platform.env.SENTRY_DSN,
-      tracesSampleRate: 1.0,
-    },
-    request: event.request,
-    context: event.platform.ctx,
-  };
-  return Sentry.wrapRequestHandler(requestHandlerOptions, () => resolve(event));
-};
-```
-
-</Expandable>
 
 ### Setup for Cloudflare Pages
 
@@ -111,6 +89,28 @@ export const onRequest = [
   // Add more middlewares here
 ];
 ```
+
+<Expandable title="Don't have access to onRequest?">
+If you don't have access to the `onRequest` middleware API, you can use the `wrapRequestHandler` API instead. For example:
+
+```javascript
+// hooks.server.js
+import * as Sentry from "@sentry/cloudflare";
+
+export const handle = ({ event, resolve }) => {
+  const requestHandlerOptions = {
+    options: {
+      dsn: event.platform.env.SENTRY_DSN,
+      tracesSampleRate: 1.0,
+    },
+    request: event.request,
+    context: event.platform.ctx,
+  };
+  return Sentry.wrapRequestHandler(requestHandlerOptions, () => resolve(event));
+};
+```
+
+</Expandable>
 
 ## Step 3: Add Readable Stack Traces With Source Maps (Optional)
 
