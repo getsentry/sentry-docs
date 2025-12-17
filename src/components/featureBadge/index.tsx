@@ -4,8 +4,8 @@ type BadgeType = 'new' | 'beta';
 type BadgeSize = 'small' | 'default';
 
 interface FeatureBadgeProps {
-  size?: BadgeSize;
   type: BadgeType;
+  size?: BadgeSize;
 }
 
 export function FeatureBadge({type, size = 'default'}: FeatureBadgeProps) {
