@@ -9,6 +9,9 @@ import {redirects} from './redirects.js';
 // needed during the build process to compile MDX and optimize assets. The compiled
 // output is used at runtime, so bundling these ~150-200MB of dependencies would bloat
 // functions unnecessarily and cause deployment failures.
+//
+// Note: mdx-bundler/client (getMDXComponent) is a tiny runtime module needed by
+// app/[[...path]]/page.tsx, so we exclude only the build parts (dist/!(client)*).
 const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
   ? {
       '/**/*': [
@@ -27,8 +30,9 @@ const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
         'node_modules/@prettier/**/*',
         'node_modules/sharp/**/*',
         'node_modules/mermaid/**/*',
-        // Exclude MDX processing dependencies
-        'node_modules/mdx-bundler/**/*',
+        // Exclude MDX processing dependencies (but keep mdx-bundler/client for runtime)
+        'node_modules/mdx-bundler/dist/!(client*)',
+        'node_modules/mdx-bundler/node_modules/**/*',
         'node_modules/rehype-preset-minify/**/*',
         'node_modules/rehype-prism-plus/**/*',
         'node_modules/rehype-prism-diff/**/*',
@@ -55,8 +59,9 @@ const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
         'node_modules/@prettier/**/*',
         'node_modules/sharp/**/*',
         'node_modules/mermaid/**/*',
-        // Exclude MDX processing dependencies
-        'node_modules/mdx-bundler/**/*',
+        // Exclude MDX processing dependencies (but keep mdx-bundler/client for runtime)
+        'node_modules/mdx-bundler/dist/!(client*)',
+        'node_modules/mdx-bundler/node_modules/**/*',
         'node_modules/rehype-preset-minify/**/*',
         'node_modules/rehype-prism-plus/**/*',
         'node_modules/rehype-prism-diff/**/*',
@@ -72,6 +77,8 @@ const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
         '**/*.pdf',
       ],
       '\\[\\[\\.\\.\\.path\\]\\]': [
+        // Exclude docs to save ~156MB, but allow specific files via outputFileTracingIncludes
+        // for pages that may be accessed at runtime (error pages, cold starts, etc.)
         'docs/**/*',
         'node_modules/prettier/plugins',
         'node_modules/rollup/dist',
@@ -83,6 +90,30 @@ const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
         '**/*.gif',
         '**/*.pdf',
         '**/*.png',
+      ],
+    };
+
+// Explicitly include the pre-computed doc tree files for routes that need them at runtime.
+// Both platform-redirect and [[...path]] need the doctree at runtime:
+// - platform-redirect: dynamic route with searchParams
+// - [[...path]]: calls getDocsRootNode() during prerendering (even though force-static)
+//
+// Additionally, include specific doc files that may be accessed at runtime due to:
+// - Error page rendering (when a static page fails to load)
+// - Cold start edge cases during deployment
+// - On-demand revalidation requests
+// These are whitelisted individually to avoid including the entire docs/ directory.
+const outputFileTracingIncludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
+  ? {
+      '/platform-redirect': ['public/doctree-dev.json'],
+      '\\[\\[\\.\\.\\.path\\]\\]': ['public/doctree-dev.json'],
+    }
+  : {
+      '/platform-redirect': ['public/doctree.json'],
+      '\\[\\[\\.\\.\\.path\\]\\]': [
+        'public/doctree.json',
+        'docs/changelog.mdx',
+        'docs/platforms/index.mdx',
       ],
     };
 
@@ -113,6 +144,7 @@ const nextConfig = {
     'mermaid',
   ],
   outputFileTracingExcludes,
+  outputFileTracingIncludes,
   images: {
     contentDispositionType: 'inline', // "open image in new tab" instead of downloading
     remotePatterns: REMOTE_IMAGE_PATTERNS,
