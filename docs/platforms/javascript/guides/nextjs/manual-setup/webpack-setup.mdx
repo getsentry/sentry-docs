@@ -206,11 +206,13 @@ export default withSentryConfig(nextConfig, {
   project: "___PROJECT_SLUG___",
   authToken: process.env.SENTRY_AUTH_TOKEN,
 
-  // Advanced Webpack plugin options
-  unstable_sentryWebpackPluginOptions: {
-    sourcemaps: {
-      assets: ["./build/**/*.js", "./build/**/*.map"],
-      ignore: ["node_modules/**"],
+  webpack: {
+    // Advanced Webpack plugin options
+    unstable_sentryWebpackPluginOptions: {
+      sourcemaps: {
+        assets: ["./build/**/*.js", "./build/**/*.map"],
+        ignore: ["node_modules/**"],
+      },
     },
   },
 });
@@ -340,7 +342,17 @@ Tunneling works identically for both Webpack and Turbopack. Sentry automatically
 
 ### Configure Tunnel Route
 
-Enable tunneling to bypass ad-blockers. Sentry automatically handles middleware span filtering for tunnel requests.
+Enable tunneling to bypass ad-blockers. Use a fixed route so you can exclude it from middleware if needed.
+
+<Expandable title="Using random tunnel routes">
+
+You can use `tunnelRoute: true` to auto-generate a random route. However, random routes cannot be excluded from middleware matchers since the route changes on each build. This may cause issues if you have middleware that intercepts all requests.
+
+```typescript
+tunnelRoute: true, // Auto-generated random route
+```
+
+</Expandable>
 
 </SplitSectionText>
 <SplitSectionCode>
@@ -349,11 +361,8 @@ Enable tunneling to bypass ad-blockers. Sentry automatically handles middleware 
 import { withSentryConfig } from "@sentry/nextjs";
 
 export default withSentryConfig(nextConfig, {
-  // Auto-generated random route (recommended)
-  tunnelRoute: true,
-
-  // Or use a fixed route
-  // tunnelRoute: "/monitoring",
+  // Use a fixed route (recommended)
+  tunnelRoute: "/monitoring",
 });
 ```
 
@@ -374,7 +383,7 @@ If you're upgrading to Turbopack:
 // Before (Webpack)
 export default withSentryConfig(nextConfig, {
   excludeServerRoutes: ["/api/health"],
-  tunnelRoute: true,
+  tunnelRoute: "/monitoring",
 });
 
 // After (Turbopack)

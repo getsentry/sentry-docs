@@ -90,9 +90,16 @@ export function StepComponent({
       if (existingToggle) existingToggle.remove();
     });
 
-    headings.forEach((h, idx) => {
-      const stepNumber = startAt + idx;
-      h.setAttribute('data-step', String(stepNumber));
+    let stepNumber = startAt;
+    headings.forEach(h => {
+      // Check if heading should be unnumbered (has data-no-number attribute in the MDX)
+      const noNumber = h.hasAttribute('data-no-number');
+      if (noNumber) {
+        h.setAttribute('data-step', '');
+      } else {
+        h.setAttribute('data-step', String(stepNumber));
+        stepNumber++;
+      }
       h.classList.add(styles.stepHeading);
 
       if (checkable) {

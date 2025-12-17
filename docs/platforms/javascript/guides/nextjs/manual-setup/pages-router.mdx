@@ -16,6 +16,17 @@ This guide covers manual setup for **Next.js applications using the Pages Router
 
 <PlatformContent includePath="getting-started-prerequisites" />
 
+Choose the features you want to configure:
+
+<OnboardingOptionButtons
+  options={[
+    "error-monitoring",
+    { id: "performance", checked: true },
+    "session-replay",
+    { id: "logs", checked: true },
+  ]}
+/>
+
 <StepConnector selector="h2" showNumbers={true}>
 
 ## Install
@@ -147,17 +158,29 @@ Sentry.init({
 
   // Adds request headers and IP for users
   sendDefaultPii: true,
+  // ___PRODUCT_OPTION_START___ performance
 
   // Capture 100% in dev, 10% in production
   // Adjust based on your traffic volume
   tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.1,
+  // ___PRODUCT_OPTION_END___ performance
+  integrations: [
+    // ___PRODUCT_OPTION_START___ session-replay
+    Sentry.replayIntegration(),
+    // ___PRODUCT_OPTION_END___ session-replay
+  ],
+  // ___PRODUCT_OPTION_START___ session-replay
 
   // Capture Replay for 10% of all sessions,
   // plus for 100% of sessions with an error
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ session-replay
+  // ___PRODUCT_OPTION_START___ logs
 
-  integrations: [Sentry.replayIntegration()],
+  // Enable logs to be sent to Sentry
+  enableLogs: true,
+  // ___PRODUCT_OPTION_END___ logs
 });
 ```
 
@@ -169,10 +192,17 @@ Sentry.init({
 
   // Adds request headers and IP for users
   sendDefaultPii: true,
+  // ___PRODUCT_OPTION_START___ performance
 
   // Capture 100% in dev, 10% in production
   // Adjust based on your traffic volume
   tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.1,
+  // ___PRODUCT_OPTION_END___ performance
+  // ___PRODUCT_OPTION_START___ logs
+
+  // Enable logs to be sent to Sentry
+  enableLogs: true,
+  // ___PRODUCT_OPTION_END___ logs
 });
 ```
 
@@ -184,10 +214,17 @@ Sentry.init({
 
   // Adds request headers and IP for users
   sendDefaultPii: true,
+  // ___PRODUCT_OPTION_START___ performance
 
   // Capture 100% in dev, 10% in production
   // Adjust based on your traffic volume
   tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.1,
+  // ___PRODUCT_OPTION_END___ performance
+  // ___PRODUCT_OPTION_START___ logs
+
+  // Enable logs to be sent to Sentry
+  enableLogs: true,
+  // ___PRODUCT_OPTION_END___ logs
 });
 ```
 
@@ -293,49 +330,105 @@ export default function Home() {
 
 Open [**Issues**](https://sentry.io/orgredirect/organizations/:orgslug/issues/) in Sentry to see your test error. [Learn more about capturing errors](/platforms/javascript/guides/nextjs/usage/).
 
-## Manually Capture Exceptions
+## Verify Additional Features
 
-<Alert type="info">
-  When using Webpack, Pages Router API routes can be auto-instrumented with the
-  `autoInstrumentServerFunctions` option. See [Webpack
-  Setup](/platforms/javascript/guides/nextjs/manual-setup/webpack-setup/) for
-  details.
-</Alert>
+Based on the features you selected above, verify each one is working correctly.
+
+<OnboardingOption optionId="session-replay">
 
 <SplitLayout>
 
 <SplitSection>
 <SplitSectionText>
 
-### Pages Router API Routes
+### Session Replay
 
-For manual error capturing in API routes, use `Sentry.captureException()`.
+Session Replay captures video-like reproductions of user sessions. It's configured with `replayIntegration()` in your client config.
+
+**Verify:** Trigger an error or navigate your app, then check [**Replays**](https://sentry.io/orgredirect/organizations/:orgslug/replays/) in Sentry.
 
 </SplitSectionText>
 <SplitSectionCode>
 
-```typescript {filename:pages/api/example.ts}
-import * as Sentry from "@sentry/nextjs";
-import type { NextApiRequest, NextApiResponse } from "next";
+```typescript {filename:sentry.client.config.ts}
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  try {
-    // ...might throw
-    res.status(200).json({ ok: true });
-  } catch (err) {
-    Sentry.captureException(err);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-}
+  integrations: [Sentry.replayIntegration()],
+
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+});
 ```
 
 </SplitSectionCode>
 </SplitSection>
 
 </SplitLayout>
+
+</OnboardingOption>
+
+<OnboardingOption optionId="performance">
+
+<SplitLayout>
+
+<SplitSection>
+<SplitSectionText>
+
+### Tracing
+
+Tracing is configured with `tracesSampleRate` in your SDK init files. Next.js routes and API calls are automatically instrumented.
+
+**Verify:** Navigate to any page, then check [**Traces**](https://sentry.io/orgredirect/organizations/:orgslug/explore/traces/) in Sentry.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {filename:sentry.server.config.ts}
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.1,
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+</SplitLayout>
+
+</OnboardingOption>
+
+<OnboardingOption optionId="logs">
+
+<SplitLayout>
+
+<SplitSection>
+<SplitSectionText>
+
+### Logs <FeatureBadge type="new" size="small" />
+
+Logs are enabled with `enableLogs: true` in your SDK config. Use the Sentry logger to send structured logs.
+
+**Verify:** Add a log statement, trigger it, then check [**Logs**](https://sentry.io/orgredirect/organizations/:orgslug/explore/logs/) in Sentry.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript
+import * as Sentry from "@sentry/nextjs";
+
+Sentry.logger.info("User action", { userId: "123" });
+Sentry.logger.warn("Warning message");
+Sentry.logger.error("Error occurred");
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+</SplitLayout>
+
+</OnboardingOption>
 
 ## Vercel Cron Jobs (Optional)
 
@@ -349,11 +442,6 @@ Automatically create [Cron Monitors](/product/crons/) in Sentry for your [Vercel
 ### Enable Automatic Cron Monitoring
 
 Add the `automaticVercelMonitors` option to your `next.config.ts`.
-
-<Alert level="warning">
-  Automatic Vercel cron jobs instrumentation currently only supports Pages
-  Router API routes. App Router route handlers are not yet supported.
-</Alert>
 
 </SplitSectionText>
 <SplitSectionCode>
@@ -371,9 +459,7 @@ export default withSentryConfig(nextConfig, {
 
 </SplitLayout>
 
-</StepConnector>
-
-## Hybrid Apps (App Router + Pages Router)
+<h2 data-no-number>Hybrid Apps (App Router + Pages Router)</h2>
 
 If your application uses both the App Router and Pages Router:
 
@@ -386,7 +472,7 @@ If your application uses both the App Router and Pages Router:
   the appropriate instrumentation.
 </Alert>
 
-## Next Steps
+<h2 data-no-number>Next Steps</h2>
 
 - [Logs Integrations](/platforms/javascript/guides/nextjs/logs/#integrations) - Connect popular logging libraries like Pino, Winston, and Bunyan
 - [Distributed Tracing](/platforms/javascript/guides/nextjs/tracing/distributed-tracing/) - Trace requests across services and microservices
@@ -400,3 +486,5 @@ If your application uses both the App Router and Pages Router:
 - [Get support](https://sentry.zendesk.com/hc/en-us/)
 
 </Expandable>
+
+</StepConnector>

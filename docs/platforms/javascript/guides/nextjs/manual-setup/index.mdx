@@ -1,7 +1,7 @@
 ---
 title: "Manual Setup"
 sidebar_order: 1
-description: "Learn how to set up and configure Sentry in your Next.js application, capture your first errors, logs and traces and view them in Sentry"
+description: "Learn how to set up and configure Sentry in your Next.js application, capture your first errors, logs and traces and view them in Sentry."
 sdk: sentry.javascript.nextjs
 categories:
   - javascript
@@ -38,7 +38,7 @@ Choose the features you want to configure:
 
 1. **Install** - Add the Sentry SDK to your project
 2. **Configure** - Set up SDK initialization files and Next.js configuration
-3. **Verify each feature** - For each feature you enabled, we'll show you how to test it and verify it's working in Sentry
+3. **Verify** - Test error monitoring and any additional features you enabled
 
 <StepConnector selector="h2" showNumbers={true}>
 
@@ -415,22 +415,24 @@ Add this button to any page and click it to trigger a test error.
 
 Open [**Issues**](https://sentry.io/orgredirect/organizations/:orgslug/issues/) in Sentry to see your test error. [Learn more about capturing errors](/platforms/javascript/guides/nextjs/usage/).
 
+## Verify Additional Features
+
+Based on the features you selected above, verify each one is working correctly.
+
 <OnboardingOption optionId="session-replay">
-
-## Session Replay
-
-Session Replay is already configured in your `instrumentation-client.ts` file. The `replayIntegration()` captures video-like reproductions of user sessions.
 
 <SplitLayout>
 
 <SplitSection>
 <SplitSectionText>
 
-### Configuration
+### Session Replay
 
-Adjust sample rates in `Sentry.init()`. By default, Sentry masks all DOM text content, images, and user input, giving you heightened confidence that no sensitive data will leave the browser.
+Session Replay captures video-like reproductions of user sessions. It's configured with `replayIntegration()` in your client config.
 
-You can customize masking behavior to unmask specific elements or mask additional sensitive content. See [Privacy Configuration](/platforms/javascript/guides/nextjs/session-replay/privacy/) for details.
+By default, Sentry masks all text, inputs, and media. You can customize this in [Privacy Configuration](/platforms/javascript/guides/nextjs/session-replay/privacy/).
+
+**Verify:** Trigger an error or navigate your app, then check [**Replays**](https://sentry.io/orgredirect/organizations/:orgslug/replays/) in Sentry.
 
 </SplitSectionText>
 <SplitSectionCode>
@@ -441,19 +443,14 @@ Sentry.init({
 
   integrations: [
     Sentry.replayIntegration({
-      // Privacy settings (defaults shown)
       maskAllText: true,
       maskAllInputs: true,
       blockAllMedia: true,
-
-      // Unmask specific elements
-      unmask: [".public-content"],
     }),
   ],
 
-  // Sample rates
-  replaysSessionSampleRate: 0.1, // Capture 10% of all sessions
-  replaysOnErrorSampleRate: 1.0, // Capture 100% of error sessions
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
 });
 ```
 
@@ -461,49 +458,23 @@ Sentry.init({
 </SplitSection>
 
 </SplitLayout>
-
-### Verify
-
-Trigger an error or navigate around your app, then open [**Replays**](https://sentry.io/orgredirect/organizations/:orgslug/replays/) in Sentry to watch the session recording. [Learn more about Session Replay](/platforms/javascript/guides/nextjs/session-replay/).
 
 </OnboardingOption>
 
 <OnboardingOption optionId="performance">
 
-## Tracing
-
-Tracing is already configured in your SDK initialization files with `tracesSampleRate`. Your Next.js routes and API calls are automatically instrumented.
-
 <SplitLayout>
 
 <SplitSection>
 <SplitSectionText>
 
-### Configuration
+### Tracing
 
-Adjust sample rates for production. We recommend starting with a lower rate and increasing as needed.
+Tracing is configured with `tracesSampleRate` in your SDK init files. Next.js routes and API calls are automatically instrumented.
 
-</SplitSectionText>
-<SplitSectionCode>
+Add [custom spans](/platforms/javascript/guides/nextjs/tracing/instrumentation/custom-instrumentation/) to trace specific operations in your code.
 
-```typescript {filename:sentry.server.config.ts}
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-
-  // Capture 100% in dev, 10% in production
-  tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.1,
-});
-```
-
-</SplitSectionCode>
-</SplitSection>
-
-<SplitSection>
-<SplitSectionText>
-
-### Custom Spans
-
-Add custom spans to trace specific operations in your code. See [Custom Instrumentation](/platforms/javascript/guides/nextjs/tracing/instrumentation/custom-instrumentation/) for more examples.
+**Verify:** Navigate to any page, then check [**Traces**](https://sentry.io/orgredirect/organizations/:orgslug/explore/traces/) in Sentry.
 
 </SplitSectionText>
 <SplitSectionCode>
@@ -511,21 +482,13 @@ Add custom spans to trace specific operations in your code. See [Custom Instrume
 ```typescript
 import * as Sentry from "@sentry/nextjs";
 
-// Wrap a function with a span
+// Wrap operations with spans
 const result = await Sentry.startSpan(
   { name: "expensive-operation", op: "function" },
   async () => {
-    // Your code here
     return await fetchDataFromAPI();
   }
 );
-
-// Or create nested spans
-Sentry.startSpan({ name: "parent-operation" }, () => {
-  Sentry.startSpan({ name: "child-operation" }, () => {
-    // Nested work
-  });
-});
 ```
 
 </SplitSectionCode>
@@ -533,26 +496,22 @@ Sentry.startSpan({ name: "parent-operation" }, () => {
 
 </SplitLayout>
 
-### Verify
-
-Navigate to any page in your app, then open [**Traces**](https://sentry.io/orgredirect/organizations/:orgslug/explore/traces/) in Sentry to see the performance data. [Learn more about Tracing](/platforms/javascript/guides/nextjs/tracing/).
-
 </OnboardingOption>
 
 <OnboardingOption optionId="logs">
-
-## Logs
-
-Logs are enabled with `enableLogs: true` in your SDK configuration. Use the Sentry logger to send structured logs.
 
 <SplitLayout>
 
 <SplitSection>
 <SplitSectionText>
 
-### Send a Test Log
+### Logs <FeatureBadge type="new" size="small" />
 
-Use the Sentry logger to send logs from anywhere in your application.
+Logs are enabled with `enableLogs: true` in your SDK config. Use the Sentry logger to send structured logs from anywhere in your application.
+
+Connect popular logging libraries via [Integrations](/platforms/javascript/guides/nextjs/logs/#integrations).
+
+**Verify:** Add a log statement, trigger it, then check [**Logs**](https://sentry.io/orgredirect/organizations/:orgslug/explore/logs/) in Sentry.
 
 </SplitSectionText>
 <SplitSectionCode>
@@ -560,17 +519,13 @@ Use the Sentry logger to send logs from anywhere in your application.
 ```typescript
 import * as Sentry from "@sentry/nextjs";
 
-// Simple log message
 Sentry.logger.info("User clicked checkout button");
 
-// Log with parameters
 Sentry.logger.info("Order completed", {
   orderId: "12345",
   total: 99.99,
 });
 
-// Different log levels
-Sentry.logger.debug("Debug information");
 Sentry.logger.warn("Warning message");
 Sentry.logger.error("Error occurred");
 ```
@@ -580,27 +535,46 @@ Sentry.logger.error("Error occurred");
 
 </SplitLayout>
 
-### Verify
-
-Add a log statement to your code and trigger it, then open [**Logs**](https://sentry.io/orgredirect/organizations/:orgslug/explore/logs/) in Sentry. [Learn more about Logs](/platforms/javascript/guides/nextjs/logs/) or see available [Integrations](/platforms/javascript/guides/nextjs/logs/#integrations) to connect popular logging libraries.
-
 </OnboardingOption>
 
 <OnboardingOption optionId="user-feedback">
 
-## User Feedback
+<SplitLayout>
 
-User Feedback is configured with `feedbackIntegration()` in your `instrumentation-client.ts`. A feedback widget is automatically added to your application.
+<SplitSection>
+<SplitSectionText>
 
-### Verify
+### User Feedback
 
-Look for the feedback button in your app (usually bottom-right corner) and submit a test feedback. Open [**User Feedback**](https://sentry.io/orgredirect/organizations/:orgslug/feedback/) in Sentry to see the submission. [Learn more about User Feedback](/platforms/javascript/guides/nextjs/user-feedback/).
+User Feedback adds an embeddable widget via `feedbackIntegration()` that lets users report bugs directly from your app.
+
+**Verify:** Look for the feedback button (bottom-right corner), submit test feedback, then check [**User Feedback**](https://sentry.io/orgredirect/organizations/:orgslug/feedback/) in Sentry.
+
+[Learn more about User Feedback](/platforms/javascript/guides/nextjs/user-feedback/)
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {filename:instrumentation-client.ts}
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  integrations: [
+    Sentry.feedbackIntegration({
+      colorScheme: "system",
+    }),
+  ],
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+</SplitLayout>
 
 </OnboardingOption>
 
-</StepConnector>
-
-## Hybrid Apps (App Router + Pages Router)
+<h2 data-no-number>Hybrid Apps (App Router + Pages Router)</h2>
 
 If your application uses both the App Router and Pages Router:
 
@@ -613,7 +587,7 @@ If your application uses both the App Router and Pages Router:
   the appropriate instrumentation.
 </Alert>
 
-## Next Steps
+<h2 data-no-number>Next Steps</h2>
 
 You've successfully integrated Sentry into your Next.js application! Here's what to explore next:
 
@@ -629,3 +603,5 @@ You've successfully integrated Sentry into your Next.js application! Here's what
 - [Get support](https://sentry.zendesk.com/hc/en-us/)
 
 </Expandable>
+
+</StepConnector>
