@@ -204,9 +204,24 @@ Set this boolean to `false` to disable sending of client reports. Client reports
 
 </SdkOption>
 
+<SdkOption name="enableNetworkBreadcrumbs" type="bool" defaultValue="true">
+
+When enabled, the SDK adds breadcrumbs for each network request. This feature uses swizzling, so disabling <PlatformLink to="/configuration/swizzling/">`enableSwizzling`</PlatformLink> also disables this feature.
+
+If you want to enable or disable network tracking for performance monitoring, use <PlatformLink to="/configuration/options/#enableNetworkTracking">`enableNetworkTracking`</PlatformLink> instead.
+</SdkOption>
+
 <SdkOption name="enableCaptureFailedRequests" type="bool">
 
 Once enabled, this feature automatically captures HTTP client errors, like bad response codes, as error events and reports them to Sentry.
+
+</SdkOption>
+
+<SdkOption name="enableGraphQLOperationTracking" type="bool" defaultValue="false">
+
+When enabled, the SDK extracts the GraphQL operation name from HTTP requests that have `Content-Type: application/json` and contain a JSON body with an `operationName` field. The operation name is then attached to HTTP breadcrumbs and failed request events.
+
+This option defaults to `false`. Learn more in the <PlatformLink to="/configuration/graphql-operation-tracking/">GraphQL Operation Tracking</PlatformLink> documentation.
 
 </SdkOption>
 
@@ -280,6 +295,19 @@ If one of the entries in the list matches the URL of an outgoing request, trace 
 String entries do not have to be full matches, meaning the URL of a request is matched when it _contains_ a string provided through the option.
 
 If <PlatformIdentifier name="tracePropagationTargets" /> is not provided, trace data is attached to every outgoing request from the instrumented client.
+
+</SdkOption>
+
+
+<SdkOption name="enable-propagate-trace-parent" type="bool" defaultValue="false" availableSince="9.0.0">
+
+This option is available as of [version 9.0.0](https://github.com/getsentry/sentry-cocoa/blob/main/CHANGELOG.md#9000).
+
+If set to `true`, the SDK adds the [W3C `traceparent` header](https://www.w3.org/TR/trace-context/) to outgoing HTTP requests.
+This header is attached in addition to the `sentry-trace` and `baggage` headers.
+Set this option to `true` if your backend services are instrumented with a W3C Trace Context compatible library such as OpenTelemetry and you want to continue traces from the client.
+
+Use <PlatformIdentifier name="trace-propagation-targets" /> to control which requests the `traceparent` header is attached to.
 
 </SdkOption>
 
