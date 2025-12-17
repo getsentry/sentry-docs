@@ -14,6 +14,7 @@ import {DefinitionList} from './components/definitionList';
 import {DevDocsCardGrid} from './components/devDocsCardGrid';
 import DocImage from './components/docImage';
 import {Expandable} from './components/expandable';
+import {FeatureBadge} from './components/featureBadge';
 import {GitHubCodePreview} from './components/githubCodePreview';
 import {GitHubDomainChecker} from './components/githubDomainChecker';
 import {GradleFeatureConfig} from './components/gradleFeatureConfig';
@@ -86,6 +87,7 @@ export function mdxComponents(
     ConfigValue,
     DefinitionList,
     Expandable,
+    FeatureBadge,
     GuideGrid,
     JsBundleList,
     LambdaLayerDetail,
