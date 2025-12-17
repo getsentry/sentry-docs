@@ -161,6 +161,34 @@ final class SceneDelegate: NSObject, UIWindowSceneDelegate {
 
 </Expandable>
 
+<Expandable title="App crashes during Session Replay or screenshot capture" permalink>
+
+If your app crashes during Session Replay recording or screenshot capture, it may be due to problematic view hierarchies that contain layers that crash when accessed during traversal.
+
+### Common Causes
+
+Some view types contain layers that cause fatal errors when their `sublayers` property is accessed. For example, `CameraUI.ChromeSwiftUIView` on iOS 26+ contains `CameraUI.ModeLoupeLayer` instances that crash during view hierarchy traversal.
+
+### Solution: Ignore View Types from Subtree Traversal
+
+You can prevent these crashes by configuring the SDK to skip traversing the subtree of problematic view types. The view itself will still be redacted, but the SDK won't attempt to traverse its children, preventing crashes.
+
+To add a problematic view type to the ignore set:
+
+```swift
+options.sessionReplay.excludeViewTypeFromSubtreeTraversal("MyProblematicView")
+```
+
+The view type identifier should match the result of `type(of: view).description()`. You can find the exact type name by inspecting the view hierarchy or checking crash logs.
+
+### Default Protection
+
+On iOS 26+, `CameraUI.ChromeSwiftUIView` is automatically included in the ignore set by default to prevent crashes. If you're experiencing crashes with other view types, add them to the ignore set using the method above.
+
+For more information, see the [Ignore View Types from Subtree Traversal](/platforms/apple/guides/ios/session-replay/customredact/#ignore-view-types-from-subtree-traversal) section in the custom masking documentation.
+
+</Expandable>
+
 <Expandable title="Masking limitations with AsyncDisplayKit/Texture" permalink>
 
 [AsyncDisplayKit](https://github.com/facebookarchive/AsyncDisplayKit) (now archived) and its successor [Texture](https://github.com/texturegroup/texture/) use a custom rendering pipeline that relies on layers rather than standard UIKit components. This architecture prevents Session Replay's default masking options (`maskAllImages` and `maskAllText`) from working correctly.
