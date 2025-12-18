@@ -1,18 +1,22 @@
 ---
-title: Backend Telemetry Buffer
-description: Detailed backend telemetry buffer design.
+title: Backend Telemetry Processor
+description: Detailed backend telemetry processor design.
 sidebar_order: 1
 ---
 
-## Telemetry Buffer Layer: Prioritized, Bounded, Rate-Aware Envelope Delivery
+<Alert level="warning">
+  🚧 This document is work in progress.
+</Alert>
+
+## Telemetry Processor Layer: Prioritized, Bounded, Rate-Aware Envelope Delivery
 
 ### Overview
 
-The buffer system sits between the SDK client and the HTTP transport layer, ensuring that critical telemetry like errors take priority over high-volume data like logs and traces. This prevents important events from getting lost when your application is under heavy load or sending large amounts of telemetry.
+The TelemetryProcessor sits between the SDK client and the HTTP transport layer, ensuring that critical telemetry like errors take priority over high-volume data like logs and traces. This prevents important events from getting lost when your application is under heavy load or sending large amounts of telemetry.
 
 ### Motivation
 
-- Aggregation lives in a unified buffer layer (this way we avoid creating multiple batch processors for different telemetry types).
+- Aggregation lives in a unified layer (this way we avoid creating multiple batch processors for different telemetry types).
 - All telemetry types use capture APIs (CaptureX) routed through the Client.
 - Rate-limit awareness is built-in across categories.
 - Buffers support two modes: normal ring buffer and bucket-by-trace (for spans).
@@ -20,7 +24,7 @@ The buffer system sits between the SDK client and the HTTP transport layer, ensu
 
 ### Architecture Overview
 
-Introduce a `Buffer` layer between the `Client` and the `Transport`. This `Buffer` wraps prioritization and scheduling and exposes a minimal API to the SDK:
+Introduce a `TelemetryProcessor` layer between the `Client` and the `Transport`. This `TelemetryProcessor` wraps prioritization and scheduling and exposes a minimal API to the SDK:
 
 - Add(item).
 - Flush(timeout).
@@ -34,11 +38,11 @@ Introduce a `Buffer` layer between the `Client` and the `Transport`. This `Buffe
 
                                 ▼
 ┌────────────────────────────────────────────────────────────────────────────┐
-│                               Buffer                                       │
+│                         TelemetryProcessor                                 │
 │             Add(item) · Flush(timeout) · Close(timeout)                    │
 │                                                                            │
 │   ┌──────────────────────┐  ┌──────────────────────┐  ┌──────────────────┐ │
-│   │  Error Store         │  │  Check-in Store      │  │  Log Store       │ │
+│   │  Error Buffer        │  │  Check-in Buffer     │  │  Log Buffer      │ │
 │   │  (CRITICAL)          │  │  (HIGH)              │  │  (LOW)           │ │
 │   │  Timeout: N/A        │  │  Timeout: N/A        │  │  Timeout: 5s     │ │
 │   │  BatchSize: 1        │  │  BatchSize: 1        │  │  BatchSize: 100  │ │
@@ -46,7 +50,7 @@ Introduce a `Buffer` layer between the `Client` and the `Transport`. This `Buffe
 │                                │                                           │
 │                                ▼                                           │
 │   ┌─────────────────────────────────────────────────────────────────────┐  │
-│   │                    Scheduler (Weighted Round-Robin)                 │  │
+│   │             TelemetryDispatcher (Weighted Round-Robin)              │  │
 │   │  - Priority weights: CRITICAL=5, HIGH=4, MEDIUM=3, LOW=2, LOWEST=1  │  │
 │   │  - Processes a batch of items based on BatchSize and/or Timeout     │  │
 │   │  - Builds envelopes from batch                                      │  │
@@ -61,10 +65,10 @@ Introduce a `Buffer` layer between the `Client` and the `Transport`. This `Buffe
 └────────────────────────────────────────────────────────────────────────────┘
 ```
 
-#### How the Buffer works
+#### How the Processor works
 
 - **Smart batching**: Logs are batched into single requests; errors, transactions, and monitors are sent immediately.
-- **Pre-send rate limiting**: The scheduler checks rate limits before serialization to avoid unnecessary processing. When a telemetry is rate-limited the selected batch should
+- **Pre-send rate limiting**: The TelemetryDispatcher checks rate limits before serialization to avoid unnecessary processing. When a telemetry is rate-limited the selected batch should
 be dropped, to avoid filling up the buffers.
 - **Category isolation**: Separate ring buffers for each telemetry type prevent head-of-line blocking.
 - **Weighted scheduling**: High-priority telemetry gets sent more frequently via round-robin selection.
@@ -81,9 +85,9 @@ Configurable via weights.
 
 ### Components
 
-#### Storage
+#### TelemetryBuffers
 
-Each telemetry category maintains a store interface; a fixed-size circular array/ring buffer (not to be confused with the `Buffer` wrapper) that stores items before transmission:
+Each telemetry category maintains a buffer interface; a fixed-size circular array/ring buffer that stores items before transmission:
 
 - **Bounded capacity**: Default to 100 items for errors, logs, and monitors; 1000 for transactions. This prevents unbounded memory growth regardless of telemetry volume and backpressure handling.
 - **Overflow policies** (optional):
@@ -100,10 +104,10 @@ Each telemetry category maintains a store interface; a fixed-size circular array
 - Offer semantics: if not full, append; when full, apply `overflowPolicy`:
   - `drop_oldest`: evict the oldest item, insert the new one, and invoke the dropped callback with reason `buffer_full_drop_oldest`.
   - `drop_newest`: reject the new item and invoke the dropped callback with reason `buffer_full_drop_newest`.
-- Readiness: a store is ready when `size >= batchSize` or when `timeout` has elapsed since `lastFlushTime` (and it is non-empty).
-- Polling: `PollIfReady()` returns up to `batchSize` items and updates `lastFlushTime`; `Drain()` empties the store.
+- Readiness: a buffer is ready when `size >= batchSize` or when `timeout` has elapsed since `lastFlushTime` (and it is non-empty).
+- Polling: `PollIfReady()` returns up to `batchSize` items and updates `lastFlushTime`; `Drain()` empties the buffer.
 
-##### Bucketed-by-trace storage (spans)
+##### Bucketed-by-trace buffer (spans)
 
 - **Purpose**: keep spans from the same trace together and flush them as a unit to avoid partial-trace delivery under pressure. This addresses a gap in standard implementations where individual span drops can create incomplete traces.
 - **Grouping**: a new bucket is created per trace id; a map (`traceIndex`) provides O(1) lookup.
@@ -119,11 +123,11 @@ Each telemetry category maintains a store interface; a fixed-size circular array
 There still remains a small subset of cases that might result in partial traces, where either an old trace bucket was dropped and a new span with the same trace arrived, or we dropped an incoming span of this trace.
 The preferred overflow behavior in most cases should be `drop_oldest` since it results in the fewest incomplete traces from the two scenarios.
 
-Stores are mapped to [DataCategories](https://github.com/getsentry/relay/blob/master/relay-base-schema/src/data_category.rs), which determine their scheduling priority and rate limits.
+Buffers are mapped to [DataCategories](https://github.com/getsentry/relay/blob/master/relay-base-schema/src/data_category.rs), which determine their scheduling priority and rate limits.
 
-#### Scheduler
+#### TelemetryDispatcher
 
-The scheduler runs as a background worker, coordinating the flow of telemetry from storage to the transport:
+The TelemetryDispatcher runs as a background worker, coordinating the flow of telemetry from buffers to the transport:
 
 - **Initialization**: Constructs a weighted priority cycle (e.g., `[CRITICAL×5, HIGH×4, MEDIUM×3, ...]`) based on configured weights.
 - **Event loop**: Wakes when explicitly signaled from the `captureX` methods on the client when new data is available (if the language does not support this, then a periodic ticker can be used).
@@ -191,7 +195,7 @@ type Storage[T any] interface {
 }
 
 
-// Single item store
+// Single item buffer
 func (b *RingBuffer[T]) PollIfReady() []T {
 	b.mu.Lock()
 	defer b.mu.Unlock()
@@ -226,7 +230,7 @@ func (b *RingBuffer[T]) PollIfReady() []T {
 	return result
 }
 
-// Bucketed store
+// Bucketed buffer
 func (b *BucketedBuffer[T]) PollIfReady() []T {
 	b.mu.Lock()
 	defer b.mu.Unlock()
@@ -257,10 +261,10 @@ func (b *BucketedBuffer[T]) PollIfReady() []T {
 
 ```
 
-#### Scheduler Processing
+#### TelemetryDispatcher Processing
 
 ```go
-func (s *Scheduler) run() {
+func (s *TelemetryDispatcher) run() {
 	for {
 		s.mu.Lock()
 
@@ -274,7 +278,7 @@ func (s *Scheduler) run() {
 	}
 }
 
-func (s *Scheduler) hasWork() bool {
+func (s *TelemetryDispatcher) hasWork() bool {
 	for _, buffer := range s.buffers {
 		if buffer.IsReadyToFlush() {
 			return true
@@ -283,7 +287,7 @@ func (s *Scheduler) hasWork() bool {
 	return false
 }
 
-func (s *Scheduler) processNextBatch() {
+func (s *TelemetryDispatcher) processNextBatch() {
 	if len(s.currentCycle) == 0 {
 		return
 	}
@@ -291,7 +295,7 @@ func (s *Scheduler) processNextBatch() {
 	priority := s.currentCycle[s.cyclePos]
 	s.cyclePos = (s.cyclePos + 1) % len(s.currentCycle)
 
-	var bufferToProcess Storage[protocol.EnvelopeItemConvertible]
+	var bufferToProcess TelemetryBuffer[protocol.EnvelopeItemConvertible]
 	var categoryToProcess ratelimit.Category
 	for category, buffer := range s.buffers {
 		if buffer.Priority() == priority && buffer.IsReadyToFlush() {
@@ -311,8 +315,8 @@ func (s *Scheduler) processNextBatch() {
 #### Flushing
 
 ```go
-func (s *Scheduler) flush() {
-  // should process all store buffers and send to transport
+func (s *TelemetryDispatcher) flush() {
+  // should process all buffers and send to transport
   for category, buffer := range s.buffers {
 		if !buffer.IsEmpty() {
 			s.processItems(buffer, category, true)
