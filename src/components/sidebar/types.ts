@@ -38,7 +38,7 @@ export type NavNode = {
     beta?: boolean;
     new?: boolean;
     section_end_divider?: boolean;
-    sidebar_section?: string;
+    sidebar_section?: 'features' | 'configuration';
   };
   path: string;
 };
