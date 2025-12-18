@@ -35,6 +35,10 @@ export type NavNode = {
     sidebar_hidden?: boolean;
     sidebar_order?: number;
     sidebar_title?: string;
+    beta?: boolean;
+    new?: boolean;
+    section_end_divider?: boolean;
+    sidebar_section?: string;
   };
   path: string;
 };
