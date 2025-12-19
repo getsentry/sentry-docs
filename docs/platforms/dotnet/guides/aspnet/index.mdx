@@ -33,9 +33,20 @@ as well as your logs as breadcrumbs. The logging integrations also capture event
 
 You configure the SDK in the `Global.asax.cs`:
 
+If you'd prefer not to hardcode your DSN in your source code, you can store it in your `Web.config` file:
+
+```xml {filename:Web.config}
+<configuration>
+  <appSettings>
+    <add key="SentryDsn" value="___PUBLIC_DSN___" />
+  </appSettings>
+</configuration>
+```
+
 
 ```csharp
 using System;
+using System.Configuration;
 using System.Web;
 using Sentry.AspNet;
 using Sentry.EntityFramework; // If you also installed Sentry.EntityFramework
@@ -50,7 +61,7 @@ public class MvcApplication : HttpApplication
         // Initialize Sentry to capture AppDomain unhandled exceptions and more.
         _sentry = SentrySdk.Init(options =>
         {
-            options.Dsn = "___PUBLIC_DSN___";
+            options.Dsn = ConfigurationManager.AppSettings["SentryDsn"];
             // When configuring for the first time, to see what the SDK is doing:
             options.Debug = true;
             // Adds request URL and headers, IP and name for users, etc.
