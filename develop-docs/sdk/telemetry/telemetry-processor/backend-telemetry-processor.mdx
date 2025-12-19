@@ -50,7 +50,7 @@ Introduce a `TelemetryProcessor` layer between the `Client` and the `Transport`.
 │                                │                                           │
 │                                ▼                                           │
 │   ┌─────────────────────────────────────────────────────────────────────┐  │
-│   │             TelemetryDispatcher (Weighted Round-Robin)              │  │
+│   │             TelemetryScheduler (Weighted Round-Robin)               │  │
 │   │  - Priority weights: CRITICAL=5, HIGH=4, MEDIUM=3, LOW=2, LOWEST=1  │  │
 │   │  - Processes a batch of items based on BatchSize and/or Timeout     │  │
 │   │  - Builds envelopes from batch                                      │  │
@@ -68,7 +68,7 @@ Introduce a `TelemetryProcessor` layer between the `Client` and the `Transport`.
 #### How the Processor works
 
 - **Smart batching**: Logs are batched into single requests; errors, transactions, and monitors are sent immediately.
-- **Pre-send rate limiting**: The TelemetryDispatcher checks rate limits before serialization to avoid unnecessary processing. When a telemetry is rate-limited the selected batch should
+- **Pre-send rate limiting**: The TelemetryScheduler checks rate limits before serialization to avoid unnecessary processing. When a telemetry is rate-limited the selected batch should
 be dropped, to avoid filling up the buffers.
 - **Category isolation**: Separate ring buffers for each telemetry type prevent head-of-line blocking.
 - **Weighted scheduling**: High-priority telemetry gets sent more frequently via round-robin selection.
@@ -125,9 +125,9 @@ The preferred overflow behavior in most cases should be `drop_oldest` since it r
 
 Buffers are mapped to [DataCategories](https://github.com/getsentry/relay/blob/master/relay-base-schema/src/data_category.rs), which determine their scheduling priority and rate limits.
 
-#### TelemetryDispatcher
+#### TelemetryScheduler
 
-The TelemetryDispatcher runs as a background worker, coordinating the flow of telemetry from buffers to the transport:
+The TelemetryScheduler runs as a background worker, coordinating the flow of telemetry from buffers to the transport:
 
 - **Initialization**: Constructs a weighted priority cycle (e.g., `[CRITICAL×5, HIGH×4, MEDIUM×3, ...]`) based on configured weights.
 - **Event loop**: Wakes when explicitly signaled from the `captureX` methods on the client when new data is available (if the language does not support this, then a periodic ticker can be used).
@@ -261,10 +261,10 @@ func (b *BucketedBuffer[T]) PollIfReady() []T {
 
 ```
 
-#### TelemetryDispatcher Processing
+#### TelemetryScheduler Processing
 
 ```go
-func (s *TelemetryDispatcher) run() {
+func (s *TelemetryScheduler) run() {
 	for {
 		s.mu.Lock()
 
@@ -278,7 +278,7 @@ func (s *TelemetryDispatcher) run() {
 	}
 }
 
-func (s *TelemetryDispatcher) hasWork() bool {
+func (s *TelemetryScheduler) hasWork() bool {
 	for _, buffer := range s.buffers {
 		if buffer.IsReadyToFlush() {
 			return true
@@ -287,7 +287,7 @@ func (s *TelemetryDispatcher) hasWork() bool {
 	return false
 }
 
-func (s *TelemetryDispatcher) processNextBatch() {
+func (s *TelemetryScheduler) processNextBatch() {
 	if len(s.currentCycle) == 0 {
 		return
 	}
@@ -315,7 +315,7 @@ func (s *TelemetryDispatcher) processNextBatch() {
 #### Flushing
 
 ```go
-func (s *TelemetryDispatcher) flush() {
+func (s *TelemetryScheduler) flush() {
   // should process all buffers and send to transport
   for category, buffer := range s.buffers {
 		if !buffer.IsEmpty() {
