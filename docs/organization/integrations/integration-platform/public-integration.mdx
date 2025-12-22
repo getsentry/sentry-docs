@@ -66,48 +66,6 @@ All public integrations can be installed via a fixed external url: `https://sent
 Public integrations generate [authentication tokens](/organization/integrations/integration-platform/#auth-tokens) after a successful [OAuth installation](#oauth-process).
 These tokens automatically expire every eight hours, meaning they must be refreshed manually.
 
-### Refreshing Tokens via Refresh Token (not recommended)
-
-In the initial installation, you'll need the grant code given to you in either the installation webhook request or the redirect URL, in addition to your integration's client ID and client Secret:
-
-```python
-url = u'https://sentry.io/api/0/sentry-app-installations/{}/authorizations/'
-url = url.format(install_id)
-
-payload = {
-    'grant_type': 'authorization_code',
-    'code': code,
-    'client_id': 'your-client-id',
-    'client_secret': 'your-client-secret',
-}
-```
-
-Tokens expire after eight hours, so you'll need to refresh your tokens accordingly:
-
-```python
-def refresh_token(install_id):
-    url = u'https://sentry.io/api/0/sentry-app-installations/{}/authorizations/'
-    url = url.format(install_id)
-
-    refresh_token = retrieve_refresh_token_from_db(install_id)
-
-    payload = {
-        'grant_type': 'refresh_token',
-        'refresh_token': refresh_token,
-        'client_id': 'your-client-id',
-        'client_secret': 'your-client-secret',
-    }
-
-    resp = requests.post(url, json=payload)
-    data = resp.json()
-
-    new_token = data['token']
-    new_refresh_token = data['refreshToken']
-    # ... Securely update the token and refresh_token in DB...
-
-    return new_token
-```
-
 ### Refreshing Tokens Manually for Integrators (recommended)
 Sometimes technical anomalies can lead to token refreshing being committed on the Sentry side but then the token is lost in transmission on the way back. As a result, we've added a method for integrators to explicitly refresh and request a new token for their installers.
 
@@ -164,6 +122,48 @@ The data you can expect back for both the initial grant code exchange and subseq
   "state": null,
   "application": null
 }
+```
+### Refreshing Tokens via Refresh Token (not recommended)
+
+We recomment Refreshing Tokens Manually as described above. But if you prefer, you can use Refresh Token. 
+In the initial installation, you'll need the grant code given to you in either the installation webhook request or the redirect URL, in addition to your integration's client ID and client Secret:
+
+```python
+url = u'https://sentry.io/api/0/sentry-app-installations/{}/authorizations/'
+url = url.format(install_id)
+
+payload = {
+    'grant_type': 'authorization_code',
+    'code': code,
+    'client_id': 'your-client-id',
+    'client_secret': 'your-client-secret',
+}
+```
+
+Tokens expire after eight hours, so you'll need to refresh your tokens accordingly:
+
+```python
+def refresh_token(install_id):
+    url = u'https://sentry.io/api/0/sentry-app-installations/{}/authorizations/'
+    url = url.format(install_id)
+
+    refresh_token = retrieve_refresh_token_from_db(install_id)
+
+    payload = {
+        'grant_type': 'refresh_token',
+        'refresh_token': refresh_token,
+        'client_id': 'your-client-id',
+        'client_secret': 'your-client-secret',
+    }
+
+    resp = requests.post(url, json=payload)
+    data = resp.json()
+
+    new_token = data['token']
+    new_refresh_token = data['refreshToken']
+    # ... Securely update the token and refresh_token in DB...
+
+    return new_token
 ```
 
 ## Verifying Installations
