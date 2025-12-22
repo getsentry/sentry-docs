@@ -36,3 +36,23 @@ Sentry.logger.fatal("Database connection pool exhausted", {
 ```
 
 Setting a log message is required for the Sentry SDK to send the log to Sentry.
+
+With version `10.32.0` and above, you can use scope APIs to set attributes on the SDK's scopes which will be applied to all logs as long as the respective scopes are active. For the time being, only `string`, `number` and `boolean` attribute values are supported.
+
+```js
+Sentry.getGlobalScope().setAttributes({
+  is_admin: true,
+  auth_provider: "sentry",
+});
+
+Sentry.withScope((scope) => {
+  scope.setAttribute("step", "authentication");
+
+  // scope attributes `is_admin`, `auth_provider` and `step` are added
+  Sentry.logger.info(`user ${user.id} logged in`, { activeSince: 100 });
+  Sentry.logger.info(`updated ${user.id} last activity`);
+});
+
+// scope attributes `is_admin` and `auth_provider` are added
+Sentry.logger.warn("stale website version, reloading page");
+```
