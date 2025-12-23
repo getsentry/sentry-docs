@@ -18,6 +18,11 @@ services:
             - '@Sentry\State\HubInterface'
             - !php/const Monolog\Logger::INFO # Configures the level of messages to capture as breadcrumbs
 
+    Sentry\Monolog\Handler:
+        arguments:
+            - '@Sentry\State\HubInterface'
+            - !php/const Monolog\Logger::ERROR
+
 monolog:
     handlers:
         # (Optionally) Register the breadcrumb handler as a Monolog handler
@@ -27,11 +32,9 @@ monolog:
             id: Sentry\Monolog\BreadcrumbHandler
         # Register the handler as a Monolog handler to capture messages as events
         sentry:
-            type: sentry
+            type: service
+            id: Sentry\Monolog\Handler
             level: !php/const Monolog\Logger::ERROR # Configures the level of messages to capture as events
-            hub_id: Sentry\State\HubInterface
-            fill_extra_context: true # Enables sending monolog context to Sentry
-            process_psr_3_messages: false # Disables the resolution of PSR-3 placeholders in reported messages
 ```
 
 ## Support With Sentry Logs
