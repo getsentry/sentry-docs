@@ -32,7 +32,7 @@ Note that setting this to `false` doesn't prevent all overhead from Sentry instr
 
 <SdkOption name="debug" type="bool" defaultValue="false">
 
-Turns debug mode on or off. If debug is enabled SDK will attempt to print out useful debugging information if something goes wrong with sending the event. It's generally not recommended to turn it on in production, though turning `debug` mode on will not cause any safety concerns.
+Turns debug mode on or off. If debug is enabled, SDK will attempt to print out useful debugging information if something goes wrong with sending the event. It's generally not recommended to turn it on in production, though this will not cause any safety concerns.
 
 </SdkOption>
 
@@ -121,7 +121,7 @@ When enabled, the SDK captures uncaught NSExceptions. As this feature uses swizz
 
 This option registers the `NSApplicationCrashOnExceptions` UserDefault, so your macOS application crashes when an uncaught exception occurs. As the Cocoa Frameworks are generally not exception-safe on macOS, we recommend this approach because the application could otherwise end up in a corrupted state.
 
-**Warning:** Don't use this in combination with `SentryCrashExceptionApplication`. Either enable this feature or use the `SentryCrashExceptionApplication`. Having both enabled can lead to duplicated reports.
+**Warning:** Don't use this in combination with `SentryCrashExceptionApplication`. Having both enabled can lead to duplicated reports.
 
 This option is available as of SDK version 8.40.0. Learn more in the <PlatformLink to="/usage/#capturing-uncaught-exceptions">capturing uncaught exceptions</PlatformLink> documentation.
 
@@ -238,9 +238,9 @@ The idle time, measured in ms, to wait until a <PlatformLink to="/tracing/instru
 
 <SdkOption name="enableUIViewControllerTracing" type="bool" defaultValue="true">
 
-When enabled, the SDK tracks performance for UIViewController subclasses.
+When enabled, the SDK tracks performance for the UIViewController subclasses.
 
-This feature is not available in `DebugWithoutUIKit` and `ReleaseWithoutUIKit` configurations even when targeting iOS or tvOS platforms. Learn more in the <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#uiviewcontroller-tracing">UIViewController Tracing</PlatformLink> documentation.
+This feature is not available in `DebugWithoutUIKit` and `ReleaseWithoutUIKit` configurations, even when targeting iOS or tvOS platforms. Learn more in the <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#uiviewcontroller-tracing">UIViewController Tracing</PlatformLink> documentation.
 
 </SdkOption>
 
@@ -309,7 +309,7 @@ Learn more about structured logging in the <PlatformLink to="/logs/">logs docume
 
 <SdkOption name="enableWatchdogTerminationTracking" type="bool" defaultValue="true">
 
-When enabled, the SDK tracks watchdog terminations based on heuristics. This feature is available for iOS, tvOS, and Mac Catalyst, works only if the application was in the foreground, and doesn't track watchdog terminations for unit tests.
+When enabled, the SDK tracks watchdog terminations based on heuristics. This feature is available for iOS, tvOS, and Mac Catalyst. It only works if the application was in the foreground, and it doesn't track watchdog terminations for unit tests.
 
 Learn more in the <PlatformLink to="/configuration/watchdog-terminations/">Watchdog Terminations</PlatformLink> documentation.
 
@@ -364,7 +364,7 @@ The callback typically gets a second argument (called a "hint") which contains t
 
 <SdkOption name="beforeSendSpan" type="function">
 
-This function is called with a span object before it is sent to Sentry. You can return a modified span object, or `null` to skip sending the span. This can be used to filter or modify spans before they are sent.
+This function is called with a span object before it is sent to Sentry. You can return a modified span object, or `null`, to skip sending the span. This can be used to filter or modify spans before they are sent.
 
 ```swift {tabTitle:Swift}
 import Sentry
@@ -720,7 +720,7 @@ Learn more in the <PlatformLink to="/tracing/instrumentation/automatic-instrumen
 
 <SdkOption name="enableTimeToFullDisplayTracing" type="bool" defaultValue="false">
 
-When enabled, every UIViewController tracing transaction will wait for a call to `SentrySDK.reportFullyDisplayed()`. Use this in conjunction with `enableUIViewControllerTracing`. If `SentrySDK.reportFullyDisplayed()` is not called, the transaction will finish automatically after 30 seconds and the `Time to full display` span will be finished with `DeadlineExceeded` status.
+When enabled, every UIViewController tracing transaction will wait for a call to `SentrySDK.reportFullyDisplayed()`. Use this in conjunction with `enableUIViewControllerTracing`. If `SentrySDK.reportFullyDisplayed()` is not called, the transaction will finish automatically after 30 seconds and the `Time to full display` span will be finished with a `DeadlineExceeded` status.
 
 Learn more in the <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#time-to-full-display">Time to Full Display</PlatformLink> documentation.
 
@@ -742,7 +742,7 @@ Use a custom URLSession with your configuration for sending requests to Sentry. 
 
 <SdkOption name="enableSwizzling" type="bool" defaultValue="true">
 
-Whether the SDK should use swizzling or not. When turned off the following features are disabled: breadcrumbs for touch events and navigation with UIViewControllers, automatic instrumentation for UIViewControllers, automatic instrumentation for HTTP requests, automatic instrumentation for file I/O with NSData, and automatically added sentry-trace header to HTTP requests for distributed tracing.
+Whether the SDK should use swizzling or not. When turned off, the following features are disabled: breadcrumbs for touch events and navigation with UIViewControllers, automatic instrumentation for UIViewControllers, automatic instrumentation for HTTP requests, automatic instrumentation for file I/O with NSData, and automatically added sentry-trace header to HTTP requests for distributed tracing.
 
 Learn more in the <PlatformLink to="/configuration/swizzling/">Swizzling</PlatformLink> documentation.
 
@@ -750,7 +750,7 @@ Learn more in the <PlatformLink to="/configuration/swizzling/">Swizzling</Platfo
 
 <SdkOption name="swizzleClassNameExcludes" type="array" defaultValue="[]">
 
-A set of class names to ignore for swizzling. The SDK checks if a class name of a class to swizzle contains a class name of this array. For example, if you add `MyUIViewController` to this list, the SDK excludes the following classes from swizzling: `YourApp.MyUIViewController`, `YourApp.MyUIViewControllerA`, `MyApp.MyUIViewController`.
+A set of class names to exclude from swizzling. The SDK checks whether the class’s name contains any value in this list. If it does, the class is skipped. For example, if you add `MyUIViewController` to this list, the SDK excludes the following classes from swizzling: `YourApp.MyUIViewController`, `YourApp.MyUIViewControllerA`, `MyApp.MyUIViewController`.
 
 This option is available with SDK version 8.23.0 and above. Learn more in the <PlatformLink to="/configuration/swizzling/">Swizzling</PlatformLink> documentation.
 
@@ -786,9 +786,9 @@ App Hang tracking is automatically disabled if a debugger is attached. Learn mor
 
 <SdkOption name="appHangTimeoutInterval" type="double" defaultValue="2.0">
 
-The minimum amount of time an app should be unresponsive to be classified as an App Hanging. The actual amount may be a little longer.
+The minimum amount of time an app should be unresponsive to be classified as an App Hang. The actual amount may be a little longer.
 
-Avoid using values lower than 100ms, which may cause a lot of app hangs events being transmitted.
+Avoid using values below 100 ms, as this can result in a high volume of app hang events being sent.
 
 Learn more in the <PlatformLink to="/configuration/app-hangs/">App Hangs</PlatformLink> documentation.
 
@@ -834,7 +834,7 @@ Please also check the maximum attachment size of relay to make sure your attachm
 
 <SdkOption name="reportAccessibilityIdentifier" type="bool" defaultValue="true">
 
-If enabled, view hierarchy attachment will contain view `accessibilityIdentifier`. Set it to `false` if your project uses `accessibilityIdentifier` for PII.
+If enabled, the view hierarchy attachment will contain view `accessibilityIdentifier`. Set it to `false` if your project uses `accessibilityIdentifier` for PII.
 
 </SdkOption>
 
@@ -842,7 +842,7 @@ If enabled, view hierarchy attachment will contain view `accessibilityIdentifier
 
 This feature is only available from Xcode 13 and from macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0.
 
-This is an experimental feature and may still have bugs. When enabled, stitches the call to Swift Async functions in one consecutive stack trace.
+This is an experimental feature and may still have bugs. When enabled, the SDK stitches the call to Swift Async functions in one consecutive stack trace.
 
 Learn more in the <PlatformLink to="/features/experimental-features/">Experimental Features</PlatformLink> documentation.
 
@@ -852,7 +852,7 @@ Learn more in the <PlatformLink to="/features/experimental-features/">Experiment
 
 The path where the SDK stores data (events, transactions, profiles, etc.). By default, the SDK uses `NSCachesDirectory`. You can specify a custom path if needed.
 
-We recommend only changing this when the default, e.g., in security environments, can't be accessed.
+We recommend only changing this when the default can't be accessed, such as in security environments.
 
 </SdkOption>
 
