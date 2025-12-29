@@ -1,0 +1,197 @@
+---
+title: "Encrypted Fields"
+description: "Drop-in replacement Django fields for encrypting sensitive data in Sentry."
+categories:
+  - backend
+  - encryption
+  - django
+sidebar_order: 10
+---
+
+# Encrypted Fields
+
+Encrypted fields provide transparent encryption for sensitive database fields in Sentry. They are drop-in replacements for standard Django fields that automatically encrypt data on save while maintaining backward compatibility with unencrypted already existing data.
+
+## Overview
+
+When dealing with sensitive data that cannot be stored in plain text, use encrypted field variants:
+
+- **`EncryptedCharField`**: Drop-in replacement for `CharField`
+- **`EncryptedJSONField`**: Drop-in replacement for `JSONField`
+
+### Key Features
+
+- **Drop-in replacement**: Use exactly like regular Django fields
+- **Encrypts on save**: Data is encrypted only when saving to the database
+- **Reads plain text**: Can read unencrypted data for backward compatibility
+- **Transparent decryption**: Works seamlessly with Django ORM, in memory field value is always decrypted (decryption happens during entry retrieval), so when you work with it, you can treat it as it is regular field
+
+## Usage
+
+Simply replace standard Django fields with their encrypted equivalents:
+
+```python {filename:models.py}
+from django.db import models
+from sentry.db.models.fields import EncryptedCharField, EncryptedJSONField
+
+class IntegrationConfig(models.Model):
+    name = models.CharField(max_length=100)
+    # Instead of: api_key = models.CharField(max_length=255)
+    api_key = EncryptedCharField() # DO NOT SET max_length as encrypted data is longer than plain text data!!!
+
+    # Instead of: config = models.JSONField()
+    config = EncryptedJSONField()
+```
+
+That's it! The field will automatically encrypt data when saving and decrypt when reading.
+
+## Configuration
+
+### Encryption Method
+
+The encryption method is currently controlled globally via Sentry options:
+
+```python
+# In sentry.conf.py or via Django admin
+options.set('database.encryption.method', 'fernet')  # or 'plaintext'
+```
+
+DO NOT CHANGE it, unless you have a really good reason to do it!
+
+### Key Management
+
+In production, encryption keys are managed via Kubernetes and mounted to pods as secrets. The keys are automatically loaded from the mounted directory.
+
+In `sentry/conf/server.py` there is a setting `DATABASE_ENCRYPTION_SETTINGS` which controls the the primary key id (key used for encrypting everything, while there might be multiple keys used for decryption), and key location directory. Each key is mounted as a separate file, where file name is used as a keyId. DO NOT change file names of existing keys.
+
+<Alert level="warning" title="Production Keys">
+  - Encryption keys are managed via Kubernetes secret manager - Keys are mounted
+  to pods under a secure directory - Never commit encryption keys to version
+  control - Use different keys for different environments
+</Alert>
+
+## How It Works
+
+### Encryption on Save
+
+When you save a model instance:
+
+1. Data is encrypted using the configured encryption method
+2. Encrypted data is wrapped with a format marker (e.g., `enc:fernet:key_id:data`)
+3. The encrypted string is stored in the database
+
+### Decryption on Read
+
+When you read a model instance:
+
+1. The field checks if data is encrypted by looking for the format marker
+2. **If encrypted**: Decrypts using the appropriate method based on the marker
+3. **If not encrypted**: Returns the data as-is (backward compatibility)
+4. Returns the decrypted value transparently
+
+### Backward Compatibility
+
+The fields are designed to work with existing unencrypted data:
+
+- Existing plain text data can be read without issues
+- Data gets encrypted the next time it's saved
+- No migration required to start using encrypted fields
+
+## Field-Specific Behavior
+
+### EncryptedCharField
+
+These work exactly like their Django counterparts but with automatic encryption:
+
+```python
+from sentry.db.models.fields import EncryptedCharField
+
+class APIKey(models.Model):
+    key = EncryptedCharField(max_length=255)
+    # Use it like a regular CharField
+```
+
+### EncryptedJSONField
+
+For JSON data, `EncryptedJSONField` encrypts the entire JSON structure:
+
+```python
+from sentry.db.models.fields import EncryptedJSONField
+
+class Integration(models.Model):
+    config = EncryptedJSONField()
+    # Store complex data structures securely
+```
+
+**Storage structure**: The encrypted data is wrapped in a JSON object for database compatibility:
+
+```json
+{
+  "sentry_encrypted_field_value": "enc:fernet:key_id:base64_encrypted_data"
+}
+```
+
+This allows:
+
+- True jsonb storage in PostgreSQL
+- Easy identification of encrypted vs unencrypted data
+- Backward compatibility with unencrypted JSON
+
+## Security Considerations
+
+### When to Use Encrypted Fields
+
+Use encrypted fields for:
+
+- API keys and tokens
+- Webhook secrets
+- OAuth credentials
+- Personal identifiable information (PII)
+- Any sensitive data that should not be stored in plain text
+
+### Limitations
+
+<Alert level="info" title="Database Query Limitations">
+  Encrypted fields **cannot** be used in: - WHERE clauses - ORDER BY statements
+  - GROUP BY statements - Database indexes - Full-text search - JSON path
+  queries (for `EncryptedJSONField`)
+</Alert>
+
+### Performance Considerations
+
+- **Encryption cost**: Minimal overhead on save operations
+- **Decryption cost**: Happens on every field access
+- **No caching**: Consider application-level caching for frequently accessed data
+- **Query restrictions**: Cannot perform database-level filtering or sorting
+
+## Migration Strategy
+
+### Adding Encryption to Existing Fields
+
+To encrypt an existing field:
+
+1. **Create a migration** changing the field type:
+
+```python {filename:migrations/0001_encrypt_api_key.py}
+from django.db import migrations
+from sentry.db.models.fields import EncryptedCharField
+
+class Migration(migrations.Migration):
+    operations = [
+        migrations.AlterField(
+            model_name='integrationconfig',
+            name='api_key',
+            field=EncryptedCharField(),
+        ),
+    ]
+```
+
+2. **Deploy**: The field will start reading existing unencrypted data
+3. **Automatic encryption**: Data gets encrypted on next save
+4. **No downtime**: Backward compatibility ensures smooth transition
+
+<Alert level="success" title="Zero-Downtime Migration">
+  You can switch to encrypted fields without downtime. The fields automatically
+  handle both encrypted and unencrypted data, encrypting values as they're
+  updated.
+</Alert>
