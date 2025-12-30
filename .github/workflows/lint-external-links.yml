@@ -32,6 +32,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       # Restore lychee cache to reduce load on external sites
       - name: Restore lychee cache
@@ -41,8 +43,38 @@ jobs:
           key: cache-lychee-${{ github.sha }}
           restore-keys: cache-lychee-
 
-      - name: Check external links
-        id: lychee
+      # For PRs: only check changed markdown files
+      - name: Get changed files
+        id: changed
+        if: github.event_name == 'pull_request'
+        run: |
+          FILES=$(git diff --name-only --diff-filter=AM origin/${{ github.base_ref }}...HEAD -- '*.md' '*.mdx' | grep -E '^(docs|develop-docs)/' || true)
+          if [ -z "$FILES" ]; then
+            echo "files=" >> $GITHUB_OUTPUT
+            echo "No markdown files changed in docs/"
+          else
+            echo "files<<EOF" >> $GITHUB_OUTPUT
+            echo "$FILES" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+            echo "Changed files:"
+            echo "$FILES"
+          fi
+
+      - name: Check external links (changed files only)
+        id: lychee-pr
+        if: github.event_name == 'pull_request' && steps.changed.outputs.files != ''
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: --cache --max-cache-age 1d --config .lychee.toml --no-progress ${{ steps.changed.outputs.files }}
+          fail: false
+          output: ./lychee-report.md
+          format: markdown
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check external links (all files)
+        id: lychee-full
+        if: github.event_name != 'pull_request'
         uses: lycheeverse/lychee-action@v2
         with:
           args: >-
@@ -56,7 +88,6 @@ jobs:
             "./docs/**/*.mdx"
             "./develop-docs/**/*.md"
             "./develop-docs/**/*.mdx"
-          # Don't fail on scheduled runs or PRs - only on manual dispatch if requested
           fail: ${{ github.event_name == 'workflow_dispatch' && inputs.fail_on_errors == true }}
           output: ./lychee-report.md
           format: markdown
@@ -65,7 +96,7 @@ jobs:
 
       # For scheduled runs: Create/update an issue with broken links
       - name: Create/Update Issue for Broken Links
-        if: github.event_name == 'schedule' && steps.lychee.outputs.exit_code != 0
+        if: github.event_name == 'schedule' && steps.lychee-full.outputs.exit_code != 0
         uses: peter-evans/create-issue-from-file@v5
         with:
           title: 'Weekly External Link Check: Broken Links Found'
@@ -78,7 +109,7 @@ jobs:
 
       # For PRs: Add a comment with the report (non-blocking)
       - name: Comment on PR with Link Report
-        if: github.event_name == 'pull_request' && steps.lychee.outputs.exit_code != 0
+        if: github.event_name == 'pull_request' && steps.lychee-pr.outputs.exit_code != 0
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
