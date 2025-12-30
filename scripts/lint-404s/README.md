@@ -74,11 +74,11 @@ This script only checks **internal links**. External links (to third-party sites
 # Install lychee
 brew install lychee
 
-# Check all docs
-lychee --config .lychee.toml "./docs/**/*.md" "./docs/**/*.mdx"
+# Check all markdown files in the repo
+lychee .
 
 # Check a specific file
-lychee --config .lychee.toml docs/platforms/javascript/index.mdx
+lychee docs/platforms/javascript/index.mdx
 ```
 
 ### Pre-commit Hook
@@ -95,7 +95,7 @@ The GitHub workflow (`.github/workflows/lint-external-links.yml`) runs:
 
 ### Configuration Files
 
-- `.lychee.toml` - Lychee configuration
+- `lychee.toml` - Lychee configuration
 - `.lycheeignore` - URLs to ignore during checking
 
 ### Why Separate from Internal Link Checking?

@@ -23,7 +23,7 @@ if (files.length === 0) {
 // Run lychee on the provided files
 const result = spawnSync(
   'lychee',
-  ['--config', '.lychee.toml', '--no-progress', ...files],
+  ['--no-progress', ...files],
   {
     stdio: 'inherit',
     encoding: 'utf-8',
