@@ -8,10 +8,10 @@
 import {spawnSync} from 'child_process';
 
 // Check if lychee is installed
-const whichResult = spawnSync('which', ['lychee'], {encoding: 'utf-8'});
-if (whichResult.status !== 0) {
+const versionCheck = spawnSync('lychee', ['--version'], {encoding: 'utf-8', stdio: 'pipe'});
+if (versionCheck.error || versionCheck.status !== 0) {
   console.log('Warning: lychee not installed. Skipping external link check.');
-  console.log('Install with: brew install lychee');
+  console.log('Install with: brew install lychee (macOS) or cargo install lychee (cross-platform)');
   process.exit(0);
 }
 
