@@ -66,15 +66,38 @@ The `ignore-list.txt` file contains paths that should be skipped during checking
 
 ## External Link Checking
 
-This script only checks **internal links**. External links (to third-party sites) are validated by a separate workflow using [lychee](https://github.com/lycheeverse/lychee).
+This script only checks **internal links**. External links (to third-party sites) are validated separately using [lychee](https://github.com/lycheeverse/lychee).
 
-See:
+### Running Locally
 
-- `.github/workflows/lint-external-links.yml` - The external link check workflow
+```bash
+# Install lychee
+brew install lychee
+
+# Check all docs
+lychee --config .lychee.toml "./docs/**/*.md" "./docs/**/*.mdx"
+
+# Check a specific file
+lychee --config .lychee.toml docs/platforms/javascript/index.mdx
+```
+
+### Pre-commit Hook
+
+A pre-commit hook checks external links in changed files (warn-only, won't block commits). Requires lychee to be installed locally.
+
+### CI Workflow
+
+The GitHub workflow (`.github/workflows/lint-external-links.yml`) runs:
+- Weekly on a schedule (creates/updates issue with broken links)
+- On PRs (adds non-blocking comment)
+- Manually via workflow dispatch
+
+### Configuration Files
+
 - `.lychee.toml` - Lychee configuration
-- `.lycheeignore` - URLs to ignore during external link checking
+- `.lycheeignore` - URLs to ignore during checking
 
-### Why Separate?
+### Why Separate from Internal Link Checking?
 
 1. **Performance**: External link checking is slower and shouldn't block PRs
 2. **False positives**: Many external sites block automated checkers
