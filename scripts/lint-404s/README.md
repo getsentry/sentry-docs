@@ -90,7 +90,7 @@ A pre-commit hook checks external links in changed files (warn-only, won't block
 The GitHub workflow (`.github/workflows/lint-external-links.yml`) runs:
 
 - Weekly on a schedule (creates/updates issue with broken links)
-- On PRs (adds non-blocking comment)
+- On PRs (checks changed files only)
 - Manually via workflow dispatch
 
 ### Configuration Files
@@ -102,4 +102,4 @@ The GitHub workflow (`.github/workflows/lint-external-links.yml`) runs:
 
 1. **Performance**: External link checking is slower and shouldn't block PRs
 2. **False positives**: Many external sites block automated checkers
-3. **Different schedules**: External checks run weekly; internal checks run on every PR
+3. **Different scope**: External checks only run on changed files in PRs; internal checks validate all pages
