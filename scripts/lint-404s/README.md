@@ -63,3 +63,19 @@ The `ignore-list.txt` file contains paths that should be skipped during checking
 
 - `0` - No 404s found
 - `1` - 404s were detected
+
+## External Link Checking
+
+This script only checks **internal links**. External links (to third-party sites) are validated by a separate workflow using [lychee](https://github.com/lycheeverse/lychee).
+
+See:
+
+- `.github/workflows/lint-external-links.yml` - The external link check workflow
+- `.lychee.toml` - Lychee configuration
+- `.lycheeignore` - URLs to ignore during external link checking
+
+### Why Separate?
+
+1. **Performance**: External link checking is slower and shouldn't block PRs
+2. **False positives**: Many external sites block automated checkers
+3. **Different schedules**: External checks run weekly; internal checks run on every PR
