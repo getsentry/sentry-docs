@@ -10,188 +10,291 @@ sidebar_order: 10
 
 # Encrypted Fields
 
-Encrypted fields provide transparent encryption for sensitive database fields in Sentry. They are drop-in replacements for standard Django fields that automatically encrypt data on save while maintaining backward compatibility with unencrypted already existing data.
+Sentry provides encrypted database field types for storing sensitive data securely. The encryption system uses Fernet symmetric encryption with support for key rotation and backward compatibility.
 
-## Overview
+## [Available Field Types](#available-field-types)
 
-When dealing with sensitive data that cannot be stored in plain text, use encrypted field variants:
+### [EncryptedCharField](#encryptedcharfield)
 
-- **`EncryptedCharField`**: Drop-in replacement for `CharField`
-- **`EncryptedJSONField`**: Drop-in replacement for `JSONField`
+A drop-in replacement for Django's `CharField` that encrypts text data.
 
-### Key Features
-
-- **Drop-in replacement**: Use exactly like regular Django fields
-- **Encrypts on save**: Data is encrypted only when saving to the database
-- **Reads plain text**: Can read unencrypted data for backward compatibility
-- **Transparent decryption**: Works seamlessly with Django ORM, in memory field value is always decrypted (decryption happens during entry retrieval), so when you work with it, you can treat it as it is regular field
-
-## Usage
-
-Simply replace standard Django fields with their encrypted equivalents:
-
-```python {filename:models.py}
-from django.db import models
-from sentry.db.models.fields import EncryptedCharField, EncryptedJSONField
-
-class IntegrationConfig(models.Model):
-    name = models.CharField(max_length=100)
-    # Instead of: api_key = models.CharField(max_length=255)
-    api_key = EncryptedCharField() # DO NOT SET max_length as encrypted data is longer than plain text data!!!
-
-    # Instead of: config = models.JSONField()
-    config = EncryptedJSONField()
-```
-
-That's it! The field will automatically encrypt data when saving and decrypt when reading.
-
-## Configuration
-
-### Encryption Method
-
-The encryption method is currently controlled globally via Sentry options:
-
-```python
-# In sentry.conf.py or via Django admin
-options.set('database.encryption.method', 'fernet')  # or 'plaintext'
-```
-
-DO NOT CHANGE it, unless you have a really good reason to do it!
-
-### Key Management
-
-In production, encryption keys are managed via Kubernetes and mounted to pods as secrets. The keys are automatically loaded from the mounted directory.
-
-In `sentry/conf/server.py` there is a setting `DATABASE_ENCRYPTION_SETTINGS` which controls the the primary key id (key used for encrypting everything, while there might be multiple keys used for decryption), and key location directory. Each key is mounted as a separate file, where file name is used as a keyId. DO NOT change file names of existing keys.
-
-<Alert level="warning" title="Production Keys">
-  - Encryption keys are managed via Kubernetes secret manager - Keys are mounted
-  to pods under a secure directory - Never commit encryption keys to version
-  control - Use different keys for different environments
+<Alert level="warning">
+  **Important**: Do not set the `max_length` property on `EncryptedCharField`.
+  The encrypted payload is larger than the original plaintext data.
 </Alert>
 
-## How It Works
-
-### Encryption on Save
-
-When you save a model instance:
-
-1. Data is encrypted using the configured encryption method
-2. Encrypted data is wrapped with a format marker (e.g., `enc:fernet:key_id:data`)
-3. The encrypted string is stored in the database
-
-### Decryption on Read
-
-When you read a model instance:
-
-1. The field checks if data is encrypted by looking for the format marker
-2. **If encrypted**: Decrypts using the appropriate method based on the marker
-3. **If not encrypted**: Returns the data as-is (backward compatibility)
-4. Returns the decrypted value transparently
-
-### Backward Compatibility
-
-The fields are designed to work with existing unencrypted data:
-
-- Existing plain text data can be read without issues
-- Data gets encrypted the next time it's saved
-- No migration required to start using encrypted fields
-
-## Field-Specific Behavior
-
-### EncryptedCharField
-
-These work exactly like their Django counterparts but with automatic encryption:
-
 ```python
-from sentry.db.models.fields import EncryptedCharField
+from sentry.db.models.fields.encryption import EncryptedCharField
 
-class APIKey(models.Model):
-    key = EncryptedCharField(max_length=255)
-    # Use it like a regular CharField
+class MyModel(models.Model):
+    secret_token = EncryptedCharField()
+    api_key = EncryptedCharField(null=True, blank=True)
 ```
 
-### EncryptedJSONField
+### [EncryptedJSONField](#encryptedjsonfield)
 
-For JSON data, `EncryptedJSONField` encrypts the entire JSON structure:
+A drop-in replacement for Django's `JSONField` that encrypts JSON data.
 
 ```python
-from sentry.db.models.fields import EncryptedJSONField
+from sentry.db.models.fields.encryption import EncryptedJSONField
 
-class Integration(models.Model):
-    config = EncryptedJSONField()
-    # Store complex data structures securely
+class MyModel(models.Model):
+    credentials = EncryptedJSONField(null=True, blank=True)
+    metadata = EncryptedJSONField(default=dict)
 ```
 
-**Storage structure**: The encrypted data is wrapped in a JSON object for database compatibility:
+## [Configuration](#configuration)
 
-```json
-{
-  "sentry_encrypted_field_value": "enc:fernet:key_id:base64_encrypted_data"
+### [Encryption Method](#encryption-method)
+
+The `database.encryption.method` option controls which encryption method to use:
+
+- `"plaintext"` - No encryption (default for development, base64-encoded only)
+- `"fernet"` - Fernet symmetric encryption (production)
+
+```python
+# In your Sentry options
+options.set("database.encryption.method", "fernet")
+```
+
+### [Fernet Keys](#fernet-keys)
+
+Fernet encryption requires two settings in `DATABASE_ENCRYPTION_SETTINGS`:
+
+```python
+DATABASE_ENCRYPTION_SETTINGS = {
+    "fernet_keys_location": "/path/to/keys/directory",
+    "fernet_primary_key_id": "key_2024_01"
 }
 ```
 
-This allows:
+- `fernet_keys_location`: Directory containing encryption key files
+- `fernet_primary_key_id`: The key ID to use for encrypting new data
 
-- True jsonb storage in PostgreSQL
-- Easy identification of encrypted vs unencrypted data
-- Backward compatibility with unencrypted JSON
+Keys are stored as Kubernetes secrets and mounted as files to pods that have access to the database. Each secret is mounted as a separate file in the keys directory, with the filename serving as the key ID:
 
-## Security Considerations
+```
+/path/to/keys/
+├── key_2023_12
+├── key_2024_01  # Current primary key
+└── key_2024_02
+```
 
-### When to Use Encrypted Fields
+### [Generating Keys](#generating-keys)
 
-Use encrypted fields for:
+Generate a Fernet key using Python:
 
-- API keys and tokens
-- Webhook secrets
-- OAuth credentials
-- Personal identifiable information (PII)
-- Any sensitive data that should not be stored in plain text
+```python
+from cryptography.fernet import Fernet
 
-### Limitations
+key = Fernet.generate_key()
+print(key.decode())  # Example: gAAAAABh...
+```
 
-<Alert level="info" title="Database Query Limitations">
-  Encrypted fields **cannot** be used in: - WHERE clauses - ORDER BY statements
-  - GROUP BY statements - Database indexes - Full-text search - JSON path
-  queries (for `EncryptedJSONField`)
-</Alert>
+## [Basic Usage](#basic-usage)
 
-### Performance Considerations
+```python
+from sentry.db.models.fields.encryption import EncryptedCharField, EncryptedJSONField
 
-- **Encryption cost**: Minimal overhead on save operations
-- **Decryption cost**: Happens on every field access
-- **No caching**: Consider application-level caching for frequently accessed data
-- **Query restrictions**: Cannot perform database-level filtering or sorting
+class TempestCredentials(models.Model):
+    client_id = models.CharField()
+    client_secret = EncryptedCharField()
+    metadata = EncryptedJSONField(default=dict)
 
-## Migration Strategy
+# Using the model
+creds = TempestCredentials.objects.create(
+    client_id="my-client",
+    client_secret="super-secret-value",
+    metadata={"api_version": "v2", "scopes": ["read", "write"]}
+)
 
-### Adding Encryption to Existing Fields
+# Reading works transparently
+print(creds.client_secret)  # Prints: "super-secret-value"
+print(creds.metadata)  # Prints: {"api_version": "v2", "scopes": ["read", "write"]}
+```
 
-To encrypt an existing field:
+## [Migrations](#migrations)
 
-1. **Create a migration** changing the field type:
+### [Adding New Encrypted Fields](#adding-new-encrypted-fields)
 
-```python {filename:migrations/0001_encrypt_api_key.py}
-from django.db import migrations
-from sentry.db.models.fields import EncryptedCharField
+Add the field to your model and generate a migration:
 
-class Migration(migrations.Migration):
+```python
+class MyModel(models.Model):
+    api_key = EncryptedCharField(null=True, blank=True)
+```
+
+```bash
+sentry django makemigrations
+sentry upgrade
+```
+
+### [Converting Existing Fields](#converting-existing-fields)
+
+**Step 1**: Change the field type in your model:
+
+```python
+# Before
+class MyModel(models.Model):
+    api_key = models.CharField(max_length=255)
+
+# After
+class MyModel(models.Model):
+    api_key = EncryptedCharField()
+```
+
+**Step 2**: Generate and deploy the migration:
+
+```bash
+sentry django makemigrations
+sentry upgrade
+```
+
+The encrypted field will automatically:
+
+- Read unencrypted data as-is (backward compatibility)
+- Encrypt new data on write
+- Gradually encrypt existing data as records are updated
+
+**Step 3** (Optional): Force immediate encryption with a data migration:
+
+```python
+from sentry.new_migrations.migrations import CheckedMigration
+from sentry.utils.query import RangeQuerySetWrapperWithProgressBar
+
+def encrypt_existing_data(apps, schema_editor):
+    MyModel = apps.get_model("myapp", "MyModel")
+    for instance in RangeQuerySetWrapperWithProgressBar(MyModel.objects.all()):
+        instance.save(update_fields=["api_key"])
+
+class Migration(CheckedMigration):
+    is_post_deployment = True
+
+    dependencies = [
+        ("myapp", "0002_alter_mymodel_api_key"),
+    ]
+
     operations = [
-        migrations.AlterField(
-            model_name='integrationconfig',
-            name='api_key',
-            field=EncryptedCharField(),
-        ),
+        migrations.RunPython(encrypt_existing_data, migrations.RunPython.noop),
     ]
 ```
 
-2. **Deploy**: The field will start reading existing unencrypted data
-3. **Automatic encryption**: Data gets encrypted on next save
-4. **No downtime**: Backward compatibility ensures smooth transition
+## [Key Rotation](#key-rotation)
 
-<Alert level="success" title="Zero-Downtime Migration">
-  You can switch to encrypted fields without downtime. The fields automatically
-  handle both encrypted and unencrypted data, encrypting values as they're
-  updated.
-</Alert>
+To rotate encryption keys:
+
+1. Generate a new key and add it to the keys directory
+2. Update `fernet_primary_key_id` to point to the new key
+3. New/updated data will use the new key
+4. Old data can still be decrypted with previous keys
+
+```python
+# Before rotation
+DATABASE_ENCRYPTION_SETTINGS = {
+    "fernet_keys_location": "/path/to/keys",
+    "fernet_primary_key_id": "key_2024_01"
+}
+
+# After rotation
+DATABASE_ENCRYPTION_SETTINGS = {
+    "fernet_keys_location": "/path/to/keys",
+    "fernet_primary_key_id": "key_2024_02"  # New key
+}
+```
+
+Data will be gradually re-encrypted as records are updated.
+
+## [Important Notes](#important-notes)
+
+### [Querying](#querying)
+
+You **cannot** query encrypted field values directly:
+
+```python
+# This will NOT work
+MyModel.objects.filter(secret="my-value")  # Won't find encrypted data
+```
+
+If you need to query by these fields, consider keeping a separate hash field:
+
+```python
+class MyModel(models.Model):
+    secret = EncryptedCharField()
+    secret_hash = models.CharField(max_length=64, db_index=True)
+
+    def save(self, *args, **kwargs):
+        if self.secret:
+            self.secret_hash = hashlib.sha256(self.secret.encode()).hexdigest()
+        super().save(*args, **kwargs)
+
+# Query by hash
+MyModel.objects.filter(secret_hash=hashlib.sha256(b"my-value").hexdigest())
+```
+
+### [What to Encrypt](#what-to-encrypt)
+
+Use encrypted fields for:
+
+- API keys, tokens, and secrets
+- Passwords and credentials
+- OAuth tokens and refresh tokens
+- PII when required by compliance
+
+Don't encrypt:
+
+- Data you need to query or filter on
+- High-volume, low-sensitivity data
+- Data already encrypted at rest
+
+### [Key Management](#key-management)
+
+- **Never commit keys to version control**
+- Keys are stored as Kubernetes secrets and mounted to pods
+- Use different keys for different environments
+- Keep all historical keys - they're needed to decrypt old data
+- Rotate keys periodically (recommended: annually)
+
+## [Troubleshooting](#troubleshooting)
+
+**Problem**: `ValueError: Fernet primary key ID is not configured`
+
+**Solution**: Set `DATABASE_ENCRYPTION_SETTINGS["fernet_primary_key_id"]` in your configuration.
+
+---
+
+**Problem**: `ValueError: Encryption key with ID 'key_id' not found`
+
+**Solution**: Add the missing key file to the keys directory or update the configuration.
+
+---
+
+**Problem**: Data is not being encrypted
+
+**Solution**: Verify `database.encryption.method` is set to `"fernet"`, not `"plaintext"`.
+
+---
+
+**Problem**: Migration takes too long on large tables
+
+**Solution**: Use a post-deployment data migration with `RangeQuerySetWrapperWithProgressBar`.
+
+## [How It Works](#how-it-works)
+
+Encrypted data is stored with a marker prefix that identifies the encryption method:
+
+```
+Plaintext: enc:plaintext:{base64_data}
+Fernet:    enc:fernet:{key_id}:{base64_encrypted_data}
+```
+
+The key ID in Fernet format enables key rotation—old data encrypted with previous keys can still be decrypted.
+
+For `EncryptedJSONField`, the encrypted value is wrapped in a JSON object:
+
+```json
+{
+  "sentry_encrypted_field_value": "enc:fernet:key_2024_01:gAAAAABh..."
+}
+```
+
+This allows the field to distinguish encrypted from unencrypted data during migrations and maintain backward compatibility.
