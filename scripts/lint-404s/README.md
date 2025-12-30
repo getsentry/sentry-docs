@@ -88,6 +88,7 @@ A pre-commit hook checks external links in changed files (warn-only, won't block
 ### CI Workflow
 
 The GitHub workflow (`.github/workflows/lint-external-links.yml`) runs:
+
 - Weekly on a schedule (creates/updates issue with broken links)
 - On PRs (adds non-blocking comment)
 - Manually via workflow dispatch
