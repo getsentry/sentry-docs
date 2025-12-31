@@ -1,15 +1,19 @@
 ---
-title: Mobile Telemetry Buffer
+title: Mobile Telemetry Processor
 sidebar_order: 4
 ---
 
+We're still figuring out the spec for the mobile telemetry processor. The telemetry buffer is already an approved concept, but not the rest of the processor.
+
+## Telemetry Buffer
+
 <Alert level="warning">
-  🚧 This concept is approved but not yet implemented in any SDKs, and it’s still being validated. If something feels unclear, too complex, or doesn’t work as expected, please open an issue or PR and tag @philipphofmann for review. Feedback and improvements are welcome while we confirm the approach makes sense. 🚧
+  🚧 This concept is approved but not yet implemented in any SDKs, and it's still being validated. If something feels unclear, too complex, or doesn't work as expected, please open an issue or PR and tag @philipphofmann for review. Feedback and improvements are welcome while we confirm the approach makes sense. 🚧
 </Alert>
 
-For the common specification for the telemetry buffer, refer to the [Telemetry Buffer](/sdk/telemetry/telemetry-buffer/) page. This page describes the mobile-specific implementation of the telemetry buffer. The most important difference is that the mobile telemetry buffer is designed to minimize data loss when sudden process terminations occur, such as crashes or watchdog terminations.
+For the common specification for the telemetry buffer, refer to the [Telemetry Processor](/sdk/telemetry/telemetry-processor/) page. This page describes the mobile-specific implementation of the telemetry buffer. The most important difference is that the mobile telemetry buffer is designed to minimize data loss when sudden process terminations occur, such as crashes or watchdog terminations.
 
-The common requirements specify [data forwarding scenarios](/sdk/telemetry/telemetry-buffer/#data-forwarding-scenarios), which mobile SDKs MUST implement. Additionally, mobile SDKs **MUST** adhere to this extra data forwarding scenario:
+The common requirements specify [data forwarding scenarios](/sdk/telemetry/telemetry-processor/#data-forwarding-scenarios), which mobile SDKs MUST implement. Additionally, mobile SDKs **MUST** adhere to this extra data forwarding scenario:
 
 * When the application moves to the background, the TelemetryBuffer **SHOULD** forward all data in memory to the transport and stop the timer. The transport **SHOULD** keep its existing behavior, which usually stores the data to disk as an envelope. It is not required to call transport `flush`.
 
@@ -17,7 +21,7 @@ Each SDK environment is unique. Therefore, SDKs have three options to choose fro
 
 ## 1. Flush All Data
 
-When the SDK detects a sudden process termination, it **MUST** put all remaining items in the telemetry buffer into one envelope and flush it. If your SDK has an offline cache, it **MAY** flush the envelope to disk and skip sending it to Sentry, if it ensures to send the envelope the next time the SDK starts. The telemetry buffer **MUST** keep its existing logic described in the [Telemetry Buffer Specification](/sdk/telemetry/telemetry-buffer/#specification) page.
+When the SDK detects a sudden process termination, it **MUST** put all remaining items in the telemetry buffer into one envelope and flush it. If your SDK has an offline cache, it **MAY** flush the envelope to disk and skip sending it to Sentry, if it ensures to send the envelope the next time the SDK starts. The telemetry buffer **MUST** keep its existing logic described in the [Telemetry Processor Specification](/sdk/telemetry/telemetry-processor/#specification) page.
 
 Suppose your SDK can't reliably detect sudden process terminations, or it can't reliably flush envelopes to Sentry or disk when a sudden process termination happens. In that case, it **SHOULD** implement the [FileStream Cache](#2-filestream-cache) or the [DoubleRotatingBuffer](#3-doublerotatingbuffer). It's acceptable to start with this option as a best effort interim solution before adding one of the more complex options.
 
