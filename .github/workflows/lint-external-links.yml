@@ -44,6 +44,14 @@ jobs:
             echo "$FILES"
           fi
 
+      - name: Restore lychee cache
+        if: steps.changed.outputs.files != ''
+        uses: actions/cache/restore@v4
+        with:
+          path: .lycheecache
+          key: lychee-cache-
+          restore-keys: lychee-cache-
+
       - name: Check external links
         if: steps.changed.outputs.files != ''
         uses: lycheeverse/lychee-action@v2
@@ -72,6 +80,12 @@ jobs:
           format: markdown
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Save lychee cache
+        uses: actions/cache/save@v4
+        with:
+          path: .lycheecache
+          key: lychee-cache-${{ github.run_id }}
 
       - name: Find existing issue
         if: steps.lychee.outputs.exit_code != 0
