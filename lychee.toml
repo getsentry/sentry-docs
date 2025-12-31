@@ -43,7 +43,16 @@ include_verbatim = false
 # Follow redirects
 max_redirects = 10
 
-# Cache settings (reduce load on external sites)
-# Cache is populated weekly by scheduled job and used by PR checks
+# Cache settings
+#
+# Strategy: Weekly scheduled runs populate the cache, PR checks consume it.
+# - Successful responses (200, 301, 403, 404) are cached and skipped on subsequent runs
+# - Transient errors (429 rate limits, 5xx server errors) are NOT cached, so they get retried
+# - Cache lifetime is just under 2 weeks so it survives between weekly runs
+#
+# This means each weekly run only re-checks:
+# 1. Links that failed with transient errors last time
+# 2. New links not yet in cache
 cache = true
-max_cache_age = "2w"
+max_cache_age = "335h"
+cache_exclude_status = ["429", "500.."]
