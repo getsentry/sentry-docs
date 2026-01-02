@@ -7,12 +7,6 @@ on:
 
   # Allow manual triggering
   workflow_dispatch:
-    inputs:
-      fail_on_errors:
-        description: 'Fail workflow if broken links found'
-        required: false
-        default: false
-        type: boolean
 
   # Run on PRs that modify docs (non-blocking)
   pull_request:
@@ -57,6 +51,8 @@ jobs:
         uses: lycheeverse/lychee-action@v2
         with:
           args: --verbose --no-progress ${{ steps.changed.outputs.files }}
+          fail: true
+          jobSummary: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -86,9 +82,10 @@ jobs:
         uses: lycheeverse/lychee-action@v2
         with:
           args: --verbose .
-          fail: ${{ inputs.fail_on_errors == true }}
+          fail: true
           output: ./lychee-report.md
           format: markdown
+          jobSummary: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -98,41 +95,41 @@ jobs:
           path: .lycheecache
           key: lychee-cache-${{ github.run_id }}
 
-      - name: Find existing issue
-        if: steps.lychee.outputs.exit_code != 0
-        id: find-issue
-        run: |
-          ISSUE_NUMBER=$(gh issue list \
-            --state open \
-            --search "Weekly External Link Check: Broken Links Found in:title" \
-            --json number \
-            --jq '.[0].number // ""')
-          echo "number=$ISSUE_NUMBER" >> $GITHUB_OUTPUT
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Find existing issue
+      #   if: steps.lychee.outputs.exit_code != 0
+      #   id: find-issue
+      #   run: |
+      #     ISSUE_NUMBER=$(gh issue list \
+      #       --state open \
+      #       --search "Weekly External Link Check: Broken Links Found in:title" \
+      #       --json number \
+      #       --jq '.[0].number // ""')
+      #     echo "number=$ISSUE_NUMBER" >> $GITHUB_OUTPUT
+      #   env:
+      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create or update issue
-        if: steps.lychee.outputs.exit_code != 0
-        run: |
-          # Check if report file exists
-          if [ ! -f ./lychee-report.md ]; then
-            echo "No report file found, skipping issue creation"
-            exit 0
-          fi
+      # - name: Create or update issue
+      #   if: steps.lychee.outputs.exit_code != 0
+      #   run: |
+      #     # Check if report file exists
+      #     if [ ! -f ./lychee-report.md ]; then
+      #       echo "No report file found, skipping issue creation"
+      #       exit 0
+      #     fi
 
-          ISSUE_BODY=$(cat ./lychee-report.md)
-          if [ -n "${{ steps.find-issue.outputs.number }}" ]; then
-            gh issue edit "${{ steps.find-issue.outputs.number }}" \
-              --body "$ISSUE_BODY"
-            echo "Updated issue #${{ steps.find-issue.outputs.number }}"
-          else
-            gh issue create \
-              --title "Weekly External Link Check: Broken Links Found" \
-              --body "$ISSUE_BODY" \
-              --label "Bug" \
-              --label "Team: Docs" \
-              --label "Product Area: Docs"
-            echo "Created new issue"
-          fi
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     ISSUE_BODY=$(cat ./lychee-report.md)
+      #     if [ -n "${{ steps.find-issue.outputs.number }}" ]; then
+      #       gh issue edit "${{ steps.find-issue.outputs.number }}" \
+      #         --body "$ISSUE_BODY"
+      #       echo "Updated issue #${{ steps.find-issue.outputs.number }}"
+      #     else
+      #       gh issue create \
+      #         --title "Weekly External Link Check: Broken Links Found" \
+      #         --body "$ISSUE_BODY" \
+      #         --label "Bug" \
+      #         --label "Team: Docs" \
+      #         --label "Product Area: Docs"
+      #       echo "Created new issue"
+      #     fi
+      #   env:
+      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
