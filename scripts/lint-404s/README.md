@@ -100,6 +100,5 @@ The GitHub workflow (`.github/workflows/lint-external-links.yml`) runs:
 
 ### Why Separate from Internal Link Checking?
 
-1. **Performance**: External link checking is slower and shouldn't block PRs
-2. **False positives**: Many external sites block automated checkers
-3. **Different scope**: External checks only run on changed files in PRs; internal checks validate all pages
+1. **False positives**: Many external sites block automated checkers
+2. **Different scope**: External checks only run on changed files in PRs; internal checks validate all pages
