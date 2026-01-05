@@ -27,7 +27,7 @@ export function GradleUploadInstructions({feature}: Props) {
           <a href="/platforms/android/configuration/gradle/">
             Sentry Android Gradle plugin
           </a>{' '}
-          with at least version <code>6.0.0-beta1</code>
+          with at least version <code>6.0.0-rc.1</code>
         </li>
 
         <li>
