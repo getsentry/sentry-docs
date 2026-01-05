@@ -140,6 +140,28 @@ Sentry.init({
 });
 ```
 
+<OnboardingOption optionId="performance">
+#### Instrument the Server Entry Point
+
+To enable tracing for server-side requests, you need to explicitly define a [server entry point](https://tanstack.com/start/latest/docs/framework/react/guide/server-entry-point) in your application and wrap your request handler with `wrapFetchWithSentry`.
+
+Create a `src/server.ts` file in your project:
+
+```typescript {filename:src/server.ts}
+import { wrapFetchWithSentry } from "@sentry/tanstackstart-react";
+import handler, { createServerEntry } from "@tanstack/react-start/server-entry";
+
+export default createServerEntry(
+  wrapFetchWithSentry({
+    fetch(request: Request) {
+      return handler.fetch(request);
+    },
+  })
+);
+```
+
+</OnboardingOption>
+
 #### Moving the Sentry server config file for production usage
 
 For production monitoring, you need to move the Sentry server config file to your build output. Since [TanStack Start is designed to work with any hosting provider](https://tanstack.com/start/latest/docs/framework/react/guide/hosting), the exact location will depend on where your build artifacts are deployed (for example, `"/dist"`, `".output/server"` or a platform-specific directory).
