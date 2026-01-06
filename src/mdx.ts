@@ -783,9 +783,7 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
       // We'll handle writing manually to gracefully handle read-only filesystems (e.g., Lambda runtime)
       // In local dev, we need write=true to avoid images being embedded as binary data
       options.write =
-        process.env.NODE_ENV === 'development' ||
-        !!process.env.CI ||
-        !process.env.VERCEL;
+        process.env.NODE_ENV === 'development' || !!process.env.CI || !process.env.VERCEL;
 
       return options;
     },
