@@ -275,6 +275,10 @@ const userDocsRedirects = [
     destination: '/security-legal-pii/scrubbing/advanced-datascrubbing/',
   },
   {
+    source: '/organization/integrations/height/',
+    destination: '/organization/integrations/issue-tracking/height/',
+  },
+  {
     source: '/organization/integrations/rootly/',
     destination: '/organization/integrations/notification-incidents/rootly/',
   },
