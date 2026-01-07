@@ -267,6 +267,10 @@ const developerDocsRedirects = [
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const userDocsRedirects = [
   {
+    source: '/integrations/cursor/',
+    destination: '/organization/integrations/cursor/',
+  },
+  {
     source: '/organization/integrations/rootly/',
     destination: '/organization/integrations/notification-incidents/rootly/',
   },
