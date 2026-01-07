@@ -7,8 +7,6 @@ sidebar_section: features
 new: true
 ---
 
-<FeatureBadge type="new" />
-
 Sentry Logs let you send structured log data from your Next.js application. Unlike traditional string-based logging, structured logs include queryable attributes that help you debug issues faster by filtering on specific users, orders, or any business context you include.
 
 ## Setup
@@ -22,6 +20,7 @@ Sentry Logs let you send structured log data from your Next.js application. Unli
 Add `enableLogs: true` to your Sentry configuration in all three runtime files.
 
 Logs work across all Next.js runtimes:
+
 - **Client** — Browser-side logging
 - **Server** — Node.js server-side logging
 - **Edge** — Edge runtime logging
@@ -70,14 +69,14 @@ Sentry.init({
 
 Use the appropriate level for each message:
 
-| Level | When to Use |
-|-------|-------------|
-| `trace` | Fine-grained debugging |
-| `debug` | Development diagnostics |
-| `info` | Normal operations, milestones |
-| `warn` | Potential issues, degraded state |
-| `error` | Failures that need attention |
-| `fatal` | Critical failures, system down |
+| Level   | When to Use                      |
+| ------- | -------------------------------- |
+| `trace` | Fine-grained debugging           |
+| `debug` | Development diagnostics          |
+| `info`  | Normal operations, milestones    |
+| `warn`  | Potential issues, degraded state |
+| `error` | Failures that need attention     |
+| `fatal` | Critical failures, system down   |
 
 </SplitSectionText>
 <SplitSectionCode>
@@ -122,9 +121,7 @@ Sentry.logger.info("User signed up", {
 });
 
 // Use fmt for parameterized messages
-Sentry.logger.info(
-  Sentry.logger.fmt`User ${userId} purchased ${productName}`
-);
+Sentry.logger.info(Sentry.logger.fmt`User ${userId} purchased ${productName}`);
 ```
 
 </SplitSectionCode>
@@ -219,7 +216,7 @@ This lets you filter logs by high-value customers or specific features.
 Sentry.logger.info("API request completed", {
   // User context
   userId: user.id,
-  userTier: user.plan,           // "free" | "pro" | "enterprise"
+  userTier: user.plan, // "free" | "pro" | "enterprise"
   accountAgeDays: user.ageDays,
 
   // Request data
@@ -378,7 +375,14 @@ const logger = winston.createLogger({
 
 </SplitSectionCode>
 </SplitSection>
+
 </SplitLayout>
+
+### Upcoming Integrations
+
+- [Node Bunyan](https://github.com/getsentry/sentry-javascript/issues/16474)
+
+[Request an integration](https://github.com/getsentry/sentry-javascript/issues/new/choose)
 
 ## Filter Logs
 
@@ -391,6 +395,7 @@ const logger = winston.createLogger({
 Filter or modify logs before they're sent. Return `null` to drop a log.
 
 Use this to:
+
 - Remove sensitive data
 - Filter noisy logs
 - Add computed attributes
@@ -427,46 +432,61 @@ Sentry.init({
 
 Sentry automatically adds these attributes to every log:
 
-### Core
+```json {10-13,16-18,21-22,25,28-29,32-33,36}
+{
+  "message": "Order completed",
+  "level": "info",
+  "attributes": {
+    // Your custom attributes
+    "order_id": "order_123",
+    "user_tier": "pro",
 
-| Attribute | Description |
-|-----------|-------------|
-| `sentry.environment` | Environment from SDK config |
-| `sentry.release` | Release version from SDK config |
-| `sentry.sdk.name` | SDK name (`sentry.javascript.nextjs`) |
-| `sentry.sdk.version` | SDK version |
+    // Core (always present)
+    "sentry.environment": "production",
+    "sentry.release": "my-app@1.2.3",
+    "sentry.sdk.name": "sentry.javascript.nextjs",
+    "sentry.sdk.version": "9.0.0",
 
-### User
+    // User (if set via Sentry.setUser)
+    "user.id": "user_456",
+    "user.email": "jane@example.com",
+    "user.name": "Jane",
 
-| Attribute | Description |
-|-----------|-------------|
-| `user.id` | User ID from scope |
-| `user.email` | User email from scope |
-| `user.name` | Username from scope |
+    // Browser (client-side only)
+    "browser.name": "Chrome",
+    "browser.version": "120.0.0",
 
-### Browser (Client-side only)
+    // Server (server-side only)
+    "server.address": "api-server-1",
 
-| Attribute | Description |
-|-----------|-------------|
-| `browser.name` | Browser name (Chrome, Firefox, etc.) |
-| `browser.version` | Browser version |
+    // Trace (if tracing enabled)
+    "sentry.trace.parent_span_id": "abc123",
+    "sentry.replay_id": "def456",
 
-### Server (Server-side only)
+    // Message (when using fmt)
+    "sentry.message.template": "Order {} completed",
+    "sentry.message.parameter.0": "order_123",
 
-| Attribute | Description |
-|-----------|-------------|
-| `server.address` | Server hostname |
+    // Payload
+    "payload_size": 342
+  }
+}
+```
 
-### Trace Context
+## Troubleshooting
 
-| Attribute | Description |
-|-----------|-------------|
-| `sentry.trace.parent_span_id` | Parent span ID for trace correlation |
-| `sentry.replay_id` | Session Replay ID (if active) |
+### Logs not appearing
 
-### Message Template
+Make sure `enableLogs: true` is set in **all** Sentry config files:
 
-| Attribute | Description |
-|-----------|-------------|
-| `sentry.message.template` | Template string when using `fmt` |
-| `sentry.message.parameter.{n}` | Parameter values from template |
+- `instrumentation-client.ts` (client)
+- `sentry.server.config.ts` (server)
+- `sentry.edge.config.ts` (edge)
+
+### Logs being dropped
+
+Logs larger than the payload threshold are dropped. Check your [org stats](https://sentry.io/orgredirect/organizations/:orgslug/stats/?dataCategory=logBytes&statsPeriod=30d) to see if logs are being rate limited or dropped.
+
+### Attributes showing [Filtered]
+
+If attributes show `[Filtered]`, they're being removed by [server-side data scrubbing](/security-legal-pii/scrubbing/server-side-scrubbing/). Check your project's data scrubbing settings to adjust what gets filtered.
