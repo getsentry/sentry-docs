@@ -1,0 +1,367 @@
+---
+title: Logs
+description: "Send structured logs from your Next.js application to Sentry for debugging and observability."
+sidebar_order: 4
+---
+
+<FeatureBadge type="new" />
+
+Sentry Logs let you send structured log data from your Next.js application. Unlike traditional string-based logging, structured logs include queryable attributes that help you debug issues faster by filtering on specific users, orders, or any business context you include.
+
+<StepComponent>
+
+## Setup
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+### Enable Logging
+
+Add `enableLogs: true` to your Sentry configuration in all three runtime files.
+
+Logs work across all Next.js runtimes:
+- **Client** — Browser-side logging
+- **Server** — Node.js server-side logging
+- **Edge** — Edge runtime logging
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {tabTitle:Client} {filename:instrumentation-client.ts}
+import * as Sentry from "@sentry/nextjs";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  enableLogs: true,
+});
+```
+
+```typescript {tabTitle:Server} {filename:sentry.server.config.ts}
+import * as Sentry from "@sentry/nextjs";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  enableLogs: true,
+});
+```
+
+```typescript {tabTitle:Edge} {filename:sentry.edge.config.ts}
+import * as Sentry from "@sentry/nextjs";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  enableLogs: true,
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+## Send Logs
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+### Log Levels
+
+Use the appropriate level for each message:
+
+| Level | When to Use |
+|-------|-------------|
+| `trace` | Fine-grained debugging |
+| `debug` | Development diagnostics |
+| `info` | Normal operations, milestones |
+| `warn` | Potential issues, degraded state |
+| `error` | Failures that need attention |
+| `fatal` | Critical failures, system down |
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript
+import * as Sentry from "@sentry/nextjs";
+
+// Different log levels
+Sentry.logger.trace("Entering function", { fn: "processOrder" });
+Sentry.logger.debug("Cache lookup", { key: "user:123" });
+Sentry.logger.info("Order created", { orderId: "order_456" });
+Sentry.logger.warn("Rate limit approaching", { current: 95, max: 100 });
+Sentry.logger.error("Payment failed", { reason: "card_declined" });
+Sentry.logger.fatal("Database unavailable", { host: "primary" });
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+## Add Context
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+### Attributes
+
+Pass structured data as the second argument. These attributes become queryable columns in Sentry.
+
+Use the `fmt` helper for parameterized messages — values are extracted as searchable attributes.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript
+// Pass attributes directly
+Sentry.logger.info("User signed up", {
+  userId: user.id,
+  plan: "pro",
+  referrer: "google",
+});
+
+// Use fmt for parameterized messages
+Sentry.logger.info(
+  Sentry.logger.fmt`User ${userId} purchased ${productName}`
+);
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Scope Attributes
+
+Set attributes on the scope to automatically include them in all logs within that context.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript
+// Global attributes (all logs)
+Sentry.getGlobalScope().setAttributes({
+  service: "checkout",
+  version: "2.1.0",
+});
+
+// Scoped attributes (logs within scope)
+Sentry.withScope((scope) => {
+  scope.setAttribute("requestId", req.id);
+
+  // Both logs include requestId
+  Sentry.logger.info("Processing order");
+  Sentry.logger.info("Order complete");
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+## Best Practices
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+### Wide Events Over Scattered Logs
+
+Instead of many thin logs that are hard to correlate, emit one comprehensive log per operation with all relevant context.
+
+This makes debugging dramatically faster — one query returns everything about a specific order, user, or request.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript
+// ❌ Scattered thin logs
+Sentry.logger.info("Starting checkout");
+Sentry.logger.info("Validating cart");
+Sentry.logger.info("Processing payment");
+Sentry.logger.info("Checkout complete");
+
+// ✅ One wide event with full context
+Sentry.logger.info("Checkout completed", {
+  orderId: order.id,
+  userId: user.id,
+  userTier: user.subscription,
+  cartValue: cart.total,
+  itemCount: cart.items.length,
+  paymentMethod: "stripe",
+  duration: Date.now() - startTime,
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Include Business Context
+
+Add attributes that help you prioritize and debug:
+
+- **User context** — tier, account age, lifetime value
+- **Transaction data** — order value, item count
+- **Feature state** — active feature flags
+- **Request metadata** — endpoint, method, duration
+
+This lets you filter logs by high-value customers or specific features.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript
+Sentry.logger.info("API request completed", {
+  // User context
+  userId: user.id,
+  userTier: user.plan,           // "free" | "pro" | "enterprise"
+  accountAgeDays: user.ageDays,
+
+  // Request data
+  endpoint: "/api/orders",
+  method: "POST",
+  duration: 234,
+
+  // Business context
+  orderValue: 149.99,
+  featureFlags: ["new-checkout", "discount-v2"],
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Consistent Attribute Naming
+
+Pick a naming convention and stick with it across your codebase. Inconsistent names make queries impossible.
+
+**Recommended:** Use `snake_case` for custom attributes to match common conventions.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript
+// ❌ Inconsistent naming
+{ user: "123" }
+{ userId: "123" }
+{ user_id: "123" }
+{ UserID: "123" }
+
+// ✅ Consistent snake_case
+{
+  user_id: "123",
+  order_id: "456",
+  cart_value: 99.99,
+  item_count: 3,
+}
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+## Integrations
+
+Connect your existing logging library to automatically send logs to Sentry.
+
+<PlatformContent includePath="logs/integrations" />
+
+## Filter Logs
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+### beforeSendLog
+
+Filter or modify logs before they're sent. Return `null` to drop a log.
+
+Use this to:
+- Remove sensitive data
+- Filter noisy logs
+- Add computed attributes
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {filename:instrumentation-client.ts}
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  enableLogs: true,
+
+  beforeSendLog(log) {
+    // Drop debug logs in production
+    if (log.level === "debug") {
+      return null;
+    }
+
+    // Remove sensitive attributes
+    if (log.attributes?.password) {
+      delete log.attributes.password;
+    }
+
+    return log;
+  },
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+<h2 data-no-number>Default Attributes</h2>
+
+Sentry automatically adds these attributes to every log:
+
+### Core
+
+| Attribute | Description |
+|-----------|-------------|
+| `sentry.environment` | Environment from SDK config |
+| `sentry.release` | Release version from SDK config |
+| `sentry.sdk.name` | SDK name (`sentry.javascript.nextjs`) |
+| `sentry.sdk.version` | SDK version |
+
+### User
+
+| Attribute | Description |
+|-----------|-------------|
+| `user.id` | User ID from scope |
+| `user.email` | User email from scope |
+| `user.name` | Username from scope |
+
+### Browser (Client-side only)
+
+| Attribute | Description |
+|-----------|-------------|
+| `browser.name` | Browser name (Chrome, Firefox, etc.) |
+| `browser.version` | Browser version |
+
+### Server (Server-side only)
+
+| Attribute | Description |
+|-----------|-------------|
+| `server.address` | Server hostname |
+
+### Trace Context
+
+| Attribute | Description |
+|-----------|-------------|
+| `sentry.trace.parent_span_id` | Parent span ID for trace correlation |
+| `sentry.replay_id` | Session Replay ID (if active) |
+
+### Message Template
+
+| Attribute | Description |
+|-----------|-------------|
+| `sentry.message.template` | Template string when using `fmt` |
+| `sentry.message.parameter.{n}` | Parameter values from template |
+
+</StepComponent>
