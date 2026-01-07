@@ -43,8 +43,8 @@ export default async function Page(props: {
     key: string;
     title: string;
     url: string;
-    isGuide?: boolean;
     parentPlatform?: string;
+    shouldBeNested?: boolean;
   };
 
   const platformOrGuideList: PlatformOrGuide[] = [];
@@ -116,7 +116,7 @@ export default async function Page(props: {
           title: guide.title ?? guide.name ?? '',
           url: guide.url ?? '', // Always use the guide-specific URL
           icon: `${platformEntry.key}-${guide.name}`,
-          isGuide: mainPlatformNode ? true : false, // Only nest if parent exists
+          shouldBeNested: mainPlatformNode ? true : false, // Only nest if parent exists
           parentPlatform: platformEntry.key,
         });
       }
@@ -152,7 +152,7 @@ export default async function Page(props: {
 
       <ul>
         {platformOrGuideList.map(p => (
-          <li key={p.key} style={{marginLeft: p.isGuide ? '20px' : '0'}}>
+          <li key={p.key} style={{marginLeft: p.shouldBeNested ? '20px' : '0'}}>
             <SmartLink to={`${p.url}${pathname}`}>
               <PlatformIcon
                 size={16}
