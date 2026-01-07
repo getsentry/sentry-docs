@@ -1,5 +1,6 @@
 ---
 title: Logs
+sidebar_title: Logs
 description: "Send structured logs from your Next.js application to Sentry for debugging and observability."
 sidebar_order: 4
 sidebar_section: features
@@ -269,9 +270,115 @@ Pick a naming convention and stick with it across your codebase. Inconsistent na
 
 ## Integrations
 
-Connect your existing logging library to automatically send logs to Sentry.
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
 
-<PlatformContent includePath="logs/integrations" />
+### Console
+
+Capture `console.log`, `console.warn`, and `console.error` calls as structured logs.
+
+The integration parses multiple arguments as searchable attributes.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.consoleLoggingIntegration({
+      levels: ["log", "warn", "error"],
+    }),
+  ],
+});
+
+// Arguments become searchable attributes
+console.log("User action:", userId, success);
+// -> message.parameter.0: userId
+// -> message.parameter.1: success
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Pino
+
+Send logs from the [Pino](https://github.com/pinojs/pino) logging library to Sentry.
+
+Requires SDK version `10.18.0` or higher.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [Sentry.pinoIntegration()],
+});
+```
+
+See <PlatformLink to="/configuration/integrations/pino">Pino integration docs</PlatformLink> for configuration options.
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Consola
+
+Send logs from the [Consola](https://github.com/unjs/consola) logging library to Sentry.
+
+Requires SDK version `10.12.0` or higher.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript
+import { consola } from "consola";
+
+const sentryReporter = Sentry.createConsolaReporter({
+  levels: ["error", "warn"], // optional filter
+});
+
+consola.addReporter(sentryReporter);
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Winston
+
+Send logs from the [Winston](https://github.com/winstonjs/winston) logging library to Sentry.
+
+Requires SDK version `9.13.0` or higher.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript
+import winston from "winston";
+import Transport from "winston-transport";
+
+const SentryTransport = Sentry.createSentryWinstonTransport(Transport, {
+  levels: ["error", "warn"], // optional filter
+});
+
+const logger = winston.createLogger({
+  transports: [new SentryTransport()],
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
 ## Filter Logs
 
