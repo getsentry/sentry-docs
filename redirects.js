@@ -271,6 +271,10 @@ const userDocsRedirects = [
     destination: '/organization/integrations/cursor/',
   },
   {
+    source: '/concepts/data-management/advanced-datascrubbing/',
+    destination: '/security-legal-pii/scrubbing/advanced-datascrubbing/',
+  },
+  {
     source: '/organization/integrations/rootly/',
     destination: '/organization/integrations/notification-incidents/rootly/',
   },
