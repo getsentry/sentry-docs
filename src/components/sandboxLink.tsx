@@ -31,7 +31,7 @@ type Props = {
 
 /**
  * Obtains the URL to the sandbox start endpoint.
- * @param param0.scenario: One of the scenarios. Determins where in the sandbox
+ * @param param0.scenario: One of the scenarios. Determines where in the sandbox
  * the user will be landed.
  * @param param0.projectSlug:
  * One of react, python, react-native, android, iOS

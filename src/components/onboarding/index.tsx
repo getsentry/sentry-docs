@@ -1,9 +1,12 @@
 'use client';
 
-import {ReactNode, useContext, useEffect, useReducer, useState} from 'react';
+// eslint-disable-next-line no-restricted-imports -- Required for JSX in test environment
+import React, {ReactNode, useContext, useEffect, useReducer, useState} from 'react';
 import {QuestionMarkCircledIcon} from '@radix-ui/react-icons';
 import * as Tooltip from '@radix-ui/react-tooltip';
 import {Button, Checkbox, Theme} from '@radix-ui/themes';
+
+import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
 
 import styles from './styles.module.scss';
 
@@ -239,7 +242,27 @@ export function updateElementsVisibilityForOptions(
     const codeBlock = openLine.closest('code.code-highlight');
     if (!codeBlock) return;
 
-    const allLines = Array.from(codeBlock.children) as HTMLElement[];
+    // Helper function to get all code lines, including those nested in HighlightBlocks
+    const getAllCodeLines = (container: Element): HTMLElement[] => {
+      const lines: HTMLElement[] = [];
+      Array.from(container.children).forEach(child => {
+        const el = child as HTMLElement;
+        // If it's a highlight-block, get lines from inside it
+        if (el.classList.contains('highlight-block')) {
+          // Lines are nested in highlight-block > div (CodeLinesContainer)
+          const linesContainer = el.querySelector('div');
+          if (linesContainer) {
+            lines.push(...(Array.from(linesContainer.children) as HTMLElement[]));
+          }
+        } else {
+          // Regular line, add it directly
+          lines.push(el);
+        }
+      });
+      return lines;
+    };
+
+    const allLines = getAllCodeLines(codeBlock);
     const openIndex = allLines.indexOf(openLine);
 
     // Find the matching close line in the same code block
@@ -318,6 +341,7 @@ export function OnboardingOptionButtons({
   options: (OnboardingOptionType | OptionId)[];
 }) {
   const codeContext = useContext(CodeContext);
+  const {emit} = usePlausibleEvent();
 
   const normalizedOptions = initialOptions
     .map(option => {
@@ -345,7 +369,7 @@ export function OnboardingOptionButtons({
   const [options, setSelectedOptions] = useState<OnboardingOptionType[]>(
     normalizedOptions.map(option => ({
       ...option,
-      // default to unchecked if not excplicitly set
+      // default to unchecked if not explicitly set
       checked: option.checked ?? false,
     }))
   );
@@ -353,6 +377,17 @@ export function OnboardingOptionButtons({
 
   function handleCheckedChange(clickedOption: OnboardingOptionType, checked: boolean) {
     touchOptions();
+
+    // Track the toggle event in Plausible
+    emit('Onboarding Option Toggle', {
+      props: {
+        checked,
+        optionId: clickedOption.id,
+        optionName: optionDetails[clickedOption.id].name,
+        page: typeof window !== 'undefined' ? window.location.pathname : '',
+      },
+    });
+
     const dependencies = optionDetails[clickedOption.id].deps ?? [];
     const depenedants =
       options.filter(opt => optionDetails[opt.id].deps?.includes(clickedOption.id)) ?? [];

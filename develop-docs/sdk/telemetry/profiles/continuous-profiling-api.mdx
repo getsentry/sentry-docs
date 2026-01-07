@@ -55,7 +55,7 @@ interface SentryOptions {
 The definition of a profiling session depends on the profiling type:
 
 - **Continuous Profiling**: The session starts when the Sentry SDK is configured and stops when the service terminates. `profile_session_sample_rate` controls the percentage of service instances that have profiling enabled. Sampling is re-evaluated on service restart or redeployment.
-- **UI Profiling**: The session corresponds to a user session. A user session starts with a new SDK initialization. It ends when the browser tab is closed, or alternatively, under the same conditions that end a [Replay session](/product/explore/session-replay/web/). `profile_session_sample_rate` sets the percentage of user sessions for which profiling is enabled. So this sampling decision is made once on SDK initialization.
+- **UI Profiling**: The session corresponds to a user session. A user session starts with a new SDK initialization. It ends when the browser tab is closed, or alternatively, under the same conditions that end a [Replay session](https://docs.sentry.io/product/explore/session-replay/). `profile_session_sample_rate` sets the percentage of user sessions for which profiling is enabled. So this sampling decision is made once on SDK initialization.
   - **On mobile**: Backgrounding and foregrounding the app starts a new user session, and sampling is re-evaluated. If a trace is active when the app is foregrounded, the existing profiling session continues until the last root span in that trace finishes. The new sample rate will only take effect when the profiler is next started.
 
 <Alert level="warning">
@@ -74,7 +74,7 @@ Those are the two modes:
 - **`'trace'`**:  **This mode requires tracing to be enabled.** The profiler starts automatically when there is at least one active root span and stops when there are no active root spans (letting the current chunk completely finish).
   - Profiling respects **both** `profile_session_sample_rate` and the tracing sampling configuration (`traces_sample_rate` or `traces_sampler`).
   - `profile_session_sample_rate` is checked first. If the session is not sampled, no profiling will occur.
-  - If the session is sampled, `traces_sample_rate` / `traces_sampler` is evaluated for each root span to determine if it should be profiled.
+  - Only if a root span is sampled (this is based on `traces_sample_rate` / `traces_sampler`), profiling will start. Therefore, profile sampling is re-evaluated for each root span.
   - The profiler runs as long as there is at least one **sampled** root span. If multiple root spans overlap, profiling continues until the last sampled root span finishes.
 
 <Alert level="warning">

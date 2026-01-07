@@ -54,11 +54,11 @@ Sets the distribution of the application. Distributions are used to disambiguate
 
 </SdkOption>
 
-<SdkOption name="environment" type="string" envVar="SENTRY_ENVIRONMENT">
+<SdkOption name="environment" type="string" envVar="SENTRY_ENVIRONMENT" defaultValue="{auto}">
 
 Sets the environment. Environments indicate where an error occurred, such as in a release export, headless server, QA build, or another deployment. A release can be associated with more than one environment to separate them in the UI (think `staging` vs `production` or similar).
 
-The SDK automatically detects Godot-specific environments, such as `headless_server` and `export_release`, but you can also set it to your own value [programmatically](#programmatic-configuration).
+This option defaults to `{auto}`, which automatically detects the environment based on the current runtime context and sets it to one of the following values: `editor_dev`, `editor_dev_run`, `export_debug`, `export_release`, or `dedicated_server`.
 
 </SdkOption>
 
@@ -122,6 +122,24 @@ This option is turned off by default.
 
 </SdkOption>
 
+<SdkOption name="app_hang_tracking" type="bool" defaultValue="false">
+
+If `true`, enables automatic detection and reporting of application hangs. The SDK will monitor the main thread and report hang events when it becomes unresponsive for longer than the duration specified in `app_hang_timeout_sec`. This helps identify performance issues where the application becomes frozen or unresponsive.
+
+<Alert title="Note">
+
+This feature is only supported on Android, iOS, and macOS platforms.
+
+</Alert>
+
+</SdkOption>
+
+<SdkOption name="app_hang_timeout_sec" type="float" defaultValue="5.0">
+
+Specifies the timeout duration in seconds after which the application is considered to have hanged. When `app_hang_tracking` is enabled, if the main thread is blocked for longer than this duration, it will be reported as an application hang event to Sentry.
+
+</SdkOption>
+
 ## GUI-only Options
 
 These options are only available in the **Project Settings** window.
@@ -145,11 +163,24 @@ This option is turned on by default.
 
 </SdkOption>
 
-## Error Logger Options
+## Logging Options
+
+<SdkOption name="enable_logs" type="bool" defaultValue="true" availableSince="1.2.0">
+
+If `true`, enables Sentry structured logs functionality, allowing you to use dedicated logging APIs through
+`SentrySDK.logger`, and Godot's built-in log messages are automatically captured and sent to Sentry Logs.
+Use `logger_enabled` and other `logger_*` options to control how Godot's error messages and log output
+(including `print()` statements) are captured and processed by Sentry.
+
+This option is turned on by default.
+
+</SdkOption>
+
+## Godot Logger Options
 
 <SdkOption name="logger_enabled" type="bool" defaultValue="true">
 
-If `true`, the SDK will capture logged errors as events and/or breadcrumbs, as defined by `logger_event_mask` and `logger_breadcrumb_mask` options. Crashes are always captured.
+If `true`, the SDK will capture logged errors as events, logs and/or breadcrumbs, as defined by `logger_event_mask` and `logger_breadcrumb_mask` options. Crashes are always captured. See also `enable_logs` option.
 
 This option is turned on by default.
 
@@ -237,7 +268,7 @@ These options can be used to hook the SDK in various ways to customize the repor
 The callbacks you set as hooks will be called on the thread where the event happened. So you can only use
 thread-safe APIs and only use Godot-specific APIs after you've checked that you're on the main thread.
 
-<SdkOption name="before_send" type="function">
+<SdkOption name="before_send" type="Callable">
 
 If assigned, this callback runs before an event is sent to Sentry. You can only set it [programmatically](#programmatic-configuration). It takes `SentryEvent` as a parameter and returns either the same event object, with or without modifications, or `null` to skip reporting the event. This can be used, for instance, for stripping PII before sending.
 
@@ -246,15 +277,17 @@ func _before_send(event: SentryEvent) -> SentryEvent:
 	if event.environment.contains("editor"):
 		# Discard event if running from the editor.
 		return null
-	if event.message.contains("Bruno"):
+	var error_message: String = event.get_exception_value(0)
+	if error_message.contains("Bruno"):
 		# Remove sensitive information from the event.
-		event.message = event.message.replace("Bruno", "REDACTED")
+		var redacted_message := error_message.replace("Bruno", "REDACTED")
+		event.set_exception_value(0, redacted_message)
 	return event
 ```
 
 </SdkOption>
 
-<SdkOption name="before_capture_screenshot" type="function">
+<SdkOption name="before_capture_screenshot" type="Callable">
 
 If assigned, this callback runs before a screenshot is captured. You can only set it [programmatically](#programmatic-configuration). It takes `SentryEvent` as a parameter and returns `false` to skip capturing the screenshot, or `true` to capture the screenshot.
 
@@ -263,6 +296,25 @@ func _before_capture_screenshot(event: SentryEvent) -> bool:
 	if is_showing_sensitive_info():
 		return false # Don't capture screenshot!
 	return true
+```
+
+</SdkOption>
+
+<SdkOption name="before_send_log" type="Callable" availableSince="1.2.0">
+
+If assigned, this callback will be called before sending a log message to Sentry.
+It can be used to modify the log message or prevent it from being sent.
+
+```GDScript
+func _before_send_log(log_entry: SentryLog) -> SentryLog:
+	# Filter junk.
+	if log_entry.body == "Junk message":
+		return null
+	# Remove sensitive information from log messages.
+	log_entry.body = log_entry.body.replace("Bruno", "REDACTED")
+	# Add custom attributes.
+	log_entry.set_attribute("current_scene", current_scene.name)
+	return log_entry
 ```
 
 </SdkOption>

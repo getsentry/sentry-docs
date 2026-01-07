@@ -85,6 +85,15 @@ You can follow the progress in [this GitHub issue](https://github.com/getsentry/
 
 </Expandable>
 
+<Expandable title="Photo pickers and camera views are not captured" permalink>
+
+Session Replay cannot capture photo picker interfaces (`PHPickerViewController` and `UIImagePickerController`) or camera views due to iOS limitations. These pickers use a remote view rendering process rather than being rendered directly in your app's view hierarchy.
+
+On physical devices, photo pickers and camera views will not appear in session replays. On simulators, they may appear because simulators don't use the same remote rendering approach, but this behavior should not be relied upon.
+
+This limitation exists at the iOS system level and cannot be worked around by configuring `unmaskedViewClasses` or other Session Replay settings.
+</Expandable>
+
 <Expandable title="Session Replay is not recording with custom window setup" permalink>
 
 If you have a custom window setup (e.g., multiple instances of `UIWindow`), you need to ensure that the Sentry SDK is able to find the correct window.
@@ -149,6 +158,41 @@ final class SceneDelegate: NSObject, UIWindowSceneDelegate {
     }
 }
 ```
+
+</Expandable>
+
+<Expandable title="Masking limitations with AsyncDisplayKit/Texture" permalink>
+
+[AsyncDisplayKit](https://github.com/facebookarchive/AsyncDisplayKit) (now archived) and its successor [Texture](https://github.com/texturegroup/texture/) use a custom rendering pipeline that relies on layers rather than standard UIKit components. This architecture prevents Session Replay's default masking options (`maskAllImages` and `maskAllText`) from working correctly.
+
+### Why masking doesn't work
+
+Texture uses `_ASDisplayView` and `_ASDisplayLayer` classes that forward rendering to associated nodes, rather than using standard UIKit view hierarchies. The SDK's default masking mechanisms rely on identifying standard UIKit components (like `UIImageView` and `UILabel`), which don't exist in Texture's custom rendering pipeline. As a result, content rendered through Texture nodes may not be masked by default.
+
+For example, when inspecting the view hierarchy, you'll see views like `ButtonNode-View` with `_ASDisplayLayer` sublayers rather than standard UIKit components:
+
+```
+<SentryMaskingExample.ButtonNode-View: 0x103b35e80; node = <SentryMaskingExample.ButtonNode: 0x10483b600>; ...>
+   | <_ASDisplayLayer: 0x60000213ab20> (layer)
+   | <_ASDisplayLayer: 0x600002139900> (layer)
+```
+
+### Workaround: Mask by view instance
+
+You can work around this limitation by using [masking by view instance](/platforms/apple/guides/ios/session-replay/customredact/#mask-by-view-instance). Access the `view` property of your `ASDisplayNode` instances and apply masking to those specific views:
+
+```swift
+// Access the view from your ASDisplayNode
+let nodeView = myASDisplayNode.view
+SentrySDK.replay.maskView(view: nodeView)
+```
+
+Note that this approach masks entire nodes rather than individual subcomponents. If you need more granular control, you may need to mask parent nodes or use the `supernode` property to mask larger sections of your UI.
+
+### Other limitations
+
+- Swizzling is not supported. While method swizzling could theoretically intercept `ASImageNode` and `ASTextNode` rendering, Sentry does not support or recommend this approach due to stability and maintenance concerns.
+- Layer-backed nodes. Some layer-backed nodes may still not be properly masked even when using view instance masking, as they render directly to layers rather than views.
 
 </Expandable>
 
