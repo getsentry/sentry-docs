@@ -157,9 +157,7 @@ export const renderChildren = (
       const sectionLink = SECTION_LINKS[sectionKey];
       // Check if the section link page actually exists in the tree before creating a link
       const sectionPageExists = sectionLink
-        ? children.some(
-            child => child.name === sectionLink && child.node !== null
-          )
+        ? children.some(child => child.name === sectionLink && child.node !== null)
         : false;
       const sectionHref =
         sectionLink && rootPath && sectionPageExists
@@ -241,8 +239,16 @@ type ChildrenProps = {
   showDepth?: number;
 };
 
-export function Children({tree, path, exclude = [], showDepth = 0, rootPath}: ChildrenProps) {
-  return <Fragment>{renderChildren(tree, exclude, path, showDepth, 0, rootPath)}</Fragment>;
+export function Children({
+  tree,
+  path,
+  exclude = [],
+  showDepth = 0,
+  rootPath,
+}: ChildrenProps) {
+  return (
+    <Fragment>{renderChildren(tree, exclude, path, showDepth, 0, rootPath)}</Fragment>
+  );
 }
 
 type Props = {
