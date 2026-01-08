@@ -1,19 +1,15 @@
-import {Tooltip} from '@radix-ui/themes';
-
 import {Banner} from 'sentry-docs/components/banner';
 import {extractPlatforms, getDocsRootNode} from 'sentry-docs/docTree';
 import PlugImage from 'sentry-docs/imgs/api.png';
 import ChatBubble from 'sentry-docs/imgs/chat-bubble.png';
 import TerminalImage from 'sentry-docs/imgs/cli.png';
 import ConceptsImage from 'sentry-docs/imgs/concepts-reference.png';
-import BgLinkedin from 'sentry-docs/imgs/Linkedin-1128x191.png';
 import OrganizationImage from 'sentry-docs/imgs/organization.png';
 import CalculatorImage from 'sentry-docs/imgs/pricing.png';
 import RocketImage from 'sentry-docs/imgs/rocket.png';
 import SecurityImage from 'sentry-docs/imgs/security.png';
 import SupportImage from 'sentry-docs/imgs/support.png';
 import SquiggleSVG from 'sentry-docs/imgs/squiggle.svg';
-import YellowShape08 from 'sentry-docs/imgs/yellow-shape-08.png';
 import AiSentryHero from 'sentry-docs/imgs/ai-sentry-hero.png';
 import ErrorMonitoringHero from 'sentry-docs/imgs/error-monitoring-hero.png';
 
