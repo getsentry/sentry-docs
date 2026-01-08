@@ -13,3 +13,6 @@ test:
 
 preview-api-docs:
 	bin/preview-api-docs
+
+clean:
+	rm -rf node_modules .next
