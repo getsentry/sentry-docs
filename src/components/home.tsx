@@ -1,17 +1,17 @@
 import {Banner} from 'sentry-docs/components/banner';
 import {extractPlatforms, getDocsRootNode} from 'sentry-docs/docTree';
+import AiSentryHero from 'sentry-docs/imgs/ai-sentry-hero.png';
 import PlugImage from 'sentry-docs/imgs/api.png';
 import ChatBubble from 'sentry-docs/imgs/chat-bubble.png';
 import TerminalImage from 'sentry-docs/imgs/cli.png';
 import ConceptsImage from 'sentry-docs/imgs/concepts-reference.png';
+import ErrorMonitoringHero from 'sentry-docs/imgs/error-monitoring-hero.png';
 import OrganizationImage from 'sentry-docs/imgs/organization.png';
 import CalculatorImage from 'sentry-docs/imgs/pricing.png';
 import RocketImage from 'sentry-docs/imgs/rocket.png';
 import SecurityImage from 'sentry-docs/imgs/security.png';
-import SupportImage from 'sentry-docs/imgs/support.png';
 import SquiggleSVG from 'sentry-docs/imgs/squiggle.svg';
-import AiSentryHero from 'sentry-docs/imgs/ai-sentry-hero.png';
-import ErrorMonitoringHero from 'sentry-docs/imgs/error-monitoring-hero.png';
+import SupportImage from 'sentry-docs/imgs/support.png';
 
 import AskAiSearchParams from './askAiSearchParams';
 import {Card} from './card';
@@ -26,7 +26,11 @@ export default async function Home() {
   const rootNode = await getDocsRootNode();
   const platforms = extractPlatforms(rootNode);
   const mostViewedSDKs = [
-    {key: 'javascript-nextjs', title: 'Next.js', url: '/platforms/javascript/guides/nextjs/'},
+    {
+      key: 'javascript-nextjs',
+      title: 'Next.js',
+      url: '/platforms/javascript/guides/nextjs/',
+    },
     {key: 'javascript-node', title: 'Node.js', url: '/platforms/javascript/guides/node/'},
     {key: 'javascript-react', title: 'React', url: '/platforms/javascript/guides/react/'},
     {key: 'react-native', title: 'React Native', url: '/platforms/react-native/'},
@@ -54,7 +58,8 @@ export default async function Home() {
       <div
         className="w-full relative overflow-hidden"
         style={{
-          background: 'linear-gradient(to bottom, rgba(168, 139, 250, 0.15) 0%, rgba(255, 255, 255, 0) 100%), #ffffff',
+          background:
+            'linear-gradient(to bottom, rgba(168, 139, 250, 0.15) 0%, rgba(255, 255, 255, 0) 100%), #ffffff',
         }}
       >
         {/* Single decorative squiggle at top right */}
@@ -132,7 +137,8 @@ export default async function Home() {
                         textDecoration: 'none',
                         padding: '16px 8px',
                         borderRadius: '8px',
-                        boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+                        boxShadow:
+                          '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
                         aspectRatio: '1 / 1',
                       }}
                     >
@@ -176,13 +182,14 @@ export default async function Home() {
         <h2 className="text-2xl mt-0 mb-6 font-medium">Sentry features</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Sentry Error Monitoring */}
-          <div 
+          <div
             className="bg-white dark:bg-[var(--gray-2)] rounded-xl p-6 flex items-start gap-4"
             style={{
-              boxShadow: '0 4px 20px 0 rgba(0, 0, 0, 0.08), 0 1px 3px 0 rgba(0, 0, 0, 0.05)',
+              boxShadow:
+                '0 4px 20px 0 rgba(0, 0, 0, 0.08), 0 1px 3px 0 rgba(0, 0, 0, 0.05)',
             }}
           >
-            <div 
+            <div
               className="flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden"
               style={{
                 display: 'flex',
@@ -190,9 +197,9 @@ export default async function Home() {
                 justifyContent: 'center',
               }}
             >
-              <img 
-                src={ErrorMonitoringHero.src} 
-                alt="Sentry Error Monitoring" 
+              <img
+                src={ErrorMonitoringHero.src}
+                alt="Sentry Error Monitoring"
                 style={{
                   width: '100%',
                   height: '100%',
@@ -202,25 +209,41 @@ export default async function Home() {
               />
             </div>
             <div className="flex-1">
-              <h3 className="text-lg font-semibold mb-2 text-[var(--gray-12)]">Sentry Error Monitoring</h3>
+              <h3 className="text-lg font-semibold mb-2 text-[var(--gray-12)]">
+                Sentry Error Monitoring
+              </h3>
               <p className="text-sm text-[var(--gray-11)] leading-relaxed">
-                Monitor, identify, and resolve errors and performance issues across your applications using{' '}
-                <a href="/product/error-monitoring/" className="text-[#8b5cf6] underline">Error Monitoring</a>,{' '}
-                <a href="/product/tracing/" className="text-[#8b5cf6] underline">Tracing</a>,{' '}
-                <a href="/product/session-replay/" className="text-[#8b5cf6] underline">Session Replay</a>, and{' '}
-                <a href="/product/" className="text-[#8b5cf6] underline">more</a>.
+                Monitor, identify, and resolve errors and performance issues across your
+                applications using{' '}
+                <a href="/product/error-monitoring/" className="text-[#8b5cf6] underline">
+                  Error Monitoring
+                </a>
+                ,{' '}
+                <a href="/product/tracing/" className="text-[#8b5cf6] underline">
+                  Tracing
+                </a>
+                ,{' '}
+                <a href="/product/session-replay/" className="text-[#8b5cf6] underline">
+                  Session Replay
+                </a>
+                , and{' '}
+                <a href="/product/" className="text-[#8b5cf6] underline">
+                  more
+                </a>
+                .
               </p>
             </div>
           </div>
 
           {/* AI in Sentry */}
-          <div 
+          <div
             className="bg-white dark:bg-[var(--gray-2)] rounded-xl p-6 flex items-start gap-4"
             style={{
-              boxShadow: '0 4px 20px 0 rgba(0, 0, 0, 0.08), 0 1px 3px 0 rgba(0, 0, 0, 0.05)',
+              boxShadow:
+                '0 4px 20px 0 rgba(0, 0, 0, 0.08), 0 1px 3px 0 rgba(0, 0, 0, 0.05)',
             }}
           >
-            <div 
+            <div
               className="flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden"
               style={{
                 display: 'flex',
@@ -228,9 +251,9 @@ export default async function Home() {
                 justifyContent: 'center',
               }}
             >
-              <img 
-                src={AiSentryHero.src} 
-                alt="AI in Sentry" 
+              <img
+                src={AiSentryHero.src}
+                alt="AI in Sentry"
                 style={{
                   width: '100%',
                   height: '100%',
@@ -240,10 +263,25 @@ export default async function Home() {
               />
             </div>
             <div className="flex-1">
-              <h3 className="text-lg font-semibold mb-2 text-[var(--gray-12)]">AI in Sentry</h3>
+              <h3 className="text-lg font-semibold mb-2 text-[var(--gray-12)]">
+                AI in Sentry
+              </h3>
               <p className="text-sm text-[var(--gray-11)] leading-relaxed">
-                Fix code faster by having <a href="/product/ai-in-sentry/seer/" className="text-[#8b5cf6] underline">Seer</a> automatically find and remedy the root cause of your issues. Use{' '}
-                <a href="/product/ai-in-sentry/ai-code-review/" className="text-[#8b5cf6] underline">Code Review</a> to review your PRs and suggest improvements.
+                Fix code faster by having{' '}
+                <a
+                  href="/product/ai-in-sentry/seer/"
+                  className="text-[#8b5cf6] underline"
+                >
+                  Seer
+                </a>{' '}
+                automatically find and remedy the root cause of your issues. Use{' '}
+                <a
+                  href="/product/ai-in-sentry/ai-code-review/"
+                  className="text-[#8b5cf6] underline"
+                >
+                  Code Review
+                </a>{' '}
+                to review your PRs and suggest improvements.
               </p>
             </div>
           </div>

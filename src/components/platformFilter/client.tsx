@@ -13,8 +13,6 @@ import styles from './style.module.scss';
 
 import {PlatformIcon} from '../platformIcon';
 
-
-
 export function PlatformFilterClient({platforms}: {platforms: Platform[]}) {
   const platformsAndGuides = platforms
     .map(p => [

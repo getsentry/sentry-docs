@@ -85,7 +85,10 @@ export default function Header({
             <TopNavClient platforms={platforms} />
           </div>
           {!noSearch && (
-            <div className="hidden sm:flex flex-shrink-0 items-center gap-4" style={{marginLeft: '15px'}}>
+            <div
+              className="hidden sm:flex flex-shrink-0 items-center gap-4"
+              style={{marginLeft: '15px'}}
+            >
               <Button
                 asChild
                 variant="ghost"
