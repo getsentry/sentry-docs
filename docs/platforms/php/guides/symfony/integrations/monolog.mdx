@@ -3,6 +3,35 @@ title: Monolog
 description: "Learn how to enable Sentry's Symfony SDK to capture Monolog events."
 ---
 
+Monolog logs can also be captured as <PlatformLink to="/logs/">Sentry Logs</PlatformLink> for better searchability and querying.
+
+To enable this, set `enable_logs` to `true` in your Sentry configuration:
+
+```yaml {filename:config/packages/sentry.yaml}
+sentry:
+    options:
+        enable_logs: true
+```
+
+Then configure the Monolog handler for logs:
+
+```yaml {filename:config/packages/monolog.yaml}
+services:
+  Sentry\SentryBundle\Monolog\LogsHandler:
+    arguments:
+      - !php/const Monolog\Logger::WARNING
+
+monolog:
+    handlers:
+        sentry_logs:
+            type: service
+            id: Sentry\SentryBundle\Monolog\LogsHandler
+```
+
+You can control which log levels are sent to Sentry Logs by configuring the handler's minimum level in your services configuration.
+
+## Breadcrumbs
+
 When using [Monolog](https://github.com/Seldaek/monolog) you can configure a [breadcrumb](../../enriching-events/breadcrumbs/) handler to capture Monolog messages as breadcrumbs and a handler that captures messages as events in Sentry.
 The breadcrumb handler will not send anything to Sentry directly, it only records breadcrumbs that will be attached to any event or exception sent to Sentry.
 
@@ -34,29 +63,4 @@ monolog:
         sentry:
             type: service
             id: Sentry\Monolog\Handler
-            level: !php/const Monolog\Logger::ERROR # Configures the level of messages to capture as events
 ```
-
-## Support With Sentry Logs
-
-Monolog logs can also be captured as <PlatformLink to="/logs/">Sentry Logs</PlatformLink> for better searchability and querying.
-
-To enable this, set `enable_logs` to `true` in your Sentry configuration:
-
-```yaml {filename:config/packages/sentry.yaml}
-sentry:
-    options:
-        enable_logs: true
-```
-
-Then configure the Monolog handler for logs:
-
-```yaml {filename:config/packages/monolog.yaml}
-monolog:
-    handlers:
-        sentry_logs:
-            type: service
-            id: Sentry\SentryBundle\Monolog\LogsHandler
-```
-
-You can control which log levels are sent to Sentry Logs by configuring the handler's minimum level in your services configuration.
