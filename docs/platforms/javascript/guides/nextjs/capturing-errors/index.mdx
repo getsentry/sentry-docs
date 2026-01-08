@@ -1,0 +1,474 @@
+---
+title: Capturing Errors
+description: "Learn how to capture and report errors from your Next.js application to Sentry."
+sidebar_order: 2
+sidebar_section: features
+---
+
+Sentry's Next.js SDK automatically captures most errors, but Next.js error boundaries intercept errors before they reach the SDK. This guide covers how to ensure all errors are properly reported.
+
+## Automatic Capturing
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+### What Gets Captured
+
+The SDK automatically captures these without any code:
+
+- **Unhandled exceptions** in client-side code
+- **Unhandled promise rejections**
+- **Server-side errors** in API routes and Server Components
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```tsx
+// These are captured automatically - no code needed
+
+// Client-side error
+throw new Error("Button click failed");
+
+// Server Component error
+async function Page() {
+  throw new Error("Failed to load");
+}
+
+// API Route error
+export async function GET() {
+  throw new Error("API failed");
+}
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+## Error Boundaries
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+### Route Error Boundaries
+
+Next.js `error.tsx` files catch rendering errors before Sentry sees them. Add `captureException` to report these errors.
+
+Place at route segment levels where you want graceful error handling.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```tsx {filename:app/dashboard/error.tsx}
+"use client";
+
+import { useEffect } from "react";
+import * as Sentry from "@sentry/nextjs";
+
+export default function Error({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
+  useEffect(() => {
+    Sentry.captureException(error);
+  }, [error]);
+
+  return (
+    <div>
+      <h2>Something went wrong!</h2>
+      <button onClick={() => reset()}>Try again</button>
+    </div>
+  );
+}
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Global Error Boundary
+
+`global-error.tsx` handles errors in your root layout. It must include `<html>` and `<body>` tags since it replaces the root layout.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```tsx {filename:app/global-error.tsx}
+"use client";
+
+import { useEffect } from "react";
+import * as Sentry from "@sentry/nextjs";
+
+export default function GlobalError({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
+  useEffect(() => {
+    Sentry.captureException(error);
+  }, [error]);
+
+  return (
+    <html>
+      <body>
+        <h2>Something went wrong!</h2>
+        <button onClick={() => reset()}>Try again</button>
+      </body>
+    </html>
+  );
+}
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+## Server Actions
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+### Manual Capture
+
+When Server Actions need to return error states to the client, catch errors and report them manually.
+
+For automatic tracing, see <PlatformLink to="/configuration/apis/#withServerActionInstrumentation">`withServerActionInstrumentation`</PlatformLink>.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```tsx {filename:app/actions.ts}
+"use server";
+
+import * as Sentry from "@sentry/nextjs";
+
+export async function createPost(formData: FormData) {
+  try {
+    const post = await db.posts.create({
+      data: { title: formData.get("title") as string },
+    });
+    return { success: true, id: post.id };
+  } catch (error) {
+    Sentry.captureException(error);
+    return { success: false, error: "Failed to create post" };
+  }
+}
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+## API Routes
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+### Route Handlers
+
+Errors in API Route Handlers are automatically captured. For custom error responses, catch and report manually.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```tsx {filename:app/api/users/route.ts}
+import { NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
+
+export async function POST(request: Request) {
+  try {
+    const data = await request.json();
+    const user = await db.users.create({ data });
+    return NextResponse.json(user);
+  } catch (error) {
+    Sentry.captureException(error);
+    return NextResponse.json(
+      { error: "Failed to create user" },
+      { status: 500 }
+    );
+  }
+}
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+## Middleware
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+### Edge Runtime Errors
+
+Middleware runs on the Edge runtime. Wrap logic in try-catch to capture errors while allowing requests to continue.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```tsx {filename:middleware.ts}
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import * as Sentry from "@sentry/nextjs";
+
+export function middleware(request: NextRequest) {
+  try {
+    const token = request.cookies.get("token");
+    if (!token) {
+      return NextResponse.redirect(new URL("/login", request.url));
+    }
+    return NextResponse.next();
+  } catch (error) {
+    Sentry.captureException(error);
+    return NextResponse.next();
+  }
+}
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+## Manual Capture
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+### captureException
+
+Use `captureException` when you catch an error and want to report it. Add context with the second parameter.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```tsx
+import * as Sentry from "@sentry/nextjs";
+
+try {
+  await processOrder(orderId);
+} catch (error) {
+  Sentry.captureException(error, {
+    tags: { section: "checkout" },
+    extra: { orderId, userId: user.id },
+  });
+}
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Adding Scope
+
+Use `withScope` to add context that only applies to a specific capture.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```tsx
+import * as Sentry from "@sentry/nextjs";
+
+Sentry.withScope((scope) => {
+  scope.setTag("transaction", "checkout");
+  scope.setUser({ id: user.id, email: user.email });
+  scope.setExtra("cart", cart);
+
+  Sentry.captureException(error);
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+## Best Practices
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+### Error Boundary Placement
+
+Place error boundaries at appropriate granularity:
+
+- **Route-level** (`app/dashboard/error.tsx`) — Catches errors in that route and children
+- **Global** (`app/global-error.tsx`) — Last resort for root layout errors
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```
+app/
+├── global-error.tsx      # Root layout errors
+├── error.tsx             # App-wide errors
+├── dashboard/
+│   ├── error.tsx         # Dashboard errors
+│   └── settings/
+│       └── error.tsx     # Settings-specific errors
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Link Errors and Logs
+
+Use <PlatformLink to="/logs/">Sentry Logs</PlatformLink> alongside error capture for comprehensive debugging. Log context before operations that might fail.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```tsx
+import * as Sentry from "@sentry/nextjs";
+
+Sentry.logger.info("Processing payment", { orderId, amount });
+
+try {
+  await processPayment(orderId, amount);
+} catch (error) {
+  Sentry.captureException(error);
+  throw error;
+}
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Don't Swallow Errors
+
+After capturing, consider whether to re-throw. Swallowing errors hides problems from error boundaries.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```tsx
+// Bad: Error swallowed, app continues in broken state
+try {
+  data = await fetchData();
+} catch (error) {
+  Sentry.captureException(error);
+}
+
+// Good: Error captured and propagated
+try {
+  data = await fetchData();
+} catch (error) {
+  Sentry.captureException(error);
+  throw error;
+}
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+## Troubleshooting
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+### Errors Not Appearing
+
+Check these common causes:
+
+1. **Error boundaries intercepting** — Ensure you call `captureException` in `error.tsx` files
+2. **SDK not initialized** — Verify all config files exist with correct DSN
+3. **beforeSend filtering** — Check if your hook is dropping errors
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```tsx {filename:app/error.tsx}
+"use client";
+
+import { useEffect } from "react";
+import * as Sentry from "@sentry/nextjs";
+
+export default function Error({ error }: { error: Error }) {
+  useEffect(() => {
+    // This line is required!
+    Sentry.captureException(error);
+  }, [error]);
+
+  return <div>Something went wrong</div>;
+}
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Duplicate Errors
+
+If you see the same error twice:
+
+- **Remove duplicate captures** — Check if both an error boundary and global handler are capturing
+- **Deduplication** — The SDK deduplicates by default, but timing can cause duplicates
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```tsx
+// Check you're not capturing in multiple places
+
+// error.tsx captures it
+Sentry.captureException(error);
+
+// Don't also capture in a parent component
+// or global error handler
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Missing Stack Traces
+
+Server errors may show minified traces in production:
+
+- **Enable source maps** — See <PlatformLink to="/sourcemaps/">Source Maps</PlatformLink>
+- **Check digest** — Server errors include a `digest` hash you can search for in logs
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```tsx
+// The digest helps identify server errors
+export default function Error({
+  error,
+}: {
+  error: Error & { digest?: string };
+}) {
+  // Log digest for debugging
+  console.error("Error digest:", error.digest);
+  // ...
+}
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
