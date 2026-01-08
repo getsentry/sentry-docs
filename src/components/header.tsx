@@ -38,7 +38,7 @@ export default function Header({
       <style>{':root { --header-height: 64px; }'}</style>
       <nav className="nav-inner mx-auto px-4 lg:px-8 flex items-center gap-4 min-h-[64px]">
         {pathname !== '/' && (
-          <button className="lg:hidden mr-3">
+          <button className="lg-xl:hidden mr-3">
             <label
               htmlFor={sidebarToggleId}
               aria-label="Close"

@@ -6,6 +6,8 @@ import {QuestionMarkCircledIcon} from '@radix-ui/react-icons';
 import * as Tooltip from '@radix-ui/react-tooltip';
 import {Button, Checkbox, Theme} from '@radix-ui/themes';
 
+import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
+
 import styles from './styles.module.scss';
 
 import {CodeContext} from '../codeContext';
@@ -339,6 +341,7 @@ export function OnboardingOptionButtons({
   options: (OnboardingOptionType | OptionId)[];
 }) {
   const codeContext = useContext(CodeContext);
+  const {emit} = usePlausibleEvent();
 
   const normalizedOptions = initialOptions
     .map(option => {
@@ -374,6 +377,17 @@ export function OnboardingOptionButtons({
 
   function handleCheckedChange(clickedOption: OnboardingOptionType, checked: boolean) {
     touchOptions();
+
+    // Track the toggle event in Plausible
+    emit('Onboarding Option Toggle', {
+      props: {
+        checked,
+        optionId: clickedOption.id,
+        optionName: optionDetails[clickedOption.id].name,
+        page: typeof window !== 'undefined' ? window.location.pathname : '',
+      },
+    });
+
     const dependencies = optionDetails[clickedOption.id].deps ?? [];
     const depenedants =
       options.filter(opt => optionDetails[opt.id].deps?.includes(clickedOption.id)) ?? [];

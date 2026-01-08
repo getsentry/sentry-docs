@@ -1,27 +1,63 @@
-Once the feature is enabled on the SDK and the SDK is initialized, you can send metrics using the `sentry_sdk.metrics` APIs.
+Metrics are enabled by default. Once you initialize the SDK, you can send metrics using the `sentry_sdk.metrics` APIs.
 
 The `metrics` namespace exposes three methods that you can use to capture different types of metric information: `count`, `gauge`, and `distribution`.
 
-```python
-from sentry_sdk import metrics
+## Emit a Counter
 
-metrics.count("checkout.failed", 1)
-metrics.gauge("queue.depth", 42)
-metrics.distribution("cart.amount_usd", 187.5)
+Counters are one of the more basic types of metrics and can be used to count certain event occurrences.
+
+To emit a counter, do the following:
+
+```python
+import sentry_sdk
+
+# Record five total button clicks
+sentry_sdk.metrics.count(
+	"button_click",
+	5,
+	attributes={
+		"browser": "Firefox",
+		"app_version": "1.0.0"
+	},
+)
 ```
 
-You can also pass additional attributes directly to `count`, `gauge`, and `distribution` via the `attributes` kwarg.
+## Emit a Distribution
+
+Distributions help you get the most insights from your data by allowing you to obtain aggregations such as `p90`, `min`, `max`, and `avg`.
+
+To emit a distribution, do the following:
 
 ```python
-from sentry_sdk import metrics
+import sentry_sdk
 
-metrics.count(
-    "checkout.failed",
-    1,
-    attributes={
-        "route": "/checkout",
-        "tenant": "acme",
-        "provider": "stripe",
-    },
+# Add '15.0' to a distribution used for tracking the loading times per page.
+sentry_sdk.metrics.distribution(
+	"page_load",
+	15.0,
+	unit="millisecond",
+	attributes={
+		"page": "/home"
+	},
+)
+```
+
+## Emit a Gauge
+
+Gauges let you obtain aggregates like `min`, `max`, `avg`, `sum`, and `count`. They can be represented in a more space-efficient way than distributions, but they can't be used to get percentiles. If percentiles aren't important to you, we recommend using gauges.
+
+To emit a gauge, do the following:
+
+```python
+import sentry_sdk
+
+# Add '15.0' to a gauge used for tracking the loading times for a page.
+sentry_sdk.metrics.gauge(
+	"page_load",
+	15.0,
+	unit="millisecond",
+	attributes={
+		"page": "/home"
+	},
 )
 ```

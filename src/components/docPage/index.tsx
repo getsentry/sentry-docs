@@ -143,11 +143,35 @@ export function DocPage({
           </aside>
         )}
       </section>
-      <style>{`:root { --doc-content-w: 1200px; } #doc-content { max-width: var(--doc-content-w); box-sizing: border-box; }`}</style>
+      <style>{`:root { --doc-content-w: 1100px; }`}</style>
       <style>{`
+        #doc-content {
+          max-width: none;
+          box-sizing: border-box;
+        }
+        /* Mobile responsive styles */
+        @media (max-width: 768px) {
+          .main-content {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: hidden;
+          }
+          #doc-content {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: hidden;
+          }
+        }
+        /* At toc breakpoint (1490px), constrain content to leave room for TOC */
+        @media (min-width: 1490px) {
+          #doc-content {
+            /* Calculate max width: viewport - sidebar - TOC */
+            max-width: calc(100vw - 300px - 250px);
+          }
+        }
         @media (min-width: 2057px) {
           :root {
-            --doc-content-w: 1200px;
+            --doc-content-w: 1100px;
             --toc-w: 250px;
             --gap: 24px;
           }
@@ -156,6 +180,8 @@ export function DocPage({
             max-width: var(--doc-content-w);
             padding-left: 2rem;
             padding-right: 2rem;
+            margin-left: auto;
+            margin-right: auto;
           }
           /* Cancel default push so content can center */
           [data-layout-anchor="left"] + .main-content {

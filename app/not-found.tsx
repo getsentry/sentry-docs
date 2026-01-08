@@ -2,18 +2,40 @@
 
 import {useEffect, useState} from 'react';
 import {Button} from '@radix-ui/themes';
+import {usePathname} from 'next/navigation';
 
 import Header from 'sentry-docs/components/header';
 import {Search} from 'sentry-docs/components/search';
+import {DocMetrics} from 'sentry-docs/metrics';
 
 export default function NotFound() {
-  const [pathname, setPathname] = useState('');
-  const [host, setHost] = useState('');
+  const pathname = usePathname() || '';
+  const [brokenUrl, setBrokenUrl] = useState('');
+
   useEffect(() => {
-    setPathname(window.location.pathname);
-    setHost(window.location.host);
-  }, []);
-  const brokenUrl = `${host}${pathname}`;
+    // Construct URL synchronously from window.location
+    const fullUrl = `${window.location.host}${pathname}`;
+    setBrokenUrl(fullUrl);
+
+    // Track 404 metric
+    const path = pathname.split('/').filter(Boolean);
+    let refererType: 'internal' | 'external' | 'direct' = 'direct';
+
+    if (document.referrer) {
+      try {
+        const referrerUrl = new URL(document.referrer);
+        const currentUrl = new URL(window.location.href);
+        // Compare origins for exact match
+        refererType = referrerUrl.origin === currentUrl.origin ? 'internal' : 'external';
+      } catch (e) {
+        // Invalid referrer URL
+        refererType = 'external';
+      }
+    }
+
+    DocMetrics.pageNotFound(path, refererType);
+  }, [pathname]);
+
   const reportUrl = `https://github.com/getsentry/sentry-docs/issues/new?template=issue-platform-404.yml&title=🔗 404 Error&url=${brokenUrl}`;
   return (
     <div className="tw-app">

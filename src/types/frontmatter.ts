@@ -83,12 +83,10 @@ export interface FrontMatter {
 
   /**
    * Set this to true to show a separator/divider below this item in the sidebar
+   * @deprecated Use sidebar_section instead
    */
   section_end_divider?: boolean;
 
-  /**
-   * The next page in the sidebar navigation.
-   */
   /**
    * Set this to true to hide from the sidebar
    */
@@ -98,6 +96,13 @@ export interface FrontMatter {
    * The order of this page in auto generated sidebars and grids.
    */
   sidebar_order?: number;
+
+  /**
+   * Which sidebar section this page belongs to (for platform docs).
+   * Options: 'features' | 'configuration'
+   * Defaults to 'features' if not specified.
+   */
+  sidebar_section?: 'features' | 'configuration';
 
   /**
    * optional sidebar title

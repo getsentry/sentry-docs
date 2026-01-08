@@ -14,7 +14,11 @@ import {DefinitionList} from './components/definitionList';
 import {DevDocsCardGrid} from './components/devDocsCardGrid';
 import DocImage from './components/docImage';
 import {Expandable} from './components/expandable';
+import {FeatureBadge} from './components/featureBadge';
+import {GitHubCodePreview} from './components/githubCodePreview';
 import {GitHubDomainChecker} from './components/githubDomainChecker';
+import {GradleFeatureConfig} from './components/gradleFeatureConfig';
+import {GradleUploadInstructions} from './components/gradleUploadInstructions';
 import {GuideGrid} from './components/guideGrid';
 import {JsBundleList} from './components/jsBundleList';
 import {LambdaLayerDetail} from './components/lambdaLayerDetail';
@@ -77,9 +81,13 @@ export function mdxComponents(
     TableOfContents,
     CreateGitHubAppForm,
     GitHubDomainChecker,
+    GitHubCodePreview,
+    GradleFeatureConfig,
+    GradleUploadInstructions,
     ConfigValue,
     DefinitionList,
     Expandable,
+    FeatureBadge,
     GuideGrid,
     JsBundleList,
     LambdaLayerDetail,

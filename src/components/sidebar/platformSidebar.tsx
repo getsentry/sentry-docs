@@ -25,6 +25,7 @@ export function PlatformSidebar({
         beta: n.frontmatter.beta,
         new: n.frontmatter.new,
         section_end_divider: n.frontmatter.section_end_divider,
+        sidebar_section: n.frontmatter.sidebar_section,
       },
       path: '/' + n.path + '/',
     };
@@ -46,12 +47,18 @@ export function PlatformSidebar({
     ? `platforms/${platformName}/guides/${guideName}`
     : `platforms/${platformName}`;
 
+  // Use "Getting Started" for Next.js, default title for other platforms
+  const isNextJs = platformName === 'javascript' && guideName === 'nextjs';
+  const sidebarTitle = isNextJs
+    ? 'Getting Started'
+    : `Sentry for ${(guide || platform).title}`;
+
   return (
     <ul data-sidebar-tree>
       <DynamicNav
         root={pathRoot}
         tree={tree}
-        title={`Sentry for ${(guide || platform).title}`}
+        title={sidebarTitle}
         exclude={[`/${pathRoot}/guides/`]}
       />
     </ul>

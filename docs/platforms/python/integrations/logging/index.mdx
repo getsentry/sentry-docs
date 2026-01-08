@@ -3,7 +3,13 @@ title: Logging
 description: "Learn about logging with Python."
 ---
 
-Adds support for Python logging.
+The logging integration adds support for the `logging` framework from Python's standard library. Depending on your settings, logs can be captured as Sentry logs, as error events, or as breadcrumbs, or a combination of those.
+
+<Alert level="info" title="Sentry Logs">
+
+Enable the Sentry Logs feature with `sentry_sdk.init(enable_logs=True)` to unlock Sentry's full logging power. With Sentry Logs, you can search, filter, and analyze logs from across your entire application in one place.
+
+</Alert>
 
 ## Install
 
@@ -19,7 +25,7 @@ uv add "sentry-sdk"
 
 ## Configure
 
-The logging integrations is a default integration so it will be enabled automatically when you initialize the Sentry SDK.
+To capture log records as [Sentry logs](/platforms/python/logs/), set `enable_logs` to `True`. The logging integration is a default integration, so it will be enabled automatically when you initialize the Sentry SDK.
 
 ```python
 import sentry_sdk
@@ -29,6 +35,7 @@ sentry_sdk.init(
     # Add data like request headers and IP for users, if applicable;
     # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
     send_default_pii=True,
+    enable_logs=True,
 )
 ```
 
@@ -39,34 +46,48 @@ import logging
 
 def main():
     sentry_sdk.init(...)  # same as above
-
-    logging.debug("I am ignored")
-    logging.info("I am a breadcrumb")
-    logging.error("I am an event", extra=dict(bar=43))
-    logging.exception("An exception happened")
+    logging.info("Logging some info")
+    logging.error("Logging an error")
 
 main()
 ```
 
-- There will be an error event with the message `"I am an event"`.
-- `"I am a breadcrumb"` will be attached as a breadcrumb to that event.
-- `bar` will end up in the event's `extra` attributes.
-- `"An exception happened"` will send the current exception from `sys.exc_info()` with the stack trace and everything to the Sentry Python SDK. If there's no exception, the current stack will be attached.
-- The debug message `"I am ignored"` will not surface anywhere. To capture it, you need to lower `level` to `DEBUG` (See below).
+This will capture both logs and send them to Sentry Logs. Additionally, an error event will be created from the `ERROR`-level log. In addition to that, a breadcrumb will be created from the `INFO`-level log.
 
-Log records can additionally also be captured as [Sentry logs](/platforms/python/logs/) as long as the `enable_logs` option is `True`.
+## Behavior
+
+As long as `enable_logs` is `True`, logs with a level of `INFO` and higher will be captured as Sentry logs if the log level set in the `logging` module is `INFO` or below. The threshold can be configured via the [`sentry_logs_level` option](#options).
+
+Additionally, the logging integration will create an error event from all `ERROR`-level logs. This feature is configurable via the [`event_level` integration option](#options).
+
+`INFO` and above logs will also be captured as breadcrumbs. Use the [`level` integration option](#options) to adjust the threshold.
 
 ```python
 import logging
+
 import sentry_sdk
 
 sentry_sdk.init(
-    # ...
+    ...,
     enable_logs=True,
 )
 
-logging.info("I will be sent to Sentry logs")
+# The following will be captured as Sentry logs:
+logging.info("I'm an INFO log")
+logging.error("I'm an ERROR log", extra={"bar": 43})
+logging.exception("I'm an exception log")
+
+# DEBUG-level logs won't be captured by default
+logging.debug("I'm a DEBUG log")
 ```
+
+- All of the above logs except for the `DEBUG` level message will be sent to Sentry as logs.
+- An error event with the message `"I'm an ERROR log"` will be created.
+- `"I'm an INFO log"` will be attached as a breadcrumb to that event.
+- `bar` will end up in the `extra` attributes of that event.
+- `"I'm an exception log"` will send the current exception from `sys.exc_info()` with the stack trace to Sentry. If there's no exception, the current stack will be attached.
+- The debug message `"I'm a DEBUG log"` will not be captured by Sentry. See the [`sentry_logs_level` option](#option) to adjust which levels should be sent to Sentry as logs, and the [`level` option](#option) to do adjust the level for capturing breadcrumbs.
+
 
 ### Working with Extra Fields
 
@@ -115,19 +136,15 @@ sentry_sdk.init(
     # ...
     integrations=[
         LoggingIntegration(
+            sentry_logs_level=logging.INFO,  # Capture INFO and above as logs
             level=logging.INFO,              # Capture INFO and above as breadcrumbs
             event_level=logging.ERROR,       # Send ERROR records as events
-            sentry_logs_level=logging.INFO,  # Capture INFO and above as logs
         ),
     ],
 )
 ```
 
 You can pass the following keyword arguments to `LoggingIntegration()`:
-
-- `level` (default `INFO`): The Sentry Python SDK will record log records with a level higher than or equal to `level` as breadcrumbs. Inversely, the SDK completely ignores any log record with a level lower than this one. If a value of `None` occurs, the SDK won't send log records as breadcrumbs.
-
-- `event_level` (default `ERROR`): The Sentry Python SDK will report log records with a level higher than or equal to `event_level` as events as long as the logger itself is set to output records of those log levels (see note below). If a value of `None` occurs, the SDK won't send log records as events.
 
 - `sentry_logs_level` (default `INFO`): The Sentry Python SDK will capture records with a level higher than or equal to `sentry_logs_level` as [Sentry structured logs](/platforms/python/logs/) as long as the `enable_logs` option is `True`.
 
@@ -138,17 +155,12 @@ You can pass the following keyword arguments to `LoggingIntegration()`:
   )
   ```
 
-<Alert title="Note">
+- `level` (default `INFO`): The Sentry Python SDK will record log records with a level higher than or equal to `level` as breadcrumbs. Inversely, the SDK completely ignores any log record with a level lower than this one. If a value of `None` occurs, the SDK won't send log records as breadcrumbs.
 
-The Sentry Python SDK will honor the configured level of each logger (set with `logger.setLevel(level)` or `logging.basicConfig(level=level)`). That means that you will not see any `INFO` or `DEBUG` events from a logger with the level set to `WARNING`, regardless of how you configure the integration. If not set explicitly, the logging level defaults to `WARNING`.
+- `event_level` (default `ERROR`): The Sentry Python SDK will report log records with a level higher than or equal to `event_level` as events as long as the logger itself is set to output records of those log levels (see note below). If a value of `None` occurs, the SDK won't send log records as events.
 
-</Alert>
 
-<Alert title="Logs are not sent to Sentry?">
 
-Some frameworks, such as `uvicorn`, may reset or override your `logging` configuration. To ensure your log level is applied and logs at or above the configured level are picked up by the SDK, you can use the `force=True` flag when configuring your log level. For example `logger.setLevel(level, force=True)` and `logging.basicConfig(level=level, force=True)`.
-
-</Alert>
 
 ## Ignoring a logger
 
@@ -173,3 +185,15 @@ Instead of using `LoggingIntegration`, you can use two regular logging `logging.
 **Usually, you don't need this.** You _can_ use this together with `default_integrations=False` if you want to opt into what the Sentry Python SDK captures. However, correctly setting up logging is difficult. Also, an opt-in approach to capture data will miss errors you may not think of on your own.
 
 See the [API documentation](https://getsentry.github.io/sentry-python/integrations.html#module-sentry_sdk.integrations.logging) for more information.
+
+## Troubleshooting
+
+<Expandable title="Logs not appearing in Sentry">
+
+  First, make sure you have the `enable_logs=True` option in your `sentry_sdk.init()` and you're on the latest version of the SDK.
+
+  The SDK will honor the configured level of each logger (set with `logger.setLevel(level)` or `logging.basicConfig(level=level)`). That means that you will not see any `INFO` or `DEBUG` events from a logger with the level set to `WARNING`, regardless of how you configure the integration. If not set explicitly, the logging level defaults to `WARNING`.
+
+  Some frameworks, such as `uvicorn`, may reset or override your `logging` configuration. To ensure your log level is applied and logs at or above the configured level are picked up by the SDK, you can use the `force=True` flag when configuring your log level. For example `logger.setLevel(level, force=True)` and `logging.basicConfig(level=level, force=True)`.
+
+</Expandable>

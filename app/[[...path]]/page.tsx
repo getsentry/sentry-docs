@@ -1,4 +1,4 @@
-import {useMemo} from 'react';
+import {Fragment, useMemo} from 'react';
 import {getMDXComponent} from 'mdx-bundler/client';
 import {Metadata} from 'next';
 import {notFound} from 'next/navigation';
@@ -9,6 +9,7 @@ import {ApiPage} from 'sentry-docs/components/apiPage';
 import {DocPage} from 'sentry-docs/components/docPage';
 import Home from 'sentry-docs/components/home';
 import {Include} from 'sentry-docs/components/include';
+import {PageLoadMetrics} from 'sentry-docs/components/pageLoadMetrics';
 import {PlatformContent} from 'sentry-docs/components/platformContent';
 import {
   DocNode,
@@ -26,6 +27,7 @@ import {
   getVersionsFromDoc,
 } from 'sentry-docs/mdx';
 import {mdxComponents} from 'sentry-docs/mdxComponents';
+import {PageType} from 'sentry-docs/metrics';
 import {setServerContext} from 'sentry-docs/serverContext';
 import {PaginationNavNode} from 'sentry-docs/types/paginationNavNode';
 import {stripVersion} from 'sentry-docs/versioning';
@@ -74,7 +76,12 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
   });
 
   if (!params.path && !isDeveloperDocs) {
-    return <Home />;
+    return (
+      <Fragment>
+        <PageLoadMetrics pageType="home" />
+        <Home />
+      </Fragment>
+    );
   }
 
   const pageNode = nodeForPath(rootNode, params.path ?? '');
@@ -119,14 +126,19 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
       throw e;
     }
     const {mdxSource, frontMatter} = doc;
+
     // pass frontmatter tree into sidebar, rendered page + fm into middle, headers into toc
+    const pageType = (params.path?.[0] as PageType) || 'unknown';
     return (
-      <MDXLayoutRenderer
-        mdxSource={mdxSource}
-        frontMatter={frontMatter}
-        nextPage={nextPage}
-        previousPage={previousPage}
-      />
+      <Fragment>
+        <PageLoadMetrics pageType={pageType} attributes={{is_developer_docs: true}} />
+        <MDXLayoutRenderer
+          mdxSource={mdxSource}
+          frontMatter={frontMatter}
+          nextPage={nextPage}
+          previousPage={previousPage}
+        />
+      </Fragment>
     );
   }
 
@@ -135,11 +147,29 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
     const category = categories.find(c => c.slug === params?.path?.[1]);
     if (category) {
       if (params.path.length === 2) {
-        return <ApiCategoryPage category={category} />;
+        // API category page
+        return (
+          <Fragment>
+            <PageLoadMetrics pageType="api" attributes={{api_category: category.slug}} />
+            <ApiCategoryPage category={category} />
+          </Fragment>
+        );
       }
       const api = category.apis.find(a => a.slug === params.path?.[2]);
       if (api) {
-        return <ApiPage api={api} />;
+        // Specific API endpoint page
+        return (
+          <Fragment>
+            <PageLoadMetrics
+              pageType="api"
+              attributes={{
+                api_category: category.slug,
+                api_endpoint: api.slug,
+              }}
+            />
+            <ApiPage api={api} />
+          </Fragment>
+        );
       }
     }
   }
@@ -161,13 +191,24 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
   const versions = getVersionsFromDoc(allFm, pageNode.path);
 
   // pass frontmatter tree into sidebar, rendered page + fm into middle, headers into toc.
+  const pageType = (params.path?.[0] as PageType) || 'unknown';
   return (
-    <MDXLayoutRenderer
-      mdxSource={mdxSource}
-      frontMatter={{...frontMatter, versions}}
-      nextPage={nextPage}
-      previousPage={previousPage}
-    />
+    <Fragment>
+      <PageLoadMetrics
+        pageType={pageType}
+        attributes={{
+          has_platform_content: params.path?.[0] === 'platforms',
+          is_versioned: pageNode.path.includes('__v'),
+          has_versions: versions && versions.length > 0,
+        }}
+      />
+      <MDXLayoutRenderer
+        mdxSource={mdxSource}
+        frontMatter={{...frontMatter, versions}}
+        nextPage={nextPage}
+        previousPage={previousPage}
+      />
+    </Fragment>
   );
 }
 
