@@ -155,8 +155,17 @@ export const renderChildren = (
 
       // Add section header (with optional link)
       const sectionLink = SECTION_LINKS[sectionKey];
-      const sectionHref = sectionLink && rootPath ? `/${rootPath}/${sectionLink}/` : null;
-      
+      // Check if the section link page actually exists in the tree before creating a link
+      const sectionPageExists = sectionLink
+        ? children.some(
+            child => child.name === sectionLink && child.node !== null
+          )
+        : false;
+      const sectionHref =
+        sectionLink && rootPath && sectionPageExists
+          ? `/${rootPath}/${sectionLink}/`
+          : null;
+
       result.push(
         <li
           key={`header-${sectionKey}`}
