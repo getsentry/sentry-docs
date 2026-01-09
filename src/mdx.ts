@@ -69,6 +69,33 @@ if (process.env.CI) {
 
 const md5 = (data: BinaryLike) => createHash('md5').update(data).digest('hex');
 
+/**
+ * Extract image paths from MDX source and compute a combined hash of their contents.
+ * This ensures the cache key changes when referenced images are modified.
+ */
+async function getImageHashesFromSource(source: string, cwd: string): Promise<string> {
+  // Match markdown image syntax: ![alt](./path/to/image.ext)
+  const imageRegex = /!\[.*?\]\((\.[^)]+\.(png|jpg|jpeg|gif|svg|webp))\)/gi;
+  const matches = [...source.matchAll(imageRegex)];
+
+  if (matches.length === 0) {
+    return '';
+  }
+
+  const imageHashes: string[] = [];
+  for (const match of matches) {
+    const imagePath = path.join(cwd, match[1]);
+    try {
+      const imageContent = await readFile(imagePath);
+      imageHashes.push(md5(imageContent));
+    } catch {
+      // Image doesn't exist yet or can't be read, skip
+    }
+  }
+
+  return imageHashes.length > 0 ? md5(imageHashes.join('')) : '';
+}
+
 // Worker-level registry cache to avoid fetching multiple times per worker
 let cachedRegistryHash: Promise<string> | null = null;
 
@@ -605,12 +632,15 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
   // Check cache in CI environments
   if (process.env.CI) {
     const sourceHash = md5(source);
+    const imageHash = await getImageHashesFromSource(source, path.dirname(sourcePath));
 
     // Include registry hash in cache key for registry-dependent files
     if (dependsOnRegistry) {
       try {
         const registryHash = await getRegistryHash();
-        cacheKey = `${sourceHash}-${registryHash}`;
+        cacheKey = imageHash
+          ? `${sourceHash}-${registryHash}-${imageHash}`
+          : `${sourceHash}-${registryHash}`;
         // eslint-disable-next-line no-console
         console.info(
           `Using registry-aware cache for ${sourcePath} (registry hash: ${registryHash.slice(0, 8)}...)`
@@ -625,7 +655,7 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
         cacheKey = null;
       }
     } else {
-      cacheKey = sourceHash;
+      cacheKey = imageHash ? `${sourceHash}-${imageHash}` : sourceHash;
     }
 
     if (cacheKey) {
