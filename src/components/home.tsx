@@ -208,7 +208,7 @@ export default async function Home() {
                   Error Monitoring
                 </a>
                 ,{' '}
-                <a href="/product/tracing/" className="text-[#8b5cf6] underline">
+                <a href="/product/explore/trace-explorer/" className="text-[#8b5cf6] underline">
                   Tracing
                 </a>
                 ,{' '}
