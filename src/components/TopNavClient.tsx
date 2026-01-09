@@ -96,7 +96,7 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
   const platformDropdownRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const isPlatformsRoute = pathname?.startsWith('/platforms/');
-  const closeTimers = useRef<{products?: NodeJS.Timeout; sdks?: NodeJS.Timeout}>({});
+  const closeTimers = useRef<{products?: NodeJS.Timeout; sdks?: NodeJS.Timeout; concepts?: NodeJS.Timeout; admin?: NodeJS.Timeout}>({});
   const [productsDropdownOpen, setProductsDropdownOpen] = useState(false);
   const [conceptsDropdownOpen, setConceptsDropdownOpen] = useState(false);
   const [adminDropdownOpen, setAdminDropdownOpen] = useState(false);
@@ -259,7 +259,21 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
             {mainSections.map(section => (
               <li key={section.href} className="list-none relative">
                 {section.label === 'Products' ? (
-                  <div style={{display: 'inline-block'}}>
+                  <div 
+                    style={{display: 'inline-block'}}
+                    onMouseEnter={() => {
+                      clearTimeout(closeTimers.current.products);
+                      setProductsDropdownOpen(true);
+                      setConceptsDropdownOpen(false);
+                      setAdminDropdownOpen(false);
+                      setPlatformDropdownOpen(false);
+                    }}
+                    onMouseLeave={() => {
+                      closeTimers.current.products = setTimeout(() => {
+                        setProductsDropdownOpen(false);
+                      }, 150);
+                    }}
+                  >
                     <button
                       ref={productsBtnRef}
                       className={`text-[var(--gray-12)] transition-colors duration-150 inline-block py-2 px-1 rounded-t-md flex items-center gap-1 text-[0.875rem] font-normal ${
@@ -295,7 +309,22 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
                     </button>
                   </div>
                 ) : section.label === 'SDKs' ? (
-                  <div style={{display: 'inline-block'}}>
+                  <div 
+                    style={{display: 'inline-block'}}
+                    onMouseEnter={() => {
+                      clearTimeout(closeTimers.current.sdks);
+                      setPlatformDropdownOpen(true);
+                      setProductsDropdownOpen(false);
+                      setConceptsDropdownOpen(false);
+                      setAdminDropdownOpen(false);
+                    }}
+                    onMouseLeave={() => {
+                      closeTimers.current.sdks = setTimeout(() => {
+                        setPlatformDropdownOpen(false);
+                        setPlatformDropdownByClick(false);
+                      }, 150);
+                    }}
+                  >
                     <button
                       ref={platformBtnRef}
                       className={`text-[var(--gray-12)] transition-colors duration-150 inline-block py-2 px-1 rounded-t-md flex items-center gap-1 text-[0.875rem] font-normal ${
@@ -331,7 +360,21 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
                     </button>
                   </div>
                 ) : section.label === 'Concepts & Reference' ? (
-                  <div style={{display: 'inline-block'}}>
+                  <div 
+                    style={{display: 'inline-block'}}
+                    onMouseEnter={() => {
+                      clearTimeout(closeTimers.current.concepts);
+                      setConceptsDropdownOpen(true);
+                      setProductsDropdownOpen(false);
+                      setAdminDropdownOpen(false);
+                      setPlatformDropdownOpen(false);
+                    }}
+                    onMouseLeave={() => {
+                      closeTimers.current.concepts = setTimeout(() => {
+                        setConceptsDropdownOpen(false);
+                      }, 150);
+                    }}
+                  >
                     <button
                       ref={conceptsBtnRef}
                       className={`text-[var(--gray-12)] transition-colors duration-150 inline-block py-2 px-1 rounded-t-md flex items-center gap-1 text-[0.875rem] font-normal ${
@@ -370,7 +413,21 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
                     </button>
                   </div>
                 ) : section.label === 'Admin' ? (
-                  <div style={{display: 'inline-block'}}>
+                  <div 
+                    style={{display: 'inline-block'}}
+                    onMouseEnter={() => {
+                      clearTimeout(closeTimers.current.admin);
+                      setAdminDropdownOpen(true);
+                      setProductsDropdownOpen(false);
+                      setConceptsDropdownOpen(false);
+                      setPlatformDropdownOpen(false);
+                    }}
+                    onMouseLeave={() => {
+                      closeTimers.current.admin = setTimeout(() => {
+                        setAdminDropdownOpen(false);
+                      }, 150);
+                    }}
+                  >
                     <button
                       ref={adminBtnRef}
                       className={`text-[var(--gray-12)] transition-colors duration-150 inline-block py-2 px-1 rounded-t-md flex items-center gap-1 text-[0.875rem] font-normal ${
@@ -441,6 +498,14 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
               msOverflowStyle: 'none',
             }}
             onClick={e => e.stopPropagation()}
+            onMouseEnter={() => {
+              clearTimeout(closeTimers.current.products);
+            }}
+            onMouseLeave={() => {
+              closeTimers.current.products = setTimeout(() => {
+                setProductsDropdownOpen(false);
+              }, 150);
+            }}
           >
             <style>{`
             .dark .product-dropdown-link {
@@ -478,6 +543,15 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
               fontFamily: 'var(--font-sans, sans-serif)',
             }}
             onClick={e => e.stopPropagation()}
+            onMouseEnter={() => {
+              clearTimeout(closeTimers.current.sdks);
+            }}
+            onMouseLeave={() => {
+              closeTimers.current.sdks = setTimeout(() => {
+                setPlatformDropdownOpen(false);
+                setPlatformDropdownByClick(false);
+              }, 150);
+            }}
           >
             <style>{`
             .${platformSelectorStyles.popover} {
@@ -585,6 +659,14 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
               msOverflowStyle: 'none',
             }}
             onClick={e => e.stopPropagation()}
+            onMouseEnter={() => {
+              clearTimeout(closeTimers.current.concepts);
+            }}
+            onMouseLeave={() => {
+              closeTimers.current.concepts = setTimeout(() => {
+                setConceptsDropdownOpen(false);
+              }, 150);
+            }}
           >
             <style>{`
             .dark .concepts-dropdown-link {
@@ -620,6 +702,14 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
               msOverflowStyle: 'none',
             }}
             onClick={e => e.stopPropagation()}
+            onMouseEnter={() => {
+              clearTimeout(closeTimers.current.admin);
+            }}
+            onMouseLeave={() => {
+              closeTimers.current.admin = setTimeout(() => {
+                setAdminDropdownOpen(false);
+              }, 150);
+            }}
           >
             <style>{`
             .dark .admin-dropdown-link {
