@@ -76,7 +76,31 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/telemetry/spans/batch-processor/',
-    destination: '/sdk/telemetry/telemetry-buffer/batch-processor/',
+    destination: '/sdk/telemetry/telemetry-processor/batch-processor/',
+  },
+  {
+    source: '/sdk/telemetry/telemetry-buffer/',
+    destination: '/sdk/telemetry/telemetry-processor/',
+  },
+  {
+    source: '/sdk/telemetry/telemetry-buffer/backend-telemetry-buffer/',
+    destination: '/sdk/telemetry/telemetry-processor/backend-telemetry-processor/',
+  },
+  {
+    source: '/sdk/telemetry/telemetry-buffer/browser-telemetry-buffer/',
+    destination: '/sdk/telemetry/telemetry-processor/browser-telemetry-processor/',
+  },
+  {
+    source: '/sdk/telemetry/telemetry-buffer/gdx-telemetry-buffer/',
+    destination: '/sdk/telemetry/telemetry-processor/gdx-telemetry-processor/',
+  },
+  {
+    source: '/sdk/telemetry/telemetry-buffer/mobile-telemetry-buffer/',
+    destination: '/sdk/telemetry/telemetry-processor/mobile-telemetry-processor/',
+  },
+  {
+    source: '/sdk/telemetry/telemetry-buffer/batch-processor/',
+    destination: '/sdk/telemetry/telemetry-processor/batch-processor/',
   },
   {
     source: '/sdk/setup-wizards/:path*',
