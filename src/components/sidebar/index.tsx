@@ -15,6 +15,7 @@ import {PlatformSelector} from '../platformSelector';
 import {VersionSelector} from '../versionSelector';
 
 import {DevelopDocsSidebar} from './developDocsSidebar';
+import {MobileSidebarNav} from './MobileSidebarNav';
 import {SidebarSeparator} from './sidebarLink';
 import {SidebarMoreLinks} from './SidebarMoreLinks';
 import {SidebarNavigation} from './sidebarNavigation';
@@ -88,6 +89,7 @@ export async function Sidebar({path, versions}: SidebarProps) {
           className="md:flex flex-col items-stretch h-full"
           style={{display: 'flex', flexDirection: 'column', height: '100%'}}
         >
+          <MobileSidebarNav />
           <div className="platform-selector px-3">
             <div className="mb-3">
               <PlatformSelector
@@ -126,6 +128,7 @@ export async function Sidebar({path, versions}: SidebarProps) {
         className="md:flex flex-col items-stretch h-full"
         style={{display: 'flex', flexDirection: 'column', height: '100%'}}
       >
+        <MobileSidebarNav />
         <div
           className={`${styles['sidebar-main']} px-3 flex-1`}
           style={{overflow: 'auto'}}

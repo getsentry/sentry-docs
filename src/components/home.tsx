@@ -71,7 +71,7 @@ export default async function Home() {
         />
 
         {/* Content Container */}
-        <div className="max-w-screen-xl mx-auto px-[50px] pt-16 pb-6 relative z-10">
+        <div className="max-w-screen-xl mx-auto px-4 sm:px-8 lg:px-[50px] pt-16 pb-6 relative z-10">
           <div className="flex flex-col lg:flex-row items-start gap-12">
             {/* Left Column: Welcome Text + Search */}
             <div className="flex-1 flex flex-col items-start justify-center lg:w-[50%]">
@@ -113,12 +113,7 @@ export default async function Home() {
                 >
                   Top SDKs
                 </h2>
-                <div
-                  className="grid gap-4 mb-6"
-                  style={{
-                    gridTemplateColumns: 'repeat(4, 1fr)',
-                  }}
-                >
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
                   {mostViewedSDKs.map(platform => (
                     <a
                       key={platform.key}
@@ -152,7 +147,7 @@ export default async function Home() {
                 </div>
                 <a
                   href="#all-sdks"
-                  className="hover:underline font-bold text-center block uppercase tracking-wider"
+                  className="hover:underline font-bold text-center block uppercase tracking-wider mt-2"
                   style={{
                     color: '#8b5cf6',
                     fontSize: '0.875rem',
@@ -166,7 +161,7 @@ export default async function Home() {
           </div>
         </div>
       </div>
-      <div className="hero max-w-screen-xl mx-auto px-[50px] py-2">
+      <div className="hero max-w-screen-xl mx-auto px-4 sm:px-8 lg:px-[50px] py-2">
         {/* Sentry Features Header */}
         <h2 className="text-2xl mt-0 mb-6 font-medium">Sentry features</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

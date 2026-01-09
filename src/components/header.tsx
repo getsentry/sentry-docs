@@ -10,7 +10,7 @@ import {Platform} from 'sentry-docs/types';
 
 import sidebarStyles from './sidebar/style.module.scss';
 
-import {MobileMenu} from './mobileMenu';
+import {MagicIcon} from './cutomIcons/magic';
 import {Search} from './search';
 import {ThemeToggle} from './theme-toggle';
 import TopNavClient from './TopNavClient';
@@ -104,12 +104,17 @@ export default function Header({
               <ThemeToggle />
             </div>
           )}
-          {!noSearch && (
-            <div className="flex items-center sm:hidden ml-2 gap-2 w-full justify-between">
-              <MobileMenu pathname={pathname} searchPlatforms={searchPlatforms || []} />
-              <ThemeToggle />
-            </div>
-          )}
+          {/* Mobile: show Ask AI button and theme toggle */}
+          <div className="flex items-center sm:hidden ml-auto gap-3">
+            <button
+              className="kapa-ai-class flex items-center gap-1.5 text-sm font-medium text-[var(--foreground)] px-2 py-1.5 rounded-md hover:bg-[var(--gray-a3)] transition-colors"
+              aria-label="Ask AI"
+            >
+              <MagicIcon className="size-4" />
+              <span className="uppercase text-xs">Ask AI</span>
+            </button>
+            <ThemeToggle />
+          </div>
         </div>
       </nav>
       <style>{`
