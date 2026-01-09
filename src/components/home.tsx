@@ -2,6 +2,7 @@ import Image from 'next/image';
 
 import {Banner} from 'sentry-docs/components/banner';
 import {SentryWordmarkLogo} from 'sentry-docs/components/wordmarkLogo';
+import AiImage from 'sentry-docs/imgs/integrate.png';
 import PlugImage from 'sentry-docs/imgs/api.png';
 import ChatBubble from 'sentry-docs/imgs/chat-bubble.png';
 import TerminalImage from 'sentry-docs/imgs/cli.png';
@@ -56,7 +57,16 @@ export function Home() {
             image={RocketImage}
             imageAlt="Rocket image"
             title="What is Sentry?"
-            description="Application monitoring and debugging software considered “not bad” by 4 million developers."
+            description="Application monitoring and debugging software considered 'not bad' by 4 million developers."
+          />
+
+          <Card
+            className="w-full md:w-[calc(50%-12px)]"
+            href="/ai/"
+            image={AiImage}
+            imageAlt="AI integration image"
+            title="Sentry In AI"
+            description="Integrate Sentry into your AI workflows with agent skills, MCP, agent monitoring, and Seer."
           />
 
           <Card

@@ -210,6 +210,50 @@ type Redirect = {
 /** Note: if you want to set redirects for developer docs, set them below in `DEVELOPER_DOCS_REDIRECTS` */
 const USER_DOCS_REDIRECTS: Redirect[] = [
   {
+    from: '/product/sentry-mcp/',
+    to: '/ai/mcp/',
+  },
+  {
+    from: '/product/insights/ai/',
+    to: '/ai/monitoring/',
+  },
+  {
+    from: '/product/insights/ai/agents/',
+    to: '/ai/monitoring/agents/',
+  },
+  {
+    from: '/product/insights/ai/agents/getting-started/',
+    to: '/ai/monitoring/agents/getting-started/',
+  },
+  {
+    from: '/product/insights/ai/agents/dashboard/',
+    to: '/ai/monitoring/agents/dashboard/',
+  },
+  {
+    from: '/product/insights/ai/agents/privacy/',
+    to: '/ai/monitoring/agents/privacy/',
+  },
+  {
+    from: '/product/insights/ai/mcp/',
+    to: '/ai/monitoring/mcp/',
+  },
+  {
+    from: '/product/insights/ai/mcp/getting-started/',
+    to: '/ai/monitoring/mcp/getting-started/',
+  },
+  {
+    from: '/product/insights/ai/mcp/dashboard/',
+    to: '/ai/monitoring/mcp/dashboard/',
+  },
+  {
+    from: '/ai/agent-monitoring/',
+    to: '/ai/monitoring/agents/',
+  },
+  {
+    from: '/ai/mcp-monitoring/',
+    to: '/ai/monitoring/mcp/',
+  },
+  {
     from: '/platforms/python/http_errors/',
     to: '/platforms/python/integrations/django/http_errors/',
   },

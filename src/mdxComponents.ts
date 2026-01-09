@@ -22,6 +22,7 @@ import {GradleUploadInstructions} from './components/gradleUploadInstructions';
 import {GuideGrid} from './components/guideGrid';
 import {JsBundleList} from './components/jsBundleList';
 import {LambdaLayerDetail} from './components/lambdaLayerDetail';
+import {LinkCard, LinkCardGrid} from './components/linkCard';
 import {LinkWithPlatformIcon} from './components/linkWithPlatformIcon';
 import {LLMSteering} from './components/llmSteering';
 import {
@@ -92,6 +93,8 @@ export function mdxComponents(
     JsBundleList,
     LambdaLayerDetail,
     Link: SmartLink,
+    LinkCard,
+    LinkCardGrid,
     LinkWithPlatformIcon,
     LLMSteering,
     OrgAuthTokenNote,
