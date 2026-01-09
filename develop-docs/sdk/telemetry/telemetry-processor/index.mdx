@@ -12,8 +12,7 @@ sidebar_order: 5
   This document uses key words such as "MUST", "SHOULD", and "MAY" as defined in [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt) to indicate requirement levels.
 </Alert>
 
-The telemetry processor ensures data is delivered efficiently to Sentry. It receives data from the client and forwards it to the transport. Its key responsibilities include buffering, rate limiting, client reporting, priority-based sending, and, on some platforms, offline caching. We recommend adding the telemetry processor only for high-volume data, such as spans, logs, and metrics. If your SDK doesn't implement any of these high-volume data features, it **MAY** not have a telemetry processor.
-
+The telemetry processor ensures data is delivered efficiently to Sentry. It receives data from the client and forwards it to the transport. Its key responsibilities include buffering, rate limiting, client reports, priority-based sending, and, on some platforms, offline caching.
 
 ```mermaid
 flowchart LR
@@ -21,7 +20,9 @@ flowchart LR
   TelemetryProcessor -- sendEnvelope --> Transport
 ```
 
-After integrating the telemetry processor, SDK clients **SHOULD** forward all data to it instead of the transport. SDKs **MAY** temporarily route only some telemetry data through the processor during a migration phase. The telemetry processor consists of two major components:
+Add the telemetry processor for high-volume data (spans, logs, metrics). SDKs without these features **MAY** omit it. Once added, clients **SHOULD** forward all data to the processor, not the transport. During migration, SDKs **MAY** temporarily send only some telemetry data through the processor.
+
+The telemetry processor consists of two major components:
 
 - **Telemetry Buffer**: Focuses on buffering high-volume data, such as spans and logs, into batches to minimize HTTP requests.
 - **Telemetry Scheduler**: Takes buffered data from the TelemetryBuffer and manages prioritized sending, including potential offline caching and sending of client reports.
@@ -80,17 +81,16 @@ Here's a simplified example of a log traveling through the telemetry processor:
 6. The telemetry scheduler asks the telemetry queue for the next envelope to send and passes it to the transport.
 7. The transport sends the envelope to Sentry.
 
-It’s worth noting that we don’t enforce this exact flow on all SDKs. SDKs **MAY** choose a different flow depending on their needs. For example, if it’s better on your platform that the telemetry scheduler pulls data from the telemetry buffer rather than the buffer pushing data to the telemetry scheduler, you **MAY** do so. Also, SDKs **MAY** refactor their client and transport interactions to follow this architecture, but they don't have to.
+This exact flow is not enforced for all SDKs. SDKs **MAY** adapt the architecture as needed, such as having the telemetry scheduler pull from the telemetry buffer instead of receiving pushed data.
 
-We try to streamline requirements across all platforms to ensure that all SDKs share similar logic. This is especially useful for SDKs supporting multiple platforms, such as Java, which support backend and mobile. Still, it's acceptable for the requirements to differ per platform based on their needs. This page defines the common requirements for all platforms. You can find the platform specific requirements for each platform [below](#platform-specific-requirements).
-
+We aim to standardize requirements so SDKs share consistent logic across platforms. This benefits multi-platform SDKs like Java. However, requirements **MAY** differ where necessary. This page outlines common requirements; platform-specific requirements are listed [below](#platform-specific-requirements).
 
 # Telemetry Buffer
 
 The telemetry buffer batches high-volume data and forwards it to the telemetry scheduler. This section covers the common requirements for all platforms:
 
 1. Before adding an item to a specific buffer, the telemetry buffer **SHOULD** drop rate-limited items to avoid overhead. If doing so, it **MUST** record client reports.
-2. When the telemetry buffer overflows and data must be dropped, it **MUST** record client reports.
+2. When the telemetry buffer overflows and it drops data, it **MUST** record client reports.
 3. The telemetry buffer **MUST** forward low-volume data, such as normal events, session replays, or user feedback, directly to the telemetry scheduler.
 
 ## Data Forwarding Scenarios
@@ -103,12 +103,12 @@ The telemetry buffer **MUST** forward all data in memory to the telemetry schedu
 
 # Telemetry Scheduler
 
-The telemetry scheduler collects buffered data from the telemetry buffer, prioritizes critical low-volume data (like errors and crashes) over high-volume data (like spans), builds envelopes, and forwards them to the transport. Before sending, it enforces rate limits and records client reports for dropped envelopes.
+The telemetry scheduler receives buffered data from the telemetry buffer, prioritizes critical low-volume data (like errors and crashes) over high-volume data (like spans), builds envelopes, and forwards them to the transport. Before sending, it enforces rate limits and records client reports for dropped envelopes.
 
-For the priority strategy, we recommend either LIFO (last in, first out) or round-robin, but SDKs **MAY** choose different strategies based on their needs. For storing envelopes, SDKs **MAY** choose between in-memory and on-disk storage.
+We recommend LIFO or round-robin as priority strategies, but SDKs **MAY** use other methods. Envelopes can be stored in memory, on disk, or with other solutions as needed.
 
 <Alert>
-Previously, the [unified API](/sdk/telemetry/unified-api/) handled rate limits and offline caching within the transport, requiring SDKs for multi-platform environments (like Java) to maintain separate transports with and without offline cache support. To avoid bloating the transport with extra logic—such as telemetry priority queues—we now recommend that transports focus only on sending envelopes. Features like rate limiting, offline caching, and prioritization should be managed by the telemetry scheduler, enabling consistent logic across platforms. Custom transport implementations can then remain simple, while SDKs only need to adjust the telemetry scheduler to meet platform-specific needs. While not mandatory, we recommend that SDKs refactor their transports to follow this architecture.
+Previously, the [unified API](/sdk/telemetry/unified-api/) managed rate limits and offline caching in the transport, forcing multi-platform SDKs (like Java) to maintain separate transports. To simplify, transports should now only send envelopes. The telemetry scheduler should handle rate limiting, offline caching, and prioritization, ensuring consistent logic across platforms. This keeps custom transports simple—SDKs need only adjust the scheduler for platform-specific needs. We recommend, but do not require, SDKs to adopt this architecture.
 </Alert>
 
 Here are the common requirements for all platforms:
@@ -116,7 +116,6 @@ Here are the common requirements for all platforms:
 1. The telemetry scheduler **MUST** drop rate-limited envelope items before forwarding them to the transport. When doing so, it **MUST** record respective client reports.
 2. The telemetry scheduler **SHOULD** attach the client reports to the envelopes it forwards to the transport.
 3. When the telemetry queue overflows and drops envelopes, it **MUST** record the client report.
-
 
 To be defined: How exactly does the telemetry scheduler interact with the transport to correctly remove items from the telemetry queue based on the received HTTP info and how to adhere to the [dealing with network failure](/sdk/expected-features/dealing-with-network-failures/) requirements.
 
