@@ -280,10 +280,12 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
                   >
                     <button
                       ref={productsBtnRef}
-                      className={`text-[var(--gray-12)] transition-colors duration-150 inline-block py-2 px-1 rounded-t-md flex items-center gap-1 text-[0.875rem] font-normal ${
-                        productsDropdownOpen || pathname?.startsWith(section.href)
-                          ? 'border-b-2 border-[var(--accent-purple)]'
-                          : 'hover:text-[var(--accent)]'
+                      className={`text-[var(--gray-12)] transition-all duration-150 inline-block py-2 px-1 rounded-t-md flex items-center gap-1 text-[0.875rem] font-normal border-b-2 ${
+                        pathname?.startsWith(section.href)
+                          ? 'border-[var(--accent-purple)]'
+                          : productsDropdownOpen
+                            ? 'border-[#a78bfa]'
+                            : 'border-transparent hover:border-[#a78bfa]'
                       }`}
                       onClick={() => {
                         setProductsDropdownOpen(v => !v);
@@ -330,13 +332,14 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
                   >
                     <button
                       ref={conceptsBtnRef}
-                      className={`text-[var(--gray-12)] transition-colors duration-150 inline-block py-2 px-1 rounded-t-md flex items-center gap-1 text-[0.875rem] font-normal ${
-                        conceptsDropdownOpen ||
+                      className={`text-[var(--gray-12)] transition-all duration-150 inline-block py-2 px-1 rounded-t-md flex items-center gap-1 text-[0.875rem] font-normal border-b-2 ${
                         mainSections
                           .find(s => s.label === 'CONCEPTS')
                           ?.dropdown?.some(d => pathname?.startsWith(d.href))
-                          ? 'border-b-2 border-[var(--accent-purple)]'
-                          : 'hover:text-[var(--accent)]'
+                          ? 'border-[var(--accent-purple)]'
+                          : conceptsDropdownOpen
+                            ? 'border-[#a78bfa]'
+                            : 'border-transparent hover:border-[#a78bfa]'
                       }`}
                       onClick={() => {
                         setConceptsDropdownOpen(v => !v);
@@ -383,13 +386,14 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
                   >
                     <button
                       ref={adminBtnRef}
-                      className={`text-[var(--gray-12)] transition-colors duration-150 inline-block py-2 px-1 rounded-t-md flex items-center gap-1 text-[0.875rem] font-normal ${
-                        adminDropdownOpen ||
+                      className={`text-[var(--gray-12)] transition-all duration-150 inline-block py-2 px-1 rounded-t-md flex items-center gap-1 text-[0.875rem] font-normal border-b-2 ${
                         mainSections
                           .find(s => s.label === 'ADMIN')
                           ?.dropdown?.some(d => pathname?.startsWith(d.href))
-                          ? 'border-b-2 border-[var(--accent-purple)]'
-                          : 'hover:text-[var(--accent)]'
+                          ? 'border-[var(--accent-purple)]'
+                          : adminDropdownOpen
+                            ? 'border-[#a78bfa]'
+                            : 'border-transparent hover:border-[#a78bfa]'
                       }`}
                       onClick={() => {
                         setAdminDropdownOpen(v => !v);
@@ -421,10 +425,10 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
                 ) : (
                   <Link
                     href={section.href}
-                    className={`text-[var(--gray-12)] transition-colors duration-150 inline-block py-2 px-1 rounded-t-md text-[0.875rem] font-normal ${
+                    className={`text-[var(--gray-12)] transition-all duration-150 inline-block py-2 px-1 rounded-t-md text-[0.875rem] font-normal border-b-2 ${
                       pathname?.startsWith(section.href)
-                        ? 'border-b-2 border-[var(--accent-purple)]'
-                        : 'hover:text-[var(--accent)]'
+                        ? 'border-[var(--accent-purple)]'
+                        : 'border-transparent hover:border-[#a78bfa]'
                     }`}
                   >
                     {section.label}
