@@ -100,7 +100,11 @@ export default async function Home() {
               </p>
               <HomeSearchObserver>
                 <div className="home-search-bar w-full max-w-md lg:max-w-none relative z-50 mx-auto lg:mx-0">
-                  <Search path="/" searchPlatforms={[]} useStoredSearchPlatforms={false} />
+                  <Search
+                    path="/"
+                    searchPlatforms={[]}
+                    useStoredSearchPlatforms={false}
+                  />
                 </div>
               </HomeSearchObserver>
             </div>

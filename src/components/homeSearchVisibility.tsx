@@ -49,10 +49,7 @@ export function useHomeSearchVisibility(callback: (isVisible: boolean) => void) 
       callback(e.detail.isVisible);
     };
 
-    window.addEventListener(
-      SEARCH_VISIBILITY_EVENT as any,
-      handler as EventListener
-    );
+    window.addEventListener(SEARCH_VISIBILITY_EVENT as any, handler as EventListener);
     return () => {
       window.removeEventListener(
         SEARCH_VISIBILITY_EVENT as any,

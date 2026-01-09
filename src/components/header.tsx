@@ -36,11 +36,13 @@ export default function Header({
 }: Props) {
   const isHomePage = pathname === '/';
   const [homeSearchVisible, setHomeSearchVisible] = useState(true);
-  
+
   // Listen for home search visibility changes
-  useHomeSearchVisibility(useCallback((isVisible: boolean) => {
-    setHomeSearchVisible(isVisible);
-  }, []));
+  useHomeSearchVisibility(
+    useCallback((isVisible: boolean) => {
+      setHomeSearchVisible(isVisible);
+    }, [])
+  );
 
   // Show header search if: not on home page, OR on home page but home search is scrolled out of view
   const showHeaderSearch = !isHomePage || !homeSearchVisible;
