@@ -55,9 +55,7 @@ export default async function Home() {
         <Banner />
       </div>
       {/* Hero Banner with Two-Column Layout */}
-      <div
-        className="w-full relative overflow-hidden hero-gradient"
-      >
+      <div className="w-full relative overflow-hidden hero-gradient">
         {/* Single decorative squiggle at top right */}
         <img
           src={SquiggleSVG.src}
