@@ -76,7 +76,8 @@ const md5 = (data: BinaryLike) => createHash('md5').update(data).digest('hex');
 async function getImageHashesFromSource(source: string, cwd: string): Promise<string> {
   // Match markdown image syntax: ![alt](path/to/image.ext)
   // Excludes absolute paths (starting with /) and URLs (http/https)
-  const imageRegex = /!\[.*?\]\((?!\/|https?:\/\/)([^)\s]+\.(png|jpg|jpeg|gif|svg|webp))\)/gi;
+  const imageRegex =
+    /!\[.*?\]\((?!\/|https?:\/\/)([^)\s]+\.(png|jpg|jpeg|gif|svg|webp))\)/gi;
   const matches = [...source.matchAll(imageRegex)];
 
   if (matches.length === 0) {
