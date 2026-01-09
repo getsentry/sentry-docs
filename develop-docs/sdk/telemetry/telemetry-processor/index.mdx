@@ -43,16 +43,15 @@ subgraph TelemetryProcessorSubgraph["TelemetryProcessor"]
 
       TelemetryBuffer -- add Span --> SpanBuffer
       TelemetryBuffer -- add Log or Metric --> GenericBuffer
-      TelemetryBuffer -- add Error, Check-In, Session, etc. --> OneItemBuffer
 
       SpanBuffer --> SendData
       GenericBuffer --> SendData
-      OneItemBuffer --> SendData
 
       SendData@{ shape: fork, label: "Fork or Join" }
 
     end
 
+    TelemetryBuffer -- "add low-volume data (Error, Check-In, Session, etc.)" --> TelemetryScheduler
     SendData -- when full or time out, flush buffered data --> TelemetryScheduler
 
     subgraph TelemetrySchedulerSubGraph["TelemetryScheduler"]
