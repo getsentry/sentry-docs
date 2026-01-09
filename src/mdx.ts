@@ -74,8 +74,9 @@ const md5 = (data: BinaryLike) => createHash('md5').update(data).digest('hex');
  * This ensures the cache key changes when referenced images are modified.
  */
 async function getImageHashesFromSource(source: string, cwd: string): Promise<string> {
-  // Match markdown image syntax: ![alt](./path/to/image.ext)
-  const imageRegex = /!\[.*?\]\((\.[^)]+\.(png|jpg|jpeg|gif|svg|webp))\)/gi;
+  // Match markdown image syntax: ![alt](path/to/image.ext)
+  // Excludes absolute paths (starting with /) and URLs (http/https)
+  const imageRegex = /!\[.*?\]\((?!\/|https?:\/\/)([^)\s]+\.(png|jpg|jpeg|gif|svg|webp))\)/gi;
   const matches = [...source.matchAll(imageRegex)];
 
   if (matches.length === 0) {
