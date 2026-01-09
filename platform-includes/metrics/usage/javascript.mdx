@@ -43,6 +43,24 @@ Sentry.metrics.count(
 );
 ```
 
+With version `10.33.0` and above, you can use scope APIs to set attributes on the SDK's scopes which will be applied to all metrics as long as the respective scopes are active. For the time being, only `string`, `number` and `boolean` attribute values are supported.
+
+
+```js
+Sentry.getGlobalScope().setAttributes({ is_admin: true, auth_provider: 'google' });
+
+Sentry.withScope(scope => {
+  scope.setAttribute('step', 'authentication');
+
+  // scope attributes `is_admin`, `auth_provider` and `step` are added
+  Sentry.metrics.count('clicks', 1, { attributes: { activeSince: 100 } });
+  Sentry.metrics.gauge('time_since_refresh', 4, { unit: 'hour' });
+});
+
+// scope attributes `is_admin` and `auth_provider` are added
+Sentry.metrics.distribution('response_time', 283.33, { unit: 'millisecond' });
+```
+
 ### Specifying Units
 
 For `gauge` and `distribution` metrics, you can specify a unit using the `unit` option. This helps Sentry display the metric value in a human-readable format.
