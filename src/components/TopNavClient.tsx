@@ -95,13 +95,7 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
   const platformBtnRef = useRef<HTMLButtonElement>(null);
   const platformDropdownRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
-  const isPlatformsRoute = pathname?.startsWith('/platforms/');
-  const closeTimers = useRef<{
-    admin?: NodeJS.Timeout;
-    concepts?: NodeJS.Timeout;
-    products?: NodeJS.Timeout;
-    sdks?: NodeJS.Timeout;
-  }>({});
+  const closeTimers = useRef<{products?: NodeJS.Timeout; sdks?: NodeJS.Timeout; concepts?: NodeJS.Timeout; admin?: NodeJS.Timeout}>({});
   const [productsDropdownOpen, setProductsDropdownOpen] = useState(false);
   const [conceptsDropdownOpen, setConceptsDropdownOpen] = useState(false);
   const [adminDropdownOpen, setAdminDropdownOpen] = useState(false);
@@ -263,8 +257,8 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
           >
             {mainSections.map(section => (
               <li key={section.href} className="list-none relative">
-                {section.label === 'Products' ? (
-                  <div
+                {section.label === 'PRODUCTS' ? (
+                  <div 
                     style={{display: 'inline-block'}}
                     onMouseEnter={() => {
                       clearTimeout(closeTimers.current.products);
@@ -313,59 +307,8 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
                       </svg>
                     </button>
                   </div>
-                ) : section.label === 'SDKs' ? (
-                  <div
-                    style={{display: 'inline-block'}}
-                    onMouseEnter={() => {
-                      clearTimeout(closeTimers.current.sdks);
-                      setPlatformDropdownOpen(true);
-                      setProductsDropdownOpen(false);
-                      setConceptsDropdownOpen(false);
-                      setAdminDropdownOpen(false);
-                    }}
-                    onMouseLeave={() => {
-                      closeTimers.current.sdks = setTimeout(() => {
-                        setPlatformDropdownOpen(false);
-                        setPlatformDropdownByClick(false);
-                      }, 150);
-                    }}
-                  >
-                    <button
-                      ref={platformBtnRef}
-                      className={`text-[var(--gray-12)] transition-colors duration-150 inline-block py-2 px-1 rounded-t-md flex items-center gap-1 text-[0.875rem] font-normal ${
-                        platformDropdownOpen || isPlatformsRoute
-                          ? 'border-b-2 border-[var(--accent-purple)]'
-                          : 'hover:text-[var(--accent)]'
-                      }`}
-                      onClick={() => {
-                        clearTimeout(closeTimers.current.sdks);
-                        setPlatformDropdownOpen(v => !v);
-                        setPlatformDropdownByClick(true);
-                      }}
-                      aria-haspopup="true"
-                      aria-expanded={platformDropdownOpen}
-                    >
-                      {section.label}
-                      <svg
-                        className={`ml-1 transition-transform duration-150 ${platformDropdownOpen ? 'rotate-180' : ''}`}
-                        width="16"
-                        height="16"
-                        viewBox="0 0 16 16"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          d="M4 6L8 10L12 6"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                ) : section.label === 'Concepts & Reference' ? (
-                  <div
+                ) : section.label === 'CONCEPTS' ? (
+                  <div 
                     style={{display: 'inline-block'}}
                     onMouseEnter={() => {
                       clearTimeout(closeTimers.current.concepts);
@@ -385,7 +328,7 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
                       className={`text-[var(--gray-12)] transition-colors duration-150 inline-block py-2 px-1 rounded-t-md flex items-center gap-1 text-[0.875rem] font-normal ${
                         conceptsDropdownOpen ||
                         mainSections
-                          .find(s => s.label === 'Concepts & Reference')
+                          .find(s => s.label === 'CONCEPTS')
                           ?.dropdown?.some(d => pathname?.startsWith(d.href))
                           ? 'border-b-2 border-[var(--accent-purple)]'
                           : 'hover:text-[var(--accent)]'
@@ -417,8 +360,8 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
                       </svg>
                     </button>
                   </div>
-                ) : section.label === 'Admin' ? (
-                  <div
+                ) : section.label === 'ADMIN' ? (
+                  <div 
                     style={{display: 'inline-block'}}
                     onMouseEnter={() => {
                       clearTimeout(closeTimers.current.admin);
@@ -438,7 +381,7 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
                       className={`text-[var(--gray-12)] transition-colors duration-150 inline-block py-2 px-1 rounded-t-md flex items-center gap-1 text-[0.875rem] font-normal ${
                         adminDropdownOpen ||
                         mainSections
-                          .find(s => s.label === 'Admin')
+                          .find(s => s.label === 'ADMIN')
                           ?.dropdown?.some(d => pathname?.startsWith(d.href))
                           ? 'border-b-2 border-[var(--accent-purple)]'
                           : 'hover:text-[var(--accent)]'
@@ -679,7 +622,7 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
             }
           `}</style>
             {mainSections
-              .find(s => s.label === 'Concepts & Reference')
+              .find(s => s.label === 'CONCEPTS')
               ?.dropdown?.map(dropdown => (
                 <Link
                   key={dropdown.href}
@@ -722,7 +665,7 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
             }
           `}</style>
             {mainSections
-              .find(s => s.label === 'Admin')
+              .find(s => s.label === 'ADMIN')
               ?.dropdown?.map(dropdown => (
                 <Link
                   key={dropdown.href}

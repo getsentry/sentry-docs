@@ -13,22 +13,42 @@ function debounce(func: Function, wait: number) {
   };
 }
 
+/** Find the scrollable parent element */
+function getScrollableParent(element: Element | null): Element | null {
+  if (!element) return null;
+  
+  let parent = element.parentElement;
+  while (parent) {
+    const style = window.getComputedStyle(parent);
+    const overflowY = style.overflowY;
+    if (overflowY === 'auto' || overflowY === 'scroll') {
+      return parent;
+    }
+    parent = parent.parentElement;
+  }
+  return null;
+}
+
 /** Make sure the active link is visible in the sidebar */
 export function ScrollActiveLink({activeLinkSelector}: Props) {
   useEffect(() => {
-    const sidebar = document.querySelector('[data-sidebar-link]')?.closest('aside');
-    if (!sidebar) {
+    const sidebarLink = document.querySelector('[data-sidebar-link]');
+    const scrollContainer = getScrollableParent(sidebarLink);
+    if (!scrollContainer) {
       const noOp = () => {};
       return noOp;
     }
     const onLinkClick = (e: Event) => {
       const target = e.target as HTMLElement;
-      if (target.hasAttribute('data-sidebar-link')) {
-        const top = target.getBoundingClientRect().top;
-        sessionStorage.setItem('sidebar-link-position', top.toString());
+      if (target.hasAttribute('data-sidebar-link') || target.closest('[data-sidebar-link]')) {
+        const link = target.hasAttribute('data-sidebar-link') ? target : target.closest('[data-sidebar-link]');
+        if (link) {
+          const top = link.getBoundingClientRect().top;
+          sessionStorage.setItem('sidebar-link-position', top.toString());
+        }
       }
     };
-    sidebar.addEventListener('click', onLinkClick);
+    scrollContainer.addEventListener('click', onLinkClick);
     // track active link position on scroll as well
     const onSidebarScroll = debounce(() => {
       const activeLink = document.querySelector(activeLinkSelector);
@@ -38,28 +58,36 @@ export function ScrollActiveLink({activeLinkSelector}: Props) {
       }
     }, 50);
 
-    sidebar.addEventListener('scroll', onSidebarScroll);
+    scrollContainer.addEventListener('scroll', onSidebarScroll);
     return () => {
-      sidebar.removeEventListener('click', onLinkClick);
-      sidebar.removeEventListener('scroll', onSidebarScroll);
+      scrollContainer.removeEventListener('click', onLinkClick);
+      scrollContainer.removeEventListener('scroll', onSidebarScroll);
     };
   }, [activeLinkSelector]);
 
   useEffect(() => {
-    const activeLink = document.querySelector(activeLinkSelector);
-    const sidebar = activeLink?.closest('aside')!;
-    if (!activeLink || !sidebar) {
+    const activeLink = document.querySelector(activeLinkSelector) as HTMLElement | null;
+    if (!activeLink) {
       return;
     }
+    
+    const scrollContainer = getScrollableParent(activeLink);
+    if (!scrollContainer) {
+      return;
+    }
+
     const previousBoundingRectTop = sessionStorage.getItem('sidebar-link-position');
     const currentBoundingRectTop = activeLink.getBoundingClientRect().top;
-    // scroll the sidebar to make sure the active link is visible & has the same position as when it was clicked
-    if (!previousBoundingRectTop) {
-      return;
+    
+    // If we have a previous position, try to maintain the same visual position
+    if (previousBoundingRectTop) {
+      const scrollX = 0;
+      const scrollY = scrollContainer.scrollTop + currentBoundingRectTop - +previousBoundingRectTop;
+      scrollContainer.scrollTo(scrollX, scrollY);
+    } else {
+      // No previous position - scroll the active link into view (centered in sidebar)
+      activeLink.scrollIntoView({block: 'center', behavior: 'instant'});
     }
-    const scrollX = 0;
-    const scrollY = sidebar.scrollTop + currentBoundingRectTop - +previousBoundingRectTop;
-    sidebar?.scrollTo(scrollX, scrollY);
   }, [activeLinkSelector]);
   // don't render anything, just exist as a client-side component for the useEffect.
   return null;

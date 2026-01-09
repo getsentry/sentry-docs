@@ -15,7 +15,8 @@ import {PlatformSelector} from '../platformSelector';
 import {VersionSelector} from '../versionSelector';
 
 import {DevelopDocsSidebar} from './developDocsSidebar';
-import {SidebarLink, SidebarSeparator} from './sidebarLink';
+import {SidebarSeparator} from './sidebarLink';
+import {SidebarMoreLinks} from './SidebarMoreLinks';
 import {SidebarNavigation} from './sidebarNavigation';
 import {SidebarProps} from './types';
 
@@ -109,36 +110,7 @@ export async function Sidebar({path, versions}: SidebarProps) {
             className={`${styles['sidebar-external-links']} px-3`}
             style={{flex: '0 0 auto', paddingBottom: 0}}
           >
-            <ul data-sidebar-tree>
-              <li className="mb-3" data-sidebar-branch>
-                <ul data-sidebar-tree>
-                  <SidebarLink
-                    href="https://sentry.io/changelog/"
-                    title="Changelog"
-                    className="font-bold"
-                  />
-                  <SidebarLink
-                    href="https://sandbox.sentry.io/"
-                    title="Sandbox"
-                    className="font-bold"
-                  />
-                  <SidebarLink href="https://about.codecov.io/" title="Codecov" />
-                  <SidebarLink href="https://discord.gg/sentry" title="Discord" />
-                  <SidebarLink
-                    href="https://sentry.zendesk.com/hc/en-us/"
-                    title="Support"
-                  />
-                  <SidebarLink
-                    href="https://develop.sentry.dev/self-hosted/"
-                    title="Self-Hosting Sentry"
-                  />
-                  <SidebarLink
-                    href="https://develop.sentry.dev"
-                    title="Developer Documentation"
-                  />
-                </ul>
-              </li>
-            </ul>
+            <SidebarMoreLinks />
           </div>
         </div>
       </aside>
@@ -166,36 +138,7 @@ export async function Sidebar({path, versions}: SidebarProps) {
           className={`${styles['sidebar-external-links']} px-3`}
           style={{flex: '0 0 auto', paddingBottom: 0}}
         >
-          <ul data-sidebar-tree>
-            <li className="mb-3" data-sidebar-branch>
-              <ul data-sidebar-tree>
-                <SidebarLink
-                  href="https://sentry.io/changelog/"
-                  title="Changelog"
-                  className="font-bold"
-                />
-                <SidebarLink
-                  href="https://sandbox.sentry.io/"
-                  title="Sandbox"
-                  className="font-bold"
-                />
-                <SidebarLink href="https://about.codecov.io/" title="Codecov" />
-                <SidebarLink href="https://discord.gg/sentry" title="Discord" />
-                <SidebarLink
-                  href="https://sentry.zendesk.com/hc/en-us/"
-                  title="Support"
-                />
-                <SidebarLink
-                  href="https://develop.sentry.dev/self-hosted/"
-                  title="Self-Hosting Sentry"
-                />
-                <SidebarLink
-                  href="https://develop.sentry.dev"
-                  title="Developer Documentation"
-                />
-              </ul>
-            </li>
-          </ul>
+          <SidebarMoreLinks />
         </div>
       </div>
     </aside>
