@@ -96,7 +96,12 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
   const platformDropdownRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const isPlatformsRoute = pathname?.startsWith('/platforms/');
-  const closeTimers = useRef<{products?: NodeJS.Timeout; sdks?: NodeJS.Timeout; concepts?: NodeJS.Timeout; admin?: NodeJS.Timeout}>({});
+  const closeTimers = useRef<{
+    admin?: NodeJS.Timeout;
+    concepts?: NodeJS.Timeout;
+    products?: NodeJS.Timeout;
+    sdks?: NodeJS.Timeout;
+  }>({});
   const [productsDropdownOpen, setProductsDropdownOpen] = useState(false);
   const [conceptsDropdownOpen, setConceptsDropdownOpen] = useState(false);
   const [adminDropdownOpen, setAdminDropdownOpen] = useState(false);
@@ -259,7 +264,7 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
             {mainSections.map(section => (
               <li key={section.href} className="list-none relative">
                 {section.label === 'Products' ? (
-                  <div 
+                  <div
                     style={{display: 'inline-block'}}
                     onMouseEnter={() => {
                       clearTimeout(closeTimers.current.products);
@@ -309,7 +314,7 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
                     </button>
                   </div>
                 ) : section.label === 'SDKs' ? (
-                  <div 
+                  <div
                     style={{display: 'inline-block'}}
                     onMouseEnter={() => {
                       clearTimeout(closeTimers.current.sdks);
@@ -360,7 +365,7 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
                     </button>
                   </div>
                 ) : section.label === 'Concepts & Reference' ? (
-                  <div 
+                  <div
                     style={{display: 'inline-block'}}
                     onMouseEnter={() => {
                       clearTimeout(closeTimers.current.concepts);
@@ -413,7 +418,7 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
                     </button>
                   </div>
                 ) : section.label === 'Admin' ? (
-                  <div 
+                  <div
                     style={{display: 'inline-block'}}
                     onMouseEnter={() => {
                       clearTimeout(closeTimers.current.admin);
