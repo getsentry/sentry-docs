@@ -1,9 +1,9 @@
 'use client';
 
-import {useState} from 'react';
+import {Fragment, useState} from 'react';
+import {ChevronDownIcon} from '@radix-ui/react-icons';
 import Link from 'next/link';
 import {usePathname} from 'next/navigation';
-import {ChevronDownIcon} from '@radix-ui/react-icons';
 
 const productSections = [
   {label: 'Sentry Basics', href: '/product/sentry-basics/'},
@@ -66,7 +66,7 @@ export function MobileSidebarNav() {
         {mainSections.map(section => (
           <div key={section.href}>
             {section.dropdown ? (
-              <>
+              <Fragment>
                 <button
                   onClick={() => toggleSection(section.label)}
                   className={`w-full flex items-center justify-between py-2 px-2 rounded text-sm font-medium transition-colors ${
@@ -99,7 +99,7 @@ export function MobileSidebarNav() {
                     ))}
                   </div>
                 )}
-              </>
+              </Fragment>
             ) : (
               <Link
                 href={section.href}
