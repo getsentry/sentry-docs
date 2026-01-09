@@ -16,7 +16,7 @@ function debounce(func: Function, wait: number) {
 /** Find the scrollable parent element */
 function getScrollableParent(element: Element | null): Element | null {
   if (!element) return null;
-  
+
   let parent = element.parentElement;
   while (parent) {
     const style = window.getComputedStyle(parent);
@@ -40,8 +40,13 @@ export function ScrollActiveLink({activeLinkSelector}: Props) {
     }
     const onLinkClick = (e: Event) => {
       const target = e.target as HTMLElement;
-      if (target.hasAttribute('data-sidebar-link') || target.closest('[data-sidebar-link]')) {
-        const link = target.hasAttribute('data-sidebar-link') ? target : target.closest('[data-sidebar-link]');
+      if (
+        target.hasAttribute('data-sidebar-link') ||
+        target.closest('[data-sidebar-link]')
+      ) {
+        const link = target.hasAttribute('data-sidebar-link')
+          ? target
+          : target.closest('[data-sidebar-link]');
         if (link) {
           const top = link.getBoundingClientRect().top;
           sessionStorage.setItem('sidebar-link-position', top.toString());
@@ -70,7 +75,7 @@ export function ScrollActiveLink({activeLinkSelector}: Props) {
     if (!activeLink) {
       return;
     }
-    
+
     const scrollContainer = getScrollableParent(activeLink);
     if (!scrollContainer) {
       return;
@@ -78,11 +83,12 @@ export function ScrollActiveLink({activeLinkSelector}: Props) {
 
     const previousBoundingRectTop = sessionStorage.getItem('sidebar-link-position');
     const currentBoundingRectTop = activeLink.getBoundingClientRect().top;
-    
+
     // If we have a previous position, try to maintain the same visual position
     if (previousBoundingRectTop) {
       const scrollX = 0;
-      const scrollY = scrollContainer.scrollTop + currentBoundingRectTop - +previousBoundingRectTop;
+      const scrollY =
+        scrollContainer.scrollTop + currentBoundingRectTop - +previousBoundingRectTop;
       scrollContainer.scrollTo(scrollX, scrollY);
     } else {
       // No previous position - scroll the active link into view (centered in sidebar)

@@ -95,7 +95,12 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
   const platformBtnRef = useRef<HTMLButtonElement>(null);
   const platformDropdownRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
-  const closeTimers = useRef<{admin?: NodeJS.Timeout, concepts?: NodeJS.Timeout; products?: NodeJS.Timeout; sdks?: NodeJS.Timeout;}>({});
+  const closeTimers = useRef<{
+    admin?: NodeJS.Timeout;
+    concepts?: NodeJS.Timeout;
+    products?: NodeJS.Timeout;
+    sdks?: NodeJS.Timeout;
+  }>({});
   const [productsDropdownOpen, setProductsDropdownOpen] = useState(false);
   const [conceptsDropdownOpen, setConceptsDropdownOpen] = useState(false);
   const [adminDropdownOpen, setAdminDropdownOpen] = useState(false);
@@ -258,7 +263,7 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
             {mainSections.map(section => (
               <li key={section.href} className="list-none relative">
                 {section.label === 'PRODUCTS' ? (
-                  <div 
+                  <div
                     style={{display: 'inline-block'}}
                     onMouseEnter={() => {
                       clearTimeout(closeTimers.current.products);
@@ -308,7 +313,7 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
                     </button>
                   </div>
                 ) : section.label === 'CONCEPTS' ? (
-                  <div 
+                  <div
                     style={{display: 'inline-block'}}
                     onMouseEnter={() => {
                       clearTimeout(closeTimers.current.concepts);
@@ -361,7 +366,7 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
                     </button>
                   </div>
                 ) : section.label === 'ADMIN' ? (
-                  <div 
+                  <div
                     style={{display: 'inline-block'}}
                     onMouseEnter={() => {
                       clearTimeout(closeTimers.current.admin);

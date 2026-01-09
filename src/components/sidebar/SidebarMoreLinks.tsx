@@ -25,7 +25,7 @@ export function SidebarMoreLinks() {
             title="Sandbox"
             className="font-bold"
           />
-          
+
           {/* Collapsible "More" section - styled to match SidebarLink */}
           <button
             onClick={() => setIsExpanded(!isExpanded)}
@@ -45,10 +45,7 @@ export function SidebarMoreLinks() {
             <Fragment>
               <SidebarLink href="https://about.codecov.io/" title="Codecov" />
               <SidebarLink href="https://discord.gg/sentry" title="Discord" />
-              <SidebarLink
-                href="https://sentry.zendesk.com/hc/en-us/"
-                title="Support"
-              />
+              <SidebarLink href="https://sentry.zendesk.com/hc/en-us/" title="Support" />
               <SidebarLink
                 href="https://develop.sentry.dev/self-hosted/"
                 title="Self-Hosting Sentry"
