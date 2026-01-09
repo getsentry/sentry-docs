@@ -34,7 +34,7 @@ const productSections = [
 const mainSections = [
   {label: 'SDKS', href: '/platforms/'},
   {
-    label: 'PRODUCTS',
+    label: 'PRODUCT',
     href: '/product/',
     dropdown: productSections,
   },

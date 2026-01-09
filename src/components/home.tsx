@@ -105,14 +105,6 @@ export default async function Home() {
             {/* Right Column: SDK Section (no card background) */}
             <div className="flex-shrink-0 w-full lg:w-[50%]">
               <div>
-                <h2
-                  className="text-2xl font-bold mb-6 text-center text-[var(--gray-12)]"
-                  style={{
-                    fontWeight: 700,
-                  }}
-                >
-                  Top SDKs
-                </h2>
                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
                   {mostViewedSDKs.map(platform => (
                     <a

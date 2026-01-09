@@ -42,7 +42,7 @@ const adminSections = [
 
 const mainSections = [
   {label: 'SDKs', href: '/platforms/'},
-  {label: 'Products', href: '/product/', dropdown: productSections},
+  {label: 'Product', href: '/product/', dropdown: productSections},
   {label: 'Concepts', href: '/concepts/', dropdown: conceptsSections},
   {label: 'Admin', href: '/organization/', dropdown: adminSections},
   {label: 'API', href: '/api/'},
