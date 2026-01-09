@@ -72,26 +72,26 @@ export default async function Home() {
         />
 
         {/* Content Container */}
-        <div className="max-w-screen-xl mx-auto px-4 sm:px-8 lg:px-[50px] pt-16 pb-6 relative z-10">
-          <div className="flex flex-col lg:flex-row items-start gap-12">
+        <div className="max-w-screen-xl mx-auto px-4 sm:px-8 lg:px-[50px] pt-10 pb-6 relative z-10">
+          <div className="flex flex-col lg:flex-row items-start gap-8">
             {/* Left Column: Welcome Text + Search */}
-            <div className="flex-1 flex flex-col items-start justify-center lg:w-[50%]">
+            <div className="flex-1 flex flex-col items-center lg:items-start justify-center lg:w-[50%]">
               <h1
-                className="font-bold mb-6 text-left text-[var(--gray-12)]"
+                className="font-bold mb-3 text-center lg:text-left text-[var(--gray-12)]"
                 style={{
                   fontWeight: 700,
-                  fontSize: '50px',
-                  lineHeight: 1.1,
+                  fontSize: '32px',
+                  lineHeight: 1.2,
                 }}
               >
                 Welcome to Sentry docs
               </h1>
               <p
-                className="mb-10 text-left text-[var(--gray-11)]"
+                className="mb-5 text-center lg:text-left text-[var(--gray-11)]"
                 style={{
-                  lineHeight: '1.6',
+                  lineHeight: '1.5',
                   fontWeight: 400,
-                  fontSize: '18px',
+                  fontSize: '15px',
                 }}
               >
                 Sentry provides end-to-end distributed tracing, enabling developers to
@@ -99,16 +99,16 @@ export default async function Home() {
                 services.
               </p>
               <HomeSearchObserver>
-                <div className="home-search-bar w-full max-w-2xl relative z-50">
+                <div className="home-search-bar w-full max-w-md lg:max-w-none relative z-50 mx-auto lg:mx-0">
                   <Search path="/" searchPlatforms={[]} useStoredSearchPlatforms={false} />
                 </div>
               </HomeSearchObserver>
             </div>
 
-            {/* Right Column: SDK Section - aligned so GO TO ALL SDKS aligns with search bar bottom */}
-            <div className="flex-shrink-0 w-full lg:w-[50%] lg:pt-[140px]">
+            {/* Right Column: SDK Section */}
+            <div className="flex-shrink-0 w-full lg:w-[50%] lg:pt-[20px] flex flex-col items-center lg:items-end">
               <div>
-                <div className="grid grid-cols-4 gap-2 mb-4">
+                <div className="grid grid-cols-4 lg:grid-cols-6 gap-2 mb-4">
                   {mostViewedSDKs.map(platform => (
                     <a
                       key={platform.key}
@@ -116,22 +116,25 @@ export default async function Home() {
                       className="sdk-tile flex flex-col items-center justify-center bg-white dark:bg-[var(--gray-2)] transition-transform hover:scale-105"
                       style={{
                         textDecoration: 'none',
-                        padding: '10px 6px',
+                        padding: '6px',
                         borderRadius: '6px',
+                        width: '70px',
+                        height: '70px',
                       }}
                     >
                       <PlatformIcon
                         platform={platform.key}
-                        size={32}
+                        size={36}
                         format="lg"
-                        style={{margin: 0, display: 'block', marginBottom: '4px'}}
+                        style={{margin: 0, display: 'block', marginBottom: '2px'}}
                       />
                       <span
                         className="text-[var(--gray-12)]"
                         style={{
-                          fontSize: '0.7rem',
+                          fontSize: '0.6rem',
                           fontWeight: 500,
                           textAlign: 'center',
+                          lineHeight: 1.1,
                         }}
                       >
                         {platform.title}
@@ -141,7 +144,7 @@ export default async function Home() {
                 </div>
                 <a
                   href="#all-sdks"
-                  className="hover:underline font-bold text-center block uppercase tracking-wider mt-2"
+                  className="hover:underline font-bold text-center lg:text-right block uppercase tracking-wider mt-2"
                   style={{
                     color: '#8b5cf6',
                     fontSize: '0.875rem',
@@ -420,15 +423,15 @@ export default async function Home() {
           border: 1px solid var(--gray-4);
         }
         .home-search-bar input[type="text"], .home-search-bar input {
-          height: 64px !important;
-          min-height: 64px !important;
-          font-size: 1.25rem !important;
+          height: 44px !important;
+          min-height: 44px !important;
+          font-size: 0.95rem !important;
           max-width: 100% !important;
           width: 100% !important;
           background: linear-gradient(90deg, #fff 80%, #f3e8ff 100%);
-          border: 2px solid #a78bfa !important;
-          box-shadow: 0 4px 24px 0 rgba(168,139,250,0.10), 0 1.5px 8px 0 rgba(168,139,250,0.08);
-          border-radius: 18px !important;
+          border: 1.5px solid #a78bfa !important;
+          box-shadow: 0 2px 12px 0 rgba(168,139,250,0.10), 0 1px 4px 0 rgba(168,139,250,0.08);
+          border-radius: 12px !important;
           color: #1a1a1a;
           transition: box-shadow 0.2s, border-color 0.2s;
         }
