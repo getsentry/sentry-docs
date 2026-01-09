@@ -18,7 +18,9 @@ export function HomeSearchObserver({children}: {children: React.ReactNode}) {
 
   useEffect(() => {
     const element = ref.current;
-    if (!element) return;
+    if (!element) {
+      return undefined;
+    }
 
     const observer = new IntersectionObserver(
       ([entry]) => {
