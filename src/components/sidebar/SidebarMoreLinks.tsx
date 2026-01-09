@@ -1,6 +1,6 @@
 'use client';
 
-import {useState} from 'react';
+import {Fragment, useState} from 'react';
 import {ChevronDownIcon, ChevronRightIcon} from '@radix-ui/react-icons';
 
 import styles from './style.module.scss';
@@ -42,7 +42,7 @@ export function SidebarMoreLinks() {
             )}
           </button>
           {isExpanded && (
-            <>
+            <Fragment>
               <SidebarLink href="https://about.codecov.io/" title="Codecov" />
               <SidebarLink href="https://discord.gg/sentry" title="Discord" />
               <SidebarLink
@@ -57,7 +57,7 @@ export function SidebarMoreLinks() {
                 href="https://develop.sentry.dev"
                 title="Developer Documentation"
               />
-            </>
+            </Fragment>
           )}
         </ul>
       </li>

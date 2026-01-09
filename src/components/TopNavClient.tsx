@@ -95,7 +95,7 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
   const platformBtnRef = useRef<HTMLButtonElement>(null);
   const platformDropdownRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
-  const closeTimers = useRef<{products?: NodeJS.Timeout; sdks?: NodeJS.Timeout; concepts?: NodeJS.Timeout; admin?: NodeJS.Timeout}>({});
+  const closeTimers = useRef<{admin?: NodeJS.Timeout, concepts?: NodeJS.Timeout; products?: NodeJS.Timeout; sdks?: NodeJS.Timeout;}>({});
   const [productsDropdownOpen, setProductsDropdownOpen] = useState(false);
   const [conceptsDropdownOpen, setConceptsDropdownOpen] = useState(false);
   const [adminDropdownOpen, setAdminDropdownOpen] = useState(false);
