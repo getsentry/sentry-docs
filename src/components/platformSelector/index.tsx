@@ -75,7 +75,10 @@ export function PlatformSelector({
   };
 
   const currentPlatformKey = currentPlatform?.key;
-  const [open, setOpen] = useState(alwaysOpen);
+  const path = usePathname();
+  // Auto-open selector when on /platforms/ index page (no SDK selected)
+  const isOnPlatformsIndex = path === '/platforms/' || path === '/platforms';
+  const [open, setOpen] = useState(alwaysOpen || isOnPlatformsIndex);
   const [searchValue, setSearchValue] = useState('');
 
   const matches = useMemo(() => {
@@ -131,7 +134,6 @@ export function PlatformSelector({
     }
   }, [currentPlatformKey]);
 
-  const path = usePathname();
   const isPlatformPage = Boolean(
     path?.startsWith('/platforms/') &&
       // /platforms/something

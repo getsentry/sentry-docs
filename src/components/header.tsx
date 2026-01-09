@@ -1,5 +1,6 @@
 'use client';
 
+import {useCallback, useState} from 'react';
 import {HamburgerMenuIcon} from '@radix-ui/react-icons';
 import {Button} from '@radix-ui/themes';
 import Image from 'next/image';
@@ -11,6 +12,7 @@ import {Platform} from 'sentry-docs/types';
 import sidebarStyles from './sidebar/style.module.scss';
 
 import {MagicIcon} from './cutomIcons/magic';
+import {useHomeSearchVisibility} from './homeSearchVisibility';
 import {Search} from './search';
 import {ThemeToggle} from './theme-toggle';
 import TopNavClient from './TopNavClient';
@@ -32,6 +34,17 @@ export default function Header({
   useStoredSearchPlatforms,
   platforms = [],
 }: Props) {
+  const isHomePage = pathname === '/';
+  const [homeSearchVisible, setHomeSearchVisible] = useState(true);
+  
+  // Listen for home search visibility changes
+  useHomeSearchVisibility(useCallback((isVisible: boolean) => {
+    setHomeSearchVisible(isVisible);
+  }, []));
+
+  // Show header search if: not on home page, OR on home page but home search is scrolled out of view
+  const showHeaderSearch = !isHomePage || !homeSearchVisible;
+
   return (
     <header className="bg-[var(--gray-1)] h-[var(--header-height)] w-full z-50 border-b border-[var(--gray-a3)] fixed top-0">
       {/* define a header-height variable for consumption by other components */}
@@ -70,7 +83,7 @@ export default function Header({
           </div>
           <span className="text-base font-semibold tracking-tight">Docs</span>
         </Link>
-        {!noSearch && (
+        {!noSearch && showHeaderSearch && (
           <div className="hidden sm:flex flex-shrink-0 items-center gap-2 mr-4">
             <Search
               path={pathname}

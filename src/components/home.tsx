@@ -16,6 +16,7 @@ import SupportImage from 'sentry-docs/imgs/support.png';
 import AskAiSearchParams from './askAiSearchParams';
 import {Card} from './card';
 import Header from './header';
+import {HomeSearchObserver} from './homeSearchVisibility';
 import {NavLink, NavLinkProps} from './navlink';
 import {PlatformFilter} from './platformFilter';
 import {PlatformIcon} from './platformIcon';
@@ -55,12 +56,12 @@ export default async function Home() {
         <Banner />
       </div>
       {/* Hero Banner with Two-Column Layout */}
-      <div className="w-full relative overflow-hidden hero-gradient">
+      <div className="w-full relative hero-gradient">
         {/* Single decorative squiggle at top right */}
         <img
           src={SquiggleSVG.src}
           alt=""
-          className="pointer-events-none absolute"
+          className="pointer-events-none absolute overflow-hidden"
           style={{
             right: 0,
             top: '-80px',
@@ -97,15 +98,17 @@ export default async function Home() {
                 identify and debug performance issues and errors across their systems and
                 services.
               </p>
-              <div className="home-search-bar w-full max-w-2xl">
-                <Search path="/" searchPlatforms={[]} useStoredSearchPlatforms={false} />
-              </div>
+              <HomeSearchObserver>
+                <div className="home-search-bar w-full max-w-2xl relative z-50">
+                  <Search path="/" searchPlatforms={[]} useStoredSearchPlatforms={false} />
+                </div>
+              </HomeSearchObserver>
             </div>
 
-            {/* Right Column: SDK Section (no card background) */}
-            <div className="flex-shrink-0 w-full lg:w-[50%]">
+            {/* Right Column: SDK Section - aligned so GO TO ALL SDKS aligns with search bar bottom */}
+            <div className="flex-shrink-0 w-full lg:w-[50%] lg:pt-[140px]">
               <div>
-                <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
+                <div className="grid grid-cols-4 gap-2 mb-4">
                   {mostViewedSDKs.map(platform => (
                     <a
                       key={platform.key}
@@ -113,21 +116,20 @@ export default async function Home() {
                       className="sdk-tile flex flex-col items-center justify-center bg-white dark:bg-[var(--gray-2)] transition-transform hover:scale-105"
                       style={{
                         textDecoration: 'none',
-                        padding: '16px 8px',
-                        borderRadius: '8px',
-                        aspectRatio: '1 / 1',
+                        padding: '10px 6px',
+                        borderRadius: '6px',
                       }}
                     >
                       <PlatformIcon
                         platform={platform.key}
-                        size={40}
+                        size={32}
                         format="lg"
-                        style={{margin: 0, display: 'block', marginBottom: '8px'}}
+                        style={{margin: 0, display: 'block', marginBottom: '4px'}}
                       />
                       <span
                         className="text-[var(--gray-12)]"
                         style={{
-                          fontSize: '0.75rem',
+                          fontSize: '0.7rem',
                           fontWeight: 500,
                           textAlign: 'center',
                         }}
