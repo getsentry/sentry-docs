@@ -194,6 +194,25 @@ export async function SidebarNavigation({path}: {path: string[]}) {
     );
   }
 
+  // Documentation Changelog
+  if (path[0] === 'changelog') {
+    const changelogNode = nodeForPath(rootNode, 'changelog');
+    if (changelogNode) {
+      const changelogNodes: NavNode[] = getNavNodes([changelogNode], docNodeToNavNode);
+      return (
+        <ul data-sidebar-tree>
+          <DynamicNav
+            root="changelog"
+            title="Documentation Changelog"
+            tree={toTree(changelogNodes)}
+          />
+        </ul>
+      );
+    }
+    // Return empty sidebar if no changelog node exists
+    return <ul data-sidebar-tree />;
+  }
+
   // This should never happen, all cases need to be handled above
   throw new Error(`Unknown path: ${path.join('/')} - cannot render sidebar`);
 }
