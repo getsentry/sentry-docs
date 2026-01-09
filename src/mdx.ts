@@ -487,6 +487,28 @@ export const addVersionToFilePath = (filePath: string, version: string) => {
 };
 
 export async function getFileBySlug(slug: string): Promise<SlugFile> {
+  // Block MDX compilation at Vercel runtime.
+  // MDX should only be compiled during CI builds - all pages are statically generated.
+  // If this code path is hit at runtime, it means:
+  // 1. A 404 page is being accessed (Next.js tries to render before showing not-found)
+  // 2. Some edge case in routing is bypassing static generation
+  //
+  // Without this check, runtime MDX compilation would:
+  // - Fetch from release-registry.services.sentry.io (hammering the registry)
+  // - Fail with "read-only file system" errors from esbuild
+  //
+  // See: DOCS-915, DOCS-9H5, DOCS-9N0, DOCS-9HB
+  const isVercelRuntime =
+    process.env.VERCEL && !process.env.CI && process.env.NODE_ENV !== 'development';
+
+  if (isVercelRuntime) {
+    throw new Error(
+      `[MDX Runtime Error] Attempted to compile MDX at Vercel runtime for slug "${slug}". ` +
+        `This should not happen - all pages should be pre-built during CI. ` +
+        `If you're seeing this error, the requested path may not exist or was not included in generateStaticParams().`
+    );
+  }
+
   // no versioning on a config file
   const configPath = path.join(root, slug.split(VERSION_INDICATOR)[0], 'config.yml');
 
