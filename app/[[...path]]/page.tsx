@@ -45,6 +45,9 @@ export async function generateStaticParams() {
 // Only render paths returned by generateStaticParams
 export const dynamicParams = false;
 export const dynamic = 'force-static';
+// Revalidate at most once per hour to prevent mass regeneration in preview environments
+// This limits traffic spikes from simultaneous page rebuilds
+export const revalidate = 3600;
 
 const mdxComponentsWithWrapper = mdxComponents(
   {Include, PlatformContent},
