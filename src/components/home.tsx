@@ -56,11 +56,7 @@ export default async function Home() {
       </div>
       {/* Hero Banner with Two-Column Layout */}
       <div
-        className="w-full relative overflow-hidden"
-        style={{
-          background:
-            'linear-gradient(to bottom, rgba(168, 139, 250, 0.15) 0%, rgba(255, 255, 255, 0) 100%), #ffffff',
-        }}
+        className="w-full relative overflow-hidden hero-gradient"
       >
         {/* Single decorative squiggle at top right */}
         <img
@@ -82,9 +78,8 @@ export default async function Home() {
             {/* Left Column: Welcome Text + Search */}
             <div className="flex-1 flex flex-col items-start justify-center lg:w-[50%]">
               <h1
-                className="font-bold mb-6 text-left"
+                className="font-bold mb-6 text-left text-[var(--gray-12)]"
                 style={{
-                  color: '#1a1a1a',
                   fontWeight: 700,
                   fontSize: '50px',
                   lineHeight: 1.1,
@@ -93,9 +88,8 @@ export default async function Home() {
                 Welcome to Sentry docs
               </h1>
               <p
-                className="mb-10 text-left"
+                className="mb-10 text-left text-[var(--gray-11)]"
                 style={{
-                  color: '#3f3f46',
                   lineHeight: '1.6',
                   fontWeight: 400,
                   fontSize: '18px',
@@ -114,9 +108,8 @@ export default async function Home() {
             <div className="flex-shrink-0 w-full lg:w-[50%]">
               <div>
                 <h2
-                  className="text-2xl font-bold mb-6 text-center"
+                  className="text-2xl font-bold mb-6 text-center text-[var(--gray-12)]"
                   style={{
-                    color: '#1a1a1a',
                     fontWeight: 700,
                   }}
                 >
@@ -132,13 +125,11 @@ export default async function Home() {
                     <a
                       key={platform.key}
                       href={platform.url}
-                      className="flex flex-col items-center justify-center bg-white transition-transform hover:scale-105"
+                      className="sdk-tile flex flex-col items-center justify-center bg-white dark:bg-[var(--gray-2)] transition-transform hover:scale-105"
                       style={{
                         textDecoration: 'none',
                         padding: '16px 8px',
                         borderRadius: '8px',
-                        boxShadow:
-                          '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
                         aspectRatio: '1 / 1',
                       }}
                     >
@@ -149,8 +140,8 @@ export default async function Home() {
                         style={{margin: 0, display: 'block', marginBottom: '8px'}}
                       />
                       <span
+                        className="text-[var(--gray-12)]"
                         style={{
-                          color: '#1a1a1a',
                           fontSize: '0.75rem',
                           fontWeight: 500,
                           textAlign: 'center',
@@ -420,6 +411,23 @@ export default async function Home() {
         .card-align-center > div,
         .card-align-center .flex {
           align-items: center !important;
+        }
+        /* Hero gradient - light mode */
+        .hero-gradient {
+          background: linear-gradient(to bottom, rgba(168, 139, 250, 0.15) 0%, rgba(255, 255, 255, 0) 100%), #ffffff;
+        }
+        /* Hero gradient - dark mode */
+        .dark .hero-gradient {
+          background: linear-gradient(to bottom, rgba(168, 139, 250, 0.15) 0%, rgba(0, 0, 0, 0) 100%), var(--gray-1);
+        }
+        /* SDK tiles - light mode */
+        .sdk-tile {
+          box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+        /* SDK tiles - dark mode */
+        .dark .sdk-tile {
+          box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+          border: 1px solid var(--gray-4);
         }
         .home-search-bar input[type="text"], .home-search-bar input {
           height: 64px !important;
