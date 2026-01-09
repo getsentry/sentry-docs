@@ -1,0 +1,61 @@
+The Sentry Cocoa SDK provides several options to configure how metrics are captured and sent to Sentry.
+
+### Enabling Metrics
+
+Metrics are disabled by default. To enable metrics, set `enableMetrics` to `true` when initializing the SDK:
+
+```swift
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.enableMetrics = true
+}
+```
+
+### Filtering and Modifying Metrics
+
+Use the `beforeSendMetric` callback to filter or modify metrics before they're sent to Sentry. This is useful for:
+
+- Removing sensitive data from metric attributes
+- Dropping metrics you don't want to send
+- Adding or modifying attributes
+
+The callback receives a metric object and must return either a modified metric or `nil` to drop it. Attributes use the `Attributable` protocol, so you can only assign valid types (`String`, `Bool`, `Int`, `Double`, `Float`, or arrays of these types).
+
+```swift
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.enableMetrics = true
+    options.beforeSendMetric = { metric in
+        // Create a local mutable variable since metric is a data value
+        var metric = metric
+
+        // Drop metrics with specific attributes
+        // Note: Access attributes through the Attributable protocol
+        if let dropMe = metric.attributes["dropMe"] as? Bool, dropMe == true {
+            return nil
+        }
+
+        // Modify metric attributes (only Attributable types are allowed)
+        metric.attributes["processed"] = true
+        metric.attributes["processed_at"] = "2024-01-01"
+
+        return metric
+    }
+}
+```
+
+### Flushing Metrics
+
+By default, metrics are buffered and flushed depending on buffer size and time. If you need to manually flush metrics before the automatic interval, you can use the `flush` method:
+
+```swift
+import Sentry
+
+SentrySDK.flush(timeout: 5.0)
+```
+
+This will flush all pending metrics and events to Sentry.
