@@ -45,9 +45,7 @@ sentry_sdk.init(
     send_default_pii=True,
     integrations=[
         PydanticAIIntegration(),
-    ],
-    # Disable the OpenAI integration to avoid double reporting of chat spans
-    disabled_integrations=[OpenAIIntegration()],
+    ]
 )
 ```
 
@@ -66,12 +64,6 @@ sentry_sdk.init(
     ],
 )
 ```
-
-<Alert level="warning">
-
-When using Pydantic AI with OpenAI models, you must disable the OpenAI integration to avoid double reporting of chat spans. Add `disabled_integrations=[OpenAIIntegration()]` to your `sentry_sdk.init()` call as shown in the OpenAI tab above.
-
-</Alert>
 
 ## Verify
 
@@ -105,11 +97,11 @@ support_agent = Agent(
 @support_agent.tool
 async def lookup_order(ctx: RunContext[None], order_id: str) -> dict:
     """Look up order details by order ID.
-    
+
     Args:
         ctx: The context object.
         order_id: The order identifier.
-    
+
     Returns:
         Order details including status and tracking.
     """
@@ -130,9 +122,7 @@ async def main() -> None:
         send_default_pii=True,
         integrations=[
             PydanticAIIntegration(),
-        ],
-        # Disable the OpenAI integration to avoid double reporting of chat spans
-        disabled_integrations=[OpenAIIntegration()],
+        ]
     )
 
     result = await support_agent.run(
@@ -171,11 +161,11 @@ support_agent = Agent(
 @support_agent.tool
 async def lookup_order(ctx: RunContext[None], order_id: str) -> dict:
     """Look up order details by order ID.
-    
+
     Args:
         ctx: The context object.
         order_id: The order identifier.
-    
+
     Returns:
         Order details including status and tracking.
     """
@@ -248,6 +238,13 @@ You can pass the following keyword arguments to `PydanticAIIntegration()`:
 - `include_prompts`:
 
   Whether LLM and tool inputs and outputs should be sent to Sentry. Sentry considers this data personal identifiable data (PII) by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False`.
+
+  The default is `True`.
+
+- `handled_tool_call_exceptions`:
+
+  Option to capture tool call exceptions that Pydantic AI prevents from bubbling up. These include validation errors when an agent is configured to
+  retry tool calls. All additional tool call exceptions reported when this option is `True` are handled errors in Sentry. This option has no effect on exceptions that are not handled by Pydantic AI.
 
   The default is `True`.
 

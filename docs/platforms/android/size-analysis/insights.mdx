@@ -2,6 +2,7 @@
 title: Insights
 sidebar_order: 5250
 description: Preview how Size Analysis reports highlight Android build trends.
+beta: true
 ---
 
 Size Analysis Insights point out opportunities to reduce your Android app's size. They spot patterns like duplicate files, oversized media, or unneeded assets, and list exactly what to fix along with the estimated size savings.
@@ -18,6 +19,7 @@ Below are a list of available insights for Android builds, followed by more deta
 | [WebP Optimization](#webp-optimization)                   | Tests PNG/JPEG bitmaps to see if lossless WebP would shrink them.     |
 | [Large Audio](#large-audio)                               | Surfaces hefty audio tracks that could be recompressed or trimmed.    |
 | [Hermes Debug Info (RN Only)](#hermes-debug-info-rn-only) | Points to bundled Hermes bytecode still carrying debugger metadata.   |
+| [Multiple Native Library Architectures](#multiple-native-library-architectures) | Detects when multiple native library architectures are packaged in an APK.   |
 
 ### Duplicate Files
 
@@ -106,3 +108,26 @@ You can tweak the bitrate (`b:a`) to balance quality vs. size. Higher bitrates (
 **What it is**: Detects Hermes bytecode bundles that still contain debug info sections.
 
 **How to fix**: Build the React Native bundle in release mode (`react-native bundle --dev false` or the Gradle release task) so Hermes strips debug sections before packaging.
+
+### Multiple Native Library Architectures
+
+**What it is**: Detects when multiple native libraries are packaged in an APK supporting different architectures. End user devices will only use one architecture (usually arm64_v8a), so most can be removed.
+
+**How to fix**: Upload an AAB to the Play Store (Google will automatically pass the architecture the end user needs). We also recommend you upload an AAB for size analysis.
+
+If you ship an APK, the `split {}` block can be used to output split APKs manually. If configured to skip ABI splits, Android will package all native library architectures into the main split.
+
+Ensure your split Gradle dls config has the `isEnabled = true` field set for the `abi {}` block.
+
+```kotlin
+android {
+  splits {
+    ..
+
+    abi {
+      isEnabled.set(true)
+    }
+  }
+}
+```
+More information about the ABI configuration for manual APK splits can be found in the [Android developer documentation](https://developer.android.com/studio/build/configure-apk-splits#configure-abi-split).

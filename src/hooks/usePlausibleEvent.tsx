@@ -7,6 +7,24 @@ type PlausibleEventProps = {
   ['Ask AI Referrer']: {
     referrer: string;
   };
+  ['Checklist Complete']: {
+    checklistId: string;
+    page: string;
+  };
+  ['Checklist Item Toggle']: {
+    checked: boolean;
+    checklistId: string;
+    itemId: string;
+    itemLabel: string;
+    page: string;
+  };
+  ['Checklist Link Click']: {
+    checklistId: string;
+    itemId: string;
+    link: string;
+    linkText: string;
+    page: string;
+  };
   ['Copy Expandable Content']: {
     page: string;
     title: string;
@@ -21,6 +39,12 @@ type PlausibleEventProps = {
   };
   ['Doc Feedback']: {
     helpful: boolean;
+    page: string;
+  };
+  ['Onboarding Option Toggle']: {
+    checked: boolean;
+    optionId: string;
+    optionName: string;
     page: string;
   };
   ['Open Expandable']: {
