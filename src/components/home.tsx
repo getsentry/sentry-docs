@@ -148,7 +148,7 @@ export default async function Home() {
                 </div>
                 <a
                   href="#all-sdks"
-                  className="hover:underline font-bold text-center lg:text-right block uppercase tracking-wider mt-2"
+                  className="hover:underline font-bold text-center lg:text-left block uppercase tracking-wider mt-2"
                   style={{
                     color: '#8b5cf6',
                     fontSize: '0.875rem',
