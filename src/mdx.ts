@@ -174,6 +174,22 @@ const isSupported = (
 let getDocsFrontMatterCache: Promise<FrontMatter[]> | undefined;
 
 export function getDocsFrontMatter(): Promise<FrontMatter[]> {
+  // Block filesystem scanning at Vercel runtime.
+  // Frontmatter should only be scanned during CI builds - the doc tree is pre-computed.
+  // See: DOCS-83Q, DOCS-9A5, DOCS-9RE
+  const isVercelRuntime =
+    process.env.VERCEL && !process.env.CI && process.env.NODE_ENV !== 'development';
+
+  if (isVercelRuntime) {
+    return Promise.reject(
+      new Error(
+        `[MDX Runtime Error] Attempted to scan docs frontmatter at Vercel runtime. ` +
+          `This should not happen - the doc tree should be pre-computed during CI. ` +
+          `If you're seeing this error, the requested path may not exist or was not included in generateStaticParams().`
+      )
+    );
+  }
+
   if (!getDocsFrontMatterCache) {
     getDocsFrontMatterCache = getDocsFrontMatterUncached();
   }
@@ -269,6 +285,22 @@ export async function getDevDocsFrontMatterUncached(): Promise<FrontMatter[]> {
 let getDevDocsFrontMatterCache: Promise<FrontMatter[]> | undefined;
 
 export function getDevDocsFrontMatter(): Promise<FrontMatter[]> {
+  // Block filesystem scanning at Vercel runtime.
+  // Frontmatter should only be scanned during CI builds - the doc tree is pre-computed.
+  // See: DOCS-83Q, DOCS-9A5, DOCS-9RE
+  const isVercelRuntime =
+    process.env.VERCEL && !process.env.CI && process.env.NODE_ENV !== 'development';
+
+  if (isVercelRuntime) {
+    return Promise.reject(
+      new Error(
+        `[MDX Runtime Error] Attempted to scan develop-docs frontmatter at Vercel runtime. ` +
+          `This should not happen - the doc tree should be pre-computed during CI. ` +
+          `If you're seeing this error, the requested path may not exist or was not included in generateStaticParams().`
+      )
+    );
+  }
+
   if (!getDevDocsFrontMatterCache) {
     getDevDocsFrontMatterCache = getDevDocsFrontMatterUncached();
   }
