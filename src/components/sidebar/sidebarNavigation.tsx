@@ -9,58 +9,17 @@ import {SidebarSeparator} from './sidebarLink';
 import {NavNode} from './types';
 import {docNodeToNavNode, getNavNodes} from './utils';
 
-/** a root of `"some-root"` maps to the `/some-root/` url */
-// todo: we should probably get rid of this
-const productSidebarItems = [
-  {
-    title: 'Account Settings',
-    root: 'account',
-  },
-  {
-    title: 'Organization Settings',
-    root: 'organization',
-  },
-  {
-    title: 'Product Walkthroughs',
-    root: 'product',
-  },
-  {
-    title: 'Pricing & Billing',
-    root: 'pricing',
-  },
-  {
-    title: 'Sentry CLI',
-    root: 'cli',
-  },
-  {
-    title: 'Sentry API',
-    root: 'api',
-  },
-  {
-    title: 'Security, Legal, & PII',
-    root: 'security-legal-pii',
-  },
-  {
-    title: 'Concepts & Reference',
-    root: 'concepts',
-  },
-  {
-    title: 'Documentation Changelog',
-    root: 'changelog',
-  },
-];
-
 export async function SidebarNavigation({path}: {path: string[]}) {
   const rootNode = await getDocsRootNode();
-  // product docs and platform-redirect page
-  if (
-    productSidebarItems.some(el => el.root === path[0]) ||
-    path[0] === 'platform-redirect'
-  ) {
-    return <ProductSidebar rootNode={rootNode} items={productSidebarItems} />;
+
+  // Product section: just show the sidebar for /product/ and its children
+  if (path[0] === 'product') {
+    return (
+      <ProductSidebar rootNode={rootNode} items={[{title: 'Product', root: 'product'}]} />
+    );
   }
 
-  // /platforms/:platformName/guides/:guideName
+  // SDKs/Platforms
   if (path[0] === 'platforms') {
     const platformName = path[1];
     const guideName = path[3];
@@ -76,12 +35,100 @@ export async function SidebarNavigation({path}: {path: string[]}) {
             <SidebarSeparator />
           </Fragment>
         )}
-        <ProductSidebar rootNode={rootNode} items={productSidebarItems} />
       </Fragment>
     );
   }
 
-  // contributing pages
+  // Concepts & Reference
+  if (path[0] === 'concepts') {
+    return (
+      <ul data-sidebar-tree>
+        <DynamicNav
+          root="concepts/key-terms"
+          title="Key Terms"
+          tree={toTree(
+            getNavNodes([nodeForPath(rootNode, 'concepts/key-terms')!], docNodeToNavNode)
+          )}
+          collapsible={false}
+        />
+        <DynamicNav
+          root="concepts/search"
+          title="Search"
+          tree={toTree(
+            getNavNodes([nodeForPath(rootNode, 'concepts/search')!], docNodeToNavNode)
+          )}
+          collapsible={false}
+        />
+        <DynamicNav
+          root="concepts/migration"
+          title="Migration"
+          tree={toTree(
+            getNavNodes([nodeForPath(rootNode, 'concepts/migration')!], docNodeToNavNode)
+          )}
+          collapsible={false}
+        />
+        <DynamicNav
+          root="concepts/data-management"
+          title="Data Management"
+          tree={toTree(
+            getNavNodes(
+              [nodeForPath(rootNode, 'concepts/data-management')!],
+              docNodeToNavNode
+            )
+          )}
+          collapsible={false}
+        />
+        <DynamicNav
+          root="cli"
+          title="Sentry CLI"
+          tree={toTree(getNavNodes([nodeForPath(rootNode, 'cli')!], docNodeToNavNode))}
+          collapsible={false}
+        />
+      </ul>
+    );
+  }
+
+  // Admin Settings
+  if (path[0] === 'organization' || path[0] === 'account' || path[0] === 'pricing') {
+    const adminItems = [
+      {title: 'Account Settings', root: 'account'},
+      {title: 'Organization Settings', root: 'organization'},
+      {title: 'Pricing & Billing', root: 'pricing'},
+    ];
+    return <ProductSidebar rootNode={rootNode} items={adminItems} />;
+  }
+
+  // Security, Legal, & PII
+  if (path[0] === 'security-legal-pii') {
+    return (
+      <ul data-sidebar-tree>
+        <DynamicNav
+          root="security-legal-pii"
+          title="Security, Legal, & PII"
+          tree={toTree(
+            getNavNodes([nodeForPath(rootNode, 'security-legal-pii')!], docNodeToNavNode)
+          )}
+          collapsible={false}
+        />
+      </ul>
+    );
+  }
+
+  // API Reference
+  if (path[0] === 'api') {
+    return (
+      <ul data-sidebar-tree>
+        <DynamicNav
+          root="api"
+          title="API Reference"
+          tree={toTree(getNavNodes([nodeForPath(rootNode, 'api')!], docNodeToNavNode))}
+          collapsible={false}
+        />
+      </ul>
+    );
+  }
+
+  // Contributing pages
   if (path[0] === 'contributing') {
     const contribNode = nodeForPath(rootNode, 'contributing');
     if (contribNode) {
@@ -96,6 +143,74 @@ export async function SidebarNavigation({path}: {path: string[]}) {
         </ul>
       );
     }
+  }
+
+  // Sentry CLI (standalone route)
+  if (path[0] === 'cli') {
+    return (
+      <ul data-sidebar-tree>
+        <DynamicNav
+          root="concepts/key-terms"
+          title="Key Terms"
+          tree={toTree(
+            getNavNodes([nodeForPath(rootNode, 'concepts/key-terms')!], docNodeToNavNode)
+          )}
+          collapsible={false}
+        />
+        <DynamicNav
+          root="concepts/search"
+          title="Search"
+          tree={toTree(
+            getNavNodes([nodeForPath(rootNode, 'concepts/search')!], docNodeToNavNode)
+          )}
+          collapsible={false}
+        />
+        <DynamicNav
+          root="concepts/migration"
+          title="Migration"
+          tree={toTree(
+            getNavNodes([nodeForPath(rootNode, 'concepts/migration')!], docNodeToNavNode)
+          )}
+          collapsible={false}
+        />
+        <DynamicNav
+          root="concepts/data-management"
+          title="Data Management"
+          tree={toTree(
+            getNavNodes(
+              [nodeForPath(rootNode, 'concepts/data-management')!],
+              docNodeToNavNode
+            )
+          )}
+          collapsible={false}
+        />
+        <DynamicNav
+          root="cli"
+          title="Sentry CLI"
+          tree={toTree(getNavNodes([nodeForPath(rootNode, 'cli')!], docNodeToNavNode))}
+          collapsible={false}
+        />
+      </ul>
+    );
+  }
+
+  // Documentation Changelog
+  if (path[0] === 'changelog') {
+    const changelogNode = nodeForPath(rootNode, 'changelog');
+    if (changelogNode) {
+      const changelogNodes: NavNode[] = getNavNodes([changelogNode], docNodeToNavNode);
+      return (
+        <ul data-sidebar-tree>
+          <DynamicNav
+            root="changelog"
+            title="Documentation Changelog"
+            tree={toTree(changelogNodes)}
+          />
+        </ul>
+      );
+    }
+    // Return empty sidebar if no changelog node exists
+    return <ul data-sidebar-tree />;
   }
 
   // This should never happen, all cases need to be handled above
