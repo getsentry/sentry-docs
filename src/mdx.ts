@@ -534,11 +534,13 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
     process.env.VERCEL && !process.env.CI && process.env.NODE_ENV !== 'development';
 
   if (isVercelRuntime) {
-    throw new Error(
+    const error = new Error(
       `[MDX Runtime Error] Attempted to compile MDX at Vercel runtime for slug "${slug}". ` +
         `This should not happen - all pages should be pre-built during CI. ` +
         `If you're seeing this error, the requested path may not exist or was not included in generateStaticParams().`
-    );
+    ) as Error & {code: string};
+    error.code = 'MDX_RUNTIME_ERROR';
+    throw error;
   }
 
   // no versioning on a config file
