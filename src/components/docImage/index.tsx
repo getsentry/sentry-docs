@@ -86,10 +86,10 @@ export default function DocImage({
       finalSrc = `/${pagePath.join('/')}/${src}`;
     }
 
-    // For internal images, imgPath should be the pathname only
+    // For internal images, imgPath should be pathname + query string (for cache busting)
     try {
       const srcURL = new URL(finalSrc, 'https://example.com');
-      imgPath = srcURL.pathname;
+      imgPath = srcURL.pathname + srcURL.search;
     } catch (_error) {
       imgPath = finalSrc;
     }
