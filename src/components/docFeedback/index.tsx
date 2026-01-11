@@ -41,6 +41,7 @@ export function DocFeedback({pathname}: Props) {
       Sentry.captureFeedback(
         {
           message: comments,
+          url: window.location.href,
         },
         {captureContext: {tags: {page: pathname, type: feedbackType}}}
       );
