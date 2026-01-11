@@ -1,8 +1,8 @@
-import {createHash} from 'node:crypto';
-import {readFileSync} from 'node:fs';
 import path from 'path';
 
 import getImageSize from 'image-size';
+import {createHash} from 'node:crypto';
+import {readFileSync} from 'node:fs';
 import {visit} from 'unist-util-visit';
 
 /**
