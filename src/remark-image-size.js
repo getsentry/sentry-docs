@@ -1,13 +1,16 @@
+import {createHash} from 'node:crypto';
+import {readFileSync} from 'node:fs';
 import path from 'path';
 
 import getImageSize from 'image-size';
 import {visit} from 'unist-util-visit';
 
 /**
- * appends the image size to the image url as a hash e.g. /img.png -> /img.png#100x100
- * the size is consumed by docImage.tsx and passed down to next/image
- * **this is a hack!**, there's probably a better way to set image node properties
- * but adding a hash to the url seems like a very low risk way to do it 🙈
+ * Appends image size and content hash to the URL.
+ * e.g. /img.png -> /img.png?v=abc12345#100x100
+ *
+ * The size is consumed by docImage.tsx and passed down to next/image.
+ * The content hash (?v=xxx) busts Vercel's CDN cache when images are updated.
  */
 export default function remarkImageSize(options) {
   return tree =>
@@ -21,7 +24,13 @@ export default function remarkImageSize(options) {
         node.url.startsWith('/') ? options.publicFolder : options.sourceFolder,
         node.url
       );
-      const imageSize = getImageSize(fullImagePath);
-      node.url = node.url + `#${imageSize.width}x${imageSize.height}`;
+
+      // Read file once for both size and content hash
+      const imageBuffer = readFileSync(fullImagePath);
+      const imageSize = getImageSize(imageBuffer);
+      const contentHash = createHash('md5').update(imageBuffer).digest('hex').slice(0, 8);
+
+      // Add content hash as query param (for CDN cache busting) and size as hash
+      node.url = node.url + `?v=${contentHash}#${imageSize.width}x${imageSize.height}`;
     });
 }
