@@ -75,7 +75,10 @@ type URLQueryObject = {
 const paramsToSync = [/utm_/i, /promo_/i, /gclid/i, /original_referrer/i];
 
 export const marketingUrlParams = (): URLQueryObject => {
-  const query = new URLSearchParams(window.location.search);
+  // Replace + with %2B before parsing to preserve literal + characters.
+  // URLSearchParams decodes + as space per the form-urlencoded spec,
+  // but we want to match the previous query-string behavior.
+  const query = new URLSearchParams(window.location.search.replace(/\+/g, '%2B'));
   const marketingParams: Record<string, string> = {};
   for (const [key, value] of query.entries()) {
     if (paramsToSync.some(m => m.test(key))) {
