@@ -462,3 +462,39 @@ const extractIntegrations = (p: DocNode): PlatformIntegration[] => {
       }) ?? []
   );
 };
+
+/**
+ * Collect all slugs from the doc tree (for version extraction)
+ */
+function collectSlugsFromTree(node: DocNode, slugs: string[] = []): string[] {
+  if (node.path) {
+    slugs.push(node.path);
+  }
+  node.children.forEach(child => collectSlugsFromTree(child, slugs));
+  return slugs;
+}
+
+/**
+ * Collect all available versions for a given document path from the doc tree.
+ * This is a tree-based alternative to getVersionsFromDoc that doesn't require
+ * filesystem scanning.
+ * See: DOCS-9RT
+ */
+export function getVersionsFromTree(rootNode: DocNode, docPath: string): string[] {
+  const allSlugs = collectSlugsFromTree(rootNode);
+  const basePath = docPath.split(VERSION_INDICATOR)[0];
+
+  const versions = allSlugs
+    .filter(slug => {
+      return (
+        slug.includes(VERSION_INDICATOR) && slug.split(VERSION_INDICATOR)[0] === basePath
+      );
+    })
+    .map(slug => {
+      const segments = slug.split(VERSION_INDICATOR);
+      return segments[segments.length - 1];
+    });
+
+  // Remove duplicates
+  return [...new Set(versions)];
+}

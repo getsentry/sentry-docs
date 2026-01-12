@@ -17,6 +17,7 @@ import {
   getDocsRootNode,
   getNextNode,
   getPreviousNode,
+  getVersionsFromTree,
   nodeForPath,
 } from 'sentry-docs/docTree';
 import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
@@ -24,7 +25,6 @@ import {
   getDevDocsFrontMatter,
   getDocsFrontMatter,
   getFileBySlugWithCache,
-  getVersionsFromDoc,
 } from 'sentry-docs/mdx';
 import {mdxComponents} from 'sentry-docs/mdxComponents';
 import {PageType} from 'sentry-docs/metrics';
@@ -192,9 +192,9 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
   }
   const {mdxSource, frontMatter} = doc;
 
-  // collect versioned files
-  const allFm = await getDocsFrontMatter();
-  const versions = getVersionsFromDoc(allFm, pageNode.path);
+  // collect versioned files from pre-computed tree (avoids filesystem scanning)
+  // See: DOCS-9RT
+  const versions = getVersionsFromTree(rootNode, pageNode.path);
 
   // pass frontmatter tree into sidebar, rendered page + fm into middle, headers into toc.
   const pageType = (params.path?.[0] as PageType) || 'unknown';
