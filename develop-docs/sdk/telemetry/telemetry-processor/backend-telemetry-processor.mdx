@@ -8,21 +8,12 @@ sidebar_order: 1
   🚧 This document is work in progress.
 </Alert>
 
-For the common specification for the telemetry processor, refer to the [Telemetry Processor](/sdk/telemetry/telemetry-processor/) page. This page describes the backend-specific implementation of the telemetry processor.
+For the common specification, refer to the [Telemetry Processor](/sdk/telemetry/telemetry-processor/) page. This page describes the backend-specific implementation. The key difference is that backend SDKs use **weighted round-robin scheduling** to ensure critical telemetry (like errors) gets priority over high-volume data (like logs) when the application is under heavy load.
 
-## Telemetry Processor Layer: Prioritized, Bounded, Rate-Aware Envelope Delivery
+## Backend-Specific Design Decisions
 
-### Overview
-
-The TelemetryProcessor sits between the SDK client and the HTTP transport layer, ensuring that critical telemetry like errors take priority over high-volume data like logs and traces. This prevents important events from getting lost when your application is under heavy load or sending large amounts of telemetry.
-
-### Motivation
-
-- Aggregation lives in a unified layer (this way we avoid creating multiple batch processors for different telemetry types).
-- All telemetry types use capture APIs (CaptureX) routed through the Client.
-- Rate-limit awareness is built-in across categories.
-- Buffers support two modes: normal ring buffer and bucket-by-trace (for spans).
-- For spans, dropping an entire trace under pressure is preferable.
+- **Weighted round-robin scheduling**: Backend applications often run under sustained high load. Weighted scheduling ensures critical telemetry (errors) gets sent even when flooded with high-volume data (logs, spans).
+- **Signal-based scheduling**: The scheduler wakes when new data arrives rather than polling, reducing CPU overhead in idle periods.
 
 ### Architecture Overview
 
@@ -69,11 +60,8 @@ Introduce a `TelemetryProcessor` layer between the `Client` and the `Transport`.
 
 #### How the Processor works
 
-- **Smart batching**: Logs are batched into single requests; errors, transactions, and monitors are sent immediately.
-- **Pre-send rate limiting**: The TelemetryScheduler checks rate limits before serialization to avoid unnecessary processing. When a telemetry is rate-limited the selected batch should
-be dropped, to avoid filling up the buffers.
 - **Category isolation**: Separate ring buffers for each telemetry type prevent head-of-line blocking.
-- **Weighted scheduling**: High-priority telemetry gets sent more frequently via round-robin selection.
+- **Weighted scheduling**: High-priority telemetry gets sent more frequently via weighted round-robin selection.
 - **Transport compatibility**: Works with existing HTTP transport implementations without modification.
 
 ### Priorities
@@ -87,38 +75,23 @@ Configurable via weights.
 
 ### Components
 
-#### TelemetryBuffers
+#### TelemetryBuffer
 
-Each telemetry category maintains a buffer interface; a fixed-size circular array/ring buffer that stores items before transmission:
+The telemetry buffer on the backend must follow the common [telemetry buffer requirements](/sdk/telemetry/telemetry-processor/#telemetry-buffer). Here are the additional requirements for the backend-specific implementation:
 
-- **Bounded capacity**: Default to 100 items for errors, logs, and monitors; 1000 for transactions. This prevents unbounded memory growth regardless of telemetry volume and backpressure handling.
-- **Overflow policies** (optional):
-  - `drop_oldest` (default): Evicts the oldest item when the buffer is full, making room for new data. This should be the normal SDK behavior.
-  - `drop_newest`: Rejects incoming items when full, preserving what's already queued.
-- **Batching configuration**:
-  - `batchSize`: Number of items to combine into a single batch (1 for errors, transactions, and monitors; 100 for logs).
-  - `timeout`: Maximum time to wait before sending a partial batch (5 seconds for logs).
-- **Bucketed Storage Support**: The storage interface should satisfy both bucketed and single-item implementations, allowing sending spans per trace id (required for Span First).
+1. The telemetry buffer **SHOULD** use drop older items as the overflow policy. It **MAY** also drop newer items to preserve what's already buffered.
 
-##### Single-item ring buffer (default)
+Here are the size limit recommendations for the backend. Each SDK MAY choose a different value, but it **MUST** respect the [envelope max sizes](/sdk/data-model/envelopes/#size-limits):
+- 100 items for logs
+- 100 items for metrics
+- 1000 items for spans
 
-- Data structure: fixed-size circular array with head/tail indices; O(1) `Offer`/`Poll`.
-- Offer semantics: if not full, append; when full, apply `overflowPolicy`:
-  - `drop_oldest`: evict the oldest item, insert the new one, and invoke the dropped callback with reason `buffer_full_drop_oldest`.
-  - `drop_newest`: reject the new item and invoke the dropped callback with reason `buffer_full_drop_newest`.
-- Readiness: a buffer is ready when `size >= batchSize` or when `timeout` has elapsed since `lastFlushTime` (and it is non-empty).
-- Polling: `PollIfReady()` returns up to `batchSize` items and updates `lastFlushTime`; `Drain()` empties the buffer.
 
-##### Bucketed-by-trace buffer (spans)
+##### Span Buffer
 
-- **Purpose**: keep spans from the same trace together and flush them as a unit to avoid partial-trace delivery under pressure. This addresses a gap in standard implementations where individual span drops can create incomplete traces.
-- **Grouping**: a new bucket is created per trace id; a map (`traceIndex`) provides O(1) lookup.
-- **Capacity model**: two limits are enforced—overall `itemCapacity` and a derived `bucketCapacity ~= capacity/10` (minimum 10).
-- **Readiness**: when total buffered items reach `batchSize` or `timeout` elapses, the entire oldest bucket is flushed to preserve trace coherence.
-- **Overflow behavior**:
-  - `drop_oldest`: evict the oldest bucket (dropping all its items). Preferred for spans to drop an entire trace.
-  - `drop_newest`: reject the incoming item (`buffer_full_drop_newest`).
-- Lifecycle: empty buckets are removed and their trace ids are purged from the index; `MarkFlushed()` updates `lastFlushTime`.
+The span buffer must follow the common [telemetry span buffer requirements](/sdk/telemetry/telemetry-processor/#span-buffer). Further requirements for the bucketed-by-trace buffer are:
+
+1. The span buffer **MAY** use FIFO to prioritize forwarding spans: always forward spans from the oldest traceID. FIFO prevents spans from lingering in the buffer.
 
 ##### Trace Consistency Trade-offs
 
@@ -138,7 +111,6 @@ The TelemetryScheduler runs as a background worker, coordinating the flow of tel
 - **Envelope construction**: Converts buffered items into Sentry protocol envelopes.
   - Log items are batched together into a single envelope with multiple log entries.
   - Other categories typically send one item per envelope.
-- **Graceful shutdown**: During client shutdown, force-drains all buffers to prevent data loss.
 
 #### Transport
 
