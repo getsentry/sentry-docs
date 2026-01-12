@@ -174,6 +174,22 @@ const isSupported = (
 let getDocsFrontMatterCache: Promise<FrontMatter[]> | undefined;
 
 export function getDocsFrontMatter(): Promise<FrontMatter[]> {
+  // Block filesystem scanning at Vercel runtime.
+  // Frontmatter should only be scanned during CI builds - the doc tree is pre-computed.
+  // See: DOCS-83Q, DOCS-9A5, DOCS-9RE
+  const isVercelRuntime =
+    process.env.VERCEL && !process.env.CI && process.env.NODE_ENV !== 'development';
+
+  if (isVercelRuntime) {
+    return Promise.reject(
+      new Error(
+        `[MDX Runtime Error] Attempted to scan docs frontmatter at Vercel runtime. ` +
+          `This should not happen - the doc tree should be pre-computed during CI. ` +
+          `If you're seeing this error, the requested path may not exist or was not included in generateStaticParams().`
+      )
+    );
+  }
+
   if (!getDocsFrontMatterCache) {
     getDocsFrontMatterCache = getDocsFrontMatterUncached();
   }
@@ -269,6 +285,22 @@ export async function getDevDocsFrontMatterUncached(): Promise<FrontMatter[]> {
 let getDevDocsFrontMatterCache: Promise<FrontMatter[]> | undefined;
 
 export function getDevDocsFrontMatter(): Promise<FrontMatter[]> {
+  // Block filesystem scanning at Vercel runtime.
+  // Frontmatter should only be scanned during CI builds - the doc tree is pre-computed.
+  // See: DOCS-83Q, DOCS-9A5, DOCS-9RE
+  const isVercelRuntime =
+    process.env.VERCEL && !process.env.CI && process.env.NODE_ENV !== 'development';
+
+  if (isVercelRuntime) {
+    return Promise.reject(
+      new Error(
+        `[MDX Runtime Error] Attempted to scan develop-docs frontmatter at Vercel runtime. ` +
+          `This should not happen - the doc tree should be pre-computed during CI. ` +
+          `If you're seeing this error, the requested path may not exist or was not included in generateStaticParams().`
+      )
+    );
+  }
+
   if (!getDevDocsFrontMatterCache) {
     getDevDocsFrontMatterCache = getDevDocsFrontMatterUncached();
   }
@@ -487,6 +519,30 @@ export const addVersionToFilePath = (filePath: string, version: string) => {
 };
 
 export async function getFileBySlug(slug: string): Promise<SlugFile> {
+  // Block MDX compilation at Vercel runtime.
+  // MDX should only be compiled during CI builds - all pages are statically generated.
+  // If this code path is hit at runtime, it means:
+  // 1. A 404 page is being accessed (Next.js tries to render before showing not-found)
+  // 2. Some edge case in routing is bypassing static generation
+  //
+  // Without this check, runtime MDX compilation would:
+  // - Fetch from release-registry.services.sentry.io (hammering the registry)
+  // - Fail with "read-only file system" errors from esbuild
+  //
+  // See: DOCS-915, DOCS-9H5, DOCS-9N0, DOCS-9HB
+  const isVercelRuntime =
+    process.env.VERCEL && !process.env.CI && process.env.NODE_ENV !== 'development';
+
+  if (isVercelRuntime) {
+    const error = new Error(
+      `[MDX Runtime Error] Attempted to compile MDX at Vercel runtime for slug "${slug}". ` +
+        `This should not happen - all pages should be pre-built during CI. ` +
+        `If you're seeing this error, the requested path may not exist or was not included in generateStaticParams().`
+    ) as Error & {code: string};
+    error.code = 'MDX_RUNTIME_ERROR';
+    throw error;
+  }
+
   // no versioning on a config file
   const configPath = path.join(root, slug.split(VERSION_INDICATOR)[0], 'config.yml');
 
@@ -704,7 +760,10 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
         remarkGfm,
         remarkDefList,
         remarkFormatCodeBlocks,
-        [remarkImageProcessing, {sourceFolder: cwd, publicFolder: path.join(root, 'public')}],
+        [
+          remarkImageProcessing,
+          {sourceFolder: cwd, publicFolder: path.join(root, 'public')},
+        ],
         remarkMdxImages,
         remarkImageResize,
         remarkCodeTitles,
