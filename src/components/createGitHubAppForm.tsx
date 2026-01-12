@@ -1,9 +1,7 @@
 'use client';
 
-import {useState} from 'react';
+import {useId, useState} from 'react';
 import {Button} from '@radix-ui/themes';
-
-const MAX_COMPONENTS_ON_PAGE = 100;
 
 type AccountType = 'personal' | 'organization';
 
@@ -29,8 +27,9 @@ export function CreateGitHubAppForm({url, defaultOrg, defaultUrlPrefix}) {
 
   const inputClassName =
     'form-input w-full rounded-md border-[1.5px] focus:ring-2 focus:ring-accent-purple/20 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500';
-  // This is to avoid in case multiple instances of this component are used on the page
-  const randomCounter = Math.round(Math.random() * MAX_COMPONENTS_ON_PAGE);
+  // Use React's useId for stable, hydration-safe unique IDs
+  // This avoids hydration mismatches that occur with Math.random()
+  const uniqueId = useId();
 
   const isValid = isPersonal ? !!urlPrefix : !!orgSlug && !!urlPrefix;
 
@@ -44,7 +43,7 @@ export function CreateGitHubAppForm({url, defaultOrg, defaultUrlPrefix}) {
           <label className="flex items-center gap-2 cursor-pointer">
             <input
               type="radio"
-              name={`account-type-${randomCounter}`}
+              name={`account-type-${uniqueId}`}
               value="organization"
               checked={accountType === 'organization'}
               onChange={() => setAccountType('organization')}
@@ -55,7 +54,7 @@ export function CreateGitHubAppForm({url, defaultOrg, defaultUrlPrefix}) {
           <label className="flex items-center gap-2 cursor-pointer">
             <input
               type="radio"
-              name={`account-type-${randomCounter}`}
+              name={`account-type-${uniqueId}`}
               value="personal"
               checked={accountType === 'personal'}
               onChange={() => setAccountType('personal')}
@@ -68,12 +67,12 @@ export function CreateGitHubAppForm({url, defaultOrg, defaultUrlPrefix}) {
       {!isPersonal && (
         <div className="flex w-full">
           <div className="flex items-center min-w-[16ch] px-4">
-            <label htmlFor={`gh-org-slug-${randomCounter}`} className="text-nowrap">
+            <label htmlFor={`gh-org-slug-${uniqueId}`} className="text-nowrap">
               GitHub Org Slug
             </label>
           </div>
           <input
-            id={`gh-org-slug-${randomCounter}`}
+            id={`gh-org-slug-${uniqueId}`}
             value={orgSlug}
             placeholder={defaultOrg}
             className={inputClassName}
@@ -83,12 +82,12 @@ export function CreateGitHubAppForm({url, defaultOrg, defaultUrlPrefix}) {
       )}
       <div className="flex w-full">
         <div className="flex items-center min-w-[16ch] px-4">
-          <label htmlFor={`sentry-url-prefix-${randomCounter}`} className="text-nowrap">
+          <label htmlFor={`sentry-url-prefix-${uniqueId}`} className="text-nowrap">
             Sentry <code>url-prefix</code>
           </label>
         </div>
         <input
-          id={`sentry-url-prefix-${randomCounter}`}
+          id={`sentry-url-prefix-${uniqueId}`}
           placeholder={defaultUrlPrefix}
           value={urlPrefix}
           className={inputClassName}

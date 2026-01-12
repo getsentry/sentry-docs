@@ -1,6 +1,6 @@
 'use client';
 
-import {useState} from 'react';
+import {useId, useState} from 'react';
 
 interface GitHubDomainCheckerProps {
   id?: string;
@@ -87,8 +87,10 @@ export function GitHubDomainChecker({id}: GitHubDomainCheckerProps = {}) {
   const inputClassName =
     'form-input w-full rounded-md border-[1.5px] focus:ring-2 focus:ring-accent-purple/20 border-gray-200 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400';
 
-  // Use provided id or generate a fallback
-  const inputId = id || `gh-domain-${Date.now()}`;
+  // Use React's useId for stable, hydration-safe unique IDs
+  // This avoids hydration mismatches that occur with Date.now()
+  const reactId = useId();
+  const inputId = id || `gh-domain-${reactId}`;
 
   return (
     <div className="space-y-4 p-6 border border-gray-100 dark:border-gray-700 rounded">
