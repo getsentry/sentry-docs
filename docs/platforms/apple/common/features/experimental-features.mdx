@@ -76,7 +76,42 @@ Enable the <PlatformLink to="/configuration/options/#enablePersistingTracesWhenC
 
 ### Unhandled C++ Exceptions V2
 
-Enable the <PlatformLink to="/configuration/options/#enableUnhandledCPPExceptionsV2">`enableUnhandledCPPExceptionsV2`</PlatformLink> option to capture fatal CPPExceptions via hooking into `cxa_throw`.
+Enable the `enableUnhandledCPPExceptionsV2` option to capture fatal C++ exceptions via a more reliable approach that hooks into all instances of the `__cxa_throw` function.
+
+```swift
+options.experimental.enableUnhandledCPPExceptionsV2 = true
+```
+
+```objc {tabTitle:Objective-C}
+options.experimental.enableUnhandledCPPExceptionsV2 = YES;
+```
+
+This provides more comprehensive and consistent exception handling across your app's runtime, regardless of the number of C++ modules or how they're linked, and helps in obtaining accurate stack traces.
+
+**Note:** The mechanism of hooking into `__cxa_throw` could cause issues with symbolication on iOS due to caching of symbol references.
+
+### Session Replay in Unreliable Environments
+
+Enable the `enableSessionReplayInUnreliableEnvironment` option to force enabling of session replay in unreliable environments.
+
+```swift
+options.experimental.enableSessionReplayInUnreliableEnvironment = true
+```
+
+```objc {tabTitle:Objective-C}
+options.experimental.enableSessionReplayInUnreliableEnvironment = YES;
+```
+
+Due to internal changes with the release of Liquid Glass on iOS 26.0, the masking of text and images cannot be reliably guaranteed. Therefore the SDK uses a defensive programming approach to disable the session replay integration by default, unless the environment is detected as reliable.
+
+Indicators for reliable environments include:
+- Running on an older version of iOS that doesn't have Liquid Glass (iOS 18 or earlier)
+- `UIDesignRequiresCompatibility` is explicitly set to `YES` in Info.plist
+- The app was built with Xcode < 26.0 (DTXcode < 2600)
+
+**Important:** This flag allows you to re-enable the session replay integration on iOS 26.0 and later, but please be aware that text and images may not be masked as expected.
+
+Learn more in the <PlatformLink to="/session-replay/">Session Replay</PlatformLink> documentation.
 
 ## Providing Feedback
 
