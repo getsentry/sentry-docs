@@ -639,9 +639,13 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
   let cacheFile: string | null = null;
   let assetsCacheDir: string | null = null;
 
-  // Always use public/mdx-images during build
-  // During runtime (Lambda), this directory is read-only but images are already there from build
-  const outdir = path.join(root, 'public', 'mdx-images');
+  // Use public/mdx-images during build (CI or local dev)
+  // During Vercel runtime (Lambda), /var/task is read-only but /tmp is writable
+  // Note: Even with options.write=false, esbuild still attempts to create outdir internally
+  // See: DOCS-9K6 for the read-only filesystem error this prevents
+  const outdir = isVercelRuntime
+    ? path.join('/tmp', 'mdx-images')
+    : path.join(root, 'public', 'mdx-images');
 
   try {
     await mkdir(outdir, {recursive: true});
