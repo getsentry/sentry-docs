@@ -77,7 +77,7 @@ await Sentry.startSpan(
     span.setAttribute("mcp.transport", "stdio"); // or "http", "sse" for HTTP/WebSocket/SSE
     span.setAttribute("network.transport", "pipe"); // or "tcp" for HTTP/SSE
 
-    // Set tool arguments (optional, if send_default_pii=true)
+    // Set tool arguments (optional, requires recordInputs: true)
     for (const [key, value] of Object.entries(toolArguments)) {
       span.setAttribute(`mcp.request.argument.${key}`, value);
     }
@@ -141,7 +141,7 @@ await Sentry.startSpan(
     span.setAttribute("mcp.transport", "http");
     span.setAttribute("network.transport", "tcp");
 
-    // Set prompt arguments (optional, if send_default_pii=true)
+    // Set prompt arguments (optional, requires recordInputs: true)
     for (const [key, value] of Object.entries(promptArguments)) {
       span.setAttribute(`mcp.request.argument.${key}`, value);
     }
@@ -156,7 +156,7 @@ await Sentry.startSpan(
     // For single-message prompts, set role and content
     if (messages.length === 1) {
       span.setAttribute("mcp.prompt.result.message_role", messages[0].role);
-      // Content is PII, only set if send_default_pii=true
+      // Content may contain sensitive data, only set if recordOutputs: true
       span.setAttribute(
         "mcp.prompt.result.message_content",
         JSON.stringify(messages[0].content)
