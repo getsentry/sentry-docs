@@ -41,54 +41,6 @@ class MyModel(models.Model):
     metadata = EncryptedJSONField(default=dict)
 ```
 
-## [Configuration](#configuration)
-
-### [Encryption Method](#encryption-method)
-
-The `database.encryption.method` option controls which encryption method to use:
-
-- `"plaintext"` - No encryption (default for development, base64-encoded only)
-- `"fernet"` - Fernet symmetric encryption (production)
-
-```python
-# In your Sentry options
-options.set("database.encryption.method", "fernet")
-```
-
-### [Fernet Keys](#fernet-keys)
-
-Fernet encryption requires two settings in `DATABASE_ENCRYPTION_SETTINGS`:
-
-```python
-DATABASE_ENCRYPTION_SETTINGS = {
-    "fernet_keys_location": "/path/to/keys/directory",
-    "fernet_primary_key_id": "key_2024_01"
-}
-```
-
-- `fernet_keys_location`: Directory containing encryption key files
-- `fernet_primary_key_id`: The key ID to use for encrypting new data
-
-Keys are stored as Kubernetes secrets and mounted as files to pods that have access to the database. Each secret is mounted as a separate file in the keys directory, with the filename serving as the key ID:
-
-```
-/path/to/keys/
-├── key_2023_12
-├── key_2024_01  # Current primary key
-└── key_2024_02
-```
-
-### [Generating Keys](#generating-keys)
-
-Generate a Fernet key using Python:
-
-```python
-from cryptography.fernet import Fernet
-
-key = Fernet.generate_key()
-print(key.decode())  # Example: gAAAAABh...
-```
-
 ## [Basic Usage](#basic-usage)
 
 ```python
@@ -115,21 +67,18 @@ print(creds.metadata)  # Prints: {"api_version": "v2", "scopes": ["read", "write
 
 ### [Adding New Encrypted Fields](#adding-new-encrypted-fields)
 
-Add the field to your model and generate a migration:
+Add the field to your model:
 
 ```python
 class MyModel(models.Model):
     api_key = EncryptedCharField(null=True, blank=True)
 ```
 
-```bash
-sentry django makemigrations
-sentry upgrade
-```
+Then follow the [regular migration procedure](/backend/application-domains/database-migrations/) to generate and deploy the migration.
 
 ### [Converting Existing Fields](#converting-existing-fields)
 
-**Step 1**: Change the field type in your model:
+Change the field type in your model:
 
 ```python
 # Before
@@ -141,12 +90,13 @@ class MyModel(models.Model):
     api_key = EncryptedCharField()
 ```
 
-**Step 2**: Generate and deploy the migration:
+Then follow the [regular migration procedure](/backend/application-domains/database-migrations/) to generate and deploy the migration.
 
-```bash
-sentry django makemigrations
-sentry upgrade
-```
+<Alert level="info">
+  This migration will be a SQL no-op—the field remains a text field in the
+  database. The encryption is handled at the application layer, so no database
+  schema changes occur.
+</Alert>
 
 The encrypted field will automatically:
 
@@ -177,6 +127,127 @@ class Migration(CheckedMigration):
     ]
 ```
 
+## [Querying](#querying)
+
+You **cannot** query encrypted field values directly:
+
+```python
+# This will NOT work
+MyModel.objects.filter(secret="my-value")  # Won't find encrypted data
+```
+
+If you need to query by these fields, consider keeping a separate hash field:
+
+```python
+class MyModel(models.Model):
+    secret = EncryptedCharField()
+    secret_hash = models.CharField(max_length=64, db_index=True)
+
+    def save(self, *args, **kwargs):
+        if self.secret:
+            self.secret_hash = hashlib.sha256(self.secret.encode()).hexdigest()
+        super().save(*args, **kwargs)
+
+# Query by hash
+MyModel.objects.filter(secret_hash=hashlib.sha256(b"my-value").hexdigest())
+```
+
+## [What to Encrypt](#what-to-encrypt)
+
+Use encrypted fields for:
+
+- API keys, tokens, and secrets
+- Passwords and credentials
+- OAuth tokens and refresh tokens
+- PII when required by compliance
+
+Don't encrypt:
+
+- Data you need to query or filter on
+- High-volume, low-sensitivity data
+- Data already encrypted at rest
+
+## [Troubleshooting](#troubleshooting)
+
+**Problem**: `ValueError: Fernet primary key ID is not configured`
+
+**Solution**: Set `DATABASE_ENCRYPTION_SETTINGS["fernet_primary_key_id"]` in your configuration.
+
+---
+
+**Problem**: `ValueError: Encryption key with ID 'key_id' not found`
+
+**Solution**: Add the missing key file to the keys directory or update the configuration.
+
+---
+
+**Problem**: Data is not being encrypted
+
+**Solution**: Verify `database.encryption.method` is set to `"fernet"`, not `"plaintext"`.
+
+---
+
+**Problem**: Migration takes too long on large tables
+
+**Solution**: Use a post-deployment data migration with `RangeQuerySetWrapperWithProgressBar`.
+
+---
+
+## [Configuration](#configuration)
+
+<Alert level="info">
+  This section is primarily for SREs and infrastructure teams who need to
+  configure encryption keys and settings.
+</Alert>
+
+### [Encryption Method](#encryption-method)
+
+The `database.encryption.method` option controls which encryption method to use:
+
+- `"plaintext"` - No encryption (default for development, base64-encoded only)
+- `"fernet"` - Fernet symmetric encryption (production)
+
+```python
+# In your Sentry options
+options.set("database.encryption.method", "fernet")
+```
+
+### [Fernet Keys](#fernet-keys)
+
+Fernet encryption requires two settings in `DATABASE_ENCRYPTION_SETTINGS`:
+
+```python
+DATABASE_ENCRYPTION_SETTINGS = {
+    "fernet_keys_location": "/path/to/keys/directory",
+    "fernet_primary_key_id": "key_2024_01"
+}
+```
+
+- `fernet_keys_location`: Directory containing encryption key files
+- `fernet_primary_key_id`: The key ID to use for encrypting new data
+
+In Sentry SaaS, keys are stored as Kubernetes secrets and mounted as files to pods that have access to the database. Each secret is mounted as a separate file in the keys directory, with the filename serving as the key ID:
+
+```
+/path/to/keys/
+├── key_2023_12
+├── key_2024_01  # Current primary key
+└── key_2024_02
+```
+
+For self hosted users, keys should be mounted to all the containers that interact with the database.
+
+### [Generating Keys](#generating-keys)
+
+Generate a Fernet key using Python:
+
+```python
+from cryptography.fernet import Fernet
+
+key = Fernet.generate_key()
+print(key.decode())  # Example: gAAAAABh...
+```
+
 ## [Key Rotation](#key-rotation)
 
 To rotate encryption keys:
@@ -202,79 +273,13 @@ DATABASE_ENCRYPTION_SETTINGS = {
 
 Data will be gradually re-encrypted as records are updated.
 
-## [Important Notes](#important-notes)
-
-### [Querying](#querying)
-
-You **cannot** query encrypted field values directly:
-
-```python
-# This will NOT work
-MyModel.objects.filter(secret="my-value")  # Won't find encrypted data
-```
-
-If you need to query by these fields, consider keeping a separate hash field:
-
-```python
-class MyModel(models.Model):
-    secret = EncryptedCharField()
-    secret_hash = models.CharField(max_length=64, db_index=True)
-
-    def save(self, *args, **kwargs):
-        if self.secret:
-            self.secret_hash = hashlib.sha256(self.secret.encode()).hexdigest()
-        super().save(*args, **kwargs)
-
-# Query by hash
-MyModel.objects.filter(secret_hash=hashlib.sha256(b"my-value").hexdigest())
-```
-
-### [What to Encrypt](#what-to-encrypt)
-
-Use encrypted fields for:
-
-- API keys, tokens, and secrets
-- Passwords and credentials
-- OAuth tokens and refresh tokens
-- PII when required by compliance
-
-Don't encrypt:
-
-- Data you need to query or filter on
-- High-volume, low-sensitivity data
-- Data already encrypted at rest
-
-### [Key Management](#key-management)
+## [Key Management](#key-management)
 
 - **Never commit keys to version control**
 - Keys are stored as Kubernetes secrets and mounted to pods
 - Use different keys for different environments
 - Keep all historical keys - they're needed to decrypt old data
 - Rotate keys periodically (recommended: annually)
-
-## [Troubleshooting](#troubleshooting)
-
-**Problem**: `ValueError: Fernet primary key ID is not configured`
-
-**Solution**: Set `DATABASE_ENCRYPTION_SETTINGS["fernet_primary_key_id"]` in your configuration.
-
----
-
-**Problem**: `ValueError: Encryption key with ID 'key_id' not found`
-
-**Solution**: Add the missing key file to the keys directory or update the configuration.
-
----
-
-**Problem**: Data is not being encrypted
-
-**Solution**: Verify `database.encryption.method` is set to `"fernet"`, not `"plaintext"`.
-
----
-
-**Problem**: Migration takes too long on large tables
-
-**Solution**: Use a post-deployment data migration with `RangeQuerySetWrapperWithProgressBar`.
 
 ## [How It Works](#how-it-works)
 
