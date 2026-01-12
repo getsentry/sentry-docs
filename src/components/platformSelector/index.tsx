@@ -138,8 +138,8 @@ export function PlatformSelector({
   const path = usePathname();
   const isPlatformPage = Boolean(
     path?.startsWith('/platforms/') &&
-    // /platforms/something
-    path.length > '/platforms/'.length
+      // /platforms/something
+      path.length > '/platforms/'.length
   );
   // Only show stored platform after mount to prevent hydration mismatch
   // Server doesn't have localStorage, so this must wait until client-side
