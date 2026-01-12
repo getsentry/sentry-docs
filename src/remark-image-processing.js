@@ -6,13 +6,16 @@ import {readFileSync} from 'node:fs';
 import {visit} from 'unist-util-visit';
 
 /**
- * Appends image size and content hash to the URL.
+ * Processes images in MDX content:
+ * 1. Appends image dimensions as a URL hash (for next/image sizing)
+ * 2. Appends content hash as query param (for Vercel CDN cache busting)
+ *
  * e.g. /img.png -> /img.png?v=abc12345#100x100
  *
- * The size is consumed by docImage.tsx and passed down to next/image.
- * The content hash (?v=xxx) busts Vercel's CDN cache when images are updated.
+ * The size (#WxH) is consumed by docImage.tsx and passed down to next/image.
+ * The content hash (?v=xxx) ensures browsers/CDN fetch fresh images when content changes.
  */
-export default function remarkImageSize(options) {
+export default function remarkImageProcessing(options) {
   return tree =>
     visit(tree, 'image', node => {
       // don't process external images
@@ -25,7 +28,7 @@ export default function remarkImageSize(options) {
         node.url
       );
 
-      // Read file once for both size and content hash
+      // Read file buffer once for both operations to avoid redundant disk I/O
       const imageBuffer = readFileSync(fullImagePath);
       const imageSize = getImageSize(imageBuffer);
       const contentHash = createHash('md5').update(imageBuffer).digest('hex').slice(0, 8);
