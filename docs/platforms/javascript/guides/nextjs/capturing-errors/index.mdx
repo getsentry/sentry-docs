@@ -98,7 +98,9 @@ export default function Error({
 
 ### Global Error Boundary
 
-`global-error.tsx` catches errors in your root layout. It must include `<html>` and `<body>` tags since it replaces the entire document.
+`global-error.tsx` is a last-resort safety net that only triggers when your root layout itself fails. This is rare—most errors are caught by route-level `error.tsx` files first.
+
+Include `<html>` and `<body>` tags since it replaces the entire document.
 
 </SplitSectionText>
 <SplitSectionCode>
@@ -172,7 +174,9 @@ export async function createPost(formData: FormData) {
 
 ### Adding Context
 
-Pass a second argument to `captureException` to add debugging context:
+Add metadata to help debug errors:
+- **Tags**: Searchable in Sentry's UI for filtering and grouping (e.g., by feature area or user tier)
+- **Extra**: Displayed in event details for debugging values like IDs (not searchable)
 
 ```tsx
 Sentry.captureException(error, {
@@ -180,6 +184,8 @@ Sentry.captureException(error, {
   extra: { orderId, userId: user.id },
 });
 ```
+
+See <PlatformLink to="/enriching-events/">Enriching Events</PlatformLink> for more options like breadcrumbs, user context, and attachments.
 
 For automatic tracing in Server Actions, see <PlatformLink to="/configuration/apis/#withServerActionInstrumentation">`withServerActionInstrumentation`</PlatformLink>.
 
