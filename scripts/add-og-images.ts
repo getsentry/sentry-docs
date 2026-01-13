@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable no-console */
 /**
  * Script to automatically add og_image frontmatter to all MDX files that contain images.
  * This script:

@@ -1,5 +1,3 @@
-import qs from 'query-string';
-
 /**
  * This function is used to filter out any elements that are not truthy and plays nice with TypeScript.
  * @param x - The value to check for truthiness.
@@ -77,11 +75,16 @@ type URLQueryObject = {
 const paramsToSync = [/utm_/i, /promo_/i, /gclid/i, /original_referrer/i];
 
 export const marketingUrlParams = (): URLQueryObject => {
-  const query = qs.parse(window.location.search);
-  const marketingParams: Record<string, string> = Object.keys(query).reduce((a, k) => {
-    const matcher = paramsToSync.find(m => m.test(k));
-    return matcher ? {...a, [k]: query[k]} : a;
-  }, {});
+  // Replace + with %2B before parsing to preserve literal + characters.
+  // URLSearchParams decodes + as space per the form-urlencoded spec,
+  // but we want to match the previous query-string behavior.
+  const query = new URLSearchParams(window.location.search.replace(/\+/g, '%2B'));
+  const marketingParams: Record<string, string> = {};
+  for (const [key, value] of query.entries()) {
+    if (paramsToSync.some(m => m.test(key))) {
+      marketingParams[key] = value;
+    }
+  }
 
   // add in original_referrer
   if (document.referrer && !marketingParams.original_referrer) {
