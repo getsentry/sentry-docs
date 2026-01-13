@@ -63,3 +63,12 @@ When writing requirements in `develop-docs/`:
      This document uses key words such as "MUST", "SHOULD", and "MAY" as defined in [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt) to indicate requirement levels.
    </Alert>
    ```
+
+## Plan Mode
+
+- Make the plan extremely concise. Sacrifice grammar for the sake of concision.
+- At the end of each plan, give me a list of unresolved questions to answer, if any.
+
+## Pull Request generation 
+
+Use .github/PULL_REQUEST_TEMPLATE.md and add Co-Authored-By: Claude
