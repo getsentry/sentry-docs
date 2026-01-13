@@ -1,124 +1,131 @@
 name: New Integration Doc (Organization > Integrations)
-description: Generate an integration doc page under docs/organization/integrations/<category>/<slug>/index.mdx
+description: Generate an integration doc page under docs/organization/integrations/<category>/<slug>.md
 title: "Integration docs: "
 labels: ["doc-request", "docs", "integrations"]
 body:
   - type: markdown
     attributes:
       value: |
-        This creates a PR that:
-        1) adds `docs/organization/integrations/<category>/<slug>/index.mdx`
-        2) (optionally) updates the category `docs/organization/integrations/<category>/index.mdx` to link to it.
+        This request generates a docs page for an integration under:
+        docs/organization/integrations/<category>/<slug>.md
+
+        It will include:
+        - A lead "Learn about Sentry's <title> integration ..." description
+        - An "Install and Configure" section (required)
 
   - type: input
-    id: integration_title
+    id: title
     attributes:
-      label: Integration name (title)
-      description: Used for the page `title:` frontmatter.
-      placeholder: "Unleash"
+      label: Integration name
+      placeholder: "Blar"
     validations:
       required: true
 
   - type: input
     id: slug
     attributes:
-      label: Slug (folder name)
-      description: Lowercase with hyphens. Will create `.../<slug>/index.mdx`.
-      placeholder: "unleash"
+      label: Slug (filename)
+      description: Lowercase, hyphens. This becomes <slug>.md
+      placeholder: "blar"
     validations:
       required: true
 
   - type: dropdown
     id: category
     attributes:
-      label: Integration category (folder under docs/organization/integrations)
-      description: Picks the section where the doc will live.
+      label: Integration category (folder)
+      description: Folder under docs/organization/integrations/
       options:
-        - feature-flag
+        - notification-incidents
         - source-code-mgmt
         - issue-tracking
         - deployment
-        - notification-incidents
-        - cloud-monitoring
-        - data-forwarding
-        - compliance
         - debugging
+        - compliance
+        - data-forwarding
+        - cloud-monitoring
         - session-replay
         - other
     validations:
       required: true
 
-  - type: input
-    id: sidebar_order
-    attributes:
-      label: Sidebar order
-      description: Numeric ordering in the left nav for this category (example pages use `sidebar_order`).
-      placeholder: "2"
-    validations:
-      required: true
-
   - type: textarea
-    id: description
+    id: learn_about_sentence
     attributes:
-      label: Short description (frontmatter)
-      description: Used for `description:` frontmatter. Keep it short; sentence case.
-      placeholder: "Learn about Sentry's <Integration> integration."
+      label: "Lead sentence (Learn about...)"
+      description: This becomes the first sentence on the page.
+      placeholder: "Learn about Sentry's <Integration> integration and how it ..."
     validations:
       required: true
-
-  - type: checkboxes
-    id: update_category_index
-    attributes:
-      label: Update category index page
-      description: Add a link entry to `docs/organization/integrations/<category>/index.mdx` (common pattern).
-      options:
-        - label: "Yes — add link to the category index.mdx"
-          required: false
 
   - type: textarea
     id: overview
     attributes:
-      label: Overview (what this integration does)
-      description: 1–3 paragraphs. What problems it solves / what you get.
+      label: Overview (1–2 short paragraphs)
+      description: What it does + what value users get.
       placeholder: |
-        Sentry's <Integration> integration lets you...
+        <Integration> captures...
+        This helps developers...
     validations:
       required: true
 
   - type: checkboxes
-    id: capabilities
+    id: ownership
     attributes:
-      label: Integration capabilities
-      description: Select what applies; the doc can generate sections accordingly.
+      label: Maintained & supported by
+      description: Many pages include a line stating who maintains it.
       options:
-        - label: Install / connect from Sentry UI
-        - label: Alerts / notifications
-        - label: Issue creation / issue sync
-        - label: Code linking / commit association
-        - label: Deploy tracking
-        - label: Feature flag evaluation tracking
-        - label: Webhook-based change tracking
-        - label: SSO / SCIM provisioning
-        - label: Data forwarding / ingestion
-        - label: Other (describe below)
+        - label: "Third-party (company that created it)"
+        - label: "Sentry"
+        - label: "Other (specify below)"
+    validations:
+      required: true
 
-  - type: textarea
-    id: setup
+  - type: input
+    id: maintained_by
     attributes:
-      label: Setup steps
-      description: Step-by-step instructions. If there are multiple flows, separate with headings.
-      placeholder: |
-        1. In Sentry, go to Settings → Integrations → ...
-        2. Click ...
-        3. In <Integration>, create ...
+      label: Maintained by (name)
+      description: If not Sentry, include company/project name.
+      placeholder: "Acme, Inc."
+    validations:
+      required: false
+
+  - type: input
+    id: support_contact
+    attributes:
+      label: Support contact (optional)
+      description: Email or URL if the page should include a support contact line.
+      placeholder: "support@example.com"
+    validations:
+      required: false
+
+  - type: input
+    id: permissions_required
+    attributes:
+      label: Permissions required (Sentry)
+      description: Example: "Sentry Owner, Manager, or Admin permissions are required..."
+      placeholder: "Sentry Owner, Manager, or Admin permissions are required to install this integration."
     validations:
       required: true
 
   - type: textarea
-    id: configuration
+    id: install_and_configure_steps
+    attributes:
+      label: Install and Configure (required steps)
+      description: Use numbered steps. Include the exact Settings path(s) and any external install link.
+      placeholder: |
+        1. In Sentry, navigate to Settings > Integrations > <Integration>.
+        2. Click Install.
+        3. In the modal, ...
+        4. Follow the full <Integration> installation instructions: https://...
+    validations:
+      required: true
+
+  - type: textarea
+    id: configure_details
     attributes:
       label: Configuration details (optional)
-      description: Scopes/permissions, required settings, webhook secret requirements, etc.
+      description: Scopes/permissions on the third-party side, webhook details, required settings, etc.
       placeholder: |
         Required permissions:
         - ...
@@ -128,13 +135,13 @@ body:
       required: false
 
   - type: textarea
-    id: supported_platforms
+    id: verify_it_works
     attributes:
-      label: Links to supported platforms / SDK docs (optional)
-      description: If setup differs by language/platform, include links (one per line).
+      label: Verify it works (optional)
+      description: How a user confirms the integration is correctly installed.
       placeholder: |
-        - /platforms/javascript/...
-        - /platforms/python/...
+        - Trigger an alert and confirm...
+        - Confirm events appear in...
     validations:
       required: false
 
@@ -142,38 +149,28 @@ body:
     id: troubleshooting
     attributes:
       label: Troubleshooting (optional)
-      description: Common pitfalls, error messages, how to verify it’s working.
+      description: Common issues and fixes.
       placeholder: |
         - If you see ...
           - Check ...
     validations:
       required: false
 
-  - type: textarea
-    id: uninstall
+  - type: checkboxes
+    id: include_platform_link
     attributes:
-      label: Uninstall / disconnect (optional)
-      placeholder: |
-        To remove the integration...
-    validations:
-      required: false
-
-  - type: textarea
-    id: assets
-    attributes:
-      label: Images / screenshots to include (optional)
-      description: Note filenames/paths you will add (or want the PR to create placeholders for).
-      placeholder: |
-        - ./img/screenshot-1.png (shows ...)
+      label: Include Integration Platform link line
+      description: Many pages mention "For more details, check out our Integration Platform documentation."
+      options:
+        - label: "Yes — add Integration Platform link line"
     validations:
       required: false
 
   - type: input
-    id: owner
+    id: pr_reviewer
     attributes:
-      label: Doc owner / reviewer
-      description: Team or handle to request review from (used for PR body or CODEOWNERS hint).
-      placeholder: "@team-web-frontend"
+      label: Suggested reviewer / owner
+      placeholder: "@getsentry/team-web-frontend"
     validations:
       required: true
 
@@ -181,8 +178,9 @@ body:
     id: references
     attributes:
       label: References (optional)
-      description: Links to product spec, integration docs, Jira ticket, etc.
+      description: Product spec, integration listing, ticket, etc.
       placeholder: |
+        - https://sentry.io/integrations/<slug>/
         - https://...
     validations:
       required: false
