@@ -6,7 +6,6 @@ import {Rubik} from 'next/font/google';
 import Script from 'next/script';
 import PlausibleProvider from 'next-plausible';
 
-import {RadixStyles} from 'sentry-docs/components/radixStyles';
 import {ThemeProvider} from 'sentry-docs/components/theme-provider';
 
 const rubik = Rubik({
@@ -38,7 +37,6 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
         <PlausibleProvider taggedEvents domain="docs.sentry.io,rollup.sentry.io" />
       </head>
       <body className={rubik.variable} suppressHydrationWarning>
-        <RadixStyles />
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
