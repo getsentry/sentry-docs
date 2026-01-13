@@ -102,7 +102,7 @@ The telemetry buffer **MUST** forward all data in memory to the telemetry schedu
 
 # Telemetry Scheduler
 
-The telemetry scheduler receives buffered data from the telemetry buffer, prioritizes critical low-volume data (like errors and crashes) over high-volume data (like spans), builds envelopes, and forwards them to the transport. Before sending, it enforces rate limits and records client reports for dropped envelopes or envelope items. Finally, it also forwards client reports to the transport.
+The telemetry scheduler receives buffered data from the telemetry buffer, prioritizes critical low-volume data (like errors and crashes) over high-volume data (like spans), builds envelopes, and forwards them to the transport. Before sending, it enforces rate limits and records client reports for dropped envelopes and envelope items. Finally, it also forwards client reports to the transport.
 
 The [now deprecated unified API](/sdk/miscellaneous/unified-api/) suggested to handle rate limits and offline caching in the transport, forcing multi-platform SDKs (like Java) to maintain separate transports. To simplify, transports **SHOULD** now only send envelopes. The telemetry scheduler **SHOULD** handle rate limiting, offline caching, and prioritization, ensuring consistent logic across platforms. This also keeps custom user defined transports simple. SDKs need only adjust the scheduler for platform-specific needs.
 
@@ -120,7 +120,7 @@ To be defined: How exactly does the telemetry scheduler interact with the transp
 
 The telemetry scheduler **SHOULD** add [client reports](/sdk/telemetry/client-reports/) to outgoing envelopes or, if not, periodically send standalone client report envelopes to the transport, following the [SDK side recommendations](/sdk/telemetry/client-reports/#sdk-side-recommendations).
 
-Client report tracking **SHOULD NOT** be implemented in the telemetry scheduler. Instead, add a client report component accessible throughout the SDK, since data can be dropped in multiple places see the diagram below. The telemetry scheduler **SHOULD** request the current client reports from the client reports component.
+Client report tracking **SHOULD NOT** be implemented in the telemetry scheduler. Instead, add a client report component accessible throughout the SDK, since data can be dropped in multiple places, as shown in the diagram below. The telemetry scheduler **SHOULD** request the current client reports from the client reports component.
 
 Here is a diagram showing which components record client reports and how they interact with the telemetry scheduler.
 
@@ -136,7 +136,7 @@ flowchart LR
 
   TelemetryBuffer -- buffer_overflow, ratelimit_backoff, etc. --> ClientReports
   TelemetryScheduler -- ratelimit_backoff, queue_overflow, etc. --> ClientReports
-  Transport -- send_errors --> ClientReports
+  Transport -- send_error, network_error --> ClientReports
   ClientReports -- current client reports --> TelemetryScheduler
 ```
 

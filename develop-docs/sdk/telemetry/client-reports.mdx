@@ -148,12 +148,12 @@ the SDKs should ensure not dropping too many reports. It is not required, for ex
 - to persist the data when an application crashes.
 - to move an envelope item with a client report to the next envelope when the cache for envelopes is full.
 
-SDKs **SHOULD** minimize unnecessary communication and **MUST NOT** send an envelope for each discarded event. Adjust these recommendations as needed:
+SDKs **SHOULD** minimize unnecessary HTTP requests and **MUST NOT** send an envelope for each discarded event. Adjust these recommendations as needed:
 
-1. For apps with low envelope frequency (e.g., mobile or web), SDKs **MUST** attach discarded events to scheduled envelopes. Fewer client reports are acceptable in such cases.
-2. For backends or apps with continuous envelopes, SDKs **MUST** periodically flush or attach discarded events to scheduled envelopes.
+1. For low-frequency apps (mobile/web): Attach discarded events to scheduled envelopes. Fewer client reports are acceptable in such cases.
+2. For high-frequency apps (backends): Periodically flush discarded events or attach to scheduled envelopes.
 
-The SDKs **MAY** keep track of the discard events in the transport. Once SDKs implement the [telemetry processor](/sdk/telemetry/telemetry-processor/), they **SHOULD** add an extra component, called client reports, to keep track of discarded events. The [telemetry scheduler](/sdk/telemetry/telemetry-processor/#telemetry-scheduler) is then responsible for passing client reports to the transport. It still **MUST** adhere to the requirements above.
+The SDKs **MAY** keep track of the discard events in the transport. Once SDKs implement the [telemetry processor](/sdk/telemetry/telemetry-processor/), they **SHOULD** add an extra component, called client reports, to keep track of discarded events. The [telemetry scheduler](/sdk/telemetry/telemetry-processor/#telemetry-scheduler) is then responsible for passing aggregated client reports to the transport. The telemetry scheduler still **MUST** adhere to the requirements above.
 
 The one who drops an envelope item must record and report it. If the server drops
 an envelope item, for example, with the response 429, the client SDK must not record
