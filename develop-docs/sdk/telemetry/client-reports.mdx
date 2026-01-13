@@ -148,15 +148,12 @@ the SDKs should ensure not dropping too many reports. It is not required, for ex
 - to persist the data when an application crashes.
 - to move an envelope item with a client report to the next envelope when the cache for envelopes is full.
 
-SDKs are encouraged to reduce needless communication. They shall not send an envelope
-everytime they record a discarded event. The following approaches are recommendations
-that can be adjusted if required. The SDKs should keep track of the discard events in
-the transport. For applications with a low frequency of envelopes to ingest, such as
-mobile or web apps, the SDK shall attach the discarded events to an already scheduled
-envelope. We accept the tradeoff that apps rarely sending events will have fewer
-client reports. When the SDK schedules envelopes continuously, like on the backend,
-the SDK shall either choose to flush the discarded events periodically or attach them
-to an already scheduled envelope.
+SDKs **SHOULD** minimize unnecessary communication and **MUST NOT** send an envelope for each discarded event. Adjust these recommendations as needed:
+
+1. For apps with low envelope frequency (e.g., mobile or web), SDKs **MUST** attach discarded events to scheduled envelopes. Fewer client reports are acceptable in such cases.
+2. For backends or apps with continuous envelopes, SDKs **MUST** periodically flush or attach discarded events to scheduled envelopes.
+
+The SDKs **MAY** keep track of the discard events in the transport. Once SDKs implement the [telemetry processor](/sdk/telemetry/telemetry-processor/), they **SHOULD** add an extra component, called client reports, to keep track of discarded events. The [telemetry scheduler](/sdk/telemetry/telemetry-processor/#telemetry-scheduler) is then responsible for passing client reports to the transport. It still **MUST** adhere to the requirements above.
 
 The one who drops an envelope item must record and report it. If the server drops
 an envelope item, for example, with the response 429, the client SDK must not record
