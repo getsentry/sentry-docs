@@ -1,0 +1,209 @@
+docs/api/auth.mdx
+  2da442db2640663f 127,228
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "bdacbbf9f4d36a8b46d9911bf7b1241369e2c455",
+  "prompts": {
+    "2da442db2640663f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "edf8d74b-b7e9-49bc-9d54-2ece5284eb14",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "David Cramer <dcramer@gmail.com>",
+      "messages": [
+        {
+          "type": "user",
+          "text": "iterate-pr",
+          "timestamp": "2026-01-13T16:10:22.655Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The user wants me to run the \"iterate-pr\" skill. This is a skill that iterates on a PR until CI passes. Let me invoke it using the Skill tool.",
+          "timestamp": "2026-01-13T16:10:26.209Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Skill",
+          "input": {
+            "skill": "sentry-skills:iterate-pr"
+          },
+          "timestamp": "2026-01-13T16:10:26.912Z"
+        },
+        {
+          "type": "user",
+          "text": "Base directory for this skill: /home/dcramer/.claude/plugins/cache/sentry-skills/sentry-skills/0189f2ed17fd/skills/iterate-pr\n\n# Iterate on PR Until CI Passes\n\nContinuously iterate on the current branch until all CI checks pass and review feedback is addressed.\n\n**Requires**: GitHub CLI (`gh`) authenticated and available.\n\n## Process\n\n### Step 1: Identify the PR\n\n```bash\ngh pr view --json number,url,headRefName,baseRefName\n```\n\nIf no PR exists for the current branch, stop and inform the user.\n\n### Step 2: Check CI Status First\n\nAlways check CI/GitHub Actions status before looking at review feedback:\n\n```bash\ngh pr checks --json name,state,bucket,link,workflow\n```\n\nThe `bucket` field categorizes state into: `pass`, `fail`, `pending`, `skipping`, or `cancel`.\n\n**Important:** If any of these checks are still `pending`, wait before proceeding:\n- `sentry` / `sentry-io`\n- `codecov`\n- `cursor` / `bugbot` / `seer`\n- Any linter or code analysis checks\n\nThese bots may post additional feedback comments once their checks complete. Waiting avoids duplicate work.\n\n### Step 3: Gather Review Feedback\n\nOnce CI checks have completed (or at least the bot-related checks), gather human and bot feedback:\n\n**Review Comments and Status:**\n```bash\ngh pr view --json reviews,comments,reviewDecision\n```\n\n**Inline Code Review Comments:**\n```bash\ngh api repos/{owner}/{repo}/pulls/{pr_number}/comments\n```\n\n**PR Conversation Comments (includes bot comments):**\n```bash\ngh api repos/{owner}/{repo}/issues/{pr_number}/comments\n```\n\nLook for bot comments from: Sentry, Codecov, Cursor, Bugbot, Seer, and other automated tools.\n\n### Step 4: Investigate Failures\n\nFor each CI failure, get the actual logs:\n\n```bash\n# List recent runs for this branch\ngh run list --branch $(git branch --show-current) --limit 5 --json databaseId,name,status,conclusion\n\n# View failed logs for a specific run\ngh run view <run-id> --log-failed\n```\n\nDo NOT assume what failed based on the check name alone. Always read the actual logs.\n\n### Step 5: Validate Feedback\n\nFor each piece of feedback (CI failure or review comment):\n\n1. **Read the relevant code** - Understand the context before making changes\n2. **Verify the issue is real** - Not all feedback is correct; reviewers and bots can be wrong\n3. **Check if already addressed** - The issue may have been fixed in a subsequent commit\n4. **Skip invalid feedback** - If the concern is not legitimate, move on\n\n### Step 6: Address Valid Issues\n\nMake minimal, targeted code changes. Only fix what is actually broken.\n\n### Step 7: Commit and Push\n\n```bash\ngit add -A\ngit commit -m \"fix: <descriptive message of what was fixed>\"\ngit push origin $(git branch --show-current)\n```\n\n### Step 8: Wait for CI\n\nUse the built-in watch functionality:\n\n```bash\ngh pr checks --watch --interval 30\n```\n\nThis waits until all checks complete. Exit code 0 means all passed, exit code 1 means failures.\n\nAlternatively, poll manually if you need more control:\n\n```bash\ngh pr checks --json name,state,bucket | jq '.[] | select(.bucket != \"pass\")'\n```\n\n### Step 9: Repeat\n\nReturn to Step 2 if:\n- Any CI checks failed\n- New review feedback appeared\n\nContinue until all checks pass and no unaddressed feedback remains.\n\n## Exit Conditions\n\n**Success:**\n- All CI checks are green (`bucket: pass`)\n- No unaddressed human review feedback\n\n**Ask for Help:**\n- Same failure persists after 3 attempts (likely a flaky test or deeper issue)\n- Review feedback requires clarification or decision from the user\n- CI failure is unrelated to branch changes (infrastructure issue)\n\n**Stop Immediately:**\n- No PR exists for the current branch\n- Branch is out of sync and needs rebase (inform user)\n\n## Tips\n\n- Use `gh pr checks --required` to focus only on required checks\n- Use `gh run view <run-id> --verbose` to see all job steps, not just failures\n- If a check is from an external service, the `link` field in checks JSON provides the URL to investigate\n",
+          "timestamp": "2026-01-13T16:11:52.673Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The user wants me to iterate on the current PR until CI passes. Let me follow the process outlined in the skill.\n\nStep 1: Identify the PR",
+          "timestamp": "2026-01-13T16:11:56.140Z"
+        },
+        {
+          "type": "assistant",
+          "text": "I'll help you iterate on the current PR until CI passes. Let me start by identifying the PR and checking its status.",
+          "timestamp": "2026-01-13T16:11:56.692Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh pr view --json number,url,headRefName,baseRefName",
+            "description": "Get PR details for current branch"
+          },
+          "timestamp": "2026-01-13T16:11:57.236Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Good, there's a PR #15977. Now let me check the CI status.",
+          "timestamp": "2026-01-13T16:12:08.163Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Found PR #15977. Let me check the CI status.",
+          "timestamp": "2026-01-13T16:12:08.163Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh pr checks --json name,state,bucket,link,workflow",
+            "description": "Check CI status for the PR"
+          },
+          "timestamp": "2026-01-13T16:12:08.163Z"
+        },
+        {
+          "type": "assistant",
+          "text": "All CI checks are passing:\n- Vercel Preview Comments: pass\n- Cursor Bugbot: pass\n- Check Typos: pass\n- Secret Scan: pass\n- Lint: pass\n- enforce-license-compliance: pass\n- check-version-convention: pass\n- lint-404: pass\n- Test: pass\n- Seer Code Review: skipping (neutral - this is okay)\n- Codeowner assignment: pass\n- semgrep-cloud-platform/scan: pass\n- Vercel – develop-docs: pass\n- Vercel – sentry-docs: pass\n\nAll checks are green! Now let me check if there's any review feedback.",
+          "timestamp": "2026-01-13T16:12:38.007Z"
+        },
+        {
+          "type": "assistant",
+          "text": "All CI checks are passing. Let me check for any review feedback.",
+          "timestamp": "2026-01-13T16:12:38.323Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh pr view --json reviews,comments,reviewDecision",
+            "description": "Check for review feedback"
+          },
+          "timestamp": "2026-01-13T16:12:38.820Z"
+        },
+        {
+          "type": "assistant",
+          "text": "There's review feedback! The review decision is \"CHANGES_REQUESTED\". Let me look at the details:\n\n1. BYK approved the PR\n2. betegon requested changes - the endpoint URL is wrong:\n   - The docs say `/oauth/device_authorization/` but the actual implementation uses `/oauth/device/code/`\n\nI need to:\n1. Find the file that has this incorrect URL\n2. Update it to use the correct URL\n\nLet me find the file first.",
+          "timestamp": "2026-01-13T16:12:44.642Z"
+        },
+        {
+          "type": "assistant",
+          "text": "There's review feedback requesting changes. The reviewer `betegon` identified that the endpoint URL is incorrect:\n- Current: `https://sentry.io/oauth/device_authorization/`\n- Should be: `https://sentry.io/oauth/device/code/`\n\nLet me find and fix the documentation file.",
+          "timestamp": "2026-01-13T16:12:45.977Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Grep",
+          "input": {
+            "output_mode": "content",
+            "pattern": "device_authorization"
+          },
+          "timestamp": "2026-01-13T16:12:46.614Z"
+        },
+        {
+          "type": "assistant",
+          "text": "I found two instances in `docs/api/auth.mdx` at lines 127 and 228. Let me read the file to see the context, then fix both occurrences.",
+          "timestamp": "2026-01-13T16:12:50.071Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Found the file. Let me read the relevant sections and fix both occurrences.",
+          "timestamp": "2026-01-13T16:12:50.630Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/home/dcramer/src/sentry-docs/docs/api/auth.mdx",
+            "limit": 30,
+            "offset": 120
+          },
+          "timestamp": "2026-01-13T16:12:51.707Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now let me also read the second occurrence around line 228.",
+          "timestamp": "2026-01-13T16:12:54.819Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/home/dcramer/src/sentry-docs/docs/api/auth.mdx",
+            "limit": 30,
+            "offset": 220
+          },
+          "timestamp": "2026-01-13T16:12:55.441Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I can fix both occurrences. I'll use the Edit tool to replace `device_authorization` with `device/code` in both places.",
+          "timestamp": "2026-01-13T16:12:58.753Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I'll fix both occurrences of the incorrect endpoint URL.",
+          "timestamp": "2026-01-13T16:12:58.980Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Edit",
+          "input": {
+            "file_path": "/home/dcramer/src/sentry-docs/docs/api/auth.mdx",
+            "new_string": "curl -X POST https://sentry.io/oauth/device/code/ \\",
+            "old_string": "curl -X POST https://sentry.io/oauth/device_authorization/ \\",
+            "replace_all": false
+          },
+          "timestamp": "2026-01-13T16:12:58.208Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Edit",
+          "input": {
+            "file_path": "/home/dcramer/src/sentry-docs/docs/api/auth.mdx",
+            "new_string": "DEVICE_AUTH_URL = 'https://sentry.io/oauth/device/code/'",
+            "old_string": "DEVICE_AUTH_URL = 'https://sentry.io/oauth/device_authorization/'",
+            "replace_all": false
+          },
+          "timestamp": "2026-01-13T16:12:59.162Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Both edits were successful. Now I need to commit and push these changes to the PR.",
+          "timestamp": "2026-01-13T16:13:13.303Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Both URLs have been fixed. Now let me commit and push these changes.",
+          "timestamp": "2026-01-13T16:13:13.750Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git add -A && git commit -m \"$(cat <<'EOF'\nfix(api): correct device authorization endpoint URL\n\nChange endpoint from /oauth/device_authorization/ to /oauth/device/code/\nto match the actual implementation in sentry.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n)\"",
+            "description": "Commit the endpoint URL fix"
+          },
+          "timestamp": "2026-01-13T16:13:15.859Z"
+        }
+      ],
+      "total_additions": 2,
+      "total_deletions": 2,
+      "accepted_lines": 2,
+      "overriden_lines": 0
+    }
+  }
+}
