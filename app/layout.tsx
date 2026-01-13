@@ -6,6 +6,7 @@ import {Rubik} from 'next/font/google';
 import Script from 'next/script';
 import PlausibleProvider from 'next-plausible';
 
+import {RadixStyles} from 'sentry-docs/components/radixStyles';
 import {ThemeProvider} from 'sentry-docs/components/theme-provider';
 
 const rubik = Rubik({
@@ -13,6 +14,7 @@ const rubik = Rubik({
   style: ['normal', 'italic'],
   subsets: ['latin'],
   variable: '--font-rubik',
+  display: 'swap', // Show fallback font immediately, swap when loaded
 });
 
 export const metadata: Metadata = {
@@ -36,6 +38,7 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
         <PlausibleProvider taggedEvents domain="docs.sentry.io,rollup.sentry.io" />
       </head>
       <body className={rubik.variable} suppressHydrationWarning>
+        <RadixStyles />
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
@@ -47,7 +50,7 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
           </Theme>
         </ThemeProvider>
         <Script
-          async
+          strategy="lazyOnload"
           src="https://widget.kapa.ai/kapa-widget.bundle.js"
           data-website-id="cac7cc70-969e-4bc1-a968-55534a839be4"
           data-button-hide // do not render kapa ai button
