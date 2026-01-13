@@ -245,7 +245,7 @@ function resolveOgImageUrl(
     return null;
   }
 
-  // Remove hash fragments (e.g., #600x400 from remark-image-size)
+  // Remove hash fragments (e.g., #600x400 from remark-image-processing)
   const cleanUrl = imageUrl.split('#')[0];
 
   // External URLs - return as is
