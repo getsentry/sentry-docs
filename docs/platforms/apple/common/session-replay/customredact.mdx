@@ -111,7 +111,7 @@ You can add custom view types to the ignore set using the `excludeViewTypeFromSu
 options.sessionReplay.excludeViewTypeFromSubtreeTraversal("MyProblematicView")
 ```
 
-The view type identifier should match the result of `type(of: view).description()`, which typically follows the format `"ModuleName.ClassName"`.
+The view type identifier uses **partial string matching** against the result of `type(of: view).description()`. This means if you exclude `"MyView"`, it will match `"MyApp.MyView"`, `"MyViewSubclass"`, `"Some.MyView.Container"`, etc. The view type identifier typically follows the format `"ModuleName.ClassName"`.
 
 ### Removing View Types from Ignore List
 
@@ -120,6 +120,8 @@ If you need to remove a view type from the ignore set (not recommended for defau
 ```swift
 options.sessionReplay.includeViewTypeInSubtreeTraversal("CameraUI.ChromeSwiftUIView")
 ```
+
+The view type identifier uses **exact string matching** against the result of `type(of: view).description()`. This means `"MyApp.MyView"` will only match exactly `"MyApp.MyView"`, not `"MyApp.MyViewSubclass"`. This exact matching prevents accidental matches when removing view types from the ignore set.
 
 <Alert level="warning">
 
@@ -133,11 +135,21 @@ You can also configure ignored view types when initializing `SentryReplayOptions
 
 ```swift
 let replayOptions = SentryReplayOptions(dictionary: [
-    "viewTypesIgnoredFromSubtreeTraversal": ["MyCustomView", "AnotherProblematicView"]
+    "excludedViewClasses": ["MyCustomView", "AnotherProblematicView"],
+    "includedViewClasses": ["CameraUI.ChromeSwiftUIView"]
 ])
 ```
 
+- `excludedViewClasses`: An array of view type identifier patterns that use partial matching (contains)
+- `includedViewClasses`: An array of view type identifiers that use exact matching to remove items from the excluded set
+
 ### How It Works
+
+The final set of excluded view types is computed using the formula: **Default View Classes + Excluded View Classes - Included View Classes**
+
+- Default view classes are defined internally by the SDK (e.g., `CameraUI.ChromeSwiftUIView` on iOS 26+)
+- Excluded view classes use partial matching (contains) - if a view's class name contains the pattern, it's excluded
+- Included view classes use exact matching - they remove specific view types from the excluded set
 
 When a view type is ignored from subtree traversal:
 
