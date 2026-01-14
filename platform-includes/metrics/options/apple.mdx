@@ -2,14 +2,14 @@ The Sentry Cocoa SDK provides several options to configure how metrics are captu
 
 ### Enabling Metrics
 
-Metrics are disabled by default. To enable metrics, set `enableMetrics` to `true` when initializing the SDK:
+Metrics are disabled by default. To enable metrics, set `enableMetrics` to `true` in the experimental options when initializing the SDK:
 
 ```swift
 import Sentry
 
 SentrySDK.start { options in
     options.dsn = "___PUBLIC_DSN___"
-    options.enableMetrics = true
+    options.experimental.enableMetrics = true
 }
 ```
 
@@ -20,28 +20,54 @@ Use the `beforeSendMetric` callback to filter or modify metrics before they're s
 - Removing sensitive data from metric attributes
 - Dropping metrics you don't want to send
 - Adding or modifying attributes
+- Changing metric names or units
 
-The callback receives a metric object and must return either a modified metric or `nil` to drop it. Attributes use the `Attributable` protocol, so you can only assign valid types (`String`, `Bool`, `Int`, `Double`, `Float`, or arrays of these types).
+The callback receives a `SentryMetric` struct and must return either a modified metric or `nil` to drop it.
+
+**Available `SentryMetric` properties:**
+- `name`: The metric name (e.g., "api.response_time")
+- `value`: The metric value (counter, distribution, or gauge)
+- `unit`: The unit of measurement (`SentryMetricsUnit?`)
+- `attributes`: Dictionary of attributes (`[String: SentryAttributeContent]`)
+- `timestamp`: When the metric was recorded
+- `traceId`: Associated trace ID
+
+When modifying `attributes`, you can assign values directly using literals thanks to Swift's `ExpressibleBy...Literal` protocols. The SDK supports `String`, `Bool`, `Int`, `Double`, and arrays of these types.
 
 ```swift
 import Sentry
 
 SentrySDK.start { options in
     options.dsn = "___PUBLIC_DSN___"
-    options.enableMetrics = true
-    options.beforeSendMetric = { metric in
-        // Create a local mutable variable since metric is a data value
+    options.experimental.enableMetrics = true
+    options.experimental.beforeSendMetric = { metric in
+        // Create a mutable copy (SentryMetric is a struct)
         var metric = metric
 
-        // Drop metrics with specific attributes
-        // Note: Access attributes through the Attributable protocol
-        if let dropMe = metric.attributes["dropMe"] as? Bool, dropMe == true {
+        // Drop metrics based on attributes
+        if case .boolean(let dropMe) = metric.attributes["dropMe"], dropMe {
             return nil
         }
 
-        // Modify metric attributes (only Attributable types are allowed)
-        metric.attributes["processed"] = true
-        metric.attributes["processed_at"] = "2024-01-01"
+        // Drop metrics by name
+        if metric.name.hasPrefix("internal.") {
+            return nil
+        }
+
+        // Modify or add attributes using literals (recommended)
+        metric.attributes["processed"] = true          // Boolean literal
+        metric.attributes["environment"] = "production" // String literal
+        metric.attributes["retry_count"] = 3           // Integer literal
+        metric.attributes["latency"] = 42.5            // Double literal
+
+        // You can also use enum cases for explicitness
+        metric.attributes["explicit"] = .boolean(true)
+        metric.attributes["tags"] = .stringArray(["tag1", "tag2"])
+
+        // Change the metric name
+        if metric.name == "legacy_metric" {
+            metric.name = "new_metric_name"
+        }
 
         return metric
     }
