@@ -100,6 +100,24 @@ function paint() {
   Sentry.getClient().getIntegrationByName("ReplayCanvas").snapshot(canvasRef);
 }
 ```
+
+#### WebGPU Canvases
+
+WebGPU works differently from WebGL. The canvas texture returned by `getCurrentTexture()` is only valid until the current task completes - after that, the texture expires and its contents are no longer accessible. This means that by default, when `snapshot()` defers capture to the next animation frame, it will capture an empty or invalid canvas.
+
+To fix this, pass `skipRequestAnimationFrame: true` to capture the snapshot immediately:
+
+```javascript
+function paint() {
+  const canvasRef = document.querySelector("#my-canvas");
+  const canvasIntegration = Sentry.getClient().getIntegrationByName("ReplayCanvas");
+
+  // ... your WebGPU rendering commands ...
+
+  // Capture immediately after rendering - required for WebGPU
+  canvasIntegration.snapshot(canvasRef, { skipRequestAnimationFrame: true });
+}
+```
 </PlatformSection>
 
 ### Content Security Policy (CSP)
@@ -161,11 +179,11 @@ Sampling allows you to control how much of your website's traffic will result in
 ```javascript {5-6} {filename:instrumentation-client.ts}
 Sentry.init({
   // ... other configuration
-  
+
   // Session Replay sampling rates
   replaysSessionSampleRate: 0.1, // Capture 10% of all sessions
   replaysOnErrorSampleRate: 1.0,  // Capture 100% of error sessions
-  
+
   // For development/testing, you can set replaysSessionSampleRate to 1.0
   // to capture all sessions for complete visibility
 });
@@ -204,4 +222,3 @@ Once testing is complete, **we recommend lowering this value in production**. We
 ## Next Steps
 
 <PageGrid />
-
