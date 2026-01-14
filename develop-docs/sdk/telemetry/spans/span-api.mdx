@@ -85,7 +85,6 @@ interface StartSpanOptions {
   name: string;
   attributes?: Record<string, SpanAttributeValue>;
   parentSpan?: Span | null;
-  active?: boolean;
 }
 ```
 
@@ -97,14 +96,13 @@ with start_span(
     name,  # type: str
     attributes,  # type: SpanAttributes
     parent_span,  # type: Span
-    active,  # type: bool
 ) as span:
     ...
 
 # Alternative API without the use of a context manager, to allow for more
 # flexibility when to end the span:
 
-span = start_span(name, attributes, parent_span, active)
+span = start_span(name, attributes, parent_span)
 span.end()
 ```
 
@@ -115,12 +113,9 @@ SDKs MUST allow specifying the following options to be passed to `startSpan`:
 | `name`        | Yes      | The name of the span. MUST be set by users   |
 | `attributes`  | No       | Attributes to attach to the span.            |
 | `parentSpan`  | No       | The parent span. See description below for implications of allowed values |
-| `active`      | No       | Whether the started span should be _active_ (i.e. if spans started while this span is active should become children of the started span). |
 
 Behaviour:
 - Spans MUST be started as active by default. This means that any span started, while the initial span is active, MUST be attached as a child span of the active span. 
-- Only if users set `active: false`, the span will be started as inactive, meaning spans started while this span is not yet ended, will not become children, but siblings of the started span.
-- If a `Span` is passed via `parentSpan`, the span will be started as the child of the passed parent span. This has precedence over the currently active span.
 - If `null` is passed via `parentSpan`, the new span will be started as a root/segment span.
 - SDKs MUST NOT end the span automatically. This is the responsibility of the user.
 - `startSpan` MUST always return a span instance, even if the started span's trace is negatively sampled.
