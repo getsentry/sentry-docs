@@ -27,7 +27,9 @@ import remarkStringify from 'remark-stringify';
 import {unified} from 'unified';
 import {remove} from 'unist-util-remove';
 
-const DOCS_ORIGIN = 'https://docs.sentry.io';
+const DOCS_ORIGIN = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
+  ? 'https://develop.sentry.dev'
+  : 'https://docs.sentry.io';
 const CACHE_VERSION = 3;
 const CACHE_COMPRESS_LEVEL = 4;
 const R2_BUCKET = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
@@ -214,6 +216,133 @@ async function createWork() {
   );
 
   await Promise.all(workerPromises);
+
+  // Generate hierarchical sitemaps
+  const allPaths = workerTasks
+    .flat()
+    .map(task => task.relativePath)
+    .filter(p => p !== 'index.md')
+    .sort();
+
+  // Root index.md - only top-level pages (no slashes in path)
+  const topLevelPaths = allPaths.filter(p => !p.includes('/'));
+  const rootSitemapContent = `# Sentry Documentation
+
+Sentry is a developer-first application monitoring platform that helps you identify and fix issues in real-time. It provides error tracking, performance monitoring, session replay, and more across all major platforms and frameworks.
+
+## Key Features
+
+- **Error Monitoring**: Capture and diagnose errors with full stack traces, breadcrumbs, and context
+- **Tracing**: Track requests across services to identify performance bottlenecks
+- **Session Replay**: Watch real user sessions to understand what led to errors
+- **Profiling**: Identify slow functions and optimize application performance
+- **Crons**: Monitor scheduled jobs and detect failures
+- **Logs**: Collect and analyze application logs in context
+
+## Documentation Sections
+
+${topLevelPaths.filter(p => p !== '_not-found.md').map(p => `- [${p.replace(/\.md$/, '')}](${DOCS_ORIGIN}/${p})`).join('\n')}
+
+## Quick Links
+
+- [Platform SDKs](${DOCS_ORIGIN}/platforms.md) - Install Sentry for your language/framework
+- [API Reference](${DOCS_ORIGIN}/api.md) - Programmatic access to Sentry
+- [CLI](${DOCS_ORIGIN}/cli.md) - Command-line interface for Sentry operations
+`;
+
+  const indexPath = path.join(OUTPUT_DIR, 'index.md');
+  await writeFile(indexPath, rootSitemapContent, {encoding: 'utf8'});
+  console.log(`📑 Generated root index.md with ${topLevelPaths.length} top-level sections`);
+
+  // Append child page listings to section index pages
+  // Group paths by their DIRECT parent (handling guides specially)
+  const pathsByParent = new Map();
+  for (const p of allPaths) {
+    const parts = p.replace(/\.md$/, '').split('/');
+    if (parts.length <= 1) continue;
+
+    // Determine the parent path - always direct parent, except:
+    // Guide index pages (platforms/X/guides/Y.md) -> parent is platform (platforms/X.md)
+    let parentPath;
+    if (parts.includes('guides')) {
+      const guidesIdx = parts.indexOf('guides');
+      if (parts.length === guidesIdx + 2) {
+        // This is a guide index (e.g., platforms/python/guides/django.md)
+        // Parent is the platform (platforms/python.md), skipping 'guides' folder
+        parentPath = parts.slice(0, guidesIdx).join('/') + '.md';
+      } else {
+        // Pages inside guides use normal parent-child (direct parent only)
+        parentPath = parts.slice(0, -1).join('/') + '.md';
+      }
+    } else {
+      // Standard parent-child relationship (direct parent only)
+      parentPath = parts.slice(0, -1).join('/') + '.md';
+    }
+
+    if (!pathsByParent.has(parentPath)) {
+      pathsByParent.set(parentPath, []);
+    }
+    pathsByParent.get(parentPath).push(p);
+  }
+
+  // Append child listings to parent index files
+  let updatedCount = 0;
+  for (const [parentPath, children] of pathsByParent) {
+    const parentFile = path.join(OUTPUT_DIR, parentPath);
+    if (existsSync(parentFile)) {
+      const existingContent = await readFile(parentFile, {encoding: 'utf8'});
+
+      // Only show "## Guides" section for platform index pages (e.g., platforms/javascript.md)
+      // These are the only pages that have guide children (platforms/X/guides/Y.md)
+      const isPlatformIndex =
+        parentPath.startsWith('platforms/') &&
+        parentPath.split('/').length === 2; // e.g., "platforms/javascript.md"
+
+      const guides = isPlatformIndex
+        ? children.filter(p => p.includes('/guides/'))
+        : [];
+      const otherPages = isPlatformIndex
+        ? children.filter(p => !p.includes('/guides/'))
+        : children;
+
+      let childSection = '';
+      if (guides.length > 0) {
+        const guideList = guides
+          .map(p => {
+            const name = p.replace(/\.md$/, '').split('/').pop();
+            return `- [${name}](${DOCS_ORIGIN}/${p})`;
+          })
+          .join('\n');
+        childSection += `\n## Guides\n\n${guideList}\n`;
+      }
+      if (otherPages.length > 0) {
+        const pageList = otherPages
+          .map(p => {
+            const name = p.replace(/\.md$/, '').split('/').pop();
+            return `- [${name}](${DOCS_ORIGIN}/${p})`;
+          })
+          .join('\n');
+        childSection += `\n## Pages in this section\n\n${pageList}\n`;
+      }
+
+      if (childSection) {
+        await writeFile(parentFile, existingContent + childSection, {encoding: 'utf8'});
+        updatedCount++;
+      }
+    }
+  }
+  console.log(`📑 Added child page listings to ${updatedCount} section index files`);
+
+  // Upload index.md to R2 if configured
+  if (accessKeyId && secretAccessKey) {
+    const s3Client = getS3Client();
+    const indexHash = md5(rootSitemapContent);
+    const existingHash = existingFilesOnR2?.get('index.md');
+    if (existingHash !== indexHash) {
+      await uploadToCFR2(s3Client, 'index.md', rootSitemapContent);
+      console.log(`📤 Uploaded updated index.md to R2`);
+    }
+  }
 
   // Clean up unused cache files to prevent unbounded growth
   if (!noCache) {

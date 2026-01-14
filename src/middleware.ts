@@ -136,8 +136,8 @@ const handleAIClientRedirect = (request: NextRequest) => {
 
   // Check for markdown request (Accept header, user-agent, or manual)
   if (clientWantsMarkdown || forceMarkdown) {
-    // Log the redirect for debugging
-    Sentry.logger.info('Markdown redirect triggered', {
+    // Log the rewrite for debugging
+    Sentry.logger.info('Markdown rewrite triggered', {
       urlPath: url.pathname,
       detectionMethod: forceMarkdown ? 'Manual format=md' : detectionMethod,
       targetUrl: url.pathname.replace(/\/+$/, '') + '.md',
@@ -156,9 +156,9 @@ const handleAIClientRedirect = (request: NextRequest) => {
       newUrl.searchParams.delete('format');
     }
 
-    return NextResponse.redirect(newUrl, {
-      status: redirectStatusCode,
-    });
+    // Rewrite to serve markdown inline (same URL, different content)
+    // The next.config.ts rewrite rule maps *.md to /md-exports/*.md
+    return NextResponse.rewrite(newUrl);
   }
 
   return undefined;
