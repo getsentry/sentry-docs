@@ -1,16 +1,19 @@
 ### Manual Configuration
+If you installed the SDK manually or the wizard failed, follow the steps below to manually configure source maps upload.
 
-If you installed the SDK manually or the wizard didn't complete, configure source map uploads:
+#### 1. Configure Source Maps Upload
+
+To automatically upload source maps, you need to provide your Sentry auth token, organization, and project slugs in your Next.js configuration:
 
 <OrgAuthTokenNote />
 
-**Step 1:** Add your auth token to your environment (and to your CI):
+**Make sure you add your auth token to your CI, if you are using one to deploy your application.** 
+
+Add your auth token to your environment:
 
 ```bash {filename:.env.local}
 SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
 ```
-
-**Step 2:** Configure `withSentryConfig` in your Next.js config:
 
 ```javascript {filename:next.config.js}
 const { withSentryConfig } = require("@sentry/nextjs");
@@ -27,31 +30,34 @@ module.exports = withSentryConfig(
 );
 ```
 
-### Common Options
+#### 2. [Optional] Customize Source Map Options
 
-| Option | Default | Use When |
-|--------|---------|----------|
-| `sourcemaps.deleteSourcemapsAfterUpload` | `true` | Set `false` to keep source maps in your build output |
-| `sourcemaps.ignore` | `[]` | Exclude files from upload (e.g., `["**/node_modules/**"]`) |
-| `widenClientFileUpload` | `false` | Some client frames show `[native code]` — enables uploading dependency source maps |
+Configure source map behavior in your Next.js config:
 
-See <PlatformLink to="/configuration/build/#source-maps-options">Build Options</PlatformLink> for all available options.
+```javascript {11-16} {filename:next.config.js}
+const { withSentryConfig } = require("@sentry/nextjs");
 
-### Webpack vs Turbopack
+module.exports = withSentryConfig(
+  {
+    // your existing Next.js config
+  },
+  {
+    org: "___ORG_SLUG___",
+    project: "___PROJECT_SLUG___",
+    authToken: process.env.SENTRY_AUTH_TOKEN,
+    sourcemaps: {
+      disable: false, // Source maps are enabled by default
+      assets: ["**/*.js", "**/*.js.map"], // Specify which files to upload
+      ignore: ["**/node_modules/**"], // Files to exclude
+      deleteSourcemapsAfterUpload: true, // Security: delete after upload
+    },
+  }
+);
+```
+### Turbopack Considerations
 
-| Bundler | Upload Timing | Requirements |
-|---------|--------------|--------------|
-| **Webpack** | During build (default) | None |
-| **Turbopack** | After build | `@sentry/nextjs@10.13.0+`, `next@15.4.1+` |
-
-Turbopack uses the `runAfterProductionCompile` hook from Next.js to upload after the build completes.
+Sourcemaps for Turbopack production builds are supported starting with `@sentry/nextjs@10.13.0`. The minimum required Next.js version is `next@15.4.1`.
 
 ### Troubleshooting
 
-| Problem | Solution |
-|---------|----------|
-| Stack traces show minified code | Verify `SENTRY_AUTH_TOKEN` is set in CI |
-| Some frames show `[native code]` | Enable `widenClientFileUpload: true` |
-| Uploads failing in CI | Check auth token permissions and network access |
-
-See <PlatformLink to="/sourcemaps/troubleshooting_js/">Troubleshooting Source Maps</PlatformLink> for detailed debugging steps.
+If you're experiencing issues with source maps, see [Troubleshooting Source Maps](/platforms/javascript/guides/nextjs/sourcemaps/troubleshooting_js/).
