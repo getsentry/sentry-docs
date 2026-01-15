@@ -70,6 +70,36 @@ Sentry.metrics.count("api_calls", 1, {
 <SplitSection>
 <SplitSectionText>
 
+#### Scope Attributes
+
+With version `10.33.0`+, use scope APIs to set attributes that apply to all metrics while the scope is active.
+
+Supported types: `string`, `number`, `boolean`
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript
+Sentry.getGlobalScope().setAttributes({
+  is_admin: true,
+  auth_provider: "google",
+});
+
+Sentry.withScope((scope) => {
+  scope.setAttribute("step", "authentication");
+
+  // All scope attributes are added
+  Sentry.metrics.count("clicks", 1);
+  Sentry.metrics.gauge("time_since_refresh", 4, { unit: "hour" });
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
 #### Units
 
 For `gauge` and `distribution` metrics, specify a unit to help Sentry display values in a human-readable format.
