@@ -103,9 +103,21 @@ function paint() {
 
 #### WebGPU Canvases
 
-WebGPU works differently from WebGL in how it manages the lifetime of rendered frames. The canvas texture returned by `getCurrentTexture()` is only valid until the current task completes – after that, the texture expires, and its contents are no longer accessible. This means that by default, when `snapshot()` defers capture to the next animation frame, it will capture an empty or invalid canvas.
+WebGPU works differently from WebGL in how it manages the lifetime of rendered frames. The canvas texture returned by `getCurrentTexture()` is only valid until the current task completes – after that, the texture expires, and its contents are no longer accessible. This means that by default, when `snapshot()` defers capture to the next animation frame, it will capture an empty or invalid canvas. There are two steps to capturing WebGPU canvases:
 
-To fix this, pass `skipRequestAnimationFrame: true` to capture the snapshot immediately:
+**Step 1.**
+Enable manual snapshotting when initializing the `ReplayCanvas` integration.
+
+```javascript
+Sentry.replayCanvasIntegration({
+  // Enabling the following will ensure your canvas elements are not forced
+  // into `preserveDrawingBuffer`.
+  enableManualSnapshot: true,
+});
+```
+
+**Step 2.**
+Call the `snapshot()` method inside your application's paint loop with `skipRequestAnimationFrame: true` to capture the snapshot immediately:
 
 ```javascript
 function paint() {
