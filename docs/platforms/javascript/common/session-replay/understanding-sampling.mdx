@@ -1,0 +1,190 @@
+---
+title: "How Session Replay Sampling Works (Web)"
+sidebar_order: 15
+description: "Understand the internal mechanism of Web Session Replay sampling and memory buffering"
+---
+
+<Alert level="info">
+  This guide is specific to **Web Session Replay** using rrweb. Mobile platforms
+  (iOS/Android) use fundamentally different approaches with screenshot-based
+  capture and on-device video synthesis. For mobile documentation, see [iOS
+  Session Replay](/platforms/apple/guides/ios/session-replay/) and [Android
+  Session Replay](/platforms/android/session-replay/).
+</Alert>
+
+# How Session Replay Sampling Works (Web)
+
+Understanding how Sentry's Web Session Replay sampling mechanism works internally can help you optimize your configuration and predict what data will be captured.
+
+## Overview
+
+Session Replay uses two sampling rates that work together:
+
+- **`replaysSessionSampleRate`**: Percentage of users who get their entire session recorded
+- **`replaysOnErrorSampleRate`**: Percentage of error-encountering users whose sessions get recorded
+
+The key to understanding how these work together is the **memory buffer**.
+
+## Memory Buffer System
+
+### What Gets Stored (Web)
+
+Web Session Replay doesn't store actual video files in memory. Instead, it stores **event logs** in a structured format using the rrweb library:
+
+```javascript
+// Example event log entries (Web only)
+{ time: 1234, type: 'click', x: 100, y: 200 }
+{ time: 1235, type: 'input', value: 'cat' }
+{ time: 1236, type: 'scroll', x: 0, y: 500 }
+```
+
+These event logs are:
+
+- **Lightweight**: Approximately 2-5MB for a typical buffer period
+- **Structured**: JSON-like format capturing DOM mutations, user interactions, and console logs
+- **Reconstructible**: Sentry's server automatically converts these logs into video-like replays
+
+<Alert level="info">
+  **Mobile platforms work differently:** iOS and Android use screenshot-based
+  capture with on-device masking and video synthesis, rather than DOM event
+  logs.
+</Alert>
+
+### Buffer Duration and Size
+
+- **Duration**: Configurable buffer period (commonly 60 seconds by default for Web)
+- **Memory footprint**: 2-5MB typically
+- **Storage location**: In-memory ring buffer (overwrites old data)
+- **Network impact**: Only sent to Sentry when conditions are met
+
+<Alert level="info">
+  **Note:** Buffer durations vary by platform. For example, iOS uses a 30-second
+  buffer by default.
+</Alert>
+
+## How Sampling Decisions Work
+
+For detailed configuration options and current recommendations, see <PlatformLink to="/session-replay/">Session Replay Setup Guide</PlatformLink>.
+
+### Decision Flow
+
+When a user visits your application:
+
+1. **Initial Sampling Decision**
+   - A random number determines if the user is selected for `replaysSessionSampleRate`
+   - If selected: Full session recording starts immediately → sent to Sentry in real-time
+   - If not selected: Recording starts but stays in memory buffer only
+
+2. **Error Trigger**
+   - If an error occurs and `replaysOnErrorSampleRate` condition is met:
+     - The buffered period (or as configured) _before_ the error is captured
+     - Recording continues until the session ends
+     - Everything is sent to Sentry
+
+## User Scenarios
+
+### 👮 Scenario A: Full Session Recording (No Error)
+
+**User type**: Selected for `replaysSessionSampleRate`
+
+```
+1. User visits site
+2. Random selection → Selected
+3. Recording starts → Sent to Sentry in real-time
+4. User browses for 5 minutes
+5. Session ends normally
+6. ✅ Full 5-minute replay available in Sentry
+```
+
+**Result**: Complete session visible in Sentry dashboard
+
+---
+
+### 🥷 Scenario B: Not Selected, No Error
+
+**User type**: Not selected for `replaysSessionSampleRate`
+
+```
+1. User visits site
+2. Random selection → Not selected
+3. Recording starts → Stored in memory buffer only
+4. User browses normally (no errors)
+5. Session ends
+6. Memory buffer discarded
+7. ❌ No replay in Sentry
+```
+
+**Result**: No session data sent to Sentry (saves quota)
+
+---
+
+### 👰 Scenario C: Not Selected Initially, But Error Occurs
+
+**User type**: Not selected initially, but encounters error
+
+```
+1. User visits site
+2. Random selection → Not selected
+3. Recording starts → Stored in memory buffer only
+4. User browses for 2 minutes
+5. 🚨 Error occurs!
+6. Check replaysOnErrorSampleRate condition
+7. Memory buffer (buffered period) → Sent to Sentry
+8. Continue recording until session ends
+9. ✅ Replay available showing buffered period before error + everything after
+```
+
+**Result**: Error replay with valuable context before the error occurred
+
+---
+
+## Key Technical Points
+
+### Why Event Logs Instead of Video? (Web)
+
+Web Session Replay uses DOM event logs rather than video recording:
+
+1. **Privacy**: Text can be masked, images can be blocked
+2. **Size**: Event logs are much smaller than video
+3. **Flexibility**: Can redact sensitive data before sending
+4. **Performance**: Minimal impact on browser performance
+
+### When Data Is Sent to Sentry
+
+| Scenario                      | When Data Leaves Browser         |
+| ----------------------------- | -------------------------------- |
+| Selected for session sampling | Immediately, in real-time chunks |
+| Not selected, no error        | Never (discarded)                |
+| Not selected, error occurs    | After error + buffer is sent     |
+
+### Memory Management (Web)
+
+Web Session Replay manages the buffer as a **ring buffer**:
+
+- Old events are automatically overwritten
+- No memory leak concerns
+- Stops recording after 60 minutes (hard limit)
+
+<Alert level="info">
+  **Mobile platforms:** Use screenshot-based capture that is masked and combined
+  into videos on-device, rather than a ring buffer of DOM events.
+</Alert>
+
+## Configuration Guidance
+
+For current recommended sampling rates and detailed configuration options, see:
+
+- <PlatformLink to="/session-replay/">Session Replay Setup Guide</PlatformLink>
+- <PlatformLink to="/session-replay/privacy/">
+    Privacy Configuration
+  </PlatformLink>
+
+This document focuses on explaining the internal mechanism rather than specific configuration values, which may change over time and vary by use case.
+
+## Further Reading
+
+- <PlatformLink to="/session-replay/">Session Replay Setup Guide</PlatformLink>
+- <PlatformLink to="/session-replay/privacy/">
+    Privacy Configuration
+  </PlatformLink>
+- [Performance Overhead](/product/explore/session-replay/web/#performance-overhead)
