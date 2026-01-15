@@ -221,6 +221,45 @@ export const onRequest = sequence(
 
 If you have multiple request handlers, make sure to add the Sentry middleware as the first handler in the sequence.
 
+### Disable Automatic Instrumentation
+
+For Astro version `3.5.2` and up, you can optionally disable the automatic server instrumentation by turning off the `requestHandler` auto instrumentation option:
+
+```javascript {filename:astro.config.mjs}
+import { defineConfig } from "astro/config";
+import sentry from "@sentry/astro";
+
+export default defineConfig({
+  integrations: [
+    sentry({
+      autoInstrumentation: {
+        requestHandler: false,
+      },
+    }),
+  ],
+  output: "server",
+});
+```
+
+### Customize Server Instrumentation
+
+Sentry's Astro middleware gives you control over what additional data should be added to the recorded request spans.
+
+To customize the server instrumentation, add the Sentry middleware to your `src/middleware.(ts|js)` file:
+
+```javascript {filename:src/middleware.(js|ts)}
+import * as Sentry from "@sentry/astro";
+import { sequence } from "astro:middleware";
+
+export const onRequest = sequence(
+  Sentry.handleRequest({
+    trackClientIp: true, // defaults to false
+    trackHeaders: true, // defaults to false
+  })
+  // other middleware handlers
+);
+```
+
 ## Step 3: Add Readable Stack Traces With Source Maps
 
 To upload source maps for clear error stack traces, add your Sentry auth token, organization, and project slugs in the sentry options inside `astro.config.mjs`:

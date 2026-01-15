@@ -22,47 +22,6 @@ Capturing spans requires that you first <PlatformLink to="/tracing/">set up trac
 
 <PlatformContent includePath="performance/enable-automatic-instrumentation" />
 
-<PlatformSection supported={["javascript.astro"]}>
-    ## Disable Automatic Instrumentation
-    For Astro version `3.5.2` and up, you can optionally disable the automatic server instrumentation by turning off the `requestHandler` auto instrumentation option:
-
-    ```javascript {filename:astro.config.mjs}
-    import { defineConfig } from "astro/config";
-    import sentry from "@sentry/astro";
-
-    export default defineConfig({
-    integrations: [
-        sentry({
-        autoInstrumentation: {
-            requestHandler: false,
-        },
-        }),
-    ],
-    output: "server",
-    });
-    ```
-
-    ## Customize Server Instrumentation
-
-    Sentry's Astro middleware gives you control over what additional data should be added to the recorded request spans.
-
-    To customize the server instrumentation, add the Sentry middleware to your `src/middleware.(ts|js)` file:
-
-    ```javascript {filename:src/middleware.(js|ts)}
-        import * as Sentry from "@sentry/astro";
-        import { sequence } from "astro:middleware";
-
-        export const onRequest = sequence(
-        Sentry.handleRequest({
-            trackClientIp: true, // defaults to false
-            trackHeaders: true, // defaults to false
-        })
-        // other middleware handlers
-        );
-    ```
-
-</PlatformSection>
-
 ## Configuration Options
 
 <PlatformSection supported={["javascript.nextjs"]} notSupported={["javascript"]}>
@@ -172,6 +131,7 @@ This flag enables or disables creation of `pageload` span on first pageload.
 
 </SdkOption>
 
+
 <SdkOption name="enableReportPageLoaded" type='boolean' defaultValue='false' availableSince='10.13.0'>
 
 This option determines whether the <PlatformLink to="/apis/#reportPageLoaded">`Sentry.reportPageLoaded()` function</PlatformLink> is enabled.
@@ -244,8 +204,8 @@ By default, all resource spans are captured.
 
 This option allows you to ignore certain spans created from the following browser Performance APIs:
 
-- [`performance.mark(...)`](https://developer.mozilla.org/en-US/docs/Web/API/Performance/mark)
-- [`performance.measure(...)`](https://developer.mozilla.org/en-US/docs/Web/API/Performance/measure)
+  - [`performance.mark(...)`](https://developer.mozilla.org/en-US/docs/Web/API/Performance/mark)
+  - [`performance.measure(...)`](https://developer.mozilla.org/en-US/docs/Web/API/Performance/measure)
 
 Any mark or measure entries matching the strings or regular expressions in the passed array will not be emitted as `mark` or `measure` spans.
 
