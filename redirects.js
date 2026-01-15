@@ -1335,6 +1335,15 @@ const userDocsRedirects = [
     source: '/product/insights/mcp/',
     destination: '/product/insights/ai/mcp/',
   },
+  // Next.js usage -> capturing-errors rename
+  {
+    source: '/platforms/javascript/guides/nextjs/usage/',
+    destination: '/platforms/javascript/guides/nextjs/capturing-errors/',
+  },
+  {
+    source: '/product/new-monitors-and-alerts/alerts/:path*',
+    destination: '/product/alerts/:path*',
+  },
 ];
 
 /**
