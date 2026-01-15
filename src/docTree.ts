@@ -1,5 +1,5 @@
+import {getDevDocsFrontMatter, getDocsFrontMatter} from './frontmatter';
 import {isDeveloperDocs} from './isDeveloperDocs';
-import {getDevDocsFrontMatter, getDocsFrontMatter} from './mdx';
 import {platformsData} from './platformsData';
 import {
   FrontMatter,

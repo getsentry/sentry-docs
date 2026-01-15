@@ -1,0 +1,48 @@
+Metrics are enabled by default in the PHP SDK. After the SDK is initialized, you can send metric data through `\Sentry\trace_metrics()`, which acts as the entry point for recording counts, gauges, and distributions.
+
+The SDK buffers up to 1000 metric entries at a time. Once that limit is reached, it keeps only the most recent 1000. If you need to retain more than that, flush the metrics periodically before you exceed the buffer.
+
+## Emit a Counter
+
+Counters are one of the more basic types of metrics and can be used to count certain event occurrences.
+
+To emit a counter, do the following:
+
+```php
+// Record five total button clicks
+\Sentry\trace_metrics()->count('button-click', 5, ['browser' => 'Firefox', 'app_version' => '1.0.0']);
+```
+
+## Emit a Distribution
+
+Distributions help you get the most insights from your data by allowing you to obtain aggregations such as `p90`, `min`, `max`, and `avg`.
+
+To emit a distribution, do the following:
+
+```php
+use \Sentry\Metrics\Unit;
+
+// Add '15.0' to a distribution used for tracking the loading times per page.
+\Sentry\trace_metrics()->distribution('page-load', 15.0, ['page' => '/home'], Unit::millisecond());
+```
+
+## Emit a Gauge
+
+Gauges let you obtain aggregates like `min`, `max`, `avg`, `sum`, and `count`. Gauges can not be used to represent percentiles. If percentiles aren't important to you, we recommend using gauges.
+
+To emit a gauge, do the following:
+
+```php
+use \Sentry\Metrics\Unit;
+
+// Add '15.0' to a gauge used for tracking the loading times per page.
+\Sentry\trace_metrics()->gauge('page-load', 15.0, ['page' => '/home'], Unit::millisecond());
+```
+
+## Flush
+
+Make sure to flush collected metrics at the end.
+
+```php
+\Sentry\trace_metrics()->flush();
+```

@@ -37,35 +37,104 @@ export default async function Page(props: {
     "The page you are looking for is customized for each platform. Select your platform below and we'll direct you to the most specific documentation on it.";
   let title = defaultTitle;
 
-  // get rid of irrelevant platforms for the `next` path
-  const platformList = extractPlatforms(rootNode).filter(platform_ => {
-    const node = nodeForPath(rootNode, [
+  // Build a list of platforms or guides that have the content for the `next` path
+  type PlatformOrGuide = {
+    icon: string;
+    key: string;
+    title: string;
+    url: string;
+    parentPlatform?: string;
+    shouldBeNested?: boolean;
+  };
+
+  const platformOrGuideList: PlatformOrGuide[] = [];
+
+  for (const platformEntry of extractPlatforms(rootNode)) {
+    // Check if the main platform path has the content
+    const mainPlatformNode = nodeForPath(rootNode, [
       'platforms',
-      platform_.key,
+      platformEntry.key,
       ...pathname.split('/').filter(Boolean),
     ]);
 
-    // extract title and description for displaying it on page
-    if (node && title === defaultTitle && pathname.length > 0) {
-      title = node.frontmatter.title ?? title;
-      description = node.frontmatter.description || '';
+    // Extract title and description from the first valid node we find
+    if (mainPlatformNode && title === defaultTitle && pathname.length > 0) {
+      title = mainPlatformNode.frontmatter.title ?? title;
+      description = mainPlatformNode.frontmatter.description || '';
     }
 
-    return !!node;
-  });
+    // Check which guides have the content
+    const supportedGuides: typeof platformEntry.guides = [];
+    if (platformEntry.guides) {
+      for (const guide of platformEntry.guides) {
+        const guideNode = nodeForPath(rootNode, [
+          'platforms',
+          platformEntry.key,
+          'guides',
+          guide.name,
+          ...pathname.split('/').filter(Boolean),
+        ]);
 
-  if (platformList.length === 0) {
+        if (guideNode) {
+          supportedGuides.push(guide);
+
+          // Extract title and description if we haven't yet
+          if (title === defaultTitle && pathname.length > 0) {
+            title = guideNode.frontmatter.title ?? title;
+            description = guideNode.frontmatter.description || '';
+          }
+        }
+      }
+    }
+
+    // Check notSupported list to filter out unsupported guides (for platforms like JavaScript)
+    let filteredGuides = supportedGuides;
+    if (mainPlatformNode?.frontmatter.notSupported && supportedGuides.length > 0) {
+      const notSupported = mainPlatformNode.frontmatter.notSupported;
+      filteredGuides = supportedGuides.filter(
+        guide => !notSupported.includes(`${platformEntry.key}.${guide.name}`)
+      );
+    }
+
+    // Include platform if main path exists OR if any guides exist
+    if (mainPlatformNode || filteredGuides.length > 0) {
+      // Add the main platform entry only if it has content
+      if (mainPlatformNode) {
+        platformOrGuideList.push({
+          key: platformEntry.key,
+          title: platformEntry.title ?? platformEntry.key ?? '',
+          url: platformEntry.url ?? '',
+          icon: platformEntry.icon ?? platformEntry.key,
+        });
+      }
+
+      // Add guide entries as nested items (only if main platform exists)
+      // or as top-level items (if only guides have content)
+      for (const guide of filteredGuides) {
+        platformOrGuideList.push({
+          key: `${platformEntry.key}.${guide.name}`,
+          title: guide.title ?? guide.name ?? '',
+          url: guide.url ?? '', // Always use the guide-specific URL
+          icon: `${platformEntry.key}-${guide.name}`,
+          shouldBeNested: mainPlatformNode ? true : false, // Only nest if parent exists
+          parentPlatform: platformEntry.key,
+        });
+      }
+    }
+  }
+
+  if (platformOrGuideList.length === 0) {
     // try to redirect the user to the page directly, might result in 404
     return redirect(next);
   }
 
   const requestedPlatform = Array.isArray(platform) ? platform[0] : platform;
   if (requestedPlatform) {
-    const isValidPlatform = platformList.some(
+    const validPlatform = platformOrGuideList.find(
       p => p.key === requestedPlatform?.toLowerCase()
     );
-    if (isValidPlatform) {
-      return redirect(`/platforms/${requestedPlatform}${pathname}`);
+    if (validPlatform) {
+      return redirect(`${validPlatform.url}${pathname}`);
     }
   }
 
@@ -82,12 +151,12 @@ export default async function Page(props: {
       <Alert>{platformInfo}</Alert>
 
       <ul>
-        {platformList.map(p => (
-          <li key={p.key}>
-            <SmartLink to={`/platforms/${p.key}${pathname}`}>
+        {platformOrGuideList.map(p => (
+          <li key={p.key} style={{marginLeft: p.shouldBeNested ? '20px' : '0'}}>
+            <SmartLink to={`${p.url}${pathname}`}>
               <PlatformIcon
                 size={16}
-                platform={p.icon ?? p.key}
+                platform={p.icon}
                 style={{marginRight: '0.5rem'}}
                 format="sm"
               />

@@ -23,10 +23,10 @@ Concurrently to the above SDK work, we also shipped first-class support for inge
 The new integration MUST be called `OTLPIntegration` with the following signature:
 
 ```python
-OTLPIntegration(setup_otlp_traces_exporter=True, setup_propagator=True)
+OTLPIntegration(setup_otlp_traces_exporter=True, setup_propagator=True, capture_exceptions=False)
 ```
 
-The arguments `setup_otlp_traces_exporter` and  `setup_propagator` MUST be booleans that default to `True` and can be turned off if needed by the user.
+The arguments `setup_otlp_traces_exporter`, `setup_propagator` and `capture_exceptions` MUST be booleans that default to `True`, `True` and `False` respectively and can be turned off if needed by the user.
 
 It MUST consist of and setup the following components:
 
@@ -34,6 +34,7 @@ It MUST consist of and setup the following components:
 * A `Propagator` that ensures Distributed Tracing works with other upstream and downstream services using Sentry SDKs
   * Note that we use the `sentry-trace` (NOT `traceparent`) and `baggage` headers here
 * An `external_propagation_context` that extracts the active `trace_id` and `span_id` from the OpenTelemetry SDK
+* An interceptor for OpenTelemetry's `Span.record_exception` method that sends those exceptions to Sentry
 
 ### SpanExporter
 
@@ -92,6 +93,16 @@ The Integration then MUST call `register_external_propagation_context` with a fu
 See the reference Python implementation:
 <GitHubCodePreview url="https://github.com/getsentry/sentry-python/blob/c68c3d6b5152b879bc107f76d9a9c78e95792235/sentry_sdk/integrations/otlp.py#L23-L33" />
 <GitHubCodePreview url="https://github.com/getsentry/sentry-python/blob/c68c3d6b5152b879bc107f76d9a9c78e95792235/sentry_sdk/integrations/otlp.py#L70" />
+
+### Exception interceptor
+
+OpenTelemetry users and instrumentation use `Span.record_exception` to record exceptions on spans during the execution flow. For convenience, where possible, we
+setup a monkeypatch for this method that intercepts and reports this exception to Sentry as well IF `capture_exceptions` is enabled on the integration.
+
+Caveat: Most of the time, some existing Sentry integration will capture those exceptions too so depending on which one is captured first, the `DedupeIntegration` will typically drop either the Sentry or the OpenTelemetry captured exception which is fine from a product experience POV.
+
+See the reference Python implementation:
+<GitHubCodePreview url="https://github.com/getsentry/sentry-python/blob/e275c9e94323b429f39196881fb992d81a2e52ea/sentry_sdk/integrations/otlp.py#L93-L119" />
 
 ## Comparison to POTEL
 
