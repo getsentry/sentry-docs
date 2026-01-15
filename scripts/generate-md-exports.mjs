@@ -382,10 +382,7 @@ ${topLevelPaths
 const md5 = data => createHash('md5').update(data).digest('hex');
 
 async function genMDFromHTML(source, target, {cacheDir, noCache, usedCacheFiles}) {
-  const leanHTML = (await readFile(source, {encoding: 'utf8'}))
-    // Remove all script tags, as they are not needed in markdown
-    // and they are not stable across builds, causing cache misses
-    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
+  const leanHTML = await readFile(source, {encoding: 'utf8'});
   const cacheKey = `v${CACHE_VERSION}_${md5(leanHTML)}`;
   const cacheFile = path.join(cacheDir, cacheKey);
   if (!noCache) {
@@ -411,6 +408,11 @@ async function genMDFromHTML(source, target, {cacheDir, noCache, usedCacheFiles}
   const data = String(
     await unified()
       .use(rehypeParse)
+      // Remove all script elements (they're not needed in markdown and aren't stable across builds)
+      .use(() => tree => {
+        remove(tree, {tagName: 'script'});
+        return tree;
+      })
       // Need the `head > title` selector for the headers
       .use(
         () => tree =>
