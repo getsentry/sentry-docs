@@ -294,43 +294,49 @@ ${topLevelPaths
   let updatedCount = 0;
   for (const [parentPath, children] of pathsByParent) {
     const parentFile = path.join(OUTPUT_DIR, parentPath);
-    if (existsSync(parentFile)) {
-      const existingContent = await readFile(parentFile, {encoding: 'utf8'});
-
-      // Only show "## Guides" section for platform index pages (e.g., platforms/javascript.md)
-      // These are the only pages that have guide children (platforms/X/guides/Y.md)
-      const isPlatformIndex =
-        parentPath.startsWith('platforms/') && parentPath.split('/').length === 2; // e.g., "platforms/javascript.md"
-
-      const guides = isPlatformIndex ? children.filter(p => p.includes('/guides/')) : [];
-      const otherPages = isPlatformIndex
-        ? children.filter(p => !p.includes('/guides/'))
-        : children;
-
-      let childSection = '';
-      if (guides.length > 0) {
-        const guideList = guides
-          .map(p => {
-            const name = p.replace(/\.md$/, '').split('/').pop();
-            return `- [${name}](${DOCS_ORIGIN}/${p})`;
-          })
-          .join('\n');
-        childSection += `\n## Guides\n\n${guideList}\n`;
+    let existingContent;
+    try {
+      existingContent = await readFile(parentFile, {encoding: 'utf8'});
+    } catch (err) {
+      if (err.code === 'ENOENT') {
+        continue; // Parent file doesn't exist, skip
       }
-      if (otherPages.length > 0) {
-        const pageList = otherPages
-          .map(p => {
-            const name = p.replace(/\.md$/, '').split('/').pop();
-            return `- [${name}](${DOCS_ORIGIN}/${p})`;
-          })
-          .join('\n');
-        childSection += `\n## Pages in this section\n\n${pageList}\n`;
-      }
+      throw err;
+    }
 
-      if (childSection) {
-        await writeFile(parentFile, existingContent + childSection, {encoding: 'utf8'});
-        updatedCount++;
-      }
+    // Only show "## Guides" section for platform index pages (e.g., platforms/javascript.md)
+    // These are the only pages that have guide children (platforms/X/guides/Y.md)
+    const isPlatformIndex =
+      parentPath.startsWith('platforms/') && parentPath.split('/').length === 2; // e.g., "platforms/javascript.md"
+
+    const guides = isPlatformIndex ? children.filter(p => p.includes('/guides/')) : [];
+    const otherPages = isPlatformIndex
+      ? children.filter(p => !p.includes('/guides/'))
+      : children;
+
+    let childSection = '';
+    if (guides.length > 0) {
+      const guideList = guides
+        .map(p => {
+          const name = p.replace(/\.md$/, '').split('/').pop();
+          return `- [${name}](${DOCS_ORIGIN}/${p})`;
+        })
+        .join('\n');
+      childSection += `\n## Guides\n\n${guideList}\n`;
+    }
+    if (otherPages.length > 0) {
+      const pageList = otherPages
+        .map(p => {
+          const name = p.replace(/\.md$/, '').split('/').pop();
+          return `- [${name}](${DOCS_ORIGIN}/${p})`;
+        })
+        .join('\n');
+      childSection += `\n## Pages in this section\n\n${pageList}\n`;
+    }
+
+    if (childSection) {
+      await writeFile(parentFile, existingContent + childSection, {encoding: 'utf8'});
+      updatedCount++;
     }
   }
   console.log(`📑 Added child page listings to ${updatedCount} section index files`);
