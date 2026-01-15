@@ -247,20 +247,20 @@ ${topLevelPaths
   .join('\n')}
 
 ${
-    process.env.NEXT_PUBLIC_DEVELOPER_DOCS
-      ? `## Quick Links
+  process.env.NEXT_PUBLIC_DEVELOPER_DOCS
+    ? `## Quick Links
 
 - [Backend Development](${DOCS_ORIGIN}/backend.md) - Backend service architecture
 - [Frontend Development](${DOCS_ORIGIN}/frontend.md) - Frontend development guide
 - [SDK Development](${DOCS_ORIGIN}/sdk.md) - SDK development documentation
 `
-      : `## Quick Links
+    : `## Quick Links
 
 - [Platform SDKs](${DOCS_ORIGIN}/platforms.md) - Install Sentry for your language/framework
 - [API Reference](${DOCS_ORIGIN}/api.md) - Programmatic access to Sentry
 - [CLI](${DOCS_ORIGIN}/cli.md) - Command-line interface for Sentry operations
 `
-  }`;
+}`;
 
   const indexPath = path.join(OUTPUT_DIR, 'index.md');
   await writeFile(indexPath, rootSitemapContent, {encoding: 'utf8'});
