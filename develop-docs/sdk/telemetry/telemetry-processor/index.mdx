@@ -4,15 +4,15 @@ sidebar_order: 5
 ---
 
 <Alert level="warning">
-  🚧 This document is work in progress.
+  🚧 This document is work in progress. 🚧<br/>
+  For feedback or suggestions, open an issue or PR and tag @philipphofmann, @isaacs, or @giortzisg for review. We welcome input as we validate this approach.
 </Alert>
 
 <Alert>
   This document uses key words such as "MUST", "SHOULD", and "MAY" as defined in [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt) to indicate requirement levels.
 </Alert>
 
-The telemetry processor ensures data is delivered efficiently to Sentry. It receives data from the client and forwards it to the transport. Its key responsibilities include buffering, rate limiting, client reporting, priority-based sending, and, on some platforms, offline caching.
-
+The telemetry processor ensures data is delivered efficiently to Sentry. It receives data from the client and forwards it to the transport. Its key responsibilities include buffering, rate limiting, client reports, priority-based sending, and, on some platforms, offline caching.
 
 ```mermaid
 flowchart LR
@@ -20,37 +20,119 @@ flowchart LR
   TelemetryProcessor -- sendEnvelope --> Transport
 ```
 
-Once an SDK adds the telemetry processor, its client **SHOULD** only forward data to the telemetry processor, and not directly to the transport. The TelemetryProcessor consists of two major components:
+SDKs **SHOULD** only add the telemetry processor for high-volume data (spans, logs, metrics). SDKs without these features **MAY** omit it. Once added, SDK clients **SHOULD** forward all data to the processor, not the transport. During migration, SDKs **MAY** temporarily send only some telemetry data through the processor.
 
-- **TelemetryBuffer**: Focuses on buffering high-volume data, such as spans and logs, into batches to minimize HTTP requests.
-- **TelemetryScheduler**: Takes buffered data from the TelemetryBuffer and manages prioritized sending, including potential offline caching and sending of client reports.
+The telemetry processor consists of two major components:
 
-Because telemetry workloads and platform constraints vary widely, the requirements differ across environments. For example, backend SDKs need high throughput and backpressure management to handle large data volumes. Mobile SDKs have lower throughput and don't need to worry much about backpressure, but they do need to minimize data loss in the event of abnormal process termination. Browser and GDX SDKs also have different requirements.
+- **Telemetry Buffer**: Focuses on buffering high-volume data, such as spans and logs, into batches to minimize HTTP requests.
+- **Telemetry Scheduler**: Takes buffered data from the TelemetryBuffer and manages prioritized sending, including potential offline caching and sending of client reports.
 
-Therefore, we recommend implementing different types of telemetry processors tailored to the platform's needs. As of Dec 18th, 2025, this page is under development, and we're currently refining the requirements for different platforms:
+Here's a more detailed overview of the most important components of the telemetry processor:
 
-* [Backend Telemetry Processor](./backend-telemetry-processor/): Detailed backend design
-* [Browser Telemetry Processor](./browser-telemetry-processor/): To be defined
-* [GDX Telemetry Processor](./gdx-telemetry-processor/): To be defined
-* [Mobile Telemetry Processor](./mobile-telemetry-processor/): Spec under validation.
+```mermaid
+flowchart
 
+Client -- add telemetry data --> TelemetryBuffer
+
+subgraph TelemetryProcessorSubgraph["TelemetryProcessor"]
+
+    subgraph TelemetryBufferSubgraph["TelemetryBuffer"]
+
+      TelemetryBuffer["**TelemetryBuffer**<br/>Knows all buffers and forwards telemetry data"]
+      SpanBuffer["**SpanBuffer**</br>Buckets per trace"]
+
+      TelemetryBuffer -- add Span --> SpanBuffer
+      TelemetryBuffer -- add Log or Metric --> GenericBuffer
+
+      SpanBuffer --> SendData
+      GenericBuffer --> SendData
+
+      SendData@{ shape: fork, label: "Fork or Join" }
+
+    end
+
+    TelemetryBuffer -- "add low-volume data (Error, Check-In, Session, etc.)" --> TelemetryScheduler
+    SendData -- when full or time out, flush buffered data --> TelemetryScheduler
+
+    subgraph TelemetrySchedulerSubGraph["TelemetryScheduler"]
+
+      TelemetryQueue["**TelemetryQueue**<br/>LIFO or RoundRobin</br>InMemory or Disk"]
+      TelemetryQueue -- nextEnvelope --> TelemetryScheduler
+
+    TelemetryScheduler -- add or remove envelope --> TelemetryQueue
+  end
+
+
+end
+
+Transport
+TelemetryScheduler -- sendEnvelope -->Transport
+
+```
+
+Here's a simplified example of a log traveling through the telemetry processor:
+
+1. The client adds the log to the telemetry processor.
+2. The telemetry processor adds the log to the telemetry buffer.
+3. When the telemetry buffer is full or its timeout fires, it forwards a batch of logs to the telemetry scheduler.
+4. The telemetry scheduler builds the envelope containing the batch of logs and adds it to the telemetry queue.
+5. Depending on the platform, the telemetry queue can use either in-memory or disk storage. Each platform can also choose a priority concept. It can be, for example, LIFO or RoundRobin.
+6. The telemetry scheduler asks the telemetry queue for the next envelope to send and passes it to the transport.
+7. The transport sends the envelope to Sentry.
+
+This exact flow is not enforced for all SDKs. SDKs **MAY** adapt the architecture as needed, such as having the telemetry scheduler pull from the telemetry buffer instead of receiving pushed data.
+
+We aim to standardize requirements so SDKs share consistent logic across platforms. This benefits multi-platform SDKs like Java. However, requirements **MAY** differ where necessary. This page outlines common requirements; platform-specific requirements are listed [below](#platform-specific-requirements).
 
 # Telemetry Buffer
 
-This section covers the common requirements relevant for all platforms for the TelemetryBuffer.
+The telemetry buffer batches high-volume data and forwards it to the telemetry scheduler. This section covers the common requirements for all platforms:
+
+1. Before adding an item to a specific buffer, the telemetry buffer **SHOULD** drop rate-limited items to avoid overhead. If doing so, it **MUST** record client reports.
+2. When the telemetry buffer overflows and it drops data, it **MUST** record client reports.
+3. The telemetry buffer **MUST** forward low-volume data, such as normal events, session replays, or user feedback, directly to the telemetry scheduler.
 
 ## Data Forwarding Scenarios
 
-The TelemetryBuffer **MUST** forward all data in memory to the transport to avoid data loss in the following scenarios:
+The telemetry buffer **MUST** forward all data in memory to the telemetry scheduler to avoid data loss in the following scenarios:
 
-1. When the user calls `SentrySDK.flush()`, the TelemetryBuffer **MUST** forward all data in memory to the transport, and only then **SHOULD**  the transport flush the data.
-2. When the user calls  `SentrySDK.close()`, the TelemetryBuffer **MUST** forward all data in memory to the transport. SDKs **SHOULD** keep their existing closing behavior.
-3. When the application shuts down gracefully, the TelemetryBuffer **SHOULD** forward all data in memory to the transport. The transport **SHOULD** keep its existing behavior, which usually stores the data to disk as an envelope. It is not required to call transport `flush`.
+1. When the user calls `SentrySDK.flush()`, the telemetry buffer **MUST** forward all data in memory to the telemetry scheduler, and only then **SHOULD**  the telemetry scheduler flush the data.
+2. When the user calls  `SentrySDK.close()`, the telemetry buffer **MUST** forward all data in memory to the telemetry scheduler. SDKs **SHOULD** keep their existing closing behavior.
+3. When the application shuts down gracefully, the telemetry buffer **MUST** forward all data in memory to the telemetry scheduler.
 
 ## Envelope Size Limits
 
 The different telemetry buffers **MUST** be compatible with the [envelope item size limits](/sdk/data-model/envelopes/#size-limits) imposed by Relay.
 
+# Telemetry Scheduler
+
+The telemetry scheduler receives buffered data from the telemetry buffer, prioritizes critical low-volume data (like errors and crashes) over high-volume data (like spans), builds envelopes, and forwards them to the transport. Before sending, it enforces rate limits and records client reports for dropped envelopes.
+
+The [now deprecated unified API](/sdk/miscellaneous/unified-api/) suggested to handle rate limits and offline caching in the transport, forcing multi-platform SDKs (like Java) to maintain separate transports. To simplify, transports **SHOULD** now only send envelopes. The telemetry scheduler **SHOULD** handle rate limiting, offline caching, and prioritization, ensuring consistent logic across platforms. This also keeps custom user defined transports simple. SDKs need only adjust the scheduler for platform-specific needs.
+
+We recommend LIFO or round-robin as priority strategies, but SDKs **MAY** use other methods. Envelopes can be stored in memory, on disk, or with other solutions as needed.
+
+Here are the common requirements for all platforms:
+
+1. The telemetry scheduler **MUST** drop rate-limited envelope items before forwarding them to the transport. When doing so, it **MUST** record respective client reports.
+2. The telemetry scheduler **SHOULD** attach the client reports to the envelopes it forwards to the transport.
+3. When the telemetry queue overflows and drops envelopes, it **MUST** record the client report.
+
+To be defined: How exactly does the telemetry scheduler interact with the transport to correctly remove items from the telemetry queue based on the received HTTP info and how to adhere to the [dealing with network failure](/sdk/expected-features/#dealing-with-network-failures) requirements.
+
+
+# Client Reports and Rate Limiting
+
+To be defined: We still need to define how the transport, client and the telemetry processor interact with client reports and rate limiting.
+
+# Platform Specific Requirements
+
+For the platform specific requirements, please see:
+
+* [Backend Telemetry Processor](./backend-telemetry-processor/): Detailed backend design
+* [Browser Telemetry Processor](./browser-telemetry-processor/): To be defined
+* [GDX Telemetry Processor](./gdx-telemetry-processor/): To be defined
+* [Mobile Telemetry Processor](./mobile-telemetry-processor/): Spec under validation.
 
 ## FAQ
 
