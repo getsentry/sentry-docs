@@ -246,12 +246,21 @@ ${topLevelPaths
   .map(p => `- [${p.replace(/\.md$/, '')}](${DOCS_ORIGIN}/${p})`)
   .join('\n')}
 
-## Quick Links
+${
+    process.env.NEXT_PUBLIC_DEVELOPER_DOCS
+      ? `## Quick Links
+
+- [Backend Development](${DOCS_ORIGIN}/backend.md) - Backend service architecture
+- [Frontend Development](${DOCS_ORIGIN}/frontend.md) - Frontend development guide
+- [SDK Development](${DOCS_ORIGIN}/sdk.md) - SDK development documentation
+`
+      : `## Quick Links
 
 - [Platform SDKs](${DOCS_ORIGIN}/platforms.md) - Install Sentry for your language/framework
 - [API Reference](${DOCS_ORIGIN}/api.md) - Programmatic access to Sentry
 - [CLI](${DOCS_ORIGIN}/cli.md) - Command-line interface for Sentry operations
-`;
+`
+  }`;
 
   const indexPath = path.join(OUTPUT_DIR, 'index.md');
   await writeFile(indexPath, rootSitemapContent, {encoding: 'utf8'});
@@ -335,8 +344,19 @@ ${topLevelPaths
     }
 
     if (childSection) {
-      await writeFile(parentFile, existingContent + childSection, {encoding: 'utf8'});
+      const updatedContent = existingContent + childSection;
+      await writeFile(parentFile, updatedContent, {encoding: 'utf8'});
       updatedCount++;
+
+      // Upload modified parent file to R2 if configured
+      if (accessKeyId && secretAccessKey && existingFilesOnR2) {
+        const fileHash = md5(updatedContent);
+        const existingHash = existingFilesOnR2.get(parentPath);
+        if (existingHash !== fileHash) {
+          const s3Client = getS3Client();
+          await uploadToCFR2(s3Client, parentPath, updatedContent);
+        }
+      }
     }
   }
   console.log(`📑 Added child page listings to ${updatedCount} section index files`);
@@ -388,8 +408,11 @@ ${topLevelPaths
 const md5 = data => createHash('md5').update(data).digest('hex');
 
 async function genMDFromHTML(source, target, {cacheDir, noCache, usedCacheFiles}) {
-  const leanHTML = await readFile(source, {encoding: 'utf8'});
-  const cacheKey = `v${CACHE_VERSION}_${md5(leanHTML)}`;
+  const rawHTML = await readFile(source, {encoding: 'utf8'});
+  // Note: Scripts in the HTML may cause cache misses between builds since they
+  // contain build-specific hashes. We accept this trade-off to avoid regex-based
+  // script stripping which triggers CodeQL security warnings.
+  const cacheKey = `v${CACHE_VERSION}_${md5(rawHTML)}`;
   const cacheFile = path.join(cacheDir, cacheKey);
   if (!noCache) {
     try {
@@ -477,7 +500,7 @@ async function genMDFromHTML(source, target, {cacheDir, noCache, usedCacheFiles}
       .use(() => tree => remove(tree, {type: 'inlineCode', value: ''}))
       .use(remarkGfm)
       .use(remarkStringify)
-      .process(leanHTML)
+      .process(rawHTML)
   );
   const reader = Readable.from(data);
 
