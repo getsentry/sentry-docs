@@ -135,7 +135,12 @@ const nextConfig = {
     '@esbuild/linux-arm64',
     '@esbuild/linux-x64',
     '@esbuild/win32-x64',
-    'mdx-bundler',
+    // Note: mdx-bundler is intentionally NOT in serverExternalPackages.
+    // The package is ESM-only ("type": "module") and cannot be require()'d at runtime.
+    // Keeping it out allows webpack to bundle mdx-bundler/client properly while
+    // outputFileTracingExcludes still prevents the heavy build-time parts from
+    // being included in the serverless function bundle.
+    // Fixes: DOCS-A0W
     'sharp',
     '@aws-sdk/client-s3',
     '@google-cloud/storage',
