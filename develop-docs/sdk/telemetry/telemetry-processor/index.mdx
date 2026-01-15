@@ -117,9 +117,27 @@ Here are the common requirements for all platforms:
 To be defined: How exactly does the telemetry scheduler interact with the transport to correctly remove items from the telemetry queue based on the received HTTP info and how to adhere to the [dealing with network failure](/sdk/expected-features/#dealing-with-network-failures) requirements.
 
 
-# Client Reports and Rate Limiting
+# Rate Limiting
 
-To be defined: We still need to define how the transport, client and the telemetry processor interact with client reports and rate limiting.
+As mentioned above, the telemetry buffer **SHOULD** drop rate-limited data to reduce overhead, and the telemetry scheduler **MUST** drop rate-limited envelopes before forwarding them to the transport. To do this, the telemetry processor **MUST** have access to active rate limits. If your SDKs keep track of active rate limits in the transport, we recommend extracting them from the transport and making them available to the telemetry processor. Ideally, the transport is unaware of rate limits and only passes update information to the rate limits class, which manages updates.
+
+
+The following diagram shows how the telemetry processor interacts with the transport and rate limits. SDKs can choose to implement RateLimits inside or outside the telemetry processor, based on their needs.
+
+```mermaid
+flowchart LR
+
+  RateLimits["RateLimits"]
+
+  subgraph TelemetryProcessor
+    TelemetryBuffer
+    TelemetryScheduler
+  end
+
+  TelemetryBuffer -- "checks active rate limits" --> RateLimits
+  TelemetryScheduler -- "checks active rate limits" --> RateLimits
+  Transport -- "reports HTTP responses" --> RateLimits
+```
 
 # Platform Specific Requirements
 
