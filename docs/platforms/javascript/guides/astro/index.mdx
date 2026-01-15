@@ -19,7 +19,7 @@ You need:
 - If you're using Astro's Netlify adapter (`@astrojs/netlify`), you need version `5.0.0` or above
 
 <Alert level="warning" title="What runtime do you use?">
-  This SDK currently only works on Node runtimes such as Node adapter or Vercel
+  This SDK currently only works on Node runtimes, such as Node adapter or Vercel
   with Lambda functions. If you use Cloudflare Pages, refer to our [Astro on
   Cloudflare guide](/platforms/javascript/guides/cloudflare/frameworks/astro/).
   Other non-Node runtimes, like Vercel's Edge runtime, are currently **not
@@ -45,7 +45,7 @@ Choose the features you want to configure, and this guide will show you how:
 
 ### Install the Sentry SDK
 
-Install the SDK using the `astro` CLI:
+Install and add the Sentry integration using the `astro` CLI:
 
 ```bash {tabTitle:npm}
 npx astro add @sentry/astro
@@ -176,7 +176,7 @@ import { nodeProfilingIntegration } from "@sentry/profiling-node";
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
 
-  // Adds request headers and IP for users, for more info visit: for more info visit:
+  // Adds request headers and IP for users, for more info visit:
   // https://docs.sentry.io/platforms/javascript/guides/astro/configuration/options/#sendDefaultPii
   sendDefaultPii: true,
   // ___PRODUCT_OPTION_START___ profiling
@@ -205,6 +205,8 @@ Sentry.init({
 });
 ```
 
+## Step 3: Server Instrumentation
+
 ### Manually Add Server Instrumentation (Astro `<3.5.2`)
 
 For Astro versions below `3.5.2`, you need to manually add the Sentry middleware to your `src/middleware.js` file:
@@ -221,7 +223,28 @@ export const onRequest = sequence(
 
 If you have multiple request handlers, make sure to add the Sentry middleware as the first handler in the sequence.
 
-### Disable Automatic Instrumentation
+### Customize Server Instrumentation for Manual Middleware (Optional)
+
+Sentry's Astro middleware lets you control which additional data should be added to recorded request spans.
+
+To customize the server instrumentation, add the Sentry middleware to your `src/middleware.(ts|js)` file:
+
+```javascript {filename:src/middleware.(js|ts)}
+import * as Sentry from "@sentry/astro";
+import { sequence } from "astro:middleware";
+
+export const onRequest = sequence(
+  Sentry.handleRequest({
+    trackClientIp: true, // defaults to false
+    trackHeaders: true, // defaults to false
+  })
+  // other middleware handlers
+);
+```
+
+If you're using Astro `3.5.2` or newer, make sure to also disable auto instrumentation as shown below.
+
+### Disable Automatic Instrumentation (Optional)
 
 For Astro version `3.5.2` and up, you can optionally disable the automatic server instrumentation by turning off the `requestHandler` auto instrumentation option:
 
@@ -241,28 +264,9 @@ export default defineConfig({
 });
 ```
 
-### Customize Server Instrumentation
+## Step 4: Add Readable Stack Traces With Source Maps
 
-Sentry's Astro middleware gives you control over what additional data should be added to the recorded request spans.
-
-To customize the server instrumentation, add the Sentry middleware to your `src/middleware.(ts|js)` file:
-
-```javascript {filename:src/middleware.(js|ts)}
-import * as Sentry from "@sentry/astro";
-import { sequence } from "astro:middleware";
-
-export const onRequest = sequence(
-  Sentry.handleRequest({
-    trackClientIp: true, // defaults to false
-    trackHeaders: true, // defaults to false
-  })
-  // other middleware handlers
-);
-```
-
-## Step 3: Add Readable Stack Traces With Source Maps
-
-To upload source maps for clear error stack traces, add your Sentry auth token, organization, and project slugs in the sentry options inside `astro.config.mjs`:
+To upload source maps for clear error stack traces, add your Sentry auth token, organization, and project slugs in the `sentry` options inside `astro.config.mjs`:
 
 ```javascript {filename:astro.config.mjs}
 import { defineConfig } from "astro/config";
@@ -280,7 +284,7 @@ export default defineConfig({
 });
 ```
 
-To keep your auth token secure, set the `SENTRY_AUTH_TOKEN` environment variable in your build environment or store it in an environment variable:
+To keep your auth token secure, set the `SENTRY_AUTH_TOKEN` environment variable in your build environment:
 
 <OrgAuthTokenNote />
 
@@ -288,11 +292,11 @@ To keep your auth token secure, set the `SENTRY_AUTH_TOKEN` environment variable
 SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
 ```
 
-## Step 4: Avoid Ad Blockers With Tunneling (Optional)
+## Step 5: Avoid Ad Blockers With Tunneling (Optional)
 
 <PlatformContent includePath="getting-started-tunneling" />
 
-## Step 5: Verify Your Setup
+## Step 6: Verify Your Setup
 
 Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
 
@@ -307,23 +311,17 @@ To verify that Sentry captures errors and creates issues in your Sentry project,
   }
 
   async function throwApiError() {
-    const res = await fetch("/api/test-error");
-    // throw an error if the API call's return is not `ok`
-    if (!res.ok) {
-      throw new Error("Sentry Example Frontend Error");
-    }
+    await fetch("/api/test-error");
   }
 </script>
 
-<button type="button" onclick="throwFrontendError()">
-  Throw frontend error
-</button>
-<button type="button" onclick="throwApiError()">Throw API error</button>
+<button type="button" onclick="throwTestError()">Throw a frontend error</button>
+<button type="button" onclick="throwApiError()">Throw an API error</button>
 ```
 
 Then also create the route we're calling in our test page, like `src/pages/api/test-error.(js|ts)`:
 
-```javascript {filename: test-error.ts}
+```javascript {filename: test-error.(js|ts)}
 export async function GET() {
   throw new Error("Sentry Example API Route Error");
 }
@@ -344,22 +342,21 @@ To test tracing, create a custom span to measure the time it takes for the API r
   import * as Sentry from "@sentry/astro";
 
   async function throwApiError() {
-    Sentry.startSpan(
+    await Sentry.startSpan(
       {
         name: "Example Frontend Span",
         op: "test",
       },
       async () => {
-        const res = await fetch("/api/test-error");
-        if (!res.ok) {
-          throw new Error("Sentry Example Frontend Error");
-        }
+        await fetch("/api/test-error");
       }
     );
   }
 </script>
 
-<button type="button" onclick="throwApiError()">Throw error with trace</button>
+<button type="button" onclick="throwApiError()">
+  Throw an API error with a trace
+</button>
 ```
 
 </OnboardingOption>
