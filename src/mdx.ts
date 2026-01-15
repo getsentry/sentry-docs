@@ -630,9 +630,11 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
     }
   }
   if (source === undefined || sourcePath === undefined) {
-    throw new Error(
+    const error = new Error(
       `Failed to find a valid source file for slug "${slug}". Tried:\n${sourcePaths.join('\n')}\nErrors:\n${errors.map(e => e.message).join('\n')}`
-    );
+    ) as Error & {code: string};
+    error.code = 'ENOENT';
+    throw error;
   }
 
   let cacheKey: string | null = null;
