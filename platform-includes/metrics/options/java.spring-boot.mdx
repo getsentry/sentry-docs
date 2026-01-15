@@ -1,0 +1,70 @@
+#### beforeSendMetric
+
+To filter metrics, or update them before they are sent to Sentry, you can expose a bean implementing the metrics `beforeSend` callback:
+
+```java {tabTitle: Java}
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import io.sentry.SentryLogEventAttributeValue;
+import io.sentry.SentryOptions;
+import io.sentry.SentryAttributeType;
+
+@Configuration
+public class SentryMetricsConfiguration {
+  @Bean
+  public SentryOptions.Metrics.BeforeSendMetricCallback beforeSendMetric() {
+    return (metric, hint) -> {
+      // Drop metrics with specific attributes
+      if (metric.getAttributes().containsKey("dropmetric")) {
+        return null;
+      }
+
+      // Modify metric attributes
+      metric.setAttribute("processed", new SentryLogEventAttributeValue(SentryAttributeType.BOOLEAN, true));
+      return metric;
+    };
+  }
+}
+```
+```kotlin {tabTitle: Kotlin}
+import io.sentry.SentryAttributeType
+import io.sentry.SentryLogEventAttributeValue
+import io.sentry.SentryOptions
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+
+@Configuration
+class SentryMetricsConfiguration {
+  @Bean
+  fun beforeSendMetric(): SentryOptions.Metrics.BeforeSendMetricCallback =
+    SentryOptions.Metrics.BeforeSendMetricCallback { metric, hint ->
+      // Drop metrics with specific attributes
+      if (metric.attributes.containsKey("dropmetric")) {
+        return@BeforeSendMetricCallback null
+      }
+
+      // Modify metric attributes
+      metric.setAttribute(
+        "processed",
+        SentryLogEventAttributeValue(SentryAttributeType.BOOLEAN, true)
+      )
+      metric
+    }
+}
+```
+
+The `beforeSend` function receives a metric object, and should return the metric object if you want it to be sent to Sentry, or `null` if you want to discard it.
+
+### Disabling Metrics
+
+If you want to disable metrics collection entirely, you can do so by disabling the `metrics.enabled` flag:
+
+```properties {tabTitle:application.properties}
+sentry.metrics.enabled=false
+```
+```yaml {tabTitle:application.yml}
+sentry:
+  metrics:
+    enabled: false
+```

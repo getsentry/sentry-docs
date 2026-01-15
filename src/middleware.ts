@@ -1775,14 +1775,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/concepts/key-terms/tracing/span-metrics/',
   },
   {
-    from: '/platforms/java/metrics/',
-    to: '/concepts/key-terms/tracing/span-metrics/',
-  },
-  {
-    from: '/platforms/android/metrics/',
-    to: '/concepts/key-terms/tracing/span-metrics/',
-  },
-  {
     from: '/platforms/apple/metrics/',
     to: '/concepts/key-terms/tracing/span-metrics/',
   },
