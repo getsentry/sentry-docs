@@ -65,8 +65,8 @@ export function Home() {
             href="/ai/"
             image={AiImage}
             imageAlt="AI integration image"
-            title="Sentry In AI"
-            description="Integrate Sentry into your AI workflows with agent skills, MCP, agent monitoring, and Seer."
+            title="Sentry AI"
+            description="Integrate Sentry into your AI workflows and leverage AI-powered debugging with Seer."
           />
 
           <Card
