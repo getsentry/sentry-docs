@@ -279,8 +279,8 @@ export function DynamicNav({
       collapsible={collapsible}
       isActive={!isPlatformSidebar && unversionedPath === root}
       topLevel
-      beta={parentNode.node?.context.beta}
-      isNew={parentNode.node?.context.new}
+      beta={parentNode.node?.context.beta ?? entity.node?.context.beta}
+      isNew={parentNode.node?.context.new ?? entity.node?.context.new}
       data-sidebar-link
     />
   );
