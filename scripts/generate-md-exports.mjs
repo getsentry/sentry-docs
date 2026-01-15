@@ -241,7 +241,10 @@ Sentry is a developer-first application monitoring platform that helps you ident
 
 ## Documentation Sections
 
-${topLevelPaths.filter(p => p !== '_not-found.md').map(p => `- [${p.replace(/\.md$/, '')}](${DOCS_ORIGIN}/${p})`).join('\n')}
+${topLevelPaths
+  .filter(p => p !== '_not-found.md')
+  .map(p => `- [${p.replace(/\.md$/, '')}](${DOCS_ORIGIN}/${p})`)
+  .join('\n')}
 
 ## Quick Links
 
@@ -252,7 +255,9 @@ ${topLevelPaths.filter(p => p !== '_not-found.md').map(p => `- [${p.replace(/\.m
 
   const indexPath = path.join(OUTPUT_DIR, 'index.md');
   await writeFile(indexPath, rootSitemapContent, {encoding: 'utf8'});
-  console.log(`📑 Generated root index.md with ${topLevelPaths.length} top-level sections`);
+  console.log(
+    `📑 Generated root index.md with ${topLevelPaths.length} top-level sections`
+  );
 
   // Append child page listings to section index pages
   // Group paths by their DIRECT parent (handling guides specially)
@@ -295,12 +300,9 @@ ${topLevelPaths.filter(p => p !== '_not-found.md').map(p => `- [${p.replace(/\.m
       // Only show "## Guides" section for platform index pages (e.g., platforms/javascript.md)
       // These are the only pages that have guide children (platforms/X/guides/Y.md)
       const isPlatformIndex =
-        parentPath.startsWith('platforms/') &&
-        parentPath.split('/').length === 2; // e.g., "platforms/javascript.md"
+        parentPath.startsWith('platforms/') && parentPath.split('/').length === 2; // e.g., "platforms/javascript.md"
 
-      const guides = isPlatformIndex
-        ? children.filter(p => p.includes('/guides/'))
-        : [];
+      const guides = isPlatformIndex ? children.filter(p => p.includes('/guides/')) : [];
       const otherPages = isPlatformIndex
         ? children.filter(p => !p.includes('/guides/'))
         : children;
