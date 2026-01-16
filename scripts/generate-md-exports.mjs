@@ -280,7 +280,7 @@ ${
     let parentPath;
     if (parts.includes('guides')) {
       const guidesIdx = parts.indexOf('guides');
-      if (parts.length === guidesIdx + 2) {
+      if (parts.length === guidesIdx + 2 && guidesIdx > 0) {
         // This is a guide index (e.g., platforms/python/guides/django.md)
         // Parent is the platform (platforms/python.md), skipping 'guides' folder
         parentPath = parts.slice(0, guidesIdx).join('/') + '.md';
