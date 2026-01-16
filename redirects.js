@@ -267,6 +267,18 @@ const developerDocsRedirects = [
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const userDocsRedirects = [
   {
+    source: '/integrations/cursor/',
+    destination: '/organization/integrations/cursor/',
+  },
+  {
+    source: '/concepts/data-management/advanced-datascrubbing/',
+    destination: '/security-legal-pii/scrubbing/advanced-datascrubbing/',
+  },
+  {
+    source: '/organization/integrations/height/',
+    destination: '/organization/integrations/issue-tracking/height/',
+  },
+  {
     source: '/organization/integrations/rootly/',
     destination: '/organization/integrations/notification-incidents/rootly/',
   },
@@ -1322,6 +1334,15 @@ const userDocsRedirects = [
   {
     source: '/product/insights/mcp/',
     destination: '/product/insights/ai/mcp/',
+  },
+  // Next.js usage -> capturing-errors rename
+  {
+    source: '/platforms/javascript/guides/nextjs/usage/',
+    destination: '/platforms/javascript/guides/nextjs/capturing-errors/',
+  },
+  {
+    source: '/product/new-monitors-and-alerts/alerts/:path*',
+    destination: '/product/alerts/:path*',
   },
 ];
 
