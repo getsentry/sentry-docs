@@ -16,7 +16,6 @@ import {CopyMarkdownButton} from '../copyMarkdownButton';
 import {DocFeedback} from '../docFeedback';
 import {GitHubCTA} from '../githubCTA';
 import {Header} from '../header';
-import {LastUpdated} from '../lastUpdated';
 import Mermaid from '../mermaid';
 import {PaginationNav} from '../paginationNav';
 import {PlatformSdkDetail} from '../platformSdkDetail';
@@ -95,10 +94,6 @@ export function DocPage({
             <div>
               <hgroup>
                 <h1>{frontMatter.title}</h1>
-                {/* Show last updated info for develop-docs pages */}
-                {frontMatter.gitMetadata && (
-                  <LastUpdated gitMetadata={frontMatter.gitMetadata} />
-                )}
                 <h2>{frontMatter.description}</h2>
               </hgroup>
               {/* This exact id is important for Algolia indexing */}

@@ -36,14 +36,6 @@ export interface FrontMatter {
   fullWidth?: boolean;
 
   /**
-   * Git metadata for the last commit & author that modified this file
-   */
-  gitMetadata?: {
-    author: string;
-    commitHash: string;
-    timestamp: number;
-  };
-  /**
    * A list of keywords for indexing with search.
    */
   keywords?: string[];

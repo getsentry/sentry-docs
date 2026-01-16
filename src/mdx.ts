@@ -268,31 +268,11 @@ export async function getDevDocsFrontMatterUncached(): Promise<FrontMatter[]> {
 
             const source = await readFile(file, 'utf8');
             const {data: frontmatter} = matter(source);
-            const sourcePath = path.join(folder, fileName);
-
-            // In production builds, fetch git metadata for develop-docs pages only
-            // In development, skip this and fetch on-demand per page (faster dev server startup)
-            let gitMetadata: typeof frontmatter.gitMetadata = undefined;
-            if (
-              process.env.NODE_ENV !== 'development' &&
-              sourcePath.startsWith('develop-docs/')
-            ) {
-              const {getGitMetadata} = await import('./utils/getGitMetadata');
-              const metadata = getGitMetadata(sourcePath);
-              // Ensure we create a completely new object to avoid any reference sharing
-              gitMetadata = metadata ? {...metadata} : undefined;
-
-              // Log during build to debug Vercel issues
-              if (process.env.CI || process.env.VERCEL) {
-                console.log(`[BUILD] Git metadata for ${sourcePath}:`, gitMetadata);
-              }
-            }
 
             return {
               ...(frontmatter as FrontMatter),
               slug: fileName.replace(/\/index.mdx?$/, '').replace(/\.mdx?$/, ''),
-              sourcePath,
-              gitMetadata,
+              sourcePath: path.join(folder, fileName),
             };
           },
           {concurrency: FILE_CONCURRENCY_LIMIT}
