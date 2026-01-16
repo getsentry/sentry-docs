@@ -4,6 +4,156 @@ description: "Learn more about migrating to the current version."
 sidebar_order: 8000
 ---
 
+## Migrating to 4.0.0
+
+### Minimum Unity version
+
+Unity 2020 support has been removed as it reached End of Life in 2023. The minimum supported version is now Unity 2021.
+
+### Ubuntu version requirement for Linux servers
+
+If you are running your game on a Linux server, note that `sentry-native` is now built on Ubuntu 22.04 instead of Ubuntu 20.04 (which reached EOL in May 2025). If you are running on Ubuntu 20.04, you should update the OS before upgrading to this SDK version.
+
+### Programmatic configuration changes
+
+The deprecated `RuntimeConfiguration` and `BuildtimeConfiguration` classes have been removed. You must now use the single `OptionsConfiguration` script for all programmatic configuration. Use preprocessor directives to set platform-specific options:
+
+```csharp
+public class SentryOptionsConfiguration : OptionsConfiguration
+{
+    public override void Configure(SentryUnityOptions options)
+    {
+#if UNITY_IOS
+        // iOS-specific configuration
+        options.IosNativeInitializationType = NativeInitializationType.Runtime;
+#elif UNITY_ANDROID
+        // Android-specific configuration
+        options.AndroidNativeInitializationType = NativeInitializationType.Runtime;
+#endif
+        // Common configuration
+        options.Debug = true;
+    }
+}
+```
+
+### Callback signature changes
+
+Several callback signatures have been updated to receive the `SentryEvent` that triggered the capture, allowing for context-aware decisions:
+
+#### SetBeforeCaptureScreenshot
+
+**Before:**
+```csharp
+options.SetBeforeCaptureScreenshot(() =>
+{
+    return true; // Capture screenshot
+});
+```
+
+**After:**
+```csharp
+options.SetBeforeCaptureScreenshot(sentryEvent =>
+{
+    // You can now make decisions based on the actual event
+    return sentryEvent.Level >= SentryLevel.Error;
+});
+```
+
+#### SetBeforeCaptureViewHierarchy
+
+**Before:**
+```csharp
+options.SetBeforeCaptureViewHierarchy(() =>
+{
+    return true; // Capture view hierarchy
+});
+```
+
+**After:**
+```csharp
+options.SetBeforeCaptureViewHierarchy(sentryEvent =>
+{
+    // You can now make decisions based on the actual event
+    return sentryEvent.Level >= SentryLevel.Error;
+});
+```
+
+### API removals and changes
+
+#### User feedback API
+
+The deprecated `SentrySdk.CaptureUserFeedback` method and all associated members have been removed. Use the newer `SentrySdk.CaptureFeedback` instead:
+
+**Before:**
+```csharp
+SentrySdk.CaptureUserFeedback(new UserFeedback(eventId, "user@example.com", "User comment", "User Name"));
+```
+
+**After:**
+```csharp
+var feedbackResult = SentrySdk.CaptureFeedback(new UserFeedback
+{
+    Email = "user@example.com",
+    Message = "User comment",
+    Name = "User Name"
+}, out var captureResult);
+```
+
+Note that `CaptureFeedback` now returns a `SentryId` and provides a `CaptureFeedbackResult` out parameter to indicate capture success or failure reason.
+
+#### Breadcrumb level changes
+
+`BreadcrumbLevel.Critical` has been renamed to `BreadcrumbLevel.Fatal` for consistency with other Sentry SDKs:
+
+**Before:**
+```csharp
+SentrySdk.AddBreadcrumb("Critical error", level: BreadcrumbLevel.Critical);
+```
+
+**After:**
+```csharp
+SentrySdk.AddBreadcrumb("Critical error", level: BreadcrumbLevel.Fatal);
+```
+
+### Behavioral changes
+
+#### Span and transaction lifecycle
+
+Spans and Transactions now implement `IDisposable` and can be used with `using` statements/declarations. They will automatically finish with a status of OK when they pass out of scope if not already finished:
+
+```csharp
+using (var transaction = SentrySdk.StartTransaction("my-transaction", "operation"))
+{
+    // Transaction will automatically finish when the using block exits
+}
+
+// Or with using declaration
+using var span = transaction.StartChild("child-operation");
+// Span will automatically finish at the end of the scope
+```
+
+Note that `SpanTracer` and `TransactionTracer` are now `sealed` classes.
+
+#### Backpressure handling
+
+Backpressure handling is now enabled by default. The SDK will monitor system health and reduce the sampling rate of events and transactions when the system is under load. Sampling rates return to original levels when the system is healthy again.
+
+#### Automatic breadcrumbs
+
+The SDK now always adds a breadcrumb when capturing an exception. The option to opt-out of this behavior has been removed.
+
+### Tag changes
+
+The SDK no longer sets tags automatically. Tag promotion from contexts now happens exclusively in Sentry. The following tags have been removed:
+- `unity.device.unique_identifier`
+- `unity.gpu.supports_instancing`
+
+The `Unity` context has been extended with `IsMainThread` to support this change.
+
+### Trace ID persistence
+
+The SDK no longer refreshes the trace ID when the game loses and regains focus. The trace ID now persists from game start to game end. The SDK automatically adds breadcrumbs on focus lifecycle events.
+
 ## Migrating to 3.0.0
 
 ### Changes to the initialization behaviour on iOS and Android

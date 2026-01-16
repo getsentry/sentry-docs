@@ -51,28 +51,6 @@ The main Sentry configuration should happen as early as possible in your app's l
   platform="javascript.cloudflare.workers"
 />
 
-<Expandable title="Don't have access to onRequest?">
-If you don't have access to the `onRequest` middleware API, you can use the `wrapRequestHandler` API instead. For example:
-
-```javascript
-// hooks.server.js
-import * as Sentry from "@sentry/cloudflare";
-
-export const handle = ({ event, resolve }) => {
-  const requestHandlerOptions = {
-    options: {
-      dsn: event.platform.env.SENTRY_DSN,
-      tracesSampleRate: 1.0,
-    },
-    request: event.request,
-    context: event.platform.ctx,
-  };
-  return Sentry.wrapRequestHandler(requestHandlerOptions, () => resolve(event));
-};
-```
-
-</Expandable>
-
 ### Setup for Cloudflare Pages
 
 To use the Sentry SDK, add the `sentryPagesPlugin` as [middleware to your Cloudflare Pages application](https://developers.cloudflare.com/pages/functions/middleware/).
@@ -111,6 +89,28 @@ export const onRequest = [
   // Add more middlewares here
 ];
 ```
+
+<Expandable title="Don't have access to onRequest?">
+If you don't have access to the `onRequest` middleware API, you can use the `wrapRequestHandler` API instead. For example:
+
+```javascript
+// hooks.server.js
+import * as Sentry from "@sentry/cloudflare";
+
+export const handle = ({ event, resolve }) => {
+  const requestHandlerOptions = {
+    options: {
+      dsn: event.platform.env.SENTRY_DSN,
+      tracesSampleRate: 1.0,
+    },
+    request: event.request,
+    context: event.platform.ctx,
+  };
+  return Sentry.wrapRequestHandler(requestHandlerOptions, () => resolve(event));
+};
+```
+
+</Expandable>
 
 ## Step 3: Add Readable Stack Traces With Source Maps (Optional)
 

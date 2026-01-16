@@ -24,8 +24,33 @@ Once you <PlatformLink to="/tracing/">set up tracing</PlatformLink>, the SDK ena
 
 This feature is available for iOS, tvOS, and Mac Catalyst, is enabled by default, and works for `UIViewControllers`.
 
-UIViewController Tracing is enabled by default once you <PlatformLink to="/tracing/">set up tracing</PlatformLink>. This feature captures transactions when your app loads an in-app [UIViewController][UIViewController]. However, the SDK doesn't capture transactions for UIViewControllers of third-party libraries or SwiftUI.
+UIViewController Tracing is enabled by default once you <PlatformLink to="/tracing/">set up tracing</PlatformLink>. This feature captures transactions when your app loads an in-app [UIViewController][UIViewController]. By default, the SDK only instruments UIViewControllers that are considered "in-app" (those in your main application bundle) to avoid instrumenting third-party library view controllers that would create noise in your performance data. However, the SDK doesn't capture transactions for UIViewControllers of third-party libraries or SwiftUI.
+
 The SDK sets the transaction name to the name of the ViewController, including the module — for example, `Your_App.MainViewController` — and the transaction operation to `ui.load`.
+
+### Including Framework Bundle View Controllers
+
+If you have view controllers in framework bundles that you want to instrument, you can include them using the [`inAppInclude`](/platforms/apple/configuration/options/#inAppInclude) option. This tells the SDK to treat those frameworks as part of your application, which enables UIViewController tracing for their view controllers:
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.add(inAppInclude: "MyFramework")
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    [options addInAppInclude:@"MyFramework"];
+}];
+```
+
+This is particularly useful for modularized applications or apps using third-party UI frameworks where you want to track performance metrics for view controllers in those frameworks.
 
 The SDK creates spans to provide insight into the time consumed by each of the methods shown in the screenshot below. Due to implementation limitations, the SDK only adds a span for loadView if the instrumented view controller implements it. The SDK adds spans for all other methods, whether you implement them in your view controller or not.
 
@@ -102,8 +127,8 @@ To enable this feature, enable `enableAutoPerformanceTracing`.
 
 The SDK differentiates between a cold and a warm start, but doesn't track hot starts/resumes.
 
-- **Cold start**: App launched for the first time, after a reboot or update. The app is not in memory and no process exists.
-- **Warm start**: App launched at least once, is partially in memory, and no process exists.
+- **Cold start**: App launched for the first time, after a reboot or update. A cold start begins when the process is created.
+- **Warm start**: Any time the process is created that isn’t a cold start.
 
 <Alert>
 
@@ -118,7 +143,7 @@ The Cocoa SDK creates the following app start spans:
 - **Runtime Init to Pre Main Initializers**: from runtime init to pre main initializers.
 - **UIKit Init**: from pre main initializers to the when starting the Sentry Cocoa SDK.
 - **Application Init**: this reflects the duration of your AppDelegate `application:didFinishLaunchingWithOptions` method or [App conformer's initializer](<https://developer.apple.com/documentation/swiftui/app/main()>) when using SwiftUI, which is from when starting the Cocoa SDK to the [`didFinishLaunchingNotification`][didfinishlaunching].
-- **Initial Frame Render**: from the [`didFinishLaunchingNotification`][didfinishlaunching] until the app renders its first frame. **Starting with version 9.0.0, this is the default behavior.** In versions prior to 9.0.0, this measured until [`UIWindowDidBecomeVisibleNotification`][uiwindow] unless you enabled the `enablePerformanceV2` option.
+- **Initial Frame Render**: from the [`didFinishLaunchingNotification`][didfinishlaunching] until the first CADisplayLink callback. **Starting with version 9.0.0, this is the default behavior.** In versions prior to 9.0.0, this measured until [`UIWindowDidBecomeVisibleNotification`][uiwindow] unless you enabled the `enablePerformanceV2` option.
 
 ![App Start Transaction](./img/app-start-transaction.png)
 

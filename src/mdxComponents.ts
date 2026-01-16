@@ -1,5 +1,6 @@
 import {Alert} from './components/alert';
 import {Arcade} from './components/arcade';
+import {AvailableSince} from './components/availableSince';
 import {Break} from './components/break';
 import {Card} from './components/card';
 import {CliChecksumTable} from './components/cliChecksumTable';
@@ -14,6 +15,7 @@ import {DefinitionList} from './components/definitionList';
 import {DevDocsCardGrid} from './components/devDocsCardGrid';
 import DocImage from './components/docImage';
 import {Expandable} from './components/expandable';
+import {FeatureBadge} from './components/featureBadge';
 import {GitHubCodePreview} from './components/githubCodePreview';
 import {GitHubDomainChecker} from './components/githubDomainChecker';
 import {GradleFeatureConfig} from './components/gradleFeatureConfig';
@@ -65,6 +67,7 @@ export function mdxComponents(
   return {
     Alert,
     Arcade,
+    AvailableSince,
     Break,
     Card,
     CliChecksumTable,
@@ -86,6 +89,7 @@ export function mdxComponents(
     ConfigValue,
     DefinitionList,
     Expandable,
+    FeatureBadge,
     GuideGrid,
     JsBundleList,
     LambdaLayerDetail,
