@@ -323,7 +323,11 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/ai-in-sentry/ai-privacy-and-security/',
-    to: '/ai/use-ai-in-sentry/ai-privacy-and-security/',
+    to: '/ai/ai-privacy-and-security/',
+  },
+  {
+    from: '/ai/use-ai-in-sentry/ai-privacy-and-security/',
+    to: '/ai/ai-privacy-and-security/',
   },
   {
     from: '/platforms/python/http_errors/',
