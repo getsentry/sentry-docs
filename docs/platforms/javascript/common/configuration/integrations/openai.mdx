@@ -34,15 +34,13 @@ supported:
   - javascript.gatsby
 ---
 
-<PlatformSection notSupported={["javascript", "javascript.react", "javascript.angular", "javascript.vue", "javascript.svelte", "javascript.solid", "javascript.ember", "javascript.gatsby", "javascript.cloudflare"]}>
+<PlatformSection notSupported={["javascript", "javascript.react", "javascript.angular", "javascript.vue", "javascript.svelte", "javascript.solid", "javascript.ember", "javascript.gatsby"]}>
 
 ## Server-Side Usage
 
 _Import name: `Sentry.openAIIntegration`_
 
 The `openAIIntegration` adds instrumentation for the `openai` API to capture spans by wrapping OpenAI client calls and recording LLM interactions.
-
-<PlatformSection notSupported={["javascript.cloudflare"]}>
 
 <Alert>
 
@@ -51,8 +49,6 @@ This integration is **enabled by default for Node.js-based platforms** and autom
 </Alert>
 
 To customize what data is captured (such as inputs and outputs), see the [Options](#options) in the Configuration section.
-
-</PlatformSection>
 
 </PlatformSection>
 
@@ -72,12 +68,23 @@ For Cloudflare Workers edge runtime, manual instrumentation is required using `i
 
 </PlatformSection>
 
+<PlatformSection supported={["javascript.nextjs"]}>
+
+<Alert>
+
+For Next.js applications using the Edge runtime, manual instrumentation is required using `instrumentOpenAiClient`. This integration is automatically instrumented in the Node.js runtime.
+
+</Alert>
+
+</PlatformSection>
+
 The `instrumentOpenAiClient` helper adds instrumentation for the `openai` API to capture spans by wrapping OpenAI client calls and recording LLM interactions with configurable input/output recording. You need to manually wrap your OpenAI client instance with this helper. See example below:
 
 ```javascript
+import OpenAI from "openai";
+
 const openai = new OpenAI({
-  apiKey: "your-api-key", // Warning: API key will be exposed in browser!
-  dangerouslyAllowBrowser: true,
+  apiKey: process.env.API_KEY, // Warning: API key will be exposed in browser!
 });
 
 const client = Sentry.instrumentOpenAiClient(openai, {
@@ -92,27 +99,13 @@ const response = await client.chat.completions.create({
 });
 ```
 
+To customize what data is captured (such as inputs and outputs), see the [Options](#options) in the Configuration section.
+
 </PlatformSection>
 
 ## Configuration
 
-<PlatformSection notSupported={["javascript", "javascript.react", "javascript.angular", "javascript.vue", "javascript.svelte", "javascript.solid", "javascript.ember", "javascript.gatsby", "javascript.cloudflare"]}>
-
 ### Options
-
-To configure the integration, add it to your `integrations` array with the desired options:
-
-```javascript
-Sentry.init({
-  dsn: "____PUBLIC_DSN____",
-  tracesSampleRate: 1.0, // Required for AI observability
-  integrations: [
-    Sentry.openAIIntegration({
-      // your-options-here
-    }),
-  ],
-});
-```
 
 The following options control what data is captured from OpenAI API calls:
 
@@ -124,12 +117,6 @@ Records inputs to OpenAI API method calls (such as prompts and messages).
 
 Defaults to `true` if `sendDefaultPii` is `true`.
 
-```javascript
-Sentry.init({
-  integrations: [Sentry.openAIIntegration({ recordInputs: true })],
-});
-```
-
 #### `recordOutputs`
 
 _Type: `boolean` (optional)_
@@ -138,9 +125,33 @@ Records outputs from OpenAI API method calls (such as generated text and respons
 
 Defaults to `true` if `sendDefaultPii` is `true`.
 
+**Usage**
+
+<PlatformSection notSupported={["javascript", "javascript.react", "javascript.angular", "javascript.vue", "javascript.svelte", "javascript.solid", "javascript.ember", "javascript.gatsby"]}>
+
+Automatic Instrumentation
+
 ```javascript
 Sentry.init({
-  integrations: [Sentry.openAIIntegration({ recordOutputs: true })],
+  dsn: "____PUBLIC_DSN____",
+  tracesSampleRate: 1.0, // Required for AI observability
+  integrations: [
+    Sentry.openAIIntegration({
+      // your options here
+    }),
+  ],
+});
+```
+
+The following options control what data is captured from OpenAI API calls:
+
+<PlatformSection supported={["javascript", "javascript.react", "javascript.angular", "javascript.vue", "javascript.svelte", "javascript.solid", "javascript.ember", "javascript.gatsby", "javascript.nextjs", "javascript.nuxt", "javascript.solidstart", "javascript.sveltekit", "javascript.react-router", "javascript.remix", "javascript.astro", "javascript.tanstackstart-react", "javascript.electron", "javascript.cloudflare"]}>
+
+Manual Instrumentation
+
+```javascript
+const client = Sentry.instrumentOpenAiClient(openai, {
+  // your options here
 });
 ```
 
@@ -154,7 +165,6 @@ By default, tracing support is added to the following OpenAI API method calls:
 - `responses.create()` - Response API requests
 
 Streaming and non-streaming requests are automatically detected and handled appropriately.
-
 
 ## Supported Versions
 
