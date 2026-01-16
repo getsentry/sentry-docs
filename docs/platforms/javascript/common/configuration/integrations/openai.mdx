@@ -40,62 +40,17 @@ supported:
 
 _Import name: `Sentry.openAIIntegration`_
 
-<Alert>
-
-This integration works in Node.js-based server runtimes. It requires SDK version `10.2.0` or higher.
-
-</Alert>
-
-The `openAIIntegration` adds instrumentation for the `openai` API to capture spans by wrapping OpenAI client calls and recording LLM interactions with configurable input/output recording.
+The `openAIIntegration` adds instrumentation for the `openai` API to capture spans by wrapping OpenAI client calls and recording LLM interactions.
 
 <PlatformSection notSupported={["javascript.cloudflare"]}>
 
-This integration is **enabled by default for Node.js-based platforms** and automatically captures spans for OpenAI API method calls. You don't need to add it to your `integrations` array in `Sentry.init` unless you want to configure input and output recording with the `recordInputs` and `recordOutputs` options:
+<Alert>
 
-```javascript
-Sentry.init({
-  dsn: "____PUBLIC_DSN____",
-  tracesSampleRate: 1.0,
-  integrations: [
-    // This integration is enabled by default.
-    // Only add this if you want to configure options.
-    Sentry.openAIIntegration({
-      recordInputs: true,
-      recordOutputs: true,
-    }),
-  ],
-});
-```
+This integration is **enabled by default for Node.js-based platforms** and automatically captures spans for OpenAI API method calls. It requires SDK version `10.2.0` or higher.
 
-### Options
+</Alert>
 
-#### `recordInputs`
-
-_Type: `boolean`_
-
-Records inputs to OpenAI API method calls (such as prompts and messages).
-
-Defaults to `true` if `sendDefaultPii` is `true`.
-
-```javascript
-Sentry.init({
-  integrations: [Sentry.openAIIntegration({ recordInputs: true })],
-});
-```
-
-#### `recordOutputs`
-
-_Type: `boolean`_
-
-Records outputs from OpenAI API method calls (such as generated text and responses).
-
-Defaults to `true` if `sendDefaultPii` is `true`.
-
-```javascript
-Sentry.init({
-  integrations: [Sentry.openAIIntegration({ recordOutputs: true })],
-});
-```
+To customize what data is captured (such as inputs and outputs), see the [Options](#options) in the Configuration section.
 
 </PlatformSection>
 
@@ -141,12 +96,65 @@ const response = await client.chat.completions.create({
 
 ## Configuration
 
+<PlatformSection notSupported={["javascript", "javascript.react", "javascript.angular", "javascript.vue", "javascript.svelte", "javascript.solid", "javascript.ember", "javascript.gatsby", "javascript.cloudflare"]}>
+
+### Options
+
+To configure the integration, add it to your `integrations` array with the desired options:
+
+```javascript
+Sentry.init({
+  dsn: "____PUBLIC_DSN____",
+  tracesSampleRate: 1.0, // Required for AI observability
+  integrations: [
+    Sentry.openAIIntegration({
+      // your-options-here
+    }),
+  ],
+});
+```
+
+The following options control what data is captured from OpenAI API calls:
+
+#### `recordInputs`
+
+_Type: `boolean` (optional)_
+
+Records inputs to OpenAI API method calls (such as prompts and messages).
+
+Defaults to `true` if `sendDefaultPii` is `true`.
+
+```javascript
+Sentry.init({
+  integrations: [Sentry.openAIIntegration({ recordInputs: true })],
+});
+```
+
+#### `recordOutputs`
+
+_Type: `boolean` (optional)_
+
+Records outputs from OpenAI API method calls (such as generated text and responses).
+
+Defaults to `true` if `sendDefaultPii` is `true`.
+
+```javascript
+Sentry.init({
+  integrations: [Sentry.openAIIntegration({ recordOutputs: true })],
+});
+```
+
+</PlatformSection>
+
+### Captured Operations
+
 By default, tracing support is added to the following OpenAI API method calls:
 
 - `chat.completions.create()` - Chat completion requests
 - `responses.create()` - Response API requests
 
 Streaming and non-streaming requests are automatically detected and handled appropriately.
+
 
 ## Supported Versions
 
