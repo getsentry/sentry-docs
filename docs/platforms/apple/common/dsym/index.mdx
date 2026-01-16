@@ -6,3 +6,209 @@ description: "Learn more about how to upload debug symbols for iOS."
 ---
 
 <PlatformContent includePath="debug-symbols-apple" />
+
+## Migration Guide
+
+### Migrating from Sentry Fastlane Plugin 1.x to 2.0.0
+
+Version 2.0.0 of the Sentry Fastlane plugin includes breaking changes due to the sentry-cli 3.0.0 upgrade. Follow this guide to migrate your Fastfiles.
+
+#### Removed Actions
+
+The following actions have been removed and must be replaced:
+
+**`sentry_upload_dsym`** → Use `sentry_debug_files_upload` instead:
+
+```ruby
+# Before (removed)
+sentry_upload_dsym(
+  auth_token: '...',
+  org_slug: '...',
+  project_slug: '...',
+  dsym_path: '/path/to/dSYMs'
+)
+
+# After
+sentry_debug_files_upload(
+  auth_token: '...',
+  org_slug: '...',
+  project_slug: '...',
+  path: '/path/to/dSYMs'
+)
+```
+
+**`sentry_upload_dif`** → Use `sentry_debug_files_upload` instead:
+
+```ruby
+# Before (removed)
+sentry_upload_dif(
+  auth_token: '...',
+  org_slug: '...',
+  project_slug: '...',
+  path: '/path/to/files'
+)
+
+# After
+sentry_debug_files_upload(
+  auth_token: '...',
+  org_slug: '...',
+  project_slug: '...',
+  path: '/path/to/files'
+)
+```
+
+**`sentry_upload_file`** → Use specialized upload actions instead:
+
+```ruby
+# Before (removed)
+sentry_upload_file(
+  auth_token: '...',
+  org_slug: '...',
+  project_slug: '...',
+  version: '1.0.0',
+  file: '/path/to/file.map'
+)
+
+# After - For source maps, use:
+sentry_upload_sourcemap(
+  auth_token: '...',
+  org_slug: '...',
+  project_slug: '...',
+  version: '1.0.0',
+  sourcemap: '/path/to/file.map'
+)
+```
+
+#### Removed Parameters
+
+**`api_key`** → Use `auth_token` instead:
+
+```ruby
+# Before (removed)
+sentry_debug_files_upload(
+  api_key: '...',  # ❌ Removed
+  org_slug: '...',
+  project_slug: '...'
+)
+
+# After
+sentry_debug_files_upload(
+  auth_token: '...',  # ✅ Use auth_token
+  org_slug: '...',
+  project_slug: '...'
+)
+```
+
+**`android_manifest_path`** in `sentry_upload_proguard` → Remove this parameter:
+
+```ruby
+# Before (removed)
+sentry_upload_proguard(
+  auth_token: '...',
+  org_slug: '...',
+  project_slug: '...',
+  android_manifest_path: '/path/to/AndroidManifest.xml'  # ❌ Removed
+)
+
+# After
+sentry_upload_proguard(
+  auth_token: '...',
+  org_slug: '...',
+  project_slug: '...'
+  # android_manifest_path parameter removed - no longer needed
+)
+```
+
+**`force_foreground`** in `sentry_debug_files_upload` → Remove this parameter:
+
+```ruby
+# Before (removed)
+sentry_debug_files_upload(
+  auth_token: '...',
+  org_slug: '...',
+  project_slug: '...',
+  force_foreground: true  # ❌ Removed (was deprecated since v1.26.0)
+)
+
+# After
+sentry_debug_files_upload(
+  auth_token: '...',
+  org_slug: '...',
+  project_slug: '...'
+  # force_foreground parameter removed
+)
+```
+
+**`ids`** in `sentry_debug_files_upload` → Renamed to `id` (singular):
+
+```ruby
+# Before (renamed)
+sentry_debug_files_upload(
+  auth_token: '...',
+  org_slug: '...',
+  project_slug: '...',
+  ids: 'abc123'  # ❌ Renamed
+)
+
+# After
+sentry_debug_files_upload(
+  auth_token: '...',
+  org_slug: '...',
+  project_slug: '...',
+  id: 'abc123'  # ✅ Use id instead
+)
+```
+
+**Deprecated parameters in `sentry_debug_files_upload`** → Remove these parameters:
+
+The following parameters have been removed as they are no longer supported in sentry-cli v3:
+
+- `info_plist`
+- `no_reprocessing`
+- `upload_symbol_maps`
+
+```ruby
+# Before (removed)
+sentry_debug_files_upload(
+  auth_token: '...',
+  org_slug: '...',
+  project_slug: '...',
+  info_plist: '/path/to/Info.plist',  # ❌ Removed
+  no_reprocessing: true,  # ❌ Removed
+  upload_symbol_maps: true  # ❌ Removed
+)
+
+# After
+sentry_debug_files_upload(
+  auth_token: '...',
+  org_slug: '...',
+  project_slug: '...'
+  # info_plist, no_reprocessing, and upload_symbol_maps parameters removed
+)
+```
+
+#### Changed Default Behavior
+
+**`path` parameter in `sentry_debug_files_upload`** → Default behavior changed:
+
+The `path` parameter now defaults to `DSYM_OUTPUT_PATH` from fastlane's lane context if available (set by actions like `build_app` or `ipa`), otherwise falls back to `'.'` (current directory).
+
+```ruby
+# If you were relying on the previous behavior of always searching from current directory:
+sentry_debug_files_upload(
+  auth_token: '...',
+  org_slug: '...',
+  project_slug: '...'
+  # path defaults to DSYM_OUTPUT_PATH if available, otherwise '.'
+)
+
+# To maintain previous behavior (always search from current directory):
+sentry_debug_files_upload(
+  auth_token: '...',
+  org_slug: '...',
+  project_slug: '...',
+  path: '.'  # Explicitly specify current directory
+)
+```
+
+For more details, see the [sentry-cli 3.0.0 release notes](https://github.com/getsentry/sentry-cli/releases/tag/3.0.0) and the [plugin changelog](https://github.com/getsentry/sentry-fastlane-plugin/blob/master/CHANGELOG.md).
