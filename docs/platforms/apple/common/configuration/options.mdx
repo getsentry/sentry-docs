@@ -881,40 +881,36 @@ This option is only used when <PlatformIdentifier name="enableSpotlight" /> is s
 
 ## Metrics Options
 
-<SdkOption name="enableMetrics" type="bool" defaultValue="false" availableSince="9.1.0">
+<SdkOption name="experimental.enableMetrics" type="bool" defaultValue="true" availableSince="9.2.0">
 
-When enabled, the SDK sends metrics to Sentry. Metrics can be captured using the `SentrySDK.metrics` API, which allows you to send, view and query counters, gauges and measurements.
+When enabled, the SDK sends metrics to Sentry. Metrics can be captured using the `SentrySDK.metrics` API, which allows you to send, view and query counters, gauges and distributions.
 
-This option is available as of [version 9.1.0](https://github.com/getsentry/sentry-cocoa/blob/main/CHANGELOG.md#910).
-
-This option defaults to `false`. Learn more in the <PlatformLink to="/metrics/">Metrics documentation</PlatformLink>.
+Learn more in the <PlatformLink to="/metrics/">Metrics documentation</PlatformLink>.
 
 </SdkOption>
 
-<SdkOption name="beforeSendMetric" type="function" availableSince="9.1.0">
+<SdkOption name="experimental.beforeSendMetric" type="function" availableSince="9.2.0">
 
 Use this callback to filter or modify metrics before they're sent to Sentry. Return `nil` to drop the metric.
 
-This option is available as of [version 9.1.0](https://github.com/getsentry/sentry-cocoa/blob/main/CHANGELOG.md#910).
-
-The callback receives a metric object and must return either a modified metric or `nil` to drop it. Attributes use the `Attributable` protocol, so you can only assign valid types (`String`, `Bool`, `Int`, `Double`, `Float`, or arrays of these types).
+The callback receives a `SentryMetric` struct and must return either a modified metric or `nil` to drop it. Attributes use the `SentryAttributeValue` protocol, so you can assign valid types directly (`String`, `Bool`, `Int`, `Double`, `Float`, or arrays of these types).
 
 ```swift
 import Sentry
 
 SentrySDK.start { options in
     options.dsn = "___PUBLIC_DSN___"
-    options.enableMetrics = true
-    options.beforeSendMetric = { metric in
-        // Create a local mutable variable since metric is a data value
+    // Metrics are enabled by default, no need to set enableMetrics = true
+    options.experimental.beforeSendMetric = { metric in
+        // Create a mutable copy (SentryMetric is a struct)
         var metric = metric
 
         // Drop metrics with specific attributes
-        if let dropMe = metric.attributes["dropMe"] as? Bool, dropMe == true {
+        if case .boolean(let dropMe) = metric.attributes["dropMe"], dropMe {
             return nil
         }
 
-        // Modify metric attributes (only Attributable types are allowed)
+        // Modify metric attributes using literals
         metric.attributes["processed"] = true
         metric.attributes["processed_at"] = "2024-01-01"
 
