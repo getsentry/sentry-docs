@@ -1340,10 +1340,6 @@ const userDocsRedirects = [
     source: '/platforms/javascript/guides/nextjs/usage/',
     destination: '/platforms/javascript/guides/nextjs/capturing-errors/',
   },
-  {
-    source: '/product/new-monitors-and-alerts/alerts/:path*',
-    destination: '/product/alerts/:path*',
-  },
 ];
 
 /**
