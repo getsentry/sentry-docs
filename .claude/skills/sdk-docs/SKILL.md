@@ -190,7 +190,7 @@ sentry_sdk.init(dsn="___PUBLIC_DSN___", option_name=value)
 2. **Save files:**
    - Write new files or edit existing:
      - Troubleshooting: Add to existing page's "Troubleshooting" section
-     - Integrations: `docs/platforms/{sdk}/integrations/{name}/index.mdx` (Ruby uses `guides/`)
+     - Integrations: `docs/platforms/{sdk}/integrations/{name}/index.mdx` (Ruby: update table in `docs/platforms/ruby/common/integrations/index.mdx`)
      - Configuration: Add `<SdkOption>` to `docs/platforms/{sdk}/configuration/options.mdx`
      - Features: `docs/platforms/{sdk}/{category}/{feature}.mdx`
    - Set sidebar navigation in MDX frontmatter if creating new page: `sidebar_order` (number), `sidebar_title` (optional), `sidebar_section` (optional)
