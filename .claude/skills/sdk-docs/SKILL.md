@@ -1,6 +1,6 @@
 ---
 name: sdk-docs
-description: Generate user-facing SDK documentation for docs.sentry.io using MDX format. Use when writing integration docs, configuration options, SDK features, or instrumentation guides after implementation. Analyzes SDK PRs from sentry-python, sentry-javascript, sentry-ruby, etc., finds similar documentation patterns, and follows Sentry's customer documentation standards with proper MDX components like Alert, Note, SdkOption, and PlatformContent.
+description: Generate user-facing SDK documentation for docs.sentry.io using MDX format. Use when writing integration docs, configuration options, SDK features, or instrumentation guides after implementation. Analyzes SDK PRs from sentry-python, sentry-javascript, sentry-ruby, etc., finds similar documentation patterns, and follows Sentry's customer documentation standards with proper MDX components like Alert, SdkOption, and PlatformContent.
 model: sonnet
 allowed-tools: Read Grep Glob Bash Write Edit Skill
 compatibility: Requires gh CLI (GitHub CLI) with authentication configured for fetching PR details from SDK repositories. Uses the sentry-skills:create-pr skill for creating pull requests following Sentry conventions.
@@ -24,6 +24,8 @@ Generate user-facing documentation for docs.sentry.io showing users HOW TO USE i
 - `php` → `getsentry/sentry-php`
 - `go` → `getsentry/sentry-go`
 - `java` → `getsentry/sentry-java`
+- `laravel` → `getsentry/sentry-laravel`
+- `symfony` → `getsentry/sentry-symfony`
 - `dotnet` / `csharp` → `getsentry/sentry-dotnet`
 - `rust` → `getsentry/sentry-rust`
 - `android` → `getsentry/sentry-java`
@@ -34,8 +36,6 @@ Generate user-facing documentation for docs.sentry.io showing users HOW TO USE i
 - `unreal` → `getsentry/sentry-unreal`
 - `native` / `c` / `cpp` → `getsentry/sentry-native`
 - `elixir` → `getsentry/sentry-elixir`
-- `perl` → `getsentry/sentry-perl`
-- `clojure` → `getsentry/sentry-clj`
 - `kotlin` → `getsentry/sentry-kotlin-multiplatform`
 
 **Docs paths:** Use lowercase SDK names (e.g., `docs/platforms/python/`, `docs/platforms/javascript/node/`)
@@ -47,8 +47,8 @@ Generate user-facing documentation for docs.sentry.io showing users HOW TO USE i
 **Automatically prepare clean branch:**
 1. Check status: `git branch --show-current && git status --short`
 2. Auto-stash uncommitted changes: `git stash push -m "Auto-stash before sdk-docs"` (inform user, can restore with `git stash pop`)
-3. Auto-switch to main: Detect with `git remote show origin | grep "HEAD branch" | cut -d' ' -f5`, then checkout
-4. Update main: `git pull origin <main-branch-name>` to ensure local main is up-to-date
+3. Auto-switch to main: Detect branch with `git remote show origin | sed -n '/HEAD branch/s/.*: //p'`, then `git checkout <detected-branch>`
+4. Update main: `git pull origin <detected-branch>` to ensure local main is up-to-date
 5. Auto-generate branch name: `docs/<sdk>/<feature-name>` (e.g., `docs/python/fastapi-integration`)
 6. Create branch: `git checkout -b <branch-name>`
 
@@ -62,8 +62,8 @@ Handle three scenarios:
 1. Extract repo, PR number, SDK from URL
 2. Fetch PR: `gh pr view <PR_NUM> --repo <REPO> --json title,body,files,state`
 3. **Auto-detect doc type** from PR changes:
-   - Files matching `*integration*.py|rb|js|go` → **integration**
-   - Changes to `*client*|*init*|*config*` with new params → **configuration_option**
+   - Files with paths containing "integration" and extensions .py, .rb, .js, or .go → **integration**
+   - Changes to files containing "client", "init", or "config" with new parameters → **configuration_option**
    - New span/trace/instrumentation code → **feature**
    - If unclear, default to **feature** and inform user
 
@@ -95,11 +95,12 @@ Handle three scenarios:
 
 **Check for existing docs first:**
 1. Search for existing docs PR: `gh search prs --repo getsentry/sentry-docs --match body "{PR_NUM}" --limit 3`
-2. Check if docs exist: Use Glob to search `docs/platforms/{sdk}/**/*{feature-name}*.mdx`
+2. Check if docs exist: Use Grep to search for feature name in `docs/platforms/{sdk}/` with pattern `{feature-name}` and output mode `files_with_matches`
 3. If found, ask user to update existing docs or create new ones
 
 **Find templates based on doc type:**
-- **Integration:** `docs/platforms/{SDK}/integrations/**/*.mdx` (Ruby uses `guides/` instead)
+- **Integration (most SDKs):** Read similar docs in `docs/platforms/{SDK}/integrations/**/*.mdx`
+- **Integration (Ruby only):** Read table structure from `docs/platforms/ruby/common/integrations/index.mdx` - Ruby uses centralized table, not individual integration files
 - **Configuration:** `docs/platforms/{SDK}/**/options.mdx`
 - **Feature/Guide:** Use Grep for related keywords in `docs/platforms/{SDK}/`
 
@@ -172,11 +173,11 @@ Brief description. Why use this?
 sentry_sdk.init(dsn="___PUBLIC_DSN___", option_name=value)
 \```
 
-<Note>Available in SDK version X.Y.Z+.</Note>
+Available in SDK version X.Y.Z+.
 </SdkOption>
 ```
 
-**Common MDX components:** `<Alert>`, `<Note>`, `<SdkOption>`, `<PlatformContent>`, `<OnboardingOptionButtons>`
+**Common MDX components:** `<Alert>`, `<SdkOption>`, `<PlatformContent>`, `<OnboardingOptionButtons>`
 
 ### Step 5: Save, Commit, and Create PR
 
@@ -199,7 +200,8 @@ sentry_sdk.init(dsn="___PUBLIC_DSN___", option_name=value)
 3. **Commit changes:**
    ```bash
    git add docs/
-   git commit -m "docs(<sdk>): Add <feature> documentation
+   git commit -m "$(cat <<'EOF'
+   docs(<sdk>): Add <feature> documentation
 
    Add documentation for <feature> integration/option/guide.
 
@@ -208,7 +210,9 @@ sentry_sdk.init(dsn="___PUBLIC_DSN___", option_name=value)
 
    Based on PR: <link-to-sdk-pr>
 
-   Co-Authored-By: Claude <noreply@anthropic.com>"
+   Co-Authored-By: Claude <noreply@anthropic.com>
+   EOF
+   )"
    ```
 
 4. **Create PR:**
