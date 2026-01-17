@@ -48,8 +48,9 @@ Generate user-facing documentation for docs.sentry.io showing users HOW TO USE i
 1. Check status: `git branch --show-current && git status --short`
 2. Auto-stash uncommitted changes: `git stash push -m "Auto-stash before sdk-docs"` (inform user, can restore with `git stash pop`)
 3. Auto-switch to main: Detect with `git remote show origin | grep "HEAD branch" | cut -d' ' -f5`, then checkout
-4. Auto-generate branch name: `docs/<sdk>/<feature-name>` (e.g., `docs/python/fastapi-integration`)
-5. Create branch: `git checkout -b <branch-name>`
+4. Update main: `git pull origin <main-branch-name>` to ensure local main is up-to-date
+5. Auto-generate branch name: `docs/<sdk>/<feature-name>` (e.g., `docs/python/fastapi-integration`)
+6. Create branch: `git checkout -b <branch-name>`
 
 **Ask user only if:** Branch already exists (use existing, rename, or delete/recreate)
 
