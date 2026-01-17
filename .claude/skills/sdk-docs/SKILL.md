@@ -106,7 +106,24 @@ Handle three scenarios:
 
 ### Step 4: Generate Documentation
 
+**Code Example Requirements:**
+- Every code example MUST start with: "This example shows how to [specific action]."
+- Help users quickly identify relevant examples
+- Use descriptive headers for multiple examples
+
 **Two formats based on context:**
+
+**Tone Guidelines:**
+- Be accessible: Explain clearly without jargon
+- Avoid alarmist language: "prevents traces from other organizations" not "protects against DOS attacks"
+- Be direct: "Set this option" not "You might want to set this option"
+- Use active voice: "The SDK captures errors" not "Errors are captured"
+
+**Output Length Calibration:**
+- **Simple config option:** Be concise - no subsections, 1 example, brief explanation
+- **Multi-option/feature:** Be focused - minimal subsections, 1-2 examples, clear explanations
+- **Major feature/integration:** Be comprehensive - organized subsections, multiple examples as needed
+- After drafting, review and reduce length by 20-30% while maintaining completeness
 
 #### A) Troubleshooting (for fixes/crashes/errors)
 
