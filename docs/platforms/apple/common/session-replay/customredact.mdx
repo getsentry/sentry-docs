@@ -93,6 +93,70 @@ var body: some View {
 }
 ```
 
+## Ignore View Types from Subtree Traversal
+
+Some view hierarchies contain layers that crash when accessed during traversal. For example, `CameraUI.ChromeSwiftUIView` on iOS 26+ contains `CameraUI.ModeLoupeLayer` instances that cause fatal errors when their `sublayers` property is accessed, resulting in crashes during session replay or screenshot capture.
+
+To prevent these crashes, you can configure the SDK to skip traversing the subtree of specific view types while still redacting the view itself if needed.
+
+### Default Behavior
+
+On iOS 26+, `CameraUI.ChromeSwiftUIView` is automatically included in the ignore set by default to prevent crashes. On other platforms or iOS versions, the ignore set is empty by default.
+
+### Adding View Types to Ignore List
+
+You can add custom view types to the ignore set using the `excludeViewTypeFromSubtreeTraversal` method:
+
+```swift
+options.sessionReplay.excludeViewTypeFromSubtreeTraversal("MyProblematicView")
+```
+
+The view type identifier uses **partial string matching** against the result of `type(of: view).description()`. This means if you exclude `"MyView"`, it will match `"MyApp.MyView"`, `"MyViewSubclass"`, `"Some.MyView.Container"`, etc. The view type identifier typically follows the format `"ModuleName.ClassName"`.
+
+### Removing View Types from Ignore List
+
+If you need to remove a view type from the ignore set (not recommended for default values), you can use:
+
+```swift
+options.sessionReplay.includeViewTypeInSubtreeTraversal("CameraUI.ChromeSwiftUIView")
+```
+
+The view type identifier uses **exact string matching** against the result of `type(of: view).description()`. This means `"MyApp.MyView"` will only match exactly `"MyApp.MyView"`, not `"MyApp.MyViewSubclass"`. This exact matching prevents accidental matches when removing view types from the ignore set.
+
+<Alert level="warning">
+
+Removing default values like `CameraUI.ChromeSwiftUIView` from the ignore set may cause crashes on iOS 26+. Only do this if you understand the risks and have tested thoroughly.
+
+</Alert>
+
+### Dictionary Initialization
+
+You can also configure ignored view types when initializing `SentryReplayOptions` from a dictionary:
+
+```swift
+let replayOptions = SentryReplayOptions(dictionary: [
+    "excludedViewClasses": ["MyCustomView", "AnotherProblematicView"],
+    "includedViewClasses": ["CameraUI.ChromeSwiftUIView"]
+])
+```
+
+- `excludedViewClasses`: An array of view type identifier patterns that use partial matching (contains)
+- `includedViewClasses`: An array of view type identifiers that use exact matching to remove items from the excluded set
+
+### How It Works
+
+The final set of excluded view types is computed using the formula: **Default View Classes + Excluded View Classes - Included View Classes**
+
+- Default view classes are defined internally by the SDK (e.g., `CameraUI.ChromeSwiftUIView` on iOS 26+)
+- Excluded view classes use partial matching (contains) - if a view's class name contains the pattern, it's excluded
+- Included view classes use exact matching - they remove specific view types from the excluded set
+
+When a view type is ignored from subtree traversal:
+
+- The view itself is still redacted (unless it's explicitly marked to be ignored, like `UISwitch`)
+- The SDK skips traversing the view's subtree, preventing crashes from accessing problematic sublayers
+- This prevents crashes while maintaining privacy protection for the view itself
+
 ## Debugging Session Replay masking
 
 To see how elements are being masked, enable the masking preview from anywhere in your app. It will display an overlay on top of the masked elements. This works on the simulator and on device, as well as within Xcode Preview.
