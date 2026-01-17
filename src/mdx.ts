@@ -630,9 +630,22 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
     }
   }
   if (source === undefined || sourcePath === undefined) {
-    throw new Error(
-      `Failed to find a valid source file for slug "${slug}". Tried:\n${sourcePaths.join('\n')}\nErrors:\n${errors.map(e => e.message).join('\n')}`
+    // Check if we have any non-ENOENT errors (permission, file system errors, etc.)
+    const nonEnoentError = errors.find(
+      err => err && typeof err === 'object' && 'code' in err && err.code !== 'ENOENT'
     );
+
+    // If there's a non-ENOENT error, throw it directly to preserve the original error
+    if (nonEnoentError) {
+      throw nonEnoentError;
+    }
+
+    // Otherwise, all errors are ENOENT (file not found), so we can safely report as such
+    const error = new Error(
+      `Failed to find a valid source file for slug "${slug}". Tried:\n${sourcePaths.join('\n')}\nErrors:\n${errors.map(e => e.message).join('\n')}`
+    ) as Error & {code: string};
+    error.code = 'ENOENT';
+    throw error;
   }
 
   let cacheKey: string | null = null;
