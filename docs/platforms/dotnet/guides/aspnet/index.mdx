@@ -32,8 +32,6 @@ as well as your logs as breadcrumbs. The logging integrations also capture event
 ## Configure
 
 You configure the SDK in the `Global.asax.cs`:
-
-
 ```csharp
 using System;
 using System.Web;
@@ -89,6 +87,26 @@ public class MvcApplication : HttpApplication
         _sentry?.Dispose();
     }
 }
+```
+
+If you'd prefer not to hardcode your DSN in your source code, you can store it in your `Web.config` file:
+
+```xml {filename:Web.config}
+<configuration>
+  <appSettings>
+    <add key="SentryDsn" value="___PUBLIC_DSN___" />
+  </appSettings>
+</configuration>
+```
+
+And then read it from `ConfigurationManager.AppSettings`:
+
+```csharp
+using System.Configuration;
+
+// ...
+
+options.Dsn = ConfigurationManager.AppSettings["SentryDsn"];
 ```
 
 ### Capturing the affected user
