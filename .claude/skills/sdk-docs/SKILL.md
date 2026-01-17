@@ -192,7 +192,7 @@ sentry_sdk.init(dsn="___PUBLIC_DSN___", option_name=value)
      - Integrations: `docs/platforms/{sdk}/integrations/{name}/index.mdx` (Ruby uses `guides/`)
      - Configuration: Add `<SdkOption>` to `docs/platforms/{sdk}/configuration/options.mdx`
      - Features: `docs/platforms/{sdk}/{category}/{feature}.mdx`
-   - Update `_meta.json` for sidebar navigation if creating new page
+   - Set sidebar navigation in MDX frontmatter if creating new page: `sidebar_order` (number), `sidebar_title` (optional), `sidebar_section` (optional)
    - Run `yarn lint:fix` to auto-fix formatting
 
 3. **Commit changes:**
