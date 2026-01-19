@@ -123,7 +123,25 @@ This feature is available for iOS, tvOS, and Mac Catalyst.
 App Start Tracing is enabled by default once you <PlatformLink to="/tracing/">set up tracing</PlatformLink>. This feature provides insight into how long your application takes to launch. It adds spans for different phases, from the application launch to the first auto-generated UI transaction.
 
 The SDK adds these spans to the first transaction that starts during the app launch with the operation `ui.load`. This is what UIViewController tracing uses. If the duration between the transaction start time and the end timestamp of the app start is more than 5 seconds, the SDK doesn't attach the spans from the app start. This helps prevent attaching spans to unrelated transactions.
-To enable this feature, enable `enableAutoPerformanceTracing`.
+
+We don't have a fine-grained way to only disable this feature. If you want to disable it, you have to also disable all other automatic instrumentations:
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.enableAutoPerformanceTracing = false
+}
+```
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.enableAutoPerformanceTracing = NO;
+}];
+```
 
 The SDK differentiates between a cold and a warm start, but doesn't track hot starts/resumes.
 
@@ -148,7 +166,6 @@ The Cocoa SDK creates the following app start spans:
 ![App Start Transaction](./img/app-start-transaction.png)
 
 Cold and warm start are Mobile Vitals, which you can learn about in the [full documentation](/product/insights/mobile/mobile-vitals).
-
 ### Prewarmed App Start Tracing
 
 Starting with iOS 15, the operating system might [prewarm](https://developer.apple.com/documentation/uikit/app_and_environment/responding_to_the_launch_of_your_app/about_the_app_launch_sequence#3894431) your app by creating the process before the user opens it. Starting with SDK version [9.0.0](https://github.com/getsentry/sentry-cocoa/releases/tag/9.0.0), the `enablePreWarmedAppStartTracing` is enabled by default.
