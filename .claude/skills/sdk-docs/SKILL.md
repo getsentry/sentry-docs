@@ -1,7 +1,6 @@
 ---
 name: sdk-docs
-description: Generate user-facing SDK documentation for docs.sentry.io using MDX format. Use when writing integration docs, configuration options, SDK features, or instrumentation guides after implementation. Analyzes SDK PRs from sentry-python, sentry-javascript, sentry-ruby, etc., finds similar documentation patterns, and follows Sentry's customer documentation standards with proper MDX components like Alert, SdkOption, and PlatformContent.
-model: sonnet
+description: Generate user-facing SDK documentation for docs.sentry.io. Use after implementing SDK features, integrations, configuration options, or instrumentation guides.
 allowed-tools: Read Grep Glob Bash Write Edit Skill
 compatibility: Requires gh CLI (GitHub CLI) with authentication configured for fetching PR details from SDK repositories. Uses the sentry-skills:create-pr skill for creating pull requests following Sentry conventions.
 ---
@@ -10,7 +9,9 @@ compatibility: Requires gh CLI (GitHub CLI) with authentication configured for f
 
 Generate user-facing documentation for docs.sentry.io showing users HOW TO USE implemented SDK features.
 
-**Default Workflow:** Fully automated - auto-stashes uncommitted changes, switches to main branch, creates a new branch, generates documentation files, auto-commits with proper attribution, and creates a PR via `sentry-skills:create-pr`. User intervention only needed for genuine decision points.
+**Repository Requirement:** This skill MUST be run from the `sentry-docs` repository directory (getsentry/sentry-docs). It will verify the repository at the start and stop if in the wrong location.
+
+**Default Workflow:** Fully automated - auto-stashes uncommitted changes, switches to main branch, creates a new branch, generates documentation files, auto-commits with proper attribution, and creates a PR in the sentry-docs repository via `sentry-skills:create-pr`. User intervention only needed for genuine decision points.
 
 **When to Use:** AFTER feature implementation for new SDK configuration options, framework/library integrations, SDK features/capabilities, or automatic instrumentation. **Not for:** Developer/maintainer docs.
 
@@ -43,6 +44,11 @@ Generate user-facing documentation for docs.sentry.io showing users HOW TO USE i
 ## Instructions
 
 ### Step 0: Prepare Git Branch
+
+**Verify repository first:**
+1. Check current repository: `git remote get-url origin`
+2. **Critical:** Verify you're in the `sentry-docs` repository (getsentry/sentry-docs)
+3. If in wrong repository, STOP and inform user that this skill must be run from the sentry-docs repository directory
 
 **Automatically prepare clean branch:**
 1. Check status: `git branch --show-current && git status --short`
@@ -216,7 +222,9 @@ Available in SDK version X.Y.Z+.
    ```
 
 4. **Create PR:**
-   - Invoke `sentry-skills:create-pr` skill to push and create PR
+   - Push branch to remote: `git push -u origin <branch-name>`
+   - Invoke `sentry-skills:create-pr` skill to create PR in the **sentry-docs repository** (getsentry/sentry-docs)
+   - **Critical:** Ensure you're in the sentry-docs repository directory before creating the PR
    - Inform user of PR URL and live docs URL: `https://docs.sentry.io/platforms/{sdk}/{path}/`
 
 **Error handling:** PR not accessible? Suggest `gh auth login`. No similar docs? Adapt from other SDKs. Docs exist? Ask to update or create new. Linter fails? Show errors and ask for guidance.
