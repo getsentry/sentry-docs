@@ -240,8 +240,3 @@ Available in SDK version X.Y.Z+.
 **Error handling:** PR not accessible? Suggest `gh auth login`. No similar docs? Adapt from other SDKs. Docs exist? Ask to update or create new. Linter fails? Show errors and ask for guidance.
 
 **Flexibility:** User can request manual review before PR, add more docs to branch, or adjust workflow as needed.
-
-## References
-
-- [Sentry Docs Repo](https://github.com/getsentry/sentry-docs)
-- [Example Integration](https://github.com/getsentry/sentry-docs/blob/master/docs/platforms/python/integrations/pydantic-ai/index.mdx)
