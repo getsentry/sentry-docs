@@ -50,34 +50,6 @@ This integration is **enabled by default for Node.js-based platforms** and autom
 
 To customize what data is captured (such as inputs and outputs), see the [Options](#options) in the Configuration section.
 
-### Supported Operations
-
-By default, the integration automatically captures spans for LangChain operations including:
-
-- **Chat model invocations** - Captures spans for chat model calls
-- **LLM invocations** - Captures spans for LLM pipeline executions
-- **Chain executions** - Captures spans for chain invocations
-- **Tool executions** - Captures spans for tool calls
-
-### Supported Runnables
-
-The integration automatically instruments the following LangChain runnable methods:
-
-- `invoke()` - Single execution
-- `stream()` - Streaming execution
-- `batch()` - Batch execution
-
-### Supported Providers
-
-The automatic instrumentation supports the following LangChain provider packages:
-
-- `@langchain/anthropic`
-- `@langchain/openai`
-- `@langchain/google-genai`
-- `@langchain/mistralai`
-- `@langchain/google-vertexai`
-- `@langchain/groq`
-
 </PlatformSection>
 
 <PlatformSection supported={["javascript", "javascript.react", "javascript.angular", "javascript.vue", "javascript.svelte", "javascript.solid", "javascript.ember", "javascript.gatsby", "javascript.nextjs", "javascript.nuxt", "javascript.solidstart", "javascript.sveltekit", "javascript.react-router", "javascript.remix", "javascript.astro", "javascript.tanstackstart-react", "javascript.electron", "javascript.cloudflare"]}>
@@ -90,7 +62,7 @@ _Import name: `Sentry.createLangChainCallbackHandler`_
 
 <Alert>
 
-For Cloudflare Workers edge runtime, manual instrumentation is required using `createLangChainCallbackHandler`.
+For Cloudflare Workers, manual instrumentation is required using `createLangChainCallbackHandler`.
 
 </Alert>
 
@@ -109,7 +81,6 @@ For Next.js applications using the Edge runtime, manual instrumentation is requi
 The `createLangChainCallbackHandler` helper adds instrumentation for LangChain to capture spans by creating a callback handler that wraps LangChain operations and records AI agent interactions with configurable input/output recording. You need to manually create and pass this callback handler to your LangChain operations. See example below:
 
 ```javascript
-import * as Sentry from "@sentry/browser";
 import { ChatAnthropic } from "@langchain/anthropic";
 
 // Create a LangChain callback handler
@@ -121,7 +92,7 @@ const callbackHandler = Sentry.createLangChainCallbackHandler({
 // Use with chat models
 const model = new ChatAnthropic({
   model: "claude-3-5-sonnet-20241022",
-  apiKey: process.env.ANTHROPIC_API_KEY, // Warning: API key will be exposed in browser!
+  apiKey: "your-api-key", // Warning: API key will be exposed in browser!
 });
 
 await model.invoke("Tell me a joke", {
@@ -186,6 +157,34 @@ const callbackHandler = Sentry.createLangChainCallbackHandler({
 ```
 
 </PlatformSection>
+
+## Supported Operations
+
+By default, tracing support is added to the following LangChain API method calls:
+
+- **Chat model invocations** - Captures spans for chat model calls
+- **LLM invocations** - Captures spans for LLM pipeline executions
+- **Chain executions** - Captures spans for chain invocations
+- **Tool executions** - Captures spans for tool calls
+
+### Runnables
+
+The integration automatically instruments the following LangChain runnable methods:
+
+- `invoke()` - Single execution
+- `stream()` - Streaming execution
+- `batch()` - Batch execution
+
+### Providers
+
+The automatic instrumentation supports the following LangChain provider packages:
+
+- `@langchain/anthropic`
+- `@langchain/openai`
+- `@langchain/google-genai`
+- `@langchain/mistralai`
+- `@langchain/google-vertexai`
+- `@langchain/groq`
 
 ## Supported Versions
 
