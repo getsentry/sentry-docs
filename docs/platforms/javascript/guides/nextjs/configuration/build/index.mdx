@@ -222,11 +222,13 @@ Enables the use of the [`runAfterProductionCompile` hook from Next.js](https://n
 
 </SdkOption>
 
-<SdkOption name="disableManifestInjection" type="boolean|undefined" defaultValue="false">
+<SdkOption name="routeManifestInjection" type="boolean|object" defaultValue="true">
 
-Disables automatic injection of the route manifest into the client bundle.
+Controls the behavior of the route manifest injection into the client bundle.
 
 The route manifest is a build-time generated mapping of your Next.js App Router routes that enables Sentry to group transactions by parameterized route names (e.g., `/users/:id` instead of `/users/123`, `/users/456`, etc.).
+
+You can set this option to `false` to disable the route manifest injection.
 
 **Disable this option if:**
 
@@ -234,6 +236,16 @@ The route manifest is a build-time generated mapping of your Next.js App Router 
 - You're experiencing build issues related to route scanning
 - You prefer raw URLs in transaction names
 - You're only using the Pages Router (this feature is only supported in the App Router)
+
+You can also pass in an object to control which routes should be excluded from the route manifest.
+
+```javascript
+routeManifestInjection: {
+  exclude: ["/api/health", "/api/excluded/[parameter]", /^\/internal\//],
+  // or a function that return `true` to exclude the route
+  exclude: (route) => route.includes("/excluded"),
+},
+```
 
 </SdkOption>
 
