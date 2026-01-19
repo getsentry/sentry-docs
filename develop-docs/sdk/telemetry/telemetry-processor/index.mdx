@@ -92,8 +92,21 @@ The telemetry buffer batches high-volume data and forwards it to the telemetry s
 2. When the telemetry buffer overflows and it drops data, it **MUST** record client reports.
 3. The telemetry buffer **MUST** forward low-volume data, such as normal events, session replays, or user feedback, directly to the telemetry scheduler.
 4. The telemetry buffer **MUST** start a timeout of 5 seconds when the first item is added. When the timeout expires, the telemetry buffer **MUST** forward all items to the telemetry scheduler.
-5. The telemetry buffer **MUST** define a size limit of x items. Each SDK MAY choose its own x based on its needs, but SDKs **MUST** ensure that the serialized envelope doesn't exceed the [envelope max sizes](/sdk/data-model/envelopes/#size-limits).
+5. The telemetry buffer **MUST** define a size limit of `x` items. See [Size Limit Recommendations](#size-limit-recommendations) below for more details.
 6. When the size limit is reached, the telemetry buffer **MUST** forward all items to the telemetry scheduler. The buffer **MAY** forward items in batches.
+
+
+## Size Limit Recommendations
+
+We recommend starting with 100 items for logs, metrics, and spans for `x`, which is the maximum number of items the buffer can hold. SDKs **MAY** choose different values based on their needs, but they **SHOULD** respect the max suggested `x` values:
+
+| Data type | Max suggested x |
+| --- | --- |
+| Logs | ~1150 |
+| Metrics |  ~1800 (Each metric **MUST** be `<= 2 KiB` or Relay drops the entire envelope) |
+| Spans | ~1300 |
+
+Here is the reasoning behind the max numbers. Using the example payloads in [Logs](/sdk/telemetry/logs/#appendix-a-example-log-envelope), [Metrics](/sdk/telemetry/metrics/#appendix-a-example-trace_metric-envelope), and the [Span Protocol](/sdk/telemetry/spans/span-protocol/#span-v2-envelope-item-payload), the average serialized item sizes are ~730 B (log), ~460 B (metric), and ~630 B (span). Applying a 20% safety buffer against the Relay [envelope size limits](/sdk/data-model/envelopes/#size-limits) yields the maximum suggested x values.
 
 ## Data Forwarding Scenarios
 
