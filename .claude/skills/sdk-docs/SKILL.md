@@ -2,7 +2,7 @@
 name: sdk-docs
 description: Generate user-facing SDK documentation for docs.sentry.io. Use after implementing SDK features, integrations, configuration options, or instrumentation guides.
 allowed-tools: Read Grep Glob Bash Write Edit Skill
-compatibility: Requires gh CLI (GitHub CLI) with authentication configured for fetching PR details from SDK repositories. Uses the sentry-skills:create-pr skill for creating pull requests following Sentry conventions (auto-installs from marketplace if not present).
+compatibility: Requires gh CLI (GitHub CLI) with authentication configured for fetching PR details from SDK repositories. Uses sentry-skills:commit and sentry-skills:create-pr skills for committing and creating pull requests following Sentry conventions (auto-installs from marketplace if not present).
 ---
 
 # Sentry SDK Documentation Generator
@@ -45,11 +45,12 @@ Generate user-facing documentation for docs.sentry.io showing users HOW TO USE i
 
 ### Step 0: Prepare Environment
 
-**Install required skill if needed:**
+**Install required skills if needed:**
 1. Check if marketplace is added: `claude plugin marketplace list`
 2. If `sentry-skills` marketplace not present, add it: `claude plugin marketplace add getsentry/skills`
-3. Check if create-pr skill is installed: `claude plugin list`
-4. If `sentry-skills:create-pr` not present, install it: `claude plugin install sentry-skills:create-pr`
+3. Check if required skills are installed: `claude plugin list`
+4. If `sentry-skills:commit` not present, install it: `claude plugin install sentry-skills:commit`
+5. If `sentry-skills:create-pr` not present, install it: `claude plugin install sentry-skills:create-pr`
 
 **Verify repository:**
 1. Check current repository: `git remote get-url origin`
@@ -210,22 +211,8 @@ Available in SDK version X.Y.Z+.
    - Run `yarn lint:fix` to auto-fix formatting
 
 3. **Commit changes:**
-   ```bash
-   git add docs/
-   git commit -m "$(cat <<'EOF'
-   docs(<sdk>): Add <feature> documentation
-
-   Add documentation for <feature> integration/option/guide.
-
-   Key sections:
-   - [List main sections]
-
-   Based on PR: <link-to-sdk-pr>
-
-   Co-Authored-By: Claude <noreply@anthropic.com>
-   EOF
-   )"
-   ```
+   - Stage documentation files: `git add docs/`
+   - Invoke `sentry-skills:commit` skill with message: "docs(<sdk>): Add <feature> documentation" and include details about key sections and source PR
 
 4. **Confirm before creating PR:**
    - Show the user what was committed: `git show --stat HEAD`
