@@ -1,0 +1,124 @@
+## Next.js Patterns
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+### API Routes
+
+Track request timing and business events in your route handlers.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {filename:app/api/orders/route.ts}
+import * as Sentry from "@sentry/nextjs";
+
+export async function POST(request: Request) {
+  const start = Date.now();
+
+  try {
+    const order = await createOrder(request);
+
+    Sentry.metrics.count("orders_created", 1, {
+      attributes: { status: "success" },
+    });
+
+    return Response.json(order);
+  } catch (error) {
+    Sentry.metrics.count("orders_created", 1, {
+      attributes: { status: "failed" },
+    });
+    throw error;
+  } finally {
+    Sentry.metrics.distribution("order_latency", Date.now() - start, {
+      unit: "millisecond",
+    });
+  }
+}
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Server Actions
+
+Track form submissions and mutations.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {filename:app/actions.ts}
+"use server";
+
+import * as Sentry from "@sentry/nextjs";
+
+export async function submitCheckout(formData: FormData) {
+  Sentry.metrics.count("checkout_attempts", 1);
+
+  try {
+    const result = await processCheckout(formData);
+    Sentry.metrics.count("checkout_success", 1);
+    return result;
+  } catch (error) {
+    Sentry.metrics.count("checkout_failures", 1);
+    throw error;
+  }
+}
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Proxy / Middleware
+
+Track request patterns at the edge.
+
+Next.js 16+ uses `proxy.ts`, while earlier versions use `middleware.ts`. The pattern is the same.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {tabTitle:Proxy} {filename:proxy.ts}
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import * as Sentry from "@sentry/nextjs";
+
+export function proxy(request: NextRequest) {
+  Sentry.metrics.count("requests", 1, {
+    attributes: {
+      path: request.nextUrl.pathname,
+      method: request.method,
+    },
+  });
+
+  return NextResponse.next();
+}
+```
+
+```typescript {tabTitle:Middleware} {filename:middleware.ts}
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import * as Sentry from "@sentry/nextjs";
+
+export function middleware(request: NextRequest) {
+  Sentry.metrics.count("requests", 1, {
+    attributes: {
+      path: request.nextUrl.pathname,
+      method: request.method,
+    },
+  });
+
+  return NextResponse.next();
+}
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
