@@ -10,17 +10,33 @@ The callback receives a metric object and must return either a modified metric o
 
 ```go
 err := sentry.Init(sentry.ClientOptions{
-	Dsn: "___PUBLIC_DSN___",
-	BeforeSendMetric: func(metric *sentry.Metric) *sentry.Metric {
-		// Drop metrics with specific attributes
-		if _, ok := metric.Attributes["dropmetric"]; ok {
-			return nil
-		}
+  Dsn: "___PUBLIC_DSN___",
+  BeforeSendMetric: func(metric *sentry.Metric) *sentry.Metric {
+    // Filter metrics based on metric type and value
+    switch metric.Type {
+    case sentry.MetricTypeCounter:
+      if v, ok := metric.Value.Int64(); ok && v < 5 {
+        return nil // drop low-value counters
+      }
+    case sentry.MetricTypeGauge:
+      if v, ok := metric.Value.Float64(); ok && v < 10.0 {
+        return nil // drop low gauge readings
+      }
+    case sentry.MetricTypeDistribution:
+      // keep all distributions
+    }
 
-		// Modify metric attributes
-		metric.Attributes["processed"] = true
-		return metric
-	},
+    // Alternative: handle value types directly
+    if v, ok := metric.Value.Int64(); ok && v > 1 {
+      // handle all int64 values (counters)
+    }
+    // Drop metrics with specific attributes
+    if _, ok := metric.Attributes["dropmetric"]; ok {
+      return nil
+    }
+
+    return metric
+  },
 })
 ```
 
