@@ -1,0 +1,230 @@
+---
+title: GoodJob
+description: "Learn about using Sentry with GoodJob."
+---
+
+The GoodJob integration adds support for [GoodJob](https://github.com/bensheldon/good_job), a Postgres-based ActiveJob backend for Ruby on Rails.
+
+## Install
+
+Install `sentry-good_job` by adding it to your `Gemfile`:
+
+```ruby {filename:Gemfile}
+gem "sentry-ruby"
+gem "sentry-good_job"
+```
+
+Then run:
+
+```bash
+bundle install
+```
+
+## Configure
+
+### Rails Applications
+
+If you're using Rails, the GoodJob integration will be enabled automatically when you have both `sentry-rails` and `sentry-good_job` in your `Gemfile`. The SDK will be initialized in your Rails application as described in the [Rails integration documentation](/platforms/ruby/guides/rails/#configure).
+
+This example shows how to configure the GoodJob integration with common options:
+
+```ruby {filename:config/initializers/sentry.rb}
+Sentry.init do |config|
+  config.dsn = "___PUBLIC_DSN___"
+  config.traces_sample_rate = 1.0
+
+  # GoodJob integration options
+  config.good_job.report_after_job_retries = false
+  config.good_job.include_job_arguments = false
+  config.good_job.auto_setup_cron_monitoring = true
+end
+```
+
+### Non-Rails Applications
+
+For non-Rails applications using GoodJob, initialize the Sentry SDK before starting your GoodJob workers:
+
+```ruby
+require "sentry-ruby"
+require "sentry-good_job"
+require "good_job"
+
+Sentry.init do |config|
+  config.dsn = "___PUBLIC_DSN___"
+  config.traces_sample_rate = 1.0
+end
+
+# Your GoodJob setup
+GoodJob.on_thread_error = ->(exception) { Sentry.capture_exception(exception) }
+```
+
+## Verify
+
+To verify that the integration is working, create a job that raises an error:
+
+```ruby
+class FailingJob < ApplicationJob
+  queue_as :default
+
+  def perform(*args)
+    1 / 0
+  end
+end
+```
+
+Enqueue and process the job:
+
+```ruby
+FailingJob.perform_later
+```
+
+After the job is processed, you should see the error in [Issues](https://sentry.io/issues/) with enriched context including the job name, queue name, and job ID.
+
+## Behavior
+
+### Error Capture
+
+The GoodJob integration automatically captures exceptions that occur during job execution. Each error event includes:
+
+- Job class name
+- Queue name
+- Job ID
+- Execution attempt number
+- Job arguments (if `include_job_arguments` is enabled)
+
+### Performance Monitoring
+
+When performance monitoring is enabled (`traces_sample_rate > 0`), the integration creates spans for each job execution that include:
+
+- Execution time
+- Queue latency (time between enqueue and execution)
+- Trace propagation from the code that enqueued the job
+
+You can view these spans in [Performance > Traces](https://sentry.io/performance/traces/).
+
+### Trace Propagation
+
+The integration propagates Sentry tracing information from the code that enqueues a job to the job execution. This creates a distributed trace connecting the original request or code to the background job.
+
+## Cron Monitoring
+
+The GoodJob integration includes automatic support for [Cron Monitoring](/product/crons/). If you have cron jobs configured in GoodJob, the integration will automatically set up monitoring for them.
+
+### Automatic Setup
+
+By default, the integration reads your GoodJob cron configuration and automatically creates Sentry cron monitors. This works with GoodJob's cron configuration:
+
+```ruby {filename:config/application.rb}
+config.good_job.cron = {
+  send_daily_reports: {
+    cron: "0 9 * * *", # Every day at 9am
+    class: "DailyReportJob"
+  },
+  cleanup_old_data: {
+    cron: "0 2 * * 0", # Every Sunday at 2am
+    class: "CleanupJob"
+  }
+}
+```
+
+With automatic cron monitoring enabled, you'll see these jobs appear in [Crons](https://sentry.io/crons/) with their schedules automatically detected.
+
+### Manual Configuration
+
+You can also manually configure cron monitoring for specific jobs using the `sentry_cron_monitor` method in your job class:
+
+```ruby
+class DailyReportJob < ApplicationJob
+  include Sentry::Cron::MonitorCheckIns
+
+  sentry_cron_monitor :daily_reports,
+    schedule: { type: "crontab", value: "0 9 * * *" },
+    timezone: "America/New_York"
+
+  def perform
+    # Generate and send reports
+  end
+end
+```
+
+This approach gives you fine-grained control over monitoring settings including custom monitor slugs and timezone specifications.
+
+## Options
+
+The following options are available for the GoodJob integration. Set them in your `Sentry.init` block:
+
+### `report_after_job_retries`
+
+Only report errors to Sentry after all retry attempts have been exhausted.
+
+**Type:** `Boolean`
+**Default:** `false`
+
+```ruby
+config.good_job.report_after_job_retries = true
+```
+
+When enabled, errors from jobs that will be retried are not sent to Sentry until the final retry fails.
+
+### `report_only_dead_jobs`
+
+Only report errors from jobs that cannot be retried (dead jobs).
+
+**Type:** `Boolean`
+**Default:** `false`
+
+```ruby
+config.good_job.report_only_dead_jobs = true
+```
+
+This is useful if you only want to be notified about jobs that have permanently failed.
+
+### `include_job_arguments`
+
+Include job arguments in error context.
+
+**Type:** `Boolean`
+**Default:** `false`
+
+```ruby
+config.good_job.include_job_arguments = true
+```
+
+<Alert level="warning">
+
+Job arguments may contain sensitive data. Only enable this option if you're confident that your job arguments don't contain personally identifiable information (PII) or other sensitive data. Consider using [`before_send`](/platforms/ruby/configuration/filtering/) to filter sensitive arguments before they're sent to Sentry.
+
+</Alert>
+
+### `auto_setup_cron_monitoring`
+
+Automatically set up cron monitoring by reading GoodJob's cron configuration.
+
+**Type:** `Boolean`
+**Default:** `true`
+
+```ruby
+config.good_job.auto_setup_cron_monitoring = false
+```
+
+Set this to `false` if you want to manually configure cron monitoring for your scheduled jobs.
+
+### `logging_enabled`
+
+Enable detailed logging for debugging the integration.
+
+**Type:** `Boolean`
+**Default:** `false`
+
+```ruby
+config.good_job.logging_enabled = true
+```
+
+When enabled, the integration will log additional information about job processing, error capture, and cron monitoring setup. This is useful for troubleshooting but not recommended for production.
+
+## Supported Versions
+
+- Ruby: 2.4+
+- Rails: 5.2+
+- GoodJob: 3.0+
+- Sentry Ruby SDK: 5.28.0+
