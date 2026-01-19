@@ -40,52 +40,15 @@ supported:
 
 _Import name: `Sentry.langGraphIntegration`_
 
-The `langGraphIntegration` adds instrumentation for LangGraph to capture spans by automatically wrapping LangGraph operations and recording AI agent interactions including agent invocations, graph executions, and node operations.
-
 <Alert>
 
 This integration is **enabled by default for Node.js-based platforms** and automatically captures spans for LangGraph operations. It requires SDK version `10.25.0` or higher.
 
 </Alert>
 
+The `langGraphIntegration` adds instrumentation for LangGraph to capture spans by automatically wrapping LangGraph operations and recording AI agent interactions including agent invocations, graph executions, and node operations. 
+
 To customize what data is captured (such as inputs and outputs), see the [Options](#options) in the Configuration section.
-
-### Usage Example
-
-```javascript
-import { ChatOpenAI } from "@langchain/openai";
-import { StateGraph, MessagesAnnotation, START, END } from '@langchain/langgraph';
-
-// Create LLM call
-const llm = new ChatOpenAI({
-  modelName: "gpt-4o",
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-async function callLLM(state) {
-  const response = await llm.invoke(state.messages);
-
-  return {
-    messages: [...state.messages, response],
-  };
-}
-
-// Create the agent
-const agent = new StateGraph(MessagesAnnotation)
-  .addNode('agent', callLLM)
-  .addEdge(START, 'agent')
-  .addEdge('agent', END);
-
-const compiledAgent = agent.compile({ name: 'my_agent' });
-
-// Invoke the agent - automatically instrumented
-const result = await compiledAgent.invoke({
-  messages: [
-    new SystemMessage("You are a helpful assistant."),
-    new HumanMessage("Hello!"),
-  ],
-});
-```
 
 </PlatformSection>
 
@@ -99,7 +62,7 @@ _Import name: `Sentry.instrumentLangGraph`_
 
 <Alert>
 
-For Cloudflare Workers edge runtime, manual instrumentation is required using `instrumentLangGraph`.
+For Cloudflare Workers, manual instrumentation is required using `instrumentLangGraph`.
 
 </Alert>
 
@@ -118,14 +81,13 @@ For Next.js applications using the Edge runtime, manual instrumentation is requi
 The `instrumentLangGraph` helper adds instrumentation for LangGraph to capture spans by wrapping a compiled LangGraph graph and recording AI agent interactions with configurable input/output recording. You need to manually wrap your compiled graph with this helper. See example below:
 
 ```javascript
-import * as Sentry from "@sentry/browser";
 import { ChatOpenAI } from "@langchain/openai";
 import { StateGraph, MessagesAnnotation, START, END } from '@langchain/langgraph';
 
 // Create LLM call
 const llm = new ChatOpenAI({
   modelName: "gpt-4o",
-  apiKey: process.env.OPENAI_API_KEY, // Warning: API key will be exposed in browser!
+  apiKey: "your-api-key", // Warning: API key will be exposed in browser!
 });
 
 async function callLLM(state) {
@@ -217,9 +179,9 @@ Sentry.instrumentLangGraph(graph, {
 
 </PlatformSection>
 
-### Captured Operations
+## Supported Operations
 
-By default, tracing support is added to the following LangGraph operations:
+By default, tracing support is added to the following LangGraph API method calls:
 
 - **Agent Creation** (`gen_ai.create_agent`) - Captures spans when compiling a StateGraph into an executable agent
 - **Agent Invocation** (`gen_ai.invoke_agent`) - Captures spans for agent execution via `invoke()`
