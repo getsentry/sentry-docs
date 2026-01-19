@@ -107,7 +107,7 @@ The telemetry buffer **MUST** forward all data in memory to the telemetry schedu
 
 Spans require a dedicated buffer because we can only send spans from a single trace per envelope. Still, the span buffer **MUST** respect the [common telemetry buffer requirements](#telemetry-buffer).
 
-For the telemetry span buffer, we recommend to use a map of [traceID to span buckets per trace](#buckets-per-traceid). SDKs may use alternatives, such as a fixed-ring buffer with tombstones. Regardless of the data structure, your SDK **MUST** meet these requirements:
+For the telemetry span buffer, we recommend using a map of [traceID to span buckets per trace](#buckets-per-traceid). SDKs may also use alternatives, such as a fixed-ring buffer with tombstones. Regardless of the data structure, your SDK **MUST** meet these requirements:
 
 1. When forwarding spans, the span buffer **MUST** forward only spans from a single trace, since each envelope supports only one traceID. This means that the span buffer might forward spans multiple times.
 2. When the span buffer overflows and it drops data, it **SHOULD** drop all spans from a single traceID rather than individual spans. Dropping individual spans creates incomplete traces that are harder to debug, whereas dropping a complete trace preserves the integrity of the remaining traces.
