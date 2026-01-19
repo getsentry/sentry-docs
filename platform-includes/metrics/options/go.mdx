@@ -1,0 +1,36 @@
+### Filtering and Modifying Metrics
+
+Use the `BeforeSendMetric` callback to filter or modify metrics before they're sent to Sentry. This is useful for:
+
+- Removing sensitive data from metric attributes
+- Dropping metrics you don't want to send
+- Adding or modifying attributes
+
+The callback receives a metric object and must return either a modified metric or `nil` to drop it.
+
+```go
+err := sentry.Init(sentry.ClientOptions{
+	Dsn: "___PUBLIC_DSN___",
+	BeforeSendMetric: func(metric *sentry.Metric) *sentry.Metric {
+		// Drop metrics with specific attributes
+		if _, ok := metric.Attributes["dropmetric"]; ok {
+			return nil
+		}
+
+		// Modify metric attributes
+		metric.Attributes["processed"] = true
+		return metric
+	},
+})
+```
+
+### Disabling Metrics
+
+If you want to disable metrics collection entirely, you can do so by setting `EnableMetrics` to `false`:
+
+```go
+err := sentry.Init(sentry.ClientOptions{
+	Dsn:           "___PUBLIC_DSN___",
+	EnableMetrics: false,
+})
+```

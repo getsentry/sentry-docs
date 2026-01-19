@@ -1,0 +1,82 @@
+Once you initialize the SDK, you can create a meter and send metrics using its methods.
+
+The meter exposes three methods that you can use to capture different types of metric information: `Count`, `Gauge`, and `Distribution`.
+
+```go
+import (
+	"context"
+	"github.com/getsentry/sentry-go"
+)
+
+meter := sentry.NewMeter(context.Background())
+```
+
+### Counter
+
+Use `Count` to track an incrementing value, such as the number of times a button was clicked or a function was called.
+
+```go
+meter.Count("button_click", 1)
+```
+
+### Gauge
+
+Use `Gauge` to track a value that can go up and down, such as the current memory usage or the number of items in a queue.
+
+```go
+meter.Gauge("queue_depth", 42.0)
+```
+
+### Distribution
+
+Use `Distribution` to track the distribution of a value, such as the response time of a request.
+
+```go
+meter.Distribution("response_time", 187.5)
+```
+
+### Adding Attributes
+
+You can pass additional attributes to any of the metric methods. Attributes allow you to filter and group metrics.
+
+```go
+import (
+	"github.com/getsentry/sentry-go/attribute"
+)
+
+meter.Distribution("page_load", 1.0,
+	sentry.WithUnit(sentry.UnitMillisecond),
+	sentry.WithAttributes(
+		attribute.String("browser", "Firefox"),
+	),
+)
+```
+
+### Specifying Units
+
+For `Gauge` and `Distribution` metrics, you can specify a unit using the `WithUnit` option. This helps Sentry display the metric value in a human-readable format.
+
+```go
+meter.Distribution("response_time", 187.5, sentry.WithUnit(sentry.UnitMillisecond))
+
+meter.Gauge("memory_usage", 1024.0, sentry.WithUnit(sentry.UnitByte))
+```
+
+### Linking Metrics to Traces
+
+Use `WithCtx` to link metrics to the current trace.
+
+```go
+func handler(w http.ResponseWriter, r *http.Request) {
+	// Use r.Context() and `WithCtx` to link the metric to the current request's span.
+	// The sentryhttp middleware adds the span to the request context.
+	meter.WithCtx(r.Context()).Count("page_views", 1,
+		sentry.WithAttributes(
+			attribute.String("path", r.URL.Path),
+			attribute.String("method", r.Method),
+		),
+	)
+
+	w.WriteHeader(http.StatusOK)
+}
+```
