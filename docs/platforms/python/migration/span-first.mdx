@@ -34,8 +34,8 @@ spans.
 
 ## New `start_span` API
 
-The `sentry_sdk.start_span()` API has been replaced by
-`sentry_sdk.tracing.start_span()`.
+The `sentry_sdk.start_span()`, `sentry_sdk.start_transaction()`, and
+`span.start_child()` APIs have been replaced by `sentry_sdk.tracing.start_span()`.
 
 ```python diff
   import sentry_sdk
@@ -81,8 +81,25 @@ The above is equivalent to:
 import sentry_sdk
 
 span = sentry_sdk.tracing.start_span(name="flow.checkout")
-# Do something...
+# Do something
 span.end()
+```
+
+### Other tracing API
+
+`<TODO: actually figure out the new @trace namespace>`
+
+The span-streaming-friendly version of the `@trace` decorator is accessible under
+`@sentry_sdk.tracing.trace` and accepts an optional `name` (defaulting to function
+name) and `attributes`.
+
+```python diff
+- from sentry_sdk import trace
++ from sentry_sdk.tracing import trace
+
+@trace(name="flow.checkout", attributes={"flow.pipeline": "legacy"})
+def checkout():
+    ...
 ```
 
 ## Attributes stored on spans
