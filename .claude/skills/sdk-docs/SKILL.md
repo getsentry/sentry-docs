@@ -1,8 +1,8 @@
 ---
 name: sdk-docs
 description: Generate user-facing SDK documentation for docs.sentry.io. Use after implementing SDK features, integrations, configuration options, or instrumentation guides.
-allowed-tools: Read Grep Glob Bash Write Edit Skill
-compatibility: Requires gh CLI (GitHub CLI) with authentication configured for fetching PR details from SDK repositories. Uses sentry-skills:commit and sentry-skills:create-pr skills for committing and creating pull requests following Sentry conventions (auto-installs from marketplace if not present).
+allowed-tools: Read Grep Glob Bash Write Edit Skill AskUserQuestion
+compatibility: Requires gh CLI (GitHub CLI) with authentication configured for fetching PR details from SDK repositories. Depends on sentry-skills:commit and sentry-skills:create-pr (auto-installs from marketplace if not present).
 ---
 
 # Sentry SDK Documentation Generator
