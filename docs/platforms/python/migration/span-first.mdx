@@ -37,21 +37,23 @@ spans.
 The `sentry_sdk.start_span()` API has been replaced by
 `sentry_sdk.tracing.start_span()`.
 
-```python
+```python diff
   import sentry_sdk
 
-- sentry_sdk.start_span(name="flow.checkout")
-+ sentry_sdk.tracing.start_span(name="flow.checkout")
+- with sentry_sdk.start_span(name="flow.checkout") as span:
++ with sentry_sdk.tracing.start_span(name="flow.checkout") as span:
+      ...
 ```
 
 The `sentry_sdk.start_transaction()` API doesn't exist anymore. Instead, use
 `sentry_sdk.tracing.start_span()`.
 
-```python
+```python diff
   import sentry_sdk
 
-- sentry_sdk.start_transaction(name="flow.checkout")
-+ sentry_sdk.tracing.start_span(name="flow.checkout")
+- with sentry_sdk.start_transaction(name="flow.checkout") as transaction:
++ with sentry_sdk.tracing.start_span(name="flow.checkout") as span:
+      ...
 ```
 
 The `sentry_sdk.tracing.start_span()` API requires a `name` argument, and also
@@ -67,10 +69,12 @@ The following is equivalent:
 import sentry_sdk
 
 with sentry_sdk.tracing.start_span(name="flow.checkout") as span:
-    # Do something
+    ... # Do something
 
 # The span ends once the with block is over
 ```
+
+`<TODO: how the non-context-manager version of this api will look is not 100% clear yet, please use the above example for now>`
 
 ```python
 import sentry_sdk
