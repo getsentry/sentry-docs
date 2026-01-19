@@ -221,7 +221,14 @@ Available in SDK version X.Y.Z+.
    )"
    ```
 
-4. **Create PR:**
+4. **Confirm before creating PR:**
+   - Show the user what was committed
+   - Display files changed: `git show --stat HEAD`
+   - Ask: "Documentation committed. Ready to create PR? (y/n)"
+   - If no: Stop here, user can review locally or run create-pr manually later
+   - If yes: Proceed to step 5
+
+5. **Create PR:**
    - Push branch to remote: `git push -u origin <branch-name>`
    - Invoke `sentry-skills:create-pr` skill to create PR in the **sentry-docs repository** (getsentry/sentry-docs)
    - **Critical:** Ensure you're in the sentry-docs repository directory before creating the PR
