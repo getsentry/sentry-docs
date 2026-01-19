@@ -2,7 +2,7 @@
 name: sdk-docs
 description: Generate user-facing SDK documentation for docs.sentry.io. Use after implementing SDK features, integrations, configuration options, or instrumentation guides.
 allowed-tools: Read Grep Glob Bash Write Edit Skill
-compatibility: Requires gh CLI (GitHub CLI) with authentication configured for fetching PR details from SDK repositories. Uses the sentry-skills:create-pr skill for creating pull requests following Sentry conventions.
+compatibility: Requires gh CLI (GitHub CLI) with authentication configured for fetching PR details from SDK repositories. Uses the sentry-skills:create-pr skill for creating pull requests following Sentry conventions (auto-installs from marketplace if not present).
 ---
 
 # Sentry SDK Documentation Generator
@@ -43,14 +43,20 @@ Generate user-facing documentation for docs.sentry.io showing users HOW TO USE i
 
 ## Instructions
 
-### Step 0: Prepare Git Branch
+### Step 0: Prepare Environment
 
-**Verify repository first:**
+**Install required skill if needed:**
+1. Check if marketplace is added: `claude plugin marketplace list`
+2. If `sentry-skills` marketplace not present, add it: `claude plugin marketplace add getsentry/skills`
+3. Check if create-pr skill is installed: `claude plugin list`
+4. If `sentry-skills:create-pr` not present, install it: `claude plugin install sentry-skills:create-pr`
+
+**Verify repository:**
 1. Check current repository: `git remote get-url origin`
 2. **Critical:** Verify you're in the `sentry-docs` repository (getsentry/sentry-docs)
 3. If in wrong repository, STOP and inform user that this skill must be run from the sentry-docs repository directory
 
-**Automatically prepare clean branch:**
+**Prepare clean branch:**
 1. Check status: `git branch --show-current && git status --short`
 2. Auto-stash uncommitted changes: `git stash push -m "Auto-stash before sdk-docs"` (inform user, can restore with `git stash pop`)
 3. Auto-switch to main: Detect branch with `git remote show origin | sed -n '/HEAD branch/s/.*: //p'`, then `git checkout <detected-branch>`
@@ -229,7 +235,6 @@ Available in SDK version X.Y.Z+.
 5. **Create PR:**
    - Push branch to remote: `git push -u origin <branch-name>`
    - Invoke `sentry-skills:create-pr` skill to create PR in the **sentry-docs repository** (getsentry/sentry-docs)
-   - **Critical:** Ensure you're in the sentry-docs repository directory before creating the PR
    - Inform user of PR URL and live docs URL: `https://docs.sentry.io/platforms/{sdk}/{path}/`
 
 **Error handling:** PR not accessible? Suggest `gh auth login`. No similar docs? Adapt from other SDKs. Docs exist? Ask to update or create new. Linter fails? Show errors and ask for guidance.
