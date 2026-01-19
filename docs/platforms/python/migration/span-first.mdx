@@ -109,33 +109,39 @@ span attribute. It's therefore necessary to migrate all existing
 `span.set_data()`, `span.set_context()`, and `span.set_tag()` to
 `span.set_attribute()`.
 
+Replacing `set_data()`:
+
 ```python diff
 import sentry_sdk
 
 - with sentry_sdk.start_span(name="flow.checkout.process") as span:
-+ with sentry_sdk.tracing.start_span(name="flow.checkout.process") as span:
 -     span.set_data("flow.step", "submit_payment")
++ with sentry_sdk.tracing.start_span(name="flow.checkout.process") as span:
 +     span.set_attribute("flow.step", "submit_payment")
 ```
 
+Replacing `set_context()`:
+
 ```python diff
 import sentry_sdk
 
 - with sentry_sdk.start_span(name="flow.checkout.process") as span:
-+ with sentry_sdk.tracing.start_span(name="flow.checkout.process") as span:
 -     span.set_context("flow", {"id": "123456789", "pipeline": "legacy"})
++ with sentry_sdk.tracing.start_span(name="flow.checkout.process") as span:
 +     # Dictionaries are not allowed as attribute values, so take the original
 +     # context apart:
 +     span.set_attribute("flow.id", "123456789")
 +     span.set_attribute("flow.pipeline", "legacy")
 ```
 
+Replacing `set_tag()`:
+
 ```python diff
 import sentry_sdk
 
 - with sentry_sdk.start_span(name="flow.checkout.process") as span:
-+ with sentry_sdk.tracing.start_span(name="flow.checkout.process") as span:
 -     span.set_tag("http.status_code", 201)
++ with sentry_sdk.tracing.start_span(name="flow.checkout.process") as span:
 +     span.set_attribute("http.response.status_code", 201)
 ```
 
