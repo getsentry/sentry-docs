@@ -68,7 +68,7 @@ Handle three scenarios:
 1. Extract repo, PR number, SDK from URL
 2. Fetch PR: `gh pr view <PR_NUM> --repo <REPO> --json title,body,files,state`
 3. **Auto-detect doc type** from PR changes:
-   - Files with paths containing "integration" and extensions .py, .rb, .js, or .go → **integration**
+   - File paths containing "integration" or "integrations" → **integration**
    - Changes to files containing "client", "init", or "config" with new parameters → **configuration_option**
    - New span/trace/instrumentation code → **feature**
    - If unclear, default to **feature** and inform user
