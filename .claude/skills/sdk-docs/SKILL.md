@@ -222,11 +222,9 @@ Available in SDK version X.Y.Z+.
    ```
 
 4. **Confirm before creating PR:**
-   - Show the user what was committed
-   - Display files changed: `git show --stat HEAD`
-   - Ask: "Documentation committed. Ready to create PR? (y/n)"
-   - If no: Stop here, user can review locally or run create-pr manually later
-   - If yes: Proceed to step 5
+   - Show the user what was committed: `git show --stat HEAD`
+   - Ask user to confirm before proceeding (use AskUserQuestion)
+   - If confirmed, proceed to create PR; otherwise stop
 
 5. **Create PR:**
    - Push branch to remote: `git push -u origin <branch-name>`
