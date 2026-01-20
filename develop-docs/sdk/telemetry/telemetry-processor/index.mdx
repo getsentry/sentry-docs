@@ -91,6 +91,22 @@ The telemetry buffer batches high-volume data and forwards it to the telemetry s
 1. Before adding an item to a specific buffer, the telemetry buffer **SHOULD** drop rate-limited items to avoid overhead. If doing so, it **MUST** record client reports.
 2. When the telemetry buffer overflows and it drops data, it **MUST** record client reports.
 3. The telemetry buffer **MUST** forward low-volume data, such as normal events, session replays, or user feedback, directly to the telemetry scheduler.
+4. The telemetry buffer **MUST** start a timeout of 5 seconds when the first item is added. When the timeout expires, the telemetry buffer **MUST** forward all items to the telemetry scheduler.
+5. The telemetry buffer **MUST** define a size limit of `x` items. See [Size Limit Recommendations](#size-limit-recommendations) below for more details.
+6. When the size limit is reached, the telemetry buffer **MUST** forward all items to the telemetry scheduler. The buffer **MAY** forward items in batches.
+
+
+## Size Limit Recommendations
+
+We recommend starting with 100 items for logs, metrics, and spans for `x`, which is the maximum number of items the buffer can hold. SDKs **MAY** choose different values based on their needs, but they **SHOULD** respect the max suggested `x` values:
+
+| Data type | Max suggested x |
+| --- | --- |
+| Logs | ~1150 |
+| Metrics |  ~1800 (Each metric **MUST** be `<= 2 KiB` or Relay drops the entire envelope) |
+| Spans | ~1300 |
+
+Here is the reasoning behind the max numbers. Using the example payloads in [Logs](/sdk/telemetry/logs/#appendix-a-example-log-envelope), [Metrics](/sdk/telemetry/metrics/#appendix-a-example-trace_metric-envelope), and the [Span Protocol](/sdk/telemetry/spans/span-protocol/#span-v2-envelope-item-payload), the average serialized item sizes are ~730 B (log), ~460 B (metric), and ~630 B (span). Applying a 20% safety buffer against the Relay [envelope size limits](/sdk/data-model/envelopes/#size-limits) yields the maximum suggested x values.
 
 ## Data Forwarding Scenarios
 
@@ -99,6 +115,32 @@ The telemetry buffer **MUST** forward all data in memory to the telemetry schedu
 1. When the user calls `SentrySDK.flush()`, the telemetry buffer **MUST** forward all data in memory to the telemetry scheduler, and only then **SHOULD**  the telemetry scheduler flush the data.
 2. When the user calls  `SentrySDK.close()`, the telemetry buffer **MUST** forward all data in memory to the telemetry scheduler. SDKs **SHOULD** keep their existing closing behavior.
 3. When the application shuts down gracefully, the telemetry buffer **MUST** forward all data in memory to the telemetry scheduler.
+
+## Span Buffer
+
+Spans require a dedicated buffer because we can only send spans from a single trace per envelope. Still, the span buffer **MUST** respect the [common telemetry buffer requirements](#telemetry-buffer).
+
+For the telemetry span buffer, we recommend using a map of [traceID to span buckets per trace](#buckets-per-traceid). SDKs may also use alternatives, such as a fixed-ring buffer with tombstones. Regardless of the data structure, your SDK **MUST** meet these requirements:
+
+1. When forwarding spans, the span buffer **MUST** forward only spans from a single trace, since each envelope supports only one traceID. This means that the span buffer might forward spans multiple times.
+2. When the span buffer overflows and it drops data, it **SHOULD** drop all spans from a single traceID rather than individual spans. Dropping individual spans creates incomplete traces that are harder to debug, whereas dropping a complete trace preserves the integrity of the remaining traces.
+
+### Buckets per TraceID
+
+The span buffer is a map where each key is a traceID and each value is a list of spans.
+```
+spanBuffer = {
+  "trace-a": [span1, span2, span3],
+  "trace-b": [span4],
+  "trace-c": [span5, span6]
+}
+```
+
+Here are the requirements for the buckets per traceID:
+
+1. When the span buffer adds a span, it **MUST** add it to the bucket with the traceID of the span.
+2. When the span buffer doesn't have a bucket for the traceID, it **MUST** create a new bucket for this traceID.
+3. After forwarding the spans, the span buffer **MUST** remove all spans from the bucket and delete the bucket.
 
 # Telemetry Scheduler
 
@@ -117,9 +159,28 @@ Here are the common requirements for all platforms:
 To be defined: How exactly does the telemetry scheduler interact with the transport to correctly remove items from the telemetry queue based on the received HTTP info and how to adhere to the [dealing with network failure](/sdk/expected-features/#dealing-with-network-failures) requirements.
 
 
-# Client Reports and Rate Limiting
+# Rate Limiting
 
-To be defined: We still need to define how the transport, client and the telemetry processor interact with client reports and rate limiting.
+As mentioned above, the telemetry buffer **SHOULD** drop rate-limited data to reduce overhead, and the telemetry scheduler **MUST** drop rate-limited envelopes before forwarding them to the transport. To do this, the telemetry processor **MUST** have access to active rate limits. If your SDKs keep track of active rate limits in the transport, we recommend extracting them from the transport and making them available to the telemetry processor. Ideally, the transport is unaware of rate limits and only passes update information to the rate limits class, which manages updates.
+
+It's worth noting that [rate limits](/sdk/expected-features/rate-limiting/) **MUST** still be tracked per each DSN. Whatever bookkeeping you do to track rate limits, it **MUST** be done per each DSN.
+
+The following diagram shows how the telemetry processor interacts with the transport and rate limits. SDKs can choose to implement RateLimits inside or outside the telemetry processor, based on their needs.
+
+```mermaid
+flowchart LR
+
+  RateLimits["RateLimits"]
+
+  subgraph TelemetryProcessor
+    TelemetryBuffer
+    TelemetryScheduler
+  end
+
+  TelemetryBuffer -- "checks active rate limits" --> RateLimits
+  TelemetryScheduler -- "checks active rate limits" --> RateLimits
+  Transport -- "reports HTTP responses" --> RateLimits
+```
 
 # Platform Specific Requirements
 
