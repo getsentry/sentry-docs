@@ -51,6 +51,7 @@ Generate user-facing documentation for docs.sentry.io showing users HOW TO USE i
 3. Check if required skills are installed: `claude plugin list`
 4. If `sentry-skills:commit` not present, install it: `claude plugin install sentry-skills:commit`
 5. If `sentry-skills:create-pr` not present, install it: `claude plugin install sentry-skills:create-pr`
+6. **CRITICAL:** If any skills were installed in steps 4-5, inform user they **MUST restart Claude Code** for the skills to become available. The skill cannot proceed until restart is complete. After restart, the user should re-run the sdk-docs skill.
 
 **Verify repository:**
 1. Check current repository: `git remote get-url origin`
