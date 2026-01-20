@@ -110,7 +110,8 @@ export function DocFeedback({pathname}: Props) {
                 </div>
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium mb-2">
-                    Email <span className="text-[var(--gray-9)] font-normal">(optional)</span>
+                    Email{' '}
+                    <span className="text-[var(--gray-9)] font-normal">(optional)</span>
                   </label>
                   <input
                     type="email"
