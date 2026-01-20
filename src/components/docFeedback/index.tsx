@@ -36,11 +36,13 @@ export function DocFeedback({pathname}: Props) {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const comments = formData.get('comments') as string;
+    const email = formData.get('email') as string;
 
     try {
       Sentry.captureFeedback(
         {
           message: comments,
+          email: email || undefined,
           url: window.location.href,
         },
         {captureContext: {tags: {page: pathname, type: feedbackType}}}
@@ -87,12 +89,12 @@ export function DocFeedback({pathname}: Props) {
 
             <div
               className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                showFeedback ? 'max-h-[300px] opacity-100' : 'max-h-0 opacity-0'
+                showFeedback ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
               }`}
             >
               <form onSubmit={handleSubmitFeedback} className="space-y-4">
                 <div>
-                  <label htmlFor="comments" className="block text-sm font-medium mb-4">
+                  <label htmlFor="comments" className="block text-sm font-medium mb-2">
                     {feedbackType === 'helpful'
                       ? 'What did you like about this page?'
                       : 'How can we improve this page?'}
@@ -106,13 +108,27 @@ export function DocFeedback({pathname}: Props) {
                     placeholder="Please share your thoughts..."
                   />
                 </div>
-                <Button
-                  type="submit"
-                  className="px-4 py-2 text-sm rounded-lg bg-[var(--accent-purple)]"
-                  size={'3'}
-                >
-                  Submit feedback
-                </Button>
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium mb-2">
+                    Email <span className="text-[var(--gray-9)] font-normal">(optional)</span>
+                  </label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    className="w-[calc(100%-4px)] ml-[2px] px-3 py-2 border border-[var(--gray-6)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent)] bg-transparent text-sm"
+                    placeholder="your@email.com"
+                  />
+                </div>
+                <div className="pt-2">
+                  <Button
+                    type="submit"
+                    className="px-4 py-2 text-sm rounded-lg bg-[var(--accent-purple)]"
+                    size={'3'}
+                  >
+                    Submit feedback
+                  </Button>
+                </div>
               </form>
             </div>
           </Fragment>
