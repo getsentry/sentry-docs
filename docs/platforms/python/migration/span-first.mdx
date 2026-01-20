@@ -170,9 +170,35 @@ import sentry_sdk
 +     span.set_attribute("http.response.status_code", 201)
 ```
 
+### Applying Data from Scope
+
+Note that since spans no longer support tags, tags set on the scope with the
+global `sentry_sdk.set_tag()` API will not be applied to spans. You can use the
+the `scope.set_attribute()` API to set attributes on the scope -- spans captured
+in that scope will inherit them.
+
+```python diff
+  import sentry_sdk
+
+  sentry_sdk.set_tag("region", "Europe")
++ scope = sentry_sdk.get_global_scope()
++ scope.set_attribute("region", "Europe")
+```
+
+In the above example, the tag will be applied to all telemetry that supports
+tags, while the attribute will be applied to all telemetry that supports
+attributes (streaming spans, logs, metrics).
+
+Use the global scope if you want the attribute to be applied to all telemetry
+over the lifecycle of your program. If you need to only apply it to a specific
+subset of telemetry, use the isolation or the current scope. See [the Scopes
+documentation](/platforms/python/enriching-events/scopes/)
+for more details.
+
 ## Other Span Properties
 
 `<TODO: span.set_status(), anything else?>`
+
 
 ## Trace Propagation
 
