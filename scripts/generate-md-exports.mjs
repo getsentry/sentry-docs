@@ -2,6 +2,7 @@
 /* eslint-disable no-console */
 import {ListObjectsV2Command, PutObjectCommand, S3Client} from '@aws-sdk/client-s3';
 import imgLinks from '@pondorasti/remark-img-links';
+import * as Sentry from '@sentry/node';
 import {selectAll} from 'hast-util-select';
 import {createHash} from 'node:crypto';
 import {createReadStream, createWriteStream, existsSync} from 'node:fs';
@@ -27,10 +28,21 @@ import remarkStringify from 'remark-stringify';
 import {unified} from 'unified';
 import {remove} from 'unist-util-remove';
 
+// Initialize Sentry for build-time tracing (main thread only)
+if (isMainThread && process.env.NEXT_PUBLIC_SENTRY_DSN) {
+  Sentry.init({
+    dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+    tracesSampleRate: 1.0,
+    environment: process.env.VERCEL_ENV || process.env.NODE_ENV || 'development',
+    release: process.env.VERCEL_GIT_COMMIT_SHA,
+    integrations: [],
+  });
+}
+
 const DOCS_ORIGIN = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
   ? 'https://develop.sentry.dev'
   : 'https://docs.sentry.io';
-const CACHE_VERSION = 3;
+const CACHE_VERSION = 4;
 const CACHE_COMPRESS_LEVEL = 4;
 const R2_BUCKET = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
   ? 'sentry-develop-docs'
@@ -61,10 +73,18 @@ async function uploadToCFR2(s3Client, relativePath, data) {
   return;
 }
 
-// Global set to track which cache files are used across all workers
+// Global tracking for cache files and stats across all workers
 let globalUsedCacheFiles = null;
+let globalCacheStats = {hits: 0, misses: 0};
 
-function taskFinishHandler({id, success, failedTasks, usedCacheFiles}) {
+function taskFinishHandler({
+  id,
+  success,
+  failedTasks,
+  usedCacheFiles,
+  cacheHits,
+  cacheMisses,
+}) {
   // Collect cache files used by this worker into the global set
   if (usedCacheFiles && globalUsedCacheFiles) {
     console.log(`🔍 Worker[${id}]: returned ${usedCacheFiles.size} cache files.`);
@@ -74,6 +94,10 @@ function taskFinishHandler({id, success, failedTasks, usedCacheFiles}) {
       `⚠️ Worker[${id}]: usedCacheFiles=${!!usedCacheFiles}, globalUsedCacheFiles=${!!globalUsedCacheFiles}`
     );
   }
+
+  // Aggregate cache stats
+  globalCacheStats.hits += cacheHits || 0;
+  globalCacheStats.misses += cacheMisses || 0;
 
   if (failedTasks.length === 0) {
     console.log(`✅ Worker[${id}]: converted ${success} files successfully.`);
@@ -403,16 +427,57 @@ ${
 
   console.log(`📄 Generated ${numFiles} markdown files from HTML.`);
   console.log('✅ Markdown export generation complete!');
+
+  // Record cache metrics to Sentry for build observability
+  const totalFiles = globalCacheStats.hits + globalCacheStats.misses;
+  const hitRate = totalFiles > 0 ? globalCacheStats.hits / totalFiles : 0;
+  Sentry.setMeasurement('cache.hits', globalCacheStats.hits, 'none');
+  Sentry.setMeasurement('cache.misses', globalCacheStats.misses, 'none');
+  Sentry.setMeasurement('cache.hit_rate', hitRate, 'ratio');
+  Sentry.setMeasurement('files.total', numFiles, 'none');
+  console.log(
+    `📊 Overall cache stats: ${globalCacheStats.hits} hits, ${globalCacheStats.misses} misses (${(hitRate * 100).toFixed(1)}% hit rate)`
+  );
 }
 
 const md5 = data => createHash('md5').update(data).digest('hex');
 
+/**
+ * Strips build-specific elements from HTML for stable cache keys and faster processing.
+ *
+ * Next.js build output contains non-deterministic elements that change between builds
+ * even when content is unchanged:
+ * - <script> tags: RSC/Flight payloads, JS chunk references with content hashes
+ * - <link> tags referencing /_next/static/: CSS files, fonts, JS preloads with hashes
+ * - <style> tags with href: inlined CSS with build-specific hash in href attribute
+ *
+ * These elements are irrelevant for markdown generation (we only use title, canonical
+ * link, and div#main content), so stripping them:
+ * 1. Makes cache keys stable across builds
+ * 2. Speeds up HTML parsing by reducing input size significantly
+ *
+ * We use regex instead of proper HTML parsing for performance - this runs on every file
+ * and regex is much faster. The input is trusted (Next.js build output), and worst case
+ * for any regex edge cases is a cache miss, which is acceptable.
+ */
+function stripUnstableElements(html) {
+  return (
+    html
+      // Remove script tags (RSC payloads, JS chunk references)
+      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+      // Remove link tags referencing Next.js build assets (CSS, fonts, JS preloads)
+      .replace(/<link[^>]*\/_next\/[^>]*>/gi, '')
+      // Remove style tags with href attribute (inlined CSS with build hashes)
+      .replace(/<style[^>]*href="[^"]*"[^>]*>[\s\S]*?<\/style>/gi, '')
+  );
+}
+
 async function genMDFromHTML(source, target, {cacheDir, noCache, usedCacheFiles}) {
   const rawHTML = await readFile(source, {encoding: 'utf8'});
-  // Note: Scripts in the HTML may cause cache misses between builds since they
-  // contain build-specific hashes. We accept this trade-off to avoid regex-based
-  // script stripping which triggers CodeQL security warnings.
-  const cacheKey = `v${CACHE_VERSION}_${md5(rawHTML)}`;
+  // Strip build-specific elements for stable cache keys and faster parsing.
+  // See stripUnstableElements() for details on what's removed and why.
+  const strippedHTML = stripUnstableElements(rawHTML);
+  const cacheKey = `v${CACHE_VERSION}_${md5(strippedHTML)}`;
   const cacheFile = path.join(cacheDir, cacheKey);
   if (!noCache) {
     try {
@@ -437,12 +502,9 @@ async function genMDFromHTML(source, target, {cacheDir, noCache, usedCacheFiles}
   const data = String(
     await unified()
       .use(rehypeParse)
-      // Remove all script elements (they're not needed in markdown and aren't stable across builds)
-      .use(() => tree => {
-        remove(tree, {tagName: 'script'});
-        return tree;
-      })
-      // Need the `head > title` selector for the headers
+      // Select only the elements we need for markdown (title, canonical URL, main content).
+      // Build-specific elements (scripts, CSS links, etc.) are already stripped by
+      // stripUnstableElements() above, so we don't need to remove them here.
       .use(
         () => tree =>
           selectAll('head > title, head > link[rel="canonical"], div#main', tree)
@@ -500,7 +562,7 @@ async function genMDFromHTML(source, target, {cacheDir, noCache, usedCacheFiles}
       .use(() => tree => remove(tree, {type: 'inlineCode', value: ''}))
       .use(remarkGfm)
       .use(remarkStringify)
-      .process(rawHTML)
+      .process(strippedHTML)
   );
   const reader = Readable.from(data);
 
@@ -595,6 +657,8 @@ async function processTaskList({id, tasks, cacheDir, noCache, usedCacheFiles}) {
     success,
     failedTasks,
     usedCacheFiles,
+    cacheHits,
+    cacheMisses: cacheMisses.length,
   };
 }
 
@@ -603,7 +667,22 @@ async function doWork(work) {
 }
 
 if (isMainThread) {
-  await createWork();
+  // Wrap the main work in a Sentry span for tracing
+  await Sentry.startSpan(
+    {
+      name: 'generate-md-exports',
+      op: 'build.task',
+      attributes: {
+        'build.cache_version': CACHE_VERSION,
+      },
+    },
+    async () => {
+      await createWork();
+    }
+  );
+
+  // Flush Sentry to ensure all events are sent before the script exits
+  await Sentry.flush(5000);
 } else {
   await doWork(workerData);
 }
