@@ -30,7 +30,7 @@ import {remove} from 'unist-util-remove';
 const DOCS_ORIGIN = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
   ? 'https://develop.sentry.dev'
   : 'https://docs.sentry.io';
-const CACHE_VERSION = 3;
+const CACHE_VERSION = 4;
 const CACHE_COMPRESS_LEVEL = 4;
 const R2_BUCKET = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
   ? 'sentry-develop-docs'
@@ -407,12 +407,42 @@ ${
 
 const md5 = data => createHash('md5').update(data).digest('hex');
 
+/**
+ * Strips build-specific elements from HTML for stable cache keys and faster processing.
+ *
+ * Next.js build output contains non-deterministic elements that change between builds
+ * even when content is unchanged:
+ * - <script> tags: RSC/Flight payloads, JS chunk references with content hashes
+ * - <link> tags referencing /_next/static/: CSS files, fonts, JS preloads with hashes
+ * - <style> tags with href: inlined CSS with build-specific hash in href attribute
+ *
+ * These elements are irrelevant for markdown generation (we only use title, canonical
+ * link, and div#main content), so stripping them:
+ * 1. Makes cache keys stable across builds
+ * 2. Speeds up HTML parsing by reducing input size significantly
+ *
+ * We use regex instead of proper HTML parsing for performance - this runs on every file
+ * and regex is much faster. The input is trusted (Next.js build output), and worst case
+ * for any regex edge cases is a cache miss, which is acceptable.
+ */
+function stripUnstableElements(html) {
+  return (
+    html
+      // Remove script tags (RSC payloads, JS chunk references)
+      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+      // Remove link tags referencing Next.js build assets (CSS, fonts, JS preloads)
+      .replace(/<link[^>]*\/_next\/[^>]*>/gi, '')
+      // Remove style tags with href attribute (inlined CSS with build hashes)
+      .replace(/<style[^>]*href="[^"]*"[^>]*>[\s\S]*?<\/style>/gi, '')
+  );
+}
+
 async function genMDFromHTML(source, target, {cacheDir, noCache, usedCacheFiles}) {
   const rawHTML = await readFile(source, {encoding: 'utf8'});
-  // Note: Scripts in the HTML may cause cache misses between builds since they
-  // contain build-specific hashes. We accept this trade-off to avoid regex-based
-  // script stripping which triggers CodeQL security warnings.
-  const cacheKey = `v${CACHE_VERSION}_${md5(rawHTML)}`;
+  // Strip build-specific elements for stable cache keys and faster parsing.
+  // See stripUnstableElements() for details on what's removed and why.
+  const strippedHTML = stripUnstableElements(rawHTML);
+  const cacheKey = `v${CACHE_VERSION}_${md5(strippedHTML)}`;
   const cacheFile = path.join(cacheDir, cacheKey);
   if (!noCache) {
     try {
@@ -437,12 +467,9 @@ async function genMDFromHTML(source, target, {cacheDir, noCache, usedCacheFiles}
   const data = String(
     await unified()
       .use(rehypeParse)
-      // Remove all script elements (they're not needed in markdown and aren't stable across builds)
-      .use(() => tree => {
-        remove(tree, {tagName: 'script'});
-        return tree;
-      })
-      // Need the `head > title` selector for the headers
+      // Select only the elements we need for markdown (title, canonical URL, main content).
+      // Build-specific elements (scripts, CSS links, etc.) are already stripped by
+      // stripUnstableElements() above, so we don't need to remove them here.
       .use(
         () => tree =>
           selectAll('head > title, head > link[rel="canonical"], div#main', tree)
@@ -500,7 +527,7 @@ async function genMDFromHTML(source, target, {cacheDir, noCache, usedCacheFiles}
       .use(() => tree => remove(tree, {type: 'inlineCode', value: ''}))
       .use(remarkGfm)
       .use(remarkStringify)
-      .process(rawHTML)
+      .process(strippedHTML)
   );
   const reader = Readable.from(data);
 
