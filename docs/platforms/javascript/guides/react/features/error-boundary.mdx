@@ -7,7 +7,18 @@ description: >-
 og_image: /og-images/platforms-javascript-guides-react-features-error-boundary.png
 ---
 
-The React SDK exports an error boundary component that leverages [React component APIs](https://reactjs.org/docs/error-boundaries.html) to automatically catch and send JavaScript errors from inside a React component tree to Sentry.
+<Alert level="info" title="Using React 19+?">
+
+For React 19 and above, we recommend using `Sentry.reactErrorHandler()` with React's built-in error hooks (`onUncaughtError`, `onCaughtError`, `onRecoverableError`) for more comprehensive error coverage. See the [getting started guide](../) for setup instructions.
+
+The `ErrorBoundary` component described on this page is useful for:
+- React 18 and below
+- Granular error handling in specific component subtrees
+- Custom fallback UIs for specific sections of your app
+
+</Alert>
+
+The React SDK exports an error boundary component that leverages [React component APIs](https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary) to automatically catch and send JavaScript errors from inside a React component tree to Sentry.
 
 ## Configure
 
@@ -51,14 +62,12 @@ const myFallback = <FallbackComponent />;
 // Alternatively:
 // const myFallback = () => <FallbackComponent />;
 
-class App extends React.Component {
-  render() {
-    return (
-      <Sentry.ErrorBoundary fallback={myFallback} showDialog>
-        <Example />
-      </Sentry.ErrorBoundary>
-    );
-  }
+function App() {
+  return (
+    <Sentry.ErrorBoundary fallback={myFallback} showDialog>
+      <Example />
+    </Sentry.ErrorBoundary>
+  );
 }
 
 export default App;
@@ -72,7 +81,7 @@ By default React [logs all errors to the console](https://github.com/facebook/re
 
 ## Linked Errors
 
-In [React v17 and above](https://reactjs.org/blog/2020/08/10/react-v17-rc.html#native-component-stacks), the SDK will automatically parse the [error boundary `componentStack`](https://react.dev/reference/react/Component#componentdidcatch-parameters) and attach the full stacktrace to the event via `error.cause`. This requires the [`LinkedErrors`](../../configuration/integrations/linkederrors/) integration to be enabled (enabled by default). To get the full source context, we recommend setting up [source maps](../../sourcemaps) for your project.
+In React v17 and above, the SDK will automatically parse the [error boundary `componentStack`](https://react.dev/reference/react/Component#componentdidcatch-parameters) and attach the full stacktrace to the event via `error.cause`. This requires the [`LinkedErrors`](../../configuration/integrations/linkederrors/) integration to be enabled (enabled by default). To get the full source context, we recommend setting up [source maps](../../sourcemaps) for your project.
 
 ![React Error Boundary stacktrace](./img/errorboundary-error.png)
 
@@ -106,64 +115,49 @@ A function that gets called on ErrorBoundary `componentWillUnmount()`.
 
 `beforeCapture` (Function)
 
-_(Available in version 5.20.0 and above)_
-
 A function that gets called before an error is sent to Sentry, allowing for extra tags or context to be added to the error.
 
 ## Examples
 
 #### Setting a Fallback Function (Render Props)
 
-Below is an example where a fallback prop, using the [render props approach](https://reactjs.org/docs/render-props.html), is used to display a fallback UI on error. The fallback UI returns to a standard component state when reset using the `resetError()` API provided by the component through render props.
+Below is an example where a fallback prop, using the [render props approach](https://react.dev/reference/react/cloneElement#passing-data-with-a-render-prop), is used to display a fallback UI on error. The fallback UI returns to a standard component state when reset using the `resetError()` API provided by the component through render props.
 
 ```javascript
-import React from "react";
+import React, { useState } from "react";
 import * as Sentry from "@sentry/react";
 
-class App extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      message: "This is my app",
-    };
-  }
+function App() {
+  const [message, setMessage] = useState("This is my app");
 
-  render() {
-    return (
-      <Sentry.ErrorBoundary
-        fallback={({ error, componentStack, resetError }) => (
-          <React.Fragment>
-            <div>You have encountered an error</div>
-            <div>{error.toString()}</div>
-            <div>{componentStack}</div>
-            <button
-              onClick={() => {
-                this.setState({ message: "This is my app" });
-                {
-                  /* When resetError() is called it will remove the Fallback component */
-                }
-                {
-                  /* and render the Sentry ErrorBoundary's children in their initial state */
-                }
-                resetError();
-              }}
-            >
-              Click here to reset!
-            </button>
-          </React.Fragment>
-        )}
-      >
-        <div>{this.state.message}</div>
-        {/* on click, this button sets an Object as a message, not a string. */}
-        {/* which will cause an error to occur in the component tree */}
-        <button
-          onClick={() => this.setState({ message: { text: "Hello World" } })}
-        >
-          Click here to change message!
-        </button>
-      </Sentry.ErrorBoundary>
-    );
-  }
+  return (
+    <Sentry.ErrorBoundary
+      fallback={({ error, componentStack, resetError }) => (
+        <React.Fragment>
+          <div>You have encountered an error</div>
+          <div>{error.toString()}</div>
+          <div>{componentStack}</div>
+          <button
+            onClick={() => {
+              setMessage("This is my app");
+              {/* When resetError() is called it will remove the Fallback component */}
+              {/* and render the Sentry ErrorBoundary's children in their initial state */}
+              resetError();
+            }}
+          >
+            Click here to reset!
+          </button>
+        </React.Fragment>
+      )}
+    >
+      <div>{message}</div>
+      {/* on click, this button sets an Object as a message, not a string. */}
+      {/* which will cause an error to occur in the component tree */}
+      <button onClick={() => setMessage({ text: "Hello World" })}>
+        Click here to change message!
+      </button>
+    </Sentry.ErrorBoundary>
+  );
 }
 
 export default App;
@@ -206,7 +200,14 @@ export default App;
 
 If you don't want to use the Sentry Error Boundary component, you can use the `captureReactException` function to capture errors manually with your own Error Boundary. This will still ensure that the `componentStack` is linked to the error as detailed in the [Linked Errors](#linked-errors) section. The `Sentry.captureReactException` function requires React SDK `v9.8.0` or above.
 
+<Alert>
+
+Custom error boundaries in React **must be class components** — this is a React requirement, not a Sentry limitation. React does not provide a hook-based API for error boundaries.
+
+</Alert>
+
 ```javascript
+import React from "react";
 import * as Sentry from "@sentry/react";
 
 class ErrorBoundary extends React.Component {
