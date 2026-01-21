@@ -40,9 +40,9 @@ export function makeKeywordsClickable(
 
     if (ORG_AUTH_TOKEN_REGEX.test(child)) {
       makeOrgAuthTokenClickable(arr, child);
-    } else if (SDK_PACKAGE_REGEX.test(child) && sdkPackage) {
-      // Simple string replacement for SDK package
-      arr.push(child.replace(SDK_PACKAGE_REGEX, sdkPackage));
+    } else if (SDK_PACKAGE_REGEX.test(child)) {
+      // Simple string replacement for SDK package (fallback to @sentry/browser on non-platform pages)
+      arr.push(child.replace(SDK_PACKAGE_REGEX, sdkPackage || '@sentry/browser'));
     } else if (KEYWORDS_REGEX.test(child)) {
       const isDSNKeyword = /___PUBLIC_DSN___/.test(child);
       makeProjectKeywordsClickable(arr, child, isDSNKeyword);
