@@ -5,13 +5,14 @@ import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
 
 /**
  * Recursively extracts all slugs (paths) from a DocNode tree.
- * This traverses the entire tree and collects the path from each node.
+ * This traverses the entire tree and collects the path from each node,
+ * excluding synthetic nodes (nodes with missing: true).
  */
 function extractSlugsFromDocTree(node: DocNode): string[] {
   const slugs: string[] = [];
 
-  // Add current node's path (skip root which has empty path)
-  if (node.path && node.path !== '/') {
+  // Add current node's path (skip root, empty paths, and synthetic nodes)
+  if (node.path && node.path !== '/' && !node.missing) {
     slugs.push(node.path);
   }
 
