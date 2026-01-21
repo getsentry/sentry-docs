@@ -15,19 +15,26 @@ title: Span Trace Propagation
 To continue a trace from an upstream service, the SDK must expose a method to extract the traceparent and baggage information and apply these to the applicable scope. The method MUST NOT create a new segment span on its own.
 
 ```js
-scope.setPropagationContext({
-    traceparent: request.headers.SENTRY_TRACE,
-    baggage: request.headers.SENTRY_BAGGAGE,
+Sentry.continueTrace({
+  sentryTrace: request.headers['sentry-trace'],
+  baggage: request.headers['baggage'],
+}, () => {
+  Sentry.startSpan({ name: 'test' }, () => {
+    // ....
+  });
 })
 ```
 
 ```python
-import sentry_sdk
-
 sentry_sdk.continue_trace(request.headers)
+
+with sentry_sdk.start_span(name="test"):
+    ...
 ```
 
 Newly created root spans should now contain these properties, such as `trace_id` and `parent_span_id`.
+
+The exact function signature of the `continueTrace` function depends on what's canonical in your SDK. It MAY require explicitly passing `sentry-trace` and `baggage`, or it MAY allow providing a dictionary of headers/environment variables.
 
 ## Continue an outgoing trace
 
@@ -38,9 +45,24 @@ traceparent = scope.getTraceparent()
 baggage = scope.getBaggage()
 ```
 
+```python
+traceparent = sentry_sdk.get_traceparent()
+baggage = sentry_sdk.get_baggage()
+```
+
 ## Starting a new trace
 
 The SDK MUST offer a method to clear trace propagation data, allowing to create spans with a fresh new trace.
+
+```js
+Sentry.startNewTrace(() => {
+  Sentry.startSpan('segment under trace 1');
+})
+
+Sentry.startNewTrace(() => {
+  Sentry.startSpan('segment under trace 2');
+})
+```
 
 ```python
 import sentry_sdk
