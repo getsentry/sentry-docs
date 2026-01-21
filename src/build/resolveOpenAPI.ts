@@ -4,7 +4,28 @@
 
 import {promises as fs} from 'fs';
 
+import rehypeStringify from 'rehype-stringify';
+import remarkGfm from 'remark-gfm';
+import remarkParse from 'remark-parse';
+import remarkRehype from 'remark-rehype';
+import {unified} from 'unified';
+
 import {DeRefedOpenAPI} from './open-api/types';
+
+/**
+ * Compile markdown to HTML at build time.
+ * This avoids needing esbuild/mdx-bundler at runtime.
+ * Fixes: DOCS-A3H
+ */
+async function compileMarkdownToHtml(markdown: string): Promise<string> {
+  const result = await unified()
+    .use(remarkParse)
+    .use(remarkGfm)
+    .use(remarkRehype)
+    .use(rehypeStringify)
+    .process(markdown);
+  return String(result);
+}
 
 // SENTRY_API_SCHEMA_SHA is used in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
 // DO NOT change variable name unless you change it in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
@@ -73,6 +94,9 @@ export type API = {
   server: string;
   slug: string;
   bodyContentType?: string;
+  /** Pre-compiled HTML from descriptionMarkdown (built at build time to avoid runtime esbuild) */
+  descriptionHtml?: string;
+  /** Raw markdown description from OpenAPI spec */
   descriptionMarkdown?: string;
   requestBodyContent?: any;
   security?: {[key: string]: string[]};
@@ -119,14 +143,18 @@ async function apiCategoriesUncached(): Promise<APICategory[]> {
     };
   });
 
+  // Collect all APIs first, then compile markdown in parallel
+  const apiPromises: Promise<void>[] = [];
+
   Object.entries(data.paths).forEach(([apiPath, methods]) => {
     Object.entries(methods).forEach(([method, apiData]) => {
       let server = 'https://sentry.io';
       if (apiData.servers && apiData.servers[0]) {
         server = apiData.servers[0].url;
       }
+
       apiData.tags.forEach(tag => {
-        categoryMap[tag].apis.push({
+        const api: API = {
           apiPath,
           method,
           name: apiData.operationId,
@@ -165,10 +193,24 @@ async function apiCategoriesUncached(): Promise<APICategory[]> {
                 ...rest,
               };
             }),
-        });
+        };
+
+        categoryMap[tag].apis.push(api);
+
+        // Pre-compile markdown to HTML at build time (fixes DOCS-A3H)
+        if (api.descriptionMarkdown) {
+          apiPromises.push(
+            compileMarkdownToHtml(api.descriptionMarkdown).then(html => {
+              api.descriptionHtml = html;
+            })
+          );
+        }
       });
     });
   });
+
+  // Wait for all markdown compilation to complete
+  await Promise.all(apiPromises);
 
   const categories = Object.values(categoryMap);
   categories.sort((a, b) => a.name.localeCompare(b.name));

@@ -1,17 +1,22 @@
-import {Fragment, ReactElement, useMemo} from 'react';
-import {bundleMDX} from 'mdx-bundler';
+import {Fragment} from 'react';
 
 import {type API} from 'sentry-docs/build/resolveOpenAPI';
-import {getMDXComponent} from 'sentry-docs/getMDXComponent';
-import {mdxComponents} from 'sentry-docs/mdxComponents';
-import remarkCodeTabs from 'sentry-docs/remark-code-tabs';
-import remarkCodeTitles from 'sentry-docs/remark-code-title';
 
 import './styles.scss';
 
 import {ApiExamples} from '../apiExamples/apiExamples';
 import {DocPage} from '../docPage';
 import {SmartLink} from '../smartLink';
+
+/**
+ * Renders pre-compiled HTML from markdown.
+ * The HTML is compiled at build time in resolveOpenAPI.ts to avoid
+ * needing esbuild/mdx-bundler at runtime.
+ * Fixes: DOCS-A3H
+ */
+function MarkdownHtml({html}: {html: string}) {
+  return <div dangerouslySetInnerHTML={{__html: html}} />;
+}
 
 function Params({params}) {
   return (
@@ -59,7 +64,8 @@ function Params({params}) {
                     </ul>
                   </Fragment>
                 )}
-                {param.description && parseMarkdown(param.description)}
+                {/* Parameter descriptions are simple text, render directly */}
+                {param.description}
               </dd>
             )}
           </Fragment>
@@ -73,49 +79,6 @@ const getScopes = (data, securityScheme) => {
   const obj = data.security.find(e => e[securityScheme]);
   return obj[securityScheme];
 };
-
-// https://stackoverflow.com/a/38137700
-function cssToObj(css) {
-  const obj = {},
-    s = css
-      .toLowerCase()
-      .replace(/-(.)/g, function (_, g) {
-        return g.toUpperCase();
-      })
-      .replace(/;\s?$/g, '')
-      .split(/:|;/g);
-  for (let i = 0; i < s.length; i += 2) {
-    obj[s[i].replace(/\s/g, '')] = s[i + 1].replace(/^\s+|\s+$/g, '');
-  }
-  return obj;
-}
-
-async function parseMarkdown(source: string): Promise<ReactElement> {
-  // Source uses string styles, but MDX requires object styles.
-  source = source.replace(/style="([^"]+)"/g, (_, style) => {
-    return `style={${JSON.stringify(cssToObj(style))}}`;
-  });
-  const {code} = await bundleMDX({
-    source,
-    cwd: process.cwd(),
-    mdxOptions(options) {
-      options.remarkPlugins = [remarkCodeTitles, remarkCodeTabs];
-      return options;
-    },
-    esbuildOptions: options => {
-      options.loader = {
-        ...options.loader,
-        '.js': 'jsx',
-      };
-      return options;
-    },
-  });
-  function MDXLayoutRenderer({mdxSource, ...rest}) {
-    const MDXLayout = useMemo(() => getMDXComponent(mdxSource), [mdxSource]);
-    return <MDXLayout components={mdxComponents()} {...rest} />;
-  }
-  return <MDXLayoutRenderer mdxSource={code} />;
-}
 
 type Props = {
   api: API;
@@ -141,7 +104,8 @@ export function ApiPage({api}: Props) {
         <div className="w-full md:w-1/2">
           {api.summary && <p>{api.summary}</p>}
 
-          {api.descriptionMarkdown && parseMarkdown(api.descriptionMarkdown)}
+          {/* Use pre-compiled HTML instead of runtime bundleMDX (fixes DOCS-A3H) */}
+          {api.descriptionHtml && <MarkdownHtml html={api.descriptionHtml} />}
 
           {!!api.pathParameters.length && (
             <div className="api-info-row">
