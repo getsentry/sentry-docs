@@ -209,125 +209,130 @@ type Redirect = {
 
 /** Note: if you want to set redirects for developer docs, set them below in `DEVELOPER_DOCS_REDIRECTS` */
 const USER_DOCS_REDIRECTS: Redirect[] = [
-  // AI section restructure redirects
+  // AI section restructure redirects - from old add-sentry-to-ai paths
   {
-    from: '/ai/agent-skills/',
-    to: '/ai/add-sentry-to-ai/agent-skills/',
+    from: '/ai/add-sentry-to-ai/',
+    to: '/ai/',
   },
   {
-    from: '/ai/mcp/',
-    to: '/ai/add-sentry-to-ai/mcp/',
+    from: '/ai/add-sentry-to-ai/agent-skills/',
+    to: '/ai/agent-skills/',
   },
   {
-    from: '/ai/seer/',
-    to: '/ai/use-ai-in-sentry/seer/',
+    from: '/ai/add-sentry-to-ai/mcp/',
+    to: '/ai/mcp/',
   },
   {
-    from: '/ai/monitoring/',
-    to: '/ai/add-sentry-to-ai/monitoring/',
+    from: '/ai/add-sentry-to-ai/monitoring/',
+    to: '/ai/monitoring/',
   },
   {
-    from: '/ai/monitoring/agents/',
-    to: '/ai/add-sentry-to-ai/monitoring/agents/',
+    from: '/ai/add-sentry-to-ai/monitoring/agents/',
+    to: '/ai/monitoring/agents/',
   },
   {
-    from: '/ai/monitoring/agents/getting-started/',
-    to: '/ai/add-sentry-to-ai/monitoring/agents/getting-started/',
+    from: '/ai/add-sentry-to-ai/monitoring/agents/getting-started/',
+    to: '/ai/monitoring/agents/getting-started/',
   },
   {
-    from: '/ai/monitoring/agents/dashboard/',
-    to: '/ai/add-sentry-to-ai/monitoring/agents/dashboard/',
+    from: '/ai/add-sentry-to-ai/monitoring/agents/dashboard/',
+    to: '/ai/monitoring/agents/dashboard/',
   },
   {
-    from: '/ai/monitoring/agents/privacy/',
-    to: '/ai/add-sentry-to-ai/monitoring/agents/privacy/',
+    from: '/ai/add-sentry-to-ai/monitoring/agents/privacy/',
+    to: '/ai/monitoring/agents/privacy/',
   },
   {
-    from: '/ai/monitoring/mcp/',
-    to: '/ai/add-sentry-to-ai/monitoring/mcp/',
+    from: '/ai/add-sentry-to-ai/monitoring/mcp/',
+    to: '/ai/monitoring/mcp/',
   },
   {
-    from: '/ai/monitoring/mcp/getting-started/',
-    to: '/ai/add-sentry-to-ai/monitoring/mcp/getting-started/',
+    from: '/ai/add-sentry-to-ai/monitoring/mcp/getting-started/',
+    to: '/ai/monitoring/mcp/getting-started/',
   },
   {
-    from: '/ai/monitoring/mcp/dashboard/',
-    to: '/ai/add-sentry-to-ai/monitoring/mcp/dashboard/',
+    from: '/ai/add-sentry-to-ai/monitoring/mcp/dashboard/',
+    to: '/ai/monitoring/mcp/dashboard/',
   },
-  // Redirect from old use-ai-in-sentry/monitoring location
+  // AI section restructure redirects - from old use-ai-in-sentry paths to product
+  {
+    from: '/ai/use-ai-in-sentry/',
+    to: '/product/ai-in-sentry/',
+  },
+  {
+    from: '/ai/use-ai-in-sentry/seer/',
+    to: '/product/ai-in-sentry/seer/',
+  },
+  {
+    from: '/ai/use-ai-in-sentry/seer/issue-fix/',
+    to: '/product/ai-in-sentry/seer/issue-fix/',
+  },
+  {
+    from: '/ai/use-ai-in-sentry/ai-code-review/',
+    to: '/product/ai-in-sentry/ai-code-review/',
+  },
+  {
+    from: '/ai/use-ai-in-sentry/ai-privacy-and-security/',
+    to: '/product/ai-in-sentry/ai-privacy-and-security/',
+  },
   {
     from: '/ai/use-ai-in-sentry/monitoring/',
-    to: '/ai/add-sentry-to-ai/monitoring/',
+    to: '/ai/monitoring/',
+  },
+  // AI section restructure redirects - from old ai-privacy-and-security location
+  {
+    from: '/ai/ai-privacy-and-security/',
+    to: '/product/ai-in-sentry/ai-privacy-and-security/',
+  },
+  // AI section restructure redirects - old paths that now point to /ai/
+  {
+    from: '/ai/seer/',
+    to: '/product/ai-in-sentry/seer/',
+  },
+  {
+    from: '/ai/agent-monitoring/',
+    to: '/ai/monitoring/agents/',
+  },
+  {
+    from: '/ai/mcp-monitoring/',
+    to: '/ai/monitoring/mcp/',
   },
   // Legacy redirects from product section
   {
     from: '/product/sentry-mcp/',
-    to: '/ai/add-sentry-to-ai/mcp/',
+    to: '/ai/mcp/',
   },
   {
     from: '/product/insights/ai/',
-    to: '/ai/add-sentry-to-ai/monitoring/',
+    to: '/ai/monitoring/',
   },
   {
     from: '/product/insights/ai/agents/',
-    to: '/ai/add-sentry-to-ai/monitoring/agents/',
+    to: '/ai/monitoring/agents/',
   },
   {
     from: '/product/insights/ai/agents/getting-started/',
-    to: '/ai/add-sentry-to-ai/monitoring/agents/getting-started/',
+    to: '/ai/monitoring/agents/getting-started/',
   },
   {
     from: '/product/insights/ai/agents/dashboard/',
-    to: '/ai/add-sentry-to-ai/monitoring/agents/dashboard/',
+    to: '/ai/monitoring/agents/dashboard/',
   },
   {
     from: '/product/insights/ai/agents/privacy/',
-    to: '/ai/add-sentry-to-ai/monitoring/agents/privacy/',
+    to: '/ai/monitoring/agents/privacy/',
   },
   {
     from: '/product/insights/ai/mcp/',
-    to: '/ai/add-sentry-to-ai/monitoring/mcp/',
+    to: '/ai/monitoring/mcp/',
   },
   {
     from: '/product/insights/ai/mcp/getting-started/',
-    to: '/ai/add-sentry-to-ai/monitoring/mcp/getting-started/',
+    to: '/ai/monitoring/mcp/getting-started/',
   },
   {
     from: '/product/insights/ai/mcp/dashboard/',
-    to: '/ai/add-sentry-to-ai/monitoring/mcp/dashboard/',
-  },
-  {
-    from: '/ai/agent-monitoring/',
-    to: '/ai/add-sentry-to-ai/monitoring/agents/',
-  },
-  {
-    from: '/ai/mcp-monitoring/',
-    to: '/ai/add-sentry-to-ai/monitoring/mcp/',
-  },
-  // Redirects from product/ai-in-sentry to new location
-  {
-    from: '/product/ai-in-sentry/',
-    to: '/ai/use-ai-in-sentry/',
-  },
-  {
-    from: '/product/ai-in-sentry/seer/',
-    to: '/ai/use-ai-in-sentry/seer/',
-  },
-  {
-    from: '/product/ai-in-sentry/seer/issue-fix/',
-    to: '/ai/use-ai-in-sentry/seer/issue-fix/',
-  },
-  {
-    from: '/product/ai-in-sentry/ai-code-review/',
-    to: '/ai/use-ai-in-sentry/ai-code-review/',
-  },
-  {
-    from: '/product/ai-in-sentry/ai-privacy-and-security/',
-    to: '/ai/ai-privacy-and-security/',
-  },
-  {
-    from: '/ai/use-ai-in-sentry/ai-privacy-and-security/',
-    to: '/ai/ai-privacy-and-security/',
+    to: '/ai/monitoring/mcp/dashboard/',
   },
   {
     from: '/platforms/python/http_errors/',
