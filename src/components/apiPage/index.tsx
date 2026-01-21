@@ -14,7 +14,7 @@ import {SmartLink} from '../smartLink';
  * needing esbuild/mdx-bundler at runtime.
  * Fixes: DOCS-A3H
  */
-function MarkdownHtml({html}: {html: string}) {
+function MarkdownHtml({html}: { html: string }) {
   return <div dangerouslySetInnerHTML={{__html: html}} />;
 }
 
