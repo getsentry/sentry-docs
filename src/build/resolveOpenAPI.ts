@@ -77,7 +77,7 @@ type APIResponse = {
     content_type: string;
     schema: any;
     example?: APIExample;
-    examples?: { [key: string]: APIExample };
+    examples?: {[key: string]: APIExample};
   };
 };
 
@@ -99,7 +99,7 @@ export type API = {
   /** Raw markdown description from OpenAPI spec */
   descriptionMarkdown?: string;
   requestBodyContent?: any;
-  security?: { [key: string]: string[] };
+  security?: {[key: string]: string[]};
   summary?: string;
 };
 
@@ -133,7 +133,7 @@ export function apiCategories(): Promise<APICategory[]> {
 async function apiCategoriesUncached(): Promise<APICategory[]> {
   const data = await resolveOpenAPI();
 
-  const categoryMap: { [name: string]: APICategory } = {};
+  const categoryMap: {[name: string]: APICategory} = {};
   data.tags.forEach(tag => {
     categoryMap[tag.name] = {
       name: tag['x-sidebar-name'] || tag.name,
