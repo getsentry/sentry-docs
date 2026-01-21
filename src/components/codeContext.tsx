@@ -110,6 +110,7 @@ type CodeContextType = {
   codeKeywords: CodeKeywords;
   isLoading: boolean;
   onboardingOptions: OnboardingOptionType[];
+  sdkPackage: string | null;
   sharedKeywordSelection: [
     Record<string, number>,
     React.Dispatch<Record<string, number>>,
@@ -329,7 +330,12 @@ const getLocallyStoredSelections = (): SelectedCodeTabs => {
   return {};
 };
 
-export function CodeContextProvider({children}: {children: React.ReactNode}) {
+type CodeContextProviderProps = {
+  children: React.ReactNode;
+  sdkPackage?: string | null;
+};
+
+export function CodeContextProvider({children, sdkPackage = null}: CodeContextProviderProps) {
   const [codeKeywords, setCodeKeywords] = useState(cachedCodeKeywords ?? DEFAULTS);
   const [isLoading, setIsLoading] = useState<boolean>(cachedCodeKeywords ? false : true);
   const [storedCodeSelection, setStoredCodeSelection] = useState<SelectedCodeTabs>({});
@@ -381,6 +387,7 @@ export function CodeContextProvider({children}: {children: React.ReactNode}) {
     isLoading,
     onboardingOptions,
     updateOnboardingOptions: options => setOnboardingOptions(options),
+    sdkPackage,
   };
 
   return <CodeContext.Provider value={result}>{children}</CodeContext.Provider>;

@@ -7,10 +7,19 @@ import {OrgAuthTokenCreator} from './orgAuthTokenCreator';
 
 export const KEYWORDS_REGEX = /\b___(?:([A-Z_][A-Z0-9_]*)\.)?([A-Z_][A-Z0-9_]*)___\b/g;
 export const ORG_AUTH_TOKEN_REGEX = /___ORG_AUTH_TOKEN___/g;
+export const SDK_PACKAGE_REGEX = /___SDK_PACKAGE___/g;
 
 type ChildrenItem = ReturnType<typeof Children.toArray>[number] | React.ReactNode;
 
-export function makeKeywordsClickable(children: React.ReactNode) {
+type MakeKeywordsClickableOptions = {
+  sdkPackage?: string | null;
+};
+
+export function makeKeywordsClickable(
+  children: React.ReactNode,
+  options: MakeKeywordsClickableOptions = {}
+) {
+  const {sdkPackage} = options;
   const items = Children.toArray(children);
 
   return items.reduce((arr: ChildrenItem[], child) => {
@@ -18,7 +27,7 @@ export function makeKeywordsClickable(children: React.ReactNode) {
       const updatedChild = cloneElement(
         child as ReactElement,
         {},
-        makeKeywordsClickable((child as ReactElement).props.children)
+        makeKeywordsClickable((child as ReactElement).props.children, options)
       );
       arr.push(updatedChild);
       return arr;
@@ -27,9 +36,13 @@ export function makeKeywordsClickable(children: React.ReactNode) {
     // Reset regex lastIndex before testing to avoid stale state from previous matches
     ORG_AUTH_TOKEN_REGEX.lastIndex = 0;
     KEYWORDS_REGEX.lastIndex = 0;
+    SDK_PACKAGE_REGEX.lastIndex = 0;
 
     if (ORG_AUTH_TOKEN_REGEX.test(child)) {
       makeOrgAuthTokenClickable(arr, child);
+    } else if (SDK_PACKAGE_REGEX.test(child) && sdkPackage) {
+      // Simple string replacement for SDK package
+      arr.push(child.replace(SDK_PACKAGE_REGEX, sdkPackage));
     } else if (KEYWORDS_REGEX.test(child)) {
       const isDSNKeyword = /___PUBLIC_DSN___/.test(child);
       makeProjectKeywordsClickable(arr, child, isDSNKeyword);
