@@ -12,7 +12,7 @@ title: Span Trace Propagation
 
 ## Continue an incoming trace
 
-To continue a trace from an upstream service, the SDK must expose a method to extract the traceparent and baggage information and apply these to the applicable scope. The method MUST NOT create a new transaction on its own.
+To continue a trace from an upstream service, the SDK must expose a method to extract the traceparent and baggage information and apply these to the applicable scope. The method MUST NOT create a new segment span on its own.
 
 ```js
 scope.setPropagationContext({
@@ -45,13 +45,12 @@ The SDK MUST offer a method to clear trace propagation data, allowing to create 
 ```python
 import sentry_sdk
 
-with sentry_sdk.start_span(name="Segment 1"):
+with sentry_sdk.start_span(name="segment under trace 1"):
     ...
 
 sentry_sdk.new_trace()
 
-# The next span start after new_trace() will NOT continue the same trace as Segment 1:
-
-with sentry_sdk.start_span(name="Segment 2"):
+# The next span started after new_trace() will NOT continue the same trace:
+with sentry_sdk.start_span(name="segment under trace 2"):
     ...
 ```
