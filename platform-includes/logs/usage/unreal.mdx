@@ -1,6 +1,6 @@
-Once logging is enabled, you can send log messages to Sentry using the `AddLog` method.
+Once logging is enabled, you can send log messages to Sentry using the logging methods on the Sentry subsystem.
 
-## Basic Logging
+### Basic Logging
 
 ```cpp
 #include "SentrySubsystem.h"
@@ -10,38 +10,93 @@ void SendLogs()
     USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
 
     // Send a simple log message
-    SentrySubsystem->AddLog(TEXT("User completed tutorial"), ESentryLevel::Info);
+    SentrySubsystem->LogInfo(TEXT("User completed tutorial"));
 
     // Send a log message with category
-    SentrySubsystem->AddLog(TEXT("Failed to load texture asset"), ESentryLevel::Warning, TEXT("AssetLoading"));
+    SentrySubsystem->LogWarning(TEXT("Failed to load texture asset"), TEXT("AssetLoading"));
 
     // Send an error log
-    SentrySubsystem->AddLog(TEXT("Database connection failed"), ESentryLevel::Error, TEXT("Database"));
+    SentrySubsystem->LogError(TEXT("Database connection failed"), TEXT("Database"));
 }
 ```
 
-## Log Levels
+### Logging with Attributes
+
+You can attach structured attributes to your logs for better filtering and searchability:
+
+```cpp
+USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
+
+TMap<FString, FSentryVariant> Attributes;
+Attributes.Add(TEXT("user_id"), FSentryVariant(TEXT("12345")));
+Attributes.Add(TEXT("level"), FSentryVariant(42));
+Attributes.Add(TEXT("score"), FSentryVariant(99.5f));
+Attributes.Add(TEXT("is_premium"), FSentryVariant(true));
+
+SentrySubsystem->LogWarningWithAttributes(
+    TEXT("Player achieved high score"),
+    Attributes,
+    TEXT("LogGameplay")
+);
+```
+
+Each log level has a corresponding method with attributes support:
+- `LogDebugWithAttributes()`
+- `LogInfoWithAttributes()`
+- `LogWarningWithAttributes()`
+- `LogErrorWithAttributes()`
+- `LogFatalWithAttributes()`
+
+Attributes support the following types: `bool`, `int32`, `float`, and `FString`.
+
+<Alert level="info">
+  If the variant used to set an attribute value is of Array or Map type, it will be implicitly converted to the corresponding JSON string.
+</Alert>
+
+### Global Attributes
+
+You can set global attributes that will be automatically attached to all captured logs:
+
+```cpp
+USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
+
+// Set global attributes that will be included in all logs
+SentrySubsystem->SetAttribute(TEXT("game_version"), FSentryVariant(TEXT("2.1.0")));
+SentrySubsystem->SetAttribute(TEXT("platform"), FSentryVariant(TEXT("PC")));
+
+// All subsequent logs will include these attributes
+SentrySubsystem->LogInfo(TEXT("Game started")); // Includes game_version and platform
+
+// Remove when no longer needed
+SentrySubsystem->RemoveAttribute(TEXT("platform"));
+```
+
+<Alert level="warning">
+  Global log attributes are not currently supported on Android. The `SetAttribute` and `RemoveAttribute` methods will be no-ops on that platform.
+</Alert>
+
+### Log Levels
 
 Sentry Logs supports the following log levels:
 
-| Unreal ESentryLevel | Sentry Logs UI Severity |
+| Method | Sentry Logs UI Severity |
 | --- | --- |
-| Debug | DEBUG |
-| Info | INFO |
-| Warning | WARN |
-| Error | ERROR |
-| Fatal | FATAL |
+| `LogDebug()` | DEBUG |
+| `LogInfo()` | INFO |
+| `LogWarning()` | WARN |
+| `LogError()` | ERROR |
+| `LogFatal()` | FATAL |
 
 ```cpp
 // Examples of different log levels
-SentrySubsystem->AddLog(TEXT("Player position updated"), ESentryLevel::Debug, TEXT("Player"));
-SentrySubsystem->AddLog(TEXT("Level loaded successfully"), ESentryLevel::Info, TEXT("GameFlow"));
-SentrySubsystem->AddLog(TEXT("Low memory warning"), ESentryLevel::Warning, TEXT("Performance"));
-SentrySubsystem->AddLog(TEXT("Failed to save game data"), ESentryLevel::Error, TEXT("SaveSystem"));
-SentrySubsystem->AddLog(TEXT("Critical system failure"), ESentryLevel::Fatal, TEXT("System"));
+SentrySubsystem->LogDebug(TEXT("Player position updated"), TEXT("Player"));
+SentrySubsystem->LogInfo(TEXT("Level loaded successfully"), TEXT("GameFlow"));
+SentrySubsystem->LogWarning(TEXT("Low memory warning"), TEXT("Performance"));
+SentrySubsystem->LogError(TEXT("Failed to save game data"), TEXT("SaveSystem"));
+SentrySubsystem->LogFatal(TEXT("Critical system failure"), TEXT("System"));
 ```
 
-## Automatic UE_LOG Integration
+### Automatic UE_LOG Integration
 
 When structured logging is enabled with the appropriate severity levels, the SDK can automatically capture Unreal Engine's native `UE_LOG` calls:
 
@@ -56,11 +111,12 @@ You can configure whether these logs are sent as:
 - **Structured Logs**: Full log entries with searchable attributes
 - **Breadcrumbs**: Contextual information attached to errors (useful for debugging)
 
-## Blueprint Support
+### Blueprint Support
 
-You can also use Sentry Logs from Blueprints by calling the **Add Log** function:
+You can also use Sentry Logs from Blueprints by calling the logging functions:
 
-1. Add a **Add Log** node to your Blueprint
-2. Set the **Body** parameter to your log message
-3. Choose the appropriate **Level** from the dropdown
-4. Optionally set a **Category** for better organization
+1. Add a **Log Warning** (or other level) node to your Blueprint
+2. Set the **Message** parameter to your log message
+3. Optionally set a **Category** for better organization
+
+For logs with attributes, use the **Log Warning With Attributes** (or other level) nodes.

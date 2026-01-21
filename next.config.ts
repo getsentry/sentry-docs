@@ -9,6 +9,9 @@ import {redirects} from './redirects.js';
 // needed during the build process to compile MDX and optimize assets. The compiled
 // output is used at runtime, so bundling these ~150-200MB of dependencies would bloat
 // functions unnecessarily and cause deployment failures.
+//
+// Note: mdx-bundler/client (getMDXComponent) is a tiny runtime module needed by
+// app/[[...path]]/page.tsx, so we exclude only the build parts (dist/!(client)*).
 const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
   ? {
       '/**/*': [
@@ -27,8 +30,9 @@ const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
         'node_modules/@prettier/**/*',
         'node_modules/sharp/**/*',
         'node_modules/mermaid/**/*',
-        // Exclude MDX processing dependencies
-        'node_modules/mdx-bundler/**/*',
+        // Exclude MDX processing dependencies (but keep mdx-bundler/client for runtime)
+        'node_modules/mdx-bundler/dist/!(client*)',
+        'node_modules/mdx-bundler/node_modules/**/*',
         'node_modules/rehype-preset-minify/**/*',
         'node_modules/rehype-prism-plus/**/*',
         'node_modules/rehype-prism-diff/**/*',
@@ -55,8 +59,9 @@ const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
         'node_modules/@prettier/**/*',
         'node_modules/sharp/**/*',
         'node_modules/mermaid/**/*',
-        // Exclude MDX processing dependencies
-        'node_modules/mdx-bundler/**/*',
+        // Exclude MDX processing dependencies (but keep mdx-bundler/client for runtime)
+        'node_modules/mdx-bundler/dist/!(client*)',
+        'node_modules/mdx-bundler/node_modules/**/*',
         'node_modules/rehype-preset-minify/**/*',
         'node_modules/rehype-prism-plus/**/*',
         'node_modules/rehype-prism-diff/**/*',
@@ -72,6 +77,8 @@ const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
         '**/*.pdf',
       ],
       '\\[\\[\\.\\.\\.path\\]\\]': [
+        // Exclude docs to save ~156MB, but allow specific files via outputFileTracingIncludes
+        // for pages that may be accessed at runtime (error pages, cold starts, etc.)
         'docs/**/*',
         'node_modules/prettier/plugins',
         'node_modules/rollup/dist',
@@ -84,6 +91,33 @@ const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
         '**/*.pdf',
         '**/*.png',
       ],
+    };
+
+// Explicitly include the pre-computed doc tree files for routes that need them at runtime.
+// Both platform-redirect and [[...path]] need the doctree at runtime:
+// - platform-redirect: dynamic route with searchParams
+// - [[...path]]: calls getDocsRootNode() during prerendering (even though force-static)
+// - sitemap.xml: uses getDocsRootNode() to extract all page paths
+//
+// Additionally, include specific doc files that may be accessed at runtime due to:
+// - Error page rendering (when a static page fails to load)
+// - Cold start edge cases during deployment
+// - On-demand revalidation requests
+// These are whitelisted individually to avoid including the entire docs/ directory.
+const outputFileTracingIncludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
+  ? {
+      '/platform-redirect': ['public/doctree-dev.json'],
+      '\\[\\[\\.\\.\\.path\\]\\]': ['public/doctree-dev.json'],
+      'sitemap.xml': ['public/doctree-dev.json'],
+    }
+  : {
+      '/platform-redirect': ['public/doctree.json'],
+      '\\[\\[\\.\\.\\.path\\]\\]': [
+        'public/doctree.json',
+        'docs/changelog.mdx',
+        'docs/platforms/index.mdx',
+      ],
+      'sitemap.xml': ['public/doctree.json'],
     };
 
 if (process.env.NODE_ENV !== 'development' && !process.env.NEXT_PUBLIC_SENTRY_DSN) {
@@ -104,7 +138,12 @@ const nextConfig = {
     '@esbuild/linux-arm64',
     '@esbuild/linux-x64',
     '@esbuild/win32-x64',
-    'mdx-bundler',
+    // Note: mdx-bundler is intentionally NOT in serverExternalPackages.
+    // The package is ESM-only ("type": "module") and cannot be require()'d at runtime.
+    // Keeping it out allows webpack to bundle mdx-bundler/client properly while
+    // outputFileTracingExcludes still prevents the heavy build-time parts from
+    // being included in the serverless function bundle.
+    // Fixes: DOCS-A0W
     'sharp',
     '@aws-sdk/client-s3',
     '@google-cloud/storage',
@@ -113,6 +152,7 @@ const nextConfig = {
     'mermaid',
   ],
   outputFileTracingExcludes,
+  outputFileTracingIncludes,
   images: {
     contentDispositionType: 'inline', // "open image in new tab" instead of downloading
     remotePatterns: REMOTE_IMAGE_PATTERNS,
@@ -148,6 +188,7 @@ const nextConfig = {
 module.exports = withSentryConfig(nextConfig, {
   org: 'sentry',
   project: process.env.NEXT_PUBLIC_DEVELOPER_DOCS ? 'develop-docs' : 'docs',
+  authToken: process.env.SENTRY_AUTH_TOKEN,
 
   // Suppresses source map uploading logs during build
   silent: !process.env.CI,

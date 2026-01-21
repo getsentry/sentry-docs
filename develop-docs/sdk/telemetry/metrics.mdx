@@ -206,7 +206,8 @@ The parameters for these methods should be the following, or an equivalent form 
 - `name` **String, required**: The name of the metric
 - `value` **Number, required**: The value of the metric
 - `options` **Object, optional**: An object containing the following properties:
-  - `unit` **String, optional**: The unit of measurement (only used for `distribution` and `gauge`)
+  - `unit` **String, optional**: The unit of measurement (only used for `distribution` and `gauge`). SDKs must not restrict what can be sent in (e.g. by using an enum) but should offer constants or similar that help customers send in <Link
+to="/sdk/telemetry/attributes/#units">units we support</Link>.
   - `attributes` **Object, optional**: A dictionary of attributes (key-value pairs with type information)
   - `scope` **Scope, optional**: The scope to capture the metric with.
 
@@ -267,6 +268,7 @@ Sentry.metrics.distribution(
   unit='millisecond',
   attributes={'page': '/dashboard', 'browser': 'chrome'},
 )
+```
 
 #### PHP
 
@@ -320,29 +322,23 @@ SentrySDK.metrics()
   .count(
     name: "button.clicks",
     value: 1,
-    options: [
-      "attributes": ["button_id": "submit", "page": "checkout"]
-    ]
+    attributes: ["button_id": "submit", "page": "checkout"]
   )
 
 SentrySDK.metrics()
   .gauge(
     name: "db.connection_pool.active",
     value: 42,
-    options: [
-      "unit": "connection",
-      "attributes": ["pool_name": "main_db", "database": "postgres"]
-    ]
+    unit: "connection",
+    attributes: ["pool_name": "main_db", "database": "postgres"]
   )
 
 SentrySDK.metrics()
   .distribution(
     name: "page.load_time",
     value: 245.7,
-    options: [
-      "unit": "millisecond",
-      "attributes": ["page": "/dashboard", "browser": "chrome"]
-    ]
+    unit: "millisecond",
+    attributes: ["page": "/dashboard", "browser": "chrome"]
   )
 ```
 
@@ -406,7 +402,9 @@ SDKs may optionally attach user information as attributes (guarded by `sendDefau
 ```json
 {
   "attributes": {
-    "user.id": { "value": "123", "type": "string" }
+    "user.id": { "value": "123", "type": "string" },
+    "user.name": { "value": "john.doe", "type": "string" },
+    "user.email": { "value": "john.doe@example.com", "type": "string" }
   }
 }
 ```
@@ -420,8 +418,10 @@ By default, Relay should parse the user agent attached to an incoming metric env
 
 ```json
 {
-  "browser.name": "Chrome",
-  "browser.version": "120.0"
+  "attributes": {
+    "browser.name": { "value": "Chrome", "type": "string" },
+    "browser.version": { "value": "120.0", "type": "string" }
+  }
 }
 ```
 
@@ -429,11 +429,13 @@ By default, Relay should parse the user agent attached to an incoming metric env
 
 For backend SDKs (Node.js, Python, PHP, etc.), the SDKs should attach the following:
 
-1. `server.address`: The address of the server that sent the log. Equivalent to [`server_name`](/sdk/data-model/event-payloads/#optional-attributes) we attach to errors and transactions.
+1. `server.address`: The address of the server that sent the metric. Equivalent to [`server_name`](/sdk/data-model/event-payloads/#optional-attributes) we attach to errors and transactions.
 
 ```json
 {
-  "server.address": "foo.example.com"
+  "attributes": {
+    "server.address": { "value": "foo.example.com", "type": "string" }
+  }
 }
 ```
 
@@ -460,7 +462,7 @@ We're currently working on a concept for buffering different types of telemetry 
 
 #### Tracing
 
-Metrics should be associated with traces. If a metric is recorded during an active span, the SDK should set the `sentry.trace.parent_span_id` attribute to the span id of the span that was active when the metric was collected.
+Metrics should be associated with traces if possible. If a metric is recorded during an active span, the SDK should set the `span_id` property of the metric to the span id of the span that was active when the metric was collected.
 
 #### Replays
 
@@ -550,7 +552,7 @@ If `debug` is set to `true` in SDK init, calls to the Sentry metrics API should 
       "span_id": "b0e6f15b45c36b12",
       "name": "active.users",
       "value": 12345,
-      "type": "set",
+      "type": "gauge",
       "attributes": {
         "cohort": { "value": "beta", "type": "string" },
         "sentry.sdk.name": { "value": "sentry.javascript.browser", "type": "string" },

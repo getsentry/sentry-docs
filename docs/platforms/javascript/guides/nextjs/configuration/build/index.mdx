@@ -16,7 +16,7 @@ keywords:
   ]
 ---
 
-The Sentry Next.js SDK supports automatic code injection and source map upload during your app's build process using the `withSentryConfig` wrapper in your Next.js configuration file (`next.config.js` or `next.config.mjs`). For information on updating the configuration, see [Extend Next.js Configuration](../../manual-setup/#extend-your-nextjs-configuration).
+The Sentry Next.js SDK supports automatic code injection and source map upload during your app's build process using the `withSentryConfig` wrapper in your Next.js configuration file (`next.config.js` or `next.config.mjs`). For information on updating the configuration, see the [Manual Setup guide](/platforms/javascript/guides/nextjs/manual-setup/#configure).
 
 ## Available Options
 
@@ -222,18 +222,52 @@ Enables the use of the [`runAfterProductionCompile` hook from Next.js](https://n
 
 </SdkOption>
 
-<SdkOption name="disableManifestInjection" type="boolean|undefined" defaultValue="false">
+<SdkOption name="routeManifestInjection" type="boolean|object" defaultValue="true">
 
-Disables automatic injection of the route manifest into the client bundle.
+<AvailableSince version="10.34.0" />
 
-The route manifest is a build-time generated mapping of your Next.js App Router routes that enables Sentry to group transactions by parameterized route names (e.g., `/users/:id` instead of `/users/123`, `/users/456`, etc.).
+<Alert level="info" title="App Router only">
+  `routeManifestInjection` option is only supported in the App Router.
+</Alert>
+
+Controls injection and filtering of the route manifest in the client bundle.
+
+The route manifest is a build-time generated mapping of your Next.js App Router routes that enables Sentry to group transactions by parameterized route names (for example, `/users/:id` instead of `/users/123` or `/users/456`).
+
+You can set this option to `false` to disable the route manifest injection.
 
 **Disable this option if:**
 
 - You want to minimize client bundle size
 - You're experiencing build issues related to route scanning
 - You prefer raw URLs in transaction names
-- You're only using the Pages Router (this feature is only supported in the App Router)
+
+You can also pass in an object with an `exclude` property to control which routes should be excluded from the route manifest. The `exclude` property accepts an array of strings or regular expressions, or a function that returns `true` to exclude a route.
+
+```javascript
+withSentryConfig(nextConfig, {
+  // Exclude specific routes using an array of strings or RegExps
+  routeManifestInjection: {
+    exclude: ["/api/health", "/api/excluded/[parameter]", /^\/internal\//],
+  },
+});
+```
+
+```javascript
+withSentryConfig(nextConfig, {
+  // Or use a function for dynamic exclusion
+  routeManifestInjection: {
+    exclude: (route) => route.includes("/excluded"),
+  },
+});
+```
+
+Excluded routes will appear as raw URLs in transaction names instead of parameterized routes.
+
+**Use `exclude` if:**
+
+- You want to hide internal or unreleased routes from appearing in the client bundle
+- You want to reduce bundle size by excluding routes that don't benefit from parameterized grouping (for example, static routes with no dynamic segments)
 
 </SdkOption>
 
@@ -312,5 +346,11 @@ Enables React component name tracking. When enabled, it annotates React componen
 <SdkOption name="webpack.reactComponentAnnotation.ignoredComponents" type="string[] | undefined">
 
 A list of React component names to exclude from component annotation.
+
+</SdkOption>
+
+<SdkOption name="webpack.treeshake" type="object">
+
+Configuration options for tree shaking. Refer to the [tree shaking documentation](/platforms/javascript/guides/nextjs/configuration/tree-shaking) for more details.
 
 </SdkOption>

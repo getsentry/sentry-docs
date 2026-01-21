@@ -105,7 +105,7 @@ export const getRouter = () => {
 +     // ___PRODUCT_OPTION_END___ session-replay
 +   });
   }
-  
+
   return router;
 }
 ```
@@ -139,6 +139,62 @@ Sentry.init({
   // ___PRODUCT_OPTION_END___ performance
 });
 ```
+
+<OnboardingOption optionId="performance">
+#### Instrument the Server Entry Point
+
+To enable tracing for server-side requests, you need to explicitly define a [server entry point](https://tanstack.com/start/latest/docs/framework/react/guide/server-entry-point) in your application and wrap your request handler with `wrapFetchWithSentry`.
+
+Create a `src/server.ts` file in your project:
+
+```typescript {filename:src/server.ts}
+import { wrapFetchWithSentry } from "@sentry/tanstackstart-react";
+import handler, { createServerEntry } from "@tanstack/react-start/server-entry";
+
+export default createServerEntry(
+  wrapFetchWithSentry({
+    fetch(request: Request) {
+      return handler.fetch(request);
+    },
+  })
+);
+```
+
+</OnboardingOption>
+
+#### Add the sentryTanstackStart Vite Plugin
+
+<OrgAuthTokenNote />
+
+**Make sure you add your auth token to your CI, if you are using one to deploy your application.**
+
+Add your auth token to your environment:
+
+```bash {filename:.env}
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
+and configure `sentryTanstackStart` in your `vite.config.ts`:
+
+```typescript {filename:vite.config.ts}
+import { defineConfig } from "vite";
+import { sentryTanstackStart } from "@sentry/tanstackstart-react";
+import { tanstackStart } from "@tanstack/react-start/plugin/vite";
+
+export default defineConfig({
+  plugins: [
+    tanstackStart(),
+    // other plugins - sentryTanstackStart should be last
+    sentryTanstackStart({
+      org: "___ORG_SLUG___",
+      project: "___PROJECT_SLUG___",
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+    }),
+  ],
+});
+```
+
+For all available options, see the [Vite Plugin documentation](/platforms/javascript/guides/tanstackstart-react/features/sentryTanstackStart/).
 
 #### Moving the Sentry server config file for production usage
 
@@ -228,9 +284,9 @@ const route = createRoute({
 
 ## Step 4: Add Readable Stack Traces With Source Maps (Optional)
 
-The stack traces in your Sentry errors probably won't look like your actual code. To fix this, upload your source maps to Sentry. 
+If you configured the `sentryTanstackStart` Vite plugin in Step 2, source maps are automatically uploaded during production builds.
 
-Since TanStack Start uses Vite, you can use the Sentry Vite plugin to automatically upload source maps. Follow our [TanStack Start source maps guide](/platforms/javascript/guides/tanstackstart-react/sourcemaps) to set this up.
+If you need more control over the upload process, see our [source maps guide](/platforms/javascript/guides/tanstackstart-react/sourcemaps/) for manual configuration options.
 
 ## Step 5: Avoid Ad Blockers With Tunneling (Optional)
 
@@ -270,20 +326,23 @@ To test tracing, create a new file like `src/routes/api/sentry-example.ts` to cr
 import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@tanstack/react-start";
 
-export const Route = createFileRoute('/api/sentry-example')({
+export const Route = createFileRoute("/api/sentry-example")({
   server: {
     handlers: {
       GET: () => {
         throw new Error("Sentry Example Route Error");
-        return new Response(JSON.stringify({ message: "Testing Sentry Error..." }), {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        })
+        return new Response(
+          JSON.stringify({ message: "Testing Sentry Error..." }),
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
       },
     },
   },
-})
+});
 ```
 
 Next, update your test button to call this route and throw an error if the response isn't `ok`:

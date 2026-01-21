@@ -339,17 +339,16 @@ SDKs should not rely on Envelope header authentication to retain backward compat
 ### Size Limits
 
 Event ingestion imposes limits on the size and number of Items in Envelopes.
-These limits are subject to future change and defined currently as:
+These limits are subject to future change and defined currently as (see [Relay config source](https://github.com/getsentry/relay/blob/master/relay-config/src/config.rs)):
 
-- *40MB* for a compressed envelope request
-- *200MB* for a full envelope after decompression
-- *200MB* for all attachments combined
-- *200MB* for each attachment item
-- *1MB* for event (errors and transactions), span, log, and metric (statsd, buckets, meta) items.
-- *100KB* for monitor check-in items
-- *50MB* for profile items
-- *10MB* for compressed replay item
-- *100MB* for replay item after decompression
+- *200 MiB* for an envelope after decompression including all envelope items.
+- *1 MiB* for event (errors and transactions), span, log, and metric (statsd, buckets, meta) envelope items.
+- *2 KiB* for each metric within an envelope. Relay discards the entire envelope if the one of the metrics exceeds 2 KiB.
+- *100 KiB* for monitor check-in items
+- *4 KiB* for client report items
+- *50 MiB* for profile items
+- *10 MiB* for compressed replay items
+- *100 MiB* for replay items after decompression
 - *100 sessions* per envelope
 - *100 pre-aggregated session buckets* per each `"sessions"` item
 
