@@ -10,8 +10,10 @@ import {redirects} from './redirects.js';
 // output is used at runtime, so bundling these ~150-200MB of dependencies would bloat
 // functions unnecessarily and cause deployment failures.
 //
-// Note: mdx-bundler/client (getMDXComponent) is a tiny runtime module needed by
-// app/[[...path]]/page.tsx, so we exclude only the build parts (dist/!(client)*).
+// Note: We use a local getMDXComponent implementation (src/getMDXComponent.ts)
+// instead of mdx-bundler/client to avoid CJS/ESM compatibility issues at runtime.
+// This allows us to fully exclude mdx-bundler from serverless bundles.
+// Fixes: DOCS-A0W
 const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
   ? {
       '/**/*': [
@@ -30,9 +32,11 @@ const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
         'node_modules/@prettier/**/*',
         'node_modules/sharp/**/*',
         'node_modules/mermaid/**/*',
-        // Exclude MDX processing dependencies (but keep mdx-bundler/client for runtime)
-        'node_modules/mdx-bundler/dist/!(client*)',
-        'node_modules/mdx-bundler/node_modules/**/*',
+        // Exclude MDX processing dependencies
+        // Note: We use a local getMDXComponent implementation (src/getMDXComponent.ts)
+        // instead of mdx-bundler/client to avoid CJS/ESM compatibility issues at runtime.
+        // Fixes: DOCS-A0W
+        'node_modules/mdx-bundler/**/*',
         'node_modules/rehype-preset-minify/**/*',
         'node_modules/rehype-prism-plus/**/*',
         'node_modules/rehype-prism-diff/**/*',
@@ -59,9 +63,11 @@ const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
         'node_modules/@prettier/**/*',
         'node_modules/sharp/**/*',
         'node_modules/mermaid/**/*',
-        // Exclude MDX processing dependencies (but keep mdx-bundler/client for runtime)
-        'node_modules/mdx-bundler/dist/!(client*)',
-        'node_modules/mdx-bundler/node_modules/**/*',
+        // Exclude MDX processing dependencies
+        // Note: We use a local getMDXComponent implementation (src/getMDXComponent.ts)
+        // instead of mdx-bundler/client to avoid CJS/ESM compatibility issues at runtime.
+        // Fixes: DOCS-A0W
+        'node_modules/mdx-bundler/**/*',
         'node_modules/rehype-preset-minify/**/*',
         'node_modules/rehype-prism-plus/**/*',
         'node_modules/rehype-prism-diff/**/*',
@@ -139,11 +145,9 @@ const nextConfig = {
     '@esbuild/linux-x64',
     '@esbuild/win32-x64',
     // Note: mdx-bundler is intentionally NOT in serverExternalPackages.
-    // The package is ESM-only ("type": "module") and cannot be require()'d at runtime.
-    // Keeping it out allows webpack to bundle mdx-bundler/client properly while
-    // outputFileTracingExcludes still prevents the heavy build-time parts from
-    // being included in the serverless function bundle.
-    // Fixes: DOCS-A0W
+    // We use a local getMDXComponent implementation (src/getMDXComponent.ts) and
+    // webpack bundles the mdx-bundler code that's imported for API pages.
+    // This avoids CJS/ESM compatibility issues at runtime. Fixes: DOCS-A0W
     'sharp',
     '@aws-sdk/client-s3',
     '@google-cloud/storage',

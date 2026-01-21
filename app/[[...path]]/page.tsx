@@ -1,6 +1,5 @@
 import {Fragment, useMemo} from 'react';
 import * as Sentry from '@sentry/nextjs';
-import {getMDXComponent} from 'mdx-bundler/client';
 import {Metadata} from 'next';
 import {notFound} from 'next/navigation';
 
@@ -20,6 +19,7 @@ import {
   getPreviousNode,
   nodeForPath,
 } from 'sentry-docs/docTree';
+import {getMDXComponent} from 'sentry-docs/getMDXComponent';
 import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
 import {
   getDevDocsFrontMatter,
