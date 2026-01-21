@@ -25,7 +25,9 @@ function extractSlugsFromDocTree(node: DocNode): string[] {
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const rootNode = await getDocsRootNode();
-  const baseUrl = isDeveloperDocs ? 'https://develop.sentry.dev' : 'https://docs.sentry.io';
+  const baseUrl = isDeveloperDocs
+    ? 'https://develop.sentry.dev'
+    : 'https://docs.sentry.io';
 
   const paths = extractSlugsFromDocTree(rootNode);
   return docsToSitemap(paths, baseUrl);
