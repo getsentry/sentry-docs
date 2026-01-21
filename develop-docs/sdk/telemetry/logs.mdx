@@ -3,12 +3,6 @@ title: Logs
 sidebar_order: 3
 ---
 
-<Alert title="Note" level="warning">
-
-The Sentry Logs feature is under active development. The information in this document is subject to change.
-
-</Alert>
-
 This document defines the format used by Sentry to ingest logs, as well as the SDK API and behavior that create and send logs to Sentry.
 
 ## Logs Protocol
@@ -40,6 +34,7 @@ The `log` envelope item payload is a JSON object that represents a Sentry Log.
 {
   "timestamp": 1544719860.0,
   "trace_id": "5b8efff798038103d269b633813fc60c",
+  "span_id": "b0e6f15b45c36b12",
   "level": "info",
   "body": "User John has logged in!",
   "attributes": {
@@ -58,10 +53,6 @@ The `log` envelope item payload is a JSON object that represents a Sentry Log.
     "sentry.release": {
       "value": "1.0.0",
       "type": "string"
-    },
-    "sentry.trace.parent_span_id": {
-      "value": "b0e6f15b45c36b12",
-      "type": "string"
     }
   }
 }
@@ -77,6 +68,10 @@ It consists of the following fields:
 
 : **String, required**. The trace id of the log. The value should be 16 random bytes encoded as a hex string (32 characters long). The trace id should be grabbed from the current propagation context in the SDK.
 
+`span_id`
+
+: **String, optional**. The span id of the span that was active when the log was collected. The value should be 8 random bytes encoded as a hex string (16 characters long). The span id should be grabbed from the current active span in the SDK.
+
 `level`
 
 : **String, required**. The severity level of the log. One of `trace`, `debug`, `info`, `warn`, `error`, `fatal` (in order of lowest to highest).
@@ -87,9 +82,7 @@ It consists of the following fields:
 
 `attributes`
 
-: **Object, optional**. A dictionary of key-value pairs of arbitrary data attached to the log. Attributes must also declare the type of the value. The following types are supported: `string`, `boolean`, `integer`, `double`. In the future arrays will be supported (`string[]`, `boolean[]`, `integer[]`, `double[]`).
-
-Integers should be a 64-bit signed integer, while doubles should be a 64-bit floating point number. For 64-bit unsigned integers, use the `string` type to avoid overflow issues. Make sure to always convert 64-bit unsigned integers to strings regardless of if they are in or out of the 64-bit signed range. In the future we will support sending 64-bit unsigned integers without converting them to strings.
+: **Object, optional**. A dictionary of key-value pairs of arbitrary data attached to the log. Attributes must also declare the type of the value. See [Attributes](/sdk/telemetry/attributes) for the supported types and structure.
 
 Example:
 
@@ -188,7 +181,7 @@ Sentry.logger.warn("User %s performed action %s", [userId, actionName], {
 });
 ```
 
-Aside from accepting attributes, these methods can be overloaded to accept severity number or other parameters if required for the language or platform.
+Aside from accepting attributes, these methods can be overloaded to accept severity number or other parameters if required for the language or platform. The Hub/Scope MUST offer the same methods as the static API `Sentry.logger.X`, which is useful for power users who want to use multiple Hubs/Scopes. The Client SHOULD only offer one generic method that accepts the log object and the Scope, such as `captureLog(log, scope)`.
 
 Beyond the specified methods, SDKs are free to add any extra helpers as they feel is necessary. For example, they could choose to add specialized decorators or helpers for string template creation.
 
@@ -255,6 +248,8 @@ In general log processing should follow this order:
 
 1. Capture log via [Public APIs](#logger-module) (e.g. `Sentry.logger.info`) or via [SDK integrations](#sdk-integrations).
 1. Check if logging is enabled as per `enableLogs`/`enable_logs` configuration - if not, skip the rest of the steps.
+1. Pass the log to Hub/Scope, which MUST offer the same methods as the static API `Sentry.logger.X`. This is useful for power users who want to use multiple Hubs/Scopes.
+1. Pass the log to the Client, via a generic method that accepts the log object and the `scope`, such as `captureLog(log, scope)`.
 1. Process captured log (attach attributes as per [default attributes](#default-attributes)).
 1. Run `beforeSendLog`/`before_send_log` to filter or modify the log.
 1. Add log to buffer/batch processor as detailed in [buffering](#buffering).
@@ -272,21 +267,21 @@ By default the SDK should attach the following attributes to a log:
 
 1. `sentry.environment`: The environment set in the SDK if defined.
 2. `sentry.release`: The release set in the SDK if defined.
-3. `sentry.trace.parent_span_id`: The span id of the span that was active when the log was collected. This should not be set if there was no active span.
-4. `sentry.sdk.name`: The name of the SDK that sent the log
-5. `sentry.sdk.version`: The version of the SDK that sent the log
+3. `sentry.sdk.name`: The name of the SDK that sent the log
+4. `sentry.sdk.version`: The version of the SDK that sent the log
+5. `sentry.replay_id`: The replay id of the replay that was active when the log was collected. This should not be set if there was no active replay.
 
 ```json
 {
   "sentry.environment": "production",
   "sentry.release": "1.0.0",
-  "sentry.trace.parent_span_id": "b0e6f15b45c36b12",
   "sentry.sdk.name": "sentry.javascript.node",
-  "sentry.sdk.version": "9.11.0"
+  "sentry.sdk.version": "9.11.0",
+  "sentry.replay_id": "36b75d9fa11f45459412a96c41bdf691"
 }
 ```
 
-If the log was paramaterized the SDK should attach the following
+If the log was parameterized the SDK should attach the following
 
 1. `sentry.message.template`: The parameterized template string
 2. `sentry.message.parameter.X`: The parameters to the template string. X can either be the number that represent the parameter's position in the template string (`sentry.message.parameter.0`, `sentry.message.parameter.1`, etc) or the parameter's name (`sentry.message.parameter.item_id`, `sentry.message.parameter.user_id`, etc)
@@ -299,17 +294,31 @@ If the log was paramaterized the SDK should attach the following
 }
 ```
 
+If there are no `sentry.message.parameter.X` attributes included in the log, then the SDK MUST NOT attach a `sentry.message.template` attribute. This is important because it reduces duplicate content in the log and makes PII processing in Sentry much easier as only we don't have to duplicate processing between the log message and the `sentry.message.template` attribute.
+
 #### SDK Integration Attributes
 
-If a log is generated by an SDK integration, the SDK should also set the `sentry.origin` attribute, as per the [Trace Origin](/sdk/telemetry/traces/trace-origin/) documentation. It is assumed that logs without a `sentry.origin` attribute are manually created by the user.
+If a log is generated by an SDK integration, the SDK should also set the `sentry.origin` attribute, as per the [Trace Origin](/sdk/telemetry/traces/trace-origin/) documentation.
+
+Logs can be generated in three ways:
+
+1. User calls Sentry’s Logging API directly: SDKs MUST NOT send a `sentry.origin`. As logs are charged based on size, we want to minimize the size of logs, and we **intentionally deviate** from the original [Trace Origin](/sdk/telemetry/traces/trace-origin/) documentation.
+
+2. Captured from a logging library: Use `auto.log.<name>` format. where `<name>` is the relevant integration. For example, the .NET Serilog library emits:
 
 ```json
-{
-  "sentry.origin": "auto.db.graphql"
-}
+{ "sentry.origin": "auto.log.serilog" }
+```
+
+3. Auto-emitted logs from other instrumented systems: Use the `auto.<category>.<integration-name>` format as outlined in [Trace Origin](/sdk/telemetry/traces/trace-origin/) documentation.
+
+```json
+{ "sentry.origin": "auto.db.prisma" }
 ```
 
 #### User Attributes
+
+SDKs may optionally attach user information as attributes (guarded by `sendDefaultPii`):
 
 1. `user.id`: The user ID. Maps to `id` in the [User](/sdk/data-model/event-payloads/user/) payload.
 2. `user.name`: The username. Maps to `username` in the [User](/sdk/data-model/event-payloads/user/) payload.
@@ -317,9 +326,11 @@ If a log is generated by an SDK integration, the SDK should also set the `sentry
 
 ```json
 {
-  "user.id": "123",
-  "user.name": "john.doe",
-  "user.email": "john.doe@example.com"
+  "attributes": {
+    "user.id": { "value": "123", "type": "string" },
+    "user.name": { "value": "john.doe", "type": "string" },
+    "user.email": { "value": "john.doe@example.com", "type": "string" }
+  }
 }
 ```
 
@@ -332,8 +343,10 @@ By default, Relay should parse the user agent attached to an incoming log envelo
 
 ```json
 {
-  "browser.name": "Chrome",
-  "browser.version": "120.0"
+  "attributes": {
+    "browser.name": { "value": "Chrome", "type": "string" },
+    "browser.version": { "value": "120.0", "type": "string" }
+  }
 }
 ```
 
@@ -341,11 +354,13 @@ By default, Relay should parse the user agent attached to an incoming log envelo
 
 For backend SDKs (Node.js, Python, PHP, etc.), the SDKs should attach the following:
 
-1. `server.address`: The address of the server that sent the log. Equivalent to [`server_name`](sdk/data-model/event-payloads/#optional-attributes) we attach to errors and transactions.
+1. `server.address`: The address of the server that sent the log. Equivalent to [`server_name`](/sdk/data-model/event-payloads/#optional-attributes) we attach to errors and transactions.
 
 ```json
 {
-  "server.address": "foo.example.com"
+  "attributes": {
+    "server.address": { "value": "foo.example.com", "type": "string" }
+  }
 }
 ```
 
@@ -361,11 +376,13 @@ For mobile, desktop, and native SDKs (Android, Apple, Electron, etc.), the SDKs 
 
 ```json
 {
-  "os.name": "iOS",
-  "os.version": "17.0",
-  "device.brand": "Apple",
-  "device.model": "iPhone 15 Pro Max",
-  "device.family": "iPhone"
+  "attributes": {
+    "os.name": { "value": "iOS", "type": "string" },
+    "os.version": { "value": "17.0", "type": "string" },
+    "device.brand": { "value": "Apple", "type": "string" },
+    "device.model": { "value": "iPhone 15 Pro Max", "type": "string" },
+    "device.family": { "value": "iPhone", "type": "string" }
+  }
 }
 ```
 
@@ -381,7 +398,11 @@ A new data category for logs has been added to Relay, `log_item`. Both the `log`
 
 ### Buffering
 
-Logs should be buffered before being sent. SDKs should keep a buffer of logs on the client (so you can have logs from multiple traces in the buffer) that flushes out based on some kind of condition. We recommend to use follow the [batch processor specification outlined](/sdk/telemetry/spans/batch-processor/) in the develop docs, but you should choose the approach that works best for your platform. When starting intial development on the SDK you can choose a simple approach to buffer like flushing logs if the buffer length exceeds 100 items, or if 5 seconds have passed.
+SDKs **MUST** buffer logs before sending them. SDKs should keep a buffer of logs and flush it when specific conditions are met. For initial implementation, a simple strategy is fine, for example: flushing logs if the buffer length exceeds 100 items or if 5 seconds have passed. To prevent data loss, the buffer SHOULD forward logs to the transport in the scenarios outlined in the [telemetry buffer data forwarding scenarios](/sdk/telemetry/telemetry-buffer/#data-forwarding-scenarios).
+
+SDKs **MUST** also have a hard limit of 1000 log events queued up to avoid causing your customers' applications going out of memory. Logs added once this hard limit has been reached are dropped. Also, Relay has a hard limit of 1000 logs per envelope. SDKs **MUST** not exceed this limit. SDKs **SHOULD**  batch logs into envelopes of 100 or less.
+
+We used to recommend following the [BatchProcessor](/sdk/telemetry/telemetry-buffer/#batchprocessor-v0), but this page is currently under development. We currently working on a new [telemetry buffer specification](/sdk/telemetry/telemetry-buffer/) that will replace the BatchProcessor.
 
 SDKS should NOT release logging capabilities to users if a buffering implementation has not been added to their SDK when adding logging APIs.
 
@@ -390,6 +411,16 @@ SDKS should NOT release logging capabilities to users if a buffering implementat
 SDKs should aim to have it so that console/logger integrations create logs as per the appropriate log level if `enableLogs`/`enable_logs` is set to true. Examples of this include JavaScript's `console` object and Pythons `logging` standard library.
 
 If SDK authors feel the need, they can also introduce additional options to beyond `enableLogs`/`enable_logs` to gate this functionality. For example an option to control log appenders added via external config like with `Log4j` in the Java SDK.
+
+### Behaviour with other Sentry Telemetry
+
+#### Tracing
+
+Logs should be associated with traces if possible. If a log is recorded during an active span, the SDK should set the `span_id` property of the log to the span id of the span that was active when the log was collected.
+
+#### Replays
+
+Logs should be associated with replays if possible. If a log is recorded during an active replay, the SDK should set the `sentry.replay_id` attribute to the replay id of the replay that was active when the log was collected.
 
 ### Other
 
@@ -666,3 +697,7 @@ Example:
 : **String, optional**. The time the log was created in Unix nanoseconds. If not set, the SDK should set this to the current time.
 
 </Expandable>
+
+## Client Reports
+
+SDKs must report count (`log_item`) and size in bytes (`log_byte`) of discarded log messages. An approximation of log size is sufficient (e.g. by counting as if serialized).

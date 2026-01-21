@@ -1,13 +1,33 @@
 'use client';
 
-import {ReactNode, useContext, useEffect, useReducer, useState} from 'react';
+// eslint-disable-next-line no-restricted-imports -- Required for JSX in test environment
+import React, {ReactNode, useContext, useEffect, useReducer, useState} from 'react';
 import {QuestionMarkCircledIcon} from '@radix-ui/react-icons';
 import * as Tooltip from '@radix-ui/react-tooltip';
 import {Button, Checkbox, Theme} from '@radix-ui/themes';
 
+import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
+
 import styles from './styles.module.scss';
 
 import {CodeContext} from '../codeContext';
+
+const OPTION_IDS = [
+  'error-monitoring',
+  'logs',
+  'session-replay',
+  'performance',
+  'profiling',
+  'source-maps',
+  'user-feedback',
+  'source-context',
+  'dsym',
+  'opentelemetry',
+] as const;
+
+const OPTION_IDS_SET = new Set(OPTION_IDS);
+
+type OptionId = (typeof OPTION_IDS)[number];
 
 const optionDetails: Record<
   OptionId,
@@ -20,6 +40,24 @@ const optionDetails: Record<
   'error-monitoring': {
     name: 'Error Monitoring',
     description: "Let's admit it, we all have errors.",
+  },
+  logs: {
+    name: 'Logs',
+    description: (
+      <span>
+        Send text-based log information from your applications to Sentry for viewing
+        alongside relevant errors and searching by text-string or individual attributes.
+      </span>
+    ),
+  },
+  'session-replay': {
+    name: 'Session Replay',
+    description: (
+      <span>
+        Video-like reproductions of user sessions with debugging context to help you
+        confirm issue impact and troubleshoot faster.
+      </span>
+    ),
   },
   performance: {
     name: 'Tracing',
@@ -41,12 +79,12 @@ const optionDetails: Record<
     ),
     deps: ['performance'],
   },
-  'session-replay': {
-    name: 'Session Replay',
+  'source-maps': {
+    name: 'Source Maps',
     description: (
       <span>
-        Video-like reproductions of user sessions with debugging context to help you
-        confirm issue impact and troubleshoot faster.
+        Source maps for web applications that help translate minified code back to the
+        original source for better error reporting.
       </span>
     ),
   },
@@ -56,15 +94,6 @@ const optionDetails: Record<
       <span>
         Collect user feedback from anywhere in your application with an embeddable widget
         that allows users to report bugs and provide insights.
-      </span>
-    ),
-  },
-  logs: {
-    name: 'Logs (Beta)',
-    description: (
-      <span>
-        Send text-based log information from your applications to Sentry for viewing
-        alongside relevant errors and searching by text-string or individual attributes.
       </span>
     ),
   },
@@ -86,35 +115,11 @@ const optionDetails: Record<
       </span>
     ),
   },
-  'source-maps': {
-    name: 'Source Maps',
-    description: (
-      <span>
-        Source maps for web applications that help translate minified code back to the
-        original source for better error reporting.
-      </span>
-    ),
-  },
   opentelemetry: {
     name: 'OpenTelemetry',
     description: <span>Combine Sentry with OpenTelemetry.</span>,
   },
 };
-
-const OPTION_IDS = [
-  'error-monitoring',
-  'performance',
-  'profiling',
-  'session-replay',
-  'user-feedback',
-  'logs',
-  'source-context',
-  'dsym',
-  'source-maps',
-  'opentelemetry',
-] as const;
-
-type OptionId = (typeof OPTION_IDS)[number];
 
 export type OnboardingOptionType = {
   /**
@@ -132,7 +137,7 @@ export type OnboardingOptionType = {
 
 const validateOptionIds = (options: Pick<OnboardingOptionType, 'id'>[]) => {
   options.forEach(option => {
-    if (!OPTION_IDS.includes(option.id)) {
+    if (!OPTION_IDS_SET.has(option.id)) {
       throw new Error(
         `Invalid option id: ${option.id}.\nValid options are: ${OPTION_IDS.map(opt => `"${opt}"`).join(', ')}`
       );
@@ -227,6 +232,106 @@ export function updateElementsVisibilityForOptions(
       });
     }
   });
+
+  // Handle integrations wrapper: hide opening/closing brackets if no integrations are visible
+  const openWrappers = document.querySelectorAll<HTMLElement>(
+    '[data-integrations-wrapper="open"]'
+  );
+
+  openWrappers.forEach(openLine => {
+    const codeBlock = openLine.closest('code.code-highlight');
+    if (!codeBlock) return;
+
+    // Helper function to get all code lines, including those nested in HighlightBlocks
+    const getAllCodeLines = (container: Element): HTMLElement[] => {
+      const lines: HTMLElement[] = [];
+      Array.from(container.children).forEach(child => {
+        const el = child as HTMLElement;
+        // If it's a highlight-block, get lines from inside it
+        if (el.classList.contains('highlight-block')) {
+          // Lines are nested in highlight-block > div (CodeLinesContainer)
+          const linesContainer = el.querySelector('div');
+          if (linesContainer) {
+            lines.push(...(Array.from(linesContainer.children) as HTMLElement[]));
+          }
+        } else {
+          // Regular line, add it directly
+          lines.push(el);
+        }
+      });
+      return lines;
+    };
+
+    const allLines = getAllCodeLines(codeBlock);
+    const openIndex = allLines.indexOf(openLine);
+
+    // Find the matching close line in the same code block
+    let closeIndex = -1;
+    for (let i = openIndex + 1; i < allLines.length; i++) {
+      if (allLines[i].dataset.integrationsWrapper === 'close') {
+        closeIndex = i;
+        break;
+      }
+    }
+
+    if (closeIndex === -1) return;
+
+    // Check if any lines between open and close are visible (non-marker lines)
+    let hasVisibleIntegrations = false;
+    for (let i = openIndex + 1; i < closeIndex; i++) {
+      const line = allLines[i];
+      const isHidden = line.classList.contains('hidden');
+      const isMarker = line.dataset.onboardingOptionHidden;
+
+      // Count any visible non-marker line
+      if (!isMarker && !isHidden) {
+        hasVisibleIntegrations = true;
+        break;
+      }
+    }
+
+    // Toggle visibility of both open and close lines
+    openLine.classList.toggle('hidden', !hasVisibleIntegrations);
+    allLines[closeIndex].classList.toggle('hidden', !hasVisibleIntegrations);
+
+    // Hide empty lines adjacent to the wrapper when no integrations are visible
+    if (!hasVisibleIntegrations) {
+      // Check line before open wrapper
+      if (openIndex > 0) {
+        const prevLine = allLines[openIndex - 1];
+        if (!prevLine.textContent?.trim()) {
+          prevLine.classList.add('hidden');
+          prevLine.dataset.emptyLineHidden = 'true';
+        }
+      }
+
+      // Check line after close wrapper
+      if (closeIndex < allLines.length - 1) {
+        const nextLine = allLines[closeIndex + 1];
+        if (!nextLine.textContent?.trim()) {
+          nextLine.classList.add('hidden');
+          nextLine.dataset.emptyLineHidden = 'true';
+        }
+      }
+    } else {
+      // Show empty lines when integrations are visible
+      if (openIndex > 0) {
+        const prevLine = allLines[openIndex - 1];
+        if (prevLine.dataset.emptyLineHidden === 'true') {
+          prevLine.classList.remove('hidden');
+          delete prevLine.dataset.emptyLineHidden;
+        }
+      }
+
+      if (closeIndex < allLines.length - 1) {
+        const nextLine = allLines[closeIndex + 1];
+        if (nextLine.dataset.emptyLineHidden === 'true') {
+          nextLine.classList.remove('hidden');
+          delete nextLine.dataset.emptyLineHidden;
+        }
+      }
+    }
+  });
 }
 
 export function OnboardingOptionButtons({
@@ -236,25 +341,35 @@ export function OnboardingOptionButtons({
   options: (OnboardingOptionType | OptionId)[];
 }) {
   const codeContext = useContext(CodeContext);
+  const {emit} = usePlausibleEvent();
 
-  const normalizedOptions = initialOptions.map(option => {
-    if (typeof option === 'string') {
-      return {
-        id: option,
-        // error monitoring is always needs to be checked and disabled
-        disabled: option === 'error-monitoring',
-        checked: option === 'error-monitoring',
-      };
-    }
-    return option;
-  });
+  const normalizedOptions = initialOptions
+    .map(option => {
+      if (typeof option === 'string') {
+        return {
+          id: option,
+          // error monitoring is always needs to be checked and disabled
+          disabled: option === 'error-monitoring',
+          checked: option === 'error-monitoring',
+        };
+      }
+      return option;
+    })
+    // sort options by their index in OPTION_IDS
+    // so that the order of the options is consistent
+    // regardless of how the user passes them in
+    .sort((a, b) => {
+      const indexA = OPTION_IDS.indexOf(a.id);
+      const indexB = OPTION_IDS.indexOf(b.id);
+      return indexA - indexB;
+    });
 
   validateOptionIds(normalizedOptions);
 
   const [options, setSelectedOptions] = useState<OnboardingOptionType[]>(
     normalizedOptions.map(option => ({
       ...option,
-      // default to unchecked if not excplicitly set
+      // default to unchecked if not explicitly set
       checked: option.checked ?? false,
     }))
   );
@@ -262,6 +377,17 @@ export function OnboardingOptionButtons({
 
   function handleCheckedChange(clickedOption: OnboardingOptionType, checked: boolean) {
     touchOptions();
+
+    // Track the toggle event in Plausible
+    emit('Onboarding Option Toggle', {
+      props: {
+        checked,
+        optionId: clickedOption.id,
+        optionName: optionDetails[clickedOption.id].name,
+        page: typeof window !== 'undefined' ? window.location.pathname : '',
+      },
+    });
+
     const dependencies = optionDetails[clickedOption.id].deps ?? [];
     const depenedants =
       options.filter(opt => optionDetails[opt.id].deps?.includes(clickedOption.id)) ?? [];
@@ -310,7 +436,7 @@ export function OnboardingOptionButtons({
   }, [options, touchOptions, touchedOptions]);
 
   return (
-    <div className="onboarding-options flex flex-wrap gap-3 py-2 bg-[var(--white)] dark:bg-[var(--gray-1)]  sticky top-[80px] z-[4] shadow-[var(--shadow-6)] transition">
+    <div className="onboarding-options flex flex-wrap gap-3 py-2 bg-[var(--white)] dark:bg-[var(--gray-1)] lg:sticky top-[80px] z-[4] shadow-[var(--shadow-6)] transition">
       {options.map(option => (
         <Button
           variant="surface"

@@ -1,0 +1,195 @@
+---
+title: Hydrogen with React Router
+description: Learn how to use the Sentry React Router SDK to instrument your Hydrogen app (versions 2025.5.0+).
+---
+
+<Alert level="info" title="Hydrogen Version">
+
+This guide applies to Hydrogen versions **2025.5.0 and later** that use React Router 7 (framework mode). For older versions of Hydrogen that use Remix v2, see the [Remix guide](/platforms/javascript/guides/cloudflare/frameworks/hydrogen-remix/).
+
+</Alert>
+
+Starting from Hydrogen version 2025.5.0, Shopify switched from Remix v2 to React Router 7 (framework mode). You can use the Sentry React Router SDK with Cloudflare support to add Sentry instrumentation to your Hydrogen app.
+
+## Installing Sentry React Router and Cloudflare SDKs
+
+First, install the Sentry React Router and Cloudflare SDKs with your package manager:
+
+```bash {tabTitle:npm}
+npm install @sentry/react-router @sentry/cloudflare --save
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/react-router @sentry/cloudflare
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/react-router @sentry/cloudflare
+```
+
+## Instrumenting Your Server
+
+Create an `instrument.server.mjs` file to initialize Sentry on the server:
+
+```js {filename:instrument.server.mjs}
+import * as Sentry from "@sentry/react-router";
+
+Sentry.init({
+  dsn: "YOUR_DSN_HERE",
+  // Adds request headers and IP for users, for more info visit:
+  // https://docs.sentry.io/platforms/javascript/guides/react-router/configuration/options/#sendDefaultPii
+  sendDefaultPii: true,
+  tracesSampleRate: 1.0,
+});
+```
+
+Update your `server.ts` file to use the `wrapRequestHandler` method from `@sentry/cloudflare`:
+
+```ts {filename:server.ts}
+import { wrapRequestHandler } from '@sentry/cloudflare';
+// ...other imports
+
+/**
+ * Export a fetch handler in module format.
+ */
+export default {
+  async fetch(
+    request: Request,
+    env: Env,
+    executionContext: ExecutionContext
+  ): Promise<Response> {
+    return wrapRequestHandler(
+      {
+        options: {
+          dsn: "YOUR_DSN_HERE",
+          tracesSampleRate: 1.0,
+        },
+        request: request as any,
+        context: executionContext,
+      },
+      async () => {
+        // Your existing Hydrogen server logic
+        const handleRequest = createRequestHandler({
+          // @ts-ignore
+          build: await import('virtual:react-router/server-build'),
+          mode: process.env.NODE_ENV,
+          getLoadContext: (): AppLoadContext => ({
+            // your load context
+          }),
+        });
+
+        return handleRequest(request);
+      }
+    );
+  },
+};
+```
+
+## Instrumenting Your Client
+
+Initialize Sentry in your `entry.client.tsx` file:
+
+```tsx {filename:app/entry.client.tsx}
+import { HydratedRouter } from 'react-router/dom';
+import * as Sentry from '@sentry/react-router/cloudflare';
+import { StrictMode, startTransition } from 'react';
+import { hydrateRoot } from 'react-dom/client';
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [Sentry.reactRouterTracingIntegration()],
+  tracesSampleRate: 1.0,
+});
+
+startTransition(() => {
+  hydrateRoot(
+    document,
+    <StrictMode>
+      <HydratedRouter />
+    </StrictMode>,
+  );
+});
+```
+
+## Server-Side Rendering with Trace Injection
+
+To enable distributed tracing, wrap your `handleRequest` function in your `entry.server.tsx` file and inject trace meta tags:
+
+```tsx {filename:app/entry.server.tsx}
+import './instrument.server';
+import { HandleErrorFunction, ServerRouter } from 'react-router';
+import type { EntryContext } from '@shopify/remix-oxygen';
+import { renderToReadableStream } from 'react-dom/server';
+import * as Sentry from '@sentry/react-router/cloudflare';
+
+async function handleRequest(
+  request: Request,
+  responseStatusCode: number,
+  responseHeaders: Headers,
+  reactRouterContext: EntryContext,
+) {
+  const body = Sentry.injectTraceMetaTags(await renderToReadableStream(
+    <ServerRouter context={reactRouterContext} url={request.url} />,
+    {
+      signal: request.signal,
+    },
+  ));
+
+  responseHeaders.set('Content-Type', 'text/html');
+
+  return new Response(body, {
+    headers: responseHeaders,
+    status: responseStatusCode,
+  });
+}
+
+export const handleError: HandleErrorFunction = (error, { request }) => {
+  // React Router may abort some interrupted requests, don't log those
+  if (!request.signal.aborted) {
+    Sentry.captureException(error);
+    console.error(error);
+  }
+};
+
+export default Sentry.wrapSentryHandleRequest(handleRequest);
+```
+
+## Configuration
+
+### Vite Configuration
+
+Add the Sentry plugin to your `vite.config.ts`:
+
+```ts {filename:vite.config.ts}
+import { reactRouter } from '@react-router/dev/vite';
+import { hydrogen } from '@shopify/hydrogen/vite';
+import { oxygen } from '@shopify/mini-oxygen/vite';
+import { defineConfig } from 'vite';
+import { sentryReactRouter } from '@sentry/react-router';
+
+export default defineConfig(config => ({
+  plugins: [
+    hydrogen(),
+    oxygen(),
+    reactRouter(),
+    sentryReactRouter({
+      org: "your-org-slug",
+      project: "your-project-slug",
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+    }, config),
+    // ... other plugins
+  ],
+}));
+```
+
+### Build Configuration
+
+Since the `buildEnd` hook will not be executed for Hydrogen, you'll need to manually upload source maps using the [Sentry CLI](/cli/) instead.
+
+```bash
+# Inject debug IDs
+sentry-cli sourcemaps inject /path/to/build/dir
+# Upload sourcemaps
+sentry-cli sourcemaps upload /path/to/build/dir
+```
+

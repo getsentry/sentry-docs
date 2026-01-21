@@ -15,6 +15,14 @@ CSRF_TRUSTED_ORIGINS = ["https://sentry.example.com", "http://10.100.10.10", "ht
 
 See [Django's documentation on CSRF](https://docs.djangoproject.com/en/4.2/ref/settings/#std-setting-CSRF_TRUSTED_ORIGINS) for further detail.
 
+## Containers taking too much CPU/RAM usage
+
+If you're seeing a higher incoming traffic load, then it's expected. If this is the case, you might want to increase your machine resources.
+
+However, if you have very low incoming traffic and the CPU/RAM constantly spikes, you might want to check on your `top` (or `htop`, or similar) command to see which process are taking the most resources. You can then track down the corresponding Docker container and see if there are any logs that might help you identify the issue.
+
+Usually, most containers that are not a dependency (like Postgres or Kafka) will consume some good amount of CPU & RAM during startup, specifically for catching up with backlogs. If they are experiencing a [bootloop](https://en.wikipedia.org/wiki/Booting#Bootloop), it usually comes down to invalid configuration or a broken dependency.
+
 ## `sentry-data` volume not being cleaned up
 
 You may see the `sentry-data` taking too much disk space. You can clean it manually (or putting the cleanup cronjob in place).
@@ -61,3 +69,18 @@ Some known paths where you may see this error:
 * _static/dist/sentry/entrypoints/app.js
 
 To fix this, you can disable the auto optimization performed by your CDN.
+
+## Relay rejects envelope events
+
+If you're seeing the following error in your Relay logs:
+```
+ERROR relay_server::services::projects::cache::service: failed to fetch project from source: Fetch { project_key: ProjectKey("00000000000000000000000000000000"), previous_fetch: None, initiated: Instant { tv_sec: 16838910, tv_nsec: 923025932 }, when: Some(Instant { tv_sec: 16839069, tv_nsec: 382950946 }), revision: Revision(None) } tags.project_key="00000000000000000000000000000000" tags.has_revision=false error=upstream error failed to send message to service error.sources=[failed to send message to service]
+```
+
+This means Relay is unable to fetch the project configuration from Redis. This can happen if the worker (in the `taskworker` container) is lagging behind, making it unable to write new project configurations to Redis, which Relay then cannot fetch.
+
+To fix this, you can trigger a manual project configuration invalidation by running the following command. Warning: This will temporarily halt event ingestion until the project configurations are written to Redis again.
+
+```bash
+docker compose exec web ./bin/invalidate-project-configs
+```

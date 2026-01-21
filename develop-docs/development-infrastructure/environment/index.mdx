@@ -1,12 +1,12 @@
 ---
 title: Environment
-description: This guide steps you through configuring a local development environment for the Sentry server on macOS and Linux.
+description: This guide steps you through configuring a local development environment for the Sentry server on macOS.
 sidebar_order: 2
 ---
 
-If you're using
-another operating system (Plan 9, BeOS, Windows, …) the instructions are still roughly the same, but we don't maintain any official documentation
-for anything else for now.
+We primarily support development on macOS (arm64 only), but Linux (amd64) should be possible too.
+If you run into any problems on either platform, please open an issue on [devenv](https://github.com/getsentry/devenv/).
+
 
 ## Setup
 
@@ -16,11 +16,17 @@ After installation you should be able to run `devenv bootstrap` which will guide
 
 When you're done with setup, you'll want to also review the <Link to="/development/workflow/">development workflow</Link>.
 
+
 ## Keeping your environment up-to-date
 
-Simply run `devenv sync` inside of your sentry or getsentry repo.
+First make sure your branch is rebased or remerged onto latest `master`.
 
-NOTE: After running `devenv sync` you may need to restart your terminal to continue.
+Running `devenv sync` (which runs `devenv/sync.py`) will bring your environment up-to-date (dependencies, migrations, etc.).
+
+You may also need to run `direnv allow` if you haven't already (sometimes it's easy to miss the prompt).
+
+Any issues? See [troubleshooting](#troubleshooting).
+
 
 ## Running the Development Server
 
@@ -34,11 +40,8 @@ devservices up
 After that, you can start the development server inside the `sentry` folder:
 
 ```shell
-sentry devserver --workers
+devservices serve
 ```
-
-If you are developing for aesthetics only and do not rely on the async workers, you can omit the `--workers` flag in order
-to use fewer system resources.
 
 Access it at [http://dev.getsentry.net:8000](http://dev.getsentry.net:8000) (you'll have to wait a bit for webpack to finish).
 A superuser account should have been created for you during bootstrap - `admin@sentry.io` with password `admin`.
@@ -86,8 +89,8 @@ After the server is running we can visit the dev server using `https` at port `:
 <Link to="/relay/">Relay</Link> and the ingest workers are not started by default. Follow the instructions below to start them so you can send events to your dev environment Sentry instance:
 
 - Set `SENTRY_USE_RELAY = True` in `~/.sentry/sentry.conf.py`.
-- Run `devservices up` to start the services Relay needs. (like for example Kafka)
-- (Re-)Start your devserver with the `--ingest` flag (e.g. `sentry devserver --workers --ingest`). This will start the Relay container and all related services alongside your devserver.
+- Run `devservices up --mode ingest` to start the services Relay needs. (like for example Kafka)
+- Start your devserver (e.g. `devservices serve`).
 
 ## Running the Getsentry Development Server
 
@@ -97,21 +100,37 @@ After the server is running we can visit the dev server using `https` at port `:
 
 See also: <Link to="/application/sentry-vs-getsentry/">Sentry vs Getsentry</Link>
 
-Before running `getsentry`, you might need to run `devenv sync` inside the `getsentry` directory if you have previously run `sentry` locally, as there might be differences between the environments.
+To set up and keep getsentry up to date, you need to run `devenv sync` inside `sentry` before you run `devenv sync` inside `getsentry`.
 
-Just like running `sentry` (see above), you can start the `devservices` using the following command in the `getsentry` folder:
+`getsentry` depends on what commit `../sentry` is checked out to, so keeping your sentry repo up to date is important.
+
+Just like running `sentry` (see above), you can start the `devservices` using the following command in the `getsentry` repo:
 
 ```shell
 devservices up
 ```
 
+To run tasks, you will also need to start taskbroker:
+
+```shell
+# start just taskbroker
+devservices up --mode=taskbroker
+
+# start taskbroker and a background worker
+devservices up --mode=taskworker
+```
+
+If you use the `--mode` flag of devservices, any modes that started celery workers will now start taskbroker and a taskworker.
+
 After that, you can start the development server inside the `getsentry` folder:
 
 ```shell
-getsentry devserver --workers
+devservices serve
 ```
 
-**Note**: You **cannot** have both sentry and getsentry devserver running at the same time.
+<Alert title="Note">
+You **cannot** have both sentry and getsentry devserver running at the same time.
+</Alert>
 
 After the server warms up, access it at [http://dev.getsentry.net:8000](http://dev.getsentry.net:8000/). Using localhost won't work. Note that the **http** protocol is used, not **https**. If you encounter a certificate error while accessing it locally, it might be because your browser has remembered that `dev.getsentry.net` previously used the https protocol (possibly while running `pnpm dev-ui`) and is now redirecting all http requests to https. To resolve this, open the site in an **incognito window** of your browser.
 
@@ -123,7 +142,7 @@ by `dev.py` if it exists.
 To enable the ingest workers, follow the steps described <Link to="#ingestion-pipeline-relay">here</Link> and run
 
 ```shell
-getsentry devserver --workers --ingest
+devservices serve
 ```
 
 ## Running siloed instances
@@ -134,10 +153,10 @@ The devserver command supports `--silo` option that lets you create siloed insta
 
 ```shell
 # Start control silo servers
-sentry devserver --silo=control --celery-beat --workers
+devservices serve --silo=control --celery-beat
 
 # Start region silo servers
-sentry devserver --silo=region --celery-beat --workers --ingest
+devservices serve --silo=region --celery-beat
 ```
 
 Siloed servers have the following port assignments:
@@ -166,9 +185,19 @@ SENTRY_SILO_DEVSERVER=1 SENTRY_SILO_MODE=REGION SENTRY_REGION=us getsentry djang
 
 ## Troubleshooting
 
-The more up-to-date troubleshooting docs for the internal development environment on MacOS are <Link to="https://www.notion.so/sentry/devenv-troubleshooting-1448b10e4b5d8080ba04f452e33de48d">here</Link>.
+### Resetting the Database
 
-You might also be interested in <Link to="/development/continuous-integration/#troubleshooting-ci">Troubleshooting CI</Link>.
+If you're experiencing persistent database issues (migrations failing, schema corruption, or incompatible migrations between branches), you can completely reset your local database using `make reset-db`. **Warning:** This will delete all local data in your database.
+
+```bash
+make reset-db
+```
+
+This command will:
+- Drop the existing database
+- Create a new database
+- Run all migrations
+- Load initial data/fixtures
 
 ---
 
@@ -213,7 +242,7 @@ Then, either end the process or kill it if you need to.
 
 ---
 
-**Problem:** You see `Error occured while trying to proxy to: dev.getsentry.net:8000/`
+**Problem:** You see `Error occurred while trying to proxy to: dev.getsentry.net:8000/`
 
 **Solution:** You likely need to upgrade your Python dependencies. Go to the git root directory and run `make install-py-dev`.
 

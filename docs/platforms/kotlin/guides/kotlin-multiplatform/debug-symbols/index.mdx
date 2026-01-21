@@ -15,7 +15,7 @@ For Apple applications please follow the iOS documentation on [Uploading Debug S
 
 ### Gradle
 
-To upload ProGuard mapping files or Native debug symbols via Gradle you need to install the [Sentry Android Gradle](/platforms/android/configuration/gradle) plugin:
+To upload ProGuard mapping files or Native debug symbols via Gradle you need to install the [Sentry Android Gradle Plugin](/platforms/android/configuration/gradle) in your `androidApp` module:
 
 ```kotlin {filename:androidApp/build.gradle.kts}
 plugins {
@@ -23,13 +23,34 @@ plugins {
     id("io.sentry.android.gradle") version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.0.0') }}"
 }
 
-// Prevent Sentry dependencies from being included in the Android app through the AGP.
 sentry {
+  // Prevent Sentry dependencies from being included in the Android app through the AGP.
   autoInstallation {
     enabled.set(false)
   }
+  
+  // The slug of the Sentry organization to use for uploading proguard mappings/source contexts.
+  org.set("___ORG_SLUG___")
+
+  // The slug of the Sentry project to use for uploading proguard mappings/source contexts.
+  projectName.set("___PROJECT_SLUG___")
+
+  // The authentication token to use for uploading proguard mappings/source contexts.
+  // WARNING: Do not expose this token in your build.gradle files, but rather set an environment
+  // variable and read it into this property.
+  authToken.set(System.getenv("SENTRY_AUTH_TOKEN"))
 }
 ```
+
+After installing the plugin, you need to configure your auth token as an environment variable:
+
+<OrgAuthTokenNote />
+
+```bash
+export SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
+Once configured, the plugin will automatically upload the necessary debug symbols to Sentry when a release build is created.
 
 #### ProGuard/R8 & DexGuard
 

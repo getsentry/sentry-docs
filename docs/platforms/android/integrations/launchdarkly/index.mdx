@@ -1,0 +1,80 @@
+---
+title: LaunchDarkly
+description: "Learn how to use Sentry with LaunchDarkly."
+---
+
+The [LaunchDarkly](https://launchdarkly.com/) integration tracks feature flag evaluations produced by the LaunchDarkly SDK. These evaluations are held in memory and are sent to Sentry on error and transaction events. **At the moment, we only support boolean flag evaluations.**
+
+## Install
+
+
+```groovy {tabTitle:Gradle}
+implementation 'io.sentry:sentry-launchdarkly-android:{{@inject packages.version('sentry.java.launchdarkly.android', '8.27.0') }}'
+```
+
+For other dependency managers, check out the [central Maven repository](https://search.maven.org/artifact/io.sentry/sentry-launchdarkly-android).
+
+Before using this integration, you need to install and instrument the [LaunchDarkly Android SDK](https://docs.launchdarkly.com/sdk/client-side/android) in your app.
+
+## Configure
+
+Add `SentryLaunchDarklyAndroidHook` to your LaunchDarkly setup:
+
+```java {5,10}
+import com.launchdarkly.sdk.LDContext;
+import com.launchdarkly.sdk.android.Components;
+import com.launchdarkly.sdk.android.LDClient;
+import com.launchdarkly.sdk.android.LDConfig;
+import io.sentry.launchdarkly.android.SentryLaunchDarklyAndroidHook;
+
+LDConfig config = new LDConfig.Builder(LDConfig.Builder.AutoEnvAttributes.Enabled)
+    .mobileKey("mobile-key")
+    .hooks(Components.hooks()
+        .setHooks(Arrays.asList(new SentryLaunchDarklyAndroidHook())))
+    .build();
+LDContext context = LDContext.create("context-key-123abc");
+LDClient launchDarklyClient = LDClient.init(this.getApplication(), config, context, 0);
+```
+
+```kotlin {5,10}
+import com.launchdarkly.sdk.LDContext
+import com.launchdarkly.sdk.android.Components
+import com.launchdarkly.sdk.android.LDClient
+import com.launchdarkly.sdk.android.LDConfig
+import io.sentry.launchdarkly.android.SentryLaunchDarklyAndroidHook
+
+val config: LDConfig = LDConfig.Builder(LDConfig.Builder.AutoEnvAttributes.Enabled)
+    .mobileKey("mobile-key")
+    .hooks(Components.hooks()
+        .setHooks(listOf(SentryLaunchDarklyAndroidHook())))
+    .build()
+val context: LDContext = LDContext.create("context-key-123abc")
+val launchDarklyClient: LDClient = LDClient.init(this.application, config, context, 0)
+```
+
+## Verify
+
+The integration is tested by evaluating a feature flag using your LaunchDarkly SDK before capturing an exception.
+
+```java
+import io.sentry.Sentry;
+
+boolean flagValue = launchDarklyClient.boolVariation("test-flag", false);
+
+Sentry.captureException(new Exception("Something went wrong!"));
+```
+
+```kotlin
+import io.sentry.Sentry
+
+val flagValue: Boolean = launchDarklyClient.boolVariation("test-flag", false)
+
+Sentry.captureException(Exception("Something went wrong!"))
+```
+
+Visit your Sentry project and confirm that your error event has recorded the feature flag "test-flag" and its value "false".
+
+<PlatformContent includePath="feature-flags/next-steps" />
+
+
+

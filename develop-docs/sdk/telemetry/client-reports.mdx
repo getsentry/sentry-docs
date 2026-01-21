@@ -99,9 +99,10 @@ The following discard reasons are currently defined for `discarded_events`:
 - `internal_sdk_error`: an event was dropped due to an internal SDK error (eg: web worker crash)
 - `insufficient_data`: an event was dropped due to a lack of data in the event (eg: not enough samples in a profile)
 - `backpressure`: an event was dropped due to downsampling caused by the system being under load
+- `ignored`: a telemetry item was ignored by the SDK (eg: a span was ignored by `ignore_spans`, can also be used by other deny-list mechanisms)
 
 In case a reason needs to be added,
-it also has to be added to the allowlist in [snuba](https://github.com/getsentry/snuba/blob/1a2528dacaf7415f71866bf2602ce473832d938c/rust_snuba/src/processors/outcomes.rs#L15-L27).
+it also has to be added to the allowlist in [snuba](https://github.com/getsentry/snuba/blob/master/rust_snuba/src/processors/outcomes.rs#L15).
 
 Additionally the following discard reasons are reserved but there is no expectation
 that SDKs send these under normal operation:
@@ -111,7 +112,7 @@ that SDKs send these under normal operation:
 : _List of outcome objects_ \{`reason`, `category`, `quantity`\}
 
 These function like `discarded_events` but identify events that were rate limited,
-filtered or filtered by by dynamic sampling _at a relay_. Client SDKs must never
+filtered or filtered by dynamic sampling _at a relay_. Client SDKs must never
 emit these _unless_ they are operating as a relay. The reason codes for these
 need to match the reason codes that relay would emit directly to Sentry.
 

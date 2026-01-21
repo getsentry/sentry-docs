@@ -1,7 +1,8 @@
 ---
 title: Inbound Filters
 sidebar_order: 5
-description: "Learn about the different methods for filtering data in your project."
+description: Learn about the different methods for filtering data in your project.
+og_image: /og-images/concepts-data-management-filtering.png
 ---
 
 Sentry provides several methods to filter data in your project. Using sentry.io to filter events is a simple method since you don't have to [configure and deploy your SDK to filter projects](/platform-redirect/?next=/configuration/filtering/).
@@ -29,7 +30,7 @@ Inbound filters include:
 
 The legacy browser filters allow you to filter out certain legacy versions of browsers that are known to cause problems.
 
-Legacy browser filters were updated in Feb 2024 and will be periodically evaluated to include additional legacy versions.
+Legacy browser filters were updated in December 2025 and will be periodically evaluated to include additional legacy versions.
 
 If you had a legacy browser filter on before the update, the old filter will appear in your settings as "Deprecated". Deprecated legacy browser filters still work. However, if you turn them off, you won't be able to turn them on again and will need to use the new filters instead.
 
@@ -48,6 +49,7 @@ Filters events based on the **originating IP address of the client making the re
 Sentry attempts to identify the request's origin using the **forwarded IP address**. If no forwarded IP is available, it falls back to the **direct IP** of the client connecting to Sentry's servers.
 
 The supported IP address formats are:
+
 - **IPv4 Addresses**: Standard dotted-decimal notation (e.g., 1.2.3.4, 122.33.230.14, 127.0.0.1).
 - **IPv6 Addresses**: Standard colon-separated hexadecimal notation (e.g., aaaa:bbbb::cccc, a:b:c::1).
 - **IPv4 Network Ranges (CIDR Notation)**: IPv4 address with a subnet mask (e.g., 122.33.230.0/30, 127.0.0.0/8).
@@ -89,7 +91,7 @@ The following inbound filters **do** apply to Session Replays:
 The following inbound filters **do not** apply to Session Replays:
 
 - Error messages
-- Browser extension errors  
+- Browser extension errors
 - Web crawler errors
 - Legacy browser filters
 - React hydration errors
@@ -110,6 +112,28 @@ Once applied, you can track the filtered events (numbers and cause) using the gr
 
 ![](./img/builtin-inbound-filters.png)
 
+## Logs Filtering
+
+Inbound data filters have partial support for [Logs](/product/explore/logs/). Only a subset of the available inbound filters apply to Logs.
+
+The following inbound filters **do** apply to Logs:
+
+- **Log Message** - Filters logs based on the log message match
+- **Releases** - Filters replays from specific release versions
+
+The following inbound filters **do not** apply to Logs:
+
+- Error messages
+- Browser extension errors
+- Web crawler errors
+- Legacy browser filters
+- React hydration errors
+- ChunkLoadErrors
+- Health check transactions
+- IP Address
+- Request URLs
+- User-Agents
+
 ## How Custom Filtering Works
 
 <Include name="feature-available-for-plan-trial-business.mdx" />
@@ -127,6 +151,12 @@ To use inbound data filters for error messages, keep the following in mind:
 
 To ensure you're adding the correct message to the inbound filter setting, check the JSON for an event in the issue. The filter by error message setting matches the data found in the "title" field near the end of the file.
 
+<Alert title="Note" level="warning">
+
+Matching on the deobfuscated `{exception.type}` is not supported for <PlatformLink to="/enhance-errors/proguard/">ProGuard</PlatformLink> events, because deobfuscation of class names happens after ingestion.
+
+</Alert>
+
 ### Releases
 
 To filter releases, keep the following in mind:
@@ -135,9 +165,16 @@ To filter releases, keep the following in mind:
 - Globbing rules apply and there is no special casing for SemVer. This allows for matching prefixes, such as `my-example@1.*`.
 - The filter never applies to events without a release.
 
+### Log Message
+
+To use inbound data filters for log messages, keep the following in mind:
+
+- You can provide multiple patterns, one per line. The filter applies if any of the patterns match.
+- On logs, the filter matches the log message in the format. We do not recommend matching the full log message, and suggest you match with wildcards. For example, to match any "Connection timeout asbq33q", use the filter `*Connection timeout*`. The wildcard matcher can be used at the beginning or end of the string.
+
 ### Glob Matching
 
-The error messages and releases filters use glob patterns. Globs are case insensitive and allow you to specify wildcards to match variable input. For example, `*panic*` matches any error that contains the words "panic", "PANIC" or "PaNiC".
+The error messages, log messages and releases filters use glob patterns. Globs are case insensitive and allow you to specify wildcards to match variable input. For example, `*panic*` matches any error that contains the words "panic", "PANIC" or "PaNiC".
 
 Some symbols, such as the `*` character, receive special meaning as meta characters. To match a literal asterisk, escape it with a backslash: `\*`. Inbound data filters use the following meta characters:
 

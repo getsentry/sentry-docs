@@ -1,4 +1,4 @@
-import {useMemo} from 'react';
+import {Fragment, useMemo} from 'react';
 import {getMDXComponent} from 'mdx-bundler/client';
 import {Metadata} from 'next';
 import {notFound} from 'next/navigation';
@@ -9,6 +9,7 @@ import {ApiPage} from 'sentry-docs/components/apiPage';
 import {DocPage} from 'sentry-docs/components/docPage';
 import {Home} from 'sentry-docs/components/home';
 import {Include} from 'sentry-docs/components/include';
+import {PageLoadMetrics} from 'sentry-docs/components/pageLoadMetrics';
 import {PlatformContent} from 'sentry-docs/components/platformContent';
 import {
   DocNode,
@@ -26,6 +27,7 @@ import {
   getVersionsFromDoc,
 } from 'sentry-docs/mdx';
 import {mdxComponents} from 'sentry-docs/mdxComponents';
+import {PageType} from 'sentry-docs/metrics';
 import {setServerContext} from 'sentry-docs/serverContext';
 import {PaginationNavNode} from 'sentry-docs/types/paginationNavNode';
 import {stripVersion} from 'sentry-docs/versioning';
@@ -47,7 +49,12 @@ export const dynamic = 'force-static';
 const mdxComponentsWithWrapper = mdxComponents(
   {Include, PlatformContent},
   ({children, frontMatter, nextPage, previousPage}) => (
-    <DocPage frontMatter={frontMatter} nextPage={nextPage} previousPage={previousPage}>
+    <DocPage
+      frontMatter={frontMatter}
+      nextPage={nextPage}
+      previousPage={previousPage}
+      fullWidth={frontMatter.fullWidth}
+    >
       {children}
     </DocPage>
   )
@@ -69,7 +76,12 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
   });
 
   if (!params.path && !isDeveloperDocs) {
-    return <Home />;
+    return (
+      <Fragment>
+        <PageLoadMetrics pageType="home" />
+        <Home />
+      </Fragment>
+    );
   }
 
   const pageNode = nodeForPath(rootNode, params.path ?? '');
@@ -118,14 +130,19 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
       throw e;
     }
     const {mdxSource, frontMatter} = doc;
+
     // pass frontmatter tree into sidebar, rendered page + fm into middle, headers into toc
+    const pageType = (params.path?.[0] as PageType) || 'unknown';
     return (
-      <MDXLayoutRenderer
-        mdxSource={mdxSource}
-        frontMatter={frontMatter}
-        nextPage={nextPage}
-        previousPage={previousPage}
-      />
+      <Fragment>
+        <PageLoadMetrics pageType={pageType} attributes={{is_developer_docs: true}} />
+        <MDXLayoutRenderer
+          mdxSource={mdxSource}
+          frontMatter={frontMatter}
+          nextPage={nextPage}
+          previousPage={previousPage}
+        />
+      </Fragment>
     );
   }
 
@@ -134,11 +151,29 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
     const category = categories.find(c => c.slug === params?.path?.[1]);
     if (category) {
       if (params.path.length === 2) {
-        return <ApiCategoryPage category={category} />;
+        // API category page
+        return (
+          <Fragment>
+            <PageLoadMetrics pageType="api" attributes={{api_category: category.slug}} />
+            <ApiCategoryPage category={category} />
+          </Fragment>
+        );
       }
       const api = category.apis.find(a => a.slug === params.path?.[2]);
       if (api) {
-        return <ApiPage api={api} />;
+        // Specific API endpoint page
+        return (
+          <Fragment>
+            <PageLoadMetrics
+              pageType="api"
+              attributes={{
+                api_category: category.slug,
+                api_endpoint: api.slug,
+              }}
+            />
+            <ApiPage api={api} />
+          </Fragment>
+        );
       }
     }
   }
@@ -162,13 +197,24 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
   const versions = getVersionsFromDoc(allFm, pageNode.path);
 
   // pass frontmatter tree into sidebar, rendered page + fm into middle, headers into toc.
+  const pageType = (params.path?.[0] as PageType) || 'unknown';
   return (
-    <MDXLayoutRenderer
-      mdxSource={mdxSource}
-      frontMatter={{...frontMatter, versions}}
-      nextPage={nextPage}
-      previousPage={previousPage}
-    />
+    <Fragment>
+      <PageLoadMetrics
+        pageType={pageType}
+        attributes={{
+          has_platform_content: params.path?.[0] === 'platforms',
+          is_versioned: pageNode.path.includes('__v'),
+          has_versions: versions && versions.length > 0,
+        }}
+      />
+      <MDXLayoutRenderer
+        mdxSource={mdxSource}
+        frontMatter={{...frontMatter, versions}}
+        nextPage={nextPage}
+        previousPage={previousPage}
+      />
+    </Fragment>
   );
 }
 
@@ -189,12 +235,47 @@ function formatCanonicalTag(tag: string) {
   return tag;
 }
 
+// Helper function to resolve OG image URLs
+function resolveOgImageUrl(
+  imageUrl: string | undefined,
+  domain: string,
+  pagePath: string[]
+): string | null {
+  if (!imageUrl) {
+    return null;
+  }
+
+  // Remove hash fragments (e.g., #600x400 from remark-image-processing)
+  const cleanUrl = imageUrl.split('#')[0];
+
+  // External URLs - return as is
+  if (cleanUrl.startsWith('http://') || cleanUrl.startsWith('https://')) {
+    return cleanUrl;
+  }
+
+  // Absolute paths (public folder)
+  if (cleanUrl.startsWith('/')) {
+    return `${domain}${cleanUrl}`;
+  }
+
+  // Relative paths - resolve based on page path
+  if (cleanUrl.startsWith('./')) {
+    const relativePath = cleanUrl.slice(2); // Remove './'
+    const pageDir = pagePath.join('/');
+    return `${domain}/${pageDir}/${relativePath}`;
+  }
+
+  // Default case: treat as relative to page
+  const pageDir = pagePath.join('/');
+  return `${domain}/${pageDir}/${cleanUrl}`;
+}
+
 export async function generateMetadata(props: MetadataProps): Promise<Metadata> {
   const params = await props.params;
   const domain = isDeveloperDocs
     ? 'https://develop.sentry.dev'
     : 'https://docs.sentry.io';
-  // enable og iamge preview on preview deployments
+  // enable og image preview on preview deployments
   const previewDomain = process.env.VERCEL_URL
     ? `https://${process.env.VERCEL_URL}`
     : domain;
@@ -203,12 +284,8 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
   let customCanonicalTag: string = '';
   let description =
     'Self-hosted and cloud-based application performance monitoring & error tracking that helps software teams see clearer, solve quicker, and learn continuously.';
-  // show og image on the home page only
-  const images =
-    ((await props.params).path ?? []).length === 0
-      ? [{url: `${previewDomain ?? domain}/og.png`, width: 1200, height: 630}]
-      : [];
 
+  let ogImageUrl: string | null = null;
   let noindex: undefined | boolean = undefined;
 
   const rootNode = await getDocsRootNode();
@@ -231,8 +308,24 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
       }
 
       noindex = pageNode.frontmatter.noindex;
+
+      // Check for manual OG image override in frontmatter
+      if (pageNode.frontmatter.og_image) {
+        ogImageUrl = resolveOgImageUrl(
+          pageNode.frontmatter.og_image,
+          previewDomain ?? domain,
+          params.path
+        );
+      }
     }
   }
+
+  // Default fallback
+  if (!ogImageUrl) {
+    ogImageUrl = `${previewDomain ?? domain}/og.png`;
+  }
+
+  const images = [{url: ogImageUrl, width: 1200, height: 630}];
 
   const canonical = customCanonicalTag
     ? domain + customCanonicalTag

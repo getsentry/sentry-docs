@@ -6,7 +6,6 @@ import {KeywordSelector} from './keywordSelector';
 import {OrgAuthTokenCreator} from './orgAuthTokenCreator';
 
 export const KEYWORDS_REGEX = /\b___(?:([A-Z_][A-Z0-9_]*)\.)?([A-Z_][A-Z0-9_]*)___\b/g;
-
 export const ORG_AUTH_TOKEN_REGEX = /___ORG_AUTH_TOKEN___/g;
 
 type ChildrenItem = ReturnType<typeof Children.toArray>[number] | React.ReactNode;
@@ -24,10 +23,16 @@ export function makeKeywordsClickable(children: React.ReactNode) {
       arr.push(updatedChild);
       return arr;
     }
+
+    // Reset regex lastIndex before testing to avoid stale state from previous matches
+    ORG_AUTH_TOKEN_REGEX.lastIndex = 0;
+    KEYWORDS_REGEX.lastIndex = 0;
+
     if (ORG_AUTH_TOKEN_REGEX.test(child)) {
       makeOrgAuthTokenClickable(arr, child);
     } else if (KEYWORDS_REGEX.test(child)) {
-      makeProjectKeywordsClickable(arr, child);
+      const isDSNKeyword = /___PUBLIC_DSN___/.test(child);
+      makeProjectKeywordsClickable(arr, child, isDSNKeyword);
     } else {
       arr.push(child);
     }
@@ -42,13 +47,18 @@ function makeOrgAuthTokenClickable(arr: ChildrenItem[], str: string) {
   ));
 }
 
-function makeProjectKeywordsClickable(arr: ChildrenItem[], str: string) {
+function makeProjectKeywordsClickable(
+  arr: ChildrenItem[],
+  str: string,
+  isDSNKeyword = false
+) {
   runRegex(arr, str, KEYWORDS_REGEX, (lastIndex, match) => (
     <KeywordSelector
       key={`project-keyword-${lastIndex}`}
       index={lastIndex}
       group={match[1] || 'PROJECT'}
       keyword={match[2]}
+      showPreview={isDSNKeyword}
     />
   ));
 }

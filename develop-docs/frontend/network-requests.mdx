@@ -167,14 +167,12 @@ Mutations, unlike queries, do not fire automatically. Instead of `data`, it retu
 Let’s say you have a button that creates a project with `POST /organizations/<org>/projects/`. You will need to define the response type (`CreateProjectResponse` in this example) as well as the shape of the object you will pass to the mutation function (`CreateProjectVariables` in this example). You can then use the `mutate` function to trigger the mutation:
 
 ```tsx
-import {useMutation} from 'sentry/utils/queryClient';
+import {fetchMutation, useMutation} from 'sentry/utils/queryClient';
 
 type CreateProjectResponse = {id: string; name: string};
 type CreateProjectVariables = {name: string; orgSlug: string};
 
 function Component() {
-  const api = useApi();
-
   const {mutate} = useMutation<
     CreateProjectResponse,
     RequestError,
@@ -182,9 +180,10 @@ function Component() {
   >({
     ...options,
     mutationFn: ({name, orgSlug}: CreateProjectVariables) =>
-      api.requestPromise(`/organizations/${orgSlug}/projects/`, {
+      fetchMutation({
+        url: `/organizations/${orgSlug}/projects/`,
         method: 'POST',
-        data: {name},
+        data: {name}
       }),
     onSuccess: response => {
       addSuccessMessage(`Successfully created project ${response.name}`);
@@ -215,13 +214,13 @@ export function makeFetchProjectQueryKey({id}): ApiQueryKey {
 
 // useUpdateProjectNameOptimistic.tsx
 function useUpdateProjectNameOptimistic(incomingOptions: UpdateProjectOptions) {
-  const api = useApi();
   const queryClient = useQueryClient();
 
   const options: Options = {
     ...incomingOptions,
     mutationFn: ({id, name}) => {
-      return api.requestPromise(`/projects/${id}/`, {
+      return fetchMutations({
+        url: `/projects/${id}/`,
         method: 'PUT',
         data: {name},
       });

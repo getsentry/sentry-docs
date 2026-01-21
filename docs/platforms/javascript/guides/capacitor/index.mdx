@@ -8,15 +8,7 @@ categories:
   - mobile
 ---
 
-## Features
-
-In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/). You can also get to the root of an error or performance issue faster, by watching a video-like reproduction of a user session with [session replay](/product/explore/session-replay/web/getting-started/).
-
-Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
-
 ## Install
-
-<OnboardingOptionButtons options={["error-monitoring", "performance", "session-replay", "user-feedback", "logs"]} />
 
 Sentry captures data by using an SDK within your application's runtime.
 
@@ -97,6 +89,12 @@ Both Frameworks are fully compatible with the current and beta versions of Sentr
 
 ## Configure
 
+In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/). You can also get to the root of an error or performance issue faster, by watching a video-like reproduction of a user session with [session replay](/product/explore/session-replay/web/getting-started/).
+
+Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
+
+<OnboardingOptionButtons options={["error-monitoring", "performance", "session-replay", "user-feedback", "logs"]} />
+
 Configuration should happen as early as possible in your application's lifecycle.
 
 Then forward the `init` method from the sibling Sentry SDK for the framework you use, such as Angular in this example:
@@ -118,6 +116,16 @@ Sentry.init(
     release: "my-project-name@<release-name>",
     // Set your dist version, such as "1"
     dist: "<dist>",
+    // ___PRODUCT_OPTION_START___ logs
+    // Logs requires @sentry/capacitor 2.0.0 or newer.
+    _experiments: {
+      enableLogs: true,
+      beforeSendLog: (log) => {
+        // Add custom filters to logs.
+        return log;
+      }
+    },
+    // ___PRODUCT_OPTION_END___ logs
     integrations: [
       // ___PRODUCT_OPTION_START___ performance
       // Registers and configures the Tracing integration,
@@ -203,6 +211,9 @@ Sentry.init(
     release: "my-project-name@<release-name>",
     // Set your dist version, such as "1"
     dist: "<dist>",
+    // ___PRODUCT_OPTION_START___ logs
+    // Logs requires Angular 14 or newer.
+    // ___PRODUCT_OPTION_END___ logs
     integrations: [
       // ___PRODUCT_OPTION_START___ performance
       // Registers and configures the Tracing integration,
@@ -285,6 +296,16 @@ Sentry.init(
     release: "my-project-name@<release-name>",
     // Set your dist version, such as "1"
     dist: "<dist>",
+    // ___PRODUCT_OPTION_START___ logs
+    // Logs requires @sentry/capacitor 2.0.0 or newer.
+    _experiments: {
+      enableLogs: true,
+      beforeSendLog: (log) => {
+        // Add custom filters to logs.
+        return log;
+      }
+    },
+    // ___PRODUCT_OPTION_END___ logs
     integrations: [
       // ___PRODUCT_OPTION_START___ performance
       // Registers and configures the Tracing integration,
@@ -351,6 +372,16 @@ Sentry.init(
     release: "my-project-name@<release-name>",
     // Set your dist version, such as "1"
     dist: "<dist>",
+    // ___PRODUCT_OPTION_START___ logs
+    // Logs requires @sentry/capacitor 2.0.0 or newer.
+    _experiments: {
+      enableLogs: true,
+      beforeSendLog: (log) => {
+        // Add custom filters to logs.
+        return log;
+      }
+    },
+    // ___PRODUCT_OPTION_END___ logs
     integrations: [
       // ___PRODUCT_OPTION_START___ performance
       // Registers and configures the Tracing integration,
@@ -414,6 +445,16 @@ Sentry.init(
     release: "my-project-name@<release-name>",
     // Set your dist version, such as "1"
     dist: "<dist>",
+    // ___PRODUCT_OPTION_START___ logs
+    // Logs requires @sentry/capacitor 2.0.0 or newer.
+    _experiments: {
+      enableLogs: true,
+      beforeSendLog: (log) => {
+        // Add custom filters to logs.
+        return log;
+      }
+    },
+    // ___PRODUCT_OPTION_END___ logs
     integrations: [
       // ___PRODUCT_OPTION_START___ performance
       // Registers and configures the Tracing integration,
@@ -467,11 +508,31 @@ You can also use the features available with the Sentry SDK for the framework yo
 
 You will need to upload source maps to make sense of the events you receive in Sentry.
 
-For example, if you are using Capacitor with Ionic-Angular, upload your `www` folder on **every build** you release. The values for `<release_name>` and `<dist>` must match the values passed into `Sentry.init` for events to be deminified correctly.
+If you are using Capacitor with Ionic-Angular, upload your outputPath folder (typically `www` or `dist`) on **every build** you release. The values for `<release_name>` and `<dist>` must match the values passed into `Sentry.init` for events to be deminified correctly.
 
-```bash {tabTitle: Ionic}
+```bash {tabTitle: Ionic Build & others}
+sentry-cli sourcemaps inject --org ___ORG_SLUG___ --project ___PROJECT_SLUG___ ./www
 sentry-cli sourcemaps upload --release <release_name>  --dist <dist> ./www
 ```
+
+```bash {tabTitle: Ionic Capacitor Build}
+
+# Android
+sentry-cli sourcemaps inject --org ___ORG_SLUG___ --project ___PROJECT_SLUG___ ./android/app/src/main/assets/public
+sentry-cli sourcemaps upload --org ___ORG_SLUG___ --project ___PROJECT_SLUG___ --release <release_name>  --dist <dist> ./android/app/src/main/assets/public
+find ./android/app/src/main/assets/public -type f -name '*.map' -delete # Optional, removes sourcemaps from the mobile app.
+
+# iOS
+sentry-cli sourcemaps inject --org ___ORG_SLUG___ --project ___PROJECT_SLUG___ ./ios/App/App/public
+sentry-cli sourcemaps upload --org ___ORG_SLUG___ --project ___PROJECT_SLUG___ --release <release_name> --dist <dist> ./ios/App/App/public,
+find ./ios/App/App/public -type f -name '*.map' -delete # Optional, removes sourcemaps from the mobile app.
+
+```
+
+<Alert level="warning" title="Important">
+If you are building your project using `ionic capacitor build`, you must upload the source maps from the native app folder (e.g., android/app/build/assets) — not from the `outputPath` defined in your web project (like `www` or `dist`).
+</Alert>
+
 
 Learn more about uploading [source maps](/platforms/javascript/guides/capacitor/sourcemaps/).
 
