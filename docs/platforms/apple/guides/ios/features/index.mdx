@@ -8,42 +8,33 @@ Sentry's Apple SDK for iOS enables automatic reporting of errors and exceptions,
 
 <Alert>
 
-The SDK builds a crash report that persists to disk. While it attempts to send the report right after the crash, it may not always work because the environment may be unstable at the time of the crash. If this is the case, the report will be sent upon application start.
+The SDK builds a crash report that persists to disk. On iOS, crash reports are sent on the next app launch, not immediately after the crash, because iOS only allows async-safe code during crashes and network requests are not async-safe.
 
 </Alert>
 
 For a complete list of all available features, see the <PlatformLink to="/features">main Features page</PlatformLink>. This page highlights iOS-specific features and capabilities.
 
-## iOS-Specific Features
+## Error Detection Features
 
-### Session Replay
+iOS supports comprehensive error detection:
 
-<PlatformLink to="/session-replay">Session Replay</PlatformLink> records user sessions for visual debugging, helping you understand what happened before, during, and after an error.
+- Crash detection for all types of crashes and exceptions
+- <PlatformLink to="/configuration/app-hangs/">App hang detection</PlatformLink> for when the app becomes unresponsive
+- <PlatformLink to="/configuration/watchdog-terminations/">Watchdog termination tracking</PlatformLink> for abnormal process terminations
+- <PlatformLink to="/configuration/http-client-errors">HTTP client errors</PlatformLink> automatically captured
 
-- Available on iOS 16+
-- Requires SDK version 8.31.1 or later
-- Enabled by default (when conditions are met)
+## Event Enrichment
 
-<Alert level="warning">
+- Events <PlatformLink to="/enriching-events/context">enriched</PlatformLink> with device data, environment information, and app state
+- <PlatformLink to="/enriching-events/breadcrumbs/#automatic-breadcrumbs">Breadcrumbs are automatically</PlatformLink> captured for app lifecycle, touch events, system events, and network requests
+- <PlatformLink to="/enriching-events/attachments">Attachments</PlatformLink> for storing additional files with events
+- <PlatformLink to="/data-management/debug-files/source-context">Source Context</PlatformLink> shows code snippets around stack frames
+- <PlatformLink to="/enriching-events/screenshots">Screenshot</PlatformLink> capture when errors occur
+- <PlatformLink to="/enriching-events/viewhierarchy">View Hierarchy</PlatformLink> capture when errors occur
 
-Session Replay is automatically disabled on iOS 26.0+ when built with Xcode 26.0+ to prevent potential PII leaks due to Apple's Liquid Glass rendering changes. See the <PlatformLink to="/session-replay/troubleshooting">Session Replay troubleshooting guide</PlatformLink> for details.
+## Logs
 
-</Alert>
-
-### User Feedback UI
-
-<PlatformLink to="/user-feedback">User Feedback</PlatformLink> provides a built-in UI to collect user information when an error occurs.
-
-- Available on iOS 13+
-- Enabled by default
-
-### Screenshot Capture
-
-Automatically captures screenshots when errors occur to help with debugging. See the <PlatformLink to="/enriching-events/screenshots">Screenshot documentation</PlatformLink> for configuration options.
-
-### View Hierarchy Capture
-
-Captures the complete view hierarchy when errors occur, providing visual context for debugging. See the <PlatformLink to="/enriching-events/viewhierarchy">View Hierarchy documentation</PlatformLink> for configuration options.
+<PlatformLink to="/logs">Logs capturing</PlatformLink> is available and requires the `enableLogs` option to be enabled.
 
 ## Performance Features Available on iOS
 
@@ -55,29 +46,33 @@ iOS supports all <PlatformLink to="/tracing/instrumentation">performance monitor
 - <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#network-tracking">Network request monitoring</PlatformLink> for HTTP request performance
 - <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#file-io-tracing">File I/O performance tracking</PlatformLink> for file operations
 - <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#core-data-tracing">Core Data performance tracking</PlatformLink> for Core Data query performance
-- <PlatformLink to="/profiling">Profiling</PlatformLink> for code-level performance profiling (requires configuration)
 
-## Error Detection Features
+## iOS-Specific Features
 
-iOS supports comprehensive error detection:
+### Session Replay
 
-- Crash detection for all types of crashes and exceptions
-- <PlatformLink to="/configuration/app-hangs/">App hang detection</PlatformLink> for when the app becomes unresponsive
-- <PlatformLink to="/configuration/watchdog-terminations/">Watchdog termination tracking</PlatformLink> for out-of-memory terminations
-- <PlatformLink to="/configuration/http-client-errors">HTTP client errors</PlatformLink> automatically captured
+<PlatformLink to="/session-replay">Session Replay</PlatformLink> records user sessions for visual debugging, helping you understand what happened before, during, and after an error.
 
-## Event Enrichment
+- Available on iOS 16+
+- Requires SDK version 8.31.1 or later
+- Requires enabling the `enableSessionReplay` option
 
-- Events <PlatformLink to="/enriching-events/context">enriched</PlatformLink> with device data, environment information, and app state
-- <PlatformLink to="/enriching-events/breadcrumbs/">Breadcrumbs</PlatformLink> automatically captured for app lifecycle, touch events, system events, and network requests
-- <PlatformLink to="/enriching-events/attachments">Attachments</PlatformLink> for storing additional files with events
-- <PlatformLink to="/data-management/debug-files/source-context">Source Context</PlatformLink> shows code snippets around stack frames
+<Alert level="warning">
+
+Session Replay is automatically disabled on iOS 26.0+ when built with Xcode 26.0+ to prevent potential PII leaks due to Apple's Liquid Glass rendering changes. See the <PlatformLink to="/session-replay/troubleshooting">Session Replay troubleshooting guide</PlatformLink> for details.
+
+</Alert>
 
 ## Other Features
 
 - <PlatformLink to="/configuration/metric-kit">MetricKit integration</PlatformLink> available on iOS 15+ (requires `enableMetricKit` option)
-- <PlatformLink to="/logs">Logs capturing</PlatformLink> available (requires `enableLogs` option)
 - <Link to="/product/releases/health">Release health</Link> tracks crash-free users and sessions
 - Swift Async/Await support for automatically stitching together stack traces of Swift concurrency code
+
+## User Feedback UI
+
+<PlatformLink to="/user-feedback">User Feedback</PlatformLink> provides a built-in UI to collect user information when an error occurs. You must call the User Feedback API to display the UI.
+
+- Requires calling the User Feedback API to show the UI
 
 For configuration options and detailed documentation, see the <PlatformLink to="/configuration">Configuration</PlatformLink> section.
