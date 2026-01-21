@@ -123,19 +123,21 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
     try {
       doc = await getFileBySlugWithCache(`develop-docs/${params.path?.join('/') ?? ''}`);
     } catch (e: unknown) {
-      // Handle file not found errors gracefully - this can happen when:
-      // 1. Serverless function is invoked at runtime but docs files aren't in the bundle
-      // 2. Build-time issues with file resolution
-      // Check for ENOENT in multiple ways to be defensive
-      const isNotFound =
-        (e && typeof e === 'object' && 'code' in e && e.code === 'ENOENT') ||
+      // Handle file not found and runtime MDX compilation errors gracefully.
+      // This can happen when serverless function is invoked at runtime but docs files
+      // aren't in the bundle, or MDX compilation is attempted at Vercel runtime.
+      // Note: This error handling is duplicated for regular docs below - keep them in sync.
+      const errorCode = e && typeof e === 'object' && 'code' in e ? e.code : null;
+      const isExpectedError =
+        errorCode === 'ENOENT' ||
+        errorCode === 'MDX_RUNTIME_ERROR' ||
         (e instanceof Error && e.message.includes('Failed to find a valid source file'));
-      if (isNotFound) {
-        // Log as info (not error) for visibility without noise
-        // This typically happens during serverless cold starts when docs files
-        // aren't in the bundle - users are served static pages from CDN instead
-        Sentry.logger.info('MDX file not found at runtime, returning 404', {
+      if (isExpectedError) {
+        // Log as warning for visibility without flooding errors
+        // Users are served static pages from CDN - this is an infrastructure edge case
+        Sentry.logger.warn('MDX file not found at runtime, returning 404', {
           path: params.path?.join('/'),
+          errorCode,
           reason: 'serverless_bundle_exclusion',
         });
         return notFound();
@@ -196,19 +198,21 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
   try {
     doc = await getFileBySlugWithCache(`docs/${pageNode.path}`);
   } catch (e: unknown) {
-    // Handle file not found errors gracefully - this can happen when:
-    // 1. Serverless function is invoked at runtime but docs files aren't in the bundle
-    // 2. Build-time issues with file resolution
-    // Check for ENOENT in multiple ways to be defensive
-    const isNotFound =
-      (e && typeof e === 'object' && 'code' in e && e.code === 'ENOENT') ||
+    // Handle file not found and runtime MDX compilation errors gracefully.
+    // This can happen when serverless function is invoked at runtime but docs files
+    // aren't in the bundle, or MDX compilation is attempted at Vercel runtime.
+    // Note: This error handling is duplicated for developer docs above - keep them in sync.
+    const errorCode = e && typeof e === 'object' && 'code' in e ? e.code : null;
+    const isExpectedError =
+      errorCode === 'ENOENT' ||
+      errorCode === 'MDX_RUNTIME_ERROR' ||
       (e instanceof Error && e.message.includes('Failed to find a valid source file'));
-    if (isNotFound) {
-      // Log as info (not error) for visibility without noise
-      // This typically happens during serverless cold starts when docs files
-      // aren't in the bundle - users are served static pages from CDN instead
-      Sentry.logger.info('MDX file not found at runtime, returning 404', {
+    if (isExpectedError) {
+      // Log as warning for visibility without flooding errors
+      // Users are served static pages from CDN - this is an infrastructure edge case
+      Sentry.logger.warn('MDX file not found at runtime, returning 404', {
         path: pageNode.path,
+        errorCode,
         reason: 'serverless_bundle_exclusion',
       });
       return notFound();
