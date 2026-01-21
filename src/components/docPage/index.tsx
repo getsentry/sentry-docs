@@ -106,7 +106,9 @@ export async function DocPage({
               </hgroup>
               {/* This exact id is important for Algolia indexing */}
               <div id="main">
-                <CodeContextProvider sdkPackage={sdkPackage}>{children}</CodeContextProvider>
+                <CodeContextProvider sdkPackage={sdkPackage}>
+                  {children}
+                </CodeContextProvider>
               </div>
 
               <div className="grid grid-cols-2 gap-4 not-prose mt-16">

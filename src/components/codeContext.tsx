@@ -335,7 +335,10 @@ type CodeContextProviderProps = {
   sdkPackage?: string | null;
 };
 
-export function CodeContextProvider({children, sdkPackage = null}: CodeContextProviderProps) {
+export function CodeContextProvider({
+  children,
+  sdkPackage = null,
+}: CodeContextProviderProps) {
   const [codeKeywords, setCodeKeywords] = useState(cachedCodeKeywords ?? DEFAULTS);
   const [isLoading, setIsLoading] = useState<boolean>(cachedCodeKeywords ? false : true);
   const [storedCodeSelection, setStoredCodeSelection] = useState<SelectedCodeTabs>({});
