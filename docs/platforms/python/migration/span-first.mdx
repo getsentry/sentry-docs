@@ -93,7 +93,7 @@ span.finish()
 
 ### Other Tracing API
 
-`<TODO: actually figure out the new @trace namespace>`
+#### `@trace`
 
 The span-streaming-friendly version of the `@trace` decorator is accessible under
 `@sentry_sdk.traces.trace` and accepts an optional `name` (defaulting to function
@@ -107,6 +107,28 @@ name) and `attributes`.
 def checkout():
     ...
 ```
+
+#### `start_child()`
+
+The `span.start_child()` is not supported anymore.
+
+You can either start the child span with `sentry_sdk.traces.start_span()` while
+the parent span is still active, in which case it'll become its parent automatically,
+or, in more difficult scenarios, you can set the `parent_span` argument to control
+the parentage:
+
+```python
+import sentry_sdk
+
+with sentry_sdk.traces.start_span(name="outer") as span:
+    with sentry_sdk.traces.start_span(name="child 1"):
+        with sentry_sdk.traces.start_span(name="child 2", parent_span=span):
+            ...
+```
+
+In this case, "child 2" would be a direct child of "outer" rather than
+"child 1". If you didn't provide a `parent_span` to "child 2",
+it would become the direct child of "child 1".
 
 ## Span Attributes
 
