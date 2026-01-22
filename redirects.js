@@ -1298,6 +1298,10 @@ const userDocsRedirects = [
     destination: '/product/ai-in-sentry/ai-privacy-and-security/',
   },
   {
+    source: '/product/ai-in-sentry/ai-code-review/',
+    destination: '/product/ai-in-sentry/seer/ai-code-review/',
+  },
+  {
     source: '/product/ai-in-sentry/seer/issue-fix/:path*',
     destination: '/product/ai-in-sentry/seer/root-cause-analysis/:path*',
   },
