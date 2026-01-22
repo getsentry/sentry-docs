@@ -101,22 +101,9 @@ export function PlatformSelector({
     );
     if (platform_) {
       localStorage.setItem('active-platform', platform_.key);
-
-      // Try to maintain the current path when switching platforms
-      // Extract relative path from current URL (e.g., /ai-agent-monitoring/ from /platforms/javascript/guides/nextjs/ai-agent-monitoring/)
-      let relativePath = '';
-      if (currentPlatform?.url && pathname?.startsWith(currentPlatform.url)) {
-        relativePath = pathname.slice(currentPlatform.url.length);
-      }
-
-      if (relativePath) {
-        // Use platform-redirect to find the equivalent page on the new platform
-        router.push(
-          `/platform-redirect?next=${encodeURIComponent(relativePath)}&platform=${encodeURIComponent(platform_.key)}`
-        );
-      } else {
-        router.push(platform_.url);
-      }
+      // Use the pre-computed URL from the sidebar which already handles
+      // equivalent paths (e.g., ai-agent-monitoring <-> ai-agent-monitoring-browser)
+      router.push(platform_.url);
     }
   };
 
