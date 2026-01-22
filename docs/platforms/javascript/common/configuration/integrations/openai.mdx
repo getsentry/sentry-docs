@@ -40,13 +40,13 @@ supported:
 
 _Import name: `Sentry.openAIIntegration`_
 
-The `openAIIntegration` adds instrumentation for the `openai` SDK to capture spans by wrapping OpenAI client calls and recording LLM interactions.
+The `openAIIntegration` adds instrumentation for the [`openai`](https://www.npmjs.com/package/openai) SDK to capture spans by wrapping OpenAI client calls and recording LLM interactions.
 
 <PlatformSection notSupported={["javascript.nextjs", "javascript.nuxt", "javascript.solidstart", "javascript.sveltekit", "javascript.react-router", "javascript.remix", "javascript.astro", "javascript.tanstackstart-react", "javascript.bun", "javascript.cloudflare"]}>
 
 <Alert>
 
-Enabled by default and automatically captures spans for OpenAI SDK calls. Requires SDK version `10.2.0` or higher.
+Enabled by default and automatically captures spans for OpenAI SDK calls. Requires SDK version `10.28.0` or higher.
 
 </Alert>
 
@@ -56,9 +56,9 @@ Enabled by default and automatically captures spans for OpenAI SDK calls. Requir
 
 <Alert>
 
-Enabled by default and automatically captures spans for OpenAI SDK calls. Requires SDK version `10.2.0` or higher.
+Enabled by default and automatically captures spans for OpenAI SDK calls. Requires SDK version `10.28.0` or higher.
 
-**For runtimes**, manual instrumentation is required. See the [setup instructions below](#browser-side-usage).
+For other runtimes, like the Browser, the instrumentation needs to be manually enabled. See the [setup instructions below](#browser-side-usage).
 
 </Alert>
 
@@ -81,7 +81,8 @@ The `instrumentOpenAiClient` helper adds instrumentation for the `openai` SDK to
 import OpenAI from "openai";
 
 const openai = new OpenAI({
-  apiKey: 'your-api-key', // Warning: API key will be exposed in browser!
+  // Warning: API key will be exposed in browser!
+  apiKey: 'your-api-key', 
 });
 
 const client = Sentry.instrumentOpenAiClient(openai, {
@@ -126,12 +127,13 @@ Defaults to `true` if `sendDefaultPii` is `true`.
 
 <PlatformSection notSupported={["javascript", "javascript.react", "javascript.angular", "javascript.vue", "javascript.svelte", "javascript.solid", "javascript.ember", "javascript.gatsby"]}>
 
-Automatic Instrumentation
+Using the `openAIIntegration` integration:
 
 ```javascript
 Sentry.init({
   dsn: "____PUBLIC_DSN____",
-  tracesSampleRate: 1.0, // Required for AI observability
+  // Tracing must be enabled for agent monitoring to work
+  tracesSampleRate: 1.0, 
   integrations: [
     Sentry.openAIIntegration({
       // your options here
@@ -144,7 +146,7 @@ Sentry.init({
 
 <PlatformSection supported={["javascript", "javascript.react", "javascript.angular", "javascript.vue", "javascript.svelte", "javascript.solid", "javascript.ember", "javascript.gatsby", "javascript.nextjs", "javascript.nuxt", "javascript.solidstart", "javascript.sveltekit", "javascript.react-router", "javascript.remix", "javascript.astro", "javascript.tanstackstart-react", "javascript.electron", "javascript.cloudflare", "javascript.bun"]}>
 
-Manual Instrumentation
+Using the `instrumentOpenAiClient` helper:
 
 ```javascript
 const client = Sentry.instrumentOpenAiClient(openai, {
