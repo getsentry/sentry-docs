@@ -94,13 +94,29 @@ export function PlatformSelector({
   }, [searchValue, currentPlatformKey, platformsAndGuides]);
 
   const router = useRouter();
+  const pathname = usePathname();
   const onPlatformChange = (platformKey: string) => {
     const platform_ = platformsAndGuides.find(
       platform => platform.key === platformKey.replace('-redirect', '')
     );
     if (platform_) {
       localStorage.setItem('active-platform', platform_.key);
-      router.push(platform_.url);
+
+      // Try to maintain the current path when switching platforms
+      // Extract relative path from current URL (e.g., /ai-agent-monitoring/ from /platforms/javascript/guides/nextjs/ai-agent-monitoring/)
+      let relativePath = '';
+      if (currentPlatform?.url && pathname?.startsWith(currentPlatform.url)) {
+        relativePath = pathname.slice(currentPlatform.url.length);
+      }
+
+      if (relativePath) {
+        // Use platform-redirect to find the equivalent page on the new platform
+        router.push(
+          `/platform-redirect?next=${encodeURIComponent(relativePath)}&platform=${encodeURIComponent(platform_.key)}`
+        );
+      } else {
+        router.push(platform_.url);
+      }
     }
   };
 
@@ -135,11 +151,10 @@ export function PlatformSelector({
     }
   }, [currentPlatformKey]);
 
-  const path = usePathname();
   const isPlatformPage = Boolean(
-    path?.startsWith('/platforms/') &&
+    pathname?.startsWith('/platforms/') &&
       // /platforms/something
-      path.length > '/platforms/'.length
+      pathname.length > '/platforms/'.length
   );
   // Only show stored platform after mount to prevent hydration mismatch
   // Server doesn't have localStorage, so this must wait until client-side
@@ -149,7 +164,7 @@ export function PlatformSelector({
     !isPlatformPage &&
     storedPlatformKey &&
     storedPlatform &&
-    path !== '/platforms/';
+    pathname !== '/platforms/';
 
   return (
     <div>
