@@ -58,12 +58,13 @@ interface Span {
 class Span:
     span_id: str
 
+    def finish(self, end_timestamp: Optional[Union[float, datetime.datetime]]) -> None: ...
     def set_attribute(self, key: str, value: SpanAttributeValue) -> None: ...
     def remove_attribute(self, key: str) -> None: ...
+    def get_attributes(self) -> SpanAttributes: ...
     def set_status(self, status: Literal["ok", "error"]) -> None: ...
     def get_name(self) -> str: ...
     def set_name(self, name: str) -> None: ...
-    def get_attributes(self) -> SpanAttributes: ...
 ```
 
 When implementing the span interface, consider the following guidelines:
@@ -107,7 +108,7 @@ with start_span(
 # flexibility when to end the span:
 
 span = start_span(name, attributes, parent_span, active)
-span.end()
+span.finish()
 ```
 
 SDKs MUST allow specifying the following options to be passed to `startSpan`:
@@ -195,7 +196,7 @@ with sentry_sdk.start_span(name="checkout", attributes={"user.id": "123"}) as ch
 
     span = sentry_sdk.start_span(name="log-order", parent_span=None)
     log_order()
-    span.end()
+    span.finish()
 ```
 
 ```Dart {tabTitle:Dart}
