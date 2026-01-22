@@ -1076,12 +1076,12 @@ const userDocsRedirects = [
   },
   {
     source: '/platforms/javascript/guides/:guide/tracing/instrumentation/ai-agents-module-browser/:path*',
-    destination: '/platforms/javascript/guides/:guide/ai-agent-monitoring-browser/:path*',
+    destination: '/platforms/javascript/ai-agent-monitoring-browser/',
   },
   // Browser JS doesn't have server-side AI Agent Monitoring, redirect to browser version
   {
     source: '/platforms/javascript/ai-agent-monitoring/',
-    destination: '/platforms/javascript/ai-agent-monitoring/browser/',
+    destination: '/platforms/javascript/ai-agent-monitoring-browser/',
   },
   {
     source: '/product/insights/retention-priorities/',
