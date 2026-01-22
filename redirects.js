@@ -1294,8 +1294,8 @@ const userDocsRedirects = [
     destination: '/product/ai-in-sentry/seer/',
   },
   {
-    source: '/product/ai-in-sentry/seer/seer-privacy-and-security',
-    destination: '/product/ai-in-sentry/ai-privacy-and-security/',
+    source: '/product/ai-in-sentry/ai-code-review/',
+    destination: '/product/ai-in-sentry/seer/ai-code-review/',
   },
   {
     source: '/product/ai-in-sentry/seer/issue-fix/:path*',
@@ -1359,8 +1359,8 @@ const redirects = async () => {
     'docs redirects in next.config.js'
   );
   return (isDeveloperDocs ? developerDocsRedirects : userDocsRedirects).map(r => {
-    return {...r, permanent: true};
+    return { ...r, permanent: true };
   });
 };
 
-module.exports = {redirects};
+module.exports = { redirects };
