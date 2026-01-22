@@ -1,0 +1,41 @@
+The Sentry Dart SDK provides several options to configure how metrics are captured and sent to Sentry.
+
+### Filtering and Modifying Metrics
+
+Use the `beforeSendMetric` callback to filter or modify metrics before they're sent to Sentry. This is useful for:
+
+- Removing sensitive data from metric attributes
+- Dropping metrics you don't want to send
+- Adding or modifying attributes
+
+The callback receives a metric object and must return either a modified metric or `null` to drop it.
+
+```dart
+import 'package:sentry/sentry.dart';
+
+await Sentry.init((options) {
+  options.dsn = 'your-dsn';
+  options.beforeSendMetric = (metric) {
+    // Drop metrics with specific attributes
+    if (metric.attributes.containsKey('dropmetric')) {
+      return null;
+    }
+
+    // Return the metric to send it
+    return metric;
+  };
+});
+```
+
+### Disabling Metrics
+
+Metrics are enabled by default. To disable metrics collection entirely, set `enableMetrics` to `false`:
+
+```dart
+import 'package:sentry/sentry.dart';
+
+await Sentry.init((options) {
+  options.dsn = 'your-dsn';
+  options.enableMetrics = false;
+});
+```
