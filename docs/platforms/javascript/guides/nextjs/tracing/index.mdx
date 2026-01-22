@@ -6,7 +6,61 @@ sidebar_order: 5
 sidebar_section: features
 ---
 
-Tracing captures the timing and flow of requests through your Next.js application. Sentry automatically instruments most operations, but Server Actions require manual setup.
+Tracing captures the timing and flow of requests through your Next.js application. Learn more about [tracing](/concepts/key-terms/tracing/) and how Sentry uses traces to track performance across services.
+
+Sentry automatically instruments most operations, but Server Actions require manual setup.
+
+## Prerequisites
+
+Before enabling tracing, ensure you have:
+- [Installed the Sentry SDK](/platforms/javascript/guides/nextjs/) in your Next.js application
+- Initialized Sentry in all three config files (`instrumentation-client.ts`, `sentry.server.config.ts`, `sentry.edge.config.ts`)
+
+## Enable Tracing
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+### Configure Sample Rate
+
+Add `tracesSampleRate` to your Sentry configuration in all three runtime files.
+
+**Start with 100% in development, and 10-20% in production.** Adjust based on traffic volume and budget.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {tabTitle:Client} {filename:instrumentation-client.ts}
+import * as Sentry from "@sentry/nextjs";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.1,
+});
+```
+
+```typescript {tabTitle:Server} {filename:sentry.server.config.ts}
+import * as Sentry from "@sentry/nextjs";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.1,
+});
+```
+
+```typescript {tabTitle:Edge} {filename:sentry.edge.config.ts}
+import * as Sentry from "@sentry/nextjs";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.1,
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
 ## What's Traced Automatically
 
@@ -43,52 +97,6 @@ export default async function Page() {
   const data = await fetchData();
   return <div>{data}</div>;
 }
-```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
-## Enable Tracing
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
-### Configure Sample Rate
-
-Add `tracesSampleRate` to your Sentry configuration in all three runtime files.
-
-**Start with 100% in development, 10-20% in production.** Adjust based on traffic volume and budget.
-
-</SplitSectionText>
-<SplitSectionCode>
-
-```typescript {tabTitle:Client} {filename:instrumentation-client.ts}
-import * as Sentry from "@sentry/nextjs";
-
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.1,
-});
-```
-
-```typescript {tabTitle:Server} {filename:sentry.server.config.ts}
-import * as Sentry from "@sentry/nextjs";
-
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.1,
-});
-```
-
-```typescript {tabTitle:Edge} {filename:sentry.edge.config.ts}
-import * as Sentry from "@sentry/nextjs";
-
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.1,
-});
 ```
 
 </SplitSectionCode>
@@ -168,37 +176,17 @@ export async function submitForm(formData: FormData) {
 
 ## Web Vitals
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
+The SDK automatically captures [Web Vitals](/product/insights/web-vitals/) on every page load. These metrics measure real user experience:
 
-### Core Web Vitals
+| Metric | What It Measures | Threshold (Good) |
+|--------|------------------|------------------|
+| **LCP** | Largest Contentful Paint — loading performance | ≤ 2.5s |
+| **INP** | Interaction to Next Paint — responsiveness | ≤ 200ms |
+| **CLS** | Cumulative Layout Shift — visual stability | ≤ 0.1 |
+| **FCP** | First Contentful Paint — initial render | ≤ 1s |
+| **TTFB** | Time to First Byte — server response | ≤ 100ms |
 
-The SDK automatically captures Google's Core Web Vitals on page load:
-
-| Metric | What It Measures |
-|--------|------------------|
-| **LCP** | Largest Contentful Paint — loading performance |
-| **INP** | Interaction to Next Paint — responsiveness |
-| **CLS** | Cumulative Layout Shift — visual stability |
-
-These appear as measurements on your page load transactions.
-
-</SplitSectionText>
-<SplitSectionCode>
-
-```typescript
-// Automatic - no code needed
-// Web Vitals are captured on every page load transaction
-
-// View in Sentry:
-// Performance → Web Vitals
-// Or on individual transaction details
-```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
+Web Vitals appear as measurements on page load transactions and feed into your [Performance Score](/product/insights/web-vitals/#performance-score). See [Web Vitals Concepts](/product/insights/web-vitals/web-vitals-concepts/) for detailed explanations of each metric.
 
 ## Custom Instrumentation
 
@@ -322,69 +310,34 @@ Sentry.init({
 | External API calls | Partial | Configure `tracePropagationTargets` |
 | Custom business logic | No | Use `startSpan` |
 
-## Disable Tracing
-
-To fully disable tracing, **remove** `tracesSampleRate` from your config. Setting it to `0` still initializes tracing code.
-
-For complete removal from your bundle, set the build flag:
-
-```bash {filename:.env}
-__SENTRY_TRACING__=false
-```
-
-See <PlatformLink to="/configuration/tree-shaking/">Tree Shaking</PlatformLink> for details.
-
 ## Troubleshooting
 
-### Server Actions not appearing
-
-Ensure you're using `withServerActionInstrumentation`:
-
-```tsx
-// ❌ No span created
-export async function myAction() {
-  return doSomething();
-}
-
-// ✅ Creates a named span
-export async function myAction() {
-  return Sentry.withServerActionInstrumentation("myAction", () => {
-    return doSomething();
-  });
-}
-```
-
-### Traces disconnected between client and server
-
-Pass headers to `withServerActionInstrumentation` to connect the trace:
-
-```tsx
-import { headers } from "next/headers";
-
-export async function myAction() {
-  return Sentry.withServerActionInstrumentation(
-    "myAction",
-    { headers: await headers() },
-    () => doSomething()
-  );
-}
-```
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
 
 ### High trace volume
 
-If you're sending too many traces, lower your sample rate or use `tracesSampler` for dynamic sampling:
+If you're sending too many traces, lower your sample rate or use `tracesSampler` for dynamic sampling based on route.
+
+See <PlatformLink to="/tracing/configure-sampling/">Configure Sampling</PlatformLink> for more options.
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```typescript
 Sentry.init({
-  tracesSampler: ({ name, attributes }) => {
-    // Always sample errors
-    if (attributes?.["http.status_code"] >= 500) return 1.0;
+  tracesSampler: ({ name }) => {
     // Sample 5% of health checks
     if (name.includes("health")) return 0.05;
+    // Sample 50% of API routes
+    if (name.includes("/api/")) return 0.5;
     // Default 10%
     return 0.1;
   },
 });
 ```
 
-See <PlatformLink to="/tracing/configure-sampling/">Configure Sampling</PlatformLink> for more options.
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
