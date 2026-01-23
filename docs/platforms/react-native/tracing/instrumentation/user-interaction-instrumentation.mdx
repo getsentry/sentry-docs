@@ -45,6 +45,41 @@ export default Sentry.wrap(App, {
 });
 ```
 
+### Adding Custom Attributes to User Interaction Spans
+
+<Alert level="warning">
+  The `sentry-span-attributes` prop is experimental and may change in future releases.
+</Alert>
+
+You can attach custom attributes to user interaction spans by passing the `sentry-span-attributes` prop to your components. This is useful for adding contextual information like user type, cart value, or feature flags that help you understand user behavior in performance monitoring.
+
+The `sentry-span-attributes` prop accepts an object with string keys and values that are strings, numbers, booleans, or arrays. These attributes will be attached to the user interaction span created when the component is interacted with.
+
+```javascript
+import { Button } from 'react-native';
+
+const CheckoutButton = ({ userType, cartValue }) => {
+  const handleCheckout = () => {
+    // Checkout logic
+  };
+
+  return (
+    <Button
+      sentry-label="checkout"
+      sentry-span-attributes={{
+        'user.type': userType,
+        'cart.value': cartValue,
+        'feature.enabled': true,
+      }}
+      onPress={handleCheckout}
+      title="Checkout"
+    />
+  );
+};
+```
+
+The SDK will traverse the component tree to find the `sentry-span-attributes` prop, so you can attach it to parent components if needed. The attributes work alongside `sentry-label` and will be included in the user interaction span.
+
 <Alert>
   If the UI transaction idled, but didn't have any child spans, it'll be
   dropped.
