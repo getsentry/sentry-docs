@@ -320,7 +320,7 @@ const userDocsRedirects = [
   },
   {
     source: '/product/ai-in-sentry/sentry-prevent-ai/:path*',
-    destination: '/product/ai-in-sentry/ai-code-review/:path*',
+    destination: '/product/ai-in-sentry/seer/ai-code-review/:path*',
   },
 
   {
@@ -1296,6 +1296,14 @@ const userDocsRedirects = [
   {
     source: '/product/ai-in-sentry/seer/seer-privacy-and-security',
     destination: '/product/ai-in-sentry/ai-privacy-and-security/',
+  },
+  {
+    source: '/product/ai-in-sentry/ai-code-review/',
+    destination: '/product/ai-in-sentry/seer/ai-code-review/',
+  },
+  {
+    source: '/product/ai-in-sentry/seer/issue-fix/:path*',
+    destination: '/product/ai-in-sentry/seer/root-cause-analysis/:path*',
   },
   // .NET profiling guide redirects - consolidate to main profiling page
   {
