@@ -1,0 +1,165 @@
+---
+title: Mastra
+description: "Export Mastra AI tracing to Sentry."
+supported:
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.hono
+  - javascript.koa
+  - javascript.nestjs
+  - javascript.bun
+---
+
+<Alert>
+
+This is a server-side exporter for Mastra AI tracing that uses the Node.js Sentry SDK. It requires Node.js or compatible runtimes. Requires `@mastra/sentry@beta` package.
+
+</Alert>
+
+[Mastra](https://mastra.ai/) is a framework for building AI-powered applications and agents with a modern TypeScript stack. The Mastra Sentry Exporter sends tracing data to Sentry using OpenTelemetry semantic conventions, providing insights into model performance, token usage, and tool executions.
+
+## Installation
+
+Install the Mastra Sentry exporter package:
+
+```bash
+npm install @mastra/sentry@beta
+```
+
+## Configuration
+
+### Zero-Config Setup
+
+The Sentry exporter can automatically read configuration from environment variables:
+
+```javascript
+import { SentryExporter } from "@mastra/sentry";
+
+// Reads from SENTRY_DSN, SENTRY_ENVIRONMENT, SENTRY_RELEASE
+const exporter = new SentryExporter();
+```
+
+### Explicit Configuration
+
+You can also configure the exporter explicitly:
+
+```javascript
+import { SentryExporter } from "@mastra/sentry";
+
+const exporter = new SentryExporter({
+  dsn: process.env.SENTRY_DSN,
+  environment: "production",
+  tracesSampleRate: 1.0,
+  release: "1.0.0",
+});
+```
+
+<Expandable title="Span Mapping">
+
+Mastra automatically maps its span types to Sentry operations for proper visualization in Sentry's AI monitoring dashboards:
+
+| Mastra Span Type | Sentry Operation |
+|------------------|------------------|
+| `AGENT_RUN` | `gen_ai.invoke_agent` |
+| `MODEL_GENERATION` | `gen_ai.chat` |
+| `TOOL_CALL` | `gen_ai.execute_tool` |
+| `MCP_TOOL_CALL` | `gen_ai.execute_tool` |
+| `WORKFLOW_RUN` | `workflow.run` |
+| `WORKFLOW_STEP` | `workflow.step` |
+| `WORKFLOW_CONDITIONAL` | `workflow.conditional` |
+| `WORKFLOW_PARALLEL` | `workflow.parallel` |
+| `WORKFLOW_LOOP` | `workflow.loop` |
+| `PROCESSOR_RUN` | `ai.processor` |
+| `GENERIC` | `ai.span` |
+
+**Note:** `MODEL_STEP` and `MODEL_CHUNK` spans are automatically skipped to simplify trace hierarchy. Their data is aggregated into parent `MODEL_GENERATION` spans.
+
+</Expandable>
+
+<Expandable title="Captured Data">
+
+The Sentry exporter captures comprehensive trace data following OpenTelemetry semantic conventions:
+
+### Common Attributes (all spans)
+
+- `sentry.origin`: `auto.ai.mastra` (identifies spans from Mastra)
+- `ai.span.type`: Mastra span type
+
+### Model Generation Spans
+
+- `gen_ai.operation.name`: Operation name (e.g., `chat`)
+- `gen_ai.system`: Model provider (e.g., OpenAI, Anthropic)
+- `gen_ai.request.model`: Model identifier
+- `gen_ai.request.messages`: Input messages/prompts (JSON)
+- `gen_ai.response.model`: Response model
+- `gen_ai.response.text`: Output text
+- `gen_ai.response.tool_calls`: Tool calls made during generation
+- `gen_ai.usage.input_tokens`: Input token count
+- `gen_ai.usage.output_tokens`: Output token count
+- `gen_ai.usage.total_tokens`: Total tokens used
+- `gen_ai.request.stream`: Whether streaming was used
+- `gen_ai.request.temperature`: Temperature parameter
+- `gen_ai.completion_start_time`: Time to first token
+
+### Tool Call Spans
+
+- `gen_ai.operation.name`: `execute_tool`
+- `gen_ai.tool.name`: Tool identifier
+- `gen_ai.tool.type`: `function`
+- `gen_ai.tool.call.id`: Tool call ID
+- `gen_ai.tool.input`: Tool input parameters
+- `gen_ai.tool.output`: Tool output result
+- `tool.success`: Success flag
+
+### Agent Run Spans
+
+- `gen_ai.operation.name`: `invoke_agent`
+- `gen_ai.agent.name`: Agent identifier
+- `gen_ai.pipeline.name`: Agent name
+- `gen_ai.agent.instructions`: Agent instructions/system prompt
+- `gen_ai.response.model`: Model from child generation
+- `gen_ai.response.text`: Output from child generation
+- `gen_ai.usage.*`: Token usage aggregated from child spans
+
+</Expandable>
+
+## Methods
+
+### `exportTracingEvent()`
+
+Exports a tracing event to Sentry. Handles `SPAN_STARTED`, `SPAN_UPDATED`, and `SPAN_ENDED` events.
+
+```javascript
+await exporter.exportTracingEvent(event);
+```
+
+### `flush()`
+
+Force flushes any pending spans to Sentry without shutting down the exporter. Waits up to 2 seconds for pending data to be sent. Useful in serverless environments where you need to ensure spans are exported before the runtime terminates.
+
+```javascript
+await exporter.flush();
+```
+
+### `shutdown()`
+
+Ends all active spans, clears internal state, and closes the Sentry connection. Waits up to 2 seconds for pending data to be sent.
+
+```javascript
+await exporter.shutdown();
+```
+
+## Learn More
+
+For complete documentation on using Mastra with Sentry, see the [Mastra Sentry Exporter documentation](https://mastra.ai/docs/observability/tracing/exporters/sentry).
+
+
+## Supported Versions
+
+- `@mastra/sentry`: `>=1.0.0-beta.2`
