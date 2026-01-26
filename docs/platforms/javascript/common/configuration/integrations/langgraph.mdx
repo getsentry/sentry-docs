@@ -132,6 +132,55 @@ To customize what data is captured (such as inputs and outputs), see the [Option
 
 </PlatformSection>
 
+<PlatformSection supported={['javascript.nextjs']}>
+
+## Edge runtime
+
+This integration is automatically instrumented in the Node.js runtime. For Next.js applications using the Edge runtime, you need to manually instrument LangGraph operations using the `instrumentLangGraph` helper:
+
+```javascript
+import { ChatOpenAI } from "@langchain/openai";
+import { StateGraph, MessagesAnnotation, START, END } from '@langchain/langgraph';
+
+// Create LLM call
+const llm = new ChatOpenAI({
+  modelName: "gpt-4o",
+  apiKey: "your-api-key", // Warning: API key will be exposed in browser!
+});
+
+async function callLLM(state) {
+  const response = await llm.invoke(state.messages);
+
+  return {
+    messages: [...state.messages, response],
+  };
+}
+
+// Create the agent
+const agent = new StateGraph(MessagesAnnotation)
+  .addNode('agent', callLLM)
+  .addEdge(START, 'agent')
+  .addEdge('agent', END);
+
+const graph = agent.compile({ name: 'my_agent' });
+
+// Manually instrument the graph
+Sentry.instrumentLangGraph(graph, {
+  recordInputs: true,
+  recordOutputs: true,
+});
+
+// Invoke the agent
+const result = await graph.invoke({
+  messages: [
+    new SystemMessage("You are a helpful assistant."),
+    new HumanMessage("Hello!"),
+  ],
+});
+```
+
+</PlatformSection>
+
 ## Configuration
 
 ### Options
@@ -193,6 +242,7 @@ By default, tracing support is added to the following LangGraph SDK calls:
 
 - **Agent Creation** (`gen_ai.create_agent`) - Captures spans when compiling a StateGraph into an executable agent
 - **Agent Invocation** (`gen_ai.invoke_agent`) - Captures spans for agent execution via `invoke()`
+
 
 ## Supported Versions
 
