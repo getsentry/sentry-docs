@@ -1,5 +1,5 @@
 ---
-title: Experimental features
+title: Experimental Features
 sidebar_order: 6500
 sidebar_section: features
 description: "Learn about the experimental features available for Sentry's Apple SDK."
@@ -10,17 +10,67 @@ description: "Learn about the experimental features available for Sentry's Apple
   recognize the irony.
 </Alert>
 
-Do you want to try some new experimental features? On the latest version of the Apple SDK, you can:
+Experimental features are features that are still being developed and tested. They may have bugs, incomplete functionality, or may change in future releases. Use them at your own risk and provide feedback to help us improve them.
 
-<PlatformSection notSupported={["apple.tvos", "apple.watchos", "apple.visionos"]}>
-- Enable <PlatformLink to="/profiling/#enable-launch-profiling">App Launch Profiling</PlatformLink> to get detailed profiles for your app launches.
-- Enable <PlatformLink to="/profiling/#continuous-profiling">Continuous Profiling</PlatformLink> to get full coverage of your app's execution.
-</PlatformSection>
-<PlatformSection notSupported={["apple.macos", "apple.watchos", "apple.visionos"]}>
-- Enable <PlatformLink to="/configuration/app-hangs/#app-hangs-v2">AppHangsV2</PlatformLink> to get more detailed app hangs. This differentiates between fully-blocking and non-fully-blocking app hangs, and also tells you the duration of app hangs.
-</PlatformSection>
-- If you use Swift concurrency, stitch together stack traces of your async code with the `swiftAsyncStacktraces` option. Note that you can enable this in your Objective-C project, but only async code written in Swift will be stitched together.
-- Enable the <PlatformLink to="/configuration/options/#enablePersistingTracesWhenCrashing">`enablePersistingTracesWhenCrashing`</PlatformLink> option to link ongoing transactions to a crash event when your app crashes.
-- Enable the `enableUnhandledCPPExceptionsV2` option to capture fatal CPPExceptions via hooking into `cxa_throw`
+For stable features, see the <PlatformLink to="/features">Features</PlatformLink> page.
 
-Let us know if you have feedback through [GitHub issues](https://github.com/getsentry/sentry-cocoa/issues).
+## Profiling Features
+
+Profiling features are only available on iOS and macOS.
+
+### App Launch Profiling
+
+Enable <PlatformLink to="/profiling/#enable-launch-profiling">App Launch Profiling</PlatformLink> to get detailed profiles for your app launches.
+
+### Continuous Profiling
+
+Enable <PlatformLink to="/profiling/#continuous-profiling">Continuous Profiling</PlatformLink> to get full coverage of your app's execution.
+
+## Crash & Error Handling
+
+### Persisting Traces When Crashing
+
+Enable the <PlatformLink to="/configuration/options/#enablePersistingTracesWhenCrashing">`enablePersistingTracesWhenCrashing`</PlatformLink> option to link ongoing transactions to a crash event when your app crashes.
+
+### Unhandled C++ Exceptions V2
+
+Enable the `enableUnhandledCPPExceptionsV2` option to capture fatal C++ exceptions using a more reliable mechanism that hooks into all `__cxa_throw` calls.
+
+```swift
+options.experimental.enableUnhandledCPPExceptionsV2 = true
+```
+
+```objc {tabTitle:Objective-C}
+options.experimental.enableUnhandledCPPExceptionsV2 = YES;
+```
+
+This provides more comprehensive and consistent exception handling across your app's runtime, regardless of the number of C++ modules or how they're linked, and helps in obtaining accurate stack traces.
+
+**Note:** The mechanism of hooking into `__cxa_throw` could cause issues with symbolication on iOS due to caching of symbol references.
+
+### Session Replay in Unreliable Environments
+
+Enable the `enableSessionReplayInUnreliableEnvironment` option to force enabling of session replay in unreliable environments.
+
+```swift
+options.experimental.enableSessionReplayInUnreliableEnvironment = true
+```
+
+```objc {tabTitle:Objective-C}
+options.experimental.enableSessionReplayInUnreliableEnvironment = YES;
+```
+
+Due to internal changes with the release of Liquid Glass on iOS 26.0, the masking of text and images cannot be reliably guaranteed. Therefore the SDK uses a defensive programming approach to disable the session replay integration by default, unless the environment is detected as reliable.
+
+Indicators for reliable environments include:
+- Running on an older version of iOS that doesn't have Liquid Glass (iOS 18 or earlier)
+- `UIDesignRequiresCompatibility` is explicitly set to `YES` in Info.plist
+- The app was built with Xcode < 26.0 (DTXcode < 2600)
+
+**Important:** This flag allows you to re-enable the session replay integration on iOS 26.0 and later, but please be aware that text and images may not be masked as expected.
+
+Learn more in the <PlatformLink to="/session-replay/">Session Replay</PlatformLink> documentation.
+
+## Providing Feedback
+
+Let us know if you have feedback through [GitHub issues](https://github.com/getsentry/sentry-cocoa/issues). Your feedback helps us improve these experimental features and move them toward stable releases.
