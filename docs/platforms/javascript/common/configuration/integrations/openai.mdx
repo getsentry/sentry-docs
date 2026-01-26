@@ -101,6 +101,35 @@ To customize what data is captured (such as inputs and outputs), see the [Option
 
 </PlatformSection>
 
+<PlatformSection supported={['javascript.nextjs']}>
+
+## Edge runtime
+
+For Next.js applications using the Edge runtime, you need to manually wrap your OpenAI client instance with the `instrumentOpenAiClient` helper:
+
+```javascript
+import OpenAI from "openai";
+
+const openai = new OpenAI({
+  // Warning: API key will be exposed in browser!
+  apiKey: 'your-api-key', 
+});
+
+const client = Sentry.instrumentOpenAiClient(openai, {
+  recordInputs: true,
+  recordOutputs: true,
+});
+
+// Use the wrapped client instead of the original openai instance
+const response = await client.chat.completions.create({
+  model: "gpt-4o",
+  messages: [{ role: "user", content: "Hello!" }],
+});
+```
+
+</PlatformSection>
+
+
 ## Configuration
 
 ### Options

@@ -111,6 +111,34 @@ To customize what data is captured (such as inputs and outputs), see the [Option
 
 </PlatformSection>
 
+<PlatformSection supported={['javascript.nextjs']}>
+
+## Edge runtime
+
+For Next.js applications using the Edge runtime, you need to manually wrap your Anthropic client instance with the `instrumentAnthropicAiClient` helper:
+
+```javascript
+import Anthropic from "@anthropic-ai/sdk";
+
+const anthropic = new Anthropic({
+  apiKey: "your-api-key", // Warning: API key will be exposed in browser!
+});
+
+const client = Sentry.instrumentAnthropicAiClient(anthropic, {
+  recordInputs: true,
+  recordOutputs: true,
+});
+
+// Use the wrapped client instead of the original anthropic instance
+const response = await client.messages.create({
+  model: "claude-3-5-sonnet-20241022",
+  max_tokens: 1024,
+  messages: [{ role: "user", content: "Hello!" }],
+});
+```
+
+</PlatformSection>
+
 ## Configuration
 
 ### Options
