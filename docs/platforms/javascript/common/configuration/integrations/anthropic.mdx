@@ -1,6 +1,6 @@
 ---
 title: Anthropic
-description: "Adds instrumentation for Anthropic API."
+description: "Adds instrumentation for the Anthropic SDK."
 supported:
   - javascript.node
   - javascript.aws-lambda
@@ -40,13 +40,30 @@ supported:
 
 _Import name: `Sentry.anthropicAIIntegration`_
 
-The `anthropicAIIntegration` adds instrumentation for the `@anthropic-ai/sdk` API to capture spans by wrapping Anthropic client calls and recording LLM interactions.
+The `anthropicAIIntegration` adds instrumentation for the [`@anthropic-ai/sdk`](https://www.npmjs.com/package/@anthropic-ai/sdk) API to capture spans by wrapping Anthropic SDK calls and recording LLM interactions.
+
+
+<PlatformSection notSupported={["javascript.nextjs", "javascript.nuxt", "javascript.solidstart", "javascript.sveltekit", "javascript.react-router", "javascript.remix", "javascript.astro", "javascript.tanstackstart-react", "javascript.bun", "javascript.cloudflare"]}>
 
 <Alert>
 
-This integration is **enabled by default for Node.js-based platforms** and automatically captures spans for Anthropic API method calls. It requires SDK version `10.12.0` or higher.
+Enabled by default and automatically captures spans for Anthropic SDK calls. Requires Sentry SDK version `10.28.0` or higher.
 
 </Alert>
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.nextjs", "javascript.nuxt", "javascript.solidstart", "javascript.sveltekit", "javascript.react-router", "javascript.remix", "javascript.astro", "javascript.tanstackstart-react", "javascript.bun", "javascript.cloudflare"]}>
+
+<Alert>
+
+Enabled by default and automatically captures spans for Anthropic SDK calls. Requires Sentry SDK version `10.28.0` or higher.
+
+For other runtimes, like the Browser, the instrumentation needs to be manually enabled. See the [setup instructions below](#browser-side-usage).
+
+</Alert>
+
+</PlatformSection>
 
 To customize what data is captured (such as inputs and outputs), see the [Options](#options) in the Configuration section.
 
@@ -68,17 +85,7 @@ For Cloudflare Workers, manual instrumentation is required using `instrumentAnth
 
 </PlatformSection>
 
-<PlatformSection supported={["javascript.nextjs"]}>
-
-<Alert>
-
-For Next.js applications using the Edge runtime, manual instrumentation is required using `instrumentAnthropicAiClient`. This integration is automatically instrumented in the Node.js runtime.
-
-</Alert>
-
-</PlatformSection>
-
-The `instrumentAnthropicAiClient` helper adds instrumentation for the `@anthropic-ai/sdk` API to capture spans by wrapping Anthropic client calls and recording LLM interactions with configurable input/output recording. You need to manually wrap your Anthropic client instance with this helper. See example below:
+The `instrumentAnthropicAiClient` helper adds instrumentation for the [`@anthropic-ai/sdk`](https://www.npmjs.com/package/@anthropic-ai/sdk) API to capture spans by wrapping Anthropic SDK calls and recording LLM interactions with configurable input/output recording. You need to manually wrap your Anthropic client instance with this helper. See example below:
 
 ```javascript
 import Anthropic from "@anthropic-ai/sdk";
@@ -108,13 +115,13 @@ To customize what data is captured (such as inputs and outputs), see the [Option
 
 ### Options
 
-The following options control what data is captured from Anthropic API calls:
+The following options control what data is captured from Anthropic SDK calls:
 
 #### `recordInputs`
 
 _Type: `boolean` (optional)_
 
-Records inputs to Anthropic API method calls (such as prompts and messages).
+Records inputs to Anthropic SDK calls (such as prompts and messages).
 
 Defaults to `true` if `sendDefaultPii` is `true`.
 
@@ -122,7 +129,7 @@ Defaults to `true` if `sendDefaultPii` is `true`.
 
 _Type: `boolean` (optional)_
 
-Records outputs from Anthropic API method calls (such as generated text and responses).
+Records outputs from Anthropic SDK calls (such as generated text and responses).
 
 Defaults to `true` if `sendDefaultPii` is `true`.
 
@@ -130,12 +137,13 @@ Defaults to `true` if `sendDefaultPii` is `true`.
 
 <PlatformSection notSupported={["javascript", "javascript.react", "javascript.angular", "javascript.vue", "javascript.svelte", "javascript.solid", "javascript.ember", "javascript.gatsby"]}>
 
-Automatic Instrumentation
+Using the `anthropicAIIntegration` integration:
 
 ```javascript
 Sentry.init({
   dsn: "____PUBLIC_DSN____",
-  tracesSampleRate: 1.0, // Required for AI observability
+   // Tracing must be enabled for agent monitoring to work
+  tracesSampleRate: 1.0, 
   integrations: [
     Sentry.anthropicAIIntegration({
       // your options here
@@ -148,7 +156,7 @@ Sentry.init({
 
 <PlatformSection supported={["javascript", "javascript.react", "javascript.angular", "javascript.vue", "javascript.svelte", "javascript.solid", "javascript.ember", "javascript.gatsby", "javascript.nextjs", "javascript.nuxt", "javascript.solidstart", "javascript.sveltekit", "javascript.react-router", "javascript.remix", "javascript.astro", "javascript.tanstackstart-react", "javascript.electron", "javascript.cloudflare"]}>
 
-Manual Instrumentation
+Using the `instrumentAnthropicAiClient` helper:
 
 ```javascript
 const client = Sentry.instrumentAnthropicAiClient(anthropic, {
@@ -160,7 +168,7 @@ const client = Sentry.instrumentAnthropicAiClient(anthropic, {
 
 ## Supported Operations
 
-By default, tracing support is added to the following Anthropic API method calls:
+By default, tracing support is added to the following Anthropic SDK calls:
 
 - `messages.create()` - Create messages with Claude models
 - `messages.stream()` - Stream messages with Claude models
