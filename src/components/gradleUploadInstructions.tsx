@@ -2,6 +2,8 @@ import {Fragment} from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 
+import getPackageRegistry from 'sentry-docs/build/packageRegistry';
+
 import {CodeBlock} from './codeBlock';
 import {CodeTabs} from './codeTabs';
 import {GradleFeatureConfig} from './gradleFeatureConfig';
@@ -12,8 +14,12 @@ type Props = {
   feature: 'sizeAnalysis' | 'distribution';
 };
 
-export function GradleUploadInstructions({feature}: Props) {
+export async function GradleUploadInstructions({feature}: Props) {
   const featureName = feature === 'sizeAnalysis' ? 'size analysis' : 'distribution';
+
+  const packageRegistry = await getPackageRegistry();
+  const gradlePluginVersion =
+    packageRegistry.data['sentry.java.android.gradle-plugin']?.version || '6.0.0';
 
   return (
     <Fragment>
@@ -29,7 +35,7 @@ export function GradleUploadInstructions({feature}: Props) {
           <Link href="/platforms/android/configuration/gradle/">
             Sentry Android Gradle plugin
           </Link>{' '}
-          with at least version <code>6.0.0-rc.1</code>
+          with at least version <code>{gradlePluginVersion}</code>
         </li>
 
         <li>
