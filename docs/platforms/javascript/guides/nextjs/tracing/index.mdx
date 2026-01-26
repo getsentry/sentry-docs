@@ -1,0 +1,349 @@
+---
+title: Set Up Tracing
+sidebar_title: Tracing
+description: "Monitor performance across all Next.js runtimes: client, server, and edge."
+sidebar_order: 5
+sidebar_section: features
+---
+
+Tracing captures the timing and flow of requests through your Next.js application. Learn more about [tracing](/concepts/key-terms/tracing/) and how Sentry uses traces to track performance across services.
+
+Sentry automatically instruments most operations, but Server Actions require manual setup.
+
+## Prerequisites
+
+Before enabling tracing, ensure you have:
+- [Installed the Sentry SDK](/platforms/javascript/guides/nextjs/) in your Next.js application
+- Initialized Sentry in all three config files (`instrumentation-client.ts`, `sentry.server.config.ts`, `sentry.edge.config.ts`)
+
+## Enable Tracing
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+### Configure Sample Rate
+
+Add `tracesSampleRate` to your Sentry configuration in all three runtime files.
+
+**Start with 100% in development, and 10-20% in production.** Adjust based on traffic volume and budget.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {tabTitle:Client} {filename:instrumentation-client.ts}
+import * as Sentry from "@sentry/nextjs";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.1,
+});
+```
+
+```typescript {tabTitle:Server} {filename:sentry.server.config.ts}
+import * as Sentry from "@sentry/nextjs";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.1,
+});
+```
+
+```typescript {tabTitle:Edge} {filename:sentry.edge.config.ts}
+import * as Sentry from "@sentry/nextjs";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.1,
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+## What's Traced Automatically
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+### By Runtime
+
+The SDK instruments different operations depending on where your code runs:
+
+| Runtime | Auto-Instrumented |
+|---------|-------------------|
+| **Client** | Page loads, navigations, fetch requests, Web Vitals |
+| **Server** | API routes, Server Components, `getServerSideProps` |
+| **Edge** | Middleware, edge API routes |
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```tsx
+// All of these create spans automatically
+
+// Client: navigation creates a span
+<Link href="/dashboard">Dashboard</Link>
+
+// Server: API route creates a span
+export async function GET() {
+  return Response.json({ data });
+}
+
+// Server Component: creates a span
+export default async function Page() {
+  const data = await fetchData();
+  return <div>{data}</div>;
+}
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+For configuration options like timeouts, INP settings, and filtering spans, see <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/">Automatic Instrumentation</PlatformLink>.
+
+## Server Actions
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+### Why Manual Instrumentation?
+
+Server Actions are **not** automatically instrumented. Without wrapping, they appear as anonymous server operations with no timing or context.
+
+Use `withServerActionInstrumentation` to:
+- Create named spans for each action
+- Capture timing and errors
+- Connect client and server traces
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```tsx {filename:app/actions.ts}
+"use server";
+
+import * as Sentry from "@sentry/nextjs";
+
+export async function createOrder(formData: FormData) {
+  return Sentry.withServerActionInstrumentation(
+    "createOrder",
+    async () => {
+      // Your action logic
+      const order = await db.orders.create({
+        data: { items: formData.get("items") },
+      });
+      return { success: true, orderId: order.id };
+    }
+  );
+}
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### With Headers
+
+Pass headers to connect client-side traces with server-side spans. This enables full distributed tracing across the browser-to-server boundary.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```tsx {filename:app/actions.ts}
+"use server";
+
+import * as Sentry from "@sentry/nextjs";
+import { headers } from "next/headers";
+
+export async function submitForm(formData: FormData) {
+  return Sentry.withServerActionInstrumentation(
+    "submitForm",
+    { headers: await headers() },
+    async () => {
+      // Action logic with full trace context
+    }
+  );
+}
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+## Web Vitals
+
+The SDK automatically captures [Web Vitals](/product/insights/web-vitals/) on every page load. These metrics measure real user experience:
+
+| Metric | What It Measures | Threshold (Good) |
+|--------|------------------|------------------|
+| **LCP** | Largest Contentful Paint — loading performance | ≤ 2.5s |
+| **INP** | Interaction to Next Paint — responsiveness | ≤ 200ms |
+| **CLS** | Cumulative Layout Shift — visual stability | ≤ 0.1 |
+| **FCP** | First Contentful Paint — initial render | ≤ 1s |
+| **TTFB** | Time to First Byte — server response | ≤ 100ms |
+
+Web Vitals appear as measurements on page load transactions and feed into your [Performance Score](/product/insights/web-vitals/#performance-score). See [Web Vitals Concepts](/product/insights/web-vitals/web-vitals-concepts/) for detailed explanations of each metric.
+
+## Custom Instrumentation
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+### When to Use `startSpan`
+
+Add custom spans when you want to measure:
+- Business operations (checkout flow, multi-step wizards)
+- External API calls you want to track separately
+- Database operations not auto-captured
+- Expensive computations
+
+For the full span API including `startSpanManual` and `startInactiveSpan`, see <PlatformLink to="/tracing/instrumentation/">Custom Instrumentation</PlatformLink>.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```tsx {filename:app/api/checkout/route.ts}
+import * as Sentry from "@sentry/nextjs";
+
+export async function POST(request: Request) {
+  return Sentry.startSpan(
+    { name: "checkout.process", op: "checkout" },
+    async () => {
+      // Nested spans for sub-operations
+      const cart = await Sentry.startSpan(
+        { name: "checkout.validate_cart", op: "validation" },
+        () => validateCart(request)
+      );
+
+      const payment = await Sentry.startSpan(
+        { name: "checkout.process_payment", op: "payment" },
+        () => processPayment(cart)
+      );
+
+      return Response.json({ orderId: payment.orderId });
+    }
+  );
+}
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Add Attributes
+
+Attach data to spans for filtering and debugging in Sentry.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```tsx
+Sentry.startSpan(
+  {
+    name: "order.process",
+    op: "order",
+    attributes: {
+      "order.id": orderId,
+      "order.value": cart.total,
+      "order.item_count": cart.items.length,
+    },
+  },
+  async () => {
+    // Operation logic
+  }
+);
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+## Distributed Tracing
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+### Automatic Propagation
+
+The SDK automatically propagates trace context for:
+- `fetch()` requests to your own domain
+- Server Actions (when using `withServerActionInstrumentation` with headers)
+
+For external APIs, configure `tracePropagationTargets`:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {filename:instrumentation-client.ts}
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 0.1,
+
+  // Propagate traces to these external services
+  tracePropagationTargets: [
+    "localhost",
+    /^https:\/\/api\.yourcompany\.com/,
+    /^https:\/\/payments\.stripe\.com/,
+  ],
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+For CORS configuration and manual trace propagation (WebSockets, etc.), see <PlatformLink to="/tracing/distributed-tracing/">Distributed Tracing</PlatformLink>.
+
+## Quick Reference
+
+| Scenario | Auto-Instrumented? | Action |
+|----------|-------------------|--------|
+| Page loads and navigations | Yes | None |
+| API routes (`route.ts`) | Yes | None |
+| Server Components | Yes | None |
+| `getServerSideProps` | Yes | None |
+| **Server Actions** | **No** | Use `withServerActionInstrumentation` |
+| External API calls | Partial | Configure `tracePropagationTargets` |
+| Custom business logic | No | Use `startSpan` |
+
+## Troubleshooting
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+### High trace volume
+
+If you're sending too many traces, lower your sample rate or use `tracesSampler` for dynamic sampling based on route.
+
+See <PlatformLink to="/tracing/configure-sampling/">Configure Sampling</PlatformLink> for more options.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript
+Sentry.init({
+  tracesSampler: ({ name }) => {
+    // Sample 5% of health checks
+    if (name.includes("health")) return 0.05;
+    // Sample 50% of API routes
+    if (name.includes("/api/")) return 0.5;
+    // Default 10%
+    return 0.1;
+  },
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
