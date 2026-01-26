@@ -1,0 +1,416 @@
+---
+title: Browser AI Monitoring
+sidebar_title: AI Agent Monitoring
+sidebar_order: 7
+description: "Learn how to manually instrument AI agents in browser applications."
+sidebar_section: features
+new: true
+supported:
+  - javascript
+  - javascript.angular
+  - javascript.ember
+  - javascript.gatsby
+  - javascript.react
+  - javascript.solid
+  - javascript.svelte
+  - javascript.vue
+  - javascript.wasm
+notSupported:
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.hono
+  - javascript.koa
+  - javascript.nestjs
+  - javascript.bun
+  - javascript.deno
+  - javascript.nextjs
+  - javascript.nuxt
+  - javascript.astro
+  - javascript.solidstart
+  - javascript.sveltekit
+  - javascript.remix
+  - javascript.cloudflare
+  - javascript.tanstackstart-react
+  - javascript.react-router
+  - javascript.electron
+  - javascript.cordova
+  - javascript.capacitor
+---
+
+With <Link to="/product/insights/ai/agents/dashboard/">Sentry AI Agent Monitoring</Link>, you can monitor and debug your AI systems with full-stack context. You'll be able to track key insights like token usage, latency, tool usage, and error rates. AI Agent Monitoring data will be fully connected to your other Sentry data like logs, errors, and traces.
+
+## Prerequisites
+
+Before setting up AI Agent Monitoring, ensure you have <PlatformLink to="/tracing/">tracing enabled</PlatformLink> in your Sentry configuration.
+
+<Alert level="info">
+
+**Browser applications require manual instrumentation.** Unlike Node.js applications, the JavaScript SDK does not provide automatic instrumentation for AI libraries in the browser.
+
+</Alert>
+
+## Using Integration Helpers
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+For supported AI libraries, Sentry provides manual instrumentation helpers that simplify span creation. These helpers handle the complexity of creating properly structured spans with the correct attributes.
+
+**Supported libraries:**
+- <PlatformLink to="/configuration/integrations/openai/">OpenAI</PlatformLink>
+- <PlatformLink to="/configuration/integrations/anthropic/">Anthropic</PlatformLink>
+- <PlatformLink to="/configuration/integrations/google-genai/">Google Gen AI SDK</PlatformLink>
+- <PlatformLink to="/configuration/integrations/langchain/">LangChain</PlatformLink>
+- <PlatformLink to="/configuration/integrations/langgraph/">LangGraph</PlatformLink>
+
+Each integration page includes browser-specific examples with options like `recordInputs` and `recordOutputs`.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript
+import * as Sentry from "___SDK_PACKAGE___";
+import { wrapOpenAIWithSentry } from "___SDK_PACKAGE___";
+import OpenAI from "openai";
+
+const client = wrapOpenAIWithSentry(
+  new OpenAI({ apiKey: "...", dangerouslyAllowBrowser: true }),
+  {
+    recordInputs: true,
+    recordOutputs: true,
+  }
+);
+
+// All calls are now instrumented
+const response = await client.chat.completions.create({
+  model: "gpt-4o-mini",
+  messages: [{ role: "user", content: "Hello!" }],
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+## Manual Span Creation
+
+If you're using a library that Sentry doesn't provide helpers for, you can manually create spans. For your data to show up in [AI Agents Insights](https://sentry.io/orgredirect/organizations/:orgslug/insights/ai/agents/), spans must have well-defined names and data attributes.
+
+### Invoke Agent Span
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+This span represents the execution of an AI agent, capturing the full lifecycle from receiving a task to producing a final response.
+
+**Key attributes:**
+- `gen_ai.agent.name` — The agent's name (e.g., "Weather Agent")
+- `gen_ai.request.model` — The underlying model used
+- `gen_ai.response.text` — The agent's final output
+- `gen_ai.usage.input_tokens` / `output_tokens` — Total token counts
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript
+// Example agent implementation for demonstration
+const myAgent = {
+  name: "Weather Agent",
+  modelProvider: "openai",
+  model: "gpt-4o-mini",
+  async run() {
+    // Agent implementation
+    return {
+      output: "The weather in Paris is sunny",
+      usage: {
+        inputTokens: 15,
+        outputTokens: 8,
+      },
+    };
+  },
+};
+
+Sentry.startSpan(
+  {
+    op: "gen_ai.invoke_agent",
+    name: `invoke_agent ${myAgent.name}`,
+    attributes: {
+      "gen_ai.operation.name": "invoke_agent",
+      "gen_ai.request.model": myAgent.model,
+      "gen_ai.agent.name": myAgent.name,
+    },
+  },
+  async (span) => {
+    // run the agent
+    const result = await myAgent.run();
+
+    // set agent response
+    span.setAttribute("gen_ai.response.text", JSON.stringify([result.output]));
+
+    // set token usage
+    span.setAttribute("gen_ai.usage.input_tokens", result.usage.inputTokens);
+    span.setAttribute("gen_ai.usage.output_tokens", result.usage.outputTokens);
+
+    return result;
+  }
+);
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+<Expandable title="All Invoke Agent span attributes">
+  <Include name="tracing/ai-agents-module/invoke-agent-span" />
+</Expandable>
+
+### AI Client Span
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+This span represents a chat or completion request to an LLM, capturing the messages, model configuration, and response.
+
+**Key attributes:**
+- `gen_ai.request.model` — The model name (required)
+- `gen_ai.request.messages` — Chat messages sent to the LLM
+- `gen_ai.request.max_tokens` — Token limit for the response
+- `gen_ai.response.text` — The model's response
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript
+// Example AI implementation for demonstration
+const myAi = {
+  modelProvider: "openai",
+  model: "gpt-4o-mini",
+  modelConfig: {
+    temperature: 0.1,
+    presencePenalty: 0.5,
+  },
+  async createMessage(messages, maxTokens) {
+    // AI implementation
+    return {
+      output: "Here's a joke: Why don't scientists trust atoms? Because they make up everything!",
+      usage: {
+        inputTokens: 12,
+        outputTokens: 24,
+      },
+    };
+  },
+};
+
+Sentry.startSpan(
+  {
+    op: "gen_ai.chat",
+    name: `chat ${myAi.model}`,
+    attributes: {
+      "gen_ai.operation.name": "chat",
+      "gen_ai.request.model": myAi.model,
+    },
+  },
+  async (span) => {
+    // set up messages for LLM
+    const maxTokens = 1024;
+    const messages = [{ role: "user", content: "Tell me a joke" }];
+
+    // set chat request data
+    span.setAttribute("gen_ai.request.messages", JSON.stringify(messages));
+    span.setAttribute("gen_ai.request.max_tokens", maxTokens);
+    span.setAttribute("gen_ai.request.temperature", myAi.modelConfig.temperature);
+
+    // ask the LLM
+    const result = await myAi.createMessage(messages, maxTokens);
+
+    // set response
+    span.setAttribute("gen_ai.response.text", JSON.stringify([result.output]));
+
+    // set token usage
+    span.setAttribute("gen_ai.usage.input_tokens", result.usage.inputTokens);
+    span.setAttribute("gen_ai.usage.output_tokens", result.usage.outputTokens);
+
+    return result;
+  }
+);
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+<Expandable title="All AI Client span attributes">
+  <Include name="tracing/ai-agents-module/ai-client-span" />
+</Expandable>
+
+### Execute Tool Span
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+This span represents the execution of a tool or function that was requested by an AI model, including the input arguments and resulting output.
+
+**Key attributes:**
+- `gen_ai.tool.name` — The tool's name (e.g., "random_number")
+- `gen_ai.tool.description` — Description of what the tool does
+- `gen_ai.tool.input` — The arguments passed to the tool
+- `gen_ai.tool.output` — The tool's return value
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript
+// Example AI implementation for demonstration
+const myAi = {
+  modelProvider: "openai",
+  model: "gpt-4o-mini",
+  async createMessage(messages, maxTokens) {
+    // AI implementation that returns tool calls
+    return {
+      toolCalls: [
+        {
+          name: "random_number",
+          description: "Generate a random number",
+          arguments: { max: 10 },
+        },
+      ],
+    };
+  },
+};
+
+const messages = [{ role: "user", content: "Generate a random number between 0 and 10" }];
+
+// First, make the AI call
+const result = await Sentry.startSpan(
+  { op: "gen_ai.chat", name: `chat ${myAi.model}` },
+  () => myAi.createMessage(messages, 1024)
+);
+
+// Check if we should call a tool
+if (result.toolCalls && result.toolCalls.length > 0) {
+  const tool = result.toolCalls[0];
+
+  await Sentry.startSpan(
+    {
+      op: "gen_ai.execute_tool",
+      name: `execute_tool ${tool.name}`,
+      attributes: {
+        "gen_ai.request.model": myAi.model,
+        "gen_ai.tool.type": "function",
+        "gen_ai.tool.name": tool.name,
+        "gen_ai.tool.description": tool.description,
+        "gen_ai.tool.input": JSON.stringify(tool.arguments),
+      },
+    },
+    async (span) => {
+      // run tool (example implementation)
+      const toolResult = Math.floor(Math.random() * tool.arguments.max);
+
+      // set tool result
+      span.setAttribute("gen_ai.tool.output", String(toolResult));
+
+      return toolResult;
+    }
+  );
+}
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+<Expandable title="All Execute Tool span attributes">
+  <Include name="tracing/ai-agents-module/execute-tool-span" />
+</Expandable>
+
+### Handoff Span
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+This span marks the transition of control from one agent to another, typically when the current agent determines another agent is better suited to handle the task.
+
+**Requirements:**
+- `op` must be `"gen_ai.handoff"`
+- `name` should follow the pattern `"handoff from {source} to {target}"`
+- All [Common Span Attributes](#common-span-attributes) should be set
+
+The handoff span itself has no body — it just marks the transition point before the target agent starts.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript
+// Example agent implementations for demonstration
+const myAgent = {
+  name: "Weather Agent",
+  modelProvider: "openai",
+  model: "gpt-4o-mini",
+  async run() {
+    // Agent implementation
+    return {
+      handoffTo: "Travel Agent",
+      output: "I need to handoff to the travel agent for booking recommendations",
+    };
+  },
+};
+
+const otherAgent = {
+  name: "Travel Agent",
+  modelProvider: "openai",
+  model: "gpt-4o-mini",
+  async run() {
+    // Other agent implementation
+    return { output: "Here are some travel recommendations..." };
+  },
+};
+
+// First agent execution
+const result = await Sentry.startSpan(
+  { op: "gen_ai.invoke_agent", name: `invoke_agent ${myAgent.name}` },
+  () => myAgent.run()
+);
+
+// Check if we should handoff to another agent
+if (result.handoffTo) {
+  // Create handoff span
+  await Sentry.startSpan(
+    {
+      op: "gen_ai.handoff",
+      name: `handoff from ${myAgent.name} to ${otherAgent.name}`,
+      attributes: {
+        "gen_ai.request.model": myAgent.model,
+      },
+    },
+    () => {
+      // the handoff span just marks the handoff
+      // no actual work is done here
+    }
+  );
+
+  // Execute the other agent
+  await Sentry.startSpan(
+    { op: "gen_ai.invoke_agent", name: `invoke_agent ${otherAgent.name}` },
+    () => otherAgent.run()
+  );
+}
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+## Common Span Attributes
+
+<Include name="tracing/ai-agents-module/common-span-attributes" />

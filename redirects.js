@@ -320,7 +320,7 @@ const userDocsRedirects = [
   },
   {
     source: '/product/ai-in-sentry/sentry-prevent-ai/:path*',
-    destination: '/product/ai-in-sentry/ai-code-review/:path*',
+    destination: '/product/ai-in-sentry/seer/ai-code-review/:path*',
   },
 
   {
@@ -1061,10 +1061,27 @@ const userDocsRedirects = [
     source: '/product/insights/agents/:path*',
     destination: '/product/insights/ai/agents/:path*',
   },
+  // AI Agent Monitoring moved to top-level feature
   {
-    source: '/platforms/javascript/tracing/instrumentation/ai-agents-module',
-    destination:
-      '/platforms/javascript/guides/node/tracing/instrumentation/ai-agents-module',
+    source: '/platforms/javascript/tracing/instrumentation/ai-agents-module/:path*',
+    destination: '/platforms/javascript/ai-agent-monitoring/:path*',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/tracing/instrumentation/ai-agents-module/:path*',
+    destination: '/platforms/javascript/guides/:guide/ai-agent-monitoring/:path*',
+  },
+  {
+    source: '/platforms/javascript/tracing/instrumentation/ai-agents-module-browser/:path*',
+    destination: '/platforms/javascript/ai-agent-monitoring-browser/:path*',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/tracing/instrumentation/ai-agents-module-browser/:path*',
+    destination: '/platforms/javascript/guides/:guide/ai-agent-monitoring-browser/',
+  },
+  // Browser JS doesn't have server-side AI Agent Monitoring, redirect to browser version
+  {
+    source: '/platforms/javascript/ai-agent-monitoring/',
+    destination: '/platforms/javascript/ai-agent-monitoring-browser/',
   },
   {
     source: '/product/insights/retention-priorities/',
@@ -1297,6 +1314,14 @@ const userDocsRedirects = [
     source: '/product/ai-in-sentry/seer/seer-privacy-and-security',
     destination: '/product/ai-in-sentry/ai-privacy-and-security/',
   },
+  {
+    source: '/product/ai-in-sentry/ai-code-review/',
+    destination: '/product/ai-in-sentry/seer/ai-code-review/',
+  },
+  {
+    source: '/product/ai-in-sentry/seer/issue-fix/:path*',
+    destination: '/product/ai-in-sentry/seer/root-cause-analysis/:path*',
+  },
   // .NET profiling guide redirects - consolidate to main profiling page
   {
     source: '/platforms/dotnet/guides/uwp/profiling/:path*',
@@ -1339,10 +1364,6 @@ const userDocsRedirects = [
   {
     source: '/platforms/javascript/guides/nextjs/usage/',
     destination: '/platforms/javascript/guides/nextjs/capturing-errors/',
-  },
-  {
-    source: '/product/new-monitors-and-alerts/alerts/:path*',
-    destination: '/product/alerts/:path*',
   },
 ];
 

@@ -18,6 +18,12 @@ import {DevelopDocsSidebar} from './developDocsSidebar';
 import {SidebarNavigation} from './sidebarNavigation';
 import {SidebarProps} from './types';
 
+// Pages that have different paths on different platforms but are conceptually equivalent
+const EQUIVALENT_PATHS: Record<string, string> = {
+  'ai-agent-monitoring': 'ai-agent-monitoring-browser',
+  'ai-agent-monitoring-browser': 'ai-agent-monitoring',
+};
+
 const activeLinkSelector = `.${styles.sidebar} .toc-item .active`;
 
 export const sidebarToggleId = styles['navbar-menu-toggle'];
@@ -41,19 +47,27 @@ export async function Sidebar({path, versions}: SidebarProps) {
   const platforms: Platform[] = !rootNode
     ? []
     : extractPlatforms(rootNode).map(platform => {
+        // take the :path in /platforms/:platformName/:path
+        // or /platforms/:platformName/guides/:guideName/:path when we're in a guide
+        const currentPathParts = path.slice(currentGuide ? 4 : 2);
+        const lastPart = currentPathParts[currentPathParts.length - 1];
+        const equivalentPath = EQUIVALENT_PATHS[lastPart];
+
         const platformPageForCurrentPath =
-          nodeForPath(rootNode, [
-            'platforms',
-            platform.name,
-            // take the :path in /platforms/:platformName/:path
-            // or /platforms/:platformName/guides/:guideName/:path when we're in a guide
-            ...path.slice(currentGuide ? 4 : 2),
-          ]) ||
+          nodeForPath(rootNode, ['platforms', platform.name, ...currentPathParts]) ||
+          // try equivalent path (e.g., ai-agent-monitoring <-> ai-agent-monitoring-browser)
+          (equivalentPath &&
+            nodeForPath(rootNode, [
+              'platforms',
+              platform.name,
+              ...currentPathParts.slice(0, -1),
+              equivalentPath,
+            ])) ||
           // try to go one page higher, example: go to /usage/ from /usage/something
           nodeForPath(rootNode, [
             'platforms',
             platform.name,
-            ...path.slice(currentGuide ? 4 : 2, path.length - 1),
+            ...currentPathParts.slice(0, -1),
           ]);
 
         return {
@@ -63,13 +77,24 @@ export async function Sidebar({path, versions}: SidebarProps) {
               ? '/' + platformPageForCurrentPath.path + '/'
               : platform.url,
           guides: platform.guides.map(guide => {
-            const guidePageForCurrentPath = nodeForPath(rootNode, [
-              'platforms',
-              platform.name,
-              'guides',
-              guide.name,
-              ...path.slice(currentGuide ? 4 : 2),
-            ]);
+            const guidePageForCurrentPath =
+              nodeForPath(rootNode, [
+                'platforms',
+                platform.name,
+                'guides',
+                guide.name,
+                ...currentPathParts,
+              ]) ||
+              // try equivalent path (e.g., ai-agent-monitoring <-> ai-agent-monitoring-browser)
+              (equivalentPath &&
+                nodeForPath(rootNode, [
+                  'platforms',
+                  platform.name,
+                  'guides',
+                  guide.name,
+                  ...currentPathParts.slice(0, -1),
+                  equivalentPath,
+                ]));
             return guidePageForCurrentPath && !guidePageForCurrentPath.missing
               ? {
                   ...guide,

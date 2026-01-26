@@ -1,6 +1,6 @@
 ---
 title: Anthropic
-description: "Adds instrumentation for Anthropic API."
+description: "Adds instrumentation for the Anthropic SDK."
 supported:
   - javascript.node
   - javascript.aws-lambda
@@ -25,29 +25,128 @@ supported:
   - javascript.tanstackstart-react
   - javascript.cloudflare
   - javascript
+  - javascript.react
+  - javascript.angular
+  - javascript.vue
+  - javascript.svelte
+  - javascript.solid
+  - javascript.ember
+  - javascript.gatsby
 ---
 
-<Alert>
+<PlatformSection notSupported={["javascript", "javascript.react", "javascript.angular", "javascript.vue", "javascript.svelte", "javascript.solid", "javascript.ember", "javascript.gatsby"]}>
 
-This integration works in the Node.js, Cloudflare Workers, Vercel Edge Functions, and browser runtimes. It requires SDK version `10.12.0` or higher.
-
-</Alert>
+## Server-Side Usage
 
 _Import name: `Sentry.anthropicAIIntegration`_
 
-The `anthropicAIIntegration` adds instrumentation for the `@anthropic-ai/sdk` to capture spans by automatically wrapping Anthropic client calls and recording LLM interactions with configurable input/output recording.
+The `anthropicAIIntegration` adds instrumentation for the [`@anthropic-ai/sdk`](https://www.npmjs.com/package/@anthropic-ai/sdk) API to capture spans by wrapping Anthropic SDK calls and recording LLM interactions.
 
-<PlatformSection notSupported={["javascript.cloudflare", "javascript.nextjs", "javascript"]}>
-It is enabled by default and will automatically capture spans for Anthropic API method calls. You can opt-in to capture inputs and outputs by setting `recordInputs` and `recordOutputs` in the integration config:
+
+<PlatformSection notSupported={["javascript.nextjs", "javascript.nuxt", "javascript.solidstart", "javascript.sveltekit", "javascript.react-router", "javascript.remix", "javascript.astro", "javascript.tanstackstart-react", "javascript.bun", "javascript.cloudflare"]}>
+
+<Alert>
+
+Enabled by default and automatically captures spans for Anthropic SDK calls. Requires Sentry SDK version `10.28.0` or higher.
+
+</Alert>
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.nextjs", "javascript.nuxt", "javascript.solidstart", "javascript.sveltekit", "javascript.react-router", "javascript.remix", "javascript.astro", "javascript.tanstackstart-react", "javascript.bun", "javascript.cloudflare"]}>
+
+<Alert>
+
+Enabled by default and automatically captures spans for Anthropic SDK calls. Requires Sentry SDK version `10.28.0` or higher.
+
+For other runtimes, like the Browser, the instrumentation needs to be manually enabled. See the [setup instructions below](#browser-side-usage).
+
+</Alert>
+
+</PlatformSection>
+
+To customize what data is captured (such as inputs and outputs), see the [Options](#options) in the Configuration section.
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript", "javascript.react", "javascript.angular", "javascript.vue", "javascript.svelte", "javascript.solid", "javascript.ember", "javascript.gatsby", "javascript.nextjs", "javascript.nuxt", "javascript.solidstart", "javascript.sveltekit", "javascript.react-router", "javascript.remix", "javascript.astro", "javascript.tanstackstart-react", "javascript.electron", "javascript.cloudflare"]}>
+
+## Browser-Side Usage
+
+_Import name: `Sentry.instrumentAnthropicAiClient`_
+
+<PlatformSection supported={["javascript.cloudflare"]}>
+
+<Alert>
+
+For Cloudflare Workers, manual instrumentation is required using `instrumentAnthropicAiClient`.
+
+</Alert>
+
+</PlatformSection>
+
+The `instrumentAnthropicAiClient` helper adds instrumentation for the [`@anthropic-ai/sdk`](https://www.npmjs.com/package/@anthropic-ai/sdk) API to capture spans by wrapping Anthropic SDK calls and recording LLM interactions with configurable input/output recording. You need to manually wrap your Anthropic client instance with this helper. See example below:
+
+```javascript
+import Anthropic from "@anthropic-ai/sdk";
+
+const anthropic = new Anthropic({
+  apiKey: "your-api-key", // Warning: API key will be exposed in browser!
+});
+
+const client = Sentry.instrumentAnthropicAiClient(anthropic, {
+  recordInputs: true,
+  recordOutputs: true,
+});
+
+// Use the wrapped client instead of the original anthropic instance
+const response = await client.messages.create({
+  model: "claude-3-5-sonnet-20241022",
+  max_tokens: 1024,
+  messages: [{ role: "user", content: "Hello!" }],
+});
+```
+
+To customize what data is captured (such as inputs and outputs), see the [Options](#options) in the Configuration section.
+
+</PlatformSection>
+
+## Configuration
+
+### Options
+
+The following options control what data is captured from Anthropic SDK calls:
+
+#### `recordInputs`
+
+_Type: `boolean` (optional)_
+
+Records inputs to Anthropic SDK calls (such as prompts and messages).
+
+Defaults to `true` if `sendDefaultPii` is `true`.
+
+#### `recordOutputs`
+
+_Type: `boolean` (optional)_
+
+Records outputs from Anthropic SDK calls (such as generated text and responses).
+
+Defaults to `true` if `sendDefaultPii` is `true`.
+
+**Usage**
+
+<PlatformSection notSupported={["javascript", "javascript.react", "javascript.angular", "javascript.vue", "javascript.svelte", "javascript.solid", "javascript.ember", "javascript.gatsby"]}>
+
+Using the `anthropicAIIntegration` integration:
 
 ```javascript
 Sentry.init({
   dsn: "____PUBLIC_DSN____",
-  tracesSampleRate: 1.0,
+   // Tracing must be enabled for agent monitoring to work
+  tracesSampleRate: 1.0, 
   integrations: [
     Sentry.anthropicAIIntegration({
-      recordInputs: true,
-      recordOutputs: true,
+      // your options here
     }),
   ],
 });
@@ -55,85 +154,21 @@ Sentry.init({
 
 </PlatformSection>
 
-<PlatformSection supported={["javascript.cloudflare"]}>
-For Cloudflare Workers, you need to manually instrument the Anthropic client using the `instrumentAnthropicAiClient` helper:
+<PlatformSection supported={["javascript", "javascript.react", "javascript.angular", "javascript.vue", "javascript.svelte", "javascript.solid", "javascript.ember", "javascript.gatsby", "javascript.nextjs", "javascript.nuxt", "javascript.solidstart", "javascript.sveltekit", "javascript.react-router", "javascript.remix", "javascript.astro", "javascript.tanstackstart-react", "javascript.electron", "javascript.cloudflare"]}>
+
+Using the `instrumentAnthropicAiClient` helper:
 
 ```javascript
-import * as Sentry from "@sentry/cloudflare";
-import Anthropic from "@anthropic-ai/sdk";
-
-const anthropic = new Anthropic();
 const client = Sentry.instrumentAnthropicAiClient(anthropic, {
-  recordInputs: true,
-  recordOutputs: true,
-});
-
-// Use the wrapped client instead of the original anthropic instance
-const response = await client.messages.create({
-  model: "claude-3-5-sonnet-20241022",
-  max_tokens: 1024,
-  messages: [{ role: "user", content: "Hello!" }],
+  // your options here
 });
 ```
 
 </PlatformSection>
 
-<PlatformSection supported={["javascript"]}>
-For browser applications, you need to manually instrument the Anthropic client using the `instrumentAnthropicAiClient` helper:
+## Supported Operations
 
-```javascript
-import * as Sentry from "@sentry/browser";
-import Anthropic from "@anthropic-ai/sdk";
-
-const anthropic = new Anthropic();
-const client = Sentry.instrumentAnthropicAiClient(anthropic, {
-  recordInputs: true,
-  recordOutputs: true,
-});
-
-// Use the wrapped client instead of the original anthropic instance
-const response = await client.messages.create({
-  model: "claude-3-5-sonnet-20241022",
-  max_tokens: 1024,
-  messages: [{ role: "user", content: "Hello!" }],
-});
-```
-
-</PlatformSection>
-
-## Options
-
-### `recordInputs`
-
-_Type: `boolean`_
-
-Records inputs to Anthropic API method calls (such as prompts and messages).
-
-Defaults to `true` if `sendDefaultPii` is `true`.
-
-```javascript
-Sentry.init({
-  integrations: [Sentry.anthropicAIIntegration({ recordInputs: true })],
-});
-```
-
-### `recordOutputs`
-
-_Type: `boolean`_
-
-Records outputs from Anthropic API method calls (such as generated text and responses).
-
-Defaults to `true` if `sendDefaultPii` is `true`.
-
-```javascript
-Sentry.init({
-  integrations: [Sentry.anthropicAIIntegration({ recordOutputs: true })],
-});
-```
-
-## Configuration
-
-By default this integration adds tracing support to Anthropic API method calls including:
+By default, tracing support is added to the following Anthropic SDK calls:
 
 - `messages.create()` - Create messages with Claude models
 - `messages.stream()` - Stream messages with Claude models
@@ -143,33 +178,7 @@ By default this integration adds tracing support to Anthropic API method calls i
 - `models.retrieve()` - Retrieve model details
 - `beta.messages.create()` - Beta messages API
 
-The integration will automatically detect streaming vs non-streaming requests and handle them appropriately.
-
-<PlatformSection supported={['javascript.nextjs']}>
-
-## Edge runtime
-
-This integration is automatically instrumented in the Node.js runtime. For Next.js applications using the Edge runtime, you need to manually instrument the Anthropic client:
-
-```javascript
-import * as Sentry from "@sentry/nextjs";
-import Anthropic from "@anthropic-ai/sdk";
-
-const anthropic = new Anthropic();
-const client = Sentry.instrumentAnthropicAiClient(anthropic, {
-  recordInputs: true,
-  recordOutputs: true,
-});
-
-// Use the wrapped client instead of the original anthropic instance
-const response = await client.messages.create({
-  model: "claude-3-5-sonnet-20241022",
-  max_tokens: 1024,
-  messages: [{ role: "user", content: "Hello!" }],
-});
-```
-
-</PlatformSection>
+Streaming and non-streaming requests are automatically detected and handled appropriately.
 
 ## Supported Versions
 
