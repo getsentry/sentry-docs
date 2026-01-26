@@ -45,6 +45,16 @@ The `sentry_sdk.start_span()`, `sentry_sdk.start_transaction()`, and
       ...
 ```
 
+Alternatively, you can just change the import:
+
+```python diff
+- from sentry_sdk import start_span
++ from sentry_sdk.traces import start_span
+
+  with start_span(name="flow.checkout") as span:
+      ...
+```
+
 The `sentry_sdk.start_transaction()` API doesn't exist anymore. Instead, use
 `sentry_sdk.traces.start_span()`.
 
@@ -232,8 +242,29 @@ for more details.
 
 ## Other Span Properties
 
-`<TODO: span.set_status(), anything else?>`
+### Status
 
+Span status can only be `ok` or `error`. The status is `ok` by default. Use the
+ `span.set_status()` API to update it.
+
+```python
+from sentry_sdk.traces import start_span
+
+with start_span(name="span") as span:
+    try:
+        ...
+    except:
+        span.set_status("error")
+```
+
+### Source
+
+```python
+from sentry_sdk.traces import start_span
+
+with start_span(name="span") as span:
+    span.set_source("function")
+```
 
 ## Trace Propagation
 
