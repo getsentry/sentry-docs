@@ -64,8 +64,22 @@ The `sentry_sdk.traces.start_span()` API accepts the following arguments:
 - `parent_span`: A span instance that should be set as the parent of this span.
   If not provided, the currently active span will be set as the parent, if any.
 
-The new API does not accept the `op` or `description` argument anymore. Use
-`name` for giving the span a recognizable title.
+The new API does not accept the `description` argument anymore. `description`
+should be migrated to `name`.
+
+The `op` argument is also not supported anymore. However, there's a 
+`span.set_op(op)` method on the span.
+
+```python diff
+- from sentry_sdk import start_span
++ from sentry_sdk.traces import start_span
+
+- with start_span(description="span", op="db.query") as span:
+-     ...
++ with start_span(name="span") as span:
++     span.set_op("db.query")
+```
+
 
 ### Using as a Context Manager or Directly
 
