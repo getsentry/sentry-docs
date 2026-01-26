@@ -121,6 +121,11 @@ async function apiCategoriesUncached(): Promise<APICategory[]> {
 
   Object.entries(data.paths).forEach(([apiPath, methods]) => {
     Object.entries(methods).forEach(([method, apiData]) => {
+      // Skip deprecated endpoints
+      if (apiData.operationId && apiData.operationId.includes('(DEPRECATED)')) {
+        return;
+      }
+
       let server = 'https://sentry.io';
       if (apiData.servers && apiData.servers[0]) {
         server = apiData.servers[0].url;
