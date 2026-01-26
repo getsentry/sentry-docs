@@ -111,6 +111,35 @@ To customize what data is captured (such as inputs and outputs), see the [Option
 
 </PlatformSection>
 
+<PlatformSection supported={['javascript.nextjs']}>
+
+## Edge runtime
+
+This integration is automatically instrumented in the Node.js runtime. For Next.js applications using the Edge runtime, you need to manually instrument LangChain operations using the callback handler:
+
+```javascript
+import * as Sentry from "@sentry/nextjs";
+import { ChatAnthropic } from "@langchain/anthropic";
+
+// Create a LangChain callback handler
+const callbackHandler = Sentry.createLangChainCallbackHandler({
+  recordInputs: true,
+  recordOutputs: true,
+});
+
+// Use with chat models
+const model = new ChatAnthropic({
+  model: "claude-3-5-sonnet-20241022",
+  apiKey: process.env.ANTHROPIC_API_KEY,
+});
+
+await model.invoke("Tell me a joke", {
+  callbacks: [callbackHandler],
+});
+```
+
+</PlatformSection>
+
 ## Configuration
 
 ### Options
@@ -193,35 +222,6 @@ The automatic instrumentation supports the following LangChain provider packages
 - `@langchain/mistralai`
 - `@langchain/google-vertexai`
 - `@langchain/groq`
-
-<PlatformSection supported={['javascript.nextjs']}>
-
-## Edge runtime
-
-This integration is automatically instrumented in the Node.js runtime. For Next.js applications using the Edge runtime, you need to manually instrument LangChain operations using the callback handler:
-
-```javascript
-import * as Sentry from "@sentry/nextjs";
-import { ChatAnthropic } from "@langchain/anthropic";
-
-// Create a LangChain callback handler
-const callbackHandler = Sentry.createLangChainCallbackHandler({
-  recordInputs: true,
-  recordOutputs: true,
-});
-
-// Use with chat models
-const model = new ChatAnthropic({
-  model: "claude-3-5-sonnet-20241022",
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
-
-await model.invoke("Tell me a joke", {
-  callbacks: [callbackHandler],
-});
-```
-
-</PlatformSection>
 
 ## Supported Versions
 
