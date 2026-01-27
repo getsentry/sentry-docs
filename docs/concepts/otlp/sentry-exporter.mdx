@@ -1,0 +1,182 @@
+---
+title: Sentry Exporter
+sidebar_order: 10
+description: "Route OpenTelemetry traces and logs from multiple services to different Sentry projects through a single collector instance."
+keywords: ["otlp", "otel", "opentelemetry", "collector", "exporter", "routing"]
+---
+
+The Sentry exporter is an OpenTelemetry Collector component that sends traces and logs to Sentry with automatic project routing. Unlike the generic `otlphttp` exporter, it routes telemetry from multiple services to different Sentry projects through a single collector instance, no routing connector required.
+
+## When to Use the Sentry Exporter
+
+Use the Sentry exporter when:
+
+- You have multiple services that should send to different Sentry projects
+- You want to avoid managing per-project DSNs in your collector config
+- You need automatic project creation for new services
+
+For single-project setups, the standard `otlphttp` exporter with a project DSN is sufficient.
+
+## Prerequisites
+
+### OpenTelemetry Collector Distribution
+
+The Sentry exporter is included in [OpenTelemetry Collector Contrib](https://github.com/open-telemetry/opentelemetry-collector-releases/tree/main/distributions/otelcol-contrib). Use `otelcol-contrib` or build a custom collector that includes the `sentryexporter` component.
+
+### Sentry Auth Token
+
+Create an Internal Integration in Sentry:
+
+1. Go to **Settings > Developer Settings > Internal Integrations**
+2. Click **Create New Integration**
+3. Set permissions:
+   - **Project**: Read (required)
+   - **Project**: Write (required if using `auto_create_projects`)
+4. Save and copy the token
+
+Store the token as an environment variable:
+
+```bash
+export SENTRY_AUTH_TOKEN="sntrys_eyJ..."
+```
+
+### Organization Slug
+
+Find your organization slug at **Settings > General Settings**, or extract it from your Sentry URL: `https://sentry.io/organizations/{org-slug}/`
+
+## Configuration Reference
+
+### Required
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `url` | string | Base Sentry URL (e.g., `https://sentry.io`) |
+| `org_slug` | string | Your Sentry organization slug |
+| `auth_token` | string | Internal Integration token |
+
+### Optional
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `auto_create_projects` | bool | `false` | Create missing projects automatically |
+| `routing.project_from_attribute` | string | `service.name` | Resource attribute for routing |
+| `routing.attribute_to_project_mapping` | map | - | Map attribute values to project slugs |
+| `http.timeout` | duration | `30s` | HTTP client timeout |
+| `sending_queue.enabled` | bool | `true` | Enable the sending queue |
+
+## Examples
+
+### Basic Setup
+
+Routes telemetry based on `service.name`. A service with `service.name: payments-api` sends to the `payments-api` project.
+
+```yaml
+receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:4318
+      grpc:
+        endpoint: 0.0.0.0:4317
+
+exporters:
+  sentry:
+    url: https://sentry.io
+    org_slug: ${env:SENTRY_ORG_SLUG}
+    auth_token: ${env:SENTRY_AUTH_TOKEN}
+
+processors:
+  batch:
+    timeout: 1s
+    send_batch_size: 512
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [sentry]
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [sentry]
+```
+
+### With Automatic Project Creation
+
+Creates Sentry projects on-the-fly when a service name doesn't match an existing project:
+
+```yaml
+exporters:
+  sentry:
+    url: https://sentry.io
+    org_slug: ${env:SENTRY_ORG_SLUG}
+    auth_token: ${env:SENTRY_AUTH_TOKEN}
+    auto_create_projects: true
+```
+
+Project creation happens asynchronously, so the first batch of data for a new project may be dropped while the project is being provisioned.
+
+### With Custom Project Mapping
+
+Map service names to different Sentry project slugs:
+
+```yaml
+exporters:
+  sentry:
+    url: https://sentry.io
+    org_slug: ${env:SENTRY_ORG_SLUG}
+    auth_token: ${env:SENTRY_AUTH_TOKEN}
+    routing:
+      project_from_attribute: service.name
+      attribute_to_project_mapping:
+        orders-service: ecommerce-orders
+        products-service: ecommerce-products
+        api-gateway: ecommerce-gateway
+```
+
+Services not in the mapping use their `service.name` directly as the project slug.
+
+### With Custom Routing Attribute
+
+Route by a different resource attribute:
+
+```yaml
+exporters:
+  sentry:
+    url: https://sentry.io
+    org_slug: ${env:SENTRY_ORG_SLUG}
+    auth_token: ${env:SENTRY_AUTH_TOKEN}
+    routing:
+      project_from_attribute: deployment.environment
+      attribute_to_project_mapping:
+        production: prod-monitoring
+        staging: staging-monitoring
+```
+
+## Rate Limiting
+
+The exporter automatically respects Sentry's rate limits:
+
+- Parses `X-Sentry-Rate-Limits` headers from responses
+- Maintains per-project, per-category (traces/logs) rate limit deadlines
+- Returns throttle errors to the collector queue for automatic retry
+- Falls back to 60-second backoff on HTTP 429 without headers
+
+## Known Limitations
+
+| Limitation | Impact | Mitigation |
+|------------|--------|------------|
+| Missing routing attribute | Data is dropped with a warning | Ensure `service.name` is set on all resources |
+| Auto-create startup loss | First batch for new projects may be dropped | Subsequent data flows normally |
+| Cache drift | Deleted projects cause 403 until cache eviction | Avoid deleting projects while collector is running |
+| No per-batch retry | Multi-project batches cannot safely retry | Use sending queue for reliability |
+| Single organization | One org per exporter instance | Deploy multiple exporters for multi-org |
+
+## Connecting Sentry SDK Errors to Traces
+
+<!-- TODO: create example -->
+
+## Troubleshooting
+
+<!-- TODO: gather set up issues -->
