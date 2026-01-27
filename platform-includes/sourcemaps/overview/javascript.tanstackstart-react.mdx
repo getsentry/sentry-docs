@@ -1,0 +1,83 @@
+## Uploading Source Maps in a TanStack Start Project Using sentryTanstackStart
+
+<OrgAuthTokenNote />
+
+**Make sure you add your auth token to your CI, if you are using one to deploy your application.**
+
+Add your auth token to your environment:
+
+```bash {filename:.env}
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
+and configure `sentryTanstackStart` in your `vite.config.ts`:
+
+```typescript {filename:vite.config.ts}
+import { defineConfig } from "vite";
+import { sentryTanstackStart } from "@sentry/tanstackstart-react";
+import { tanstackStart } from "@tanstack/react-start/plugin/vite";
+
+export default defineConfig({
+  plugins: [
+    tanstackStart(),
+    // other plugins - sentryTanstackStart should be last
+    sentryTanstackStart({
+      org: "___ORG_SLUG___",
+      project: "___PROJECT_SLUG___",
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+    }),
+  ],
+});
+```
+
+<Alert level="info">
+  Source map upload **only** works when `org`, `project`, and `authToken` are
+  all configured. Without these options, source maps will not be uploaded to
+  Sentry.
+</Alert>
+
+### Source Map Options
+
+The plugin, by default, automatically enables hidden source maps and deletes `.map` files after upload.
+
+Configure source map behavior using the [plugin options](/platforms/javascript/sourcemaps/uploading/vite/), for example:
+
+```typescript {filename:vite.config.ts}
+import { defineConfig } from "vite";
+import { sentryTanstackStart } from "@sentry/tanstackstart-react";
+import { tanstackStart } from "@tanstack/react-start/plugin/vite";
+
+export default defineConfig({
+  plugins: [
+    tanstackStart(),
+    sentryTanstackStart({
+      org: "___ORG_SLUG___",
+      project: "___PROJECT_SLUG___",
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+
+      sourcemaps: {
+        assets: ["./dist/**/*"],
+        ignore: ["**/node_modules/**"],
+        filesToDeleteAfterUpload: [
+          "./**/*.map",
+          ".*/**/public/**/*.map",
+          "./dist/**/client/**/*.map",
+        ],
+      },
+    }),
+  ],
+});
+```
+
+<Alert level="warning">
+  Generating source maps **may expose them to the public**, potentially causing
+  your source code to be leaked. The `sentryTanstackStart` plugin automatically
+  deletes source map files after upload by default. If you customize this
+  behavior, ensure your server denies access to `.js.map` files, or configure
+  [`sourcemaps.filesToDeleteAfterUpload`](/platforms/javascript/sourcemaps/uploading/vite/)
+  to delete source maps after upload.
+</Alert>
+
+### Troubleshooting
+
+If you're experiencing issues with source maps, see [Troubleshooting Source Maps](/platforms/javascript/guides/tanstackstart-react/sourcemaps/troubleshooting_js/).

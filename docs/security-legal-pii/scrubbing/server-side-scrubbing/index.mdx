@@ -36,7 +36,7 @@ Sentry will redact arrays and literal values, but also entire objects. For examp
 ```javascript
 credentials = {
   username: 'jane',
-  cats: ['pancake', 'maple', 'hellboy']
+  cats: ['pancake', 'maple', 'hellboy'],
   password: 'p4ssw0rd!',
   lastLogin: 'yesterday',
   ...
@@ -55,6 +55,13 @@ You can choose to expand the keys that are scrubbed by the server, as well as pr
 Only a select number of fields are scrubbed. You can find a list of the fields that will be scrubbed in [Event PII Fields](/data-management-settings/event-pii-fields/).
 
 In addition, we provide an [_Advanced Data Scrubbing_](/security-legal-pii/scrubbing//advanced-datascrubbing/) feature that allows more control over how filters are applied.
+
+## Geographic Information
+
+Geographic information is extracted from the user's IP address. This occurs even if the setting to stop storing IP addresses is turned on.
+
+To scrub geo data, it's necessary to add an [_Advanced Data Scrubbing_](/security-legal-pii/scrubbing//advanced-datascrubbing/) rule.
+For example, the rule `[Remove] [Anything] from [$user.geo.**]` will remove all geo information.
 
 ## Removing Data
 
@@ -84,11 +91,11 @@ Safe Fields are used to exclude fields and data from scrubbing. For example, tak
 When scrubbing is enabled and `id` added as a sensitive field, the `password` string in `extra.'sys.argv'`,
 both `id` fields (`user.id` and `extra.id`), as well as the entire `credentials` object will be scrubbed.
 
-To accomodate more fine-grained filtering, the Safe Fields support the same syntax as the
+To accommodate more fine-grained filtering, the Safe Fields support the same syntax as the
 [Advanced Datascrubbing Sources](/security-legal-pii/scrubbing//advanced-datascrubbing/#sources).
 
 If you want to leave the `user.id` field intact, you can configure the `id` as a Safe Field, but this will also
-mark `extra.id` as a Safe Field. To specifically select the user id, use the full path instead of `user.id`.
+mark `extra.id` as a Safe Field. To specifically select the user id, use the full path `user.id`.
 
 Marking elements of an array as safe requires a wildcard selector, for example `'sys.argv'.*`. A deep wildcard
 can be used to mark all elements contained within an object. The two selectors: `extra.credentials` and

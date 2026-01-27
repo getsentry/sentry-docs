@@ -22,12 +22,30 @@ All Sentry SDKs support the <PlatformIdentifier name="before-send" /> callback m
 
 Note also that breadcrumbs can be filtered, as discussed in [our Breadcrumbs documentation](/product/error-monitoring/breadcrumbs/).
 
-#### Event Hints
+## Filtering Transaction Events
 
-The <PlatformIdentifier name="before-send" /> callback is passed both the `event` and a second argument, `hint`, that holds one or more hints.
+To prevent certain transactions from being reported to Sentry, use the <PlatformIdentifier name="traces-sampler" /> or <PlatformIdentifier name="before-send-transaction" /> configuration option, which allows you to provide a function to evaluate the current transaction and drop it if it's not one you want.
 
-Typically, a `hint` holds the original exception so that additional data can be extracted or grouping is affected. In this example, the fingerprint is forced to a common value if an exception of a certain type has been caught:
+### Using <PlatformIdentifier name="traces-sampler" />
 
-<PlatformContent includePath="configuration/before-send-hint" />
+<Alert>
+The <PlatformIdentifier name="traces-sampler" /> and <PlatformIdentifier name="traces-sample-rate" /> config options are mutually exclusive. If you define a <PlatformIdentifier name="traces-sampler" /> to filter out certain transactions, you must also handle the case of non-filtered transactions by returning the rate at which you'd like them sampled.
+</Alert>
 
-When the SDK creates an event or breadcrumb for transmission, that transmission is typically created from some sort of source object. For instance, an error event is typically created from a log record or exception instance. For better customization, SDKs send these objects to certain callbacks (<PlatformIdentifier name="before-send" />, <PlatformIdentifier name="before-breadcrumb" /> or the event processor system in the SDK).
+
+In its simplest form, used just for filtering the transaction, it looks like this:
+
+<PlatformContent includePath="performance/traces-sampler-as-sampler" />
+
+It also allows you to sample different transactions at different rates.
+
+If the transaction currently being processed has a parent transaction (from an upstream service calling this service), the parent (upstream) sampling decision will always be included in the `parent_sampled` parameter, so that your <PlatformIdentifier name="traces-sampler" /> can choose whether and when to inherit that decision. In most cases, inheritance is the right choice, to avoid breaking distributed traces. A broken trace will not include all your services. See <PlatformLink to="/configuration/sampling/#inheritance">Inheriting the parent sampling decision</PlatformLink> to learn more.
+
+Learn more about <PlatformLink to="/configuration/sampling/">configuring the sample rate</PlatformLink>.
+
+### Using <PlatformIdentifier name="before-send-transaction" />
+<Alert>
+When discarding a transaction in a `before_send_transaction` callback, one must call `sentry_value_decref(tx)` and return a `sentry_value_new_null()`.
+</Alert>
+
+<PlatformContent includePath="configuration/before-send-transaction" />

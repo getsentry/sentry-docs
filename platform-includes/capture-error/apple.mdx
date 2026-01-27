@@ -3,8 +3,16 @@ You can capture errors with the `captureError` method. This method takes an `Err
 ```swift {tabTitle:Swift}
 import Sentry
 
+enum MyCustomError: Error {
+    case myFirstIssue
+}
+
+func thisFunctionThrows() throws {
+    throw MyCustomError.myFirstIssue
+} 
+
 do {
-    try aMethodThatMightFail()
+    try thisFunctionThrows()
 } catch {
     SentrySDK.capture(error: error)
 }
@@ -13,8 +21,18 @@ do {
 ```objc {tabTitle:Objective-C}
 @import Sentry;
 
+- (void)thisFunctionReturnsAnError:(NSError **)error {
+    *error = [NSError errorWithDomain:@"com.example.myapp"
+                                 code:1001
+                             userInfo:@{
+      NSLocalizedDescriptionKey: @"Something went wrong."
+    }];
+}
+
+// ... Your code
+
 NSError *error = nil;
-[self aMethodThatMightFail:&error]
+[self thisFunctionReturnsAnError:&error];
 
 if (error) {
     [SentrySDK captureError:error];
@@ -47,6 +65,8 @@ For the Swift error above Sentry displays:
 This feature is available on [sentry-cocoa 7.25.0](https://github.com/getsentry/sentry-cocoa/blob/main/CHANGELOG.md#7250) and above.
 
 You may want to provide a custom description to make identifying the error in the **Issues** page easier. For `NSError` values, you can do this by adding a description to the `userInfo` dictionary with the key `NSDebugDescriptionErrorKey`.
+
+`NSLocalizedDescription` (or `NSLocalizedDescriptionKey`) will not be used for the issue title in Sentry. This is intentional to prevent duplicate issues, as localized descriptions can vary and lead to incorrect grouping. Only `NSDebugDescriptionErrorKey` is used for customizing the issue title.
 
 Sentry will group errors based on the error domain and code, and by enum value for Swift enum types, so customizing error descriptions won’t impact grouping.
 

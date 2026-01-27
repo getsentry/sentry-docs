@@ -8,13 +8,21 @@ Sentry takes data privacy very seriously and has default settings in place that 
 
 The category types and amount of data collected vary, depending on the integrations you've enabled in the Sentry SDK. This page lists data categories that the Sentry Java SDK collects.
 
-For many of the categories listed here it is required to enable the <PlatformLink to="/configuration/options/#send-default-pii">sendDefaultPii option</PlatformLink>.
+For many of the categories listed here it is required to enable the <PlatformLink to="/configuration/options/#sendDefaultPii">sendDefaultPii option</PlatformLink>.
 
 ## HTTP Headers
 
-By default, the Sentry SDK doesn't send any HTTP headers. Even when sending HTTP headers is enabled, we have a [denylist](https://github.com/getsentry/sentry-java/blob/main/sentry/src/main/java/io/sentry/util/HttpUtils.java#L21-L34) in place, which filters out any headers that contain sensitive data.
+### Outgoing Requests
 
-To start sending HTTP headers, set <PlatformLink to="/configuration/options/#send-default-pii">`sendDefaultPii=true`</PlatformLink>.
+By default, the Sentry SDK doesn't send any headers for outgoing HTTP requests. Even when sending HTTP headers is enabled, we have a [denylist](https://github.com/getsentry/sentry-java/blob/main/sentry/src/main/java/io/sentry/util/HttpUtils.java#L21-L34) in place, which filters out any headers that contain sensitive data.
+
+To send all HTTP headers, set <PlatformLink to="/configuration/options/#sendDefaultPii">`sendDefaultPii=true`</PlatformLink>.
+
+### Incoming Requests
+
+By default, the Sentry SDK sends headers for incoming HTTP requests to Sentry but filters out any headers that contain sensitive data. (See the [list of headers](https://github.com/getsentry/sentry-java/blob/main/sentry/src/main/java/io/sentry/util/HttpUtils.java#L21-L34) that are filtered).
+
+To send all HTTP headers, set <PlatformLink to="/configuration/options/#sendDefaultPii">`sendDefaultPii=true`</PlatformLink>.
 
 ## Cookies
 
@@ -48,11 +56,11 @@ The request body of incoming HTTP requests can be sent to Sentry. Whether it's s
 
 - **The type of the request body:**
   - JSON and form bodies are sent
-- **The size of the request body:** There's a <PlatformLink to="/configuration/options/#max-request-body-size">maxRequestBodySize</PlatformLink> option that's set to `NONE` by default. This means by default no request body is sent to Sentry.
+- **The size of the request body:** There's a <PlatformLink to="/configuration/options/#maxRequestBodySize">maxRequestBodySize</PlatformLink> option that's set to `NONE` by default. This means by default no request body is sent to Sentry.
 
 ## Source Context
 
-Our build tool plugins for Gradle and Maven can upload your source code to Sentry, which can then used to show the lines of code where an error happened in the Issue Details page. 
+Our build tool plugins for Gradle and Maven can upload your source code to Sentry, which can then used to show the lines of code where an error happened in the Issue Details page.
 
 To opt into sending this source context to Sentry, you have to enable the feature as described in <PlatformLink to="/source-context/">the Source Context documentation</PlatformLink>.
 

@@ -1,0 +1,32 @@
+#### before_send_log
+
+To filter logs, or update them before they are sent to Sentry, you can use the `before_send_log` option.
+
+```python
+import sentry_sdk
+from sentry_sdk.types import Log, Hint
+from typing import Optional
+
+def before_log(log: Log, _hint: Hint) -> Optional[Log]:
+    # Filter out all info level logs
+    if log["severity_text"] == "info":
+        return None
+    return log
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    enable_logs=True,
+    before_send_log=before_log,
+)
+```
+
+The `before_send_log` function receives a log object, and should return the log object if you want it to be sent to Sentry, or `None` if you want to discard it.
+
+The log dict has the following keys:
+
+- `severity_text`: (`str` - one of `trace`, `debug`, `info`, `warning`, `error`, `fatal`) The log level.
+- `severity_number`: (`int`) The log level as a number ranging from 1 to 24, as per the OpenTelemetry specification of [`SeverityNumber`](https://opentelemetry.io/docs/specs/otel/logs/data-model/#field-severitynumber).
+- `body`: (`str`) The log message.
+- `attributes`: (`dict[str, str | bool | float | int]`) Additional attributes to be sent with the log.
+- `time_unix_nano`: (`int`) The timestamp of the log in nanoseconds since the Unix epoch.
+- `trace_id`: (`Optional[str]`) The trace ID of the trace this log belongs to.

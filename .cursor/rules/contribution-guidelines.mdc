@@ -1,0 +1,310 @@
+---
+description: LLM Contribution Guidelines for Sentry Documentation
+globs:
+alwaysApply: false
+---
+# LLM Contribution Guidelines for Sentry Documentation
+
+## Overview
+
+This is a Next.js documentation site using MDX for content management. The codebase serves SDK documentation for multiple platforms and frameworks with a sophisticated shared content system.
+
+## File Structure & Organization
+
+### Core Directories
+
+```
+docs/                          # All documentation content
+├── platforms/                 # Platform-specific documentation
+│   ├── javascript/
+│   │   ├── config.yml         # Platform configuration
+│   │   ├── common/            # Shared content for JS platform
+│   │   └── guides/            # Framework-specific guides
+│   │       ├── hono/
+│   │       ├── express/
+│   │       └── react/
+│   ├── python/
+│   └── ...
+├── product/                   # Product documentation
+├── api/                       # API documentation
+└── concepts/                  # Conceptual documentation
+
+platform-includes/            # Shared content across platforms
+├── getting-started-install/
+├── getting-started-config/
+└── getting-started-verify/
+
+includes/                      # General shared content
+src/                          # Application source code
+├── components/               # React components
+├── mdx.ts                   # MDX processing logic
+└── types/                   # TypeScript types
+```
+
+## Content Creation Rules
+
+### 1. MDX File Structure
+
+All documentation files must use MDX format with YAML frontmatter:
+
+```mdx
+---
+title: "Framework Name"
+description: "Learn how to set up Framework with Sentry."
+sdk: sentry.javascript.framework
+categories:
+  - javascript
+  - server
+sidebar_order: 10
+---
+
+<PlatformContent includePath="getting-started-primer" />
+
+Content goes here...
+```
+
+### 2. Required Frontmatter Fields
+
+- `title`: Page title (used in navigation and SEO)
+- `description`: Meta description for SEO
+- `sdk`: SDK identifier (format: `sentry.{platform}.{guide}`)
+- `categories`: Array of category tags
+
+### 3. Optional Frontmatter Fields
+
+- `sidebar_order`: Controls navigation order (lower = higher in list)
+- `sidebar_title`: Override sidebar display name
+- `sidebar_hidden`: Hide from sidebar navigation
+- `draft`: Mark as draft (hidden from navigation)
+- `supported`: Array of platforms/guides this content supports
+- `notSupported`: Array of platforms/guides this content doesn't support
+
+## Component Usage
+
+### Platform-Specific Content
+
+Use `<PlatformContent>` for shared, platform-specific content:
+
+```mdx
+<PlatformContent includePath="getting-started-install" />
+<PlatformContent includePath="getting-started-config" />
+```
+
+### Onboarding Options
+
+For feature selection interfaces:
+
+```mdx
+<OnboardingOptionButtons
+  options={["error-monitoring", "performance", "profiling"]}
+/>
+```
+
+### Code Blocks with Tabs
+
+For package manager instructions:
+
+```mdx
+```bash {tabTitle:npm}
+npm install @sentry/node --save
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/node
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/node
+```
+```
+
+### Code Highlighting
+
+Use filename annotations and highlighting:
+
+```mdx
+```typescript {filename:index.ts}
+import * as Sentry from "@sentry/node";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+});
+```
+```
+
+### Alerts and Callouts
+
+```mdx
+<Alert level="info" title="Important Note">
+Content here...
+</Alert>
+
+<Alert level="warning">
+Warning content...
+</Alert>
+```
+
+### Links
+
+```mdx
+<PlatformLink to="/configuration/">Configuration</PlatformLink>
+```
+
+### Expandable Sections
+
+```mdx
+<Expandable title="Optional Section">
+Additional details...
+</Expandable>
+```
+
+## Platform-Specific Guidelines
+
+### JavaScript Guides
+
+1. **Location**: Place under `docs/platforms/javascript/guides/{framework}/`
+2. **Naming**: Use lowercase, hyphenated names (e.g., `next-js`, `react-native`)
+3. **Structure**: Most guides should be simple and leverage shared content:
+
+```mdx
+---
+title: "Framework Name"
+description: "Learn how to set up Framework with Sentry."
+sdk: sentry.javascript.framework
+fallbackGuide: javascript.node  # For server-side frameworks
+categories:
+  - javascript
+  - server  # or 'browser' for client-side
+---
+
+<PlatformContent includePath="getting-started-primer" />
+
+Brief framework-specific introduction...
+
+<PlatformContent includePath="getting-started-node" />
+```
+
+### Shared Content Creation
+
+Create shared content in `platform-includes/` when:
+- Content applies to multiple frameworks within a platform
+- Installation/configuration steps are similar
+- Verification steps are identical
+
+### Content Resolution Priority
+
+The system resolves content in this order:
+1. Guide-specific: `platform-includes/path/{platform}.{guide}.mdx`
+2. Platform-specific: `platform-includes/path/{platform}.mdx`
+3. Default: `platform-includes/path/_default.mdx`
+
+## Content Standards
+
+### Writing Style
+
+1. **Be concise**: Avoid unnecessary explanations
+2. **Use active voice**: "Install the SDK" not "The SDK should be installed"
+3. **Provide working examples**: All code samples must be functional
+4. **Include all imports**: Don't assume imports are obvious
+
+### Code Samples
+
+1. **Complete examples**: Include all necessary imports and setup
+2. **Use placeholders**: Use `___PUBLIC_DSN___` for DSN values
+3. **Add context**: Use filename annotations
+4. **Test functionality**: Ensure examples work as written
+
+### Error Handling
+
+Always include error handling examples:
+
+```typescript
+app.onError((err, c) => {
+  Sentry.captureException(err);
+  if (err instanceof HTTPException) {
+    return err.getResponse()
+  }
+  return c.json({ error: "Internal server error" }, 500)
+})
+```
+
+## File Naming Conventions
+
+- Guide directories: lowercase with hyphens (`react-native`, `next-js`)
+- MDX files: `index.mdx` for main content
+- Versioned files: `index__v{version}.mdx` for version-specific content
+- Images: descriptive names in local `img/` directories
+
+## Navigation & Discovery
+
+### Sidebar Order
+
+Control navigation order with `sidebar_order`:
+- Getting started: 1-10
+- Configuration: 11-20
+- Advanced topics: 21-30
+- Troubleshooting: 90+
+
+### Page Grids
+
+For overview pages, use `<PageGrid>` to auto-generate child page listings:
+
+```mdx
+<PageGrid />
+```
+
+## Validation Checklist
+
+Before submitting content:
+
+- [ ] Frontmatter includes required fields
+- [ ] All code examples are complete and functional
+- [ ] Platform-specific content uses appropriate includes
+- [ ] Links use proper components (`<PlatformLink>` for internal)
+- [ ] Content follows established patterns for similar platforms
+- [ ] Sidebar navigation order is appropriate
+- [ ] All placeholders use standard format (`___PUBLIC_DSN___`)
+
+## Common Anti-Patterns
+
+### ❌ Avoid
+
+```mdx
+# Don't repeat boilerplate content
+Install Sentry by running: npm install @sentry/node
+
+# Don't use hardcoded links
+[Configuration](mdc:https:/docs.sentry.io/platforms/javascript/configuration)
+
+# Don't skip imports in examples
+Sentry.init({ dsn: "..." }); // Missing import
+```
+
+### ✅ Do
+
+```mdx
+# Use shared content for common steps
+<PlatformContent includePath="getting-started-install" />
+
+# Use proper link components
+<PlatformLink to="/configuration/">Configuration</PlatformLink>
+
+# Include complete examples
+import * as Sentry from "@sentry/node";
+
+Sentry.init({ dsn: "___PUBLIC_DSN___" });
+```
+
+## Testing Content
+
+1. **Build locally**: Run `npm run dev` to test content rendering
+2. **Check navigation**: Verify sidebar placement and ordering
+3. **Test links**: Ensure all internal links resolve correctly
+4. **Validate components**: Confirm all MDX components render properly
+
+## Version Management
+
+- Use versioned includes for breaking changes: `file__v{version}.mdx`
+- Maintain backward compatibility when possible
+- Document version-specific differences clearly
+- Test across supported SDK versions

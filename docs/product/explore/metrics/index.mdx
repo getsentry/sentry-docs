@@ -1,96 +1,169 @@
 ---
-title: "Metrics"
-sidebar_order: 40
-description: "Metrics help you track and visualize the data points you care about, making it easier to monitor your application health and identify issues."
-sidebar_hidden: true
+title: Metrics
+sidebar_order: 75
+description: >-
+  Send counters, gauges, and distributions from your code to track application
+  health and drill down into related traces, logs, and errors.
+og_image: /og-images/product-explore-metrics.png
 ---
 
-<Include name="metrics-api-change.mdx" />
+<Alert level="info">
+  Metrics is currently in Open Beta for non-Enterprise plans customers that have JavaScript or Python SDK based projects. If you have any questions or feedback comment on this [GitHub discussion](https://github.com/getsentry/sentry/discussions/102275) or contact us at feedback-metrics@sentry.io . Features in beta are still in-progress and may have bugs. We recognize the irony.
+</Alert>
 
-Sentry metrics are numerical values that allow you to pinpoint and solve issues impacting user experience and app performance by measuring the data points that are important to you and your application. You can track things like latency, processing time, event size, user signups and conversion rates, and see how they correlate back to tracing data. This gives you a comprehensive understanding of the health of your systems and helps solve issues faster.
+## Overview
 
-![Metrics UI](./img/Index.png)
+With Sentry Metrics, you can send [counters](#counters), [gauges](#gauges), and [distributions](#distributions) from your code to track application health signals like `email.sent`, `checkout.failed`, or `queue.depth`. What makes Sentry's Metrics unique is that every metric event is **trace-connected**, meaning you can click directly into the related traces, logs, and errors when something looks off.
+
+<Arcade src="https://demo.arcade.software/wNDJOXTJw64xiuVi7Hp6?embed" />
+
+Unlike traditional metrics tools that only show _if_ something's changed, Sentry's trace-connected metrics let you understand _why_ it changed. When a `checkout.failed` counter spikes, you can click into a sample and see the exact trace, spans, logs, and errors that produced that metric event.
+
+Not everything in your application generates an error or requires full tracing. Metrics are perfect for tracking:
+
+- **Business events**: `checkout.started`, `checkout.failed`, `payment.declined`, `refund.issued`
+- **Application health**: `email.sent`, `email.failed`, `job.processed`, `job.retried`
+- **Resource utilization**: `queue.depth`, `pool.in_use`, `cache.hit_rate`
+- **User behavior**: `search.zero_results`, `feature.enabled`, `configuration.loaded`
+
+## Set up Metrics
+
+To get started with Metrics, navigate to the [Getting Started](/product/explore/metrics/getting-started/) page and select your SDK from the list.
 
 ## Metric Types
 
-Metrics at Sentry come in different flavors, in order to help you track your data in the most efficient and cost-effective way. The metric types we currently support are:
+Sentry supports three types of metrics:
 
-- **Counters:** Tracks a value that can only be incremented (for example, button clicks)
-- **Distributions:** Tracks a list of values which can be aggregated over time like `max`, `min`, `avg` (for example, page load times)
-- **Gauges:** Tracks a value that can go up or down (for example, available disk space, memory used)
-- **Sets:** Tracks a set of values on which can be aggregations over time such as `count_unique` (for example, number of unique users)
+### Counters
 
-Each metric also needs to have a unit associated with it, so that you know what you're dealing with. Examples of units are seconds, milliseconds, bytes, or even potatoes if you like.
+Counters track how many times something happened. Each increment adds to a cumulative total.
 
-## Augmenting Metrics with Tags
+**Aggregation methods**: `sum`, `per_second`, and `per_minute`.
 
-Metrics are powerful on their own, but you can enrich them further by adding dimensions in the form of Tags. Metrics can be categorized, organized, and filtered based on these different dimensions, providing more granularity and flexibility in analyzing and querying your data.
+**Use cases**: events that occur over time
+- `email.sent` - Track total emails sent
+- `checkout.failed` - Track failed checkout attempts
+- `api.request` - Track API calls
 
-Tags consist of key-value pairs, where the key represents the tag name and the value represents the tag value. For example, you might have a platform tag, like `platform:android` or `platform:ios`. You can create your own custom tags to track attributes that help organize your data for your specific use case. Other useful tags are browser name, region, language, and customer.
+### Gauges
 
-To improve your product experience, Sentry adds certain common tags by default: `transaction`, `environment`, and `release`. This allows you to immediately analyze and segment your metrics data based on these useful dimensions. These tags can also be found on events such as errors and transactions.
+Gauges set a specific value at a point in time, like a snapshot. The latest value replaces the previous one.
 
-## Limits and Restrictions
+**Aggregation methods**: `min`, `max`, `avg`, `per_second`, and `per_minute`.
 
-### Cardinality
+**Use cases**: current state or level
+- `queue.depth` - Current number of items in queue
+- `pool.in_use` - Active connections in a pool
+- `memory.usage` - Current memory consumption
 
-In metrics, "cardinality" refers to the number of unique time-series generated by tags associated with a metric. The more unique tag combinations you create, the higher the cardinality.
+### Distributions
 
-For instance, imagine you are tracking daily logins. You create a metric named `login` and add tags like `platform` (with values `ios`, `android`, `web`) to indicate where logins occur. This will result in 3 distinct time-series:
-- metric `login`, tag `platform:android`
-- metric `login`, tag `platform:ios`
-- metric `login`, tag `platform:web`
+Distributions record numeric values to compute statistical aggregates.
 
-Then you decide to add a new tag called `region` which can be either be `US` or `EU`. If all combinations of tag values actually occurs, this will result in up to **6 time-series:**
-- metric `login`, tag `platform:android`, tag `region:US`
-- metric `login`, tag `platform:android`, tag `region:EU`
-- metric `login`, tag `platform:ios`, tag `region:US`
-- metric `login`, tag `platform:ios`, tag `region:EU`
-- metric `login`, tag `platform:web`, tag `region:US`
-- metric `login`, tag `platform:web`, tag `region:EU`
+**Aggregation methods**: `p50`, `p75`, `p95`, `p99`, `avg`, `sum`, `min`, `max`, `count`, `per_second`, and `per_minute`.
 
-Generally, the maximum cardinality for a metric is the product of tag cardinalities. In this example, the cardinality is 3(`platform`) x 2(`region`) = 6.
+**Use cases**: values that vary and need statistical analysis
+- `cart.amount_usd` - Purchase amounts for revenue tracking
+- `query.duration_ms` - Query latency for performance monitoring
+- `file.size_bytes` - File sizes for storage analysis
 
-![Cardinality](./img/cardinality.png)
+## Viewing and Exploring Metrics
 
-To maintain reasonable cardinality, use tags with a fixed or predictable set of values. Adding a tag such as `user_id`, which will have a different value for each user and can also grow significantly over time, will result in a substantial increase in overall cardinality. Considering that each user might log in from various platforms, this multiplies the number of unique time series needed to analyze the data. For example, with 100,000 user IDs and 3 platform values, you would potentially require 300,000 time series.
+The Metrics Explorer provides two main views:
 
-Metrics are useful for analyzing your data in aggregate. If you have more than 10 users, is it really useful to track the number of logins for each user from each platform? Probably not. Instead, what might be more valuable is to look at a dimension like a `plan_tier` (e.g. `free`, `team`, `business`,`internal users`) to segment your login data based on user categories that are meaningful for your analysis. This approach helps limit cardinality and optimizes metric analysis.
+### Aggregates View
 
-If you really are interested in individual user actions, consider using [transactions](/product/insights/overview/transaction-summary/#what-is-a-transaction) instead of metrics.
+![Metrics Aggregates View Screenshot](./img/aggregates.png)
 
-<Alert>
+The Aggregates tab shows trends and totals across any attributes you've added to your metrics. You can:
 
-Sentry incorporates protection mechanisms that will drop metrics if their cardinality exceeds an internally defined limit.
+- View time-series charts showing metric trends
+- Group by custom attributes (e.g., `sum(metrics_value)` grouped by `email_type`)
+- Apply filters to drill down into specific segments
+- Compare multiple time periods
 
+Use this view to spot trends, identify anomalies, and understand aggregate behavior across your application.
+
+### Samples View
+
+![Samples View Screenshot](./img/samples.png)
+
+The Samples tab shows individual metric events with **direct links to their traces**. This is where trace-connected metrics shine:
+
+- See each individual metric event as it occurred
+- Click any sample to open the full trace waterfall
+- View related spans, logs, and errors from the same moment
+- Understand the exact context that produced each metric
+
+When you notice a spike or dip in the Aggregates view, switch to Samples to drill into specific occurrences and find the root cause.
+
+## Trace-Connected Debugging Flow
+
+Sentry's metrics enable a seamless debugging workflow:
+
+1. **Spot the anomaly**: Notice a spike in your Aggregates view (e.g., `checkout.failed` increased 3x)
+2. **Open samples**: Switch to the Samples tab to see individual metric events
+3. **Pick a trace**: Click on a sample to open the full trace that produced it
+4. **Find the cause**: Examine spans for slow queries, check logs for error messages, view related exceptions
+5. **Fix the issue**: With full context in hand, identify and resolve the root cause
+
+Instead of "metric alert → guesswork," debugging becomes a **single flow**: Metric spike → sample → trace → root cause.
+
+## Metric Attributes
+
+Each metric event automatically includes:
+
+| **Field**           | **Description**                                                                 |
+|----------------------|---------------------------------------------------------------------------------|
+| **name**             | The metric identifier (e.g., `checkout.failed`)                                |
+| **kind**             | The metric type (counter, gauge, or distribution)                              |
+| **value**            | The numeric value                                                              |
+| **trace_id**         | Links to the active trace when the metric was recorded                         |
+| **span_id**          | Links to the specific span within the trace                                    |
+| **unit** *(optional)*| Unit of measurement (e.g., `usd`, `ms`, `bytes`)                               |
+| **custom attributes**| Any key-value pairs you add for grouping and filtering                         |
+
+## Alerts and Dashboard Widgets
+
+<Alert level="info">
+  Alerts and dashboard widgets for Metrics are coming soon.
 </Alert>
 
-### Supported Characters
+You'll soon be able to:
+- Create alert rules based on metric queries
+- Add metric visualizations to dashboards
+- Set up notifications when metrics cross thresholds
+- Save common queries for quick access
 
-Sentry allows the use of specific characters for the components of a metric:
+## When to Use Metrics
 
-- **Metric Name**: All word characters including `_`, `-`, `.`, but must start with an alphabetic character. Any unsupported characters will be replaced by `_`.
+Metrics are best for **application and code-based health signals** — numeric indicators of whether your application logic is behaving as expected.
 
-- **Metric Unit**: ASCII alphanumeric characters, underscores, and digits.
+**Good candidates for metrics:**
+- Business KPIs tied to code execution
+- Application health indicators
+- Resource utilization tracking
+- User action counts
+- Success/failure rates
 
-- **Metric Tag Key**: All word characters including `_`, `-`, `.`, `/`. Any unsupported characters will be removed from the tag key.
+**Not ideal for metrics:**
+- Infrastructure metrics (CPU, memory, disk) - use APM tools
+- Log aggregation - use [Logs](/product/explore/logs/)
+- Full request tracing - use [Traces](/product/explore/trace-explorer/)
 
-- **Metric Tag Value**: All Unicode characters.
+## AI-Powered Metric Analysis
 
-More information about the normalization of unsupported characters can be found [here](https://develop.sentry.dev/sdk/metrics/#normalization).
+Your Sentry metrics can be leveraged with AI agents and tooling for debugging and automated analysis:
 
-### Maximum Lengths
+- **[Sentry MCP Server](/product/sentry-mcp/)**: Enables natural language queries and deep integration with AI tools like Claude, Cursor, and VS Code using the Model Context Protocol
+- **[Seer](/product/ai-in-sentry/seer/)**: Sentry's AI debugging agent can use metrics alongside traces, logs, and errors to provide intelligent issue analysis
 
-Sentry sets a maximum length for the components of a metric:
-- **Metric Name**: 150 characters.
-- **Metric Unit**: 15 characters.
-- **Metric Tag Key**: 32 characters.
-- **Metric Tag Value**: 200 characters.
+## Beta Feedback
 
-### Retention
+We'd love to hear your feedback:
 
-Metrics are retained for 90 days in sentry.io (the same retention period as other event types, such as Errors and Transactions). The retention period is not configurable.
+- Are the SDK APIs easy enough to send your desired metrics?
+- Any feedback about the Metrics Explorer UX - what could make this better?
+- Any default metrics you'd like Sentry to send automatically?
 
-## Learn More
-
-<PageGrid />
+Share your thoughts on [GitHub](https://github.com/getsentry/sentry/discussions/102275) or email us at [feedback-metrics@sentry.io](mailto:feedback-metrics@sentry.io).

@@ -1,6 +1,6 @@
 ---
 title: Remix
-description: Sentry's Remix SDK enables automatic reporting of errors and exceptions, as well as the performance metrics for both client and server side operations.
+description: Learn how to set up and configure Sentry in your Remix application using the installation wizard, capture your first errors, and view them in Sentry.
 sdk: sentry.javascript.remix
 categories:
   - javascript
@@ -9,98 +9,108 @@ categories:
   - server-node
 ---
 
-<Alert>
-
-Sentry's Remix SDK enables automatic reporting of errors and exceptions, as well as the performance metrics for both client and server side operations.
-
-</Alert>
-
-Sentry's Remix SDK relies on our [React SDK](/platforms/javascript/guides/react/) for the frontend and [Node SDK](/platforms/node) for the backend. That means all features available in those SDKs are also available in this SDK.
-The minimum supported Remix version is `2.0.0`.
-
 <PlatformContent includePath="getting-started-prerequisites" />
 
-## Install
+## Step 1: Install
 
-Sentry captures data by using an SDK within your application’s runtime.
-
-We recommend installing the SDK through our installation wizard:
+To install Sentry using the installation wizard, run the following command within your project:
 
 ```bash
 npx @sentry/wizard@latest -i remix
 ```
 
-The wizard will prompt you to log in to Sentry. It will then automatically do the following steps for you:
+The wizard then guides you through the setup process, asking you to enable additional (optional) Sentry features for your application beyond error monitoring.
 
-- create two files in the root directory of your project, `entry.client.tsx` and `entry.server.tsx` (if they don't already exist).
-- add the default `Sentry.init()` for the client in `entry.client.tsx` and the server in `entry.server.tsx`.
-- create `.sentryclirc` with an auth token to upload source maps (this file is automatically added to `.gitignore`).
-- adjust your `build` script in `package.json` to automatically upload source maps to Sentry when you build your application.
-- add an example page to your app to verify your Sentry setup
+<PlatformContent includePath="getting-started-features-expandable" />
 
-If you use [Remix future flags](https://remix.run/docs/en/main/pages/api-development-strategy#current-future-flags), the wizard will instrument your application accordingly to support Remix v2 features.
+This guide assumes that you enable all features and allow the wizard to create an example page. You can add or remove features at any time, but setting them up now will save you the effort of configuring them manually later.
 
-After the wizard setup is completed, the SDK will automatically capture unhandled errors, and monitor performance.
-You can also <PlatformLink to="/usage/">manually capture errors</PlatformLink>.
+<Expandable title="What does the installation wizard change inside your application?">
 
-<Alert>
+- Creates or updates `entry.(client|server).tsx` to initialize the SDK
+- Creates `.env.sentry-build-plugin` with an auth token to upload source maps
+  (this file is automatically added to `.gitignore`)
+- Updates your build script or Vite configuration to automatically upload source maps to Sentry
+- Instruments your application to support Remix v2 features if you use [Remix future flags](https://remix.run/docs/en/main/pages/api-development-strategy#current-future-flags)
+- Adds an example page to your application to help verify your Sentry setup
 
-If the wizard setup isn't working for you, you can <PlatformLink to="/manual-setup/">set up the SDK manually</PlatformLink>.
+</Expandable>
 
-</Alert>
+## Step 2: Server-Side Performance Monitoring
 
-## Configure
+To capture performance data on the server side, wrap your Remix root component (`root.tsx`) with `withSentry`:
 
-Configuration should happen as early as possible in your application's lifecycle.
+```tsx {filename: root.tsx}
+import {
+  Links,
+  LiveReload,
+  Meta,
+  Outlet,
+  Scripts,
+  ScrollRestoration,
+} from "@remix-run/react";
 
-To complete your configuration, add <PlatformLink to="/configuration/options/">options</PlatformLink> to your `Sentry.init()` calls.
-Here, you'll also be able to set context data, which includes data about the <PlatformLink to="/enriching-events/identify-user/">user</PlatformLink>, <PlatformLink to="/enriching-events/tags/">tags</PlatformLink>, or even <PlatformLink to="/enriching-events/context/">arbitrary data</PlatformLink>, all of which will be added to every event sent to Sentry.
+import { withSentry } from "@sentry/remix";
 
-## Add Readable Stack Traces to Errors
+function App() {
+  return (
+    <html>
+      <head>
+        <Meta />
+        <Links />
+      </head>
+      <body>
+        <Outlet />
+        <ScrollRestoration />
+        <Scripts />
+        <LiveReload />
+      </body>
+    </html>
+  );
+}
 
-By default, Remix will minify your JavaScript and CSS files in production. This makes it difficult to debug errors in production. To make debugging easier, you can generate source maps and upload them to Sentry.
-
-Depending on your build setup, you can either use [Sentry's Vite plugin](/platforms/javascript/sourcemaps/uploading/vite/) or `sentry-upload-sourcemaps` script to upload sourcemaps.
-
-Please refer to the <PlatformLink to="/sourcemaps">Sourcemaps Documentation</PlatformLink>, for more information.
-
-For more advanced configuration, you can use [`sentry-cli`](https://github.com/getsentry/sentry-cli) directly to upload sourcemaps.
-
-## Verify
-
-This snippet includes an intentional error, so you can test that everything is working as soon as you set it up.
-
-```typescript {filename:routes/error.tsx}
-<button
-  type="button"
-  onClick={() => {
-    throw new Error("Sentry Frontend Error");
-  }}
->
-  Throw error
-</button>
+export default withSentry(App);
 ```
 
-This snippet adds a button that throws an error in a component or page.
+## Step 3: Avoid Ad Blockers With Tunneling (Optional)
 
-<Alert>
+<PlatformContent includePath="getting-started-tunneling" />
 
-Errors triggered from within Browser DevTools are sandboxed, so will not trigger an error handler. Place the snippet directly in your code instead.
+## Step 4: Verify Your Setup
 
-</Alert>
+If you haven't tested your Sentry configuration yet, let's do it now. You can confirm that Sentry is working properly and sending data to your Sentry project by using the example page created by the installation wizard:
 
-Then, throw an error in a `loader` or `action`.
+1. Open the example page `/sentry-example-page` in your browser. For most Remix applications, this will be at localhost.
+2. Click the "Throw Sample Error" button to trigger a frontend error and trace.
 
-```typescript {filename:routes/error.tsx}
-export const action: ActionFunction = async ({ request }) => {
-  throw new Error("Sentry Error");
-};
-```
+<Alert level="success" title="Tip">
 
-<Alert>
-
-Learn more about manually capturing an error or message in our <PlatformLink to="/usage/">Usage documentation</PlatformLink>.
+Don't forget to explore the example page's code in your project to understand what's happening after your button click.
 
 </Alert>
 
-To view and resolve the recorded error, log into [sentry.io](https://sentry.io) and select your project. Clicking on the error's title will open a page where you can see detailed information and mark it as resolved.
+### View Captured Data in Sentry
+
+Now, head over to your project on [Sentry.io](https://sentry.io) to view the collected data (it takes a couple of moments for the data to appear).
+
+<PlatformContent includePath="getting-started-browser-sandbox-warning" />
+
+<PlatformContent includePath="getting-started-verify-locate-data" />
+
+## Next Steps
+
+At this point, you should have integrated Sentry into your Remix application and should already be sending error and performance data to your Sentry project.
+
+Now's a good time to customize your setup and look into more advanced topics. Our next recommended steps for you are:
+
+- Learn how to [manually capture errors](/platforms/javascript/guides/remix/usage/)
+- Continue to [customize your configuration](/platforms/javascript/guides/remix/configuration/)
+- Get familiar with [Sentry's product features](/product/) like tracing, insights, and alerts
+
+<Expandable permalink={false} title="Are you having problems setting up the SDK?">
+
+- If you encountered issues with our installation wizard, try <PlatformLink to="/manual-setup">setting up Sentry manually</PlatformLink>
+- Find various topics in <PlatformLink to="/troubleshooting">Troubleshooting</PlatformLink>
+- [Get support](https://sentry.zendesk.com/hc/en-us/)
+
+</Expandable>

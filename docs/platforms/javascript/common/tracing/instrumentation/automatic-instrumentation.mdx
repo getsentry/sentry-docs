@@ -14,7 +14,17 @@ Capturing spans requires that you first <PlatformLink to="/tracing/">set up trac
 
 <PlatformContent includePath="performance/automatic-instrumentation-intro" />
 
-## What Our Instrumentation Provides
+## What's Captured Automatically
+
+Once you enable tracing, the SDK automatically captures performance data without additional code:
+
+| What | Description | Metrics |
+|------|-------------|---------|
+| **Page loads** | Full page load performance | LCP, CLS, TTFB |
+| **Navigations** | Client-side route changes | Duration, Web Vitals |
+| **HTTP requests** | All fetch/XHR calls | Duration, status, URL |
+| **User interactions** | Clicks, inputs that trigger work | INP (responsiveness) |
+| **Long tasks** | Main thread blocking > 50ms | Duration, attribution |
 
 <PlatformContent includePath="performance/what-instrumentation-provides" />
 
@@ -22,148 +32,237 @@ Capturing spans requires that you first <PlatformLink to="/tracing/">set up trac
 
 <PlatformContent includePath="performance/enable-automatic-instrumentation" />
 
-## Configuration Options
+<PlatformSection supported={["javascript.astro"]}>
+
+## Disable Automatic Instrumentation
+
+For Astro version `3.5.2` and up, you can optionally disable the automatic server instrumentation by turning off the `requestHandler` auto instrumentation option:
+
+```javascript {filename:astro.config.mjs}
+import { defineConfig } from "astro/config";
+import sentry from "@sentry/astro";
+
+export default defineConfig({
+  integrations: [
+    sentry({
+      autoInstrumentation: {
+        requestHandler: false,
+      },
+    }),
+  ],
+  output: "server",
+});
+```
+
+</PlatformSection>
+
+## Common Configuration
+
+Most apps only need these options:
+
+- [Distributed Tracing Targets](#distributed-tracing-targets) — Connect frontend and backend spans
+- [Customize Span Names](#customize-span-names) — Normalize URLs or add context
+- [Filter Out Unwanted Requests](#filter-out-unwanted-requests) — Exclude health checks, analytics
+
+### Distributed Tracing Targets
+
+<SdkOption name="tracePropagationTargets" type='Array<string | RegExp>' defaultValue={'[\'localhost\', /^\\\/$/]'}>
+
+Controls which outgoing requests include tracing headers (`sentry-trace` and `baggage`). **Required for connecting frontend spans to backend spans.**
+
+By default, tracing headers are only attached to requests containing `localhost` or starting with `/`. Add your API domains to trace requests across services:
+
+<PlatformContent includePath="performance/tracePropagationTargets-example" />
+
+<Alert level="warning">
+
+Your server must allow these headers via CORS: `Access-Control-Allow-Headers: sentry-trace, baggage`
+
+</Alert>
+
+</SdkOption>
+
+### Customize Span Names
+
+<SdkOption name="beforeStartSpan" type='(options: StartSpanOptions) => StartSpanOptions'>
+
+Modify span data before it's captured. Useful for adding context or normalizing URLs with dynamic segments:
+
+<PlatformContent includePath="performance/beforeNavigate-example" />
+
+</SdkOption>
+
+<PlatformSection supported={["javascript.react"]}>
+
+<Alert level="info">
+
+For React Router integration, see <PlatformLink to="/configuration/integrations/react-router/">React Router Integration</PlatformLink> for automatic route-based span names.
+
+</Alert>
+
+</PlatformSection>
+
+### Filter Out Unwanted Requests
+
+<SdkOption name="shouldCreateSpanForRequest" type='(url: string) => boolean'>
+
+Exclude requests from tracing, such as health checks or analytics pings:
+
+<PlatformContent includePath="performance/filter-span-example" />
+
+</SdkOption>
+
+## Web Vitals & Interactions
+
+### Interaction to Next Paint (INP)
+
+<SdkOption name="enableInp" type='boolean' defaultValue='true' availableSince='7.104.0' defaultNote="See note">
+
+Automatically captures [INP](/product/insights/web-vitals/web-vitals-concepts/#interaction-to-next-paint-inp) events to measure responsiveness. Results appear in the [Web Vitals](/product/insights/web-vitals/) module.
+
+Default: `true` in SDK 8.x+, `false` in 7.x.
+
+<Alert level="info" title="INP replaces FID">
+
+As of SDK version 10.0.0, First Input Delay (FID) is no longer reported. Google deprecated FID in favor of INP, which provides a more comprehensive measure of responsiveness. If you have alerts or dashboards based on FID, update them to use INP instead.
+
+</Alert>
+
+<PlatformContent includePath="performance/enable-inp-example" />
+
+</SdkOption>
+
+<SdkOption name="interactionsSampleRate" type='number' defaultValue='1.0'>
+
+Sample rate for INP spans, applied on top of `tracesSampleRate`. For example, `interactionsSampleRate: 0.5` with `tracesSampleRate: 0.1` results in 5% of interactions captured.
+
+</SdkOption>
+
+## Advanced Options
+
+<Expandable title="Timing & Timeout Options">
+
+<SdkOption name="idleTimeout" type='number' defaultValue='1000'>
+
+Time in ms to wait before finishing a pageload/navigation span when no unfinished child spans remain.
+
+</SdkOption>
+
+<SdkOption name="finalTimeout" type='number' defaultValue='30000'>
+
+Maximum duration in ms for pageload/navigation spans. Spans exceeding this are automatically finished.
+
+</SdkOption>
+
+<SdkOption name="childSpanTimeout" type='number' defaultValue='15000'>
+
+Maximum time in ms a child span can run before the parent pageload/navigation span is finished.
+
+</SdkOption>
+
+</Expandable>
+
+<Expandable title="Enable/Disable Specific Instrumentation">
+
+<SdkOption name="instrumentPageLoad" type='boolean' defaultValue='true'>
+
+Enable/disable automatic `pageload` span creation on initial page load.
+
+</SdkOption>
+
+<SdkOption name="instrumentNavigation" type='boolean' defaultValue='true'>
+
+Enable/disable automatic `navigation` span creation on history changes.
+
+</SdkOption>
+
+<SdkOption name="enableLongTask" type='boolean' defaultValue='true'>
+
+Enable/disable automatic spans for long tasks (main thread blocking > 50ms).
+
+</SdkOption>
+
+<SdkOption name="enableLongAnimationFrame" type='boolean' defaultValue='true' availableSince='8.18.0'>
+
+Enable/disable spans for long animation frames. Falls back to long tasks if browser doesn't support long animation frames.
+
+</SdkOption>
+
+<SdkOption name="markBackgroundSpan" type='boolean' defaultValue='true'>
+
+Mark pageload/navigation spans as "cancelled" when the tab moves to background. Recommended to keep enabled for accurate measurements.
+
+</SdkOption>
+
+<SdkOption name="enableReportPageLoaded" type='boolean' defaultValue='false' availableSince='10.13.0'>
+
+Enable the <PlatformLink to="/apis/#reportPageLoaded">`Sentry.reportPageLoaded()` function</PlatformLink>.
+
+</SdkOption>
+
+</Expandable>
+
+<Expandable title="Filtering & Ignoring Spans">
+
+<SdkOption name="ignoreResourceSpans" type='Array<string>' defaultValue='[]' availableSince='9.23.0'>
+
+Ignore specific resource span categories by their `op` (e.g., `resource.script`, `resource.css`):
+
+```javascript
+Sentry.init({
+  integrations: [
+    Sentry.browserTracingIntegration({
+      ignoreResourceSpans: ['resource.css', 'resource.script'],
+    }),
+  ],
+});
+```
+
+</SdkOption>
+
+<SdkOption name="ignorePerformanceApiSpans" type='Array<string | RegExp>' defaultValue='[]' availableSince='9.23.0'>
+
+Ignore spans created from `performance.mark()` and `performance.measure()`:
+
+```javascript
+Sentry.init({
+  integrations: [
+    Sentry.browserTracingIntegration({
+      ignorePerformanceApiSpans: ['myMeasurement', /myMark/],
+    }),
+  ],
+});
+```
+
+</SdkOption>
+
+<SdkOption name="onRequestSpanStart" type="(span: Span, requestInformation: { headers?: WebFetchHeaders }): void">
+
+Callback invoked when a span starts for an outgoing fetch/XHR request. Use to annotate spans with additional attributes based on request headers.
+
+</SdkOption>
+
+</Expandable>
 
 <PlatformSection supported={["javascript.nextjs"]} notSupported={["javascript"]}>
 
-Though the `BrowserTracing` integration is automatically enabled in `@sentry/nextjs`, in order to customize its options you must include it in your `Sentry.init` in `instrumentation-client.js`:
+## Next.js Configuration
+
+The `browserTracingIntegration` is automatically enabled in `@sentry/nextjs`. To customize options, include it explicitly in `instrumentation-client.js`:
 
 ```javascript
 import * as Sentry from "@sentry/nextjs";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-
-  integrations: [Sentry.browserTracingIntegration()],
-
-  tracesSampleRate: 1.0,
-  // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
-  tracePropagationTargets: [
-    "localhost",
-    /^\//,
-    /^https:\/\/yourserver\.io\/api/,
+  integrations: [
+    Sentry.browserTracingIntegration({
+      // your options here
+    }),
   ],
+  tracesSampleRate: 1.0,
+  tracePropagationTargets: ["localhost", /^\//,  /^https:\/\/yourserver\.io\/api/],
 });
 ```
 
 </PlatformSection>
-
-Supported options:
-
-### tracePropagationTargets
-
-<Alert>
-
-The `tracingOrigins` option was renamed `tracePropagationTargets` and deprecated in [version `7.19.0`](https://github.com/getsentry/sentry-javascript/releases/tag/7.19.0) of the JavaScript SDK. `tracingOrigins` will be removed in version 8.
-
-</Alert>
-
-A list of strings and regular expressions. The JavaScript SDK will attach the `sentry-trace` and `baggage` headers to all outgoing XHR/fetch requests whose destination contains a string in the list or matches a regex in the list. If your frontend is making requests to a different domain, you'll need to add it there to propagate the `sentry-trace` and `baggage` headers to the backend services, which is required to link spans together as part of a single trace.
-
-**The `tracePropagationTargets` option matches the entire request URL, not just the domain. Using stricter regex to match certain parts of the URL ensures that requests don't unnecessarily have additional headers attached.**
-
-The default value of `tracePropagationTargets` is `['localhost', /^\//]`. This means that by default, tracing headers are only attached to requests that contain `localhost` in their URL or requests whose URL starts with a `'/'` (for example `GET /api/v1/users`).
-
-<PlatformContent includePath="performance/tracePropagationTargets-example" />
-
-You will need to configure your web server [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Headers) to allow the `sentry-trace` and `baggage` headers. The configuration might look like `"Access-Control-Allow-Headers: sentry-trace"` and `"Access-Control-Allow-Headers: baggage"`, but it depends on your set up. If you do not allow the two headers, the request might be blocked.
-
-### beforeStartSpan
-
-`beforeStartSpan` is called at the start of every `pageload` or `navigation` span, and is passed an object containing data about the span which will be started. With `beforeStartSpan` you can modify that data.
-
-<PlatformContent includePath="performance/beforeNavigate-example" />
-
-<Alert>
-  If you're using React, read our docs to learn how to set up your [React Router
-  integration](/platforms/javascript/guides/react/configuration/integrations/react-router/).
-</Alert>
-
-### shouldCreateSpanForRequest
-
-This function can be used to filter out unwanted spans such as XHRs running
-health checks or something similar. If this function isn't specified, spans
-will be created for all requests.
-
-<PlatformContent includePath="performance/filter-span-example" />
-
-### idleTimeout
-
-The idle time, measured in ms, to wait until the pageload/navigation span will be finished, if there are no unfinished spans. The pageload/navigation span will use the end timestamp of the last finished span as the endtime.
-
-The default is `1000`.
-
-### finalTimeout
-
-The maximum duration of the pageload/naivgation span, measured in ms. If the duration exceeds the `finalTimeout` value, it will be finished.
-
-The default is `30000`.
-
-### childSpanTimeout
-
-The time, measured in ms, that a child span may run. If the last started child span is still running for more than this time, the pageload/navigation span will be finished.
-
-The default is `15000`.
-
-### instrumentNavigation
-
-This flag enables or disables creation of `navigation` span on history changes.
-
-The default is `true`.
-
-### instrumentPageLoad
-
-This flag enables or disables creation of `pageload` span on first pageload.
-
-The default is `true`.
-
-### markBackgroundSpans
-
-This option flags pageload/navigation spans when tabs are moved to the background with "cancelled". Because browser background tab timing is not suited for precise measurements of operations and can affect your statistics in nondeterministic ways, we recommend that this option be enabled.
-
-The default is `true`.
-
-### enableLongTask
-
-This option determines whether spans for long tasks automatically get created.
-
-The default is `true`.
-
-### enableLongAnimationFrame
-
-<Alert>
-  The `enableLongAnimationFrame` option requires SDK [version
-  8.18.0](https://github.com/getsentry/sentry-javascript/releases/tag/8.18.0) or
-  higher.
-</Alert>
-
-This option determines whether spans for long animation frames get created automatically. If both `enableLongAnimationFrame` and `enableLongTask` are enabled, Sentry will send long animation frames and fallback to long tasks (if long animation frames aren't supported by the browser).
-
-The default is `true`.
-
-### enableInp
-
-<Alert>
-  The `enableInp` option requires SDK [version
-  7.104.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.104.0)
-  or higher.
-</Alert>
-
-This option determines whether interactions spans automatically get created when an [Interaction to Next Paint (INP)](/product/insights/web-vitals/web-vitals-concepts/#interaction-to-next-paint-inp) event is detected. Interactions are scored and surfaced in the [Web Vitals](/product/insights/web-vitals/) module.
-
-The default is `true` in `8.x` of the SDK, and `false` in `7.x`.
-
-<Alert>
-INP samples currently incur no cost to enable at Sentry. Basic samples contain limited information such as the interaction target, latency, and user. You may wish to enrich your INP samples by setting up [Session Replays](/platforms/javascript/session-replay/) and/or setting up [Browser Profiling](/platforms/javascript/profiling/) instrumentation around your interactive elements to gain further insights into your slowest interactions.
-
-Please note that any Session Replays and Browser Profiles used this way will incur their [standard cost](/pricing/#per-category-pricing) depending on your plan and are subject to the sampling rates configured.
-
-</Alert>
-
-<PlatformContent includePath="performance/enable-inp-example" />
-
-### interactionsSampleRate
-
-This option determines the sample rate of INP spans. `interactionsSampleRate` is applied on top of `tracesSampleRate`, therefore if your `interactionsSampleRate` is set to `0.5` and your `tracesSampleRate` is set to `0.1`, the outcome will be `0.05`.
-
-The default is `1.0`.

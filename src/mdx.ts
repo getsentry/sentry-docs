@@ -1,11 +1,21 @@
-import fs from 'fs';
-import path from 'path';
-
-import {cache} from 'react';
 import matter from 'gray-matter';
 import {s} from 'hastscript';
 import yaml from 'js-yaml';
 import {bundleMDX} from 'mdx-bundler';
+import {BinaryLike, createHash} from 'node:crypto';
+import {createReadStream, createWriteStream, mkdirSync} from 'node:fs';
+import {access, cp, mkdir, opendir, readFile} from 'node:fs/promises';
+import path from 'node:path';
+// @ts-expect-error ts(2305) -- For some reason "compose" is not recognized in the types
+import {compose, Readable} from 'node:stream';
+import {json} from 'node:stream/consumers';
+import {pipeline} from 'node:stream/promises';
+import {
+  constants as zlibConstants,
+  createBrotliCompress,
+  createBrotliDecompress,
+} from 'node:zlib';
+import {limitFunction} from 'p-limit';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import rehypePresetMinify from 'rehype-preset-minify';
 import rehypePrismDiff from 'rehype-prism-diff';
@@ -18,6 +28,7 @@ import getPackageRegistry from './build/packageRegistry';
 import {apiCategories} from './build/resolveOpenAPI';
 import getAllFilesRecursively from './files';
 import remarkDefList from './mdx-deflist';
+import {DocMetrics} from './metrics';
 import rehypeOnboardingLines from './rehype-onboarding-lines';
 import rehypeSlug from './rehype-slug.js';
 import remarkCodeTabs from './remark-code-tabs';
@@ -25,14 +36,113 @@ import remarkCodeTitles from './remark-code-title';
 import remarkComponentSpacing from './remark-component-spacing';
 import remarkExtractFrontmatter from './remark-extract-frontmatter';
 import remarkFormatCodeBlocks from './remark-format-code';
-import remarkImageSize from './remark-image-size';
+import remarkImageProcessing from './remark-image-processing';
+import remarkImageResize from './remark-image-resize';
 import remarkTocHeadings, {TocNode} from './remark-toc-headings';
 import remarkVariables from './remark-variables';
 import {FrontMatter, Platform, PlatformConfig} from './types';
 import {isNotNil} from './utils';
 import {isVersioned, VERSION_INDICATOR} from './versioning';
 
+type SlugFile = {
+  frontMatter: Platform & {slug: string};
+  matter: Omit<matter.GrayMatterFile<string>, 'data'> & {
+    data: Platform;
+  };
+  mdxSource: string;
+  toc: TocNode[];
+  firstImage?: string;
+};
+
 const root = process.cwd();
+// We need to limit this as we have code doing things like Promise.all(allFiles.map(...))
+// where `allFiles` is in the order of thousands. This not only slows down the build but
+// it also crashes the dynamic pages such as `/platform-redirect` as these run on Vercel
+// Functions which looks like AWS Lambda and we get `EMFILE` errors when trying to open
+// so many files at once.
+const FILE_CONCURRENCY_LIMIT = 200;
+const CACHE_COMPRESS_LEVEL = 4;
+const CACHE_DIR = path.join(root, '.next', 'cache', 'mdx-bundler');
+if (process.env.CI) {
+  mkdirSync(CACHE_DIR, {recursive: true});
+}
+
+const md5 = (data: BinaryLike) => createHash('md5').update(data).digest('hex');
+
+// Worker-level registry cache to avoid fetching multiple times per worker
+let cachedRegistryHash: Promise<string> | null = null;
+
+/**
+ * Fetch registry data and compute its hash, with retry logic and exponential backoff.
+ * Retries up to maxRetries times with exponential backoff starting at initialDelayMs.
+ */
+async function getRegistryHashWithRetry(
+  maxRetries = 3,
+  initialDelayMs = 1000
+): Promise<string> {
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const [apps, packages] = await Promise.all([
+        getAppRegistry(),
+        getPackageRegistry(),
+      ]);
+      return md5(JSON.stringify({apps, packages}));
+    } catch (err) {
+      lastError = err as Error;
+
+      if (attempt < maxRetries) {
+        const delay = initialDelayMs * Math.pow(2, attempt);
+        // eslint-disable-next-line no-console
+        console.warn(
+          `Failed to fetch registry (attempt ${attempt + 1}/${maxRetries + 1}). Retrying in ${delay}ms...`,
+          err
+        );
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+
+  throw lastError || new Error('Failed to fetch registry after all retries');
+}
+
+/**
+ * Get the registry hash, using cached value if available.
+ * This ensures we only fetch the registry once per worker process.
+ * If the fetch fails, the error is cached so subsequent calls fail fast.
+ */
+function getRegistryHash(): Promise<string> {
+  if (!cachedRegistryHash) {
+    // eslint-disable-next-line no-console
+    console.info('Fetching registry hash for the first time in this worker');
+    cachedRegistryHash = getRegistryHashWithRetry();
+  }
+  return cachedRegistryHash;
+}
+
+async function readCacheFile<T>(file: string): Promise<T> {
+  const reader = createReadStream(file);
+  const decompressor = createBrotliDecompress();
+
+  return (await json(compose(reader, decompressor))) as T;
+}
+
+async function writeCacheFile(file: string, data: string) {
+  const bufferData = Buffer.from(data);
+  await pipeline(
+    Readable.from(bufferData),
+    createBrotliCompress({
+      chunkSize: 32 * 1024,
+      params: {
+        [zlibConstants.BROTLI_PARAM_MODE]: zlibConstants.BROTLI_MODE_TEXT,
+        [zlibConstants.BROTLI_PARAM_QUALITY]: CACHE_COMPRESS_LEVEL,
+        [zlibConstants.BROTLI_PARAM_SIZE_HINT]: bufferData.length,
+      },
+    }),
+    createWriteStream(file)
+  );
+}
 
 function formatSlug(slug: string) {
   return slug.replace(/\.(mdx|md)/, '');
@@ -64,10 +174,25 @@ const isSupported = (
 let getDocsFrontMatterCache: Promise<FrontMatter[]> | undefined;
 
 export function getDocsFrontMatter(): Promise<FrontMatter[]> {
-  if (getDocsFrontMatterCache) {
-    return getDocsFrontMatterCache;
+  // Block filesystem scanning at Vercel runtime.
+  // Frontmatter should only be scanned during CI builds - the doc tree is pre-computed.
+  // See: DOCS-83Q, DOCS-9A5, DOCS-9RE
+  const isVercelRuntime =
+    process.env.VERCEL && !process.env.CI && process.env.NODE_ENV !== 'development';
+
+  if (isVercelRuntime) {
+    return Promise.reject(
+      new Error(
+        `[MDX Runtime Error] Attempted to scan docs frontmatter at Vercel runtime. ` +
+          `This should not happen - the doc tree should be pre-computed during CI. ` +
+          `If you're seeing this error, the requested path may not exist or was not included in generateStaticParams().`
+      )
+    );
   }
-  getDocsFrontMatterCache = getDocsFrontMatterUncached();
+
+  if (!getDocsFrontMatterCache) {
+    getDocsFrontMatterCache = getDocsFrontMatterUncached();
+  }
   return getDocsFrontMatterCache;
 }
 
@@ -92,7 +217,7 @@ export const getVersionsFromDoc = (frontMatter: FrontMatter[], docPath: string) 
 };
 
 async function getDocsFrontMatterUncached(): Promise<FrontMatter[]> {
-  const frontMatter = getAllFilesFrontMatter();
+  const frontMatter = await getAllFilesFrontMatter();
 
   const categories = await apiCategories();
   categories.forEach(category => {
@@ -127,142 +252,236 @@ async function getDocsFrontMatterUncached(): Promise<FrontMatter[]> {
   return frontMatter;
 }
 
-export function getDevDocsFrontMatter(): FrontMatter[] {
+export async function getDevDocsFrontMatterUncached(): Promise<FrontMatter[]> {
   const folder = 'develop-docs';
   const docsPath = path.join(root, folder);
-  const files = getAllFilesRecursively(docsPath);
-  const fmts = files
-    .map(file => {
-      const fileName = file.slice(docsPath.length + 1);
-      if (path.extname(fileName) !== '.md' && path.extname(fileName) !== '.mdx') {
-        return undefined;
-      }
+  const files = await getAllFilesRecursively(docsPath);
+  const frontMatters = (
+    await Promise.all(
+      files.map(
+        limitFunction(
+          async file => {
+            const fileName = file.slice(docsPath.length + 1);
+            if (path.extname(fileName) !== '.md' && path.extname(fileName) !== '.mdx') {
+              return undefined;
+            }
 
-      const source = fs.readFileSync(file, 'utf8');
-      const {data: frontmatter} = matter(source);
-      return {
-        ...(frontmatter as FrontMatter),
-        slug: fileName.replace(/\/index.mdx?$/, '').replace(/\.mdx?$/, ''),
-        sourcePath: path.join(folder, fileName),
-      };
-    })
-    .filter(isNotNil);
-  return fmts;
+            const source = await readFile(file, 'utf8');
+            const {data: frontmatter} = matter(source);
+            return {
+              ...(frontmatter as FrontMatter),
+              slug: fileName.replace(/\/index.mdx?$/, '').replace(/\.mdx?$/, ''),
+              sourcePath: path.join(folder, fileName),
+            };
+          },
+          {concurrency: FILE_CONCURRENCY_LIMIT}
+        )
+      )
+    )
+  ).filter(isNotNil);
+  return frontMatters;
 }
 
-function getAllFilesFrontMatter() {
+let getDevDocsFrontMatterCache: Promise<FrontMatter[]> | undefined;
+
+export function getDevDocsFrontMatter(): Promise<FrontMatter[]> {
+  // Block filesystem scanning at Vercel runtime.
+  // Frontmatter should only be scanned during CI builds - the doc tree is pre-computed.
+  // See: DOCS-83Q, DOCS-9A5, DOCS-9RE
+  const isVercelRuntime =
+    process.env.VERCEL && !process.env.CI && process.env.NODE_ENV !== 'development';
+
+  if (isVercelRuntime) {
+    return Promise.reject(
+      new Error(
+        `[MDX Runtime Error] Attempted to scan develop-docs frontmatter at Vercel runtime. ` +
+          `This should not happen - the doc tree should be pre-computed during CI. ` +
+          `If you're seeing this error, the requested path may not exist or was not included in generateStaticParams().`
+      )
+    );
+  }
+
+  if (!getDevDocsFrontMatterCache) {
+    getDevDocsFrontMatterCache = getDevDocsFrontMatterUncached();
+  }
+  return getDevDocsFrontMatterCache;
+}
+
+async function getAllFilesFrontMatter(): Promise<FrontMatter[]> {
   const docsPath = path.join(root, 'docs');
-  const files = getAllFilesRecursively(docsPath);
+  const files = await getAllFilesRecursively(docsPath);
   const allFrontMatter: FrontMatter[] = [];
-  files.forEach(file => {
-    const fileName = file.slice(docsPath.length + 1);
-    if (path.extname(fileName) !== '.md' && path.extname(fileName) !== '.mdx') {
-      return;
-    }
 
-    if (fileName.indexOf('/common/') !== -1) {
-      return;
-    }
+  await Promise.all(
+    files.map(
+      limitFunction(
+        async file => {
+          const fileName = file.slice(docsPath.length + 1);
+          if (path.extname(fileName) !== '.md' && path.extname(fileName) !== '.mdx') {
+            return;
+          }
 
-    const source = fs.readFileSync(file, 'utf8');
-    const {data: frontmatter} = matter(source);
-    allFrontMatter.push({
-      ...(frontmatter as FrontMatter),
-      slug: formatSlug(fileName),
-      sourcePath: path.join('docs', fileName),
-    });
-  });
+          if (fileName.indexOf('/common/') !== -1) {
+            return;
+          }
+
+          const source = await readFile(file, 'utf8');
+          const {data: frontmatter} = matter(source);
+          allFrontMatter.push({
+            ...(frontmatter as FrontMatter),
+            slug: formatSlug(fileName),
+            sourcePath: path.join('docs', fileName),
+          });
+        },
+        {concurrency: FILE_CONCURRENCY_LIMIT}
+      )
+    )
+  );
 
   // Add all `common` files in the right place.
   const platformsPath = path.join(docsPath, 'platforms');
-  const platformNames = fs
-    .readdirSync(platformsPath)
-    .filter(p => !fs.statSync(path.join(platformsPath, p)).isFile());
-  platformNames.forEach(platformName => {
+  for await (const platform of await opendir(platformsPath)) {
+    if (platform.isFile()) {
+      continue;
+    }
+    const platformName = platform.name;
+
     let platformFrontmatter: PlatformConfig = {};
     const configPath = path.join(platformsPath, platformName, 'config.yml');
-    if (fs.existsSync(configPath)) {
+    try {
       platformFrontmatter = yaml.load(
-        fs.readFileSync(configPath, 'utf8')
+        await readFile(configPath, 'utf8')
       ) as PlatformConfig;
+    } catch (err) {
+      // the file may not exist and that's fine, for anything else we throw
+      if (err.code !== 'ENOENT') {
+        throw err;
+      }
     }
 
     const commonPath = path.join(platformsPath, platformName, 'common');
-    if (!fs.existsSync(commonPath)) {
-      return;
+    try {
+      await access(commonPath);
+    } catch (err) {
+      continue;
     }
 
-    const commonFileNames: string[] = getAllFilesRecursively(commonPath).filter(
+    const commonFileNames: string[] = (await getAllFilesRecursively(commonPath)).filter(
       p => path.extname(p) === '.mdx'
     );
-    const commonFiles = commonFileNames.map(commonFileName => {
-      const source = fs.readFileSync(commonFileName, 'utf8');
-      const {data: frontmatter} = matter(source);
-      return {commonFileName, frontmatter: frontmatter as FrontMatter};
-    });
 
-    commonFiles.forEach(f => {
-      if (!isSupported(f.frontmatter, platformName)) {
-        return;
-      }
+    const commonFiles = await Promise.all(
+      commonFileNames.map(
+        limitFunction(
+          async commonFileName => {
+            const source = await readFile(commonFileName, 'utf8');
+            const {data: frontmatter} = matter(source);
+            return {commonFileName, frontmatter: frontmatter as FrontMatter};
+          },
+          {concurrency: FILE_CONCURRENCY_LIMIT}
+        )
+      )
+    );
 
-      const subpath = f.commonFileName.slice(commonPath.length + 1);
-      const slug = f.commonFileName.slice(docsPath.length + 1).replace(/\/common\//, '/');
-      if (
-        !fs.existsSync(path.join(docsPath, slug)) &&
-        !fs.existsSync(path.join(docsPath, slug.replace('/index.mdx', '.mdx')))
-      ) {
-        let frontmatter = f.frontmatter;
-        if (subpath === 'index.mdx') {
-          frontmatter = {...frontmatter, ...platformFrontmatter};
-        }
-        allFrontMatter.push({
-          ...frontmatter,
-          slug: formatSlug(slug),
-          sourcePath: 'docs/' + f.commonFileName.slice(docsPath.length + 1),
-        });
-      }
-    });
+    await Promise.all(
+      commonFiles.map(
+        limitFunction(
+          async f => {
+            if (!isSupported(f.frontmatter, platformName)) {
+              return;
+            }
+
+            const subpath = f.commonFileName.slice(commonPath.length + 1);
+            const slug = f.commonFileName
+              .slice(docsPath.length + 1)
+              .replace(/\/common\//, '/');
+            const noFrontMatter = (
+              await Promise.allSettled([
+                access(path.join(docsPath, slug)),
+                access(path.join(docsPath, slug.replace('/index.mdx', '.mdx'))),
+              ])
+            ).every(r => r.status === 'rejected');
+            if (noFrontMatter) {
+              let frontmatter = f.frontmatter;
+              if (subpath === 'index.mdx') {
+                frontmatter = {...frontmatter, ...platformFrontmatter};
+              }
+              allFrontMatter.push({
+                ...frontmatter,
+                slug: formatSlug(slug),
+                sourcePath: 'docs/' + f.commonFileName.slice(docsPath.length + 1),
+              });
+            }
+          },
+          {concurrency: FILE_CONCURRENCY_LIMIT}
+        )
+      )
+    );
 
     const guidesPath = path.join(docsPath, 'platforms', platformName, 'guides');
-    let guideNames: string[] = [];
-    if (!fs.existsSync(guidesPath)) {
-      return;
+    try {
+      await access(guidesPath);
+    } catch (err) {
+      continue;
     }
-    guideNames = fs
-      .readdirSync(guidesPath)
-      .filter(g => !fs.statSync(path.join(guidesPath, g)).isFile());
-    guideNames.forEach(guideName => {
+
+    for await (const guide of await opendir(guidesPath)) {
+      if (guide.isFile()) {
+        continue;
+      }
+      const guideName = guide.name;
+
       let guideFrontmatter: FrontMatter | null = null;
       const guideConfigPath = path.join(guidesPath, guideName, 'config.yml');
-      if (fs.existsSync(guideConfigPath)) {
+      try {
         guideFrontmatter = yaml.load(
-          fs.readFileSync(guideConfigPath, 'utf8')
+          await readFile(guideConfigPath, 'utf8')
         ) as FrontMatter;
+      } catch (err) {
+        if (err.code !== 'ENOENT') {
+          throw err;
+        }
       }
 
-      commonFiles.forEach(f => {
-        if (!isSupported(f.frontmatter, platformName, guideName)) {
-          return;
-        }
+      await Promise.all(
+        commonFiles.map(
+          limitFunction(
+            async f => {
+              if (!isSupported(f.frontmatter, platformName, guideName)) {
+                return;
+              }
 
-        const subpath = f.commonFileName.slice(commonPath.length + 1);
-        const slug = path.join('platforms', platformName, 'guides', guideName, subpath);
-        if (!fs.existsSync(path.join(docsPath, slug))) {
-          let frontmatter = f.frontmatter;
-          if (subpath === 'index.mdx') {
-            frontmatter = {...frontmatter, ...guideFrontmatter};
-          }
-          allFrontMatter.push({
-            ...frontmatter,
-            slug: formatSlug(slug),
-            sourcePath: 'docs/' + f.commonFileName.slice(docsPath.length + 1),
-          });
-        }
-      });
-    });
-  });
+              const subpath = f.commonFileName.slice(commonPath.length + 1);
+              const slug = path.join(
+                'platforms',
+                platformName,
+                'guides',
+                guideName,
+                subpath
+              );
+              try {
+                await access(path.join(docsPath, slug));
+                return;
+              } catch {
+                // pass
+              }
 
+              let frontmatter = f.frontmatter;
+              if (subpath === 'index.mdx') {
+                frontmatter = {...frontmatter, ...guideFrontmatter};
+              }
+              allFrontMatter.push({
+                ...frontmatter,
+                slug: formatSlug(slug),
+                sourcePath: 'docs/' + f.commonFileName.slice(docsPath.length + 1),
+              });
+            },
+            {concurrency: FILE_CONCURRENCY_LIMIT}
+          )
+        )
+      );
+    }
+  }
   return allFrontMatter;
 }
 
@@ -299,13 +518,42 @@ export const addVersionToFilePath = (filePath: string, version: string) => {
   return `${filePath}__v${version}`;
 };
 
-export async function getFileBySlug(slug: string) {
+export async function getFileBySlug(slug: string): Promise<SlugFile> {
+  // Block MDX compilation at Vercel runtime.
+  // MDX should only be compiled during CI builds - all pages are statically generated.
+  // If this code path is hit at runtime, it means:
+  // 1. A 404 page is being accessed (Next.js tries to render before showing not-found)
+  // 2. Some edge case in routing is bypassing static generation
+  //
+  // Without this check, runtime MDX compilation would:
+  // - Fetch from release-registry.services.sentry.io (hammering the registry)
+  // - Fail with "read-only file system" errors from esbuild
+  //
+  // See: DOCS-915, DOCS-9H5, DOCS-9N0, DOCS-9HB
+  const isVercelRuntime =
+    process.env.VERCEL && !process.env.CI && process.env.NODE_ENV !== 'development';
+
+  if (isVercelRuntime) {
+    const error = new Error(
+      `[MDX Runtime Error] Attempted to compile MDX at Vercel runtime for slug "${slug}". ` +
+        `This should not happen - all pages should be pre-built during CI. ` +
+        `If you're seeing this error, the requested path may not exist or was not included in generateStaticParams().`
+    ) as Error & {code: string};
+    error.code = 'MDX_RUNTIME_ERROR';
+    throw error;
+  }
+
   // no versioning on a config file
   const configPath = path.join(root, slug.split(VERSION_INDICATOR)[0], 'config.yml');
 
   let configFrontmatter: PlatformConfig | undefined;
-  if (fs.existsSync(configPath)) {
-    configFrontmatter = yaml.load(fs.readFileSync(configPath, 'utf8')) as PlatformConfig;
+  try {
+    configFrontmatter = yaml.load(await readFile(configPath, 'utf8')) as PlatformConfig;
+  } catch (err) {
+    // If the config file does not exist, we can ignore it.
+    if (err.code !== 'ENOENT') {
+      throw err;
+    }
   }
 
   let mdxPath = path.join(root, `${slug}.mdx`);
@@ -315,10 +563,14 @@ export async function getFileBySlug(slug: string) {
   let mdIndexPath = path.join(root, slug, 'index.md');
 
   if (
-    slug.indexOf('docs/platforms/') === 0 &&
-    [mdxPath, mdxIndexPath, mdPath, mdIndexPath, versionedMdxIndexPath].filter(p =>
-      fs.existsSync(p)
-    ).length === 0
+    slug.startsWith('docs/platforms/') &&
+    (
+      await Promise.allSettled(
+        [mdxPath, mdxIndexPath, mdPath, mdIndexPath, versionedMdxIndexPath].map(p =>
+          access(p)
+        )
+      )
+    ).every(r => r.status === 'rejected')
   ) {
     // Try the common folder.
     const slugParts = slug.split('/');
@@ -334,25 +586,162 @@ export async function getFileBySlug(slug: string) {
       commonFilePath = path.join(commonPath, slugParts.slice(3).join('/'));
       versionedMdxIndexPath = getVersionedIndexPath(root, commonFilePath, '.mdx');
     }
-    if (commonFilePath && fs.existsSync(commonPath)) {
-      mdxPath = path.join(root, `${commonFilePath}.mdx`);
-      mdxIndexPath = path.join(root, commonFilePath, 'index.mdx');
-      mdPath = path.join(root, `${commonFilePath}.md`);
-      mdIndexPath = path.join(root, commonFilePath, 'index.md');
-      versionedMdxIndexPath = getVersionedIndexPath(root, commonFilePath, '.mdx');
+    if (commonFilePath) {
+      try {
+        await access(commonPath);
+        mdxPath = path.join(root, `${commonFilePath}.mdx`);
+        mdxIndexPath = path.join(root, commonFilePath, 'index.mdx');
+        mdPath = path.join(root, `${commonFilePath}.md`);
+        mdIndexPath = path.join(root, commonFilePath, 'index.md');
+        versionedMdxIndexPath = getVersionedIndexPath(root, commonFilePath, '.mdx');
+      } catch (err) {
+        // If the common folder does not exist, we can ignore it.
+        if (err.code !== 'ENOENT') {
+          throw err;
+        }
+      }
     }
   }
 
   // check if a versioned index file exists
-  if (isVersioned(slug) && fs.existsSync(mdxIndexPath)) {
-    mdxIndexPath = addVersionToFilePath(mdxIndexPath, slug.split(VERSION_INDICATOR)[1]);
+  if (isVersioned(slug)) {
+    try {
+      await access(mdxIndexPath);
+      mdxIndexPath = addVersionToFilePath(mdxIndexPath, slug.split(VERSION_INDICATOR)[1]);
+    } catch (err) {
+      // pass, the file does not exist
+      if (err.code !== 'ENOENT') {
+        throw err;
+      }
+    }
   }
 
-  const sourcePath =
-    [mdxPath, mdxIndexPath, mdPath, versionedMdxIndexPath].find(fs.existsSync) ??
-    mdIndexPath;
+  let source: string | undefined = undefined;
+  let sourcePath: string | undefined = undefined;
+  const sourcePaths = [mdxPath, mdxIndexPath, mdPath, versionedMdxIndexPath, mdIndexPath];
+  const errors: Error[] = [];
+  for (const p of sourcePaths) {
+    try {
+      source = await readFile(p, 'utf8');
+      sourcePath = p;
+      break;
+    } catch (e) {
+      errors.push(e);
+    }
+  }
+  if (source === undefined || sourcePath === undefined) {
+    // Check if we have any non-ENOENT errors (permission, file system errors, etc.)
+    const nonEnoentError = errors.find(
+      err => err && typeof err === 'object' && 'code' in err && err.code !== 'ENOENT'
+    );
 
-  const source = fs.readFileSync(sourcePath, 'utf8');
+    // If there's a non-ENOENT error, throw it directly to preserve the original error
+    if (nonEnoentError) {
+      throw nonEnoentError;
+    }
+
+    // Otherwise, all errors are ENOENT (file not found), so we can safely report as such
+    const error = new Error(
+      `Failed to find a valid source file for slug "${slug}". Tried:\n${sourcePaths.join('\n')}\nErrors:\n${errors.map(e => e.message).join('\n')}`
+    ) as Error & {code: string};
+    error.code = 'ENOENT';
+    throw error;
+  }
+
+  let cacheKey: string | null = null;
+  let cacheFile: string | null = null;
+  let assetsCacheDir: string | null = null;
+
+  // Always use public/mdx-images during build
+  // During runtime (Lambda), this directory is read-only but images are already there from build
+  const outdir = path.join(root, 'public', 'mdx-images');
+
+  try {
+    await mkdir(outdir, {recursive: true});
+  } catch (e) {
+    // If we can't create the directory (e.g., read-only filesystem),
+    // continue anyway - images should already exist from build time
+  }
+
+  // Detect if file contains content that depends on the Release Registry
+  // If it does, we include the registry hash in the cache key so the cache
+  // is invalidated when the registry changes.
+  const dependsOnRegistry =
+    source.includes('@inject') ||
+    source.includes('<PlatformSDKPackageName') ||
+    source.includes('<LambdaLayerDetail');
+
+  // Check cache in CI environments
+  if (process.env.CI) {
+    const sourceHash = md5(source);
+
+    // Include registry hash in cache key for registry-dependent files
+    if (dependsOnRegistry) {
+      try {
+        const registryHash = await getRegistryHash();
+        cacheKey = `${sourceHash}-${registryHash}`;
+        // eslint-disable-next-line no-console
+        console.info(
+          `Using registry-aware cache for ${sourcePath} (registry hash: ${registryHash.slice(0, 8)}...)`
+        );
+      } catch (err) {
+        // If we can't get registry hash, skip cache for this file
+        // eslint-disable-next-line no-console
+        console.warn(
+          `Failed to get registry hash for ${sourcePath}, skipping cache:`,
+          err
+        );
+        cacheKey = null;
+      }
+    } else {
+      cacheKey = sourceHash;
+    }
+
+    if (cacheKey) {
+      cacheFile = path.join(CACHE_DIR, `${cacheKey}.br`);
+      assetsCacheDir = path.join(CACHE_DIR, cacheKey);
+
+      try {
+        // Time only the cache read operation, not the asset copy
+        const cacheStartTime = Date.now();
+        const cached = await readCacheFile<SlugFile>(cacheFile);
+        const cacheReadDuration = Date.now() - cacheStartTime;
+
+        // Track cache hit metrics immediately after cache read
+        if (typeof window === 'undefined') {
+          const fileSizeKb = Buffer.byteLength(source, 'utf8') / 1024;
+          const hasImages =
+            source.includes('.png') ||
+            source.includes('.jpg') ||
+            source.includes('.jpeg') ||
+            source.includes('.svg') ||
+            source.includes('.gif');
+
+          DocMetrics.mdxCompile(cacheReadDuration, {
+            cached: true,
+            file_size_kb: Math.round(fileSizeKb),
+            has_images: hasImages,
+            slug_prefix: slug.split('/')[0],
+          });
+        }
+
+        // Copy assets (wait for completion before returning)
+        await cp(assetsCacheDir, outdir, {recursive: true});
+
+        return cached;
+      } catch (err) {
+        if (
+          err.code !== 'ENOENT' &&
+          err.code !== 'ABORT_ERR' &&
+          err.code !== 'Z_BUF_ERROR'
+        ) {
+          // If cache is corrupted, ignore and proceed
+          // eslint-disable-next-line no-console
+          console.warn(`Failed to read MDX cache: ${cacheFile}`, err);
+        }
+      }
+    }
+  }
 
   process.env.ESBUILD_BINARY_PATH = path.join(
     root,
@@ -366,6 +755,9 @@ export async function getFileBySlug(slug: string) {
 
   // cwd is how mdx-bundler knows how to resolve relative paths
   const cwd = path.dirname(sourcePath);
+
+  // Track MDX compilation timing
+  const compilationStart = Date.now();
 
   const result = await bundleMDX<Platform>({
     source,
@@ -381,8 +773,12 @@ export async function getFileBySlug(slug: string) {
         remarkGfm,
         remarkDefList,
         remarkFormatCodeBlocks,
-        [remarkImageSize, {sourceFolder: cwd, publicFolder: path.join(root, 'public')}],
+        [
+          remarkImageProcessing,
+          {sourceFolder: cwd, publicFolder: path.join(root, 'public')},
+        ],
         remarkMdxImages,
+        remarkImageResize,
         remarkCodeTitles,
         remarkCodeTabs,
         remarkComponentSpacing,
@@ -429,9 +825,9 @@ export async function getFileBySlug(slug: string) {
             ],
           },
         ],
-        [rehypePrismPlus, {ignoreMissing: true}],
+        [rehypePrismPlus, {ignoreMissing: true}] as any,
         rehypeOnboardingLines,
-        [rehypePrismDiff, {remove: true}],
+        [rehypePrismDiff, {remove: true}] as any,
         rehypePresetMinify,
       ];
       return options;
@@ -448,11 +844,18 @@ export async function getFileBySlug(slug: string) {
         '.svg': 'dataurl',
       };
       // Set the `outdir` to a public location for this bundle.
-      // this where this images will be copied
-      options.outdir = path.join(root, 'public', 'mdx-images');
+      // this is where these images will be copied
+      // the reason we use the cache folder when it's
+      // enabled is because mdx-images is a dumping ground
+      // for all images, so we cannot filter it out only
+      // for this specific slug easily
+      options.outdir = assetsCacheDir || outdir;
 
-      // Set write to true so that esbuild will output the files.
-      options.write = true;
+      // Set write to false to prevent esbuild from writing files automatically.
+      // We'll handle writing manually to gracefully handle read-only filesystems (e.g., Lambda runtime)
+      // In local dev, we need write=true to avoid images being embedded as binary data
+      options.write =
+        process.env.NODE_ENV === 'development' || !!process.env.CI || !process.env.VERCEL;
 
       return options;
     },
@@ -462,6 +865,29 @@ export async function getFileBySlug(slug: string) {
     throw e;
   });
 
+  // Track MDX compilation metrics for cache miss (server-side only)
+  const compilationDuration = Date.now() - compilationStart;
+  if (typeof window === 'undefined') {
+    const fileSizeKb = Buffer.byteLength(source, 'utf8') / 1024;
+    const hasImages =
+      source.includes('.png') ||
+      source.includes('.jpg') ||
+      source.includes('.jpeg') ||
+      source.includes('.svg') ||
+      source.includes('.gif');
+
+    DocMetrics.mdxCompile(compilationDuration, {
+      cached: false, // This path only reached on cache miss
+      file_size_kb: Math.round(fileSizeKb),
+      has_images: hasImages,
+      slug_prefix: slug.split('/')[0], // First path segment for grouping
+    });
+  }
+
+  // Manually write output files from esbuild when available
+  // This only happens during build time (when filesystem is writable)
+  // At runtime (Lambda), files already exist from build time
+
   const {code, frontmatter} = result;
 
   let mergedFrontmatter = frontmatter;
@@ -469,7 +895,7 @@ export async function getFileBySlug(slug: string) {
     mergedFrontmatter = {...frontmatter, ...configFrontmatter};
   }
 
-  return {
+  const resultObj: SlugFile = {
     matter: result.matter,
     mdxSource: code,
     toc,
@@ -478,11 +904,38 @@ export async function getFileBySlug(slug: string) {
       slug,
     },
   };
+
+  if (assetsCacheDir && cacheFile && cacheKey) {
+    try {
+      await cp(assetsCacheDir, outdir, {recursive: true});
+    } catch (e) {
+      // If copy fails (e.g., on read-only filesystem), continue anyway
+      // Images should already exist from build time
+    }
+    writeCacheFile(cacheFile, JSON.stringify(resultObj)).catch(e => {
+      // eslint-disable-next-line no-console
+      console.warn(`Failed to write MDX cache: ${cacheFile}`, e);
+    });
+  }
+
+  return resultObj;
 }
+
+const fileBySlugCache = new Map<string, Promise<SlugFile>>();
 
 /**
  * Cache the result of {@link getFileBySlug}.
  *
  * This is useful for performance when rendering the same file multiple times.
  */
-export const getFileBySlugWithCache = cache(getFileBySlug);
+export const getFileBySlugWithCache: (slug: string) => Promise<SlugFile> =
+  process.env.NODE_ENV === 'development'
+    ? getFileBySlug
+    : (slug: string) => {
+        let cached = fileBySlugCache.get(slug);
+        if (!cached) {
+          cached = getFileBySlug(slug);
+          fileBySlugCache.set(slug, cached);
+        }
+        return cached;
+      };

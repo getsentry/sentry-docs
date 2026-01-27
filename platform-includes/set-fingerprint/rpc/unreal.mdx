@@ -1,0 +1,22 @@
+```cpp
+USTRUCT()
+struct FSomeRpcError
+{
+    GENERATED_BODY()
+
+    UPROPERTY()
+    FString Function;
+    UPROPERTY()
+    FString Code;
+}
+
+// Some code that emits RPC error info
+FSomeRpcError RpcError = /* ... */
+
+USentryEvent* Event = NewObject<USentryEvent>();
+Event->Initialize();
+Event->SetFingerprint( { "{{ default }}", RpcError.Function, RpcError.Code } );
+
+USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
+SentrySubsystem->CaptureEvent(Event, ESentryLevel::Error);
+```

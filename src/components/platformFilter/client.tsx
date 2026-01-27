@@ -27,7 +27,7 @@ const mostViewedPlatforms: {icon: string; key: string; title: string; url: strin
     title: 'React',
   },
   {
-    url: 'platforms/php/guides/laravel/',
+    url: '/platforms/php/guides/laravel/',
     key: 'php-laravel',
     icon: 'php-laravel',
     title: 'Laravel',

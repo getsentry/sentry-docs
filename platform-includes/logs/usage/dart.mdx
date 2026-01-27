@@ -1,0 +1,34 @@
+Once the feature is enabled on the SDK and the SDK is initialized, you can send logs using the `Sentry.logger` APIs.
+
+The `logger` namespace exposes six methods that you can use to log messages at different log levels: `trace`, `debug`, `info`, `warning`, `error`, and `fatal`.
+
+Aside from the primary logging methods, we've provided a format text function, `Sentry.logger.fmt`, that you can use to insert properties into to your log entries.
+
+These properties will be sent to Sentry, and can be searched from within the Logs UI, and even added to the Logs views as a dedicated column.
+
+<Alert level="info">
+  When using the `fmt` function, you must use the `%s` placeholder for each value you want to insert.
+</Alert>
+
+```dart
+Sentry.logger.fmt.error('Uh oh, something broke, here is the error: %s', [
+  errorMsg
+], attributes: {
+  'additional_info': SentryLogAttribute.string('some info'),
+});
+Sentry.logger.fmt.info("%s added %s to cart.", [user.username, product.name]);
+```
+
+You can also pass additional attributes directly to the logging functions, avoiding the need to use the `fmt` function.
+
+```dart
+Sentry.logger.error('Uh oh, something broke, here is the error: $errorMsg',
+    attributes: {
+      'error': SentryLogAttribute.string(errorMsg),
+      'some_info': SentryLogAttribute.string('some info'),
+    });
+Sentry.logger.info('User ${user.username} added ${product.name} to cart.', attributes: {
+  'user': SentryLogAttribute.string(user.username),
+  'product': SentryLogAttribute.string(product.name),
+});
+```

@@ -21,22 +21,30 @@ import {
   KeywordIndicator,
   KeywordSearchInput,
   PositionWrapper,
+  ProjectPreview,
   Selections,
-} from './styles.css';
+} from './styles';
 import {dropdownPopperOptions} from './utils';
 
 type KeywordSelectorProps = {
   group: string;
   index: number;
   keyword: string;
+  showPreview: boolean;
 };
 
-export function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
+export function KeywordSelector({
+  keyword,
+  group,
+  index,
+  showPreview,
+}: KeywordSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [referenceEl, setReferenceEl] = useState<HTMLSpanElement | null>(null);
   const [dropdownEl, setDropdownEl] = useState<HTMLElement | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const [orgFilter, setOrgFilter] = useState('');
+  const [showProjectPreview, setShowProjectPreview] = useState(false);
   const {resolvedTheme: theme} = useTheme();
 
   const isDarkMode = theme === 'dark';
@@ -127,8 +135,18 @@ export function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
         role="button"
         tabIndex={0}
         title={currentSelection?.title}
+        aria-label={
+          currentSelection?.title
+            ? `${currentSelection?.title}: ${currentSelection[keyword]}. Click to select different project.`
+            : `Click to select project`
+        }
+        aria-expanded={isOpen}
         onClick={() => setIsOpen(!isOpen)}
         onKeyDown={e => e.key === 'Enter' && setIsOpen(!isOpen)}
+        onMouseEnter={() => setShowProjectPreview(true)}
+        onMouseLeave={() => setShowProjectPreview(false)}
+        onFocus={() => setShowProjectPreview(true)}
+        onBlur={() => setShowProjectPreview(false)}
       >
         <KeywordIndicatorComponent isOpen={isOpen} />
         <span
@@ -137,6 +155,7 @@ export function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
             // correctly overlap during animations, but this must be removed
             // after so copy-paste correctly works.
             display: isAnimating ? 'inline-grid' : undefined,
+            position: 'relative',
           }}
         >
           <AnimatePresence initial={false}>
@@ -144,10 +163,16 @@ export function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
               onAnimationStart={() => setIsAnimating(true)}
               onAnimationComplete={() => setIsAnimating(false)}
               key={currentSelectionIdx}
+              showPreview={showPreview}
             >
               {currentSelection[keyword]}
             </Keyword>
           </AnimatePresence>
+          {!isOpen && showProjectPreview && showPreview && currentSelection?.title && (
+            <ProjectPreview className="no-copy" aria-hidden="true">
+              {currentSelection.title}
+            </ProjectPreview>
+          )}
         </span>
       </KeywordDropdown>
       {isMounted &&

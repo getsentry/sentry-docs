@@ -13,6 +13,7 @@ const rubik = Rubik({
   style: ['normal', 'italic'],
   subsets: ['latin'],
   variable: '--font-rubik',
+  display: 'swap', // Show fallback font immediately, swap when loaded
 });
 
 export const metadata: Metadata = {
@@ -33,7 +34,7 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <PlausibleProvider domain="docs.sentry.io,rollup.sentry.io" />
+        <PlausibleProvider taggedEvents domain="docs.sentry.io,rollup.sentry.io" />
       </head>
       <body className={rubik.variable} suppressHydrationWarning>
         <ThemeProvider
@@ -47,7 +48,7 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
           </Theme>
         </ThemeProvider>
         <Script
-          async
+          strategy="lazyOnload"
           src="https://widget.kapa.ai/kapa-widget.bundle.js"
           data-website-id="cac7cc70-969e-4bc1-a968-55534a839be4"
           data-button-hide // do not render kapa ai button
@@ -58,6 +59,7 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
           data-font-family="var(--font-rubik)"
           data-modal-disclaimer="Please note: This is a tool that searches publicly available sources. Do not include any sensitive or personal information in your queries. For more on how Sentry handles your data, see our [Privacy Policy](https://sentry.io/privacy/)."
           data-modal-example-questions="How to set up Sentry for Next.js?,What are tracePropagationTargets?"
+          data-user-analytics-cookie-enabled="false"
         />
       </body>
     </html>

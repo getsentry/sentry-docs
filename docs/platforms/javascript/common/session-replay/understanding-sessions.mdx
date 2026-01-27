@@ -26,13 +26,22 @@ For more complex cases, it's helpful to understand how sessions work and how to 
 
 ## Default Session Initialization
 
-By default, Replay will immediately start a session when the `replayIntegration()` integration instance is added to the SDK client. The session will be in either `session` or `buffer` mode, depending on your `replaysSessionSampleRate` and `replaysOnErrorSampleRate`.
+With the  `replayIntegration()` enabled in your SDK, a replay session will start capturing based on your sample rate settings:
 
-When Replay is initialized, we check the `replaysSessionSampleRate`. If it's sampled, we'll start recording and sending Replay data immediately.
+| Configuration | What Happens |
+|--------------|-------------|
+| `replaysSessionSampleRate > 0` | Starts in <PlatformLink to="/session-replay/understanding-sessions/#session-mode">**session mode**</PlatformLink> |
+| `replaysOnErrorSampleRate > 0` only | Starts in <PlatformLink to="/session-replay/understanding-sessions/#buffer-mode">**buffer mode**</PlatformLink> |
+| Both rates are `0` | Replay is installed but inactive until you <PlatformLink to="/session-replay/understanding-sessions/#manually-starting-replay">**manually start it**</PlatformLink> |
 
-If `replaysOnErrorSampleRate > 0`, we'll start recording in buffering mode and keep checking `replaysOnErrorSampleRate` whenever an error occurs. Once we see that it's sampled, we'll upload the Replay to Sentry and continue recording normally.
+**Recommended default:**
 
-If both `replaysSessionSampleRate` and `replaysOnErrorSampleRate` are `0`, the recording won't start, but you'll be able to <PlatformLink to="/session-replay/understanding-sessions/#manually-starting-replay">record manually</PlatformLink>.
+```javascript
+replaysSessionSampleRate: 0.1,  // 10% of sessions
+replaysOnErrorSampleRate: 1.0,  // 100% of all errors
+```
+
+This captures 10% of sessions in full, plus every error from the remaining 90%. Think of it like a security camera: some cameras always record, others only save footage when the alarm goes off.
 
 ## Session Mode
 
@@ -206,7 +215,7 @@ Note that this hook only runs in `buffer` mode, as `session` mode records contin
 
 Replays do not need to be connected to an application error, they can also be used to supplement your support tickets.
 Depending on the level of customization provided by your support widget, it is possible to send a replay to
-Sentry when your users open the support widget. Note that Sentry's [User Feedback](https://docs.sentry.io/product/user-feedback/#user-feedback-widget)
+Sentry when your users open the support widget. Note that Sentry's [User Feedback](/product/user-feedback/#user-feedback-widget)
 provides this functionality by default! You can then send the ID of the replay along with the support ticket that your
 user submits. The ID can be used to reference the replay in Sentry. Alternatively, you can search for
 replays by a user identifier such as email.

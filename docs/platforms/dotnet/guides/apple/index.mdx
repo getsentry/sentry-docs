@@ -1,0 +1,86 @@
+---
+title: .NET for iOS, macOS, and Mac Catalyst
+sdk: sentry.dotnet.apple
+description: "Learn about Sentry's .NET integration with .NET for iOS, macOS, and Mac Catalyst"
+---
+
+Sentry supports [.NET for iOS, macOS, and Mac Catalyst](https://learn.microsoft.com/dotnet/ios/) directly from the [Sentry NuGet package](https://www.nuget.org/packages/Sentry).
+
+## Overview of the features
+
+- All the features of our main [.NET SDK](/platforms/dotnet), for your managed code
+- Native crash reporting for Apple platforms, leveraging our [Cocoa SDK](/platforms/apple) including:
+    - Automatically [attach screenshots to Native exceptions](/platforms/apple/guides/ios/configuration/options/#attach-screenshot)
+    - Detect [App Hangs](/platforms/apple/configuration/app-hangs/)
+    - [Automatic performance tracing](/platforms/apple/performance/)
+    - [Automatic breadcrumbs](/platforms/apple/enriching-events/breadcrumbs/#automatic-breadcrumbs)
+    - [Swizzling](/platforms/apple/configuration/swizzling/)
+- Automatic session tracking and [release health](/product/releases/)
+
+## Install
+
+Add the Sentry dependency to your .NET for iOS, macOS, and/or Mac Catalyst application:
+
+```shell {tabTitle:.NET Core CLI}
+dotnet add package Sentry -v {{@inject packages.version('sentry.dotnet') }}
+```
+
+```powershell {tabTitle:Package Manager}
+Install-Package Sentry -Version {{@inject packages.version('sentry.dotnet') }}
+```
+
+## Configure
+
+In your `AppDelegate.cs` file, call `SentrySdk.Init` in the `FinishedLaunching` event and include any options you would like to set. The `Dsn` is the only required parameter.
+
+
+```csharp
+[Register("AppDelegate")]
+public class AppDelegate : UIApplicationDelegate
+{
+    public override bool FinishedLaunching(UIApplication application, NSDictionary launchOptions)
+    {
+        // Init the Sentry SDK
+        SentrySdk.Init(options =>
+        {
+            options.Dsn = "___PUBLIC_DSN___";
+            options.SendDefaultPii = true; // adds the user's IP address automatically
+#if DEBUG
+            // Log debug information about the Sentry SDK
+            options.Debug = true;
+#endif
+
+            // All the native iOS SDK options are available below
+            // https://docs.sentry.io/platforms/apple/guides/ios/configuration/
+            // Enable Native iOS SDK App Hangs detection
+            options.Native.EnableAppHangTracking = true;
+
+            options.SetBeforeSend(evt =>
+            {
+                if (evt.Exception?.Message.Contains("Something you don't care want logged?") ?? false)
+                {
+                    return null; // return null to filter out event
+                }
+                // or add additional data
+                evt.SetTag("dotnet-iOS-Native-Before", "Hello World");
+                return evt;
+            });
+
+            options.OnCrashedLastRun = e =>
+            {
+                Console.WriteLine(e);
+            };
+        });
+    }
+}
+```
+
+### Options
+
+The .NET for iOS, macOS, and Mac Catalyst integration is part of [Sentry](/platforms/dotnet/). Please refer to the documentation for that package for information about platform agnostic options.
+
+## Verify
+
+This snippet includes an intentional error, so you can test that everything is working as soon as you set it up.
+
+<PlatformContent includePath="getting-started-verify" />

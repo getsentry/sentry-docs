@@ -1,0 +1,137 @@
+name: Codeowner assignment
+
+on: [pull_request]
+
+jobs:
+  codeowner_assignment:
+    name: Codeowner assignment
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/create-github-app-token@v2.0.6
+        id: token
+        with:
+          app-id: ${{ vars.CODEOWNER_ASSIGNMENT_GITHUB_APP_ID }}
+          private-key: ${{ secrets.CODEOWNER_ASSIGNMENT_PRI_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: |
+            sentry-docs
+
+      - name: Parse CODEOWNERS and assign reviewers
+        id: assign-reviewers
+        env:
+          PR_NUMBER: ${{ github.event.number }}
+          GH_TOKEN: ${{ steps.token.outputs.token }}
+        run: |
+          # locate CODEOWNERS file exists
+          if [[ -f .github/CODEOWNERS ]]; then
+            codeowner_path=".github/CODEOWNERS"
+          elif [[ -f CODEOWNERS ]]; then
+            codeowner_path="CODEOWNERS"
+          else
+            echo "CODEOWNERS file not found, skipping."
+            exit 0
+          fi
+
+          # Get changed files in the PR
+          CHANGED_FILES=$(gh pr view $PR_NUMBER --json files --jq '.files[].path')
+
+          echo "----------------------------------------"
+          echo "Changed files:"
+          echo "$CHANGED_FILES" | tr ' ' '\n' | sed 's/^/- /'
+          echo "----------------------------------------"
+          
+          # Get existing reviewers
+          # merge reqeusted teams and users into a single array
+          REQUESTED_REVIEWERS=$(gh pr view $PR_NUMBER --json reviewRequests --jq '[.reviewRequests[] | if .__typename == "Team" then .slug else .login end]')
+          echo "Requested reviewers:"
+          echo "$REQUESTED_REVIEWERS" | tr ' ' '\n' | sed 's/^/- /'
+          echo "----------------------------------------"
+
+          # Parse CODEOWNERS and find commented lines
+          # Add newline to the end of the file if it doesn't have one, otherwise sed will not read the last line
+          sed -i -e '$a\' $codeowner_path
+          
+          while read -r LINE; do
+            # Skip lines that are not commented, GitHub will take care of un-commented lines
+            if [[ ! "$LINE" =~ ^# ]]; then continue; fi
+
+            # Extract pattern and reviewer from the commented line
+            PATTERN=$(echo "$LINE" | sed -E 's/^#\s*([^@]+).*$/\1/' | xargs)
+            # Capture both individual users and GitHub teams reviewers that have "/" in the name
+            REVIEWERS=$(echo "$LINE" | grep -o "@[a-zA-Z0-9_-]\+\(/[a-zA-Z0-9_-]\+\)\?" | tr '\n' ' ' | xargs)
+
+            # Skip if no reviewers found
+            if [[ -z "$REVIEWERS" ]]; then
+              continue
+            fi
+
+            # Convert pattern to a regex for matching
+            REGEX_PATTERN=$(echo "$PATTERN" | sed -e 's/\./\\./g' -e 's/\*/.*/g' -e 's/\?/./g' -e 's|^/||')
+            
+            # Match changed files to the pattern
+            for FILE in $CHANGED_FILES; do
+              # For glob patterns(e.g. "**/"), use a different matching approach
+              if [[ "$PATTERN" == *"*"* ]]; then
+                # Special handling for **/ pattern
+                if [[ "$PATTERN" == "**/"* ]]; then
+                  # Get the filename part after **/
+                  FILENAME=${PATTERN#**/}
+                  # Match either the filename directly or with any path prefix
+                  if [[ "$FILE" == "$FILENAME" ]] || [[ "$FILE" == */"$FILENAME" ]]; then
+                    echo "File $FILE matches glob pattern $PATTERN"
+                    # Assign each reviewer
+                    for REVIEWER in $REVIEWERS; do
+                      # Remove @ symbol from reviewer name
+                      REVIEWER_NAME=${REVIEWER#@}
+                      if [[ "$REQUESTED_REVIEWERS" == *"$REVIEWER_NAME"* ]]; then
+                        echo " - $REVIEWER_NAME is already a requested reviewer, skipping"
+                      else
+                        echo " - Assigning $REVIEWER_NAME to review changes in $FILE"
+                        gh pr edit $PR_NUMBER --add-reviewer "$REVIEWER_NAME"
+                      fi
+                    done
+                  fi
+                else
+                  # Convert other glob patterns to regex for matching
+                  GLOB_PATTERN=$(echo "$PATTERN" | sed -e 's/\./\\./g' -e 's/\*/.*/g' -e 's/\?/./g')
+                  if [[ "$FILE" =~ $GLOB_PATTERN ]]; then
+                    echo "File $FILE matches glob pattern $PATTERN"
+                    # Assign each reviewer
+                    for REVIEWER in $REVIEWERS; do
+                      # Remove @ symbol from reviewer name
+                      REVIEWER_NAME=${REVIEWER#@}
+                      if [[ "$REQUESTED_REVIEWERS" == *"$REVIEWER_NAME"* ]]; then
+                        echo " - $REVIEWER_NAME is already a requested reviewer, skipping"
+                      else
+                        echo " - Assigning $REVIEWER_NAME to review changes in $FILE"
+                        gh pr edit $PR_NUMBER --add-reviewer "$REVIEWER_NAME"
+                      fi
+                    done
+                  fi
+                fi
+              else
+                # Original directory matching logic
+                if [[ "$FILE" == ${REGEX_PATTERN}* ]]; then
+                  echo "File $FILE matches pattern $PATTERN"
+                  # Assign each reviewer
+                  for REVIEWER in $REVIEWERS; do
+                    # Remove @ symbol from reviewer name
+                    REVIEWER_NAME=${REVIEWER#@}
+                    if [[ "$REQUESTED_REVIEWERS" == *"$REVIEWER_NAME"* ]]; then
+                      echo " - $REVIEWER_NAME is already a requested reviewer, skipping"
+                    else
+                      echo " - Assigning $REVIEWER_NAME to review changes in $FILE"
+                      gh pr edit $PR_NUMBER --add-reviewer "$REVIEWER_NAME"
+                    fi
+                  done
+                fi
+              fi
+            done
+          done < $codeowner_path
+

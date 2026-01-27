@@ -23,9 +23,370 @@ You can create authentication tokens within Sentry by [creating an internal inte
 
 ### User authentication tokens
 
-Some API endpoints require an authentication token that's associated with your user account, rather than an authentication token from an internal integration. These auth tokens can be created within Sentry on the "User settings" page (**User settings > User Auth Tokens**) and assigned specific scopes.
+Some API endpoints require an authentication token that's associated with your user account, rather than an authentication token from an internal integration. These auth tokens can be created within Sentry on the "User settings" page (**User settings > Personal Tokens**) and assigned specific scopes.
 
 The endpoints that require a user authentication token are specific to your user, such as [Retrieve an Organization](/api/organizations/retrieve-an-organization/).
+
+## OAuth2
+
+For third-party applications that need to access Sentry on behalf of users, Sentry supports OAuth2 with the authorization code grant type. This allows users to authorize your application without sharing their credentials.
+
+### Authorization Request
+
+Direct users to the authorization endpoint:
+
+```
+https://sentry.io/oauth/authorize/?client_id={CLIENT_ID}&response_type=code&scope={SCOPES}
+```
+
+**Parameters:**
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `client_id` | Yes | Your registered client ID |
+| `response_type` | Yes | Must be `code` |
+| `scope` | Yes | Space-separated list of [permissions](/api/permissions/) |
+| `redirect_uri` | No | Your callback URI (must match registered URI) |
+| `state` | No | Random string to prevent CSRF attacks |
+| `code_challenge` | Recommended | PKCE challenge (see below) |
+| `code_challenge_method` | Recommended | Must be `S256` |
+
+After the user approves, Sentry redirects to your callback URI with an authorization code:
+
+```
+https://your-app.com/callback?code={AUTHORIZATION_CODE}
+```
+
+### Token Exchange
+
+Exchange the authorization code for an access token:
+
+```bash
+curl -X POST https://sentry.io/oauth/token/ \
+  -d client_id={CLIENT_ID} \
+  -d client_secret={CLIENT_SECRET} \
+  -d grant_type=authorization_code \
+  -d code={AUTHORIZATION_CODE} \
+  -d code_verifier={CODE_VERIFIER}
+```
+
+The `code_verifier` parameter is required if you used PKCE in the authorization request.
+
+**Response:**
+```json
+{
+  "access_token": "{ACCESS_TOKEN}",
+  "refresh_token": "{REFRESH_TOKEN}",
+  "expires_in": 2591999,
+  "expires_at": "2024-11-27T23:20:21.054320Z",
+  "token_type": "bearer",
+  "scope": "org:read project:read",
+  "user": {
+    "id": "123",
+    "name": "Jane Doe",
+    "email": "jane@example.com"
+  }
+}
+```
+
+### Refreshing Tokens
+
+Access tokens expire after 30 days. Use the refresh token to obtain new tokens:
+
+```bash
+curl -X POST https://sentry.io/oauth/token/ \
+  -d client_id={CLIENT_ID} \
+  -d client_secret={CLIENT_SECRET} \
+  -d grant_type=refresh_token \
+  -d refresh_token={REFRESH_TOKEN}
+```
+
+### Using Access Tokens
+
+Include the access token in API requests using the Authorization header:
+
+```bash
+curl -H 'Authorization: Bearer {ACCESS_TOKEN}' \
+  https://sentry.io/api/0/organizations/
+```
+
+### Organization Scoping
+
+A Sentry user can belong to multiple organizations. The access token only provides access to the specific organization the user selected during the OAuth flow. The `/api/0/organizations/` endpoint will only return the connected organization.
+
+### Device Authorization Flow
+
+The device authorization grant ([RFC 8628](https://datatracker.ietf.org/doc/html/rfc8628)) enables applications on devices without a browser or with limited input capabilities to obtain authorization. This is ideal for CLI tools, CI/CD pipelines, Docker containers, and other headless environments where redirecting to a browser on the same device isn't practical.
+
+**How it works:** Your application requests a device code, displays a short user code to the user, and polls for authorization. The user visits Sentry in their browser (on any device), enters the code, and approves the request. Once approved, your application receives an access token.
+
+#### Step 1: Request Device Code
+
+Request a device code from the device authorization endpoint:
+
+```bash
+curl -X POST https://sentry.io/oauth/device/code/ \
+  -d client_id={CLIENT_ID} \
+  -d scope=org:read%20project:read
+```
+
+**Parameters:**
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `client_id` | Yes | Your registered client ID |
+| `scope` | No | Space-separated list of [permissions](/api/permissions/) |
+
+**Response:**
+```json
+{
+  "device_code": "a1b2c3d4e5f6...",
+  "user_code": "ABCD-EFGH",
+  "verification_uri": "https://sentry.io/oauth/device/",
+  "verification_uri_complete": "https://sentry.io/oauth/device/?user_code=ABCD-EFGH",
+  "expires_in": 600,
+  "interval": 5
+}
+```
+
+| Field | Description |
+|-------|-------------|
+| `device_code` | Secret code your application uses to poll for the token |
+| `user_code` | Short code the user enters to authorize (format: `XXXX-XXXX`) |
+| `verification_uri` | URL where the user should go to enter the code |
+| `verification_uri_complete` | URL with user code pre-filled (useful for QR codes or clickable links) |
+| `expires_in` | Seconds until the codes expire (default: 600 / 10 minutes) |
+| `interval` | Minimum seconds between polling requests (default: 5) |
+
+#### Step 2: Display Instructions to User
+
+Display the user code and verification URL to your user:
+
+```
+To authenticate, visit: https://sentry.io/oauth/device/
+Enter code: ABCD-EFGH
+```
+
+The user code uses an unambiguous character set (no 0/O, 1/I/L confusion) for easy entry.
+
+#### Step 3: Poll for Token
+
+While the user authorizes in their browser, poll the token endpoint:
+
+```bash
+curl -X POST https://sentry.io/oauth/token/ \
+  -d client_id={CLIENT_ID} \
+  -d device_code={DEVICE_CODE} \
+  -d grant_type=urn:ietf:params:oauth:grant-type:device_code
+```
+
+Poll at the `interval` specified in the device authorization response (default: 5 seconds). While waiting for the user, you'll receive:
+
+```json
+{
+  "error": "authorization_pending",
+  "error_description": "The authorization request is still pending."
+}
+```
+
+Continue polling until you receive a token or an error.
+
+#### Step 4: Receive Access Token
+
+Once the user approves, the token endpoint returns:
+
+```json
+{
+  "access_token": "{ACCESS_TOKEN}",
+  "refresh_token": "{REFRESH_TOKEN}",
+  "expires_in": 2591999,
+  "expires_at": "2024-11-27T23:20:21.054320Z",
+  "token_type": "bearer",
+  "scope": "org:read project:read",
+  "user": {
+    "id": "123",
+    "name": "Jane Doe",
+    "email": "jane@example.com"
+  }
+}
+```
+
+#### Device Flow Error Responses
+
+| Error | Description | Action |
+|-------|-------------|--------|
+| `authorization_pending` | User hasn't completed authorization yet | Continue polling |
+| `slow_down` | Polling too frequently | Increase interval by 5 seconds |
+| `access_denied` | User denied the authorization request | Stop polling, notify user |
+| `expired_token` | Device code has expired | Restart the flow from step 1 |
+
+#### Device Flow Example
+
+```python
+import time
+import requests
+
+CLIENT_ID = 'your-client-id'
+DEVICE_AUTH_URL = 'https://sentry.io/oauth/device/code/'
+TOKEN_URL = 'https://sentry.io/oauth/token/'
+
+def authenticate():
+    # Step 1: Request device code
+    response = requests.post(DEVICE_AUTH_URL, data={
+        'client_id': CLIENT_ID,
+        'scope': 'org:read project:read'
+    })
+    data = response.json()
+
+    device_code = data['device_code']
+    user_code = data['user_code']
+    verification_uri = data['verification_uri']
+    verification_uri_complete = data.get('verification_uri_complete')
+    interval = data.get('interval', 5)
+    expires_in = data['expires_in']
+
+    # Step 2: Display instructions
+    print(f"\nTo authenticate, visit: {verification_uri}")
+    print(f"Enter code: {user_code}")
+    if verification_uri_complete:
+        print(f"\nOr open this link directly: {verification_uri_complete}")
+    print()
+
+    # Step 3: Poll for token
+    deadline = time.time() + expires_in
+    while time.time() < deadline:
+        time.sleep(interval)
+
+        response = requests.post(TOKEN_URL, data={
+            'client_id': CLIENT_ID,
+            'device_code': device_code,
+            'grant_type': 'urn:ietf:params:oauth:grant-type:device_code'
+        })
+        result = response.json()
+
+        if 'access_token' in result:
+            # Step 4: Success
+            print("Authentication successful!")
+            return result['access_token'], result['refresh_token']
+
+        error = result.get('error')
+        if error == 'authorization_pending':
+            continue
+        elif error == 'slow_down':
+            interval += 5
+        elif error == 'access_denied':
+            raise Exception("User denied authorization")
+        elif error == 'expired_token':
+            raise Exception("Device code expired")
+        else:
+            raise Exception(f"Unexpected error: {error}")
+
+    raise Exception("Authorization timed out")
+
+if __name__ == '__main__':
+    access_token, refresh_token = authenticate()
+    print(f"Access token: {access_token[:20]}...")
+```
+
+### PKCE (Proof Key for Code Exchange)
+
+PKCE protects against authorization code interception attacks and is strongly recommended for all OAuth clients.
+
+**How it works:** For each authorization request, generate a unique random secret called the `code_verifier`. Create a `code_challenge` by hashing this verifier. The challenge is sent with the authorization request, while the original verifier is sent when exchanging the code for a token. Sentry verifies they match, ensuring the same client that started the flow is completing it.
+
+**Generating PKCE values (generate fresh for each authorization request):**
+
+```python
+import base64
+import hashlib
+import secrets
+
+# Generate a random code_verifier (43-128 URL-safe characters)
+code_verifier = secrets.token_urlsafe(64)
+
+# Create code_challenge by hashing the verifier with SHA256
+code_challenge = base64.urlsafe_b64encode(
+    hashlib.sha256(code_verifier.encode()).digest()
+).rstrip(b'=').decode()
+
+# Store code_verifier securely - you'll need it for the token exchange
+```
+
+### Error Handling
+
+| Status Code | Meaning | Action |
+|-------------|---------|--------|
+| 401 | Token expired or revoked | Refresh the token, or prompt user to reconnect |
+| 403 | Insufficient permissions | Request additional scopes or handle gracefully |
+
+### Example Implementation
+
+```python
+import base64
+import hashlib
+import secrets
+
+import requests
+from flask import Flask, redirect, request, session
+
+app = Flask(__name__)
+app.secret_key = 'your-secret-key'
+
+CLIENT_ID = 'your-client-id'
+CLIENT_SECRET = 'your-client-secret'
+REDIRECT_URI = 'https://your-app.com/callback'
+TOKEN_URL = 'https://sentry.io/oauth/token/'
+
+def generate_pkce_pair():
+    """Generate a code verifier and challenge for PKCE."""
+    code_verifier = secrets.token_urlsafe(64)
+    code_challenge = base64.urlsafe_b64encode(
+        hashlib.sha256(code_verifier.encode()).digest()
+    ).rstrip(b'=').decode()
+    return code_verifier, code_challenge
+
+@app.route('/connect')
+def connect():
+    code_verifier, code_challenge = generate_pkce_pair()
+    session['code_verifier'] = code_verifier
+
+    return redirect(
+        f"https://sentry.io/oauth/authorize/"
+        f"?client_id={CLIENT_ID}"
+        f"&response_type=code"
+        f"&scope=org:read%20project:read"
+        f"&redirect_uri={REDIRECT_URI}"
+        f"&code_challenge={code_challenge}"
+        f"&code_challenge_method=S256"
+    )
+
+@app.route('/callback')
+def callback():
+    code = request.args.get('code')
+    code_verifier = session.pop('code_verifier', None)
+
+    response = requests.post(TOKEN_URL, data={
+        "client_id": CLIENT_ID,
+        "client_secret": CLIENT_SECRET,
+        "grant_type": "authorization_code",
+        "code": code,
+        "code_verifier": code_verifier
+    })
+    tokens = response.json()
+
+    session['access_token'] = tokens['access_token']
+    session['refresh_token'] = tokens['refresh_token']
+    return "Connected!"
+
+def refresh_token():
+    response = requests.post(TOKEN_URL, data={
+        "client_id": CLIENT_ID,
+        "client_secret": CLIENT_SECRET,
+        "grant_type": "refresh_token",
+        "refresh_token": session['refresh_token']
+    })
+    tokens = response.json()
+    session['access_token'] = tokens['access_token']
+    session['refresh_token'] = tokens['refresh_token']
+```
 
 ## DSN Authentication
 

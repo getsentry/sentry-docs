@@ -78,6 +78,7 @@ import JavascriptSVG from 'platformicons/svg/javascript.svg';
 import KoaSVG from 'platformicons/svg/koa.svg';
 import KotlinSVG from 'platformicons/svg/kotlin.svg';
 import LangchainSVG from 'platformicons/svg/langchain.svg';
+import LanggraphSVG from 'platformicons/svg/langgraph.svg';
 import LaravelSVG from 'platformicons/svg/laravel.svg';
 import LinuxSVG from 'platformicons/svg/linux.svg';
 import LitestarSVG from 'platformicons/svg/litestar.svg';
@@ -94,6 +95,7 @@ import NuxtSVG from 'platformicons/svg/nuxt.svg';
 import OpenaiSVG from 'platformicons/svg/openai.svg';
 import PerlSVG from 'platformicons/svg/perl.svg';
 import PhpSVG from 'platformicons/svg/php.svg';
+import PlaystationSVG from 'platformicons/svg/playstation.svg';
 import PostgresqlSVG from 'platformicons/svg/postgresql.svg';
 import PowershellSVG from 'platformicons/svg/powershell.svg';
 import PyramidSVG from 'platformicons/svg/pyramid.svg';
@@ -128,7 +130,9 @@ import SvelteSVG from 'platformicons/svg/svelte.svg';
 import SwiftSVG from 'platformicons/svg/swift.svg';
 import SymfonySVG from 'platformicons/svg/symfony.svg';
 import TanstackSVG from 'platformicons/svg/tanstack.svg';
+import TokioSVG from 'platformicons/svg/tokio.svg';
 import TornadoSVG from 'platformicons/svg/tornado.svg';
+import TracingSVG from 'platformicons/svg/tracing.svg';
 import TrytonSVG from 'platformicons/svg/tryton.svg';
 import UnitySVG from 'platformicons/svg/unity.svg';
 import UnoSVG from 'platformicons/svg/uno.svg';
@@ -138,6 +142,7 @@ import VueSVG from 'platformicons/svg/vue.svg';
 import WasmSVG from 'platformicons/svg/wasm.svg';
 import WindowsSVG from 'platformicons/svg/windows.svg';
 import XamarinSVG from 'platformicons/svg/xamarin.svg';
+import XboxSVG from 'platformicons/svg/xbox.svg';
 import ActixSVGLarge from 'platformicons/svg_80x80/actix.svg';
 import AiohttpSVGLarge from 'platformicons/svg_80x80/aiohttp.svg';
 import AndroidSVGLarge from 'platformicons/svg_80x80/android.svg';
@@ -218,6 +223,7 @@ import JavascriptSVGLarge from 'platformicons/svg_80x80/javascript.svg';
 import KoaSVGLarge from 'platformicons/svg_80x80/koa.svg';
 import KotlinSVGLarge from 'platformicons/svg_80x80/kotlin.svg';
 import LangchainSVGLarge from 'platformicons/svg_80x80/langchain.svg';
+import LanggraphSVGLarge from 'platformicons/svg_80x80/langgraph.svg';
 import LaravelSVGLarge from 'platformicons/svg_80x80/laravel.svg';
 import LinuxSVGLarge from 'platformicons/svg_80x80/linux.svg';
 import LitestarSVGLarge from 'platformicons/svg_80x80/litestar.svg';
@@ -234,6 +240,7 @@ import NuxtSVGLarge from 'platformicons/svg_80x80/nuxt.svg';
 import OpenaiSVGLarge from 'platformicons/svg_80x80/openai.svg';
 import PerlSVGLarge from 'platformicons/svg_80x80/perl.svg';
 import PhpSVGLarge from 'platformicons/svg_80x80/php.svg';
+import PlaystationSVGLarge from 'platformicons/svg_80x80/playstation.svg';
 import PostgresqlSVGLarge from 'platformicons/svg_80x80/postgresql.svg';
 import PowershellSVGLarge from 'platformicons/svg_80x80/powershell.svg';
 import PyramidSVGLarge from 'platformicons/svg_80x80/pyramid.svg';
@@ -269,7 +276,9 @@ import SvelteSVGLarge from 'platformicons/svg_80x80/svelte.svg';
 import SwiftSVGLarge from 'platformicons/svg_80x80/swift.svg';
 import SymfonySVGLarge from 'platformicons/svg_80x80/symfony.svg';
 import TanstackSVGLarge from 'platformicons/svg_80x80/tanstack.svg';
+import TokioSVGLarge from 'platformicons/svg_80x80/tokio.svg';
 import TornadoSVGLarge from 'platformicons/svg_80x80/tornado.svg';
+import TracingSVGLarge from 'platformicons/svg_80x80/tracing.svg';
 import TrytonSVGLarge from 'platformicons/svg_80x80/tryton.svg';
 import UnitySVGLarge from 'platformicons/svg_80x80/unity.svg';
 import UnoSVGLarge from 'platformicons/svg_80x80/uno.svg';
@@ -279,6 +288,7 @@ import VueSVGLarge from 'platformicons/svg_80x80/vue.svg';
 import WasmSVGLarge from 'platformicons/svg_80x80/wasm.svg';
 import WindowsSVGLarge from 'platformicons/svg_80x80/windows.svg';
 import XamarinSVGLarge from 'platformicons/svg_80x80/xamarin.svg';
+import XboxSVGLarge from 'platformicons/svg_80x80/xbox.svg';
 
 const formatToSVG = {
   HTML5: {
@@ -341,6 +351,10 @@ const formatToSVG = {
   awslambda: {
     sm: AwslambdaSVG,
     lg: AwslambdaSVGLarge,
+  },
+  axum: {
+    sm: TokioSVG,
+    lg: TokioSVGLarge,
   },
   'azure-functions': {
     sm: AzurefunctionsSVG,
@@ -602,6 +616,10 @@ const formatToSVG = {
     sm: LangchainSVG,
     lg: LangchainSVGLarge,
   },
+  langgraph: {
+    sm: LanggraphSVG,
+    lg: LanggraphSVGLarge,
+  },
   laravel: {
     sm: LaravelSVG,
     lg: LaravelSVGLarge,
@@ -665,6 +683,10 @@ const formatToSVG = {
   php: {
     sm: PhpSVG,
     lg: PhpSVGLarge,
+  },
+  playstation: {
+    sm: PlaystationSVG,
+    lg: PlaystationSVGLarge,
   },
   postgresql: {
     sm: PostgresqlSVG,
@@ -811,6 +833,10 @@ const formatToSVG = {
     sm: TornadoSVG,
     lg: TornadoSVGLarge,
   },
+  tracing: {
+    sm: TracingSVG,
+    lg: TracingSVGLarge,
+  },
   tryton: {
     sm: TrytonSVG,
     lg: TrytonSVGLarge,
@@ -846,6 +872,10 @@ const formatToSVG = {
   xamarin: {
     sm: XamarinSVG,
     lg: XamarinSVGLarge,
+  },
+  xbox: {
+    sm: XboxSVG,
+    lg: XboxSVGLarge,
   },
 };
 
@@ -951,6 +981,7 @@ export const PLATFORM_TO_ICON = {
   kotlin: 'kotlin',
   'kotlin-android': 'android',
   langchain: 'langchain',
+  langgraph: 'langgraph',
   linux: 'linux',
   native: 'nativec',
   'native-qt': 'qt',
@@ -963,6 +994,7 @@ export const PLATFORM_TO_ICON = {
   'php-monolog': 'php',
   'php-symfony2': 'symfony',
   'php-symfony': 'symfony',
+  playstation: 'playstation',
   python: 'python',
   'python-aiohttp': 'aiohttp',
   'python-airflow': 'apache-airflow',
@@ -1020,6 +1052,8 @@ export const PLATFORM_TO_ICON = {
   'ruby-sinatra': 'sinatra',
   rust: 'rust',
   'rust-actix-web': 'actix',
+  'rust-tracing': 'tracing',
+  'rust-axum': 'axum',
   scala: 'scala',
   stride3d: 'stride3d',
   sql: 'sql',
@@ -1032,6 +1066,7 @@ export const PLATFORM_TO_ICON = {
   unrealengine: 'unreal',
   visualbasic: 'visual-basic',
   windows: 'windows',
+  xbox: 'xbox',
   // Don't add new platforms down here!
   // Please add them where they belong alphabetically
 } as const;

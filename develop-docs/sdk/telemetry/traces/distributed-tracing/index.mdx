@@ -6,18 +6,24 @@ This document describes how an SDK should propagate information between differen
 
 For an overview see [Distributed Tracing](https://docs.sentry.io/product/performance/distributed-tracing/) in the product docs.
 
-Sentry uses three containers to hold trace information [`sentry-trace`](/sdk/performance/#header-sentry-trace), [`traceparent`](/sdk/performance/#header-traceparent) and [`baggage`](/sdk/performance/dynamic-sampling-context/#baggage-header).
+Sentry uses three containers to hold trace information [`sentry-trace`](/sdk/performance/#header-sentry-trace), [`baggage`](/sdk/performance/dynamic-sampling-context/#baggage-header) and optionally [`traceparent`](/sdk/performance/distributed-tracing/#w3c-trace-context-header).
 
 With these containers you can propagate a trace to a down-stream service by either:
-- adding `sentry-trace`, `traceparent` and `baggage` HTTP headers (when making outgoing HTTP requests),
-- adding `sentry-trace`, `traceparent` and `baggage` as meta data (when putting tasks into a queue, details are specific to the queue you want to support), or
-- setting environment variables (when calling another process). In this case the env variables should be called `SENTRY_TRACE`, `SENTRY_TRACEPARENT` and `SENTRY_BAGGAGE`.
+- adding `sentry-trace` and `baggage` HTTP headers (when making outgoing HTTP requests),
+- adding `sentry-trace` and `baggage` as meta data (when putting tasks into a queue, details are specific to the queue you want to support), or
+- setting environment variables (when calling another process). In this case the env variables should be called `SENTRY_TRACE` and `SENTRY_BAGGAGE`.
 
 The SDK running in the receiving service needs to make sure to pick up incoming trace information by
-- reading `sentry-trace`, `traceparent` and `baggage` headers for each incoming HTTP request,
-- reading `sentry-trace`, `traceparent` and `baggage` meta data when retrieving an item from a queue, or
-- reading the environment variables `SENTRY_TRACE`, `SENTRY_TRACEPARENT` and `SENTRY_BAGGAGE` on startup.
-
-In case both `sentry-trace` and `traceparent` are present, `sentry-trace` takes precedence.
+- reading `sentry-trace` and `baggage` headers for each incoming HTTP request,
+- reading `sentry-trace` and `baggage` meta data when retrieving an item from a queue, or
+- reading the environment variables `SENTRY_TRACE` and `SENTRY_BAGGAGE` on startup.
 
 This trace information should be stored in the "propagation context" of the current scope. This makes sure that all telemetry that is emitted from the receiving service to Sentry will include the correct trace information.
+
+## W3C Trace Context Header
+
+To interoperate with OpenTelemetry (OTel) services, SDKs can optionally send the W3C Trace Context `traceparent` HTTP header on outgoing requests in addition to Sentry’s own `sentry-trace` and `baggage`. This enables traces originating from a Sentry SDK to be continued by components that only use OTel/W3C propagation.
+
+The `traceparent` header must only be sent when [`propagateTraceparent`](/sdk/telemetry/traces/#propagatetraceparent) is `true` and the request matches `tracePropagationTargets` (same condition as for `sentry-trace`/`baggage`).
+
+The full spec is available in the [W3C Trace Context](https://www.w3.org/TR/trace-context/) document.

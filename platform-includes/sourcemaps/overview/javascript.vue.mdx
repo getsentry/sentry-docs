@@ -39,9 +39,9 @@ pnpm add @sentry/vite-plugin --save-dev
 
 Learn more about configuring the plugin in our [Sentry Vite Plugin documentation](https://www.npmjs.com/package/@sentry/vite-plugin).
 
-To upload source maps you have to configure an [Organization Auth Token](https://sentry.io/orgredirect/organizations/:orgslug/settings/auth-tokens/).
+To upload source maps you have to configure an [Organization Token](https://sentry.io/orgredirect/organizations/:orgslug/settings/auth-tokens/).
 
-Alternatively, you can also use a [User Auth Token](https://sentry.io/orgredirect/organizations/:orgslug/settings/account/api/auth-tokens/), with the "Project: Read & Write" and "Release: Admin" permissions.
+Alternatively, you can also use a [Personal Token](https://sentry.io/orgredirect/organizations/:orgslug/settings/account/api/auth-tokens/), with the "Project: Read & Write" and "Release: Admin" permissions.
 
 Auth tokens can be passed to the plugin explicitly with the `authToken` option, with a `SENTRY_AUTH_TOKEN` environment variable, or with a `.env.sentry-build-plugin` file in the working directory when building your project.
 You likely want to add the auth token as an environment variable to your CI/CD environment.
@@ -63,23 +63,29 @@ import { sentryVitePlugin } from "@sentry/vite-plugin";
 // https://vitejs.dev/config/
 export default defineConfig({
   build: {
-    sourcemap: true, // Source map generation must be turned on
+    sourcemap: "hidden", // Source map generation must be turned on
   },
   plugins: [
     vue(),
 
-    // Put the Sentry vite plugin after all other plugins
+    // Put the Sentry Vite plugin after all other plugins
     sentryVitePlugin({
       org: "___ORG_SLUG___",
       project: "___PROJECT_SLUG___",
       authToken: process.env.SENTRY_AUTH_TOKEN,
+
+      sourcemaps: {
+        // As you're enabling client source maps, you probably want to delete them after they're uploaded to Sentry.
+        // Set the appropriate glob pattern for your output folder - some glob examples below:
+        filesToDeleteAfterUpload: ["./**/*.map", ".*/**/public/**/*.map", "./dist/**/client/**/*.map"]
+      }
     }),
   ],
 });
 ```
 
-<Alert>
-  Generating sourcemaps may expose them to the public, potentially causing your
+<Alert level="warning">
+  Generating source maps **may expose them to the public**, potentially causing your
   source code to be leaked. You can prevent this by configuring your server to deny access to `.js.map` files, or by
   using [Sentry Vite Plugin's
   `sourcemaps.filesToDeleteAfterUpload`](https://www.npmjs.com/package/@sentry/vite-plugin#sourcemapsfilestodeleteafterupload)
