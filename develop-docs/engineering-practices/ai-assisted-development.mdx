@@ -1,0 +1,148 @@
+---
+title: AI-Assisted Development
+description: Best practices for using AI coding assistants at Sentry.
+sidebar_order: 25
+---
+
+This guide covers techniques for getting the most out of AI coding assistants like [Claude Code](https://docs.anthropic.com/en/docs/claude-code), [Cursor](https://docs.cursor.com/), and similar tools.
+
+## The Basics
+
+AI assistants have broad knowledge but no inherent context about your codebase. They're good at pattern-matching, but they need direction and review. There is a skill to using them.
+
+**What they're good at:** Boilerplate code, refactoring, finding patterns across files, explaining unfamiliar code, writing tests, catching common bugs, and tedious multi-file changes.
+
+**What they struggle with:** Novel architecture decisions, understanding implicit business logic, knowing when _not_ to change something, and anything requiring context they can't see.
+
+Luckily for us, software engineering is full of largely mechanical boilerplate changes that can make great use of agents. That said, **always fully review agent changes before merging**. Pay special attention to tests, where agents tend to write assertions that pass rather than assertions that are correct.
+
+## Start With a Plan
+
+The most effective workflow is to have the AI create a plan before writing any code. Describe the task with any constraints, let the AI explore the codebase and propose an approach, then iterate on the plan until it meets your criteria. Once the plan is solid, have the AI implement it.
+
+Most AI coding tools have a native "plan mode" or "agent mode" that enforces this workflow. Use it!
+
+**Example workflow:**
+
+```
+I need to add a new API endpoint POST /api/projects/{id}/archive
+that archives a project and all its associated data. This should follow
+standard API route conventions and have appropriate testing. Follow the
+POST /api/projects/{id}/blah endpoint as an example. Archiving a project
+could have many downstream side effects and bugs, can you please also
+analyze any potential risks that could happen in other parts of our product
+from using this feature.
+```
+
+After reviewing the proposed plan:
+
+```
+The plan looks good, but we also need to revoke API keys
+when archiving. Update the plan.
+```
+
+The goal is to allow the agent to work independently for as long as possible without needing your input.
+
+## Context Files
+
+Most AI tools support project-level context files that provide instructions and codebase knowledge:
+
+| Tool           | Context File                      | Docs                                                                                                                      |
+| -------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Claude Code    | `CLAUDE.md`                       | [docs](https://docs.anthropic.com/en/docs/claude-code/memory)                                                             |
+| Cursor         | `.cursorrules`                    | [docs](https://docs.cursor.com/context/rules-for-ai)                                                                      |
+| GitHub Copilot | `.github/copilot-instructions.md` | [docs](https://docs.github.com/en/copilot/customizing-copilot/adding-repository-custom-instructions-for-github-copilot) |
+
+These files can specify coding conventions, architecture decisions, and project-specific guidance. Root-level files are always included, while files in subdirectories are loaded when the AI accesses that directory. Keep them concise and relevant to their scope.
+
+These files have already been added to our main repos but are by no means complete, please contribute to them!
+
+## Extending AI Tools
+
+There are two main ways to extend AI coding tools. **Skills** are prompt templates that teach the AI how to perform specific tasks like following commit conventions. They run inside the AI's context. **MCP (Model Context Protocol)** connects the AI to external services and data sources, providing tools the AI can call.
+
+### Sentry Skills
+
+[Sentry Skills](https://github.com/getsentry/skills) are available for Claude Code users:
+
+| Skill                    | Description                                              |
+| ------------------------ | -------------------------------------------------------- |
+| `/commit`                | Create commits following Sentry conventions              |
+| `/create-pr`             | Create pull requests with proper formatting              |
+| `/code-review`           | Review code against Sentry practices                     |
+| `/find-bugs`             | Find bugs and security vulnerabilities in branch changes |
+| `/iterate-pr`            | Iterate on a PR until CI passes                          |
+| `/claude-settings-audit` | Generate recommended Claude Code settings for a repo     |
+| `/brand-guidelines`      | Write copy following Sentry brand guidelines             |
+| `/doc-coauthoring`       | Structured workflow for co-authoring docs and specs      |
+
+Install with:
+
+```bash
+claude plugin marketplace add getsentry/skills
+claude plugin install sentry-skills@sentry-skills
+```
+
+See the [Claude Code skills documentation](https://docs.anthropic.com/en/docs/claude-code/skills) for more on how skills work.
+
+### MCP Tools
+
+[Model Context Protocol](https://modelcontextprotocol.io/) is an open standard for connecting AI tools to external systems (think USB-C for AI). While skills teach the AI _how_ to do something, MCP gives it _access_ to things it otherwise couldn't reach: databases, APIs, external services, and the ability to take actions like creating tickets or sending messages.
+
+Why MCP instead of raw APIs? MCP provides a standardized interface the AI already understands, so there's no need to explain authentication, endpoints, or response formats. The AI just has tools available and knows how to use them.
+
+For example, with the Sentry MCP server configured, you can ask your AI assistant to "find the most common errors in the billing service this week" and it will query Sentry directly.
+
+MCP works across tools that support it, including Claude Code and Cursor. See the [MCP documentation](https://modelcontextprotocol.io/docs) for setup and available servers.
+
+### Subagents
+
+Subagents are child agents spawned to handle specific tasks in parallel. They each run in their own context window and return a summary to the parent agent. General-purpose and Plan agents inherit the full parent conversation context, while Explore agents start fresh with no prior context (useful for independent search tasks).
+
+This isolation keeps your main conversation focused. A subagent can read thousands of lines of code, but only returns a concise summary, so your parent context stays clean. Use subagents when searching multiple code paths in parallel, running independent operations simultaneously, or doing large refactors across many files.
+
+See the [Claude Code subagents documentation](https://code.claude.com/docs/en/sub-agents) for details.
+
+## Working in Parallel
+
+The goal is to run multiple AI sessions simultaneously with minimal interruption. A few techniques help achieve this.
+
+### Git Worktrees
+
+[Git worktrees](https://git-scm.com/docs/git-worktree) let you check out multiple branches in separate directories, each with its own Claude session. While one agent refactors authentication, another can build an unrelated feature without conflicts or context pollution.
+
+```bash
+git worktree add ../myrepo-feature-x feature-x
+cd ../myrepo-feature-x
+claude
+```
+
+Keep worktrees isolated: one branch per worktree, never develop directly in main. For short tasks (under 10 minutes), the setup overhead may not be worth it.
+
+### Pre-approve Permissions
+
+Every permission prompt interrupts your flow. Configure allowed tools and commands in your project's settings to let agents work autonomously. In Claude Code, use `/allowed-tools` to see current permissions and `claude config set` to add new ones.
+
+### Multi-repo Tasks
+
+When a task spans multiple repositories, use `/add-dir` in Claude Code to add additional directories to the session context. The agent can then read and edit files across repos.
+
+### Managing Context
+
+Long sessions accumulate irrelevant context that can degrade performance. Use `/clear` between unrelated tasks to reset the context window. Use `/compact` to summarize and condense the current conversation. Give sessions descriptive names so you can `/resume` them later.
+
+### Todo Lists
+
+For complex multi-step tasks, ask the agent to maintain a todo list. This helps it track progress, and you can review the list to course-correct before it goes too far in the wrong direction. Many agents will do this automatically in certain situations but sometimes it can't hurt to ask!
+
+### Refinement Passes
+
+Agents, like humans, often need multiple passes to polish code. After the initial implementation, use skills like `/code-simplifier` to clean up verbose or overly defensive patterns. Think of it as a code review step before your actual code review to catch the obvious issues before opening a PR.
+
+### Let the Agent Fetch Context
+
+Instead of copying and pasting error messages, give the agent a PR or issue URL and let it fetch the details itself. It can read build failures, status check logs, and PR comments directly using the `gh` CLI. This saves you time and ensures the agent sees the full context.
+
+### Enable Notifications
+
+When running multiple sessions, enable terminal notifications so you know when an agent is waiting for input. This lets you context-switch to other work while agents run, without constantly checking back.
