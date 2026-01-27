@@ -1,6 +1,6 @@
 ---
-title: Capture App Start Errors (v8+)
-sidebar_order: 3
+title: Capture App Start Errors
+sidebar_order: 50
 description: "Learn how to capture app start errors and crashes that occur before JavaScript loads using native initialization."
 ---
 
@@ -62,27 +62,6 @@ class MainApplication : Application(), ReactApplication {
 }
 ```
 
-You can also provide additional configuration options:
-
-```kotlin {filename:android/app/src/main/java/.../MainApplication.kt}
-import io.sentry.react.RNSentrySDK
-import io.sentry.android.core.SentryAndroidOptions
-
-class MainApplication : Application(), ReactApplication {
-    override fun onCreate() {
-        super.onCreate()
-        RNSentrySDK.init(this) { options ->
-            // Additional configuration that can't be serialized in JSON
-            options.beforeSend = { event, hint ->
-                // Custom beforeSend logic
-                event
-            }
-        }
-        // ... rest of your initialization code
-    }
-}
-```
-
 ## iOS Setup
 
 Initialize Sentry in your `AppDelegate`:
@@ -96,29 +75,6 @@ Initialize Sentry in your `AppDelegate`:
     didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
     [RNSentrySDK start];
-    return [super application:application didFinishLaunchingWithOptions:launchOptions];
-}
-
-@end
-```
-
-You can also provide additional configuration options:
-
-```objective-c {filename:ios/YourApp/AppDelegate.mm}
-#import <RNSentry/RNSentry.h>
-
-@implementation AppDelegate
-
-- (BOOL)application:(UIApplication *)application
-    didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
-{
-    [RNSentrySDK startWithConfigureOptions:^(SentryOptions *options) {
-        // Additional configuration that can't be serialized in JSON
-        options.beforeSend = ^SentryEvent*(SentryEvent *event, SentryHint *hint) {
-            // Custom beforeSend logic
-            return event;
-        };
-    }];
     return [super application:application didFinishLaunchingWithOptions:launchOptions];
 }
 
