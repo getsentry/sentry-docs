@@ -1,11 +1,9 @@
 ---
 title: LangChain
-description: "Learn about using Sentry for LangChain."
+description: "Adds instrumentation for LangChain."
 ---
 
-This integration connects Sentry with [LangChain](https://github.com/langchain-ai/langchain) in Python.
-
-Once you've installed this SDK, you can use Sentry AI Agents Monitoring, a Sentry dashboard that helps you understand what's going on with your AI requests. Sentry AI Monitoring will automatically collect information about prompts, tools, tokens, and models. Learn more about the [AI Agents Dashboard](/product/insights/ai/agents).
+This integration connects Sentry with [LangChain](https://github.com/langchain-ai/langchain) to automatically capture spans for AI agent interactions. Data shows up in the [AI Agents Dashboard](/product/insights/ai/agents).
 
 ## Install
 
@@ -153,42 +151,42 @@ After running this script, the resulting data should show up in the `"AI Spans"`
 
 It may take a couple of moments for the data to appear in [sentry.io](https://sentry.io).
 
-## Behavior
+## Supported Operations
 
-- The LangChain integration will connect Sentry with all supported LangChain methods automatically.
+The integration automatically captures spans for:
 
-- All exceptions are reported.
-
-- Sentry considers LLM and tokenizer inputs/outputs as PII (Personally identifiable information) and doesn't include PII data by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False` as shown in the [Options section](#options) below.
+- Chat model invocations
+- LLM pipeline executions
+- Chain invocations
+- Tool executions
 
 ## Options
 
-By adding `LangchainIntegration` to your `sentry_sdk.init()` call explicitly, you can set options for `LangchainIntegration` to change its behavior:
+Configure the LangChain integration by adding `LangchainIntegration` to your `sentry_sdk.init()` call:
 
 ```python
 import sentry_sdk
 from sentry_sdk.integrations.langchain import LangchainIntegration
 
 sentry_sdk.init(
-    # ...
-    # Add data like inputs and responses;
-    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    dsn="___PUBLIC_DSN___",
     send_default_pii=True,
     integrations=[
         LangchainIntegration(
-            include_prompts=False,  # LLM inputs/outputs will be not sent to Sentry, despite send_default_pii=True
+            include_prompts=True,
+            # See below for all available options
         ),
     ],
 )
 ```
 
-You can pass the following keyword arguments to `LangchainIntegration()`:
+### `include_prompts`
 
-- `include_prompts`
+_Type: `boolean`_
 
-  Whether LLM and tokenizer inputs and outputs should be sent to Sentry. Sentry considers this data personal identifiable data (PII) by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False`.
+Records inputs and outputs from LLM calls (prompts, messages, responses).
 
-  The default is `True`.
+Defaults to `True` if `send_default_pii` is `True`.
 
 ## Supported Versions
 

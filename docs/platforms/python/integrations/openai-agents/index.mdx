@@ -1,20 +1,15 @@
 ---
 title: OpenAI Agents
-description: "Learn about using Sentry for OpenAI Agents SDK."
+description: "Adds instrumentation for the OpenAI Agents SDK."
 ---
 
 <Alert title="Beta">
 
-The support for **OpenAI Agents SDK** is in its beta phase. Please test locally before using in production.
+The support for **OpenAI Agents SDK** is in beta. Test locally before using in production.
 
 </Alert>
 
-This integration connects Sentry with the [OpenAI Python SDK](https://openai.github.io/openai-agents-python/).
-The integration has been confirmed to work with OpenAI Agents version 0.0.19.
-
-Once you've installed this SDK, you can use [Sentry AI Agents Insights](https://sentry.io/orgredirect/organizations/:orgslug/insights/ai/agents/), a Sentry dashboard that helps you understand what's going on with your AI agents.
-
-Sentry AI Agents monitoring will automatically collect information about agents, tools, prompts, tokens, and models.
+This integration connects Sentry with the [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) to automatically capture spans for AI agent interactions. Data shows up in the [AI Agents Dashboard](/product/insights/ai/agents).
 
 ## Install
 
@@ -81,45 +76,42 @@ if __name__ == "__main__":
 
 It may take a couple of moments for the data to appear in [sentry.io](https://sentry.io).
 
-## Behavior
+## Supported Operations
 
-Data on the following will be collected:
+The integration automatically captures spans for:
 
-- AI agents invocations
-- execution of tools
-- number of input and output tokens used
-- LLM models usage
-
-Sentry considers LLM and tool inputs/outputs as PII and doesn't include PII data by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False` as shown in the [Options section](#options) below.
+- Agent invocations
+- Tool executions
+- Token usage (input and output)
+- Model usage
 
 ## Options
 
-By adding `OpenAIAgentsIntegration` to your `sentry_sdk.init()` call explicitly, you can set options for `OpenAIAgentsIntegration` to change its behavior:
+Configure the OpenAI Agents integration by adding `OpenAIAgentsIntegration` to your `sentry_sdk.init()` call:
 
 ```python
 import sentry_sdk
 from sentry_sdk.integrations.openai_agents import OpenAIAgentsIntegration
 
 sentry_sdk.init(
-    # ...
-    # Add data like inputs and responses;
-    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    dsn="___PUBLIC_DSN___",
     send_default_pii=True,
     integrations=[
         OpenAIAgentsIntegration(
-            include_prompts=False,  # LLM and tool inputs/outputs will be not sent to Sentry, despite send_default_pii=True
+            include_prompts=True,
+            # See below for all available options
         ),
     ],
 )
 ```
 
-You can pass the following keyword arguments to `OpenAIAgentsIntegration()`:
+### `include_prompts`
 
-- `include_prompts`:
+_Type: `boolean`_
 
-  Whether LLM and tool inputs and outputs should be sent to Sentry. Sentry considers this data personal identifiable data (PII) by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False`.
+Records inputs and outputs from LLM and tool calls (prompts, messages, responses).
 
-  The default is `True`.
+Defaults to `True` if `send_default_pii` is `True`.
 
 ## Supported Versions
 

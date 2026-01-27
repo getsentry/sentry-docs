@@ -1,20 +1,15 @@
 ---
 title: Pydantic AI
-description: "Learn about using Sentry for Pydantic AI."
+description: "Adds instrumentation for Pydantic AI."
 ---
 
 <Alert title="Beta">
 
-The support for **Pydantic AI** is in beta. Please test locally before using in production.
+The support for **Pydantic AI** is in beta. Test locally before using in production.
 
 </Alert>
 
-This integration connects Sentry with the [Pydantic AI](https://ai.pydantic.dev/) library.
-The integration has been confirmed to work with Pydantic AI version 1.0.0+.
-
-Once you've installed this integration, you can use [Sentry AI Agents Insights](https://sentry.io/orgredirect/organizations/:orgslug/insights/ai/agents/), a Sentry dashboard that helps you understand what's going on with your AI agents.
-
-Sentry AI Agents monitoring will automatically collect information about agents, tools, prompts, tokens, and models.
+This integration connects Sentry with [Pydantic AI](https://ai.pydantic.dev/) to automatically capture spans for AI agent interactions. Data shows up in the [AI Agents Dashboard](/product/insights/ai/agents).
 
 ## Install
 
@@ -200,53 +195,51 @@ if __name__ == "__main__":
 
 It may take a couple of moments for the data to appear in [sentry.io](https://sentry.io).
 
-## Behavior
+## Supported Operations
 
-Data on the following will be collected:
+The integration automatically captures spans for:
 
-- AI agents invocations
-- execution of tools
-- number of input and output tokens used
-- LLM models usage
-- model settings (temperature, max_tokens, etc.)
-
-Sentry considers LLM and tool inputs/outputs as PII and doesn't include PII data by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False` as shown in the Options section below.
+- Agent invocations
+- Tool executions
+- Token usage (input and output)
+- Model usage and settings (temperature, max_tokens, etc.)
 
 ## Options
 
-By adding `PydanticAIIntegration` to your `sentry_sdk.init()` call explicitly, you can set options for `PydanticAIIntegration` to change its behavior:
+Configure the Pydantic AI integration by adding `PydanticAIIntegration` to your `sentry_sdk.init()` call:
 
 ```python
 import sentry_sdk
 from sentry_sdk.integrations.pydantic_ai import PydanticAIIntegration
 
 sentry_sdk.init(
-    # ...
-    # Add data like inputs and responses;
-    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    dsn="___PUBLIC_DSN___",
     send_default_pii=True,
     integrations=[
         PydanticAIIntegration(
-            include_prompts=False,  # LLM and tool inputs/outputs will be not sent to Sentry, despite send_default_pii=True
+            include_prompts=True,
+            handled_tool_call_exceptions=True,
+            # See below for all available options
         ),
     ],
 )
 ```
 
-You can pass the following keyword arguments to `PydanticAIIntegration()`:
+### `include_prompts`
 
-- `include_prompts`:
+_Type: `boolean`_
 
-  Whether LLM and tool inputs and outputs should be sent to Sentry. Sentry considers this data personal identifiable data (PII) by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False`.
+Records inputs and outputs from LLM and tool calls (prompts, messages, responses).
 
-  The default is `True`.
+Defaults to `True` if `send_default_pii` is `True`.
 
-- `handled_tool_call_exceptions`:
+### `handled_tool_call_exceptions`
 
-  Option to capture tool call exceptions that Pydantic AI prevents from bubbling up. These include validation errors when an agent is configured to
-  retry tool calls. All additional tool call exceptions reported when this option is `True` are handled errors in Sentry. This option has no effect on exceptions that are not handled by Pydantic AI.
+_Type: `boolean`_
 
-  The default is `True`.
+Captures tool call exceptions that Pydantic AI handles internally (such as validation errors during retries). These are reported as handled errors in Sentry.
+
+Defaults to `True`.
 
 ## Supported Versions
 

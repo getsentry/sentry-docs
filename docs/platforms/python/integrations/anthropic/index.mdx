@@ -1,13 +1,9 @@
 ---
 title: Anthropic
-description: "Learn about using Sentry for Anthropic."
+description: "Adds instrumentation for the Anthropic Python SDK."
 ---
 
-This integration connects Sentry with the [Anthropic Python SDK](https://github.com/anthropics/anthropic-sdk-python).
-
-Once you've installed this SDK, you can use the Sentry AI Agents Monitoring, a Sentry dashboard that helps you understand what's going on with your AI requests.
-
-Sentry AI Monitoring will automatically collect information about prompts, tools, tokens, and models. Learn more about the [AI Agents Dashboard](/product/insights/ai/agents).
+This integration connects Sentry with the [Anthropic Python SDK](https://github.com/anthropics/anthropic-sdk-python) to automatically capture spans for LLM requests. Data shows up in the [AI Agents Dashboard](/product/insights/ai/agents).
 
 ## Install
 
@@ -52,48 +48,45 @@ def my_llm_stuff():
         )
 ```
 
-After running this script, the resulting data should show up in the `AI Spans` tab on the `Explore > "races > Trace` page on Sentry.io.
+After running this script, the resulting data should show up in the `"AI Spans"` tab on the `"Explore" > "Traces"` page on Sentry.io.
 
 If you manually created an <PlatformLink to="/tracing/instrumentation/custom-instrumentation/ai-agents-module/#invoke-agent-span">Invoke Agent Span</PlatformLink> (not done in the example above) the data will also show up in the [AI Agents Dashboard](/product/insights/ai/agents).
 
 It may take a couple of moments for the data to appear in [sentry.io](https://sentry.io).
 
-## Behavior
+## Supported Operations
 
-- The Anthropic integration will connect Sentry with the supported Anthropic methods automatically.
+The integration automatically captures spans for the following Anthropic SDK calls:
 
-- The supported function is currently `messages.create` (both sync and async).
-
-- Sentry considers LLM inputs/outputs as PII (Personally identifiable information) and doesn't include PII data by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False` as shown in the [Options section](#options) below.
+- `messages.create()` - Create messages (sync and async)
 
 ## Options
 
-By adding `AnthropicIntegration` to your `sentry_sdk.init()` call explicitly, you can set options for `AnthropicIntegration` to change its behavior:
+Configure the Anthropic integration by adding `AnthropicIntegration` to your `sentry_sdk.init()` call:
 
 ```python
 import sentry_sdk
 from sentry_sdk.integrations.anthropic import AnthropicIntegration
 
 sentry_sdk.init(
-    # ...
-    # Add data like inputs and responses;
-    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    dsn="___PUBLIC_DSN___",
     send_default_pii=True,
     integrations=[
         AnthropicIntegration(
-            include_prompts=False,  # LLM inputs/outputs will be not sent to Sentry, despite send_default_pii=True
+            include_prompts=True,
+            # See below for all available options
         ),
     ],
 )
 ```
 
-You can pass the following keyword arguments to `AnthropicIntegration()`:
+### `include_prompts`
 
-- `include_prompts`:
+_Type: `boolean`_
 
-  Whether LLM inputs and outputs should be sent to Sentry. Sentry considers this data personal identifiable data (PII) by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False`.
+Records inputs and outputs from LLM calls (prompts, messages, responses).
 
-  The default is `True`.
+Defaults to `True` if `send_default_pii` is `True`.
 
 ## Supported Versions
 

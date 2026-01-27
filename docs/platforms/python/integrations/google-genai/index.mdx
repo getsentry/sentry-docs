@@ -1,13 +1,9 @@
 ---
 title: Google Gen AI
-description: "Learn about using Sentry for Google Gen AI."
+description: "Adds instrumentation for the Google Gen AI Python SDK."
 ---
 
-This integration connects Sentry with the [Google Gen AI Python SDK](https://github.com/googleapis/python-genai).
-
-Once you've installed this SDK, you can use the Sentry AI Agents Monitoring, a Sentry dashboard that helps you understand what's going on with your AI requests.
-
-Sentry AI Monitoring will automatically collect information about prompts, tools, tokens, and models. Learn more about the [AI Agents Dashboard](/product/insights/ai/agents).
+This integration connects Sentry with the [Google Gen AI Python SDK](https://github.com/googleapis/python-genai) to automatically capture spans for LLM requests. Data shows up in the [AI Agents Dashboard](/product/insights/ai/agents).
 
 ## Install
 
@@ -71,42 +67,39 @@ If you manually created an <PlatformLink to="/tracing/instrumentation/custom-ins
 
 It may take a couple of moments for the data to appear in [sentry.io](https://sentry.io).
 
-## Behavior
+## Supported Operations
 
-- The Google Gen AI integration will connect Sentry with the supported Google Gen AI methods automatically.
+The integration automatically captures spans for the following Google Gen AI SDK calls:
 
-- The supported function is currently `models.generate_content` (both sync and async).
-
-- Sentry considers LLM inputs/outputs as PII (Personally identifiable information) and doesn't include PII data by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False` as shown in the [Options section](#options) below.
+- `models.generate_content()` - Generate content (sync and async)
 
 ## Options
 
-You can set options for `GoogleGenAIIntegration` to change its behavior:
+Configure the Google Gen AI integration by adding `GoogleGenAIIntegration` to your `sentry_sdk.init()` call:
 
 ```python
 import sentry_sdk
 from sentry_sdk.integrations.google_genai import GoogleGenAIIntegration
 
 sentry_sdk.init(
-    # ...
-    # Add data like inputs and responses;
-    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    dsn="___PUBLIC_DSN___",
     send_default_pii=True,
     integrations=[
         GoogleGenAIIntegration(
-            include_prompts=False,  # LLM inputs/outputs will be not sent to Sentry, despite send_default_pii=True
+            include_prompts=True,
+            # See below for all available options
         ),
     ],
 )
 ```
 
-You can pass the following keyword arguments to `GoogleGenAIIntegration()`:
+### `include_prompts`
 
-- `include_prompts`:
+_Type: `boolean`_
 
-  Whether LLM inputs and outputs should be sent to Sentry. Sentry considers this data personal identifiable data (PII) by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False`.
+Records inputs and outputs from LLM calls (prompts, messages, responses).
 
-  The default is `True`.
+Defaults to `True` if `send_default_pii` is `True`.
 
 ## Supported Versions
 
