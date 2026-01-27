@@ -1,0 +1,140 @@
+## Troubleshooting: Missing AI Spans
+
+If you're not seeing AI agent monitoring spans in Sentry, verify that your Sentry import comes **before** the AI SDK imports. Sentry needs to be imported first to properly instrument the AI libraries.
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+### Incorrect Import Order
+
+When the AI SDK is imported before Sentry, the SDK cannot instrument the library and spans will not be captured.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript
+// Wrong: AI SDK imported first
+import { openai } from "@ai-sdk/openai";
+import OpenAI from "openai";
+import * as Sentry from "___SDK_PACKAGE___"; // Too late to instrument
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+### Correct Import Order
+
+Import Sentry first so it can patch the AI libraries before they're used.
+
+This applies to all AI libraries: Vercel AI SDK, OpenAI, Anthropic, LangChain, Google GenAI, etc.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript
+// Correct: Sentry imported first
+import * as Sentry from "___SDK_PACKAGE___";
+import { openai } from "@ai-sdk/openai";
+import OpenAI from "openai";
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+### Enforcing Import Order
+
+Configure your linter to automatically enforce Sentry imports first.
+
+<Expandable title="ESLint configuration">
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Using [`eslint-plugin-import`](https://github.com/import-js/eslint-plugin-import), configure `pathGroups` to place `@sentry/*` imports before other external packages.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```json
+{
+  "plugins": ["import"],
+  "rules": {
+    "import/order": [
+      "error",
+      {
+        "groups": [
+          "builtin",
+          "external",
+          "internal",
+          "parent",
+          "sibling",
+          "index"
+        ],
+        "pathGroups": [
+          {
+            "pattern": "@sentry/**",
+            "group": "external",
+            "position": "before"
+          }
+        ],
+        "pathGroupsExcludedImportTypes": [
+          "@sentry/**"
+        ]
+      }
+    ]
+  }
+}
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+</Expandable>
+
+<Expandable title="Biome configuration">
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+In your `biome.json`, configure import groups to place `@sentry/*` first. Then run `biome format --write .` to apply across your codebase.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```json
+{
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": {
+          "level": "on",
+          "options": {
+            "groups": [
+              ["@sentry/*"],
+              ["PACKAGES"],
+              ["ALIAS"],
+              ["RELATIVE"]
+            ]
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+</Expandable>
