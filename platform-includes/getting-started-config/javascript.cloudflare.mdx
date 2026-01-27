@@ -14,7 +14,14 @@ compatibility_flags = ["nodejs_als"]
 # compatibility_flags = ["nodejs_compat"]
 ```
 
-Additionally, add the `CF_VERSION_METADATA` binding in the same file. This binding provides access to the [Cloudflare version metadata](https://developers.cloudflare.com/workers/runtime-apis/bindings/version-metadata/), which the SDK uses to automatically set the Sentry `release` value based on your deployment version:
+### Release Configuration (Optional)
+
+If you don't set the `release` option manually, the SDK automatically detects it from these sources (in order of priority):
+
+1. The `SENTRY_RELEASE` environment variable
+2. The `CF_VERSION_METADATA.id` binding (if configured)
+
+To enable automatic release detection via Cloudflare's version metadata, add the `CF_VERSION_METADATA` binding in your wrangler configuration. This provides access to the [Cloudflare version metadata](https://developers.cloudflare.com/workers/runtime-apis/bindings/version-metadata/):
 
 ```jsonc {tabTitle:JSON} {filename:wrangler.jsonc}
 {
@@ -26,5 +33,6 @@ Additionally, add the `CF_VERSION_METADATA` binding in the same file. This bindi
 ```
 
 ```toml {tabTitle:Toml} {filename:wrangler.toml}
-version_metadata = { binding = "CF_VERSION_METADATA" }
+[version_metadata]
+binding = "CF_VERSION_METADATA"
 ```
