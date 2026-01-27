@@ -16,7 +16,23 @@ Uploading AAB and APK files requires Sentry Fastlane plugin version `2.0.0-rc.3`
 
    **Uploading an AAB (preferred):**
 
-   When using the `gradle` action with `bundle` task, the AAB path is automatically detected from `SharedValues::GRADLE_AAB_OUTPUT_PATH`. You can also explicitly specify `aab_path`:
+   When using the `gradle` action with `bundle` task, the AAB path is automatically detected from `SharedValues::GRADLE_AAB_OUTPUT_PATH`.
+
+   ```ruby {filename:Fastfile}
+   lane :upload_to_sentry do
+     gradle(
+       task: 'bundle',
+       build_type: 'Release'
+     )
+     sentry_upload_build(
+       org_slug: 'your-org',
+       project_slug: 'your-project',
+       build_configuration: 'Release'
+     )
+   end
+   ```
+
+   You can also explicitly specify `aab_path`:
 
    ```ruby {filename:Fastfile}
    lane :upload_to_sentry do
@@ -35,7 +51,23 @@ Uploading AAB and APK files requires Sentry Fastlane plugin version `2.0.0-rc.3`
 
    **Uploading an APK:**
 
-   When using the `gradle` action with `assemble` task, the APK path is automatically detected from `SharedValues::GRADLE_APK_OUTPUT_PATH`. You can also explicitly specify `apk_path`:
+   When using the `gradle` action with `assemble` task, the APK path is automatically detected from `SharedValues::GRADLE_APK_OUTPUT_PATH`.
+
+    ```ruby {filename:Fastfile}
+   lane :upload_to_sentry do
+     gradle(
+       task: 'assemble',
+       build_type: 'Release'
+     )
+     sentry_upload_build(
+       org_slug: 'your-org',
+       project_slug: 'your-project',
+       build_configuration: 'Release'
+     )
+   end
+   ```
+
+   You can also explicitly specify `apk_path`:
 
    ```ruby {filename:Fastfile}
    lane :upload_to_sentry do
@@ -56,7 +88,7 @@ Uploading AAB and APK files requires Sentry Fastlane plugin version `2.0.0-rc.3`
 
    ![Upload metadata =400x](./img/android-metadata.png)
 
-The Fastlane plugin automatically detects all build metadata. If needed, the metadata values can be overridden by passing parameters to `sentry_upload_build`:
+The Fastlane plugin automatically detects the following build metadata. If needed, the metadata values can be overridden by passing parameters to `sentry_upload_build`:
 
 ```ruby {filename:Fastfile}
 sentry_upload_build(

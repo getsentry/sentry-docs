@@ -47,7 +47,23 @@ Uploading IPA files requires Sentry Fastlane plugin version `2.0.0-rc.3` or late
 
    **Uploading an IPA:**
 
-   When using `build_ios_app`, the IPA path is automatically detected from `SharedValues::IPA_OUTPUT_PATH`. To upload an IPA instead of the XCArchive, explicitly specify `ipa_path`:
+   When using `build_ios_app`, the IPA path is automatically detected from `SharedValues::IPA_OUTPUT_PATH`.
+
+   ```ruby {filename:Fastfile}
+   lane :upload_to_sentry do
+     build_ios_app(
+       scheme: 'YourScheme',
+       configuration: 'Release'
+     )
+     sentry_upload_build(
+       org_slug: 'your-org',
+       project_slug: 'your-project',
+       build_configuration: 'Release'
+     )
+   end
+   ```
+
+   To upload an IPA instead of the XCArchive, explicitly specify `ipa_path`:
 
    ```ruby {filename:Fastfile}
    lane :upload_to_sentry do
@@ -68,7 +84,7 @@ Uploading IPA files requires Sentry Fastlane plugin version `2.0.0-rc.3` or late
 
    ![Upload metadata =400x](./img/ios-metadata.png)
 
-The Fastlane plugin automatically detects all build metadata. If needed, the metadata values can be overridden by passing parameters to `sentry_upload_build`:
+The Fastlane plugin automatically detects the following build metadata. If needed, the metadata values can be overridden by passing parameters to `sentry_upload_build`:
 
 ```ruby {filename:Fastfile}
 sentry_upload_build(
