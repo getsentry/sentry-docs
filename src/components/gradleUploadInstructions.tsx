@@ -19,7 +19,7 @@ export async function GradleUploadInstructions({feature}: Props) {
 
   const packageRegistry = await getPackageRegistry();
   const gradlePluginVersion =
-    packageRegistry.data?.['sentry.java.android.gradle-plugin']?.version || '6.0.0';
+    packageRegistry.data?.['sentry.java.android.gradle-plugin']?.version || '7.12.3';
 
   return (
     <Fragment>
