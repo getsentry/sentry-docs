@@ -8,7 +8,7 @@ import {DeRefedOpenAPI} from './open-api/types';
 
 // SENTRY_API_SCHEMA_SHA is used in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
 // DO NOT change variable name unless you change it in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
-const SENTRY_API_SCHEMA_SHA = '0026719ede0a1ced5b9fc0b40a76b117becbc11b';
+const SENTRY_API_SCHEMA_SHA = 'c85186402a97fe3a8e9a54216cb5bf5d9a626729';
 
 const activeEnv = process.env.GATSBY_ENV || process.env.NODE_ENV || 'development';
 
@@ -121,6 +121,11 @@ async function apiCategoriesUncached(): Promise<APICategory[]> {
 
   Object.entries(data.paths).forEach(([apiPath, methods]) => {
     Object.entries(methods).forEach(([method, apiData]) => {
+      // Skip deprecated endpoints
+      if (apiData.operationId && apiData.operationId.includes('(DEPRECATED)')) {
+        return;
+      }
+
       let server = 'https://sentry.io';
       if (apiData.servers && apiData.servers[0]) {
         server = apiData.servers[0].url;
