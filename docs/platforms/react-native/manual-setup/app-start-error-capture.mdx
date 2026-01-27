@@ -1,0 +1,150 @@
+---
+title: Capture App Start Errors (v8+)
+sidebar_order: 3
+description: "Learn how to capture app start errors and crashes that occur before JavaScript loads using native initialization."
+---
+
+<Alert level="warning" title="Alpha Testing">
+
+Sentry React Native SDK v8 is currently in alpha testing. This feature is available for early adopters and may undergo changes before the stable release.
+
+</Alert>
+
+By default, the React Native SDK initializes the native SDK underneath the `init` method called on the JS layer. As a result, the SDK has a current limitation of not capturing native crashes that occur prior to the `init` method being called on the JS layer.
+
+Starting with SDK version 8.0.0, you can initialize Sentry natively before JavaScript loads, enabling capture of app start errors and crashes that occur during:
+
+- Native module initialization
+- JavaScript bundle loading
+- Early React Native bridge setup
+
+This feature uses a `sentry.options.json` configuration file and native initialization APIs that read from this file.
+
+<Alert level="info" title="SDK Version Requirement">
+
+This feature requires Sentry React Native SDK version 8.0.0 or higher.
+
+</Alert>
+
+## Configuration File
+
+Create a `sentry.options.json` file in your React Native project root with the same options you currently have in `Sentry.init`:
+
+```json {filename:sentry.options.json}
+{
+  "dsn": "https://key@example.io/value",
+  "debug": true,
+  "environment": "production",
+  "tracesSampleRate": 1.0,
+  "enableTracing": true
+}
+```
+
+<Alert level="info" title="Options Merging">
+
+Options from `sentry.options.json` are merged with options from `Sentry.init()` in JavaScript. Options specified in JavaScript take precedence over the configuration file, allowing you to override settings at runtime.
+
+</Alert>
+
+## Android Setup
+
+Initialize Sentry in your `MainApplication` class:
+
+```kotlin {filename:android/app/src/main/java/.../MainApplication.kt}
+import io.sentry.react.RNSentrySDK
+
+class MainApplication : Application(), ReactApplication {
+    override fun onCreate() {
+        super.onCreate()
+        RNSentrySDK.init(this)
+        // ... rest of your initialization code
+    }
+}
+```
+
+You can also provide additional configuration options:
+
+```kotlin {filename:android/app/src/main/java/.../MainApplication.kt}
+import io.sentry.react.RNSentrySDK
+import io.sentry.android.core.SentryAndroidOptions
+
+class MainApplication : Application(), ReactApplication {
+    override fun onCreate() {
+        super.onCreate()
+        RNSentrySDK.init(this) { options ->
+            // Additional configuration that can't be serialized in JSON
+            options.beforeSend = { event, hint ->
+                // Custom beforeSend logic
+                event
+            }
+        }
+        // ... rest of your initialization code
+    }
+}
+```
+
+## iOS Setup
+
+Initialize Sentry in your `AppDelegate`:
+
+```objective-c {filename:ios/YourApp/AppDelegate.mm}
+#import <RNSentry/RNSentry.h>
+
+@implementation AppDelegate
+
+- (BOOL)application:(UIApplication *)application
+    didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
+{
+    [RNSentrySDK start];
+    return [super application:application didFinishLaunchingWithOptions:launchOptions];
+}
+
+@end
+```
+
+You can also provide additional configuration options:
+
+```objective-c {filename:ios/YourApp/AppDelegate.mm}
+#import <RNSentry/RNSentry.h>
+
+@implementation AppDelegate
+
+- (BOOL)application:(UIApplication *)application
+    didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
+{
+    [RNSentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+        // Additional configuration that can't be serialized in JSON
+        options.beforeSend = ^SentryEvent*(SentryEvent *event, SentryHint *hint) {
+            // Custom beforeSend logic
+            return event;
+        };
+    }];
+    return [super application:application didFinishLaunchingWithOptions:launchOptions];
+}
+
+@end
+```
+
+## Expo Setup
+
+If you're using Expo, you can enable native initialization automatically using the Expo plugin:
+
+```json {filename:app.json}
+{
+  "expo": {
+    "plugins": [
+      [
+        "@sentry/react-native/expo",
+        {
+          "useNativeInit": true
+        }
+      ]
+    ]
+  }
+}
+```
+
+When `useNativeInit` is set to `true`, the Expo plugin automatically:
+- Creates `sentry.options.json` from your Expo config
+- Adds `RNSentrySDK.init()` to your Android `MainApplication`
+- Adds `RNSentrySDK.start()` to your iOS `AppDelegate`
