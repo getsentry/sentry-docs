@@ -56,6 +56,7 @@ import FsharpSVG from 'platformicons/svg/fsharp.svg';
 import GatsbySVG from 'platformicons/svg/gatsby.svg';
 import GcpSVG from 'platformicons/svg/gcp.svg';
 import GcpfunctionsSVG from 'platformicons/svg/gcp-functions.svg';
+import GeminiSVG from 'platformicons/svg/gemini.svg';
 import GinSVG from 'platformicons/svg/gin.svg';
 import GitSVG from 'platformicons/svg/git.svg';
 import GnuSVG from 'platformicons/svg/gnu.svg';
@@ -81,10 +82,12 @@ import LangchainSVG from 'platformicons/svg/langchain.svg';
 import LanggraphSVG from 'platformicons/svg/langgraph.svg';
 import LaravelSVG from 'platformicons/svg/laravel.svg';
 import LinuxSVG from 'platformicons/svg/linux.svg';
+import LitellmSVG from 'platformicons/svg/litellm.svg';
 import LitestarSVG from 'platformicons/svg/litestar.svg';
 import LogbackSVG from 'platformicons/svg/logback.svg';
 import LoguruSVG from 'platformicons/svg/loguru.svg';
 import MauiSVG from 'platformicons/svg/maui.svg';
+import McpSVG from 'platformicons/svg/mcp.svg';
 import MongodbSVG from 'platformicons/svg/mongodb.svg';
 import NativecSVG from 'platformicons/svg/nativec.svg';
 import NestjsSVG from 'platformicons/svg/nestjs.svg';
@@ -98,6 +101,7 @@ import PhpSVG from 'platformicons/svg/php.svg';
 import PlaystationSVG from 'platformicons/svg/playstation.svg';
 import PostgresqlSVG from 'platformicons/svg/postgresql.svg';
 import PowershellSVG from 'platformicons/svg/powershell.svg';
+import PydanticSVG from 'platformicons/svg/pydantic-ai.svg';
 import PyramidSVG from 'platformicons/svg/pyramid.svg';
 import QtSVG from 'platformicons/svg/qt.svg';
 import QuartSVG from 'platformicons/svg/quart.svg';
@@ -201,6 +205,7 @@ import FsharpSVGLarge from 'platformicons/svg_80x80/fsharp.svg';
 import GatsbySVGLarge from 'platformicons/svg_80x80/gatsby.svg';
 import GcpSVGLarge from 'platformicons/svg_80x80/gcp.svg';
 import GcpfunctionsSVGLarge from 'platformicons/svg_80x80/gcp-functions.svg';
+import GeminiSVGLarge from 'platformicons/svg_80x80/gemini.svg';
 import GinSVGLarge from 'platformicons/svg_80x80/gin.svg';
 import GitSVGLarge from 'platformicons/svg_80x80/git.svg';
 import GnuSVGLarge from 'platformicons/svg_80x80/gnu.svg';
@@ -226,10 +231,12 @@ import LangchainSVGLarge from 'platformicons/svg_80x80/langchain.svg';
 import LanggraphSVGLarge from 'platformicons/svg_80x80/langgraph.svg';
 import LaravelSVGLarge from 'platformicons/svg_80x80/laravel.svg';
 import LinuxSVGLarge from 'platformicons/svg_80x80/linux.svg';
+import LitellmSVGLarge from 'platformicons/svg_80x80/litellm.svg';
 import LitestarSVGLarge from 'platformicons/svg_80x80/litestar.svg';
 import LogbackSVGLarge from 'platformicons/svg_80x80/logback.svg';
 import LoguruSVGLarge from 'platformicons/svg_80x80/loguru.svg';
 import MauiSVGLarge from 'platformicons/svg_80x80/maui.svg';
+import McpSVGLarge from 'platformicons/svg_80x80/mcp.svg';
 import MongodbSVGLarge from 'platformicons/svg_80x80/mongodb.svg';
 import NativecSVGLarge from 'platformicons/svg_80x80/nativec.svg';
 import NestjsSVGLarge from 'platformicons/svg_80x80/nestjs.svg';
@@ -243,6 +250,7 @@ import PhpSVGLarge from 'platformicons/svg_80x80/php.svg';
 import PlaystationSVGLarge from 'platformicons/svg_80x80/playstation.svg';
 import PostgresqlSVGLarge from 'platformicons/svg_80x80/postgresql.svg';
 import PowershellSVGLarge from 'platformicons/svg_80x80/powershell.svg';
+import PydanticSVGLarge from 'platformicons/svg_80x80/pydantic-ai.svg';
 import PyramidSVGLarge from 'platformicons/svg_80x80/pyramid.svg';
 import PythonSVGLarge from 'platformicons/svg_80x80/python.svg';
 import QtSVGLarge from 'platformicons/svg_80x80/qt.svg';
@@ -528,6 +536,10 @@ const formatToSVG = {
     sm: GcpSVG,
     lg: GcpSVGLarge,
   },
+  gemini: {
+    sm: GeminiSVG,
+    lg: GeminiSVGLarge,
+  },
   gin: {
     sm: GinSVG,
     lg: GinSVGLarge,
@@ -632,6 +644,10 @@ const formatToSVG = {
     sm: LitestarSVG,
     lg: LitestarSVGLarge,
   },
+  litellm: {
+    sm: LitellmSVG,
+    lg: LitellmSVGLarge,
+  },
   logback: {
     sm: LogbackSVG,
     lg: LogbackSVGLarge,
@@ -643,6 +659,10 @@ const formatToSVG = {
   maui: {
     sm: MauiSVG,
     lg: MauiSVGLarge,
+  },
+  mcp: {
+    sm: McpSVG,
+    lg: McpSVGLarge,
   },
   mongodb: {
     sm: MongodbSVG,
@@ -699,6 +719,10 @@ const formatToSVG = {
   pyramid: {
     sm: PyramidSVG,
     lg: PyramidSVGLarge,
+  },
+  pydantic: {
+    sm: PydanticSVG,
+    lg: PydanticSVGLarge,
   },
   python: {
     // todo: switch to small icon https://github.com/getsentry/platformicons/issues/199
@@ -919,6 +943,7 @@ export const PLATFORM_TO_ICON = {
   fsharp: 'fsharp',
   git: 'git',
   go: 'go',
+  'google-genai': 'gemini',
   'go-echo': 'echo',
   'go-fasthttp': 'fasthttp',
   'go-fiber': 'fiber',
@@ -929,7 +954,7 @@ export const PLATFORM_TO_ICON = {
   'go-slog': 'go',
   'go-logrus': 'go',
   godot: 'godot',
-  huggingface: 'huggingface',
+  huggingface_hub: 'huggingface',
   java: 'java',
   'java-appengine': 'app-engine',
   'java-android': 'android',
@@ -982,7 +1007,9 @@ export const PLATFORM_TO_ICON = {
   'kotlin-android': 'android',
   langchain: 'langchain',
   langgraph: 'langgraph',
+  litellm: 'litellm',
   linux: 'linux',
+  mcp: 'mcp',
   native: 'nativec',
   'native-qt': 'qt',
   'native-wasm': 'wasm',
@@ -1029,6 +1056,7 @@ export const PLATFORM_TO_ICON = {
   'python-pylons': 'python',
   'python-pymongo': 'mongodb',
   'python-pyramid': 'pyramid',
+  'pydantic-ai': 'pydantic',
   'python-quart': 'quart',
   'python-redis': 'redis',
   'python-rq': 'redis',
