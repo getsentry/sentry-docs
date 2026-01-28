@@ -12,28 +12,201 @@ notSupported:
 
 <PlatformContent includePath="llm-rules-logs" />
 
-With Sentry Structured Logs, you can send text-based log information from your applications to Sentry. Once in Sentry, these logs can be viewed alongside relevant errors, searched by text-string, or searched using their individual attributes.
-
-## Requirements
+Sentry Logs let you send structured log data from your application. Unlike traditional string-based logging, structured logs include queryable attributes that help you debug issues faster by filtering on specific users, orders, or any context you include.
 
 <PlatformContent includePath="logs/requirements" />
 
+<SplitLayout>
+
+<SplitSection>
+<SplitSectionText>
+
 ## Setup
 
-<PlatformContent includePath="logs/setup" />
+Enable logging by adding `enableLogs: true` to your Sentry configuration.
 
-## Usage
+</SplitSectionText>
+<SplitSectionCode>
 
-<PlatformContent includePath="logs/usage" />
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  enableLogs: true,
+});
+```
 
-## Integrations
+</SplitSectionCode>
+</SplitSection>
 
-<PlatformContent includePath="logs/integrations" />
+<SplitSection>
+<SplitSectionText>
 
-## Options
+## Send Logs
 
-<PlatformContent includePath="logs/options" />
+Use `Sentry.logger` to send logs at different levels. A log message is required for Sentry to send the log.
+
+| Level   | When to Use                      |
+| ------- | -------------------------------- |
+| `trace` | Fine-grained debugging           |
+| `debug` | Development diagnostics          |
+| `info`  | Normal operations, milestones    |
+| `warn`  | Potential issues, degraded state |
+| `error` | Failures that need attention     |
+| `fatal` | Critical failures, system down   |
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript
+Sentry.logger.trace("Entering function", { fn: "processOrder" });
+Sentry.logger.debug("Cache lookup", { key: "user:123" });
+Sentry.logger.info("Order created", { orderId: "order_456" });
+Sentry.logger.warn("Rate limit approaching", { current: 95, max: 100 });
+Sentry.logger.error("Payment failed", { reason: "card_declined" });
+Sentry.logger.fatal("Database unavailable", { host: "primary" });
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+## Add Context
+
+Pass structured data as the second argument — these attributes become searchable columns in Sentry.
+
+Use `Sentry.logger.fmt` for parameterized messages. Values are automatically extracted as searchable attributes.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript
+// Pass attributes directly
+Sentry.logger.info("User signed up", {
+  userId: user.id,
+  plan: "pro",
+  referrer: "google",
+});
+
+// Use fmt for parameterized messages
+const userId = "user_123";
+const productName = "Widget Pro";
+Sentry.logger.info(Sentry.logger.fmt`User ${userId} purchased ${productName}`);
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+## Scope Attributes
+
+Set attributes on a scope to automatically include them in all logs within that context. Requires SDK version `10.32.0` or above.
+
+Use global scope for app-wide attributes, and isolation scope for request-specific context. Only `string`, `number`, and `boolean` attribute values are supported.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript
+// Global scope - shared across entire app
+Sentry.getGlobalScope().setAttributes({
+  service: "checkout",
+  version: "2.1.0",
+});
+
+// Isolation scope - unique per request
+Sentry.getIsolationScope().setAttributes({
+  org_id: user.orgId,
+  user_tier: user.tier,
+});
+
+// Current scope - single operation
+Sentry.withScope((scope) => {
+  scope.setAttribute("request_id", req.id);
+  Sentry.logger.info("Processing order");
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+## Console Integration
+
+Already using `console.log`? Capture console calls as Sentry Logs with `consoleLoggingIntegration`.
+
+Multiple arguments are parsed as searchable attributes (requires SDK `10.13.0`+).
+
+For [Consola](https://github.com/unjs/consola) users, use `Sentry.createConsolaReporter()` instead (requires SDK `10.12.0`+).
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.consoleLoggingIntegration({ levels: ["log", "warn", "error"] }),
+  ],
+});
+
+// Arguments become searchable attributes
+console.log("Executed Action for User:", 123, true);
+// -> message.parameter.0: 123
+// -> message.parameter.1: true
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+## Filter Logs
+
+Use `beforeSendLog` to filter or modify logs before they're sent. Return `null` to drop a log.
+
+The log object includes: `level`, `message`, `timestamp`, and `attributes`.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  enableLogs: true,
+  beforeSendLog: (log) => {
+    // Drop debug logs in production
+    if (log.level === "debug") {
+      return null;
+    }
+
+    // Remove sensitive attributes
+    if (log.attributes?.password) {
+      delete log.attributes.password;
+    }
+
+    return log;
+  },
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+</SplitLayout>
 
 ## Default Attributes
 
 <PlatformContent includePath="logs/default-attributes" />
+
+## Related Features
+
+- <PlatformLink to="/tracing/">Tracing</PlatformLink> — Logs are automatically linked to traces, so you can see logs in the context of the request or operation that produced them.
+- <PlatformSection notSupported={["javascript.node", "javascript.aws-lambda", "javascript.azure-functions", "javascript.connect", "javascript.express", "javascript.fastify", "javascript.gcp-functions", "javascript.hapi", "javascript.hono", "javascript.koa", "javascript.nestjs", "javascript.bun", "javascript.cloudflare"]}><PlatformLink to="/session-replay/">Session Replay</PlatformLink> — Logs are automatically linked to replays, letting you jump from a log entry to see what the user was doing.</PlatformSection>
+- <PlatformLink to="/usage/">Error Monitoring</PlatformLink> — Use logs to add diagnostic context that helps you understand what led to an error.
