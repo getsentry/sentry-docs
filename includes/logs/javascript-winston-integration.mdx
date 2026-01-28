@@ -13,11 +13,43 @@ const logger = winston.createLogger({
 });
 ```
 
-The `createSentryWinstonTransport` method accepts a `levels` option, which allows you to filter which levels are sent to Sentry. By default all levels are logged.
+The `createSentryWinstonTransport` method accepts the following options:
+
+### Filtering Log Levels
+
+Use the `levels` option to filter which levels are sent to Sentry. By default all levels are logged.
 
 ```js
 const SentryWinstonTransport = Sentry.createSentryWinstonTransport(Transport, {
   // Only capture error and warn logs
   levels: ["error", "warn"],
+});
+```
+
+### Custom Level Mapping
+
+<AvailableSince version="10.37.0" />
+
+If you use [custom winston log levels](https://github.com/winstonjs/winston?tab=readme-ov-file#using-custom-logging-levels), they won't be sent to Sentry by default because they can't be mapped to Sentry's severity levels. Use the `customLevelMap` option to map your custom levels to Sentry levels (`fatal`, `error`, `warning`, `info`, `debug`, or `trace`).
+
+```js
+const customLevels = {
+  levels: {
+    customCritical: 0,
+    customNotice: 2,
+  },
+};
+
+const SentryWinstonTransport = Sentry.createSentryWinstonTransport(Transport, {
+  customLevelMap: {
+    customCritical: "fatal",
+    customNotice: "info",
+  },
+});
+
+const logger = winston.createLogger({
+  levels: customLevels.levels,
+  level: "customNotice",
+  transports: [new SentryWinstonTransport()],
 });
 ```
