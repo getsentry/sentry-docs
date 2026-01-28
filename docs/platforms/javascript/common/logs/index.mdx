@@ -12,7 +12,9 @@ notSupported:
 
 <PlatformContent includePath="llm-rules-logs" />
 
-Sentry Logs let you send structured log data from your application. Unlike traditional string-based logging, structured logs include queryable attributes that help you debug issues faster by filtering on specific users, orders, or any context you include.
+Stack traces tell you *what* broke. Logs tell you *why*. When an error fires, you get a snapshot of the failure, but the context leading up to it is often missing. Logs capture the journey — what the data looked like, which code paths executed, and what state the system was in.
+
+Sentry Logs are **high-cardinality** — you can pass any attributes you want and search or filter by them later. No need to decide upfront which fields are important. Just log what might be useful and query it when you need it.
 
 <PlatformContent includePath="logs/requirements" />
 
@@ -193,6 +195,90 @@ Sentry.init({
 
     return log;
   },
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+</SplitLayout>
+
+## How Logs Link to Other Features
+
+Everything in Sentry is linked by trace. When you're viewing a log, you can jump to the parent trace to see the full request context. When you're viewing a trace, you can see all logs emitted during that operation. This connection makes it easy to move between high-level performance data and detailed diagnostic logs.
+
+- **[Traces](/product/explore/traces/)** — Logs emitted during an active span automatically include `sentry.trace.parent_span_id`. Click through from any log to see the full trace, or filter logs by trace ID to see everything that happened during a specific request.
+- <PlatformSection notSupported={["javascript.node", "javascript.aws-lambda", "javascript.azure-functions", "javascript.connect", "javascript.express", "javascript.fastify", "javascript.gcp-functions", "javascript.hapi", "javascript.hono", "javascript.koa", "javascript.nestjs", "javascript.bun", "javascript.cloudflare"]}>**[Session Replay](/product/explore/session-replay/)** — Logs include `sentry.replay_id` when a replay is active. Jump from a log entry directly to the replay to see what the user was doing when the log was emitted.</PlatformSection>
+- **[Errors](/product/issues/)** — Logs capture the journey leading up to a failure. When an error occurs, your logs show what data was processed, which code paths executed, and what state the system was in — context that stack traces alone can't provide.
+
+## Best Practices
+
+<SplitLayout>
+
+<SplitSection>
+<SplitSectionText>
+
+### Wide Events Over Scattered Logs
+
+Instead of many small logs that are hard to correlate, emit one comprehensive log per operation with all relevant context.
+
+This makes debugging dramatically faster — one query returns everything about a specific order, user, or request.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript
+// ❌ Scattered thin logs
+Sentry.logger.info("Starting checkout");
+Sentry.logger.info("Validating cart");
+Sentry.logger.info("Processing payment");
+Sentry.logger.info("Checkout complete");
+
+// ✅ One wide event with full context
+Sentry.logger.info("Checkout completed", {
+  orderId: order.id,
+  userId: user.id,
+  cartValue: cart.total,
+  itemCount: cart.items.length,
+  paymentMethod: "stripe",
+  duration: Date.now() - startTime,
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Include Business Context
+
+Add attributes that help you prioritize and debug:
+
+- **User context** — tier, account age, lifetime value
+- **Transaction data** — order value, item count
+- **Feature state** — active feature flags
+- **Request metadata** — endpoint, method, duration
+
+This lets you filter logs by high-value customers or specific features.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript
+Sentry.logger.info("API request completed", {
+  // User context
+  userId: user.id,
+  userTier: user.plan, // "free" | "pro" | "enterprise"
+
+  // Request data
+  endpoint: "/api/orders",
+  method: "POST",
+  duration: 234,
+
+  // Business context
+  orderValue: 149.99,
+  featureFlags: ["new-checkout", "discount-v2"],
 });
 ```
 
