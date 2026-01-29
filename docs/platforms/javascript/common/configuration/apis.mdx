@@ -642,25 +642,25 @@ See <PlatformLink to="/tracing/instrumentation/">Tracing Instrumentation</Platfo
  categorySupported={["browser"]}
  >
   Sets the passed span as the active span on the current scope.
-  You most likely don't need this functionality and should [use `startSpan`](#startSpan) 
+  You most likely don't need this functionality and should [use `startSpan`](#startSpan)
   instead.
-  However, in some situations, you might prefer a span being active outside of a callback. 
+  However, in some situations, you might prefer a span being active outside of a callback.
   In this case, the combination of [`startInactiveSpan`](#startInactiveSpan) with this function
   allows you to start a span, hold a reference to it and keep it active until you end it, without
   the active duration being bound to the callback (as opposed to [`startSpanManual`](#startSpanManual)).
-  
-  
+
+
   <Expandable title='Examples'>
   ```javascript
   let checkoutSpan;
-  
+
   on('startCheckout', () => {
     checkoutSpan = Sentry.startInactiveSpan({name: 'checkout-flow'});
     Sentry.setActiveSpanInBrowser(checkoutSpan);
   })
-  
+
   doSomeWork();
-  
+
   on('endCheckout', () => {
     // Ending the span automatically removes it as the active span on the scope
     checkoutSpan.end();
@@ -1207,7 +1207,7 @@ export const load = wrapServerLoadWithSentry(({ fetch }) => {
 
 </SdkApi>
 
-## Instrumenting Server Routes 
+## Instrumenting Server Routes
 
 <SdkApi
   name="wrapServerRouteWithSentry"
@@ -1358,6 +1358,56 @@ export const GET = wrapServerRouteWithSentry(async () => {
   Instrument a `getInitialProps` function in a custom document (`_document.js`)
   with Sentry error and performance monitoring by creating and returning a
   wrapped version of the function.
+</SdkApi>
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.astro"]}>
+## Server Request Instrumentation
+
+Astro server requests are automatically instrumented starting from Astro version `3.5.2`.
+
+If you're below Astro version `3.5.2` or want to customize instrumentation, you can use `Sentry.handleRequest()` as an Astro middleware.
+
+<SdkApi
+  name="handleRequest"
+  signature={`function handleRequest(options?: {
+  trackClientIp?: boolean;
+}): MiddlewareResponseHandler`}
+  parameters={[
+  {
+    name: "trackClientIp",
+    type: "boolean",
+    description: "When enabled, Sentry attaches the client's IP address to the event. This requires your Astro app to be configured for SSR or Hybrid rendering. Defaults to `false`.",
+    defaultValue: "false" },
+  ]}
+>
+Returns an Astro middleware handler that instruments incoming server requests with Sentry error and performance monitoring. It lets you control which additional data should be added to recorded request spans.
+
+If you have multiple request handlers, make sure to add the Sentry middleware as the first handler in the sequence.
+
+<Alert>
+
+If you're using Astro version `>=3.5.2`, you must <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#disable-automatic-instrumentation">disable automatic instrumentation</PlatformLink> before adding this middleware manually.
+
+</Alert>
+
+<Expandable title="Example">
+
+```javascript {filename:src/middleware.(js|ts)}
+import * as Sentry from "@sentry/astro";
+import { sequence } from "astro:middleware";
+
+export const onRequest = sequence(
+  Sentry.handleRequest({
+    trackClientIp: true, // defaults to false
+  })
+  // other middleware handlers
+);
+```
+
+</Expandable>
+
 </SdkApi>
 
 </PlatformSection>
