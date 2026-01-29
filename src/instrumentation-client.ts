@@ -4,8 +4,44 @@ import * as Spotlight from '@spotlightjs/spotlight';
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
 
-  // Adjust this value in production, or use tracesSampler for greater control
-  tracesSampleRate: 1,
+  // Use tracesSampler to filter out bot/crawler traffic
+  tracesSampler: _samplingContext => {
+    // Check if running in browser environment
+    if (typeof navigator === 'undefined' || !navigator.userAgent) {
+      return 1; // Default to sampling if userAgent not available
+    }
+
+    const userAgent = navigator.userAgent.toLowerCase();
+
+    // Patterns to identify bots, crawlers, and headless browsers
+    const botPatterns = [
+      'headlesschrome',
+      'headless',
+      'bot',
+      'crawler',
+      'spider',
+      'scraper',
+      'googlebot',
+      'bingbot',
+      'yandexbot',
+      'slackbot',
+      'facebookexternalhit',
+      'twitterbot',
+      'linkedinbot',
+      'whatsapp',
+      'telegrambot',
+      'phantomjs',
+      'selenium',
+      'puppeteer',
+      'playwright',
+    ];
+
+    // Check if userAgent matches any bot pattern
+    const isBot = botPatterns.some(pattern => userAgent.includes(pattern));
+
+    // Drop spans for bots (return 0), keep for real users (return 1)
+    return isBot ? 0 : 1;
+  },
 
   // Enable logs to be sent to Sentry
   enableLogs: true,
