@@ -300,10 +300,28 @@ headers = {
 
 ## Sampling
 
-In order to make a sampling decision `traces_sampler`, you'll have all starting
-attributes on the span accessible in `sampling_context["attributes"]`. You can
-provide attributes via the `attributes` argument to
-`sentry_sdk.traces.start_span()`.
+In order to make a sampling decision `traces_sampler`, you'll have access to a
+sampling context. Its format is:
+
+```python
+{
+    "name": ...,
+    "trace_id": ...,
+    "span_id": ...,
+    "parent_span_id": ...,
+    "parent_sampled": ...,
+    "attributes": ...,
+    # additionally, custom sampling context keys will appear here if provided,
+    # see the Custom Sampling Context section
+}
+```
+
+This is a departure from the previous format in order to make the structure
+simpler and easier to work with.
+
+All starting attributes on the span will be accessible in
+`sampling_context["attributes"]`. You can provide attributes via the `attributes`
+argument to `sentry_sdk.traces.start_span()`.
 
 Sampling is applied on span start. If you're using the context manager way
 (`with start_span(...):`), the span will be sampled immediately after the `with`
@@ -312,17 +330,18 @@ span will be sampled when calling `span.start()`.
 
 As before, sampling will only be applied to top-level spans. Children spans
 inherit the sampling decision of their parents, unless specifically filtered
-out via the [`ignore_span` callback](#filtering).
+out via the [`ignore_spans` option](#filtering).
 
 ### Custom Sampling Context
 
-If you're using a traces sampler, it's possible to provide a custom sampling
-context in addition to the attributes set on the span. The custom sampling
-context will solely be used for making the sampling decision in the traces
-sampler and will not be materialized on the span in any way. It also has no
-type restrictions, so you can, for instance, have the whole request object
-accessible in the traces sampler in a web framework context, as long as it's
-accessible at sampling time.
+If you need additional data or objects to make a sampling decision, you can
+provide a custom sampling context, which will be merged with the
+`sampling_context` in the traces sampler.
+
+Custom sampling context will solely be used for making a sampling decision in the
+traces sampler and will not be materialized on the span in any way. It also has
+no type restrictions, so you can, for instance, have the whole request object
+accessible in the traces sampler in a web framework context.
 
 Before, the custom sampling context used to be an optional argument to
 `start_span`. In span streaming mode, it's instead a method on the scope:
@@ -331,6 +350,9 @@ Before, the custom sampling context used to be an optional argument to
   import sentry_sdk
 
   def traces_sampler(sampling_context):
+      # sampling_context has the usual "name", "attributes", "trace_id" and so on,
+      # and additionally it was merged with the custom_sampling_context we
+      # provided
       if sampling_context["asgi_scope"].method not in ("GET", "POST"):
           return 0.0
       return 1.0
