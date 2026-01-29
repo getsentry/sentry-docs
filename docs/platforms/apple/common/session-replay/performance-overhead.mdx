@@ -21,6 +21,34 @@ If you're considering enabling Session Replay, it's important to first understan
 
 You can learn more about the various performance overhead optimizations implemented in the iOS Replay SDK in the [Replay Performance Overhead](/product/explore/session-replay/mobile/performance-overhead/) docs.
 
+## Performance on Older Devices
+
+<Alert level="warning" title="Important">
+
+On older iOS devices (iPhone 8 and earlier, or devices with equivalent hardware), Session Replay can cause **visible scrolling stutter** and dropped frames during UI animations. This is due to the screenshot capture process blocking the main thread.
+
+</Alert>
+
+Session Replay works by capturing screenshots of your app once per second. This capture process must run on the main thread because it accesses the view hierarchy. On modern devices (iPhone X and newer), this overhead is imperceptible. However, on older devices with less powerful processors, the time required to capture each screenshot can exceed the available frame budget, causing frames to be dropped.
+
+**What this looks like in practice:**
+- Scrolling may appear jerky or stuttery rather than smooth
+- UI animations may skip frames
+- Touch responsiveness may feel slightly delayed during the capture moment
+
+**Devices most affected:**
+- Older devices like iPhone 8 and earlier
+- Older iPad models
+
+**Scenarios that increase the likelihood of stutter:**
+- Heavy or complex animations that already consume significant CPU time
+- Screens with deeply nested view hierarchies
+- Apps performing intensive background work on the main thread
+
+When your app is already pushing the device's capabilities with animations or complex UI, the additional overhead from Session Replay's screenshot capture can tip the frame budget over the limit, causing visible stutter. This is especially true on older devices where the CPU has less headroom.
+
+If your app targets these older devices and smooth scrolling or animation performance is critical, consider [disabling Session Replay on low-end devices](#disable-replay-for-low-end-devices) or using a lower [sample rate](/platforms/apple/guides/ios/session-replay/#sampling).
+
 ## Benchmarking the iOS Replay SDK
 
 The Pocket Casts app offers a diverse mix of components making it an ideal candidate for testing. Here's how the benchmarks were conducted:
@@ -29,7 +57,7 @@ The Pocket Casts app offers a diverse mix of components making it an ideal candi
 - **User Flow:** The same flow was executed 10 times to ensure consistency.
 - **Real-World Representation:** This approach closely mirrors performance in real-world scenarios.
 
-The benchmarks were run on an iPhone 14 Pro. Note that active Session Replay recording can introduce slow frames on older lower-end iOS devices (for example iPhone 8).
+The benchmarks were run on an iPhone 14 Pro.
 
 ### Results
 
@@ -41,43 +69,96 @@ Below are the results of the benchmarking tests, presented as median values to r
 | Memory                  | 102 MB          | 121 MB               |
 | CPU                     | 4%              | 13%                  |
 | App Startup Time (Cold) | 1264.80 ms      | 1265 ms              |
-| Main Thread Time        | n/a             | 43ms                 |
+| Main Thread Time        | n/a             | ~25ms per capture    |
 | Network Bandwidth       | n/a             | 10 KB/s of recording |
+
+<Alert>
+
+These benchmarks represent performance on modern devices (iPhone 14 Pro). On older devices like iPhone 8, the main thread time per capture can be higher, potentially causing visible frame drops during scrolling and animations. See [Performance on Older Devices](#performance-on-older-devices) above.
+
+</Alert>
+
+### Understanding Main Thread Impact
+
+Session Replay captures one screenshot per second. During each capture:
+
+1. **Redaction phase**: The SDK traverses the view hierarchy to identify elements requiring privacy masking (~6ms on iPhone 8)
+2. **Render phase**: The current view is rendered into a bitmap image (~25ms on iPhone 8 with View Renderer V2)
+
+iOS displays at 60 FPS, giving each frame a budget of ~16.7ms. When the capture process exceeds this budget, frames are dropped. With View Renderer V2 (the default since v8.50.0), the render phase takes approximately 25ms on older devices like iPhone 8, which can cause 1-2 frames to be dropped once per second during the capture moment.
+
+While this overhead is minimal for most use cases, it can be noticeable during fast scrolling or complex animations on older devices.
 
 ## Reducing Performance Overhead
 
-To minimize the performance impact of the Replay SDK, consider the following steps:
+To minimize the performance impact of the Replay SDK, consider the following options:
 
-### Change Replay quality
+### Change Replay Quality
 
-Lowering the quality of captured screenshots and videos can significantly reduce CPU, memory, and network bandwidth usage. Here's how you can do it:
+Lowering the quality of captured screenshots and videos can reduce CPU, memory, and network bandwidth usage:
 
 ```swift
 SentrySDK.start(configureOptions: { options in
-  // this will reduce screenshot compression to 10 and bitrate to 50kbps
+  // Reduces screenshot compression quality and video bitrate to 50kbps
   options.sessionReplay.quality = .low // defaults to .medium
 })
 ```
 
 ### Disable Replay for Low-End Devices
 
-If the Replay SDK causes performance issues on lower-end devices (for example, [this](https://github.com/getsentry/relay/blob/695b459e03481f7d799f07b2b901b140e5d5753d/relay-event-schema/src/protocol/device_class.rs#L21-L37) is how Sentry determines the device class), you can disable it specifically for those devices:
+If Session Replay causes performance issues on older devices, you can disable it specifically for those devices by checking the device model at runtime and setting the sample rates to zero:
 
 ```swift
 SentrySDK.start(configureOptions: { options in
   options.dsn = "___PUBLIC_DSN___"
-  options.debug = true
 
-  options.sessionReplay.onErrorSampleRate = if isLowEnd() { 0.0 } else { 1.0 }
-  options.sessionReplay.sessionSampleRate = if isLowEnd() { 0.0 } else { 0.1 }
+  if isLowEndDevice() {
+    options.sessionReplay.onErrorSampleRate = 0.0
+    options.sessionReplay.sessionSampleRate = 0.0
+  } else {
+    options.sessionReplay.onErrorSampleRate = 1.0
+    options.sessionReplay.sessionSampleRate = 0.1
+  }
 })
 ```
 
-### Disable View Renderer V2
+You can use Sentry's [device classification](https://github.com/getsentry/relay/blob/695b459e03481f7d799f07b2b901b140e5d5753d/relay-event-schema/src/protocol/device_class.rs#L21-L37) as a reference for determining which devices to consider low-end.
 
-Starting with v8.50.0, the up-to-5x-faster view renderer V2 is used by default, reducing the impact of Session Replay on the main thread and potential frame drops. In previous versions (v8.47.0 and above), you can already enable it by setting `enableExperimentalViewRenderer=true`.
+### Enable Fast View Rendering (Experimental)
 
-While we do recommend the new view renderer, if you are experiencing issues, you can opt out of using it by setting the following flag:
+For additional performance gains at the cost of some rendering accuracy, you can enable fast view rendering:
+
+```swift
+SentrySDK.start(configureOptions: { options in
+  options.sessionReplay.enableFastViewRendering = true
+})
+```
+
+<Alert level="warning">
+
+Fast view rendering uses `CALayer.render(in:)` instead of `UIView.drawHierarchy(in:afterScreenUpdates:)`. While faster, this can result in some UI elements (such as SF Symbols in tab bars) not appearing in the replay. Use this option only if the standard renderer causes unacceptable performance issues.
+
+</Alert>
+
+### View Renderer V2
+
+Starting with v8.50.0, View Renderer V2 is enabled by default. This renderer provides up to 5x faster screenshot capture compared to the original implementation, significantly reducing main thread blocking time and frame drops.
+
+**Performance comparison on iPhone 8:**
+| Renderer | Time per capture | Frames dropped per capture |
+| -------- | ---------------- | -------------------------- |
+| V1 (old) | ~155ms           | 9-10 frames                |
+| V2 (new) | ~25ms            | 1-2 frames                 |
+
+If you're using SDK version 8.47.0 to 8.49.x, you can enable View Renderer V2 early:
+
+```swift
+SentrySDK.start(configureOptions: { options in
+  options.sessionReplay.enableExperimentalViewRenderer = true
+})
+```
+
+If you experience issues with View Renderer V2 and need to fall back to the original renderer:
 
 ```swift
 SentrySDK.start(configureOptions: { options in
@@ -85,9 +166,9 @@ SentrySDK.start(configureOptions: { options in
 })
 ```
 
-<Alert title="✨ Note">
+<Alert>
 
-The old view renderer will be deprecated and removed in a future release.
+The original view renderer (V1) will be deprecated and removed in a future release.
 
 </Alert>
 
