@@ -1,22 +1,36 @@
 import * as Sentry from '@sentry/nextjs';
 import * as Spotlight from '@spotlightjs/spotlight';
 
-// Regex to identify bots, crawlers, and headless browsers
-// Note: 'bot' catches googlebot, slackbot, twitterbot, etc
+// AI agents we want to track for docs/markdown consumption visibility
+// These fetch markdown content and we need performance data on serving to agentic tools
+const AI_AGENT_PATTERN =
+  /claudebot|claude-web|anthropic|gptbot|chatgpt|openai|cursor|codex|copilot|perplexity|cohere|gemini/i;
+
+// Bots/crawlers to filter out (SEO crawlers, social media, testing tools, monitors)
+// Note: 'bot' is broad but AI agents are allowlisted above
 const BOT_PATTERN =
   /bot|crawler|spider|scraper|headless|facebookexternalhit|whatsapp|phantomjs|selenium|puppeteer|playwright|lighthouse|pagespeed|gtmetrix|pingdom|uptimerobot/i;
 
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
 
-  // Use tracesSampler to filter out bot/crawler traffic
+  // Use tracesSampler to filter out bot/crawler traffic while keeping AI agents
   tracesSampler: _samplingContext => {
     // Check if running in browser environment
     if (typeof navigator === 'undefined' || !navigator.userAgent) {
       return 1; // Default to sampling if userAgent not available
     }
 
-    const isBot = BOT_PATTERN.test(navigator.userAgent);
+    const userAgent = navigator.userAgent;
+
+    // Always sample AI agents - we want visibility into how agentic tools consume our docs
+    const isAIAgent = AI_AGENT_PATTERN.test(userAgent);
+    if (isAIAgent) {
+      return 1;
+    }
+
+    // Filter out traditional bots/crawlers
+    const isBot = BOT_PATTERN.test(userAgent);
 
     // Drop traces for bots (return 0), keep for real users (return 1)
     return isBot ? 0 : 1;
