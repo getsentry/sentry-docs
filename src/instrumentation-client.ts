@@ -18,12 +18,12 @@ Sentry.init({
   tracesSampler: _samplingContext => {
     // Check if running in browser environment
     if (typeof navigator === 'undefined' || !navigator.userAgent) {
-      return 1; // Default to sampling if userAgent not available
+      return 0.3; // Default to sampling if userAgent not available
     }
 
     const userAgent = navigator.userAgent;
 
-    // Always sample AI agents - we want visibility into how agentic tools consume our docs
+    // Always sample AI agents - we want full visibility into agentic docs consumption
     const isAIAgent = AI_AGENT_PATTERN.test(userAgent);
     if (isAIAgent) {
       return 1;
@@ -32,8 +32,8 @@ Sentry.init({
     // Filter out traditional bots/crawlers
     const isBot = BOT_PATTERN.test(userAgent);
 
-    // Drop traces for bots (return 0), keep for real users (return 1)
-    return isBot ? 0 : 1;
+    // Drop traces for bots, sample 30% of real users
+    return isBot ? 0 : 0.3;
   },
 
   // Enable logs to be sent to Sentry
