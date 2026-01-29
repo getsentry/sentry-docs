@@ -3,13 +3,67 @@ import * as Spotlight from '@spotlightjs/spotlight';
 
 // AI agents we want to track for docs/markdown consumption visibility
 // These fetch markdown content and we need performance data on serving to agentic tools
-const AI_AGENT_PATTERN =
-  /claudebot|claude-web|anthropic|gptbot|chatgpt|openai|cursor|codex|copilot|perplexity|cohere|gemini/i;
+const AI_AGENT_PATTERN = new RegExp(
+  [
+    'claudebot',
+    'claude-web',
+    'anthropic',
+    'gptbot',
+    'chatgpt',
+    'openai',
+    'cursor',
+    'codex',
+    'copilot',
+    'perplexity',
+    'cohere',
+    'gemini',
+  ].join('|'),
+  'i'
+);
 
 // Bots/crawlers to filter out (SEO crawlers, social media, testing tools, monitors)
 // Using explicit bot names to avoid false positives (e.g., "bot" would match Cubot phones)
-const BOT_PATTERN =
-  /googlebot|bingbot|yandexbot|baiduspider|duckduckbot|slackbot|twitterbot|linkedinbot|telegrambot|discordbot|applebot|ahrefsbot|semrushbot|dotbot|mj12bot|crawler|spider|scraper|headless|facebookexternalhit|whatsapp|phantomjs|selenium|puppeteer|playwright|lighthouse|pagespeed|gtmetrix|pingdom|uptimerobot/i;
+const BOT_PATTERN = new RegExp(
+  [
+    // Search engine crawlers
+    'googlebot',
+    'bingbot',
+    'yandexbot',
+    'baiduspider',
+    'duckduckbot',
+    'applebot',
+    // SEO tools
+    'ahrefsbot',
+    'semrushbot',
+    'dotbot',
+    'mj12bot',
+    // Social media
+    'slackbot',
+    'twitterbot',
+    'linkedinbot',
+    'telegrambot',
+    'discordbot',
+    'facebookexternalhit',
+    'whatsapp',
+    // Generic patterns
+    'crawler',
+    'spider',
+    'scraper',
+    'headless',
+    // Testing/automation tools
+    'phantomjs',
+    'selenium',
+    'puppeteer',
+    'playwright',
+    // Performance/monitoring tools
+    'lighthouse',
+    'pagespeed',
+    'gtmetrix',
+    'pingdom',
+    'uptimerobot',
+  ].join('|'),
+  'i'
+);
 
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
