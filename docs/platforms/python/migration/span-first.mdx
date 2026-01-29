@@ -305,7 +305,55 @@ attributes on the span accessible in `sampling_context["attributes"]`. You can
 provide attributes via the `attributes` argument to
 `sentry_sdk.traces.start_span()`.
 
-As before, sampling will only be applied to top-level spans. Children spans
-inherit the sampling decision of their parents.
+Sampling is applied on span start. If you're using the context manager way
+(`with start_span(...):`), the span will be sampled immediately after the `with`
+block is entered. If you're using the direct `span = start_span(...)` API, the
+span will be sampled when calling `span.start()`.
 
-`<TODO: custom_sampling_context replacement>`
+As before, sampling will only be applied to top-level spans. Children spans
+inherit the sampling decision of their parents, unless specifically filtered
+out via the [`ignore_span` callback](#filtering).
+
+### Custom sampling context
+
+If you're using a traces sampler, it's possible to provide a custom sampling
+context in addition to the attributes set on the span. The custom sampling
+context will solely be used for making the sampling decision in the traces
+sampler and will not be materialized on the span in any way. It also has no
+type restrictions, so you can, for instance, have the whole request object
+accessible in the traces sampler in a web framework context, as long as it's
+accessible at sampling time.
+
+Before, the custom sampling context used to be an optional argument to
+`start_span`. In span streaming mode, it's instead a method on the scope:
+
+```python diff
+  import sentry_sdk
+
+  def traces_sampler(sampling_context):
+      if sampling_context["asgi_scope"].method not in ("GET", "POST"):
+          return 0.0
+      return 1.0
+
+  sentry_sdk.init(
++     _experiments={"trace_lifecycle": "stream"},
+      traces_sampler=traces_sampler,
+  )
+
+  custom_sampling_context = {
+      "asgi_scope": asgi_scope,
+  }
+
+- with sentry_sdk.start_span(
+-     name="flow.start",
+-     custom_sampling_context=custom_sampling_context
+- ):
+-     ...
++ sentry_sdk.get_current_scope().set_custom_sampling_context(custom_sampling_context)
++ with sentry_sdk.traces.start_span(name="flow.start"):
++     ...
+```
+
+## Filtering
+
+`<TODO: ignore_spans>`
