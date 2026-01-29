@@ -7,9 +7,9 @@ const AI_AGENT_PATTERN =
   /claudebot|claude-web|anthropic|gptbot|chatgpt|openai|cursor|codex|copilot|perplexity|cohere|gemini/i;
 
 // Bots/crawlers to filter out (SEO crawlers, social media, testing tools, monitors)
-// Note: 'bot' is broad but AI agents are allowlisted above
+// Using explicit bot names to avoid false positives (e.g., "bot" would match Cubot phones)
 const BOT_PATTERN =
-  /bot|crawler|spider|scraper|headless|facebookexternalhit|whatsapp|phantomjs|selenium|puppeteer|playwright|lighthouse|pagespeed|gtmetrix|pingdom|uptimerobot/i;
+  /googlebot|bingbot|yandexbot|baiduspider|duckduckbot|slackbot|twitterbot|linkedinbot|telegrambot|discordbot|applebot|ahrefsbot|semrushbot|dotbot|mj12bot|crawler|spider|scraper|headless|facebookexternalhit|whatsapp|phantomjs|selenium|puppeteer|playwright|lighthouse|pagespeed|gtmetrix|pingdom|uptimerobot/i;
 
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
