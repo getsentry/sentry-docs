@@ -27,8 +27,10 @@ import remarkStringify from 'remark-stringify';
 import {unified} from 'unified';
 import {remove} from 'unist-util-remove';
 
-const DOCS_ORIGIN = 'https://docs.sentry.io';
-const CACHE_VERSION = 3;
+const DOCS_ORIGIN = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
+  ? 'https://develop.sentry.dev'
+  : 'https://docs.sentry.io';
+const CACHE_VERSION = 4;
 const CACHE_COMPRESS_LEVEL = 4;
 const R2_BUCKET = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
   ? 'sentry-develop-docs'
@@ -215,6 +217,161 @@ async function createWork() {
 
   await Promise.all(workerPromises);
 
+  // Generate hierarchical sitemaps
+  const allPaths = workerTasks
+    .flat()
+    .map(task => task.relativePath)
+    .filter(p => p !== 'index.md')
+    .sort();
+
+  // Root index.md - only top-level pages (no slashes in path)
+  const topLevelPaths = allPaths.filter(p => !p.includes('/'));
+  const rootSitemapContent = `# Sentry Documentation
+
+Sentry is a developer-first application monitoring platform that helps you identify and fix issues in real-time. It provides error tracking, performance monitoring, session replay, and more across all major platforms and frameworks.
+
+## Key Features
+
+- **Error Monitoring**: Capture and diagnose errors with full stack traces, breadcrumbs, and context
+- **Tracing**: Track requests across services to identify performance bottlenecks
+- **Session Replay**: Watch real user sessions to understand what led to errors
+- **Profiling**: Identify slow functions and optimize application performance
+- **Crons**: Monitor scheduled jobs and detect failures
+- **Logs**: Collect and analyze application logs in context
+
+## Documentation Sections
+
+${topLevelPaths
+  .filter(p => p !== '_not-found.md')
+  .map(p => `- [${p.replace(/\.md$/, '')}](${DOCS_ORIGIN}/${p})`)
+  .join('\n')}
+
+${
+  process.env.NEXT_PUBLIC_DEVELOPER_DOCS
+    ? `## Quick Links
+
+- [Backend Development](${DOCS_ORIGIN}/backend.md) - Backend service architecture
+- [Frontend Development](${DOCS_ORIGIN}/frontend.md) - Frontend development guide
+- [SDK Development](${DOCS_ORIGIN}/sdk.md) - SDK development documentation
+`
+    : `## Quick Links
+
+- [Platform SDKs](${DOCS_ORIGIN}/platforms.md) - Install Sentry for your language/framework
+- [API Reference](${DOCS_ORIGIN}/api.md) - Programmatic access to Sentry
+- [CLI](${DOCS_ORIGIN}/cli.md) - Command-line interface for Sentry operations
+`
+}`;
+
+  const indexPath = path.join(OUTPUT_DIR, 'index.md');
+  await writeFile(indexPath, rootSitemapContent, {encoding: 'utf8'});
+  console.log(
+    `📑 Generated root index.md with ${topLevelPaths.length} top-level sections`
+  );
+
+  // Append child page listings to section index pages
+  // Group paths by their DIRECT parent (handling guides specially)
+  const pathsByParent = new Map();
+  for (const p of allPaths) {
+    const parts = p.replace(/\.md$/, '').split('/');
+    if (parts.length <= 1) continue;
+
+    // Determine the parent path - always direct parent, except:
+    // Guide index pages (platforms/X/guides/Y.md) -> parent is platform (platforms/X.md)
+    let parentPath;
+    if (parts.includes('guides')) {
+      const guidesIdx = parts.indexOf('guides');
+      if (parts.length === guidesIdx + 2 && guidesIdx > 0) {
+        // This is a guide index (e.g., platforms/python/guides/django.md)
+        // Parent is the platform (platforms/python.md), skipping 'guides' folder
+        parentPath = parts.slice(0, guidesIdx).join('/') + '.md';
+      } else {
+        // Pages inside guides use normal parent-child (direct parent only)
+        parentPath = parts.slice(0, -1).join('/') + '.md';
+      }
+    } else {
+      // Standard parent-child relationship (direct parent only)
+      parentPath = parts.slice(0, -1).join('/') + '.md';
+    }
+
+    if (!pathsByParent.has(parentPath)) {
+      pathsByParent.set(parentPath, []);
+    }
+    pathsByParent.get(parentPath).push(p);
+  }
+
+  // Append child listings to parent index files
+  let updatedCount = 0;
+  for (const [parentPath, children] of pathsByParent) {
+    const parentFile = path.join(OUTPUT_DIR, parentPath);
+    let existingContent;
+    try {
+      existingContent = await readFile(parentFile, {encoding: 'utf8'});
+    } catch (err) {
+      if (err.code === 'ENOENT') {
+        continue; // Parent file doesn't exist, skip
+      }
+      throw err;
+    }
+
+    // Only show "## Guides" section for platform index pages (e.g., platforms/javascript.md)
+    // These are the only pages that have guide children (platforms/X/guides/Y.md)
+    const isPlatformIndex =
+      parentPath.startsWith('platforms/') && parentPath.split('/').length === 2; // e.g., "platforms/javascript.md"
+
+    const guides = isPlatformIndex ? children.filter(p => p.includes('/guides/')) : [];
+    const otherPages = isPlatformIndex
+      ? children.filter(p => !p.includes('/guides/'))
+      : children;
+
+    let childSection = '';
+    if (guides.length > 0) {
+      const guideList = guides
+        .map(p => {
+          const name = p.replace(/\.md$/, '').split('/').pop();
+          return `- [${name}](${DOCS_ORIGIN}/${p})`;
+        })
+        .join('\n');
+      childSection += `\n## Guides\n\n${guideList}\n`;
+    }
+    if (otherPages.length > 0) {
+      const pageList = otherPages
+        .map(p => {
+          const name = p.replace(/\.md$/, '').split('/').pop();
+          return `- [${name}](${DOCS_ORIGIN}/${p})`;
+        })
+        .join('\n');
+      childSection += `\n## Pages in this section\n\n${pageList}\n`;
+    }
+
+    if (childSection) {
+      const updatedContent = existingContent + childSection;
+      await writeFile(parentFile, updatedContent, {encoding: 'utf8'});
+      updatedCount++;
+
+      // Upload modified parent file to R2 if configured
+      if (accessKeyId && secretAccessKey && existingFilesOnR2) {
+        const fileHash = md5(updatedContent);
+        const existingHash = existingFilesOnR2.get(parentPath);
+        if (existingHash !== fileHash) {
+          const s3Client = getS3Client();
+          await uploadToCFR2(s3Client, parentPath, updatedContent);
+        }
+      }
+    }
+  }
+  console.log(`📑 Added child page listings to ${updatedCount} section index files`);
+
+  // Upload index.md to R2 if configured
+  if (accessKeyId && secretAccessKey) {
+    const s3Client = getS3Client();
+    const indexHash = md5(rootSitemapContent);
+    const existingHash = existingFilesOnR2?.get('index.md');
+    if (existingHash !== indexHash) {
+      await uploadToCFR2(s3Client, 'index.md', rootSitemapContent);
+      console.log(`📤 Uploaded updated index.md to R2`);
+    }
+  }
+
   // Clean up unused cache files to prevent unbounded growth
   if (!noCache) {
     try {
@@ -250,12 +407,42 @@ async function createWork() {
 
 const md5 = data => createHash('md5').update(data).digest('hex');
 
+/**
+ * Strips build-specific elements from HTML for stable cache keys and faster processing.
+ *
+ * Next.js build output contains non-deterministic elements that change between builds
+ * even when content is unchanged:
+ * - <script> tags: RSC/Flight payloads, JS chunk references with content hashes
+ * - <link> tags referencing /_next/static/: CSS files, fonts, JS preloads with hashes
+ * - <style> tags with href: inlined CSS with build-specific hash in href attribute
+ *
+ * These elements are irrelevant for markdown generation (we only use title, canonical
+ * link, and div#main content), so stripping them:
+ * 1. Makes cache keys stable across builds
+ * 2. Speeds up HTML parsing by reducing input size significantly
+ *
+ * We use regex instead of proper HTML parsing for performance - this runs on every file
+ * and regex is much faster. The input is trusted (Next.js build output), and worst case
+ * for any regex edge cases is a cache miss, which is acceptable.
+ */
+function stripUnstableElements(html) {
+  return (
+    html
+      // Remove script tags (RSC payloads, JS chunk references)
+      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+      // Remove link tags referencing Next.js build assets (CSS, fonts, JS preloads)
+      .replace(/<link[^>]*\/_next\/[^>]*>/gi, '')
+      // Remove style tags with href attribute (inlined CSS with build hashes)
+      .replace(/<style[^>]*href="[^"]*"[^>]*>[\s\S]*?<\/style>/gi, '')
+  );
+}
+
 async function genMDFromHTML(source, target, {cacheDir, noCache, usedCacheFiles}) {
-  const leanHTML = (await readFile(source, {encoding: 'utf8'}))
-    // Remove all script tags, as they are not needed in markdown
-    // and they are not stable across builds, causing cache misses
-    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
-  const cacheKey = `v${CACHE_VERSION}_${md5(leanHTML)}`;
+  const rawHTML = await readFile(source, {encoding: 'utf8'});
+  // Strip build-specific elements for stable cache keys and faster parsing.
+  // See stripUnstableElements() for details on what's removed and why.
+  const strippedHTML = stripUnstableElements(rawHTML);
+  const cacheKey = `v${CACHE_VERSION}_${md5(strippedHTML)}`;
   const cacheFile = path.join(cacheDir, cacheKey);
   if (!noCache) {
     try {
@@ -280,7 +467,9 @@ async function genMDFromHTML(source, target, {cacheDir, noCache, usedCacheFiles}
   const data = String(
     await unified()
       .use(rehypeParse)
-      // Need the `head > title` selector for the headers
+      // Select only the elements we need for markdown (title, canonical URL, main content).
+      // Build-specific elements (scripts, CSS links, etc.) are already stripped by
+      // stripUnstableElements() above, so we don't need to remove them here.
       .use(
         () => tree =>
           selectAll('head > title, head > link[rel="canonical"], div#main', tree)
@@ -338,7 +527,7 @@ async function genMDFromHTML(source, target, {cacheDir, noCache, usedCacheFiles}
       .use(() => tree => remove(tree, {type: 'inlineCode', value: ''}))
       .use(remarkGfm)
       .use(remarkStringify)
-      .process(leanHTML)
+      .process(strippedHTML)
   );
   const reader = Readable.from(data);
 

@@ -97,6 +97,7 @@ const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
 // Both platform-redirect and [[...path]] need the doctree at runtime:
 // - platform-redirect: dynamic route with searchParams
 // - [[...path]]: calls getDocsRootNode() during prerendering (even though force-static)
+// - sitemap.xml: uses getDocsRootNode() to extract all page paths
 //
 // Additionally, include specific doc files that may be accessed at runtime due to:
 // - Error page rendering (when a static page fails to load)
@@ -107,6 +108,7 @@ const outputFileTracingIncludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
   ? {
       '/platform-redirect': ['public/doctree-dev.json'],
       '\\[\\[\\.\\.\\.path\\]\\]': ['public/doctree-dev.json'],
+      'sitemap.xml': ['public/doctree-dev.json'],
     }
   : {
       '/platform-redirect': ['public/doctree.json'],
@@ -115,6 +117,7 @@ const outputFileTracingIncludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
         'docs/changelog.mdx',
         'docs/platforms/index.mdx',
       ],
+      'sitemap.xml': ['public/doctree.json'],
     };
 
 if (process.env.NODE_ENV !== 'development' && !process.env.NEXT_PUBLIC_SENTRY_DSN) {
@@ -135,7 +138,12 @@ const nextConfig = {
     '@esbuild/linux-arm64',
     '@esbuild/linux-x64',
     '@esbuild/win32-x64',
-    'mdx-bundler',
+    // Note: mdx-bundler is intentionally NOT in serverExternalPackages.
+    // The package is ESM-only ("type": "module") and cannot be require()'d at runtime.
+    // Keeping it out allows webpack to bundle mdx-bundler/client properly while
+    // outputFileTracingExcludes still prevents the heavy build-time parts from
+    // being included in the serverless function bundle.
+    // Fixes: DOCS-A0W
     'sharp',
     '@aws-sdk/client-s3',
     '@google-cloud/storage',

@@ -94,12 +94,15 @@ export function PlatformSelector({
   }, [searchValue, currentPlatformKey, platformsAndGuides]);
 
   const router = useRouter();
+  const pathname = usePathname();
   const onPlatformChange = (platformKey: string) => {
     const platform_ = platformsAndGuides.find(
       platform => platform.key === platformKey.replace('-redirect', '')
     );
     if (platform_) {
       localStorage.setItem('active-platform', platform_.key);
+      // Use the pre-computed URL from the sidebar which already handles
+      // equivalent paths (e.g., ai-agent-monitoring <-> ai-agent-monitoring-browser)
       router.push(platform_.url);
     }
   };
@@ -113,10 +116,20 @@ export function PlatformSelector({
     requestAnimationFrame(() => activeElementRef.current?.scrollIntoView());
   }, [open]);
 
+  // Track if component has mounted to prevent hydration mismatch
+  // localStorage is only available on the client, so we must wait until
+  // after hydration to render UI that depends on it
+  // See: DOCS-7RD
+  const [hasMounted, setHasMounted] = useState(false);
   const [storedPlatformKey, setStoredPlatformKey] = useState<string | null>(null);
   const storedPlatform = platformsAndGuides.find(
     platform => platform.key === storedPlatformKey
   );
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
   useEffect(() => {
     if (currentPlatformKey) {
       localStorage.setItem('active-platform', currentPlatformKey);
@@ -125,18 +138,20 @@ export function PlatformSelector({
     }
   }, [currentPlatformKey]);
 
-  const path = usePathname();
   const isPlatformPage = Boolean(
-    path?.startsWith('/platforms/') &&
+    pathname?.startsWith('/platforms/') &&
       // /platforms/something
-      path.length > '/platforms/'.length
+      pathname.length > '/platforms/'.length
   );
+  // Only show stored platform after mount to prevent hydration mismatch
+  // Server doesn't have localStorage, so this must wait until client-side
   const showStoredPlatform =
+    hasMounted &&
     !open &&
     !isPlatformPage &&
     storedPlatformKey &&
     storedPlatform &&
-    path !== '/platforms/';
+    pathname !== '/platforms/';
 
   return (
     <div>

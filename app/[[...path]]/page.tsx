@@ -1,4 +1,5 @@
 import {Fragment, useMemo} from 'react';
+import * as Sentry from '@sentry/nextjs';
 import {getMDXComponent} from 'mdx-bundler/client';
 import {Metadata} from 'next';
 import {notFound} from 'next/navigation';
@@ -121,10 +122,24 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
     let doc: Awaited<ReturnType<typeof getFileBySlugWithCache>>;
     try {
       doc = await getFileBySlugWithCache(`develop-docs/${params.path?.join('/') ?? ''}`);
-    } catch (e) {
-      if (e.code === 'ENOENT') {
-        // eslint-disable-next-line no-console
-        console.error('ENOENT', params.path);
+    } catch (e: unknown) {
+      // Handle file not found and runtime MDX compilation errors gracefully.
+      // This can happen when serverless function is invoked at runtime but docs files
+      // aren't in the bundle, or MDX compilation is attempted at Vercel runtime.
+      // Note: This error handling is duplicated for regular docs below - keep them in sync.
+      const errorCode = e && typeof e === 'object' && 'code' in e ? e.code : null;
+      const isExpectedError =
+        errorCode === 'ENOENT' ||
+        errorCode === 'MDX_RUNTIME_ERROR' ||
+        (e instanceof Error && e.message.includes('Failed to find a valid source file'));
+      if (isExpectedError) {
+        // Log as warning for visibility without flooding errors
+        // Users are served static pages from CDN - this is an infrastructure edge case
+        Sentry.logger.warn('MDX file not found at runtime, returning 404', {
+          path: params.path?.join('/'),
+          errorCode,
+          reason: 'serverless_bundle_exclusion',
+        });
         return notFound();
       }
       throw e;
@@ -182,10 +197,24 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
   let doc: Awaited<ReturnType<typeof getFileBySlugWithCache>>;
   try {
     doc = await getFileBySlugWithCache(`docs/${pageNode.path}`);
-  } catch (e) {
-    if (e.code === 'ENOENT') {
-      // eslint-disable-next-line no-console
-      console.error('ENOENT', pageNode.path);
+  } catch (e: unknown) {
+    // Handle file not found and runtime MDX compilation errors gracefully.
+    // This can happen when serverless function is invoked at runtime but docs files
+    // aren't in the bundle, or MDX compilation is attempted at Vercel runtime.
+    // Note: This error handling is duplicated for developer docs above - keep them in sync.
+    const errorCode = e && typeof e === 'object' && 'code' in e ? e.code : null;
+    const isExpectedError =
+      errorCode === 'ENOENT' ||
+      errorCode === 'MDX_RUNTIME_ERROR' ||
+      (e instanceof Error && e.message.includes('Failed to find a valid source file'));
+    if (isExpectedError) {
+      // Log as warning for visibility without flooding errors
+      // Users are served static pages from CDN - this is an infrastructure edge case
+      Sentry.logger.warn('MDX file not found at runtime, returning 404', {
+        path: pageNode.path,
+        errorCode,
+        reason: 'serverless_bundle_exclusion',
+      });
       return notFound();
     }
     throw e;
@@ -245,7 +274,7 @@ function resolveOgImageUrl(
     return null;
   }
 
-  // Remove hash fragments (e.g., #600x400 from remark-image-size)
+  // Remove hash fragments (e.g., #600x400 from remark-image-processing)
   const cleanUrl = imageUrl.split('#')[0];
 
   // External URLs - return as is
