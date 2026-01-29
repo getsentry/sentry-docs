@@ -1,0 +1,66 @@
+---
+title: Migrate from 7.x to 8.x
+sidebar_order: 98
+description: "Learn how to migrate from version 7 to version 8 of the Sentry React Native SDK"
+---
+
+<Alert level="warning">
+
+**Version 8 is currently in alpha.** This migration guide is provided for early adopters. The API and features may change before the stable release.
+
+</Alert>
+
+Version 8 of the Sentry React Native SDK updates the underlying native SDKs (Cocoa v9, CLI v3, Android Gradle Plugin v6) which introduce breaking changes in minimum version requirements and build tooling.
+
+## Important Changes in Dependencies
+
+Version 8 includes major upgrades to the underlying native SDKs:
+
+- **Cocoa SDK**: Upgraded from v8.58.0 to v9.1.0 ([#5356](https://github.com/getsentry/sentry-react-native/pull/5356)). See the [Cocoa SDK 8.x to 9.x migration guide](/platforms/apple/migration/#migrating-from-8x-to-9x) for details on breaking changes.
+- **Sentry CLI**: Upgraded from v2.58.4 to v3.1.0 ([#5523](https://github.com/getsentry/sentry-react-native/pull/5523))
+- **Android Gradle Plugin**: Upgraded to v6.0.0 ([#5578](https://github.com/getsentry/sentry-react-native/pull/5578)). If you're using the Android SDK directly, see the [Android SDK migration guide](/platforms/android/migration/) for details.
+
+These upgrades introduce breaking changes in minimum version requirements and build tooling.
+
+## Breaking Changes
+
+### Minimum Version Requirements
+
+#### iOS/macOS/tvOS
+
+The minimum supported versions have been updated:
+
+- **iOS**: **15.1+** (previously 13.0+)
+- **macOS**: **12.0+** (previously 10.13+)
+- **tvOS**: **15.0+** (previously 13.0+)
+
+If your app targets older versions, you'll need to update your deployment targets before upgrading to version 8. For more details on the Cocoa SDK v9 changes, see the [Cocoa SDK 8.x to 9.x migration guide](/platforms/apple/migration/#migrating-from-8x-to-9x).
+
+#### Android
+
+The Android build tooling requirements have been updated:
+
+- **Sentry Android Gradle Plugin**: **6.0.0** (previously 5.x)
+- **Android Gradle Plugin**: **7.4.0+** (previously 7.3.0+)
+- **Kotlin**: **1.8+**
+
+Update your `android/build.gradle` file to ensure compatibility. If you're using the Android SDK directly, see the [Android SDK migration guide](/platforms/android/migration/) for details:
+
+```gradle
+buildscript {
+    ext {
+        kotlinVersion = "1.8.0" // or higher
+        androidGradlePluginVersion = "7.4.0" // or higher
+    }
+    dependencies {
+        classpath("com.android.tools.build:gradle:$androidGradlePluginVersion")
+        classpath("io.sentry:sentry-android-gradle-plugin:6.0.0")
+    }
+}
+```
+
+#### Sentry Self-Hosted
+
+Sentry CLI v3 requires self-hosted Sentry instances version **25.11.1+** (previously 25.2.0).
+
+If you're using a self-hosted Sentry instance, ensure it's running version 25.11.1 or higher before upgrading to React Native SDK v8.
