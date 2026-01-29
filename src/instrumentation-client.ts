@@ -1,6 +1,11 @@
 import * as Sentry from '@sentry/nextjs';
 import * as Spotlight from '@spotlightjs/spotlight';
 
+// Regex to identify bots, crawlers, and headless browsers
+// Note: 'bot' catches googlebot, slackbot, twitterbot, etc
+const BOT_PATTERN =
+  /bot|crawler|spider|scraper|headless|facebookexternalhit|whatsapp|phantomjs|selenium|puppeteer|playwright|lighthouse|pagespeed|gtmetrix|pingdom|uptimerobot/i;
+
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
 
@@ -11,35 +16,9 @@ Sentry.init({
       return 1; // Default to sampling if userAgent not available
     }
 
-    const userAgent = navigator.userAgent.toLowerCase();
+    const isBot = BOT_PATTERN.test(navigator.userAgent);
 
-    // Patterns to identify bots, crawlers, and headless browsers
-    const botPatterns = [
-      'headlesschrome',
-      'headless',
-      'bot',
-      'crawler',
-      'spider',
-      'scraper',
-      'googlebot',
-      'bingbot',
-      'yandexbot',
-      'slackbot',
-      'facebookexternalhit',
-      'twitterbot',
-      'linkedinbot',
-      'whatsapp',
-      'telegrambot',
-      'phantomjs',
-      'selenium',
-      'puppeteer',
-      'playwright',
-    ];
-
-    // Check if userAgent matches any bot pattern
-    const isBot = botPatterns.some(pattern => userAgent.includes(pattern));
-
-    // Drop spans for bots (return 0), keep for real users (return 1)
+    // Drop traces for bots (return 0), keep for real users (return 1)
     return isBot ? 0 : 1;
   },
 
