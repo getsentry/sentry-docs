@@ -409,18 +409,14 @@ following:
 1. a string which span names will be compared against
 2. a compiled regex which span names will be matched against
 3. a dictionary with two possible keys: `name` and `attributes`
-  - if `name` is provided, its value must be a string or regex as described in
-    1. and 2.
-  - if `attributes` is provided, they have to be a dictionary of attribute/value
-    pairs
-  - if `attributes` is provided, all listed attributes have to be present on the
-    span for it to match
-  - if both `name` and `attributes` is provided, both the `name` as well as all
-    of the listed `attributes` need to match for a span to be ignored
+    - if `name` is provided, its value must be a string or regex as described in 1. and 2.
+    - if `attributes` is provided, they have to be a dictionary of attribute/value pairs
+    - if `attributes` is provided, all listed attributes have to be present on the span for it to match
+    - if both `name` and `attributes` is provided, both the `name` as well as all of the listed `attributes` need to match for a span to be ignored
 
 Each span will be matched against all rules defined, and if any of the rules
-matches, the span will be ignored. In practice, this means it will be unsampled
-and all its children will be parented to its parent instead.
+matches, the span will be ignored.
+
 
 ```python
 import re
@@ -461,6 +457,37 @@ Each span is matched against the `ignore_spans` rules when it's created. This
 means it can only take into account attributes and span names at creation time.
 
 </Alert>
+
+
+In practice, ignoring a span means it will be unsampled and not set on the scope.
+If it's a top-level (segment) span, all of its children will be ignored as well.
+If it isn't a top-level span, its children won't be ignored by default; they'll
+be parented to the ignored span's parent instead.
+
+```python
+from sentry_sdk.traces import start_span
+
+sentry_sdk.init(
+    _experiments={
+        "trace_lifecycle": "stream",
+        "ignore_spans": ["ignored"],
+    }
+)
+
+# In this example, "ignored" would be ignored, and "custom" would as well, by
+# extension, since it's a child span in a span tree with a top-level span that's
+# ignored.
+with start_span(name="ignored"):
+    with start_span(name="custom"):
+        ...
+
+# Here, "ignored" will be ignored, and "custom2" will become a child of "custom1"
+# in the resulting span tree:
+with start_span(name="custom1"):
+    with start_span(name="ignored"):
+        with start_span(name="custom2"):
+            ...
+```
 
 
 ## Scrubbing Data
