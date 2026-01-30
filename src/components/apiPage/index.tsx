@@ -1,9 +1,8 @@
 import {Fragment, ReactElement, useMemo} from 'react';
 import {bundleMDX} from 'mdx-bundler';
 
-import {getMDXComponent} from 'sentry-docs/getMDXComponent';
-
 import {type API} from 'sentry-docs/build/resolveOpenAPI';
+import {getMDXComponent} from 'sentry-docs/getMDXComponent';
 import {mdxComponents} from 'sentry-docs/mdxComponents';
 import remarkCodeTabs from 'sentry-docs/remark-code-tabs';
 import remarkCodeTitles from 'sentry-docs/remark-code-title';
