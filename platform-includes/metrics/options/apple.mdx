@@ -2,15 +2,24 @@ The Sentry Cocoa SDK provides several options to configure how metrics are captu
 
 ### Enabling/Disabling Metrics
 
-Metrics are enabled by default. If you need to disable metrics, set `enableMetrics` to `false` in the experimental options when initializing the SDK:
+Metrics are enabled by default, but are not collected automatically. You must manually call the `SentrySDK.metrics` API to record metrics. If you need to disable metrics entirely, set `options.experimental.enableMetrics` to `false` when initializing the SDK:
 
-```swift
+```swift {tabTitle:Swift}
 import Sentry
 
 SentrySDK.start { options in
     options.dsn = "___PUBLIC_DSN___"
     options.experimental.enableMetrics = false // Metrics are enabled by default
 }
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.experimental.enableMetrics = NO; // Metrics are enabled by default
+}];
 ```
 
 ### Filtering and Modifying Metrics
@@ -76,7 +85,7 @@ SentrySDK.start { options in
 
 ### Flushing Metrics
 
-By default, metrics are buffered and flushed depending on buffer size and time. If you need to manually flush metrics before the automatic interval, you can use the `flush` method:
+By default, metrics are buffered and flushed depending on buffer size and time. If you need to manually flush metrics before the automatic interval, you can use the `flush` method. Note that this is a **blocking** call that will wait until all pending data is sent or the timeout is reached:
 
 ```swift
 import Sentry
