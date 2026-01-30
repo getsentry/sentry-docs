@@ -310,8 +310,23 @@ headers = {
 
 ## Sampling
 
-In order to make a sampling decision `traces_sampler`, you'll have access to a
-sampling context. Its format is:
+If you define a custom `traces_sampler`, it'll receive a sampling context as 
+its sole argument:
+
+```python
+def traces_sampler(sampling_context):
+    if sampling_context["name"] in IGNORED_SPAN_NAMES:
+        return 0.0
+    return 1.0
+
+sentry_sdk.init(
+    traces_sampler=traces_sampler,
+    _experiments={"trace_lifecycle": "stream"},
+)
+```
+
+In span streaming mode, `sampling_context` is a dictionary with the following
+structure:
 
 ```python
 {
@@ -326,17 +341,15 @@ sampling context. Its format is:
 }
 ```
 
-This is a departure from the previous format in order to make the structure
-simpler and easier to work with.
-
 All starting attributes on the span will be accessible in
 `sampling_context["attributes"]`. You can provide attributes via the `attributes`
 argument to `sentry_sdk.traces.start_span()`.
 
-Sampling is applied on span start. If you're using the context manager way
-(`with start_span(...):`), the span will be sampled immediately after the `with`
-block is entered. If you're using the direct `span = start_span(...)` API, the
-span will be sampled when calling `span.start()`.
+The sampling decision is made on span start. If you're using the context manager
+way of starting a span (`with start_span(...):`), the span will be sampled
+immediately after the `with` block is entered. If you're using the direct
+`span = start_span(...)` API, the span will be sampled when calling
+`span.start()`.
 
 As before, sampling will only be applied to top-level spans. Children spans
 inherit the sampling decision of their parents, unless specifically filtered
@@ -344,12 +357,12 @@ out via the [`ignore_spans` option](#filtering).
 
 ### Custom Sampling Context
 
-If you need additional data or objects to make a sampling decision, you can
+If you need additional data to make a sampling decision, you can
 provide a custom sampling context, which will be merged with the
 `sampling_context` in the traces sampler.
 
-Custom sampling context will solely be used for making a sampling decision in the
-traces sampler and will not be materialized on the span in any way. It also has
+Custom sampling context will only be used for making a sampling decision in the
+traces sampler and won't be materialized on the span in any way. It also has
 no type restrictions, so you can, for instance, have the whole request object
 accessible in the traces sampler in a web framework context.
 
@@ -388,4 +401,68 @@ Before, the custom sampling context used to be an optional argument to
 
 ## Filtering
 
-`<TODO: ignore_spans>`
+In span streaming mode, the SDK provides a new `ignore_spans` configuration
+option.
+
+`ignore_spans` is a list of filtering rules. A filtering rule is one of the
+following:
+1. a string which span names will be compared against
+2. a compiled regex which span names will be matched against
+3. a dictionary with two possible keys: `name` and `attributes`
+  - if `name` is provided, its value must be a string or regex as described in
+    1. and 2.
+  - if `attributes` is provided, they have to be a dictionary of attribute/value
+    pairs
+  - if `attributes` is provided, all listed attributes have to be present on the
+    span for it to match
+  - if both `name` and `attributes` is provided, both the `name` as well as all
+    of the listed `attributes` need to match for a span to be ignored
+
+Each span will be matched against all rules defined, and if any of the rules
+matches, the span will be ignored. In practice, this means it will be unsampled
+and all its children will be parented to its parent instead.
+
+```python
+import re
+
+import sentry_sdk
+
+sentry_sdk.init(
+    _experiments={
+        "trace_lifecycle": "stream",
+        "ignore_spans": [
+            # ignore all spans with the name "/health"
+            "/health",
+            # ignore all spans that match a regex
+            re.compile(r"/flow/.*"),
+            # ignore all spans from a certain service and certain pipeline
+            {
+                "attributes": {
+                    "service.id": "15def9a",
+                    "flow.pipeline": "legacy",
+                }
+            },
+            # ignore all spans from a certain service of a specific kind
+            {
+                "name": re.compile(r"/flow/.*"),
+                "attributes": {
+                    "service.id": "15def9a",
+                    "flow.pipeline": "legacy",
+                },
+            }
+        ],
+    }
+)
+```
+
+<Alert level="info" title="Attributes and names visible to `ignore_spans`">
+
+Each span is matched against the `ignore_spans` rules when it's created. This
+means it can only take into account attributes and span names at creation time.
+
+</Alert>
+
+
+## Scrubbing Data
+
+`<TODO: before_send_span>`
