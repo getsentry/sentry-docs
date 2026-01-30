@@ -1,6 +1,7 @@
 import {Fragment, ReactElement, useMemo} from 'react';
 import {bundleMDX} from 'mdx-bundler';
-import {getMDXComponent} from 'mdx-bundler/client';
+
+import {getMDXComponent} from 'sentry-docs/getMDXComponent';
 
 import {type API} from 'sentry-docs/build/resolveOpenAPI';
 import {mdxComponents} from 'sentry-docs/mdxComponents';

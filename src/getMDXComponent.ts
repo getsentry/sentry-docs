@@ -4,8 +4,6 @@
  * Eliminates the runtime dependency on mdx-bundler/client which has CJS/ESM
  * compatibility issues in Vercel serverless functions. Since getMDXComponent
  * only needs React at runtime, we can safely inline this implementation.
- *
- * @see https://github.com/kentcdodds/mdx-bundler/blob/main/src/client.js
  */
 import type {ComponentType, FunctionComponent} from 'react';
 // Namespace imports required - MDX runtime expects React, ReactDOM, jsx_runtime in scope
