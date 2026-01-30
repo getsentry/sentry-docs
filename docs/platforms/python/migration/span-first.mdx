@@ -406,12 +406,14 @@ option.
 
 `ignore_spans` is a list of filtering rules. A filtering rule is one of the
 following:
-1. a string which span names will be compared against
-2. a compiled regex which span names will be matched against
-3. a dictionary with two possible keys: `name` and `attributes`
-    - if `name` is provided, its value must be a string or regex as described in 1. and 2.
-    - if `attributes` is provided, they have to be a dictionary of attribute/value pairs
-    - if `attributes` is provided, all listed attributes have to be present on the span for it to match
+1. a string or a compiled regex to match against the span name
+2. a dictionary with two possible keys: `name` and `attributes`
+    - if `name` is provided, its value must be a string or regex as described in 1.
+    - if `attributes` is provided:
+         - It has to be a dictionary of attribute/value pairs
+         - Attribute values will be checked for exact matches
+         - Attribute values can optionally be compiled regexes
+         - All listed attributes have to be present on the span for it to match
     - if both `name` and `attributes` is provided, both the `name` as well as all of the listed `attributes` need to match for a span to be ignored
 
 Each span will be matched against all rules defined, and if any of the rules
@@ -442,7 +444,7 @@ sentry_sdk.init(
             {
                 "name": re.compile(r"/flow/.*"),
                 "attributes": {
-                    "service.id": "15def9a",
+                    "service.id": re.compile(r".*\.facade"),
                     "flow.pipeline": "legacy",
                 },
             }
@@ -451,18 +453,18 @@ sentry_sdk.init(
 )
 ```
 
-<Alert level="info" title="Attributes and names visible to `ignore_spans`">
+<Alert level="info" title="Attributes and names visible to ignore_spans">
 
 Each span is matched against the `ignore_spans` rules when it's created. This
 means it can only take into account attributes and span names at creation time.
+It doesn't have access to attributes set on span end, like
+`http.response.status_code`.
 
 </Alert>
 
-
-In practice, ignoring a span means it will be unsampled and not set on the scope.
-If it's a top-level (segment) span, all of its children will be ignored as well.
-If it isn't a top-level span, its children won't be ignored by default; they'll
-be parented to the ignored span's parent instead.
+In practice, ignoring a span means it will be unsampled, and:
+- If a top-level span is ignored, all of its children will be ignored as well.
+- If a non-top-level (child) span, its children won't be ignored by default; they'll be parented to the ignored span's parent instead in the trace waterfall.
 
 ```python
 from sentry_sdk.traces import start_span
