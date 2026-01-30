@@ -18,6 +18,10 @@ Use this guide for general instructions on using the Sentry SDK with Cloudflare.
 - **[Remix](/platforms/javascript/guides/cloudflare/frameworks/remix/)**
 - **[SvelteKit](/platforms/javascript/guides/cloudflare/frameworks/sveltekit/)**
 
+<Alert>
+  The Cloudflare Workers runtime has some platform-specific limitations that affect tracing. See [Known Limitations](#known-limitations) for details.
+</Alert>
+
 <PlatformContent includePath="getting-started-prerequisites" />
 
 ## Step 1: Install
@@ -207,6 +211,14 @@ export async function onRequest(context) {
 Now, head over to your project on [Sentry.io](https://sentry.io) to view the collected data (it takes a couple of moments for the data to appear).
 
 <PlatformContent includePath="getting-started-verify-locate-data" />
+
+## Known Limitations
+
+### Span Durations
+
+Server-side spans will display `0ms` for their durations. This is due to a security measure Cloudflare Workers implements to [mitigate against timing attacks](https://developers.cloudflare.com/workers/runtime-apis/performance/). In the Cloudflare Workers runtime, `performance.now()` and `Date.now()` only advance after I/O occurs, which means CPU-bound operations will show zero duration.
+
+This is expected behavior in the Cloudflare Workers environment and affects all frameworks deployed to Cloudflare Workers, including Next.js, Astro, Remix, and others.
 
 ## Next Steps
 
