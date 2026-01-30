@@ -669,7 +669,8 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
   const dependsOnRegistry =
     source.includes('@inject') ||
     source.includes('<PlatformSDKPackageName') ||
-    source.includes('<LambdaLayerDetail');
+    source.includes('<LambdaLayerDetail') ||
+    source.includes('<GradleUploadInstructions');
 
   // Check cache in CI environments
   if (process.env.CI) {
