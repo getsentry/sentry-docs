@@ -1,94 +1,11 @@
 import * as Sentry from '@sentry/nextjs';
 import * as Spotlight from '@spotlightjs/spotlight';
 
-// AI agents we want to track for docs/markdown consumption visibility
-// These fetch markdown content and we need performance data on serving to agentic tools
-const AI_AGENT_PATTERN = new RegExp(
-  [
-    'claudebot',
-    'claude-web',
-    'anthropic',
-    'gptbot',
-    'chatgpt',
-    'openai',
-    'cursor',
-    'codex',
-    'copilot',
-    'perplexity',
-    'cohere',
-    'gemini',
-  ].join('|'),
-  'i'
-);
-
-// Bots/crawlers to filter out (SEO crawlers, social media, testing tools, monitors)
-// Using explicit bot names to avoid false positives (e.g., "bot" would match Cubot phones)
-const BOT_PATTERN = new RegExp(
-  [
-    // Search engine crawlers
-    'googlebot',
-    'bingbot',
-    'yandexbot',
-    'baiduspider',
-    'duckduckbot',
-    'applebot',
-    // SEO tools
-    'ahrefsbot',
-    'semrushbot',
-    'dotbot',
-    'mj12bot',
-    // Social media
-    'slackbot',
-    'twitterbot',
-    'linkedinbot',
-    'telegrambot',
-    'discordbot',
-    'facebookexternalhit',
-    'whatsapp',
-    // Generic patterns
-    'crawler',
-    'spider',
-    'scraper',
-    'headless',
-    // Testing/automation tools
-    'phantomjs',
-    'selenium',
-    'puppeteer',
-    'playwright',
-    // Performance/monitoring tools
-    'lighthouse',
-    'pagespeed',
-    'gtmetrix',
-    'pingdom',
-    'uptimerobot',
-  ].join('|'),
-  'i'
-);
-
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
 
-  // Use tracesSampler to filter out bot/crawler traffic while keeping AI agents
-  tracesSampler: _samplingContext => {
-    // Check if running in browser environment
-    if (typeof navigator === 'undefined' || !navigator.userAgent) {
-      return 0.3; // Default to sampling if userAgent not available
-    }
-
-    const userAgent = navigator.userAgent;
-
-    // Always sample AI agents - we want full visibility into agentic docs consumption
-    const isAIAgent = AI_AGENT_PATTERN.test(userAgent);
-    if (isAIAgent) {
-      return 1;
-    }
-
-    // Filter out traditional bots/crawlers
-    const isBot = BOT_PATTERN.test(userAgent);
-
-    // Drop traces for bots, sample 30% of real users
-    return isBot ? 0 : 0.3;
-  },
+  // Adjust this value in production, or use tracesSampler for greater control
+  tracesSampleRate: 0.3,
 
   // Enable logs to be sent to Sentry
   enableLogs: true,
