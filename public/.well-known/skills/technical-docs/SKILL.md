@@ -1,1 +1,0 @@
-../../../../.claude/skills/technical-docs/SKILL.md

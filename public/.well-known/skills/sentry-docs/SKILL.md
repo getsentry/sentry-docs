@@ -1,1 +1,0 @@
-../../../../.claude/skills/sentry-docs/SKILL.md
