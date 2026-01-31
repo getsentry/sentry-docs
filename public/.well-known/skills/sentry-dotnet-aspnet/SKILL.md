@@ -31,7 +31,6 @@ Fetch these markdown files as needed:
 - https://docs.sentry.io/platforms/dotnet/guides/aspnet/tracing/trace-propagation/custom-instrumentation.md
 - https://docs.sentry.io/platforms/dotnet/guides/aspnet/tracing/trace-propagation/dealing-with-cors-issues.md
 - https://docs.sentry.io/platforms/dotnet/guides/aspnet/tracing/troubleshooting.md - Learn more about how to troubleshoot performance issues with the ASP.NET SDK.
-- https://docs.sentry.io/platforms/dotnet/guides/aspnet/tracing/troubleshooting.md - Learn how to troubleshoot your tracing setup.
 - https://docs.sentry.io/platforms/dotnet/guides/aspnet/crons.md - Sentry Crons allows you to monitor the uptime and performance of any scheduled, recurring job ...
 - https://docs.sentry.io/platforms/dotnet/guides/aspnet/crons/hangfire.md - Learn more about how to monitor your Hangfire jobs.
 - https://docs.sentry.io/platforms/dotnet/guides/aspnet/user-feedback.md - Learn more about collecting user feedback when an event occurs. Sentry pairs the feedback with...

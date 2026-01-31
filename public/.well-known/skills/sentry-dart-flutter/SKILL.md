@@ -73,7 +73,6 @@ Fetch these markdown files as needed:
 
 ### Migration
 - https://docs.sentry.io/platforms/dart/guides/flutter/migration.md
-- https://docs.sentry.io/platforms/dart/guides/flutter/migration.md - Migrate between versions of Sentry's SDK for Dart.
 
 ### Troubleshooting
 - https://docs.sentry.io/platforms/dart/guides/flutter/troubleshooting.md - Troubleshoot and resolve edge cases regarding known limitations and bundling.

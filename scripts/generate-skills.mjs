@@ -110,8 +110,10 @@ function findNode(node, targetPath) {
 /**
  * Collect all docs from a node and its children
  */
-function collectDocs(node, parentPath, results = []) {
-  if (node.path && node.missing !== true) {
+function collectDocs(node, parentPath, results = [], seen = new Set()) {
+  if (node.path && node.missing !== true && !seen.has(node.path)) {
+    seen.add(node.path);
+
     const sidebarSection = node.frontmatter?.sidebar_section || null;
     let category = getSectionCategory(sidebarSection);
 
@@ -133,7 +135,7 @@ function collectDocs(node, parentPath, results = []) {
   }
 
   for (const child of node.children || []) {
-    collectDocs(child, parentPath, results);
+    collectDocs(child, parentPath, results, seen);
   }
 
   return results;

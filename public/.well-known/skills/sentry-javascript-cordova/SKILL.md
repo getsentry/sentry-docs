@@ -100,9 +100,6 @@ Fetch these markdown files as needed:
 - https://docs.sentry.io/platforms/javascript/guides/cordova/best-practices/multiple-sentry-instances.md - Learn how to manage several Sentry instances by creating your own clients.
 - https://docs.sentry.io/platforms/javascript/guides/cordova/best-practices/sentry-testkit.md - Learn how to assert that the right flow-tracking or error is being sent to Sentry, but without...
 
-### Troubleshooting
-- https://docs.sentry.io/platforms/javascript/guides/cordova/troubleshooting.md - Troubleshoot and resolve issues when submitting to iTunes Connect.
-
 ### Other
 - https://docs.sentry.io/platforms/javascript/guides/cordova/upload-debug.md - Learn more about uploading debug symbols when building your app.
 - https://docs.sentry.io/platforms/javascript/guides/cordova/ionic.md - Learn how to use Sentry with Ionic.

@@ -155,9 +155,6 @@ Fetch these markdown files as needed:
 - https://docs.sentry.io/platforms/javascript/guides/aws-lambda/migration/v6-to-v7.md - Learn about migrating from Sentry JavaScript SDK 6.x to 7.x
 - https://docs.sentry.io/platforms/javascript/guides/aws-lambda/migration/v4-to-v5_v6.md - Learn about migrating from Sentry JavaScript SDK 4.x to 5.x/6.x
 
-### Troubleshooting
-- https://docs.sentry.io/platforms/javascript/guides/aws-lambda/troubleshooting.md - If you need help solving issues with your Sentry JavaScript AWS Lambda SDK, you can read the e...
-
 ### Other
 - https://docs.sentry.io/platforms/javascript/guides/aws-lambda/install.md - Review all installation methods for using Sentry in AWS Lambda functions
 - https://docs.sentry.io/platforms/javascript/guides/aws-lambda/install/layer.md - Learn how to add the Sentry Node Lambda Layer to use Sentry in your Lambda functions
