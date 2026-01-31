@@ -48,6 +48,10 @@ const productSidebarItems = [
     title: 'Documentation Changelog',
     root: 'changelog',
   },
+  {
+    title: 'Agentic Usage',
+    root: 'agentic-usage',
+  },
 ];
 
 export async function SidebarNavigation({path}: {path: string[]}) {
