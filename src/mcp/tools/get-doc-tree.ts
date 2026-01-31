@@ -10,7 +10,11 @@ interface TreeNode {
   children?: TreeNode[];
 }
 
-function filterTreeByDepth(node: DocNode, currentDepth: number, maxDepth: number): TreeNode {
+function filterTreeByDepth(
+  node: DocNode,
+  currentDepth: number,
+  maxDepth: number
+): TreeNode {
   const title = node.frontmatter.sidebar_title || node.frontmatter.title || node.slug;
 
   const result: TreeNode = {

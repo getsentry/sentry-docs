@@ -22,7 +22,9 @@ export function registerListPlatforms(server: McpServer) {
     platform: z
       .string()
       .optional()
-      .describe('Specific platform slug to get details for (e.g., "javascript", "python")'),
+      .describe(
+        'Specific platform slug to get details for (e.g., "javascript", "python")'
+      ),
   };
 
   server.tool('list_platforms', description, paramsSchema, async ({platform}) => {

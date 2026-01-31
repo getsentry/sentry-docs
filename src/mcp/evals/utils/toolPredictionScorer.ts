@@ -79,19 +79,20 @@ const predictionSchema = z.object({
   ),
   score: z
     .number()
-    .describe('Score from 0.0 to 1.0 indicating how well the predicted tools match the expected'),
+    .describe(
+      'Score from 0.0 to 1.0 indicating how well the predicted tools match the expected'
+    ),
   rationale: z
     .string()
-    .describe('Explanation of the score and any discrepancies between predicted and expected'),
+    .describe(
+      'Explanation of the score and any discrepancies between predicted and expected'
+    ),
 });
 
 /**
  * Generate the prompt for the scoring model.
  */
-function generatePrompt(
-  userQuery: string,
-  expectedTools: ExpectedToolCall[]
-): string {
+function generatePrompt(userQuery: string, expectedTools: ExpectedToolCall[]): string {
   const toolDescriptions = AVAILABLE_TOOLS.map(
     tool =>
       `- **${tool.name}**: ${tool.description}\n  Parameters: ${JSON.stringify(tool.parameters, null, 2)}`
