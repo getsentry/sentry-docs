@@ -130,6 +130,7 @@ if (process.env.NODE_ENV !== 'development' && !process.env.NEXT_PUBLIC_SENTRY_DS
 const nextConfig = {
   pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx', 'mdx'],
   trailingSlash: true,
+  skipTrailingSlashRedirect: true,
   serverExternalPackages: [
     'rehype-preset-minify',
     'esbuild',
