@@ -60,56 +60,67 @@ export function registerSearchDocs(server: McpServer) {
   };
 
   server.tool('search_docs', description, paramsSchema, async ({query, maxResults, site, guide}) => {
-    const search = site === 'develop' ? developSearch : docsSearch;
-    const platforms = guide ? [standardSDKSlug(guide)?.slug].filter(Boolean) : [];
+    try {
+      const search = site === 'develop' ? developSearch : docsSearch;
+      const platforms = guide ? [standardSDKSlug(guide)?.slug].filter(Boolean) : [];
 
-    const results = await search.query(query, {
-      platforms: platforms as string[],
-      searchAllIndexes: false,
-    });
+      const results = await search.query(query, {
+        platforms: platforms as string[],
+        searchAllIndexes: false,
+      });
 
-    // Flatten and format results
-    const allHits = results.flatMap(result =>
-      result.hits.map(hit => ({
-        id: hit.id,
-        url: hit.url,
-        title: stripHtmlTags(hit.title || ''),
-        snippet:
-          stripHtmlTags(hit.text || '').slice(0, 300) ||
-          stripHtmlTags(hit.context?.context1 || '').slice(0, 300) ||
-          '',
-      }))
-    );
+      // Flatten and format results
+      const allHits = results.flatMap(result =>
+        result.hits.map(hit => ({
+          id: hit.id,
+          url: hit.url,
+          title: stripHtmlTags(hit.title || ''),
+          snippet:
+            stripHtmlTags(hit.text || '').slice(0, 300) ||
+            stripHtmlTags(hit.context?.context1 || '').slice(0, 300) ||
+            '',
+        }))
+      );
 
-    const limitedResults = allHits.slice(0, maxResults);
+      const limitedResults = allHits.slice(0, maxResults);
 
-    if (limitedResults.length === 0) {
+      if (limitedResults.length === 0) {
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: `No documentation found for "${query}". Try different search terms or check the spelling.`,
+            },
+          ],
+        };
+      }
+
+      let output = `# Search Results for "${query}"\n\n`;
+      output += `Found ${limitedResults.length} result(s)\n\n`;
+      output += 'Use `get_doc` with the path to fetch full content.\n\n';
+
+      for (const [index, result] of limitedResults.entries()) {
+        const path = new URL(result.url).pathname.replace(/\/$/, '');
+        output += `## ${index + 1}. ${result.title || 'Untitled'}\n\n`;
+        output += `**Path**: \`${path}\`\n`;
+        output += `**URL**: ${result.url}\n\n`;
+        if (result.snippet) {
+          output += `> ${result.snippet.replace(/\n/g, '\n> ')}\n\n`;
+        }
+      }
+
+      return {
+        content: [{type: 'text' as const, text: output}],
+      };
+    } catch (error) {
       return {
         content: [
           {
             type: 'text' as const,
-            text: `No documentation found for "${query}". Try different search terms or check the spelling.`,
+            text: `Error searching documentation: ${error instanceof Error ? error.message : 'Unknown error'}`,
           },
         ],
       };
     }
-
-    let output = `# Search Results for "${query}"\n\n`;
-    output += `Found ${limitedResults.length} result(s)\n\n`;
-    output += 'Use `get_doc` with the path to fetch full content.\n\n';
-
-    for (const [index, result] of limitedResults.entries()) {
-      const path = new URL(result.url).pathname.replace(/\/$/, '');
-      output += `## ${index + 1}. ${result.title || 'Untitled'}\n\n`;
-      output += `**Path**: \`${path}\`\n`;
-      output += `**URL**: ${result.url}\n\n`;
-      if (result.snippet) {
-        output += `> ${result.snippet.replace(/\n/g, '\n> ')}\n\n`;
-      }
-    }
-
-    return {
-      content: [{type: 'text' as const, text: output}],
-    };
   });
 }

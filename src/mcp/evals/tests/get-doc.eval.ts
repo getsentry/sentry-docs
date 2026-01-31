@@ -3,7 +3,7 @@ import {describeEval} from 'vitest-evals';
 import {NoOpTaskRunner, ToolPredictionScorer} from '../utils';
 
 describeEval('get-doc', {
-  data: async () => [
+  data: () => Promise.resolve([
     {
       input: 'Get the full documentation for /platforms/javascript/guides/nextjs',
       expectedTools: [
@@ -50,7 +50,7 @@ describeEval('get-doc', {
         },
       ],
     },
-  ],
+  ]),
   task: NoOpTaskRunner(),
   scorers: [ToolPredictionScorer()],
   threshold: 0.6,

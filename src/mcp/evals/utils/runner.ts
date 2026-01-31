@@ -6,8 +6,8 @@
  * The scorer handles the actual prediction logic.
  */
 export function NoOpTaskRunner() {
-  return async function runner(input: string) {
+  return function runner(input: string) {
     // Simply return the input - the actual evaluation happens in the scorer
-    return input;
+    return Promise.resolve(input);
   };
 }

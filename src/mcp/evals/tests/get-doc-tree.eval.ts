@@ -3,7 +3,7 @@ import {describeEval} from 'vitest-evals';
 import {NoOpTaskRunner, ToolPredictionScorer} from '../utils';
 
 describeEval('get-doc-tree', {
-  data: async () => [
+  data: () => Promise.resolve([
     {
       input: 'Show me the documentation structure',
       expectedTools: [
@@ -58,7 +58,7 @@ describeEval('get-doc-tree', {
         },
       ],
     },
-  ],
+  ]),
   task: NoOpTaskRunner(),
   scorers: [ToolPredictionScorer()],
   threshold: 0.6,

@@ -3,7 +3,7 @@ import {describeEval} from 'vitest-evals';
 import {NoOpTaskRunner, ToolPredictionScorer} from '../utils';
 
 describeEval('search-docs', {
-  data: async () => [
+  data: () => Promise.resolve([
     {
       input: 'How do I set up Sentry in my Next.js app?',
       expectedTools: [
@@ -43,7 +43,7 @@ describeEval('search-docs', {
         },
       ],
     },
-  ],
+  ]),
   task: NoOpTaskRunner(),
   scorers: [ToolPredictionScorer()],
   threshold: 0.6,

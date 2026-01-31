@@ -3,7 +3,7 @@ import {describeEval} from 'vitest-evals';
 import {NoOpTaskRunner, ToolPredictionScorer} from '../utils';
 
 describeEval('list-platforms', {
-  data: async () => [
+  data: () => Promise.resolve([
     {
       input: 'What platforms does Sentry support?',
       expectedTools: [
@@ -58,7 +58,7 @@ describeEval('list-platforms', {
         },
       ],
     },
-  ],
+  ]),
   task: NoOpTaskRunner(),
   scorers: [ToolPredictionScorer()],
   threshold: 0.6,
