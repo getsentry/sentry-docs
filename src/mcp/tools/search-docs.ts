@@ -5,6 +5,20 @@ import {z} from 'zod';
 const docsSearch = new SentryGlobalSearch([{site: 'docs', pathBias: true, platformBias: true}]);
 const developSearch = new SentryGlobalSearch(['develop']);
 
+/**
+ * Strip HTML tags from a string iteratively to handle nested angle brackets.
+ * Prevents incomplete sanitization like `<<script>` → `<script>`
+ */
+function stripHtmlTags(str: string): string {
+  let result = str;
+  let previous = '';
+  while (result !== previous) {
+    previous = result;
+    result = result.replace(/<[^>]*>/g, '');
+  }
+  return result;
+}
+
 export function registerSearchDocs(server: McpServer) {
   const description = [
     'Search Sentry documentation for SDK setup, configuration, and usage guidance.',
@@ -59,10 +73,10 @@ export function registerSearchDocs(server: McpServer) {
       result.hits.map(hit => ({
         id: hit.id,
         url: hit.url,
-        title: hit.title?.replace(/<[^>]*>/g, '') || '',
+        title: stripHtmlTags(hit.title || ''),
         snippet:
-          hit.text?.replace(/<[^>]*>/g, '').slice(0, 300) ||
-          hit.context?.context1?.replace(/<[^>]*>/g, '').slice(0, 300) ||
+          stripHtmlTags(hit.text || '').slice(0, 300) ||
+          stripHtmlTags(hit.context?.context1 || '').slice(0, 300) ||
           '',
       }))
     );
