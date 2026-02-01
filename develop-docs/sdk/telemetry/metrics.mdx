@@ -451,10 +451,9 @@ A new data category for metrics has been added to Relay, `trace_metric`. Rate li
 
 ### Buffering
 
-SDKs **MUST** buffer metrics before sending them. SDKs should also keep a buffer of metrics and flush it when specific conditions are met. For initial implementation, a simple strategy is fine, for example: flushing metrics if the buffer length exceeds 100 items or if 5 seconds have passed. To prevent data loss, the buffer **SHOULD** forward metrics to the transport in the scenarios outlined in the [telemetry buffer data forwarding scenarios](/sdk/telemetry/telemetry-buffer/#data-forwarding-scenarios). Furthermore:
+SDKs **MUST** buffer metrics before sending them. SDKs should keep a buffer of metrics and flush it when specific conditions are met. For initial implementation, a simple strategy is fine, for example: flushing metrics if the buffer length exceeds 100 items or if 5 seconds have passed. To prevent data loss, the buffer **SHOULD** forward metrics to the transport in the scenarios outlined in the [telemetry buffer data forwarding scenarios](/sdk/telemetry/telemetry-buffer/#data-forwarding-scenarios).
 
-- The aggregation window should be time and size based.
-- SDKs should implement safeguards to prevent excessive memory usage from metric buffering.
+SDKs **MUST** also have a hard limit of 1000 metric events queued up to avoid causing your customers' applications going out of memory. Metrics added once this hard limit has been reached are dropped. Also, Relay has a hard limit of 1000 metrics per envelope. SDKs **MUST** not exceed this limit. SDKs **SHOULD** batch metrics into envelopes of 100 or less.
 
 We're currently working on a concept for buffering different types of telemetry data in [telemetry buffer specification](/sdk/telemetry/telemetry-buffer/).
 
@@ -471,6 +470,10 @@ Whenever possible, metrics should be linked to replays. If a metric is recorded 
 ### Other
 
 If `debug` is set to `true` in SDK init, calls to the Sentry metrics API should also print to the console with appropriate details. This will help debugging metrics setups.
+
+## Client Reports
+
+SDKs must report count (`trace_metric`) and size in bytes (`trace_metric_byte`) of discarded metrics. An approximation of metric size is sufficient (e.g. by counting as if serialized).
 
 ## Appendix A: Example `trace_metric` Envelope
 
