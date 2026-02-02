@@ -878,3 +878,48 @@ The Spotlight URL for local development.
 This option is only used when <PlatformIdentifier name="enableSpotlight" /> is set to `true`.
 
 </SdkOption>
+
+## Metrics Options
+<Alert>
+This feature is currently in open beta. Please reach out on [GitHub](https://github.com/getsentry/sentry-cocoa/discussions) if you have feedback or questions. Features in beta are still in-progress and may have bugs. We recognize the irony.
+</Alert>
+
+<SdkOption name="experimental.enableMetrics" type="bool" defaultValue="true" availableSince="9.2.0">
+
+When enabled, the SDK can send metrics to Sentry. Note that metrics are not collected automatically — you must manually call the `SentrySDK.metrics` API to record counters, gauges, and distributions.
+
+Learn more in the <PlatformLink to="/metrics/">Metrics documentation</PlatformLink>.
+
+</SdkOption>
+
+<SdkOption name="experimental.beforeSendMetric" type="function" availableSince="9.2.0">
+
+Use this callback to filter or modify metrics before they're sent to Sentry. Return `nil` to drop the metric.
+
+The callback receives a `SentryMetric` struct and must return either a modified metric or `nil` to drop it. Attributes use the `SentryAttributeValue` protocol, so you can assign valid types directly (`String`, `Bool`, `Int`, `Double`, `Float`, or arrays of these types).
+
+```swift
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    // Metrics are enabled by default, no need to set enableMetrics = true
+    options.experimental.beforeSendMetric = { metric in
+        // Create a mutable copy (SentryMetric is a struct)
+        var metric = metric
+
+        // Drop metrics with specific attributes
+        if case .boolean(let dropMe) = metric.attributes["dropMe"], dropMe {
+            return nil
+        }
+
+        // Modify metric attributes using literals
+        metric.attributes["processed"] = true
+        metric.attributes["processed_at"] = "2024-01-01"
+
+        return metric
+    }
+}
+```
+
+</SdkOption>
