@@ -1,11 +1,10 @@
 import {Fragment, useMemo} from 'react';
 import * as Sentry from '@sentry/nextjs';
 import {Metadata} from 'next';
+import nextDynamic from 'next/dynamic';
 import {notFound} from 'next/navigation';
 
 import {apiCategories} from 'sentry-docs/build/resolveOpenAPI';
-import {ApiCategoryPage} from 'sentry-docs/components/apiCategoryPage';
-import {ApiPage} from 'sentry-docs/components/apiPage';
 import {DocPage} from 'sentry-docs/components/docPage';
 import {Home} from 'sentry-docs/components/home';
 import {Include} from 'sentry-docs/components/include';
@@ -32,6 +31,17 @@ import {PageType} from 'sentry-docs/metrics';
 import {setServerContext} from 'sentry-docs/serverContext';
 import {PaginationNavNode} from 'sentry-docs/types/paginationNavNode';
 import {stripVersion} from 'sentry-docs/versioning';
+
+// Dynamic imports for API page components to avoid loading mdx-bundler at module load time.
+// mdx-bundler is excluded from serverless bundles, so we must only import it when actually needed.
+const ApiCategoryPage = nextDynamic(
+  () => import('sentry-docs/components/apiCategoryPage').then(mod => mod.ApiCategoryPage),
+  {ssr: true}
+);
+const ApiPage = nextDynamic(
+  () => import('sentry-docs/components/apiPage').then(mod => mod.ApiPage),
+  {ssr: true}
+);
 
 export async function generateStaticParams() {
   const docs = await (isDeveloperDocs ? getDevDocsFrontMatter() : getDocsFrontMatter());
