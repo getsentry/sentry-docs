@@ -79,6 +79,15 @@ const BOT_PATTERN = new RegExp(
 const DEFAULT_SAMPLE_RATE = 0.3;
 
 /**
+ * Checks if the input matches the pattern.
+ * Returns the matched substring (lowercase), or undefined if no match.
+ */
+function matchPattern(input: string, pattern: RegExp): string | undefined {
+  const match = input.match(pattern);
+  return match ? match[0].toLowerCase() : undefined;
+}
+
+/**
  * Determines trace sample rate based on user agent.
  * - AI agents: 100% (we want full visibility into agentic docs consumption)
  * - Bots/crawlers: 0% (filter out noise)
@@ -104,24 +113,24 @@ export function tracesSampler(samplingContext: SamplingContext): number {
     return DEFAULT_SAMPLE_RATE;
   }
 
-  const aiMatch = userAgent.match(AI_AGENT_PATTERN);
-  if (aiMatch) {
+  const aiAgent = matchPattern(userAgent, AI_AGENT_PATTERN);
+  if (aiAgent) {
     Sentry.metrics.count('docs.trace.sampled', 1, {
       attributes: {
         traffic_type: 'ai_agent',
-        agent_match: aiMatch[0].toLowerCase(),
+        agent_match: aiAgent,
         sample_rate: 1,
       },
     });
     return 1;
   }
 
-  const botMatch = userAgent.match(BOT_PATTERN);
-  if (botMatch) {
+  const bot = matchPattern(userAgent, BOT_PATTERN);
+  if (bot) {
     Sentry.metrics.count('docs.trace.sampled', 1, {
       attributes: {
         traffic_type: 'bot',
-        bot_match: botMatch[0].toLowerCase(),
+        bot_match: bot,
         sample_rate: 0,
       },
     });
