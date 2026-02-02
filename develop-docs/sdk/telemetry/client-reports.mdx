@@ -100,9 +100,10 @@ The following discard reasons are currently defined for `discarded_events`:
 - `insufficient_data`: an event was dropped due to a lack of data in the event (eg: not enough samples in a profile)
 - `backpressure`: an event was dropped due to downsampling caused by the system being under load
 - `ignored`: a telemetry item was ignored by the SDK (eg: a span was ignored by `ignore_spans`, can also be used by other deny-list mechanisms)
+- `invalid`: an event was dropped because it failed validation (eg: a replay session exceeded the maximum allowed length)
 
 In case a reason needs to be added,
-it also has to be added to the allowlist in [snuba](https://github.com/getsentry/snuba/blob/1a2528dacaf7415f71866bf2602ce473832d938c/rust_snuba/src/processors/outcomes.rs#L15-L27).
+it also has to be added to the allowlist in [snuba](https://github.com/getsentry/snuba/blob/master/rust_snuba/src/processors/outcomes.rs#L15).
 
 Additionally the following discard reasons are reserved but there is no expectation
 that SDKs send these under normal operation:
@@ -149,22 +150,19 @@ the SDKs should ensure not dropping too many reports. It is not required, for ex
 - to persist the data when an application crashes.
 - to move an envelope item with a client report to the next envelope when the cache for envelopes is full.
 
-SDKs are encouraged to reduce needless communication. They shall not send an envelope
-everytime they record a discarded event. The following approaches are recommendations
-that can be adjusted if required. The SDKs should keep track of the discard events in
-the transport. For applications with a low frequency of envelopes to ingest, such as
-mobile or web apps, the SDK shall attach the discarded events to an already scheduled
-envelope. We accept the tradeoff that apps rarely sending events will have fewer
-client reports. When the SDK schedules envelopes continuously, like on the backend,
-the SDK shall either choose to flush the discarded events periodically or attach them
-to an already scheduled envelope.
+SDKs **SHOULD** minimize unnecessary HTTP requests and **MUST NOT** send an envelope for each discarded event. Adjust these recommendations as needed:
+
+1. For low-frequency apps (mobile/web): Attach discarded events to scheduled envelopes. Fewer client reports are acceptable in such cases.
+2. For high-frequency apps (backends): Periodically flush discarded events or attach to scheduled envelopes.
+
+SDKs **MAY** keep track of discarded events in the transport. Once SDKs implement the [telemetry processor](/sdk/telemetry/telemetry-processor/), they **SHOULD** implement client reports tracking outside the transport, since data can be dropped in multiple places throughout the SDK. The [telemetry scheduler](/sdk/telemetry/telemetry-processor/#telemetry-scheduler) is then responsible for passing aggregated client reports to the transport. The telemetry scheduler still **MUST** adhere to the requirements above.
 
 The one who drops an envelope item must record and report it. If the server drops
 an envelope item, for example, with the response 429, the client SDK must not record
 this as the server already does. Still, the SDK must record lost envelope items
 when dropping them itself, for example, caused by an active rate limit. SDKs can put
 a simple optional check for HTTP status codes in place where any code `>= 400` except
-`429` will be recorded as `network_error`. The client SDKs can assume that client
+`429` will be recorded as `send_error`. The client SDKs can assume that client
 reports never get rate limited. The server is minimizing the possibility of client
 reports getting rate limited, but the SDKs shouldn't worry about this edge case as
 this feature is best-effort.

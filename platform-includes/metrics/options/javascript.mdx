@@ -1,25 +1,24 @@
-The Sentry JavaScript SDK provides several options to configure how metrics are captured and sent to Sentry.
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
 
-### Filtering and Modifying Metrics
+### beforeSendMetric
 
-Use the `beforeSendMetric` callback to filter or modify metrics before they're sent to Sentry. This is useful for:
+Filter or modify metrics before sending. Return `null` to drop a metric.
 
-- Removing sensitive data from metric attributes
-- Dropping metrics you don't want to send
-- Adding or modifying attributes
-
-The callback receives a metric object and must return either a modified metric or `null` to drop it.
+</SplitSectionText>
+<SplitSectionCode>
 
 ```javascript
 Sentry.init({
-  // ...
+  dsn: "___PUBLIC_DSN___",
   beforeSendMetric: (metric) => {
-    // Drop metrics with specific attributes
-    if (metric.attributes?.dropMe === true) {
+    // Drop specific metrics
+    if (metric.name === "debug_metric") {
       return null;
     }
 
-    // Modify metric attributes
+    // Add attributes
     metric.attributes = {
       ...metric.attributes,
       processed: true,
@@ -30,25 +29,34 @@ Sentry.init({
 });
 ```
 
-### Disabling Metrics
+</SplitSectionCode>
+</SplitSection>
 
-If you want to disable metrics collection entirely, you can do so by disabling the `enableMetrics` flag:
+<SplitSection>
+<SplitSectionText>
+
+### Disable Metrics
+
+Set `enableMetrics: false` to disable metrics collection entirely.
+
+### Flush Metrics
+
+Metrics are buffered and sent periodically. Use this snippet to flush immediately:
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```javascript
+// Disable metrics
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   enableMetrics: false,
 });
-```
 
-
-### Flushing Metrics
-
-By default, metrics are buffered and flushed depending on buffer size and time. If you need to manually flush metrics before the automatic interval, you can use the `flush` method:
-
-```javascript
+// Flush all pending metrics
 await Sentry.flush();
 ```
 
-This will flush all pending metrics and events to Sentry.
-
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
