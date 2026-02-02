@@ -88,28 +88,35 @@ function matchPattern(input: string, pattern: RegExp): string | undefined {
 }
 
 /**
+ * Gets user agent from headers object, handling case-insensitivity.
+ * HTTP headers are case-insensitive, but JS objects are case-sensitive.
+ */
+function getUserAgentFromHeaders(headers?: Record<string, string>): string | undefined {
+  if (!headers) {
+    return undefined;
+  }
+  const key = Object.keys(headers).find(k => k.toLowerCase() === 'user-agent');
+  return key ? headers[key] : undefined;
+}
+
+/**
  * Determines trace sample rate based on user agent.
  * - AI agents: 100% (we want full visibility into agentic docs consumption)
  * - Bots/crawlers: 0% (filter out noise)
  * - Real users: 30%
  *
- * AI agents are checked first, so if something matches both AI and bot patterns, we sample it.
+ * AI agents are checked first, if something matches both AI and bot patterns, we sample it.
  */
 export function tracesSampler(samplingContext: SamplingContext): number {
   // Try to get user agent from normalizedRequest headers (Sentry SDK provides this)
   // Falls back to OTel semantic convention attributes if normalizedRequest not available
   const userAgent =
-    samplingContext.normalizedRequest?.headers?.['user-agent'] ??
+    getUserAgentFromHeaders(samplingContext.normalizedRequest?.headers) ??
     (samplingContext.attributes?.['http.user_agent'] as string | undefined) ??
     (samplingContext.attributes?.['user_agent.original'] as string | undefined);
 
+  // No user-agent = can't classify traffic, skip metric
   if (!userAgent) {
-    Sentry.metrics.count('docs.trace.sampled', 1, {
-      attributes: {
-        traffic_type: 'unknown',
-        sample_rate: DEFAULT_SAMPLE_RATE,
-      },
-    });
     return DEFAULT_SAMPLE_RATE;
   }
 
