@@ -1,0 +1,46 @@
+To enable logging, you need to configure the SDK with the `enable_logs` option set to `true`:
+
+```elixir
+# In config/config.exs or config/runtime.exs
+config :sentry,
+  dsn: "___PUBLIC_DSN___",
+  enable_logs: true
+```
+
+You'll also need to add the `Sentry.LoggerHandler` to your application and configure it to send logs:
+
+```elixir
+# In your application's start/2 callback (e.g., lib/my_app/application.ex)
+def start(_type, _args) do
+  :logger.add_handler(:sentry_handler, Sentry.LoggerHandler, %{
+    config: %{
+      logs_level: :info
+    }
+  })
+
+  # ... rest of your application startup
+end
+```
+
+Alternatively, you can configure the handler through your application's logger configuration:
+
+```elixir
+# In config/config.exs
+config :my_app, :logger, [
+  {:handler, :sentry_handler, Sentry.LoggerHandler, %{
+    config: %{
+      logs_level: :info
+    }
+  }}
+]
+```
+
+Then in your application startup:
+
+```elixir
+def start(_type, _args) do
+  Logger.add_handlers(:my_app)
+
+  # ... rest of your application startup
+end
+```
