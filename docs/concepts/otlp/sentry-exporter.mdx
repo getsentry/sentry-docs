@@ -7,6 +7,8 @@ keywords: ["otlp", "otel", "opentelemetry", "collector", "exporter", "routing"]
 
 The Sentry exporter is an OpenTelemetry Collector component that sends traces and logs to Sentry with automatic project routing. Unlike the generic `otlphttp` exporter, it routes telemetry from multiple services to different Sentry projects through a single collector instance, no routing connector required.
 
+For the full specification and source code, see the [sentryexporter documentation](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/exporter/sentryexporter) in otel-collector-contrib.
+
 ## When to Use the Sentry Exporter
 
 Use the Sentry exporter when:
@@ -61,8 +63,9 @@ Find your organization slug at **Settings > General Settings**, or extract it fr
 | `auto_create_projects` | bool | `false` | Create missing projects automatically |
 | `routing.project_from_attribute` | string | `service.name` | Resource attribute for routing |
 | `routing.attribute_to_project_mapping` | map | - | Map attribute values to project slugs |
-| `http.timeout` | duration | `30s` | HTTP client timeout |
-| `sending_queue.enabled` | bool | `true` | Enable the sending queue |
+| `timeout` | duration | `30s` | Exporter timeout |
+| `http` | object | - | Standard [confighttp](https://pkg.go.dev/go.opentelemetry.io/collector/config/confighttp) client settings (timeout, TLS, headers) |
+| `sending_queue` | object | enabled | Queue settings from exporterhelper |
 
 ## Examples
 
@@ -74,10 +77,10 @@ Routes telemetry based on `service.name`. A service with `service.name: payments
 receivers:
   otlp:
     protocols:
-      http:
-        endpoint: 0.0.0.0:4318
       grpc:
         endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
 
 exporters:
   sentry:
@@ -87,8 +90,6 @@ exporters:
 
 processors:
   batch:
-    timeout: 1s
-    send_batch_size: 512
 
 service:
   pipelines:
@@ -154,6 +155,22 @@ exporters:
         staging: staging-monitoring
 ```
 
+### With Custom HTTP Settings
+
+Configure timeout and TLS for self-hosted Sentry:
+
+```yaml
+exporters:
+  sentry:
+    url: https://sentry.example.com
+    org_slug: ${env:SENTRY_ORG_SLUG}
+    auth_token: ${env:SENTRY_AUTH_TOKEN}
+    timeout: 20s
+    http:
+      tls:
+        insecure_skip_verify: true
+```
+
 ## Rate Limiting
 
 The exporter automatically respects Sentry's rate limits:
@@ -162,6 +179,10 @@ The exporter automatically respects Sentry's rate limits:
 - Maintains per-project, per-category (traces/logs) rate limit deadlines
 - Returns throttle errors to the collector queue for automatic retry
 - Falls back to 60-second backoff on HTTP 429 without headers
+
+## Stability
+
+The Sentry exporter has **alpha** stability for traces and logs.
 
 ## Known Limitations
 
@@ -172,6 +193,7 @@ The exporter automatically respects Sentry's rate limits:
 | Cache drift | Deleted projects cause 403 until cache eviction | Avoid deleting projects while collector is running |
 | No per-batch retry | Multi-project batches cannot safely retry | Use sending queue for reliability |
 | Single organization | One org per exporter instance | Deploy multiple exporters for multi-org |
+| No trace connectedness guarantee | The exporter cannot independently ensure trace spans are connected | Configure SDK sampling and trace propagation appropriately |
 
 ## Connecting Sentry SDK Errors to Traces
 
