@@ -1,3 +1,5 @@
+import * as Sentry from '@sentry/nextjs';
+
 // Sampling context passed to tracesSampler
 // Using inline type to avoid dependency on internal Sentry types
 interface SamplingContext {
@@ -77,6 +79,15 @@ const BOT_PATTERN = new RegExp(
 const DEFAULT_SAMPLE_RATE = 0.3;
 
 /**
+ * Checks if the input matches the pattern.
+ * Returns the matched substring (lowercase), or undefined if no match.
+ */
+function matchPattern(input: string, pattern: RegExp): string | undefined {
+  const match = input.match(pattern);
+  return match ? match[0].toLowerCase() : undefined;
+}
+
+/**
  * Determines trace sample rate based on user agent.
  * - AI agents: 100% (we want full visibility into agentic docs consumption)
  * - Bots/crawlers: 0% (filter out noise)
@@ -93,17 +104,45 @@ export function tracesSampler(samplingContext: SamplingContext): number {
     (samplingContext.attributes?.['user_agent.original'] as string | undefined);
 
   if (!userAgent) {
+    Sentry.metrics.count('docs.trace.sampled', 1, {
+      attributes: {
+        traffic_type: 'unknown',
+        sample_rate: DEFAULT_SAMPLE_RATE,
+      },
+    });
     return DEFAULT_SAMPLE_RATE;
   }
 
-  if (AI_AGENT_PATTERN.test(userAgent)) {
+  const aiAgent = matchPattern(userAgent, AI_AGENT_PATTERN);
+  if (aiAgent) {
+    Sentry.metrics.count('docs.trace.sampled', 1, {
+      attributes: {
+        traffic_type: 'ai_agent',
+        agent_match: aiAgent,
+        sample_rate: 1,
+      },
+    });
     return 1;
   }
 
-  if (BOT_PATTERN.test(userAgent)) {
+  const bot = matchPattern(userAgent, BOT_PATTERN);
+  if (bot) {
+    Sentry.metrics.count('docs.trace.sampled', 1, {
+      attributes: {
+        traffic_type: 'bot',
+        bot_match: bot,
+        sample_rate: 0,
+      },
+    });
     return 0;
   }
 
   // Sample real users at default rate
+  Sentry.metrics.count('docs.trace.sampled', 1, {
+    attributes: {
+      traffic_type: 'user',
+      sample_rate: DEFAULT_SAMPLE_RATE,
+    },
+  });
   return DEFAULT_SAMPLE_RATE;
 }
