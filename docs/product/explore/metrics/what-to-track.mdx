@@ -1,0 +1,154 @@
+---
+title: "What to Track"
+sidebar_order: 5
+description: "Practical guidance on what metrics to track and how to explore them in Sentry."
+---
+
+You've set up Sentry Metrics. Now what? This guide covers the high-value metric patterns that give you visibility into application health—and how to drill into traces when something looks off.
+
+## The Pattern
+
+Sentry supports three metric types:
+
+| Type | Method | Use For |
+|------|--------|---------|
+| **Counter** | `Sentry.metrics.count()` | Events that happen (orders, clicks, errors) |
+| **Gauge** | `Sentry.metrics.gauge()` | Current state (queue depth, connections) |
+| **Distribution** | `Sentry.metrics.distribution()` | Values that vary (latency, sizes, amounts) |
+
+Every metric is trace-connected. When a metric spikes, click into samples to see the exact trace that produced it.
+
+```javascript
+Sentry.metrics.count("checkout.failed", 1, {
+  attributes: {
+    user_tier: "premium",
+    failure_reason: "payment_declined"
+  }
+});
+```
+
+## Where to Add Metrics
+
+These five categories give you the most visibility per line of code.
+
+### 1. Business Events (Counters)
+
+Track discrete events that matter to the business. These become your KPIs.
+
+```javascript
+Sentry.metrics.count("checkout.completed", 1, {
+  attributes: { user_tier: "premium", payment_method: "card" }
+});
+
+Sentry.metrics.count("checkout.failed", 1, {
+  attributes: { user_tier: "premium", failure_reason: "payment_declined" }
+});
+```
+
+**How to explore:**
+1. Go to **Explore > Metrics**
+2. Select `checkout.failed`, set **Agg** to `sum`
+3. **Group by** `failure_reason`
+4. Click **Samples** to see individual events and their traces
+
+### 2. Application Health (Counters)
+
+Track success and failure of critical operations.
+
+```javascript
+Sentry.metrics.count("email.sent", 1, {
+  attributes: { email_type: "welcome", provider: "sendgrid" }
+});
+
+Sentry.metrics.count("email.failed", 1, {
+  attributes: { email_type: "welcome", error: "rate_limited" }
+});
+
+Sentry.metrics.count("job.processed", 1, {
+  attributes: { job_type: "invoice-generation", queue: "billing" }
+});
+```
+
+**Explore:** Add both `email.sent` and `email.failed`, group by `email_type`, compare the ratio.
+
+### 3. Resource Utilization (Gauges)
+
+Track current state of pools, queues, and connections. Call these periodically (e.g., every 30 seconds).
+
+```javascript
+Sentry.metrics.gauge("queue.depth", await queue.size(), {
+  attributes: { queue_name: "notifications" }
+});
+
+Sentry.metrics.gauge("pool.connections_active", pool.activeConnections, {
+  attributes: { pool_name: "postgres-primary" }
+});
+```
+
+**Explore:** View `max(queue.depth)` over time to spot backlogs.
+
+### 4. Latency and Performance (Distributions)
+
+Track values that vary and need percentile analysis. Averages hide outliers—use p90/p95/p99.
+
+```javascript
+Sentry.metrics.distribution("api.latency", responseTimeMs, {
+  unit: "millisecond",
+  attributes: { endpoint: "/api/orders", method: "POST" }
+});
+
+Sentry.metrics.distribution("db.query_time", queryDurationMs, {
+  unit: "millisecond",
+  attributes: { table: "orders", operation: "select" }
+});
+```
+
+**Explore:** View `p95(api.latency)` grouped by `endpoint` to find slow routes.
+
+### 5. Business Values (Distributions)
+
+Track amounts, sizes, and quantities for analysis.
+
+```javascript
+Sentry.metrics.distribution("order.amount", order.totalUsd, {
+  unit: "usd",
+  attributes: { user_tier: "premium", region: "us-west" }
+});
+
+Sentry.metrics.distribution("upload.size", fileSizeBytes, {
+  unit: "byte",
+  attributes: { file_type: "image", source: "profile-update" }
+});
+```
+
+**Explore:** View `avg(order.amount)` grouped by `region` to compare regional performance.
+
+## The Debugging Flow
+
+When something looks off in metrics, here's how to find the cause:
+
+```
+Metric spike → Samples tab → Click a sample → Full trace → Related logs/errors → Root cause
+```
+
+This is the advantage of trace-connected metrics. Instead of "metric alert → guesswork," you get direct links to exactly what happened.
+
+## When to Use Metrics vs Traces vs Logs
+
+| Signal | Best For | Example Question |
+|--------|----------|------------------|
+| **Metrics** | Aggregated counts, rates, percentiles | "How many checkouts failed this hour?" |
+| **Traces** | Request flow, latency breakdown | "Why was this specific request slow?" |
+| **Logs** | Detailed context, debugging | "What happened right before this error?" |
+
+All three are trace-connected. Start wherever makes sense and navigate to the others.
+
+## Quick Reference
+
+| Category | Type | Metric Name Examples | Key Attributes |
+|----------|------|---------------------|----------------|
+| Business events | `count` | checkout.completed, checkout.failed | user_tier, failure_reason |
+| App health | `count` | email.sent, job.processed | email_type, job_type |
+| Resources | `gauge` | queue.depth, pool.connections_active | queue_name, pool_name |
+| Latency | `distribution` | api.latency, db.query_time | endpoint, table, operation |
+| Business values | `distribution` | order.amount, upload.size | user_tier, region, file_type |

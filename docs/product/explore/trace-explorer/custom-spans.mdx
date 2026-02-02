@@ -1,0 +1,170 @@
+---
+title: "Adding Custom Spans"
+sidebar_order: 15
+description: "Add custom instrumentation for visibility beyond auto-instrumentation."
+---
+
+Auto-instrumentation captures a lot, but some operations need manual spans. This guide covers when and how to add custom instrumentation.
+
+## When to Add Custom Spans
+
+Add custom spans when you need visibility that auto-instrumentation doesn't provide:
+
+- Business-critical flows (checkout, onboarding)
+- Third-party API calls with custom context
+- Database queries with business context
+- Background job execution
+- AI/LLM operations
+
+## The Pattern
+
+```javascript
+Sentry.startSpan(
+  { name: "operation-name", op: "category" },
+  async (span) => {
+    span.setAttribute("key", value);
+    // ... your code ...
+  }
+);
+```
+
+Numeric attributes become metrics you can aggregate with `sum()`, `avg()`, `p90()` in Trace Explorer.
+
+## Where to Add Custom Spans
+
+### Business-Critical User Flows
+
+Track the full journey through critical paths. When checkout is slow, you need to know which step.
+
+```javascript
+Sentry.startSpan(
+  { name: "checkout-flow", op: "user.action" },
+  async (span) => {
+    span.setAttribute("cart.itemCount", 3);
+    span.setAttribute("user.tier", "premium");
+
+    await validateCart();
+    await processPayment();
+    await createOrder();
+  }
+);
+```
+
+**Query:** `span.op:user.action` grouped by `user.tier`, visualize `p90(span.duration)`.
+
+**Alert idea:** `p90(span.duration) > 10s` for checkout flows.
+
+### Third-Party API Calls
+
+Measure dependencies you don't control. They're often the source of slowdowns.
+
+```javascript
+Sentry.startSpan(
+  { name: "shipping-rates-api", op: "http.client" },
+  async (span) => {
+    span.setAttribute("http.url", "api.shipper.com/rates");
+    span.setAttribute("request.itemCount", items.length);
+
+    const start = Date.now();
+    const response = await fetch("https://api.shipper.com/rates");
+
+    span.setAttribute("http.status_code", response.status);
+    span.setAttribute("response.timeMs", Date.now() - start);
+
+    return response.json();
+  }
+);
+```
+
+**Query:** `span.op:http.client` + `response.timeMs:>2000` to find slow external calls.
+
+**Alert idea:** `p95(span.duration) > 3s` where `http.url` contains your critical dependencies.
+
+### Database Queries with Business Context
+
+Auto-instrumentation catches queries, but custom spans let you add context that explains why a query matters.
+
+```javascript
+Sentry.startSpan(
+  { name: "load-user-dashboard", op: "db.query" },
+  async (span) => {
+    span.setAttribute("db.system", "postgres");
+    span.setAttribute("query.type", "aggregation");
+    span.setAttribute("query.dateRange", "30d");
+
+    const results = await db.query(dashboardQuery);
+    span.setAttribute("result.rowCount", results.length);
+
+    return results;
+  }
+);
+```
+
+**Why this matters:** Without these attributes, you see "a database query took 2 seconds." With them, you know it was aggregating 30 days of data and returned 50,000 rows. That's actionable.
+
+**Query ideas:**
+- "Which aggregation queries are slowest?" → Group by `query.type`, sort by `p90(span.duration)`
+- "Does date range affect performance?" → Filter by name, group by `query.dateRange`
+
+### Background Jobs
+
+Jobs run outside request context. Custom spans make them visible.
+
+```javascript
+async function processEmailDigest(job) {
+  return Sentry.startSpan(
+    { name: `job:${job.type}`, op: "queue.process" },
+    async (span) => {
+      span.setAttribute("job.id", job.id);
+      span.setAttribute("job.type", "email-digest");
+      span.setAttribute("queue.name", "notifications");
+
+      const users = await getDigestRecipients();
+      span.setAttribute("job.recipientCount", users.length);
+
+      for (const user of users) {
+        await sendDigest(user);
+      }
+
+      span.setAttribute("job.status", "completed");
+    }
+  );
+}
+```
+
+**Query:** `span.op:queue.process` grouped by `job.type`, visualize `p90(span.duration)`.
+
+**Alert idea:** `p90(span.duration) > 60s` for queue processing.
+
+### AI/LLM Operations
+
+For AI workloads, use [Sentry Agent Monitoring](/product/insights/ai/agents/) instead of manual instrumentation when possible. It automatically captures agent workflows, tool calls, and token usage.
+
+If you're not using a supported framework or need custom attributes:
+
+```javascript
+Sentry.startSpan(
+  { name: "generate-summary", op: "ai.inference" },
+  async (span) => {
+    span.setAttribute("ai.model", "gpt-4");
+    span.setAttribute("ai.feature", "document-summary");
+
+    const response = await openai.chat.completions.create({...});
+
+    span.setAttribute("ai.tokens.total", response.usage.total_tokens);
+    return response;
+  }
+);
+```
+
+**Alert idea:** `p95(span.duration) > 5s` for AI inference.
+
+## Quick Reference
+
+| Category | `op` Value | Key Attributes |
+|----------|-----------|----------------|
+| User flows | `user.action` | cart.itemCount, user.tier |
+| External APIs | `http.client` | http.url, response.timeMs |
+| Database | `db.query` | query.type, result.rowCount |
+| Background jobs | `queue.process` | job.type, job.id, queue.name |
+| AI/LLM | `ai.inference` | ai.model, ai.tokens.total |
