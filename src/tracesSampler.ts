@@ -1,3 +1,5 @@
+import * as Sentry from '@sentry/nextjs';
+
 // Sampling context passed to tracesSampler
 // Using inline type to avoid dependency on internal Sentry types
 interface SamplingContext {
@@ -93,17 +95,45 @@ export function tracesSampler(samplingContext: SamplingContext): number {
     (samplingContext.attributes?.['user_agent.original'] as string | undefined);
 
   if (!userAgent) {
+    Sentry.metrics.count('docs.trace.sampled', 1, {
+      attributes: {
+        traffic_type: 'unknown',
+        sample_rate: DEFAULT_SAMPLE_RATE,
+      },
+    });
     return DEFAULT_SAMPLE_RATE;
   }
 
-  if (AI_AGENT_PATTERN.test(userAgent)) {
+  const aiMatch = userAgent.match(AI_AGENT_PATTERN);
+  if (aiMatch) {
+    Sentry.metrics.count('docs.trace.sampled', 1, {
+      attributes: {
+        traffic_type: 'ai_agent',
+        agent_match: aiMatch[0].toLowerCase(),
+        sample_rate: 1,
+      },
+    });
     return 1;
   }
 
-  if (BOT_PATTERN.test(userAgent)) {
+  const botMatch = userAgent.match(BOT_PATTERN);
+  if (botMatch) {
+    Sentry.metrics.count('docs.trace.sampled', 1, {
+      attributes: {
+        traffic_type: 'bot',
+        bot_match: botMatch[0].toLowerCase(),
+        sample_rate: 0,
+      },
+    });
     return 0;
   }
 
   // Sample real users at default rate
+  Sentry.metrics.count('docs.trace.sampled', 1, {
+    attributes: {
+      traffic_type: 'user',
+      sample_rate: DEFAULT_SAMPLE_RATE,
+    },
+  });
   return DEFAULT_SAMPLE_RATE;
 }
