@@ -4,7 +4,7 @@ description: Best practices for using AI coding assistants at Sentry.
 sidebar_order: 25
 ---
 
-This guide covers techniques for getting the most out of AI coding assistants like [Claude Code](https://docs.anthropic.com/en/docs/claude-code), [Cursor](https://docs.cursor.com/), and similar tools.
+This guide covers techniques for getting the most out of AI coding assistants like [Claude Code](https://docs.anthropic.com/en/docs/claude-code), [Cursor](https://docs.cursor.com/), and similar tools. Some of these tips are from [Boris Cherny](https://x.com/bcherny) and the Claude Code team.
 
 ## The Basics
 
@@ -18,9 +18,11 @@ Luckily for us, software engineering is full of largely mechanical boilerplate c
 
 ## Start With a Plan
 
-The most effective workflow is to have the AI create a plan before writing any code. Describe the task with any constraints, let the AI explore the codebase and propose an approach, then iterate on the plan until it meets your criteria. Once the plan is solid, have the AI implement it.
+The most effective workflow is to have the AI create a plan before writing any code. Describe the task with any constraints, let the AI explore the codebase and propose an approach, then iterate on the plan until it meets your criteria. Once the plan is solid, the AI can often one-shot the implementation.
 
-Most AI coding tools have a native "plan mode" or "agent mode" that enforces this workflow. Use it!
+Most AI coding tools have a native "plan mode" or "agent mode" that enforces this workflow. Use it! For extra rigor, have one Claude write the plan, then spin up a second Claude to review it as a staff engineer.
+
+The moment something goes sideways during implementation, switch back to plan mode and re-plan. Don't keep pushing. You can also explicitly tell Claude to enter plan mode for verification steps, not just for the initial build.
 
 **Example workflow:**
 
@@ -55,6 +57,8 @@ Most AI tools support project-level context files that provide instructions and 
 
 These files can specify coding conventions, architecture decisions, and project-specific guidance. Root-level files are always included, while files in subdirectories are loaded when the AI accesses that directory. Keep them concise and relevant to their scope.
 
+Invest in your context file. After every correction, end with: "Update your CLAUDE.md so you don't make that mistake again." Claude is good at writing rules for itself. Ruthlessly edit your CLAUDE.md over time and keep iterating until the mistake rate measurably drops. Some engineers maintain a notes directory for every task or project, updated after every PR, and point CLAUDE.md at it.
+
 These files have already been added to our main repos but are by no means complete, please contribute to them!
 
 ## Extending AI Tools
@@ -83,7 +87,7 @@ claude plugin marketplace add getsentry/skills
 claude plugin install sentry-skills@sentry-skills
 ```
 
-See the [Claude Code skills documentation](https://docs.anthropic.com/en/docs/claude-code/skills) for more on how skills work.
+If you do something more than once a day, turn it into a skill or command. Create your own skills and commit them to git so you can reuse them across projects. See the [Claude Code skills documentation](https://docs.anthropic.com/en/docs/claude-code/skills) for more on how skills work.
 
 ### MCP Tools
 
@@ -101,6 +105,8 @@ Subagents are child agents spawned to handle specific tasks in parallel. They ea
 
 This isolation keeps your main conversation focused. A subagent can read thousands of lines of code, but only returns a concise summary, so your parent context stays clean. Use subagents when searching multiple code paths in parallel, running independent operations simultaneously, or doing large refactors across many files.
 
+Append "use subagents" to any request where you want Claude to throw more compute at the problem. You can also route permission requests to Opus 4.5 via a [hook](https://code.claude.com/docs/en/hooks#permissionrequest) to scan for attacks and auto-approve the safe ones.
+
 See the [Claude Code subagents documentation](https://code.claude.com/docs/en/sub-agents) for details.
 
 ## Working in Parallel
@@ -109,7 +115,7 @@ The goal is to run multiple AI sessions simultaneously with minimal interruption
 
 ### Git Worktrees
 
-[Git worktrees](https://git-scm.com/docs/git-worktree) let you check out multiple branches in separate directories, each with its own Claude session. While one agent refactors authentication, another can build an unrelated feature without conflicts or context pollution.
+[Git worktrees](https://git-scm.com/docs/git-worktree) let you check out multiple branches in separate directories, each with its own Claude session. Spinning up 3-5 worktrees at once, each running its own Claude session in parallel, is one of the biggest productivity unlocks. While one agent refactors authentication, another can build an unrelated feature without conflicts or context pollution.
 
 ```bash
 git worktree add ../myrepo-feature-x feature-x
@@ -117,7 +123,9 @@ cd ../myrepo-feature-x
 claude
 ```
 
-Keep worktrees isolated: one branch per worktree, never develop directly in main. For short tasks (under 10 minutes), the setup overhead may not be worth it.
+Name your worktrees and set up shell aliases (`za`, `zb`, `zc`) so you can hop between them in one keystroke. Some people keep a dedicated "analysis" worktree that's only for reading logs and running queries.
+
+Keep worktrees isolated: one branch per worktree, never develop directly in main. For short tasks, the setup overhead may not be worth it. See [Run parallel Claude Code sessions with git worktrees](https://code.claude.com/docs/en/common-workflows#run-parallel-claude-code-sessions-with-git-worktrees) for more.
 
 ### Pre-approve Permissions
 
@@ -146,3 +154,37 @@ Instead of copying and pasting error messages, give the agent a PR or issue URL 
 ### Enable Notifications
 
 When running multiple sessions, enable terminal notifications so you know when an agent is waiting for input. This lets you context-switch to other work while agents run, without constantly checking back.
+
+### Terminal Setup
+
+[Ghostty](https://ghostty.org/) is a popular choice for its synchronized rendering, 24-bit color, and proper unicode support. Use `/statusline` to customize your status bar to always show context usage and current git branch. Color-code and name your terminal tabs, one tab per task or worktree. Some people use tmux for this.
+
+Use voice dictation. You speak 3x faster than you type, and your prompts get way more detailed as a result (hit fn twice on macOS). See the [terminal configuration docs](https://code.claude.com/docs/en/terminal-config) for more tips.
+
+## Bug Fixing
+
+Claude fixes most bugs by itself with minimal guidance. Enable the Slack MCP, paste a Slack bug thread into Claude, and just say "fix."
+
+Or just say "Go fix the failing CI tests." Don't micromanage how. Point Claude at docker logs to troubleshoot distributed systems.
+
+## Prompting Techniques
+
+Challenge Claude. Say "Grill me on these changes and don't make a PR until I pass your test." Make Claude be your reviewer. Or say "Prove to me this works" and have Claude diff behavior between main and your feature branch.
+
+After a mediocre fix, say: "Knowing everything you know now, scrap this and implement the elegant solution."
+
+Write detailed specs and reduce ambiguity before handing work off. The more specific you are, the better the output.
+
+## Data & Analytics
+
+Ask Claude Code to use the `bq` CLI to pull and analyze metrics on the fly. You can create a BigQuery skill and check it into the codebase so everyone on the team can run analytics queries directly in Claude Code.
+
+This works for any database that has a CLI, MCP, or API.
+
+## Learning with Claude
+
+Enable the "Explanatory" or "Learning" output style in `/config` to have Claude explain the _why_ behind its changes.
+
+Have Claude generate a visual HTML presentation explaining unfamiliar code. Ask Claude to draw ASCII diagrams of new protocols and codebases to help you understand them.
+
+You can even build a spaced-repetition learning skill: you explain your understanding, Claude asks follow-ups to fill gaps, and stores the result.
