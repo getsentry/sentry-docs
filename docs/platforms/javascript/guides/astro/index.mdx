@@ -205,66 +205,13 @@ Sentry.init({
 });
 ```
 
-## Step 3: Server Instrumentation
+<Alert title="Instrumentation for Astro <3.5.2">
 
-### Manually Add Server Instrumentation (Astro `<3.5.2`)
+For Astro versions below `3.5.2`, you need to manually add server instrumentation via the Sentry middleware as explained on our <PlatformLink to="/configuration/apis/#server-request-instrumentation">APIs page</PlatformLink>.
 
-For Astro versions below `3.5.2`, you need to manually add the Sentry middleware to your `src/middleware.js` file:
+</Alert>
 
-```javascript {filename:src/middleware.(js|ts)}
-import * as Sentry from "@sentry/astro";
-import { sequence } from "astro:middleware";
-
-export const onRequest = sequence(
-  Sentry.handleRequest()
-  // other middleware handlers
-);
-```
-
-If you have multiple request handlers, make sure to add the Sentry middleware as the first handler in the sequence.
-
-### Customize Server Instrumentation With Manual Middleware (Optional)
-
-Sentry's Astro middleware lets you control which additional data should be added to recorded request spans.
-
-To customize the server instrumentation, add the Sentry middleware to your `src/middleware.(ts|js)` file:
-
-```javascript {filename:src/middleware.(js|ts)}
-import * as Sentry from "@sentry/astro";
-import { sequence } from "astro:middleware";
-
-export const onRequest = sequence(
-  Sentry.handleRequest({
-    trackClientIp: true, // defaults to false
-    trackHeaders: true, // defaults to false
-  })
-  // other middleware handlers
-);
-```
-
-If you're using Astro `3.5.2` or newer, make sure to also disable auto instrumentation as shown below.
-
-### Disable Automatic Instrumentation (Optional)
-
-For Astro version `3.5.2` and up, you can optionally disable the automatic server instrumentation by turning off the `requestHandler` auto instrumentation option:
-
-```javascript {filename:astro.config.mjs}
-import { defineConfig } from "astro/config";
-import sentry from "@sentry/astro";
-
-export default defineConfig({
-  integrations: [
-    sentry({
-      autoInstrumentation: {
-        requestHandler: false,
-      },
-    }),
-  ],
-  output: "server",
-});
-```
-
-## Step 4: Add Readable Stack Traces With Source Maps
+## Step 3: Add Readable Stack Traces With Source Maps
 
 To upload source maps for clear error stack traces, add your Sentry auth token, organization, and project slugs in the `sentry` options inside `astro.config.mjs`:
 
@@ -292,11 +239,11 @@ To keep your auth token secure, set the `SENTRY_AUTH_TOKEN` environment variable
 SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
 ```
 
-## Step 5: Avoid Ad Blockers With Tunneling (Optional)
+## Step 4: Avoid Ad Blockers With Tunneling (Optional)
 
 <PlatformContent includePath="getting-started-tunneling" />
 
-## Step 6: Verify Your Setup
+## Step 5: Verify Your Setup
 
 Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
 
@@ -306,6 +253,12 @@ To verify that Sentry captures errors and creates issues in your Sentry project,
 
 ```html {filename: test.astro}
 <script>
+  const buttonOne = document.getElementById("one");
+  const buttonTwo = document.getElementById("two");
+
+  buttonOne.addEventListener("click", throwTestError);
+  buttonTwo.addEventListener("click", throwApiError);
+
   function throwTestError() {
     throw new Error("Sentry Example Frontend Error");
   }
@@ -315,8 +268,8 @@ To verify that Sentry captures errors and creates issues in your Sentry project,
   }
 </script>
 
-<button type="button" onclick="throwTestError()">Throw a frontend error</button>
-<button type="button" onclick="throwApiError()">Throw an API error</button>
+<button id="one" type="button">Throw a frontend error</button>
+<button id="two" type="button">Throw an API error</button>
 ```
 
 Then also create the route we're calling in our test page, like `src/pages/api/test-error.(js|ts)`:
@@ -341,6 +294,10 @@ To test tracing, create a custom span to measure the time it takes for the API r
 <script>
   import * as Sentry from "@sentry/astro";
 
+  const button = document.getElementById("one");
+
+  button.addEventListener("click", throwApiError);
+
   async function throwApiError() {
     await Sentry.startSpan(
       {
@@ -354,7 +311,7 @@ To test tracing, create a custom span to measure the time it takes for the API r
   }
 </script>
 
-<button type="button" onclick="throwApiError()">
+<button id="one" type="button">
   Throw an API error with a trace
 </button>
 ```
