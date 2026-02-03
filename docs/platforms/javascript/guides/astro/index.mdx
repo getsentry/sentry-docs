@@ -252,7 +252,13 @@ Let's test your setup and confirm that Sentry is working correctly and sending d
 To verify that Sentry captures errors and creates issues in your Sentry project, create a test page, for example, at `src/pages/test.astro` with two buttons:
 
 ```html {filename: test.astro}
-<script is:inline>
+<script>
+  const buttonOne = document.getElementById("one");
+  const buttonTwo = document.getElementById("two");
+
+  buttonOne.addEventListener("click", throwTestError);
+  buttonTwo.addEventListener("click", throwApiError);
+
   function throwTestError() {
     throw new Error("Sentry Example Frontend Error");
   }
@@ -262,8 +268,8 @@ To verify that Sentry captures errors and creates issues in your Sentry project,
   }
 </script>
 
-<button type="button" onclick="throwTestError()">Throw a frontend error</button>
-<button type="button" onclick="throwApiError()">Throw an API error</button>
+<button id="one" type="button">Throw a frontend error</button>
+<button id="two" type="button">Throw an API error</button>
 ```
 
 Then also create the route we're calling in our test page, like `src/pages/api/test-error.(js|ts)`:
