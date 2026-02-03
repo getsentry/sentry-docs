@@ -11,7 +11,7 @@ keywords: ["otlp", "otel", "opentelemetry", "collector", "exporter", "routing"]
 
 The Sentry Exporter routes telemetry from multiple services to different Sentry projects through a single collector instance. Without it, you'd need to configure separate DSNs for each project or set up additional routing connectors.
 
-## When to Use `sentry` vs `otlphttp` Exporters
+## When to Use `sentry` vs `otlphttp` Exporter
 
 | Scenario | Recommended Exporter |
 |----------|---------------------|
@@ -23,18 +23,22 @@ The Sentry Exporter routes telemetry from multiple services to different Sentry 
 
 ### Collector Distribution
 
-The Sentry Exporter is included in [otelcol-contrib](https://github.com/open-telemetry/opentelemetry-collector-releases/tree/main/distributions/otelcol-contrib). For the full specification, see the [source code](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/exporter/sentryexporter).
+The Sentry Exporter is included in [otelcol-contrib](https://github.com/open-telemetry/opentelemetry-collector-releases/tree/main/distributions/otelcol-contrib), the pre-built OpenTelemetry Collector distribution. There is no build step required, just download and run `otelcol-contrib` with your configuration. For the full specification, see the [source code](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/exporter/sentryexporter).
 
 ### Auth Token
 
 In your Sentry account, create an Internal Integration with the required permissions:
 
-1. Go to **Settings > Developer Settings > Internal Integrations**
+1. Navigate to **[Custom Integrations](https://sentry.io/orgredirect/organizations/:orgslug/settings/developer-settings/)**
 2. Click **Create New Integration**
-3. Set permissions:
-   - **Project: Read** - required for endpoint resolution
-   - **Project: Write** - only if using `auto_create_projects`
-4. Copy the token and store it securely:
+3. Choose **Internal Integration** (not Public)
+4. Give it a name (e.g., "OTEL Collector")
+5. Set permissions:
+   - **Project: Read** — required
+   - **Project: Write** — required for `auto_create_projects`
+6. Click **Save Changes**
+7. After saving, click **Create New Token**
+8. Copy the token and store it securely, you won't be able to see it again
 
 ```bash
 export SENTRY_AUTH_TOKEN="sntrys_eyJ..."
@@ -42,7 +46,7 @@ export SENTRY_AUTH_TOKEN="sntrys_eyJ..."
 
 ### Organization Slug
 
-In your Sentry account, go to **Settings > General Settings** to find your organization slug. Alternatively, you can find it in  your Sentry URL: `https://sentry.io/organizations/{org-slug}/`
+In your Sentry account, go to **[General Settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/)** to find your organization slug. Alternatively, you can find it in your Sentry URL: `https://sentry.io/organizations/{org-slug}/`
 
 ## Configuration Reference
 
@@ -146,22 +150,6 @@ exporters:
       attribute_to_project_mapping:
         production: prod-monitoring
         staging: staging-monitoring
-```
-
-## Self-Hosted Sentry
-
-For self-hosted installations, configure the base URL and any required TLS settings:
-
-```yaml
-exporters:
-  sentry:
-    url: https://sentry.example.com
-    org_slug: ${env:SENTRY_ORG_SLUG}
-    auth_token: ${env:SENTRY_AUTH_TOKEN}
-    timeout: 20s
-    http:
-      tls:
-        insecure_skip_verify: true  # Only for development
 ```
 
 ## Rate Limiting
