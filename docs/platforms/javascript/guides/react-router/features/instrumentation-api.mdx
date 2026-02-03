@@ -10,7 +10,7 @@ React Router's instrumentation API is experimental and uses the `unstable_instru
 
 </Alert>
 
-React Router 7.9.5+ provides an [instrumentation API](https://reactrouter.com/how-to/instrumentation) that enables automatic span creation for loaders, actions, middleware, navigations, fetchers, lazy routes, and request handlers—without manual wrapper functions. Transaction names use parameterized route patterns (e.g., `/users/:id`), and errors are automatically captured with proper context.
+React Router 7.9.5+ provides an [instrumentation API](https://reactrouter.com/how-to/instrumentation) that enables automatic span creation for loaders, actions, middleware, navigations, fetchers, lazy routes, and request handlers without the need for manual wrapper functions. Transaction names use parameterized route patterns, such as `/users/:id`, and errors are automatically captured with proper context.
 
 ## Server-Side Setup
 
@@ -20,13 +20,13 @@ React Router 7.9.5+ provides an [instrumentation API](https://reactrouter.com/ho
 
 Export `unstable_instrumentations` from your `entry.server.tsx` to enable automatic server-side tracing.
 
-The `createSentryServerInstrumentation()` function instruments:
+The `createSentryServerInstrumentation()` function creates spans for:
 
-- **Request handlers**: Creates root HTTP server spans
-- **Loaders**: Automatic loader span creation
-- **Actions**: Automatic action span creation
-- **Middleware**: Automatic middleware span creation
-- **Lazy routes**: Lazy route loading spans
+- Request handlers (root HTTP server spans)
+- Loaders
+- Actions
+- Middleware
+- Lazy route loading
 
 </SplitSectionText>
 <SplitSectionCode>
@@ -53,9 +53,14 @@ export const unstable_instrumentations = [
 
 </SplitSectionCode>
 </SplitSection>
-</SplitLayout>
+
+<SplitSection>
+<SplitSectionText>
 
 You can optionally configure error capture behavior:
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```typescript
 Sentry.createSentryServerInstrumentation({
@@ -63,6 +68,10 @@ Sentry.createSentryServerInstrumentation({
   captureErrors: true,
 });
 ```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
 ## Client-Side Setup
 
@@ -72,18 +81,18 @@ Sentry.createSentryServerInstrumentation({
 
 To enable the client-side instrumentation API, pass `useInstrumentationAPI: true` to `reactRouterTracingIntegration()` and provide the `clientInstrumentation` to `HydratedRouter`.
 
-The client instrumentation covers:
+The client instrumentation creates spans for:
 
-- **Navigations**: Programmatic navigation spans (including back/forward)
-- **Fetchers**: Fetcher operation spans
-- **Client loaders**: Client-side loader spans
-- **Client actions**: Client-side action spans
-- **Client middleware**: Client-side middleware spans
-- **Lazy routes**: Lazy route loading spans
+- Navigations (including back/forward)
+- Fetchers
+- Client loaders
+- Client actions
+- Client middleware
+- Lazy route loading
 
-<Alert level="info" title="Framework Mode Limitation">
+<Alert level="info" title="Framework Mode limitation">
 
-`HydratedRouter` does not currently invoke client-side instrumentation hooks in Framework Mode. Client-side navigation tracking still works through the SDK's built-in instrumentation. The client-side setup shown here prepares your app for when React Router adds support.
+`HydratedRouter` doesn't currently invoke client-side instrumentation hooks when running in Framework Mode. As a result, only client-side navigation spans are captured through the SDK's built-in instrumentation. The client-side setup shown here prepares your app for when React Router adds support for invoking these hooks.
 
 </Alert>
 
@@ -130,9 +139,9 @@ If you're using `wrapServerLoader` and `wrapServerAction`, you can migrate to th
 <SplitSection>
 <SplitSectionText>
 
-**Before** (manual wrappers):
+**Before migrating** (manual wrappers):
 
-Each loader and action needs to be individually wrapped.
+Without the instrumentation API, each loader and action needs to be wrapped individually.
 
 </SplitSectionText>
 <SplitSectionCode>
@@ -163,15 +172,15 @@ export const action = Sentry.wrapServerAction(
 <SplitSection>
 <SplitSectionText>
 
-**After** (instrumentation API):
+**After migrating** (instrumentation API):
 
-Add the instrumentation export once in `entry.server.tsx`, and all loaders/actions are automatically traced.
+After adding the instrumentation export once in `entry.server.tsx`, all loaders and actions are traced automatically.
 
 </SplitSectionText>
 <SplitSectionCode>
 
 ```tsx {filename:app/routes/users.$id.tsx}
-// No Sentry imports or wrappers needed!
+// No Sentry imports or wrappers needed
 
 export async function loader({ params }) {
   const user = await getUser(params.id);
@@ -194,9 +203,9 @@ export async function action({ request }) {
 
 If you're not seeing spans for your loaders and actions:
 
-1. **Check React Router version**: The instrumentation API requires React Router 7.9.5 or later
-2. **Verify the export**: Ensure `unstable_instrumentations` is exported from `entry.server.tsx`
-3. **Check sample rate**: Verify `tracesSampleRate` is set in your server configuration
+1. Check that the React Router version is 7.9.5 or later
+2. Make sure `unstable_instrumentations` is exported from `entry.server.tsx`
+3. Verify `tracesSampleRate` is set in your server configuration
 
 </Expandable>
 
@@ -208,6 +217,6 @@ The SDK automatically detects when the instrumentation API is active and skips s
 
 1. Update to the latest SDK version
 2. Check that the instrumentation export is correctly configured
-3. The manual wrappers (`wrapServerLoader`, `wrapServerAction`) will log a debug message when skipped
+3. Enable debug mode to verify the manual wrappers are being skipped—they log a message when the instrumentation API is active
 
 </Expandable>
