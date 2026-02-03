@@ -111,6 +111,48 @@ Sentry.init({
 </SplitSection>
 </SplitLayout>
 
+## Tracking Conversations
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+When building AI applications with multi-turn conversations, you can use `setConversationId()` to link all AI spans from the same conversation together. This allows you to analyze entire conversation flows in Sentry.
+
+The conversation ID is automatically applied as the `gen_ai.conversation.id` attribute to all AI-related spans within the current scope.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript
+import * as Sentry from "___SDK_PACKAGE___";
+
+// Set conversation ID at the start of a conversation
+Sentry.setConversationId('conv_abc123');
+
+// All subsequent AI calls will be linked to this conversation
+await openai.chat.completions.create({
+  model: "gpt-4",
+  messages: [{ role: "user", content: "Hello" }],
+});
+
+// Later in the conversation
+await openai.chat.completions.create({
+  model: "gpt-4",
+  messages: [
+    { role: "user", content: "Hello" },
+    { role: "assistant", content: "Hi there!" },
+    { role: "user", content: "What's the weather?" },
+  ],
+});
+
+// Both calls will have gen_ai.conversation.id: "conv_abc123"
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
 ## Manual Instrumentation
 
 If you're using a library that Sentry does not automatically instrument, you can manually instrument your code to capture spans. For your AI agents data to show up in Sentry [AI Agents Insights](https://sentry.io/orgredirect/organizations/:orgslug/insights/ai/agents/), spans must have well-defined names and data attributes.
