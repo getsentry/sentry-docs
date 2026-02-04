@@ -90,8 +90,8 @@ export function ImageLightbox({
   };
 
   // Filter out props that are incompatible with Next.js Image component
-  // Next.js Image has stricter typing for certain props like 'placeholder'
-  const {placeholder: _placeholder, ...imageCompatibleProps} = props;
+  // Next.js Image has stricter typing for certain props like 'placeholder' and 'preload'
+  const {placeholder: _placeholder, preload: _preload, ...imageCompatibleProps} = props;
 
   const renderImage = (isInline: boolean = true) => {
     const renderedSrc = getImageUrl(src, imgPath);
