@@ -32,6 +32,23 @@ const sharedExcludes = [
   'node_modules/remark-mdx-images/**/*',
   'node_modules/unified/**/*',
   'node_modules/rollup/**/*',
+  // ESLint/TypeScript - build-time only
+  'node_modules/eslint/**/*',
+  'node_modules/eslint-*/**/*',
+  'node_modules/@eslint/**/*',
+  'node_modules/@typescript-eslint/**/*',
+  'node_modules/typescript/**/*',
+  // Mermaid dependencies (build-time diagram generation)
+  'node_modules/cytoscape/**/*',
+  'node_modules/cytoscape-*/**/*',
+  // Development/test tools
+  'node_modules/vitest/**/*',
+  'node_modules/vite/**/*',
+  'node_modules/@vitest/**/*',
+  // Platform-specific SWC binaries (Vercel uses linux-x64)
+  'node_modules/@next/swc-darwin-*/**/*',
+  'node_modules/@next/swc-win32-*/**/*',
+  'node_modules/@next/swc-linux-arm*/**/*',
 ];
 
 const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
