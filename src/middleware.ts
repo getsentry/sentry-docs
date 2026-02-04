@@ -9,6 +9,9 @@ const isDeveloperDocs = process.env.DEVELOPER_DOCS_;
 export const config = {
   // learn more: https://nextjs.org/docs/pages/building-your-application/routing/middleware#matcher
   matcher: [
+    // Match MCP routes for trailing slash handling
+    '/mcp',
+    '/mcp/',
     // Match all request paths except for the ones starting with:
     // - api (API routes)
     // - _next/static (static files)
@@ -18,8 +21,33 @@ export const config = {
   ],
 };
 
+// don't send Permanent Redirects (301) in dev mode - it gets cached for "localhost" by the browser
+const redirectStatusCode = process.env.NODE_ENV === 'development' ? 302 : 301;
+
 // This function can be marked `async` if using `await` inside
 export function middleware(request: NextRequest) {
+  const {pathname} = request.nextUrl;
+
+  // Handle MCP routes - rewrite trailing slash version to non-trailing
+  if (pathname === '/mcp/') {
+    const url = request.nextUrl.clone();
+    url.pathname = '/mcp';
+    return NextResponse.rewrite(url);
+  }
+
+  // Skip trailing slash redirect for MCP and API routes
+  if (pathname.startsWith('/mcp') || pathname.startsWith('/api')) {
+    return NextResponse.next();
+  }
+
+  // Add trailing slash redirect for docs pages (since skipTrailingSlashRedirect is enabled)
+  if (!pathname.endsWith('/') && !pathname.includes('.')) {
+    return NextResponse.redirect(
+      new URL(`${pathname}/`, request.url),
+      redirectStatusCode
+    );
+  }
+
   // First, handle canonical URL redirects for deprecated paths
   const canonicalRedirect = handleRedirects(request);
   if (canonicalRedirect) {
@@ -29,9 +57,6 @@ export function middleware(request: NextRequest) {
   // Then, check for AI/LLM clients and redirect to markdown if appropriate
   return handleAIClientRedirect(request);
 }
-
-// don't send Permanent Redirects (301) in dev mode - it gets cached for "localhost" by the browser
-const redirectStatusCode = process.env.NODE_ENV === 'development' ? 302 : 301;
 
 /**
  * Detects if the user agent belongs to an AI/LLM tool or development environment
