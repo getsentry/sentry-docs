@@ -1,5 +1,6 @@
 import {dirname} from 'path';
 import {fileURLToPath} from 'url';
+
 import {FlatCompat} from '@eslint/eslintrc';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -9,7 +10,7 @@ const compat = new FlatCompat({
   baseDirectory: __dirname,
 });
 
-export default [
+const config = [
   {
     ignores: ['.babelrc.js'],
   },
@@ -26,3 +27,5 @@ export default [
     },
   },
 ];
+
+export default config;
