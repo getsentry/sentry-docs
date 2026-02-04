@@ -1,10 +1,12 @@
 import * as Sentry from '@sentry/nextjs';
 
+import {tracesSampler} from './tracesSampler';
+
 export function register() {
   if (process.env.NEXT_RUNTIME === 'nodejs') {
     Sentry.init({
       dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
-      tracesSampleRate: 1,
+      tracesSampler,
       enableLogs: true,
       debug: false,
       environment: process.env.NODE_ENV === 'development' ? 'development' : undefined,
@@ -29,7 +31,7 @@ export function register() {
   if (process.env.NEXT_RUNTIME === 'edge') {
     Sentry.init({
       dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
-      tracesSampleRate: 1,
+      tracesSampler,
       enableLogs: true,
       debug: false,
       environment: process.env.NODE_ENV === 'development' ? 'development' : undefined,

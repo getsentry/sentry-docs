@@ -1,0 +1,128 @@
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+### Metric Types
+
+| Type | Use For |
+|------|---------|
+| `count` | Events (orders, clicks, API calls) |
+| `gauge` | Current values (queue depth, connections) |
+| `distribution` | Value ranges (response times, payload sizes) |
+
+No setup required beyond SDK initialization.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```dart
+import 'package:sentry/sentry.dart';
+
+// Count occurrences
+Sentry.metrics.count('orders_created', 1);
+
+// Track current values
+Sentry.metrics.gauge('active_connections', 42);
+
+// Track distributions
+Sentry.metrics.distribution(
+  'api_latency',
+  187,
+  unit: 'millisecond',
+);
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+### Attributes
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+#### Filtering and Grouping
+
+Attributes let you filter and group metrics in Sentry. Use them for:
+- Environment segmentation
+- Feature flag tracking
+- User tier analysis
+
+Each metric has a **2KB size limit**. If you exceed this, the metric will be dropped.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```dart
+Sentry.metrics.count(
+  'api_calls',
+  1,
+  attributes: {
+    'endpoint': SentryAttribute.string('/api/orders'),
+    'user_tier': SentryAttribute.string('pro'),
+    'region': SentryAttribute.string('us-west'),
+  },
+);
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+#### Scope Attributes
+
+Use scope APIs to set attributes that apply to all metrics while the scope is active.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```dart
+// Add attributes to the global scope
+Sentry.setAttributes({'is_admin': SentryAttribute.bool(true)});
+
+// All scope attributes are added to metrics
+Sentry.metrics.count('clicks', 1);
+Sentry.metrics.gauge(
+  'time_since_refresh',
+  4,
+  unit: 'second',
+);
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+#### Units
+
+For `gauge` and `distribution` metrics, specify a unit to help Sentry display values in a human-readable format.
+
+Common units: `millisecond`, `second`, `byte`, `kilobyte`, `megabyte`.
+Use `SentryMetricUnit` to conveniently access supported units in Dart.
+See [supported units](https://develop.sentry.dev/sdk/telemetry/attributes/#units) for the full list.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```dart
+Sentry.metrics.distribution(
+  'response_time',
+  187.5,
+  unit: SentryMetricUnit.millisecond,
+);
+
+Sentry.metrics.gauge(
+  'memory_usage',
+  1024,
+  unit: SentryMetricUnit.byte,
+);
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
