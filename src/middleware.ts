@@ -1771,14 +1771,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   // START redirecting deprecated generic metrics docs to concepts
   {
-    from: '/platforms/java/metrics/',
-    to: '/concepts/key-terms/tracing/span-metrics/',
-  },
-  {
-    from: '/platforms/android/metrics/',
-    to: '/concepts/key-terms/tracing/span-metrics/',
-  },
-  {
     from: '/platforms/apple/metrics/',
     to: '/concepts/key-terms/tracing/span-metrics/',
   },
