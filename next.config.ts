@@ -118,6 +118,13 @@ const nextConfig = {
   images: {
     contentDispositionType: 'inline', // "open image in new tab" instead of downloading
     remotePatterns: REMOTE_IMAGE_PATTERNS,
+    // Next.js 16 requires localPatterns for images with query strings
+    // Omitting 'search' allows any query string (used for cache busting)
+    localPatterns: [
+      {
+        pathname: '/**',
+      },
+    ],
   },
   webpack: (config, options) => {
     config.plugins.push(
@@ -132,7 +139,7 @@ const nextConfig = {
     return config;
   },
   env: {
-    // This is used on middleware
+    // This is used on proxy
     DEVELOPER_DOCS_: process.env.NEXT_PUBLIC_DEVELOPER_DOCS,
   },
   redirects,
