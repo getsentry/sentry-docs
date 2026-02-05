@@ -278,6 +278,12 @@ To verify that Sentry captures errors and creates issues in your Sentry project,
 
 ```html {filename: test.astro}
 <script>
+  const buttonOne = document.getElementById("one");
+  const buttonTwo = document.getElementById("two");
+
+  buttonOne.addEventListener("click", throwTestError);
+  buttonTwo.addEventListener("click", throwApiError);
+
   function throwTestError() {
     throw new Error("Sentry Example Frontend Error");
   }
@@ -287,8 +293,8 @@ To verify that Sentry captures errors and creates issues in your Sentry project,
   }
 </script>
 
-<button type="button" onclick="throwTestError()">Throw a frontend error</button>
-<button type="button" onclick="throwApiError()">Throw an API error</button>
+<button id="one" type="button">Throw a frontend error</button>
+<button id="two" type="button">Throw an API error</button>
 ```
 
 Then also create the route we're calling in our test page, like `src/pages/api/test-error.(js|ts)`:
@@ -313,6 +319,10 @@ To test tracing, create a custom span to measure the time it takes for the API r
 <script>
   import * as Sentry from "@sentry/astro";
 
+  const button = document.getElementById("one");
+
+  button.addEventListener("click", throwApiError);
+
   async function throwApiError() {
     await Sentry.startSpan(
       {
@@ -326,9 +336,7 @@ To test tracing, create a custom span to measure the time it takes for the API r
   }
 </script>
 
-<button type="button" onclick="throwApiError()">
-  Throw an API error with a trace
-</button>
+<button id="one" type="button">Throw an API error with a trace</button>
 ```
 
 </OnboardingOption>
