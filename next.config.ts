@@ -83,6 +83,7 @@ const outputFileTracingIncludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
         'public/doctree.json',
         'docs/changelog.mdx',
         'docs/platforms/index.mdx',
+        'src/components/changelog/docsChangelog.tsx',
       ],
       'sitemap.xml': ['public/doctree.json'],
     };
