@@ -73,7 +73,7 @@ When writing or editing documentation content in `docs/`:
 
 ### Word Choice
 - Use "blocklist/allowlist" not "blacklist/whitelist"
-- Use "primary/replica" not "master/slave"
+- Use "master/secondary", "primary/secondary" not "master/slave"
 - Use "to" not "in order to"
 - Use "use" not "utilize"
 - Verb forms: "set up" (verb) vs "setup" (noun), "log in" vs "login"
