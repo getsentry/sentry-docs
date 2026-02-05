@@ -67,6 +67,12 @@ const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
         'node_modules/prettier/plugins',
         'node_modules/rollup/dist',
         'public/og-images/**/*',
+        // Exclude static assets that don't need to be in the serverless function
+        'public/mdx-images/**/*',
+        'public/md-exports/**/*',
+        'public/pdfs/**/*',
+        '**/*.gif',
+        '**/*.pdf',
       ],
       'sitemap.xml': [
         'public/mdx-images/**/*',
