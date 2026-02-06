@@ -1,0 +1,246 @@
+Copy this prompt and provide it to your AI coding assistant to automatically set up Sentry in your React Native project:
+
+```
+Integrate Sentry error monitoring into this React Native app.
+
+STEP 1 - DETECT PROJECT TYPE:
+Check project structure automatically:
+- Expo: Has 'expo' in package.json dependencies
+- Bare React Native: Has ios/ and android/ directories at root
+
+STEP 2 - ASK USER FOR CONFIGURATION:
+
+1. "What's your Sentry DSN?"
+   (Find it at: Project Settings > Client Keys (DSN))
+
+2. "Which features do you want to enable?"
+   Options:
+   - Error Monitoring (always included)
+   - Performance Tracing (recommended) - tracks app performance
+   - Profiling (requires Performance Tracing) - profiles code execution
+   - Session Replay - records user sessions
+   - Logs - captures console logs
+
+   VALIDATION: If user selects Profiling, Performance Tracing is required.
+
+STEP 3 - INSTALL:
+npm install @sentry/react-native
+
+STEP 4 - INITIALIZE SDK:
+Find the app entry point (App.tsx, App.js, app/_layout.tsx, or app/_layout.js)
+
+Add at the top of the file:
+import * as Sentry from '@sentry/react-native';
+
+Sentry.init({
+  dsn: 'USER_PROVIDED_DSN',
+
+  // Always include for better debugging:
+  sendDefaultPii: true,
+
+  // Only add if user selected Performance Tracing:
+  tracesSampleRate: 1.0, // 100% in dev, reduce to 0.1-0.2 in production
+
+  // Only add if user selected Profiling:
+  profilesSampleRate: 1.0, // 100% in dev, reduce to 0.1-0.2 in production
+
+  // Only add if user selected Session Replay:
+  replaysOnErrorSampleRate: 1.0, // Capture 100% of sessions with errors
+  replaysSessionSampleRate: 0.1, // Capture 10% of sessions (reduce to 0.01 in production)
+  integrations: [Sentry.mobileReplayIntegration()],
+
+  // Only add if user selected Logs:
+  enableLogs: true,
+});
+
+STEP 5 - WRAP ROOT COMPONENT:
+At the bottom of the same file, wrap the root component:
+
+export default Sentry.wrap(App); // or RootLayout, etc.
+
+This enables:
+- Automatic touch event tracking (if Performance Tracing enabled)
+- Navigation breadcrumbs
+- Better error context
+
+STEP 6A - IF EXPO (auto-detected):
+
+1. Add Metro config:
+   Create or update metro.config.js:
+
+   const { getSentryExpoConfig } = require('@sentry/react-native/metro');
+   const config = getSentryExpoConfig(__dirname);
+   module.exports = config;
+
+2. Add Expo plugin to app.json (or app.config.js):
+
+   In app.json:
+   {
+     "expo": {
+       "plugins": ["@sentry/react-native/expo"]
+     }
+   }
+
+   Note: org/project config is optional and only needed for production builds with source maps.
+
+3. (OPTIONAL - for production builds only) Set up source maps upload:
+   - Get organization slug and project slug from your Sentry URL:
+     https://sentry.io/organizations/[ORG-SLUG]/projects/[PROJECT-SLUG]/
+
+   - Create auth token at: https://sentry.io/settings/account/api/auth-tokens/
+     Permissions needed: project:releases, project:write
+
+   - Create .env.local file:
+     SENTRY_AUTH_TOKEN=your-auth-token
+
+   - Add to .gitignore (if not already present):
+     echo ".env.local" >> .gitignore
+
+   - Update app.json plugin config:
+     {
+       "expo": {
+         "plugins": [
+           [
+             "@sentry/react-native/expo",
+             {
+               "organization": "your-org-slug",
+               "project": "your-project-slug"
+             }
+           ]
+         ]
+       }
+     }
+
+4. IMPORTANT: Expo Go is NOT supported. Use development builds:
+   npx expo run:ios
+   npx expo run:android
+
+STEP 6B - IF BARE REACT NATIVE (auto-detected):
+
+For production-ready setup with source maps and debug symbols upload, you need to configure native build tools.
+
+OPTION 1 - RECOMMENDED: Run the Sentry Wizard (easiest):
+npx @sentry/wizard@latest -i reactNative
+
+The wizard automatically handles all the setup below.
+
+OPTION 2 - Manual Setup (for full control):
+
+1. Add Metro config:
+   Create or update metro.config.js:
+
+   const {getDefaultConfig, mergeConfig} = require('@react-native/metro-config');
+   const {withSentryConfig} = require('@sentry/react-native/metro');
+
+   const config = {};
+
+   module.exports = withSentryConfig(mergeConfig(getDefaultConfig(__dirname), config));
+
+2. Get credentials from Sentry:
+   - Organization slug: From your Sentry URL (sentry.io/organizations/[ORG-SLUG]/)
+   - Project slug: From your Sentry URL (sentry.io/organizations/[ORG]/projects/[PROJECT-SLUG]/)
+   - Auth token: Create at https://sentry.io/settings/account/api/auth-tokens/
+     Required scopes: project:releases, project:write
+
+3. iOS Setup (if ios/ directory exists):
+
+   a. Create ios/sentry.properties:
+      defaults.org=YOUR_ORG_SLUG
+      defaults.project=YOUR_PROJECT_SLUG
+      defaults.url=https://sentry.io/
+
+   b. Configure auth token (choose ONE option):
+
+      OPTION A - Environment Variable (recommended for CI/CD):
+      Set SENTRY_AUTH_TOKEN environment variable when building:
+      export SENTRY_AUTH_TOKEN=your-auth-token
+
+      OPTION B - In sentry.properties (convenient for local dev):
+      Add to ios/sentry.properties:
+      auth.token=YOUR_AUTH_TOKEN
+
+      Then add to .gitignore:
+      echo "ios/sentry.properties" >> .gitignore
+
+   c. Modify Xcode project (requires manual Xcode project file editing):
+      - Find the "Bundle React Native code and images" build phase
+      - Replace the script with:
+        set -e
+        WITH_ENVIRONMENT="../node_modules/react-native/scripts/xcode/with-environment.sh"
+        SENTRY_XCODE="../node_modules/@sentry/react-native/scripts/sentry-xcode.sh"
+        /bin/sh -c "$WITH_ENVIRONMENT $SENTRY_XCODE"
+
+      - Add new "Upload Debug Symbols to Sentry" build phase with:
+        /bin/sh ../node_modules/@sentry/react-native/scripts/sentry-xcode-debug-files.sh
+
+   d. Run pod install (on macOS):
+      cd ios && pod install && cd ..
+
+4. Android Setup (if android/ directory exists):
+
+   a. Create android/sentry.properties:
+      defaults.org=YOUR_ORG_SLUG
+      defaults.project=YOUR_PROJECT_SLUG
+      defaults.url=https://sentry.io/
+
+   b. Configure auth token (choose ONE option):
+
+      OPTION A - Environment Variable (recommended for CI/CD):
+      Set SENTRY_AUTH_TOKEN environment variable when building:
+      export SENTRY_AUTH_TOKEN=your-auth-token
+
+      OPTION B - In sentry.properties (convenient for local dev):
+      Add to android/sentry.properties:
+      auth.token=YOUR_AUTH_TOKEN
+
+      Then add to .gitignore:
+      echo "android/sentry.properties" >> .gitignore
+
+   c. Modify android/app/build.gradle:
+      Add this line BEFORE the 'android {' block:
+
+      apply from: new File(["node", "--print", "require.resolve('@sentry/react-native/package.json')"].execute().text.trim(), "../sentry.gradle")
+
+IMPORTANT FOR BARE RN:
+- The manual iOS setup (3c) requires editing Xcode project files, which is complex and error-prone
+- Using the wizard (Option 1) is strongly recommended to avoid mistakes
+- Without this setup, error monitoring works but source maps won't be uploaded
+- SECURITY: Never commit auth tokens to version control
+  - Use environment variables (SENTRY_AUTH_TOKEN) for CI/CD
+  - If storing in sentry.properties files, add them to .gitignore
+  - The wizard creates sentry.properties files but does NOT gitignore them by default
+
+STEP 7 - VERIFY SETUP:
+
+Add a test button to trigger an error:
+
+import { Button } from 'react-native';
+
+<Button
+  title="Trigger Test Error"
+  onPress={() => {
+    Sentry.captureException(new Error('Test error from Sentry integration!'));
+  }}
+/>
+
+After pressing the button:
+1. Check the Sentry dashboard (Issues page)
+2. You should see the error within a few seconds
+3. The error should include device info, breadcrumbs, and stack trace
+
+PRODUCTION RECOMMENDATIONS:
+- Reduce tracesSampleRate to 0.1-0.2 (10-20% of transactions)
+- Reduce profilesSampleRate to 0.1-0.2 (10-20% of transactions)
+- Reduce replaysSessionSampleRate to 0.01-0.02 (1-2% of sessions)
+- Keep replaysOnErrorSampleRate at 1.0 (100% of error sessions)
+- Keep sendDefaultPii enabled for better debugging (or disable for strict privacy)
+
+IMPORTANT NOTES:
+- DSN is public and safe to include in source code
+- Auth token is secret - use environment variables, never commit it
+- Auth token only needed for uploading source maps/debug symbols (build time)
+- DSN is needed for runtime error reporting
+- Wrapping your app is optional but highly recommended
+- For Expo: source maps upload only works with development builds, not Expo Go
+- Error monitoring works immediately after init, no additional setup needed
+```
