@@ -128,6 +128,37 @@ with sentry_sdk.start_span(op="gen_ai.invoke_agent", name="invoke_agent Travel A
     pass
 ```
 
+## Tracking Conversations
+
+For AI applications that involve multi-turn conversations, you can use `sentry_sdk.ai.set_conversation_id()` to associate all AI spans from the same conversation. This enables you to track and analyze complete conversation flows within Sentry.
+
+The conversation ID is set as the `gen_ai.conversation.id` attribute on all AI-related spans in the current scope. To remove the conversation ID, use the `remove_conversation_id()` method on the `Scope`.
+
+```python
+import sentry_sdk
+
+sentry_sdk.set_conversation_id("conv_abc123")
+
+# All subsequent AI calls will be linked to this conversation
+```
+
+Some integrations, like the OpenAI integration, will automatically set the conversation ID for you, when you use APIs that expose that.
+
+```python
+import sentry_sdk
+import openai
+
+sentry_sdk.init(...)
+
+conversation = openai.conversations.create()
+
+response = openai.responses.create(
+    model="gpt-4.1",
+    input=[{"role": "user", "content": "What are the 5 Ds of dodgeball?"}],
+    conversation=conversation.id  # this will automatically set `gen_ai.conversation.id` on the span
+)
+```
+
 ## Common Span Attributes
 
 <Include name="tracing/ai-agents-module/common-span-attributes" />
