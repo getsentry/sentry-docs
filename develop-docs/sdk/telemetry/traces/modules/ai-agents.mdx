@@ -73,12 +73,12 @@ Additional attributes on the span:
 
 | Attribute                               | Type | Requirement Level | Description                                                                                     | Example |
 | :-------------------------------------- | :--- | :---------------- | :---------------------------------------------------------------------------------------------- | :------ |
-| `gen_ai.usage.input_tokens`             | int  | optional          | The number of tokens used to process the AI input (prompt) without cached input tokens. **[2]** | `10`    |
-| `gen_ai.usage.input_tokens.cached`      | int  | optional          | The number of cached tokens used in the AI input (prompt).                                      | `50`    |
-| `gen_ai.usage.input_tokens.cache_write` | int  | optional          | Tokens written to cache when processing input.                                                  | `20`    |
-| `gen_ai.usage.output_tokens`            | int  | optional          | The number of tokens used for creating the AI output without reasoning tokens. **[3]**          | `100`   |
-| `gen_ai.usage.output_tokens.reasoning`  | int  | optional          | The number of tokens used for reasoning.                                                        | `30`    |
-| `gen_ai.usage.total_tokens`             | int  | optional          | The total number of tokens used to process the prompt. (input and output)                       | `190`   |
+| `gen_ai.usage.input_tokens`             | int  | optional          | The number of tokens used in the AI input (prompt), including cached tokens. **[2]** | `60`    |
+| `gen_ai.usage.input_tokens.cached`      | int  | optional          | The number of cached tokens used in the AI input (prompt).                           | `50`    |
+| `gen_ai.usage.input_tokens.cache_write` | int  | optional          | Tokens written to cache when processing input.                                       | `20`    |
+| `gen_ai.usage.output_tokens`            | int  | optional          | The number of tokens used in the AI output, including reasoning tokens. **[3]**      | `130`   |
+| `gen_ai.usage.output_tokens.reasoning`  | int  | optional          | The number of tokens used for reasoning.                                             | `30`    |
+| `gen_ai.usage.total_tokens`             | int  | optional          | The sum of `gen_ai.usage.input_tokens` and `gen_ai.usage.output_tokens`.             | `190`   |
 
 ### Cost Data
 
@@ -90,8 +90,8 @@ Additional attributes on the span:
 
 - **[0]:** Span attributes only allow primitive data types (like `int`, `float`, `boolean`, `string`). This means you need to use a stringified version of a list of dictionaries. Do NOT set the object/array `[{"foo": "bar"}]` but rather the string `'[{"foo": "bar"}]'` (must be parsable JSON).
 - **[1]:** Messages use the format `{role, parts}` where `parts` is an array of typed objects: `[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]`. The `role` must be `"user"`, `"assistant"`, `"tool"`, or `"system"`. For backwards compatibility, the legacy format `{role, content}` (e.g. `[{"role": "user", "content": "..."}]`) is also accepted.
-- **[2]:** Cached tokens are NOT included in `gen_ai.usage.input_tokens`; they are tracked separately in `gen_ai.usage.input_tokens.cached`.
-- **[3]:** Reasoning tokens are NOT included in `gen_ai.usage.output_tokens`; they are tracked separately in `gen_ai.usage.output_tokens.reasoning`.
+- **[2]:** Cached tokens are a subset of input tokens; `gen_ai.usage.input_tokens` includes `gen_ai.usage.input_tokens.cached`.
+- **[3]:** Reasoning tokens are a subset of output tokens; `gen_ai.usage.output_tokens` includes `gen_ai.usage.output_tokens.reasoning`.
 
 ## AI Client Span
 
@@ -138,12 +138,12 @@ Additional attributes on the span:
 
 | Attribute                               | Type | Requirement Level | Description                                                                                     | Example |
 | :-------------------------------------- | :--- | :---------------- | :---------------------------------------------------------------------------------------------- | :------ |
-| `gen_ai.usage.input_tokens`             | int  | optional          | The number of tokens used to process the AI input (prompt) without cached input tokens. **[2]** | `10`    |
-| `gen_ai.usage.input_tokens.cached`      | int  | optional          | The number of cached tokens used in the AI input (prompt).                                      | `50`    |
-| `gen_ai.usage.input_tokens.cache_write` | int  | optional          | Tokens written to cache when processing input.                                                  | `20`    |
-| `gen_ai.usage.output_tokens`            | int  | optional          | The number of tokens used for creating the AI output without reasoning tokens. **[3]**          | `100`   |
-| `gen_ai.usage.output_tokens.reasoning`  | int  | optional          | The number of tokens used for reasoning.                                                        | `30`    |
-| `gen_ai.usage.total_tokens`             | int  | optional          | The total number of tokens used to process the prompt. (input and output)                       | `190`   |
+| `gen_ai.usage.input_tokens`             | int  | optional          | The number of tokens used in the AI input (prompt), including cached tokens. **[2]** | `60`    |
+| `gen_ai.usage.input_tokens.cached`      | int  | optional          | The number of cached tokens used in the AI input (prompt).                           | `50`    |
+| `gen_ai.usage.input_tokens.cache_write` | int  | optional          | Tokens written to cache when processing input.                                       | `20`    |
+| `gen_ai.usage.output_tokens`            | int  | optional          | The number of tokens used in the AI output, including reasoning tokens. **[3]**      | `130`   |
+| `gen_ai.usage.output_tokens.reasoning`  | int  | optional          | The number of tokens used for reasoning.                                             | `30`    |
+| `gen_ai.usage.total_tokens`             | int  | optional          | The sum of `gen_ai.usage.input_tokens` and `gen_ai.usage.output_tokens`.             | `190`   |
 
 ### Cost Data
 
@@ -155,8 +155,8 @@ Additional attributes on the span:
 
 - **[0]:** Span attributes only allow primitive data types (like `int`, `float`, `boolean`, `string`). This means you need to use a stringified version of a list of dictionaries. Do NOT set the object/array `[{"foo": "bar"}]` but rather the string `'[{"foo": "bar"}]'` (must be parsable JSON).
 - **[1]:** Messages use the format `{role, parts}` where `parts` is an array of typed objects: `[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]`. The `role` must be `"user"`, `"assistant"`, `"tool"`, or `"system"`. For backwards compatibility, the legacy format `{role, content}` (e.g. `[{"role": "user", "content": "..."}]`) is also accepted.
-- **[2]:** Cached tokens are NOT included in `gen_ai.usage.input_tokens`; they are tracked separately in `gen_ai.usage.input_tokens.cached`.
-- **[3]:** Reasoning tokens are NOT included in `gen_ai.usage.output_tokens`; they are tracked separately in `gen_ai.usage.output_tokens.reasoning`.
+- **[2]:** Cached tokens are a subset of input tokens; `gen_ai.usage.input_tokens` includes `gen_ai.usage.input_tokens.cached`.
+- **[3]:** Reasoning tokens are a subset of output tokens; `gen_ai.usage.output_tokens` includes `gen_ai.usage.output_tokens.reasoning`.
 
 ## Execute Tool Span
 
