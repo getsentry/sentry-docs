@@ -158,21 +158,11 @@ SDKs **SHOULD** minimize unnecessary HTTP requests and **MUST NOT** send an enve
 SDKs **MAY** keep track of discarded events in the transport. Once SDKs implement the [telemetry processor](/sdk/telemetry/telemetry-processor/), they **SHOULD** implement client reports tracking outside the transport, since data can be dropped in multiple places throughout the SDK. The [telemetry scheduler](/sdk/telemetry/telemetry-processor/#telemetry-scheduler) is then responsible for passing aggregated client reports to the transport. The telemetry scheduler still **MUST** adhere to the requirements above.
 
 
-### Dealing with network failures
+### Dealing with Network Failures
 
-The party that drops an envelope item **MUST** record and report it.
+The party that drops an envelope item **MUST** record and report it. SDKs can assume client reports are never rate limited.
 
-The `send_error` reason is reserved for client error outcomes only. Server related codes **SHOULD NOT** be recorded since the server already tracks these. However, Relay does not always record an outcome for oversized envelopes (413), so SDKs **SHOULD** accept the trade-off of potential double counting for `RequestEntityTooLarge` (413) responses to ensure all discarded events are captured. `TooManyRequests` (429) responses **MUST** be skipped since the server records these outcomes.
-
-In summary:
-
-- **HTTP 2xx**: Successful send—no client report needed.
-- **HTTP 4xx/5xx (except 429)**: Discard the envelope and record a client report with reason `send_error`.
-- **HTTP 429**: Discard the envelope without recording a client report.
-
-SDKs can assume client reports are never rate limited.
-
-For more details on retry behavior and error handling, see [Dealing with Network Failures](/sdk/expected-features/#dealing-with-network-failures).
+For details on which HTTP status codes require a client report and which discard reasons to use, see [Dealing with Network Failures](/sdk/expected-features/#dealing-with-network-failures).
 
 ### Configuration
 
