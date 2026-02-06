@@ -4,36 +4,39 @@ sidebar_order: 7919
 description: "Learn about migrating from Sentry Capacitor SDK 2.x to 3.x"
 ---
 
-<Alert level="warning" title="Important">
-
-
-Version 3 is still under development, this documentation may change before the final release.
-
-
-</Alert>
-
-Version 3 of the Sentry Capacitor SDK primarily introduces API cleanup and version support changes.
+Version 3 of the Sentry Capacitor SDK introduces API cleanup, version support changes, and adds Capacitor 8 support.
 
 The main goal of version 3 of Sentry Capacitor SDK is to provide compatibility with Sentry JavaScript version 10. This update includes breaking changes due to the upgrade to JavaScript SDK v10, the removal of deprecated APIs, reorganization of the npm package structure and also the refactoring on how you initialize Sentry Capacitor.
 
+## Minimum Version Requirements
+
+iOS, macOS, and tvOS have increased minimum version requirements:
+
+- **iOS**: 15.0+ (previously 11.0+)
+- **macOS**: 10.14+ (previously 10.13+)
+- **tvOS**: 15.0+ (previously 11.0+)
+
+## Self-Hosted Sentry Compatibility
+
+If you are using a self-hosted Sentry instance, we recommend using version 24.4.2 or higher for full feature support.
 
 ## Major Changes in Sentry JS SDK v10
 
 This update contains API cleanups related to `BaseClient`, `hasTracingEnabled`, and `logger` from `@sentry/core`.
-Each Sibling SDK has specific changes in version 10, follow the tutorials below to update the SDK.
+Each Sibling SDK has specific changes in version 10, follow the guides below to update the SDK.
 
-- [Angular SDK 8.x to 9.x migration guide](/platforms/javascript/guides/angular/migration/v9-to-v10/).
-- [React SDK 8.x to 9.x migration guide](/platforms/javascript/guides/react/migration/v9-to-v10/).
-- [Vue SDK 8.x to 9.x migration guide](/platforms/javascript/guides/vue/migration/v9-to-v10/).
-- [Nuxt SDK 8.x to 9.x migration guide](/platforms/javascript/guides/nuxt/migration/v9-to-v10/).
+- [Angular SDK v9 to v10 migration guide](/platforms/javascript/guides/angular/migration/v9-to-v10/).
+- [React SDK v9 to v10 migration guide](/platforms/javascript/guides/react/migration/v9-to-v10/).
+- [Vue SDK v9 to v10 migration guide](/platforms/javascript/guides/vue/migration/v9-to-v10/).
+- [Nuxt SDK v9 to v10 migration guide](/platforms/javascript/guides/nuxt/migration/v9-to-v10/).
 
 ## Important Capacitor SDK `3.x` Changes
 
 This section describes the changes in Sentry Capacitor SDK, version 3.
 
-### Changes on How You Initialize the SDK on Projects Using Vue or Nuxt.
+### Changes on How You Initialize the SDK on Projects Using Vue or Nuxt
 
-Starting on version `3.0.0`, calling `sentry.init` will break; to fix it, you will need to move the `sibling` parameters from the root option to `siblingOptions` inside the root of `CapacitorOptions`.
+Starting in version `3.0.0`, Vue and Nuxt options must be nested inside `siblingOptions` rather than passed directly to `Sentry.init()`.
 
 ```JavaScript diff {tabTitle: Vue}
 import * as Sentry from '@sentry/capacitor';
@@ -41,21 +44,17 @@ import * as SentryVue from '@sentry/vue';
 
 Sentry.init({
 - app: app,
-  attachErrorHandler: false,
-  dsn: '...',
-  enableLogs: true,
 - attachErrorHandler: false,
 - attachProps: true,
-- attachErrorHandler: true,
-- tracingOptions: ...
+- tracingOptions: { ... },
+  dsn: '...',
 + siblingOptions: {
-+    vueOptions: {
-+       app: app,
-+       attachErrorHandler: false,
-+       attachProps: true,
-+       attachErrorHandler: true,
-+       tracingOptions: ...
-+    },
++   vueOptions: {
++     app: app,
++     attachErrorHandler: false,
++     attachProps: true,
++     tracingOptions: { ... },
++   },
 + },
 }, SentryVue.init);
 ```
@@ -66,34 +65,50 @@ import * as SentryNuxt from '@sentry/nuxt';
 
 Sentry.init({
 - Vue: Vue,
-  attachErrorHandler: false,
-  dsn: '...',
-  enableLogs: true,
 - attachErrorHandler: false,
 - attachProps: true,
-- attachErrorHandler: true,
-- tracingOptions: ...
+- tracingOptions: { ... },
+  dsn: '...',
 + siblingOptions: {
-+    nuxtOptions: {
-+       Vue: Vue,
-+       attachErrorHandler: false,
-+       attachProps: true,
-+       attachErrorHandler: true,
-+       tracingOptions: ...
-+    },
++   nuxtOptions: {
++     Vue: Vue,
++     attachErrorHandler: false,
++     attachProps: true,
++     tracingOptions: { ... },
++   },
 + },
 }, SentryNuxt.init);
 ```
 
-### Logs are Out of Experimental
+### Removed APIs
 
-to keep using logs, you need to move your parameters from `Options._experimental.*` into `Options.*`, the `_experimental` field was removed on version `3.0.0` but may return once new experimental fields appear.
- 
- ### Integration Changes
- 
- This version will include more integrations by default and also a new Spotlight integration that works on both Web and Mobile. See the list below with the new integrations:
- 
- |                                                       | **Auto Enabled** | **Errors** | **Tracing** | **Replay** | **Additional Context** |
+The following APIs have been removed or renamed:
+
+- `BaseClient` → use `Client` instead
+- `hasTracingEnabled()` → use `hasSpansEnabled()` instead
+- Internal logger exports from `@sentry/core` → use `debug` and `SentryDebugLogger` types
+
+### Logs Configuration Changes
+
+Logging options have been moved out of the `_experiments` namespace. Update your configuration as follows:
+
+```javascript diff
+Sentry.init({
+  dsn: '...',
+- _experiments: {
+-   enableLogs: true,
+-   beforeSendLog: (log) => log,
+- },
++ enableLogs: true,
++ beforeSendLog: (log) => log,
+});
+```
+
+### Integration Changes
+
+This version restores several integrations that were previously missing and adds a new Spotlight integration that works on both Web and Mobile. The following integrations are now available:
+
+|                                                       | **Auto Enabled** | **Errors** | **Tracing** | **Replay** | **Additional Context** |
 |-------------------------------------------------------|:----------------:|:----------:|:-----------:|:----------:|:----------------------:|
 | <PlatformLink to="/configuration/integrations/breadcrumbs/">`breadcrumbsIntegration`</PlatformLink>             |        ✓         |            |             |            |           ✓            |
 | <PlatformLink to="/configuration/integrations/browserapierrors/">`browserApiErrorsIntegration`</PlatformLink>   |        ✓         |     ✓      |             |            |                        |
@@ -102,7 +117,6 @@ to keep using logs, you need to move your parameters from `Options._experimental
 | <PlatformLink to="/configuration/integrations/globalhandlers/">`globalHandlersIntegration`</PlatformLink>       |        ✓         |     ✓      |             |            |                        |
 | <PlatformLink to="/configuration/integrations/inboundfilters/">`inboundFiltersIntegration`</PlatformLink>       |        ✓         |     ✓      |             |            |                        |
 | <PlatformLink to="/configuration/integrations/linkederrors/">`linkedErrorsIntegration`</PlatformLink>           |        ✓         |     ✓      |             |            |                        |
-| <PlatformLink to="/configuration/integrations/spotlight/">`spotlightIntegration`</PlatformLink>       |                  |            |             |            |                        |
-
+| <PlatformLink to="/configuration/integrations/spotlight/">`spotlightIntegration`</PlatformLink>                 |                  |            |             |            |                        |
 
 <PageGrid/>
