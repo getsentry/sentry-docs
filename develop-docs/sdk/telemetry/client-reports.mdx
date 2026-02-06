@@ -157,15 +157,9 @@ SDKs **SHOULD** minimize unnecessary HTTP requests and **MUST NOT** send an enve
 
 SDKs **MAY** keep track of discarded events in the transport. Once SDKs implement the [telemetry processor](/sdk/telemetry/telemetry-processor/), they **SHOULD** implement client reports tracking outside the transport, since data can be dropped in multiple places throughout the SDK. The [telemetry scheduler](/sdk/telemetry/telemetry-processor/#telemetry-scheduler) is then responsible for passing aggregated client reports to the transport. The telemetry scheduler still **MUST** adhere to the requirements above.
 
-The one who drops an envelope item must record and report it. If the server drops
-an envelope item, for example, with the response 429, the client SDK must not record
-this as the server already does. Still, the SDK must record lost envelope items
-when dropping them itself, for example, caused by an active rate limit. SDKs can put
-a simple optional check for HTTP status codes in place where any code `>= 400` except
-`429` will be recorded as `send_error`. The client SDKs can assume that client
-reports never get rate limited. The server is minimizing the possibility of client
-reports getting rate limited, but the SDKs shouldn't worry about this edge case as
-this feature is best-effort.
+The party that drops an envelope item **MUST** record and report it. SDKs can assume client reports are never rate limited. The server is minimizing the possibility of client reports getting rate limited, but the SDKs shouldn't worry about this edge case as this feature is best-effort.
+
+For details on which HTTP status codes require a client report and which discard reasons to use, see [Dealing with Network Failures](/sdk/expected-features/#dealing-with-network-failures).
 
 ### Configuration
 
