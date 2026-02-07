@@ -1,0 +1,96 @@
+---
+title: "Querying Auto-Instrumented Traces"
+sidebar_order: 10
+description: "Find performance issues using data Sentry captures automatically."
+---
+
+Sentry's browser SDK automatically captures page loads, navigation, fetch requests, and resource loading. This guide shows you how to query that data to find performance issues—no custom code required.
+
+## What's Auto-Instrumented
+
+With `browserTracingIntegration()` enabled, Sentry automatically captures:
+
+- Page loads and navigation
+- Fetch/XHR requests
+- Long animation frames (main thread blocking)
+- Resource loading (JS, CSS, images)
+
+## Finding Performance Issues
+
+### Slow Page Loads
+
+Pages taking too long to become interactive.
+
+**Query:** `span.op:pageload`
+
+**Visualize:** `p90(span.duration)` grouped by `transaction` to compare routes.
+
+**Alert idea:** `p75(transaction.duration) > 3s` for pageload transactions.
+
+### Slow API Calls
+
+Fetch/XHR requests dragging down your app.
+
+**Query:** `span.op:http.client`
+
+**Visualize:** `avg(span.duration)` grouped by `span.description` (the URL).
+
+**Alert idea:** `p95(span.duration) > 2s` where `span.op:http.client`.
+
+### JavaScript Blocking the Main Thread
+
+Long animation frames indicate JavaScript execution blocking the UI.
+
+**Query:** `span.op:ui.long-animation-frame`
+
+**Visualize:** Sort by `span.duration` to find the worst offenders.
+
+**Alert idea:** `p75(span.duration) > 200ms` for long animation frames.
+
+### Slow SPA Navigation
+
+How long it takes users to move between pages after initial load.
+
+**Query:** `span.op:navigation`
+
+**Visualize:** `p90(span.duration)` grouped by `transaction` to compare route performance.
+
+**Alert idea:** `p75(span.duration) > 2s` for navigation.
+
+### Heavy Resources
+
+JS bundles, stylesheets, or images slowing down page load.
+
+**Queries:**
+- `span.op:resource.script` (JavaScript)
+- `span.op:resource.css` (stylesheets)
+- `span.op:resource.img` (images)
+
+**Visualize:** `avg(span.duration)` to find the heaviest assets.
+
+**Alert idea:** `p75(span.duration) > 3s` for resource.script.
+
+## Creating Trace-Based Alerts
+
+1. Go to **Explore > Traces**
+2. Build your query (e.g., `span.op:http.client`)
+3. Click **Save As** → **Alert**
+4. Choose a threshold type:
+   - **Static:** Set a specific threshold
+   - **Percent Change:** Alert on relative change
+   - **Anomaly:** Let Sentry detect unusual patterns
+5. Configure notifications and save
+
+**Tip:** Alert on percentiles (p75, p95) rather than averages. Averages hide the outliers that hurt real users.
+
+## Quick Reference
+
+| What You're Looking For | Query | Visualize |
+|------------------------|-------|-----------|
+| Slow page loads | `span.op:pageload` | `p90(span.duration)` by route |
+| Slow fetch requests | `span.op:http.client` | `avg(span.duration)` by URL |
+| JS blocking UI | `span.op:ui.long-animation-frame` | `max(span.duration)` |
+| Slow SPA navigation | `span.op:navigation` | `p90(span.duration)` by route |
+| Heavy JS bundles | `span.op:resource.script` | `avg(span.duration)` |
+| Heavy stylesheets | `span.op:resource.css` | `avg(span.duration)` |
+| Slow images | `span.op:resource.img` | `avg(span.duration)` |
