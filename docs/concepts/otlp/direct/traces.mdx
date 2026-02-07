@@ -1,0 +1,50 @@
+---
+title: Direct OTLP Traces
+sidebar_title: Traces
+sidebar_order: 10
+description: "Send OpenTelemetry traces directly to Sentry without a Sentry SDK."
+keywords: ["otlp", "otel", "opentelemetry", "traces", "tracing"]
+---
+
+<Include name="feature-available-open-beta-tracing.mdx" />
+
+Send traces directly from your OpenTelemetry SDK to Sentry's OTLP endpoint. You can find your endpoint URL and auth key in [Project settings > Client Keys (DSN)](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/).
+
+## Environment Variables
+
+The simplest way to configure your OTel SDK:
+
+```bash {filename: .env}
+export OTEL_EXPORTER_OTLP_TRACES_ENDPOINT="___OTLP_TRACES_URL___"
+export OTEL_EXPORTER_OTLP_TRACES_HEADERS="x-sentry-auth=sentry sentry_key=___PUBLIC_KEY___"
+```
+
+## SDK Configuration
+
+You can also configure the exporter directly in your application code. Here's an example with the OTel Node SDK:
+
+```typescript {filename: app.ts}
+import { NodeSDK } from "@opentelemetry/sdk-node";
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
+
+const sdk = new NodeSDK({
+  traceExporter: new OTLPTraceExporter({
+    url: "___OTLP_TRACES_URL___",
+    headers: {
+      "x-sentry-auth": "sentry sentry_key=___PUBLIC_KEY___",
+    },
+  }),
+});
+
+sdk.start();
+```
+
+## Known Limitations
+
+- Span events are not supported. All span events are dropped during ingestion.
+- Span links are partially supported. We ingest and display span links, but they cannot be searched, filtered, or aggregated. Links are shown in the [Trace View](/concepts/key-terms/tracing/trace-view/).
+- Array attributes are partially supported. We ingest and display array attributes, but they cannot be searched, filtered, or aggregated. Array attributes are shown in the [Trace View](/concepts/key-terms/tracing/trace-view/).
+
+## Using a Collector Instead
+
+If you need to process traces before sending them to Sentry (sampling, transforming, routing to multiple projects), see the [OpenTelemetry Collector](/concepts/otlp/forwarding/tools/collector/) guide.

@@ -1,37 +1,27 @@
 ---
 title: OpenTelemetry Protocol (OTLP)
 sidebar_order: 400
-description: "Learn how to send OpenTelemetry trace data directly to Sentry from OpenTelemetry SDKs."
+description: "Learn how to send OpenTelemetry traces and logs to Sentry."
 keywords: ["otlp", "otel", "opentelemetry"]
 ---
 
 <Include name="feature-available-open-beta-tracing.mdx" />
 
-Sentry can ingest OTel traces and logs directly via the OpenTelemetry Protocol (OTLP). Sentry does not support ingesting OTLP metrics.
+Sentry can ingest OpenTelemetry traces and logs via OTLP endpoints, either directly from an OTel SDK or through a pipeline tool like the OpenTelemetry Collector. Sentry does not support OTLP metrics at this time.
 
-Sentry supports OTel in several ways, depending on your setup:
+## Linking Traces with Sentry SDK
+
+If you're using a Sentry SDK alongside OTel instrumentation, you can connect them to share trace context:
 
 | Scenario | Solution |
 |----------|----------|
-| **Sentry frontend + OTel backend** | Use [propagateTraceparent](/concepts/otlp/sentry-with-otel/#linking-sentry-and-otlp-traces) to link frontend traces with OTLP instrumented backend services |
+| **Sentry frontend + OTel backend** | Use [propagateTraceparent](/concepts/otlp/sentry-with-otel/#linking-sentry-and-otlp-traces) to connect frontend traces with OTel-instrumented backend services |
 | **Sentry SDK + OTel in the same service** | Use the [OTLP Integration](/concepts/otlp/sentry-with-otel/#otlp-integration) to share trace context between Sentry and OTel |
-| **OTel backend, no Sentry SDK** | Send [OTLP traces](/concepts/otlp/otlp-traces/) and [logs](/concepts/otlp/otlp-logs/) directly to Sentry via environment variables or collector config |
 
-## OpenTelemetry Collector
+## Sending OTel Data to Sentry
 
-The [OpenTelemetry Collector](/concepts/otlp/collector/) is a vendor-agnostic proxy that can receive, process, and export telemetry data. You can configure the Collector to forward logs and traces to Sentry.
+If you're using OTel without a Sentry SDK, or want to ingest telemetry from infrastructure sources:
 
-### Collector Guides
-
-<Include name="opentelemetry-collector-guides.mdx" />
-
-## Other Forwarders
-
-| Forwarder                                          | Logs | Traces |
-| -------------------------------------------------- | :--: | :----: |
-| [Vector](/concepts/otlp/forwarders/vector/)        |  ✅  |   ❌   |
-| [Fluent Bit](/concepts/otlp/forwarders/fluentbit/) |  ✅  |   ✅   |
-
-## Platform Drains
-
-Looking to send telemetry from a managed hosting platform? See [Log and Trace Drains](/product/drains/) for platform-specific integrations (Vercel, Cloudflare, Heroku, etc.).
+- **[Direct Export](/concepts/otlp/direct/)** - Configure your OTel SDK to send traces and logs directly to Sentry's OTLP endpoints
+- **[Forwarding](/concepts/otlp/forwarding/)** - Use the OpenTelemetry Collector, Vector, or Fluent Bit to forward data from infrastructure sources (CloudWatch, Kafka, Nginx, syslog, etc.)
+- **[Platform Drains](/product/drains/)** - Send telemetry from managed hosting platforms (Vercel, Cloudflare, Heroku, etc.)
