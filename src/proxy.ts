@@ -19,7 +19,7 @@ export const config = {
 };
 
 // This function can be marked `async` if using `await` inside
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   // First, handle canonical URL redirects for deprecated paths
   const canonicalRedirect = handleRedirects(request);
   if (canonicalRedirect) {
