@@ -1,0 +1,92 @@
+---
+title: Logrus Integration with Tracing
+sidebar_order: 200
+sdk: sentry.go.logrus
+description: "Learn how to link Logrus logs with distributed traces."
+---
+
+<Alert>
+
+To link logs with traces, you'll need to first <PlatformLink to="/tracing/">set up tracing</PlatformLink>.
+
+</Alert>
+
+The `sentrylogrus` integration provides structured logging support. When combined with tracing, you can link your logs to traces by using `NewLogHook` with context-aware logging methods.
+
+## Linking Logs to Traces
+
+To link your Logrus logs to active traces, use `NewLogHook` (which supports context) and log with `WithContext(ctx)`.
+
+### Example
+
+```go
+package main
+
+import (
+	"fmt"
+	"net/http"
+	"time"
+
+	"github.com/getsentry/sentry-go"
+	sentryhttp "github.com/getsentry/sentry-go/http"
+	sentrylogrus "github.com/getsentry/sentry-go/logrus"
+	"github.com/sirupsen/logrus"
+)
+
+var logger = logrus.New()
+
+func main() {
+	// Initialize Sentry with tracing and logs enabled
+	if err := sentry.Init(sentry.ClientOptions{
+		Dsn:              "___PUBLIC_DSN___",
+		EnableTracing:    true,
+		TracesSampleRate: 1.0,
+		EnableLogs:       true,
+		LogsSampleRate:   1.0,
+	}); err != nil {
+		panic(err)
+	}
+	defer sentry.Flush(2 * time.Second)
+
+	// Use NewLogHook to send logs with context support
+	hook, err := sentrylogrus.NewLogHook(
+		[]logrus.Level{logrus.InfoLevel, logrus.ErrorLevel},
+		sentry.ClientOptions{
+			Dsn:        "___PUBLIC_DSN___",
+			EnableLogs: true,
+		},
+	)
+	if err != nil {
+		panic(err)
+	}
+	defer hook.Flush(5 * time.Second)
+	logger.AddHook(hook)
+
+	sentryHandler := sentryhttp.New(sentryhttp.Options{})
+	http.Handle("/", sentryHandler.Handle(http.HandlerFunc(handler)))
+
+	fmt.Println("Listening on :3000")
+	http.ListenAndServe(":3000", nil)
+}
+
+func handler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	// Logs with context are automatically linked to the active trace
+	logger.WithContext(ctx).Info("Processing request")
+
+	w.Write([]byte("OK"))
+}
+```
+
+## Best Practices
+
+- **Use `NewLogHook` not `NewEventHook`**: Only `NewLogHook` supports context-based trace linking
+- **Enable logs**: Set `EnableLogs: true` in ClientOptions
+- **Use `WithContext`**: Always use `logger.WithContext(ctx)` to associate logs with the active trace
+- **Log within transactions**: Ensure logs are created while a transaction or span is active
+
+## Related Documentation
+
+- <PlatformLink to="/logs/">Logs</PlatformLink> - Comprehensive logging setup
+- <PlatformLink to="/tracing/instrumentation/custom-instrumentation/">Custom Instrumentation</PlatformLink> - Manual tracing setup
+- [Logrus Integration Guide](/platforms/go/guides/logrus/) - Full Logrus integration details

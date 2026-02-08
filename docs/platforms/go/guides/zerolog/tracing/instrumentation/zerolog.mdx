@@ -1,0 +1,127 @@
+---
+title: Linking Zerolog Error Events to Traces
+sidebar_order: 202
+sdk: sentry.go.zerolog
+description: "Learn how to link Zerolog error events with distributed traces in concurrent applications."
+---
+
+<Alert level="warning">
+
+The zerolog integration sends error events to Sentry but does not support Structured Logs due to architectural limitations:
+- The `io.Writer` interface lacks access to `context.Context`, preventing proper per-request hub isolation
+- In concurrent applications, breadcrumbs from different requests may leak into each other's events
+- Related issues: [#1178](https://github.com/getsentry/sentry-go/issues/1178), [#1029](https://github.com/getsentry/sentry-go/issues/1029)
+
+However, you can link error events to traces with manual hub management.
+
+</Alert>
+
+## Linking Error Events to Traces
+
+The zerolog integration sends error events (not structured logs) to Sentry. To properly link these error events to traces in concurrent applications, you need to create a per-request writer with the hub from context:
+
+### Example
+
+```go
+package main
+
+import (
+	"fmt"
+	"net/http"
+	"os"
+	"time"
+
+	"github.com/getsentry/sentry-go"
+	sentryzerolog "github.com/getsentry/sentry-go/zerolog"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
+)
+
+func main() {
+	// Initialize Sentry with tracing enabled
+	if err := sentry.Init(sentry.ClientOptions{
+		Dsn:              "___PUBLIC_DSN___",
+		EnableTracing:    true,
+		TracesSampleRate: 1.0,
+	}); err != nil {
+		panic(err)
+	}
+	defer sentry.Flush(2 * time.Second)
+
+	baseSentryWriter, err := sentryzerolog.New(sentryzerolog.Config{
+		Options: sentryzerolog.Options{
+			Levels: []zerolog.Level{
+				zerolog.ErrorLevel,
+				zerolog.FatalLevel,
+				zerolog.PanicLevel,
+			},
+			FlushTimeout:    3 * time.Second,
+		},
+	})
+	if err != nil {
+		panic(err)
+	}
+	defer baseSentryWriter.Close()
+
+	// Global logger for non-request contexts
+	log.Logger = log.Output(zerolog.MultiLevelWriter(
+		zerolog.ConsoleWriter{Out: os.Stderr},
+		baseSentryWriter,
+	))
+
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+
+		// Start a transaction
+		transaction := sentry.StartTransaction(ctx,
+			fmt.Sprintf("%s %s", r.Method, r.URL.Path),
+			sentry.WithOpName("http.server"),
+		)
+		defer transaction.Finish()
+		ctx = transaction.Context()
+
+		// Get hub from context for this request
+		hub := sentry.GetHubFromContext(ctx)
+
+		// Create request-scoped writer with the hub from context
+		requestWriter := baseSentryWriter.WithHub(hub)
+
+		// Create request-scoped logger
+		requestLogger := zerolog.New(zerolog.MultiLevelWriter(
+			zerolog.ConsoleWriter{Out: os.Stderr},
+			requestWriter,
+		)).With().Timestamp().Logger()
+
+		// Info logs are written to console but not sent to Sentry
+		requestLogger.Info().
+			Str("method", r.Method).
+			Str("path", r.URL.Path).
+			Msg("Request received")
+
+		// Simulate an error - this will be sent to Sentry as an error event
+		// linked to this request's trace
+		requestLogger.Error().
+			Str("trace_id", transaction.TraceID.String()).
+			Str("span_id", transaction.SpanID.String()).
+			Msg("Example error event linked to trace")
+
+		w.Write([]byte("OK"))
+	})
+
+	fmt.Println("Listening on :3000")
+	http.ListenAndServe(":3000", nil)
+}
+```
+
+## Best Practices
+
+1. **Disable `WithBreadcrumbs` in concurrent applications** - To avoid breadcrumb leakage across requests
+2. **Create per-request loggers** - Use `WithHub()` to create request-scoped writers that properly link error events to traces
+3. **Add explicit trace context** - Include `trace_id` and `span_id` in error event fields for easier debugging
+4. **Use structured fields** - Add relevant context fields to error events
+
+## Related Documentation
+
+- <PlatformLink to="/tracing/instrumentation/custom-instrumentation/">Custom Instrumentation</PlatformLink> - Manual tracing setup
+- [Zerolog Integration Guide](/platforms/go/guides/zerolog/) - Full Zerolog integration details
+- [Structured Logs](/platforms/go/common/logs/) - Structured Logs with sentry.Logger

@@ -1,0 +1,72 @@
+---
+title: Logs in Zerolog
+sidebar_title: Logs
+description: "Zerolog does not support Structured Logs. Use alternative integrations instead."
+sidebar_order: 5600
+sidebar_section: features
+---
+
+<Alert level="warning">
+
+The zerolog integration sends error events to Sentry but does not support Structured Logs due to architectural limitations:
+- The `io.Writer` interface lacks access to `context.Context`, preventing proper per-request hub isolation
+- In concurrent applications, breadcrumbs from different requests may leak into each other's events
+- Related issues: [#1178](https://github.com/getsentry/sentry-go/issues/1178), [#1029](https://github.com/getsentry/sentry-go/issues/1029)
+
+For Structured Logs, use our Sentry.Logger or any of the supported integrations instead.
+
+</Alert>
+
+## What Zerolog Integration Supports
+
+The zerolog integration **does** support sending **error events** to Sentry:
+
+```go
+import (
+	"errors"
+	"time"
+	"os"
+
+	"github.com/getsentry/sentry-go"
+	sentryzerolog "github.com/getsentry/sentry-go/zerolog"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
+)
+
+func main() {
+	// Initialize Sentry
+	err := sentry.Init(sentry.ClientOptions{
+		Dsn: "___PUBLIC_DSN___",
+		// Note: EnableLogs is for Structured Logs, not zerolog error events
+	})
+	if err != nil {
+		log.Fatal().Err(err).Msg("sentry initialization failed")
+	}
+	defer sentry.Flush(2 * time.Second)
+
+	// Configure Zerolog to send error events to Sentry
+	sentryWriter, err := sentryzerolog.New(sentryzerolog.Config{
+		Options: sentryzerolog.Options{
+			// These levels will be sent as error events
+			Levels:          []zerolog.Level{zerolog.ErrorLevel, zerolog.FatalLevel, zerolog.PanicLevel},
+			// Disable breadcrumbs in concurrent applications to prevent leakage
+			WithBreadcrumbs: false,
+			FlushTimeout:    3 * time.Second,
+		},
+	})
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to create sentry writer")
+	}
+	defer sentryWriter.Close()
+
+	// Use Sentry writer in Zerolog
+	log.Logger = log.Output(zerolog.MultiLevelWriter(zerolog.ConsoleWriter{Out: os.Stderr}, sentryWriter))
+
+	// This will be sent as an error event to Sentry
+	log.Error().Msg("This is an error event, not a structured log")
+}
+```
+
+## Linking Error Events to Traces
+
+If you need to link zerolog error events to traces in concurrent applications, see the [tracing instrumentation documentation](/platforms/go/guides/zerolog/tracing/instrumentation/zerolog/).
