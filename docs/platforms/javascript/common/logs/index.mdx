@@ -12,28 +12,287 @@ notSupported:
 
 <PlatformContent includePath="llm-rules-logs" />
 
-With Sentry Structured Logs, you can send text-based log information from your applications to Sentry. Once in Sentry, these logs can be viewed alongside relevant errors, searched by text-string, or searched using their individual attributes.
+Stack traces tell you *what* broke. Logs tell you *why*. When an error fires, you get a snapshot of the failure, but the context leading up to it is often missing. Logs capture the journey — what the data looked like, which code paths executed, and what state the system was in.
 
-## Requirements
+Sentry Logs are **high-cardinality** — you can pass any attributes you want and search or filter by them later. No need to decide upfront which fields are important. Just log what might be useful and query it when you need it.
 
 <PlatformContent includePath="logs/requirements" />
 
+<SplitLayout>
+
+<SplitSection>
+<SplitSectionText>
+
 ## Setup
 
-<PlatformContent includePath="logs/setup" />
+Enable logging by adding `enableLogs: true` to your Sentry configuration.
 
-## Usage
+</SplitSectionText>
+<SplitSectionCode>
 
-<PlatformContent includePath="logs/usage" />
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  enableLogs: true,
+});
+```
 
-## Integrations
+</SplitSectionCode>
+</SplitSection>
 
-<PlatformContent includePath="logs/integrations" />
+<SplitSection>
+<SplitSectionText>
 
-## Options
+## Send Logs
 
-<PlatformContent includePath="logs/options" />
+Use `Sentry.logger` to send logs at different levels. A log message is required for Sentry to send the log.
+
+| Level   | When to Use                      |
+| ------- | -------------------------------- |
+| `trace` | Fine-grained debugging           |
+| `debug` | Development diagnostics          |
+| `info`  | Normal operations, milestones    |
+| `warn`  | Potential issues, degraded state |
+| `error` | Failures that need attention     |
+| `fatal` | Critical failures, system down   |
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript
+Sentry.logger.trace("Entering function", { fn: "processOrder" });
+Sentry.logger.debug("Cache lookup", { key: "user:123" });
+Sentry.logger.info("Order created", { orderId: "order_456" });
+Sentry.logger.warn("Rate limit approaching", { current: 95, max: 100 });
+Sentry.logger.error("Payment failed", { reason: "card_declined" });
+Sentry.logger.fatal("Database unavailable", { host: "primary" });
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+## Add Context
+
+Pass structured data as the second argument — these attributes become searchable columns in Sentry.
+
+Use `Sentry.logger.fmt` for parameterized messages. Values are automatically extracted as searchable attributes.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript
+// Pass attributes directly
+Sentry.logger.info("User signed up", {
+  userId: user.id,
+  plan: "pro",
+  referrer: "google",
+});
+
+// Use fmt for parameterized messages
+const userId = "user_123";
+const productName = "Widget Pro";
+Sentry.logger.info(Sentry.logger.fmt`User ${userId} purchased ${productName}`);
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+## Scope Attributes
+
+Set attributes on a scope to automatically include them in all logs within that context. Requires SDK version `10.32.0` or above.
+
+Use global scope for app-wide attributes, and isolation scope for request-specific context. Only `string`, `number`, and `boolean` attribute values are supported.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript
+// Global scope - shared across entire app
+Sentry.getGlobalScope().setAttributes({
+  service: "checkout",
+  version: "2.1.0",
+});
+
+// Isolation scope - unique per request
+Sentry.getIsolationScope().setAttributes({
+  org_id: user.orgId,
+  user_tier: user.tier,
+});
+
+// Current scope - single operation
+Sentry.withScope((scope) => {
+  scope.setAttribute("request_id", req.id);
+  Sentry.logger.info("Processing order");
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+## Console Integration
+
+Already using `console.log`? Capture console calls as Sentry Logs with `consoleLoggingIntegration`.
+
+Multiple arguments are parsed as searchable attributes (requires SDK `10.13.0`+).
+
+For [Consola](https://github.com/unjs/consola) users, use `Sentry.createConsolaReporter()` instead (requires SDK `10.12.0`+).
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.consoleLoggingIntegration({ levels: ["log", "warn", "error"] }),
+  ],
+});
+
+// Arguments become searchable attributes
+console.log("Executed Action for User:", 123, true);
+// -> message.parameter.0: 123
+// -> message.parameter.1: true
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+## Filter Logs
+
+Use `beforeSendLog` to filter or modify logs before they're sent. Return `null` to drop a log.
+
+The log object includes: `level`, `message`, `timestamp`, and `attributes`.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  enableLogs: true,
+  beforeSendLog: (log) => {
+    // Drop debug logs in production
+    if (log.level === "debug") {
+      return null;
+    }
+
+    // Remove sensitive attributes
+    if (log.attributes?.password) {
+      delete log.attributes.password;
+    }
+
+    return log;
+  },
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+</SplitLayout>
+
+## How Logs Link to Other Features
+
+Everything in Sentry is linked by trace. When you're viewing a log, you can jump to the parent trace to see the full request context. When you're viewing a trace, you can see all logs emitted during that operation. This connection makes it easy to move between high-level performance data and detailed diagnostic logs.
+
+- **[Traces](/product/explore/traces/)** — Logs emitted during an active span automatically include `sentry.trace.parent_span_id`. Click through from any log to see the full trace, or filter logs by trace ID to see everything that happened during a specific request.
+- <PlatformSection notSupported={["javascript.node", "javascript.aws-lambda", "javascript.azure-functions", "javascript.connect", "javascript.express", "javascript.fastify", "javascript.gcp-functions", "javascript.hapi", "javascript.hono", "javascript.koa", "javascript.nestjs", "javascript.bun", "javascript.cloudflare"]}>**[Session Replay](/product/explore/session-replay/)** — Logs include `sentry.replay_id` when a replay is active. Jump from a log entry directly to the replay to see what the user was doing when the log was emitted.</PlatformSection>
+- **[Errors](/product/issues/)** — Logs capture the journey leading up to a failure. When an error occurs, your logs show what data was processed, which code paths executed, and what state the system was in — context that stack traces alone can't provide.
+
+## Best Practices
+
+<SplitLayout>
+
+<SplitSection>
+<SplitSectionText>
+
+### Wide Events Over Scattered Logs
+
+Instead of many small logs that are hard to correlate, emit one comprehensive log per operation with all relevant context.
+
+This makes debugging dramatically faster — one query returns everything about a specific order, user, or request.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript
+// ❌ Scattered thin logs
+Sentry.logger.info("Starting checkout");
+Sentry.logger.info("Validating cart");
+Sentry.logger.info("Processing payment");
+Sentry.logger.info("Checkout complete");
+
+// ✅ One wide event with full context
+Sentry.logger.info("Checkout completed", {
+  orderId: order.id,
+  userId: user.id,
+  cartValue: cart.total,
+  itemCount: cart.items.length,
+  paymentMethod: "stripe",
+  duration: Date.now() - startTime,
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Include Business Context
+
+Add attributes that help you prioritize and debug:
+
+- **User context** — tier, account age, lifetime value
+- **Transaction data** — order value, item count
+- **Feature state** — active feature flags
+- **Request metadata** — endpoint, method, duration
+
+This lets you filter logs by high-value customers or specific features.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript
+Sentry.logger.info("API request completed", {
+  // User context
+  userId: user.id,
+  userTier: user.plan, // "free" | "pro" | "enterprise"
+
+  // Request data
+  endpoint: "/api/orders",
+  method: "POST",
+  duration: 234,
+
+  // Business context
+  orderValue: 149.99,
+  featureFlags: ["new-checkout", "discount-v2"],
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+</SplitLayout>
 
 ## Default Attributes
 
 <PlatformContent includePath="logs/default-attributes" />
+
+## Related Features
+
+- <PlatformLink to="/tracing/">Tracing</PlatformLink> — Logs are automatically linked to traces, so you can see logs in the context of the request or operation that produced them.
+- <PlatformSection notSupported={["javascript.node", "javascript.aws-lambda", "javascript.azure-functions", "javascript.connect", "javascript.express", "javascript.fastify", "javascript.gcp-functions", "javascript.hapi", "javascript.hono", "javascript.koa", "javascript.nestjs", "javascript.bun", "javascript.cloudflare"]}><PlatformLink to="/session-replay/">Session Replay</PlatformLink> — Logs are automatically linked to replays, letting you jump from a log entry to see what the user was doing.</PlatformSection>
+- <PlatformLink to="/usage/">Error Monitoring</PlatformLink> — Use logs to add diagnostic context that helps you understand what led to an error.

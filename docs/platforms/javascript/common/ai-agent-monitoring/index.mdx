@@ -1,0 +1,363 @@
+---
+title: Set Up AI Agent Monitoring
+sidebar_title: AI Agent Monitoring
+sidebar_order: 7
+description: "Monitor AI agents with token usage, latency, tool execution, and error tracking."
+sidebar_section: features
+new: true
+supported:
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.hono
+  - javascript.koa
+  - javascript.nestjs
+  - javascript.bun
+  - javascript.deno
+  - javascript.nextjs
+  - javascript.nuxt
+  - javascript.astro
+  - javascript.solidstart
+  - javascript.sveltekit
+  - javascript.remix
+  - javascript.cloudflare
+  - javascript.tanstackstart-react
+---
+
+With <Link to="/product/insights/ai/agents/dashboard/">Sentry AI Agent Monitoring</Link>, you can monitor and debug your AI systems with full-stack context. You'll be able to track key insights like token usage, latency, tool usage, and error rates. AI Agent Monitoring data will be fully connected to your other Sentry data like logs, errors, and traces.
+
+## Prerequisites
+
+Before setting up AI Agent Monitoring, ensure you have <PlatformLink to="/tracing/">tracing enabled</PlatformLink> in your Sentry configuration.
+
+## Automatic Instrumentation
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+The JavaScript SDK supports automatic instrumentation for AI libraries. Add the integration for your AI library to your Sentry configuration:
+
+<PlatformSection notSupported={["javascript.deno"]}>
+- <PlatformLink to="/configuration/integrations/vercelai/">Vercel AI SDK</PlatformLink>
+- <PlatformLink to="/configuration/integrations/openai/">OpenAI</PlatformLink>
+- <PlatformLink to="/configuration/integrations/anthropic/">Anthropic</PlatformLink>
+- <PlatformLink to="/configuration/integrations/google-genai/">Google Gen AI SDK</PlatformLink>
+- <PlatformLink to="/configuration/integrations/langchain/">LangChain</PlatformLink>
+- <PlatformLink to="/configuration/integrations/langgraph/">LangGraph</PlatformLink>
+</PlatformSection>
+
+<PlatformSection supported={["javascript.deno"]}>
+- <PlatformLink to="/configuration/integrations/vercelai/">Vercel AI SDK</PlatformLink>
+</PlatformSection>
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript
+import * as Sentry from "___SDK_PACKAGE___";
+import { openAIIntegration } from "___SDK_PACKAGE___";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+  integrations: [
+    openAIIntegration(),
+  ],
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+## Options
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+### Privacy Controls
+
+All AI integrations support `recordInputs` and `recordOutputs` options to control whether prompts and responses are captured. Both default to `true`.
+
+Set these to `false` if your prompts or responses contain sensitive data you don't want sent to Sentry.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript
+import * as Sentry from "___SDK_PACKAGE___";
+import { openAIIntegration } from "___SDK_PACKAGE___";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+  integrations: [
+    openAIIntegration({
+      recordInputs: false, // Don't capture prompts
+      recordOutputs: false, // Don't capture responses
+    }),
+  ],
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+## Tracking Conversations
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+When building AI applications with multi-turn conversations, you can use `setConversationId()` to link all AI spans from the same conversation together. This allows you to analyze entire conversation flows in Sentry.
+
+The conversation ID is automatically applied as the `gen_ai.conversation.id` attribute to all AI-related spans within the current scope. To unset the conversation ID, pass `null`.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript
+import * as Sentry from "___SDK_PACKAGE___";
+
+// Set conversation ID at the start of a conversation
+Sentry.setConversationId('conv_abc123');
+
+// All subsequent AI calls will be linked to this conversation
+await openai.chat.completions.create({
+  model: "gpt-4",
+  messages: [{ role: "user", content: "Hello" }],
+});
+
+// Later in the conversation
+await openai.chat.completions.create({
+  model: "gpt-4",
+  messages: [
+    { role: "user", content: "Hello" },
+    { role: "assistant", content: "Hi there!" },
+    { role: "user", content: "What's the weather?" },
+  ],
+});
+
+// Both calls will have gen_ai.conversation.id: "conv_abc123"
+
+// To unset it
+Sentry.setConversationId(null); 
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+## Manual Instrumentation
+
+If you're using a library that Sentry does not automatically instrument, you can manually instrument your code to capture spans. For your AI agents data to show up in Sentry [AI Agents Insights](https://sentry.io/orgredirect/organizations/:orgslug/insights/ai/agents/), spans must have well-defined names and data attributes.
+
+### AI Request Span
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+This span represents a request to an LLM model or service that generates a response based on the input prompt.
+
+**Key attributes:**
+- `gen_ai.request.model` — The model name (required)
+- `gen_ai.request.messages` — The prompts sent to the LLM
+- `gen_ai.response.text` — The model's response
+- `gen_ai.usage.input_tokens` / `output_tokens` — Token counts
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript
+const messages = [{ role: "user", content: "Tell me a joke" }];
+
+await Sentry.startSpan(
+  {
+    op: "gen_ai.request",
+    name: "request o3-mini",
+    attributes: {
+      "gen_ai.request.model": "o3-mini",
+      "gen_ai.request.messages": JSON.stringify(messages),
+    },
+  },
+  async (span) => {
+    // Call your LLM here
+    const result = await client.chat.completions.create({
+      model: "o3-mini",
+      messages,
+    });
+
+    span.setAttribute(
+      "gen_ai.response.text",
+      JSON.stringify([result.choices[0].message.content])
+    );
+    // Set token usage
+    span.setAttribute("gen_ai.usage.input_tokens", result.usage.prompt_tokens);
+    span.setAttribute(
+      "gen_ai.usage.output_tokens",
+      result.usage.completion_tokens
+    );
+  }
+);
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+<Expandable title="AI Request span attributes">
+  <Include name="tracing/ai-agents-module/ai-client-span" />
+</Expandable>
+
+### Invoke Agent Span
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+This span represents the execution of an AI agent, capturing the full lifecycle from receiving a task to producing a final response.
+
+**Key attributes:**
+- `gen_ai.agent.name` — The agent's name (e.g., "Weather Agent")
+- `gen_ai.request.model` — The underlying model used
+- `gen_ai.response.text` — The agent's final output
+- `gen_ai.usage.input_tokens` / `output_tokens` — Total token counts
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript
+await Sentry.startSpan(
+  {
+    op: "gen_ai.invoke_agent",
+    name: "invoke_agent Weather Agent",
+    attributes: {
+      "gen_ai.request.model": "o3-mini",
+      "gen_ai.agent.name": "Weather Agent",
+    },
+  },
+  async (span) => {
+    // Run the agent
+    const result = await myAgent.run();
+
+    span.setAttribute("gen_ai.response.text", JSON.stringify([result.output]));
+    // Set token usage
+    span.setAttribute("gen_ai.usage.input_tokens", result.usage.inputTokens);
+    span.setAttribute("gen_ai.usage.output_tokens", result.usage.outputTokens);
+  }
+);
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+<Expandable title="Invoke Agent span attributes">
+  <Include name="tracing/ai-agents-module/invoke-agent-span" />
+</Expandable>
+
+### Execute Tool Span
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+This span represents the execution of a tool or function that was requested by an AI model, including the input arguments and resulting output.
+
+**Key attributes:**
+- `gen_ai.tool.name` — The tool's name (e.g., "get_weather")
+- `gen_ai.tool.input` — The arguments passed to the tool
+- `gen_ai.tool.output` — The tool's return value
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript
+await Sentry.startSpan(
+  {
+    op: "gen_ai.execute_tool",
+    name: "execute_tool get_weather",
+    attributes: {
+      "gen_ai.tool.name": "get_weather",
+      "gen_ai.tool.input": JSON.stringify({ location: "Paris" }),
+    },
+  },
+  async (span) => {
+    // Call the tool
+    const result = await getWeather({ location: "Paris" });
+
+    span.setAttribute("gen_ai.tool.output", JSON.stringify(result));
+  }
+);
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+<Expandable title="Execute Tool span attributes">
+  <Include name="tracing/ai-agents-module/execute-tool-span" />
+</Expandable>
+
+### Handoff Span
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+This span marks the transition of control from one agent to another, typically when the current agent determines another agent is better suited to handle the task.
+
+**Requirements:**
+- `op` must be `"gen_ai.handoff"`
+- `name` should follow the pattern `"handoff from {source} to {target}"`
+- All [Common Span Attributes](#common-span-attributes) should be set
+
+The handoff span itself has no body — it just marks the transition point before the target agent starts.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript
+await Sentry.startSpan(
+  { op: "gen_ai.handoff", name: "handoff from Weather Agent to Travel Agent" },
+  () => {} // Handoff span just marks the transition
+);
+
+await Sentry.startSpan(
+  { op: "gen_ai.invoke_agent", name: "invoke_agent Travel Agent" },
+  async () => {
+    // Run the target agent here
+  }
+);
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+## Common Span Attributes
+
+<Include name="tracing/ai-agents-module/common-span-attributes" />
+
+<Include name="tracing/ai-agents-module/token-cost-gotchas" />
+
+## Framework Exporters
+
+If you're using an AI framework with a Sentry exporter, you can send traces to Sentry:
+
+- <PlatformLink to="/ai-agent-monitoring/mastra/">
+    Mastra Sentry Exporter
+  </PlatformLink>
+
+## MCP Server Monitoring
+
+If you're building MCP (Model Context Protocol) servers, Sentry can also track tool executions, prompt retrievals, and resource access. See <PlatformLink to="/tracing/instrumentation/mcp-module/">Instrument MCP Servers</PlatformLink> for setup instructions.

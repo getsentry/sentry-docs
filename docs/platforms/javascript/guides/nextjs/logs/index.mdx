@@ -132,25 +132,37 @@ Sentry.logger.info(Sentry.logger.fmt`User ${userId} purchased ${productName}`);
 
 ### Scope Attributes
 
-Set attributes on the scope to automatically include them in all logs within that context.
+Set attributes on a scope to automatically include them in all logs within that context.
+
+<Alert>
+
+Scopes don't propagate between Next.js runtimes. To include attributes on logs from all three runtimes, call `getIsolationScope().setAttribute()` in each (client, edge, server). Use isolation scope (not global) to prevent data leaking between concurrent requests. For server-side code, set context before any try/catch blocks so errors include it.
+
+</Alert>
+
+See <PlatformLink to="/enriching-events/scopes/#different-kinds-of-scopes">Different Kinds of Scopes</PlatformLink> to learn more.
 
 </SplitSectionText>
 <SplitSectionCode>
 
 ```typescript
-// Global attributes (all logs)
+// setAttribute() or setAttributes()
+// Global scope - shared across entire app
 Sentry.getGlobalScope().setAttributes({
   service: "checkout",
   version: "2.1.0",
 });
 
-// Scoped attributes (logs within scope)
-Sentry.withScope((scope) => {
-  scope.setAttribute("requestId", req.id);
+// Isolation scope - unique per request
+Sentry.getIsolationScope().setAttributes({
+  org_id: user.orgId,
+  user_tier: user.tier,
+});
 
-  // Both logs include requestId
+// Current scope - single operation
+Sentry.withScope((scope) => {
+  scope.setAttribute("request_id", req.id);
   Sentry.logger.info("Processing order");
-  Sentry.logger.info("Order complete");
 });
 ```
 
@@ -283,6 +295,7 @@ The integration parses multiple arguments as searchable attributes.
 ```typescript
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
+  enableLogs: true,
   integrations: [
     Sentry.consoleLoggingIntegration({
       levels: ["log", "warn", "error"],
@@ -314,6 +327,7 @@ Requires SDK version `10.18.0` or higher.
 ```typescript
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
+  enableLogs: true,
   integrations: [Sentry.pinoIntegration()],
 });
 ```
@@ -330,7 +344,7 @@ See <PlatformLink to="/configuration/integrations/pino">Pino integration docs</P
 
 Send logs from the [Consola](https://github.com/unjs/consola) logging library to Sentry.
 
-Requires SDK version `10.12.0` or higher.
+Requires SDK version `10.12.0` or higher and `enableLogs: true` in your `Sentry.init` call.
 
 </SplitSectionText>
 <SplitSectionCode>
@@ -355,7 +369,7 @@ consola.addReporter(sentryReporter);
 
 Send logs from the [Winston](https://github.com/winstonjs/winston) logging library to Sentry.
 
-Requires SDK version `9.13.0` or higher.
+Requires SDK version `9.13.0` or higher and `enableLogs: true` in your `Sentry.init` call.
 
 </SplitSectionText>
 <SplitSectionCode>

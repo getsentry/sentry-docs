@@ -3,7 +3,7 @@ title: Size Analysis
 sidebar_order: 136
 description: Monitor mobile builds for size changes before they reach users.
 og_image: /og-images/product-size-analysis.png
-beta: true
+new: true
 ---
 
 Size Analysis monitors your mobile app size to prevent regressions before they reach users. Upload builds from CI to spot regressions early, understand what's inside each bundle, and keep release artifacts lean.
@@ -13,6 +13,38 @@ Size Analysis monitors your mobile app size to prevent regressions before they r
 - Faster downloads reduce install drop-off
 - Install size is linked to uninstall rates, particularly for customers with limited storage or slower connections
 - Size bloat can have downstream technical impact: longer build times, startup times, code complexity, etc.
+
+## Configuring Size Analysis Uploads
+
+All Sentry accounts have an included 100 builds of Size Analysis per month. Below are mechanisms to control which builds are processed for Size Analysis.
+
+### Uploading Select Builds
+
+Control which builds get uploaded by configuring your CI workflow triggers. For example, upload when commits land on main or release branches:
+
+```yml {filename:.github/workflows/size_analysis.yml}
+on:
+  push:
+    branches:
+      - main
+      - release/*
+
+jobs:
+  build_and_upload:
+    # ...
+```
+
+See [Integrating Into CI](/product/size-analysis/integrating-into-ci/) for end-to-end setup, and our sample GitHub actions for [Android](https://github.com/EmergeTools/hackernews/blob/main/.github/workflows/android_emerge_upload.yml) and [iOS](https://github.com/EmergeTools/hackernews/blob/main/.github/workflows/ios_emerge_upload_pr.yml). Platform-specific upload steps are covered in the [Upload Guides](#upload-guides) below.
+
+### Configuring Processing Filters in Sentry Settings
+
+You can further tune your builds for Size Analysis in Sentry Settings. Go to your project's [Mobile Builds](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/mobile-builds/) settings.
+
+![Mobile Builds Settings Page](./images/settings-mobile-builds.png)
+
+By default, Size Analysis processes all uploaded builds. You can configure filters to only process builds for specific criteria, e.g. `git_head_ref: main`, `build_configuration_name: Release`, etc. Below is an example filter for a specific bundle (`com.emergetools.hackernews`) and branch (`main`).
+
+![Example Filter for specific bundle + branch](./images/settings-config-1.png)
 
 ## Features
 
@@ -54,7 +86,7 @@ The X-Ray diff shows a visual representation of the file changes between the two
 
 ### Status Checks
 
-Integrate into CI Size Analysis results on pull requests. You can track size on every commit to ensure there are no unnecessary size increases.
+Integrate into CI Size Analysis results on pull requests. You can track size on every commit to ensure there are no unnecessary size increases. You can configure rules to automatically fail checks when thresholds are exceeded.
 
 ![Status check screenshot placeholder](./images/status-check.png)
 
