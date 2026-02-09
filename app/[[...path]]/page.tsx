@@ -9,6 +9,7 @@ import {ApiPage} from 'sentry-docs/components/apiPage';
 import {DocPage} from 'sentry-docs/components/docPage';
 import {Home} from 'sentry-docs/components/home';
 import {Include} from 'sentry-docs/components/include';
+import {LinkCard, LinkCardGrid} from 'sentry-docs/components/linkCard';
 import {PageLoadMetrics} from 'sentry-docs/components/pageLoadMetrics';
 import {PlatformContent} from 'sentry-docs/components/platformContent';
 import {
@@ -47,19 +48,23 @@ export async function generateStaticParams() {
 export const dynamicParams = false;
 export const dynamic = 'force-static';
 
-const mdxComponentsWithWrapper = mdxComponents(
-  {Include, PlatformContent},
-  ({children, frontMatter, nextPage, previousPage}) => (
-    <DocPage
-      frontMatter={frontMatter}
-      nextPage={nextPage}
-      previousPage={previousPage}
-      fullWidth={frontMatter.fullWidth}
-    >
-      {children}
-    </DocPage>
-  )
-);
+const mdxComponentsWithWrapper = {
+  ...mdxComponents(
+    {Include, PlatformContent},
+    ({children, frontMatter, nextPage, previousPage}) => (
+      <DocPage
+        frontMatter={frontMatter}
+        nextPage={nextPage}
+        previousPage={previousPage}
+        fullWidth={frontMatter.fullWidth}
+      >
+        {children}
+      </DocPage>
+    )
+  ),
+  LinkCard,
+  LinkCardGrid,
+};
 
 function MDXLayoutRenderer({mdxSource, ...rest}) {
   const MDXLayout = useMemo(() => getMDXComponent(mdxSource), [mdxSource]);
