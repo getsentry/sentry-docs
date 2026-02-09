@@ -326,9 +326,11 @@ SDKs may optionally attach user information as attributes (guarded by `sendDefau
 
 ```json
 {
-  "user.id": "123",
-  "user.name": "john.doe",
-  "user.email": "john.doe@example.com"
+  "attributes": {
+    "user.id": { "value": "123", "type": "string" },
+    "user.name": { "value": "john.doe", "type": "string" },
+    "user.email": { "value": "john.doe@example.com", "type": "string" }
+  }
 }
 ```
 
@@ -341,8 +343,10 @@ By default, Relay should parse the user agent attached to an incoming log envelo
 
 ```json
 {
-  "browser.name": "Chrome",
-  "browser.version": "120.0"
+  "attributes": {
+    "browser.name": { "value": "Chrome", "type": "string" },
+    "browser.version": { "value": "120.0", "type": "string" }
+  }
 }
 ```
 
@@ -354,7 +358,9 @@ For backend SDKs (Node.js, Python, PHP, etc.), the SDKs should attach the follow
 
 ```json
 {
-  "server.address": "foo.example.com"
+  "attributes": {
+    "server.address": { "value": "foo.example.com", "type": "string" }
+  }
 }
 ```
 
@@ -370,11 +376,13 @@ For mobile, desktop, and native SDKs (Android, Apple, Electron, etc.), the SDKs 
 
 ```json
 {
-  "os.name": "iOS",
-  "os.version": "17.0",
-  "device.brand": "Apple",
-  "device.model": "iPhone 15 Pro Max",
-  "device.family": "iPhone"
+  "attributes": {
+    "os.name": { "value": "iOS", "type": "string" },
+    "os.version": { "value": "17.0", "type": "string" },
+    "device.brand": { "value": "Apple", "type": "string" },
+    "device.model": { "value": "iPhone 15 Pro Max", "type": "string" },
+    "device.family": { "value": "iPhone", "type": "string" }
+  }
 }
 ```
 
@@ -392,7 +400,9 @@ A new data category for logs has been added to Relay, `log_item`. Both the `log`
 
 SDKs **MUST** buffer logs before sending them. SDKs should keep a buffer of logs and flush it when specific conditions are met. For initial implementation, a simple strategy is fine, for example: flushing logs if the buffer length exceeds 100 items or if 5 seconds have passed. To prevent data loss, the buffer SHOULD forward logs to the transport in the scenarios outlined in the [telemetry buffer data forwarding scenarios](/sdk/telemetry/telemetry-buffer/#data-forwarding-scenarios).
 
-SDKs **MUST** also have a hard limit of 1000 log events queued up to avoid causing your customers' applications going out of memory. Logs added once this hard limit has been reached are dropped. Also, Relay has a hard limit of 1000 logs per envelope. SDKs **MUST** not exceed this limit. SDKs **SHOULD**  batch logs into envelopes of 100 or less.
+Relay is optimized for up to 100 logs per envelope. SDKs **MUST NOT** send more than 100 logs per envelope.
+
+To prevent out-of-memory issues in customer applications, SDKs **MUST** enforce a hard limit of 1000 queued log events. Any logs added beyond this limit are dropped. SDKs **MAY** use a lower limit but **MUST NOT** exceed 1000.
 
 We used to recommend following the [BatchProcessor](/sdk/telemetry/telemetry-buffer/#batchprocessor-v0), but this page is currently under development. We currently working on a new [telemetry buffer specification](/sdk/telemetry/telemetry-buffer/) that will replace the BatchProcessor.
 

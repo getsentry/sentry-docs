@@ -38,18 +38,40 @@ import { McpServer } from "@modelcontextprotocol/sdk";
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   tracesSampleRate: 1.0,
-  // Optional: Enable to capture tool call arguments and results in Sentry, which may include PII
-  sendDefaultPii: true,
 });
 
-// Your MCP server
-const server = Sentry.wrapMcpServerWithSentry(new McpServer({
+// Your MCP server with optional input/output recording
+const server = Sentry.wrapMcpServerWithSentry(
+  new McpServer({
     name: "my-mcp-server",
     version: "1.0.0",
-}));
+  }),
+  {
+    recordInputs: true,
+    recordOutputs: true,
+  }
+);
 
 ...
 ```
+
+#### Options
+
+##### `recordInputs`
+
+_Type: `boolean`_
+
+Records inputs to MCP tool and prompt calls (such as tool arguments and prompt parameters).
+
+Defaults to `true` if `sendDefaultPii` is `true`.
+
+##### `recordOutputs`
+
+_Type: `boolean`_
+
+Records outputs from MCP tool and prompt calls (such as tool results and prompt messages).
+
+Defaults to `true` if `sendDefaultPii` is `true`.
 
 ### Python - MCP Server
 

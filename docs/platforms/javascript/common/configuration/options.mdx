@@ -341,6 +341,18 @@ By the time `beforeSend` is executed, all scope data has already been applied to
 
 </SdkOption>
 
+<SdkOption name="enhanceFetchErrorMessages" type="'always' | 'report-only' | false" defaultValue="always" availableSince="10.34.0">
+
+Controls whether fetch error messages are enhanced by appending the request’s hostname. When enabled, generic fetch errors like "Failed to fetch" will be enhanced to include the hostname (e.g., "Failed to fetch (example.com)") to provide better context in Sentry.
+
+Available options:
+
+- `'always'` (default): Modifies the actual error message directly. This may break third-party packages that rely on exact message matching (e.g., `is-network-error`, `p-retry`).
+- `'report-only'`: Only enhances the message when sending to Sentry. The original error message remains unchanged, preserving compatibility with third-party packages that also check error messages.
+- `false`: Disables hostname enhancement completely.
+
+</SdkOption>
+
 <SdkOption name="ignoreErrors" type='Array<string | RegExp>' defaultValue='[]'>
 
 <Include name="platforms/configuration/options/ignore-errors.mdx" />
@@ -497,7 +509,7 @@ Sentry.init({
 
 </SdkOption>
 
-<SdkOption name="propagateTraceparent" type='boolean' defaultValue='false' availableSince='10.10.0' categorySupported={['browser']}>
+<SdkOption name="propagateTraceparent" type='boolean' defaultValue='false' availableSince='10.10.0'>
 
 If set to `true`, the SDK adds the [W3C `traceparent` header](https://www.w3.org/TR/trace-context/) to outgoing Http requests made via `fetch` or `XMLHttpRequest`.
 This header is attached in addition to the `sentry-trace` and `baggage` headers.
@@ -514,8 +526,6 @@ See <PlatformLink to="/tracing/distributed-tracing/dealing-with-cors-issues/">De
 
 </SdkOption>
 
-<PlatformCategorySection supported={['browser']}>
-
 ## Logs Options
 
 <SdkOption name="enableLogs" type='boolean' defaultValue='false'>
@@ -529,6 +539,8 @@ Set this option to `true` to enable log capturing in Sentry. Only when this is e
 This function is called with a log object, and can return a modified log object, or `null` to skip sending this log to Sentry. This can be used, for instance, for manual PII stripping before sending, or to add custom attributes to all logs.
 
 </SdkOption>
+
+<PlatformCategorySection supported={['browser']}>
 
 ## Session Replay Options
 

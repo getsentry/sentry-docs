@@ -136,8 +136,8 @@ const handleAIClientRedirect = (request: NextRequest) => {
 
   // Check for markdown request (Accept header, user-agent, or manual)
   if (clientWantsMarkdown || forceMarkdown) {
-    // Log the redirect for debugging
-    Sentry.logger.info('Markdown redirect triggered', {
+    // Log the rewrite for debugging
+    Sentry.logger.info('Markdown rewrite triggered', {
       urlPath: url.pathname,
       detectionMethod: forceMarkdown ? 'Manual format=md' : detectionMethod,
       targetUrl: url.pathname.replace(/\/+$/, '') + '.md',
@@ -156,9 +156,9 @@ const handleAIClientRedirect = (request: NextRequest) => {
       newUrl.searchParams.delete('format');
     }
 
-    return NextResponse.redirect(newUrl, {
-      status: redirectStatusCode,
-    });
+    // Rewrite to serve markdown inline (same URL, different content)
+    // The next.config.ts rewrite rule maps *.md to /md-exports/*.md
+    return NextResponse.rewrite(newUrl);
   }
 
   return undefined;
@@ -1895,18 +1895,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/platforms/javascript/guides/:guide/opentelemetry/',
   },
   // START redirecting deprecated generic metrics docs to concepts
-  {
-    from: '/platforms/ruby/metrics/',
-    to: '/concepts/key-terms/tracing/span-metrics/',
-  },
-  {
-    from: '/platforms/java/metrics/',
-    to: '/concepts/key-terms/tracing/span-metrics/',
-  },
-  {
-    from: '/platforms/android/metrics/',
-    to: '/concepts/key-terms/tracing/span-metrics/',
-  },
   {
     from: '/platforms/apple/metrics/',
     to: '/concepts/key-terms/tracing/span-metrics/',

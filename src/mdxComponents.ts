@@ -1,5 +1,6 @@
 import {Alert} from './components/alert';
 import {Arcade} from './components/arcade';
+import {AvailableSince} from './components/availableSince';
 import {Break} from './components/break';
 import {Card} from './components/card';
 import {CliChecksumTable} from './components/cliChecksumTable';
@@ -67,6 +68,7 @@ export function mdxComponents(
   return {
     Alert,
     Arcade,
+    AvailableSince,
     Break,
     Card,
     CliChecksumTable,
