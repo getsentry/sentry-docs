@@ -11,8 +11,9 @@ export type TrafficType = 'ai_agent' | 'bot' | 'user' | 'unknown';
 /**
  * AI agents we want to track for docs/markdown consumption visibility.
  * These fetch markdown content and we need performance data on serving to agentic tools.
+ * Also used by middleware to decide whether to serve markdown content.
  */
-export const AI_AGENT_PATTERN = /claudebot|claude-web|anthropic|gptbot|chatgpt|openai|cursor|codex|copilot|perplexity|cohere|gemini/i;
+export const AI_AGENT_PATTERN = /claude|anthropic|gptbot|chatgpt|openai|cursor|codex|copilot|perplexity|cohere|gemini/i;
 
 /**
  * Bots/crawlers to filter out (SEO crawlers, social media, testing tools, monitors).

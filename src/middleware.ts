@@ -35,24 +35,13 @@ export function middleware(request: NextRequest) {
 // don't send Permanent Redirects (301) in dev mode - it gets cached for "localhost" by the browser
 const redirectStatusCode = process.env.NODE_ENV === 'development' ? 302 : 301;
 
-// Patterns for detecting AI tools that want markdown content.
-// Only includes tools known to fetch docs programmatically.
-// Other clients can use Accept header (text/markdown, text/plain) to request markdown.
-const MARKDOWN_CLIENT_PATTERNS = [
-  /claude/i, // Claude Desktop/Code
-  /cursor/i, // Cursor IDE
-  /copilot/i, // GitHub Copilot
-  /chatgpt/i, // ChatGPT
-  /openai/i, // OpenAI tools
-  /anthropic/i, // Anthropic tools
-];
-
 /**
  * Detects if the user agent belongs to an AI/LLM tool or development environment
- * that would benefit from markdown format
+ * that would benefit from markdown format.
+ * Uses shared AI_AGENT_PATTERN from trafficClassification.ts.
  */
 function isAIOrDevTool(userAgentString: string): boolean {
-  return MARKDOWN_CLIENT_PATTERNS.some(pattern => pattern.test(userAgentString));
+  return AI_AGENT_PATTERN.test(userAgentString);
 }
 
 /**
