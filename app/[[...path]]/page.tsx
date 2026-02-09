@@ -1,5 +1,5 @@
-import {useMemo} from 'react';
-import {getMDXComponent} from 'mdx-bundler/client';
+import {Fragment, useMemo} from 'react';
+import * as Sentry from '@sentry/nextjs';
 import {Metadata} from 'next';
 import {notFound} from 'next/navigation';
 
@@ -9,6 +9,7 @@ import {ApiPage} from 'sentry-docs/components/apiPage';
 import {DocPage} from 'sentry-docs/components/docPage';
 import {Home} from 'sentry-docs/components/home';
 import {Include} from 'sentry-docs/components/include';
+import {PageLoadMetrics} from 'sentry-docs/components/pageLoadMetrics';
 import {PlatformContent} from 'sentry-docs/components/platformContent';
 import {
   DocNode,
@@ -18,6 +19,7 @@ import {
   getPreviousNode,
   nodeForPath,
 } from 'sentry-docs/docTree';
+import {getMDXComponent} from 'sentry-docs/getMDXComponent';
 import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
 import {
   getDevDocsFrontMatter,
@@ -26,6 +28,7 @@ import {
   getVersionsFromDoc,
 } from 'sentry-docs/mdx';
 import {mdxComponents} from 'sentry-docs/mdxComponents';
+import {PageType} from 'sentry-docs/metrics';
 import {setServerContext} from 'sentry-docs/serverContext';
 import {PaginationNavNode} from 'sentry-docs/types/paginationNavNode';
 import {stripVersion} from 'sentry-docs/versioning';
@@ -74,7 +77,12 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
   });
 
   if (!params.path && !isDeveloperDocs) {
-    return <Home />;
+    return (
+      <Fragment>
+        <PageLoadMetrics pageType="home" />
+        <Home />
+      </Fragment>
+    );
   }
 
   const pageNode = nodeForPath(rootNode, params.path ?? '');
@@ -114,23 +122,42 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
     let doc: Awaited<ReturnType<typeof getFileBySlugWithCache>>;
     try {
       doc = await getFileBySlugWithCache(`develop-docs/${params.path?.join('/') ?? ''}`);
-    } catch (e) {
-      if (e.code === 'ENOENT') {
-        // eslint-disable-next-line no-console
-        console.error('ENOENT', params.path);
+    } catch (e: unknown) {
+      // Handle file not found and runtime MDX compilation errors gracefully.
+      // This can happen when serverless function is invoked at runtime but docs files
+      // aren't in the bundle, or MDX compilation is attempted at Vercel runtime.
+      // Note: This error handling is duplicated for regular docs below - keep them in sync.
+      const errorCode = e && typeof e === 'object' && 'code' in e ? e.code : null;
+      const isExpectedError =
+        errorCode === 'ENOENT' ||
+        errorCode === 'MDX_RUNTIME_ERROR' ||
+        (e instanceof Error && e.message.includes('Failed to find a valid source file'));
+      if (isExpectedError) {
+        // Log as warning for visibility without flooding errors
+        // Users are served static pages from CDN - this is an infrastructure edge case
+        Sentry.logger.warn('MDX file not found at runtime, returning 404', {
+          path: params.path?.join('/'),
+          errorCode,
+          reason: 'serverless_bundle_exclusion',
+        });
         return notFound();
       }
       throw e;
     }
     const {mdxSource, frontMatter} = doc;
+
     // pass frontmatter tree into sidebar, rendered page + fm into middle, headers into toc
+    const pageType = (params.path?.[0] as PageType) || 'unknown';
     return (
-      <MDXLayoutRenderer
-        mdxSource={mdxSource}
-        frontMatter={frontMatter}
-        nextPage={nextPage}
-        previousPage={previousPage}
-      />
+      <Fragment>
+        <PageLoadMetrics pageType={pageType} attributes={{is_developer_docs: true}} />
+        <MDXLayoutRenderer
+          mdxSource={mdxSource}
+          frontMatter={frontMatter}
+          nextPage={nextPage}
+          previousPage={previousPage}
+        />
+      </Fragment>
     );
   }
 
@@ -139,11 +166,29 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
     const category = categories.find(c => c.slug === params?.path?.[1]);
     if (category) {
       if (params.path.length === 2) {
-        return <ApiCategoryPage category={category} />;
+        // API category page
+        return (
+          <Fragment>
+            <PageLoadMetrics pageType="api" attributes={{api_category: category.slug}} />
+            <ApiCategoryPage category={category} />
+          </Fragment>
+        );
       }
       const api = category.apis.find(a => a.slug === params.path?.[2]);
       if (api) {
-        return <ApiPage api={api} />;
+        // Specific API endpoint page
+        return (
+          <Fragment>
+            <PageLoadMetrics
+              pageType="api"
+              attributes={{
+                api_category: category.slug,
+                api_endpoint: api.slug,
+              }}
+            />
+            <ApiPage api={api} />
+          </Fragment>
+        );
       }
     }
   }
@@ -152,10 +197,24 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
   let doc: Awaited<ReturnType<typeof getFileBySlugWithCache>>;
   try {
     doc = await getFileBySlugWithCache(`docs/${pageNode.path}`);
-  } catch (e) {
-    if (e.code === 'ENOENT') {
-      // eslint-disable-next-line no-console
-      console.error('ENOENT', pageNode.path);
+  } catch (e: unknown) {
+    // Handle file not found and runtime MDX compilation errors gracefully.
+    // This can happen when serverless function is invoked at runtime but docs files
+    // aren't in the bundle, or MDX compilation is attempted at Vercel runtime.
+    // Note: This error handling is duplicated for developer docs above - keep them in sync.
+    const errorCode = e && typeof e === 'object' && 'code' in e ? e.code : null;
+    const isExpectedError =
+      errorCode === 'ENOENT' ||
+      errorCode === 'MDX_RUNTIME_ERROR' ||
+      (e instanceof Error && e.message.includes('Failed to find a valid source file'));
+    if (isExpectedError) {
+      // Log as warning for visibility without flooding errors
+      // Users are served static pages from CDN - this is an infrastructure edge case
+      Sentry.logger.warn('MDX file not found at runtime, returning 404', {
+        path: pageNode.path,
+        errorCode,
+        reason: 'serverless_bundle_exclusion',
+      });
       return notFound();
     }
     throw e;
@@ -167,13 +226,24 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
   const versions = getVersionsFromDoc(allFm, pageNode.path);
 
   // pass frontmatter tree into sidebar, rendered page + fm into middle, headers into toc.
+  const pageType = (params.path?.[0] as PageType) || 'unknown';
   return (
-    <MDXLayoutRenderer
-      mdxSource={mdxSource}
-      frontMatter={{...frontMatter, versions}}
-      nextPage={nextPage}
-      previousPage={previousPage}
-    />
+    <Fragment>
+      <PageLoadMetrics
+        pageType={pageType}
+        attributes={{
+          has_platform_content: params.path?.[0] === 'platforms',
+          is_versioned: pageNode.path.includes('__v'),
+          has_versions: versions && versions.length > 0,
+        }}
+      />
+      <MDXLayoutRenderer
+        mdxSource={mdxSource}
+        frontMatter={{...frontMatter, versions}}
+        nextPage={nextPage}
+        previousPage={previousPage}
+      />
+    </Fragment>
   );
 }
 
@@ -194,12 +264,47 @@ function formatCanonicalTag(tag: string) {
   return tag;
 }
 
+// Helper function to resolve OG image URLs
+function resolveOgImageUrl(
+  imageUrl: string | undefined,
+  domain: string,
+  pagePath: string[]
+): string | null {
+  if (!imageUrl) {
+    return null;
+  }
+
+  // Remove hash fragments (e.g., #600x400 from remark-image-processing)
+  const cleanUrl = imageUrl.split('#')[0];
+
+  // External URLs - return as is
+  if (cleanUrl.startsWith('http://') || cleanUrl.startsWith('https://')) {
+    return cleanUrl;
+  }
+
+  // Absolute paths (public folder)
+  if (cleanUrl.startsWith('/')) {
+    return `${domain}${cleanUrl}`;
+  }
+
+  // Relative paths - resolve based on page path
+  if (cleanUrl.startsWith('./')) {
+    const relativePath = cleanUrl.slice(2); // Remove './'
+    const pageDir = pagePath.join('/');
+    return `${domain}/${pageDir}/${relativePath}`;
+  }
+
+  // Default case: treat as relative to page
+  const pageDir = pagePath.join('/');
+  return `${domain}/${pageDir}/${cleanUrl}`;
+}
+
 export async function generateMetadata(props: MetadataProps): Promise<Metadata> {
   const params = await props.params;
   const domain = isDeveloperDocs
     ? 'https://develop.sentry.dev'
     : 'https://docs.sentry.io';
-  // enable og iamge preview on preview deployments
+  // enable og image preview on preview deployments
   const previewDomain = process.env.VERCEL_URL
     ? `https://${process.env.VERCEL_URL}`
     : domain;
@@ -208,12 +313,8 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
   let customCanonicalTag: string = '';
   let description =
     'Self-hosted and cloud-based application performance monitoring & error tracking that helps software teams see clearer, solve quicker, and learn continuously.';
-  // show og image on the home page only
-  const images =
-    ((await props.params).path ?? []).length === 0
-      ? [{url: `${previewDomain ?? domain}/og.png`, width: 1200, height: 630}]
-      : [];
 
+  let ogImageUrl: string | null = null;
   let noindex: undefined | boolean = undefined;
 
   const rootNode = await getDocsRootNode();
@@ -236,8 +337,24 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
       }
 
       noindex = pageNode.frontmatter.noindex;
+
+      // Check for manual OG image override in frontmatter
+      if (pageNode.frontmatter.og_image) {
+        ogImageUrl = resolveOgImageUrl(
+          pageNode.frontmatter.og_image,
+          previewDomain ?? domain,
+          params.path
+        );
+      }
     }
   }
+
+  // Default fallback
+  if (!ogImageUrl) {
+    ogImageUrl = `${previewDomain ?? domain}/og.png`;
+  }
+
+  const images = [{url: ogImageUrl, width: 1200, height: 630}];
 
   const canonical = customCanonicalTag
     ? domain + customCanonicalTag

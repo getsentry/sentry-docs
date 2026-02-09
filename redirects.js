@@ -75,6 +75,34 @@ const developerDocsRedirects = [
     destination: '/sdk/telemetry/replays/:path*',
   },
   {
+    source: '/sdk/telemetry/spans/batch-processor/',
+    destination: '/sdk/telemetry/telemetry-processor/batch-processor/',
+  },
+  {
+    source: '/sdk/telemetry/telemetry-buffer/',
+    destination: '/sdk/telemetry/telemetry-processor/',
+  },
+  {
+    source: '/sdk/telemetry/telemetry-buffer/backend-telemetry-buffer/',
+    destination: '/sdk/telemetry/telemetry-processor/backend-telemetry-processor/',
+  },
+  {
+    source: '/sdk/telemetry/telemetry-buffer/browser-telemetry-buffer/',
+    destination: '/sdk/telemetry/telemetry-processor/browser-telemetry-processor/',
+  },
+  {
+    source: '/sdk/telemetry/telemetry-buffer/gdx-telemetry-buffer/',
+    destination: '/sdk/telemetry/telemetry-processor/gdx-telemetry-processor/',
+  },
+  {
+    source: '/sdk/telemetry/telemetry-buffer/mobile-telemetry-buffer/',
+    destination: '/sdk/telemetry/telemetry-processor/mobile-telemetry-processor/',
+  },
+  {
+    source: '/sdk/telemetry/telemetry-buffer/batch-processor/',
+    destination: '/sdk/telemetry/telemetry-processor/batch-processor/',
+  },
+  {
     source: '/sdk/setup-wizards/:path*',
     destination: '/sdk/expected-features/setup-wizards/:path*',
   },
@@ -214,10 +242,46 @@ const developerDocsRedirects = [
     source: '/services/emails/',
     destination: '/backend/emails/',
   },
+  {
+    source: '/backend/application-domains/asynchronous-workers/',
+    destination: '/backend/application-domains/tasks/',
+  },
+  {
+    source: '/self-hosted/custom-ca-roots/',
+    destination: '/self-hosted/configuration/custom-ca-roots/',
+  },
+  {
+    source: '/self-hosted/email/',
+    destination: '/self-hosted/configuration/email/',
+  },
+  {
+    source: '/self-hosted/geolocation/',
+    destination: '/self-hosted/configuration/geolocation/',
+  },
+  {
+    source: '/self-hosted/sso/',
+    destination: '/self-hosted/configuration/sso/',
+  },
 ];
 
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const userDocsRedirects = [
+  {
+    source: '/integrations/cursor/',
+    destination: '/organization/integrations/cursor/',
+  },
+  {
+    source: '/concepts/data-management/advanced-datascrubbing/',
+    destination: '/security-legal-pii/scrubbing/advanced-datascrubbing/',
+  },
+  {
+    source: '/organization/integrations/height/',
+    destination: '/organization/integrations/issue-tracking/height/',
+  },
+  {
+    source: '/organization/integrations/rootly/',
+    destination: '/organization/integrations/notification-incidents/rootly/',
+  },
   {
     source: '/account/cli/configuration/',
     destination: '/cli/configuration/',
@@ -240,7 +304,7 @@ const userDocsRedirects = [
   },
   {
     source: '/organization/integrations/cloudflare-workers/',
-    destination: '/organization/integrations/cloud-monitoring/cloudflare-workers/',
+    destination: '/platforms/javascript/guides/cloudflare/',
   },
   {
     source: '/account/require-2fa/',
@@ -256,12 +320,28 @@ const userDocsRedirects = [
   },
   {
     source: '/product/ai-in-sentry/sentry-prevent-ai/:path*',
-    destination: '/product/ai-in-sentry/ai-code-review/:path*',
+    destination: '/product/ai-in-sentry/seer/ai-code-review/:path*',
   },
 
   {
     source: '/organization/integrations/launchdarkly/',
     destination: '/organization/integrations/feature-flag/launchdarkly/',
+  },
+  {
+    source: '/platforms/javascript/guides/aws-lambda/layer__v9.x/',
+    destination: '/platforms/javascript/guides/aws-lambda/install/layer__v9.x/',
+  },
+  {
+    source: '/platforms/javascript/guides/aws-lambda/npm__v9.x/',
+    destination: '/platforms/javascript/guides/aws-lambda/install/npm__v9.x/',
+  },
+  {
+    source: '/platforms/javascript/guides/aws-lambda/esm-npm__v9.x/',
+    destination: '/platforms/javascript/guides/aws-lambda/install/esm-npm__v9.x/',
+  },
+  {
+    source: '/platforms/javascript/guides/aws-lambda/cjs-npm__v9.x/',
+    destination: '/platforms/javascript/guides/aws-lambda/install/cjs-npm__v9.x/',
   },
   {
     source: '/platforms/javascript/guides/nextjs/sourcemaps/uploading/',
@@ -286,10 +366,6 @@ const userDocsRedirects = [
   {
     source: '/organization/integrations/goastai/',
     destination: '/organization/integrations/issue-tracking/goast/',
-  },
-  {
-    source: '/organization/integrations/github-deployment-gates/',
-    destination: '/product/releases/setup/release-automation/github-deployment-gates/',
   },
   {
     source: '/development/sdk-dev/:path*',
@@ -505,23 +581,23 @@ const userDocsRedirects = [
   },
   {
     source: '/platforms/javascript/configuration/draining/',
-    destination: '/platforms/javascript/apis/#flush',
+    destination: '/platforms/javascript/configuration/apis/#flush',
   },
   {
     source: '/platforms/javascript/guides/:guide/configuration/draining/',
-    destination: '/platforms/javascript/guides/:guide/apis/#flush',
+    destination: '/platforms/javascript/guides/:guide/configuration/apis/#flush',
   },
   {
     source: '/platforms/javascript/enriching-events/identify-user/',
-    destination: '/platforms/javascript/apis/#setUser',
+    destination: '/platforms/javascript/configuration/apis/#setUser',
   },
   {
     source: '/platforms/javascript/guides/:guide/enriching-events/identify-user/',
-    destination: '/platforms/javascript/guides/:guide/apis/#setUser',
+    destination: '/platforms/javascript/guides/:guide/configuration/apis/#setUser',
   },
   {
     source: '/platforms/javascript/enriching-events/context/',
-    destination: '/platforms/javascript/apis/',
+    destination: '/platforms/javascript/configuration/apis/',
   },
   {
     source: '/platforms/javascript/guides/:guide/enriching-events/context/',
@@ -584,6 +660,10 @@ const userDocsRedirects = [
   {
     source: '/platforms/python/guides/:guide/:path*',
     destination: '/platforms/python/:path*',
+  },
+  {
+    source: '/platforms/python/configuration/sampling/',
+    destination: '/platforms/python/sampling/',
   },
   {
     source: '/platforms/php/guides/laravel/other-versions/laravel8-10/usage/:path*',
@@ -981,10 +1061,27 @@ const userDocsRedirects = [
     source: '/product/insights/agents/:path*',
     destination: '/product/insights/ai/agents/:path*',
   },
+  // AI Agent Monitoring moved to top-level feature
   {
-    source: '/platforms/javascript/tracing/instrumentation/ai-agents-module',
-    destination:
-      '/platforms/javascript/guides/node/tracing/instrumentation/ai-agents-module',
+    source: '/platforms/javascript/tracing/instrumentation/ai-agents-module/:path*',
+    destination: '/platforms/javascript/ai-agent-monitoring/:path*',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/tracing/instrumentation/ai-agents-module/:path*',
+    destination: '/platforms/javascript/guides/:guide/ai-agent-monitoring/:path*',
+  },
+  {
+    source: '/platforms/javascript/tracing/instrumentation/ai-agents-module-browser/:path*',
+    destination: '/platforms/javascript/ai-agent-monitoring-browser/:path*',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/tracing/instrumentation/ai-agents-module-browser/:path*',
+    destination: '/platforms/javascript/guides/:guide/ai-agent-monitoring-browser/',
+  },
+  // Browser JS doesn't have server-side AI Agent Monitoring, redirect to browser version
+  {
+    source: '/platforms/javascript/ai-agent-monitoring/',
+    destination: '/platforms/javascript/ai-agent-monitoring-browser/',
   },
   {
     source: '/product/insights/retention-priorities/',
@@ -1060,10 +1157,6 @@ const userDocsRedirects = [
     destination: '/product/issues/issue-details/feature-flags/:path*',
   },
   {
-    source: '/product/explore/metrics/:path*',
-    destination: '/concepts/key-terms/tracing/span-metrics/',
-  },
-  {
     source: '/product/tracing/:path*',
     destination: '/concepts/key-terms/tracing/:path*',
   },
@@ -1075,14 +1168,6 @@ const userDocsRedirects = [
   {
     source: '/platforms/javascript/tracing/trace-propagation/:path*',
     destination: '/platforms/javascript/tracing/distributed-tracing/:path*',
-  },
-  {
-    source: '/platforms/javascript/metrics/:path*',
-    destination: '/platforms/javascript/tracing/span-metrics/:path*',
-  },
-  {
-    source: '/platforms/javascript/guides/:guide/metrics/:path*',
-    destination: '/platforms/javascript/guides/:guide/tracing/span-metrics/:path*',
   },
   {
     source: '/platforms/javascript/tracing/instrumentation/performance-metrics/',
@@ -1105,6 +1190,22 @@ const userDocsRedirects = [
   {
     source: '/platforms/javascript/guides/:guide/profiling/browser-profiling/',
     destination: '/platforms/javascript/guides/:guide/profiling/',
+  },
+  {
+    source: '/platforms/javascript/apis/',
+    destination: '/platforms/javascript/configuration/apis/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/apis/',
+    destination: '/platforms/javascript/guides/:guide/configuration/apis/',
+  },
+  {
+    source: '/platforms/javascript/configuration/sampling/',
+    destination: '/platforms/javascript/sampling/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/configuration/sampling/',
+    destination: '/platforms/javascript/guides/:guide/sampling/',
   },
   {
     source: '/platforms/javascript/guides/:guide/profiling/node-profiling/',
@@ -1213,10 +1314,23 @@ const userDocsRedirects = [
     source: '/product/ai-in-sentry/seer/seer-privacy-and-security',
     destination: '/product/ai-in-sentry/ai-privacy-and-security/',
   },
+  {
+    source: '/product/ai-in-sentry/ai-code-review/',
+    destination: '/product/ai-in-sentry/seer/ai-code-review/',
+  },
+  {
+    source: '/product/ai-in-sentry/seer/issue-fix/:path*',
+    destination: '/product/ai-in-sentry/seer/root-cause-analysis/:path*',
+  },
   // .NET profiling guide redirects - consolidate to main profiling page
   {
     source: '/platforms/dotnet/guides/uwp/profiling/:path*',
     destination: '/platforms/dotnet/profiling/',
+  },
+  // General .NET redirects for UWP (deprecated)
+  {
+    source: '/platforms/dotnet/guides/uwp/:path*',
+    destination: '/platforms/dotnet/guides/maui/',
   },
   {
     source: '/platforms/dotnet/guides/aws-lambda/profiling/:path*',
@@ -1241,6 +1355,15 @@ const userDocsRedirects = [
   {
     source: '/platforms/dotnet/guides/google-cloud-functions/profiling/:path*',
     destination: '/platforms/dotnet/profiling/',
+  },
+  {
+    source: '/product/insights/mcp/',
+    destination: '/product/insights/ai/mcp/',
+  },
+  // Next.js usage -> capturing-errors rename
+  {
+    source: '/platforms/javascript/guides/nextjs/usage/',
+    destination: '/platforms/javascript/guides/nextjs/capturing-errors/',
   },
 ];
 

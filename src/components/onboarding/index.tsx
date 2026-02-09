@@ -1,9 +1,12 @@
 'use client';
 
-import {ReactNode, useContext, useEffect, useReducer, useState} from 'react';
+// eslint-disable-next-line no-restricted-imports -- Required for JSX in test environment
+import React, {ReactNode, useContext, useEffect, useReducer, useState} from 'react';
 import {QuestionMarkCircledIcon} from '@radix-ui/react-icons';
 import * as Tooltip from '@radix-ui/react-tooltip';
 import {Button, Checkbox, Theme} from '@radix-ui/themes';
+
+import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
 
 import styles from './styles.module.scss';
 
@@ -229,6 +232,106 @@ export function updateElementsVisibilityForOptions(
       });
     }
   });
+
+  // Handle integrations wrapper: hide opening/closing brackets if no integrations are visible
+  const openWrappers = document.querySelectorAll<HTMLElement>(
+    '[data-integrations-wrapper="open"]'
+  );
+
+  openWrappers.forEach(openLine => {
+    const codeBlock = openLine.closest('code.code-highlight');
+    if (!codeBlock) return;
+
+    // Helper function to get all code lines, including those nested in HighlightBlocks
+    const getAllCodeLines = (container: Element): HTMLElement[] => {
+      const lines: HTMLElement[] = [];
+      Array.from(container.children).forEach(child => {
+        const el = child as HTMLElement;
+        // If it's a highlight-block, get lines from inside it
+        if (el.classList.contains('highlight-block')) {
+          // Lines are nested in highlight-block > div (CodeLinesContainer)
+          const linesContainer = el.querySelector('div');
+          if (linesContainer) {
+            lines.push(...(Array.from(linesContainer.children) as HTMLElement[]));
+          }
+        } else {
+          // Regular line, add it directly
+          lines.push(el);
+        }
+      });
+      return lines;
+    };
+
+    const allLines = getAllCodeLines(codeBlock);
+    const openIndex = allLines.indexOf(openLine);
+
+    // Find the matching close line in the same code block
+    let closeIndex = -1;
+    for (let i = openIndex + 1; i < allLines.length; i++) {
+      if (allLines[i].dataset.integrationsWrapper === 'close') {
+        closeIndex = i;
+        break;
+      }
+    }
+
+    if (closeIndex === -1) return;
+
+    // Check if any lines between open and close are visible (non-marker lines)
+    let hasVisibleIntegrations = false;
+    for (let i = openIndex + 1; i < closeIndex; i++) {
+      const line = allLines[i];
+      const isHidden = line.classList.contains('hidden');
+      const isMarker = line.dataset.onboardingOptionHidden;
+
+      // Count any visible non-marker line
+      if (!isMarker && !isHidden) {
+        hasVisibleIntegrations = true;
+        break;
+      }
+    }
+
+    // Toggle visibility of both open and close lines
+    openLine.classList.toggle('hidden', !hasVisibleIntegrations);
+    allLines[closeIndex].classList.toggle('hidden', !hasVisibleIntegrations);
+
+    // Hide empty lines adjacent to the wrapper when no integrations are visible
+    if (!hasVisibleIntegrations) {
+      // Check line before open wrapper
+      if (openIndex > 0) {
+        const prevLine = allLines[openIndex - 1];
+        if (!prevLine.textContent?.trim()) {
+          prevLine.classList.add('hidden');
+          prevLine.dataset.emptyLineHidden = 'true';
+        }
+      }
+
+      // Check line after close wrapper
+      if (closeIndex < allLines.length - 1) {
+        const nextLine = allLines[closeIndex + 1];
+        if (!nextLine.textContent?.trim()) {
+          nextLine.classList.add('hidden');
+          nextLine.dataset.emptyLineHidden = 'true';
+        }
+      }
+    } else {
+      // Show empty lines when integrations are visible
+      if (openIndex > 0) {
+        const prevLine = allLines[openIndex - 1];
+        if (prevLine.dataset.emptyLineHidden === 'true') {
+          prevLine.classList.remove('hidden');
+          delete prevLine.dataset.emptyLineHidden;
+        }
+      }
+
+      if (closeIndex < allLines.length - 1) {
+        const nextLine = allLines[closeIndex + 1];
+        if (nextLine.dataset.emptyLineHidden === 'true') {
+          nextLine.classList.remove('hidden');
+          delete nextLine.dataset.emptyLineHidden;
+        }
+      }
+    }
+  });
 }
 
 export function OnboardingOptionButtons({
@@ -238,6 +341,7 @@ export function OnboardingOptionButtons({
   options: (OnboardingOptionType | OptionId)[];
 }) {
   const codeContext = useContext(CodeContext);
+  const {emit} = usePlausibleEvent();
 
   const normalizedOptions = initialOptions
     .map(option => {
@@ -265,7 +369,7 @@ export function OnboardingOptionButtons({
   const [options, setSelectedOptions] = useState<OnboardingOptionType[]>(
     normalizedOptions.map(option => ({
       ...option,
-      // default to unchecked if not excplicitly set
+      // default to unchecked if not explicitly set
       checked: option.checked ?? false,
     }))
   );
@@ -273,6 +377,17 @@ export function OnboardingOptionButtons({
 
   function handleCheckedChange(clickedOption: OnboardingOptionType, checked: boolean) {
     touchOptions();
+
+    // Track the toggle event in Plausible
+    emit('Onboarding Option Toggle', {
+      props: {
+        checked,
+        optionId: clickedOption.id,
+        optionName: optionDetails[clickedOption.id].name,
+        page: typeof window !== 'undefined' ? window.location.pathname : '',
+      },
+    });
+
     const dependencies = optionDetails[clickedOption.id].deps ?? [];
     const depenedants =
       options.filter(opt => optionDetails[opt.id].deps?.includes(clickedOption.id)) ?? [];

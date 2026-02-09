@@ -136,8 +136,8 @@ const handleAIClientRedirect = (request: NextRequest) => {
 
   // Check for markdown request (Accept header, user-agent, or manual)
   if (clientWantsMarkdown || forceMarkdown) {
-    // Log the redirect for debugging
-    Sentry.logger.info('Markdown redirect triggered', {
+    // Log the rewrite for debugging
+    Sentry.logger.info('Markdown rewrite triggered', {
       urlPath: url.pathname,
       detectionMethod: forceMarkdown ? 'Manual format=md' : detectionMethod,
       targetUrl: url.pathname.replace(/\/+$/, '') + '.md',
@@ -156,9 +156,9 @@ const handleAIClientRedirect = (request: NextRequest) => {
       newUrl.searchParams.delete('format');
     }
 
-    return NextResponse.redirect(newUrl, {
-      status: redirectStatusCode,
-    });
+    // Rewrite to serve markdown inline (same URL, different content)
+    // The next.config.ts rewrite rule maps *.md to /md-exports/*.md
+    return NextResponse.rewrite(newUrl);
   }
 
   return undefined;
@@ -175,7 +175,7 @@ const handleRedirects = (request: NextRequest) => {
   }
 
   // If we don't find an exact match, we try to look for a :guide placeholder
-  const guidePlaceholer = '/guides/:guide/';
+  const guidePlaceholder = '/guides/:guide/';
   const guideRegex = /\/guides\/(\w+)\//g;
   const match = guideRegex.exec(urlPath);
 
@@ -183,13 +183,13 @@ const handleRedirects = (request: NextRequest) => {
     return undefined;
   }
 
-  const pathWithPlaceholder = urlPath.replace(guideRegex, guidePlaceholer);
+  const pathWithPlaceholder = urlPath.replace(guideRegex, guidePlaceholder);
   const guide = match[1];
 
   const redirectToGuide = redirectMap.get(pathWithPlaceholder);
   if (redirectToGuide) {
     const finalRedirectToPath = redirectToGuide.replace(
-      guidePlaceholer,
+      guidePlaceholder,
       `/guides/${guide}/`
     );
 
@@ -288,6 +288,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/organization/integrations/jam/',
     to: '/organization/integrations/session-replay/jam/',
+  },
+  {
+    from: '/organization/integrations/cloud-monitoring/cloudflare-workers/',
+    to: '/platforms/javascript/guides/cloudflare/',
   },
   {
     from: '/product/crons/getting-started/cli/',
@@ -1251,7 +1255,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/workflow/releases/release-automation/github-actions/',
-    to: '/product/releases/setup/release-automation/github-deployment-gates/',
+    to: '/product/releases/setup/release-automation/github-actions/',
   },
   {
     from: '/product/releases/setup/manual-setup-releases/',
@@ -1767,43 +1771,11 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   // START redirecting deprecated generic metrics docs to concepts
   {
-    from: '/platforms/python/metrics/',
-    to: '/platforms/python/tracing/span-metrics/',
-  },
-  {
-    from: '/platforms/ruby/metrics/',
-    to: '/concepts/key-terms/tracing/span-metrics/',
-  },
-  {
-    from: '/platforms/react-native/metrics/',
-    to: '/concepts/key-terms/tracing/span-metrics/',
-  },
-  {
-    from: '/platforms/java/metrics/',
-    to: '/concepts/key-terms/tracing/span-metrics/',
-  },
-  {
-    from: '/platforms/android/metrics/',
-    to: '/concepts/key-terms/tracing/span-metrics/',
-  },
-  {
     from: '/platforms/apple/metrics/',
     to: '/concepts/key-terms/tracing/span-metrics/',
   },
   {
     from: '/platforms/unity/metrics/',
-    to: '/concepts/key-terms/tracing/span-metrics/',
-  },
-  {
-    from: '/platforms/php/metrics/',
-    to: '/concepts/key-terms/tracing/span-metrics/',
-  },
-  {
-    from: '/platforms/php/guides/laravel/metrics/',
-    to: '/concepts/key-terms/tracing/span-metrics/',
-  },
-  {
-    from: '/platforms/php/guides/symfony/metrics/',
     to: '/concepts/key-terms/tracing/span-metrics/',
   },
   // END redirecting deprecated generic metrics docs to concepts
@@ -1913,31 +1885,55 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/workflow/integrations/amazon-sqs/',
-    to: '/organization/integrations/data-visualization/amazon-sqs/',
+    to: '/organization/integrations/data-forwarding/amazon-sqs/',
   },
   {
     from: '/workflow/integrations/legacy-integrations/amazon-sqs/',
-    to: '/organization/integrations/data-visualization/amazon-sqs/',
+    to: '/organization/integrations/data-forwarding/amazon-sqs/',
   },
   {
     from: '/product/integrations/amazon-sqs/',
-    to: '/organization/integrations/data-visualization/amazon-sqs/',
+    to: '/organization/integrations/data-forwarding/amazon-sqs/',
   },
   {
     from: '/product/integrations/segment/',
-    to: '/organization/integrations/data-visualization/segment/',
+    to: '/organization/integrations/data-forwarding/segment/',
   },
   {
     from: '/workflow/integrations/splunk/',
-    to: '/organization/integrations/data-visualization/splunk/',
+    to: '/organization/integrations/data-forwarding/splunk/',
   },
   {
     from: '/workflow/integrations/legacy-integrations/splunk/',
-    to: '/organization/integrations/data-visualization/splunk/',
+    to: '/organization/integrations/data-forwarding/splunk/',
   },
   {
     from: '/product/integrations/splunk/',
-    to: '/organization/integrations/data-visualization/splunk/',
+    to: '/organization/integrations/data-forwarding/splunk/',
+  },
+  {
+    from: '/organization/integrations/data-visualization/splunk/',
+    to: '/organization/integrations/data-forwarding/splunk/',
+  },
+  {
+    from: '/organization/integrations/data-visualization/segment/',
+    to: '/organization/integrations/data-forwarding/segment/',
+  },
+  {
+    from: '/organization/integrations/data-visualization/amazon-sqs/',
+    to: '/organization/integrations/data-forwarding/amazon-sqs/',
+  },
+  {
+    from: '/organization/integrations/data-visualization/grafana/',
+    to: '/organization/integrations/data-forwarding/grafana/',
+  },
+  {
+    from: '/organization/integrations/data-visualization/',
+    to: '/organization/integrations/data-forwarding/',
+  },
+  {
+    from: '/concepts/data-management/data-forwarding/',
+    to: '/organization/integrations/data-forwarding/',
   },
   {
     from: '/workflow/integrations/gitlab/',
@@ -2061,7 +2057,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/integrations/cloudflare-workers/',
-    to: '/organization/integrations/cloud-monitoring/cloudflare-workers/',
+    to: '/platforms/javascript/guides/cloudflare/',
   },
   {
     from: '/product/integrations/vanta/',

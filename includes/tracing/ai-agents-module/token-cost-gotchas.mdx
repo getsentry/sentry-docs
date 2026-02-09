@@ -1,0 +1,23 @@
+## Token Usage and Cost Gotchas
+
+When manually setting token attributes, be aware of how Sentry uses them to [calculate model costs](/product/insights/ai/agents/costs/).
+
+**Cached and reasoning tokens are subsets, not separate counts.** `gen_ai.usage.input_tokens` is the **total** input token count that already includes any cached tokens. Similarly, `gen_ai.usage.output_tokens` already includes reasoning tokens. Sentry subtracts the cached/reasoning counts from the totals to compute the "raw" portion, so reporting them incorrectly can produce wrong or negative costs.
+
+For example, say your LLM call uses 100 input tokens total, 90 of which were served from cache. Using a standard rate of $0.01 per token and a cached rate of $0.001 per token:
+
+**Correct** — `input_tokens` is the total (includes cached):
+
+- `gen_ai.usage.input_tokens = 100`
+- `gen_ai.usage.input_tokens.cached = 90`
+- Sentry calculates: `(100 - 90) × $0.01 + 90 × $0.001` = `$0.10 + $0.09` = **$0.19** ✓
+
+**Wrong** — `input_tokens` set to only the non-cached tokens, making cached larger than total:
+
+- `gen_ai.usage.input_tokens = 10`
+- `gen_ai.usage.input_tokens.cached = 90`
+- Sentry calculates: `(10 - 90) × $0.01 + 90 × $0.001` = `−$0.80 + $0.09` = **−$0.71**
+
+Because `input_tokens.cached` (90) is larger than `input_tokens` (10), the subtraction goes negative, resulting in a negative total cost.
+
+The same applies to `gen_ai.usage.output_tokens` and `gen_ai.usage.output_tokens.reasoning`.

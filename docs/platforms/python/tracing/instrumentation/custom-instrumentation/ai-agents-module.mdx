@@ -13,217 +13,154 @@ As a prerequisite to setting up AI Agent Monitoring with Python, you'll need to 
 The Python SDK supports automatic instrumentation for some AI libraries. We recommend adding their integrations to your Sentry configuration to automatically capture spans for AI agents.
 
 - <PlatformLink to="/integrations/anthropic/">Anthropic</PlatformLink>
+- <PlatformLink to="/integrations/google-genai/">Google Gen AI</PlatformLink>
 - <PlatformLink to="/integrations/openai/">OpenAI</PlatformLink>
 - <PlatformLink to="/integrations/openai-agents/">OpenAI Agents SDK</PlatformLink>
 - <PlatformLink to="/integrations/langchain/">LangChain</PlatformLink>
 - <PlatformLink to="/integrations/langgraph/">LangGraph</PlatformLink>
+- <PlatformLink to="/integrations/litellm/">LiteLLM</PlatformLink>
+- <PlatformLink to="/integrations/pydantic-ai/">Pydantic AI</PlatformLink>
 
 ## Manual Instrumentation
 
-For your AI agents data to show up in the Sentry [AI Agents Insights](https://sentry.io/orgredirect/organizations/:orgslug/insights/agents/), two spans must be created and have well-defined names and data attributes. See below.
+For your AI agents data to show up in the Sentry [AI Agents Insights](https://sentry.io/orgredirect/organizations/:orgslug/insights/ai/agents/), at least one of the AI spans needs to be created and have well-defined names and data attributes. See below.
 
 The [@sentry_sdk.trace()](/platforms/python/tracing/instrumentation/custom-instrumentation/#span-templates) decorator can also be used to create these spans.
 
 ## Spans
 
-### Invoke Agent Span
+### AI Request span
 
-<Include name="tracing/ai-agents-module/invoke-agent-span" />
+This span represents a request to a LLM model or service that generates a response based on the input prompt.
 
-#### Example Invoke Agent Span:
+<Expandable title="AI Request span attributes">
+  <Include name="tracing/ai-agents-module/ai-client-span" />
+</Expandable>
+
+#### Example AI Request span
 
 ```python
 import sentry_sdk
 
-sentry_sdk.init(...)
+messages = [{"role": "user", "content": "Tell me a joke"}]
 
-# some example agent implementation for demonstration
-my_agent = MyAgent(
-    name="Weather Agent",
-    model_provider="openai",
-    model="o3-mini",
-)
-
-with sentry_sdk.start_span(
-    op="gen_ai.invoke_agent",
-    name=f"invoke_agent {my_agent.name}",
-) as span:
-    # set data about LLM and agent
+with sentry_sdk.start_span(op="gen_ai.request", name="chat o3-mini") as span:
+    span.set_data("gen_ai.request.model", "o3-mini")
+    span.set_data("gen_ai.request.messages", json.dumps(messages))
     span.set_data("gen_ai.operation.name", "invoke_agent")
-    span.set_data("gen_ai.system", my_agent.model_provider)
-    span.set_data("gen_ai.request.model", my_agent.model)
-    span.set_data("gen_ai.agent.name", my_agent.name)
 
-    # run the agent
-    result = my_agent.run()
+    # Call your LLM here
+    result = client.chat.completions.create(model="o3-mini", messages=messages)
 
-    # set agent response
-    # we assume result.output is a dictionary
-    # type of `gen_ai.response.text` needs to be a string
-    span.set_data("gen_ai.response.text", json.dumps([result.output]))
-
-    # set token usage
-    # we assume the result includes the tokens used
-    span.set_data("gen_ai.usage.input_tokens", result.usage.input_tokens)
-    span.set_data("gen_ai.usage.output_tokens", result.usage.output_tokens)
+    span.set_data("gen_ai.response.text", json.dumps([result.choices[0].message.content]))
+    # Set token usage
+    span.set_data("gen_ai.usage.input_tokens", result.usage.prompt_tokens)
+    span.set_data("gen_ai.usage.output_tokens", result.usage.completion_tokens)
 ```
 
-### AI Client Span
+### Invoke Agent Span
 
-<Include name="tracing/ai-agents-module/ai-client-span" />
+This span represents the execution of an AI agent, capturing the full lifecycle from receiving a task to producing a final response.
 
-#### Example AI Client Span
+<Expandable title="Invoke Agent span attributes">
+  <Include name="tracing/ai-agents-module/invoke-agent-span" />
+</Expandable>
+
+#### Example of an Invoke Agent Span:
 
 ```python
 import sentry_sdk
 
-sentry_sdk.init(...)
+with sentry_sdk.start_span(op="gen_ai.invoke_agent", name="invoke_agent Weather Agent") as span:
+    span.set_data("gen_ai.request.model", "o3-mini")
+    span.set_data("gen_ai.agent.name", "Weather Agent")
 
-# some example implementation for demonstration
-my_ai = MyAI(
-    model_provider="openai",
-    model="o3-mini",
-    model_config={
-        "temperature": 0.1,
-        "presence_penalty": 0.5,
-    }
-)
+    # Run the agent
+    final_output = my_agent.run()
 
-with sentry_sdk.start_span(
-    op="gen_ai.chat",
-    name=f"chat {my_ai.model}",
-) as span:
-    # set data about LLM
-    span.set_data("gen_ai.operation.name", "chat")
-    span.set_data("gen_ai.system", my_ai.model_provider)
-    span.set_data("gen_ai.request.model", my_ai.model)
-
-    # set up messages for LLM
-    max_tokens = 1024
-    prompt = "Tell me a joke"
-    messages = [
-        {"role": "user", "content": prompt},
-    ]
-
-    # set chat request data
-    span.set_data("gen_ai.request.message", json.dumbs(messages))
-    span.set_data("gen_ai.request.max_tokens", max_tokens)
-    span.set_data(
-        "gen_ai.request.temperature",
-        my_ai.model_config.get("temperature"),
-    )
-    span.set_data(
-        "gen_ai.request.presence_penalty",
-        my_ai.model_config.get("presence_penalty"),
-    )
-
-    # ask the LLM
-    result = my_ai.messages.create(
-        messages=messages,
-        max_tokens=max_tokens,
-    )
-
-    # set response
-    # we assume result.output is a dictionary
-    # type of `gen_ai.response.text` needs to be a string
-    span.set_data("gen_ai.response.text", json.dumps([result.output]))
-
-    # set token usage
-    # we assume the result includes the tokens used
+    span.set_data("gen_ai.response.text", str(final_output))
+    # Set token usage
     span.set_data("gen_ai.usage.input_tokens", result.usage.input_tokens)
     span.set_data("gen_ai.usage.output_tokens", result.usage.output_tokens)
 ```
 
 ### Execute Tool Span
 
-<Include name="tracing/ai-agents-module/execute-tool-span" />
+This span represents the execution of a tool or function that was requested by an AI model, including the input arguments and resulting output.
+
+<Expandable title="Execute Tool span attributes">
+  <Include name="tracing/ai-agents-module/execute-tool-span" />
+</Expandable>
 
 #### Example Execute Tool Span
 
 ```python
 import sentry_sdk
 
-sentry_sdk.init(...)
+with sentry_sdk.start_span(op="gen_ai.execute_tool", name="execute_tool get_weather") as span:
+    span.set_data("gen_ai.tool.name", "get_weather")
+    span.set_data("gen_ai.tool.input", json.dumps({"location": "Paris"}))
 
-# some example implementation for demonstration
-my_ai = MyAI(
-    model_provider="openai",
-    model="o3-mini",
-)
+    # Call the tool
+    result = get_weather(location="Paris")
 
-with sentry_sdk.start_span(op="gen_ai.chat", ...):
-    #  .. some code ..
-    result = my_ai.messages.create(
-        messages=messages,
-        max_tokens=1024,
-    )
-    # .. some code ..
-
-# we assume the llm tells us to call a tool in the result
-if my_should_call_tool(result):
-    # we parse the result to know which tool to call
-    tool = my_get_tool_to_call(result)
-
-    with sentry_sdk.start_span(
-        op="gen_ai.execute_tool",
-        name=f"execute_tool {tool.name}"
-    ) as span:
-        # set data about LLM and tool
-        span.set_data("gen_ai.system", my_ai.model_provider)
-        span.set_data("gen_ai.request.model", my_ai.model)
-        span.set_data("gen_ai.tool.type", "function")
-        span.set_data("gen_ai.tool.name", tool.name)
-        span.set_data("gen_ai.tool.description", tool.description)
-
-        # run tool
-        tool_result = my_run_tool(tool)
-
-        # set tool result
-        span.set_data("gen_ai.tool.output", json.dumps(tool_result))
+    span.set_data("gen_ai.tool.output", json.dumps(result))
 ```
 
 ### Handoff Span
 
-<Include name="tracing/ai-agents-module/handoff-span" />
+This span marks the transition of control from one agent to another, typically when the current agent determines another agent is better suited to handle the task.
 
-#### Example Handoff Span
+<Expandable title="Handoff span attributes">
+  <Include name="tracing/ai-agents-module/handoff-span" />
+</Expandable>
+
+#### Example of a Handoff Span
 
 ```python
 import sentry_sdk
 
+with sentry_sdk.start_span(op="gen_ai.handoff", name="handoff from Weather Agent to Travel Agent"):
+    pass  # Handoff span just marks the transition
+
+with sentry_sdk.start_span(op="gen_ai.invoke_agent", name="invoke_agent Travel Agent"):
+    # Run the target agent here
+    pass
+```
+
+## Tracking Conversations
+
+For AI applications that involve multi-turn conversations, you can use `sentry_sdk.ai.set_conversation_id()` to associate all AI spans from the same conversation. This enables you to track and analyze complete conversation flows within Sentry.
+
+The conversation ID is set as the `gen_ai.conversation.id` attribute on all AI-related spans in the current scope. To remove the conversation ID, use the `remove_conversation_id()` method on the `Scope`.
+
+```python
+import sentry_sdk
+
+sentry_sdk.set_conversation_id("conv_abc123")
+
+# All subsequent AI calls will be linked to this conversation
+```
+
+Some integrations, like the OpenAI integration, will automatically set the conversation ID for you, when you use APIs that expose that.
+
+```python
+import sentry_sdk
+import openai
+
 sentry_sdk.init(...)
 
-# some example agent implementation for demonstration
-my_agent = MyAgent(
-    name="Weather Agent",
-    model_provider="openai",
-    model="o3-mini",
+conversation = openai.conversations.create()
+
+response = openai.responses.create(
+    model="gpt-4.1",
+    input=[{"role": "user", "content": "What are the 5 Ds of dodgeball?"}],
+    conversation=conversation.id  # this will automatically set `gen_ai.conversation.id` on the span
 )
-
-with sentry_sdk.start_span(op="gen_ai.invoke_agent", ...):
-    #  .. some code ..
-    result = my_agent.run()
-    #  .. some code ..
-
-
-# we assume the llm tells us to handoff to another agent
-if my_should_handoff(result):
-    # we parse the result to know which agent to handoff to
-    other_agent = my_get_agent(result)
-
-    with sentry_sdk.start_span(
-        op="gen_ai.handoff",
-        name=f"handoff from {my_agent.name} to {other_agent.name}",
-    ):
-        # the handoff span just marks the handoff
-        pass
-
-    with sentry_sdk.start_span(op="gen_ai.invoke_agent", ...):
-        #  .. some code ..
-        other_agent.run()
-        #  .. some code ..
 ```
 
 ## Common Span Attributes
 
 <Include name="tracing/ai-agents-module/common-span-attributes" />
+
+<Include name="tracing/ai-agents-module/token-cost-gotchas" />

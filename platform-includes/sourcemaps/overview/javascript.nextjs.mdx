@@ -1,63 +1,84 @@
 ### Manual Configuration
-If you installed the SDK manually or the wizard failed, follow the steps below to manually configure source maps upload.
 
-#### 1. Configure Source Maps Upload
-
-To automatically upload source maps, you need to provide your Sentry auth token, organization, and project slugs in your Next.js configuration:
+If you installed the SDK manually or the wizard didn't complete, configure source map uploads:
 
 <OrgAuthTokenNote />
 
-**Make sure you add your auth token to your CI, if you are using one to deploy your application.** 
+<SplitLayout>
 
-Add your auth token to your environment:
+<SplitSection>
+<SplitSectionText>
+
+#### Add Auth Token
+
+Add your Sentry auth token to your environment. Make sure to also add it to your CI.
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```bash {filename:.env.local}
 SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
 ```
 
-```javascript {filename:next.config.js}
-const { withSentryConfig } = require("@sentry/nextjs");
+</SplitSectionCode>
+</SplitSection>
 
-module.exports = withSentryConfig(
-  {
-    // your existing Next.js config
-  },
-  {
-    org: "___ORG_SLUG___",
-    project: "___PROJECT_SLUG___",
-    authToken: process.env.SENTRY_AUTH_TOKEN,
-  }
-);
+<SplitSection>
+<SplitSectionText>
+
+#### Configure Next.js
+
+Add `withSentryConfig` to your Next.js config with your org, project, and auth token.
+
+With **Turbopack** (Next.js 15+ default), source maps upload after the build completes.
+
+<Alert level="info">
+  Requires `@sentry/nextjs@10.13.0+` and `next@15.4.1+`.
+</Alert>
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {filename:next.config.ts}
+import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs";
+
+const nextConfig: NextConfig = {
+  // your existing Next.js config
+};
+
+export default withSentryConfig(nextConfig, {
+  org: "___ORG_SLUG___",
+  project: "___PROJECT_SLUG___",
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+});
 ```
 
-#### 2. [Optional] Customize Source Map Options
+</SplitSectionCode>
+</SplitSection>
 
-Configure source map behavior using the [source maps options](/platforms/javascript/guides/nextjs/configuration/build/#source-maps-options) in your Next.js config:
+</SplitLayout>
 
-```javascript {11-16} {filename:next.config.js}
-const { withSentryConfig } = require("@sentry/nextjs");
+### Common Options
 
-module.exports = withSentryConfig(
-  {
-    // your existing Next.js config
-  },
-  {
-    org: "___ORG_SLUG___",
-    project: "___PROJECT_SLUG___",
-    authToken: process.env.SENTRY_AUTH_TOKEN,
-    sourcemaps: {
-      disable: false, // Source maps are enabled by default
-      assets: ["**/*.js", "**/*.js.map"], // Specify which files to upload
-      ignore: ["**/node_modules/**"], // Files to exclude
-      deleteSourcemapsAfterUpload: true, // Security: delete after upload
-    },
-  }
-);
-```
-### Turbopack Considerations
+| Option                                   | Default | Description                                                 |
+| ---------------------------------------- | ------- | ----------------------------------------------------------- |
+| `sourcemaps.deleteSourcemapsAfterUpload` | `true`  | Delete source maps after upload (recommended for security)  |
+| `widenClientFileUpload`                  | `false` | Upload dependency source maps to fix `[native code]` frames |
 
-Sourcemaps for Turbopack production builds are supported starting with `@sentry/nextjs@10.13.0`. The minimum required Next.js version is `next@15.4.1`.
+See <PlatformLink to="/configuration/build/#source-maps-options">Build Options</PlatformLink> for all available options.
+
+### Using Webpack?
+
+If you're using Webpack instead of Turbopack, source maps are uploaded **during** the build (not after). The configuration is the same, but you have additional options:
+
+- **Post-build upload mode:** Set `useRunAfterProductionCompileHook: true` to upload after build (requires Next.js 15.4.1+)
+- **Advanced plugin options:** Use `webpack.unstable_sentryWebpackPluginOptions` to pass options to the Sentry Webpack Plugin
+
+See <PlatformLink to="/manual-setup/webpack-setup/#source-map-upload">Webpack Setup</PlatformLink> for complete Webpack configuration.
 
 ### Troubleshooting
 
-If you're experiencing issues with source maps, see [Troubleshooting Source Maps](/platforms/javascript/guides/nextjs/sourcemaps/troubleshooting_js/).
+If stack traces show minified code, check that `SENTRY_AUTH_TOKEN` is set in your CI environment.
+
+See <PlatformLink to="/sourcemaps/troubleshooting_js/">Troubleshooting Source Maps</PlatformLink> for detailed debugging steps.

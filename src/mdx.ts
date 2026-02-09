@@ -28,6 +28,7 @@ import getPackageRegistry from './build/packageRegistry';
 import {apiCategories} from './build/resolveOpenAPI';
 import getAllFilesRecursively from './files';
 import remarkDefList from './mdx-deflist';
+import {DocMetrics} from './metrics';
 import rehypeOnboardingLines from './rehype-onboarding-lines';
 import rehypeSlug from './rehype-slug.js';
 import remarkCodeTabs from './remark-code-tabs';
@@ -35,7 +36,8 @@ import remarkCodeTitles from './remark-code-title';
 import remarkComponentSpacing from './remark-component-spacing';
 import remarkExtractFrontmatter from './remark-extract-frontmatter';
 import remarkFormatCodeBlocks from './remark-format-code';
-import remarkImageSize from './remark-image-size';
+import remarkImageProcessing from './remark-image-processing';
+import remarkImageResize from './remark-image-resize';
 import remarkTocHeadings, {TocNode} from './remark-toc-headings';
 import remarkVariables from './remark-variables';
 import {FrontMatter, Platform, PlatformConfig} from './types';
@@ -49,6 +51,7 @@ type SlugFile = {
   };
   mdxSource: string;
   toc: TocNode[];
+  firstImage?: string;
 };
 
 const root = process.cwd();
@@ -65,6 +68,58 @@ if (process.env.CI) {
 }
 
 const md5 = (data: BinaryLike) => createHash('md5').update(data).digest('hex');
+
+// Worker-level registry cache to avoid fetching multiple times per worker
+let cachedRegistryHash: Promise<string> | null = null;
+
+/**
+ * Fetch registry data and compute its hash, with retry logic and exponential backoff.
+ * Retries up to maxRetries times with exponential backoff starting at initialDelayMs.
+ */
+async function getRegistryHashWithRetry(
+  maxRetries = 3,
+  initialDelayMs = 1000
+): Promise<string> {
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const [apps, packages] = await Promise.all([
+        getAppRegistry(),
+        getPackageRegistry(),
+      ]);
+      return md5(JSON.stringify({apps, packages}));
+    } catch (err) {
+      lastError = err as Error;
+
+      if (attempt < maxRetries) {
+        const delay = initialDelayMs * Math.pow(2, attempt);
+        // eslint-disable-next-line no-console
+        console.warn(
+          `Failed to fetch registry (attempt ${attempt + 1}/${maxRetries + 1}). Retrying in ${delay}ms...`,
+          err
+        );
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+
+  throw lastError || new Error('Failed to fetch registry after all retries');
+}
+
+/**
+ * Get the registry hash, using cached value if available.
+ * This ensures we only fetch the registry once per worker process.
+ * If the fetch fails, the error is cached so subsequent calls fail fast.
+ */
+function getRegistryHash(): Promise<string> {
+  if (!cachedRegistryHash) {
+    // eslint-disable-next-line no-console
+    console.info('Fetching registry hash for the first time in this worker');
+    cachedRegistryHash = getRegistryHashWithRetry();
+  }
+  return cachedRegistryHash;
+}
 
 async function readCacheFile<T>(file: string): Promise<T> {
   const reader = createReadStream(file);
@@ -119,6 +174,22 @@ const isSupported = (
 let getDocsFrontMatterCache: Promise<FrontMatter[]> | undefined;
 
 export function getDocsFrontMatter(): Promise<FrontMatter[]> {
+  // Block filesystem scanning at Vercel runtime.
+  // Frontmatter should only be scanned during CI builds - the doc tree is pre-computed.
+  // See: DOCS-83Q, DOCS-9A5, DOCS-9RE
+  const isVercelRuntime =
+    process.env.VERCEL && !process.env.CI && process.env.NODE_ENV !== 'development';
+
+  if (isVercelRuntime) {
+    return Promise.reject(
+      new Error(
+        `[MDX Runtime Error] Attempted to scan docs frontmatter at Vercel runtime. ` +
+          `This should not happen - the doc tree should be pre-computed during CI. ` +
+          `If you're seeing this error, the requested path may not exist or was not included in generateStaticParams().`
+      )
+    );
+  }
+
   if (!getDocsFrontMatterCache) {
     getDocsFrontMatterCache = getDocsFrontMatterUncached();
   }
@@ -214,6 +285,22 @@ export async function getDevDocsFrontMatterUncached(): Promise<FrontMatter[]> {
 let getDevDocsFrontMatterCache: Promise<FrontMatter[]> | undefined;
 
 export function getDevDocsFrontMatter(): Promise<FrontMatter[]> {
+  // Block filesystem scanning at Vercel runtime.
+  // Frontmatter should only be scanned during CI builds - the doc tree is pre-computed.
+  // See: DOCS-83Q, DOCS-9A5, DOCS-9RE
+  const isVercelRuntime =
+    process.env.VERCEL && !process.env.CI && process.env.NODE_ENV !== 'development';
+
+  if (isVercelRuntime) {
+    return Promise.reject(
+      new Error(
+        `[MDX Runtime Error] Attempted to scan develop-docs frontmatter at Vercel runtime. ` +
+          `This should not happen - the doc tree should be pre-computed during CI. ` +
+          `If you're seeing this error, the requested path may not exist or was not included in generateStaticParams().`
+      )
+    );
+  }
+
   if (!getDevDocsFrontMatterCache) {
     getDevDocsFrontMatterCache = getDevDocsFrontMatterUncached();
   }
@@ -432,6 +519,30 @@ export const addVersionToFilePath = (filePath: string, version: string) => {
 };
 
 export async function getFileBySlug(slug: string): Promise<SlugFile> {
+  // Block MDX compilation at Vercel runtime.
+  // MDX should only be compiled during CI builds - all pages are statically generated.
+  // If this code path is hit at runtime, it means:
+  // 1. A 404 page is being accessed (Next.js tries to render before showing not-found)
+  // 2. Some edge case in routing is bypassing static generation
+  //
+  // Without this check, runtime MDX compilation would:
+  // - Fetch from release-registry.services.sentry.io (hammering the registry)
+  // - Fail with "read-only file system" errors from esbuild
+  //
+  // See: DOCS-915, DOCS-9H5, DOCS-9N0, DOCS-9HB
+  const isVercelRuntime =
+    process.env.VERCEL && !process.env.CI && process.env.NODE_ENV !== 'development';
+
+  if (isVercelRuntime) {
+    const error = new Error(
+      `[MDX Runtime Error] Attempted to compile MDX at Vercel runtime for slug "${slug}". ` +
+        `This should not happen - all pages should be pre-built during CI. ` +
+        `If you're seeing this error, the requested path may not exist or was not included in generateStaticParams().`
+    ) as Error & {code: string};
+    error.code = 'MDX_RUNTIME_ERROR';
+    throw error;
+  }
+
   // no versioning on a config file
   const configPath = path.join(root, slug.split(VERSION_INDICATOR)[0], 'config.yml');
 
@@ -519,37 +630,116 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
     }
   }
   if (source === undefined || sourcePath === undefined) {
-    throw new Error(
-      `Failed to find a valid source file for slug "${slug}". Tried:\n${sourcePaths.join('\n')}\nErrors:\n${errors.map(e => e.message).join('\n')}`
+    // Check if we have any non-ENOENT errors (permission, file system errors, etc.)
+    const nonEnoentError = errors.find(
+      err => err && typeof err === 'object' && 'code' in err && err.code !== 'ENOENT'
     );
+
+    // If there's a non-ENOENT error, throw it directly to preserve the original error
+    if (nonEnoentError) {
+      throw nonEnoentError;
+    }
+
+    // Otherwise, all errors are ENOENT (file not found), so we can safely report as such
+    const error = new Error(
+      `Failed to find a valid source file for slug "${slug}". Tried:\n${sourcePaths.join('\n')}\nErrors:\n${errors.map(e => e.message).join('\n')}`
+    ) as Error & {code: string};
+    error.code = 'ENOENT';
+    throw error;
   }
 
   let cacheKey: string | null = null;
   let cacheFile: string | null = null;
   let assetsCacheDir: string | null = null;
+
+  // Always use public/mdx-images during build
+  // During runtime (Lambda), this directory is read-only but images are already there from build
   const outdir = path.join(root, 'public', 'mdx-images');
-  await mkdir(outdir, {recursive: true});
 
+  try {
+    await mkdir(outdir, {recursive: true});
+  } catch (e) {
+    // If we can't create the directory (e.g., read-only filesystem),
+    // continue anyway - images should already exist from build time
+  }
+
+  // Detect if file contains content that depends on the Release Registry
+  // If it does, we include the registry hash in the cache key so the cache
+  // is invalidated when the registry changes.
+  const dependsOnRegistry =
+    source.includes('@inject') ||
+    source.includes('<PlatformSDKPackageName') ||
+    source.includes('<LambdaLayerDetail') ||
+    source.includes('<GradleUploadInstructions');
+
+  // Check cache in CI environments
   if (process.env.CI) {
-    cacheKey = md5(source);
-    cacheFile = path.join(CACHE_DIR, `${cacheKey}.br`);
-    assetsCacheDir = path.join(CACHE_DIR, cacheKey);
+    const sourceHash = md5(source);
 
-    try {
-      const [cached, _] = await Promise.all([
-        readCacheFile<SlugFile>(cacheFile),
-        cp(assetsCacheDir, outdir, {recursive: true}),
-      ]);
-      return cached;
-    } catch (err) {
-      if (
-        err.code !== 'ENOENT' &&
-        err.code !== 'ABORT_ERR' &&
-        err.code !== 'Z_BUF_ERROR'
-      ) {
-        // If cache is corrupted, ignore and proceed
+    // Include registry hash in cache key for registry-dependent files
+    if (dependsOnRegistry) {
+      try {
+        const registryHash = await getRegistryHash();
+        cacheKey = `${sourceHash}-${registryHash}`;
         // eslint-disable-next-line no-console
-        console.warn(`Failed to read MDX cache: ${cacheFile}`, err);
+        console.info(
+          `Using registry-aware cache for ${sourcePath} (registry hash: ${registryHash.slice(0, 8)}...)`
+        );
+      } catch (err) {
+        // If we can't get registry hash, skip cache for this file
+        // eslint-disable-next-line no-console
+        console.warn(
+          `Failed to get registry hash for ${sourcePath}, skipping cache:`,
+          err
+        );
+        cacheKey = null;
+      }
+    } else {
+      cacheKey = sourceHash;
+    }
+
+    if (cacheKey) {
+      cacheFile = path.join(CACHE_DIR, `${cacheKey}.br`);
+      assetsCacheDir = path.join(CACHE_DIR, cacheKey);
+
+      try {
+        // Time only the cache read operation, not the asset copy
+        const cacheStartTime = Date.now();
+        const cached = await readCacheFile<SlugFile>(cacheFile);
+        const cacheReadDuration = Date.now() - cacheStartTime;
+
+        // Track cache hit metrics immediately after cache read
+        if (typeof window === 'undefined') {
+          const fileSizeKb = Buffer.byteLength(source, 'utf8') / 1024;
+          const hasImages =
+            source.includes('.png') ||
+            source.includes('.jpg') ||
+            source.includes('.jpeg') ||
+            source.includes('.svg') ||
+            source.includes('.gif');
+
+          DocMetrics.mdxCompile(cacheReadDuration, {
+            cached: true,
+            file_size_kb: Math.round(fileSizeKb),
+            has_images: hasImages,
+            slug_prefix: slug.split('/')[0],
+          });
+        }
+
+        // Copy assets (wait for completion before returning)
+        await cp(assetsCacheDir, outdir, {recursive: true});
+
+        return cached;
+      } catch (err) {
+        if (
+          err.code !== 'ENOENT' &&
+          err.code !== 'ABORT_ERR' &&
+          err.code !== 'Z_BUF_ERROR'
+        ) {
+          // If cache is corrupted, ignore and proceed
+          // eslint-disable-next-line no-console
+          console.warn(`Failed to read MDX cache: ${cacheFile}`, err);
+        }
       }
     }
   }
@@ -567,6 +757,9 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
   // cwd is how mdx-bundler knows how to resolve relative paths
   const cwd = path.dirname(sourcePath);
 
+  // Track MDX compilation timing
+  const compilationStart = Date.now();
+
   const result = await bundleMDX<Platform>({
     source,
     cwd,
@@ -581,8 +774,12 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
         remarkGfm,
         remarkDefList,
         remarkFormatCodeBlocks,
-        [remarkImageSize, {sourceFolder: cwd, publicFolder: path.join(root, 'public')}],
+        [
+          remarkImageProcessing,
+          {sourceFolder: cwd, publicFolder: path.join(root, 'public')},
+        ],
         remarkMdxImages,
+        remarkImageResize,
         remarkCodeTitles,
         remarkCodeTabs,
         remarkComponentSpacing,
@@ -655,8 +852,11 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
       // for this specific slug easily
       options.outdir = assetsCacheDir || outdir;
 
-      // Set write to true so that esbuild will output the files.
-      options.write = true;
+      // Set write to false to prevent esbuild from writing files automatically.
+      // We'll handle writing manually to gracefully handle read-only filesystems (e.g., Lambda runtime)
+      // In local dev, we need write=true to avoid images being embedded as binary data
+      options.write =
+        process.env.NODE_ENV === 'development' || !!process.env.CI || !process.env.VERCEL;
 
       return options;
     },
@@ -665,6 +865,29 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
     console.error('Error occurred during MDX compilation:', e.errors);
     throw e;
   });
+
+  // Track MDX compilation metrics for cache miss (server-side only)
+  const compilationDuration = Date.now() - compilationStart;
+  if (typeof window === 'undefined') {
+    const fileSizeKb = Buffer.byteLength(source, 'utf8') / 1024;
+    const hasImages =
+      source.includes('.png') ||
+      source.includes('.jpg') ||
+      source.includes('.jpeg') ||
+      source.includes('.svg') ||
+      source.includes('.gif');
+
+    DocMetrics.mdxCompile(compilationDuration, {
+      cached: false, // This path only reached on cache miss
+      file_size_kb: Math.round(fileSizeKb),
+      has_images: hasImages,
+      slug_prefix: slug.split('/')[0], // First path segment for grouping
+    });
+  }
+
+  // Manually write output files from esbuild when available
+  // This only happens during build time (when filesystem is writable)
+  // At runtime (Lambda), files already exist from build time
 
   const {code, frontmatter} = result;
 
@@ -683,8 +906,13 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
     },
   };
 
-  if (assetsCacheDir && cacheFile) {
-    await cp(assetsCacheDir, outdir, {recursive: true});
+  if (assetsCacheDir && cacheFile && cacheKey) {
+    try {
+      await cp(assetsCacheDir, outdir, {recursive: true});
+    } catch (e) {
+      // If copy fails (e.g., on read-only filesystem), continue anyway
+      // Images should already exist from build time
+    }
     writeCacheFile(cacheFile, JSON.stringify(resultObj)).catch(e => {
       // eslint-disable-next-line no-console
       console.warn(`Failed to write MDX cache: ${cacheFile}`, e);

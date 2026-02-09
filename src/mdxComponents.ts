@@ -1,5 +1,6 @@
 import {Alert} from './components/alert';
 import {Arcade} from './components/arcade';
+import {AvailableSince} from './components/availableSince';
 import {Break} from './components/break';
 import {Card} from './components/card';
 import {CliChecksumTable} from './components/cliChecksumTable';
@@ -14,7 +15,11 @@ import {DefinitionList} from './components/definitionList';
 import {DevDocsCardGrid} from './components/devDocsCardGrid';
 import DocImage from './components/docImage';
 import {Expandable} from './components/expandable';
+import {FeatureBadge} from './components/featureBadge';
+import {GitHubCodePreview} from './components/githubCodePreview';
 import {GitHubDomainChecker} from './components/githubDomainChecker';
+import {GradleFeatureConfig} from './components/gradleFeatureConfig';
+import {GradleUploadInstructions} from './components/gradleUploadInstructions';
 import {GuideGrid} from './components/guideGrid';
 import {JsBundleList} from './components/jsBundleList';
 import {LambdaLayerDetail} from './components/lambdaLayerDetail';
@@ -44,6 +49,12 @@ import {SdkApi} from './components/sdkApi';
 import {SdkOption} from './components/sdkOption';
 import {SignInNote} from './components/signInNote';
 import {SmartLink} from './components/smartLink';
+import {
+  SplitLayout,
+  SplitSection,
+  SplitSectionCode,
+  SplitSectionText,
+} from './components/splitLayout';
 import {StepComponent, StepConnector} from './components/stepConnector';
 import {TableOfContents} from './components/tableOfContents';
 import {VersionRequirement} from './components/version-requirement';
@@ -56,6 +67,7 @@ export function mdxComponents(
   return {
     Alert,
     Arcade,
+    AvailableSince,
     Break,
     Card,
     CliChecksumTable,
@@ -71,9 +83,13 @@ export function mdxComponents(
     TableOfContents,
     CreateGitHubAppForm,
     GitHubDomainChecker,
+    GitHubCodePreview,
+    GradleFeatureConfig,
+    GradleUploadInstructions,
     ConfigValue,
     DefinitionList,
     Expandable,
+    FeatureBadge,
     GuideGrid,
     JsBundleList,
     LambdaLayerDetail,
@@ -98,6 +114,10 @@ export function mdxComponents(
     RelayMetrics,
     SandboxLink,
     SignInNote,
+    SplitLayout,
+    SplitSection,
+    SplitSectionText,
+    SplitSectionCode,
     StepComponent,
     StepConnector,
     VimeoEmbed,

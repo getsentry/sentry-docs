@@ -11,12 +11,17 @@ categories:
 
 Use this guide for general instructions on using the Sentry SDK with Cloudflare. If you're using any of the listed frameworks, follow their specific setup instructions:
 
-- **[Astro](frameworks/astro/)**
-- **[Hono](frameworks/hono/)**
-- **[Hydrogen](frameworks/hydrogen-react-router/)**
-- **[Nuxt](frameworks/nuxt/)**
-- **[Remix](frameworks/remix/)**
-- **[SvelteKit](frameworks/sveltekit/)**
+- **[Astro](/platforms/javascript/guides/cloudflare/frameworks/astro/)**
+- **[Hono](/platforms/javascript/guides/cloudflare/frameworks/hono/)**
+- **[Hydrogen](/platforms/javascript/guides/cloudflare/frameworks/hydrogen-react-router/)**
+- **[Next.js](/platforms/javascript/guides/cloudflare/frameworks/nextjs/)**
+- **[Nuxt](/platforms/javascript/guides/cloudflare/frameworks/nuxt/)**
+- **[Remix](/platforms/javascript/guides/cloudflare/frameworks/remix/)**
+- **[SvelteKit](/platforms/javascript/guides/cloudflare/frameworks/sveltekit/)**
+
+<Alert>
+  The Cloudflare Workers runtime has some platform-specific limitations that affect tracing. See [Known Limitations](#known-limitations) for details.
+</Alert>
 
 <PlatformContent includePath="getting-started-prerequisites" />
 
@@ -50,28 +55,6 @@ The main Sentry configuration should happen as early as possible in your app's l
   includePath="getting-started-config"
   platform="javascript.cloudflare.workers"
 />
-
-<Expandable title="Don't have access to onRequest?">
-If you don't have access to the `onRequest` middleware API, you can use the `wrapRequestHandler` API instead. For example:
-
-```javascript
-// hooks.server.js
-import * as Sentry from "@sentry/cloudflare";
-
-export const handle = ({ event, resolve }) => {
-  const requestHandlerOptions = {
-    options: {
-      dsn: event.platform.env.SENTRY_DSN,
-      tracesSampleRate: 1.0,
-    },
-    request: event.request,
-    context: event.platform.ctx,
-  };
-  return Sentry.wrapRequestHandler(requestHandlerOptions, () => resolve(event));
-};
-```
-
-</Expandable>
 
 ### Setup for Cloudflare Pages
 
@@ -112,27 +95,31 @@ export const onRequest = [
 ];
 ```
 
+<Expandable title="Don't have access to onRequest?">
+If you don't have access to the `onRequest` middleware API, you can use the `wrapRequestHandler` API instead. For example:
+
+```javascript
+// hooks.server.js
+import * as Sentry from "@sentry/cloudflare";
+
+export const handle = ({ event, resolve }) => {
+  const requestHandlerOptions = {
+    options: {
+      dsn: event.platform.env.SENTRY_DSN,
+      tracesSampleRate: 1.0,
+    },
+    request: event.request,
+    context: event.platform.ctx,
+  };
+  return Sentry.wrapRequestHandler(requestHandlerOptions, () => resolve(event));
+};
+```
+
+</Expandable>
+
 ## Step 3: Add Readable Stack Traces With Source Maps (Optional)
 
-The stack traces in your Sentry errors probably won't look like your actual code. To fix this, upload your source maps to Sentry.
-
-First, set the `upload_source_maps` option to `true` in your `wrangler.(jsonc|toml)` config file to enable source map uploading:
-
-```jsonc {tabTitle:JSON} {filename:wrangler.jsonc}
-{
-  "upload_source_maps": true,
-}
-```
-
-```toml {tabTitle:Toml} {filename:wrangler.toml}
-upload_source_maps = true
-```
-
-Next, run the Sentry Wizard to finish your setup:
-
-```bash
-npx @sentry/wizard@latest -i sourcemaps
-```
+<PlatformContent includePath="getting-started-sourcemaps-short-version" />
 
 ## Step 4: Verify Your Setup
 
@@ -225,6 +212,14 @@ export async function onRequest(context) {
 Now, head over to your project on [Sentry.io](https://sentry.io) to view the collected data (it takes a couple of moments for the data to appear).
 
 <PlatformContent includePath="getting-started-verify-locate-data" />
+
+## Known Limitations
+
+### Span Durations
+
+Server-side spans will display `0ms` for their durations. In the Cloudflare Workers runtime, `performance.now()` and `Date.now()` only advance after I/O occurs. CPU-bound operations will show zero duration. This is a security measure Cloudflare implements to [mitigate against timing attacks](https://developers.cloudflare.com/workers/runtime-apis/performance/).
+
+This is expected behavior in the Cloudflare Workers environment and affects all frameworks deployed to Cloudflare Workers, including Next.js, Astro, Remix, and others.
 
 ## Next Steps
 
