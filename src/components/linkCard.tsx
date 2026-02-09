@@ -7,10 +7,10 @@ export function LinkCard({
   description,
   className = '',
 }: {
+  description: string;
   href: string;
   icon: string;
   title: string;
-  description: string;
   className?: string;
 }) {
   return (
