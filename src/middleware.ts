@@ -1,6 +1,8 @@
 import * as Sentry from '@sentry/nextjs';
 import type {NextRequest} from 'next/server';
-import {NextResponse} from 'next/server';
+import {NextResponse, userAgent} from 'next/server';
+
+import {AI_AGENT_PATTERN, type TrafficType} from './lib/trafficClassification';
 
 // This env var is set in next.config.js based on the `NEXT_PUBLIC_DEVELOPER_DOCS` env var at build time
 // a workaround edge middleware not having access to env vars
@@ -35,24 +37,56 @@ const redirectStatusCode = process.env.NODE_ENV === 'development' ? 302 : 301;
 
 /**
  * Detects if the user agent belongs to an AI/LLM tool or development environment
- * that would benefit from markdown format
+ * that would benefit from markdown format.
+ * Uses shared AI_AGENT_PATTERN from trafficClassification.ts.
  */
-function isAIOrDevTool(userAgent: string): boolean {
-  const patterns = [
-    /claude/i, // Claude Desktop/Code
-    /cursor/i, // Cursor IDE
-    /copilot/i, // GitHub Copilot
-    /chatgpt/i, // ChatGPT
-    /openai/i, // OpenAI tools
-    /anthropic/i, // Anthropic tools
-    /vscode/i, // VS Code extensions
-    /intellij/i, // IntelliJ plugins
-    /sublime/i, // Sublime Text plugins
-    /got/i, // Got HTTP library (sindresorhus/got)
-    // Add more patterns as needed
-  ];
+function isAIOrDevTool(userAgentString: string): boolean {
+  return AI_AGENT_PATTERN.test(userAgentString);
+}
 
-  return patterns.some(pattern => pattern.test(userAgent));
+/**
+ * Traffic classification for metrics tracking.
+ * Uses Next.js userAgent() for enhanced bot detection plus custom AI agent patterns.
+ */
+function classifyTraffic(request: NextRequest): {
+  deviceType: string;
+  isBot: boolean;
+  trafficType: TrafficType;
+} {
+  const userAgentString = request.headers.get('user-agent');
+
+  // No user-agent = unknown traffic
+  if (!userAgentString) {
+    return {trafficType: 'unknown', deviceType: 'unknown', isBot: false};
+  }
+
+  // Use Next.js built-in userAgent() for enhanced parsing
+  const ua = userAgent(request);
+
+  // Check for AI agents first (higher priority than generic bot detection)
+  if (AI_AGENT_PATTERN.test(userAgentString)) {
+    return {
+      trafficType: 'ai_agent',
+      deviceType: ua.device.type || 'desktop',
+      isBot: true,
+    };
+  }
+
+  // Use Next.js isBot detection (covers major search engines, social crawlers, etc.)
+  if (ua.isBot) {
+    return {
+      trafficType: 'bot',
+      deviceType: ua.device.type || 'crawler',
+      isBot: true,
+    };
+  }
+
+  // Real user traffic - include device type for richer metrics
+  return {
+    trafficType: 'user',
+    deviceType: ua.device.type || 'desktop',
+    isBot: false,
+  };
 }
 
 /**
@@ -70,7 +104,7 @@ function wantsMarkdownViaAccept(acceptHeader: string): boolean {
  * Detects if client wants markdown via Accept header or user-agent
  */
 function wantsMarkdown(request: NextRequest): boolean {
-  const userAgent = request.headers.get('user-agent') || '';
+  const uaString = request.headers.get('user-agent') || '';
   const acceptHeader = request.headers.get('accept') || '';
 
   // Strategy 1: Accept header content negotiation (standards-compliant)
@@ -79,14 +113,49 @@ function wantsMarkdown(request: NextRequest): boolean {
   }
 
   // Strategy 2: User-agent detection (fallback for tools that don't set Accept)
-  return isAIOrDevTool(userAgent);
+  return isAIOrDevTool(uaString);
+}
+
+/**
+ * Creates request headers with traffic classification for downstream consumption.
+ * These headers are added to the REQUEST (not response) so tracesSampler can read them.
+ * Uses NextResponse.next({ request: { headers } }) pattern to modify the request.
+ */
+function createClassifiedRequestHeaders(request: NextRequest): Headers {
+  const classification = classifyTraffic(request);
+  const headers = new Headers(request.headers);
+  headers.set('x-traffic-type', classification.trafficType);
+  headers.set('x-device-type', classification.deviceType);
+  return headers;
+}
+
+/**
+ * Creates a pass-through response with traffic classification headers on the request.
+ */
+function nextWithClassification(request: NextRequest): NextResponse {
+  return NextResponse.next({
+    request: {
+      headers: createClassifiedRequestHeaders(request),
+    },
+  });
+}
+
+/**
+ * Creates a rewrite response with traffic classification headers on the request.
+ */
+function rewriteWithClassification(request: NextRequest, destination: URL): NextResponse {
+  return NextResponse.rewrite(destination, {
+    request: {
+      headers: createClassifiedRequestHeaders(request),
+    },
+  });
 }
 
 /**
  * Handles redirection to markdown versions for AI/LLM clients
  */
 const handleAIClientRedirect = (request: NextRequest) => {
-  const userAgent = request.headers.get('user-agent') || '';
+  const userAgentString = request.headers.get('user-agent') || '';
   const acceptHeader = request.headers.get('accept') || '';
   const url = request.nextUrl;
 
@@ -99,7 +168,7 @@ const handleAIClientRedirect = (request: NextRequest) => {
   // Determine detection method for logging
   const detectionMethod = wantsMarkdownViaAccept(acceptHeader)
     ? 'Accept header'
-    : isAIOrDevTool(userAgent)
+    : isAIOrDevTool(userAgentString)
       ? 'User-agent'
       : 'Manual';
 
@@ -118,12 +187,13 @@ const handleAIClientRedirect = (request: NextRequest) => {
     });
   }
 
-  // Skip if already requesting a markdown file
+  // Skip if already requesting a markdown file - pass through with classification headers
   if (url.pathname.endsWith('.md')) {
-    return undefined;
+    return nextWithClassification(request);
   }
 
   // Skip API routes and static assets (should already be filtered by matcher)
+  // Pass through with classification headers
   if (
     url.pathname.startsWith('/api/') ||
     url.pathname.startsWith('/_next/') ||
@@ -131,7 +201,7 @@ const handleAIClientRedirect = (request: NextRequest) => {
       url.pathname
     )
   ) {
-    return undefined;
+    return nextWithClassification(request);
   }
 
   // Check for markdown request (Accept header, user-agent, or manual)
@@ -158,10 +228,11 @@ const handleAIClientRedirect = (request: NextRequest) => {
 
     // Rewrite to serve markdown inline (same URL, different content)
     // The next.config.ts rewrite rule maps *.md to /md-exports/*.md
-    return NextResponse.rewrite(newUrl);
+    return rewriteWithClassification(request, newUrl);
   }
 
-  return undefined;
+  // Default: pass through with traffic classification headers
+  return nextWithClassification(request);
 };
 
 const handleRedirects = (request: NextRequest) => {
@@ -209,131 +280,6 @@ type Redirect = {
 
 /** Note: if you want to set redirects for developer docs, set them below in `DEVELOPER_DOCS_REDIRECTS` */
 const USER_DOCS_REDIRECTS: Redirect[] = [
-  // AI section restructure redirects - from old add-sentry-to-ai paths
-  {
-    from: '/ai/add-sentry-to-ai/',
-    to: '/ai/',
-  },
-  {
-    from: '/ai/add-sentry-to-ai/agent-skills/',
-    to: '/ai/agent-skills/',
-  },
-  {
-    from: '/ai/add-sentry-to-ai/mcp/',
-    to: '/ai/mcp/',
-  },
-  {
-    from: '/ai/add-sentry-to-ai/monitoring/',
-    to: '/ai/monitoring/',
-  },
-  {
-    from: '/ai/add-sentry-to-ai/monitoring/agents/',
-    to: '/ai/monitoring/agents/',
-  },
-  {
-    from: '/ai/add-sentry-to-ai/monitoring/agents/getting-started/',
-    to: '/ai/monitoring/agents/getting-started/',
-  },
-  {
-    from: '/ai/add-sentry-to-ai/monitoring/agents/dashboard/',
-    to: '/ai/monitoring/agents/dashboard/',
-  },
-  {
-    from: '/ai/add-sentry-to-ai/monitoring/agents/privacy/',
-    to: '/ai/monitoring/agents/privacy/',
-  },
-  {
-    from: '/ai/add-sentry-to-ai/monitoring/mcp/',
-    to: '/ai/monitoring/mcp/',
-  },
-  {
-    from: '/ai/add-sentry-to-ai/monitoring/mcp/getting-started/',
-    to: '/ai/monitoring/mcp/getting-started/',
-  },
-  {
-    from: '/ai/add-sentry-to-ai/monitoring/mcp/dashboard/',
-    to: '/ai/monitoring/mcp/dashboard/',
-  },
-  // AI section restructure redirects - from old use-ai-in-sentry paths to product
-  {
-    from: '/ai/use-ai-in-sentry/',
-    to: '/product/ai-in-sentry/',
-  },
-  {
-    from: '/ai/use-ai-in-sentry/seer/',
-    to: '/product/ai-in-sentry/seer/',
-  },
-  {
-    from: '/ai/use-ai-in-sentry/seer/issue-fix/',
-    to: '/product/ai-in-sentry/seer/issue-fix/',
-  },
-  {
-    from: '/ai/use-ai-in-sentry/ai-code-review/',
-    to: '/product/ai-in-sentry/ai-code-review/',
-  },
-  {
-    from: '/ai/use-ai-in-sentry/ai-privacy-and-security/',
-    to: '/product/ai-in-sentry/ai-privacy-and-security/',
-  },
-  {
-    from: '/ai/use-ai-in-sentry/monitoring/',
-    to: '/ai/monitoring/',
-  },
-  // AI section restructure redirects - from old ai-privacy-and-security location
-  {
-    from: '/ai/ai-privacy-and-security/',
-    to: '/product/ai-in-sentry/ai-privacy-and-security/',
-  },
-  // AI section restructure redirects - old paths that now point to /ai/
-  {
-    from: '/ai/seer/',
-    to: '/product/ai-in-sentry/seer/',
-  },
-  {
-    from: '/ai/agent-monitoring/',
-    to: '/ai/monitoring/agents/',
-  },
-  {
-    from: '/ai/mcp-monitoring/',
-    to: '/ai/monitoring/mcp/',
-  },
-  // Legacy redirects from product section
-  {
-    from: '/product/sentry-mcp/',
-    to: '/ai/mcp/',
-  },
-  {
-    from: '/product/insights/ai/',
-    to: '/ai/monitoring/',
-  },
-  {
-    from: '/product/insights/ai/agents/',
-    to: '/ai/monitoring/agents/',
-  },
-  {
-    from: '/product/insights/ai/agents/getting-started/',
-    to: '/ai/monitoring/agents/getting-started/',
-  },
-  {
-    from: '/product/insights/ai/agents/dashboard/',
-    to: '/ai/monitoring/agents/dashboard/',
-  },
-  {
-    from: '/product/insights/ai/agents/privacy/',
-    to: '/ai/monitoring/agents/privacy/',
-  },
-  {
-    from: '/product/insights/ai/mcp/',
-    to: '/ai/monitoring/mcp/',
-  },
-  {
-    from: '/product/insights/ai/mcp/getting-started/',
-    to: '/ai/monitoring/mcp/getting-started/',
-  },
-  {
-    from: '/product/insights/ai/mcp/dashboard/',
-    to: '/ai/monitoring/mcp/dashboard/',
-  },
   {
     from: '/platforms/python/http_errors/',
     to: '/platforms/python/integrations/django/http_errors/',
