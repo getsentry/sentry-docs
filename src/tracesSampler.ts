@@ -58,23 +58,6 @@ function getMiddlewareClassification(headers?: Record<string, string>): {
 }
 
 /**
- * Emits a sampling metric with consistent attributes.
- */
-function emitSamplingMetric(
-  trafficType: TrafficType,
-  sampleRate: number,
-  extra?: Record<string, unknown>
-): void {
-  Sentry.metrics.count('docs.trace.sampled', 1, {
-    attributes: {
-      sample_rate: sampleRate,
-      traffic_type: trafficType,
-      ...extra,
-    },
-  });
-}
-
-/**
  * Determines trace sample rate based on traffic classification.
  * Uses middleware classification headers when available, falls back to user-agent pattern matching.
  *
@@ -97,8 +80,12 @@ export function tracesSampler(samplingContext: SamplingContext): number {
     const {trafficType, deviceType} = middlewareClassification;
     const sampleRate = SAMPLE_RATES[trafficType];
 
-    emitSamplingMetric(trafficType, sampleRate, {
-      device_type: deviceType || 'unknown',
+    Sentry.metrics.count('docs.trace.sampled', 1, {
+      attributes: {
+        sample_rate: sampleRate,
+        traffic_type: trafficType,
+        device_type: deviceType || 'unknown',
+      },
     });
 
     return sampleRate;
@@ -113,8 +100,12 @@ export function tracesSampler(samplingContext: SamplingContext): number {
 
   // No user-agent = unknown traffic, track it explicitly
   if (!userAgent) {
-    emitSamplingMetric('unknown', SAMPLE_RATES.unknown, {
-      device_type: 'unknown',
+    Sentry.metrics.count('docs.trace.sampled', 1, {
+      attributes: {
+        sample_rate: SAMPLE_RATES.unknown,
+        traffic_type: 'unknown',
+        device_type: 'unknown',
+      },
     });
     return SAMPLE_RATES.unknown;
   }
@@ -122,8 +113,12 @@ export function tracesSampler(samplingContext: SamplingContext): number {
   // Check for AI agents first
   const aiAgent = matchPattern(userAgent, AI_AGENT_PATTERN);
   if (aiAgent) {
-    emitSamplingMetric('ai_agent', SAMPLE_RATES.ai_agent, {
-      agent_match: aiAgent,
+    Sentry.metrics.count('docs.trace.sampled', 1, {
+      attributes: {
+        sample_rate: SAMPLE_RATES.ai_agent,
+        traffic_type: 'ai_agent',
+        agent_match: aiAgent,
+      },
     });
     return SAMPLE_RATES.ai_agent;
   }
@@ -131,13 +126,22 @@ export function tracesSampler(samplingContext: SamplingContext): number {
   // Check for bots/crawlers
   const bot = matchPattern(userAgent, BOT_PATTERN);
   if (bot) {
-    emitSamplingMetric('bot', SAMPLE_RATES.bot, {
-      bot_match: bot,
+    Sentry.metrics.count('docs.trace.sampled', 1, {
+      attributes: {
+        sample_rate: SAMPLE_RATES.bot,
+        traffic_type: 'bot',
+        bot_match: bot,
+      },
     });
     return SAMPLE_RATES.bot;
   }
 
   // Sample real users at default rate
-  emitSamplingMetric('user', SAMPLE_RATES.user);
+  Sentry.metrics.count('docs.trace.sampled', 1, {
+    attributes: {
+      sample_rate: SAMPLE_RATES.user,
+      traffic_type: 'user',
+    },
+  });
   return SAMPLE_RATES.user;
 }
