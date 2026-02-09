@@ -156,13 +156,13 @@ more information on how to use integrations.
 
 </SdkApi>
 
-<SdkApi name="lazyLoadIntegration" signature="function lazyLoadIntegration(name: string, scriptNonce?: string): Promise<Integration>" categorySupported={['browser']}>
-  Lazy load an integration. This expects the name to be e.g. `replayIntegration`. It will load the script from the CDN, and return a promise that resolves to the integration, which can then be added to the SDK using `addIntegration`:
+<SdkApi name="lazyLoadIntegration" signature="function lazyLoadIntegration(name: string, scriptNonce?: string): Promise<IntegrationFn>" categorySupported={['browser']}>
+  Lazy load an integration. This expects the name to be e.g. `replayIntegration`. It will load the script from the CDN, and return a promise that resolves to the integration function, which can then be called and added to the SDK using `addIntegration`:
 
 ```javascript
 Sentry.lazyLoadIntegration("replayIntegration")
-  .then((integration) => {
-    Sentry.addIntegration(integration);
+  .then((replayIntegration) => {
+    Sentry.addIntegration(replayIntegration());
   })
   .catch((error) => {
     // Make sure to handle errors here!
@@ -306,7 +306,7 @@ Messages show up as issues on your issue stream, with the message as the issue n
 
 <SdkApi
   name="setTag"
-  signature="function setTag(key: string, value: string): void"
+  signature="function setTag(key: string, value: Primitive): void"
   parameters={[]}
 >
 Set a tag to be sent with Sentry events.
@@ -318,7 +318,7 @@ Set a tag to be sent with Sentry events.
 
 <SdkApi
   name="setTags"
-  signature="function setTags(tags: Record<string, string>): void"
+  signature="function setTags(tags: Record<string, Primitive>): void"
   parameters={[]}
 >
   Set multiple tags to be sent with Sentry events.
@@ -326,12 +326,13 @@ Set a tag to be sent with Sentry events.
 
 <SdkApi
   name="setContext"
-  signature="function setContext(name: string, context: Record<string, unknown>): void"
+  signature="function setContext(name: string, context: Record<string, unknown> | null): void"
   parameters={[]}
 >
   Set a context to be sent with Sentry events. Custom contexts allow you to attach arbitrary data to an event.
   You cannot search these, but they are viewable on the issue page - if you
   need to be able to filter for certain data, use [tags](./#setTag) instead.
+  Pass `null` as the context value to clear a previously set context.
 
 There are no restrictions on context name. In the context object, all keys are allowed except for `type`, which is used internally.
 
@@ -818,7 +819,7 @@ These utilities can be used for more advanced tracing use cases.
 
 <SdkApi
   name="withActiveSpan"
-  signature="function withActiveSpan<T>(span: Span | null, callback: () => T): T"
+  signature="function withActiveSpan<T>(span: Span | null, callback: (span: Span) => T): T"
 >
   Runs the provided callback with the given span as the active span. If `null`
   is provided, the callback will have no active span.
@@ -858,7 +859,7 @@ See <PlatformLink to="/ai-agent-monitoring/">AI Agent Monitoring</PlatformLink> 
 Sessions allow you to track the release health of your application.
 See the <PlatformLink to="/configuration/releases/#sessions">Releases & Health</PlatformLink> page for more information.
 
-<SdkApi name="startSession" signature="function startSession(): void">
+<SdkApi name="startSession" signature="function startSession(): Session">
   Starts a new session.
 </SdkApi>
 
