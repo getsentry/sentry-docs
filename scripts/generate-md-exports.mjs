@@ -30,7 +30,7 @@ import {remove} from 'unist-util-remove';
 const DOCS_ORIGIN = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
   ? 'https://develop.sentry.dev'
   : 'https://docs.sentry.io';
-const CACHE_VERSION = 4;
+const CACHE_VERSION = 7;
 const CACHE_COMPRESS_LEVEL = 4;
 const R2_BUCKET = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
   ? 'sentry-develop-docs'
@@ -408,22 +408,22 @@ ${
 const md5 = data => createHash('md5').update(data).digest('hex');
 
 /**
- * Strips build-specific elements from HTML for stable cache keys and faster processing.
+ * Strips build-specific HTML elements that are irrelevant for markdown generation.
  *
- * Next.js build output contains non-deterministic elements that change between builds
- * even when content is unchanged:
+ * Next.js build output contains elements that change between builds:
  * - <script> tags: RSC/Flight payloads, JS chunk references with content hashes
  * - <link> tags referencing /_next/static/: CSS files, fonts, JS preloads with hashes
  * - <style> tags with href: inlined CSS with build-specific hash in href attribute
  *
  * These elements are irrelevant for markdown generation (we only use title, canonical
  * link, and div#main content), so stripping them:
- * 1. Makes cache keys stable across builds
- * 2. Speeds up HTML parsing by reducing input size significantly
+ * 1. Speeds up HTML parsing by reducing input size significantly
+ * 2. Removes most build-specific variation from the HTML
  *
- * We use regex instead of proper HTML parsing for performance - this runs on every file
- * and regex is much faster. The input is trusted (Next.js build output), and worst case
- * for any regex edge cases is a cache miss, which is acceptable.
+ * IMPORTANT: This function's output is used as pipeline input for .process(), so it must
+ * only remove complete HTML elements — never modify text content or attribute values.
+ * For additional normalization that's only safe for cache key computation, see
+ * normalizeForCacheKey().
  */
 function stripUnstableElements(html) {
   return (
@@ -437,12 +437,56 @@ function stripUnstableElements(html) {
   );
 }
 
+/**
+ * Extracts only the content-relevant portions of HTML for stable cache key computation.
+ *
+ * The unified pipeline only uses three pieces of data from each page:
+ * 1. <title> — the page title (becomes the H1 heading)
+ * 2. <link rel="canonical"> — the canonical URL (used for link rewriting)
+ * 3. <div id="main"> — the main content area (becomes the markdown body)
+ *
+ * Everything else (header, sidebar, footer, scripts, styles, fonts) is irrelevant for
+ * markdown output. By extracting only these three elements, we make the cache key immune
+ * to layout changes (sidebar updates from merged PRs), CSS hash changes (Emotion, CSS
+ * modules), font hash changes, and any other build-specific variation in the surrounding
+ * HTML shell.
+ *
+ * Within the extracted content, we still normalize build-specific hashes that can appear
+ * inside div#main (e.g., Emotion classes on code block components, CSS module hashes on
+ * interactive elements). These are irrelevant for text content extraction but would
+ * otherwise cause cache misses between builds.
+ */
+function extractContentForCacheKey(html) {
+  const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+  const canonicalMatch = html.match(/<link[^>]*rel="canonical"[^>]*href="([^"]*)"/i);
+  const mainMatch = html.match(/<div id="main"[^>]*>([\s\S]*)<\/main>/i);
+
+  const title = titleMatch ? titleMatch[1] : '';
+  const canonical = canonicalMatch ? canonicalMatch[1] : '';
+  const mainContent = mainMatch ? mainMatch[1] : '';
+
+  // Normalize build-specific hashes that appear inside main content
+  // (e.g., Emotion CSS classes on code block tabs, CSS module hashes)
+  const normalizedMain = mainContent
+    // Remove Emotion style tags entirely (e.g., <style data-emotion="css o2ofml">...</style>)
+    .replace(/<style data-emotion[^>]*>[\s\S]*?<\/style>/gi, '')
+    // Normalize Emotion class names (e.g., css-o2ofml -> css-X)
+    .replace(/css-[a-z0-9]+/g, 'css-X')
+    // Normalize CSS module hashes (e.g., style_sidebar__iEJoR -> style_sidebar__X)
+    .replace(/(\w+__)[a-zA-Z0-9]{5}/g, '$1X');
+
+  return title + '\0' + canonical + '\0' + normalizedMain;
+}
+
 async function genMDFromHTML(source, target, {cacheDir, noCache, usedCacheFiles}) {
   const rawHTML = await readFile(source, {encoding: 'utf8'});
-  // Strip build-specific elements for stable cache keys and faster parsing.
+  // Strip build-specific HTML elements for faster parsing.
   // See stripUnstableElements() for details on what's removed and why.
   const strippedHTML = stripUnstableElements(rawHTML);
-  const cacheKey = `v${CACHE_VERSION}_${md5(strippedHTML)}`;
+  // Extract only content-relevant portions (title, canonical URL, main content)
+  // for cache key computation. This makes the key immune to layout/sidebar/header
+  // changes and most build-specific hash variations. See extractContentForCacheKey().
+  const cacheKey = `v${CACHE_VERSION}_${md5(extractContentForCacheKey(rawHTML))}`;
   const cacheFile = path.join(cacheDir, cacheKey);
   if (!noCache) {
     try {
@@ -463,6 +507,7 @@ async function genMDFromHTML(source, target, {cacheDir, noCache, usedCacheFiles}
       }
     }
   }
+
   let baseUrl = DOCS_ORIGIN;
   const data = String(
     await unified()
