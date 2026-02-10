@@ -16,19 +16,26 @@ Before you begin, ensure you have:
 
 ## Step 1: Get Your Sentry OTLP Credentials
 
-You'll need your Sentry OTLP endpoint and authentication header. These can be found in your [Sentry Project Settings](https://sentry.io/settings/projects/) under **Client Keys (DSN)** > **OpenTelemetry (OTLP)**.
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
 
-### Logs Endpoint
+Find these in [Sentry Project Settings](https://sentry.io/settings/projects/) under **Client Keys (DSN)** > **OpenTelemetry (OTLP)**.
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```bash
+# Logs endpoint
 ___OTLP_LOGS_URL___
-```
 
-### Authentication Header
-
-```
+# Auth header (include in all requests)
 x-sentry-auth: sentry sentry_key=___PUBLIC_KEY___
 ```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
 ## Step 2: Configure Vector
 
@@ -39,7 +46,20 @@ Choose your configuration based on your data source:
 
 ## Option A: Forwarding OTLP Data
 
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
 If you're receiving data that's already in OTLP format (from an OpenTelemetry SDK or collector), you can forward it directly to Sentry using the `otlp` codec without any transformation.
+
+<Alert level="info">
+
+The `otlp` codec requires Vector version [0.51.0](https://vector.dev/releases/0.51.0/) or higher. The `use_otlp_decoding` option was introduced in Vector [0.50.0](https://vector.dev/releases/0.50.0/).
+
+</Alert>
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```yaml {filename:vector.yaml}
 sources:
@@ -66,11 +86,9 @@ sinks:
         codec: otlp
 ```
 
-<Alert level="info">
-
-The `otlp` codec requires Vector version [0.51.0](https://vector.dev/releases/0.51.0/) or higher. The `use_otlp_decoding` option was introduced in Vector [0.50.0](https://vector.dev/releases/0.50.0/).
-
-</Alert>
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
 ## Option B: Transforming Non-OTLP Data
 
@@ -109,7 +127,20 @@ The OpenTelemetry log format requires a specific structure with `resourceLogs`, 
 
 ### Example: Forwarding File Logs
 
-Here's a complete example that reads logs from a file and forwards them to Sentry:
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+This example reads logs from a file and forwards them to Sentry.
+
+The remap transform:
+- Converts the timestamp to nanoseconds
+- Builds the OTEL `resourceLogs` structure
+- Maps file metadata to attributes
+- Cleans up original fields
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```yaml {filename:vector.yaml}
 sources:
@@ -171,9 +202,25 @@ sinks:
         codec: otlp
 ```
 
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
 ### Example: Forwarding Syslog
 
-For syslog data, you can map severity levels to OTEL severity:
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+For syslog data, you can map severity levels to OTEL severity.
+
+The remap transform:
+- Maps syslog severity to OTEL severity text
+- Preserves syslog metadata as attributes
+- Handles the syslog-specific fields
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```yaml {filename:vector.yaml}
 sources:
@@ -251,6 +298,10 @@ sinks:
       encoding:
         codec: otlp
 ```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
 ## VRL Remap Reference
 
