@@ -30,7 +30,7 @@ import {remove} from 'unist-util-remove';
 const DOCS_ORIGIN = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
   ? 'https://develop.sentry.dev'
   : 'https://docs.sentry.io';
-const CACHE_VERSION = 6;
+const CACHE_VERSION = 7;
 const CACHE_COMPRESS_LEVEL = 4;
 const R2_BUCKET = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
   ? 'sentry-develop-docs'
@@ -438,60 +438,69 @@ function stripUnstableElements(html) {
 }
 
 /**
- * Applies additional normalization to stripped HTML for stable cache key computation.
+ * Extracts only the content-relevant portions of HTML for stable cache key computation.
  *
- * These regex replacements neutralize build-specific hashes that survive element stripping:
- * - next/font variable classes on <body>: e.g. __variable_c58dd6
- * - CSS module class name hashes in attributes: e.g. style_sidebar__iEJoR
- * - /_next/static/media/ content hashes: e.g. sentry-logo-dark.fc8e1eeb.svg
+ * The unified pipeline only uses three pieces of data from each page:
+ * 1. <title> — the page title (becomes the H1 heading)
+ * 2. <link rel="canonical"> — the canonical URL (used for link rewriting)
+ * 3. <div id="main"> — the main content area (becomes the markdown body)
  *
- * WARNING: These regexes can match and corrupt actual page content (e.g., "Sentry__Debug"
- * would become "Sentry__X" because "Debug" is 5 alphanumeric chars). This is acceptable
- * for cache key computation (worst case: a false cache hit, which is extremely unlikely
- * since the full HTML must also match), but must NEVER be applied to HTML that will be
- * processed into markdown output.
+ * Everything else (header, sidebar, footer, scripts, styles, fonts) is irrelevant for
+ * markdown output. By extracting only these three elements, we make the cache key immune
+ * to layout changes (sidebar updates from merged PRs), CSS hash changes (Emotion, CSS
+ * modules), font hash changes, and any other build-specific variation in the surrounding
+ * HTML shell.
+ *
+ * Within the extracted content, we still normalize build-specific hashes that can appear
+ * inside div#main (e.g., Emotion classes on code block components, CSS module hashes on
+ * interactive elements). These are irrelevant for text content extraction but would
+ * otherwise cause cache misses between builds.
  */
-function normalizeForCacheKey(html) {
-  return (
-    html
-      // Normalize next/font variable classes (e.g., __variable_c58dd6)
-      .replace(/__variable_[a-f0-9]+/g, '__variable_X')
-      // Normalize CSS module hashes (e.g., style_sidebar__iEJoR)
-      .replace(/(\w+__)[a-zA-Z0-9]{5}/g, '$1X')
-      // Normalize /_next/static/media/ content hashes (e.g., sentry-logo-dark.fc8e1eeb.svg)
-      .replace(/(\/_next\/static\/media\/[^.]+\.)[a-f0-9]+\./g, '$1X.')
-  );
+function extractContentForCacheKey(html) {
+  const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+  const canonicalMatch = html.match(/<link[^>]*rel="canonical"[^>]*href="([^"]*)"/i);
+  const mainMatch = html.match(/<div id="main"[^>]*>([\s\S]*)<\/main>/i);
+
+  const title = titleMatch ? titleMatch[1] : '';
+  const canonical = canonicalMatch ? canonicalMatch[1] : '';
+  const mainContent = mainMatch ? mainMatch[1] : '';
+
+  // Normalize build-specific hashes that appear inside main content
+  // (e.g., Emotion CSS classes on code block tabs, CSS module hashes)
+  const normalizedMain = mainContent
+    // Remove Emotion style tags entirely (e.g., <style data-emotion="css o2ofml">...</style>)
+    .replace(/<style data-emotion[^>]*>[\s\S]*?<\/style>/gi, '')
+    // Normalize Emotion class names (e.g., css-o2ofml -> css-X)
+    .replace(/css-[a-z0-9]+/g, 'css-X')
+    // Normalize CSS module hashes (e.g., style_sidebar__iEJoR -> style_sidebar__X)
+    .replace(/(\w+__)[a-zA-Z0-9]{5}/g, '$1X');
+
+  return title + '\0' + canonical + '\0' + normalizedMain;
 }
 
 /**
  * Diagnostic logging for cache miss debugging on Vercel.
- * Logs hash breakdowns of different HTML sections to identify what changes between builds.
+ * Logs the cache key hash and content extraction details to verify stability.
  * This is temporary — remove once the Vercel cache miss issue is resolved.
  */
-function logCacheMissDiagnostics(relativePath, strippedHTML) {
-  const normalizedHTML = normalizeForCacheKey(strippedHTML);
-  const headMatch = normalizedHTML.match(/<head[^>]*>([\s\S]*?)<\/head>/i);
-  const mainMatch = normalizedHTML.match(
-    /<div id="main"[^>]*>([\s\S]*?)<\/div>\s*<\/main>/i
-  );
-  const headContent = headMatch ? headMatch[1] : '';
-  const mainContent = mainMatch ? mainMatch[1] : '';
+function logCacheMissDiagnostics(relativePath, rawHTML) {
+  const extracted = extractContentForCacheKey(rawHTML);
+  const parts = extracted.split('\0');
+  const title = parts[0] || '';
+  const canonical = parts[1] || '';
+  const mainContent = parts[2] || '';
 
-  // Layout = everything except head and main content
-  let layoutContent = normalizedHTML;
-  if (headMatch) layoutContent = layoutContent.replace(headMatch[0], '');
-  if (mainMatch) layoutContent = layoutContent.replace(mainMatch[0], '');
-
-  const headHash = md5(headContent).slice(0, 8);
+  const cacheKeyHash = md5(extracted).slice(0, 8);
+  const titleHash = md5(title).slice(0, 8);
   const mainHash = md5(mainContent).slice(0, 8);
-  const layoutHash = md5(layoutContent).slice(0, 8);
-  const fullHash = md5(normalizedHTML).slice(0, 8);
 
   console.log(
     `🔬 Cache miss diagnostics for ${relativePath}:\n` +
-      `   full=${fullHash} head=${headHash} main=${mainHash} layout=${layoutHash}\n` +
-      `   headLen=${headContent.length} mainLen=${mainContent.length} layoutLen=${layoutContent.length}\n` +
-      `   layoutSnippet=${JSON.stringify(layoutContent.slice(0, 300))}`
+      `   cacheKey=${cacheKeyHash} title=${titleHash} main=${mainHash}\n` +
+      `   titleLen=${title.length} canonicalLen=${canonical.length} mainLen=${mainContent.length}\n` +
+      `   title=${JSON.stringify(title.slice(0, 100))}\n` +
+      `   canonical=${JSON.stringify(canonical)}\n` +
+      `   mainSnippet=${JSON.stringify(mainContent.slice(0, 200))}`
   );
 }
 
@@ -515,10 +524,10 @@ async function genMDFromHTML(
   // Strip build-specific HTML elements for faster parsing.
   // See stripUnstableElements() for details on what's removed and why.
   const strippedHTML = stripUnstableElements(rawHTML);
-  // Apply additional normalization only for cache key computation.
-  // normalizeForCacheKey() can alter text content (e.g., CSS module hash regexes),
-  // so its output must NOT be used as pipeline input — only for hashing.
-  const cacheKey = `v${CACHE_VERSION}_${md5(normalizeForCacheKey(strippedHTML))}`;
+  // Extract only content-relevant portions (title, canonical URL, main content)
+  // for cache key computation. This makes the key immune to layout/sidebar/header
+  // changes and most build-specific hash variations. See extractContentForCacheKey().
+  const cacheKey = `v${CACHE_VERSION}_${md5(extractContentForCacheKey(rawHTML))}`;
   const cacheFile = path.join(cacheDir, cacheKey);
   if (!noCache) {
     try {
@@ -547,7 +556,7 @@ async function genMDFromHTML(
     DIAGNOSTIC_FILES.has(relativePath) ||
     diagnosticsLogged < MAX_DIAGNOSTICS_PER_WORKER
   ) {
-    logCacheMissDiagnostics(relativePath, strippedHTML);
+    logCacheMissDiagnostics(relativePath, rawHTML);
     diagnosticsLogged++;
   }
 
