@@ -13,6 +13,12 @@ In the event that API returns data considered PII, we guard that behind a flag c
 This is an option in the SDK called [_send-default-pii_](https://docs.sentry.io/platforms/python/configuration/options/#send-default-pii)
 and is **disabled by default**. That means that data that is naturally sensitive is not sent by default.
 
+<Alert level="info">
+
+When a user manually sets the data on the scope (user, contexts, tags, data, request, response, etc.), this data should not be gated by the _Send Default PII_ flag and should always be attached to all outgoing telemetry. This also applies to the data that the user manually sets on a span, log, metric and other types of telemetry (directly or, for example, via `BeforeSend`).
+
+</Alert>
+
 Certain sensitive data must never be sent through SDK instrumentation, regardless of any configuration:
 
 - HTTP Headers: The keys of known sensitive headers are added, while their values must be replaced with `"[Filtered]"`.
@@ -26,7 +32,6 @@ Some examples of data guarded by `send_default_pii: false`:
 - When attaching data of HTTP requests and/or responses to events
   - Request Body: "raw" HTTP bodies (bodies which cannot be parsed as JSON or FormData) are removed
   - HTTP Headers: header values, containing information about the user are replaced with `"[Filtered]"`
-  - _Note_ that if a user explicitly sets a request on the scope, nothing is stripped from that request. The above rules only apply to integrations that come with the SDK.
 - User-specific information (e.g. the current user ID according to the used web-framework) is not collected and therefore not sent at all.
 - On desktop applications
   - The username logged in the device is not included. This is often a person's name.
