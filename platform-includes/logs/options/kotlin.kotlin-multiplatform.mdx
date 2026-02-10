@@ -1,0 +1,22 @@
+```kotlin {filename:SentrySetup.kt}
+import io.sentry.kotlin.multiplatform.Sentry
+
+fun initializeSentry() {
+  Sentry.init {
+    it.dsn = "___PUBLIC_DSN___"
+    it.logs.enabled = true
+    it.logs.beforeSend = { log ->
+      if (log.level == SentryLogLevel.DEBUG) {
+        null
+      } else {
+        if (log.attributes.contains("password")) {
+          log.attributes.remove("password")
+        }
+        log
+      }
+    }
+  }
+}
+```
+
+The `beforeSend` function receives a log object, and should return the log object if you want it to be sent to Sentry, or `null` if you want to discard it.
