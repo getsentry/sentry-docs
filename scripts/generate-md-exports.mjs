@@ -30,7 +30,7 @@ import {remove} from 'unist-util-remove';
 const DOCS_ORIGIN = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
   ? 'https://develop.sentry.dev'
   : 'https://docs.sentry.io';
-const CACHE_VERSION = 4;
+const CACHE_VERSION = 5;
 const CACHE_COMPRESS_LEVEL = 4;
 const R2_BUCKET = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
   ? 'sentry-develop-docs'
@@ -415,6 +415,9 @@ const md5 = data => createHash('md5').update(data).digest('hex');
  * - <script> tags: RSC/Flight payloads, JS chunk references with content hashes
  * - <link> tags referencing /_next/static/: CSS files, fonts, JS preloads with hashes
  * - <style> tags with href: inlined CSS with build-specific hash in href attribute
+ * - next/font variable classes on <body>: e.g. __variable_c58dd6
+ * - CSS module class name hashes throughout HTML: e.g. style_sidebar__iEJoR
+ * - /_next/static/media/ content hashes: e.g. sentry-logo-dark.fc8e1eeb.svg
  *
  * These elements are irrelevant for markdown generation (we only use title, canonical
  * link, and div#main content), so stripping them:
@@ -434,6 +437,12 @@ function stripUnstableElements(html) {
       .replace(/<link[^>]*\/_next\/[^>]*>/gi, '')
       // Remove style tags with href attribute (inlined CSS with build hashes)
       .replace(/<style[^>]*href="[^"]*"[^>]*>[\s\S]*?<\/style>/gi, '')
+      // Normalize next/font variable classes (e.g., __variable_c58dd6)
+      .replace(/__variable_[a-f0-9]+/g, '__variable_X')
+      // Normalize CSS module hashes (e.g., style_sidebar__iEJoR)
+      .replace(/(\w+__)[a-zA-Z0-9]{5}/g, '$1X')
+      // Normalize /_next/static/media/ content hashes (e.g., sentry-logo-dark.fc8e1eeb.svg)
+      .replace(/(\/_next\/static\/media\/[^.]+\.)[a-f0-9]+\./g, '$1X.')
   );
 }
 
