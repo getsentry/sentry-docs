@@ -13,7 +13,10 @@ function findScrollContainer(element: Element): Element | null {
   while (current) {
     const {overflow, overflowY} = window.getComputedStyle(current);
     if (
-      (overflow === 'auto' || overflow === 'scroll' || overflowY === 'auto' || overflowY === 'scroll') &&
+      (overflow === 'auto' ||
+        overflow === 'scroll' ||
+        overflowY === 'auto' ||
+        overflowY === 'scroll') &&
       current.scrollHeight > current.clientHeight
     ) {
       return current;
