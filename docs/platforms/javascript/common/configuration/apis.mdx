@@ -156,13 +156,13 @@ more information on how to use integrations.
 
 </SdkApi>
 
-<SdkApi name="lazyLoadIntegration" signature="function lazyLoadIntegration(name: string, scriptNonce?: string): Promise<Integration>" categorySupported={['browser']}>
-  Lazy load an integration. This expects the name to be e.g. `replayIntegration`. It will load the script from the CDN, and return a promise that resolves to the integration, which can then be added to the SDK using `addIntegration`:
+<SdkApi name="lazyLoadIntegration" signature="function lazyLoadIntegration(name: string, scriptNonce?: string): Promise<IntegrationFn>" categorySupported={['browser']}>
+  Lazy load an integration. This expects the name to be e.g. `replayIntegration`. It will load the script from the CDN, and return a promise that resolves to the integration function, which can then be called and added to the SDK using `addIntegration`:
 
 ```javascript
 Sentry.lazyLoadIntegration("replayIntegration")
-  .then((integration) => {
-    Sentry.addIntegration(integration);
+  .then((replayIntegration) => {
+    Sentry.addIntegration(replayIntegration());
   })
   .catch((error) => {
     // Make sure to handle errors here!
@@ -332,6 +332,7 @@ Set a tag to be sent with Sentry events.
   Set a context to be sent with Sentry events. Custom contexts allow you to attach arbitrary data to an event.
   You cannot search these, but they are viewable on the issue page - if you
   need to be able to filter for certain data, use [tags](./#setTag) instead.
+  Pass `null` as the context value to clear a previously set context.
 
 There are no restrictions on context name. In the context object, all keys are allowed except for `type`, which is used internally.
 
@@ -649,23 +650,23 @@ See <PlatformLink to="/tracing/instrumentation/">Tracing Instrumentation</Platfo
   allows you to start a span, hold a reference to it and keep it active until you end it, without
   the active duration being bound to the callback (as opposed to [`startSpanManual`](#startSpanManual)).
 
-
   <Expandable title='Examples'>
   ```javascript
   let checkoutSpan;
 
-  on('startCheckout', () => {
-    checkoutSpan = Sentry.startInactiveSpan({name: 'checkout-flow'});
-    Sentry.setActiveSpanInBrowser(checkoutSpan);
-  })
+on('startCheckout', () => {
+checkoutSpan = Sentry.startInactiveSpan({name: 'checkout-flow'});
+Sentry.setActiveSpanInBrowser(checkoutSpan);
+})
 
-  doSomeWork();
+doSomeWork();
 
-  on('endCheckout', () => {
-    // Ending the span automatically removes it as the active span on the scope
-    checkoutSpan.end();
-  })
-  ```
+on('endCheckout', () => {
+// Ending the span automatically removes it as the active span on the scope
+checkoutSpan.end();
+})
+
+````
 </Expandable>
 
 See <PlatformLink to="/tracing/instrumentation/">Tracing Instrumentation</PlatformLink> for more information on how to work with spans.
@@ -673,111 +674,112 @@ See <PlatformLink to="/tracing/instrumentation/">Tracing Instrumentation</Platfo
 </SdkApi>
 
 <SdkApi
-  name="continueTrace"
-  signature="function continueTrace<T>(options: TraceOptions, callback: () => T): T"
-  parameters={[
-    {
-      name: "options",
-      type: {
-        name: "TraceOptions",
-        properties: [
-          {
-            name: "sentryTrace",
-            type: "string",
-            description: "The sentry-trace header.",
-          },
-          {
-            name: "baggage",
-            type: "string",
-            description: "The baggage header.",
-          },
-        ],
-      },
+name="continueTrace"
+signature="function continueTrace<T>(options: TraceOptions, callback: () => T): T"
+parameters={[
+  {
+    name: "options",
+    type: {
+      name: "TraceOptions",
+      properties: [
+        {
+          name: "sentryTrace",
+          type: "string",
+          description: "The sentry-trace header.",
+        },
+        {
+          name: "baggage",
+          type: "string",
+          description: "The baggage header.",
+        },
+      ],
     },
-    {
-      name: "callback",
-      type: "() => T",
-      description: "The callback to continue the trace.",
-    },
-  ]}
+  },
+  {
+    name: "callback",
+    type: "() => T",
+    description: "The callback to continue the trace.",
+  },
+]}
 >
-  Continues a trace in the provided callback. Any spans created inside of the
-  callback will be linked to the trace.
+Continues a trace in the provided callback. Any spans created inside of the
+callback will be linked to the trace.
 </SdkApi>
 
 <SdkApi
-  name="suppressTracing"
-  signature="function suppressTracing<T>(callback: () => T): T"
+name="suppressTracing"
+signature="function suppressTracing<T>(callback: () => T): T"
 >
-  Ensure that all spans created inside of the provided callback are not sent to
-  Sentry.
+Ensure that all spans created inside of the provided callback are not sent to
+Sentry.
 </SdkApi>
 
 <SdkApi
-  name="startNewTrace"
-  signature="function startNewTrace<T>(callback: () => T): T"
+name="startNewTrace"
+signature="function startNewTrace<T>(callback: () => T): T"
 >
-  Start a new trace that is active in the provided callback.
+Start a new trace that is active in the provided callback.
 </SdkApi>
 
 <SdkApi
-  name="startBrowserTracingPageLoadSpan"
-  signature="function startBrowserTracingPageLoadSpan(client: Client, options: StartSpanOptions): Span | undefined"
-  categorySupported={["browser"]}
+name="startBrowserTracingPageLoadSpan"
+signature="function startBrowserTracingPageLoadSpan(client: Client, options: StartSpanOptions): Span | undefined"
+categorySupported={["browser"]}
 >
-  Start an pageload span that will be automatically ended when the page is
-  considered idle. If a pageload/navigation span is currently ongoing, it will
-  automatically be ended first. In most cases, you do not need to call this, as
-  the `browserTracingIntegration` will automatically do that for you. However,
-  if you opt-out of pageload spans, you can use this method to manually start
-  such a span. Please note that this function will do nothing if
-  `browserTracingIntegration` has not been enabled.
+Start an pageload span that will be automatically ended when the page is
+considered idle. If a pageload/navigation span is currently ongoing, it will
+automatically be ended first. In most cases, you do not need to call this, as
+the `browserTracingIntegration` will automatically do that for you. However,
+if you opt-out of pageload spans, you can use this method to manually start
+such a span. Please note that this function will do nothing if
+`browserTracingIntegration` has not been enabled.
 </SdkApi>
 
 <SdkApi
-  name="startBrowserTracingNavigationSpan"
-  signature="function startBrowserTracingNavigationSpan(client: Client, options: StartSpanOptions): Span | undefined"
-  categorySupported={["browser"]}
+name="startBrowserTracingNavigationSpan"
+signature="function startBrowserTracingNavigationSpan(client: Client, options: StartSpanOptions): Span | undefined"
+categorySupported={["browser"]}
 >
-  Start an navigation span that will be automatically ended when the page is
-  considered idle. If a pageload/navigation span is currently ongoing, it will
-  automatically be ended first. In most cases, you do not need to call this, as
-  the `browserTracingIntegration` will automatically do that for you. However,
-  if you opt-out of navigation spans, you can use this method to manually start
-  such a span. Please note that this function will do nothing if
-  `browserTracingIntegration` has not been enabled.
+Start an navigation span that will be automatically ended when the page is
+considered idle. If a pageload/navigation span is currently ongoing, it will
+automatically be ended first. In most cases, you do not need to call this, as
+the `browserTracingIntegration` will automatically do that for you. However,
+if you opt-out of navigation spans, you can use this method to manually start
+such a span. Please note that this function will do nothing if
+`browserTracingIntegration` has not been enabled.
 </SdkApi>
 
 <SdkApi
-  name="reportPageLoaded"
-  signature="function reportPageLoaded(): void"
-  categorySupported={["browser"]}
-  availableSince="10.13.0"
+name="reportPageLoaded"
+signature="function reportPageLoaded(): void"
+categorySupported={["browser"]}
+availableSince="10.13.0"
 >
 
-  Signals to the Sentry SDK that the initial page was fully loaded.
-  Requires the <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#enableReportPageLoaded">`enableReportPageLoaded` option</PlatformLink> in `browserTracingIntegration` to
-  be set to `true`. Once called, the SDK ends the pageload span automatically,
+Signals to the Sentry SDK that the initial page was fully loaded.
+Requires the <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#enableReportPageLoaded">`enableReportPageLoaded` option</PlatformLink> in `browserTracingIntegration` to
+be set to `true`. Once called, the SDK ends the pageload span automatically,
 
-  By default, the SDK takes care of ending the pageload span automatically, based on
-  a period of inactivity where no new child spans are added to the pageload trace.
-  You can alternatively use explicit pageload reporting if the inactivity heuristics of
-  `browserTracingIntegration` don't work well for your use case.
-  However, you must ensure that you call `reportPageLoaded` in every situation.
-  If `reportPageLoaded` is not called, the pageload span will be ended after 30 seconds
-  or whatever custom value is set on the <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#enableReportPageLoaded">`finalTimeout` option</PlatformLink>.
+By default, the SDK takes care of ending the pageload span automatically, based on
+a period of inactivity where no new child spans are added to the pageload trace.
+You can alternatively use explicit pageload reporting if the inactivity heuristics of
+`browserTracingIntegration` don't work well for your use case.
+However, you must ensure that you call `reportPageLoaded` in every situation.
+If `reportPageLoaded` is not called, the pageload span will be ended after 30 seconds
+or whatever custom value is set on the <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#enableReportPageLoaded">`finalTimeout` option</PlatformLink>.
 
 
-  <Expandable title="Examples">
-  ```javascript
-  Sentry.init({
-    // 1. Enable manual page load reporting:
-    integrations: [browserTracingIntegration({ enableReportPageLoaded: true })]
-  })
+<Expandable title="Examples">
+```javascript
+Sentry.init({
+  // 1. Enable manual page load reporting:
+  integrations: [browserTracingIntegration({ enableReportPageLoaded: true })]
+})
 
-  // 2. Whenever you consider the page loaded:
-  Sentry.reportPageLoaded();
-  ```
+// 2. Whenever you consider the page loaded:
+Sentry.reportPageLoaded();
+````
+
   </Expandable>
 </SdkApi>
 
@@ -817,10 +819,39 @@ These utilities can be used for more advanced tracing use cases.
 
 <SdkApi
   name="withActiveSpan"
-  signature="function withActiveSpan<T>(span: Span | null, callback: () => T): T"
+  signature="function withActiveSpan<T>(span: Span | null, callback: (scope: Scope) => T): T"
 >
   Runs the provided callback with the given span as the active span. If `null`
   is provided, the callback will have no active span.
+</SdkApi>
+
+<SdkApi
+  name="setConversationId"
+  signature="function setConversationId(conversationId: string | null): void"
+>
+  Set a conversation ID that will be automatically applied to all subsequent AI spans within the current scope. This is useful for tracking multiple AI API calls that are part of the same conversation, allowing you to analyze entire conversation flows in Sentry.
+
+The conversation ID is stored on the isolation scope and automatically added as the `gen_ai.conversation.id` attribute to all AI-related spans. To unset the conversation ID, pass `null`.
+
+<Expandable title="Example">
+
+```javascript
+import * as Sentry from '@sentry/node';
+
+// Set conversation ID for all subsequent spans
+Sentry.setConversationId('conv_abc123');
+
+// All AI spans will now include the gen_ai.conversation.id attribute
+await openai.chat.completions.create({...});
+
+// To unset it
+Sentry.setConversationId(null);
+```
+
+</Expandable>
+
+See <PlatformLink to="/ai-agent-monitoring/">AI Agent Monitoring</PlatformLink> for more information on tracking AI conversations.
+
 </SdkApi>
 
 ## Sessions
@@ -828,7 +859,7 @@ These utilities can be used for more advanced tracing use cases.
 Sessions allow you to track the release health of your application.
 See the <PlatformLink to="/configuration/releases/#sessions">Releases & Health</PlatformLink> page for more information.
 
-<SdkApi name="startSession" signature="function startSession(): void">
+<SdkApi name="startSession" signature="function startSession(): Session">
   Starts a new session.
 </SdkApi>
 
