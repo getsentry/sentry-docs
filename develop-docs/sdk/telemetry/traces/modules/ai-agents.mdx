@@ -25,6 +25,7 @@ Describes AI agent invocation.
 - Span `name` SHOULD be `"create_agent {gen_ai.agent.name}"`. (e.g. `"create_agent Weather Agent"`)
 - Attribute `gen_ai.operation.name` MUST be `"create_agent"`.
 - Attribute `gen_ai.agent.name` SHOULD be set to the agents name. (e.g. `"Weather Agent"`)
+- If provided, the attribute `gen_ai.request.model` MUST be the agent's default request model. (e.g. `"gpt-4o"`)
 - If relevant, the `gen_ai.pipeline.name` attribute SHOULD be set to the name of the AI workflow, pipeline or chain within which the agent operates. (e.g. `"weather-pipeline"`)
 - All [Common Span Attributes](#common-span-attributes) SHOULD be set (all `required` common attributes MUST be set).
 
@@ -36,6 +37,7 @@ Describes AI agent invocation.
 - Span `name` SHOULD be `"invoke_agent {gen_ai.agent.name}"`. (e.g. `"invoke_agent Weather Agent"`)
 - Attribute `gen_ai.operation.name` MUST be `"invoke_agent"`.
 - Attribute `gen_ai.agent.name` SHOULD be set to the agents name. (e.g. `"Weather Agent"`)
+- If provided, the attribute `gen_ai.request.model` MUST be the agent's default request model. (e.g. `"gpt-4o"`)
 - If relevant, the `gen_ai.pipeline.name` attribute SHOULD be set to the name of the AI workflow, pipeline or chain within which the agent operates. (e.g. `"weather-pipeline"`)
 - All [Common Span Attributes](#common-span-attributes) SHOULD be set (all `required` common attributes MUST be set).
 
@@ -63,11 +65,7 @@ Additional attributes on the span:
 | Attribute                             | Type    | Requirement Level | Description                                                                                           | Example                                                                      |
 | :------------------------------------ | :------ | :---------------- | :---------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------- |
 | `gen_ai.output.messages`              | string  | optional          | Stringified array of message objects representing the model's output. **[0]**, **[1]**                | `'[{"role": "assistant", "parts": [{"type": "text", "content": "..."}]}]'`   |
-| `gen_ai.response.finish_reasons`      | string  | optional          | The reason why the model stopped generating.                                                          | `"stop"`                                                                     |
-| `gen_ai.response.id`                  | string  | optional          | Unique identifier for the completion.                                                                 | `"chatcmpl-abc123"`                                                          |
 | `gen_ai.response.streaming`           | boolean | optional          | Whether response was streamed asynchronously.                                                         | `true`                                                                       |
-| `gen_ai.response.time_to_first_token` | double  | optional          | Seconds until first response chunk in streaming.                                                      | `0.5`                                                                        |
-| `gen_ai.response.tokens_per_second`   | double  | optional          | Output tokens per second throughput.                                                                  | `50.0`                                                                       |
 | `gen_ai.response.text`                | string  | optional          | **Deprecated.** Use `gen_ai.output.messages` instead. The text representation of the agents response. | `"The weather in Paris is rainy"`                                            |
 | `gen_ai.response.tool_calls`          | string  | optional          | **Deprecated.** Use `gen_ai.output.messages` instead. The tool calls in the model's response. **[0]** | `'[{"name": "random_number", "type": "function_call", "arguments": "..."}]'` |
 
@@ -102,6 +100,8 @@ This span represents a request to an AI model or service that generates a respon
 - Span `op` SHOULD be `"gen_ai.{gen_ai.operation.name}"`. (e.g. `"gen_ai.chat"`)
 - Span `name` SHOULD be `{gen_ai.operation.name} {gen_ai.request.model}"`. (e.g. `"chat o3-mini"`)
 - Attribute `gen_ai.operation.name` MUST be `"chat"`, `"embeddings"`, `"generate_content"` or `"text_completion"`. **[4]**
+- Attribute `gen_ai.request.model` MUST be the requested model. (e.g. `"gpt-4o"`)
+- Attribute `gen_ai.response.model` MUST be the concrete response model. (e.g. `"gpt-4o-2024-08-06"`)
 - If the request originates from an agent, the `gen_ai.agent.name` attribute SHOULD be set to the name of the agent. (e.g. `"Weather Agent"`)
 - If relevant, the `gen_ai.pipeline.name` attribute SHOULD be set to the name of the AI workflow, pipeline or chain within which the agent operates. (e.g. `"weather-pipeline"`)
 - All [Common Span Attributes](#common-span-attributes) SHOULD be set (all `required` common attributes MUST be set).
@@ -205,8 +205,6 @@ Some attributes are common to all AI Agents spans:
 | Attribute               | Type   | Requirement Level | Description                                                                              | Example               |
 | :---------------------- | :----- | :---------------- | :--------------------------------------------------------------------------------------- | :-------------------- |
 | `gen_ai.operation.name` | string | required          | The name of the operation being performed. **[4]**                                       | `"chat"`              |
-| `gen_ai.request.model`  | string | required          | The name of the AI model a request is being made to.                                     | `"gpt-4o"`            |
-| `gen_ai.response.model` | string | optional          | The name of the AI model the response was created with.                                  | `"gpt-4o-2024-08-06"` |
 | `gen_ai.system`         | string | optional          | The Generative AI product as identified by the client or server instrumentation. **[5]** | `"openai"`            |
 
 **[4]** Well defined values for data attribute `gen_ai.operation.name`:
