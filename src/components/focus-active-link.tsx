@@ -31,14 +31,12 @@ export function ScrollActiveLink({activeLinkSelector}: Props) {
   useEffect(() => {
     const firstLink = document.querySelector('[data-sidebar-link]');
     if (!firstLink) {
-      const noOp = () => {};
-      return noOp;
+      return;
     }
 
     const scrollContainer = findScrollContainer(firstLink);
     if (!scrollContainer) {
-      const noOp = () => {};
-      return noOp;
+      return;
     }
 
     const onLinkClick = (e: Event) => {
@@ -62,6 +60,10 @@ export function ScrollActiveLink({activeLinkSelector}: Props) {
     return () => {
       scrollContainer.removeEventListener('click', onLinkClick);
       scrollContainer.removeEventListener('scroll', onSidebarScroll);
+      const debouncedHandler = onSidebarScroll as unknown as {cancel?: () => void};
+      if (typeof debouncedHandler.cancel === 'function') {
+        debouncedHandler.cancel();
+      }
     };
   }, [activeLinkSelector]);
 
@@ -90,11 +92,16 @@ export function ScrollActiveLink({activeLinkSelector}: Props) {
         scrollContainer?.scrollTo(scrollX, scrollY);
       } else {
         // No stored position (direct navigation, refresh, etc.) - scroll active link into view
-        // Use scrollIntoView with smooth behavior and center the link in the viewport
-        activeLink.scrollIntoView({
-          behavior: 'auto',
-          block: 'center',
-        });
+        // Manually adjust only the sidebar scroll container to center the active link
+        const containerRect = scrollContainer.getBoundingClientRect();
+        const linkRect = activeLink.getBoundingClientRect();
+        const offsetWithinContainer = linkRect.top - containerRect.top;
+        const targetScrollTop =
+          scrollContainer.scrollTop +
+          offsetWithinContainer -
+            scrollContainer.clientHeight / 2 +
+            linkRect.height / 2;
+        scrollContainer.scrollTo({left: 0, top: targetScrollTop, behavior: 'auto'});
       }
     });
 
