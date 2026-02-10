@@ -2,6 +2,8 @@
 title: Manual Setup
 sidebar_order: 1
 description: "Learn how to set up the SDK manually."
+redirect_from:
+  - /platforms/android/configuration/manual-init/
 ---
 
 If you can't (or prefer not to) run the [automatic setup](/platforms/android/#install), you can follow the instructions below to configure your application manually.
@@ -26,7 +28,29 @@ plugins {
 
 Version `{{@inject packages.version('sentry.java.android.gradle-plugin', '3.0.0') }}` of the plugin will automatically add the Sentry Android SDK (version `{{@inject packages.version('sentry.java.android', '4.2.0') }}`) to your app.
 
-## Configuration
+### Manual Installation
+
+If you don't want the Sentry Gradle plugin to install the Sentry SDK automatically, you can define the dependency directly in the `build.gradle` file of your app module.
+
+```groovy {filename:app/build.gradle}
+dependencies {
+    implementation 'io.sentry:sentry-android:{{@inject packages.version('sentry.java.android', '4.2.0') }}'
+}
+```
+
+```kotlin {filename:app/build.gradle.kts}
+dependencies {
+    implementation("io.sentry:sentry-android:{{@inject packages.version('sentry.java.android', '4.2.0') }}")
+}
+```
+
+<Alert level="info">
+
+If you're using multiple Sentry dependencies, you can add a [bill of materials](/platforms/android/configuration/bill-of-materials) to avoid specifying the version of each dependency.
+
+</Alert>
+
+## Configuration via AndroidManifest.xml
 
 Configuration is done via the application `AndroidManifest.xml`. Here's an example config which should get you started:
 
@@ -39,7 +63,7 @@ Configuration is done via the application `AndroidManifest.xml`. Here's an examp
   <!-- Add data like request headers, user ip address and device name, see https://docs.sentry.io/platforms/android/data-management/data-collected/ for more info -->
   <meta-data android:name="io.sentry.send-default-pii" android:value="true" />
 
-  <!-- enable automatic breadcrumbs for user interactions (clicks, swipes, scrolls) -->
+  <!-- enable automatic traces for user interactions (clicks, swipes, scrolls) -->
   <meta-data android:name="io.sentry.traces.user-interaction.enable" android:value="true" />
   <!-- enable screenshot for crashes -->
   <meta-data android:name="io.sentry.attach-screenshot" android:value="true" />
@@ -68,6 +92,148 @@ Configuration is done via the application `AndroidManifest.xml`. Here's an examp
 
 Under the hood, Sentry uses a `ContentProvider` to initialize the SDK based on the values provided above. This way, the SDK can capture important crashes and metrics right from the app start.
 
+## Configuration via SentryOptions
+
+Initialize the SDK manually when you need to provide additional configuration to the SDK that cannot be specified in the manifest.
+
+To initialize the SDK manually, disable the auto initialization. You can do so by adding the following line into your manifest:
+
+```xml {filename:AndroidManifest.xml}
+<application>
+    <meta-data android:name="io.sentry.auto-init" android:value="false" />
+</application>
+```
+
+Or, to completely remove the merging of the `ContentProvider`:
+
+```xml {filename:AndroidManifest.xml}
+<application>
+    <provider
+        android:name="io.sentry.android.core.SentryInitProvider"
+        android:authorities="${applicationId}.SentryInitProvider"
+        tools:node="remove" />
+
+    <provider
+        android:name="io.sentry.android.core.SentryPerformanceProvider"
+        android:authorities="${applicationId}.SentryPerformanceProvider"
+        tools:node="remove" />
+</application>
+```
+
+The next step is to initialize the SDK directly in your code.
+
+The SDK can catch errors and crashes only after you've initialized it. So, we recommend calling `SentryAndroid.init` in the instance your Application class right after the application is created. If you don't have a custom Application class yet, [checkout the official docs on how to create one](https://developer.android.com/reference/android/app/Application).
+
+Configuration options will be loaded from the manifest so that you don't need to have the static properties in your code. In the `init` method, you can provide a callback that will modify the configuration and also register new options.
+
+
+```java
+import io.sentry.ScreenshotStrategyType;
+import io.sentry.SentryLevel;
+import io.sentry.ProfileLifecycle;
+import io.sentry.android.core.SentryAndroid;
+import android.app.Application;
+
+public class MyApplication extends Application {
+  public void onCreate() {
+    super.onCreate();
+
+    SentryAndroid.init(this, options -> {
+      // Required: set your sentry.io project identifier (DSN)
+      options.setDsn("___PUBLIC_DSN___");
+      // Add data like request headers, user ip address and device name, see https://docs.sentry.io/platforms/android/data-management/data-collected/ for more info
+      options.setSendDefaultPii(true);
+      // enable automatic traces for user interactions (clicks, swipes, scrolls)
+      options.setEnableUserInteractionTracing(true);
+      // enable screenshot for crashes
+      options.setAttachScreenshot(true);
+      // enable view hierarchy for crashes
+      options.setAttachViewHierarchy(true);
+      // enable the performance API by setting a sample-rate, adjust in production env
+      options.setTracesSampleRate(1.0);
+      // enable UI profiling, adjust in production env. This is evaluated only once per session
+      options.setProfileSessionSampleRate(1.0);
+      // set profiling mode. For more info see https://docs.sentry.io/platforms/android/profiling/#enabling-ui-profiling
+      options.setProfileLifecycle(ProfileLifecycle.TRACE);
+      // enable profiling on app start. The app start profile will be stopped automatically when the app start root span finishes
+      options.setStartProfilerOnAppStart(true);
+      // record session replays for 100% of errors and 10% of sessions
+      options.getSessionReplay().setSessionSampleRate(0.1);
+      options.getSessionReplay().setOnErrorSampleRate(1.0);
+
+      // If your application has strict PII requirements we recommend using the Canvas screenshot strategy.
+      // See the Android Session Replay documentation for details: https://docs.sentry.io/platforms/android/session-replay/#screenshot-strategy.
+      // options.getSessionReplay().setScreenshotStrategy(ScreenshotStrategyType.CANVAS);
+
+
+      // Add a callback that will be used before the event is sent to Sentry.
+      // With this callback, you can modify the event or, when returning null, also discard the event.
+      options.setBeforeSend((event, hint) -> {
+        if (SentryLevel.DEBUG.equals(event.getLevel())) {
+          return null;
+        } else {
+          return event;
+        }
+      });
+    });
+  }
+}
+```
+
+```kotlin
+import io.sentry.ScreenshotStrategyType;
+import io.sentry.SentryLevel;
+import io.sentry.ProfileLifecycle;
+import io.sentry.android.core.SentryAndroid;
+import android.app.Application;
+import io.sentry.SentryOptions
+
+class MyApplication : Application() {
+  override fun onCreate() {
+    super.onCreate()
+
+    SentryAndroid.init(this) { options ->
+      // Required: set your sentry.io project identifier (DSN)
+      options.dsn = "___PUBLIC_DSN___"
+      // Add data like request headers, user ip address and device name, see https://docs.sentry.io/platforms/android/data-management/data-collected/ for more info
+      options.isSendDefaultPii = true
+      // enable automatic traces for user interactions (clicks, swipes, scrolls)
+      options.isEnableUserInteractionTracing = true
+      // enable screenshot for crashes
+      options.isAttachScreenshot = true
+      // enable view hierarchy for crashes
+      options.isAttachViewHierarchy = true
+      // enable the performance API by setting a sample-rate, adjust in production env
+      options.tracesSampleRate = 1.0
+      // enable UI profiling, adjust in production env. This is evaluated only once per session
+      options.profileSessionSampleRate = 1.0
+      // set profiling mode. For more info see https://docs.sentry.io/platforms/android/profiling/#enabling-ui-profiling
+      options.profileLifecycle = ProfileLifecycle.TRACE
+      // enable profiling on app start. The app start profile will be stopped automatically when the app start root span finishes
+      options.isStartProfilerOnAppStart = true
+      // record session replays for 100% of errors and 10% of sessions
+      options.sessionReplay.sessionSampleRate = 0.1
+      options.sessionReplay.onErrorSampleRate = 1.0
+
+      // If your application has strict PII requirements we recommend using the Canvas screenshot strategy.
+      // See the Android Session Replay documentation for details: https://docs.sentry.io/platforms/android/session-replay/#screenshot-strategy.
+      // options.sessionReplay.screenshotStrategy = ScreenshotStrategyType.CANVAS
+
+      // Add a callback that will be used before the event is sent to Sentry.
+      // With this callback, you can modify the event or, when returning null, also discard the event.
+      options.beforeSend =
+        SentryOptions.BeforeSendCallback { event, hint ->
+          if (SentryLevel.DEBUG == event.level) {
+            null
+          } else {
+            event
+          }
+        }
+    }
+  }
+}
+```
+
+
 Additional options can be found <PlatformLink to="/configuration/options/">on our dedicated options page</PlatformLink>.
 
-If you want to customize the SDK init behaviour, you can still use the <PlatformLink to="/configuration/manual-init/">Manual Initialization method</PlatformLink>.
