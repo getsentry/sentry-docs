@@ -1022,7 +1022,11 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/platforms/android/manual-configuration/',
-    to: '/platforms/android/configuration/manual-init/',
+    to: '/platforms/android/manual-setup/',
+  },
+  {
+    from: '/platforms/android/configuration/manual-init/',
+    to: '/platforms/android/manual-setup/',
   },
   {
     from: '/platforms/android/advanced-usage/',
