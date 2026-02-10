@@ -478,48 +478,7 @@ function extractContentForCacheKey(html) {
   return title + '\0' + canonical + '\0' + normalizedMain;
 }
 
-/**
- * Diagnostic logging for cache miss debugging on Vercel.
- * Logs the cache key hash and content extraction details to verify stability.
- * This is temporary — remove once the Vercel cache miss issue is resolved.
- */
-function logCacheMissDiagnostics(relativePath, rawHTML) {
-  const extracted = extractContentForCacheKey(rawHTML);
-  const parts = extracted.split('\0');
-  const title = parts[0] || '';
-  const canonical = parts[1] || '';
-  const mainContent = parts[2] || '';
-
-  const cacheKeyHash = md5(extracted).slice(0, 8);
-  const titleHash = md5(title).slice(0, 8);
-  const mainHash = md5(mainContent).slice(0, 8);
-
-  console.log(
-    `🔬 Cache miss diagnostics for ${relativePath}:\n` +
-      `   cacheKey=${cacheKeyHash} title=${titleHash} main=${mainHash}\n` +
-      `   titleLen=${title.length} canonicalLen=${canonical.length} mainLen=${mainContent.length}\n` +
-      `   title=${JSON.stringify(title.slice(0, 100))}\n` +
-      `   canonical=${JSON.stringify(canonical)}\n` +
-      `   mainSnippet=${JSON.stringify(mainContent.slice(0, 200))}`
-  );
-}
-
-// Well-known files for diagnostic logging — these are deterministic so we can
-// compare the same file's hashes across consecutive Vercel builds.
-const DIAGNOSTIC_FILES = new Set([
-  'account.md',
-  'platforms/python.md',
-  'platforms/javascript.md',
-]);
-// Also log the first few cache misses regardless of file name
-let diagnosticsLogged = 0;
-const MAX_DIAGNOSTICS_PER_WORKER = 2;
-
-async function genMDFromHTML(
-  source,
-  target,
-  {cacheDir, noCache, usedCacheFiles, relativePath}
-) {
+async function genMDFromHTML(source, target, {cacheDir, noCache, usedCacheFiles}) {
   const rawHTML = await readFile(source, {encoding: 'utf8'});
   // Strip build-specific HTML elements for faster parsing.
   // See stripUnstableElements() for details on what's removed and why.
@@ -547,17 +506,6 @@ async function genMDFromHTML(
         console.warn(`Error using cache file ${cacheFile}:`, err);
       }
     }
-  }
-
-  // Log diagnostics for cache misses to help debug Vercel cache miss issues.
-  // Always log well-known files (for cross-build comparison) + first few misses.
-  // Remove once the root cause is identified.
-  if (
-    DIAGNOSTIC_FILES.has(relativePath) ||
-    diagnosticsLogged < MAX_DIAGNOSTICS_PER_WORKER
-  ) {
-    logCacheMissDiagnostics(relativePath, rawHTML);
-    diagnosticsLogged++;
   }
 
   let baseUrl = DOCS_ORIGIN;
@@ -674,7 +622,6 @@ async function processTaskList({id, tasks, cacheDir, noCache, usedCacheFiles}) {
         cacheDir,
         noCache,
         usedCacheFiles,
-        relativePath,
       });
       if (!cacheHit) {
         cacheMisses.push(relativePath);
