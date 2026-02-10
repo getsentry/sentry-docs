@@ -25,6 +25,7 @@ Once you enable tracing, the SDK automatically captures performance data without
 | **HTTP requests** | All fetch/XHR calls | Duration, status, URL |
 | **User interactions** | Clicks, inputs that trigger work | INP (responsiveness) |
 | **Long tasks** | Main thread blocking > 50ms | Duration, attribution |
+| **Element timing** | Elements marked with `elementtiming` attribute | Render/load times for critical UI elements |
 
 <PlatformContent includePath="performance/what-instrumentation-provides" />
 
@@ -185,6 +186,24 @@ Enable/disable automatic spans for long tasks (main thread blocking > 50ms).
 <SdkOption name="enableLongAnimationFrame" type='boolean' defaultValue='true' availableSince='8.18.0'>
 
 Enable/disable spans for long animation frames. Falls back to long tasks if browser doesn't support long animation frames.
+
+</SdkOption>
+
+<SdkOption name="enableElementTiming" type='boolean' defaultValue='true'>
+
+Enable/disable automatic spans for [Element Timing API](https://developer.mozilla.org/en-US/docs/Web/API/PerformanceElementTiming) entries. When enabled, Sentry captures performance data for elements marked with the `elementtiming` attribute.
+
+This is useful for tracking when critical UI elements (like hero images or important text) are rendered on the page:
+
+```html
+<img src="hero.jpg" elementtiming="hero-image" />
+<h1 elementtiming="main-heading">Welcome</h1>
+```
+
+Element timing spans will appear in your trace with names like `element[hero-image]` and include metrics such as:
+- Render time
+- Load time (for images)
+- Element size and type
 
 </SdkOption>
 
