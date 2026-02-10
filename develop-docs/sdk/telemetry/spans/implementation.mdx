@@ -34,12 +34,12 @@ If you're implementing Span-First (as a PoC) in your SDK, take an iterative appr
    - TBD: Some SDKs already have `startSpan` or similar APIs. The migration path is still TBD but a decision can be made at a later stage.
 5. Implement the `captureSpan` [single-span processing pipeline](#single-span-processing-pipeline)
    - Either reuse existing heuristics (e.g. flush when segment span ends) or build a simple span buffer to flush spans (e.g. similar to the existing buffers for logs or metrics).
-   - Implementing the more complex [Telemetry Buffer](./../../telemetry-buffer) can happen at a later stage.
+   - Implementing the more complex [Telemetry Processor](/sdk/telemetry/telemetry-processor/) buffer and scheduler can happen at a later stage.
 6. Achieve data parity with the existing transaction events.
    - Ensure that the data added by SDK integrations, event processors, etc. to transaction events is also added to the spans (see [Event Processors](#tbd-event-processors)).
    - Most additional data MUST only be added to the segment span. See [Common Attributes](../span-protocol/#common-attribute-keys) for attributes that MUST be added to every span.
    - Mental model: All data our SDKs _automatically_ add to a transaction, MUST also be added to the segment span.
-7. Implement the span telemetry buffer for proper, weighted span flushing. See [Span Buffer](#span-buffer) for more details.
+7. Implement the span telemetry buffer for proper, weighted span flushing. See [Span Buffer](/sdk/telemetry/spans/span-buffer/) for more details.
 8. (Optional) Depending on necessity, drop support for sending traces as transactions in the next major release. From this point on, the SDK will by default send spans (v2) only and therefore will no longer be compatible with current self-hosted Sentry installations.   
    
    
@@ -128,14 +128,13 @@ SDK authors working on Span-First are encouraged to evaluate both options, try t
 
 ## Span Buffer
 
-This section is intentionally short because all buffering specification is being added to the [Telemetry Buffer](../../telemetry-buffer) page.
+For full span buffer requirements (buckets per trace, serialization, DSC, size limits, and links to platform-specific specs), see the [Span Buffer](/sdk/telemetry/spans/span-buffer/) page. Summary:
 
-Some rough pointers:
 - Given that SDKs SHOULD materialize and freeze the DSC as late as possible, the span buffer SHOULD enqueue span instances and at _flush time_ serialize them to JSON.
   Before serialization, the span buffer SHOULD materialize and freeze the DSC on the segment span if not already done so.
   This ensures that the `trace` envelope header has the most up to date data from the DSC (e.g. relevant for `transaction` names in the DSC).
-- SDKs SHOULD follow one of the backend, mobile or browser telemetry buffer specifications. 
-- It is expected and fine to implement the proper, weighted buffering logic as a final step in the Span-First project. 
+- SDKs SHOULD follow one of the [Backend](/sdk/telemetry/telemetry-processor/backend-telemetry-processor/), [Mobile](/sdk/telemetry/telemetry-processor/mobile-telemetry-processor/), or [Browser](/sdk/telemetry/telemetry-processor/browser-telemetry-processor/) telemetry processor specifications.
+- It is expected and fine to implement the proper, weighted buffering logic as a final step in the Span-First project.
   Intermediate buffers MAY be simpler, for example disregard the priority logic and just buffer until a certain span length, size or time interval is reached.
 
 ## Release
