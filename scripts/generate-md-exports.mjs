@@ -30,7 +30,7 @@ import {remove} from 'unist-util-remove';
 const DOCS_ORIGIN = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
   ? 'https://develop.sentry.dev'
   : 'https://docs.sentry.io';
-const CACHE_VERSION = 5;
+const CACHE_VERSION = 6;
 const CACHE_COMPRESS_LEVEL = 4;
 const R2_BUCKET = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
   ? 'sentry-develop-docs'
@@ -408,25 +408,22 @@ ${
 const md5 = data => createHash('md5').update(data).digest('hex');
 
 /**
- * Strips build-specific elements from HTML for stable cache keys and faster processing.
+ * Strips build-specific HTML elements that are irrelevant for markdown generation.
  *
- * Next.js build output contains non-deterministic elements that change between builds
- * even when content is unchanged:
+ * Next.js build output contains elements that change between builds:
  * - <script> tags: RSC/Flight payloads, JS chunk references with content hashes
  * - <link> tags referencing /_next/static/: CSS files, fonts, JS preloads with hashes
  * - <style> tags with href: inlined CSS with build-specific hash in href attribute
- * - next/font variable classes on <body>: e.g. __variable_c58dd6
- * - CSS module class name hashes throughout HTML: e.g. style_sidebar__iEJoR
- * - /_next/static/media/ content hashes: e.g. sentry-logo-dark.fc8e1eeb.svg
  *
  * These elements are irrelevant for markdown generation (we only use title, canonical
  * link, and div#main content), so stripping them:
- * 1. Makes cache keys stable across builds
- * 2. Speeds up HTML parsing by reducing input size significantly
+ * 1. Speeds up HTML parsing by reducing input size significantly
+ * 2. Removes most build-specific variation from the HTML
  *
- * We use regex instead of proper HTML parsing for performance - this runs on every file
- * and regex is much faster. The input is trusted (Next.js build output), and worst case
- * for any regex edge cases is a cache miss, which is acceptable.
+ * IMPORTANT: This function's output is used as pipeline input for .process(), so it must
+ * only remove complete HTML elements — never modify text content or attribute values.
+ * For additional normalization that's only safe for cache key computation, see
+ * normalizeForCacheKey().
  */
 function stripUnstableElements(html) {
   return (
@@ -437,6 +434,26 @@ function stripUnstableElements(html) {
       .replace(/<link[^>]*\/_next\/[^>]*>/gi, '')
       // Remove style tags with href attribute (inlined CSS with build hashes)
       .replace(/<style[^>]*href="[^"]*"[^>]*>[\s\S]*?<\/style>/gi, '')
+  );
+}
+
+/**
+ * Applies additional normalization to stripped HTML for stable cache key computation.
+ *
+ * These regex replacements neutralize build-specific hashes that survive element stripping:
+ * - next/font variable classes on <body>: e.g. __variable_c58dd6
+ * - CSS module class name hashes in attributes: e.g. style_sidebar__iEJoR
+ * - /_next/static/media/ content hashes: e.g. sentry-logo-dark.fc8e1eeb.svg
+ *
+ * WARNING: These regexes can match and corrupt actual page content (e.g., "Sentry__Debug"
+ * would become "Sentry__X" because "Debug" is 5 alphanumeric chars). This is acceptable
+ * for cache key computation (worst case: a false cache hit, which is extremely unlikely
+ * since the full HTML must also match), but must NEVER be applied to HTML that will be
+ * processed into markdown output.
+ */
+function normalizeForCacheKey(html) {
+  return (
+    html
       // Normalize next/font variable classes (e.g., __variable_c58dd6)
       .replace(/__variable_[a-f0-9]+/g, '__variable_X')
       // Normalize CSS module hashes (e.g., style_sidebar__iEJoR)
@@ -446,12 +463,62 @@ function stripUnstableElements(html) {
   );
 }
 
-async function genMDFromHTML(source, target, {cacheDir, noCache, usedCacheFiles}) {
+/**
+ * Diagnostic logging for cache miss debugging on Vercel.
+ * Logs hash breakdowns of different HTML sections to identify what changes between builds.
+ * This is temporary — remove once the Vercel cache miss issue is resolved.
+ */
+function logCacheMissDiagnostics(relativePath, strippedHTML) {
+  const normalizedHTML = normalizeForCacheKey(strippedHTML);
+  const headMatch = normalizedHTML.match(/<head[^>]*>([\s\S]*?)<\/head>/i);
+  const mainMatch = normalizedHTML.match(
+    /<div id="main"[^>]*>([\s\S]*?)<\/div>\s*<\/main>/i
+  );
+  const headContent = headMatch ? headMatch[1] : '';
+  const mainContent = mainMatch ? mainMatch[1] : '';
+
+  // Layout = everything except head and main content
+  let layoutContent = normalizedHTML;
+  if (headMatch) layoutContent = layoutContent.replace(headMatch[0], '');
+  if (mainMatch) layoutContent = layoutContent.replace(mainMatch[0], '');
+
+  const headHash = md5(headContent).slice(0, 8);
+  const mainHash = md5(mainContent).slice(0, 8);
+  const layoutHash = md5(layoutContent).slice(0, 8);
+  const fullHash = md5(normalizedHTML).slice(0, 8);
+
+  console.log(
+    `🔬 Cache miss diagnostics for ${relativePath}:\n` +
+      `   full=${fullHash} head=${headHash} main=${mainHash} layout=${layoutHash}\n` +
+      `   headLen=${headContent.length} mainLen=${mainContent.length} layoutLen=${layoutContent.length}\n` +
+      `   layoutSnippet=${JSON.stringify(layoutContent.slice(0, 300))}`
+  );
+}
+
+// Well-known files for diagnostic logging — these are deterministic so we can
+// compare the same file's hashes across consecutive Vercel builds.
+const DIAGNOSTIC_FILES = new Set([
+  'account.md',
+  'platforms/python.md',
+  'platforms/javascript.md',
+]);
+// Also log the first few cache misses regardless of file name
+let diagnosticsLogged = 0;
+const MAX_DIAGNOSTICS_PER_WORKER = 2;
+
+async function genMDFromHTML(
+  source,
+  target,
+  {cacheDir, noCache, usedCacheFiles, relativePath}
+) {
   const rawHTML = await readFile(source, {encoding: 'utf8'});
-  // Strip build-specific elements for stable cache keys and faster parsing.
+  // Strip build-specific HTML elements for faster parsing.
   // See stripUnstableElements() for details on what's removed and why.
   const strippedHTML = stripUnstableElements(rawHTML);
-  const cacheKey = `v${CACHE_VERSION}_${md5(strippedHTML)}`;
+  // Apply additional normalization only for cache key computation.
+  // normalizeForCacheKey() can alter text content (e.g., CSS module hash regexes),
+  // so its output must NOT be used as pipeline input — only for hashing.
+  const cacheKey = `v${CACHE_VERSION}_${md5(normalizeForCacheKey(strippedHTML))}`;
   const cacheFile = path.join(cacheDir, cacheKey);
   if (!noCache) {
     try {
@@ -472,6 +539,18 @@ async function genMDFromHTML(source, target, {cacheDir, noCache, usedCacheFiles}
       }
     }
   }
+
+  // Log diagnostics for cache misses to help debug Vercel cache miss issues.
+  // Always log well-known files (for cross-build comparison) + first few misses.
+  // Remove once the root cause is identified.
+  if (
+    DIAGNOSTIC_FILES.has(relativePath) ||
+    diagnosticsLogged < MAX_DIAGNOSTICS_PER_WORKER
+  ) {
+    logCacheMissDiagnostics(relativePath, strippedHTML);
+    diagnosticsLogged++;
+  }
+
   let baseUrl = DOCS_ORIGIN;
   const data = String(
     await unified()
@@ -586,6 +665,7 @@ async function processTaskList({id, tasks, cacheDir, noCache, usedCacheFiles}) {
         cacheDir,
         noCache,
         usedCacheFiles,
+        relativePath,
       });
       if (!cacheHit) {
         cacheMisses.push(relativePath);
