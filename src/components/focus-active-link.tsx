@@ -88,10 +88,16 @@ export function ScrollActiveLink({activeLinkSelector}: Props) {
         scrollContainer.scrollTo(scrollX, scrollY);
       } else {
         // No stored position (direct navigation, refresh, etc.) - scroll active link into view
-        // Use scrollIntoView with smooth behavior and center the link in the viewport
-        activeLink.scrollIntoView({
+        // Calculate the scroll position to center the active link in the scroll container
+        const containerRect = scrollContainer.getBoundingClientRect();
+        const linkRect = activeLink.getBoundingClientRect();
+        const containerCenter = containerRect.height / 2;
+        const linkCenter = linkRect.height / 2;
+        const scrollY =
+          scrollContainer.scrollTop + (linkRect.top - containerRect.top) - containerCenter + linkCenter;
+        scrollContainer.scrollTo({
+          top: scrollY,
           behavior: 'auto',
-          block: 'center',
         });
       }
     });
