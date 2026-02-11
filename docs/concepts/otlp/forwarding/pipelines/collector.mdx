@@ -1,6 +1,7 @@
 ---
-title: OpenTelemetry Collector
-sidebar_order: 20
+title: OpenTelemetry Collector Setup
+sidebar_title: OpenTelemetry Collector
+sidebar_order: 10
 description: Learn how to set up the OpenTelemetry Collector to forward logs and traces data to Sentry.
 ---
 
@@ -17,41 +18,50 @@ Before you begin, ensure you have:
 
 ## Step 1: Get Your Sentry OTLP Credentials
 
-You'll need your Sentry OTLP endpoint and authentication header. These can be found in your [Sentry Project Settings](https://sentry.io/settings/projects/) under **Client Keys (DSN)** > **OpenTelemetry (OTLP)**.
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
 
-### Logs Endpoint
+Find these in [Sentry Project Settings](https://sentry.io/settings/projects/) under **Client Keys (DSN)** > **OpenTelemetry (OTLP)**.
+
+- Use the **combined endpoint** if sending both logs and traces
+- The Collector appends `/v1/logs` or `/v1/traces` automatically
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```bash
+# Logs endpoint
 ___OTLP_LOGS_URL___
-```
 
-### Traces Endpoint
-
-```bash
+# Traces endpoint
 ___OTLP_TRACES_URL___
-```
 
-### Combined Endpoint (for Logs and Traces)
-
-When configuring a combined pipeline, use the base OTLP endpoint. The OpenTelemetry Collector will automatically append the appropriate path (`/v1/logs` or `/v1/traces`) based on the signal type.
-
-```bash
+# Combined endpoint (logs + traces)
 ___OTLP_URL___
-```
 
-### Authentication Header
-
-```
+# Auth header (include in all requests)
 x-sentry-auth: sentry sentry_key=___PUBLIC_KEY___
 ```
 
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
 ## Step 2: Configure the Collector
 
-Update your OpenTelemetry Collector configuration to add the `otlphttp` exporter pointing to Sentry. You can configure logs, traces, or both.
+Update your OpenTelemetry Collector configuration to add the `otlphttp` exporter pointing to Sentry.
 
-### Logs Configuration
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
 
-To forward logs to Sentry, add the following exporter configuration:
+### Logs Only
+
+Use `logs_endpoint` to forward only logs to Sentry.
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```yaml {filename:otel-collector.yaml}
 exporters:
@@ -63,9 +73,18 @@ exporters:
     encoding: proto
 ```
 
-### Traces Configuration
+</SplitSectionCode>
+</SplitSection>
 
-To forward traces to Sentry, add the following exporter configuration:
+<SplitSection>
+<SplitSectionText>
+
+### Traces Only
+
+Use `traces_endpoint` to forward only traces to Sentry.
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```yaml {filename:otel-collector.yaml}
 exporters:
@@ -77,9 +96,18 @@ exporters:
     encoding: proto
 ```
 
-### Combined Logs and Traces Configuration
+</SplitSectionCode>
+</SplitSection>
 
-To send both logs and traces to Sentry, you can combine the configurations:
+<SplitSection>
+<SplitSectionText>
+
+### Logs and Traces
+
+Use the combined `endpoint` to forward both logs and traces. The Collector appends the appropriate path for each signal type.
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```yaml {filename:otel-collector.yaml}
 exporters:
@@ -91,9 +119,25 @@ exporters:
     encoding: proto
 ```
 
-## Routing to Multiple Sentry Projects
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
-Sentry's OTLP endpoints are project-specific. If you need to route telemetry from different services to different Sentry projects, you can use the [routing connector](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/connector/routingconnector).
+## Routing to Multiple Projects
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Sentry's OTLP endpoints are project-specific. To route telemetry from different services to different Sentry projects, use the [routing connector](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/connector/routingconnector).
+
+This example routes logs to different Sentry projects based on the `service.name` attribute:
+
+- Logs with `service.name: "service-b"` go to Project B
+- All other logs go to Project A (the default)
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```yaml {filename:otel-collector.yaml}
 receivers:
@@ -138,8 +182,6 @@ service:
       exporters: [otlphttp/project-b]
 ```
 
-## OpenTelemetry Collector Guides
-
-These guides show you how to leverage the OpenTelemetry Collector to send traces and logs to Sentry from different sources.
-
-<Include name="opentelemetry-collector-guides.mdx" />
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
