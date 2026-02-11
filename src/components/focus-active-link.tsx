@@ -31,14 +31,12 @@ export function ScrollActiveLink({activeLinkSelector}: Props) {
   useEffect(() => {
     const firstLink = document.querySelector('[data-sidebar-link]');
     if (!firstLink) {
-      const noOp = () => {};
-      return noOp;
+      return undefined;
     }
 
     const scrollContainer = findScrollContainer(firstLink);
     if (!scrollContainer) {
-      const noOp = () => {};
-      return noOp;
+      return undefined;
     }
 
     const onLinkClick = (e: Event) => {
