@@ -94,7 +94,10 @@ export function ScrollActiveLink({activeLinkSelector}: Props) {
         const containerCenter = containerRect.height / 2;
         const linkCenter = linkRect.height / 2;
         const scrollY =
-          scrollContainer.scrollTop + (linkRect.top - containerRect.top) - containerCenter + linkCenter;
+          scrollContainer.scrollTop +
+          (linkRect.top - containerRect.top) -
+          containerCenter +
+          linkCenter;
         scrollContainer.scrollTo({
           top: scrollY,
           behavior: 'auto',
