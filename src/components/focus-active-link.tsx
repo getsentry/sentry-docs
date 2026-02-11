@@ -85,7 +85,7 @@ export function ScrollActiveLink({activeLinkSelector}: Props) {
         const scrollX = 0;
         const scrollY =
           scrollContainer.scrollTop + currentBoundingRectTop - +previousBoundingRectTop;
-        scrollContainer?.scrollTo(scrollX, scrollY);
+        scrollContainer.scrollTo(scrollX, scrollY);
       } else {
         // No stored position (direct navigation, refresh, etc.) - scroll active link into view
         // Use scrollIntoView with smooth behavior and center the link in the viewport
