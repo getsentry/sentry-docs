@@ -85,7 +85,9 @@ Nice!
 This file is used to trigger the release from the GitHub UI.
 
 You'll notice it uses `vars.SENTRY_RELEASE_BOT_CLIENT_ID` and `secrets.SENTRY_RELEASE_BOT_PRIVATE_KEY` -- these should be
-available to your repository automatically!
+available to your repository automatically! These are needed because
+[GitHub prevents `GITHUB_TOKEN` from triggering downstream workflows](https://docs.github.com/en/actions/reference/events-that-trigger-workflows),
+which is required for creating publish request issues in `getsentry/publish`.
 
 ```yaml
 name: Release
@@ -95,7 +97,7 @@ on:
     inputs:
       version:
         description: Version to release
-        required: true
+        required: false
       force:
         description: Force a release even when there are release-blockers (optional)
         required: false
@@ -111,12 +113,12 @@ jobs:
         with:
           app-id: ${{ vars.SENTRY_RELEASE_BOT_CLIENT_ID }}
           private-key: ${{ secrets.SENTRY_RELEASE_BOT_PRIVATE_KEY }}
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           token: ${{ steps.token.outputs.token }}
           fetch-depth: 0
       - name: Prepare release
-        uses: getsentry/action-prepare-release@v1
+        uses: getsentry/craft@v2
         env:
           GITHUB_TOKEN: ${{ steps.token.outputs.token }}
         with:
@@ -124,14 +126,15 @@ jobs:
           force: ${{ github.event.inputs.force }}
 ```
 
+For full details on all available options including auto-versioning, changelog preview,
+and more, see [Craft's GitHub Actions documentation](https://craft.sentry.dev/github-actions/).
+If your repository is outside the `getsentry` organization, you can use the simpler
+[reusable workflow](https://craft.sentry.dev/github-actions/#option-1-reusable-workflow-recommended)
+which handles token management automatically via `secrets: inherit`.
+
 ### Commit + PR
 
 **Commit those three files and make a pull request.**
-
-Here's [an example PR] and the [follow-up to fix `fetch-depth`].
-
-[an example PR]: https://github.com/getsentry/uwsgi-dogstatsd-plugin/pull/2
-[follow-up to fix `fetch-depth`]: https://github.com/getsentry/uwsgi-dogstatsd-plugin/pull/3
 
 ## Setting Up Permissions
 
@@ -157,6 +160,37 @@ This will create an [issue in `publish`] which you'll need an approver to
 add a label to.
 
 [issue in `publish`]: https://github.com/getsentry/publish/issues
+
+## Calendar Versioning (CalVer)
+
+To enable calendar versioning for your SDK, add the following to your `.craft.yml`:
+
+```yaml
+versioning:
+  policy: calver
+  calver:
+    format: "%y.%-m" # e.g., 24.12 for December 2024
+    offset: 14 # Days to look back for date calculation (optional)
+```
+
+See the [Craft CalVer documentation](https://craft.sentry.dev/configuration/#calendar-versioning-calver) for more details.
+
+## Merge Target
+
+By default, all releases are merged to the default branch of your repository (usually `main`). To override this, pass the `merge_target` input in your release workflow:
+
+```yaml
+- name: Prepare release
+  uses: getsentry/craft@v2
+  env:
+    GITHUB_TOKEN: ${{ steps.token.outputs.token }}
+  with:
+    version: ${{ github.event.inputs.version }}
+    merge_target: ${{ github.event.inputs.merge_target }}
+```
+
+Make sure to also add a `merge_target` input to your workflow's `workflow_dispatch.inputs` block.
+The same input is available in the [reusable workflow](https://craft.sentry.dev/github-actions/#option-1-reusable-workflow-recommended) as well.
 
 ## Version name conventions
 
@@ -227,7 +261,7 @@ You can opt your repo into using the config from a specific merge target branch 
 
 ### 1. Release Preparation:
 
-Add `craft_config_from_merge_target: true` when calling `getsentry/action-prepare-release` in your repo's release workflow:
+Add `craft_config_from_merge_target: true` when calling `getsentry/craft` in your repo's release workflow:
 
 ```yml
 # ...
@@ -238,11 +272,13 @@ jobs:
     steps:
       # ...
       - name: Prepare release
-        uses: getsentry/action-prepare-release@v1
+        uses: getsentry/craft@v2
         with:
           # ...
           craft_config_from_merge_target: true
 ```
+
+This input is also available in the [reusable workflow](https://craft.sentry.dev/github-actions/#option-1-reusable-workflow-recommended).
 
 ### 2. Publish Configuration
 
