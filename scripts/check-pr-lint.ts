@@ -30,7 +30,7 @@ const BOILERPLATE_PATTERNS = [
   /^\*.*\*/,
   /^- \[ ?\]/,
   /^- \[x\]/i,
-  /^<!--.*-->$/,
+  /^<!--/,
   /^Help us prioritize/i,
   /^Teamwork makes the dream work/i,
   /^Please give the docs team/i,
