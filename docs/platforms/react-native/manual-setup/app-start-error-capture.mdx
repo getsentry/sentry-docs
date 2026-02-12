@@ -4,12 +4,6 @@ sidebar_order: 50
 description: "Learn how to capture app start errors and crashes that occur before JavaScript loads using native initialization."
 ---
 
-<Alert level="warning" title="Beta Testing">
-
-Sentry React Native SDK v8 is currently in beta testing. This feature is available for early adopters and may undergo changes before the stable release.
-
-</Alert>
-
 By default, the React Native SDK initializes the native SDK underneath the `init` method called on the JS layer. As a result, the SDK has a current limitation of not capturing native crashes that occur prior to the `init` method being called on the JS layer.
 
 Starting with SDK version 8.0.0, you can initialize Sentry natively before JavaScript loads, enabling capture of app start errors and crashes that occur during:
@@ -50,7 +44,7 @@ Options from `sentry.options.json` are merged with options from `Sentry.init()` 
 
 Initialize Sentry in your `MainApplication` class:
 
-```kotlin {filename:android/app/src/main/java/.../MainApplication.kt}
+```kotlin {tabTitle:Kotlin,filename:android/app/src/main/java/.../MainApplication.kt}
 import io.sentry.react.RNSentrySDK
 
 class MainApplication : Application(), ReactApplication {
@@ -62,11 +56,24 @@ class MainApplication : Application(), ReactApplication {
 }
 ```
 
+```java {tabTitle:Java,filename:android/app/src/main/java/.../MainApplication.java}
+import io.sentry.react.RNSentrySDK;
+
+public class MainApplication extends Application implements ReactApplication {
+  @Override
+  public void onCreate() {
+    super.onCreate();
+    RNSentrySDK.init(this);
+    // ... rest of your initialization code
+  }
+}
+```
+
 ## iOS Setup
 
-Initialize Sentry in your `AppDelegate`:
+Initialize Sentry in your `AppDelegate` before starting React Native so app start crashes are captured.
 
-```objective-c {filename:ios/YourApp/AppDelegate.mm}
+```objective-c {tabTitle:Objective-C,filename:ios/YourApp/AppDelegate.mm}
 #import <RNSentry/RNSentry.h>
 
 @implementation AppDelegate
@@ -79,6 +86,23 @@ Initialize Sentry in your `AppDelegate`:
 }
 
 @end
+```
+
+```swift {tabTitle:Swift,filename:ios/YourApp/AppDelegate.swift}
+import RNSentry
+
+@main
+class AppDelegate: UIResponder, UIApplicationDelegate {
+
+  func application(
+    _ application: UIApplication,
+    didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
+  ) -> Bool {
+    RNSentrySDK.start()
+    // ... rest of your initialization code
+    return true
+  }
+}
 ```
 
 ## Expo Setup
