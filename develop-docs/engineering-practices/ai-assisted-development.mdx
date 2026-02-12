@@ -65,6 +65,14 @@ These files have already been added to our main repos but are by no means comple
 
 There are two main ways to extend AI coding tools. **Skills** are prompt templates that teach the AI how to perform specific tasks like following commit conventions. They run inside the AI's context. **MCP (Model Context Protocol)** connects the AI to external services and data sources, providing tools the AI can call.
 
+### Plugins
+
+Plugins are the primary way to install extensions in Claude Code. A plugin can bundle LSPs (available for every major language), MCPs, skills, agents, and custom hooks into a single installable package.
+
+Install plugins from the official Anthropic plugin marketplace, or create a private marketplace for your company. Check the `settings.json` into your codebase to auto-add marketplaces for your team so everyone gets the same tooling.
+
+Run `/plugin` to browse and install plugins. See the [plugin documentation](https://code.claude.com/docs/en/discover-plugins) for more.
+
 ### Sentry Skills
 
 [Sentry Skills](https://github.com/getsentry/skills) are available for Claude Code users:
@@ -109,6 +117,35 @@ Append "use subagents" to any request where you want Claude to throw more comput
 
 See the [Claude Code subagents documentation](https://code.claude.com/docs/en/sub-agents) for details.
 
+### Custom Agents
+
+Custom agents let you define specialized personas with their own tools, permissions, and models. Drop `.md` files in `.claude/agents/` to create them. Each agent can have a custom name, color, tool set, pre-allowed and pre-disallowed tools, permission mode, and model.
+
+You can also set a default agent for your main conversation using the `"agent"` field in `settings.json` or the `--agent` CLI flag. This is useful for teams that want a consistent base configuration.
+
+Run `/agents` to get started, or see the [custom agents documentation](https://code.claude.com/docs/en/sub-agents).
+
+## Recommended Tools
+
+Connect your AI assistant to the services your team already uses. These are the MCP servers and CLIs we've found most useful at Sentry.
+
+| Tool | What it gives you | Setup |
+| ---- | ----------------- | ----- |
+| [Sentry MCP](https://docs.sentry.io/product/sentry-mcp/) | Query errors, search issues, analyze traces, and get root cause analysis directly from your editor. | `claude mcp add sentry -- npx @sentry/mcp` |
+| [Linear MCP](https://github.com/jerhadf/linear-mcp-server) | Create, search, and update Linear issues without leaving your session. Great for turning bug findings into tickets on the spot. | See repo README |
+| [Notion MCP](https://github.com/makenotion/notion-mcp-server) | Search and read Notion pages. Useful for pulling in specs, RFCs, and team docs as context. | See repo README |
+| [Slack MCP](https://github.com/nicholasgriffintn/slack-mcp-server) | Read Slack threads and channels. Paste a bug report thread and say "fix." | See repo README |
+
+### CLIs
+
+AI assistants can use any CLI tool you have installed. A few that work especially well:
+
+- **`gcloud`** — Fetch logs, query BigQuery, and inspect GCP resources. Point Claude at `gcloud logging read` output to troubleshoot production issues.
+- **`gh`** — Read PRs, issues, CI logs, and review comments from GitHub.
+- **`bq`** — Run BigQuery queries for ad-hoc analytics (see [Data & Analytics](#data--analytics)).
+
+If there's a service your team uses daily and it has a CLI or MCP server, connect it. The fewer context switches between your editor and browser, the better.
+
 ## Working in Parallel
 
 The goal is to run multiple AI sessions simultaneously with minimal interruption. A few techniques help achieve this.
@@ -129,7 +166,26 @@ Keep worktrees isolated: one branch per worktree, never develop directly in main
 
 ### Pre-approve Permissions
 
-Every permission prompt interrupts your flow. Configure allowed tools and commands in your project's settings to let agents work autonomously. In Claude Code, use `/allowed-tools` to see current permissions and `claude config set` to add new ones.
+Every permission prompt interrupts your flow. Run `/permissions` in Claude Code to manage your allow and block lists. Check these into your team's `settings.json` so everyone benefits.
+
+Claude Code supports full wildcard syntax for permissions. For example, `Bash(bun run *)` pre-approves all `bun run` commands, and `Edit(/docs/**)` allows edits to any file under `/docs/`. See the [permissions documentation](https://code.claude.com/docs/en/permissions) for details.
+
+### Sandboxing
+
+Enable Claude Code's [open source sandbox runtime](https://github.com/anthropic-experimental/sandbox-runtime) to improve safety while reducing permission prompts. Sandboxing runs on your machine and supports both file and network isolation.
+
+Run `/sandbox` to enable it. See the [sandboxing documentation](https://code.claude.com/docs/en/sandboxing) for details.
+
+### Hooks
+
+Hooks let you deterministically hook into Claude's lifecycle. Use them to:
+
+- Automatically route permission requests to Slack or Opus for approval
+- Nudge Claude to keep going when it reaches the end of a turn (you can use a prompt or kick off an agent to decide whether Claude should continue)
+- Pre-process or post-process tool calls, for example to add your own logging
+- Enable terminal notifications when an agent is waiting for input
+
+Ask Claude to add a hook to get started, or see the [hooks documentation](https://code.claude.com/docs/en/hooks).
 
 ### Multi-repo Tasks
 
@@ -153,13 +209,7 @@ Instead of copying and pasting error messages, give the agent a PR or issue URL 
 
 ### Enable Notifications
 
-When running multiple sessions, enable terminal notifications so you know when an agent is waiting for input. This lets you context-switch to other work while agents run, without constantly checking back.
-
-### Terminal Setup
-
-[Ghostty](https://ghostty.org/) is a popular choice for its synchronized rendering, 24-bit color, and proper unicode support. Use `/statusline` to customize your status bar to always show context usage and current git branch. Color-code and name your terminal tabs, one tab per task or worktree. Some people use tmux for this.
-
-Use voice dictation. You speak 3x faster than you type, and your prompts get way more detailed as a result (hit fn twice on macOS). See the [terminal configuration docs](https://code.claude.com/docs/en/terminal-config) for more tips.
+When running multiple sessions, enable terminal notifications so you know when an agent is waiting for input. iTerm2 has built-in notification support, or you can use a custom notifications hook. This lets you context-switch to other work while agents run, without constantly checking back.
 
 ## Bug Fixing
 
@@ -183,8 +233,49 @@ This works for any database that has a CLI, MCP, or API.
 
 ## Learning with Claude
 
-Enable the "Explanatory" or "Learning" output style in `/config` to have Claude explain the _why_ behind its changes.
+Run `/config` and set an output style to adjust Claude's tone and format. The **"Explanatory"** style is great when getting familiar with a new codebase, as Claude explains frameworks and code patterns as it works. The **"Learning"** style coaches you through making code changes yourself instead of writing the code for you. You can also create custom output styles to adjust Claude's voice however you like. See the [output styles documentation](https://code.claude.com/docs/en/output-styles) for details.
 
 Have Claude generate a visual HTML presentation explaining unfamiliar code. Ask Claude to draw ASCII diagrams of new protocols and codebases to help you understand them.
 
 You can even build a spaced-repetition learning skill: you explain your understanding, Claude asks follow-ups to fill gaps, and stores the result.
+
+## Personalizing Claude Code
+
+Claude Code is built to work well out of the box, but almost everything is customizable.
+
+### Terminal Setup
+
+[Ghostty](https://ghostty.org/) is a popular choice for its synchronized rendering, 24-bit color, and proper unicode support. Color-code and name your terminal tabs, one tab per task or worktree. Some people use tmux for this.
+
+- **Theme:** Run `/config` to set light or dark mode.
+- **Newlines:** If you use Claude Code in an IDE terminal, Apple Terminal, Warp, or Alacritty, run `/terminal-setup` to enable shift+enter for newlines (so you don't need to type `\`).
+- **Vim mode:** Run `/vim` to enable vim keybindings.
+- **Voice dictation:** You speak 3x faster than you type, and your prompts get way more detailed as a result (hit fn twice on macOS).
+
+See the [terminal configuration docs](https://code.claude.com/docs/en/terminal-config) for more.
+
+### Effort Level
+
+Run `/model` to pick your preferred effort level:
+
+- **Low:** Fewer tokens, faster responses.
+- **Medium:** Balanced behavior.
+- **High:** More tokens, more intelligence.
+
+Use High for complex tasks requiring deep reasoning, and Low or Medium for quick edits and straightforward questions.
+
+### Status Line
+
+Custom status lines appear below the composer and can show model, directory, remaining context, cost, and more. Run `/statusline` to configure yours, or have Claude generate one based on your shell config. See the [status line documentation](https://code.claude.com/docs/en/statusline).
+
+### Keybindings
+
+Every keybinding in Claude Code is customizable. Run `/keybindings` to remap any key. Settings live-reload so you can see how changes feel immediately.
+
+### Spinner Verbs
+
+You can customize the spinner verbs that display while Claude is working. Ask Claude to customize your spinner verbs to replace the defaults with your own. Check the `settings.json` into source control to share them with your team.
+
+### Sharing Settings
+
+Check your `settings.json` into git so your team benefits from your configuration. Claude Code supports configuring settings at the codebase level, for a sub-folder, for just yourself, or via enterprise-wide policies. You can also use the `"env"` field in `settings.json` to set environment variables without wrapper scripts. Claude Code supports 37 settings and 84 environment variables. See the [settings documentation](https://code.claude.com/docs/en/settings) for the full reference.
