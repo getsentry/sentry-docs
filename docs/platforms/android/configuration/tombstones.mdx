@@ -6,13 +6,26 @@ description: Learn how to configure Tombstone support.
 
 The Tombstone Integration generates events for native crashes based on data ("tombstones") that Android attaches to [`ApplicationExitInfo.REASON_CRASH_NATIVE`](https://developer.android.com/reference/android/app/ApplicationExitInfo#REASON_CRASH_NATIVE) starting with [Android 12+](https://developer.android.com/reference/android/app/ApplicationExitInfo#getTraceInputStream()).
 
-This crash context is collected by the operating system during the app’s shutdown after a crash. Because part of this process runs out of process, it can capture richer crash details than the [NDK integration](/platforms/android/configuration/using-ndk/).
+This crash context is collected by the operating system during the app’s shutdown after a crash. Because part of the collection runs out of process, it can capture richer crash details than the [NDK integration](/platforms/android/configuration/using-ndk/) and also is safer.
 
 In particular, you will get:
 
 * stack-traces for each of the threads in your process (which on Android is often key to understanding crashes)
 * improved stack traces through Android Runtime stack frames
 * client-side symbolication of all system libraries (while still allowing for server-side symbolication of your binaries to keep app size small)
+* safer crash context collection reduces crashes during crash handling
+* potentially smaller artifacts since the Tombstone Integration is part of `android-core` (if you [don't need the NDK integration](/platforms/android/configuration/using-ndk/#using-the-sdk-without-the-ndk) as a fallback)
+
+Keep in mind that the Tombstone Integration is not a full replacement for the NDK integration:
+
+* it only works on devices running Android 12+
+* if you instrument your native code with the NDK integration already, then Tombstones will only improve native crash reports, you still need the NDK integration for capturing native context
+
+However, if you don't develop native code for your apps, but use packages that have native code and a significant portion of your users runs on Android 12+, then the Tombstone Integration can be a replacement.
+
+![Tombstone Thread Stack Trace](./img/tombstone_stacktrace.png)
+
+#### Enabling the Tombstone Integration
 
 The Tombstone Integration is disabled by default. You can enable the tombstone integration using:
 
@@ -68,3 +81,7 @@ This option is useful after upgrading to an SDK version that introduces the Tomb
 It can also make sense if you get recurring reports of native crashes early during app start, or if your app regularly runs and restarts during longer offline periods.
 
 Other than that, the SDK will always pick up the latest Tombstone from the historical exit reasons list on the next app restart, and there won’t be any historical Tombstones to report. Also keep in mind that historical Tombstones will receive only minimal updates, as the available data is likely out of sync.
+
+#### Interaction with other Options
+
+Similar to ANR, for Tombstone derived events the options `attachThreads` and `attachStacktrace` are currently without effect.
