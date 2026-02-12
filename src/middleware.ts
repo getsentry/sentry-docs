@@ -1840,16 +1840,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     from: '/platforms/javascript/guides/:guide/tracing/instrumentation/opentelemetry/',
     to: '/platforms/javascript/guides/:guide/opentelemetry/',
   },
-  // START redirecting deprecated generic metrics docs to concepts
-  {
-    from: '/platforms/apple/metrics/',
-    to: '/concepts/key-terms/tracing/span-metrics/',
-  },
-  {
-    from: '/platforms/unity/metrics/',
-    to: '/concepts/key-terms/tracing/span-metrics/',
-  },
-  // END redirecting deprecated generic metrics docs to concepts
   {
     from: '/learn/cli/configuration/',
     to: '/cli/configuration/',
