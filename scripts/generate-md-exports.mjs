@@ -301,6 +301,7 @@ ${
 
   // Append child listings to parent index files
   let updatedCount = 0;
+  const r2Uploads = [];
   for (const [parentPath, children] of pathsByParent) {
     const parentFile = path.join(OUTPUT_DIR, parentPath);
     let existingContent;
@@ -348,16 +349,27 @@ ${
       await writeFile(parentFile, updatedContent, {encoding: 'utf8'});
       updatedCount++;
 
-      // Upload modified parent file to R2 if configured
+      // Collect R2 uploads needed (will be uploaded in parallel below)
       if (accessKeyId && secretAccessKey && existingFilesOnR2) {
         const fileHash = md5(updatedContent);
         const existingHash = existingFilesOnR2.get(parentPath);
         if (existingHash !== fileHash) {
-          const s3Client = getS3Client();
-          await uploadToCFR2(s3Client, parentPath, updatedContent);
+          r2Uploads.push({parentPath, updatedContent});
         }
       }
     }
+  }
+
+  // Upload all modified section index files to R2 in parallel
+  if (r2Uploads.length > 0) {
+    const limit = pLimit(50);
+    const s3Client = getS3Client();
+    await Promise.all(
+      r2Uploads.map(({parentPath, updatedContent}) =>
+        limit(() => uploadToCFR2(s3Client, parentPath, updatedContent))
+      )
+    );
+    console.log(`📤 Uploaded ${r2Uploads.length} section index files to R2`);
   }
   console.log(`📑 Added child page listings to ${updatedCount} section index files`);
 
