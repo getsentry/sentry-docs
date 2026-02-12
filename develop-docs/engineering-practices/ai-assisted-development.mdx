@@ -45,6 +45,8 @@ when archiving. Update the plan.
 
 The goal is to allow the agent to work independently for as long as possible without needing your input.
 
+An alternative to explicit plan mode is **spec-based development**: start with a minimal spec or prompt and ask Claude to interview you (using skills like [brainstorming](https://github.com/obra/superpowers/blob/main/skills/brainstorming/SKILL.md) that leverage `AskUserQuestion` to refine requirements interactively). Once the spec is solid, start a new session to execute it. This separates the thinking from the doing and keeps the implementation context clean.
+
 ## Context Files
 
 Most AI tools support project-level context files that provide instructions and codebase knowledge:
@@ -107,16 +109,6 @@ For example, with the Sentry MCP server configured, you can ask your AI assistan
 
 MCP works across tools that support it, including Claude Code and Cursor. See the [MCP documentation](https://modelcontextprotocol.io/docs) for setup and available servers.
 
-### Subagents
-
-Subagents are child agents spawned to handle specific tasks in parallel. They each run in their own context window and return a summary to the parent agent. General-purpose and Plan agents inherit the full parent conversation context, while Explore agents start fresh with no prior context (useful for independent search tasks).
-
-This isolation keeps your main conversation focused. A subagent can read thousands of lines of code, but only returns a concise summary, so your parent context stays clean. Use subagents when searching multiple code paths in parallel, running independent operations simultaneously, or doing large refactors across many files.
-
-Append "use subagents" to any request where you want Claude to throw more compute at the problem. You can also route permission requests to Opus 4.5 via a [hook](https://code.claude.com/docs/en/hooks#permissionrequest) to scan for attacks and auto-approve the safe ones.
-
-See the [Claude Code subagents documentation](https://code.claude.com/docs/en/sub-agents) for details.
-
 ### Custom Agents
 
 Custom agents let you define specialized personas with their own tools, permissions, and models. Drop `.md` files in `.claude/agents/` to create them. Each agent can have a custom name, color, tool set, pre-allowed and pre-disallowed tools, permission mode, and model.
@@ -149,6 +141,16 @@ If there's a service your team uses daily and it has a CLI or MCP server, connec
 ## Working in Parallel
 
 The goal is to run multiple AI sessions simultaneously with minimal interruption. A few techniques help achieve this.
+
+### Subagents
+
+Subagents are child agents spawned to handle specific tasks in parallel. They each run in their own context window and return a summary to the parent agent. General-purpose and Plan agents inherit the full parent conversation context, while Explore agents start fresh with no prior context (useful for independent search tasks).
+
+This isolation keeps your main conversation focused. A subagent can read thousands of lines of code, but only returns a concise summary, so your parent context stays clean. Use subagents when searching multiple code paths in parallel, running independent operations simultaneously, or doing large refactors across many files.
+
+Append "use subagents" to any request where you want Claude to throw more compute at the problem. You can also route permission requests to Opus 4.5 via a [hook](https://code.claude.com/docs/en/hooks#permissionrequest) to scan for attacks and auto-approve the safe ones.
+
+See the [Claude Code subagents documentation](https://code.claude.com/docs/en/sub-agents) for details.
 
 ### Git Worktrees
 
@@ -211,6 +213,18 @@ Instead of copying and pasting error messages, give the agent a PR or issue URL 
 
 When running multiple sessions, enable terminal notifications so you know when an agent is waiting for input. iTerm2 has built-in notification support, or you can use a custom notifications hook. This lets you context-switch to other work while agents run, without constantly checking back.
 
+### Terminal Setup
+
+[Ghostty](https://ghostty.org/) is a popular choice for its synchronized rendering, 24-bit color, and proper unicode support. Color-code and name your terminal tabs, one tab per task or worktree. Some people use tmux for this.
+
+- **Theme:** Run `/config` to set light or dark mode.
+- **Newlines:** If you use Claude Code in an IDE terminal, Apple Terminal, Warp, or Alacritty, run `/terminal-setup` to enable shift+enter for newlines (so you don't need to type `\`).
+- **Vim mode:** Run `/vim` to enable vim keybindings.
+- **Status line:** Run `/statusline` to show model, directory, remaining context, cost, and more below the composer. See the [status line documentation](https://code.claude.com/docs/en/statusline).
+- **Voice dictation:** You speak 3x faster than you type, and your prompts get way more detailed as a result (hit fn twice on macOS).
+
+See the [terminal configuration docs](https://code.claude.com/docs/en/terminal-config) for more.
+
 ## Bug Fixing
 
 Claude fixes most bugs by itself with minimal guidance. Enable the Slack MCP, paste a Slack bug thread into Claude, and just say "fix."
@@ -238,44 +252,3 @@ Run `/config` and set an output style to adjust Claude's tone and format. The **
 Have Claude generate a visual HTML presentation explaining unfamiliar code. Ask Claude to draw ASCII diagrams of new protocols and codebases to help you understand them.
 
 You can even build a spaced-repetition learning skill: you explain your understanding, Claude asks follow-ups to fill gaps, and stores the result.
-
-## Personalizing Claude Code
-
-Claude Code is built to work well out of the box, but almost everything is customizable.
-
-### Terminal Setup
-
-[Ghostty](https://ghostty.org/) is a popular choice for its synchronized rendering, 24-bit color, and proper unicode support. Color-code and name your terminal tabs, one tab per task or worktree. Some people use tmux for this.
-
-- **Theme:** Run `/config` to set light or dark mode.
-- **Newlines:** If you use Claude Code in an IDE terminal, Apple Terminal, Warp, or Alacritty, run `/terminal-setup` to enable shift+enter for newlines (so you don't need to type `\`).
-- **Vim mode:** Run `/vim` to enable vim keybindings.
-- **Voice dictation:** You speak 3x faster than you type, and your prompts get way more detailed as a result (hit fn twice on macOS).
-
-See the [terminal configuration docs](https://code.claude.com/docs/en/terminal-config) for more.
-
-### Effort Level
-
-Run `/model` to pick your preferred effort level:
-
-- **Low:** Fewer tokens, faster responses.
-- **Medium:** Balanced behavior.
-- **High:** More tokens, more intelligence.
-
-Use High for complex tasks requiring deep reasoning, and Low or Medium for quick edits and straightforward questions.
-
-### Status Line
-
-Custom status lines appear below the composer and can show model, directory, remaining context, cost, and more. Run `/statusline` to configure yours, or have Claude generate one based on your shell config. See the [status line documentation](https://code.claude.com/docs/en/statusline).
-
-### Keybindings
-
-Every keybinding in Claude Code is customizable. Run `/keybindings` to remap any key. Settings live-reload so you can see how changes feel immediately.
-
-### Spinner Verbs
-
-You can customize the spinner verbs that display while Claude is working. Ask Claude to customize your spinner verbs to replace the defaults with your own. Check the `settings.json` into source control to share them with your team.
-
-### Sharing Settings
-
-Check your `settings.json` into git so your team benefits from your configuration. Claude Code supports configuring settings at the codebase level, for a sub-folder, for just yourself, or via enterprise-wide policies. You can also use the `"env"` field in `settings.json` to set environment variables without wrapper scripts. Claude Code supports 37 settings and 84 environment variables. See the [settings documentation](https://code.claude.com/docs/en/settings) for the full reference.
