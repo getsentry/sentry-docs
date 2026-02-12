@@ -3342,19 +3342,47 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/ai-monitoring/',
-    to: '/product/insights/ai/agents/',
+    to: '/ai/monitoring/agents/',
   },
   {
     from: '/product/insights/llm-monitoring/',
-    to: '/product/insights/ai/agents/',
+    to: '/ai/monitoring/agents/',
   },
   {
     from: '/product/insights/llm-monitoring/getting-started/',
-    to: '/product/insights/ai/agents/getting-started/',
+    to: '/ai/monitoring/agents/getting-started/',
   },
   {
     from: '/product/insights/llm-monitoring/getting-started/the-dashboard/',
-    to: '/product/insights/ai/agents/getting-started/the-dashboard/',
+    to: '/ai/monitoring/agents/dashboard/',
+  },
+  {
+    from: '/product/insights/ai/agents/',
+    to: '/ai/monitoring/agents/',
+  },
+  {
+    from: '/product/insights/ai/agents/dashboard/',
+    to: '/ai/monitoring/agents/dashboard/',
+  },
+  {
+    from: '/product/insights/ai/agents/costs/',
+    to: '/ai/monitoring/agents/costs/',
+  },
+  {
+    from: '/product/insights/ai/agents/getting-started/',
+    to: '/ai/monitoring/agents/getting-started/',
+  },
+  {
+    from: '/product/insights/ai/mcp/',
+    to: '/ai/monitoring/mcp/',
+  },
+  {
+    from: '/product/insights/ai/mcp/getting-started/',
+    to: '/ai/monitoring/mcp/getting-started/',
+  },
+  {
+    from: '/product/sentry-mcp/',
+    to: '/ai/mcp/',
   },
   {
     from: '/product/metrics/',
