@@ -24,23 +24,22 @@ The Sentry Exporter routes telemetry from multiple services to different Sentry 
 
 <Expandable title="Interactive Setup with AI Agent Skills" level="success">
 
-If you use an AI coding assistant, the `sentry-otel-exporter-setup` skill can guide you through configuration interactively.
+If you use an AI agent (like Claude Code or Cursor), the `sentry-otel-exporter-setup` skill can guide you through configuring the Sentry Exporter interactively.
 
 The skill walks you through:
 
-- Creating a Sentry Internal Integration with the required permissions
-- Choosing the right routing strategy (`service.name`, custom attributes, or auto-creation)
-- Generating a complete collector configuration for your use case
-- Configuring self-hosted Sentry with TLS if needed
-- Troubleshooting common issues
+- Choosing an installation method (binary or Docker)
+- Configuring automatic project creation
+- Generating a complete collector configuration
+- Setting up environment variables for authentication
 
 **Installation:**
 
 ```bash
-npx skills add https://github.com/getsentry/sentry-agent-skills --skill sentry-otel-exporter-setup
+npx skills add https://github.com/getsentry/agent-skills --skill sentry-otel-exporter-setup
 ```
 
-See the [Sentry Agent Skills](https://github.com/getsentry/sentry-agent-skills) repo for other agents.
+See the [Sentry Agent Skills](https://github.com/getsentry/agent-skills) repo for other agents.
 
 **Usage:**
 
@@ -111,7 +110,14 @@ In your Sentry account, go to **[General Settings](https://sentry.io/orgredirect
 
 ## Basic Configuration
 
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
 By default, the exporter routes telemetry based on `service.name`. A service with `service.name: payments-api` sends to a Sentry project with slug `payments-api`.
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```yaml {filename:otel-collector-config.yaml}
 receivers:
@@ -143,11 +149,27 @@ service:
       exporters: [sentry]
 ```
 
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
 ## Routing Options
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
 
 ### Automatic Project Creation
 
-When services spin up dynamically (Kubernetes deployments, serverless functions), you may not have pre-created Sentry projects. Enable `auto_create_projects` to provision them on-demand:
+When services spin up dynamically (Kubernetes deployments, serverless functions), you may not have pre-created Sentry projects. Enable `auto_create_projects` to provision them on-demand.
+
+<Alert level="warning">
+  Project creation is asynchronous. The first batch of data for a new project
+  may be dropped while provisioning completes.
+</Alert>
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```yaml
 exporters:
@@ -156,14 +178,20 @@ exporters:
     auto_create_projects: true
 ```
 
-<Alert level="warning">
-  Project creation is asynchronous. The first batch of data for a new project
-  may be dropped while provisioning completes.
-</Alert>
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
 
 ### Custom Project Mapping
 
-When your service names don't match your Sentry project slugs (legacy naming, organizational conventions), map them explicitly:
+When your service names don't match your Sentry project slugs (legacy naming, organizational conventions), map them explicitly.
+
+Services not in the mapping fall back to using `service.name` as the project slug.
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```yaml
 exporters:
@@ -176,11 +204,18 @@ exporters:
         api-gateway: ecommerce-gateway
 ```
 
-Services not in the mapping fall back to using `service.name` as the project slug.
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
 
 ### Routing by Different Attributes
 
-Route by environment, team, or any other resource attribute instead of service name:
+Route by environment, team, or any other resource attribute instead of service name.
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```yaml
 exporters:
@@ -192,6 +227,10 @@ exporters:
         production: prod-monitoring
         staging: staging-monitoring
 ```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
 ## Rate Limiting
 
