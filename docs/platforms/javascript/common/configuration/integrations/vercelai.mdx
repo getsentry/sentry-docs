@@ -200,4 +200,29 @@ const result = await generateText({
 
 ## Supported Versions
 
-- `ai`: `>=3.0.0 <6`
+- `ai`: `>=3.0.0 <=6`
+
+## Troubleshooting
+
+<PlatformSection supported={['javascript.nextjs']}>
+
+<Expandable title="Why do my AI spans show 'ai.toolCall' instead of 'gen_ai.execute_tool' on Vercel?">
+
+When deploying to Vercel, you may notice that AI SDK spans have raw names like `ai.toolCall` or `ai.streamText` instead of the expected semantic names like `gen_ai.execute_tool` or `gen_ai.stream_text`.
+
+This happens because the `ai` package is bundled (not externalized) in Next.js production builds, which prevents the integration from automatically detecting and instrumenting the module.
+
+To fix this, explicitly enable the integration with `force: true` in your `sentry.server.config.ts`:
+
+```javascript
+Sentry.init({
+  dsn: "____PUBLIC_DSN____",
+  integrations: [Sentry.vercelAIIntegration({ force: true })],
+});
+```
+
+The `force` option ensures the integration registers its span processors regardless of module detection.
+
+</Expandable>
+
+</PlatformSection>

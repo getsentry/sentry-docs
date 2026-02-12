@@ -104,7 +104,7 @@ Initialize Sentry in your `entry.client.tsx` file:
 +    // ___PRODUCT_OPTION_START___ performance
 +    // Registers and configures the Tracing integration,
 +    // which automatically instruments your application to monitor its
-+    // performance, including custom Angular routing instrumentation
++    // performance, including custom React Router routing instrumentation
 +    Sentry.reactRouterTracingIntegration(),
 +    // ___PRODUCT_OPTION_END___ performance
 +    // ___PRODUCT_OPTION_START___ session-replay
@@ -131,7 +131,7 @@ Initialize Sentry in your `entry.client.tsx` file:
 +  // We recommend adjusting this value in production
 +  // Learn more at
 +  // https://docs.sentry.io/platforms/javascript/guides/react-router/configuration/options/#traces-sample-rate
-+  tracesSampleRate: 1.0, //  Capture 100% of the transactions
++  tracesSampleRate: 1.0,
 +
 +  // Set `tracePropagationTargets` to declare which URL(s) should have trace propagation enabled
 +  tracePropagationTargets: [/^\//, /^https:\/\/yourserver\.io\/api/],
@@ -206,7 +206,10 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
     - **Node 20:** Version \<20.19
     - **Node 22:** Version \<22.12
 
-If you're on a different version, use our manual server wrappers.
+If you're on a different version, you have two options:
+
+1. **Recommended**: Use the <PlatformLink to="/features/instrumentation-api/">Instrumentation API</PlatformLink> (React Router 7.9.5+) for automatic tracing without Node version restrictions
+2. **Alternative**: Use our manual server wrappers (shown below)
 
 For server loaders use `wrapServerLoader`:
 
@@ -275,12 +278,10 @@ Sentry.init({
   tracesSampleRate: 1.0,
   // ___PRODUCT_OPTION_END___ performance
   // ___PRODUCT_OPTION_START___ profiling
-  // Set profilesSampleRate to 1.0 to profile 100%
-  // of sampled transactions.
-  // This is relative to tracesSampleRate
+  // Enable profiling for a percentage of sessions
   // Learn more at
-  // https://docs.sentry.io/platforms/javascript/guides/react-router/configuration/options/#profilesSampleRate
-  profilesSampleRate: 1.0,
+  // https://docs.sentry.io/platforms/javascript/configuration/options/#profileSessionSampleRate
+  profileSessionSampleRate: 1.0,
   // ___PRODUCT_OPTION_END___ profiling
 });
 ```

@@ -45,7 +45,7 @@ By default, our Session Replay SDK masks all DOM text content, images, and user 
   </Alert>
 </PlatformSection>
 
-## Pre-requisites
+## Prerequisites
 
 <PlatformContent includePath="session-replay/pre-requisites" />
 
@@ -57,6 +57,14 @@ By default, our Session Replay SDK masks all DOM text content, images, and user 
 
 To set up the integration, add the following to your Sentry initialization. There are several options you can pass to the integration constructor. See the [configuration documentation](/platforms/javascript/session-replay/configuration/) for more details.
 
+<PlatformSection supported={["javascript.nextjs"]}>
+<Alert>
+
+Session Replay only runs in the browser, so you only need to configure it in `instrumentation-client.ts`. The server (`sentry.server.config.ts`) and edge (`sentry.edge.config.ts`) entry points run in Node.js and Edge runtimes where Replay is not available.
+
+</Alert>
+</PlatformSection>
+
 <PlatformContent
   includePath="session-replay/setup"
   fallbackPlatform="javascript"
@@ -67,88 +75,122 @@ To set up the integration, add the following to your Sentry initialization. Ther
 ### Canvas Recording
 
 <Alert level="warning">
-
-There is currently no PII scrubbing in canvas recordings!
-
+  There is currently no PII scrubbing in canvas recordings!
 </Alert>
 
-If you want to record HTML canvas elements, you'll need to add an additional integration in your Sentry configuration. The canvas integration is exported from the browser SDK, so no additional package is required. Canvas recording is opt-in and will be tree-shaken from your bundle if it's not being used:
+<SplitLayout>
+
+<SplitSection>
+<SplitSectionText>
+
+#### Enable Canvas Recording
+
+Add `replayCanvasIntegration()` to record HTML canvas elements. This is opt-in and tree-shaken from your bundle if not used.
+
+</SplitSectionText>
+<SplitSectionCode>
 
 <PlatformContent includePath="session-replay/setup-canvas" />
 
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
 #### 3D and WebGL Canvases
 
-The canvas recording integration works by exporting the canvas as an image (at a rate of 2 frames per second). However, in order to export images from 3D and WebGL canvases, the integration needs to enable `preserveDrawingBuffer` which can negatively affect canvas performance. If your canvas application is impacted by enabling `preserveDrawingBuffer`, you'll need to enable manual snapshotting and call a `snapshot()` method inside of your re-paint loop. There are two steps to using manual snapshotting:
+For 3D/WebGL canvases, the integration needs `preserveDrawingBuffer` to export images, which can affect performance. To avoid this, enable manual snapshotting and call `snapshot()` inside your paint loop.
 
-**Step 1.**
-Enable manual snapshotting when initializing the `ReplayCanvas` integration.
+Call `snapshot()` in the same execution loop as draw commands to avoid capturing empty buffers.
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```javascript
+// Step 1: Enable manual snapshotting
 Sentry.replayCanvasIntegration({
-  // Enabling the following will ensure your canvas elements are not forced
-  // into `preserveDrawingBuffer`.
   enableManualSnapshot: true,
 });
-```
 
-**Step 2**
-Call the following `snapshot()` method inside your application's paint loop. `snapshot()` needs to be called in the same execution loop as the canvas draw commands, otherwise you may be snapshotting empty canvas buffers. This is due to how WebGL works when `preserveDrawingBuffer` is `false`.
-
-```javascript
+// Step 2: Call snapshot in your paint loop
 function paint() {
   const canvasRef = document.querySelector("#my-canvas");
-  Sentry.getClient().getIntegrationByName("ReplayCanvas").snapshot(canvasRef);
+  Sentry.getClient()
+    ?.getIntegrationByName("ReplayCanvas")
+    ?.snapshot(canvasRef);
 }
 ```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
 
 #### WebGPU Canvases
 
-WebGPU works differently from WebGL in how it manages the lifetime of rendered frames. The canvas texture returned by `getCurrentTexture()` is only valid until the current task completes – after that, the texture expires, and its contents are no longer accessible. This means that by default, when `snapshot()` defers capture to the next animation frame, it will capture an empty or invalid canvas. There are two steps to capturing WebGPU canvases:
+WebGPU canvas textures expire after the current task completes. Use `skipRequestAnimationFrame: true` to capture immediately after rendering.
 
-**Step 1.**
-Enable manual snapshotting when initializing the `ReplayCanvas` integration.
+</SplitSectionText>
+<SplitSectionCode>
 
 ```javascript
+// Step 1: Enable manual snapshotting
 Sentry.replayCanvasIntegration({
-  // Enabling the following will ensure your canvas elements are not forced
-  // into `preserveDrawingBuffer`.
   enableManualSnapshot: true,
 });
-```
 
-**Step 2.**
-Call the `snapshot()` method inside your application's paint loop with `skipRequestAnimationFrame: true` to capture the snapshot immediately:
-
-```javascript
+// Step 2: Snapshot immediately after rendering
 function paint() {
   const canvasRef = document.querySelector("#my-canvas");
-  const canvasIntegration = Sentry.getClient().getIntegrationByName("ReplayCanvas");
+  const canvasIntegration = Sentry.getClient()
+    ?.getIntegrationByName("ReplayCanvas");
 
   // ... your WebGPU rendering commands ...
 
-  // Capture immediately after rendering - required for WebGPU
-  canvasIntegration.snapshot(canvasRef, { skipRequestAnimationFrame: true });
+  // Capture immediately - required for WebGPU
+  canvasIntegration?.snapshot(canvasRef, {
+    skipRequestAnimationFrame: true,
+  });
 }
 ```
+
+</SplitSectionCode>
+</SplitSection>
+
+</SplitLayout>
 </PlatformSection>
 
 ### Content Security Policy (CSP)
 
-Session Replay uses a WebWorker to perform work (for example, compression) off the main UI thread so as not to degrade the performance of your application. Add the below entry to make sure that workers can be loaded:
+<SplitLayout>
 
-```
-worker-src 'self' blob:
-```
+<SplitSection>
+<SplitSectionText>
+
+#### Configure CSP for Replay
+
+Session Replay uses a WebWorker for compression off the main UI thread. Add these CSP entries to allow workers to load.
 
 <PlatformSection notSupported={["javascript.electron"]}>
 
-[Safari versions &lt;= 15.4](https://caniuse.com/?search=worker-src) do not support `worker-src`, you will need to additionally add an entry for `child-src`:
+Safari versions ≤ 15.4 also need `child-src`.
 
-```
+</PlatformSection>
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```text
+worker-src 'self' blob:
 child-src 'self' blob:
 ```
 
-</PlatformSection>
+</SplitSectionCode>
+</SplitSection>
+
+</SplitLayout>
 
 If you're unable to update your CSP policy to allow inline web workers, you can also [use a custom compression worker](./configuration#using-a-custom-compression-worker) instead.
 
@@ -178,44 +220,76 @@ If you prefer not to record an entire session, you can elect to capture a replay
 
 ## Sampling
 
-Sampling allows you to control how much of your website's traffic will result in a Session Replay. There are two sample rates you can adjust to get the replays relevant to you:
+Sampling controls how much traffic results in a Session Replay.
 
-1. <PlatformIdentifier name="replays-session-sample-rate" /> - The sample rate
-   for replays that begin recording immediately and last the entirety of the
-   user's session.
-2. <PlatformIdentifier name="replays-on-error-sample-rate" /> - The sample rate
-   for replays that are recorded when an error happens. This type of replay will
-   record up to a minute of events prior to the error and continue recording
-   until the session ends.
+<SplitLayout>
 
-```javascript {5-6} {filename:instrumentation-client.ts}
+<SplitSection>
+<SplitSectionText>
+
+#### Configure Sample Rates
+
+- <PlatformIdentifier name="replays-session-sample-rate" /> - Percentage of sessions to record fully
+- <PlatformIdentifier name="replays-on-error-sample-rate" /> - Percentage of sessions to record when an error occurs (buffers 1 minute before the error)
+
+**Tip:** Keep `replaysOnErrorSampleRate` at `1.0` - error sessions provide the most debugging value.
+
+#### Recommended Production Sample Rates
+
+<div className="table-fit-content">
+
+| Traffic Volume             | Session Rate | Error Rate |
+| -------------------------- | ------------ | ---------- |
+| **High** (100k+/day)       | `0.01` (1%)  | `1.0`      |
+| **Medium** (10k-100k/day)  | `0.1` (10%)  | `1.0`      |
+| **Low** (under 10k/day)    | `0.25` (25%) | `1.0`      |
+
+</div>
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript {filename:instrumentation-client.ts}
 Sentry.init({
-  // ... other configuration
+  dsn: "___PUBLIC_DSN___",
 
-  // Session Replay sampling rates
-  replaysSessionSampleRate: 0.1, // Capture 10% of all sessions
-  replaysOnErrorSampleRate: 1.0,  // Capture 100% of error sessions
+  // Capture 10% of all sessions
+  replaysSessionSampleRate: 0.1,
 
-  // For development/testing, you can set replaysSessionSampleRate to 1.0
-  // to capture all sessions for complete visibility
+  // Capture 100% of sessions with errors
+  replaysOnErrorSampleRate: 1.0,
+
+  integrations: [Sentry.replayIntegration()],
 });
 ```
 
-### Recommended Production Sample Rates
+</SplitSectionCode>
+</SplitSection>
 
-Choose your `replaysSessionSampleRate` based on your traffic volume:
-
-| Traffic Volume | Session Sample Rate | Error Sample Rate | Description |
-|---|---|---|---|
-| **High** (100k+ sessions/day) | `0.01` (1%) | `1.0` (100%) | Minimal session capture, all errors |
-| **Medium** (10k-100k sessions/day) | `0.1` (10%) | `1.0` (100%) | Balanced approach |
-| **Low** (under 10k sessions/day) | `0.25` (25%) | `1.0` (100%) | Higher session capture for better insights |
-
-**Why keep `replaysOnErrorSampleRate` at 1.0?** Error sessions provide the most valuable debugging context, so capturing all of them is recommended regardless of traffic volume.
+</SplitLayout>
 
 ### How Sampling Works
 
-Sampling begins as soon as a session starts. <PlatformIdentifier name="replays-session-sample-rate" /> is evaluated first. If it's sampled, the replay recording will begin. Otherwise, <PlatformIdentifier name="replays-on-error-sample-rate" /> is evaluated and if it's sampled, the integration will begin buffering the replay and will only upload it to Sentry if an error occurs. The remainder of the replay will behave similarly to a whole-session replay.
+Sampling begins as soon as a session starts. When someone visits your application, sampling decisions happen in this order:
+
+1. **<PlatformIdentifier name="replays-session-sample-rate" /> is checked first**
+   - If sampled: Full session recording starts and is sent to Sentry in real-time
+   - If not sampled: Recording is buffered in memory only (last 60 seconds kept)
+
+2. **If an error occurs** (and session wasn't selected for full recording):
+   - <PlatformIdentifier name="replays-on-error-sample-rate" /> is checked
+   - If sampled: Buffered 60 seconds + rest of session is sent to Sentry
+   - If not sampled: Buffer is discarded, nothing sent
+
+**When data leaves your browser:**
+
+| Scenario | Data Sent to Sentry |
+|----------|---------------------|
+| Selected for session sampling | Immediately (real-time chunks) |
+| Not selected, no error occurs | Never (buffer discarded) |
+| Not selected, error occurs & sampled | After error (60s before + everything after) |
+
+Read more about <PlatformLink to="/session-replay/understanding-sessions/">understanding sessions</PlatformLink>.
 
 ## Error Linking
 
@@ -225,12 +299,25 @@ Errors that happen on the page while a replay is running will be linked to the r
 - The replay was deleted by a member of your org.
 - There were network errors and the replay wasn't saved.
 
+## Trace Linking
+
+When [tracing](/product/explore/traces/) is enabled, traces are visible in the Replay timeline. This lets you see performance data in the context of what the user was doing — you can watch a user click a button, then see the corresponding network request and how long it took.
+
+From the Replay Details page, click on any trace span in the timeline to jump directly to the trace view. From there, you can drill into individual spans, see database queries, API calls, and identify performance bottlenecks that affected the user's experience.
+
+This connection works both ways: when viewing a trace, you can jump to the associated replay to see exactly what the user experienced during that operation.
+
 ## Verify
 
 While you're testing, we recommend that you set <PlatformIdentifier name="replays-session-sample-rate" /> to `1.0`. This ensures that every user session will be sent to Sentry.
 
 Once testing is complete, **we recommend lowering this value in production**. We still recommend keeping <PlatformIdentifier name="replays-on-error-sample-rate" /> set to `1.0`.
 
-## Next Steps
+## Related Features
+
+- <PlatformLink to="/tracing/">Tracing</PlatformLink> — Traces are visible in the Replay timeline, showing you performance data in context.
+- <PlatformSection notSupported={["javascript.deno", "javascript.cordova"]}><PlatformLink to="/logs/">Logs</PlatformLink> — Logs emitted during a replay session are automatically linked for easy navigation.</PlatformSection>
+
+## Replay Next Steps
 
 <PageGrid />

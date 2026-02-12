@@ -1,30 +1,50 @@
-Since the SDK needs access to the `AsyncLocalStorage` API, you need to set either the `nodejs_compat` or `nodejs_als` compatibility flags in your `wrangler.(jsonc|toml)` configuration file:
+Since the SDK needs access to the `AsyncLocalStorage` API, you need to set the `nodejs_compat` compatibility flag in your `wrangler.(jsonc|toml)` configuration file:
 
 ```jsonc {tabTitle:JSON} {filename:wrangler.jsonc}
 {
-  "compatibility_flags": [
-    "nodejs_als",
-    // "nodejs_compat"
-  ],
+  "compatibility_flags": ["nodejs_compat"],
 }
 ```
 
 ```toml {tabTitle:Toml} {filename:wrangler.toml}
-compatibility_flags = ["nodejs_als"]
-# compatibility_flags = ["nodejs_compat"]
+compatibility_flags = ["nodejs_compat"]
 ```
 
-Additionally, add the `CF_VERSION_METADATA` binding in the same file:
+### Release Configuration (Optional)
+
+If you don't set the `release` option manually, the SDK automatically detects it from these sources (in order of priority):
+
+1. The `SENTRY_RELEASE` environment variable
+2. The `CF_VERSION_METADATA.id` binding (if configured)
+
+To enable automatic release detection via Cloudflare's version metadata, add the `CF_VERSION_METADATA` binding in your wrangler configuration. This provides access to the [Cloudflare version metadata](https://developers.cloudflare.com/workers/runtime-apis/bindings/version-metadata/):
+
+<Expandable title="Using an SDK version before 10.35.0?">
+
+In earlier versions, you need to manually extract `CF_VERSION_METADATA.id` and pass it as the `release` option:
+
+```javascript
+Sentry.withSentry(
+  (env) => ({
+    dsn: "___PUBLIC_DSN___",
+    release: env.CF_VERSION_METADATA?.id,
+  }),
+  // ...
+);
+```
+
+</Expandable>
 
 ```jsonc {tabTitle:JSON} {filename:wrangler.jsonc}
 {
   // ...
   "version_metadata": {
-    "binding": "CF_VERSION_METADATA",
-  },
+    "binding": "CF_VERSION_METADATA"
+  }
 }
 ```
 
 ```toml {tabTitle:Toml} {filename:wrangler.toml}
-version_metadata = { binding = "CF_VERSION_METADATA" }
+[version_metadata]
+binding = "CF_VERSION_METADATA"
 ```

@@ -94,12 +94,15 @@ export function PlatformSelector({
   }, [searchValue, currentPlatformKey, platformsAndGuides]);
 
   const router = useRouter();
+  const pathname = usePathname();
   const onPlatformChange = (platformKey: string) => {
     const platform_ = platformsAndGuides.find(
       platform => platform.key === platformKey.replace('-redirect', '')
     );
     if (platform_) {
       localStorage.setItem('active-platform', platform_.key);
+      // Use the pre-computed URL from the sidebar which already handles
+      // equivalent paths (e.g., ai-agent-monitoring <-> ai-agent-monitoring-browser)
       router.push(platform_.url);
     }
   };
@@ -135,11 +138,10 @@ export function PlatformSelector({
     }
   }, [currentPlatformKey]);
 
-  const path = usePathname();
   const isPlatformPage = Boolean(
-    path?.startsWith('/platforms/') &&
+    pathname?.startsWith('/platforms/') &&
       // /platforms/something
-      path.length > '/platforms/'.length
+      pathname.length > '/platforms/'.length
   );
   // Only show stored platform after mount to prevent hydration mismatch
   // Server doesn't have localStorage, so this must wait until client-side
@@ -149,7 +151,7 @@ export function PlatformSelector({
     !isPlatformPage &&
     storedPlatformKey &&
     storedPlatform &&
-    path !== '/platforms/';
+    pathname !== '/platforms/';
 
   return (
     <div>

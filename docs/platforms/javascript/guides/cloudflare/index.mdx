@@ -14,9 +14,14 @@ Use this guide for general instructions on using the Sentry SDK with Cloudflare.
 - **[Astro](/platforms/javascript/guides/cloudflare/frameworks/astro/)**
 - **[Hono](/platforms/javascript/guides/cloudflare/frameworks/hono/)**
 - **[Hydrogen](/platforms/javascript/guides/cloudflare/frameworks/hydrogen-react-router/)**
+- **[Next.js](/platforms/javascript/guides/cloudflare/frameworks/nextjs/)**
 - **[Nuxt](/platforms/javascript/guides/cloudflare/frameworks/nuxt/)**
 - **[Remix](/platforms/javascript/guides/cloudflare/frameworks/remix/)**
 - **[SvelteKit](/platforms/javascript/guides/cloudflare/frameworks/sveltekit/)**
+
+<Alert>
+  The Cloudflare Workers runtime has some platform-specific limitations that affect tracing. See [Known Limitations](#known-limitations) for details.
+</Alert>
 
 <PlatformContent includePath="getting-started-prerequisites" />
 
@@ -54,38 +59,32 @@ The main Sentry configuration should happen as early as possible in your app's l
 ### Setup for Cloudflare Pages
 
 To use the Sentry SDK, add the `sentryPagesPlugin` as [middleware to your Cloudflare Pages application](https://developers.cloudflare.com/pages/functions/middleware/).
-For this, we recommend you create a `functions/_middleware.js` file to set up the middleware for your entire app:
+<Include name="cloudflare-pages-middleware-intro.mdx" />
 
 ```javascript {filename:functions/_middleware.js}
 import * as Sentry from "@sentry/cloudflare";
 
 export const onRequest = [
   // Make sure Sentry is the first middleware
-  Sentry.sentryPagesPlugin((context) => {
-    const { id: versionId } = env.CF_VERSION_METADATA;
+  Sentry.sentryPagesPlugin((context) => ({
+    dsn: "___PUBLIC_DSN___",
 
-    return {
-      dsn: "___PUBLIC_DSN___",
+    // Adds request headers and IP for users, for more info visit:
+    // https://docs.sentry.io/platforms/javascript/guides/cloudflare/configuration/options/#sendDefaultPii
+    sendDefaultPii: true,
+    // ___PRODUCT_OPTION_START___ logs
 
-      release: versionId,
+    // Enable logs to be sent to Sentry
+    enableLogs: true,
+    // ___PRODUCT_OPTION_END___ logs
+    // ___PRODUCT_OPTION_START___ performance
 
-      // Adds request headers and IP for users, for more info visit:
-      // https://docs.sentry.io/platforms/javascript/guides/cloudflare/configuration/options/#sendDefaultPii
-      sendDefaultPii: true,
-      // ___PRODUCT_OPTION_START___ logs
-
-      // Enable logs to be sent to Sentry
-      enableLogs: true,
-      // ___PRODUCT_OPTION_END___ logs
-      // ___PRODUCT_OPTION_START___ performance
-
-      // Set tracesSampleRate to 1.0 to capture 100% of spans for tracing.
-      // Learn more at
-      // https://docs.sentry.io/platforms/javascript/guides/cloudflare/configuration/options/#tracesSampleRate
-      tracesSampleRate: 1.0,
-      // ___PRODUCT_OPTION_END___ performance
-    };
-  }),
+    // Set tracesSampleRate to 1.0 to capture 100% of spans for tracing.
+    // Learn more at
+    // https://docs.sentry.io/platforms/javascript/guides/cloudflare/configuration/options/#tracesSampleRate
+    tracesSampleRate: 1.0,
+    // ___PRODUCT_OPTION_END___ performance
+  })),
   // Add more middlewares here
 ];
 ```
@@ -207,6 +206,14 @@ export async function onRequest(context) {
 Now, head over to your project on [Sentry.io](https://sentry.io) to view the collected data (it takes a couple of moments for the data to appear).
 
 <PlatformContent includePath="getting-started-verify-locate-data" />
+
+## Known Limitations
+
+### Span Durations
+
+Server-side spans will display `0ms` for their durations. In the Cloudflare Workers runtime, `performance.now()` and `Date.now()` only advance after I/O occurs. CPU-bound operations will show zero duration. This is a security measure Cloudflare implements to [mitigate against timing attacks](https://developers.cloudflare.com/workers/runtime-apis/performance/).
+
+This is expected behavior in the Cloudflare Workers environment and affects all frameworks deployed to Cloudflare Workers, including Next.js, Astro, Remix, and others.
 
 ## Next Steps
 
