@@ -182,17 +182,12 @@ function parseMiddlewareTs(filePath: string): {
         return [];
       }
 
-      const redirects: Redirect[] = [];
       // Match individual {from: '...', to: '...'} entries
       const entryRegex = /\{\s*from:\s*'([^']+)',\s*to:\s*'([^']+)',?\s*\}/g;
-      let entryMatch: RegExpExecArray | null;
-      while ((entryMatch = entryRegex.exec(match[1])) !== null) {
-        redirects.push({
-          source: entryMatch[1],
-          destination: entryMatch[2],
-        });
-      }
-      return redirects;
+      return Array.from(match[1].matchAll(entryRegex), m => ({
+        source: m[1],
+        destination: m[2],
+      }));
     };
 
     return {
