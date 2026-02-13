@@ -1,0 +1,187 @@
+---
+title: OpenTelemetry Collector Setup
+sidebar_title: OpenTelemetry Collector
+sidebar_order: 10
+description: Learn how to set up the OpenTelemetry Collector to forward logs and traces data to Sentry.
+---
+
+The [OpenTelemetry Collector](https://opentelemetry.io/docs/collector/) is a vendor-agnostic proxy that can receive, process, and export telemetry data. You can configure the Collector to forward logs and traces to Sentry using the `otlphttp` exporter.
+
+If you're looking to forward logs and traces from an OpenTelemetry SDK directly to Sentry, take a look at our [OpenTelemetry (OTLP) documentation](/concepts/otlp/) instead.
+
+## Prerequisites
+
+Before you begin, ensure you have:
+
+- OpenTelemetry Collector installed and running
+- A Sentry project you want to send data to
+
+## Step 1: Get Your Sentry OTLP Credentials
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Find these in [Sentry Project Settings](https://sentry.io/settings/projects/) under **Client Keys (DSN)** > **OpenTelemetry (OTLP)**.
+
+- Use the **combined endpoint** if sending both logs and traces
+- The Collector appends `/v1/logs` or `/v1/traces` automatically
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```bash
+# Logs endpoint
+___OTLP_LOGS_URL___
+
+# Traces endpoint
+___OTLP_TRACES_URL___
+
+# Combined endpoint (logs + traces)
+___OTLP_URL___
+
+# Auth header (include in all requests)
+x-sentry-auth: sentry sentry_key=___PUBLIC_KEY___
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+## Step 2: Configure the Collector
+
+Update your OpenTelemetry Collector configuration to add the `otlphttp` exporter pointing to Sentry.
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+### Logs Only
+
+Use `logs_endpoint` to forward only logs to Sentry.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```yaml {filename:otel-collector.yaml}
+exporters:
+  otlphttp/sentry:
+    logs_endpoint: ___OTLP_LOGS_URL___
+    headers:
+      x-sentry-auth: "sentry sentry_key=___PUBLIC_KEY___"
+    compression: gzip
+    encoding: proto
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Traces Only
+
+Use `traces_endpoint` to forward only traces to Sentry.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```yaml {filename:otel-collector.yaml}
+exporters:
+  otlphttp/sentry:
+    traces_endpoint: ___OTLP_TRACES_URL___
+    headers:
+      x-sentry-auth: "sentry sentry_key=___PUBLIC_KEY___"
+    compression: gzip
+    encoding: proto
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Logs and Traces
+
+Use the combined `endpoint` to forward both logs and traces. The Collector appends the appropriate path for each signal type.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```yaml {filename:otel-collector.yaml}
+exporters:
+  otlphttp/sentry:
+    endpoint: ___OTLP_URL___
+    headers:
+      x-sentry-auth: "sentry sentry_key=___PUBLIC_KEY___"
+    compression: gzip
+    encoding: proto
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+## Routing to Multiple Projects
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Sentry's OTLP endpoints are project-specific. To route telemetry from different services to different Sentry projects, use the [routing connector](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/connector/routingconnector).
+
+This example routes logs to different Sentry projects based on the `service.name` attribute:
+
+- Logs with `service.name: "service-b"` go to Project B
+- All other logs go to Project A (the default)
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```yaml {filename:otel-collector.yaml}
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+
+connectors:
+  routing:
+    default_pipelines: [logs/project-a]
+    error_mode: ignore
+    table:
+      - statement: route() where attributes["service.name"] == "service-b"
+        pipelines: [logs/project-b]
+
+exporters:
+  otlphttp/project-a:
+    logs_endpoint: https://o00000.ingest.sentry.io/api/1111111/integration/otlp/v1/logs
+    headers:
+      x-sentry-auth: "sentry sentry_key=example-public-key-for-project-a"
+    compression: gzip
+    encoding: proto
+
+  otlphttp/project-b:
+    logs_endpoint: https://o00000.ingest.sentry.io/api/2222222/integration/otlp/v1/logs
+    headers:
+      x-sentry-auth: "sentry sentry_key=example-public-key-for-project-b"
+    compression: gzip
+    encoding: proto
+
+service:
+  pipelines:
+    logs:
+      receivers: [otlp]
+      exporters: [routing]
+    logs/project-a:
+      receivers: [routing]
+      exporters: [otlphttp/project-a]
+    logs/project-b:
+      receivers: [routing]
+      exporters: [otlphttp/project-b]
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
