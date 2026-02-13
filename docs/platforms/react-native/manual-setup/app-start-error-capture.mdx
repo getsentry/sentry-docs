@@ -107,7 +107,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 ## Expo Setup
 
-If you're using Expo, you can enable native initialization automatically using the Expo plugin:
+If you're using Expo, you can enable native initialization using the Expo plugin. First, create a `sentry.options.json` file in your project root (same location as your `app.json`) [as above](#configuration-file).
+
+Add the `useNativeInit` option to your Expo plugin configuration:
 
 ```json {filename:app.json}
 {
@@ -124,7 +126,16 @@ If you're using Expo, you can enable native initialization automatically using t
 }
 ```
 
+If you need to use environment variables or dynamic configuration, you can use `app.config.js` with the `withSentry()` wrapper instead of the array form in `app.json`:
+
+```javascript {filename:app.config.js}
+import { withSentry } from "@sentry/react-native/expo";
+
+export default withSentry(config, {
+  useNativeInit: true,
+});
+```
+
 When `useNativeInit` is set to `true`, the Expo plugin automatically:
-- Creates `sentry.options.json` from your Expo config
 - Adds `RNSentrySDK.init()` to your Android `MainApplication`
 - Adds `RNSentrySDK.start()` to your iOS `AppDelegate`
