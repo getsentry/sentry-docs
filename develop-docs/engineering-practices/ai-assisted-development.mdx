@@ -152,15 +152,15 @@ Write detailed specs and reduce ambiguity before handing work off. The more spec
 
 The goal is to run multiple AI sessions simultaneously with minimal interruption. A few techniques help achieve this.
 
-### Subagents
+### Pre-approve Permissions
 
-Subagents are child agents spawned to handle specific tasks in parallel. They each run in their own context window and return a summary to the parent agent. General-purpose and Plan agents inherit the full parent conversation context, while Explore agents start fresh with no prior context (useful for independent search tasks).
+Every permission prompt interrupts your flow. Run `/permissions` in Claude Code to manage your allow and block lists. Check these into your team's `settings.json` so everyone benefits.
 
-This isolation keeps your main conversation focused. A subagent can read thousands of lines of code, but only returns a concise summary, so your parent context stays clean. Use subagents when searching multiple code paths in parallel, running independent operations simultaneously, or doing large refactors across many files.
+Claude Code supports full wildcard syntax for permissions. For example, `Bash(bun run *)` pre-approves all `bun run` commands, and `Edit(/docs/**)` allows edits to any file under `/docs/`. See the [permissions documentation](https://code.claude.com/docs/en/permissions) for details.
 
-Append "use subagents" to any request where you want Claude to throw more compute at the problem. You can also route permission requests to Opus 4.5 via a [hook](https://code.claude.com/docs/en/hooks#permissionrequest) to scan for attacks and auto-approve the safe ones.
+### Multi-repo Tasks
 
-See the [Claude Code subagents documentation](https://code.claude.com/docs/en/sub-agents) for details.
+When a task spans multiple repositories, use `/add-dir` in Claude Code to add additional directories to the session context. The agent can then read and edit files across repos.
 
 ### Git Worktrees
 
@@ -176,11 +176,15 @@ Name your worktrees and set up shell aliases (`za`, `zb`, `zc`) so you can hop b
 
 Keep worktrees isolated: one branch per worktree, never develop directly in main. For short tasks, the setup overhead may not be worth it. See [Run parallel Claude Code sessions with git worktrees](https://code.claude.com/docs/en/common-workflows#run-parallel-claude-code-sessions-with-git-worktrees) for more.
 
-### Pre-approve Permissions
+### Subagents
 
-Every permission prompt interrupts your flow. Run `/permissions` in Claude Code to manage your allow and block lists. Check these into your team's `settings.json` so everyone benefits.
+Subagents are child agents spawned to handle specific tasks in parallel. They each run in their own context window and return a summary to the parent agent. General-purpose and Plan agents inherit the full parent conversation context, while Explore agents start fresh with no prior context (useful for independent search tasks).
 
-Claude Code supports full wildcard syntax for permissions. For example, `Bash(bun run *)` pre-approves all `bun run` commands, and `Edit(/docs/**)` allows edits to any file under `/docs/`. See the [permissions documentation](https://code.claude.com/docs/en/permissions) for details.
+This isolation keeps your main conversation focused. A subagent can read thousands of lines of code, but only returns a concise summary, so your parent context stays clean. Use subagents when searching multiple code paths in parallel, running independent operations simultaneously, or doing large refactors across many files.
+
+Append "use subagents" to any request where you want Claude to throw more compute at the problem. You can also route permission requests to Opus 4.5 via a [hook](https://code.claude.com/docs/en/hooks#permissionrequest) to scan for attacks and auto-approve the safe ones.
+
+See the [Claude Code subagents documentation](https://code.claude.com/docs/en/sub-agents) for details.
 
 ### Sandboxing
 
@@ -198,10 +202,6 @@ Hooks let you deterministically hook into Claude's lifecycle. Use them to:
 - Enable terminal notifications when an agent is waiting for input
 
 Ask Claude to add a hook to get started, or see the [hooks documentation](https://code.claude.com/docs/en/hooks).
-
-### Multi-repo Tasks
-
-When a task spans multiple repositories, use `/add-dir` in Claude Code to add additional directories to the session context. The agent can then read and edit files across repos.
 
 ### Managing Context
 
