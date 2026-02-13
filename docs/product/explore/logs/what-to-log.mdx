@@ -1,0 +1,205 @@
+---
+title: "What to Log"
+sidebar_order: 5
+description: "Practical guidance on what to log, how to search logs, and when to set alerts."
+---
+
+You've set up Sentry Logs. Now what? This guide covers the high-value logging patterns that help you debug faster and catch problems before users report them.
+
+## The Pattern
+
+Every structured log follows the same format:
+
+```javascript
+Sentry.logger.<level>(message, { attributes });
+```
+
+**Levels:** `trace`, `debug`, `info`, `warn`, `error`, `fatal`
+
+**Attributes:** Key-value pairs you can search and filter on. Use whatever naming convention fits your codebase—consistency matters more than specific names.
+
+```javascript
+Sentry.logger.info("Order completed", {
+  orderId: "order_123",
+  userId: user.id,
+  amount: 149.99,
+  paymentMethod: "stripe"
+});
+```
+
+Every log is automatically trace-connected. Click any log entry to see the full trace, spans, and errors from that moment.
+
+## Where to Add Logs
+
+These five categories give you the most debugging value per line of code.
+
+### 1. Authentication Events
+
+Login flows are invisible until something breaks. Log successes and failures to spot patterns—brute force attempts, OAuth misconfigurations, or MFA issues.
+
+```javascript
+Sentry.logger.info("User logged in", {
+  userId: user.id,
+  authMethod: "oauth",
+  provider: "google"
+});
+
+Sentry.logger.warn("Login failed", {
+  email: maskedEmail,
+  reason: "invalid_password",
+  attemptCount: 3
+});
+```
+
+**Search:** `userId:123 "logged in"` or `severity:warn authMethod:*`
+
+**Alert idea:** `severity:warn "Login failed"` exceeding your baseline in 5 minutes can indicate brute force or auth provider issues.
+
+### 2. Payment and Checkout
+
+Money paths need visibility even when they succeed. When payments fail, you need context fast.
+
+```javascript
+Sentry.logger.error("Payment failed", {
+  orderId: "order_123",
+  amount: 99.99,
+  gateway: "stripe",
+  errorCode: "card_declined",
+  cartItems: 3
+});
+```
+
+**Search:** `orderId:order_123` or `severity:error gateway:stripe`
+
+**Alert idea:** `severity:error gateway:*` spiking can indicate payment provider outages.
+
+### 3. External APIs and Async Operations
+
+Traces capture what your code does. Logs capture context about external triggers and async boundaries—webhooks, scheduled tasks, third-party API responses—that traces can't automatically instrument.
+
+```javascript
+// Third-party API call
+const start = Date.now();
+const response = await shippingApi.getRates(items);
+
+Sentry.logger.info("Shipping rates fetched", {
+  service: "shipping-provider",
+  endpoint: "/rates",
+  durationMs: Date.now() - start,
+  rateCount: response.rates.length
+});
+
+// Webhook received
+Sentry.logger.info("Webhook received", {
+  source: "stripe",
+  eventType: "payment_intent.succeeded",
+  paymentId: event.data.object.id
+});
+```
+
+**Search:** `service:shipping-provider durationMs:>2000` or `source:stripe`
+
+**Alert idea:** `service:* durationMs:>3000` can catch third-party slowdowns before they cascade.
+
+### 4. Background Jobs
+
+Jobs run outside request context. Without logs, failed jobs are invisible until someone notices missing data.
+
+```javascript
+Sentry.logger.info("Job started", {
+  jobType: "email-digest",
+  jobId: "job_456",
+  queue: "notifications"
+});
+
+Sentry.logger.error("Job failed", {
+  jobType: "email-digest",
+  jobId: "job_456",
+  retryCount: 3,
+  lastError: "SMTP timeout"
+});
+```
+
+**Search:** `jobType:email-digest severity:error`
+
+**Alert idea:** `severity:error jobType:*` spiking can indicate queue processing issues or downstream failures.
+
+### 5. Feature Flags and Config Changes
+
+When something breaks after a deploy, the first question is "what changed?" Logging flag evaluations and config reloads gives you that answer instantly.
+
+```javascript
+Sentry.logger.info("Feature flag evaluated", {
+  flag: "new-checkout-flow",
+  enabled: true,
+  userId: user.id
+});
+
+Sentry.logger.warn("Config reloaded", {
+  reason: "env-change",
+  changedKeys: ["API_TIMEOUT", "MAX_CONNECTIONS"]
+});
+```
+
+**Search:** `flag:new-checkout-flow` or `"Config reloaded"`
+
+## Creating Alerts From Logs
+
+1. Go to **Explore > Logs**
+2. Enter your search query (e.g., `severity:error gateway:*`)
+3. Click **Save As** → **Alert**
+4. Choose a threshold type:
+   - **Static:** Alert when count exceeds a value
+   - **Percent Change:** Alert when count changes relative to a previous period
+   - **Anomaly:** Let Sentry detect unusual patterns
+5. Configure notification channels and save
+
+## Production Logging Strategy
+
+Local debugging often means many small logs tracing execution flow. In production, this creates noise that's hard to query.
+
+Instead, log fewer messages with higher cardinality. Store events during execution and emit them as a single structured log.
+
+**Don't do this:**
+
+```javascript
+Sentry.logger.info("Checkout started", { userId: "882" });
+Sentry.logger.info("Discount applied", { code: "WINTER20" });
+Sentry.logger.error("Payment failed", { reason: "Insufficient Funds" });
+```
+
+These logs are trace-connected, but searching for the error won't return the userId or discount code from the same transaction.
+
+**Do this instead:**
+
+```javascript
+Sentry.logger.error("Checkout failed", {
+  userId: "882",
+  orderId: "order_pc_991",
+  cartTotal: 142.50,
+  discountCode: "WINTER20",
+  paymentMethod: "stripe",
+  errorReason: "Insufficient Funds",
+  itemCount: 4
+});
+```
+
+One log tells the whole story. Search for the error and get full context.
+
+## Log Drains for Platform Logs
+
+If you can't install the Sentry SDK or need platform-level logs (CDN, database, load balancer), use [Log Drains](/product/drains/).
+
+**Platform drains:** Vercel, Cloudflare Workers, Heroku, Supabase
+
+**Forwarders:** OpenTelemetry Collector, Vector, Fluent Bit, AWS CloudWatch, Kafka
+
+## Quick Reference
+
+| Category | Level | Key Attributes |
+|----------|-------|----------------|
+| Auth events | `info`/`warn` | userId, authMethod, reason |
+| Payments | `info`/`error` | orderId, amount, gateway, errorCode |
+| External APIs | `info` | service, endpoint, durationMs |
+| Background jobs | `info`/`error` | jobType, jobId, retryCount |
+| Feature flags | `info` | flag, enabled, changedKeys |
