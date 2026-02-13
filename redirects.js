@@ -1384,4 +1384,4 @@ const redirects = async () => {
   });
 };
 
-module.exports = {redirects};
+module.exports = {redirects, developerDocsRedirects, userDocsRedirects};
