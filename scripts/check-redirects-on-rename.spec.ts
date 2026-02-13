@@ -5,6 +5,7 @@ import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 
 import {
   filePathToUrls,
+  parseMiddlewareTs,
   parseRedirectsJs,
   redirectMatches,
 } from './check-redirects-on-rename';
@@ -99,6 +100,80 @@ describe('parseRedirectsJs', () => {
     // Should have some redirects
     expect(result.developerDocsRedirects.length).toBeGreaterThan(0);
     expect(result.userDocsRedirects.length).toBeGreaterThan(0);
+  });
+});
+
+// Mock middleware.ts fixture
+const mockMiddlewareTs = `
+import type {NextRequest} from 'next/server';
+
+type Redirect = {
+  from: \`/\${string}/\` | '/';
+  to: string;
+};
+
+const USER_DOCS_REDIRECTS: Redirect[] = [
+  {
+    from: '/platforms/python/old-path/',
+    to: '/platforms/python/new-path/',
+  },
+  {
+    from: '/platforms/javascript/old-guide/',
+    to: '/platforms/javascript/new-guide/',
+  },
+];
+
+const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
+  {
+    from: '/sdk/old-api/',
+    to: '/sdk/new-api/',
+  },
+];
+`;
+
+describe('parseMiddlewareTs', () => {
+  let tempFile: string;
+
+  beforeEach(() => {
+    tempFile = path.join(process.cwd(), 'middleware-test-temp.ts');
+  });
+
+  afterEach(() => {
+    if (fs.existsSync(tempFile)) {
+      fs.unlinkSync(tempFile);
+    }
+  });
+
+  it('should parse both USER_DOCS_REDIRECTS and DEVELOPER_DOCS_REDIRECTS', () => {
+    fs.writeFileSync(tempFile, mockMiddlewareTs);
+    const result = parseMiddlewareTs(tempFile);
+    expect(result.userDocsRedirects).toHaveLength(2);
+    expect(result.developerDocsRedirects).toHaveLength(1);
+  });
+
+  it('should convert from/to to source/destination format', () => {
+    fs.writeFileSync(tempFile, mockMiddlewareTs);
+    const result = parseMiddlewareTs(tempFile);
+    expect(result.userDocsRedirects[0]).toEqual({
+      source: '/platforms/python/old-path/',
+      destination: '/platforms/python/new-path/',
+    });
+    expect(result.developerDocsRedirects[0]).toEqual({
+      source: '/sdk/old-api/',
+      destination: '/sdk/new-api/',
+    });
+  });
+
+  it('should return empty arrays for non-existent file', () => {
+    const result = parseMiddlewareTs('/nonexistent/middleware.ts');
+    expect(result.developerDocsRedirects).toEqual([]);
+    expect(result.userDocsRedirects).toEqual([]);
+  });
+
+  it('should parse real src/middleware.ts file', () => {
+    const result = parseMiddlewareTs('src/middleware.ts');
+    expect(result.userDocsRedirects.length).toBeGreaterThan(0);
+    expect(result.developerDocsRedirects.length).toBeGreaterThan(0);
   });
 });
 

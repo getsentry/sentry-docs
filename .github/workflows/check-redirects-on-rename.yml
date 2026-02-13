@@ -86,11 +86,21 @@ jobs:
             const userDocsRedirects = missingRedirects.filter(mr => !mr.isDeveloperDocs);
 
             let comment = '## ⚠️ Missing Redirects Detected\n\n';
-            comment += 'This PR renames or moves MDX files, but some redirects may be missing from `redirects.js`.\n\n';
+            comment += 'This PR renames or moves MDX files, but some redirects may be missing from `redirects.js` or `src/middleware.ts`.\n\n';
             comment += 'Please add the following redirects to ensure old URLs continue to work:\n\n';
 
             if (userDocsRedirects.length > 0) {
-              comment += '### User Docs Redirects (userDocsRedirects array)\n\n';
+              comment += '### User Docs Redirects\n\n';
+              comment += '**Option A (Recommended):** Add to `USER_DOCS_REDIRECTS` in `src/middleware.ts`:\n\n';
+              comment += '```typescript\n';
+              userDocsRedirects.forEach(mr => {
+                comment += `  {\n`;
+                comment += `    from: '${mr.oldUrl}',\n`;
+                comment += `    to: '${mr.newUrl}',\n`;
+                comment += `  },\n`;
+              });
+              comment += '```\n\n';
+              comment += '**Option B:** Add to `userDocsRedirects` in `redirects.js`:\n\n';
               comment += '```javascript\n';
               userDocsRedirects.forEach(mr => {
                 comment += `  {\n`;
@@ -102,7 +112,17 @@ jobs:
             }
 
             if (devDocsRedirects.length > 0) {
-              comment += '### Developer Docs Redirects (developerDocsRedirects array)\n\n';
+              comment += '### Developer Docs Redirects\n\n';
+              comment += '**Option A (Recommended):** Add to `DEVELOPER_DOCS_REDIRECTS` in `src/middleware.ts`:\n\n';
+              comment += '```typescript\n';
+              devDocsRedirects.forEach(mr => {
+                comment += `  {\n`;
+                comment += `    from: '${mr.oldUrl}',\n`;
+                comment += `    to: '${mr.newUrl}',\n`;
+                comment += `  },\n`;
+              });
+              comment += '```\n\n';
+              comment += '**Option B:** Add to `developerDocsRedirects` in `redirects.js`:\n\n';
               comment += '```javascript\n';
               devDocsRedirects.forEach(mr => {
                 comment += `  {\n`;
@@ -114,7 +134,7 @@ jobs:
             }
 
             comment += '---\n';
-            comment += '_Note: This check will fail until redirects are added. Adding redirects ensures old links continue to work._\n';
+            comment += '_Note: `src/middleware.ts` is recommended for simple exact-match redirects. Use `redirects.js` for redirects with path parameters (e.g., `:path*`)._\n';
 
             // Check for existing comments from this action
             const {data: comments} = await github.rest.issues.listComments({

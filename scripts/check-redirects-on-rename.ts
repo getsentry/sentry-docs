@@ -157,6 +157,55 @@ function parseRedirectsJs(filePath: string): {
 }
 
 /**
+ * Parses middleware.ts to extract redirect entries from USER_DOCS_REDIRECTS and DEVELOPER_DOCS_REDIRECTS.
+ * These use {from, to} format which we convert to {source, destination} for consistency.
+ */
+function parseMiddlewareTs(filePath: string): {
+  developerDocsRedirects: Redirect[];
+  userDocsRedirects: Redirect[];
+} {
+  if (!fs.existsSync(filePath)) {
+    console.warn(`⚠️  middleware.ts not found at ${filePath}`);
+    return {developerDocsRedirects: [], userDocsRedirects: []};
+  }
+
+  try {
+    const content = fs.readFileSync(filePath, 'utf8');
+
+    const parseArray = (arrayName: string): Redirect[] => {
+      // Match the array contents between `const <NAME>: Redirect[] = [` and `];`
+      const regex = new RegExp(
+        `const ${arrayName}:\\s*Redirect\\[\\]\\s*=\\s*\\[([\\s\\S]*?)\\];`
+      );
+      const match = content.match(regex);
+      if (!match) {
+        return [];
+      }
+
+      const redirects: Redirect[] = [];
+      // Match individual {from: '...', to: '...'} entries
+      const entryRegex = /\{\s*from:\s*'([^']+)',\s*to:\s*'([^']+)',?\s*\}/g;
+      let entryMatch: RegExpExecArray | null;
+      while ((entryMatch = entryRegex.exec(match[1])) !== null) {
+        redirects.push({
+          source: entryMatch[1],
+          destination: entryMatch[2],
+        });
+      }
+      return redirects;
+    };
+
+    return {
+      userDocsRedirects: parseArray('USER_DOCS_REDIRECTS'),
+      developerDocsRedirects: parseArray('DEVELOPER_DOCS_REDIRECTS'),
+    };
+  } catch (error) {
+    console.warn(`⚠️  Error parsing middleware redirects from ${filePath}:`, error);
+    return {developerDocsRedirects: [], userDocsRedirects: []};
+  }
+}
+
+/**
  * Escapes special regex characters in a string so they are treated as literals
  */
 function escapeRegexSpecialChars(str: string): string {
@@ -271,10 +320,11 @@ function validateRedirects(): MissingRedirect[] {
   const baseSha = process.env.GITHUB_BASE_SHA || `origin/${baseBranch}`;
   const headSha = process.env.GITHUB_SHA || 'HEAD';
 
-  // Determine which version of redirects.js to check
-  // If redirects.js was modified in the PR, we should validate against the PR version
+  // Determine which version of redirects.js and middleware.ts to check
+  // If modified in the PR, validate against the PR version
   // Otherwise, validate against the base branch version
   let redirectsFilePath = 'redirects.js';
+  let middlewareFilePath = 'src/middleware.ts';
 
   try {
     // Check if redirects.js was modified in this PR
@@ -289,9 +339,10 @@ function validateRedirects(): MissingRedirect[] {
       .toString()
       .trim();
 
-    const redirectsModified = modifiedFiles.includes('redirects.js');
+    const redirectsJsModified = modifiedFiles.includes('redirects.js');
+    const middlewareModified = modifiedFiles.includes('src/middleware.ts');
 
-    if (redirectsModified) {
+    if (redirectsJsModified) {
       console.log('📝 redirects.js was modified in this PR, using PR version');
       redirectsFilePath = 'redirects.js';
     } else {
@@ -314,26 +365,65 @@ function validateRedirects(): MissingRedirect[] {
         redirectsFilePath = 'redirects.js';
       }
     }
+
+    // Determine which version of middleware.ts to check
+    if (middlewareModified) {
+      console.log('📝 middleware.ts was modified in this PR, using PR version');
+      middlewareFilePath = 'src/middleware.ts';
+    } else {
+      try {
+        const baseMiddleware = execFileSync(
+          'git',
+          ['show', `${baseSha}:src/middleware.ts`],
+          {encoding: 'utf8', stdio: 'pipe'}
+        );
+        const tmpMiddleware = path.join(process.cwd(), 'middleware-base.ts');
+        fs.writeFileSync(tmpMiddleware, baseMiddleware);
+        middlewareFilePath = tmpMiddleware;
+        console.log('📝 middleware.ts was not modified, using base branch version');
+      } catch (err) {
+        console.log(
+          '⚠️  Could not get base version of middleware.ts, using current version'
+        );
+        middlewareFilePath = 'src/middleware.ts';
+      }
+    }
   } catch (err) {
-    // If we can't determine, use current file
-    console.log('⚠️  Could not determine redirects.js status, using current version');
+    // If we can't determine, use current files
+    console.log(
+      '⚠️  Could not determine file modification status, using current versions'
+    );
     redirectsFilePath = 'redirects.js';
   }
 
-  const {developerDocsRedirects, userDocsRedirects} = parseRedirectsJs(redirectsFilePath);
+  // Parse redirects from both sources
+  const redirectsJsResult = parseRedirectsJs(redirectsFilePath);
+  const middlewareResult = parseMiddlewareTs(middlewareFilePath);
 
-  // Clean up temp file after use
-  try {
-    const tmpFile = path.join(process.cwd(), 'redirects-base.js');
-    if (fs.existsSync(tmpFile)) {
-      fs.unlinkSync(tmpFile);
+  // Merge redirects from both sources
+  const developerDocsRedirects = [
+    ...redirectsJsResult.developerDocsRedirects,
+    ...middlewareResult.developerDocsRedirects,
+  ];
+  const userDocsRedirects = [
+    ...redirectsJsResult.userDocsRedirects,
+    ...middlewareResult.userDocsRedirects,
+  ];
+
+  // Clean up temp files after use
+  for (const tmpFile of ['redirects-base.js', 'middleware-base.ts']) {
+    try {
+      const tmpPath = path.join(process.cwd(), tmpFile);
+      if (fs.existsSync(tmpPath)) {
+        fs.unlinkSync(tmpPath);
+      }
+    } catch {
+      // Ignore cleanup errors
     }
-  } catch {
-    // Ignore cleanup errors
   }
 
   console.log(
-    `📋 Found ${developerDocsRedirects.length} developer docs redirects and ${userDocsRedirects.length} user docs redirects`
+    `📋 Found ${developerDocsRedirects.length} developer docs redirects and ${userDocsRedirects.length} user docs redirects (from redirects.js + middleware.ts)`
   );
 
   const missingRedirects: MissingRedirect[] = [];
@@ -395,9 +485,17 @@ if (require.main === module) {
 
     process.exit(1);
   } else {
-    console.log('\n✅ All renamed files have corresponding redirects in redirects.js');
+    console.log(
+      '\n✅ All renamed files have corresponding redirects in redirects.js or middleware.ts'
+    );
     process.exit(0);
   }
 }
 
-export {validateRedirects, filePathToUrls, parseRedirectsJs, redirectMatches};
+export {
+  validateRedirects,
+  filePathToUrls,
+  parseRedirectsJs,
+  parseMiddlewareTs,
+  redirectMatches,
+};
