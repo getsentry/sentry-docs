@@ -3,11 +3,14 @@
 ## Package Manager
 Use **yarn**: `yarn install`, `yarn dev`, `yarn build`, `yarn test`
 
-## Commit Attribution
-AI commits MUST include:
-```
-Co-Authored-By: Claude <noreply@anthropic.com>
-```
+## Commits
+
+Format: `type(scope): subject` per https://develop.sentry.dev/commit-messages/
+
+- Types: feat, fix, docs, ref, chore, test, style, perf, build, ci, meta
+- Subject: imperative, capitalized, max 70 chars, no period
+- Each commit = single stable change
+- AI commits MUST include: `Co-Authored-By: Claude <noreply@anthropic.com>`
 
 ## Development
 - `yarn dev` - Start dev server with Sentry sidecar
@@ -69,6 +72,10 @@ When writing requirements in `develop-docs/`:
 - Make the plan extremely concise. Sacrifice grammar for the sake of concision.
 - At the end of each plan, give me a list of unresolved questions to answer, if any.
 
-## Pull Request generation 
+## Pull Requests
 
-Use .github/PULL_REQUEST_TEMPLATE.md and add Co-Authored-By: Claude
+1. Self-review your diff before creating the PR
+2. Use .github/PULL_REQUEST_TEMPLATE.md
+3. Description MUST explain what changed and why -- never blank or title restatement
+4. PR title follows commit format: `type(scope): subject`
+5. One feature/fix per PR
