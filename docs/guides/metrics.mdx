@@ -1,7 +1,7 @@
 ---
 title: "What to Track"
-sidebar_order: 5
-description: "Practical guidance on what metrics to track and how to explore them in Sentry."
+sidebar_order: 15
+description: "Practical guidance on what metrics to track, how to explore them, and when to set alerts."
 ---
 
 You've set up Sentry Metrics. Now what? This guide covers the high-value metric patterns that give you visibility into application health and how to drill into traces when something looks off.
@@ -27,11 +27,11 @@ Sentry.metrics.count("checkout.failed", 1, {
 });
 ```
 
-## Where to Add Metrics
+## Where to Track Metrics
 
-Try these five metrics and you'll spot issues before they become problems.
+Start with these five metrics and you'll spot issues before they become problems.
 
-### 1. Business Events (Counters)
+### 1. Business Events
 
 Track discrete events that matter to the business. These become your KPIs.
 
@@ -45,13 +45,13 @@ Sentry.metrics.count("checkout.failed", 1, {
 });
 ```
 
-**How to explore:**
+**Explore in Sentry:**
 1. Go to **Explore > Metrics**
 2. Select `checkout.failed`, set **Aggregate** to `sum`
 3. **Group by** `failure_reason`
 4. Click **Samples** to see individual events and their traces
 
-### 2. Application Health (Counters)
+### 2. Application Health
 
 Track success and failure of critical operations.
 
@@ -69,9 +69,9 @@ Sentry.metrics.count("job.processed", 1, {
 });
 ```
 
-**Explore:** Add both `email.sent` and `email.failed`, group by `email_type`, compare the ratio.
+**Explore in Sentry:** Add both `email.sent` and `email.failed`, group by `email_type`, compare the ratio.
 
-### 3. Resource Utilization (Gauges)
+### 3. Resource Utilization
 
 Track current state of pools, queues, and connections. Call these periodically (e.g., every 30 seconds).
 
@@ -85,9 +85,9 @@ Sentry.metrics.gauge("pool.connections_active", pool.activeConnections, {
 });
 ```
 
-**Explore:** View `max(queue.depth)` over time to spot backlogs.
+**Explore in Sentry:** View `max(queue.depth)` over time to spot backlogs.
 
-### 4. Latency and Performance (Distributions)
+### 4. Latency and Performance
 
 Track values that vary and need percentile analysis. **Tip:** averages can hide outliers, use p90/p95/p99 instead.
 
@@ -103,9 +103,9 @@ Sentry.metrics.distribution("db.query_time", queryDurationMs, {
 });
 ```
 
-**Explore:** View `p95(api.latency)` grouped by `endpoint` to find slow routes.
+**Explore in Sentry:** View `p95(api.latency)` grouped by `endpoint` to find slow routes.
 
-### 5. Business Values (Distributions)
+### 5. Business Values
 
 Track amounts, sizes, and quantities for analysis.
 
@@ -121,7 +121,44 @@ Sentry.metrics.distribution("upload.size", fileSizeBytes, {
 });
 ```
 
-**Explore:** View `avg(order.amount)` grouped by `region` to compare regional performance.
+**Explore in Sentry:** View `avg(order.amount)` grouped by `region` to compare regional performance.
+
+{/*
+## Creating Alerts From Metrics
+
+1. Go to **Explore > Metrics**
+2. Build your query (e.g., `checkout.failed` grouped by `failure_reason`)
+3. Click **Save As** - **Alert**
+4. Choose a threshold type:
+   - **Static:** Alert when count exceeds a value
+   - **Percent Change:** Alert when count changes relative to a previous period
+   - **Anomaly:** Let Sentry detect unusual patterns
+5. Configure notification channels and save
+
+Learn about [creating alerts](/product/new-monitors-and-alerts/alerts/) and best practices for [reducing noise and routing notifications](/product/new-monitors-and-alerts/alerts/best-practices/).
+*/}
+
+## Alerts and Dashboard Widgets
+
+<Alert level="info">
+  Alerts and dashboard widgets for Metrics are coming soon.
+</Alert>
+
+You'll soon be able to:
+- Create alert rules based on metric queries
+- Add metric visualizations to dashboards
+- Set up notifications when metrics cross thresholds
+- Save common queries for quick access
+
+## Quick Reference
+
+| Category | Type | Method | Example Attributes |
+|----------|------|--------|----------------|
+| Business events | Counter | `count()` | user_tier, payment_method, failure_reason |
+| Application health | Counter | `count()` | email_type, provider, job_type, queue |
+| Resource utilization | Gauge | `gauge()` | queue_name, pool_name |
+| Latency/performance | Distribution | `distribution()` | endpoint, method, table, operation |
+| Business values | Distribution | `distribution()` | user_tier, region, file_type |
 
 ## When to Use Metrics vs Traces vs Logs
 

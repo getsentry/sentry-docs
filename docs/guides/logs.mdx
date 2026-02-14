@@ -1,6 +1,6 @@
 ---
 title: "What to Log"
-sidebar_order: 5
+sidebar_order: 10
 description: "Practical guidance on what to log, how to search logs, and when to set alerts."
 ---
 
@@ -156,9 +156,34 @@ Sentry.logger.warn("Config reloaded", {
    - **Anomaly:** Let Sentry detect unusual patterns
 5. Configure notification channels and save
 
-# Logging Strategy
+Learn about [creating alerts](/product/new-monitors-and-alerts/alerts/) and best practices for [reducing noise and routing notifications](/product/new-monitors-and-alerts/alerts/best-practices/).
 
-## Production Logging
+## Logging Strategy
+
+### Development Logging
+
+In development, set sample rates to 100% to catch everything. This helps you understand what logs are being generated and tune your instrumentation before it hits production.
+
+**Development configuration:**
+
+```javascript
+Sentry.init({
+  dsn: "...",
+  environment: "development",
+  tracesSampleRate: 1.0,  // 100% of traces
+  // Capture all logs in development
+  integrations: [
+    Sentry.captureConsoleIntegration({
+      levels: ["log", "info", "warn", "error", "debug"]
+    })
+  ]
+});
+```
+
+Use verbose logging levels like `debug` (development diagnostics) and `trace` (fine-grained execution details) freely in development. You can [filter these out in production](/platforms/javascript/logs/#filter-logs) using `beforeSendLog` to only capture `info` and above.
+
+### Production Logging
+
 Local debugging often means many small logs tracing execution flow. In production, this creates noise that's hard to query.
 
 Instead, log fewer messages with higher cardinality. Store events during execution and emit them as a single structured log.
@@ -189,7 +214,7 @@ Sentry.logger.error("Checkout failed", {
 
 One log tells the whole story. Search for the error and get full context.
 
-## Log Drains for Platform Logs
+### Log Drains for Platform Logs
 
 If you can't install the Sentry SDK or need platform-level logs (CDN, database, load balancer), use [Log Drains](/product/drains/).
 
@@ -199,7 +224,7 @@ If you can't install the Sentry SDK or need platform-level logs (CDN, database, 
 
 ## Quick Reference
 
-| Category | Level | Key Attributes |
+| Category | Level | Example Attributes |
 |----------|-------|----------------|
 | Auth events | `info`/`warn` | userId, authMethod, reason |
 | Payments | `info`/`error` | orderId, amount, gateway, errorCode |

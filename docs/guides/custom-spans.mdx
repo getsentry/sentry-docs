@@ -1,20 +1,10 @@
 ---
 title: "Adding Custom Spans"
-sidebar_order: 15
-description: "Add custom instrumentation for visibility beyond auto-instrumentation."
+sidebar_order: 30
+description: "Add custom instrumentation for visibility beyond auto-instrumentation and set up alerts."
 ---
 
-Auto-instrumentation captures a lot, but some operations need manual spans. This guide covers when and how to add custom instrumentation.
-
-## When to Add Custom Spans
-
-Add custom spans when you need visibility that auto-instrumentation doesn't provide:
-
-- Business-critical flows (checkout, onboarding)
-- Third-party API calls with custom context
-- Database queries with business context
-- Background job execution
-- AI/LLM operations
+You've got auto-instrumentation running. Now what? Auto-instrumentation captures HTTP, database, and framework operations, but it can't see business logic, third-party APIs without auto-instrumentation, or background jobs. This guide shows you where to add custom spans.
 
 ## The Pattern
 
@@ -30,9 +20,11 @@ Sentry.startSpan(
 
 Numeric attributes become metrics you can aggregate with `sum()`, `avg()`, `p90()` in Trace Explorer.
 
-## Where to Add Custom Spans
+## Where to Add Spans
 
-### Business-Critical User Flows
+Start with these five areas and you'll have visibility into the operations that matter most.
+
+### 1. Business-Critical User Flows
 
 Track the full journey through critical paths. When checkout is slow, you need to know which step.
 
@@ -50,11 +42,11 @@ Sentry.startSpan(
 );
 ```
 
-**Query:** `span.op:user.action` grouped by `user.tier`, visualize `p90(span.duration)`.
+**Query in Explore > Traces:** `span.op:user.action` grouped by `user.tier`, visualize `p90(span.duration)`.
 
 **Alert idea:** `p90(span.duration) > 10s` for checkout flows.
 
-### Third-Party API Calls
+### 2. Third-Party API Calls
 
 Measure dependencies you don't control. They're often the source of slowdowns.
 
@@ -76,11 +68,11 @@ Sentry.startSpan(
 );
 ```
 
-**Query:** `span.op:http.client` + `response.timeMs:>2000` to find slow external calls.
+**Query in Explore > Traces:** `span.op:http.client response.timeMs:>2000` to find slow external calls.
 
 **Alert idea:** `p95(span.duration) > 3s` where `http.url` contains your critical dependencies.
 
-### Database Queries with Business Context
+### 3. Database Queries with Business Context
 
 Auto-instrumentation catches queries, but custom spans let you add context that explains why a query matters.
 
@@ -102,11 +94,11 @@ Sentry.startSpan(
 
 **Why this matters:** Without these attributes, you see "a database query took 2 seconds." With them, you know it was aggregating 30 days of data and returned 50,000 rows. That's actionable.
 
-**Query ideas:**
-- "Which aggregation queries are slowest?" → Group by `query.type`, sort by `p90(span.duration)`
-- "Does date range affect performance?" → Filter by name, group by `query.dateRange`
+**Query ideas in Explore > Traces:**
+- "Which aggregation queries are slowest?" Group by `query.type`, sort by `p90(span.duration)`
+- "Does date range affect performance?" Filter by name, group by `query.dateRange`
 
-### Background Jobs
+### 4. Background Jobs
 
 Jobs run outside request context. Custom spans make them visible.
 
@@ -132,11 +124,11 @@ async function processEmailDigest(job) {
 }
 ```
 
-**Query:** `span.op:queue.process` grouped by `job.type`, visualize `p90(span.duration)`.
+**Query in Explore > Traces:** `span.op:queue.process` grouped by `job.type`, visualize `p90(span.duration)`.
 
 **Alert idea:** `p90(span.duration) > 60s` for queue processing.
 
-### AI/LLM Operations
+### 5. AI/LLM Operations
 
 For AI workloads, use [Sentry Agent Monitoring](/product/insights/ai/agents/) instead of manual instrumentation when possible. It automatically captures agent workflows, tool calls, and token usage.
 
@@ -161,7 +153,7 @@ Sentry.startSpan(
 
 ## Quick Reference
 
-| Category | `op` Value | Key Attributes |
+| Category | `op` Value | Example Attributes |
 |----------|-----------|----------------|
 | User flows | `user.action` | cart.itemCount, user.tier |
 | External APIs | `http.client` | http.url, response.timeMs |
