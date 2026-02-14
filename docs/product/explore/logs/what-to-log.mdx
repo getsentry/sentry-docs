@@ -16,7 +16,7 @@ Sentry.logger.<level>(message, { attributes });
 
 **Levels:** `trace`, `debug`, `info`, `warn`, `error`, `fatal`
 
-**Attributes:** Key-value pairs you can search and filter on. Use whatever naming convention fits your codebase—consistency matters more than specific names.
+**Attributes:** Key-value pairs you can search and filter on. Consistency matters, so use whatever naming convention fits your codebase.
 
 ```javascript
 Sentry.logger.info("Order completed", {
@@ -27,15 +27,15 @@ Sentry.logger.info("Order completed", {
 });
 ```
 
-Every log is automatically trace-connected. Click any log entry to see the full trace, spans, and errors from that moment.
+Logs in Sentry are automatically trace-connected. Each log shows a trace ID that links to the full [trace view](/concepts/key-terms/tracing/trace-view/).
 
 ## Where to Add Logs
 
-These five categories give you the most debugging value per line of code.
+Start with these five areas and you'll catch most issues before users do.
 
 ### 1. Authentication Events
 
-Login flows are invisible until something breaks. Log successes and failures to spot patterns—brute force attempts, OAuth misconfigurations, or MFA issues.
+Login flows are invisible until something breaks. Log successes and failures to spot patterns like brute force attempts, OAuth misconfigurations, or MFA issues.
 
 ```javascript
 Sentry.logger.info("User logged in", {
@@ -51,9 +51,9 @@ Sentry.logger.warn("Login failed", {
 });
 ```
 
-**Search:** `userId:123 "logged in"` or `severity:warn authMethod:*`
+**Search in Sentry:** `userId:123 "logged in"` or `severity:warn authMethod:*`
 
-**Alert idea:** `severity:warn "Login failed"` exceeding your baseline in 5 minutes can indicate brute force or auth provider issues.
+**Alert idea:** Alert when `severity:warn "Login failed"` spikes in a 5-minute window—this can indicate brute force attempts or auth provider issues.
 
 ### 2. Payment and Checkout
 
@@ -69,13 +69,13 @@ Sentry.logger.error("Payment failed", {
 });
 ```
 
-**Search:** `orderId:order_123` or `severity:error gateway:stripe`
+**Search in Sentry:** `orderId:order_123` or `severity:error gateway:stripe`
 
-**Alert idea:** `severity:error gateway:*` spiking can indicate payment provider outages.
+**Alert idea:** Alert when `severity:error gateway:*` spikes—this can indicate payment provider outages.
 
 ### 3. External APIs and Async Operations
 
-Traces capture what your code does. Logs capture context about external triggers and async boundaries—webhooks, scheduled tasks, third-party API responses—that traces can't automatically instrument.
+Traces capture what your code does. Logs capture context about external triggers and async boundaries. Things like webhooks, scheduled tasks, and third-party API responses that traces can't automatically instrument.
 
 ```javascript
 // Third-party API call
@@ -97,13 +97,13 @@ Sentry.logger.info("Webhook received", {
 });
 ```
 
-**Search:** `service:shipping-provider durationMs:>2000` or `source:stripe`
+**Search in Sentry:** `service:shipping-provider durationMs:>2000` or `source:stripe`
 
-**Alert idea:** `service:* durationMs:>3000` can catch third-party slowdowns before they cascade.
+**Alert idea:** Alert when `service:* durationMs:>3000` to catch third-party slowdowns before they cascade.
 
 ### 4. Background Jobs
 
-Jobs run outside request context. Without logs, failed jobs are invisible until someone notices missing data.
+Jobs run outside the request context. Without logs, failed jobs are invisible until someone notices missing data.
 
 ```javascript
 Sentry.logger.info("Job started", {
@@ -120,9 +120,9 @@ Sentry.logger.error("Job failed", {
 });
 ```
 
-**Search:** `jobType:email-digest severity:error`
+**Search in Sentry:** `jobType:email-digest severity:error`
 
-**Alert idea:** `severity:error jobType:*` spiking can indicate queue processing issues or downstream failures.
+**Alert idea:** Alert when `severity:error jobType:*` spikes—this can indicate queue processing issues or downstream failures.
 
 ### 5. Feature Flags and Config Changes
 
@@ -141,21 +141,24 @@ Sentry.logger.warn("Config reloaded", {
 });
 ```
 
-**Search:** `flag:new-checkout-flow` or `"Config reloaded"`
+**Search in Sentry:** `flag:new-checkout-flow` or `"Config reloaded"`
 
 ## Creating Alerts From Logs
 
+{/* TODO: replace with Arcade */}
+
 1. Go to **Explore > Logs**
 2. Enter your search query (e.g., `severity:error gateway:*`)
-3. Click **Save As** → **Alert**
+3. Click **Save As** - **Alert**
 4. Choose a threshold type:
    - **Static:** Alert when count exceeds a value
    - **Percent Change:** Alert when count changes relative to a previous period
    - **Anomaly:** Let Sentry detect unusual patterns
 5. Configure notification channels and save
 
-## Production Logging Strategy
+# Logging Strategy
 
+## Production Logging
 Local debugging often means many small logs tracing execution flow. In production, this creates noise that's hard to query.
 
 Instead, log fewer messages with higher cardinality. Store events during execution and emit them as a single structured log.
@@ -190,9 +193,9 @@ One log tells the whole story. Search for the error and get full context.
 
 If you can't install the Sentry SDK or need platform-level logs (CDN, database, load balancer), use [Log Drains](/product/drains/).
 
-**Platform drains:** Vercel, Cloudflare Workers, Heroku, Supabase
+**Platform drains:** [Vercel](/product/drains/vercel/), [Cloudflare Workers](/product/drains/cloudflare/), [Heroku](/product/drains/heroku/), [Supabase](/product/drains/supabase/)
 
-**Forwarders:** OpenTelemetry Collector, Vector, Fluent Bit, AWS CloudWatch, Kafka
+**Forwarders:** [OpenTelemetry Collector](/concepts/otlp/forwarding/pipelines/collector/), [Vector](/concepts/otlp/forwarding/pipelines/vector/), [Fluent Bit](/concepts/otlp/forwarding/pipelines/fluentbit/), [AWS CloudWatch](/concepts/otlp/forwarding/sources/aws-cloudwatch/), [Kafka](/concepts/otlp/forwarding/sources/kafka/)
 
 ## Quick Reference
 
