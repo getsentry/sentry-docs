@@ -3,12 +3,6 @@
 ## Package Manager
 Use **yarn**: `yarn install`, `yarn dev`, `yarn build`, `yarn test`
 
-## Commit Attribution
-AI commits MUST include:
-```
-Co-Authored-By: Claude <noreply@anthropic.com>
-```
-
 ## Development
 - `yarn dev` - Start dev server with Sentry sidecar
 - `yarn dev:minimal` - Start dev server without sidecar
@@ -69,6 +63,11 @@ When writing requirements in `develop-docs/`:
 - Make the plan extremely concise. Sacrifice grammar for the sake of concision.
 - At the end of each plan, give me a list of unresolved questions to answer, if any.
 
-## Pull Request generation 
+## Local Skills
 
-Use .github/PULL_REQUEST_TEMPLATE.md and add Co-Authored-By: Claude
+| Skill | Path |
+|-------|------|
+| `commit` | `.claude/skills/commit/SKILL.md` |
+| `create-pr` | `.claude/skills/create-pr/SKILL.md` |
+| `technical-docs` | `.claude/skills/technical-docs/SKILL.md` |
+| `docs-review` | `.claude/skills/docs-review/SKILL.md` |
