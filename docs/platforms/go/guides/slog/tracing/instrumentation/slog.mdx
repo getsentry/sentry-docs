@@ -1,0 +1,72 @@
+---
+title: Slog Integration with Tracing
+sidebar_order: 201
+sdk: sentry.go.slog
+description: "Learn how to link Slog logs with distributed traces."
+---
+
+<Alert>
+
+To link logs with traces, you'll need to first <PlatformLink to="/tracing/">set up tracing</PlatformLink>.
+
+</Alert>
+
+The `sentryslog` integration provides structured logging support for Go's standard `log/slog` package (Go 1.21+). When combined with tracing, you can link your logs to traces for better observability.
+
+## Linking Logs to Traces
+
+To link your Slog logs to active traces, you need to use context-aware logging methods like `logger.InfoContext()`.
+
+### Example
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"log/slog"
+	"net/http"
+	"time"
+
+	"github.com/getsentry/sentry-go"
+	sentryhttp "github.com/getsentry/sentry-go/http"
+)
+
+func main() {
+	// Initialize Sentry with tracing enabled
+	if err := sentry.Init(sentry.ClientOptions{
+		Dsn:              "___PUBLIC_DSN___",
+		EnableTracing:    true,
+		TracesSampleRate: 1.0,
+	}); err != nil {
+		panic(err)
+	}
+	defer sentry.Flush(2 * time.Second)
+
+	sentryHandler := sentryhttp.New(sentryhttp.Options{})
+	http.Handle("/", sentryHandler.Handle(http.HandlerFunc(handler)))
+
+	fmt.Println("Listening on :3000")
+	http.ListenAndServe(":3000", nil)
+}
+
+func handler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	// Logs with context are automatically linked to the active trace
+	slog.InfoContext(ctx, "Processing request")
+
+	w.Write([]byte("OK"))
+}
+```
+
+## Best Practices
+
+- **Use context-aware methods**: Always use `InfoContext`, `ErrorContext`, etc. instead of `Info`, `Error`
+- **Log within transactions**: Ensure logs are created while a transaction or span is active
+
+## Related Documentation
+
+- <PlatformLink to="/logs/">Logs</PlatformLink> - Comprehensive logging setup
+- <PlatformLink to="/tracing/instrumentation/custom-instrumentation/">Custom Instrumentation</PlatformLink> - Manual tracing setup
+- [Slog Integration Guide](/platforms/go/guides/slog/) - Full Slog integration details

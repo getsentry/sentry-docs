@@ -1,7 +1,18 @@
 ---
 title: Zerolog
-description: "Zerolog is a fast and efficient logging library for Go, designed for structured logging. This guide demonstrates how to integrate Zerolog with Sentry."
+description: "Learn how to capture errors and events from Zerolog and send them to Sentry."
 ---
+
+<Alert level="warning">
+
+The zerolog integration sends error events to Sentry but does not support Structured Logs due to architectural limitations:
+- The `io.Writer` interface lacks access to `context.Context`, preventing proper per-request hub isolation
+- In concurrent applications, breadcrumbs from different requests may leak into each other's events
+- Related issues: [#1178](https://github.com/getsentry/sentry-go/issues/1178), [#1029](https://github.com/getsentry/sentry-go/issues/1029)
+
+For Structured Logs, use our Sentry.Logger or any of the supported integrations instead.
+
+</Alert>
 
 For a complete example, visit the [Go SDK source code repository](https://github.com/getsentry/sentry-go/tree/master/_examples/zerolog).
 
@@ -29,8 +40,8 @@ The sentryzerolog.Options struct has the following fields:
 
 ```go
 // Levels specifies the log levels that will trigger event sending to Sentry.
-// Only log messages at these levels will be sent. By default, the levels are
-// Error, Fatal, and Panic.
+// Only log messages at these levels will be sent as error events. By default,
+// the levels are Error, Fatal, and Panic.
 Levels []zerolog.Level
 
 // WithBreadcrumbs, when enabled, adds log entries as breadcrumbs in Sentry.
@@ -40,8 +51,7 @@ WithBreadcrumbs bool
 
 // FlushTimeout sets the maximum duration allowed for flushing events to Sentry.
 // This is the time limit within which all pending events must be sent to Sentry
-// before the application exits. A typical use is ensuring all logs are sent before
-// application shutdown. The default timeout is usually 3 seconds.
+// before the application exits. The default timeout is usually 3 seconds.
 FlushTimeout time.Duration
 ```
 
@@ -67,16 +77,16 @@ defer sentryWriter.Close()
 // Use Sentry writer in Zerolog
 log.Logger = log.Output(zerolog.MultiLevelWriter(zerolog.ConsoleWriter{Out: os.Stderr}, sentryWriter))
 
-// Test logging - this will be sent to Sentry as an event
+// Test error reporting - this will be sent to Sentry as an error event
 log.Error().Msg("This error will be sent to Sentry!")
 
-// Example of logging with error context
+// Example of error reporting with error context
 log.Error().Err(errors.New("test error")).Msg("An error occurred")
 ```
 
 ## Usage
 
-To integrate Sentry with Zerolog, you need to set up a custom writer that sends logs to Sentry based on the configured levels.
+To integrate Sentry with Zerolog, you need to set up a custom writer that sends error events to Sentry based on the configured levels.
 
 ```go
 import (
@@ -131,10 +141,10 @@ func main() {
 	// Log an InfoLevel entry to STDERR (not sent to Sentry)
 	log.Info().Msg("Application has started")
 
-	// Log an ErrorLevel entry to STDERR and Sentry
+	// Log an ErrorLevel entry to STDERR and send as error event to Sentry
 	log.Error().Msg("oh no!")
 
-	// Log a FatalLevel entry to STDERR, send to Sentry, and terminate the application
+	// Log a FatalLevel entry to STDERR, send as error event to Sentry, and terminate the application
 	log.Fatal().Err(errors.New("can't continue")).Msg("fatal error occurred")
 }
 ```
@@ -142,7 +152,7 @@ func main() {
 
 ### Using `hubProvider` for Scoped Sentry Hubs
 
-The hubProvider allows you to configure the Sentry hook to use a custom Sentry hub. This can be particularly useful when you want to scope logs to specific goroutines or operations, enabling more precise grouping and context in Sentry.
+The hubProvider allows you to configure the Sentry hook to use a custom Sentry hub. This can be particularly useful when you want to scope error events to specific goroutines or operations, enabling more precise grouping and context in Sentry.
 
 You can set a custom hubProvider function using the SetHubProvider method:
 
@@ -153,9 +163,13 @@ sentryHook.SetHubProvider(func() *sentry.Hub {
 })
 ```
 
-This ensures that logs from specific contexts or threads use the appropriate Sentry hub and scope.
+This ensures that error events from specific contexts or threads use the appropriate Sentry hub and scope.
 
 
-Use Zerolog as you normally would, and it will automatically send logs at or above the specified levels to Sentry.
+Use Zerolog as you normally would, and it will automatically send error events at or above the specified levels to Sentry.
 
 Note: Ensure Sentry is flushed before the application exits to avoid losing any pending events.
+
+## Concurrent Applications
+
+For concurrent applications (HTTP/gRPC servers), see the [tracing documentation](/platforms/go/guides/zerolog/tracing/instrumentation/zerolog/) for best practices on linking error events to traces with proper hub management.
