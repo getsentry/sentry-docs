@@ -39,11 +39,11 @@ export interface FrontMatter {
    * A list of keywords for indexing with search.
    */
   keywords?: string[];
+
   /**
    * Set this to true to show a "new" badge next to the title in the sidebar
    */
   new?: boolean;
-
   /**
    * The next page in the bottom pagination navigation.
    */
@@ -53,6 +53,7 @@ export interface FrontMatter {
    * takes precedence over children when present
    */
   next_steps?: string[];
+
   /**
    * Set this to true to disable indexing (robots, algolia) of this content.
    */
