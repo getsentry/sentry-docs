@@ -1,0 +1,91 @@
+---
+title: Overview
+description: What an SDK is, what it does, and how end-users interact with it.
+sidebar_order: 1
+---
+
+## Writing an SDK
+
+At its core an SDK is a set of utilities for capturing data about an exceptional state in an application. Given this data, it then builds and sends a JSON payload to the Sentry server.
+
+The following items are expected of production-ready SDKs:
+
+-   DSN configuration
+-   Graceful failures (e.g. Sentry server is unreachable)
+-   Setting attributes (e.g. tags and extra data)
+-   Support for Linux, Windows and OS X (where applicable)
+
+Feature based support is required for the following:
+
+-   If cookie data is available, it's not sent by default
+-   If POST data is available, it's not sent by default
+
+Additionally, the following features are highly encouraged:
+
+-   Automated error capturing (e.g. uncaught exception handlers)
+-   Logging framework integration
+-   Non-blocking event submission
+-   Context data helpers (e.g. setting the current user, recording breadcrumbs)
+-   Event sampling
+-   Honor Sentry's [Rate Limiting](/sdk/foundations/transport/rate-limiting/) HTTP headers
+-   Pre and Post event send hooks
+-   Local variable values in stack trace (on platforms where this is possible)
+-   Send an `environment` on each event. If none was detected or set by the user, `production` should be used.
+
+Please see the <Link to="/sdk/expected-features#features">expected features page</Link> for descriptions of commonly Sentry SDK features.
+
+## Usage for End-users
+
+Generally, using an SDK consists of three steps for the end user, which should look almost identical no matter the language:
+
+1.  Initialization of the SDK (sometimes this is hidden from the user):
+
+    ```javascript
+    Sentry.init({dsn: '___PROJECT.DSN___'});
+    ```
+
+    ```python
+    sentry_sdk.init('___PROJECT.DSN___')
+    ```
+
+2.  Capturing an event:
+
+    ```javascript
+    var resultId = Sentry.captureException(myException);
+    ```
+
+    ```python
+    result_id = sentry_sdk.capture_exception(my_exception);
+    ```
+
+3.  Using the result of an event capture:
+
+    ```javascript
+    alert(`Your exception was recorded as ${resultId}`);
+    ```
+
+    ```python
+    print('Your exception was recorded as %s', result_id);
+    ```
+
+`init` ideally allows several configuration methods. The first argument should always be the DSN value (if possible):
+
+```javascript
+Sentry.init({
+    'dsn': '___PROJECT.DSN___',
+    'foo': 'bar'
+})
+```
+
+<Alert title="Note">
+SDKs should accept an empty DSN as valid configuration.
+
+If an SDK is not initialized or if it is initialized with an empty DSN, the SDK should not send any data over the network, such as captured exceptions.
+Depending on the platform, the SDK may avoid performing unnecessary initialization work and reduce its runtime footprint to a minimum.
+</Alert>
+
+Additionally, you should provide global functions which allow for capturing of
+a basic message or exception:
+
+-   `Sentry.captureMessage(message)`
+-   `Sentry.captureException(exception)`

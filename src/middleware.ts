@@ -4330,6 +4330,22 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
     from: '/sdk/philosophy/',
     to: '/sdk/getting-started/philosophy/',
   },
+  {
+    from: '/sdk/data-model/envelopes/',
+    to: '/sdk/foundations/transport/envelopes/',
+  },
+  {
+    from: '/sdk/data-model/envelope-items/',
+    to: '/sdk/foundations/transport/envelope-items/',
+  },
+  {
+    from: '/sdk/expected-features/rate-limiting/',
+    to: '/sdk/foundations/transport/rate-limiting/',
+  },
+  {
+    from: '/sdk/overview/',
+    to: '/sdk/foundations/overview/',
+  },
 ];
 
 const redirectMap = new Map(
