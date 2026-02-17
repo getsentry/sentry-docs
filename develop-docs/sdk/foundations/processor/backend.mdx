@@ -8,7 +8,7 @@ sidebar_order: 1
   🚧 This document is work in progress.
 </Alert>
 
-For the common specification, refer to the [Telemetry Processor](/sdk/telemetry/telemetry-processor/) page. This page describes the backend-specific implementation. The key difference is that backend SDKs use **weighted round-robin scheduling** to ensure critical telemetry (like errors) gets priority over high-volume data (like logs) when the application is under heavy load.
+For the common specification, refer to the [Telemetry Processor](/sdk/foundations/processor/) page. This page describes the backend-specific implementation. The key difference is that backend SDKs use **weighted round-robin scheduling** to ensure critical telemetry (like errors) gets priority over high-volume data (like logs) when the application is under heavy load.
 
 ## Backend-Specific Design Decisions
 
@@ -77,15 +77,15 @@ Configurable via weights.
 
 #### TelemetryBuffer
 
-The telemetry buffer on the backend must follow the common [telemetry buffer requirements](/sdk/telemetry/telemetry-processor/#telemetry-buffer). Here are the additional requirements for the backend-specific implementation:
+The telemetry buffer on the backend must follow the common [telemetry buffer requirements](/sdk/foundations/processor/#telemetry-buffer). Here are the additional requirements for the backend-specific implementation:
 
 1. The telemetry buffer **SHOULD** drop older items as the overflow policy. It **MAY** also drop newer items to preserve what's already buffered.
 
-On the backend, use the same size limits as the [common requirements](/sdk/telemetry/telemetry-processor/#telemetry-buffer), except for spans, where we recommend **1000** because span volume is higher.
+On the backend, use the same size limits as the [common requirements](/sdk/foundations/processor/#telemetry-buffer), except for spans, where we recommend **1000** because span volume is higher.
 
 ##### Span Buffer
 
-The span buffer must follow the common [telemetry span buffer requirements](/sdk/telemetry/telemetry-processor/#span-buffer). Further requirements for the bucketed-by-trace buffer are:
+The span buffer must follow the common [telemetry span buffer requirements](/sdk/foundations/processor/#span-buffer). Further requirements for the bucketed-by-trace buffer are:
 
 1. The span buffer **MAY** use FIFO to prioritize forwarding spans: always forward spans from the oldest traceID. FIFO prevents spans from lingering in the buffer.
 

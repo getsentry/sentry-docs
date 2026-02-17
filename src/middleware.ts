@@ -4415,20 +4415,44 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
     to: '/sdk/foundations/data-model/event-payloads/user/',
   },
   {
+    from: '/sdk/telemetry/telemetry-processor/',
+    to: '/sdk/foundations/processor/',
+  },
+  {
     from: '/sdk/telemetry/telemetry-processor/backend-telemetry-processor/',
-    to: '/sdk/telemetry/telemetry-processor/backend/',
+    to: '/sdk/foundations/processor/backend/',
+  },
+  {
+    from: '/sdk/telemetry/telemetry-processor/backend/',
+    to: '/sdk/foundations/processor/backend/',
   },
   {
     from: '/sdk/telemetry/telemetry-processor/browser-telemetry-processor/',
-    to: '/sdk/telemetry/telemetry-processor/browser/',
+    to: '/sdk/foundations/processor/browser/',
+  },
+  {
+    from: '/sdk/telemetry/telemetry-processor/browser/',
+    to: '/sdk/foundations/processor/browser/',
   },
   {
     from: '/sdk/telemetry/telemetry-processor/gdx-telemetry-processor/',
-    to: '/sdk/telemetry/telemetry-processor/gdx/',
+    to: '/sdk/foundations/processor/gdx/',
+  },
+  {
+    from: '/sdk/telemetry/telemetry-processor/gdx/',
+    to: '/sdk/foundations/processor/gdx/',
   },
   {
     from: '/sdk/telemetry/telemetry-processor/mobile-telemetry-processor/',
-    to: '/sdk/telemetry/telemetry-processor/mobile/',
+    to: '/sdk/foundations/processor/mobile/',
+  },
+  {
+    from: '/sdk/telemetry/telemetry-processor/mobile/',
+    to: '/sdk/foundations/processor/mobile/',
+  },
+  {
+    from: '/sdk/telemetry/telemetry-processor/batch-processor/',
+    to: '/sdk/foundations/processor/batch-processor/',
   },
 ];
 
