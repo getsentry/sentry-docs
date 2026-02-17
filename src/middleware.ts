@@ -4332,11 +4332,11 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/sdk/data-model/envelopes/',
-    to: '/sdk/foundations/transport/envelopes/',
+    to: '/sdk/foundations/data-model/envelopes/',
   },
   {
     from: '/sdk/data-model/envelope-items/',
-    to: '/sdk/foundations/transport/envelope-items/',
+    to: '/sdk/foundations/data-model/envelope-items/',
   },
   {
     from: '/sdk/expected-features/rate-limiting/',
@@ -4352,67 +4352,67 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/sdk/data-model/event-payloads/',
-    to: '/sdk/foundations/data-model/event-payloads/',
+    to: '/sdk/foundations/data-model/events/',
   },
   {
     from: '/sdk/data-model/event-payloads/breadcrumbs/',
-    to: '/sdk/foundations/data-model/event-payloads/breadcrumbs/',
+    to: '/sdk/foundations/data-model/events/breadcrumbs/',
   },
   {
     from: '/sdk/data-model/event-payloads/contexts/',
-    to: '/sdk/foundations/data-model/event-payloads/contexts/',
+    to: '/sdk/foundations/data-model/events/contexts/',
   },
   {
     from: '/sdk/data-model/event-payloads/debugmeta/',
-    to: '/sdk/foundations/data-model/event-payloads/debugmeta/',
+    to: '/sdk/foundations/data-model/events/debugmeta/',
   },
   {
     from: '/sdk/data-model/event-payloads/exception/',
-    to: '/sdk/foundations/data-model/event-payloads/exception/',
+    to: '/sdk/foundations/data-model/events/exception/',
   },
   {
     from: '/sdk/data-model/event-payloads/lockreason/',
-    to: '/sdk/foundations/data-model/event-payloads/lockreason/',
+    to: '/sdk/foundations/data-model/events/lockreason/',
   },
   {
     from: '/sdk/data-model/event-payloads/message/',
-    to: '/sdk/foundations/data-model/event-payloads/message/',
+    to: '/sdk/foundations/data-model/events/message/',
   },
   {
     from: '/sdk/data-model/event-payloads/replay-recording/',
-    to: '/sdk/foundations/data-model/event-payloads/replay-recording/',
+    to: '/sdk/foundations/data-model/events/replay-recording/',
   },
   {
     from: '/sdk/data-model/event-payloads/request/',
-    to: '/sdk/foundations/data-model/event-payloads/request/',
+    to: '/sdk/foundations/data-model/events/request/',
   },
   {
     from: '/sdk/data-model/event-payloads/sdk/',
-    to: '/sdk/foundations/data-model/event-payloads/sdk/',
+    to: '/sdk/foundations/data-model/events/sdk/',
   },
   {
     from: '/sdk/data-model/event-payloads/span/',
-    to: '/sdk/foundations/data-model/event-payloads/span/',
+    to: '/sdk/foundations/data-model/events/span/',
   },
   {
     from: '/sdk/data-model/event-payloads/stacktrace/',
-    to: '/sdk/foundations/data-model/event-payloads/stacktrace/',
+    to: '/sdk/foundations/data-model/events/stacktrace/',
   },
   {
     from: '/sdk/data-model/event-payloads/template/',
-    to: '/sdk/foundations/data-model/event-payloads/template/',
+    to: '/sdk/foundations/data-model/events/template/',
   },
   {
     from: '/sdk/data-model/event-payloads/threads/',
-    to: '/sdk/foundations/data-model/event-payloads/threads/',
+    to: '/sdk/foundations/data-model/events/threads/',
   },
   {
     from: '/sdk/data-model/event-payloads/transaction/',
-    to: '/sdk/foundations/data-model/event-payloads/transaction/',
+    to: '/sdk/foundations/data-model/events/transaction/',
   },
   {
     from: '/sdk/data-model/event-payloads/user/',
-    to: '/sdk/foundations/data-model/event-payloads/user/',
+    to: '/sdk/foundations/data-model/events/user/',
   },
 ];
 

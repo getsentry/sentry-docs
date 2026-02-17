@@ -44,7 +44,7 @@ With deeper framework integration, the automatic recording of breadcrumbs is pos
 * System Events: low battery, low storage space, airplane mode started, memory warnings, device orientation changed, etc.
 * [Outgoing HTTP requests](#http-client-integrations)
 
-Check out the [complete breadcrumb documentation](/sdk/foundations/data-model/event-payloads/breadcrumbs/#breadcrumb-types) for more types.
+Check out the [complete breadcrumb documentation](/sdk/foundations/data-model/events/breadcrumbs/#breadcrumb-types) for more types.
 
 ## Event Sampling
 
@@ -128,7 +128,7 @@ An SDK may optionally track feature flag evaluations. Feature flags can be attac
 
 When tracking feature flag evaluations on spans, we track the first 10 feature flags evaluated within the span's scope.  Evaluations are span attributes and follow the existing span attribute schema.
 
-When tracking on error feature flag evaluations, we record the 100 most recent, unique feature flag evaluations.  Evaluations are stored on the scope. When the scope forks a copy of the collected feature flag evaluations are given to the child scope.  Mutations to the child's copy of the feature flags object should not be propagated to the parent.  Flag evaluations within a scope are considered local to the scope and do not propagate.  Evaluations should be submitted to Sentry following the schema specified in the <Link to="/sdk/foundations/data-model/event-payloads/contexts/#feature-flag-context">Feature Flag Context</Link> protocol documentation.
+When tracking on error feature flag evaluations, we record the 100 most recent, unique feature flag evaluations.  Evaluations are stored on the scope. When the scope forks a copy of the collected feature flag evaluations are given to the child scope.  Mutations to the child's copy of the feature flags object should not be propagated to the parent.  Flag evaluations within a scope are considered local to the scope and do not propagate.  Evaluations should be submitted to Sentry following the schema specified in the <Link to="/sdk/foundations/data-model/events/contexts/#feature-flag-context">Feature Flag Context</Link> protocol documentation.
 
 If an SDK supports feature flags it must expose a function `add_feature_flag` which has similar behavior to the `set_tag` function. It must accept a key of type string and a value which is a union of string, boolean, integer, float, and structure.
 
@@ -146,7 +146,7 @@ Ability to get the ID of the last event sent. Event IDs are useful for correlati
 
 ## User Feedback
 
-For all SDKs, it is strongly recommended to send the `User Feedback` as an [envelope item](/sdk/foundations/transport/envelope-items/#user-report---deprecated). Alternatively, the SDKs can
+For all SDKs, it is strongly recommended to send the `User Feedback` as an [envelope item](/sdk/foundations/data-model/envelope-items/#user-report---deprecated). Alternatively, the SDKs can
 use the [User Feedback endpoint](https://docs.sentry.io/api/projects/submit-user-feedback/), which is not recommended.
 
 ### User Facing Platforms
@@ -194,7 +194,7 @@ Envelope item:
 
 ## Attachments
 
-Attachments are files stored alongside an event. To send an attachment, add it as an [envelope item](/sdk/foundations/transport/envelope-items/#attachment)
+Attachments are files stored alongside an event. To send an attachment, add it as an [envelope item](/sdk/foundations/data-model/envelope-items/#attachment)
 to the corresponding event.
 
 We recommend implementing two types of attachments, one with a path and another with a byte array.
@@ -206,7 +206,7 @@ The overload that takes a `path` should consider:
 * If reading the attachment fails, the SDK should not drop the whole envelope, but just the attachment's envelope item.
 * If the SDK is in debug mode log (`debug=true`) out errors to make debugging easier.
 
-If the SDK supports [transactions](/sdk/foundations/transport/envelope-items/#transaction), the attachments should offer a flag `addToTransactions`,
+If the SDK supports [transactions](/sdk/foundations/data-model/envelope-items/#transaction), the attachments should offer a flag `addToTransactions`,
 that specifies if SDK adds the attachment to every transaction or not. The default should be `false`.
 
 Use the implementations of [Java](https://github.com/getsentry/sentry-java/blob/main/sentry/src/main/java/io/sentry/Attachment.java),
@@ -222,7 +222,7 @@ useful because attachments could quickly eat up the users' disk space. Furthermo
 
 ## Screenshots
 
-When the user opts-in, if technically possible, take a screenshot of the application during a crash or error and include it as an [attachment](#attachments) to the [envelope](/sdk/foundations/transport/envelopes/) with the event.
+When the user opts-in, if technically possible, take a screenshot of the application during a crash or error and include it as an [attachment](#attachments) to the [envelope](/sdk/foundations/data-model/envelopes/) with the event.
 
 This feature only applies to SDKs with a user interface, such as Mobile and Desktop.
 In some environments such as native iOS, taking a screenshot requires the UI thread and in the event of a crash, that might not be available. So inherently this feature will be a best effort solution.
@@ -369,7 +369,7 @@ If Performance Monitoring is both supported by the SDK and enabled in the client
 - description: `$METHOD $url` (uppercase HTTP method), e.g. `GET https://sentry.io`
 - HTTP requests must be enhanced with a [`sentry-trace` HTTP header](/sdk/telemetry/traces/#header-sentry-trace) to support [distributed tracing](https://docs.sentry.io/product/sentry-basics/tracing/distributed-tracing)
 - HTTP requests must be enhanced with a [`baggage` HTTP header](/sdk/telemetry/traces/dynamic-sampling-context/#baggage-header) to support [dynamic sampling](/sdk/telemetry/traces/dynamic-sampling-context/)
-- span status must match HTTP response status code ([see Span status to HTTP status code mapping](/sdk/foundations/data-model/event-payloads/span/))
+- span status must match HTTP response status code ([see Span status to HTTP status code mapping](/sdk/foundations/data-model/events/span/))
 - when network error occurs, span status must be set to `internal_error`
 - span data must follow the [Span Data Conventions](/sdk/telemetry/traces/span-data-conventions/)
 
@@ -390,9 +390,9 @@ The HTTP Client integration should have 3 configuration options:
 
 The HTTP Client integration should capture error events with the following properties:
 
-The Request interface, see the <Link to="/sdk/foundations/data-model/event-payloads/request/">Spec</Link> for details.
+The Request interface, see the <Link to="/sdk/foundations/data-model/events/request/">Spec</Link> for details.
 
-The Response context, see the <Link to="/sdk/foundations/data-model/event-payloads/contexts/#response-context">Spec</Link> for details.
+The Response context, see the <Link to="/sdk/foundations/data-model/events/contexts/#response-context">Spec</Link> for details.
 
 ```json
 {
@@ -411,12 +411,12 @@ The Response context, see the <Link to="/sdk/foundations/data-model/event-payloa
 }
 ```
 
-The Exception Interface, see the <Link to="/sdk/foundations/data-model/event-payloads/exception/">Spec</Link> for details.
+The Exception Interface, see the <Link to="/sdk/foundations/data-model/events/exception/">Spec</Link> for details.
 
 If the HTTP Client integration does not throw an exception for unsuccessful requests, you can create a synthetic exception following this Spec:
 
-- Set the <Link to="/sdk/foundations/data-model/event-payloads/exception/#exception-mechanism">Exception Mechanism</Link> with a proper `type` such as `SentryOkHttpInterceptor`.
-- Set the <Link to="/sdk/foundations/data-model/event-payloads/stacktrace/">Stack Trace Interface</Link> with `snapshot=true`.
+- Set the <Link to="/sdk/foundations/data-model/events/exception/#exception-mechanism">Exception Mechanism</Link> with a proper `type` such as `SentryOkHttpInterceptor`.
+- Set the <Link to="/sdk/foundations/data-model/events/stacktrace/">Stack Trace Interface</Link> with `snapshot=true`.
   - `HTTP Client Error with status code: $code`.
 
 When capturing error events, pass the original `Request` and `Response` objects from the HTTP Client as `hints`, so the users may filter out events in `beforeSend` with the full context.
