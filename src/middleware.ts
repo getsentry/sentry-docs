@@ -4326,6 +4326,10 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
     from: '/organization/integrations/elba/',
     to: '/organization/integrations/compliance/elba/',
   },
+  {
+    from: '/sdk/philosophy/',
+    to: '/sdk/getting-started/philosophy/',
+  },
 ];
 
 const redirectMap = new Map(
