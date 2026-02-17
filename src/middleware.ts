@@ -4346,6 +4346,74 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
     from: '/sdk/overview/',
     to: '/sdk/foundations/overview/',
   },
+  {
+    from: '/sdk/data-model/',
+    to: '/sdk/foundations/data-model/',
+  },
+  {
+    from: '/sdk/data-model/event-payloads/',
+    to: '/sdk/foundations/data-model/event-payloads/',
+  },
+  {
+    from: '/sdk/data-model/event-payloads/breadcrumbs/',
+    to: '/sdk/foundations/data-model/event-payloads/breadcrumbs/',
+  },
+  {
+    from: '/sdk/data-model/event-payloads/contexts/',
+    to: '/sdk/foundations/data-model/event-payloads/contexts/',
+  },
+  {
+    from: '/sdk/data-model/event-payloads/debugmeta/',
+    to: '/sdk/foundations/data-model/event-payloads/debugmeta/',
+  },
+  {
+    from: '/sdk/data-model/event-payloads/exception/',
+    to: '/sdk/foundations/data-model/event-payloads/exception/',
+  },
+  {
+    from: '/sdk/data-model/event-payloads/lockreason/',
+    to: '/sdk/foundations/data-model/event-payloads/lockreason/',
+  },
+  {
+    from: '/sdk/data-model/event-payloads/message/',
+    to: '/sdk/foundations/data-model/event-payloads/message/',
+  },
+  {
+    from: '/sdk/data-model/event-payloads/replay-recording/',
+    to: '/sdk/foundations/data-model/event-payloads/replay-recording/',
+  },
+  {
+    from: '/sdk/data-model/event-payloads/request/',
+    to: '/sdk/foundations/data-model/event-payloads/request/',
+  },
+  {
+    from: '/sdk/data-model/event-payloads/sdk/',
+    to: '/sdk/foundations/data-model/event-payloads/sdk/',
+  },
+  {
+    from: '/sdk/data-model/event-payloads/span/',
+    to: '/sdk/foundations/data-model/event-payloads/span/',
+  },
+  {
+    from: '/sdk/data-model/event-payloads/stacktrace/',
+    to: '/sdk/foundations/data-model/event-payloads/stacktrace/',
+  },
+  {
+    from: '/sdk/data-model/event-payloads/template/',
+    to: '/sdk/foundations/data-model/event-payloads/template/',
+  },
+  {
+    from: '/sdk/data-model/event-payloads/threads/',
+    to: '/sdk/foundations/data-model/event-payloads/threads/',
+  },
+  {
+    from: '/sdk/data-model/event-payloads/transaction/',
+    to: '/sdk/foundations/data-model/event-payloads/transaction/',
+  },
+  {
+    from: '/sdk/data-model/event-payloads/user/',
+    to: '/sdk/foundations/data-model/event-payloads/user/',
+  },
 ];
 
 const redirectMap = new Map(
