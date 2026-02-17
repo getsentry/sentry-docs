@@ -232,9 +232,29 @@ ${
 }`;
 }
 
+// Registry of full-page content overrides.
+// When a page matches, its entire content is replaced (not appended).
+// Used for pages like root index.md that need completely custom content.
+const contentOverrides = [
+  {
+    match: relativePath => relativePath === 'index.md',
+    build: (docTree, _existingContent, {allPaths}) => {
+      const topLevelPaths = allPaths.filter(p => !p.includes('/'));
+      if (docTree && !process.env.NEXT_PUBLIC_DEVELOPER_DOCS) {
+        return buildDocTreeRootIndex(docTree, topLevelPaths);
+      }
+      if (docTree && process.env.NEXT_PUBLIC_DEVELOPER_DOCS) {
+        return buildDocTreeDevRootIndex(docTree, topLevelPaths);
+      }
+      return buildFallbackRootIndex(topLevelPaths);
+    },
+  },
+];
+
 // Registry of custom section builders for specific page patterns.
 // Each entry has a `match` function and a `build` function.
 // First match wins; unmatched pages fall through to the generic builder.
+// These are appended to the existing converted content.
 const sectionOverrides = [
   {
     match: (_parts, parentPath) => parentPath === 'platforms.md',
@@ -616,23 +636,20 @@ async function createWork() {
     .filter(p => p !== 'index.md')
     .sort();
 
-  // Root index.md - build using doctree when available
-  const topLevelPaths = allPaths.filter(p => !p.includes('/'));
-  let rootSitemapContent;
-
-  if (docTree && !process.env.NEXT_PUBLIC_DEVELOPER_DOCS) {
-    rootSitemapContent = buildDocTreeRootIndex(docTree, topLevelPaths);
-  } else if (docTree && process.env.NEXT_PUBLIC_DEVELOPER_DOCS) {
-    rootSitemapContent = buildDocTreeDevRootIndex(docTree, topLevelPaths);
-  } else {
-    rootSitemapContent = buildFallbackRootIndex(topLevelPaths);
+  // Apply full-page content overrides (e.g., root index.md)
+  // These replace the worker-generated content entirely.
+  const overrideContext = {allPaths};
+  const contentOverrideResults = new Map();
+  for (const override of contentOverrides) {
+    for (const task of workerTasks.flat()) {
+      if (override.match(task.relativePath)) {
+        const content = override.build(docTree, null, overrideContext);
+        await writeFile(task.targetPath, content, {encoding: 'utf8'});
+        contentOverrideResults.set(task.relativePath, content);
+        console.log(`📑 Generated ${task.relativePath} (content override)`);
+      }
+    }
   }
-
-  const indexPath = path.join(OUTPUT_DIR, 'index.md');
-  await writeFile(indexPath, rootSitemapContent, {encoding: 'utf8'});
-  console.log(
-    `📑 Generated root index.md with ${topLevelPaths.length} top-level sections`
-  );
 
   // Append child page listings to section index pages
   // Group paths by their DIRECT parent (handling guides specially)
@@ -715,14 +732,16 @@ async function createWork() {
   }
   console.log(`📑 Added child page listings to ${updatedCount} section index files`);
 
-  // Upload index.md to R2 if configured
-  if (accessKeyId && secretAccessKey) {
+  // Upload content-overridden pages to R2 if configured
+  if (accessKeyId && secretAccessKey && contentOverrideResults.size > 0) {
     const s3Client = getS3Client();
-    const indexHash = md5(rootSitemapContent);
-    const existingHash = existingFilesOnR2?.get('index.md');
-    if (existingHash !== indexHash) {
-      await uploadToCFR2(s3Client, 'index.md', rootSitemapContent);
-      console.log(`📤 Uploaded updated index.md to R2`);
+    for (const [relativePath, content] of contentOverrideResults) {
+      const fileHash = md5(content);
+      const existingHash = existingFilesOnR2?.get(relativePath);
+      if (existingHash !== fileHash) {
+        await uploadToCFR2(s3Client, relativePath, content);
+        console.log(`📤 Uploaded updated ${relativePath} to R2`);
+      }
     }
   }
 
