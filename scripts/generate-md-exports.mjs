@@ -405,7 +405,9 @@ async function renderMdxOverrides(root, docTree) {
   const grayMatter = (await import('gray-matter')).default;
 
   const components = buildMdxComponents(docTree, React.createElement);
-  const files = await readdir(overrideDir, {recursive: true});
+  // Non-recursive: only read .mdx files directly in overrideDir.
+  // This prevents dev/ overrides from leaking into production builds.
+  const files = await readdir(overrideDir);
 
   for (const file of files) {
     if (!file.endsWith('.mdx')) {
