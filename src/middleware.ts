@@ -1022,7 +1022,11 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/platforms/android/manual-configuration/',
-    to: '/platforms/android/configuration/manual-init/',
+    to: '/platforms/android/manual-setup/',
+  },
+  {
+    from: '/platforms/android/configuration/manual-init/',
+    to: '/platforms/android/manual-setup/',
   },
   {
     from: '/platforms/android/advanced-usage/',
@@ -1995,6 +1999,70 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/concepts/data-management/data-forwarding/',
     to: '/organization/integrations/data-forwarding/',
+  },
+  {
+    from: '/concepts/otlp/otlp-logs/',
+    to: '/concepts/otlp/direct/logs/',
+  },
+  {
+    from: '/concepts/otlp/otlp-traces/',
+    to: '/concepts/otlp/direct/traces/',
+  },
+  {
+    from: '/product/drains/integration/vercel/',
+    to: '/product/drains/vercel/',
+  },
+  {
+    from: '/product/drains/integration/cloudflare/',
+    to: '/product/drains/cloudflare/',
+  },
+  {
+    from: '/product/drains/integration/heroku/',
+    to: '/product/drains/heroku/',
+  },
+  {
+    from: '/product/drains/integration/openrouter/',
+    to: '/product/drains/openrouter/',
+  },
+  {
+    from: '/product/drains/integration/supabase/',
+    to: '/product/drains/supabase/',
+  },
+  {
+    from: '/product/drains/integration/shopify-hydrogen/',
+    to: '/product/drains/shopify-hydrogen/',
+  },
+  {
+    from: '/product/drains/integration/opentelemetry-collector/',
+    to: '/concepts/otlp/forwarding/pipelines/collector/',
+  },
+  {
+    from: '/product/drains/integration/vector/',
+    to: '/concepts/otlp/forwarding/pipelines/vector/',
+  },
+  {
+    from: '/product/drains/integration/fluentbit/',
+    to: '/concepts/otlp/forwarding/pipelines/fluentbit/',
+  },
+  {
+    from: '/product/drains/otlp-guides/aws-cloudwatch/',
+    to: '/concepts/otlp/forwarding/sources/aws-cloudwatch/',
+  },
+  {
+    from: '/product/drains/otlp-guides/kafka/',
+    to: '/concepts/otlp/forwarding/sources/kafka/',
+  },
+  {
+    from: '/product/drains/otlp-guides/nginx/',
+    to: '/concepts/otlp/forwarding/sources/nginx/',
+  },
+  {
+    from: '/product/drains/otlp-guides/syslog/',
+    to: '/concepts/otlp/forwarding/sources/syslog/',
+  },
+  {
+    from: '/product/drains/otlp-guides/windows-events/',
+    to: '/concepts/otlp/forwarding/sources/windows-events/',
   },
   {
     from: '/workflow/integrations/gitlab/',

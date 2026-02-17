@@ -50,6 +50,25 @@ Next, install Sentry's Cloudflare SDK using your favorite package manager:
 
 Register the Sentry integration in your `astro.config.mjs` file:
 
+<PlatformSection supported={["javascript.cloudflare"]}>
+
+Start by following [Astro's Cloudflare deployment guide](https://docs.astro.build/en/guides/deploy/cloudflare/). Add the Sentry integration to your config, alongside the Cloudflare adapter.
+
+```javascript {filename:astro.config.mjs}
+import { defineConfig } from "astro/config";
+import cloudflare from "@astrojs/cloudflare";
+import sentry from "@sentry/astro";
+
+export default defineConfig({
+  adapter: cloudflare(),
+  integrations: [sentry()],
+});
+```
+
+</PlatformSection>
+
+<PlatformSection notSupported={["javascript.cloudflare"]}>
+
 ```javascript {filename:astro.config.mjs}
 import { defineConfig } from "astro/config";
 import sentry from "@sentry/astro";
@@ -58,6 +77,8 @@ export default defineConfig({
   integrations: [sentry()],
 });
 ```
+
+</PlatformSection>
 
 ### Configure Client-side Sentry
 
@@ -188,7 +209,7 @@ For Astro versions below `3.5.2`, you need to manually add server instrumentatio
 
 <PlatformSection supported={["javascript.cloudflare"]}>
 
-Create a `_middleware.js` file in your `functions` directory if you don't have one already. In this file, import and initialize the Sentry Cloudflare SDK:
+<Include name="cloudflare-pages-middleware-intro.mdx" />
 
 ```javascript {filename:functions/_middleware.js}
 import * as Sentry from "@sentry/cloudflare";
@@ -230,6 +251,30 @@ export const onRequest = [
 
 To upload source maps for clear error stack traces, add your Sentry auth token, organization, and project slugs in the `sentry` options inside `astro.config.mjs`:
 
+<PlatformSection supported={["javascript.cloudflare"]}>
+
+```javascript {filename:astro.config.mjs}
+import { defineConfig } from "astro/config";
+import cloudflare from "@astrojs/cloudflare";
+import sentry from "@sentry/astro";
+
+export default defineConfig({
+  adapter: cloudflare(),
+  integrations: [
+    sentry({
+      org: "___ORG_SLUG___",
+      project: "___PROJECT_SLUG___",
+      // store your auth token in an environment variable
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+    }),
+  ],
+});
+```
+
+</PlatformSection>
+
+<PlatformSection notSupported={["javascript.cloudflare"]}>
+
 ```javascript {filename:astro.config.mjs}
 import { defineConfig } from "astro/config";
 import sentry from "@sentry/astro";
@@ -245,6 +290,8 @@ export default defineConfig({
   ],
 });
 ```
+
+</PlatformSection>
 
 To keep your auth token secure, set the `SENTRY_AUTH_TOKEN` environment variable in your build environment:
 
