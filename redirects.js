@@ -28,7 +28,15 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/data-model/event-payloads/types/',
-    destination: '/sdk/data-model/event-payloads/',
+    destination: '/sdk/foundations/data-model/event-payloads/',
+  },
+  {
+    source: '/sdk/data-model/event-payloads/',
+    destination: '/sdk/foundations/data-model/event-payloads/',
+  },
+  {
+    source: '/sdk/data-model/event-payloads/:path*',
+    destination: '/sdk/foundations/data-model/event-payloads/:path*',
   },
   {
     source: '/sdk/basics/:path*',
@@ -52,7 +60,7 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/event-payloads/:path*',
-    destination: '/sdk/data-model/event-payloads/:path*',
+    destination: '/sdk/foundations/data-model/event-payloads/:path*',
   },
   {
     source: '/sdk/hub_and_scope_refactoring/:path*',
@@ -1067,15 +1075,18 @@ const userDocsRedirects = [
     destination: '/platforms/javascript/ai-agent-monitoring/:path*',
   },
   {
-    source: '/platforms/javascript/guides/:guide/tracing/instrumentation/ai-agents-module/:path*',
+    source:
+      '/platforms/javascript/guides/:guide/tracing/instrumentation/ai-agents-module/:path*',
     destination: '/platforms/javascript/guides/:guide/ai-agent-monitoring/:path*',
   },
   {
-    source: '/platforms/javascript/tracing/instrumentation/ai-agents-module-browser/:path*',
+    source:
+      '/platforms/javascript/tracing/instrumentation/ai-agents-module-browser/:path*',
     destination: '/platforms/javascript/ai-agent-monitoring-browser/:path*',
   },
   {
-    source: '/platforms/javascript/guides/:guide/tracing/instrumentation/ai-agents-module-browser/:path*',
+    source:
+      '/platforms/javascript/guides/:guide/tracing/instrumentation/ai-agents-module-browser/:path*',
     destination: '/platforms/javascript/guides/:guide/ai-agent-monitoring-browser/',
   },
   // Browser JS doesn't have server-side AI Agent Monitoring, redirect to browser version
