@@ -1,0 +1,145 @@
+---
+title: Code Quality
+sidebar_order: 3
+---
+
+## Linting and formatting in CI
+
+#### Rule
+
+Every SDK repo must have automated linting and formatting in CI. Code that doesn't pass doesn't merge. No exceptions.
+
+#### Enforcement
+
+CI required status check (language-specific linters).
+
+#### Suggested skill(s)
+
+- [`sentry-skills:claude-settings-audit`](https://github.com/getsentry/skills?tab=readme-ov-file#available-skills) - detects tech stack and recommends linter configuration.
+
+#### Per-SDK override
+
+Yes - linter choice, rules, strictness. The standard is that a linter exists and is enforced.
+
+---
+
+## Type checking in CI
+
+#### Rule
+
+For languages with mainstream static type checking (TypeScript, Python with mypy/pyright, Java, Kotlin, C#, Go, Rust), type checking is a required CI check.
+
+#### Enforcement
+
+CI required status check.
+
+#### Per-SDK override
+
+Yes - configuration and strictness. Gradual typing allowed with a tracked plan.
+
+---
+
+## Test requirements by change type
+
+#### Rule
+
+* **Bug fix** → regression test (fails without fix, passes with it).
+* **New feature** → unit tests + integration tests where applicable.
+* **Refactor** → existing tests pass; no new tests required unless coverage was missing.
+* **Performance change** → benchmark or measurable evidence.
+* **Breaking change** → update/remove old tests, add new tests.
+
+#### Enforcement
+
+Human review. AGENTS.md instruction.
+
+#### Suggested skill(s)
+
+- [`sentry-skills:code-review`](https://github.com/getsentry/skills?tab=readme-ov-file#available-skills) - includes test coverage in checklist.
+- [`sentry-skills:find-bugs`](https://github.com/getsentry/skills?tab=readme-ov-file#available-skills) - identifies untested paths.
+
+#### Per-SDK override
+
+Yes - test categories and boundaries are SDK-specific.
+
+---
+
+## Test quality
+
+#### Rule
+
+Tests must assert meaningful behavior: assertions that would fail if the tested behavior broke, not just "no exception thrown" unless that's the behavior under test, snapshot tests reviewed for correctness not auto-accepted, AI-generated tests get extra scrutiny (watch for hardcoded values, implementation-detail testing, tests that pass regardless).
+
+#### Enforcement
+
+Human review. AGENTS.md: "Every test must answer: what user-visible behavior would break if this test were deleted?"
+
+#### Suggested skill(s)
+
+- [`sentry-skills:code-review`](https://github.com/getsentry/skills?tab=readme-ov-file#available-skills)
+- [`sentry-skills:find-bugs`](https://github.com/getsentry/skills?tab=readme-ov-file#available-skills)
+
+#### Per-SDK override
+
+No - principle is universal. Language-specific anti-patterns documented per-SDK in AGENTS.md.
+
+---
+
+## Dependency management
+
+#### Rule
+
+New dependency requires explicit justification in the PR description. Dependencies pinned to a version range (not floating). Transitive dependency behavior changes get same scrutiny as direct additions. Quarterly dependency audit minimum.
+
+#### Enforcement
+
+Human review. CI detection of new dependency manifest entries.
+
+#### Suggested skill(s)
+
+- [`sentry-skills:security-review`](https://github.com/getsentry/skills?tab=readme-ov-file#available-skills)
+
+#### Per-SDK override
+
+Yes - tooling varies. Approval requirement is universal.
+
+---
+
+## SDK size and performance budgets
+
+#### Rule
+
+Each SDK defines and tracks: package/binary size budget, initialization time budget, memory overhead budget (where applicable).
+
+#### Enforcement
+
+CI check where feasible (size comparison, benchmarks). Advisory initially, path toward blocking.
+
+#### Suggested skill(s)
+
+-
+
+#### Per-SDK override
+
+Yes - entirely. Budgets and measurement are SDK-specific. The standard is that budgets exist and are tracked.
+
+---
+
+## Security practices
+
+#### Rule
+
+No secrets, credentials, or PII in code or commits. Data handling follows the [data handling spec](/sdk/04-sdk-features/data-handling/). Security-sensitive changes require explicit review from someone with security context. Vulnerability patch SLAs: critical 48h, high 1 week, medium next release.
+
+#### Enforcement
+
+CI secret scanning. Human review.
+
+#### Suggested skill(s)
+
+- [`sentry-skills:security-review`](https://github.com/getsentry/skills?tab=readme-ov-file#available-skills)
+- [`sentry-skills:find-bugs`](https://github.com/getsentry/skills?tab=readme-ov-file#available-skills)
+
+#### Per-SDK override
+
+Vulnerability SLAs can be adjusted. Data handling requirements are universal.

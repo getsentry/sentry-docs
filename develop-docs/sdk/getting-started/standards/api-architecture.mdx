@@ -1,0 +1,122 @@
+---
+title: API and Architecture
+sidebar_order: 4
+---
+
+## Public API change approval gate
+
+#### Rule
+
+Any change to public API surface (add, change, deprecate, remove) requires senior/lead approval. "Public API" = anything a user can call, import, or reference. If in doubt, search public repos for usage.
+
+#### Enforcement
+
+CI API surface snapshot diffs (where feasible). Human review gate (senior approval).
+
+#### Suggested skill(s)
+
+- [`sentry-skills:code-review`](https://github.com/getsentry/skills?tab=readme-ov-file#available-skills) — flags API changes for escalation.
+
+#### Per-SDK override
+
+Yes — detection mechanisms are language-specific. Approval requirement is universal.
+
+---
+
+## Server-side vs. SDK-side decision gate
+
+#### Rule
+
+New processing/transformation logic defaults to server-side. SDK-side requires justification: must happen before network, requires platform API, latency sensitivity, offline scenarios.
+
+#### Enforcement
+
+Human review. AGENTS.md instruction.
+
+#### Suggested skill(s)
+
+—
+
+#### Per-SDK override
+
+No — the default is universal. Justifications are SDK-specific.
+
+---
+
+## Semantic conventions process
+
+#### Rule
+
+New attributes must first be defined in sentry-conventions. Process: PR to sentry-conventions → code owner approval → 3 business day wait → SDK implementation.
+
+#### Enforcement
+
+CI validation where feasible. Human review.
+
+#### Suggested skill(s)
+
+—
+
+#### Per-SDK override
+
+No.
+
+---
+
+## Breaking change process
+
+#### Rule
+
+Breaking changes follow the [breaking changes playbook](../playbooks/breaking-changes): accumulate in next major version only, require deprecation period in prior version, migration guide with copy-pastable examples, changelog with `BREAKING CHANGE:` notation. Test migration guide with an LLM.
+
+#### Enforcement
+
+Commit footer `BREAKING CHANGE:` triggers CI checks. Human review. Breaking changes in non-major branches are CI-blocked.
+
+#### Suggested skill(s)
+
+- [`sentry-skills:code-review`](https://github.com/getsentry/skills?tab=readme-ov-file#available-skills)
+
+#### Per-SDK override
+
+Deprecation period timelines can vary. Process is universal.
+
+---
+
+## Deprecation lifecycle
+
+#### Rule
+
+Standardized stages: 1) Announce: deprecation warning + changelog + docs + migration guide (minor release), 2) Maintain: deprecated API works for at least one minor release cycle, 3) Remove: next major version only. Deprecation warnings must include: replacement, code example, docs link.
+
+#### Enforcement
+
+Human review. CI checks deprecated APIs still have passing tests.
+
+#### Suggested skill(s)
+
+—
+
+#### Per-SDK override
+
+Minimum period can be extended. Stages are universal.
+
+---
+
+## SDK-side logic must not break on server changes
+
+#### Rule
+
+SDKs must be resilient to unexpected server responses: unknown fields, missing fields, new enum values, rate limiting. Ignore unknown categories/dimensions rather than erroring.
+
+#### Enforcement
+
+Integration tests for degraded-server scenarios. Human review.
+
+#### Suggested skill(s)
+
+—
+
+#### Per-SDK override
+
+Specific tests vary. Principle is universal.

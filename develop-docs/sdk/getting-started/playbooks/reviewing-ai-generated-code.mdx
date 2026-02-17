@@ -1,0 +1,65 @@
+---
+title: Reviewing AI-Generated Code
+---
+
+## Standard review first
+
+Apply the full review checklist from [Reviewing a PR](reviewing-a-pr):
+
+#### 1. Check the PR description
+
+What, why, linked issue.
+
+#### 2. Check CI status
+
+Don't review failing code.
+
+#### 3. Review for common issues
+
+Runtime errors, performance, side effects, backwards compatibility, security, test coverage ([Test requirements by change type](../standards/code-quality#test-requirements-by-change-type)), test quality ([Test quality](../standards/code-quality#test-quality)).
+
+#### 4. Check senior review triggers
+
+#### 5. Use LOGAF prefixes on feedback
+
+([Review feedback conventions](../standards/review-ci#review-feedback-conventions))
+
+#### 6. Approve when only `l:` items remain
+
+## Additional AI-specific checks
+
+AI-generated code has specific failure modes. Check for these in addition to the standard review:
+
+#### 1. Hallucinated imports and APIs
+
+Verify every import and function call actually exists. AI tools sometimes reference packages, modules, or functions that don't exist or have different signatures than expected.
+
+#### 2. Tests that test nothing
+
+Check that test assertions would actually fail if the feature broke ([Test quality](../standards/code-quality#test-quality)). Watch for: hardcoded expected values that happen to match the output, `assert True` or equivalents, testing mock behavior instead of real behavior, asserting only that no exception was thrown.
+
+#### 3. Over-engineering
+
+AI tools frequently add unnecessary abstractions, configuration options, and error handling for impossible cases. Ask: "does this need to be this complex?" If a simpler approach works, request it.
+
+#### 4. Speculative changes
+
+Code changes beyond what the issue or PR describes ([One logical change per PR](../standards/code-submission#one-logical-change-per-pr)). If the PR is "fix null check" but also reorganizes imports and adds docstrings, request a split.
+
+#### 5. Missing architecture context
+
+AI tools may not understand SDK-specific patterns and conventions. Check that the change fits the SDK's existing architecture, not just generic "good code" patterns.
+
+#### 6. Subtle behavior changes
+
+Pay extra attention to edge cases in any "cleanup" or "refactor" PR. AI refactors sometimes change semantics in ways that aren't obvious from a quick scan.
+
+**Skill: `sentry-skills:find-bugs`** for systematic bug and vulnerability detection in the diff.
+
+## Referenced Standards
+
+- [AI attribution](../standards/code-submission#ai-attribution)
+- [Test requirements by change type](../standards/code-quality#test-requirements-by-change-type)
+- [Test quality](../standards/code-quality#test-quality)
+- [Review feedback conventions](../standards/review-ci#review-feedback-conventions)
+- [One logical change per PR](../standards/code-submission#one-logical-change-per-pr)
