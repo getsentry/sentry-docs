@@ -1,0 +1,50 @@
+---
+title: Transport
+description: How SDKs send data to Sentry - envelope format, authentication, compression, and rate limiting.
+sidebar_order: 1
+---
+
+The transport layer handles all communication between an SDK and the Sentry server. SDKs serialize data into [envelopes](envelopes/), [authenticate](authentication/) requests using DSN-derived credentials, optionally [compress](compression/) payloads, and respect [rate limits](rate-limiting/) communicated via response headers.
+
+## Reading the Response
+
+On success, you will receive an HTTP response from the server containing a JSON payload with information on the submitted payload:
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "id": "fc6d8c0c43fc4630ad850ee518f1b9d0"
+}
+```
+
+**Always** check for a `200` response, which confirms the message was delivered. A small level of validation happens immediately that may result in a different response code (and message).
+
+## Handling Server Errors
+
+SDKs **MUST** honor the `429` status code and not attempt sending until the `Retry-After` kicks in. SDKs **SHOULD** drop events if Sentry is unavailable instead of retrying.
+
+To debug an error during development, inspect the response headers and response body. For example, you may get a response similar to:
+
+```http
+HTTP/1.1 400 Bad Request
+Content-Type: application/json
+X-Sentry-Error: failed to read request body
+
+{
+  "detail":"failed to read request body",
+  "causes":[
+    "failed to decode zlib payload",
+    "corrupt deflate stream"
+  ]
+}
+```
+
+The `X-Sentry-Error` header and response body will not always contain a message, but they can still be helpful in debugging clients. When emitted, they will contain a precise error message, which is useful to identify root cause.
+
+<Alert title="Note">
+We do not recommend that SDKs retry event submissions automatically on error — not even if `Retry-After` is declared in the response headers. If a request fails once, it is very likely to fail again on the next attempt. Retrying too often may cause further rate limiting or blocking by the Sentry server.
+</Alert>
+
+<PageGrid />
