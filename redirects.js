@@ -28,7 +28,7 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/data-model/event-payloads/types/',
-    destination: '/sdk/foundations/data-model/events/',
+    destination: '/sdk/foundations/data-model/event-payloads/',
   },
   {
     source: '/sdk/basics/:path*',
@@ -52,7 +52,7 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/event-payloads/:path*',
-    destination: '/sdk/foundations/data-model/events/:path*',
+    destination: '/sdk/foundations/data-model/event-payloads/:path*',
   },
   {
     source: '/sdk/hub_and_scope_refactoring/:path*',
