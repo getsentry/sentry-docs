@@ -4,13 +4,16 @@ sidebar_order: 10
 ---
 
 <Alert level="warning">
-  🚧 This document is work in progress.
-  The steps and suggestions in this document primarily serve as a means to document what SDKs so far have been doing when implementing Span-First.
-  This page also serves as a place to document (temporary) decisions, trade-offs, considerations, etc.
+  🚧 This document is work in progress. The steps and suggestions in this
+  document primarily serve as a means to document what SDKs so far have been
+  doing when implementing Span-First. This page also serves as a place to
+  document (temporary) decisions, trade-offs, considerations, etc.
 </Alert>
 
 <Alert>
-  This document uses key words such as "MUST", "SHOULD", and "MAY" as defined in [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt) to indicate requirement levels.
+  This document uses key words such as "MUST", "SHOULD", and "MAY" as defined in
+  [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt) to indicate requirement
+  levels.
 </Alert>
 
 This document provides guidelines for implementing Span-First in SDKs. This is purposefully NOT a full specification. For exact specifications, refer to the other pages under [Spans](..).
@@ -34,18 +37,18 @@ If you're implementing Span-First (as a PoC) in your SDK, take an iterative appr
    - TBD: Some SDKs already have `startSpan` or similar APIs. The migration path is still TBD but a decision can be made at a later stage.
 5. Implement the `captureSpan` [single-span processing pipeline](#single-span-processing-pipeline)
    - Either reuse existing heuristics (e.g. flush when segment span ends) or build a simple span buffer to flush spans (e.g. similar to the existing buffers for logs or metrics).
-   - Implementing the more complex [Telemetry Buffer](./../../telemetry-buffer) can happen at a later stage.
+   - Implementing the more complex [Telemetry Processor](/sdk/telemetry/telemetry-processor/) buffer and scheduler can happen at a later stage.
 6. Achieve data parity with the existing transaction events.
    - Ensure that the data added by SDK integrations, event processors, etc. to transaction events is also added to the spans (see [Event Processors](#tbd-event-processors)).
    - Most additional data MUST only be added to the segment span. See [Common Attributes](../span-protocol/#common-attribute-keys) for attributes that MUST be added to every span.
    - Mental model: All data our SDKs _automatically_ add to a transaction, MUST also be added to the segment span.
-7. Implement the span telemetry buffer for proper, weighted span flushing. See [Span Buffer](#span-buffer) for more details.
-8. (Optional) Depending on necessity, drop support for sending traces as transactions in the next major release. From this point on, the SDK will by default send spans (v2) only and therefore will no longer be compatible with current self-hosted Sentry installations.   
-   
-   
+7. Implement the span telemetry buffer for proper, weighted span flushing. See [Span Buffer](/sdk/telemetry/spans/span-buffer/) for more details.
+8. (Optional) Depending on necessity, drop support for sending traces as transactions in the next major release. From this point on, the SDK will by default send spans (v2) only and therefore will no longer be compatible with current self-hosted Sentry installations.
+
 ## Span APIs
 
 To do: This section needs a few guidelines and implementation hints, including:
+
 - how to set a span active and remove it from the scope once it ends
 - languages having to deal with async context management
 
@@ -55,7 +58,7 @@ SDKs MUST expose a `parentSpan` option on the `startSpan` API which allows users
 
 The `parentSpan` parameter has three distinct states: `undefined`, `null` and a span instance. See the [Span API documentation](../span-api) for the semantics.
 
-For languages that do not support an `undefined` state, SDKs SHOULD model this three-state behavior using platform-appropriate mechanisms. 
+For languages that do not support an `undefined` state, SDKs SHOULD model this three-state behavior using platform-appropriate mechanisms.
 Prefer solutions that preserve the semantic distinction between `undefined` and `null`, such as:
 
 - method/constructor overloading (e.g., an overload without `parentSpan`, and another accepting `parentSpan: Span?`),
@@ -69,7 +72,7 @@ Prefer solutions that preserve the semantic distinction between `undefined` and 
 
 ## Single-Span Processing Pipeline
 
-SDKs MUST expose a `captureSpan` API that takes a single span once it ends, and then processes and enqueues it into the span buffer. In most cases, this API SHOULD be exposed as a method on the `Client`. SDKs (e.g. JS Browser) MAY chose a different location if necessary. 
+SDKs MUST expose a `captureSpan` API that takes a single span once it ends, and then processes and enqueues it into the span buffer. In most cases, this API SHOULD be exposed as a method on the `Client`. SDKs (e.g. JS Browser) MAY chose a different location if necessary.
 
 Here's a rough overview of what `captureSpan` should do in which order:
 
@@ -82,22 +85,25 @@ Here's a rough overview of what `captureSpan` should do in which order:
 7. Apply the `before_send_span` callback to the span.
 8. Enqueue the span into the span buffer.
 
-The `captureSpan` pipeline MUST NOT 
+The `captureSpan` pipeline MUST NOT
+
 - drop any span
 - buffer spans before enqueuing them
 
 ### [TMP solution] Span Filtering
 
 For the moment, we settled on `ignore_spans` being applied prior to span start. This means that the `captureSpan` pipeline doesn't have to handle filtering spans. However, there are some drawbacks with this approach, most prominently:
+
 - Not being able to filter on span names or data that is added/updated post span start
 - Not being able to filter entire segments (e.g. `http.server` segments for bot requests resulting in 404 errors)
 
 We might revisit this, which could require changes to the single-span processing pipeline.
 
 For now, this means though:
+
 - Whenever `ignore_spans` is applied, SDKs MUST NOT start an actual span. Instead, they SHOULD start a No-op ("non-recording") span, which has no influence on the trace hierarchy.
 - SDKS MUST record client outcomes for ignored spans
-- SDKs MUST apply `ignore_spans` to every span if at all possible (POTel SDKs are excepted, but encouraged to do so as well) 
+- SDKs MUST apply `ignore_spans` to every span if at all possible (POTel SDKs are excepted, but encouraged to do so as well)
 
 ### [TBD] Event Processors
 
@@ -108,9 +114,9 @@ For user-facing migration, we should try to solve every use case with `ignore_sp
 
 For SDK-internal processing, we're still evaluating the preferred approach but there are two main options:
 
-1. Expose new APIs for integrations (and secondarily users) to process a span. 
-   For example via SDK lifecycle hooks (implemented in the JS SDK). 
-   Every integration would have to listen to this hook and apply its logic to spans. 
+1. Expose new APIs for integrations (and secondarily users) to process a span.
+   For example via SDK lifecycle hooks (implemented in the JS SDK).
+   Every integration would have to listen to this hook and apply its logic to spans.
    SDKs need to add a subscriber to the hook everywhere where they currently add an event processor.
    - Pro: Clear separation and semantics
    - Pro: Easy to implement and maintain
@@ -123,20 +129,12 @@ For SDK-internal processing, we're still evaluating the preferred approach but t
    - Con: Because of the single-span processing approach, we cannot add child spans to the pseudo event. Even if we somehow made this possible, we have no guarantee that the entire span tree would be present. Similarly to the [span filtering implications](#tmp-solution-span-filtering).
    - Con: back-merging is complex and might not be able to cover every aspect
    - Con: Very obscure behaviour (to us and users) and contradicts our commitment to move away from events in the future.
-   
+
 SDK authors working on Span-First are encouraged to evaluate both options, try them out and provide perspective as well as better solutions.
 
 ## Span Buffer
 
-This section is intentionally short because all buffering specification is being added to the [Telemetry Buffer](../../telemetry-buffer) page.
-
-Some rough pointers:
-- Given that SDKs SHOULD materialize and freeze the DSC as late as possible, the span buffer SHOULD enqueue span instances and at _flush time_ serialize them to JSON.
-  Before serialization, the span buffer SHOULD materialize and freeze the DSC on the segment span if not already done so.
-  This ensures that the `trace` envelope header has the most up to date data from the DSC (e.g. relevant for `transaction` names in the DSC).
-- SDKs SHOULD follow one of the backend, mobile or browser telemetry buffer specifications. 
-- It is expected and fine to implement the proper, weighted buffering logic as a final step in the Span-First project. 
-  Intermediate buffers MAY be simpler, for example disregard the priority logic and just buffer until a certain span length, size or time interval is reached.
+See [Span Buffer specification](../span-buffer/) for more details.
 
 ## Release
 

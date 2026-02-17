@@ -1,0 +1,76 @@
+---
+title: Environment Variables
+sidebar_order: 10
+description: >-
+  Common environment variables that Sentry SDKs should support for configuration
+  without code changes.
+---
+
+<Alert>
+This document uses key words such as "MUST", "SHOULD", and "MAY" as defined in [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt) to indicate requirement levels.
+</Alert>
+
+Sentry SDKs **SHOULD** support a set of common environment variables that allow users to configure SDK behavior without modifying their code. This is particularly useful for containerized deployments, serverless environments, or when users need to adjust settings without redeploying their application.
+
+## Supported Environment Variables
+
+The following environment variables **SHOULD** be supported across Sentry server-side SDKs:
+
+| Variable | Description |
+|----------|-------------|
+| `SENTRY_DSN` | The Data Source Name that tells the SDK where to send events. |
+| `SENTRY_RELEASE` | The release version of the application. Used to associate events with source maps and track regressions. |
+| `SENTRY_ENVIRONMENT` | The environment name, such as `production`, `staging`, or `development`. |
+| `SENTRY_SAMPLE_RATE` | Controls the percentage of error events sent to Sentry (0.0 to 1.0). |
+| `SENTRY_TRACES_SAMPLE_RATE` | Controls the percentage of transactions sent for tracing (0.0 to 1.0). |
+| `SENTRY_PROFILES_SAMPLE_RATE` | Controls the percentage of transactions that include profiling data (0.0 to 1.0). Requires tracing to be enabled. |
+| `SENTRY_DEBUG` | Enables debug mode for troubleshooting SDK issues. |
+
+SDKs **MAY** support additional SDK-specific environment variables beyond this common set. Any additional environment variables **SHOULD** be documented in the SDK's user-facing documentation.
+
+<Alert>
+Some SDKs may also offer additional SDK-specific environment variables beyond this common set. Check the [platform-specific documentation](https://docs.sentry.io/platforms/) for the full list of supported options.
+</Alert>
+
+## Precedence
+
+When both environment variables and code-based configuration are present, **code-based configuration MUST take precedence**. If the user explicitly passes a value to the SDK's init function, the environment variable **MUST** be ignored.
+
+To use environment variables, users omit the option from their init call and the SDK reads from the environment automatically:
+
+```javascript
+// SDK will read from SENTRY_DSN automatically
+Sentry.init({
+  // dsn omitted, will use SENTRY_DSN
+});
+```
+
+```python
+import sentry_sdk
+
+# SDK will read from SENTRY_DSN automatically
+sentry_sdk.init(
+    # dsn omitted, will use SENTRY_DSN
+)
+```
+
+```go
+import "github.com/getsentry/sentry-go"
+
+// SDK will read from SENTRY_DSN automatically
+sentry.Init(sentry.ClientOptions{
+    // Dsn omitted, will use SENTRY_DSN
+})
+```
+
+```php
+\Sentry\init([
+    // dsn omitted, will use SENTRY_DSN
+]);
+```
+
+## Client-Side Considerations
+
+Environment variables work differently in client-side environments like web browsers, where the concept of environment variables doesn't exist at runtime. For frontend SDKs, values **MUST** be injected by users at build time or configured directly in code.
+
+For server-side SDKs (Node.js, Python, Ruby, Java, .NET, Go, PHP, etc.), environment variables are read at runtime when the SDK initializes.

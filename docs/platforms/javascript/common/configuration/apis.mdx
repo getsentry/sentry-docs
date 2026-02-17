@@ -156,13 +156,13 @@ more information on how to use integrations.
 
 </SdkApi>
 
-<SdkApi name="lazyLoadIntegration" signature="function lazyLoadIntegration(name: string, scriptNonce?: string): Promise<Integration>" categorySupported={['browser']}>
-  Lazy load an integration. This expects the name to be e.g. `replayIntegration`. It will load the script from the CDN, and return a promise that resolves to the integration, which can then be added to the SDK using `addIntegration`:
+<SdkApi name="lazyLoadIntegration" signature="function lazyLoadIntegration(name: string, scriptNonce?: string): Promise<IntegrationFn>" categorySupported={['browser']}>
+  Lazy load an integration. This expects the name to be e.g. `replayIntegration`. It will load the script from the CDN, and return a promise that resolves to the integration function, which can then be called and added to the SDK using `addIntegration`:
 
 ```javascript
 Sentry.lazyLoadIntegration("replayIntegration")
-  .then((integration) => {
-    Sentry.addIntegration(integration);
+  .then((replayIntegration) => {
+    Sentry.addIntegration(replayIntegration());
   })
   .catch((error) => {
     // Make sure to handle errors here!
@@ -332,6 +332,7 @@ Set a tag to be sent with Sentry events.
   Set a context to be sent with Sentry events. Custom contexts allow you to attach arbitrary data to an event.
   You cannot search these, but they are viewable on the issue page - if you
   need to be able to filter for certain data, use [tags](./#setTag) instead.
+  Pass `null` as the context value to clear a previously set context.
 
 There are no restrictions on context name. In the context object, all keys are allowed except for `type`, which is used internally.
 
@@ -339,7 +340,7 @@ By default, Sentry SDKs normalize nested structured context data up to three lev
 Any data beyond this depth will be trimmed and marked using its type instead.
 To adjust this default, use the <PlatformLink to="/configuration/options#normalize-depth">`normalizeDepth`</PlatformLink> SDK option.
 
-Learn more about conventions for common contexts in the [contexts interface developer documentation](https://develop.sentry.dev/sdk/data-model/event-payloads/contexts/).
+Learn more about conventions for common contexts in the [contexts interface developer documentation](https://develop.sentry.dev/sdk/foundations/data-model/event-payloads/contexts/).
 
  <Expandable title='Example'>
   Context data is structured and can contain any data you want:
@@ -818,7 +819,7 @@ These utilities can be used for more advanced tracing use cases.
 
 <SdkApi
   name="withActiveSpan"
-  signature="function withActiveSpan<T>(span: Span | null, callback: () => T): T"
+  signature="function withActiveSpan<T>(span: Span | null, callback: (scope: Scope) => T): T"
 >
   Runs the provided callback with the given span as the active span. If `null`
   is provided, the callback will have no active span.
@@ -858,7 +859,7 @@ See <PlatformLink to="/ai-agent-monitoring/">AI Agent Monitoring</PlatformLink> 
 Sessions allow you to track the release health of your application.
 See the <PlatformLink to="/configuration/releases/#sessions">Releases & Health</PlatformLink> page for more information.
 
-<SdkApi name="startSession" signature="function startSession(): void">
+<SdkApi name="startSession" signature="function startSession(): Session">
   Starts a new session.
 </SdkApi>
 
