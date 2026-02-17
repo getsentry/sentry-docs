@@ -4414,6 +4414,22 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
     from: '/sdk/data-model/event-payloads/user/',
     to: '/sdk/foundations/data-model/event-payloads/user/',
   },
+  {
+    from: '/sdk/telemetry/telemetry-processor/backend-telemetry-processor/',
+    to: '/sdk/telemetry/telemetry-processor/backend/',
+  },
+  {
+    from: '/sdk/telemetry/telemetry-processor/browser-telemetry-processor/',
+    to: '/sdk/telemetry/telemetry-processor/browser/',
+  },
+  {
+    from: '/sdk/telemetry/telemetry-processor/gdx-telemetry-processor/',
+    to: '/sdk/telemetry/telemetry-processor/gdx/',
+  },
+  {
+    from: '/sdk/telemetry/telemetry-processor/mobile-telemetry-processor/',
+    to: '/sdk/telemetry/telemetry-processor/mobile/',
+  },
 ];
 
 const redirectMap = new Map(
