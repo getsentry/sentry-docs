@@ -615,11 +615,16 @@ async function createWork() {
 
   // Warn about MDX overrides that didn't match any HTML file
   const usedOverrides = new Set(
-    workerTasks.flat().filter(t => mdxOverrides.has(t.relativePath)).map(t => t.relativePath)
+    workerTasks
+      .flat()
+      .filter(t => mdxOverrides.has(t.relativePath))
+      .map(t => t.relativePath)
   );
   for (const [key] of mdxOverrides) {
     if (!usedOverrides.has(key)) {
-      console.warn(`⚠️ MDX override "${key}" did not match any HTML file and will be ignored`);
+      console.warn(
+        `⚠️ MDX override "${key}" did not match any HTML file and will be ignored`
+      );
     }
   }
 
