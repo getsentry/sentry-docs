@@ -380,7 +380,39 @@ function buildMdxComponents(docTree, createElement) {
     );
   }
 
-  return {PlatformList, FrameworkGroups, DocSectionList};
+  // Renders every top-level section with its visible children as a nested list.
+  // Used for the root index.md sitemap.
+  function SectionTree({exclude = []}) {
+    if (!docTree) {
+      return null;
+    }
+    const sections = getVisibleChildren(docTree).filter(
+      child => !exclude.includes(child.slug)
+    );
+    const elements = [];
+    for (const section of sections) {
+      elements.push(createElement('h2', {key: `h-${section.slug}`}, getTitle(section)));
+      const children = getVisibleChildren(section);
+      if (children.length > 0) {
+        elements.push(
+          createElement(
+            'ul',
+            {key: `ul-${section.slug}`},
+            children.map(child =>
+              createElement(
+                'li',
+                {key: child.slug},
+                createElement('a', {href: `/${child.path}`}, getTitle(child))
+              )
+            )
+          )
+        );
+      }
+    }
+    return createElement('div', null, ...elements);
+  }
+
+  return {PlatformList, FrameworkGroups, DocSectionList, SectionTree};
 }
 
 async function renderMdxOverrides(root, docTree) {
