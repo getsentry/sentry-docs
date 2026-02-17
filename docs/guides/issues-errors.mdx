@@ -1,0 +1,194 @@
+---
+title: "What to Watch"
+sidebar_order: 5
+description: "Practical guidance on what errors to catch, how to search issues, and when to set alerts."
+---
+
+You've set up Sentry error monitoring. Now what? This guide covers the high-value error patterns that help you catch problems before they impact users and fix issues faster.
+
+## The Pattern
+
+Sentry automatically captures unhandled errors. For handled errors, use `Sentry.captureException()` to add context:
+
+```javascript
+try {
+  await processOrder(order);
+} catch (error) {
+  Sentry.captureException(error, {
+    tags: {
+      order_id: order.id,
+      payment_method: order.paymentMethod
+    },
+    level: "error"
+  });
+  throw error;
+}
+```
+
+**Levels:** `fatal`, `error`, `warning`, `info`, `debug`
+
+**Context:** Tags, user info, and breadcrumbs help you debug faster. Tags are searchable, so use them for high-cardinality data like IDs, regions, and feature flags.
+
+Every error in Sentry is automatically trace-connected. Click the trace ID to see the full [trace view](/concepts/key-terms/tracing/trace-view/) and understand what led to the error.
+
+## Where to Look
+
+Start with these five views to catch critical issues.
+
+### 1. Unresolved High-Volume Issues
+
+High event counts mean either many users are affected or one user is stuck in a loop. Both need immediate attention.
+
+**In Issues:** Search for `is:unresolved` (applied by default) and use the sort dropdown (defaults to "Last Seen") to sort by **Events** 
+
+**What to look for:**
+- Issues at the top with high event counts (many occurrences in a short time)
+- Click into these issues to see the stack trace and how many users are affected
+
+Learn more about [Issue States & Triage](/product/issues/states-triage/) to manage and prioritize issues.
+
+**Alert idea:** Trigger when event count spikes in a short time window to catch high-impact bugs and infinite loops.
+
+### 2. New Issues After Deploy
+
+Every deploy introduces risk. New errors that appear right after a release are usually regressions.
+
+**In Issues:** Filter by `is:unresolved` and sort by **Age** to find issues that first appeared recently (not just issues that happened recently). Filter by release: `release:v1.2.3`
+
+**What to look for:**
+- Issues that didn't exist in the previous release
+- Errors in code paths you just changed
+- New error types (TypeError, ReferenceError) indicating breaking changes
+
+Learn more about [Release Health](/product/releases/health/) to track error rates and crash-free sessions per release.
+
+**Alert idea:** Trigger when a new issue is created, filtered to production environment and error/fatal level. This catches regressions immediately after deploy.
+
+### 3. Errors by Environment
+
+Production errors are critical. Staging errors help you catch problems before they reach users. Comparing environments helps you spot configuration issues.
+
+**In Issues:** Search for `is:unresolved environment:production` or `environment:staging`
+
+**What to look for:**
+- Errors only in production (often config, API keys, or data issues)
+- Errors only in staging (caught before deploy, needs fixing)
+- Same error in both (systemic code issue)
+
+Learn more about <PlatformLink to="/configuration/environments/">configuring environments</PlatformLink> to separate production and staging issues.
+
+**Alert idea:** Trigger when a new issue is created, filtered to production environment. These often indicate config drift or environment-specific bugs.
+
+### 4. Errors with High User Impact
+
+Some errors affect power users heavily. Others affect everyone rarely. Prioritize by unique user count, not just event count.
+
+**In Issues:** Search for `is:unresolved` and use the sort dropdown to sort by **Users**
+
+**What to look for:**
+- Issues affecting many unique users (e.g., more than 10 users indicates widespread impact)
+- Issues affecting VIP or paying users (check user tags)
+- Issues blocking core workflows (login, checkout, data access)
+
+Learn more about <PlatformLink to="/enriching-events/tags/">custom tags</PlatformLink> to mark user tiers, plans, or roles. Then search `is:unresolved user.tier:enterprise` to prioritize high-value users.
+
+**Alert idea:** Trigger when unique user count exceeds a threshold in a time window (e.g., more than 50 users in 1 hour) to catch widespread issues.
+
+### 5. User-Reported Issues
+
+When users report problems, they often see an error. User feedback tells you which errors hurt the experience most, even if event counts are low.
+
+**In Issues:** Navigate to **User Feedback** in the left sidebar to see reports submitted by users.
+
+**What to look for:**
+- User descriptions of what they were doing when the error occurred
+- Patterns in feedback about specific workflows or features
+- Issues that frustrate users even if they don't generate many events
+
+Enable the [User Feedback Widget](/platforms/javascript/user-feedback/) to let users report problems directly when errors happen.
+
+**Alert idea:** Trigger when a new issue is created, filtered to issue category equals feedback. This ensures you respond quickly when users report problems.
+
+## Creating Issue Alerts
+
+Issue alerts notify you when specific conditions are met. To create one:
+
+1. Go to **Alerts** and click "Create Alert Rule"
+2. Select "Issues" and click "Set Conditions"
+3. Configure "When" conditions (what triggers the alert)
+4. Add "If" filters to narrow the scope (optional)
+5. Set "Then" actions (where to send notifications)
+
+Common triggers: new issues, high event counts, high user counts, state changes.
+
+Common filters: environment, tags, issue properties.
+
+Learn more about [Creating Alerts](/product/alerts/create-alerts/) and [Issue Alert Configuration](/product/alerts/create-alerts/issue-alert-config/).
+
+## Error Handling Strategy
+
+### Capture Context, Not Just Exceptions
+
+When you catch an error, add tags, user info, and breadcrumbs to make debugging instant.
+
+```javascript
+Sentry.captureException(error, {
+  tags: {
+    order_id: order.id,
+    payment_gateway: "stripe",
+    region: user.region
+  },
+  user: {
+    id: user.id,
+    email: user.email
+  },
+  contexts: {
+    order: {
+      total: order.total,
+      items: order.items.length,
+      discount_code: order.discountCode
+    }
+  }
+});
+```
+
+**Search in Sentry:** `order_id:order_123` or `payment_gateway:stripe region:us-west`
+
+### Ignore Known Noise
+
+Some errors aren't actionable. Use `ignoreErrors` to filter them out.
+
+```javascript
+Sentry.init({
+  dsn: "...",
+  ignoreErrors: [
+    "Non-Error promise rejection captured",
+    /^Timeout of \d+ms exceeded$/
+  ]
+});
+```
+
+Also use `beforeSend` to filter errors dynamically:
+
+```javascript
+Sentry.init({
+  beforeSend(event, hint) {
+    // Ignore errors from browser extensions
+    if (event.exception?.values?.[0]?.stacktrace?.frames?.some(
+      frame => frame.filename?.includes("chrome-extension://")
+    )) {
+      return null;
+    }
+    return event;
+  }
+});
+```
+
+## Quick Reference
+
+| View | Search Query | Look For |
+|------|--------------|----------|
+| High-volume issues | `is:unresolved` (sort by Events) | High event counts, post-deploy spikes |
+| New regressions | `is:unresolved` (sort by Age) | Issues that first appeared recently |
+| Environment issues | `environment:production` | Prod-only config or data issues |
+| High user impact | `is:unresolved` (sort by Users) | Issues affecting many users |
