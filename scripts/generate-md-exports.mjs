@@ -38,6 +38,41 @@ const R2_BUCKET = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
 const accessKeyId = process.env.R2_ACCESS_KEY_ID;
 const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
 
+// --- Doc tree helpers for generating structured navigation ---
+
+function findNode(node, pathParts) {
+  for (const part of pathParts) {
+    node = node.children?.find(c => c.slug === part);
+    if (!node) {
+      return null;
+    }
+  }
+  return node;
+}
+
+function getTitle(node) {
+  return node.frontmatter?.sidebar_title || node.frontmatter?.title || node.slug;
+}
+
+function isVisible(node) {
+  return (
+    !node.frontmatter?.sidebar_hidden &&
+    !node.frontmatter?.draft &&
+    !node.path?.includes('__v') &&
+    (node.frontmatter?.title || node.frontmatter?.sidebar_title)
+  );
+}
+
+function getVisibleChildren(node) {
+  return (node.children || [])
+    .filter(isVisible)
+    .sort((a, b) => {
+      const orderDiff =
+        (a.frontmatter?.sidebar_order ?? 99) - (b.frontmatter?.sidebar_order ?? 99);
+      return orderDiff !== 0 ? orderDiff : getTitle(a).localeCompare(getTitle(b));
+    });
+}
+
 function getS3Client() {
   return new S3Client({
     endpoint: 'https://773afa1f62ff86c80db4f24f7ff1e9c8.r2.cloudflarestorage.com',
@@ -59,6 +94,349 @@ async function uploadToCFR2(s3Client, relativePath, data) {
   });
   await s3Client.send(command);
   return;
+}
+
+// --- Index and child section builders ---
+
+function titleForPath(docTree, mdPath) {
+  const parts = mdPath.replace(/\.md$/, '').split('/');
+  const node = findNode(docTree, parts);
+  return node ? getTitle(node) : parts[parts.length - 1];
+}
+
+function buildDocTreeRootIndex(docTree, topLevelPaths) {
+  const platformsNode = findNode(docTree, ['platforms']);
+  let platformsSection = '';
+  let frameworksSection = '';
+
+  if (platformsNode) {
+    const platforms = getVisibleChildren(platformsNode);
+    platformsSection = `## Platforms\n\n${platforms
+      .map(p => `- [${getTitle(p)}](${DOCS_ORIGIN}/platforms/${p.slug}.md)`)
+      .join('\n')}\n`;
+
+    const frameworkLines = [];
+    for (const platform of platforms) {
+      const guidesNode = findNode(platform, ['guides']);
+      if (!guidesNode) {
+        continue;
+      }
+      const guides = getVisibleChildren(guidesNode);
+      if (guides.length === 0) {
+        continue;
+      }
+      frameworkLines.push(`\n### ${getTitle(platform)}\n`);
+      for (const guide of guides) {
+        frameworkLines.push(
+          `- [${getTitle(guide)}](${DOCS_ORIGIN}/platforms/${platform.slug}/guides/${guide.slug}.md)`
+        );
+      }
+    }
+    if (frameworkLines.length > 0) {
+      frameworksSection = `## Frameworks\n${frameworkLines.join('\n')}\n`;
+    }
+  }
+
+  // Build documentation sections from top-level pages (excluding platforms)
+  const docSections = topLevelPaths
+    .filter(p => p !== '_not-found.md' && p !== 'platforms.md')
+    .map(p => {
+      const title = titleForPath(docTree, p);
+      return `- [${title}](${DOCS_ORIGIN}/${p})`;
+    })
+    .join('\n');
+
+  return `# Sentry Documentation
+
+Sentry is a developer-first application monitoring platform that helps you identify and fix issues in real-time. It provides error tracking, performance monitoring, session replay, and more across all major platforms and frameworks.
+
+## Key Features
+
+- **Error Monitoring**: Capture and diagnose errors with full stack traces, breadcrumbs, and context
+- **Tracing**: Track requests across services to identify performance bottlenecks
+- **Session Replay**: Watch real user sessions to understand what led to errors
+- **Profiling**: Identify slow functions and optimize application performance
+- **Crons**: Monitor scheduled jobs and detect failures
+- **Logs**: Collect and analyze application logs in context
+
+${platformsSection}
+${frameworksSection}
+## Documentation
+
+${docSections}
+
+## Quick Links
+
+- [Platform SDKs](${DOCS_ORIGIN}/platforms.md) - Install Sentry for your language/framework
+- [API Reference](${DOCS_ORIGIN}/api.md) - Programmatic access to Sentry
+- [CLI](${DOCS_ORIGIN}/cli.md) - Command-line interface for Sentry operations
+`;
+}
+
+function buildDocTreeDevRootIndex(docTree, topLevelPaths) {
+  const docSections = topLevelPaths
+    .filter(p => p !== '_not-found.md')
+    .map(p => {
+      const title = titleForPath(docTree, p);
+      return `- [${title}](${DOCS_ORIGIN}/${p})`;
+    })
+    .join('\n');
+
+  return `# Sentry Developer Documentation
+
+${docSections}
+
+## Quick Links
+
+- [Backend Development](${DOCS_ORIGIN}/backend.md) - Backend service architecture
+- [Frontend Development](${DOCS_ORIGIN}/frontend.md) - Frontend development guide
+- [SDK Development](${DOCS_ORIGIN}/sdk.md) - SDK development documentation
+`;
+}
+
+function buildFallbackRootIndex(topLevelPaths) {
+  return `# Sentry Documentation
+
+Sentry is a developer-first application monitoring platform that helps you identify and fix issues in real-time. It provides error tracking, performance monitoring, session replay, and more across all major platforms and frameworks.
+
+## Key Features
+
+- **Error Monitoring**: Capture and diagnose errors with full stack traces, breadcrumbs, and context
+- **Tracing**: Track requests across services to identify performance bottlenecks
+- **Session Replay**: Watch real user sessions to understand what led to errors
+- **Profiling**: Identify slow functions and optimize application performance
+- **Crons**: Monitor scheduled jobs and detect failures
+- **Logs**: Collect and analyze application logs in context
+
+## Documentation Sections
+
+${topLevelPaths
+  .filter(p => p !== '_not-found.md')
+  .map(p => `- [${p.replace(/\.md$/, '')}](${DOCS_ORIGIN}/${p})`)
+  .join('\n')}
+
+${
+  process.env.NEXT_PUBLIC_DEVELOPER_DOCS
+    ? `## Quick Links
+
+- [Backend Development](${DOCS_ORIGIN}/backend.md) - Backend service architecture
+- [Frontend Development](${DOCS_ORIGIN}/frontend.md) - Frontend development guide
+- [SDK Development](${DOCS_ORIGIN}/sdk.md) - SDK development documentation
+`
+    : `## Quick Links
+
+- [Platform SDKs](${DOCS_ORIGIN}/platforms.md) - Install Sentry for your language/framework
+- [API Reference](${DOCS_ORIGIN}/api.md) - Programmatic access to Sentry
+- [CLI](${DOCS_ORIGIN}/cli.md) - Command-line interface for Sentry operations
+`
+}`;
+}
+
+// Registry of custom section builders for specific page patterns.
+// Each entry has a `match` function and a `build` function.
+// First match wins; unmatched pages fall through to the generic builder.
+const sectionOverrides = [
+  {
+    match: (_parts, parentPath) => parentPath === 'platforms.md',
+    build: (docTree, _parentParts, _parentNode, _children) =>
+      buildPlatformsIndexSection(docTree),
+  },
+  {
+    // Platform index pages (e.g., platforms/javascript.md)
+    match: (parts, parentPath) =>
+      parentPath.startsWith('platforms/') && parts.length === 2,
+    build: (docTree, parentParts, parentNode, children) =>
+      buildPlatformPageSection(docTree, parentParts, parentNode, children),
+  },
+  {
+    // Guide index pages (e.g., platforms/javascript/guides/nextjs.md)
+    match: (parts, _parentPath) =>
+      parts.length === 4 && parts[0] === 'platforms' && parts[2] === 'guides',
+    build: (docTree, parentParts, _parentNode, children) =>
+      buildGuidePageSection(docTree, parentParts, _parentNode, children),
+  },
+];
+
+function buildDocTreeChildSection(docTree, parentPath, children) {
+  const parentParts = parentPath.replace(/\.md$/, '').split('/');
+  const parentNode = findNode(docTree, parentParts);
+
+  for (const override of sectionOverrides) {
+    if (override.match(parentParts, parentPath)) {
+      return override.build(docTree, parentParts, parentNode, children);
+    }
+  }
+
+  // Default: generic section with doctree titles
+  return buildGenericSection(docTree, parentPath, children);
+}
+
+function buildPlatformsIndexSection(docTree) {
+  const platformsNode = findNode(docTree, ['platforms']);
+  if (!platformsNode) {
+    return '';
+  }
+
+  const platforms = getVisibleChildren(platformsNode);
+  let section = `\n## Platforms\n\n`;
+  section += platforms
+    .map(p => `- [${getTitle(p)}](${DOCS_ORIGIN}/platforms/${p.slug}.md)`)
+    .join('\n');
+
+  const frameworkLines = [];
+  for (const platform of platforms) {
+    const guidesNode = findNode(platform, ['guides']);
+    if (!guidesNode) {
+      continue;
+    }
+    const guides = getVisibleChildren(guidesNode);
+    if (guides.length === 0) {
+      continue;
+    }
+    frameworkLines.push(`\n### ${getTitle(platform)}\n`);
+    for (const guide of guides) {
+      frameworkLines.push(
+        `- [${getTitle(guide)}](${DOCS_ORIGIN}/platforms/${platform.slug}/guides/${guide.slug}.md)`
+      );
+    }
+  }
+  if (frameworkLines.length > 0) {
+    section += `\n\n## Frameworks\n${frameworkLines.join('\n')}\n`;
+  }
+
+  return section + '\n';
+}
+
+function buildPlatformPageSection(docTree, parentParts, parentNode, children) {
+  const platformSlug = parentParts[1];
+  let section = '';
+
+  // Frameworks (guides)
+  const guides = children.filter(p => p.includes('/guides/'));
+  if (guides.length > 0 && parentNode) {
+    const guidesNode = findNode(parentNode, ['guides']);
+    if (guidesNode) {
+      const sortedGuides = getVisibleChildren(guidesNode);
+      section += `\n## Frameworks\n\n`;
+      section += sortedGuides
+        .map(
+          g =>
+            `- [${getTitle(g)}](${DOCS_ORIGIN}/platforms/${platformSlug}/guides/${g.slug}.md)`
+        )
+        .join('\n');
+      section += '\n';
+    } else {
+      section += buildFallbackGuidesList(guides, 'Frameworks');
+    }
+  }
+
+  // Topics (non-guide children)
+  const topics = children.filter(p => !p.includes('/guides/'));
+  if (topics.length > 0) {
+    section += buildSortedTopicsSection(docTree, topics, 'Topics');
+  }
+
+  return section;
+}
+
+function buildGuidePageSection(docTree, parentParts, _parentNode, children) {
+  const platformSlug = parentParts[1];
+  const guideSlug = parentParts[3];
+  let section = '';
+
+  // Other frameworks for this platform
+  const platformNode = findNode(docTree, ['platforms', platformSlug]);
+  if (platformNode) {
+    const guidesNode = findNode(platformNode, ['guides']);
+    if (guidesNode) {
+      const siblingGuides = getVisibleChildren(guidesNode).filter(
+        g => g.slug !== guideSlug
+      );
+      if (siblingGuides.length > 0) {
+        const platformTitle = getTitle(platformNode);
+        section += `\n## Other ${platformTitle} Frameworks\n\n`;
+        section += siblingGuides
+          .map(
+            g =>
+              `- [${getTitle(g)}](${DOCS_ORIGIN}/platforms/${platformSlug}/guides/${g.slug}.md)`
+          )
+          .join('\n');
+        section += '\n';
+      }
+    }
+  }
+
+  // Topics (child pages of this guide)
+  if (children.length > 0) {
+    section += buildSortedTopicsSection(docTree, children, 'Topics');
+  }
+
+  return section;
+}
+
+function buildSortedTopicsSection(docTree, pages, heading) {
+  // Sort using doctree order when available
+  const pagesWithMeta = pages.map(p => {
+    const parts = p.replace(/\.md$/, '').split('/');
+    const node = findNode(docTree, parts);
+    return {
+      path: p,
+      title: node ? getTitle(node) : parts[parts.length - 1],
+      order: node?.frontmatter?.sidebar_order ?? 99,
+    };
+  });
+
+  pagesWithMeta.sort((a, b) => {
+    const orderDiff = a.order - b.order;
+    return orderDiff !== 0 ? orderDiff : a.title.localeCompare(b.title);
+  });
+
+  let section = `\n## ${heading}\n\n`;
+  section += pagesWithMeta
+    .map(p => `- [${p.title}](${DOCS_ORIGIN}/${p.path})`)
+    .join('\n');
+  section += '\n';
+  return section;
+}
+
+function buildGenericSection(docTree, _parentPath, children) {
+  // Use doctree titles for all children
+  return buildSortedTopicsSection(docTree, children, 'Pages in this section');
+}
+
+function buildFallbackGuidesList(guides, heading) {
+  const guideList = guides
+    .map(p => {
+      const name = p.replace(/\.md$/, '').split('/').pop();
+      return `- [${name}](${DOCS_ORIGIN}/${p})`;
+    })
+    .join('\n');
+  return `\n## ${heading}\n\n${guideList}\n`;
+}
+
+function buildFallbackChildSection(parentPath, children) {
+  const isPlatformIndex =
+    parentPath.startsWith('platforms/') && parentPath.split('/').length === 2;
+
+  const guides = isPlatformIndex ? children.filter(p => p.includes('/guides/')) : [];
+  const otherPages = isPlatformIndex
+    ? children.filter(p => !p.includes('/guides/'))
+    : children;
+
+  let childSection = '';
+  if (guides.length > 0) {
+    childSection += buildFallbackGuidesList(guides, 'Guides');
+  }
+  if (otherPages.length > 0) {
+    const pageList = otherPages
+      .map(p => {
+        const name = p.replace(/\.md$/, '').split('/').pop();
+        return `- [${name}](${DOCS_ORIGIN}/${p})`;
+      })
+      .join('\n');
+    childSection += `\n## Pages in this section\n\n${pageList}\n`;
+  }
+  return childSection;
 }
 
 // Global set to track which cache files are used across all workers
@@ -98,6 +476,20 @@ async function createWork() {
 
   console.log(`🚀 Starting markdown generation from: ${INPUT_DIR}`);
   console.log(`📁 Output directory: ${OUTPUT_DIR}`);
+
+  // Load doctree for structured navigation
+  const doctreeFilename = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
+    ? 'doctree-dev.json'
+    : 'doctree.json';
+  const doctreePath = path.join(root, 'public', doctreeFilename);
+  let docTree = null;
+  try {
+    docTree = JSON.parse(await readFile(doctreePath, {encoding: 'utf8'}));
+    console.log(`🌳 Loaded doc tree from ${doctreePath}`);
+  } catch (err) {
+    console.warn(`⚠️ Could not load doctree (${doctreePath}): ${err.message}`);
+    console.warn('   Falling back to slug-based navigation');
+  }
 
   // Clear output directory
   await rm(OUTPUT_DIR, {recursive: true, force: true});
@@ -224,43 +616,17 @@ async function createWork() {
     .filter(p => p !== 'index.md')
     .sort();
 
-  // Root index.md - only top-level pages (no slashes in path)
+  // Root index.md - build using doctree when available
   const topLevelPaths = allPaths.filter(p => !p.includes('/'));
-  const rootSitemapContent = `# Sentry Documentation
+  let rootSitemapContent;
 
-Sentry is a developer-first application monitoring platform that helps you identify and fix issues in real-time. It provides error tracking, performance monitoring, session replay, and more across all major platforms and frameworks.
-
-## Key Features
-
-- **Error Monitoring**: Capture and diagnose errors with full stack traces, breadcrumbs, and context
-- **Tracing**: Track requests across services to identify performance bottlenecks
-- **Session Replay**: Watch real user sessions to understand what led to errors
-- **Profiling**: Identify slow functions and optimize application performance
-- **Crons**: Monitor scheduled jobs and detect failures
-- **Logs**: Collect and analyze application logs in context
-
-## Documentation Sections
-
-${topLevelPaths
-  .filter(p => p !== '_not-found.md')
-  .map(p => `- [${p.replace(/\.md$/, '')}](${DOCS_ORIGIN}/${p})`)
-  .join('\n')}
-
-${
-  process.env.NEXT_PUBLIC_DEVELOPER_DOCS
-    ? `## Quick Links
-
-- [Backend Development](${DOCS_ORIGIN}/backend.md) - Backend service architecture
-- [Frontend Development](${DOCS_ORIGIN}/frontend.md) - Frontend development guide
-- [SDK Development](${DOCS_ORIGIN}/sdk.md) - SDK development documentation
-`
-    : `## Quick Links
-
-- [Platform SDKs](${DOCS_ORIGIN}/platforms.md) - Install Sentry for your language/framework
-- [API Reference](${DOCS_ORIGIN}/api.md) - Programmatic access to Sentry
-- [CLI](${DOCS_ORIGIN}/cli.md) - Command-line interface for Sentry operations
-`
-}`;
+  if (docTree && !process.env.NEXT_PUBLIC_DEVELOPER_DOCS) {
+    rootSitemapContent = buildDocTreeRootIndex(docTree, topLevelPaths);
+  } else if (docTree && process.env.NEXT_PUBLIC_DEVELOPER_DOCS) {
+    rootSitemapContent = buildDocTreeDevRootIndex(docTree, topLevelPaths);
+  } else {
+    rootSitemapContent = buildFallbackRootIndex(topLevelPaths);
+  }
 
   const indexPath = path.join(OUTPUT_DIR, 'index.md');
   await writeFile(indexPath, rootSitemapContent, {encoding: 'utf8'});
@@ -273,7 +639,9 @@ ${
   const pathsByParent = new Map();
   for (const p of allPaths) {
     const parts = p.replace(/\.md$/, '').split('/');
-    if (parts.length <= 1) continue;
+    if (parts.length <= 1) {
+      continue;
+    }
 
     // Determine the parent path - always direct parent, except:
     // Guide index pages (platforms/X/guides/Y.md) -> parent is platform (platforms/X.md)
@@ -314,35 +682,9 @@ ${
       throw err;
     }
 
-    // Only show "## Guides" section for platform index pages (e.g., platforms/javascript.md)
-    // These are the only pages that have guide children (platforms/X/guides/Y.md)
-    const isPlatformIndex =
-      parentPath.startsWith('platforms/') && parentPath.split('/').length === 2; // e.g., "platforms/javascript.md"
-
-    const guides = isPlatformIndex ? children.filter(p => p.includes('/guides/')) : [];
-    const otherPages = isPlatformIndex
-      ? children.filter(p => !p.includes('/guides/'))
-      : children;
-
-    let childSection = '';
-    if (guides.length > 0) {
-      const guideList = guides
-        .map(p => {
-          const name = p.replace(/\.md$/, '').split('/').pop();
-          return `- [${name}](${DOCS_ORIGIN}/${p})`;
-        })
-        .join('\n');
-      childSection += `\n## Guides\n\n${guideList}\n`;
-    }
-    if (otherPages.length > 0) {
-      const pageList = otherPages
-        .map(p => {
-          const name = p.replace(/\.md$/, '').split('/').pop();
-          return `- [${name}](${DOCS_ORIGIN}/${p})`;
-        })
-        .join('\n');
-      childSection += `\n## Pages in this section\n\n${pageList}\n`;
-    }
+    const childSection = docTree
+      ? buildDocTreeChildSection(docTree, parentPath, children)
+      : buildFallbackChildSection(parentPath, children);
 
     if (childSection) {
       const updatedContent = existingContent + childSection;
