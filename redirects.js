@@ -31,6 +31,14 @@ const developerDocsRedirects = [
     destination: '/sdk/foundations/data-model/event-payloads/',
   },
   {
+    source: '/sdk/data-model/event-payloads/',
+    destination: '/sdk/foundations/data-model/event-payloads/',
+  },
+  {
+    source: '/sdk/data-model/event-payloads/:path*',
+    destination: '/sdk/foundations/data-model/event-payloads/:path*',
+  },
+  {
     source: '/sdk/basics/:path*',
     destination: '/sdk/processes/basics/:path*',
   },
