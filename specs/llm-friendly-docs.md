@@ -31,53 +31,93 @@ Markdown exports are not just raw dumps of HTML content. They are adapted for LL
 
 ## Page Customization Architecture
 
-The generation script has two override registries for customizing output on a per-page basis:
+The generation script has two layers of page customization, each suited to its use case:
 
-### Content Overrides (full page replacement)
+### Layer 1: MDX Template Overrides (full page replacement)
 
-For pages that need completely custom content (e.g., root `index.md`), register a `contentOverride`. The override replaces the entire worker-generated Markdown with custom content.
+For pages that need completely custom **content** (like root `index.md`), put an `.mdx` file in `md-overrides/`. These are authored like normal docs content but with custom components for dynamic data.
+
+**Pipeline**: `MDX → React SSR → HTML → wrap in shell → existing HTML→MD worker pipeline`
+
+The rendered HTML gets wrapped in a minimal `<title>` + `<link rel="canonical">` + `<div id="main">` structure that the existing pipeline expects. Workers process it through the same unified/rehype conversion as any other page — link rewriting, caching, R2 sync all work automatically.
+
+**Directory structure:**
+- `md-overrides/*.mdx` — overrides for `docs.sentry.io` pages
+- `md-overrides/dev/*.mdx` — overrides for `develop.sentry.dev` pages
+
+**Example** (`md-overrides/index.mdx`):
+```mdx
+---
+title: "Sentry Documentation"
+append_sections: false
+---
+
+Sentry is a developer-first application monitoring platform...
+
+## Platforms
+
+<PlatformList />
+
+## Frameworks
+
+<FrameworkGroups />
+
+## Documentation
+
+<DocSectionList exclude={["platforms", "_not-found"]} />
+
+## Quick Links
+
+- [Platform SDKs](/platforms) - Install Sentry for your language/framework
+```
+
+**Frontmatter fields:**
+- `title` — becomes `<title>` in the HTML shell → H1 in the converted markdown
+- `append_sections` — `false` to skip auto-appended navigation sections (default: `true`). Set to `false` when the template already includes all navigation via components.
+
+The canonical URL is derived from the file path (`md-overrides/platforms.mdx` → `https://docs.sentry.io/platforms`).
+
+**Available components** (close over `docTree`):
+- `PlatformList` — renders `<ul>` of all visible platforms
+- `FrameworkGroups` — renders platforms with nested guide lists
+- `DocSectionList` — renders top-level doc sections (with `exclude` prop)
+
+### Layer 2: Declarative Section Overrides (appended navigation)
+
+For pages that need custom **navigation sections** appended after their converted content, use the `pageOverrides` table with declarative `sections` arrays.
 
 ```javascript
-const contentOverrides = [
+const pageOverrides = [
   {
-    match: (relativePath) => relativePath === 'index.md',
-    build: (docTree, existingContent, context) => {
-      // Return full page content as a string
-      return `# Sentry Documentation\n...`;
-    },
+    match: 'platforms.md',
+    build: ctx => buildPlatformsSection(ctx),  // complex grouping needs custom build
+  },
+  {
+    match: ctx => ctx.pathParts[0] === 'platforms' && ctx.pathParts.length === 2,
+    sections: [
+      { heading: 'Frameworks', items: ctx => nodeLinks(ctx.node, 'guides') },
+      { heading: 'Topics',     items: ctx => childLinks(ctx, p => !p.includes('/guides/')) },
+    ],
   },
 ];
 ```
 
-**Parameters:**
-- `match(relativePath)` — return `true` if this override applies to the given path
-- `build(docTree, existingContent, context)` — return the full page content
-  - `docTree` — parsed `doctree.json` (or `null` if unavailable)
-  - `existingContent` — the worker-generated Markdown (can be used as base)
-  - `context.allPaths` — list of all generated `.md` paths
+**Override fields:**
+- `match` — string for exact path match, or function receiving the context
+- `sections` — array of `{heading, items}` for declarative sections (preferred)
+- `build` — function returning markdown string (escape hatch for complex cases)
 
-### Section Overrides (appended navigation)
+**Shared utilities:**
+- `nodeLinks(node, subtreePath)` — links to visible children of a doctree subtree
+- `childLinks(ctx, filter?)` — links from `ctx.children` with optional filter, sorted by `sidebar_order`
+- `siblingGuideLinks(ctx)` — links to sibling guides for the same platform
+- `renderSections(ctx, sections)` — renders section arrays to markdown
+- `platformTitle(ctx)` — human-readable platform title from doctree
 
-For pages that need custom navigation sections appended to the converted content, register a `sectionOverride`. These are appended after the main content.
-
+**Unified context object** passed to all match/build/section functions:
 ```javascript
-const sectionOverrides = [
-  {
-    match: (pathParts, parentPath) => parentPath === 'platforms.md',
-    build: (docTree, parentParts, parentNode, children) => {
-      // Return markdown string to append
-      return '\n## Platforms\n\n- [JavaScript](...)\n';
-    },
-  },
-];
+{ docTree, relativePath, pathParts, node, children }
 ```
-
-**Parameters:**
-- `match(pathParts, parentPath)` — path segments array and full parent path (e.g., `['platforms', 'javascript']`, `'platforms/javascript.md'`)
-- `build(docTree, parentParts, parentNode, children)` — return the section to append
-  - `parentParts` — path segments for the parent page
-  - `parentNode` — doctree node for the parent (if found)
-  - `children` — list of child `.md` paths that belong to this parent
 
 ### Default Behavior
 
@@ -88,11 +128,12 @@ Pages without a matching override get a generic "Pages in this section" listing 
 
 ## Current Override Registry
 
-### Content Overrides
+### MDX Template Overrides
 
-| Pattern | Description |
-|---------|-------------|
-| `index.md` | Root documentation index with platforms, frameworks, and doc sections |
+| File | Output | Description |
+|------|--------|-------------|
+| `md-overrides/index.mdx` | `index.md` | Root docs index with platforms, frameworks, and doc sections |
+| `md-overrides/dev/index.mdx` | `index.md` (dev) | Root developer docs index |
 
 ### Section Overrides
 
@@ -121,11 +162,27 @@ yarn next build          →  .next/server/app/**/*.html
 yarn generate-md-exports →  public/md-exports/**/*.md  (+ R2 sync)
 ```
 
+During `generate-md-exports`:
+1. Load doctree
+2. Render MDX templates from `md-overrides/` → HTML in `.next/cache/md-override-html/`
+3. Discover HTML files, swapping source path for MDX override pages
+4. Workers convert HTML → Markdown (parallel, cached, with R2 sync)
+5. Append navigation sections to parent pages using `pageOverrides`
+
 ## Adding a New Override
 
-1. Write a builder function in `scripts/generate-md-exports.mjs`
-2. Add an entry to `contentOverrides` (full replacement) or `sectionOverrides` (appended section)
-3. The match function determines which pages use the override
+### MDX Template Override (full page replacement)
+
+1. Create an `.mdx` file in `md-overrides/` (or `md-overrides/dev/` for developer docs)
+2. Add frontmatter with `title` and `append_sections: false` if the template handles its own navigation
+3. Use available components (`PlatformList`, `FrameworkGroups`, `DocSectionList`) or add new ones in `buildMdxComponents()`
+4. Build and verify: check the output in `public/md-exports/`
+
+### Section Override (appended navigation)
+
+1. Add an entry to the `pageOverrides` array in `scripts/generate-md-exports.mjs`
+2. Use `sections` array for declarative overrides, or `build` function for complex cases
+3. The `match` field determines which pages use the override (string or function)
 4. Build and verify: check the output in `public/md-exports/`
 
 ## Verification

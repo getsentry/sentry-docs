@@ -64,13 +64,11 @@ function isVisible(node) {
 }
 
 function getVisibleChildren(node) {
-  return (node.children || [])
-    .filter(isVisible)
-    .sort((a, b) => {
-      const orderDiff =
-        (a.frontmatter?.sidebar_order ?? 99) - (b.frontmatter?.sidebar_order ?? 99);
-      return orderDiff !== 0 ? orderDiff : getTitle(a).localeCompare(getTitle(b));
-    });
+  return (node.children || []).filter(isVisible).sort((a, b) => {
+    const orderDiff =
+      (a.frontmatter?.sidebar_order ?? 99) - (b.frontmatter?.sidebar_order ?? 99);
+    return orderDiff !== 0 ? orderDiff : getTitle(a).localeCompare(getTitle(b));
+  });
 }
 
 function getS3Client() {
@@ -93,206 +91,89 @@ async function uploadToCFR2(s3Client, relativePath, data) {
     ContentType: 'text/markdown',
   });
   await s3Client.send(command);
-  return;
 }
 
-// --- Index and child section builders ---
+// --- Shared link resolver utilities for page overrides ---
 
-function titleForPath(docTree, mdPath) {
-  const parts = mdPath.replace(/\.md$/, '').split('/');
-  const node = findNode(docTree, parts);
-  return node ? getTitle(node) : parts[parts.length - 1];
-}
-
-function buildDocTreeRootIndex(docTree, topLevelPaths) {
-  const platformsNode = findNode(docTree, ['platforms']);
-  let platformsSection = '';
-  let frameworksSection = '';
-
-  if (platformsNode) {
-    const platforms = getVisibleChildren(platformsNode);
-    platformsSection = `## Platforms\n\n${platforms
-      .map(p => `- [${getTitle(p)}](${DOCS_ORIGIN}/platforms/${p.slug}.md)`)
-      .join('\n')}\n`;
-
-    const frameworkLines = [];
-    for (const platform of platforms) {
-      const guidesNode = findNode(platform, ['guides']);
-      if (!guidesNode) {
-        continue;
-      }
-      const guides = getVisibleChildren(guidesNode);
-      if (guides.length === 0) {
-        continue;
-      }
-      frameworkLines.push(`\n### ${getTitle(platform)}\n`);
-      for (const guide of guides) {
-        frameworkLines.push(
-          `- [${getTitle(guide)}](${DOCS_ORIGIN}/platforms/${platform.slug}/guides/${guide.slug}.md)`
-        );
-      }
-    }
-    if (frameworkLines.length > 0) {
-      frameworksSection = `## Frameworks\n${frameworkLines.join('\n')}\n`;
-    }
+function nodeLinks(node, subtreePath) {
+  if (!node) {
+    return [];
   }
-
-  // Build documentation sections from top-level pages (excluding platforms)
-  const docSections = topLevelPaths
-    .filter(p => p !== '_not-found.md' && p !== 'platforms.md')
-    .map(p => {
-      const title = titleForPath(docTree, p);
-      return `- [${title}](${DOCS_ORIGIN}/${p})`;
-    })
-    .join('\n');
-
-  return `# Sentry Documentation
-
-Sentry is a developer-first application monitoring platform that helps you identify and fix issues in real-time. It provides error tracking, performance monitoring, session replay, and more across all major platforms and frameworks.
-
-## Key Features
-
-- **Error Monitoring**: Capture and diagnose errors with full stack traces, breadcrumbs, and context
-- **Tracing**: Track requests across services to identify performance bottlenecks
-- **Session Replay**: Watch real user sessions to understand what led to errors
-- **Profiling**: Identify slow functions and optimize application performance
-- **Crons**: Monitor scheduled jobs and detect failures
-- **Logs**: Collect and analyze application logs in context
-
-${platformsSection}
-${frameworksSection}
-## Documentation
-
-${docSections}
-
-## Quick Links
-
-- [Platform SDKs](${DOCS_ORIGIN}/platforms.md) - Install Sentry for your language/framework
-- [API Reference](${DOCS_ORIGIN}/api.md) - Programmatic access to Sentry
-- [CLI](${DOCS_ORIGIN}/cli.md) - Command-line interface for Sentry operations
-`;
-}
-
-function buildDocTreeDevRootIndex(docTree, topLevelPaths) {
-  const docSections = topLevelPaths
-    .filter(p => p !== '_not-found.md')
-    .map(p => {
-      const title = titleForPath(docTree, p);
-      return `- [${title}](${DOCS_ORIGIN}/${p})`;
-    })
-    .join('\n');
-
-  return `# Sentry Developer Documentation
-
-${docSections}
-
-## Quick Links
-
-- [Backend Development](${DOCS_ORIGIN}/backend.md) - Backend service architecture
-- [Frontend Development](${DOCS_ORIGIN}/frontend.md) - Frontend development guide
-- [SDK Development](${DOCS_ORIGIN}/sdk.md) - SDK development documentation
-`;
-}
-
-function buildFallbackRootIndex(topLevelPaths) {
-  return `# Sentry Documentation
-
-Sentry is a developer-first application monitoring platform that helps you identify and fix issues in real-time. It provides error tracking, performance monitoring, session replay, and more across all major platforms and frameworks.
-
-## Key Features
-
-- **Error Monitoring**: Capture and diagnose errors with full stack traces, breadcrumbs, and context
-- **Tracing**: Track requests across services to identify performance bottlenecks
-- **Session Replay**: Watch real user sessions to understand what led to errors
-- **Profiling**: Identify slow functions and optimize application performance
-- **Crons**: Monitor scheduled jobs and detect failures
-- **Logs**: Collect and analyze application logs in context
-
-## Documentation Sections
-
-${topLevelPaths
-  .filter(p => p !== '_not-found.md')
-  .map(p => `- [${p.replace(/\.md$/, '')}](${DOCS_ORIGIN}/${p})`)
-  .join('\n')}
-
-${
-  process.env.NEXT_PUBLIC_DEVELOPER_DOCS
-    ? `## Quick Links
-
-- [Backend Development](${DOCS_ORIGIN}/backend.md) - Backend service architecture
-- [Frontend Development](${DOCS_ORIGIN}/frontend.md) - Frontend development guide
-- [SDK Development](${DOCS_ORIGIN}/sdk.md) - SDK development documentation
-`
-    : `## Quick Links
-
-- [Platform SDKs](${DOCS_ORIGIN}/platforms.md) - Install Sentry for your language/framework
-- [API Reference](${DOCS_ORIGIN}/api.md) - Programmatic access to Sentry
-- [CLI](${DOCS_ORIGIN}/cli.md) - Command-line interface for Sentry operations
-`
-}`;
-}
-
-// Registry of full-page content overrides.
-// When a page matches, its entire content is replaced (not appended).
-// Used for pages like root index.md that need completely custom content.
-const contentOverrides = [
-  {
-    match: relativePath => relativePath === 'index.md',
-    build: (docTree, _existingContent, {allPaths}) => {
-      const topLevelPaths = allPaths.filter(p => !p.includes('/'));
-      if (docTree && !process.env.NEXT_PUBLIC_DEVELOPER_DOCS) {
-        return buildDocTreeRootIndex(docTree, topLevelPaths);
-      }
-      if (docTree && process.env.NEXT_PUBLIC_DEVELOPER_DOCS) {
-        return buildDocTreeDevRootIndex(docTree, topLevelPaths);
-      }
-      return buildFallbackRootIndex(topLevelPaths);
-    },
-  },
-];
-
-// Registry of custom section builders for specific page patterns.
-// Each entry has a `match` function and a `build` function.
-// First match wins; unmatched pages fall through to the generic builder.
-// These are appended to the existing converted content.
-const sectionOverrides = [
-  {
-    match: (_parts, parentPath) => parentPath === 'platforms.md',
-    build: (docTree, _parentParts, _parentNode, _children) =>
-      buildPlatformsIndexSection(docTree),
-  },
-  {
-    // Platform index pages (e.g., platforms/javascript.md)
-    match: (parts, parentPath) =>
-      parentPath.startsWith('platforms/') && parts.length === 2,
-    build: (docTree, parentParts, parentNode, children) =>
-      buildPlatformPageSection(docTree, parentParts, parentNode, children),
-  },
-  {
-    // Guide index pages (e.g., platforms/javascript/guides/nextjs.md)
-    match: (parts, _parentPath) =>
-      parts.length === 4 && parts[0] === 'platforms' && parts[2] === 'guides',
-    build: (docTree, parentParts, _parentNode, children) =>
-      buildGuidePageSection(docTree, parentParts, _parentNode, children),
-  },
-];
-
-function buildDocTreeChildSection(docTree, parentPath, children) {
-  const parentParts = parentPath.replace(/\.md$/, '').split('/');
-  const parentNode = findNode(docTree, parentParts);
-
-  for (const override of sectionOverrides) {
-    if (override.match(parentParts, parentPath)) {
-      return override.build(docTree, parentParts, parentNode, children);
-    }
+  const subtree = subtreePath ? findNode(node, subtreePath.split('/')) : node;
+  if (!subtree) {
+    return [];
   }
-
-  // Default: generic section with doctree titles
-  return buildGenericSection(docTree, parentPath, children);
+  return getVisibleChildren(subtree).map(child => ({
+    title: getTitle(child),
+    url: `${DOCS_ORIGIN}/${child.path}.md`,
+  }));
 }
 
-function buildPlatformsIndexSection(docTree) {
-  const platformsNode = findNode(docTree, ['platforms']);
+function childLinks(ctx, filter) {
+  let pages = ctx.children;
+  if (filter) {
+    pages = pages.filter(filter);
+  }
+  return pages
+    .map(p => {
+      const parts = p.replace(/\.md$/, '').split('/');
+      const node = findNode(ctx.docTree, parts);
+      return {
+        title: node ? getTitle(node) : parts[parts.length - 1],
+        url: `${DOCS_ORIGIN}/${p}`,
+        order: node?.frontmatter?.sidebar_order ?? 99,
+      };
+    })
+    .sort((a, b) => {
+      const orderDiff = a.order - b.order;
+      return orderDiff !== 0 ? orderDiff : a.title.localeCompare(b.title);
+    });
+}
+
+function siblingGuideLinks(ctx) {
+  const platformSlug = ctx.pathParts[1];
+  const guideSlug = ctx.pathParts[3];
+  const platformNode = findNode(ctx.docTree, ['platforms', platformSlug]);
+  if (!platformNode) {
+    return [];
+  }
+  const guidesNode = findNode(platformNode, ['guides']);
+  if (!guidesNode) {
+    return [];
+  }
+  return getVisibleChildren(guidesNode)
+    .filter(g => g.slug !== guideSlug)
+    .map(g => ({
+      title: getTitle(g),
+      url: `${DOCS_ORIGIN}/platforms/${platformSlug}/guides/${g.slug}.md`,
+    }));
+}
+
+function platformTitle(ctx) {
+  const platformNode = findNode(ctx.docTree, ['platforms', ctx.pathParts[1]]);
+  return platformNode ? getTitle(platformNode) : ctx.pathParts[1];
+}
+
+function renderSections(ctx, sections) {
+  let result = '';
+  for (const section of sections) {
+    const heading =
+      typeof section.heading === 'function' ? section.heading(ctx) : section.heading;
+    const items =
+      typeof section.items === 'function' ? section.items(ctx) : section.items;
+    if (items.length === 0) {
+      continue;
+    }
+    result += `\n## ${heading}\n\n`;
+    result += items.map(item => `- [${item.title}](${item.url})`).join('\n');
+    result += '\n';
+  }
+  return result;
+}
+
+// Escape hatch for platforms.md which needs complex grouped structure
+function buildPlatformsSection(ctx) {
+  const platformsNode = findNode(ctx.docTree, ['platforms']);
   if (!platformsNode) {
     return '';
   }
@@ -327,111 +208,59 @@ function buildPlatformsIndexSection(docTree) {
   return section + '\n';
 }
 
-function buildPlatformPageSection(docTree, parentParts, parentNode, children) {
-  const platformSlug = parentParts[1];
-  let section = '';
+// Declarative page overrides for appended navigation sections.
+// First match wins. Unmatched pages with children get default "Pages in this section".
+const pageOverrides = [
+  {
+    match: 'platforms.md',
+    build: ctx => buildPlatformsSection(ctx),
+  },
+  {
+    // Platform index pages (e.g., platforms/javascript.md)
+    match: ctx => ctx.pathParts[0] === 'platforms' && ctx.pathParts.length === 2,
+    sections: [
+      {heading: 'Frameworks', items: ctx => nodeLinks(ctx.node, 'guides')},
+      {heading: 'Topics', items: ctx => childLinks(ctx, p => !p.includes('/guides/'))},
+    ],
+  },
+  {
+    // Guide index pages (e.g., platforms/javascript/guides/nextjs.md)
+    match: ctx =>
+      ctx.pathParts.length === 4 &&
+      ctx.pathParts[0] === 'platforms' &&
+      ctx.pathParts[2] === 'guides',
+    sections: [
+      {
+        heading: ctx => `Other ${platformTitle(ctx)} Frameworks`,
+        items: ctx => siblingGuideLinks(ctx),
+      },
+      {heading: 'Topics', items: ctx => childLinks(ctx)},
+    ],
+  },
+];
 
-  // Frameworks (guides)
-  const guides = children.filter(p => p.includes('/guides/'));
-  if (guides.length > 0 && parentNode) {
-    const guidesNode = findNode(parentNode, ['guides']);
-    if (guidesNode) {
-      const sortedGuides = getVisibleChildren(guidesNode);
-      section += `\n## Frameworks\n\n`;
-      section += sortedGuides
-        .map(
-          g =>
-            `- [${getTitle(g)}](${DOCS_ORIGIN}/platforms/${platformSlug}/guides/${g.slug}.md)`
-        )
-        .join('\n');
-      section += '\n';
-    } else {
-      section += buildFallbackGuidesList(guides, 'Frameworks');
+function buildChildSection(ctx) {
+  for (const override of pageOverrides) {
+    const matches =
+      typeof override.match === 'string'
+        ? ctx.relativePath === override.match
+        : override.match(ctx);
+    if (!matches) {
+      continue;
     }
-  }
-
-  // Topics (non-guide children)
-  const topics = children.filter(p => !p.includes('/guides/'));
-  if (topics.length > 0) {
-    section += buildSortedTopicsSection(docTree, topics, 'Topics');
-  }
-
-  return section;
-}
-
-function buildGuidePageSection(docTree, parentParts, _parentNode, children) {
-  const platformSlug = parentParts[1];
-  const guideSlug = parentParts[3];
-  let section = '';
-
-  // Other frameworks for this platform
-  const platformNode = findNode(docTree, ['platforms', platformSlug]);
-  if (platformNode) {
-    const guidesNode = findNode(platformNode, ['guides']);
-    if (guidesNode) {
-      const siblingGuides = getVisibleChildren(guidesNode).filter(
-        g => g.slug !== guideSlug
-      );
-      if (siblingGuides.length > 0) {
-        const platformTitle = getTitle(platformNode);
-        section += `\n## Other ${platformTitle} Frameworks\n\n`;
-        section += siblingGuides
-          .map(
-            g =>
-              `- [${getTitle(g)}](${DOCS_ORIGIN}/platforms/${platformSlug}/guides/${g.slug}.md)`
-          )
-          .join('\n');
-        section += '\n';
-      }
+    if (override.build) {
+      return override.build(ctx);
     }
+    if (override.sections) {
+      return renderSections(ctx, override.sections);
+    }
+    return '';
   }
 
-  // Topics (child pages of this guide)
-  if (children.length > 0) {
-    section += buildSortedTopicsSection(docTree, children, 'Topics');
-  }
-
-  return section;
-}
-
-function buildSortedTopicsSection(docTree, pages, heading) {
-  // Sort using doctree order when available
-  const pagesWithMeta = pages.map(p => {
-    const parts = p.replace(/\.md$/, '').split('/');
-    const node = findNode(docTree, parts);
-    return {
-      path: p,
-      title: node ? getTitle(node) : parts[parts.length - 1],
-      order: node?.frontmatter?.sidebar_order ?? 99,
-    };
-  });
-
-  pagesWithMeta.sort((a, b) => {
-    const orderDiff = a.order - b.order;
-    return orderDiff !== 0 ? orderDiff : a.title.localeCompare(b.title);
-  });
-
-  let section = `\n## ${heading}\n\n`;
-  section += pagesWithMeta
-    .map(p => `- [${p.title}](${DOCS_ORIGIN}/${p.path})`)
-    .join('\n');
-  section += '\n';
-  return section;
-}
-
-function buildGenericSection(docTree, _parentPath, children) {
-  // Use doctree titles for all children
-  return buildSortedTopicsSection(docTree, children, 'Pages in this section');
-}
-
-function buildFallbackGuidesList(guides, heading) {
-  const guideList = guides
-    .map(p => {
-      const name = p.replace(/\.md$/, '').split('/').pop();
-      return `- [${name}](${DOCS_ORIGIN}/${p})`;
-    })
-    .join('\n');
-  return `\n## ${heading}\n\n${guideList}\n`;
+  // Default: list children sorted by sidebar_order
+  return renderSections(ctx, [
+    {heading: 'Pages in this section', items: () => childLinks(ctx)},
+  ]);
 }
 
 function buildFallbackChildSection(parentPath, children) {
@@ -445,7 +274,13 @@ function buildFallbackChildSection(parentPath, children) {
 
   let childSection = '';
   if (guides.length > 0) {
-    childSection += buildFallbackGuidesList(guides, 'Guides');
+    const guideList = guides
+      .map(p => {
+        const name = p.replace(/\.md$/, '').split('/').pop();
+        return `- [${name}](${DOCS_ORIGIN}/${p})`;
+      })
+      .join('\n');
+    childSection += `\n## Guides\n\n${guideList}\n`;
   }
   if (otherPages.length > 0) {
     const pageList = otherPages
@@ -457,6 +292,159 @@ function buildFallbackChildSection(parentPath, children) {
     childSection += `\n## Pages in this section\n\n${pageList}\n`;
   }
   return childSection;
+}
+
+// --- MDX template rendering for full-page overrides ---
+
+function buildMdxComponents(docTree, createElement) {
+  function PlatformList() {
+    if (!docTree) {
+      return null;
+    }
+    const platformsNode = findNode(docTree, ['platforms']);
+    if (!platformsNode) {
+      return null;
+    }
+    const platforms = getVisibleChildren(platformsNode);
+    return createElement(
+      'ul',
+      null,
+      platforms.map(p =>
+        createElement(
+          'li',
+          {key: p.slug},
+          createElement('a', {href: `/platforms/${p.slug}`}, getTitle(p))
+        )
+      )
+    );
+  }
+
+  function FrameworkGroups() {
+    if (!docTree) {
+      return null;
+    }
+    const platformsNode = findNode(docTree, ['platforms']);
+    if (!platformsNode) {
+      return null;
+    }
+    const platforms = getVisibleChildren(platformsNode);
+    const groups = [];
+    for (const platform of platforms) {
+      const guidesNode = findNode(platform, ['guides']);
+      if (!guidesNode) {
+        continue;
+      }
+      const guides = getVisibleChildren(guidesNode);
+      if (guides.length === 0) {
+        continue;
+      }
+      groups.push(
+        createElement('h3', {key: `h-${platform.slug}`}, getTitle(platform)),
+        createElement(
+          'ul',
+          {key: `ul-${platform.slug}`},
+          guides.map(g =>
+            createElement(
+              'li',
+              {key: g.slug},
+              createElement(
+                'a',
+                {href: `/platforms/${platform.slug}/guides/${g.slug}`},
+                getTitle(g)
+              )
+            )
+          )
+        )
+      );
+    }
+    return createElement('div', null, ...groups);
+  }
+
+  function DocSectionList({exclude = []}) {
+    if (!docTree) {
+      return null;
+    }
+    const sections = getVisibleChildren(docTree).filter(
+      child => !exclude.includes(child.slug)
+    );
+    return createElement(
+      'ul',
+      null,
+      sections.map(child =>
+        createElement(
+          'li',
+          {key: child.slug},
+          createElement('a', {href: `/${child.slug}`}, getTitle(child))
+        )
+      )
+    );
+  }
+
+  return {PlatformList, FrameworkGroups, DocSectionList};
+}
+
+async function renderMdxOverrides(root, docTree) {
+  const overrideDir = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
+    ? path.join(root, 'md-overrides', 'dev')
+    : path.join(root, 'md-overrides');
+
+  const overrides = new Map();
+
+  if (!existsSync(overrideDir)) {
+    return overrides;
+  }
+
+  const tempDir = path.join(root, '.next', 'cache', 'md-override-html');
+  await rm(tempDir, {recursive: true, force: true});
+  await mkdir(tempDir, {recursive: true});
+
+  const {evaluate} = await import('@mdx-js/mdx');
+  const jsxRuntime = await import('react/jsx-runtime');
+  const React = await import('react');
+  const {renderToStaticMarkup} = await import('react-dom/server');
+  const grayMatter = (await import('gray-matter')).default;
+
+  const components = buildMdxComponents(docTree, React.createElement);
+  const files = await readdir(overrideDir, {recursive: true});
+
+  for (const file of files) {
+    if (!file.endsWith('.mdx')) {
+      continue;
+    }
+
+    const mdxSource = await readFile(path.join(overrideDir, file), {encoding: 'utf8'});
+    const {data: frontmatter, content} = grayMatter(mdxSource);
+
+    const {default: MDXContent} = await evaluate(content, {
+      jsx: jsxRuntime.jsx,
+      jsxs: jsxRuntime.jsxs,
+      Fragment: jsxRuntime.Fragment,
+    });
+
+    const bodyHtml = renderToStaticMarkup(React.createElement(MDXContent, {components}));
+
+    const relativePath = file.replace(/\.mdx$/, '.md');
+    const urlPath = file.replace(/\.mdx$/, '').replace(/^index$/, '');
+    const canonicalUrl = `${DOCS_ORIGIN}/${urlPath}`;
+
+    const html = [
+      '<!DOCTYPE html><html><head>',
+      `<title>${frontmatter.title || ''}</title>`,
+      `<link rel="canonical" href="${canonicalUrl}" />`,
+      '</head><body>',
+      `<main><div id="main">${bodyHtml}</div></main>`,
+      '</body></html>',
+    ].join('\n');
+
+    const htmlPath = path.join(tempDir, file.replace(/\.mdx$/, '.html'));
+    await mkdir(path.dirname(htmlPath), {recursive: true});
+    await writeFile(htmlPath, html, {encoding: 'utf8'});
+
+    overrides.set(relativePath, {htmlPath, frontmatter});
+    console.log(`📝 Rendered MDX override: ${file} → ${relativePath}`);
+  }
+
+  return overrides;
 }
 
 // Global set to track which cache files are used across all workers
@@ -510,6 +498,9 @@ async function createWork() {
     console.warn(`⚠️ Could not load doctree (${doctreePath}): ${err.message}`);
     console.warn('   Falling back to slug-based navigation');
   }
+
+  // Render MDX template overrides (full-page content replacements)
+  const mdxOverrides = await renderMdxOverrides(root, docTree);
 
   // Clear output directory
   await rm(OUTPUT_DIR, {recursive: true, force: true});
@@ -575,8 +566,10 @@ async function createWork() {
       await mkdir(targetDir, {recursive: true});
       const targetPath = path.join(targetDir, dirent.name.slice(0, -5) + '.md');
       const relativePath = path.relative(OUTPUT_DIR, targetPath);
+      // Use MDX override HTML if available, otherwise use Next.js build HTML
+      const mdxOverride = mdxOverrides.get(relativePath);
       workerTasks[workerIdx].push({
-        sourcePath,
+        sourcePath: mdxOverride ? mdxOverride.htmlPath : sourcePath,
         targetPath,
         relativePath,
         r2Hash: existingFilesOnR2 ? existingFilesOnR2.get(relativePath) : null,
@@ -629,27 +622,11 @@ async function createWork() {
 
   await Promise.all(workerPromises);
 
-  // Generate hierarchical sitemaps
+  // Collect all generated paths
   const allPaths = workerTasks
     .flat()
     .map(task => task.relativePath)
-    .filter(p => p !== 'index.md')
     .sort();
-
-  // Apply full-page content overrides (e.g., root index.md)
-  // These replace the worker-generated content entirely.
-  const overrideContext = {allPaths};
-  const contentOverrideResults = new Map();
-  for (const override of contentOverrides) {
-    for (const task of workerTasks.flat()) {
-      if (override.match(task.relativePath)) {
-        const content = override.build(docTree, null, overrideContext);
-        await writeFile(task.targetPath, content, {encoding: 'utf8'});
-        contentOverrideResults.set(task.relativePath, content);
-        console.log(`📑 Generated ${task.relativePath} (content override)`);
-      }
-    }
-  }
 
   // Append child page listings to section index pages
   // Group paths by their DIRECT parent (handling guides specially)
@@ -684,10 +661,16 @@ async function createWork() {
     pathsByParent.get(parentPath).push(p);
   }
 
-  // Append child listings to parent index files
+  // Append child listings to parent index files.
+  // Skip pages whose MDX override sets append_sections: false.
   let updatedCount = 0;
   const r2Uploads = [];
   for (const [parentPath, children] of pathsByParent) {
+    const overrideFm = mdxOverrides.get(parentPath)?.frontmatter;
+    if (overrideFm?.append_sections === false) {
+      continue;
+    }
+
     const parentFile = path.join(OUTPUT_DIR, parentPath);
     let existingContent;
     try {
@@ -699,8 +682,18 @@ async function createWork() {
       throw err;
     }
 
+    const pathParts = parentPath.replace(/\.md$/, '').split('/');
+    const node = docTree ? findNode(docTree, pathParts) : null;
+    const ctx = {
+      docTree,
+      relativePath: parentPath,
+      pathParts,
+      node,
+      children,
+    };
+
     const childSection = docTree
-      ? buildDocTreeChildSection(docTree, parentPath, children)
+      ? buildChildSection(ctx)
       : buildFallbackChildSection(parentPath, children);
 
     if (childSection) {
@@ -731,19 +724,6 @@ async function createWork() {
     console.log(`📤 Uploaded ${r2Uploads.length} section index files to R2`);
   }
   console.log(`📑 Added child page listings to ${updatedCount} section index files`);
-
-  // Upload content-overridden pages to R2 if configured
-  if (accessKeyId && secretAccessKey && contentOverrideResults.size > 0) {
-    const s3Client = getS3Client();
-    for (const [relativePath, content] of contentOverrideResults) {
-      const fileHash = md5(content);
-      const existingHash = existingFilesOnR2?.get(relativePath);
-      if (existingHash !== fileHash) {
-        await uploadToCFR2(s3Client, relativePath, content);
-        console.log(`📤 Uploaded updated ${relativePath} to R2`);
-      }
-    }
-  }
 
   // Clean up unused cache files to prevent unbounded growth
   if (!noCache) {
