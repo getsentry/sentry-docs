@@ -14,8 +14,8 @@ function isCurrentPage(href: string): boolean {
 }
 
 type Props = {
-  href: string;
   children: React.ReactNode;
+  href: string;
 };
 
 /**
