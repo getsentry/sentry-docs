@@ -55,6 +55,7 @@ import {
   SplitSectionCode,
   SplitSectionText,
 } from './components/splitLayout';
+import {StatusBadge} from './components/statusBadge';
 import {StepComponent, StepConnector} from './components/stepConnector';
 import {TableOfContents} from './components/tableOfContents';
 import {VersionRequirement} from './components/version-requirement';
@@ -118,6 +119,7 @@ export function mdxComponents(
     SplitSection,
     SplitSectionText,
     SplitSectionCode,
+    StatusBadge,
     StepComponent,
     StepConnector,
     VimeoEmbed,
