@@ -51,6 +51,35 @@ Run `yarn test` for vitest. Tests live alongside source files or in `__tests__` 
 | `yarn lint:eslint` | ESLint check |
 | `yarn lint:prettier` | Prettier check |
 
+## Documentation Writing Style
+
+When writing or editing documentation content in `docs/`:
+
+### Tone & Voice
+- **Supportive Peer:** Write like a developer talking to another developer. Use "we" to include both author and reader.
+- **Direct & Honest:** Avoid corporate fluff ("best-in-class", "leverage", "synergy"). If something is a workaround, call it that.
+- **Inclusive:** Use gender-neutral language. Use "they/them" for the reader.
+
+### Stylistic Rules
+- **American English:** Use U.S. spelling (color, organize, center).
+- **Scannability:** Short paragraphs (2-3 sentences max). Use bullet points for lists.
+- **Active Voice:** "Sentry groups similar errors" not "Similar errors are grouped by Sentry."
+- **Headings:** Use Title Case for all heading levels. Never stack headlines without body text between them.
+
+### Formatting
+- **Code First:** Show code examples, then explain them.
+- **Bold for Emphasis:** Use **bold** for UI elements and key actions.
+- **UI References:** Click **Save Changes**, go to **Settings > Projects**.
+
+### Word Choice
+- Use "blocklist/allowlist" not "blacklist/whitelist"
+- Use "master/secondary", "primary/secondary" not "master/slave"
+- Use "to" not "in order to"
+- Use "use" not "utilize"
+- Verb forms: "set up" (verb) vs "setup" (noun), "log in" vs "login"
+
+For the complete style guide, see: https://docs.sentry.io/contributing/approach/style-guide/
+
 ## Developer Documentation (develop-docs/)
 
 When writing requirements in `develop-docs/`:
