@@ -27,6 +27,10 @@ const developerDocsRedirects = [
     destination: '/sdk/telemetry/traces/:path*',
   },
   {
+    source: '/sdk/telemetry/scopes/',
+    destination: '/sdk/foundations/data-model/scopes/',
+  },
+  {
     source: '/sdk/data-model/event-payloads/types/',
     destination: '/sdk/foundations/data-model/event-payloads/',
   },
@@ -56,7 +60,15 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/envelopes/:path*',
-    destination: '/sdk/data-model/envelopes/:path*',
+    destination: '/sdk/foundations/data-model/envelopes/:path*',
+  },
+  {
+    source: '/sdk/foundations/transport/envelopes/',
+    destination: '/sdk/foundations/data-model/envelopes/',
+  },
+  {
+    source: '/sdk/foundations/transport/envelope-items/',
+    destination: '/sdk/foundations/data-model/envelope-items/',
   },
   {
     source: '/sdk/event-payloads/:path*',
