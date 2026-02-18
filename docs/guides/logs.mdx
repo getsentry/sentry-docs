@@ -23,6 +23,30 @@ logger.<level>(message, attribute=value)
 \Sentry\logger()-><level>(message, attributes: [...]);
 ```
 
+```csharp {tabTitle: .NET}
+using Sentry;
+SentrySdk.Logger.<Level>(message);
+```
+
+```ruby {tabTitle: Ruby}
+Sentry.logger.<level>(message)
+```
+
+```dart {tabTitle: Flutter}
+import 'package:sentry/sentry.dart';
+Sentry.logger.<level>(message);
+```
+
+```swift {tabTitle: Swift}
+import Sentry
+SentrySDK.logger.<level>(message, attributes: [...])
+```
+
+```kotlin {tabTitle: Kotlin}
+import io.sentry.Sentry
+Sentry.logger().<level>(message)
+```
+
 **Levels:** `trace`, `debug`, `info`, `warn` (or `warning` in Python), `error`, `fatal`
 
 **Attributes:** Key-value pairs you can search and filter on. Consistency matters, so use whatever naming convention fits your codebase.
@@ -54,6 +78,52 @@ sentry_logger.info("Order completed",
     'amount' => 149.99,
     'payment_method' => 'stripe',
 ]);
+```
+
+```csharp {tabTitle: .NET}
+using Sentry;
+
+SentrySdk.Logger.Info("Order completed", logger => logger
+    .SetAttribute("orderId", "order_123")
+    .SetAttribute("userId", user.Id)
+    .SetAttribute("amount", 149.99)
+    .SetAttribute("paymentMethod", "stripe"));
+```
+
+```ruby {tabTitle: Ruby}
+Sentry.logger.info('Order completed',
+  order_id: 'order_123',
+  user_id: user.id,
+  amount: 149.99,
+  payment_method: 'stripe'
+)
+```
+
+```dart {tabTitle: Flutter}
+Sentry.logger.info('Order completed', attributes: {
+  'orderId': 'order_123',
+  'userId': user.id,
+  'amount': 149.99,
+  'paymentMethod': 'stripe',
+});
+```
+
+```swift {tabTitle: Swift}
+import Sentry
+
+SentrySDK.logger.info("Order completed", attributes: [
+    "orderId": "order_123",
+    "userId": user.id,
+    "amount": 149.99,
+    "paymentMethod": "stripe"
+])
+```
+
+```kotlin {tabTitle: Kotlin}
+import io.sentry.Sentry
+
+Sentry.logger().info("Order completed orderId=%s userId=%s amount=%.2f",
+    "order_123", user.id, 149.99)
 ```
 
 Logs in Sentry are automatically trace-connected. Each log shows a trace ID that links to the full [trace view](/concepts/key-terms/tracing/trace-view/).
@@ -110,6 +180,70 @@ sentry_logger.warning("Login failed",
 ]);
 ```
 
+```csharp {tabTitle: .NET}
+SentrySdk.Logger.Info("User logged in", logger => logger
+    .SetAttribute("userId", user.Id)
+    .SetAttribute("authMethod", "oauth")
+    .SetAttribute("provider", "google"));
+
+SentrySdk.Logger.Warning("Login failed", logger => logger
+    .SetAttribute("email", maskedEmail)
+    .SetAttribute("reason", "invalid_password")
+    .SetAttribute("attemptCount", 3));
+```
+
+```ruby {tabTitle: Ruby}
+Sentry.logger.info('User logged in',
+  user_id: user.id,
+  auth_method: 'oauth',
+  provider: 'google'
+)
+
+Sentry.logger.warn('Login failed',
+  email: masked_email,
+  reason: 'invalid_password',
+  attempt_count: 3
+)
+```
+
+```dart {tabTitle: Flutter}
+Sentry.logger.info('User logged in', attributes: {
+  'userId': user.id,
+  'authMethod': 'oauth',
+  'provider': 'google',
+});
+
+Sentry.logger.warn('Login failed', attributes: {
+  'email': maskedEmail,
+  'reason': 'invalid_password',
+  'attemptCount': 3,
+});
+```
+
+```swift {tabTitle: Swift}
+import Sentry
+
+SentrySDK.logger.info("User logged in", attributes: [
+    "userId": user.id,
+    "authMethod": "oauth",
+    "provider": "google"
+])
+
+SentrySDK.logger.warn("Login failed", attributes: [
+    "email": maskedEmail,
+    "reason": "invalid_password",
+    "attemptCount": 3
+])
+```
+
+```kotlin {tabTitle: Kotlin}
+import io.sentry.Sentry
+
+Sentry.logger().info("User logged in userId=%s authMethod=%s", user.id, "oauth")
+
+Sentry.logger().warn("Login failed email=%s reason=%s", maskedEmail, "invalid_password")
+```
+
 **Search in Sentry:** `userId:123 "logged in"` or `severity:warn authMethod:*`
 
 **Alert idea:** Alert when `severity:warn "Login failed"` spikes in a 5-minute window—this can indicate brute force attempts or auth provider issues.
@@ -148,6 +282,54 @@ sentry_logger.error("Payment failed",
     'error_code' => 'card_declined',
     'cart_items' => 3,
 ]);
+```
+
+```csharp {tabTitle: .NET}
+SentrySdk.Logger.Error("Payment failed", logger => logger
+    .SetAttribute("orderId", "order_123")
+    .SetAttribute("amount", 99.99)
+    .SetAttribute("gateway", "stripe")
+    .SetAttribute("errorCode", "card_declined")
+    .SetAttribute("cartItems", 3));
+```
+
+```ruby {tabTitle: Ruby}
+Sentry.logger.error('Payment failed',
+  order_id: 'order_123',
+  amount: 99.99,
+  gateway: 'stripe',
+  error_code: 'card_declined',
+  cart_items: 3
+)
+```
+
+```dart {tabTitle: Flutter}
+Sentry.logger.error('Payment failed', attributes: {
+  'orderId': 'order_123',
+  'amount': 99.99,
+  'gateway': 'stripe',
+  'errorCode': 'card_declined',
+  'cartItems': 3,
+});
+```
+
+```swift {tabTitle: Swift}
+import Sentry
+
+SentrySDK.logger.error("Payment failed", attributes: [
+    "orderId": "order_123",
+    "amount": 99.99,
+    "gateway": "stripe",
+    "errorCode": "card_declined",
+    "cartItems": 3
+])
+```
+
+```kotlin {tabTitle: Kotlin}
+import io.sentry.Sentry
+
+Sentry.logger().error("Payment failed orderId=%s gateway=%s errorCode=%s",
+    "order_123", "stripe", "card_declined")
 ```
 
 **Search in Sentry:** `orderId:order_123` or `severity:error gateway:stripe`
@@ -221,6 +403,101 @@ $response = $shippingApi->getRates($items);
 ]);
 ```
 
+```csharp {tabTitle: .NET}
+// Third-party API call
+var stopwatch = Stopwatch.StartNew();
+var response = await shippingApi.GetRatesAsync(items);
+
+SentrySdk.Logger.Info("Shipping rates fetched", logger => logger
+    .SetAttribute("service", "shipping-provider")
+    .SetAttribute("endpoint", "/rates")
+    .SetAttribute("durationMs", stopwatch.ElapsedMilliseconds)
+    .SetAttribute("rateCount", response.Rates.Count));
+
+// Webhook received
+SentrySdk.Logger.Info("Webhook received", logger => logger
+    .SetAttribute("source", "stripe")
+    .SetAttribute("eventType", "payment_intent.succeeded")
+    .SetAttribute("paymentId", eventData.Object.Id));
+```
+
+```ruby {tabTitle: Ruby}
+# Third-party API call
+start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+response = shipping_api.get_rates(items)
+
+Sentry.logger.info('Shipping rates fetched',
+  service: 'shipping-provider',
+  endpoint: '/rates',
+  duration_ms: ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - start) * 1000).to_i,
+  rate_count: response.rates.length
+)
+
+# Webhook received
+Sentry.logger.info('Webhook received',
+  source: 'stripe',
+  event_type: 'payment_intent.succeeded',
+  payment_id: event['data']['object']['id']
+)
+```
+
+```dart {tabTitle: Flutter}
+// Third-party API call
+final stopwatch = Stopwatch()..start();
+final response = await shippingApi.getRates(items);
+
+Sentry.logger.info('Shipping rates fetched', attributes: {
+  'service': 'shipping-provider',
+  'endpoint': '/rates',
+  'durationMs': stopwatch.elapsedMilliseconds,
+  'rateCount': response.rates.length,
+});
+
+// Webhook received
+Sentry.logger.info('Webhook received', attributes: {
+  'source': 'stripe',
+  'eventType': 'payment_intent.succeeded',
+  'paymentId': event.data.object.id,
+});
+```
+
+```swift {tabTitle: Swift}
+import Sentry
+
+// Third-party API call
+let start = Date()
+let response = try await shippingApi.getRates(items)
+
+SentrySDK.logger.info("Shipping rates fetched", attributes: [
+    "service": "shipping-provider",
+    "endpoint": "/rates",
+    "durationMs": Int(Date().timeIntervalSince(start) * 1000),
+    "rateCount": response.rates.count
+])
+
+// Webhook received
+SentrySDK.logger.info("Webhook received", attributes: [
+    "source": "stripe",
+    "eventType": "payment_intent.succeeded",
+    "paymentId": event.data.object.id
+])
+```
+
+```kotlin {tabTitle: Kotlin}
+import io.sentry.Sentry
+
+// Third-party API call
+val start = System.currentTimeMillis()
+val response = shippingApi.getRates(items)
+
+Sentry.logger().info("Shipping rates fetched service=%s durationMs=%d",
+    "shipping-provider", System.currentTimeMillis() - start)
+
+// Webhook received
+Sentry.logger().info("Webhook received source=%s eventType=%s",
+    "stripe", "payment_intent.succeeded")
+```
+
 **Search in Sentry:** `service:shipping-provider durationMs:>2000` or `source:stripe`
 
 **Alert idea:** Alert when `service:* durationMs:>3000` to catch third-party slowdowns before they cascade.
@@ -276,6 +553,76 @@ sentry_logger.error("Job failed",
 ]);
 ```
 
+```csharp {tabTitle: .NET}
+SentrySdk.Logger.Info("Job started", logger => logger
+    .SetAttribute("jobType", "email-digest")
+    .SetAttribute("jobId", "job_456")
+    .SetAttribute("queue", "notifications"));
+
+SentrySdk.Logger.Error("Job failed", logger => logger
+    .SetAttribute("jobType", "email-digest")
+    .SetAttribute("jobId", "job_456")
+    .SetAttribute("retryCount", 3)
+    .SetAttribute("lastError", "SMTP timeout"));
+```
+
+```ruby {tabTitle: Ruby}
+Sentry.logger.info('Job started',
+  job_type: 'email-digest',
+  job_id: 'job_456',
+  queue: 'notifications'
+)
+
+Sentry.logger.error('Job failed',
+  job_type: 'email-digest',
+  job_id: 'job_456',
+  retry_count: 3,
+  last_error: 'SMTP timeout'
+)
+```
+
+```dart {tabTitle: Flutter}
+Sentry.logger.info('Job started', attributes: {
+  'jobType': 'email-digest',
+  'jobId': 'job_456',
+  'queue': 'notifications',
+});
+
+Sentry.logger.error('Job failed', attributes: {
+  'jobType': 'email-digest',
+  'jobId': 'job_456',
+  'retryCount': 3,
+  'lastError': 'SMTP timeout',
+});
+```
+
+```swift {tabTitle: Swift}
+import Sentry
+
+SentrySDK.logger.info("Job started", attributes: [
+    "jobType": "email-digest",
+    "jobId": "job_456",
+    "queue": "notifications"
+])
+
+SentrySDK.logger.error("Job failed", attributes: [
+    "jobType": "email-digest",
+    "jobId": "job_456",
+    "retryCount": 3,
+    "lastError": "SMTP timeout"
+])
+```
+
+```kotlin {tabTitle: Kotlin}
+import io.sentry.Sentry
+
+Sentry.logger().info("Job started jobType=%s jobId=%s queue=%s",
+    "email-digest", "job_456", "notifications")
+
+Sentry.logger().error("Job failed jobType=%s jobId=%s retryCount=%d",
+    "email-digest", "job_456", 3)
+```
+
 **Search in Sentry:** `jobType:email-digest severity:error`
 
 **Alert idea:** Alert when `severity:error jobType:*` spikes—this can indicate queue processing issues or downstream failures.
@@ -323,6 +670,67 @@ sentry_logger.warning("Config reloaded",
     'reason' => 'env-change',
     'changed_keys' => ['API_TIMEOUT', 'MAX_CONNECTIONS'],
 ]);
+```
+
+```csharp {tabTitle: .NET}
+SentrySdk.Logger.Info("Feature flag evaluated", logger => logger
+    .SetAttribute("flag", "new-checkout-flow")
+    .SetAttribute("enabled", true)
+    .SetAttribute("userId", user.Id));
+
+SentrySdk.Logger.Warning("Config reloaded", logger => logger
+    .SetAttribute("reason", "env-change")
+    .SetAttribute("changedKeys", new[] { "API_TIMEOUT", "MAX_CONNECTIONS" }));
+```
+
+```ruby {tabTitle: Ruby}
+Sentry.logger.info('Feature flag evaluated',
+  flag: 'new-checkout-flow',
+  enabled: true,
+  user_id: user.id
+)
+
+Sentry.logger.warn('Config reloaded',
+  reason: 'env-change',
+  changed_keys: ['API_TIMEOUT', 'MAX_CONNECTIONS']
+)
+```
+
+```dart {tabTitle: Flutter}
+Sentry.logger.info('Feature flag evaluated', attributes: {
+  'flag': 'new-checkout-flow',
+  'enabled': true,
+  'userId': user.id,
+});
+
+Sentry.logger.warn('Config reloaded', attributes: {
+  'reason': 'env-change',
+  'changedKeys': ['API_TIMEOUT', 'MAX_CONNECTIONS'],
+});
+```
+
+```swift {tabTitle: Swift}
+import Sentry
+
+SentrySDK.logger.info("Feature flag evaluated", attributes: [
+    "flag": "new-checkout-flow",
+    "enabled": true,
+    "userId": user.id
+])
+
+SentrySDK.logger.warn("Config reloaded", attributes: [
+    "reason": "env-change",
+    "changedKeys": ["API_TIMEOUT", "MAX_CONNECTIONS"]
+])
+```
+
+```kotlin {tabTitle: Kotlin}
+import io.sentry.Sentry
+
+Sentry.logger().info("Feature flag evaluated flag=%s enabled=%b userId=%s",
+    "new-checkout-flow", true, user.id)
+
+Sentry.logger().warn("Config reloaded reason=%s", "env-change")
 ```
 
 **Search in Sentry:** `flag:new-checkout-flow` or `"Config reloaded"`
@@ -384,6 +792,59 @@ sentry_sdk.init(
 ]);
 ```
 
+```csharp {tabTitle: .NET}
+SentrySdk.Init(options =>
+{
+    options.Dsn = "...";
+    options.Environment = "development";
+    options.TracesSampleRate = 1.0;  // 100% of traces
+    options.EnableLogs = true;
+});
+```
+
+```ruby {tabTitle: Ruby}
+Sentry.init do |config|
+  config.dsn = '...'
+  config.environment = 'development'
+  config.traces_sample_rate = 1.0  # 100% of traces
+  config.enable_logs = true
+end
+```
+
+```dart {tabTitle: Flutter}
+await SentryFlutter.init(
+  (options) {
+    options.dsn = '...';
+    options.environment = 'development';
+    options.tracesSampleRate = 1.0;  // 100% of traces
+    options.enableLogs = true;
+  },
+  appRunner: () => runApp(MyApp()),
+);
+```
+
+```swift {tabTitle: Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "..."
+    options.environment = "development"
+    options.tracesSampleRate = 1.0  // 100% of traces
+    options.enableLogs = true
+}
+```
+
+```kotlin {tabTitle: Kotlin}
+import io.sentry.android.core.SentryAndroid
+
+SentryAndroid.init(context) { options ->
+    options.dsn = "..."
+    options.environment = "development"
+    options.tracesSampleRate = 1.0  // 100% of traces
+    options.logs.enabled = true
+}
+```
+
 Use verbose logging levels like `debug` (development diagnostics) and `trace` (fine-grained execution details) freely in development. You can [filter these out in production](/platforms/javascript/logs/#filter-logs) using `beforeSendLog` to only capture `info` and above.
 
 ### Production Logging
@@ -410,6 +871,36 @@ sentry_logger.error("Payment failed", reason="Insufficient Funds")
 \Sentry\logger()->info('Checkout started', attributes: ['user_id' => '882']);
 \Sentry\logger()->info('Discount applied', attributes: ['code' => 'WINTER20']);
 \Sentry\logger()->error('Payment failed', attributes: ['reason' => 'Insufficient Funds']);
+```
+
+```csharp {tabTitle: .NET}
+SentrySdk.Logger.Info("Checkout started", l => l.SetAttribute("userId", "882"));
+SentrySdk.Logger.Info("Discount applied", l => l.SetAttribute("code", "WINTER20"));
+SentrySdk.Logger.Error("Payment failed", l => l.SetAttribute("reason", "Insufficient Funds"));
+```
+
+```ruby {tabTitle: Ruby}
+Sentry.logger.info('Checkout started', user_id: '882')
+Sentry.logger.info('Discount applied', code: 'WINTER20')
+Sentry.logger.error('Payment failed', reason: 'Insufficient Funds')
+```
+
+```dart {tabTitle: Flutter}
+Sentry.logger.info('Checkout started', attributes: {'userId': '882'});
+Sentry.logger.info('Discount applied', attributes: {'code': 'WINTER20'});
+Sentry.logger.error('Payment failed', attributes: {'reason': 'Insufficient Funds'});
+```
+
+```swift {tabTitle: Swift}
+SentrySDK.logger.info("Checkout started", attributes: ["userId": "882"])
+SentrySDK.logger.info("Discount applied", attributes: ["code": "WINTER20"])
+SentrySDK.logger.error("Payment failed", attributes: ["reason": "Insufficient Funds"])
+```
+
+```kotlin {tabTitle: Kotlin}
+Sentry.logger().info("Checkout started userId=%s", "882")
+Sentry.logger().info("Discount applied code=%s", "WINTER20")
+Sentry.logger().error("Payment failed reason=%s", "Insufficient Funds")
 ```
 
 These logs are trace-connected, but searching for the error won't return the userId or discount code from the same transaction.
@@ -450,6 +941,79 @@ sentry_logger.error("Checkout failed",
     'error_reason' => 'Insufficient Funds',
     'item_count' => 4,
 ]);
+```
+
+```csharp {tabTitle: .NET}
+SentrySdk.Logger.Error("Checkout failed", logger => logger
+    .SetAttribute("userId", "882")
+    .SetAttribute("orderId", "order_pc_991")
+    .SetAttribute("cartTotal", 142.50)
+    .SetAttribute("discountCode", "WINTER20")
+    .SetAttribute("paymentMethod", "stripe")
+    .SetAttribute("errorReason", "Insufficient Funds")
+    .SetAttribute("itemCount", 4));
+```
+
+```ruby {tabTitle: Ruby}
+Sentry.logger.error('Checkout failed',
+  user_id: '882',
+  order_id: 'order_pc_991',
+  cart_total: 142.50,
+  discount_code: 'WINTER20',
+  payment_method: 'stripe',
+  error_reason: 'Insufficient Funds',
+  item_count: 4
+)
+```
+
+```dart {tabTitle: Flutter}
+Sentry.logger.error('Checkout failed', attributes: {
+  'userId': '882',
+  'orderId': 'order_pc_991',
+  'cartTotal': 142.50,
+  'discountCode': 'WINTER20',
+  'paymentMethod': 'stripe',
+  'errorReason': 'Insufficient Funds',
+  'itemCount': 4,
+});
+```
+
+```swift {tabTitle: Swift}
+import Sentry
+
+SentrySDK.logger.error("Checkout failed", attributes: [
+    "userId": "882",
+    "orderId": "order_pc_991",
+    "cartTotal": 142.50,
+    "discountCode": "WINTER20",
+    "paymentMethod": "stripe",
+    "errorReason": "Insufficient Funds",
+    "itemCount": 4
+])
+```
+
+```kotlin {tabTitle: Kotlin}
+import io.sentry.Sentry
+import io.sentry.SentryAttribute
+import io.sentry.SentryAttributes
+import io.sentry.SentryLogLevel
+import io.sentry.logger.SentryLogParameters
+
+Sentry.logger().log(
+    SentryLogLevel.ERROR,
+    SentryLogParameters.create(
+        SentryAttributes.of(
+            SentryAttribute.stringAttribute("userId", "882"),
+            SentryAttribute.stringAttribute("orderId", "order_pc_991"),
+            SentryAttribute.doubleAttribute("cartTotal", 142.50),
+            SentryAttribute.stringAttribute("discountCode", "WINTER20"),
+            SentryAttribute.stringAttribute("paymentMethod", "stripe"),
+            SentryAttribute.stringAttribute("errorReason", "Insufficient Funds"),
+            SentryAttribute.integerAttribute("itemCount", 4)
+        )
+    ),
+    "Checkout failed"
+)
 ```
 
 One log tells the whole story. Search for the error and get full context.

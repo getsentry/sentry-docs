@@ -43,6 +43,41 @@ sentry_sdk.metrics.count("checkout.failed", 1, attributes={
 ]);
 ```
 
+```csharp {tabTitle: .NET}
+SentrySdk.Metrics.Counter("checkout.failed")
+    .Tag("user_tier", "premium")
+    .Tag("failure_reason", "payment_declined")
+    .Increment();
+```
+
+```ruby {tabTitle: Ruby}
+Sentry.metrics.count('checkout.failed', 1,
+  tags: { user_tier: 'premium', failure_reason: 'payment_declined' }
+)
+```
+
+```dart {tabTitle: Flutter}
+Sentry.metrics.count('checkout.failed', 1, attributes: {
+  'user_tier': 'premium',
+  'failure_reason': 'payment_declined',
+});
+```
+
+```swift {tabTitle: Swift}
+import Sentry
+
+SentrySDK.metrics.count(key: "checkout.failed", value: 1, attributes: [
+    "user_tier": "premium",
+    "failure_reason": "payment_declined"
+])
+```
+
+```kotlin {tabTitle: Kotlin}
+import io.sentry.Sentry
+
+Sentry.metrics().count("checkout.failed", 1.0)
+```
+
 ## Where to Track Metrics
 
 Start with these five metrics and you'll spot issues before they become problems.
@@ -81,6 +116,59 @@ sentry_sdk.metrics.count("checkout.failed", 1, attributes={
 \Sentry\traceMetrics()->count('checkout.failed', 1, [
     'user_tier' => 'premium', 'failure_reason' => 'payment_declined'
 ]);
+```
+
+```csharp {tabTitle: .NET}
+SentrySdk.Metrics.Counter("checkout.completed")
+    .Tag("user_tier", "premium")
+    .Tag("payment_method", "card")
+    .Increment();
+
+SentrySdk.Metrics.Counter("checkout.failed")
+    .Tag("user_tier", "premium")
+    .Tag("failure_reason", "payment_declined")
+    .Increment();
+```
+
+```ruby {tabTitle: Ruby}
+Sentry.metrics.count('checkout.completed', 1,
+  tags: { user_tier: 'premium', payment_method: 'card' }
+)
+
+Sentry.metrics.count('checkout.failed', 1,
+  tags: { user_tier: 'premium', failure_reason: 'payment_declined' }
+)
+```
+
+```dart {tabTitle: Flutter}
+Sentry.metrics.count('checkout.completed', 1, attributes: {
+  'user_tier': 'premium',
+  'payment_method': 'card',
+});
+
+Sentry.metrics.count('checkout.failed', 1, attributes: {
+  'user_tier': 'premium',
+  'failure_reason': 'payment_declined',
+});
+```
+
+```swift {tabTitle: Swift}
+import Sentry
+
+SentrySDK.metrics.count(key: "checkout.completed", value: 1, attributes: [
+    "user_tier": "premium", "payment_method": "card"
+])
+
+SentrySDK.metrics.count(key: "checkout.failed", value: 1, attributes: [
+    "user_tier": "premium", "failure_reason": "payment_declined"
+])
+```
+
+```kotlin {tabTitle: Kotlin}
+import io.sentry.Sentry
+
+Sentry.metrics().count("checkout.completed", 1.0)
+Sentry.metrics().count("checkout.failed", 1.0)
 ```
 
 **Explore in Sentry:**
@@ -138,6 +226,78 @@ sentry_sdk.metrics.count("job.processed", 1, attributes={
 ]);
 ```
 
+```csharp {tabTitle: .NET}
+SentrySdk.Metrics.Counter("email.sent")
+    .Tag("email_type", "welcome")
+    .Tag("provider", "sendgrid")
+    .Increment();
+
+SentrySdk.Metrics.Counter("email.failed")
+    .Tag("email_type", "welcome")
+    .Tag("error", "rate_limited")
+    .Increment();
+
+SentrySdk.Metrics.Counter("job.processed")
+    .Tag("job_type", "invoice-generation")
+    .Tag("queue", "billing")
+    .Increment();
+```
+
+```ruby {tabTitle: Ruby}
+Sentry.metrics.count('email.sent', 1,
+  tags: { email_type: 'welcome', provider: 'sendgrid' }
+)
+
+Sentry.metrics.count('email.failed', 1,
+  tags: { email_type: 'welcome', error: 'rate_limited' }
+)
+
+Sentry.metrics.count('job.processed', 1,
+  tags: { job_type: 'invoice-generation', queue: 'billing' }
+)
+```
+
+```dart {tabTitle: Flutter}
+Sentry.metrics.count('email.sent', 1, attributes: {
+  'email_type': 'welcome',
+  'provider': 'sendgrid',
+});
+
+Sentry.metrics.count('email.failed', 1, attributes: {
+  'email_type': 'welcome',
+  'error': 'rate_limited',
+});
+
+Sentry.metrics.count('job.processed', 1, attributes: {
+  'job_type': 'invoice-generation',
+  'queue': 'billing',
+});
+```
+
+```swift {tabTitle: Swift}
+import Sentry
+
+SentrySDK.metrics.count(key: "email.sent", value: 1, attributes: [
+    "email_type": "welcome", "provider": "sendgrid"
+])
+
+SentrySDK.metrics.count(key: "email.failed", value: 1, attributes: [
+    "email_type": "welcome", "error": "rate_limited"
+])
+
+SentrySDK.metrics.count(key: "job.processed", value: 1, attributes: [
+    "job_type": "invoice-generation", "queue": "billing"
+])
+```
+
+```kotlin {tabTitle: Kotlin}
+import io.sentry.Sentry
+
+Sentry.metrics().count("email.sent", 1.0)
+Sentry.metrics().count("email.failed", 1.0)
+Sentry.metrics().count("job.processed", 1.0)
+```
+
 **Explore in Sentry:** Add both `email.sent` and `email.failed`, group by `email_type`, compare the ratio.
 
 ### 3. Resource Utilization
@@ -176,6 +336,55 @@ use \Sentry\Metrics\Unit;
 \Sentry\traceMetrics()->gauge('pool.connections_active', $pool->activeConnections, [
     'pool_name' => 'postgres-primary'
 ]);
+```
+
+```csharp {tabTitle: .NET}
+SentrySdk.Metrics.Gauge("queue.depth")
+    .Tag("queue_name", "notifications")
+    .Set(queue.Size);
+
+SentrySdk.Metrics.Gauge("pool.connections_active")
+    .Tag("pool_name", "postgres-primary")
+    .Set(pool.ActiveConnections);
+```
+
+```ruby {tabTitle: Ruby}
+Sentry.metrics.gauge('queue.depth', queue.size,
+  tags: { queue_name: 'notifications' }
+)
+
+Sentry.metrics.gauge('pool.connections_active', pool.active_connections,
+  tags: { pool_name: 'postgres-primary' }
+)
+```
+
+```dart {tabTitle: Flutter}
+Sentry.metrics.gauge('queue.depth', queue.size.toDouble(), attributes: {
+  'queue_name': 'notifications',
+});
+
+Sentry.metrics.gauge('pool.connections_active', pool.activeConnections.toDouble(), attributes: {
+  'pool_name': 'postgres-primary',
+});
+```
+
+```swift {tabTitle: Swift}
+import Sentry
+
+SentrySDK.metrics.gauge(key: "queue.depth", value: Double(queue.size), attributes: [
+    "queue_name": "notifications"
+])
+
+SentrySDK.metrics.gauge(key: "pool.connections_active", value: Double(pool.activeConnections), attributes: [
+    "pool_name": "postgres-primary"
+])
+```
+
+```kotlin {tabTitle: Kotlin}
+import io.sentry.Sentry
+
+Sentry.metrics().gauge("queue.depth", queue.size.toDouble())
+Sentry.metrics().gauge("pool.connections_active", pool.activeConnections.toDouble())
 ```
 
 **Explore in Sentry:** View `max(queue.depth)` over time to spot backlogs.
@@ -224,6 +433,67 @@ use \Sentry\Metrics\Unit;
 );
 ```
 
+```csharp {tabTitle: .NET}
+SentrySdk.Metrics.Distribution("api.latency", responseTimeMs,
+    unit: MeasurementUnit.Duration.Millisecond)
+    .Tag("endpoint", "/api/orders")
+    .Tag("method", "POST");
+
+SentrySdk.Metrics.Distribution("db.query_time", queryDurationMs,
+    unit: MeasurementUnit.Duration.Millisecond)
+    .Tag("table", "orders")
+    .Tag("operation", "select");
+```
+
+```ruby {tabTitle: Ruby}
+Sentry.metrics.distribution('api.latency', response_time_ms,
+  unit: 'millisecond',
+  tags: { endpoint: '/api/orders', method: 'POST' }
+)
+
+Sentry.metrics.distribution('db.query_time', query_duration_ms,
+  unit: 'millisecond',
+  tags: { table: 'orders', operation: 'select' }
+)
+```
+
+```dart {tabTitle: Flutter}
+Sentry.metrics.distribution('api.latency', responseTimeMs,
+  unit: SentryMeasurementUnit.duration(SentryDurationUnit.milliSecond),
+  attributes: {'endpoint': '/api/orders', 'method': 'POST'},
+);
+
+Sentry.metrics.distribution('db.query_time', queryDurationMs,
+  unit: SentryMeasurementUnit.duration(SentryDurationUnit.milliSecond),
+  attributes: {'table': 'orders', 'operation': 'select'},
+);
+```
+
+```swift {tabTitle: Swift}
+import Sentry
+
+SentrySDK.metrics.distribution(key: "api.latency", value: responseTimeMs,
+    unit: .millisecond,
+    attributes: ["endpoint": "/api/orders", "method": "POST"]
+)
+
+SentrySDK.metrics.distribution(key: "db.query_time", value: queryDurationMs,
+    unit: .millisecond,
+    attributes: ["table": "orders", "operation": "select"]
+)
+```
+
+```kotlin {tabTitle: Kotlin}
+import io.sentry.Sentry
+import io.sentry.metrics.MetricsUnit
+
+Sentry.metrics().distribution("api.latency", responseTimeMs,
+    MetricsUnit.Duration.MILLISECOND)
+
+Sentry.metrics().distribution("db.query_time", queryDurationMs,
+    MetricsUnit.Duration.MILLISECOND)
+```
+
 **Explore in Sentry:** View `p95(api.latency)` grouped by `endpoint` to find slow routes.
 
 ### 5. Business Values
@@ -270,6 +540,66 @@ use \Sentry\Metrics\Unit;
 );
 ```
 
+```csharp {tabTitle: .NET}
+SentrySdk.Metrics.Distribution("order.amount", order.TotalUsd,
+    unit: MeasurementUnit.Custom("usd"))
+    .Tag("user_tier", "premium")
+    .Tag("region", "us-west");
+
+SentrySdk.Metrics.Distribution("upload.size", fileSizeBytes,
+    unit: MeasurementUnit.Information.Byte)
+    .Tag("file_type", "image")
+    .Tag("source", "profile-update");
+```
+
+```ruby {tabTitle: Ruby}
+Sentry.metrics.distribution('order.amount', order.total_usd,
+  unit: 'usd',
+  tags: { user_tier: 'premium', region: 'us-west' }
+)
+
+Sentry.metrics.distribution('upload.size', file_size_bytes,
+  unit: 'byte',
+  tags: { file_type: 'image', source: 'profile-update' }
+)
+```
+
+```dart {tabTitle: Flutter}
+Sentry.metrics.distribution('order.amount', order.totalUsd,
+  unit: SentryMeasurementUnit.custom('usd'),
+  attributes: {'user_tier': 'premium', 'region': 'us-west'},
+);
+
+Sentry.metrics.distribution('upload.size', fileSizeBytes.toDouble(),
+  unit: SentryMeasurementUnit.information(SentryInformationUnit.byte),
+  attributes: {'file_type': 'image', 'source': 'profile-update'},
+);
+```
+
+```swift {tabTitle: Swift}
+import Sentry
+
+SentrySDK.metrics.distribution(key: "order.amount", value: order.totalUsd,
+    unit: .generic("usd"),
+    attributes: ["user_tier": "premium", "region": "us-west"]
+)
+
+SentrySDK.metrics.distribution(key: "upload.size", value: Double(fileSizeBytes),
+    unit: .byte,
+    attributes: ["file_type": "image", "source": "profile-update"]
+)
+```
+
+```kotlin {tabTitle: Kotlin}
+import io.sentry.Sentry
+import io.sentry.metrics.MetricsUnit
+
+Sentry.metrics().distribution("order.amount", order.totalUsd)
+
+Sentry.metrics().distribution("upload.size", fileSizeBytes.toDouble(),
+    MetricsUnit.Information.BYTE)
+```
+
 **Explore in Sentry:** View `avg(order.amount)` grouped by `region` to compare regional performance.
 
 {/*
@@ -286,7 +616,7 @@ use \Sentry\Metrics\Unit;
 5. Configure notification channels and save
 
 Learn about [creating alerts](/product/new-monitors-and-alerts/alerts/) and best practices for [reducing noise and routing notifications](/product/new-monitors-and-alerts/alerts/best-practices/).
-\*/}
+*/}
 
 ## Alerts and Dashboard Widgets
 
