@@ -8,20 +8,45 @@ Your Sentry SDK is sending errors to [Sentry Issues](/product/issues/) out of th
 
 ## The Pattern
 
-Sentry automatically captures unhandled errors. For handled errors, use `Sentry.captureException()` and add context:
+Sentry automatically captures unhandled errors. For handled errors, use `captureException()` and add context:
 
-```javascript
+```javascript {tabTitle: JavaScript}
 try {
   await processOrder(order);
 } catch (error) {
   Sentry.captureException(error, {
     tags: {
       order_id: order.id,
-      payment_method: order.paymentMethod
+      payment_method: order.paymentMethod,
     },
-    level: "error"
+    level: "error",
   });
   throw error;
+}
+```
+
+```python {tabTitle: Python}
+import sentry_sdk
+
+try:
+    process_order(order)
+except Exception as e:
+    sentry_sdk.capture_exception(e)
+    sentry_sdk.set_tag("order_id", order.id)
+    sentry_sdk.set_tag("payment_method", order.payment_method)
+    raise
+```
+
+```php {tabTitle: PHP}
+try {
+    $this->processOrder($order);
+} catch (\Throwable $exception) {
+    \Sentry\configureScope(function (\Sentry\State\Scope $scope) use ($order): void {
+        $scope->setTag('order_id', $order->id);
+        $scope->setTag('payment_method', $order->paymentMethod);
+    });
+    \Sentry\captureException($exception);
+    throw $exception;
 }
 ```
 
@@ -41,9 +66,10 @@ Start by creating these five [Issue views](https://sentry.io/orgredirect/organiz
 
 High event counts mean either many users are affected or one user is stuck in a loop. Both need immediate attention.
 
-**[In Issues](https://sentry.io/orgredirect/organizations/:orgslug/issues/):** Search for `is:unresolved` (applied by default) and use the sort dropdown (defaults to "Last Seen") to sort by **Events** 
+**[In Issues](https://sentry.io/orgredirect/organizations/:orgslug/issues/):** Search for `is:unresolved` (applied by default) and use the sort dropdown (defaults to "Last Seen") to sort by **Events**
 
 **What to look for:**
+
 - Issues at the top with high event counts (many occurrences in a short time)
 - Click into these issues to see the stack trace and how many users are affected
 
@@ -58,6 +84,7 @@ Every deploy introduces risk. New errors that appear right after a release are u
 **[In Issues](https://sentry.io/orgredirect/organizations/:orgslug/issues/):** Filter by `is:unresolved firstRelease:v1.2.3` to find issues introduced in a specific release. Sort by **Age** to see the newest issues first.
 
 **What to look for:**
+
 - Issues that didn't exist in the previous release
 - Errors in code paths you just changed
 - New error types (TypeError, ReferenceError) indicating breaking changes
@@ -73,6 +100,7 @@ Production errors are critical. Staging errors help you catch problems before th
 **[In Issues](https://sentry.io/orgredirect/organizations/:orgslug/issues/):** Search for `is:unresolved environment:production` or `environment:staging`
 
 **What to look for:**
+
 - Errors only in production (often config, API keys, or data issues)
 - Errors only in staging (caught before deploy, needs fixing)
 - Same error in both (systemic code issue)
@@ -88,6 +116,7 @@ Some errors heavily affect power users. Others affect everyone, but rarely. Prio
 **[In Issues](https://sentry.io/orgredirect/organizations/:orgslug/issues/):** Search for `is:unresolved` and use the sort dropdown to sort by **Users**
 
 **What to look for:**
+
 - Issues affecting many unique users (e.g., more than 10 users indicates widespread impact)
 - Issues affecting VIP or paying users (check user tags)
 - Issues blocking core workflows (login, checkout, data access)
@@ -105,6 +134,7 @@ Enable the [User Feedback Widget](/platforms/javascript/user-feedback/) to let u
 **[In Issues](https://sentry.io/orgredirect/organizations/:orgslug/issues/):** Navigate to **User Feedback** in the left sidebar to see reports submitted by users.
 
 **What to look for:**
+
 - User descriptions of what they were doing when the error occurred
 - Patterns in feedback about specific workflows or features
 - Issues that frustrate users even if they don't generate many events
@@ -115,9 +145,9 @@ Enable the [User Feedback Widget](/platforms/javascript/user-feedback/) to let u
 
 ### Capture Context, Not Just Exceptions
 
-When you catch an error, add tags and context to make debugging instant. Set user info globally with `Sentry.setUser()` so it applies to all events. Enable [Session Replays](/product/explore/session-replay/) and [Logs](/product/explore/logs/) for even more visibility.
+When you catch an error, add tags and context to make debugging instant. Set user info globally so it applies to all events. Enable [Session Replays](/product/explore/session-replay/) and [Logs](/product/explore/logs/) for even more visibility.
 
-```javascript
+```javascript {tabTitle: JavaScript}
 // Set user globally (e.g., after login)
 Sentry.setUser({ id: user.id, email: user.email });
 
@@ -126,16 +156,56 @@ Sentry.captureException(error, {
   tags: {
     order_id: order.id,
     payment_gateway: "stripe",
-    region: user.region
+    region: user.region,
   },
   contexts: {
     order: {
       total: order.total,
       items: order.items.length,
-      discount_code: order.discountCode
-    }
-  }
+      discount_code: order.discountCode,
+    },
+  },
 });
+```
+
+```python {tabTitle: Python}
+import sentry_sdk
+
+# Set user globally (e.g., after login)
+sentry_sdk.set_user({"id": user.id, "email": user.email})
+
+# Add tags and context per-event
+sentry_sdk.set_tags({
+    "order_id": order.id,
+    "payment_gateway": "stripe",
+    "region": user.region
+})
+sentry_sdk.set_context("order", {
+    "total": order.total,
+    "items": len(order.items),
+    "discount_code": order.discount_code
+})
+sentry_sdk.capture_exception(error)
+```
+
+```php {tabTitle: PHP}
+// Set user globally (e.g., after login)
+\Sentry\configureScope(function (\Sentry\State\Scope $scope) use ($user): void {
+    $scope->setUser(['id' => $user->id, 'email' => $user->email]);
+});
+
+// Add tags and context per-event
+\Sentry\configureScope(function (\Sentry\State\Scope $scope) use ($order, $user): void {
+    $scope->setTag('order_id', $order->id);
+    $scope->setTag('payment_gateway', 'stripe');
+    $scope->setTag('region', $user->region);
+    $scope->setContext('order', [
+        'total' => $order->total,
+        'items' => count($order->items),
+        'discount_code' => $order->discountCode
+    ]);
+});
+\Sentry\captureException($error);
 ```
 
 **Search in Sentry:** `order_id:order_123` or `payment_gateway:stripe region:us-west`
@@ -144,37 +214,90 @@ Sentry.captureException(error, {
 
 Some errors aren't actionable. Use <PlatformLink to="/configuration/options/#ignoreErrors">ignoreErrors</PlatformLink> to filter them out.
 
-```javascript
+```javascript {tabTitle: JavaScript}
 Sentry.init({
   dsn: "...",
   ignoreErrors: [
     "Non-Error promise rejection captured",
-    /^Timeout of \d+ms exceeded$/
-  ]
+    /^Timeout of \d+ms exceeded$/,
+  ],
 });
+```
+
+```python {tabTitle: Python}
+import sentry_sdk
+
+sentry_sdk.init(
+    dsn="...",
+    ignore_errors=[
+        ValueError,
+        ConnectionError,
+    ]
+)
+```
+
+```php {tabTitle: PHP}
+\Sentry\init([
+    'dsn' => '...',
+    'ignore_exceptions' => [
+        \RuntimeException::class,
+    ],
+]);
 ```
 
 You can also use <PlatformLink to="/configuration/filtering/#using-before-send">beforeSend</PlatformLink> to filter errors dynamically:
 
-```javascript
+```javascript {tabTitle: JavaScript}
 Sentry.init({
   beforeSend(event, hint) {
     // Ignore errors from browser extensions
-    if (event.exception?.values?.[0]?.stacktrace?.frames?.some(
-      frame => frame.filename?.includes("chrome-extension://")
-    )) {
+    if (
+      event.exception?.values?.[0]?.stacktrace?.frames?.some((frame) =>
+        frame.filename?.includes("chrome-extension://")
+      )
+    ) {
       return null;
     }
     return event;
-  }
+  },
 });
+```
+
+```python {tabTitle: Python}
+import sentry_sdk
+
+def before_send(event, hint):
+    # Ignore specific error types
+    if "exc_info" in hint:
+        exc_type, exc_value, tb = hint["exc_info"]
+        if isinstance(exc_value, KeyboardInterrupt):
+            return None
+    return event
+
+sentry_sdk.init(
+    dsn="...",
+    before_send=before_send
+)
+```
+
+```php {tabTitle: PHP}
+\Sentry\init([
+    'dsn' => '...',
+    'before_send' => function (\Sentry\Event $event, ?\Sentry\EventHint $hint): ?\Sentry\Event {
+        // Ignore specific error types
+        if ($hint !== null && $hint->exception instanceof \RuntimeException) {
+            return null;
+        }
+        return $event;
+    },
+]);
 ```
 
 ## Quick Reference
 
-| View | Search Query | Look For |
-|------|--------------|----------|
+| View               | Search Query                     | Look For                              |
+| ------------------ | -------------------------------- | ------------------------------------- |
 | High-volume issues | `is:unresolved` (sort by Events) | High event counts, post-deploy spikes |
-| New regressions | `is:unresolved` (sort by Age) | Issues that first appeared recently |
-| Environment issues | `environment:production` | Prod-only config or data issues |
-| High user impact | `is:unresolved` (sort by Users) | Issues affecting many users |
+| New regressions    | `is:unresolved` (sort by Age)    | Issues that first appeared recently   |
+| Environment issues | `environment:production`         | Prod-only config or data issues       |
+| High user impact   | `is:unresolved` (sort by Users)  | Issues affecting many users           |

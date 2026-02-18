@@ -10,21 +10,50 @@ You've set up [Sentry Logs](/product/explore/logs/). Now what? This guide covers
 
 Every structured log follows the same format:
 
-```javascript
+```javascript {tabTitle: JavaScript}
 Sentry.logger.<level>(message, { attributes });
 ```
 
-**Levels:** `trace`, `debug`, `info`, `warn`, `error`, `fatal`
+```python {tabTitle: Python}
+from sentry_sdk import logger
+logger.<level>(message, attribute=value)
+```
+
+```php {tabTitle: PHP}
+\Sentry\logger()-><level>(message, attributes: [...]);
+```
+
+**Levels:** `trace`, `debug`, `info`, `warn` (or `warning` in Python), `error`, `fatal`
 
 **Attributes:** Key-value pairs you can search and filter on. Consistency matters, so use whatever naming convention fits your codebase.
 
-```javascript
+```javascript {tabTitle: JavaScript}
 Sentry.logger.info("Order completed", {
   orderId: "order_123",
   userId: user.id,
   amount: 149.99,
-  paymentMethod: "stripe"
+  paymentMethod: "stripe",
 });
+```
+
+```python {tabTitle: Python}
+from sentry_sdk import logger as sentry_logger
+
+sentry_logger.info("Order completed",
+    order_id="order_123",
+    user_id=user.id,
+    amount=149.99,
+    payment_method="stripe"
+)
+```
+
+```php {tabTitle: PHP}
+\Sentry\logger()->info('Order completed', attributes: [
+    'order_id' => 'order_123',
+    'user_id' => $user->id,
+    'amount' => 149.99,
+    'payment_method' => 'stripe',
+]);
 ```
 
 Logs in Sentry are automatically trace-connected. Each log shows a trace ID that links to the full [trace view](/concepts/key-terms/tracing/trace-view/).
@@ -37,18 +66,48 @@ Start with these five areas and you'll catch most issues before users do.
 
 Login flows are invisible until something breaks. Log successes and failures to spot patterns like brute force attempts, OAuth misconfigurations, or MFA issues.
 
-```javascript
+```javascript {tabTitle: JavaScript}
 Sentry.logger.info("User logged in", {
   userId: user.id,
   authMethod: "oauth",
-  provider: "google"
+  provider: "google",
 });
 
 Sentry.logger.warn("Login failed", {
   email: maskedEmail,
   reason: "invalid_password",
-  attemptCount: 3
+  attemptCount: 3,
 });
+```
+
+```python {tabTitle: Python}
+from sentry_sdk import logger as sentry_logger
+
+sentry_logger.info("User logged in",
+    user_id=user.id,
+    auth_method="oauth",
+    provider="google"
+)
+
+sentry_logger.warning("Login failed",
+    email=masked_email,
+    reason="invalid_password",
+    attempt_count=3
+)
+```
+
+```php {tabTitle: PHP}
+\Sentry\logger()->info('User logged in', attributes: [
+    'user_id' => $user->id,
+    'auth_method' => 'oauth',
+    'provider' => 'google',
+]);
+
+\Sentry\logger()->warn('Login failed', attributes: [
+    'email' => $maskedEmail,
+    'reason' => 'invalid_password',
+    'attempt_count' => 3,
+]);
 ```
 
 **Search in Sentry:** `userId:123 "logged in"` or `severity:warn authMethod:*`
@@ -59,14 +118,36 @@ Sentry.logger.warn("Login failed", {
 
 Money paths need visibility even when they succeed. When payments fail, you need context fast.
 
-```javascript
+```javascript {tabTitle: JavaScript}
 Sentry.logger.error("Payment failed", {
   orderId: "order_123",
   amount: 99.99,
   gateway: "stripe",
   errorCode: "card_declined",
-  cartItems: 3
+  cartItems: 3,
 });
+```
+
+```python {tabTitle: Python}
+from sentry_sdk import logger as sentry_logger
+
+sentry_logger.error("Payment failed",
+    order_id="order_123",
+    amount=99.99,
+    gateway="stripe",
+    error_code="card_declined",
+    cart_items=3
+)
+```
+
+```php {tabTitle: PHP}
+\Sentry\logger()->error('Payment failed', attributes: [
+    'order_id' => 'order_123',
+    'amount' => 99.99,
+    'gateway' => 'stripe',
+    'error_code' => 'card_declined',
+    'cart_items' => 3,
+]);
 ```
 
 **Search in Sentry:** `orderId:order_123` or `severity:error gateway:stripe`
@@ -77,7 +158,7 @@ Sentry.logger.error("Payment failed", {
 
 Traces capture what your code does. Logs capture context about external triggers and async boundaries. Things like webhooks, scheduled tasks, and third-party API responses that traces can't automatically instrument.
 
-```javascript
+```javascript {tabTitle: JavaScript}
 // Third-party API call
 const start = Date.now();
 const response = await shippingApi.getRates(items);
@@ -86,15 +167,58 @@ Sentry.logger.info("Shipping rates fetched", {
   service: "shipping-provider",
   endpoint: "/rates",
   durationMs: Date.now() - start,
-  rateCount: response.rates.length
+  rateCount: response.rates.length,
 });
 
 // Webhook received
 Sentry.logger.info("Webhook received", {
   source: "stripe",
   eventType: "payment_intent.succeeded",
-  paymentId: event.data.object.id
+  paymentId: event.data.object.id,
 });
+```
+
+```python {tabTitle: Python}
+import time
+from sentry_sdk import logger as sentry_logger
+
+# Third-party API call
+start = time.time()
+response = shipping_api.get_rates(items)
+
+sentry_logger.info("Shipping rates fetched",
+    service="shipping-provider",
+    endpoint="/rates",
+    duration_ms=int((time.time() - start) * 1000),
+    rate_count=len(response.rates)
+)
+
+# Webhook received
+sentry_logger.info("Webhook received",
+    source="stripe",
+    event_type="payment_intent.succeeded",
+    payment_id=event["data"]["object"]["id"]
+)
+```
+
+```php {tabTitle: PHP}
+// Third-party API call
+$start = microtime(true);
+$response = $shippingApi->getRates($items);
+
+\Sentry\logger()->info('Shipping rates fetched', attributes: [
+    'service' => 'shipping-provider',
+    'endpoint' => '/rates',
+    'duration_ms' => (int)((microtime(true) - $start) * 1000),
+    'rate_count' => count($response->rates),
+]);
+
+// Webhook received
+\Sentry\logger()->info('Webhook received', attributes: [
+    'source' => 'stripe',
+    'event_type' => 'payment_intent.succeeded',
+    'payment_id' => $event['data']['object']['id'],
+]);
 ```
 
 **Search in Sentry:** `service:shipping-provider durationMs:>2000` or `source:stripe`
@@ -105,19 +229,51 @@ Sentry.logger.info("Webhook received", {
 
 Jobs run outside the request context. Without logs, failed jobs are invisible until someone notices missing data.
 
-```javascript
+```javascript {tabTitle: JavaScript}
 Sentry.logger.info("Job started", {
   jobType: "email-digest",
   jobId: "job_456",
-  queue: "notifications"
+  queue: "notifications",
 });
 
 Sentry.logger.error("Job failed", {
   jobType: "email-digest",
   jobId: "job_456",
   retryCount: 3,
-  lastError: "SMTP timeout"
+  lastError: "SMTP timeout",
 });
+```
+
+```python {tabTitle: Python}
+from sentry_sdk import logger as sentry_logger
+
+sentry_logger.info("Job started",
+    job_type="email-digest",
+    job_id="job_456",
+    queue="notifications"
+)
+
+sentry_logger.error("Job failed",
+    job_type="email-digest",
+    job_id="job_456",
+    retry_count=3,
+    last_error="SMTP timeout"
+)
+```
+
+```php {tabTitle: PHP}
+\Sentry\logger()->info('Job started', attributes: [
+    'job_type' => 'email-digest',
+    'job_id' => 'job_456',
+    'queue' => 'notifications',
+]);
+
+\Sentry\logger()->error('Job failed', attributes: [
+    'job_type' => 'email-digest',
+    'job_id' => 'job_456',
+    'retry_count' => 3,
+    'last_error' => 'SMTP timeout',
+]);
 ```
 
 **Search in Sentry:** `jobType:email-digest severity:error`
@@ -128,17 +284,45 @@ Sentry.logger.error("Job failed", {
 
 When something breaks after a deploy, the first question is "what changed?" Logging flag evaluations and config reloads gives you that answer instantly.
 
-```javascript
+```javascript {tabTitle: JavaScript}
 Sentry.logger.info("Feature flag evaluated", {
   flag: "new-checkout-flow",
   enabled: true,
-  userId: user.id
+  userId: user.id,
 });
 
 Sentry.logger.warn("Config reloaded", {
   reason: "env-change",
-  changedKeys: ["API_TIMEOUT", "MAX_CONNECTIONS"]
+  changedKeys: ["API_TIMEOUT", "MAX_CONNECTIONS"],
 });
+```
+
+```python {tabTitle: Python}
+from sentry_sdk import logger as sentry_logger
+
+sentry_logger.info("Feature flag evaluated",
+    flag="new-checkout-flow",
+    enabled=True,
+    user_id=user.id
+)
+
+sentry_logger.warning("Config reloaded",
+    reason="env-change",
+    changed_keys=["API_TIMEOUT", "MAX_CONNECTIONS"]
+)
+```
+
+```php {tabTitle: PHP}
+\Sentry\logger()->info('Feature flag evaluated', attributes: [
+    'flag' => 'new-checkout-flow',
+    'enabled' => true,
+    'user_id' => $user->id,
+]);
+
+\Sentry\logger()->warn('Config reloaded', attributes: [
+    'reason' => 'env-change',
+    'changed_keys' => ['API_TIMEOUT', 'MAX_CONNECTIONS'],
+]);
 ```
 
 **Search in Sentry:** `flag:new-checkout-flow` or `"Config reloaded"`
@@ -166,18 +350,38 @@ In development, set sample rates to 100% to catch everything. This helps you und
 
 **Development configuration:**
 
-```javascript
+```javascript {tabTitle: JavaScript}
 Sentry.init({
   dsn: "...",
   environment: "development",
-  tracesSampleRate: 1.0,  // 100% of traces
+  tracesSampleRate: 1.0, // 100% of traces
   // Capture all logs in development
   integrations: [
     Sentry.captureConsoleIntegration({
-      levels: ["log", "info", "warn", "error", "debug"]
-    })
-  ]
+      levels: ["log", "info", "warn", "error", "debug"],
+    }),
+  ],
 });
+```
+
+```python {tabTitle: Python}
+import sentry_sdk
+
+sentry_sdk.init(
+    dsn="...",
+    environment="development",
+    traces_sample_rate=1.0,  # 100% of traces
+    enable_logs=True,
+)
+```
+
+```php {tabTitle: PHP}
+\Sentry\init([
+    'dsn' => '...',
+    'environment' => 'development',
+    'traces_sample_rate' => 1.0,  // 100% of traces
+    'enable_logs' => true,
+]);
 ```
 
 Use verbose logging levels like `debug` (development diagnostics) and `trace` (fine-grained execution details) freely in development. You can [filter these out in production](/platforms/javascript/logs/#filter-logs) using `beforeSendLog` to only capture `info` and above.
@@ -190,26 +394,62 @@ Instead, log fewer messages with higher cardinality. Store events during executi
 
 **Don't do this:**
 
-```javascript
+```javascript {tabTitle: JavaScript}
 Sentry.logger.info("Checkout started", { userId: "882" });
 Sentry.logger.info("Discount applied", { code: "WINTER20" });
 Sentry.logger.error("Payment failed", { reason: "Insufficient Funds" });
+```
+
+```python {tabTitle: Python}
+sentry_logger.info("Checkout started", user_id="882")
+sentry_logger.info("Discount applied", code="WINTER20")
+sentry_logger.error("Payment failed", reason="Insufficient Funds")
+```
+
+```php {tabTitle: PHP}
+\Sentry\logger()->info('Checkout started', attributes: ['user_id' => '882']);
+\Sentry\logger()->info('Discount applied', attributes: ['code' => 'WINTER20']);
+\Sentry\logger()->error('Payment failed', attributes: ['reason' => 'Insufficient Funds']);
 ```
 
 These logs are trace-connected, but searching for the error won't return the userId or discount code from the same transaction.
 
 **Do this instead:**
 
-```javascript
+```javascript {tabTitle: JavaScript}
 Sentry.logger.error("Checkout failed", {
   userId: "882",
   orderId: "order_pc_991",
-  cartTotal: 142.50,
+  cartTotal: 142.5,
   discountCode: "WINTER20",
   paymentMethod: "stripe",
   errorReason: "Insufficient Funds",
-  itemCount: 4
+  itemCount: 4,
 });
+```
+
+```python {tabTitle: Python}
+sentry_logger.error("Checkout failed",
+    user_id="882",
+    order_id="order_pc_991",
+    cart_total=142.50,
+    discount_code="WINTER20",
+    payment_method="stripe",
+    error_reason="Insufficient Funds",
+    item_count=4
+)
+```
+
+```php {tabTitle: PHP}
+\Sentry\logger()->error('Checkout failed', attributes: [
+    'user_id' => '882',
+    'order_id' => 'order_pc_991',
+    'cart_total' => 142.50,
+    'discount_code' => 'WINTER20',
+    'payment_method' => 'stripe',
+    'error_reason' => 'Insufficient Funds',
+    'item_count' => 4,
+]);
 ```
 
 One log tells the whole story. Search for the error and get full context.
@@ -224,10 +464,10 @@ If you can't install the Sentry SDK or need platform-level logs (CDN, database, 
 
 ## Quick Reference
 
-| Category | Level | Example Attributes |
-|----------|-------|----------------|
-| Auth events | `info`/`warn` | userId, authMethod, reason |
-| Payments | `info`/`error` | orderId, amount, gateway, errorCode |
-| External APIs | `info` | service, endpoint, durationMs |
-| Background jobs | `info`/`error` | jobType, jobId, retryCount |
-| Feature flags | `info` | flag, enabled, changedKeys |
+| Category        | Level          | Example Attributes                  |
+| --------------- | -------------- | ----------------------------------- |
+| Auth events     | `info`/`warn`  | userId, authMethod, reason          |
+| Payments        | `info`/`error` | orderId, amount, gateway, errorCode |
+| External APIs   | `info`         | service, endpoint, durationMs       |
+| Background jobs | `info`/`error` | jobType, jobId, retryCount          |
+| Feature flags   | `info`         | flag, enabled, changedKeys          |

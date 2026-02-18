@@ -10,21 +10,37 @@ You've set up [Sentry Metrics](/product/explore/metrics/). Now what? This guide 
 
 Sentry supports three metric types:
 
-| Type | Method | Use For |
-|------|--------|---------|
-| **Counter** | `Sentry.metrics.count()` | Events that happen (orders, clicks, errors) |
-| **Gauge** | `Sentry.metrics.gauge()` | Current state (queue depth, connections) |
-| **Distribution** | `Sentry.metrics.distribution()` | Values that vary (latency, sizes, amounts) |
+| Type             | Method                          | Use For                                     |
+| ---------------- | ------------------------------- | ------------------------------------------- |
+| **Counter**      | `Sentry.metrics.count()`        | Events that happen (orders, clicks, errors) |
+| **Gauge**        | `Sentry.metrics.gauge()`        | Current state (queue depth, connections)    |
+| **Distribution** | `Sentry.metrics.distribution()` | Values that vary (latency, sizes, amounts)  |
 
 Every metric is trace-connected. When a metric spikes, click into samples to see the exact trace that produced it.
 
-```javascript
+```javascript {tabTitle: JavaScript}
 Sentry.metrics.count("checkout.failed", 1, {
   attributes: {
     user_tier: "premium",
-    failure_reason: "payment_declined"
-  }
+    failure_reason: "payment_declined",
+  },
 });
+```
+
+```python {tabTitle: Python}
+import sentry_sdk
+
+sentry_sdk.metrics.count("checkout.failed", 1, attributes={
+    "user_tier": "premium",
+    "failure_reason": "payment_declined"
+})
+```
+
+```php {tabTitle: PHP}
+\Sentry\traceMetrics()->count('checkout.failed', 1, [
+    'user_tier' => 'premium',
+    'failure_reason' => 'payment_declined',
+]);
 ```
 
 ## Where to Track Metrics
@@ -35,17 +51,40 @@ Start with these five metrics and you'll spot issues before they become problems
 
 Track discrete events that matter to the business. These become your KPIs.
 
-```javascript
+```javascript {tabTitle: JavaScript}
 Sentry.metrics.count("checkout.completed", 1, {
-  attributes: { user_tier: "premium", payment_method: "card" }
+  attributes: { user_tier: "premium", payment_method: "card" },
 });
 
 Sentry.metrics.count("checkout.failed", 1, {
-  attributes: { user_tier: "premium", failure_reason: "payment_declined" }
+  attributes: { user_tier: "premium", failure_reason: "payment_declined" },
 });
 ```
 
+```python {tabTitle: Python}
+import sentry_sdk
+
+sentry_sdk.metrics.count("checkout.completed", 1, attributes={
+    "user_tier": "premium", "payment_method": "card"
+})
+
+sentry_sdk.metrics.count("checkout.failed", 1, attributes={
+    "user_tier": "premium", "failure_reason": "payment_declined"
+})
+```
+
+```php {tabTitle: PHP}
+\Sentry\traceMetrics()->count('checkout.completed', 1, [
+    'user_tier' => 'premium', 'payment_method' => 'card'
+]);
+
+\Sentry\traceMetrics()->count('checkout.failed', 1, [
+    'user_tier' => 'premium', 'failure_reason' => 'payment_declined'
+]);
+```
+
 **Explore in Sentry:**
+
 1. Go to **Explore > Metrics**
 2. Select `checkout.failed`, set **Aggregate** to `sum`
 3. **Group by** `failure_reason`
@@ -55,18 +94,48 @@ Sentry.metrics.count("checkout.failed", 1, {
 
 Track success and failure of critical operations.
 
-```javascript
+```javascript {tabTitle: JavaScript}
 Sentry.metrics.count("email.sent", 1, {
-  attributes: { email_type: "welcome", provider: "sendgrid" }
+  attributes: { email_type: "welcome", provider: "sendgrid" },
 });
 
 Sentry.metrics.count("email.failed", 1, {
-  attributes: { email_type: "welcome", error: "rate_limited" }
+  attributes: { email_type: "welcome", error: "rate_limited" },
 });
 
 Sentry.metrics.count("job.processed", 1, {
-  attributes: { job_type: "invoice-generation", queue: "billing" }
+  attributes: { job_type: "invoice-generation", queue: "billing" },
 });
+```
+
+```python {tabTitle: Python}
+import sentry_sdk
+
+sentry_sdk.metrics.count("email.sent", 1, attributes={
+    "email_type": "welcome", "provider": "sendgrid"
+})
+
+sentry_sdk.metrics.count("email.failed", 1, attributes={
+    "email_type": "welcome", "error": "rate_limited"
+})
+
+sentry_sdk.metrics.count("job.processed", 1, attributes={
+    "job_type": "invoice-generation", "queue": "billing"
+})
+```
+
+```php {tabTitle: PHP}
+\Sentry\traceMetrics()->count('email.sent', 1, [
+    'email_type' => 'welcome', 'provider' => 'sendgrid'
+]);
+
+\Sentry\traceMetrics()->count('email.failed', 1, [
+    'email_type' => 'welcome', 'error' => 'rate_limited'
+]);
+
+\Sentry\traceMetrics()->count('job.processed', 1, [
+    'job_type' => 'invoice-generation', 'queue' => 'billing'
+]);
 ```
 
 **Explore in Sentry:** Add both `email.sent` and `email.failed`, group by `email_type`, compare the ratio.
@@ -75,14 +144,38 @@ Sentry.metrics.count("job.processed", 1, {
 
 Track the current state of pools, queues, and connections. Call these periodically (e.g., every 30 seconds).
 
-```javascript
+```javascript {tabTitle: JavaScript}
 Sentry.metrics.gauge("queue.depth", await queue.size(), {
-  attributes: { queue_name: "notifications" }
+  attributes: { queue_name: "notifications" },
 });
 
 Sentry.metrics.gauge("pool.connections_active", pool.activeConnections, {
-  attributes: { pool_name: "postgres-primary" }
+  attributes: { pool_name: "postgres-primary" },
 });
+```
+
+```python {tabTitle: Python}
+import sentry_sdk
+
+sentry_sdk.metrics.gauge("queue.depth", queue.size(), attributes={
+    "queue_name": "notifications"
+})
+
+sentry_sdk.metrics.gauge("pool.connections_active", pool.active_connections, attributes={
+    "pool_name": "postgres-primary"
+})
+```
+
+```php {tabTitle: PHP}
+use \Sentry\Metrics\Unit;
+
+\Sentry\traceMetrics()->gauge('queue.depth', $queue->size(), [
+    'queue_name' => 'notifications'
+]);
+
+\Sentry\traceMetrics()->gauge('pool.connections_active', $pool->activeConnections, [
+    'pool_name' => 'postgres-primary'
+]);
 ```
 
 **Explore in Sentry:** View `max(queue.depth)` over time to spot backlogs.
@@ -91,16 +184,44 @@ Sentry.metrics.gauge("pool.connections_active", pool.activeConnections, {
 
 Track values that vary and need percentile analysis. **Tip:** averages can hide outliers, use p90/p95/p99 instead.
 
-```javascript
+```javascript {tabTitle: JavaScript}
 Sentry.metrics.distribution("api.latency", responseTimeMs, {
   unit: "millisecond",
-  attributes: { endpoint: "/api/orders", method: "POST" }
+  attributes: { endpoint: "/api/orders", method: "POST" },
 });
 
 Sentry.metrics.distribution("db.query_time", queryDurationMs, {
   unit: "millisecond",
-  attributes: { table: "orders", operation: "select" }
+  attributes: { table: "orders", operation: "select" },
 });
+```
+
+```python {tabTitle: Python}
+import sentry_sdk
+
+sentry_sdk.metrics.distribution("api.latency", response_time_ms,
+    unit="millisecond",
+    attributes={"endpoint": "/api/orders", "method": "POST"}
+)
+
+sentry_sdk.metrics.distribution("db.query_time", query_duration_ms,
+    unit="millisecond",
+    attributes={"table": "orders", "operation": "select"}
+)
+```
+
+```php {tabTitle: PHP}
+use \Sentry\Metrics\Unit;
+
+\Sentry\traceMetrics()->distribution('api.latency', $responseTimeMs,
+    ['endpoint' => '/api/orders', 'method' => 'POST'],
+    Unit::millisecond()
+);
+
+\Sentry\traceMetrics()->distribution('db.query_time', $queryDurationMs,
+    ['table' => 'orders', 'operation' => 'select'],
+    Unit::millisecond()
+);
 ```
 
 **Explore in Sentry:** View `p95(api.latency)` grouped by `endpoint` to find slow routes.
@@ -109,21 +230,50 @@ Sentry.metrics.distribution("db.query_time", queryDurationMs, {
 
 Track amounts, sizes, and quantities for analysis.
 
-```javascript
+```javascript {tabTitle: JavaScript}
 Sentry.metrics.distribution("order.amount", order.totalUsd, {
   unit: "usd",
-  attributes: { user_tier: "premium", region: "us-west" }
+  attributes: { user_tier: "premium", region: "us-west" },
 });
 
 Sentry.metrics.distribution("upload.size", fileSizeBytes, {
   unit: "byte",
-  attributes: { file_type: "image", source: "profile-update" }
+  attributes: { file_type: "image", source: "profile-update" },
 });
+```
+
+```python {tabTitle: Python}
+import sentry_sdk
+
+sentry_sdk.metrics.distribution("order.amount", order.total_usd,
+    unit="usd",
+    attributes={"user_tier": "premium", "region": "us-west"}
+)
+
+sentry_sdk.metrics.distribution("upload.size", file_size_bytes,
+    unit="byte",
+    attributes={"file_type": "image", "source": "profile-update"}
+)
+```
+
+```php {tabTitle: PHP}
+use \Sentry\Metrics\Unit;
+
+\Sentry\traceMetrics()->distribution('order.amount', $order->totalUsd,
+    ['user_tier' => 'premium', 'region' => 'us-west'],
+    Unit::custom('usd')
+);
+
+\Sentry\traceMetrics()->distribution('upload.size', $fileSizeBytes,
+    ['file_type' => 'image', 'source' => 'profile-update'],
+    Unit::byte()
+);
 ```
 
 **Explore in Sentry:** View `avg(order.amount)` grouped by `region` to compare regional performance.
 
 {/*
+
 ## Creating Alerts From Metrics
 
 1. Go to **Explore > Metrics**
@@ -136,7 +286,7 @@ Sentry.metrics.distribution("upload.size", fileSizeBytes, {
 5. Configure notification channels and save
 
 Learn about [creating alerts](/product/new-monitors-and-alerts/alerts/) and best practices for [reducing noise and routing notifications](/product/new-monitors-and-alerts/alerts/best-practices/).
-*/}
+\*/}
 
 ## Alerts and Dashboard Widgets
 
@@ -145,6 +295,7 @@ Learn about [creating alerts](/product/new-monitors-and-alerts/alerts/) and best
 </Alert>
 
 You'll soon be able to:
+
 - Create alert rules based on metric queries
 - Add metric visualizations to dashboards
 - Set up notifications when metrics cross thresholds
@@ -152,20 +303,20 @@ You'll soon be able to:
 
 ## Quick Reference
 
-| Category | Type | Method | Example Attributes |
-|----------|------|--------|----------------|
-| Business events | Counter | `count()` | user_tier, payment_method, failure_reason |
-| Application health | Counter | `count()` | email_type, provider, job_type, queue |
-| Resource utilization | Gauge | `gauge()` | queue_name, pool_name |
-| Latency/performance | Distribution | `distribution()` | endpoint, method, table, operation |
-| Business values | Distribution | `distribution()` | user_tier, region, file_type |
+| Category             | Type         | Method           | Example Attributes                        |
+| -------------------- | ------------ | ---------------- | ----------------------------------------- |
+| Business events      | Counter      | `count()`        | user_tier, payment_method, failure_reason |
+| Application health   | Counter      | `count()`        | email_type, provider, job_type, queue     |
+| Resource utilization | Gauge        | `gauge()`        | queue_name, pool_name                     |
+| Latency/performance  | Distribution | `distribution()` | endpoint, method, table, operation        |
+| Business values      | Distribution | `distribution()` | user_tier, region, file_type              |
 
 ## When to Use Metrics vs Traces vs Logs
 
-| Signal | Best For | Example Question |
-|--------|----------|------------------|
-| **Metrics** | Aggregated counts, rates, percentiles | "How many checkouts failed this hour?" |
-| **Traces** | Request flow, latency breakdown | "Why was this specific request slow?" |
-| **Logs** | Detailed context, debugging | "What happened right before this error?" |
+| Signal      | Best For                              | Example Question                         |
+| ----------- | ------------------------------------- | ---------------------------------------- |
+| **Metrics** | Aggregated counts, rates, percentiles | "How many checkouts failed this hour?"   |
+| **Traces**  | Request flow, latency breakdown       | "Why was this specific request slow?"    |
+| **Logs**    | Detailed context, debugging           | "What happened right before this error?" |
 
 All three are trace-connected. Start wherever makes sense and navigate to the others.

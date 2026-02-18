@@ -4,20 +4,36 @@ sidebar_order: 30
 description: "Add custom instrumentation for visibility beyond auto-instrumentation and set up alerts."
 ---
 
-You've got your Sentry SDK [auto-instrumentation](/product/explore/trace-explorer/) running. Now what? 
+You've got your Sentry SDK [auto-instrumentation](/product/explore/trace-explorer/) running. Now what?
 
 Auto-instrumentation captures HTTP, database, and framework operations. But it can't see business logic, third-party APIs without auto-instrumentation, or background jobs. This guide shows you where to add custom spans to fill in those gaps.
 
 ## The Pattern
 
-```javascript
-Sentry.startSpan(
-  { name: "operation-name", op: "category" },
-  async (span) => {
-    span.setAttribute("key", value);
+```javascript {tabTitle: JavaScript}
+Sentry.startSpan({ name: "operation-name", op: "category" }, async (span) => {
+  span.setAttribute("key", value);
+  // ... your code ...
+});
+```
+
+```python {tabTitle: Python}
+import sentry_sdk
+
+with sentry_sdk.start_span(name="operation-name", op="category") as span:
+    span.set_data("key", value)
+    # ... your code ...
+```
+
+```php {tabTitle: PHP}
+$spanContext = \Sentry\Tracing\SpanContext::make()
+    ->setOp('category')
+    ->setDescription('operation-name')
+    ->setData(['key' => $value]);
+
+\Sentry\trace(function () {
     // ... your code ...
-  }
-);
+}, $spanContext);
 ```
 
 Numeric attributes become metrics you can aggregate with `sum()`, `avg()`, `p90()` in Trace Explorer.
@@ -30,18 +46,43 @@ Start with these five areas and you'll have visibility into the operations that 
 
 Track the full journey through critical paths. When checkout is slow, you need to know which step is responsible.
 
-```javascript
-Sentry.startSpan(
-  { name: "checkout-flow", op: "user.action" },
-  async (span) => {
-    span.setAttribute("cart.itemCount", 3);
-    span.setAttribute("user.tier", "premium");
+```javascript {tabTitle: JavaScript}
+Sentry.startSpan({ name: "checkout-flow", op: "user.action" }, async (span) => {
+  span.setAttribute("cart.itemCount", 3);
+  span.setAttribute("user.tier", "premium");
 
-    await validateCart();
-    await processPayment();
-    await createOrder();
-  }
-);
+  await validateCart();
+  await processPayment();
+  await createOrder();
+});
+```
+
+```python {tabTitle: Python}
+import sentry_sdk
+
+with sentry_sdk.start_span(name="checkout-flow", op="user.action") as span:
+    span.set_data("cart.itemCount", 3)
+    span.set_data("user.tier", "premium")
+
+    validate_cart()
+    process_payment()
+    create_order()
+```
+
+```php {tabTitle: PHP}
+$spanContext = \Sentry\Tracing\SpanContext::make()
+    ->setOp('user.action')
+    ->setDescription('checkout-flow')
+    ->setData([
+        'cart.itemCount' => 3,
+        'user.tier' => 'premium',
+    ]);
+
+\Sentry\trace(function () {
+    $this->validateCart();
+    $this->processPayment();
+    $this->createOrder();
+}, $spanContext);
 ```
 
 **Query in Explore > Traces:** `span.op:user.action` grouped by `user.tier`, visualize `p90(span.duration)`.
@@ -52,7 +93,7 @@ Sentry.startSpan(
 
 Measure dependencies you don't control. They're often the source of slowdowns.
 
-```javascript
+```javascript {tabTitle: JavaScript}
 Sentry.startSpan(
   { name: "shipping-rates-api", op: "http.client" },
   async (span) => {
@@ -70,6 +111,44 @@ Sentry.startSpan(
 );
 ```
 
+```python {tabTitle: Python}
+import time
+import sentry_sdk
+
+with sentry_sdk.start_span(name="shipping-rates-api", op="http.client") as span:
+    span.set_data("http.url", "api.shipper.com/rates")
+    span.set_data("request.itemCount", len(items))
+
+    start = time.time()
+    response = requests.get("https://api.shipper.com/rates")
+
+    span.set_data("http.status_code", response.status_code)
+    span.set_data("response.timeMs", int((time.time() - start) * 1000))
+```
+
+```php {tabTitle: PHP}
+$spanContext = \Sentry\Tracing\SpanContext::make()
+    ->setOp('http.client')
+    ->setDescription('shipping-rates-api')
+    ->setData([
+        'http.url' => 'api.shipper.com/rates',
+        'request.itemCount' => count($items),
+    ]);
+
+\Sentry\trace(function () use ($spanContext) {
+    $start = microtime(true);
+    $response = $this->httpClient->get('https://api.shipper.com/rates');
+
+    $span = \Sentry\SentrySdk::getCurrentHub()->getSpan();
+    $span->setData([
+        'http.status_code' => $response->getStatusCode(),
+        'response.timeMs' => (int)((microtime(true) - $start) * 1000),
+    ]);
+
+    return $response;
+}, $spanContext);
+```
+
 **Query in Explore > Traces:** `span.op:http.client response.timeMs:>2000` to find slow external calls.
 
 **Alert idea:** `p95(span.duration) > 3s` where `http.url` contains your critical dependencies.
@@ -78,7 +157,7 @@ Sentry.startSpan(
 
 Auto-instrumentation catches queries, but custom spans let you add context that explains why a query matters.
 
-```javascript
+```javascript {tabTitle: JavaScript}
 Sentry.startSpan(
   { name: "load-user-dashboard", op: "db.query" },
   async (span) => {
@@ -94,9 +173,42 @@ Sentry.startSpan(
 );
 ```
 
+```python {tabTitle: Python}
+import sentry_sdk
+
+with sentry_sdk.start_span(name="load-user-dashboard", op="db.query") as span:
+    span.set_data("db.system", "postgres")
+    span.set_data("query.type", "aggregation")
+    span.set_data("query.dateRange", "30d")
+
+    results = db.execute(dashboard_query).fetchall()
+    span.set_data("result.rowCount", len(results))
+```
+
+```php {tabTitle: PHP}
+$spanContext = \Sentry\Tracing\SpanContext::make()
+    ->setOp('db.query')
+    ->setDescription('load-user-dashboard')
+    ->setData([
+        'db.system' => 'postgres',
+        'query.type' => 'aggregation',
+        'query.dateRange' => '30d',
+    ]);
+
+$results = \Sentry\trace(function () use ($dashboardQuery) {
+    $results = $this->db->query($dashboardQuery)->fetchAll();
+
+    $span = \Sentry\SentrySdk::getCurrentHub()->getSpan();
+    $span->setData(['result.rowCount' => count($results)]);
+
+    return $results;
+}, $spanContext);
+```
+
 **Why this matters:** Without these attributes, you see "a database query took 2 seconds." With them, you know it was aggregating 30 days of data and returned 50,000 rows. That's actionable.
 
 **Query ideas in Explore > Traces:**
+
 - "Which aggregation queries are slowest?" Group by `query.type`, sort by `p90(span.duration)`
 - "Does date range affect performance?" Filter by name, group by `query.dateRange`
 
@@ -104,7 +216,7 @@ Sentry.startSpan(
 
 Jobs run outside of request context. Custom spans make them visible.
 
-```javascript
+```javascript {tabTitle: JavaScript}
 async function processEmailDigest(job) {
   return Sentry.startSpan(
     { name: `job:${job.type}`, op: "queue.process" },
@@ -126,6 +238,51 @@ async function processEmailDigest(job) {
 }
 ```
 
+```python {tabTitle: Python}
+import sentry_sdk
+
+def process_email_digest(job):
+    with sentry_sdk.start_span(name=f"job:{job.type}", op="queue.process") as span:
+        span.set_data("job.id", job.id)
+        span.set_data("job.type", "email-digest")
+        span.set_data("queue.name", "notifications")
+
+        users = get_digest_recipients()
+        span.set_data("job.recipientCount", len(users))
+
+        for user in users:
+            send_digest(user)
+
+        span.set_data("job.status", "completed")
+```
+
+```php {tabTitle: PHP}
+public function processEmailDigest($job)
+{
+    $spanContext = \Sentry\Tracing\SpanContext::make()
+        ->setOp('queue.process')
+        ->setDescription("job:{$job->type}")
+        ->setData([
+            'job.id' => $job->id,
+            'job.type' => 'email-digest',
+            'queue.name' => 'notifications',
+        ]);
+
+    \Sentry\trace(function () use ($job) {
+        $users = $this->getDigestRecipients();
+
+        $span = \Sentry\SentrySdk::getCurrentHub()->getSpan();
+        $span->setData(['job.recipientCount' => count($users)]);
+
+        foreach ($users as $user) {
+            $this->sendDigest($user);
+        }
+
+        $span->setData(['job.status' => 'completed']);
+    }, $spanContext);
+}
+```
+
 **Query in Explore > Traces:** `span.op:queue.process` grouped by `job.type`, visualize `p90(span.duration)`.
 
 **Alert idea:** `p90(span.duration) > 60s` for queue processing.
@@ -136,7 +293,7 @@ For AI workloads, use [Sentry Agent Monitoring](/product/insights/ai/agents/) in
 
 If you're not using a supported framework or need custom attributes:
 
-```javascript
+```javascript {tabTitle: JavaScript}
 Sentry.startSpan(
   { name: "generate-summary", op: "ai.inference" },
   async (span) => {
@@ -151,14 +308,45 @@ Sentry.startSpan(
 );
 ```
 
+```python {tabTitle: Python}
+import sentry_sdk
+
+with sentry_sdk.start_span(name="generate-summary", op="ai.inference") as span:
+    span.set_data("ai.model", "gpt-4")
+    span.set_data("ai.feature", "document-summary")
+
+    response = openai.chat.completions.create(...)
+
+    span.set_data("ai.tokens.total", response.usage.total_tokens)
+```
+
+```php {tabTitle: PHP}
+$spanContext = \Sentry\Tracing\SpanContext::make()
+    ->setOp('ai.inference')
+    ->setDescription('generate-summary')
+    ->setData([
+        'ai.model' => 'gpt-4',
+        'ai.feature' => 'document-summary',
+    ]);
+
+$response = \Sentry\trace(function () {
+    $response = $this->openai->chat()->completions()->create([...]);
+
+    $span = \Sentry\SentrySdk::getCurrentHub()->getSpan();
+    $span->setData(['ai.tokens.total' => $response->usage->totalTokens]);
+
+    return $response;
+}, $spanContext);
+```
+
 **Alert idea:** `p95(span.duration) > 5s` for AI inference.
 
 ## Quick Reference
 
-| Category | `op` Value | Example Attributes |
-|----------|-----------|----------------|
-| User flows | `user.action` | cart.itemCount, user.tier |
-| External APIs | `http.client` | http.url, response.timeMs |
-| Database | `db.query` | query.type, result.rowCount |
+| Category        | `op` Value      | Example Attributes           |
+| --------------- | --------------- | ---------------------------- |
+| User flows      | `user.action`   | cart.itemCount, user.tier    |
+| External APIs   | `http.client`   | http.url, response.timeMs    |
+| Database        | `db.query`      | query.type, result.rowCount  |
 | Background jobs | `queue.process` | job.type, job.id, queue.name |
-| AI/LLM | `ai.inference` | ai.model, ai.tokens.total |
+| AI/LLM          | `ai.inference`  | ai.model, ai.tokens.total    |
