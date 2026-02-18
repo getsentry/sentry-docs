@@ -3,35 +3,20 @@ title: API and Architecture
 sidebar_order: 4
 ---
 
-## Public API change approval gate
+## Server-side (Relay) vs. SDK-side decision gate
 
 #### Rule
 
-Any change to public API surface (add, change, deprecate, remove) requires senior/lead approval. "Public API" = anything a user can call, import, or reference. If in doubt, search public repos for usage.
+New processing or transformation logic must default to server-side (Relay).
+
+Logic should only be implemented in the SDK if it must run before data leaves the customer's application (e.g., user-controlled filtering like `before_send_*`), requires access to platform-specific APIs, is strictly latency-sensitive, or must function in offline scenarios.
+
+Transformations of data that has already been collected should be handled in Relay. This ensures consistency across SDK versions and avoids duplicating logic in clients that may remain in use indefinitely.
 
 #### Enforcement
 
-CI API surface snapshot diffs (where feasible). Human review gate (senior approval).
-
-#### Suggested skill(s)
-
-- [`sentry-skills:code-review`](https://github.com/getsentry/skills?tab=readme-ov-file#available-skills) — flags API changes for escalation.
-
-#### Per-SDK override
-
-Yes — detection mechanisms are language-specific. Approval requirement is universal.
-
----
-
-## Server-side vs. SDK-side decision gate
-
-#### Rule
-
-New processing/transformation logic defaults to server-side. SDK-side requires justification: must happen before network, requires platform API, latency sensitivity, offline scenarios.
-
-#### Enforcement
-
-Human review. AGENTS.md instruction.
+* AGENTS.md instruction
+* Human review
 
 #### Suggested skill(s)
 
@@ -39,67 +24,7 @@ Human review. AGENTS.md instruction.
 
 #### Per-SDK override
 
-No — the default is universal. Justifications are SDK-specific.
-
----
-
-## Semantic conventions process
-
-#### Rule
-
-New attributes must first be defined in sentry-conventions. Process: PR to sentry-conventions → code owner approval → 3 business day wait → SDK implementation.
-
-#### Enforcement
-
-CI validation where feasible. Human review.
-
-#### Suggested skill(s)
-
-—
-
-#### Per-SDK override
-
-No.
-
----
-
-## Breaking change process
-
-#### Rule
-
-Breaking changes follow the [breaking changes playbook](../playbooks/breaking-changes): accumulate in next major version only, require deprecation period in prior version, migration guide with copy-pastable examples, changelog with `BREAKING CHANGE:` notation. Test migration guide with an LLM.
-
-#### Enforcement
-
-Commit footer `BREAKING CHANGE:` triggers CI checks. Human review. Breaking changes in non-major branches are CI-blocked.
-
-#### Suggested skill(s)
-
-- [`sentry-skills:code-review`](https://github.com/getsentry/skills?tab=readme-ov-file#available-skills)
-
-#### Per-SDK override
-
-Deprecation period timelines can vary. Process is universal.
-
----
-
-## Deprecation lifecycle
-
-#### Rule
-
-Standardized stages: 1) Announce: deprecation warning + changelog + docs + migration guide (minor release), 2) Maintain: deprecated API works for at least one minor release cycle, 3) Remove: next major version only. Deprecation warnings must include: replacement, code example, docs link.
-
-#### Enforcement
-
-Human review. CI checks deprecated APIs still have passing tests.
-
-#### Suggested skill(s)
-
-—
-
-#### Per-SDK override
-
-Minimum period can be extended. Stages are universal.
+<StatusBadge type="no" /> The default is universal. Justifications are SDK-specific.
 
 ---
 
@@ -107,11 +32,12 @@ Minimum period can be extended. Stages are universal.
 
 #### Rule
 
-SDKs must be resilient to unexpected server responses: unknown fields, missing fields, new enum values, rate limiting. Ignore unknown categories/dimensions rather than erroring.
+SDKs typically outlive individual API versions, so forward compatibility is essential to prevent ecosystem breakage. They must remain resilient to evolving server responses, including additional fields, missing optional fields, new enum values, and rate limiting. They must not fail due to additive changes. Unknown fields, categories, or dimensions should be safely ignored rather than causing errors.
 
 #### Enforcement
 
-Integration tests for degraded-server scenarios. Human review.
+* Integration tests for degraded-server scenarios
+* Human review
 
 #### Suggested skill(s)
 
@@ -119,4 +45,110 @@ Integration tests for degraded-server scenarios. Human review.
 
 #### Per-SDK override
 
-Specific tests vary. Principle is universal.
+<StatusBadge type="yes" /> Specific tests vary. Principle is universal.
+
+---
+
+## Public API change approval gate
+
+#### Rule
+
+Any change to public API surface (add, change, deprecate, remove) requires @sdk-leads approval. Public API includes anything a user can call, import, configure, subclass, or otherwise reference. If there is any doubt whether something is public, check for usage in public repositories. When still unsure, treat it as public.
+
+#### Enforcement
+
+* CI API surface snapshot diffs (where feasible)
+* Human review gate (senior approval)
+
+#### Suggested skill(s)
+
+* [`sentry-skills:code-review`](https://github.com/getsentry/skills/blob/main/plugins/sentry-skills/skills/code-review/SKILL.md) — flags API changes for escalation.
+
+#### Per-SDK override
+
+<StatusBadge type="yes" /> Detection mechanisms are language-specific. Approval requirement is universal.
+
+---
+
+## Semantic conventions process
+
+#### Rule
+
+New attributes must first be defined in [sentry-conventions](https://github.com/getsentry/sentry-conventions).
+Process:
+1. PR to sentry-conventions
+2. code owner approval
+3. 3 business day minimum wait
+4. SDK implementation
+
+#### Enforcement
+
+* CI validation where feasible
+* Human review
+
+#### Suggested skill(s)
+
+—
+
+#### Per-SDK override
+
+<StatusBadge type="no" />
+
+---
+
+## Breaking change process
+
+#### Rule
+
+Breaking changes must follow the [breaking changes playbook](../playbooks/breaking-changes).
+
+Breaking changes may only ship in a major version. They must not ship in minor versions. Opt-in previews are allowed in minor versions.
+
+A deprecation period is required in a prior minor version, during which dual behavior is allowed to support migration.
+
+Every breaking change must include:
+* A migration guide with copy-pastable examples
+* A changelog entry using the BREAKING CHANGE: notation
+* Validation of the migration guide using an LLM to ensure it is clear and complete
+
+#### Enforcement
+
+* [Commit footer BREAKING CHANGE:](../../../engineering-practices/commit-messages/#footer) triggers CI checks
+* Breaking changes in non-major branches are CI-blocked
+* Human review.
+
+#### Suggested skill(s)
+
+* [`sentry-skills:code-review`](https://github.com/getsentry/skills?tab=readme-ov-file#available-skills)
+
+#### Per-SDK override
+
+<StatusBadge type="yes" /> Deprecation period timelines can vary. Process is universal.
+
+---
+
+## Deprecation lifecycle
+
+#### Rule
+
+All deprecations of public APIs, user-facing integrations, and supported platform or framework versions follow three stages:
+
+1. Announce the deprecation in a minor release with a runtime warning (where possible), updated changelog and documentation, and a migration guide. Warnings must include the replacement, a code example, and a link to the migration docs.
+2. The deprecated surface must remain fully functional for at least one subsequent minor release (e.g., deprecated in X.Y, still supported in X.(Y+1)).
+3. Removal may occur only in the next major release (X+1.0).
+
+Dropping support for platforms or frameworks requires announcement in a minor release and removal in the next major release.
+Deprecating an entire SDK is never silent. It requires sound reasoning about customer impact, a public announcement, updated documentation, a clear support timeline and advance EOL notice .
+
+#### Enforcement
+
+* CI checks deprecated APIs still have passing tests
+* Human review
+
+#### Suggested skill(s)
+
+—
+
+#### Per-SDK override
+
+<StatusBadge type="yes" /> Minimum period can be extended. Stages are universal.
