@@ -27,9 +27,9 @@ try {
 
 **Levels:** `fatal`, `error`, `warning`, `info`, `debug`
 
-**Context:** Tags, user info, and breadcrumbs help you debug faster. Tags are searchable, so use them for high-cardinality data like IDs, regions, and feature flags.
+**Context:** Tags, user info, logs, and session replays help you debug faster. Tags are searchable, so use them for high-cardinality data like IDs, regions, and feature flags.
 
-Every error in Sentry is automatically trace-connected. Click the trace ID to see the full [trace view](/concepts/key-terms/tracing/trace-view/) and understand what led to the error.
+Every error in Sentry is automatically trace-connected. Click the trace ID to see the full [trace view](/concepts/key-terms/tracing/#traces-to-trace-view) and understand what led to the error.
 
 ## Where to Look
 
@@ -39,7 +39,7 @@ Start with these five views to catch the most critical issues.
 
 High event counts mean either many users are affected or one user is stuck in a loop. Both need immediate attention.
 
-**In Issues:** Search for `is:unresolved` (applied by default) and use the sort dropdown (defaults to "Last Seen") to sort by **Events** 
+**[In Issues](https://sentry.io/orgredirect/organizations/:orgslug/issues/):** Search for `is:unresolved` (applied by default) and use the sort dropdown (defaults to "Last Seen") to sort by **Events** 
 
 **What to look for:**
 - Issues at the top with high event counts (many occurrences in a short time)
@@ -53,7 +53,7 @@ Learn more about [Issue States & Triage](/product/issues/states-triage/) to mana
 
 Every deploy introduces risk. New errors that appear right after a release are usually regressions.
 
-**In Issues:** Filter by `is:unresolved` and sort by **Age** to find issues that first appeared recently (not just issues that happened recently). Filter by release: `release:v1.2.3`
+**[In Issues](https://sentry.io/orgredirect/organizations/:orgslug/issues/):** Filter by `is:unresolved` and sort by **Age** to find issues that first appeared recently (not just issues that happened recently). Filter by release: `release:v1.2.3`
 
 **What to look for:**
 - Issues that didn't exist in the previous release
@@ -68,7 +68,7 @@ Learn more about [Release Health](/product/releases/health/) to track error rate
 
 Production errors are critical. Staging errors help you catch problems before they reach users. Comparing environments helps you spot configuration issues.
 
-**In Issues:** Search for `is:unresolved environment:production` or `environment:staging`
+**[In Issues](https://sentry.io/orgredirect/organizations/:orgslug/issues/):** Search for `is:unresolved environment:production` or `environment:staging`
 
 **What to look for:**
 - Errors only in production (often config, API keys, or data issues)
@@ -83,7 +83,7 @@ Learn more about <PlatformLink to="/configuration/environments/">configuring env
 
 Some errors heavily affect power users. Others affect everyone, but rarely. Prioritize by unique user count, not just event count.
 
-**In Issues:** Search for `is:unresolved` and use the sort dropdown to sort by **Users**
+**[In Issues](https://sentry.io/orgredirect/organizations/:orgslug/issues/):** Search for `is:unresolved` and use the sort dropdown to sort by **Users**
 
 **What to look for:**
 - Issues affecting many unique users (e.g., more than 10 users indicates widespread impact)
@@ -98,49 +98,33 @@ Learn more about <PlatformLink to="/enriching-events/tags/">custom tags</Platfor
 
 When users report problems, they often see an error. User feedback tells you which errors hurt the experience most, even if event counts are low.
 
-**In Issues:** Navigate to **User Feedback** in the left sidebar to see reports submitted by users.
+Enable the [User Feedback Widget](/platforms/javascript/user-feedback/) to let users report problems directly when errors happen.
+
+**[In Issues](https://sentry.io/orgredirect/organizations/:orgslug/issues/):** Navigate to **User Feedback** in the left sidebar to see reports submitted by users.
 
 **What to look for:**
 - User descriptions of what they were doing when the error occurred
 - Patterns in feedback about specific workflows or features
 - Issues that frustrate users even if they don't generate many events
 
-Enable the [User Feedback Widget](/platforms/javascript/user-feedback/) to let users report problems directly when errors happen.
-
 **Alert idea:** Trigger when a new issue is created, filtered to issue category equals feedback. This ensures you respond quickly when users report problems.
-
-## Creating Issue Alerts
-
-Issue alerts notify you when specific conditions are met. To create one:
-
-1. Go to **Alerts** and click "Create Alert Rule"
-2. Select "Issues" and click "Set Conditions"
-3. Configure "When" conditions (what triggers the alert)
-4. Add "If" filters to narrow the scope (optional)
-5. Set "Then" actions (where to send notifications)
-
-Common triggers: new issues, high event counts, high user counts, state changes.
-
-Common filters: environment, tags, issue properties.
-
-Learn more about [Creating Alerts](/product/alerts/create-alerts/) and [Issue Alert Configuration](/product/alerts/create-alerts/issue-alert-config/).
 
 ## Error Handling Strategy
 
 ### Capture Context, Not Just Exceptions
 
-When you catch an error, add tags, user info, and breadcrumbs to make debugging instant.
+When you catch an error, add tags and context to make debugging instant. Set user info globally with `Sentry.setUser()` so it applies to all events. Enable [Session Replays](/product/explore/session-replay/) and [Logs](/product/explore/logs/) for even more visibility.
 
 ```javascript
+// Set user globally (e.g., after login)
+Sentry.setUser({ id: user.id, email: user.email });
+
+// Add tags and context per-event
 Sentry.captureException(error, {
   tags: {
     order_id: order.id,
     payment_gateway: "stripe",
     region: user.region
-  },
-  user: {
-    id: user.id,
-    email: user.email
   },
   contexts: {
     order: {
