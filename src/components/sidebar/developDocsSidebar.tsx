@@ -2,10 +2,14 @@ import {DocNode, nodeForPath} from 'sentry-docs/docTree';
 
 import styles from './style.module.scss';
 
+import {ScrollActiveLink} from '../focus-active-link';
+
 import {DynamicNav, toTree} from './dynamicNav';
 import {SidebarLink, SidebarSeparator} from './sidebarLink';
 import {NavNode} from './types';
 import {docNodeToNavNode, getNavNodes} from './utils';
+
+const activeLinkSelector = `.${styles.sidebar} .toc-item .active`;
 
 const devDocsMenuItems: {root: string; title: string}[] = [
   {root: 'getting-started', title: 'Getting Started'},
@@ -42,6 +46,7 @@ export function DevelopDocsSidebar({
       <style>{':root { --sidebar-width: 300px; }'}</style>
       <div className="md:flex flex-col items-stretch">
         <div className={styles.toc}>
+          <ScrollActiveLink activeLinkSelector={activeLinkSelector} />
           <ul data-sidebar-tree>
             {devDocsMenuItems.map(({root, title}) => (
               <DynamicNav
