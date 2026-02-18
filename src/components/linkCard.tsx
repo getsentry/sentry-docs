@@ -10,10 +10,10 @@ export function LinkCard({
 }: {
   description: string;
   href: string;
-  icon?: string;
-  iconSrc?: string;
   title: string;
   className?: string;
+  icon?: string;
+  iconSrc?: string;
 }) {
   return (
     <Link href={href} className={`no-underline ${className}`}>
