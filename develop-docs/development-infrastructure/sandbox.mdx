@@ -212,8 +212,11 @@ Both the Python backend (Granian) and the frontend (rspack) watch for file chang
 | `sandbox ssh <name>` | SSH into the sandbox (auto-forwards port 8000) |
 | `sandbox ssh-config <name>` | Generate or manage SSH config for IDE integration |
 | `sandbox sync <name>` | Pull latest branch changes and update dependencies |
-| `sandbox logs <name> [service]` | View devserver or service logs |
+| `sandbox logs [service]` | View devserver or service logs |
 | `sandbox port-forward <name>` | Forward ports in the background (without an SSH session) |
+| `sandbox migrate <name>` | Run database migrations on the sandbox |
+| `sandbox restart-devserver <name>` | Restart the devserver systemd unit |
+| `sandbox exec <command>` | Run an arbitrary command on the sandbox via SSH |
 | `sandbox start <name>` | Start a stopped sandbox (preserves disk) |
 | `sandbox stop <name>` | Stop a sandbox without destroying it |
 | `sandbox destroy <name>` | Permanently delete a sandbox and its disk |
@@ -288,6 +291,22 @@ What sync does:
 2. Compares lockfile checksums (`pnpm-lock.yaml`, `uv.lock`, `setup.cfg`)
 3. Reinstalls only changed dependencies
 4. Runs database migrations if needed
+
+## Running Commands
+
+Run database migrations, restart the devserver, or execute arbitrary commands on the sandbox without opening an SSH session:
+
+```shell
+# Run database migrations
+devservices sandbox migrate my-sandbox
+
+# Restart the devserver (useful after config changes)
+devservices sandbox restart-devserver my-sandbox
+
+# Run any command on the sandbox
+devservices sandbox exec "ls -la /opt/sentry/src/sentry/api/"
+devservices sandbox exec --name my-sandbox "sudo systemctl status sandbox-devserver"
+```
 
 ## Lifecycle Management
 
