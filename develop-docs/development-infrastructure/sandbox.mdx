@@ -257,6 +257,27 @@ After forwarding PostgreSQL, connect with:
 psql -h 127.0.0.1 -p 15432 -U postgres -d sentry
 ```
 
+### Port Profiles
+
+Instead of listing ports individually, use a named profile:
+
+```shell
+# Forward all service ports (PostgreSQL, Redis, Kafka, Snuba, ClickHouse, Relay, Spotlight)
+devservices sandbox port-forward my-sandbox --ports services
+
+# Forward everything (devserver + all services)
+devservices sandbox port-forward my-sandbox --ports all
+
+# Forward just the devserver (default)
+devservices sandbox port-forward my-sandbox --ports devserver
+```
+
+| Profile | Ports |
+|:--------|:------|
+| `devserver` | 8000 |
+| `services` | 5432, 6379, 9092, 1218, 9000, 7899, 8969 |
+| `all` | 8000 + all service ports |
+
 ## Viewing Logs
 
 ```shell
@@ -307,6 +328,42 @@ devservices sandbox restart-devserver my-sandbox
 devservices sandbox exec "ls -la /opt/sentry/src/sentry/api/"
 devservices sandbox exec --name my-sandbox "sudo systemctl status sandbox-devserver"
 ```
+
+## Hybrid Mode: Local Code + Remote Services
+
+If you have a local Python/Node setup but want to avoid running Docker, you can use the sandbox purely as a service provider. Run the devserver locally while connecting to the sandbox's databases and services.
+
+1. Forward service ports from the sandbox:
+
+```shell
+devservices sandbox port-forward my-sandbox --ports services
+```
+
+2. Stop local devservices if running (to free up ports):
+
+```shell
+devservices down
+```
+
+3. Stop the remote devserver on the sandbox:
+
+```shell
+devservices sandbox exec "sudo systemctl stop sandbox-devserver"
+```
+
+<Alert title="Note">
+  The sandbox devserver should be stopped in hybrid mode since you're running the devserver locally. This frees CPU/RAM on the VM for the Docker services.
+</Alert>
+
+4. Start the local devserver — it connects to the forwarded ports:
+
+```shell
+devservices serve
+```
+
+<Alert title="Note">
+  This requires a fully set up local environment (`devenv sync`). Every database query and Redis call goes over the SSH tunnel, which adds latency.
+</Alert>
 
 ## Lifecycle Management
 
