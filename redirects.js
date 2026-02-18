@@ -27,6 +27,10 @@ const developerDocsRedirects = [
     destination: '/sdk/telemetry/traces/:path*',
   },
   {
+    source: '/sdk/telemetry/scopes/',
+    destination: '/sdk/foundations/data-model/scopes/',
+  },
+  {
     source: '/sdk/data-model/event-payloads/types/',
     destination: '/sdk/foundations/data-model/event-payloads/',
   },
