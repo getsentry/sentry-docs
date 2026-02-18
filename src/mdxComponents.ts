@@ -10,6 +10,7 @@ import {CommunitySupportedPlatforms} from './components/communitySupportedPlatfo
 import {ConfigKey} from './components/configKey';
 import {ConfigValue} from './components/configValue';
 import {ContentSeparator} from './components/contentSeparator';
+import {CopyableCard} from './components/copyableCard';
 import {CreateGitHubAppForm} from './components/createGitHubAppForm';
 import {DefinitionList} from './components/definitionList';
 import {DevDocsCardGrid} from './components/devDocsCardGrid';
@@ -114,6 +115,7 @@ export function mdxComponents(
     OnboardingSteps,
     RelayMetrics,
     SandboxLink,
+    CopyableCard,
     SignInNote,
     SplitLayout,
     SplitSection,
