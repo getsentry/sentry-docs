@@ -4,6 +4,10 @@ description: What an SDK is, what it does, and how end-users interact with it.
 sidebar_order: 1
 ---
 
+<Alert>
+  This document uses key words such as "MUST", "SHOULD", and "MAY" as defined in [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt) to indicate requirement levels.
+</Alert>
+
 ## Writing an SDK
 
 At its core an SDK is a set of utilities for capturing data about an exceptional state in an application. Given this data, it then builds and sends a JSON payload to the Sentry server.
@@ -89,3 +93,55 @@ a basic message or exception:
 
 -   `Sentry.captureMessage(message)`
 -   `Sentry.captureException(exception)`
+
+## Run a Local Relay
+
+You do not need a local Sentry for SDK development but you will want to run a local
+[relay](https://docs.sentry.io/product/relay/).  The reason for this is that Sentry's
+main ingestion endpoint is not intended for development but for high throughput
+production use.  What this means is that a lot of the event processing is happening
+after the event has already been accepted by the system so you won't be able to see
+errors when sending the HTTP request.
+
+If you haven't used relay yet, have a look at the [getting started](https://docs.sentry.io/product/relay/getting-started/)
+docs for relay.  Once installed you will want to turn up the log level in your
+`.relay/config.yml` file:
+
+```yaml
+logging:
+  level: trace
+```
+
+Make sure your relay is running whenever you're doing development:
+
+```shell
+relay run
+```
+
+When sending events just substitute `orgXXX.ingest.sentry.io` with `localhost:3000` or
+whichever port you ended up choosing.  Also note that a local relay will out of the box
+be available via HTTP only so don't try to send HTTPS requests there.
+
+## Consult Existing SDKs
+
+While we're trying to keep the docs up to date about all important things, it's usually
+a good idea to refer to already existing Sentry SDKs for input.  In particular the
+transport design is not part of the documentation but generally quite similar between
+SDKs.
+
+## Define Conventions and Types Before Shipping
+
+Before shipping new or changed SDK behavior, make sure the relevant definitions exist outside your SDK first:
+
+- **Semantic conventions:** New or changed attributes **MUST** first be defined in [sentry-conventions](https://github.com/getsentry/sentry-conventions/). If the convention you need doesn't exist yet, open a PR there to propose it. Only after the convention has been merged should you implement it in an SDK. This ensures all SDKs use consistent naming and semantics.
+
+  The merge process for sentry-conventions PRs:
+  1. Open a PR with the proposed convention.
+  2. Get an approval from at least one code owner.
+  3. Wait at least 3 business days after the first approval to give other code owners a chance to review.
+
+- **Context types:** Any newly added [context](https://develop.sentry.dev/sdk/foundations/data-model/event-payloads/contexts/) **SHOULD** also be typed out in [Relay](https://github.com/getsentry/relay/tree/master/relay-event-schema/src/protocol/contexts) so that the schema stays in sync with what SDKs emit.
+
+## Join us on Discord
+
+You can reach out to Sentry open source contributors and talk with other SDK maintainers on the [Sentry Discord server](https://discord.gg/sentry).

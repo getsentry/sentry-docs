@@ -44,7 +44,11 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/basics/:path*',
-    destination: '/sdk/processes/basics/:path*',
+    destination: '/sdk/foundations/overview/',
+  },
+  {
+    source: '/sdk/processes/basics/:path*',
+    destination: '/sdk/foundations/overview/',
   },
   {
     source: '/sdk/data-handling/:path*',
