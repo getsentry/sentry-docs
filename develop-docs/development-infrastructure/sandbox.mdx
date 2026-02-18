@@ -64,22 +64,103 @@ devservices sandbox ssh-config my-sandbox --remove
 
 1. Install the [Remote-SSH](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-ssh) extension
 2. Run SSH config setup (above)
-3. Open the command palette (Cmd+Shift+P) and select **Remote-SSH: Connect to Host**
+3. Open the command palette (`Cmd+Shift+P`) and select **Remote-SSH: Connect to Host**
 4. Choose `sandbox-my-sandbox`
-5. Open `/opt/sentry` or `/opt/getsentry`
-6. Set the Python interpreter to `/opt/sentry/.venv/bin/python`
+5. Open `/opt/sentry` when prompted for a folder
+
+<Alert title="First Connection">
+  VS Code installs a server component on the VM on first connection (~200 MB). Subsequent connections are faster.
+</Alert>
+
+**Multi-root workspace** — To work on both repositories, add the second folder via **File > Add Folder to Workspace** and select `/opt/getsentry`. Save the workspace if you want this to persist across sessions.
+
+**Python interpreter** — Open the command palette and run **Python: Select Interpreter**, then choose **Enter interpreter path** and enter:
+
+```
+/opt/sentry/.venv/bin/python
+```
+
+**Recommended extensions** — Install these on the sandbox (VS Code will prompt to install them on the remote host, not locally):
+
+- [Python](https://marketplace.visualstudio.com/items?itemName=ms-python.python) (`ms-python.python`)
+- [Ruff](https://marketplace.visualstudio.com/items?itemName=charliermarsh.ruff) (`charliermarsh.ruff`)
+- [Mypy Type Checker](https://marketplace.visualstudio.com/items?itemName=ms-python.mypy-type-checker) (`ms-python.mypy-type-checker`)
+- [GitLens](https://marketplace.visualstudio.com/items?itemName=eamodio.gitlens) (`eamodio.gitlens`) — optional
+
+**Recommended settings** — Add these to your remote workspace settings (`.vscode/settings.json`):
+
+```json
+{
+  "python.defaultInterpreterPath": "/opt/sentry/.venv/bin/python",
+  "python.analysis.extraPaths": ["/opt/sentry/src", "/opt/getsentry"],
+  "editor.formatOnSave": true,
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff"
+  }
+}
+```
+
+**Port forwarding** — VS Code auto-detects forwarded ports from your SSH config. You can also manage them manually in the **Ports** panel (`Cmd+Shift+P` > **Ports: Focus on Ports View**). The devserver on port 8000 is forwarded by default.
+
+**Debugging** — VS Code can detect Django run configurations automatically. For a custom setup, create `.vscode/launch.json`:
+
+```json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Sentry Devserver",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "/opt/sentry/.venv/bin/sentry",
+      "args": ["devserver", "--workers=0"],
+      "django": true,
+      "cwd": "/opt/sentry",
+      "env": {
+        "SENTRY_CONF": "/opt/getsentry"
+      }
+    }
+  ]
+}
+```
 
 <Alert title="Note">
-  VS Code installs a server component on the VM on first connection (~200 MB). Subsequent connections are faster.
+  When debugging, stop the systemd devserver first (`sudo systemctl stop sandbox-devserver`) so it does not conflict with the VS Code debug session.
 </Alert>
 
 ### JetBrains Gateway
 
-1. Install [JetBrains Gateway](https://www.jetbrains.com/remote-development/gateway/)
+1. Install [JetBrains Gateway](https://www.jetbrains.com/remote-development/gateway/) and ensure you have an active IDE license
 2. Run SSH config setup (above)
-3. Open Gateway, go to **SSH** tab, and select `sandbox-my-sandbox`
-4. Choose your IDE (PyCharm, IntelliJ, WebStorm)
-5. Set the project directory to `/opt/sentry` or `/opt/getsentry`
+3. Open Gateway, select **SSH** and connect to `sandbox-my-sandbox`
+4. Choose the IDE backend to install on the VM — **PyCharm Professional** is recommended for Python/Django work, **WebStorm** for frontend
+5. Set the project directory to `/opt/sentry`
+
+<Alert title="Note">
+  The IDE backend requires ~500 MB to 1 GB on the VM. The sandbox has 32 GB RAM, so this is not a concern. Initial project indexing takes 5-10 minutes for the first connection due to the size of the codebase.
+</Alert>
+
+**Python SDK** — Go to **Settings > Project > Python Interpreter > Add Interpreter > System Interpreter** and set the path to:
+
+```
+/opt/sentry/.venv/bin/python
+```
+
+**Source roots** — Mark these directories so imports resolve correctly:
+
+- Right-click `/opt/sentry/src` > **Mark Directory as > Sources Root**
+- Right-click `/opt/getsentry` > **Mark Directory as > Sources Root**
+
+To work on getsentry alongside sentry, attach it via **File > Attach Directory to Project** and select `/opt/getsentry`.
+
+**Database tool** — After forwarding PostgreSQL (see [Port Forwarding](#port-forwarding)), open the **Database** panel and add a PostgreSQL data source:
+
+| Field    | Value       |
+|:---------|:------------|
+| Host     | `localhost` |
+| Port     | `15432`     |
+| User     | `postgres`  |
+| Database | `sentry`    |
 
 ### Terminal (vim, tmux)
 
