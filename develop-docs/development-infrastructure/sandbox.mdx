@@ -217,6 +217,7 @@ Both the Python backend (Granian) and the frontend (rspack) watch for file chang
 | `sandbox migrate <name>` | Run database migrations on the sandbox |
 | `sandbox restart-devserver <name>` | Restart the devserver systemd unit |
 | `sandbox exec <command>` | Run an arbitrary command on the sandbox via SSH |
+| `sandbox hybrid <name>` | Toggle hybrid mode (local devserver + remote services) |
 | `sandbox start <name>` | Start a stopped sandbox (preserves disk) |
 | `sandbox stop <name>` | Stop a sandbox without destroying it |
 | `sandbox destroy <name>` | Permanently delete a sandbox and its disk |
@@ -333,36 +334,27 @@ devservices sandbox exec --name my-sandbox "sudo systemctl status sandbox-devser
 
 If you have a local Python/Node setup but want to avoid running Docker, you can use the sandbox purely as a service provider. Run the devserver locally while connecting to the sandbox's databases and services.
 
-1. Forward service ports from the sandbox:
-
 ```shell
-devservices sandbox port-forward my-sandbox --ports services
-```
+# Enter hybrid mode (stops remote devserver, forwards all service ports)
+devservices sandbox hybrid my-sandbox
 
-2. Stop local devservices if running (to free up ports):
-
-```shell
+# Stop local devservices if running (to free up ports)
 devservices down
-```
 
-3. Stop the remote devserver on the sandbox:
-
-```shell
-devservices sandbox exec "sudo systemctl stop sandbox-devserver"
-```
-
-<Alert title="Note">
-  The sandbox devserver should be stopped in hybrid mode since you're running the devserver locally. This frees CPU/RAM on the VM for the Docker services.
-</Alert>
-
-4. Start the local devserver — it connects to the forwarded ports:
-
-```shell
+# Start the local devserver — it connects to the forwarded ports
 devservices serve
 ```
 
+The `hybrid` command stops the sandbox devserver (freeing VM resources for Docker services) and forwards all service ports (PostgreSQL, Redis, Kafka, Snuba, ClickHouse, Relay, Spotlight) to localhost.
+
+To exit hybrid mode and restore the sandbox devserver:
+
+```shell
+devservices sandbox hybrid my-sandbox --stop
+```
+
 <Alert title="Note">
-  This requires a fully set up local environment (`devenv sync`). Every database query and Redis call goes over the SSH tunnel, which adds latency.
+  Hybrid mode requires a fully set up local environment (`devenv sync`). Every database query and Redis call goes over the SSH tunnel, which adds some latency.
 </Alert>
 
 ## Lifecycle Management
