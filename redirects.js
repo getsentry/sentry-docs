@@ -174,6 +174,10 @@ const developerDocsRedirects = [
     destination: '/sdk/processes/:path*',
   },
   {
+    source: '/sdk/processes/releases/',
+    destination: '/sdk/getting-started/playbooks/setting-up-release-infrastructure/',
+  },
+  {
     source: '/application/ab-testing/',
     destination: '/backend/ab-testing/',
   },
