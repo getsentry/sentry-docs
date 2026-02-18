@@ -1,3 +1,5 @@
+import type {ReactNode} from 'react';
+
 import {serverContext} from 'sentry-docs/serverContext';
 
 import {SmartLink} from './smartLink';
@@ -14,21 +16,9 @@ function isCurrentPage(href: string): boolean {
 }
 
 type Props = {
-  children: React.ReactNode;
+  children: ReactNode;
   href: string;
 };
-
-/**
- * Renders a link that is hidden when the current page path matches href.
- * Used in "Integrations" / "Other integrations" lists so the current page
- * is not listed as an option.
- */
-export function IntegrationLink({href, children}: Props) {
-  if (isCurrentPage(href)) {
-    return null;
-  }
-  return <SmartLink to={href}>{children}</SmartLink>;
-}
 
 /**
  * List item that is omitted when href is the current page. Use in integration
