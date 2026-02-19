@@ -807,10 +807,18 @@ async function createWork() {
       navLinks.push(`Full documentation index: ${DOCS_ORIGIN}/`);
     }
     // Guide pages get a link back to their platform index
-    if (pathParts[0] === 'platforms' && pathParts.includes('guides') && pathParts.length >= 4) {
-      const platformNode = docTree ? findNode(docTree, ['platforms', pathParts[1]]) : null;
+    if (
+      pathParts[0] === 'platforms' &&
+      pathParts.includes('guides') &&
+      pathParts.length >= 4
+    ) {
+      const platformNode = docTree
+        ? findNode(docTree, ['platforms', pathParts[1]])
+        : null;
       const platformName = platformNode ? getTitle(platformNode) : pathParts[1];
-      navLinks.push(`${platformName} SDK docs: ${DOCS_ORIGIN}/platforms/${pathParts[1]}/`);
+      navLinks.push(
+        `${platformName} SDK docs: ${DOCS_ORIGIN}/platforms/${pathParts[1]}/`
+      );
     }
     const injected = injectDescription(content, description, {navLinks});
     if (injected === content) {
