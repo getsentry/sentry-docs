@@ -62,14 +62,23 @@ function mdxComponentsForFrontMatter(frontMatter: Record<string, unknown>) {
       }))
     : undefined;
   if (changelog) {
-    specOverrides.SpecChangelog = () => <SpecChangelog changelog={changelog} />;
+    specOverrides.SpecChangelog = function() {
+  return <SpecChangelog changelog={changelog} />
+};
   }
   if (frontMatter.spec_version) {
     const boundProps = {
       version: String(frontMatter.spec_version),
-      status: frontMatter.spec_status as 'proposal' | 'draft' | 'candidate' | 'stable' | 'deprecated',
+      status: frontMatter.spec_status as
+        | 'proposal'
+        | 'draft'
+        | 'candidate'
+        | 'stable'
+        | 'deprecated',
     };
-    specOverrides.SpecMeta = () => <SpecMeta {...boundProps} />;
+    specOverrides.SpecMeta = function() {
+  return <SpecMeta {...boundProps} />
+};
   }
   return mdxComponents(
     {Include, PlatformContent, ...specOverrides},

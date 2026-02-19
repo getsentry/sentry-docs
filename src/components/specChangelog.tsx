@@ -35,9 +35,7 @@ export function SpecChangelog({changelog}: SpecChangelogProps) {
                 </code>
               </td>
               <td className="py-2 pr-4 text-gray-500">{entry.date}</td>
-              <td className="py-2 text-gray-700 dark:text-gray-300">
-                {entry.summary}
-              </td>
+              <td className="py-2 text-gray-700 dark:text-gray-300">{entry.summary}</td>
             </tr>
           ))}
         </tbody>

@@ -32,7 +32,10 @@ export function SpecMeta({version, status}: SpecMetaProps) {
           <code className="rounded bg-gray-200 px-1.5 py-0.5 text-xs font-medium dark:bg-gray-700">
             {version}
           </code>
-          <a href="#changelog" className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+          <a
+            href="#changelog"
+            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+          >
             (changelog)
           </a>
         </div>
