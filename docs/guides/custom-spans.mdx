@@ -8,7 +8,7 @@ You've got your Sentry SDK [auto-instrumentation](/product/explore/trace-explore
 
 Auto-instrumentation captures HTTP, database, and framework operations. But it can't see business logic, third-party APIs without auto-instrumentation, or background jobs. This guide shows you where to add custom spans to fill in those gaps.
 
-## The Pattern
+## Anatomy of a Span
 
 ```javascript {tabTitle: JavaScript}
 Sentry.startSpan({ name: "operation-name", op: "category" }, async (span) => {
@@ -201,7 +201,7 @@ createOrder()
 transaction.finish()
 ```
 
-**Query in Explore > Traces:** `span.op:user.action` grouped by `user.tier`, visualize `p90(span.duration)`.
+**Query in [Explore > Traces](https://sentry.io/orgredirect/organizations/:orgslug/explore/traces/):** `span.op:user.action` grouped by `user.tier`, visualize `p90(span.duration)`.
 
 **Alert idea:** `p90(span.duration) > 10s` for checkout flows.
 
@@ -336,7 +336,7 @@ transaction.setData("response.timeMs", System.currentTimeMillis() - start)
 transaction.finish()
 ```
 
-**Query in Explore > Traces:** `span.op:http.client response.timeMs:>2000` to find slow external calls.
+**Query in [Explore > Traces](https://sentry.io/orgredirect/organizations/:orgslug/explore/traces/):** `span.op:http.client response.timeMs:>2000` to find slow external calls.
 
 **Alert idea:** `p95(span.duration) > 3s` where `http.url` contains your critical dependencies.
 
@@ -455,7 +455,7 @@ transaction.finish()
 
 **Why this matters:** Without these attributes, you see "a database query took 2 seconds." With them, you know it was aggregating 30 days of data and returned 50,000 rows. That's actionable.
 
-**Query ideas in Explore > Traces:**
+**Query ideas in [Explore > Traces](https://sentry.io/orgredirect/organizations/:orgslug/explore/traces/):**
 
 - "Which aggregation queries are slowest?" Group by `query.type`, sort by `p90(span.duration)`
 - "Does date range affect performance?" Filter by name, group by `query.dateRange`
@@ -632,7 +632,7 @@ fun processEmailDigest(job: Job) {
 }
 ```
 
-**Query in Explore > Traces:** `span.op:queue.process` grouped by `job.type`, visualize `p90(span.duration)`.
+**Query in [Explore > Traces](https://sentry.io/orgredirect/organizations/:orgslug/explore/traces/):** `span.op:queue.process` grouped by `job.type`, visualize `p90(span.duration)`.
 
 **Alert idea:** `p90(span.duration) > 60s` for queue processing.
 

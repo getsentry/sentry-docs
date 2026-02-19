@@ -6,7 +6,7 @@ description: "Practical guidance on what to log, how to search logs, and when to
 
 You've set up [Sentry Logs](/product/explore/logs/). Now what? This guide covers the high-value logging patterns that help you debug faster and catch problems before users report them.
 
-## The Pattern
+## Anatomy of a Log
 
 Every structured log follows the same format:
 
@@ -27,7 +27,9 @@ logger.<level>(message, attribute=value)
 using Sentry;
 SentrySdk.Logger.<Level>(message);
 ```
+
 Logs in Sentry are automatically trace-connected. Each log shows a trace ID that links to the full [trace view](/concepts/key-terms/tracing/#traces-to-trace-view).
+
 ```ruby {tabTitle: Ruby}
 Sentry.logger.<level>(message)
 ```
@@ -137,12 +139,14 @@ Start with these five areas and you'll catch most issues before users do.
 Login flows are invisible until something breaks. Log successes and failures to spot patterns like brute force attempts, OAuth misconfigurations, or MFA issues.
 
 ```javascript {tabTitle: JavaScript}
+// After successful authentication
 Sentry.logger.info("User logged in", {
   userId: user.id,
   authMethod: "oauth",
   provider: "google",
 });
 
+// After authentication fails
 Sentry.logger.warn("Login failed", {
   email: maskedEmail,
   reason: "invalid_password",
@@ -153,12 +157,14 @@ Sentry.logger.warn("Login failed", {
 ```python {tabTitle: Python}
 from sentry_sdk import logger as sentry_logger
 
+# After successful authentication
 sentry_logger.info("User logged in",
     user_id=user.id,
     auth_method="oauth",
     provider="google"
 )
 
+# After authentication fails
 sentry_logger.warning("Login failed",
     email=masked_email,
     reason="invalid_password",
@@ -167,12 +173,14 @@ sentry_logger.warning("Login failed",
 ```
 
 ```php {tabTitle: PHP}
+// After successful authentication
 \Sentry\logger()->info('User logged in', attributes: [
     'user_id' => $user->id,
     'auth_method' => 'oauth',
     'provider' => 'google',
 ]);
 
+// After authentication fails
 \Sentry\logger()->warn('Login failed', attributes: [
     'email' => $maskedEmail,
     'reason' => 'invalid_password',
@@ -181,11 +189,13 @@ sentry_logger.warning("Login failed",
 ```
 
 ```csharp {tabTitle: .NET}
+// After successful authentication
 SentrySdk.Logger.Info("User logged in", logger => logger
     .SetAttribute("userId", user.Id)
     .SetAttribute("authMethod", "oauth")
     .SetAttribute("provider", "google"));
 
+// After authentication fails
 SentrySdk.Logger.Warning("Login failed", logger => logger
     .SetAttribute("email", maskedEmail)
     .SetAttribute("reason", "invalid_password")
@@ -193,12 +203,14 @@ SentrySdk.Logger.Warning("Login failed", logger => logger
 ```
 
 ```ruby {tabTitle: Ruby}
+# After successful authentication
 Sentry.logger.info('User logged in',
   user_id: user.id,
   auth_method: 'oauth',
   provider: 'google'
 )
 
+# After authentication fails
 Sentry.logger.warn('Login failed',
   email: masked_email,
   reason: 'invalid_password',
@@ -207,12 +219,14 @@ Sentry.logger.warn('Login failed',
 ```
 
 ```dart {tabTitle: Flutter}
+// After successful authentication
 Sentry.logger.info('User logged in', attributes: {
   'userId': user.id,
   'authMethod': 'oauth',
   'provider': 'google',
 });
 
+// After authentication fails
 Sentry.logger.warn('Login failed', attributes: {
   'email': maskedEmail,
   'reason': 'invalid_password',
@@ -223,12 +237,14 @@ Sentry.logger.warn('Login failed', attributes: {
 ```swift {tabTitle: Swift}
 import Sentry
 
+// After successful authentication
 SentrySDK.logger.info("User logged in", attributes: [
     "userId": user.id,
     "authMethod": "oauth",
     "provider": "google"
 ])
 
+// After authentication fails
 SentrySDK.logger.warn("Login failed", attributes: [
     "email": maskedEmail,
     "reason": "invalid_password",
@@ -239,12 +255,14 @@ SentrySDK.logger.warn("Login failed", attributes: [
 ```kotlin {tabTitle: Kotlin}
 import io.sentry.Sentry
 
+// After successful authentication
 Sentry.logger().info("User logged in userId=%s authMethod=%s", user.id, "oauth")
 
+// After authentication fails
 Sentry.logger().warn("Login failed email=%s reason=%s", maskedEmail, "invalid_password")
 ```
 
-**Search in Sentry:** `userId:123 "logged in"` or `severity:warn authMethod:*`
+**Query in [Explore > Logs](https://sentry.io/orgredirect/organizations/:orgslug/explore/logs/):** `userId:123 "logged in"` or `severity:warn authMethod:*`
 
 **Alert idea:** Alert when `severity:warn "Login failed"` spikes in a 5-minute window—this can indicate brute force attempts or auth provider issues.
 
@@ -253,6 +271,7 @@ Sentry.logger().warn("Login failed email=%s reason=%s", maskedEmail, "invalid_pa
 Money paths need visibility even when they succeed. When payments fail, you need context fast.
 
 ```javascript {tabTitle: JavaScript}
+// After payment gateway returns an error
 Sentry.logger.error("Payment failed", {
   orderId: "order_123",
   amount: 99.99,
@@ -265,6 +284,7 @@ Sentry.logger.error("Payment failed", {
 ```python {tabTitle: Python}
 from sentry_sdk import logger as sentry_logger
 
+# After payment gateway returns an error
 sentry_logger.error("Payment failed",
     order_id="order_123",
     amount=99.99,
@@ -275,6 +295,7 @@ sentry_logger.error("Payment failed",
 ```
 
 ```php {tabTitle: PHP}
+// After payment gateway returns an error
 \Sentry\logger()->error('Payment failed', attributes: [
     'order_id' => 'order_123',
     'amount' => 99.99,
@@ -285,6 +306,7 @@ sentry_logger.error("Payment failed",
 ```
 
 ```csharp {tabTitle: .NET}
+// After payment gateway returns an error
 SentrySdk.Logger.Error("Payment failed", logger => logger
     .SetAttribute("orderId", "order_123")
     .SetAttribute("amount", 99.99)
@@ -294,6 +316,7 @@ SentrySdk.Logger.Error("Payment failed", logger => logger
 ```
 
 ```ruby {tabTitle: Ruby}
+# After payment gateway returns an error
 Sentry.logger.error('Payment failed',
   order_id: 'order_123',
   amount: 99.99,
@@ -304,6 +327,7 @@ Sentry.logger.error('Payment failed',
 ```
 
 ```dart {tabTitle: Flutter}
+// After payment gateway returns an error
 Sentry.logger.error('Payment failed', attributes: {
   'orderId': 'order_123',
   'amount': 99.99,
@@ -316,6 +340,7 @@ Sentry.logger.error('Payment failed', attributes: {
 ```swift {tabTitle: Swift}
 import Sentry
 
+// After payment gateway returns an error
 SentrySDK.logger.error("Payment failed", attributes: [
     "orderId": "order_123",
     "amount": 99.99,
@@ -328,11 +353,12 @@ SentrySDK.logger.error("Payment failed", attributes: [
 ```kotlin {tabTitle: Kotlin}
 import io.sentry.Sentry
 
+// After payment gateway returns an error
 Sentry.logger().error("Payment failed orderId=%s gateway=%s errorCode=%s",
     "order_123", "stripe", "card_declined")
 ```
 
-**Search in Sentry:** `orderId:order_123` or `severity:error gateway:stripe`
+**Query in [Explore > Logs](https://sentry.io/orgredirect/organizations/:orgslug/explore/logs/):** `orderId:order_123` or `severity:error gateway:stripe`
 
 **Alert idea:** Alert when `severity:error gateway:*` spikes—this can indicate payment provider outages.
 
@@ -498,7 +524,7 @@ Sentry.logger().info("Webhook received source=%s eventType=%s",
     "stripe", "payment_intent.succeeded")
 ```
 
-**Search in Sentry:** `service:shipping-provider durationMs:>2000` or `source:stripe`
+**Query in [Explore > Logs](https://sentry.io/orgredirect/organizations/:orgslug/explore/logs/):** `service:shipping-provider durationMs:>2000` or `source:stripe`
 
 **Alert idea:** Alert when `service:* durationMs:>3000` to catch third-party slowdowns before they cascade.
 
@@ -507,6 +533,7 @@ Sentry.logger().info("Webhook received source=%s eventType=%s",
 Jobs run outside the request context. Without logs, failed jobs are invisible until someone notices missing data.
 
 ```javascript {tabTitle: JavaScript}
+// Inside background job handler
 Sentry.logger.info("Job started", {
   jobType: "email-digest",
   jobId: "job_456",
@@ -524,6 +551,7 @@ Sentry.logger.error("Job failed", {
 ```python {tabTitle: Python}
 from sentry_sdk import logger as sentry_logger
 
+# Inside background job handler
 sentry_logger.info("Job started",
     job_type="email-digest",
     job_id="job_456",
@@ -539,6 +567,7 @@ sentry_logger.error("Job failed",
 ```
 
 ```php {tabTitle: PHP}
+// Inside background job handler
 \Sentry\logger()->info('Job started', attributes: [
     'job_type' => 'email-digest',
     'job_id' => 'job_456',
@@ -554,6 +583,7 @@ sentry_logger.error("Job failed",
 ```
 
 ```csharp {tabTitle: .NET}
+// Inside background job handler
 SentrySdk.Logger.Info("Job started", logger => logger
     .SetAttribute("jobType", "email-digest")
     .SetAttribute("jobId", "job_456")
@@ -567,6 +597,7 @@ SentrySdk.Logger.Error("Job failed", logger => logger
 ```
 
 ```ruby {tabTitle: Ruby}
+# Inside background job handler
 Sentry.logger.info('Job started',
   job_type: 'email-digest',
   job_id: 'job_456',
@@ -582,6 +613,7 @@ Sentry.logger.error('Job failed',
 ```
 
 ```dart {tabTitle: Flutter}
+// Inside background job handler
 Sentry.logger.info('Job started', attributes: {
   'jobType': 'email-digest',
   'jobId': 'job_456',
@@ -599,6 +631,7 @@ Sentry.logger.error('Job failed', attributes: {
 ```swift {tabTitle: Swift}
 import Sentry
 
+// Inside background job handler
 SentrySDK.logger.info("Job started", attributes: [
     "jobType": "email-digest",
     "jobId": "job_456",
@@ -616,6 +649,7 @@ SentrySDK.logger.error("Job failed", attributes: [
 ```kotlin {tabTitle: Kotlin}
 import io.sentry.Sentry
 
+// Inside background job handler
 Sentry.logger().info("Job started jobType=%s jobId=%s queue=%s",
     "email-digest", "job_456", "notifications")
 
@@ -623,7 +657,7 @@ Sentry.logger().error("Job failed jobType=%s jobId=%s retryCount=%d",
     "email-digest", "job_456", 3)
 ```
 
-**Search in Sentry:** `jobType:email-digest severity:error`
+**Query in [Explore > Logs](https://sentry.io/orgredirect/organizations/:orgslug/explore/logs/):** `jobType:email-digest severity:error`
 
 **Alert idea:** Alert when `severity:error jobType:*` spikes—this can indicate queue processing issues or downstream failures.
 
@@ -632,6 +666,7 @@ Sentry.logger().error("Job failed jobType=%s jobId=%s retryCount=%d",
 When something breaks after a deploy, the first question is "what changed?" Logging flag evaluations and config reloads gives you that answer instantly.
 
 ```javascript {tabTitle: JavaScript}
+// When feature flag is checked or config changes
 Sentry.logger.info("Feature flag evaluated", {
   flag: "new-checkout-flow",
   enabled: true,
@@ -647,6 +682,7 @@ Sentry.logger.warn("Config reloaded", {
 ```python {tabTitle: Python}
 from sentry_sdk import logger as sentry_logger
 
+# When feature flag is checked or config changes
 sentry_logger.info("Feature flag evaluated",
     flag="new-checkout-flow",
     enabled=True,
@@ -660,6 +696,7 @@ sentry_logger.warning("Config reloaded",
 ```
 
 ```php {tabTitle: PHP}
+// When feature flag is checked or config changes
 \Sentry\logger()->info('Feature flag evaluated', attributes: [
     'flag' => 'new-checkout-flow',
     'enabled' => true,
@@ -673,6 +710,7 @@ sentry_logger.warning("Config reloaded",
 ```
 
 ```csharp {tabTitle: .NET}
+// When feature flag is checked or config changes
 SentrySdk.Logger.Info("Feature flag evaluated", logger => logger
     .SetAttribute("flag", "new-checkout-flow")
     .SetAttribute("enabled", true)
@@ -684,6 +722,7 @@ SentrySdk.Logger.Warning("Config reloaded", logger => logger
 ```
 
 ```ruby {tabTitle: Ruby}
+# When feature flag is checked or config changes
 Sentry.logger.info('Feature flag evaluated',
   flag: 'new-checkout-flow',
   enabled: true,
@@ -697,6 +736,7 @@ Sentry.logger.warn('Config reloaded',
 ```
 
 ```dart {tabTitle: Flutter}
+// When feature flag is checked or config changes
 Sentry.logger.info('Feature flag evaluated', attributes: {
   'flag': 'new-checkout-flow',
   'enabled': true,
@@ -712,6 +752,7 @@ Sentry.logger.warn('Config reloaded', attributes: {
 ```swift {tabTitle: Swift}
 import Sentry
 
+// When feature flag is checked or config changes
 SentrySDK.logger.info("Feature flag evaluated", attributes: [
     "flag": "new-checkout-flow",
     "enabled": true,
@@ -727,13 +768,14 @@ SentrySDK.logger.warn("Config reloaded", attributes: [
 ```kotlin {tabTitle: Kotlin}
 import io.sentry.Sentry
 
+// When feature flag is checked or config changes
 Sentry.logger().info("Feature flag evaluated flag=%s enabled=%b userId=%s",
     "new-checkout-flow", true, user.id)
 
 Sentry.logger().warn("Config reloaded reason=%s", "env-change")
 ```
 
-**Search in Sentry:** `flag:new-checkout-flow` or `"Config reloaded"`
+**Query in [Explore > Logs](https://sentry.io/orgredirect/organizations/:orgslug/explore/logs/):** `flag:new-checkout-flow` or `"Config reloaded"`
 
 ## Creating Alerts From Logs
 
