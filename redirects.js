@@ -174,6 +174,10 @@ const developerDocsRedirects = [
     destination: '/sdk/processes/:path*',
   },
   {
+    source: '/sdk/processes/triaging/',
+    destination: '/sdk/getting-started/playbooks/',
+  },
+  {
     source: '/application/ab-testing/',
     destination: '/backend/ab-testing/',
   },
