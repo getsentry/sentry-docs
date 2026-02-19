@@ -62,9 +62,9 @@ function mdxComponentsForFrontMatter(frontMatter: Record<string, unknown>) {
       }))
     : undefined;
   if (changelog) {
-    specOverrides.SpecChangelog = function() {
-  return <SpecChangelog changelog={changelog} />
-};
+    specOverrides.SpecChangelog = function () {
+      return <SpecChangelog changelog={changelog} />;
+    };
   }
   if (frontMatter.spec_version) {
     const boundProps = {
@@ -76,9 +76,9 @@ function mdxComponentsForFrontMatter(frontMatter: Record<string, unknown>) {
         | 'stable'
         | 'deprecated',
     };
-    specOverrides.SpecMeta = function() {
-  return <SpecMeta {...boundProps} />
-};
+    specOverrides.SpecMeta = function () {
+      return <SpecMeta {...boundProps} />;
+    };
   }
   return mdxComponents(
     {Include, PlatformContent, ...specOverrides},
