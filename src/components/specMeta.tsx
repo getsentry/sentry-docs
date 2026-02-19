@@ -1,20 +1,12 @@
-type SpecStatus = 'proposal' | 'draft' | 'candidate' | 'stable' | 'deprecated';
+import {SPEC_STATUS_BADGE,type SpecStatus} from './specConstants';
 
 type SpecMetaProps = {
   status: SpecStatus;
   version: string;
 };
 
-const STATUS_BADGE: Record<SpecStatus, string> = {
-  proposal: 'bg-gray-100 text-gray-700',
-  draft: 'bg-yellow-100 text-yellow-800',
-  candidate: 'bg-blue-100 text-blue-800',
-  stable: 'bg-green-100 text-green-800',
-  deprecated: 'bg-red-100 text-red-800',
-};
-
 export function SpecMeta({version, status}: SpecMetaProps) {
-  const badgeClass = STATUS_BADGE[status];
+  const badgeClass = SPEC_STATUS_BADGE[status];
 
   return (
     <div className="not-prose mb-8 rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm dark:border-gray-700 dark:bg-gray-900">

@@ -12,6 +12,7 @@ import {Include} from 'sentry-docs/components/include';
 import {PageLoadMetrics} from 'sentry-docs/components/pageLoadMetrics';
 import {PlatformContent} from 'sentry-docs/components/platformContent';
 import {SpecChangelog} from 'sentry-docs/components/specChangelog';
+import type {SpecStatus} from 'sentry-docs/components/specConstants';
 import {SpecMeta} from 'sentry-docs/components/specMeta';
 import {
   DocNode,
@@ -69,12 +70,7 @@ function mdxComponentsForFrontMatter(frontMatter: Record<string, unknown>) {
   if (frontMatter.spec_version) {
     const boundProps = {
       version: String(frontMatter.spec_version),
-      status: frontMatter.spec_status as
-        | 'proposal'
-        | 'draft'
-        | 'candidate'
-        | 'stable'
-        | 'deprecated',
+      status: frontMatter.spec_status as SpecStatus,
     };
     specOverrides.SpecMeta = function () {
       return <SpecMeta {...boundProps} />;
