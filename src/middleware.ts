@@ -3415,8 +3415,16 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/ai/monitoring/agents/dashboard/',
   },
   {
+    from: '/product/insights/ai/',
+    to: '/ai/monitoring/',
+  },
+  {
     from: '/product/insights/ai/agents/',
     to: '/ai/monitoring/agents/',
+  },
+  {
+    from: '/product/insights/ai/agents/privacy/',
+    to: '/ai/monitoring/agents/privacy/',
   },
   {
     from: '/product/insights/ai/agents/dashboard/',
@@ -3437,6 +3445,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/product/insights/ai/mcp/getting-started/',
     to: '/ai/monitoring/mcp/getting-started/',
+  },
+  {
+    from: '/product/insights/ai/mcp/dashboard/',
+    to: '/ai/monitoring/mcp/dashboard/',
   },
   {
     from: '/product/sentry-mcp/',
