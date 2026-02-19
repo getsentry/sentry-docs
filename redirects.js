@@ -44,7 +44,11 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/basics/:path*',
-    destination: '/sdk/processes/basics/:path*',
+    destination: '/sdk/foundations/overview/',
+  },
+  {
+    source: '/sdk/processes/basics/:path*',
+    destination: '/sdk/foundations/overview/',
   },
   {
     source: '/sdk/data-handling/:path*',
@@ -172,6 +176,14 @@ const developerDocsRedirects = [
   {
     source: '/sdk/development-process/:path*',
     destination: '/sdk/processes/:path*',
+  },
+  {
+    source: '/sdk/processes/releases/',
+    destination: '/sdk/getting-started/playbooks/setting-up-release-infrastructure/',
+  },
+  {
+    source: '/sdk/processes/triaging/',
+    destination: '/sdk/getting-started/playbooks/',
   },
   {
     source: '/application/ab-testing/',
