@@ -66,8 +66,8 @@ function mdxComponentsForFrontMatter(frontMatter: Record<string, unknown>) {
   }
   if (frontMatter.spec_version) {
     const boundProps = {
-      version: frontMatter.spec_version,
-      status: frontMatter.spec_status,
+      version: String(frontMatter.spec_version),
+      status: frontMatter.spec_status as 'proposal' | 'draft' | 'candidate' | 'stable' | 'deprecated',
     };
     specOverrides.SpecMeta = () => <SpecMeta {...boundProps} />;
   }
