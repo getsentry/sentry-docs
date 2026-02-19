@@ -17,6 +17,10 @@ const productSidebarItems = [
     root: 'ai',
   },
   {
+    title: 'Guides',
+    root: 'guides',
+  },
+  {
     title: 'Account Settings',
     root: 'account',
   },

@@ -1,0 +1,636 @@
+---
+title: "What to Track"
+sidebar_order: 15
+description: "Practical guidance on what metrics to track, how to explore them, and when to set alerts."
+---
+
+You've set up [Sentry Metrics](/product/explore/metrics/). Now what? This guide covers the high-value metric patterns that give you visibility into application health and how to drill into traces when something looks off.
+
+## Anatomy of a Metric
+
+Sentry supports three metric types:
+
+| Type             | Method                          | Use For                                     |
+| ---------------- | ------------------------------- | ------------------------------------------- |
+| **Counter**      | `Sentry.metrics.count()`        | Events that happen (orders, clicks, errors) |
+| **Gauge**        | `Sentry.metrics.gauge()`        | Current state (queue depth, connections)    |
+| **Distribution** | `Sentry.metrics.distribution()` | Values that vary (latency, sizes, amounts)  |
+
+Every metric is trace-connected. When a metric spikes, click into samples to see the exact [trace](/concepts/key-terms/tracing/trace-view/) that produced it.
+
+```javascript {tabTitle: JavaScript}
+Sentry.metrics.count("checkout.failed", 1, {
+  attributes: {
+    user_tier: "premium",
+    failure_reason: "payment_declined",
+  },
+});
+```
+
+```python {tabTitle: Python}
+import sentry_sdk
+
+sentry_sdk.metrics.count("checkout.failed", 1, attributes={
+    "user_tier": "premium",
+    "failure_reason": "payment_declined"
+})
+```
+
+```php {tabTitle: PHP}
+\Sentry\traceMetrics()->count('checkout.failed', 1, [
+    'user_tier' => 'premium',
+    'failure_reason' => 'payment_declined',
+]);
+```
+
+```csharp {tabTitle: .NET}
+SentrySdk.Metrics.Counter("checkout.failed")
+    .Tag("user_tier", "premium")
+    .Tag("failure_reason", "payment_declined")
+    .Increment();
+```
+
+```ruby {tabTitle: Ruby}
+Sentry.metrics.count('checkout.failed', 1,
+  tags: { user_tier: 'premium', failure_reason: 'payment_declined' }
+)
+```
+
+```dart {tabTitle: Flutter}
+Sentry.metrics.count('checkout.failed', 1, attributes: {
+  'user_tier': 'premium',
+  'failure_reason': 'payment_declined',
+});
+```
+
+```swift {tabTitle: Swift}
+import Sentry
+
+SentrySDK.metrics.count(key: "checkout.failed", value: 1, attributes: [
+    "user_tier": "premium",
+    "failure_reason": "payment_declined"
+])
+```
+
+```kotlin {tabTitle: Kotlin}
+import io.sentry.Sentry
+
+Sentry.metrics().count("checkout.failed", 1.0)
+```
+
+## Where to Track Metrics
+
+Start with these five metrics and you'll spot issues before they become problems.
+
+### 1. Business Events
+
+Track discrete events that matter to the business. These become your KPIs.
+
+```javascript {tabTitle: JavaScript}
+Sentry.metrics.count("checkout.completed", 1, {
+  attributes: { user_tier: "premium", payment_method: "card" },
+});
+
+Sentry.metrics.count("checkout.failed", 1, {
+  attributes: { user_tier: "premium", failure_reason: "payment_declined" },
+});
+```
+
+```python {tabTitle: Python}
+import sentry_sdk
+
+sentry_sdk.metrics.count("checkout.completed", 1, attributes={
+    "user_tier": "premium", "payment_method": "card"
+})
+
+sentry_sdk.metrics.count("checkout.failed", 1, attributes={
+    "user_tier": "premium", "failure_reason": "payment_declined"
+})
+```
+
+```php {tabTitle: PHP}
+\Sentry\traceMetrics()->count('checkout.completed', 1, [
+    'user_tier' => 'premium', 'payment_method' => 'card'
+]);
+
+\Sentry\traceMetrics()->count('checkout.failed', 1, [
+    'user_tier' => 'premium', 'failure_reason' => 'payment_declined'
+]);
+```
+
+```csharp {tabTitle: .NET}
+SentrySdk.Metrics.Counter("checkout.completed")
+    .Tag("user_tier", "premium")
+    .Tag("payment_method", "card")
+    .Increment();
+
+SentrySdk.Metrics.Counter("checkout.failed")
+    .Tag("user_tier", "premium")
+    .Tag("failure_reason", "payment_declined")
+    .Increment();
+```
+
+```ruby {tabTitle: Ruby}
+Sentry.metrics.count('checkout.completed', 1,
+  tags: { user_tier: 'premium', payment_method: 'card' }
+)
+
+Sentry.metrics.count('checkout.failed', 1,
+  tags: { user_tier: 'premium', failure_reason: 'payment_declined' }
+)
+```
+
+```dart {tabTitle: Flutter}
+Sentry.metrics.count('checkout.completed', 1, attributes: {
+  'user_tier': 'premium',
+  'payment_method': 'card',
+});
+
+Sentry.metrics.count('checkout.failed', 1, attributes: {
+  'user_tier': 'premium',
+  'failure_reason': 'payment_declined',
+});
+```
+
+```swift {tabTitle: Swift}
+import Sentry
+
+SentrySDK.metrics.count(key: "checkout.completed", value: 1, attributes: [
+    "user_tier": "premium", "payment_method": "card"
+])
+
+SentrySDK.metrics.count(key: "checkout.failed", value: 1, attributes: [
+    "user_tier": "premium", "failure_reason": "payment_declined"
+])
+```
+
+```kotlin {tabTitle: Kotlin}
+import io.sentry.Sentry
+
+Sentry.metrics().count("checkout.completed", 1.0)
+Sentry.metrics().count("checkout.failed", 1.0)
+```
+
+**Explore in Sentry:**
+
+1. Go to [**Explore > Metrics**](https://sentry.io/orgredirect/organizations/:orgslug/explore/metrics/)
+2. Select `checkout.failed`, set **Aggregate** to `sum`
+3. **Group by** `failure_reason`
+4. Click **Samples** to see individual events and their traces
+
+### 2. Application Health
+
+Track success and failure of critical operations.
+
+```javascript {tabTitle: JavaScript}
+Sentry.metrics.count("email.sent", 1, {
+  attributes: { email_type: "welcome", provider: "sendgrid" },
+});
+
+Sentry.metrics.count("email.failed", 1, {
+  attributes: { email_type: "welcome", error: "rate_limited" },
+});
+
+Sentry.metrics.count("job.processed", 1, {
+  attributes: { job_type: "invoice-generation", queue: "billing" },
+});
+```
+
+```python {tabTitle: Python}
+import sentry_sdk
+
+sentry_sdk.metrics.count("email.sent", 1, attributes={
+    "email_type": "welcome", "provider": "sendgrid"
+})
+
+sentry_sdk.metrics.count("email.failed", 1, attributes={
+    "email_type": "welcome", "error": "rate_limited"
+})
+
+sentry_sdk.metrics.count("job.processed", 1, attributes={
+    "job_type": "invoice-generation", "queue": "billing"
+})
+```
+
+```php {tabTitle: PHP}
+\Sentry\traceMetrics()->count('email.sent', 1, [
+    'email_type' => 'welcome', 'provider' => 'sendgrid'
+]);
+
+\Sentry\traceMetrics()->count('email.failed', 1, [
+    'email_type' => 'welcome', 'error' => 'rate_limited'
+]);
+
+\Sentry\traceMetrics()->count('job.processed', 1, [
+    'job_type' => 'invoice-generation', 'queue' => 'billing'
+]);
+```
+
+```csharp {tabTitle: .NET}
+SentrySdk.Metrics.Counter("email.sent")
+    .Tag("email_type", "welcome")
+    .Tag("provider", "sendgrid")
+    .Increment();
+
+SentrySdk.Metrics.Counter("email.failed")
+    .Tag("email_type", "welcome")
+    .Tag("error", "rate_limited")
+    .Increment();
+
+SentrySdk.Metrics.Counter("job.processed")
+    .Tag("job_type", "invoice-generation")
+    .Tag("queue", "billing")
+    .Increment();
+```
+
+```ruby {tabTitle: Ruby}
+Sentry.metrics.count('email.sent', 1,
+  tags: { email_type: 'welcome', provider: 'sendgrid' }
+)
+
+Sentry.metrics.count('email.failed', 1,
+  tags: { email_type: 'welcome', error: 'rate_limited' }
+)
+
+Sentry.metrics.count('job.processed', 1,
+  tags: { job_type: 'invoice-generation', queue: 'billing' }
+)
+```
+
+```dart {tabTitle: Flutter}
+Sentry.metrics.count('email.sent', 1, attributes: {
+  'email_type': 'welcome',
+  'provider': 'sendgrid',
+});
+
+Sentry.metrics.count('email.failed', 1, attributes: {
+  'email_type': 'welcome',
+  'error': 'rate_limited',
+});
+
+Sentry.metrics.count('job.processed', 1, attributes: {
+  'job_type': 'invoice-generation',
+  'queue': 'billing',
+});
+```
+
+```swift {tabTitle: Swift}
+import Sentry
+
+SentrySDK.metrics.count(key: "email.sent", value: 1, attributes: [
+    "email_type": "welcome", "provider": "sendgrid"
+])
+
+SentrySDK.metrics.count(key: "email.failed", value: 1, attributes: [
+    "email_type": "welcome", "error": "rate_limited"
+])
+
+SentrySDK.metrics.count(key: "job.processed", value: 1, attributes: [
+    "job_type": "invoice-generation", "queue": "billing"
+])
+```
+
+```kotlin {tabTitle: Kotlin}
+import io.sentry.Sentry
+
+Sentry.metrics().count("email.sent", 1.0)
+Sentry.metrics().count("email.failed", 1.0)
+Sentry.metrics().count("job.processed", 1.0)
+```
+
+**Query in [Explore > Metrics](https://sentry.io/orgredirect/organizations/:orgslug/explore/metrics/):** Add both `email.sent` and `email.failed`, group by `email_type`, compare the ratio.
+
+### 3. Resource Utilization
+
+Track the current state of pools, queues, and connections. Call these periodically (e.g., every 30 seconds).
+
+```javascript {tabTitle: JavaScript}
+Sentry.metrics.gauge("queue.depth", await queue.size(), {
+  attributes: { queue_name: "notifications" },
+});
+
+Sentry.metrics.gauge("pool.connections_active", pool.activeConnections, {
+  attributes: { pool_name: "postgres-primary" },
+});
+```
+
+```python {tabTitle: Python}
+import sentry_sdk
+
+sentry_sdk.metrics.gauge("queue.depth", queue.size(), attributes={
+    "queue_name": "notifications"
+})
+
+sentry_sdk.metrics.gauge("pool.connections_active", pool.active_connections, attributes={
+    "pool_name": "postgres-primary"
+})
+```
+
+```php {tabTitle: PHP}
+use \Sentry\Metrics\Unit;
+
+\Sentry\traceMetrics()->gauge('queue.depth', $queue->size(), [
+    'queue_name' => 'notifications'
+]);
+
+\Sentry\traceMetrics()->gauge('pool.connections_active', $pool->activeConnections, [
+    'pool_name' => 'postgres-primary'
+]);
+```
+
+```csharp {tabTitle: .NET}
+SentrySdk.Metrics.Gauge("queue.depth")
+    .Tag("queue_name", "notifications")
+    .Set(queue.Size);
+
+SentrySdk.Metrics.Gauge("pool.connections_active")
+    .Tag("pool_name", "postgres-primary")
+    .Set(pool.ActiveConnections);
+```
+
+```ruby {tabTitle: Ruby}
+Sentry.metrics.gauge('queue.depth', queue.size,
+  tags: { queue_name: 'notifications' }
+)
+
+Sentry.metrics.gauge('pool.connections_active', pool.active_connections,
+  tags: { pool_name: 'postgres-primary' }
+)
+```
+
+```dart {tabTitle: Flutter}
+Sentry.metrics.gauge('queue.depth', queue.size.toDouble(), attributes: {
+  'queue_name': 'notifications',
+});
+
+Sentry.metrics.gauge('pool.connections_active', pool.activeConnections.toDouble(), attributes: {
+  'pool_name': 'postgres-primary',
+});
+```
+
+```swift {tabTitle: Swift}
+import Sentry
+
+SentrySDK.metrics.gauge(key: "queue.depth", value: Double(queue.size), attributes: [
+    "queue_name": "notifications"
+])
+
+SentrySDK.metrics.gauge(key: "pool.connections_active", value: Double(pool.activeConnections), attributes: [
+    "pool_name": "postgres-primary"
+])
+```
+
+```kotlin {tabTitle: Kotlin}
+import io.sentry.Sentry
+
+Sentry.metrics().gauge("queue.depth", queue.size.toDouble())
+Sentry.metrics().gauge("pool.connections_active", pool.activeConnections.toDouble())
+```
+
+**Query in [Explore > Metrics](https://sentry.io/orgredirect/organizations/:orgslug/explore/metrics/):** View `max(queue.depth)` over time to spot backlogs.
+
+### 4. Latency and Performance
+
+Track values that vary and need percentile analysis. **Tip:** averages can hide outliers, use p90/p95/p99 instead.
+
+```javascript {tabTitle: JavaScript}
+Sentry.metrics.distribution("api.latency", responseTimeMs, {
+  unit: "millisecond",
+  attributes: { endpoint: "/api/orders", method: "POST" },
+});
+
+Sentry.metrics.distribution("db.query_time", queryDurationMs, {
+  unit: "millisecond",
+  attributes: { table: "orders", operation: "select" },
+});
+```
+
+```python {tabTitle: Python}
+import sentry_sdk
+
+sentry_sdk.metrics.distribution("api.latency", response_time_ms,
+    unit="millisecond",
+    attributes={"endpoint": "/api/orders", "method": "POST"}
+)
+
+sentry_sdk.metrics.distribution("db.query_time", query_duration_ms,
+    unit="millisecond",
+    attributes={"table": "orders", "operation": "select"}
+)
+```
+
+```php {tabTitle: PHP}
+use \Sentry\Metrics\Unit;
+
+\Sentry\traceMetrics()->distribution('api.latency', $responseTimeMs,
+    ['endpoint' => '/api/orders', 'method' => 'POST'],
+    Unit::millisecond()
+);
+
+\Sentry\traceMetrics()->distribution('db.query_time', $queryDurationMs,
+    ['table' => 'orders', 'operation' => 'select'],
+    Unit::millisecond()
+);
+```
+
+```csharp {tabTitle: .NET}
+SentrySdk.Metrics.Distribution("api.latency", responseTimeMs,
+    unit: MeasurementUnit.Duration.Millisecond)
+    .Tag("endpoint", "/api/orders")
+    .Tag("method", "POST");
+
+SentrySdk.Metrics.Distribution("db.query_time", queryDurationMs,
+    unit: MeasurementUnit.Duration.Millisecond)
+    .Tag("table", "orders")
+    .Tag("operation", "select");
+```
+
+```ruby {tabTitle: Ruby}
+Sentry.metrics.distribution('api.latency', response_time_ms,
+  unit: 'millisecond',
+  tags: { endpoint: '/api/orders', method: 'POST' }
+)
+
+Sentry.metrics.distribution('db.query_time', query_duration_ms,
+  unit: 'millisecond',
+  tags: { table: 'orders', operation: 'select' }
+)
+```
+
+```dart {tabTitle: Flutter}
+Sentry.metrics.distribution('api.latency', responseTimeMs,
+  unit: SentryMeasurementUnit.duration(SentryDurationUnit.milliSecond),
+  attributes: {'endpoint': '/api/orders', 'method': 'POST'},
+);
+
+Sentry.metrics.distribution('db.query_time', queryDurationMs,
+  unit: SentryMeasurementUnit.duration(SentryDurationUnit.milliSecond),
+  attributes: {'table': 'orders', 'operation': 'select'},
+);
+```
+
+```swift {tabTitle: Swift}
+import Sentry
+
+SentrySDK.metrics.distribution(key: "api.latency", value: responseTimeMs,
+    unit: .millisecond,
+    attributes: ["endpoint": "/api/orders", "method": "POST"]
+)
+
+SentrySDK.metrics.distribution(key: "db.query_time", value: queryDurationMs,
+    unit: .millisecond,
+    attributes: ["table": "orders", "operation": "select"]
+)
+```
+
+```kotlin {tabTitle: Kotlin}
+import io.sentry.Sentry
+import io.sentry.metrics.MetricsUnit
+
+Sentry.metrics().distribution("api.latency", responseTimeMs,
+    MetricsUnit.Duration.MILLISECOND)
+
+Sentry.metrics().distribution("db.query_time", queryDurationMs,
+    MetricsUnit.Duration.MILLISECOND)
+```
+
+**Query in [Explore > Metrics](https://sentry.io/orgredirect/organizations/:orgslug/explore/metrics/):** View `p95(api.latency)` grouped by `endpoint` to find slow routes.
+
+### 5. Business Values
+
+Track amounts, sizes, and quantities for analysis.
+
+```javascript {tabTitle: JavaScript}
+Sentry.metrics.distribution("order.amount", order.totalUsd, {
+  unit: "usd",
+  attributes: { user_tier: "premium", region: "us-west" },
+});
+
+Sentry.metrics.distribution("upload.size", fileSizeBytes, {
+  unit: "byte",
+  attributes: { file_type: "image", source: "profile-update" },
+});
+```
+
+```python {tabTitle: Python}
+import sentry_sdk
+
+sentry_sdk.metrics.distribution("order.amount", order.total_usd,
+    unit="usd",
+    attributes={"user_tier": "premium", "region": "us-west"}
+)
+
+sentry_sdk.metrics.distribution("upload.size", file_size_bytes,
+    unit="byte",
+    attributes={"file_type": "image", "source": "profile-update"}
+)
+```
+
+```php {tabTitle: PHP}
+use \Sentry\Metrics\Unit;
+
+\Sentry\traceMetrics()->distribution('order.amount', $order->totalUsd,
+    ['user_tier' => 'premium', 'region' => 'us-west'],
+    Unit::custom('usd')
+);
+
+\Sentry\traceMetrics()->distribution('upload.size', $fileSizeBytes,
+    ['file_type' => 'image', 'source' => 'profile-update'],
+    Unit::byte()
+);
+```
+
+```csharp {tabTitle: .NET}
+SentrySdk.Metrics.Distribution("order.amount", order.TotalUsd,
+    unit: MeasurementUnit.Custom("usd"))
+    .Tag("user_tier", "premium")
+    .Tag("region", "us-west");
+
+SentrySdk.Metrics.Distribution("upload.size", fileSizeBytes,
+    unit: MeasurementUnit.Information.Byte)
+    .Tag("file_type", "image")
+    .Tag("source", "profile-update");
+```
+
+```ruby {tabTitle: Ruby}
+Sentry.metrics.distribution('order.amount', order.total_usd,
+  unit: 'usd',
+  tags: { user_tier: 'premium', region: 'us-west' }
+)
+
+Sentry.metrics.distribution('upload.size', file_size_bytes,
+  unit: 'byte',
+  tags: { file_type: 'image', source: 'profile-update' }
+)
+```
+
+```dart {tabTitle: Flutter}
+Sentry.metrics.distribution('order.amount', order.totalUsd,
+  unit: SentryMeasurementUnit.custom('usd'),
+  attributes: {'user_tier': 'premium', 'region': 'us-west'},
+);
+
+Sentry.metrics.distribution('upload.size', fileSizeBytes.toDouble(),
+  unit: SentryMeasurementUnit.information(SentryInformationUnit.byte),
+  attributes: {'file_type': 'image', 'source': 'profile-update'},
+);
+```
+
+```swift {tabTitle: Swift}
+import Sentry
+
+SentrySDK.metrics.distribution(key: "order.amount", value: order.totalUsd,
+    unit: .generic("usd"),
+    attributes: ["user_tier": "premium", "region": "us-west"]
+)
+
+SentrySDK.metrics.distribution(key: "upload.size", value: Double(fileSizeBytes),
+    unit: .byte,
+    attributes: ["file_type": "image", "source": "profile-update"]
+)
+```
+
+```kotlin {tabTitle: Kotlin}
+import io.sentry.Sentry
+import io.sentry.metrics.MetricsUnit
+
+Sentry.metrics().distribution("order.amount", order.totalUsd)
+
+Sentry.metrics().distribution("upload.size", fileSizeBytes.toDouble(),
+    MetricsUnit.Information.BYTE)
+```
+
+**Query in [Explore > Metrics](https://sentry.io/orgredirect/organizations/:orgslug/explore/metrics/):** View `avg(order.amount)` grouped by `region` to compare regional performance.
+
+## Alerts and Dashboard Widgets
+
+<Alert level="info">
+  Alerts and dashboard widgets for Metrics are coming soon.
+</Alert>
+
+You'll soon be able to:
+
+- Create alert rules based on metric queries
+- Add metric visualizations to dashboards
+- Set up notifications when metrics cross thresholds
+- Save common queries for quick access
+
+## Quick Reference
+
+| Category             | Type         | Method           | Example Attributes                        |
+| -------------------- | ------------ | ---------------- | ----------------------------------------- |
+| Business events      | Counter      | `count()`        | user_tier, payment_method, failure_reason |
+| Application health   | Counter      | `count()`        | email_type, provider, job_type, queue     |
+| Resource utilization | Gauge        | `gauge()`        | queue_name, pool_name                     |
+| Latency/performance  | Distribution | `distribution()` | endpoint, method, table, operation        |
+| Business values      | Distribution | `distribution()` | user_tier, region, file_type              |
+
+## When to Use Metrics vs Traces vs Logs
+
+| Signal      | Best For                              | Example Question                         |
+| ----------- | ------------------------------------- | ---------------------------------------- |
+| **Metrics** | Aggregated counts, rates, percentiles | "How many checkouts failed this hour?"   |
+| **Traces**  | Request flow, latency breakdown       | "Why was this specific request slow?"    |
+| **Logs**    | Detailed context, debugging           | "What happened right before this error?" |
+
+All three are trace-connected. Start wherever makes sense and navigate to the others.
