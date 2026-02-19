@@ -728,18 +728,16 @@ async function createWork() {
   // Skip pages whose MDX override sets append_sections: false.
   const hasR2 = !!(accessKeyId && secretAccessKey && existingFilesOnR2);
   let updatedCount = 0;
-  // Use a Map so later writes (e.g. description injection) replace earlier
-  // entries (e.g. child section append) for the same key, avoiding stale uploads.
+  // Always store the latest content per key. Hash comparison happens at upload
+  // time so that later writes (description injection) always overwrite earlier
+  // entries (child section append) even when the final content matches R2.
   const r2Uploads = new Map();
 
   function collectR2Upload(key, data) {
     if (!hasR2) {
       return;
     }
-    const fileHash = md5(data);
-    if (existingFilesOnR2.get(key) !== fileHash) {
-      r2Uploads.set(key, data);
-    }
+    r2Uploads.set(key, data);
   }
 
   for (const [parentPath, children] of pathsByParent) {
@@ -809,11 +807,10 @@ async function createWork() {
       navLinks.push(`Full documentation index: ${DOCS_ORIGIN}/`);
     }
     // Guide pages get a link back to their platform index
-    const parts = relativePath.replace(/\.md$/, '').split('/');
-    if (parts[0] === 'platforms' && parts.includes('guides') && parts.length >= 4) {
-      const platformNode = docTree ? findNode(docTree, ['platforms', parts[1]]) : null;
-      const platformName = platformNode ? getTitle(platformNode) : parts[1];
-      navLinks.push(`${platformName} SDK docs: ${DOCS_ORIGIN}/platforms/${parts[1]}/`);
+    if (pathParts[0] === 'platforms' && pathParts.includes('guides') && pathParts.length >= 4) {
+      const platformNode = docTree ? findNode(docTree, ['platforms', pathParts[1]]) : null;
+      const platformName = platformNode ? getTitle(platformNode) : pathParts[1];
+      navLinks.push(`${platformName} SDK docs: ${DOCS_ORIGIN}/platforms/${pathParts[1]}/`);
     }
     const injected = injectDescription(content, description, {navLinks});
     if (injected === content) {
@@ -827,14 +824,19 @@ async function createWork() {
     console.log(`📝 Injected descriptions into ${descriptionCount} markdown files`);
   }
 
-  // Upload all modified files to R2 in parallel
+  // Upload modified files to R2, skipping those whose hash already matches
   if (r2Uploads.size > 0) {
-    const limit = pLimit(50);
-    const s3Client = getS3Client();
-    await Promise.all(
-      [...r2Uploads].map(([key, data]) => limit(() => uploadToCFR2(s3Client, key, data)))
+    const toUpload = [...r2Uploads].filter(
+      ([key, data]) => existingFilesOnR2.get(key) !== md5(data)
     );
-    console.log(`📤 Uploaded ${r2Uploads.size} modified files to R2`);
+    if (toUpload.length > 0) {
+      const limit = pLimit(50);
+      const s3Client = getS3Client();
+      await Promise.all(
+        toUpload.map(([key, data]) => limit(() => uploadToCFR2(s3Client, key, data)))
+      );
+      console.log(`📤 Uploaded ${toUpload.length} modified files to R2`);
+    }
   }
 
   // Clean up unused cache files to prevent unbounded growth
