@@ -303,7 +303,9 @@ function injectDescription(markdown, description, {navLinks = []} = {}) {
   if (navLinks.length > 0) {
     suffix += '\n' + navLinks.map(link => `*${link}*`).join('\n') + '\n';
   }
-  return markdown.replace(/^(# .+)$/m, `$1${suffix}`);
+  // Use a replacer function to avoid $ in descriptions being interpreted as
+  // special regex replacement patterns (e.g. $1, $&, $')
+  return markdown.replace(/^(# .+)$/m, match => match + suffix);
 }
 
 // --- MDX template rendering for full-page overrides ---
@@ -726,7 +728,9 @@ async function createWork() {
   // Skip pages whose MDX override sets append_sections: false.
   const hasR2 = !!(accessKeyId && secretAccessKey && existingFilesOnR2);
   let updatedCount = 0;
-  const r2Uploads = [];
+  // Use a Map so later writes (e.g. description injection) replace earlier
+  // entries (e.g. child section append) for the same key, avoiding stale uploads.
+  const r2Uploads = new Map();
 
   function collectR2Upload(key, data) {
     if (!hasR2) {
@@ -734,7 +738,7 @@ async function createWork() {
     }
     const fileHash = md5(data);
     if (existingFilesOnR2.get(key) !== fileHash) {
-      r2Uploads.push({key, data});
+      r2Uploads.set(key, data);
     }
   }
 
@@ -824,13 +828,13 @@ async function createWork() {
   }
 
   // Upload all modified files to R2 in parallel
-  if (r2Uploads.length > 0) {
+  if (r2Uploads.size > 0) {
     const limit = pLimit(50);
     const s3Client = getS3Client();
     await Promise.all(
-      r2Uploads.map(({key, data}) => limit(() => uploadToCFR2(s3Client, key, data)))
+      [...r2Uploads].map(([key, data]) => limit(() => uploadToCFR2(s3Client, key, data)))
     );
-    console.log(`📤 Uploaded ${r2Uploads.length} modified files to R2`);
+    console.log(`📤 Uploaded ${r2Uploads.size} modified files to R2`);
   }
 
   // Clean up unused cache files to prevent unbounded growth
