@@ -54,7 +54,9 @@ function mdxComponentsForFrontMatter(frontMatter: Record<string, unknown>) {
   const specOverrides: Record<string, unknown> = {};
   const changelog = Array.isArray(frontMatter.spec_changelog)
     ? (frontMatter.spec_changelog as Array<Record<string, unknown>>)
-        .filter(entry => entry.version != null && entry.date != null && entry.summary != null)
+        .filter(
+          entry => entry.version != null && entry.date != null && entry.summary != null
+        )
         .map(entry => ({
           version: String(entry.version),
           date:
