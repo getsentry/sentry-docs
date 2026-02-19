@@ -25,6 +25,7 @@ import {GuideGrid} from './components/guideGrid';
 import {IntegrationListItem} from './components/integrationLink';
 import {JsBundleList} from './components/jsBundleList';
 import {LambdaLayerDetail} from './components/lambdaLayerDetail';
+import {LinkCard, LinkCardGrid} from './components/linkCard';
 import {LinkWithPlatformIcon} from './components/linkWithPlatformIcon';
 import {LLMSteering} from './components/llmSteering';
 import {
@@ -139,6 +140,8 @@ export function mdxComponents(
     a: SmartLink,
     img: DocImage,
     ...dynamicComponents,
+    LinkCard,
+    LinkCardGrid,
     wrapper,
   };
 }
