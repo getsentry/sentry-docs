@@ -13,9 +13,15 @@ type SpecSectionProps = {
 const STATUS_CONFIG: Record<SpecStatus, {borderColor: string; label: string}> = {
   proposal: {label: 'Proposal', borderColor: 'border-l-gray-400 dark:border-l-gray-500'},
   draft: {label: 'Draft', borderColor: 'border-l-yellow-400 dark:border-l-yellow-500'},
-  candidate: {label: 'Candidate', borderColor: 'border-l-blue-400 dark:border-l-blue-500'},
+  candidate: {
+    label: 'Candidate',
+    borderColor: 'border-l-blue-400 dark:border-l-blue-500',
+  },
   stable: {label: 'Stable', borderColor: 'border-l-green-400 dark:border-l-green-500'},
-  deprecated: {label: 'Deprecated', borderColor: 'border-l-red-400 dark:border-l-red-500'},
+  deprecated: {
+    label: 'Deprecated',
+    borderColor: 'border-l-red-400 dark:border-l-red-500',
+  },
 };
 
 export function SpecSection({
