@@ -211,6 +211,8 @@ to="/sdk/telemetry/attributes/#units">units we support</Link>.
   - `attributes` **Object, optional**: A dictionary of attributes (key-value pairs with type information)
   - `scope` **Scope, optional**: The scope to capture the metric with.
 
+The Hub/Scope MUST offer the same methods as the static API `Sentry.metrics.X`, which is useful for power users who want to use multiple Hubs/Scopes. The Client SHOULD only offer one generic method that accepts the metric object and the Scope, such as `captureMetric(metric, scope)`.
+
 Below are some example SDK implementations to get you started. These are not finalized versions of the API and individual SDK authors should ensure the metrics APIs best fit their platforms.
 
 #### JavaScript
@@ -352,6 +354,8 @@ In general metric processing should follow this order:
 
 1. Capture metric via [Public APIs](#metrics-module) (e.g. `Sentry.metrics.increment`).
 1. Check if metrics are disabled as per `enableMetrics`/`enable_metrics` configuration - if so, skip the rest of the steps.
+1. Pass the metric to Hub/Scope, which MUST offer the same methods as the static API `Sentry.metrics.X`. This is useful for power users who want to use multiple Hubs/Scopes.
+1. Pass the metric to the Client, via a generic method that accepts the metric object and the `scope`, such as `captureMetric(metric, scope)`.
 1. Process captured metric (attach default attributes as per [default attributes](#default-attributes)).
 1. Run `beforeSendMetric`/`before_send_metric` to filter or modify the metric.
 1. Add metric to buffer/batch processor as detailed in [buffering](#buffering).
