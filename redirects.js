@@ -27,6 +27,10 @@ const developerDocsRedirects = [
     destination: '/sdk/telemetry/traces/:path*',
   },
   {
+    source: '/sdk/telemetry/scopes/',
+    destination: '/sdk/foundations/data-model/scopes/',
+  },
+  {
     source: '/sdk/data-model/event-payloads/types/',
     destination: '/sdk/foundations/data-model/event-payloads/',
   },
@@ -56,7 +60,15 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/envelopes/:path*',
-    destination: '/sdk/data-model/envelopes/:path*',
+    destination: '/sdk/foundations/data-model/envelopes/:path*',
+  },
+  {
+    source: '/sdk/foundations/transport/envelopes/',
+    destination: '/sdk/foundations/data-model/envelopes/',
+  },
+  {
+    source: '/sdk/foundations/transport/envelope-items/',
+    destination: '/sdk/foundations/data-model/envelope-items/',
   },
   {
     source: '/sdk/event-payloads/:path*',
@@ -84,31 +96,50 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/telemetry/spans/batch-processor/',
-    destination: '/sdk/telemetry/telemetry-processor/batch-processor/',
+    destination: '/sdk/foundations/processing/batch-processor/',
   },
   {
     source: '/sdk/telemetry/telemetry-buffer/',
-    destination: '/sdk/telemetry/telemetry-processor/',
+    destination: '/sdk/foundations/processing/telemetry-processor/',
   },
   {
     source: '/sdk/telemetry/telemetry-buffer/backend-telemetry-buffer/',
-    destination: '/sdk/telemetry/telemetry-processor/backend-telemetry-processor/',
+    destination:
+      '/sdk/foundations/processing/telemetry-processor/backend-telemetry-processor/',
   },
   {
     source: '/sdk/telemetry/telemetry-buffer/browser-telemetry-buffer/',
-    destination: '/sdk/telemetry/telemetry-processor/browser-telemetry-processor/',
+    destination: '/sdk/foundations/processing/telemetry-processor/',
   },
   {
     source: '/sdk/telemetry/telemetry-buffer/gdx-telemetry-buffer/',
-    destination: '/sdk/telemetry/telemetry-processor/gdx-telemetry-processor/',
+    destination: '/sdk/foundations/processing/telemetry-processor/',
+  },
+  {
+    source:
+      '/sdk/foundations/processing/telemetry-processor/browser-telemetry-processor/',
+    destination: '/sdk/foundations/processing/telemetry-processor/',
+  },
+  {
+    source: '/sdk/foundations/processing/telemetry-processor/gdx-telemetry-processor/',
+    destination: '/sdk/foundations/processing/telemetry-processor/',
   },
   {
     source: '/sdk/telemetry/telemetry-buffer/mobile-telemetry-buffer/',
-    destination: '/sdk/telemetry/telemetry-processor/mobile-telemetry-processor/',
+    destination:
+      '/sdk/foundations/processing/telemetry-processor/mobile-telemetry-processor/',
   },
   {
     source: '/sdk/telemetry/telemetry-buffer/batch-processor/',
-    destination: '/sdk/telemetry/telemetry-processor/batch-processor/',
+    destination: '/sdk/foundations/processing/batch-processor/',
+  },
+  {
+    source: '/sdk/foundations/processing/telemetry-processor/batch-processor/',
+    destination: '/sdk/foundations/processing/batch-processor/',
+  },
+  {
+    source: '/sdk/telemetry/telemetry-processor/:path*',
+    destination: '/sdk/foundations/processing/telemetry-processor/:path*',
   },
   {
     source: '/sdk/setup-wizards/:path*',
