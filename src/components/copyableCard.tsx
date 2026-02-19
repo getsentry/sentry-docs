@@ -6,6 +6,63 @@ import {Clipboard} from 'react-feather';
 
 import Chevron from 'sentry-docs/icons/Chevron';
 
+/**
+ * Converts a DOM tree back to markdown so that copied saved replies
+ * preserve formatting (checkboxes, bold, links, lists) when pasted
+ * into GitHub's markdown editor.
+ */
+function domToMarkdown(node: Node): string {
+  if (node.nodeType === Node.TEXT_NODE) {
+    return node.textContent ?? '';
+  }
+
+  if (node.nodeType !== Node.ELEMENT_NODE) {
+    return '';
+  }
+
+  const el = node as HTMLElement;
+  const tag = el.tagName.toLowerCase();
+
+  // Self-closing / special elements
+  if (tag === 'br') {
+    return '\n';
+  }
+  if (tag === 'input' && el.getAttribute('type') === 'checkbox') {
+    return (el as HTMLInputElement).checked ? '[x] ' : '[ ] ';
+  }
+
+  const childText = Array.from(el.childNodes).map(domToMarkdown).join('');
+
+  switch (tag) {
+    case 'strong':
+    case 'b':
+      return `**${childText}**`;
+    case 'em':
+    case 'i':
+      return `*${childText}*`;
+    case 'a':
+      return `[${childText}](${el.getAttribute('href') ?? ''})`;
+    case 'p':
+      return `${childText}\n\n`;
+    case 'li': {
+      const parent = el.parentElement;
+      if (parent?.tagName.toLowerCase() === 'ol') {
+        const index =
+          Array.from(parent.children).indexOf(el as HTMLLIElement) + 1;
+        return `${index}. ${childText}\n`;
+      }
+      return `- ${childText}\n`;
+    }
+    case 'ul':
+    case 'ol':
+      return `${childText}\n`;
+    case 'code':
+      return `\`${childText}\``;
+    default:
+      return childText;
+  }
+}
+
 interface CopyableCardProps {
   children: React.ReactNode;
   title: string;
@@ -68,7 +125,10 @@ export function CopyableCard({title, children}: CopyableCardProps) {
     'w-full p-2 px-3 text-left text-sm bg-transparent border-none rounded-md transition-colors hover:bg-gray-100 dark:hover:bg-[var(--gray-a4)] font-sans text-gray-900 dark:text-[var(--foreground)] cursor-pointer';
 
   function getBodyText(): string {
-    return contentRef.current?.innerText?.trim() ?? '';
+    if (!contentRef.current) {
+      return '';
+    }
+    return domToMarkdown(contentRef.current).trim();
   }
 
   const getButtonLabel = () => {
