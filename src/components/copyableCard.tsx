@@ -47,8 +47,7 @@ function domToMarkdown(node: Node): string {
     case 'li': {
       const parent = el.parentElement;
       if (parent?.tagName.toLowerCase() === 'ol') {
-        const index =
-          Array.from(parent.children).indexOf(el as HTMLLIElement) + 1;
+        const index = Array.from(parent.children).indexOf(el as HTMLLIElement) + 1;
         return `${index}. ${childText}\n`;
       }
       return `- ${childText}\n`;
