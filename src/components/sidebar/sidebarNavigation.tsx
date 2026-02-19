@@ -13,6 +13,10 @@ import {docNodeToNavNode, getNavNodes} from './utils';
 // todo: we should probably get rid of this
 const productSidebarItems = [
   {
+    title: 'Sentry for AI',
+    root: 'ai',
+  },
+  {
     title: 'Guides',
     root: 'guides',
   },
