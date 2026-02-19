@@ -1,4 +1,16 @@
-export type SpecStatus = 'proposal' | 'draft' | 'candidate' | 'stable' | 'deprecated';
+export const SPEC_STATUSES = [
+  'proposal',
+  'draft',
+  'candidate',
+  'stable',
+  'deprecated',
+] as const;
+
+export type SpecStatus = (typeof SPEC_STATUSES)[number];
+
+export function isSpecStatus(value: unknown): value is SpecStatus {
+  return typeof value === 'string' && SPEC_STATUSES.includes(value as SpecStatus);
+}
 
 export const SPEC_STATUS_BADGE: Record<SpecStatus, string> = {
   proposal: 'bg-gray-100 text-gray-700',
