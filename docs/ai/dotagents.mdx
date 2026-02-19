@@ -1,0 +1,192 @@
+---
+title: dotagents
+sidebar_order: 15
+beta: true
+description: >-
+  A package manager for .agents directories. Declare agent skill dependencies
+  in agents.toml, lock versions for reproducibility, and share skills across
+  your team.
+keywords:
+  - dotagents
+  - agent skills
+  - package manager
+  - agents.toml
+  - Claude Code
+  - Cursor
+  - Codex
+  - VS Code
+  - OpenCode
+  - MCP
+  - reproducible
+---
+
+<Alert>
+  dotagents is currently in beta. The project is in an early exploration phase
+  and changes should be expected. Please share feedback on
+  [GitHub](https://github.com/getsentry/dotagents/issues).
+</Alert>
+
+[dotagents](https://github.com/getsentry/dotagents) is a package manager for `.agents` directories. It lets you declare agent skill dependencies in `agents.toml`, lock versions for reproducibility, and ensure every tool on your team discovers skills from a single place.
+
+## Why dotagents?
+
+Without a package manager, agent skills end up copy-pasted between directories, versions drift across team members, and onboarding new tools requires manual setup. dotagents solves this:
+
+- **One source of truth.** Skills live in `.agents/skills/` and symlink into `.claude/skills/`, `.cursor/skills/`, or wherever your tools expect them.
+- **Reproducible.** `agents.lock` pins exact commits and integrity hashes. Running `npx @sentry/dotagents install --frozen` in CI guarantees everyone uses the same skills.
+- **Shareable.** Skills are directories with a `SKILL.md`. Host them in any git repo, discover them automatically, and install with one command.
+
+## Quick Start
+
+<StepComponent>
+
+### Initialize a New Project
+
+Run `init` in your project root to create an `agents.toml` and the `.agents/skills/` directory:
+
+```bash
+npx @sentry/dotagents init
+```
+
+### Add a Skill
+
+Add a skill from a GitHub repository. The `--name` flag selects a specific skill from the repo:
+
+```bash
+npx @sentry/dotagents add getsentry/skills --name find-bugs
+```
+
+### Install All Skills
+
+Install every skill declared in `agents.toml`:
+
+```bash
+npx @sentry/dotagents install
+```
+
+</StepComponent>
+
+This creates an `agents.toml` at your project root:
+
+```toml {filename:agents.toml}
+version = 1
+gitignore = false
+agents = ["claude"]
+
+[[skills]]
+name = "find-bugs"
+source = "getsentry/skills"
+```
+
+And a lockfile (`agents.lock`) that pins the exact commit and SHA-256 integrity hash for each skill.
+
+## Commands
+
+| Command         | Description                                     |
+| --------------- | ----------------------------------------------- |
+| `init`          | Create `agents.toml` and `.agents/skills/`      |
+| `add <source>`  | Add a skill dependency                          |
+| `remove <name>` | Remove a skill                                  |
+| `install`       | Install all dependencies from `agents.toml`     |
+| `update [name]` | Update skills to latest versions                |
+| `list`          | Show installed skills and their status          |
+| `sync`          | Reconcile gitignore, symlinks, and verify state |
+
+## Source Formats
+
+Skills can come from GitHub repos, pinned refs, non-GitHub git hosts, or local paths:
+
+```toml {filename:agents.toml}
+[[skills]]
+name = "find-bugs"
+source = "getsentry/skills"              # GitHub repo (auto-discover)
+
+[[skills]]
+name = "review"
+source = "getsentry/skills@v1.0.0"       # Pinned to a ref
+
+[[skills]]
+name = "internal"
+source = "git:https://git.corp.dev/repo"  # Non-GitHub git
+
+[[skills]]
+name = "local"
+source = "path:./my-skills/local-skill"   # Local directory
+```
+
+## Agent Targets
+
+The `agents` field controls which tools dotagents configures. It handles skill symlinks, MCP config files, and hook config files for each agent:
+
+```toml {filename:agents.toml}
+agents = ["claude", "cursor"]
+```
+
+Supported agents: `claude`, `cursor`, `codex`, `vscode`, `opencode`.
+
+## MCP Servers
+
+Declare MCP servers once in `agents.toml` and dotagents generates the correct config file for each agent during `install` and `sync`:
+
+```toml {filename:agents.toml}
+agents = ["claude", "cursor"]
+
+# Stdio transport
+[[mcp]]
+name = "github"
+command = "npx"
+args = ["-y", "@modelcontextprotocol/server-github"]
+env = ["GITHUB_TOKEN"]
+
+# HTTP transport
+[[mcp]]
+name = "remote-api"
+url = "https://mcp.example.com/sse"
+headers = { Authorization = "Bearer tok" }
+```
+
+Each server uses either `command` (stdio) or `url` (HTTP), not both. The `env` field lists environment variable names to pass through from the user's environment.
+
+## Hooks
+
+Declare hooks once in `agents.toml` and dotagents writes the correct hook config for each agent that supports them:
+
+```toml {filename:agents.toml}
+agents = ["claude"]
+
+[[hooks]]
+event = "PreToolUse"
+matcher = "Bash"
+command = "my-lint-check"
+
+[[hooks]]
+event = "Stop"
+command = "notify-done"
+```
+
+| Field     | Required | Description                                                |
+| --------- | :------: | ---------------------------------------------------------- |
+| `event`   |   Yes    | `PreToolUse`, `PostToolUse`, `UserPromptSubmit`, or `Stop` |
+| `matcher` |    No    | Filter to specific tool names (e.g., `Bash`, `Write`)      |
+| `command` |   Yes    | Shell command to run when the hook fires                   |
+
+## How It Works
+
+1. Skills are declared in `agents.toml` at the project root.
+2. `install` clones repos, discovers skills by convention, and copies them into `.agents/skills/`.
+3. `agents.lock` records the resolved commit and a SHA-256 integrity hash.
+4. By default (`gitignore = false`), skills are checked into git so collaborators get them immediately. Set `gitignore = true` to exclude managed skills instead.
+5. Symlinks connect `.agents/skills/` to wherever your tools look (configured via the `agents` field).
+6. MCP and hook configs are generated for each declared agent.
+
+## Checking In Skills
+
+By default, `init` sets `gitignore = false` so installed skills are committed to git. Anyone cloning the repo gets skills immediately — they only need dotagents when adding or updating skills.
+
+To gitignore managed skills instead (collaborators must run `install`), set `gitignore = true` in `agents.toml`.
+
+## Learn More
+
+- [dotagents on GitHub](https://github.com/getsentry/dotagents)
+- [Agent Skills](/ai/agent-skills/)
+- [Sentry MCP Server](/ai/mcp/)
