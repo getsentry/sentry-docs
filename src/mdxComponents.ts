@@ -52,6 +52,10 @@ import {SdkApi} from './components/sdkApi';
 import {SdkOption} from './components/sdkOption';
 import {SignInNote} from './components/signInNote';
 import {SmartLink} from './components/smartLink';
+import {SpecChangelog} from './components/specChangelog';
+import {SpecMeta} from './components/specMeta';
+import {SpecRfcAlert} from './components/specRfcAlert';
+import {SpecSection} from './components/specSection';
 import {
   SplitLayout,
   SplitSection,
@@ -120,6 +124,10 @@ export function mdxComponents(
     SandboxLink,
     CopyableCard,
     SignInNote,
+    SpecChangelog,
+    SpecMeta,
+    SpecRfcAlert,
+    SpecSection,
     SplitLayout,
     SplitSection,
     SplitSectionText,
