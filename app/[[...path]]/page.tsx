@@ -11,6 +11,8 @@ import {Home} from 'sentry-docs/components/home';
 import {Include} from 'sentry-docs/components/include';
 import {PageLoadMetrics} from 'sentry-docs/components/pageLoadMetrics';
 import {PlatformContent} from 'sentry-docs/components/platformContent';
+import {SpecChangelog} from 'sentry-docs/components/specChangelog';
+import {SpecMeta} from 'sentry-docs/components/specMeta';
 import {
   DocNode,
   getCurrentPlatformOrGuide,
@@ -47,23 +49,50 @@ export async function generateStaticParams() {
 export const dynamicParams = false;
 export const dynamic = 'force-static';
 
-const mdxComponentsWithWrapper = mdxComponents(
-  {Include, PlatformContent},
-  ({children, frontMatter, nextPage, previousPage}) => (
-    <DocPage
-      frontMatter={frontMatter}
-      nextPage={nextPage}
-      previousPage={previousPage}
-      fullWidth={frontMatter.fullWidth}
-    >
-      {children}
-    </DocPage>
-  )
-);
+function mdxComponentsForFrontMatter(frontMatter: Record<string, unknown>) {
+  const specOverrides: Record<string, unknown> = {};
+  const changelog = Array.isArray(frontMatter.spec_changelog)
+    ? (frontMatter.spec_changelog as Array<Record<string, unknown>>).map(entry => ({
+        version: String(entry.version),
+        date:
+          entry.date instanceof Date
+            ? entry.date.toISOString().split('T')[0]
+            : String(entry.date),
+        summary: String(entry.summary),
+      }))
+    : undefined;
+  if (changelog) {
+    specOverrides.SpecChangelog = () => <SpecChangelog changelog={changelog} />;
+  }
+  if (frontMatter.spec_version) {
+    const boundProps = {
+      version: frontMatter.spec_version,
+      status: frontMatter.spec_status,
+    };
+    specOverrides.SpecMeta = () => <SpecMeta {...boundProps} />;
+  }
+  return mdxComponents(
+    {Include, PlatformContent, ...specOverrides},
+    ({children, frontMatter: fm, nextPage, previousPage}) => (
+      <DocPage
+        frontMatter={fm}
+        nextPage={nextPage}
+        previousPage={previousPage}
+        fullWidth={fm.fullWidth}
+      >
+        {children}
+      </DocPage>
+    )
+  );
+}
 
 function MDXLayoutRenderer({mdxSource, ...rest}) {
   const MDXLayout = useMemo(() => getMDXComponent(mdxSource), [mdxSource]);
-  return <MDXLayout components={mdxComponentsWithWrapper} {...rest} />;
+  const components = useMemo(
+    () => mdxComponentsForFrontMatter(rest.frontMatter || {}),
+    [rest.frontMatter]
+  );
+  return <MDXLayout components={components} {...rest} />;
 }
 
 export default async function Page(props: {params: Promise<{path?: string[]}>}) {
