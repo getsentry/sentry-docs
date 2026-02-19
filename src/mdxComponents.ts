@@ -10,6 +10,7 @@ import {CommunitySupportedPlatforms} from './components/communitySupportedPlatfo
 import {ConfigKey} from './components/configKey';
 import {ConfigValue} from './components/configValue';
 import {ContentSeparator} from './components/contentSeparator';
+import {CopyableCard} from './components/copyableCard';
 import {CreateGitHubAppForm} from './components/createGitHubAppForm';
 import {DefinitionList} from './components/definitionList';
 import {DevDocsCardGrid} from './components/devDocsCardGrid';
@@ -21,6 +22,7 @@ import {GitHubDomainChecker} from './components/githubDomainChecker';
 import {GradleFeatureConfig} from './components/gradleFeatureConfig';
 import {GradleUploadInstructions} from './components/gradleUploadInstructions';
 import {GuideGrid} from './components/guideGrid';
+import {IntegrationListItem} from './components/integrationLink';
 import {JsBundleList} from './components/jsBundleList';
 import {LambdaLayerDetail} from './components/lambdaLayerDetail';
 import {LinkWithPlatformIcon} from './components/linkWithPlatformIcon';
@@ -55,6 +57,7 @@ import {
   SplitSectionCode,
   SplitSectionText,
 } from './components/splitLayout';
+import {StatusBadge} from './components/statusBadge';
 import {StepComponent, StepConnector} from './components/stepConnector';
 import {TableOfContents} from './components/tableOfContents';
 import {VersionRequirement} from './components/version-requirement';
@@ -91,6 +94,7 @@ export function mdxComponents(
     Expandable,
     FeatureBadge,
     GuideGrid,
+    IntegrationListItem,
     JsBundleList,
     LambdaLayerDetail,
     Link: SmartLink,
@@ -113,11 +117,13 @@ export function mdxComponents(
     OnboardingSteps,
     RelayMetrics,
     SandboxLink,
+    CopyableCard,
     SignInNote,
     SplitLayout,
     SplitSection,
     SplitSectionText,
     SplitSectionCode,
+    StatusBadge,
     StepComponent,
     StepConnector,
     VimeoEmbed,

@@ -4,6 +4,12 @@ sidebar_order: 2
 description: Learn how to configure Tombstone support.
 ---
 
+<Alert level="info">
+
+Tombstone Integration is available in the Android SDK version 8.32.0 or above.
+
+</Alert>
+
 The Tombstone Integration generates events for native crashes based on data ("tombstones") that Android attaches to [`ApplicationExitInfo.REASON_CRASH_NATIVE`](https://developer.android.com/reference/android/app/ApplicationExitInfo#REASON_CRASH_NATIVE) starting with [Android 12+](https://developer.android.com/reference/android/app/ApplicationExitInfo#getTraceInputStream()).
 
 This crash context is collected by the operating system during the app’s shutdown after a crash. Because part of the collection runs out of process, it can capture richer crash details than the [NDK integration](/platforms/android/configuration/using-ndk/) and also is safer.
@@ -33,6 +39,18 @@ The Tombstone Integration is disabled by default. You can enable the tombstone i
 <application>
     <meta-data android:name="io.sentry.tombstone.enable" android:value="true" />
 </application>
+```
+
+```kotlin
+SentryAndroid.init(context) { options ->
+  options.isTombstoneEnabled = true
+}
+```
+
+```java
+SentryAndroid.init(context, options -> {
+  options.setTombstoneEnabled(true);
+});
 ```
 
 #### Merging Tombstone and NDK Crash Events
@@ -71,9 +89,9 @@ SentryAndroid.init(context) { options ->
 ```
 
 ```java
-SentryAndroid.init(context) { options ->
-  options.setReportHistoricalTombstones(true)
-}
+SentryAndroid.init(context, options ->
+  options.setReportHistoricalTombstones(true);
+});
 ```
 
 This option is useful after upgrading to an SDK version that introduces the Tombstone integration, as it allows you to report any tombstones that occurred before the update.
