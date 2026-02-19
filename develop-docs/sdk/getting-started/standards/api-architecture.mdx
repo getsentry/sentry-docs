@@ -3,13 +3,15 @@ title: API and Architecture
 sidebar_order: 1
 ---
 
+<SpecRfcAlert />
+
 ## Server-side (Relay) vs. SDK-side decision gate
 
 #### Rule
 
-New processing or transformation logic must default to server-side (Relay).
+New processing or transformation logic **MUST** default to server-side (Relay).
 
-Logic should only be implemented in the SDK if it must run before data leaves the customer's application (e.g., user-controlled filtering like `before_send_*`), requires access to platform-specific APIs, is strictly latency-sensitive, or must function in offline scenarios.
+Logic **SHOULD** only be implemented in the SDK if it **MUST** run before data leaves the customer's application (e.g., user-controlled filtering like `before_send_*`), **REQUIRES** access to platform-specific APIs, is strictly latency-sensitive, or **MUST** function in offline scenarios.
 
 Transformations of data that has already been collected should be handled in Relay. This ensures consistency across SDK versions and avoids duplicating logic in clients that may remain in use indefinitely.
 
@@ -28,7 +30,7 @@ Transformations of data that has already been collected should be handled in Rel
 
 #### Rule
 
-SDKs typically outlive individual API versions, so forward compatibility is essential to prevent ecosystem breakage. They must remain resilient to evolving server responses, including additional fields, missing optional fields, new enum values, and rate limiting. They must not fail due to additive changes. Unknown fields, categories, or dimensions should be safely ignored rather than causing errors.
+SDKs typically outlive individual API versions, so forward compatibility is essential to prevent ecosystem breakage. They **MUST** remain resilient to evolving server responses, including additional fields, missing optional fields, new enum values, and rate limiting. They **MUST NOT** fail due to additive changes. Unknown fields, categories, or dimensions **SHOULD** be safely ignored rather than causing errors.
 
 #### Enforcement
 
@@ -45,7 +47,7 @@ SDKs typically outlive individual API versions, so forward compatibility is esse
 
 #### Rule
 
-Any change to public API surface (add, change, deprecate, remove) requires @sdk-leads approval. Public API includes anything a user can call, import, configure, subclass, or otherwise reference. If there is any doubt whether something is public, check for usage in public repositories. When still unsure, treat it as public.
+Any change to public API surface (add, change, deprecate, remove) **REQUIRES** @sdk-leads approval. Public API includes anything a user can call, import, configure, subclass, or otherwise reference. If there is any doubt whether something is public, check for usage in public repositories. When still unsure, treat it as public.
 
 #### Enforcement
 
@@ -66,7 +68,7 @@ Any change to public API surface (add, change, deprecate, remove) requires @sdk-
 
 #### Rule
 
-New attributes must first be defined in [sentry-conventions](https://github.com/getsentry/sentry-conventions).
+New attributes **MUST** first be defined in [sentry-conventions](https://github.com/getsentry/sentry-conventions).
 Process:
 1. PR to sentry-conventions
 2. code owner approval
@@ -88,13 +90,13 @@ Process:
 
 #### Rule
 
-Breaking changes must follow the breaking changes playbook.
+Breaking changes **MUST** follow the breaking changes playbook.
 
-Breaking changes may only ship in a major version. They must not ship in minor versions. Opt-in previews are allowed in minor versions.
+Breaking changes **MAY** only ship in a major version. They **MUST NOT** ship in minor versions. Opt-in previews are allowed in minor versions.
 
-A deprecation period is required in a prior minor version, during which dual behavior is allowed to support migration.
+A deprecation period is **REQUIRED** in a prior minor version, during which dual behavior is allowed to support migration.
 
-Every breaking change must include:
+Every breaking change **MUST** include:
 * A migration guide with copy-pastable examples
 * A changelog entry using the BREAKING CHANGE: notation
 * Validation of the migration guide using an LLM to ensure it is clear and complete
@@ -120,11 +122,11 @@ Every breaking change must include:
 #### Rule
 
 All deprecations of public APIs, user-facing integrations, and supported platforms or frameworks follow three stages:
-1.	Announce in a minor release with a runtime warning (where possible), updated changelog and documentation, and a migration guide. Warnings must include the replacement, a code example, and a link to the migration docs.
+1.	Announce in a minor release with a runtime warning (where possible), updated changelog and documentation, and a migration guide. Warnings **MUST** include the replacement, a code example, and a link to the migration docs.
 2.	Keep the deprecated surface fully functional for at least one subsequent minor release (e.g., deprecated in X.Y, still supported in X.(Y+1)).
 3.	Remove only in the next major release (X+1.0).
 
-Deprecating an entire SDK must never be silent. It requires clear customer impact analysis, a public announcement, updated documentation, a defined support timeline, and advance EOL notice.
+Deprecating an entire SDK **MUST NOT** be silent. It **REQUIRES** clear customer impact analysis, a public announcement, updated documentation, a defined support timeline, and advance EOL notice.
 
 #### Enforcement
 
