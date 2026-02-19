@@ -8,16 +8,16 @@ import Chevron from 'sentry-docs/icons/Chevron';
 
 interface CopyableCardProps {
   children: React.ReactNode;
-  description: string;
   title: string;
 }
 
-export function CopyableCard({title, description, children}: CopyableCardProps) {
-  const [copiedItem, setCopiedItem] = useState<'title' | 'description' | null>(null);
+export function CopyableCard({title, children}: CopyableCardProps) {
+  const [copiedItem, setCopiedItem] = useState<'title' | 'body' | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const buttonRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setIsMounted(true);
@@ -39,7 +39,7 @@ export function CopyableCard({title, description, children}: CopyableCardProps) 
     };
   }, []);
 
-  async function copyText(text: string, item: 'title' | 'description') {
+  async function copyText(text: string, item: 'title' | 'body') {
     try {
       await navigator.clipboard.writeText(text.trim());
       setCopiedItem(item);
@@ -67,12 +67,16 @@ export function CopyableCard({title, description, children}: CopyableCardProps) 
   const dropdownItemClass =
     'w-full p-2 px-3 text-left text-sm bg-transparent border-none rounded-md transition-colors hover:bg-gray-100 dark:hover:bg-[var(--gray-a4)] font-sans text-gray-900 dark:text-[var(--foreground)] cursor-pointer';
 
+  function getBodyText(): string {
+    return contentRef.current?.innerText?.trim() ?? '';
+  }
+
   const getButtonLabel = () => {
     if (copiedItem === 'title') {
       return 'Reply title copied!';
     }
-    if (copiedItem === 'description') {
-      return 'Reply description copied!';
+    if (copiedItem === 'body') {
+      return 'Reply body copied!';
     }
     return 'Copy';
   };
@@ -89,7 +93,7 @@ export function CopyableCard({title, description, children}: CopyableCardProps) 
             <div className="relative inline-block" ref={buttonRef}>
               <div className="inline-flex items-center h-8 border border-gray-200 dark:border-[var(--gray-6)] rounded-full overflow-hidden bg-white dark:bg-[var(--gray-2)]">
                 <button
-                  onClick={() => copyText(description, 'description')}
+                  onClick={() => copyText(getBodyText(), 'body')}
                   className={`${buttonClass} gap-1.5 px-3 text-sm font-medium`}
                   style={{borderRadius: '9999px 0 0 9999px'}}
                 >
@@ -129,10 +133,10 @@ export function CopyableCard({title, description, children}: CopyableCardProps) 
                       Reply title
                     </button>
                     <button
-                      onClick={() => copyText(description, 'description')}
+                      onClick={() => copyText(getBodyText(), 'body')}
                       className={dropdownItemClass}
                     >
-                      Reply description
+                      Reply body
                     </button>
                   </div>
                 </div>,
@@ -142,7 +146,9 @@ export function CopyableCard({title, description, children}: CopyableCardProps) 
         )}
       </div>
       <div className="p-4 bg-white dark:bg-[var(--gray-1)]">
-        <div className="prose dark:prose-invert max-w-none">{children}</div>
+        <div ref={contentRef} className="prose dark:prose-invert max-w-none">
+          {children}
+        </div>
       </div>
     </div>
   );
