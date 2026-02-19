@@ -4,7 +4,7 @@ title: Setting Up Release Infrastructure
 
 ## Steps
 
-#### 1. Create the initial tag
+#### 1. Create the Initial Tag
 
 A tag must exist for the first commit of the repository due to a [craft limitation](https://github.com/getsentry/craft/issues/342). Tag the first commit before any meaningful history so the first changelog includes useful context.
 
@@ -13,11 +13,11 @@ git tag 0.0.0 "$(git log -1 --reverse --format=%h)"
 git push origin --tags
 ```
 
-#### 2. Set up CI for release branches
+#### 2. Set Up CI for Release Branches
 
 Ensure the repository's CI responds to `release/**` branches and produces a named artifact. See [sentry-python's build workflow](https://github.com/getsentry/sentry-python/blob/master/.github/workflows/build.yml) for an example.
 
-#### 3. Configure craft (`.craft.yml`)
+#### 3. Configure Craft (`.craft.yml`)
 
 Create a `.craft.yml` with targets for your package registry and GitHub releases:
 
@@ -30,7 +30,7 @@ targets:
 
 See the [Craft configuration docs](https://craft.sentry.dev/configuration/) for all available targets and options.
 
-#### 4. Add version bump script (`scripts/bump-version.sh`)
+#### 4. Add Version Bump Script (`scripts/bump-version.sh`)
 
 Craft invokes this script when bumping the version. The script receives the old version as `$1` and the new version as `$2`:
 
@@ -43,7 +43,7 @@ sed -i "s/^version =.*/version = $2/" setup.cfg
 
 For a real-world example with multiple version locations, see [sentry-python's bump-version.sh](https://github.com/getsentry/sentry-python/blob/master/scripts/bump-version.sh).
 
-#### 5. Add release workflow (`.github/workflows/release.yml`)
+#### 5. Add Release Workflow (`.github/workflows/release.yml`)
 
 This workflow triggers releases from the GitHub UI. It uses `vars.SENTRY_RELEASE_BOT_CLIENT_ID` and `secrets.SENTRY_RELEASE_BOT_PRIVATE_KEY` which are available to repositories in the `getsentry` org automatically. These are needed because [GitHub prevents `GITHUB_TOKEN` from triggering downstream workflows](https://docs.github.com/en/actions/reference/events-that-trigger-workflows).
 
@@ -86,15 +86,15 @@ jobs:
 
 For full details on all available options including auto-versioning, changelog preview, merge targets, and multiple craft configs, see [Craft's GitHub Actions documentation](https://craft.sentry.dev/github-actions/). Repositories outside the `getsentry` org can use the simpler [reusable workflow](https://craft.sentry.dev/github-actions/#option-1-reusable-workflow-recommended) which handles token management automatically via `secrets: inherit`.
 
-#### 6. Set repository permissions
+#### 6. Set Repository Permissions
 
 Give the `engineering` team write access via your repository's settings page: `https://github.com/getsentry/REPONAME_HERE/settings/access`
 
-#### 7. Create branch ruleset
+#### 7. Create Branch Ruleset
 
 Download the [default ruleset template](/json/Default_ruleset.json). Import it at `https://github.com/getsentry/REPONAME_HERE/settings/rules` via **New ruleset** > **Import a ruleset**. You can adjust settings but do not remove the App in the Bypass List.
 
-#### 8. Cut your first release
+#### 8. Cut Your First Release
 
 Navigate to the Actions tab, locate the Release workflow, and trigger it. This creates an [issue in `getsentry/publish`](https://github.com/getsentry/publish/issues) which requires an approver to add a label before artifacts are published.
 
