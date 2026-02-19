@@ -1,0 +1,133 @@
+---
+title: "Using Session Replay"
+sidebar_order: 40
+description: "Practical guidance on debugging errors and finding UX issues with Session Replay."
+---
+
+You've set up [Sentry Session Replay](/product/explore/session-replay/). Now what? Stack traces tell you _what_ broke. Replay shows you _why_. This guide covers how to use replay to debug errors and spot UX problems before users report them.
+
+## What Replay Captures
+
+Every replay connected to an error includes:
+
+- **User actions** — clicks, navigation, form inputs
+- **Network requests** — API calls, responses, failures, latency
+- **Console logs** — warnings, errors, debug messages
+- **Application state** — URL changes, route transitions
+
+## AI Summary
+
+<Alert level="info">
+
+The AI Summary tab automatically generates a natural language summary of what happened during a session. Instead of watching the entire replay, you can read a text description that highlights key actions, navigation paths, and timestamps.
+
+Use AI Summary to:
+
+- Quickly understand what a user did without watching the full replay
+- Jump to specific moments in the session by clicking timestamps in the summary
+- Share context with teammates who need the highlights, not the full recording
+
+Click the **AI Summary** tab in any replay to see the generated summary. You can regenerate it if needed.
+
+</Alert>
+
+## Where to Use Replay
+
+Start with these five workflows and you'll debug faster and catch UX issues before they become support tickets.
+
+### 1. Root Cause Analysis for Errors
+
+When an error spikes, the stack trace shows the line of code. Replay shows the user journey that triggered it.
+
+**What to look for:**
+
+- **Failed API calls** — Check the Network tab. A 500 error or timeout often cascaded into the JavaScript error.
+- **Race conditions** — Did they click twice? Navigate before a request finished? Trigger conflicting operations?
+- **Edge case data** — Empty arrays, null values, unexpected formats your code didn't handle.
+- **Browser/device context** — Errors on slow connections or older browsers reveal assumptions in your code.
+
+**Search in Sentry:** Go to **Replays** and filter by `count_errors:>0` to see all sessions with errors. Click into a replay to watch it, or check the AI Summary tab to quickly jump to key moments.
+
+### 2. Reproducing User-Reported Bugs
+
+User says it's broken, but you can't reproduce it locally. Replay shows you exactly what they did.
+
+**What to watch:**
+
+- The exact sequence of clicks and navigation
+- Form inputs or selections that triggered the bug
+- Browser console errors they didn't mention
+- Network failures or slow responses that affected behavior
+
+**Search in Sentry:** Go to **Replays** and filter by `user.email:jane@example.com` or `user.id:123` to find sessions around the time they reported the issue.
+
+### 3. Finding Error Patterns Across Users
+
+When multiple users hit the same error, patterns emerge that point to the root cause.
+
+**What to compare:**
+
+- Do they all come from the same release?
+- Did they visit the same pages in the same order?
+- Do they share the same browser, device, or region?
+- Did a specific API endpoint fail for all of them?
+
+**Search in Sentry:** Go to **Replays** and filter by `count_errors:>0 release:1.2.3` to see if errors cluster by release, or use `count_errors:>0 browser.name:Chrome` to compare by browser.
+
+### 4. Spotting Rage Clicks and Dead Clicks
+
+Clicks that don't work create silent frustration. Replay catches these before users complain.
+
+**Rage clicks:** Users clicking the same element repeatedly because nothing happens.
+
+**Dead clicks:** Clicks on elements that look interactive but have no handler.
+
+**Common causes:**
+
+- Button appears clickable but has no handler
+- Click handler is slow or async without visual feedback
+- Element is covered by an invisible overlay (z-index issue)
+- JavaScript error preventing the handler from running
+
+**Search in Sentry:** Go to **Replays** and check the "Most Rage Clicks" and "Most Dead Clicks" widgets at the top* to see the worst offenders. Or filter by `count_rage_clicks:>0` or `count_dead_clicks:>0`. *If you don't see the widgets, toggle "Show Widgets" at the top.
+
+### 5. Identifying Slow Interactions
+
+Users waiting too long for responses creates perceived sluggishness even if the page loaded fast.
+
+**What to watch:**
+
+- Long gaps between click and visual response
+- Loading spinners that last too long (over 2-3 seconds)
+- Form submissions with no feedback
+- Navigation that feels frozen
+
+**Search in Sentry:** Go to **Replays** and filter by `url:*/checkout*` to focus on critical flows, then watch replays to spot slow interactions.
+
+## Privacy Considerations
+
+By default, Session Replay masks all text content, user input, and images. Sensitive data stays in the browser.
+
+You'll see placeholder blocks instead of actual content, which is enough to understand what users did without exposing their data. If you need to see specific elements for debugging (like button labels or navigation items), you can unmask them:
+
+```html
+<h1 data-sentry-unmask>Welcome to Checkout</h1>
+```
+
+Be selective. Never unmask form inputs, and review your [privacy configuration](/platforms/javascript/session-replay/privacy/) before increasing sample rates.
+
+## Quick Reference
+
+| What You're Looking For | Filter                                     |
+| ----------------------- | ------------------------------------------ |
+| Sessions with errors    | `count_errors:>0`                          |
+| Specific user           | `user.email:jane@example.com`              |
+| Specific page           | `url:*/checkout*`                          |
+| Rage clicks             | `count_rage_clicks:>0`                     |
+| Dead clicks             | `count_dead_clicks:>0`                     |
+| Mobile users            | `device.family:iOS`                        |
+| Slow sessions           | Filter by URL, watch for slow interactions |
+
+## Next Steps
+
+Explore the [product walkthrough guides](/product/) to learn more about the Sentry interface and discover additional tips.
