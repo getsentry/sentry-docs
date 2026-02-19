@@ -1,0 +1,150 @@
+---
+title: Code Quality
+sidebar_order: 3
+---
+
+## Linting and Formatting in CI
+
+#### Rule
+
+Every SDK repo must have automated linting and formatting in CI. Code that doesn't pass doesn't merge. No exceptions.
+
+#### Enforcement
+
+* CI required status check (language-specific linters).
+
+#### Suggested skill(s)
+
+* [`sentry-skills:claude-settings-audit`](https://github.com/getsentry/skills#available-skills) - detects tech stack and recommends linter configuration.
+
+#### Per-SDK override
+
+<StatusBadge type="yes" /> Linter choice, rules, strictness. The standard is that a linter exists and is enforced.
+
+---
+
+## Type Checking in CI
+
+#### Rule
+
+Type checking is required in CI for:
+* All statically typed languages (Java, Kotlin, Swift, C#, Go, Rust, Dart)
+* Dynamically typed languages with an established type-checking ecosystem (TypeScript, Python, PHP, Elixir)
+
+Dynamically typed languages without an established type-checking system (e.g., Ruby) are TBD or may be exempt with a valid reason.
+
+#### Enforcement
+
+* CI required status check
+
+#### Per-SDK override
+
+<StatusBadge type="yes" /> Configuration and strictness. Gradual typing allowed with a tracked plan.
+
+---
+
+## Test Requirements by Change Type
+
+#### Rule
+
+* **Bug fix**: regression test (fails without fix, passes with it).
+* **New feature**: unit tests + integration tests where applicable.
+* **Refactor**: existing tests pass; no new tests required unless coverage was missing.
+* **Performance change**: benchmark or measurable evidence.
+* **Breaking change**: update/remove old tests, add new tests.
+
+#### Enforcement
+
+* AGENTS.md instruction
+* Human review
+
+#### Suggested skill(s)
+
+* [`sentry-skills:code-review`](https://github.com/getsentry/skills#available-skills) - includes test coverage in checklist
+* [`sentry-skills:find-bugs`](https://github.com/getsentry/skills#available-skills) - identifies untested paths
+
+#### Per-SDK override
+
+<StatusBadge type="yes" /> Test categories and boundaries are SDK-specific.
+
+---
+
+## Test Quality
+
+#### Rule
+
+Tests must assert meaningful behavior: assertions that would fail if the tested behavior broke, not just "no exception thrown" unless that's the behavior under test, snapshot tests reviewed for correctness not auto-accepted, AI-generated tests get extra scrutiny (watch for hardcoded values, implementation-detail testing, tests that pass regardless).
+
+#### Enforcement
+
+* AGENTS.md: "Every test must answer: what user-visible behavior would break if this test were deleted?"
+* Human review
+
+#### Suggested skill(s)
+
+* [`sentry-skills:code-review`](https://github.com/getsentry/skills#available-skills)
+* [`sentry-skills:find-bugs`](https://github.com/getsentry/skills#available-skills)
+
+#### Per-SDK override
+
+<StatusBadge type="no" /> Principle is universal. Language-specific anti-patterns documented per-SDK in AGENTS.md.
+
+---
+
+## Dependency Management
+
+#### Rule
+
+New dependency requires explicit justification in the PR description. Dependencies pinned to a version range (not floating). Transitive dependency behavior changes get same scrutiny as direct additions. Quarterly dependency audit minimum.
+
+#### Enforcement
+
+* CI detection of new dependency manifest entries
+* Human review
+
+#### Suggested skill(s)
+
+* [`sentry-skills:security-review`](https://github.com/getsentry/skills#available-skills)
+
+#### Per-SDK override
+
+<StatusBadge type="yes" /> Tooling varies. Approval requirement is universal.
+
+---
+
+## SDK Size and Performance Budgets
+
+#### Rule
+
+Each SDK defines and tracks: package/binary size budget, initialization time budget, memory overhead budget (where applicable).
+
+#### Enforcement
+
+* CI check where feasible (size comparison, benchmarks); advisory initially, path toward blocking
+
+#### Per-SDK override
+
+<StatusBadge type="yes" /> Budgets and measurement are SDK-specific. The standard is that budgets exist and are tracked.
+
+---
+
+## Security Practices
+
+#### Rule
+
+No secrets, credentials, or PII in code or commits. Data handling follows the [data handling spec](/sdk/expected-features/data-handling/). Security-sensitive changes require explicit review from someone with security context. Vulnerability patch SLAs: critical 48h, high 1 week, medium next release. Dependency vulnerability alerts must not be ignored or silently dismissed.
+
+#### Enforcement
+
+* CI secret scanning
+* Dependency scanning (GitHub Security Advisories / Dependabot alerts)
+* Human review
+
+#### Suggested skill(s)
+
+* [`sentry-skills:security-review`](https://github.com/getsentry/skills#available-skills)
+* [`sentry-skills:find-bugs`](https://github.com/getsentry/skills#available-skills)
+
+#### Per-SDK override
+
+<StatusBadge type="yes" /> Vulnerability SLAs can be adjusted. Data handling requirements are universal.
