@@ -1,6 +1,6 @@
 import type {ReactNode} from 'react';
 
-import {SPEC_STATUS_BADGE,type SpecStatus} from './specConstants';
+import {SPEC_STATUS_BADGE, type SpecStatus} from './specConstants';
 
 type SpecSectionProps = {
   children: ReactNode;
