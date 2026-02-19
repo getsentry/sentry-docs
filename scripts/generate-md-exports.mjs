@@ -295,11 +295,15 @@ function buildFallbackChildSection(parentPath, children) {
 }
 
 /**
- * Injects a description as italic text after the first H1 heading in markdown.
+ * Injects a description and navigation links after the first H1 heading.
  * Returns the original content unchanged if no H1 is found.
  */
-function injectDescription(markdown, description) {
-  return markdown.replace(/^(# .+)$/m, `$1\n\n*${description}*\n`);
+function injectDescription(markdown, description, {navLinks = []} = {}) {
+  let suffix = `\n\n*${description}*\n`;
+  if (navLinks.length > 0) {
+    suffix += '\n' + navLinks.map(link => `*${link}*`).join('\n') + '\n';
+  }
+  return markdown.replace(/^(# .+)$/m, `$1${suffix}`);
 }
 
 // --- MDX template rendering for full-page overrides ---
@@ -796,7 +800,18 @@ async function createWork() {
     } catch {
       continue;
     }
-    const injected = injectDescription(content, description);
+    const navLinks = [];
+    if (relativePath !== 'index.md') {
+      navLinks.push(`Full documentation index: ${DOCS_ORIGIN}/`);
+    }
+    // Guide pages get a link back to their platform index
+    const parts = relativePath.replace(/\.md$/, '').split('/');
+    if (parts[0] === 'platforms' && parts.includes('guides') && parts.length >= 4) {
+      const platformNode = docTree ? findNode(docTree, ['platforms', parts[1]]) : null;
+      const platformName = platformNode ? getTitle(platformNode) : parts[1];
+      navLinks.push(`${platformName} SDK docs: ${DOCS_ORIGIN}/platforms/${parts[1]}/`);
+    }
+    const injected = injectDescription(content, description, {navLinks});
     if (injected === content) {
       continue;
     }
