@@ -53,16 +53,18 @@ export const dynamic = 'force-static';
 function mdxComponentsForFrontMatter(frontMatter: Record<string, unknown>) {
   const specOverrides: Record<string, unknown> = {};
   const changelog = Array.isArray(frontMatter.spec_changelog)
-    ? (frontMatter.spec_changelog as Array<Record<string, unknown>>).map(entry => ({
-        version: String(entry.version),
-        date:
-          entry.date instanceof Date
-            ? entry.date.toISOString().split('T')[0]
-            : String(entry.date),
-        summary: String(entry.summary),
-      }))
+    ? (frontMatter.spec_changelog as Array<Record<string, unknown>>)
+        .filter(entry => entry.version != null && entry.date != null && entry.summary != null)
+        .map(entry => ({
+          version: String(entry.version),
+          date:
+            entry.date instanceof Date
+              ? entry.date.toISOString().split('T')[0]
+              : String(entry.date),
+          summary: String(entry.summary),
+        }))
     : undefined;
-  if (changelog) {
+  if (changelog && changelog.length > 0) {
     specOverrides.SpecChangelog = function () {
       return <SpecChangelog changelog={changelog} />;
     };
