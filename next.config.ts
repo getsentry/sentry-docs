@@ -32,6 +32,23 @@ const sharedExcludes = [
   'node_modules/remark-mdx-images/**/*',
   'node_modules/unified/**/*',
   'node_modules/rollup/**/*',
+  // ESLint/TypeScript - build-time only
+  'node_modules/eslint/**/*',
+  'node_modules/eslint-*/**/*',
+  'node_modules/@eslint/**/*',
+  'node_modules/@typescript-eslint/**/*',
+  'node_modules/typescript/**/*',
+  // Mermaid dependencies (build-time diagram generation)
+  'node_modules/cytoscape/**/*',
+  'node_modules/cytoscape-*/**/*',
+  // Development/test tools
+  'node_modules/vitest/**/*',
+  'node_modules/vite/**/*',
+  'node_modules/@vitest/**/*',
+  // Platform-specific SWC binaries (Vercel uses linux-x64)
+  'node_modules/@next/swc-darwin-*/**/*',
+  'node_modules/@next/swc-win32-*/**/*',
+  'node_modules/@next/swc-linux-arm*/**/*',
 ];
 
 const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
@@ -50,6 +67,12 @@ const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
         'node_modules/prettier/plugins',
         'node_modules/rollup/dist',
         'public/og-images/**/*',
+        // Exclude static assets that don't need to be in the serverless function
+        'public/mdx-images/**/*',
+        'public/md-exports/**/*',
+        'public/pdfs/**/*',
+        '**/*.gif',
+        '**/*.pdf',
       ],
       'sitemap.xml': [
         'public/mdx-images/**/*',
@@ -118,6 +141,13 @@ const nextConfig = {
   images: {
     contentDispositionType: 'inline', // "open image in new tab" instead of downloading
     remotePatterns: REMOTE_IMAGE_PATTERNS,
+    // Next.js 16 requires localPatterns for images with query strings
+    // Omitting 'search' allows any query string (used for cache busting)
+    localPatterns: [
+      {
+        pathname: '/**',
+      },
+    ],
   },
   webpack: (config, options) => {
     config.plugins.push(
@@ -132,7 +162,7 @@ const nextConfig = {
     return config;
   },
   env: {
-    // This is used on middleware
+    // This is used on proxy
     DEVELOPER_DOCS_: process.env.NEXT_PUBLIC_DEVELOPER_DOCS,
   },
   redirects,

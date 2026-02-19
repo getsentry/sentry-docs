@@ -55,7 +55,11 @@ export function CodeTabs({children}: CodeTabProps) {
   // The title is what we use for sorting and also for remembering the
   // selection. If there is no title fall back to the title cased language name
   // (or override from `LANGUAGES`).
-  const possibleChoices = codeBlocks.map<string>(({props: {title, language}}) => {
+  const possibleChoices = codeBlocks.map<string>(child => {
+    const props = child?.props;
+    const title = props?.title;
+    const language = props?.language;
+
     if (title) {
       return title;
     }
