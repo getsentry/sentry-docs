@@ -168,6 +168,65 @@ The trace attachment item payload consists of a JSON object containing metadata 
 | `content_type` | string | Yes | the content type of the attachment body (not to be confused with the content type of the envelope item, which is always `application/vnd.sentry.trace-attachment`). |
 | `attributes` | object | No | arbitrary attributes that will be queryable on the attachment trace item, similar to spans, logs, and trace metrics. |
 
+### Attachment Placeholder
+
+<Alert level="warning">
+Attachment placeholders are an experimental feature, the protocol is subject to change.
+</Alert>
+
+Item type `"attachment"` with content type `"application/vnd.sentry.attachment-ref"`. This item contains a reference to an attachment together with some metadata. It does _not_ contain the actual attachment payload. The purpose of this kind of item is for the attachment to be handled (rate limited, filtered, etc.) together with the event payload, even if it was uploaded elsewhere (for example, through the "upload" endpoint). The placeholder should therefore be sent in the same envelope of the event that the file was attached to.
+
+**Envelope Headers:**
+
+`event_id`
+
+: **UUID String, required.** The identifier of the event or transaction.
+
+**Item Headers:**
+
+The placeholder item header _must_ contain the following properties:
+
+```json
+{
+  "type": "attachment",
+  "content_type": "application/vnd.sentry.attachment-ref",
+  "length": 123,
+  "attachment_length": 212341234,
+  "filename": "myfile.log"
+}
+```
+
+`attachment_length`
+
+: **integer, required.** The size of the referenced attachment in bytes.
+
+`filename`
+
+: **String, required.** The name of the uploaded file without a path component.
+
+The item header _may_ also contain the `attachment_type` and `content_type` fields (see [Attachment](#attachment)).
+
+
+**Item Payload:**
+
+The placeholder item payload consists of a JSON object containing metadata.
+
+```json
+{
+  "location": "/api/",
+  "content_type": "text/plain"
+}helloworld
+```
+
+`location`
+
+**String, required.** The identifier of the upload, as returned in the `Location` header of the upload endpoint response.
+
+`content_type`
+
+_String, optional._ The content type of the represented attachment (as opposed to the content type of the placeholder item itself).
+
+
 
 ### Session
 
