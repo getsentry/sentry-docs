@@ -40,7 +40,7 @@ export function HomeSearchObserver({children}: {children: React.ReactNode}) {
     return () => observer.disconnect();
   }, []);
 
-  return <div ref={ref}>{children}</div>;
+  return <div ref={ref} style={{width: '100%'}}>{children}</div>;
 }
 
 export function useHomeSearchVisibility(callback: (isVisible: boolean) => void) {

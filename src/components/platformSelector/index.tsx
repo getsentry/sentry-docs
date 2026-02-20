@@ -4,6 +4,7 @@ import {
   Ref,
   startTransition,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -75,9 +76,17 @@ export function PlatformSelector({
   };
 
   const currentPlatformKey = currentPlatform?.key;
-  const path = usePathname();
+  const pathname = usePathname();
+  
   // Auto-open selector when on /platforms/ index page (no SDK selected)
-  const isOnPlatformsIndex = path === '/platforms/' || path === '/platforms';
+  const isOnPlatformsIndex = pathname === '/platforms/' || pathname === '/platforms';
+  
+  // Track if we're redirecting to prevent flash of selector
+  // Initialize to true on platforms index if we might have a stored platform (checked client-side)
+  const [isRedirecting, setIsRedirecting] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return isOnPlatformsIndex && localStorage.getItem('active-platform') !== null;
+  });
   const [open, setOpen] = useState(alwaysOpen || isOnPlatformsIndex);
   const [searchValue, setSearchValue] = useState('');
 
@@ -102,17 +111,15 @@ export function PlatformSelector({
     return matches_;
   }, [searchValue, currentPlatformKey, platformsAndGuides]);
 
-  const router = useRouter();
-  const pathname = usePathname();
+
   const onPlatformChange = (platformKey: string) => {
     const platform_ = platformsAndGuides.find(
       platform => platform.key === platformKey.replace('-redirect', '')
     );
     if (platform_) {
       localStorage.setItem('active-platform', platform_.key);
-      // Use the pre-computed URL from the sidebar which already handles
-      // equivalent paths (e.g., ai-agent-monitoring <-> ai-agent-monitoring-browser)
-      router.push(platform_.url);
+      // Use hard navigation for faster page load
+      window.location.href = platform_.url;
     }
   };
 
@@ -134,18 +141,34 @@ export function PlatformSelector({
   const storedPlatform = platformsAndGuides.find(
     platform => platform.key === storedPlatformKey
   );
-
-  useEffect(() => {
+  // Check for stored platform and redirect if on /platforms/ index
+  // Use useLayoutEffect to redirect before paint for faster UX
+  useLayoutEffect(() => {
     setHasMounted(true);
   }, []);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (currentPlatformKey) {
       localStorage.setItem('active-platform', currentPlatformKey);
+      setIsRedirecting(false);
+    } else if (isOnPlatformsIndex) {
+      const stored = localStorage.getItem('active-platform');
+      setStoredPlatformKey(stored);
+      
+      // If we have a stored platform, redirect to it immediately
+      if (stored) {
+        const storedPlatformData = platformsAndGuides.find(p => p.key === stored);
+        if (storedPlatformData) {
+          setIsRedirecting(true);
+          // Use hard navigation for instant redirect
+          window.location.replace(storedPlatformData.url);
+          return;
+        }
+      }
     } else {
       setStoredPlatformKey(localStorage.getItem('active-platform'));
     }
-  }, [currentPlatformKey]);
+  }, [currentPlatformKey, isOnPlatformsIndex, platformsAndGuides]);
 
   const isPlatformPage = Boolean(
     pathname?.startsWith('/platforms/') &&
@@ -161,6 +184,11 @@ export function PlatformSelector({
     storedPlatformKey &&
     storedPlatform &&
     pathname !== '/platforms/';
+
+  // Don't render anything while redirecting to prevent flash
+  if (isRedirecting) {
+    return null;
+  }
 
   if (listOnly) {
     return (
@@ -383,8 +411,8 @@ function PlatformItem({
           ref={activeItemRef}
           style={{cursor: 'pointer', display: 'flex', alignItems: 'center'}}
           onClick={() => {
-            // mimic navigation
             if (typeof window !== 'undefined') {
+              localStorage.setItem('active-platform', platform.key);
               window.location.href = platform.url;
             }
           }}
@@ -506,6 +534,7 @@ function GuideItem({guide, dropdownStyle = false, listOnly = false}: GuideItemPr
         }}
         onClick={() => {
           if (typeof window !== 'undefined') {
+            localStorage.setItem('active-platform', guide.key);
             window.location.href = guide.url;
           }
         }}

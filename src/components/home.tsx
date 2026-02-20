@@ -85,7 +85,7 @@ export default async function Home() {
                   lineHeight: 1.2,
                 }}
               >
-                Welcome to Sentry docs
+                Welcome To Sentry Docs
               </h1>
               <p
                 className="mb-5 text-center lg:text-left text-[var(--gray-11)]"
@@ -100,7 +100,7 @@ export default async function Home() {
                 services.
               </p>
               <HomeSearchObserver>
-                <div className="home-search-bar w-full max-w-md lg:max-w-none relative z-50 mx-auto lg:mx-0">
+                <div className="home-search-bar relative z-50 self-stretch">
                   <Search
                     path="/"
                     searchPlatforms={[]}
@@ -134,7 +134,7 @@ export default async function Home() {
                         style={{margin: 0, display: 'block', marginBottom: '2px'}}
                       />
                       <span
-                        className="text-[var(--gray-12)]"
+                        className="text-[var(--gray-12)] whitespace-nowrap"
                         style={{
                           fontSize: '0.6rem',
                           fontWeight: 500,

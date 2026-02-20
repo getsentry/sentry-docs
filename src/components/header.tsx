@@ -3,7 +3,7 @@
 import {useCallback, useState} from 'react';
 import {HamburgerMenuIcon} from '@radix-ui/react-icons';
 import {Button} from '@radix-ui/themes';
-import dynamic from 'next/dynamic';
+
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -14,19 +14,9 @@ import sidebarStyles from './sidebar/style.module.scss';
 
 import {MagicIcon} from './cutomIcons/magic';
 import {useHomeSearchVisibility} from './homeSearchVisibility';
+import {Search} from './search';
 import {ThemeToggle} from './theme-toggle';
 import TopNavClient from './TopNavClient';
-
-// Lazy load Search to reduce initial bundle size.
-// Search includes Algolia and @sentry-internal/global-search which add significant JS.
-// Using ssr:false since search is interactive-only and not needed for initial paint.
-// Fixes: DOCS-8BT (Large Render Blocking Asset)
-const Search = dynamic(() => import('./search').then(mod => ({default: mod.Search})), {
-  ssr: false,
-  loading: () => (
-    <div className="h-10 w-full max-w-md rounded-lg border border-[var(--gray-a5)] bg-[var(--gray-2)] animate-pulse" />
-  ),
-});
 
 export const sidebarToggleId = sidebarStyles['navbar-menu-toggle'];
 
@@ -96,8 +86,17 @@ export default function Header({
           </div>
           <span className="text-base font-semibold tracking-tight">Docs</span>
         </Link>
-        {!noSearch && showHeaderSearch && (
-          <div className="hidden sm:flex flex-shrink-0 items-center gap-2 mr-4">
+        {!noSearch && (
+          <div
+            className="hidden sm:flex flex-shrink-0 items-center gap-2"
+            style={{
+              visibility: showHeaderSearch ? 'visible' : 'hidden',
+              pointerEvents: showHeaderSearch ? 'auto' : 'none',
+              marginRight: '-4px',
+              width: '340px',
+              minWidth: '340px',
+            }}
+          >
             <Search
               path={pathname}
               searchPlatforms={searchPlatforms}

@@ -2,7 +2,7 @@
 import {useEffect, useRef, useState} from 'react';
 import ReactDOM from 'react-dom';
 import Link from 'next/link';
-import {usePathname} from 'next/navigation';
+import {usePathname, useRouter} from 'next/navigation';
 
 import {Platform} from 'sentry-docs/types';
 
@@ -97,6 +97,57 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
   const platformBtnRef = useRef<HTMLButtonElement>(null);
   const platformDropdownRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
+  const router = useRouter();
+
+  // Compute the SDK link href - use stored platform URL if available
+  const [sdkLinkHref, setSdkLinkHref] = useState('/platforms/');
+  
+  // Update href after hydration to check localStorage
+  useEffect(() => {
+    const storedPlatform = localStorage.getItem('active-platform');
+    if (storedPlatform) {
+      // Find the platform URL from our platforms list
+      const platform = platforms.find(p => p.key === storedPlatform);
+      if (platform) {
+        setSdkLinkHref(platform.url);
+        return;
+      }
+      // Also check guides
+      for (const p of platforms) {
+        const guide = p.guides.find(g => g.key === storedPlatform);
+        if (guide) {
+          setSdkLinkHref(guide.url);
+          return;
+        }
+      }
+    }
+  }, [platforms]);
+  
+  // Click handler - use client-side navigation for stored platform redirect
+  const handleSdkClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    const storedPlatform = localStorage.getItem('active-platform');
+    if (storedPlatform && platforms && platforms.length > 0) {
+      // First check if it's a platform key
+      const platform = platforms.find(p => p.key === storedPlatform);
+      if (platform) {
+        e.preventDefault();
+        router.push(platform.url);
+        return;
+      }
+      // Then check guides
+      for (const p of platforms) {
+        if (p.guides) {
+          const guide = p.guides.find(g => g.key === storedPlatform);
+          if (guide) {
+            e.preventDefault();
+            router.push(guide.url);
+            return;
+          }
+        }
+      }
+    }
+  };
+
   const closeTimers = useRef<{
     admin?: NodeJS.Timeout;
     concepts?: NodeJS.Timeout;
@@ -424,6 +475,18 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
                       </svg>
                     </button>
                   </div>
+                ) : section.label === 'SDKS' ? (
+                  <a
+                    href={sdkLinkHref}
+                    onClick={handleSdkClick}
+                    className={`text-[var(--gray-12)] transition-all duration-150 inline-block py-2 px-1 rounded-t-md text-[0.875rem] font-normal border-b-2 ${
+                      pathname?.startsWith('/platforms/')
+                        ? 'border-[var(--accent-purple)]'
+                        : 'border-transparent hover:border-[#a78bfa]'
+                    }`}
+                  >
+                    {section.label}
+                  </a>
                 ) : (
                   <Link
                     href={section.href}
