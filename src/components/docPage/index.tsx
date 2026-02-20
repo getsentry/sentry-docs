@@ -80,16 +80,10 @@ export async function DocPage({
         {sidebar ?? (
           <Sidebar path={unversionedPath.split('/')} versions={frontMatter.versions} />
         )}
-        <main
-          className="main-content flex w-full flex-1 mx-auto"
-          style={{
-            marginTop: 'calc(var(--header-height) + var(--topnav-height))',
-            paddingTop: '78px',
-          }}
-        >
+        <main className="main-content flex mt-[var(--header-height)] flex-1">
           <div
             className={[
-              'mx-auto lg:mx-0 px-6 prose dark:prose-invert max-w-full text-[var(--gray-12)] prose-a:no-underline hover:prose-a:underline',
+              'pt-6 px-6 prose dark:prose-invert max-w-full text-[var(--gray-12)] prose-a:no-underline hover:prose-a:underline',
               'prose-code:font-normal prose-code:font-mono marker:text-[var(--accent)] prose-li:my-1',
               'prose-headings:mt-0 prose-headings:font-medium prose-headings:relative prose-headings:text-[var(--gray-12)]',
               'prose-blockquote:font-normal prose-blockquote:border-l-[3px] prose-em:font-normal prose-blockquote:text-[var(--gray-12)]',

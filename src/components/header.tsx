@@ -105,12 +105,12 @@ export default function Header({
           </div>
         )}
         <div className="flex-1 min-w-0 flex items-center gap-4">
-          <div className="hidden sm:block flex-1 min-w-0">
+          <div className="hidden lg-xl:block flex-1 min-w-0">
             <TopNavClient platforms={platforms} />
           </div>
           {!noSearch && (
             <div
-              className="hidden sm:flex flex-shrink-0 items-center gap-4"
+              className="hidden lg-xl:flex flex-shrink-0 items-center gap-4"
               style={{marginLeft: '15px'}}
             >
               <Button
@@ -128,8 +128,8 @@ export default function Header({
               <ThemeToggle />
             </div>
           )}
-          {/* Mobile: show Ask AI button and theme toggle */}
-          <div className="flex items-center sm:hidden ml-auto gap-3">
+          {/* Mobile/tablet: show Ask AI button and theme toggle */}
+          <div className="flex items-center lg-xl:hidden ml-auto gap-3">
             <button
               className="kapa-ai-class flex items-center gap-1.5 text-sm font-medium text-[var(--foreground)] px-2 py-1.5 rounded-md hover:bg-[var(--gray-a3)] transition-colors"
               aria-label="Ask AI"

@@ -436,7 +436,7 @@ export function OnboardingOptionButtons({
   }, [options, touchOptions, touchedOptions]);
 
   return (
-    <div className="onboarding-options flex flex-wrap gap-3 py-2 bg-[var(--white)] dark:bg-[var(--gray-1)] lg:sticky top-[80px] z-[4] shadow-[var(--shadow-6)] transition">
+    <div className="onboarding-options flex flex-wrap gap-3 py-2 bg-[var(--white)] dark:bg-[var(--gray-1)] lg:sticky top-[var(--header-height)] z-[4] shadow-[var(--shadow-6)] transition">
       {options.map(option => (
         <Button
           variant="surface"
