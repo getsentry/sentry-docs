@@ -99,6 +99,18 @@ const developerDocsRedirects = [
     destination: '/sdk/telemetry/replays/:path*',
   },
   {
+    source: '/sdk/telemetry/profiles/sample-format-v1/',
+    destination: '/sdk/telemetry/profiles/',
+  },
+  {
+    source: '/sdk/telemetry/profiles/sample-format-v2/',
+    destination: '/sdk/telemetry/profiles/',
+  },
+  {
+    source: '/sdk/telemetry/profiles/continuous-profiling-api/',
+    destination: '/sdk/telemetry/profiles/',
+  },
+  {
     source: '/sdk/telemetry/spans/batch-processor/',
     destination: '/sdk/foundations/processing/batch-processor/',
   },
