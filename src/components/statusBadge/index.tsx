@@ -4,7 +4,7 @@ interface StatusBadgeProps {
   type: StatusType;
 }
 
-const STATUS_BADGE_CONFIG: Record<StatusType, {className: string, label: string;}> = {
+const STATUS_BADGE_CONFIG: Record<StatusType, {className: string; label: string}> = {
   yes: {
     label: 'Yes',
     className: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
