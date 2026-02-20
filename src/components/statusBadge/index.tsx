@@ -4,15 +4,14 @@ interface StatusBadgeProps {
   type: StatusType;
 }
 
-const STATUS_BADGE_CONFIG: Record<StatusType, {label: string; className: string}> = {
+const STATUS_BADGE_CONFIG: Record<StatusType, {className: string, label: string;}> = {
   yes: {
     label: 'Yes',
     className: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
   },
   no: {
     label: 'No',
-    className:
-      'bg-[#fee2e2] text-[#991b1b] dark:bg-[#7f1d1d]/50 dark:text-[#fca5a5]',
+    className: 'bg-[#fee2e2] text-[#991b1b] dark:bg-[#7f1d1d]/50 dark:text-[#fca5a5]',
   },
 };
 
