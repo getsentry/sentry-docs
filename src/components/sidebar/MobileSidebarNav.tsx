@@ -65,7 +65,7 @@ export function MobileSidebarNav({platforms = []}: {platforms?: Platform[]}) {
 
   // Compute the SDK link href - use stored platform URL if available
   const [sdkLinkHref, setSdkLinkHref] = useState('/platforms/');
-  
+
   // Update href after hydration to check localStorage
   useEffect(() => {
     const storedPlatform = localStorage.getItem('active-platform');
@@ -84,7 +84,7 @@ export function MobileSidebarNav({platforms = []}: {platforms?: Platform[]}) {
       }
     }
   }, [platforms]);
-  
+
   // Click handler as fallback
   const handleSdkClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     const storedPlatform = localStorage.getItem('active-platform');

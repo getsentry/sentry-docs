@@ -22,7 +22,10 @@ export async function SidebarNavigation({path}: {path: string[]}) {
   // AI section
   if (path[0] === 'ai') {
     return (
-      <ProductSidebar rootNode={rootNode} items={[{title: 'Sentry for AI', root: 'ai'}]} />
+      <ProductSidebar
+        rootNode={rootNode}
+        items={[{title: 'Sentry for AI', root: 'ai'}]}
+      />
     );
   }
 

@@ -77,10 +77,10 @@ export function PlatformSelector({
 
   const currentPlatformKey = currentPlatform?.key;
   const pathname = usePathname();
-  
+
   // Auto-open selector when on /platforms/ index page (no SDK selected)
   const isOnPlatformsIndex = pathname === '/platforms/' || pathname === '/platforms';
-  
+
   // Track if we're redirecting to prevent flash of selector
   // Initialize to true on platforms index if we might have a stored platform (checked client-side)
   const [isRedirecting, setIsRedirecting] = useState(() => {
@@ -110,7 +110,6 @@ export function PlatformSelector({
     }
     return matches_;
   }, [searchValue, currentPlatformKey, platformsAndGuides]);
-
 
   const onPlatformChange = (platformKey: string) => {
     const platform_ = platformsAndGuides.find(
@@ -154,7 +153,7 @@ export function PlatformSelector({
     } else if (isOnPlatformsIndex) {
       const stored = localStorage.getItem('active-platform');
       setStoredPlatformKey(stored);
-      
+
       // If we have a stored platform, redirect to it immediately
       if (stored) {
         const storedPlatformData = platformsAndGuides.find(p => p.key === stored);

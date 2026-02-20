@@ -101,7 +101,7 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
 
   // Compute the SDK link href - use stored platform URL if available
   const [sdkLinkHref, setSdkLinkHref] = useState('/platforms/');
-  
+
   // Update href after hydration to check localStorage
   useEffect(() => {
     const storedPlatform = localStorage.getItem('active-platform');
@@ -122,7 +122,7 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
       }
     }
   }, [platforms]);
-  
+
   // Click handler - use client-side navigation for stored platform redirect
   const handleSdkClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     const storedPlatform = localStorage.getItem('active-platform');

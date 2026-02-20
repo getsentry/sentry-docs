@@ -3,7 +3,6 @@
 import {useCallback, useState} from 'react';
 import {HamburgerMenuIcon} from '@radix-ui/react-icons';
 import {Button} from '@radix-ui/themes';
-
 import Image from 'next/image';
 import Link from 'next/link';
 
