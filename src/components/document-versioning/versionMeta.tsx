@@ -1,11 +1,11 @@
-import {SPEC_STATUS_BADGE, type SpecStatus} from './specConstants';
+import {SPEC_STATUS_BADGE, type SpecStatus} from './constants';
 
-type SpecMetaProps = {
+type VersionMetaProps = {
   status: SpecStatus;
   version: string;
 };
 
-export function SpecMeta({version, status}: SpecMetaProps) {
+export function VersionMeta({version, status}: VersionMetaProps) {
   const badgeClass = SPEC_STATUS_BADGE[status];
 
   return (

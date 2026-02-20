@@ -7,13 +7,15 @@ import {apiCategories} from 'sentry-docs/build/resolveOpenAPI';
 import {ApiCategoryPage} from 'sentry-docs/components/apiCategoryPage';
 import {ApiPage} from 'sentry-docs/components/apiPage';
 import {DocPage} from 'sentry-docs/components/docPage';
+import {
+  isSpecStatus,
+  VersionChangelog,
+  VersionMeta,
+} from 'sentry-docs/components/document-versioning';
 import {Home} from 'sentry-docs/components/home';
 import {Include} from 'sentry-docs/components/include';
 import {PageLoadMetrics} from 'sentry-docs/components/pageLoadMetrics';
 import {PlatformContent} from 'sentry-docs/components/platformContent';
-import {SpecChangelog} from 'sentry-docs/components/specChangelog';
-import {isSpecStatus} from 'sentry-docs/components/specConstants';
-import {SpecMeta} from 'sentry-docs/components/specMeta';
 import {
   DocNode,
   getCurrentPlatformOrGuide,
@@ -67,8 +69,8 @@ function mdxComponentsForFrontMatter(frontMatter: Record<string, unknown>) {
         }))
     : undefined;
   if (changelog && changelog.length > 0) {
-    specOverrides.SpecChangelog = function () {
-      return <SpecChangelog changelog={changelog} />;
+    specOverrides.VersionChangelog = function () {
+      return <VersionChangelog changelog={changelog} />;
     };
   }
   if (frontMatter.spec_version && isSpecStatus(frontMatter.spec_status)) {
@@ -76,8 +78,8 @@ function mdxComponentsForFrontMatter(frontMatter: Record<string, unknown>) {
       version: String(frontMatter.spec_version),
       status: frontMatter.spec_status,
     };
-    specOverrides.SpecMeta = function () {
-      return <SpecMeta {...boundProps} />;
+    specOverrides.VersionMeta = function () {
+      return <VersionMeta {...boundProps} />;
     };
   }
   return mdxComponents(

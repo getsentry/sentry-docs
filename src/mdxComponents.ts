@@ -15,6 +15,12 @@ import {CreateGitHubAppForm} from './components/createGitHubAppForm';
 import {DefinitionList} from './components/definitionList';
 import {DevDocsCardGrid} from './components/devDocsCardGrid';
 import DocImage from './components/docImage';
+import {
+  RfcComplianceAlert,
+  VersionChangelog,
+  VersionedSection,
+  VersionMeta,
+} from './components/document-versioning';
 import {Expandable} from './components/expandable';
 import {FeatureBadge} from './components/featureBadge';
 import {GitHubCodePreview} from './components/githubCodePreview';
@@ -52,10 +58,6 @@ import {SdkApi} from './components/sdkApi';
 import {SdkOption} from './components/sdkOption';
 import {SignInNote} from './components/signInNote';
 import {SmartLink} from './components/smartLink';
-import {SpecChangelog} from './components/specChangelog';
-import {SpecMeta} from './components/specMeta';
-import {SpecRfcAlert} from './components/specRfcAlert';
-import {SpecSection} from './components/specSection';
 import {
   SplitLayout,
   SplitSection,
@@ -124,10 +126,10 @@ export function mdxComponents(
     SandboxLink,
     CopyableCard,
     SignInNote,
-    SpecChangelog,
-    SpecMeta,
-    SpecRfcAlert,
-    SpecSection,
+    RfcComplianceAlert,
+    VersionMeta,
+    VersionChangelog,
+    VersionedSection,
     SplitLayout,
     SplitSection,
     SplitSectionText,

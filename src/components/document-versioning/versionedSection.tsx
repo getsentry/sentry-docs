@@ -1,8 +1,8 @@
 import type {ReactNode} from 'react';
 
-import {SPEC_STATUS_BADGE, type SpecStatus} from './specConstants';
+import {SPEC_STATUS_BADGE, type SpecStatus} from './constants';
 
-type SpecSectionProps = {
+type VersionedSectionProps = {
   children: ReactNode;
   id: string;
   since: string;
@@ -24,13 +24,13 @@ const STATUS_CONFIG: Record<SpecStatus, {borderColor: string; label: string}> = 
   },
 };
 
-export function SpecSection({
+export function VersionedSection({
   id,
   status,
   since,
   superseded_by,
   children,
-}: SpecSectionProps) {
+}: VersionedSectionProps) {
   const {label, borderColor} = STATUS_CONFIG[status];
   const badgeClass = SPEC_STATUS_BADGE[status];
 

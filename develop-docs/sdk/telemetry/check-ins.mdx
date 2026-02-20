@@ -33,9 +33,9 @@ spec_changelog:
 sidebar_order: 1
 ---
 
-<SpecRfcAlert />
+<RfcComplianceAlert />
 
-<SpecMeta />
+<VersionMeta />
 
 ## Overview
 
@@ -79,7 +79,7 @@ SDKs can send monitor configuration (schedule, thresholds, timezone) alongside a
 
 ### Check-In Lifecycle
 
-<SpecSection id="check-in-lifecycle" status="stable" since="1.0.0">
+<VersionedSection id="check-in-lifecycle" status="stable" since="1.0.0">
 
 SDKs **MUST** generate a unique `check_in_id` (UUID v4) when a job execution starts and send a check-in with status `in_progress`.
 
@@ -87,21 +87,21 @@ When the job completes, SDKs **MUST** send a second check-in with the same `chec
 
 SDKs **SHOULD** compute the `duration` field for terminal check-ins (`ok` or `error`) by measuring the elapsed time since the `in_progress` check-in was sent.
 
-</SpecSection>
+</VersionedSection>
 
 ### Trace Context Linking
 
-<SpecSection id="trace-context-linking" status="stable" since="1.3.0">
+<VersionedSection id="trace-context-linking" status="stable" since="1.3.0">
 
 SDKs **SHOULD** include a `contexts.trace` object with a `trace_id` field to link the check-in to associated errors and traces.
 
 If the job execution is part of an active trace, the SDK **SHOULD** use that trace's `trace_id`. Otherwise, the SDK **MAY** generate a new `trace_id` for correlation purposes.
 
-</SpecSection>
+</VersionedSection>
 
 ### Updating in_progress Check-Ins
 
-<SpecSection id="zero-uuid-update" status="stable" since="1.2.0">
+<VersionedSection id="zero-uuid-update" status="stable" since="1.2.0">
 
 SDKs **MAY** send a check-in with `check_in_id` set to an empty UUID (128-bit zero value, `00000000000000000000000000000000`) to indicate that Sentry **SHOULD** update the most recent `in_progress` check-in for the given monitor.
 
@@ -109,21 +109,21 @@ If no `in_progress` check-in exists, Sentry creates a new one.
 
 This is useful for fire-and-forget patterns where the SDK does not retain the original `check_in_id`.
 
-</SpecSection>
+</VersionedSection>
 
 ### Monitor Upsert
 
-<SpecSection id="monitor-upsert" status="stable" since="1.1.0">
+<VersionedSection id="monitor-upsert" status="stable" since="1.1.0">
 
 SDKs **MAY** include a `monitor_config` object in the check-in payload. When present, Sentry creates the monitor if it does not exist, or updates its configuration if it does.
 
 SDKs **SHOULD** only send `monitor_config` on the first check-in of a job execution (the `in_progress` check-in), not on every check-in.
 
-</SpecSection>
+</VersionedSection>
 
 ### Auto-Instrumentation
 
-<SpecSection id="auto-instrumentation" status="stable" since="1.1.0">
+<VersionedSection id="auto-instrumentation" status="stable" since="1.1.0">
 
 SDKs **MAY** provide integrations that automatically instrument popular scheduling libraries. When available, these integrations **SHOULD**:
 
@@ -133,7 +133,7 @@ SDKs **MAY** provide integrations that automatically instrument popular scheduli
 
 Known integrations include Celery Beat (Python), node-cron / cron / node-schedule (JavaScript), Sidekiq-Cron (Ruby), and Oban/Quantum (Elixir).
 
-</SpecSection>
+</VersionedSection>
 
 ---
 
@@ -141,7 +141,7 @@ Known integrations include Celery Beat (Python), node-cron / cron / node-schedul
 
 ### Check-In Payload
 
-<SpecSection id="check-in-payload" status="stable" since="1.0.0">
+<VersionedSection id="check-in-payload" status="stable" since="1.0.0">
 
 A check-in is sent as a `check_in` envelope item containing a JSON object.
 
@@ -176,11 +176,11 @@ A check-in is sent as a `check_in` envelope item containing a JSON object.
 - A `check_in` item **MUST** occur at most once per envelope.
 - Maximum item size: 100 KiB.
 
-</SpecSection>
+</VersionedSection>
 
 ### Monitor Configuration Payload
 
-<SpecSection id="monitor-config-payload" status="stable" since="1.1.0">
+<VersionedSection id="monitor-config-payload" status="stable" since="1.1.0">
 
 When included, the `monitor_config` object supports the following fields:
 
@@ -211,11 +211,11 @@ When included, the `monitor_config` object supports the following fields:
 | `timezone` | String | **OPTIONAL** | 1.1.0 | A [tz database](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) string for the monitor's execution schedule timezone. |
 | `owner` | String | **OPTIONAL** | 1.5.0 | An actor identifier string, e.g. `user:john@example.com` or `team:a-sentry-team`. |
 
-</SpecSection>
+</VersionedSection>
 
 ### Schedule Configuration
 
-<SpecSection id="schedule-config" status="stable" since="1.1.0">
+<VersionedSection id="schedule-config" status="stable" since="1.1.0">
 
 <Alert>
 This configuration format differs slightly from what is accepted in the
@@ -239,7 +239,7 @@ The `schedule` object **MUST** contain a `type` field set to either `crontab` or
 | `value` | Number | **REQUIRED** | The interval value. |
 | `unit` | String | **REQUIRED** | One of `year`, `month`, `week`, `day`, `hour`, `minute`. |
 
-</SpecSection>
+</VersionedSection>
 
 ---
 
@@ -247,7 +247,7 @@ The `schedule` object **MUST** contain a `type` field set to either `crontab` or
 
 ### Capture Check-In
 
-<SpecSection id="capture-check-in" status="stable" since="1.0.0">
+<VersionedSection id="capture-check-in" status="stable" since="1.0.0">
 
 SDKs **MUST** expose a top-level function to send a check-in:
 
@@ -266,11 +266,11 @@ Naming **SHOULD** follow the SDK's language conventions:
 - `capture_check_in` (Python, Ruby, Elixir)
 - `CaptureCheckIn` (Go, .NET)
 
-</SpecSection>
+</VersionedSection>
 
 ### Monitor Wrapper
 
-<SpecSection id="monitor-wrapper" status="stable" since="1.1.0">
+<VersionedSection id="monitor-wrapper" status="stable" since="1.1.0">
 
 SDKs **SHOULD** expose a higher-level wrapper that automatically sends `in_progress` and `ok`/`error` check-ins around a callback:
 
@@ -290,17 +290,17 @@ SDKs **MAY** additionally provide language-idiomatic alternatives:
 - **Mixins** (Ruby): `include Sentry::Cron::MonitorCheckIns`
 - **Annotations** (Java/Kotlin): framework-specific annotations
 
-</SpecSection>
+</VersionedSection>
 
 ### Hooks
 
-<SpecSection id="hooks" status="stable" since="1.6.0">
+<VersionedSection id="hooks" status="stable" since="1.6.0">
 
 Check-in events **MUST NOT** go through the `beforeSend` hook. The `beforeSend` hook is reserved for error events.
 
 SDKs **MAY** implement a dedicated `beforeSendCheckIn` hook that applies only to check-in events.
 
-</SpecSection>
+</VersionedSection>
 
 ---
 
@@ -391,4 +391,4 @@ The terminal envelope payload omits the config:
 
 ## Changelog
 
-<SpecChangelog />
+<VersionChangelog />

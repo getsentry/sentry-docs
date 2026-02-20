@@ -4,11 +4,11 @@ type ChangelogEntry = {
   version: string;
 };
 
-type SpecChangelogProps = {
+type VersionChangelogProps = {
   changelog: ChangelogEntry[];
 };
 
-export function SpecChangelog({changelog}: SpecChangelogProps) {
+export function VersionChangelog({changelog}: VersionChangelogProps) {
   if (!changelog || changelog.length === 0) {
     return null;
   }

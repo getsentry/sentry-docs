@@ -1,6 +1,6 @@
-import {Alert} from './alert';
+import {Alert} from '../alert';
 
-export function SpecRfcAlert() {
+export function RfcComplianceAlert() {
   return (
     <Alert>
       This document uses key words such as "MUST", "SHOULD", and "MAY" as defined in{' '}
