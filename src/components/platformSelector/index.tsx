@@ -13,7 +13,7 @@ import {Combobox, ComboboxItem, ComboboxList, ComboboxProvider} from '@ariakit/r
 import {CaretRightIcon, CaretSortIcon, MagnifyingGlassIcon} from '@radix-ui/react-icons';
 import * as RadixSelect from '@radix-ui/react-select';
 import {matchSorter} from 'match-sorter';
-import {usePathname, useRouter} from 'next/navigation';
+import {usePathname} from 'next/navigation';
 
 import {PlatformIcon} from 'sentry-docs/components/platformIcon';
 import {Platform, PlatformGuide, PlatformIntegration} from 'sentry-docs/types';
