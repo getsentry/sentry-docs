@@ -167,7 +167,7 @@ export default async function Home() {
         {/* Sentry Features Header */}
         <h2 className="text-2xl mt-0 mb-6 font-medium">Sentry features</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Sentry Error Monitoring */}
+          {/* Sentry Debugging */}
           <div
             className="bg-white dark:bg-[var(--gray-2)] rounded-xl p-6 flex items-start gap-4"
             style={{
@@ -185,7 +185,7 @@ export default async function Home() {
             >
               <img
                 src={ErrorMonitoringHero.src}
-                alt="Sentry Error Monitoring"
+                alt="Sentry Debugging"
                 style={{
                   width: '100%',
                   height: '100%',
@@ -196,7 +196,7 @@ export default async function Home() {
             </div>
             <div className="flex-1">
               <h3 className="text-lg font-semibold mb-2 text-[var(--gray-12)]">
-                Sentry Error Monitoring
+                Sentry Debugging
               </h3>
               <p className="text-sm text-[var(--gray-11)] leading-relaxed">
                 Monitor, identify, and resolve errors and performance issues across your
@@ -224,7 +224,7 @@ export default async function Home() {
             </div>
           </div>
 
-          {/* AI in Sentry */}
+          {/* AI for Agents and AI in Sentry */}
           <div
             className="bg-white dark:bg-[var(--gray-2)] rounded-xl p-6 flex items-start gap-4"
             style={{
@@ -253,24 +253,36 @@ export default async function Home() {
             </div>
             <div className="flex-1">
               <h3 className="text-lg font-semibold mb-2 text-[var(--gray-12)]">
-                AI in Sentry
+                AI for Agents and AI in Sentry
               </h3>
               <p className="text-sm text-[var(--gray-11)] leading-relaxed">
-                Fix code faster by having{' '}
+                Use Sentry's{' '}
+                <a href="/ai/agent-skills/" className="text-[#8b5cf6] underline">
+                  skills
+                </a>{' '}
+                and{' '}
+                <a href="/ai/mcp/" className="text-[#8b5cf6] underline">
+                  MCP server
+                </a>{' '}
+                with your agents, and start{' '}
+                <a href="/ai/monitoring/" className="text-[#8b5cf6] underline">
+                  monitoring your AI features
+                </a>
+                . Fix code faster with{' '}
                 <a
-                  href="/product/ai-in-sentry/seer/"
+                  href="/product/ai-in-sentry/seer/root-cause-analysis/"
                   className="text-[#8b5cf6] underline"
                 >
-                  Seer
+                  root cause analysis
                 </a>{' '}
-                automatically find and remedy the root cause of your issues. Use{' '}
+                in debugging your issues. Use{' '}
                 <a
-                  href="/product/ai-in-sentry/ai-code-review/"
+                  href="/product/ai-in-sentry/seer/ai-code-review/"
                   className="text-[#8b5cf6] underline"
                 >
-                  Code Review
+                  code review
                 </a>{' '}
-                to review your PRs and suggest improvements.
+                to review your PRs and prevent errors.
               </p>
             </div>
           </div>
