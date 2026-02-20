@@ -1,27 +1,30 @@
 ---
 title: Release and Versioning
-sidebar_order: 99
+sidebar_order: 6
 ---
+
+<SpecRfcAlert />
 
 ## Version Format
 
 #### Rule
 
-All SDK versions follow [semantic versioning (SemVer)](https://semver.org/):
+All SDK versions **MUST** follow [semantic versioning (SemVer)](https://semver.org/):
 
 ```
 <major>.<minor>.<patch>(-<prerelease>)?(-<build>)?
 ```
 
-Major, minor, and patch are required. Pre-release and build identifiers are optional and can be combined.
+Major, minor, and patch are **REQUIRED**. Pre-release and build identifiers are **OPTIONAL** and can be combined.
 
 #### Enforcement
 
 - [Craft](https://github.com/getsentry/craft) validates version format at release time.
 
-#### Per-SDK Override
+#### Per-SDK override
 
-<StatusBadge type="no" /> Format is universal. Language-specific conventions around SemVer (if applicable) are allowed.
+<StatusBadge type="no" /> Format is universal. Language-specific conventions
+around SemVer (if applicable) are allowed.
 
 ---
 
@@ -29,9 +32,10 @@ Major, minor, and patch are required. Pre-release and build identifiers are opti
 
 #### Rule
 
-Pre-release identifiers must be one of: `preview`, `pre`, `rc`, `dev`, `alpha`, `beta`, `unstable`, `a`, `b`. Arbitrary strings are not accepted.
+Pre-release identifiers **MUST** be one of: `preview`, `pre`, `rc`, `dev`, `alpha`, `beta`, `unstable`, `a`, `b`. Arbitrary strings are not accepted.
 
 Pre-releases:
+
 - Do not receive a `latest` tag in package registries
 - Are not inserted into the internal release-registry (used by Sentry product, docs, and tooling)
 
@@ -51,13 +55,13 @@ Invalid (treated as stable):
 1.0.0-canary.0
 ```
 
-**Python post-releases:** Python has the concept of post-releases indicated by a numeric-only suffix (e.g. `1.0.0-1`). Since this doesn't match any valid pre-release identifier, craft treats post-releases as stable releases.
+**Python post-releases:** Python has the concept of post-releases indicated by a numeric-only suffix (e.g., `1.0.0-1`). Since this doesn't match any valid pre-release identifier, craft treats post-releases as stable releases.
 
 #### Enforcement
 
 - Craft rejects unrecognized identifiers or treats them as stable releases.
 
-#### Per-SDK Override
+#### Per-SDK override
 
 <StatusBadge type="no" />
 
@@ -67,7 +71,7 @@ Invalid (treated as stable):
 
 #### Rule
 
-Build identifiers can be appended for platform or architecture variants. When combined with pre-release identifiers, the pre-release must come first.
+Build identifiers **MAY** be appended for platform or architecture variants. When combined with pre-release identifiers, the pre-release **MUST** come first.
 
 Valid examples:
 
@@ -87,9 +91,10 @@ Invalid:
 
 - Craft validates format at release time.
 
-#### Per-SDK Override
+#### Per-SDK override
 
-<StatusBadge type="yes" /> Usage depends on whether the SDK publishes platform-specific artifacts.
+<StatusBadge type="yes" /> Usage depends on whether the SDK publishes
+platform-specific artifacts.
 
 ---
 
@@ -97,7 +102,7 @@ Invalid:
 
 #### Rule
 
-SDKs use [craft](https://github.com/getsentry/craft) for release preparation and [publish](https://github.com/getsentry/publish) for release approval. Every SDK repository must have:
+SDKs **MUST** use [craft](https://github.com/getsentry/craft) for release preparation and [publish](https://github.com/getsentry/publish) for release approval. Every SDK repo **MUST** have:
 
 - `.craft.yml` — release configuration
 - `scripts/bump-version.sh` — version bump script invoked by craft
@@ -110,9 +115,10 @@ See the [setting up release infrastructure](/sdk/getting-started/playbooks/setti
 - Craft enforces configuration at release time.
 - Publish requires approval label before artifacts are published.
 
-#### Per-SDK Override
+#### Per-SDK override
 
-<StatusBadge type="yes" /> Craft targets and bump-version logic are SDK-specific. Toolchain is universal.
+<StatusBadge type="yes" /> Craft targets and bump-version logic are
+SDK-specific. Toolchain is universal.
 
 ---
 
@@ -138,7 +144,7 @@ Add a corresponding `merge_target` input to the workflow's `workflow_dispatch.in
 
 - Craft handles branch targeting at release time.
 
-#### Per-SDK Override
+#### Per-SDK override
 
 <StatusBadge type="yes" /> Depends on branching strategy.
 
@@ -148,7 +154,7 @@ Add a corresponding `merge_target` input to the workflow's `workflow_dispatch.in
 
 #### Rule
 
-When a repository maintains multiple major versions (e.g. v7 and v8) with diverging publishing targets, it can opt into using the `.craft.yml` from the merge target branch instead of the default branch.
+When a repository maintains multiple major versions (e.g., v7 and v8) with diverging publishing targets, it can opt into using the `.craft.yml` from the merge target branch instead of the default branch.
 
 **Release preparation:** Add `craft_config_from_merge_target: true` when calling `getsentry/craft` in the release workflow:
 
@@ -169,13 +175,14 @@ This input is also available in the [reusable workflow](https://craft.sentry.dev
     fromJSON(steps.inputs.outputs.result).repo == 'sentry-javascript' && fromJSON(steps.inputs.outputs.result).merge_target == 'v7'
 ```
 
-The registered branches **must be** protected in the target repository — disable direct pushing and require PR approvals before merging.
+The registered branches **MUST** be protected in the target repository — disable direct pushing and require PR approvals before merging.
 
 #### Enforcement
 
 - Craft validates config from the specified branch.
 - Publish workflow enforces branch protection requirement.
 
-#### Per-SDK Override
+#### Per-SDK override
 
-<StatusBadge type="yes" /> Only needed for repos maintaining multiple major versions.
+<StatusBadge type="yes" /> Only needed for repos maintaining multiple major
+versions.
