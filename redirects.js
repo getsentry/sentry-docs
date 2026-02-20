@@ -1106,11 +1106,11 @@ const userDocsRedirects = [
   },
   {
     source: '/product/insights/llm-monitoring/:path*',
-    destination: '/product/insights/ai/',
+    destination: '/ai/monitoring/',
   },
   {
     source: '/product/insights/agents/:path*',
-    destination: '/product/insights/ai/agents/:path*',
+    destination: '/ai/monitoring/agents/:path*',
   },
   // AI Agent Monitoring moved to top-level feature
   {
@@ -1412,7 +1412,7 @@ const userDocsRedirects = [
   },
   {
     source: '/product/insights/mcp/',
-    destination: '/product/insights/ai/mcp/',
+    destination: '/ai/monitoring/mcp/',
   },
   // Next.js usage -> capturing-errors rename
   {
