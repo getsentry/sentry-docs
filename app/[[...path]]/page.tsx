@@ -158,7 +158,6 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
     let doc: Awaited<ReturnType<typeof getFileBySlugWithCache>>;
     try {
       doc = await getFileBySlugWithCache(`develop-docs/${params.path?.join('/') ?? ''}`);
-<<<<<<< HEAD
     } catch (e: unknown) {
       // Handle file not found and runtime MDX compilation errors gracefully.
       // This can happen when serverless function is invoked at runtime but docs files

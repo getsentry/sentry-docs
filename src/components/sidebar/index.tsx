@@ -44,14 +44,6 @@ export async function Sidebar({path, versions}: SidebarProps) {
     );
   }
 
-  // Extract basic platforms list for SDK link redirection (used by MobileSidebarNav)
-  const basicPlatforms: Platform[] = !rootNode
-    ? []
-    : extractPlatforms(rootNode).map(platform => ({
-        ...platform,
-        guides: platform.guides,
-      }));
-
   const currentPlatform = getCurrentPlatform(rootNode, path);
   const currentGuide = getCurrentGuide(rootNode, path);
 
@@ -126,7 +118,7 @@ export async function Sidebar({path, versions}: SidebarProps) {
           className="md:flex flex-col items-stretch h-full"
           style={{display: 'flex', flexDirection: 'column', height: '100%'}}
         >
-          <MobileSidebarNav platforms={basicPlatforms} />
+          <MobileSidebarNav />
           <div className="platform-selector px-3">
             <div className="mb-3">
               <PlatformSelector
@@ -165,7 +157,7 @@ export async function Sidebar({path, versions}: SidebarProps) {
         className="md:flex flex-col items-stretch h-full"
         style={{display: 'flex', flexDirection: 'column', height: '100%'}}
       >
-        <MobileSidebarNav platforms={basicPlatforms} />
+        <MobileSidebarNav />
         <div
           className={`${styles['sidebar-main']} px-3 flex-1`}
           style={{overflow: 'auto'}}

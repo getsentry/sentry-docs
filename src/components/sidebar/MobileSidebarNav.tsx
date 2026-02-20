@@ -43,6 +43,8 @@ const adminSections = [
 const mainSections = [
   {label: 'SDKs', href: '/platforms/'},
   {label: 'Product', href: '/product/', dropdown: productSections},
+  {label: 'AI', href: '/ai/'},
+  {label: 'Guides', href: '/guides/'},
   {label: 'Concepts', href: '/concepts/', dropdown: conceptsSections},
   {label: 'Admin', href: '/organization/', dropdown: adminSections},
   {label: 'API', href: '/api/'},

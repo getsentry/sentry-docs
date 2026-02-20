@@ -38,6 +38,8 @@ const mainSections = [
     href: '/product/',
     dropdown: productSections,
   },
+  {label: 'AI', href: '/ai/'},
+  {label: 'GUIDES', href: '/guides/'},
   {
     label: 'CONCEPTS',
     href: '/concepts/',
