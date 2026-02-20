@@ -1,9 +1,51 @@
 ---
 title: Metrics
+spec_id: sdk/telemetry/metrics
+spec_version: 2.5.0
+spec_status: stable
+spec_depends_on:
+  - id: sdk/foundations/data-model/envelopes
+    version: ">=1.0.0"
+  - id: sdk/telemetry/attributes
+    version: ">=1.0.0"
+spec_changelog:
+  - version: 2.5.0
+    date: 2026-02-12
+    summary: Clarified sendDefaultPii gating for user attributes — allowed when user manually sets data
+  - version: 2.4.1
+    date: 2026-01-19
+    summary: Fixed example — replaced unsupported set type with gauge
+  - version: 2.4.0
+    date: 2026-01-14
+    summary: SDKs MUST NOT restrict unit values, SHOULD offer constants for supported units
+  - version: 2.3.1
+    date: 2026-01-09
+    summary: Fixed Swift API examples (syntax correction)
+  - version: 2.3.0
+    date: 2025-12-15
+    summary: Added span_id field, added replay association (sentry.replay_id, sentry._internal.replay_is_buffering)
+  - version: 2.2.0
+    date: 2025-11-19
+    summary: Tightened buffering from SHOULD to MUST, added telemetry buffer forwarding scenarios
+  - version: 2.1.0
+    date: 2025-11-17
+    summary: Added backend SDK default attributes (server.address)
+  - version: 2.0.0
+    date: 2025-11-13
+    summary: Breaking — new trace_metric JSON envelope format, attribute system replacing tags
+  - version: 1.0.0
+    date: 2023-12-07
+    summary: Initial metrics spec (statsd-based format, now superseded)
 sidebar_order: 4
 ---
 
-This document defines the format used by Sentry to ingest metrics, as well as the SDK API and behavior that create and send metrics to Sentry.
+<SpecRfcAlert />
+
+<SpecMeta />
+
+## Overview
+
+This spec defines the format used by Sentry to ingest metrics, as well as the SDK API and behavior that create and send metrics to Sentry. Metrics are sent as `trace_metric` envelope items containing JSON-encoded payloads.
 
 <Alert title="Note" level="info">
 
@@ -11,13 +53,166 @@ The envelope item type is named `trace_metric` for internal usage to avoid namin
 
 </Alert>
 
-## Metrics Protocol
+Related specs:
+- [Envelopes](/sdk/foundations/data-model/envelopes/) — transport format
+- [Envelope Items](/sdk/foundations/data-model/envelope-items/) — `trace_metric` item type constraints
+- [Attributes](/sdk/telemetry/attributes/) — attribute types and structure
+- [Tracing without Performance](/sdk/telemetry/traces/tracing-without-performance/) — required before adding metrics support
+- [Telemetry Processor](/sdk/foundations/processing/telemetry-processor/) — buffer data forwarding scenarios
 
-Metrics are sent to Sentry via the `trace_metric` envelope item. Each `trace_metric` envelope item contains a batch of metric payloads encoded as JSON, allowing for transmission of multiple metrics in a single envelope.
+---
+
+## Concepts
+
+### Metric Types
+
+A metric has a `type` that determines how its values are interpreted:
+
+- **Counter** — tracks the number of times an event occurs. Only increases. Useful for requests, errors, or any countable event.
+- **Gauge** — tracks a value that can arbitrarily increase or decrease over time, such as memory usage, queue depth, or connection pool size.
+- **Distribution** — tracks the statistical distribution of a set of values. Useful for understanding percentiles, averages, and other statistical properties of measurements like response times or file sizes.
+
+### Attributes
+
+Metrics carry typed key-value pairs called **attributes** for dimensional filtering and grouping. Each attribute declares its type (`string`, `boolean`, `integer`, `double`). See [Attributes](/sdk/telemetry/attributes/) for the full type specification.
+
+### Batching
+
+Multiple metrics are batched into a single `trace_metric` envelope item for efficient transport. SDKs buffer metrics locally and flush them periodically or when size thresholds are reached.
+
+---
+
+## Behavior
+
+<Alert title="Note" level="warning">
+
+An SDK **SHOULD** implement [Tracing without Performance](/sdk/telemetry/traces/tracing-without-performance/) before adding support for metrics. This is required to ensure that metrics are associated with traces and that the correct trace context is sent to Sentry.
+
+</Alert>
+
+### Processing Pipeline
+
+<SpecSection id="processing-pipeline" status="stable" since="2.0.0">
+
+Metric processing **MUST** follow this order:
+
+1. Capture metric via [Public APIs](#metrics-module) (e.g. `Sentry.metrics.count`).
+2. Check if metrics are disabled as per `enableMetrics`/`enable_metrics` configuration — if so, skip the rest of the steps.
+3. Process captured metric (attach default attributes as per [Default Attributes](#default-attributes)).
+4. Run `beforeSendMetric`/`before_send_metric` to filter or modify the metric.
+5. Add metric to buffer/batch processor as detailed in [Buffering](#buffering).
+6. At time of flushing buffer, send array of metrics to Sentry via `trace_metric` envelope, apply rate limiting as per [Data Category and Rate Limiting](#data-category-and-rate-limiting).
+
+</SpecSection>
+
+### Default Attributes
+
+<SpecSection id="default-attributes" status="stable" since="2.0.0">
+
+SDKs **MUST** attach the following attributes to every metric by default:
+
+1. `sentry.environment` — the environment set in the SDK, if defined.
+2. `sentry.release` — the release set in the SDK, if defined.
+3. `sentry.sdk.name` — the name of the SDK that sent the metric.
+4. `sentry.sdk.version` — the version of the SDK that sent the metric.
+
+SDKs **SHOULD** minimize the number of default attributes. Metrics cardinality can explode quickly with too many attributes. New default attributes **SHOULD** only be added after significant feedback from users and discussion internally with the SDK and ingest teams.
+
+</SpecSection>
+
+### User Attributes
+
+<SpecSection id="user-attributes" status="stable" since="2.0.0">
+
+SDKs **MAY** attach user information as attributes, guarded by `sendDefaultPii` ([unless manually set by user](/sdk/expected-features/data-handling/#sensitive-data), since 2.5.0):
+
+1. `user.id` — the user ID. Maps to `id` in the [User](/sdk/foundations/data-model/event-payloads/user/) payload.
+2. `user.name` — the username. Maps to `username` in the [User](/sdk/foundations/data-model/event-payloads/user/) payload.
+3. `user.email` — the email address. Maps to `email` in the [User](/sdk/foundations/data-model/event-payloads/user/) payload.
+
+</SpecSection>
+
+### Browser Attributes (Relay)
+
+<SpecSection id="browser-attributes" status="stable" since="2.0.0">
+
+By default, Relay parses the user agent attached to an incoming metric envelope to extract `browser` and `os` information. These attributes are attached by Relay, but client-side SDKs **MAY** attach them if they do not forward a user agent when sending metrics to Sentry.
+
+1. `browser.name` — display name of the browser application. Maps to `name` in the [Browser Context](/sdk/foundations/data-model/event-payloads/contexts/#browser-context).
+2. `browser.version` — version string of the browser. Maps to `version` in the [Browser Context](/sdk/foundations/data-model/event-payloads/contexts/#browser-context).
+
+</SpecSection>
+
+### Backend SDK Attributes
+
+<SpecSection id="backend-attributes" status="stable" since="2.1.0">
+
+Backend SDKs (Node.js, Python, PHP, etc.) **SHOULD** attach the following attribute:
+
+1. `server.address` — the address of the server that sent the metric. Equivalent to [`server_name`](/sdk/foundations/data-model/event-payloads/#optional-attributes) attached to errors and transactions.
+
+</SpecSection>
+
+### Buffering
+
+<SpecSection id="buffering" status="stable" since="2.0.0">
+
+SDKs **MUST** buffer metrics before sending them (since 2.2.0, tightened from SHOULD). SDKs **SHOULD** flush the buffer when specific conditions are met. For initial implementation, a simple strategy is fine, for example: flushing if the buffer length exceeds 100 items or if 5 seconds have passed.
+
+To prevent data loss, the buffer **SHOULD** forward metrics to the transport in the scenarios outlined in the [telemetry buffer data forwarding scenarios](/sdk/foundations/processing/telemetry-processor/#data-forwarding-scenarios) (since 2.2.0).
+
+Furthermore:
+- The aggregation window **SHOULD** be time and size based.
+- SDKs **SHOULD** implement safeguards to prevent excessive memory usage from metric buffering.
+
+</SpecSection>
+
+### Tracing Association
+
+<SpecSection id="tracing-association" status="stable" since="2.0.0">
+
+Metrics **SHOULD** be associated with traces if possible. If a metric is recorded during an active span, the SDK **SHOULD** set the `span_id` property of the metric to the span ID of the span that was active when the metric was collected.
+
+The `trace_id` field is **REQUIRED** on every metric payload and **MUST** be taken from the current propagation context.
+
+</SpecSection>
+
+### Replay Association
+
+<SpecSection id="replay-association" status="stable" since="2.3.0">
+
+Whenever possible, metrics **SHOULD** be linked to replays. If a metric is recorded while an active, sampled replay is in progress, the SDK **SHOULD** attach:
+
+1. `sentry.replay_id` — the ID of the replay that was active when the metric was collected. This **MUST NOT** be set if there was no active replay.
+2. `sentry._internal.replay_is_buffering` — indicates that the metric is associated with a replay that is currently buffering. This ensures correct handling of scenarios where a `replay_id` is present but the corresponding replay was never actually sent.
+
+</SpecSection>
+
+### Data Category and Rate Limiting
+
+<SpecSection id="data-category-rate-limiting" status="stable" since="2.0.0">
+
+The data category for metrics is `trace_metric`. Rate limiting applies as usual. SDKs **SHOULD** track client outcomes to monitor how often metrics are dropped. If the SDK receives a rate limit, it **MUST NOT** send any trace metrics until the limit expires (based on the communicated end timestamp).
+
+</SpecSection>
+
+### Debug Logging
+
+<SpecSection id="debug-logging" status="stable" since="2.0.0">
+
+If `debug` is set to `true` in SDK init, calls to the Sentry metrics API **SHOULD** also print to the console with appropriate details. This will help debugging metrics setups.
+
+</SpecSection>
+
+---
+
+## Wire Format
 
 ### `trace_metric` Envelope Item
 
-The `trace_metric` envelope item is an object that contains an array of metric payloads encoded as JSON. See [Appendix A](#appendix-a-example-trace_metric-envelope) for an example `trace_metric` envelope.
+<SpecSection id="trace-metric-envelope" status="stable" since="2.0.0">
+
+Metrics are sent as a `trace_metric` envelope item containing a JSON object with an `items` array. See the [Examples](#full-trace_metric-envelope) section for a complete envelope.
 
 ```json
 {
@@ -26,18 +221,29 @@ The `trace_metric` envelope item is an object that contains an array of metric p
 	"content_type": "application/vnd.sentry.items.trace-metric+json"
 }
 {
-	"items": [{..metric..}, {..metric..}, {..metric..}, {..metric..}, {..metric..}, ...]
+	"items": [{..metric..}, {..metric..}, {..metric..}]
 }
 ```
 
-### `trace_metric` Envelope Item Payload
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `type` | String | **REQUIRED** | **MUST** be `"trace_metric"`. |
+| `item_count` | Number | **REQUIRED** | Number of metric items in the `items` array. |
+| `content_type` | String | **REQUIRED** | **MUST** be `"application/vnd.sentry.items.trace-metric+json"`. |
 
-The `trace_metric` envelope item payload is a JSON object that represents a Sentry Metric.
+</SpecSection>
+
+### Metric Payload
+
+<SpecSection id="metric-payload" status="stable" since="2.0.0">
+
+Each metric in the `items` array is a JSON object with the following fields:
 
 ```json
 {
   "timestamp": 1544719860.0,
   "trace_id": "5b8efff798038103d269b633813fc60c",
+  "span_id": "b0e6f15b45c36b12",
   "name": "api.response_time",
   "value": 125.5,
   "unit": "millisecond",
@@ -50,75 +256,77 @@ The `trace_metric` envelope item payload is a JSON object that represents a Sent
 }
 ```
 
-It consists of the following fields:
+| Field | Type | Required | Since | Description |
+|-------|------|----------|-------|-------------|
+| `timestamp` | Number | **REQUIRED** | 2.0.0 | Timestamp in seconds (epoch time) indicating when the metric was recorded. |
+| `type` | String | **REQUIRED** | 2.0.0 | The type of metric. One of `counter`, `gauge`, `distribution`. |
+| `name` | String | **REQUIRED** | 2.0.0 | The name of the metric. **SHOULD** follow a hierarchical naming convention using dots as separators (e.g., `api.response_time`, `db.query.duration`). |
+| `value` | Number | **REQUIRED** | 2.0.0 | The numeric value. For `counter`: the count to increment by (default 1). For `gauge`: the current value. For `distribution`: a single measured value. Integers **MUST** be 64-bit signed; doubles **MUST** be 64-bit floating point. |
+| `trace_id` | String | **REQUIRED** | 2.0.0 | 16 random bytes encoded as a hex string (32 characters). Taken from the current propagation context. |
+| `span_id` | String | **OPTIONAL** | 2.3.0 | 8 random bytes encoded as a hex string (16 characters). The span ID of the span that was active when the metric was emitted. |
+| `unit` | String | **OPTIONAL** | 2.0.0 | The unit of measurement for the metric value. |
+| `attributes` | Object | **OPTIONAL** | 2.0.0 | Typed key-value pairs. See [Attributes](/sdk/telemetry/attributes/) for supported types and structure. |
 
-`timestamp`
+</SpecSection>
 
-: **Number, required**. Timestamp in seconds (epoch time) indicating when the metric was recorded.
+---
 
-`type`
+## Public API
 
-: **String, required**. The type of metric. One of:
+### Initialization Options
 
-- `counter`: A metric that increments counts
-- `gauge`: A metric that tracks a value that can go up or down
-- `distribution`: A metric that tracks the statistical distribution of values
+<SpecSection id="initialization-options" status="stable" since="2.0.0">
 
-`name`
+SDKs **MUST** expose the following configuration options:
 
-: **String, required**. The name of the metric. This should follow a hierarchical naming convention using dots as separators (e.g., `api.response_time`, `db.query.duration`).
+- `enableMetrics`/`enable_metrics` — a boolean flag to control if metric envelopes will be generated and sent to Sentry. If `false`, the SDK **MUST NOT** send metrics. Defaults to `true`.
 
-`value`
+- `beforeSendMetric`/`before_send_metric` — an **OPTIONAL** function that takes a metric object and returns a metric object. Called before sending the metric to Sentry. Can be used to modify the metric or prevent it from being sent (by returning `null`/`None`).
 
-: **Number, required**. The numeric value of the metric. The interpretation depends on the metric `type`:
+While metrics functionality is in an experimental state, SDKs **SHOULD** put these options in an experimental namespace to avoid breaking changes:
 
-- For `counter` metrics: the count to increment by (should default to 1)
-- For `gauge` metrics: the current value
-- For `distribution` metrics: a single measured value
+```
+Sentry.init({
+  // stable
+  enableMetrics: true,
 
-Integers should be a 64-bit signed integer, while doubles should be a 64-bit floating point number.
-
-`trace_id`
-
-: **String, required**. The trace id of the metric. The value should be 16 random bytes encoded as a hex string (32 characters long). The trace id should be grabbed from the current propagation context in the SDK.
-
-`span_id`
-
-: **String, optional**. The span id of the span that was active when the metric was emitted. The value should be 8 random bytes encoded as a hex string (16 characters long). The span id should be grabbed from the current active span in the SDK.
-
-`unit`
-
-: **String, optional**. The unit of measurement for the metric value.
-
-`attributes`
-
-: **Object, optional**. A dictionary of key-value pairs of arbitrary data attached to the metric. Attributes must also declare the type of the value. See [Attributes](/sdk/telemetry/attributes) for the supported types and structure.
-
-Example with multiple attribute types:
-
-```json
-{
-  "timestamp": 1544719860.0,
-  "trace_id": "5b8efff798038103d269b633813fc60c",
-  "span_id": "b0e6f15b45c36b12",
-  "name": "http.request.duration",
-  "value": 245.3,
-  "unit": "millisecond",
-  "type": "distribution",
-  "attributes": {
-    "endpoint": { "value": "/api/users", "type": "string" },
-    "status_code": { "value": 200, "type": "integer" },
-    "response_size": { "value": 1024.5, "type": "double" },
-    "cache_hit": { "value": true, "type": "boolean" }
-  }
-}
+  // experimental
+  _experiments: { enableMetrics: true },
+})
 ```
 
-### Metric Types
+</SpecSection>
 
-#### Counter
+### Metrics Module
 
-Counters track the number of times an event occurs. They only increase and are useful for tracking things like requests, errors, or any other countable event.
+<SpecSection id="metrics-module" status="stable" since="2.0.0">
+
+SDKs **MUST** expose metrics methods in a `metrics` module or namespace. At minimum, the SDK **MUST** implement the following methods:
+
+- `Sentry.metrics.count(name, value, options)` — increment a counter
+- `Sentry.metrics.gauge(name, value, options)` — set a gauge value
+- `Sentry.metrics.distribution(name, value, options)` — add a distribution value
+
+**Parameters:**
+
+- `name` **String, required** — the name of the metric.
+- `value` **Number, required** — the value of the metric.
+- `options` **Object, optional** — containing:
+  - `unit` **String, optional** — the unit of measurement (only used for `distribution` and `gauge`). SDKs **MUST NOT** restrict what can be sent in (e.g. by using an enum) but **SHOULD** offer constants or similar that help customers send in <Link to="/sdk/telemetry/attributes/#units">units we support</Link> (since 2.4.0).
+  - `attributes` **Object, optional** — a dictionary of attributes (key-value pairs with type information).
+  - `scope` **Scope, optional** — the scope to capture the metric with.
+
+</SpecSection>
+
+### Threading and Concurrency Considerations
+
+The threading and concurrency considerations for metrics are the same as for logs. See the [Threading and Concurrency Considerations section in the Logs documentation](/sdk/telemetry/logs/#threading-and-concurrency-considerations) for more information.
+
+---
+
+## Examples
+
+### Counter metric
 
 ```json
 {
@@ -132,9 +340,7 @@ Counters track the number of times an event occurs. They only increase and are u
 }
 ```
 
-#### Gauge
-
-Gauges track a value that can arbitrarily increase or decrease over time, such as memory usage, queue depth, or connection pool size.
+### Gauge metric
 
 ```json
 {
@@ -150,9 +356,7 @@ Gauges track a value that can arbitrarily increase or decrease over time, such a
 }
 ```
 
-#### Distribution
-
-Distributions track the statistical distribution of a set of values. They're useful for understanding percentiles, averages, and other statistical properties of measurements like response times or file sizes.
+### Distribution metric
 
 ```json
 {
@@ -167,55 +371,9 @@ Distributions track the statistical distribution of a set of values. They're use
 }
 ```
 
-## Public API
+### SDK API usage
 
-API wise the SDKs are required to expose metrics methods which are to be defined in a `metrics` module or namespace. The SDKs should also include some initialization options to configure the behavior of metrics in the SDK.
-
-### Initialization Options
-
-The SDKs must expose the following configuration options:
-
-- `enableMetrics`/`enable_metrics`: A boolean flag to control if metric envelopes will be generated and sent to Sentry via the Sentry SDK's Metrics APIs. If this flag is set to `false`, the SDK should not send metrics to Sentry. Defaults to `true`.
-
-- `beforeSendMetric`/`before_send_metric`: A function that takes a metric object and returns a metric object. This function is called before sending the metric to Sentry. It can be used to modify the metric object or to prevent the metric from being sent to Sentry. This function is optional.
-
-While the metrics functionality for an SDK is in an experimental state, SDKs should put these configuration options in an experimental namespace to avoid breaking changes.
-
-```js
-Sentry.init({
-  // stable
-  enableMetrics: true,
-
-  // experimental
-  _experiments: { enableMetrics: true },
-});
-```
-
-### Metrics Module
-
-At minimum the SDK needs to implement the following methods for each metric type:
-
-- `Sentry.metrics.count(name, value, options)` - Increment a counter
-- `Sentry.metrics.gauge(name, value, options)` - Set a gauge value
-- `Sentry.metrics.distribution(name, value, options)` - Add a distribution value
-
-#### Method Signatures
-
-The parameters for these methods should be the following, or an equivalent form that is more natural for SDK's language:
-
-- `name` **String, required**: The name of the metric
-- `value` **Number, required**: The value of the metric
-- `options` **Object, optional**: An object containing the following properties:
-  - `unit` **String, optional**: The unit of measurement (only used for `distribution` and `gauge`). SDKs must not restrict what can be sent in (e.g. by using an enum) but should offer constants or similar that help customers send in <Link
-to="/sdk/telemetry/attributes/#units">units we support</Link>.
-  - `attributes` **Object, optional**: A dictionary of attributes (key-value pairs with type information)
-  - `scope` **Scope, optional**: The scope to capture the metric with.
-
-Below are some example SDK implementations to get you started. These are not finalized versions of the API and individual SDK authors should ensure the metrics APIs best fit their platforms.
-
-#### JavaScript
-
-```jsx
+```javascript
 // Increment a counter
 Sentry.metrics.count("button.clicks", 1, {
   attributes: {
@@ -242,9 +400,6 @@ Sentry.metrics.distribution("page.load_time", 245.7, {
   },
 });
 ```
-
-#### Python
-
 ```python
 # Increment a counter
 Sentry.metrics.count(
@@ -269,9 +424,6 @@ Sentry.metrics.distribution(
   attributes={'page': '/dashboard', 'browser': 'chrome'},
 )
 ```
-
-#### PHP
-
 ```php
 use function Sentry\metrics;
 
@@ -289,9 +441,6 @@ metrics()->distribution('page.load_time', 245.7, [
   'attributes' => ['page' => '/dashboard', 'browser' => 'chrome']
 ]);
 ```
-
-#### Java
-
 ```java
 import io.sentry.Sentry;
 
@@ -313,11 +462,7 @@ Sentry.metrics().distribution("page.load_time", 245.7,
   )
 );
 ```
-
-#### Apple
-
 ```swift
-// Swift
 SentrySDK.metrics()
   .count(
     name: "button.clicks",
@@ -342,36 +487,7 @@ SentrySDK.metrics()
   )
 ```
 
-### Threading and Concurrency Considerations
-
-The threading and concurrency considerations for metrics are the same as for logs. See the [Threading and Concurrency Considerations section in the Logs documentation](/sdk/telemetry/logs/#threading-and-concurrency-considerations) for more information.
-
-## SDK Behavior
-
-In general metric processing should follow this order:
-
-1. Capture metric via [Public APIs](#metrics-module) (e.g. `Sentry.metrics.increment`).
-1. Check if metrics are disabled as per `enableMetrics`/`enable_metrics` configuration - if so, skip the rest of the steps.
-1. Process captured metric (attach default attributes as per [default attributes](#default-attributes)).
-1. Run `beforeSendMetric`/`before_send_metric` to filter or modify the metric.
-1. Add metric to buffer/batch processor as detailed in [buffering](#buffering).
-1. At time of flushing buffer, send array of metrics to Sentry via `trace_metric` envelope, apply rate limiting as per [data category and rate limiting](#data-category-and-rate-limiting).
-
-<Alert title="Note" level="warning">
-
-An SDK should implement [Tracing without Performance](/sdk/telemetry/traces/tracing-without-performance) before adding support for metrics. This is required to ensure that metrics are associated with traces and that the correct trace context is sent to Sentry.
-
-</Alert>
-
-### Default Attributes
-
-By default the SDK should attach the following attributes to a metric:
-
-1. `sentry.environment`: The environment set in the SDK if defined.
-2. `sentry.release`: The release set in the SDK if defined.
-3. `sentry.sdk.name`: The name of the SDK that sent the metric
-4. `sentry.sdk.version`: The version of the SDK that sent the metric
-5. `sentry.replay_id`: The replay id of the replay that was active when the metric was collected. This should not be set if there was no active replay.
+### Default attributes example
 
 ```json
 {
@@ -391,13 +507,7 @@ By default the SDK should attach the following attributes to a metric:
 }
 ```
 
-#### User Attributes
-
-SDKs may optionally attach user information as attributes (guarded by `sendDefaultPii`):
-
-1. `user.id`: The user ID. Maps to `id` in the [User](/sdk/data-model/event-payloads/user/) payload.
-2. `user.name`: The username. Maps to `username` in the [User](/sdk/data-model/event-payloads/user/) payload.
-3. `user.email`: The email address. Maps to `email` in the [User](/sdk/data-model/event-payloads/user/) payload.
+### User attributes example
 
 ```json
 {
@@ -409,70 +519,7 @@ SDKs may optionally attach user information as attributes (guarded by `sendDefau
 }
 ```
 
-#### User Agent Parsing
-
-By default, Relay should parse the user agent attached to an incoming metric envelope to parse `browser` and `os` information for metrics. These attributes should be attached by Relay, but client-side SDKs can attach them if they do not forward a user agent when sending metrics to Sentry.
-
-1. `browser.name`: Display name of the browser application. Maps to `name` in the [Contexts](/sdk/data-model/event-payloads/contexts/#browser-context) payload.
-2. `browser.version`: Version string of the browser. Maps to `version` in the [Contexts](/sdk/data-model/event-payloads/contexts/#browser-context) payload.
-
-```json
-{
-  "attributes": {
-    "browser.name": { "value": "Chrome", "type": "string" },
-    "browser.version": { "value": "120.0", "type": "string" }
-  }
-}
-```
-
-#### Backend SDKs
-
-For backend SDKs (Node.js, Python, PHP, etc.), the SDKs should attach the following:
-
-1. `server.address`: The address of the server that sent the metric. Equivalent to [`server_name`](/sdk/data-model/event-payloads/#optional-attributes) we attach to errors and transactions.
-
-```json
-{
-  "attributes": {
-    "server.address": { "value": "foo.example.com", "type": "string" }
-  }
-}
-```
-
-#### Future Default Attributes
-
-The SDKs should aim to minimize the number of default attributes attached to a metric. Metrics cardinality can explode quickly with too many attributes, and we want to keep metrics lightweight and cost-effective.
-
-New default attributes should only be added after significant feedback from users and discussion internally with the SDK and ingest teams. There is no hard rule about what exact attributes are allowed, every proposed new attribute will be evaluated on a case-by-case basis.
-
-### Data Category and Rate Limiting
-
-A new data category for metrics has been added to Relay, `trace_metric`. Rate limiting applies as usual. SDKs should track client outcomes to monitor how often metrics are dropped. If the SDK receives a rate limit, it should not send any trace metrics until the limit expires (based on the communicated end timestamp).
-
-### Buffering
-
-SDKs **MUST** buffer metrics before sending them. SDKs should also keep a buffer of metrics and flush it when specific conditions are met. For initial implementation, a simple strategy is fine, for example: flushing metrics if the buffer length exceeds 100 items or if 5 seconds have passed. To prevent data loss, the buffer **SHOULD** forward metrics to the transport in the scenarios outlined in the [telemetry buffer data forwarding scenarios](/sdk/telemetry/telemetry-buffer/#data-forwarding-scenarios). Furthermore:
-
-- The aggregation window should be time and size based.
-- SDKs should implement safeguards to prevent excessive memory usage from metric buffering.
-
-We're currently working on a concept for buffering different types of telemetry data in [telemetry buffer specification](/sdk/telemetry/telemetry-buffer/).
-
-### Behaviour with other Sentry Telemetry
-
-#### Tracing
-
-Metrics should be associated with traces if possible. If a metric is recorded during an active span, the SDK should set the `span_id` property of the metric to the span id of the span that was active when the metric was collected.
-
-#### Replays
-
-Whenever possible, metrics should be linked to replays. If a metric is recorded while an active, sampled replay is in progress, the SDK should attach the `sentry.replay_id` attribute with the ID of the replay that was active at the time the metric was collected. Additionally, the SDK should include the `sentry._internal.replay_is_buffering` attribute to indicate that the metric is associated with a replay that is currently buffering. This ensures we can correctly handle scenarios where a `replay_id` is present, but the corresponding replay was never actually sent.
-
-### Other
-
-If `debug` is set to `true` in SDK init, calls to the Sentry metrics API should also print to the console with appropriate details. This will help debugging metrics setups.
-
-## Appendix A: Example `trace_metric` Envelope
+### Full `trace_metric` envelope
 
 ```json
 { "sdk": { "name": "sentry.javascript.browser", "version": "10.17.0" } }
@@ -564,8 +611,14 @@ If `debug` is set to `true` in SDK init, calls to the Sentry metrics API should 
 }
 ```
 
-## Related Resources
+### Related Resources
 
 - [Experimental JS SDK PR #17883 - Metrics API Implementation](https://github.com/getsentry/sentry-javascript/pull/17883/files)
 - [Experimental Python SDK PR #4898 - Metrics API Implementation](https://github.com/getsentry/sentry-python/pull/4898)
-- [Batch Processor Specification](/sdk/telemetry/telemetry-buffer/batch-processor/)
+- [Batch Processor Specification](/sdk/foundations/processing/batch-processor/)
+
+---
+
+## Changelog
+
+<SpecChangelog />

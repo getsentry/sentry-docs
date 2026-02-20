@@ -118,7 +118,8 @@ Server Actions are **not** automatically instrumented. Without wrapping, they ap
 Use `withServerActionInstrumentation` to:
 - Create named spans for each action
 - Capture timing and errors
-- Connect client and server traces
+- Connect client and server traces via `headers`
+- Attach form data to Sentry events via `formData`
 
 </SplitSectionText>
 <SplitSectionCode>
@@ -148,9 +149,9 @@ export async function createOrder(formData: FormData) {
 <SplitSection>
 <SplitSectionText>
 
-### With Headers
+### With Headers and Form Data
 
-Pass headers to connect client-side traces with server-side spans. This enables full distributed tracing across the browser-to-server boundary.
+Pass `headers` to connect client-side traces with server-side spans for full distributed tracing across the browser-to-server boundary. Pass `formData` to attach submitted form data to Sentry events for easier debugging.
 
 </SplitSectionText>
 <SplitSectionCode>
@@ -164,7 +165,11 @@ import { headers } from "next/headers";
 export async function submitForm(formData: FormData) {
   return Sentry.withServerActionInstrumentation(
     "submitForm",
-    { headers: await headers() },
+    {
+      headers: await headers(), // Connect client and server traces
+      formData, // Attach form data to events
+      recordResponse: true, // Include response data
+    },
     async () => {
       // Action logic with full trace context
     }

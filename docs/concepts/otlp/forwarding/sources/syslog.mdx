@@ -1,0 +1,166 @@
+---
+title: Syslog Messages
+sidebar_title: Syslog
+sidebar_order: 50
+description: "Learn how to forward syslog messages to Sentry via the OpenTelemetry Protocol (OTLP)."
+keywords: ["otlp", "otel", "opentelemetry", "syslog"]
+---
+
+This guide shows you how to collect syslog messages and forward them to Sentry using the OpenTelemetry Collector with the [Syslog Receiver](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/syslogreceiver).
+
+## Prerequisites
+
+Before you begin, ensure you have:
+
+- Network access to receive syslog messages (TCP or UDP)
+- A Sentry project to send data to
+
+## Step 1: Install the OpenTelemetry Collector
+
+The Syslog Receiver is included in the [OpenTelemetry Collector Contrib](https://github.com/open-telemetry/opentelemetry-collector-releases/tree/main/distributions/otelcol-contrib) distribution. You'll need to download and install this version, as the standard `otelcol` binary does not include the Syslog Receiver.
+
+Download the latest `otelcol-contrib` binary from the [OpenTelemetry Collector releases page](https://github.com/open-telemetry/opentelemetry-collector-releases/releases).
+
+## Step 2: Get Your Sentry OTLP Credentials
+
+You'll need your Sentry OTLP endpoint and authentication header. These can be found in your [Sentry Project Settings](https://sentry.io/settings/projects/) under **Client Keys (DSN)** > **OpenTelemetry (OTLP)**.
+
+### Logs Endpoint
+
+```bash
+___OTLP_LOGS_URL___
+```
+
+### Authentication Header
+
+```
+x-sentry-auth: sentry sentry_key=___PUBLIC_KEY___
+```
+
+## Step 3: Configure the Collector
+
+Create a configuration file with the Syslog Receiver and the OTLP HTTP exporter configured to send logs to Sentry.
+
+For additional configuration options like TLS, async processing, or custom attributes, see the [Syslog Receiver Documentation](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/syslogreceiver).
+
+### TCP Configuration (RFC 5424)
+
+This configuration receives syslog messages over TCP using the RFC 5424 format:
+
+```yaml {filename:config.yaml}
+receivers:
+  syslog:
+    tcp:
+      listen_address: "0.0.0.0:514"
+    protocol: rfc5424
+
+processors:
+  batch:
+    send_batch_size: 1024
+    send_batch_max_size: 2048
+    timeout: "1s"
+
+exporters:
+  otlphttp/sentry:
+    logs_endpoint: ___OTLP_LOGS_URL___
+    headers:
+      x-sentry-auth: "sentry sentry_key=___PUBLIC_KEY___"
+    compression: gzip
+    encoding: proto
+
+service:
+  pipelines:
+    logs:
+      receivers:
+        - syslog
+      processors:
+        - batch
+      exporters:
+        - otlphttp/sentry
+```
+
+### UDP Configuration (RFC 3164)
+
+This configuration receives syslog messages over UDP using the older RFC 3164 (BSD syslog) format:
+
+```yaml {filename:config.yaml}
+receivers:
+  syslog:
+    udp:
+      listen_address: "0.0.0.0:514"
+    protocol: rfc3164
+    location: UTC
+
+processors:
+  batch:
+    send_batch_size: 1024
+    send_batch_max_size: 2048
+    timeout: "1s"
+
+exporters:
+  otlphttp/sentry:
+    logs_endpoint: ___OTLP_LOGS_URL___
+    headers:
+      x-sentry-auth: "sentry sentry_key=___PUBLIC_KEY___"
+    compression: gzip
+    encoding: proto
+
+service:
+  pipelines:
+    logs:
+      receivers:
+        - syslog
+      processors:
+        - batch
+      exporters:
+        - otlphttp/sentry
+```
+
+## Configuring Syslog Sources
+
+After setting up the collector, configure your systems to send syslog messages to it.
+
+### Linux (rsyslog)
+
+Add the following to `/etc/rsyslog.conf` or create a file in `/etc/rsyslog.d/`:
+
+```bash {filename:/etc/rsyslog.d/50-otel.conf}
+# For TCP (RFC 5424)
+*.* @@otel-collector-host:514
+
+# For UDP (RFC 3164)
+*.* @otel-collector-host:514
+```
+
+Then restart rsyslog:
+
+```bash
+sudo systemctl restart rsyslog
+```
+
+### Linux (syslog-ng)
+
+Add to your syslog-ng configuration:
+
+```bash
+destination d_otel {
+    network("otel-collector-host" port(514) transport("tcp"));
+};
+
+log {
+    source(s_sys);
+    destination(d_otel);
+};
+```
+
+## Troubleshooting
+
+- Verify the syslog source is sending to the correct host and port
+- Ensure firewall rules allow inbound traffic on the configured port
+- Confirm the protocol setting matches your syslog source (RFC 3164 vs RFC 5424)
+
+## Additional Resources
+
+- [Syslog Receiver Documentation](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/syslogreceiver)
+- [Sentry OpenTelemetry Collector Configuration](/concepts/otlp/forwarding/pipelines/collector/)
+- [Sentry Logs](/product/explore/logs/)

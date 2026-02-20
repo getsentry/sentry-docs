@@ -1,23 +1,28 @@
 # Agent Instructions
 
 ## Package Manager
-Use **yarn**: `yarn install`, `yarn dev`, `yarn build`, `yarn test`
+
+Use **pnpm**: `pnpm install`, `pnpm dev`, `pnpm build`, `pnpm test`
 
 ## Commit Attribution
+
 AI commits MUST include:
+
 ```
 Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
 ## Development
-- `yarn dev` - Start dev server with Sentry sidecar
-- `yarn dev:minimal` - Start dev server without sidecar
-- `yarn build` - Production build
-- `yarn test` - Run tests with vitest
-- `yarn lint` - Run all linters
-- `yarn lint:fix` - Auto-fix lint issues
+
+- `pnpm dev` - Start dev server with Sentry sidecar
+- `pnpm dev:minimal` - Start dev server without sidecar
+- `pnpm build` - Production build
+- `pnpm test` - Run tests with vitest
+- `pnpm lint` - Run all linters
+- `pnpm lint:fix` - Auto-fix lint issues
 
 ## Tech Stack
+
 - Next.js 15 with App Router
 - React 19
 - TypeScript
@@ -26,6 +31,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 - Sentry SDK (`@sentry/nextjs`)
 
 ## Project Structure
+
 - `app/` - Next.js app router pages and layouts
 - `src/` - Source code (components, utilities)
 - `docs/` - MDX documentation content
@@ -35,21 +41,24 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 - `public/` - Static assets
 
 ## Code Style
+
 - ESLint + Prettier enforced via pre-commit hooks
 - Use TypeScript strict mode
 - Follow existing patterns in codebase
 
 ## Testing
-Run `yarn test` for vitest. Tests live alongside source files or in `__tests__` directories.
+
+Run `pnpm test` for vitest. Tests live alongside source files or in `__tests__` directories.
 
 ## CLI Commands
-| Command | Description |
-|---------|-------------|
-| `make develop` | Initial setup |
-| `make test` | Run tests |
-| `yarn lint:ts` | TypeScript check |
-| `yarn lint:eslint` | ESLint check |
-| `yarn lint:prettier` | Prettier check |
+
+| Command              | Description      |
+| -------------------- | ---------------- |
+| `make develop`       | Initial setup    |
+| `make test`          | Run tests        |
+| `pnpm lint:ts`       | TypeScript check |
+| `pnpm lint:eslint`   | ESLint check     |
+| `pnpm lint:prettier` | Prettier check   |
 
 ## Developer Documentation (develop-docs/)
 
@@ -60,6 +69,17 @@ When writing requirements in `develop-docs/`:
 2. **Add RFC 2119 Alert**: When creating a new file with requirements, or adding requirements to an existing file, ensure the file has an Alert at the top (after frontmatter) to clarify RFC 2119 usage. If missing, add:
    ```mdx
    <Alert>
-     This document uses key words such as "MUST", "SHOULD", and "MAY" as defined in [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt) to indicate requirement levels.
+     This document uses key words such as "MUST", "SHOULD", and "MAY" as defined
+     in [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt) to indicate requirement
+     levels.
    </Alert>
    ```
+
+## Plan Mode
+
+- Make the plan extremely concise. Sacrifice grammar for the sake of concision.
+- At the end of each plan, give me a list of unresolved questions to answer, if any.
+
+## Pull Request generation 
+
+Use .github/PULL_REQUEST_TEMPLATE.md and add Co-Authored-By: Claude

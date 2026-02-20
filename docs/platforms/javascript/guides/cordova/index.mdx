@@ -1,40 +1,106 @@
 ---
 title: Cordova
 sdk: sentry.javascript.cordova
+description: Learn how to manually set up Sentry in your Cordova app and capture your first errors.
 categories:
   - javascript
   - browser
   - mobile
 ---
 
-<PlatformContent includePath="getting-started-primer" />
+<Alert>
+  The Cordova SDK uses a native extension for iOS and Android, but will fall
+  back to a pure JavaScript version (`@sentry/browser`) if needed.
+</Alert>
 
-## Install
+<Expandable title="Features">
 
-Sentry captures data by using an SDK within your application’s runtime.
+- Automatic Native crash [error tracking](/product/issues/) using both [iOS](/platforms/apple/guides/ios/) and [Android](/platforms/android/) supports
+  - [Release health](/product/releases/health/) to track crash-free users and sessions
+- Offline storage of events
+  - Android: Offline caching when a device is offline; we send a report once the application is restarted
+  - iOS: Offline caching when a device is unable to connect; we send a report once we receive another event
+- Events [enriched](/platforms/javascript/guides/cordova/enriching-events/context/) with device data
+- [Breadcrumbs](/platforms/javascript/guides/cordova/enriching-events/breadcrumbs/) created for location changes, outgoing HTTP requests with XHR and Fetch, console logs, and HTML touch events
+- On-device symbolication for JavaScript (in `Debug` mode)
+- [Ionic support](/platforms/javascript/guides/cordova/ionic/)
+- Under the hood, the SDK relies on our [JavaScript SDK](/platforms/javascript/), which makes all functions available for JavaScript also available in this SDK ,including:
+  - [Tracing](/platforms/javascript/guides/cordova/performance/instrumentation/custom-instrumentation) to create transactions
 
-<PlatformContent includePath="getting-started-install" />
+</Expandable>
 
-## Configure
+<PlatformContent includePath="getting-started-prerequisites" />
 
-Configuration should happen as early as possible in your application's lifecycle.
+## Step 1: Install
 
-<PlatformContent includePath="getting-started-config" />
+### Install the Sentry SDK
 
-<PlatformContent includePath="getting-started-sourcemaps" />
+Run this `cordova` command to add the Sentry SDK to your application:
 
-## Verify
+```bash
+cordova plugin add sentry-cordova
+```
+
+This command starts the Sentry Wizard, which will patch your project (you need to do this only once).
+The wizard helps configure your project by:
+
+- Linking your Sentry account and project
+- Adding a build step to Xcode to upload debug symbols for iOS crashes
+- Configuring <PlatformLink to="/sourcemaps">source map uploads</PlatformLink> so you can see your original JavaScript code in Sentry instead of minified production code
+
+## Step 2: Configure
+
+### Initialize the Sentry SDK
+
+Initialize Sentry as early as possible in your application. For this, `init` the SDK in the `deviceready` event:
+
+```javascript
+onDeviceReady: function() {
+  var Sentry = cordova.require("sentry-cordova.Sentry");
+  Sentry.init({
+    dsn: '___PUBLIC_DSN___',
+
+    // Adds request headers and IP for users, for more info visit:
+    // https://docs.sentry.io/platforms/javascript/guides/cordova/configuration/options/#sendDefaultPii
+    sendDefaultPii: true,
+  });
+}
+```
+
+### Allow the Sentry Domain
+
+Make sure your app can talk to Sentry by adding this to your `config.xml`:
+
+```xml {filename:config.xml}
+<access origin="https://*.sentry.io" />
+```
+
+## Step 3: Verify Your Setup
+
+Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
 
 This snippet includes an intentional error, so you can test that everything is working as soon as you set it up.
 
 <PlatformContent includePath="getting-started-verify" />
 
-<Alert>
+### View Captured Data in Sentry
 
-Learn more about manually capturing an error or message in our <PlatformLink to="/usage/">Usage documentation</PlatformLink>.
+To view and resolve the recorded error, log in to [sentry.io](https://sentry.io) and select your project. Clicking the error's title opens a page where you can view detailed information and mark it as resolved.
 
-</Alert>
+## Next Steps
 
-To view and resolve the recorded error, log into [sentry.io](https://sentry.io) and select your project. Clicking on the error's title will open a page where you can see detailed information and mark it as resolved.
+At this point, you should have integrated Sentry into your Cordova application and should already be sending data to your Sentry project.
 
-<PlatformContent includePath="getting-started-next-steps" />
+Now's a good time to customize your setup and look into more advanced topics. Our next recommended steps for you are:
+
+- Explore [practical guides](/guides/) on what to monitor, log, track, and investigate after setup
+- Continue to <PlatformLink to="/configuration">customize your configuration</PlatformLink>
+- Learn how to <PlatformLink to="/upload-debug">upload debug symbols</PlatformLink> to make sure your native stack traces are readable
+- Check our [Ionic support guide](/platforms/javascript/guides/cordova/ionic/)
+- Learn how to <PlatformLink to="/usage">manually capture errors</PlatformLink>
+
+<Expandable permalink={false} title="Are you having problems setting up the SDK?">
+- If you are experiencing errors and want to remove unused architectures from your binary when submitting the build to iTunes Connect, you can use the scripts provided in [Troubleshooting](/platforms/javascript/guides/cordova/troubleshooting/).
+- [Get support](https://sentry.zendesk.com/hc/en-us/)
+
+</Expandable>
