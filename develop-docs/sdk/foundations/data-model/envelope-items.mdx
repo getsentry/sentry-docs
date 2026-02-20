@@ -226,7 +226,17 @@ The placeholder item payload consists of a JSON object containing metadata.
 
 _String, optional._ The content type of the represented attachment (as opposed to the content type of the placeholder item itself).
 
+**Workflow:**
 
+1. If an attachment is larger than ~100 MiB, upload it to the [TUS](https://tus.io/protocols/resumable-upload#creation-with-upload)-conformant upload endpoint:
+  ```shell
+  curl -X POST https://o0.ingest.sentry.io/api/0/upload/ \
+    --header "Tus-Resumable: 1.0.0" \
+    --header "Content-Type: application/offset+octet-stream" \
+    --header "Upload-Length: ${FILE_SIZE}" \
+    --data @myfile.log
+  ```
+2. Upon successful upload, attach a placeholder item to the event envelope, using the `Location` header from the upload response.
 
 ### Session
 
