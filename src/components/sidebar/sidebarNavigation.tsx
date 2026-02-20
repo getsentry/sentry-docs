@@ -19,6 +19,20 @@ export async function SidebarNavigation({path}: {path: string[]}) {
     );
   }
 
+  // AI section
+  if (path[0] === 'ai') {
+    return (
+      <ProductSidebar rootNode={rootNode} items={[{title: 'Sentry for AI', root: 'ai'}]} />
+    );
+  }
+
+  // Guides section
+  if (path[0] === 'guides') {
+    return (
+      <ProductSidebar rootNode={rootNode} items={[{title: 'Guides', root: 'guides'}]} />
+    );
+  }
+
   // SDKs/Platforms
   if (path[0] === 'platforms') {
     const platformName = path[1];

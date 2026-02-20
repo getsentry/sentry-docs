@@ -6,6 +6,7 @@ import ChatBubble from 'sentry-docs/imgs/chat-bubble.png';
 import TerminalImage from 'sentry-docs/imgs/cli.png';
 import ConceptsImage from 'sentry-docs/imgs/concepts-reference.png';
 import ErrorMonitoringHero from 'sentry-docs/imgs/error-monitoring-hero.png';
+import AiImage from 'sentry-docs/imgs/integrate.png';
 import OrganizationImage from 'sentry-docs/imgs/organization.png';
 import CalculatorImage from 'sentry-docs/imgs/pricing.png';
 import RocketImage from 'sentry-docs/imgs/rocket.png';
@@ -288,6 +289,15 @@ export default async function Home() {
             description={
               'Application monitoring and debugging software considered "not bad" by 4 million developers.'
             }
+          />
+
+          <Card
+            className="w-full md:w-[calc(50%-12px)]"
+            href="/ai/"
+            image={AiImage}
+            imageAlt="AI integration image"
+            title="Sentry for AI"
+            description="Connect Sentry to your AI coding assistants with agent skills and MCP."
           />
 
           <Card

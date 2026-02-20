@@ -4,6 +4,7 @@ import {
   extractPlatforms,
   getCurrentGuide,
   getCurrentPlatform,
+  getCurrentPlatformOrGuide,
   nodeForPath,
 } from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
@@ -24,6 +25,7 @@ import Header from '../header';
 import Mermaid from '../mermaid';
 import {PaginationNav} from '../paginationNav';
 import {PlatformSdkDetail} from '../platformSdkDetail';
+import {getSdkPackageName} from '../platformSdkPackageName';
 import {Sidebar} from '../sidebar';
 import {SidebarTableOfContents} from '../sidebarTableOfContents';
 import {ReaderDepthTracker} from '../track-reader-depth';
@@ -40,7 +42,7 @@ type Props = {
   sidebar?: ReactNode;
 };
 
-export function DocPage({
+export async function DocPage({
   children,
   frontMatter,
   notoc = false,
@@ -53,6 +55,8 @@ export function DocPage({
   const currentPlatform = getCurrentPlatform(rootNode, path);
   const currentGuide = getCurrentGuide(rootNode, path);
   const platforms = extractPlatforms(rootNode);
+  const platformOrGuide = getCurrentPlatformOrGuide(rootNode, path);
+  const sdkPackage = await getSdkPackageName(platformOrGuide);
 
   const hasToc = (!notoc && !frontMatter.notoc) || !!(currentPlatform || currentGuide);
   const hasGithub = !!path?.length && path[0] !== 'api';
@@ -113,7 +117,9 @@ export function DocPage({
               </hgroup>
               {/* This exact id is important for Algolia indexing */}
               <div id="main">
-                <CodeContextProvider>{children}</CodeContextProvider>
+                <CodeContextProvider sdkPackage={sdkPackage}>
+                  {children}
+                </CodeContextProvider>
               </div>
 
               <div className="grid grid-cols-2 gap-4 not-prose mt-16">

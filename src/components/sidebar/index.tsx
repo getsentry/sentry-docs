@@ -21,6 +21,12 @@ import {SidebarMoreLinks} from './SidebarMoreLinks';
 import {SidebarNavigation} from './sidebarNavigation';
 import {SidebarProps} from './types';
 
+// Pages that have different paths on different platforms but are conceptually equivalent
+const EQUIVALENT_PATHS: Record<string, string> = {
+  'ai-agent-monitoring': 'ai-agent-monitoring-browser',
+  'ai-agent-monitoring-browser': 'ai-agent-monitoring',
+};
+
 export const sidebarToggleId = styles['navbar-menu-toggle'];
 
 const activeLinkSelector = `.${styles.sidebar} .toc-item .active`;
@@ -38,23 +44,43 @@ export async function Sidebar({path, versions}: SidebarProps) {
     );
   }
 
+  // Extract basic platforms list for SDK link redirection (used by MobileSidebarNav)
+  const basicPlatforms: Platform[] = !rootNode
+    ? []
+    : extractPlatforms(rootNode).map(platform => ({
+        ...platform,
+        guides: platform.guides,
+      }));
+
+  const currentPlatform = getCurrentPlatform(rootNode, path);
+  const currentGuide = getCurrentGuide(rootNode, path);
+
   // Only show the platform selector and sidebar for SDKs/platforms section
   if (path[0] === 'platforms') {
-    const currentPlatform = getCurrentPlatform(rootNode, path);
-    const currentGuide = getCurrentGuide(rootNode, path);
     const platforms: Platform[] = !rootNode
       ? []
       : extractPlatforms(rootNode).map(platform => {
+          // take the :path in /platforms/:platformName/:path
+          // or /platforms/:platformName/guides/:guideName/:path when we're in a guide
+          const currentPathParts = path.slice(currentGuide ? 4 : 2);
+          const lastPart = currentPathParts[currentPathParts.length - 1];
+          const equivalentPath = EQUIVALENT_PATHS[lastPart];
+
           const platformPageForCurrentPath =
+            nodeForPath(rootNode, ['platforms', platform.name, ...currentPathParts]) ||
+            // try equivalent path (e.g., ai-agent-monitoring <-> ai-agent-monitoring-browser)
+            (equivalentPath &&
+              nodeForPath(rootNode, [
+                'platforms',
+                platform.name,
+                ...currentPathParts.slice(0, -1),
+                equivalentPath,
+              ])) ||
+            // try to go one page higher, example: go to /usage/ from /usage/something
             nodeForPath(rootNode, [
               'platforms',
               platform.name,
-              ...path.slice(currentGuide ? 4 : 2),
-            ]) ||
-            nodeForPath(rootNode, [
-              'platforms',
-              platform.name,
-              ...path.slice(currentGuide ? 4 : 2, path.length - 1),
+              ...currentPathParts.slice(0, -1),
             ]);
 
           return {
@@ -64,13 +90,24 @@ export async function Sidebar({path, versions}: SidebarProps) {
                 ? '/' + platformPageForCurrentPath.path + '/'
                 : platform.url,
             guides: platform.guides.map(guide => {
-              const guidePageForCurrentPath = nodeForPath(rootNode, [
-                'platforms',
-                platform.name,
-                'guides',
-                guide.name,
-                ...path.slice(currentGuide ? 4 : 2),
-              ]);
+              const guidePageForCurrentPath =
+                nodeForPath(rootNode, [
+                  'platforms',
+                  platform.name,
+                  'guides',
+                  guide.name,
+                  ...currentPathParts,
+                ]) ||
+                // try equivalent path (e.g., ai-agent-monitoring <-> ai-agent-monitoring-browser)
+                (equivalentPath &&
+                  nodeForPath(rootNode, [
+                    'platforms',
+                    platform.name,
+                    'guides',
+                    guide.name,
+                    ...currentPathParts.slice(0, -1),
+                    equivalentPath,
+                  ]));
               return guidePageForCurrentPath && !guidePageForCurrentPath.missing
                 ? {
                     ...guide,
@@ -89,7 +126,7 @@ export async function Sidebar({path, versions}: SidebarProps) {
           className="md:flex flex-col items-stretch h-full"
           style={{display: 'flex', flexDirection: 'column', height: '100%'}}
         >
-          <MobileSidebarNav />
+          <MobileSidebarNav platforms={basicPlatforms} />
           <div className="platform-selector px-3">
             <div className="mb-3">
               <PlatformSelector
@@ -128,7 +165,7 @@ export async function Sidebar({path, versions}: SidebarProps) {
         className="md:flex flex-col items-stretch h-full"
         style={{display: 'flex', flexDirection: 'column', height: '100%'}}
       >
-        <MobileSidebarNav />
+        <MobileSidebarNav platforms={basicPlatforms} />
         <div
           className={`${styles['sidebar-main']} px-3 flex-1`}
           style={{overflow: 'auto'}}

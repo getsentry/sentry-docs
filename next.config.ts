@@ -5,71 +5,39 @@ import {REMOTE_IMAGE_PATTERNS} from './src/config/images';
 import {redirects} from './redirects.js';
 
 // Exclude build-time-only dependencies from serverless function bundles to stay under
-// Vercel's 250MB limit. These packages (esbuild, mdx-bundler, sharp, etc.) are only
-// needed during the build process to compile MDX and optimize assets. The compiled
-// output is used at runtime, so bundling these ~150-200MB of dependencies would bloat
-// functions unnecessarily and cause deployment failures.
-//
-// Note: mdx-bundler/client (getMDXComponent) is a tiny runtime module needed by
-// app/[[...path]]/page.tsx, so we exclude only the build parts (dist/!(client)*).
+// Vercel's 250MB limit. These packages are only needed during build to compile MDX and
+// optimize assets. We use a local getMDXComponent (src/getMDXComponent.ts) instead of
+// mdx-bundler/client to avoid CJS/ESM compatibility issues at runtime.
+const sharedExcludes = [
+  '**/*.map',
+  './.git/**/*',
+  './apps/**/*',
+  './.next/cache/mdx-bundler/**/*',
+  './.next/cache/md-exports/**/*',
+  // Heavy build dependencies
+  'node_modules/@esbuild/**/*',
+  'node_modules/esbuild/**/*',
+  'node_modules/@aws-sdk/**/*',
+  'node_modules/@google-cloud/**/*',
+  'node_modules/prettier/**/*',
+  'node_modules/@prettier/**/*',
+  'node_modules/sharp/**/*',
+  'node_modules/mermaid/**/*',
+  // MDX processing dependencies (local getMDXComponent replaces mdx-bundler/client)
+  'node_modules/mdx-bundler/**/*',
+  'node_modules/rehype-preset-minify/**/*',
+  'node_modules/rehype-prism-plus/**/*',
+  'node_modules/rehype-prism-diff/**/*',
+  'node_modules/remark-gfm/**/*',
+  'node_modules/remark-mdx-images/**/*',
+  'node_modules/unified/**/*',
+  'node_modules/rollup/**/*',
+];
+
 const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
-  ? {
-      '/**/*': [
-        '**/*.map',
-        './.git/**/*',
-        './apps/**/*',
-        './.next/cache/mdx-bundler/**/*',
-        './.next/cache/md-exports/**/*',
-        'docs/**/*',
-        // Exclude heavy build dependencies
-        'node_modules/@esbuild/**/*',
-        'node_modules/esbuild/**/*',
-        'node_modules/@aws-sdk/**/*',
-        'node_modules/@google-cloud/**/*',
-        'node_modules/prettier/**/*',
-        'node_modules/@prettier/**/*',
-        'node_modules/sharp/**/*',
-        'node_modules/mermaid/**/*',
-        // Exclude MDX processing dependencies (but keep mdx-bundler/client for runtime)
-        'node_modules/mdx-bundler/dist/!(client*)',
-        'node_modules/mdx-bundler/node_modules/**/*',
-        'node_modules/rehype-preset-minify/**/*',
-        'node_modules/rehype-prism-plus/**/*',
-        'node_modules/rehype-prism-diff/**/*',
-        'node_modules/remark-gfm/**/*',
-        'node_modules/remark-mdx-images/**/*',
-        'node_modules/unified/**/*',
-        'node_modules/rollup/**/*',
-      ],
-    }
+  ? {'/**/*': [...sharedExcludes, 'docs/**/*']}
   : {
-      '/**/*': [
-        '**/*.map',
-        './.git/**/*',
-        './.next/cache/mdx-bundler/**/*',
-        './.next/cache/md-exports/**/*',
-        './apps/**/*',
-        'develop-docs/**/*',
-        // Exclude heavy build dependencies
-        'node_modules/@esbuild/**/*',
-        'node_modules/esbuild/**/*',
-        'node_modules/@aws-sdk/**/*',
-        'node_modules/@google-cloud/**/*',
-        'node_modules/prettier/**/*',
-        'node_modules/@prettier/**/*',
-        'node_modules/sharp/**/*',
-        'node_modules/mermaid/**/*',
-        // Exclude MDX processing dependencies (but keep mdx-bundler/client for runtime)
-        'node_modules/mdx-bundler/dist/!(client*)',
-        'node_modules/mdx-bundler/node_modules/**/*',
-        'node_modules/rehype-preset-minify/**/*',
-        'node_modules/rehype-prism-plus/**/*',
-        'node_modules/rehype-prism-diff/**/*',
-        'node_modules/remark-gfm/**/*',
-        'node_modules/remark-mdx-images/**/*',
-        'node_modules/unified/**/*',
-        'node_modules/rollup/**/*',
-      ],
+      '/**/*': [...sharedExcludes, 'develop-docs/**/*'],
       '/platform-redirect': [
         '**/*.gif',
         'public/mdx-images/**/*',
@@ -77,8 +45,7 @@ const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
         '**/*.pdf',
       ],
       '\\[\\[\\.\\.\\.path\\]\\]': [
-        // Exclude docs to save ~156MB, but allow specific files via outputFileTracingIncludes
-        // for pages that may be accessed at runtime (error pages, cold starts, etc.)
+        // Exclude docs to save ~156MB, allow specific files via outputFileTracingIncludes
         'docs/**/*',
         'node_modules/prettier/plugins',
         'node_modules/rollup/dist',
@@ -97,6 +64,7 @@ const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
 // Both platform-redirect and [[...path]] need the doctree at runtime:
 // - platform-redirect: dynamic route with searchParams
 // - [[...path]]: calls getDocsRootNode() during prerendering (even though force-static)
+// - sitemap.xml: uses getDocsRootNode() to extract all page paths
 //
 // Additionally, include specific doc files that may be accessed at runtime due to:
 // - Error page rendering (when a static page fails to load)
@@ -107,6 +75,7 @@ const outputFileTracingIncludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
   ? {
       '/platform-redirect': ['public/doctree-dev.json'],
       '\\[\\[\\.\\.\\.path\\]\\]': ['public/doctree-dev.json'],
+      'sitemap.xml': ['public/doctree-dev.json'],
     }
   : {
       '/platform-redirect': ['public/doctree.json'],
@@ -115,6 +84,7 @@ const outputFileTracingIncludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
         'docs/changelog.mdx',
         'docs/platforms/index.mdx',
       ],
+      'sitemap.xml': ['public/doctree.json'],
     };
 
 if (process.env.NODE_ENV !== 'development' && !process.env.NEXT_PUBLIC_SENTRY_DSN) {
@@ -135,7 +105,7 @@ const nextConfig = {
     '@esbuild/linux-arm64',
     '@esbuild/linux-x64',
     '@esbuild/win32-x64',
-    'mdx-bundler',
+    // mdx-bundler fully excluded via outputFileTracingExcludes
     'sharp',
     '@aws-sdk/client-s3',
     '@google-cloud/storage',
