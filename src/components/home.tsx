@@ -1,54 +1,295 @@
-import Image from 'next/image';
-
 import {Banner} from 'sentry-docs/components/banner';
-import {SentryWordmarkLogo} from 'sentry-docs/components/wordmarkLogo';
+import {extractPlatforms, getDocsRootNode} from 'sentry-docs/docTree';
+import AiSentryHero from 'sentry-docs/imgs/ai-sentry-hero.png';
 import PlugImage from 'sentry-docs/imgs/api.png';
 import ChatBubble from 'sentry-docs/imgs/chat-bubble.png';
 import TerminalImage from 'sentry-docs/imgs/cli.png';
 import ConceptsImage from 'sentry-docs/imgs/concepts-reference.png';
-import HeroImage from 'sentry-docs/imgs/home_illustration.png';
+import ErrorMonitoringHero from 'sentry-docs/imgs/error-monitoring-hero.png';
 import AiImage from 'sentry-docs/imgs/integrate.png';
 import OrganizationImage from 'sentry-docs/imgs/organization.png';
 import CalculatorImage from 'sentry-docs/imgs/pricing.png';
 import RocketImage from 'sentry-docs/imgs/rocket.png';
 import SecurityImage from 'sentry-docs/imgs/security.png';
+import SquiggleSVG from 'sentry-docs/imgs/squiggle.svg';
 import SupportImage from 'sentry-docs/imgs/support.png';
 
 import AskAiSearchParams from './askAiSearchParams';
 import {Card} from './card';
-import {Header} from './header';
+import Header from './header';
+import {HomeSearchObserver} from './homeSearchVisibility';
 import {NavLink, NavLinkProps} from './navlink';
 import {PlatformFilter} from './platformFilter';
+import {PlatformIcon} from './platformIcon';
+import {Search} from './search';
+import {SentryWordmarkLogo} from './wordmarkLogo';
 
-export function Home() {
+export default async function Home() {
+  const rootNode = await getDocsRootNode();
+  const platforms = extractPlatforms(rootNode);
+  const mostViewedSDKs = [
+    {
+      key: 'javascript-nextjs',
+      title: 'Next.js',
+      url: '/platforms/javascript/guides/nextjs/',
+    },
+    {key: 'javascript-node', title: 'Node.js', url: '/platforms/javascript/guides/node/'},
+    {key: 'javascript-react', title: 'React', url: '/platforms/javascript/guides/react/'},
+    {key: 'react-native', title: 'React Native', url: '/platforms/react-native/'},
+    {key: 'python', title: 'Python', url: '/platforms/python/'},
+    {key: 'php-laravel', title: 'Laravel', url: '/platforms/php/guides/laravel/'},
+    {key: 'apple', title: 'Apple', url: '/platforms/apple/'},
+    {key: 'android', title: 'Android', url: '/platforms/android/'},
+    {key: 'dart', title: 'Dart', url: '/platforms/dart/'},
+    {key: 'javascript', title: 'JavaScript', url: '/platforms/javascript/'},
+    {key: 'unity', title: 'Unity', url: '/platforms/unity/'},
+    {key: 'unreal', title: 'Unreal', url: '/platforms/unreal/'},
+  ];
   return (
     <div className="tw-app">
-      <Header pathname="/" searchPlatforms={[]} useStoredSearchPlatforms={false} />
+      <Header
+        pathname="/"
+        searchPlatforms={[]}
+        useStoredSearchPlatforms={false}
+        platforms={platforms}
+      />
       <div className="mt-[var(--header-height)]">
         <Banner />
       </div>
-      <div className="hero max-w-screen-xl mx-auto px-6 lg:px-8 py-2">
-        <div className="flex flex-col md:flex-row gap-4 mx-auto justify-between pt-20">
-          <div className="flex flex-col justify-center items-start">
-            <h1 className="text-[40px] font-medium mb-2 leading-[1.2]">
-              Welcome to Sentry Docs
-            </h1>
-            <p className="max-w-[55ch]">
-              Sentry provides end-to-end distributed tracing, enabling developers to
-              identify and debug performance issues and errors across their systems and
-              services.
-            </p>
-          </div>
-          <div className="self-center">
-            <Image
-              src={HeroImage}
-              alt="Sentry's hero image"
-              className="max-h-[100px] w-auto md:max-h-[195px]"
-            />
+      {/* Hero Banner with Two-Column Layout */}
+      <div className="w-full relative hero-gradient">
+        {/* Single decorative squiggle at top right */}
+        <img
+          src={SquiggleSVG.src}
+          alt=""
+          className="pointer-events-none absolute overflow-hidden"
+          style={{
+            right: 0,
+            top: '-80px',
+            width: '30%',
+            opacity: 0.1,
+            zIndex: 0,
+          }}
+        />
+
+        {/* Content Container */}
+        <div className="max-w-screen-xl mx-auto px-4 sm:px-8 lg:px-[50px] pt-10 pb-6 relative z-10">
+          <div className="flex flex-col lg:flex-row items-start gap-8">
+            {/* Left Column: Welcome Text + Search */}
+            <div className="flex-1 flex flex-col items-center lg:items-start justify-center lg:w-[50%]">
+              <h1
+                className="font-bold mb-3 text-center lg:text-left text-[var(--gray-12)]"
+                style={{
+                  fontWeight: 700,
+                  fontSize: '32px',
+                  lineHeight: 1.2,
+                }}
+              >
+                Welcome To Sentry Docs
+              </h1>
+              <p
+                className="mb-5 text-center lg:text-left text-[var(--gray-11)]"
+                style={{
+                  lineHeight: '1.5',
+                  fontWeight: 400,
+                  fontSize: '15px',
+                }}
+              >
+                Sentry provides end-to-end distributed tracing, enabling developers to
+                identify and debug performance issues and errors across their systems and
+                services.
+              </p>
+              <HomeSearchObserver>
+                <div className="home-search-bar relative z-50 self-stretch">
+                  <Search
+                    path="/"
+                    searchPlatforms={[]}
+                    useStoredSearchPlatforms={false}
+                  />
+                </div>
+              </HomeSearchObserver>
+            </div>
+
+            {/* Right Column: SDK Section */}
+            <div className="flex-shrink-0 w-full lg:w-[50%] lg:pt-[20px] flex flex-col items-center lg:items-end">
+              <div>
+                <div className="grid grid-cols-4 lg:grid-cols-6 gap-2 mb-4">
+                  {mostViewedSDKs.map(platform => (
+                    <a
+                      key={platform.key}
+                      href={platform.url}
+                      className="sdk-tile flex flex-col items-center justify-center bg-white dark:bg-[var(--gray-2)] transition-transform hover:scale-105"
+                      style={{
+                        textDecoration: 'none',
+                        padding: '6px',
+                        borderRadius: '6px',
+                        width: '70px',
+                        height: '70px',
+                      }}
+                    >
+                      <PlatformIcon
+                        platform={platform.key}
+                        size={36}
+                        format="lg"
+                        style={{margin: 0, display: 'block', marginBottom: '2px'}}
+                      />
+                      <span
+                        className="text-[var(--gray-12)] whitespace-nowrap"
+                        style={{
+                          fontSize: '0.6rem',
+                          fontWeight: 500,
+                          textAlign: 'center',
+                          lineHeight: 1.1,
+                        }}
+                      >
+                        {platform.title}
+                      </span>
+                    </a>
+                  ))}
+                </div>
+                <a
+                  href="#all-sdks"
+                  className="hover:underline font-bold text-center lg:text-left block uppercase tracking-wider mt-2"
+                  style={{
+                    color: '#8b5cf6',
+                    fontSize: '0.875rem',
+                    letterSpacing: '0.05em',
+                  }}
+                >
+                  GO TO ALL SDKS
+                </a>
+              </div>
+            </div>
           </div>
         </div>
+      </div>
+      <div className="hero max-w-screen-xl mx-auto px-4 sm:px-8 lg:px-[50px] py-2">
+        {/* Sentry Features Header */}
+        <h2 className="text-2xl mt-0 mb-6 font-medium">Sentry features</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Sentry Debugging */}
+          <div
+            className="bg-white dark:bg-[var(--gray-2)] rounded-xl p-6 flex items-start gap-4"
+            style={{
+              boxShadow:
+                '0 4px 20px 0 rgba(0, 0, 0, 0.08), 0 1px 3px 0 rgba(0, 0, 0, 0.05)',
+            }}
+          >
+            <div
+              className="flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <img
+                src={ErrorMonitoringHero.src}
+                alt="Sentry Debugging"
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  objectPosition: 'center',
+                }}
+              />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold mb-2 text-[var(--gray-12)]">
+                Sentry Debugging
+              </h3>
+              <p className="text-sm text-[var(--gray-11)] leading-relaxed">
+                Monitor, identify, and resolve errors and performance issues across your
+                applications using{' '}
+                <a href="/product/error-monitoring/" className="text-[#8b5cf6] underline">
+                  Error Monitoring
+                </a>
+                ,{' '}
+                <a
+                  href="/product/explore/trace-explorer/"
+                  className="text-[#8b5cf6] underline"
+                >
+                  Tracing
+                </a>
+                ,{' '}
+                <a href="/product/session-replay/" className="text-[#8b5cf6] underline">
+                  Session Replay
+                </a>
+                , and{' '}
+                <a href="/product/" className="text-[#8b5cf6] underline">
+                  more
+                </a>
+                .
+              </p>
+            </div>
+          </div>
 
-        <PlatformFilter />
+          {/* AI for Agents and AI in Sentry */}
+          <div
+            className="bg-white dark:bg-[var(--gray-2)] rounded-xl p-6 flex items-start gap-4"
+            style={{
+              boxShadow:
+                '0 4px 20px 0 rgba(0, 0, 0, 0.08), 0 1px 3px 0 rgba(0, 0, 0, 0.05)',
+            }}
+          >
+            <div
+              className="flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <img
+                src={AiSentryHero.src}
+                alt="AI in Sentry"
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  objectPosition: 'center',
+                }}
+              />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold mb-2 text-[var(--gray-12)]">
+                AI for Agents and AI in Sentry
+              </h3>
+              <p className="text-sm text-[var(--gray-11)] leading-relaxed">
+                Use Sentry's{' '}
+                <a href="/ai/agent-skills/" className="text-[#8b5cf6] underline">
+                  skills
+                </a>{' '}
+                and{' '}
+                <a href="/ai/mcp/" className="text-[#8b5cf6] underline">
+                  MCP server
+                </a>{' '}
+                with your agents, and start{' '}
+                <a href="/ai/monitoring/" className="text-[#8b5cf6] underline">
+                  monitoring your AI features
+                </a>
+                . Fix code faster with{' '}
+                <a
+                  href="/product/ai-in-sentry/seer/root-cause-analysis/"
+                  className="text-[#8b5cf6] underline"
+                >
+                  root cause analysis
+                </a>{' '}
+                in debugging your issues. Use{' '}
+                <a
+                  href="/product/ai-in-sentry/seer/ai-code-review/"
+                  className="text-[#8b5cf6] underline"
+                >
+                  code review
+                </a>{' '}
+                to review your PRs and prevent errors.
+              </p>
+            </div>
+          </div>
+        </div>
+        <div id="all-sdks">
+          <PlatformFilter />
+        </div>
         <h2 className="text-2xl mt-16 mb-6 font-medium">Get to know us</h2>
         <div className="flex flex-wrap gap-6">
           <Card
@@ -57,7 +298,9 @@ export function Home() {
             image={RocketImage}
             imageAlt="Rocket image"
             title="What is Sentry?"
-            description="Application monitoring and debugging software considered 'not bad' by 4 million developers."
+            description={
+              'Application monitoring and debugging software considered "not bad" by 4 million developers.'
+            }
           />
 
           <Card
@@ -102,7 +345,7 @@ export function Home() {
             image={TerminalImage}
             imageAlt="Terminal image"
             title="CLI"
-            description="How to use ‘sentry-cli’ on the command line."
+            description="How to use 'sentry-cli' on the command line."
           />
 
           <Card
@@ -179,6 +422,61 @@ export function Home() {
         </div>
       </footer>
       <AskAiSearchParams />
+      <style>{`
+        .card-large-icon img {
+          width: 40px !important;
+          height: 40px !important;
+        }
+        .card-align-center > div,
+        .card-align-center .flex {
+          align-items: center !important;
+        }
+        /* Hero gradient - light mode */
+        .hero-gradient {
+          background: linear-gradient(to bottom, rgba(168, 139, 250, 0.15) 0%, rgba(255, 255, 255, 0) 100%), #ffffff;
+        }
+        /* Hero gradient - dark mode */
+        .dark .hero-gradient {
+          background: linear-gradient(to bottom, rgba(168, 139, 250, 0.15) 0%, rgba(0, 0, 0, 0) 100%), var(--gray-1);
+        }
+        /* SDK tiles - light mode */
+        .sdk-tile {
+          box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+        /* SDK tiles - dark mode */
+        .dark .sdk-tile {
+          box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+          border: 1px solid var(--gray-4);
+        }
+        .home-search-bar input[type="text"], .home-search-bar input {
+          height: 44px !important;
+          min-height: 44px !important;
+          font-size: 0.95rem !important;
+          max-width: 100% !important;
+          width: 100% !important;
+          background: linear-gradient(90deg, #fff 80%, #f3e8ff 100%);
+          border: 1.5px solid #a78bfa !important;
+          box-shadow: 0 2px 12px 0 rgba(168,139,250,0.10), 0 1px 4px 0 rgba(168,139,250,0.08);
+          border-radius: 12px !important;
+          color: #1a1a1a;
+          transition: box-shadow 0.2s, border-color 0.2s;
+        }
+        .home-search-bar input[type="text"]:focus, .home-search-bar input:focus {
+          border-color: #7c3aed !important;
+          box-shadow: 0 6px 32px 0 rgba(124,58,237,0.18), 0 2px 12px 0 rgba(124,58,237,0.12);
+          outline: none !important;
+        }
+        .dark .home-search-bar input[type="text"], .dark .home-search-bar input {
+          background: linear-gradient(90deg, #18181b 80%, #312e38 100%) !important;
+          border: 2px solid #a78bfa !important;
+          color: #f3f3f3 !important;
+          box-shadow: 0 4px 24px 0 rgba(124,58,237,0.10), 0 1.5px 8px 0 rgba(124,58,237,0.08);
+        }
+        .dark .home-search-bar input[type="text"]:focus, .dark .home-search-bar input:focus {
+          border-color: #c4b5fd !important;
+          box-shadow: 0 6px 32px 0 rgba(124,58,237,0.18), 0 2px 12px 0 rgba(124,58,237,0.12);
+        }
+      `}</style>
     </div>
   );
 }

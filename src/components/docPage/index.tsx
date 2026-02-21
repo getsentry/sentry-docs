@@ -1,6 +1,7 @@
 import {ReactNode} from 'react';
 
 import {
+  extractPlatforms,
   getCurrentGuide,
   getCurrentPlatform,
   getCurrentPlatformOrGuide,
@@ -20,7 +21,7 @@ import {CodeContextProvider} from '../codeContext';
 import {CopyMarkdownButton} from '../copyMarkdownButton';
 import {DocFeedback} from '../docFeedback';
 import {GitHubCTA} from '../githubCTA';
-import {Header} from '../header';
+import Header from '../header';
 import Mermaid from '../mermaid';
 import {PaginationNav} from '../paginationNav';
 import {PlatformSdkDetail} from '../platformSdkDetail';
@@ -53,6 +54,7 @@ export async function DocPage({
   const {rootNode, path} = serverContext();
   const currentPlatform = getCurrentPlatform(rootNode, path);
   const currentGuide = getCurrentGuide(rootNode, path);
+  const platforms = extractPlatforms(rootNode);
   const platformOrGuide = getCurrentPlatformOrGuide(rootNode, path);
   const sdkPackage = await getSdkPackageName(platformOrGuide);
 
@@ -69,8 +71,11 @@ export async function DocPage({
 
   return (
     <div className="tw-app">
-      <Header pathname={pathname} searchPlatforms={searchPlatforms} />
-
+      <Header
+        pathname={pathname}
+        searchPlatforms={searchPlatforms}
+        platforms={platforms}
+      />
       <section className="px-0 flex relative">
         {sidebar ?? (
           <Sidebar path={unversionedPath.split('/')} versions={frontMatter.versions} />

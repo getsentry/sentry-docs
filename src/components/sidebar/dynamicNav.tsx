@@ -296,7 +296,7 @@ export function DynamicNav({
   }
 
   const {path} = serverContext();
-  const isActive = path.join('/').indexOf(root) === 0;
+  const isActive = getUnversionedPath(path, false) === root;
   const linkPath = `/${path.join('/')}/`;
   const unversionedPath = getUnversionedPath(path, false);
 
@@ -320,7 +320,7 @@ export function DynamicNav({
   return (
     <li className="mb-3" data-sidebar-branch>
       {header}
-      {(!collapsible || isActive) && entity.children && (
+      {entity.children && entity.children.length > 0 && (!collapsible || isActive) && (
         <ul data-sidebar-tree className="pl-3">
           {isPlatformSidebar && (
             <CollapsibleSidebarLink

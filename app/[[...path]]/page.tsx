@@ -7,7 +7,7 @@ import {apiCategories} from 'sentry-docs/build/resolveOpenAPI';
 import {ApiCategoryPage} from 'sentry-docs/components/apiCategoryPage';
 import {ApiPage} from 'sentry-docs/components/apiPage';
 import {DocPage} from 'sentry-docs/components/docPage';
-import {Home} from 'sentry-docs/components/home';
+import Home from 'sentry-docs/components/home';
 import {Include} from 'sentry-docs/components/include';
 import {PageLoadMetrics} from 'sentry-docs/components/pageLoadMetrics';
 import {PlatformContent} from 'sentry-docs/components/platformContent';
@@ -126,8 +126,6 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
   const pageNode = nodeForPath(rootNode, params.path ?? '');
 
   if (!pageNode) {
-    // eslint-disable-next-line no-console
-    console.warn('no page node', params.path);
     return notFound();
   }
 

@@ -1107,6 +1107,7 @@ export const PLATFORM_TO_ICON = {
   unrealengine: 'unreal',
   visualbasic: 'visual-basic',
   windows: 'windows',
+  sentry: 'sentry',
   xbox: 'xbox',
   // Don't add new platforms down here!
   // Please add them where they belong alphabetically
@@ -1147,6 +1148,7 @@ type Props = React.HTMLAttributes<HTMLDivElement | HTMLImageElement> & {
   languageIconStyles?: React.CSSProperties;
   radius?: number | null;
   size?: number;
+  title?: string;
   withLanguageIcon?: boolean;
 };
 
@@ -1158,6 +1160,7 @@ export function PlatformIcon({
   withLanguageIcon,
   languageIconStyles = {},
   style = {},
+  title,
   ...otherProps
 }: Props) {
   const icon = getIcon(platform);
@@ -1180,6 +1183,7 @@ export function PlatformIcon({
           style={{borderRadius: `${radius}px`}}
           alt={`${platform} icon`}
           loading="eager"
+          title={title}
         />
         <Image
           src={languageSvg}
@@ -1198,6 +1202,20 @@ export function PlatformIcon({
           alt={`${platform} icon`}
         />
       </div>
+    );
+  }
+
+  if (title) {
+    return (
+      <img
+        src={typeof svg === 'string' ? svg : svg?.src}
+        width={size}
+        height={size}
+        style={{borderRadius: `${radius}px`, marginTop: 0, marginBottom: 0, ...style}}
+        alt={`${platform} icon`}
+        title={title}
+        {...otherProps}
+      />
     );
   }
 
