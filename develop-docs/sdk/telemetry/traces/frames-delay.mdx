@@ -1,11 +1,26 @@
 ---
 title: Frames Delay
+spec_id: sdk/telemetry/traces/frames-delay
+spec_version: 1.0.0
+spec_status: stable
+spec_platforms:
+  - mobile
+spec_changelog:
+  - version: 1.0.0
+    date: 2024-02-15
+    summary: Initial spec — frames delay metric for mobile and desktop SDKs
 ---
+
+<SpecRfcAlert />
+
+<SpecMeta />
+
+## Overview
 
 Frames Delay is the user-perceived delayed duration of rendered frames. SDKs can attach this
 information to spans. We recommend implementing this feature for mobile and desktop SDKs.
 
-## Background
+### Background
 
 This section explains why frames delay is a better metric than slow and frozen frames. If you
 already know why, you can skip this section.
@@ -47,18 +62,27 @@ Scenario | Calculation | Frames Delay
 Now, when prioritizing the user-perceived degraded responsiveness by frames delay, we get  1, 3, 2 instead of
 3, 2, 1 when looking at slow and frozen frames.
 
-## Specification
+Related specs:
+- [Span Data Conventions](/sdk/telemetry/traces/span-data-conventions/#mobile) — `frames.delay` attribute
+
+---
+
+## Behavior
+
+### Specification
+
+<SpecSection id="frames-delay-spec" status="stable" since="1.0.0">
 
 Frames delay represents the delayed frame render duration of all frames. The frame delay for one frame is
 `actual frame duration - expected frame duration`. For example, with 60 fps the expected frame duration is 16.67 ms.
 When a frame takes 20 ms to render,  the frame delay is `20ms - 16.67ms = 3.33ms`. As the expected frame rate can
-change at any time, SDKs must check the expected frame rate for every frame. The frame delay for a span is the sum
+change at any time, SDKs **MUST** check the expected frame rate for every frame. The frame delay for a span is the sum
 of frame delays for all slow and frozen frames during the start and end time of the span.
 
-SDKs should attach frames delay in seconds to spans via <Link to="/sdk/performance/span-data-conventions/#mobile">span data</Link>
+SDKs **SHOULD** attach frames delay in seconds to spans via <Link to="/sdk/telemetry/traces/span-data-conventions/#mobile">span data</Link>
 and __attach frames delay to all spans__, regardless of on which thread a span runs, and as well to concurrently running spans.
-For transactions SDKs should send frames delay via the root span with span data.
-While it makes sense to calculate frames delay in milliseconds, __SDKs must send frames delay in seconds__, as SDKs already
+For transactions SDKs **SHOULD** send frames delay via the root span with span data.
+While it makes sense to calculate frames delay in milliseconds, __SDKs **MUST** send frames delay in seconds__, as SDKs already
 use seconds for most timestamps. For the specification here, we use milliseconds cause they are easier to read.
 
 The specification is written in the [Gherkin syntax](https://cucumber.io/docs/gherkin/reference/).
@@ -157,3 +181,11 @@ Scenario: Two concurrent spans
     Then the frames delay for span 1 is it's full duration of 180 ms
     Then the frames delay for span 2 is it's full duration of 160 ms
 ```
+
+</SpecSection>
+
+---
+
+## Changelog
+
+<SpecChangelog />

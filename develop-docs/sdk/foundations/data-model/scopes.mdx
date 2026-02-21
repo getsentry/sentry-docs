@@ -1,50 +1,136 @@
 ---
 title: Scopes
+spec_id: sdk/foundations/data-model/scopes
+spec_version: 2.11.0
+spec_status: stable
+spec_changelog:
+  - version: 2.11.0
+    date: 2026-02-03
+    summary: Clarified array and unit support for scope attributes
+  - version: 2.10.0
+    date: 2026-01-19
+    summary: Clarified wording for attributes on current scope
+  - version: 2.9.0
+    date: 2025-12-19
+    summary: Fixed unit naming (s to second)
+  - version: 2.8.0
+    date: 2025-12-12
+    summary: Clearing scope attributes with scope.clear()
+  - version: 2.7.0
+    date: 2025-12-11
+    summary: Dedicated attributes page, updated attribute type/unit guidance
+  - version: 2.6.0
+    date: 2025-12-04
+    summary: Removed attribute type as user-facing property
+  - version: 2.5.0
+    date: 2025-11-27
+    summary: Scope attribute precedence for logs and metrics
+  - version: 2.4.0
+    date: 2025-11-26
+    summary: Clarified attribute application for logs and metrics
+  - version: 2.3.0
+    date: 2025-11-14
+    summary: Method to remove attributes from scopes
+  - version: 2.2.0
+    date: 2025-11-07
+    summary: Global scope attributes
+  - version: 2.1.0
+    date: 2025-11-06
+    summary: Scope inheritance diagram
+  - version: 2.0.0
+    date: 2024-11-20
+    summary: "Three-scope model (global, isolation, current) replacing Hub-based scope stack"
+  - version: 1.0.0
+    date: 2022-01-01
+    summary: "Original Unified API scope — single mutable scope per Hub with push/pop"
 sidebar_order: 10
 og_image: /og-images/sdk-telemetry-scopes.png
 ---
 
-<Alert>
-  This document uses key words such as "MUST", "SHOULD", and "MAY" as defined in [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt) to indicate requirement levels.
-</Alert>
+<SpecRfcAlert />
 
-The implementation in each SDK MUST consist of three types of scopes:
+<SpecMeta />
+
+## Overview
+
+Scopes manage contextual data (tags, breadcrumbs, user, context) that the SDK attaches to events, spans, logs, and metrics. The current model uses three scope types with copy-on-write semantics, replacing the older [Hub](/sdk/foundations/data-model/hub/)-based scope stack.
+
+Related specs:
+- [Hub](/sdk/foundations/data-model/hub/) — the deprecated predecessor (v1)
+- [Hub & Scope Refactoring](/sdk/miscellaneous/hub_and_scope_refactoring/) — migration guide
+- [Attributes](/sdk/telemetry/attributes) — attribute structure and types
+
+---
+
+## Legacy: Hub-Based Scope (v1)
+
+<SpecSection id="v1-hub-scope" status="deprecated" since="1.0.0" superseded_by="sdk/foundations/data-model/scopes#v2-three-scope-model">
+
+In v1, the SDK used a single mutable `Scope` managed by a [Hub](/sdk/foundations/data-model/hub/). The Hub maintained a stack of `(Scope, Client)` pairs. Users called `pushScope()` / `popScope()` or `configureScope()` to manage context.
+
+This model had problems with OpenTelemetry compatibility, async context propagation, and scope leaking. See the [Hub](/sdk/foundations/data-model/hub/) spec for details.
+
+</SpecSection>
+
+---
+
+## Three-Scope Model (v2)
+
+<SpecSection id="v2-three-scope-model" status="stable" since="2.0.0">
+
+The implementation in each SDK **MUST** consist of three types of scopes:
 
 - The global scope
 - The isolation scope
 - The current scope
 
-Users MUST be able to add data such as `tags`, `breadcrumbs`, and `context` to any scope, regardless of its type.
+Users **MUST** be able to add data such as `tags`, `breadcrumbs`, and `context` to any scope, regardless of its type.
 
-## Choosing the Right Scope
+</SpecSection>
 
 ### Global Scope
+
+<SpecSection id="global-scope" status="stable" since="2.0.0">
 
 The global scope functions as a persistent global variable throughout the application's execution. Any data assigned to this scope is automatically applied to **all** events emitted by the SDK.
 
 It is typically used to store application-wide data, such as the `release`, `environment`, and similar context.
 
+</SpecSection>
+
 ### Isolation Scope
 
-The isolation scope MUST contain data specific to the current execution context: a single request (on a server), a single tab (in a browser), or a single user session (on mobile). Top-level SDK APIs, such as `sentry.setTag()` and `sentry.setContext()` MUST write to the isolation scope.
+<SpecSection id="isolation-scope" status="stable" since="2.0.0">
 
-The isolation scope SHOULD be implemented using a context variable, thread-local storage, async-local storage, or an equivalent mechanism appropriate for the platform.
+The isolation scope **MUST** contain data specific to the current execution context: a single request (on a server), a single tab (in a browser), or a single user session (on mobile). Top-level SDK APIs, such as `sentry.setTag()` and `sentry.setContext()` **MUST** write to the isolation scope.
 
-SDK integrations MUST handle the forking of isolation scopes automatically. Users MUST NOT need to manage or be concerned with the details of scope isolation or its forking process.
+The isolation scope **SHOULD** be implemented using a context variable, thread-local storage, async-local storage, or an equivalent mechanism appropriate for the platform.
+
+SDK integrations **MUST** handle the forking of isolation scopes automatically. Users **MUST NOT** need to manage or be concerned with the details of scope isolation or its forking process.
+
+</SpecSection>
 
 ### Current Scope
 
-The current scope MUST maintain data for the active span. When a new span is started, the current scope of the parent span is forked (i.e., duplicated), transferring all data from the parent span to the new span. This allows modifications or additions specific to the new span without affecting the parent span. This behavior aligns with a "copy-on-write" model.
+<SpecSection id="current-scope" status="stable" since="2.0.0">
 
-Any changes made to the current scope after forking MUST NOT impact the forked scope.
+The current scope **MUST** maintain data for the active span. When a new span is started, the current scope of the parent span is forked (i.e., duplicated), transferring all data from the parent span to the new span. This allows modifications or additions specific to the new span without affecting the parent span. This behavior aligns with a "copy-on-write" model.
 
-The current scope SHOULD be implemented using a context variable, thread-local storage, async-local storage, or an equivalent mechanism appropriate for the platform.
+Any changes made to the current scope after forking **MUST NOT** impact the forked scope.
 
-Users MAY fork the current scope explicitly by invoking `sentry.withScope()` or implicitly by starting a new span.
+The current scope **SHOULD** be implemented using a context variable, thread-local storage, async-local storage, or an equivalent mechanism appropriate for the platform.
+
+Users **MAY** fork the current scope explicitly by invoking `sentry.withScope()` or implicitly by starting a new span.
+
+</SpecSection>
+
+---
 
 ## Applying Scope Data to Events
 
-Data from all three scope types MUST be merged in a specific order before being applied to an event. The process is as follows:
+<SpecSection id="scope-data-merge" status="stable" since="2.0.0">
+
+Data from all three scope types **MUST** be merged in a specific order before being applied to an event. The process is as follows:
 
 1. data from the global scope is...
 2. merged with data from the isolation scope, which is...
@@ -53,18 +139,24 @@ Data from all three scope types MUST be merged in a specific order before being 
 
 ![Scope Inheritance](scope-inheritance.png)
 
+</SpecSection>
+
+---
+
 ## Scope Methods
 
 ### Setting Attributes
 
-Users MUST be able to attach attributes to any scope using a dedicated method (e.g., `scope.setAttributes()` or `scope.setAttribute()`). These attributes follow the structure defined in the [Attributes](/sdk/telemetry/attributes) documentation.
+<SpecSection id="scope-set-attributes" status="stable" since="2.2.0">
+
+Users **MUST** be able to attach attributes to any scope using a dedicated method (e.g., `scope.setAttributes()` or `scope.setAttribute()`). These attributes follow the structure defined in the [Attributes](/sdk/telemetry/attributes) documentation.
 
 Attributes are key-value pairs where each value is either an attribute value or an object containing:
 
-- `value`: The actual attribute value, which MUST match the specified type
+- `value`: The actual attribute value, which **MUST** match the specified type
 - `unit` (optional): The unit of measurement. See [Units](/sdk/telemetry/attributes#units) for the full list of supported units.
-  - SDKs MAY delay adding support for units for the moment, but MUST be able to do so at a later date without a breaking change.
-- `type` (optional): The type of the attribute. See [Attributes](/sdk/telemetry/attributes) for the full list. SDKs SHOULD NOT expose this to users if they can reliably infer the type from the value. If not, SDKs MAY allow or require users to set the `type` explicitly.
+  - SDKs **MAY** delay adding support for units for the moment, but **MUST** be able to do so at a later date without a breaking change.
+- `type` (optional): The type of the attribute. See [Attributes](/sdk/telemetry/attributes) for the full list. SDKs **SHOULD NOT** expose this to users if they can reliably infer the type from the value. If not, SDKs **MAY** allow or require users to set the `type` explicitly.
 
 #### Example Usage
 
@@ -90,26 +182,34 @@ sentry_sdk.get_global_scope().set_attributes({
 
 #### Method Signature
 
-The method SHOULD accept a dictionary/map/object where:
+The method **SHOULD** accept a dictionary/map/object where:
 - Keys are attribute names (strings)
 - Values are either directly values or attribute objects/dictionaries with `value`, and optionally `unit` properties (see [example](#example-usage)).
-- The SDK SHOULD infer the `type` of the attribute at serialization time to spare users from setting a (potentially incorrect) `type`. Depending on platform or constraints, the SDK MAY instead also allow or require users to set the `type` explicitly.
+- The SDK **SHOULD** infer the `type` of the attribute at serialization time to spare users from setting a (potentially incorrect) `type`. Depending on platform or constraints, the SDK **MAY** instead also allow or require users to set the `type` explicitly.
 
-#### Behavior
+</SpecSection>
 
-- Attributes set on the global scope MUST be applied to all logs and metrics
-- Attributes set on the isolation scope MUST be applied to all logs and metrics in that execution context
-- Attributes set on the current scope MUST be applied only to the logs and metrics that are captured while that current scope is active
+### Attribute Behavior
+
+<SpecSection id="scope-attribute-behavior" status="stable" since="2.4.0">
+
+- Attributes set on the global scope **MUST** be applied to all logs and metrics
+- Attributes set on the isolation scope **MUST** be applied to all logs and metrics in that execution context
+- Attributes set on the current scope **MUST** be applied only to the logs and metrics that are captured while that current scope is active
 - When the same attribute key exists in multiple scopes, the more specific scope's value takes precedence (current > isolation > global)
-- When the same attribute key exists on the current log or metric, it MUST take precedence over an attribute with the same key set on any scope (log/metric > current > isolation > global)
-- The SDK SHOULD keep the attribute format consistent with the user-set format until user-provided processing callbacks like `before_send_log` have been called. This ensures compatibility with already existing callbacks and avoids unexpected changes to the attribute format.
-- Calling `scope.clear()` MUST remove all attributes from the corresponding scope.
+- When the same attribute key exists on the current log or metric, it **MUST** take precedence over an attribute with the same key set on any scope (log/metric > current > isolation > global)
+- The SDK **SHOULD** keep the attribute format consistent with the user-set format until user-provided processing callbacks like `before_send_log` have been called. This ensures compatibility with already existing callbacks and avoids unexpected changes to the attribute format.
+- Calling `scope.clear()` **MUST** remove all attributes from the corresponding scope.
 
 See [Attributes](/sdk/telemetry/attributes) for detailed information about attribute structure, supported types, units, and common attribute keys. Also see [Sentry Conventions](https://github.com/getsentry/sentry-conventions/) for the complete attribute registry.
 
+</SpecSection>
+
 ### Removing Attributes
 
-Users MUST be able to remove attributes set on any scope using a dedicated method, e.g. `scope.removeAttribute()`.
+<SpecSection id="scope-remove-attributes" status="stable" since="2.3.0">
+
+Users **MUST** be able to remove attributes set on any scope using a dedicated method, e.g. `scope.removeAttribute()`.
 
 #### Example Usage
 
@@ -121,6 +221,16 @@ Sentry.getGlobalScope().removeAttribute('app.feature_flag.enabled');
 sentry_sdk.get_global_scope().remove_attribute('app.feature_flag.enabled')
 ```
 
+</SpecSection>
+
+---
+
 ## Related Documents
 
 This document provides a concise summary of the [Hub & Scope Refactoring](/sdk/miscellaneous/hub_and_scope_refactoring/), focusing on implementation details and expected features. The original document remains unchanged, offering additional historical context and migration strategies.
+
+---
+
+## Changelog
+
+<SpecChangelog />

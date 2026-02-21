@@ -1,18 +1,68 @@
 ---
 title: Trace Origin
+spec_id: sdk/telemetry/traces/trace-origin
+spec_version: 1.8.0
+spec_status: stable
+spec_changelog:
+  - version: 1.8.0
+    date: 2023-06-30
+    summary: Definition list support for origin parts
+  - version: 1.7.0
+    date: 2023-06-29
+    summary: Origin values should rarely change for analytics stability
+  - version: 1.6.0
+    date: 2023-06-28
+    summary: Clarified integration part of origin
+  - version: 1.5.0
+    date: 2023-06-20
+    summary: Removed dots from allowed characters
+  - version: 1.4.0
+    date: 2023-06-07
+    summary: Clarified auto-set behavior
+  - version: 1.3.0
+    date: 2023-06-01
+    summary: Clarified manual origins usage
+  - version: 1.2.0
+    date: 2023-05-16
+    summary: Added dots to allowed characters
+  - version: 1.1.0
+    date: 2023-05-12
+    summary: Expanded origin format
+  - version: 1.0.0
+    date: 2023-03-24
+    summary: Initial spec — trace origin concept
 ---
+
+<SpecRfcAlert />
+
+<SpecMeta />
+
+## Overview
 
 Trace origin indicates what created a trace, span or log. Not all traces, spans or logs contain enough information
 to tell whether the user or what precisely in the SDK created it. Origin solves this problem. Origin can be sent with
 the <Link to="/sdk/foundations/data-model/event-payloads/contexts/#trace-context">trace context</Link>, <Link to="/sdk/foundations/data-model/event-payloads/span/">spans</Link>, or <Link to="/sdk/telemetry/logs/">logs</Link>.
 
-For logs and standalone spans, the origin should be set as the `sentry.origin` attribute key.
+For logs and standalone spans, the origin **SHOULD** be set as the `sentry.origin` attribute key.
 
-The SDKs should set this value automatically. It is not expected to be set manually by users. The value for origin should rarely change so that we can run proper analytics on them.
+Related specs:
+- <Link to="/sdk/foundations/data-model/event-payloads/span/">Span Interface</Link>
+- <Link to="/sdk/foundations/data-model/event-payloads/contexts/#trace-context">Trace Context</Link>
+- <Link to="/sdk/telemetry/logs/">Logs Interface</Link>
+
+---
+
+## Wire Format
+
+### Format
+
+<SpecSection id="origin-format" status="stable" since="1.0.0">
+
+The SDKs **SHOULD** set this value automatically. It is not expected to be set manually by users. The value for origin **SHOULD** rarely change so that we can run proper analytics on them.
 
 The origin is of type `string` and consists of four parts: `<type>.<category>.<integration-name>.<integration-part>`.
 Only the first is mandatory. The parts build upon each other, meaning it is forbidden
-to skip one part. For example, you may send parts one and two but aren't allowed to send parts one and three without part two.
+to skip one part. For example, you **MAY** send parts one and two but aren't allowed to send parts one and three without part two.
 
 `type`
 
@@ -20,7 +70,7 @@ to skip one part. For example, you may send parts one and two but aren't allowed
 
 `category`
 
-: _Optional_. Is the category of the trace or span, and it must be a category of [span operations](/sdk/performance/span-operations/). For example, `http`, `db`, `ui`, `navigation`, `file`, `browser`, `rpc`, etc.
+: _Optional_. Is the category of the trace or span, and it **MUST** be a category of [span operations](/sdk/telemetry/traces/span-operations/). For example, `http`, `db`, `ui`, `navigation`, `file`, `browser`, `rpc`, etc.
 
 `integration-name`
 
@@ -35,7 +85,11 @@ All parts can only contain:
 - Alphanumeric characters: `a-z` , `A-Z` , and `0-9`.
 - Underscores: `_`
 
+</SpecSection>
+
 ### Examples
+
+<SpecSection id="origin-examples" status="stable" since="1.0.0">
 
 - `manual`
 - `auto`
@@ -53,16 +107,23 @@ All parts can only contain:
 - `auto.db.core_data`
 - `auto.db.graphql`
 
-Origins of type `manual` can also have categories and integration names. For example, for the <Link to="/sdk/performance/time-to-initial-full-display/">time to display feature</Link>, the user manually calls an API of the SDK,
+Origins of type `manual` can also have categories and integration names. For example, for the <Link to="/sdk/telemetry/traces/time-to-initial-full-display/">time to display feature</Link>, the user manually calls an API of the SDK,
 creating a span. In this case, the SDK can tell what created the span, but the user did it manually. On the other hand, the SDK also
 automatically creates a span. In this case we end up with the following origins:
 
 - `manual.ui.time_to_display`
 - `auto.ui.time_to_display`
 
-## See also:
+</SpecSection>
 
-- <Link to="/sdk/foundations/data-model/event-payloads/span/">Span Interface</Link>
-- <Link to="/sdk/foundations/data-model/event-payloads/contexts/#trace-context">Trace Context</Link>
-- <Link to="/sdk/telemetry/logs/">Logs Interface</Link>
+---
+
+## See Also
+
 - Related [RFC](https://github.com/getsentry/rfcs/pull/73/)
+
+---
+
+## Changelog
+
+<SpecChangelog />

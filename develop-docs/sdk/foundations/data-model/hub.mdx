@@ -1,0 +1,102 @@
+---
+title: Hub
+spec_id: sdk/foundations/data-model/hub
+spec_version: 1.0.0
+spec_status: deprecated
+spec_superseded_by: sdk/foundations/data-model/scopes
+spec_changelog:
+  - version: 1.0.0
+    date: 2024-05-03
+    summary: Initial spec — Hub concept documented for deprecation purposes
+sidebar_order: 11
+---
+
+<SpecRfcAlert />
+
+<SpecMeta />
+
+## Overview
+
+The Hub was the central coordination object in the original [Unified API](/sdk/miscellaneous/unified-api/). It managed a stack of `Scope` and `Client` pairs, routing API calls to the correct client with the correct scope data. The Hub has been **removed** in favor of the [three-scope model](/sdk/foundations/data-model/scopes/).
+
+<Alert title="Deprecated">
+
+The decision to remove the Hub from all Sentry SDKs was confirmed on 2024-05-03. SDKs **MUST** migrate to the [Scopes](/sdk/foundations/data-model/scopes/) model. See the [Hub & Scope Refactoring](/sdk/miscellaneous/hub_and_scope_refactoring/) for migration details.
+
+</Alert>
+
+Related specs:
+- [Scopes](/sdk/foundations/data-model/scopes/) — the replacement model
+- [Hub & Scope Refactoring](/sdk/miscellaneous/hub_and_scope_refactoring/) — migration guide
+- [Unified API](/sdk/miscellaneous/unified-api/) — original API specification
+
+---
+
+## Concepts
+
+<SpecSection id="hub-concept" status="deprecated" since="1.0.0" superseded_by="sdk/foundations/data-model/scopes">
+
+### What Was the Hub?
+
+The Hub held a stack of `Layer` entries, where each layer was a pair of `(Scope, Client)`. The topmost layer was the "current" layer — API calls like `captureEvent` or `setTag` operated on the topmost scope and client.
+
+Key properties:
+- **Hub.current** — a static/thread-local reference to the current Hub
+- **Stack** — a LIFO stack of `(Scope, Client)` pairs
+- **Push/Pop** — adding and removing layers from the stack
+
+### Hub Operations
+
+- `Hub.current` — returns the current Hub for the running thread/context
+- `Hub.clone()` — creates a new Hub with a shallow copy of the stack (used for async context propagation)
+- `hub.pushScope()` — pushes a new layer onto the stack, duplicating the current scope
+- `hub.popScope()` — removes the topmost layer from the stack
+- `hub.withScope(callback)` — pushes a scope, runs the callback, then pops
+- `hub.bindClient(client)` — replaces the client on the topmost layer
+- `hub.captureEvent(event)` — delegates to the topmost client with the topmost scope
+- `hub.captureException(exception)` — convenience for capturing exceptions
+- `hub.captureMessage(message)` — convenience for capturing messages
+- `hub.startTransaction(context)` — creates a new transaction bound to this Hub
+- `hub.traceHeaders()` — returns the `sentry-trace` header value from the current span on scope
+
+### Problems with the Hub Model
+
+1. **Complexity** — users had to understand Hub cloning, scope stacking, and thread-local semantics
+2. **Incompatibility with OpenTelemetry** — OTel uses immutable contexts that fork on every span; the Hub's mutable stack model could not reproduce this
+3. **Fragile async propagation** — moving execution across threads required manual Hub cloning, which was error-prone and could break breadcrumbs and other features
+4. **Scope leaking** — forgetting to pop a scope or clone a Hub caused data to leak across unrelated operations
+
+</SpecSection>
+
+---
+
+## Migration to Scopes
+
+<SpecSection id="hub-migration" status="deprecated" since="1.0.0" superseded_by="sdk/foundations/data-model/scopes">
+
+The Hub is replaced by three scopes (global, isolation, current) that handle all coordination previously done by the Hub. The mapping is:
+
+| Old Hub API | New Scopes API | Notes |
+|---|---|---|
+| `Hub(Hub.current)` (clone) | `withIsolationScope()` | Forks isolation + current scope |
+| `hub.configureScope()` | `getIsolationScope()` or `getCurrentScope()` | Depends on desired scope lifetime |
+| `hub.pushScope()` / `hub.popScope()` | `withScope()` | Automatically manages lifecycle |
+| `hub.bindClient(client)` | Set client on scope | Client is always available (NoOpClient before init) |
+| `hub.startTransaction()` | `Sentry.startSpan()` | See [Spans](/sdk/telemetry/spans/#span-api) |
+| `hub.traceHeaders()` | `Sentry.getTraceData()` | See [Spans](/sdk/telemetry/spans/#span-trace-propagation) |
+
+### Backwards Compatibility
+
+During the migration phase, SDKs **SHOULD**:
+- Keep Hub API functional but deprecated, shimming calls to the new scopes model
+- Have top-level static APIs (like `Sentry.setTag()`) write to both current and isolation scope
+- In a later major version, change top-level APIs to only write to isolation scope
+- Eventually remove the Hub entirely in a subsequent major version
+
+</SpecSection>
+
+---
+
+## Changelog
+
+<SpecChangelog />

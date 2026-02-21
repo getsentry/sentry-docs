@@ -1,6 +1,22 @@
 ---
 title: AI Agents Module
+spec_id: sdk/telemetry/traces/modules/ai-agents
+spec_version: 1.13.0
+spec_status: stable
+spec_changelog:
+  - version: 1.13.0
+    date: 2026-02-10
+    summary: Narrowed operation names, elaborated agent/pipeline naming
+  - version: 1.0.0
+    date: 2025-07-07
+    summary: Initial spec — AI Agents module
 ---
+
+<SpecRfcAlert />
+
+<SpecMeta />
+
+<SpecSection id="overview" status="stable" since="1.0.0">
 
 The AI Agents module is agnostic to the library used. The SDK will instrument existing AI agents in certain frameworks or libraries (at the time of writing those are `openai-agents` in Python and `Vercel AI` in Javascript). You may need to manually annotate spans for other libraries.
 
@@ -17,29 +33,37 @@ Sentry Conventions is the single source of truth.
 
 </Alert>
 
+</SpecSection>
+
+<SpecSection id="create-agent-span" status="stable" since="1.0.0">
+
 ## Create Agent Span
 
 Describes AI agent invocation.
 
-- Span `op` SHOULD be `"gen_ai.create_agent"`.
-- Span `name` SHOULD be `"create_agent {gen_ai.agent.name}"`. (e.g. `"create_agent Weather Agent"`)
-- Attribute `gen_ai.operation.name` MUST be `"create_agent"`.
-- Attribute `gen_ai.agent.name` SHOULD be set to the agents name. (e.g. `"Weather Agent"`)
-- If provided, the attribute `gen_ai.request.model` MUST be the agent's default request model. (e.g. `"gpt-4o"`)
-- If relevant, the `gen_ai.pipeline.name` attribute SHOULD be set to the name of the AI workflow, pipeline or chain within which the agent operates. (e.g. `"weather-pipeline"`)
-- All [Common Span Attributes](#common-span-attributes) SHOULD be set (all `required` common attributes MUST be set).
+- Span `op` **SHOULD** be `"gen_ai.create_agent"`.
+- Span `name` **SHOULD** be `"create_agent {gen_ai.agent.name}"`. (e.g. `"create_agent Weather Agent"`)
+- Attribute `gen_ai.operation.name` **MUST** be `"create_agent"`.
+- Attribute `gen_ai.agent.name` **SHOULD** be set to the agents name. (e.g. `"Weather Agent"`)
+- If provided, the attribute `gen_ai.request.model` **MUST** be the agent's default request model. (e.g. `"gpt-4o"`)
+- If relevant, the `gen_ai.pipeline.name` attribute **SHOULD** be set to the name of the AI workflow, pipeline or chain within which the agent operates. (e.g. `"weather-pipeline"`)
+- All [Common Span Attributes](#common-span-attributes) **SHOULD** be set (all `required` common attributes **MUST** be set).
+
+</SpecSection>
+
+<SpecSection id="invoke-agent-span" status="stable" since="1.0.0">
 
 ## Invoke Agent Span
 
 Describes AI agent invocation.
 
-- Span `op` SHOULD be `"gen_ai.invoke_agent"`.
-- Span `name` SHOULD be `"invoke_agent {gen_ai.agent.name}"`. (e.g. `"invoke_agent Weather Agent"`)
-- Attribute `gen_ai.operation.name` MUST be `"invoke_agent"`.
-- Attribute `gen_ai.agent.name` SHOULD be set to the agents name. (e.g. `"Weather Agent"`)
-- If provided, the attribute `gen_ai.request.model` MUST be the agent's default request model. (e.g. `"gpt-4o"`)
-- If relevant, the `gen_ai.pipeline.name` attribute SHOULD be set to the name of the AI workflow, pipeline or chain within which the agent operates. (e.g. `"weather-pipeline"`)
-- All [Common Span Attributes](#common-span-attributes) SHOULD be set (all `required` common attributes MUST be set).
+- Span `op` **SHOULD** be `"gen_ai.invoke_agent"`.
+- Span `name` **SHOULD** be `"invoke_agent {gen_ai.agent.name}"`. (e.g. `"invoke_agent Weather Agent"`)
+- Attribute `gen_ai.operation.name` **MUST** be `"invoke_agent"`.
+- Attribute `gen_ai.agent.name` **SHOULD** be set to the agents name. (e.g. `"Weather Agent"`)
+- If provided, the attribute `gen_ai.request.model` **MUST** be the agent's default request model. (e.g. `"gpt-4o"`)
+- If relevant, the `gen_ai.pipeline.name` attribute **SHOULD** be set to the name of the AI workflow, pipeline or chain within which the agent operates. (e.g. `"weather-pipeline"`)
+- All [Common Span Attributes](#common-span-attributes) **SHOULD** be set (all `required` common attributes **MUST** be set).
 
 Additional attributes on the span:
 
@@ -93,18 +117,22 @@ Additional attributes on the span:
 - **[2]:** Cached tokens are a subset of input tokens; `gen_ai.usage.input_tokens` includes `gen_ai.usage.input_tokens.cached`.
 - **[3]:** Reasoning tokens are a subset of output tokens; `gen_ai.usage.output_tokens` includes `gen_ai.usage.output_tokens.reasoning`.
 
+</SpecSection>
+
+<SpecSection id="ai-client-span" status="stable" since="1.0.0">
+
 ## AI Client Span
 
 This span represents a request to an AI model or service that generates a response or requests a tool call based on the input prompt.
 
-- Span `op` SHOULD be `"gen_ai.{gen_ai.operation.name}"`. (e.g. `"gen_ai.chat"`)
-- Span `name` SHOULD be `{gen_ai.operation.name} {gen_ai.request.model}"`. (e.g. `"chat o3-mini"`)
-- Attribute `gen_ai.operation.name` MUST be `"chat"`, `"embeddings"`, `"generate_content"` or `"text_completion"`. **[4]**
-- Attribute `gen_ai.request.model` MUST be the requested model. (e.g. `"gpt-4o"`)
-- Attribute `gen_ai.response.model` MUST be the concrete response model. (e.g. `"gpt-4o-2024-08-06"`)
-- If the request originates from an agent, the `gen_ai.agent.name` attribute SHOULD be set to the name of the agent. (e.g. `"Weather Agent"`)
-- If relevant, the `gen_ai.pipeline.name` attribute SHOULD be set to the name of the AI workflow, pipeline or chain within which the agent operates. (e.g. `"weather-pipeline"`)
-- All [Common Span Attributes](#common-span-attributes) SHOULD be set (all `required` common attributes MUST be set).
+- Span `op` **SHOULD** be `"gen_ai.{gen_ai.operation.name}"`. (e.g. `"gen_ai.chat"`)
+- Span `name` **SHOULD** be `{gen_ai.operation.name} {gen_ai.request.model}"`. (e.g. `"chat o3-mini"`)
+- Attribute `gen_ai.operation.name` **MUST** be `"chat"`, `"embeddings"`, `"generate_content"` or `"text_completion"`. **[4]**
+- Attribute `gen_ai.request.model` **MUST** be the requested model. (e.g. `"gpt-4o"`)
+- Attribute `gen_ai.response.model` **MUST** be the concrete response model. (e.g. `"gpt-4o-2024-08-06"`)
+- If the request originates from an agent, the `gen_ai.agent.name` attribute **SHOULD** be set to the name of the agent. (e.g. `"Weather Agent"`)
+- If relevant, the `gen_ai.pipeline.name` attribute **SHOULD** be set to the name of the AI workflow, pipeline or chain within which the agent operates. (e.g. `"weather-pipeline"`)
+- All [Common Span Attributes](#common-span-attributes) **SHOULD** be set (all `required` common attributes **MUST** be set).
 
 Additional attributes on the span:
 
@@ -162,17 +190,21 @@ Additional attributes on the span:
 - **[2]:** Cached tokens are a subset of input tokens; `gen_ai.usage.input_tokens` includes `gen_ai.usage.input_tokens.cached`.
 - **[3]:** Reasoning tokens are a subset of output tokens; `gen_ai.usage.output_tokens` includes `gen_ai.usage.output_tokens.reasoning`.
 
+</SpecSection>
+
+<SpecSection id="execute-tool-span" status="stable" since="1.0.0">
+
 ## Execute Tool Span
 
 Describes a tool execution.
 
-- Span `op` SHOULD be `"gen_ai.execute_tool"`.
-- Span `name` SHOULD be `"execute_tool {gen_ai.tool.name}"`. (e.g. `"execute_tool query_database"`)
-- Attribute `gen_ai.operation.name` MUST be `"execute_tool"`.
-- Attribute `gen_ai.tool.name` SHOULD be set to the name of the tool. (e.g. `"query_database"`)
-- Attribute `gen_ai.agent.name` SHOULD be set to the name of the agent that invoked the tool. (e.g. `"Weather Agent"`)
-- If relevant, the `gen_ai.pipeline.name` attribute SHOULD be set to the name of the AI workflow, pipeline or chain within which the agent operates. (e.g. `"weather-pipeline"`)
-- All [Common Span Attributes](#common-span-attributes) SHOULD be set (all `required` common attributes MUST be set).
+- Span `op` **SHOULD** be `"gen_ai.execute_tool"`.
+- Span `name` **SHOULD** be `"execute_tool {gen_ai.tool.name}"`. (e.g. `"execute_tool query_database"`)
+- Attribute `gen_ai.operation.name` **MUST** be `"execute_tool"`.
+- Attribute `gen_ai.tool.name` **SHOULD** be set to the name of the tool. (e.g. `"query_database"`)
+- Attribute `gen_ai.agent.name` **SHOULD** be set to the name of the agent that invoked the tool. (e.g. `"Weather Agent"`)
+- If relevant, the `gen_ai.pipeline.name` attribute **SHOULD** be set to the name of the AI workflow, pipeline or chain within which the agent operates. (e.g. `"weather-pipeline"`)
+- All [Common Span Attributes](#common-span-attributes) **SHOULD** be set (all `required` common attributes **MUST** be set).
 
 Additional attributes on the span:
 
@@ -189,14 +221,22 @@ Additional attributes on the span:
 | `gen_ai.tool.input`          | string | optional          | **Deprecated.** Use `gen_ai.tool.call.arguments` instead. Input that was given to the executed tool as string. | `'{"max":10}'`                             |
 | `gen_ai.tool.output`         | string | optional          | **Deprecated.** Use `gen_ai.tool.call.result` instead. The output from the tool.                               | `"7"`                                      |
 
+</SpecSection>
+
+<SpecSection id="handoff-span" status="stable" since="1.0.0">
+
 ## Handoff Span
 
 A span that describes the handoff from one agent to another agent.
 
-- Span `op` SHOULD be `"gen_ai.handoff"`.
-- Span `name` SHOULD be `"handoff from {from_agent} to {to_agent}"`.
-- Attribute `gen_ai.operation.name` MUST be `"handoff"`.
-- All [Common Span Attributes](#common-span-attributes) SHOULD be set (all `required` common attributes MUST be set).
+- Span `op` **SHOULD** be `"gen_ai.handoff"`.
+- Span `name` **SHOULD** be `"handoff from {from_agent} to {to_agent}"`.
+- Attribute `gen_ai.operation.name` **MUST** be `"handoff"`.
+- All [Common Span Attributes](#common-span-attributes) **SHOULD** be set (all `required` common attributes **MUST** be set).
+
+</SpecSection>
+
+<SpecSection id="common-span-attributes" status="stable" since="1.0.0">
 
 ## Common Span Attributes
 
@@ -238,3 +278,9 @@ Some attributes are common to all AI Agents spans:
 | `"openai"`          | OpenAI                            |
 | `"perplexity"`      | Perplexity                        |
 | `"xai"`             | xAI                               |
+
+</SpecSection>
+
+## Changelog
+
+<SpecChangelog />

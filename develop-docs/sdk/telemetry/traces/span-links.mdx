@@ -1,7 +1,20 @@
 ---
 title: Span Links
+spec_id: sdk/telemetry/traces/span-links
+spec_version: 1.0.0
+spec_status: stable
 og_image: /og-images/sdk-telemetry-traces-span-links.png
+spec_changelog:
+  - version: 1.0.0
+    date: 2025-02-26
+    summary: Initial spec — span links for trace correlation
 ---
+
+<SpecRfcAlert />
+
+<SpecMeta />
+
+## Overview
 
 Span links associate one span with one or more other spans. The most important application of linking traces are frontend applications.
 It can also be useful in settings with producer/consumer patterns or batch operations.
@@ -11,81 +24,73 @@ A span link can store the context of (a.k.a. link to) any other span. When neces
 
 Learn more about Span Links in [the RFC 141](https://github.com/getsentry/rfcs/blob/main/text/0141-linking-traces.md) or in the [OpenTelemetry docs](https://opentelemetry.io/docs/concepts/signals/traces/#span-links).
 
-## SDK Implementation Guideline
+---
 
-- Links are added on a span level, as defined and specified by [OpenTelemetry](https://opentelemetry.io/docs/specs/otel/trace/api/#link).
-- In addition to linking to span IDs, a span link also holds meta information about the link, collected via attributes.
-- Span links MUST only link to other spans. We do not support linking a span to an error or other Sentry events.
-- For SDKs still having public APIs around transactions, their respective Transaction interface and `startTransaction` function(s) should support the same APIs.
+## Behavior
 
-### Type Definitions
+### Link Types
 
-SDKs should follow the OpenTelemetry spec for the Link interface as defined by the platform.
-Non-OTel SDKs should orient themselves on OTel, resulting in the interface below, or a related version that applies to the terminology and philosophy of the respective SDK:
+<SpecSection id="link-types" status="stable" since="1.0.0">
 
-```ts {tabTitle:Types}
-// see https://github.com/open-telemetry/opentelemetry-js/blob/main/api/src/trace/link.ts
-// or interface of respective platform
-interface Link {
-  // contains the SpanContext of the span to link to
-  context: SpanContext;
-  // key-value pair with primitive values
-  attributes?: Attributes;
-}
+Links don't require a special meaning or type but if necessary (e.g. for identifying special links in the product), set the `sentry.link.type` attribute on the link to define the link type.
+Any string can be used, but these types have predefined meanings:
 
+| `sentry.link.type` | Usage                                                          | UI Implications                                                                                   |
+|--------------------|----------------------------------------------------------------|---------------------------------------------------------------------------------------------------|
+| "previous_trace"   | Linking e.g. a navigation span to the previous page load span. | Used to query linked traces. Shows a button to go to linked previous trace in the trace explorer. |
+| "next_trace"       | Linking e.g. a page load span to the next navigation span.     | Used to query linked traces. Shows a button to go to linked next trace in the trace explorer.     |
 
-// see https://github.com/open-telemetry/opentelemetry-js/blob/main/api/src/trace/span_context.ts
-// or interface of respective platform
-interface SpanContext {
-  traceId: string,
-  spanId: string,
-  traceFlags: number,
-}
+#### `previous_trace`
 
-type Attributes = Record<string, AttributeValues>
-type AttributeValues = string | boolean | number | Array<string> | Array<boolean> | Array<number>
-```
+Frontend traces can be linked by adding span links between root spans. For example, a navigation span includes a link to the previous page load span.
 
+The span context inside the link object **SHOULD** be stored in a storage mechanism of choice (e.g. in-memory or `sessionStorage` in the browser).
 
-### Required Span API
+Therefore, on root span start:
+- Check if there is a previous span context stored. If yes, add the span link with the `'sentry.link.type': 'previous_trace'` attribute
+- Store the root span context as the previous root span in a storage mechanism of choice (e.g. in-memory or `sessionStorage` in the browser)
 
-Ideally, the link is added when starting a span. An optional `links` attribute is added to the `startSpan` options.
-SDKs that don't offer span-centric APIs but e.g. transaction APIs, should ensure that their respective `start...` APIs (e.g. `startTransaction`) also offer a possibility to add links.
+SDKs are free to implement heuristics around how long a previous trace span context **SHOULD** be considered (max time) and store additional necessary data.
 
-```ts {tabTitle:Span Options}
-function startSpan(options: StartSpanOptions);
+![](./span-links-previous-trace-100.png)
 
-interface StartSpanOptions: {
-  //... other options (name, attributes, etc)
-  links?: Link[];
-}
-```
+#### Negatively Sampled Traces
 
-Furthermore, the SDKs need to expose at least an `addLink` method on their respective Span interface. For completeness with OpenTelemetry, ideally they also expose `addLinks`:
+In many cases, with lower sample rates, we will not be able to provide a full trace link chain, due to some or many traces being negatively sampled.
 
-```ts {tabTitle:Span API}
-interface Span {
-  // return value can differ depending on platform
-  addLink(link: Link): this;
-  addLinks(links: Link[]): this;
-}
-```
+- Sampled root spans **SHOULD** still include a link to the previous, negatively sampled root span (`traceFlags` on the spanContext() carry
+  the information that the previous trace root span was negatively sampled).
 
-## Envelope Item Payload
+This helps our product to hint that there would have been a previous trace, but it was negatively sampled.
+
+We will not link to the previous positively sampled trace if a negatively sampled trace is in-between (see Traces 2-4 in the diagram below).
+Furthermore, we will not show how many traces were negatively sampled in between two trace chains; only that there was at least one trace in between (see Trace 5-8).
+
+![](./span-links-previous-trace-negative-sample.png)
+
+</SpecSection>
+
+---
+
+## Wire Format
+
+### Envelope Item Payload
+
+<SpecSection id="envelope-item-payload" status="stable" since="1.0.0">
 
 Span trees are serialized to transaction event envelopes in all Sentry SDKs. Therefore, the envelope item needs to accommodate span links
 in its payload. If the `links` entry is an empty array, it can be omitted from the envelope.
 
-The serialized `links` objects should always contain:
+The serialized `links` objects **SHOULD** always contain:
 
 - `span_id: string` - id of the span to link to
 - `trace_id: string` - trace id of the span to link to
-- `sampled: boolean` - required if sampling decision of the span to link to (corresponds to `traceFlags` in Otel span context converted to `boolean`) is available
-- `attributes:` - required if attributes were added to the link
+- `sampled: boolean` - **REQUIRED** if sampling decision of the span to link to (corresponds to `traceFlags` in Otel span context converted to `boolean`) is available
+- `attributes:` - **REQUIRED** if attributes were added to the link
 
-Optionally, the serialized link object can contain further fields from OTel like `traceState`, `isRemote` or `droppedAttributesCount` which will be just forwarded unless we find a use case for them.
+Optionally, the serialized link object **MAY** contain further fields from OTel like `traceState`, `isRemote` or `droppedAttributesCount` which will be just forwarded unless we find a use case for them.
 
-The OTel fields `spanId`, `traceId`, and `traceFlags` should be excluded from the links objects in the envelope to avoid duplicate data (e.g. `trace_id` vs. `traceId`).
+The OTel fields `spanId`, `traceId`, and `traceFlags` **SHOULD** be excluded from the links objects in the envelope to avoid duplicate data (e.g. `trace_id` vs. `traceId`).
 
 If the root span (previously known as transaction) has span links, the links are stored in the trace context.
 
@@ -138,43 +143,77 @@ Links that are stored in child spans are serialized in `spans[i].links`.
 }
 ```
 
-## Link Types
+</SpecSection>
 
-Links don't require a special meaning or type but if necessary (e.g. for identifying special links in the product), set the `sentry.link.type` attribute on the link to define the link type.
-Any string can be used, but these types have predefined meanings:
+---
 
-| `sentry.link.type` | Usage                                                          | UI Implications                                                                                   |
-|--------------------|----------------------------------------------------------------|---------------------------------------------------------------------------------------------------|
-| "previous_trace"   | Linking e.g. a navigation span to the previous page load span. | Used to query linked traces. Shows a button to go to linked previous trace in the trace explorer. |
-| "next_trace"       | Linking e.g. a page load span to the next navigation span.     | Used to query linked traces. Shows a button to go to linked next trace in the trace explorer.     |
+## Public API
 
-### `previous_trace`
+### SDK Implementation Guideline
 
-Frontend traces can be linked by adding span links between root spans. For example, a navigation span includes a link to the previous page load span.
+<SpecSection id="sdk-implementation-guideline" status="stable" since="1.0.0">
 
-The span context inside the link object should be stored in a storage mechanism of choice (e.g. in-memory or `sessionStorage` in the browser).
+- Links are added on a span level, as defined and specified by [OpenTelemetry](https://opentelemetry.io/docs/specs/otel/trace/api/#link).
+- In addition to linking to span IDs, a span link also holds meta information about the link, collected via attributes.
+- Span links **MUST** only link to other spans. We do not support linking a span to an error or other Sentry events.
+- For SDKs still having public APIs around transactions, their respective Transaction interface and `startTransaction` function(s) **SHOULD** support the same APIs.
 
-Therefore, on root span start:
-- Check if there is a previous span context stored. If yes, add the span link with the `'sentry.link.type': 'previous_trace'` attribute
-- Store the root span context as the previous root span in a storage mechanism of choice (e.g. in-memory or `sessionStorage` in the browser)
+#### Type Definitions
 
-SDKs are free to implement heuristics around how long a previous trace span context should be considered (max time) and store additional necessary data.
+SDKs **SHOULD** follow the OpenTelemetry spec for the Link interface as defined by the platform.
+Non-OTel SDKs **SHOULD** orient themselves on OTel, resulting in the interface below, or a related version that applies to the terminology and philosophy of the respective SDK:
 
-![](./span-links-previous-trace-100.png)
+```ts {tabTitle:Types}
+// see https://github.com/open-telemetry/opentelemetry-js/blob/main/api/src/trace/link.ts
+// or interface of respective platform
+interface Link {
+  // contains the SpanContext of the span to link to
+  context: SpanContext;
+  // key-value pair with primitive values
+  attributes?: Attributes;
+}
 
-#### Negatively Sampled Traces
 
-In many cases, with lower sample rates, we will not be able to provide a full trace link chain, due to some or many traces being negatively sampled.
+// see https://github.com/open-telemetry/opentelemetry-js/blob/main/api/src/trace/span_context.ts
+// or interface of respective platform
+interface SpanContext {
+  traceId: string,
+  spanId: string,
+  traceFlags: number,
+}
 
-- Sampled root spans should still include a link to the previous, negatively sampled root span (`traceFlags` on the spanContext() carry
-  the information that the previous trace root span was negatively sampled).
+type Attributes = Record<string, AttributeValues>
+type AttributeValues = string | boolean | number | Array<string> | Array<boolean> | Array<number>
+```
 
-This helps our product to hint that there would have been a previous trace, but it was negatively sampled.
 
-We will not link to the previous positively sampled trace if a negatively sampled trace is in-between (see Traces 2-4 in the diagram below).
-Furthermore, we will not show how many traces were negatively sampled in between two trace chains; only that there was at least one trace in between (see Trace 5-8).
+#### Required Span API
 
-![](./span-links-previous-trace-negative-sample.png)
+Ideally, the link is added when starting a span. An optional `links` attribute is added to the `startSpan` options.
+SDKs that don't offer span-centric APIs but e.g. transaction APIs, **SHOULD** ensure that their respective `start...` APIs (e.g. `startTransaction`) also offer a possibility to add links.
+
+```ts {tabTitle:Span Options}
+function startSpan(options: StartSpanOptions);
+
+interface StartSpanOptions: {
+  //... other options (name, attributes, etc)
+  links?: Link[];
+}
+```
+
+Furthermore, the SDKs need to expose at least an `addLink` method on their respective Span interface. For completeness with OpenTelemetry, ideally they also expose `addLinks`:
+
+```ts {tabTitle:Span API}
+interface Span {
+  // return value can differ depending on platform
+  addLink(link: Link): this;
+  addLinks(links: Link[]): this;
+}
+```
+
+</SpecSection>
+
+---
 
 ## Usage Example
 
@@ -216,3 +255,9 @@ Importantly, Relay doesn't require span links to be defined. They are completely
 Relay handles passing span links in the root span as well as in any child span (see [envelope item payload](#envelope-item-payload)).
 
 The expected type and structure of the links array and its contents is [specified in Relay](https://github.com/getsentry/relay/blob/master/relay-event-schema/src/protocol/span.rs#L753).
+
+---
+
+## Changelog
+
+<SpecChangelog />
