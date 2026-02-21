@@ -11,7 +11,7 @@ const STATUS_BADGE_CONFIG: Record<StatusType, {className: string; label: string}
   },
   no: {
     label: 'No',
-    className: 'bg-[#fee2e2] text-[#991b1b] dark:bg-[#7f1d1d]/50 dark:text-[#fca5a5]',
+    className: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
   },
 };
 
