@@ -1,0 +1,102 @@
+---
+title: Reviewing AI-Generated Code
+spec_id: sdk/playbooks/reviewing-ai-generated-code
+spec_version: 1.0.0
+spec_status: candidate
+spec_depends_on:
+  - id: sdk/getting-started/standards/review-ci
+    version: ">=1.0.0"
+  - id: sdk/getting-started/standards/code-quality
+    version: ">=1.0.0"
+  - id: sdk/getting-started/standards/code-submission
+    version: ">=1.0.0"
+spec_changelog:
+  - version: 1.0.0
+    date: 2026-02-21
+    summary: Initial playbook — specialized review techniques for AI-generated code with common failure modes
+---
+
+<SpecRfcAlert />
+
+<SpecMeta />
+
+## Overview
+
+This playbook extends the standard code review process with AI-specific checks for common failure modes in AI-generated code. It covers hallucinated imports, meaningless tests, over-engineering, speculative changes, missing context, and subtle behavior changes. By following these steps, reviewers will catch issues that automated tools miss while maintaining the same quality standards as human-written code.
+
+Related resources:
+- [Reviewing a PR](/sdk/getting-started/playbooks/reviewing-a-pr) — base review process
+- [Code Quality Standards](/sdk/getting-started/standards/code-quality) — test quality requirements
+- [Sentry Skills](https://github.com/getsentry/skills#available-skills) — find-bugs skill for systematic detection
+
+---
+
+## Standard review first
+
+Apply the full review checklist from [Reviewing a PR](/sdk/getting-started/playbooks/reviewing-a-pr):
+
+#### 1. Check the PR description
+
+What, why, linked issue.
+
+#### 2. Check CI status
+
+You **MUST NOT** review failing code.
+
+#### 3. Review for common issues
+
+Runtime errors, performance, side effects, backwards compatibility, security, test coverage ([Test requirements by change type](/sdk/getting-started/standards/code-quality#test-requirements-by-change-type)), test quality ([Test quality](/sdk/getting-started/standards/code-quality#test-quality)).
+
+#### 4. Check @sdk-leads review triggers
+
+Public API, dependencies, schema changes, security-sensitive code, frameworks.
+
+#### 5. Use LOGAF prefixes on feedback
+
+([Review feedback conventions](/sdk/getting-started/standards/review-ci#review-feedback-conventions))
+
+#### 6. Approve when only `l:` items remain
+
+---
+
+## Additional AI-specific checks
+
+AI-generated code has specific failure modes. You **MUST** check for these in addition to the standard review:
+
+#### 1. Hallucinated imports and APIs
+
+Verify every import and function call actually exists. AI tools sometimes reference packages, modules, or functions that don't exist or have different signatures than expected.
+
+#### 2. Tests that test nothing
+
+You **MUST** check that test assertions would actually fail if the feature broke ([Test quality](/sdk/getting-started/standards/code-quality#test-quality)). Watch for: hardcoded expected values that happen to match the output, `assert True` or equivalents, testing mock behavior instead of real behavior, asserting only that no exception was thrown.
+
+#### 3. Over-engineering
+
+AI tools frequently add unnecessary abstractions, configuration options, and error handling for impossible cases. Ask: "does this need to be this complex?" If a simpler approach works, request it.
+
+#### 4. Speculative changes
+
+Code changes beyond what the issue or PR describes ([One logical change per PR](/sdk/getting-started/standards/code-submission#one-logical-change-per-pr)). If the PR is "fix null check" but also reorganizes imports and adds docstrings, request a split.
+
+#### 5. Missing architecture context
+
+AI tools may not understand SDK-specific patterns and conventions. Check that the change fits the SDK's existing architecture, not just generic "good code" patterns.
+
+#### 6. Subtle behavior changes
+
+Pay extra attention to edge cases in any "cleanup" or "refactor" PR. AI refactors sometimes change semantics in ways that aren't obvious from a quick scan.
+
+You **SHOULD** use the [`sentry-skills:find-bugs`](https://github.com/getsentry/skills#available-skills) skill for systematic bug and vulnerability detection in the diff.
+
+## Referenced Standards
+
+- [Review feedback conventions](/sdk/getting-started/standards/review-ci#review-feedback-conventions) — LOGAF scale and blocking criteria
+- [Test requirements by change type](/sdk/getting-started/standards/code-quality#test-requirements-by-change-type) — test coverage expectations
+- [Test quality](/sdk/getting-started/standards/code-quality#test-quality) — meaningful assertion requirements
+- [AI attribution](/sdk/getting-started/standards/code-submission#ai-attribution) — Co-Authored-By footer requirement
+- [One logical change per PR](/sdk/getting-started/standards/code-submission#one-logical-change-per-pr) — focused PR scope
+
+---
+
+<SpecChangelog />
