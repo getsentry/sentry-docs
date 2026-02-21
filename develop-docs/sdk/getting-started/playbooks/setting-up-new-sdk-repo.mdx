@@ -1,0 +1,122 @@
+---
+title: Setting Up a New SDK Repository
+spec_id: sdk/playbooks/setting-up-new-sdk-repo
+spec_version: 1.0.0
+spec_status: candidate
+spec_depends_on:
+  - id: sdk/getting-started/standards/repository-docs
+    version: ">=1.0.0"
+  - id: sdk/getting-started/standards/review-ci
+    version: ">=1.0.0"
+  - id: sdk/getting-started/standards/code-submission
+    version: ">=1.0.0"
+  - id: sdk/getting-started/standards/code-quality
+    version: ">=1.0.0"
+  - id: sdk/getting-started/standards/coordination-maintenance
+    version: ">=1.0.0"
+spec_changelog:
+  - version: 1.0.0
+    date: 2026-02-21
+    summary: Initial playbook — standardized SDK repository setup with required files, CI pipeline, and AI context
+---
+
+<SpecRfcAlert />
+
+<SpecMeta />
+
+## Overview
+
+This playbook guides SDK maintainers through setting up a new SDK repository from scratch. It covers repository scaffolding, required documentation files, CI pipeline configuration, and verification steps to ensure AI tools can effectively contribute. By following these steps, the repository will have proper branch protection, documentation, testing infrastructure, and release automation in place.
+
+Related resources:
+- [Repository Documentation Standards](/sdk/getting-started/standards/repository-docs) — required files and AI context
+- [Review and CI Standards](/sdk/getting-started/standards/review-ci) — CI checks and review requirements
+- [Sentry Skills](https://github.com/getsentry/skills#available-skills) — automation tools for commits, PRs, and AGENTS.md
+
+---
+
+## Steps
+
+#### 1. Repository scaffolding
+
+Create the repository in the `getsentry` organization. You **MUST** configure branch protection rules:
+- Require CI checks to pass ([Required CI checks baseline](/sdk/getting-started/standards/review-ci#required-ci-checks-baseline))
+- Require at least one approving review ([Required reviewers](/sdk/getting-started/standards/review-ci#required-reviewers))
+
+You **MUST** set up a `CODEOWNERS` file with team members to automatically request reviews.
+
+#### 2. Required files
+
+You **MUST** create the following files:
+
+- `AGENTS.md` ([AGENTS.md](/sdk/getting-started/standards/repository-docs#agentsmd)) — Use the [AGENTS.md template](../templates/agents-md-template). You **SHOULD** use the [`sentry-skills:agents-md`](https://github.com/getsentry/skills#available-skills) skill to generate initial content.
+- `CONTRIBUTING.md` ([CONTRIBUTING.md](/sdk/getting-started/standards/repository-docs#contributingmd)) — Use the [CONTRIBUTING.md template](../templates/contributing-md-template), customized for this SDK.
+- `.github/PULL_REQUEST_TEMPLATE.md` ([PR template](/sdk/getting-started/standards/repository-docs#pr-template)) — Use the [PR template](../templates/pr-template).
+- `CHANGELOG.md` or equivalent
+- `LICENSE` file
+
+#### 3. CI pipeline
+
+Set up CI with at minimum:
+
+You **MUST** configure:
+- Build verification
+- Linting ([Linting and formatting in CI](/sdk/getting-started/standards/code-quality#linting-and-formatting-in-ci))
+- Type checking, if applicable for the language ([Type checking in CI](/sdk/getting-started/standards/code-quality#type-checking-in-ci))
+- Test suite
+- Commit message format check ([Commit message format](/sdk/getting-started/standards/code-submission#commit-message-format))
+- Secret scanning ([Security practices](/sdk/getting-started/standards/code-quality#security-practices))
+
+#### 4. AI context files
+
+You **MUST** create AI context files ([AI context file maintenance](/sdk/getting-started/standards/repository-docs#ai-context-file-maintenance)):
+- `AGENTS.md` — required
+
+You **SHOULD** create:
+- `CLAUDE.md`
+- `.cursorrules`
+- `.github/copilot-instructions.md`
+
+#### 5. Release setup
+
+You **MUST** configure release automation:
+- Craft configuration (`.craft.yml`)
+- Version bump script (e.g., `scripts/bump-version.sh`)
+- Release workflow (e.g., `.github/workflows/release.yml`)
+
+#### 6. Rollback documentation
+
+You **MUST** document rollback procedures ([Rollback procedures](/sdk/getting-started/standards/coordination-maintenance#rollback-procedures)):
+- Who can publish and yank releases (at least two people)
+- How to yank a release from the package registry
+- Backup contact if the primary publisher is unavailable
+
+#### 7. Verify with an AI tool
+
+Clone the repository fresh. Point an AI coding tool at it with no additional context. Ask it to make a sample contribution.
+
+You **MUST** verify that:
+- `AGENTS.md` gives the tool enough context to understand the architecture
+- The tool can figure out how to run tests
+- The tool creates a properly formatted commit
+- The tool opens a draft PR with a meaningful description
+
+If the tool cannot do this, the documentation needs work.
+
+## Referenced Standards
+
+- [AGENTS.md](/sdk/getting-started/standards/repository-docs#agentsmd) — AI context file requirements
+- [CONTRIBUTING.md](/sdk/getting-started/standards/repository-docs#contributingmd) — contributor guidelines
+- [PR template](/sdk/getting-started/standards/repository-docs#pr-template) — pull request template structure
+- [AI context file maintenance](/sdk/getting-started/standards/repository-docs#ai-context-file-maintenance) — maintaining AI-readable documentation
+- [Required reviewers](/sdk/getting-started/standards/review-ci#required-reviewers) — review approval requirements
+- [Required CI checks baseline](/sdk/getting-started/standards/review-ci#required-ci-checks-baseline) — minimum CI pipeline requirements
+- [Commit message format](/sdk/getting-started/standards/code-submission#commit-message-format) — conventional commit format
+- [Linting and formatting in CI](/sdk/getting-started/standards/code-quality#linting-and-formatting-in-ci) — automated code style checks
+- [Type checking in CI](/sdk/getting-started/standards/code-quality#type-checking-in-ci) — static type verification
+- [Security practices](/sdk/getting-started/standards/code-quality#security-practices) — secret scanning and security checks
+- [Rollback procedures](/sdk/getting-started/standards/coordination-maintenance#rollback-procedures) — release rollback documentation
+
+---
+
+<SpecChangelog />
