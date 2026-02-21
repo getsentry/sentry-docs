@@ -187,7 +187,7 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/development-process/:path*',
-    destination: '/sdk/processes/:path*',
+    destination: '/sdk/getting-started/',
   },
   {
     source: '/sdk/processes/releases/',
@@ -196,6 +196,10 @@ const developerDocsRedirects = [
   {
     source: '/sdk/processes/triaging/',
     destination: '/sdk/getting-started/playbooks/',
+  },
+  {
+    source: '/sdk/miscellaneous/feature-branches/',
+    destination: '/sdk/getting-started/playbooks/syncing-feature-branches/',
   },
   {
     source: '/application/ab-testing/',
