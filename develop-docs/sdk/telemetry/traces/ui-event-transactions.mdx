@@ -1,6 +1,23 @@
 ---
 title: UI Event Transactions
+spec_id: sdk/telemetry/traces/ui-event-transactions
+spec_version: 1.1.0
+spec_status: stable
+spec_platforms: mobile
+spec_changelog:
+  - version: 1.1.0
+    date: 2023-03-06
+    summary: Same event same element handling
+  - version: 1.0.0
+    date: 2022-10-06
+    summary: Initial spec — UI event transactions for mobile
 ---
+
+<SpecRfcAlert />
+
+<SpecMeta />
+
+## Overview
 
 We recommend implementing this feature for mobile and desktop SDKs.
 
@@ -16,9 +33,9 @@ platform. UI event transactions are an expansion to transactions generated autom
 the SDK, which are referred to as auto-generated transactions in this document.
 
 Creating transactions for a single UI event without any spans would be fruitless. Instead, the
-SDK shall use a UI event as the entry point to a possibly meaningful transaction. It should
+SDK shall use a UI event as the entry point to a possibly meaningful transaction. It **SHOULD**
 wait to see if it can add any auto-generated spans to the transaction. If it can, it shall keep
-and send the transaction. If not, the SDK should discard the empty transaction. A combination of
+and send the transaction. If not, the SDK **SHOULD** discard the empty transaction. A combination of
 two concepts is needed to implement the wait-and-see logic: __idle transactions__ and
 __wait-for-children__. Check out the specification below to see how those two concepts work
 together with covering multiple edge cases. The following description is drastically simplified:
@@ -36,7 +53,13 @@ local database. The SDK can create a meaningful transaction in that case.
 SDK can automatically instrument. The SDK could only create a transaction without any spans, which would
 be valueless.
 
-# Specification
+---
+
+## Behavior
+
+### Specification
+
+<SpecSection id="specification" status="stable" since="1.0.0">
 
 Users can change the `idleTimeout` via the SDK config options. The default is 3.0 seconds.
 
@@ -105,7 +128,11 @@ Scenario: Event on same UI element without child spans
     And starts a new transaction
 ```
 
-## Binding to scope
+</SpecSection>
+
+### Binding to Scope
+
+<SpecSection id="binding-to-scope" status="stable" since="1.0.0">
 
 On platforms mainly interacting with the static API, such as mobile, it's typical to bind auto-generated
 transactions to the scope so that users can access them via the static API. We recommend binding UI event
@@ -113,7 +140,7 @@ transactions to the scope on these platforms. The following extra rules apply as
 could interfere with other auto-generated transactions.
 
 The SDK adds auto-generated spans to the transaction bound to the scope. UI event transactions need
-auto-generated spans not to be empty. Therefore, the SDK shouldn't start a UI event transaction if there
+auto-generated spans not to be empty. Therefore, the SDK **SHOULD NOT** start a UI event transaction if there
 is already an ongoing screen load/navigation transaction or a transaction bound to the scope by the user.
 
 ```Gherkin
@@ -142,7 +169,7 @@ Scenario: Manually created transaction bound to the scope
     Then the SDK doesn't start a UI event transaction
 ```
 
-### Screen load/navigation transactions
+#### Screen load/navigation transactions
 
 This section deals specifically with auto-generated transactions for loading screens. If your SDK has
 other types of auto-generated transactions, please update the specification here.
@@ -162,12 +189,28 @@ Scenario: Ongoing screen load/navigation transaction
     Then the SDK doesn't start a UI event transaction
 ```
 
-## Transaction name
+</SpecSection>
 
-The user should be able to identify to which UI element the UI event transaction belongs on which screen
+---
+
+## Public API
+
+### Transaction Name
+
+<SpecSection id="transaction-name" status="stable" since="1.0.0">
+
+The user **SHOULD** be able to identify to which UI element the UI event transaction belongs on which screen
 by only looking at the transaction name. Choose whatever works best for your specific platform. Be
 attentive not to use any PII in the transaction name. One recommendation is
 `screen name + view identifier`. On Android, this would map to
 `LoginActivity.login_button`, and on Cocoa, to `YourApp.LoginViewController.loginButton`. If the UI element
 doesn't have a view identifier, it's acceptable that the SDK doesn't start a UI event transaction and logs
 a warning to inform the user. The Cocoa SDK uses the method the UI element calls as the view identifier.
+
+</SpecSection>
+
+---
+
+## Changelog
+
+<SpecChangelog />

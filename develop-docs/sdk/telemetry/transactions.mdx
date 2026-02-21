@@ -1,0 +1,201 @@
+---
+title: Transactions
+spec_id: sdk/telemetry/transactions
+spec_version: 1.0.0
+spec_status: deprecated
+spec_superseded_by: sdk/telemetry/spans
+spec_changelog:
+  - version: 1.0.0
+    date: 2025-09-26
+    summary: Initial spec — extracted transaction-level content from traces/index.mdx for deprecation
+---
+
+<SpecRfcAlert />
+
+<SpecMeta />
+
+## Overview
+
+Transactions were the original unit of performance data in Sentry. A transaction represented a span tree sent as a single event to Sentry. The SDK ecosystem is transitioning from transactions to [spans](/sdk/telemetry/spans/) sent in batches.
+
+<Alert title="Deprecated">
+
+Transactions are being replaced by the [Spans](/sdk/telemetry/spans/) spec. New SDKs **SHOULD NOT** implement transaction-based tracing. Existing SDKs **SHOULD** migrate to the span-first model via the `traceLifecycle` option. See [Implementation Guidelines](/sdk/telemetry/spans/#implementation-guidelines) for migration steps.
+
+</Alert>
+
+Related specs:
+- [Spans](/sdk/telemetry/spans/) — the modern replacement (protocol, API, buffering)
+- [Transaction Event Payload](/sdk/foundations/data-model/event-payloads/transaction/) — wire format
+- [Span Event Payload](/sdk/foundations/data-model/event-payloads/span/) — legacy span wire format
+- [Traces](/sdk/telemetry/traces/) — trace-level concepts (propagation, sampling)
+
+---
+
+## Behavior
+
+### `maxSpans`
+
+<SpecSection id="max-spans" status="deprecated" since="1.0.0" superseded_by="sdk/telemetry/spans">
+
+Because transaction payloads have a maximum size enforced on the ingestion side, SDKs **SHOULD** limit the number of spans that are attached to a transaction. This is similar to how breadcrumbs and other arbitrarily sized lists are limited to prevent accidental misuse. If new spans are added once the maximum is reached, the SDK **SHOULD** drop the spans and ideally use the internal logging to help debugging.
+
+The `maxSpans` **SHOULD** be implemented as an internal, non-configurable, constant that defaults to 1000. It **MAY** become configurable if there is justification for that in a given platform.
+
+The `maxSpans` limit **MAY** also help avoiding transactions that never finish (in platforms that keep a transaction open for as long as spans are open), preventing OOM errors, and generally avoiding degraded application performance.
+
+</SpecSection>
+
+### `enableTracing`
+
+<SpecSection id="enable-tracing" status="deprecated" since="1.0.0">
+
+This option is **deprecated** and **SHOULD** be removed from all SDKs.
+
+</SpecSection>
+
+### `traceOptionsRequests`
+
+<SpecSection id="trace-options-requests" status="deprecated" since="1.0.0">
+
+This **SHOULD** be a boolean value. Default is `false`. When set to `true` transactions **SHOULD** be created for HTTP `OPTIONS` requests. When set to `false` **NO** transactions **SHOULD** be created for HTTP `OPTIONS` requests. This configuration is most valuable on backend server SDKs. If this configuration does not make sense for an SDK it can be omitted.
+
+</SpecSection>
+
+### Interaction with `beforeSend` and Event Processors
+
+<SpecSection id="before-send" status="deprecated" since="1.0.0">
+
+The `beforeSend` callback is a special Event Processor that is considered to be of most prominent use. Proper Event Processors are often considered internal.
+
+Transactions **SHOULD NOT** go through `beforeSend`. However, they are still processed by Event Processors. This is a compromise between some flexibility in dealing with the current implementation of transactions as events, and leaving room for different lifetime hooks for transactions and spans.
+
+Motivations:
+
+1. **Future-proofing:** if users rely on `beforeSend` for transactions, that would complicate eventually implementing individual span ingestion without breaking user code.
+
+2. **API compatibility:** users have their existing implementation of `beforeSend` that only ever had to deal with error events. Transactions introduced as a new type of event could break user apps, silently drop transactions, or modify transaction events in surprising ways.
+
+3. **Usability:** `beforeSend` is not a perfect fit for dropping transactions like it is for dropping errors. Transactions are open for some time while child spans are created. Meanwhile outgoing HTTP requests include the sampling decision. Dropping the transaction in a `beforeSend`-like hook would leave orphan transactions from other services in a trace.
+
+</SpecSection>
+
+---
+
+## Wire Format
+
+### Event Changes
+
+<SpecSection id="event-changes" status="deprecated" since="1.0.0" superseded_by="sdk/telemetry/spans">
+
+Transactions are implemented as an extension of the `Event` model. The distinctive feature of a `Transaction` is `type: "transaction"`.
+
+Apart from that, the `Event` gets new fields: `spans`, `contexts.TraceContext`.
+
+</SpecSection>
+
+---
+
+## Public API
+
+### Span and Transaction Classes
+
+<SpecSection id="span-transaction-classes" status="deprecated" since="1.0.0" superseded_by="sdk/telemetry/spans">
+
+In memory, spans build up a conceptual tree of timed operations. The whole span tree is called a transaction. Sometimes "transaction" refers to the span tree as a whole, sometimes to the root span of the tree.
+
+Over the wire, transactions are serialized to JSON as an augmented `Event`, and sent as envelopes. The different envelope types are for optimizing ingestion (so "transaction events" can be routed differently than "error events").
+
+The [Span](/sdk/foundations/data-model/event-payloads/span/) class stores each individual span in a trace.
+
+The [Transaction](/sdk/foundations/data-model/event-payloads/transaction/) class is like a span, with a few key differences:
+
+- Transactions have `name`, spans don't.
+- Transactions **MUST** specify the [source](/sdk/foundations/data-model/event-payloads/transaction/#transaction-annotations) of its `name` to indicate how the transaction name was generated.
+- Calling the `finish` method on spans records the span's end timestamp. For transactions, the `finish` method additionally sends an event to Sentry.
+
+The `Transaction` class **MAY** inherit from `Span`, but that's an implementation detail. Semantically, transactions represent both the top-level span of a span tree as well as the unit of reporting to Sentry.
+
+#### `Span` Interface
+
+- When a `Span` is created, set the `startTimestamp` to the current time
+- `SpanContext` is the attribute collection for a `Span` (can be an implementation detail). When possible `SpanContext` **SHOULD** be immutable.
+- `Span` **SHOULD** have a method `startChild` which creates a new span with the current span's id as the new span's `parentSpanId` and the current span's `sampled` value copied over to the new span's `sampled` property
+- The `startChild` method **SHOULD** respect the `maxSpans` limit, and once the limit is reached the SDK **SHOULD NOT** create new child spans for the given transaction.
+- `Span` **SHOULD** have a method called `toSentryTrace` which returns a string that could be sent as a header called `sentry-trace`.
+- `Span` **SHOULD** have a method called `iterHeaders` (adapt to platform's naming conventions) that returns an iterable or map of header names and values. This is a thin wrapper containing `return {"sentry-trace": toSentryTrace()}`. See `continueFromHeaders` as to why this exists and **SHOULD** be preferred when writing integrations.
+
+#### `Transaction` Interface
+
+- A `Transaction` internally holds a flat list of child Spans (not a tree structure)
+- `Transaction` has additionally a `setName` method that sets the name of the transaction
+- `Transaction` receives a `TransactionContext` on creation (new property vs. `SpanContext` is `name`)
+- Since a `Transaction` inherits a `Span` it has all functions available and can be interacted with like it was a `Span`
+- A transaction is either sampled (`sampled = true`) or unsampled (`sampled = false`), a decision which is either inherited or set once during the transaction's lifetime, and in either case is propagated to all children. Unsampled transactions **SHOULD NOT** be sent to Sentry.
+- `TransactionContext` **SHOULD** have a static/ctor method called `fromSentryTrace` which prefills a `TransactionContext` with data received from a `sentry-trace` header value
+- `TransactionContext` **SHOULD** have a static/ctor method called `continueFromHeaders(headerMap)` which is a thin wrapper around `fromSentryTrace(headerMap.get("sentry-trace"))`. This **SHOULD** be preferred by integration/framework-SDK authors over `fromSentryTrace` as it hides the exact header names used deeper in the core SDK, and leaves opportunity for using additional headers in the future without changing all integrations.
+
+#### `Span.finish()`
+
+- Accepts an optional `endTimestamp` to allow users to set a custom `endTimestamp` on the finished span
+- If an `endTimestamp` value is not provided, set `endTimestamp` to the current time (in payload `timestamp`)
+
+#### `Transaction.finish()`
+
+- `super.finish()` (call finish on Span)
+- Send it to Sentry only if `sampled == true`
+- Like spans, can be given an optional `endTimestamp` value that should be passed into the `span.finish()` call
+- A `Transaction` needs to be wrapped in an `Envelope` and sent to the [Envelope Endpoint](/sdk/foundations/data-model/envelopes/)
+- The `Transport` **SHOULD** use the same internal queue for `Transactions` / `Events`
+- The `Transport` **SHOULD** implement category-based rate limiting
+- The `Transport` **SHOULD** deal with wrapping a `Transaction` in an `Envelope` internally
+
+</SpecSection>
+
+### Static API Changes
+
+<SpecSection id="static-api" status="deprecated" since="1.0.0" superseded_by="sdk/telemetry/spans">
+
+The `Sentry.startTransaction` function **SHOULD** take two arguments — the `transactionContext` passed to the `Transaction` constructor and an optional `customSamplingContext` object containing data to be passed to `tracesSampler` (if defined). It creates a `Transaction` bound to the current hub and returns the instance. Users interact with the instance for creating child spans and, thus, have to keep track of it themselves.
+
+With `Sentry.span` users can attach spans to an already ongoing transaction. This property returns a `SpanProtocol` if a running transaction is bound to the scope; otherwise, it returns nil. Although we recommend users keep track of their own transactions, the SDKs **SHOULD** offer a way to expose auto-generated transactions. SDKs shall bind auto-generated transactions to the scope, making them accessible with `Sentry.span`.
+
+If the SDK has global mode enabled, which specifies whether to use global scope management mode and **SHOULD** be `true` for client applications and `false` for server applications, `Sentry.span` shall return the active transaction. If the user disables global mode, `Sentry.span` shall return the latest active (unfinished) span.
+
+</SpecSection>
+
+### Hub Changes
+
+<SpecSection id="hub-changes" status="deprecated" since="1.0.0" superseded_by="sdk/foundations/data-model/scopes">
+
+- Introduce a method called `traceHeaders`
+  - This function returns a header (string) `sentry-trace`
+  - The value **SHOULD** be the trace header string of the `Span` that is currently on the `Scope`
+
+- Introduce a method called `startTransaction`
+  - Takes the same two arguments as `Sentry.startTransaction`
+  - Creates a new `Transaction` instance
+  - **SHOULD** implement sampling as described in the [Traces spec](/sdk/telemetry/traces/#sampling)
+
+- Modify the method called `captureEvent` or `captureTransaction`
+  - Don't set `lastEventId` for transactions
+
+</SpecSection>
+
+### Scope Changes
+
+<SpecSection id="scope-changes" status="deprecated" since="1.0.0" superseded_by="sdk/foundations/data-model/scopes">
+
+The `Scope` holds a reference to the current `Span` or `Transaction`.
+
+- `Scope` introduce `setSpan`
+  - This can be used internally to pass a `Span` / `Transaction` around so that integrations can attach children to it
+  - Setting the `transaction` property on the `Scope` (legacy) **SHOULD** overwrite the name of the `Transaction` stored in the `Scope`, if there is one. With that we give users the option to change the transaction name even if they don't have access to the instance of the `Transaction` directly.
+
+</SpecSection>
+
+---
+
+## Changelog
+
+<SpecChangelog />

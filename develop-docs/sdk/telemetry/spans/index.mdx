@@ -1,6 +1,625 @@
 ---
 title: Spans
-sidebar_order: 10
+spec_id: sdk/telemetry/spans
+spec_version: 1.14.0
+spec_status: candidate
+spec_depends_on:
+  - id: sdk/foundations/data-model/envelopes
+    version: ">=1.0.0"
+  - id: sdk/telemetry/traces
+    version: ">=1.0.0"
+  - id: sdk/foundations/data-model/scopes
+    version: ">=2.0.0"
+spec_changelog:
+  - version: 1.14.0
+    date: 2026-02-11
+    summary: Span buffer specification for span streaming
+  - version: 1.13.0
+    date: 2026-02-02
+    summary: Added sentry.replay_id and sentry.profiler_id attributes
+  - version: 1.12.0
+    date: 2026-01-28
+    summary: Clarified ignoreSpans evaluated before span starts, added ignored client outcome
+  - version: 1.11.0
+    date: 2026-01-22
+    summary: Added new_trace() API for span trace propagation
+  - version: 1.10.0
+    date: 2026-01-19
+    summary: removeAttribute API
+  - version: 1.9.0
+    date: 2025-12-10
+    summary: Implementation guidelines with scope data application in captureSpan
+  - version: 1.8.0
+    date: 2025-11-10
+    summary: "BREAKING: Renamed beforeSendSpans to beforeSendSpan"
+  - version: 1.7.0
+    date: 2024-12-13
+    summary: Span API, span trace propagation
+  - version: 1.6.0
+    date: 2024-11-26
+    summary: Span sampling, filtering, scrubbing
+  - version: 1.0.0
+    date: 2024-12-13
+    summary: Initial spec — span v2 protocol
 ---
 
-<PageGrid />
+<SpecRfcAlert />
+
+<SpecMeta />
+
+## Overview
+
+A **span** is a timed operation within a [trace](/sdk/telemetry/traces/). Spans are the modern unit of performance data in Sentry, replacing the deprecated [transaction](/sdk/telemetry/transactions/) model. SDKs send spans in batches using the span v2 envelope format.
+
+This spec covers the span wire protocol, public API, sampling, filtering, data scrubbing, trace propagation, buffering, and implementation guidelines.
+
+Related specs:
+- [Traces](/sdk/telemetry/traces/) — trace-level concepts (propagation, sampling decisions, sentry-trace header)
+- [Transactions](/sdk/telemetry/transactions/) — the deprecated predecessor
+- [Envelopes](/sdk/foundations/data-model/envelopes/) — transport format
+- [Scopes](/sdk/foundations/data-model/scopes/) — scope data applied to spans
+- [Span Operations](/sdk/telemetry/traces/span-operations/) — operation naming conventions
+- [Span Data Conventions](/sdk/telemetry/traces/span-data-conventions/) — attribute conventions
+
+---
+
+## Behavior
+
+### Sampling
+
+<SpecSection id="sampling" status="draft" since="1.6.0">
+
+Any APIs exposed to the user to sample spans **MUST** adhere to the following design principles:
+
+- Sampling **MUST** only happen to a root span
+- The APIs are optimized for trace completeness
+- The APIs are optimized for conclusive sampling decisions
+
+#### Sample with `tracesSampleRate`
+
+The SDK is automatically initialized with a `tracesSampleRate` of `0.0`.
+When starting a root span, the configured rate is compared against a random number between `0.0` and `1.0` to decide if this root span will be sampled or not.
+
+#### Sample with `tracesSampler`
+
+If the SDK is configured with a `tracesSampler`, the `tracesSampleRate` no longer applies.
+
+The `tracesSampler` callback **MUST** receive sufficient arguments from users to define their own sampling rules.
+This **MAY** include but is not limited to certain attributes from the root span, such as HTTP headers.
+The return value of the `tracesSampler` is a float between `0.0` and `1.0`.
+
+If no `tracesSampler` is configured, a propagated sampling decision via the traceparent takes precedence over the `tracesSampleRate`. This behavior **MAY** be disabled by defining a `tracesSampler`.
+
+</SpecSection>
+
+### Filtering
+
+<SpecSection id="filtering" status="draft" since="1.6.0">
+
+The SDK **MUST** implement a mechanism for users to filter out spans.
+The result **MUST** be binary (`true` or `false`).
+
+#### Filter with `ignoreSpans`
+
+The `ignoreSpans` option **MUST** accept a string, RegExp or glob pattern (whichever the platform supports). These values **MUST** be matched against the span name.
+
+Furthermore, `ignoreSpans` **SHOULD** accept an Object with patterns matching the span name, or span attributes:
+
+```ts
+type IgnoreSpanNamePattern = string | RegExp | GlobPattern;
+type IgnoreSpanFilter = {
+  name?: IgnoreSpanNamePattern;
+  attributes?: Record<string, string | boolean | number | RegExp | GlobPattern>;
+}
+type IgnoreSpans = Array<IgnoreSpanNamePattern | IgnoreSpanFilter>
+```
+
+Example:
+
+```js
+Sentry.init({
+  ignoreSpans: [
+    'GET /about',
+    /api\/\d+/,
+    { name: /healthz?/, attributes: { 'http.method': 'GET', 'http.status_code': 200 } },
+  ]
+})
+```
+
+##### Implementation Requirements
+
+1. The `ignoreSpans` patterns **MUST** be evaluated **before** the span is started.
+2. The `ignoreSpans` patterns **MUST** be applied to all spans, including the root or segment span.
+   - If a pattern matches the root span, the span and all its children **MUST** be ignored.
+   - If a pattern matches a child span, the span **MUST** be ignored but child spans **MUST** be reparented to the parent.
+3. String attribute values are matched like span names (contains). RegExp/glob **MUST** match the pattern. Other types **MUST** strictly equal.
+4. If a span is ignored, the SDK **MUST** record a client report with the `ignored` discard reason and `span` category.
+
+#### Filter with `integrations`
+
+The `integrations` option **MAY** perform similar filtering or explicit opt-out via boolean flags.
+
+#### Other approaches
+
+If both options above are not feasible, other approaches **MUST** be explored that have the same outcome.
+
+</SpecSection>
+
+### Data Scrubbing
+
+<SpecSection id="scrubbing-data" status="draft" since="1.6.0">
+
+#### `beforeSendSpan`
+
+This callback **MUST NOT** allow the removal of any spans from the span tree.
+It receives a deep copy of all spans in the span tree and their attributes.
+
+Users **MAY** mutate any exposed properties to perform sanitation on sensitive data or PII.
+The return value of `beforeSendSpan` **MUST** be merged with the original span tree prior to emission.
+
+</SpecSection>
+
+### Span Buffer
+
+<SpecSection id="span-buffer-requirements" status="candidate" since="1.14.0">
+
+The span buffer is responsible for batching spans, constructing span envelopes and forwarding them to the transport. It is used in the span streaming flow, where spans are captured via `captureSpan` and enqueued into the span buffer instead of being sent as transaction events.
+
+SDKs **MAY** implement and extend the span buffer with platform-specific behaviour, as long as the core requirements are met.
+
+#### Requirements
+
+1. The buffer **MUST** bucket spans by trace ID. When flushing, the buffer **MUST** create distinct envelopes for each trace ID.
+2. The buffer **MUST NOT** add more than 1000 spans to an envelope.
+3. When the buffer drops spans, it **MUST** record a client report with the exact number of spans dropped.
+4. The buffer **MAY** ignore priority-based scheduling with other telemetry categories for the time being.
+5. The buffer **MUST** implement flushing:
+   - On a regular interval (every 5 seconds, SDKs **MAY** choose a different value)
+   - When a trace bucket reaches 1000 spans
+   - When a trace bucket reaches 5MB (SDKs **MAY** choose a different value, **MUST NOT** exceed 10MB)
+   - When `SentrySDK.flush()` is called
+   - When `SentrySDK.close()` is called (stop accepting new spans)
+
+#### Buckets per Trace ID
+
+A recommended design is a map of **trace ID → list of spans**:
+
+```
+spanBuffer = {
+  "trace-a": [span1, span2, span3],
+  "trace-b": [span4],
+  "trace-c": [span5, span6]
+}
+```
+
+1. When adding a span, the buffer **MUST** add it to the bucket for that span's trace ID.
+2. When no bucket exists, the buffer **MUST** create a new bucket.
+3. After forwarding spans, the buffer **MUST** remove all spans from that bucket and delete the bucket.
+
+#### Serialization and DSC
+
+SDKs **SHOULD** materialize and freeze the [Dynamic Sampling Context](/sdk/telemetry/traces/dynamic-sampling-context/) as late as possible:
+- Enqueue spans but only create the final envelope at **flush time**.
+- At flush time, materialize and freeze the DSC on the segment span if not already done.
+
+</SpecSection>
+
+### Implementation Guidelines
+
+<Alert level="warning">
+  The steps and suggestions in this section primarily serve to document what SDKs have been doing when implementing Span-First. This also serves as a place to document decisions, trade-offs, and considerations.
+</Alert>
+
+<SpecSection id="implementation-approach" status="draft" since="1.9.0">
+
+This section provides guidelines for implementing Span-First in SDKs. This is purposefully NOT a full specification.
+
+#### How To Approach Span-First
+
+Take an iterative approach:
+
+1. Add the Span v2 Envelope (type), serialization logic and utilities.
+2. Add the `traceLifecycle` SDK init option (`'static'` or `'stream'`). Default **MUST** be `'static'`. Span-First **MUST** be opt-in.
+3. As an initial PoC, convert transaction events to v2 spans. Maximum 1000 spans per envelope; an envelope **MUST** only contain spans from one trace.
+4. Add new Span APIs (`start_span`). This API **MUST NOT** expose old transaction properties (`op`, `description`, `tags`).
+5. Implement the `captureSpan` [single-span processing pipeline](#single-span-processing-pipeline).
+6. Achieve data parity with transaction events. Additional data **MUST** only be added to the segment span. See [Common Attributes](#common-attribute-keys).
+7. Implement the [span buffer](#span-buffer-requirements).
+8. (Optional) Drop transaction support in the next major release.
+
+#### `parentSpan` option for `startSpan`
+
+SDKs **MUST** expose a `parentSpan` option on the `startSpan` API with three distinct states: `undefined`, `null`, and a span instance. For languages without `undefined`, use platform-appropriate mechanisms (overloading, sentinel values, etc.).
+
+If `parentSpan` references an ended span, the SDK **SHOULD** still create the new span as its child.
+
+#### Single-Span Processing Pipeline
+
+SDKs **MUST** expose a `captureSpan` API that takes a single span once it ends, then processes and enqueues it into the span buffer. This **SHOULD** be a method on the `Client`.
+
+Processing order:
+1. Accept any span that already ended
+2. Obtain and merge scope data (current, isolation, global)
+3. Apply [common span attributes](#common-attribute-keys) from the client and merged scope data to every span
+4. Apply [scope attributes](/sdk/foundations/data-model/scopes/#setting-attributes) from the merged scope data to every span
+5. Apply `contexts` and `request` data from merged scopes to the **segment span only**
+6. Apply span processing hooks
+7. Apply the `beforeSendSpan` callback
+8. Enqueue into the span buffer
+
+The `captureSpan` pipeline **MUST NOT** drop any span or buffer spans before enqueuing.
+
+#### Release
+
+The initial Span-First implementation **SHOULD** be released in a minor version of the SDK. The feature is opt-in via `traceLifecycle = 'stream'`. The default transaction-based behavior **MUST** remain unchanged until a future major release.
+
+</SpecSection>
+
+---
+
+## Wire Format
+
+### Span v2 Protocol
+
+<SpecSection id="span-v2-envelope-header" status="candidate" since="1.0.0">
+
+The SDK **MUST** implement a "span v2" envelope item, which is used to emit spans to Sentry.
+
+#### Envelope Header
+
+The envelope header **MUST** contain the same properties as previously with transactions.
+There are no special requirements for the Span v2 envelope header.
+
+```json
+{
+  "sent_at": "2025-02-07T14:16:00Z",
+  "dsn": "https://e12d836b15bb49d7bbf99e64295d995b@sentry.io/42",
+  "sdk": {
+    // ...
+  },
+  "trace": {
+    // ...
+  }
+}
+```
+
+Also see [Envelope Headers](/sdk/foundations/data-model/envelopes/#headers).
+
+#### Envelope Item Header
+
+The envelope item header **MUST** contain the following properties:
+
+```json
+{
+  "type": "span",
+  "item_count": 2,
+  "content_type": "application/vnd.sentry.items.span.v2+json"
+}
+```
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `type` | string | Yes | **MUST** be set to `"span"` |
+| `item_count` | integer | Yes | Number of span items in the payload |
+| `content_type` | string | Yes | **MUST** be set to `"application/vnd.sentry.items.span.v2+json"` |
+
+</SpecSection>
+
+#### Envelope Item Payload
+
+<SpecSection id="span-v2-envelope-item-payload" status="candidate" since="1.0.0">
+
+The envelope item payload **MUST** contain an `items` array with one and up to 1000 span objects:
+
+```json
+{
+  "items": [
+    {
+      "trace_id": "6cf173d587eb48568a9b2e12dcfbea52",
+      "span_id": "438f40bd3b4a41ee",
+      "name": "GET /users",
+      "status": "ok",
+      "is_segment": true,
+      "start_timestamp": 1742921669.158209,
+      "end_timestamp": 1742921669.180536,
+      "attributes": {
+        "sentry.release": { "type": "string", "value": "1.0.0" },
+        "sentry.environment": { "type": "string", "value": "local" },
+        "sentry.platform": { "type": "string", "value": "php" },
+        "sentry.sdk.name": { "type": "string", "value": "sentry.php" },
+        "sentry.sdk.version": { "type": "string", "value": "4.10.0" },
+        "sentry.origin": { "type": "string", "value": "auto" },
+        "http.response.status_code": { "type": "integer", "value": 200 }
+      },
+      "links": [
+        {
+          "span_id": "6c71fc6b09b8b716",
+          "trace_id": "627a2885119dcc8184fae7eef09438cb",
+          "sampled": true,
+          "attributes": {
+            "sentry.link.type": { "type": "string", "value": "previous_trace" }
+          }
+        }
+      ]
+    },
+    {
+      "trace_id": "6cf173d587eb48568a9b2e12dcfbea52",
+      "parent_span_id": "438f40bd3b4a41ee",
+      "span_id": "f1196292f76e45c0",
+      "name": "app.handle",
+      "status": "ok",
+      "is_segment": false,
+      "start_timestamp": 1742921669.178306,
+      "end_timestamp": 1742921669.180484,
+      "attributes": {
+        "sentry.origin": { "type": "string", "value": "auto" }
+      }
+    }
+  ]
+}
+```
+
+</SpecSection>
+
+#### Span Properties
+
+<SpecSection id="span-v2-protocol-properties" status="candidate" since="1.0.0">
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `trace_id` | string | Yes | 32-character hexadecimal string |
+| `span_id` | string | Yes | 16-character hexadecimal string |
+| `parent_span_id` | string | No | 16-character hexadecimal string |
+| `name` | string | Yes | Low cardinality description (e.g., "GET /users") |
+| `status` | string | Yes | Either `"ok"` or `"error"` |
+| `is_segment` | boolean | Yes | Whether the span is a segment span |
+| `start_timestamp` | number | Yes | Unix timestamp with fractional microseconds |
+| `end_timestamp` | number | Yes | Unix timestamp with fractional microseconds |
+| `attributes` | object | No | Key-value metadata |
+| `links` | array | No | Links connecting this span to other spans |
+
+##### Common Attribute Keys
+
+All attributes mentioned below **MUST** be attached to every span being emitted from the SDK, depending on the platform. Empty attributes **MUST** be omitted.
+
+| Attribute Key | Type | Description |
+|---------------|------|-------------|
+| `sentry.op` | string | The [span op](/sdk/telemetry/traces/span-operations/) (e.g., "http.client", "db.query") |
+| `sentry.release` | string | The release version |
+| `sentry.environment` | string | The environment name |
+| `sentry.segment.name` | string | The segment name |
+| `sentry.segment.id` | string | The segment span id |
+| `sentry.span.source` | string | The source of the span name. **MUST** be set on segment spans, **MAY** be set on child spans. See [Sentry Conventions](https://github.com/getsentry/sentry-conventions/attributes/sentry#sentry-span-source). |
+| `sentry.profiler_id` | string | The id of the currently running profiler |
+| `sentry.replay_id` | string | The id of the currently running replay |
+| `os.name` | string | The operating system name |
+| `browser.name` | string | The browser name |
+| `user.id` | string | The user ID (gated by `sendDefaultPii`) |
+| `user.email` | string | The user email (gated by `sendDefaultPii`) |
+| `user.ip_address` | string | The user IP address (gated by `sendDefaultPii`) |
+| `user.name` | string | The user username (gated by `sendDefaultPii`) |
+| `thread.id` | string | The thread ID |
+| `thread.name` | string | The thread name |
+| `sentry.sdk.name` | string | Name of the Sentry SDK |
+| `sentry.sdk.version` | string | Version of the Sentry SDK |
+
+See [Sentry Conventions](https://github.com/getsentry/sentry-conventions/) for a full list of supported attributes.
+
+##### Link Object Properties
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `span_id` | string | Yes | 16-character hexadecimal string |
+| `trace_id` | string | Yes | 32-character hexadecimal string |
+| `sampled` | boolean | No | Whether the linked trace was sampled |
+| `attributes` | object | No | Additional metadata (e.g., `sentry.link.type`) |
+
+##### Data Types
+
+- **Trace ID**: 32-character (128 bits) lowercase hex string
+- **Span ID**: 16-character (64 bits) lowercase hex string
+- **Timestamps**: Unix time with fractional microseconds (e.g., `1742921669.158209`)
+
+</SpecSection>
+
+#### Span Attachments
+
+<SpecSection id="span-attachments" status="candidate" since="1.0.0">
+
+<Alert level="warning">
+Span attachments are an experimental feature that is still under development.
+</Alert>
+
+To associate an attachment with a span, submit a [trace attachment](/sdk/foundations/data-model/envelope-items/#trace-attachment) item with an additional `span_id` item header. The trace attachment _should_ be submitted in the same envelope as the span itself.
+
+- `span_id` is the ID of the span that owns the attachment. If set, the attachment will be dropped with the span if the span is dropped by dynamic sampling, inbound filters or rate limits.
+- The SDK _may_ set the `span_id` item header to an explicit `null` value. `span_id: null` is treated as "owned by spans", but not owned by a specific span.
+
+</SpecSection>
+
+---
+
+## Public API
+
+### Span API
+
+<Alert level="info">
+  The APIs specified here **MUST** be implemented by all SDKs that don't use OpenTelemetry as their underlying tracing implementation.
+  SDKs using OTel **SHOULD** follow their own already established span APIs but **MAY** orient themselves on this document if applicable.
+</Alert>
+
+#### Terminology
+
+The topmost member of a (distributed) span tree is the **Root Span** — it has no parent span. The topmost span within a service boundary is the **Segment Span** — it has a `parent_span_id` pointing to a "remote" span from the parent service.
+
+SDKs **MUST NOT** expose names like "segment span" in APIs to users and **SHOULD NOT** expose "root span" if possible.
+
+#### Span Interface
+
+<SpecSection id="span-interface" status="draft" since="1.7.0">
+
+SDKs' span implementations **MUST** at minimum implement the following span interface.
+
+```ts {tabTitle:TypeScript}
+interface Span {
+  private _spanId: string;
+  end(endTimestamp?: SpanTimeInput): void;
+  setAttribute(key: string, value: SpanAttributeValue | undefined): this;
+  setAttributes(attributes: SpanAttributes): this;
+  removeAttribute(key: string): this;
+  setStatus(status: 'ok' | 'error'): this;
+  setName(name: string): this;
+  addLink(link: SpanLink): this;
+  addLinks(links: SpanLink[]): this;
+  getName(): string;
+  getAttributes(): Record<string, SpanAttributeValue>
+}
+```
+
+```Python {tabTitle:Python}
+class Span:
+    span_id: str
+    def set_attribute(self, key: str, value: SpanAttributeValue) -> None: ...
+    def remove_attribute(self, key: str) -> None: ...
+    def set_status(self, status: Literal["ok", "error"]) -> None: ...
+    def get_name(self) -> str: ...
+    def set_name(self, name: str) -> None: ...
+    def get_attributes(self) -> SpanAttributes: ...
+```
+
+- SDKs **MAY** implement additional APIs (getters/setters, convenience methods).
+- SDK implementers **SHOULD** disallow direct mutation (without setters) of span properties.
+- SDK implementers **MAY** disallow direct read access to span properties.
+
+</SpecSection>
+
+#### Span Starting APIs
+
+<SpecSection id="span-starting-apis" status="draft" since="1.7.0">
+
+SDKs **MUST** expose at least one API to start a span.
+
+##### Default `startSpan` API
+
+```ts {tabTitle:TypeScript}
+function startSpan(options: StartSpanOptions): Span;
+
+interface StartSpanOptions {
+  name: string;
+  attributes?: Record<string, SpanAttributeValue>;
+  parentSpan?: Span | null;
+  active?: boolean;
+}
+```
+
+```Python {tabTitle:Python}
+with start_span(name, attributes, parent_span, active) as span:
+    ...
+
+# or without context manager:
+span = start_span(name, attributes, parent_span, active)
+span.end()
+```
+
+| Option | Required | Description |
+|--------|----------|-------------|
+| `name` | Yes | The name of the span. **MUST** be set by users |
+| `attributes` | No | Attributes to attach to the span |
+| `parentSpan` | No | The parent span. See below for implications |
+| `active` | No | Whether the span should be _active_ |
+
+Behaviour:
+- Spans **MUST** be started as active by default — any span started while the initial span is active **MUST** become a child.
+- If `active: false`, the span is inactive — other spans become siblings.
+- If a `Span` is passed via `parentSpan`, it takes precedence over the currently active span.
+- If `null` is passed via `parentSpan`, the new span starts as a root/segment span.
+- SDKs **MUST NOT** end the span automatically. This is the user's responsibility.
+- `startSpan` **MUST** always return a span instance, even if negatively sampled.
+
+##### Additional APIs
+
+SDKs **MAY** expose additional span starting APIs (decorators, annotations, callback-based). These **MAY** end spans automatically or adjust status based on errors.
+
+SDKs **MUST NOT** expose APIs like `Span::startChild` at this time.
+
+</SpecSection>
+
+#### Utility APIs
+
+<SpecSection id="utility-apis" status="draft" since="1.7.0">
+
+SDKs **MAY** expose additional utility APIs:
+- `Scope::getSpan()` — returns the currently active span
+- `Scope::_INTERNAL_getSegmentSpan()` — returns the segment span (**MUST NOT** be documented for users)
+
+</SpecSection>
+
+### Span Trace Propagation
+
+<SpecSection id="continue-incoming-trace" status="draft" since="1.7.0">
+
+#### Continue an incoming trace
+
+To continue a trace from an upstream service, the SDK **MUST** expose a method to extract the traceparent and baggage information and apply these to the applicable scope. The method **MUST NOT** create a new segment span on its own.
+
+```js
+Sentry.continueTrace({
+  sentryTrace: request.headers['sentry-trace'],
+  baggage: request.headers['baggage'],
+}, () => {
+  Sentry.startSpan({ name: 'test' }, () => { /* ... */ });
+})
+```
+
+```python
+sentry_sdk.continue_trace(request.headers)
+with sentry_sdk.start_span(name="test"):
+    ...
+```
+
+The exact function signature depends on what's canonical in your SDK. It **MAY** require explicitly passing headers, or **MAY** allow providing a dictionary.
+
+</SpecSection>
+
+<SpecSection id="continue-outgoing-trace" status="draft" since="1.7.0">
+
+#### Continue an outgoing trace
+
+To propagate a trace to a downstream service, the SDK **MUST** expose methods to fetch the required information.
+
+```js
+const traceData = Sentry.getTraceData()
+```
+
+```python
+traceparent = sentry_sdk.get_traceparent()
+baggage = sentry_sdk.get_baggage()
+```
+
+</SpecSection>
+
+<SpecSection id="starting-new-trace" status="draft" since="1.11.0">
+
+#### Starting a new trace
+
+The SDK **MUST** offer a method to clear trace propagation data, allowing creation of spans with a fresh trace.
+
+```js
+Sentry.startNewTrace(() => {
+  Sentry.startSpan({ name: 'segment under trace 1' }, () => {...});
+})
+```
+
+```python
+sentry_sdk.new_trace()
+with sentry_sdk.start_span(name="segment under trace 2"):
+    ...
+```
+
+</SpecSection>
+
+---
+
+## Changelog
+
+<SpecChangelog />

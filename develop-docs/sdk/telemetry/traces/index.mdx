@@ -1,18 +1,63 @@
 ---
 title: Traces
-sidebar_order: 9
+spec_id: sdk/telemetry/traces
+spec_version: 1.34.0
+spec_status: stable
+spec_depends_on:
+  - id: sdk/foundations/data-model/envelopes
+    version: ">=1.0.0"
+  - id: sdk/foundations/data-model/scopes
+    version: ">=2.0.0"
+spec_changelog:
+  - version: 1.34.0
+    date: 2025-09-26
+    summary: Code source info options (enableDbQuerySource, enableHttpRequestSource) and thresholds
+  - version: 1.33.0
+    date: 2025-09-11
+    summary: traceIgnoreStatusCodes option for server SDKs
+  - version: 1.32.0
+    date: 2025-06-04
+    summary: W3C traceparent propagation support (propagateTraceparent option)
+  - version: 1.31.0
+    date: 2025-05-20
+    summary: strictTraceContinuation option with org_id matching
+  - version: 1.30.0
+    date: 2025-04-08
+    summary: Propagated random value (sample_rand) for consistent trace sampling
+  - version: 1.29.0
+    date: 2024-11-06
+    summary: Tracing without performance documentation
+  - version: 1.28.0
+    date: 2024-04-29
+    summary: Backpressure-aware sampling
+  - version: 1.27.0
+    date: 2024-02-20
+    summary: Readable page restructuring
+  - version: 1.0.0
+    date: 2020-03-06
+    summary: Initial tracing specification
 ---
 
-This document covers how SDKs should add support for Performance Monitoring with [Distributed
-Tracing](https://docs.sentry.io/product/performance/distributed-tracing/).
+<SpecRfcAlert />
 
-This should give an overview of the APIs that SDKs need to implement, without
-mandating internal implementation details.
+<SpecMeta />
+
+## Overview
+
+A **trace** is the fundamental correlation unit in Sentry. A `trace_id` links all telemetry — errors, spans, replays, sessions, check-ins, logs — across services into one distributed operation. Traces are not synonymous with "performance monitoring"; they are the connective tissue that ties all Sentry telemetry together.
+
+This spec covers trace-level concepts: how traces propagate across services, how sampling decisions are made, and how SDKs configure tracing behavior. For the modern span data model, see [Spans](/sdk/telemetry/spans/). For the deprecated transaction model, see [Transactions](/sdk/telemetry/transactions/).
 
 Reference implementations:
 
 - [JavaScript SDK](https://github.com/getsentry/sentry-javascript/tree/master/packages/core/src/tracing)
 - [Python SDK](https://github.com/getsentry/sentry-python/blob/master/sentry_sdk/tracing.py)
+
+Related specs:
+- [Spans](/sdk/telemetry/spans/) — modern span protocol and API
+- [Transactions](/sdk/telemetry/transactions/) — deprecated transaction model
+- [Dynamic Sampling Context](/sdk/telemetry/traces/dynamic-sampling-context/) — DSC and baggage header
+- [Scopes](/sdk/foundations/data-model/scopes/) — scope model that carries trace context
 
 <Alert>
 
@@ -20,257 +65,15 @@ This document uses standard interval notation, where `[` and `]` indicates close
 
 </Alert>
 
-## SDK Configuration
+---
 
-This section describes the options SDKs should expose to configure tracing and performance monitoring.
+## Behavior
 
-Tracing is enabled by setting either a `tracesSampleRate` or `tracesSampler`. If not set, these options default to `undefined` or `null`, making tracing opt-in.
+### Sampling
 
-### `enableTracing`
+<SpecSection id="sampling" status="stable" since="1.0.0">
 
-This option is **deprecated** and should be removed from all SDKs.
-
-### `tracesSampleRate`
-
-This should be a floating-point number in the range `[0, 1]` and represents the percentage chance that any given transaction will be sent to Sentry. So, barring [outside influence](#sampling), `0.0` is a guaranteed 0% chance (none will be sent) and `1.0` is a guaranteed 100% chance (all will be sent). This rate applies equally to all transactions; in other words, each transaction has an equal chance of being marked as `sampled = true`, based on the `tracesSampleRate`.
-
-See more about how sampling should be performed [below](#sampling).
-
-### `tracesSampler`
-
-This should be a callback function, triggered when a transaction is started. It should be given a `samplingContext` object and should return a sample rate in the range of `[0, 1]` _for the transaction in question_. This sample rate should behave the same way as the `tracesSampleRate` above. The only difference is that it only applies to the newly-created transaction and that different transactions can be sampled at different rates. Returning `0.0` should force the transaction to be dropped (set to `sampled = false`) and returning `1.0` should force the transaction to be sent (set to `sampled = true`).
-
-Historically, the `tracesSampler` callback could have also returned a boolean to force a sampling decision (with `false` equivalent to `0.0` and `true` equivalent to `1.0`). This behavior is now **deprecated** and should be removed from all SDKs.
-
-See more about how sampling should be performed [below](#sampling).
-
-### `tracePropagationTargets`
-
-Sentry SDKs propagate trace information to downstream SDKs via headers on outgoing HTTP requests. The `tracePropagationTargets` option gives users a mechanism of controlling to which outgoing HTTP requests these headers should be attached. For example, users can specify this property to keep trace propagation within their infrastructure, thereby preventing data within the headers from being sent to third party services.
-
-This option takes an array of strings and/or regular expressions. SDKs should only add trace headers to an outgoing request if the request's URL matches the regex or, in the case of string literals, contains at least one of the items from the array. String literals do not have to be full matches, meaning the URL of a request is matched when it contains a string provided through the option.
-
-SDKs may choose a default value which makes sense for their use case. Most SDKs default to the regex `.*` (meaning they attach headers to all outgoing requests), but deviation is allowed if necessary. For example, because of CORS, browser-based SDKs default to only adding headers to domain-internal requests.
-
-See [`sentry-trace`](#header-sentry-trace) and [`baggage`](/sdk/performance/dynamic-sampling-context/#baggage-header) for more details on the individual headers which are attached to outgoing requests.
-
-#### Example
-
-The following example shows which URLs of outgoing requests would (not) match a given `tracePropagationTargets` array:
-
-```JS
-// Entries can be strings or regex
-tracePropagationTargets: ['localhost', /^\// ,/myApi.com\/v[2-4]/]
-
-URLs matching: 'localhost:8443/api/users', 'mylocalhost:8080/api/users', '/api/envelopes', 'myApi.com/v2/projects'
-URLs not matching: 'someHost.com/data', 'myApi.com/v1/projects'
-```
-
-<Alert title="Deprecation of tracingOrigins">
-
-This Option replaces the non-standardized `tracingOrigins` option which was previously used in some SDKs. SDKs that support `tracingOrigins` are encouraged to deprecate and and eventually remove `tracingOrigins` in favour `tracePropagationTargets`. In case both options are specified by users, SDKs should only rely on the `tracePropagationTargets` array.
-
-</Alert>
-
-### `strictTraceContinuation`
-
-This must be a boolean value. Default is `false`. This option controls trace continuation from unknown 3rd party services that happen to be instrumented by a Sentry SDK.
-
-If the SDK is able parse an org ID from the configured DSN, it must be propagated as a baggage entry with the key `sentry-org_id`. Given a DSN of `https://1234@o1.ingest.us.sentry.io/1`, the org ID is `1`, based on `o1`.
-
-Additionally, the SDK must be configurable with an optional `orgId: <org-id>` setting that takes precedence over the parsed value from the DSN. This option should be set when running a self-hosted version of Sentry or if a non-standard Sentry DSN is used, such as when using a local Relay.
-
-On incoming traces, the SDK must compare the `sentry-org_id` baggage value against its own parsed value from the DSN or org setting. Only if both match, the trace is continued. If there is no match, neither the trace ID, the parent sampling decision nor the baggage should be taken into account.
-The SDK should behave like it is the head of trace in this case, and not consider any propagted values.
-
-This behavior can be disabled by setting `strictTraceContinuation: false` in the SDK init call.
-Initially, SDKs must introduce the this option with a default value of `false`.
-Once the majority of SDKs have introduced this option, we'll change the default value to `true` (in a major version bump), making it opt-out.
-
-Regardless of `strictTraceContinuation` being set to `true` or `false`, if the SDK is either configured with a `org` or was able to parse the value from the DSN, incoming traces containing an `org` value in the  baggage that does not match the one from the receiving SDK, the trace is not continuned.
-
-Examples:
-
-- baggage: `sentry-org: 1`, SDK config: `org: 1, strictTraceContinuation: false` -> continue trace
-- baggage: `sentry-org: none`, SDK config: `org: 1, strictTraceContinuation: false` -> continue trace
-- baggage: `sentry-org: 1`, SDK config: `org: none, strictTraceContinuation: false` -> continue trace
-- baggage: `sentry-org: none`, SDK config: `org: none, strictTraceContinuation: false` -> continue trace
-- baggage: `sentry-org: 1`, SDK config: `org: 2, strictTraceContinuation: false` -> start new trace
-
-- baggage: `sentry-org: 1`, SDK config: `org: 1, strictTraceContinuation: true` -> continue trace
-- baggage: `sentry-org: none`, SDK config: `org: 1, strictTraceContinuation: true` -> start new trace
-- baggage: `sentry-org: 1`, SDK config: `org: none, strictTraceContinuation: true` -> start new trace
-- baggage: `sentry-org: none`, SDK config: `org: none, strictTraceContinuation: true` -> continue trace
-- baggage: `sentry-org: 1`, SDK config: `org: 2, strictTraceContinuation: true` -> start new trace
-
-### `traceOptionsRequests`
-
-This should be a boolean value. Default is `false`. When set to `true` transactions should be created for HTTP `OPTIONS` requests. When set to `false` NO transactions should be created for HTTP `OPTIONS` requests. This configuration is most valuable on backend server SDKs. If this configuration does not make sense for an SDK it can be omitted.
-
-### `maxSpans`
-
-Because transaction payloads have a maximum size enforced on the ingestion side, SDKs should limit the number of spans that are attached to a transaction. This is similar to how breadcrumbs and other arbitrarily sized lists are limited to prevent accidental misuse. If new spans are added once the maximum is reached, the SDK should drop the spans and ideally use the internal logging to help debugging.
-
-The `maxSpans` should be implemented as an internal, non-configurable, constant that defaults to 1000. It may become configurable if there is justification for that in a given platform.
-
-The `maxSpans` limit may also help avoiding transactions that never finish (in platforms that keep a transaction open for as long as spans are open), preventing OOM errors, and generally avoiding degraded application performance.
-
-
-### `propagateTraceparent`
-
-This must be a boolean value. The default is `false`. This option is used to enable the propagation of the W3C Trace Context HTTP header `traceparent` on outgoing HTTP requests. This is useful when the receiving services only support OTel/W3C propagation.
-
-The `traceparent` header is only sent when `propagateTraceparent` is `true` and the request matches `tracePropagationTargets` (same condition as for `sentry-trace`/`baggage`).
-
-Header Format:
-- Key: `traceparent`
-- Value: `00-<traceId>-<spanId>-<sampled>` where `<sampled>` is `01` if sampled, otherwise `00`.
-
-The full spec is available in the [W3C Trace Context](https://www.w3.org/TR/trace-context/) specification.
-
-### `traceIgnoreStatusCodes`
-
-This SHOULD be a collection of integers, denoting HTTP status codes.
-If suitable for the platform, the collection MAY also admit pairs of integers, denoting inclusive HTTP status code ranges.
-
-The option applies exclusively to incoming requests, and therefore MUST only be implemented in server SDKs.
-
-The SDK MUST honor this option by inspecting the [`http.response.status_code`](https://opentelemetry.io/docs/specs/semconv/registry/attributes/http/#:~:text=1437-,http.response.status_code,-int) attribute on each transaction/root span before it's finished.
-If the value of this attribute matches one of the status codes in `traceIgnoreStatusCodes`, the SDK MUST set the transaction's [sampling decision](https://develop.sentry.dev/sdk/telemetry/traces/#sampling) to `not sampled`.
-
-Note that a prerequisite to implement this option is that every HTTP server integration MUST record the [`http.response.status_code`](https://opentelemetry.io/docs/specs/semconv/registry/attributes/http/#:~:text=1437-,http.response.status_code,-int) attribute as defined in the OTEL spec.
-
-The SDK MUST emit a debug log denoting why the transaction was dropped.
-If the SDK implements client reports, it MUST record the dropped transaction with the `event_processor` discard reason.
-
-This option MUST default to an empty collection if it's introduced in a release with a minor SemVer bump.
-SDKs SHOULD set the default for this option to the following value (or equivalent if the implementation doesn't admit pairs of integers)
-```
-[[301, 303], [305, 399], [401, 404]]
-```
-at the earliest release with a major SemVer bump following its introduction.
-
-The rationale for this option and default is to not consume a user's span quota to trace requests that are useless for debugging purposes (and can often be triggered by scanning bots).
-
-Examples:
-`[403, 404]`: don't sample transactions corresponding to requests with status code 403 or 404
-`[[300, 399], [401, 404]]`: don't sample transactions corresponding to requests with status codes between 300 and 399 (inclusive) or between 401 and 404 (inclusive)
-
-### `enableDbQuerySource`
-
-This MUST be a boolean value that defaults to `true`.
-
-The option controls if attributes with code source information are set on database query spans when the query duration exceeds a given threshold.
-
-The following attributes, or a subset thereof, SHOULD be set on database query spans if the threshold is exceeded.
-Values for some of the attributes below may be unavailable in some situations for the SDK, and in these cases a subset MAY be provided.
-
-The attributes are described in <Link to="https://getsentry.github.io/sentry-conventions/generated/attributes/code.html">Sentry's Span Convention Documentation</Link>.
-
-- code.file.path
-- code.function.name
-- code.line.number
-
-### `dbQuerySourceThresholdMs`
-
-A threshold duration, which MUST be a floating point or integer value.
-The value specifies, in milliseconds, the duration of a database query before code source information is added.
-
-The default value is platform-dependent and SHOULD balance the overhead of adding the information with its utility for queries that exceed the threshold duration for users of the SDK.
-In Python and PHP Laravel, the default threshold is 100 milliseconds.
-
-### `enableHttpRequestSource`
-
-This MUST be a boolean value that defaults to `true`.
-
-The option controls if attributes with code source information are set on outgoing HTTP requests.
-When enabled, the attributes SHOULD be attached only when the time to receive the response from sending the request exceeds a given threshold.
-
-The following attributes, or a subset thereof, SHOULD be set if the threshold is exceeded.
-Values for some of the attributes below may be unavailable in some situations for the SDK, and in these cases a subset MAY be provided.
-
-The attributes are described in <Link to="https://getsentry.github.io/sentry-conventions/generated/attributes/code.html">Sentry's Span Convention Documentation</Link>.
-
-- code.file.path
-- code.function.name
-- code.line.number
-
-### `httpRequestSourceThresholdMs`
-
-A threshold duration, which MUST be a floating point or integer value.
-The value specifies, in milliseconds, the time between sending an HTTP request and receiving its response, after which code source information is added.
-
-The default value is platform-dependent and SHOULD balance the overhead of adding the information with its utility for request-response cycles that exceed the threshold duration for users of the SDK.
-
-
-## `Event` Changes
-
-As of writing, transactions are implemented as an extension of the `Event`
-model.
-
-The distinctive feature of a `Transaction` is `type: "transaction"`.
-
-Apart from that, the `Event` gets new fields: `spans`, `contexts.TraceContext`.
-
-## New `Span` and `Transaction` Classes
-
-In memory, spans build up a conceptual tree of timed operations. We call the whole span tree a transaction. Sometimes we use the term "transaction" to refer to a span tree as a whole tree, sometimes to refer specifically to the root span of the tree.
-
-Over the wire, transactions are serialized to JSON as an augmented `Event`, and sent as envelopes. The different envelope types are for optimizing ingestion (so we can route "transaction events" differently than other events, mostly "error events").
-
-In the Sentry UI, you can use Discover to look at all events regardless of type, and the Issues and Performance sections to dive into errors and transactions, respectively. The [user-facing tracing documentation](https://docs.sentry.io/product/performance/distributed-tracing/#traces-transactions-and-spans) explains more of the concepts on the product level.
-
-The [Span](/sdk/foundations/data-model/event-payloads/span/) class stores each individual span in a
-trace.
-
-The [Transaction](/sdk/foundations/data-model/event-payloads/transaction/) class is like a span, with a
-few key differences:
-
-- Transactions have `name`, spans don't.
-- Transactions must specify the [source](/sdk/foundations/data-model/event-payloads/transaction/#transaction-annotations) of its `name` to indicate how the transaction name was generated.
-- Calling the `finish` method on spans record the span's end timestamp. For
-  transactions, the `finish` method additionally sends an event to Sentry.
-
-The `Transaction` class may inherit from `Span`, but that's an implementation
-detail. Semantically, transactions represent both the top-level span of a span
-tree as well as the unit of reporting to Sentry.
-
-- `Span` Interface
-
-  - When a `Span` is created, set the `startTimestamp` to the current time
-  - `SpanContext` is the attribute collection for a `Span` (Can be an implementation detail). When possible `SpanContext` should be immutable.
-  - `Span` should have a method `startChild` which creates a new span with the current span's id as the new span's `parentSpanId` and the current span's `sampled` value copied over to the new span's `sampled` property
-  - The `startChild` method should respect the `maxSpans` limit, and once the limit is reached the SDK should not create new child spans for the given transaction.
-  - `Span` should have a method called `toSentryTrace` which returns a string that could be sent as a header called `sentry-trace`.
-  - `Span` should have a method called `iterHeaders` (adapt to platform's naming conventions) that returns an iterable or map of header names and values. This is a thin wrapper containing `return {"sentry-trace": toSentryTrace()}` right now. See `continueFromHeaders` as to why this exists and should be preferred when writing integrations.
-
-- `Transaction` Interface
-
-  - A `Transaction` internally holds a flat list of child Spans (not a tree structure)
-  - `Transaction` has additionally a `setName` method that sets the name of the transaction
-  - `Transaction` receives a `TransactionContext` on creation (new property vs. `SpanContext` is `name`)
-  - Since a `Transaction` inherits a `Span` it has all functions available and can be interacted with like it was a `Span`
-  - A transaction is either sampled (`sampled = true`) or unsampled (`sampled = false`), a decision which is either inherited or set once during the transaction's lifetime, and in either case is propagated to all children. Unsampled transactions should not be sent to Sentry.
-  - `TransactionContext` should have a static/ctor method called `fromSentryTrace` which prefills a `TransactionContext` with data received from a `sentry-trace` header value
-  - `TransactionContext` should have a static/ctor method called `continueFromHeaders(headerMap)` which is really just a thin wrapper around `fromSentryTrace(headerMap.get("sentry-trace"))` right now. This should be preferred by integration/framework-sdk authors over `fromSentryTrace` as it hides the exact header names used deeper in the core sdk, and leaves opportunity for using additional headers (from the W3C) in the future without changing all integrations.
-
-- `Span.finish()`
-
-  - Accepts an optional `endTimestamp` to allow users to set a custom `endTimestamp` on the finished span
-  - If an `endTimestamp` value is not provided, set `endTimestamp` to the current time (in payload `timestamp`)
-
-- `Transaction.finish()`
-  - `super.finish()` (call finish on Span)
-  - Send it to Sentry only if `sampled == true`
-  - Like spans, can be given an optional `endTimestamp` value that should be passed into the `span.finish()` call
-  - A `Transaction` needs to be wrapped in an `Envelope` and sent to the [Envelope Endpoint](/sdk/foundations/data-model/envelopes/)
-  - The `Transport` should use the same internal queue for `Transactions` / `Events`
-  - The `Transport` should implement category-based rate limiting →
-  - The `Transport` should deal with wrapping a `Transaction` in an `Envelope` internally
-
-## Sampling
-
-Each transaction has a _sampling decision_, that is, a boolean which declares whether or not it should be sent to Sentry. This should be set exactly once during a transaction's lifetime, and should be stored in an internal `sampled` boolean.
+Each transaction has a _sampling decision_, that is, a boolean which declares whether or not it should be sent to Sentry. This **SHOULD** be set exactly once during a transaction's lifetime, and **SHOULD** be stored in an internal `sampled` boolean.
 
 There are multiple ways a transaction can end up with a sampling decision:
 
@@ -290,27 +93,39 @@ If more than one option could apply, the following rules determine which takes p
 <Alert title="Note">
 <markdown>
 
-Transactions should be sampled only by `tracesSampleRate` or `tracesSampler`. The `sampleRate` configuration is used for error events and should not apply to transactions.
+Transactions **SHOULD** be sampled only by `tracesSampleRate` or `tracesSampler`. The `sampleRate` configuration is used for error events and **SHOULD NOT** apply to transactions.
 
 </markdown>
 </Alert>
 
-### Sampling Context
+</SpecSection>
 
-If defined, the `tracesSampler` callback should be passed a `samplingContext` object, which should include, at minimum:
+#### Sampling Context
+
+<SpecSection id="sampling-context" status="stable" since="1.0.0">
+
+If defined, the `tracesSampler` callback **SHOULD** be passed a `samplingContext` object, which **SHOULD** include, at minimum:
 
 - The `transactionContext` with which the transaction was created
 - A float/double `parentSampleRate` which contains the sampling rate passed down from the parent
 - A boolean `parentSampled` which contains the sampling decision passed down from the parent, if any
 - Data from an optional `customSamplingContext` object passed to `startTransaction` when it is called manually
 
-Depending on the platform, other default data may be included. (For example, for server frameworks, it makes sense to include the `request` object corresponding to the request the transaction is measuring.)
+Depending on the platform, other default data **MAY** be included. (For example, for server frameworks, it makes sense to include the `request` object corresponding to the request the transaction is measuring.)
 
-### Propagation
+</SpecSection>
 
-A transaction's sampling decision should be passed to all of its children, including across service boundaries. This can be accomplished in the `startChild` method for same-service children and using the `sentry-trace` header for children in a different service.
+#### Propagation
 
-### Propagated Random Value
+<SpecSection id="sampling-propagation" status="stable" since="1.0.0">
+
+A transaction's sampling decision **SHOULD** be passed to all of its children, including across service boundaries. This can be accomplished in the `startChild` method for same-service children and using the `sentry-trace` header for children in a different service.
+
+</SpecSection>
+
+#### Propagated Random Value
+
+<SpecSection id="propagated-random-value" status="stable" since="1.30.0">
 
 To improve the likelihood of capturing complete traces when backend services use a custom sample rate via `tracesSampler`, the SDK propagates the same random value used for sampling decisions across all services in a trace. This ensures consistent sampling decisions across a trace instead of generating a new random value for each service.
 
@@ -318,7 +133,7 @@ The random value (`sample_rand`) is set according to the following rules:
 
 1. A `sample_rand` is a float (`0.123456` notation) in the range of `[0, 1)` (including 0.0, excluding 1.0), with six digits after the decimal point.
 1. When tracing is enabled and a new trace is started, the SDK generates a `sample_rand` value for the current execution context.
-  1. This also applies to Tracing without Performance where we simply want to generate `sample_rand` every time a new trace is started. This `sample_rand` value can then be stored on `PropagationContext`.
+   1. This also applies to Tracing without Performance where we simply want to generate `sample_rand` every time a new trace is started. This `sample_rand` value can then be stored on `PropagationContext`.
 1. It is _recommended_ to generate the random number deterministically using the trace ID as seed or source of randomness (make sure to do this atomically so multiple threads accessing the same random instance don't mix their seeds). The exact method by which the random number is created is implementation-defined and may vary between SDK implementations.
 1. The `sample_rand` is part of the DSC (Dynamic Sampling Context) and as with other values on the `baggage` header, the `sample_rand` value from the current execution context should be propagated to downstream SDKs. It should also be sent to other system as part of the `baggage` header if Performance is disabled and sampling decision is deferred.
 1. On incoming traces, an SDK takes the incoming `sentry-sample_rand` value in the `baggage` header and uses it for the rest of the current execution context (for example, request) by storing it in the `PropagationContext`.
@@ -326,13 +141,13 @@ The random value (`sample_rand`) is set according to the following rules:
    1. If `sample_rate` (inside `baggage`) and the sampling decision (trailing `-1` or `-0` from the `sentry-trace` header) are present in the incoming trace, create `sample_rand` so that when compared to the incoming `sample_rate` it would lead to the same sampling decision that is in the `sentry-trace` header. This means, for a decision of `True` generate a random number in half-open range `[0, rate)` and for a decision of `False` generate a random number in range `[rate, 1)`.
    1. If the sampling decision is missing on the incoming trace, generate a random number in range of `[0, 1)` (including 0.0, excluding 1.0), like for a new trace.
 
-The SDK should always use the stored random number (`sentry-sample_rand`) for sampling decisions and should not directly rely on `math.random()` when deciding to sample or not:
+The SDK **SHOULD** always use the stored random number (`sentry-sample_rand`) for sampling decisions and **SHOULD NOT** directly rely on `math.random()` when deciding to sample or not:
 
-1. When the `tracesSampler` is invoked, the return value should be compared with `sample_rand`: `trace["sentry-sample_rand"] < tracesSampler(context)`
+1. When the `tracesSampler` is invoked, the return value **SHOULD** be compared with `sample_rand`: `trace["sentry-sample_rand"] < tracesSampler(context)`
 1. When there is an incoming trace, the SDK fully inherits incoming sampling decisions from the `sentry-trace` header.
 1. Otherwise, when the SDK is the head of a trace (and `tracesSampleRate` is defined), the sampling is done comparing the `tracesSampleRate` with the `sample_rand`: `trace["sentry-sample_rand"] < config.tracesSampleRate`
 
-Something that should be documented for every SDK is the recommended way to use a `tracesSampler` to inherit the parent's sampling decision using the `parentSampleRate`. This way, Sentry can still extrapolate counts correctly:
+Something that **SHOULD** be documented for every SDK is the recommended way to use a `tracesSampler` to inherit the parent's sampling decision using the `parentSampleRate`. This way, Sentry can still extrapolate counts correctly:
 
 ```js
 tracesSampler: ({ name, parentSampleRate }) => {
@@ -348,11 +163,65 @@ tracesSampler: ({ name, parentSampleRate }) => {
 },
 ```
 
-### Backpressure
+</SpecSection>
 
-If the SDK supports backpressure handling, the overall sampling rate needs to be divided by the `downsamplingFactor` from the backpressure monitor. See [the backpressure spec](/sdk/performance/backpressure/#downsampling) for more details.
+#### Backpressure
 
-## Header `sentry-trace`
+<SpecSection id="sampling-backpressure" status="stable" since="1.28.0">
+
+If the SDK supports backpressure handling, the overall sampling rate needs to be divided by the `downsamplingFactor` from the backpressure monitor. See [the backpressure spec](/sdk/telemetry/traces/backpressure/#downsampling) for more details.
+
+</SpecSection>
+
+### Distributed Tracing
+
+<SpecSection id="distributed-tracing" status="stable" since="1.0.0">
+
+SDKs propagate trace information between services to connect all telemetry (errors, profiles, replays, transactions, check-ins, ...) from those services into one trace.
+
+For an overview see [Distributed Tracing](https://docs.sentry.io/product/performance/distributed-tracing/) in the product docs.
+
+Sentry uses three containers to hold trace information: [`sentry-trace`](#header-sentry-trace), [`baggage`](/sdk/telemetry/traces/dynamic-sampling-context/#baggage-header) and optionally [`traceparent`](#propagatetraceparent).
+
+With these containers you can propagate a trace to a downstream service by either:
+- adding `sentry-trace` and `baggage` HTTP headers (when making outgoing HTTP requests),
+- adding `sentry-trace` and `baggage` as metadata (when putting tasks into a queue, details are specific to the queue you want to support), or
+- setting environment variables (when calling another process). In this case the env variables **SHOULD** be called `SENTRY_TRACE` and `SENTRY_BAGGAGE`.
+
+The SDK running in the receiving service needs to make sure to pick up incoming trace information by:
+- reading `sentry-trace` and `baggage` headers for each incoming HTTP request,
+- reading `sentry-trace` and `baggage` metadata when retrieving an item from a queue, or
+- reading the environment variables `SENTRY_TRACE` and `SENTRY_BAGGAGE` on startup.
+
+This trace information **SHOULD** be stored in the "propagation context" of the current scope. This makes sure that all telemetry that is emitted from the receiving service to Sentry will include the correct trace information.
+
+</SpecSection>
+
+### Interaction with `beforeSend` and Event Processors
+
+<SpecSection id="before-send" status="stable" since="1.0.0">
+
+The `beforeSend` callback is a special Event Processor that is considered to be of most prominent use. Proper Event Processors are often considered internal.
+
+Transactions **SHOULD NOT** go through `beforeSend`. However, they are still processed by Event Processors. This is a compromise between some flexibility in dealing with the current implementation of transactions as events, and leaving room for different lifetime hooks for transactions and spans.
+
+Motivations:
+
+1. **Future-proofing:** if users rely on `beforeSend` for transactions, that would complicate eventually implementing individual span ingestion without breaking user code. As of writing, a transaction is sent as an event, but that is considered an implementation detail.
+
+2. **API compatibility:** users have their existing implementation of `beforeSend` that only ever had to deal with error events. We introduced transactions as a new type of event. As users upgrade to a new SDK version and start using tracing, their `beforeSend` would start seeing a new type that their code was not meant to handle. Before transactions, they didn't have to care about different event types at all. There are several possible consequences: breaking user apps; silently and unintentionally dropping transactions; transaction events modified in surprising ways.
+
+3. In terms of usability, `beforeSend` is not a perfect fit for dropping transactions like it is for dropping errors. Errors are a point-in-time event. When errors happen, users have full context in `beforeSend` and can modify/drop the event before it goes to Sentry. With transactions the flow is different. Transactions are created and then they are open for some time while child spans are created and appended to it. Meanwhile outgoing HTTP requests include the sampling decision of the current transaction with other services. After spans and the transaction are finished, dropping the transaction in a `beforeSend`-like hook would leave orphan transactions from other services in a trace. Similarly, modifying the sampling decision to "yes" at this late stage would also produce inconsistent traces.
+
+</SpecSection>
+
+---
+
+## Wire Format
+
+### Header `sentry-trace`
+
+<SpecSection id="header-sentry-trace" status="stable" since="1.0.0">
 
 The header is used for trace propagation. SDKs use the header to continue traces from upstream services (incoming HTTP requests), and to propagate tracing information to downstream services (outgoing HTTP requests).
 
@@ -362,13 +231,13 @@ The header is used for trace propagation. SDKs use the header to continue traces
 
 `sentry-trace = traceid-spanid`
 
-To offer a minimal compatibility with the [W3C `traceparent` header](https://www.w3.org/TR/trace-context/#traceparent-header) (without the version prefix) and [Zipkin's `b3` headers](https://zipkin.io/pages/instrumenting#communicating-trace-information) (which consider both 64 and 128 bits for `traceId` valid), the `sentry-trace` header should have a `traceId` of 128 bits encoded in 32 hex chars and a `spanId` of 64 bits encoded in 16 hex chars.
+To offer a minimal compatibility with the [W3C `traceparent` header](https://www.w3.org/TR/trace-context/#traceparent-header) (without the version prefix) and [Zipkin's `b3` headers](https://zipkin.io/pages/instrumenting#communicating-trace-information) (which consider both 64 and 128 bits for `traceId` valid), the `sentry-trace` header **SHOULD** have a `traceId` of 128 bits encoded in 32 hex chars and a `spanId` of 64 bits encoded in 16 hex chars.
 To avoid confusion with the W3C `traceparent` header (to which our header is similar but not identical), we call it simply `sentry-trace`.
 No version is being defined in the header.
 
-The `sentry-trace` header should only be attached to an outgoing request if the request's URL matches at least one entry of the [`tracePropagationTargets`](#tracepropagationtargets) SDK option or this options is set to `null`.
+The `sentry-trace` header **SHOULD** only be attached to an outgoing request if the request's URL matches at least one entry of the [`tracePropagationTargets`](#tracepropagationtargets) SDK option or this option is set to `null`.
 
-### The `sampled` Value
+#### The `sampled` Value
 
 To simplify processing, the value consists of a single (optional) character. The possible values are:
 
@@ -380,113 +249,227 @@ To simplify processing, the value consists of a single (optional) character. The
 1 - Sampled
 ```
 
-Unlike with `b3` headers, a `sentry-trace` header should never consist solely of a sampling decision, with no `traceid` or `spanid` values. There are [good reasons](https://github.com/apache/incubator-zipkin-b3-propagation/blob/bc937b6854ea30e46b3e85fbf147d8f4de685dd5/README.md#why-send-trace-ids-with-a-reject-sampling-decision) to always include the `traceid` and `spanid` regardless of the sampling decision, and doing so also simplifies implementation.
+Unlike with `b3` headers, a `sentry-trace` header **SHOULD** never consist solely of a sampling decision, with no `traceid` or `spanid` values. There are [good reasons](https://github.com/apache/incubator-zipkin-b3-propagation/blob/bc937b6854ea30e46b3e85fbf147d8f4de685dd5/README.md#why-send-trace-ids-with-a-reject-sampling-decision) to always include the `traceid` and `spanid` regardless of the sampling decision, and doing so also simplifies implementation.
 
-Besides the [usual reasons to use \*defer](https://github.com/apache/incubator-zipkin-b3-propagation/blob/bc937b6854ea30e46b3e85fbf147d8f4de685dd5/README.md#why-defer-a-sampling-decision),\* in the case of Sentry, a reason would be if a downstream system captures an error event with Sentry. The decision could be done at that point to sample that trace in order to have tracing data available for the reported crash.
+Besides the [usual reasons to use *defer*](https://github.com/apache/incubator-zipkin-b3-propagation/blob/bc937b6854ea30e46b3e85fbf147d8f4de685dd5/README.md#why-defer-a-sampling-decision), in the case of Sentry, a reason would be if a downstream system captures an error event with Sentry. The decision could be done at that point to sample that trace in order to have tracing data available for the reported crash.
 
-`sentry-trace = sampled`
+</SpecSection>
 
-Which in reality is useful for proxies to set it to `0` and opt out of tracing.
+---
 
-## Static API Changes
+## Public API
 
-The `Sentry.startTransaction` function should take two arguments - the `transactionContext` passed to the `Transaction` constructor and an optional `customSamplingContext` object containing data to be passed to `tracesSampler` (if defined).
-It creates a `Transaction` bound to the current hub and returns the instance.
-Users interact with the instance for creating child spans and, thus, have to
-keep track of it themselves.
+### SDK Configuration
 
-With `Sentry.span` users can attach spans to an already ongoing transaction.
-This property returns a `SpanProtocol` if a running transaction is bound to
-the scope; otherwise, it returns nil. Although we recommend users keep track
-of their own transactions, the SDKs should offer a way to expose auto-generated
-transactions. SDKs shall bind auto-generated transactions to the scope, making
-them accessible with `Sentry.span`.
-If the SDK has global mode enabled, which specifies whether to use global scope
-management mode and should be `true` for client applications and `false` for server
-applications, `Sentry.span` shall return the active transaction. If the
-user disables global mode, `Sentry.span` shall return the latest active (unfinished) span.
+<SpecSection id="sdk-configuration" status="stable" since="1.0.0">
 
-## `Hub` Changes
+This section describes the options SDKs **MUST** expose to configure tracing and performance monitoring.
 
-- Introduce a method called `traceHeaders`
+Tracing is enabled by setting either a `tracesSampleRate` or `tracesSampler`. If not set, these options default to `undefined` or `null`, making tracing opt-in.
 
-  - This function returns a header (string) `sentry-trace`
-  - The value should be the trace header string of the `Span` that is currently on the `Scope`
+</SpecSection>
 
-- Introduce a method called `startTransaction`
+#### `tracesSampleRate`
 
-  - Takes the same two arguments as `Sentry.startTransaction`
-  - Creates a new `Transaction` instance
-  - Should implement sampling as described in more detail in the 'Sampling' section of this document
+<SpecSection id="traces-sample-rate" status="stable" since="1.0.0">
 
-- Modify the method called `captureEvent` or `captureTransaction`
-  - Don't set `lastEventId` for transactions
+This **SHOULD** be a floating-point number in the range `[0, 1]` and represents the percentage chance that any given transaction will be sent to Sentry. So, barring [outside influence](#sampling), `0.0` is a guaranteed 0% chance (none will be sent) and `1.0` is a guaranteed 100% chance (all will be sent). This rate applies equally to all transactions; in other words, each transaction has an equal chance of being marked as `sampled = true`, based on the `tracesSampleRate`.
 
-{/*
-NOTE: we may omit this as a deprecated API replaced by `startTransaction` and
-`transaction.startChild`, or embrace it as a shortcut for creating a span that
-is the child of an existing transaction in the current scope or otherwise an
-orphan span (that will not be sent to Sentry on its own).
+See more about how sampling should be performed [below](#sampling).
 
-- `Hub` → Introduce a method called `startSpan`
-    - Creates a new `Span` instance
-    - If there is already a `Span` on the current `Scope`, the created `Span`
-      should be its child
-*/}
+</SpecSection>
 
-## `Scope` Changes
+#### `tracesSampler`
 
-The `Scope` holds a reference to the current `Span` or `Transaction`.
+<SpecSection id="traces-sampler" status="stable" since="1.0.0">
 
-{/*
-TODO: as of writing, the reference in the scope is only done for automatically
-instrumented transactions and spans. It is yet-to-be-specified whether this
-behavior applies to manual instrumentation as well.
-*/}
+This **SHOULD** be a callback function, triggered when a transaction is started. It **SHOULD** be given a `samplingContext` object and **SHOULD** return a sample rate in the range of `[0, 1]` _for the transaction in question_. This sample rate **SHOULD** behave the same way as the `tracesSampleRate` above. The only difference is that it only applies to the newly-created transaction and that different transactions can be sampled at different rates. Returning `0.0` **SHOULD** force the transaction to be dropped (set to `sampled = false`) and returning `1.0` **SHOULD** force the transaction to be sent (set to `sampled = true`).
 
-- `Scope` Introduce `setSpan`
-  - This can be used internally to pass a `Span` / `Transaction` around so
-    that integrations can attach children to it
-  - Setting the `transaction` property on the `Scope` (legacy) should
-    overwrite the name of the `Transaction` stored in the `Scope`, if there is
-    one. With that we give users the option to change the transaction name
-    even if they don't have access to the instance of the `Transaction`
-    directly.
+Historically, the `tracesSampler` callback could have also returned a boolean to force a sampling decision (with `false` equivalent to `0.0` and `true` equivalent to `1.0`). This behavior is now **deprecated** and **SHOULD** be removed from all SDKs.
 
-## Interaction with `beforeSend` and Event Processors
+See more about how sampling should be performed [below](#sampling).
 
-The `beforeSend` callback is a special Event Processor that we consider to be of
-most prominent use. Proper Event Processors are often considered internal.
+</SpecSection>
 
-Transactions should **not** go through `beforeSend`. However, they are still
-processed by Event Processors. This is a compromise between some flexibility in
-dealing with the current implementation of transactions as events, and
-leaving room for different lifetime hooks for transactions and spans.
+#### `tracePropagationTargets`
 
-Motivations:
+<SpecSection id="trace-propagation-targets" status="stable" since="1.0.0">
 
-1. Future-proofing: if users rely on `beforeSend` for transactions, that would
-   complicate eventually implementing individual span ingestion without breaking
-   user code. As of writing, a transaction is sent as an event, but that is
-   considered an implementation detail.
+Sentry SDKs propagate trace information to downstream SDKs via headers on outgoing HTTP requests. The `tracePropagationTargets` option gives users a mechanism of controlling to which outgoing HTTP requests these headers should be attached. For example, users can specify this property to keep trace propagation within their infrastructure, thereby preventing data within the headers from being sent to third party services.
 
-2. API compatibility: users have their existing implementation of `beforeSend`
-   that only ever had to deal with error events. We introduced transactions as a
-   new type of event. As users upgrade to a new SDK version and start using
-   tracing, their `beforeSend` would start seeing a new type that their code was
-   not meant to handle. Before transactions, they didn't have to care about
-   different event types at all. There are several possible consequences:
-   breaking user apps; silently and unintentionally dropping transactions;
-   transaction events modified in surprising ways.
+This option takes an array of strings and/or regular expressions. SDKs **SHOULD** only add trace headers to an outgoing request if the request's URL matches the regex or, in the case of string literals, contains at least one of the items from the array. String literals do not have to be full matches, meaning the URL of a request is matched when it contains a string provided through the option.
 
-3. In terms of usability, `beforeSend` is not a perfect fit for dropping
-   transactions like it is for dropping errors. Errors are a point-in-time
-   event. When errors happen, users have full context in `beforeSend` and can
-   modify/drop the event before it goes to Sentry. With transactions the flow is
-   different. Transactions are created and then they are open for some time
-   while child spans are created and appended to it. Meanwhile outgoing HTTP
-   requests include the sampling decision of the current transaction with other
-   services. After spans and the transaction are finished, dropping the
-   transaction in a `beforeSend`-like hook would leave orphan transactions from
-   other services in a trace. Similarly, modifying the sampling decision to
-   "yes" at this late stage would also produce inconsistent traces.
+SDKs **MAY** choose a default value which makes sense for their use case. Most SDKs default to the regex `.*` (meaning they attach headers to all outgoing requests), but deviation is allowed if necessary. For example, because of CORS, browser-based SDKs default to only adding headers to domain-internal requests.
+
+See [`sentry-trace`](#header-sentry-trace) and [`baggage`](/sdk/telemetry/traces/dynamic-sampling-context/#baggage-header) for more details on the individual headers which are attached to outgoing requests.
+
+##### Example
+
+The following example shows which URLs of outgoing requests would (not) match a given `tracePropagationTargets` array:
+
+```JS
+// Entries can be strings or regex
+tracePropagationTargets: ['localhost', /^\// ,/myApi.com\/v[2-4]/]
+
+URLs matching: 'localhost:8443/api/users', 'mylocalhost:8080/api/users', '/api/envelopes', 'myApi.com/v2/projects'
+URLs not matching: 'someHost.com/data', 'myApi.com/v1/projects'
+```
+
+<Alert title="Deprecation of tracingOrigins">
+
+This Option replaces the non-standardized `tracingOrigins` option which was previously used in some SDKs. SDKs that support `tracingOrigins` are encouraged to deprecate and eventually remove `tracingOrigins` in favour `tracePropagationTargets`. In case both options are specified by users, SDKs **SHOULD** only rely on the `tracePropagationTargets` array.
+
+</Alert>
+
+</SpecSection>
+
+#### `strictTraceContinuation`
+
+<SpecSection id="strict-trace-continuation" status="stable" since="1.31.0">
+
+This **MUST** be a boolean value. Default is `false`. This option controls trace continuation from unknown 3rd party services that happen to be instrumented by a Sentry SDK.
+
+If the SDK is able parse an org ID from the configured DSN, it **MUST** be propagated as a baggage entry with the key `sentry-org_id`. Given a DSN of `https://1234@o1.ingest.us.sentry.io/1`, the org ID is `1`, based on `o1`.
+
+Additionally, the SDK **MUST** be configurable with an optional `orgId: <org-id>` setting that takes precedence over the parsed value from the DSN. This option **SHOULD** be set when running a self-hosted version of Sentry or if a non-standard Sentry DSN is used, such as when using a local Relay.
+
+On incoming traces, the SDK **MUST** compare the `sentry-org_id` baggage value against its own parsed value from the DSN or org setting. Only if both match, the trace is continued. If there is no match, neither the trace ID, the parent sampling decision nor the baggage **SHOULD** be taken into account.
+The SDK **SHOULD** behave like it is the head of trace in this case, and not consider any propagated values.
+
+This behavior can be disabled by setting `strictTraceContinuation: false` in the SDK init call.
+Initially, SDKs **MUST** introduce this option with a default value of `false`.
+Once the majority of SDKs have introduced this option, we'll change the default value to `true` (in a major version bump), making it opt-out.
+
+Regardless of `strictTraceContinuation` being set to `true` or `false`, if the SDK is either configured with a `org` or was able to parse the value from the DSN, incoming traces containing an `org` value in the baggage that does not match the one from the receiving SDK, the trace is not continued.
+
+Examples:
+
+- baggage: `sentry-org: 1`, SDK config: `org: 1, strictTraceContinuation: false` -> continue trace
+- baggage: `sentry-org: none`, SDK config: `org: 1, strictTraceContinuation: false` -> continue trace
+- baggage: `sentry-org: 1`, SDK config: `org: none, strictTraceContinuation: false` -> continue trace
+- baggage: `sentry-org: none`, SDK config: `org: none, strictTraceContinuation: false` -> continue trace
+- baggage: `sentry-org: 1`, SDK config: `org: 2, strictTraceContinuation: false` -> start new trace
+
+- baggage: `sentry-org: 1`, SDK config: `org: 1, strictTraceContinuation: true` -> continue trace
+- baggage: `sentry-org: none`, SDK config: `org: 1, strictTraceContinuation: true` -> start new trace
+- baggage: `sentry-org: 1`, SDK config: `org: none, strictTraceContinuation: true` -> start new trace
+- baggage: `sentry-org: none`, SDK config: `org: none, strictTraceContinuation: true` -> continue trace
+- baggage: `sentry-org: 1`, SDK config: `org: 2, strictTraceContinuation: true` -> start new trace
+
+</SpecSection>
+
+#### `propagateTraceparent`
+
+<SpecSection id="propagate-traceparent" status="stable" since="1.32.0">
+
+This **MUST** be a boolean value. The default is `false`. This option is used to enable the propagation of the W3C Trace Context HTTP header `traceparent` on outgoing HTTP requests. This is useful when the receiving services only support OTel/W3C propagation.
+
+The `traceparent` header is only sent when `propagateTraceparent` is `true` and the request matches `tracePropagationTargets` (same condition as for `sentry-trace`/`baggage`).
+
+Header Format:
+- Key: `traceparent`
+- Value: `00-<traceId>-<spanId>-<sampled>` where `<sampled>` is `01` if sampled, otherwise `00`.
+
+The full spec is available in the [W3C Trace Context](https://www.w3.org/TR/trace-context/) specification.
+
+</SpecSection>
+
+#### `traceIgnoreStatusCodes`
+
+<SpecSection id="trace-ignore-status-codes" status="stable" since="1.33.0">
+
+This **SHOULD** be a collection of integers, denoting HTTP status codes.
+If suitable for the platform, the collection **MAY** also admit pairs of integers, denoting inclusive HTTP status code ranges.
+
+The option applies exclusively to incoming requests, and therefore **MUST** only be implemented in server SDKs.
+
+The SDK **MUST** honor this option by inspecting the [`http.response.status_code`](https://opentelemetry.io/docs/specs/semconv/registry/attributes/http/#:~:text=1437-,http.response.status_code,-int) attribute on each transaction/root span before it's finished.
+If the value of this attribute matches one of the status codes in `traceIgnoreStatusCodes`, the SDK **MUST** set the transaction's [sampling decision](#sampling) to `not sampled`.
+
+Note that a prerequisite to implement this option is that every HTTP server integration **MUST** record the [`http.response.status_code`](https://opentelemetry.io/docs/specs/semconv/registry/attributes/http/#:~:text=1437-,http.response.status_code,-int) attribute as defined in the OTEL spec.
+
+The SDK **MUST** emit a debug log denoting why the transaction was dropped.
+If the SDK implements client reports, it **MUST** record the dropped transaction with the `event_processor` discard reason.
+
+This option **MUST** default to an empty collection if it's introduced in a release with a minor SemVer bump.
+SDKs **SHOULD** set the default for this option to the following value (or equivalent if the implementation doesn't admit pairs of integers)
+```
+[[301, 303], [305, 399], [401, 404]]
+```
+at the earliest release with a major SemVer bump following its introduction.
+
+The rationale for this option and default is to not consume a user's span quota to trace requests that are useless for debugging purposes (and can often be triggered by scanning bots).
+
+Examples:
+`[403, 404]`: don't sample transactions corresponding to requests with status code 403 or 404
+`[[300, 399], [401, 404]]`: don't sample transactions corresponding to requests with status codes between 300 and 399 (inclusive) or between 401 and 404 (inclusive)
+
+</SpecSection>
+
+#### `enableDbQuerySource`
+
+<SpecSection id="enable-db-query-source" status="stable" since="1.34.0">
+
+This **MUST** be a boolean value that defaults to `true`.
+
+The option controls if attributes with code source information are set on database query spans when the query duration exceeds a given threshold.
+
+The following attributes, or a subset thereof, **SHOULD** be set on database query spans if the threshold is exceeded.
+Values for some of the attributes below may be unavailable in some situations for the SDK, and in these cases a subset **MAY** be provided.
+
+The attributes are described in <Link to="https://getsentry.github.io/sentry-conventions/generated/attributes/code.html">Sentry's Span Convention Documentation</Link>.
+
+- code.file.path
+- code.function.name
+- code.line.number
+
+</SpecSection>
+
+#### `dbQuerySourceThresholdMs`
+
+<SpecSection id="db-query-source-threshold" status="stable" since="1.34.0">
+
+A threshold duration, which **MUST** be a floating point or integer value.
+The value specifies, in milliseconds, the duration of a database query before code source information is added.
+
+The default value is platform-dependent and **SHOULD** balance the overhead of adding the information with its utility for queries that exceed the threshold duration for users of the SDK.
+In Python and PHP Laravel, the default threshold is 100 milliseconds.
+
+</SpecSection>
+
+#### `enableHttpRequestSource`
+
+<SpecSection id="enable-http-request-source" status="stable" since="1.34.0">
+
+This **MUST** be a boolean value that defaults to `true`.
+
+The option controls if attributes with code source information are set on outgoing HTTP requests.
+When enabled, the attributes **SHOULD** be attached only when the time to receive the response from sending the request exceeds a given threshold.
+
+The following attributes, or a subset thereof, **SHOULD** be set if the threshold is exceeded.
+Values for some of the attributes below may be unavailable in some situations for the SDK, and in these cases a subset **MAY** be provided.
+
+The attributes are described in <Link to="https://getsentry.github.io/sentry-conventions/generated/attributes/code.html">Sentry's Span Convention Documentation</Link>.
+
+- code.file.path
+- code.function.name
+- code.line.number
+
+</SpecSection>
+
+#### `httpRequestSourceThresholdMs`
+
+<SpecSection id="http-request-source-threshold" status="stable" since="1.34.0">
+
+A threshold duration, which **MUST** be a floating point or integer value.
+The value specifies, in milliseconds, the time between sending an HTTP request and receiving its response, after which code source information is added.
+
+The default value is platform-dependent and **SHOULD** balance the overhead of adding the information with its utility for request-response cycles that exceed the threshold duration for users of the SDK.
+
+</SpecSection>
+
+---
+
+## Changelog
+
+<SpecChangelog />

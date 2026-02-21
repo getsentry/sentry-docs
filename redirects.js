@@ -27,6 +27,42 @@ const developerDocsRedirects = [
     destination: '/sdk/telemetry/traces/:path*',
   },
   {
+    source: '/sdk/telemetry/traces/distributed-tracing/',
+    destination: '/sdk/telemetry/traces/#distributed-tracing',
+  },
+  {
+    source: '/sdk/telemetry/spans/span-protocol/',
+    destination: '/sdk/telemetry/spans/#span-v2-protocol',
+  },
+  {
+    source: '/sdk/telemetry/spans/span-api/',
+    destination: '/sdk/telemetry/spans/#span-api',
+  },
+  {
+    source: '/sdk/telemetry/spans/span-buffer/',
+    destination: '/sdk/telemetry/spans/#span-buffer',
+  },
+  {
+    source: '/sdk/telemetry/spans/sampling/',
+    destination: '/sdk/telemetry/spans/#sampling',
+  },
+  {
+    source: '/sdk/telemetry/spans/filtering/',
+    destination: '/sdk/telemetry/spans/#filtering',
+  },
+  {
+    source: '/sdk/telemetry/spans/scrubbing-data/',
+    destination: '/sdk/telemetry/spans/#data-scrubbing',
+  },
+  {
+    source: '/sdk/telemetry/spans/implementation/',
+    destination: '/sdk/telemetry/spans/#implementation-guidelines',
+  },
+  {
+    source: '/sdk/telemetry/spans/span-trace-propagation/',
+    destination: '/sdk/telemetry/spans/#span-trace-propagation',
+  },
+  {
     source: '/sdk/telemetry/scopes/',
     destination: '/sdk/foundations/data-model/scopes/',
   },

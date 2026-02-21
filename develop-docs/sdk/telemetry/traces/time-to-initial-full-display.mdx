@@ -1,6 +1,24 @@
 ---
 title: Time to Initial/Full Display
+spec_id: sdk/telemetry/traces/time-to-initial-full-display
+spec_version: 1.1.0
+spec_status: stable
+spec_platforms:
+  - mobile
+spec_changelog:
+  - version: 1.1.0
+    date: 2023-07-10
+    summary: Align start timestamp with app start timestamp
+  - version: 1.0.0
+    date: 2023-02-27
+    summary: Initial spec — TTID and TTFD spans for mobile/desktop
 ---
+
+<SpecRfcAlert />
+
+<SpecMeta />
+
+## Overview
 
 We recommend implementing this feature for mobile and desktop SDKs.
 
@@ -13,18 +31,27 @@ Being spans, they don't impact user quota.
 The SDK starts them as soon as a new screen is created, as long as there is an active transaction for the screen load.
 Note: When the app is started, the SDK aligns the start timestamp of the Time to Initial Display and Time to Full Display to the app start timestamp.
 
-## Time to Initial Display
+---
+
+## Behavior
+
+### Time to Initial Display
+
+<SpecSection id="ttid" status="stable" since="1.0.0">
 
 Time to Initial Display is a span with the operation `ui.load.initial_display`, which finishes automatically
 when the screen draws its first frame. It's controlled automatically by the SDK and doesn't
 require any manual intervention from the user.
 
 The SDKs set the time to initial display as a transaction measurement, with `time_to_initial_display` as the key and the span duration as the value.
-Note: The measurement should be set only if the span finishes with the status `OK`. In case a screen is used just as a
- router to start other screens, it could be finished before drawing a frame.
+Note: The measurement **SHOULD** be set only if the span finishes with the status `OK`. In case a screen is used just as a
+router to start other screens, it could be finished before drawing a frame.
 
+</SpecSection>
 
-## Time to Full Display
+### Time to Full Display
+
+<SpecSection id="ttfd" status="stable" since="1.0.0">
 
 Time to Full Display is a span with operation `ui.load.full_display` which is finished manually through
 the `Sentry.reportFullyDisplayed` static API. This feature has to be enabled by setting the SDK config
@@ -97,3 +124,11 @@ Scenario: No ongoing screen load transaction
     Then the SDK ignores the call
 
 ```
+
+</SpecSection>
+
+---
+
+## Changelog
+
+<SpecChangelog />
