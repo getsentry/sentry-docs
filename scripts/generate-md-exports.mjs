@@ -294,6 +294,20 @@ function buildFallbackChildSection(parentPath, children) {
   return childSection;
 }
 
+/**
+ * Injects a description and navigation links after the first H1 heading.
+ * Returns the original content unchanged if no H1 is found.
+ */
+function injectDescription(markdown, description, {navLinks = []} = {}) {
+  let suffix = `\n\n*${description}*\n`;
+  if (navLinks.length > 0) {
+    suffix += '\n' + navLinks.map(link => `*${link}*`).join('\n') + '\n';
+  }
+  // Use a replacer function to avoid $ in descriptions being interpreted as
+  // special regex replacement patterns (e.g. $1, $&, $')
+  return markdown.replace(/^(# .+)$/m, match => match + suffix);
+}
+
 // --- MDX template rendering for full-page overrides ---
 
 function buildMdxComponents(docTree, createElement) {
@@ -712,8 +726,20 @@ async function createWork() {
 
   // Append child listings to parent index files.
   // Skip pages whose MDX override sets append_sections: false.
+  const hasR2 = !!(accessKeyId && secretAccessKey && existingFilesOnR2);
   let updatedCount = 0;
-  const r2Uploads = [];
+  // Always store the latest content per key. Hash comparison happens at upload
+  // time so that later writes (description injection) always overwrite earlier
+  // entries (child section append) even when the final content matches R2.
+  const r2Uploads = new Map();
+
+  function collectR2Upload(key, data) {
+    if (!hasR2) {
+      return;
+    }
+    r2Uploads.set(key, data);
+  }
+
   for (const [parentPath, children] of pathsByParent) {
     const overrideFm = mdxOverrides.get(parentPath)?.frontmatter;
     if (overrideFm?.append_sections === false) {
@@ -749,30 +775,77 @@ async function createWork() {
       const updatedContent = existingContent + childSection;
       await writeFile(parentFile, updatedContent, {encoding: 'utf8'});
       updatedCount++;
-
-      // Collect R2 uploads needed (will be uploaded in parallel below)
-      if (accessKeyId && secretAccessKey && existingFilesOnR2) {
-        const fileHash = md5(updatedContent);
-        const existingHash = existingFilesOnR2.get(parentPath);
-        if (existingHash !== fileHash) {
-          r2Uploads.push({parentPath, updatedContent});
-        }
-      }
+      collectR2Upload(parentPath, updatedContent);
     }
   }
-
-  // Upload all modified section index files to R2 in parallel
-  if (r2Uploads.length > 0) {
-    const limit = pLimit(50);
-    const s3Client = getS3Client();
-    await Promise.all(
-      r2Uploads.map(({parentPath, updatedContent}) =>
-        limit(() => uploadToCFR2(s3Client, parentPath, updatedContent))
-      )
-    );
-    console.log(`📤 Uploaded ${r2Uploads.length} section index files to R2`);
-  }
   console.log(`📑 Added child page listings to ${updatedCount} section index files`);
+
+  // Inject frontmatter descriptions after H1 headings in MD exports.
+  // This helps LLM agents quickly assess page relevance from the first few lines.
+  // Skip MDX override pages (they have custom intros).
+  const mdxOverridePaths = new Set(mdxOverrides.keys());
+  let descriptionCount = 0;
+  for (const relativePath of allPaths) {
+    if (mdxOverridePaths.has(relativePath)) {
+      continue;
+    }
+    const pathParts = relativePath.replace(/\.md$/, '').split('/');
+    const node = docTree ? findNode(docTree, pathParts) : null;
+    const description = node?.frontmatter?.description;
+    if (!description) {
+      continue;
+    }
+    const filePath = path.join(OUTPUT_DIR, relativePath);
+    let content;
+    try {
+      content = await readFile(filePath, {encoding: 'utf8'});
+    } catch {
+      continue;
+    }
+    const navLinks = [];
+    if (relativePath !== 'index.md') {
+      navLinks.push(`Full documentation index: ${DOCS_ORIGIN}/`);
+    }
+    // Guide pages get a link back to their platform index
+    if (
+      pathParts[0] === 'platforms' &&
+      pathParts.includes('guides') &&
+      pathParts.length >= 4
+    ) {
+      const platformNode = docTree
+        ? findNode(docTree, ['platforms', pathParts[1]])
+        : null;
+      const platformName = platformNode ? getTitle(platformNode) : pathParts[1];
+      navLinks.push(
+        `${platformName} SDK docs: ${DOCS_ORIGIN}/platforms/${pathParts[1]}/`
+      );
+    }
+    const injected = injectDescription(content, description, {navLinks});
+    if (injected === content) {
+      continue;
+    }
+    await writeFile(filePath, injected, {encoding: 'utf8'});
+    descriptionCount++;
+    collectR2Upload(relativePath, injected);
+  }
+  if (descriptionCount > 0) {
+    console.log(`📝 Injected descriptions into ${descriptionCount} markdown files`);
+  }
+
+  // Upload modified files to R2, skipping those whose hash already matches
+  if (r2Uploads.size > 0) {
+    const toUpload = [...r2Uploads].filter(
+      ([key, data]) => existingFilesOnR2.get(key) !== md5(data)
+    );
+    if (toUpload.length > 0) {
+      const limit = pLimit(50);
+      const s3Client = getS3Client();
+      await Promise.all(
+        toUpload.map(([key, data]) => limit(() => uploadToCFR2(s3Client, key, data)))
+      );
+      console.log(`📤 Uploaded ${toUpload.length} modified files to R2`);
+    }
+  }
 
   // Clean up unused cache files to prevent unbounded growth
   if (!noCache) {

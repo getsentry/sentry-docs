@@ -28,6 +28,7 @@ Markdown exports are not just raw dumps of HTML content. They are adapted for LL
 | **Links**                | Relative HTML paths                   | Absolute `.md` URLs (e.g., `https://docs.sentry.io/platforms/javascript.md`) |
 | **Images**               | Relative paths                        | Absolute URLs                                                                |
 | **Page structure**       | Header, sidebar, main content, footer | Title + main content + navigation sections                                   |
+| **Description**          | HTML meta tag only                    | Injected as italic text after H1 heading                                     |
 
 ## Page Customization Architecture
 
@@ -140,6 +141,28 @@ Pages without a matching override get a generic "Pages in this section" listing 
 - Sorted by `sidebar_order`, then alphabetically by title
 - Hidden/draft/versioned pages filtered out
 
+## Description Injection
+
+After all markdown files are generated and child sections are appended, the script injects frontmatter `description` values into the markdown output. This gives LLM agents a relevance signal in the first few lines of each page.
+
+**How it works:**
+
+1. For each `.md` file, look up the corresponding doctree node and read `frontmatter.description`
+2. If a description exists, find the H1 line and insert `*{description}*` (italic) after it
+3. Skip MDX override pages (they have custom intros)
+
+**Result:**
+
+```markdown
+# Python | Sentry for Python
+
+*Sentry's Python SDK enables automatic reporting of errors and performance data.*
+
+## Prerequisites
+```
+
+The `injectDescription(markdown, description)` function finds the first `^# .+$` line and inserts the italic description after it. Files without an H1 or without a description are left unchanged. Modified files are uploaded to R2 if credentials are configured.
+
 ## Current Override Registry
 
 ### MDX Template Overrides
@@ -183,6 +206,7 @@ During `generate-md-exports`:
 3. Discover HTML files, swapping source path for MDX override pages
 4. Workers convert HTML → Markdown (parallel, cached, with R2 sync)
 5. Append navigation sections to parent pages using `pageOverrides`
+6. Inject frontmatter descriptions after H1 headings (skipping MDX overrides)
 
 ## Adding a New Override
 
