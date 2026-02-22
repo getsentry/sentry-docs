@@ -18,7 +18,7 @@ spec_changelog:
     summary: Added replay sampling timing requirement for feedback widgets
   - version: 1.0.0
     date: 2025-04-15
-    summary: Initial spec — feedback protocol, context attributes, SDK pipeline, session replay integration, platform-specific guidance (onCrashedLastRun, user-facing/backend platforms)
+    summary: Initial spec — feedback protocol, envelope item constraints, context attributes, SDK pipeline, session replay integration, platform-specific guidance (onCrashedLastRun, user-facing/backend platforms)
 sidebar_order: 5
 ---
 
@@ -32,8 +32,8 @@ User feedback allows Sentry to collect qualitative input directly from users —
 
 Related specs:
 - [Envelopes](/sdk/foundations/data-model/envelopes/) — transport format
-- [Envelope Items](/sdk/foundations/data-model/envelope-items/) — `feedback` item type constraints
 - [Event Payloads](/sdk/foundations/data-model/event-payloads/) — base event attributes
+- [User Report (Deprecated)](/sdk/telemetry/user-reports/) — deprecated predecessor
 
 ---
 
@@ -124,6 +124,21 @@ On backend platforms, SDKs **SHOULD** document how to use the [last event ID](/s
 <SpecSection id="feedback-payload" status="stable" since="1.0.0">
 
 A feedback is sent as a `feedback` envelope item containing a JSON object. The object is an [event payload](/sdk/foundations/data-model/event-payloads/) with an additional `feedback` context object.
+
+#### Envelope Item Constraints
+
+- This Item **MAY** occur at most once per Envelope.
+- This Item is mutually exclusive with `"transaction"` items.
+
+#### Envelope Headers
+
+`event_id`
+
+: **UUID String, required.** Corresponds to the `event_id` field of the event payload. **It is not equal to the `associated_event_id`** field in the feedback context. Clients are required to generate an event identifier ahead of time and set it at least in the Envelope headers. If the identifier mismatches between the Envelope and payload, the Envelope header takes precedence.
+
+#### Additional Item Headers
+
+_None_
 
 #### Event Attributes
 

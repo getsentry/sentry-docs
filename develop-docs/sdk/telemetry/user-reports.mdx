@@ -1,0 +1,102 @@
+---
+title: "User Report (Deprecated)"
+spec_id: sdk/telemetry/user-reports
+spec_version: 1.2.1
+spec_status: deprecated
+spec_superseded_by: sdk/telemetry/feedbacks
+spec_depends_on:
+  - id: sdk/foundations/data-model/envelopes
+    version: ">=1.0.0"
+spec_changelog:
+  - version: 1.2.1
+    date: 2025-01-21
+    summary: Typo fix in deprecation description
+  - version: 1.2.0
+    date: 2025-01-08
+    summary: Deprecated in favor of `feedback` item type — added max length (4096) for comments, added constraints (no multiple per event, 30-minute event age limit, discard on missing event), updated event_id semantics
+  - version: 1.1.0
+    date: 2020-10-30
+    summary: Added payload attributes (event_id, email, name, comments) and JSON example
+  - version: 1.0.0
+    date: 2020-05-05
+    summary: Initial spec — user_report envelope item type, basic constraints, envelope headers
+sidebar_order: 5
+---
+
+<SpecRfcAlert />
+
+<SpecMeta />
+
+## Overview
+
+User reports are a deprecated way of submitting user feedback. They associate user information and comments with an existing error event. New implementations **MUST** use the [`feedback` item type](/sdk/telemetry/feedbacks/) instead.
+
+User reports continue to work so older SDKs won't break. If both the item and its associated event are accepted, the backend converts the report into a feedback event.
+
+---
+
+## Wire Format
+
+### Envelope Item
+
+<SpecSection id="envelope-item" status="deprecated" since="1.0.0">
+
+Item type `"user_report"`. The item contains a JSON payload:
+
+```json
+{"event_id":"9ec79c33ec9942ab8353589fcb2e04dc","email":"john@example.com","name":"John Me","comments":"It broke."}
+```
+
+#### Payload Attributes
+
+| Field | Type | Required | Since | Description |
+|-------|------|----------|-------|-------------|
+| `event_id` | String | **REQUIRED** | 1.1.0 | The identifier of the associated event, ideally an error. (since 1.2.0) Updated from "identifier of the event or transaction" to clarify this refers to an associated error event. |
+| `email` | String | **RECOMMENDED** | 1.1.0 | The email of the user. |
+| `name` | String | **RECOMMENDED** | 1.1.0 | The name of the user. |
+| `comments` | String | **RECOMMENDED** | 1.1.0 | Comments of the user about what happened. (since 1.2.0) Max length: **4096 characters**. |
+
+#### Constraints
+
+- This Item **MAY** occur once per Envelope.
+- User Reports can be ingested separately from their events. However, SDKs **SHOULD** send them in the same Envelope.
+- (since 1.2.0) SDKs **MUST NOT** associate multiple User Reports to the same event.
+- (since 1.2.0) The event can not be more than 30 minutes old.
+- (since 1.2.0) If the event does not exist in the same project or was never ingested, the report is discarded and never converted to feedback.
+
+#### Envelope Headers
+
+`event_id`
+
+: **UUID String, required.** Corresponds to the `event_id` field of the payload. (since 1.2.0) If the identifier mismatches between the Envelope and payload, the Envelope header takes precedence.
+
+#### Additional Item Headers
+
+_None_
+
+</SpecSection>
+
+---
+
+## Public API
+
+### Capture User Feedback (Deprecated)
+
+<SpecSection id="capture-user-feedback" status="deprecated" since="1.1.0">
+
+```
+captureUserFeedback(userFeedback) -> void
+```
+
+**Parameters:**
+- `userFeedback` — Object containing `event_id` (required), and optionally `email`, `name`, `comments`.
+
+(since 1.2.0) SDKs that still expose this function **SHOULD** mark it as deprecated and direct users to [`captureFeedback`](/sdk/telemetry/feedbacks/#capture-feedback) instead.
+
+</SpecSection>
+
+---
+
+## Changelog
+
+<SpecChangelog />
