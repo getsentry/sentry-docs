@@ -204,75 +204,14 @@ _None_
 
 ### User Feedback
 
-Item type `"feedback"` contains an event with a feedback context in the payload encoded in JSON.
-
-Example payload:
-
-```json
-{
-  "event_id": "9ec79c33ec9942ab8353589fcb2e04dc",
-  "timestamp": "2011-05-02T17:41:36Z",
-  "platform": "javascript",
-  "level": "error",
-  "contexts": {
-    "feedback": {
-      "contact_email": "john@example.com",
-      "name": "John Smith",
-      "message": "I love session replay!",
-      "url": "https://sentry.io/replays/",
-      "associated_event_id": "32fd1995636d446385016e2747623e11",
-      "replay_id": "82840977e85b4ed3bc27f7b5b25cec15"
-    }
-  }
-}
-```
-
-**Payload Attributes**
-
-We only document attributes for the `contexts.feedback` object, which is **required**
-for this item type. For other attributes, see [Event Payloads](/sdk/foundations/data-model/event-payloads/).
-
-`message`
-
-: **String, required.** Comments of the user, describing what happened and/or sharing
-feedback. The max length is **4096 characters**.
-
-`contact_email`
-
-: _String, optional._ The email of the user who submitted the feedback. If excluded, Sentry attempts to fill this in with user context. Anonymous feedbacks (no name or email) are still accepted.
-
-`name`
-
-: _String, optional._ The name of the user who submitted the feedback. If excluded, Sentry attempts to fill this in with user context. Anonymous feedbacks (no name or email) are still accepted.
-
-`url`
-
-: _String, optional._ The URL of the webpage the user was on when submitting feedback.
-This may be used to search for or set alerts on feedback.
-
-`associated_event_id`
-
-: _UUID String, optional._ The identifier of an error event in the same project.
-Use this to explicitly link a related error in the feedback UI.
-
-`replay_id`
-
-: _UUID String, optional._ The identifier of a related Session Replay in the same
-project. Sentry uses this ID to render a Replay clip in the feedback UI.
-
-**Attaching Files:**
-
-You can attach files of any type to a feedback (screenshots, logs, documents, etc.) by sending them as
-[attachment items](/sdk/foundations/data-model/envelope-items/#attachment), with `event_id`
-corresponding to the feedback item. We recommend sending the attachment items in the same
-Envelope as the feedback item.
+Item type `"feedback"` contains an event with a feedback context in the payload encoded in JSON. See the <Link to="/sdk/telemetry/feedbacks/">Feedback spec</Link> for the full protocol, payload attributes, and examples.
 
 **Constraints:**
 
 - This Item may occur at most once per Envelope.
 - This Item is mutually exclusive with `"transaction"` items.
 
-**Required Envelope Headers:**
+**Envelope Headers:**
 
 `event_id`
 
@@ -281,6 +220,10 @@ payload. **It is not equal to the `associated_event_id`** field in the feedback
 context. Clients are required to generate an event identifier ahead of time
 and set it at least in the Envelope headers. If the identifier mismatches
 between the Envelope and payload, the Envelope header takes precedence.
+
+**Additional Item Headers:**
+
+_None_
 
 ### User Report - Deprecated
 
