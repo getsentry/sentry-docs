@@ -151,6 +151,52 @@ ReactDOM.render(
 
 Now, Sentry should generate `pageload`/`navigation` transactions with parameterized transaction names (for example, `/teams/:teamid/user/:userid`), where applicable. This is only needed at the top level of your app, unlike React Router v4/v5, which required wrapping every `<Route />` you wanted parametrized.
 
+## Static Route Manifest
+
+<AvailableSince version="10.39.0" />
+
+When using [`patchRoutesOnNavigation`](https://reactrouter.com/6.30.3/routers/create-browser-router#optspatchroutesonnavigation) to dynamically load route definitions, the full route hierarchy isn't available to Sentry until each route is navigated to. This can cause transactions to receive incomplete or wildcard names (for example, `/users/*` instead of `/users/:userId`).
+
+To ensure accurate transaction names, you can provide a static list of route patterns via the `lazyRouteManifest` option. When provided, Sentry uses this manifest as the primary source for determining transaction names without needing to wait for route modules to load.
+
+Make sure to keep the `lazyRouteManifest` array in sync with your route definitions: if you add, remove, or change routes in your app, update this list accordingly. Any route that doesn't match a pattern in the manifest will fall back to the default behavior, which may result in incomplete transaction names until the route is visited. You can also include non-lazy routes in the manifest for convenience or consistency.
+
+To use `lazyRouteManifest`, you need to set `enableAsyncRouteHandlers: true` in your `reactRouterV6BrowserTracingIntegration` configuration:
+
+```javascript {20-27}
+import React from "react";
+import {
+  createRoutesFromChildren,
+  matchRoutes,
+  useLocation,
+  useNavigationType,
+} from "react-router-dom";
+
+import * as Sentry from "@sentry/react";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.reactRouterV6BrowserTracingIntegration({
+      useEffect: React.useEffect,
+      useLocation,
+      useNavigationType,
+      createRoutesFromChildren,
+      matchRoutes,
+      enableAsyncRouteHandlers: true,
+      lazyRouteManifest: [
+        "/users",
+        "/users/:userId",
+        "/users/:userId/settings",
+        "/dashboard",
+        "/dashboard/analytics",
+      ],
+    }),
+  ],
+  tracesSampleRate: 1.0,
+});
+```
+
 ## Set Up a Custom Error Boundary
 
 When using `react-router`, errors thrown inside route elements will only be re-thrown in **development mode** while using [`strict mode`](https://react.dev/reference/react/StrictMode).\
