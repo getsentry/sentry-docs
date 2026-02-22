@@ -1,0 +1,34 @@
+```elixir
+config :sentry,
+  dsn: "___PUBLIC_DSN___",
+  enable_logs: true,
+  before_send_log: fn log_event ->
+    # Skip info logs
+    if log_event.level == :info do
+      false
+    else
+      log_event
+    end
+  end
+```
+
+You can also use a module/function tuple:
+
+```elixir
+config :sentry,
+  dsn: "___PUBLIC_DSN___",
+  enable_logs: true,
+  before_send_log: {MyApp.Sentry, :before_send_log}
+
+# In lib/my_app/sentry.ex
+defmodule MyApp.Sentry do
+  def before_send_log(%Sentry.LogEvent{} = log_event) do
+    # Filter out logs from specific domains or modify attributes
+    if String.contains?(log_event.body, "sensitive") do
+      false
+    else
+      log_event
+    end
+  end
+end
+```
