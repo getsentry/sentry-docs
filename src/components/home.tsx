@@ -78,7 +78,7 @@ export default async function Home() {
             {/* Left Column: Welcome Text + Search */}
             <div className="flex-1 flex flex-col items-center lg:items-start justify-center lg:w-[50%]">
               <h1
-                className="font-bold mb-3 text-center lg:text-left text-[var(--gray-12)]"
+                className="font-bold mb-3 text-center lg:text-left text-[var(--gray-12)] dark:text-white"
                 style={{
                   fontWeight: 700,
                   fontSize: '32px',
@@ -88,7 +88,7 @@ export default async function Home() {
                 Welcome To Sentry Docs
               </h1>
               <p
-                className="mb-5 text-center lg:text-left text-[var(--gray-11)]"
+                className="mb-5 text-center lg:text-left text-[var(--gray-11)] dark:text-white"
                 style={{
                   lineHeight: '1.5',
                   fontWeight: 400,
@@ -198,12 +198,12 @@ export default async function Home() {
               <h3 className="text-lg font-semibold mb-2 text-[var(--gray-12)]">
                 Sentry Debugging
               </h3>
-              <p className="text-sm text-[var(--gray-11)] leading-relaxed">
+              <p className="text-sm text-[var(--gray-11)] dark:text-white leading-relaxed">
                 Monitor, identify, and resolve errors and performance issues across your
                 applications using{' '}
                 <a href="/product/error-monitoring/" className="text-[#8b5cf6] underline">
                   Error Monitoring
-                </a>
+                </a> 
                 ,{' '}
                 <a
                   href="/product/explore/trace-explorer/"
@@ -214,6 +214,10 @@ export default async function Home() {
                 ,{' '}
                 <a href="/product/session-replay/" className="text-[#8b5cf6] underline">
                   Session Replay
+                </a>
+                {' '}
+                <a href="/product/drains/" className="text-[#8b5cf6] underline">
+                  Logs
                 </a>
                 , and{' '}
                 <a href="/product/" className="text-[#8b5cf6] underline">
@@ -255,15 +259,16 @@ export default async function Home() {
               <h3 className="text-lg font-semibold mb-2 text-[var(--gray-12)]">
                 AI for Agents and AI in Sentry
               </h3>
-              <p className="text-sm text-[var(--gray-11)] leading-relaxed">
+              <p className="text-sm text-[var(--gray-11)] dark:text-white leading-relaxed">
                 Use Sentry's{' '}
                 <a href="/ai/agent-skills/" className="text-[#8b5cf6] underline">
-                  skills
+                  Skills
                 </a>{' '}
                 and{' '}
                 <a href="/ai/mcp/" className="text-[#8b5cf6] underline">
                   MCP server
-                </a>{' '}
+                </a>
+                {' '}
                 with your agents, and start{' '}
                 <a href="/ai/monitoring/" className="text-[#8b5cf6] underline">
                   monitoring your AI features
@@ -273,14 +278,14 @@ export default async function Home() {
                   href="/product/ai-in-sentry/seer/root-cause-analysis/"
                   className="text-[#8b5cf6] underline"
                 >
-                  root cause analysis
+                  AI-powered root cause analysis
                 </a>{' '}
                 in debugging your issues. Use{' '}
                 <a
                   href="/product/ai-in-sentry/seer/ai-code-review/"
                   className="text-[#8b5cf6] underline"
                 >
-                  code review
+                 AI code review
                 </a>{' '}
                 to review your PRs and prevent errors.
               </p>
