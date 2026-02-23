@@ -4,7 +4,7 @@ spec_id: sdk/telemetry/profiles
 spec_version: 2.5.0
 spec_status: stable
 spec_depends_on:
-  - id: sdk/foundations/data-model/envelopes
+  - id: sdk/foundations/transport/envelopes
     version: ">=1.0.0"
 spec_changelog:
   - version: 2.5.0
@@ -60,9 +60,9 @@ Profiling captures stack traces at regular intervals during program execution, e
 - **V1 (Transaction-based):** *(Deprecated)* Profile is bound to a transaction and sent in the same envelope. SDKs **SHOULD** migrate to V2.
 
 Related specs:
-- [Envelopes](/sdk/foundations/data-model/envelopes/) — transport format
-- [Envelope Items](/sdk/foundations/data-model/envelope-items/) — `profile` and `profile_chunk` item type constraints
-- [Frame Attributes](/sdk/foundations/data-model/event-payloads/stacktrace/#frame-attributes) — frame object format
+- [Envelopes](/sdk/foundations/transport/envelopes/) — transport format
+- [Envelope Items](/sdk/foundations/transport/envelope-items/) — `profile` and `profile_chunk` item type constraints
+- [Frame Attributes](/sdk/foundations/transport/event-payloads/stacktrace/#frame-attributes) — frame object format
 
 ---
 
@@ -166,7 +166,7 @@ A V1 profile **MUST** be associated with a transaction and sent in the same enve
 | `transaction` | Object | **REQUIRED** | 1.0.0 | Associated transaction: `id` (required), `name` (required), `trace_id` (required), `active_thread_id` (required, uint64 as string). |
 | `timestamp` | String | **RECOMMENDED** | 1.0.0 | RFC 3339 timestamp of when the profile was captured. **SHOULD** match the transaction's `start_timestamp`. |
 | `environment` | String | **RECOMMENDED** | 1.0.0 | Environment name. Default: `production`. |
-| `debug_meta` | Object | **REQUIRED** (native) | 1.0.0 | Debug metadata for symbolication. Required on native platforms (`cocoa`, `rust`). Same payload as the [`debug_meta` interface](/sdk/foundations/data-model/event-payloads/sdk/). |
+| `debug_meta` | Object | **REQUIRED** (native) | 1.0.0 | Debug metadata for symbolication. Required on native platforms (`cocoa`, `rust`). Same payload as the [`debug_meta` interface](/sdk/foundations/transport/event-payloads/sdk/). |
 | `measurements` | Object | **OPTIONAL** | 1.0.0 | Metrics collected during profiling (e.g., `frozen_frame_renders`, `slow_frame_renders`). See [Measurements](#measurements). |
 | `runtime` | Object | **OPTIONAL** | 1.0.0 | Runtime information (`name`, `version`). Used for platforms with multiple runtimes. |
 
@@ -200,7 +200,7 @@ A V2 profile chunk exists independently and is sent as a `profile_chunk` envelop
 | `client_sdk` | Object | **REQUIRED** | 2.0.0 | SDK information: `name` and `version`. (since 2.2.0) Changed from optional to required. |
 | `profile` | Object | **REQUIRED** | 2.0.0 | Profile data. See [Profile Data](#profile-data). |
 | `environment` | String | **RECOMMENDED** | 2.0.0 | Environment name. Default: `production`. |
-| `debug_meta` | Object | **REQUIRED** (native) | 2.0.0 | Debug metadata for symbolication. Required on native platforms. Same payload as the [`debug_meta` interface](/sdk/foundations/data-model/event-payloads/sdk/). |
+| `debug_meta` | Object | **REQUIRED** (native) | 2.0.0 | Debug metadata for symbolication. Required on native platforms. Same payload as the [`debug_meta` interface](/sdk/foundations/transport/event-payloads/sdk/). |
 | `measurements` | Object | **OPTIONAL** | 2.0.0 | Metrics collected during profiling. See [Measurements](#measurements). |
 
 </SpecSection>
@@ -215,7 +215,7 @@ Both V1 and V2 formats share the same `profile` object structure:
 |-------|------|----------|-------|-------------|
 | `samples` | List | **REQUIRED** | 1.0.0 | List of sample objects. Each sample contains `stack_id` (integer), `thread_id` (string), and a timestamp — V1 uses `elapsed_since_start_ns` (uint64 as string, wall time nanoseconds since profile start); V2 uses `timestamp` (float64, Unix seconds with microsecond precision). |
 | `stacks` | List | **REQUIRED** | 1.0.0 | List of frame index arrays forming stack traces. Frames **SHOULD** be ordered from leaf to root (main frame at end). SDKs **SHOULD** deduplicate stacks. |
-| `frames` | List | **REQUIRED** | 1.0.0 | List of [frame objects](/sdk/foundations/data-model/event-payloads/stacktrace/#frame-attributes). (since 1.1.0) Each frame **MUST** contain at least one of `filename`, `function`, or `instruction_addr`. For native platforms, `instruction_addr` is **REQUIRED** for symbolication. `module` or `package` is used for frame grouping. |
+| `frames` | List | **REQUIRED** | 1.0.0 | List of [frame objects](/sdk/foundations/transport/event-payloads/stacktrace/#frame-attributes). (since 1.1.0) Each frame **MUST** contain at least one of `filename`, `function`, or `instruction_addr`. For native platforms, `instruction_addr` is **REQUIRED** for symbolication. `module` or `package` is used for frame grouping. |
 | `thread_metadata` | Object | **REQUIRED** | 1.0.0 | Object keyed by thread ID. Each entry **MAY** contain `name` (string) and `priority` (number). Used in the flamechart thread selector. |
 
 #### Measurements
@@ -267,7 +267,7 @@ SDKs **SHOULD** remove unnecessary data like thread entries without samples from
 
 <SpecSection id="v1-envelope" status="deprecated" since="1.0.0" superseded_by="#v2-envelope">
 
-A V1 profile **MUST** be serialized as JSON and sent in the same [envelope](/sdk/foundations/data-model/envelopes/) as the associated transaction with item type [`profile`](/sdk/foundations/data-model/envelope-items/#profile).
+A V1 profile **MUST** be serialized as JSON and sent in the same [envelope](/sdk/foundations/transport/envelopes/) as the associated transaction with item type [`profile`](/sdk/foundations/transport/envelope-items/#profile).
 
 ```json
 {"event_id":"a229377b82ad4898be7c3a6272d052d9"}
@@ -283,7 +283,7 @@ A V1 profile **MUST** be serialized as JSON and sent in the same [envelope](/sdk
 
 <SpecSection id="v2-envelope" status="stable" since="2.0.0">
 
-A V2 profile chunk **MUST** be serialized as JSON and sent in an [envelope](/sdk/foundations/data-model/envelopes/) with item type [`profile_chunk`](/sdk/foundations/data-model/envelope-items/#profile-chunk).
+A V2 profile chunk **MUST** be serialized as JSON and sent in an [envelope](/sdk/foundations/transport/envelopes/) with item type [`profile_chunk`](/sdk/foundations/transport/envelope-items/#profile-chunk).
 
 (since 2.4.0) The `platform` item header is **REQUIRED** for rate limiting and categorization and **MUST** match the `platform` field in the payload.
 
