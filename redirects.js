@@ -187,7 +187,11 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/store/:path*',
-    destination: '/sdk/miscellaneous/store/:path*',
+    destination: '/sdk/foundations/transport/',
+  },
+  {
+    source: '/sdk/miscellaneous/store/:path*',
+    destination: '/sdk/foundations/transport/',
   },
   {
     source: '/sdk/development-process/:path*',
