@@ -18,14 +18,15 @@ When configuring `Sentry.LoggerHandler`, you can use these options specific to l
 
 These options are set in your Sentry configuration (`config :sentry`):
 
-- **`:enable_logs`** - Set to `true` to enable the logs feature. Default is `false`.
+- **`:enable_logs`** - Set to `true` to enable the logs feature. When enabled, log events are routed through the SDK's Telemetry Processor, which buffers them and sends them to Sentry in batches. Default is `false`.
 
-- **`:max_log_events`** - The maximum number of log events to buffer before flushing to Sentry. Default is `100`. Logs are also flushed every 5 seconds.
+- **`:before_send_log`** - A callback function to filter or modify log events before they are sent.
+
+Log events are buffered by the Telemetry Processor with a capacity of 1000 entries and flushed in batches of 100 or every 5 seconds, whichever comes first. You can customize these defaults through the <PlatformLink to="/configuration/options/#telemetry-processor-options">Telemetry Processor options</PlatformLink>.
 
 ```elixir
 config :sentry,
   dsn: "___PUBLIC_DSN___",
   enable_logs: true,
-  max_log_events: 50,
   before_send_log: {MyApp.Sentry, :before_send_log}
 ```
