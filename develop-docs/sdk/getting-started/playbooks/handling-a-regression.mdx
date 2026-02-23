@@ -2,14 +2,16 @@
 title: Handling a Regression
 spec_id: sdk/playbooks/handling-a-regression
 spec_version: 1.0.0
-spec_status: draft
+spec_status: candidate
 spec_depends_on:
   - id: sdk/getting-started/standards/coordination-maintenance
+    version: ">=1.0.0"
+  - id: sdk/getting-started/standards/review-ci
     version: ">=1.0.0"
 spec_changelog:
   - version: 1.0.0
     date: 2026-02-23
-    summary: Initial placeholder — detailed content to be added
+    summary: Initial playbook — regression response with severity assessment and expedited patch process
 ---
 
 <SpecRfcAlert />
@@ -18,9 +20,12 @@ spec_changelog:
 
 ## Overview
 
-This playbook guides SDK maintainers through handling regressions discovered after a release.
+This playbook guides SDK maintainers through handling regressions discovered after a release. It covers severity assessment, response options (patch release vs. rollback), communication protocols, and post-incident review. By following these steps, regressions will be resolved quickly with minimal user impact.
 
-**Note:** This playbook is currently a placeholder. Detailed content will be added in a future update.
+Related resources:
+- [Post-release monitoring](/sdk/getting-started/standards/coordination-maintenance#post-release-monitoring) — how regressions are detected
+- [Rollback procedures](/sdk/getting-started/standards/coordination-maintenance#rollback-procedures) — emergency rollback process
+- [Cutting a Release](/sdk/getting-started/playbooks/cutting-a-release) — standard release process (expedited for patches)
 
 ---
 
@@ -28,27 +33,46 @@ This playbook guides SDK maintainers through handling regressions discovered aft
 
 #### 1. Assess severity
 
-Determine if the regression is critical (requires immediate action) or can wait for the next release.
+Classify the regression using these criteria:
 
-#### 2. Decide on response
+- **Critical** (crashes, data loss, security vulnerability) → patch release **MUST** be cut within 48 hours
+- **High** (broken feature, significant performance degradation) → patch release **SHOULD** be cut within 1 week
+- **Medium** (edge case, cosmetic issue) → fix **MAY** be included in next regular release
 
-Based on severity, choose:
-- Emergency patch release
-- Rollback/yank the problematic release
-- Include fix in next scheduled release
+#### 2. For critical or high severity regressions
 
-#### 3. Follow rollback procedures if needed
+You **MUST** take one of the following actions:
 
-See [Rollback procedures](/sdk/getting-started/standards/coordination-maintenance#rollback-procedures).
+**Option A: Revert and patch**
+- Revert the problematic commit(s) on a release branch
+- Use the revert commit format: `revert: <original commit subject>`
+- Cut a patch release following [Cutting a Release](/sdk/getting-started/playbooks/cutting-a-release), expedited — you **MAY** skip non-essential gates for critical severity
 
-#### 4. Communicate
+**Option B: Yank the release**
+- If a clean revert isn't possible, yank the bad release from the package registry
+- Follow the documented rollback procedure: [Rollback procedures](/sdk/getting-started/standards/coordination-maintenance#rollback-procedures)
 
-Notify affected users and stakeholders.
+#### 3. Communicate
+
+You **MUST** post a GitHub issue describing:
+- What happened (brief explanation of the regression)
+- Which versions are affected
+- What users should do (pin to previous version, or upgrade to the patch)
+
+#### 4. Add to the quarterly retro
+
+Document the incident for the quarterly retrospective:
+- What happened
+- How it was caught (or why it wasn't caught in testing)
+- What would have prevented it
+
+This helps identify gaps in testing, review processes, or monitoring that can be improved.
 
 ## Referenced Standards
 
-- [Rollback procedures](/sdk/getting-started/standards/coordination-maintenance#rollback-procedures) — emergency rollback process
 - [Post-release monitoring](/sdk/getting-started/standards/coordination-maintenance#post-release-monitoring) — monitoring that detects regressions
+- [Rollback procedures](/sdk/getting-started/standards/coordination-maintenance#rollback-procedures) — emergency rollback process
+- [Release Gating Criteria](/sdk/getting-started/standards/review-ci#release-gating-criteria) — gates that may be expedited for critical patches
 
 ---
 
