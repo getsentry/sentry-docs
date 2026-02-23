@@ -203,7 +203,7 @@ export default async function Home() {
                 applications using{' '}
                 <a href="/product/error-monitoring/" className="text-[#8b5cf6] underline">
                   Error Monitoring
-                </a> 
+                </a>
                 ,{' '}
                 <a
                   href="/product/explore/trace-explorer/"
@@ -214,8 +214,7 @@ export default async function Home() {
                 ,{' '}
                 <a href="/product/session-replay/" className="text-[#8b5cf6] underline">
                   Session Replay
-                </a>
-                {' '}
+                </a>{' '}
                 <a href="/product/drains/" className="text-[#8b5cf6] underline">
                   Logs
                 </a>
@@ -267,8 +266,7 @@ export default async function Home() {
                 and{' '}
                 <a href="/ai/mcp/" className="text-[#8b5cf6] underline">
                   MCP server
-                </a>
-                {' '}
+                </a>{' '}
                 with your agents, and start{' '}
                 <a href="/ai/monitoring/" className="text-[#8b5cf6] underline">
                   monitoring your AI features
@@ -285,7 +283,7 @@ export default async function Home() {
                   href="/product/ai-in-sentry/seer/ai-code-review/"
                   className="text-[#8b5cf6] underline"
                 >
-                 AI code review
+                  AI code review
                 </a>{' '}
                 to review your PRs and prevent errors.
               </p>
