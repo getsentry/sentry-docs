@@ -71,7 +71,6 @@ There are two wire protocols: the `log` envelope with the Sentry Log protocol (p
 
 Related specs:
 - [Envelopes](/sdk/foundations/transport/envelopes/) — transport format
-- [Envelope Items](/sdk/foundations/transport/envelope-items/) — `log` item type constraints
 - [Attributes](/sdk/foundations/data-model/attributes) — attribute type system
 - [Tracing without Performance](/sdk/telemetry/traces/tracing-without-performance) — required for trace context
 - [Trace Origin](/sdk/telemetry/traces/trace-origin/) — origin attribute format
@@ -314,7 +313,17 @@ SDKs **MUST** report count (`log_item`) and size in bytes (`log_byte`) of discar
 
 <SpecSection id="log-envelope-item" status="candidate" since="1.1.0">
 
-The `log` envelope item contains an array of log payloads encoded as JSON, allowing multiple logs per envelope item. See the [Log Envelope Item](/sdk/foundations/transport/envelope-items/#log) documentation for envelope constraints.
+The `log` envelope item contains an array of log payloads encoded as JSON, allowing multiple logs per envelope item.
+
+An envelope **MUST** contain at most one `log` envelope item — all log entries for a flush are batched into a single item's `items` array. Logs from different traces **MAY** be mixed into the same `log` item, but if they are, the envelope **MUST NOT** include a DSC (dynamic sampling context) header.
+
+**Item Headers:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `type` | String | **REQUIRED** | **MUST** be `"log"`. |
+| `item_count` | Integer | **REQUIRED** | The number of log entries in the `items` array. **MUST** match the actual count. |
+| `content_type` | String | **REQUIRED** | **MUST** be `"application/vnd.sentry.items.log+json"`. |
 
 ```json
 {
