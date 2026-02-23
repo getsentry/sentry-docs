@@ -1,6 +1,6 @@
 develop: setup-git
 	[ -f .env.development ] || cp .env.example .env.development
-	yarn
+	pnpm install
 
 setup-git:
 ifneq (, $(shell which pre-commit))
@@ -9,7 +9,7 @@ endif
 	git config branch.autosetuprebase always
 
 test:
-	yarn test
+	pnpm test
 
 preview-api-docs:
 	bin/preview-api-docs

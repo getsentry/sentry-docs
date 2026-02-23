@@ -1,11 +1,11 @@
 'use client';
 import {useEffect} from 'react';
 
-import {debounce} from 'sentry-docs/utils';
-
 type Props = {
   activeLinkSelector: string;
 };
+
+const STORAGE_KEY = 'sidebar-scroll-top';
 
 // Helper to find the actual scrollable container
 function findScrollContainer(element: Element): Element | null {
@@ -28,6 +28,7 @@ function findScrollContainer(element: Element): Element | null {
 
 /** Make sure the active link is visible in the sidebar */
 export function ScrollActiveLink({activeLinkSelector}: Props) {
+  // Register click handler to save the scroll container's scrollTop before navigation
   useEffect(() => {
     const firstLink = document.querySelector('[data-sidebar-link]');
     if (!firstLink) {
@@ -41,28 +42,17 @@ export function ScrollActiveLink({activeLinkSelector}: Props) {
 
     const onLinkClick = (e: Event) => {
       const target = e.target as HTMLElement;
-      if (target.hasAttribute('data-sidebar-link')) {
-        const top = target.getBoundingClientRect().top;
-        sessionStorage.setItem('sidebar-link-position', top.toString());
+      if (target.closest('[data-sidebar-link]')) {
+        sessionStorage.setItem(STORAGE_KEY, scrollContainer.scrollTop.toString());
       }
     };
     scrollContainer.addEventListener('click', onLinkClick);
-    // track active link position on scroll as well
-    const onSidebarScroll = debounce(() => {
-      const activeLink = document.querySelector(activeLinkSelector);
-      if (activeLink) {
-        const top = activeLink.getBoundingClientRect().top.toString();
-        sessionStorage.setItem('sidebar-link-position', top);
-      }
-    }, 50);
-
-    scrollContainer.addEventListener('scroll', onSidebarScroll);
     return () => {
       scrollContainer.removeEventListener('click', onLinkClick);
-      scrollContainer.removeEventListener('scroll', onSidebarScroll);
     };
-  }, [activeLinkSelector]);
+  }, []);
 
+  // Restore scroll position after navigation
   useEffect(() => {
     // Use requestAnimationFrame to ensure DOM is fully rendered
     const timeoutId = requestAnimationFrame(() => {
@@ -77,15 +67,11 @@ export function ScrollActiveLink({activeLinkSelector}: Props) {
         return;
       }
 
-      const previousBoundingRectTop = sessionStorage.getItem('sidebar-link-position');
-      const currentBoundingRectTop = activeLink.getBoundingClientRect().top;
+      const storedScrollTop = sessionStorage.getItem(STORAGE_KEY);
 
-      // If we have a stored position, restore it to maintain the same visual position
-      if (previousBoundingRectTop) {
-        const scrollX = 0;
-        const scrollY =
-          scrollContainer.scrollTop + currentBoundingRectTop - +previousBoundingRectTop;
-        scrollContainer.scrollTo(scrollX, scrollY);
+      if (storedScrollTop !== null) {
+        scrollContainer.scrollTo(0, +storedScrollTop);
+        sessionStorage.removeItem(STORAGE_KEY);
       } else {
         // No stored position (direct navigation, refresh, etc.) - scroll active link into view
         // Calculate the scroll position to center the active link in the scroll container

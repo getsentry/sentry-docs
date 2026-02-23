@@ -27,12 +27,28 @@ const developerDocsRedirects = [
     destination: '/sdk/telemetry/traces/:path*',
   },
   {
+    source: '/sdk/telemetry/scopes/',
+    destination: '/sdk/foundations/data-model/scopes/',
+  },
+  {
     source: '/sdk/data-model/event-payloads/types/',
-    destination: '/sdk/data-model/event-payloads/',
+    destination: '/sdk/foundations/data-model/event-payloads/',
+  },
+  {
+    source: '/sdk/data-model/event-payloads/',
+    destination: '/sdk/foundations/data-model/event-payloads/',
+  },
+  {
+    source: '/sdk/data-model/event-payloads/:path*',
+    destination: '/sdk/foundations/data-model/event-payloads/:path*',
   },
   {
     source: '/sdk/basics/:path*',
-    destination: '/sdk/processes/basics/:path*',
+    destination: '/sdk/foundations/overview/',
+  },
+  {
+    source: '/sdk/processes/basics/:path*',
+    destination: '/sdk/foundations/overview/',
   },
   {
     source: '/sdk/data-handling/:path*',
@@ -48,11 +64,19 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/envelopes/:path*',
-    destination: '/sdk/data-model/envelopes/:path*',
+    destination: '/sdk/foundations/data-model/envelopes/:path*',
+  },
+  {
+    source: '/sdk/foundations/transport/envelopes/',
+    destination: '/sdk/foundations/data-model/envelopes/',
+  },
+  {
+    source: '/sdk/foundations/transport/envelope-items/',
+    destination: '/sdk/foundations/data-model/envelope-items/',
   },
   {
     source: '/sdk/event-payloads/:path*',
-    destination: '/sdk/data-model/event-payloads/:path*',
+    destination: '/sdk/foundations/data-model/event-payloads/:path*',
   },
   {
     source: '/sdk/hub_and_scope_refactoring/:path*',
@@ -75,32 +99,63 @@ const developerDocsRedirects = [
     destination: '/sdk/telemetry/replays/:path*',
   },
   {
+    source: '/sdk/telemetry/profiles/sample-format-v1/',
+    destination: '/sdk/telemetry/profiles/',
+  },
+  {
+    source: '/sdk/telemetry/profiles/sample-format-v2/',
+    destination: '/sdk/telemetry/profiles/',
+  },
+  {
+    source: '/sdk/telemetry/profiles/continuous-profiling-api/',
+    destination: '/sdk/telemetry/profiles/',
+  },
+  {
     source: '/sdk/telemetry/spans/batch-processor/',
-    destination: '/sdk/telemetry/telemetry-processor/batch-processor/',
+    destination: '/sdk/foundations/processing/batch-processor/',
   },
   {
     source: '/sdk/telemetry/telemetry-buffer/',
-    destination: '/sdk/telemetry/telemetry-processor/',
+    destination: '/sdk/foundations/processing/telemetry-processor/',
   },
   {
     source: '/sdk/telemetry/telemetry-buffer/backend-telemetry-buffer/',
-    destination: '/sdk/telemetry/telemetry-processor/backend-telemetry-processor/',
+    destination:
+      '/sdk/foundations/processing/telemetry-processor/backend-telemetry-processor/',
   },
   {
     source: '/sdk/telemetry/telemetry-buffer/browser-telemetry-buffer/',
-    destination: '/sdk/telemetry/telemetry-processor/browser-telemetry-processor/',
+    destination: '/sdk/foundations/processing/telemetry-processor/',
   },
   {
     source: '/sdk/telemetry/telemetry-buffer/gdx-telemetry-buffer/',
-    destination: '/sdk/telemetry/telemetry-processor/gdx-telemetry-processor/',
+    destination: '/sdk/foundations/processing/telemetry-processor/',
+  },
+  {
+    source:
+      '/sdk/foundations/processing/telemetry-processor/browser-telemetry-processor/',
+    destination: '/sdk/foundations/processing/telemetry-processor/',
+  },
+  {
+    source: '/sdk/foundations/processing/telemetry-processor/gdx-telemetry-processor/',
+    destination: '/sdk/foundations/processing/telemetry-processor/',
   },
   {
     source: '/sdk/telemetry/telemetry-buffer/mobile-telemetry-buffer/',
-    destination: '/sdk/telemetry/telemetry-processor/mobile-telemetry-processor/',
+    destination:
+      '/sdk/foundations/processing/telemetry-processor/mobile-telemetry-processor/',
   },
   {
     source: '/sdk/telemetry/telemetry-buffer/batch-processor/',
-    destination: '/sdk/telemetry/telemetry-processor/batch-processor/',
+    destination: '/sdk/foundations/processing/batch-processor/',
+  },
+  {
+    source: '/sdk/foundations/processing/telemetry-processor/batch-processor/',
+    destination: '/sdk/foundations/processing/batch-processor/',
+  },
+  {
+    source: '/sdk/telemetry/telemetry-processor/:path*',
+    destination: '/sdk/foundations/processing/telemetry-processor/:path*',
   },
   {
     source: '/sdk/setup-wizards/:path*',
@@ -132,7 +187,19 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/development-process/:path*',
-    destination: '/sdk/processes/:path*',
+    destination: '/sdk/getting-started/',
+  },
+  {
+    source: '/sdk/processes/releases/',
+    destination: '/sdk/getting-started/playbooks/setting-up-release-infrastructure/',
+  },
+  {
+    source: '/sdk/processes/triaging/',
+    destination: '/sdk/getting-started/playbooks/',
+  },
+  {
+    source: '/sdk/miscellaneous/feature-branches/',
+    destination: '/sdk/getting-started/playbooks/syncing-feature-branches/',
   },
   {
     source: '/application/ab-testing/',
@@ -1055,11 +1122,11 @@ const userDocsRedirects = [
   },
   {
     source: '/product/insights/llm-monitoring/:path*',
-    destination: '/product/insights/ai/',
+    destination: '/ai/monitoring/',
   },
   {
     source: '/product/insights/agents/:path*',
-    destination: '/product/insights/ai/agents/:path*',
+    destination: '/ai/monitoring/agents/:path*',
   },
   // AI Agent Monitoring moved to top-level feature
   {
@@ -1067,15 +1134,18 @@ const userDocsRedirects = [
     destination: '/platforms/javascript/ai-agent-monitoring/:path*',
   },
   {
-    source: '/platforms/javascript/guides/:guide/tracing/instrumentation/ai-agents-module/:path*',
+    source:
+      '/platforms/javascript/guides/:guide/tracing/instrumentation/ai-agents-module/:path*',
     destination: '/platforms/javascript/guides/:guide/ai-agent-monitoring/:path*',
   },
   {
-    source: '/platforms/javascript/tracing/instrumentation/ai-agents-module-browser/:path*',
+    source:
+      '/platforms/javascript/tracing/instrumentation/ai-agents-module-browser/:path*',
     destination: '/platforms/javascript/ai-agent-monitoring-browser/:path*',
   },
   {
-    source: '/platforms/javascript/guides/:guide/tracing/instrumentation/ai-agents-module-browser/:path*',
+    source:
+      '/platforms/javascript/guides/:guide/tracing/instrumentation/ai-agents-module-browser/:path*',
     destination: '/platforms/javascript/guides/:guide/ai-agent-monitoring-browser/',
   },
   // Browser JS doesn't have server-side AI Agent Monitoring, redirect to browser version
@@ -1358,7 +1428,7 @@ const userDocsRedirects = [
   },
   {
     source: '/product/insights/mcp/',
-    destination: '/product/insights/ai/mcp/',
+    destination: '/ai/monitoring/mcp/',
   },
   // Next.js usage -> capturing-errors rename
   {
