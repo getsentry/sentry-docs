@@ -32,15 +32,23 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/data-model/event-payloads/types/',
-    destination: '/sdk/foundations/data-model/event-payloads/',
+    destination: '/sdk/foundations/transport/event-payloads/',
   },
   {
     source: '/sdk/data-model/event-payloads/',
-    destination: '/sdk/foundations/data-model/event-payloads/',
+    destination: '/sdk/foundations/transport/event-payloads/',
   },
   {
     source: '/sdk/data-model/event-payloads/:path*',
-    destination: '/sdk/foundations/data-model/event-payloads/:path*',
+    destination: '/sdk/foundations/transport/event-payloads/:path*',
+  },
+  {
+    source: '/sdk/data-model/envelopes/',
+    destination: '/sdk/foundations/transport/envelopes/',
+  },
+  {
+    source: '/sdk/data-model/envelope-items/',
+    destination: '/sdk/foundations/transport/envelope-items/',
   },
   {
     source: '/sdk/basics/:path*',
@@ -64,19 +72,27 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/envelopes/:path*',
-    destination: '/sdk/foundations/data-model/envelopes/:path*',
+    destination: '/sdk/foundations/transport/envelopes/:path*',
   },
   {
-    source: '/sdk/foundations/transport/envelopes/',
-    destination: '/sdk/foundations/data-model/envelopes/',
+    source: '/sdk/foundations/data-model/envelopes/',
+    destination: '/sdk/foundations/transport/envelopes/',
   },
   {
-    source: '/sdk/foundations/transport/envelope-items/',
-    destination: '/sdk/foundations/data-model/envelope-items/',
+    source: '/sdk/foundations/data-model/envelope-items/',
+    destination: '/sdk/foundations/transport/envelope-items/',
+  },
+  {
+    source: '/sdk/foundations/data-model/event-payloads/',
+    destination: '/sdk/foundations/transport/event-payloads/',
+  },
+  {
+    source: '/sdk/foundations/data-model/event-payloads/:path*',
+    destination: '/sdk/foundations/transport/event-payloads/:path*',
   },
   {
     source: '/sdk/event-payloads/:path*',
-    destination: '/sdk/foundations/data-model/event-payloads/:path*',
+    destination: '/sdk/foundations/transport/event-payloads/:path*',
   },
   {
     source: '/sdk/hub_and_scope_refactoring/:path*',
@@ -109,6 +125,10 @@ const developerDocsRedirects = [
   {
     source: '/sdk/telemetry/profiles/continuous-profiling-api/',
     destination: '/sdk/telemetry/profiles/',
+  },
+  {
+    source: '/sdk/telemetry/attributes/',
+    destination: '/sdk/foundations/data-model/attributes/',
   },
   {
     source: '/sdk/telemetry/spans/batch-processor/',
