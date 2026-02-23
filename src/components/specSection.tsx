@@ -35,7 +35,7 @@ export function SpecSection({
   const badgeClass = SPEC_STATUS_BADGE[status];
 
   return (
-    <section id={id} className={`border-l-4 ${borderColor} pl-5 py-1 mb-8`}>
+    <section id={`spec-${id}`} className={`border-l-4 ${borderColor} pl-5 py-1 mb-8`}>
       <div className="flex items-center gap-2 mb-4">
         <span className={`text-xs font-medium px-2 py-0.5 rounded ${badgeClass}`}>
           {label}

@@ -1,12 +1,13 @@
 ---
 title: Logs
+description: Structured logging protocol with severity levels, trace context, and batched envelope delivery.
 spec_id: sdk/telemetry/logs
 spec_version: 1.15.0
 spec_status: stable
 spec_depends_on:
-  - id: sdk/foundations/data-model/envelopes
+  - id: sdk/foundations/transport/envelopes
     version: ">=1.0.0"
-  - id: sdk/telemetry/attributes
+  - id: sdk/foundations/data-model/attributes
     version: ">=1.0.0"
 spec_changelog:
   - version: 1.15.0
@@ -57,7 +58,6 @@ spec_changelog:
   - version: 1.0.0
     date: 2025-04-22
     summary: Initial spec — log protocol, severity model, logger API, init options, otel_log format
-sidebar_order: 3
 ---
 
 <SpecRfcAlert />
@@ -71,9 +71,8 @@ Logs allow Sentry to ingest structured log data from SDKs. SDKs send log envelop
 There are two wire protocols: the `log` envelope with the Sentry Log protocol (preferred), and the `otel_log` envelope with the OpenTelemetry Log protocol. All SDKs **MUST** send logs via the `log` envelope and Sentry Log protocol. The `otel_log` format is documented in [Appendix: `otel_log` Format](#otel_log-envelope-item-payload) for completeness.
 
 Related specs:
-- [Envelopes](/sdk/foundations/data-model/envelopes/) — transport format
-- [Envelope Items](/sdk/foundations/data-model/envelope-items/) — `log` item type constraints
-- [Attributes](/sdk/telemetry/attributes) — attribute type system
+- [Envelopes](/sdk/foundations/transport/envelopes/) — transport format
+- [Attributes](/sdk/foundations/data-model/attributes) — attribute type system
 - [Tracing without Performance](/sdk/telemetry/traces/tracing-without-performance) — required for trace context
 - [Trace Origin](/sdk/telemetry/traces/trace-origin/) — origin attribute format
 
@@ -194,9 +193,9 @@ SDKs **MAY** attach user information as attributes, guarded by `sendDefaultPii` 
 
 | Attribute | Description |
 |-----------|-------------|
-| `user.id` | The user ID. Maps to `id` in the [User](/sdk/foundations/data-model/event-payloads/user/) payload. |
-| `user.name` | The username. Maps to `username` in the [User](/sdk/foundations/data-model/event-payloads/user/) payload. |
-| `user.email` | The email address. Maps to `email` in the [User](/sdk/foundations/data-model/event-payloads/user/) payload. |
+| `user.id` | The user ID. Maps to `id` in the [User](/sdk/foundations/transport/event-payloads/user/) payload. |
+| `user.name` | The username. Maps to `username` in the [User](/sdk/foundations/transport/event-payloads/user/) payload. |
+| `user.email` | The email address. Maps to `email` in the [User](/sdk/foundations/transport/event-payloads/user/) payload. |
 
 </SpecSection>
 
@@ -208,8 +207,8 @@ By default, Relay parses the user agent attached to an incoming log envelope to 
 
 | Attribute | Description |
 |-----------|-------------|
-| `browser.name` | Display name of the browser. Maps to `name` in [Browser Context](/sdk/foundations/data-model/event-payloads/contexts/#browser-context). |
-| `browser.version` | Version string of the browser. Maps to `version` in [Browser Context](/sdk/foundations/data-model/event-payloads/contexts/#browser-context). |
+| `browser.name` | Display name of the browser. Maps to `name` in [Browser Context](/sdk/foundations/transport/event-payloads/contexts/#browser-context). |
+| `browser.version` | Version string of the browser. Maps to `version` in [Browser Context](/sdk/foundations/transport/event-payloads/contexts/#browser-context). |
 
 </SpecSection>
 
@@ -221,7 +220,7 @@ Backend SDKs (Node.js, Python, PHP, etc.) **SHOULD** attach:
 
 | Attribute | Description |
 |-----------|-------------|
-| `server.address` | The server address. Equivalent to [`server_name`](/sdk/foundations/data-model/event-payloads/#optional-attributes) on errors and transactions. |
+| `server.address` | The server address. Equivalent to [`server_name`](/sdk/foundations/transport/event-payloads/#optional-attributes) on errors and transactions. |
 
 </SpecSection>
 
@@ -233,11 +232,11 @@ Mobile, desktop, and native SDKs (Android, Apple, Electron, etc.) **SHOULD** att
 
 | Attribute | Description |
 |-----------|-------------|
-| `os.name` | OS name. Maps to `name` in [OS Context](/sdk/foundations/data-model/event-payloads/contexts/#os-context). |
-| `os.version` | OS version. Maps to `version` in [OS Context](/sdk/foundations/data-model/event-payloads/contexts/#os-context). |
-| `device.brand` | Device brand. Maps to `brand` in [Device Context](/sdk/foundations/data-model/event-payloads/contexts/#device-context). |
-| `device.model` | Device model. Maps to `model` in [Device Context](/sdk/foundations/data-model/event-payloads/contexts/#device-context). |
-| `device.family` | Device family. Maps to `family` in [Device Context](/sdk/foundations/data-model/event-payloads/contexts/#device-context). |
+| `os.name` | OS name. Maps to `name` in [OS Context](/sdk/foundations/transport/event-payloads/contexts/#os-context). |
+| `os.version` | OS version. Maps to `version` in [OS Context](/sdk/foundations/transport/event-payloads/contexts/#os-context). |
+| `device.brand` | Device brand. Maps to `brand` in [Device Context](/sdk/foundations/transport/event-payloads/contexts/#device-context). |
+| `device.model` | Device model. Maps to `model` in [Device Context](/sdk/foundations/transport/event-payloads/contexts/#device-context). |
+| `device.family` | Device family. Maps to `family` in [Device Context](/sdk/foundations/transport/event-payloads/contexts/#device-context). |
 
 </SpecSection>
 
@@ -315,7 +314,17 @@ SDKs **MUST** report count (`log_item`) and size in bytes (`log_byte`) of discar
 
 <SpecSection id="log-envelope-item" status="candidate" since="1.1.0">
 
-The `log` envelope item contains an array of log payloads encoded as JSON, allowing multiple logs per envelope item. See the [Log Envelope Item](/sdk/foundations/data-model/envelope-items/#log) documentation for envelope constraints.
+The `log` envelope item contains an array of log payloads encoded as JSON, allowing multiple logs per envelope item.
+
+An envelope **MUST** contain at most one `log` envelope item — all log entries for a flush are batched into a single item's `items` array. Logs from different traces **MAY** be mixed into the same `log` item, but if they are, the envelope **MUST NOT** include a DSC (dynamic sampling context) header.
+
+**Item Headers:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `type` | String | **REQUIRED** | **MUST** be `"log"`. |
+| `item_count` | Integer | **REQUIRED** | The number of log entries in the `items` array. **MUST** match the actual count. |
+| `content_type` | String | **REQUIRED** | **MUST** be `"application/vnd.sentry.items.log+json"`. |
 
 ```json
 {
@@ -365,7 +374,7 @@ Each log in the `items` array is a JSON object:
 | `body` | String | **REQUIRED** | 1.0.0 | The log body/message. |
 | `span_id` | String | **OPTIONAL** | 1.11.0 | Span ID of the active span when the log was collected, as 8 random bytes encoded as a hex string (16 characters). |
 | `severity_number` | Integer | **OPTIONAL** | 1.0.0 | Severity number per [Severity Levels](#severity-levels). Inferred from `level` unless explicitly set. |
-| `attributes` | Object | **OPTIONAL** | 1.0.0 | Key-value pairs of arbitrary data. Values **MUST** declare their type. See [Attributes](/sdk/telemetry/attributes). |
+| `attributes` | Object | **OPTIONAL** | 1.0.0 | Key-value pairs of arbitrary data. Values **MUST** declare their type. See [Attributes](/sdk/foundations/data-model/attributes). |
 
 </SpecSection>
 

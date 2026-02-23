@@ -1,0 +1,127 @@
+---
+title: Aligning Cross-SDK Changes
+spec_id: sdk/playbooks/aligning-cross-sdk-changes
+spec_version: 1.0.0
+spec_status: candidate
+spec_depends_on:
+  - id: sdk/getting-started/standards/coordination-maintenance
+    version: ">=1.0.0"
+  - id: sdk/getting-started/standards/api-architecture
+    version: ">=1.0.0"
+spec_changelog:
+  - version: 1.0.0
+    date: 2026-02-23
+    summary: Initial playbook — cross-SDK coordination with Linear sub-initiatives, review periods, and documentation coordination
+---
+
+<SpecRfcAlert />
+
+<SpecMeta />
+
+## Overview
+
+This playbook guides SDK teams through coordinating changes that affect multiple Sentry SDKs. It covers proposal writing, cross-team review, semantic conventions coordination, sequencing decisions, progress tracking, and documentation coordination. By following these steps, multi-SDK rollouts will be coordinated, predictable, and minimize surprises for users.
+
+Related resources:
+- [Cross-SDK Coordination Protocol](/sdk/getting-started/standards/coordination-maintenance#cross-sdk-coordination-protocol) — coordination requirements and process
+- [Semantic conventions process](/sdk/getting-started/standards/api-architecture#semantic-conventions-process) — process for new attributes
+- [Deprecating an API](/sdk/getting-started/playbooks/deprecating-an-api) — related playbook for API changes
+
+---
+
+## Steps
+
+#### 1. Write a proposal
+
+You **MUST** create an RFC or Linear initiative describing:
+- What's changing and why
+- Which SDKs are affected
+- Proposed rollout order
+- Timeline
+- Open questions
+
+#### 2. Allow cross-SDK review period
+
+You **MUST** allow a minimum of 1 week for all affected SDK teams to review and comment on the proposal. This ensures all teams have time to:
+- Assess implementation complexity for their SDK
+- Identify platform-specific concerns
+- Propose alternative approaches if needed
+
+#### 3. Land semantic conventions first (if needed)
+
+If the change involves new attributes, you **MUST** land the sentry-conventions PR first ([Semantic conventions process](/sdk/getting-started/standards/api-architecture#semantic-conventions-process)).
+
+After the conventions PR is approved, you **MUST** wait 3 business days before implementing in any SDK. This grace period allows teams to review the final conventions and raise concerns.
+
+#### 4. Agree on sequencing
+
+Choose a rollout strategy:
+
+**Option A: By adoption/maturity (Recommended)**
+- Lower risk (learn from early implementations)
+- Longer timeline
+- Best for complex features or experimental changes
+- This is the default approach for most cross-SDK changes
+
+**Option B: All-at-once**
+- Clean story for users (feature arrives everywhere simultaneously)
+- Harder to coordinate across teams
+- Best for critical security fixes or simple changes
+
+The choice **SHOULD** be documented in the proposal and agreed upon by all teams.
+
+#### 5. Create a Linear sub-initiative for SDK alignment
+
+Any change or enhancement requiring alignment across multiple SDKs **MUST** be tracked as a sub-initiative in Linear, even if the change is small.
+
+You **SHOULD** use the [`sentry-sdk-skills:linear-initiative`](https://github.com/getsentry/sdk-skills?tab=readme-ov-file#available-skills) skill to automate the creation of the Linear sub-initiative and per-SDK projects.
+
+If not using the skill, you **MUST** manually:
+- Create a sub-initiative under the [Great Data Capture - SDKs](https://linear.app/getsentry/initiative/great-data-capture-sdks-650e07004f79/overview) initiative in Linear
+- For each SDK team involved, create a separate **project** under this sub-initiative
+- You **MUST NOT** use a single project with multiple issues, as the project is only completed once **all** SDK teams finish their work
+- Each project **MUST** contain at least one issue with the **same title and description** as the project
+- Additional issues **MAY** be added as needed but **SHOULD** remain within the scope of the alignment effort
+
+This approach ensures accurate per-team progress tracking while maintaining visibility of the overall alignment effort.
+
+##### If the change affects SDK users: Create a public issue
+
+If the change or alignment is of interest to SDK users or customers, you **MAY** create one public GitHub issue to track community interest and questions.
+
+This public issue **MAY** be omitted for changes that are:
+- Too trivial to warrant public communication
+- Should not be disclosed to customers or the public yet
+- Internal implementation details without user-facing impact
+
+#### 6. Implement in each SDK independently
+
+Each team **MUST** follow their own PR process ([Opening a PR](/sdk/getting-started/playbooks/opening-a-pr), [Reviewing a PR](/sdk/getting-started/playbooks/reviewing-a-pr)). The Linear projects provide visibility, but each SDK maintains its own standards and timeline.
+
+#### 7. Coordinate documentation
+
+Documentation PRs **SHOULD** ship together or in clear sequence — not piecemeal. Users **MUST NOT** see docs for a change that hasn't reached their SDK yet.
+
+Options:
+- Hold all docs PRs until all SDKs ship
+- Use platform-specific content that only appears when the SDK supports it
+- Clearly label which SDK versions support the feature
+
+#### 8. Conduct async retro after full rollout (optional)
+
+After all SDKs have shipped, you **SHOULD** conduct an async retrospective documenting:
+- What worked well
+- What to improve for next time
+- Unexpected challenges
+- Process refinements
+
+This helps improve future cross-SDK coordination.
+
+## Referenced Standards
+
+- [Cross-SDK Coordination Protocol](/sdk/getting-started/standards/coordination-maintenance#cross-sdk-coordination-protocol) — coordination process and requirements
+- [Semantic conventions process](/sdk/getting-started/standards/api-architecture#semantic-conventions-process) — process for landing new attribute conventions
+
+---
+
+<SpecChangelog />
