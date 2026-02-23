@@ -211,14 +211,11 @@ Write events to disk before attempting to send, so that they can be retried in t
 
 When SDKs receive an `HTTP 2xx` status code response from Sentry, they **MUST** consider it as a successful send.
 
-If Sentry returns an `HTTP 4xx` or `HTTP 5xx` status code, SDKs:
-
-- **MUST** discard the envelope
-- **MUST** record a [client report](/sdk/telemetry/client-reports) with the discard reason `send_error`, except for an `HTTP 429` response, see below.
+If Sentry returns an `HTTP 4xx` or `HTTP 5xx` status code, SDKs **MUST** discard the envelope and record a [client report](/sdk/telemetry/client-reports/#network-failure-recording) as specified in the client reports spec.
 
 For an [`HTTP 413 Content Too Large`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/413) response, SDKs:
 
-* **MUST** discard the envelope and record a [client report](/sdk/telemetry/client-reports) with the discard reason `send_error`. Upstream usually records a [client report](/sdk/telemetry/client-reports) for oversized envelopes, but not always. Double-counting is preferable to not counting, so users are aware of all dropped envelopes. Since client reports are not expected to be fully accurate, we accept this tradeoff for now (Jan 7th 2026). In the future, we may add error responses to indicate when SDKs should record a client report.
+* **MUST** discard the envelope and record a [client report](/sdk/telemetry/client-reports/#network-failure-recording).
 * **MUST NOT** retry sending the envelope.
 * **SHOULD** log an error, informing users that the envelope was discarded due to size limits.
 * **MAY** add information from the response body to the logged error. If doing so, SDKs **MUST** be aware that Relay can change or remove information in the response body for an `HTTP 413` at any time without notice.
@@ -226,7 +223,7 @@ For an [`HTTP 413 Content Too Large`](https://developer.mozilla.org/en-US/docs/W
 For an [`HTTP 429 Too Many Requests`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429) response, SDKs:
 
 - **MUST** respect the [rate limiting rules](/sdk/expected-features/rate-limiting/), such as correctly parsing the retry-header.
-- **MUST** discard the envelope, but **MUST NOT** record a [client report](/sdk/telemetry/client-reports), because the upstream already does this. Doing this would double-count client reports for discarded envelopes.
+- **MUST** discard the envelope, but **MUST NOT** record a [client report](/sdk/telemetry/client-reports/#network-failure-recording), because the upstream already does this.
 - **MUST NOT** retry sending the envelope.
 
 SDKs **MAY** retry sending the envelope when a network error occurs, such as:
@@ -235,7 +232,9 @@ SDKs **MAY** retry sending the envelope when a network error occurs, such as:
 * DSN resolution failure
 * Connection reset by peer
 
-When other failures occur, like those caused by processing the file in the SDK itself, SDKs **MUST** discard the envelope and record a [client report](/sdk/telemetry/client-reports) with the discard reason `internal_sdk_error`. Otherwise, the SDK might end up in an endless retry loop.
+When other failures occur, like those caused by processing the file in the SDK itself, SDKs **MUST** discard the envelope and record a [client report](/sdk/telemetry/client-reports/#network-failure-recording) with the discard reason `internal_sdk_error`. Otherwise, the SDK might end up in an endless retry loop.
+
+See the [Client Reports — Network Failure Recording](/sdk/telemetry/client-reports/#network-failure-recording) spec for the full set of client report recording requirements for each HTTP status code.
 
 
 #### Additional capabilities
