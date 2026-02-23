@@ -1,0 +1,83 @@
+---
+title: Deprecating an API
+spec_id: sdk/playbooks/deprecating-an-api
+spec_version: 1.0.0
+spec_status: candidate
+spec_depends_on:
+  - id: sdk/getting-started/standards/api-architecture
+    version: ">=1.0.0"
+  - id: sdk/getting-started/standards/repository-docs
+    version: ">=1.0.0"
+  - id: sdk/getting-started/standards/coordination-maintenance
+    version: ">=1.0.0"
+spec_changelog:
+  - version: 1.0.0
+    date: 2026-02-23
+    summary: Initial playbook — API deprecation lifecycle with migration guides and multi-SDK coordination
+---
+
+<SpecRfcAlert />
+
+<SpecMeta />
+
+## Overview
+
+This playbook guides SDK maintainers through deprecating an API in a way that minimizes user disruption. It covers deprecation announcements, migration guide creation, maintenance periods, and eventual removal. By following these steps, users will have clear migration paths and sufficient time to adapt.
+
+Related resources:
+- [Deprecation lifecycle](/sdk/getting-started/standards/api-architecture#deprecation-lifecycle) — deprecation timeline and requirements
+- [Breaking change process](/sdk/getting-started/standards/api-architecture#breaking-change-process) — process for eventual API removal
+- [Cross-SDK Rollout](/sdk/getting-started/playbooks/cross-sdk-rollout) — coordinating deprecations across multiple SDKs
+
+---
+
+## Steps
+
+#### 1. If this is a multi-SDK deprecation
+
+If the deprecation affects multiple Sentry SDKs, you **MUST** follow the [Cross-SDK Rollout](/sdk/getting-started/playbooks/cross-sdk-rollout) process first to coordinate timing and approach across SDK teams.
+
+#### 2. Announce in a minor release
+
+In the minor release where the API is deprecated, you **MUST**:
+
+- Add a deprecation warning in code that includes:
+  - What to use instead (replacement API)
+  - A code example of the migration
+  - A link to documentation
+- Add a changelog entry explaining the deprecation and the migration path
+- Open a docs PR with a migration guide containing copy-pastable before/after examples ([Documentation-with-Code](/sdk/getting-started/standards/repository-docs#documentation-with-code))
+- Test the migration guide by having an AI tool follow it — if the tool can't complete the migration, rewrite the guide
+
+#### 3. Maintain the deprecated API
+
+The deprecated API **MUST** stay functional for at least one full minor release cycle. Tests for the deprecated code path **MUST** remain and continue to pass during this period.
+
+This gives users time to migrate without breaking their applications immediately.
+
+#### 4. Remove in the next major version only
+
+When removing the deprecated API in a major version, you **MUST**:
+
+- Remove the API and its tests
+- Include `BREAKING CHANGE:` in the commit footer ([Breaking change process](/sdk/getting-started/standards/api-architecture#breaking-change-process))
+- Update the migration guide to reference the major version that removes it
+
+#### 5. Communicate
+
+You **MUST** provide:
+- Changelog entry documenting the removal
+- Docs update referencing the version where removal occurred
+
+For high-impact deprecations, you **SHOULD** consider a blog post or announcement to reach users who may not regularly check changelogs.
+
+## Referenced Standards
+
+- [Deprecation lifecycle](/sdk/getting-started/standards/api-architecture#deprecation-lifecycle) — deprecation timeline requirements
+- [Breaking change process](/sdk/getting-started/standards/api-architecture#breaking-change-process) — process for API removal in major versions
+- [Documentation-with-Code](/sdk/getting-started/standards/repository-docs#documentation-with-code) — copy-pastable migration examples requirement
+- [Cross-SDK Coordination Protocol](/sdk/getting-started/standards/coordination-maintenance#cross-sdk-coordination-protocol) — coordinating multi-SDK changes
+
+---
+
+<SpecChangelog />
