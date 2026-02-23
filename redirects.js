@@ -111,6 +111,10 @@ const developerDocsRedirects = [
     destination: '/sdk/telemetry/profiles/',
   },
   {
+    source: '/sdk/telemetry/attributes/',
+    destination: '/sdk/foundations/data-model/attributes/',
+  },
+  {
     source: '/sdk/telemetry/spans/batch-processor/',
     destination: '/sdk/foundations/processing/batch-processor/',
   },
