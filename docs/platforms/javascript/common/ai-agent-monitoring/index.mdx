@@ -269,6 +269,78 @@ await Sentry.startSpan(
   <Include name="tracing/ai-agents-module/invoke-agent-span" />
 </Expandable>
 
+### Output Chunk Span
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+This span represents a single output chunk from an AI agent's streaming response. When an agent produces output as a stream of messages, each logical message becomes one output chunk span. For streamed messages that arrive incrementally, all events are accumulated into a single chunk span.
+
+Output chunk spans are always children of an Invoke Agent span.
+
+**Key attributes:**
+- `gen_ai.agent.name` — The agent's name
+- `gen_ai.response.model` — The model that produced the chunk
+- `gen_ai.response.streaming` — Whether the chunk was streamed
+- `gen_ai.usage.input_tokens` / `output_tokens` — Token counts for this chunk
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript
+await Sentry.startSpan(
+  {
+    op: "gen_ai.invoke_agent",
+    name: "invoke_agent Weather Agent",
+    attributes: {
+      "gen_ai.request.model": "claude-sonnet-4-20250514",
+      "gen_ai.agent.name": "Weather Agent",
+    },
+  },
+  async (parentSpan) => {
+    const stream = myAgent.stream();
+
+    for await (const message of stream) {
+      await Sentry.startSpan(
+        {
+          op: "gen_ai.output_chunk",
+          name: "output_chunk Weather Agent",
+          attributes: {
+            "gen_ai.operation.name": "output_chunk",
+            "gen_ai.agent.name": "Weather Agent",
+            "gen_ai.response.model": message.model,
+            "gen_ai.response.streaming": true,
+          },
+        },
+        (chunkSpan) => {
+          chunkSpan.setAttribute(
+            "gen_ai.output.messages",
+            JSON.stringify([{ role: message.role, parts: [{ type: "text", content: message.content }] }])
+          );
+          if (message.usage) {
+            chunkSpan.setAttribute("gen_ai.usage.input_tokens", message.usage.inputTokens);
+            chunkSpan.setAttribute("gen_ai.usage.output_tokens", message.usage.outputTokens);
+          }
+        }
+      );
+    }
+
+    // Set aggregated token usage on the parent span (not on chunks)
+    parentSpan.setAttribute("gen_ai.usage.input_tokens", totalInputTokens);
+    parentSpan.setAttribute("gen_ai.usage.output_tokens", totalOutputTokens);
+  }
+);
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+<Expandable title="Output Chunk span attributes">
+  <Include name="tracing/ai-agents-module/output-chunk-span" />
+</Expandable>
+
 ### Execute Tool Span
 
 <SplitLayout>

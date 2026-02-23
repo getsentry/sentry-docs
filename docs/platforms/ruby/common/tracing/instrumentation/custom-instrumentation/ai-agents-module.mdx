@@ -71,6 +71,47 @@ Sentry.with_child_span(op: 'gen_ai.invoke_agent', description: 'invoke_agent Wea
 end
 ```
 
+### Output Chunk Span
+
+This span represents a single output chunk from an AI agent's streaming response. Each logical message produced by the agent (assistant message, tool use message, etc.) becomes one output chunk span. For streamed messages that arrive incrementally, all events are accumulated into a single chunk span.
+
+Output chunk spans are always children of an [Invoke Agent Span](#invoke-agent-span).
+
+<Expandable title="Output Chunk span attributes">
+  <Include name="tracing/ai-agents-module/output-chunk-span" />
+</Expandable>
+
+#### Example Output Chunk Span
+
+```ruby
+require 'json'
+
+Sentry.with_child_span(op: 'gen_ai.invoke_agent', description: 'invoke_agent Weather Agent') do |parent_span|
+  parent_span.set_data('gen_ai.request.model', 'claude-sonnet-4-20250514')
+  parent_span.set_data('gen_ai.agent.name', 'Weather Agent')
+
+  my_agent.stream.each do |message|
+    Sentry.with_child_span(op: 'gen_ai.output_chunk', description: 'output_chunk Weather Agent') do |chunk_span|
+      chunk_span.set_data('gen_ai.operation.name', 'output_chunk')
+      chunk_span.set_data('gen_ai.agent.name', 'Weather Agent')
+      chunk_span.set_data('gen_ai.response.model', message.model)
+      chunk_span.set_data('gen_ai.response.streaming', true)
+      chunk_span.set_data('gen_ai.output.messages', [
+        { role: message.role, parts: [{ type: 'text', content: message.content }] }
+      ].to_json)
+      if message.respond_to?(:usage)
+        chunk_span.set_data('gen_ai.usage.input_tokens', message.usage.input_tokens)
+        chunk_span.set_data('gen_ai.usage.output_tokens', message.usage.output_tokens)
+      end
+    end
+  end
+
+  # Set aggregated token usage on the parent span
+  parent_span.set_data('gen_ai.usage.input_tokens', total_input_tokens)
+  parent_span.set_data('gen_ai.usage.output_tokens', total_output_tokens)
+end
+```
+
 ### Execute Tool Span
 
 This span represents the execution of a tool or function that was requested by an AI model, including the input arguments and resulting output.
