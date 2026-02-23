@@ -185,9 +185,10 @@ Additional attributes on the span:
 | `gen_ai.output.messages`     | string  | optional          | Stringified array of message objects representing the chunk's content. **[0]**, **[1]**        | `'[{"role": "assistant", "parts": [{"type": "text", "content": "..."}]}]'`   |
 | `gen_ai.response.model`      | string  | optional          | The concrete response model.                                                                   | `"claude-sonnet-4-20250514"`                                            |
 | `gen_ai.response.id`         | string  | optional          | Unique identifier for the message.                                                             | `"msg_abc123"`                                                               |
-| `gen_ai.response.streaming`  | boolean | optional          | Whether this chunk was part of a streamed response.                                            | `true`                                                                       |
-| `gen_ai.response.text`       | string  | optional          | **Deprecated.** Use `gen_ai.output.messages` instead. The accumulated text of the chunk.       | `"The weather in Paris is rainy"`                                            |
-| `gen_ai.response.tool_calls` | string  | optional          | **Deprecated.** Use `gen_ai.output.messages` instead. Tool calls from the chunk. **[0]**       | `'[{"name": "get_weather", "type": "function_call", "arguments": "..."}]'`   |
+| `gen_ai.response.streaming`      | boolean | optional          | Whether this chunk was part of a streamed response.                                            | `true`                                                                       |
+| `gen_ai.response.finish_reasons` | string  | optional          | The reason why the model stopped generating. Only present on streamed chunks.                  | `"end_turn"`                                                                 |
+| `gen_ai.response.text`           | string  | optional          | **Deprecated.** Use `gen_ai.output.messages` instead. The accumulated text of the chunk.       | `"The weather in Paris is rainy"`                                            |
+| `gen_ai.response.tool_calls`     | string  | optional          | **Deprecated.** Use `gen_ai.output.messages` instead. Tool calls from the chunk. **[0]**       | `'[{"name": "get_weather", "type": "function_call", "arguments": "..."}]'`   |
 
 ### Token Usage Data
 
@@ -206,6 +207,27 @@ Additional attributes on the span:
 - **[1]:** Messages use the format `{role, parts}` where `parts` is an array of typed objects: `[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]`. The `role` must be `"user"`, `"assistant"`, `"tool"`, or `"system"`. For backwards compatibility, the legacy format `{role, content}` (e.g. `[{"role": "user", "content": "..."}]`) is also accepted.
 - **[2]:** Cached tokens are a subset of input tokens; `gen_ai.usage.input_tokens` includes `gen_ai.usage.input_tokens.cached`.
 - **[3]:** Reasoning tokens are a subset of output tokens; `gen_ai.usage.output_tokens` includes `gen_ai.usage.output_tokens.reasoning`.
+
+### Attribute Availability
+
+Not all attributes appear on every output chunk span. Which attributes are present depends on the message type and the integration's streaming configuration:
+
+**Streamed chunks** (from partial/incremental messages, e.g. `SDKPartialAssistantMessage` in the Claude Agent SDK):
+- `gen_ai.response.streaming`: `true`
+- `gen_ai.usage.*`: Per-chunk token usage from stream events
+- `gen_ai.response.text` / `gen_ai.response.tool_calls`: Accumulated content deltas
+- `gen_ai.response.finish_reasons`: Why the model stopped generating
+
+**Complete message chunks** (e.g. `SDKAssistantMessage`, `SDKUserMessage`):
+- `gen_ai.output.messages`: Full message content
+- `gen_ai.response.model`: Model used
+- `gen_ai.response.streaming`: `false` or absent
+- Token usage (`gen_ai.usage.*`) MAY be absent; in this case, token usage is only available on the parent `gen_ai.invoke_agent` span (aggregated from the final result)
+
+**Result messages** (e.g. `SDKResultMessage` in the Claude Agent SDK):
+- These SHOULD NOT create a chunk span. Instead, their data (total token usage, cost, duration) SHOULD be set on the parent `gen_ai.invoke_agent` span.
+
+SDK implementations SHOULD document which streaming modes they support and how attribute availability changes based on configuration.
 
 ## Execute Tool Span
 

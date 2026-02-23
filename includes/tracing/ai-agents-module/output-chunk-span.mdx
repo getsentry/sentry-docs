@@ -16,6 +16,7 @@ Additional attributes on the span:
 | `gen_ai.response.model`               | string  | optional          | The concrete response model.                                                         | `"claude-sonnet-4-20250514"`                                                                  |
 | `gen_ai.response.id`                  | string  | optional          | Unique identifier for the message.                                                   | `"msg_abc123"`                                                                                     |
 | `gen_ai.response.streaming`           | boolean | optional          | Whether this chunk was part of a streamed response.                                  | `true`                                                                                             |
+| `gen_ai.response.finish_reasons`      | string  | optional          | The reason why the model stopped generating.                                         | `"end_turn"`                                                                                       |
 | `gen_ai.usage.input_tokens`           | int     | optional          | The number of input tokens used for this chunk.                                      | `60`                                                                                               |
 | `gen_ai.usage.output_tokens`          | int     | optional          | The number of output tokens used for this chunk.                                     | `130`                                                                                              |
 | `gen_ai.usage.total_tokens`           | int     | optional          | The sum of input and output tokens.                                                  | `190`                                                                                              |
@@ -24,3 +25,14 @@ Additional attributes on the span:
 - **[1]:** Each message item uses the format `{role:"", parts:[...]}`. The `role` can be `"user"`, `"assistant"`, `"tool"`, or `"system"`.
 
 **Note:** Cost attributes (`gen_ai.cost.*`) should NOT be set on output chunk spans. Cost is only tracked on the parent Invoke Agent span.
+
+<Alert level="info" title="Not all attributes appear on every chunk span">
+
+The attributes present on an output chunk span depend on the message type and the integration's streaming configuration:
+
+- **Streamed chunks** (e.g., from partial/incremental messages) include `gen_ai.response.streaming: true`, per-chunk token usage (`gen_ai.usage.*`), accumulated content deltas, and `gen_ai.response.finish_reasons`.
+- **Complete message chunks** (e.g., full assistant or user messages) include `gen_ai.output.messages` with the full message content and `gen_ai.response.model`, but may not have per-chunk token usage or streaming attributes. In this case, token usage is only available on the parent `gen_ai.invoke_agent` span.
+
+Check your integration's documentation for details on how to enable streaming events for richer per-chunk data.
+
+</Alert>
