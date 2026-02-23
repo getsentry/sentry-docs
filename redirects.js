@@ -43,6 +43,14 @@ const developerDocsRedirects = [
     destination: '/sdk/foundations/transport/event-payloads/:path*',
   },
   {
+    source: '/sdk/data-model/envelopes/',
+    destination: '/sdk/foundations/transport/envelopes/',
+  },
+  {
+    source: '/sdk/data-model/envelope-items/',
+    destination: '/sdk/foundations/transport/envelope-items/',
+  },
+  {
     source: '/sdk/basics/:path*',
     destination: '/sdk/foundations/overview/',
   },
