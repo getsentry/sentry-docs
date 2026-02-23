@@ -55,7 +55,6 @@ The envelope item type is named `trace_metric` for internal usage to avoid namin
 
 Related specs:
 - [Envelopes](/sdk/foundations/transport/envelopes/) — transport format
-- [Envelope Items](/sdk/foundations/transport/envelope-items/) — `trace_metric` item type constraints
 - [Attributes](/sdk/foundations/data-model/attributes) — attribute types and structure
 - [Tracing without Performance](/sdk/telemetry/traces/tracing-without-performance/) — required before adding metrics support
 - [Telemetry Processor](/sdk/foundations/processing/telemetry-processor/) — buffer data forwarding scenarios
@@ -214,6 +213,16 @@ If `debug` is set to `true` in SDK init, calls to the Sentry metrics API **SHOUL
 
 Metrics are sent as a `trace_metric` envelope item containing a JSON object with an `items` array. See the [Examples](#full-trace_metric-envelope) section for a complete envelope.
 
+An envelope **MUST** contain at most one `trace_metric` envelope item — all metrics for a flush are batched into a single item's `items` array. Metrics from different traces **MAY** be mixed into the same `trace_metric` item, but if they are, the envelope **MUST NOT** include a DSC (dynamic sampling context) header.
+
+**Item Headers:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `type` | String | **REQUIRED** | **MUST** be `"trace_metric"`. |
+| `item_count` | Number | **REQUIRED** | Number of metric items in the `items` array. **MUST** match the actual count. |
+| `content_type` | String | **REQUIRED** | **MUST** be `"application/vnd.sentry.items.trace-metric+json"`. |
+
 ```json
 {
 	"type": "trace_metric",
@@ -224,12 +233,6 @@ Metrics are sent as a `trace_metric` envelope item containing a JSON object with
 	"items": [{..metric..}, {..metric..}, {..metric..}]
 }
 ```
-
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `type` | String | **REQUIRED** | **MUST** be `"trace_metric"`. |
-| `item_count` | Number | **REQUIRED** | Number of metric items in the `items` array. |
-| `content_type` | String | **REQUIRED** | **MUST** be `"application/vnd.sentry.items.trace-metric+json"`. |
 
 </SpecSection>
 
