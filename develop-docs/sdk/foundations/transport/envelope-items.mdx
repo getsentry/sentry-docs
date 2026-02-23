@@ -14,7 +14,7 @@ The type of an Item is declared in the `type` header, as well as the payload
 size in `length`. See Serialization Format for a list of common Item headers.
 The headers described in this section are **in addition to the common headers**.
 
-### Event
+## Event
 
 Item type `"event"`. This Item contains an error or default [event payload](/sdk/foundations/transport/event-payloads/)
 encoded in JSON.
@@ -37,7 +37,7 @@ between the Envelope and payload, the Envelope header takes precedence.
 
 _None_
 
-### Transaction
+## Transaction
 
 Item type `"transaction"`. This Item contains a transaction payload encoded
 in JSON.
@@ -57,11 +57,17 @@ ahead of time and set it at least in the Envelope headers. If the identifier
 mismatches between the Envelope and payload, the Envelope header takes
 precedence.
 
+
+`trace`
+
+: **Dynamic sampling context, optional** Transaction events can optionally provide a
+[Dynamic sampling context](/sdk/telemetry/traces/dynamic-sampling-context/).
+
 **Additional Item Headers:**
 
 _None_
 
-### Attachment
+## Attachment
 
 Item type `"attachment"`. This Item contains a raw payload of an attachment
 file. It is always associated to an event or transaction.
@@ -113,7 +119,7 @@ file. It is always associated to an event or transaction.
 
 : _String, optional._ The content type of the attachment payload. Any [MIME type](https://www.iana.org/assignments/media-types/media-types.xhtml) may be used; the default is `application/octet-stream`.
 
-### Trace Attachment
+## Trace Attachment
 
 <Alert level="warning">
 Trace attachments are an experimental feature that is still under development.
@@ -123,7 +129,9 @@ Item type `"attachment"` with content type `"application/vnd.sentry.trace-attach
 
 **Envelope Headers:**
 
-- `trace` (optional): If the envelope containing the trace attachment has a [Dynamic Sampling Context](/sdk/telemetry/traces/dynamic-sampling-context), it will be subject to trace-based dynamic sampling rules, and potentially dropped.
+`trace`
+
+: **object (optional)** If the envelope containing the trace attachment has a [Dynamic Sampling Context](/sdk/telemetry/traces/dynamic-sampling-context), it will be subject to trace-based dynamic sampling rules, and potentially dropped.
 
 **Item Headers:**
 
@@ -138,7 +146,9 @@ The trace attachment item header must contain the following properties:
 }
 ```
 
-- `meta_length` is the size of the metadata portion of the payload in bytes (see item description below).
+`meta_length`
+
+: **integer, optional** is the size of the metadata portion of the payload in bytes (see item description below).
 
 
 **Item Payload:**
@@ -169,7 +179,7 @@ The trace attachment item payload consists of a JSON object containing metadata 
 | `attributes` | object | No | arbitrary attributes that will be queryable on the attachment trace item, similar to spans, logs, and trace metrics. |
 
 
-### Session
+## Session
 
 Item type `"session"` contains a single session initialization or update to an
 existing session for Release Health.
@@ -186,7 +196,7 @@ details.
 
 _None_
 
-### Sessions
+## Sessions
 
 Item type `"sessions"` contains buckets of pre-aggregated session counts.
 
@@ -203,7 +213,7 @@ details.
 _None_
 
 
-### Replay Event
+## Replay Event
 
 Item type `"replay_event"` contains a replay payload encoded in JSON.
 
@@ -223,7 +233,7 @@ _None_
 
 _None_
 
-### Replay Recording
+## Replay Recording
 
 Item type `"replay_recording"` contains a replay recording payload encoded in JSON _or_ a gzipped JSON.
 
@@ -245,7 +255,7 @@ _None_
 
 : **integer, required.** The size of the Replay recording payload
 
-### Profile
+## Profile
 
 Item type `"profile"`. This Item contains a profile payload encoded
 in JSON.
@@ -263,7 +273,7 @@ _None_
 
 _None_
 
-### Profile Chunk
+## Profile Chunk
 
 Item type `"profile_chunk"`. This Item contains a profile_chunk
 (<Link to="/sdk/telemetry/profiles/">profile sample format V2</Link>) payload encoded
@@ -283,7 +293,7 @@ _None_
 
 : **String, required.** The platform of the profiled application. This item header is used for rate limiting and categorization. It must match the `platform` in the payload. the Examples: `"javascript"`, `"node"`, `"python"`, `"cocoa"`, etc.
 
-### Check-Ins
+## Check-Ins
 
 Item type `"check_in"` contains a check-in payload encoded as JSON.
 
@@ -303,7 +313,7 @@ _None_
 
 _None_
 
-### Log
+## Log
 
 Item type `"log"` contains an array of log payloads encoded as JSON. This allows for multiple log payloads to be sent in a single envelope item.
 
@@ -345,7 +355,7 @@ _None_
 
 : **string, required.** The content type of the log entries. Must be `application/vnd.sentry.items.log+json`.
 
-### Otel Logs
+## Otel Logs
 
 Item type `"otel_log"` contains an OpenTelemetry Logs payload encoded as JSON. Multiple Otel log envelope items can be sent in a single envelope.
 
@@ -364,11 +374,11 @@ _None_
 
 _None_
 
-### Spans
+## Spans
 
 For Version 2 of the spans protocol, see <Link to="/sdk/telemetry/spans/span-protocol">Span Protocol</Link>.
 
-### Trace Metric
+## Trace Metric
 
 Item type `"trace_metric"` contains an array of metric payloads encoded as JSON. This allows for multiple metric payloads to be sent in a single envelope item.
 
@@ -410,7 +420,7 @@ _None_
 
 : **string, required.** The content type of the metric entries. Must be `application/vnd.sentry.items.trace-metric+json`.
 
-### Reserved Types
+## Reserved Types
 
 Reserved types may not be written by any implementation. They are reserved for
 future or internal use. This is the exhaustive list of reserved Item types:
