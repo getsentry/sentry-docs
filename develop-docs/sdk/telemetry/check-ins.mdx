@@ -1,12 +1,13 @@
 ---
-title: Cron Check-Ins
+title: Check-Ins
+description: Cron monitoring protocol for reporting job start, success, and failure via check-in envelopes.
 spec_id: sdk/telemetry/check-ins
 spec_version: 1.6.0
 spec_status: stable
 spec_platforms:
   - backend
 spec_depends_on:
-  - id: sdk/foundations/data-model/envelopes
+  - id: sdk/foundations/transport/envelopes
     version: ">=1.0.0"
 spec_changelog:
   - version: 1.6.0
@@ -15,22 +16,33 @@ spec_changelog:
   - version: 1.5.0
     date: 2024-04-24
     summary: Added owner field to monitor_config
+  - version: 1.4.1
+    date: 2023-12-18
+    summary: Added failure_issue_threshold and recovery_threshold to monitor_config JSON example
   - version: 1.4.0
     date: 2023-12-13
     summary: Added failure_issue_threshold and recovery_threshold to monitor_config
+  - version: 1.3.1
+    date: 2023-07-10
+    summary: Fixed typo in checkin_margin and max_runtime descriptions
   - version: 1.3.0
     date: 2023-06-26
     summary: Added trace context support for linking check-ins to errors
+  - version: 1.2.1
+    date: 2023-06-06
+    summary: Clarified zero UUID wording to specify "most recent in_progress" check-in
   - version: 1.2.0
     date: 2023-06-05
     summary: Added zero UUID support for updating most recent in_progress check-in
   - version: 1.1.0
     date: 2023-04-18
     summary: Added monitor upsert support with schedule configuration
+  - version: 1.0.1
+    date: 2023-04-17
+    summary: Improved monitor_slug example (UUID replaced with human-readable slug)
   - version: 1.0.0
     date: 2023-03-21
     summary: Initial spec — basic check-in payload
-sidebar_order: 1
 ---
 
 <SpecRfcAlert />
@@ -42,8 +54,7 @@ sidebar_order: 1
 Cron check-ins allow Sentry to monitor the health of recurring jobs (cron jobs, scheduled tasks, periodic workers). An SDK sends check-in envelopes to report when a job starts, succeeds, or fails. Sentry uses this data to detect missed, late, and failing executions.
 
 Related specs:
-- [Envelopes](/sdk/foundations/data-model/envelopes/) — transport format
-- [Envelope Items](/sdk/foundations/data-model/envelope-items/) — `check_in` item type constraints
+- [Envelopes](/sdk/foundations/transport/envelopes/) — transport format
 
 ---
 
@@ -170,11 +181,16 @@ A check-in is sent as a `check_in` envelope item containing a JSON object.
 | `release` | String | **OPTIONAL** | 1.0.0 | The release version. |
 | `environment` | String | **OPTIONAL** | 1.0.0 | The environment name. |
 | `monitor_config` | Object | **OPTIONAL** | 1.1.0 | Monitor configuration for upsert. See [Monitor Configuration Payload](#monitor-configuration-payload). |
-| `contexts` | Object | **OPTIONAL** | 1.3.0 | Contextual information. Currently supports [trace context](/sdk/foundations/data-model/event-payloads/contexts/#trace-context) with `trace_id` for linking check-ins to errors. |
+| `contexts` | Object | **OPTIONAL** | 1.3.0 | Contextual information. Currently supports [trace context](/sdk/foundations/transport/event-payloads/contexts/#trace-context) with `trace_id` for linking check-ins to errors. |
 
 **Envelope constraints:**
 - A `check_in` item **MUST** occur at most once per envelope.
+- This item can either be included in an Envelope with other items, or it **MAY** be sent by itself.
 - Maximum item size: 100 KiB.
+
+**Envelope Headers:** _None_
+
+**Additional Item Headers:** _None_
 
 </SpecSection>
 

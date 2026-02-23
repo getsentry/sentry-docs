@@ -32,15 +32,23 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/data-model/event-payloads/types/',
-    destination: '/sdk/foundations/data-model/event-payloads/',
+    destination: '/sdk/foundations/transport/event-payloads/',
   },
   {
     source: '/sdk/data-model/event-payloads/',
-    destination: '/sdk/foundations/data-model/event-payloads/',
+    destination: '/sdk/foundations/transport/event-payloads/',
   },
   {
     source: '/sdk/data-model/event-payloads/:path*',
-    destination: '/sdk/foundations/data-model/event-payloads/:path*',
+    destination: '/sdk/foundations/transport/event-payloads/:path*',
+  },
+  {
+    source: '/sdk/data-model/envelopes/',
+    destination: '/sdk/foundations/transport/envelopes/',
+  },
+  {
+    source: '/sdk/data-model/envelope-items/',
+    destination: '/sdk/foundations/transport/envelope-items/',
   },
   {
     source: '/sdk/basics/:path*',
@@ -64,19 +72,27 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/envelopes/:path*',
-    destination: '/sdk/foundations/data-model/envelopes/:path*',
+    destination: '/sdk/foundations/transport/envelopes/:path*',
   },
   {
-    source: '/sdk/foundations/transport/envelopes/',
-    destination: '/sdk/foundations/data-model/envelopes/',
+    source: '/sdk/foundations/data-model/envelopes/',
+    destination: '/sdk/foundations/transport/envelopes/',
   },
   {
-    source: '/sdk/foundations/transport/envelope-items/',
-    destination: '/sdk/foundations/data-model/envelope-items/',
+    source: '/sdk/foundations/data-model/envelope-items/',
+    destination: '/sdk/foundations/transport/envelope-items/',
+  },
+  {
+    source: '/sdk/foundations/data-model/event-payloads/',
+    destination: '/sdk/foundations/transport/event-payloads/',
+  },
+  {
+    source: '/sdk/foundations/data-model/event-payloads/:path*',
+    destination: '/sdk/foundations/transport/event-payloads/:path*',
   },
   {
     source: '/sdk/event-payloads/:path*',
-    destination: '/sdk/foundations/data-model/event-payloads/:path*',
+    destination: '/sdk/foundations/transport/event-payloads/:path*',
   },
   {
     source: '/sdk/hub_and_scope_refactoring/:path*',
@@ -97,6 +113,22 @@ const developerDocsRedirects = [
   {
     source: '/sdk/replays/:path*',
     destination: '/sdk/telemetry/replays/:path*',
+  },
+  {
+    source: '/sdk/telemetry/profiles/sample-format-v1/',
+    destination: '/sdk/telemetry/profiles/',
+  },
+  {
+    source: '/sdk/telemetry/profiles/sample-format-v2/',
+    destination: '/sdk/telemetry/profiles/',
+  },
+  {
+    source: '/sdk/telemetry/profiles/continuous-profiling-api/',
+    destination: '/sdk/telemetry/profiles/',
+  },
+  {
+    source: '/sdk/telemetry/attributes/',
+    destination: '/sdk/foundations/data-model/attributes/',
   },
   {
     source: '/sdk/telemetry/spans/batch-processor/',
@@ -171,11 +203,15 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/store/:path*',
-    destination: '/sdk/miscellaneous/store/:path*',
+    destination: '/sdk/foundations/transport/',
+  },
+  {
+    source: '/sdk/miscellaneous/store/:path*',
+    destination: '/sdk/foundations/transport/',
   },
   {
     source: '/sdk/development-process/:path*',
-    destination: '/sdk/processes/:path*',
+    destination: '/sdk/getting-started/',
   },
   {
     source: '/sdk/processes/releases/',
@@ -184,6 +220,10 @@ const developerDocsRedirects = [
   {
     source: '/sdk/processes/triaging/',
     destination: '/sdk/getting-started/playbooks/',
+  },
+  {
+    source: '/sdk/miscellaneous/feature-branches/',
+    destination: '/sdk/getting-started/playbooks/syncing-feature-branches/',
   },
   {
     source: '/application/ab-testing/',
