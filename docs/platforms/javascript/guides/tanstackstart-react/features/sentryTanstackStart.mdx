@@ -1,0 +1,61 @@
+---
+title: sentryTanstackStart
+description: "Learn about the sentryTanstackStart Vite plugin."
+---
+
+<AvailableSince version="10.35.0" />
+
+The `sentryTanstackStart` Vite plugin simplifies source map configuration for TanStack Start applications. It automatically handles source map generation and upload to Sentry during production builds.
+
+## Usage
+
+To automatically upload source maps, you need to provide your Sentry auth token, organization, and project slugs in your Vite configuration. The plugin then, by default, automatically enables hidden source maps and deletes `.map` files after upload.
+
+<OrgAuthTokenNote />
+
+**Make sure you add your auth token to your CI, if you are using one to deploy your application.**
+
+Add your auth token to your environment:
+
+```bash {filename:.env}
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
+and configure `sentryTanstackStart` in your vite.config.ts:
+
+```typescript {filename:vite.config.ts}
+import { defineConfig } from "vite";
+import { sentryTanstackStart } from "@sentry/tanstackstart-react";
+import { tanstackStart } from "@tanstack/react-start/plugin/vite";
+
+export default defineConfig({
+  plugins: [
+    tanstackStart(),
+    // other plugins - sentryTanstackStart should be last
+    sentryTanstackStart({
+      org: "___ORG_SLUG___",
+      project: "___PROJECT_SLUG___",
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+    }),
+  ],
+});
+```
+
+<Alert level="info">
+  Source map upload **only** works when `org`, `project`, and `authToken` are
+  all configured. Without these options, source maps will not be uploaded to
+  Sentry.
+</Alert>
+
+## Configuration Options
+
+The plugin passes through all options to the underlying [`@sentry/vite-plugin`](/platforms/javascript/sourcemaps/uploading/vite/). See the [Sentry Vite Plugin documentation](/platforms/javascript/sourcemaps/uploading/vite/) for the full list of available options.
+
+Additionally, the plugin automatically instruments all TanStack Start middlewares for tracing by default. To disable this behavior:
+
+```typescript {filename:vite.config.ts}
+sentryTanstackStart({
+  // ...
+  autoInstrumentMiddleware: false,
+}),
+```

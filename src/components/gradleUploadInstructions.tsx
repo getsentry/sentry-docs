@@ -1,4 +1,8 @@
 import {Fragment} from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
+
+import getPackageRegistry from 'sentry-docs/build/packageRegistry';
 
 import {CodeBlock} from './codeBlock';
 import {CodeTabs} from './codeTabs';
@@ -10,8 +14,12 @@ type Props = {
   feature: 'sizeAnalysis' | 'distribution';
 };
 
-export function GradleUploadInstructions({feature}: Props) {
+export async function GradleUploadInstructions({feature}: Props) {
   const featureName = feature === 'sizeAnalysis' ? 'size analysis' : 'distribution';
+
+  const packageRegistry = await getPackageRegistry();
+  const gradlePluginVersion =
+    packageRegistry.data?.['sentry.java.android.gradle-plugin']?.version || '6.0.0';
 
   return (
     <Fragment>
@@ -24,10 +32,10 @@ export function GradleUploadInstructions({feature}: Props) {
       <ol>
         <li>
           Configure the{' '}
-          <a href="/platforms/android/configuration/gradle/">
+          <Link href="/platforms/android/configuration/gradle/">
             Sentry Android Gradle plugin
-          </a>{' '}
-          with at least version <code>6.0.0-beta1</code>
+          </Link>{' '}
+          with at least version <code>{gradlePluginVersion}</code>
         </li>
 
         <li>
@@ -67,10 +75,12 @@ export function GradleUploadInstructions({feature}: Props) {
             After an upload has successfully processed, confirm the metadata is correct in
             the Sentry UI
           </p>
-          <img
+          <Image
             src="/platforms/android/build-distribution/images/android-metadata.png"
             alt="Upload metadata"
             style={{maxWidth: '400px'}}
+            width={400}
+            height={300}
           />
         </li>
       </ol>

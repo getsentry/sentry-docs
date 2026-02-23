@@ -1,7 +1,8 @@
 ---
 title: Set Up Session Replay
 sidebar_title: Session Replay
-sidebar_order: 5500
+sidebar_order: 5
+sidebar_section: features
 notSupported:
 description: "Learn how to enable Session Replay in your mobile app."
 ---
@@ -9,6 +10,14 @@ description: "Learn how to enable Session Replay in your mobile app."
 [Session Replay](/product/explore/session-replay/) helps you get to the root cause of an error or latency issue faster by providing you with a reproduction of what was happening in the user's device before, during, and after the issue. You can rewind and replay your application's state and see key user interactions, like taps, swipes, network requests, and console entries, in a single UI.
 
 By default, our Session Replay SDK masks all text content, images, and user input, giving you heightened confidence that no sensitive data will leave the device. To learn more, see [product docs](/product/explore/session-replay/).
+
+<Alert level="warning">
+
+<strong>Potential masking issues introduced when using Apple's Liquid Glass rendering in iOS 26.0</strong>
+
+Due to potential masking issues introduced by Apple's Liquid Glass rendering changes in iOS 26.0 we recommend that you thoroughly test your application before enabling Session Replay on iOS 26+ to prevent potential PII leaks. [Please refer to our iOS documentation for more details on the issue](/platforms/apple/guides/ios/session-replay/) and follow the progress on fixing masking for iOS 26.0 (Liquid Glass) in <a href="https://github.com/getsentry/sentry-cocoa/issues/6390">GitHub issue #6390</a>
+
+</Alert>
 
 ## Pre-requisites
 
@@ -119,14 +128,6 @@ Sentry.init({
 ```
 
 ## Privacy
-
-<Alert level="warning">
-
-<strong>Potential masking issues introduced when using Apple's Liquid Glass rendering in iOS 26.0</strong>
-
-If you are using Apple's Liquid Glass we recommend that you disable Session Replay on iOS to prevent potential PII leaks. [Please refer to our iOS documentation for more details on the issue](/platforms/apple/guides/ios/session-replay/) and follow the progress on fixing masking for iOS 26.0 (Liquid Glass) in <a href="https://github.com/getsentry/sentry-cocoa/issues/6390">GitHub issue #6390</a>
-
-</Alert>
 
 The SDK is recording and aggressively masking all text, images, and webviews by default. If your app has any sensitive data, you should only turn the default masking off after explicitly masking out any sensitive data, using the APIs described below.
 However, if you're working on a mobile app that doesn't contain any PII or private data, you can opt out of the default text and image-masking settings. To learn more about Session Replay privacy, [read our docs](/platforms/react-native/session-replay/privacy/).
@@ -243,3 +244,29 @@ Errors that happen while a replay is running will be linked to the replay, makin
 - The replay was rate-limited and couldn't be accepted.
 - The replay was deleted by a member of your org.
 - There were network errors and the replay wasn't saved.
+
+## Troubleshooting
+
+### Crashes During View Hierarchy Traversal on iOS
+
+_Supported in React Native SDK v7.9.0 and later_
+
+When capturing session replays on iOS, the SDK traverses the view hierarchy to capture screenshots and view information. Some view hierarchies may contain problematic views that can cause crashes during traversal. You can prevent these crashes by filtering which views are included or excluded from traversal. Use `includedViewClasses` to only traverse specific view classes (only views that are instances of these classes or their subclasses will be traversed), or `excludedViewClasses` to skip problematic view classes (views of these classes or their subclasses will be skipped entirely, including all their children). If both `includedViewClasses` and `excludedViewClasses` are set, `excludedViewClasses` takes precedence: views matching excluded classes won't be traversed even if they match an included class.
+
+```javascript {tabTitle:Mobile}
+import * as Sentry from "@sentry/react-native";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+  integrations: [
+    Sentry.mobileReplayIntegration({
+      includedViewClasses: ['UILabel', 'UIView', 'MyCustomView'],
+      excludedViewClasses: ['WKWebView', 'UIWebView'],
+    }),
+  ],
+});
+```
+
+For more information, see the [Ignore View Types from Subtree Traversal](/platforms/apple/guides/ios/session-replay/customredact/#ignore-view-types-from-subtree-traversal) section in the iOS documentation.

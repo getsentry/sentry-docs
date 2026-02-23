@@ -134,7 +134,7 @@ export function CodeBlock({filename, language, children, externalLink}: CodeBloc
   // Only apply keyword interpolation after component mounts to prevent hydration mismatch
   // Server and client both render raw text initially, then client upgrades after mount
   const processedChildren = isMounted
-    ? makeKeywordsClickable(highlightedChildren)
+    ? makeKeywordsClickable(highlightedChildren, {sdkPackage: codeContext?.sdkPackage})
     : highlightedChildren;
 
   return (

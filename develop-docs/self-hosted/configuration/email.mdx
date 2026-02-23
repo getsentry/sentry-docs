@@ -11,18 +11,51 @@ description: Set up and configure email notifications for your self-hosted Sentr
 
 ## Outbound Email
 
-It is recommended to use an external SMTP server due to various sender requirements implemented by major email providers, but if you are testing or running a self-hosted Sentry instance on a local network, you can use the built-in SMTP server, powered by [exim4](https://hub.docker.com/r/tianon/exim4). The default configuration is set to use this server. All you need to do is to set a valid address for `mail.from` setting in `config.yml` and the [FQDN](https://en.wikipedia.org/wiki/Fully_qualified_domain_name) of your Sentry instance for `SENTRY_MAIL_HOST` in `.env`.
+Sentry only supports SMTP for sending outbound email notifications. It does not supports other protocols or APIs for sending email. However, Sentry's built-in SMTP server powered by [egos-tech/smtp](https://gitlab.com/egos-tech/smtp) is sufficient enough to handle multiple use-cases. For more details on other use-cases, please refer to their documentation.
 
-If you want to use an external SMTP server you can set the relevant `mail.*` settings in `config.yml` file and ignore the built-in SMTP server. If you don't have an external SMTP server, yet you need to see sent emails, you can set `mail.backend` to `console` on your `config.yml` file. Refer to our [email service documentation](/backend/email/) for all the details on what each setting means and does.
+### As built-in SMTP server
 
-If your MX records usually resolve to internal private network mail handlers, see [this ticket](https://github.com/getsentry/self-hosted/issues/1202) for some pointers.
+This is the default configuration for self-hosted Sentry installations. Yet, this is not recommended for production use-cases due to various email provider requirements regarding sender reputation, SPF, DKIM, DMARC, etc.
+
+All you need to do is to set a valid address for `mail.from` setting in `config.yml` and the [FQDN](https://en.wikipedia.org/wiki/Fully_qualified_domain_name) of your Sentry instance for `SENTRY_MAIL_HOST` in `.env`.
+
+### As AWS SES relay
+
+This is recommended to use in production if you are using AWS SES for sending emails. You need to provide `SES_USER`, `SES_PASSWORD`, and `SES_REGION` values in your `.env` file. Set the mail configuration on `sentry/config.yml` file as it is.
+
+### External SMTP relay
+
+This is recommended to use in production if you have an external SMTP server for sending emails. There are two ways to configure Sentry to use an external SMTP server:
+1. Set the relevant `mail.*` settings in `config.yml` file to point directly to your external SMTP server. Refer to our [email service documentation](/backend/email/) for all the details on what each setting means and does.
+2. Use the built-in SMTP server as a relay by setting a few environment variables on the `docker-compose.yml` file. You will need to leave the configuration on `sentry/config.yml` file as it is.
+
+For the second option, it is preferred to modify through `docker-compose.override.yml` file so that your changes are not lost when updating self-hosted Sentry installation. Here is an example configuration:
+
+```yaml
+x-restart-policy: &restart_policy
+  restart: unless-stopped
+
+services:
+  smtp:
+    <<: *restart_policy
+    image: registry.gitlab.com/egos-tech/smtp
+    volumes:
+      - "sentry-smtp:/var/spool/exim4"
+      - "sentry-smtp-log:/var/log/exim4"
+    environment:
+      MAILNAME: ${SENTRY_MAIL_HOST:-}
+      SMARTHOST_ADDRESS: "mail.example.com"
+      SMARTHOST_PORT: "587"
+      SMARTHOST_USER: "smtp_user"
+      SMARTHOST_PASSWORD: "smtp_password"
+      SMARTHOST_ALIASES: "*.example.com"
+```
 
 <Alert title="Warning" level="warning">
   Because of the way configuration is layered, if you update <code>mail</code> settings through the web interface, you will need to also comment out the <code>mail.host: 'smtp'</code> default in your <code>config.yml</code> in order for your desired settings to be picked up.
 </Alert>
 
-Sentry does not support sending outbound email with any other protocol than SMTP (examples: Sendgrid's API, AWS SES API, Mailgun API). Usually, those services provide SMTP relay that you can use.
 
 ## Inbound Email
 
-Sentry has very limited inbound mail support through [Mailgun](https://documentation.mailgun.com/en/latest/quickstart-receiving.html). You can find all the information regarding how to set this up over at our [inbound email service documentation](/backend/email/#inbound-email).
+Sentry has very limited inbound mail support through [Mailgun](https://documentation.mailgun.com/docs/mailgun/user-manual/receive-forward-store/receive-forward-store). You can find all the information regarding how to set this up over at our [inbound email service documentation](/backend/email/#inbound-email).

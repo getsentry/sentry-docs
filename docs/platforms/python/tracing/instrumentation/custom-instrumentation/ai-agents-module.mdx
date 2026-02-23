@@ -4,7 +4,7 @@ sidebar_order: 500
 description: "Learn how to manually instrument your code to use Sentry's Agents module."
 ---
 
-With <Link to="/product/insights/ai/agents/dashboard/">Sentry AI Agent Monitoring</Link>, you can monitor and debug your AI systems with full-stack context. You'll be able to track key insights like token usage, latency, tool usage, and error rates. AI Agent Monitoring data will be fully connected to your other Sentry data like logs, errors, and traces.
+With <Link to="/ai/monitoring/agents/dashboard/">Sentry AI Agent Monitoring</Link>, you can monitor and debug your AI systems with full-stack context. You'll be able to track key insights like token usage, latency, tool usage, and error rates. AI Agent Monitoring data will be fully connected to your other Sentry data like logs, errors, and traces.
 
 As a prerequisite to setting up AI Agent Monitoring with Python, you'll need to first <PlatformLink to="/tracing/">set up tracing</PlatformLink>. Once this is done, the Python SDK will automatically instrument AI agents created with supported libraries. If that doesn't fit your use case, you can use custom instrumentation described below.
 
@@ -23,7 +23,7 @@ The Python SDK supports automatic instrumentation for some AI libraries. We reco
 
 ## Manual Instrumentation
 
-For your AI agents data to show up in the Sentry [AI Agents Insights](https://sentry.io/orgredirect/organizations/:orgslug/insights/ai/agents/), two spans must be created and have well-defined names and data attributes. See below.
+For your AI agents data to show up in the Sentry [AI Agents Insights](https://sentry.io/orgredirect/organizations/:orgslug/insights/ai/agents/), at least one of the AI spans needs to be created and have well-defined names and data attributes. See below.
 
 The [@sentry_sdk.trace()](/platforms/python/tracing/instrumentation/custom-instrumentation/#span-templates) decorator can also be used to create these spans.
 
@@ -128,6 +128,43 @@ with sentry_sdk.start_span(op="gen_ai.invoke_agent", name="invoke_agent Travel A
     pass
 ```
 
+## Tracking Conversations
+
+<Alert level="info">
+  Tracking Conversations has **alpha** stability. Configuration options and behavior may change.
+</Alert>
+
+For AI applications that involve multi-turn conversations, you can use `sentry_sdk.ai.set_conversation_id()` to associate all AI spans from the same conversation. This enables you to track and analyze complete conversation flows within Sentry.
+
+The conversation ID is set as the `gen_ai.conversation.id` attribute on all AI-related spans in the current scope. To remove the conversation ID, use the `remove_conversation_id()` method on the `Scope`.
+
+```python
+import sentry_sdk.ai
+
+sentry_sdk.ai.set_conversation_id("conv_abc123")
+
+# All subsequent AI calls will be linked to this conversation
+```
+
+Some integrations, like the OpenAI integration, will automatically set the conversation ID for you, when you use APIs that expose that.
+
+```python
+import sentry_sdk
+import openai
+
+sentry_sdk.init(...)
+
+conversation = openai.conversations.create()
+
+response = openai.responses.create(
+    model="gpt-4.1",
+    input=[{"role": "user", "content": "What are the 5 Ds of dodgeball?"}],
+    conversation=conversation.id  # this will automatically set `gen_ai.conversation.id` on the span
+)
+```
+
 ## Common Span Attributes
 
 <Include name="tracing/ai-agents-module/common-span-attributes" />
+
+<Include name="tracing/ai-agents-module/token-cost-gotchas" />
