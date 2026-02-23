@@ -105,8 +105,12 @@ function downloadLychee() {
   const fileBuffer = readFileSync(tarball);
   const actualHash = createHash('sha256').update(fileBuffer).digest('hex');
   if (actualHash !== LYCHEE_MACOS_ARM64_SHA256) {
-    console.log(`SHA256 mismatch! Expected ${LYCHEE_MACOS_ARM64_SHA256}, got ${actualHash}`);
-    console.log('Warning: lychee download failed integrity check. Will retry in 12 hours.');
+    console.log(
+      `SHA256 mismatch! Expected ${LYCHEE_MACOS_ARM64_SHA256}, got ${actualHash}`
+    );
+    console.log(
+      'Warning: lychee download failed integrity check. Will retry in 12 hours.'
+    );
     spawnSync('rm', ['-f', tarball]);
     markDownloadAttempted();
     return null;
@@ -125,7 +129,9 @@ function downloadLychee() {
   }
 
   if (!existsSync(LYCHEE_PATH)) {
-    console.log('Warning: lychee binary not found after extraction. Will retry in 12 hours.');
+    console.log(
+      'Warning: lychee binary not found after extraction. Will retry in 12 hours.'
+    );
     markDownloadAttempted();
     return null;
   }
