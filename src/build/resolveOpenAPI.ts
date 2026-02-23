@@ -65,6 +65,7 @@ type APIData = DeRefedOpenAPI['paths'][string][string];
 export type API = {
   apiPath: string;
   bodyParameters: APIParameter[];
+  deprecated: boolean;
   method: string;
   name: string;
   pathParameters: APIParameter[];
@@ -96,6 +97,10 @@ function slugify(s: string): string {
     .toLowerCase();
 }
 
+function stripDeprecatedPrefix(operationId: string): string {
+  return operationId.replace(/^\(DEPRECATED\)\s*/, '');
+}
+
 let apiCategoriesCache: Promise<APICategory[]> | undefined;
 
 export function apiCategories(): Promise<APICategory[]> {
@@ -121,10 +126,8 @@ async function apiCategoriesUncached(): Promise<APICategory[]> {
 
   Object.entries(data.paths).forEach(([apiPath, methods]) => {
     Object.entries(methods).forEach(([method, apiData]) => {
-      // Skip deprecated endpoints
-      if (apiData.operationId && apiData.operationId.includes('(DEPRECATED)')) {
-        return;
-      }
+      const isDeprecated = apiData.operationId?.includes('(DEPRECATED)') ?? false;
+      const cleanOperationId = stripDeprecatedPrefix(apiData.operationId ?? '');
 
       let server = 'https://sentry.io';
       if (apiData.servers && apiData.servers[0]) {
@@ -134,9 +137,10 @@ async function apiCategoriesUncached(): Promise<APICategory[]> {
         categoryMap[tag].apis.push({
           apiPath,
           method,
-          name: apiData.operationId,
+          name: cleanOperationId,
+          deprecated: isDeprecated,
           server,
-          slug: slugify(apiData.operationId),
+          slug: slugify(cleanOperationId),
           summary: apiData.summary,
           descriptionMarkdown: apiData.description,
           pathParameters: (apiData.parameters || []).filter(
