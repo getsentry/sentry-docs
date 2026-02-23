@@ -97,8 +97,14 @@ function slugify(s: string): string {
     .toLowerCase();
 }
 
+const DEPRECATED_PREFIX_REGEX = /^\(DEPRECATED\)\s*/;
+
+function isDeprecatedOperationId(operationId: string | undefined): boolean {
+  return operationId ? DEPRECATED_PREFIX_REGEX.test(operationId) : false;
+}
+
 function stripDeprecatedPrefix(operationId: string): string {
-  return operationId.replace(/^\(DEPRECATED\)\s*/, '');
+  return operationId.replace(DEPRECATED_PREFIX_REGEX, '');
 }
 
 let apiCategoriesCache: Promise<APICategory[]> | undefined;
@@ -126,7 +132,7 @@ async function apiCategoriesUncached(): Promise<APICategory[]> {
 
   Object.entries(data.paths).forEach(([apiPath, methods]) => {
     Object.entries(methods).forEach(([method, apiData]) => {
-      const isDeprecated = apiData.operationId?.includes('(DEPRECATED)') ?? false;
+      const isDeprecated = isDeprecatedOperationId(apiData.operationId);
       const cleanOperationId = stripDeprecatedPrefix(apiData.operationId ?? '');
 
       let server = 'https://sentry.io';
