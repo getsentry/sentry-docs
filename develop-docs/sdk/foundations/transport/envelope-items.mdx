@@ -113,6 +113,77 @@ file. It is always associated to an event or transaction.
 
 : _String, optional._ The content type of the attachment payload. Any [MIME type](https://www.iana.org/assignments/media-types/media-types.xhtml) may be used; the default is `application/octet-stream`.
 
+### Attachment Placeholder
+
+<Alert level="warning">
+Attachment placeholders are an experimental feature, the protocol is subject to change.
+</Alert>
+
+Item type `"attachment"` with content type `"application/vnd.sentry.attachment-ref"`. This item contains a reference to an attachment together with some metadata. It does _not_ contain the actual attachment payload. The purpose of this kind of item is for the attachment to be handled (rate limited, filtered, etc.) together with the event payload, even if it was uploaded elsewhere (for example, through the "upload" endpoint). The placeholder should therefore be sent in the same envelope of the event that the file was attached to.
+
+**Envelope Headers:**
+
+`event_id`
+
+: **UUID String, required.** The identifier of the event or transaction.
+
+**Item Headers:**
+
+The placeholder item header _must_ contain the following properties:
+
+```json
+{
+  "type": "attachment",
+  "content_type": "application/vnd.sentry.attachment-ref",
+  "length": 123,
+  "attachment_length": 212341234,
+  "filename": "myfile.log"
+}
+```
+
+`attachment_length`
+
+: **Integer, required.** The size of the referenced attachment in bytes.
+
+`filename`
+
+: **String, required.** The name of the uploaded file without a path component.
+
+The item header _may_ also contain the `attachment_type` and `content_type` fields (see [Attachment](#attachment)).
+
+
+**Item Payload:**
+
+The placeholder item payload consists of a JSON object containing metadata.
+
+```json
+{
+  "location": "/api/42/upload/019c7a950dd376a1817a9ced5cb7c4b5/?length=212341234&signature=Zct1IMmM3BIJrzDOwG3tUn5AlrLhqIJFBu8Kd59dXCz",
+  "content_type": "text/plain"
+}
+```
+
+`location`
+
+: **String, required.** The identifier of the upload, as returned in the `Location` header of the upload endpoint response.
+
+`content_type`
+
+: _String, optional._ The content type of the represented attachment (as opposed to the content type of the placeholder item itself).
+
+**Workflow:**
+
+1. If an attachment is larger than ~100 MiB, upload it to the [TUS](https://tus.io/protocols/resumable-upload#creation-with-upload)-conformant upload endpoint (requires feature `projects:relay-upload-endpoint`):
+  ```shell
+  curl -X POST https://o0.ingest.sentry.io/api/0/upload/ \
+    --header "Tus-Resumable: 1.0.0" \
+    --header "Content-Type: application/offset+octet-stream" \
+    --header "Upload-Length: ${FILE_SIZE}" \
+    --data @myfile.log
+  ```
+2. Upon successful upload, attach a placeholder item to the event envelope, using the `Location` header from the upload response.
+
+
 ### Trace Attachment
 
 <Alert level="warning">
@@ -169,120 +240,6 @@ The trace attachment item payload consists of a JSON object containing metadata 
 | `attributes` | object | No | arbitrary attributes that will be queryable on the attachment trace item, similar to spans, logs, and trace metrics. |
 
 
-### Session
-
-Item type `"session"` contains a single session initialization or update to an
-existing session for Release Health.
-
-See the <Link to="/sdk/telemetry/sessions/">sessions</Link> documentation for the payload
-details.
-
-**Constraints:**
-
-- This Item may occur multiple times per Envelope.
-- Ingestion may limit the maximum number of Items per Envelope, see _Ingestion_.
-
-**Additional Item Headers:**
-
-_None_
-
-### Sessions
-
-Item type `"sessions"` contains buckets of pre-aggregated session counts.
-
-See the <Link to="/sdk/telemetry/sessions/">sessions</Link> documentation for the payload
-details.
-
-**Constraints:**
-
-- This Item may occur multiple times per Envelope.
-- Ingestion may limit the maximum number of Items per Envelope, see _Ingestion_.
-
-**Additional Item Headers:**
-
-_None_
-
-
-### Replay Event
-
-Item type `"replay_event"` contains a replay payload encoded in JSON.
-
-See the <Link to="/sdk/telemetry/replays/">replays</Link> documentation for the payload
-details.
-
-**Constraints:**
-
-- This Item may occur at most once per Envelope.
-- This Item must be sent with a Replay Recording Item.
-
-**Envelope Headers:**
-
-_None_
-
-**Additional Item Headers:**
-
-_None_
-
-### Replay Recording
-
-Item type `"replay_recording"` contains a replay recording payload encoded in JSON _or_ a gzipped JSON.
-
-See the <Link to="/sdk/telemetry/replays/">replays</Link> documentation for the payload
-details.
-
-**Constraints:**
-
-- This Item may occur at most once per Envelope.
-- This Item must be sent with a Replay Event Item.
-
-**Envelope Headers:**
-
-_None_
-
-**Additional Item Headers:**
-
-`length`
-
-: **integer, required.** The size of the Replay recording payload
-
-### Profile
-
-Item type `"profile"`. This Item contains a profile payload encoded
-in JSON.
-
-**Constraints:**
-
-- This Item may occur at most once per Envelope.
-- This Item needs to be in the same Envelope as the associated transaction.
-
-**Envelope Headers:**
-
-_None_
-
-**Additional Item Headers:**
-
-_None_
-
-### Profile Chunk
-
-Item type `"profile_chunk"`. This Item contains a profile_chunk
-(<Link to="/sdk/telemetry/profiles/">profile sample format V2</Link>) payload encoded
-in JSON.
-
-**Constraints:**
-
-_None_
-
-**Envelope Headers:**
-
-_None_
-
-**Additional Item Headers:**
-
-`platform`
-
-: **String, required.** The platform of the profiled application. This item header is used for rate limiting and categorization. It must match the `platform` in the payload. the Examples: `"javascript"`, `"node"`, `"python"`, `"cocoa"`, etc.
-
 ### Check-Ins
 
 Item type `"check_in"` contains a check-in payload encoded as JSON.
@@ -302,113 +259,6 @@ _None_
 **Additional Item Headers:**
 
 _None_
-
-### Log
-
-Item type `"log"` contains an array of log payloads encoded as JSON. This allows for multiple log payloads to be sent in a single envelope item.
-
-Only a single log container is allowed per envelope. The `item_count` field in the envelope item header must match the amount of logs sent, it's not optional. A `content_type` field in the envelope item header must be set to `application/vnd.sentry.items.log+json`.
-
-It's okay to mix logs from different traces into the same log envelope item, but if you do, you MUST not attach a DSC (dynamic sampling context) to the envelope header.
-
-See the <Link to="/sdk/telemetry/logs">Logs</Link> documentation for the payload
-details. For an example `log` envelope, see [Appendix A of the Logs documentation](/sdk/telemetry/logs#appendix-a-log-envelope-item-payload).
-
-Example:
-
-```json
-{
-	"type": "log",
-	"item_count": 5,
-	"content_type": "application/vnd.sentry.items.log+json"
-}
-{
-	"items": [{..log..}, {..log..}, {..log..}, {..log..}, {..log..}]
-}
-```
-
-**Constraints:**
-
-_None_
-
-**Envelope Headers:**
-
-_None_
-
-**Additional Item Headers:**
-
-`item_count`
-
-: **integer, required.** The number of log entries in the envelope.
-
-`content_type`
-
-: **string, required.** The content type of the log entries. Must be `application/vnd.sentry.items.log+json`.
-
-### Otel Logs
-
-Item type `"otel_log"` contains an OpenTelemetry Logs payload encoded as JSON. Multiple Otel log envelope items can be sent in a single envelope.
-
-See the <Link to="/sdk/telemetry/logs">Logs</Link> documentation for the payload
-details.
-
-**Constraints:**
-
-_None_
-
-**Envelope Headers:**
-
-_None_
-
-**Additional Item Headers:**
-
-_None_
-
-### Spans
-
-For Version 2 of the spans protocol, see <Link to="/sdk/telemetry/spans/span-protocol">Span Protocol</Link>.
-
-### Trace Metric
-
-Item type `"trace_metric"` contains an array of metric payloads encoded as JSON. This allows for multiple metric payloads to be sent in a single envelope item.
-
-Only a single trace_metric container is allowed per envelope. The `item_count` field in the envelope item header must match the amount of metrics sent. A `content_type` field in the envelope item header must be set to `application/vnd.sentry.items.trace-metric+json`. Both the `item_count` and `content_type` fields are required.
-
-It's okay to mix metrics from different traces into the same `trace_metric` envelope item, but if you do, you MUST NOT attach a DSC (dynamic sampling context) to the envelope header.
-
-See the <Link to="/sdk/telemetry/metrics">Metrics</Link> documentation for the payload
-details. For an example `trace_metric` envelope, see [Appendix A of the Metrics documentation](/sdk/telemetry/metrics#appendix-a-example-trace_metric-envelope).
-
-Example:
-
-```json
-{
-	"type": "trace_metric",
-	"item_count": 5,
-	"content_type": "application/vnd.sentry.items.trace-metric+json"
-}
-{
-	"items": [{..metric..}, {..metric..}, {..metric..}, {..metric..}, {..metric..}]
-}
-```
-
-**Constraints:**
-
-_None_
-
-**Envelope Headers:**
-
-_None_
-
-**Additional Item Headers:**
-
-`item_count`
-
-: **integer, required.** The number of metric entries in the envelope.
-
-`content_type`
-
-: **string, required.** The content type of the metric entries. Must be `application/vnd.sentry.items.trace-metric+json`.
 
 ### Reserved Types
 

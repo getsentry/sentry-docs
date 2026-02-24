@@ -7,7 +7,7 @@ spec_status: stable
 spec_depends_on:
   - id: sdk/foundations/transport/envelopes
     version: ">=1.0.0"
-  - id: sdk/foundations/data-model/attributes
+  - id: sdk/foundations/state-management/scopes/attributes
     version: ">=1.0.0"
 spec_changelog:
   - version: 1.15.0
@@ -72,8 +72,7 @@ There are two wire protocols: the `log` envelope with the Sentry Log protocol (p
 
 Related specs:
 - [Envelopes](/sdk/foundations/transport/envelopes/) — transport format
-- [Envelope Items](/sdk/foundations/transport/envelope-items/) — `log` item type constraints
-- [Attributes](/sdk/foundations/data-model/attributes) — attribute type system
+- [Attributes](/sdk/foundations/state-management/scopes/attributes) — attribute type system
 - [Tracing without Performance](/sdk/telemetry/traces/tracing-without-performance) — required for trace context
 - [Trace Origin](/sdk/telemetry/traces/trace-origin/) — origin attribute format
 
@@ -315,7 +314,17 @@ SDKs **MUST** report count (`log_item`) and size in bytes (`log_byte`) of discar
 
 <SpecSection id="log-envelope-item" status="candidate" since="1.1.0">
 
-The `log` envelope item contains an array of log payloads encoded as JSON, allowing multiple logs per envelope item. See the [Log Envelope Item](/sdk/foundations/transport/envelope-items/#log) documentation for envelope constraints.
+The `log` envelope item contains an array of log payloads encoded as JSON, allowing multiple logs per envelope item.
+
+An envelope **MUST** contain at most one `log` envelope item — all log entries for a flush are batched into a single item's `items` array. Logs from different traces **MAY** be mixed into the same `log` item, but if they are, the envelope **MUST NOT** include a DSC (dynamic sampling context) header.
+
+**Item Headers:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `type` | String | **REQUIRED** | **MUST** be `"log"`. |
+| `item_count` | Integer | **REQUIRED** | The number of log entries in the `items` array. **MUST** match the actual count. |
+| `content_type` | String | **REQUIRED** | **MUST** be `"application/vnd.sentry.items.log+json"`. |
 
 ```json
 {
@@ -365,7 +374,7 @@ Each log in the `items` array is a JSON object:
 | `body` | String | **REQUIRED** | 1.0.0 | The log body/message. |
 | `span_id` | String | **OPTIONAL** | 1.11.0 | Span ID of the active span when the log was collected, as 8 random bytes encoded as a hex string (16 characters). |
 | `severity_number` | Integer | **OPTIONAL** | 1.0.0 | Severity number per [Severity Levels](#severity-levels). Inferred from `level` unless explicitly set. |
-| `attributes` | Object | **OPTIONAL** | 1.0.0 | Key-value pairs of arbitrary data. Values **MUST** declare their type. See [Attributes](/sdk/foundations/data-model/attributes). |
+| `attributes` | Object | **OPTIONAL** | 1.0.0 | Key-value pairs of arbitrary data. Values **MUST** declare their type. See [Attributes](/sdk/foundations/state-management/scopes/attributes). |
 
 </SpecSection>
 

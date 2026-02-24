@@ -7,7 +7,7 @@ spec_status: stable
 spec_depends_on:
   - id: sdk/foundations/transport/envelopes
     version: ">=1.0.0"
-  - id: sdk/foundations/data-model/attributes
+  - id: sdk/foundations/state-management/scopes/attributes
     version: ">=1.0.0"
 spec_changelog:
   - version: 2.5.0
@@ -55,8 +55,7 @@ The envelope item type is named `trace_metric` for internal usage to avoid namin
 
 Related specs:
 - [Envelopes](/sdk/foundations/transport/envelopes/) — transport format
-- [Envelope Items](/sdk/foundations/transport/envelope-items/) — `trace_metric` item type constraints
-- [Attributes](/sdk/foundations/data-model/attributes) — attribute types and structure
+- [Attributes](/sdk/foundations/state-management/scopes/attributes) — attribute types and structure
 - [Tracing without Performance](/sdk/telemetry/traces/tracing-without-performance/) — required before adding metrics support
 - [Telemetry Processor](/sdk/foundations/processing/telemetry-processor/) — buffer data forwarding scenarios
 
@@ -74,7 +73,7 @@ A metric has a `type` that determines how its values are interpreted:
 
 ### Attributes
 
-Metrics carry typed key-value pairs called **attributes** for dimensional filtering and grouping. Each attribute declares its type (`string`, `boolean`, `integer`, `double`). See [Attributes](/sdk/foundations/data-model/attributes/) for the full type specification.
+Metrics carry typed key-value pairs called **attributes** for dimensional filtering and grouping. Each attribute declares its type (`string`, `boolean`, `integer`, `double`). See [Attributes](/sdk/foundations/state-management/scopes/attributes/) for the full type specification.
 
 ### Batching
 
@@ -214,6 +213,16 @@ If `debug` is set to `true` in SDK init, calls to the Sentry metrics API **SHOUL
 
 Metrics are sent as a `trace_metric` envelope item containing a JSON object with an `items` array. See the [Examples](#full-trace_metric-envelope) section for a complete envelope.
 
+An envelope **MUST** contain at most one `trace_metric` envelope item — all metrics for a flush are batched into a single item's `items` array. Metrics from different traces **MAY** be mixed into the same `trace_metric` item, but if they are, the envelope **MUST NOT** include a DSC (dynamic sampling context) header.
+
+**Item Headers:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `type` | String | **REQUIRED** | **MUST** be `"trace_metric"`. |
+| `item_count` | Number | **REQUIRED** | Number of metric items in the `items` array. **MUST** match the actual count. |
+| `content_type` | String | **REQUIRED** | **MUST** be `"application/vnd.sentry.items.trace-metric+json"`. |
+
 ```json
 {
 	"type": "trace_metric",
@@ -224,12 +233,6 @@ Metrics are sent as a `trace_metric` envelope item containing a JSON object with
 	"items": [{..metric..}, {..metric..}, {..metric..}]
 }
 ```
-
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `type` | String | **REQUIRED** | **MUST** be `"trace_metric"`. |
-| `item_count` | Number | **REQUIRED** | Number of metric items in the `items` array. |
-| `content_type` | String | **REQUIRED** | **MUST** be `"application/vnd.sentry.items.trace-metric+json"`. |
 
 </SpecSection>
 
@@ -265,7 +268,7 @@ Each metric in the `items` array is a JSON object with the following fields:
 | `trace_id` | String | **REQUIRED** | 2.0.0 | 16 random bytes encoded as a hex string (32 characters). Taken from the current propagation context. |
 | `span_id` | String | **OPTIONAL** | 2.3.0 | 8 random bytes encoded as a hex string (16 characters). The span ID of the span that was active when the metric was emitted. |
 | `unit` | String | **OPTIONAL** | 2.0.0 | The unit of measurement for the metric value. |
-| `attributes` | Object | **OPTIONAL** | 2.0.0 | Typed key-value pairs. See [Attributes](/sdk/foundations/data-model/attributes/) for supported types and structure. |
+| `attributes` | Object | **OPTIONAL** | 2.0.0 | Typed key-value pairs. See [Attributes](/sdk/foundations/state-management/scopes/attributes/) for supported types and structure. |
 
 </SpecSection>
 
@@ -312,7 +315,7 @@ SDKs **MUST** expose metrics methods in a `metrics` module or namespace. At mini
 - `name` **String, required** — the name of the metric.
 - `value` **Number, required** — the value of the metric.
 - `options` **Object, optional** — containing:
-  - `unit` **String, optional** — the unit of measurement (only used for `distribution` and `gauge`). SDKs **MUST NOT** restrict what can be sent in (e.g. by using an enum) but **SHOULD** offer constants or similar that help customers send in <Link to="/sdk/foundations/data-model/attributes/#units">units we support</Link> (since 2.4.0).
+  - `unit` **String, optional** — the unit of measurement (only used for `distribution` and `gauge`). SDKs **MUST NOT** restrict what can be sent in (e.g. by using an enum) but **SHOULD** offer constants or similar that help customers send in <Link to="/sdk/foundations/state-management/scopes/attributes/#units">units we support</Link> (since 2.4.0).
   - `attributes` **Object, optional** — a dictionary of attributes (key-value pairs with type information).
   - `scope` **Scope, optional** — the scope to capture the metric with.
 
