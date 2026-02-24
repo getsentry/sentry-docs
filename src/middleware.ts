@@ -465,6 +465,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/platforms/go/guides/logrus/',
   },
   {
+    from: '/platforms/go/zap/',
+    to: '/platforms/go/guides/zap/',
+  },
+  {
     from: '/clients/go/integrations/http/',
     to: '/platforms/go/guides/http/',
   },
@@ -1022,7 +1026,11 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/platforms/android/manual-configuration/',
-    to: '/platforms/android/configuration/manual-init/',
+    to: '/platforms/android/manual-setup/',
+  },
+  {
+    from: '/platforms/android/configuration/manual-init/',
+    to: '/platforms/android/manual-setup/',
   },
   {
     from: '/platforms/android/advanced-usage/',
@@ -1995,6 +2003,70 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/concepts/data-management/data-forwarding/',
     to: '/organization/integrations/data-forwarding/',
+  },
+  {
+    from: '/concepts/otlp/otlp-logs/',
+    to: '/concepts/otlp/direct/logs/',
+  },
+  {
+    from: '/concepts/otlp/otlp-traces/',
+    to: '/concepts/otlp/direct/traces/',
+  },
+  {
+    from: '/product/drains/integration/vercel/',
+    to: '/product/drains/vercel/',
+  },
+  {
+    from: '/product/drains/integration/cloudflare/',
+    to: '/product/drains/cloudflare/',
+  },
+  {
+    from: '/product/drains/integration/heroku/',
+    to: '/product/drains/heroku/',
+  },
+  {
+    from: '/product/drains/integration/openrouter/',
+    to: '/product/drains/openrouter/',
+  },
+  {
+    from: '/product/drains/integration/supabase/',
+    to: '/product/drains/supabase/',
+  },
+  {
+    from: '/product/drains/integration/shopify-hydrogen/',
+    to: '/product/drains/shopify-hydrogen/',
+  },
+  {
+    from: '/product/drains/integration/opentelemetry-collector/',
+    to: '/concepts/otlp/forwarding/pipelines/collector/',
+  },
+  {
+    from: '/product/drains/integration/vector/',
+    to: '/concepts/otlp/forwarding/pipelines/vector/',
+  },
+  {
+    from: '/product/drains/integration/fluentbit/',
+    to: '/concepts/otlp/forwarding/pipelines/fluentbit/',
+  },
+  {
+    from: '/product/drains/otlp-guides/aws-cloudwatch/',
+    to: '/concepts/otlp/forwarding/sources/aws-cloudwatch/',
+  },
+  {
+    from: '/product/drains/otlp-guides/kafka/',
+    to: '/concepts/otlp/forwarding/sources/kafka/',
+  },
+  {
+    from: '/product/drains/otlp-guides/nginx/',
+    to: '/concepts/otlp/forwarding/sources/nginx/',
+  },
+  {
+    from: '/product/drains/otlp-guides/syslog/',
+    to: '/concepts/otlp/forwarding/sources/syslog/',
+  },
+  {
+    from: '/product/drains/otlp-guides/windows-events/',
+    to: '/concepts/otlp/forwarding/sources/windows-events/',
   },
   {
     from: '/workflow/integrations/gitlab/',
@@ -3004,7 +3076,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/clientdev/interfaces/http/',
-    to: 'https://develop.sentry.dev/sdk/data-model/event-payloads/request',
+    to: 'https://develop.sentry.dev/sdk/foundations/transport/event-payloads/request',
   },
   {
     from: '/clients/csharp/',
@@ -3332,19 +3404,59 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/ai-monitoring/',
-    to: '/product/insights/ai/agents/',
+    to: '/ai/monitoring/agents/',
   },
   {
     from: '/product/insights/llm-monitoring/',
-    to: '/product/insights/ai/agents/',
+    to: '/ai/monitoring/agents/',
   },
   {
     from: '/product/insights/llm-monitoring/getting-started/',
-    to: '/product/insights/ai/agents/getting-started/',
+    to: '/ai/monitoring/agents/getting-started/',
   },
   {
     from: '/product/insights/llm-monitoring/getting-started/the-dashboard/',
-    to: '/product/insights/ai/agents/getting-started/the-dashboard/',
+    to: '/ai/monitoring/agents/dashboard/',
+  },
+  {
+    from: '/product/insights/ai/',
+    to: '/ai/monitoring/',
+  },
+  {
+    from: '/product/insights/ai/agents/',
+    to: '/ai/monitoring/agents/',
+  },
+  {
+    from: '/product/insights/ai/agents/privacy/',
+    to: '/ai/monitoring/agents/privacy/',
+  },
+  {
+    from: '/product/insights/ai/agents/dashboard/',
+    to: '/ai/monitoring/agents/dashboard/',
+  },
+  {
+    from: '/product/insights/ai/agents/costs/',
+    to: '/ai/monitoring/agents/costs/',
+  },
+  {
+    from: '/product/insights/ai/agents/getting-started/',
+    to: '/ai/monitoring/agents/getting-started/',
+  },
+  {
+    from: '/product/insights/ai/mcp/',
+    to: '/ai/monitoring/mcp/',
+  },
+  {
+    from: '/product/insights/ai/mcp/getting-started/',
+    to: '/ai/monitoring/mcp/getting-started/',
+  },
+  {
+    from: '/product/insights/ai/mcp/dashboard/',
+    to: '/ai/monitoring/mcp/dashboard/',
+  },
+  {
+    from: '/product/sentry-mcp/',
+    to: '/ai/mcp/',
   },
   {
     from: '/product/metrics/',
@@ -4257,6 +4369,94 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/organization/integrations/elba/',
     to: '/organization/integrations/compliance/elba/',
+  },
+  {
+    from: '/sdk/philosophy/',
+    to: '/sdk/getting-started/philosophy/',
+  },
+  {
+    from: '/sdk/data-model/envelopes/',
+    to: '/sdk/foundations/transport/envelopes/',
+  },
+  {
+    from: '/sdk/data-model/envelope-items/',
+    to: '/sdk/foundations/transport/envelope-items/',
+  },
+  {
+    from: '/sdk/expected-features/rate-limiting/',
+    to: '/sdk/foundations/transport/rate-limiting/',
+  },
+  {
+    from: '/sdk/overview/',
+    to: '/sdk/foundations/overview/',
+  },
+  {
+    from: '/sdk/data-model/',
+    to: '/sdk/foundations/data-model/',
+  },
+  {
+    from: '/sdk/data-model/event-payloads/',
+    to: '/sdk/foundations/transport/event-payloads/',
+  },
+  {
+    from: '/sdk/data-model/event-payloads/breadcrumbs/',
+    to: '/sdk/foundations/transport/event-payloads/breadcrumbs/',
+  },
+  {
+    from: '/sdk/data-model/event-payloads/contexts/',
+    to: '/sdk/foundations/transport/event-payloads/contexts/',
+  },
+  {
+    from: '/sdk/data-model/event-payloads/debugmeta/',
+    to: '/sdk/foundations/transport/event-payloads/debugmeta/',
+  },
+  {
+    from: '/sdk/data-model/event-payloads/exception/',
+    to: '/sdk/foundations/transport/event-payloads/exception/',
+  },
+  {
+    from: '/sdk/data-model/event-payloads/lockreason/',
+    to: '/sdk/foundations/transport/event-payloads/lockreason/',
+  },
+  {
+    from: '/sdk/data-model/event-payloads/message/',
+    to: '/sdk/foundations/transport/event-payloads/message/',
+  },
+  {
+    from: '/sdk/data-model/event-payloads/replay-recording/',
+    to: '/sdk/foundations/transport/event-payloads/replay-recording/',
+  },
+  {
+    from: '/sdk/data-model/event-payloads/request/',
+    to: '/sdk/foundations/transport/event-payloads/request/',
+  },
+  {
+    from: '/sdk/data-model/event-payloads/sdk/',
+    to: '/sdk/foundations/transport/event-payloads/sdk/',
+  },
+  {
+    from: '/sdk/data-model/event-payloads/span/',
+    to: '/sdk/foundations/transport/event-payloads/span/',
+  },
+  {
+    from: '/sdk/data-model/event-payloads/stacktrace/',
+    to: '/sdk/foundations/transport/event-payloads/stacktrace/',
+  },
+  {
+    from: '/sdk/data-model/event-payloads/template/',
+    to: '/sdk/foundations/transport/event-payloads/template/',
+  },
+  {
+    from: '/sdk/data-model/event-payloads/threads/',
+    to: '/sdk/foundations/transport/event-payloads/threads/',
+  },
+  {
+    from: '/sdk/data-model/event-payloads/transaction/',
+    to: '/sdk/foundations/transport/event-payloads/transaction/',
+  },
+  {
+    from: '/sdk/data-model/event-payloads/user/',
+    to: '/sdk/foundations/transport/event-payloads/user/',
   },
 ];
 

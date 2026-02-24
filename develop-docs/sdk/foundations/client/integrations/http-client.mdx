@@ -1,0 +1,130 @@
+---
+title: HTTP Client Integration
+description: Guidelines for HTTP client integrations — breadcrumbs, spans, trace headers, DSN exclusion, and automatic error capture.
+spec_id: sdk/foundations/client/integrations/http-client
+spec_version: 1.0.0
+spec_status: stable
+spec_depends_on:
+  - id: sdk/foundations/client/integrations
+    version: ">=1.0.0"
+spec_changelog:
+  - version: 1.0.0
+    date: 2025-02-24
+    summary: Initial spec, extracted from expected features
+sidebar_order: 1
+---
+
+<SpecRfcAlert />
+
+<SpecMeta />
+
+## Overview
+
+HTTP client integrations instrument outgoing HTTP requests to capture breadcrumbs, create performance spans, and optionally capture HTTP client errors as Sentry events.
+
+Every HTTP client integration **MUST** exclude HTTP requests that match the configured DSN in the Options to exclude HTTP requests to Sentry.
+
+---
+
+## Behavior
+
+<SpecSection id="http-breadcrumbs" status="stable" since="1.0.0">
+
+### Breadcrumbs
+
+Add a breadcrumb for each outgoing HTTP request after the request finishes:
+
+- type: `http`
+- category: `http`
+- level
+  - `info` - response status code 2XX - 3XX
+  - `warning` - response status code 4XX
+  - `error` - response status code 5XX
+- data (all fields are optional but recommended):
+  - `url` - The URL used in the HTTP request
+  - `http.request.method` - uppercase HTTP method, i.e: GET, HEAD
+  - `http.response.status_code` - Numeric status code such as `200` or `404`
+  - `http.query` - The query part of the URL
+  - `http.fragment` - The fragment part of the URI (Browser SDKs only)
+  - `http.request.body.size` Size in bytes
+  - `http.response.body.size` Size in bytes
+
+</SpecSection>
+
+<SpecSection id="http-spans" status="stable" since="1.0.0">
+
+### Performance Spans
+
+If Performance Monitoring is both supported by the SDK and enabled in the client application when the transaction is active a new `Span` must be created around the HTTP request:
+
+- operation: `http.client`
+- description: `$METHOD $url` (uppercase HTTP method), e.g. `GET https://sentry.io`
+- HTTP requests must be enhanced with a [`sentry-trace` HTTP header](/sdk/telemetry/traces/#header-sentry-trace) to support [distributed tracing](https://docs.sentry.io/product/sentry-basics/tracing/distributed-tracing)
+- HTTP requests must be enhanced with a [`baggage` HTTP header](/sdk/telemetry/traces/dynamic-sampling-context/#baggage-header) to support [dynamic sampling](/sdk/telemetry/traces/dynamic-sampling-context/)
+- span status must match HTTP response status code ([see Span status to HTTP status code mapping](/sdk/foundations/transport/event-payloads/span/))
+- when network error occurs, span status must be set to `internal_error`
+- span data must follow the [Span Data Conventions](/sdk/telemetry/traces/span-data-conventions/)
+
+</SpecSection>
+
+<SpecSection id="http-client-errors" status="stable" since="1.0.0">
+
+### HTTP Client Errors
+
+The SDK automatically captures HTTP Client errors and sends them to [sentry.io](https://sentry.io).
+
+The HTTP Client integration should have 3 configuration options:
+
+- `captureFailedRequests` defaults to `false` when introducing this feature due to PII reasons and can be changed to `true` in a follow up major.
+  - The SDK will only capture HTTP Client errors if it is enabled.
+- `failedRequestStatusCodes` defaults to `500 - 599`, this configuration option accepts a `List` of `HttpStatusCodeRange` which is a range of HTTP status code -> `min` to `max` or a single `status_code`.
+  - The SDK will only capture HTTP Client errors if the HTTP Response status code is within the defined ranges in `failedRequestStatusCodes`.
+  - If the language has a `Range` type, it should be used instead of `HttpStatusCodeRange`.
+- `failedRequestTargets` defaults to (`.*`), this configuration option accepts a `List` of `String` that may be Regular expressions as well, similar to <Link to="/sdk/telemetry/traces/#tracepropagationtargets">tracePropagationTargets</Link>.
+  - The SDK will only capture HTTP Client errors if the HTTP Request URL is a match for any of the `failedRequestsTargets`.
+-  While the keys of sensitive HTTP headers (e.g. `Authorization` and `Cookie`) are included, their values must be replaced with `"[Filtered]"` (also see <Link to="/sdk/expected-features/data-handling/#sensitive-data">Data Handling: Sensitive Data</Link>).
+
+The HTTP Client integration should capture error events with the following properties:
+
+The Request interface, see the <Link to="/sdk/foundations/transport/event-payloads/request/">Spec</Link> for details.
+
+The Response context, see the <Link to="/sdk/foundations/transport/event-payloads/contexts/#response-context">Spec</Link> for details.
+
+```json
+{
+  "contexts": {
+    "response": {
+      "type": "response",
+      "cookies": "PHPSESSID=298zf09hf012fh2; csrftoken=u32t4o3tb3gg43; _gat=1;",
+      "headers": {
+        "content-type": "text/html"
+        /// ...
+      },
+      "status_code": 500,
+      "body_size": 1000 // in bytes
+    }
+  }
+}
+```
+
+The Exception Interface, see the <Link to="/sdk/foundations/transport/event-payloads/exception/">Spec</Link> for details.
+
+If the HTTP Client integration does not throw an exception for unsuccessful requests, you can create a synthetic exception following this Spec:
+
+- Set the <Link to="/sdk/foundations/transport/event-payloads/exception/#exception-mechanism">Exception Mechanism</Link> with a proper `type` such as `SentryOkHttpInterceptor`.
+- Set the <Link to="/sdk/foundations/transport/event-payloads/stacktrace/">Stack Trace Interface</Link> with `snapshot=true`.
+  - `HTTP Client Error with status code: $code`.
+
+When capturing error events, pass the original `Request` and `Response` objects from the HTTP Client as `hints`, so the users may filter out events in `beforeSend` with the full context.
+
+Automatically captured HTTP Client error events can be searchable and alertable with the `http.url` and `http.status_code` properties, learn more about it in the [Searchable Properties](https://docs.sentry.io/concepts/search/searchable-properties/) docs.
+
+As an example, see the [OkHTTP Client integration](https://github.com/getsentry/sentry-java/pull/2287) for Android.
+
+</SpecSection>
+
+---
+
+## Changelog
+
+<SpecChangelog />
