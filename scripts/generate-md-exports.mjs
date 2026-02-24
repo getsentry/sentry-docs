@@ -1119,7 +1119,8 @@ async function processTaskList({id, tasks, cacheDir, noCache, usedCacheFiles}) {
     );
   }
   const cacheHits = success - cacheMisses.length;
-  const missRate = success > 0 ? ((cacheMisses.length / success) * 100).toFixed(1) : '0.0';
+  const missRate =
+    success > 0 ? ((cacheMisses.length / success) * 100).toFixed(1) : '0.0';
   console.log(
     `📈 Worker[${id}]: Cache stats: ${cacheHits} hits, ${cacheMisses.length} misses (${missRate}% miss rate)`
   );
