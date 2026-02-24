@@ -122,10 +122,7 @@ export async function Sidebar({path, versions}: SidebarProps) {
       <aside className={`${styles.sidebar} py-3`} data-layout-anchor="left">
         <input type="checkbox" id={sidebarToggleId} className="hidden" />
         <style>{':root { --sidebar-width: 300px; }'}</style>
-        <div
-          className="md:flex flex-col items-stretch h-full"
-          style={{display: 'flex', flexDirection: 'column', height: '100%'}}
-        >
+        <div className="flex flex-col items-stretch h-full min-h-0">
           <MobileSidebarNav platforms={basicPlatforms} />
           <div className="platform-selector px-3">
             <div className="mb-3">
@@ -140,15 +137,12 @@ export async function Sidebar({path, versions}: SidebarProps) {
               </div>
             )}
           </div>
-          <div className={`${styles.toc} px-3 flex-1`} style={{overflow: 'auto'}}>
+          <div className={`${styles.toc} px-3`}>
             <ScrollActiveLink activeLinkSelector={activeLinkSelector} />
             <SidebarNavigation path={path} />
           </div>
           <SidebarSeparator />
-          <div
-            className={`${styles['sidebar-external-links']} px-3`}
-            style={{flex: '0 0 auto', paddingBottom: 0}}
-          >
+          <div className={`${styles['sidebar-external-links']} px-3`}>
             <SidebarMoreLinks />
           </div>
         </div>
@@ -161,23 +155,14 @@ export async function Sidebar({path, versions}: SidebarProps) {
     <aside className={`${styles.sidebar} py-3`} data-layout-anchor="left">
       <input type="checkbox" id={sidebarToggleId} className="hidden" />
       <style>{':root { --sidebar-width: 300px; }'}</style>
-      <div
-        className="md:flex flex-col items-stretch h-full"
-        style={{display: 'flex', flexDirection: 'column', height: '100%'}}
-      >
+      <div className="flex flex-col items-stretch h-full min-h-0">
         <MobileSidebarNav platforms={basicPlatforms} />
-        <div
-          className={`${styles['sidebar-main']} px-3 flex-1`}
-          style={{overflow: 'auto'}}
-        >
+        <div className={`${styles['sidebar-main']} px-3`}>
           <ScrollActiveLink activeLinkSelector={activeLinkSelector} />
           <SidebarNavigation path={path} />
         </div>
         <SidebarSeparator />
-        <div
-          className={`${styles['sidebar-external-links']} px-3`}
-          style={{flex: '0 0 auto', paddingBottom: 0}}
-        >
+        <div className={`${styles['sidebar-external-links']} px-3`}>
           <SidebarMoreLinks />
         </div>
       </div>

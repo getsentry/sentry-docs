@@ -1,7 +1,7 @@
 'use client';
 
-import {useCallback, useState} from 'react';
-import {HamburgerMenuIcon} from '@radix-ui/react-icons';
+import {useCallback, useEffect, useState} from 'react';
+import {Cross1Icon, HamburgerMenuIcon} from '@radix-ui/react-icons';
 import {Button} from '@radix-ui/themes';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -18,6 +18,18 @@ import {ThemeToggle} from './theme-toggle';
 import TopNavClient from './TopNavClient';
 
 export const sidebarToggleId = sidebarStyles['navbar-menu-toggle'];
+
+// Main navigation sections for home page mobile nav
+const mainSections = [
+  {label: 'SDKs', href: '/platforms/'},
+  {label: 'Product', href: '/product/'},
+  {label: 'AI', href: '/ai/'},
+  {label: 'Guides', href: '/guides/'},
+  {label: 'Concepts', href: '/concepts/'},
+  {label: 'Admin', href: '/organization/'},
+  {label: 'API', href: '/api/'},
+  {label: 'Security, Legal, & PII', href: '/security-legal-pii/'},
+];
 
 type Props = {
   pathname: string;
@@ -36,6 +48,8 @@ export default function Header({
 }: Props) {
   const isHomePage = pathname === '/';
   const [homeSearchVisible, setHomeSearchVisible] = useState(true);
+  const [homeMobileNavOpen, setHomeMobileNavOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Listen for home search visibility changes
   useHomeSearchVisibility(
@@ -43,6 +57,28 @@ export default function Header({
       setHomeSearchVisible(isVisible);
     }, [])
   );
+
+  // Track sidebar checkbox state for non-home pages
+  useEffect(() => {
+    if (isHomePage) {
+      return undefined;
+    }
+
+    const checkbox = document.getElementById(sidebarToggleId) as HTMLInputElement | null;
+    if (!checkbox) {
+      return undefined;
+    }
+
+    const handleChange = () => {
+      setSidebarOpen(checkbox.checked);
+    };
+
+    // Set initial state
+    setSidebarOpen(checkbox.checked);
+
+    checkbox.addEventListener('change', handleChange);
+    return () => checkbox.removeEventListener('change', handleChange);
+  }, [isHomePage]);
 
   // Show header search if: not on home page, OR on home page but home search is scrolled out of view
   const showHeaderSearch = !isHomePage || !homeSearchVisible;
@@ -52,20 +88,49 @@ export default function Header({
       {/* define a header-height variable for consumption by other components */}
       <style>{':root { --header-height: 64px; }'}</style>
       <nav className="nav-inner mx-auto px-4 lg:px-8 flex items-center gap-4 min-h-[64px]">
-        {pathname !== '/' && (
-          <button className="md:hidden mr-3">
-            <label
-              htmlFor={sidebarToggleId}
-              aria-label="Close"
-              aria-hidden="true"
-              className="inline-flex items-center cursor-pointer"
-            >
+        {/* Hamburger menu - different behavior on home page vs other pages */}
+        {isHomePage ? (
+          <button
+            className="md:hidden mr-3"
+            onClick={() => setHomeMobileNavOpen(!homeMobileNavOpen)}
+            aria-label={homeMobileNavOpen ? 'Close menu' : 'Open menu'}
+          >
+            {homeMobileNavOpen ? (
+              <Cross1Icon
+                className="inline dark:text-[var(--foreground)] text-[var(--gray-10)]"
+                width="22"
+                height="22"
+              />
+            ) : (
               <HamburgerMenuIcon
                 className="inline dark:text-[var(--foreground)] text-[var(--gray-10)]"
                 strokeWidth="1.8"
                 width="22"
                 height="22"
               />
+            )}
+          </button>
+        ) : (
+          <button className="md:hidden mr-3">
+            <label
+              htmlFor={sidebarToggleId}
+              aria-label={sidebarOpen ? 'Close menu' : 'Open menu'}
+              className="inline-flex items-center cursor-pointer"
+            >
+              {sidebarOpen ? (
+                <Cross1Icon
+                  className="inline dark:text-[var(--foreground)] text-[var(--gray-10)]"
+                  width="22"
+                  height="22"
+                />
+              ) : (
+                <HamburgerMenuIcon
+                  className="inline dark:text-[var(--foreground)] text-[var(--gray-10)]"
+                  strokeWidth="1.8"
+                  width="22"
+                  height="22"
+                />
+              )}
             </label>
           </button>
         )}
@@ -167,6 +232,36 @@ export default function Header({
           }
         }
       `}</style>
+      {/* Home page mobile navigation overlay */}
+      {isHomePage && homeMobileNavOpen && (
+        <div
+          className="md:hidden fixed inset-0 bg-[var(--gray-1)] z-40"
+          style={{top: 'var(--header-height)'}}
+        >
+          <nav className="px-4 py-4 space-y-1">
+            {mainSections.map(section => (
+              <Link
+                key={section.href}
+                href={section.href}
+                className="block py-3 px-3 rounded-md text-base font-medium text-[var(--gray-12)] hover:bg-[var(--gray-a3)] transition-colors"
+                onClick={() => setHomeMobileNavOpen(false)}
+              >
+                {section.label}
+              </Link>
+            ))}
+            <div className="border-t border-[var(--gray-a3)] my-4" />
+            <a
+              href="https://sentry.io/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block py-3 px-3 rounded-md text-base font-medium text-[var(--gray-12)] hover:bg-[var(--gray-a3)] transition-colors"
+              onClick={() => setHomeMobileNavOpen(false)}
+            >
+              Go to Sentry
+            </a>
+          </nav>
+        </div>
+      )}
     </header>
   );
 }
