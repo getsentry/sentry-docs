@@ -787,13 +787,6 @@ async function createWork() {
   // Store the latest content per key for R2 upload after child section append.
   const r2Uploads = new Map();
 
-  function collectR2Upload(key, data) {
-    if (!hasR2) {
-      return;
-    }
-    r2Uploads.set(key, data);
-  }
-
   for (const [parentPath, children] of pathsByParent) {
     const overrideFm = mdxOverrides.get(parentPath)?.frontmatter;
     if (overrideFm?.append_sections === false) {
@@ -829,7 +822,9 @@ async function createWork() {
       const updatedContent = existingContent + childSection;
       await writeFile(parentFile, updatedContent, {encoding: 'utf8'});
       updatedCount++;
-      collectR2Upload(parentPath, updatedContent);
+      if (hasR2) {
+        r2Uploads.set(parentPath, updatedContent);
+      }
     }
   }
   console.log(`📑 Added child page listings to ${updatedCount} section index files`);
