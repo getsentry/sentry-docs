@@ -82,11 +82,9 @@ export function PlatformSelector({
   const isOnPlatformsIndex = pathname === '/platforms/' || pathname === '/platforms';
 
   // Track if we're redirecting to prevent flash of selector
-  // Initialize to true on platforms index if we might have a stored platform (checked client-side)
-  const [isRedirecting, setIsRedirecting] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return isOnPlatformsIndex && localStorage.getItem('active-platform') !== null;
-  });
+  // Always initialize to false to avoid SSR hydration mismatch
+  // The useLayoutEffect below will set this to true before paint if redirecting
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const [open, setOpen] = useState(alwaysOpen || isOnPlatformsIndex);
   const [searchValue, setSearchValue] = useState('');
 

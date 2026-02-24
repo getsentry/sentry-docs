@@ -3,6 +3,7 @@
 import {useCallback, useEffect, useState} from 'react';
 import {Cross1Icon, HamburgerMenuIcon} from '@radix-ui/react-icons';
 import {Button} from '@radix-ui/themes';
+import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -14,9 +15,22 @@ import sidebarStyles from './sidebar/style.module.scss';
 import {MagicIcon} from './cutomIcons/magic';
 import {useHomeSearchVisibility} from './homeSearchVisibility';
 import {mainSections} from './navigationData';
-import {Search} from './search';
 import {ThemeToggle} from './theme-toggle';
 import TopNavClient from './TopNavClient';
+
+// Lazy load Search to reduce initial bundle size.
+// Search includes Algolia and @sentry-internal/global-search which add significant JS.
+// Using ssr:false since search is interactive-only and not needed for initial paint.
+// Fixes: DOCS-8BT (Large Render Blocking Asset)
+const Search = dynamic(() => import('./search').then(mod => ({default: mod.Search})), {
+  ssr: false,
+  loading: () => (
+    <div
+      className="flex items-center gap-2"
+      style={{width: '340px', minWidth: '340px', height: '40px'}}
+    />
+  ),
+});
 
 export const sidebarToggleId = sidebarStyles['navbar-menu-toggle'];
 
