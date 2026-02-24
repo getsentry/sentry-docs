@@ -17,6 +17,7 @@ import './type.scss';
 
 import {Banner} from '../banner';
 import {Breadcrumbs} from '../breadcrumbs';
+import {buildBreadcrumbs} from '../breadcrumbs/utils';
 import {CodeContextProvider} from '../codeContext';
 import {CopyMarkdownButton} from '../copyMarkdownButton';
 import {DocFeedback} from '../docFeedback';
@@ -99,7 +100,7 @@ export async function DocPage({
               <Banner />
             </div>
             <div className="flex items-center">
-              {leafNode && <Breadcrumbs leafNode={leafNode} />}{' '}
+              <Breadcrumbs items={buildBreadcrumbs(leafNode)} />{' '}
               <div className="ml-auto hidden sm:block">
                 <CopyMarkdownButton pathname={pathname} />
               </div>

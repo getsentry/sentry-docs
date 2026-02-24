@@ -230,6 +230,11 @@ export async function SidebarNavigation({path}: {path: string[]}) {
     return <ul data-sidebar-tree />;
   }
 
+  // Platform redirect page - no sidebar needed
+  if (path[0] === 'platform-redirect') {
+    return <ul data-sidebar-tree />;
+  }
+
   // This should never happen, all cases need to be handled above
   throw new Error(`Unknown path: ${path.join('/')} - cannot render sidebar`);
 }

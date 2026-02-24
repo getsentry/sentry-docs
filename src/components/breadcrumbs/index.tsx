@@ -3,29 +3,19 @@
 import Link from 'next/link';
 import {useRouter} from 'next/navigation';
 
-import {DocNode} from 'sentry-docs/docTree';
-
 import styles from './style.module.scss';
 
-type BreadcrumbsProps = {
-  leafNode: DocNode;
+export type BreadcrumbItem = {
+  title: string;
+  to: string;
 };
 
-export function Breadcrumbs({leafNode}: BreadcrumbsProps) {
+type BreadcrumbsProps = {
+  items: BreadcrumbItem[];
+};
+
+export function Breadcrumbs({items}: BreadcrumbsProps) {
   const router = useRouter();
-  const breadcrumbs: {title: string; to: string}[] = [];
-
-  for (let node: DocNode | undefined = leafNode; node; node = node.parent) {
-    if (node && !node.missing) {
-      const to = node.path === '/' ? node.path : `/${node.path}/`;
-      const title = node.frontmatter.sidebar_title ?? node.frontmatter.title;
-
-      breadcrumbs.unshift({
-        to,
-        title,
-      });
-    }
-  }
 
   const handlePlatformsClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -37,7 +27,7 @@ export function Breadcrumbs({leafNode}: BreadcrumbsProps) {
 
   return (
     <ul className="not-prose list-none flex flex-wrap" style={{margin: 0}}>
-      {breadcrumbs.map(b => {
+      {items.map(b => {
         const isPlatformsLink = b.to === '/platforms/';
         return (
           <li className={styles['breadcrumb-item']} key={b.to}>
