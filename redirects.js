@@ -28,7 +28,7 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/telemetry/scopes/',
-    destination: '/sdk/foundations/data-model/scopes/',
+    destination: '/sdk/foundations/state-management/scopes/',
   },
   {
     source: '/sdk/data-model/event-payloads/types/',
@@ -100,7 +100,23 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/unified-api/:path*',
-    destination: '/sdk/miscellaneous/unified-api/:path*',
+    destination: '/sdk/foundations/',
+  },
+  {
+    source: '/sdk/miscellaneous/unified-api/:path*',
+    destination: '/sdk/foundations/',
+  },
+  {
+    source: '/sdk/foundations/overview/',
+    destination: '/sdk/foundations/',
+  },
+  {
+    source: '/sdk/foundations/data-model/scopes/',
+    destination: '/sdk/foundations/state-management/scopes/',
+  },
+  {
+    source: '/sdk/foundations/data-model/attributes/',
+    destination: '/sdk/foundations/state-management/scopes/attributes/',
   },
   {
     source: '/sdk/sessions/:path*',
@@ -128,7 +144,7 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/telemetry/attributes/',
-    destination: '/sdk/foundations/data-model/attributes/',
+    destination: '/sdk/foundations/state-management/scopes/attributes/',
   },
   {
     source: '/sdk/telemetry/spans/batch-processor/',
