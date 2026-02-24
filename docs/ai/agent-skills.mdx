@@ -1,0 +1,163 @@
+---
+title: Agent Skills
+sidebar_order: 10
+description: "Teach your AI coding assistant how to set up and configure Sentry in your projects, and how to use Sentry's AI agents to debug and fix issues, even in your PRs."
+keywords:
+  - agent skills
+  - Claude Code
+  - Cursor
+  - GitHub Copilot
+  - OpenAI Codex
+  - AI coding assistant
+  - vibe coding
+  - AI setup
+  - Windsurf
+  - AmpCode
+  - OpenCode
+---
+
+Agent skills are instruction sets that teach AI coding assistants how to perform specific tasks. Sentry's official agent skills give your AI assistant the knowledge to set up and configure Sentry in your projects with no manual configuration required. Use [workflow skills](/ai/agent-skills/#workflow-skills) to debug and fix issues in your projects.
+
+<StepComponent>
+
+## Available Skills
+
+There are two types of official Sentry agent skills:
+
+- **Setup skills** - Set up Sentry in your projects with no manual configuration required.
+- **Workflow skills** - Debug and fix issues in your projects.
+
+Check out the latest and full list of skills [here](https://skills.sh/getsentry/sentry-agent-skills).
+
+## Install
+
+Run this in your project (or from any directory for user-level install) to add Sentry agent skills. Omit `--skill` to add all skills from the repo.
+
+```bash {tabTitle: npx skills}
+npx skills add getsentry/sentry-agent-skills --skill sentry-fix-issues
+```
+
+```bash {tabTitle: dotagents}
+npx @sentry/dotagents add getsentry/sentry-agent-skills --name sentry-fix-issues
+```
+
+To add all Sentry skills:
+
+```bash {tabTitle: npx skills}
+npx skills add getsentry/sentry-agent-skills
+```
+
+```bash {tabTitle: dotagents}
+npx @sentry/dotagents add getsentry/sentry-agent-skills
+```
+
+Alternatively, use [dotagents](/ai/dotagents/) to manage skills declaratively with locked versions. Initialize your project, add Sentry skills, then install:
+
+```bash
+# Initialize dotagents in your project (creates agents.toml)
+npx @sentry/dotagents init
+
+# Add a specific Sentry skill
+npx @sentry/dotagents add getsentry/sentry-agent-skills --name sentry-fix-issues
+
+# Or add all Sentry skills
+npx @sentry/dotagents add getsentry/sentry-agent-skills
+
+# Install all declared skills
+npx @sentry/dotagents install
+```
+
+This creates an `agents.toml` that pins skill versions and can be committed to your repo, so every team member gets the same skills automatically.
+
+<Alert level="info" title="Cursor users">
+
+Agent skills require Cursor Nightly. Enable via: **Cursor Settings > Rules > Import Settings > Agent Skills**
+
+</Alert>
+
+## Quick Reference
+
+Paths where each client looks for skills: **user-level** (all your projects) and **project-level** (current repository only).
+
+| Client          | User-Level Path             | Project-Level Path |
+| --------------- | --------------------------- | ------------------ |
+| **Claude Code** | `~/.claude/skills/`         | `.claude/skills/`  |
+| **Codex**       | `~/.codex/skills/`          | `.codex/skills/`   |
+| **Copilot**     | `~/.copilot/skills/`        | `.github/skills/`  |
+| **Cursor**      | `~/.cursor/skills/`         | `.cursor/skills/`  |
+| **OpenCode**    | `~/.config/opencode/skill/` | `.opencode/skill/` |
+| **AmpCode**     | `~/.config/agents/skills/`  | `.agents/skills/`  |
+
+## Usage
+
+Once installed, your AI assistant will automatically discover the skills. Simply ask it to perform Sentry-related tasks:
+
+### Setup
+
+| What to Say                                | Skill Used                   |
+| ------------------------------------------ | ---------------------------- |
+| "Add Sentry to my React app"               | `sentry-react-setup`         |
+| "Set up Sentry in React Native"            | `sentry-react-native-setup`  |
+| "Add Sentry to my Python/Django/Flask app" | `sentry-python-setup`        |
+| "Set up Sentry in my Ruby/Rails app"       | `sentry-ruby-setup`          |
+| "Add performance monitoring to my app"     | `sentry-setup-tracing`       |
+| "Enable Sentry logging"                    | `sentry-setup-logging`       |
+| "Track custom metrics with Sentry"         | `sentry-setup-metrics`       |
+| "Monitor my OpenAI/LangChain calls"        | `sentry-setup-ai-monitoring` |
+
+### Debugging & Workflow
+
+| What to Say                                                          | Skill Used              |
+| -------------------------------------------------------------------- | ----------------------- |
+| "Fix the recent Sentry errors"                                       | `sentry-fix-issues`     |
+| "Debug the production TypeError"                                     | `sentry-fix-issues`     |
+| "Work through my Sentry backlog"                                     | `sentry-fix-issues`     |
+| "Review Sentry comments on PR #123"                                  | `sentry-pr-code-review` |
+| "Fix the issues Sentry found in my PR"                               | `sentry-pr-code-review` |
+| "Create an alert that emails me when a high priority issue resolves" | `sentry-create-alert`   |
+| "Set up a Slack notification for new Sentry issues"                  | `sentry-create-alert`   |
+
+The assistant will load the appropriate skill and guide you through the process.
+
+## Contributing
+
+Want to contribute a new skill? Skills follow the [Agent Skills specification](https://agentskills.io/specification). Here's what one looks like:
+
+Each skill is a folder with a `SKILL.md` file. The file has YAML frontmatter (`name`, `description`) and markdown instructions the AI assistant will use.
+
+```text
+skill-name/
+  SKILL.md        # Required: YAML frontmatter + markdown instructions
+```
+
+```markdown
+---
+name: skill-name
+description: Description of what this skill does and when to use it
+---
+
+# Skill Title
+
+Instructions for the AI assistant...
+```
+
+**Requirements:**
+
+1. Follow the [Agent Skills specification](https://agentskills.io/specification)
+2. Have a valid `name` (lowercase, hyphens, 1-64 characters)
+3. Include a clear `description` (1-1024 characters)
+4. **Keep skills concise** — use tables over prose, avoid obvious information
+5. Include an "Invoke This Skill When" section with trigger phrases
+6. Verify technical details against Sentry docs
+
+### Style Guidelines
+
+- Prefer tables over paragraphs for reference information
+- Use phases/steps for multi-stage workflows
+- Include version requirements where applicable
+- Add troubleshooting tables for common issues
+- Target ~100-200 lines per skill to minimize token usage
+
+Submit contributions to the [sentry-agent-skills repository](https://github.com/getsentry/sentry-agent-skills).
+
+</StepComponent>

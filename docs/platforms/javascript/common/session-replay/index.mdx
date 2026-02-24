@@ -270,7 +270,24 @@ Sentry.init({
 
 ### How Sampling Works
 
-Sampling begins as soon as a session starts. <PlatformIdentifier name="replays-session-sample-rate" /> is evaluated first. If it's sampled, the replay recording will begin. Otherwise, <PlatformIdentifier name="replays-on-error-sample-rate" /> is evaluated and if it's sampled, the integration will begin buffering the replay and will only upload it to Sentry if an error occurs. The remainder of the replay will behave similarly to a whole-session replay. 
+Sampling begins as soon as a session starts. When someone visits your application, sampling decisions happen in this order:
+
+1. **<PlatformIdentifier name="replays-session-sample-rate" /> is checked first**
+   - If sampled: Full session recording starts and is sent to Sentry in real-time
+   - If not sampled: Recording is buffered in memory only (last 60 seconds kept)
+
+2. **If an error occurs** (and session wasn't selected for full recording):
+   - <PlatformIdentifier name="replays-on-error-sample-rate" /> is checked
+   - If sampled: Buffered 60 seconds + rest of session is sent to Sentry
+   - If not sampled: Buffer is discarded, nothing sent
+
+**When data leaves your browser:**
+
+| Scenario | Data Sent to Sentry |
+|----------|---------------------|
+| Selected for session sampling | Immediately (real-time chunks) |
+| Not selected, no error occurs | Never (buffer discarded) |
+| Not selected, error occurs & sampled | After error (60s before + everything after) |
 
 Read more about <PlatformLink to="/session-replay/understanding-sessions/">understanding sessions</PlatformLink>.
 
@@ -281,6 +298,14 @@ Errors that happen on the page while a replay is running will be linked to the r
 - The replay was rate-limited and couldn't be accepted.
 - The replay was deleted by a member of your org.
 - There were network errors and the replay wasn't saved.
+
+## Trace Linking
+
+When [tracing](/product/explore/traces/) is enabled, traces are visible in the Replay timeline. This lets you see performance data in the context of what the user was doing — you can watch a user click a button, then see the corresponding network request and how long it took.
+
+From the Replay Details page, click on any trace span in the timeline to jump directly to the trace view. From there, you can drill into individual spans, see database queries, API calls, and identify performance bottlenecks that affected the user's experience.
+
+This connection works both ways: when viewing a trace, you can jump to the associated replay to see exactly what the user experienced during that operation.
 
 ## Verify
 

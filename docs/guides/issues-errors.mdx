@@ -1,0 +1,643 @@
+---
+title: "What to Prioritize"
+sidebar_order: 5
+description: "Practical guidance on what errors to catch, how to search issues, and when to set alerts."
+---
+
+Your Sentry SDK is sending errors to [Sentry Issues](/product/issues/) out of the box. Now what? This guide covers the high-value error patterns that help you catch problems before they impact users and fix issues faster.
+
+## Anatomy of an Error
+
+Sentry automatically captures unhandled errors. For handled errors, use `captureException()` and add context:
+
+```javascript {tabTitle: JavaScript}
+try {
+  await processOrder(order);
+} catch (error) {
+  Sentry.captureException(error, {
+    tags: {
+      order_id: order.id,
+      payment_method: order.paymentMethod,
+    },
+    level: "error",
+  });
+  throw error;
+}
+```
+
+```python {tabTitle: Python}
+import sentry_sdk
+
+try:
+    process_order(order)
+except Exception as e:
+    sentry_sdk.capture_exception(e)
+    sentry_sdk.set_tag("order_id", order.id)
+    sentry_sdk.set_tag("payment_method", order.payment_method)
+    raise
+```
+
+```php {tabTitle: PHP}
+try {
+    $this->processOrder($order);
+} catch (\Throwable $exception) {
+    \Sentry\configureScope(function (\Sentry\State\Scope $scope) use ($order): void {
+        $scope->setTag('order_id', $order->id);
+        $scope->setTag('payment_method', $order->paymentMethod);
+    });
+    \Sentry\captureException($exception);
+    throw $exception;
+}
+```
+
+```csharp {tabTitle: .NET}
+try
+{
+    await ProcessOrder(order);
+}
+catch (Exception ex)
+{
+    SentrySdk.ConfigureScope(scope =>
+    {
+        scope.SetTag("order_id", order.Id);
+        scope.SetTag("payment_method", order.PaymentMethod);
+    });
+    SentrySdk.CaptureException(ex);
+    throw;
+}
+```
+
+```ruby {tabTitle: Ruby}
+begin
+  process_order(order)
+rescue => e
+  Sentry.set_tags(order_id: order.id, payment_method: order.payment_method)
+  Sentry.capture_exception(e)
+  raise
+end
+```
+
+```dart {tabTitle: Flutter}
+try {
+  await processOrder(order);
+} catch (error, stackTrace) {
+  Sentry.configureScope((scope) {
+    scope.setTag('order_id', order.id);
+    scope.setTag('payment_method', order.paymentMethod);
+  });
+  await Sentry.captureException(error, stackTrace: stackTrace);
+  rethrow;
+}
+```
+
+```swift {tabTitle: Swift}
+import Sentry
+
+do {
+    try processOrder(order)
+} catch {
+    SentrySDK.configureScope { scope in
+        scope.setTag(value: order.id, key: "order_id")
+        scope.setTag(value: order.paymentMethod, key: "payment_method")
+    }
+    SentrySDK.capture(error: error)
+    throw error
+}
+```
+
+```kotlin {tabTitle: Kotlin}
+import io.sentry.Sentry
+
+try {
+    processOrder(order)
+} catch (e: Exception) {
+    Sentry.configureScope { scope ->
+        scope.setTag("order_id", order.id)
+        scope.setTag("payment_method", order.paymentMethod)
+    }
+    Sentry.captureException(e)
+    throw e
+}
+```
+
+**Levels:** `fatal`, `error`, `warning`, `info`, `debug`
+
+**Context:** Tags, user info, logs, and session replays help you debug faster. Tags are searchable, so use them for high-cardinality data like IDs, regions, and feature flags.
+
+Every error in Sentry is automatically trace-connected. Click the trace ID to see the full [trace view](/concepts/key-terms/tracing/#traces-to-trace-view) and understand what led to the error.
+
+## Where to Look
+
+Start by creating these five [Issue views](https://sentry.io/orgredirect/organizations/:orgslug/issues/) to catch the most critical problems.
+
+**Save these views**: Turn these five searches into saved Issues views by clicking **Save As** after setting each filter.
+
+### 1. Unresolved High-Volume Issues
+
+High event counts mean either many users are affected or one user is stuck in a loop. Both need immediate attention.
+
+**[In Issues](https://sentry.io/orgredirect/organizations/:orgslug/issues/):** Search for `is:unresolved` (applied by default) and use the sort dropdown (defaults to "Last Seen") to sort by **Events**
+
+**What to look for:**
+
+- Issues at the top with high event counts (many occurrences in a short time)
+- Click into these issues to see the stack trace and how many users are affected
+
+Learn more about [Issue States & Triage](/product/issues/states-triage/) to manage and prioritize issues.
+
+**Alert idea:** Trigger when event count spikes in a short time window to catch high-impact bugs and infinite loops.
+
+### 2. New Issues After Deploy
+
+Every deploy introduces risk. New errors that appear right after a release are usually regressions.
+
+**[In Issues](https://sentry.io/orgredirect/organizations/:orgslug/issues/):** Filter by `is:unresolved firstRelease:v1.2.3` to find issues introduced in a specific release. Sort by **Age** to see the newest issues first.
+
+**What to look for:**
+
+- Issues that didn't exist in the previous release
+- Errors in code paths you just changed
+- New error types (TypeError, ReferenceError) indicating breaking changes
+
+Learn more about [Release Health](/product/releases/health/) to track error rates and crash-free sessions per release.
+
+**Alert idea:** Trigger when a new issue is created, filtered to production environment and error/fatal level. This catches regressions immediately after deploy.
+
+### 3. Errors by Environment
+
+Production errors are critical. Staging errors help you catch problems before they reach users. Comparing environments helps you spot configuration issues.
+
+**[In Issues](https://sentry.io/orgredirect/organizations/:orgslug/issues/):** Search for `is:unresolved environment:production` or `environment:staging`
+
+**What to look for:**
+
+- Errors only in production (often config, API keys, or data issues)
+- Errors only in staging (caught before deploy, needs fixing)
+- Same error in both (systemic code issue)
+
+Learn more about <PlatformLink to="/configuration/environments/">configuring environments</PlatformLink> to separate production and staging issues.
+
+**Alert idea:** Trigger when a new issue is created, filtered to production environment. These often indicate config drift or environment-specific bugs.
+
+### 4. Errors with High User Impact
+
+Some errors heavily affect power users. Others affect everyone, but rarely. Prioritize by unique user count, not just event count.
+
+**[In Issues](https://sentry.io/orgredirect/organizations/:orgslug/issues/):** Search for `is:unresolved` and use the sort dropdown to sort by **Users**
+
+**What to look for:**
+
+- Issues affecting many unique users (e.g., more than 10 users indicates widespread impact)
+- Issues affecting VIP or paying users (check user tags)
+- Issues blocking core workflows (login, checkout, data access)
+
+Learn more about <PlatformLink to="/enriching-events/tags/">custom tags</PlatformLink> to mark user tiers, plans, or roles. Then search `is:unresolved user.tier:enterprise` to prioritize high-value users.
+
+**Alert idea:** Trigger when unique user count exceeds a threshold in a time window (e.g., more than 50 users in 1 hour) to catch widespread issues.
+
+### 5. User-Reported Issues
+
+When users report problems, they often see an error. User feedback tells you which errors hurt the experience most, even if event counts are low.
+
+Enable the [User Feedback Widget](/platforms/javascript/user-feedback/) to let users report problems directly when errors happen.
+
+**[In Issues](https://sentry.io/orgredirect/organizations/:orgslug/issues/):** Navigate to **User Feedback** in the left sidebar to see reports submitted by users.
+
+**What to look for:**
+
+- User descriptions of what they were doing when the error occurred
+- Patterns in feedback about specific workflows or features
+- Issues that frustrate users even if they don't generate many events
+
+**Alert idea:** Trigger when a new issue is created, filtered to issue category equals feedback. This ensures you respond quickly when users report problems.
+
+## Error Handling Strategy
+
+### Capture Context, Not Just Exceptions
+
+When you catch an error, add tags and context to make debugging instant. Set user info globally so it applies to all events. Enable [Session Replays](/product/explore/session-replay/) and [Logs](/product/explore/logs/) for even more visibility.
+
+```javascript {tabTitle: JavaScript}
+// Set user globally (e.g., after login)
+Sentry.setUser({ id: user.id, email: user.email });
+
+// Add tags and context per-event
+Sentry.captureException(error, {
+  tags: {
+    order_id: order.id,
+    payment_gateway: "stripe",
+    region: user.region,
+  },
+  contexts: {
+    order: {
+      total: order.total,
+      items: order.items.length,
+      discount_code: order.discountCode,
+    },
+  },
+});
+```
+
+```python {tabTitle: Python}
+import sentry_sdk
+
+# Set user globally (e.g., after login)
+sentry_sdk.set_user({"id": user.id, "email": user.email})
+
+# Add tags and context per-event
+sentry_sdk.set_tags({
+    "order_id": order.id,
+    "payment_gateway": "stripe",
+    "region": user.region
+})
+sentry_sdk.set_context("order", {
+    "total": order.total,
+    "items": len(order.items),
+    "discount_code": order.discount_code
+})
+sentry_sdk.capture_exception(error)
+```
+
+```php {tabTitle: PHP}
+// Set user globally (e.g., after login)
+\Sentry\configureScope(function (\Sentry\State\Scope $scope) use ($user): void {
+    $scope->setUser(['id' => $user->id, 'email' => $user->email]);
+});
+
+// Add tags and context per-event
+\Sentry\configureScope(function (\Sentry\State\Scope $scope) use ($order, $user): void {
+    $scope->setTag('order_id', $order->id);
+    $scope->setTag('payment_gateway', 'stripe');
+    $scope->setTag('region', $user->region);
+    $scope->setContext('order', [
+        'total' => $order->total,
+        'items' => count($order->items),
+        'discount_code' => $order->discountCode
+    ]);
+});
+\Sentry\captureException($error);
+```
+
+```csharp {tabTitle: .NET}
+// Set user globally (e.g., after login)
+SentrySdk.ConfigureScope(scope =>
+{
+    scope.User = new SentryUser { Id = user.Id, Email = user.Email };
+});
+
+// Add tags and context per-event
+SentrySdk.ConfigureScope(scope =>
+{
+    scope.SetTag("order_id", order.Id);
+    scope.SetTag("payment_gateway", "stripe");
+    scope.SetTag("region", user.Region);
+    scope.Contexts["order"] = new
+    {
+        total = order.Total,
+        items = order.Items.Count,
+        discount_code = order.DiscountCode
+    };
+});
+SentrySdk.CaptureException(error);
+```
+
+```ruby {tabTitle: Ruby}
+# Set user globally (e.g., after login)
+Sentry.set_user(id: user.id, email: user.email)
+
+# Add tags and context per-event
+Sentry.set_tags(
+  order_id: order.id,
+  payment_gateway: 'stripe',
+  region: user.region
+)
+Sentry.set_context('order', {
+  total: order.total,
+  items: order.items.length,
+  discount_code: order.discount_code
+})
+Sentry.capture_exception(error)
+```
+
+```dart {tabTitle: Flutter}
+// Set user globally (e.g., after login)
+Sentry.configureScope((scope) {
+  scope.setUser(SentryUser(id: user.id, email: user.email));
+});
+
+// Add tags and context per-event
+Sentry.configureScope((scope) {
+  scope.setTag('order_id', order.id);
+  scope.setTag('payment_gateway', 'stripe');
+  scope.setTag('region', user.region);
+  scope.setContexts('order', {
+    'total': order.total,
+    'items': order.items.length,
+    'discount_code': order.discountCode,
+  });
+});
+await Sentry.captureException(error);
+```
+
+```swift {tabTitle: Swift}
+import Sentry
+
+// Set user globally (e.g., after login)
+let sentryUser = User()
+sentryUser.userId = user.id
+sentryUser.email = user.email
+SentrySDK.setUser(sentryUser)
+
+// Add tags and context per-event
+SentrySDK.configureScope { scope in
+    scope.setTag(value: order.id, key: "order_id")
+    scope.setTag(value: "stripe", key: "payment_gateway")
+    scope.setTag(value: user.region, key: "region")
+    scope.setContext(value: [
+        "total": order.total,
+        "items": order.items.count,
+        "discount_code": order.discountCode
+    ], key: "order")
+}
+SentrySDK.capture(error: error)
+```
+
+```kotlin {tabTitle: Kotlin}
+import io.sentry.Sentry
+import io.sentry.protocol.User
+
+// Set user globally (e.g., after login)
+Sentry.setUser(User().apply {
+    id = user.id
+    email = user.email
+})
+
+// Add tags and context per-event
+Sentry.configureScope { scope ->
+    scope.setTag("order_id", order.id)
+    scope.setTag("payment_gateway", "stripe")
+    scope.setTag("region", user.region)
+    scope.setContexts("order.total", order.total)
+    scope.setContexts("order.items", order.items.size)
+    scope.setContexts("order.discount_code", order.discountCode)
+}
+Sentry.captureException(error)
+```
+
+**Search in Sentry:** `order_id:order_123` or `payment_gateway:stripe region:us-west`
+
+### Ignore Known Noise
+
+Some errors aren't actionable. Use <PlatformLink to="/configuration/options/#ignoreErrors">ignoreErrors</PlatformLink> to filter them out.
+
+```javascript {tabTitle: JavaScript}
+Sentry.init({
+  dsn: "...",
+  ignoreErrors: [
+    "Non-Error promise rejection captured",
+    /^Timeout of \d+ms exceeded$/,
+  ],
+});
+```
+
+```python {tabTitle: Python}
+import sentry_sdk
+
+sentry_sdk.init(
+    dsn="...",
+    ignore_errors=[
+        ValueError,
+        ConnectionError,
+    ]
+)
+```
+
+```php {tabTitle: PHP}
+\Sentry\init([
+    'dsn' => '...',
+    'ignore_exceptions' => [
+        \RuntimeException::class,
+    ],
+]);
+```
+
+```csharp {tabTitle: .NET}
+SentrySdk.Init(options =>
+{
+    options.Dsn = "...";
+    options.SetBeforeSend((sentryEvent, hint) =>
+    {
+        // Filter out specific error types
+        if (sentryEvent.Exception is NetworkException)
+        {
+            return null;
+        }
+        return sentryEvent;
+    });
+});
+```
+
+```ruby {tabTitle: Ruby}
+Sentry.init do |config|
+  config.dsn = '...'
+  config.before_send = lambda do |event, hint|
+    # Filter out specific error types
+    if hint[:exception].is_a?(NetworkError)
+      nil
+    else
+      event
+    end
+  end
+end
+```
+
+```dart {tabTitle: Flutter}
+await SentryFlutter.init(
+  (options) {
+    options.dsn = '...';
+    options.beforeSend = (event, hint) {
+      // Filter out specific error types
+      if (event.exceptions?.any((e) => e.type == 'NetworkException') ?? false) {
+        return null;
+      }
+      return event;
+    };
+  },
+  appRunner: () => runApp(MyApp()),
+);
+```
+
+```swift {tabTitle: Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "..."
+    options.beforeSend = { event in
+        // Filter out specific error types
+        if let exceptions = event.exceptions,
+           exceptions.contains(where: { $0.type == "NetworkError" }) {
+            return nil
+        }
+        return event
+    }
+}
+```
+
+```kotlin {tabTitle: Kotlin}
+import io.sentry.android.core.SentryAndroid
+import io.sentry.SentryOptions.BeforeSendCallback
+
+SentryAndroid.init(context) { options ->
+    options.dsn = "..."
+    options.beforeSend = BeforeSendCallback { event, hint ->
+        // Filter out specific error types
+        if (event.exceptions?.any { it.type == "NetworkException" } == true) {
+            null
+        } else {
+            event
+        }
+    }
+}
+```
+
+You can also use <PlatformLink to="/configuration/filtering/#using-before-send">beforeSend</PlatformLink> to filter errors dynamically:
+
+```javascript {tabTitle: JavaScript}
+Sentry.init({
+  beforeSend(event, hint) {
+    // Ignore errors from browser extensions
+    if (
+      event.exception?.values?.[0]?.stacktrace?.frames?.some((frame) =>
+        frame.filename?.includes("chrome-extension://")
+      )
+    ) {
+      return null;
+    }
+    return event;
+  },
+});
+```
+
+```python {tabTitle: Python}
+import sentry_sdk
+
+def before_send(event, hint):
+    # Ignore specific error types
+    if "exc_info" in hint:
+        exc_type, exc_value, tb = hint["exc_info"]
+        if isinstance(exc_value, KeyboardInterrupt):
+            return None
+    return event
+
+sentry_sdk.init(
+    dsn="...",
+    before_send=before_send
+)
+```
+
+```php {tabTitle: PHP}
+\Sentry\init([
+    'dsn' => '...',
+    'before_send' => function (\Sentry\Event $event, ?\Sentry\EventHint $hint): ?\Sentry\Event {
+        // Ignore specific error types
+        if ($hint !== null && $hint->exception instanceof \RuntimeException) {
+            return null;
+        }
+        return $event;
+    },
+]);
+```
+
+```csharp {tabTitle: .NET}
+SentrySdk.Init(options =>
+{
+    options.Dsn = "...";
+    options.SetBeforeSend((sentryEvent, hint) =>
+    {
+        // Ignore specific error types
+        if (sentryEvent.Exception is InvalidOperationException)
+        {
+            return null;
+        }
+        return sentryEvent;
+    });
+});
+```
+
+```ruby {tabTitle: Ruby}
+Sentry.init do |config|
+  config.dsn = '...'
+  config.before_send = lambda do |event, hint|
+    # Ignore specific error types
+    if hint[:exception].is_a?(ArgumentError)
+      nil
+    else
+      event
+    end
+  end
+end
+```
+
+```dart {tabTitle: Flutter}
+await SentryFlutter.init(
+  (options) {
+    options.dsn = '...';
+    options.beforeSend = (event, hint) {
+      // Ignore specific error types
+      final exception = hint?.exception;
+      if (exception is StateError) {
+        return null;
+      }
+      return event;
+    };
+  },
+  appRunner: () => runApp(MyApp()),
+);
+```
+
+```swift {tabTitle: Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "..."
+    options.beforeSend = { event in
+        // Ignore specific error types
+        if let error = event.error as NSError?,
+           error.domain == "MyAppErrorDomain" {
+            return nil
+        }
+        return event
+    }
+}
+```
+
+```kotlin {tabTitle: Kotlin}
+import io.sentry.android.core.SentryAndroid
+import io.sentry.SentryOptions.BeforeSendCallback
+
+SentryAndroid.init(context) { options ->
+    options.dsn = "..."
+    options.beforeSend = BeforeSendCallback { event, hint ->
+        // Ignore specific error types
+        val throwable = hint.originalThrowable
+        if (throwable is IllegalStateException) {
+            null
+        } else {
+            event
+        }
+    }
+}
+```
+
+## Quick Reference
+
+| View               | Search Query                     | Look For                              |
+| ------------------ | -------------------------------- | ------------------------------------- |
+| High-volume issues | `is:unresolved` (sort by Events) | High event counts, post-deploy spikes |
+| New regressions    | `is:unresolved` (sort by Age)    | Issues that first appeared recently   |
+| Environment issues | `environment:production`         | Prod-only config or data issues       |
+| High user impact   | `is:unresolved` (sort by Users)  | Issues affecting many users           |
+
+## Next Steps
+
+Explore the [Issues product walkthrough guides](/product/issues/) to learn more about the Sentry interface and discover additional tips.

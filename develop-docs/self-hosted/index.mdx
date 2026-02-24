@@ -18,7 +18,6 @@ The difference only resides on a few things that are impossible to be hosted by 
 - [Spike protection](https://docs.sentry.io/pricing/quotas/spike-protection/), as it is tightly coupled with Billing Quotas.
 - [Spend Allocation](https://docs.sentry.io/pricing/quotas/spend-allocation/), as it is tightly coupled with Billing Quotas.
 - Seer and other AI & ML features, as these are currently closed source.
-- [Size Analysis](https://docs.sentry.io/product/size-analysis/) and [Build Distribution](https://docs.sentry.io/product/build-distribution/).
 - [Data Storage Location](https://docs.sentry.io/organization/data-storage-location/), because you own your data.
 - Limited stack-trace resolution for mobile platforms, but all other features are available:
   - [iOS Symbolication](https://docs.sentry.io/platforms/apple/data-management/debug-files/symbol-servers#built-in-repositories), because Apple does not provide a public symbol server, nor do they allow us to distribute the Debug Information Files (DIFs) ourselves.
@@ -40,9 +39,11 @@ These are the minimum requirements:
 
 We recommend using 32 GB RAM, but it works with 16 GB RAM + 16 GB swap as well. You will not notice a downside if your 16 GB swap is on a high speed disk.
 
+Self-hosted Sentry relies heavily on disk I/O because it runs databases, message brokers, and other services on a single machine. If you're using a monitoring system that measures IOPS (Input/Output Operations Per Second) and `iowait`, we recommend monitoring `iowait` to see what number is fit for you, for Self-hosted Sentry, `iowait > 10%` of CPU time probably shows your system cannot handle the load. A high-IOPS disk will significantly improve your Sentry installation's performance. Additionally, configuring a hard IOPS limit helps prevent noisy neighbors and disk saturation issues.
+
 Depending on your traffic volume, you may want to increase your system specification to handle increased load. Although most of the times, this is not the case for self-hosted Sentry, since no matter how small or big the traffic is, you will most likely hover around the same used resources.
 
-If increasing the disk storage space isn't possible, you can migrate your storage to use external storage such as AWS S3 or Google Cloud Storage (GCS). Decreasing your `SENTRY_RETENTION_DAYS` environment variable to lower numbers will save some storage space from being full, at the cost of having shorter data retention period. See [Event Retention](/self-hosted/configuration#event-retention) section.
+If increasing the disk storage space isn't possible, you can migrate your storage to use external storage such as AWS S3 or Google Cloud Storage (GCS). Decreasing your `SENTRY_EVENT_RETENTION_DAYS` environment variable to lower numbers will save some storage space from being full, at the cost of having shorter data retention period. See [Event Retention](/self-hosted/configuration#event-retention) section.
 
 Below is a breakdown of self-hosted Sentry installation compatibility with various Linux distributions:
 * **Debian/Ubuntu-based** distros are preferred; most users succeed with them, and they're used on Sentry's dogfood instance.
@@ -143,7 +144,7 @@ By default Sentry sends anonymous usage statistics to the Sentry team. It helps 
     "default": {
       "httpProxy": "http://proxy:3128",
       "httpsProxy": "http://proxy:3128",
-      "noProxy": "localhost,smtp,memcached,redis,postgres,pgbouncer,kafka,clickhouse,seaweedfs,snuba-api,symbolicator,web,worker,nginx,relay,vroom,taskbroker,172.17.0.0/16,127.0.0.0/8"
+      "noProxy": "localhost,smtp,memcached,redis,postgres,pgbouncer,kafka,clickhouse,seaweedfs,snuba-api,symbolicator,web,worker,nginx,relay,vroom,taskbroker,0.0.0.0,172.17.0.0/16,127.0.0.0/8"
     }
   }
 }

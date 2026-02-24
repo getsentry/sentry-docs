@@ -1,54 +1,319 @@
 ---
-title: Replays
-sidebar_order: 7
+title: Replay
+description: Session recording protocol for capturing and streaming browser or mobile user sessions to Sentry.
+spec_id: sdk/telemetry/replays
+spec_version: 1.2.0
+spec_status: stable
+spec_platforms:
+  - browser
+  - mobile
+spec_depends_on:
+  - id: sdk/foundations/transport/envelopes
+    version: ">=1.0.0"
+spec_changelog:
+  - version: 1.2.0
+    date: 2025-07-30
+    summary: Added session mode hard limit behavior (stop recording, clear replay_id, remove from scope)
+  - version: 1.1.0
+    date: 2025-07-29
+    summary: Added SDK behavior for session mode and buffer mode
+  - version: 1.0.0
+    date: 2024-08-15
+    summary: Initial spec — replay_event and replay_recording wire format
 ---
 
-This document defines the format used by Sentry to ingest replays. This
-document is meant for Sentry SDK developers and maintainers of the Session Replay
-ingestion pipeline.
+<SpecRfcAlert />
 
-A `"replay_event"` Item should always be sent with a `"replay_recording"` Item
-in the same envelope.
+<SpecMeta />
 
-## `"replay_event"` Item
+## Overview
 
-### Replay Attributes
+Replay captures a recording of a user's browser or mobile session and streams it to Sentry in segments. Each segment consists of two envelope items sent together: a `replay_event` (metadata about the replay) and a `replay_recording` (the actual recording data). Sentry stitches segments into a continuous replay for debugging.
 
-The following attributes are specific to the `"replay_event"` Item type.
+Related specs:
+- [Envelopes](/sdk/foundations/transport/envelopes/) — transport format
+- [Envelope Items](/sdk/foundations/transport/envelope-items/) — `replay_event` and `replay_recording` item type constraints
+- [Replay Recording Events](/sdk/foundations/transport/event-payloads/replay-recording/) — recording instruction set format
 
-| Key                    | Type                      | Description                                                                                                                                                                                                                                                                        |
-| ---------------------- | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| type                   | `"replay_event"`          | Must be `"replay_event"`                                                                                                                                                                                                                                                           |
-| replay_id              | string                    | A unique ID for the replay. Follows the [same requirements](/sdk/data-model/event-payloads/#required-attributes) as an `event_id`: Hexadecimal string representing a uuid4 value. The length is exactly 32 characters. Dashes are not allowed. Has to be lowercase.                |
-| replay_type            | `"session"` \| `"buffer"` | Describes the type of replay. `buffer` means the replay is buffered while waiting for an error to occur or until a manual flush. `session` means the replay starts recording immediately and continues through the lifespan of the replay session.                                 |
-| segment_id             | number                    | The segment id.                                                                                                                                                                                                                                                                    |
-| replay_start_timestamp | number                    | UNIX timestamp of the start of the replay (in seconds). This is only required on the first segment.                                                                                                                                                                                |
-| urls                   | list[string]              | List of URLs in order of visitation.                                                                                                                                                                                                                                               |
-| trace_ids              | list[string]              | List of trace ids that occurred during the replay.                                                                                                                                                                                                                                 |
-| error_ids              | list[string]              | **DEPRECATED **                                                                                                                                                                                                                                                                    |
+---
 
-### Event Attributes
+## Concepts
 
-The following attributes are a subset of the [optional attributes](/sdk/data-model/event-payloads/#optional-attributes) of an Event.
+### Replay Modes
 
-| Key                        | Type   | Description                                      |
-| -------------------------- | ------ | ------------------------------------------------ |
-| timestamp                  | number | UNIX timestamp of the current time (in seconds). |
-| event_id                   | string | This should be the same as `replay_id`           |
-| dist                       | string | -                                                |
-| platform                   | string | -                                                |
-| environment                | string | -                                                |
-| release                    | string | -                                                |
-| user.id                    | string | -                                                |
-| user.username              | string | -                                                |
-| user.email                 | string | -                                                |
-| user.ip_address            | string | -                                                |
-| sdk.name                   | string | -                                                |
-| sdk.version                | string | -                                                |
-| request.url                | string | -                                                |
-| request.headers.User-Agent | string | -                                                |
+Replay operates in one of two modes:
 
-### Example
+- **Session mode** (`sessionSampleRate`) — Recording starts immediately at SDK initialization and streams continuously to Sentry.
+- **Buffer mode** (`onErrorSampleRate`) — Recording starts at SDK initialization but is buffered in-memory (ring buffer). Capture is only triggered by an error or manual flush.
+
+### Segments
+
+A replay is composed of **segments**, each identified by a `segment_id` (starting at 0). Each segment is sent as a pair of envelope items: a `replay_event` containing metadata and a `replay_recording` containing the actual recording data.
+
+---
+
+## Behavior
+
+### Session Mode
+
+<SpecSection id="session-mode" status="stable" since="1.1.0">
+
+When an SDK records Session Replay in `session` mode (`sessionSampleRate` is specified), the recording **SHOULD** start when the SDK is initialized and **MUST** be continuously streamed to the Sentry servers. SDKs **SHOULD** send a replay envelope every 5 seconds.
+
+The maximum duration of the recording **MUST NOT** exceed 60 minutes (or 15 minutes without activity on Web). (since 1.2.0) After the hard limit has been reached, the SDK **MUST** stop recording, clear the current `replay_id`, and remove it from the Scope so all subsequent events are not associated with it.
+
+For SDKs that support disk cache, the recording **SHOULD** pause when there is no internet connection or the SDK is being rate-limited. This prevents overflowing the disk cache, which can result in losing more critical envelopes. When internet connection is restored or the rate limit is lifted, the recording **SHOULD** resume.
+
+</SpecSection>
+
+### Buffer Mode
+
+<SpecSection id="buffer-mode" status="stable" since="1.1.0">
+
+When an SDK records Session Replay in `buffer` mode (`onErrorSampleRate` is specified), the recording **SHOULD** start when the SDK is initialized and **MUST** be buffered in-memory (and to disk if the SDK supports disk cache) in a ring buffer for up to 30 seconds back.
+
+Capturing of the recording **MAY** be triggered when one of the following conditions is met:
+
+- A crash or error event occurs and is captured by the SDK.
+- The `flush` API has been called manually on the replay (for SDKs that support manual API).
+
+After the initial (buffered) segment has been captured, the SDK **SHOULD** continue recording in `session` mode. The `replay_type` field of subsequent segments **MUST** still be set to `buffer` to reflect the original replay type.
+
+If the crash or error event has been dropped in `beforeSend`, the replay **MUST NOT** be captured.
+
+</SpecSection>
+
+---
+
+## Wire Format
+
+### Replay Event Payload
+
+<SpecSection id="replay-event-payload" status="stable" since="1.0.0">
+
+A `replay_event` envelope item **MUST** always be sent together with a `replay_recording` item in the same envelope. An envelope **MUST** contain at most one `replay_event` item.
+
+#### Replay Attributes
+
+| Field | Type | Required | Since | Description |
+|-------|------|----------|-------|-------------|
+| `type` | String | **REQUIRED** | 1.0.0 | **MUST** be `"replay_event"`. |
+| `replay_id` | String | **REQUIRED** | 1.0.0 | A unique ID for the replay. Follows the [same requirements](/sdk/foundations/transport/event-payloads/#required-attributes) as `event_id`: hexadecimal UUID v4, exactly 32 characters, lowercase, no dashes. |
+| `replay_type` | String | **REQUIRED** | 1.0.0 | One of `"session"` or `"buffer"`. Describes the mode of the replay. |
+| `segment_id` | Number | **REQUIRED** | 1.0.0 | The segment identifier, starting at 0. |
+| `replay_start_timestamp` | Number | **REQUIRED** (first segment) | 1.0.0 | UNIX timestamp of the start of the replay (in seconds). Only required on the first segment. |
+| `urls` | List[String] | **OPTIONAL** | 1.0.0 | List of URLs in order of visitation. |
+| `trace_ids` | List[String] | **OPTIONAL** | 1.0.0 | List of trace IDs that occurred during the replay. |
+| `error_ids` | List[String] | **DEPRECATED** | 1.0.0 | Deprecated. Do not use. |
+
+#### Event Attributes
+
+The following attributes are a subset of the [optional attributes](/sdk/foundations/transport/event-payloads/#optional-attributes) of an Event.
+
+| Field | Type | Required | Since | Description |
+|-------|------|----------|-------|-------------|
+| `timestamp` | Number | **REQUIRED** | 1.0.0 | UNIX timestamp of the current time (in seconds). |
+| `event_id` | String | **REQUIRED** | 1.0.0 | **MUST** be the same as `replay_id`. |
+| `platform` | String | **OPTIONAL** | 1.0.0 | Platform of the SDK. |
+| `environment` | String | **OPTIONAL** | 1.0.0 | The environment name. |
+| `release` | String | **OPTIONAL** | 1.0.0 | The release version. |
+| `dist` | String | **OPTIONAL** | 1.0.0 | The distribution identifier. |
+| `user.id` | String | **OPTIONAL** | 1.0.0 | User identifier. |
+| `user.username` | String | **OPTIONAL** | 1.0.0 | Username. |
+| `user.email` | String | **OPTIONAL** | 1.0.0 | User email. |
+| `user.ip_address` | String | **OPTIONAL** | 1.0.0 | User IP address. |
+| `sdk.name` | String | **OPTIONAL** | 1.0.0 | SDK name. |
+| `sdk.version` | String | **OPTIONAL** | 1.0.0 | SDK version. |
+| `request.url` | String | **OPTIONAL** | 1.0.0 | Current request URL. |
+| `request.headers.User-Agent` | String | **OPTIONAL** | 1.0.0 | User agent string. |
+
+</SpecSection>
+
+### Replay Recording Item
+
+<SpecSection id="replay-recording-item" status="stable" since="1.0.0">
+
+An envelope **MUST** contain at most one `replay_recording` item. The `length` item header is **REQUIRED** and specifies the size of the recording payload.
+
+The `replay_recording` item consists of two sub-items delimited by a newline:
+
+1. **Metadata** — a JSON object. Currently only `segment_id` is required:
+
+```json
+{"segment_id": 0}
+```
+
+2. **Recording payload** — the replay recording instruction set. This payload **SHOULD** be gzipped, but uncompressed payloads are also accepted. See [Replay Recording Events](/sdk/foundations/transport/event-payloads/replay-recording/) for the recording format.
+
+</SpecSection>
+
+---
+
+## Public API
+
+### Session Sample Rate
+
+<SpecSection id="session-sample-rate" status="stable" since="1.0.0">
+
+SDKs **MUST** accept a `replaysSessionSampleRate` configuration option (number, 0.0–1.0, default 0). This controls the fraction of sessions recorded in session mode. `1.0` records all sessions, `0` records none.
+
+Naming **SHOULD** follow the SDK's language conventions:
+- `replaysSessionSampleRate` (JavaScript)
+- `replays_session_sample_rate` (Python)
+
+</SpecSection>
+
+### Error Sample Rate
+
+<SpecSection id="error-sample-rate" status="stable" since="1.0.0">
+
+SDKs **MUST** accept a `replaysOnErrorSampleRate` configuration option (number, 0.0–1.0, default 0). This controls the fraction of sessions buffered for error replay. `1.0` captures all sessions with an error, `0` captures none.
+
+Naming **SHOULD** follow the SDK's language conventions:
+- `replaysOnErrorSampleRate` (JavaScript)
+- `replays_on_error_sample_rate` (Python)
+
+</SpecSection>
+
+### Replay Integration
+
+<SpecSection id="replay-integration" status="stable" since="1.0.0">
+
+SDKs **MUST** provide a replay integration that initializes the recording subsystem:
+
+```
+replayIntegration(options?) -> Integration
+```
+
+SDKs **MAY** accept privacy and configuration options (text masking, media blocking, network capture settings).
+
+Naming **SHOULD** follow the SDK's language conventions:
+- `replayIntegration()` (JavaScript)
+- `SessionReplayIntegration()` (Python)
+- `SentryReplay` / `SessionReplay` (mobile SDKs)
+
+</SpecSection>
+
+### Get Replay Instance
+
+<SpecSection id="get-replay" status="stable" since="1.0.0">
+
+SDKs **SHOULD** expose a function to retrieve the active replay instance:
+
+```
+getReplay() -> replayInstance | null
+```
+
+Returns the replay integration instance if replay is initialized, or `null` if not. The returned instance provides the runtime control methods documented below.
+
+</SpecSection>
+
+### Get Replay ID
+
+<SpecSection id="get-replay-id" status="stable" since="1.0.0">
+
+The replay instance **MUST** expose a method to retrieve the current replay identifier:
+
+```
+replayInstance.getReplayId() -> replayId | null
+```
+
+Returns the current `replay_id` (string) if a replay is active, or `null` if no replay is recording or buffering. This is useful for checking whether a replay is active before calling other runtime methods.
+
+</SpecSection>
+
+### Start
+
+<SpecSection id="start" status="stable" since="1.1.0">
+
+The replay instance **SHOULD** expose a method to manually start recording in session mode:
+
+```
+replayInstance.start() -> void
+```
+
+Starts recording in session mode regardless of sample rates. If a session is already running, this **SHOULD** be a no-op.
+
+</SpecSection>
+
+### Start Buffering
+
+<SpecSection id="start-buffering" status="stable" since="1.1.0">
+
+The replay instance **SHOULD** expose a method to manually start recording in buffer mode:
+
+```
+replayInstance.startBuffering() -> void
+```
+
+Starts recording in buffer mode regardless of sample rates. If a session is already running, this **SHOULD** be a no-op.
+
+</SpecSection>
+
+### Stop
+
+<SpecSection id="stop" status="stable" since="1.1.0">
+
+The replay instance **SHOULD** expose a method to stop recording:
+
+```
+replayInstance.stop() -> Promise<void>
+```
+
+Flushes any pending recording data, stops the replay, and ends the session.
+
+</SpecSection>
+
+### Flush
+
+<SpecSection id="flush" status="stable" since="1.1.0">
+
+The replay instance **SHOULD** expose a method to flush pending recording data:
+
+```
+replayInstance.flush() -> Promise<void>
+```
+
+In session mode, this uploads pending recording data to Sentry. In buffer mode, this uploads the buffered data and continues recording (same as when an error triggers capture). Calling `flush()` while replay is stopped **MAY** start a new session recording.
+
+</SpecSection>
+
+---
+
+## Examples
+
+### SDK API Usage
+
+```javascript
+import * as Sentry from "@sentry/browser";
+
+Sentry.init({
+  dsn: "https://examplePublicKey@o0.ingest.sentry.io/0",
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+  integrations: [Sentry.replayIntegration()],
+});
+
+// Manual control
+const replay = Sentry.getReplay();
+replay.start();        // start session-mode recording
+replay.flush();        // flush buffered data
+await replay.stop();   // stop and end session
+```
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.session_replay import SessionReplayIntegration
+
+sentry_sdk.init(
+    dsn="https://examplePublicKey@o0.ingest.sentry.io/0",
+    replays_session_sample_rate=0.1,
+    replays_on_error_sample_rate=1.0,
+    integrations=[SessionReplayIntegration()],
+)
+```
+
+### Replay Event
 
 ```json
 {
@@ -92,34 +357,14 @@ The following attributes are a subset of the [optional attributes](/sdk/data-mod
 }
 ```
 
-## `"replay_recording"` Item
-
-The `"replay_recording"` item consists of two sub-items that are delimited by newlines. The first is a JSON of the replay recording's metadata. Currently, only `segment_id` is required.
-
-```json
-{"segment_id": 0}
-```
-
-The other sub-item is the replay recording's instructions set. This payload should be gzipped, but uncompressed payloads are also accepted. Read more about <Link to="/sdk/data-model/event-payloads/replay-recording/">replay recording events here</Link>.
-
-```json
-[
-  {
-    "type": 5,
-    "timestamp": 1710861507579,
-    "data": {}
-  }
-]
-```
-
-### Example
+### Replay Recording
 
 ```
 {"segment_id": 0}
 \x00\x00\x00\x14ftypqt  \x00\x00\x00\x00qt  \x00\x00\x00\x08wide\x03\xbdd\x11mdat
 ```
 
-## Full Envelope Example
+### Full Envelope
 
 ```json
 {"event_id":"36b75d9fa11f45459412a96c41bdf691","sent_at":"2024-03-19T15:18:27.581Z","sdk":{"name":"sentry.javascript.react","version":"7.105.0"}}
@@ -157,7 +402,7 @@ The other sub-item is the replay recording's instructions set. This payload shou
     "version": "7.105.0"
   },
   "tags": {
-    "sentry_version": "24.4.0.dev0",
+    "sentry_version": "24.4.0.dev0"
   },
   "user": {
     "ip_address": "127.0.0.1",
@@ -173,21 +418,8 @@ The other sub-item is the replay recording's instructions set. This payload shou
 /* gzipped JSON payload */
 ```
 
-## SDK Behavior
+---
 
-### Session mode
+## Changelog
 
-When an SDK records Session Replay in `session` mode (`sessionSampleRate` is specified), the recording should start when the SDK is initialized and should be continuously streamed to the Sentry servers. The SDK should send a replay envelope every 5 seconds. The maximum duration of the recording should not exceed 60 minutes (or 15 minutes without an activity on Web). After the hard limit has been reached, the SDK should stop recording, clear out the current `replay_id` and remove it from the Scope so all of the subsequent events don't get associated with it.
-
-For the SDKs that support disk cache, the recording should pause when there's no internet connection or the SDK is getting rate-limited. This is necessary to prevent overflowing the disk cache, which can potentially result in losing more critical envelopes. When internet connection is restored or rate limit is lifted, the recording should resume.
-
-### Buffer mode
-
-When an SDK records Session Replay in `buffer` mode (`onErrorSampleRate` is specified), the recording should start when the SDK is initialized and should be buffered in-memory (and to disk if the SDK supports disk cache) in a ring buffer for up to 30 seconds back. The capturing of the recording may be triggered when one of the following conditions is met:
-
-- A crash or error event occurs and is captured by the SDK
-- `flush` API has been called manually on the replay (for SDKs that support manual API)
-
-After the initial (buffered) segment has been captured, the SDK should continue recording in `session` mode. Note, however, that the `replay_type` field of the following segments should still be set to `buffer` to reflect the original `replay_type`.
-
-If the crash or error event has been dropped in `beforeSend`, the replay should **not** be captured.
+<SpecChangelog />

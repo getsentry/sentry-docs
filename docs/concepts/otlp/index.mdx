@@ -1,256 +1,29 @@
 ---
 title: OpenTelemetry Protocol (OTLP)
 sidebar_order: 400
-description: "Learn how to send OpenTelemetry trace data directly to Sentry from OpenTelemetry SDKs."
+description: "Learn how to send OpenTelemetry traces and logs to Sentry."
 keywords: ["otlp", "otel", "opentelemetry"]
 ---
 
-Sentry can ingest [OpenTelemetry](https://opentelemetry.io) traces and logs directly via the [OpenTelemetry Protocol](https://opentelemetry.io/docs/specs/otel/protocol/). Sentry does not support ingesting OTLP metrics.
-
-## OpenTelemetry Traces
-
 <Include name="feature-available-open-beta-tracing.mdx" />
 
-If you have an existing OpenTelemetry trace instrumentation, you can configure your OpenTelemetry exporter to send traces to Sentry directly. Sentry's OTLP ingestion traces endpoint is currently in development, and has a few known limitations:
+Sentry can ingest OpenTelemetry traces and logs via OTLP endpoints, either directly from an [OTel SDK](https://opentelemetry.io/docs/languages/) or through a pipeline tool like the [OpenTelemetry Collector](/concepts/otlp/forwarding/pipelines/collector/). Sentry does not support OTLP metrics at this time.
 
-- Span events are not supported. All span events are dropped during ingestion.
-- Span links are partially supported. We ingest and display span links, but they cannot be searched, filtered, or aggregated. Links are shown in the [Trace View](/concepts/key-terms/tracing/trace-view/).
-- Array attributes are partially supported. We ingest and display array attributes, but they cannot be searched, filtered, or aggregated. Array attributes are shown in the [Trace View](/concepts/key-terms/tracing/trace-view/).
+## Linking Traces with a Sentry SDK
 
-You can find the values of Sentry's OTLP traces endpoint and public key in your Sentry project settings.
+If you're using a Sentry SDK alongside OTel instrumentation, you can connect them to share trace context:
 
-1. Go to the [Settings > Projects](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/) page in Sentry.
-2. Select a project from the list.
-3. Go to the "Client Keys (DSN)" sub-page for this project under the "SDK Setup" heading.
+| Scenario | Solution |
+|----------|----------|
+| **Sentry frontend + OTel backend** | Use [propagateTraceparent](/concepts/otlp/sentry-with-otel/#linking-sentry-and-otlp-traces) to connect frontend traces with OTel-instrumented backend services |
+| **Sentry SDK + OTel in the same service** | Use the [OTLP Integration](/concepts/otlp/sentry-with-otel/#otlp-integration) to share trace context between Sentry and OTel |
 
-The easiest way to configure an OpenTelemetry exporter is with environment variables. You'll need to configure the trace endpoint URL, as well as the authentication headers. Set these variables on the server where your application is running.
+## Sending OTel Data to Sentry
 
-```bash {filename: .env}
-export OTEL_EXPORTER_OTLP_TRACES_ENDPOINT="___OTLP_TRACES_URL___"
-export OTEL_EXPORTER_OTLP_TRACES_HEADERS="x-sentry-auth=sentry sentry_key=___PUBLIC_KEY___"
-```
+If you're using OTel without a Sentry SDK, or want to ingest telemetry from infrastructure sources:
 
-If you prefer to explicitly configure an OpenTelemetry SDK or OTEL collector instance, see the following:
-
-### Using the OTEL Collector
-
-You can configure your OTEL collector instance to send traces to Sentry directly. This requires you to add an `otlphttp` exporter to your collector instance. Sentry's OTLP endpoints are project-specific, so you might also need to add a [routing connector](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/connector/routingconnector) to route traces to the correct project.
-
-```yaml {filename: otel-collector.yaml}
-exporters:
-  otlphttp:
-    traces_endpoint: ___OTLP_TRACES_URL___
-    headers:
-      x-sentry-auth: "sentry sentry_key=___PUBLIC_KEY___"
-    compression: gzip
-    encoding: proto
-    timeout: 30s
-```
-
-### Using an OpenTelemetry SDK
-
-You can configure the OpenTelemetry Exporter directly in your application code. Here is an example with the OpenTelemetry Node SDK:
-
-```typescript {filename: app.ts}
-import { NodeSDK } from "@opentelemetry/sdk-node";
-import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
-
-const sdk = new NodeSDK({
-  traceExporter: new OTLPTraceExporter({
-    url: "___OTLP_TRACES_URL___",
-    headers: {
-      "x-sentry-auth": "sentry sentry_key=___PUBLIC_KEY___",
-    },
-  }),
-});
-
-sdk.start();
-```
-
-## OpenTelemetry Logs
-
-<Include name="feature-available-open-beta-logs.mdx" />
-
-If you have an existing OpenTelemetry log instrumentation, you can configure your OpenTelemetry exporter to send logs to Sentry directly. Sentry's OTLP ingestion logs endpoint has the following known limitations:
-
-- Array attributes are partially supported. We ingest and display array attributes, but they cannot be searched, filtered, or aggregated.
-
-You can find the values of Sentry's OTLP logs endpoint and public key in your Sentry project settings.
-
-1. Go to the [Settings > Projects](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/) page in Sentry.
-2. Select a project from the list.
-3. Go to the "Client Keys (DSN)" sub-page for this project under the "SDK Setup" heading.
-
-The easiest way to configure an OpenTelemetry exporter is with environment variables. You'll need to configure the logs endpoint URL, as well as the authentication headers. Set these variables on the server where your application is running.
-
-```bash {filename: .env}
-export OTEL_EXPORTER_OTLP_LOGS_ENDPOINT="___OTLP_LOGS_URL___"
-export OTEL_EXPORTER_OTLP_LOGS_HEADERS="x-sentry-auth=sentry sentry_key=___PUBLIC_KEY___"
-```
-
-If you prefer to explicitly configure an OpenTelemetry SDK or OTEL collector instance, see the following:
-
-### Using the OTEL Collector
-
-You can configure your OTEL collector instance to send logs to Sentry directly. This requires you to add an `otlphttp` exporter to your collector instance. Sentry's OTLP endpoints are project-specific, so you might also need to add a [routing connector](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/connector/routingconnector) to route logs to the correct project.
-
-```yaml {filename: otel-collector.yaml}
-exporters:
-  otlphttp:
-    logs_endpoint: ___OTLP_LOGS_URL___
-    headers:
-      x-sentry-auth: "sentry sentry_key=___PUBLIC_KEY___"
-    compression: gzip
-    encoding: proto
-    timeout: 30s
-```
-
-### Using an OpenTelemetry SDK
-
-Alternatively, you can configure the OpenTelemetry Exporter directly in your application code. Here is an example with the OpenTelemetry Node SDK:
-
-```typescript {filename: app.ts}
-import {
-  LoggerProvider,
-  BatchLogRecordProcessor,
-} from "@opentelemetry/sdk-logs";
-import { OTLPLogExporter } from "@opentelemetry/exporter-logs-otlp-http";
-
-const logExporter = new OTLPLogExporter({
-  url: "___OTLP_LOGS_URL___",
-  headers: {
-    "x-sentry-auth": "sentry sentry_key=___PUBLIC_KEY___",
-  },
-});
-const loggerProvider = new LoggerProvider({
-  processors: [new BatchLogRecordProcessor(logExporter)],
-});
-
-const logger = loggerProvider.getLogger("default", "1.0.0");
-```
-
-## Distributed Tracing between Sentry Instrumentation and OpenTelemetry Instrumentation
-
-If you have a frontend or services instrumented with the Sentry SDK, and you are also instrumenting with OpenTelemetry, you can use the `propagateTraceparent` exposed in the Sentry SDK to propagate the W3C Trace Context `traceparent` header to the OpenTelemetry instrumentation. This will allow you to continue traces from Sentry instrumented services.
-
-The following SDKs support the `propagateTraceparent` option:
-
-### JavaScript
-
-- <LinkWithPlatformIcon
-    platform="javascript.browser"
-    label="Browser JavaScript"
-    url="/platforms/javascript/configuration/options/#propagateTraceparent"
-  />
-- <LinkWithPlatformIcon
-    platform="javascript.angular"
-    label="Angular"
-    url="/platforms/javascript/guides/angular/configuration/options/#propagateTraceparent"
-  />
-- <LinkWithPlatformIcon
-    platform="javascript.astro"
-    label="Astro"
-    url="/platforms/javascript/guides/astro/configuration/options/#propagateTraceparent"
-  />
-- <LinkWithPlatformIcon
-    platform="javascript.ember"
-    label="Ember"
-    url="/platforms/javascript/guides/ember/configuration/options/#propagateTraceparent"
-  />
-- <LinkWithPlatformIcon
-    platform="javascript.gatsby"
-    label="Gatsby"
-    url="/platforms/javascript/guides/gatsby/configuration/options/#propagateTraceparent"
-  />
-- <LinkWithPlatformIcon
-    platform="javascript.nextjs"
-    label="Next.js"
-    url="/platforms/javascript/guides/nextjs/configuration/options/#propagateTraceparent"
-  />
-- <LinkWithPlatformIcon
-    platform="javascript.nuxt"
-    label="Nuxt"
-    url="/platforms/javascript/guides/nuxt/configuration/options/#propagateTraceparent"
-  />
-- <LinkWithPlatformIcon
-    platform="javascript.react"
-    label="React"
-    url="/platforms/javascript/guides/react/configuration/options/#propagateTraceparent"
-  />
-- <LinkWithPlatformIcon
-    platform="javascript.react-router"
-    label="React Router"
-    url="/platforms/javascript/guides/react-router/configuration/options/#propagateTraceparent"
-  />
-- <LinkWithPlatformIcon
-    platform="javascript.remix"
-    label="Remix"
-    url="/platforms/javascript/guides/remix/configuration/options/#propagateTraceparent"
-  />
-- <LinkWithPlatformIcon
-    platform="javascript.solid"
-    label="Solid"
-    url="/platforms/javascript/guides/solid/configuration/options/#propagateTraceparent"
-  />
-- <LinkWithPlatformIcon
-    platform="javascript.solidstart"
-    label="SolidStart"
-    url="/platforms/javascript/guides/solidstart/configuration/options/#propagateTraceparent"
-  />
-- <LinkWithPlatformIcon
-    platform="javascript.svelte"
-    label="Svelte"
-    url="/platforms/javascript/guides/svelte/configuration/options/#propagateTraceparent"
-  />
-- <LinkWithPlatformIcon
-    platform="javascript.sveltekit"
-    label="SvelteKit"
-    url="/platforms/javascript/guides/sveltekit/configuration/options/#propagateTraceparent"
-  />
-- <LinkWithPlatformIcon
-    platform="javascript.vue"
-    label="Vue"
-    url="/platforms/javascript/guides/vue/configuration/options/#propagateTraceparent"
-  />
-- <LinkWithPlatformIcon
-    platform="javascript.wasm"
-    label="Wasm"
-    url="/platforms/javascript/guides/wasm/configuration/options/#propagateTraceparent"
-  />
-
-### Mobile
-
-- <LinkWithPlatformIcon
-    platform="android"
-    label="Android"
-    url="/platforms/android/configuration/options/#propagateTraceparent"
-  />
-- <LinkWithPlatformIcon
-    platform="dart.flutter"
-    label="Flutter"
-    url="/platforms/dart/guides/flutter/configuration/options/#propagateTraceparent"
-  />
-- <LinkWithPlatformIcon
-    platform="native"
-    label="Native"
-    url="/platforms/native/configuration/options/#propagate_traceparent"
-  />
-- <LinkWithPlatformIcon
-    platform="react-native"
-    label="React Native"
-    url="/platforms/react-native/configuration/options/#propagateTraceparent"
-  />
-
-## Dedicated Integrations
-
-The following SDKs have dedicated integrations that make OTLP setup easy:
-
-- <LinkWithPlatformIcon
-    platform="python"
-    label="Python"
-    url="/platforms/python/integrations/otlp"
-  />
-
-## OpenTelemetry Collector Guides
-
-View the [OpenTelemetry Collector Guides](/product/drains/integration/opentelemetry-collector/#open-telemetry-collector-guides) to learn how to leverage the OpenTelemetry Collector to send traces and logs to Sentry from different sources like Kafka or Nginx.
+| Method | When to Use |
+|--------|-------------|
+| **[Direct Export](/concepts/otlp/direct/)** | OTel SDK sending traces and logs straight to Sentry |
+| **[Forwarding](/concepts/otlp/forwarding/)** | Infrastructure sources via OTel Collector, Vector, or Fluent Bit. Use the [Sentry Exporter](/concepts/otlp/forwarding/pipelines/sentry-exporter/) for multi-project routing. |
+| **[Log and Trace Drains](/product/drains/)** | Managed platforms (Vercel, Cloudflare, Heroku) |
