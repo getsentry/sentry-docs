@@ -1,0 +1,214 @@
+---
+title: Sentry Exporter
+sidebar_title: Sentry Exporter
+sidebar_order: 15
+description: "Route OpenTelemetry traces and logs from multiple services to different Sentry projects through a single collector instance."
+keywords: ["otlp", "otel", "opentelemetry", "collector", "exporter", "routing"]
+---
+
+<Alert level="info">
+  The Sentry Exporter has **alpha** stability for traces and logs. Configuration options and behavior may change.
+</Alert>
+
+The Sentry Exporter routes telemetry from multiple services to different Sentry projects through a single collector instance. Without it, you'd need to configure separate DSNs for each project or set up additional routing connectors.
+
+## When to Use `sentry` vs `otlphttp` Exporter
+
+| Scenario                                    | Recommended Exporter                 |
+| ------------------------------------------- | ------------------------------------ |
+| Single project, all services share one DSN  | `otlphttp`                           |
+| Multiple projects, need per-service routing | `sentry`                             |
+| Dynamic environments with auto-provisioning | `sentry` with `auto_create_projects` |
+
+## Prerequisites
+
+### Collector Distribution
+
+The Sentry Exporter is included in [otelcol-contrib](https://github.com/open-telemetry/opentelemetry-collector-releases/tree/main/distributions/otelcol-contrib), the pre-built OpenTelemetry Collector distribution. There is no build step required, just download and run `otelcol-contrib` with your configuration. For the full specification, see the [source code](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/exporter/sentryexporter).
+
+### Auth Token
+
+In your Sentry account, create an Internal Integration with the required permissions:
+
+1. Navigate to **[Custom Integrations](https://sentry.io/orgredirect/organizations/:orgslug/settings/developer-settings/)**
+2. Click **Create New Integration**
+3. Choose **Internal Integration** (not Public)
+4. Give it a name (e.g., "OTEL Collector")
+5. Set permissions:
+   - **Organization: Read** — required
+   - **Project: Read** — required
+   - **Project: Write** — required for `auto_create_projects`
+6. Click **Save Changes**
+7. After saving, click **Create New Token**
+8. Copy the token and store it securely, you won't be able to see it again
+
+```bash
+export SENTRY_AUTH_TOKEN="abc123..."
+```
+
+### Organization Slug
+
+In your Sentry account, go to **[General Settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/)** to find your organization slug. Alternatively, you can find it in your Sentry URL: `https://sentry.io/organizations/{org-slug}/`
+
+## Configuration Reference
+
+### Required
+
+| Parameter    | Type   | Description                      |
+| ------------ | ------ | -------------------------------- |
+| `url`        | string | Base URL of your Sentry instance |
+| `org_slug`   | string | Your Sentry organization slug    |
+| `auth_token` | string | Internal Integration token       |
+
+### Optional
+
+| Parameter                              | Type     | Default            | Description                                                                                                                       |
+| -------------------------------------- | -------- | ------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
+| `auto_create_projects`                 | bool     | `false`            | Create missing projects automatically - requires one existing team                                                                |
+| `routing.project_from_attribute`       | string   | `service.name`     | Resource attribute for routing                                                                                                    |
+| `routing.attribute_to_project_mapping` | map      | -                  | Map attribute values to project slugs                                                                                             |
+| `timeout`                              | duration | `30s`              | Exporter timeout                                                                                                                  |
+| `http`                                 | object   | collector defaults | Standard [confighttp](https://pkg.go.dev/go.opentelemetry.io/collector/config/confighttp) client settings (timeout, TLS, headers) |
+| `sending_queue`                        | object   | enabled            | Queue settings from exporterhelper                                                                                                |
+
+## Basic Configuration
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+By default, the exporter routes telemetry based on `service.name`. A service with `service.name: payments-api` sends to a Sentry project with slug `payments-api`.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```yaml {filename:otel-collector-config.yaml}
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+exporters:
+  sentry:
+    url: https://sentry.io
+    org_slug: ${env:SENTRY_ORG_SLUG}
+    auth_token: ${env:SENTRY_AUTH_TOKEN}
+
+processors:
+  batch:
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [sentry]
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [sentry]
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+## Routing Options
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+### Automatic Project Creation
+
+When services spin up dynamically (Kubernetes deployments, serverless functions), you may not have pre-created Sentry projects. Enable `auto_create_projects` to provision them on-demand.
+
+<Alert level="warning">
+  Project creation is asynchronous. The first batch of data for a new project
+  may be dropped while provisioning completes.
+</Alert>
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```yaml
+exporters:
+  sentry:
+    # ... required fields
+    auto_create_projects: true
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Custom Project Mapping
+
+When your service names don't match your Sentry project slugs (legacy naming, organizational conventions), map them explicitly.
+
+Services not in the mapping fall back to using `service.name` as the project slug.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```yaml
+exporters:
+  sentry:
+    # ... required fields
+    routing:
+      attribute_to_project_mapping:
+        orders-service: ecommerce-orders
+        products-service: ecommerce-products
+        api-gateway: ecommerce-gateway
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Routing by Different Attributes
+
+Route by environment, team, or any other resource attribute instead of service name.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```yaml
+exporters:
+  sentry:
+    # ... required fields
+    routing:
+      project_from_attribute: deployment.environment
+      attribute_to_project_mapping:
+        production: prod-monitoring
+        staging: staging-monitoring
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+## Rate Limiting
+
+The exporter respects Sentry's rate limits automatically:
+
+- Parses `X-Sentry-Rate-Limits` headers
+- Tracks per-project, per-category (traces/logs) rate limit deadlines
+- Returns throttle errors to the collector queue for retry
+- Falls back to 60-second backoff on HTTP 429 without headers
+
+## Limitations
+
+| Limitation                                     | Mitigation                                         |
+| ---------------------------------------------- | -------------------------------------------------- |
+| Missing routing attribute drops data           | Ensure `service.name` is set on all resources      |
+| First batch for auto-created projects may drop | Subsequent data flows normally after provisioning  |
+| Deleted projects cause 403 until cache evicts  | Avoid deleting projects while collector is running |
+| Single organization per exporter               | Deploy multiple exporters for multi-org setups     |

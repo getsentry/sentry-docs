@@ -63,3 +63,42 @@ The `ignore-list.txt` file contains paths that should be skipped during checking
 
 - `0` - No 404s found
 - `1` - 404s were detected
+
+## External Link Checking
+
+This script only checks **internal links**. External links (to third-party sites) are validated separately using [lychee](https://github.com/lycheeverse/lychee).
+
+### Running Locally
+
+```bash
+# Install lychee
+brew install lychee
+
+# Check all markdown files in the repo
+lychee .
+
+# Check a specific file
+lychee docs/platforms/javascript/index.mdx
+```
+
+### Pre-commit Hook
+
+A pre-commit hook checks external links in changed files (warn-only, won't block commits). Requires lychee to be installed locally.
+
+### CI Workflow
+
+The GitHub workflow (`.github/workflows/lint-external-links.yml`) runs:
+
+- Weekly on a schedule (creates/updates issue with broken links)
+- On PRs (checks changed files only)
+- Manually via workflow dispatch
+
+### Configuration Files
+
+- `lychee.toml` - Lychee configuration
+- `.lycheeignore` - URLs to ignore during checking
+
+### Why Separate from Internal Link Checking?
+
+1. **False positives**: Many external sites block automated checkers
+2. **Different scope**: External checks only run on changed files in PRs; internal checks validate all pages
