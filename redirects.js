@@ -116,15 +116,7 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/hub_and_scope_refactoring/:path*',
-    destination: '/sdk/foundations/state-management/scopes/',
-  },
-  {
-    source: '/sdk/miscellaneous/hub_and_scope_refactoring/',
-    destination: '/sdk/foundations/state-management/scopes/',
-  },
-  {
-    source: '/sdk/miscellaneous/',
-    destination: '/sdk/foundations/state-management/',
+    destination: '/sdk/miscellaneous/hub_and_scope_refactoring/:path*',
   },
   {
     source: '/sdk/unified-api/:path*',
