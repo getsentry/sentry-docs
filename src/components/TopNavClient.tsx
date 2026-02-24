@@ -315,7 +315,7 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
           >
             {mainSections.map(section => (
               <li key={section.href} className="list-none relative">
-                {section.label === 'PRODUCTS' ? (
+                {section.label === 'PRODUCT' ? (
                   <div
                     style={{display: 'inline-block'}}
                     onMouseEnter={() => {
