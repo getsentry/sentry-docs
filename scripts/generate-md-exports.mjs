@@ -1075,7 +1075,8 @@ async function processTaskList({id, tasks, cacheDir, noCache, usedCacheFiles}) {
     usedCacheFiles = new Set();
   }
 
-  const s3Client = getS3Client();
+  const hasR2 = tasks.some(t => t.r2Hash !== null);
+  const s3Client = hasR2 ? getS3Client() : null;
   const failedTasks = [];
   let cacheMisses = [];
   let r2CacheMisses = [];
@@ -1095,7 +1096,7 @@ async function processTaskList({id, tasks, cacheDir, noCache, usedCacheFiles}) {
       const output = frontmatter ? formatYamlFrontmatter(frontmatter) + data : data;
       await writeFile(targetPath, output, {encoding: 'utf8'});
 
-      if (r2Hash !== null) {
+      if (r2Hash !== null && s3Client) {
         const fileHash = md5(output);
         if (r2Hash !== fileHash) {
           r2CacheMisses.push(relativePath);
@@ -1118,8 +1119,9 @@ async function processTaskList({id, tasks, cacheDir, noCache, usedCacheFiles}) {
     );
   }
   const cacheHits = success - cacheMisses.length;
+  const missRate = success > 0 ? ((cacheMisses.length / success) * 100).toFixed(1) : '0.0';
   console.log(
-    `📈 Worker[${id}]: Cache stats: ${cacheHits} hits, ${cacheMisses.length} misses (${((cacheMisses.length / success) * 100).toFixed(1)}% miss rate)`
+    `📈 Worker[${id}]: Cache stats: ${cacheHits} hits, ${cacheMisses.length} misses (${missRate}% miss rate)`
   );
 
   if (cacheMisses.length / tasks.length > 0.1) {
