@@ -22,29 +22,9 @@ Ability for the SDK to be set as a hook to record any uncaught exceptions. At th
 
 This behavior is typically provided by a default integration that can be disabled.
 
-## Scopes
-
-Scopes should be provided by SDKs to set common attributes and context data on events sent to Sentry emitted from the current scope. They should be inherited to lower scopes so that they can be set "globally" on startup.  Note that some attributes can only be set in the client options (`release`, `environment`) and not on scopes.
-
-What scope means depends on the application, for a web framework it is most likely a single request/response cycle. For a mobile application there is often just one single scope that represents the single user and their actions. Scoping can be difficult to implement because it often has to deal with threads or concurrency and can involve deep integration with frameworks. <Link to="/sdk/foundations/state-management/scopes/">see the Scopes spec</Link> for more information.
-
 ## Automatic Context Data
 
 Automatic addition of useful attributes such as `flags` or `tags` or `extra` or specific `contexts`. Typically means the SDK hooks into a framework so that it can set attributes that are known to be useful for most users. Please check [Data Handling](/sdk/expected-features/data-handling) for considerations.
-
-## Breadcrumbs
-
-Manually record application events (into the current scope) during the
-lifecycle of an application. Implement a ring buffer so as not to grow
-indefinitely. The most recent breadcrumbs should be attached to events as they occur.
-
-With deeper framework integration, the automatic recording of breadcrumbs is possible and recommended, for example:
-
-* UI Events: button clicks, touch events, etc.
-* System Events: low battery, low storage space, airplane mode started, memory warnings, device orientation changed, etc.
-* [Outgoing HTTP requests](/sdk/foundations/client/integrations/http-client)
-
-Check out the [complete breadcrumb documentation](/sdk/foundations/transport/event-payloads/breadcrumbs/#breadcrumb-types) for more types.
 
 ## Rate Limiting
 
@@ -80,51 +60,6 @@ Turn compiled or obfuscated code/method names in stack traces back into the orig
 ## Retrieve Last Event ID
 
 Ability to get the ID of the last event sent. Event IDs are useful for correlation, logging, customers rolling their own feedback forms, etc.
-
-## Attachments
-
-Attachments are files stored alongside an event. To send an attachment, add it as an [envelope item](/sdk/foundations/transport/envelope-items/#attachment)
-to the corresponding event.
-
-We recommend implementing two types of attachments, one with a path and another with a byte array.
-If the programming language allows it, create one class with multiple constructors to keep things simple and guess the content type
-of the attachment via the filename.
-
-The overload that takes a `path` should consider:
-* The SDK should read the file when an event gets captured and not when the user adds an attachment to the scope.
-* If reading the attachment fails, the SDK should not drop the whole envelope, but just the attachment's envelope item.
-* If the SDK is in debug mode log (`debug=true`) out errors to make debugging easier.
-
-If the SDK supports [transactions](/sdk/foundations/transport/envelope-items/#transaction), the attachments should offer a flag `addToTransactions`,
-that specifies if SDK adds the attachment to every transaction or not. The default should be `false`.
-
-Use the implementations of [Java](https://github.com/getsentry/sentry-java/blob/main/sentry/src/main/java/io/sentry/Attachment.java),
-[Objective-C](https://github.com/getsentry/sentry-cocoa/blob/master/Sources/Sentry/SentryAttachment.m), or
-[Python](https://github.com/getsentry/sentry-python/blob/master/sentry_sdk/attachments.py) as a reference for the API.
-
-
-### Max Attachment Size
-Alongside the implementation of attachments, add `maxAttachmentSize` to the options and set the default to 20 MiB. When converting an attachment to an
-envelope item, the SDK must discard items larger than the `maxAttachmentSize`. Especially on SDKs with offline caching, typical on mobile, this is
-useful because attachments could quickly eat up the users' disk space. Furthermore, Relay has a
-[maximum size for attachments](https://docs.sentry.io/product/relay/options/), and we want to reduce unnecessary requests.
-
-## Screenshots
-
-When the user opts-in, if technically possible, take a screenshot of the application during a crash or error and include it as an [attachment](#attachments) to the [envelope](/sdk/foundations/transport/envelopes/) with the event.
-
-This feature only applies to SDKs with a user interface, such as Mobile and Desktop.
-In some environments such as native iOS, taking a screenshot requires the UI thread and in the event of a crash, that might not be available. So inherently this feature will be a best effort solution.
-Also, some environments don't allow access to the UI or some features during a hard crash, iOS, for example, doesn't allow running Objective-C code after a signal break, therefore no hard crash screenshot capture will be possible.
-It's advised to provide this feature through a single option called `attachScreenshot`. That's the preferred way but in platforms such as Flutter, a wrapping widget is required so documentation can point users to that instead of the suggested option name.
-
-The feature is achieved by adding an attachment with:
-
-* The file name should contain the word `screenshot`
-* Image size, if possible should stay below 2 MB but quality/size could be configurable
-* `ContentType: image/jpg` or `ContentType: image/png`
-
-Whenever possible, avoid adding the attachment altogether if taking the screenshot fails. Alternatively, when streaming, it's possible the envelope header was already flushed through before the attempt to take the screenshot happens. In this case, a 0 byte attachment will be included. In that case, Sentry will not show a screenshot preview.
 
 ## List Loaded Libraries
 
