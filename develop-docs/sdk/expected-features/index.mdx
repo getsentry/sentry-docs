@@ -1,7 +1,7 @@
 ---
 title: Features
 description: The following is a description of features that are commonly expected in Sentry SDKs.
-sidebar_order: 4
+sidebar_order: 5
 ---
 
 <Alert title="Unified API" level="warning">
@@ -44,7 +44,7 @@ With deeper framework integration, the automatic recording of breadcrumbs is pos
 * System Events: low battery, low storage space, airplane mode started, memory warnings, device orientation changed, etc.
 * [Outgoing HTTP requests](#http-client-integrations)
 
-Check out the [complete breadcrumb documentation](/sdk/foundations/data-model/event-payloads/breadcrumbs/#breadcrumb-types) for more types.
+Check out the [complete breadcrumb documentation](/sdk/foundations/transport/event-payloads/breadcrumbs/#breadcrumb-types) for more types.
 
 ## Event Sampling
 
@@ -128,7 +128,7 @@ An SDK may optionally track feature flag evaluations. Feature flags can be attac
 
 When tracking feature flag evaluations on spans, we track the first 10 feature flags evaluated within the span's scope.  Evaluations are span attributes and follow the existing span attribute schema.
 
-When tracking on error feature flag evaluations, we record the 100 most recent, unique feature flag evaluations.  Evaluations are stored on the scope. When the scope forks a copy of the collected feature flag evaluations are given to the child scope.  Mutations to the child's copy of the feature flags object should not be propagated to the parent.  Flag evaluations within a scope are considered local to the scope and do not propagate.  Evaluations should be submitted to Sentry following the schema specified in the <Link to="/sdk/foundations/data-model/event-payloads/contexts/#feature-flag-context">Feature Flag Context</Link> protocol documentation.
+When tracking on error feature flag evaluations, we record the 100 most recent, unique feature flag evaluations.  Evaluations are stored on the scope. When the scope forks a copy of the collected feature flag evaluations are given to the child scope.  Mutations to the child's copy of the feature flags object should not be propagated to the parent.  Flag evaluations within a scope are considered local to the scope and do not propagate.  Evaluations should be submitted to Sentry following the schema specified in the <Link to="/sdk/foundations/transport/event-payloads/contexts/#feature-flag-context">Feature Flag Context</Link> protocol documentation.
 
 If an SDK supports feature flags it must expose a function `add_feature_flag` which has similar behavior to the `set_tag` function. It must accept a key of type string and a value which is a union of string, boolean, integer, float, and structure.
 
@@ -144,57 +144,9 @@ Turn compiled or obfuscated code/method names in stack traces back into the orig
 
 Ability to get the ID of the last event sent. Event IDs are useful for correlation, logging, customers rolling their own feedback forms, etc.
 
-## User Feedback
-
-For all SDKs, it is strongly recommended to send the `User Feedback` as an [envelope item](/sdk/foundations/data-model/envelope-items/#user-report---deprecated). Alternatively, the SDKs can
-use the [User Feedback endpoint](https://docs.sentry.io/api/projects/submit-user-feedback/), which is not recommended.
-
-### User Facing Platforms
-On user-facing platforms such as mobile, desktop, or browser this means first-class support for requesting User Feedback when an error or crash occurs.
-To see some examples of the API check out the user-facing docs for [Apple](https://docs.sentry.io/platforms/apple/enriching-events/user-feedback/) and
-[Java](https://docs.sentry.io/platforms/java/enriching-events/user-feedback/).
-
-On mobile and desktop, it is common to prompt the user for feedback after a crash happened on the previous run of the application. Therefore the SDKs should
-implement the `onCrashedLastRun` callback on the options. This callback gets called shortly after the initialization of the SDK when the last program execution
-terminated with a crash. The SDK should execute the callback only once during the entire run of the program to avoid multiple callbacks if there are multiple
-crash events to send.
-
-#### Session Replay Integration with Feedback Widgets
-
-When Session Replay's `onErrorSampleRate` is greater than 0, SDKs must integrate replay capture with feedback functionality. The timing of replay sampling depends on how feedback is captured:
-
-**Feedback Widget Integration:**
-When a feedback widget is added to an application, the SDK must sample the replay when the widget **opens**, not when the feedback is submitted. This timing is critical because:
-
-- Sampling when the widget opens captures the user's session leading up to the feedback moment
-- Sampling only when feedback is submitted would result in the replay buffer primarily showing the user typing their message, which provides minimal debugging context
-- The replay buffer should contain the user's actions and application state prior to encountering the issue they're reporting
-
-SDKs should trigger replay sampling and flushing as soon as the feedback widget becomes visible to the user, ensuring the complete context is captured regardless of whether the user ultimately submits the feedback.
-
-**Manual API Integration:**
-When feedback is captured using the manual API, the SDK must sample and flush the replay during the execution of the feedback capture API to ensure session context is preserved.
-
-### Backend Platforms
-
-On backend platforms, SDKs should document how to use the [last event ID](#retrieve-last-event-id) to prompt the user for feedback themselves.
-
-### Example implementations
-
-User Feedback class:
- * [Objective-C](https://github.com/getsentry/sentry-cocoa/blob/9eedc425727f0daccca1bd2be6021f6c3d9c654c/Sources/Sentry/SentryUserFeedback.m)
- * [Java](https://github.com/getsentry/sentry-java/blob/671f9e0b8b709ef18e8b0788c31df44f99d09d35/sentry/src/main/java/io/sentry/UserFeedback.java#L7)
- * [C#](https://github.com/getsentry/sentry-dotnet/blob/6ddf8363170bffee74a8c3cbf44335797d39ca9c/src/Sentry/Protocol/UserFeedback.cs#L10)
-
-Envelope item:
-
- * [Objective-C](https://github.com/getsentry/sentry-cocoa/blob/fd3e46efe59324e894d5601a7b3028824a588dda/Sources/Sentry/SentryEnvelope.m#L145-L162)
- * [Java](https://github.com/getsentry/sentry-java/blob/b2e8dd43ea2ef37201b215ec409655e49e3231c8/sentry/src/main/java/io/sentry/SentryEnvelopeItem.java#L131-L155)
- * [C#](https://github.com/getsentry/sentry-dotnet/blob/3bc6c66a14e653982a6a25df033d68d8ad12c4af/src/Sentry/Protocol/Envelopes/EnvelopeItem.cs#L170-L178)
-
 ## Attachments
 
-Attachments are files stored alongside an event. To send an attachment, add it as an [envelope item](/sdk/foundations/data-model/envelope-items/#attachment)
+Attachments are files stored alongside an event. To send an attachment, add it as an [envelope item](/sdk/foundations/transport/envelope-items/#attachment)
 to the corresponding event.
 
 We recommend implementing two types of attachments, one with a path and another with a byte array.
@@ -206,7 +158,7 @@ The overload that takes a `path` should consider:
 * If reading the attachment fails, the SDK should not drop the whole envelope, but just the attachment's envelope item.
 * If the SDK is in debug mode log (`debug=true`) out errors to make debugging easier.
 
-If the SDK supports [transactions](/sdk/foundations/data-model/envelope-items/#transaction), the attachments should offer a flag `addToTransactions`,
+If the SDK supports [transactions](/sdk/foundations/transport/envelope-items/#transaction), the attachments should offer a flag `addToTransactions`,
 that specifies if SDK adds the attachment to every transaction or not. The default should be `false`.
 
 Use the implementations of [Java](https://github.com/getsentry/sentry-java/blob/main/sentry/src/main/java/io/sentry/Attachment.java),
@@ -222,7 +174,7 @@ useful because attachments could quickly eat up the users' disk space. Furthermo
 
 ## Screenshots
 
-When the user opts-in, if technically possible, take a screenshot of the application during a crash or error and include it as an [attachment](#attachments) to the [envelope](/sdk/foundations/data-model/envelopes/) with the event.
+When the user opts-in, if technically possible, take a screenshot of the application during a crash or error and include it as an [attachment](#attachments) to the [envelope](/sdk/foundations/transport/envelopes/) with the event.
 
 This feature only applies to SDKs with a user interface, such as Mobile and Desktop.
 In some environments such as native iOS, taking a screenshot requires the UI thread and in the event of a crash, that might not be available. So inherently this feature will be a best effort solution.
@@ -239,7 +191,7 @@ Whenever possible, avoid adding the attachment altogether if taking the screensh
 
 ## Before-Send Hook
 
-Hook called with the event (and on some platforms the hint) that allows the user to decide whether an event should be sent or not.  This can also be used to further modify the event. This only works for `error` events. Other event types like `transactions` and `check-ins` **should not** go through `beforeSend`. For `transactions` it is recommended to have `beforeSendTransaction` implemented in SDKs. For `check-ins` you can optionally implement `beforeSendCheckIn`. To understand when you should call this in your SDK, please refer to the [error filter ordering of sessions](/sdk/telemetry/sessions/#filter-order).
+Hook called with the event (and on some platforms the hint) that allows the user to decide whether an event should be sent or not.  This can also be used to further modify the event. This only works for `error` events. Other event types like `transactions` **should not** go through `beforeSend`. For `transactions` it is recommended to have `beforeSendTransaction` implemented in SDKs. For check-in hooks, see the <Link to="/sdk/telemetry/check-ins/#hooks">Check-Ins spec</Link>.
 
 ## Before-Breadcrumb Hook
 
@@ -259,14 +211,11 @@ Write events to disk before attempting to send, so that they can be retried in t
 
 When SDKs receive an `HTTP 2xx` status code response from Sentry, they **MUST** consider it as a successful send.
 
-If Sentry returns an `HTTP 4xx` or `HTTP 5xx` status code, SDKs:
-
-- **MUST** discard the envelope
-- **MUST** record a [client report](/sdk/telemetry/client-reports) with the discard reason `send_error`, except for an `HTTP 429` response, see below.
+If Sentry returns an `HTTP 4xx` or `HTTP 5xx` status code, SDKs **MUST** discard the envelope and record a [client report](/sdk/telemetry/client-reports/#network-failure-recording) as specified in the client reports spec.
 
 For an [`HTTP 413 Content Too Large`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/413) response, SDKs:
 
-* **MUST** discard the envelope and record a [client report](/sdk/telemetry/client-reports) with the discard reason `send_error`. Upstream usually records a [client report](/sdk/telemetry/client-reports) for oversized envelopes, but not always. Double-counting is preferable to not counting, so users are aware of all dropped envelopes. Since client reports are not expected to be fully accurate, we accept this tradeoff for now (Jan 7th 2026). In the future, we may add error responses to indicate when SDKs should record a client report.
+* **MUST** discard the envelope and record a [client report](/sdk/telemetry/client-reports/#network-failure-recording).
 * **MUST NOT** retry sending the envelope.
 * **SHOULD** log an error, informing users that the envelope was discarded due to size limits.
 * **MAY** add information from the response body to the logged error. If doing so, SDKs **MUST** be aware that Relay can change or remove information in the response body for an `HTTP 413` at any time without notice.
@@ -274,7 +223,7 @@ For an [`HTTP 413 Content Too Large`](https://developer.mozilla.org/en-US/docs/W
 For an [`HTTP 429 Too Many Requests`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429) response, SDKs:
 
 - **MUST** respect the [rate limiting rules](/sdk/expected-features/rate-limiting/), such as correctly parsing the retry-header.
-- **MUST** discard the envelope, but **MUST NOT** record a [client report](/sdk/telemetry/client-reports), because the upstream already does this. Doing this would double-count client reports for discarded envelopes.
+- **MUST** discard the envelope, but **MUST NOT** record a [client report](/sdk/telemetry/client-reports/#network-failure-recording), because the upstream already does this.
 - **MUST NOT** retry sending the envelope.
 
 SDKs **MAY** retry sending the envelope when a network error occurs, such as:
@@ -283,7 +232,9 @@ SDKs **MAY** retry sending the envelope when a network error occurs, such as:
 * DSN resolution failure
 * Connection reset by peer
 
-When other failures occur, like those caused by processing the file in the SDK itself, SDKs **MUST** discard the envelope and record a [client report](/sdk/telemetry/client-reports) with the discard reason `internal_sdk_error`. Otherwise, the SDK might end up in an endless retry loop.
+When other failures occur, like those caused by processing the file in the SDK itself, SDKs **MUST** discard the envelope and record a [client report](/sdk/telemetry/client-reports/#network-failure-recording) with the discard reason `internal_sdk_error`. Otherwise, the SDK might end up in an endless retry loop.
+
+See the [Client Reports — Network Failure Recording](/sdk/telemetry/client-reports/#network-failure-recording) spec for the full set of client report recording requirements for each HTTP status code.
 
 
 #### Additional capabilities
@@ -369,7 +320,7 @@ If Performance Monitoring is both supported by the SDK and enabled in the client
 - description: `$METHOD $url` (uppercase HTTP method), e.g. `GET https://sentry.io`
 - HTTP requests must be enhanced with a [`sentry-trace` HTTP header](/sdk/telemetry/traces/#header-sentry-trace) to support [distributed tracing](https://docs.sentry.io/product/sentry-basics/tracing/distributed-tracing)
 - HTTP requests must be enhanced with a [`baggage` HTTP header](/sdk/telemetry/traces/dynamic-sampling-context/#baggage-header) to support [dynamic sampling](/sdk/telemetry/traces/dynamic-sampling-context/)
-- span status must match HTTP response status code ([see Span status to HTTP status code mapping](/sdk/foundations/data-model/event-payloads/span/))
+- span status must match HTTP response status code ([see Span status to HTTP status code mapping](/sdk/foundations/transport/event-payloads/span/))
 - when network error occurs, span status must be set to `internal_error`
 - span data must follow the [Span Data Conventions](/sdk/telemetry/traces/span-data-conventions/)
 
@@ -390,9 +341,9 @@ The HTTP Client integration should have 3 configuration options:
 
 The HTTP Client integration should capture error events with the following properties:
 
-The Request interface, see the <Link to="/sdk/foundations/data-model/event-payloads/request/">Spec</Link> for details.
+The Request interface, see the <Link to="/sdk/foundations/transport/event-payloads/request/">Spec</Link> for details.
 
-The Response context, see the <Link to="/sdk/foundations/data-model/event-payloads/contexts/#response-context">Spec</Link> for details.
+The Response context, see the <Link to="/sdk/foundations/transport/event-payloads/contexts/#response-context">Spec</Link> for details.
 
 ```json
 {
@@ -411,12 +362,12 @@ The Response context, see the <Link to="/sdk/foundations/data-model/event-payloa
 }
 ```
 
-The Exception Interface, see the <Link to="/sdk/foundations/data-model/event-payloads/exception/">Spec</Link> for details.
+The Exception Interface, see the <Link to="/sdk/foundations/transport/event-payloads/exception/">Spec</Link> for details.
 
 If the HTTP Client integration does not throw an exception for unsuccessful requests, you can create a synthetic exception following this Spec:
 
-- Set the <Link to="/sdk/foundations/data-model/event-payloads/exception/#exception-mechanism">Exception Mechanism</Link> with a proper `type` such as `SentryOkHttpInterceptor`.
-- Set the <Link to="/sdk/foundations/data-model/event-payloads/stacktrace/">Stack Trace Interface</Link> with `snapshot=true`.
+- Set the <Link to="/sdk/foundations/transport/event-payloads/exception/#exception-mechanism">Exception Mechanism</Link> with a proper `type` such as `SentryOkHttpInterceptor`.
+- Set the <Link to="/sdk/foundations/transport/event-payloads/stacktrace/">Stack Trace Interface</Link> with `snapshot=true`.
   - `HTTP Client Error with status code: $code`.
 
 When capturing error events, pass the original `Request` and `Response` objects from the HTTP Client as `hints`, so the users may filter out events in `beforeSend` with the full context.
