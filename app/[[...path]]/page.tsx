@@ -1,6 +1,5 @@
 import {Fragment, useMemo} from 'react';
 import * as Sentry from '@sentry/nextjs';
-import {getMDXComponent} from 'mdx-bundler/client';
 import {Metadata} from 'next';
 import {notFound} from 'next/navigation';
 
@@ -12,6 +11,9 @@ import {Home} from 'sentry-docs/components/home';
 import {Include} from 'sentry-docs/components/include';
 import {PageLoadMetrics} from 'sentry-docs/components/pageLoadMetrics';
 import {PlatformContent} from 'sentry-docs/components/platformContent';
+import {SpecChangelog} from 'sentry-docs/components/specChangelog';
+import {isSpecStatus} from 'sentry-docs/components/specConstants';
+import {SpecMeta} from 'sentry-docs/components/specMeta';
 import {
   DocNode,
   getCurrentPlatformOrGuide,
@@ -20,6 +22,7 @@ import {
   getPreviousNode,
   nodeForPath,
 } from 'sentry-docs/docTree';
+import {getMDXComponent} from 'sentry-docs/getMDXComponent';
 import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
 import {
   getDevDocsFrontMatter,
@@ -47,23 +50,58 @@ export async function generateStaticParams() {
 export const dynamicParams = false;
 export const dynamic = 'force-static';
 
-const mdxComponentsWithWrapper = mdxComponents(
-  {Include, PlatformContent},
-  ({children, frontMatter, nextPage, previousPage}) => (
-    <DocPage
-      frontMatter={frontMatter}
-      nextPage={nextPage}
-      previousPage={previousPage}
-      fullWidth={frontMatter.fullWidth}
-    >
-      {children}
-    </DocPage>
-  )
-);
+function mdxComponentsForFrontMatter(frontMatter: Record<string, unknown>) {
+  const specOverrides: Record<string, unknown> = {};
+  const changelog = Array.isArray(frontMatter.spec_changelog)
+    ? (frontMatter.spec_changelog as Array<Record<string, unknown>>)
+        .filter(
+          entry => entry.version != null && entry.date != null && entry.summary != null
+        )
+        .map(entry => ({
+          version: String(entry.version),
+          date:
+            entry.date instanceof Date
+              ? entry.date.toISOString().split('T')[0]
+              : String(entry.date),
+          summary: String(entry.summary),
+        }))
+    : undefined;
+  if (changelog && changelog.length > 0) {
+    specOverrides.SpecChangelog = function () {
+      return <SpecChangelog changelog={changelog} />;
+    };
+  }
+  if (frontMatter.spec_version && isSpecStatus(frontMatter.spec_status)) {
+    const boundProps = {
+      version: String(frontMatter.spec_version),
+      status: frontMatter.spec_status,
+    };
+    specOverrides.SpecMeta = function () {
+      return <SpecMeta {...boundProps} />;
+    };
+  }
+  return mdxComponents(
+    {Include, PlatformContent, ...specOverrides},
+    ({children, frontMatter: fm, nextPage, previousPage}) => (
+      <DocPage
+        frontMatter={fm}
+        nextPage={nextPage}
+        previousPage={previousPage}
+        fullWidth={fm.fullWidth}
+      >
+        {children}
+      </DocPage>
+    )
+  );
+}
 
 function MDXLayoutRenderer({mdxSource, ...rest}) {
   const MDXLayout = useMemo(() => getMDXComponent(mdxSource), [mdxSource]);
-  return <MDXLayout components={mdxComponentsWithWrapper} {...rest} />;
+  const components = useMemo(
+    () => mdxComponentsForFrontMatter(rest.frontMatter || {}),
+    [rest.frontMatter]
+  );
+  return <MDXLayout components={components} {...rest} />;
 }
 
 export default async function Page(props: {params: Promise<{path?: string[]}>}) {

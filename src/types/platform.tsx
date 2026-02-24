@@ -37,8 +37,10 @@ export interface Platform extends PlatformConfig {
  * Guide inherits most fields from {@link Platform} object, but it is not quite
  * the same thing as a platform.
  */
-export interface PlatformGuide
-  extends Omit<Platform, 'guides' | 'integrations' | 'type'> {
+export interface PlatformGuide extends Omit<
+  Platform,
+  'guides' | 'integrations' | 'type'
+> {
   /**
    * The key is the fully qualified name of the guide: `${platformKey}.${guideName}`
    */

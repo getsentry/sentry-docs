@@ -49,6 +49,7 @@ import FastapiSVG from 'platformicons/svg/fastapi.svg';
 import FasthttpSVG from 'platformicons/svg/fasthttp.svg';
 import FastifySVG from 'platformicons/svg/fastify.svg';
 import FiberSVG from 'platformicons/svg/fiber.svg';
+import FirebaseSVG from 'platformicons/svg/firebase.svg';
 import FlaskSVG from 'platformicons/svg/flask.svg';
 import FlutterSVG from 'platformicons/svg/flutter.svg';
 import FontSVG from 'platformicons/svg/font.svg';
@@ -198,6 +199,7 @@ import FastapiSVGLarge from 'platformicons/svg_80x80/fastapi.svg';
 import FasthttpSVGLarge from 'platformicons/svg_80x80/fasthttp.svg';
 import FastifySVGLarge from 'platformicons/svg_80x80/fastify.svg';
 import FiberSVGLarge from 'platformicons/svg_80x80/fiber.svg';
+import FirebaseSVGLarge from 'platformicons/svg_80x80/firebase.svg';
 import FlaskSVGLarge from 'platformicons/svg_80x80/flask.svg';
 import FlutterSVGLarge from 'platformicons/svg_80x80/flutter.svg';
 import FontSVGLarge from 'platformicons/svg_80x80/font.svg';
@@ -612,6 +614,10 @@ const formatToSVG = {
     sm: FastifySVG,
     lg: FastifySVGLarge,
   },
+  firebase: {
+    sm: FirebaseSVG,
+    lg: FirebaseSVGLarge,
+  },
   hapi: {
     sm: HapiSVG,
     lg: HapiSVGLarge,
@@ -987,6 +993,7 @@ export const PLATFORM_TO_ICON = {
   'javascript-ionic': 'ionic',
   'javascript-hapi': 'hapi',
   'javascript-hono': 'hono',
+  'javascript-firebase': 'firebase',
   'javascript-koa': 'koa',
   'javascript-fastify': 'fastify',
   'javascript-nestjs': 'nestjs',
