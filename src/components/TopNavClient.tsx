@@ -8,61 +8,10 @@ import {Platform} from 'sentry-docs/types';
 
 import platformSelectorStyles from './platformSelector/style.module.scss';
 
+import {mainSectionsWithDropdowns, productSections} from './navigationData';
 import {PlatformSelector} from './platformSelector';
 
-const productSections = [
-  {label: 'Sentry Basics', href: '/product/sentry-basics/'},
-  {label: 'AI in Sentry', href: '/product/ai-in-sentry/'},
-  {label: 'Insights', href: '/product/insights/'},
-  {label: 'User Feedback', href: '/product/user-feedback/'},
-  {label: 'Uptime Monitoring', href: '/product/uptime-monitoring/'},
-  {label: 'Dashboards', href: '/product/dashboards/'},
-  {label: 'Projects', href: '/product/projects/'},
-  {label: 'Explore', href: '/product/explore/'},
-  {label: 'Issues', href: '/product/issues/'},
-  {label: 'Alerts', href: '/product/alerts/'},
-  {label: 'Crons', href: '/product/crons/'},
-  {label: 'Releases', href: '/product/releases/'},
-  {label: 'Relay', href: '/product/relay/'},
-  {label: 'Sentry MCP', href: '/product/sentry-mcp/'},
-  {label: 'Sentry Toolbar', href: '/product/sentry-toolbar/'},
-  {label: 'Stats', href: '/product/stats/'},
-  {label: 'Codecov', href: '/product/codecov/'},
-  {label: 'Onboarding', href: '/product/onboarding/'},
-];
-
-const mainSections = [
-  {label: 'SDKS', href: '/platforms/'},
-  {
-    label: 'PRODUCT',
-    href: '/product/',
-    dropdown: productSections,
-  },
-  {label: 'AI', href: '/ai/'},
-  {label: 'GUIDES', href: '/guides/'},
-  {
-    label: 'CONCEPTS',
-    href: '/concepts/',
-    dropdown: [
-      {label: 'Key Terms', href: '/concepts/key-terms/'},
-      {label: 'Search', href: '/concepts/search/'},
-      {label: 'Migration', href: '/concepts/migration/'},
-      {label: 'Data Management', href: '/concepts/data-management/'},
-      {label: 'Sentry CLI', href: '/cli/'},
-    ],
-  },
-  {
-    label: 'ADMIN',
-    href: '/organization/',
-    dropdown: [
-      {label: 'Account Settings', href: '/account/'},
-      {label: 'Organization Settings', href: '/organization/'},
-      {label: 'Pricing & Billing', href: '/pricing'},
-    ],
-  },
-  {label: 'API', href: '/api/'},
-  {label: 'SECURITY, LEGAL, & PII', href: '/security-legal-pii/'},
-];
+const mainSections = mainSectionsWithDropdowns;
 
 // Add a helper hook for portal dropdown positioning
 function useDropdownPosition(triggerRef, open) {

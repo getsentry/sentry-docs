@@ -56,8 +56,8 @@ export async function SidebarNavigation({path}: {path: string[]}) {
     );
   }
 
-  // Concepts & Reference
-  if (path[0] === 'concepts') {
+  // Concepts & Reference (includes CLI which is part of Concepts)
+  if (path[0] === 'concepts' || path[0] === 'cli') {
     return (
       <ul data-sidebar-tree>
         <DynamicNav
@@ -160,55 +160,6 @@ export async function SidebarNavigation({path}: {path: string[]}) {
         </ul>
       );
     }
-  }
-
-  // Sentry CLI (standalone route)
-  if (path[0] === 'cli') {
-    return (
-      <ul data-sidebar-tree>
-        <DynamicNav
-          root="concepts/key-terms"
-          title="Key Terms"
-          tree={toTree(
-            getNavNodes([nodeForPath(rootNode, 'concepts/key-terms')!], docNodeToNavNode)
-          )}
-          collapsible={false}
-        />
-        <DynamicNav
-          root="concepts/search"
-          title="Search"
-          tree={toTree(
-            getNavNodes([nodeForPath(rootNode, 'concepts/search')!], docNodeToNavNode)
-          )}
-          collapsible={false}
-        />
-        <DynamicNav
-          root="concepts/migration"
-          title="Migration"
-          tree={toTree(
-            getNavNodes([nodeForPath(rootNode, 'concepts/migration')!], docNodeToNavNode)
-          )}
-          collapsible={false}
-        />
-        <DynamicNav
-          root="concepts/data-management"
-          title="Data Management"
-          tree={toTree(
-            getNavNodes(
-              [nodeForPath(rootNode, 'concepts/data-management')!],
-              docNodeToNavNode
-            )
-          )}
-          collapsible={false}
-        />
-        <DynamicNav
-          root="cli"
-          title="Sentry CLI"
-          tree={toTree(getNavNodes([nodeForPath(rootNode, 'cli')!], docNodeToNavNode))}
-          collapsible={false}
-        />
-      </ul>
-    );
   }
 
   // Documentation Changelog

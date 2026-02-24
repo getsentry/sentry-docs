@@ -13,23 +13,12 @@ import sidebarStyles from './sidebar/style.module.scss';
 
 import {MagicIcon} from './cutomIcons/magic';
 import {useHomeSearchVisibility} from './homeSearchVisibility';
+import {mainSections} from './navigationData';
 import {Search} from './search';
 import {ThemeToggle} from './theme-toggle';
 import TopNavClient from './TopNavClient';
 
 export const sidebarToggleId = sidebarStyles['navbar-menu-toggle'];
-
-// Main navigation sections for home page mobile nav
-const mainSections = [
-  {label: 'SDKs', href: '/platforms/'},
-  {label: 'Product', href: '/product/'},
-  {label: 'AI', href: '/ai/'},
-  {label: 'Guides', href: '/guides/'},
-  {label: 'Concepts', href: '/concepts/'},
-  {label: 'Admin', href: '/organization/'},
-  {label: 'API', href: '/api/'},
-  {label: 'Security, Legal, & PII', href: '/security-legal-pii/'},
-];
 
 type Props = {
   pathname: string;

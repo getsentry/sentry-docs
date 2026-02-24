@@ -5,14 +5,6 @@ import {useEffect, useRef} from 'react';
 // Custom event to communicate search visibility across components
 const SEARCH_VISIBILITY_EVENT = 'home-search-visibility';
 
-export function useHomeSearchVisible() {
-  // This hook is used by the header to know if home search is visible
-  if (typeof window === 'undefined') {
-    return true; // SSR default
-  }
-  return (window as any).__homeSearchVisible ?? true;
-}
-
 export function HomeSearchObserver({children}: {children: React.ReactNode}) {
   const ref = useRef<HTMLDivElement>(null);
 

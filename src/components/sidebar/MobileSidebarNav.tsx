@@ -6,18 +6,7 @@ import {usePathname} from 'next/navigation';
 
 import {Platform} from 'sentry-docs/types';
 
-// Main navigation sections - these are simple links that navigate to their index pages
-// The SidebarNavigation component below handles showing the children for each section
-const mainSections = [
-  {label: 'SDKs', href: '/platforms/'},
-  {label: 'Product', href: '/product/'},
-  {label: 'AI', href: '/ai/'},
-  {label: 'Guides', href: '/guides/'},
-  {label: 'Concepts', href: '/concepts/'},
-  {label: 'Admin', href: '/organization/'},
-  {label: 'API', href: '/api/'},
-  {label: 'Security, Legal, & PII', href: '/security-legal-pii/'},
-];
+import {mainSections} from '../navigationData';
 
 export function MobileSidebarNav({platforms = []}: {platforms?: Platform[]}) {
   const pathname = usePathname();

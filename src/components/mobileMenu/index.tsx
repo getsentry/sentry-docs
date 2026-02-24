@@ -8,21 +8,14 @@ import {Search} from 'sentry-docs/components/search';
 
 import styles from './styles.module.scss';
 
+import {mainSections} from '../navigationData';
+
 type Props = {
   pathname: string;
   searchPlatforms: string[];
 };
 
 export function MobileMenu({pathname, searchPlatforms}: Props) {
-  const mainSections = [
-    {label: 'Products', href: '/product/sentry'},
-    {label: 'SDKs', href: '/platforms/'},
-    {label: 'Concepts & Reference', href: '/concepts/'},
-    {label: 'Admin', href: '/organization/'},
-    {label: 'API', href: '/api/'},
-    {label: 'Security, Legal, & PII', href: '/security-legal-pii/'},
-  ];
-
   return (
     <div className="flex gap-6 items-center">
       <Popover.Root>
