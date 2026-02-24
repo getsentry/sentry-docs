@@ -336,10 +336,10 @@ function buildFrontmatterMap(docTree) {
 function formatYamlFrontmatter({title, description, url}) {
   let yaml = '---\n';
   if (title) {
-    yaml += `title: "${title.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"\n`;
+    yaml += `title: "${title.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, ' ')}"\n`;
   }
   if (description) {
-    yaml += `description: "${description.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"\n`;
+    yaml += `description: "${description.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, ' ')}"\n`;
   }
   if (url) {
     yaml += `url: ${url}\n`;
@@ -662,7 +662,9 @@ async function createWork() {
       let taskFrontmatter = null;
       if (mdxOverride) {
         const fm = mdxOverride.frontmatter;
-        const urlPath = relativePath.replace(/\.md$/, '').replace(/^index$/, '');
+        const urlPath = relativePath
+          .replace(/\.md$/, '')
+          .replace(/\/index$|^index$/, '');
         taskFrontmatter = {
           title: fm.title || '',
           description: fm.description || '',
