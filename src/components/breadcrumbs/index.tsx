@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import {useRouter} from 'next/navigation';
 
 import {DocNode} from 'sentry-docs/docTree';
 
@@ -10,9 +11,8 @@ type BreadcrumbsProps = {
   leafNode: DocNode;
 };
 
-const PLATFORM_STORAGE_KEY = 'sentry-docs:defined-platform';
-
 export function Breadcrumbs({leafNode}: BreadcrumbsProps) {
+  const router = useRouter();
   const breadcrumbs: {title: string; to: string}[] = [];
 
   for (let node: DocNode | undefined = leafNode; node; node = node.parent) {
@@ -27,9 +27,12 @@ export function Breadcrumbs({leafNode}: BreadcrumbsProps) {
     }
   }
 
-  const handlePlatformsClick = () => {
+  const handlePlatformsClick = (e: React.MouseEvent) => {
+    e.preventDefault();
     // Clear stored platform so SDK selector resets
-    localStorage.removeItem(PLATFORM_STORAGE_KEY);
+    localStorage.removeItem('active-platform');
+    // Navigate after clearing localStorage
+    router.push('/platforms/');
   };
 
   return (
@@ -38,12 +41,13 @@ export function Breadcrumbs({leafNode}: BreadcrumbsProps) {
         const isPlatformsLink = b.to === '/platforms/';
         return (
           <li className={styles['breadcrumb-item']} key={b.to}>
-            <Link
-              href={b.to}
-              onClick={isPlatformsLink ? handlePlatformsClick : undefined}
-            >
-              {b.title}
-            </Link>
+            {isPlatformsLink ? (
+              <a href={b.to} onClick={handlePlatformsClick}>
+                {b.title}
+              </a>
+            ) : (
+              <Link href={b.to}>{b.title}</Link>
+            )}
           </li>
         );
       })}
