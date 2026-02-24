@@ -836,9 +836,12 @@ async function createWork() {
 
   // Upload modified files to R2, skipping those whose hash already matches
   if (r2Uploads.size > 0) {
-    const toUpload = [...r2Uploads].filter(
-      ([key, data]) => existingFilesOnR2.get(key) !== md5(data)
-    );
+    const toUpload = [];
+    for (const [key, data] of r2Uploads) {
+      if (existingFilesOnR2.get(key) !== md5(data)) {
+        toUpload.push([key, data]);
+      }
+    }
     if (toUpload.length > 0) {
       const limit = pLimit(50);
       const s3Client = getS3Client();
