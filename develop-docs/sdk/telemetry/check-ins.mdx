@@ -1,12 +1,13 @@
 ---
-title: Cron Check-Ins
+title: Check-Ins
+description: Cron monitoring protocol for reporting job start, success, and failure via check-in envelopes.
 spec_id: sdk/telemetry/check-ins
 spec_version: 1.6.0
 spec_status: stable
 spec_platforms:
   - backend
 spec_depends_on:
-  - id: sdk/foundations/data-model/envelopes
+  - id: sdk/foundations/transport/envelopes
     version: ">=1.0.0"
 spec_changelog:
   - version: 1.6.0
@@ -42,7 +43,6 @@ spec_changelog:
   - version: 1.0.0
     date: 2023-03-21
     summary: Initial spec — basic check-in payload
-sidebar_order: 1
 ---
 
 <SpecRfcAlert />
@@ -54,8 +54,7 @@ sidebar_order: 1
 Cron check-ins allow Sentry to monitor the health of recurring jobs (cron jobs, scheduled tasks, periodic workers). An SDK sends check-in envelopes to report when a job starts, succeeds, or fails. Sentry uses this data to detect missed, late, and failing executions.
 
 Related specs:
-- [Envelopes](/sdk/foundations/data-model/envelopes/) — transport format
-- [Envelope Items](/sdk/foundations/data-model/envelope-items/) — `check_in` item type constraints
+- [Envelopes](/sdk/foundations/transport/envelopes/) — transport format
 
 ---
 
@@ -182,11 +181,16 @@ A check-in is sent as a `check_in` envelope item containing a JSON object.
 | `release` | String | **OPTIONAL** | 1.0.0 | The release version. |
 | `environment` | String | **OPTIONAL** | 1.0.0 | The environment name. |
 | `monitor_config` | Object | **OPTIONAL** | 1.1.0 | Monitor configuration for upsert. See [Monitor Configuration Payload](#monitor-configuration-payload). |
-| `contexts` | Object | **OPTIONAL** | 1.3.0 | Contextual information. Currently supports [trace context](/sdk/foundations/data-model/event-payloads/contexts/#trace-context) with `trace_id` for linking check-ins to errors. |
+| `contexts` | Object | **OPTIONAL** | 1.3.0 | Contextual information. Currently supports [trace context](/sdk/foundations/transport/event-payloads/contexts/#trace-context) with `trace_id` for linking check-ins to errors. |
 
 **Envelope constraints:**
 - A `check_in` item **MUST** occur at most once per envelope.
+- This item can either be included in an Envelope with other items, or it **MAY** be sent by itself.
 - Maximum item size: 100 KiB.
+
+**Envelope Headers:** _None_
+
+**Additional Item Headers:** _None_
 
 </SpecSection>
 
