@@ -1,0 +1,199 @@
+---
+title: Envelope Items
+sidebar_order: 80
+---
+
+Each Envelope consists of headers and a potentially empty list of Items, each
+with their own headers. Which Headers are required depends on the Items in an
+Envelope. This section describes all Item types and their respective required
+headers. It is worth noting that the list of Item types doesn't match the data
+categories used for [rate limiting](/sdk/foundations/transport/rate-limiting/#definitions) and
+client reports.
+
+The type of an Item is declared in the `type` header, as well as the payload
+size in `length`. See Serialization Format for a list of common Item headers.
+The headers described in this section are **in addition to the common headers**.
+
+### Event
+
+Item type `"event"`. This Item contains an error or default [event payload](/sdk/foundations/transport/event-payloads/)
+encoded in JSON.
+
+**Constraints:**
+
+- This Item may occur at most once per Envelope.
+- This Item is mutually exclusive with `"transaction"` Items.
+
+**Envelope Headers:**
+
+`event_id`
+
+: **UUID String, required.** Corresponds to the `event_id` field of the event
+payload. Clients are required to generate an event identifier ahead of time
+and set it at least in the Envelope headers. If the identifier mismatches
+between the Envelope and payload, the Envelope header takes precedence.
+
+**Additional Item Headers:**
+
+_None_
+
+### Transaction
+
+Item type `"transaction"`. This Item contains a transaction payload encoded
+in JSON.
+
+**Constraints:**
+
+- This Item may occur at most once per Envelope.
+- This Item is mutually exclusive with `"event"` Items.
+
+**Envelope Headers:**
+
+`event_id`
+
+: **UUID String, required.** Corresponds to the `event_id` field of the
+transaction payload. Clients are required to generate an event identifier
+ahead of time and set it at least in the Envelope headers. If the identifier
+mismatches between the Envelope and payload, the Envelope header takes
+precedence.
+
+**Additional Item Headers:**
+
+_None_
+
+### Attachment
+
+Item type `"attachment"`. This Item contains a raw payload of an attachment
+file. It is always associated to an event or transaction.
+
+**Constraints:**
+
+- This Item may occur multiple times per Envelope.
+- For **minidump** and **apple crash report** attachments, the corresponding
+  `"event"` Item must be sent within the same Envelope.
+- Generic attachments can be ingested separately from their events. We recommend
+  sending them in the same Envelope, which allows for more efficient rate
+  limiting and filtering.
+- Generic attachments sent in separate Envelopes can be dropped independently of
+  an event. To ensure consistent handling, consider sending them in the same
+  request.
+- The Sentry server supports special attachments to ingest event payloads for
+  backwards compatibility. These are not part of the official public API and the
+  behavior should not be relied upon.
+
+**Envelope Headers:**
+
+`event_id`
+
+: **UUID String, required.** The identifier of the event or transaction.
+
+**Additional Item Headers:**
+
+`filename`
+
+: **String, required.** The name of the uploaded file without a path component.
+
+`attachment_type`
+
+: _String, optional._ The special type of this attachment. Possible values are:
+
+- **`event.attachment` (default)**: A standard attachment without special
+  meaning.
+- `event.minidump`: A minidump file that creates an error event and is
+  symbolicated. The file should start with the `MDMP` magic bytes.
+- `event.applecrashreport`: An Apple crash report file that creates an error
+  event and is symbolicated.
+- `unreal.context`: An XML file containing UE4 crash meta data. During event
+  ingestion, event contexts and extra fields are extracted from this file.
+- `unreal.logs`: A plain-text log file obtained from UE4 crashes. During
+  event ingestion, the last logs are extracted into event breadcrumbs.
+- `event.view_hierarchy`: An JSON file with a predefined structure, see [RFC #33](https://github.com/getsentry/rfcs/blob/main/text/0033-view-hierarchy.md).
+
+`content_type`
+
+: _String, optional._ The content type of the attachment payload. Any [MIME type](https://www.iana.org/assignments/media-types/media-types.xhtml) may be used; the default is `application/octet-stream`.
+
+### Trace Attachment
+
+<Alert level="warning">
+Trace attachments are an experimental feature that is still under development.
+</Alert>
+
+Item type `"attachment"` with content type `"application/vnd.sentry.trace-attachment"`. This item contains a raw payload of an attachment together with metadata. Contrary to V1 attachments, trace attachments are only optionally associated with other trace items (spans, logs, ...). Their main association is with the trace itself.
+
+**Envelope Headers:**
+
+- `trace` (optional): If the envelope containing the trace attachment has a [Dynamic Sampling Context](/sdk/telemetry/traces/dynamic-sampling-context), it will be subject to trace-based dynamic sampling rules, and potentially dropped.
+
+**Item Headers:**
+
+The trace attachment item header must contain the following properties:
+
+```json
+{
+  "type": "attachment",
+  "content_type": "application/vnd.sentry.trace-attachment",
+  "length": 212341234,
+  "meta_length": 123
+}
+```
+
+- `meta_length` is the size of the metadata portion of the payload in bytes (see item description below).
+
+
+**Item Payload:**
+
+The trace attachment item payload consists of a JSON object containing metadata followed by the attachment body. For example, for a plain text attachment with the body "helloworld", the item payload would look like this:
+
+```json
+{ // Attachment Metadata
+  "trace_id": "12312012123120121231201212312012",
+  "attachment_id": "019a72d07ffe77208c013ac888b38d9e",
+  "timestamp": 1760520026.781239,
+  "filename": "myfile.txt",
+  "content_type": "text/plain",
+	"attributes": {
+	  // Arbitrary key value pairs that will end up in EAP.
+		"foo": {"type": "string", "value": "bar"}
+	}
+}helloworld
+```
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `trace_id` | string | Yes | The trace ID. Determines which `trace` the attachment belongs to. 32-character hexadecimal string. |
+| `attachment_id` | string | Yes | 32-character hexadecimal string (a valid [Version 7](https://en.wikipedia.org/wiki/Universally_unique_identifier#Version_7_(timestamp_and_random)) or Version 4 UUID without dashes) |
+| `timestamp` | float | Yes | a UNIX timestamp corresponding to the attachment's occurrence. It may be the same as the start or end timestamp of the owner span. |
+| `filename` | string | No | The file name of the attachment. |
+| `content_type` | string | Yes | the content type of the attachment body (not to be confused with the content type of the envelope item, which is always `application/vnd.sentry.trace-attachment`). |
+| `attributes` | object | No | arbitrary attributes that will be queryable on the attachment trace item, similar to spans, logs, and trace metrics. |
+
+
+### Check-Ins
+
+Item type `"check_in"` contains a check-in payload encoded as JSON.
+
+See the <Link to="/sdk/telemetry/check-ins/">Check-Ins</Link> documentation for the payload
+details.
+
+**Constraints:**
+
+- This Item may occur at most once per Envelope.
+- This Item can either be included in an Envelope with other Items, or it may be sent by itself.
+
+**Envelope Headers:**
+
+_None_
+
+**Additional Item Headers:**
+
+_None_
+
+### Reserved Types
+
+Reserved types may not be written by any implementation. They are reserved for
+future or internal use. This is the exhaustive list of reserved Item types:
+
+- `security`
+- `unreal_report`
+- `form_data`

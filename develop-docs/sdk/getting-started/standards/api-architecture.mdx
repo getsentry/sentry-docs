@@ -1,73 +1,117 @@
 ---
 title: API and Architecture
+spec_id: sdk/getting-started/standards/api-architecture
+spec_version: 1.0.0
+spec_status: candidate
+spec_platforms:
+  - all
+spec_changelog:
+  - version: 1.0.0
+    date: 2026-02-18
+    summary: Initial API and Architecture standard
 sidebar_order: 1
 ---
 
+<SpecRfcAlert />
+
+<SpecMeta />
+
 ## Server-side (Relay) vs. SDK-side decision gate
+
+<SpecSection id="relay-decision-gate" status="candidate" since="1.0.0">
 
 #### Rule
 
-New processing or transformation logic must default to server-side (Relay).
+New processing or transformation logic **MUST** default to server-side (Relay).
 
-Logic should only be implemented in the SDK if it must run before data leaves the customer's application (e.g., user-controlled filtering like `before_send_*`), requires access to platform-specific APIs, is strictly latency-sensitive, or must function in offline scenarios.
+Logic **SHOULD** only be implemented in the SDK when it meets one of these criteria:
+
+- **MUST** run before data leaves the customer's application (e.g., user-controlled filtering like `before_send_*`)
+- **REQUIRES** access to platform-specific APIs
+- Is strictly latency-sensitive
+- **MUST** function in offline scenarios
 
 Transformations of data that has already been collected should be handled in Relay. This ensures consistency across SDK versions and avoids duplicating logic in clients that may remain in use indefinitely.
 
 #### Enforcement
 
-* AGENTS.md instruction
-* Human review
+- AGENTS.md instruction
+- Human review
 
 #### Per-SDK override
 
-<StatusBadge type="no" /> The default is universal. Justifications are SDK-specific.
+<StatusBadge type="no" /> The default is universal. Justifications are
+SDK-specific.
+
+</SpecSection>
 
 ---
 
 ## SDK-side logic must not break on server changes
 
+<SpecSection id="forward-compatibility" status="candidate" since="1.0.0">
+
 #### Rule
 
-SDKs typically outlive individual API versions, so forward compatibility is essential to prevent ecosystem breakage. They must remain resilient to evolving server responses, including additional fields, missing optional fields, new enum values, and rate limiting. They must not fail due to additive changes. Unknown fields, categories, or dimensions should be safely ignored rather than causing errors.
+SDKs typically outlive individual API versions, so forward compatibility is essential to prevent ecosystem breakage.
+
+SDKs **MUST** remain resilient to evolving server responses:
+
+- Additional fields
+- Missing optional fields
+- New enum values
+- Rate limiting
+
+They **MUST NOT** fail due to additive changes. Unknown fields, categories, or dimensions **SHOULD** be safely ignored rather than causing errors.
 
 #### Enforcement
 
-* Integration tests for degraded-server scenarios
-* Human review
+- Integration tests for degraded server scenarios (additional fields, missing optional fields, new enum values, rate limiting)
+- Human review
 
 #### Per-SDK override
 
 <StatusBadge type="yes" /> Specific tests vary. Principle is universal.
 
+</SpecSection>
+
 ---
 
 ## Public API change approval gate
 
+<SpecSection id="public-api-approval" status="candidate" since="1.0.0">
+
 #### Rule
 
-Any change to public API surface (add, change, deprecate, remove) requires @sdk-leads approval. Public API includes anything a user can call, import, configure, subclass, or otherwise reference. If there is any doubt whether something is public, check for usage in public repositories. When still unsure, treat it as public.
+Any change to public API (add, change, deprecate, remove) **REQUIRES** @sdk-leads approval. Public API includes anything a user can call, import, configure, subclass, or otherwise reference. If there is any doubt whether something is public, check for usage in public repositories using the SDK. When still unsure, treat it as public.
 
 #### Enforcement
 
-* CI API surface snapshot diffs (where feasible)
-* Human review gate (senior approval)
+- CI API snapshot diffs (where feasible)
+- Human review gate (@sdk-leads approval)
 
 #### Suggested skill(s)
 
-* [`sentry-skills:code-review`](https://github.com/getsentry/skills#available-skills) — flags API changes for escalation.
+- [`sentry-skills:code-review`](https://github.com/getsentry/skills#available-skills) — flags API changes for escalation.
 
 #### Per-SDK override
 
-<StatusBadge type="yes" /> Detection mechanisms are language-specific. Approval requirement is universal.
+<StatusBadge type="yes" /> Detection mechanisms are language-specific. Approval
+requirement is universal.
+
+</SpecSection>
 
 ---
 
 ## Semantic conventions process
 
+<SpecSection id="semantic-conventions-process" status="candidate" since="1.0.0">
+
 #### Rule
 
-New attributes must first be defined in [sentry-conventions](https://github.com/getsentry/sentry-conventions).
+New attributes **MUST** first be defined in [sentry-conventions](https://github.com/getsentry/sentry-conventions).
 Process:
+
 1. PR to sentry-conventions
 2. code owner approval
 3. 3 business day minimum wait
@@ -75,62 +119,81 @@ Process:
 
 #### Enforcement
 
-* CI validation where feasible
-* Human review
+- CI validation where feasible
+- Human review
 
 #### Per-SDK override
 
 <StatusBadge type="no" />
 
+</SpecSection>
+
 ---
 
 ## Breaking change process
 
+<SpecSection id="breaking-change-process" status="candidate" since="1.0.0">
+
 #### Rule
 
-Breaking changes must follow the breaking changes playbook.
+Breaking changes **MUST** follow the breaking changes playbook.
 
-Breaking changes may only ship in a major version. They must not ship in minor versions. Opt-in previews are allowed in minor versions.
+Breaking changes **MAY** only ship in a major version. They **MUST NOT** ship in minor versions. Opt-in previews are allowed in minor versions.
 
-A deprecation period is required in a prior minor version, during which dual behavior is allowed to support migration.
+A deprecation period is **REQUIRED** in a prior minor version, during which dual behavior is allowed to support migration.
 
-Every breaking change must include:
-* A migration guide with copy-pastable examples
-* A changelog entry using the BREAKING CHANGE: notation
-* Validation of the migration guide using an LLM to ensure it is clear and complete
+Every breaking change **MUST** include:
+
+- A migration guide with copy-pastable examples
+- A changelog entry using the BREAKING CHANGE: notation
+- Validation of the migration guide using an LLM to ensure it is clear and complete
 
 #### Enforcement
 
-* [Commit footer BREAKING CHANGE:](/engineering-practices/commit-messages/#footer) triggers CI checks
-* Breaking changes in non-major branches are CI-blocked
-* Human review.
+- [Commit footer BREAKING CHANGE:](/engineering-practices/commit-messages/#footer) triggers CI checks
+- Breaking changes in non-major branches are CI-blocked
+- Human review
 
 #### Suggested skill(s)
 
-* [`sentry-skills:code-review`](https://github.com/getsentry/skills#available-skills)
+- [`sentry-skills:code-review`](https://github.com/getsentry/skills#available-skills)
 
 #### Per-SDK override
 
-<StatusBadge type="yes" /> Deprecation period timelines can vary. Process is universal.
+<StatusBadge type="yes" /> Deprecation period timelines can vary. Process is
+universal.
+
+</SpecSection>
 
 ---
 
 ## Deprecation lifecycle
 
+<SpecSection id="deprecation-lifecycle" status="candidate" since="1.0.0">
+
 #### Rule
 
 All deprecations of public APIs, user-facing integrations, and supported platforms or frameworks follow three stages:
-1.	Announce in a minor release with a runtime warning (where possible), updated changelog and documentation, and a migration guide. Warnings must include the replacement, a code example, and a link to the migration docs.
-2.	Keep the deprecated surface fully functional for at least one subsequent minor release (e.g., deprecated in X.Y, still supported in X.(Y+1)).
-3.	Remove only in the next major release (X+1.0).
 
-Deprecating an entire SDK must never be silent. It requires clear customer impact analysis, a public announcement, updated documentation, a defined support timeline, and advance EOL notice.
+1. Announce in a minor release with a runtime warning (where possible), updated changelog and documentation, and a migration guide. Warnings **MUST** include the replacement, a code example, and a link to the migration docs.
+2. Keep the deprecated surface fully functional for at least one subsequent minor release (e.g., deprecated in X.Y, still supported in X.(Y+1)).
+3. Remove only in the next major release (X+1.0).
+
+Deprecating an entire SDK **MUST NOT** be silent. It **REQUIRES** clear customer impact analysis, a public announcement, updated documentation, a defined support timeline, and advance EOL notice.
 
 #### Enforcement
 
-* CI checks deprecated APIs still have passing tests
-* Human review
+- CI checks deprecated APIs still have passing tests
+- Human review
 
 #### Per-SDK override
 
 <StatusBadge type="yes" /> Minimum period can be extended. Stages are universal.
+
+</SpecSection>
+
+---
+
+## Changelog
+
+<SpecChangelog />
