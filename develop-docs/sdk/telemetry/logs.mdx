@@ -12,7 +12,7 @@ spec_depends_on:
 spec_changelog:
   - version: 1.16.0
     date: 2026-02-06
-    summary: Added sentry.log.sequence default attribute for deterministic log ordering
+    summary: Added sentry.timestamp.sequence default attribute for deterministic log ordering
   - version: 1.15.0
     date: 2026-02-03
     summary: Clarified 100 logs per envelope hard limit, SDKs MAY use lower buffer limit
@@ -156,7 +156,7 @@ SDKs **MUST** attach the following attributes to every log:
 | `sentry.sdk.name` | 1.0.0 | The name of the SDK that sent the log. |
 | `sentry.sdk.version` | 1.0.0 | The version of the SDK that sent the log. |
 | `sentry.replay_id` | 1.8.0 | The replay ID of the active replay when the log was collected. **MUST NOT** be set if no replay is active. |
-| `sentry.log.sequence` | 1.16.0 | A monotonically incrementing integer counter used to determine correct ordering of logs when timestamps are identical. See [Log Ordering](#log-ordering). |
+| `sentry.timestamp.sequence` | 1.16.0 | A monotonically incrementing integer counter used to determine correct ordering of logs when timestamps are identical. See [Log Ordering](#log-ordering). |
 
 For parameterized logs, SDKs **MUST** also attach:
 
@@ -298,18 +298,16 @@ Logs **SHOULD** be associated with replays. If a log is recorded during an activ
 
 <SpecSection id="log-ordering" status="candidate" since="1.16.0">
 
-Some runtimes (notably Cloudflare Workers) freeze timer APIs (`Date.now()`, `performance.now()`) during synchronous execution, causing multiple logs to share identical timestamps. To guarantee deterministic ordering, SDKs **MUST** attach a `sentry.log.sequence` integer attribute to every log.
+Some runtimes (notably Cloudflare Workers) freeze timer APIs (`Date.now()`, `performance.now()`) during synchronous execution, causing multiple logs to share identical timestamps. To guarantee deterministic ordering, SDKs **MUST** attach a `sentry.timestamp.sequence` integer attribute to every log.
 
 The sequence number **MUST**:
 - Start at `0` when the SDK initializes.
 - Increment by `1` for each log that is captured.
-- Be scoped to the SDK instance lifetime. It resets naturally on process restart.
+- Reset to `0` when:
+  - The SDK is re-initialized.
+  - The current log's timestamp is strictly greater than the previous log's timestamp.
 
-The sequence number **MUST NOT**:
-- Be intentionally reset during the process lifetime.
-- Be used to modify or synthesize sub-millisecond timestamp precision.
-
-The sequence provides deterministic ordering within a single SDK instance. It does not guarantee ordering across independent processes or workers, which have separate counters.
+The sequence provides deterministic ordering within a single SDK instance. It does not guarantee ordering across independent processes or workers, which have separate counters. The reset behavior ensures the sequence only increments for consecutive logs that share the same timestamp.
 
 </SpecSection>
 
@@ -589,7 +587,7 @@ A complete `log` envelope with six log entries at different severity levels:
         "sentry.message.parameter.0": { "value": 120, "type": "integer" },
         "sentry.message.parameter.1": { "value": 85, "type": "integer" },
         "sentry.message.parameter.2": { "value": 60, "type": "integer" },
-        "sentry.log.sequence": { "value": 0, "type": "integer" }
+        "sentry.timestamp.sequence": { "value": 0, "type": "integer" }
       }
     },
     {
@@ -615,7 +613,7 @@ A complete `log` envelope with six log entries at different severity levels:
           "type": "string"
         },
         "sentry.message.parameter.1": { "value": 3, "type": "integer" },
-        "sentry.log.sequence": { "value": 1, "type": "integer" }
+        "sentry.timestamp.sequence": { "value": 1, "type": "integer" }
       }
     },
     {
@@ -641,7 +639,7 @@ A complete `log` envelope with six log entries at different severity levels:
           "type": "string"
         },
         "sentry.message.parameter.1": { "value": 8, "type": "integer" },
-        "sentry.log.sequence": { "value": 2, "type": "integer" }
+        "sentry.timestamp.sequence": { "value": 2, "type": "integer" }
       }
     },
     {
@@ -668,7 +666,7 @@ A complete `log` envelope with six log entries at different severity levels:
         },
         "sentry.message.parameter.1": { "value": 2500, "type": "integer" },
         "sentry.message.parameter.2": { "value": 1000, "type": "integer" },
-        "sentry.log.sequence": { "value": 3, "type": "integer" }
+        "sentry.timestamp.sequence": { "value": 3, "type": "integer" }
       }
     },
     {
@@ -696,7 +694,7 @@ A complete `log` envelope with six log entries at different severity levels:
           "value": "prod_123, prod_456",
           "type": "string"
         },
-        "sentry.log.sequence": { "value": 4, "type": "integer" }
+        "sentry.timestamp.sequence": { "value": 4, "type": "integer" }
       }
     },
     {
@@ -726,7 +724,7 @@ A complete `log` envelope with six log entries at different severity levels:
           "value": "UPDATE_CART",
           "type": "string"
         },
-        "sentry.log.sequence": { "value": 5, "type": "integer" }
+        "sentry.timestamp.sequence": { "value": 5, "type": "integer" }
       }
     }
   ]
