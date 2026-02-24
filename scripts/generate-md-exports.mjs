@@ -295,17 +295,57 @@ function buildFallbackChildSection(parentPath, children) {
 }
 
 /**
- * Injects a description and navigation links after the first H1 heading.
- * Returns the original content unchanged if no H1 is found.
+ * Walks the doctree to build a map of relativePath → {title, description, url}
+ * for YAML frontmatter generation.
  */
-function injectDescription(markdown, description, {navLinks = []} = {}) {
-  let suffix = `\n\n*${description}*\n`;
-  if (navLinks.length > 0) {
-    suffix += '\n' + navLinks.map(link => `*${link}*`).join('\n') + '\n';
+function buildFrontmatterMap(docTree) {
+  const map = new Map();
+  if (!docTree) {
+    return map;
   }
-  // Use a replacer function to avoid $ in descriptions being interpreted as
-  // special regex replacement patterns (e.g. $1, $&, $')
-  return markdown.replace(/^(# .+)$/m, match => match + suffix);
+
+  function walk(node) {
+    if (node.path) {
+      const relativePath = node.path + '.md';
+      map.set(relativePath, {
+        title: getTitle(node),
+        description: node.frontmatter?.description || '',
+        url: `${DOCS_ORIGIN}/${node.path}/`,
+      });
+    }
+    if (node.children) {
+      for (const child of node.children) {
+        walk(child);
+      }
+    }
+  }
+
+  if (docTree.children) {
+    for (const child of docTree.children) {
+      walk(child);
+    }
+  }
+
+  return map;
+}
+
+/**
+ * Formats a YAML frontmatter block for a markdown file.
+ * Only includes fields that have non-empty values.
+ */
+function formatYamlFrontmatter({title, description, url}) {
+  let yaml = '---\n';
+  if (title) {
+    yaml += `title: "${title.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"\n`;
+  }
+  if (description) {
+    yaml += `description: "${description.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"\n`;
+  }
+  if (url) {
+    yaml += `url: ${url}\n`;
+  }
+  yaml += '---\n\n';
+  return yaml;
 }
 
 // --- MDX template rendering for full-page overrides ---
@@ -547,6 +587,9 @@ async function createWork() {
     console.warn('   Falling back to slug-based navigation');
   }
 
+  // Build frontmatter map for YAML metadata in markdown output
+  const frontmatterMap = buildFrontmatterMap(docTree);
+
   // Render MDX template overrides (full-page content replacements)
   const mdxOverrides = await renderMdxOverrides(root, docTree);
 
@@ -616,11 +659,24 @@ async function createWork() {
       const relativePath = path.relative(OUTPUT_DIR, targetPath);
       // Use MDX override HTML if available, otherwise use Next.js build HTML
       const mdxOverride = mdxOverrides.get(relativePath);
+      let taskFrontmatter = null;
+      if (mdxOverride) {
+        const fm = mdxOverride.frontmatter;
+        const urlPath = relativePath.replace(/\.md$/, '').replace(/^index$/, '');
+        taskFrontmatter = {
+          title: fm.title || '',
+          description: fm.description || '',
+          url: `${DOCS_ORIGIN}/${urlPath}${urlPath ? '/' : ''}`,
+        };
+      } else {
+        taskFrontmatter = frontmatterMap.get(relativePath) || null;
+      }
       workerTasks[workerIdx].push({
         sourcePath: mdxOverride ? mdxOverride.htmlPath : sourcePath,
         targetPath,
         relativePath,
         r2Hash: existingFilesOnR2 ? existingFilesOnR2.get(relativePath) : null,
+        frontmatter: taskFrontmatter,
       });
       workerIdx = (workerIdx + 1) % numWorkers;
       numFiles++;
@@ -728,9 +784,7 @@ async function createWork() {
   // Skip pages whose MDX override sets append_sections: false.
   const hasR2 = !!(accessKeyId && secretAccessKey && existingFilesOnR2);
   let updatedCount = 0;
-  // Always store the latest content per key. Hash comparison happens at upload
-  // time so that later writes (description injection) always overwrite earlier
-  // entries (child section append) even when the final content matches R2.
+  // Store the latest content per key for R2 upload after child section append.
   const r2Uploads = new Map();
 
   function collectR2Upload(key, data) {
@@ -779,58 +833,6 @@ async function createWork() {
     }
   }
   console.log(`📑 Added child page listings to ${updatedCount} section index files`);
-
-  // Inject frontmatter descriptions after H1 headings in MD exports.
-  // This helps LLM agents quickly assess page relevance from the first few lines.
-  // Skip MDX override pages (they have custom intros).
-  const mdxOverridePaths = new Set(mdxOverrides.keys());
-  let descriptionCount = 0;
-  for (const relativePath of allPaths) {
-    if (mdxOverridePaths.has(relativePath)) {
-      continue;
-    }
-    const pathParts = relativePath.replace(/\.md$/, '').split('/');
-    const node = docTree ? findNode(docTree, pathParts) : null;
-    const description = node?.frontmatter?.description;
-    if (!description) {
-      continue;
-    }
-    const filePath = path.join(OUTPUT_DIR, relativePath);
-    let content;
-    try {
-      content = await readFile(filePath, {encoding: 'utf8'});
-    } catch {
-      continue;
-    }
-    const navLinks = [];
-    if (relativePath !== 'index.md') {
-      navLinks.push(`Full documentation index: ${DOCS_ORIGIN}/`);
-    }
-    // Guide pages get a link back to their platform index
-    if (
-      pathParts[0] === 'platforms' &&
-      pathParts.includes('guides') &&
-      pathParts.length >= 4
-    ) {
-      const platformNode = docTree
-        ? findNode(docTree, ['platforms', pathParts[1]])
-        : null;
-      const platformName = platformNode ? getTitle(platformNode) : pathParts[1];
-      navLinks.push(
-        `${platformName} SDK docs: ${DOCS_ORIGIN}/platforms/${pathParts[1]}/`
-      );
-    }
-    const injected = injectDescription(content, description, {navLinks});
-    if (injected === content) {
-      continue;
-    }
-    await writeFile(filePath, injected, {encoding: 'utf8'});
-    descriptionCount++;
-    collectR2Upload(relativePath, injected);
-  }
-  if (descriptionCount > 0) {
-    console.log(`📝 Injected descriptions into ${descriptionCount} markdown files`);
-  }
 
   // Upload modified files to R2, skipping those whose hash already matches
   if (r2Uploads.size > 0) {
@@ -953,7 +955,7 @@ function extractContentForCacheKey(html) {
   return title + '\0' + canonical + '\0' + normalizedMain;
 }
 
-async function genMDFromHTML(source, target, {cacheDir, noCache, usedCacheFiles}) {
+async function genMDFromHTML(source, {cacheDir, noCache, usedCacheFiles}) {
   const rawHTML = await readFile(source, {encoding: 'utf8'});
   // Strip build-specific HTML elements for faster parsing.
   // See stripUnstableElements() for details on what's removed and why.
@@ -968,7 +970,6 @@ async function genMDFromHTML(source, target, {cacheDir, noCache, usedCacheFiles}
       const data = await text(
         compose(createReadStream(cacheFile), createBrotliDecompress())
       );
-      await writeFile(target, data, {encoding: 'utf8'});
 
       // Track that we used this cache file
       if (usedCacheFiles) {
@@ -1049,28 +1050,18 @@ async function genMDFromHTML(source, target, {cacheDir, noCache, usedCacheFiles}
       .use(remarkStringify)
       .process(strippedHTML)
   );
-  const reader = Readable.from(data);
-
-  await Promise.all([
-    pipeline(
-      reader,
-      createWriteStream(target, {
-        encoding: 'utf8',
-      })
-    ),
-    pipeline(
-      reader,
-      createBrotliCompress({
-        chunkSize: 32 * 1024,
-        params: {
-          [zlibConstants.BROTLI_PARAM_MODE]: zlibConstants.BROTLI_MODE_TEXT,
-          [zlibConstants.BROTLI_PARAM_QUALITY]: CACHE_COMPRESS_LEVEL,
-          [zlibConstants.BROTLI_PARAM_SIZE_HINT]: data.length,
-        },
-      }),
-      createWriteStream(cacheFile)
-    ).catch(err => console.warn('Error writing cache file:', err)),
-  ]);
+  await pipeline(
+    Readable.from(data),
+    createBrotliCompress({
+      chunkSize: 32 * 1024,
+      params: {
+        [zlibConstants.BROTLI_PARAM_MODE]: zlibConstants.BROTLI_MODE_TEXT,
+        [zlibConstants.BROTLI_PARAM_QUALITY]: CACHE_COMPRESS_LEVEL,
+        [zlibConstants.BROTLI_PARAM_SIZE_HINT]: data.length,
+      },
+    }),
+    createWriteStream(cacheFile)
+  ).catch(err => console.warn('Error writing cache file:', err));
 
   // Track that we created this cache file
   if (usedCacheFiles) {
@@ -1091,9 +1082,9 @@ async function processTaskList({id, tasks, cacheDir, noCache, usedCacheFiles}) {
   let cacheMisses = [];
   let r2CacheMisses = [];
   console.log(`🤖 Worker[${id}]: Starting to process ${tasks.length} files...`);
-  for (const {sourcePath, targetPath, relativePath, r2Hash} of tasks) {
+  for (const {sourcePath, targetPath, relativePath, r2Hash, frontmatter} of tasks) {
     try {
-      const {data, cacheHit} = await genMDFromHTML(sourcePath, targetPath, {
+      const {data, cacheHit} = await genMDFromHTML(sourcePath, {
         cacheDir,
         noCache,
         usedCacheFiles,
@@ -1102,12 +1093,16 @@ async function processTaskList({id, tasks, cacheDir, noCache, usedCacheFiles}) {
         cacheMisses.push(relativePath);
       }
 
+      // Prepend YAML frontmatter and write to target
+      const output = frontmatter ? formatYamlFrontmatter(frontmatter) + data : data;
+      await writeFile(targetPath, output, {encoding: 'utf8'});
+
       if (r2Hash !== null) {
-        const fileHash = md5(data);
+        const fileHash = md5(output);
         if (r2Hash !== fileHash) {
           r2CacheMisses.push(relativePath);
 
-          await uploadToCFR2(s3Client, relativePath, data);
+          await uploadToCFR2(s3Client, relativePath, output);
         }
       }
     } catch (error) {

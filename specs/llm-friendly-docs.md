@@ -28,7 +28,7 @@ Markdown exports are not just raw dumps of HTML content. They are adapted for LL
 | **Links**                | Relative HTML paths                   | Absolute `.md` URLs (e.g., `https://docs.sentry.io/platforms/javascript.md`) |
 | **Images**               | Relative paths                        | Absolute URLs                                                                |
 | **Page structure**       | Header, sidebar, main content, footer | Title + main content + navigation sections                                   |
-| **Description**          | HTML meta tag only                    | Injected as italic text after H1 heading                                     |
+| **Description**          | HTML meta tag only                    | YAML frontmatter block with title, description, and canonical URL            |
 
 ## Page Customization Architecture
 
@@ -141,27 +141,32 @@ Pages without a matching override get a generic "Pages in this section" listing 
 - Sorted by `sidebar_order`, then alphabetically by title
 - Hidden/draft/versioned pages filtered out
 
-## Description Injection
+## YAML Frontmatter
 
-After all markdown files are generated and child sections are appended, the script injects frontmatter `description` values into the markdown output. This gives LLM agents a relevance signal in the first few lines of each page.
+Every markdown export includes a YAML frontmatter block with metadata from the doctree. This gives LLM agents a relevance signal before the content begins and provides the canonical URL for navigation.
 
 **How it works:**
 
-1. For each `.md` file, look up the corresponding doctree node and read `frontmatter.description`
-2. If a description exists, find the H1 line and insert `*{description}*` (italic) after it
-3. Skip MDX override pages (they have custom intros)
+1. Before workers start, `buildFrontmatterMap(docTree)` walks the doctree and creates a map of `relativePath → {title, description, url}`
+2. Each task carries its frontmatter metadata (from the map, or from MDX override frontmatter)
+3. After `genMDFromHTML` returns cached/converted markdown, `processTaskList` prepends the YAML frontmatter
+4. The combined output (frontmatter + markdown) is written to the target file and used for R2 hash comparison
 
 **Result:**
 
 ```markdown
-# Python | Sentry for Python
+---
+title: "Sentry for Python"
+description: "Sentry's Python SDK enables automatic reporting of errors and performance data."
+url: https://docs.sentry.io/platforms/python/
+---
 
-*Sentry's Python SDK enables automatic reporting of errors and performance data.*
+# Python | Sentry for Python
 
 ## Prerequisites
 ```
 
-The `injectDescription(markdown, description)` function finds the first `^# .+$` line and inserts the italic description after it. Files without an H1 or without a description are left unchanged. Modified files are uploaded to R2 if credentials are configured.
+Pages without a doctree entry (e.g., error pages) get no frontmatter. The cache stores raw markdown without frontmatter, so metadata changes don't cause unnecessary cache invalidation.
 
 ## Current Override Registry
 
@@ -201,12 +206,11 @@ pnpm generate-md-exports →  public/md-exports/**/*.md  (+ R2 sync)
 
 During `generate-md-exports`:
 
-1. Load doctree
+1. Load doctree, build frontmatter map
 2. Render MDX templates from `md-overrides/` → HTML in `.next/cache/md-override-html/`
-3. Discover HTML files, swapping source path for MDX override pages
-4. Workers convert HTML → Markdown (parallel, cached, with R2 sync)
+3. Discover HTML files, swapping source path for MDX override pages, attaching frontmatter to tasks
+4. Workers convert HTML → Markdown, prepend YAML frontmatter, write to target (parallel, cached, with R2 sync)
 5. Append navigation sections to parent pages using `pageOverrides`
-6. Inject frontmatter descriptions after H1 headings (skipping MDX overrides)
 
 ## Adding a New Override
 

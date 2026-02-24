@@ -85,7 +85,7 @@ When writing requirements in `develop-docs/`:
 
 - Every page at `docs.sentry.io/<path>` has a `.md` export at `docs.sentry.io/<path>.md`
 - `scripts/generate-md-exports.mjs` generates these as a post-build step
-- Frontmatter `description` fields are injected as italic text after the H1 in MD exports — pages missing descriptions lose LLM relevance signal
+- Frontmatter metadata (title, description, URL) is emitted as a YAML frontmatter block in MD exports — pages missing descriptions lose LLM relevance signal
 - MDX override templates live in `md-overrides/`
 - Architecture spec: `specs/llm-friendly-docs.md`
 
