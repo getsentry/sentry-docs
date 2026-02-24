@@ -96,7 +96,7 @@ This means that:
 
 ### Attaching Trace Data to Events and Envelopes
 
-Any event created by an SDK in TwP mode must include the [`trace` context](/sdk/event-payloads/contexts/#trace-context).
+Any event created by an SDK in TwP mode must include the [`trace` context](/sdk/foundations/transport/event-payloads/contexts/#trace-context).
 This context should contain the trace data of the current trace, if available, just like in regular tracing mode.
 
 Furthermore, the [`trace` envelope header](/sdk/telemetry/traces/dynamic-sampling-context/#envelope-header) (populated from the dynamic sampling context) must be attached to any outgoing event envelope.
@@ -105,7 +105,7 @@ Furthermore, the [`trace` envelope header](/sdk/telemetry/traces/dynamic-samplin
 
 Traces in TwP mode should have the same duration as regular traces.
 For example, a TwP trace for a backend server should generally last for the duration of one individual request.
-This usually corresponds with the lifetime of an [isolation scope](/sdk/miscellaneous/hub_and_scope_refactoring/#scope) (or current scope created within the isolation scope).
+This usually corresponds with the lifetime of an [isolation scope](/sdk/foundations/state-management/scopes/#isolation-scope) (or current scope created within the isolation scope).
 
 SDKs in TwP mode must store trace data in a way that makes it possible for them to be attached to events and propagated to outgoing requests.
 The exact storage mechanism is up to the SDK implementation, but we recommended using the same mechanism as for regular traces.
@@ -119,7 +119,7 @@ While not ideal, we accept this limitation as the Sentry product can and should 
 As in regular tracing mode, for SDKs starting a new trace, the [Dynamic Sampling Context](/sdk/telemetry/traces/dynamic-sampling-context/) should be lazily populated and frozen for the duration of the trace.
 Given that no span is actually available in TwP mode, the DSC will not contain any keys related to spans (`transaction`, `sample_rate` or `sampled`).
 
-In SDKs adapting OpenTelemetry's tracing capabilities ([POTel](/sdk/hub_and_scope_refactoring/#f-use-otel-for-performance-instrumentation-potel)), the TwP trace data could also be stored in a non-recording span.
+In SDKs adapting OpenTelemetry's tracing capabilities ([POTel](/sdk/foundations/state-management/scopes/#otel-context-alignment)), the TwP trace data could also be stored in a non-recording span.
 For Example, the Node SDK also starts non-recording Otel spans in TwP mode and takes the trace data from them. In case no span is started (e.g. a node script without request handling), it falls back to the propagation context on the scope.
 Note that in the case of using the non-recording span, the span is also not sampled, meaning the sampling decision must still be deferred [when starting a new Trace](#starting-a-new-trace).
 

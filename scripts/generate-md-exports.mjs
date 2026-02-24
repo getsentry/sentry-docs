@@ -27,14 +27,49 @@ import remarkStringify from 'remark-stringify';
 import {unified} from 'unified';
 import {remove} from 'unist-util-remove';
 
-const DOCS_ORIGIN = 'https://docs.sentry.io';
-const CACHE_VERSION = 3;
+const DOCS_ORIGIN = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
+  ? 'https://develop.sentry.dev'
+  : 'https://docs.sentry.io';
+const CACHE_VERSION = 7;
 const CACHE_COMPRESS_LEVEL = 4;
 const R2_BUCKET = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
   ? 'sentry-develop-docs'
   : 'sentry-docs';
 const accessKeyId = process.env.R2_ACCESS_KEY_ID;
 const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
+
+// --- Doc tree helpers for generating structured navigation ---
+
+function findNode(node, pathParts) {
+  for (const part of pathParts) {
+    node = node.children?.find(c => c.slug === part);
+    if (!node) {
+      return null;
+    }
+  }
+  return node;
+}
+
+function getTitle(node) {
+  return node.frontmatter?.sidebar_title || node.frontmatter?.title || node.slug;
+}
+
+function isVisible(node) {
+  return (
+    !node.frontmatter?.sidebar_hidden &&
+    !node.frontmatter?.draft &&
+    !node.path?.includes('__v') &&
+    (node.frontmatter?.title || node.frontmatter?.sidebar_title)
+  );
+}
+
+function getVisibleChildren(node) {
+  return (node.children || []).filter(isVisible).sort((a, b) => {
+    const orderDiff =
+      (a.frontmatter?.sidebar_order ?? 99) - (b.frontmatter?.sidebar_order ?? 99);
+    return orderDiff !== 0 ? orderDiff : getTitle(a).localeCompare(getTitle(b));
+  });
+}
 
 function getS3Client() {
   return new S3Client({
@@ -56,7 +91,394 @@ async function uploadToCFR2(s3Client, relativePath, data) {
     ContentType: 'text/markdown',
   });
   await s3Client.send(command);
-  return;
+}
+
+// --- Shared link resolver utilities for page overrides ---
+
+function nodeLinks(node, subtreePath) {
+  if (!node) {
+    return [];
+  }
+  const subtree = subtreePath ? findNode(node, subtreePath.split('/')) : node;
+  if (!subtree) {
+    return [];
+  }
+  return getVisibleChildren(subtree).map(child => ({
+    title: getTitle(child),
+    url: `${DOCS_ORIGIN}/${child.path}.md`,
+  }));
+}
+
+function childLinks(ctx, filter) {
+  let pages = ctx.children;
+  if (filter) {
+    pages = pages.filter(filter);
+  }
+  return pages
+    .map(p => {
+      const parts = p.replace(/\.md$/, '').split('/');
+      const node = findNode(ctx.docTree, parts);
+      return {
+        title: node ? getTitle(node) : parts[parts.length - 1],
+        url: `${DOCS_ORIGIN}/${p}`,
+        order: node?.frontmatter?.sidebar_order ?? 99,
+      };
+    })
+    .sort((a, b) => {
+      const orderDiff = a.order - b.order;
+      return orderDiff !== 0 ? orderDiff : a.title.localeCompare(b.title);
+    });
+}
+
+function siblingGuideLinks(ctx) {
+  const platformSlug = ctx.pathParts[1];
+  const guideSlug = ctx.pathParts[3];
+  const platformNode = findNode(ctx.docTree, ['platforms', platformSlug]);
+  if (!platformNode) {
+    return [];
+  }
+  const guidesNode = findNode(platformNode, ['guides']);
+  if (!guidesNode) {
+    return [];
+  }
+  return getVisibleChildren(guidesNode)
+    .filter(g => g.slug !== guideSlug)
+    .map(g => ({
+      title: getTitle(g),
+      url: `${DOCS_ORIGIN}/platforms/${platformSlug}/guides/${g.slug}.md`,
+    }));
+}
+
+function platformTitle(ctx) {
+  const platformNode = findNode(ctx.docTree, ['platforms', ctx.pathParts[1]]);
+  return platformNode ? getTitle(platformNode) : ctx.pathParts[1];
+}
+
+function renderSections(ctx, sections) {
+  let result = '';
+  for (const section of sections) {
+    const heading =
+      typeof section.heading === 'function' ? section.heading(ctx) : section.heading;
+    const items =
+      typeof section.items === 'function' ? section.items(ctx) : section.items;
+    if (items.length === 0) {
+      continue;
+    }
+    result += `\n## ${heading}\n\n`;
+    result += items.map(item => `- [${item.title}](${item.url})`).join('\n');
+    result += '\n';
+  }
+  return result;
+}
+
+// Escape hatch for platforms.md which needs complex grouped structure
+function buildPlatformsSection(ctx) {
+  const platformsNode = findNode(ctx.docTree, ['platforms']);
+  if (!platformsNode) {
+    return '';
+  }
+
+  const platforms = getVisibleChildren(platformsNode);
+  let section = `\n## Platforms\n\n`;
+  section += platforms
+    .map(p => `- [${getTitle(p)}](${DOCS_ORIGIN}/platforms/${p.slug}.md)`)
+    .join('\n');
+
+  const frameworkLines = [];
+  for (const platform of platforms) {
+    const guidesNode = findNode(platform, ['guides']);
+    if (!guidesNode) {
+      continue;
+    }
+    const guides = getVisibleChildren(guidesNode);
+    if (guides.length === 0) {
+      continue;
+    }
+    frameworkLines.push(`\n### ${getTitle(platform)}\n`);
+    for (const guide of guides) {
+      frameworkLines.push(
+        `- [${getTitle(guide)}](${DOCS_ORIGIN}/platforms/${platform.slug}/guides/${guide.slug}.md)`
+      );
+    }
+  }
+  if (frameworkLines.length > 0) {
+    section += `\n\n## Frameworks\n${frameworkLines.join('\n')}\n`;
+  }
+
+  return section + '\n';
+}
+
+// Declarative page overrides for appended navigation sections.
+// First match wins. Unmatched pages with children get default "Pages in this section".
+const pageOverrides = [
+  {
+    match: 'platforms.md',
+    build: ctx => buildPlatformsSection(ctx),
+  },
+  {
+    // Platform index pages (e.g., platforms/javascript.md)
+    match: ctx => ctx.pathParts[0] === 'platforms' && ctx.pathParts.length === 2,
+    sections: [
+      {heading: 'Frameworks', items: ctx => nodeLinks(ctx.node, 'guides')},
+      {heading: 'Topics', items: ctx => childLinks(ctx, p => !p.includes('/guides/'))},
+    ],
+  },
+  {
+    // Guide index pages (e.g., platforms/javascript/guides/nextjs.md)
+    match: ctx =>
+      ctx.pathParts.length === 4 &&
+      ctx.pathParts[0] === 'platforms' &&
+      ctx.pathParts[2] === 'guides',
+    sections: [
+      {
+        heading: ctx => `Other ${platformTitle(ctx)} Frameworks`,
+        items: ctx => siblingGuideLinks(ctx),
+      },
+      {heading: 'Topics', items: ctx => childLinks(ctx)},
+    ],
+  },
+];
+
+function buildChildSection(ctx) {
+  for (const override of pageOverrides) {
+    const matches =
+      typeof override.match === 'string'
+        ? ctx.relativePath === override.match
+        : override.match(ctx);
+    if (!matches) {
+      continue;
+    }
+    if (override.build) {
+      return override.build(ctx);
+    }
+    if (override.sections) {
+      return renderSections(ctx, override.sections);
+    }
+    return '';
+  }
+
+  // Default: list children sorted by sidebar_order
+  return renderSections(ctx, [
+    {heading: 'Pages in this section', items: () => childLinks(ctx)},
+  ]);
+}
+
+function buildFallbackChildSection(parentPath, children) {
+  const isPlatformIndex =
+    parentPath.startsWith('platforms/') && parentPath.split('/').length === 2;
+
+  const guides = isPlatformIndex ? children.filter(p => p.includes('/guides/')) : [];
+  const otherPages = isPlatformIndex
+    ? children.filter(p => !p.includes('/guides/'))
+    : children;
+
+  let childSection = '';
+  if (guides.length > 0) {
+    const guideList = guides
+      .map(p => {
+        const name = p.replace(/\.md$/, '').split('/').pop();
+        return `- [${name}](${DOCS_ORIGIN}/${p})`;
+      })
+      .join('\n');
+    childSection += `\n## Guides\n\n${guideList}\n`;
+  }
+  if (otherPages.length > 0) {
+    const pageList = otherPages
+      .map(p => {
+        const name = p.replace(/\.md$/, '').split('/').pop();
+        return `- [${name}](${DOCS_ORIGIN}/${p})`;
+      })
+      .join('\n');
+    childSection += `\n## Pages in this section\n\n${pageList}\n`;
+  }
+  return childSection;
+}
+
+// --- MDX template rendering for full-page overrides ---
+
+function buildMdxComponents(docTree, createElement) {
+  function PlatformList() {
+    if (!docTree) {
+      return null;
+    }
+    const platformsNode = findNode(docTree, ['platforms']);
+    if (!platformsNode) {
+      return null;
+    }
+    const platforms = getVisibleChildren(platformsNode);
+    return createElement(
+      'ul',
+      null,
+      platforms.map(p =>
+        createElement(
+          'li',
+          {key: p.slug},
+          createElement('a', {href: `/platforms/${p.slug}`}, getTitle(p))
+        )
+      )
+    );
+  }
+
+  function FrameworkGroups() {
+    if (!docTree) {
+      return null;
+    }
+    const platformsNode = findNode(docTree, ['platforms']);
+    if (!platformsNode) {
+      return null;
+    }
+    const platforms = getVisibleChildren(platformsNode);
+    const groups = [];
+    for (const platform of platforms) {
+      const guidesNode = findNode(platform, ['guides']);
+      if (!guidesNode) {
+        continue;
+      }
+      const guides = getVisibleChildren(guidesNode);
+      if (guides.length === 0) {
+        continue;
+      }
+      groups.push(
+        createElement('h3', {key: `h-${platform.slug}`}, getTitle(platform)),
+        createElement(
+          'ul',
+          {key: `ul-${platform.slug}`},
+          guides.map(g =>
+            createElement(
+              'li',
+              {key: g.slug},
+              createElement(
+                'a',
+                {href: `/platforms/${platform.slug}/guides/${g.slug}`},
+                getTitle(g)
+              )
+            )
+          )
+        )
+      );
+    }
+    return createElement('div', null, ...groups);
+  }
+
+  function DocSectionList({exclude = []}) {
+    if (!docTree) {
+      return null;
+    }
+    const sections = getVisibleChildren(docTree).filter(
+      child => !exclude.includes(child.slug)
+    );
+    return createElement(
+      'ul',
+      null,
+      sections.map(child =>
+        createElement(
+          'li',
+          {key: child.slug},
+          createElement('a', {href: `/${child.slug}`}, getTitle(child))
+        )
+      )
+    );
+  }
+
+  // Renders every top-level section with its visible children as a nested list.
+  // Used for the root index.md sitemap.
+  function SectionTree({exclude = []}) {
+    if (!docTree) {
+      return null;
+    }
+    const sections = getVisibleChildren(docTree).filter(
+      child => !exclude.includes(child.slug)
+    );
+    const elements = [];
+    for (const section of sections) {
+      elements.push(createElement('h2', {key: `h-${section.slug}`}, getTitle(section)));
+      const children = getVisibleChildren(section);
+      if (children.length > 0) {
+        elements.push(
+          createElement(
+            'ul',
+            {key: `ul-${section.slug}`},
+            children.map(child =>
+              createElement(
+                'li',
+                {key: child.slug},
+                createElement('a', {href: `/${child.path}`}, getTitle(child))
+              )
+            )
+          )
+        );
+      }
+    }
+    return createElement('div', null, ...elements);
+  }
+
+  return {PlatformList, FrameworkGroups, DocSectionList, SectionTree};
+}
+
+async function renderMdxOverrides(root, docTree) {
+  const overrideDir = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
+    ? path.join(root, 'md-overrides', 'dev')
+    : path.join(root, 'md-overrides');
+
+  const overrides = new Map();
+
+  if (!existsSync(overrideDir)) {
+    return overrides;
+  }
+
+  const tempDir = path.join(root, '.next', 'cache', 'md-override-html');
+  await rm(tempDir, {recursive: true, force: true});
+  await mkdir(tempDir, {recursive: true});
+
+  const {evaluate} = await import('@mdx-js/mdx');
+  const jsxRuntime = await import('react/jsx-runtime');
+  const React = await import('react');
+  const {renderToStaticMarkup} = await import('react-dom/server');
+  const grayMatter = (await import('gray-matter')).default;
+
+  const components = buildMdxComponents(docTree, React.createElement);
+  // Non-recursive: only read .mdx files directly in overrideDir.
+  // This prevents dev/ overrides from leaking into production builds.
+  const files = await readdir(overrideDir);
+
+  for (const file of files) {
+    if (!file.endsWith('.mdx')) {
+      continue;
+    }
+
+    const mdxSource = await readFile(path.join(overrideDir, file), {encoding: 'utf8'});
+    const {data: frontmatter, content} = grayMatter(mdxSource);
+
+    const {default: MDXContent} = await evaluate(content, {
+      jsx: jsxRuntime.jsx,
+      jsxs: jsxRuntime.jsxs,
+      Fragment: jsxRuntime.Fragment,
+    });
+
+    const bodyHtml = renderToStaticMarkup(React.createElement(MDXContent, {components}));
+
+    const relativePath = file.replace(/\.mdx$/, '.md');
+    const urlPath = file.replace(/\.mdx$/, '').replace(/^index$/, '');
+    const canonicalUrl = `${DOCS_ORIGIN}/${urlPath}`;
+
+    const html = [
+      '<!DOCTYPE html><html><head>',
+      `<title>${frontmatter.title || ''}</title>`,
+      `<link rel="canonical" href="${canonicalUrl}" />`,
+      '</head><body>',
+      `<main><div id="main">${bodyHtml}</div></main>`,
+      '</body></html>',
+    ].join('\n');
+
+    const htmlPath = path.join(tempDir, file.replace(/\.mdx$/, '.html'));
+    await mkdir(path.dirname(htmlPath), {recursive: true});
+    await writeFile(htmlPath, html, {encoding: 'utf8'});
+
+    overrides.set(relativePath, {htmlPath, frontmatter});
+    console.log(`📝 Rendered MDX override: ${file} → ${relativePath}`);
+  }
+
+  return overrides;
 }
 
 // Global set to track which cache files are used across all workers
@@ -96,6 +518,23 @@ async function createWork() {
 
   console.log(`🚀 Starting markdown generation from: ${INPUT_DIR}`);
   console.log(`📁 Output directory: ${OUTPUT_DIR}`);
+
+  // Load doctree for structured navigation
+  const doctreeFilename = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
+    ? 'doctree-dev.json'
+    : 'doctree.json';
+  const doctreePath = path.join(root, 'public', doctreeFilename);
+  let docTree = null;
+  try {
+    docTree = JSON.parse(await readFile(doctreePath, {encoding: 'utf8'}));
+    console.log(`🌳 Loaded doc tree from ${doctreePath}`);
+  } catch (err) {
+    console.warn(`⚠️ Could not load doctree (${doctreePath}): ${err.message}`);
+    console.warn('   Falling back to slug-based navigation');
+  }
+
+  // Render MDX template overrides (full-page content replacements)
+  const mdxOverrides = await renderMdxOverrides(root, docTree);
 
   // Clear output directory
   await rm(OUTPUT_DIR, {recursive: true, force: true});
@@ -161,14 +600,31 @@ async function createWork() {
       await mkdir(targetDir, {recursive: true});
       const targetPath = path.join(targetDir, dirent.name.slice(0, -5) + '.md');
       const relativePath = path.relative(OUTPUT_DIR, targetPath);
+      // Use MDX override HTML if available, otherwise use Next.js build HTML
+      const mdxOverride = mdxOverrides.get(relativePath);
       workerTasks[workerIdx].push({
-        sourcePath,
+        sourcePath: mdxOverride ? mdxOverride.htmlPath : sourcePath,
         targetPath,
         relativePath,
         r2Hash: existingFilesOnR2 ? existingFilesOnR2.get(relativePath) : null,
       });
       workerIdx = (workerIdx + 1) % numWorkers;
       numFiles++;
+    }
+  }
+
+  // Warn about MDX overrides that didn't match any HTML file
+  const usedOverrides = new Set(
+    workerTasks
+      .flat()
+      .filter(t => mdxOverrides.has(t.relativePath))
+      .map(t => t.relativePath)
+  );
+  for (const [key] of mdxOverrides) {
+    if (!usedOverrides.has(key)) {
+      console.warn(
+        `⚠️ MDX override "${key}" did not match any HTML file and will be ignored`
+      );
     }
   }
 
@@ -215,6 +671,109 @@ async function createWork() {
 
   await Promise.all(workerPromises);
 
+  // Collect all generated paths
+  const allPaths = workerTasks
+    .flat()
+    .map(task => task.relativePath)
+    .sort();
+
+  // Append child page listings to section index pages
+  // Group paths by their DIRECT parent (handling guides specially)
+  const pathsByParent = new Map();
+  for (const p of allPaths) {
+    const parts = p.replace(/\.md$/, '').split('/');
+    if (parts.length <= 1) {
+      continue;
+    }
+
+    // Determine the parent path - always direct parent, except:
+    // Guide index pages (platforms/X/guides/Y.md) -> parent is platform (platforms/X.md)
+    let parentPath;
+    if (parts.includes('guides')) {
+      const guidesIdx = parts.indexOf('guides');
+      if (parts.length === guidesIdx + 2 && guidesIdx > 0) {
+        // This is a guide index (e.g., platforms/python/guides/django.md)
+        // Parent is the platform (platforms/python.md), skipping 'guides' folder
+        parentPath = parts.slice(0, guidesIdx).join('/') + '.md';
+      } else {
+        // Pages inside guides use normal parent-child (direct parent only)
+        parentPath = parts.slice(0, -1).join('/') + '.md';
+      }
+    } else {
+      // Standard parent-child relationship (direct parent only)
+      parentPath = parts.slice(0, -1).join('/') + '.md';
+    }
+
+    if (!pathsByParent.has(parentPath)) {
+      pathsByParent.set(parentPath, []);
+    }
+    pathsByParent.get(parentPath).push(p);
+  }
+
+  // Append child listings to parent index files.
+  // Skip pages whose MDX override sets append_sections: false.
+  let updatedCount = 0;
+  const r2Uploads = [];
+  for (const [parentPath, children] of pathsByParent) {
+    const overrideFm = mdxOverrides.get(parentPath)?.frontmatter;
+    if (overrideFm?.append_sections === false) {
+      continue;
+    }
+
+    const parentFile = path.join(OUTPUT_DIR, parentPath);
+    let existingContent;
+    try {
+      existingContent = await readFile(parentFile, {encoding: 'utf8'});
+    } catch (err) {
+      if (err.code === 'ENOENT') {
+        continue; // Parent file doesn't exist, skip
+      }
+      throw err;
+    }
+
+    const pathParts = parentPath.replace(/\.md$/, '').split('/');
+    const node = docTree ? findNode(docTree, pathParts) : null;
+    const ctx = {
+      docTree,
+      relativePath: parentPath,
+      pathParts,
+      node,
+      children,
+    };
+
+    const childSection = docTree
+      ? buildChildSection(ctx)
+      : buildFallbackChildSection(parentPath, children);
+
+    if (childSection) {
+      const updatedContent = existingContent + childSection;
+      await writeFile(parentFile, updatedContent, {encoding: 'utf8'});
+      updatedCount++;
+
+      // Collect R2 uploads needed (will be uploaded in parallel below)
+      if (accessKeyId && secretAccessKey && existingFilesOnR2) {
+        const fileHash = md5(updatedContent);
+        const existingHash = existingFilesOnR2.get(parentPath);
+        if (existingHash !== fileHash) {
+          r2Uploads.push({parentPath, updatedContent});
+        }
+      }
+    }
+  }
+
+  // Upload all modified section index files to R2 in parallel
+  if (r2Uploads.length > 0) {
+    const limit = pLimit(50);
+    const s3Client = getS3Client();
+    await Promise.all(
+      r2Uploads.map(({parentPath, updatedContent}) =>
+        limit(() => uploadToCFR2(s3Client, parentPath, updatedContent))
+      )
+    );
+    console.log(`📤 Uploaded ${r2Uploads.length} section index files to R2`);
+  }
+  console.log(`📑 Added child page listings to ${updatedCount} section index files`);
+
   // Clean up unused cache files to prevent unbounded growth
   if (!noCache) {
     try {
@@ -250,12 +809,86 @@ async function createWork() {
 
 const md5 = data => createHash('md5').update(data).digest('hex');
 
+/**
+ * Strips build-specific HTML elements that are irrelevant for markdown generation.
+ *
+ * Next.js build output contains elements that change between builds:
+ * - <script> tags: RSC/Flight payloads, JS chunk references with content hashes
+ * - <link> tags referencing /_next/static/: CSS files, fonts, JS preloads with hashes
+ * - <style> tags with href: inlined CSS with build-specific hash in href attribute
+ *
+ * These elements are irrelevant for markdown generation (we only use title, canonical
+ * link, and div#main content), so stripping them:
+ * 1. Speeds up HTML parsing by reducing input size significantly
+ * 2. Removes most build-specific variation from the HTML
+ *
+ * IMPORTANT: This function's output is used as pipeline input for .process(), so it must
+ * only remove complete HTML elements — never modify text content or attribute values.
+ * For additional normalization that's only safe for cache key computation, see
+ * normalizeForCacheKey().
+ */
+function stripUnstableElements(html) {
+  return (
+    html
+      // Remove script tags (RSC payloads, JS chunk references)
+      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+      // Remove link tags referencing Next.js build assets (CSS, fonts, JS preloads)
+      .replace(/<link[^>]*\/_next\/[^>]*>/gi, '')
+      // Remove style tags with href attribute (inlined CSS with build hashes)
+      .replace(/<style[^>]*href="[^"]*"[^>]*>[\s\S]*?<\/style>/gi, '')
+  );
+}
+
+/**
+ * Extracts only the content-relevant portions of HTML for stable cache key computation.
+ *
+ * The unified pipeline only uses three pieces of data from each page:
+ * 1. <title> — the page title (becomes the H1 heading)
+ * 2. <link rel="canonical"> — the canonical URL (used for link rewriting)
+ * 3. <div id="main"> — the main content area (becomes the markdown body)
+ *
+ * Everything else (header, sidebar, footer, scripts, styles, fonts) is irrelevant for
+ * markdown output. By extracting only these three elements, we make the cache key immune
+ * to layout changes (sidebar updates from merged PRs), CSS hash changes (Emotion, CSS
+ * modules), font hash changes, and any other build-specific variation in the surrounding
+ * HTML shell.
+ *
+ * Within the extracted content, we still normalize build-specific hashes that can appear
+ * inside div#main (e.g., Emotion classes on code block components, CSS module hashes on
+ * interactive elements). These are irrelevant for text content extraction but would
+ * otherwise cause cache misses between builds.
+ */
+function extractContentForCacheKey(html) {
+  const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+  const canonicalMatch = html.match(/<link[^>]*rel="canonical"[^>]*href="([^"]*)"/i);
+  const mainMatch = html.match(/<div id="main"[^>]*>([\s\S]*)<\/main>/i);
+
+  const title = titleMatch ? titleMatch[1] : '';
+  const canonical = canonicalMatch ? canonicalMatch[1] : '';
+  const mainContent = mainMatch ? mainMatch[1] : '';
+
+  // Normalize build-specific hashes that appear inside main content
+  // (e.g., Emotion CSS classes on code block tabs, CSS module hashes)
+  const normalizedMain = mainContent
+    // Remove Emotion style tags entirely (e.g., <style data-emotion="css o2ofml">...</style>)
+    .replace(/<style data-emotion[^>]*>[\s\S]*?<\/style>/gi, '')
+    // Normalize Emotion class names (e.g., css-o2ofml -> css-X)
+    .replace(/css-[a-z0-9]+/g, 'css-X')
+    // Normalize CSS module hashes (e.g., style_sidebar__iEJoR -> style_sidebar__X)
+    .replace(/(\w+__)[a-zA-Z0-9]{5}/g, '$1X');
+
+  return title + '\0' + canonical + '\0' + normalizedMain;
+}
+
 async function genMDFromHTML(source, target, {cacheDir, noCache, usedCacheFiles}) {
-  const leanHTML = (await readFile(source, {encoding: 'utf8'}))
-    // Remove all script tags, as they are not needed in markdown
-    // and they are not stable across builds, causing cache misses
-    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
-  const cacheKey = `v${CACHE_VERSION}_${md5(leanHTML)}`;
+  const rawHTML = await readFile(source, {encoding: 'utf8'});
+  // Strip build-specific HTML elements for faster parsing.
+  // See stripUnstableElements() for details on what's removed and why.
+  const strippedHTML = stripUnstableElements(rawHTML);
+  // Extract only content-relevant portions (title, canonical URL, main content)
+  // for cache key computation. This makes the key immune to layout/sidebar/header
+  // changes and most build-specific hash variations. See extractContentForCacheKey().
+  const cacheKey = `v${CACHE_VERSION}_${md5(extractContentForCacheKey(rawHTML))}`;
   const cacheFile = path.join(cacheDir, cacheKey);
   if (!noCache) {
     try {
@@ -276,11 +909,14 @@ async function genMDFromHTML(source, target, {cacheDir, noCache, usedCacheFiles}
       }
     }
   }
+
   let baseUrl = DOCS_ORIGIN;
   const data = String(
     await unified()
       .use(rehypeParse)
-      // Need the `head > title` selector for the headers
+      // Select only the elements we need for markdown (title, canonical URL, main content).
+      // Build-specific elements (scripts, CSS links, etc.) are already stripped by
+      // stripUnstableElements() above, so we don't need to remove them here.
       .use(
         () => tree =>
           selectAll('head > title, head > link[rel="canonical"], div#main', tree)
@@ -338,7 +974,7 @@ async function genMDFromHTML(source, target, {cacheDir, noCache, usedCacheFiles}
       .use(() => tree => remove(tree, {type: 'inlineCode', value: ''}))
       .use(remarkGfm)
       .use(remarkStringify)
-      .process(leanHTML)
+      .process(strippedHTML)
   );
   const reader = Readable.from(data);
 

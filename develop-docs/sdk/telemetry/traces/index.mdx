@@ -1,6 +1,6 @@
 ---
 title: Traces
-sidebar_order: 9
+description: Distributed tracing with span trees, sampling, and cross-service trace propagation.
 ---
 
 This document covers how SDKs should add support for Performance Monitoring with [Distributed
@@ -220,14 +220,14 @@ Over the wire, transactions are serialized to JSON as an augmented `Event`, and 
 
 In the Sentry UI, you can use Discover to look at all events regardless of type, and the Issues and Performance sections to dive into errors and transactions, respectively. The [user-facing tracing documentation](https://docs.sentry.io/product/performance/distributed-tracing/#traces-transactions-and-spans) explains more of the concepts on the product level.
 
-The [Span](/sdk/data-model/event-payloads/span/) class stores each individual span in a
+The [Span](/sdk/foundations/transport/event-payloads/span/) class stores each individual span in a
 trace.
 
-The [Transaction](/sdk/data-model/event-payloads/transaction/) class is like a span, with a
+The [Transaction](/sdk/foundations/transport/event-payloads/transaction/) class is like a span, with a
 few key differences:
 
 - Transactions have `name`, spans don't.
-- Transactions must specify the [source](/sdk/data-model/event-payloads/transaction/#transaction-annotations) of its `name` to indicate how the transaction name was generated.
+- Transactions must specify the [source](/sdk/foundations/transport/event-payloads/transaction/#transaction-annotations) of its `name` to indicate how the transaction name was generated.
 - Calling the `finish` method on spans record the span's end timestamp. For
   transactions, the `finish` method additionally sends an event to Sentry.
 
@@ -263,7 +263,7 @@ tree as well as the unit of reporting to Sentry.
   - `super.finish()` (call finish on Span)
   - Send it to Sentry only if `sampled == true`
   - Like spans, can be given an optional `endTimestamp` value that should be passed into the `span.finish()` call
-  - A `Transaction` needs to be wrapped in an `Envelope` and sent to the [Envelope Endpoint](/sdk/data-model/envelopes/)
+  - A `Transaction` needs to be wrapped in an `Envelope` and sent to the [Envelope Endpoint](/sdk/foundations/transport/envelopes/)
   - The `Transport` should use the same internal queue for `Transactions` / `Events`
   - The `Transport` should implement category-based rate limiting →
   - The `Transport` should deal with wrapping a `Transaction` in an `Envelope` internally

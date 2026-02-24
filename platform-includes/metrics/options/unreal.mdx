@@ -1,0 +1,42 @@
+The following configuration options are available for Sentry Metrics in Unreal Engine:
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| **Enable Metrics** | Master toggle for the metrics feature | `false` |
+| **Before Metric Handler** | Handler to modify or filter metrics before sending | None |
+
+### Before-Metric Handler
+
+To filter metrics or modify them before they are sent to Sentry, create a custom before-metric handler class:
+
+```cpp
+UCLASS()
+class UCustomMetricFilter : public USentryBeforeMetricHandler
+{
+    GENERATED_BODY()
+public:
+    virtual USentryMetric* HandleBeforeMetric_Implementation(USentryMetric* Metric) override
+    {
+        // Drop metrics with specific names
+        if (Metric->GetName().Contains(TEXT("debug")))
+        {
+            return nullptr; // Return null to prevent sending
+        }
+
+        // Modify metric attributes
+        Metric->SetAttribute(TEXT("build"), FSentryVariant(TEXT("production")));
+
+        return Metric; // Return the metric to send it
+    }
+};
+```
+
+Configure the handler in project settings under **Hooks > Custom `beforeMetric` event handler**, or set it programmatically:
+
+```cpp
+SentrySubsystem->InitializeWithSettings(FConfigureSettingsNativeDelegate::CreateLambda([=](USentrySettings* Settings)
+{
+    Settings->EnableMetrics = true;
+    Settings->BeforeMetricHandler = UCustomMetricFilter::StaticClass();
+}));
+```

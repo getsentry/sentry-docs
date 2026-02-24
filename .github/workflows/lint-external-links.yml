@@ -1,0 +1,98 @@
+name: Check External Links
+
+on:
+  # Run weekly on Sundays at 2 AM UTC
+  schedule:
+    - cron: '0 2 * * 0'
+
+  # Allow manual triggering
+  workflow_dispatch:
+
+  # Run on PRs that modify docs (non-blocking)
+  pull_request:
+    branches: [master]
+
+jobs:
+  # Job for PRs: check only changed files
+  check-pr:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get changed files
+        id: changed
+        run: |
+          FILES=$(git diff --name-only --diff-filter=AMR origin/${{ github.base_ref }}...HEAD -- '*.md' '*.mdx' || true)
+          if [ -z "$FILES" ]; then
+            echo "files=" >> $GITHUB_OUTPUT
+            echo "No markdown files changed"
+          else
+            echo "files<<EOF" >> $GITHUB_OUTPUT
+            echo "$FILES" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+            echo "Changed files:"
+            echo "$FILES"
+          fi
+
+      - name: Restore lychee cache
+        if: steps.changed.outputs.files != ''
+        uses: actions/cache/restore@v4
+        with:
+          path: .lycheecache
+          key: lychee-cache-
+          restore-keys: lychee-cache-
+
+      - name: Check external links
+        if: steps.changed.outputs.files != ''
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: --verbose --no-progress ${{ steps.changed.outputs.files }}
+          fail: true
+          failIfEmpty: false
+          jobSummary: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Job for scheduled/manual runs: check all files, create issue
+  check-full:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Cache strategy: see lychee.toml for details
+      # - Restore previous cache so successful checks are skipped
+      # - Transient errors (429, 5xx) are excluded from cache and retried
+      # - Save updated cache for next run
+      - name: Restore lychee cache
+        uses: actions/cache/restore@v4
+        with:
+          path: .lycheecache
+          key: lychee-cache-
+          restore-keys: lychee-cache-
+
+      - name: Check external links
+        id: lychee
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: --verbose .
+          output: ./lychee-report.md
+          format: markdown
+          fail: true
+          jobSummary: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Save lychee cache
+        uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: .lycheecache
+          key: lychee-cache-${{ github.run_id }}

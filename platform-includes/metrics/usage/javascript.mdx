@@ -1,84 +1,124 @@
-Once the SDK is initialized, you can send metrics using the `Sentry.metrics` APIs.
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
 
-The `metrics` namespace exposes three methods that you can use to capture different types of metric information: `count`, `gauge` and `distribution`.
+### Metric Types
 
-### Counter
+| Type | Use For |
+|------|---------|
+| `count` | Events (orders, clicks, API calls) |
+| `gauge` | Current values (queue depth, connections) |
+| `distribution` | Value ranges (response times, payload sizes) |
 
-Use `count` to track an incrementing value, such as the number of times a button was clicked or a function was called.
+No setup required beyond SDK initialization.
 
-```javascript
-Sentry.metrics.count("button_click", 1);
-```
-
-### Gauge
-
-Use `gauge` to track a value that can go up and down, such as the current memory usage or the number of items in a queue.
-
-```javascript
-Sentry.metrics.gauge("queue_depth", 42);
-```
-
-### Distribution
-
-Use `distribution` to track the distribution of a value, such as the response time of a request.
+</SplitSectionText>
+<SplitSectionCode>
 
 ```javascript
-Sentry.metrics.distribution("response_time", 187.5);
+import * as Sentry from "@sentry/browser";
+
+// Count occurrences
+Sentry.metrics.count("orders_created", 1);
+
+// Track current values
+Sentry.metrics.gauge("active_connections", 42);
+
+// Track distributions
+Sentry.metrics.distribution("api_latency", 187, {
+  unit: "millisecond",
+});
 ```
 
-### Adding Attributes
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
-You can also pass additional attributes to any of the metric methods via the `attributes` option. Attributes allow you to filter and group metrics.
+### Attributes
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+#### Filtering and Grouping
+
+Attributes let you filter and group metrics in Sentry. Use them for:
+- Environment segmentation
+- Feature flag tracking
+- User tier analysis
+
+Each metric has a **2KB size limit**. If you exceed this, the metric will be dropped.
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```javascript
-Sentry.metrics.count(
-  "button_click",
-  1,
-  {
-    attributes: {
-      browser: "Firefox",
-      app_version: "1.0.0",
-    },
-  }
-);
+Sentry.metrics.count("api_calls", 1, {
+  attributes: {
+    endpoint: "/api/orders",
+    user_tier: "pro",
+    region: "us-west",
+    user_id: user.id,
+    order_id: order.id,
+  },
+});
 ```
 
-With version `10.33.0` and above, you can use scope APIs to set attributes on the SDK's scopes which will be applied to all metrics as long as the respective scopes are active. For the time being, only `string`, `number` and `boolean` attribute values are supported.
+</SplitSectionCode>
+</SplitSection>
 
+<SplitSection>
+<SplitSectionText>
 
-```js
-Sentry.getGlobalScope().setAttributes({ is_admin: true, auth_provider: 'google' });
+#### Scope Attributes
 
-Sentry.withScope(scope => {
-  scope.setAttribute('step', 'authentication');
+With version `10.33.0`+, use scope APIs to set attributes that apply to all metrics while the scope is active.
 
-  // scope attributes `is_admin`, `auth_provider` and `step` are added
-  Sentry.metrics.count('clicks', 1, { attributes: { activeSince: 100 } });
-  Sentry.metrics.gauge('time_since_refresh', 4, { unit: 'hour' });
+Supported types: `string`, `number`, `boolean`
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript
+Sentry.getGlobalScope().setAttributes({
+  is_admin: true,
+  auth_provider: "google",
 });
 
-// scope attributes `is_admin` and `auth_provider` are added
-Sentry.metrics.distribution('response_time', 283.33, { unit: 'millisecond' });
+Sentry.withScope((scope) => {
+  scope.setAttribute("step", "authentication");
+
+  // All scope attributes are added
+  Sentry.metrics.count("clicks", 1);
+  Sentry.metrics.gauge("time_since_refresh", 4, { unit: "hour" });
+});
 ```
 
-### Specifying Units
+</SplitSectionCode>
+</SplitSection>
 
-For `gauge` and `distribution` metrics, you can specify a unit using the `unit` option. This helps Sentry display the metric value in a human-readable format.
+<SplitSection>
+<SplitSectionText>
+
+#### Units
+
+For `gauge` and `distribution` metrics, specify a unit to help Sentry display values in a human-readable format.
+
+Common units: `millisecond`, `second`, `byte`, `kilobyte`, `megabyte`. See [supported units](https://develop.sentry.dev/sdk/foundations/data-model/attributes/#units) for the full list.
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```javascript
-Sentry.metrics.distribution(
-  "response_time",
-  187.5,
-  {
-    unit: "millisecond",
-  }
-);
+Sentry.metrics.distribution("response_time", 187.5, {
+  unit: "millisecond",
+});
 
-Sentry.metrics.gauge(
-  "memory_usage",
-  1024,
-  {
-    unit: "byte",
-  }
-);
+Sentry.metrics.gauge("memory_usage", 1024, {
+  unit: "byte",
+});
 ```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>

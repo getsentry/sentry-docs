@@ -1,0 +1,111 @@
+---
+title: Cutting a Release
+spec_id: sdk/playbooks/cutting-a-release
+spec_version: 1.0.0
+spec_status: candidate
+spec_depends_on:
+  - id: sdk/getting-started/standards/review-ci
+    version: ">=1.0.0"
+  - id: sdk/getting-started/standards/coordination-maintenance
+    version: ">=1.0.0"
+spec_changelog:
+  - version: 1.0.0
+    date: 2026-02-23
+    summary: Initial playbook — release process with gating criteria and post-release monitoring
+---
+
+<SpecRfcAlert />
+
+<SpecMeta />
+
+## Overview
+
+This playbook guides SDK maintainers through cutting a release for an SDK repository. It covers release gating criteria verification, running release tooling (Craft), artifact verification, and post-release monitoring. By following these steps, releases will be high quality, properly monitored, and quickly addressed if regressions occur.
+
+All Sentry SDKs use [Craft](https://github.com/getsentry/craft) for release automation with a two-person approval requirement. The process follows a prepare → publish workflow coordinated through the [getsentry/publish](https://github.com/getsentry/publish) repository.
+
+Related resources:
+- [Review and CI Standards](/sdk/getting-started/standards/review-ci) — release gating criteria
+- [Coordination and Maintenance Standards](/sdk/getting-started/standards/coordination-maintenance) — post-release monitoring and rollback procedures
+- [Handling a Regression](/sdk/getting-started/playbooks/development/handling-a-regression) — regression response process
+- Your SDK's `CONTRIBUTING.md` or release documentation — SDK-specific procedures and tooling details
+
+---
+
+## Steps
+
+#### 1. Verify release gating criteria
+
+You **MUST** verify all criteria pass ([Release gating criteria](/sdk/getting-started/standards/review-ci#release-gating-criteria)):
+- All required CI checks pass on the release branch
+- No unresolved `h:` (high) review comments on merged PRs since last release
+- Changelog is substantive (not empty or internal-only for a release with user-facing changes)
+- No known unresolved regressions
+
+#### 2. Prepare the release
+
+Run the Craft prepare command (command varies by SDK — check your SDK's `CONTRIBUTING.md`):
+
+```bash
+# Common pattern across SDKs
+craft prepare <version>
+# Or via GitHub Actions workflow (trigger manually)
+```
+
+This creates a release PR in the [getsentry/publish](https://github.com/getsentry/publish) repository. The PR **MUST** be approved by a second SDK maintainer before proceeding.
+
+#### 3. Publish the release
+
+Once the publish PR is approved, run the Craft publish command:
+
+```bash
+craft publish <version>
+# Or merge the publish PR to trigger automated publishing
+```
+
+Craft will:
+- Create a Git tag
+- Build and publish artifacts to package registries
+- Create a GitHub release with changelog
+
+#### 4. Verify the release artifact
+
+The artifact **MUST** be published and installable. Quick smoke test: install the new version in a clean environment and verify basic functionality.
+
+**Note:** Some SDKs have additional verification steps (example app testing, documentation updates) — check your SDK's release documentation.
+
+#### 5. Post-release monitoring
+
+You **MUST** follow post-release monitoring procedures ([Post-release monitoring](/sdk/getting-started/standards/coordination-maintenance#post-release-monitoring)):
+- Check SDK crash detection within 24 hours
+- Verify dogfooding (Sentry's own products) picks up the new version
+- Monitor the issue tracker for regression reports for 48 hours
+
+#### 6. If a critical regression is found
+
+Trigger the [Handling a Regression](/sdk/getting-started/playbooks/development/handling-a-regression) process.
+
+---
+
+## SDK-Specific Variations
+
+While the core process above applies to all Sentry SDKs, individual SDKs **MAY** have additional requirements or tooling variations. You **MUST** consult your SDK's release documentation:
+
+- **sentry-javascript**: See [docs/publishing-a-release.md](https://github.com/getsentry/sentry-javascript/blob/develop/docs/publishing-a-release.md) for detailed changelog formatting guidelines
+- **Other SDKs**: Check the "Releasing" or "Publishing" section in `CONTRIBUTING.md`
+
+Common SDK-specific variations include:
+- Changelog generation (manual vs. auto-generated)
+- Example app testing requirements
+- Documentation PR requirements
+- Registry-specific verification steps
+
+## Referenced Standards
+
+- [Release gating criteria](/sdk/getting-started/standards/review-ci#release-gating-criteria) — pre-release quality gates
+- [Post-release monitoring](/sdk/getting-started/standards/coordination-maintenance#post-release-monitoring) — monitoring requirements and timeline
+- [Rollback procedures](/sdk/getting-started/standards/coordination-maintenance#rollback-procedures) — emergency rollback process
+
+---
+
+<SpecChangelog />

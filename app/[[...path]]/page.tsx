@@ -1,5 +1,5 @@
 import {Fragment, useMemo} from 'react';
-import {getMDXComponent} from 'mdx-bundler/client';
+import * as Sentry from '@sentry/nextjs';
 import {Metadata} from 'next';
 import {notFound} from 'next/navigation';
 
@@ -11,6 +11,9 @@ import {Home} from 'sentry-docs/components/home';
 import {Include} from 'sentry-docs/components/include';
 import {PageLoadMetrics} from 'sentry-docs/components/pageLoadMetrics';
 import {PlatformContent} from 'sentry-docs/components/platformContent';
+import {SpecChangelog} from 'sentry-docs/components/specChangelog';
+import {isSpecStatus} from 'sentry-docs/components/specConstants';
+import {SpecMeta} from 'sentry-docs/components/specMeta';
 import {
   DocNode,
   getCurrentPlatformOrGuide,
@@ -19,6 +22,7 @@ import {
   getPreviousNode,
   nodeForPath,
 } from 'sentry-docs/docTree';
+import {getMDXComponent} from 'sentry-docs/getMDXComponent';
 import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
 import {
   getDevDocsFrontMatter,
@@ -46,23 +50,58 @@ export async function generateStaticParams() {
 export const dynamicParams = false;
 export const dynamic = 'force-static';
 
-const mdxComponentsWithWrapper = mdxComponents(
-  {Include, PlatformContent},
-  ({children, frontMatter, nextPage, previousPage}) => (
-    <DocPage
-      frontMatter={frontMatter}
-      nextPage={nextPage}
-      previousPage={previousPage}
-      fullWidth={frontMatter.fullWidth}
-    >
-      {children}
-    </DocPage>
-  )
-);
+function mdxComponentsForFrontMatter(frontMatter: Record<string, unknown>) {
+  const specOverrides: Record<string, unknown> = {};
+  const changelog = Array.isArray(frontMatter.spec_changelog)
+    ? (frontMatter.spec_changelog as Array<Record<string, unknown>>)
+        .filter(
+          entry => entry.version != null && entry.date != null && entry.summary != null
+        )
+        .map(entry => ({
+          version: String(entry.version),
+          date:
+            entry.date instanceof Date
+              ? entry.date.toISOString().split('T')[0]
+              : String(entry.date),
+          summary: String(entry.summary),
+        }))
+    : undefined;
+  if (changelog && changelog.length > 0) {
+    specOverrides.SpecChangelog = function () {
+      return <SpecChangelog changelog={changelog} />;
+    };
+  }
+  if (frontMatter.spec_version && isSpecStatus(frontMatter.spec_status)) {
+    const boundProps = {
+      version: String(frontMatter.spec_version),
+      status: frontMatter.spec_status,
+    };
+    specOverrides.SpecMeta = function () {
+      return <SpecMeta {...boundProps} />;
+    };
+  }
+  return mdxComponents(
+    {Include, PlatformContent, ...specOverrides},
+    ({children, frontMatter: fm, nextPage, previousPage}) => (
+      <DocPage
+        frontMatter={fm}
+        nextPage={nextPage}
+        previousPage={previousPage}
+        fullWidth={fm.fullWidth}
+      >
+        {children}
+      </DocPage>
+    )
+  );
+}
 
 function MDXLayoutRenderer({mdxSource, ...rest}) {
   const MDXLayout = useMemo(() => getMDXComponent(mdxSource), [mdxSource]);
-  return <MDXLayout components={mdxComponentsWithWrapper} {...rest} />;
+  const components = useMemo(
+    () => mdxComponentsForFrontMatter(rest.frontMatter || {}),
+    [rest.frontMatter]
+  );
+  return <MDXLayout components={components} {...rest} />;
 }
 
 export default async function Page(props: {params: Promise<{path?: string[]}>}) {
@@ -121,10 +160,24 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
     let doc: Awaited<ReturnType<typeof getFileBySlugWithCache>>;
     try {
       doc = await getFileBySlugWithCache(`develop-docs/${params.path?.join('/') ?? ''}`);
-    } catch (e) {
-      if (e.code === 'ENOENT') {
-        // eslint-disable-next-line no-console
-        console.error('ENOENT', params.path);
+    } catch (e: unknown) {
+      // Handle file not found and runtime MDX compilation errors gracefully.
+      // This can happen when serverless function is invoked at runtime but docs files
+      // aren't in the bundle, or MDX compilation is attempted at Vercel runtime.
+      // Note: This error handling is duplicated for regular docs below - keep them in sync.
+      const errorCode = e && typeof e === 'object' && 'code' in e ? e.code : null;
+      const isExpectedError =
+        errorCode === 'ENOENT' ||
+        errorCode === 'MDX_RUNTIME_ERROR' ||
+        (e instanceof Error && e.message.includes('Failed to find a valid source file'));
+      if (isExpectedError) {
+        // Log as warning for visibility without flooding errors
+        // Users are served static pages from CDN - this is an infrastructure edge case
+        Sentry.logger.warn('MDX file not found at runtime, returning 404', {
+          path: params.path?.join('/'),
+          errorCode,
+          reason: 'serverless_bundle_exclusion',
+        });
         return notFound();
       }
       throw e;
@@ -182,10 +235,24 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
   let doc: Awaited<ReturnType<typeof getFileBySlugWithCache>>;
   try {
     doc = await getFileBySlugWithCache(`docs/${pageNode.path}`);
-  } catch (e) {
-    if (e.code === 'ENOENT') {
-      // eslint-disable-next-line no-console
-      console.error('ENOENT', pageNode.path);
+  } catch (e: unknown) {
+    // Handle file not found and runtime MDX compilation errors gracefully.
+    // This can happen when serverless function is invoked at runtime but docs files
+    // aren't in the bundle, or MDX compilation is attempted at Vercel runtime.
+    // Note: This error handling is duplicated for developer docs above - keep them in sync.
+    const errorCode = e && typeof e === 'object' && 'code' in e ? e.code : null;
+    const isExpectedError =
+      errorCode === 'ENOENT' ||
+      errorCode === 'MDX_RUNTIME_ERROR' ||
+      (e instanceof Error && e.message.includes('Failed to find a valid source file'));
+    if (isExpectedError) {
+      // Log as warning for visibility without flooding errors
+      // Users are served static pages from CDN - this is an infrastructure edge case
+      Sentry.logger.warn('MDX file not found at runtime, returning 404', {
+        path: pageNode.path,
+        errorCode,
+        reason: 'serverless_bundle_exclusion',
+      });
       return notFound();
     }
     throw e;

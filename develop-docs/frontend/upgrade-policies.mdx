@@ -33,7 +33,7 @@ On the other hand, choosing to constantly keep packages updated to the absolute 
 
 - Upgrading can in some cases be a non-trivial effort for marginal gains. Validating even small upgrades takes time, often when really nothing has changed. (This is of course a slippery slope, wait too long and packages can become exponentially more work to upgrade)
 
-- There is a cost to too much `package.json` churn such as developers having to constantly run `yarn install` on every git pull.
+- There is a cost to too much `package.json` churn such as developers having to constantly run `pnpm install` on every git pull.
 
 - A security vulnerability may be introduced in a new version that was not previously present. If we had waited to upgrade until the patch we would not be vulnerable.
 
@@ -52,13 +52,13 @@ You may not have to do this manually! See the below section on [Take advantage o
 ### Seeing what can be upgraded
 
 ```bash
-yarn outdated --color | sort
+pnpm outdated --color | sort
 ```
 
 ### Upgrading packages
 
 ```bash
-yarn upgrade --latest [package-name] [...]
+pnpm update --latest [package-name] [...]
 ```
 
 <Alert>
@@ -70,7 +70,7 @@ Don’t forget to upgrade the `@types/[package-name]` package as well if necessa
 If you would like to upgrade a group of packages (for example `@babel`) you can use
 
 ```bash
-yarn upgrade --latest $(yarn outdated | cut -d' ' -f1 | grep [group-name])
+pnpm update --latest $(pnpm outdated | cut -d' ' -f1 | grep [group-name])
 ```
 
 ## Proper testing of upgrades
@@ -157,13 +157,11 @@ For example, some dependencies such as `webpack` fall both into the app build **
 
    Developer tooling and build packages are currently duplicated in `getsentry`'s `package.json`. For those packages, it is important to remember that you will need to upgrade the package in both places.
 
-6. **Read the `yarn.lock` diff**
+6. **Read the `pnpm-lock.yaml` diff**
 
    It’s good to understand exactly what has changed with the upgrade. It’s generally a bad thing if upgrading has caused a discrepancy in shared sub dependency versions. For example, if you upgrade `lodash` but another top level package specifies that it needs and older version of `lodash` we will now have **two versions** of `lodash` installed. That means two separate versions of `lodash` will be shipped!
 
-   Generally you will want to make sure nothing has duplicated versions, in that case you may need to use `[yarn-deduplicate](https://www.npmjs.com/package/yarn-deduplicate)` or in the worst case you may need to upgrade the package which is pulling in the offending older versions.
-
-   See [The Ultimate Guide to yarn.lock Lockfiles](https://www.arahansen.com/the-ultimate-guide-to-yarn-lock-lockfiles/) for an in-depth look on how these work.
+   Generally you will want to make sure nothing has duplicated versions, in that case you may need to use `pnpm dedupe` or in the worst case you may need to upgrade the package which is pulling in the offending older versions.
 
 7. **Validate in production after the upgrade is merged**
 

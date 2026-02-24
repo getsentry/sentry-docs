@@ -1,6 +1,8 @@
 import * as Sentry from '@sentry/nextjs';
 import type {NextRequest} from 'next/server';
-import {NextResponse} from 'next/server';
+import {NextResponse, userAgent} from 'next/server';
+
+import {AI_AGENT_PATTERN, type TrafficType} from './lib/trafficClassification';
 
 // This env var is set in next.config.js based on the `NEXT_PUBLIC_DEVELOPER_DOCS` env var at build time
 // a workaround edge middleware not having access to env vars
@@ -35,24 +37,56 @@ const redirectStatusCode = process.env.NODE_ENV === 'development' ? 302 : 301;
 
 /**
  * Detects if the user agent belongs to an AI/LLM tool or development environment
- * that would benefit from markdown format
+ * that would benefit from markdown format.
+ * Uses shared AI_AGENT_PATTERN from trafficClassification.ts.
  */
-function isAIOrDevTool(userAgent: string): boolean {
-  const patterns = [
-    /claude/i, // Claude Desktop/Code
-    /cursor/i, // Cursor IDE
-    /copilot/i, // GitHub Copilot
-    /chatgpt/i, // ChatGPT
-    /openai/i, // OpenAI tools
-    /anthropic/i, // Anthropic tools
-    /vscode/i, // VS Code extensions
-    /intellij/i, // IntelliJ plugins
-    /sublime/i, // Sublime Text plugins
-    /got/i, // Got HTTP library (sindresorhus/got)
-    // Add more patterns as needed
-  ];
+function isAIOrDevTool(userAgentString: string): boolean {
+  return AI_AGENT_PATTERN.test(userAgentString);
+}
 
-  return patterns.some(pattern => pattern.test(userAgent));
+/**
+ * Traffic classification for metrics tracking.
+ * Uses Next.js userAgent() for enhanced bot detection plus custom AI agent patterns.
+ */
+function classifyTraffic(request: NextRequest): {
+  deviceType: string;
+  isBot: boolean;
+  trafficType: TrafficType;
+} {
+  const userAgentString = request.headers.get('user-agent');
+
+  // No user-agent = unknown traffic
+  if (!userAgentString) {
+    return {trafficType: 'unknown', deviceType: 'unknown', isBot: false};
+  }
+
+  // Use Next.js built-in userAgent() for enhanced parsing
+  const ua = userAgent(request);
+
+  // Check for AI agents first (higher priority than generic bot detection)
+  if (AI_AGENT_PATTERN.test(userAgentString)) {
+    return {
+      trafficType: 'ai_agent',
+      deviceType: ua.device.type || 'desktop',
+      isBot: true,
+    };
+  }
+
+  // Use Next.js isBot detection (covers major search engines, social crawlers, etc.)
+  if (ua.isBot) {
+    return {
+      trafficType: 'bot',
+      deviceType: ua.device.type || 'crawler',
+      isBot: true,
+    };
+  }
+
+  // Real user traffic - include device type for richer metrics
+  return {
+    trafficType: 'user',
+    deviceType: ua.device.type || 'desktop',
+    isBot: false,
+  };
 }
 
 /**
@@ -70,7 +104,7 @@ function wantsMarkdownViaAccept(acceptHeader: string): boolean {
  * Detects if client wants markdown via Accept header or user-agent
  */
 function wantsMarkdown(request: NextRequest): boolean {
-  const userAgent = request.headers.get('user-agent') || '';
+  const uaString = request.headers.get('user-agent') || '';
   const acceptHeader = request.headers.get('accept') || '';
 
   // Strategy 1: Accept header content negotiation (standards-compliant)
@@ -79,14 +113,49 @@ function wantsMarkdown(request: NextRequest): boolean {
   }
 
   // Strategy 2: User-agent detection (fallback for tools that don't set Accept)
-  return isAIOrDevTool(userAgent);
+  return isAIOrDevTool(uaString);
+}
+
+/**
+ * Creates request headers with traffic classification for downstream consumption.
+ * These headers are added to the REQUEST (not response) so tracesSampler can read them.
+ * Uses NextResponse.next({ request: { headers } }) pattern to modify the request.
+ */
+function createClassifiedRequestHeaders(request: NextRequest): Headers {
+  const classification = classifyTraffic(request);
+  const headers = new Headers(request.headers);
+  headers.set('x-traffic-type', classification.trafficType);
+  headers.set('x-device-type', classification.deviceType);
+  return headers;
+}
+
+/**
+ * Creates a pass-through response with traffic classification headers on the request.
+ */
+function nextWithClassification(request: NextRequest): NextResponse {
+  return NextResponse.next({
+    request: {
+      headers: createClassifiedRequestHeaders(request),
+    },
+  });
+}
+
+/**
+ * Creates a rewrite response with traffic classification headers on the request.
+ */
+function rewriteWithClassification(request: NextRequest, destination: URL): NextResponse {
+  return NextResponse.rewrite(destination, {
+    request: {
+      headers: createClassifiedRequestHeaders(request),
+    },
+  });
 }
 
 /**
  * Handles redirection to markdown versions for AI/LLM clients
  */
 const handleAIClientRedirect = (request: NextRequest) => {
-  const userAgent = request.headers.get('user-agent') || '';
+  const userAgentString = request.headers.get('user-agent') || '';
   const acceptHeader = request.headers.get('accept') || '';
   const url = request.nextUrl;
 
@@ -99,7 +168,7 @@ const handleAIClientRedirect = (request: NextRequest) => {
   // Determine detection method for logging
   const detectionMethod = wantsMarkdownViaAccept(acceptHeader)
     ? 'Accept header'
-    : isAIOrDevTool(userAgent)
+    : isAIOrDevTool(userAgentString)
       ? 'User-agent'
       : 'Manual';
 
@@ -118,12 +187,13 @@ const handleAIClientRedirect = (request: NextRequest) => {
     });
   }
 
-  // Skip if already requesting a markdown file
+  // Skip if already requesting a markdown file - pass through with classification headers
   if (url.pathname.endsWith('.md')) {
-    return undefined;
+    return nextWithClassification(request);
   }
 
   // Skip API routes and static assets (should already be filtered by matcher)
+  // Pass through with classification headers
   if (
     url.pathname.startsWith('/api/') ||
     url.pathname.startsWith('/_next/') ||
@@ -131,13 +201,13 @@ const handleAIClientRedirect = (request: NextRequest) => {
       url.pathname
     )
   ) {
-    return undefined;
+    return nextWithClassification(request);
   }
 
   // Check for markdown request (Accept header, user-agent, or manual)
   if (clientWantsMarkdown || forceMarkdown) {
-    // Log the redirect for debugging
-    Sentry.logger.info('Markdown redirect triggered', {
+    // Log the rewrite for debugging
+    Sentry.logger.info('Markdown rewrite triggered', {
       urlPath: url.pathname,
       detectionMethod: forceMarkdown ? 'Manual format=md' : detectionMethod,
       targetUrl: url.pathname.replace(/\/+$/, '') + '.md',
@@ -156,12 +226,13 @@ const handleAIClientRedirect = (request: NextRequest) => {
       newUrl.searchParams.delete('format');
     }
 
-    return NextResponse.redirect(newUrl, {
-      status: redirectStatusCode,
-    });
+    // Rewrite to serve markdown inline (same URL, different content)
+    // The next.config.ts rewrite rule maps *.md to /md-exports/*.md
+    return rewriteWithClassification(request, newUrl);
   }
 
-  return undefined;
+  // Default: pass through with traffic classification headers
+  return nextWithClassification(request);
 };
 
 const handleRedirects = (request: NextRequest) => {
@@ -392,6 +463,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/platforms/go/logrus/',
     to: '/platforms/go/guides/logrus/',
+  },
+  {
+    from: '/platforms/go/zap/',
+    to: '/platforms/go/guides/zap/',
   },
   {
     from: '/clients/go/integrations/http/',
@@ -951,7 +1026,11 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/platforms/android/manual-configuration/',
-    to: '/platforms/android/configuration/manual-init/',
+    to: '/platforms/android/manual-setup/',
+  },
+  {
+    from: '/platforms/android/configuration/manual-init/',
+    to: '/platforms/android/manual-setup/',
   },
   {
     from: '/platforms/android/advanced-usage/',
@@ -1769,24 +1848,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     from: '/platforms/javascript/guides/:guide/tracing/instrumentation/opentelemetry/',
     to: '/platforms/javascript/guides/:guide/opentelemetry/',
   },
-  // START redirecting deprecated generic metrics docs to concepts
-  {
-    from: '/platforms/java/metrics/',
-    to: '/concepts/key-terms/tracing/span-metrics/',
-  },
-  {
-    from: '/platforms/android/metrics/',
-    to: '/concepts/key-terms/tracing/span-metrics/',
-  },
-  {
-    from: '/platforms/apple/metrics/',
-    to: '/concepts/key-terms/tracing/span-metrics/',
-  },
-  {
-    from: '/platforms/unity/metrics/',
-    to: '/concepts/key-terms/tracing/span-metrics/',
-  },
-  // END redirecting deprecated generic metrics docs to concepts
   {
     from: '/learn/cli/configuration/',
     to: '/cli/configuration/',
@@ -1942,6 +2003,70 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/concepts/data-management/data-forwarding/',
     to: '/organization/integrations/data-forwarding/',
+  },
+  {
+    from: '/concepts/otlp/otlp-logs/',
+    to: '/concepts/otlp/direct/logs/',
+  },
+  {
+    from: '/concepts/otlp/otlp-traces/',
+    to: '/concepts/otlp/direct/traces/',
+  },
+  {
+    from: '/product/drains/integration/vercel/',
+    to: '/product/drains/vercel/',
+  },
+  {
+    from: '/product/drains/integration/cloudflare/',
+    to: '/product/drains/cloudflare/',
+  },
+  {
+    from: '/product/drains/integration/heroku/',
+    to: '/product/drains/heroku/',
+  },
+  {
+    from: '/product/drains/integration/openrouter/',
+    to: '/product/drains/openrouter/',
+  },
+  {
+    from: '/product/drains/integration/supabase/',
+    to: '/product/drains/supabase/',
+  },
+  {
+    from: '/product/drains/integration/shopify-hydrogen/',
+    to: '/product/drains/shopify-hydrogen/',
+  },
+  {
+    from: '/product/drains/integration/opentelemetry-collector/',
+    to: '/concepts/otlp/forwarding/pipelines/collector/',
+  },
+  {
+    from: '/product/drains/integration/vector/',
+    to: '/concepts/otlp/forwarding/pipelines/vector/',
+  },
+  {
+    from: '/product/drains/integration/fluentbit/',
+    to: '/concepts/otlp/forwarding/pipelines/fluentbit/',
+  },
+  {
+    from: '/product/drains/otlp-guides/aws-cloudwatch/',
+    to: '/concepts/otlp/forwarding/sources/aws-cloudwatch/',
+  },
+  {
+    from: '/product/drains/otlp-guides/kafka/',
+    to: '/concepts/otlp/forwarding/sources/kafka/',
+  },
+  {
+    from: '/product/drains/otlp-guides/nginx/',
+    to: '/concepts/otlp/forwarding/sources/nginx/',
+  },
+  {
+    from: '/product/drains/otlp-guides/syslog/',
+    to: '/concepts/otlp/forwarding/sources/syslog/',
+  },
+  {
+    from: '/product/drains/otlp-guides/windows-events/',
+    to: '/concepts/otlp/forwarding/sources/windows-events/',
   },
   {
     from: '/workflow/integrations/gitlab/',
@@ -2951,7 +3076,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/clientdev/interfaces/http/',
-    to: 'https://develop.sentry.dev/sdk/data-model/event-payloads/request',
+    to: 'https://develop.sentry.dev/sdk/foundations/transport/event-payloads/request',
   },
   {
     from: '/clients/csharp/',
@@ -3279,19 +3404,59 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/ai-monitoring/',
-    to: '/product/insights/ai/agents/',
+    to: '/ai/monitoring/agents/',
   },
   {
     from: '/product/insights/llm-monitoring/',
-    to: '/product/insights/ai/agents/',
+    to: '/ai/monitoring/agents/',
   },
   {
     from: '/product/insights/llm-monitoring/getting-started/',
-    to: '/product/insights/ai/agents/getting-started/',
+    to: '/ai/monitoring/agents/getting-started/',
   },
   {
     from: '/product/insights/llm-monitoring/getting-started/the-dashboard/',
-    to: '/product/insights/ai/agents/getting-started/the-dashboard/',
+    to: '/ai/monitoring/agents/dashboard/',
+  },
+  {
+    from: '/product/insights/ai/',
+    to: '/ai/monitoring/',
+  },
+  {
+    from: '/product/insights/ai/agents/',
+    to: '/ai/monitoring/agents/',
+  },
+  {
+    from: '/product/insights/ai/agents/privacy/',
+    to: '/ai/monitoring/agents/privacy/',
+  },
+  {
+    from: '/product/insights/ai/agents/dashboard/',
+    to: '/ai/monitoring/agents/dashboard/',
+  },
+  {
+    from: '/product/insights/ai/agents/costs/',
+    to: '/ai/monitoring/agents/costs/',
+  },
+  {
+    from: '/product/insights/ai/agents/getting-started/',
+    to: '/ai/monitoring/agents/getting-started/',
+  },
+  {
+    from: '/product/insights/ai/mcp/',
+    to: '/ai/monitoring/mcp/',
+  },
+  {
+    from: '/product/insights/ai/mcp/getting-started/',
+    to: '/ai/monitoring/mcp/getting-started/',
+  },
+  {
+    from: '/product/insights/ai/mcp/dashboard/',
+    to: '/ai/monitoring/mcp/dashboard/',
+  },
+  {
+    from: '/product/sentry-mcp/',
+    to: '/ai/mcp/',
   },
   {
     from: '/product/metrics/',
@@ -4204,6 +4369,94 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/organization/integrations/elba/',
     to: '/organization/integrations/compliance/elba/',
+  },
+  {
+    from: '/sdk/philosophy/',
+    to: '/sdk/getting-started/philosophy/',
+  },
+  {
+    from: '/sdk/data-model/envelopes/',
+    to: '/sdk/foundations/transport/envelopes/',
+  },
+  {
+    from: '/sdk/data-model/envelope-items/',
+    to: '/sdk/foundations/transport/envelope-items/',
+  },
+  {
+    from: '/sdk/expected-features/rate-limiting/',
+    to: '/sdk/foundations/transport/rate-limiting/',
+  },
+  {
+    from: '/sdk/overview/',
+    to: '/sdk/foundations/overview/',
+  },
+  {
+    from: '/sdk/data-model/',
+    to: '/sdk/foundations/data-model/',
+  },
+  {
+    from: '/sdk/data-model/event-payloads/',
+    to: '/sdk/foundations/transport/event-payloads/',
+  },
+  {
+    from: '/sdk/data-model/event-payloads/breadcrumbs/',
+    to: '/sdk/foundations/transport/event-payloads/breadcrumbs/',
+  },
+  {
+    from: '/sdk/data-model/event-payloads/contexts/',
+    to: '/sdk/foundations/transport/event-payloads/contexts/',
+  },
+  {
+    from: '/sdk/data-model/event-payloads/debugmeta/',
+    to: '/sdk/foundations/transport/event-payloads/debugmeta/',
+  },
+  {
+    from: '/sdk/data-model/event-payloads/exception/',
+    to: '/sdk/foundations/transport/event-payloads/exception/',
+  },
+  {
+    from: '/sdk/data-model/event-payloads/lockreason/',
+    to: '/sdk/foundations/transport/event-payloads/lockreason/',
+  },
+  {
+    from: '/sdk/data-model/event-payloads/message/',
+    to: '/sdk/foundations/transport/event-payloads/message/',
+  },
+  {
+    from: '/sdk/data-model/event-payloads/replay-recording/',
+    to: '/sdk/foundations/transport/event-payloads/replay-recording/',
+  },
+  {
+    from: '/sdk/data-model/event-payloads/request/',
+    to: '/sdk/foundations/transport/event-payloads/request/',
+  },
+  {
+    from: '/sdk/data-model/event-payloads/sdk/',
+    to: '/sdk/foundations/transport/event-payloads/sdk/',
+  },
+  {
+    from: '/sdk/data-model/event-payloads/span/',
+    to: '/sdk/foundations/transport/event-payloads/span/',
+  },
+  {
+    from: '/sdk/data-model/event-payloads/stacktrace/',
+    to: '/sdk/foundations/transport/event-payloads/stacktrace/',
+  },
+  {
+    from: '/sdk/data-model/event-payloads/template/',
+    to: '/sdk/foundations/transport/event-payloads/template/',
+  },
+  {
+    from: '/sdk/data-model/event-payloads/threads/',
+    to: '/sdk/foundations/transport/event-payloads/threads/',
+  },
+  {
+    from: '/sdk/data-model/event-payloads/transaction/',
+    to: '/sdk/foundations/transport/event-payloads/transaction/',
+  },
+  {
+    from: '/sdk/data-model/event-payloads/user/',
+    to: '/sdk/foundations/transport/event-payloads/user/',
   },
 ];
 
