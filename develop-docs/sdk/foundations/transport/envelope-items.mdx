@@ -113,6 +113,77 @@ file. It is always associated to an event or transaction.
 
 : _String, optional._ The content type of the attachment payload. Any [MIME type](https://www.iana.org/assignments/media-types/media-types.xhtml) may be used; the default is `application/octet-stream`.
 
+### Attachment Placeholder
+
+<Alert level="warning">
+Attachment placeholders are an experimental feature, the protocol is subject to change.
+</Alert>
+
+Item type `"attachment"` with content type `"application/vnd.sentry.attachment-ref"`. This item contains a reference to an attachment together with some metadata. It does _not_ contain the actual attachment payload. The purpose of this kind of item is for the attachment to be handled (rate limited, filtered, etc.) together with the event payload, even if it was uploaded elsewhere (for example, through the "upload" endpoint). The placeholder should therefore be sent in the same envelope of the event that the file was attached to.
+
+**Envelope Headers:**
+
+`event_id`
+
+: **UUID String, required.** The identifier of the event or transaction.
+
+**Item Headers:**
+
+The placeholder item header _must_ contain the following properties:
+
+```json
+{
+  "type": "attachment",
+  "content_type": "application/vnd.sentry.attachment-ref",
+  "length": 123,
+  "attachment_length": 212341234,
+  "filename": "myfile.log"
+}
+```
+
+`attachment_length`
+
+: **Integer, required.** The size of the referenced attachment in bytes.
+
+`filename`
+
+: **String, required.** The name of the uploaded file without a path component.
+
+The item header _may_ also contain the `attachment_type` and `content_type` fields (see [Attachment](#attachment)).
+
+
+**Item Payload:**
+
+The placeholder item payload consists of a JSON object containing metadata.
+
+```json
+{
+  "location": "/api/42/upload/019c7a950dd376a1817a9ced5cb7c4b5/?length=212341234&signature=Zct1IMmM3BIJrzDOwG3tUn5AlrLhqIJFBu8Kd59dXCz",
+  "content_type": "text/plain"
+}
+```
+
+`location`
+
+: **String, required.** The identifier of the upload, as returned in the `Location` header of the upload endpoint response.
+
+`content_type`
+
+: _String, optional._ The content type of the represented attachment (as opposed to the content type of the placeholder item itself).
+
+**Workflow:**
+
+1. If an attachment is larger than ~100 MiB, upload it to the [TUS](https://tus.io/protocols/resumable-upload#creation-with-upload)-conformant upload endpoint (requires feature `projects:relay-upload-endpoint`):
+  ```shell
+  curl -X POST https://o0.ingest.sentry.io/api/0/upload/ \
+    --header "Tus-Resumable: 1.0.0" \
+    --header "Content-Type: application/offset+octet-stream" \
+    --header "Upload-Length: ${FILE_SIZE}" \
+    --data @myfile.log
+  ```
+2. Upon successful upload, attach a placeholder item to the event envelope, using the `Location` header from the upload response.
+
+
 ### Trace Attachment
 
 <Alert level="warning">
