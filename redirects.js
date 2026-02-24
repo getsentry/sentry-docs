@@ -276,7 +276,7 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/processes/releases/',
-    destination: '/sdk/getting-started/playbooks/setting-up-release-infrastructure/',
+    destination: '/sdk/getting-started/playbooks/setup/setting-up-release-infrastructure/',
   },
   {
     source: '/sdk/processes/triaging/',
@@ -284,7 +284,7 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/miscellaneous/feature-branches/',
-    destination: '/sdk/getting-started/playbooks/syncing-feature-branches/',
+    destination: '/sdk/getting-started/playbooks/development/syncing-feature-branches/',
   },
   {
     source: '/application/ab-testing/',
