@@ -1,19 +1,42 @@
 ---
 title: Hydrogen with React Router
-description: Learn how to use the Sentry React Router SDK to instrument your Hydrogen app (versions 2025.5.0+).
+description: Learn how to instrument your Hydrogen app on Shopify Oxygen and capture your first errors and traces.
 ---
 
-<Alert level="info" title="Hydrogen Version">
+<Alert level="info" title="Hydrogen version">
 
 This guide applies to Hydrogen versions **2025.5.0 and later** that use React Router 7 (framework mode). For older versions of Hydrogen that use Remix v2, see the [Remix guide](/platforms/javascript/guides/cloudflare/frameworks/hydrogen-remix/).
 
 </Alert>
 
-Starting from Hydrogen version 2025.5.0, Shopify switched from Remix v2 to React Router 7 (framework mode). You can use the Sentry React Router SDK with Cloudflare support to add Sentry instrumentation to your Hydrogen app.
+## Prerequisites
 
-## Installing Sentry React Router and Cloudflare SDKs
+You need:
 
-First, install the Sentry React Router and Cloudflare SDKs with your package manager:
+- A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/)
+- Your Hydrogen application (v2025.5.0+) you want to host on Shopify Oxygen
+
+## Step 1: Install
+
+Choose the features you want to configure, and this guide will show you how:
+
+<OnboardingOptionButtons
+  options={[
+    "error-monitoring",
+    "performance",
+    "session-replay",
+    "user-feedback",
+    "logs",
+  ]}
+/>
+
+<PlatformContent
+  includePath="getting-started-features-expandable"
+  platform="javascript.react-router"
+/>
+
+### Install the Sentry SDK
+Run the command for your preferred package manager to add the React Router and Cloudflare SDK:
 
 ```bash {tabTitle:npm}
 npm install @sentry/react-router @sentry/cloudflare --save
@@ -27,23 +50,114 @@ yarn add @sentry/react-router @sentry/cloudflare
 pnpm add @sentry/react-router @sentry/cloudflare
 ```
 
-## Instrumenting Your Server
+## Step 2: Configure
 
-Create an `instrument.server.mjs` file to initialize Sentry on the server:
+### Configure Client-side Sentry
+Initialize Sentry in your `entry.client.tsx` file:
+
+```tsx {filename: app/entry.client.tsx}
+import * as Sentry from "@sentry/react-router";
+import { startTransition, StrictMode } from "react";
+import { hydrateRoot } from "react-dom/client";
+import { HydratedRouter } from "react-router/dom";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // Adds request headers and IP for users, for more info visit:
+  // https://docs.sentry.io/platforms/javascript/guides/react-router/configuration/options/#sendDefaultPii
+  sendDefaultPii: true,
+
+  integrations: [
+    // ___PRODUCT_OPTION_START___ performance
+    // Registers and configures the Tracing integration,
+    // which automatically instruments your application to monitor its
+    // performance, including custom React Router routing instrumentation
+    Sentry.reactRouterTracingIntegration(),
+    // ___PRODUCT_OPTION_END___ performance
+    // ___PRODUCT_OPTION_START___ session-replay
+    // Registers the Replay integration,
+    // which automatically captures Session Replays
+    Sentry.replayIntegration(),
+    // ___PRODUCT_OPTION_END___ session-replay
+    // ___PRODUCT_OPTION_START___ user-feedback
+    Sentry.feedbackIntegration({
+      // Additional SDK configuration goes in here, for example:
+      colorScheme: "system",
+    }),
+    // ___PRODUCT_OPTION_END___ user-feedback
+  ],
+  // ___PRODUCT_OPTION_START___ logs
+
+  // Enable logs to be sent to Sentry
+  enableLogs: true,
+  // ___PRODUCT_OPTION_END___ logs
+  // ___PRODUCT_OPTION_START___ performance
+
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for tracing.
+  // We recommend adjusting this value in production
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/guides/react-router/configuration/options/#traces-sample-rate
+  tracesSampleRate: 1.0,
+
+  // Set `tracePropagationTargets` to declare which URL(s) should have trace propagation enabled
+  tracePropagationTargets: [/^\//, /^https:\/\/yourserver\.io\/api/],
+  // ___PRODUCT_OPTION_END___ performance
+  // ___PRODUCT_OPTION_START___ session-replay
+
+  // Capture Replay for 10% of all sessions,
+  // plus 100% of sessions with an error
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/guides/react-router/session-replay/configuration/#general-integration-configuration
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ session-replay
+});
+
+startTransition(() => {
+  hydrateRoot(
+    document,
+    <StrictMode>
+      <HydratedRouter />
+    </StrictMode>
+  );
+});
+```
+
+### Configure Server-side Sentry
+
+Because Oxygen is built on Cloudflare Workers, you need to wrap your request handler to capture errors on the edge.
+
+First, create an `instrument.server.mjs` file to initialize Sentry on the server:
 
 ```js {filename:instrument.server.mjs}
 import * as Sentry from "@sentry/react-router";
 
 Sentry.init({
-  dsn: "YOUR_DSN_HERE",
+  dsn: "___PUBLIC_DSN___",
+
   // Adds request headers and IP for users, for more info visit:
   // https://docs.sentry.io/platforms/javascript/guides/react-router/configuration/options/#sendDefaultPii
   sendDefaultPii: true,
+  // ___PRODUCT_OPTION_START___ logs
+
+  // Enable logs to be sent to Sentry
+  enableLogs: true,
+  // ___PRODUCT_OPTION_END___ logs
+  // ___PRODUCT_OPTION_START___ performance
+
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for tracing.
+  // We recommend adjusting this value in production
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/guides/react-router/configuration/options/#tracesSampleRate
   tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
 });
 ```
 
-Update your `server.ts` file to use the `wrapRequestHandler` method from `@sentry/cloudflare`:
+Next, update your `server.ts` file to use the `wrapRequestHandler` method from `@sentry/cloudflare`:
 
 ```ts {filename:server.ts}
 import { wrapRequestHandler } from '@sentry/cloudflare';
@@ -61,8 +175,15 @@ export default {
     return wrapRequestHandler(
       {
         options: {
-          dsn: "YOUR_DSN_HERE",
+          dsn: "___PUBLIC_DSN___",
++         // ___PRODUCT_OPTION_START___ performance
           tracesSampleRate: 1.0,
+          // ___PRODUCT_OPTION_END___ performance
+          // ___PRODUCT_OPTION_START___ logs
+          enableLogs: true,
+          // ___PRODUCT_OPTION_END___ logs
+          // We include this here as well for the request context
+          sendDefaultPii: true,
         },
         request: request as any,
         context: executionContext,
@@ -84,36 +205,11 @@ export default {
   },
 };
 ```
+<OnboardingOption optionId="performance">
 
-## Instrumenting Your Client
+### Enable Distributed Tracing
 
-Initialize Sentry in your `entry.client.tsx` file:
-
-```tsx {filename:app/entry.client.tsx}
-import { HydratedRouter } from 'react-router/dom';
-import * as Sentry from '@sentry/react-router/cloudflare';
-import { StrictMode, startTransition } from 'react';
-import { hydrateRoot } from 'react-dom/client';
-
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  integrations: [Sentry.reactRouterTracingIntegration()],
-  tracesSampleRate: 1.0,
-});
-
-startTransition(() => {
-  hydrateRoot(
-    document,
-    <StrictMode>
-      <HydratedRouter />
-    </StrictMode>,
-  );
-});
-```
-
-## Server-Side Rendering with Trace Injection
-
-To enable distributed tracing, wrap your `handleRequest` function in your `entry.server.tsx` file and inject trace meta tags:
+Update your `entry.server.tsx` file to inject trace meta tags into the HTML:
 
 ```tsx {filename:app/entry.server.tsx}
 import './instrument.server';
@@ -154,11 +250,13 @@ export const handleError: HandleErrorFunction = (error, { request }) => {
 export default Sentry.wrapSentryHandleRequest(handleRequest);
 ```
 
-## Configuration
+</OnboardingOption>
 
-### Vite Configuration
+## Step 3: Add Readable Stack Traces With Source Maps (Optional)
 
-Add the Sentry plugin to your `vite.config.ts`:
+The stack traces in your Sentry errors probably won't look like your actual code without unminifying them. To fix this, upload your source maps to Sentry.
+
+First, update `vite.config.ts` to include the `sentryReactRouter` plugin, making sure to pass both the Vite and Sentry configurations to it:
 
 ```ts {filename:vite.config.ts}
 import { reactRouter } from '@react-router/dev/vite';
@@ -173,8 +271,11 @@ export default defineConfig(config => ({
     oxygen(),
     reactRouter(),
     sentryReactRouter({
-      org: "your-org-slug",
-      project: "your-project-slug",
+      org: "___ORG_SLUG___",
+      project: "___PROJECT_SLUG___",
+
+      // An auth token is required for uploading source maps;
+      // store it in an environment variable to keep it secure.
       authToken: process.env.SENTRY_AUTH_TOKEN,
     }, config),
     // ... other plugins
@@ -182,9 +283,7 @@ export default defineConfig(config => ({
 }));
 ```
 
-### Build Configuration
-
-Since the `buildEnd` hook will not be executed for Hydrogen, you'll need to manually upload source maps using the [Sentry CLI](/cli/) instead.
+Since the `buildEnd` hook will not be executed for Hydrogen, you need to manually upload source maps using the [Sentry CLI](/cli/) instead.
 
 ```bash
 # Inject debug IDs
@@ -193,3 +292,82 @@ sentry-cli sourcemaps inject /path/to/build/dir
 sentry-cli sourcemaps upload /path/to/build/dir
 ```
 
+## Step 4: Verify Your Setup
+
+Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
+
+### Issues
+
+To verify that Sentry captures errors and creates issues in your Sentry project, throw an error in a loader:
+
+```tsx {filename: app/routes/sentry-test.tsx}
+import type { Route } from "./+types/sentry-test";
+
+export async function loader() {
+  throw new Error("My first Sentry error!");
+}
+
+export default function SentryTestPage() {
+  return <div>Loading this page will throw an error</div>;
+}
+```
+
+<OnboardingOption optionId="performance" hideForThisOption>
+  Open the `/sentry-test` route in your browser and you should trigger an error.
+</OnboardingOption>
+
+<PlatformContent includePath="getting-started-browser-sandbox-warning" />
+
+<OnboardingOption optionId="performance">
+### Tracing
+To test your tracing configuration, update the previous code snippet by starting a trace to measure the time it takes for the execution of your code:
+
+```tsx {filename: app/routes/sentry-test.tsx}
+import * as Sentry from "@sentry/cloudflare";
+import type { Route } from "./+types/sentry-test";
+
+export async function loader() {
+  return Sentry.startSpan(
+    {
+      op: "test",
+      name: "My First Test Trace",
+    },
+    () => {
+      throw new Error("My first Sentry error!");
+    }
+  );
+}
+
+export default function SentryTestPage() {
+  return <div>Loading this page will throw an error</div>;
+}
+```
+
+Open the `/sentry-test` route in your browser. You should start a trace and trigger an error.
+
+</OnboardingOption>
+
+### View Captured Data in Sentry
+
+Now, head over to your project on [Sentry.io](https://sentry.io) to view the collected data (it takes a couple of moments for the data to appear).
+
+<PlatformContent includePath="getting-started-verify-locate-data" />
+
+## Next Steps
+
+At this point, you should have integrated Sentry into your React Router Framework application and should already be sending data to your Sentry project.
+
+Now's a good time to customize your setup and look into more advanced topics.
+Our next recommended steps for you are:
+
+- Learn how to <PlatformLink to="/usage">manually capture errors</PlatformLink>
+- Continue to <PlatformLink to="/configuration">customize your configuration</PlatformLink>
+- Make use of [React Router-specific features](/platforms/javascript/guides/react-router/features/)
+- Get familiar with [Sentry's product features](/product/) like tracing, insights, and alerts
+
+<Expandable permalink={false} title="Are you having problems setting up the SDK?">
+
+- Find various topics in <PlatformLink to="/troubleshooting">Troubleshooting</PlatformLink>
+- [Get support](https://sentry.zendesk.com/hc/en-us/)
+
+</Expandable>
