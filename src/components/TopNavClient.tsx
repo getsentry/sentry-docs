@@ -98,20 +98,20 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
   };
 
   const closeTimers = useRef<{
-    admin?: NodeJS.Timeout;
     concepts?: NodeJS.Timeout;
+    more?: NodeJS.Timeout;
     products?: NodeJS.Timeout;
     sdks?: NodeJS.Timeout;
   }>({});
   const [productsDropdownOpen, setProductsDropdownOpen] = useState(false);
   const [conceptsDropdownOpen, setConceptsDropdownOpen] = useState(false);
-  const [adminDropdownOpen, setAdminDropdownOpen] = useState(false);
+  const [moreDropdownOpen, setMoreDropdownOpen] = useState(false);
   const productsBtnRef = useRef<HTMLButtonElement>(null);
   const conceptsBtnRef = useRef<HTMLButtonElement>(null);
-  const adminBtnRef = useRef<HTMLButtonElement>(null);
+  const moreBtnRef = useRef<HTMLButtonElement>(null);
   const productsDropdownRef = useRef<HTMLDivElement>(null);
   const conceptsDropdownRef = useRef<HTMLDivElement>(null);
-  const adminDropdownRef = useRef<HTMLDivElement>(null);
+  const moreDropdownRef = useRef<HTMLDivElement>(null);
   const navRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -144,12 +144,12 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
           setConceptsDropdownOpen(false);
         }
       }
-      if (adminDropdownOpen) {
+      if (moreDropdownOpen) {
         if (
-          !adminBtnRef.current?.contains(e.target as Node) &&
-          !adminDropdownRef.current?.contains(e.target as Node)
+          !moreBtnRef.current?.contains(e.target as Node) &&
+          !moreDropdownRef.current?.contains(e.target as Node)
         ) {
-          setAdminDropdownOpen(false);
+          setMoreDropdownOpen(false);
         }
       }
     }
@@ -160,7 +160,7 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
     platformDropdownByClick,
     productsDropdownOpen,
     conceptsDropdownOpen,
-    adminDropdownOpen,
+    moreDropdownOpen,
   ]);
 
   useEffect(() => {
@@ -194,7 +194,7 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
   const productsPosition = useDropdownPosition(productsBtnRef, productsDropdownOpen);
   const sdksPosition = useDropdownPosition(platformBtnRef, platformDropdownOpen);
   const conceptsPosition = useDropdownPosition(conceptsBtnRef, conceptsDropdownOpen);
-  const adminPosition = useDropdownPosition(adminBtnRef, adminDropdownOpen);
+  const morePosition = useDropdownPosition(moreBtnRef, moreDropdownOpen);
 
   return (
     <div>
@@ -264,14 +264,14 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
           >
             {mainSections.map(section => (
               <li key={section.href} className="list-none relative">
-                {section.label === 'PRODUCT' ? (
+                {section.label === 'Product' ? (
                   <div
                     style={{display: 'inline-block'}}
                     onMouseEnter={() => {
                       clearTimeout(closeTimers.current.products);
                       setProductsDropdownOpen(true);
                       setConceptsDropdownOpen(false);
-                      setAdminDropdownOpen(false);
+                      setMoreDropdownOpen(false);
                       setPlatformDropdownOpen(false);
                     }}
                     onMouseLeave={() => {
@@ -292,7 +292,7 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
                       onClick={() => {
                         setProductsDropdownOpen(v => !v);
                         setConceptsDropdownOpen(false);
-                        setAdminDropdownOpen(false);
+                        setMoreDropdownOpen(false);
                       }}
                       aria-haspopup="true"
                       aria-expanded={productsDropdownOpen}
@@ -316,14 +316,14 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
                       </svg>
                     </button>
                   </div>
-                ) : section.label === 'CONCEPTS' ? (
+                ) : section.label === 'Concepts' ? (
                   <div
                     style={{display: 'inline-block'}}
                     onMouseEnter={() => {
                       clearTimeout(closeTimers.current.concepts);
                       setConceptsDropdownOpen(true);
                       setProductsDropdownOpen(false);
-                      setAdminDropdownOpen(false);
+                      setMoreDropdownOpen(false);
                       setPlatformDropdownOpen(false);
                     }}
                     onMouseLeave={() => {
@@ -336,7 +336,7 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
                       ref={conceptsBtnRef}
                       className={`text-[var(--gray-12)] transition-all duration-150 inline-block py-2 px-1 rounded-t-md flex items-center gap-1 text-[0.875rem] font-normal border-b-2 ${
                         mainSections
-                          .find(s => s.label === 'CONCEPTS')
+                          .find(s => s.label === 'Concepts')
                           ?.dropdown?.some(d => pathname?.startsWith(d.href))
                           ? 'border-[var(--accent-purple)]'
                           : conceptsDropdownOpen
@@ -346,7 +346,7 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
                       onClick={() => {
                         setConceptsDropdownOpen(v => !v);
                         setProductsDropdownOpen(false);
-                        setAdminDropdownOpen(false);
+                        setMoreDropdownOpen(false);
                       }}
                       aria-haspopup="true"
                       aria-expanded={conceptsDropdownOpen}
@@ -370,44 +370,44 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
                       </svg>
                     </button>
                   </div>
-                ) : section.label === 'ADMIN' ? (
+                ) : section.label === 'More' ? (
                   <div
                     style={{display: 'inline-block'}}
                     onMouseEnter={() => {
-                      clearTimeout(closeTimers.current.admin);
-                      setAdminDropdownOpen(true);
+                      clearTimeout(closeTimers.current.more);
+                      setMoreDropdownOpen(true);
                       setProductsDropdownOpen(false);
                       setConceptsDropdownOpen(false);
                       setPlatformDropdownOpen(false);
                     }}
                     onMouseLeave={() => {
-                      closeTimers.current.admin = setTimeout(() => {
-                        setAdminDropdownOpen(false);
+                      closeTimers.current.more = setTimeout(() => {
+                        setMoreDropdownOpen(false);
                       }, 150);
                     }}
                   >
                     <button
-                      ref={adminBtnRef}
+                      ref={moreBtnRef}
                       className={`text-[var(--gray-12)] transition-all duration-150 inline-block py-2 px-1 rounded-t-md flex items-center gap-1 text-[0.875rem] font-normal border-b-2 ${
                         mainSections
-                          .find(s => s.label === 'ADMIN')
+                          .find(s => s.label === 'More')
                           ?.dropdown?.some(d => pathname?.startsWith(d.href))
                           ? 'border-[var(--accent-purple)]'
-                          : adminDropdownOpen
+                          : moreDropdownOpen
                             ? 'border-[#a78bfa]'
                             : 'border-transparent hover:border-[#a78bfa]'
                       }`}
                       onClick={() => {
-                        setAdminDropdownOpen(v => !v);
+                        setMoreDropdownOpen(v => !v);
                         setProductsDropdownOpen(false);
                         setConceptsDropdownOpen(false);
                       }}
                       aria-haspopup="true"
-                      aria-expanded={adminDropdownOpen}
+                      aria-expanded={moreDropdownOpen}
                     >
                       {section.label}
                       <svg
-                        className={`ml-1 transition-transform duration-150 ${adminDropdownOpen ? 'rotate-180' : ''}`}
+                        className={`ml-1 transition-transform duration-150 ${moreDropdownOpen ? 'rotate-180' : ''}`}
                         width="16"
                         height="16"
                         viewBox="0 0 16 16"
@@ -424,7 +424,7 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
                       </svg>
                     </button>
                   </div>
-                ) : section.label === 'SDKS' ? (
+                ) : section.label === 'SDKs' ? (
                   <a
                     href={sdkLinkHref}
                     onClick={handleSdkClick}
@@ -645,7 +645,7 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
             }
           `}</style>
             {mainSections
-              .find(s => s.label === 'CONCEPTS')
+              .find(s => s.label === 'Concepts')
               ?.dropdown?.map(dropdown => (
                 <Link
                   key={dropdown.href}
@@ -658,42 +658,42 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
           </div>,
           document.body
         )}
-      {adminDropdownOpen &&
+      {moreDropdownOpen &&
         ReactDOM.createPortal(
           <div
-            ref={adminDropdownRef}
+            ref={moreDropdownRef}
             className="absolute left-0 bg-white dark:bg-black border border-[var(--gray-a3)] dark:border-[var(--gray-7)] shadow-lg z-50 min-w-[220px] p-2 rounded-b-md rounded-t-none"
             style={{
               position: 'absolute',
-              top: adminPosition.top,
-              left: adminPosition.left,
-              minWidth: adminPosition.width,
+              top: morePosition.top,
+              left: morePosition.left,
+              minWidth: morePosition.width,
               overflowY: 'auto',
               scrollbarWidth: 'none',
               msOverflowStyle: 'none',
             }}
             onClick={e => e.stopPropagation()}
             onMouseEnter={() => {
-              clearTimeout(closeTimers.current.admin);
+              clearTimeout(closeTimers.current.more);
             }}
             onMouseLeave={() => {
-              closeTimers.current.admin = setTimeout(() => {
-                setAdminDropdownOpen(false);
+              closeTimers.current.more = setTimeout(() => {
+                setMoreDropdownOpen(false);
               }, 150);
             }}
           >
             <style>{`
-            .dark .admin-dropdown-link {
+            .dark .more-dropdown-link {
               color: #fff !important;
             }
           `}</style>
             {mainSections
-              .find(s => s.label === 'ADMIN')
+              .find(s => s.label === 'More')
               ?.dropdown?.map(dropdown => (
                 <Link
                   key={dropdown.href}
                   href={dropdown.href}
-                  className="admin-dropdown-link block px-4 py-2 text-[var(--gray-12)] dark:text-white hover:bg-[var(--gray-3)] dark:hover:bg-[var(--gray-8)] rounded text-[0.875rem] font-normal font-sans no-underline"
+                  className="more-dropdown-link block px-4 py-2 text-[var(--gray-12)] dark:text-white hover:bg-[var(--gray-3)] dark:hover:bg-[var(--gray-8)] rounded text-[0.875rem] font-normal font-sans no-underline"
                 >
                   {dropdown.label}
                 </Link>

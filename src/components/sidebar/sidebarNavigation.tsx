@@ -105,30 +105,20 @@ export async function SidebarNavigation({path}: {path: string[]}) {
     );
   }
 
-  // Admin Settings
-  if (path[0] === 'organization' || path[0] === 'account' || path[0] === 'pricing') {
-    const adminItems = [
+  // "More" section - Admin Settings + Security, Legal, & PII
+  if (
+    path[0] === 'organization' ||
+    path[0] === 'account' ||
+    path[0] === 'pricing' ||
+    path[0] === 'security-legal-pii'
+  ) {
+    const moreItems = [
       {title: 'Account Settings', root: 'account'},
       {title: 'Organization Settings', root: 'organization'},
       {title: 'Pricing & Billing', root: 'pricing'},
+      {title: 'Security, Legal, & PII', root: 'security-legal-pii'},
     ];
-    return <ProductSidebar rootNode={rootNode} items={adminItems} />;
-  }
-
-  // Security, Legal, & PII
-  if (path[0] === 'security-legal-pii') {
-    return (
-      <ul data-sidebar-tree>
-        <DynamicNav
-          root="security-legal-pii"
-          title="Security, Legal, & PII"
-          tree={toTree(
-            getNavNodes([nodeForPath(rootNode, 'security-legal-pii')!], docNodeToNavNode)
-          )}
-          collapsible={false}
-        />
-      </ul>
-    );
+    return <ProductSidebar rootNode={rootNode} items={moreItems} />;
   }
 
   // API Reference

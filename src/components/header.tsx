@@ -126,7 +126,7 @@ export default function Header({
         <Link
           href="/"
           title="Sentry error monitoring"
-          className="logo-slot flex flex-shrink-0 items-center text-lg font-medium text-[var(--foreground)] mr-4"
+          className="logo-slot flex flex-shrink-0 items-center text-lg font-medium text-[var(--foreground)] mr-1"
           style={{minWidth: 0}}
         >
           <div className="h-full pb-[2px] mr-2">
@@ -139,34 +139,32 @@ export default function Header({
           </div>
           <span className="text-base font-semibold tracking-tight">Docs</span>
         </Link>
-        {!noSearch && (
-          <div
-            className="hidden sm:flex flex-shrink-0 items-center gap-2"
-            style={{
-              visibility: showHeaderSearch ? 'visible' : 'hidden',
-              pointerEvents: showHeaderSearch ? 'auto' : 'none',
-              marginRight: '-4px',
-              width: '340px',
-              minWidth: '340px',
-            }}
-          >
-            <Search
-              path={pathname}
-              searchPlatforms={searchPlatforms}
-              showChatBot
-              useStoredSearchPlatforms={useStoredSearchPlatforms}
-            />
-          </div>
-        )}
-        <div className="flex-1 min-w-0 flex items-center gap-4">
-          <div className="hidden md:block flex-1 min-w-0">
-            <TopNavClient platforms={platforms} />
-          </div>
+        {/* Top nav menu - anchored next to logo */}
+        <div className="hidden md:block flex-1 min-w-0">
+          <TopNavClient platforms={platforms} />
+        </div>
+        {/* Desktop: Search bar and right-side controls */}
+        <div className="hidden md:flex items-center gap-4">
           {!noSearch && (
             <div
-              className="hidden md:flex flex-shrink-0 items-center gap-4"
-              style={{marginLeft: '15px'}}
+              className="flex flex-shrink-0 items-center gap-2"
+              style={{
+                visibility: showHeaderSearch ? 'visible' : 'hidden',
+                pointerEvents: showHeaderSearch ? 'auto' : 'none',
+                width: '340px',
+                minWidth: '340px',
+              }}
             >
+              <Search
+                path={pathname}
+                searchPlatforms={searchPlatforms}
+                showChatBot
+                useStoredSearchPlatforms={useStoredSearchPlatforms}
+              />
+            </div>
+          )}
+          {!noSearch && (
+            <div className="flex flex-shrink-0 items-center gap-4">
               <Button
                 asChild
                 variant="ghost"
@@ -182,17 +180,17 @@ export default function Header({
               <ThemeToggle />
             </div>
           )}
-          {/* Mobile: show Ask AI button and theme toggle (below md breakpoint) */}
-          <div className="flex items-center md:hidden ml-auto gap-3">
-            <button
-              className="kapa-ai-class flex items-center gap-1.5 text-sm font-medium text-[var(--foreground)] px-2 py-1.5 rounded-md hover:bg-[var(--gray-a3)] transition-colors"
-              aria-label="Ask AI"
-            >
-              <MagicIcon className="size-4" />
-              <span className="uppercase text-xs">Ask AI</span>
-            </button>
-            <ThemeToggle />
-          </div>
+        </div>
+        {/* Mobile: show Ask AI button and theme toggle (below md breakpoint) */}
+        <div className="flex items-center md:hidden ml-auto gap-3">
+          <button
+            className="kapa-ai-class flex items-center gap-1.5 text-sm font-medium text-[var(--foreground)] px-2 py-1.5 rounded-md hover:bg-[var(--gray-a3)] transition-colors"
+            aria-label="Ask AI"
+          >
+            <MagicIcon className="size-4" />
+            <span className="uppercase text-xs">Ask AI</span>
+          </button>
+          <ThemeToggle />
         </div>
       </nav>
       <style>{`
