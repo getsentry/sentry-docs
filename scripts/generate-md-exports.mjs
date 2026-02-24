@@ -662,9 +662,7 @@ async function createWork() {
       let taskFrontmatter = null;
       if (mdxOverride) {
         const fm = mdxOverride.frontmatter;
-        const urlPath = relativePath
-          .replace(/\.md$/, '')
-          .replace(/\/index$|^index$/, '');
+        const urlPath = relativePath.replace(/\.md$/, '').replace(/\/index$|^index$/, '');
         taskFrontmatter = {
           title: fm.title || '',
           description: fm.description || '',
