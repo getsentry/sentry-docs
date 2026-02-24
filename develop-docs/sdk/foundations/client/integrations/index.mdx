@@ -1,0 +1,86 @@
+---
+title: Integrations
+description: How SDKs extend functionality through modular integrations — interface, lifecycle, configuration, and default integration guidelines.
+spec_id: sdk/foundations/client/integrations
+spec_version: 1.0.0
+spec_status: stable
+spec_depends_on:
+  - id: sdk/foundations/client
+    version: ">=1.0.0"
+spec_changelog:
+  - version: 1.0.0
+    date: 2025-02-24
+    summary: Initial spec, extracted from client spec v2.1.0
+sidebar_order: 2
+---
+
+<SpecRfcAlert />
+
+<SpecMeta />
+
+## Overview
+
+Integrations extend SDK functionality in a modular way. The [Client](/sdk/foundations/client/) **MUST** own integration instances and call their lifecycle methods.
+
+Users configure integrations via the `integrations` option in `Sentry.init()`.
+
+Related specs:
+- [Client](/sdk/foundations/client/) — client lifecycle and event pipeline
+- [HTTP Client Integration](/sdk/foundations/client/integrations/http-client) — HTTP client instrumentation guidelines
+- [GraphQL Integration](/sdk/foundations/client/integrations/graphql) — GraphQL client instrumentation guidelines
+- [Feature Flags Integration](/sdk/foundations/client/integrations/feature-flags) — feature flag tracking guidelines
+
+---
+
+## Behavior
+
+<SpecSection id="integration-interface" status="stable" since="1.0.0">
+
+### Integration Interface
+
+The recommended integration interface (language-specific variations apply):
+
+| Method | When Called | Purpose |
+|---|---|---|
+| `setupOnce()` | Once globally, for the first Client | Global side effects (monkey-patching, global handlers). |
+| `setup(client)` | Per Client | Client-specific setup. Preferred over `setupOnce` for most work. |
+| `afterAllSetup(client)` | After all integrations' `setup` | Work that depends on other integrations being set up. |
+| `preprocessEvent(event, hint, client)` | Before event processors | Modify the event before other processing. |
+| `processEvent(event, hint, client)` | During event pipeline | Process the event. Return `null` to discard. |
+
+</SpecSection>
+
+<SpecSection id="integration-configuration" status="stable" since="1.0.0">
+
+### Integration Configuration
+
+Users configure integrations via the `integrations` option:
+
+```javascript
+Sentry.init({
+  integrations: [Sentry.browserTracingIntegration()],
+});
+```
+
+`Sentry.init()` **MUST** enable a set of default integrations that define baseline functionality. SDKs **MUST** expose a way to disable default integrations individually or entirely.
+
+</SpecSection>
+
+<SpecSection id="default-integration-guidelines" status="stable" since="1.0.0">
+
+### Default Integration Guidelines
+
+New default integrations **SHOULD**:
+- Be lightweight — not add significant overhead
+- Be well-tested across all supported environments
+- Not create a high volume of new data (spans, transactions) without user opt-in
+
+Integrations that create high data volume or have potential compatibility issues **SHOULD** be opt-in and only made default in a major version.
+
+</SpecSection>
+
+---
+
+## Changelog
+
+<SpecChangelog />
