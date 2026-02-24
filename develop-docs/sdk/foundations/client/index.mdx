@@ -2,7 +2,7 @@
 title: Client
 description: The SDK component responsible for event creation, integration management, and transport dispatch.
 spec_id: sdk/foundations/client
-spec_version: 2.1.0
+spec_version: 2.2.0
 spec_status: stable
 spec_depends_on:
   - id: sdk/foundations/state-management/scopes
@@ -10,6 +10,9 @@ spec_depends_on:
   - id: sdk/foundations/transport/envelopes
     version: ">=1.0.0"
 spec_changelog:
+  - version: 2.2.0
+    date: 2025-02-24
+    summary: Restructured into sub-specs for integrations, hooks, and configuration
   - version: 2.1.0
     date: 2024-09-23
     summary: Added integration lifecycle (setupOnce, setup, afterAllSetup, preprocessEvent, processEvent)
@@ -31,13 +34,16 @@ sidebar_order: 2
 
 ## Overview
 
-The Client is the SDK component responsible for building Sentry events from captured data and dispatching them to the [Transport](/sdk/foundations/transport/). It is configured once during `Sentry.init()` and manages the [integration](#integration-management) lifecycle.
+The Client is the SDK component responsible for building Sentry events from captured data and dispatching them to the [Transport](/sdk/foundations/transport/). It is configured once during `Sentry.init()` and manages the [integration](/sdk/foundations/client/integrations/) lifecycle.
 
 The Client is **stateless** with respect to contextual data — it receives the [Scope](/sdk/foundations/state-management/scopes/) at capture time and merges scope data into the event. The Client does hold configuration (options) and owns its transport and integrations.
 
 In the [Hub & Scope](/sdk/foundations/state-management/hub-and-scope/) model, the Client was bound to a Hub. In the current [Scopes](/sdk/foundations/state-management/scopes/) model, the Client is resolved via the scope chain.
 
 Related specs:
+- [Configuration](/sdk/foundations/client/configuration/) — client options, environment variables, debug mode, sampling
+- [Integrations](/sdk/foundations/client/integrations/) — integration interface, lifecycle, and defaults
+- [Hooks](/sdk/foundations/client/hooks/) — lifecycle hooks, before_send, before_breadcrumb
 - [Scopes](/sdk/foundations/state-management/scopes/) — scope chain and client resolution
 - [Transport](/sdk/foundations/transport/) — envelope delivery
 - [Envelopes](/sdk/foundations/transport/envelopes/) — wire format
@@ -116,72 +122,8 @@ When `captureEvent`, `captureException`, or `captureMessage` is called, the Clie
 1. **Disabled check**: If the SDK is disabled (no transport / no DSN), discard immediately.
 2. **Sampling**: Apply the configured `sample_rate`. Events **MAY** be randomly discarded. When discarded, the Client **MUST** record a [client report](/sdk/telemetry/client-reports/) with discard reason `sample_rate`.
 3. **Scope application**: Obtain the current, isolation, and global scopes. Merge scope data onto the event in the [defined order](/sdk/foundations/state-management/scopes/#applying-scope-data-to-events). Invoke event processors in registration order. Any processor returning `null` discards the event (client report reason: `event_processor`).
-4. **`before_send` hook**: Invoke the user-configured callback. Returning `null` discards the event (client report reason: `before_send`). This hook **MUST** only apply to error events. For transactions, use `before_send_transaction`. For logs, use `before_send_log`.
+4. **`before_send` hook**: Invoke the user-configured callback. Returning `null` discards the event (client report reason: `before_send`). This hook **MUST** only apply to error events. For transactions, use `before_send_transaction`. For logs, use `before_send_log`. See [Hooks](/sdk/foundations/client/hooks/) for details.
 5. **Transport**: Pass the event to the transport (or TelemetryProcessor). The transport **MAY** discard due to missing DSN, full queue, or [rate limiting](/sdk/expected-features/rate-limiting/).
-
-</SpecSection>
-
-<SpecSection id="integration-management" status="stable" since="2.1.0">
-
-### Integration Management
-
-The Client **MUST** own integration instances and call their lifecycle methods.
-
-#### Integration Interface
-
-Integrations extend SDK functionality in a modular way. The recommended interface (language-specific variations apply):
-
-| Method | When Called | Purpose |
-|---|---|---|
-| `setupOnce()` | Once globally, for the first Client | Global side effects (monkey-patching, global handlers). |
-| `setup(client)` | Per Client | Client-specific setup. Preferred over `setupOnce` for most work. |
-| `afterAllSetup(client)` | After all integrations' `setup` | Work that depends on other integrations being set up. |
-| `preprocessEvent(event, hint, client)` | Before event processors | Modify the event before other processing. |
-| `processEvent(event, hint, client)` | During event pipeline | Process the event. Return `null` to discard. |
-
-#### Integration Configuration
-
-Users configure integrations via the `integrations` option:
-
-```javascript
-Sentry.init({
-  integrations: [Sentry.browserTracingIntegration()],
-});
-```
-
-`Sentry.init()` **MUST** enable a set of default integrations that define baseline functionality. SDKs **MUST** expose a way to disable default integrations individually or entirely.
-
-#### Default Integration Guidelines
-
-New default integrations **SHOULD**:
-- Be lightweight — not add significant overhead
-- Be well-tested across all supported environments
-- Not create a high volume of new data (spans, transactions) without user opt-in
-
-Integrations that create high data volume or have potential compatibility issues **SHOULD** be opt-in and only made default in a major version.
-
-</SpecSection>
-
-<SpecSection id="lifecycle-hooks" status="candidate" since="2.0.0">
-
-### Lifecycle Hooks
-
-The Client **SHOULD** support an event subscription system for fine-grained extensibility beyond `before_send` and event processors. This is primarily an internal API for integration authors. (See [RFC 0034](https://github.com/getsentry/rfcs/pull/34).)
-
-```typescript
-interface Client {
-  on(hookName: string, callback: (...args: unknown[]) => void): void;
-  emit(hookName: string, ...args: unknown[]): void;
-}
-```
-
-Hooks are stateless and called in registration order. Data passed into hooks **MAY** be mutated by callbacks. Available hooks vary by SDK but may include:
-
-- `startSpan` / `finishSpan` — span lifecycle
-- `beforeEnvelope` — last chance to inspect/modify outgoing envelopes
-- `startSession` / `endSession` — session lifecycle
-
-This system complements — not replaces — the `before_send` hook and event processors. Use hooks when integrations need to react to lifecycle events that are not part of the event pipeline (e.g., span creation).
 
 </SpecSection>
 
@@ -210,30 +152,7 @@ This system complements — not replaces — the `before_send` hook and event pr
 | `close(timeout)` | Flush and disable. |
 | `flush(timeout)` | Flush without disabling. |
 
-### Client Options
-
-Core options that all SDKs **MUST** or **SHOULD** support:
-
-| Option | Type | Description |
-|---|---|---|
-| `dsn` | `string` | Data Source Name. Empty/missing = no-op mode. **MUST** support. |
-| `release` | `string` | Application release version. Can only be set in options, not on scopes. |
-| `environment` | `string` | Deployment environment. Defaults to `production` if not set. |
-| `sample_rate` | `float [0,1]` | Error event sample rate. Default `1.0`. |
-| `debug` | `bool` | Enable debug logging. Default `false`. **MUST** support. |
-| `before_send` | `callback` | Hook for error events. Return `null` to discard. **MUST** support. |
-| `before_send_transaction` | `callback` | Hook for transaction events. **SHOULD** support. |
-| `integrations` | `array` | Integration instances. **MUST** support. |
-| `max_breadcrumbs` | `int` | Breadcrumb ring buffer size. |
-| `send_default_pii` | `bool` | Whether to include PII (cookies, user IP, etc.) by default. |
-| `max_attachment_size` | `int` | Maximum attachment size in bytes. Default 20 MiB. |
-| `traces_sample_rate` | `float [0,1]` | Trace/transaction sample rate. |
-| `traces_sampler` | `callback` | Dynamic per-transaction sample rate. |
-| `trace_propagation_targets` | `array` | URL patterns for outgoing trace header injection. |
-
-Environment variables (`SENTRY_DSN`, `SENTRY_RELEASE`, `SENTRY_ENVIRONMENT`, `SENTRY_SAMPLE_RATE`, `SENTRY_TRACES_SAMPLE_RATE`) **SHOULD** be supported for server-side SDKs. Code-based configuration **MUST** take precedence over environment variables.
-
-See [Features](/sdk/expected-features/) and [Environment Variables](/sdk/expected-features/environment-variables/) for the full set of options and their behavior.
+See [Configuration](/sdk/foundations/client/configuration/) for the full set of client options, environment variables, and sampling behavior.
 
 ---
 

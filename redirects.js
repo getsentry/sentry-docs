@@ -438,6 +438,18 @@ const developerDocsRedirects = [
     source: '/self-hosted/sso/',
     destination: '/self-hosted/configuration/sso/',
   },
+  {
+    source: '/sdk/foundations/integrations/:path*',
+    destination: '/sdk/foundations/client/integrations/:path*',
+  },
+  {
+    source: '/sdk/foundations/integrations/',
+    destination: '/sdk/foundations/client/integrations/',
+  },
+  {
+    source: '/sdk/expected-features/environment-variables/',
+    destination: '/sdk/foundations/client/configuration/',
+  },
 ];
 
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
