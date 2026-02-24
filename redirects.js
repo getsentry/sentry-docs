@@ -100,7 +100,11 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/unified-api/:path*',
-    destination: '/sdk/miscellaneous/unified-api/:path*',
+    destination: '/sdk/foundations/',
+  },
+  {
+    source: '/sdk/miscellaneous/unified-api/:path*',
+    destination: '/sdk/foundations/',
   },
   {
     source: '/sdk/sessions/:path*',
