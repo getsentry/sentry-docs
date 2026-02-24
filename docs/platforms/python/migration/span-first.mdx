@@ -281,7 +281,7 @@ with start_span(name="span") as span:
 In span streaming mode, trace propagation is done via the
 `sentry_sdk.traces.continue_trace()` API.
 
-`sentry_sdk.traces.continue_trace()` works slightly differently to the legacy
+`sentry_sdk.traces.continue_trace()` works slightly differently than the legacy
 `sentry_sdk.continue_trace()`:
 - It's not a context manager.
 - It doesn't return a transaction.
@@ -304,8 +304,25 @@ headers = {
 - with sentry_sdk.continue_trace(headers) as transaction:
 -     pass
 + sentry_sdk.traces.continue_trace(headers)  # Sets the propagation context
-+ with sentry_sdk.traces.start_span():  # This span will continue the trace
++ with sentry_sdk.traces.start_span(name="some name"):  # This span will continue the trace
 +     pass
+```
+
+Additionally, span streaming mode introduces a new
+`sentry_sdk.traces.new_trace()` function that resets the trace.
+
+```python
+import sentry_sdk
+
+with sentry_sdk.start_span(name="span in trace 1"):
+    ...
+
+# Reset the trace
+sentry_sdk.traces.new_trace()
+
+with sentry_sdk.start_span(name="span in trace 2"):
+    # This span will be the root span of a new trace
+    ...
 ```
 
 ## Sampling
