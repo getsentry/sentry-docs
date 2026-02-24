@@ -1,10 +1,11 @@
 ---
 title: Sessions
+description: Release health tracking via session lifecycle updates and crash-free rate computation.
 spec_id: sdk/telemetry/sessions
 spec_version: 1.7.0
 spec_status: stable
 spec_depends_on:
-  - id: sdk/foundations/data-model/envelopes
+  - id: sdk/foundations/transport/envelopes
     version: ">=1.0.0"
 spec_changelog:
   - version: 1.7.0
@@ -46,7 +47,6 @@ spec_changelog:
   - version: 1.0.0
     date: 2020-05-25
     summary: Initial spec — session update payload, basic operation, server model
-sidebar_order: 8
 ---
 
 <SpecRfcAlert />
@@ -58,8 +58,8 @@ sidebar_order: 8
 Sessions allow Sentry to track the health of releases by monitoring when applications start, end, crash, or encounter errors. SDKs send session update events as `session` or `sessions` envelope items. Sentry uses this data to compute crash-free rates, error rates, and session durations per release.
 
 Related specs:
-- [Envelopes](/sdk/foundations/data-model/envelopes/) — transport format
-- [Envelope Items](/sdk/foundations/data-model/envelope-items/) — `session` and `sessions` item type constraints
+- [Envelopes](/sdk/foundations/transport/envelopes/) — transport format
+- [Envelope Items](/sdk/foundations/transport/envelope-items/) — `session` and `sessions` item type constraints
 
 ---
 
@@ -246,7 +246,7 @@ SDKs **SHOULD** send session updates in the same envelope as crash events when t
 
 <SpecSection id="session-update-payload" status="stable" since="1.0.0">
 
-A session update is sent as a `session` envelope item containing a JSON object.
+A session update is sent as a `session` envelope item containing a JSON object. Multiple `session` envelope items **MAY** appear in a single envelope. Ingestion may limit the maximum number of items per envelope.
 
 | Field | Type | Required | Since | Description |
 |-------|------|----------|-------|-------------|
@@ -277,7 +277,7 @@ A session update is sent as a `session` envelope item containing a JSON object.
 
 <SpecSection id="session-aggregates-payload" status="stable" since="1.2.0">
 
-For server-mode sessions, SDKs **SHOULD** send aggregated session counts as a `sessions` envelope item.
+For server-mode sessions, SDKs **SHOULD** send aggregated session counts as a `sessions` envelope item. Multiple `sessions` envelope items **MAY** appear in a single envelope. Ingestion may limit the maximum number of items per envelope.
 
 | Field | Type | Required | Since | Description |
 |-------|------|----------|-------|-------------|
