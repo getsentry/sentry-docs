@@ -1,6 +1,6 @@
 ---
 title: Astro on Cloudflare
-description: "Learn how to instrument your Astro app on Cloudflare Pages and capture your first errors."
+description: "Learn how to instrument your Astro app on Cloudflare Workers and capture your first errors."
 ---
 
 ## Prerequisites
@@ -10,6 +10,63 @@ You need:
 - A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/)
 - Your application up and running
 - Astro `3.0.0` or above
+- `@astrojs/cloudflare` v12
+- `@sentry/astro` v10.40.0 or above
+
+<Expandable level="info" title="Using Astro on Cloudflare Pages?">
+
+If you're using Cloudflare Pages (not Workers), expand the section below for
+setup instructions. We recommend migrating to Cloudflare Workers for better
+Sentry integration and full feature support.
+
+For Cloudflare Pages, you need to manually set up the `@sentry/cloudflare` SDK using the Pages middleware.
+
+1. Install both SDKs:
+
+```bash {tabTitle:npm}
+npm install @sentry/astro @sentry/cloudflare
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/astro @sentry/cloudflare
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/astro @sentry/cloudflare
+```
+
+2. Add the Sentry Astro integration to your `astro.config.mjs`:
+
+```javascript {filename:astro.config.mjs}
+import { defineConfig } from "astro/config";
+import cloudflare from "@astrojs/cloudflare";
+import sentry from "@sentry/astro";
+
+export default defineConfig({
+  adapter: cloudflare(),
+  integrations: [sentry()],
+});
+```
+
+3. <Include name="cloudflare-pages-middleware-intro.mdx" />
+
+```javascript {filename:functions/_middleware.js}
+import * as Sentry from "@sentry/cloudflare";
+
+export const onRequest = [
+  // Make sure Sentry is the first middleware
+  Sentry.sentryPagesPlugin((context) => ({
+    dsn: "___PUBLIC_DSN___",
+    sendDefaultPii: true,
+    tracesSampleRate: 1.0,
+  })),
+  // Add more middlewares here
+];
+```
+
+4. Make sure to [configure Cloudflare for Sentry](/platforms/javascript/guides/cloudflare/#wrangler-configuration).
+
+</Expandable>
 
 ## Step 1: Install
 
@@ -25,7 +82,157 @@ You need:
 
 <PlatformContent includePath="getting-started-features-expandable" />
 
-<PlatformContent
-  includePath="getting-started-complete"
-  platform="javascript.astro"
-/>
+### Install the Sentry SDKs
+
+Install both `@sentry/astro` and `@sentry/cloudflare`:
+
+```bash {tabTitle:npm}
+npm install @sentry/astro @sentry/cloudflare
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/astro @sentry/cloudflare
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/astro @sentry/cloudflare
+```
+
+## Step 2: Configure
+
+### Wrangler Configuration
+
+<PlatformContent includePath="getting-started-config" />
+
+### Register the Sentry Integration
+
+Add the Sentry integration to your `astro.config.mjs` alongside the Cloudflare adapter:
+
+```javascript {filename:astro.config.mjs}
+import { defineConfig } from "astro/config";
+import cloudflare from "@astrojs/cloudflare";
+import sentry from "@sentry/astro";
+
+export default defineConfig({
+  adapter: cloudflare(),
+  integrations: [sentry()],
+});
+```
+
+The `@sentry/astro` integration automatically detects the Cloudflare adapter and wraps your Worker with the `@sentry/cloudflare` SDK for proper request isolation and async context.
+
+### Configure Client-side Sentry
+
+Create a `sentry.client.config.js` file in the root of your project:
+
+```javascript {filename:sentry.client.config.js}
+import * as Sentry from "@sentry/astro";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  sendDefaultPii: true,
+  integrations: [
+    Sentry.browserTracingIntegration(),
+    Sentry.replayIntegration(),
+  ],
+  tracesSampleRate: 1.0,
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+});
+```
+
+### Configure Server-side Sentry
+
+Create a `sentry.server.config.js` file in the root of your project:
+
+```javascript {filename:sentry.server.config.js}
+import * as Sentry from "@sentry/astro";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  sendDefaultPii: true,
+  tracesSampleRate: 1.0,
+});
+```
+
+<Alert level="info" title="Configuration via Environment Variables">
+
+On Cloudflare Workers, you can also configure Sentry using [environment variables](https://developers.cloudflare.com/workers/configuration/environment-variables/). The SDK reads `SENTRY_DSN`, `SENTRY_TRACES_SAMPLE_RATE`, and other standard Sentry environment variables.
+
+</Alert>
+
+## Step 3: Add Readable Stack Traces With Source Maps
+
+To upload source maps, add your Sentry auth token, organization, and project slugs in the `sentry` options:
+
+```javascript {filename:astro.config.mjs}
+import { defineConfig } from "astro/config";
+import cloudflare from "@astrojs/cloudflare";
+import sentry from "@sentry/astro";
+
+export default defineConfig({
+  adapter: cloudflare(),
+  integrations: [
+    sentry({
+      org: "___ORG_SLUG___",
+      project: "___PROJECT_SLUG___",
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+    }),
+  ],
+});
+```
+
+Set the `SENTRY_AUTH_TOKEN` environment variable in your build environment:
+
+<OrgAuthTokenNote />
+
+```bash {filename:.env.sentry-build-plugin}
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
+## Step 4: Verify Your Setup
+
+Create a test page at `src/pages/test.astro`:
+
+```html {filename:src/pages/test.astro}
+<script>
+  const buttonOne = document.getElementById("one");
+  const buttonTwo = document.getElementById("two");
+
+  buttonOne.addEventListener("click", throwTestError);
+  buttonTwo.addEventListener("click", throwApiError);
+
+  function throwTestError() {
+    throw new Error("Sentry Example Frontend Error");
+  }
+
+  async function throwApiError() {
+    await fetch("/api/test-error");
+  }
+</script>
+
+<button id="one" type="button">Throw a frontend error</button>
+<button id="two" type="button">Throw an API error</button>
+```
+
+Create an API route at `src/pages/api/test-error.js`:
+
+```javascript {filename:src/pages/api/test-error.js}
+export async function GET() {
+  throw new Error("Sentry Example API Route Error");
+}
+```
+
+Deploy your app and trigger both errors. Check your [Sentry project](https://sentry.io) to verify the errors appear.
+
+## Known Limitations
+
+- **Span Durations**: Server-side spans may display `0ms` due to Cloudflare's [timing attack mitigations](https://developers.cloudflare.com/workers/runtime-apis/performance/).
+- **Profiling**: Not available on Cloudflare Workers.
+
+## Next Steps
+
+- Continue to <PlatformLink to="/configuration">customize your configuration</PlatformLink>
+- Learn how to <PlatformLink to="/usage">manually capture errors</PlatformLink>
+- Make use of [Cloudflare-specific features](/platforms/javascript/guides/cloudflare/features)
+- Get familiar with [Sentry's product features](/product/) like tracing, insights, and alerts
