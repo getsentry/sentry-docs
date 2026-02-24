@@ -2,7 +2,7 @@
 title: Metrics
 description: Counter, gauge, and distribution metrics sent as batched trace_metric envelope items.
 spec_id: sdk/telemetry/metrics
-spec_version: 2.5.0
+spec_version: 2.6.0
 spec_status: stable
 spec_depends_on:
   - id: sdk/foundations/transport/envelopes
@@ -10,6 +10,9 @@ spec_depends_on:
   - id: sdk/foundations/state-management/scopes/attributes
     version: ">=1.0.0"
 spec_changelog:
+  - version: 2.6.0
+    date: 2026-02-06
+    summary: Added sentry.timestamp.sequence default attribute for deterministic metric ordering
   - version: 2.5.0
     date: 2026-02-12
     summary: Clarified sendDefaultPii gating for user attributes — allowed when user manually sets data
@@ -114,6 +117,7 @@ SDKs **MUST** attach the following attributes to every metric by default:
 2. `sentry.release` — the release set in the SDK, if defined.
 3. `sentry.sdk.name` — the name of the SDK that sent the metric.
 4. `sentry.sdk.version` — the version of the SDK that sent the metric.
+5. `sentry.timestamp.sequence` — a monotonically incrementing integer counter used to determine correct ordering of metrics when timestamps are identical. See [Metric Ordering](#metric-ordering).
 
 SDKs **SHOULD** minimize the number of default attributes. Metrics cardinality can explode quickly with too many attributes. New default attributes **SHOULD** only be added after significant feedback from users and discussion internally with the SDK and ingest teams.
 
@@ -186,6 +190,25 @@ Whenever possible, metrics **SHOULD** be linked to replays. If a metric is recor
 2. `sentry._internal.replay_is_buffering` — indicates that the metric is associated with a replay that is currently buffering. This ensures correct handling of scenarios where a `replay_id` is present but the corresponding replay was never actually sent.
 
 </SpecSection>
+
+### Metric Ordering
+
+<SpecSection id="metric-ordering" status="candidate" since="2.6.0">
+
+Some runtimes (notably Cloudflare Workers) freeze timer APIs (`Date.now()`, `performance.now()`) during synchronous execution, causing multiple metrics to share identical timestamps. To guarantee deterministic ordering, SDKs **MUST** attach a `sentry.timestamp.sequence` integer attribute to every metric.
+
+The sequence number **MUST**:
+- Start at `0` when the SDK initializes.
+- Increment by `1` for each metric that is captured.
+- Reset to `0` when:
+  - The SDK is re-initialized.
+  - The current metric's timestamp is strictly greater than the previous metric's timestamp.
+
+The sequence provides deterministic ordering within a single SDK instance. It does not guarantee ordering across independent processes or workers, which have separate counters. The reset behavior ensures the sequence only increments for consecutive metrics that share the same timestamp.
+
+</SpecSection>
+
+### Data Category and Rate Limiting
 
 <SpecSection id="data-category-rate-limiting" status="stable" since="2.0.0">
 
@@ -547,7 +570,8 @@ SentrySDK.metrics()
         "sentry.sdk.name": { "value": "sentry.javascript.browser", "type": "string" },
         "sentry.sdk.version": { "value": "10.17.0", "type": "string" },
         "sentry.environment": { "value": "production", "type": "string" },
-        "sentry.release": { "value": "1.0.0", "type": "string" }
+        "sentry.release": { "value": "1.0.0", "type": "string" },
+        "sentry.timestamp.sequence": { "value": 0, "type": "integer" }
       }
     },
     {
@@ -562,7 +586,8 @@ SentrySDK.metrics()
         "endpoint": { "value": "/api/users", "type": "string" },
         "method": { "value": "POST", "type": "string" },
         "sentry.sdk.name": { "value": "sentry.javascript.browser", "type": "string" },
-        "sentry.sdk.version": { "value": "10.17.0", "type": "string" }
+        "sentry.sdk.version": { "value": "10.17.0", "type": "string" },
+        "sentry.timestamp.sequence": { "value": 1, "type": "integer" }
       }
     },
     {
@@ -577,7 +602,8 @@ SentrySDK.metrics()
         "cache_name": { "value": "user_sessions", "type": "string" },
         "region": { "value": "us-west-1", "type": "string" },
         "sentry.sdk.name": { "value": "sentry.javascript.browser", "type": "string" },
-        "sentry.sdk.version": { "value": "10.17.0", "type": "string" }
+        "sentry.sdk.version": { "value": "10.17.0", "type": "string" },
+        "sentry.timestamp.sequence": { "value": 0, "type": "integer" }
       }
     },
     {
@@ -593,7 +619,8 @@ SentrySDK.metrics()
         "table": { "value": "users", "type": "string" },
         "sentry.sdk.name": { "value": "sentry.javascript.browser", "type": "string" },
         "sentry.sdk.version": { "value": "10.17.0", "type": "string" },
-        "sentry.origin": { "value": "auto.db.graphql", "type": "string" }
+        "sentry.origin": { "value": "auto.db.graphql", "type": "string" },
+        "sentry.timestamp.sequence": { "value": 1, "type": "integer" }
       }
     },
     {
@@ -607,7 +634,8 @@ SentrySDK.metrics()
         "cohort": { "value": "beta", "type": "string" },
         "sentry.sdk.name": { "value": "sentry.javascript.browser", "type": "string" },
         "sentry.sdk.version": { "value": "10.17.0", "type": "string" },
-        "sentry.replay_id": { "value": "36b75d9fa11f45459412a96c41bdf691", "type": "string" }
+        "sentry.replay_id": { "value": "36b75d9fa11f45459412a96c41bdf691", "type": "string" },
+        "sentry.timestamp.sequence": { "value": 0, "type": "integer" }
       }
     }
   ]
