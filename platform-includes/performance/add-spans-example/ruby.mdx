@@ -8,7 +8,7 @@ class OrdersController < ApplicationController
     order = Order.new
 
     Sentry.with_child_span(op: :process_items, description: 'processing items') do |span|
-      span.set_data(:key, 'value')
+      span&.set_data(:key, 'value')
 
       order.process_items(params)
     end
@@ -28,12 +28,14 @@ class OrdersController < ApplicationController
     order = Order.new
     transaction = Sentry.get_current_scope.get_transaction
 
-    transaction.with_child_span(op: :process_items, description: 'processing items') do |span|
-      span.set_data(:key, 'value')
+    if transaction
+      transaction.with_child_span(op: :process_items, description: 'processing items') do |span|
+        span&.set_data(:key, 'value')
+        order.process_items(params)
+      end # the child span ends with the block
+    else
       order.process_items(params)
-    end # the child span ends with the block
+    end
   end
 end
 ```
-
-Keep in mind that there may not be an active transaction, in which case `get_transaction` returns `nil`. This case needs to be handled manually and is missing from this example.
