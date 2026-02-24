@@ -118,7 +118,7 @@ export default async function Home() {
                     <a
                       key={platform.key}
                       href={platform.url}
-                      className="sdk-tile flex flex-col items-center justify-center bg-white dark:bg-[var(--gray-2)] transition-transform hover:scale-105"
+                      className="sdk-tile flex flex-col items-center justify-center bg-white dark:bg-[var(--gray-2)]"
                       style={{
                         textDecoration: 'none',
                         padding: '6px',
@@ -131,7 +131,7 @@ export default async function Home() {
                         platform={platform.key}
                         size={36}
                         format="lg"
-                        style={{margin: 0, display: 'block', marginBottom: '2px'}}
+                        style={{margin: 0, display: 'block', marginBottom: '3px'}}
                       />
                       <span
                         className="text-[var(--gray-12)] whitespace-nowrap"
