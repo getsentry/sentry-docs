@@ -13,7 +13,8 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/getting-started/playbooks/handling-external-contributor-pr/',
-    destination: '/sdk/getting-started/playbooks/development/handling-external-contributor-pr/',
+    destination:
+      '/sdk/getting-started/playbooks/development/handling-external-contributor-pr/',
   },
   {
     source: '/sdk/getting-started/playbooks/opening-a-pr/',
@@ -25,7 +26,8 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/getting-started/playbooks/reviewing-ai-generated-code/',
-    destination: '/sdk/getting-started/playbooks/development/reviewing-ai-generated-code/',
+    destination:
+      '/sdk/getting-started/playbooks/development/reviewing-ai-generated-code/',
   },
   {
     source: '/sdk/getting-started/playbooks/syncing-feature-branches/',
@@ -33,7 +35,8 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/getting-started/playbooks/aligning-cross-sdk-changes/',
-    destination: '/sdk/getting-started/playbooks/coordination/aligning-cross-sdk-changes/',
+    destination:
+      '/sdk/getting-started/playbooks/coordination/aligning-cross-sdk-changes/',
   },
   {
     source: '/sdk/getting-started/playbooks/quarterly-cross-sdk-retro/',
@@ -53,7 +56,8 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/getting-started/playbooks/dropping-platform-support/',
-    destination: '/sdk/getting-started/playbooks/sdk-lifecycle/dropping-platform-support/',
+    destination:
+      '/sdk/getting-started/playbooks/sdk-lifecycle/dropping-platform-support/',
   },
   {
     source: '/sdk/getting-started/playbooks/setting-up-new-sdk-repo/',
@@ -61,7 +65,8 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/getting-started/playbooks/setting-up-release-infrastructure/',
-    destination: '/sdk/getting-started/playbooks/setup/setting-up-release-infrastructure/',
+    destination:
+      '/sdk/getting-started/playbooks/setup/setting-up-release-infrastructure/',
   },
   {
     source: '/sdk/miscellaneous/unified-api/tracing/:path*',
@@ -82,6 +87,23 @@ const developerDocsRedirects = [
   {
     source: '/api/:path*',
     destination: '/application/api/:path*',
+  },
+  // Context propagation consolidation (must be before the /sdk/performance/ wildcard)
+  {
+    source: '/sdk/performance/dynamic-sampling-context/',
+    destination: '/sdk/foundations/trace-propagation/dynamic-sampling-context/',
+  },
+  {
+    source: '/sdk/performance/dynamic-sampling-context/:path*',
+    destination: '/sdk/foundations/trace-propagation/dynamic-sampling-context/:path*',
+  },
+  {
+    source: '/sdk/performance/distributed-tracing/',
+    destination: '/sdk/foundations/trace-propagation/',
+  },
+  {
+    source: '/sdk/performance/distributed-tracing/:path*',
+    destination: '/sdk/foundations/trace-propagation/:path*',
   },
   {
     source: '/sdk/performance/:path*',
@@ -300,7 +322,8 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/processes/releases/',
-    destination: '/sdk/getting-started/playbooks/setup/setting-up-release-infrastructure/',
+    destination:
+      '/sdk/getting-started/playbooks/setup/setting-up-release-infrastructure/',
   },
   {
     source: '/sdk/processes/triaging/',
@@ -461,6 +484,35 @@ const developerDocsRedirects = [
   {
     source: '/sdk/expected-features/environment-variables/',
     destination: '/sdk/foundations/client/configuration/',
+  },
+  // Context propagation consolidation
+  {
+    source: '/sdk/telemetry/traces/distributed-tracing/',
+    destination: '/sdk/foundations/trace-propagation/',
+  },
+  {
+    source: '/sdk/telemetry/traces/distributed-tracing/:path*',
+    destination: '/sdk/foundations/trace-propagation/:path*',
+  },
+  {
+    source: '/sdk/telemetry/traces/dynamic-sampling-context/',
+    destination: '/sdk/foundations/trace-propagation/dynamic-sampling-context/',
+  },
+  {
+    source: '/sdk/telemetry/traces/dynamic-sampling-context/:path*',
+    destination: '/sdk/foundations/trace-propagation/dynamic-sampling-context/:path*',
+  },
+  {
+    source: '/sdk/telemetry/traces/tracing-without-performance/',
+    destination: '/sdk/foundations/trace-propagation/#default-propagation',
+  },
+  {
+    source: '/sdk/telemetry/traces/trace-propagation-cheat-sheet/',
+    destination: '/sdk/foundations/trace-propagation/#propagation-decision-matrix',
+  },
+  {
+    source: '/sdk/telemetry/spans/span-trace-propagation/',
+    destination: '/sdk/foundations/trace-propagation/#continue-trace',
   },
 ];
 

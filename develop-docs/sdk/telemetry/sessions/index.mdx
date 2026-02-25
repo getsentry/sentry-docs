@@ -94,9 +94,9 @@ Sentry's session system uses hourly buckets of pre-materialized data. Session up
 
 ## Behavior
 
-### Session Lifecycle
-
 <SpecSection id="session-lifecycle" status="stable" since="1.0.0">
+
+### Session Lifecycle
 
 Sessions are entirely client-driven. The client determines when a session starts, ends, or transitions to an unhealthy state.
 
@@ -107,17 +107,17 @@ Sessions are entirely client-driven. The client determines when a session starts
 
 </SpecSection>
 
-### Attribute Immutability
-
 <SpecSection id="attribute-immutability" status="stable" since="1.0.0">
+
+### Attribute Immutability
 
 SDKs **MUST NOT** change session attributes (`did`, `started`, or any `attrs` fields) in subsequent updates. Only `status`, `duration`, and `errors` **MAY** change. If a user is not known at session start, the session start **SHOULD** be delayed or the session restarted once the user is known.
 
 </SpecSection>
 
-### Terminal Session States
-
 <SpecSection id="terminal-states" status="stable" since="1.0.0">
+
+### Terminal Session States
 
 Once a session reaches a terminal state, the SDK **MUST NOT** send further updates. Terminal states are: `exited`, `crashed`, `abnormal`, and (since 1.6.0) `unhandled`.
 
@@ -137,9 +137,9 @@ SDKs **SHOULD** distinguish between terminal states:
 
 </SpecSection>
 
-### Error Counting
-
 <SpecSection id="error-counting" status="stable" since="1.0.0">
+
+### Error Counting
 
 SDKs **MUST** maintain a running `errors` counter that is incremented when errors occur during the session. The counter **MUST** also be incremented when a session goes to `crashed` (the crash itself is always an error). Ingest forces `errors` to 1 if not set or 0.
 
@@ -161,9 +161,9 @@ A session that is `ok` with `errors > 0` is considered "errored." All `crashed` 
 
 </SpecSection>
 
-### Session Modes
-
 <SpecSection id="session-modes" status="stable" since="1.1.0">
+
+### Session Modes
 
 SDKs **SHOULD** default to the session mode most appropriate for the language ecosystem:
 
@@ -185,9 +185,9 @@ When using user-mode, a single session **SHOULD** start at application initializ
 
 </SpecSection>
 
-### Pre-aggregation
-
 <SpecSection id="pre-aggregation" status="stable" since="1.2.0">
+
+### Pre-aggregation
 
 Server-mode SDKs **SHOULD** pre-aggregate closed sessions before sending to Sentry. When a session closes and has not been sent upstream (its `init` flag would be `true`), it is eligible for aggregation:
 
@@ -199,9 +199,9 @@ Server-mode SDKs **SHOULD** pre-aggregate closed sessions before sending to Sent
 
 </SpecSection>
 
-### Session Update Filtering
-
 <SpecSection id="session-update-filtering" status="stable" since="1.4.0">
+
+### Session Update Filtering
 
 When events are dropped by filtering mechanisms (sample rate, rate limiting, `beforeSend`, event processors, or ignored exception types), the session update behavior depends on the drop reason:
 
@@ -222,9 +222,9 @@ If the event has been dropped but the session was updated, the session update **
 
 </SpecSection>
 
-### Session Updates and Sending
-
 <SpecSection id="session-updates" status="stable" since="1.1.0">
+
+### Session Updates and Sending
 
 SDKs **SHOULD** automatically update the current session whenever data is captured (at the same point where `apply_to_scope` is called) to increment the `errors` count or update the session based on the distinct ID.
 
@@ -242,9 +242,9 @@ SDKs **SHOULD** send session updates in the same envelope as crash events when t
 
 ## Wire Format
 
-### Session Update Payload
-
 <SpecSection id="session-update-payload" status="stable" since="1.0.0">
+
+### Session Update Payload
 
 A session update is sent as a `session` envelope item containing a JSON object. Multiple `session` envelope items **MAY** appear in a single envelope. Ingestion may limit the maximum number of items per envelope.
 
@@ -273,9 +273,9 @@ A session update is sent as a `session` envelope item containing a JSON object. 
 
 </SpecSection>
 
-### Session Aggregates Payload
-
 <SpecSection id="session-aggregates-payload" status="stable" since="1.2.0">
+
+### Session Aggregates Payload
 
 For server-mode sessions, SDKs **SHOULD** send aggregated session counts as a `sessions` envelope item. Multiple `sessions` envelope items **MAY** appear in a single envelope. Ingestion may limit the maximum number of items per envelope.
 
@@ -302,9 +302,9 @@ For server-mode sessions, SDKs **SHOULD** send aggregated session counts as a `s
 
 ## Public API
 
-### Start Session
-
 <SpecSection id="start-session" status="stable" since="1.1.0">
+
+### Start Session
 
 SDKs **MUST** expose a function to start a session:
 
@@ -322,9 +322,9 @@ Naming **SHOULD** follow the SDK's language conventions:
 
 </SpecSection>
 
-### End Session
-
 <SpecSection id="end-session" status="stable" since="1.1.0">
+
+### End Session
 
 SDKs **MUST** expose a function to end a session:
 
@@ -340,9 +340,9 @@ Naming **SHOULD** follow the SDK's language conventions:
 
 </SpecSection>
 
-### Auto Session Tracking
-
 <SpecSection id="auto-session-tracking" status="stable" since="1.1.0">
+
+### Auto Session Tracking
 
 SDKs **SHOULD** accept an `autoSessionTracking` configuration option (boolean, default varies by SDK).
 
@@ -398,7 +398,8 @@ Naming **SHOULD** follow the SDK's language conventions:
 }
 ```
 
-### Full Envelope (Individual Session)
+### Full Envelope
+#### Single Session
 
 ```
 {}
@@ -406,7 +407,7 @@ Naming **SHOULD** follow the SDK's language conventions:
 {"sid":"7c7b6585-f901-4351-bf8d-02711b721929","init":true,"started":"2020-02-07T14:16:00Z","status":"ok","attrs":{"release":"my-project-name@1.0.0"}}
 ```
 
-### Full Envelope (Aggregated Sessions)
+#### Aggregated Sessions
 
 ```
 {}
