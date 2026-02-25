@@ -15,6 +15,10 @@ type Props = {
   children: ReactNode;
   title: string;
   copy?: boolean;
+  /** Which Plausible event to emit when the copy button is clicked. */
+  copyEventName?: 'Copy Expandable Content' | 'Copy AI Prompt';
+  /** Label for the copy button. Defaults to "Copy Rules". */
+  copyLabel?: string;
   /** If defined, the expandable will be grouped with other expandables that have the same group. */
   group?: string;
   // If true, the expandable will not be rendered in the markdown version of the page
@@ -37,6 +41,8 @@ export function Expandable({
   permalink,
   group,
   copy,
+  copyEventName = 'Copy Expandable Content',
+  copyLabel = 'Copy Rules',
   hideFromMd = false,
 }: Props) {
   const id = permalink ? slugify(title) : undefined;
@@ -81,7 +87,7 @@ export function Expandable({
         return;
       }
 
-      emit('Copy Expandable Content', {props: {page: window.location.pathname, title}});
+      emit(copyEventName, {props: {page: window.location.pathname, title}});
 
       // First, try to get text from main code blocks (those inside pre elements)
       const preCodeBlocks = contentRef.current.querySelectorAll('pre code');
@@ -131,7 +137,7 @@ export function Expandable({
         setCopied(false);
       }
     },
-    [emit, title]
+    [emit, title, copyEventName]
   );
 
   function toggleIsExpanded(event: React.MouseEvent<HTMLDetailsElement>) {
@@ -175,7 +181,7 @@ export function Expandable({
             onClick={copyContentOnClick}
             type="button" // Important for buttons in summaries
           >
-            {!copied && 'Copy Rules'}
+            {!copied && copyLabel}
             {copied && 'Copied!'}
           </button>
         )}
