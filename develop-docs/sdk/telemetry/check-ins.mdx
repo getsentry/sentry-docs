@@ -1,12 +1,160 @@
 ---
 title: Check-Ins
-sidebar_order: 1
+description: Cron monitoring protocol for reporting job start, success, and failure via check-in envelopes.
+spec_id: sdk/telemetry/check-ins
+spec_version: 1.6.0
+spec_status: stable
+spec_platforms:
+  - backend
+spec_depends_on:
+  - id: sdk/foundations/transport/envelopes
+    version: ">=1.0.0"
+spec_changelog:
+  - version: 1.6.0
+    date: 2025-09-18
+    summary: Added hook requirements (beforeSend exclusion, optional beforeSendCheckIn)
+  - version: 1.5.0
+    date: 2024-04-24
+    summary: Added owner field to monitor_config
+  - version: 1.4.1
+    date: 2023-12-18
+    summary: Added failure_issue_threshold and recovery_threshold to monitor_config JSON example
+  - version: 1.4.0
+    date: 2023-12-13
+    summary: Added failure_issue_threshold and recovery_threshold to monitor_config
+  - version: 1.3.1
+    date: 2023-07-10
+    summary: Fixed typo in checkin_margin and max_runtime descriptions
+  - version: 1.3.0
+    date: 2023-06-26
+    summary: Added trace context support for linking check-ins to errors
+  - version: 1.2.1
+    date: 2023-06-06
+    summary: Clarified zero UUID wording to specify "most recent in_progress" check-in
+  - version: 1.2.0
+    date: 2023-06-05
+    summary: Added zero UUID support for updating most recent in_progress check-in
+  - version: 1.1.0
+    date: 2023-04-18
+    summary: Added monitor upsert support with schedule configuration
+  - version: 1.0.1
+    date: 2023-04-17
+    summary: Improved monitor_slug example (UUID replaced with human-readable slug)
+  - version: 1.0.0
+    date: 2023-03-21
+    summary: Initial spec — basic check-in payload
 ---
 
-## Cron Monitor Check-In Payload
+<SpecRfcAlert />
 
-A check-in is an item in an envelope called `check_in`. It consists
-of a JSON payload that looks roughly like this:
+<SpecMeta />
+
+## Overview
+
+Cron check-ins allow Sentry to monitor the health of recurring jobs (cron jobs, scheduled tasks, periodic workers). An SDK sends check-in envelopes to report when a job starts, succeeds, or fails. Sentry uses this data to detect missed, late, and failing executions.
+
+Related specs:
+- [Envelopes](/sdk/foundations/transport/envelopes/) — transport format
+
+---
+
+## Concepts
+
+### Monitors and Check-Ins
+
+A **monitor** is a named entity in Sentry that tracks a recurring job. Each monitor is identified by a unique `monitor_slug`. Monitors can be created manually in Sentry or upserted by the SDK alongside check-in data.
+
+A **check-in** is a single status report for one execution of a monitored job, sent as a `check_in` envelope item.
+
+### Check-In Lifecycle
+
+Each job execution produces two check-ins that share the same `check_in_id`:
+
+```
+[job starts] → in_progress → [job ends] → ok / error
+```
+
+- `in_progress` — the job has started
+- `ok` — the job completed successfully
+- `error` — the job failed
+
+Sentry uses the time between the `in_progress` and terminal (`ok`/`error`) check-ins to compute duration, and the absence of a terminal check-in within `max_runtime` to detect timeouts.
+
+### Monitor Upsert
+
+SDKs can send monitor configuration (schedule, thresholds, timezone) alongside a check-in. Sentry creates the monitor if it doesn't exist or updates it if it does. This eliminates the need for manual monitor setup.
+
+---
+
+## Behavior
+
+### Check-In Lifecycle
+
+<SpecSection id="check-in-lifecycle" status="stable" since="1.0.0">
+
+SDKs **MUST** generate a unique `check_in_id` (UUID v4) when a job execution starts and send a check-in with status `in_progress`.
+
+When the job completes, SDKs **MUST** send a second check-in with the same `check_in_id` and status `ok` (success) or `error` (failure).
+
+SDKs **SHOULD** compute the `duration` field for terminal check-ins (`ok` or `error`) by measuring the elapsed time since the `in_progress` check-in was sent.
+
+</SpecSection>
+
+### Trace Context Linking
+
+<SpecSection id="trace-context-linking" status="stable" since="1.3.0">
+
+SDKs **SHOULD** include a `contexts.trace` object with a `trace_id` field to link the check-in to associated errors and traces.
+
+If the job execution is part of an active trace, the SDK **SHOULD** use that trace's `trace_id`. Otherwise, the SDK **MAY** generate a new `trace_id` for correlation purposes.
+
+</SpecSection>
+
+### Updating in_progress Check-Ins
+
+<SpecSection id="zero-uuid-update" status="stable" since="1.2.0">
+
+SDKs **MAY** send a check-in with `check_in_id` set to an empty UUID (128-bit zero value, `00000000000000000000000000000000`) to indicate that Sentry **SHOULD** update the most recent `in_progress` check-in for the given monitor.
+
+If no `in_progress` check-in exists, Sentry creates a new one.
+
+This is useful for fire-and-forget patterns where the SDK does not retain the original `check_in_id`.
+
+</SpecSection>
+
+### Monitor Upsert
+
+<SpecSection id="monitor-upsert" status="stable" since="1.1.0">
+
+SDKs **MAY** include a `monitor_config` object in the check-in payload. When present, Sentry creates the monitor if it does not exist, or updates its configuration if it does.
+
+SDKs **SHOULD** only send `monitor_config` on the first check-in of a job execution (the `in_progress` check-in), not on every check-in.
+
+</SpecSection>
+
+### Auto-Instrumentation
+
+<SpecSection id="auto-instrumentation" status="stable" since="1.1.0">
+
+SDKs **MAY** provide integrations that automatically instrument popular scheduling libraries. When available, these integrations **SHOULD**:
+
+1. Automatically discover scheduled jobs and derive `monitor_slug` values.
+2. Send `in_progress` and terminal check-ins for each job execution.
+3. Upsert monitor configuration based on the library's schedule definition.
+
+Known integrations include Celery Beat (Python), node-cron / cron / node-schedule (JavaScript), Sidekiq-Cron (Ruby), and Oban/Quantum (Elixir).
+
+</SpecSection>
+
+---
+
+## Wire Format
+
+### Check-In Payload
+
+<SpecSection id="check-in-payload" status="stable" since="1.0.0">
+
+A check-in is sent as a `check_in` envelope item containing a JSON object.
 
 ```json
 {
@@ -23,64 +171,37 @@ of a JSON payload that looks roughly like this:
   }
 }
 ```
-The following fields exist:
 
-`check_in_id`
+| Field | Type | Required | Since | Description |
+|-------|------|----------|-------|-------------|
+| `check_in_id` | String | **REQUIRED** | 1.0.0 | Client-generated UUID identifying this job execution. **MAY** be an empty UUID (all zeros) to update the most recent `in_progress` check-in (since 1.2.0). |
+| `monitor_slug` | String | **REQUIRED** | 1.0.0 | The distinct slug identifying the monitor. |
+| `status` | String | **REQUIRED** | 1.0.0 | One of `in_progress`, `ok`, or `error`. |
+| `duration` | Number | **OPTIONAL** | 1.0.0 | Duration of the job execution in seconds. Only takes effect for `ok` or `error` status. |
+| `release` | String | **OPTIONAL** | 1.0.0 | The release version. |
+| `environment` | String | **OPTIONAL** | 1.0.0 | The environment name. |
+| `monitor_config` | Object | **OPTIONAL** | 1.1.0 | Monitor configuration for upsert. See [Monitor Configuration Payload](#monitor-configuration-payload). |
+| `contexts` | Object | **OPTIONAL** | 1.3.0 | Contextual information. Currently supports [trace context](/sdk/foundations/transport/event-payloads/contexts/#trace-context) with `trace_id` for linking check-ins to errors. |
 
-: **String, required**. Check-In ID (unique and client generated).
+**Envelope constraints:**
+- A `check_in` item **MUST** occur at most once per envelope.
+- This item can either be included in an Envelope with other items, or it **MAY** be sent by itself.
+- Maximum item size: 100 KiB.
 
-  This may be provided as a empty UUID (128 bit zero value) to indicate to
-  Sentry that the checkin should update the most recent "in_progress" check-in.
-  If the most recent check-in is not in progress a new one will be created
-  instead.
+**Envelope Headers:** _None_
 
-`monitor_slug`
+**Additional Item Headers:** _None_
 
-: **String, required**. The distinct slug of the monitor.
+</SpecSection>
 
-`status`
+### Monitor Configuration Payload
 
-: **String, required**. The status of the check-in. Can be one of the following:
-  - `in_progress`: The check-in has started.
-  - `ok`: The check-in has completed successfully.
-  - `error`: The check-in has failed.
+<SpecSection id="monitor-config-payload" status="stable" since="1.1.0">
 
-`duration`
-
-: _Number, optional_. The duration of the check-in in seconds. Will only take effect if the
-  status is `ok` or `error`.
-
-`release`
-
-: _String, optional_. The release.
-
-`environment`
-
-: _String, optional_. The environment.
-
-`monitor_config`
-
-: _Object, optional_. A monitor configuration (defined below) that is stored with the
- check-in in order to verify the state of the monitor at the time of the check-in.
-
-`contexts`
-
-: _Object, optional_. A dictionary of contextual information about the environment running
- the check-in. Right now we only support the [trace context](/sdk/data-model/event-payloads/contexts/#trace-context)
-  and use the `trace_id` in order to link check-ins to associated errors.
-
-## Monitor upsert support
-
-In addition to sending check-in details, the SDK may also provide monitor
-configuration, allowing monitors to be created or updated when sending
-check-ins.
-
+When included, the `monitor_config` object supports the following fields:
 
 ```json
 {
-  "check_in_id": "83a7c03ed0a04e1b97e2e3b18d38f244",
-  "monitor_slug": "b7645b8e-b47d-4398-be9a-d16b0dac31cb",
-  "status": "in_progress",
   "monitor_config": {
     "schedule": {
       "type": "crontab",
@@ -95,71 +216,195 @@ check-ins.
   }
 }
 ```
-The following fields exist under the `monitor_config` key:
 
-`schedule`
+| Field | Type | Required | Since | Description |
+|-------|------|----------|-------|-------------|
+| `schedule` | Object | **REQUIRED** | 1.1.0 | Schedule configuration. See [Schedule Configuration](#schedule-configuration). |
+| `checkin_margin` | Number | **OPTIONAL** | 1.1.0 | Allowed margin in minutes after the expected check-in time before the monitor is considered missed. |
+| `max_runtime` | Number | **OPTIONAL** | 1.1.0 | Allowed duration in minutes that a monitor may be `in_progress` before being considered failed due to timeout. |
+| `failure_issue_threshold` | Number | **OPTIONAL** | 1.4.0 | Number of consecutive failed check-ins before an issue is created. |
+| `recovery_threshold` | Number | **OPTIONAL** | 1.4.0 | Number of consecutive OK check-ins before an issue is resolved. |
+| `timezone` | String | **OPTIONAL** | 1.1.0 | A [tz database](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) string for the monitor's execution schedule timezone. |
+| `owner` | String | **OPTIONAL** | 1.5.0 | An actor identifier string, e.g. `user:john@example.com` or `team:a-sentry-team`. |
 
-: **Object, required**. [See schedule configuration](#schedule-configuration).
+</SpecSection>
 
-`checkin_margin`
+### Schedule Configuration
 
-: _Number, optional_. The allowed margin of minutes after the expected
-check-in time that the monitor will not be considered missed for.
-
-`max_runtime`
-
-: _Number, optional_. The allowed duration in minutes that the monitor
-may be `in_progress` for before being considered failed due to timeout.
-
-`failure_issue_threshold`
-
-: _Number, optional_. The number of consecutive failed check-ins it takes
-before an issue is created.
-
-`recovery_threshold`
-
-: _Number, optional_. The number of consecutive OK check-ins it takes
-before an issue is resolved.
-
-`timezone`
-
-: _String, optional_. A [`tz
-database`](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) string
-representing the timezone which the monitor's execution schedule is in.
-
-`owner`
-
-: _String, optional_. An actor identifier string. This looks like
-`user:john@example.com` `team:a-sentry-team`. IDs can also be used but will
-result in a poor DX.
-
-### Schedule configuration
+<SpecSection id="schedule-config" status="stable" since="1.1.0">
 
 <Alert>
 This configuration format differs slightly from what is accepted in the
 monitors frontend APIs.
 </Alert>
 
-`type`
+The `schedule` object **MUST** contain a `type` field set to either `crontab` or `interval`.
 
-: **String, required**. One of `crontab` or `interval`.
+**Crontab schedule:**
 
-#### Using `crontab`
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `type` | String | **REQUIRED** | `"crontab"` |
+| `value` | String | **REQUIRED** | A crontab expression, e.g. `"0 * * * *"`. |
 
-`value`
+**Interval schedule:**
 
-: **String, required**. The crontab schedule string, e.g. `0 * * * *`.
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `type` | String | **REQUIRED** | `"interval"` |
+| `value` | Number | **REQUIRED** | The interval value. |
+| `unit` | String | **REQUIRED** | One of `year`, `month`, `week`, `day`, `hour`, `minute`. |
 
-#### Using `interval`
+</SpecSection>
 
-`value`
+---
 
-: **Number, required**. The interval value.
+## Public API
 
-`unit`
+### Capture Check-In
 
-: **String, required**. The interval unit. Should be one of `year`, `month`, `week`, `day`, `hour`, `minute`.
+<SpecSection id="capture-check-in" status="stable" since="1.0.0">
 
-## Interaction with `beforeSend`
+SDKs **MUST** expose a top-level function to send a check-in:
 
-Check-in events in the SDK should **not** go through `beforeSend`. SDKs can optionally implement a dedicated `beforeSendCheckIn` hook that only applies to check-in events.
+```
+captureCheckIn(checkIn, monitorConfig?) -> checkInId
+```
+
+**Parameters:**
+- `checkIn` — Object containing at minimum `monitorSlug` and `status`. For terminal check-ins, also includes `checkInId` (from the initial `in_progress` call) and optionally `duration`.
+- `monitorConfig` — **OPTIONAL**. Monitor configuration for upsert (schedule, margins, thresholds).
+
+**Returns:** The `checkInId` (string), so callers can correlate the `in_progress` and terminal check-ins.
+
+Naming **SHOULD** follow the SDK's language conventions:
+- `captureCheckIn` (JavaScript, Java)
+- `capture_check_in` (Python, Ruby, Elixir)
+- `CaptureCheckIn` (Go, .NET)
+
+</SpecSection>
+
+### Monitor Wrapper
+
+<SpecSection id="monitor-wrapper" status="stable" since="1.1.0">
+
+SDKs **SHOULD** expose a higher-level wrapper that automatically sends `in_progress` and `ok`/`error` check-ins around a callback:
+
+```
+withMonitor(monitorSlug, callback, monitorConfig?) -> callbackResult
+```
+
+The wrapper **MUST**:
+1. Send an `in_progress` check-in before invoking the callback.
+2. Send an `ok` check-in if the callback completes without error.
+3. Send an `error` check-in if the callback throws or returns a failure.
+4. Compute and include `duration` in the terminal check-in.
+
+SDKs **MAY** additionally provide language-idiomatic alternatives:
+- **Decorators** (Python): `@monitor(monitor_slug='slug')`
+- **Context managers** (Python): `with monitor(monitor_slug='slug'):`
+- **Mixins** (Ruby): `include Sentry::Cron::MonitorCheckIns`
+- **Annotations** (Java/Kotlin): framework-specific annotations
+
+</SpecSection>
+
+### Hooks
+
+<SpecSection id="hooks" status="stable" since="1.6.0">
+
+Check-in events **MUST NOT** go through the `beforeSend` hook. The `beforeSend` hook is reserved for error events.
+
+SDKs **MAY** implement a dedicated `beforeSendCheckIn` hook that applies only to check-in events.
+
+</SpecSection>
+
+---
+
+## Examples
+
+### Basic manual check-in (two-step)
+
+```
+// Start
+checkInId = captureCheckIn({
+  monitorSlug: "data-sync",
+  status: "in_progress"
+})
+
+// ... execute job ...
+
+// Complete
+captureCheckIn({
+  monitorSlug: "data-sync",
+  checkInId: checkInId,
+  status: "ok",
+  duration: 12.5
+})
+```
+
+Envelope payload for the first check-in:
+
+```json
+{
+  "check_in_id": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4",
+  "monitor_slug": "data-sync",
+  "status": "in_progress"
+}
+```
+
+Envelope payload for the terminal check-in:
+
+```json
+{
+  "check_in_id": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4",
+  "monitor_slug": "data-sync",
+  "status": "ok",
+  "duration": 12.5
+}
+```
+
+### Wrapper with monitor upsert
+
+```
+result = withMonitor("daily-report", () => {
+  return generateReport()
+}, {
+  schedule: { type: "crontab", value: "0 2 * * *" },
+  checkinMargin: 10,
+  maxRuntime: 60,
+  timezone: "America/New_York"
+})
+```
+
+The `in_progress` envelope payload includes the monitor config:
+
+```json
+{
+  "check_in_id": "f7e8d9c0b1a2f7e8d9c0b1a2f7e8d9c0",
+  "monitor_slug": "daily-report",
+  "status": "in_progress",
+  "monitor_config": {
+    "schedule": { "type": "crontab", "value": "0 2 * * *" },
+    "checkin_margin": 10,
+    "max_runtime": 60,
+    "timezone": "America/New_York"
+  }
+}
+```
+
+The terminal envelope payload omits the config:
+
+```json
+{
+  "check_in_id": "f7e8d9c0b1a2f7e8d9c0b1a2f7e8d9c0",
+  "monitor_slug": "daily-report",
+  "status": "ok",
+  "duration": 45.3
+}
+```
+
+---
+
+## Changelog
+
+<SpecChangelog />

@@ -1,6 +1,6 @@
 ---
 title: Traces
-sidebar_order: 7
+description: Distributed tracing with span trees, sampling, and cross-service trace propagation.
 ---
 
 This document covers how SDKs should add support for Performance Monitoring with [Distributed
@@ -156,6 +156,53 @@ Examples:
 `[403, 404]`: don't sample transactions corresponding to requests with status code 403 or 404
 `[[300, 399], [401, 404]]`: don't sample transactions corresponding to requests with status codes between 300 and 399 (inclusive) or between 401 and 404 (inclusive)
 
+### `enableDbQuerySource`
+
+This MUST be a boolean value that defaults to `true`.
+
+The option controls if attributes with code source information are set on database query spans when the query duration exceeds a given threshold.
+
+The following attributes, or a subset thereof, SHOULD be set on database query spans if the threshold is exceeded.
+Values for some of the attributes below may be unavailable in some situations for the SDK, and in these cases a subset MAY be provided.
+
+The attributes are described in <Link to="https://getsentry.github.io/sentry-conventions/generated/attributes/code.html">Sentry's Span Convention Documentation</Link>.
+
+- code.file.path
+- code.function.name
+- code.line.number
+
+### `dbQuerySourceThresholdMs`
+
+A threshold duration, which MUST be a floating point or integer value.
+The value specifies, in milliseconds, the duration of a database query before code source information is added.
+
+The default value is platform-dependent and SHOULD balance the overhead of adding the information with its utility for queries that exceed the threshold duration for users of the SDK.
+In Python and PHP Laravel, the default threshold is 100 milliseconds.
+
+### `enableHttpRequestSource`
+
+This MUST be a boolean value that defaults to `true`.
+
+The option controls if attributes with code source information are set on outgoing HTTP requests.
+When enabled, the attributes SHOULD be attached only when the time to receive the response from sending the request exceeds a given threshold.
+
+The following attributes, or a subset thereof, SHOULD be set if the threshold is exceeded.
+Values for some of the attributes below may be unavailable in some situations for the SDK, and in these cases a subset MAY be provided.
+
+The attributes are described in <Link to="https://getsentry.github.io/sentry-conventions/generated/attributes/code.html">Sentry's Span Convention Documentation</Link>.
+
+- code.file.path
+- code.function.name
+- code.line.number
+
+### `httpRequestSourceThresholdMs`
+
+A threshold duration, which MUST be a floating point or integer value.
+The value specifies, in milliseconds, the time between sending an HTTP request and receiving its response, after which code source information is added.
+
+The default value is platform-dependent and SHOULD balance the overhead of adding the information with its utility for request-response cycles that exceed the threshold duration for users of the SDK.
+
+
 ## `Event` Changes
 
 As of writing, transactions are implemented as an extension of the `Event`
@@ -173,14 +220,14 @@ Over the wire, transactions are serialized to JSON as an augmented `Event`, and 
 
 In the Sentry UI, you can use Discover to look at all events regardless of type, and the Issues and Performance sections to dive into errors and transactions, respectively. The [user-facing tracing documentation](https://docs.sentry.io/product/performance/distributed-tracing/#traces-transactions-and-spans) explains more of the concepts on the product level.
 
-The [Span](/sdk/data-model/event-payloads/span/) class stores each individual span in a
+The [Span](/sdk/foundations/transport/event-payloads/span/) class stores each individual span in a
 trace.
 
-The [Transaction](/sdk/data-model/event-payloads/transaction/) class is like a span, with a
+The [Transaction](/sdk/foundations/transport/event-payloads/transaction/) class is like a span, with a
 few key differences:
 
 - Transactions have `name`, spans don't.
-- Transactions must specify the [source](/sdk/data-model/event-payloads/transaction/#transaction-annotations) of its `name` to indicate how the transaction name was generated.
+- Transactions must specify the [source](/sdk/foundations/transport/event-payloads/transaction/#transaction-annotations) of its `name` to indicate how the transaction name was generated.
 - Calling the `finish` method on spans record the span's end timestamp. For
   transactions, the `finish` method additionally sends an event to Sentry.
 
@@ -216,7 +263,7 @@ tree as well as the unit of reporting to Sentry.
   - `super.finish()` (call finish on Span)
   - Send it to Sentry only if `sampled == true`
   - Like spans, can be given an optional `endTimestamp` value that should be passed into the `span.finish()` call
-  - A `Transaction` needs to be wrapped in an `Envelope` and sent to the [Envelope Endpoint](/sdk/data-model/envelopes/)
+  - A `Transaction` needs to be wrapped in an `Envelope` and sent to the [Envelope Endpoint](/sdk/foundations/transport/envelopes/)
   - The `Transport` should use the same internal queue for `Transactions` / `Events`
   - The `Transport` should implement category-based rate limiting →
   - The `Transport` should deal with wrapping a `Transaction` in an `Envelope` internally
@@ -235,7 +282,7 @@ There are multiple ways a transaction can end up with a sampling decision:
 
 If more than one option could apply, the following rules determine which takes precedence:
 
-1. If a sampling decision is passed to `startTransaction` (`startTransaction({name: "my transaction", sampled: true})`), that decision will be used, regardlesss of anything else
+1. If a sampling decision is passed to `startTransaction` (`startTransaction({name: "my transaction", sampled: true})`), that decision will be used, regardless of anything else
 2. If `tracesSampler` is defined, its decision will be used. It can choose to keep or ignore any parent sampling decision, or use the sampling context data to make its own decision or choose a sample rate for the transaction.
 3. If `tracesSampler` is not defined, but there's a parent sampling decision, the parent sampling decision will be used.
 4. If `tracesSampler` is not defined and there's no parent sampling decision, `tracesSampleRate` will be used.

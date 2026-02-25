@@ -16,12 +16,14 @@ type ProjectCodeKeywords = {
   ORG_SLUG: string;
   OTLP_LOGS_URL: string;
   OTLP_TRACES_URL: string;
+  OTLP_URL: string;
   PROJECT_ID: number;
   PROJECT_SLUG: string;
   PUBLIC_DSN: string;
   PUBLIC_KEY: string;
   SECRET_KEY: string;
   UNREAL_URL: string;
+  VERCEL_LOG_DRAIN_URL: string;
   title: string;
 };
 
@@ -88,8 +90,10 @@ export const DEFAULTS: CodeKeywords = {
       MINIDUMP_URL:
         'https://o0.ingest.sentry.io/api/0/minidump/?sentry_key=examplePublicKey',
       UNREAL_URL: 'https://o0.ingest.sentry.io/api/0/unreal/examplePublicKey/',
-      OTLP_TRACES_URL: 'https://o0.ingest.sentry.io/api/0/integration/otlp/v1/traces/',
-      OTLP_LOGS_URL: 'https://o0.ingest.sentry.io/api/0/integration/otlp/v1/logs/',
+      OTLP_URL: 'https://o0.ingest.sentry.io/api/0/integration/otlp',
+      OTLP_TRACES_URL: 'https://o0.ingest.sentry.io/api/0/integration/otlp/v1/traces',
+      OTLP_LOGS_URL: 'https://o0.ingest.sentry.io/api/0/integration/otlp/v1/logs',
+      VERCEL_LOG_DRAIN_URL: 'https://o0.ingest.sentry.io/api/0/integration/vercel/logs/',
       title: `example-org / example-project`,
     },
   ],
@@ -106,6 +110,7 @@ type CodeContextType = {
   codeKeywords: CodeKeywords;
   isLoading: boolean;
   onboardingOptions: OnboardingOptionType[];
+  sdkPackage: string | null;
   sharedKeywordSelection: [
     Record<string, number>,
     React.Dispatch<Record<string, number>>,
@@ -141,12 +146,24 @@ const formatUnrealEngineURL = ({scheme, host, pathname, publicKey}: Dsn) => {
   return `${scheme}${host}/api${pathname}/unreal/${publicKey}/`;
 };
 
-const formatOtlpTracesUrl = ({scheme, host, pathname}: Dsn) => {
-  return `${scheme}${host}/api${pathname}/integration/otlp/v1/traces/`;
+const formatIntegrationUrl = ({scheme, host, pathname}: Dsn) => {
+  return `${scheme}${host}/api${pathname}/integration/`;
 };
 
-const formatOtlpLogsUrl = ({scheme, host, pathname}: Dsn) => {
-  return `${scheme}${host}/api${pathname}/integration/otlp/v1/logs/`;
+const formatOtlpUrl = (dsn: Dsn) => {
+  return `${formatIntegrationUrl(dsn)}otlp`;
+};
+
+const formatOtlpTracesUrl = (dsn: Dsn) => {
+  return `${formatOtlpUrl(dsn)}/v1/traces`;
+};
+
+const formatOtlpLogsUrl = (dsn: Dsn) => {
+  return `${formatOtlpUrl(dsn)}/v1/logs`;
+};
+
+const formatVercelLogDrainUrl = (dsn: Dsn) => {
+  return `${formatIntegrationUrl(dsn)}vercel/logs/`;
 };
 
 const formatApiUrl = ({scheme, host}: Dsn) => {
@@ -241,6 +258,8 @@ export async function fetchCodeKeywords(): Promise<CodeKeywords> {
           parsedDsn.host ?? `o${project.organizationId}.ingest.sentry.io`,
         MINIDUMP_URL: formatMinidumpURL(parsedDsn),
         UNREAL_URL: formatUnrealEngineURL(parsedDsn),
+        OTLP_URL: formatOtlpUrl(parsedDsn),
+        VERCEL_LOG_DRAIN_URL: formatVercelLogDrainUrl(parsedDsn),
         OTLP_TRACES_URL: formatOtlpTracesUrl(parsedDsn),
         OTLP_LOGS_URL: formatOtlpLogsUrl(parsedDsn),
         title: `${project.organizationSlug} / ${project.projectSlug}`,
@@ -311,7 +330,15 @@ const getLocallyStoredSelections = (): SelectedCodeTabs => {
   return {};
 };
 
-export function CodeContextProvider({children}: {children: React.ReactNode}) {
+type CodeContextProviderProps = {
+  children: React.ReactNode;
+  sdkPackage?: string | null;
+};
+
+export function CodeContextProvider({
+  children,
+  sdkPackage = null,
+}: CodeContextProviderProps) {
   const [codeKeywords, setCodeKeywords] = useState(cachedCodeKeywords ?? DEFAULTS);
   const [isLoading, setIsLoading] = useState<boolean>(cachedCodeKeywords ? false : true);
   const [storedCodeSelection, setStoredCodeSelection] = useState<SelectedCodeTabs>({});
@@ -363,6 +390,7 @@ export function CodeContextProvider({children}: {children: React.ReactNode}) {
     isLoading,
     onboardingOptions,
     updateOnboardingOptions: options => setOnboardingOptions(options),
+    sdkPackage,
   };
 
   return <CodeContext.Provider value={result}>{children}</CodeContext.Provider>;

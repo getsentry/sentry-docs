@@ -1,0 +1,142 @@
+---
+title: Zap
+description: "Zap is a blazing-fast, structured logging library for Go. This guide demonstrates how to integrate zap with Sentry to capture and send logs to Sentry."
+---
+
+For a quick reference, there is a [complete example](https://github.com/getsentry/sentry-go/tree/master/_examples/zap) at the Go SDK source code repository.
+
+Go API documentation for the [`sentryzap` package](https://pkg.go.dev/github.com/getsentry/sentry-go/zap) is also available.
+
+## Install
+
+```bash
+go get github.com/getsentry/sentry-go
+go get github.com/getsentry/sentry-go/zap
+```
+
+## Configure
+
+### Initialize the Sentry SDK
+
+<PlatformContent includePath="getting-started-include-logs-config" />
+
+### Options
+
+`sentryzap` provides a `Core` implementation that integrates with zap's logging pipeline. It accepts a struct of `sentryzap.Option` that allows you to configure how logs are captured and sent to Sentry. The options are:
+
+| Field | Type | Description | Default |
+|-------|------|-------------|---------|
+| `Level` | `[]zapcore.Level` | Zap levels to capture and send to Sentry as log entries | All levels (Debug through Fatal) |
+| `AddCaller` | `bool` | Include caller info (file, line, function) in logs | `false` |
+| `FlushTimeout` | `time.Duration` | How long to wait when syncing/flushing logs | 5 seconds |
+
+## Verify
+
+This example shows how to create a zap logger that sends logs to Sentry.
+
+```go
+package main
+
+import (
+    "context"
+    "errors"
+    "time"
+
+    "github.com/getsentry/sentry-go"
+    sentryzap "github.com/getsentry/sentry-go/zap"
+    "go.uber.org/zap"
+    "go.uber.org/zap/zapcore"
+)
+
+func main() {
+    // Initialize Sentry with logs enabled
+    err := sentry.Init(sentry.ClientOptions{
+        Dsn:        "___PUBLIC_DSN___",
+        EnableLogs: true,
+    })
+    if err != nil {
+        panic(err)
+    }
+    defer sentry.Flush(2 * time.Second)
+
+    // Create the Sentry core
+    ctx := context.Background()
+    sentryCore := sentryzap.NewSentryCore(ctx, sentryzap.Option{
+        Level: []zapcore.Level{
+            zapcore.InfoLevel,
+            zapcore.WarnLevel,
+            zapcore.ErrorLevel,
+        },
+        AddCaller: true,
+    })
+
+    // Create a zap logger with the Sentry core
+    logger := zap.New(sentryCore)
+
+    // Log messages will be sent to Sentry
+    logger.Info("Application started",
+        zap.String("version", "1.0.0"),
+        zap.String("environment", "production"),
+    )
+
+    logger.Warn("High memory usage",
+        zap.Float64("usage_percent", 85.5),
+    )
+
+    logger.Error("Database connection failed",
+        zap.Error(errors.New("connection timeout")),
+        zap.String("host", "db.example.com"),
+    )
+}
+```
+
+## Context and Tracing
+
+The Sentry core respects the context passed during initialization. If you have Sentry tracing enabled, logs will be associated with the current span.
+
+### Option 1: Pass context when creating the core
+
+This example shows how to pass a context with an active span when creating the core.
+
+```go
+ctx := context.Background()
+
+// Start a transaction
+span := sentry.StartSpan(ctx, "operation.name")
+defer span.Finish()
+
+// Create logger with the span's context
+ctx = span.Context()
+sentryCore := sentryzap.NewSentryCore(ctx, sentryzap.Option{})
+logger := zap.New(sentryCore)
+
+// This log will be associated with the transaction
+logger.Info("Processing started")
+```
+
+### Option 2: Use the Context() helper for dynamic trace propagation
+
+This example shows how to use the `Context()` helper to propagate different contexts for different log calls.
+
+```go
+// Create logger with base context
+sentryCore := sentryzap.NewSentryCore(context.Background(), sentryzap.Option{})
+logger := zap.New(sentryCore)
+
+// Start a transaction
+span := sentry.StartTransaction(ctx, "operation.name")
+defer span.Finish()
+
+// Create a logger scoped to this transaction
+scopedLogger := logger.With(sentryzap.Context(span.Context()))
+
+// These logs will be associated with the transaction
+scopedLogger.Info("Processing started")
+scopedLogger.Info("Processing completed")
+```
+
+<Include name="logs/go-ctx-usage-alert.mdx"/>
+
+## Logs
+
+For comprehensive logging setup with zap, including advanced configuration options and best practices, see the [Go Logs documentation](/platforms/go/logs/). The zap integration shown above provides seamless integration with Sentry's structured logging features.

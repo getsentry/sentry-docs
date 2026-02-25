@@ -1,0 +1,81 @@
+---
+title: Self-Hosted Configuration
+sidebar_title: Configuration
+sidebar_order: 1
+description: Learn how to configure your own self-hosted Sentry
+---
+
+## Updating basic configuration
+
+You very likely will want to adjust the default configuration for your Sentry installation as well. These facilities are available for that purpose:
+
+1. **`sentry/config.yml`**—Contains most, if not all, configuration options to adjust. This file is generated from [`sentry/config.example.yml`](https://github.com/getsentry/self-hosted/blob/master/sentry/config.example.yml) at the time of installation. The file itself documents the most common configuration options as code comments. Some popular settings in this file include:
+
+    1. `system.url-prefix` (we prompt you to set this at the welcome screen, right after the installation). But it is recommended to uncomment this and set this to the accessible URL of your self-hosted Sentry installation. If you can't click to the link on emails or your DSN domains are empty, you almost certainly need to fill this out.
+
+    1. `mail.*` (though we do ship with a basic SMTP server)
+
+    1. integrations for GitHub, Slack, etc.
+
+1. **`sentry/sentry.conf.py`**—Contains more advanced configuration. This file is generated from [`sentry/sentry.conf.example.py`](https://github.com/getsentry/self-hosted/blob/master/sentry/sentry.conf.example.py) during installation.
+
+1. **`sentry/enhance-image.sh`**—To install plugins and their dependencies or make other modifications to the Sentry base image, copy `sentry/enhance-image.example.sh` to `sentry/enhance-image.sh` and add necessary steps there. For example, you can use `apt-get` to install dependencies and use `pip` to install plugins. After making modifications to `sentry/enhance-image.sh`, run `./install.sh` again to apply them.
+
+1. **Environment variables**—The available keys are defined in [.env](https://github.com/getsentry/self-hosted/blob/master/.env). Use some system-dependent means of setting environment variables if you need to override any of them. To avoid Git changes, simply create a file called `.env.custom` and insert your system-dependent environment variables there. In order to use this, please use `docker compose --env-file /path/to/.env.custom up --wait`.
+
+1. [Geolocation](/self-hosted/configuration/geolocation/) uses **a custom configuration file** to conform to the underlying technology.
+
+You can find more about configuring Sentry at [the configuration section of our developer documentation](/backend/config/).
+
+<Alert title="Note">
+  Once you change your configuration, it's highly recommended to re-run <code>./install.sh</code> script rather than restarting all services using <code>docker compose restart</code>. This ensures no other configuration or migrations that might be missing when something is toggled on.
+</Alert>
+
+### Event Retention
+
+Sentry comes with a cleanup cron job that prunes events older than `90 days` by default. If you want to change that, you can edit the `SENTRY_EVENT_RETENTION_DAYS` environment variable in `.env` or simply override it in your environment.
+
+### Installing a specific SHA
+
+If you want to install a specific release of Sentry, use the tags/releases on the self-hosted repository.
+
+We continuously push the Docker image for each commit made into [Sentry](https://github.com/getsentry/sentry), and other services such as [Snuba](https://github.com/getsentry/snuba) or [Symbolicator](https://github.com/getsentry/symbolicator) to [our Docker Hub](https://hub.docker.com/u/getsentry) and tag the latest version on master as `:nightly`. This is also usually what we have on sentry.io and what the install script uses. You can use a custom Sentry image, such as a modified version that you have built on your own, or refer a specific commit hash as the image tag by setting the `SENTRY_IMAGE` environment variable to that image name before running `./install.sh`:
+
+```bash
+SENTRY_IMAGE=getsentry/sentry:83b138090a3078352e3f733de7209fb02ef4f98a ./install.sh
+```
+
+Note that this may not work for all commit SHAs as this repository evolves with Sentry and its satellite projects. It is highly recommended to check out a version of this repository that is close to the timestamp of the Sentry commit you are installing.
+
+### Enabling Preview Features
+
+Only features that have reached General Availability (GA) status will be enabled by default for self-hosted. As users, you can try new features before it reaches GA by adding required infrastructure components and feature flags. Preview features are tracked and documented through [GitHub issues with Type: Pre-release Feature labels](https://github.com/getsentry/self-hosted/labels/Type%3A%20Pre-release%20Feature).
+
+### Customize DotEnv (.env) file
+
+Environment specific configurations can be done in the `.env.custom` file. It will be located in the root directory of the Sentry installation, and if it exists then `.env` will be ignored entirely.
+
+By default, there exists no `.env.custom` file. In this case, you can manually add this file by copying the `.env` file to a new `.env.custom` file and adjust your settings in the `.env.custom` file.
+
+Please keep in mind to check the `.env` file for changes, when you perform an upgrade of Sentry, so that you can adjust your `.env.custom` accordingly, if required, as `.env` is ignored entirely if `.env.custom` is present.
+
+For all Docker Compose commands, you should specify your `.env.custom`, otherwise the default `.env` file will be used. Some examples are:
+
+```bash
+docker compose --env-file .env.custom up --wait
+
+# You can also specify the original `.env` file as a fallback if the
+# environment variable doesn't exists on the `.env.custom` file.
+docker compose --env-file .env --env-file .env.custom up --wait
+```
+
+### Configuration Topics
+
+Here is further information on specific configuration topics related to self-hosting:
+
+- [Custom CA Roots](/self-hosted/configuration/custom-ca-roots/)
+- [Email](/self-hosted/configuration/email/)
+- [Geolocation](/self-hosted/configuration/geolocation/)
+- [Single Sign-On (SSO)](/self-hosted/configuration/sso/)
+- [Content Security Policy](/self-hosted/optional-features/csp/)
+- [Errors Only](/self-hosted/optional-features/errors-only/)

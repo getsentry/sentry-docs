@@ -53,7 +53,7 @@ When you open your browser's developer tools, the browser tries to fetch source 
 
 #### 3. Source Map Options
 
-Configure source map behavior using the [source maps options](/platforms/javascript/guides/nuxt/configuration/build/#source-maps-options) in your Nuxt config:
+Configure source map behavior in your Nuxt config:
 
 ```javascript {filename:nuxt.config.ts}
 export default defineNuxtConfig({
@@ -62,9 +62,23 @@ export default defineNuxtConfig({
       org: "___ORG_SLUG___",
       project: "___PROJECT_SLUG___",
       authToken: process.env.SENTRY_AUTH_TOKEN,
+
+      sourcemaps: {
+        // As you're enabling client source maps, you probably want to delete them after they're uploaded to Sentry.
+        // Set the appropriate glob pattern for your output folder - some glob examples below:
+        filesToDeleteAfterUpload: [".*/**/public/**/*.map", ".output/**/public/**/*.map"]
+      }
   },
 });
 ```
+
+<Alert level="warning">
+  Generating source maps **may expose them to the public**, potentially causing your
+  source code to be leaked. You can prevent this by configuring your server to deny access to `.js.map` files, or by
+  using [Sentry Vite Plugin's
+  `sourcemaps.filesToDeleteAfterUpload`](https://www.npmjs.com/package/@sentry/vite-plugin#sourcemapsfilestodeleteafterupload)
+  option to delete source maps after they've been uploaded to Sentry.
+</Alert>
 
 ### Troubleshooting
 

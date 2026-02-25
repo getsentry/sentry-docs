@@ -1,0 +1,161 @@
+---
+title: Client
+description: The SDK component responsible for event creation, integration management, and transport dispatch.
+spec_id: sdk/foundations/client
+spec_version: 2.2.0
+spec_status: stable
+spec_depends_on:
+  - id: sdk/foundations/state-management/scopes
+    version: ">=1.0.0"
+  - id: sdk/foundations/transport/envelopes
+    version: ">=1.0.0"
+spec_changelog:
+  - version: 2.2.0
+    date: 2025-02-24
+    summary: Restructured into sub-specs for integrations, hooks, and configuration
+  - version: 2.1.0
+    date: 2024-09-23
+    summary: Added integration lifecycle (setupOnce, setup, afterAllSetup, preprocessEvent, processEvent)
+  - version: 2.0.0
+    date: 2024-02-14
+    summary: Breaking — Client decoupled from Hub; resolved via scope chain; NoOpClient before init
+  - version: 1.1.0
+    date: 2022-11-17
+    summary: Added session lifecycle (start_session, end_session)
+  - version: 1.0.0
+    date: 2020-05-04
+    summary: Initial spec — stateless event creator with capture_event, close, flush, transport delegation
+sidebar_order: 2
+---
+
+<SpecRfcAlert />
+
+<SpecMeta />
+
+## Overview
+
+The Client is the SDK component responsible for building Sentry events from captured data and dispatching them to the [Transport](/sdk/foundations/transport/). It is configured once during `Sentry.init()` and manages the [integration](/sdk/foundations/client/integrations/) lifecycle.
+
+The Client is **stateless** with respect to contextual data — it receives the [Scope](/sdk/foundations/state-management/scopes/) at capture time and merges scope data into the event. The Client does hold configuration (options) and owns its transport and integrations.
+
+In the [Hub & Scope](/sdk/foundations/state-management/hub-and-scope/) model, the Client was bound to a Hub. In the current [Scopes](/sdk/foundations/state-management/scopes/) model, the Client is resolved via the scope chain.
+
+Related specs:
+- [Configuration](/sdk/foundations/client/configuration/) — client options, environment variables, debug mode, sampling
+- [Integrations](/sdk/foundations/client/integrations/) — integration interface, lifecycle, and defaults
+- [Hooks](/sdk/foundations/client/hooks/) — lifecycle hooks, before_send, before_breadcrumb
+- [Scopes](/sdk/foundations/state-management/scopes/) — scope chain and client resolution
+- [Transport](/sdk/foundations/transport/) — envelope delivery
+- [Envelopes](/sdk/foundations/transport/envelopes/) — wire format
+- [Attributes](/sdk/foundations/state-management/scopes/attributes) — attribute type system
+
+---
+
+## Concepts
+
+- **Stateless**: The Client does not hold contextual data (tags, breadcrumbs, user). All contextual data comes from scopes, which are passed to the Client at capture time.
+
+- **Transport delegation**: The Client builds the event; the Transport sends it. The Client **MUST NOT** implement network I/O directly — it delegates to its Transport (or [TelemetryProcessor](/sdk/foundations/processing/telemetry-processor/), if present).
+
+- **NoOpClient**: A Client that performs no operations. Present on the global scope before `Sentry.init()` is called, ensuring that `getClient()` never returns `null`.
+
+- **Disabled SDK**: The SDK is considered disabled when the Client has no transport, or when no DSN is configured. In this state, event processors, `configure_scope` callbacks, and breadcrumb recording **SHOULD NOT** be invoked.
+
+---
+
+## Behavior
+
+<SpecSection id="client-lifecycle" status="stable" since="1.0.0">
+
+### Client Lifecycle
+
+#### Initialization
+
+`Sentry.init(options)` **MUST** create a Client, configure its transport, and set up integrations. The Client is then set on the global scope, replacing the NoOpClient.
+
+Before `Sentry.init()` is called, a NoOpClient **MUST** be present on the global scope. (since 2.0.0)
+
+SDKs **MUST** accept an empty DSN as valid configuration. If initialized with an empty or missing DSN, the SDK **MUST NOT** send any data over the network. Depending on the platform, the SDK **MAY** reduce its runtime footprint to a minimum.
+
+Calling `Sentry.init()` multiple times is permitted for testing. Behavior in production beyond application startup is undefined.
+
+#### Active State
+
+The Client is considered **active** when it has a configured transport. When active, the Client processes captured events through the [event pipeline](#event-pipeline).
+
+#### Shutdown
+
+| Method | Description |
+|---|---|
+| `close(timeout)` | Flush the transport queue for up to `timeout` seconds. The Client **SHOULD** be disabled or disposed after close returns. |
+| `flush(timeout)` | Flush the transport queue for up to `timeout` seconds. The Client remains usable. |
+
+Both methods **MUST** block for at most `timeout` seconds. If the transport includes a [TelemetryProcessor](/sdk/foundations/processing/telemetry-processor/), flushing **MUST** first forward all buffered items to the transport, then flush the transport itself.
+
+</SpecSection>
+
+<SpecSection id="client-resolution" status="stable" since="2.0.0">
+
+### Client Resolution
+
+A Client **MUST** always be available — `getClient()` **MUST NOT** return `null`.
+
+Client resolution walks the scope chain:
+
+1. Check the current scope
+2. Check the isolation scope
+3. Check the global scope
+4. Fall back to NoOpClient (should not happen if `init()` was called)
+
+Users **MAY** bind a different Client to any scope via `scope.setClient(client)`.
+
+See [Scopes: Client Resolution](/sdk/foundations/state-management/scopes/#client-resolution) for details.
+
+</SpecSection>
+
+<SpecSection id="event-pipeline" status="stable" since="1.0.0">
+
+### Event Pipeline
+
+When `captureEvent`, `captureException`, or `captureMessage` is called, the Client processes the event through the following pipeline. The event **MAY** be discarded at any stage, stopping further processing.
+
+1. **Disabled check**: If the SDK is disabled (no transport / no DSN), discard immediately.
+2. **Sampling**: Apply the configured `sample_rate`. Events **MAY** be randomly discarded. When discarded, the Client **MUST** record a [client report](/sdk/telemetry/client-reports/) with discard reason `sample_rate`.
+3. **Scope application**: Obtain the current, isolation, and global scopes. Merge scope data onto the event in the [defined order](/sdk/foundations/state-management/scopes/#applying-scope-data-to-events). Invoke event processors in registration order. Any processor returning `null` discards the event (client report reason: `event_processor`).
+4. **`before_send` hook**: Invoke the user-configured callback. Returning `null` discards the event (client report reason: `before_send`). This hook **MUST** only apply to error events. For transactions, use `before_send_transaction`. For logs, use `before_send_log`. See [Hooks](/sdk/foundations/client/hooks/) for details.
+5. **Transport**: Pass the event to the transport (or TelemetryProcessor). The transport **MAY** discard due to missing DSN, full queue, or [rate limiting](/sdk/expected-features/rate-limiting/).
+
+</SpecSection>
+
+---
+
+## Public API
+
+### Client Construction
+
+| Method | Description |
+|---|---|
+| `Client(options)` / `Client.from_config(options)` | Construct a Client with the given options. |
+
+### Capture Methods
+
+| Method | Description |
+|---|---|
+| `capture_event(event, scope)` | Merge event with scope data, run through event pipeline, dispatch to transport. |
+| `capture_exception(exception, scope)` | Convert exception to event, then capture. |
+| `capture_message(message, level, scope)` | Convert message to event, then capture. |
+
+### Lifecycle
+
+| Method | Description |
+|---|---|
+| `close(timeout)` | Flush and disable. |
+| `flush(timeout)` | Flush without disabling. |
+
+See [Configuration](/sdk/foundations/client/configuration/) for the full set of client options, environment variables, and sampling behavior.
+
+---
+
+## Changelog
+
+<SpecChangelog />

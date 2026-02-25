@@ -1,0 +1,102 @@
+---
+title: Instrument HTTP Requests
+sidebar_order: 2000
+description: "Learn how to manually instrument your code to use Sentry's Requests module."
+---
+
+Sentry offers a [requests monitoring dashboard](https://sentry.io/orgredirect/organizations/:orgslug/insights/backend/http/) that can be auto-instrumented by our Go SDK.
+
+If you're not using the net/http client, you can manually instrument your requests and use Sentry to get a look into how your requests to APIs are performing by following the setup instructions below.
+
+<Alert>
+Make sure that there's a transaction running when you create the spans. See <PlatformLink to="/tracing/">Tracing</PlatformLink> for more information.
+</Alert>
+
+## Automatic instrumentation
+
+The `sentryhttpclient` package enables automatic propagation of the tracing headers (`sentry-trace` and `sentry-baggage`) and span instrumentation for outbound HTTP requests. Here is an example of using the default http client:
+
+```go
+import sentryhttpclient "github.com/getsentry/sentry-go/httpclient"
+
+func main() {
+  // need to have tracing enabled
+  _ = sentry.Init(sentry.ClientOptions{
+  	Dsn:           "___PUBLIC_DSN___",
+  	EnableTracing:    true,
+  	TracesSampleRate: 1.0,
+  })
+
+  client := sentryhttpclient.SentryHTTPClient
+  response, err := client.Do(request)
+  if err != nil {
+  	return
+  }
+  fmt.Println(response)
+}
+```
+
+## Custom HTTP client
+
+If you need to use your custom HTTP client, all you need to do is use the `SentryRoundTripper`. This gives you control over the transport while retaining Sentry integration:
+
+```go
+import sentryhttpclient "github.com/getsentry/sentry-go/httpclient"
+
+customClient := &http.Client{
+  Transport: sentryhttpclient.NewSentryRoundTripper(nil),
+}
+resp, err := customClient.Do(req)
+```
+
+Passing nil to `NewSentryRoundTripper` defaults to `http.DefaultTransport`, but you can provide a custom RoundTripper if needed.
+
+## Using a RoundTripper with trace propagation targets
+
+You can further control when sentry tracing headers are attached by using `WithTracePropagationTargets`, which limits propagation to specific URLs (string match, no regex):
+
+```go
+import sentryhttpclient "github.com/getsentry/sentry-go/httpclient"
+
+roundTripper := sentryhttpclient.NewSentryRoundTripper(
+  http.DefaultTransport,
+  sentryhttpclient.WithTracePropagationTargets([]string{"internal.service.local", "api.example.com"}),
+)
+
+client := &http.Client{
+	Transport: roundTripper,
+}
+
+resp, err := client.Do(req)
+```
+
+This setup ensures tracing headers are only added to requests targeting the specified hosts, helping prevent leakage of tracing data to third-party services.
+
+## Wrap HTTP Requests in a Span
+
+<Alert>
+
+Refer to [HTTP Span Data Conventions](https://develop.sentry.dev/sdk/performance/span-data-conventions/#http) for a full list of the span data attributes.
+
+</Alert>
+
+Here is how to manually instrument HTTP requests:
+
+```go
+var span sentry.Span
+parentSpan := sentry.SpanFromContext(ctx)
+if parentSpan != nil {
+  span = *parentSpan.StartChild("http.client", sentry.WithTransactionName("transaction-name"), sentry.WithDescription("description"))
+}
+client := &http.Client{}
+resp, err := client.Get("https://example.com")
+if err != nil {
+  return
+}
+span.SetData("http.query", "GET https://example.com/")
+span.SetData("http.request.method", "GET")
+span.SetData("http.response.status_code", resp.StatusCode)
+span.SetData("http.response_content_length", resp.ContentLength)
+```
+
+

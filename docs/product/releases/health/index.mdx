@@ -1,7 +1,10 @@
 ---
 title: Release Health
 sidebar_order: 50
-description: "Monitor the health of releases by observing user adoption, usage of the application, percentage of crashes, and session data."
+description: >-
+  Monitor the health of releases by observing user adoption, usage of the
+  application, percentage of crashes, and session data.
+og_image: /og-images/product-releases-health.png
 ---
 
 <Alert>
@@ -27,45 +30,25 @@ Sentry distinguishes between two kinds of sessions:
 
 ### User-Mode/Application-Mode Sessions
 
-<ul>
+A user- or application-mode session begins with the start of the application.
+Or, it begins with bringing the already started application back from
+background to the foreground. In this context, a user is defined by one or
+more of the following: a unique ID or UUID, username, or email.
 
-<li style={{listStyleType:'none'}}>
-  A user- or application-mode session begins with the start of the application.
-  Or, it begins with bringing the already started application back from
-  background to the foreground. In this context, a user is defined by one or
-  more of the following: a unique ID or UUID, username, or email.
-</li>
-
-<br></br>
-
-<li style={{listStyleType:'none'}}>
-  This type of session ends with the closing of the application or with the
-  application being sent to the background. If the application is in the
-  background for less than 30 seconds, we do not start the session again.
-  Applications that are active even on the background (for example, a music
-  player) should track the sessions manually for the background process.
-</li>
-
-</ul>
+This type of session ends with the closing of the application or with the
+application being sent to the background. If the application is in the
+background for less than 30 seconds, we do not start the session again.
+Applications that are active even on the background (for example, a music
+player) should track the sessions manually for the background process.
 
 ### Server-Mode/Request-Mode Sessions
 
-<ul>
+Server or request-mode sessions roughly correspond to HTTP requests or RPC
+calls in a server setting. A session is started when the server receives a
+request, and terminates when the server sends a response.
 
-<li style={{listStyleType:'none'}}>
-  Server- or request-mode sessions roughly correspond to HTTP requests or RPC
-  calls in a server setting. A session is started when the server receives a
-  request, and terminates when the server sends a response.
-</li>
-
-<br></br>
-
-<li style={{listStyleType:'none'}}>
-  These are typically high in volume since each session corresponds to a single
-  request.
-</li>
-
-</ul>
+These are typically high in volume since each session corresponds to a single
+request.
 
 Sessions, whether application-mode or request-mode, are submitted to Sentry so you can track the usage and adoption of your application. When a user of your application experiences a crash, error, or abnormal exit, the session will be flagged accordingly, and Sentry calculates derived metrics. The metrics include data such as the number of users that didn't experience a crash in the specified time range.
 
@@ -164,7 +147,15 @@ A session can have one of the following statuses:
 
 ### Abnormal
 
-The application timed out, froze, or was forced to quit by the operating system. There is usually no corresponding Sentry issue, as this is a passive action.
+An abnormal session occurs when the SDK cannot determine whether the session ended gracefully or not. This happens when the application restarts and there's no crash dump file but also no successful session termination status recorded from the previous run.
+
+Common scenarios that result in abnormal sessions include:
+
+- **Mobile applications**: The device's battery ran out, causing an immediate shutdown without allowing the SDK to properly terminate the session.
+- **Web applications**: The browser crashed, the system was forced to shut down, or the browser process was killed.
+- **General**: The application timed out, froze, or was forcibly quit by the operating system.
+
+There is usually no corresponding Sentry issue, as this is a passive action rather than an explicit error or crash.
 
 ### Crashed
 

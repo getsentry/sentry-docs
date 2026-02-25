@@ -1,6 +1,7 @@
 'use client';
 
 import {HamburgerMenuIcon} from '@radix-ui/react-icons';
+import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -8,10 +9,28 @@ import SentryLogoSVG from 'sentry-docs/logos/sentry-logo-dark.svg';
 
 import sidebarStyles from './sidebar/style.module.scss';
 
-import {MobileMenu} from './mobileMenu';
 import {NavLink} from './navlink';
-import {Search} from './search';
 import {ThemeToggle} from './theme-toggle';
+
+// Lazy load MobileMenu since it's only visible on small screens
+const MobileMenu = dynamic(
+  () => import('./mobileMenu').then(mod => ({default: mod.MobileMenu})),
+  {
+    ssr: false,
+    loading: () => <div className="w-10 h-10" />,
+  }
+);
+
+// Lazy load Search to reduce initial bundle size.
+// Search includes Algolia and @sentry-internal/global-search which add significant JS.
+// Using ssr:false since search is interactive-only and not needed for initial paint.
+// Fixes: DOCS-8BT (Large Render Blocking Asset)
+const Search = dynamic(() => import('./search').then(mod => ({default: mod.Search})), {
+  ssr: false,
+  loading: () => (
+    <div className="h-10 w-full max-w-md rounded-lg border border-[var(--gray-a5)] bg-[var(--gray-2)] animate-pulse" />
+  ),
+});
 
 export const sidebarToggleId = sidebarStyles['navbar-menu-toggle'];
 
@@ -34,7 +53,7 @@ export function Header({
       <style>{':root { --header-height: 80px; }'}</style>
       <nav className="nav-inner mx-auto px-3 py-2 flex items-center">
         {pathname !== '/' && (
-          <button className="lg:hidden mr-3">
+          <button className="lg-xl:hidden mr-3">
             <label
               htmlFor={sidebarToggleId}
               aria-label="Close"
@@ -53,7 +72,7 @@ export function Header({
         <Link
           href="/"
           title="Sentry error monitoring"
-          className="logo-slot flex flex-shrink-0 items-center lg:w-[calc(var(--sidebar-width,300px)-2rem)] text-2xl font-medium text-[var(--foreground)]"
+          className="logo-slot flex flex-shrink-0 items-center lg-xl:w-[calc(var(--sidebar-width,300px)-2rem)] text-2xl font-medium text-[var(--foreground)]"
         >
           <div className="h-full pb-[6px]">
             <Image
@@ -66,7 +85,7 @@ export function Header({
           Docs
         </Link>
         {!noSearch && (
-          <div className="hidden md:flex justify-center lg:justify-start w-full px-6">
+          <div className="hidden md:flex justify-center lg-xl:justify-start w-full px-6">
             <Search
               path={pathname}
               searchPlatforms={searchPlatforms}
