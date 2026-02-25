@@ -2,6 +2,67 @@ const isDeveloperDocs = !!process.env.NEXT_PUBLIC_DEVELOPER_DOCS;
 
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const developerDocsRedirects = [
+  // Playbook reorganization: flat → grouped subfolders
+  {
+    source: '/sdk/getting-started/playbooks/adding-a-dependency/',
+    destination: '/sdk/getting-started/playbooks/development/adding-a-dependency/',
+  },
+  {
+    source: '/sdk/getting-started/playbooks/handling-a-regression/',
+    destination: '/sdk/getting-started/playbooks/development/handling-a-regression/',
+  },
+  {
+    source: '/sdk/getting-started/playbooks/handling-external-contributor-pr/',
+    destination: '/sdk/getting-started/playbooks/development/handling-external-contributor-pr/',
+  },
+  {
+    source: '/sdk/getting-started/playbooks/opening-a-pr/',
+    destination: '/sdk/getting-started/playbooks/development/opening-a-pr/',
+  },
+  {
+    source: '/sdk/getting-started/playbooks/reviewing-a-pr/',
+    destination: '/sdk/getting-started/playbooks/development/reviewing-a-pr/',
+  },
+  {
+    source: '/sdk/getting-started/playbooks/reviewing-ai-generated-code/',
+    destination: '/sdk/getting-started/playbooks/development/reviewing-ai-generated-code/',
+  },
+  {
+    source: '/sdk/getting-started/playbooks/syncing-feature-branches/',
+    destination: '/sdk/getting-started/playbooks/development/syncing-feature-branches/',
+  },
+  {
+    source: '/sdk/getting-started/playbooks/aligning-cross-sdk-changes/',
+    destination: '/sdk/getting-started/playbooks/coordination/aligning-cross-sdk-changes/',
+  },
+  {
+    source: '/sdk/getting-started/playbooks/quarterly-cross-sdk-retro/',
+    destination: '/sdk/getting-started/playbooks/coordination/quarterly-cross-sdk-retro/',
+  },
+  {
+    source: '/sdk/getting-started/playbooks/breaking-changes/',
+    destination: '/sdk/getting-started/playbooks/sdk-lifecycle/breaking-changes/',
+  },
+  {
+    source: '/sdk/getting-started/playbooks/cutting-a-release/',
+    destination: '/sdk/getting-started/playbooks/sdk-lifecycle/cutting-a-release/',
+  },
+  {
+    source: '/sdk/getting-started/playbooks/deprecating-an-api/',
+    destination: '/sdk/getting-started/playbooks/sdk-lifecycle/deprecating-an-api/',
+  },
+  {
+    source: '/sdk/getting-started/playbooks/dropping-platform-support/',
+    destination: '/sdk/getting-started/playbooks/sdk-lifecycle/dropping-platform-support/',
+  },
+  {
+    source: '/sdk/getting-started/playbooks/setting-up-new-sdk-repo/',
+    destination: '/sdk/getting-started/playbooks/setup/setting-up-new-sdk-repo/',
+  },
+  {
+    source: '/sdk/getting-started/playbooks/setting-up-release-infrastructure/',
+    destination: '/sdk/getting-started/playbooks/setup/setting-up-release-infrastructure/',
+  },
   {
     source: '/sdk/miscellaneous/unified-api/tracing/:path*',
     destination: '/sdk/performance/:path*',
@@ -28,7 +89,7 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/telemetry/scopes/',
-    destination: '/sdk/foundations/data-model/scopes/',
+    destination: '/sdk/foundations/state-management/scopes/',
   },
   {
     source: '/sdk/data-model/event-payloads/types/',
@@ -96,11 +157,35 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/hub_and_scope_refactoring/:path*',
-    destination: '/sdk/miscellaneous/hub_and_scope_refactoring/:path*',
+    destination: '/sdk/foundations/state-management/scopes/',
+  },
+  {
+    source: '/sdk/miscellaneous/hub_and_scope_refactoring/',
+    destination: '/sdk/foundations/state-management/scopes/',
+  },
+  {
+    source: '/sdk/miscellaneous/',
+    destination: '/sdk/foundations/state-management/',
   },
   {
     source: '/sdk/unified-api/:path*',
-    destination: '/sdk/miscellaneous/unified-api/:path*',
+    destination: '/sdk/foundations/',
+  },
+  {
+    source: '/sdk/miscellaneous/unified-api/:path*',
+    destination: '/sdk/foundations/',
+  },
+  {
+    source: '/sdk/foundations/overview/',
+    destination: '/sdk/foundations/',
+  },
+  {
+    source: '/sdk/foundations/data-model/scopes/',
+    destination: '/sdk/foundations/state-management/scopes/',
+  },
+  {
+    source: '/sdk/foundations/data-model/attributes/',
+    destination: '/sdk/foundations/state-management/scopes/attributes/',
   },
   {
     source: '/sdk/sessions/:path*',
@@ -128,7 +213,7 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/telemetry/attributes/',
-    destination: '/sdk/foundations/data-model/attributes/',
+    destination: '/sdk/foundations/state-management/scopes/attributes/',
   },
   {
     source: '/sdk/telemetry/spans/batch-processor/',
@@ -215,7 +300,7 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/processes/releases/',
-    destination: '/sdk/getting-started/playbooks/setting-up-release-infrastructure/',
+    destination: '/sdk/getting-started/playbooks/setup/setting-up-release-infrastructure/',
   },
   {
     source: '/sdk/processes/triaging/',
@@ -223,7 +308,7 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/miscellaneous/feature-branches/',
-    destination: '/sdk/getting-started/playbooks/syncing-feature-branches/',
+    destination: '/sdk/getting-started/playbooks/development/syncing-feature-branches/',
   },
   {
     source: '/application/ab-testing/',
@@ -352,6 +437,18 @@ const developerDocsRedirects = [
   {
     source: '/self-hosted/sso/',
     destination: '/self-hosted/configuration/sso/',
+  },
+  {
+    source: '/sdk/foundations/integrations/:path*',
+    destination: '/sdk/foundations/client/integrations/:path*',
+  },
+  {
+    source: '/sdk/foundations/integrations/',
+    destination: '/sdk/foundations/client/integrations/',
+  },
+  {
+    source: '/sdk/expected-features/environment-variables/',
+    destination: '/sdk/foundations/client/configuration/',
   },
 ];
 

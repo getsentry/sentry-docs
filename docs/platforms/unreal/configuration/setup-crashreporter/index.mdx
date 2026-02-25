@@ -7,6 +7,12 @@ og_image: /og-images/platforms-unreal-configuration-setup-crashreporter.png
 Installation of a Sentry SDK is not required in order to capture the crashes of your
 Unreal Engine application or game, because Sentry supports the _UE Crash Reporter_.
 
+<Alert level="info">
+
+Starting from SDK version 1.8.0, the Sentry plugin includes its own [Sentry Crash Reporter](#sentry-crash-reporter) - an alternative to the built-in UE Crash Reporter that works through the Sentry SDK pipeline and supports user feedback.
+
+</Alert>
+
 To integrate your UE game or application with Sentry, the following steps are required:
 
 1. Include the _UE Crash Reporter_ in your game or application.
@@ -170,6 +176,42 @@ add JSON support to the build script (`MyProject.build.cs`):
 ```csharp
 PublicDependencyModuleNames.AddRange(new string[] { ..., "Json" });
 ```
+
+## Sentry Crash Reporter
+
+<Alert>
+
+Available starting from Sentry Unreal SDK version 1.8.0. Supported on Windows and Linux only.
+
+</Alert>
+
+Starting from version 1.8.0, the Sentry Unreal plugin ships with an optional **Sentry Crash Reporter** - a standalone application that can be used instead of the default UE Crash Reporter. When enabled, it displays a dialog to users after a crash, allowing them to review crash details and provide feedback before the report is submitted to Sentry.
+
+Unlike the built-in UE Crash Reporter, the Sentry Crash Reporter works through the Sentry SDK pipeline and doesn't require modifying engine configuration files.
+
+![Sentry Crash Reporter](./img/sentry-crash-reporter.png)
+
+### Enabling the Sentry Crash Reporter
+
+To enable it, navigate to **Project Settings > Plugins > Sentry > General > Native** and toggle **Enable external crash reporter**.
+
+Alternatively, add the following to your project's configuration `.ini` file:
+
+```ini
+[/Script/Sentry.SentrySettings]
+EnableExternalCrashReporter=True
+```
+
+### Customizing the Crash Reporter
+
+The Sentry Crash Reporter is built from the [sentry-desktop-crash-reporter](https://github.com/getsentry/sentry-desktop-crash-reporter) project. You can customize its appearance (branding, colors, layout) by forking the repository and building a custom version following the instructions in its documentation.
+
+To use your custom build, replace the crash reporter executable in the plugin's ThirdParty binaries directory:
+
+- **Windows**: `Plugins/sentry-unreal/Source/ThirdParty/Win64/bin/Sentry.CrashReporter.exe`
+- **Linux**: `Plugins/sentry-unreal/Source/ThirdParty/Linux/bin/Sentry.CrashReporter`
+
+After replacing the executable, delete the project's `Build` and `Intermediate` directories and rebuild the project to ensure the updated binary is picked up.
 
 ## Upload Debug Symbols
 
