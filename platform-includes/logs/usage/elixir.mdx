@@ -1,0 +1,55 @@
+Once `enable_logs: true` is set in your Sentry configuration, you can send logs using Elixir's standard `Logger` module.
+
+The logs will be sent to Sentry at or above the level configured by the `:level` option under `:logs` (default: `:info`). The supported log levels in Elixir are: `debug`, `info`, `notice`, `warning`, `error`, `critical`, `alert`, and `emergency`.
+
+```elixir
+require Logger
+
+Logger.info("Updated global cache")
+
+Logger.debug("Cache miss for user", user_id: 123)
+
+Logger.warning("Rate limit reached for endpoint", endpoint: "/api/results/")
+
+Logger.error("Failed to process payment", order_id: "or_2342", amount: 99.99)
+```
+
+### Message Templates with Parameters
+
+You can use message templates with positional or named parameters. To use message templates, pass parameters via the `:sentry` metadata key with `:log_parameters`:
+
+```elixir
+# Using named parameters (Elixir format)
+Logger.info("User %{name} logged in",
+  sentry: [log_parameters: %{name: "Jane Doe"}]
+)
+
+# Using positional parameters
+Logger.info("User %s logged in",
+  sentry: [log_parameters: ["Jane Doe"]]
+)
+```
+
+### Adding Custom Attributes
+
+Any metadata passed to `Logger` calls will be included as log attributes if configured via the `:metadata` option under `:logs`. To include all metadata as attributes:
+
+```elixir
+config :sentry,
+  enable_logs: true,
+  logs: [
+    level: :info,
+    metadata: :all  # or [:user_id, :request_id] for specific keys
+  ]
+```
+
+Then all metadata will be sent as extra attributes that Sentry Logs UI displays:
+
+```elixir
+# Here `user_id` and `action` will be sent as extra attributes
+Logger.info("User logged in", user_id: 123, action: "create")
+```
+
+### OpenTelemetry Integration
+
+If you're using OpenTelemetry with the `opentelemetry_logger_metadata` package, trace and span IDs will automatically be extracted from your log metadata and included in the log events sent to Sentry. This allows you to correlate logs with traces in the Sentry UI.
