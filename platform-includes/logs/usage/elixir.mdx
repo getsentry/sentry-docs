@@ -1,6 +1,6 @@
-Once the feature is enabled and the `Sentry.LoggerHandler` is configured, you can send logs using Elixir's standard `Logger` module.
+Once `enable_logs: true` is set in your Sentry configuration, you can send logs using Elixir's standard `Logger` module.
 
-The logs will be sent to Sentry at or above the level configured in `:logs_level`. The supported log levels in Elixir are: `debug`, `info`, `notice`, `warning`, `error`, `critical`, `alert`, and `emergency`.
+The logs will be sent to Sentry at or above the level configured by the `:level` option under `:logs` (default: `:info`). The supported log levels in Elixir are: `debug`, `info`, `notice`, `warning`, `error`, `critical`, `alert`, and `emergency`.
 
 ```elixir
 require Logger
@@ -32,14 +32,15 @@ Logger.info("User %s logged in",
 
 ### Adding Custom Attributes
 
-Any metadata passed to `Logger` calls will be included as log attributes if configured in `:logs_metadata`. To include all metadata as attributes:
+Any metadata passed to `Logger` calls will be included as log attributes if configured via the `:metadata` option under `:logs`. To include all metadata as attributes:
 
 ```elixir
-# In your LoggerHandler configuration:
-config: %{
-  logs_level: :info,
-  logs_metadata: :all  # or [:user_id, :request_id] for specific keys
-}
+config :sentry,
+  enable_logs: true,
+  logs: [
+    level: :info,
+    metadata: :all  # or [:user_id, :request_id] for specific keys
+  ]
 ```
 
 Then all metadata will be sent as extra attributes that Sentry Logs UI displays:

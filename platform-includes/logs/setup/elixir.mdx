@@ -1,4 +1,4 @@
-To enable logging, you need to configure the SDK with the `enable_logs` option set to `true`:
+To enable logging, set `enable_logs: true` in your Sentry configuration:
 
 ```elixir
 # In config/config.exs or config/runtime.exs
@@ -7,42 +7,23 @@ config :sentry,
   enable_logs: true
 ```
 
-You'll also need to add the `Sentry.LoggerHandler` to your application and configure it to send logs:
+When `enable_logs` is `true`, the SDK **automatically attaches** a `Sentry.LoggerHandler` (registered as `:sentry_log_handler`) on application startup. No manual handler setup is required.
+
+<Alert>
+If you already have a `Sentry.LoggerHandler` registered (for example, for crash and error reporting), the SDK will not add a second one — your existing handler will also capture logs.
+</Alert>
+
+To configure the minimum log level and other options, use the `:logs` key:
 
 ```elixir
-# In your application's start/2 callback (e.g., lib/my_app/application.ex)
-def start(_type, _args) do
-  :logger.add_handler(:sentry_handler, Sentry.LoggerHandler, %{
-    config: %{
-      logs_level: :info
-    }
-  })
-
-  # ... rest of your application startup
-end
-```
-
-Alternatively, you can configure the handler through your application's logger configuration:
-
-```elixir
-# In config/config.exs
-config :my_app, :logger, [
-  {:handler, :sentry_handler, Sentry.LoggerHandler, %{
-    config: %{
-      logs_level: :info
-    }
-  }}
-]
-```
-
-Then in your application startup:
-
-```elixir
-def start(_type, _args) do
-  Logger.add_handlers(:my_app)
-
-  # ... rest of your application startup
-end
+config :sentry,
+  dsn: "___PUBLIC_DSN___",
+  enable_logs: true,
+  logs: [
+    level: :info,         # minimum log level (default: :info)
+    excluded_domains: [], # logger domains to exclude (default: [])
+    metadata: []          # metadata keys to include as attributes (default: [])
+  ]
 ```
 
 <Alert>
