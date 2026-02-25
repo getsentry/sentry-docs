@@ -1,0 +1,59 @@
+---
+title: Feature Flags Integration
+description: Guidelines for tracking feature flag evaluations — scope storage, span attributes, the add_feature_flag API, and third-party integrations.
+spec_id: sdk/foundations/client/integrations/feature-flags
+spec_version: 1.0.0
+spec_status: stable
+spec_depends_on:
+  - id: sdk/foundations/client/integrations
+    version: ">=1.0.0"
+spec_changelog:
+  - version: 1.0.0
+    date: 2025-02-24
+    summary: Initial spec, extracted from expected features
+sidebar_order: 3
+---
+
+<SpecRfcAlert />
+
+<SpecMeta />
+
+## Overview
+
+An SDK may optionally track feature flag evaluations. Feature flags can be attached to error events or to span events.
+
+---
+
+## Behavior
+
+<SpecSection id="feature-flag-tracking" status="stable" since="1.0.0">
+
+### Tracking Feature Flag Evaluations
+
+When tracking feature flag evaluations on spans, we track the first 10 feature flags evaluated within the span's scope. Evaluations are span attributes and follow the existing span attribute schema.
+
+When tracking on error feature flag evaluations, we record the 100 most recent, unique feature flag evaluations. Evaluations are stored on the scope. When the scope forks a copy of the collected feature flag evaluations are given to the child scope. Mutations to the child's copy of the feature flags object should not be propagated to the parent. Flag evaluations within a scope are considered local to the scope and do not propagate. Evaluations should be submitted to Sentry following the schema specified in the <Link to="/sdk/foundations/transport/event-payloads/contexts/#feature-flag-context">Feature Flag Context</Link> protocol documentation.
+
+</SpecSection>
+
+<SpecSection id="add-feature-flag" status="stable" since="1.0.0">
+
+### The `add_feature_flag` API
+
+If an SDK supports feature flags it must expose a function `add_feature_flag` which has similar behavior to the `set_tag` function. It must accept a key of type string and a value which is a union of string, boolean, integer, float, and structure.
+
+</SpecSection>
+
+<SpecSection id="feature-flag-integrations" status="stable" since="1.0.0">
+
+### Integrations
+
+Integrations automate the work of tracking feature flag evaluations. An integration should hook into a third-party SDK and record feature flag evaluations using the current scope.
+
+</SpecSection>
+
+---
+
+## Changelog
+
+<SpecChangelog />

@@ -14,7 +14,7 @@ After settling with an API, performance monitoring support was then expanded to 
 
 Our initial implementation reused the mechanisms we had in place for error reporting:
 
-- The [Event type](https://develop.sentry.dev/sdk/foundations/data-model/event-payloads/) was extended with new fields. That meant that instead of designing and implementing a whole new ingestion pipeline, we could save time and quickly start sending "events" to Sentry, this time, instead of errors, a new "transaction" event type.
+- The [Event type](https://develop.sentry.dev/sdk/foundations/transport/event-payloads/) was extended with new fields. That meant that instead of designing and implementing a whole new ingestion pipeline, we could save time and quickly start sending "events" to Sentry, this time, instead of errors, a new "transaction" event type.
 - Since we were just sending a new type of event, the SDK transport layer was also reused.
 - And since we were sharing the ingestion pipeline, that meant we were sharing storage and the many parts of the processing that happens to all events.
 
@@ -26,7 +26,7 @@ In the next section, we’ll discuss some of the shortcomings with the current m
 
 ## Identified Issues
 
-While the reuse of the [Unified SDK architecture](https://develop.sentry.dev/sdk/miscellaneous/unified-api/) (hubs, clients, scopes) and the transaction ingestion model have merits, experience revealed some issues that we categorize into two groups.
+While the reuse of the [Unified SDK architecture](https://develop.sentry.dev/sdk/foundations/state-management/hub-and-scope/) (hubs, clients, scopes) and the transaction ingestion model have merits, experience revealed some issues that we categorize into two groups.
 
 The first group has to do with scope propagation, in essence the ability to determine what the “current scope” is. This operation is required for both manual instrumentation in user code as well as for automatic instrumentation in SDK integrations.
 
@@ -36,7 +36,7 @@ The second group is for issues related to the wire format used to send transacti
 
 _This issue is tracked by [getsentry/sentry-javascript#3751](https://github.com/getsentry/sentry-javascript/issues/3751)._
 
-The [Unified SDK architecture](https://develop.sentry.dev/sdk/miscellaneous/unified-api/) is fundamentally based on the existence of a `hub` per unit of concurrency, each `hub` having a stack of pairs of `client` and `scope`. A `client` holds configuration and is responsible for sending data to Sentry by means of a `transport`, while a `scope` holds contextual data that gets appended to outgoing events, such as tags and breadcrumbs.
+The [Unified SDK architecture](https://develop.sentry.dev/sdk/foundations/state-management/hub-and-scope/) is fundamentally based on the existence of a `hub` per unit of concurrency, each `hub` having a stack of pairs of `client` and `scope`. A `client` holds configuration and is responsible for sending data to Sentry by means of a `transport`, while a `scope` holds contextual data that gets appended to outgoing events, such as tags and breadcrumbs.
 
 Every `hub` knows what the current scope is. It is always the scope on top of the stack. The difficult part is having a `hub` “per unit of concurrency”.
 
