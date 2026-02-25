@@ -1,0 +1,399 @@
+---
+title: Attachments
+description: File attachments associated with events and traces, including screenshots, minidumps, crash reports, and view hierarchies.
+spec_id: sdk/telemetry/attachments
+spec_version: 1.6.0
+spec_status: stable
+spec_depends_on:
+  - id: sdk/foundations/transport/envelopes
+    version: ">=1.0.0"
+spec_changelog:
+  - version: 1.6.0
+    date: 2026-02-24
+    summary: Added attachment placeholders for resumable uploads (experimental)
+  - version: 1.5.2
+    date: 2025-12-17
+    summary: Added experimental warning to trace attachments
+  - version: 1.5.1
+    date: 2025-12-10
+    summary: Changed trace attachment content_type to application/vnd.sentry.trace-attachment
+  - version: 1.5.0
+    date: 2025-12-04
+    summary: Added trace attachments — trace-level file attachments (experimental)
+  - version: 1.4.1
+    date: 2025-05-15
+    summary: Relaxed screenshot naming — filename just needs to contain "screenshot"
+  - version: 1.4.0
+    date: 2025-04-30
+    summary: Added native SDK view hierarchy guidance (Crashpad naming constraint)
+  - version: 1.3.0
+    date: 2024-03-25
+    summary: Added event.view_hierarchy attachment type
+  - version: 1.2.1
+    date: 2022-04-26
+    summary: Added multi-screenshot naming convention (screenshot-n)
+  - version: 1.2.0
+    date: 2022-03-11
+    summary: Added screenshots as special attachment type (attachScreenshot option)
+  - version: 1.1.0
+    date: 2021-01-20
+    summary: Added SDK API guidance — path/byte-array constructors, addToTransactions, maxAttachmentSize
+  - version: 1.0.1
+    date: 2021-01-07
+    summary: Clarified content_type to allow any MIME type
+  - version: 1.0.0
+    date: 2020-05-05
+    summary: Initial spec — attachment envelope item type, constraints, headers, attachment_type values
+---
+
+<SpecRfcAlert />
+
+<SpecMeta />
+
+## Overview
+
+Attachments are files stored alongside an event or trace. They are sent as envelope items with type `"attachment"` and carry raw file payloads — crash dumps, screenshots, view hierarchies, or arbitrary user-provided files.
+
+Related specs:
+- [Envelopes](/sdk/foundations/transport/envelopes/) — transport format
+- [Envelope Items](/sdk/foundations/transport/envelope-items/) — item type reference
+
+---
+
+## Concepts
+
+### Attachment Types
+
+Attachments are distinguished by the `attachment_type` header on the envelope item:
+
+- **Standard attachments** (`event.attachment`) — arbitrary files with no special processing.
+- **Crash-related attachments** — minidumps (`event.minidump`), Apple crash reports (`event.applecrashreport`), and Unreal Engine metadata (`unreal.context`, `unreal.logs`). These trigger error event creation and/or symbolication.
+- **View hierarchies** (`event.view_hierarchy`) — JSON snapshots of the application's UI tree.
+- **Screenshots** — image captures taken during a crash or error, identified by filename containing `"screenshot"`.
+
+### Association Model
+
+Standard attachments are associated with an **event** via `event_id`. They can be sent in the same envelope as the event or separately (with caveats around independent dropping).
+
+Trace attachments (experimental) are associated with a **trace** via `trace_id` and are optionally linked to specific spans or logs.
+
+---
+
+## Behavior
+
+### Standard Attachments
+
+<SpecSection id="standard-attachments" status="stable" since="1.0.0">
+
+Envelope item type `"attachment"`. Contains the raw payload of an attachment file, always associated with an event or transaction.
+
+**Constraints:**
+
+- This item **MAY** occur multiple times per envelope.
+- For **minidump** and **apple crash report** attachments, the corresponding `"event"` item **MUST** be sent within the same envelope.
+- Generic attachments can be ingested separately from their events. SDKs **SHOULD** send them in the same envelope, which allows for more efficient rate limiting and filtering.
+- Generic attachments sent in separate envelopes can be dropped independently of an event. To ensure consistent handling, send them in the same request.
+- The Sentry server supports special attachments to ingest event payloads for backwards compatibility. These are not part of the official public API and the behavior **MUST NOT** be relied upon.
+
+</SpecSection>
+
+### Attachment Types
+
+<SpecSection id="attachment-types" status="stable" since="1.0.0">
+
+The `attachment_type` header declares the special type of an attachment. Possible values:
+
+| Type | Since | Description |
+|------|-------|-------------|
+| `event.attachment` (default) | 1.0.0 | A standard attachment without special meaning. |
+| `event.minidump` | 1.0.0 | A minidump file that creates an error event and is symbolicated. The file **SHOULD** start with the `MDMP` magic bytes. |
+| `event.applecrashreport` | 1.0.0 | An Apple crash report file that creates an error event and is symbolicated. |
+| `unreal.context` | 1.0.0 | An XML file containing UE4 crash metadata. During event ingestion, event contexts and extra fields are extracted from this file. |
+| `unreal.logs` | 1.0.0 | A plain-text log file obtained from UE4 crashes. During event ingestion, the last logs are extracted into event breadcrumbs. |
+| `event.view_hierarchy` | 1.3.0 | A JSON file with a predefined structure, see [RFC #33](https://github.com/getsentry/rfcs/blob/main/text/0033-view-hierarchy.md). |
+
+</SpecSection>
+
+### Screenshots
+
+<SpecSection id="screenshots" status="stable" since="1.2.0">
+
+When the user opts in, SDKs with a user interface (mobile, desktop) **SHOULD** take a screenshot of the application during a crash or error and include it as an attachment in the envelope with the event.
+
+This is inherently a best-effort feature. Some environments restrict UI access during hard crashes — for example, iOS does not allow running Objective-C code after a signal break, so hard crash screenshot capture is not possible there.
+
+SDKs **SHOULD** provide this feature through a single option called `attachScreenshot`.
+
+The screenshot attachment **MUST** meet these requirements:
+
+- The filename **MUST** contain the word `screenshot` (since 1.4.1).
+- Image size **SHOULD** stay below 2 MB, but quality/size **MAY** be configurable.
+- Content type **MUST** be `image/jpg` or `image/png`.
+
+Whenever possible, SDKs **SHOULD** avoid adding the attachment altogether if taking the screenshot fails. If the envelope header was already flushed before the screenshot attempt, a 0-byte attachment will be included. Sentry will not show a screenshot preview in that case.
+
+</SpecSection>
+
+### View Hierarchy
+
+<SpecSection id="view-hierarchy" status="stable" since="1.3.0">
+
+SDKs **MAY** attach a `view-hierarchy.json` file following the structure described in [RFC #33](https://github.com/getsentry/rfcs/blob/main/text/0033-view-hierarchy.md). The attachment **MUST** use `attachment_type: "event.view_hierarchy"` and `content_type: "application/json"`.
+
+For native SDKs (since 1.4.0), the path to the view hierarchy file **SHOULD** be configurable at SDK initialization. The SDK monitors the file and uploads it along with any event or crash:
+
+```c
+sentry_options_add_view_hierarchy(options, "./view-hierarchy.json");
+```
+
+<Alert>
+
+When using `Crashpad` as the crash-capturing backend in the Native SDK, the file **MUST** have the exact name `view-hierarchy.json` to be parsed correctly by the ingestion pipeline.
+
+</Alert>
+
+</SpecSection>
+
+### Trace Attachments
+
+<SpecSection id="trace-attachments" status="draft" since="1.5.0">
+
+<Alert level="warning">
+Trace attachments are an experimental feature that is still under development.
+</Alert>
+
+Trace attachments use item type `"attachment"` with content type `"application/vnd.sentry.trace-attachment"` (since 1.5.1). Unlike standard attachments, trace attachments are associated with a **trace** rather than an event. They are only optionally associated with other trace items (spans, logs).
+
+**Envelope headers:**
+
+- `trace` *(optional)*: If the envelope containing the trace attachment has a [Dynamic Sampling Context](/sdk/telemetry/traces/dynamic-sampling-context), it will be subject to trace-based dynamic sampling rules and potentially dropped.
+
+</SpecSection>
+
+### Attachment Placeholders
+
+<SpecSection id="attachment-placeholders" status="draft" since="1.6.0">
+
+<Alert level="warning">
+Attachment placeholders are an experimental feature, the protocol is subject to change.
+</Alert>
+
+Attachment placeholders use item type `"attachment"` with content type `"application/vnd.sentry.attachment-ref"`. A placeholder contains a **reference** to an attachment uploaded elsewhere — it does _not_ contain the actual attachment payload. The purpose is for the attachment to be handled (rate limited, filtered, etc.) together with the event payload, even if it was uploaded separately.
+
+SDKs **SHOULD** send placeholders in the same envelope as the event the file is attached to.
+
+**Workflow:**
+
+1. If an attachment is larger than ~100 MiB, upload it to the [TUS](https://tus.io/protocols/resumable-upload#creation-with-upload)-conformant upload endpoint (requires feature `projects:relay-upload-endpoint`):
+   ```shell
+   curl -X POST https://o0.ingest.sentry.io/api/0/upload/ \
+     --header "Tus-Resumable: 1.0.0" \
+     --header "Content-Type: application/offset+octet-stream" \
+     --header "Upload-Length: ${FILE_SIZE}" \
+     --data @myfile.log
+   ```
+2. Upon successful upload, attach a placeholder item to the event envelope, using the `Location` header from the upload response.
+
+</SpecSection>
+
+---
+
+## Wire Format
+
+### Standard Attachment Item
+
+<SpecSection id="wire-standard-attachment" status="stable" since="1.0.0">
+
+**Envelope headers:**
+
+| Field | Type | Required | Since | Description |
+|-------|------|----------|-------|-------------|
+| `event_id` | UUID string | **REQUIRED** | 1.0.0 | The identifier of the event or transaction. |
+
+**Item headers:**
+
+| Field | Type | Required | Since | Description |
+|-------|------|----------|-------|-------------|
+| `type` | String | **REQUIRED** | 1.0.0 | **MUST** be `"attachment"`. |
+| `length` | Integer | **REQUIRED** | 1.0.0 | Payload size in bytes. |
+| `filename` | String | **REQUIRED** | 1.0.0 | The name of the uploaded file without a path component. |
+| `attachment_type` | String | **OPTIONAL** | 1.0.0 | The special type of this attachment. See [Attachment Types](#attachment-types). Defaults to `event.attachment`. |
+| `content_type` | String | **OPTIONAL** | 1.0.0 | The content type of the attachment payload. Any [MIME type](https://www.iana.org/assignments/media-types/media-types.xhtml) may be used; the default is `application/octet-stream` (since 1.0.1). |
+
+</SpecSection>
+
+### Attachment Placeholder Item
+
+<SpecSection id="wire-attachment-placeholder" status="draft" since="1.6.0">
+
+**Envelope headers:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `event_id` | UUID string | **REQUIRED** | The identifier of the event or transaction. |
+
+**Item headers:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `type` | String | **REQUIRED** | **MUST** be `"attachment"`. |
+| `content_type` | String | **REQUIRED** | **MUST** be `"application/vnd.sentry.attachment-ref"`. |
+| `length` | Integer | **REQUIRED** | Size of the placeholder payload in bytes. |
+| `attachment_length` | Integer | **REQUIRED** | Size of the referenced attachment in bytes. |
+| `filename` | String | **REQUIRED** | The name of the uploaded file without a path component. |
+
+The item header **MAY** also contain `attachment_type` and the original file's `content_type` as an additional field (see [Standard Attachment Item](#standard-attachment-item)).
+
+**Item payload:**
+
+```json
+{
+  "location": "/api/42/upload/019c7a950dd376a1817a9ced5cb7c4b5/?length=212341234&signature=Zct1IMmM3BIJrzDOwG3tUn5AlrLhqIJFBu8Kd59dXCz",
+  "content_type": "text/plain"
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `location` | String | **REQUIRED** | The identifier of the upload, as returned in the `Location` header of the upload endpoint response. |
+| `content_type` | String | **OPTIONAL** | The content type of the represented attachment (as opposed to the content type of the placeholder item itself). |
+
+</SpecSection>
+
+### Trace Attachment Item
+
+<SpecSection id="wire-trace-attachment" status="draft" since="1.5.0">
+
+**Item headers:**
+
+| Field | Type | Required | Since | Description |
+|-------|------|----------|-------|-------------|
+| `type` | String | **REQUIRED** | 1.5.0 | **MUST** be `"attachment"`. |
+| `content_type` | String | **REQUIRED** | 1.5.0 | **MUST** be `"application/vnd.sentry.trace-attachment"` (since 1.5.1). |
+| `length` | Integer | **REQUIRED** | 1.5.0 | Total payload size in bytes (metadata JSON + attachment body). |
+| `meta_length` | Integer | **REQUIRED** | 1.5.0 | Size of the metadata JSON portion of the payload in bytes. |
+
+**Item payload:**
+
+The trace attachment payload consists of a JSON metadata object immediately followed by the raw attachment body:
+
+```json
+{
+  "trace_id": "12312012123120121231201212312012",
+  "attachment_id": "019a72d07ffe77208c013ac888b38d9e",
+  "timestamp": 1760520026.781239,
+  "filename": "myfile.txt",
+  "content_type": "text/plain",
+  "attributes": {
+    "foo": {"type": "string", "value": "bar"}
+  }
+}helloworld
+```
+
+**Metadata fields:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `trace_id` | String | **REQUIRED** | 32-character hexadecimal string identifying the trace. |
+| `attachment_id` | String | **REQUIRED** | 32-character hexadecimal string (Version 7 or Version 4 UUID without dashes). |
+| `timestamp` | Float | **REQUIRED** | UNIX timestamp of the attachment's occurrence. |
+| `filename` | String | **OPTIONAL** | The file name of the attachment. |
+| `content_type` | String | **REQUIRED** | Content type of the attachment body (not the envelope item content type). |
+| `attributes` | Object | **OPTIONAL** | Arbitrary key-value pairs queryable on the attachment trace item, similar to spans, logs, and trace metrics. |
+
+</SpecSection>
+
+---
+
+## Public API
+
+### Attachment Constructors
+
+<SpecSection id="sdk-api" status="stable" since="1.1.0">
+
+SDKs **SHOULD** implement two types of attachment constructors:
+
+1. **Path-based** — takes a file path. The SDK reads the file when an event is captured, not when the user adds the attachment to the scope.
+2. **Byte-array-based** — takes raw bytes directly.
+
+If the programming language allows it, SDKs **SHOULD** use one class with multiple constructors and infer the `content_type` from the filename.
+
+**Path-based error handling:**
+
+- If reading the attachment fails, the SDK **MUST NOT** drop the whole envelope — only the attachment's envelope item.
+- If the SDK is in debug mode (`debug=true`), the SDK **SHOULD** log the error.
+
+**Transaction association:**
+
+Attachments **SHOULD** offer a flag `addToTransactions` that specifies whether the SDK adds the attachment to every transaction. The default **MUST** be `false`.
+
+</SpecSection>
+
+### Configuration Options
+
+<SpecSection id="configuration-options" status="stable" since="1.1.0">
+
+| Option | Type | Default | Since | Description |
+|--------|------|---------|-------|-------------|
+| `maxAttachmentSize` | Integer (bytes) | 20 MiB | 1.1.0 | Maximum size of a single attachment. The SDK **MUST** discard items larger than this when converting to envelope items. |
+| `attachScreenshot` | Boolean | `false` | 1.2.0 | When `true`, the SDK captures a screenshot during crashes/errors and attaches it (mobile/desktop SDKs only). |
+
+</SpecSection>
+
+---
+
+## Examples
+
+### Standard Attachment Envelope
+
+```
+{"event_id":"9ec79c33ec9942ab8353589fcb2e04dc"}
+{"type":"attachment","length":12,"filename":"log.txt","content_type":"text/plain"}
+Hello World!
+```
+
+### Screenshot Attachment Envelope
+
+```
+{"event_id":"9ec79c33ec9942ab8353589fcb2e04dc"}
+{"type":"event","length":74}
+{"event_id":"9ec79c33ec9942ab8353589fcb2e04dc","timestamp":1234567890}
+{"type":"attachment","length":1024,"filename":"screenshot.jpg","content_type":"image/jpg","attachment_type":"event.attachment"}
+<binary image data>
+```
+
+### View Hierarchy Attachment Envelope
+
+```
+{"event_id":"9ec79c33ec9942ab8353589fcb2e04dc"}
+{"type":"attachment","length":245,"filename":"view-hierarchy.json","content_type":"application/json","attachment_type":"event.view_hierarchy"}
+{"rendering_system":"compose","windows":[{"type":"com.example.MyActivity","width":1080,"height":1920,"visible":true,"children":[{"type":"android.widget.TextView","width":200,"height":48,"visible":true}]}]}
+```
+
+### Attachment Placeholder Envelope
+
+```
+{"event_id":"9ec79c33ec9942ab8353589fcb2e04dc"}
+{"type":"attachment","content_type":"application/vnd.sentry.attachment-ref","length":123,"attachment_length":212341234,"filename":"myfile.log"}
+{"location":"/api/42/upload/019c7a950dd376a1817a9ced5cb7c4b5/?length=212341234&signature=Zct1IMmM3BIJrzDOwG3tUn5AlrLhqIJFBu8Kd59dXCz","content_type":"text/plain"}
+```
+
+### Trace Attachment Envelope
+
+```
+{}
+{"type":"attachment","content_type":"application/vnd.sentry.trace-attachment","length":234,"meta_length":224}
+{"trace_id":"12312012123120121231201212312012","attachment_id":"019a72d07ffe77208c013ac888b38d9e","timestamp":1760520026.781239,"filename":"myfile.txt","content_type":"text/plain","attributes":{"foo":{"type":"string","value":"bar"}}}helloworld
+```
+
+### Reference Implementations
+
+- [Java — Attachment.java](https://github.com/getsentry/sentry-java/blob/main/sentry/src/main/java/io/sentry/Attachment.java)
+- [Objective-C — SentryAttachment.m](https://github.com/getsentry/sentry-cocoa/blob/master/Sources/Sentry/SentryAttachment.m)
+- [Python — attachments.py](https://github.com/getsentry/sentry-python/blob/master/sentry_sdk/attachments.py)
+
+---
+
+## Changelog
+
+<SpecChangelog />

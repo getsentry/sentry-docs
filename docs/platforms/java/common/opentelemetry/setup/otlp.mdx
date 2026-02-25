@@ -1,0 +1,123 @@
+---
+title: OpenTelemetry OTLP
+sdk: sentry.java
+description: "Using OpenTelemetry OTLP export with Sentry."
+sidebar_order: 300
+---
+
+Use the `sentry-opentelemetry-otlp` module when you want OpenTelemetry to handle tracing (with spans exported via OTLP to Sentry) while Sentry handles errors, logs, and metrics. Sentry reads trace and span IDs from the OpenTelemetry `Context` so that all Sentry events are correlated with your OpenTelemetry traces.
+
+Unlike the <PlatformLink to="/opentelemetry/setup/agent">Agent</PlatformLink> and <PlatformLink to="/opentelemetry/setup/agentless">Agentless</PlatformLink> integrations, this module does not use OpenTelemetry for scope storage or span creation within the Sentry SDK.
+
+## Install
+
+<PlatformSection notSupported={["java.spring-boot"]}>
+
+```groovy {tabTitle:Gradle}
+implementation 'io.sentry:sentry-opentelemetry-otlp:{{@inject packages.version('sentry.java', '8.0.0') }}'
+```
+
+```xml {tabTitle:Maven}
+<dependency>
+    <groupId>io.sentry</groupId>
+    <artifactId>sentry-opentelemetry-otlp</artifactId>
+    <version>{{@inject packages.version('sentry.java', '8.0.0') }}</version>
+</dependency>
+```
+
+This includes the OpenTelemetry SDK autoconfiguration and OTLP exporter as transitive dependencies. If you configure the OpenTelemetry SDK manually without autoconfiguration, you can exclude `opentelemetry-sdk-extension-autoconfigure` to prevent it from discovering and activating components via SPI.
+
+</PlatformSection>
+
+<PlatformSection supported={["java.spring-boot"]}>
+
+```groovy {tabTitle:Gradle}
+implementation 'io.sentry:sentry-opentelemetry-otlp-spring:{{@inject packages.version('sentry.java', '8.0.0') }}'
+```
+
+```xml {tabTitle:Maven}
+<dependency>
+    <groupId>io.sentry</groupId>
+    <artifactId>sentry-opentelemetry-otlp-spring</artifactId>
+    <version>{{@inject packages.version('sentry.java', '8.0.0') }}</version>
+</dependency>
+```
+
+This includes `sentry-opentelemetry-otlp` and the OpenTelemetry Spring Boot starter as transitive dependencies.
+
+</PlatformSection>
+
+## Setup
+
+You need to configure both OpenTelemetry (to export spans via OTLP to Sentry) and Sentry (to read trace/span IDs from OpenTelemetry).
+
+The OTLP endpoint and authentication details are shown in the code examples below. You can also find the **OTLP Traces Endpoint** and **OTLP Traces Endpoint Headers** in your Sentry project under **Settings > Projects > [Project] > Client Keys (DSN)**.
+
+<PlatformSection notSupported={["java.spring-boot"]}>
+
+Initialize OpenTelemetry using `AutoConfiguredOpenTelemetrySdk`, then initialize Sentry with the `OpenTelemetryOtlpEventProcessor`:
+
+```java {tabTitle:Java}
+import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
+import io.sentry.Sentry;
+import io.sentry.opentelemetry.otlp.OpenTelemetryOtlpEventProcessor;
+
+// 1. Configure OpenTelemetry
+AutoConfiguredOpenTelemetrySdk.builder()
+    .setResultAsGlobal()
+    .addPropertiesSupplier(() -> {
+        Map<String, String> properties = new HashMap<>();
+        properties.put("otel.traces.exporter", "otlp");
+        properties.put("otel.exporter.otlp.traces.endpoint", "___OTLP_TRACES_URL___");
+        properties.put("otel.exporter.otlp.traces.protocol", "http/protobuf");
+        properties.put("otel.exporter.otlp.traces.headers", "x-sentry-auth=sentry sentry_key=___PUBLIC_KEY___");
+        properties.put("otel.propagators", "sentry");
+        properties.put("otel.logs.exporter", "none");
+        properties.put("otel.metrics.exporter", "none");
+        return properties;
+    })
+    .build();
+
+// 2. Initialize Sentry
+Sentry.init(options -> {
+    options.setDsn("___PUBLIC_DSN___");
+    // Link Sentry events to OpenTelemetry traces
+    options.addEventProcessor(new OpenTelemetryOtlpEventProcessor());
+});
+```
+
+</PlatformSection>
+
+<PlatformSection supported={["java.spring-boot"]}>
+
+Add the following to your `application.properties`:
+
+```properties {tabTitle:application.properties}
+sentry.dsn=___PUBLIC_DSN___
+
+otel.propagators=sentry
+otel.traces.exporter=otlp
+otel.exporter.otlp.traces.endpoint=___OTLP_TRACES_URL___
+otel.exporter.otlp.traces.protocol=http/protobuf
+otel.exporter.otlp.traces.headers=x-sentry-auth=sentry sentry_key=___PUBLIC_KEY___
+otel.logs.exporter=none
+otel.metrics.exporter=none
+```
+
+Register the `OpenTelemetryOtlpEventProcessor` as a Spring bean to link Sentry events to OpenTelemetry traces:
+
+```java {tabTitle:Java}
+import io.sentry.opentelemetry.otlp.OpenTelemetryOtlpEventProcessor;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class SentryConfig {
+    @Bean
+    public OpenTelemetryOtlpEventProcessor openTelemetryOtlpEventProcessor() {
+        return new OpenTelemetryOtlpEventProcessor();
+    }
+}
+```
+
+</PlatformSection>
