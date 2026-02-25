@@ -178,7 +178,7 @@ and configure `sentryTanstackStart` in your `vite.config.ts`:
 
 ```typescript {filename:vite.config.ts}
 import { defineConfig } from "vite";
-import { sentryTanstackStart } from "@sentry/tanstackstart-react";
+import { sentryTanstackStart } from "@sentry/tanstackstart-react/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 
 export default defineConfig({
@@ -229,12 +229,30 @@ Add a `--import` flag directly or to the `NODE_OPTIONS` environment variable whe
 
 ## Step 3: Capture TanStack Start React Errors
 
-### Instrument Server Requests and Server Functions
+### Capturing Server-Side Errors
+
+To capture server-side errors from HTTP requests and server function calls, add Sentry's global middlewares to `createStart()` in your `src/start.ts` file:
+
+```tsx {filename:src/start.ts}
+import {
+  sentryGlobalFunctionMiddleware,
+  sentryGlobalRequestMiddleware,
+} from "@sentry/tanstackstart-react";
+import { createStart } from "@tanstack/react-start";
+
+export const startInstance = createStart(() => {
+  return {
+    requestMiddleware: [sentryGlobalRequestMiddleware],
+    functionMiddleware: [sentryGlobalFunctionMiddleware],
+  };
+});
+```
+
+The Sentry middleware should be the first middleware in the arrays to ensure all errors are captured.
 
 <Alert level="info">
-  Automatic error monitoring is not yet supported on the server side of TanStack
-  Start. Use `captureException` to manually capture errors in your server-side
-  code.
+  SSR rendering exceptions are not captured by the middleware. Use
+  `captureException` to manually capture those errors.
 </Alert>
 
 ### Capturing Errors in Error Boundaries and Components (Optional)
