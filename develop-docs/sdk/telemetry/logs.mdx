@@ -156,7 +156,7 @@ SDKs **MUST** attach the following attributes to every log:
 | `sentry.sdk.name` | 1.0.0 | The name of the SDK that sent the log. |
 | `sentry.sdk.version` | 1.0.0 | The version of the SDK that sent the log. |
 | `sentry.replay_id` | 1.8.0 | The replay ID of the active replay when the log was collected. **MUST NOT** be set if no replay is active. |
-| `sentry.timestamp.sequence` | 1.16.0 | A monotonically incrementing integer counter used to determine correct ordering of logs when timestamps are identical. See [Log Ordering](#log-ordering). |
+| `sentry.timestamp.sequence` | 1.16.0 | A monotonically incrementing integer counter used to determine correct ordering of logs when timestamps are identical. **MUST** be sent on runtimes with frozen or low-precision timers, **MAY** be omitted otherwise. See [Log Ordering](#log-ordering). |
 
 For parameterized logs, SDKs **MUST** also attach:
 
@@ -298,16 +298,14 @@ Logs **SHOULD** be associated with replays. If a log is recorded during an activ
 
 <SpecSection id="log-ordering" status="candidate" since="1.16.0">
 
-Some runtimes (notably Cloudflare Workers) freeze timer APIs (`Date.now()`, `performance.now()`) during synchronous execution, causing multiple logs to share identical timestamps. In those cases, to guarantee deterministic ordering, SDKs **MUST** attach a `sentry.timestamp.sequence` integer attribute to every log.
+Some runtimes (notably Cloudflare Workers) freeze timer APIs (`Date.now()`, `performance.now()`) during synchronous execution, causing multiple logs to share identical timestamps. SDKs that target runtimes where timestamps may be frozen or lack sub-millisecond precision **MUST** attach a `sentry.timestamp.sequence` integer attribute to every log. SDKs that only target runtimes with reliable sub-millisecond timestamps **MAY** omit it.
 
-The sequence number **MUST**:
+When sent, the sequence number **MUST**:
 - Start at `0` when the SDK initializes.
 - Increment by `1` for each log that is captured.
 - Reset to `0` when:
   - The SDK is re-initialized.
   - The current log's integer millisecond differs from the previous log's integer millisecond (i.e., `floor(timestamp_seconds * 1000)` changes).
-
-SDKs **MAY** omit `sentry.timestamp.sequence` if the runtime provides sub-millisecond timestamp precision and does not freeze timer APIs, since ordering is already deterministic from timestamps alone.
 
 The sequence provides deterministic ordering within a single SDK instance. It does not guarantee ordering across independent processes or workers, which have separate counters. The reset behavior ensures the sequence only increments for consecutive logs that share the same timestamp.
 

@@ -117,7 +117,7 @@ SDKs **MUST** attach the following attributes to every metric by default:
 2. `sentry.release` — the release set in the SDK, if defined.
 3. `sentry.sdk.name` — the name of the SDK that sent the metric.
 4. `sentry.sdk.version` — the version of the SDK that sent the metric.
-5. `sentry.timestamp.sequence` — a monotonically incrementing integer counter used to determine correct ordering of metrics when timestamps are identical. See [Metric Ordering](#metric-ordering).
+5. `sentry.timestamp.sequence` — a monotonically incrementing integer counter used to determine correct ordering of metrics when timestamps are identical. **MUST** be sent on runtimes with frozen or low-precision timers, **MAY** be omitted otherwise. See [Metric Ordering](#metric-ordering).
 
 SDKs **SHOULD** minimize the number of default attributes. Metrics cardinality can explode quickly with too many attributes. New default attributes **SHOULD** only be added after significant feedback from users and discussion internally with the SDK and ingest teams.
 
@@ -195,16 +195,14 @@ Whenever possible, metrics **SHOULD** be linked to replays. If a metric is recor
 
 <SpecSection id="metric-ordering" status="candidate" since="2.6.0">
 
-Some runtimes (notably Cloudflare Workers) freeze timer APIs (`Date.now()`, `performance.now()`) during synchronous execution, causing multiple metrics to share identical timestamps. In those cases, to guarantee deterministic ordering, SDKs **MUST** attach a `sentry.timestamp.sequence` integer attribute to every metric.
+Some runtimes (notably Cloudflare Workers) freeze timer APIs (`Date.now()`, `performance.now()`) during synchronous execution, causing multiple metrics to share identical timestamps. SDKs that target runtimes where timestamps may be frozen or lack sub-millisecond precision **MUST** attach a `sentry.timestamp.sequence` integer attribute to every metric. SDKs that only target runtimes with reliable sub-millisecond timestamps **MAY** omit it.
 
-The sequence number **MUST**:
+When sent, the sequence number **MUST**:
 - Start at `0` when the SDK initializes.
 - Increment by `1` for each metric that is captured.
 - Reset to `0` when:
   - The SDK is re-initialized.
   - The current metric's integer millisecond differs from the previous metric's integer millisecond (i.e., `floor(timestamp_seconds * 1000)` changes).
-
-SDKs **MAY** omit `sentry.timestamp.sequence` if the runtime provides sub-millisecond timestamp precision and does not freeze timer APIs, since ordering is already deterministic from timestamps alone.
 
 The sequence provides deterministic ordering within a single SDK instance. It does not guarantee ordering across independent processes or workers, which have separate counters. The reset behavior ensures the sequence only increments for consecutive metrics that share the same timestamp.
 
