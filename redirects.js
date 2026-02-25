@@ -307,6 +307,18 @@ const developerDocsRedirects = [
     destination: '/sdk/getting-started/playbooks/',
   },
   {
+    source: '/sdk/processes/',
+    destination: '/sdk/getting-started/',
+  },
+  {
+    source: '/sdk/processes/breaking_changes/',
+    destination: '/sdk/getting-started/playbooks/sdk-lifecycle/breaking-changes/',
+  },
+  {
+    source: '/sdk/processes/breaking-changes/',
+    destination: '/sdk/getting-started/playbooks/sdk-lifecycle/breaking-changes/',
+  },
+  {
     source: '/sdk/miscellaneous/feature-branches/',
     destination: '/sdk/getting-started/playbooks/development/syncing-feature-branches/',
   },
