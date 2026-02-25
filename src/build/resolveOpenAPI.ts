@@ -8,7 +8,7 @@ import {DeRefedOpenAPI} from './open-api/types';
 
 // SENTRY_API_SCHEMA_SHA is used in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
 // DO NOT change variable name unless you change it in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
-const SENTRY_API_SCHEMA_SHA = '66c1827096e4cd8f8b5074c316c67975015a84ba';
+const SENTRY_API_SCHEMA_SHA = '870543550802cd0ec186a6e1c3f7e21e520b4361';
 
 const activeEnv = process.env.GATSBY_ENV || process.env.NODE_ENV || 'development';
 
@@ -65,6 +65,7 @@ type APIData = DeRefedOpenAPI['paths'][string][string];
 export type API = {
   apiPath: string;
   bodyParameters: APIParameter[];
+  deprecated: boolean;
   method: string;
   name: string;
   pathParameters: APIParameter[];
@@ -96,6 +97,16 @@ function slugify(s: string): string {
     .toLowerCase();
 }
 
+const DEPRECATED_PREFIX_REGEX = /^\(DEPRECATED\)\s*/;
+
+function isDeprecatedOperationId(operationId: string | undefined): boolean {
+  return operationId ? DEPRECATED_PREFIX_REGEX.test(operationId) : false;
+}
+
+function stripDeprecatedPrefix(operationId: string): string {
+  return operationId.replace(DEPRECATED_PREFIX_REGEX, '');
+}
+
 let apiCategoriesCache: Promise<APICategory[]> | undefined;
 
 export function apiCategories(): Promise<APICategory[]> {
@@ -121,10 +132,8 @@ async function apiCategoriesUncached(): Promise<APICategory[]> {
 
   Object.entries(data.paths).forEach(([apiPath, methods]) => {
     Object.entries(methods).forEach(([method, apiData]) => {
-      // Skip deprecated endpoints
-      if (apiData.operationId && apiData.operationId.includes('(DEPRECATED)')) {
-        return;
-      }
+      const isDeprecated = isDeprecatedOperationId(apiData.operationId);
+      const cleanOperationId = stripDeprecatedPrefix(apiData.operationId ?? '');
 
       let server = 'https://sentry.io';
       if (apiData.servers && apiData.servers[0]) {
@@ -134,9 +143,10 @@ async function apiCategoriesUncached(): Promise<APICategory[]> {
         categoryMap[tag].apis.push({
           apiPath,
           method,
-          name: apiData.operationId,
+          name: cleanOperationId,
+          deprecated: isDeprecated,
           server,
-          slug: slugify(apiData.operationId),
+          slug: slugify(cleanOperationId),
           summary: apiData.summary,
           descriptionMarkdown: apiData.description,
           pathParameters: (apiData.parameters || []).filter(

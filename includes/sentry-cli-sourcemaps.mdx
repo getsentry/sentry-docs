@@ -24,9 +24,29 @@ Debug IDs are used to match the stack frame of an event with its corresponding m
 
 To inject Debug IDs, use the following command:
 
+<PlatformSection supported={['javascript.capacitor']}>
+
+```bash {tabTitle: Ionic Build & others}
+sentry-cli sourcemaps inject ./www
+```
+
+```bash {tabTitle: Ionic Capacitor Build}
+# Android
+sentry-cli sourcemaps inject ./android/app/src/main/assets/public
+
+# iOS
+sentry-cli sourcemaps inject ./ios/App/App/public
+```
+
+</PlatformSection>
+
+<PlatformSection notSupported={['javascript.capacitor']}>
+
 ```bash
 sentry-cli sourcemaps inject /path/to/directory
 ```
+
+</PlatformSection>
 
 #### Verify Debug IDs Were Injected in Artifacts
 
@@ -52,9 +72,37 @@ Source maps should contain a field named `debug_id` like:
 
 After you've injected Debug IDs into your artifacts, upload them using the following command.
 
+<PlatformSection supported={['javascript.capacitor']}>
+
+```bash {tabTitle: Ionic Build & others}
+sentry-cli sourcemaps upload --release <release_name>  --dist <dist> ./www
+```
+
+```bash {tabTitle: Ionic Capacitor Build}
+
+# Android
+sentry-cli sourcemaps upload --release <release_name> --dist <dist> ./android/app/src/main/assets/public
+find ./android/app/src/main/assets/public -type f -name '*.map' -delete # Optional, removes sourcemaps from the mobile app.
+
+# iOS
+sentry-cli sourcemaps upload --release <release_name> --dist <dist> ./ios/App/App/public
+find ./ios/App/App/public -type f -name '*.map' -delete # Optional, removes sourcemaps from the mobile app.
+
+```
+
+<Alert title="Important" level="warning">
+Run these commands for every production build. The `<release_name>` and `<dist>` values must match the values you pass to `Sentry.init` for events to be deminified correctly.
+</Alert>
+
+</PlatformSection>
+
+<PlatformSection notSupported={['javascript.capacitor']}>
+
 ```bash
 sentry-cli sourcemaps upload /path/to/directory
 ```
+
+</PlatformSection>
 
 #### Verify That Artifact Bundles Were Uploaded
 

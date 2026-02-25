@@ -41,11 +41,11 @@ SentrySubsystem->InitializeWithSettings(FConfigureSettingsNativeDelegate::Create
     Settings->EnableStructuredLogging = true;
 
     // Enable specific severity levels for UE_LOG forwarding
-    Settings->EnableDebugLogs = false;
-    Settings->EnableInfoLogs = true;
-    Settings->EnableWarningLogs = true;
-    Settings->EnableErrorLogs = true;
-    Settings->EnableFatalLogs = true;
+    Settings->StructuredLoggingLevels.bOnDebugLog = false;
+    Settings->StructuredLoggingLevels.bOnInfoLog = true;
+    Settings->StructuredLoggingLevels.bOnWarningLog = true;
+    Settings->StructuredLoggingLevels.bOnErrorLog = true;
+    Settings->StructuredLoggingLevels.bOnFatalLog = true;
 
     Settings->bSendBreadcrumbsWithStructuredLogging = false; // Send as structured logs instead of breadcrumbs
 }));
@@ -69,7 +69,7 @@ SentrySubsystem->InitializeWithSettings(FConfigureSettingsNativeDelegate::Create
     AllowedCategories.Add(TEXT("LogGameFlow"));
     AllowedCategories.Add(TEXT("LogPlayerSystem"));
     AllowedCategories.Add(TEXT("LogSentrySdk"));
-    Settings->LogCategoryFilter = AllowedCategories;
+    Settings->StructuredLoggingCategories = AllowedCategories;
 
 }));
 ```
@@ -88,28 +88,28 @@ class UCustomLogFilter : public USentryBeforeLogHandler
 {
     GENERATED_BODY()
 public:
-    virtual USentryLogEvent* HandleBeforeLog_Implementation(USentryLogEvent* LogEvent) override
+    virtual USentryLog* HandleBeforeLog_Implementation(USentryLog* LogData) override
     {
         // Filter out all debug logs
-        if (LogEvent->GetLevel() == ESentryLevel::Debug)
+        if (LogData->GetLevel() == ESentryLevel::Debug)
         {
             return nullptr; // Return null to prevent sending
         }
 
         // Filter out logs based on message content
-        if (LogEvent->GetBody().Contains(TEXT("Sensitive")))
+        if (LogData->GetBody().Contains(TEXT("Sensitive")))
         {
             return nullptr; // Filter out sensitive logs
         }
 
         // Filter based on specific categories
-        if (LogEvent->GetBody().Contains(TEXT("Password")) ||
-            LogEvent->GetBody().Contains(TEXT("Token")))
+        if (LogData->GetBody().Contains(TEXT("Password")) ||
+            LogData->GetBody().Contains(TEXT("Token")))
         {
             return nullptr; // Filter out authentication-related logs
         }
 
-        return LogEvent; // Return modified event
+        return LogData; // Return modified event
     }
 };
 
@@ -123,14 +123,14 @@ void USomeClass::HandleSettingsDelegate(USentrySettings* Settings)
     Settings->EnableStructuredLogging = true;
 
     // Configure individual severity levels
-    Settings->EnableDebugLogs = false;
-    Settings->EnableInfoLogs = true;
-    Settings->EnableWarningLogs = true;
-    Settings->EnableErrorLogs = true;
-    Settings->EnableFatalLogs = true;
+    Settings->StructuredLoggingLevels.bOnDebugLog = false;
+    Settings->StructuredLoggingLevels.bOnInfoLog = true;
+    Settings->StructuredLoggingLevels.bOnWarningLog = true;
+    Settings->StructuredLoggingLevels.bOnErrorLog = true;
+    Settings->StructuredLoggingLevels.bOnFatalLog = true;
 
     // Set custom before-log handler
-    Settings->BeforeLogCallback = UCustomLogFilter::StaticClass();
+    Settings->BeforeLogHandler = UCustomLogFilter::StaticClass();
 }
 
 // Initialize with settings delegate

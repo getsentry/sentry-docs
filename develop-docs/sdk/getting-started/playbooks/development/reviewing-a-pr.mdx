@@ -1,0 +1,90 @@
+---
+title: Reviewing a Pull Request
+spec_id: sdk/playbooks/reviewing-a-pr
+spec_version: 1.0.0
+spec_status: candidate
+spec_depends_on:
+  - id: sdk/getting-started/standards/review-ci
+    version: ">=1.0.0"
+  - id: sdk/getting-started/standards/code-quality
+    version: ">=1.0.0"
+  - id: sdk/getting-started/standards/code-submission
+    version: ">=1.0.0"
+spec_changelog:
+  - version: 1.0.0
+    date: 2026-02-21
+    summary: Initial playbook — standardized code review process with LOGAF feedback conventions
+---
+
+<SpecRfcAlert />
+
+<SpecMeta />
+
+## Overview
+
+This playbook guides reviewers through conducting effective code reviews for SDK pull requests. It covers PR description validation, CI verification, code quality assessment, and feedback conventions using the LOGAF scale. By following these steps, reviews will focus on risk reduction, maintain consistent quality standards, and provide actionable feedback.
+
+Related resources:
+- [Review and CI Standards](/sdk/getting-started/standards/review-ci) — review requirements and feedback conventions
+- [Code Quality Standards](/sdk/getting-started/standards/code-quality) — test requirements and quality criteria
+- [Sentry code review checklist](/engineering-practices/code-review/) — detailed review criteria
+- [Sentry Skills](https://github.com/getsentry/skills#available-skills) — code-review skill for automated checks
+
+---
+
+## Steps
+
+#### 1. Check the PR description
+
+Does it explain what and why? Is there a linked issue? If either is missing, request it before reviewing code.
+
+#### 2. Check CI status and prior AI/human reviews
+
+A reviewer **SHOULD NOT** begin a full review unless all of the following conditions are met:
+
+- All CI checks, builds, and tests have completed successfully.
+- All requested AI code review agents have completed their reviews.
+- All comments from previous review cycles (AI or human) have been addressed, resolved, or explicitly marked as not applicable.
+
+If any of the above conditions are unmet, the reviewer **MAY** leave comments to help the author unblock CI failures or address outstanding feedback.
+
+#### 3. Review the code
+
+Use the [code review checklist](/engineering-practices/code-review/). You **MUST** focus on:
+- Runtime errors and potential crashes
+- Performance concerns (N+1 queries, unbounded operations)
+- Unintended side effects or behavior changes
+- Backwards compatibility
+- Security vulnerabilities
+- Test coverage appropriate for the change type ([Test requirements by change type](/sdk/getting-started/standards/code-quality#test-requirements-by-change-type))
+- Test quality — do assertions verify real behavior? ([Test quality](/sdk/getting-started/standards/code-quality#test-quality))
+
+You **SHOULD** use the [`sentry-skills:code-review`](https://github.com/getsentry/skills#available-skills) skill to systematically check for issues.
+
+#### 4. Check for @sdk-leads review triggers
+
+([Required reviewers](/sdk/getting-started/standards/review-ci#required-reviewers)): public API changes, new dependencies, schema changes, security-sensitive code, new frameworks. If any apply and no @sdk-leads reviewer is assigned, flag it.
+
+#### 5. Use LOGAF prefixes on all feedback
+
+You **MUST** use LOGAF prefixes on all feedback ([Review feedback conventions](/sdk/getting-started/standards/review-ci#review-feedback-conventions)):
+- `h:` (high) — must fix before merge. Bugs, security issues, breakage, data loss.
+- `m:` (medium) — should fix. Design concerns, missing tests, unclear code.
+- `l:` (low) — optional nit. Style preferences, minor suggestions.
+
+#### 6. Approve when only `l:` items remain
+
+You **MUST NOT** block for style preferences. The goal is risk reduction, not perfection.
+
+## Referenced Standards
+
+- [Review feedback conventions](/sdk/getting-started/standards/review-ci#review-feedback-conventions) — LOGAF scale and blocking criteria
+- [Required reviewers](/sdk/getting-started/standards/review-ci#required-reviewers) — @sdk-leads review triggers
+- [Required CI checks baseline](/sdk/getting-started/standards/review-ci#required-ci-checks-baseline) — minimum CI requirements
+- [Test requirements by change type](/sdk/getting-started/standards/code-quality#test-requirements-by-change-type) — test coverage expectations
+- [Test quality](/sdk/getting-started/standards/code-quality#test-quality) — meaningful assertion requirements
+- [PR description quality](/sdk/getting-started/standards/code-submission#pr-description-quality) — description content requirements
+
+---
+
+<SpecChangelog />

@@ -104,7 +104,7 @@ export const getRouter = () => {
 +     replaysOnErrorSampleRate: 1.0,
 +     // ___PRODUCT_OPTION_END___ session-replay
 +   });
-  }
++  }
 
   return router;
 }
@@ -178,7 +178,7 @@ and configure `sentryTanstackStart` in your `vite.config.ts`:
 
 ```typescript {filename:vite.config.ts}
 import { defineConfig } from "vite";
-import { sentryTanstackStart } from "@sentry/tanstackstart-react";
+import { sentryTanstackStart } from "@sentry/tanstackstart-react/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 
 export default defineConfig({
@@ -194,7 +194,7 @@ export default defineConfig({
 });
 ```
 
-For all available options, see the [Vite Plugin documentation](/platforms/javascript/guides/tanstackstart-react/features/sentryTanstackStart/).
+By default, this plugin manages source map uploads. When tracing is enabled, it also automatically instruments middlewares for tracing. For all available options, see the [Vite Plugin documentation](/platforms/javascript/guides/tanstackstart-react/features/sentryTanstackStart/).
 
 #### Moving the Sentry server config file for production usage
 
@@ -229,12 +229,30 @@ Add a `--import` flag directly or to the `NODE_OPTIONS` environment variable whe
 
 ## Step 3: Capture TanStack Start React Errors
 
-### Instrument Server Requests and Server Functions
+### Capturing Server-Side Errors
+
+To capture server-side errors from HTTP requests and server function calls, add Sentry's global middlewares to `createStart()` in your `src/start.ts` file:
+
+```tsx {filename:src/start.ts}
+import {
+  sentryGlobalFunctionMiddleware,
+  sentryGlobalRequestMiddleware,
+} from "@sentry/tanstackstart-react";
+import { createStart } from "@tanstack/react-start";
+
+export const startInstance = createStart(() => {
+  return {
+    requestMiddleware: [sentryGlobalRequestMiddleware],
+    functionMiddleware: [sentryGlobalFunctionMiddleware],
+  };
+});
+```
+
+The Sentry middleware should be the first middleware in the arrays to ensure all errors are captured.
 
 <Alert level="info">
-  Automatic error monitoring is not yet supported on the server side of TanStack
-  Start. Use `captureException` to manually capture errors in your server-side
-  code.
+  SSR rendering exceptions are not captured by the middleware. Use
+  `captureException` to manually capture those errors.
 </Alert>
 
 ### Capturing Errors in Error Boundaries and Components (Optional)
@@ -391,6 +409,7 @@ At this point, you should have integrated Sentry into your TanStack Start React 
 Now's a good time to customize your setup and look into more advanced topics.
 Our next recommended steps for you are:
 
+- Explore [practical guides](/guides/) on what to monitor, log, track, and investigate after setup
 - Learn how to [manually capture errors](/platforms/javascript/guides/tanstackstart-react/usage/)
 - Continue to [customize your configuration](/platforms/javascript/guides/tanstackstart-react/configuration/)
 - Get familiar with [Sentry's product features](/product/) like tracing, insights, and alerts

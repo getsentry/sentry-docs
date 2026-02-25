@@ -19,22 +19,27 @@ Sentry Conventions is the single source of truth.
 
 ## Create Agent Span
 
-Describes AI agent invocation.
+Describes GenAI agent creation and is usually applicable when working with remote agent services.
 
 - Span `op` SHOULD be `"gen_ai.create_agent"`.
 - Span `name` SHOULD be `"create_agent {gen_ai.agent.name}"`. (e.g. `"create_agent Weather Agent"`)
 - Attribute `gen_ai.operation.name` MUST be `"create_agent"`.
 - Attribute `gen_ai.agent.name` SHOULD be set to the agents name. (e.g. `"Weather Agent"`)
+- If provided, the attribute `gen_ai.request.model` MUST be the agent's default request model. (e.g. `"gpt-4o"`)
+- If relevant, the `gen_ai.pipeline.name` attribute SHOULD be set to the name of the AI workflow, pipeline or chain within which the agent operates. (e.g. `"weather-pipeline"`)
 - All [Common Span Attributes](#common-span-attributes) SHOULD be set (all `required` common attributes MUST be set).
 
 ## Invoke Agent Span
 
 Describes AI agent invocation.
+Agent invocations represent operations that can include multiple model calls, or some auxiliary work that goes beyond transforming the model input and output.
 
 - Span `op` SHOULD be `"gen_ai.invoke_agent"`.
 - Span `name` SHOULD be `"invoke_agent {gen_ai.agent.name}"`. (e.g. `"invoke_agent Weather Agent"`)
 - Attribute `gen_ai.operation.name` MUST be `"invoke_agent"`.
 - Attribute `gen_ai.agent.name` SHOULD be set to the agents name. (e.g. `"Weather Agent"`)
+- If provided, the attribute `gen_ai.request.model` MUST be the agent's default request model. (e.g. `"gpt-4o"`)
+- If relevant, the `gen_ai.pipeline.name` attribute SHOULD be set to the name of the AI workflow, pipeline or chain within which the agent operates. (e.g. `"weather-pipeline"`)
 - All [Common Span Attributes](#common-span-attributes) SHOULD be set (all `required` common attributes MUST be set).
 
 Additional attributes on the span:
@@ -43,7 +48,7 @@ Additional attributes on the span:
 
 | Attribute                          | Type   | Requirement Level | Description                                                                                                                             | Example                                                               |
 | :--------------------------------- | :----- | :---------------- | :-------------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------- |
-| `gen_ai.input.messages`            | string | optional          | List of dictionaries describing the messages (prompts) given to the agent. **[0]**, **[1]**                                             | `'[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]'` |
+| `gen_ai.input.messages`            | string | optional          | List of dictionaries describing the messages (prompts) given to the agent. **[0]**, **[1]**, **[6]**, **[7]**                           | `'[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]'` |
 | `gen_ai.tool.definitions`          | string | optional          | List of dictionaries describing the available tools. **[0]**                                                                            | `'[{"name": "random_number", "description": "..."}, ...]'`            |
 | `gen_ai.system_instructions`       | string | optional          | The system instructions passed to the model.                                                                                            | `"You are a helpful assistant."`                                      |
 | `gen_ai.request.max_tokens`        | int    | optional          | Model configuration parameter.                                                                                                          | `500`                                                                 |
@@ -61,11 +66,7 @@ Additional attributes on the span:
 | Attribute                             | Type    | Requirement Level | Description                                                                                           | Example                                                                      |
 | :------------------------------------ | :------ | :---------------- | :---------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------- |
 | `gen_ai.output.messages`              | string  | optional          | Stringified array of message objects representing the model's output. **[0]**, **[1]**                | `'[{"role": "assistant", "parts": [{"type": "text", "content": "..."}]}]'`   |
-| `gen_ai.response.finish_reasons`      | string  | optional          | The reason why the model stopped generating.                                                          | `"stop"`                                                                     |
-| `gen_ai.response.id`                  | string  | optional          | Unique identifier for the completion.                                                                 | `"chatcmpl-abc123"`                                                          |
 | `gen_ai.response.streaming`           | boolean | optional          | Whether response was streamed asynchronously.                                                         | `true`                                                                       |
-| `gen_ai.response.time_to_first_token` | double  | optional          | Seconds until first response chunk in streaming.                                                      | `0.5`                                                                        |
-| `gen_ai.response.tokens_per_second`   | double  | optional          | Output tokens per second throughput.                                                                  | `50.0`                                                                       |
 | `gen_ai.response.text`                | string  | optional          | **Deprecated.** Use `gen_ai.output.messages` instead. The text representation of the agents response. | `"The weather in Paris is rainy"`                                            |
 | `gen_ai.response.tool_calls`          | string  | optional          | **Deprecated.** Use `gen_ai.output.messages` instead. The tool calls in the model's response. **[0]** | `'[{"name": "random_number", "type": "function_call", "arguments": "..."}]'` |
 
@@ -99,7 +100,11 @@ This span represents a request to an AI model or service that generates a respon
 
 - Span `op` SHOULD be `"gen_ai.{gen_ai.operation.name}"`. (e.g. `"gen_ai.chat"`)
 - Span `name` SHOULD be `{gen_ai.operation.name} {gen_ai.request.model}"`. (e.g. `"chat o3-mini"`)
-- Attribute `gen_ai.operation.name` MUST be the operation performed. **[4]** (e.g. `"chat"`.)
+- Attribute `gen_ai.operation.name` MUST be `"chat"`, `"embeddings"`, `"generate_content"` or `"text_completion"`. **[4]**
+- Attribute `gen_ai.request.model` MUST be the requested model. (e.g. `"gpt-4o"`)
+- Attribute `gen_ai.response.model` MUST be the concrete response model. (e.g. `"gpt-4o-2024-08-06"`)
+- If the request originates from an agent, the `gen_ai.agent.name` attribute SHOULD be set to the name of the agent. (e.g. `"Weather Agent"`)
+- If relevant, the `gen_ai.pipeline.name` attribute SHOULD be set to the name of the AI workflow, pipeline or chain within which the agent operates. (e.g. `"weather-pipeline"`)
 - All [Common Span Attributes](#common-span-attributes) SHOULD be set (all `required` common attributes MUST be set).
 
 Additional attributes on the span:
@@ -108,7 +113,7 @@ Additional attributes on the span:
 
 | Attribute                          | Type   | Requirement Level | Description                                                                                                                          | Example                                                               |
 | :--------------------------------- | :----- | :---------------- | :----------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------- |
-| `gen_ai.input.messages`            | string | optional          | List of dictionaries describing the messages (prompts) sent to the LLM. **[0]**, **[1]**                                             | `'[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]'` |
+| `gen_ai.input.messages`            | string | optional          | List of dictionaries describing the messages (prompts) sent to the LLM. **[0]**, **[1]**, **[6]**, **[7]**                           | `'[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]'` |
 | `gen_ai.tool.definitions`          | string | optional          | List of dictionaries describing the available tools. **[0]**                                                                         | `'[{"name": "random_number", "description": "..."}, ...]'`            |
 | `gen_ai.system_instructions`       | string | optional          | The system instructions passed to the model.                                                                                         | `"You are a helpful assistant."`                                      |
 | `gen_ai.request.max_tokens`        | int    | optional          | Model configuration parameter.                                                                                                       | `500`                                                                 |
@@ -166,6 +171,8 @@ Describes a tool execution.
 - Span `name` SHOULD be `"execute_tool {gen_ai.tool.name}"`. (e.g. `"execute_tool query_database"`)
 - Attribute `gen_ai.operation.name` MUST be `"execute_tool"`.
 - Attribute `gen_ai.tool.name` SHOULD be set to the name of the tool. (e.g. `"query_database"`)
+- Attribute `gen_ai.agent.name` SHOULD be set to the name of the agent that invoked the tool. (e.g. `"Weather Agent"`)
+- If relevant, the `gen_ai.pipeline.name` attribute SHOULD be set to the name of the AI workflow, pipeline or chain within which the agent operates. (e.g. `"weather-pipeline"`)
 - All [Common Span Attributes](#common-span-attributes) SHOULD be set (all `required` common attributes MUST be set).
 
 Additional attributes on the span:
@@ -199,11 +206,6 @@ Some attributes are common to all AI Agents spans:
 | Attribute               | Type   | Requirement Level | Description                                                                              | Example               |
 | :---------------------- | :----- | :---------------- | :--------------------------------------------------------------------------------------- | :-------------------- |
 | `gen_ai.operation.name` | string | required          | The name of the operation being performed. **[4]**                                       | `"chat"`              |
-| `gen_ai.operation.type` | string | optional          | Type of AI operation: `"agent"`, `"ai_client"`, `"tool"`, `"handoff"`, `"guardrail"`.    | `"agent"`             |
-| `gen_ai.request.model`  | string | required          | The name of the AI model a request is being made to.                                     | `"gpt-4o"`            |
-| `gen_ai.response.model` | string | optional          | The name of the AI model the response was created with.                                  | `"gpt-4o-2024-08-06"` |
-| `gen_ai.agent.name`     | string | optional          | The name of the agent this span belongs to.                                              | `"Weather Agent"`     |
-| `gen_ai.pipeline.name`  | string | optional          | Name of the AI pipeline or chain being executed.                                         | `"weather-pipeline"`  |
 | `gen_ai.system`         | string | optional          | The Generative AI product as identified by the client or server instrumentation. **[5]** | `"openai"`            |
 
 **[4]** Well defined values for data attribute `gen_ai.operation.name`:
@@ -238,8 +240,10 @@ Some attributes are common to all AI Agents spans:
 | `"perplexity"`      | Perplexity                        |
 | `"xai"`             | xAI                               |
 
-## Size Limits
+**[6]**
 
-In addition to the [general size limits](https://docs.sentry.io/concepts/data-management/size-limits/) for events, spans, and attachments, there are specific size limits for AI integrations:
+The input list should include the most recent messages up to and including the most recent previous model response. The previous model response is identified with an "assistant" or "model" role in common frameworks. If there is no previous model response in the input list, then all input items which are not system instructions should be included. System instructions must be added in `gen_ai.system_instructions`, and are not included in the `gen_ai.input.messages` list.
 
-- Input messages in AI integrations recorded in the span attribute `gen_ai.input.messages` (or the deprecated `gen_ai.request.messages`) are limited to 20kB per span. Messages are trimmed and truncated if they exceed the limit, retaining the most recent messages.
+**[7]**
+
+Binary blobs in the input list should be replaced with the string `"[Blob substitute]"` in positions where binary data is expected in a given schema. Only binary blobs in positions where binary data is explicitly expected must be redacted. For example, in OpenAI Completions schema, only binary blobs in content blocks with type `image_url`, `input_audio` or `file` should be redacted.

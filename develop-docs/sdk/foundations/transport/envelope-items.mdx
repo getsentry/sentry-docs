@@ -1,0 +1,96 @@
+---
+title: Envelope Items
+sidebar_order: 80
+---
+
+Each Envelope consists of headers and a potentially empty list of Items, each
+with their own headers. Which Headers are required depends on the Items in an
+Envelope. This section describes all Item types and their respective required
+headers. It is worth noting that the list of Item types doesn't match the data
+categories used for [rate limiting](/sdk/foundations/transport/rate-limiting/#definitions) and
+client reports.
+
+The type of an Item is declared in the `type` header, as well as the payload
+size in `length`. See Serialization Format for a list of common Item headers.
+The headers described in this section are **in addition to the common headers**.
+
+### Event
+
+Item type `"event"`. This Item contains an error or default [event payload](/sdk/foundations/transport/event-payloads/)
+encoded in JSON.
+
+**Constraints:**
+
+- This Item may occur at most once per Envelope.
+- This Item is mutually exclusive with `"transaction"` Items.
+
+**Envelope Headers:**
+
+`event_id`
+
+: **UUID String, required.** Corresponds to the `event_id` field of the event
+payload. Clients are required to generate an event identifier ahead of time
+and set it at least in the Envelope headers. If the identifier mismatches
+between the Envelope and payload, the Envelope header takes precedence.
+
+**Additional Item Headers:**
+
+_None_
+
+### Transaction
+
+Item type `"transaction"`. This Item contains a transaction payload encoded
+in JSON.
+
+**Constraints:**
+
+- This Item may occur at most once per Envelope.
+- This Item is mutually exclusive with `"event"` Items.
+
+**Envelope Headers:**
+
+`event_id`
+
+: **UUID String, required.** Corresponds to the `event_id` field of the
+transaction payload. Clients are required to generate an event identifier
+ahead of time and set it at least in the Envelope headers. If the identifier
+mismatches between the Envelope and payload, the Envelope header takes
+precedence.
+
+**Additional Item Headers:**
+
+_None_
+
+### Attachment
+
+Item type `"attachment"`. See the [Attachments](/sdk/telemetry/attachments/) spec for full documentation of standard attachments, attachment placeholders, and trace attachments.
+
+
+### Check-Ins
+
+Item type `"check_in"` contains a check-in payload encoded as JSON.
+
+See the <Link to="/sdk/telemetry/check-ins/">Check-Ins</Link> documentation for the payload
+details.
+
+**Constraints:**
+
+- This Item may occur at most once per Envelope.
+- This Item can either be included in an Envelope with other Items, or it may be sent by itself.
+
+**Envelope Headers:**
+
+_None_
+
+**Additional Item Headers:**
+
+_None_
+
+### Reserved Types
+
+Reserved types may not be written by any implementation. They are reserved for
+future or internal use. This is the exhaustive list of reserved Item types:
+
+- `security`
+- `unreal_report`
+- `form_data`
