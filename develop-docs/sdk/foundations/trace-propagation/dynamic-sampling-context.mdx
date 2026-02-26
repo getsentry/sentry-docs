@@ -1,8 +1,37 @@
 ---
 title: Dynamic Sampling Context (DSC)
+description: How SDKs propagate Dynamic Sampling Context via baggage headers and envelope headers.
+spec_id: sdk/foundations/trace-propagation/dynamic-sampling-context
+spec_version: 1.3.0
+spec_status: stable
+spec_depends_on:
+  - id: sdk/foundations/trace-propagation
+    version: ">=1.0.0"
+  - id: sdk/foundations/transport/envelopes
+    version: ">=1.0.0"
+spec_changelog:
+  - version: 1.3.0
+    date: 2026-02-24
+    summary: Moved to trace-propagation sub-spec
+  - version: 1.2.0
+    date: 2025-05-15
+    summary: Renamed org to org_id, cleanup
+  - version: 1.1.0
+    date: 2024-11-28
+    summary: Added sample_rand and sample_rate fields
+  - version: 1.0.0
+    date: 2022-06-24
+    summary: Initial DSC spec
+sidebar_order: 1
 ---
 
-All data sent to Sentry will end up in a [Trace](https://docs.sentry.io/concepts/key-terms/tracing/distributed-tracing/#traces-transactions-and-spans). Traces can be sampled by the <Link to="/sdk/performance/#tracessamplerate">`tracesSampleRate`</Link> or <Link to="/sdk/performance/#tracessampler">`tracesSampler`</Link> options in the SDKs.
+<SpecRfcAlert />
+
+<SpecMeta />
+
+## Overview
+
+All data sent to Sentry will end up in a [Trace](https://docs.sentry.io/concepts/key-terms/tracing/distributed-tracing/#traces-transactions-and-spans). Traces can be sampled by the [`tracesSampleRate`](/sdk/telemetry/traces/#tracessamplerate) or [`tracesSampler`](/sdk/telemetry/traces/#tracessampler) options in the SDKs.
 
 Changing those options has quite a few consequences for users of Sentry SDKs:
 
@@ -13,9 +42,9 @@ Changing those options has quite a few consequences for users of Sentry SDKs:
 
 The solution for this is **Dynamic Sampling**. Dynamic Sampling allows Sentry to automatically adjust the amount of data retained based on the value of the data. For detailed information see [Dynamic Sampling](/dynamic-sampling/).
 
-## High-Level Problem Statement
+### High-Level Problem Statement
 
-### Ingest
+#### Ingest
 
 Implementing Dynamic Sampling comes with challenges, especially on the ingestion side of things.
 For Dynamic Sampling, we want to make sampling decisions for entire traces.
@@ -30,9 +59,9 @@ As a mental model:
 The head transaction in a trace determines the Dynamic Sampling Context for all following transactions in that trace.
 No information can be changed, added or deleted after the first propagation.
 Dynamic Sampling Context is bound to only one particular trace, and all the transactions that are part of this trace.
-Multiple different traces can and should have different Dynamic Sampling Contexts.
+Multiple different traces can and **SHOULD** have different Dynamic Sampling Contexts.
 
-### SDKs
+#### SDKs
 
 SDKs are responsible for propagating a **"Dynamic Sampling Context"** or **"DSC"** across all applications that are part of a trace.
 This involves:
@@ -42,54 +71,59 @@ This involves:
 3. Propagating DSC to downstream SDKs (via the `baggage` header).
 4. Sending the DSC to Sentry (via the `trace` envelope header).
 
-To align DSC propagation over all our SDKs, we defined a [unified propagation mechanism](#unified-propagation-mechanism) (step-by-step instructions) that all SDK implementations should be able to follow.
+To align DSC propagation over all our SDKs, we defined a [unified propagation mechanism](#unified-propagation-mechanism) (step-by-step instructions) that all SDK implementations **SHOULD** be able to follow.
 
-## DSC Specification
+---
 
-All of the attributes in the table below are required (non-optional) in a sense, that when they are known to an SDK at the time an envelope with an event (transaction or error) is sent to Sentry, or at the time a baggage header is propagated, they must also be included in said envelope or baggage.
+## Behavior
+
+<SpecSection id="dsc-specification" status="stable" since="1.0.0">
+
+### DSC Specification
+
+All of the attributes in the table below are required (non-optional) in a sense, that when they are known to an SDK at the time an envelope with an event (transaction or error) is sent to Sentry, or at the time a baggage header is propagated, they **MUST** also be included in said envelope or baggage.
 
 At the moment, only `release`, `environment` and `transaction` are used by the product for dynamic sampling functionality.
 The rest of the context attributes, `trace_id`, `public_key`, `sampled` and `sample_rate`, are used by Relay for internal decisions and for extrapolation in the product.
 Additional entries such as `replay_id`, `org_id` and `sample_rand` are only using the DSC as a means of transport.
 
-| Attribute                   | Type   | Description                                                                                                                  | Example                              | Required Level                       |
-| --------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ | ------------------------------------ |
-| `trace_id`                  | string | The original trace ID as generated by the SDK. This must match the trace id of the submitted transaction item. [1]           | `771a43a4192642f0b136d5159a501700`   | strictly required [0]                |
-| `public_key`                | string | Public key from the DSN used by the SDK. [2]                                                                                 | `49d0f7386ad645858ae85020e393bef3`   | strictly required [0]                |
-| `sample_rate`               | string | The sample rate as defined by the user on the SDK. [3] [4]                                                                   | `0.7`                                | strictly required [0]                |
-| `sample_rand`               | string | A random number generated at the start of a trace by the head of trace SDK. [4]                                              | `0.5`                                | required                             |
-| `sampled`                   | string | `"true"` if the trace is sampled, `"false"` otherwise. This is set by the head of the trace SDK. [4]                         | `true`                               | required                             |
-| `release`                   | string | The release name as specified in client options.                                                                             | `myapp@1.2.3`, `1.2.3`, `2025.4.107` | required                             |
-| `environment`               | string | The environment name as specified in client options.                                                                         | `production`, `staging`              | required                             |
-| `transaction`               | string | The transaction name set on the scope. **Only include** if name has [good quality](#note-on-good-quality-transaction-names). | `/login`, `myApp.myController.login` | required (if known and good quality) |
-| `org_id`                    | string | The org ID parsed from the DSN or received by a downstream SDK.                                                              | `1`                                  | required                             |
-| `user_segment` [DEPRECATED] | string | User segment as set by the user with `scope.set_user()`.                                                                     |                                      | deprecated                           |
+| Attribute | Type | Description | Example | Required Level | Since |
+| --- | --- | --- | --- | --- | --- |
+| `trace_id` | string | The original trace ID as generated by the SDK. This **MUST** match the trace id of the submitted transaction item. [1] | `771a43a4192642f0b136d5159a501700` | strictly required [0] | 1.0.0 |
+| `public_key` | string | Public key from the DSN used by the SDK. [2] | `49d0f7386ad645858ae85020e393bef3` | strictly required [0] | 1.0.0 |
+| `sample_rate` | string | The sample rate as defined by the user on the SDK. [3] [4] | `0.7` | strictly required [0] | 1.0.0 |
+| `sample_rand` | string | A random number generated at the start of a trace by the head of trace SDK. [4] | `0.5` | required | 1.1.0 |
+| `sampled` | string | `"true"` if the trace is sampled, `"false"` otherwise. This is set by the head of the trace SDK. [4] | `true` | required | 1.0.0 |
+| `release` | string | The release name as specified in client options. | `myapp@1.2.3`, `1.2.3`, `2025.4.107` | required | 1.0.0 |
+| `environment` | string | The environment name as specified in client options. | `production`, `staging` | required | 1.0.0 |
+| `transaction` | string | The transaction name set on the scope. **Only include** if name has [good quality](#note-on-good-quality-transaction-names). | `/login`, `myApp.myController.login` | required (if known and good quality) | 1.0.0 |
+| `org_id` | string | The org ID parsed from the DSN or received by a downstream SDK. | `1` | required | 1.2.0 |
+| `user_segment` [DEPRECATED] | string | User segment as set by the user with `scope.set_user()`. | | deprecated | 1.0.0 |
 
-0: In any case, `trace_id`, `public_key`, and `sample_rate` should always be known to an SDK, so these values are strictly required.
+0: In any case, `trace_id`, `public_key`, and `sample_rate` **SHOULD** always be known to an SDK, so these values are strictly required.
 
 1: UUID V4 encoded as a hexadecimal sequence with no dashes that is a sequence of 32 hexadecimal digits.
 
 2: It allows Sentry to sample traces spanning multiple projects, by resolving the same set of rules based on the starting project.
 
-3: This string should always be a number between (and including) 0 and 1 in a notation that is supported by the [JSON specification](https://www.json.org/json-en.html). If a `tracesSampler` callback was used for the sampling decision, its result should be used for `sample_rate` instead of the `tracesSampleRate` from `SentryOptions`. In case `tracesSampler` returns `True` it should be sent as `1.0`, `False` should be sent as `0.0`.
+3: This string **MUST** always be a number between (and including) 0 and 1 in a notation that is supported by the [JSON specification](https://www.json.org/json-en.html). If a `tracesSampler` callback was used for the sampling decision, its result **SHOULD** be used for `sample_rate` instead of the `tracesSampleRate` from `SentryOptions`. In case `tracesSampler` returns `True` it **SHOULD** be sent as `1.0`, `False` **SHOULD** be sent as `0.0`.
 
-4: These attributes must conform to the invariant `sample_rand < sample_rate <=> sampled`.
+4: These attributes **MUST** conform to the invariant `sample_rand < sample_rate <=> sampled`.
 
 <Alert level="warning">
 
-### Note on good-quality transaction names
+#### Note on good-quality transaction names
 
-UX wise for the Dynamic Sampling product, we depend on transaction names (i.e. the `transaction` attribute of the DSC) to have good quality.
-Good quality transaction names are descriptive, have proper grouping on Sentry, have low cardinality, and do not contain PII or other identifiers.
+UX wise for the Dynamic Sampling product, we depend on transaction names (i.e. the `transaction` attribute of the DSC) to have good quality. Good quality transaction names are descriptive, have proper grouping on Sentry, have low cardinality, and do not contain PII or other identifiers.
 
-For that reason: **Only if a transaction name has good quality, it should be included in the DSC. Otherwise, it cannot be included!**
+For that reason: **Only if a transaction name has good quality, it SHOULD be included in the DSC. Otherwise, it MUST NOT be included!**
 
-❌ Examples for **low quality** transaction names:
+Examples for **low quality** transaction names:
 
 - `"/organization/601242c3-8f49-4158-aef4-c9e42cb1422c/user/601242c3-8f49-4158-aef4-c9e42cb1422c"`
 - `"UIComponentWithHash_7sd8x823f48_x7b26"`
 
-✅ Examples for **good quality** transaction names:
+Examples for **good quality** transaction names:
 
 - `"/organization/:organizationId/user/:userId"`
 - `"UserListUIComponent"`
@@ -98,30 +132,22 @@ SDKs can leverage <Link to="/sdk/foundations/transport/event-payloads/transactio
 
 </Alert>
 
-## DSC Propagation
+</SpecSection>
 
-The DSC is sent to two destinations:
-
-- to Sentry via the `trace` envelope header and
-- to downstream services via the `baggage` header.
-
-### Envelope Header
-
-Dynamic Sampling Context is transferred to Sentry through the `trace` envelope header.
-The value of this envelope header is a JSON object containing the fields specified in the [DSC Specification](#dsc-specification).
+<SpecSection id="baggage-header" status="stable" since="1.0.0">
 
 ### Baggage Header
 
-We chose `baggage` as the propagation mechanism for DSC. ([w3c baggage spec](https://www.w3.org/TR/baggage/)).
+We chose `baggage` as the propagation mechanism for DSC ([w3c baggage spec](https://www.w3.org/TR/baggage/)).
 Baggage is a standard HTTP header with URI encoded key-value pairs.
 
 For the propagation of DSC, SDKs first read the DSC from the `baggage` header of incoming requests/messages.
 
 To propagate DSC to downstream SDKs/services, we create a `baggage` header (or modify an existing one) through HTTP request instrumentation.
 
-The `baggage` header should only be attached to an outgoing request if the request's URL matches at least one entry of the [`tracePropagationTargets`](/sdk/performance/#tracepropagationtargets) SDK option or this option is set to `null` or not set.
+The `baggage` header **MUST** only be attached to an outgoing request if the request's URL matches at least one entry of the [`tracePropagationTargets`](/sdk/foundations/trace-propagation/#trace-propagation-targets) option or this option is set to `null` or not set.
 
-SDKs must set all of the keys in the form of "`sentry-[name]`". Where `[name]` is the attribute in the [DSC Specification](#dsc-specification). The prefix "`sentry-`" acts to identify key-value pairs set by Sentry SDKs.
+SDKs **MUST** set all of the keys in the form of "`sentry-[name]`". Where `[name]` is the attribute in the [DSC Specification](#dsc-specification). The prefix "`sentry-`" acts to identify key-value pairs set by Sentry SDKs.
 
 The following is an example of what a baggage header containing Dynamic Sampling Context might look like:
 
@@ -132,52 +158,66 @@ baggage: other-vendor-value-1=foo;bar;baz, sentry-trace_id=771a43a4192642f0b136d
 The `sentry-` prefix allows SDKs to put all of the sentry key-value pairs from the `baggage` directly onto the envelope header, after stripping away the `sentry-` prefix.
 
 Being able to simply copy key-value pairs from the `baggage` header onto the `trace` envelope header gives us the flexibility to provide dedicated API methods to propagate additional values using Dynamic Sampling Context.
-This, in return, allows users to define their own values in the Dynamic Sampling Context so they can sample by those in the Sentry interface.
 
 <Alert>
 
 #### Note on `baggage` headers from other vendors
 
 Other vendors might also be using the `baggage` header.
-If a `baggage` header already exists on an outgoing request, SDKs should aim to be good citizens by only **appending** Sentry values to the header.
+If a `baggage` header already exists on an outgoing request, SDKs **SHOULD** be good citizens by only **appending** Sentry values to the header.
 
 In cases where we cannot access the outgoing request's headers, it is fine to add a separate sentry-only `baggage` header and rely on downstream servers to stitch them together eventually ([RFC 2616](https://www.rfc-editor.org/rfc/rfc2616#section-4.2)).
 
-In the case that another vendor added Sentry values to an outgoing request, SDKs may overwrite those values.
+In the case that another vendor added Sentry values to an outgoing request, SDKs **MAY** overwrite those values.
 
-SDKs must not add other vendors' baggage from incoming requests to outgoing requests.
+SDKs **MUST NOT** add other vendors' baggage from incoming requests to outgoing requests.
 Sentry SDKs only concern themselves with Sentry baggage.
 
 On the Java SDK ([1](https://github.com/getsentry/sentry-java/blob/725a1edc2b1c713f4d91fef6985e9c98ef2bd873/sentry/src/main/java/io/sentry/Span.java#L149-L150) [2](https://github.com/getsentry/sentry-java/blob/725a1edc2b1c713f4d91fef6985e9c98ef2bd873/sentry/src/main/java/io/sentry/BaggageHeader.java#L15-L26)) we went with an explicit param for passing in pre-existing headers on the outgoing request (`span.toBaggageHeader(preExistingBaggageHeaders)`) as these are required to produce a new header that respects the limits and only contains Sentry values once. An alternative is to have some util function that does the merging (as done e.g. in the [Dart SDK](https://github.com/getsentry/sentry-dart/blob/c2653112519fb98ceecaf3eeb8106c5ecf38fe40/dart/lib/src/utils/tracing_utils.dart#L9-L41)).
 
 </Alert>
 
-### Freezing Dynamic Sampling Context
+</SpecSection>
 
-As mentioned above, in order to be able to make sampling decisions for entire traces, Dynamic Sampling Context must be the same across all transactions of a trace.
+<SpecSection id="envelope-header" status="stable" since="1.0.0">
 
-**What does this mean for SDKs?**
+### Envelope Header
+
+Dynamic Sampling Context is transferred to Sentry through the `trace` envelope header.
+The value of this envelope header is a JSON object containing the fields specified in the [DSC Specification](#dsc-specification).
+
+</SpecSection>
+
+<SpecSection id="freezing" status="stable" since="1.0.0">
+
+### Freezing DSC
+
+In order to be able to make sampling decisions for entire traces, Dynamic Sampling Context **MUST** be the same across all transactions of a trace.
 
 When starting a new trace, SDKs are no longer allowed to alter the DSC for that trace as soon as this DSC leaves the boundaries of the SDK for the first time.
 The DSC is then considered "frozen".
 DSC leaves SDKs in two situations:
 
 - When an outgoing request with a `baggage` header, containing the DSC, is made.
-- When a transaction envelope containing the DSC is sent to Sentry
+- When a transaction envelope containing the DSC is sent to Sentry.
 
-When an SDK receives an HTTP request that was "instrumented" or "traced" by a Sentry SDK, the receiving SDK should consider the incoming DSC as instantly frozen.
-Any values on the DSC should be propagated "as is" - this includes values like "environment" or "release".
+When an SDK receives an HTTP request that was "instrumented" or "traced" by a Sentry SDK, the receiving SDK **MUST** consider the incoming DSC as instantly frozen.
+Any values on the DSC **MUST** be propagated "as is" — this includes values like "environment" or "release".
 
-SDKs should recognize incoming requests as "instrumented" or "traced" when at least one of the following applies:
+SDKs **SHOULD** recognize incoming requests as "instrumented" or "traced" when at least one of the following applies:
 
 - The incoming request has a `sentry-trace` header
 - The incoming request has a `sentry-trace` header and `baggage` header containing one or more keys starting with "`sentry-`"
 
-After the DSC of a particular trace has been frozen, API calls like `set_user` should have no effect on the DSC.
+After the DSC of a particular trace has been frozen, API calls like `set_user` **MUST** have no effect on the DSC.
+
+</SpecSection>
+
+<SpecSection id="unified-propagation-mechanism" status="stable" since="1.0.0">
 
 ### Unified Propagation Mechanism
 
-SDKs should follow these steps for any incoming and outgoing requests (in python pseudo-code for illustrative purposes):
+SDKs **SHOULD** follow these steps for any incoming and outgoing requests (in python pseudo-code for illustrative purposes):
 
 ```python
 def collect_dynamic_sampling_context():
@@ -218,7 +258,11 @@ def on_outgoing_request(request):
 While there is no strict necessity for the `current_transaction.dynamic_sampling_context_frozen` flag yet, there is a future use case where we need it:
 We might want users to be able to set Dynamic Sampling Context values themselves.
 The flag becomes relevant after the first propagation, where Dynamic Sampling Context becomes immutable.
-When users attempt to set DSC afterwards, our SDKs should make this operation a noop.
+When users attempt to set DSC afterwards, our SDKs **SHOULD** make this operation a noop.
+
+</SpecSection>
+
+---
 
 ## Considerations and Challenges
 
@@ -227,7 +271,7 @@ These are not blockers to the adoption of the spec, but instead are here as cont
 
 ### The Temporal Problem
 
-Unlike `environment` or `release`, which should always be known to an SDK at initialization time, `user_segment`, and `transaction` (name) are only known after SDK initialization time.
+Unlike `environment` or `release`, which **SHOULD** always be known to an SDK at initialization time, `user_segment`, and `transaction` (name) are only known after SDK initialization time.
 This means that if a trace is propagated from a running transaction _BEFORE_ the user/transaction attributes are set, you'll get a portion of transactions in a trace that have different Dynamic Sampling Context than other portions, leading to _dynamic sampling across a trace_ not working as expected for users.
 
 Let's say we want to dynamically sample a browser application based on the `user_segment`.
@@ -254,16 +298,6 @@ For `transaction` name, the problem is similar, but it is because of parameteriz
 As much as we can, the SDKs will try to parameterize transaction names (for ex, turn `/teams/123/user/456` into `/teams/:id/user/:id`) so that similar transactions are grouped together in the UI.
 This improves both aggregate statistics for transactions and the general UX of using the product (setting alerts, checking measurements like web vitals, etc.).
 For some frameworks, for example React Router v4 - v6, we parameterize the transaction name after the transaction has been started due to constraints with the framework itself.
-To illustrate this, let's look at another example:
-
-- Page starts loading
-- Sentry initializes and starts `pageload` transaction (with transaction name `/teams/123/user/456` - based on window URL)
-- Page makes HTTP request to service A (propagates sentry-trace/baggage to user service)
-- Page renders with react router, triggering parameterization of transaction name (`/teams/123/user/456` -> `/teams/:id/user/:id`).
-- Page finishes loading, finishing `pageload` transaction, which is sent to Sentry
-
-When the `pageload` transaction shows up in Sentry, it'll be called `/teams/:id/user/:id`, but the Dynamic Sampling Context has `/teams/123/user/456` propagated, which means that the transaction from service A will not be affected by any trace-wide dynamic sampling rules put on the transaction name.
-This will be very confusing to users, as effectively the transaction name they thinking that works will not.
 
 ### Choosing Baggage as the Propagation Mechanism
 
@@ -272,4 +306,9 @@ For more information on this, check the [DACI around using baggage](https://www.
 Previously, we were using the [w3c Trace Context spec](https://www.w3.org/TR/trace-context/) as the mechanism to propagate dynamic sampling context between SDKs.
 We switched to the [w3c Baggage spec](https://www.w3.org/TR/baggage) though because it was easier to use, required less code on the SDK side, and had much more [liberal size limits](https://www.w3.org/TR/baggage/#limits) than the trace context spec.
 To make sure that we were not colliding with user defined keys as baggage is an open standard, we decided to prefix all sentry related keys with `sentry-` as a namespace.
-This allowed us to use baggage as an open standard while only having to worry about Sentry data.
+
+---
+
+## Changelog
+
+<SpecChangelog />
