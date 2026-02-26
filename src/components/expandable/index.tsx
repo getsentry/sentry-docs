@@ -190,7 +190,7 @@ export function Expandable({
             onClick={copyContentOnClick}
             type="button" // Important for buttons in summaries
           >
-            {!copied && (typeof copy === 'string' ? copy : 'Copy Rules') && copyLabel}
+            {!copied && (typeof copy === 'string' ? copy : copyLabel)}
             {copied && 'Copied!'}
           </button>
         )}
