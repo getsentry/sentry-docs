@@ -102,6 +102,50 @@ with sentry_sdk.start_span(op="gen_ai.invoke_agent", name="invoke_agent Weather 
     span.set_data("gen_ai.usage.output_tokens", result.usage.output_tokens)
 ```
 
+### Output Chunk Span
+
+This span represents a single output chunk from an AI agent's streaming response. Each logical message produced by the agent (assistant message, tool use message, etc.) becomes one output chunk span. For streamed messages that arrive incrementally, all events are accumulated into a single chunk span.
+
+Output chunk spans are always children of an [Invoke Agent Span](#invoke-agent-span).
+
+<Expandable title="Output Chunk span attributes">
+  <Include name="tracing/ai-agents-module/output-chunk-span" />
+</Expandable>
+
+#### Example Output Chunk Span
+
+```python
+import json
+import sentry_sdk
+
+with sentry_sdk.start_span(op="gen_ai.invoke_agent", name="invoke_agent Weather Agent") as parent_span:
+    parent_span.set_data("gen_ai.request.model", "claude-sonnet-4-20250514")
+    parent_span.set_data("gen_ai.agent.name", "Weather Agent")
+
+    for message in my_agent.stream():
+        with sentry_sdk.start_span(op="gen_ai.output_chunk", name="output_chunk Weather Agent") as chunk_span:
+            chunk_span.set_data("gen_ai.operation.name", "output_chunk")
+            chunk_span.set_data("gen_ai.agent.name", "Weather Agent")
+            chunk_span.set_data("gen_ai.response.model", message.model)
+            chunk_span.set_data("gen_ai.response.streaming", True)
+            chunk_span.set_data("gen_ai.output.messages", json.dumps(
+                [{"role": message.role, "parts": [{"type": "text", "content": message.content}]}]
+            ))
+            if hasattr(message, "usage"):
+                chunk_span.set_data("gen_ai.usage.input_tokens", message.usage.input_tokens)
+                chunk_span.set_data("gen_ai.usage.output_tokens", message.usage.output_tokens)
+
+    # Set aggregated token usage on the parent span
+    parent_span.set_data("gen_ai.usage.input_tokens", total_input_tokens)
+    parent_span.set_data("gen_ai.usage.output_tokens", total_output_tokens)
+```
+
+<Alert level="info" title="Attribute availability varies by message type">
+
+Not all attributes appear on every chunk span. Streamed chunks include per-chunk token usage and streaming indicators, while complete message chunks may only have message content and model info. When per-chunk token usage is absent, total token usage is still available on the parent `gen_ai.invoke_agent` span.
+
+</Alert>
+
 ### Execute Tool Span
 
 This span represents the execution of a tool or function that was requested by an AI model, including the input arguments and resulting output.
