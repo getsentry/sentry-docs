@@ -165,7 +165,7 @@ export default async function Home() {
       </div>
       <div className="hero max-w-screen-xl mx-auto px-4 sm:px-8 lg:px-[50px] py-2">
         {/* Sentry Features Header */}
-        <h2 className="text-2xl mt-0 mb-6 font-medium">Sentry features</h2>
+        <h2 className="text-2xl mt-0 mb-6 font-medium">Sentry Features</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Sentry Debugging */}
           <div
@@ -185,7 +185,7 @@ export default async function Home() {
             >
               <img
                 src={ErrorMonitoringHero.src}
-                alt="Sentry Debugging"
+                alt="Debugging with Sentry"
                 style={{
                   width: '100%',
                   height: '100%',
@@ -196,10 +196,17 @@ export default async function Home() {
             </div>
             <div className="flex-1">
               <h3 className="text-lg font-semibold mb-2 text-[var(--gray-12)]">
-                Sentry Debugging
+                Debugging with Sentry
               </h3>
               <p className="text-sm text-[var(--gray-11)] dark:text-white leading-relaxed">
-                Monitor, identify, and resolve errors and performance issues across your
+                Debug applications automatically with{' '}
+                <a
+                  href="/product/ai-in-sentry/seer/"
+                  className="text-[#8b5cf6] underline"
+                >
+                  Seer
+                </a>
+                . Monitor, identify, and resolve errors and performance issues across your
                 applications using{' '}
                 <a href="/product/error-monitoring/" className="text-[#8b5cf6] underline">
                   Error Monitoring
@@ -214,7 +221,8 @@ export default async function Home() {
                 ,{' '}
                 <a href="/product/session-replay/" className="text-[#8b5cf6] underline">
                   Session Replay
-                </a>{' '}
+                </a>
+                ,{' '}
                 <a href="/product/drains/" className="text-[#8b5cf6] underline">
                   Logs
                 </a>
@@ -256,7 +264,7 @@ export default async function Home() {
             </div>
             <div className="flex-1">
               <h3 className="text-lg font-semibold mb-2 text-[var(--gray-12)]">
-                AI for Agents and AI in Sentry
+                AI in Sentry
               </h3>
               <p className="text-sm text-[var(--gray-11)] dark:text-white leading-relaxed">
                 Use Sentry's{' '}
@@ -271,7 +279,7 @@ export default async function Home() {
                 <a href="/ai/monitoring/" className="text-[#8b5cf6] underline">
                   monitoring your AI features
                 </a>
-                . Fix code faster with{' '}
+                . With Seer, fix code faster using{' '}
                 <a
                   href="/product/ai-in-sentry/seer/root-cause-analysis/"
                   className="text-[#8b5cf6] underline"
