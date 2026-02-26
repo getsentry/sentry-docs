@@ -268,6 +268,7 @@ export async function getDevDocsFrontMatterUncached(): Promise<FrontMatter[]> {
 
             const source = await readFile(file, 'utf8');
             const {data: frontmatter} = matter(source);
+
             return {
               ...(frontmatter as FrontMatter),
               slug: fileName.replace(/\/index.mdx?$/, '').replace(/\.mdx?$/, ''),

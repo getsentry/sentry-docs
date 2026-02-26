@@ -326,6 +326,20 @@ config.trace_ignore_status_codes = [404, (502..511)]
 
 </SdkOption>
 
+<SdkOption name="capture_queue_time" type="Boolean" defaultValue="true">
+
+Automatically capture how long requests wait in the web server queue before processing begins. The SDK reads the `X-Request-Start` header set by reverse proxies (Nginx, HAProxy, Heroku) and attaches queue time to transactions as `http.server.request.time_in_queue`.
+
+This helps identify when requests are delayed due to insufficient worker threads or server capacity, which is especially useful under load. Learn more about <PlatformLink to="/tracing/instrumentation/performance-metrics/#automatic-queue-time-capture">automatic queue time capture</PlatformLink>.
+
+To disable queue time capture:
+
+```ruby
+config.capture_queue_time = false
+```
+
+</SdkOption>
+
 <SdkOption name="instrumenter" type="Symbol" defaultValue=":sentry">
 
 The instrumenter to use, `:sentry` or `:otel` for [use with OpenTelemetry](../../tracing/instrumentation/opentelemetry).
@@ -466,7 +480,7 @@ end
 
 <SdkOption name="spotlight" type="Boolean | String" defaultValue="false">
 
-Whether to also capture events and traces into [Spotlight](https://spotlightjs.com/setup/other/).
+Whether to also capture events and traces into [Spotlight](https://spotlightjs.com/).
 
 If you set this to true, Sentry will send events and traces to the local Sidecar proxy at `http://localhost:8969/stream`.
 
