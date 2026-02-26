@@ -1,0 +1,459 @@
+---
+title: Cloud Sandbox
+description: Develop sentry and getsentry on a pre-configured GCE virtual machine without local Docker or heavy dependencies.
+sidebar_order: 3
+---
+
+<Alert title="Employees Only" level="warning">
+  Cloud sandboxes require access to a GCP project with sandbox images. Contact #discuss-dev-infra for access.
+</Alert>
+
+## Overview
+
+A cloud sandbox is a GCE virtual machine pre-built with everything needed to develop sentry and getsentry:
+
+- Both repositories cloned, dependencies installed, databases populated
+- Docker services running (PostgreSQL, Redis, Kafka, Snuba, ClickHouse, Relay)
+- Devserver starts automatically on boot
+- 8 vCPU, 32 GB RAM, SSD storage
+
+You get a full development environment without running Docker locally or installing system dependencies.
+
+## Prerequisites
+
+- **gcloud CLI** installed and authenticated (`gcloud auth login`)
+- **GCP project access** with sandbox images (request in #discuss-dev-infra)
+- **devservices CLI** (included with `devenv sync`)
+
+## Quick Start
+
+```shell
+# Create a sandbox VM
+devservices sandbox create my-sandbox --project PROJECT_ID
+
+# SSH in (auto-forwards port 8000)
+devservices sandbox ssh my-sandbox
+
+# Open in your browser
+# http://dev.getsentry.net:8000
+```
+
+The devserver starts automatically. A superuser account is pre-configured: `admin@sentry.io` with password `admin`.
+
+## Connecting Your IDE
+
+All IDE workflows start with generating an SSH config entry. This lets standard SSH tools (and IDEs) connect to your sandbox through the GCP IAP tunnel.
+
+### SSH Config Setup
+
+```shell
+# Write SSH config entry to ~/.ssh/config
+devservices sandbox ssh-config my-sandbox --append
+
+# Verify it works
+ssh sandbox-my-sandbox
+```
+
+This creates a host entry with IAP ProxyCommand, connection keepalives, and port forwarding. To remove it later:
+
+```shell
+devservices sandbox ssh-config my-sandbox --remove
+```
+
+### VS Code Remote-SSH
+
+1. Install the [Remote-SSH](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-ssh) extension
+2. Run SSH config setup (above)
+3. Open the command palette (`Cmd+Shift+P`) and select **Remote-SSH: Connect to Host**
+4. Choose `sandbox-my-sandbox`
+5. Open `/opt/sentry` when prompted for a folder
+
+<Alert title="First Connection">
+  VS Code installs a server component on the VM on first connection (~200 MB). Subsequent connections are faster.
+</Alert>
+
+**Multi-root workspace** — To work on both repositories, add the second folder via **File > Add Folder to Workspace** and select `/opt/getsentry`. Save the workspace if you want this to persist across sessions.
+
+**Python interpreter** — Open the command palette and run **Python: Select Interpreter**, then choose **Enter interpreter path** and enter:
+
+```
+/opt/sentry/.venv/bin/python
+```
+
+**Recommended extensions** — Install these on the sandbox (VS Code will prompt to install them on the remote host, not locally):
+
+- [Python](https://marketplace.visualstudio.com/items?itemName=ms-python.python) (`ms-python.python`)
+- [Ruff](https://marketplace.visualstudio.com/items?itemName=charliermarsh.ruff) (`charliermarsh.ruff`)
+- [Mypy Type Checker](https://marketplace.visualstudio.com/items?itemName=ms-python.mypy-type-checker) (`ms-python.mypy-type-checker`)
+- [GitLens](https://marketplace.visualstudio.com/items?itemName=eamodio.gitlens) (`eamodio.gitlens`) — optional
+
+**Recommended settings** — Add these to your remote workspace settings (`.vscode/settings.json`):
+
+```json
+{
+  "python.defaultInterpreterPath": "/opt/sentry/.venv/bin/python",
+  "python.analysis.extraPaths": ["/opt/sentry/src", "/opt/getsentry"],
+  "editor.formatOnSave": true,
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff"
+  }
+}
+```
+
+**Port forwarding** — VS Code auto-detects forwarded ports from your SSH config. You can also manage them manually in the **Ports** panel (`Cmd+Shift+P` > **Ports: Focus on Ports View**). The devserver on port 8000 is forwarded by default.
+
+**Debugging** — VS Code can detect Django run configurations automatically. For a custom setup, create `.vscode/launch.json`:
+
+```json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Sentry Devserver",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "/opt/sentry/.venv/bin/sentry",
+      "args": ["devserver", "--workers=0"],
+      "django": true,
+      "cwd": "/opt/sentry",
+      "env": {
+        "SENTRY_CONF": "/opt/getsentry"
+      }
+    }
+  ]
+}
+```
+
+<Alert title="Note">
+  When debugging, stop the systemd devserver first (`sudo systemctl stop sandbox-devserver`) so it does not conflict with the VS Code debug session.
+</Alert>
+
+### JetBrains Gateway
+
+1. Install [JetBrains Gateway](https://www.jetbrains.com/remote-development/gateway/) and ensure you have an active IDE license
+2. Run SSH config setup (above)
+3. Open Gateway, select **SSH** and connect to `sandbox-my-sandbox`
+4. Choose the IDE backend to install on the VM — **PyCharm Professional** is recommended for Python/Django work, **WebStorm** for frontend
+5. Set the project directory to `/opt/sentry`
+
+<Alert title="Note">
+  The IDE backend requires ~500 MB to 1 GB on the VM. The sandbox has 32 GB RAM, so this is not a concern. Initial project indexing takes 5-10 minutes for the first connection due to the size of the codebase.
+</Alert>
+
+**Python SDK** — Go to **Settings > Project > Python Interpreter > Add Interpreter > System Interpreter** and set the path to:
+
+```
+/opt/sentry/.venv/bin/python
+```
+
+**Source roots** — Mark these directories so imports resolve correctly:
+
+- Right-click `/opt/sentry/src` > **Mark Directory as > Sources Root**
+- Right-click `/opt/getsentry` > **Mark Directory as > Sources Root**
+
+To work on getsentry alongside sentry, attach it via **File > Attach Directory to Project** and select `/opt/getsentry`.
+
+**Database tool** — After forwarding PostgreSQL (see [Port Forwarding](#port-forwarding)), open the **Database** panel and add a PostgreSQL data source:
+
+| Field    | Value       |
+|:---------|:------------|
+| Host     | `localhost` |
+| Port     | `15432`     |
+| User     | `postgres`  |
+| Database | `sentry`    |
+
+### Terminal (vim, tmux)
+
+```shell
+devservices sandbox ssh my-sandbox
+
+# Inside the VM:
+tmux new-session -s dev
+cd /opt/sentry
+vim src/sentry/api/endpoints/organization_details.py
+```
+
+Tools like ripgrep, fd, bat, and tmux are pre-installed. See [What's Pre-installed](#whats-pre-installed).
+
+## Development Workflows
+
+### Editing on the VM
+
+When using VS Code Remote-SSH, JetBrains Gateway, or a terminal editor, you edit files directly on the VM. Changes trigger auto-reload immediately:
+
+- **Python changes**: Granian detects file modifications and restarts the server (~2-3 seconds)
+- **Frontend changes**: rspack HMR updates the browser via WebSocket (~1-3 seconds)
+
+No manual restart is needed.
+
+### Editing Locally with Git-Sync
+
+If you prefer a local editor, commit and push your changes, then sync them to the sandbox:
+
+```shell
+# On your laptop
+git add -A && git commit -m "wip" && git push
+
+# Sync to sandbox
+devservices sandbox sync my-sandbox
+```
+
+Sync fetches your branch, checks out the latest commit, detects dependency changes, and runs migrations if needed. Best for branch switches and dependency updates.
+
+### Auto-Reload
+
+Both the Python backend (Granian) and the frontend (rspack) watch for file changes on disk. Any modification, whether from a local editor over SSH, a synced commit, or a terminal edit, triggers a reload automatically.
+
+## Sandbox Commands
+
+| Command | Description |
+|:--------|:------------|
+| `sandbox create <name>` | Create a new sandbox VM |
+| `sandbox ssh <name>` | SSH into the sandbox (auto-forwards port 8000) |
+| `sandbox ssh-config <name>` | Generate or manage SSH config for IDE integration |
+| `sandbox sync <name>` | Pull latest branch changes and update dependencies |
+| `sandbox logs [service]` | View devserver or service logs |
+| `sandbox port-forward <name>` | Forward ports in the background (without an SSH session) |
+| `sandbox migrate <name>` | Run database migrations on the sandbox |
+| `sandbox restart-devserver <name>` | Restart the devserver systemd unit |
+| `sandbox exec <command>` | Run an arbitrary command on the sandbox via SSH |
+| `sandbox hybrid <name>` | Toggle hybrid mode (local devserver + remote services) |
+| `sandbox start <name>` | Start a stopped sandbox (preserves disk) |
+| `sandbox stop <name>` | Stop a sandbox without destroying it |
+| `sandbox destroy <name>` | Permanently delete a sandbox and its disk |
+| `sandbox list` | List all your sandboxes |
+| `sandbox status <name>` | Show sandbox status and configuration |
+
+All commands are subcommands of `devservices`. For example: `devservices sandbox create my-sandbox --project PROJECT_ID`.
+
+## Port Forwarding
+
+The `sandbox ssh` command auto-forwards port 8000 by default. To customize:
+
+```shell
+# Forward additional ports
+devservices sandbox ssh my-sandbox --ports 8000,15432:5432
+
+# Skip port forwarding (useful for additional SSH sessions)
+devservices sandbox ssh my-sandbox --no-forward
+```
+
+For background port forwarding without an interactive shell:
+
+```shell
+devservices sandbox port-forward my-sandbox --ports 8000,15432:5432
+```
+
+Common ports to forward:
+
+| Local Port | Remote Port | Service |
+|:-----------|:------------|:--------|
+| 8000 | 8000 | Devserver (webpack + API) |
+| 15432 | 5432 | PostgreSQL |
+| 16379 | 6379 | Redis |
+
+After forwarding PostgreSQL, connect with:
+
+```shell
+psql -h 127.0.0.1 -p 15432 -U postgres -d sentry
+```
+
+### Port Profiles
+
+Instead of listing ports individually, use a named profile:
+
+```shell
+# Forward all service ports (PostgreSQL, Redis, Kafka, Snuba, ClickHouse, Relay, Spotlight)
+devservices sandbox port-forward my-sandbox --ports services
+
+# Forward everything (devserver + all services)
+devservices sandbox port-forward my-sandbox --ports all
+
+# Forward just the devserver (default)
+devservices sandbox port-forward my-sandbox --ports devserver
+```
+
+| Profile | Ports |
+|:--------|:------|
+| `devserver` | 8000 |
+| `services` | 5432, 6379, 9092, 1218, 9000, 7899, 8969 |
+| `all` | 8000 + all service ports |
+
+## Viewing Logs
+
+```shell
+# Devserver logs (default)
+devservices sandbox logs my-sandbox
+
+# Follow mode
+devservices sandbox logs my-sandbox -f
+
+# Startup/boot logs
+devservices sandbox logs my-sandbox startup
+
+# Docker container logs (e.g., postgres, redis)
+devservices sandbox logs my-sandbox postgres
+```
+
+Logs are colored automatically when output goes to a terminal. To control color behavior:
+
+```shell
+# Force colors (useful with pagers like less -R)
+devservices sandbox logs my-sandbox --color
+
+# Disable colors (useful for piping to files or grep)
+devservices sandbox logs my-sandbox --no-color
+```
+
+## Syncing Changes
+
+The `sync` command updates your sandbox to match a branch:
+
+```shell
+# Sync current branch
+devservices sandbox sync my-sandbox
+
+# Sync with a specific sentry ref
+devservices sandbox sync my-sandbox --sentry-ref my-sentry-branch
+```
+
+What sync does:
+
+1. Fetches and checks out the latest commit on your branch
+2. Compares lockfile checksums (`pnpm-lock.yaml`, `uv.lock`, `setup.cfg`)
+3. Reinstalls only changed dependencies
+4. Runs database migrations if needed
+
+## Running Commands
+
+Run database migrations, restart the devserver, or execute arbitrary commands on the sandbox without opening an SSH session:
+
+```shell
+# Run database migrations
+devservices sandbox migrate my-sandbox
+
+# Restart the devserver (useful after config changes)
+devservices sandbox restart-devserver my-sandbox
+
+# Run any command on the sandbox
+devservices sandbox exec "ls -la /opt/sentry/src/sentry/api/"
+devservices sandbox exec --name my-sandbox "sudo systemctl status sandbox-devserver"
+```
+
+## Hybrid Mode: Local Code + Remote Services
+
+If you have a local Python/Node setup but want to avoid running Docker, you can use the sandbox purely as a service provider. Run the devserver locally while connecting to the sandbox's databases and services.
+
+```shell
+# Enter hybrid mode (stops remote devserver, forwards all service ports)
+devservices sandbox hybrid my-sandbox
+
+# Stop local devservices if running (to free up ports)
+devservices down
+
+# Start the local devserver — it connects to the forwarded ports
+devservices serve
+```
+
+The `hybrid` command stops the sandbox devserver (freeing VM resources for Docker services) and forwards all service ports (PostgreSQL, Redis, Kafka, Snuba, ClickHouse, Relay, Spotlight) to localhost.
+
+To exit hybrid mode and restore the sandbox devserver:
+
+```shell
+devservices sandbox hybrid my-sandbox --stop
+```
+
+<Alert title="Note">
+  Hybrid mode requires a fully set up local environment (`devenv sync`). Every database query and Redis call goes over the SSH tunnel, which adds some latency.
+</Alert>
+
+## Lifecycle Management
+
+```shell
+# Stop a sandbox (preserves disk, stops billing for compute)
+devservices sandbox stop my-sandbox
+
+# Start it back up
+devservices sandbox start my-sandbox
+
+# Permanently delete a sandbox
+devservices sandbox destroy my-sandbox
+
+# List all your sandboxes
+devservices sandbox list
+```
+
+Stopped sandboxes retain their disk and configuration. Starting a stopped sandbox restores the previous state, including the devserver.
+
+## Troubleshooting
+
+**Problem:** Port 8000 shows "address already in use" when opening a second SSH session.
+
+**Solution:** The first SSH session already forwards port 8000. Use `--no-forward` for additional sessions:
+
+```shell
+devservices sandbox ssh my-sandbox --no-forward
+```
+
+---
+
+**Problem:** `DoesNotExist: Subscription matching query does not exist`
+
+**Solution:** SSH into the sandbox and create a mock subscription:
+
+```shell
+cd /opt/getsentry
+./bin/mock-subscription default
+```
+
+---
+
+**Problem:** SSH connection drops frequently.
+
+**Solution:** The SSH config generated by `ssh-config --append` already includes `ServerAliveInterval 30`. If you set up SSH manually, add these to your config:
+
+```
+ServerAliveInterval 30
+ServerAliveCountMax 3
+```
+
+---
+
+**Problem:** IAP tunnel feels slow.
+
+**Solution:** Install numpy in your local gcloud Python environment to speed up the IAP tunnel:
+
+```shell
+pip install numpy
+```
+
+---
+
+**Problem:** Devserver is not running after `sandbox start`.
+
+**Solution:** The devserver should start automatically. Check its status:
+
+```shell
+sudo systemctl status sandbox-devserver
+sudo journalctl -u sandbox-devserver -f
+```
+
+If needed, restart it:
+
+```shell
+sudo systemctl restart sandbox-devserver
+```
+
+## What's Pre-installed
+
+| Category | Tools |
+|:---------|:------|
+| Languages | Python 3.13, Node.js 22 (via Volta), pnpm |
+| Containers | Docker, Docker Compose |
+| Search | ripgrep (`rg`), fd (`fd`) |
+| Terminal | tmux, bat, htop, jq |
+| Databases | `psql`, `pg_isready`, `redis-cli` |
+| Repos | `/opt/sentry`, `/opt/getsentry` (both cloned and built) |
+| Services | PostgreSQL, Redis, Kafka, ClickHouse, Snuba, Relay |
+
+The Python virtualenv at `/opt/sentry/.venv` is shared by both repositories and includes all dependencies pre-installed.
