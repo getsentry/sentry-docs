@@ -90,7 +90,7 @@ export default function Header({
     <header className="bg-[var(--gray-1)] h-[var(--header-height)] w-full z-50 border-b border-[var(--gray-a3)] fixed top-0">
       {/* define a header-height variable for consumption by other components */}
       <style>{':root { --header-height: 64px; }'}</style>
-      <nav className="nav-inner mx-auto px-4 lg:px-8 flex items-center gap-4 min-h-[64px]">
+      <nav className="nav-inner mx-auto px-4 lg:px-8 flex items-center gap-4 min-h-[64px] max-w-[1800px]">
         {/* Hamburger menu - different behavior on home page vs other pages */}
         {isHomePage ? (
           <button
@@ -207,32 +207,7 @@ export default function Header({
           <ThemeToggle />
         </div>
       </nav>
-      <style>{`
-        /* Align header width with content + sidebars at wide screens */
-        @media (min-width: 2057px) {
-          header .nav-inner {
-            /* total layout width = sidebar + gap + content + gap + toc */
-            max-width: calc(
-              var(--sidebar-width, 300px)
-              + var(--gap, 24px)
-              + var(--doc-content-w, 1200px)
-              + var(--gap, 24px)
-              + var(--toc-w, 250px)
-            );
-            margin-left: auto;
-            margin-right: auto;
-            /* center, then compensate if sidebar != toc */
-            transform: translateX(calc((var(--toc-w, 250px) - var(--sidebar-width, 300px)) / 2));
-            /* restore small internal padding (≈ Tailwind px-3) */
-            padding-left: 0.75rem;
-            padding-right: 0.75rem;
-          }
-          /* Ensure the left logo area equals sidebar width */
-          header .nav-inner .logo-slot {
-            width: var(--sidebar-width, 300px);
-          }
-        }
-      `}</style>
+
       {/* Home page mobile navigation overlay */}
       {isHomePage && homeMobileNavOpen && (
         <div
