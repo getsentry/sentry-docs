@@ -3,8 +3,32 @@
 ## Package Manager
 Use **yarn**: `yarn install`, `yarn dev`, `yarn build`, `yarn test`
 
-## Commit Attribution
-AI commits MUST include a `Co-Authored-By` line when the AI coding tool provides one (e.g. Cursor, Claude Code, or other assistants). Use the attribution your tool supplies; do not hardcode a specific agent or email.
+## Git Commits
+
+When creating commits, follow this exact workflow:
+
+1. **Check status**: Run `git status` and `git diff` to see changes
+2. **Draft message**: Write commit message following conventional commits format
+3. **⚠️ ADD CO-AUTHOR**: Append to commit body:
+   ```
+   Co-Authored-By: Cursor AI <cursor@cursor.sh>
+   ```
+4. **Stage files**: `git add` relevant files  
+5. **Commit**: Run the commit command with message that includes Co-Authored-By
+
+**Example commit command:**
+```bash
+git commit -m "$(cat <<'EOF'
+feat: Add new feature
+
+Description of changes.
+
+Co-Authored-By: Cursor AI <cursor@cursor.sh>
+EOF
+)"
+```
+
+**IMPORTANT**: The Co-Authored-By line is REQUIRED in every AI-assisted commit. Do NOT skip step 3.
 
 ## Development
 - `yarn dev` - Start dev server with Sentry sidecar
