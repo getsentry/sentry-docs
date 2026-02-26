@@ -1,39 +1,210 @@
 ---
-title: Feedbacks
-sidebar_order: 5
+title: Feedback
+description: Collecting qualitative user input with optional attachments, replay links, and error associations.
+spec_id: sdk/telemetry/feedbacks
+spec_version: 1.3.0
+spec_status: stable
+spec_depends_on:
+  - id: sdk/foundations/transport/envelopes
+    version: ">=1.0.0"
+spec_changelog:
+  - version: 1.3.0
+    date: 2026-02-04
+    summary: Broadened attachments from screenshots-only to any file type, added attachment examples to envelope
+  - version: 1.2.0
+    date: 2025-06-30
+    summary: Added manual API replay sampling timing requirement
+  - version: 1.1.0
+    date: 2025-06-19
+    summary: Added replay sampling timing requirement for feedback widgets
+  - version: 1.0.0
+    date: 2025-04-15
+    summary: Initial spec — feedback protocol, envelope item constraints, context attributes, SDK pipeline, session replay integration, platform-specific guidance (onCrashedLastRun, user-facing/backend platforms)
 ---
 
-This document is meant for Sentry SDK developers and maintainers of the Feedback ingestion pipeline.
+<SpecRfcAlert />
 
-## Feedback Protocol
+<SpecMeta />
 
-Item type `"feedback"`. This Item contains an [event payload](/sdk/foundations/data-model/event-payloads/) encoded in JSON, with an additional `feedback` context object.
+## Overview
 
-## `"feedback"` Item
+User feedback allows Sentry to collect qualitative input directly from users — free-form comments describing what happened, optionally accompanied by contact information, linked errors, replay recordings, and file attachments. An SDK sends feedback as a `feedback` envelope item containing an event payload with a `feedback` context object.
 
-### Feedback Context Attributes
+Related specs:
+- [Envelopes](/sdk/foundations/transport/envelopes/) — transport format
+- [Event Payloads](/sdk/foundations/transport/event-payloads/) — base event attributes
+- [User Report (Deprecated)](/sdk/telemetry/user-reports/) — deprecated predecessor
 
-| Key                    | Type                      | Description                                                                                                                                                                                          |
-| ---------------------- | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| message                | string                    | Required. Comments of the user, describing what happened and/or sharing feedback. The max length is **4096 characters**.                                                                             |
-| contact_email          | string                    | The email of the user who submitted the feedback. If excluded, Sentry (not the SDK) attempts to fill this in with user context. Anonymous feedbacks (no name or email) are still accepted.           |
-| name                   | string                    | The name of the user who submitted the feedback. If excluded, Sentry (not the SDK) attempts to fill this in with user context. Anonymous feedbacks (no name or email) are still accepted.            |
-| url                    | string                    | The URL of the webpage the user was on when submitting feedback. This may be used to search for or set alerts on feedback.                                                                           |
-| associated_event_id    | string                    | The identifier of an error event in the same project. Use this to explicitly link a related error in the feedback UI.                                                                                |
-| replay_id              | string                    | The identifier of a related Session Replay in the same project. Sentry uses this ID to render a Replay clip in the feedback UI.                                                                      |
+---
 
-### Event Attributes
+## Concepts
 
-Below is a recap of the [required attributes](/sdk/foundations/data-model/event-payloads/#required-attributes) for the event payload.
-For the full list of attributes, see [Event Payloads](/sdk/foundations/data-model/event-payloads/).
+### Feedback Events
 
-| Key                        | Type   | Description                                     |
-| -------------------------- | ------ | ----------------------------------------------- |
-| timestamp                  | number | UNIX timestamp of the current time (in seconds) |
-| event_id                   | string | Hexadecimal string representing a uuid4 value   |
-| platform                   | string |  Platform of the SDK                            |
+A **feedback event** is an [event payload](/sdk/foundations/transport/event-payloads/) with a `feedback` context object. The feedback context carries user-provided data (message, contact info, URLs), while the event payload carries standard attributes (timestamp, event_id, platform, user, tags, etc.).
 
-### Example
+### Attachments
+
+Files of any type (screenshots, logs, documents) can accompany a feedback event by sending them as [attachment items](/sdk/telemetry/attachments/) in the same envelope. Sentry uses the shared `event_id` to associate attachments with the feedback.
+
+---
+
+## Behavior
+
+<SpecSection id="feedback-pipeline" status="stable" since="1.0.0">
+
+### SDK Pipeline
+
+A feedback captured by `capture_feedback` is processed through the SDK pipeline. The feedback event can be discarded at any stage, at which point no further processing happens.
+
+SDKs **SHOULD** implement a `beforeSendFeedback` callback to allow users to modify or discard the feedback before it is sent. This callback **SHOULD** be similar to the existing [`beforeSend`](/sdk/foundations/client/hooks/#before-send-hook) callback used for error events. Feedback events **MUST NOT** go through the `beforeSend` hook.
+
+SDKs **MUST** apply scope data to the feedback event, including tags, user, trace, and contexts. The scope's event processors **MUST** also be invoked.
+
+SDKs **MUST** apply [rate limiting](/sdk/expected-features/rate-limiting/) to feedbacks in the same way as it is applied to events.
+
+There is no sample rate for feedbacks — they are always sent. However, a feedback can be discarded at any pipeline stage (rate limiting, invalid message, etc.). SDKs **SHOULD** report dropped feedbacks through [client reports](/sdk/telemetry/client-reports/).
+
+</SpecSection>
+
+<SpecSection id="session-replay-flush" status="stable" since="1.0.0">
+
+### Session Replay Integration
+
+When sending feedback, SDKs **SHOULD** flush the current Session Replay, if running. This ensures a meaningful replay recording exists and can be included in the `replay_id` attribute of the feedback context.
+
+</SpecSection>
+
+<SpecSection id="replay-widget-sampling-timing" status="stable" since="1.1.0">
+
+### Replay Sampling Timing for Feedback Widgets
+
+For feedback widgets specifically, when Session Replay's `onErrorSampleRate` is greater than 0, SDKs **MUST** sample and flush the replay when the widget **opens**, not when the user submits the feedback.
+
+This timing is critical because:
+
+- The replay buffer captures the user's session leading up to opening the feedback widget, providing context about what the user experienced before deciding to provide feedback.
+- If sampling only occurs on submission, the buffer would primarily contain the user's interactions with the feedback form itself, which provides minimal debugging value.
+- Early sampling ensures the complete user context is preserved regardless of whether the user ultimately submits the feedback.
+
+</SpecSection>
+
+<SpecSection id="replay-manual-api-sampling-timing" status="stable" since="1.2.0">
+
+### Replay Sampling Timing for Manual API
+
+When feedback is captured using the manual API (`capture_feedback`), SDKs **MUST** sample and flush the replay during the execution of the feedback capture API to ensure session context is preserved.
+
+</SpecSection>
+
+<SpecSection id="user-facing-platforms" status="stable" since="1.0.0">
+
+### User-Facing Platforms
+
+On user-facing platforms such as mobile, desktop, or browser, SDKs **SHOULD** provide first-class support for requesting user feedback when an error or crash occurs. See the user-facing docs for [Apple](https://docs.sentry.io/platforms/apple/enriching-events/user-feedback/) and [Java](https://docs.sentry.io/platforms/java/enriching-events/user-feedback/) for API examples.
+
+On mobile and desktop, it is common to prompt the user for feedback after a crash happened on the previous run of the application. SDKs **SHOULD** implement the `onCrashedLastRun` callback on the options. This callback gets called shortly after the initialization of the SDK when the last program execution terminated with a crash. The SDK **SHOULD** execute the callback only once during the entire run of the program to avoid multiple callbacks if there are multiple crash events to send.
+
+</SpecSection>
+
+<SpecSection id="backend-platforms" status="stable" since="1.0.0">
+
+### Backend Platforms
+
+On backend platforms, SDKs **SHOULD** document how to use the [last event ID](/sdk/expected-features/#retrieve-last-event-id) to prompt the user for feedback themselves.
+
+</SpecSection>
+
+---
+
+## Wire Format
+
+<SpecSection id="feedback-payload" status="stable" since="1.0.0">
+
+### Feedback Payload
+
+A feedback is sent as a `feedback` envelope item containing a JSON object. The object is an [event payload](/sdk/foundations/transport/event-payloads/) with an additional `feedback` context object.
+
+#### Envelope Item Constraints
+
+- This Item **MAY** occur at most once per Envelope.
+- This Item is mutually exclusive with `"transaction"` items.
+
+#### Envelope Headers
+
+`event_id`
+
+: **UUID String, required.** Corresponds to the `event_id` field of the event payload. **It is not equal to the `associated_event_id`** field in the feedback context. Clients are required to generate an event identifier ahead of time and set it at least in the Envelope headers. If the identifier mismatches between the Envelope and payload, the Envelope header takes precedence.
+
+#### Additional Item Headers
+
+_None_
+
+#### Event Attributes
+
+Below is a recap of the [required attributes](/sdk/foundations/transport/event-payloads/#required-attributes) for the event payload. For the full list of attributes, see [Event Payloads](/sdk/foundations/transport/event-payloads/).
+
+| Field | Type | Required | Since | Description |
+|-------|------|----------|-------|-------------|
+| `event_id` | String | **REQUIRED** | 1.0.0 | Hexadecimal string representing a UUID v4 value. |
+| `timestamp` | Number | **REQUIRED** | 1.0.0 | UNIX timestamp of the current time (in seconds). |
+| `platform` | String | **REQUIRED** | 1.0.0 | Platform of the SDK. |
+
+#### Feedback Context Attributes
+
+The `contexts.feedback` object carries user-provided feedback data:
+
+| Field | Type | Required | Since | Description |
+|-------|------|----------|-------|-------------|
+| `message` | String | **REQUIRED** | 1.0.0 | Comments of the user, describing what happened and/or sharing feedback. Max length: **4096 characters**. |
+| `contact_email` | String | **OPTIONAL** | 1.0.0 | Email of the user who submitted the feedback. If excluded, Sentry (not the SDK) attempts to fill this in from user context. Anonymous feedbacks (no name or email) are accepted. |
+| `name` | String | **OPTIONAL** | 1.0.0 | Name of the user who submitted the feedback. If excluded, Sentry (not the SDK) attempts to fill this in from user context. |
+| `url` | String | **OPTIONAL** | 1.0.0 | URL of the webpage the user was on when submitting feedback. May be used for search or alerts. |
+| `associated_event_id` | String | **OPTIONAL** | 1.0.0 | Identifier of an error event in the same project. Links a related error in the feedback UI. |
+| `replay_id` | String | **OPTIONAL** | 1.0.0 | Identifier of a related Session Replay in the same project. Sentry uses this to render a Replay clip in the feedback UI. |
+
+</SpecSection>
+
+<SpecSection id="file-attachments" status="stable" since="1.0.0">
+
+### File Attachments
+
+SDKs **MAY** attach files of any type to a feedback (screenshots, logs, documents, etc.) by sending them as [attachment items](/sdk/telemetry/attachments/), with `event_id` corresponding to the feedback item. SDKs **SHOULD** send attachment items in the same envelope as the feedback item. (since 1.3.0) Attachments are not limited to screenshots — any file type is supported.
+
+</SpecSection>
+
+---
+
+## Public API
+
+<SpecSection id="capture-feedback" status="stable" since="1.0.0">
+
+### Capture Feedback
+
+SDKs **MUST** expose a top-level function to send a feedback:
+
+```
+captureFeedback(feedback) -> eventId
+```
+
+**Parameters:**
+- `feedback` — Object containing at minimum `message`. Optionally includes `contact_email`, `name`, `url`, `associated_event_id`, and `replay_id`.
+
+**Returns:** The `eventId` (string).
+
+Naming **SHOULD** follow the SDK's language conventions:
+- `captureFeedback` (JavaScript, Java)
+- `capture_feedback` (Python, Ruby)
+- `CaptureFeedback` (Go, .NET)
+
+</SpecSection>
+
+---
+
+## Examples
+
+### Feedback Payload
+
 ```json
 {
   "event_id": "9ec79c33ec9942ab8353589fcb2e04dc",
@@ -46,20 +217,13 @@ For the full list of attributes, see [Event Payloads](/sdk/foundations/data-mode
       "message": "I love session replay!",
       "url": "https://sentry.io/replays/",
       "associated_event_id": "32fd1995636d446385016e2747623e11",
-      "replay_id":"82840977e85b4ed3bc27f7b5b25cec15"
+      "replay_id": "82840977e85b4ed3bc27f7b5b25cec15"
     }
   }
 }
 ```
 
-### Attaching Files
-
-You can attach files of any type to a feedback (screenshots, logs, documents, etc.) by sending them as
-[attachment items](/sdk/foundations/data-model/envelope-items/#attachment), with `event_id`
-corresponding to the feedback item. We recommend sending the attachment items in the same
-Envelope as the feedback item.
-
-## Full Envelope Example
+### Full Envelope with Attachments
 
 ```json
 {"event_id":"9ec79c33ec9942ab8353589fcb2e04dc","sent_at":"2024-03-19T15:18:27.581Z","sdk":{"name":"sentry.javascript.react","version":"7.105.0"}}
@@ -76,7 +240,7 @@ Envelope as the feedback item.
       "message": "I love session replay!",
       "url": "https://sentry.io/replays/",
       "associated_event_id": "32fd1995636d446385016e2747623e11",
-      "replay_id":"82840977e85b4ed3bc27f7b5b25cec15"
+      "replay_id": "82840977e85b4ed3bc27f7b5b25cec15"
     }
   },
   "level": "error",
@@ -93,7 +257,7 @@ Envelope as the feedback item.
     "version": "7.105.0"
   },
   "tags": {
-    "sentry_version": "24.4.0.dev0",
+    "sentry_version": "24.4.0.dev0"
   },
   "user": {
     "ip_address": "127.0.0.1",
@@ -108,36 +272,20 @@ Envelope as the feedback item.
 <text file content>
 ```
 
-## Feedback SDK Pipeline
+### Example Implementations
 
-A feedback captured by capture_feedback is processed by the SDK. Note: The event can be discarded at any of the stages, at which point no further processing happens.
+User Feedback class:
+ * [Objective-C](https://github.com/getsentry/sentry-cocoa/blob/9eedc425727f0daccca1bd2be6021f6c3d9c654c/Sources/Sentry/SentryUserFeedback.m)
+ * [Java](https://github.com/getsentry/sentry-java/blob/671f9e0b8b709ef18e8b0788c31df44f99d09d35/sentry/src/main/java/io/sentry/UserFeedback.java#L7)
+ * [C#](https://github.com/getsentry/sentry-dotnet/blob/6ddf8363170bffee74a8c3cbf44335797d39ca9c/src/Sentry/Protocol/UserFeedback.cs#L10)
 
-### BeforeSendFeedback
+Envelope item:
+ * [Objective-C](https://github.com/getsentry/sentry-cocoa/blob/fd3e46efe59324e894d5601a7b3028824a588dda/Sources/Sentry/SentryEnvelope.m#L145-L162)
+ * [Java](https://github.com/getsentry/sentry-java/blob/b2e8dd43ea2ef37201b215ec409655e49e3231c8/sentry/src/main/java/io/sentry/SentryEnvelopeItem.java#L131-L155)
+ * [C#](https://github.com/getsentry/sentry-dotnet/blob/3bc6c66a14e653982a6a25df033d68d8ad12c4af/src/Sentry/Protocol/Envelopes/EnvelopeItem.cs#L170-L178)
 
-SDKs should implement a `beforeSendFeedback` callback to allow users to modify the feedback before it is sent. This callback should be similar to the existing [`beforeSend`](/sdk/expected-features/#before-send-hook) callback used for events.
+---
 
-### Scope Data and Event Processors
+## Changelog
 
-The scope is applied to the feedbacks, including tags, user, trace and contexts. The scope's _event processors_ are invoked, too.
-
-### Rate Limiting
-
-[Rate limiting](/sdk/expected-features/rate-limiting/) is applied to feedbacks in the same way as it is applied to events.
-
-### Dropped Feedback Reports
-
-There is no sample rate for feedbacks, as they are always sampled. However, a feedback can be discarded at any of the pipeline stages, for reasons like rate limiting or an invalid message (too large or empty). The SDK should report dropped feedbacks through [client reports](/sdk/telemetry/client-reports/).
-
-### Session Replay Integration
-
-When sending feedback, SDKs are expected to flush the current Session Replay, if running. This ensures a meaningful replay recording exists and can be included in the `replay_id` attribute of the feedback context.
-
-#### Timing of Replay Sampling with Feedback Widgets
-
-For feedback widgets specifically, when Session Replay's `onErrorSampleRate` is greater than 0, SDKs must sample and flush the replay when the widget **opens**, not when the user submits the feedback. This timing is critical because:
-
-- The replay buffer captures the user's session leading up to opening the feedback widget, providing context about what the user experienced before deciding to provide feedback
-- If sampling only occurs on submission, the buffer would primarily contain the user's interactions with the feedback form itself (typing their message), which provides minimal debugging value
-- Early sampling ensures the complete user context is preserved regardless of whether the user ultimately submits the feedback
-
-This behavior ensures that developers receive meaningful session replay data that shows the user's experience prior to the feedback moment, rather than just their interaction with the feedback widget itself.
+<SpecChangelog />
