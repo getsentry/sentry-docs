@@ -140,6 +140,40 @@ Sentry.init({
 });
 ```
 
+#### Add the sentryTanstackStart Vite Plugin
+
+<OrgAuthTokenNote />
+
+**Make sure you add your auth token to your CI, if you are using one to deploy your application.**
+
+Add your auth token to your environment:
+
+```bash {filename:.env}
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
+and configure `sentryTanstackStart` in your `vite.config.ts`:
+
+```typescript {filename:vite.config.ts}
+import { defineConfig } from "vite";
+import { sentryTanstackStart } from "@sentry/tanstackstart-react/vite";
+import { tanstackStart } from "@tanstack/react-start/plugin/vite";
+
+export default defineConfig({
+  plugins: [
+    tanstackStart(),
+    // other plugins - sentryTanstackStart should be last
+    sentryTanstackStart({
+      org: "___ORG_SLUG___",
+      project: "___PROJECT_SLUG___",
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+    }),
+  ],
+});
+```
+
+By default, this plugin manages source map uploads. When tracing is enabled, it also automatically instruments middlewares for tracing. For all available options, see the [Vite Plugin documentation](/platforms/javascript/guides/tanstackstart-react/features/sentryTanstackStart/).
+
 #### Instrument the Server Entry Point
 
 To capture server-side errors and tracing data, you need to explicitly define a [server entry point](https://tanstack.com/start/latest/docs/framework/react/guide/server-entry-point) in your application and wrap your request handler with `wrapFetchWithSentry`.
@@ -219,40 +253,6 @@ export default createServerEntry(
 <Alert level="warning">
   This setup does not currently work for Cloudflare deployments.
 </Alert>
-
-#### Add the sentryTanstackStart Vite Plugin
-
-<OrgAuthTokenNote />
-
-**Make sure you add your auth token to your CI, if you are using one to deploy your application.**
-
-Add your auth token to your environment:
-
-```bash {filename:.env}
-SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
-```
-
-and configure `sentryTanstackStart` in your `vite.config.ts`:
-
-```typescript {filename:vite.config.ts}
-import { defineConfig } from "vite";
-import { sentryTanstackStart } from "@sentry/tanstackstart-react/vite";
-import { tanstackStart } from "@tanstack/react-start/plugin/vite";
-
-export default defineConfig({
-  plugins: [
-    tanstackStart(),
-    // other plugins - sentryTanstackStart should be last
-    sentryTanstackStart({
-      org: "___ORG_SLUG___",
-      project: "___PROJECT_SLUG___",
-      authToken: process.env.SENTRY_AUTH_TOKEN,
-    }),
-  ],
-});
-```
-
-By default, this plugin manages source map uploads. When tracing is enabled, it also automatically instruments middlewares for tracing. For all available options, see the [Vite Plugin documentation](/platforms/javascript/guides/tanstackstart-react/features/sentryTanstackStart/).
 
 ## Step 3: Capture TanStack Start React Errors
 
