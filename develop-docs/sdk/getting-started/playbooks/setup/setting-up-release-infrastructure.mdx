@@ -1,0 +1,139 @@
+---
+title: Setting Up Release Infrastructure
+spec_id: sdk/playbooks/release-infrastructure
+spec_version: 1.0.0
+spec_status: stable
+spec_depends_on:
+  - id: sdk/getting-started/standards/release-versioning
+    version: ">=1.0.0"
+spec_changelog:
+  - version: 1.0.0
+    date: 2026-02-20
+    summary: Initial playbook — standardized release infrastructure setup with Craft, CI/CD, and branch protection
+---
+
+<SpecRfcAlert />
+
+<SpecMeta />
+
+## Overview
+
+This playbook guides SDK maintainers through setting up automated release infrastructure for a new SDK repository using [Craft](https://craft.sentry.dev). It covers initial tagging, CI configuration, version management, and branch protection rules. By following these steps, the repository will support automated changelog generation, artifact publishing, and controlled releases via GitHub Actions.
+
+Related resources:
+- [Release Versioning Standard](/sdk/getting-started/standards/release-versioning) — version format and tooling requirements
+- [Craft Documentation](https://craft.sentry.dev) — release automation tool
+- [Craft GitHub Actions](https://craft.sentry.dev/github-actions/) — workflow configuration options
+
+---
+
+## Steps
+
+#### 1. Create the Initial Tag
+
+A tag **MUST** exist for the first commit of the repository due to a [craft limitation](https://github.com/getsentry/craft/issues/342). You **SHOULD** tag the first commit before any meaningful history so the first changelog includes useful context.
+
+```bash
+git tag 0.0.0 "$(git log -1 --reverse --format=%h)"
+git push origin --tags
+```
+
+#### 2. Set Up CI for Release Branches
+
+The repository's CI **MUST** respond to `release/**` branches and produce a named artifact.
+
+#### 3. Configure Craft (`.craft.yml`)
+
+You **MUST** create a `.craft.yml` with targets for your package registry and GitHub releases:
+
+```yaml
+minVersion: 0.28.1
+targets:
+  - name: pypi
+  - name: github
+```
+
+See the [Craft configuration docs](https://craft.sentry.dev/configuration/) for all available targets and options.
+
+#### 4. Add Version Bump Script (`scripts/bump-version.sh`)
+
+Craft invokes this script when bumping the version. The script **MUST** accept the old version as `$1` and the new version as `$2`:
+
+```bash
+#!/usr/bin/env bash
+set -euxo pipefail
+
+sed -i "s/^version =.*/version = $2/" setup.cfg
+```
+
+For a real-world example with multiple version locations, see [sentry-python's bump-version.sh](https://github.com/getsentry/sentry-python/blob/master/scripts/bump-version.sh).
+
+#### 5. Add Release Workflow (`.github/workflows/release.yml`)
+
+You **MUST** add a release workflow that triggers releases from the GitHub UI. The workflow **SHOULD** use `vars.SENTRY_RELEASE_BOT_CLIENT_ID` and `secrets.SENTRY_RELEASE_BOT_PRIVATE_KEY` which are available to repositories in the `getsentry` org automatically. These are needed because [GitHub prevents `GITHUB_TOKEN` from triggering downstream workflows](https://docs.github.com/en/actions/reference/events-that-trigger-workflows).
+
+```yaml
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version to release
+        required: false
+      force:
+        description: Force a release even when there are release-blockers (optional)
+        required: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    name: "Release a new version"
+    steps:
+      - name: Get auth token
+        id: token
+        uses: actions/create-github-app-token@5d869da34e18e7287c1daad50e0b8ea0f506ce69 # v1.11.0
+        with:
+          app-id: ${{ vars.SENTRY_RELEASE_BOT_CLIENT_ID }}
+          private-key: ${{ secrets.SENTRY_RELEASE_BOT_PRIVATE_KEY }}
+      - uses: actions/checkout@v6
+        with:
+          token: ${{ steps.token.outputs.token }}
+          fetch-depth: 0
+      - name: Prepare release
+        uses: getsentry/craft@v2
+        env:
+          GITHUB_TOKEN: ${{ steps.token.outputs.token }}
+        with:
+          version: ${{ github.event.inputs.version }}
+          force: ${{ github.event.inputs.force }}
+```
+
+For full details on all available options including auto-versioning, changelog preview, merge targets, and multiple Craft configs, see [Craft's GitHub Actions documentation](https://craft.sentry.dev/github-actions/). Repositories outside the `getsentry` org can use the simpler [reusable workflow](https://craft.sentry.dev/github-actions/#option-1-reusable-workflow-recommended) which handles token management automatically via `secrets: inherit`.
+
+#### 6. Set Repository Permissions
+
+You **MUST** give the `engineering` team write access via your repository's settings page: `https://github.com/getsentry/REPONAME_HERE/settings/access`
+
+#### 7. Create Branch Ruleset
+
+Download the [default ruleset template](/json/Default_ruleset.json). You **MUST** import it at `https://github.com/getsentry/REPONAME_HERE/settings/rules` via **New ruleset** > **Import a ruleset**. You **MAY** adjust settings but **MUST NOT** remove the App in the Bypass List.
+
+#### 8. Cut Your First Release
+
+Navigate to the Actions tab, locate the Release workflow, and trigger it. This creates an [issue in `getsentry/publish`](https://github.com/getsentry/publish/issues) which requires an approver to add a label before artifacts are published.
+
+For the ongoing release process after setup, see "Cutting a release" (wip).
+
+## Referenced Standards
+
+- [Version format](/sdk/getting-started/standards/release-versioning#version-format) — SemVer requirements
+- [Release tooling](/sdk/getting-started/standards/release-versioning#release-tooling) — Craft and publish setup
+- [Release gating criteria](/sdk/getting-started/standards/review-ci#release-gating-criteria) — Pre-release validation requirements
+- [Rollback procedures](/sdk/getting-started/standards/coordination-maintenance#rollback-procedures) — Emergency release rollback process
+
+---
+
+## Changelog
+
+<SpecChangelog />
