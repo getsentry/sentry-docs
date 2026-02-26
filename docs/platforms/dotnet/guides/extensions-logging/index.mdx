@@ -18,9 +18,9 @@ By default, any message with log level `Information` or higher will be kept as a
 
 The default value to report a log entry as an event to Sentry is `Error`.
 
-This means that out of the box, any `LogError` call will create an `Event` which will include all log messages of level `Information`, `Warning` and also `Error` and `Critical`.
+This means that out of the box, any `LogError` call will create an `Event` which will include breadcrumbs for all prior log messages of level `Information`, `Warning`, `Error` and `Critical`.
 
-Additionally, when enabled, log messages are sent to Sentry as [Structured Logs](logs/).
+Additionally, when enabled, log messages are sent to Sentry as [Structured Logs](logs/). Filtering to control the minimum log level to capture should be done [via `Microsoft.Extensions.Logging` configuration](https://learn.microsoft.com/en-us/dotnet/core/extensions/logging/overview?tabs=command-line#how-filtering-rules-are-applied).
 
 ## Install
 
@@ -89,7 +89,8 @@ Example using `appsettings.json`:
 {
   "Logging": {
     "LogLevel": {
-      "Default": "Debug"
+      "Default": "Debug",
+      "Microsoft": "Warning"
     }
   },
   "Sentry": {
@@ -102,7 +103,7 @@ Example using `appsettings.json`:
 }
 ```
 
-Above we set the application wide minimum log level to `Debug`. Sentry specific settings are set under the `Sentry` property. Options are documented below.
+Above we set the application wide minimum log level to `Debug` and we configure a minimum log level for Microsoft specific logs to `Warning`. Sentry specific settings are set under the `Sentry` property. Options are documented below.
 
 #### Through `ILoggerFactory`
 
@@ -117,6 +118,7 @@ using (var loggerFactory = new LoggerFactory()
 ```
 
 This approach doesn't include any of the framework's configuration system. Since the DSN is being provided via parameter, the SDK will be initialized.
+
 More settings can be passed via the callback configuring the `SentryOptions`.
 
 ## Options and Initialization
@@ -153,7 +155,13 @@ Whether or not this integration should initialize the SDK. If you intend to call
 
 #### Filters
 
-A list of filters which are invoked before processing any log message. This allows you to inspect the details of the log entry before they become a `Breadcrumb` or an `Event` with full access to the `Microsoft.Extensions.Logging` data.
+A list of filters which are invoked before processing log messages. This allows you to inspect the details of the log entry before they become a `Breadcrumb` or an `Event` with full access to the `Microsoft.Extensions.Logging` data.
+
+<Alert title="✨ Note">
+
+These filters only apply to breadcrumbs and events. They don't control which logs will be captured as structured logs in Sentry. That can be controlled independently using the [filtering capabilities built into `Microsoft.Extensions.Logging`](https://learn.microsoft.com/en-us/dotnet/core/extensions/logging/overview?tabs=command-line#how-filtering-rules-are-applied).
+
+</Alert>
 
 #### TagFilters
 
