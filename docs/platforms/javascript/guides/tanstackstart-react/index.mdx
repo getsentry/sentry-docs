@@ -140,10 +140,15 @@ Sentry.init({
 });
 ```
 
-<OnboardingOption optionId="performance">
 #### Instrument the Server Entry Point
 
-To enable tracing for server-side requests, you need to explicitly define a [server entry point](https://tanstack.com/start/latest/docs/framework/react/guide/server-entry-point) in your application and wrap your request handler with `wrapFetchWithSentry`.
+To capture server-side errors and tracing data, you need to explicitly define a [server entry point](https://tanstack.com/start/latest/docs/framework/react/guide/server-entry-point) in your application and wrap your request handler with `wrapFetchWithSentry`.
+
+Follow the section below that matches your deployment setup:
+
+#### Node.js Server
+
+Use this setup when running your application as a long-lived Node.js process (e.g. a traditional server or container).
 
 Create a `src/server.ts` file in your project:
 
@@ -160,7 +165,60 @@ export default createServerEntry(
 );
 ```
 
-</OnboardingOption>
+##### Moving the Sentry server config file for production usage
+
+For production monitoring, you need to move the Sentry server config file to your build output. Since [TanStack Start is designed to work with any hosting provider](https://tanstack.com/start/latest/docs/framework/react/guide/hosting), the exact location will depend on where your build artifacts are deployed (for example, `"/dist"`, `".output/server"` or a platform-specific directory).
+
+For example, when using [Nitro](https://nitro.build/), copy the instrumentation file to `".output/server"`:
+
+```json {diff}  {filename:package.json}
+{
+  "scripts": {
+-     "build": "vite build",
++     "build": "vite build && cp instrument.server.mjs .output/server",
+  }
+}
+```
+
+##### Load Instrumentation on Startup
+
+Add a `--import` flag directly or to the `NODE_OPTIONS` environment variable wherever you run your application to import `instrument.server.mjs`.
+
+```json {diff} {filename:package.json}
+{
+  "scripts": {
+     "build": "vite build && cp instrument.server.mjs .output/server",
+-       "dev": "vite dev --port 3000",
+-       "start": "node .output/server/index.mjs",
++       "dev": "NODE_OPTIONS='--import ./instrument.server.mjs' vite dev --port 3000",
++       "start": "node --import ./.output/server/instrument.server.mjs .output/server/index.mjs",
+  }
+}
+```
+
+#### Serverless (e.g. Vercel, Netlify)
+
+Use this setup when deploying to a serverless platform. Instead of using the `--import` flag, import the server instrumentation file directly at the top of your server entry point.
+
+Create a `src/server.ts` file in your project:
+
+```typescript {filename:src/server.ts}
+import "../instrument.server.mjs";
+import { wrapFetchWithSentry } from "@sentry/tanstackstart-react";
+import handler, { createServerEntry } from "@tanstack/react-start/server-entry";
+
+export default createServerEntry(
+  wrapFetchWithSentry({
+    fetch(request: Request) {
+      return handler.fetch(request);
+    },
+  })
+);
+```
+
+<Alert level="warning">
+  This setup does not currently work for Cloudflare deployments.
+</Alert>
 
 #### Add the sentryTanstackStart Vite Plugin
 
@@ -195,37 +253,6 @@ export default defineConfig({
 ```
 
 By default, this plugin manages source map uploads. When tracing is enabled, it also automatically instruments middlewares for tracing. For all available options, see the [Vite Plugin documentation](/platforms/javascript/guides/tanstackstart-react/features/sentryTanstackStart/).
-
-#### Moving the Sentry server config file for production usage
-
-For production monitoring, you need to move the Sentry server config file to your build output. Since [TanStack Start is designed to work with any hosting provider](https://tanstack.com/start/latest/docs/framework/react/guide/hosting), the exact location will depend on where your build artifacts are deployed (for example, `"/dist"`, `".output/server"` or a platform-specific directory).
-
-For example, when using [Nitro](https://nitro.build/), copy the instrumentation file to `".output/server"`:
-
-```json {diff}  {filename:package.json}
-{
-  "scripts": {
--     "build": "vite build",
-+     "build": "vite build && cp instrument.server.mjs .output/server",
-  }
-}
-```
-
-#### Load Instrumentation on Startup
-
-Add a `--import` flag directly or to the `NODE_OPTIONS` environment variable wherever you run your application to import `instrument.server.mjs`.
-
-```json {diff} {filename:package.json}
-{
-  "scripts": {
-     "build": "vite build && cp instrument.server.mjs .output/server",
--       "dev": "vite dev --port 3000",
--       "start": "node .output/server/index.mjs",
-+       "dev": "NODE_OPTIONS='--import ./instrument.server.mjs' vite dev --port 3000",
-+       "start": "node --import ./.output/server/instrument.server.mjs .output/server/index.mjs",
-  }
-}
-```
 
 ## Step 3: Capture TanStack Start React Errors
 
