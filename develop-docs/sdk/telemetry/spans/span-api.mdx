@@ -140,6 +140,37 @@ Likewise, additional APIs MAY also adjust the span status based on errors thrown
 At this time, SDKs MUST NOT expose APIs like `Span::startChild` or similar functionality that explicitly creates a child span.
 This is still TBD but the `parentSpan` option should suffice to serve this use case.
 
+## Noop Span
+
+A Noop span is a span that implements the full [Span Interface](#span-interface) but does not record any data and has no influence on the trace hierarchy.
+
+`startSpan` **MUST** always return a valid `Span` instance. If a span should not be recorded (for example due to [sampling](../sampling/) or [filtering](../filtering/) decisions), the SDK **MUST** return a Noop span instead. This allows callers to use the span without null checks.
+
+SDKs **MUST** return a Noop span in the following scenarios:
+
+- Unsampled spans: When a span's trace is negatively sampled.
+- Ignored spans: When a span matches an `ignoreSpans` pattern (see [Filtering](../filtering/)).
+
+### Behavior
+
+- All mutating methods (`setAttribute`, `setAttributes`, `removeAttribute`, `setStatus`, `setName`, `addLink`, `addLinks`, `end`) **MUST** be no-ops — they **MUST NOT** record or store any data.
+- Getter methods (`getName`, `getAttributes`) **SHOULD** return empty/default values (e.g., empty string, empty map).
+- A Noop span **MUST NOT** be sent to Sentry.
+
+### Default Property Values
+
+For platforms where span properties are non-nullable, a Noop span **MUST** use the following default values:
+
+| Property      | Default Value                            |
+|---------------|------------------------------------------|
+| `traceId`     | `00000000000000000000000000000000` (32 zero hex chars) |
+| `spanId`      | `0000000000000000` (16 zero hex chars)   |
+| `name`        | Empty string `""`                        |
+| `attributes`  | Empty map `{}`                           |
+| `status`      | `ok`                                     |
+
+For platforms that support properties with nullable types, returning `null` **MUST** be used instead.
+
 ## Utility APIs
 
 SDKs MAY expose additional utility APIs for users, or internal usage to access certain spans. For example,
