@@ -4,10 +4,7 @@
 Use **yarn**: `yarn install`, `yarn dev`, `yarn build`, `yarn test`
 
 ## Commit Attribution
-AI commits MUST include:
-```
-Co-Authored-By: Claude <noreply@anthropic.com>
-```
+AI commits MUST include a `Co-Authored-By` line when the AI coding tool provides one (e.g. Cursor, Claude Code, or other assistants). Use the attribution your tool supplies; do not hardcode a specific agent or email.
 
 ## Development
 - `yarn dev` - Start dev server with Sentry sidecar
@@ -69,6 +66,6 @@ When writing requirements in `develop-docs/`:
 - Make the plan extremely concise. Sacrifice grammar for the sake of concision.
 - At the end of each plan, give me a list of unresolved questions to answer, if any.
 
-## Pull Request generation 
+## Pull Request generation
 
-Use .github/PULL_REQUEST_TEMPLATE.md and add Co-Authored-By: Claude
+Use .github/PULL_REQUEST_TEMPLATE.md and, if your AI tool provides a Co-Authored-By line, add it to the PR description.
