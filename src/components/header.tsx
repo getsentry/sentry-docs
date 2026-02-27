@@ -100,36 +100,14 @@ export function Header({
       <div className="header-content flex items-center w-full">
         {/* Left: logo + nav links, capped so right block can anchor to viewport edge */}
         <nav className="nav-inner flex items-center gap-4 min-h-[64px] min-w-0 flex-1 px-4 md:pl-3 md:pr-4">
-        {/* Hamburger menu - different behavior on home page vs other pages */}
-        {isHomePage ? (
-          <button
-            className="md:hidden mr-3 flex items-center"
-            onClick={() => setHomeMobileNavOpen(!homeMobileNavOpen)}
-            aria-label={homeMobileNavOpen ? 'Close menu' : 'Open menu'}
-          >
-            {homeMobileNavOpen ? (
-              <Cross1Icon
-                className="inline dark:text-[var(--foreground)] text-[var(--gray-10)]"
-                width="22"
-                height="22"
-              />
-            ) : (
-              <HamburgerMenuIcon
-                className="inline dark:text-[var(--foreground)] text-[var(--gray-10)]"
-                strokeWidth="1.8"
-                width="22"
-                height="22"
-              />
-            )}
-          </button>
-        ) : (
-          <button className="md:hidden mr-3 flex items-center">
-            <label
-              htmlFor={sidebarToggleId}
-              aria-label={sidebarOpen ? 'Close menu' : 'Open menu'}
-              className="inline-flex items-center cursor-pointer"
+          {/* Hamburger menu - different behavior on home page vs other pages */}
+          {isHomePage ? (
+            <button
+              className="md:hidden mr-3 flex items-center"
+              onClick={() => setHomeMobileNavOpen(!homeMobileNavOpen)}
+              aria-label={homeMobileNavOpen ? 'Close menu' : 'Open menu'}
             >
-              {sidebarOpen ? (
+              {homeMobileNavOpen ? (
                 <Cross1Icon
                   className="inline dark:text-[var(--foreground)] text-[var(--gray-10)]"
                   width="22"
@@ -143,79 +121,101 @@ export function Header({
                   height="22"
                 />
               )}
-            </label>
-          </button>
-        )}
-        <Link
-          href="/"
-          title="Sentry error monitoring"
-          className="logo-slot flex flex-shrink-0 items-center text-lg font-medium text-[var(--foreground)] mr-1"
-          style={{minWidth: 0}}
-        >
-          <div className="h-full pb-[2px] mr-2">
-            <Image
-              src={SentryLogoSVG}
-              alt="Sentry's logo"
-              width={28}
-              className="h-10 dark:invert"
-            />
-          </div>
-          <span className="text-base font-semibold tracking-tight">Docs</span>
-        </Link>
-        {/* Top nav menu - anchored next to logo */}
-        <div className="hidden md:block flex-1 min-w-0">
-          <TopNavClient platforms={platforms} />
-        </div>
-        {/* Mobile: show Ask AI button and theme toggle (below md breakpoint) */}
-        <div className="flex items-center md:hidden ml-auto gap-3">
-          <button
-            className="kapa-ai-class flex items-center gap-1.5 text-sm font-medium text-[var(--foreground)] px-2 py-1.5 rounded-md hover:bg-[var(--gray-a3)] transition-colors"
-            aria-label="Ask AI"
+            </button>
+          ) : (
+            <button className="md:hidden mr-3 flex items-center">
+              <label
+                htmlFor={sidebarToggleId}
+                aria-label={sidebarOpen ? 'Close menu' : 'Open menu'}
+                className="inline-flex items-center cursor-pointer"
+              >
+                {sidebarOpen ? (
+                  <Cross1Icon
+                    className="inline dark:text-[var(--foreground)] text-[var(--gray-10)]"
+                    width="22"
+                    height="22"
+                  />
+                ) : (
+                  <HamburgerMenuIcon
+                    className="inline dark:text-[var(--foreground)] text-[var(--gray-10)]"
+                    strokeWidth="1.8"
+                    width="22"
+                    height="22"
+                  />
+                )}
+              </label>
+            </button>
+          )}
+          <Link
+            href="/"
+            title="Sentry error monitoring"
+            className="logo-slot flex flex-shrink-0 items-center text-lg font-medium text-[var(--foreground)] mr-1"
+            style={{minWidth: 0}}
           >
-            <MagicIcon className="size-4" />
-            <span className="uppercase text-xs">Ask AI</span>
-          </button>
-          <ThemeToggle />
-        </div>
-      </nav>
-      {/* Right: search + actions, anchored to viewport right at any width */}
-      <div className="hidden md:flex items-center gap-4 flex-shrink-0 ml-auto pl-4 pr-4 lg:pr-6">
-        {!noSearch && (
-          <div
-            className="flex flex-shrink-0 items-center gap-2"
-            style={{
-              visibility: showHeaderSearch ? 'visible' : 'hidden',
-              pointerEvents: showHeaderSearch ? 'auto' : 'none',
-              width: '340px',
-              minWidth: '340px',
-            }}
-          >
-            <Search
-              path={pathname}
-              searchPlatforms={searchPlatforms}
-              showChatBot
-              useStoredSearchPlatforms={useStoredSearchPlatforms}
-            />
+            <div className="h-full pb-[2px] mr-2">
+              <Image
+                src={SentryLogoSVG}
+                alt="Sentry's logo"
+                width={28}
+                className="h-10 dark:invert"
+              />
+            </div>
+            <span className="text-base font-semibold tracking-tight">Docs</span>
+          </Link>
+          {/* Top nav menu - anchored next to logo */}
+          <div className="hidden md:block flex-1 min-w-0">
+            <TopNavClient platforms={platforms} />
           </div>
-        )}
-        {!noSearch && (
-          <div className="flex flex-shrink-0 items-center gap-4">
-            <Button
-              asChild
-              variant="ghost"
-              color="gray"
-              size="3"
-              radius="medium"
-              className="font-medium text-[var(--foreground)] py-2 px-3 uppercase cursor-pointer whitespace-nowrap"
+          {/* Mobile: show Ask AI button and theme toggle (below md breakpoint) */}
+          <div className="flex items-center md:hidden ml-auto gap-3">
+            <button
+              className="kapa-ai-class flex items-center gap-1.5 text-sm font-medium text-[var(--foreground)] px-2 py-1.5 rounded-md hover:bg-[var(--gray-a3)] transition-colors"
+              aria-label="Ask AI"
             >
-              <a href="https://sentry.io/" target="_blank" rel="noopener noreferrer">
-                Go to Sentry
-              </a>
-            </Button>
+              <MagicIcon className="size-4" />
+              <span className="uppercase text-xs">Ask AI</span>
+            </button>
             <ThemeToggle />
           </div>
-        )}
-      </div>
+        </nav>
+        {/* Right: search + actions, anchored to viewport right at any width */}
+        <div className="hidden md:flex items-center gap-4 flex-shrink-0 ml-auto pl-4 pr-4 lg:pr-6">
+          {!noSearch && (
+            <div
+              className="flex flex-shrink-0 items-center gap-2"
+              style={{
+                visibility: showHeaderSearch ? 'visible' : 'hidden',
+                pointerEvents: showHeaderSearch ? 'auto' : 'none',
+                width: '340px',
+                minWidth: '340px',
+              }}
+            >
+              <Search
+                path={pathname}
+                searchPlatforms={searchPlatforms}
+                showChatBot
+                useStoredSearchPlatforms={useStoredSearchPlatforms}
+              />
+            </div>
+          )}
+          {!noSearch && (
+            <div className="flex flex-shrink-0 items-center gap-4">
+              <Button
+                asChild
+                variant="ghost"
+                color="gray"
+                size="3"
+                radius="medium"
+                className="font-medium text-[var(--foreground)] py-2 px-3 uppercase cursor-pointer whitespace-nowrap"
+              >
+                <a href="https://sentry.io/" target="_blank" rel="noopener noreferrer">
+                  Go to Sentry
+                </a>
+              </Button>
+              <ThemeToggle />
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Home page mobile navigation overlay */}
