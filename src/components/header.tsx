@@ -87,11 +87,19 @@ export function Header({
   const showHeaderSearch = !isHomePage || !homeSearchVisible;
 
   return (
-    <header className="bg-[var(--gray-1)] h-[var(--header-height)] w-full z-50 border-b border-[var(--gray-a3)] fixed top-0 flex items-center min-h-[64px]">
+    <header className="bg-[var(--gray-1)] h-[var(--header-height)] w-full z-50 border-b border-[var(--gray-a3)] fixed top-0 flex items-center justify-center min-h-[64px]">
       {/* define a header-height variable for consumption by other components */}
-      <style>{':root { --header-height: 64px; }'}</style>
-      {/* Left: logo + nav links, capped so right block can anchor to viewport edge */}
-      <nav className="nav-inner flex items-center gap-4 min-h-[64px] min-w-0 flex-1 max-w-[1800px] px-4 md:pl-3 md:pr-4">
+      <style>{`
+        :root { --header-height: 64px; }
+        @media (min-width: 2057px) {
+          .header-content {
+            max-width: calc(var(--sidebar-width, 300px) + var(--doc-content-w, 1100px) + var(--toc-w, 250px) + var(--gap, 24px) * 2);
+          }
+        }
+      `}</style>
+      <div className="header-content flex items-center w-full">
+        {/* Left: logo + nav links, capped so right block can anchor to viewport edge */}
+        <nav className="nav-inner flex items-center gap-4 min-h-[64px] min-w-0 flex-1 px-4 md:pl-3 md:pr-4">
         {/* Hamburger menu - different behavior on home page vs other pages */}
         {isHomePage ? (
           <button
@@ -207,6 +215,7 @@ export function Header({
             <ThemeToggle />
           </div>
         )}
+      </div>
       </div>
 
       {/* Home page mobile navigation overlay */}
