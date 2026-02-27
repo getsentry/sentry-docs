@@ -45,9 +45,13 @@ export function PlatformSelector({
         .slice()
         .sort(
           (a, b) =>
-            humanizeTitle(a.title ?? '').localeCompare(humanizeTitle(b.title ?? ''), 'en', {
-              sensitivity: 'base',
-            }) ?? 0
+            humanizeTitle(a.title ?? '').localeCompare(
+              humanizeTitle(b.title ?? ''),
+              'en',
+              {
+                sensitivity: 'base',
+              }
+            ) ?? 0
         )
         .map(platform => [
           platform,
