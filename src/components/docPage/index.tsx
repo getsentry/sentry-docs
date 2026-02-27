@@ -170,7 +170,35 @@ export async function DocPage({
             max-width: calc(100vw - 300px - 250px);
           }
         }
-
+        @media (min-width: 2057px) {
+          :root {
+            --doc-content-w: 1100px;
+            --toc-w: 250px;
+            --gap: 24px;
+          }
+          /* Cap content width and center (reinforced at this breakpoint) */
+          #doc-content {
+            max-width: var(--doc-content-w);
+            padding-left: 2rem;
+            padding-right: 2rem;
+            margin-left: auto;
+            margin-right: auto;
+          }
+          /* Cancel default push so content can center */
+          [data-layout-anchor="left"] + .main-content {
+            margin-left: 0 !important;
+            width: 100% !important;
+          }
+          /* Anchor sidebars to content edges */
+          [data-layout-anchor="left"] {
+            left: calc(50% - (var(--doc-content-w) / 2) - var(--gap) - var(--sidebar-width));
+          }
+          [data-layout-anchor="right"] {
+            position: fixed !important;
+            left: calc(50% + (var(--doc-content-w) / 2) + var(--gap));
+            width: var(--toc-w);
+          }
+        }
       `}</style>
 
       <Mermaid />
