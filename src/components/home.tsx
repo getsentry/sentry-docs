@@ -1,5 +1,6 @@
 import {Banner} from 'sentry-docs/components/banner';
 import {extractPlatforms, getDocsRootNode} from 'sentry-docs/docTree';
+import AiInSentryHero from 'sentry-docs/imgs/AI-in-Sentry.jpeg';
 import AiSentryHero from 'sentry-docs/imgs/ai-sentry-hero.png';
 import PlugImage from 'sentry-docs/imgs/api.png';
 import ChatBubble from 'sentry-docs/imgs/chat-bubble.png';
@@ -166,8 +167,8 @@ export default async function Home() {
       <div className="hero max-w-screen-xl mx-auto px-4 sm:px-8 lg:px-[50px] py-2">
         {/* Sentry Features Header */}
         <h2 className="text-2xl mt-0 mb-6 font-medium">Sentry Features</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Sentry Debugging */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Debugging in Sentry */}
           <div
             className="bg-white dark:bg-[var(--gray-2)] rounded-xl p-6 flex items-start gap-4"
             style={{
@@ -185,7 +186,7 @@ export default async function Home() {
             >
               <img
                 src={ErrorMonitoringHero.src}
-                alt="Debugging with Sentry"
+                alt="Debugging in Sentry"
                 style={{
                   width: '100%',
                   height: '100%',
@@ -196,17 +197,10 @@ export default async function Home() {
             </div>
             <div className="flex-1">
               <h3 className="text-lg font-semibold mb-2 text-[var(--gray-12)]">
-                Debugging with Sentry
+                Debugging in Sentry
               </h3>
               <p className="text-sm text-[var(--gray-11)] dark:text-white leading-relaxed">
-                Debug applications automatically with{' '}
-                <a
-                  href="/product/ai-in-sentry/seer/"
-                  className="text-[#8b5cf6] underline"
-                >
-                  Seer
-                </a>
-                . Monitor, identify, and resolve errors and performance issues across your
+                Monitor, identify, and resolve errors and performance issues across your
                 applications using{' '}
                 <a href="/product/error-monitoring/" className="text-[#8b5cf6] underline">
                   Error Monitoring
@@ -235,7 +229,7 @@ export default async function Home() {
             </div>
           </div>
 
-          {/* AI for Agents and AI in Sentry */}
+          {/* Fix Bugs Faster with Seer */}
           <div
             className="bg-white dark:bg-[var(--gray-2)] rounded-xl p-6 flex items-start gap-4"
             style={{
@@ -253,6 +247,64 @@ export default async function Home() {
             >
               <img
                 src={AiSentryHero.src}
+                alt="Fix Bugs Faster with Seer"
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  objectPosition: 'center',
+                }}
+              />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold mb-2 text-[var(--gray-12)]">
+                Fix Bugs Faster with Seer
+              </h3>
+              <p className="text-sm text-[var(--gray-11)] dark:text-white leading-relaxed">
+                Debug applications automatically with{' '}
+                <a
+                  href="/product/ai-in-sentry/seer/"
+                  className="text-[#8b5cf6] underline"
+                >
+                  Seer
+                </a>
+                . Use{' '}
+                <a
+                  href="/product/ai-in-sentry/seer/root-cause-analysis/"
+                  className="text-[#8b5cf6] underline"
+                >
+                  AI-powered root cause analysis
+                </a>{' '}
+                in debugging your issues. Use{' '}
+                <a
+                  href="/product/ai-in-sentry/seer/ai-code-review/"
+                  className="text-[#8b5cf6] underline"
+                >
+                  code review
+                </a>{' '}
+                to review your PRs and prevent errors.
+              </p>
+            </div>
+          </div>
+
+          {/* AI in Sentry */}
+          <div
+            className="bg-white dark:bg-[var(--gray-2)] rounded-xl p-6 flex items-start gap-4"
+            style={{
+              boxShadow:
+                '0 4px 20px 0 rgba(0, 0, 0, 0.08), 0 1px 3px 0 rgba(0, 0, 0, 0.05)',
+            }}
+          >
+            <div
+              className="flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <img
+                src={AiInSentryHero.src}
                 alt="AI in Sentry"
                 style={{
                   width: '100%',
@@ -267,7 +319,7 @@ export default async function Home() {
                 AI in Sentry
               </h3>
               <p className="text-sm text-[var(--gray-11)] dark:text-white leading-relaxed">
-                Use Sentry's{' '}
+              Integrate Sentry into your AI coding assistants using Sentry's{' '}
                 <a href="/ai/agent-skills/" className="text-[#8b5cf6] underline">
                   Skills
                 </a>{' '}
@@ -275,25 +327,11 @@ export default async function Home() {
                 <a href="/ai/mcp/" className="text-[#8b5cf6] underline">
                   MCP server
                 </a>{' '}
-                with your agents, and start{' '}
+                with your agents. Debug agents and MCP servers by{' '}
                 <a href="/ai/monitoring/" className="text-[#8b5cf6] underline">
                   monitoring your AI features
                 </a>
-                . With Seer, fix code faster using{' '}
-                <a
-                  href="/product/ai-in-sentry/seer/root-cause-analysis/"
-                  className="text-[#8b5cf6] underline"
-                >
-                  AI-powered root cause analysis
-                </a>{' '}
-                in debugging your issues. Use{' '}
-                <a
-                  href="/product/ai-in-sentry/seer/ai-code-review/"
-                  className="text-[#8b5cf6] underline"
-                >
-                  AI code review
-                </a>{' '}
-                to review your PRs and prevent errors.
+                .
               </p>
             </div>
           </div>
