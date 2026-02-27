@@ -40,7 +40,17 @@ pnpm add @sentry/profiling-node
 
 Next, install Sentry's Cloudflare SDK using your favorite package manager:
 
-<PlatformContent includePath="getting-started-install" />
+```bash {tabTitle:npm}
+npm install @sentry/cloudflare
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/cloudflare
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/cloudflare
+```
 
 </PlatformSection>
 
@@ -209,37 +219,38 @@ For Astro versions below `3.5.2`, you need to manually add server instrumentatio
 
 <PlatformSection supported={["javascript.cloudflare"]}>
 
-<Include name="cloudflare-pages-middleware-intro.mdx" />
+Create a `sentry.server.config.(ts|js)` file in the root of your project. In this file, import and initialize Sentry for the server:
 
-```javascript {filename:functions/_middleware.js}
-import * as Sentry from "@sentry/cloudflare";
+```javascript {filename:sentry.server.config.(ts|js)}
+import * as Sentry from "@sentry/astro";
 
-export const onRequest = [
-  // Make sure Sentry is the first middleware
-  Sentry.sentryPagesPlugin((context) => ({
-    dsn: "___PUBLIC_DSN___",
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
 
-    // Adds request headers and IP for users, for more info visit:
-    // https://docs.sentry.io/platforms/javascript/guides/astro/configuration/options/#sendDefaultPii
-    sendDefaultPii: true,
-    // ___PRODUCT_OPTION_START___ performance
+  // Adds request headers and IP for users, for more info visit:
+  // https://docs.sentry.io/platforms/javascript/guides/astro/configuration/options/#sendDefaultPii
+  sendDefaultPii: true,
+  // ___PRODUCT_OPTION_START___ performance
 
-    // Set tracesSampleRate to 1.0 to capture 100% of spans for tracing.
-    // Learn more at
-    // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
-    tracesSampleRate: 1.0,
-    // ___PRODUCT_OPTION_END___ performance
+  // Define how likely traces are sampled. Adjust this value in production,
+  // or use tracesSampler for greater control.
+  tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+  // ___PRODUCT_OPTION_START___ logs
 
-    // Optionally capture action formData attributes with errors.
-    // This requires `sendDefaultPii` set to true as well.
-    captureActionFormDataKeys: {
-      key_x: true,
-      key_y: true,
-    },
-  })),
-  // Add more middlewares here
-];
+  // Enable logs to be sent to Sentry
+  enableLogs: true,
+  // ___PRODUCT_OPTION_END___ logs
+});
 ```
+
+The `@sentry/astro` integration automatically detects the `@astrojs/cloudflare` adapter and wraps your Worker entry with `@sentry/cloudflare`'s `withSentry` for proper request isolation and async context.
+
+<Alert level="info" title="Configuration via Environment Variables">
+
+On Cloudflare Workers, you can also configure Sentry using [environment variables](https://developers.cloudflare.com/workers/configuration/environment-variables/). The SDK reads `SENTRY_DSN`, `SENTRY_TRACES_SAMPLE_RATE`, and other standard Sentry environment variables.
+
+</Alert>
 
 ### Configure Cloudflare for Sentry
 
@@ -406,7 +417,7 @@ Our next recommended steps for you are:
 - Explore [practical guides](/guides/) on what to monitor, log, track, and investigate after setup
 - Continue to <PlatformLink to="/configuration">customize your configuration</PlatformLink>
 - Learn how to <PlatformLink to="/usage">manually capture errors</PlatformLink>
-- Learn more about [deploying Astro apps to Cloudflare Pages](/platforms/javascript/guides/cloudflare/frameworks/astro/)
+- Learn more about [deploying Astro apps to Cloudflare](/platforms/javascript/guides/cloudflare/frameworks/astro/)
 - Get familiar with [Sentry's product features](/product/) like tracing, insights, and alerts
 
 </PlatformSection>
