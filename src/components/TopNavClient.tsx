@@ -255,11 +255,11 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
         )}
         <div
           ref={navRef}
-          className="overflow-x-auto whitespace-nowrap max-w-full scrollbar-hide pr-8 pl-8"
+          className="overflow-x-auto whitespace-nowrap max-w-full scrollbar-hide pl-4 pr-6"
           style={{scrollbarWidth: 'none', msOverflowStyle: 'none'}}
         >
           <ul
-            className="flex gap-4 w-full items-center overflow-x-visible"
+            className="flex gap-4 w-max min-w-0 items-center overflow-x-visible"
             style={{scrollbarWidth: 'none'}}
           >
             {mainSections.map(section => (

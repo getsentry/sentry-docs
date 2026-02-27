@@ -87,10 +87,11 @@ export default function Header({
   const showHeaderSearch = !isHomePage || !homeSearchVisible;
 
   return (
-    <header className="bg-[var(--gray-1)] h-[var(--header-height)] w-full z-50 border-b border-[var(--gray-a3)] fixed top-0">
+    <header className="bg-[var(--gray-1)] h-[var(--header-height)] w-full z-50 border-b border-[var(--gray-a3)] fixed top-0 flex items-center min-h-[64px]">
       {/* define a header-height variable for consumption by other components */}
       <style>{':root { --header-height: 64px; }'}</style>
-      <nav className="nav-inner mx-auto px-4 lg:px-8 flex items-center gap-4 min-h-[64px] max-w-[1800px]">
+      {/* Left: logo + nav links, capped so right block can anchor to viewport edge */}
+      <nav className="nav-inner flex items-center gap-4 min-h-[64px] min-w-0 flex-1 max-w-[1800px] px-4 md:pl-3 md:pr-4">
         {/* Hamburger menu - different behavior on home page vs other pages */}
         {isHomePage ? (
           <button
@@ -157,44 +158,6 @@ export default function Header({
         <div className="hidden md:block flex-1 min-w-0">
           <TopNavClient platforms={platforms} />
         </div>
-        {/* Desktop: Search bar and right-side controls */}
-        <div className="hidden md:flex items-center gap-4">
-          {!noSearch && (
-            <div
-              className="flex flex-shrink-0 items-center gap-2"
-              style={{
-                visibility: showHeaderSearch ? 'visible' : 'hidden',
-                pointerEvents: showHeaderSearch ? 'auto' : 'none',
-                width: '340px',
-                minWidth: '340px',
-              }}
-            >
-              <Search
-                path={pathname}
-                searchPlatforms={searchPlatforms}
-                showChatBot
-                useStoredSearchPlatforms={useStoredSearchPlatforms}
-              />
-            </div>
-          )}
-          {!noSearch && (
-            <div className="flex flex-shrink-0 items-center gap-4">
-              <Button
-                asChild
-                variant="ghost"
-                color="gray"
-                size="3"
-                radius="medium"
-                className="font-medium text-[var(--foreground)] py-2 px-3 uppercase cursor-pointer whitespace-nowrap"
-              >
-                <a href="https://sentry.io/" target="_blank" rel="noopener noreferrer">
-                  Go to Sentry
-                </a>
-              </Button>
-              <ThemeToggle />
-            </div>
-          )}
-        </div>
         {/* Mobile: show Ask AI button and theme toggle (below md breakpoint) */}
         <div className="flex items-center md:hidden ml-auto gap-3">
           <button
@@ -207,6 +170,44 @@ export default function Header({
           <ThemeToggle />
         </div>
       </nav>
+      {/* Right: search + actions, anchored to viewport right at any width */}
+      <div className="hidden md:flex items-center gap-4 flex-shrink-0 ml-auto pl-4 pr-4 lg:pr-6">
+        {!noSearch && (
+          <div
+            className="flex flex-shrink-0 items-center gap-2"
+            style={{
+              visibility: showHeaderSearch ? 'visible' : 'hidden',
+              pointerEvents: showHeaderSearch ? 'auto' : 'none',
+              width: '340px',
+              minWidth: '340px',
+            }}
+          >
+            <Search
+              path={pathname}
+              searchPlatforms={searchPlatforms}
+              showChatBot
+              useStoredSearchPlatforms={useStoredSearchPlatforms}
+            />
+          </div>
+        )}
+        {!noSearch && (
+          <div className="flex flex-shrink-0 items-center gap-4">
+            <Button
+              asChild
+              variant="ghost"
+              color="gray"
+              size="3"
+              radius="medium"
+              className="font-medium text-[var(--foreground)] py-2 px-3 uppercase cursor-pointer whitespace-nowrap"
+            >
+              <a href="https://sentry.io/" target="_blank" rel="noopener noreferrer">
+                Go to Sentry
+              </a>
+            </Button>
+            <ThemeToggle />
+          </div>
+        )}
+      </div>
 
       {/* Home page mobile navigation overlay */}
       {isHomePage && homeMobileNavOpen && (
