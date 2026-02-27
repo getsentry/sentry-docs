@@ -319,7 +319,7 @@ export default async function Home() {
                 AI in Sentry
               </h3>
               <p className="text-sm text-[var(--gray-11)] dark:text-white leading-relaxed">
-              Integrate Sentry into your AI coding assistants using Sentry's{' '}
+                Integrate Sentry into your AI coding assistants using Sentry's{' '}
                 <a href="/ai/agent-skills/" className="text-[#8b5cf6] underline">
                   Skills
                 </a>{' '}
