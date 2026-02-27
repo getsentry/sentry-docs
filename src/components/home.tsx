@@ -17,7 +17,7 @@ import SupportImage from 'sentry-docs/imgs/support.png';
 
 import AskAiSearchParams from './askAiSearchParams';
 import {Card} from './card';
-import Header from './header';
+import {Header} from './header';
 import {HomeSearchObserver} from './homeSearchVisibility';
 import {NavLink, NavLinkProps} from './navlink';
 import {PlatformFilter} from './platformFilter';
@@ -25,7 +25,7 @@ import {PlatformIcon} from './platformIcon';
 import {Search} from './search';
 import {SentryWordmarkLogo} from './wordmarkLogo';
 
-export default async function Home() {
+export async function Home() {
   const rootNode = await getDocsRootNode();
   const platforms = extractPlatforms(rootNode);
   const mostViewedSDKs = [

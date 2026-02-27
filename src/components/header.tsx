@@ -42,7 +42,7 @@ type Props = {
   useStoredSearchPlatforms?: boolean;
 };
 
-export default function Header({
+export function Header({
   pathname,
   searchPlatforms,
   noSearch,

@@ -35,6 +35,7 @@ export const conceptsSections: NavSection[] = [
   {label: 'Search', href: '/concepts/search/'},
   {label: 'Migration', href: '/concepts/migration/'},
   {label: 'Data Management', href: '/concepts/data-management/'},
+  {label: 'OpenTelemetry (OTLP)', href: '/concepts/otlp/'},
   {label: 'Sentry CLI', href: '/cli/'},
 ];
 
@@ -50,7 +51,7 @@ export const moreSections: NavSection[] = [
 // Labels use title case with proper acronym handling (SDKs, API stay uppercase)
 export const mainSectionsWithDropdowns: NavSection[] = [
   {label: 'SDKs', href: '/platforms/'},
-  {label: 'Product', href: '/product/', dropdown: productSections},
+  {label: 'Product', href: '/product/'},
   {label: 'AI', href: '/ai/'},
   {label: 'Guides', href: '/guides/'},
   {label: 'Concepts', href: '/concepts/', dropdown: conceptsSections},

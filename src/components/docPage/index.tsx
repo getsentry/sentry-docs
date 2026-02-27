@@ -22,7 +22,7 @@ import {CodeContextProvider} from '../codeContext';
 import {CopyMarkdownButton} from '../copyMarkdownButton';
 import {DocFeedback} from '../docFeedback';
 import {GitHubCTA} from '../githubCTA';
-import Header from '../header';
+import {Header} from '../header';
 import Mermaid from '../mermaid';
 import {PaginationNav} from '../paginationNav';
 import {PlatformSdkDetail} from '../platformSdkDetail';

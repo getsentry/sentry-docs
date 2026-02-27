@@ -8,7 +8,7 @@ import {Platform} from 'sentry-docs/types';
 
 import platformSelectorStyles from './platformSelector/style.module.scss';
 
-import {mainSectionsWithDropdowns, productSections} from './navigationData';
+import {mainSectionsWithDropdowns} from './navigationData';
 import {PlatformSelector} from './platformSelector';
 
 const mainSections = mainSectionsWithDropdowns;
@@ -100,16 +100,12 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
   const closeTimers = useRef<{
     concepts?: NodeJS.Timeout;
     more?: NodeJS.Timeout;
-    products?: NodeJS.Timeout;
     sdks?: NodeJS.Timeout;
   }>({});
-  const [productsDropdownOpen, setProductsDropdownOpen] = useState(false);
   const [conceptsDropdownOpen, setConceptsDropdownOpen] = useState(false);
   const [moreDropdownOpen, setMoreDropdownOpen] = useState(false);
-  const productsBtnRef = useRef<HTMLButtonElement>(null);
   const conceptsBtnRef = useRef<HTMLButtonElement>(null);
   const moreBtnRef = useRef<HTMLButtonElement>(null);
-  const productsDropdownRef = useRef<HTMLDivElement>(null);
   const conceptsDropdownRef = useRef<HTMLDivElement>(null);
   const moreDropdownRef = useRef<HTMLDivElement>(null);
   const navRef = useRef<HTMLDivElement>(null);
@@ -126,14 +122,6 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
         ) {
           setPlatformDropdownOpen(false);
           setPlatformDropdownByClick(false);
-        }
-      }
-      if (productsDropdownOpen) {
-        if (
-          !productsBtnRef.current?.contains(e.target as Node) &&
-          !productsDropdownRef.current?.contains(e.target as Node)
-        ) {
-          setProductsDropdownOpen(false);
         }
       }
       if (conceptsDropdownOpen) {
@@ -155,13 +143,7 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
     }
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
-  }, [
-    platformDropdownOpen,
-    platformDropdownByClick,
-    productsDropdownOpen,
-    conceptsDropdownOpen,
-    moreDropdownOpen,
-  ]);
+  }, [platformDropdownOpen, platformDropdownByClick, conceptsDropdownOpen, moreDropdownOpen]);
 
   useEffect(() => {
     function updateScrollState() {
@@ -190,8 +172,6 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
   }
 
   // For each dropdown, use the hook and portal rendering
-  // Example for Products:
-  const productsPosition = useDropdownPosition(productsBtnRef, productsDropdownOpen);
   const sdksPosition = useDropdownPosition(platformBtnRef, platformDropdownOpen);
   const conceptsPosition = useDropdownPosition(conceptsBtnRef, conceptsDropdownOpen);
   const morePosition = useDropdownPosition(moreBtnRef, moreDropdownOpen);
@@ -264,65 +244,12 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
           >
             {mainSections.map(section => (
               <li key={section.href} className="list-none relative">
-                {section.label === 'Product' ? (
-                  <div
-                    style={{display: 'inline-block'}}
-                    onMouseEnter={() => {
-                      clearTimeout(closeTimers.current.products);
-                      setProductsDropdownOpen(true);
-                      setConceptsDropdownOpen(false);
-                      setMoreDropdownOpen(false);
-                      setPlatformDropdownOpen(false);
-                    }}
-                    onMouseLeave={() => {
-                      closeTimers.current.products = setTimeout(() => {
-                        setProductsDropdownOpen(false);
-                      }, 150);
-                    }}
-                  >
-                    <button
-                      ref={productsBtnRef}
-                      className={`text-[var(--gray-12)] transition-all duration-150 inline-block py-2 px-1 rounded-t-md flex items-center gap-1 text-[0.875rem] font-normal border-b-2 ${
-                        pathname?.startsWith(section.href)
-                          ? 'border-[var(--accent-purple)]'
-                          : productsDropdownOpen
-                            ? 'border-[#a78bfa]'
-                            : 'border-transparent hover:border-[#a78bfa]'
-                      }`}
-                      onClick={() => {
-                        setProductsDropdownOpen(v => !v);
-                        setConceptsDropdownOpen(false);
-                        setMoreDropdownOpen(false);
-                      }}
-                      aria-haspopup="true"
-                      aria-expanded={productsDropdownOpen}
-                    >
-                      {section.label}
-                      <svg
-                        className={`ml-1 transition-transform duration-150 ${productsDropdownOpen ? 'rotate-180' : ''}`}
-                        width="16"
-                        height="16"
-                        viewBox="0 0 16 16"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          d="M4 6L8 10L12 6"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                ) : section.label === 'Concepts' ? (
+                {section.label === 'Concepts' ? (
                   <div
                     style={{display: 'inline-block'}}
                     onMouseEnter={() => {
                       clearTimeout(closeTimers.current.concepts);
                       setConceptsDropdownOpen(true);
-                      setProductsDropdownOpen(false);
                       setMoreDropdownOpen(false);
                       setPlatformDropdownOpen(false);
                     }}
@@ -345,7 +272,6 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
                       }`}
                       onClick={() => {
                         setConceptsDropdownOpen(v => !v);
-                        setProductsDropdownOpen(false);
                         setMoreDropdownOpen(false);
                       }}
                       aria-haspopup="true"
@@ -376,7 +302,6 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
                     onMouseEnter={() => {
                       clearTimeout(closeTimers.current.more);
                       setMoreDropdownOpen(true);
-                      setProductsDropdownOpen(false);
                       setConceptsDropdownOpen(false);
                       setPlatformDropdownOpen(false);
                     }}
@@ -399,7 +324,6 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
                       }`}
                       onClick={() => {
                         setMoreDropdownOpen(v => !v);
-                        setProductsDropdownOpen(false);
                         setConceptsDropdownOpen(false);
                       }}
                       aria-haspopup="true"
@@ -454,47 +378,6 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
         </div>
       </div>
       {/* Portal-based dropdowns */}
-      {productsDropdownOpen &&
-        ReactDOM.createPortal(
-          <div
-            ref={productsDropdownRef}
-            className="absolute left-0 bg-white dark:bg-black border border-[var(--gray-a3)] dark:border-[var(--gray-7)] shadow-lg z-50 min-w-[220px] p-2 rounded-b-md rounded-t-none"
-            style={{
-              position: 'absolute',
-              top: productsPosition.top,
-              left: productsPosition.left,
-              minWidth: productsPosition.width,
-              overflowY: 'auto',
-              scrollbarWidth: 'none',
-              msOverflowStyle: 'none',
-            }}
-            onClick={e => e.stopPropagation()}
-            onMouseEnter={() => {
-              clearTimeout(closeTimers.current.products);
-            }}
-            onMouseLeave={() => {
-              closeTimers.current.products = setTimeout(() => {
-                setProductsDropdownOpen(false);
-              }, 150);
-            }}
-          >
-            <style>{`
-            .dark .product-dropdown-link {
-              color: #fff !important;
-            }
-          `}</style>
-            {productSections.map(product => (
-              <Link
-                key={product.href}
-                href={product.href}
-                className="product-dropdown-link block px-4 py-2 text-[var(--gray-12)] dark:text-white hover:bg-[var(--gray-3)] dark:hover:bg-[var(--gray-8)] rounded text-[0.875rem] font-normal font-sans no-underline"
-              >
-                {product.label}
-              </Link>
-            ))}
-          </div>,
-          document.body
-        )}
       {platformDropdownOpen &&
         ReactDOM.createPortal(
           <div
