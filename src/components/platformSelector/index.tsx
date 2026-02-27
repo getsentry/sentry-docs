@@ -39,27 +39,31 @@ export function PlatformSelector({
   // humanize the title for a more natural sorting
   const humanizeTitle = (title: string) =>
     title.replaceAll('.', ' ').replaceAll(/ +/g, ' ').trim();
-  const platformsAndGuides = platforms
-    .slice()
-    .sort(
-      (a, b) =>
-        humanizeTitle(a.title ?? '').localeCompare(humanizeTitle(b.title ?? ''), 'en', {
-          sensitivity: 'base',
-        }) ?? 0
-    )
-    .map(platform => [
-      platform,
-      ...platform.guides.map(guide => ({
-        ...guide,
-        // add a reference to the parent platform instead of its key
-        platform,
-      })),
-      ...platform.integrations.map(integration => ({
-        ...integration,
-        platform,
-      })),
-    ])
-    .flat(2);
+  const platformsAndGuides = useMemo(
+    () =>
+      platforms
+        .slice()
+        .sort(
+          (a, b) =>
+            humanizeTitle(a.title ?? '').localeCompare(humanizeTitle(b.title ?? ''), 'en', {
+              sensitivity: 'base',
+            }) ?? 0
+        )
+        .map(platform => [
+          platform,
+          ...platform.guides.map(guide => ({
+            ...guide,
+            // add a reference to the parent platform instead of its key
+            platform,
+          })),
+          ...platform.integrations.map(integration => ({
+            ...integration,
+            platform,
+          })),
+        ])
+        .flat(2),
+    [platforms]
+  );
 
   const [expandedPlatforms, setExpandedPlatforms] = useState<Set<string>>(new Set());
 
