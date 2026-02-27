@@ -7,28 +7,6 @@ export type NavSection = {
   dropdown?: NavSection[];
 };
 
-// Product sub-sections (used in TopNavClient dropdown)
-export const productSections: NavSection[] = [
-  {label: 'Sentry Basics', href: '/product/sentry-basics/'},
-  {label: 'AI in Sentry', href: '/product/ai-in-sentry/'},
-  {label: 'Insights', href: '/product/insights/'},
-  {label: 'User Feedback', href: '/product/user-feedback/'},
-  {label: 'Uptime Monitoring', href: '/product/uptime-monitoring/'},
-  {label: 'Dashboards', href: '/product/dashboards/'},
-  {label: 'Projects', href: '/product/projects/'},
-  {label: 'Explore', href: '/product/explore/'},
-  {label: 'Issues', href: '/product/issues/'},
-  {label: 'Alerts', href: '/product/alerts/'},
-  {label: 'Crons', href: '/product/crons/'},
-  {label: 'Releases', href: '/product/releases/'},
-  {label: 'Relay', href: '/product/relay/'},
-  {label: 'Sentry MCP', href: '/product/sentry-mcp/'},
-  {label: 'Sentry Toolbar', href: '/product/sentry-toolbar/'},
-  {label: 'Stats', href: '/product/stats/'},
-  {label: 'Codecov', href: '/product/codecov/'},
-  {label: 'Onboarding', href: '/product/onboarding/'},
-];
-
 // Concepts sub-sections
 export const conceptsSections: NavSection[] = [
   {label: 'Key Terms', href: '/concepts/key-terms/'},
