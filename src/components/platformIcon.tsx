@@ -1096,6 +1096,7 @@ export const PLATFORM_TO_ICON = {
   'rust-tracing': 'tracing',
   'rust-axum': 'axum',
   scala: 'scala',
+  sentry: 'sentry',
   stride3d: 'stride3d',
   sql: 'sql',
   sqlserver: 'sqlserver',
@@ -1107,7 +1108,6 @@ export const PLATFORM_TO_ICON = {
   unrealengine: 'unreal',
   visualbasic: 'visual-basic',
   windows: 'windows',
-  sentry: 'sentry',
   xbox: 'xbox',
   // Don't add new platforms down here!
   // Please add them where they belong alphabetically
