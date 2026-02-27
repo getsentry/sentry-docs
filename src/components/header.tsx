@@ -94,7 +94,7 @@ export default function Header({
         {/* Hamburger menu - different behavior on home page vs other pages */}
         {isHomePage ? (
           <button
-            className="md:hidden mr-3"
+            className="md:hidden mr-3 flex items-center"
             onClick={() => setHomeMobileNavOpen(!homeMobileNavOpen)}
             aria-label={homeMobileNavOpen ? 'Close menu' : 'Open menu'}
           >
@@ -114,7 +114,7 @@ export default function Header({
             )}
           </button>
         ) : (
-          <button className="md:hidden mr-3">
+          <button className="md:hidden mr-3 flex items-center">
             <label
               htmlFor={sidebarToggleId}
               aria-label={sidebarOpen ? 'Close menu' : 'Open menu'}
