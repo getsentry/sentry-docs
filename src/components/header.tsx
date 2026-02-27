@@ -87,13 +87,20 @@ export function Header({
   const showHeaderSearch = !isHomePage || !homeSearchVisible;
 
   return (
-    <header className="bg-[var(--gray-1)] h-[var(--header-height)] w-full z-50 border-b border-[var(--gray-a3)] fixed top-0 flex items-center justify-center min-h-[64px]">
+    <header className="bg-[var(--gray-1)] h-[var(--header-height)] w-full z-50 border-b border-[var(--gray-a3)] fixed top-0 flex items-center min-h-[64px]">
       {/* define a header-height variable for consumption by other components */}
       <style>{`
         :root { --header-height: 64px; }
         @media (min-width: 2057px) {
           .header-content {
-            max-width: calc(var(--sidebar-width, 300px) + var(--doc-content-w, 1100px) + var(--toc-w, 250px) + var(--gap, 24px) * 2);
+            --sidebar-width: 300px;
+            --doc-content-w: 1100px;
+            --toc-w: 250px;
+            --gap: 24px;
+            /* Match sidebar left edge position */
+            padding-left: calc(50% - (var(--doc-content-w) / 2) - var(--gap) - var(--sidebar-width));
+            /* Match TOC right edge position */
+            padding-right: calc(50% - (var(--doc-content-w) / 2) - var(--gap) - var(--toc-w));
           }
         }
       `}</style>
