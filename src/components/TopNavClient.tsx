@@ -143,7 +143,12 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
     }
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
-  }, [platformDropdownOpen, platformDropdownByClick, conceptsDropdownOpen, moreDropdownOpen]);
+  }, [
+    platformDropdownOpen,
+    platformDropdownByClick,
+    conceptsDropdownOpen,
+    moreDropdownOpen,
+  ]);
 
   useEffect(() => {
     function updateScrollState() {
