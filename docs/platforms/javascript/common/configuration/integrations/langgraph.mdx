@@ -52,7 +52,7 @@ For meta-framework applications using all runtimes, you need to manually wrap yo
 
 _Import name: `Sentry.langGraphIntegration`_
 
-The `langGraphIntegration` adds instrumentation for [`@langchain/langgraph`](https://www.npmjs.com/package/@langchain/langgraph) to capture spans by automatically wrapping LangGraph operations and recording AI agent interactions including agent invocations, graph executions, and node operations. 
+The `langGraphIntegration` adds instrumentation for [`@langchain/langgraph`](https://www.npmjs.com/package/@langchain/langgraph) to capture spans by automatically wrapping LangGraph operations and recording AI agent interactions including agent invocations, graph executions, and node operations.
 
 <PlatformSection notSupported={["javascript.bun", "javascript.cloudflare"]}>
 
@@ -98,7 +98,7 @@ For Cloudflare Workers, manual instrumentation is required using `instrumentLang
 
 </PlatformSection>
 
-The `instrumentLangGraph` helper adds instrumentation for [`@langchain/langgraph`](https://www.npmjs.com/package/@langchain/langgraph) to capture spans by wrapping a compiled LangGraph graph and recording AI agent interactions with configurable input/output recording. You need to manually wrap your compiled graph with this helper. See example below:
+The `instrumentLangGraph` helper adds instrumentation for [`@langchain/langgraph`](https://www.npmjs.com/package/@langchain/langgraph) to capture spans by wrapping a `StateGraph` before compilation and recording AI agent interactions with configurable input/output recording. You need to call this helper on the graph **before** calling `.compile()`. See example below:
 
 ```javascript
 import { ChatOpenAI } from "@langchain/openai";
@@ -124,13 +124,13 @@ const agent = new StateGraph(MessagesAnnotation)
   .addEdge(START, 'agent')
   .addEdge('agent', END);
 
-const graph = agent.compile({ name: 'my_agent' });
-
-// Manually instrument the graph
-Sentry.instrumentLangGraph(graph, {
+// Instrument the graph before compiling
+Sentry.instrumentLangGraph(agent, {
   recordInputs: true,
   recordOutputs: true,
 });
+
+const graph = agent.compile({ name: 'my_agent' });
 
 // Invoke the agent
 const result = await graph.invoke({
