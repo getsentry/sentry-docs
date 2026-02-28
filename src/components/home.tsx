@@ -1,7 +1,7 @@
 import {Banner} from 'sentry-docs/components/banner';
 import {extractPlatforms, getDocsRootNode} from 'sentry-docs/docTree';
 import AiInSentryHero from 'sentry-docs/imgs/AI-in-Sentry.jpeg';
-import AiSentryHero from 'sentry-docs/imgs/ai-sentry-hero.png';
+import AiSentryHero from 'sentry-docs/imgs/ai-sentry-hero.jpeg';
 import PlugImage from 'sentry-docs/imgs/api.png';
 import ChatBubble from 'sentry-docs/imgs/chat-bubble.png';
 import TerminalImage from 'sentry-docs/imgs/cli.png';
