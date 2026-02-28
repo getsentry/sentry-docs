@@ -319,10 +319,10 @@ const SENTRY_PROJECT_IDS = ["123456"];
 
 export const postAction = async ({ request }) => {
   try {
-    const envelopeBytes = await req.arrayBuffer();
-    const envelope = new TextDecoder().decode(envelopeBytes);
-    const piece = envelope.split("\n")[0];
-    const header = JSON.parse(piece);
+    const envelopeBytes = new Uint8Array(await req.arrayBuffer());
+    const headerEnd = envelopeBytes.indexOf(0x0a); // Find the first newline
+    const headerBytes = envelopeBytes.subarray(0, headerEnd);
+    const header = JSON.parse(new TextDecoder().decode(headerBytes));
     const dsn = new URL(header["dsn"]);
     const project_id = dsn.pathname?.replace("/", "");
 
