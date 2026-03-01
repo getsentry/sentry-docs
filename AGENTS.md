@@ -4,13 +4,32 @@
 
 Use **pnpm**: `pnpm install`, `pnpm dev`, `pnpm build`, `pnpm test`
 
-## Commit Attribution
+## Git Commits
 
-AI commits MUST include:
+When creating commits, follow this exact workflow:
 
+1. **Check status**: Run `git status` and `git diff` to see changes
+2. **Draft message**: Write commit message following conventional commits format
+3. **⚠️ ADD CO-AUTHOR**: Append to commit body:
+   ```
+   Co-Authored-By: Cursor AI <cursor@cursor.sh>
+   ```
+4. **Stage files**: `git add` relevant files  
+5. **Commit**: Run the commit command with message that includes Co-Authored-By
+
+**Example commit command:**
+```bash
+git commit -m "$(cat <<'EOF'
+feat: Add new feature
+
+Description of changes.
+
+Co-Authored-By: Cursor AI <cursor@cursor.sh>
+EOF
+)"
 ```
-Co-Authored-By: Claude <noreply@anthropic.com>
-```
+
+**IMPORTANT**: The Co-Authored-By line is REQUIRED in every AI-assisted commit. Do NOT skip step 3.
 
 ## Development
 
@@ -80,6 +99,6 @@ When writing requirements in `develop-docs/`:
 - Make the plan extremely concise. Sacrifice grammar for the sake of concision.
 - At the end of each plan, give me a list of unresolved questions to answer, if any.
 
-## Pull Request generation 
+## Pull Request generation
 
-Use .github/PULL_REQUEST_TEMPLATE.md and add Co-Authored-By: Claude
+Use .github/PULL_REQUEST_TEMPLATE.md and, if your AI tool provides a Co-Authored-By line, add it to the PR description.
