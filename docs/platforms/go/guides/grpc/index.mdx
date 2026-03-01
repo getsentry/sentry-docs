@@ -1,0 +1,189 @@
+---
+title: gRPC
+description: "Learn how to add Sentry instrumentation to programs using the GRPC package."
+---
+
+The Sentry Go SDK repository has complete examples for using grpc interceptors for both [client](https://github.com/getsentry/sentry-go/tree/master/_examples/grpc/client)
+and [server](https://github.com/getsentry/sentry-go/tree/master/_examples/grpc/server) apps.
+
+For additional reference, see the [`sentrygrpc` API
+documentation](https://godoc.org/github.com/getsentry/sentry-go/grpc).
+
+## Install
+
+<OnboardingOptionButtons
+  options={[
+    'error-monitoring',
+    'performance',
+  ]}
+/>
+
+```shell
+go get github.com/getsentry/sentry-go/grpc
+```
+
+<Break />
+
+### Tracing Setup
+```go
+import (
+	"fmt"
+	"net/http"
+
+	"github.com/getsentry/sentry-go"
+	sentrygrpc "github.com/getsentry/sentry-go/grpc"
+)
+
+// To initialize Sentry's handler, you need to initialize Sentry itself beforehand
+if err := sentry.Init(sentry.ClientOptions{
+	Dsn: "___PUBLIC_DSN___",
+	// ___PRODUCT_OPTION_START___ performance
+	EnableTracing: true,
+	// Set TracesSampleRate to 1.0 to capture 100%
+	// of transactions for performance monitoring.
+	// We recommend adjusting this value in production,
+	TracesSampleRate: 1.0,
+	// ___PRODUCT_OPTION_END___ performance
+	// Adds request headers and IP for users,
+	// visit: https://docs.sentry.io/platforms/go/data-management/data-collected/ for more info
+	SendDefaultPII: true,
+}); err != nil {
+	fmt.Printf("Sentry initialization failed: %v\n", err)
+}
+```
+
+### Client Setup
+```go
+conn, err := grpc.NewClient(
+    "localhost:50051",
+    grpc.WithUnaryInterceptor(sentrygrpc.UnaryClientInterceptor(sentrygrpc.ClientOptions{})),
+    grpc.WithStreamInterceptor(sentrygrpc.StreamClientInterceptor(sentrygrpc.ClientOptions{})),
+)
+if err != nil {
+    log.Fatalf("Failed to connect: %v", err)
+}
+defer conn.Close()
+```
+
+### Server Setup
+```go
+server := grpc.NewServer(
+    grpc.UnaryInterceptor(sentrygrpc.UnaryServerInterceptor(sentrygrpc.ServerOptions{
+        Repanic:            true,
+        CaptureRequestBody: true,
+    })),
+    grpc.StreamInterceptor(sentrygrpc.StreamServerInterceptor(sentrygrpc.ServerOptions{
+        Repanic: true,
+    })),
+)
+```
+
+
+## Configure
+
+`sentrygrpc` accepts a struct of `Options` that allows you to configure how the handler will behave.
+
+Currently, it respects three options:
+
+```go
+// Repanic configures whether Sentry should repanic after recovery, in most cases it should be set to true,
+// as fiber includes its own Recover middleware that handles http responses.
+Repanic bool
+// WaitForDelivery configures whether you want to block the request before moving forward with the response.
+// Because Fiber's `Recover` handler doesn't restart the application,
+// it's safe to either skip this option or set it to `false`.
+WaitForDelivery bool
+// Timeout for the event delivery requests.
+Timeout time.Duration
+```
+
+## Usage
+
+`sentrygrpc` attaches an instance of `*sentry.Hub` (https://pkg.go.dev/github.com/getsentry/sentry-go#Hub) to the gRPC context, making it available throughout the lifecycle of each individual RPC call.
+You can access it by using the `sentry.GetHubFromContext()` method on the context passed into your gRPC handlers. This lets you capture errors, messages, and set additional data that is scoped only to that request.
+
+**Keep in mind that `*sentry.Hub` will only be available in RPC handlers and interceptors registered after `sentrygrpc.UnaryServerInterceptor` or `sentrygrpc.StreamServerInterceptor`!**
+
+```go
+type ExampleServiceServer struct {
+	examplepb.UnimplementedExampleServiceServer
+}
+
+func (s *ExampleServiceServer) UnaryExample(ctx context.Context, req *examplepb.ExampleRequest) (*examplepb.ExampleResponse, error) {
+	// Extract the Sentry Hub from context
+	if hub := sentry.GetHubFromContext(ctx); hub != nil {
+		hub.WithScope(func(scope *sentry.Scope) {
+			scope.SetTag("grpc-method", "UnaryExample")
+			scope.SetExtra("request_message", req.Message)
+			scope.SetLevel(sentry.LevelInfo)
+
+			if req.Message == "warn" {
+				hub.CaptureMessage("Received warning-level input from user")
+			}
+		})
+	}
+
+	if req.Message == "error" {
+		err := fmt.Errorf("simulated error from user input")
+		if hub := sentry.GetHubFromContext(ctx); hub != nil {
+			hub.CaptureException(err)
+		}
+		return nil, err
+	}
+
+	return &examplepb.ExampleResponse{Message: "Hello " + req.Message}, nil
+}
+
+func main() {
+	err := sentry.Init(sentry.ClientOptions{
+		Dsn:              "___PUBLIC_DSN___",
+		TracesSampleRate: 1.0,
+		BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
+			event.Tags["component"] = "grpc-server"
+			return event
+		},
+	})
+	if err != nil {
+		log.Fatalf("sentry.Init failed: %s", err)
+	}
+	defer sentry.Flush(2 * time.Second)
+
+	grpcServer := grpc.NewServer(
+		grpc.UnaryInterceptor(sentrygrpc.UnaryServerInterceptor(sentrygrpc.ServerOptions{
+			Repanic: true,
+		})),
+	)
+
+  // this is generated by protoc
+	examplepb.RegisterExampleServiceServer(grpcServer, &ExampleServiceServer{})
+
+	listener, err := net.Listen("tcp", ":50051")
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
+	log.Println("gRPC server running on :50051")
+	if err := grpcServer.Serve(listener); err != nil {
+		log.Fatalf("failed to serve: %v", err)
+	}
+}
+```
+
+### Accessing Event in `BeforeSend` callback
+
+<SignInNote />
+
+```go
+sentry.Init(sentry.ClientOptions{
+	Dsn: "___PUBLIC_DSN___",
+  BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
+    // Example: add custom tag or filter out events
+    event.Tags["custom_tag"] = "grpc_server"
+    if event.Message == "simulated unary error" {
+      // You can filter out specific events by returning nil
+      return nil
+    }
+    return event
+  },
+},
+)
+```

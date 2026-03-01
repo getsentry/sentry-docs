@@ -1,0 +1,64 @@
+---
+title: Instrument Database
+sidebar_order: 3000
+description: "Learn how to manually instrument your code to use Sentry's SQL module."
+---
+Sentry provides you the ability to capture, trace and monitor SQL database queries with the `sentrysql` package. The package supports all third-party drivers that adhere to Go's [`database/sql/driver`](https://go.dev/src/database/sql/doc.txt).
+
+<Alert>
+ Make sure that there's a transaction running when you create the spans. See <PlatformLink to="/tracing/">Tracing</PlatformLink> for more information.
+</Alert>
+
+## Automatic instrumentation
+
+The `sentrysql` package gives you the ability to either wrap a driver (recommended for `sql.Open`) or wrap a connector (recommended for `sql.OpenDB`).
+
+### Wrapping a driver
+
+```go
+dsn := "postgres://postgres:password@write.postgres.internal:5432/postgres"
+sql.Register("sentrysql-postgres", sentrysql.NewSentrySQL(
+  &pq.Driver{},
+  sentrysql.WithDatabaseSystem(sentrysql.PostgreSQL),
+  sentrysql.WithDatabaseName("postgres"),
+  sentrysql.WithServerAddress("write.postgres.internal", "5432"),
+))
+
+db, err := sql.Open("sentrysql-postgres", dsn)
+if err != nil {
+	panic(fmt.Sprintf("failed to open write postgres db: %s\n", err.Error()))
+}
+defer func() {
+  err := db.Close()
+  if err != nil {
+    sentry.CaptureException(err)
+  }
+}()
+```
+This allows you to connect like normal with `sql.Open`.
+
+### Wrapping a connector
+
+For more control (for example, for a read replica), you can wrap a connector:
+
+```go
+dsn := "postgres://postgres:password@read.postgres.internal:5432/postgres"
+connector, err := pq.NewConnector(dsn)
+if err != nil {
+  panic(fmt.Sprintf("failed to create a postgres connector: %s\n", err.Error()))
+}
+wrappedConnector := sentrysql.NewSentrySQLConnector(
+  connector,
+  sentrysql.WithDatabaseSystem(sentrysql.PostgreSQL),
+  sentrysql.WithDatabaseName("postgres"),
+  sentrysql.WithServerAddress("read.postgres.internal", "5432"),
+)
+
+db := sql.OpenDB(wrappedConnector)
+defer func() {
+  err := db.Close()
+  if err != nil {
+  	sentry.CaptureException(err)
+  }
+}()
+```
