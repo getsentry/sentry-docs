@@ -327,7 +327,7 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/processes/triaging/',
-    destination: '/sdk/getting-started/playbooks/',
+    destination: '/sdk/getting-started/playbooks/coordination/triaging/',
   },
   {
     source: '/sdk/processes/',

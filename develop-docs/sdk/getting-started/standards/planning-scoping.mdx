@@ -1,0 +1,250 @@
+---
+title: Planning and Scoping
+spec_id: sdk/getting-started/standards/planning-scoping
+spec_version: 1.0.0
+spec_status: draft
+spec_platforms:
+  - all
+spec_changelog:
+  - version: 1.0.0
+    date: 2026-02-25
+    summary: Initial Planning and Scoping standard
+sidebar_order: 8
+---
+
+<SpecRfcAlert />
+
+<SpecMeta />
+
+<SpecSection id="issue-quality" status="draft" since="1.0.0">
+
+## Issue Quality
+
+#### Rule
+
+Every Linear issue **MUST** have the following attributes before it moves to **In Progress**:
+
+- **Assignee**: a single owner (not a team)
+- **Description**: verbose enough for anyone on the team to understand scope and acceptance criteria without asking the author
+- **SDK label**: the SDK(s) the issue affects
+- **Type label**: one of `bug`, `feature`, `chore`, `spike`, or `docs`
+- **Estimate**: story-point or t-shirt size agreed by the team's estimation convention
+- **Priority**: set for all issues in the backlog or later states
+
+Issues estimated larger than **M** (or the team's medium equivalent) **MUST NOT** move to **Todo** until they are either:
+
+- Split into smaller issues, each ≤ M, or
+- Converted to a Linear project (if the scope warrants tracked delivery)
+
+#### Enforcement
+
+- PR review checklist
+- Human review at backlog grooming
+
+#### Per-SDK override
+
+<StatusBadge type="no" /> Universal. Every SDK team applies these attributes.
+
+</SpecSection>
+
+---
+
+<SpecSection id="definition-of-done" status="draft" since="1.0.0">
+
+## Definition of Done
+
+#### Rule
+
+**Issue level** — an issue is done when:
+
+- All acceptance criteria in the description are met
+- Code is reviewed and merged
+- Tests cover the changed behavior (per the [Test Requirements](/sdk/getting-started/standards/code-quality#test-requirements-by-change-type) standard)
+- Any user-facing documentation impact is either shipped or tracked in a follow-up issue
+
+**Project level** — a project is done when:
+
+- All issues are **Done** or **Cancelled** with a note explaining why
+- User-facing documentation is shipped, or explicitly deferred with a tracked follow-up
+- No known regressions have been introduced without a tracked resolution plan
+- A final project update has been posted summarizing what shipped
+
+An issue or project **MUST NOT** be marked done if any of these conditions are unmet. "Mostly done" or "good enough" are not acceptable states — defer remaining work to a follow-up issue or project instead.
+
+#### Enforcement
+
+- Human review
+- PR review checklist
+
+#### Per-SDK override
+
+<StatusBadge type="yes" /> Teams **MAY** add additional issue-level criteria. The project-level conditions are universal.
+
+</SpecSection>
+
+---
+
+<SpecSection id="project-naming" status="draft" since="1.0.0">
+
+## Project Naming
+
+#### Rule
+
+Linear project titles **MUST** follow the conventions below.
+
+**Cross-SDK rollout projects** — when the same effort is delivered independently by multiple SDK teams — **MUST** use the format `[Effort name] [SDK name]`.
+
+Examples: `OTLP Integration [Python]`, `SDK Handling HTTP 413 [Go]`, `Implement Global Attributes API [Android]`.
+
+This makes it unambiguous which SDK team owns a given project and makes the set of per-SDK projects easy to find and filter.
+
+**Standalone projects** (not part of a cross-SDK rollout) **SHOULD** use a clear, action-oriented title that describes what will be delivered, not what will be done. Avoid vague or task-like titles.
+
+#### Enforcement
+
+- Human review at project creation
+- Reviewed during initiative-level planning
+
+#### Per-SDK override
+
+<StatusBadge type="no" /> Universal. The `[Effort name] [SDK name]` format for cross-SDK projects is required across all teams.
+
+</SpecSection>
+
+---
+
+<SpecSection id="design-first-gate" status="draft" since="1.0.0">
+
+## Design-First Gate
+
+#### Rule
+
+A design document **MUST** be completed and linked in the Linear project's **Documentation** field before any implementation work begins when either of the following is true:
+
+- The issue or project estimate is greater than **M**, or
+- The change affects more than one SDK
+
+Acceptable design document types (one is sufficient):
+
+- **RFC** — for changes that need broad stakeholder input
+- **Tech Spec** — for implementation-heavy changes scoped to one or a few SDKs
+- **PRFAQ** — for product-facing or user-visible changes
+- **DACI** — for decisions requiring explicit role clarity (Driver, Approver, Contributor, Informed)
+
+The design document **MUST** be complete enough that a reviewer can approve the approach before implementation begins. A draft or stub **MUST NOT** satisfy this gate.
+
+The design document **MUST** also identify the partners whose input or approval is required before work begins and who needs to be kept informed as work progresses. At minimum this covers:
+
+- Which teams or roles need to **review and approve** the approach (e.g., other SDK teams affected, security, docs)
+- Which teams or roles need to be **informed** (e.g., teams that depend on or integrate with the work)
+
+This does not need to be a formal org-chart mapping — a short list in the document is sufficient. The goal is to surface dependencies and avoid mid-implementation surprises.
+
+#### Enforcement
+
+- Reviewer verifies design doc is present and linked before approving the first implementation PR
+- Linear project **Documentation** field checked during project setup
+
+See also: [Risk Identification](#risk-identification) — the design document must include a risk section; high risks block implementation start. *Building Something New at Sentry* (internal).
+
+#### Per-SDK override
+
+<StatusBadge type="no" /> Trigger conditions and completion requirement are universal. The choice of document type (**RFC**, **Tech Spec**, **PRFAQ**, or **DACI**) may vary by team preference or change type.
+
+</SpecSection>
+
+---
+
+<SpecSection id="risk-identification" status="draft" since="1.0.0">
+
+## Risk Identification
+
+#### Rule
+
+Before implementation begins on any project or issue that requires a design document (per the [Design-First Gate](#design-first-gate)), the design document **MUST** include a risk section identifying:
+
+- **Technical risks**: implementation unknowns, performance concerns, platform-specific challenges
+- **Integration risks**: dependencies on upstream APIs, cross-SDK coordination, external services or tooling
+- **Any other risks** the team anticipates
+
+For each risk rated **high**, the team **MUST** address it before the first implementation issue moves to **In Progress** — either by running a spike (per the [Spike Timeboxing](#spike-timeboxing) standard) or by documenting a concrete mitigation plan in the design document.
+
+Do not start on the "fun parts" while high-rated risks remain unresolved.
+
+#### Enforcement
+
+- Human review: design document reviewer checks for a risk section
+- High-rated risks with no mitigation plan block the design-first gate
+
+#### Per-SDK override
+
+<StatusBadge type="no" /> Universal. Risk identification is required regardless of SDK or change type.
+
+</SpecSection>
+
+---
+
+<SpecSection id="spike-timeboxing" status="draft" since="1.0.0">
+
+## Spike and Exploration Timeboxing
+
+#### Rule
+
+All exploration or research issues (**spikes**) **MUST** be timeboxed:
+
+- Maximum **2 business days**
+- The timebox **MUST** be agreed upfront before the spike starts and set as the issue's target date
+- At the end of the timebox, the engineer **MUST** post a written summary as a Linear comment or linked document containing:
+  - Key findings
+  - Recommended next action (implement, discard, investigate further, or escalate)
+
+If the spike is not complete within the timebox, it **MUST** either be closed with whatever findings are available or explicitly re-scoped with a new timebox agreed by the team lead.
+
+Spikes are the primary tool for resolving high-rated risks identified during [Risk Identification](#risk-identification).
+
+#### Enforcement
+
+- Human process: team lead verifies timebox is set before spike starts
+- Spike issue target date = timebox end date
+
+#### Per-SDK override
+
+<StatusBadge type="yes" /> Teams **MAY** use shorter timeboxes. The 2-business-day maximum and the written-summary requirement are universal.
+
+</SpecSection>
+
+---
+
+<SpecSection id="ai-assisted-planning" status="draft" since="1.0.0">
+
+## AI-Assisted Planning
+
+#### Rule
+
+AI **MAY** be used to generate issue descriptions and decompose work into sub-issues. When AI is used:
+
+- **AI-generated issue descriptions**: the assigned human **MUST** review and edit the description before the issue moves to **Todo** or is acted upon. Unreviewed AI output **MUST NOT** be treated as authoritative scope.
+- **AI-decomposed sub-issues**: the project lead **MUST** review and approve **all** sub-issues before any of them move to **Todo**. Sub-issues **MUST NOT** be auto-accepted in bulk.
+
+These requirements apply regardless of which AI tool or agent generated the content.
+
+#### Enforcement
+
+- Human review
+- AGENTS.md instruction: "AI-generated issue descriptions and sub-issue lists must be reviewed and edited by a human before being acted upon."
+
+#### Suggested skill(s)
+
+- [`sentry-sdk-skills:linear-initiative`](https://github.com/getsentry/sdk-skills?tab=readme-ov-file#available-skills) — automates creation of Linear sub-initiatives and per-SDK projects; review all generated issues before moving any to **Todo**.
+
+#### Per-SDK override
+
+<StatusBadge type="no" /> Universal. Human review of AI-generated planning artifacts is required for all SDK teams.
+
+</SpecSection>
+
+---
+
+## Changelog
+
+<SpecChangelog />

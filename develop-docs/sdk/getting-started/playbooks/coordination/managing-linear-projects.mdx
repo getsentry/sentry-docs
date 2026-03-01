@@ -1,0 +1,283 @@
+---
+title: Project Management in Linear
+spec_id: sdk/playbooks/managing-linear-projects
+spec_version: 1.0.0
+spec_status: draft
+spec_depends_on:
+  - id: sdk/getting-started/standards/planning-scoping
+    version: ">=1.0.0"
+  - id: sdk/getting-started/standards/coordination-maintenance
+    version: ">=1.0.0"
+spec_changelog:
+  - version: 1.0.0
+    date: 2026-02-25
+    summary: >
+      Covers the full Linear hierarchy for SDK work — initiatives, cross-SDK
+      sub-initiatives, projects, and standalone issue management; includes GitHub
+      sync guidance, data hygiene requirements, and Linear views recommendations
+---
+
+<SpecRfcAlert />
+
+<SpecMeta />
+
+## Overview
+
+This playbook covers how SDK work is organized in Linear — from initiatives at the top of the
+hierarchy down to individual issues.
+
+Use it to choose the right level of organization, set up and run projects, manage the standalone
+backlog, understand which teams sync to GitHub, and keep issues free of sensitive data.
+
+SDK work falls under the **Great Data Capture** goal — see *Goal Hierarchy* (internal).
+
+**Jump to:** [The Linear Hierarchy](#the-linear-hierarchy) · [Initiatives](#initiatives) ·
+[Projects](#projects) · [Issues](#issues) · [Linear Views](#using-linear-views)
+
+Related resources:
+
+- [Planning and Scoping standard](/sdk/getting-started/standards/planning-scoping) — issue quality, definition of done, design-first gate, risk identification, and AI-assisted planning requirements
+- [Aligning Cross-SDK Changes](/sdk/getting-started/playbooks/coordination/aligning-cross-sdk-changes) — detailed playbook for cross-SDK sub-initiative work
+- [Triaging](/sdk/getting-started/playbooks/coordination/triaging) — how issues enter the queue before landing in a project or backlog
+
+---
+
+## The Linear Hierarchy
+
+SDK work maps to four levels in Linear:
+
+| Level | What goes here |
+|---|---|
+| **Initiative** | A strategic area of work — product feature area, cross-SDK alignment effort, or maintenance theme |
+| **Sub-initiative** | A specific effort within an initiative — used especially for cross-SDK rollouts where multiple teams deliver independently |
+| **Project** | Time-bounded delivery tracked by one SDK team — always lives under an initiative or sub-initiative |
+| **Issue** | Individual unit of work — lives inside a project or standalone in the team backlog |
+
+The [Issue Quality](/sdk/getting-started/standards/planning-scoping#issue-quality) and [Definition of Done](/sdk/getting-started/standards/planning-scoping#definition-of-done) standards apply at the issue level regardless of whether the issue belongs to a project.
+
+---
+
+## Initiatives
+
+Every project **MUST** be linked to an initiative before work begins. Projects **MUST NOT** be orphaned (no parent initiative) if they represent tracked delivery effort.
+
+SDK work falls into three initiative categories — choose the one that fits:
+
+| Category | Use when… |
+|---|---|
+| **Product feature work** | Implementing a new SDK capability aligned to a product area (e.g., a new signal type, a new first-party integration) |
+| **Cross-SDK alignment** | Standardizing an existing API, protocol behavior, or data format across multiple SDKs |
+| **SDK maintenance** | Everything else: major releases, ecosystem compatibility, code health, infrastructure, developer experience |
+
+If the correct initiative does not exist yet, create one or confirm the category with your team lead before proceeding.
+
+### Cross-SDK Alignment: Sub-Initiatives
+
+When a change requires alignment across multiple SDKs, it **MUST** be tracked as a sub-initiative with one project per SDK team — not as a single project with issues from multiple teams. Project names **MUST** follow the [Project Naming](/sdk/getting-started/standards/planning-scoping#project-naming) standard: `[Effort name] [SDK name]`.
+
+For the full process — proposal, review periods, sequencing, and documentation coordination — follow the [Aligning Cross-SDK Changes](/sdk/getting-started/playbooks/coordination/aligning-cross-sdk-changes) playbook.
+
+### Initiative Hygiene
+
+Initiatives accumulate over time. Review the initiative list at least quarterly:
+
+- Archive initiatives whose projects are all Done and no new work is planned.
+- Ensure every active project is linked to an initiative.
+- Split an initiative into sub-initiatives if distinct teams are delivering independently and the
+  single initiative is becoming hard to filter.
+
+---
+
+## Projects
+
+### Setup
+
+Run these steps in order when starting a new project.
+
+#### 1. Create the Project and Set Required Attributes
+
+You **MUST** set all of the following attributes before sharing the project with the team:
+
+- **Title**: follow the [Project Naming](/sdk/getting-started/standards/planning-scoping#project-naming) standard — cross-SDK rollout projects use `[Effort name] [SDK name]` (e.g., `OTLP Integration [Python]`); standalone projects use a clear, action-oriented title
+- **Initiative**: link to the appropriate initiative (see [Initiatives](#initiatives) above); **MUST** be set before work begins
+- **Lead**: a single owner (not a team)
+- **Status**: set to the appropriate state (`Planned`, `In Progress`, etc.)
+- **Target date**: realistic delivery date; **MUST** be set before the project moves to **In Progress**
+- **Team**: the owning SDK team
+- **Description**: scope, goals, and non-goals; detailed enough that a new team member can orient themselves without asking
+
+A project without a lead, initiative, or target date **MUST NOT** be moved to **In Progress**.
+
+#### 2. Add Pre-Implementation Documentation
+
+Before implementation begins, you **MUST** complete all pre-implementation documentation required by the [Design-First Gate](/sdk/getting-started/standards/planning-scoping#design-first-gate) and [Risk Identification](/sdk/getting-started/standards/planning-scoping#risk-identification) standards.
+
+- If the estimate is greater than **M** or the change affects more than one SDK, a design document (**RFC**, **Tech Spec**, **PRFAQ**, or **DACI**) **MUST** be linked in the project's **Documentation** field.
+- The design document **MUST** be complete (not a draft or stub) before the first implementation PR is reviewed.
+- The design document **MUST** include a risk section; any high-rated risks **MUST** be resolved before the first implementation issue moves to **In Progress**.
+- If a design document is not required (small, single-SDK change), document this explicitly in the project description.
+
+#### 3. Set Up a Communication Channel
+
+You **MUST** set up or re-use a dedicated communication channel for the project before team members begin work:
+
+- Create or identify a Slack channel (e.g., `#proj-<feature-name>`, `#team-sdks`) for async updates and discussion.
+- Link the channel in the Linear project's **Documentation** field or add it as a note in the project description.
+- For small projects (single engineer, ≤ 1 week of work), a dedicated channel **MAY** be omitted if the team agrees updates will flow through an existing channel.
+
+Announce the project in relevant team channels once the project and channel are set up.
+
+#### 4. Create and Triage the Issue Backlog
+
+Before moving the project to **In Progress**, create and triage the initial issue backlog:
+
+- All issues **MUST** meet the [Issue Quality](/sdk/getting-started/standards/planning-scoping#issue-quality) requirements: assignee, detailed description, SDK label, type label, estimate, and priority.
+- Issues estimated larger than **M** **MUST** be split before they are moved to **Todo**.
+- Use a spike (timeboxed per the [Spike Timeboxing](/sdk/getting-started/standards/planning-scoping#spike-timeboxing) standard) for any work that is too uncertain to estimate.
+- Apply priorities clearly: mark blockers and critical-path issues as high priority.
+
+For AI-assisted decomposition of the backlog, follow the [AI-Assisted Planning](/sdk/getting-started/standards/planning-scoping#ai-assisted-planning) standard — all AI-generated sub-issues **MUST** be reviewed and approved before moving to **Todo**.
+
+### During the Project
+
+These are ongoing responsibilities — not a sequence. They apply from the moment the project moves to **In Progress** until it closes.
+
+#### Maintain Backlog Hygiene
+
+Observe the following WIP limits at all times:
+
+- **Todo**: keep at most **5** issues ready (estimated, assigned, unblocked) at any time.
+- **In Progress**: keep at most **3** issues active per engineer at any time.
+- **In Review**: keep at most **3** issues awaiting review; issues stale for more than 2 business days **SHOULD** be escalated to the team lead.
+
+At each weekly sync (or equivalent cadence):
+
+- Move stale issues back to **Backlog** if they are no longer ready.
+- Re-estimate or split issues that have grown beyond **M** per the [Issue Quality](/sdk/getting-started/standards/planning-scoping#issue-quality) standard.
+- Close or archive issues that are no longer in scope with a brief note explaining why.
+
+Use the [Linear views](#using-linear-views) recommended below to surface work that needs attention during weekly reviews.
+
+#### Handle Incoming Issues and PRs
+
+Issues and PRs that arrive while the project is active **MUST** go through the standard triage process — follow the [Triaging](/sdk/getting-started/playbooks/coordination/triaging) playbook. The project lead owns this.
+
+#### Visibility for Major Releases
+
+If the project delivers a **major release** or a **user-visible feature**:
+
+- Create a public GitHub issue (or link an existing one) to track community interest and questions.
+- Coordinate documentation PRs so they land at the same time as the SDK release — docs **MUST NOT** go live before the SDK ships (see [Aligning Cross-SDK Changes](/sdk/getting-started/playbooks/coordination/aligning-cross-sdk-changes)).
+- Post a project update at least once per week while the project is **In Progress**.
+
+For changes that only affect internal implementation details with no user-facing impact, public visibility **MAY** be omitted.
+
+### Closing Out
+
+Run these steps in order when all implementation and documentation is shipped.
+
+Verify closure against the [Definition of Done](/sdk/getting-started/standards/planning-scoping#definition-of-done) standard before setting the project to **Done**.
+
+1. Verify all issues in the project are either **Done** or explicitly **Cancelled** with a note.
+2. Post a final update summarizing: what shipped, any known follow-up work, and lessons learned.
+3. Set the project status to **Done**. A project **MUST NOT** be set to **Done** if there are open issues that are not yet resolved or intentionally cancelled.
+4. Archive the project Slack channel (or post a close-out message) so team members know the project is complete.
+5. If a retro is worth writing up, file it as a linked document on the project or post to the team's retro thread.
+
+A project in **Done** status means all planned work is complete or explicitly deferred to a new project. It does not mean "mostly done" or "close enough."
+
+---
+
+## Issues
+
+### GitHub Sync and Visibility
+
+Two kinds of Linear teams exist in the SDK workspace:
+
+**Repo-named teams** (e.g., `sentry-python`, `sentry-ruby`, `sentry-go`) are configured to sync
+Linear issues bidirectionally with their corresponding GitHub repository. Issues created in Linear
+become public GitHub issues and vice versa.
+
+**Umbrella teams** — `SDKs`, `Backend SDKs`, `Mobile SDKs`, `JavaScript SDKs`, `GDX` — do **NOT**
+sync with GitHub. These teams use Linear as a private project management tool only.
+
+Use a repo-named team issue when:
+
+- The bug or feature is community-reported or has community impact.
+- You want external contributors to track progress or contribute.
+- The resolution affects how users interact with the SDK.
+
+Use an umbrella team issue (no GitHub sync) when:
+
+- The work is cross-SDK coordination, internal architecture, or tooling.
+- The issue contains internal context not ready for public view.
+- The work is not actionable or relevant to external contributors.
+
+For repo-named teams: Linear issues become public GitHub issues — write descriptions for a public
+audience.
+
+<Alert level="warning">
+  **Data hygiene — required for all teams regardless of sync status.** Linear issues **MUST NOT**
+  contain customer-identifiable information, PII, or sensitive support ticket data. If context
+  involves a specific customer or support case, reference an internal ticket ID or Zendesk URL only
+  — never embed customer details. This applies to issue descriptions, comments, and attachments.
+</Alert>
+
+### Backlog Management
+
+Issues that are not part of a project — bugs accepted from triage, backlog items,
+community-reported issues — are worked under the same rules as project issues. The
+[Issue Quality](/sdk/getting-started/standards/planning-scoping#issue-quality) and
+[Definition of Done](/sdk/getting-started/standards/planning-scoping#definition-of-done) standards
+apply equally.
+
+The same WIP limits apply: no more than **3** issues **In Progress** per engineer at any time.
+
+Groom the standalone backlog at least monthly (or per sprint if the team runs sprints):
+
+- Close stale issues that are no longer relevant with a brief note explaining why.
+- Re-estimate issues that have grown in scope since they were first added to the backlog.
+- Promote issues that have accumulated enough related work to warrant a project — follow the
+  [Setup](#setup) steps above.
+
+**When to escalate to a project**: if a standalone issue grows beyond **M**, or if related issues
+accumulate to a point where tracked delivery is beneficial, convert to a project and follow the
+Setup steps above.
+
+**Requires Customer Signal**: use this project status for backlog items that are valid but where
+there is no confirmed customer demand yet. It signals to the team that the work is intentionally
+parked pending external validation, not forgotten or deprioritized for technical reasons. When
+meaningful customer signal arrives (support tickets, Discord reports, direct requests), re-evaluate
+priority and move the project to **Backlog** or **Planned**.
+
+### Using Linear Views
+
+Linear views are the primary tool for surfacing work that needs attention. The following views are
+recommended for all teams; create them per-team and pin them in the sidebar.
+
+| View | Filter | Purpose |
+|---|---|---|
+| **High priority** | Priority = Urgent or High; Status ≠ Done/Cancelled | Daily focus — work that must move this week |
+| **Needs response** | Label = Awaiting Triage or Needs Response; assigned to me | First-response accountability |
+| **Bugs** | Type = bug; Status ≠ Done/Cancelled | Ongoing quality tracking |
+| **In Review** | Status = In Review | PR review queue health |
+| **Backlog grooming** | Status = Backlog; Estimate = unset | Issues needing estimation |
+
+Teams **MAY** add additional views. The views above **SHOULD** exist in every SDK team workspace.
+
+---
+
+## Referenced Standards
+
+- [Project Naming](/sdk/getting-started/standards/planning-scoping#project-naming) — naming conventions for cross-SDK rollout and standalone projects
+- [Issue Quality](/sdk/getting-started/standards/planning-scoping#issue-quality) — required issue attributes and size limits
+- [Definition of Done](/sdk/getting-started/standards/planning-scoping#definition-of-done) — conditions for closing issues and projects
+- [Design-First Gate](/sdk/getting-started/standards/planning-scoping#design-first-gate) — when design docs are required before implementation
+- [Risk Identification](/sdk/getting-started/standards/planning-scoping#risk-identification) — required risk section in design documents; high risks block implementation start
+- [Spike Timeboxing](/sdk/getting-started/standards/planning-scoping#spike-timeboxing) — timeboxing exploration work
+- [AI-Assisted Planning](/sdk/getting-started/standards/planning-scoping#ai-assisted-planning) — human review requirements for AI-generated planning artifacts
+- [Cross-SDK Coordination Protocol](/sdk/getting-started/standards/coordination-maintenance#cross-sdk-coordination) — cross-SDK process (see [Aligning Cross-SDK Changes](/sdk/getting-started/playbooks/coordination/aligning-cross-sdk-changes))
+
+---
+
+<SpecChangelog />
