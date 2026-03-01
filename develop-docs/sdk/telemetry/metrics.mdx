@@ -97,10 +97,12 @@ Metric processing **MUST** follow this order:
 
 1. Capture metric via [Public APIs](#metrics-module) (e.g. `Sentry.metrics.count`).
 2. Check if metrics are disabled as per `enableMetrics`/`enable_metrics` configuration — if so, skip the rest of the steps.
-3. Process captured metric (attach default attributes as per [Default Attributes](#default-attributes)).
-4. Run `beforeSendMetric`/`before_send_metric` to filter or modify the metric.
-5. Add metric to buffer/batch processor as detailed in [Buffering](#buffering).
-6. At time of flushing buffer, send array of metrics to Sentry via `trace_metric` envelope, apply rate limiting as per [Data Category and Rate Limiting](#data-category-and-rate-limiting).
+3. Pass the metric to Hub/Scope via a generic method (e.g., `captureMetric(metric, scope)`).
+4. Pass the metric to the Client via a generic method (e.g., `captureMetric(metric, scope)`).
+5. Process captured metric (attach default attributes as per [Default Attributes](#default-attributes)).
+6. Run `beforeSendMetric`/`before_send_metric` to filter or modify the metric.
+7. Add metric to buffer/batch processor as detailed in [Buffering](#buffering).
+8. At time of flushing buffer, send array of metrics to Sentry via `trace_metric` envelope, apply rate limiting as per [Data Category and Rate Limiting](#data-category-and-rate-limiting).
 
 </SpecSection>
 
@@ -318,6 +320,11 @@ SDKs **MUST** expose metrics methods in a `metrics` module or namespace. At mini
   - `unit` **String, optional** — the unit of measurement (only used for `distribution` and `gauge`). SDKs **MUST NOT** restrict what can be sent in (e.g. by using an enum) but **SHOULD** offer constants or similar that help customers send in <Link to="/sdk/foundations/state-management/scopes/attributes/#units">units we support</Link> (since 2.4.0).
   - `attributes` **Object, optional** — a dictionary of attributes (key-value pairs with type information).
   - `scope` **Scope, optional** — the scope to capture the metric with.
+
+Furthermore:
+
+1. The Hub/Scope and Client **MUST** offer a generic method for capturing metrics (e.g., `captureMetric(metric, scope)`).
+1. The Hub/Scope **MAY** offer the same methods as the static `Sentry.metrics.X` API.
 
 </SpecSection>
 

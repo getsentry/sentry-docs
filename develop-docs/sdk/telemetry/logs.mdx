@@ -125,7 +125,7 @@ Log processing **MUST** follow this order:
 
 1. Capture log via [Public APIs](#logger-module) (e.g. `Sentry.logger.info`) or via [SDK integrations](#sdk-integrations).
 2. Check if logging is enabled via `enableLogs`/`enable_logs` — if not, skip remaining steps.
-3. Pass the log to Hub/Scope, which **MUST** offer the same methods as the static API `Sentry.logger.X`.
+3. Pass the log to Hub/Scope via a generic method (e.g., `captureLog(log, scope)`).
 4. Pass the log to the Client via a generic method (e.g., `captureLog(log, scope)`).
 5. Process captured log (attach attributes per [Default Attributes](#default-attributes)).
 6. Run `beforeSendLog`/`before_send_log` to filter or modify the log.
@@ -461,9 +461,11 @@ SDKs **MUST** expose logging methods in a `logger` module or namespace, with one
 
 These methods accept a string template and parameters for structured logging. They **MAY** also accept arbitrary attributes.
 
-The Hub/Scope **MUST** offer the same methods as the static `Sentry.logger.X` API (since 1.10.0). The Client **SHOULD** only offer one generic method (e.g., `captureLog(log, scope)`).
+Furthermore:
 
-SDKs **MAY** add additional helpers (e.g., decorators, string template helpers) as appropriate for their platform.
+1. The Hub/Scope and Client **MUST** offer a generic method for capturing logs (e.g., `captureLog(log, scope)`).
+1. The Hub/Scope **MAY** offer the same methods as the static `Sentry.logger.X` API (since 1.10.0).
+1. SDKs **MAY** add additional helpers (e.g., decorators, string template helpers) as appropriate for their platform.
 
 </SpecSection>
 
