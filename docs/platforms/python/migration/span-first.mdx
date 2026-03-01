@@ -1,0 +1,500 @@
+---
+title: Migrate to Span Streaming
+sidebar_order: 8998
+description: "Learn about switching to span streaming in the SDK."
+---
+
+This guide describes the common patterns involved in migrating to the new span
+streaming API introduced in version `<TODO>`.
+
+
+## Enabling Span Streaming
+
+In your SDK `init()`, provide the following experimental option:
+
+```python
+import sentry_sdk
+
+sentry_sdk.init(
+    # ...your existing options...
+    _experiments={
+        "trace_lifecycle": "stream",
+    },
+)
+```
+
+Note that you need to have tracing enabled via the `traces_sample_rate` or
+`traces_sampler` option.
+
+In order to stream spans, you need to switch to the new `traces.start_span` API
+in addition to setting `trace_lifecycle="stream"`. Using the legacy
+`sentry_sdk.start_span` and `sentry_sdk.start_transaction` API will not stream
+spans.
+
+
+## New `start_span` API
+
+The `sentry_sdk.start_span()`, `sentry_sdk.start_transaction()`, and
+`span.start_child()` APIs have been replaced by `sentry_sdk.traces.start_span()`.
+
+```python diff
+  import sentry_sdk
+
+- with sentry_sdk.start_span(name="flow.checkout") as span:
++ with sentry_sdk.traces.start_span(name="flow.checkout") as span:
+      ...
+```
+
+Alternatively, you can just change the import:
+
+```python diff
+- from sentry_sdk import start_span
++ from sentry_sdk.traces import start_span
+
+  with start_span(name="flow.checkout") as span:
+      ...
+```
+
+The `sentry_sdk.start_transaction()` API doesn't exist anymore. Instead, use
+`sentry_sdk.traces.start_span()`.
+
+```python diff
+  import sentry_sdk
+
+- with sentry_sdk.start_transaction(name="flow.checkout") as transaction:
++ with sentry_sdk.traces.start_span(name="flow.checkout") as span:
+      ...
+```
+
+### Arguments
+
+The `sentry_sdk.traces.start_span()` API accepts the following arguments:
+- `name`: Required.
+- `attributes`: See [Span Attributes](#span-attributes).
+- `parent_span`: A span instance that should be set as the parent of this span.
+  If not provided, the currently active span will be set as the parent, if any.
+- `active`: Defaults to `True`. If set to `False`, the span will be detached from
+  the currently active span tree.
+
+The new API does not accept the `description` argument anymore. `description`
+should be migrated to `name`.
+
+The `op` argument is not supported anymore.
+
+```python diff
+- from sentry_sdk import start_span
++ from sentry_sdk.traces import start_span
+
+- with start_span(description="span") as span:
+-     ...
++ with start_span(name="span") as span:
++     ...
+```
+
+
+### Using as a Context Manager or Directly
+
+`sentry_sdk.traces.start_span()` can be used as a context manager or directly.
+
+```python
+import sentry_sdk
+
+with sentry_sdk.traces.start_span(name="flow.checkout") as span:
+    ... # Do something
+
+# The span ends once the with block is over
+```
+
+The above is equivalent to:
+
+```python
+import sentry_sdk
+
+span = sentry_sdk.traces.start_span(name="flow.checkout")
+span.start()
+# Do something
+span.end()
+```
+
+### Other Tracing API
+
+#### `@trace`
+
+The span-streaming-friendly version of the `@trace` decorator is accessible under
+`@sentry_sdk.traces.trace` and accepts an optional `name` (defaulting to function
+name), `attributes`, and `active` flag.
+
+```python diff
+- from sentry_sdk import trace
++ from sentry_sdk.traces import trace
+
+  @trace(name="flow.checkout", attributes={"flow.pipeline": "legacy"})
+  def checkout():
+      ...
+```
+
+#### `start_child()`
+
+The `span.start_child()` API is not supported anymore.
+
+You can either start the child span with `sentry_sdk.traces.start_span()` while
+the parent span is still active, in which case it'll become its parent automatically,
+or, in more difficult scenarios, you can set the `parent_span` argument to control
+the parentage:
+
+```python
+import sentry_sdk
+
+with sentry_sdk.traces.start_span(name="outer") as span:
+    with sentry_sdk.traces.start_span(name="child 1"):
+        with sentry_sdk.traces.start_span(name="child 2", parent_span=span):
+            # This span will become a sibling of "child 1"
+            ...
+```
+
+In this case, "child 2" would be a direct child of "outer" rather than
+"child 1". If you didn't provide a `parent_span` to "child 2",
+it would become the direct child of "child 1".
+
+## Span Attributes
+
+Spans now have attributes. These are key-value pairs, where keys are strings and
+values are of type `int`, `bool`, `str`, `float`, or an array of these primitive
+types (no mixing of types supported, they all have to be the same in one array).
+Notably, `None` attribute values are not supported.
+
+<Alert level="warning" title="Unsupported values">
+
+If you set an attribute of an unsupported type (for example, an object, or a
+list with elements of different types), it will be cast to string before it's
+set on the span. If you need access to specific properties on an object or to the
+individual elements of a list, we recommend picking the object apart into
+separate attributes.
+
+</Alert>
+
+The following API exists to retrieve and mutate the attributes set on a span:
+
+```python
+import sentry_sdk
+
+with sentry_sdk.traces.start_span(name="flow.checkout.prepare") as span:
+    span.set_attribute("flow.version", "0.35")
+    span.set_attributes({"flow.conversion": 1.0, "flow.use_new_pipeline": True})
+    span.get_attributes()  # returns {"flow.version": "0.35", "flow.conversion": 1.0, "flow.use_new_pipeline": True}
+    span.remove_attribute("flow.conversion")
+    span.get_attributes()  # returns {"flow.version": "0.35", "flow.use_new_pipeline": True}
+```
+
+In span streaming mode, spans have no contexts, data, or tags. Everything is a
+span attribute. It's therefore necessary to migrate all existing
+`span.set_data()`, `span.set_context()`, and `span.set_tag()` to
+`span.set_attribute()`.
+
+Replacing `set_data()`:
+
+```python diff
+import sentry_sdk
+
+- with sentry_sdk.start_span(name="flow.checkout.process") as span:
+-     span.set_data("flow.step", "submit_payment")
++ with sentry_sdk.traces.start_span(name="flow.checkout.process") as span:
++     span.set_attribute("flow.step", "submit_payment")
+```
+
+Replacing `set_context()`:
+
+```python diff
+import sentry_sdk
+
+- with sentry_sdk.start_span(name="flow.checkout.process") as span:
+-     span.set_context("flow", {"id": "123456789", "pipeline": "legacy"})
++ with sentry_sdk.traces.start_span(name="flow.checkout.process") as span:
++     # Dictionaries are not allowed as attribute values, so take the original
++     # context apart:
++     span.set_attribute("flow.id", "123456789")
++     span.set_attribute("flow.pipeline", "legacy")
+```
+
+Replacing `set_tag()`:
+
+```python diff
+import sentry_sdk
+
+- with sentry_sdk.start_span(name="flow.checkout.process") as span:
+-     span.set_tag("http.status_code", 201)
++ with sentry_sdk.traces.start_span(name="flow.checkout.process") as span:
++     span.set_attribute("http.response.status_code", 201)
+```
+
+### Applying Data from Scope
+
+Since spans no longer support tags, tags set on the scope with the
+global `sentry_sdk.set_tag()` API will not be applied to spans. You can use the
+the `sentry_sdk.set_attribute()` API to set attributes.
+
+```python diff
+  import sentry_sdk
+
+  sentry_sdk.set_tag("region", "Europe")
++ sentry_sdk.set_attribute("region", "Europe")
+```
+
+In the above example, the tag will be applied to all telemetry that supports
+tags, while the attribute will be applied to all telemetry that supports
+attributes (streaming spans, logs, metrics).
+
+## Other Span Properties
+
+### Status
+
+Span status can only be `ok` or `error`. The status is `ok` by default. Use the
+ `span.set_status()` API to update it.
+
+```python
+from sentry_sdk.traces import start_span
+
+with start_span(name="span") as span:
+    try:
+        ...
+    except:
+        span.set_status("error")
+```
+
+## Trace Propagation
+
+In span streaming mode, trace propagation is done via the
+`sentry_sdk.traces.continue_trace()` API.
+
+`sentry_sdk.traces.continue_trace()` works slightly differently than the legacy
+`sentry_sdk.continue_trace()`:
+- It's not a context manager.
+- It doesn't return a transaction.
+
+Instead, it sets the SDK's propagation context, which holds trace propagation
+data like `trace_id`, `parent_span_id`, and so on. When a span starts, it
+automatically checks the current propagation context and makes sure incoming
+traces are continued and that we also propagate trace information to outgoing
+requests.
+
+```python diff
+import sentry_sdk
+
+# Example incoming headers from a request
+headers = {
+    "sentry-trace": "4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-1",
+    "baggage": "sentry-trace_id=4bf92f3577b34da6a3ce929d0e0e4736,sentry-sample_rate=0.5,sentry-sample_rand=0.123456",
+}
+
+- with sentry_sdk.continue_trace(headers) as transaction:
+-     pass
++ sentry_sdk.traces.continue_trace(headers)  # Sets the propagation context
++ with sentry_sdk.traces.start_span(name="some name"):  # This span will continue the trace
++     pass
+```
+
+Additionally, span streaming mode introduces a new
+`sentry_sdk.traces.new_trace()` function that resets the trace.
+
+```python
+import sentry_sdk
+
+with sentry_sdk.start_span(name="span in trace 1"):
+    ...
+
+# Reset the trace
+sentry_sdk.traces.new_trace()
+
+with sentry_sdk.start_span(name="span in trace 2"):
+    # This span will be the root span of a new trace
+    ...
+```
+
+## Sampling
+
+If you define a custom `traces_sampler`, it'll receive a sampling context as 
+its sole argument:
+
+```python
+def traces_sampler(sampling_context):
+    if sampling_context["name"] in IGNORED_SPAN_NAMES:
+        return 0.0
+    return 1.0
+
+sentry_sdk.init(
+    traces_sampler=traces_sampler,
+    _experiments={"trace_lifecycle": "stream"},
+)
+```
+
+In span streaming mode, `sampling_context` is a dictionary with the following
+structure:
+
+```python
+{
+    "name": ...,
+    "trace_id": ...,
+    "parent_span_id": ...,
+    "parent_sampled": ...,
+    "attributes": ...,
+    # additionally, custom sampling context keys will appear here if provided,
+    # see the Custom Sampling Context section
+}
+```
+
+All starting attributes on the span will be accessible in
+`sampling_context["attributes"]`. You can provide attributes via the `attributes`
+argument to `sentry_sdk.traces.start_span()`.
+
+The sampling decision is made on span creation. If you're using the context
+manager way of starting a span (`with start_span(...):`), the span will be
+sampled immediately after the `with` block is entered. If you're using the direct
+`span = start_span(...)` API, the span will be sampled when it's created.
+
+As before, sampling will only be applied to top-level spans. Children spans
+inherit the sampling decision of their parents, unless specifically filtered
+out via the [`ignore_spans` option](#filtering).
+
+### Custom Sampling Context
+
+If you need additional data to make a sampling decision, you can
+provide a custom sampling context, which will be merged with the
+`sampling_context` in the traces sampler.
+
+Custom sampling context will only be used for making a sampling decision in the
+traces sampler and won't be materialized on the span in any way. It also has
+no type restrictions, so you can, for instance, have the whole request object
+accessible in the traces sampler in a web framework context.
+
+Before, the custom sampling context used to be an optional argument to
+`start_span`. In span streaming mode, it's instead a method on the scope:
+
+```python diff
+  import sentry_sdk
+
+  def traces_sampler(sampling_context):
+      # sampling_context has the usual "name", "attributes", "trace_id" and so on,
+      # and additionally it was merged with the custom_sampling_context we
+      # provided
+      if sampling_context["asgi_scope"].method not in ("GET", "POST"):
+          return 0.0
+      return 1.0
+
+  sentry_sdk.init(
++     _experiments={"trace_lifecycle": "stream"},
+      traces_sampler=traces_sampler,
+  )
+
+  custom_sampling_context = {
+      "asgi_scope": asgi_scope,
+  }
+
+- with sentry_sdk.start_span(
+-     name="flow.start",
+-     custom_sampling_context=custom_sampling_context
+- ):
+-     ...
++ sentry_sdk.get_current_scope().set_custom_sampling_context(custom_sampling_context)
++ with sentry_sdk.traces.start_span(name="flow.start"):
++     ...
+```
+
+## Filtering
+
+In span streaming mode, the SDK provides a new `ignore_spans` configuration
+option.
+
+`ignore_spans` is a list of filtering rules. A filtering rule is one of the
+following:
+1. a string or a compiled regex to match against the span name
+2. a dictionary with two possible keys: `name` and `attributes`
+    - if `name` is provided, its value must be a string or regex as described in 1.
+    - if `attributes` is provided:
+         - It has to be a dictionary of attribute/value pairs
+         - Attribute values will be checked for exact matches
+         - Attribute values can optionally be compiled regexes
+         - All listed attributes have to be present on the span for it to match
+    - if both `name` and `attributes` is provided, both the `name` as well as all of the listed `attributes` need to match for a span to be ignored
+
+Each span will be matched against all rules defined, and if any of the rules
+matches, the span will be ignored.
+
+
+```python
+import re
+
+import sentry_sdk
+
+sentry_sdk.init(
+    _experiments={
+        "trace_lifecycle": "stream",
+        "ignore_spans": [
+            # ignore all spans with the name "/health"
+            "/health",
+            # ignore all spans that match a regex
+            re.compile(r"/flow/.*"),
+            # ignore all spans from a certain service and certain pipeline
+            {
+                "attributes": {
+                    "service.id": "15def9a",
+                    "flow.pipeline": "legacy",
+                }
+            },
+            # ignore all spans from a certain service of a specific kind
+            {
+                "name": re.compile(r"/flow/.*"),
+                "attributes": {
+                    "service.id": re.compile(r".*\.facade"),
+                    "flow.pipeline": "legacy",
+                },
+            }
+        ],
+    }
+)
+```
+
+<Alert level="info" title="Attributes and names visible to ignore_spans">
+
+Each span is matched against your `ignore_spans` rules when it's created. This
+means it can only take into account attributes and span names at creation time.
+It doesn't have access to attributes set on span end, like
+`http.response.status_code`.
+
+</Alert>
+
+In practice, ignoring a span means it will be unsampled. This might lead to 
+other spans in the same tree also being unsampled:
+- If a top-level span is ignored, all of its children (its whole span
+  tree) will be ignored as well.
+- If a non-top-level span is ignored, its children will NOT be ignored by default,
+  unless they themselves match an ignore rule.
+
+```python
+from sentry_sdk.traces import start_span
+
+sentry_sdk.init(
+    _experiments={
+        "trace_lifecycle": "stream",
+        "ignore_spans": ["ignored"],
+    }
+)
+
+# In this example, "ignored" would be ignored, and "custom" would as well, by
+# extension, since it's a child span in a span tree with a top-level span that's
+# ignored.
+with start_span(name="ignored"):
+    with start_span(name="custom"):
+        ...
+
+# Here, "ignored" will be ignored, and "custom2" will become a child of "custom1"
+# in the resulting span tree:
+with start_span(name="custom1"):
+    with start_span(name="ignored"):
+        with start_span(name="custom2"):
+            ...
+```
+
+
+## Scrubbing Data
+
+`<TODO: before_send_span>`
