@@ -659,8 +659,9 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
     source.includes('<LambdaLayerDetail') ||
     source.includes('<GradleUploadInstructions');
 
-  // Check cache in CI environments
-  if (process.env.CI) {
+  // Check cache in CI and Vercel environments (including preview)
+  // This prevents expensive MDX recompilation and registry API fetches on every page render
+  if (process.env.CI || process.env.VERCEL) {
     const sourceHash = md5(source);
 
     // Include registry hash in cache key for registry-dependent files
