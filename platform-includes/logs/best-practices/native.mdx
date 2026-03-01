@@ -1,0 +1,94 @@
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+### Wide Events Over Scattered Logs
+
+Instead of many thin logs that are hard to correlate, emit one comprehensive log per operation with all relevant context.
+
+This makes debugging dramatically faster — one query returns everything about a specific order, user, or request.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```c
+// ❌ Scattered thin logs
+sentry_log_info("Starting checkout");
+sentry_log_info("Validating cart");
+sentry_log_info("Processing payment");
+sentry_log_info("Checkout complete");
+
+// ✅ One wide event with full context
+sentry_log_info("Checkout completed - order: %s, user: %s, value: %.2f",
+    order_id, user_id, cart_value);
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Include Business Context
+
+Add attributes that help you prioritize and debug:
+
+- **User context** — tier, account age, lifetime value
+- **Transaction data** — order value, item count
+- **Feature state** — active feature flags
+- **Request metadata** — endpoint, method, duration
+
+This lets you filter logs by high-value customers or specific features.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```c
+// Include context in formatted messages
+sentry_log_info("API request - endpoint: %s, method: %s, user: %s, duration: %dms",
+    "/api/orders", "POST", user_id, duration_ms);
+
+// Or use attributes (requires logs_with_attributes option)
+sentry_value_t attrs = sentry_value_new_object();
+sentry_value_set_by_key(attrs, "user_id",
+    sentry_value_new_attribute(sentry_value_new_string(user_id), NULL));
+sentry_value_set_by_key(attrs, "endpoint",
+    sentry_value_new_attribute(sentry_value_new_string("/api/orders"), NULL));
+sentry_value_set_by_key(attrs, "duration_ms",
+    sentry_value_new_attribute(sentry_value_new_int64(duration_ms), NULL));
+
+sentry_log_info("API request completed", attrs);
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Consistent Attribute Naming
+
+Pick a naming convention and stick with it across your codebase. Inconsistent names make queries impossible.
+
+**Recommended:** Use `snake_case` for custom attributes to match common conventions.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```c
+// ❌ Inconsistent naming
+sentry_value_set_by_key(attrs, "user", ...);
+sentry_value_set_by_key(attrs, "userId", ...);
+sentry_value_set_by_key(attrs, "user_id", ...);
+sentry_value_set_by_key(attrs, "UserID", ...);
+
+// ✅ Consistent snake_case
+sentry_value_set_by_key(attrs, "user_id", ...);
+sentry_value_set_by_key(attrs, "order_id", ...);
+sentry_value_set_by_key(attrs, "cart_value", ...);
+sentry_value_set_by_key(attrs, "item_count", ...);
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
