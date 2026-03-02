@@ -296,9 +296,9 @@ export function DynamicNav({
   }
 
   const {path} = serverContext();
-  const isActive = getUnversionedPath(path, false) === root;
-  const linkPath = `/${path.join('/')}/`;
   const unversionedPath = getUnversionedPath(path, false);
+  const isActive = unversionedPath === root || unversionedPath.startsWith(root + '/');
+  const linkPath = `/${path.join('/')}/`;
 
   // For platform sidebars (SDK documentation), we want to show a "Quick Start" link
   // instead of making the section header itself selectable
