@@ -53,18 +53,7 @@ const BANNERS: BannerType[] = [
     text: 'Edit this banner on `/src/components/banner/index.tsx`',
     linkURL: 'https://docs.sentry.io/contributing/pages/banners/',
     linkText: 'CTA',
-  },
-  {
-    appearsOn: [
-      '^/platforms/dart/guides/flutter/',
-      '^/platforms/react-native/',
-      '^/platforms/android/',
-      '^/platforms/apple/guides/ios/',
-    ],
-    text: 'Session Replay is now generally available for mobile.',
-    linkURL: 'https://docs.sentry.io/product/explore/session-replay/mobile/',
-    linkText: 'Get started today.',
-  },
+  }
 ];
 
 const LOCALSTORAGE_NAMESPACE = 'banner-manifest';
