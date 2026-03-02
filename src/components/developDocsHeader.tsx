@@ -44,7 +44,7 @@ export function DevelopDocsHeader({
       <style>{':root { --header-height: 80px; }'}</style>
       <nav className="nav-inner mx-auto px-3 py-2 flex items-center">
         {pathname !== '/' && (
-          <button className="lg-xl:hidden mr-3">
+          <button className="md:hidden mr-3">
             <label
               htmlFor={developerDocsSidebarToggleId}
               aria-label="Close"
@@ -97,7 +97,7 @@ export function DevelopDocsHeader({
           </NavLink>
           <ThemeToggle />
         </div>
-        <div className="lg-xl:hidden ml-auto">
+        <div className="md:hidden ml-auto">
           <div className="flex gap-6 items-center">
             <Popover.Root>
               <Popover.Trigger asChild>
