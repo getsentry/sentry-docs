@@ -1,0 +1,72 @@
+---
+title: Postgres.js
+description: "Adds instrumentation for the postgres (postgres.js) library."
+supported:
+  - javascript.cloudflare
+  - javascript.deno
+---
+
+_Import name: `Sentry.instrumentPostgresJsSql`_
+
+The `instrumentPostgresJsSql` helper adds instrumentation for the [`postgres`](https://github.com/porsager/postgres) (postgres.js) library to capture spans by wrapping a postgres.js `sql` tagged-template instance. You need to manually wrap your `sql` instance with this helper:
+
+## Usage
+
+<PlatformSection supported={["javascript.cloudflare"]}>
+
+```javascript
+import postgres from "postgres";
+import * as Sentry from "@sentry/cloudflare";
+
+export default Sentry.withSentry((env) => ({ dsn: "__DSN__" }), {
+  async fetch(request, env, ctx) {
+    const sql = Sentry.instrumentPostgresJsSql(postgres(env.DATABASE_URL));
+
+    // All queries now create Sentry spans
+    const users = await sql`SELECT * FROM users WHERE id = ${userId}`;
+    return Response.json(users);
+  },
+});
+```
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.deno"]}>
+
+```javascript
+import * as Sentry from "npm:@sentry/deno";
+import postgres from "npm:postgres";
+
+const sql = Sentry.instrumentPostgresJsSql(
+  postgres("postgres://user:pass@localhost/mydb")
+);
+
+// All queries now create Sentry spans
+const users = await sql`SELECT * FROM users WHERE id = ${userId}`;
+```
+
+</PlatformSection>
+
+## Options
+
+### `requireParentSpan`
+
+_Type: `boolean`_
+
+Whether the instrumentation requires a parent span to create child spans. When set to `true`, spans are only created if there is an active parent span in the current scope.
+
+Default: `true`
+
+### `requestHook`
+
+_Type: `(span: Span, sanitizedSqlQuery: string, postgresConnectionContext?: PostgresConnectionContext) => void`_
+
+A hook called before each span is started. Use it to set additional attributes or modify the span.
+
+```javascript
+const sql = Sentry.instrumentPostgresJsSql(postgres(env.DATABASE_URL), {
+  requestHook(span, query) {
+    span.setAttribute("custom.query", query);
+  },
+});
+```
