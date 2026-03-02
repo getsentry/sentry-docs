@@ -1,0 +1,60 @@
+---
+title: Install Groups
+sidebar_order: 20
+description: Control which Android builds can see updates for each other using install groups.
+---
+
+<Include name="feature-available-for-user-group-early-adopter" />
+
+Install groups let you tag builds with one or more group names to control update visibility between builds. See the [product documentation](/product/build-distribution/#install-groups) for a full explanation of how install groups work.
+
+## Uploading With Install Groups
+
+### Sentry CLI
+
+Pass `--install-group` one or more times:
+
+```bash
+sentry-cli build upload app.apk \
+  --org your-org \
+  --project your-project \
+  --build-configuration Release \
+  --install-group alpha \
+  --install-group staging
+```
+
+### Gradle Plugin
+
+Set `installGroups` in the `distribution` block:
+
+```kotlin {filename:build.gradle.kts}
+sentry {
+  distribution {
+    enabled = true
+    installGroups.set(setOf("alpha", "staging"))
+  }
+}
+```
+
+```groovy {filename:build.gradle}
+sentry {
+  distribution {
+    enabled = true
+    installGroups = ["alpha", "staging"]
+  }
+}
+```
+
+### Fastlane Plugin
+
+Pass the `install_groups` parameter:
+
+```ruby {filename:Fastfile}
+sentry_upload_build(
+  org_slug: 'your-org',
+  project_slug: 'your-project',
+  apk_path: 'path/to/app.apk',
+  build_configuration: 'Release',
+  install_groups: ['alpha', 'staging']
+)
+```

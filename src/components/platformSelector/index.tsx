@@ -4,6 +4,7 @@ import {
   Ref,
   startTransition,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -12,7 +13,7 @@ import {Combobox, ComboboxItem, ComboboxList, ComboboxProvider} from '@ariakit/r
 import {CaretRightIcon, CaretSortIcon, MagnifyingGlassIcon} from '@radix-ui/react-icons';
 import * as RadixSelect from '@radix-ui/react-select';
 import {matchSorter} from 'match-sorter';
-import {usePathname, useRouter} from 'next/navigation';
+import {usePathname} from 'next/navigation';
 
 import {PlatformIcon} from 'sentry-docs/components/platformIcon';
 import {Platform, PlatformGuide, PlatformIntegration} from 'sentry-docs/types';
@@ -25,34 +26,48 @@ import {SidebarLink, SidebarSeparator} from '../sidebar/sidebarLink';
 export function PlatformSelector({
   platforms,
   currentPlatform,
+  alwaysOpen = false,
+  listOnly = false,
+  dropdownStyle = false,
 }: {
   platforms: Array<Platform>;
+  alwaysOpen?: boolean;
   currentPlatform?: Platform | PlatformGuide;
+  dropdownStyle?: boolean;
+  listOnly?: boolean;
 }) {
   // humanize the title for a more natural sorting
   const humanizeTitle = (title: string) =>
     title.replaceAll('.', ' ').replaceAll(/ +/g, ' ').trim();
-  const platformsAndGuides = platforms
-    .slice()
-    .sort(
-      (a, b) =>
-        humanizeTitle(a.title ?? '').localeCompare(humanizeTitle(b.title ?? ''), 'en', {
-          sensitivity: 'base',
-        }) ?? 0
-    )
-    .map(platform => [
-      platform,
-      ...platform.guides.map(guide => ({
-        ...guide,
-        // add a reference to the parent platform instead of its key
-        platform,
-      })),
-      ...platform.integrations.map(integration => ({
-        ...integration,
-        platform,
-      })),
-    ])
-    .flat(2);
+  const platformsAndGuides = useMemo(
+    () =>
+      platforms
+        .slice()
+        .sort(
+          (a, b) =>
+            humanizeTitle(a.title ?? '').localeCompare(
+              humanizeTitle(b.title ?? ''),
+              'en',
+              {
+                sensitivity: 'base',
+              }
+            ) ?? 0
+        )
+        .map(platform => [
+          platform,
+          ...platform.guides.map(guide => ({
+            ...guide,
+            // add a reference to the parent platform instead of its key
+            platform,
+          })),
+          ...platform.integrations.map(integration => ({
+            ...integration,
+            platform,
+          })),
+        ])
+        .flat(2),
+    [platforms]
+  );
 
   const [expandedPlatforms, setExpandedPlatforms] = useState<Set<string>>(new Set());
 
@@ -69,7 +84,16 @@ export function PlatformSelector({
   };
 
   const currentPlatformKey = currentPlatform?.key;
-  const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+
+  // Auto-open selector when on /platforms/ index page (no SDK selected)
+  const isOnPlatformsIndex = pathname === '/platforms/' || pathname === '/platforms';
+
+  // Track if we're redirecting to prevent flash of selector
+  // Always initialize to false to avoid SSR hydration mismatch
+  // The useLayoutEffect below will set this to true before paint if redirecting
+  const [isRedirecting, setIsRedirecting] = useState(false);
+  const [open, setOpen] = useState(alwaysOpen || isOnPlatformsIndex);
   const [searchValue, setSearchValue] = useState('');
 
   const matches = useMemo(() => {
@@ -93,17 +117,14 @@ export function PlatformSelector({
     return matches_;
   }, [searchValue, currentPlatformKey, platformsAndGuides]);
 
-  const router = useRouter();
-  const pathname = usePathname();
   const onPlatformChange = (platformKey: string) => {
     const platform_ = platformsAndGuides.find(
       platform => platform.key === platformKey.replace('-redirect', '')
     );
     if (platform_) {
       localStorage.setItem('active-platform', platform_.key);
-      // Use the pre-computed URL from the sidebar which already handles
-      // equivalent paths (e.g., ai-agent-monitoring <-> ai-agent-monitoring-browser)
-      router.push(platform_.url);
+      // Use hard navigation for faster page load
+      window.location.href = platform_.url;
     }
   };
 
@@ -125,18 +146,34 @@ export function PlatformSelector({
   const storedPlatform = platformsAndGuides.find(
     platform => platform.key === storedPlatformKey
   );
-
-  useEffect(() => {
+  // Check for stored platform and redirect if on /platforms/ index
+  // Use useLayoutEffect to redirect before paint for faster UX
+  useLayoutEffect(() => {
     setHasMounted(true);
   }, []);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (currentPlatformKey) {
       localStorage.setItem('active-platform', currentPlatformKey);
+      setIsRedirecting(false);
+    } else if (isOnPlatformsIndex) {
+      const stored = localStorage.getItem('active-platform');
+      setStoredPlatformKey(stored);
+
+      // If we have a stored platform, redirect to it immediately
+      if (stored) {
+        const storedPlatformData = platformsAndGuides.find(p => p.key === stored);
+        if (storedPlatformData) {
+          setIsRedirecting(true);
+          // Use hard navigation for instant redirect
+          window.location.replace(storedPlatformData.url);
+          return;
+        }
+      }
     } else {
       setStoredPlatformKey(localStorage.getItem('active-platform'));
     }
-  }, [currentPlatformKey]);
+  }, [currentPlatformKey, isOnPlatformsIndex, platformsAndGuides]);
 
   const isPlatformPage = Boolean(
     pathname?.startsWith('/platforms/') &&
@@ -153,6 +190,78 @@ export function PlatformSelector({
     storedPlatform &&
     pathname !== '/platforms/';
 
+  // Don't render anything while redirecting to prevent flash
+  if (isRedirecting) {
+    return null;
+  }
+
+  if (listOnly) {
+    return (
+      <div
+        className={styles.popover}
+        style={{display: 'flex', flexDirection: 'column', height: '100%'}}
+      >
+        <div
+          className={styles['combobox-wrapper']}
+          style={{position: 'sticky', top: 0, zIndex: 2}}
+        >
+          <div className={styles['combobox-icon']}>
+            <MagnifyingGlassIcon />
+          </div>
+          <input
+            type="text"
+            value={searchValue}
+            onChange={e => setSearchValue(e.target.value)}
+            placeholder="Search platforms"
+            className={styles.combobox}
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+          />
+        </div>
+        <div className={styles.listbox} style={{flex: 1, overflowY: 'auto'}}>
+          {uniqByReference(
+            matches.map(x => (x.type === 'platform' ? x : x.platform))
+          ).map(platform => (
+            <PlatformItem
+              key={platform.key}
+              platform={{
+                ...platform,
+                guides: platform.guides
+                  .filter(g => matches.some(m => m.key === g.key && m.type === 'guide'))
+                  .sort((a, b) => {
+                    const indexA = matches.findIndex(m => m.key === a.key);
+                    const indexB = matches.findIndex(m => m.key === b.key);
+                    return indexA - indexB;
+                  }),
+                integrations: platform.integrations.filter(i =>
+                  matches.some(m => m.key === i.key)
+                ),
+                isExpanded:
+                  searchValue !== '' ||
+                  expandedPlatforms.has(platform.key) ||
+                  platform.key === currentPlatformKey ||
+                  platform.key === storedPlatformKey ||
+                  platform.guides.some(
+                    g => g.key === currentPlatformKey || g.key === storedPlatformKey
+                  ),
+              }}
+              activeItemRef={
+                platform.key === currentPlatformKey ||
+                platform.guides.some(g => g.key === currentPlatformKey)
+                  ? activeElementRef
+                  : null
+              }
+              activeItemKey={currentPlatformKey}
+              onPlatformExpand={onToggleExpand}
+              dropdownStyle={dropdownStyle}
+              listOnly
+            />
+          ))}
+        </div>
+      </div>
+    );
+  }
   return (
     <div>
       <RadixSelect.Root
@@ -168,12 +277,14 @@ export function PlatformSelector({
           includesBaseElement={false}
           setValue={v => startTransition(() => setSearchValue(v))}
         >
-          <RadixSelect.Trigger aria-label="Platform" className={styles.select}>
-            <RadixSelect.Value placeholder="Choose your SDK" />
-            <RadixSelect.Icon className={styles['select-icon']}>
-              <CaretSortIcon />
-            </RadixSelect.Icon>
-          </RadixSelect.Trigger>
+          {!alwaysOpen && (
+            <RadixSelect.Trigger aria-label="Platform" className={styles.select}>
+              <RadixSelect.Value placeholder="Choose your SDK" />
+              <RadixSelect.Icon className={styles['select-icon']}>
+                <CaretSortIcon />
+              </RadixSelect.Icon>
+            </RadixSelect.Trigger>
+          )}
           <RadixSelect.Content
             role="dialog"
             aria-label="Platforms"
@@ -188,15 +299,6 @@ export function PlatformSelector({
                 autoSelect
                 placeholder="Search platforms"
                 className={styles.combobox}
-                // Ariakit's Combobox manually triggers a blur event on virtually
-                // blurred items, making them work as if they had actual DOM
-                // focus. These blur events might happen after the corresponding
-                // focus events in the capture phase, leading Radix Select to
-                // close the popover. This happens because Radix Select relies on
-                // the order of these captured events to discern if the focus was
-                // outside the element. Since we don't have access to the
-                // onInteractOutside prop in the Radix SelectContent component to
-                // stop this behavior, we can turn off Ariakit's behavior here.
                 onBlurCapture={event => {
                   event.preventDefault();
                   event.stopPropagation();
@@ -208,16 +310,13 @@ export function PlatformSelector({
             </div>
             <ComboboxList className={styles.listbox}>
               {uniqByReference(
-                matches
-                  // map guides to parent platforms
-                  .map(x => (x.type === 'platform' ? x : x.platform))
+                matches.map(x => (x.type === 'platform' ? x : x.platform))
               ).map(platform => {
                 return (
                   <PlatformItem
                     key={platform.key}
                     platform={{
                       ...platform,
-                      // only keep guides that are in the matches list
                       guides: platform.guides
                         .filter(g =>
                           matches.some(m => m.key === g.key && m.type === 'guide')
@@ -227,15 +326,12 @@ export function PlatformSelector({
                           const indexB = matches.findIndex(m => m.key === b.key);
                           return indexA - indexB;
                         }),
-
                       integrations: platform.integrations.filter(i =>
                         matches.some(m => m.key === i.key)
                       ),
                       isExpanded:
-                        // expand search results
                         searchValue !== '' ||
                         expandedPlatforms.has(platform.key) ||
-                        // expand current platform/parent of current guide
                         platform.key === currentPlatformKey ||
                         platform.key === storedPlatformKey ||
                         platform.guides.some(
@@ -250,6 +346,8 @@ export function PlatformSelector({
                     }
                     activeItemKey={currentPlatformKey}
                     onPlatformExpand={onToggleExpand}
+                    dropdownStyle={dropdownStyle}
+                    listOnly={false}
                   />
                 );
               })}
@@ -276,6 +374,8 @@ type PlatformItemProps = {
   activeItemRef: Ref<HTMLDivElement>;
   platform: Platform & {isExpanded?: boolean};
   activeItemKey?: string;
+  dropdownStyle?: boolean;
+  listOnly?: boolean;
   onPlatformExpand?: (platformKey: string) => void;
 };
 function PlatformItem({
@@ -283,6 +383,8 @@ function PlatformItem({
   activeItemRef,
   activeItemKey,
   onPlatformExpand: onExpand,
+  dropdownStyle = false,
+  listOnly = false,
 }: PlatformItemProps) {
   const showCaret = (p: Platform) => p.guides.length > 0 || p.integrations.length > 0;
 
@@ -301,6 +403,62 @@ function PlatformItem({
     ? markLastGuide(platform.guides.length > 0 ? platform.guides : platform.integrations)
     : [];
 
+  if (listOnly) {
+    return (
+      <Fragment>
+        <div
+          className={
+            dropdownStyle
+              ? 'block px-4 py-2 text-[var(--gray-12)] hover:bg-[var(--gray-3)] rounded text-[0.875rem] font-normal font-sans no-underline'
+              : styles.item
+          }
+          data-platform-with-guides
+          ref={activeItemRef}
+          style={{cursor: 'pointer', display: 'flex', alignItems: 'center'}}
+          onClick={() => {
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('active-platform', platform.key);
+              window.location.href = platform.url;
+            }
+          }}
+        >
+          <span className={dropdownStyle ? '' : styles['item-text']}>
+            <PlatformIcon
+              platform={platform.icon ?? platform.key}
+              size={16}
+              format="sm"
+              className={styles['platform-icon']}
+            />
+            {platform.title}
+          </span>
+          {showCaret(platform) && (
+            <button
+              className={styles['expand-button']}
+              type="button"
+              tabIndex={-1}
+              aria-label="Expand"
+              style={{marginLeft: 'auto'}}
+              onClick={e => {
+                e.stopPropagation();
+                onExpand?.(platform.key);
+              }}
+              data-expanded={platform.isExpanded}
+            >
+              <CaretRightIcon />
+            </button>
+          )}
+        </div>
+        {guides.map(guide => (
+          <GuideItem
+            key={guide.key}
+            guide={guide}
+            dropdownStyle={dropdownStyle}
+            listOnly
+          />
+        ))}
+      </Fragment>
+    );
+  }
   return (
     <Fragment>
       {/* This is a hack. The Label allows us to have a clickable button inside the item without triggering its selection */}
@@ -310,13 +468,17 @@ function PlatformItem({
             <RadixSelect.Item
               value={hasGuideWithPlatformKey ? `${platform.key}-redirect` : platform.key}
               asChild
-              className={styles.item}
+              className={
+                dropdownStyle
+                  ? 'block px-4 py-2 text-[var(--gray-12)] hover:bg-[var(--gray-3)] rounded text-[0.875rem] font-normal font-sans no-underline'
+                  : styles.item
+              }
               data-platform-with-guides
               ref={activeItemRef}
             >
               <ComboboxItem>
                 <RadixSelect.ItemText>
-                  <span className={styles['item-text']}>
+                  <span className={dropdownStyle ? '' : styles['item-text']}>
                     <PlatformIcon
                       platform={platform.icon ?? platform.key}
                       size={16}
@@ -347,7 +509,7 @@ function PlatformItem({
         </RadixSelect.Label>
       </RadixSelect.Group>
       {guides.map(guide => {
-        return <GuideItem key={guide.key} guide={guide} />;
+        return <GuideItem key={guide.key} guide={guide} dropdownStyle={dropdownStyle} />;
       })}
     </Fragment>
   );
@@ -355,20 +517,64 @@ function PlatformItem({
 
 type GuideItemProps = {
   guide: (PlatformGuide | PlatformIntegration) & {isLastGuide: boolean};
+  dropdownStyle?: boolean;
+  listOnly?: boolean;
 };
-function GuideItem({guide}: GuideItemProps) {
+function GuideItem({guide, dropdownStyle = false, listOnly = false}: GuideItemProps) {
+  if (listOnly) {
+    return (
+      <div
+        className={
+          dropdownStyle
+            ? 'block px-4 py-2 text-[var(--gray-12)] hover:bg-[var(--gray-3)] rounded text-[0.875rem] font-normal font-sans no-underline'
+            : styles.item
+        }
+        data-guide
+        data-last-guide={guide.type === 'guide' && guide.isLastGuide}
+        style={{
+          marginLeft: '1.5rem',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+        }}
+        onClick={() => {
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('active-platform', guide.key);
+            window.location.href = guide.url;
+          }
+        }}
+      >
+        <span className={dropdownStyle ? '' : styles['item-text']}>
+          <PlatformIcon
+            platform={guide.icon ?? guide.key}
+            size={16}
+            format="sm"
+            className={styles['platform-icon']}
+          />
+          {/* replace dots with zero width space + period to allow text wrapping before periods
+            without breaking words in weird places
+          */}
+          {(guide.title ?? guide.name ?? guide.key).replace(/\./g, '\u200B.')}
+        </span>
+      </div>
+    );
+  }
   return (
     <RadixSelect.Item
       key={guide.key}
       value={guide.key}
       asChild
-      className={styles.item}
+      className={
+        dropdownStyle
+          ? 'block px-4 py-2 text-[var(--gray-12)] hover:bg-[var(--gray-3)] rounded text-[0.875rem] font-normal font-sans no-underline'
+          : styles.item
+      }
       data-guide
       data-last-guide={guide.type === 'guide' && guide.isLastGuide}
     >
       <ComboboxItem>
         <RadixSelect.ItemText>
-          <span className={styles['item-text']}>
+          <span className={dropdownStyle ? '' : styles['item-text']}>
             <PlatformIcon
               platform={guide.icon ?? guide.key}
               size={16}
