@@ -1,25 +1,19 @@
 'use client';
 
-import {HamburgerMenuIcon} from '@radix-ui/react-icons';
+import {HamburgerMenuIcon, TriangleRightIcon} from '@radix-ui/react-icons';
+import * as Popover from '@radix-ui/react-popover';
+import {Box, Button, Theme} from '@radix-ui/themes';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import Link from 'next/link';
 
 import SentryLogoSVG from 'sentry-docs/logos/sentry-logo-dark.svg';
 
+import mobileMenuStyles from './mobileMenu/styles.module.scss';
 import sidebarStyles from './sidebar/style.module.scss';
 
 import {NavLink} from './navlink';
 import {ThemeToggle} from './theme-toggle';
-
-// Lazy load MobileMenu since it's only visible on small screens
-const MobileMenu = dynamic(
-  () => import('./mobileMenu').then(mod => ({default: mod.MobileMenu})),
-  {
-    ssr: false,
-    loading: () => <div className="w-10 h-10" />,
-  }
-);
 
 // Lazy load Search to reduce initial bundle size.
 const Search = dynamic(() => import('./search').then(mod => ({default: mod.Search})), {
@@ -104,7 +98,52 @@ export function DevelopDocsHeader({
           <ThemeToggle />
         </div>
         <div className="lg-xl:hidden ml-auto">
-          <MobileMenu pathname={pathname} searchPlatforms={searchPlatforms} />
+          <div className="flex gap-6 items-center">
+            <Popover.Root>
+              <Popover.Trigger asChild>
+                <Button
+                  variant="ghost"
+                  size="4"
+                  color="gray"
+                  radius="medium"
+                  className="font-medium text-[var(--foreground)]"
+                >
+                  Menu
+                  <TriangleRightIcon />
+                </Button>
+              </Popover.Trigger>
+              <Popover.Portal>
+                <Theme accentColor="iris">
+                  <Popover.Content
+                    className={mobileMenuStyles.PopoverContent}
+                    sideOffset={5}
+                  >
+                    <Box display={{xs: 'block', sm: 'none'}}>
+                      <li className={mobileMenuStyles.MenuItem}>
+                        <Search
+                          path={pathname}
+                          searchPlatforms={searchPlatforms}
+                        />
+                      </li>
+                      <div className={mobileMenuStyles.MenuSeparator} />
+                    </Box>
+                    <li className={mobileMenuStyles.MenuItem}>
+                      <Link href="https://sentry.io/changelog/">Changelog</Link>
+                    </li>
+                    <li className={mobileMenuStyles.MenuItem}>
+                      <Link href="https://sandbox.sentry.io/">Sandbox</Link>
+                    </li>
+                    <li className={mobileMenuStyles.MenuItem}>
+                      <Link href="https://sentry.io/">Go to Sentry</Link>
+                    </li>
+                    <li className={mobileMenuStyles.MenuItem}>
+                      <Link href="https://sentry.io/signup/">Get Started</Link>
+                    </li>
+                  </Popover.Content>
+                </Theme>
+              </Popover.Portal>
+            </Popover.Root>
+          </div>
         </div>
       </nav>
       <style>{`
