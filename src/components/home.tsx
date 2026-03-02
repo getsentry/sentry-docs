@@ -119,20 +119,20 @@ export async function Home() {
                     <a
                       key={platform.key}
                       href={platform.url}
-                      className="sdk-tile flex flex-col items-center justify-center bg-white dark:bg-[var(--gray-2)]"
+                      className="sdk-tile flex flex-col items-center justify-center gap-1.5 bg-white dark:bg-[var(--gray-2)]"
                       style={{
                         textDecoration: 'none',
                         padding: '6px',
                         borderRadius: '6px',
                         width: '70px',
-                        height: '70px',
+                        height: '76px',
                       }}
                     >
                       <PlatformIcon
                         platform={platform.key}
                         size={36}
                         format="lg"
-                        style={{margin: 0, display: 'block', marginBottom: '3px'}}
+                        style={{margin: 0, display: 'block'}}
                       />
                       <span
                         className="text-[var(--gray-12)] whitespace-nowrap"
