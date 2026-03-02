@@ -93,8 +93,7 @@ We aim to standardize requirements so SDKs share consistent logic across platfor
 
 {/* TODO: Open items from architecture consolidation (https://github.com/getsentry/sentry-docs/issues/16189):
   - Requirement #4: Finish wording for low-volume data push vs pull approach.
-  - Errors/check-ins size limit of 1 was promoted from backend-specific to common — confirm this is correct for all platforms.
-  - Backend file line 36 says spans recommend 1000 "because span volume is higher", but the common spec already says 1000 — this is now redundant.
+  - Errors/check-ins batch size of 1 was promoted from backend-specific to common — confirm this is correct for all platforms.
 */}
 
 The telemetry buffer batches high-volume data and forwards it to the telemetry scheduler. This section covers the common requirements for all platforms:
@@ -103,24 +102,30 @@ The telemetry buffer batches high-volume data and forwards it to the telemetry s
 2. Before adding an item to a specific buffer, the telemetry buffer **SHOULD** drop rate-limited items to avoid overhead. If doing so, it **MUST** record client reports.
 3. When the telemetry buffer overflows and it drops data, it **MUST** record client reports.
 4. For low-volume data, such as events, session replays or user feedback, the telemetry buffer MUST either directly forward these items to the telemetry scheduler, or if the scheduler pulls items from the buffers the telemetry buffer TODO
-5. For buffers with a size limit greater than 1, the telemetry buffer **MUST** start a timeout of 5 seconds when the first item is added. When the timeout expires, the telemetry buffer **MUST** forward all items to the telemetry scheduler. Buffers with a size limit of 1 **MUST** forward items immediately and **SHOULD NOT** use a timeout.
-6. The telemetry buffer **MUST** define a size limit of `x` items. See [Size Limit Recommendations](#size-limit-recommendations) below for more details.
-7. When the size limit is reached, the telemetry buffer **MUST** forward all items to the telemetry scheduler. The buffer **MAY** forward items in batches.
+5. For buffers with a batch size greater than 1, the telemetry buffer **MUST** start a timeout of 5 seconds when the first item is added. When the timeout expires, the telemetry buffer **MUST** forward all items to the telemetry scheduler. Buffers with a batch size of 1 **MUST** forward items immediately and **SHOULD NOT** use a timeout.
+6. The telemetry buffer **MUST** define a batch size per telemetry category. See [Batch Size Limits](#batch-size-limits) below for recommended values.
+7. When the batch size is reached, the telemetry buffer **MUST** forward the batch to the telemetry scheduler.
 
-## Size Limits
+## Batch Size Limits
 
-The following categories **SHOULD** use a size limit of 1, which means items are forwarded immediately:
+The batch size controls how many items the telemetry buffer groups together before forwarding them to the telemetry scheduler. These limits exist because [envelope size limits](/sdk/foundations/transport/envelopes/#size-limits) constrain how many items a single envelope can carry. While the envelope limits would allow higher values for some categories, the batch sizes below are optimized for Relay and exceeding them is absolutely discouraged.
+
+The following categories **SHOULD** use a batch size of 1, which means items are forwarded immediately:
 
 - Errors
 - Check-ins
 
-For high-volume data, SDKs **SHOULD** use the following size limits. SDKs **MAY** use lower values, but they **MUST NOT** exceed these limits:
+For high-volume data, SDKs **SHOULD** use the following batch sizes. SDKs **MAY** use lower values, but they **MUST NOT** exceed these limits:
 
 - 100 items for logs
 - 100 items for metrics
 - 1000 items for spans
 
-While the [envelope size limits](/sdk/foundations/transport/envelopes/#size-limits) would allow higher size limits for specific categories, these limits are optimized for Relay and exceeding them is absolutely discouraged.
+## Buffer Capacity
+
+The buffer capacity defines the maximum number of items a buffer can hold in memory. This is separate from the [batch size](#batch-size-limits) — the buffer capacity **MUST** be greater than or equal to the batch size, but it **MAY** be larger. A larger capacity allows the buffer to absorb bursts of data without dropping items while the scheduler processes previous batches.
+
+When the buffer capacity is exceeded, the buffer **MUST** drop items according to its overflow policy and **MUST** record client reports for dropped items. Platform-specific pages define the recommended overflow policies and capacity values. For example, the [backend spec](/sdk/foundations/processing/telemetry-processor/backend-telemetry-processor/#configuration) uses `drop_oldest` with capacities of 100 for errors and check-ins, and `10 * batch size` for logs.
 
 ## Data Forwarding Scenarios
 
