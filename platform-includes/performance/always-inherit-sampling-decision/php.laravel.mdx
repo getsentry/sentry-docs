@@ -1,16 +1,19 @@
 ```php {filename:config/sentry.php}
-'traces_sampler' => function (\Sentry\Tracing\SamplingContext $context): float {
-    // always inherit
-    if ($context->getParentSampled()) {
-        return 1.0;
-    }
-
-    // the rest of sampling logic
-},
+'traces_sampler' => [App\Exceptions\Sentry::class, 'tracesSampler'],
 ```
 
-<Alert>
+```php {filename:app/Exceptions/Sentry.php}
+class Sentry
+{
+    public static function tracesSampler(\Sentry\Tracing\SamplingContext $context): float
+    {
+        // Always inherit the parent sampling decision.
+        if ($context->getParentSampled()) {
+            return 1.0;
+        }
 
-Learn more in [Closures and Config Caching](/platforms/php/guides/laravel/configuration/laravel-options/#closures-and-config-caching).
-
-</Alert>
+        // The rest of your sampling logic.
+        return 0.25;
+    }
+}
+```
