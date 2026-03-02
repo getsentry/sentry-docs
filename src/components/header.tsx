@@ -156,10 +156,10 @@ export function Header({
           <Link
             href="/"
             title="Sentry error monitoring"
-            className="logo-slot flex flex-shrink-0 items-center text-lg font-medium text-[var(--foreground)] mr-1"
+            className="logo-slot flex flex-shrink-0 items-center text-lg font-medium text-[var(--foreground)] mr-1 py-2 border-b-2 border-transparent -translate-y-[1px]"
             style={{minWidth: 0}}
           >
-            <div className="h-full pb-[2px] mr-2">
+            <div className="mr-2">
               <Image
                 src={SentryLogoSVG}
                 alt="Sentry's logo"
