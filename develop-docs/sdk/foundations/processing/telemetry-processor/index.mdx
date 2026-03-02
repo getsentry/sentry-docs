@@ -91,19 +91,30 @@ We aim to standardize requirements so SDKs share consistent logic across platfor
 
 # Telemetry Buffer
 
+{/* TODO: Open items from architecture consolidation (https://github.com/getsentry/sentry-docs/issues/16189):
+  - Requirement #4: Finish wording for low-volume data push vs pull approach.
+  - Errors/check-ins size limit of 1 was promoted from backend-specific to common — confirm this is correct for all platforms.
+  - Backend file line 36 says spans recommend 1000 "because span volume is higher", but the common spec already says 1000 — this is now redundant.
+*/}
+
 The telemetry buffer batches high-volume data and forwards it to the telemetry scheduler. This section covers the common requirements for all platforms:
 
 1. The telemetry buffer **SHOULD** use separate buffers per telemetry category (e.g., one for spans, one for logs, one for metrics).
 2. Before adding an item to a specific buffer, the telemetry buffer **SHOULD** drop rate-limited items to avoid overhead. If doing so, it **MUST** record client reports.
 3. When the telemetry buffer overflows and it drops data, it **MUST** record client reports.
-4. The telemetry buffer **MUST** forward low-volume data, such as normal events, session replays, or user feedback, directly to the telemetry scheduler.
-5. The telemetry buffer **MUST** start a timeout of 5 seconds when the first item is added. When the timeout expires, the telemetry buffer **MUST** forward all items to the telemetry scheduler.
+4. For low-volume data, such as events, session replays or user feedback, the telemetry buffer MUST either directly forward these items to the telemetry scheduler, or if the scheduler pulls items from the buffers the telemetry buffer TODO
+5. For buffers with a size limit greater than 1, the telemetry buffer **MUST** start a timeout of 5 seconds when the first item is added. When the timeout expires, the telemetry buffer **MUST** forward all items to the telemetry scheduler. Buffers with a size limit of 1 **MUST** forward items immediately and **SHOULD NOT** use a timeout.
 6. The telemetry buffer **MUST** define a size limit of `x` items. See [Size Limit Recommendations](#size-limit-recommendations) below for more details.
 7. When the size limit is reached, the telemetry buffer **MUST** forward all items to the telemetry scheduler. The buffer **MAY** forward items in batches.
 
 ## Size Limits
 
-SDKs **SHOULD** use the following size limits for the telemetry buffer. SDKs **MAY** use lower values, but they **MUST NOT** exceed the following size limits:
+The following categories **SHOULD** use a size limit of 1, which means items are forwarded immediately:
+
+- Errors
+- Check-ins
+
+For high-volume data, SDKs **SHOULD** use the following size limits. SDKs **MAY** use lower values, but they **MUST NOT** exceed these limits:
 
 - 100 items for logs
 - 100 items for metrics
