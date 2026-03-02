@@ -135,9 +135,11 @@ export async function SidebarNavigation({path}: {path: string[]}) {
     return <ul data-sidebar-tree />;
   }
 
-  // Platform redirect page - no sidebar needed
+  // Platform redirect page - show product sidebar
   if (path[0] === 'platform-redirect') {
-    return <ul data-sidebar-tree />;
+    return (
+      <ProductSidebar rootNode={rootNode} items={[{title: 'Product', root: 'product'}]} />
+    );
   }
 
   // This should never happen, all cases need to be handled above
