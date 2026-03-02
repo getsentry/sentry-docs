@@ -1,6 +1,7 @@
 import {ReactNode} from 'react';
 
 import {
+  extractPlatforms,
   getCurrentGuide,
   getCurrentPlatform,
   getCurrentPlatformOrGuide,
@@ -16,6 +17,7 @@ import './type.scss';
 
 import {Banner} from '../banner';
 import {Breadcrumbs} from '../breadcrumbs';
+import {buildBreadcrumbs} from '../breadcrumbs/utils';
 import {CodeContextProvider} from '../codeContext';
 import {CopyMarkdownButton} from '../copyMarkdownButton';
 import {DocFeedback} from '../docFeedback';
@@ -53,6 +55,7 @@ export async function DocPage({
   const {rootNode, path} = serverContext();
   const currentPlatform = getCurrentPlatform(rootNode, path);
   const currentGuide = getCurrentGuide(rootNode, path);
+  const platforms = extractPlatforms(rootNode);
   const platformOrGuide = getCurrentPlatformOrGuide(rootNode, path);
   const sdkPackage = await getSdkPackageName(platformOrGuide);
 
@@ -69,8 +72,11 @@ export async function DocPage({
 
   return (
     <div className="tw-app">
-      <Header pathname={pathname} searchPlatforms={searchPlatforms} />
-
+      <Header
+        pathname={pathname}
+        searchPlatforms={searchPlatforms}
+        platforms={platforms}
+      />
       <section className="px-0 flex relative">
         {sidebar ?? (
           <Sidebar path={unversionedPath.split('/')} versions={frontMatter.versions} />
@@ -94,7 +100,7 @@ export async function DocPage({
               <Banner />
             </div>
             <div className="flex items-center">
-              {leafNode && <Breadcrumbs leafNode={leafNode} />}{' '}
+              <Breadcrumbs items={buildBreadcrumbs(leafNode)} />{' '}
               <div className="ml-auto hidden sm:block">
                 <CopyMarkdownButton pathname={pathname} />
               </div>
