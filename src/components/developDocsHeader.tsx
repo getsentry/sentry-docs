@@ -47,8 +47,7 @@ export function DevelopDocsHeader({
           <button className="md:hidden mr-3">
             <label
               htmlFor={developerDocsSidebarToggleId}
-              aria-label="Close"
-              aria-hidden="true"
+              aria-label="Toggle sidebar navigation"
               className="inline-flex items-center cursor-pointer"
             >
               <HamburgerMenuIcon
@@ -97,7 +96,7 @@ export function DevelopDocsHeader({
           </NavLink>
           <ThemeToggle />
         </div>
-        <div className="md:hidden ml-auto">
+        <div className="lg-xl:hidden ml-auto">
           <div className="flex gap-6 items-center">
             <Popover.Root>
               <Popover.Trigger asChild>
