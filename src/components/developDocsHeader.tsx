@@ -120,10 +120,7 @@ export function DevelopDocsHeader({
                   >
                     <Box display={{xs: 'block', sm: 'none'}}>
                       <li className={mobileMenuStyles.MenuItem}>
-                        <Search
-                          path={pathname}
-                          searchPlatforms={searchPlatforms}
-                        />
+                        <Search path={pathname} searchPlatforms={searchPlatforms} />
                       </li>
                       <div className={mobileMenuStyles.MenuSeparator} />
                     </Box>
