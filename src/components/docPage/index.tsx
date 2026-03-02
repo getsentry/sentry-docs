@@ -7,10 +7,10 @@ import {
   getCurrentPlatformOrGuide,
   nodeForPath,
 } from 'sentry-docs/docTree';
+import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
 import {serverContext} from 'sentry-docs/serverContext';
 import {FrontMatter} from 'sentry-docs/types';
 import {PaginationNavNode} from 'sentry-docs/types/paginationNavNode';
-import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
 import {isNotNil} from 'sentry-docs/utils';
 import {getUnversionedPath} from 'sentry-docs/versioning';
 
@@ -21,9 +21,9 @@ import {Breadcrumbs} from '../breadcrumbs';
 import {buildBreadcrumbs} from '../breadcrumbs/utils';
 import {CodeContextProvider} from '../codeContext';
 import {CopyMarkdownButton} from '../copyMarkdownButton';
+import {DevelopDocsHeader} from '../developDocsHeader';
 import {DocFeedback} from '../docFeedback';
 import {GitHubCTA} from '../githubCTA';
-import {DevelopDocsHeader} from '../developDocsHeader';
 import {Header} from '../header';
 import Mermaid from '../mermaid';
 import {PaginationNav} from '../paginationNav';
