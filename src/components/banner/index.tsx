@@ -53,7 +53,7 @@ const BANNERS: BannerType[] = [
     text: 'Edit this banner on `/src/components/banner/index.tsx`',
     linkURL: 'https://docs.sentry.io/contributing/pages/banners/',
     linkText: 'CTA',
-  }
+  },
 ];
 
 const LOCALSTORAGE_NAMESPACE = 'banner-manifest';
