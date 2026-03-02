@@ -19,16 +19,18 @@ const DOCS_PATH = resolve(__dirname, '../docs/ai/agent-skills.mdx');
 
 async function getRepoSkills() {
   try {
-    const output = execSync(
-      `gh api repos/${REPO}/contents/skills --jq '.[].name'`,
-      {encoding: 'utf-8', timeout: 15000}
-    );
+    const output = execSync(`gh api repos/${REPO}/contents/skills --jq '.[].name'`, {
+      encoding: 'utf-8',
+      timeout: 15000,
+    });
     return output
       .trim()
       .split('\n')
       .filter(name => name && !name.startsWith('.'));
   } catch (err) {
-    console.error('Failed to fetch skills from GitHub. Is `gh` CLI installed and authenticated?');
+    console.error(
+      'Failed to fetch skills from GitHub. Is `gh` CLI installed and authenticated?'
+    );
     console.error(err.message);
     process.exit(2);
   }
@@ -77,9 +79,13 @@ async function main() {
   }
 
   if (!drifted) {
-    console.log(`All ${repoSkills.length} repo skills are documented. No drift detected.`);
+    console.log(
+      `All ${repoSkills.length} repo skills are documented. No drift detected.`
+    );
   } else {
-    console.warn('⚠ Drift detected — please update docs/ai/agent-skills.mdx to match the repo.');
+    console.warn(
+      '⚠ Drift detected — please update docs/ai/agent-skills.mdx to match the repo.'
+    );
   }
 }
 
