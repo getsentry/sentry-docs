@@ -22,7 +22,7 @@ Sentry Conventions is the single source of truth.
 Describes GenAI agent creation and is usually applicable when working with remote agent services.
 
 - Span `op` SHOULD be `"gen_ai.create_agent"`.
-- Span `name` SHOULD be `"create_agent {gen_ai.agent.name}"`. (e.g. `"create_agent Weather Agent"`)
+- Span `name` SHOULD be `"create_agent {gen_ai.agent.name}"`. (e.g. `"create_agent Weather Agent"`)  **[8]**
 - Attribute `gen_ai.operation.name` MUST be `"create_agent"`.
 - Attribute `gen_ai.agent.name` SHOULD be set to the agents name. (e.g. `"Weather Agent"`)
 - If provided, the attribute `gen_ai.request.model` MUST be the agent's default request model. (e.g. `"gpt-4o"`)
@@ -35,7 +35,7 @@ Describes AI agent invocation.
 Agent invocations represent operations that can include multiple model calls, or some auxiliary work that goes beyond transforming the model input and output.
 
 - Span `op` SHOULD be `"gen_ai.invoke_agent"`.
-- Span `name` SHOULD be `"invoke_agent {gen_ai.agent.name}"`. (e.g. `"invoke_agent Weather Agent"`)
+- Span `name` SHOULD be `"invoke_agent {gen_ai.agent.name}"`. (e.g. `"invoke_agent Weather Agent"`)  **[8]**
 - Attribute `gen_ai.operation.name` MUST be `"invoke_agent"`.
 - Attribute `gen_ai.agent.name` SHOULD be set to the agents name. (e.g. `"Weather Agent"`)
 - If provided, the attribute `gen_ai.request.model` MUST be the agent's default request model. (e.g. `"gpt-4o"`)
@@ -247,3 +247,8 @@ The input list should include the most recent messages up to and including the m
 **[7]**
 
 Binary blobs in the input list should be replaced with the string `"[Blob substitute]"` in positions where binary data is expected in a given schema. Only binary blobs in positions where binary data is explicitly expected must be redacted. For example, in OpenAI Completions schema, only binary blobs in content blocks with type `image_url`, `input_audio` or `file` should be redacted.
+
+**[8]**
+
+In some agent libraries, the agent name is optional, and some do not provide an option to name your agents.
+In these cases, the span name SHOULD be `"invoke_agent {call_id}"`, where `call_id` is some user-provided identifier for the agent invocation. For example, `functionId` in Vercel AI.
