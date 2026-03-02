@@ -20,6 +20,11 @@ flowchart LR
   TelemetryProcessor -- sendEnvelope --> Transport
 ```
 
+The telemetry processor **SHOULD** expose the following minimal API:
+
+- `Add(item)` — Adds a telemetry item to the processor.
+- `Flush(timeout)` — Flushes all buffered data to the transport within the given timeout.
+
 SDKs **SHOULD** only add the telemetry processor for high-volume data (spans, logs, metrics). SDKs without these features **MAY** omit it. Once added, SDK clients **SHOULD** forward all data to the processor, not the transport. During migration, SDKs **MAY** temporarily send only some telemetry data through the processor.
 
 The telemetry processor consists of two major components:
@@ -88,13 +93,13 @@ We aim to standardize requirements so SDKs share consistent logic across platfor
 
 The telemetry buffer batches high-volume data and forwards it to the telemetry scheduler. This section covers the common requirements for all platforms:
 
-1. Before adding an item to a specific buffer, the telemetry buffer **SHOULD** drop rate-limited items to avoid overhead. If doing so, it **MUST** record client reports.
-2. When the telemetry buffer overflows and it drops data, it **MUST** record client reports.
-3. The telemetry buffer **MUST** forward low-volume data, such as normal events, session replays, or user feedback, directly to the telemetry scheduler.
-4. The telemetry buffer **MUST** start a timeout of 5 seconds when the first item is added. When the timeout expires, the telemetry buffer **MUST** forward all items to the telemetry scheduler.
-5. The telemetry buffer **MUST** define a size limit of `x` items. See [Size Limit Recommendations](#size-limit-recommendations) below for more details.
-6. When the size limit is reached, the telemetry buffer **MUST** forward all items to the telemetry scheduler. The buffer **MAY** forward items in batches.
-
+1. The telemetry buffer **SHOULD** use separate buffers per telemetry category (e.g., one for spans, one for logs, one for metrics).
+2. Before adding an item to a specific buffer, the telemetry buffer **SHOULD** drop rate-limited items to avoid overhead. If doing so, it **MUST** record client reports.
+3. When the telemetry buffer overflows and it drops data, it **MUST** record client reports.
+4. The telemetry buffer **MUST** forward low-volume data, such as normal events, session replays, or user feedback, directly to the telemetry scheduler.
+5. The telemetry buffer **MUST** start a timeout of 5 seconds when the first item is added. When the timeout expires, the telemetry buffer **MUST** forward all items to the telemetry scheduler.
+6. The telemetry buffer **MUST** define a size limit of `x` items. See [Size Limit Recommendations](#size-limit-recommendations) below for more details.
+7. When the size limit is reached, the telemetry buffer **MUST** forward all items to the telemetry scheduler. The buffer **MAY** forward items in batches.
 
 ## Size Limits
 

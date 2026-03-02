@@ -12,57 +12,9 @@ For the common specification, refer to the [Telemetry Processor](/sdk/foundation
 
 ## Backend-Specific Design Decisions
 
-- **Weighted round-robin scheduling**: Backend applications often run under sustained high load. Weighted scheduling ensures critical telemetry (errors) gets sent even when flooded with high-volume data (logs, spans).
+- **Weighted round-robin scheduling**: Backend applications often run under sustained high load. Weighted scheduling ensures critical telemetry (errors) gets sent even when flooded with high-volume data (logs, spans). High-priority telemetry **MUST** be sent more frequently via weighted round-robin selection.
 - **Signal-based scheduling**: The scheduler wakes when new data arrives rather than polling, reducing CPU overhead in idle periods.
-
-### Architecture Overview
-
-Introduce a `TelemetryProcessor` layer between the `Client` and the `Transport`. This `TelemetryProcessor` wraps prioritization and scheduling and exposes a minimal API to the SDK:
-
-- Add(item).
-- Flush(timeout).
-- Close(timeout).
-
-```
-┌────────────────────────────────────────────────────────────────────────────┐
-│                               Client                                       │
-│   captureEvent / captureTransaction / captureCheckIn / captureLog          │
-└────────────────────────────────────────────────────────────────────────────┘
-
-                                ▼
-┌────────────────────────────────────────────────────────────────────────────┐
-│                         TelemetryProcessor                                 │
-│             Add(item) · Flush(timeout) · Close(timeout)                    │
-│                                                                            │
-│   ┌──────────────────────┐  ┌──────────────────────┐  ┌──────────────────┐ │
-│   │  Error Buffer        │  │  Check-in Buffer     │  │  Log Buffer      │ │
-│   │  (CRITICAL)          │  │  (HIGH)              │  │  (LOW)           │ │
-│   │  Timeout: N/A        │  │  Timeout: N/A        │  │  Timeout: 5s     │ │
-│   │  BatchSize: 1        │  │  BatchSize: 1        │  │  BatchSize: 100  │ │
-│   └──────────────────────┘  └──────────────────────┘  └──────────────────┘ │
-│                                │                                           │
-│                                ▼                                           │
-│   ┌─────────────────────────────────────────────────────────────────────┐  │
-│   │             TelemetryScheduler (Weighted Round-Robin)               │  │
-│   │  - Priority weights: CRITICAL=5, HIGH=4, MEDIUM=3, LOW=2, LOWEST=1  │  │
-│   │  - Processes a batch of items based on BatchSize and/or Timeout     │  │
-│   │  - Builds envelopes from batch                                      │  │
-│   │  - Submits envelopes to transport                                   │  │
-│   └─────────────────────────────────────────────────────────────────────┘  │
-└────────────────────────────────────────────────────────────────────────────┘
-
-                                ▼
-┌────────────────────────────────────────────────────────────────────────────┐
-│                             Transport                                      │
-│   - Single worker, disk cache, offline retry, client reports               │
-└────────────────────────────────────────────────────────────────────────────┘
-```
-
-#### How the Processor works
-
-- **Category isolation**: Separate ring buffers for each telemetry type prevent head-of-line blocking.
-- **Weighted scheduling**: High-priority telemetry gets sent more frequently via weighted round-robin selection.
-- **Transport compatibility**: Works with existing HTTP transport implementations without modification.
+- **Transport compatibility**: The telemetry processor **MUST** work with existing transport implementations.
 
 ### Priorities
 - CRITICAL: Error, Feedback.
