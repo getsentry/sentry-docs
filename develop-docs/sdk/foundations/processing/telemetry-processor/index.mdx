@@ -102,7 +102,9 @@ The telemetry buffer batches high-volume telemetry items and forwards them to th
 
 ## Push-Based Approach
 
-The push-based approach is the default for most SDKs. The telemetry buffers push data to the telemetry scheduler when full or on timeout. SDKs **MAY** use a [pull-based alternative](./backend-telemetry-processor/), where the telemetry scheduler pulls items from the buffers, which can improve prioritization and throughput control.
+SDKs **SHOULD** use the push-based approach, where the telemetry buffers push data to the telemetry scheduler when full or on timeout. For high-throughput scenarios, SDKs **MAY** use a [pull-based alternative](./backend-telemetry-processor/) optimized for backends, where the scheduler pulls items from the buffers.
+
+SDKs using the push-based approach **MUST** follow these requirements:
 
 1. The telemetry buffer **MUST** forward low-volume data, such as normal events, session replays, or user feedback, directly to the telemetry scheduler.
 2. The telemetry buffer **MUST** start a timeout of 5 seconds when the first item is added. When the timeout expires, the telemetry buffer **MUST** forward all items to the telemetry scheduler.
