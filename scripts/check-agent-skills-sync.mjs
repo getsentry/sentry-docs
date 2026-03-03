@@ -32,7 +32,7 @@ async function getRepoSkills() {
       'Failed to fetch skills from GitHub. Is `gh` CLI installed and authenticated?'
     );
     console.error(err.message);
-    process.exit(2);
+    return [];
   }
 }
 
@@ -41,7 +41,8 @@ function getDocSkills() {
   const skills = new Set();
 
   // Match backtick-wrapped skill names in table rows (e.g. `sentry-react-sdk`)
-  const tableRowRegex = /\|\s*`([^`]+)`\s*\|/g;
+  // Only match names that look like skill slugs (alphanumeric with hyphens), not file paths
+  const tableRowRegex = /\|\s*`([a-z0-9][a-z0-9-]*)`\s*\|/g;
   let match;
   while ((match = tableRowRegex.exec(content)) !== null) {
     skills.add(match[1]);
@@ -89,4 +90,7 @@ async function main() {
   }
 }
 
-main();
+main().catch(err => {
+  console.error('Unexpected error:', err.message);
+  process.exit(0);
+});
