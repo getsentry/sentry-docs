@@ -10,10 +10,15 @@ sidebar_order: 1
 
 For the common specification, refer to the [Telemetry Processor](/sdk/foundations/processing/telemetry-processor/) page. This page describes a backend-specific approach, which is optimized for high load. The key difference is that the telemetry scheduler pulls telemetry data from the telemetry buffers using **weighted round-robin scheduling**.
 
-# Backend-Specific Design Decisions
+## Backend-Specific Design Decisions
 
 - **Weighted round-robin scheduling**: Backend applications often run under sustained high load. Weighted scheduling ensures critical telemetry (errors) gets sent even when flooded with high-volume data (logs, spans). High-priority telemetry **MUST** be sent more frequently via weighted round-robin selection.
 - **Signal-based scheduling**: The scheduler wakes when new data arrives rather than polling, reducing CPU overhead in idle periods.
+
+#### How the Processor works
+
+- **Category isolation**: Separate ring buffers for each telemetry type prevent head-of-line blocking.
+- **Weighted scheduling**: High-priority telemetry gets sent more frequently via weighted round-robin selection.
 
 ### Priorities
 - CRITICAL: Error, Feedback.
