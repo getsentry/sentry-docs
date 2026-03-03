@@ -20,6 +20,14 @@ flowchart LR
   TelemetryProcessor -- sendEnvelope --> Transport
 ```
 
+The telemetry processor **SHOULD** expose the following minimal API:
+
+- `Add(item)` — Adds a telemetry item to the processor.
+- `Flush(timeout)` — Flushes all buffered data to the transport within the given timeout.
+- `Close(timeout)` — Flushes all buffered data and closes the processor within the given timeout.
+
+The telemetry processor **MUST** work with existing transport implementations.
+
 SDKs **SHOULD** only add the telemetry processor for high-volume data (spans, logs, metrics). SDKs without these features **MAY** omit it. Once added, SDK clients **SHOULD** forward all data to the processor, not the transport. During migration, SDKs **MAY** temporarily send only some telemetry data through the processor.
 
 The telemetry processor consists of two major components:
