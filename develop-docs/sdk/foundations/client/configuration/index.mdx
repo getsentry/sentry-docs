@@ -1,0 +1,183 @@
+---
+title: Configuration
+description: Client options, environment variables, debug mode, and event sampling behavior.
+spec_id: sdk/foundations/client/configuration
+spec_version: 1.0.0
+spec_status: stable
+spec_depends_on:
+  - id: sdk/foundations/client
+    version: ">=1.0.0"
+spec_changelog:
+  - version: 1.0.0
+    date: 2025-02-24
+    summary: Initial spec, consolidated from client spec, expected features, and environment variables
+sidebar_order: 0
+---
+
+<SpecRfcAlert />
+
+<SpecMeta />
+
+## Overview
+
+This spec defines the configuration surface of the Sentry Client — the options passed to `Sentry.init()`, environment variable support, debug mode behavior, and event sampling.
+
+Related specs:
+- [Client](/sdk/foundations/client/) — client lifecycle and event pipeline
+- [Hooks](/sdk/foundations/client/hooks/) — `before_send` and `before_breadcrumb` callback details
+
+---
+
+## Behavior
+
+<SpecSection id="client-options" status="stable" since="1.0.0">
+
+### Client Options
+
+Core options that all SDKs **MUST** or **SHOULD** support:
+
+| Option | Type | Description |
+|---|---|---|
+| `dsn` | `string` | Data Source Name. Empty/missing = no-op mode. **MUST** support. |
+| `release` | `string` | Application release version. Can only be set in options, not on scopes. |
+| `environment` | `string` | Deployment environment. Defaults to `production` if not set. |
+| `sample_rate` | `float [0,1]` | Error event sample rate. Default `1.0`. |
+| `debug` | `bool` | Enable debug logging. Default `false`. **MUST** support. |
+| `before_send` | `callback` | Hook for error events. Return `null` to discard. **MUST** support. See [Hooks](/sdk/foundations/client/hooks/). |
+| `before_send_transaction` | `callback` | Hook for transaction events. **SHOULD** support. See [Hooks](/sdk/foundations/client/hooks/). |
+| `before_breadcrumb` | `callback` | Hook for breadcrumbs. See [Hooks](/sdk/foundations/client/hooks/). |
+| `integrations` | `array` | Integration instances. **MUST** support. |
+| `max_breadcrumbs` | `int` | Breadcrumb ring buffer size. |
+| `send_default_pii` | `bool` | Whether to include PII (cookies, user IP, etc.) by default. |
+| `max_attachment_size` | `int` | Maximum attachment size in bytes. Default 20 MiB. |
+| `traces_sample_rate` | `float [0,1]` | Trace/transaction sample rate. |
+| `traces_sampler` | `callback` | Dynamic per-transaction sample rate. |
+| `trace_propagation_targets` | `array` | URL patterns for outgoing trace header injection. |
+
+</SpecSection>
+
+<SpecSection id="environment-variables" status="stable" since="1.0.0">
+
+### Environment Variables
+
+Sentry SDKs **SHOULD** support a set of common environment variables that allow users to configure SDK behavior without modifying their code. This is particularly useful for containerized deployments, serverless environments, or when users need to adjust settings without redeploying their application.
+
+The following environment variables **SHOULD** be supported across Sentry server-side SDKs:
+
+| Variable | Description |
+|----------|-------------|
+| `SENTRY_DSN` | The Data Source Name that tells the SDK where to send events. |
+| `SENTRY_RELEASE` | The release version of the application. Used to associate events with source maps and track regressions. |
+| `SENTRY_ENVIRONMENT` | The environment name, such as `production`, `staging`, or `development`. |
+| `SENTRY_SAMPLE_RATE` | Controls the percentage of error events sent to Sentry (0.0 to 1.0). |
+| `SENTRY_TRACES_SAMPLE_RATE` | Controls the percentage of transactions sent for tracing (0.0 to 1.0). |
+| `SENTRY_PROFILES_SAMPLE_RATE` | Controls the percentage of transactions that include profiling data (0.0 to 1.0). Requires tracing to be enabled. |
+| `SENTRY_DEBUG` | Enables debug mode for troubleshooting SDK issues. |
+
+SDKs **MAY** support additional SDK-specific environment variables beyond this common set. Any additional environment variables **SHOULD** be documented in the SDK's user-facing documentation.
+
+<Alert>
+Some SDKs may also offer additional SDK-specific environment variables beyond this common set. Check the [platform-specific documentation](https://docs.sentry.io/platforms/) for the full list of supported options.
+</Alert>
+
+#### Precedence
+
+When both environment variables and code-based configuration are present, **code-based configuration MUST take precedence**. If the user explicitly passes a value to the SDK's init function, the environment variable **MUST** be ignored.
+
+To use environment variables, users omit the option from their init call and the SDK reads from the environment automatically:
+
+```javascript
+// SDK will read from SENTRY_DSN automatically
+Sentry.init({
+  // dsn omitted, will use SENTRY_DSN
+});
+```
+
+```python
+import sentry_sdk
+
+# SDK will read from SENTRY_DSN automatically
+sentry_sdk.init(
+    # dsn omitted, will use SENTRY_DSN
+)
+```
+
+```go
+import "github.com/getsentry/sentry-go"
+
+// SDK will read from SENTRY_DSN automatically
+sentry.Init(sentry.ClientOptions{
+    // Dsn omitted, will use SENTRY_DSN
+})
+```
+
+```php
+\Sentry\init([
+    // dsn omitted, will use SENTRY_DSN
+]);
+```
+
+#### Client-Side Considerations
+
+Environment variables work differently in client-side environments like web browsers, where the concept of environment variables doesn't exist at runtime. For frontend SDKs, values **MUST** be injected by users at build time or configured directly in code.
+
+For server-side SDKs (Node.js, Python, Ruby, Java, .NET, Go, PHP, etc.), environment variables are read at runtime when the SDK initializes.
+
+</SpecSection>
+
+<SpecSection id="debug-mode" status="stable" since="1.0.0">
+
+### Debug Mode
+
+Every SDK must implement a debug mode, which is disabled by default. Users can enable it by setting the option `debug` to `true`. If the debug mode is enabled, the SDK prints out useful debugging information for two main purposes:
+
+1. It helps users identify and fix SDK problems, such as misconfigurations or something going wrong with sending data to Sentry.
+2. It can help Sentry SDK engineers investigate issues in Sentry SDKs, which can be done while developing or by asking a user to enable the debug mode and share the debug logs.
+
+As the log output can add unnecessary overhead, we advise users to refrain from enabling the debug mode in production. Still, SDKs may log fatal error messages even when the debug mode is disabled. When using debug mode extensively for the second use case, we recommend adding the diagnostic level because users could easily miss error or fatal log messages.
+
+#### Diagnostic Level
+
+SDKs may offer an optional diagnostic level, which controls the verbosity of the debug mode. There are five different levels:
+
+- `debug`: The most verbose mode
+- `info`: Informational messages
+- `warning`: Warning that something might not be right
+- `error`: Only SDK internal errors are printed
+- `fatal`: Only critical errors are printed
+
+The default level can be **debug** or **error** depending on the SDK's usage of log messages. When the volume of log message is low, the default can be debug. When it is high, users might easily miss errors or fatal messages. In that case, the SDK should set the default level to **error**. This choice must be clearly documented in the user-facing docs.
+
+#### Auto Debug Mode
+
+So users can easily spot errors during development, the SDK can automatically enable debug mode when it reliably detects it's running in a debug build. When doing so, the SDK must communicate this in the docs and with a log message when initializing the SDK. When the user explicitly sets the `debug` option to `false`, the SDK must disable the debug mode.
+
+</SpecSection>
+
+<SpecSection id="event-sampling" status="stable" since="1.0.0">
+
+### Event Sampling
+
+SDKs should allow the user to configure what percentage of events are actually sent to the server (the rest should be silently ignored). For example:
+
+```python
+sample_rate = options.get('sample_rate', 1.0)
+
+# assuming random() returns a value between 0.0 (inclusive) and 1.0 (exclusive)
+if random() < sample_rate:
+    transport.capture_event(event)
+```
+
+To further simplify ignoring certain events from being sent to sentry, it is also suggested to provide `ignoreTransactions` and `ignoreErrors` (or exception, choose terminology which is best for the platform). The array for `ignoreTransactions` specifically should contain an array of transaction names, as is stored in the transaction event schema (ie `GET /info`). These options should provide a simple way to allow users to discard events (ignore) from before they are sent to sentry. Prevents sending data which is undesired and may consume quota or resources on the Sentry server.
+
+```python
+ignore_transactions = ['GET /api/health','/api/v1/*']
+```
+
+</SpecSection>
+
+---
+
+## Changelog
+
+<SpecChangelog />

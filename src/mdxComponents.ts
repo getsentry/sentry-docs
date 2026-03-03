@@ -22,8 +22,10 @@ import {GitHubDomainChecker} from './components/githubDomainChecker';
 import {GradleFeatureConfig} from './components/gradleFeatureConfig';
 import {GradleUploadInstructions} from './components/gradleUploadInstructions';
 import {GuideGrid} from './components/guideGrid';
+import {IntegrationListItem} from './components/integrationLink';
 import {JsBundleList} from './components/jsBundleList';
 import {LambdaLayerDetail} from './components/lambdaLayerDetail';
+import {LinkCard, LinkCardGrid} from './components/linkCard';
 import {LinkWithPlatformIcon} from './components/linkWithPlatformIcon';
 import {LLMSteering} from './components/llmSteering';
 import {
@@ -50,6 +52,10 @@ import {SdkApi} from './components/sdkApi';
 import {SdkOption} from './components/sdkOption';
 import {SignInNote} from './components/signInNote';
 import {SmartLink} from './components/smartLink';
+import {SpecChangelog} from './components/specChangelog';
+import {SpecMeta} from './components/specMeta';
+import {SpecRfcAlert} from './components/specRfcAlert';
+import {SpecSection} from './components/specSection';
 import {
   SplitLayout,
   SplitSection,
@@ -93,6 +99,7 @@ export function mdxComponents(
     Expandable,
     FeatureBadge,
     GuideGrid,
+    IntegrationListItem,
     JsBundleList,
     LambdaLayerDetail,
     Link: SmartLink,
@@ -117,6 +124,10 @@ export function mdxComponents(
     SandboxLink,
     CopyableCard,
     SignInNote,
+    SpecChangelog,
+    SpecMeta,
+    SpecRfcAlert,
+    SpecSection,
     SplitLayout,
     SplitSection,
     SplitSectionText,
@@ -129,6 +140,8 @@ export function mdxComponents(
     a: SmartLink,
     img: DocImage,
     ...dynamicComponents,
+    LinkCard,
+    LinkCardGrid,
     wrapper,
   };
 }
