@@ -98,11 +98,17 @@ The telemetry buffer batches high-volume telemetry items and forwards them to th
 
 1. Before adding an item to a specific buffer, the telemetry buffer **SHOULD** drop rate-limited items to avoid overhead. If doing so, it **MUST** record client reports.
 2. When the telemetry buffer overflows and it drops data, it **MUST** record client reports.
-3. The telemetry buffer **MUST** forward low-volume data, such as normal events, session replays, or user feedback, directly to the telemetry scheduler.
-4. The telemetry buffer **MUST** start a timeout of 5 seconds when the first item is added. When the timeout expires, the telemetry buffer **MUST** forward all items to the telemetry scheduler.
-5. The telemetry buffer **MUST** define a size limit of `x` items. See [Size Limit Recommendations](#size-limit-recommendations) below for more details.
-6. When the size limit is reached, the telemetry buffer **MUST** forward all items to the telemetry scheduler. The buffer **MAY** forward items in batches.
-7. The telemetry buffer **SHOULD** use separate buffers per telemetry item type (e.g., one for spans, one for logs, one for metrics).
+3. The telemetry buffer **SHOULD** use separate buffers per telemetry item type (e.g., one for spans, one for logs, one for metrics).
+
+## Push-Based Approach
+
+The push-based approach is the default for most SDKs. The telemetry buffers push data to the telemetry scheduler when full or on timeout. For a pull-based alternative, where the telemetry scheduler polls data from the buffers, see the [Backend Telemetry Processor](./backend-telemetry-processor/).
+
+1. The telemetry buffer **MUST** forward low-volume data, such as normal events, session replays, or user feedback, directly to the telemetry scheduler.
+2. The telemetry buffer **MUST** start a timeout of 5 seconds when the first item is added. When the timeout expires, the telemetry buffer **MUST** forward all items to the telemetry scheduler.
+3. The telemetry buffer **MUST** define a size limit of `x` items. See [Size Limit Recommendations](#size-limit-recommendations) below for more details.
+4. When the size limit is reached, the telemetry buffer **MUST** forward all items to the telemetry scheduler. The buffer **MAY** forward items in batches.
+
 
 ## Batch Size Limit
 
