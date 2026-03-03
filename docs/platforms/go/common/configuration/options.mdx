@@ -20,7 +20,7 @@ Learn more about [DSN utilization](/product/sentry-basics/dsn-explainer/#dsn-uti
 
 <SdkOption name="Debug" type="bool" defaultValue="false">
 
-If debug is enabled, the SDK will attempt to print out useful debugging information if something goes wrong while sending the event. It's always `false` by default and generally not recommended in production environments, though it's safe to use.
+In debug mode, debug information is printed to help you understand what Sentry is doing. It is `false` by default and generally not recommended in production, though it is safe to use.
 
 </SdkOption>
 
@@ -72,7 +72,7 @@ As a historical special case, the sample rate `0.0` is treated as if it was `1.0
 
 <SdkOption name="MaxBreadcrumbs" type="int" defaultValue="100">
 
-This variable controls the total amount of breadcrumbs that should be captured. However, you should be aware that Sentry has a [maximum payload size](https://develop.sentry.dev/sdk/data-model/envelopes/#size-limits) and any events exceeding that payload size will be dropped.
+This variable controls the total amount of breadcrumbs that should be captured. However, you should be aware that Sentry has a [maximum payload size](https://develop.sentry.dev/sdk/envelopes/#size-limits) and any events exceeding that payload size will be dropped.
 
 If MaxBreadcrumbs is given a negative value, breadcrumbs are ignored.
 
@@ -100,6 +100,11 @@ If you enable this option, be sure to manually remove what you don't want to sen
 
 Supplies a server name. When provided, the name of the server is sent along and persisted in the event. For many integrations, the server name actually corresponds to the device hostname, even in situations where the machine is not actually a server.
 
+</SdkOption>
+
+<SdkOption name="Tags" type="map[string]string">
+
+Default event tags applied to all events. These are overridden by tags set on a scope.
 
 </SdkOption>
 
@@ -129,6 +134,14 @@ Set this option to `true` to enable log capturing in Sentry. The SDK will only c
 
 </SdkOption>
 
+## Metrics Options
+
+<SdkOption name="DisableMetrics" type="bool" defaultValue="false">
+
+When set to `true`, the SDK does not emit metrics. By default, metrics are enabled.
+
+</SdkOption>
+
 ## Tracing Options
 
 <SdkOption name="EnableTracing" type="bool" defaultValue="false">
@@ -137,9 +150,9 @@ Enables performance tracing. When enabled, the SDK will create transactions and 
 
 </SdkOption>
 
-<SdkOption name="TracesSampleRate" type="float64" defaultValue="0.0" envVar="SENTRY_TRACES_SAMPLE_RATE">
+<SdkOption name="TracesSampleRate" type="float64" defaultValue="0.0">
 
-A number between `0.0` and `1.0`, controlling the percentage chance a given transaction will be sent to Sentry (`0.0` represents 0% while `1.0` represents 100%.) Applies equally to all transactions created in the app. Either this or `traces-sampler` must be defined to enable tracing.
+A number between `0.0` and `1.0`, controlling the percentage chance a given transaction will be sent to Sentry (`0.0` represents 0% while `1.0` represents 100%.) Applies equally to all transactions created in the app. Either this or `TracesSampler` must be defined to enable tracing.
 
 </SdkOption>
 
@@ -153,7 +166,7 @@ Used to customize the sampling of traces, overrides `TracesSampleRate`. This is 
 
 Maximum number of spans that can be attached to a transaction.
 
-See https://develop.sentry.dev/sdk/data-model/envelopes/#size-limits for size limits applied during event ingestion. Events that exceed these limits might get dropped.
+See https://develop.sentry.dev/sdk/envelopes/#size-limits for size limits applied during event ingestion. Events that exceed these limits might get dropped.
 
 </SdkOption>
 
@@ -163,6 +176,31 @@ See https://develop.sentry.dev/sdk/data-model/envelopes/#size-limits for size li
 A list of regexp strings that will be used to match against a transaction's name. If a match is found, then the transaction will be dropped.
 
 By default, no transactions are ignored.
+
+</SdkOption>
+
+<SdkOption name="TracePropagationTargets" type="[]string">
+
+Controls with which URLs trace propagation should be enabled. Does not support regex patterns.
+
+</SdkOption>
+
+<SdkOption name="PropagateTraceparent" type="bool" defaultValue="false">
+
+When set to `true`, the W3C Trace Context HTTP `traceparent` header is propagated on outgoing HTTP requests.
+
+</SdkOption>
+
+<SdkOption name="TraceIgnoreStatusCodes" type="[][]int">
+
+A list of HTTP status codes that should not be traced. Each element can be either:
+
+- A single-element slice `[code]` for a specific status code (for example, `[][]int{{404}}` to ignore 404)
+- A two-element slice `[min, max]` for a range of status codes, inclusive (for example, `[][]int{{400, 405}}` for 400–405)
+
+When an HTTP request results in a status code that matches any of these codes or ranges, the transaction will not be sent to Sentry.
+
+By default, 404 status codes are ignored. To not ignore any status codes, set this option to an empty slice (not `nil`).
 
 </SdkOption>
 
@@ -181,6 +219,18 @@ By the time `BeforeSend` is executed, all scope data has already been applied to
 <SdkOption name="BeforeSendTransaction" type="func(event *Event, hint *EventHint) *Event">
 
 This function is called with a transaction object, and can return a modified transaction object, or `nil` to skip reporting the transaction. One way this might be used is for manual PII stripping before sending.
+
+</SdkOption>
+
+<SdkOption name="BeforeSendLog" type="func(event *Log) *Log">
+
+This function is called before log events are sent to Sentry. You can use it to mutate the log event or return `nil` to discard it.
+
+</SdkOption>
+
+<SdkOption name="BeforeSendMetric" type="func(metric *Metric) *Metric">
+
+This function is called before metric events are sent to Sentry. You can use it to mutate the metric or return `nil` to discard it.
 
 </SdkOption>
 
@@ -248,6 +298,12 @@ This will default to the HTTPS_PROXY environment variable. HTTPS_PROXY takes pre
 <SdkOption name="CaCerts" type="*x509.CertPool">
 
 An optional set of SSL certificates to use. See the [Providing SSL Certificates](#providing-ssl-certificates) section below for an example.
+
+</SdkOption>
+
+<SdkOption name="DisableTelemetryBuffer" type="bool" defaultValue="false">
+
+When set to `true`, disables the telemetry buffer layer for prioritizing events and uses the legacy transport layer instead.
 
 </SdkOption>
 
