@@ -1,0 +1,29 @@
+The following configuration options are available for Sentry Metrics in Godot Engine:
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| **enable_metrics** | Toggle for the metrics feature (experimental) | `true` |
+| **before_send_metric** | Callback to modify or filter metrics before sending (experimental) | None |
+
+### before_send_metric
+
+To filter metrics or modify them before they are sent to Sentry, you can use the `before_send_metric` option:
+
+```GDScript
+SentrySDK.init(func(options: SentryOptions) -> void:
+	options.experimental.enable_metrics = true
+	options.experimental.before_send_metric = _before_send_metric
+)
+
+func _before_send_metric(metric: SentryMetric) -> SentryMetric:
+	# Drop metrics with specific names
+	if "debug" in metric.name:
+		return null
+
+	# Add custom attributes
+	metric.set_attribute("build", "production")
+
+	return metric
+```
+
+The `before_send_metric` callback receives a `SentryMetric` object, and should return either the same metric object (with or without modifications) or `null` to discard it.
