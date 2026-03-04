@@ -9,35 +9,11 @@ sidebar_order: 5
   including the <Link to="/sdk/foundations/state-management/scopes/">Scopes</Link> and <Link to="/sdk/foundations/client/">Client</Link> specs.
 </Alert>
 
-## Background Sending
-
-Events should be transmitted in a background thread or similar system.  This queue must be flushed when the
-application shuts down with a specific timeout.  This feature is typically user facing and explained
-as part of [shutdown and draining](https://docs.sentry.io/platforms/javascript/configuration/draining/).
-
-
 ## Uncaught Exception Handler
 
 Ability for the SDK to be set as a hook to record any uncaught exceptions. At the language level this is typically a global hook provided by the language itself. For framework integrations this might be part of middleware or some other system.
 
 This behavior is typically provided by a default integration that can be disabled.
-
-## Automatic Context Data
-
-Automatic addition of useful attributes such as `flags` or `tags` or `extra` or specific `contexts`. Typically means the SDK hooks into a framework so that it can set attributes that are known to be useful for most users. Please check [Data Handling](/sdk/expected-features/data-handling) for considerations.
-
-## Rate Limiting
-
-Respect Sentry's HTTP 429 `Retry-After` header, or, if the SDK supports multiple payload types (e.g. errors and transactions), the `X-Sentry-Rate-Limits` header. Outgoing SDK requests should be dropped during the backoff period.
-
-See <Link to="/sdk/expected-features/rate-limiting">Rate Limiting</Link> for details.
-
-
-## Backpressure Management
-
-Backend SDKs (typically used in server applications) should have backpressure management logic that dynamically downsamples transactions when the throughput in the system is too high.
-
-See <Link to="/sdk/telemetry/traces/backpressure/">Backpressure Management</Link> for details.
 
 ## In-App frames
 
@@ -56,65 +32,6 @@ This functionality should be gated behind the `includeLocalVariables` option, wh
 ## Desymbolication
 
 Turn compiled or obfuscated code/method names in stack traces back into the original. Desymbolication always requires Sentry backend support. Not necessary for many languages.
-
-## Retrieve Last Event ID
-
-Ability to get the ID of the last event sent. Event IDs are useful for correlation, logging, customers rolling their own feedback forms, etc.
-
-## List Loaded Libraries
-
-Include a list of loaded libraries (and versions) when sending an event.
-
-## Buffer to Disk
-
-This feature is also known as 'Offline Caching'.
-
-Write events to disk before attempting to send, so that they can be retried in the event of a temporary network failure. Needs to implement a cap on the number of stored events. This is mostly useful on mobile and desktop(e.g: laptop) apps, where stable connectivity is often not available.
-
-### Dealing With Network Failures
-
-When SDKs receive an `HTTP 2xx` status code response from Sentry, they **MUST** consider it as a successful send.
-
-If Sentry returns an `HTTP 4xx` or `HTTP 5xx` status code, SDKs **MUST** discard the envelope and record a [client report](/sdk/telemetry/client-reports/#network-failure-recording) as specified in the client reports spec.
-
-For an [`HTTP 413 Content Too Large`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/413) response, SDKs:
-
-* **MUST** discard the envelope and record a [client report](/sdk/telemetry/client-reports/#network-failure-recording).
-* **MUST NOT** retry sending the envelope.
-* **SHOULD** log an error, informing users that the envelope was discarded due to size limits.
-* **MAY** add information from the response body to the logged error. If doing so, SDKs **MUST** be aware that Relay can change or remove information in the response body for an `HTTP 413` at any time without notice.
-
-For an [`HTTP 429 Too Many Requests`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429) response, SDKs:
-
-- **MUST** respect the [rate limiting rules](/sdk/expected-features/rate-limiting/), such as correctly parsing the retry-header.
-- **MUST** discard the envelope, but **MUST NOT** record a [client report](/sdk/telemetry/client-reports/#network-failure-recording), because the upstream already does this.
-- **MUST NOT** retry sending the envelope.
-
-SDKs **MAY** retry sending the envelope when a network error occurs, such as:
-
-* Connection timeout
-* DSN resolution failure
-* Connection reset by peer
-
-When other failures occur, like those caused by processing the file in the SDK itself, SDKs **MUST** discard the envelope and record a [client report](/sdk/telemetry/client-reports/#network-failure-recording) with the discard reason `internal_sdk_error`. Otherwise, the SDK might end up in an endless retry loop.
-
-See the [Client Reports — Network Failure Recording](/sdk/telemetry/client-reports/#network-failure-recording) spec for the full set of client report recording requirements for each HTTP status code.
-
-
-#### Additional capabilities
-
-Consider having the SDK retry sending events once the device is back online, when such notification exists in the platform.
-
-Once the device is back online, the SDK is likely going to empty its disk queue in a quick burst of requests. This can trigger different abuse filters in Sentry. To account for that, it's considered to add a small delay between cached event captures. A recommended value is 100 milliseconds.
-
-If the SDK is being [rate-limited](/sdk/expected-features/rate-limiting/), which causes the SDK to drop any event that reaches its HTTP transport, consider stop consuming the disk cache until the `Retry-After` timeout is reached or the app restarts.
-
-#### Example implementations
-
-- [C#](https://github.com/getsentry/sentry-dotnet/blob/main/src/Sentry/Internal/Http/CachingTransport.cs)
-- [Java](https://github.com/getsentry/sentry-java/blob/main/sentry/src/main/java/io/sentry/cache/EnvelopeCache.java)
-- [Objective-C](https://github.com/getsentry/sentry-cocoa/blob/master/Sources/Sentry/SentryHttpTransport.m)
-- [TypeScript](https://github.com/getsentry/sentry-electron/blob/master/src/main/transports/electron-offline-net.ts)
 
 ## Start-Up Crash Detection
 
@@ -152,25 +69,3 @@ ones. We can always add these values later.
 #### Example implementations
 - [Java](https://github.com/getsentry/sentry-java/pull/2277)
 - [Objective-C](https://github.com/getsentry/sentry-cocoa/pull/2220)
-
-## HTTP Proxy
-
-Ability to use an HTTP proxy. Often easy to implement using the existing HTTP client.  This should be picked up from the system config if possible or explicit config in the client options.
-
-## Attaching Request Body in Server SDKs
-
-Ability for the SDK to attach request body to events and triggered during the execution of request.
-
-User should be able to set a configuration option `maxRequestBodySize` to instruct SDK how big requests bodies should be attached.
-SDK controls what is an actual size in bytes for each option:
-
-- `none`
-- `small` - `1000` bytes
-- `medium` - `10000` bytes (default)
-- `always`
-
-## Log context
-
-Some logging frameworks provide an option to set logging context. In Java this is called MDC (Mapped Diagnostic Context).
-
-Users should be able to set a list of logging context entries in a configuration option `contextTags` to tell the SDK to convert the entries to Sentry tags.
