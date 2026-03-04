@@ -170,8 +170,8 @@ describe('parseMiddlewareTs', () => {
     expect(result.userDocsRedirects).toEqual([]);
   });
 
-  it('should parse real src/middleware.ts file', () => {
-    const result = parseMiddlewareTs('src/middleware.ts');
+  it('should parse real middleware.ts file', () => {
+    const result = parseMiddlewareTs('middleware.ts');
     expect(result.userDocsRedirects.length).toBeGreaterThan(0);
     expect(result.developerDocsRedirects.length).toBeGreaterThan(0);
   });

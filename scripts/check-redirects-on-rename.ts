@@ -319,7 +319,7 @@ function validateRedirects(): MissingRedirect[] {
   // If modified in the PR, validate against the PR version
   // Otherwise, validate against the base branch version
   let redirectsFilePath = 'redirects.js';
-  let middlewareFilePath = 'src/middleware.ts';
+  let middlewareFilePath = 'middleware.ts';
 
   try {
     // Check if redirects.js was modified in this PR
@@ -335,7 +335,7 @@ function validateRedirects(): MissingRedirect[] {
       .trim();
 
     const redirectsJsModified = modifiedFiles.includes('redirects.js');
-    const middlewareModified = modifiedFiles.includes('src/middleware.ts');
+    const middlewareModified = modifiedFiles.includes('middleware.ts');
 
     if (redirectsJsModified) {
       console.log('📝 redirects.js was modified in this PR, using PR version');
@@ -364,12 +364,12 @@ function validateRedirects(): MissingRedirect[] {
     // Determine which version of middleware.ts to check
     if (middlewareModified) {
       console.log('📝 middleware.ts was modified in this PR, using PR version');
-      middlewareFilePath = 'src/middleware.ts';
+      middlewareFilePath = 'middleware.ts';
     } else {
       try {
         const baseMiddleware = execFileSync(
           'git',
-          ['show', `${baseSha}:src/middleware.ts`],
+          ['show', `${baseSha}:middleware.ts`],
           {encoding: 'utf8', stdio: 'pipe'}
         );
         const tmpMiddleware = path.join(process.cwd(), 'middleware-base.ts');
@@ -380,7 +380,7 @@ function validateRedirects(): MissingRedirect[] {
         console.log(
           '⚠️  Could not get base version of middleware.ts, using current version'
         );
-        middlewareFilePath = 'src/middleware.ts';
+        middlewareFilePath = 'middleware.ts';
       }
     }
   } catch (err) {
