@@ -3,63 +3,21 @@ title: Data Handling
 sidebar_order: 1
 ---
 
-Data handling is the standardized context in how we want SDKs help users filter data.
-
-## Sensitive Data
-
-SDKs should not include PII or other sensitive data in the payload by default.
-When building an SDK we can come across some API that can give useful information to debug a problem.
-In the event that API returns data considered PII, we guard that behind a flag called _Send Default PII_.
-This is an option in the SDK called [_send-default-pii_](https://docs.sentry.io/platforms/python/configuration/options/#send-default-pii)
-and is **disabled by default**. That means that data that is naturally sensitive is not sent by default.
+Data handling is the standardized context in how we want SDKs to help users filter data.
 
 <Alert level="info">
 
-When a user manually sets the data on the scope (user, contexts, tags, data, request, response, etc.), this data should not be gated by the _Send Default PII_ flag and should always be attached to all outgoing telemetry. This also applies to the data that the user manually sets on a span, log, metric and other types of telemetry (directly or, for example, via `BeforeSend`).
+**Data collection and scrubbing:** The canonical spec for what data SDKs collect, default denylists (headers, cookies, query params), request body and cookie scrubbing, user-set data, and `beforeSend` is [Data Collection](/sdk/foundations/client/data-collection/). That spec supersedes the sensitive-data and cookie sections below for SDK behavior. This page retains **Structuring Data** and **Variable Size** and the legacy `send_default_pii` context for reference.
 
 </Alert>
 
-Certain sensitive data must never be sent through SDK instrumentation, regardless of any configuration:
+## Sensitive Data
 
-- HTTP Headers: The keys of known sensitive headers are added, while their values must be replaced with `"[Filtered]"`.
-  - The SDK performs a **partial, case-insensitive match** against the following headers to determine if they are sensitive: `["auth", "token", "secret", "password", "passwd", "pwd", "key", "jwt", "bearer", "sso", "saml", "csrf", "xsrf", "credentials"]`
+The normative rules for sensitive data, PII, cookies, request bodies, and user-set data are in [Data Collection](/sdk/foundations/client/data-collection/). The following is kept for context:
 
-SDKs should only replace sensitive data with `"[Filtered]"` when the data is gathered automatically through instrumentation.
-If a user explicitly provides data (for example, by setting a request object on the scope), the SDK must not modify it.
-
-Some examples of data guarded by `send_default_pii: false`:
-
-- When attaching data of HTTP requests and/or responses to events
-  - Request Body: "raw" HTTP bodies (bodies which cannot be parsed as JSON or FormData) are removed
-  - HTTP Headers: header values, containing information about the user are replaced with `"[Filtered]"`
-- User-specific information (e.g. the current user ID according to the used web-framework) is not collected and therefore not sent at all.
-- On desktop applications
-  - The username logged in the device is not included. This is often a person's name.
-  - The machine name is not included, for example `Bruno's laptop`
-- SDKs don't set `{{auto}}` as `user.ip_address`. This instructs the server to keep the connection's IP address.
-- Server SDKs remove the IP address of incoming HTTP requests.
-
-Sentry server is always aware of the connecting IP address and can use it for logging in some platforms. Namely JavaScript and iOS/macOS/tvOS.
-All other platforms require the event to include `user.ip_address={{auto}}` which happens if `sendDefaultPii` is set to true.
-
-Before sending events to Sentry, the SDKs should invokes callbacks. That allows users to remove any sensitive data client-side.
-
-- [`before-send` and `event-processors`](/sdk/foundations/client/#event-pipeline) can be used to register a callback with custom logic to remove sensitive data.
-
-### Cookies
-
-Since `Cookie` and `Set-Cookie` headers can contain a mix of sensitive and non-sensitive data, SDKs should parse the cookie header and filter values on a per-key basis, depending on the SDK setting and the sensitivity of the cookie value.
-In case, the SDK cannot parse each cookie key-value pair, the entire cookie header must be replaced with `"[Filtered]"`. An unfiltered, raw cookie header value must never be sent.
-
-This selective filtering prevents capturing sensitive data while retaining harmless contextual information for debugging.
-For example, a sensitive session cookie's value is replaced with "[Filtered]", but a non-sensitive cookie for the theme preference can be sent as-is.
-
-When attached as span attributes, the results should be as follows:
-
-- `http.request.header.cookie.user_session: "[Filtered]"`
-- `http.request.header.cookie.theme: "dark-mode"`
-- `http.request.header.set_cookie.theme: "light-mode"`
-- `http.request.header.cookie: "[Filtered]"` (Used as a fallback if the cookie header cannot be parsed)
+- SDKs should not include PII or other sensitive data in the payload by default. The legacy option [_send-default-pii_](https://docs.sentry.io/platforms/python/configuration/options/#send-default-pii) is **disabled by default**; the replacement is `dataCollection.includeUserInfo` and `dataCollection.collect` (see [Data Collection](/sdk/foundations/client/data-collection/)).
+- Certain sensitive data must never be sent through SDK instrumentation: header/cookie/query values matching the default denylist are replaced with `"[Filtered]"`. User-set data is always attached; only automatically gathered data is scrubbed. Users can use `beforeSend` / event processors to remove or redact any data.
+- For the exact default denylist (partial, case-insensitive match), PII denylist (`x-forwarded-`, `-user`), cookies when unparseable, and raw request bodies, see [Data Collection — Default Denylist](/sdk/foundations/client/data-collection/#default-denylist) and [User-Set Data and Scrubbing](/sdk/foundations/client/data-collection/#user-set-data-scrubbing).
 
 ### Application State
 
