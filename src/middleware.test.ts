@@ -1,5 +1,5 @@
 import {NextRequest} from 'next/server';
-import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
+import {afterEach, describe, expect, it, vi} from 'vitest';
 
 // Helper to import the middleware module fresh with given env vars.
 // isDeveloperDocs and redirectMap are evaluated at module load time,
@@ -32,10 +32,6 @@ function isRedirect(res: Response): boolean {
 }
 
 describe('middleware redirect set selection', () => {
-  beforeEach(() => {
-    vi.stubEnv('NODE_ENV', 'test');
-  });
-
   afterEach(() => {
     vi.unstubAllEnvs();
   });
