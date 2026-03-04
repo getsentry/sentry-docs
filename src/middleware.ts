@@ -4,11 +4,7 @@ import {NextResponse, userAgent} from 'next/server';
 
 import {AI_AGENT_PATTERN, type TrafficType} from './lib/trafficClassification';
 
-// DEVELOPER_DOCS_ is set via next.config.ts `env` field from NEXT_PUBLIC_DEVELOPER_DOCS.
-// Edge runtime inlines `env` values at build time, but Node.js middleware reads process.env
-// at runtime where DEVELOPER_DOCS_ doesn't exist. Fall back to the original env var.
-const isDeveloperDocs =
-  process.env.DEVELOPER_DOCS_ || process.env.NEXT_PUBLIC_DEVELOPER_DOCS;
+const isDeveloperDocs = process.env.NEXT_PUBLIC_DEVELOPER_DOCS;
 
 export const config = {
   // learn more: https://nextjs.org/docs/pages/building-your-application/routing/middleware#matcher

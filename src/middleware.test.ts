@@ -8,7 +8,6 @@ async function importMiddleware(env: Record<string, string | undefined> = {}) {
   vi.resetModules();
 
   const originalEnv = {...process.env};
-  delete process.env.DEVELOPER_DOCS_;
   delete process.env.NEXT_PUBLIC_DEVELOPER_DOCS;
   Object.assign(process.env, env);
 
@@ -39,29 +38,32 @@ describe('middleware redirect set selection', () => {
   // "/" only exists in DEVELOPER_DOCS_REDIRECTS, so it's a good signal
   // for which redirect set is active without hardcoding destinations.
 
-  describe('DEVELOPER_DOCS_ env var (edge build-time inline)', () => {
-    it('activates developer docs redirect set', async () => {
-      const {middleware} = await importMiddleware({DEVELOPER_DOCS_: '1'});
-
-      // "/" is a developer-docs-only redirect
-      expect(isRedirect(middleware(makeRequest('/')))).toBe(true);
-    });
-  });
-
-  describe('NEXT_PUBLIC_DEVELOPER_DOCS env var (node runtime fallback)', () => {
+  describe('when NEXT_PUBLIC_DEVELOPER_DOCS is set (develop.sentry.dev)', () => {
     it('activates developer docs redirect set', async () => {
       const {middleware} = await importMiddleware({NEXT_PUBLIC_DEVELOPER_DOCS: '1'});
-
       expect(isRedirect(middleware(makeRequest('/')))).toBe(true);
+    });
+
+    it('does not use user docs redirects', async () => {
+      const {middleware} = await importMiddleware({NEXT_PUBLIC_DEVELOPER_DOCS: '1'});
+      // user-docs-only path should not redirect in developer docs mode
+      expect(isRedirect(middleware(makeRequest('/platforms/python/http_errors/')))).toBe(
+        false
+      );
     });
   });
 
-  describe('no developer docs env var (user docs mode)', () => {
+  describe('when NEXT_PUBLIC_DEVELOPER_DOCS is not set (docs.sentry.io)', () => {
     it('activates user docs redirect set', async () => {
       const {middleware} = await importMiddleware({});
-
       // "/" should NOT redirect in user docs mode
       expect(isRedirect(middleware(makeRequest('/')))).toBe(false);
+    });
+
+    it('does not use developer docs redirects', async () => {
+      const {middleware} = await importMiddleware({});
+      // developer-docs-only path "/docs-components/" should not redirect
+      expect(isRedirect(middleware(makeRequest('/docs-components/')))).toBe(false);
     });
   });
 
@@ -72,7 +74,7 @@ describe('middleware redirect set selection', () => {
     });
 
     it('does not redirect unknown paths in developer docs mode', async () => {
-      const {middleware} = await importMiddleware({DEVELOPER_DOCS_: '1'});
+      const {middleware} = await importMiddleware({NEXT_PUBLIC_DEVELOPER_DOCS: '1'});
       expect(isRedirect(middleware(makeRequest('/not/a/real/path/')))).toBe(false);
     });
   });
