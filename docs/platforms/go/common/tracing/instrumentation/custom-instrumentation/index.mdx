@@ -10,62 +10,101 @@ To capture transactions and spans customized to your organization's needs, you m
 
 </Alert>
 
-<PlatformContent includePath="performance/enable-manual-instrumentation" />
+<Note>
 
-<PlatformContent includePath="performance/add-spans-example" />
+If you're using an HTTP framework with Sentry middleware (Gin, Echo, Fiber, etc.), transactions are already created automatically for incoming requests. You don't need to create transactions manually — use custom instrumentation to **add child spans** within your handlers. See <PlatformLink to="/tracing/instrumentation/auto-instrumentation/">Automatic Instrumentation</PlatformLink>.
 
-<PlatformContent includePath="performance/retrieve-transaction" />
+</Note>
+
+## Adding Child Spans
+
+If you're using one of the supported HTTP middleware packages, transactions are created for you. Within your handlers, add child spans to track specific operations:
+
+```go
+func doWork(ctx context.Context) {
+	// Set the OP based on values from https://develop.sentry.dev/sdk/performance/span-operations/
+	span := sentry.StartSpan(ctx, "function")
+	span.Description = "suboperation1"
+	// omitted code ...
+	span.Finish()
+
+	span = sentry.StartSpan(ctx, "function")
+	span.Description = "suboperation2"
+	// omitted code ...
+	span.Finish()
+}
+```
+
+All finished spans are sent together as a transaction when the root span is finished. Make sure to call `Finish()` appropriately. Often times `defer span.Finish()` is handy.
+
+## Retrieve a Transaction
+
+In cases where you want to access the current transaction but don't have a direct reference to it, use `sentry.TransactionFromContext`. This function returns the root span of the current transaction, or `nil` if no transaction is started.
+
+```go
+transaction := sentry.TransactionFromContext(ctx)
+if transaction != nil {
+	transaction.SetTag("key", "value")
+}
+```
+
+## Manual Transaction Creation
+
+If you're **not** using a supported framework middleware, you need to create transactions manually. The following example creates a transaction based on an incoming request:
+
+```go
+http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	hub := sentry.GetHubFromContext(ctx)
+	if hub == nil {
+		// Check the concurrency guide for more details: https://docs.sentry.io/platforms/go/concurrency/
+		hub = sentry.CurrentHub().Clone()
+		ctx = sentry.SetHubOnContext(ctx, hub)
+	}
+
+	options := []sentry.SpanOption{
+		// Set the OP based on values from https://develop.sentry.dev/sdk/performance/span-operations/
+		sentry.WithOpName("http.server"),
+		sentry.ContinueFromRequest(r),
+		sentry.WithTransactionSource(sentry.SourceURL),
+	}
+
+	transaction := sentry.StartTransaction(ctx,
+		fmt.Sprintf("%s %s", r.Method, r.URL.Path),
+		options...,
+	)
+	defer transaction.Finish()
+
+	doWork(transaction.Context());
+})
+```
 
 ## Adding Span & Transaction Data Attributes
 
 You can capture data attributes along with your spans and transactions. You can specify data attributes when starting a span or transaction:
 
 ```go
-http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-  ctx := r.Context()
-
-  options := []sentry.SpanOption{
-    // Set the OP based on values from https://develop.sentry.dev/sdk/performance/span-operations/
-    sentry.WithOpName("http.server"),
-    sentry.ContinueFromRequest(r),
-    sentry.WithTransactionSource(sentry.SourceURL),
-  }
-
-  // Create a transaction and assign data attributes
-  transaction := sentry.StartTransaction(ctx,
-    fmt.Sprintf("%s %s", r.Method, r.URL.Path),
-    options...,
-  )
-  transaction.SetData("dataAttr1", 42)
-  transaction.SetData("dataAttr2", true)
-  // omitted code ...
-  transaction.Finish()
-
-  // ... or create a span and assign data attributes
-  span := sentry.StartSpan(ctx, "span1")
-  span.SetData("dataAttr1", 42)
-  span.SetData("dataAttr2", true)
-  // omitted code ...
-  span.Finish()
-})
+// Create a span and assign data attributes
+span := sentry.StartSpan(ctx, "span1")
+span.SetData("dataAttr1", 42)
+span.SetData("dataAttr2", true)
+// omitted code ...
+span.Finish()
 ```
 
 Or you can add data attributes to an existing transaction or span:
 
 ```go
-http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-  ctx := r.Context()
-  transaction := sentry.TransactionFromContext(ctx)
+transaction := sentry.TransactionFromContext(ctx)
 
-  if transaction != nil {
-    transaction.SetData("dataAttr1", 42)
-    transaction.SetData("dataAttr2", true)
-  }
+if transaction != nil {
+	transaction.SetData("dataAttr1", 42)
+	transaction.SetData("dataAttr2", true)
+}
 
-  span := sentry.SpanFromContext(ctx)
-  span.SetData("dataAttr1", 42)
-  span.SetData("dataAttr2", true)
-})
+span := sentry.SpanFromContext(ctx)
+span.SetData("dataAttr1", 42)
+span.SetData("dataAttr2", true)
 ```
 
 Or you can update existing transaction and span data by:
@@ -82,7 +121,6 @@ if d, found := span.Data["dataAttr1"]; found {
     span.SetData("dataAttr1", dataAttr1.(int)+42)
   }
 }
-})
 ```
 
 To attach data attributes to the transaction and all its spans, you can use `BeforeSendTransaction`:

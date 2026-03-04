@@ -1,6 +1,7 @@
 ---
 title: Zerolog
-description: "Learn how to capture errors and events from Zerolog and send them to Sentry."
+description: "Capture error events from Zerolog and send them to Sentry. Note: Zerolog does not support Structured Logs."
+sidebar_order: 30
 ---
 
 <Alert level="warning">
@@ -24,8 +25,6 @@ For a complete example, visit the [Go SDK source code repository](https://github
 go get github.com/getsentry/sentry-go
 go get github.com/getsentry/sentry-go/zerolog
 ```
-
-<Break />
 
 ## Configure
 
@@ -55,33 +54,54 @@ WithBreadcrumbs bool
 FlushTimeout time.Duration
 ```
 
-## Verify
+## What Zerolog Integration Supports
+
+The zerolog integration **does** support sending **error events** to Sentry:
 
 ```go
-// Configure Zerolog to use Sentry as a writer
-sentryWriter, err := sentryzerolog.New(sentryzerolog.Config{
-	ClientOptions: sentry.ClientOptions{
+import (
+	"errors"
+	"time"
+	"os"
+
+	"github.com/getsentry/sentry-go"
+	sentryzerolog "github.com/getsentry/sentry-go/zerolog"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
+)
+
+func main() {
+	// Initialize Sentry
+	err := sentry.Init(sentry.ClientOptions{
 		Dsn: "___PUBLIC_DSN___",
-	},
-	Options: sentryzerolog.Options{
-		Levels:          []zerolog.Level{zerolog.ErrorLevel, zerolog.FatalLevel, zerolog.PanicLevel},
-		WithBreadcrumbs: true,
-		FlushTimeout:    3 * time.Second,
-	},
-})
-if err != nil {
-	log.Fatal().Err(err).Msg("failed to create sentry writer")
+		// Note: EnableLogs is for Structured Logs, not zerolog error events
+	})
+	if err != nil {
+		log.Fatal().Err(err).Msg("sentry initialization failed")
+	}
+	defer sentry.Flush(2 * time.Second)
+
+	// Configure Zerolog to send error events to Sentry
+	sentryWriter, err := sentryzerolog.New(sentryzerolog.Config{
+		Options: sentryzerolog.Options{
+			// These levels will be sent as error events
+			Levels:          []zerolog.Level{zerolog.ErrorLevel, zerolog.FatalLevel, zerolog.PanicLevel},
+			// Disable breadcrumbs in concurrent applications to prevent leakage
+			WithBreadcrumbs: false,
+			FlushTimeout:    3 * time.Second,
+		},
+	})
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to create sentry writer")
+	}
+	defer sentryWriter.Close()
+
+	// Use Sentry writer in Zerolog
+	log.Logger = log.Output(zerolog.MultiLevelWriter(zerolog.ConsoleWriter{Out: os.Stderr}, sentryWriter))
+
+	// This will be sent as an error event to Sentry
+	log.Error().Msg("This is an error event, not a structured log")
 }
-defer sentryWriter.Close()
-
-// Use Sentry writer in Zerolog
-log.Logger = log.Output(zerolog.MultiLevelWriter(zerolog.ConsoleWriter{Out: os.Stderr}, sentryWriter))
-
-// Test error reporting - this will be sent to Sentry as an error event
-log.Error().Msg("This error will be sent to Sentry!")
-
-// Example of error reporting with error context
-log.Error().Err(errors.New("test error")).Msg("An error occurred")
 ```
 
 ## Usage
@@ -172,4 +192,4 @@ Note: Ensure Sentry is flushed before the application exits to avoid losing any 
 
 ## Concurrent Applications
 
-For concurrent applications (HTTP/gRPC servers), see the [tracing documentation](/platforms/go/guides/zerolog/tracing/instrumentation/zerolog/) for best practices on linking error events to traces with proper hub management.
+For concurrent applications (HTTP/gRPC servers), use scoped hubs to link error events to traces. See the `hubProvider` section above and the <PlatformLink to="/tracing/instrumentation/custom-instrumentation/">Custom Instrumentation</PlatformLink> documentation for best practices on proper hub management.
