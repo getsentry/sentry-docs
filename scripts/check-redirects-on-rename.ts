@@ -367,11 +367,10 @@ function validateRedirects(): MissingRedirect[] {
       middlewareFilePath = 'middleware.ts';
     } else {
       try {
-        const baseMiddleware = execFileSync(
-          'git',
-          ['show', `${baseSha}:middleware.ts`],
-          {encoding: 'utf8', stdio: 'pipe'}
-        );
+        const baseMiddleware = execFileSync('git', ['show', `${baseSha}:middleware.ts`], {
+          encoding: 'utf8',
+          stdio: 'pipe',
+        });
         const tmpMiddleware = path.join(process.cwd(), 'middleware-base.ts');
         fs.writeFileSync(tmpMiddleware, baseMiddleware);
         middlewareFilePath = tmpMiddleware;
