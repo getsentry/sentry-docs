@@ -131,7 +131,11 @@ const nextConfig = {
 
     return config;
   },
-  env: {},
+  env: {
+    // Expose NEXT_PUBLIC_DEVELOPER_DOCS to middleware at build time.
+    // Node.js middleware doesn't get NEXT_PUBLIC_ vars inlined automatically.
+    DEVELOPER_DOCS: process.env.NEXT_PUBLIC_DEVELOPER_DOCS,
+  },
   redirects,
   rewrites: () => [
     {

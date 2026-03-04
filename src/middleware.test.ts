@@ -8,8 +8,8 @@ async function importMiddleware(env: Record<string, string> = {}) {
   vi.resetModules();
   vi.unstubAllEnvs();
 
-  // Ensure the var is absent unless explicitly provided
-  vi.stubEnv('NEXT_PUBLIC_DEVELOPER_DOCS', '');
+  // Ensure both vars are absent unless explicitly provided
+  delete process.env.DEVELOPER_DOCS;
   delete process.env.NEXT_PUBLIC_DEVELOPER_DOCS;
 
   for (const [key, value] of Object.entries(env)) {
@@ -43,7 +43,14 @@ describe('middleware redirect set selection', () => {
   // "/" only exists in DEVELOPER_DOCS_REDIRECTS, so it's a good signal
   // for which redirect set is active without hardcoding destinations.
 
-  describe('when NEXT_PUBLIC_DEVELOPER_DOCS is set (develop.sentry.dev)', () => {
+  describe('when DEVELOPER_DOCS is set (build-time inline via next.config.ts)', () => {
+    it('activates developer docs redirect set', async () => {
+      const {middleware} = await importMiddleware({DEVELOPER_DOCS: '1'});
+      expect(isRedirect(middleware(makeRequest('/')))).toBe(true);
+    });
+  });
+
+  describe('when NEXT_PUBLIC_DEVELOPER_DOCS is set (runtime fallback)', () => {
     it('activates developer docs redirect set', async () => {
       const {middleware} = await importMiddleware({NEXT_PUBLIC_DEVELOPER_DOCS: '1'});
       expect(isRedirect(middleware(makeRequest('/')))).toBe(true);
