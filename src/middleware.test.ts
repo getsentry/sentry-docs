@@ -4,13 +4,20 @@ import {afterEach, describe, expect, it, vi} from 'vitest';
 // Helper to import the middleware module fresh with given env vars.
 // isDeveloperDocs and redirectMap are evaluated at module load time,
 // so we need a fresh import per env var scenario.
+const ENV_KEYS = ['DEVELOPER_DOCS', 'NEXT_PUBLIC_DEVELOPER_DOCS'] as const;
+
 async function importMiddleware(env: Record<string, string> = {}) {
   vi.resetModules();
   vi.unstubAllEnvs();
 
-  // Ensure both vars are absent unless explicitly provided
-  delete process.env.DEVELOPER_DOCS;
-  delete process.env.NEXT_PUBLIC_DEVELOPER_DOCS;
+  // Save originals so we can restore after import
+  const saved = new Map<string, string>();
+  for (const key of ENV_KEYS) {
+    if (key in process.env) {
+      saved.set(key, process.env[key]!);
+    }
+    delete process.env[key];
+  }
 
   for (const [key, value] of Object.entries(env)) {
     vi.stubEnv(key, value);
@@ -19,6 +26,11 @@ async function importMiddleware(env: Record<string, string> = {}) {
   const mod = await import('./middleware');
 
   vi.unstubAllEnvs();
+
+  // Restore any originals that were deleted
+  for (const [key, value] of saved) {
+    process.env[key] = value;
+  }
 
   return mod;
 }
