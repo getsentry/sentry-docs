@@ -1,0 +1,285 @@
+---
+title: Android Native Options
+description: "Configure the embedded Sentry Android SDK when using .NET for Android."
+sidebar_order: 10
+---
+
+When you use the .NET for Android integration, Sentry embeds the [Sentry Android SDK](/platforms/android/) to provide native crash reporting and other Android-specific features. The `options.Native` property exposes configuration for this embedded SDK.
+
+```csharp
+SentrySdk.Init(options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
+
+    // Native Android SDK options:
+    options.Native.AnrEnabled = true;
+    options.Native.EnableNdk = true;
+});
+```
+
+These options are also available in [MAUI](/platforms/dotnet/guides/maui/) when targeting Android.
+
+## Application Not Responding (ANR)
+
+<SdkOption name="Native.AnrEnabled" type="bool" defaultValue="true">
+
+Enables detection of [Application Not Responding (ANR)](/platforms/android/configuration/app-not-respond/) errors — events where the main thread is blocked for too long. Enabled by default.
+
+</SdkOption>
+
+<SdkOption name="Native.AnrReportInDebug" type="bool" defaultValue="false">
+
+Whether ANR events are reported in debug builds. Disabled by default to avoid noise during development.
+
+</SdkOption>
+
+<SdkOption name="Native.AnrTimeoutInterval" type="TimeSpan" defaultValue="TimeSpan.FromSeconds(5)">
+
+How long the main thread must be unresponsive before an ANR event is captured. Default is 5 seconds.
+
+</SdkOption>
+
+## Breadcrumbs
+
+The Android SDK automatically captures breadcrumbs for various system events. Each category can be enabled or disabled independently.
+
+<SdkOption name="Native.EnableActivityLifecycleBreadcrumbs" type="bool" defaultValue="true">
+
+Adds breadcrumbs for `Activity` lifecycle events (created, started, resumed, paused, stopped, destroyed).
+
+See [Automatic Breadcrumbs](/platforms/android/enriching-events/breadcrumbs/).
+
+</SdkOption>
+
+<SdkOption name="Native.EnableAppComponentBreadcrumbs" type="bool" defaultValue="true">
+
+Adds breadcrumbs for `App` component events.
+
+See [Automatic Breadcrumbs](/platforms/android/enriching-events/breadcrumbs/).
+
+</SdkOption>
+
+<SdkOption name="Native.EnableAppLifecycleBreadcrumbs" type="bool" defaultValue="true">
+
+Adds breadcrumbs for `App` lifecycle events (foregrounded, backgrounded).
+
+See [Automatic Breadcrumbs](/platforms/android/enriching-events/breadcrumbs/).
+
+</SdkOption>
+
+<SdkOption name="Native.EnableNetworkEventBreadcrumbs" type="bool" defaultValue="true">
+
+Adds breadcrumbs when network connectivity changes.
+
+See [Automatic Breadcrumbs](/platforms/android/enriching-events/breadcrumbs/).
+
+</SdkOption>
+
+<SdkOption name="Native.EnableSystemEventBreadcrumbs" type="bool" defaultValue="true">
+
+Adds breadcrumbs for system events such as battery state changes, low memory warnings, and timezone changes.
+
+See [Automatic Breadcrumbs](/platforms/android/enriching-events/breadcrumbs/).
+
+</SdkOption>
+
+<SdkOption name="Native.EnableUserInteractionBreadcrumbs" type="bool" defaultValue="true">
+
+Adds breadcrumbs when the user interacts with UI elements (taps, swipes, etc.).
+
+See [Automatic Breadcrumbs](/platforms/android/enriching-events/breadcrumbs/).
+
+</SdkOption>
+
+## Performance
+
+<SdkOption name="Native.EnableAutoActivityLifecycleTracing" type="bool" defaultValue="true">
+
+Automatically creates transactions for `Activity` lifecycle events. Requires `TracesSampleRate` or `TracesSampler` to be configured.
+
+See [Activity Instrumentation](/platforms/android/performance/instrumentation/automatic-instrumentation/#activity-instrumentation).
+
+</SdkOption>
+
+<SdkOption name="Native.EnableActivityLifecycleTracingAutoFinish" type="bool" defaultValue="true">
+
+Whether transactions created for Activity lifecycle events finish automatically when the Activity is fully drawn. Requires `EnableAutoActivityLifecycleTracing` to be enabled.
+
+See [Activity Instrumentation](/platforms/android/performance/instrumentation/automatic-instrumentation/#activity-instrumentation).
+
+</SdkOption>
+
+<SdkOption name="Native.EnableUserInteractionTracing" type="bool" defaultValue="false">
+
+Automatically creates traces for user interaction events (button clicks, etc.). Disabled by default.
+
+See [User Interaction Instrumentation](/platforms/android/performance/instrumentation/automatic-instrumentation/#user-interaction-instrumentation).
+
+</SdkOption>
+
+<SdkOption name="Native.EnableTracing" type="bool" defaultValue="false">
+
+Enables tracing features on the embedded Android SDK. When disabled, the .NET SDK still handles traces for managed code, but the native Android SDK will not create its own traces.
+
+</SdkOption>
+
+<SdkOption name="Native.ProfilesSampleRate" type="double?" defaultValue="null">
+
+Profiling sample rate for the native Android SDK, between `0.0` and `1.0`. Disabled when `null`.
+
+</SdkOption>
+
+## Enriching Events
+
+<SdkOption name="Native.AttachScreenshot" type="bool" defaultValue="false">
+
+Automatically attaches a screenshot when the native Android SDK captures a Java-based error or exception.
+
+<Alert level="info">
+
+This feature is provided by the embedded Sentry Android SDK and only works for Java-based exceptions. For .NET managed code screenshots, see <PlatformLink to="/enriching-events/screenshots/">Screenshots</PlatformLink>.
+
+</Alert>
+
+See [Screenshots](/platforms/android/enriching-events/screenshots/).
+
+</SdkOption>
+
+<SdkOption name="Native.AttachThreads" type="bool" defaultValue="false">
+
+Automatically attaches information about all threads to all logged events.
+
+</SdkOption>
+
+<SdkOption name="Native.EnableRootCheck" type="bool" defaultValue="true">
+
+Checks whether the device has been rooted and includes this in event context. Disable if your app store flags this check as harmful.
+
+</SdkOption>
+
+## Android NDK
+
+<SdkOption name="Native.EnableNdk" type="bool" defaultValue="true">
+
+Enables the [Android NDK integration](/platforms/android/configuration/using-ndk/) for native C/C++ crash reporting. Disable only if you don't need native crash reports and want to reduce overhead.
+
+</SdkOption>
+
+## Networking
+
+<SdkOption name="Native.ConnectionTimeout" type="TimeSpan" defaultValue="TimeSpan.FromSeconds(5)">
+
+Connection timeout on the HTTP connection used by the Java SDK when sending events to Sentry.
+
+</SdkOption>
+
+<SdkOption name="Native.ReadTimeout" type="TimeSpan" defaultValue="TimeSpan.FromSeconds(5)">
+
+Read timeout on the HTTP connection used by the Java SDK when sending events to Sentry.
+
+</SdkOption>
+
+## Error Handling
+
+<SdkOption name="Native.EnableShutdownHook" type="bool" defaultValue="true">
+
+Enables a hook that flushes events when the main Java thread shuts down, ensuring events are sent before the process exits.
+
+</SdkOption>
+
+<SdkOption name="Native.EnableUncaughtExceptionHandler" type="bool" defaultValue="true">
+
+Enables the handler that attaches to Java's `Thread.UncaughtExceptionHandler` to capture unhandled Java exceptions.
+
+</SdkOption>
+
+<SdkOption name="Native.PrintUncaughtStackTrace" type="bool" defaultValue="false">
+
+When enabled, prints uncaught Java error stack traces to stderr in addition to sending them to Sentry.
+
+</SdkOption>
+
+<SdkOption name="Native.EnableBeforeSend" type="bool" defaultValue="false">
+
+When enabled, the `BeforeSend` callback configured on `SentryOptions` will also be invoked for events that originate from the embedded Android SDK.
+
+<Alert level="warning">
+
+This is an experimental feature. The .NET and Android SDKs don't implement identical features, so some optional event properties may be lost when round-tripping between the two SDKs.
+
+</Alert>
+
+</SdkOption>
+
+## Stack Traces
+
+Use these methods to control which Java packages are considered "in-app" in stack traces. Note that these use Java package names, not .NET namespaces.
+
+<SdkOption name="Native.AddInAppExclude(prefix)" type="method">
+
+Excludes frames matching the given Java package prefix from being flagged as "in-app" in stack traces.
+
+```csharp
+options.Native.AddInAppExclude("java.util.");
+options.Native.AddInAppExclude("org.apache.logging.log4j.");
+```
+
+See [In-App Exclude](/platforms/java/configuration/options/#in-app-exclude).
+
+</SdkOption>
+
+<SdkOption name="Native.AddInAppInclude(prefix)" type="method">
+
+Includes frames matching the given Java package prefix as "in-app" in stack traces.
+
+```csharp
+options.Native.AddInAppInclude("io.sentry.samples.");
+```
+
+See [In-App Include](/platforms/java/configuration/options/#in-app-include).
+
+</SdkOption>
+
+## Session Replay
+
+Session Replay for Android is currently experimental and must be opted into.
+
+<SdkOption name="Native.ExperimentalOptions.SessionReplay.SessionSampleRate" type="double?" defaultValue="null">
+
+Sample rate for all sessions, between `0.0` and `1.0`. Set to `0.0` or leave as `null` to disable session replay for regular sessions.
+
+</SdkOption>
+
+<SdkOption name="Native.ExperimentalOptions.SessionReplay.OnErrorSampleRate" type="double?" defaultValue="null">
+
+Sample rate for sessions that encountered an error, between `0.0` and `1.0`. Set to `0.0` or leave as `null` to disable session replay for errored sessions.
+
+</SdkOption>
+
+<SdkOption name="Native.ExperimentalOptions.SessionReplay.MaskAllText" type="bool" defaultValue="true">
+
+Masks all text content in session replay recordings to protect user privacy. Enabled by default.
+
+</SdkOption>
+
+<SdkOption name="Native.ExperimentalOptions.SessionReplay.MaskAllImages" type="bool" defaultValue="true">
+
+Masks all images in session replay recordings to protect user privacy. Enabled by default.
+
+</SdkOption>
+
+For finer-grained control of masking, you can mask or unmask entire classes of `VisualElement`:
+
+```csharp
+// Unmask all Buttons (override the default mask-all behaviour)
+options.Native.ExperimentalOptions.SessionReplay.UnmaskControlsOfType<Button>();
+
+// Or mask a specific control type that isn't masked by default
+options.Native.ExperimentalOptions.SessionReplay.MaskControlsOfType<MyCustomView>();
+```
+
+<Alert level="warning">
+
+In apps with complex UIs containing hundreds of visual controls on a single page, type-based masking may cause performance issues. In such cases, consider applying the `sentry:SessionReplay.Mask` XML attribute to individual controls instead.
+
+</Alert>
