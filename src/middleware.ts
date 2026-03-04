@@ -18,6 +18,7 @@ export const config = {
     // - favicon.ico (favicon file)
     '/((?!api|_next/static|_next/image|favicon.ico).*)',
   ],
+  runtime: 'nodejs',
 };
 
 // This function can be marked `async` if using `await` inside
