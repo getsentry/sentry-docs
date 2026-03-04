@@ -514,6 +514,10 @@ const developerDocsRedirects = [
     source: '/sdk/telemetry/spans/span-trace-propagation/',
     destination: '/sdk/foundations/trace-propagation/#continue-trace',
   },
+  {
+    source: '/sdk/expected-features/setup-wizards/:path*',
+    destination: '/sdk-setup-wizards/:path*',
+  },
 ];
 
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
