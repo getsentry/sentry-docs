@@ -1,0 +1,488 @@
+---
+title: Trace Propagation
+description: How SDKs propagate trace context between services via headers, metadata, and environment variables.
+spec_id: sdk/foundations/trace-propagation
+spec_version: 1.9.0
+spec_status: stable
+spec_depends_on:
+  - id: sdk/foundations/transport/envelopes
+    version: ">=1.0.0"
+  - id: sdk/foundations/state-management/scopes
+    version: ">=1.0.0"
+spec_changelog:
+  - version: 1.9.0
+    date: 2026-02-24
+    summary: Consolidated into foundations/trace-propagation
+  - version: 1.8.0
+    date: 2026-01-22
+    summary: Added startNewTrace API
+  - version: 1.7.0
+    date: 2025-09-09
+    summary: Added propagateTraceparent option
+  - version: 1.6.0
+    date: 2025-08-14
+    summary: Re-added W3C traceparent documentation
+  - version: 1.5.0
+    date: 2024-11-06
+    summary: Added default propagation behavior without tracing (TwP), deferred sampling
+  - version: 1.4.0
+    date: 2025-04-09
+    summary: Added propagation decision matrix
+  - version: 1.3.0
+    date: 2024-11-28
+    summary: Added strictTraceContinuation, sample_rand propagation
+  - version: 1.2.0
+    date: 2024-04-09
+    summary: Added W3C traceparent header support
+  - version: 1.1.0
+    date: 2023-11-06
+    summary: Distributed tracing (carriers, mechanisms, env vars)
+  - version: 1.0.0
+    date: 2022-07-21
+    summary: Initial — tracePropagationTargets, sentry-trace header
+sidebar_order: 4
+---
+
+<SpecRfcAlert />
+
+<SpecMeta />
+
+## Overview
+
+SDKs **MUST** propagate trace information between services so that all telemetry (errors, profiles, replays, transactions, check-ins, etc.) from those services can be connected into one trace.
+
+Trace propagation operates independently of span collection. Even when an SDK is not configured to send spans (i.e. no `tracesSampleRate` or `tracesSampler`), it **MUST** still continue incoming traces, propagate trace data on outgoing requests, and attach trace context to events. This default behavior is sometimes referred to as "Tracing without Performance" (TwP).
+
+Related specs:
+- [Dynamic Sampling Context](/sdk/foundations/trace-propagation/dynamic-sampling-context/) — DSC fields, baggage format, freezing rules
+- [Traces](/sdk/telemetry/traces/) — span collection, sampling, transaction payloads
+- [Scopes](/sdk/foundations/state-management/scopes/) — propagation context storage
+
+---
+
+## Concepts
+
+- **Trace context**: The combination of `trace_id`, `span_id`, and sampling decision that identifies a position within a distributed trace.
+
+- **Propagation context**: The storage location for trace context on the current [scope](/sdk/foundations/state-management/scopes/). The propagation context **SHOULD** be populated with a random `traceId` and `spanId` if no incoming trace is present.
+
+- **Carriers**: The mechanisms used to transmit trace context between services:
+  - **HTTP headers**: `sentry-trace` and `baggage` headers on outgoing HTTP requests.
+  - **Metadata**: `sentry-trace` and `baggage` as metadata on queue messages (details are queue-specific).
+  - **Environment variables**: `SENTRY_TRACE` and `SENTRY_BAGGAGE` when calling another process.
+
+---
+
+## Behavior
+
+<SpecSection id="outgoing-propagation" status="stable" since="1.1.0">
+
+### Outgoing Propagation
+
+SDKs **MUST** propagate trace context to downstream services by adding `sentry-trace` and `baggage` to outgoing requests via one of the supported [carriers](#concepts).
+
+The `sentry-trace` and `baggage` headers **MUST** only be attached to an outgoing request if the request URL matches the [`tracePropagationTargets`](#trace-propagation-targets) option (or if the option is `null` / not set).
+
+</SpecSection>
+
+<SpecSection id="incoming-propagation" status="stable" since="1.1.0">
+
+### Incoming Propagation
+
+SDKs **MUST** pick up incoming trace information by:
+- Reading `sentry-trace` and `baggage` headers for each incoming HTTP request.
+- Reading `sentry-trace` and `baggage` metadata when retrieving an item from a queue.
+- Reading the environment variables `SENTRY_TRACE` and `SENTRY_BAGGAGE` on startup.
+
+This trace information **MUST** be stored in the propagation context of the current scope, ensuring all telemetry emitted from the receiving service includes the correct trace information.
+
+</SpecSection>
+
+<SpecSection id="trace-propagation-targets" status="stable" since="1.0.0">
+
+### tracePropagationTargets
+
+SDKs **MUST** expose a `tracePropagationTargets` option that controls which outgoing HTTP requests receive trace headers. This option takes an array of strings and/or regular expressions.
+
+SDKs **MUST** only add trace headers to an outgoing request if the request's URL matches the regex or, in the case of string literals, contains at least one of the items from the array. String literals do not have to be full matches — the URL of a request is matched when it *contains* a string provided through the option.
+
+SDKs **MAY** choose a default value which makes sense for their use case. Most SDKs default to `.*` (attach headers to all outgoing requests), but deviation is allowed. For example, because of CORS, browser-based SDKs default to only adding headers to domain-internal requests.
+
+#### Example
+
+```JS
+// Entries can be strings or regex
+tracePropagationTargets: ['localhost', /^\// ,/myApi.com\/v[2-4]/]
+
+URLs matching: 'localhost:8443/api/users', 'mylocalhost:8080/api/users', '/api/envelopes', 'myApi.com/v2/projects'
+URLs not matching: 'someHost.com/data', 'myApi.com/v1/projects'
+```
+
+<Alert title="Deprecation of tracingOrigins">
+
+This option replaces the non-standardized `tracingOrigins` option which was previously used in some SDKs. SDKs that support `tracingOrigins` are encouraged to deprecate and eventually remove `tracingOrigins` in favour of `tracePropagationTargets`. In case both options are specified by users, SDKs **SHOULD** only rely on the `tracePropagationTargets` array.
+
+</Alert>
+
+</SpecSection>
+
+<SpecSection id="strict-trace-continuation" status="stable" since="1.3.0">
+
+### strictTraceContinuation
+
+This **MUST** be a boolean value. Default is `false`. This option controls trace continuation from unknown 3rd party services that happen to be instrumented by a Sentry SDK.
+
+If the SDK is able to parse an org ID from the configured DSN, it **MUST** be propagated as a baggage entry with the key `sentry-org_id`. Given a DSN of `https://1234@o1.ingest.us.sentry.io/1`, the org ID is `1`, based on `o1`.
+
+Additionally, the SDK **MUST** be configurable with an optional `orgId: <org-id>` setting that takes precedence over the parsed value from the DSN. This option **SHOULD** be set when running a self-hosted version of Sentry or if a non-standard Sentry DSN is used, such as when using a local Relay.
+
+On incoming traces, the SDK **MUST** compare the `sentry-org_id` baggage value against its own parsed value from the DSN or org setting. Only if both match, the trace is continued. If there is no match, neither the trace ID, the parent sampling decision nor the baggage **SHOULD** be taken into account. The SDK **SHOULD** behave like it is the head of trace in this case.
+
+This behavior can be disabled by setting `strictTraceContinuation: false` in the SDK init call. Initially, SDKs **MUST** introduce this option with a default value of `false`. Once the majority of SDKs have introduced this option, the default value will change to `true` (in a major version bump), making it opt-out.
+
+Regardless of `strictTraceContinuation` being set to `true` or `false`, if the SDK is either configured with an `org` or was able to parse the value from the DSN, incoming traces containing an `org` value in the baggage that does not match the one from the receiving SDK, the trace is not continued.
+
+#### Examples
+
+| Baggage `sentry-org` | SDK `org` | `strictTraceContinuation` | Result |
+| --- | --- | :---: | --- |
+| 1 | 1 | false | continue trace |
+| none | 1 | false | continue trace |
+| 1 | none | false | continue trace |
+| none | none | false | continue trace |
+| 1 | 2 | false | start new trace |
+| 1 | 1 | true | continue trace |
+| none | 1 | true | start new trace |
+| 1 | none | true | start new trace |
+| none | none | true | continue trace |
+| 1 | 2 | true | start new trace |
+
+</SpecSection>
+
+<SpecSection id="propagate-traceparent" status="stable" since="1.6.0">
+
+### propagateTraceparent
+
+This **MUST** be a boolean value. The default is `false`. This option enables the propagation of the W3C Trace Context HTTP header `traceparent` on outgoing HTTP requests.
+
+The `traceparent` header **MUST** only be sent when `propagateTraceparent` is `true` and the request matches `tracePropagationTargets` (same condition as for `sentry-trace`/`baggage`).
+
+Header Format:
+- Key: `traceparent`
+- Value: `00-<traceId>-<spanId>-<sampled>` where `<sampled>` is `01` if sampled, otherwise `00`.
+
+The full spec is available in the [W3C Trace Context](https://www.w3.org/TR/trace-context/) specification.
+
+</SpecSection>
+
+<SpecSection id="propagated-random-value" status="stable" since="1.3.0">
+
+### Propagated Random Value
+
+To improve the likelihood of capturing complete traces when backend services use a custom sample rate via `tracesSampler`, the SDK propagates the same random value used for sampling decisions across all services in a trace. This ensures consistent sampling decisions across a trace instead of generating a new random value for each service.
+
+The random value (`sample_rand`) is set according to the following rules:
+
+1. A `sample_rand` is a float (`0.123456` notation) in the range of `[0, 1)` (including 0.0, excluding 1.0), with six digits after the decimal point.
+1. When tracing is enabled and a new trace is started, the SDK generates a `sample_rand` value for the current execution context.
+   1. This also applies to default propagation mode (no tracing config) where the SDK simply generates `sample_rand` every time a new trace is started. This `sample_rand` value can then be stored on `PropagationContext`.
+1. It is _recommended_ to generate the random number deterministically using the trace ID as seed or source of randomness (make sure to do this atomically so multiple threads accessing the same random instance don't mix their seeds). The exact method by which the random number is created is implementation-defined and **MAY** vary between SDK implementations.
+1. The `sample_rand` is part of the DSC (Dynamic Sampling Context) and as with other values on the `baggage` header, the `sample_rand` value from the current execution context **SHOULD** be propagated to downstream SDKs. It **SHOULD** also be sent to other systems as part of the `baggage` header if Performance is disabled and sampling decision is deferred.
+1. On incoming traces, an SDK takes the incoming `sentry-sample_rand` value in the `baggage` header and uses it for the rest of the current execution context (for example, request) by storing it in the `PropagationContext`.
+1. If `sample_rand` is missing on an incoming trace, the SDK creates a new one applying **special rules** and uses it for the current execution context:
+   1. If `sample_rate` (inside `baggage`) and the sampling decision (trailing `-1` or `-0` from the `sentry-trace` header) are present in the incoming trace, create `sample_rand` so that when compared to the incoming `sample_rate` it would lead to the same sampling decision that is in the `sentry-trace` header. This means, for a decision of `True` generate a random number in half-open range `[0, rate)` and for a decision of `False` generate a random number in range `[rate, 1)`.
+   1. If the sampling decision is missing on the incoming trace, generate a random number in range of `[0, 1)` (including 0.0, excluding 1.0), like for a new trace.
+
+The SDK **SHOULD** always use the stored random number (`sentry-sample_rand`) for sampling decisions and **SHOULD NOT** directly rely on `math.random()` when deciding to sample or not:
+
+1. When the `tracesSampler` is invoked, the return value **SHOULD** be compared with `sample_rand`: `trace["sentry-sample_rand"] < tracesSampler(context)`
+1. When there is an incoming trace, the SDK fully inherits incoming sampling decisions from the `sentry-trace` header.
+1. Otherwise, when the SDK is the head of a trace (and `tracesSampleRate` is defined), the sampling is done comparing the `tracesSampleRate` with the `sample_rand`: `trace["sentry-sample_rand"] < config.tracesSampleRate`
+
+Something that **SHOULD** be documented for every SDK is the recommended way to use a `tracesSampler` to inherit the parent's sampling decision using the `parentSampleRate`. This way, Sentry can still extrapolate counts correctly:
+
+```js
+tracesSampler: ({ name, parentSampleRate }) => {
+  // Inherit the trace parent's sample rate if there is one. Sampling is deterministic
+  // for one trace, i.e. if the parent was sampled, we will be sampled too at the same
+  // rate.
+  if (typeof parentSampleRate === "number") {
+    return parentSampleRate;
+  }
+
+  // Else, use default sample rate (replacing tracesSampleRate).
+  return 0.5;
+},
+```
+
+</SpecSection>
+
+<SpecSection id="sampling-decision-propagation" status="stable" since="1.0.0">
+
+### Sampling Decision Propagation
+
+A transaction's sampling decision **MUST** be passed to all of its children, including across service boundaries. This can be accomplished in the `startChild` method for same-service children and using the `sentry-trace` header for children in a different service.
+
+</SpecSection>
+
+<SpecSection id="default-propagation" status="stable" since="1.5.0">
+
+### Default Propagation (No Tracing Config)
+
+If Sentry SDKs are not configured for sending spans (i.e. no `tracesSampleRate` or `tracesSampler`), they **MUST** fall back to a mode where they still handle continuing and propagating traces. Internally, this mode is referred to as "Tracing without Performance" (TwP).
+
+This means that SDKs by default always:
+
+- Continue incoming traces
+- Attach `event.contexts.trace` context on events (e.g. errors, check-ins, replays)
+- Attach the `trace` envelope header to Sentry envelopes, populated from the [dynamic sampling context](/sdk/foundations/trace-propagation/dynamic-sampling-context/)
+- Propagate trace data (`sentry-trace`, `baggage`) via the usual [carriers](#concepts), with the correct [sampling decision](#deferred-sampling)
+
+Setting `tracesSampleRate: 0` does **not** fall back to this mode. Instead, sampling decisions are always negative and the trace is propagated with a negative sampling decision.
+
+To opt out of further propagating a trace, users can pass an empty array (or language-equivalent parameter) to [`tracePropagationTargets`](#trace-propagation-targets). This prevents the SDK from propagating trace information further. Note that for incoming requests with trace headers, SDKs **SHOULD** still continue the trace but not propagate it further downstream.
+
+</SpecSection>
+
+<SpecSection id="deferred-sampling" status="stable" since="1.5.0">
+
+### Deferred Sampling
+
+If an SDK in default propagation mode doesn't receive an incoming trace, it **SHOULD** start a new trace. In this case, the new trace is not sampled (as in, there is no sampling decision, neither positive nor negative). Instead, the sampling decision is _deferred_ to the next downstream SDK.
+
+This means that:
+
+- The SDK **MUST NOT** include a sampled flag in the [`sentry-trace` header](#sentry-trace-header), meaning the header has the format `<traceId>-<spanId>`.
+- The [dynamic sampling context](/sdk/foundations/trace-propagation/dynamic-sampling-context/), propagated via `baggage`, **MUST NOT** contain the `sentry-sampled` key.
+
+For SDKs starting a new trace in this mode, the [Dynamic Sampling Context](/sdk/foundations/trace-propagation/dynamic-sampling-context/) **SHOULD** be lazily populated and frozen for the duration of the trace. Given that no span is actually available, the DSC will not contain any keys related to spans (`transaction`, `sample_rate`, or `sampled`).
+
+</SpecSection>
+
+<SpecSection id="trace-data-on-events" status="stable" since="1.5.0">
+
+### Trace Data on Events and Envelopes
+
+Any event created by an SDK **MUST** include the [`trace` context](/sdk/foundations/transport/event-payloads/contexts/#trace-context). This context **SHOULD** contain the trace data of the current trace, if available, just like in regular tracing mode.
+
+Furthermore, the [`trace` envelope header](/sdk/foundations/trace-propagation/dynamic-sampling-context/#envelope-header) (populated from the dynamic sampling context) **MUST** be attached to any outgoing event envelope.
+
+#### Trace Duration and Storage
+
+Traces **SHOULD** have the same duration as regular traces. For example, a trace for a backend server **SHOULD** generally last for the duration of one individual request. This usually corresponds with the lifetime of an [isolation scope](/sdk/foundations/state-management/scopes/#isolation-scope).
+
+SDKs **MUST** store trace data in a way that makes it possible for them to be attached to events and propagated to outgoing requests. The exact storage mechanism is up to the SDK implementation, but we recommend storing the data on the scope in a field called `propagationContext`.
+
+The `propagationContext` **SHOULD** be populated with a random `traceId` and `spanId` if no incoming trace is present. This — in combination with the [`sentry-trace` header specification](#sentry-trace-header) requiring a `spanId` — means a non-existing `spanId` will be propagated along with the trace and attached to events. While not ideal, we accept this limitation as the Sentry product can and **SHOULD** handle non-existing (parent) spans.
+
+In SDKs adapting OpenTelemetry's tracing capabilities ([POTel](/sdk/foundations/state-management/scopes/#otel-context-alignment)), trace data could also be stored in a non-recording span. Note that in the case of using the non-recording span, the span is also not sampled, meaning the sampling decision **MUST** still be [deferred](#deferred-sampling) when starting a new trace.
+
+</SpecSection>
+
+---
+
+## Wire Format
+
+<SpecSection id="sentry-trace-header" status="stable" since="1.0.0">
+
+### sentry-trace Header
+
+The `sentry-trace` header is used for trace propagation. SDKs use it to continue traces from upstream services (incoming HTTP requests) and to propagate tracing information to downstream services (outgoing HTTP requests).
+
+`sentry-trace = traceid-spanid-sampled`
+
+`sampled` is optional. So at a minimum, it's expected:
+
+`sentry-trace = traceid-spanid`
+
+To offer minimal compatibility with the [W3C `traceparent` header](https://www.w3.org/TR/trace-context/#traceparent-header) (without the version prefix) and [Zipkin's `b3` headers](https://zipkin.io/pages/instrumenting#communicating-trace-information) (which consider both 64 and 128 bits for `traceId` valid), the `sentry-trace` header **SHOULD** have a `traceId` of 128 bits encoded in 32 hex chars and a `spanId` of 64 bits encoded in 16 hex chars. To avoid confusion with the W3C `traceparent` header (to which our header is similar but not identical), we call it simply `sentry-trace`. No version is being defined in the header.
+
+The `sentry-trace` header **MUST** only be attached to an outgoing request if the request's URL matches at least one entry of the [`tracePropagationTargets`](#trace-propagation-targets) option or this option is set to `null`.
+
+</SpecSection>
+
+<SpecSection id="sentry-trace-sampled" status="stable" since="1.0.0">
+
+### The sampled Value
+
+To simplify processing, the value consists of a single (optional) character. The possible values are:
+
+```
+  - No value means defer
+
+0 - Don't sample
+
+1 - Sampled
+```
+
+Unlike with `b3` headers, a `sentry-trace` header **MUST** never consist solely of a sampling decision, with no `traceid` or `spanid` values. There are [good reasons](https://github.com/apache/incubator-zipkin-b3-propagation/blob/bc937b6854ea30e46b3e85fbf147d8f4de685dd5/README.md#why-send-trace-ids-with-a-reject-sampling-decision) to always include the `traceid` and `spanid` regardless of the sampling decision, and doing so also simplifies implementation.
+
+Besides the [usual reasons to use \*defer](https://github.com/apache/incubator-zipkin-b3-propagation/blob/bc937b6854ea30e46b3e85fbf147d8f4de685dd5/README.md#why-defer-a-sampling-decision),\* in the case of Sentry, a reason would be if a downstream system captures an error event with Sentry. The decision could be done at that point to sample that trace in order to have tracing data available for the reported crash.
+
+</SpecSection>
+
+<SpecSection id="w3c-traceparent" status="stable" since="1.2.0">
+
+### W3C traceparent Header
+
+To interoperate with OpenTelemetry (OTel) services, SDKs can optionally send the W3C Trace Context `traceparent` HTTP header on outgoing requests in addition to Sentry's own `sentry-trace` and `baggage`. This enables traces originating from a Sentry SDK to be continued by components that only use OTel/W3C propagation.
+
+The `traceparent` header **MUST** only be sent when [`propagateTraceparent`](#propagate-traceparent) is `true` and the request matches [`tracePropagationTargets`](#trace-propagation-targets) (same condition as for `sentry-trace`/`baggage`).
+
+The full spec is available in the [W3C Trace Context](https://www.w3.org/TR/trace-context/) document.
+
+</SpecSection>
+
+<SpecSection id="environment-variables" status="stable" since="1.1.0">
+
+### Environment Variables
+
+When propagating trace context by launching a subprocess, the environment variables `SENTRY_TRACE` and `SENTRY_BAGGAGE` **SHOULD** be set. The values **MUST** match what would be set for the corresponding HTTP headers.
+
+</SpecSection>
+
+---
+
+## Public API
+
+<SpecSection id="continue-trace" status="stable" since="1.1.0">
+
+### continueTrace
+
+To continue a trace from an upstream service, the SDK **MUST** expose a method to extract the traceparent and baggage information and apply these to the applicable scope. The method **MUST NOT** create a new segment span on its own.
+
+```js
+Sentry.continueTrace({
+  sentryTrace: request.headers['sentry-trace'],
+  baggage: request.headers['baggage'],
+}, () => {
+  Sentry.startSpan({ name: 'test' }, () => {
+    // ....
+  });
+})
+```
+
+```python
+sentry_sdk.continue_trace(request.headers)
+
+with sentry_sdk.start_span(name="test"):
+    ...
+```
+
+Newly created root spans **SHOULD** now contain these properties, such as `trace_id` and `parent_span_id`.
+
+The exact function signature of the `continueTrace` function depends on what's canonical in the SDK. It **MAY** require explicitly passing `sentry-trace` and `baggage`, or it **MAY** allow providing a dictionary of headers/environment variables.
+
+</SpecSection>
+
+<SpecSection id="get-trace-data" status="stable" since="1.1.0">
+
+### getTraceData
+
+To propagate a trace to a downstream service, the SDK **MUST** expose methods to fetch the required information to allow the next service to continue the trace.
+
+```js
+const traceData = Sentry.getTraceData()
+```
+
+```python
+traceparent = sentry_sdk.get_traceparent()
+baggage = sentry_sdk.get_baggage()
+```
+
+</SpecSection>
+
+<SpecSection id="start-new-trace" status="stable" since="1.7.0">
+
+### startNewTrace
+
+The SDK **MUST** offer a method to clear trace propagation data, allowing to create spans with a fresh new trace.
+
+```js
+Sentry.startNewTrace(() => {
+  Sentry.startSpan({ name: 'segment under trace 1' }, () => {...});
+})
+
+Sentry.startNewTrace(() => {
+  Sentry.startSpan({ name: 'segment under trace 2' }, () => {...});
+})
+```
+
+```python
+import sentry_sdk
+
+with sentry_sdk.start_span(name="segment under trace 1"):
+    ...
+
+sentry_sdk.new_trace()
+
+# The next span started after new_trace() will NOT continue the same trace:
+with sentry_sdk.start_span(name="segment under trace 2"):
+    ...
+```
+
+</SpecSection>
+
+---
+
+## Reference
+
+<SpecSection id="propagation-decision-matrix" status="stable" since="1.4.0">
+
+### Propagation Decision Matrix
+
+This matrix shows how trace propagation works in SDKs under different scenarios.
+
+**Column definitions:**
+
+Scenario (inputs):
+- **Incoming trace**: Whether `sentry-trace`/`baggage` headers are present on the incoming request.
+- **Incoming sampled**: The sampled flag from the incoming `sentry-trace` header (`1` = sampled, `0` = not sampled, `deferred` = no value).
+- **`tracePropagationTargets` match**: Whether the outgoing request URL matches the `tracePropagationTargets` option.
+- **`tracesSampleRate`**: The configured sample rate (`null` = tracing not enabled, `0` = 0%, `1` = 100%).
+
+Outcome (results):
+- **Send spans?**: Whether the SDK sends span/transaction data to Sentry.
+- **Outgoing trace?**: Whether `sentry-trace`/`baggage` headers are added to outgoing requests.
+- **Continue trace?**: Whether the outgoing `trace_id` matches the incoming `trace_id`.
+
+| Incoming trace | Incoming sampled | `tracePropagationTargets` match | `tracesSampleRate` | Send spans? | Outgoing trace? | Continue trace? |
+| --- | :---: | :---: | :---: | :---: | :---: | :---: |
+| not present | - | yes | null | no | yes | - |
+| not present | - | yes | 0 | no | yes | - |
+| not present | - | yes | 1 | yes | yes | - |
+| not present | - | no | null | no | no | - |
+| not present | - | no | 0 | no | no | - |
+| not present | - | no | 1 | yes | no | - |
+| present | deferred | yes | null | no | yes | yes |
+| present | deferred | yes | 0 | no | yes | yes |
+| present | deferred | yes | 1 | yes | yes | yes |
+| present | 1 | yes | null | no | yes | yes |
+| present | 1 | yes | 0 | yes | yes | yes |
+| present | 1 | yes | 1 | yes | yes | yes |
+| present | 0 | yes | null | no | yes | yes |
+| present | 0 | yes | 0 | no | yes | yes |
+| present | 0 | yes | 1 | no | yes | yes |
+| present | deferred | no | null | no | no | - |
+| present | deferred | no | 0 | no | no | - |
+| present | deferred | no | 1 | yes | no | - |
+| present | 1 | no | null | no | no | - |
+| present | 1 | no | 0 | yes | no | - |
+| present | 1 | no | 1 | yes | no | - |
+| present | 0 | no | null | no | no | - |
+| present | 0 | no | 0 | no | no | - |
+| present | 0 | no | 1 | no | no | - |
+
+#### FAQ
+
+**Why are we sometimes sampling even if `tracesSampleRate` is 0? Why are we sometimes unsampling if `tracesSampleRate` is 1?**
+
+A `tracesSampleRate` between 0 and 1 is only taken into account if there is no incoming trace and the SDK has to make its own sampling decision. If there is an incoming trace, the parent sampling decision always takes precedence over `tracesSampleRate`.
+
+</SpecSection>
+
+---
+
+## Changelog
+
+<SpecChangelog />

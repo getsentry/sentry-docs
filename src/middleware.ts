@@ -465,6 +465,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/platforms/go/guides/logrus/',
   },
   {
+    from: '/platforms/go/zap/',
+    to: '/platforms/go/guides/zap/',
+  },
+  {
     from: '/clients/go/integrations/http/',
     to: '/platforms/go/guides/http/',
   },
