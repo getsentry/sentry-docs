@@ -15,13 +15,11 @@ SentrySDK.init(func(options: SentryOptions) -> void:
 )
 
 func _before_send_metric(metric: SentryMetric) -> SentryMetric:
-	# Drop metrics with specific names
-	if "debug" in metric.name:
+	# Drop debug-only metrics in release builds.
+	if not OS.is_debug_build() and metric.name.begins_with("debug."):
 		return null
-
-	# Add custom attributes
-	metric.set_attribute("build", "production")
-
+	# Enrich with runtime context.
+	metric.set_attribute("current_scene", get_tree().current_scene.name)
 	return metric
 ```
 

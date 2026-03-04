@@ -4,9 +4,9 @@ Once metrics are enabled and the SDK is initialized, you can emit metrics using 
 
 | Type           | Use For                                      |
 | -------------- | -------------------------------------------- |
-| `Counter`      | Events (orders, clicks, API calls)           |
-| `Gauge`        | Current values (queue depth, connections)     |
-| `Distribution` | Value ranges (response times, payload sizes)  |
+| `Counter`      | Events (matches started, items purchased)     |
+| `Gauge`        | Current values (players online, memory usage) |
+| `Distribution` | Value ranges (load times, frame times)        |
 
 ### Counters
 
@@ -14,10 +14,10 @@ Track the number of times something happens. Each increment adds to a cumulative
 
 ```GDScript
 # Increment by 1 (default)
-SentrySDK.metrics.count("button_click")
+SentrySDK.metrics.count("match_started")
 
-# Increment by a specific amount
-SentrySDK.metrics.count("items_collected", 5)
+# Increment by a specific amount with attributes
+SentrySDK.metrics.count("in_app_purchase", 1, {"item": "sword_of_fire"})
 ```
 
 ### Gauges
@@ -25,7 +25,7 @@ SentrySDK.metrics.count("items_collected", 5)
 Track current values at a point in time, like a snapshot. Sentry computes aggregates like min, max, avg, sum, and count:
 
 ```GDScript
-SentrySDK.metrics.gauge("active_connections", 42)
+SentrySDK.metrics.gauge("players_online", lobby.get_player_count())
 
 # With a unit
 SentrySDK.metrics.gauge("memory_usage", OS.get_static_memory_usage(), "byte")
@@ -36,10 +36,7 @@ SentrySDK.metrics.gauge("memory_usage", OS.get_static_memory_usage(), "byte")
 Record numeric values to compute statistical aggregates such as p50, p95, avg, min, and max:
 
 ```GDScript
-SentrySDK.metrics.distribution("response_time", 150.0)
-
-# With a unit
-SentrySDK.metrics.distribution("request_size", 256.0, "kilobyte")
+SentrySDK.metrics.distribution("level_load_time", load_time, "millisecond")
 ```
 
 ### Custom Attributes
@@ -47,14 +44,10 @@ SentrySDK.metrics.distribution("request_size", 256.0, "kilobyte")
 Add attributes to filter and group metrics in Sentry:
 
 ```GDScript
-SentrySDK.metrics.count("enemy_defeated", 1, {
-	"level": "forest",
-	"enemy_id": 42,
-	"elite": false
-})
+SentrySDK.metrics.count("enemies_spawned", wave_size, {"level": "castle"})
 
-SentrySDK.metrics.distribution("frame_time", 16.5, "millisecond", {
-	"scene": "main_menu",
+SentrySDK.metrics.distribution("level_load_time", load_time, "millisecond", {
+	"scene": current_scene.name,
 	"platform": OS.get_name()
 })
 ```
@@ -67,10 +60,10 @@ For gauge and distribution metrics, you can specify a unit as a string to help S
 
 ```GDScript
 # Duration units
-SentrySDK.metrics.distribution("load_time", 1.5, "second")
+SentrySDK.metrics.distribution("level_load_time", load_time, "millisecond")
 
 # Information units
-SentrySDK.metrics.gauge("memory_usage", 1024.0, "byte")
+SentrySDK.metrics.gauge("memory_usage", OS.get_static_memory_usage(), "byte")
 
 # Custom units
 SentrySDK.metrics.distribution("frame_rate", 60.0, "fps")
