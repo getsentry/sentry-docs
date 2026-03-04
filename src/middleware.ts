@@ -4,8 +4,8 @@ import {NextResponse, userAgent} from 'next/server';
 
 import {AI_AGENT_PATTERN, type TrafficType} from './lib/trafficClassification';
 
-// DEVELOPER_DOCS is set via next.config.ts env field (inlined at build time).
-// Also check NEXT_PUBLIC_DEVELOPER_DOCS for Node.js middleware runtime access.
+// DEVELOPER_DOCS is set via next.config.ts env field (inlined at build time for edge runtime).
+// NEXT_PUBLIC_DEVELOPER_DOCS is the canonical env var; DEVELOPER_DOCS is the build-time alias.
 const isDeveloperDocs =
   process.env.DEVELOPER_DOCS || process.env.NEXT_PUBLIC_DEVELOPER_DOCS;
 
@@ -19,7 +19,6 @@ export const config = {
     // - favicon.ico (favicon file)
     '/((?!api|_next/static|_next/image|favicon.ico).*)',
   ],
-  runtime: 'nodejs',
 };
 
 // This function can be marked `async` if using `await` inside

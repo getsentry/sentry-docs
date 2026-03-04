@@ -132,8 +132,8 @@ const nextConfig = {
     return config;
   },
   env: {
-    // Expose NEXT_PUBLIC_DEVELOPER_DOCS to middleware at build time.
-    // Node.js middleware doesn't get NEXT_PUBLIC_ vars inlined automatically.
+    // Inline NEXT_PUBLIC_DEVELOPER_DOCS into edge middleware at build time.
+    // Edge runtime doesn't have access to server env vars at request time.
     DEVELOPER_DOCS: process.env.NEXT_PUBLIC_DEVELOPER_DOCS,
   },
   redirects,
