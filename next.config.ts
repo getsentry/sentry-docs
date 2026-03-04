@@ -132,7 +132,8 @@ const nextConfig = {
     return config;
   },
   env: {
-    // This is used on middleware
+    // Inlined into edge middleware at build time. Node.js middleware reads process.env
+    // at runtime instead, so middleware.ts also checks NEXT_PUBLIC_DEVELOPER_DOCS directly.
     DEVELOPER_DOCS_: process.env.NEXT_PUBLIC_DEVELOPER_DOCS,
   },
   redirects,
