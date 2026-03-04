@@ -1,0 +1,335 @@
+---
+title: Data Collection
+description: Configuration for what data SDKs collect by default — technical context, PII, and sensitive data.
+spec_id: sdk/foundations/client/data-collection
+spec_version: 1.0.0
+spec_status: candidate
+spec_depends_on:
+  - id: sdk/foundations/client
+    version: ">=1.0.0"
+spec_changelog:
+  - version: 1.0.0
+    date: 2025-03-05
+    summary: Initial spec; dataCollection config, three data tiers, cookies/headers denylist, replace sendDefaultPii.
+sidebar_order: 1
+---
+
+<SpecRfcAlert />
+
+<SpecMeta />
+
+## Overview
+
+This spec defines how SDKs control **what data is collected automatically** from the runtime (device, requests, responses, user context). It replaces the single `sendDefaultPii` (or platform-equivalent) flag with a structured `dataCollection` configuration so users can enable or restrict collection by category and by field.
+
+Related specs:
+
+- [Data Handling](/sdk/expected-features/data-handling/) — structuring data for scrubbing (spans, breadcrumbs), variable size limits
+- [Client](/sdk/foundations/client/) — client lifecycle and event pipeline
+- [Configuration](/sdk/foundations/client/configuration/) — top-level init options including `send_default_pii` (deprecated in favor of this spec)
+
+---
+
+## Data Tiers
+
+Collected data is grouped into three tiers. SDKs **MUST** treat these tiers consistently when applying defaults and user configuration.
+
+<SpecSection id="data-tiers" status="stable" since="1.0.0">
+
+### 1. Technical Context Data
+
+Non-identifying context used for debugging and performance:
+
+- Device and environment context (OS, runtime, non-PII identifiers)
+- Performance and error context (stack traces, breadcrumbs, span metadata)
+- Framework/routing context where it does not contain PII or secrets
+
+This tier is **not** gated by the data collection configuration. SDKs **MAY** collect it by default.
+
+### 2. PII Data
+
+Personally identifiable or user-linked data:
+
+- User identifiers (user ID, username, email)
+- IP address
+- Cookies and headers that identify the user or session
+- AI Agent input and output messages
+
+This tier **MUST** be off by default unless the user opts in via `includeUserInfo` and/or explicit `collect` allowlists. See [Include User Info](#include-user-info), [collect options](#collect-options), and [Default Denylist](#default-denylist).
+
+### 3. Sensitive Data
+
+Credentials and secrets that must never be sent by default:
+
+- Passwords, tokens, API keys, bearer tokens
+- Header or cookie values that match known sensitive names (auth, token, secret, password, key, jwt, etc.)
+
+SDKs **MUST** never send sensitive **values** through automatic instrumentation; keys are included by the SDK while values are replaced with `"[Filtered]"` (see [Default Denylist](#default-denylist)). Users can use `beforeSend` (or equivalent) to remove or redact keys if needed.
+
+</SpecSection>
+
+---
+
+## Configuration Surface
+
+All data-collection options live under a single key: `dataCollection`.
+
+<SpecSection id="configuration-surface" status="stable" since="1.0.0">
+
+### Top-Level Shape
+
+At the top level, users **MAY** specify **`includeUserInfo`** and a **`collect`** record.
+
+- **`includeUserInfo`** is the primary toggle for Personally Identifiable Information (PII). It controls whether user-identity fields are included in or excluded from automatic collection, and sets the default for other PII-heavy options (such as `aiAgentMessages`).
+- **`collect`** controls which categories of request/response and runtime data are gathered (cookies, headers, body, query params, etc.); see the sections below.
+
+Users configure data collection via the init options. An example with the default options:
+
+```typescript
+init({
+  dsn: "...",
+  dataCollection: {
+    includeUserInfo: false,
+    collect: {
+      cookies: true,
+      httpHeaders: true,
+      queryParams: true,
+      stackTraceVariables: true,
+      incomingRequestBody: false,
+      outgoingRequestBody: false,
+      aiAgentMessages: false
+    },
+  },
+});
+```
+
+- SDKs **MUST** support at least `includeUserInfo` and the `collect` object. SDKs **MAY** omit options that do not apply to the platform (e.g. no `outgoingRequestBody` on a backend-only SDK).
+
+For how `includeUserInfo` affects the defaults of collection options, see [How Defaults Cascade](#how-defaults-cascade).
+
+</SpecSection>
+
+---
+
+## Option Reference
+
+<SpecSection id="include-user-info" status="stable" since="1.0.0">
+
+  ### `includeUserInfo`
+
+  **Type:** Boolean option
+
+  Controls whether the SDK automatically attaches user identity fields to events (e.g. `user.id`, `user.email`, `user.username`, `user.ip_address`). This is the primary PII gate: its value sets the default for all other PII-heavy options, most notably `aiAgentMessages`.
+
+  | Value | Behavior |
+  |-------|----------|
+  | `true` | Attach all user identity fields captured by automatic instrumentation. Equivalent to the legacy `sendDefaultPii` flag scoped to user data. |
+  | `false` | Do not attach user identity fields from automatic instrumentation. |
+
+  - **Default:** `false`.
+  - When user data is set **explicitly** on the scope (or equivalent), it is **always** attached regardless of this setting. See [User-Set Data and Scrubbing](#user-set-data-scrubbing).
+
+</SpecSection>
+
+---
+
+<SpecSection id="collect-options" status="stable" since="1.0.0">
+
+  ### `collect` Options
+
+  Each key under `collect` maps to a category of automatically collected data. Refer to the [Option Types](#option-types) section below to understand which value type each key accepts.
+
+  | Key | Option Type | Default | Description |
+  |-----|-------------|---------|-------------|
+  | `cookies` | Collection | `true` | Include cookie values; keys are filtered by the default denylist or by allow/deny lists. |
+  | `httpHeaders` | Collection | `true` | Include HTTP header values; keys are filtered by the default denylist or by allow/deny lists. |
+  | `queryParams` | Collection | `true` | Include URL query parameter values; keys are filtered by the default denylist or by allow/deny lists. |
+  | `stackTraceVariables` | Boolean | Inherits `includeUserInfo` | Include local variable values captured within stack traces. |
+  | `incomingRequestBody` | Boolean | Inherits `includeUserInfo` | Include full body of the incoming HTTP request. |
+  | `outgoingRequestBody` | Boolean | Inherits `includeUserInfo` | Include full body of outgoing HTTP requests. |
+  | `aiAgentMessages` | Boolean | Inherits `includeUserInfo` | Include AI agent input and output messages. |
+
+  <Expandable title="Why are some options boolean-only?">
+    Unlike cookies or headers, some data (e.g. request bodies) has no predictable key structure for the SDK to filter. Data can still be redacted in `beforeSend` or event processors if needed.
+  </Expandable>
+
+
+  <SpecSection id="option-types" status="stable" since="1.0.0">
+
+    ### Option Types
+
+    Each option in `dataCollection.collect` uses one of two distinct value types. Which type an option accepts depends on whether the collected data is structured as named key-value pairs (e.g. cookies, headers) or as an opaque blob (e.g. request bodies).
+
+    ---
+
+    #### Boolean Options
+
+    Used for categories where data cannot be meaningfully filtered at the key level — the SDK either collects the entire category or skips it entirely.
+
+    | Value | Behavior |
+    |-------|----------|
+    | `true` | Collect and attach this data category. |
+    | `false` | Do not collect this data category at all. |
+
+    Examples: `incomingRequestBody`, `outgoingRequestBody`, `aiAgentMessages`.
+
+    ---
+
+    #### Collection Options
+
+    Used for categories structured as named key-value pairs, where the SDK can inspect individual keys and apply filtering rules before attaching data. In addition to the `true`/`false` toggle, these options accept an allow/deny object for fine-grained control.
+
+    | Value | Behavior |
+    |-------|----------|
+    | `true` | Collect this category. Apply the default denylist — values for sensitive key names (e.g. `authorization`, `cookie`, `token`) are replaced with `"[Filtered]"` (see [Default Denylist](#default-denylist)). |
+    | `false` | Do not collect this category at all. |
+    | `{ deny: string[] }` | Collect this category. Apply the default denylist **plus** these additional key names. |
+    | `{ allow: string[] }` | Collect **only** keys matching this list. The default denylist is replaced, but sensitive values **MUST** still be scrubbed regardless. |
+
+    > **Note:** Sensitive key **values** are always scrubbed — they are replaced with `"[Filtered]"` — regardless of how the collection option is configured. The allow/deny lists control which keys are included, not whether scrubbing applies.
+
+    Examples: `cookies`, `httpHeaders`, `queryParams`.
+
+  </SpecSection>
+
+
+  <SpecSection id="how-defaults-cascade" status="stable" since="1.0.0">
+
+    ### How Defaults Cascade
+
+    Because `includeUserInfo` acts as the main gate for PII, its value determines the defaults for other PII-heavy options. Explicitly set `collect` options always override these defaults.
+
+    | Option type | Default when `includeUserInfo: true` | Default when `includeUserInfo: false` |
+    |-------------|--------------------------------------|----------------------------------------|
+    | Collection (key-value pairs) | `true` — use default denylist | `true` — use default denylist, plus PII keys denied |
+    | Boolean | `true` — attach | `false` — do not attach |
+
+  </SpecSection>
+
+
+
+</SpecSection>
+
+---
+
+## Default Denylist
+
+For key-value data (HTTP headers, cookies, URL query params), SDKs **MUST** apply a **default denylist** by key name: values for known-sensitive keys are replaced with `"[Filtered]"`; **keys are never scrubbed** by the SDK.
+
+<SpecSection id="default-denylist" status="stable" since="1.0.0">
+
+### Matching Rule
+
+SDKs **MUST** perform a **partial, case-insensitive match** when comparing header names, cookie names, and query parameter names against the denylist. A key is treated as sensitive if any denylist term appears as a substring in the key (e.g. the term `auth` matches the header names `Authorization` and `X-Auth-Token`).
+
+### Base Denylist (Sensitive Data)
+
+The following terms **MUST** be included in the default denylist for headers (and **SHOULD** be used for cookies and query params where applicable). A key is sensitive if it **partially matches**, case-insensitively, any of:
+
+`["auth", "token", "secret", "password", "passwd", "pwd", "key", "jwt", "bearer", "sso", "saml", "csrf", "xsrf", "credentials", "session", "sid", "identity"]`
+
+Values for keys that match **MUST** be replaced with `"[Filtered]"`.
+
+### PII Denylist (when `includeUserInfo` is `false`)
+
+When `includeUserInfo` is `false`, SDKs **MUST** apply the base denylist **and** treat the following as sensitive (in addition to the list above):
+
+- Any data that contains the following: email, user ID, IP address, username, machine name (if applicable)
+- Any header or key containing **`x-forwarded-`** (e.g. `x-forwarded-for`, `x-forwarded-host`) — often carries client IP or host.
+- Any header or key whose name ends with or contains **`-user`** (e.g. `x-user-id`, `remote-user`) — often carries user identifiers.
+
+So the effective denylist when PII is disabled is: base list + `["x-forwarded-", "-user"]` (substring match, case-insensitive).
+
+### Cookies and Cookie Headers
+- SDKs **SHOULD** maintain a default denylist of cookie names using the same matching rule (e.g. `session`, `auth`, `identity`). Values for matching cookie names **MUST** be replaced with `"[Filtered]"`.
+- **When individual cookie key-value pairs cannot be extracted** (e.g. malformed or opaque cookie header), the entire `Cookie` or `Set-Cookie` header value **MUST** be replaced with `"[Filtered]"`. Unfiltered raw cookie header values **MUST NOT** be sent. When in doubt, treat the whole cookie header as sensitive.
+
+### Request Bodies
+
+When request or response bodies are collected (`incomingRequestBody` / `outgoingRequestBody`):
+
+- **Parseable as JSON or form data:** SDKs **MAY** extract key-value pairs and apply the same denylist rules (partial, case-insensitive match) to keys. Values for matching keys **MUST** be replaced with `"[Filtered]"`. This allows selective scrubbing while retaining non-sensitive fields for debugging.
+- **Raw bodies (not parseable as JSON or FormData):** The body **MUST** be removed and **MUST NOT** be attached to the event. "Raw" HTTP bodies (e.g. binary payloads, plain text, or unparseable content) are never sent through automatic instrumentation. When the SDK cannot parse the body into key-value structure, the entire body **MUST** be replaced with `"[Filtered]"`.
+
+No built-in option scrubs **keys**; users who need to hide header or cookie names **MUST** use `beforeSend` (or equivalent).
+
+</SpecSection>
+
+---
+
+## Use Cases
+
+The following examples show how `dataCollection` maps to common configurations.
+
+<SpecSection id="use-case-default" status="stable" since="1.0.0">
+
+### Maximum PII (full collection)
+
+When the user enables full PII collection:
+
+- `includeUserInfo: true`
+- `collect`: all collection options `true` (default denylist); `incomingRequestBody`, `outgoingRequestBody`, and `aiAgentMessages` are `true`.
+
+**Result:** Technical context and request/response data (headers, cookies, query params) are collected with the default denylist; request bodies, user identifiers, and AI agent messages are included; sensitive values are still replaced with `"[Filtered]"`.
+
+</SpecSection>
+
+<SpecSection id="use-case-debugging" status="stable" since="1.0.0">
+
+### Granular Debugging
+
+The user wants to include user info and only specific headers for debugging, and does not want to send query params at all:
+
+```typescript
+init({
+  dsn: "...",
+  dataCollection: {
+    includeUserInfo: true,
+    collect: {
+      httpHeaders: { allow: ['x-request-id', 'x-trace-id', 'x-correlation-id'] },
+      queryParams: false,
+    },
+  },
+});
+```
+
+Because `includeUserInfo` is set, `aiAgentMessages` defaults to `true` unless the user explicitly sets `collect: { aiAgentMessages: false }`.
+
+</SpecSection>
+
+<SpecSection id="use-case-migration" status="stable" since="1.0.0">
+
+### Migration from sendDefaultPii
+
+- **`sendDefaultPii: true`** (legacy) → `dataCollection: { includeUserInfo: true }` and keep `collect` defaults.
+- **`sendDefaultPii: false`** (legacy) → `dataCollection: { includeUserInfo: false }` (or omit; same as default).
+
+SDKs **SHOULD** document this mapping and **MAY** implement `send_default_pii` as a compatibility shim that sets `includeUserInfo`.
+
+</SpecSection>
+
+---
+
+## User-Set Data and Scrubbing
+
+<SpecSection id="user-set-data-scrubbing" status="stable" since="1.0.0">
+
+### Data set by the user
+
+When the user **explicitly** sets data on the scope (user, request, response, tags, contexts, etc.) or on a span, log, or other telemetry, that data is **not** gated by `dataCollection`. It **MUST** always be attached to outgoing telemetry. The same applies to data the user provides via `beforeSend` or event processors (e.g. attaching a request object).
+
+### Automatic vs explicit data
+
+SDKs **SHOULD** only replace sensitive values with `"[Filtered]"` when the data is gathered **automatically** through instrumentation. If the user explicitly provides data (e.g. by setting a request object on the scope), the SDK **MUST NOT** modify it; the user is responsible for what they attach.
+
+### beforeSend and event processors
+
+Users can register callbacks (e.g. `beforeSend`, event processors) to remove or redact any data — including keys — before events are sent. This spec does not replace those hooks; they remain the mechanism for custom filtering and key removal.
+
+</SpecSection>
+
+---
+
+## Changelog
+
+<SpecChangelog />
