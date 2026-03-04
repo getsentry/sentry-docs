@@ -4,16 +4,21 @@ import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 // Helper to import the middleware module fresh with given env vars.
 // isDeveloperDocs and redirectMap are evaluated at module load time,
 // so we need a fresh import per env var scenario.
-async function importMiddleware(env: Record<string, string | undefined> = {}) {
+async function importMiddleware(env: Record<string, string> = {}) {
   vi.resetModules();
+  vi.unstubAllEnvs();
 
-  const originalEnv = {...process.env};
+  // Ensure the var is absent unless explicitly provided
+  vi.stubEnv('NEXT_PUBLIC_DEVELOPER_DOCS', '');
   delete process.env.NEXT_PUBLIC_DEVELOPER_DOCS;
-  Object.assign(process.env, env);
+
+  for (const [key, value] of Object.entries(env)) {
+    vi.stubEnv(key, value);
+  }
 
   const mod = await import('./middleware');
 
-  process.env = originalEnv;
+  vi.unstubAllEnvs();
 
   return mod;
 }
