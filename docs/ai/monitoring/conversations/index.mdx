@@ -1,0 +1,68 @@
+---
+title: Conversations
+sidebar_order: 15
+new: true
+description: >-
+  Monitor past conversations with your AI assistants. Replay every message and
+  tool call to understand what happened and where things went wrong.
+keywords:
+  - AI conversations
+  - conversation monitoring
+  - chat monitoring
+  - gen_ai.conversation.id
+  - conversation tracking
+  - LLM conversations
+---
+
+Sentry's Conversations view lets you observe the interactions users have had with your chat-based AI assistants. It provides a user-like view into past conversations, showing the full exchange of messages and tool calls so you can understand exactly what happened during each session.
+
+## Prerequisites
+
+Conversations are built on top of [AI Agent Monitoring](/ai/monitoring/agents/). Before you can use them, you need:
+
+1. **Tracing enabled** with the Sentry SDK configured for your AI agent project. Follow the [Agent Monitoring getting started guide](/ai/monitoring/agents/getting-started/) if you haven't already.
+
+2. **A conversation ID on your spans.** Sentry groups spans into conversations using the `gen_ai.conversation.id` attribute. You can set this manually, or some SDK integrations infer it automatically.
+
+## Conversation ID
+
+A conversation is a collection of spans that share the same `gen_ai.conversation.id`. This is typically the ID of the chat session in your application (for example, the session ID you store in your database).
+
+Some SDK integrations (such as OpenAI Agents SDK for Python and OpenAI SDK for Node) automatically infer the conversation ID. For all other integrations, you need to set it manually. See your platform's AI agent monitoring guide for setup instructions:
+
+- [JavaScript/Node](/platforms/javascript/guides/node/ai-agent-monitoring/#tracking-conversations)
+- [Python](/platforms/python/tracing/instrumentation/custom-instrumentation/ai-agents-module/#tracking-conversations)
+
+### Conversations and Traces
+
+Conversations and traces are independent concepts. A single conversation can span multiple traces. For example, if a user refreshes the page mid-conversation, the browser starts a new trace, but the conversation continues with the same ID.
+
+The reverse is also true: a single trace can contain spans from different conversations. For example, if a user starts a new chat session without refreshing the page, the new conversation's spans appear in the same trace as the previous one.
+
+## Conversations List
+
+The [Conversations](https://sentry.io/orgredirect/organizations/:orgslug/insights/conversations/) page shows the most recent conversations that match your filters.
+
+{/* TODO: Add screenshot of conversations list */}
+{/* ![Conversations List](./img/conversations-list.png) */}
+
+Each row in the list displays:
+
+- **First input** — the first user message in the conversation
+- **Last output** — the most recent assistant response
+- **Cost** — estimated dollar cost and token usage
+- **LLM calls** — number of LLM generation requests
+- **Tool calls** — number of tool executions
+
+Use the filters at the top of the page to narrow results by project, date range, or agent.
+
+## Conversation Detail
+
+Click any conversation to open the detail view in a drawer.
+
+{/* TODO: Add screenshot of conversation detail drawer */}
+{/* ![Conversation Detail](./img/conversation-detail.png) */}
+
+The detail view shows a chat-like interface with the full message history: user inputs, assistant responses, and tool calls. Click on any message to see the underlying spans, including individual LLM generations and tool executions, with timing and error information.
+
+This makes it straightforward to trace a conversation from start to finish and pinpoint where things went wrong.
