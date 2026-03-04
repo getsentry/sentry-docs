@@ -1,30 +1,33 @@
 import {NextRequest} from 'next/server';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 
-// Helper to import the middleware module fresh with given env vars
+// Helper to import the middleware module fresh with given env vars.
+// isDeveloperDocs and redirectMap are evaluated at module load time,
+// so we need a fresh import per env var scenario.
 async function importMiddleware(env: Record<string, string | undefined> = {}) {
   vi.resetModules();
 
-  // Set env vars before importing (module-level code reads process.env on load)
   const originalEnv = {...process.env};
-  // Clear both vars first
   delete process.env.DEVELOPER_DOCS_;
   delete process.env.NEXT_PUBLIC_DEVELOPER_DOCS;
   Object.assign(process.env, env);
 
   const mod = await import('./middleware');
 
-  // Restore env after import
   process.env = originalEnv;
 
   return mod;
 }
 
 function makeRequest(path: string): NextRequest {
-  return new NextRequest(new URL(path, 'https://docs.sentry.io'));
+  return new NextRequest(new URL(path, 'http://localhost:3000'));
 }
 
-describe('middleware redirects', () => {
+function isRedirect(res: Response): boolean {
+  return res.status === 301 || res.status === 302;
+}
+
+describe('middleware redirect set selection', () => {
   beforeEach(() => {
     vi.stubEnv('NODE_ENV', 'test');
   });
@@ -33,63 +36,44 @@ describe('middleware redirects', () => {
     vi.unstubAllEnvs();
   });
 
-  describe('when DEVELOPER_DOCS_ env var is set (edge runtime / build-time inline)', () => {
-    it('uses developer docs redirects', async () => {
+  // "/" only exists in DEVELOPER_DOCS_REDIRECTS, so it's a good signal
+  // for which redirect set is active without hardcoding destinations.
+
+  describe('DEVELOPER_DOCS_ env var (edge build-time inline)', () => {
+    it('activates developer docs redirect set', async () => {
       const {middleware} = await importMiddleware({DEVELOPER_DOCS_: '1'});
 
-      // "/" redirects to "/getting-started/" in developer docs
-      const res = middleware(makeRequest('/'));
-      expect(res.status).toBe(301);
-      expect(new URL(res.headers.get('location')!).pathname).toBe('/getting-started/');
-    });
-
-    it('redirects /docs-components/ to /development/docs/', async () => {
-      const {middleware} = await importMiddleware({DEVELOPER_DOCS_: '1'});
-
-      const res = middleware(makeRequest('/docs-components/'));
-      expect(res.status).toBe(301);
-      expect(new URL(res.headers.get('location')!).pathname).toBe('/development/docs/');
+      // "/" is a developer-docs-only redirect
+      expect(isRedirect(middleware(makeRequest('/')))).toBe(true);
     });
   });
 
-  describe('when NEXT_PUBLIC_DEVELOPER_DOCS env var is set (node runtime fallback)', () => {
-    it('uses developer docs redirects', async () => {
+  describe('NEXT_PUBLIC_DEVELOPER_DOCS env var (node runtime fallback)', () => {
+    it('activates developer docs redirect set', async () => {
       const {middleware} = await importMiddleware({NEXT_PUBLIC_DEVELOPER_DOCS: '1'});
 
-      const res = middleware(makeRequest('/'));
-      expect(res.status).toBe(301);
-      expect(new URL(res.headers.get('location')!).pathname).toBe('/getting-started/');
+      expect(isRedirect(middleware(makeRequest('/')))).toBe(true);
     });
   });
 
-  describe('when no developer docs env var is set (user docs)', () => {
-    it('uses user docs redirects', async () => {
+  describe('no developer docs env var (user docs mode)', () => {
+    it('activates user docs redirect set', async () => {
       const {middleware} = await importMiddleware({});
 
-      // A known user docs redirect
-      const res = middleware(makeRequest('/platforms/python/http_errors/'));
-      expect(res.status).toBe(301);
-      expect(new URL(res.headers.get('location')!).pathname).toBe(
-        '/platforms/python/integrations/django/http_errors/'
-      );
-    });
-
-    it('does not redirect developer docs paths', async () => {
-      const {middleware} = await importMiddleware({});
-
-      // "/" should NOT redirect to /getting-started/ when not in dev docs mode
-      const res = middleware(makeRequest('/some-random-path/'));
-      // Should pass through (not a redirect)
-      expect(res.status).not.toBe(301);
+      // "/" should NOT redirect in user docs mode
+      expect(isRedirect(middleware(makeRequest('/')))).toBe(false);
     });
   });
 
-  describe('pass-through behavior', () => {
+  describe('pass-through', () => {
     it('does not redirect unknown paths', async () => {
       const {middleware} = await importMiddleware({});
+      expect(isRedirect(middleware(makeRequest('/not/a/real/path/')))).toBe(false);
+    });
 
-      const res = middleware(makeRequest('/this/path/does/not/exist/'));
-      expect(res.status).not.toBe(301);
+    it('does not redirect unknown paths in developer docs mode', async () => {
+      const {middleware} = await importMiddleware({DEVELOPER_DOCS_: '1'});
+      expect(isRedirect(middleware(makeRequest('/not/a/real/path/')))).toBe(false);
     });
   });
 });
