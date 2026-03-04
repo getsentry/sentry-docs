@@ -6,6 +6,10 @@ sidebar_order: 20
 
 The transport layer handles all communication between an SDK and the Sentry server. SDKs serialize data into [envelopes](envelopes/), [authenticate](authentication/) requests using DSN-derived credentials, optionally [compress](compression/) payloads, respect [rate limits](rate-limiting/) communicated via response headers, and optionally [buffer envelopes to disk](offline-caching/) for retry on network failure.
 
+## Background Sending
+
+Envelopes **SHOULD** be transmitted in a background thread or equivalent asynchronous mechanism so that sending does not block the application. The send queue **MUST** be flushed when the application shuts down, with a configurable timeout. This is typically exposed to users as [shutdown and draining](https://docs.sentry.io/platforms/javascript/configuration/draining/).
+
 ## Reading the Response
 
 On success, you will receive an HTTP response from the server containing a JSON payload with information on the submitted payload:
