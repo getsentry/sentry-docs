@@ -7,6 +7,7 @@ import {
   getCurrentPlatformOrGuide,
   nodeForPath,
 } from 'sentry-docs/docTree';
+import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
 import {serverContext} from 'sentry-docs/serverContext';
 import {FrontMatter} from 'sentry-docs/types';
 import {PaginationNavNode} from 'sentry-docs/types/paginationNavNode';
@@ -20,6 +21,7 @@ import {Breadcrumbs} from '../breadcrumbs';
 import {buildBreadcrumbs} from '../breadcrumbs/utils';
 import {CodeContextProvider} from '../codeContext';
 import {CopyMarkdownButton} from '../copyMarkdownButton';
+import {DevelopDocsHeader} from '../developDocsHeader';
 import {DocFeedback} from '../docFeedback';
 import {GitHubCTA} from '../githubCTA';
 import {Header} from '../header';
@@ -72,11 +74,15 @@ export async function DocPage({
 
   return (
     <div className="tw-app">
-      <Header
-        pathname={pathname}
-        searchPlatforms={searchPlatforms}
-        platforms={platforms}
-      />
+      {isDeveloperDocs ? (
+        <DevelopDocsHeader pathname={pathname} searchPlatforms={searchPlatforms} />
+      ) : (
+        <Header
+          pathname={pathname}
+          searchPlatforms={searchPlatforms}
+          platforms={platforms}
+        />
+      )}
       <section className="px-0 flex relative">
         {sidebar ?? (
           <Sidebar path={unversionedPath.split('/')} versions={frontMatter.versions} />
