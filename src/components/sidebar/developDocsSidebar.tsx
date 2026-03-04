@@ -22,6 +22,7 @@ const devDocsMenuItems: {root: string; title: string}[] = [
   {root: 'integrations', title: 'Integrations'},
   {root: 'ingestion', title: 'Ingestion'},
   {root: 'sdk', title: 'SDKs'},
+  {root: 'sdk-setup-wizards', title: 'SDK Setup Wizards'},
   {root: 'self-hosted', title: 'Self-Hosted Sentry'},
 ];
 
