@@ -108,6 +108,60 @@ Sentry.metrics().distribution(
 )
 ```
 
+### Scope Attributes
+
+You can set attributes on the scope that will be automatically included in all metrics captured within that scope. This is useful for attaching contextual information that should appear on every metric.
+
+```java {tabTitle: Java}
+import io.sentry.Sentry;
+import io.sentry.SentryAttribute;
+import io.sentry.SentryAttributes;
+
+// Set a single attribute with automatic type inference
+Sentry.setAttribute("request.id", "abc-123");
+
+// Or use a factory method to set the type explicitly
+Sentry.setAttribute(SentryAttribute.integerAttribute("request.duration_ms", 150));
+
+// Set multiple attributes at once
+Sentry.setAttributes(SentryAttributes.of(
+    SentryAttribute.stringAttribute("service", "checkout"),
+    SentryAttribute.booleanAttribute("canary", false)
+));
+
+// All subsequent metrics will include these attributes
+Sentry.metrics().count("order_placed", 1.0);
+
+// Remove an attribute when it's no longer relevant
+Sentry.removeAttribute("canary");
+```
+
+```kotlin {tabTitle: Kotlin}
+import io.sentry.Sentry
+import io.sentry.SentryAttribute
+import io.sentry.SentryAttributes
+
+// Set a single attribute with automatic type inference
+Sentry.setAttribute("request.id", "abc-123")
+
+// Or use a factory method to set the type explicitly
+Sentry.setAttribute(SentryAttribute.integerAttribute("request.duration_ms", 150))
+
+// Set multiple attributes at once
+Sentry.setAttributes(SentryAttributes.of(
+    SentryAttribute.stringAttribute("service", "checkout"),
+    SentryAttribute.booleanAttribute("canary", false)
+))
+
+// All subsequent metrics will include these attributes
+Sentry.metrics().count("order_placed", 1.0)
+
+// Remove an attribute when it's no longer relevant
+Sentry.removeAttribute("canary")
+```
+
+Attributes passed directly to a metric call override scope attributes with the same key.
+
 ### Specifying Units
 
 For `gauge` and `distribution` metrics, you can specify a unit using the `unit` option. This helps Sentry display the metric value in a human-readable format. `MetricsUnit` offers constants for units supported by Sentry. Sending in custom units is not supported.

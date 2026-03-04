@@ -1,0 +1,182 @@
+name: Check Redirects on File Rename
+
+on:
+  pull_request:
+    branches: [master]
+
+jobs:
+  check-redirects:
+    name: Check redirects for renamed files
+    runs-on: ubuntu-latest
+    continue-on-error: true # Fail the check but don't block merge
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Set up git for diff
+        run: |
+          git fetch origin ${{ github.event.pull_request.base.ref }}:${{ github.event.pull_request.base.ref }}
+          echo "GITHUB_BASE_REF=${{ github.event.pull_request.base.ref }}" >> $GITHUB_ENV
+          echo "GITHUB_BASE_SHA=$(git rev-parse origin/${{ github.event.pull_request.base.ref }})" >> $GITHUB_ENV
+          echo "GITHUB_SHA=${{ github.event.pull_request.head.sha }}" >> $GITHUB_ENV
+
+      - name: Run redirect validation
+        id: validate
+        continue-on-error: true
+        run: |
+          set +e
+          OUTPUT=$(bun scripts/check-redirects-on-rename.ts 2>&1)
+          EXIT_CODE=$?
+          set -e
+
+          echo "$OUTPUT"
+
+          # Extract JSON output if present
+          HAS_JSON=false
+          if echo "$OUTPUT" | grep -Fq -- "---JSON_OUTPUT---"; then
+            JSON_OUTPUT=$(echo "$OUTPUT" | sed -n '/---JSON_OUTPUT---/,/---JSON_OUTPUT---/p' | sed '1d;$d')
+            echo "validation_result<<EOF" >> $GITHUB_OUTPUT
+            echo "$JSON_OUTPUT" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+            HAS_JSON=true
+          fi
+
+          echo "has_results=$HAS_JSON" >> $GITHUB_OUTPUT
+          echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
+
+      - name: Post comment if redirects are missing
+        if: steps.validate.outputs.exit_code == '1' && steps.validate.outputs.has_results == 'true'
+        uses: actions/github-script@v7
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          script: |
+            // Use toJSON() to safely escape the JSON string for JavaScript interpolation
+            // toJSON() will JSON-encode the string, so we need to parse it once to get the original JSON string,
+            // then parse again to get the actual object
+            const validationResultJsonString = ${{ toJSON(steps.validate.outputs.validation_result) }};
+            let validationResult;
+            try {
+              // First parse: convert from JSON-encoded string to original JSON string
+              const jsonString = JSON.parse(validationResultJsonString);
+              // Second parse: convert from JSON string to object
+              validationResult = JSON.parse(jsonString);
+            } catch (e) {
+              console.error('Failed to parse validation result:', e);
+              return;
+            }
+
+            const missingRedirects = validationResult.missingRedirects || [];
+
+            if (missingRedirects.length === 0) {
+              return;
+            }
+
+            // Group by redirects array type
+            const devDocsRedirects = missingRedirects.filter(mr => mr.isDeveloperDocs);
+            const userDocsRedirects = missingRedirects.filter(mr => !mr.isDeveloperDocs);
+
+            let comment = '## ⚠️ Missing Redirects Detected\n\n';
+            comment += 'This PR renames or moves MDX files, but some redirects may be missing from `redirects.js` or `src/middleware.ts`.\n\n';
+            comment += 'Please add the following redirects to ensure old URLs continue to work:\n\n';
+
+            if (userDocsRedirects.length > 0) {
+              comment += '### User Docs Redirects\n\n';
+              comment += '**Option A (Recommended):** Add to `USER_DOCS_REDIRECTS` in `src/middleware.ts`:\n\n';
+              comment += '```typescript\n';
+              userDocsRedirects.forEach(mr => {
+                comment += `  {\n`;
+                comment += `    from: '${mr.oldUrl}',\n`;
+                comment += `    to: '${mr.newUrl}',\n`;
+                comment += `  },\n`;
+              });
+              comment += '```\n\n';
+              comment += '**Option B:** Add to `userDocsRedirects` in `redirects.js`:\n\n';
+              comment += '```javascript\n';
+              userDocsRedirects.forEach(mr => {
+                comment += `  {\n`;
+                comment += `    source: '${mr.oldUrl}',\n`;
+                comment += `    destination: '${mr.newUrl}',\n`;
+                comment += `  },\n`;
+              });
+              comment += '```\n\n';
+            }
+
+            if (devDocsRedirects.length > 0) {
+              comment += '### Developer Docs Redirects\n\n';
+              comment += '**Option A (Recommended):** Add to `DEVELOPER_DOCS_REDIRECTS` in `src/middleware.ts`:\n\n';
+              comment += '```typescript\n';
+              devDocsRedirects.forEach(mr => {
+                comment += `  {\n`;
+                comment += `    from: '${mr.oldUrl}',\n`;
+                comment += `    to: '${mr.newUrl}',\n`;
+                comment += `  },\n`;
+              });
+              comment += '```\n\n';
+              comment += '**Option B:** Add to `developerDocsRedirects` in `redirects.js`:\n\n';
+              comment += '```javascript\n';
+              devDocsRedirects.forEach(mr => {
+                comment += `  {\n`;
+                comment += `    source: '${mr.oldUrl}',\n`;
+                comment += `    destination: '${mr.newUrl}',\n`;
+                comment += `  },\n`;
+              });
+              comment += '```\n\n';
+            }
+
+            comment += '---\n';
+            comment += '_Note: `src/middleware.ts` is recommended for simple exact-match redirects. Use `redirects.js` for redirects with path parameters (e.g., `:path*`)._\n';
+
+            // Check for existing comments from this action
+            const {data: comments} = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const existingComment = comments.find(comment => 
+              comment.user.type === 'Bot' && 
+              (comment.user.login === 'github-actions[bot]' || comment.user.login.includes('bot')) &&
+              comment.body.includes('Missing Redirects Detected')
+            );
+
+            if (existingComment) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existingComment.id,
+                body: comment,
+              });
+              console.log(`Updated existing comment ${existingComment.id}`);
+            } else {
+              // Create new comment
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: comment,
+              });
+              console.log('Created new comment');
+            }
+
+      - name: Report failure if redirects are missing
+        if: steps.validate.outputs.exit_code == '1' && steps.validate.outputs.has_results == 'true'
+        run: |
+          echo "::warning::Missing redirects detected. Please add the redirects shown in the PR comment above."
+          echo "::warning::This check will show as failed, but will not block merging. However, adding redirects is recommended."
+          exit 1
+
+      - name: Success - no redirects needed
+        if: steps.validate.outputs.exit_code == '0'
+        run: |
+          echo "✅ No file renames detected, or all renames have corresponding redirects."

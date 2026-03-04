@@ -1,0 +1,224 @@
+---
+title: Set Up Logs
+sidebar_title: Logs
+description: "Structured logs allow you to send, view and query logs sent from your applications within Sentry."
+sidebar_order: 5755
+sidebar_section: features
+new: true
+---
+
+Stack traces tell you *what* broke. Logs tell you *why*. When an error fires, you get a snapshot of the failure, but the context leading up to it is often missing. Logs capture the journey — what the data looked like, which code paths executed, and what state the system was in.
+
+Sentry Logs are **high-cardinality** — you can pass any attributes you want and search or filter by them later. No need to decide upfront which fields are important. Just log what might be useful and query it when you need it.
+
+## Requirements
+
+<PlatformContent includePath="logs/requirements" />
+
+Logs are supported on all platforms listed in <PlatformLink to="/features/#supported-platforms">Supported Platforms</PlatformLink>.
+
+<SplitLayout>
+
+<SplitSection>
+<SplitSectionText>
+
+## Setup
+
+Enable logging by adding `logs.enabled = true` to your Sentry configuration.
+
+<Alert>
+Using native platform options? See [Using Native Platform Options](#using-native-platform-options) below.
+</Alert>
+
+</SplitSectionText>
+<SplitSectionCode>
+
+<PlatformContent includePath="logs/setup" />
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+## Send Logs
+
+Use `Sentry.logger` to send logs at different levels. A log message is required for Sentry to send the log.
+
+| Level   | When to Use                      |
+| ------- | -------------------------------- |
+| `trace` | Fine-grained debugging           |
+| `debug` | Development diagnostics          |
+| `info`  | Normal operations, milestones    |
+| `warn`  | Potential issues, degraded state |
+| `error` | Failures that need attention     |
+| `fatal` | Critical failures, system down   |
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```kotlin
+import io.sentry.kotlin.multiplatform.Sentry
+
+Sentry.logger.trace("Entering function") { this["fn"] = "processOrder" }
+Sentry.logger.debug("Cache lookup") { this["key"] = "user:123" }
+Sentry.logger.info("Order created") { this["orderId"] = "order_456" }
+Sentry.logger.warn("Rate limit approaching") { this["current"] = 95; this["max"] = 100 }
+Sentry.logger.error("Payment failed") { this["reason"] = "card_declined" }
+Sentry.logger.fatal("Database unavailable") { this["host"] = "primary" }
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+## Add Context
+
+Pass structured data as attributes — these become searchable columns in Sentry.
+
+Use the trailing lambda to attach attributes, or the full DSL with `message()` and `attributes {}` blocks for more complex logs.
+
+You can use `%s` placeholders to create parameterized log messages. 
+These will be automatically extracted as attributes.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+<PlatformContent includePath="logs/usage" />
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+## Filter Logs
+
+Use `logs.beforeSend` to filter or modify logs before they're sent. Return `null` to drop a log.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+<PlatformContent includePath="logs/options" />
+
+</SplitSectionCode>
+</SplitSection>
+
+</SplitLayout>
+
+## Best Practices
+
+<SplitLayout>
+
+<SplitSection>
+<SplitSectionText>
+
+### Wide Events Over Scattered Logs
+
+Instead of many small logs that are hard to correlate, emit one comprehensive log per operation with all relevant context.
+
+This makes debugging dramatically faster — one query returns everything about a specific order, user, or request.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```kotlin
+import io.sentry.kotlin.multiplatform.Sentry
+
+// ❌ Scattered thin logs
+Sentry.logger.info("Starting checkout")
+Sentry.logger.info("Validating cart")
+Sentry.logger.info("Processing payment")
+Sentry.logger.info("Checkout complete")
+
+// ✅ One wide event with full context
+Sentry.logger.info("Checkout completed") {
+    this["orderId"] = order.id
+    this["userId"] = user.id
+    this["cartValue"] = cart.total
+    this["itemCount"] = cart.items.size
+    this["paymentMethod"] = "stripe"
+    this["duration"] = System.currentTimeMillis() - startTime
+}
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Include Business Context
+
+Add attributes that help you prioritize and debug:
+
+- **User context** — tier, account age, lifetime value
+- **Transaction data** — order value, item count
+- **Feature state** — active feature flags
+- **Request metadata** — endpoint, method, duration
+
+This lets you filter logs by high-value customers or specific features.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```kotlin
+import io.sentry.kotlin.multiplatform.Sentry
+
+Sentry.logger.info("API request completed") {
+    // User context
+    this["userId"] = user.id
+    this["userTier"] = user.plan // "free" | "pro" | "enterprise"
+
+    // Request data
+    this["endpoint"] = "/api/orders"
+    this["method"] = "POST"
+    this["duration"] = 234
+
+    // Business context
+    this["orderValue"] = 149.99
+}
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+</SplitLayout>
+
+## Default Attributes
+
+<PlatformContent includePath="logs/default-attributes" />
+
+## Using Native Platform Options
+
+If you initialize the SDK with <PlatformLink to="/initialization-strategies/#native-platform-options">Native Platform Options</PlatformLink>, enable logs through the native SDK's configuration:
+
+```kotlin {filename:SentrySetup.android.kt} {tabTitle: androidMain}
+import io.sentry.kotlin.multiplatform.PlatformOptionsConfiguration
+
+actual fun platformOptionsConfiguration(): PlatformOptionsConfiguration = {
+    it.dsn = "___PUBLIC_DSN___"
+    // Enable logs to be sent to Sentry
+    it.logs.isEnabled = true
+}
+```
+
+```kotlin {filename:SentrySetup.ios.kt} {tabTitle: iosMain}
+import io.sentry.kotlin.multiplatform.PlatformOptionsConfiguration
+import platform.Foundation.setValue
+
+actual fun platformOptionsConfiguration(): PlatformOptionsConfiguration = {
+    it.dsn = "___PUBLIC_DSN___"
+    // Enable logs to be sent to Sentry
+    // Note that this is an experimental option in Sentry Cocoa v8 and is moved to the main options in v9.
+    it._swiftExperimentalOptions.setValue(true, "enableLogs")
+}
+```
+
+After initializing the SDK with the native platform options, you can use the common `Sentry.logger` API to send logs to Sentry.
+
+## Troubleshooting
+
+<PlatformContent includePath="logs/troubleshooting" />

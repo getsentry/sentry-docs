@@ -32,14 +32,6 @@
     ]
   },
   {
-    "type": "Gauge",
-    "name": "attachment.upload.concurrent",
-    "description": "Number of attachment uploads currently in flight.",
-    "features": [
-      "processing"
-    ]
-  },
-  {
     "type": "Timer",
     "name": "attachment.upload.duration",
     "description": "Time needed to upload an attachment to objectstore.\n\nTagged by:\n- `type`: \"envelope\" or \"attachment_v2\".",
@@ -863,6 +855,12 @@
     "features": []
   },
   {
+    "type": "Distribution",
+    "name": "requests.content_length",
+    "description": "The Content-Length of incoming HTTP requests in bytes.\n\nThis metric is tagged with:\n- `has_content_length`: Whether the Content-Length header was present (\"true\"/\"false\").\n- `route`: The matched route pattern.\n- `status_code`: The HTTP response status code.",
+    "features": []
+  },
+  {
     "type": "Timer",
     "name": "requests.duration",
     "description": "Total duration in milliseconds for handling inbound web requests until the HTTP response is\nreturned to the client.\n\nThis does **not** correspond to the full event ingestion time. Requests for events that are\nnot immediately rejected due to bad data or cached rate limits always return `200 OK`. Full\nvalidation and normalization occur asynchronously, which is reported by\n`event.processing_time`.\n\nThis metric is tagged with:\n- `method`: The HTTP method of the request.\n- `route`: Unique dashed identifier of the endpoint.",
@@ -923,8 +921,8 @@
     "features": []
   },
   {
-    "type": "Counter",
-    "name": "runtime.task.count",
+    "type": "Gauge",
+    "name": "runtime.tasks",
     "description": "Number of active runtime tasks.\n\nEvery call to [`spawn`](`crate::spawn()`) increases this counter by one,\nand decrements the counter by one on termination.\n\nThis metric is tagged with:\n- `id`: A unique identifier for the task, derived from its location in code.\n- `file`: The source filename where the task is created.\n- `line`: The source line where the task is created within the file.",
     "features": []
   },
@@ -1040,6 +1038,12 @@
     "type": "Gauge",
     "name": "service.back_pressure",
     "description": "A number of messages queued in a services inbound message channel.\n\nThis metric is emitted once per second for every running service. Without backlogs, this\nnumber should be close to `0`. If this number is monotonically increasing, the service is\nnot able to process the inbound message volume.\n\nThis metric is tagged with:\n- `service`: The fully qualified type name of the service implementation.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "service.concurrency",
+    "description": "Number of messages currently being handled concurrently by a [`ConcurrentService`](crate::ConcurrentService).\nThis metric is tagged with:\n- `service`: The fully qualified type name of the service implementation.",
     "features": []
   },
   {

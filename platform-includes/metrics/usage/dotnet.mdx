@@ -1,0 +1,42 @@
+Metrics are enabled by default. Once you initialize the SDK, you can send metrics using the `SentrySdk.Experimental.Metrics` APIs.
+
+The `SentryMetricEmitter` type exposes three method groups that you can use to capture different types of metric information: `Counter`, `Gauge`, and `Distribution`.
+
+All methods are generic, where the provided type argument defines the numeric value type that the metric is emitted with.
+The supported numeric types are `byte`, `short`, `int`, `long`, `float`, and `double`.
+
+### Emit a Counter
+
+Counters are one of the more basic types of metrics and can be used to count certain event occurrences.
+
+To emit a counter, do the following:
+
+```csharp
+// Record five total button clicks
+SentrySdk.Experimental.Metrics.EmitCounter("button_click", 5,
+    [new KeyValuePair<string, object>("browser", "Firefox"), new KeyValuePair<string, object>("app_version", "1.0.0")]);
+```
+
+### Emit a Distribution
+
+Distributions help you get the most insights from your data by allowing you to obtain aggregations such as `p90`, `min`, `max`, and `avg`.
+
+To emit a distribution, do the following:
+
+```csharp
+// Add '15.0' to a distribution used for tracking the loading times per page.
+SentrySdk.Experimental.Metrics.EmitDistribution("page_load", 15.0, MeasurementUnit.Duration.Millisecond,
+    [new KeyValuePair<string, object>("page", "/home")]);
+```
+
+### Emit a Gauge
+
+Gauges let you obtain aggregates like `min`, `max`, `avg`, `sum`, and `count`. They can be represented in a more space-efficient way than distributions, but they can't be used to get percentiles. If percentiles aren't important to you, we recommend using gauges.
+
+To emit a gauge, do the following:
+
+```csharp
+// Add '15.0' to a gauge used for tracking the loading times for a page.
+SentrySdk.Experimental.Metrics.EmitGauge("page_load", 15.0, MeasurementUnit.Duration.Millisecond,
+    [new KeyValuePair<string, object>("page", "/home")]);
+```

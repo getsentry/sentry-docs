@@ -1,0 +1,43 @@
+### before_send_log
+
+To filter or modify logs before they are sent to Sentry, use the `before_send_log` callback. Return `false` to skip a log, or return the log event to send it.
+
+<PlatformContent includePath="configuration/before-send-log" />
+
+### Logs Configuration
+
+Logs behavior is configured under the `:logs` key in your Sentry configuration. These options control the auto-attached `Sentry.LoggerHandler`:
+
+- **`:level`** - The minimum log level to send to Sentry's Logs Protocol. Default: `:info`. Supported values: `:debug`, `:info`, `:notice`, `:warning`, `:error`, `:critical`, `:alert`, `:emergency`.
+
+- **`:excluded_domains`** - A list of logger domains to exclude from logs sent to Sentry. Default: `[]`.
+
+- **`:metadata`** - Logger metadata keys to include as attributes in log events. Set to `:all` to include all metadata, or a list of specific keys like `[:request_id, :user_id]`. Default: `[]`.
+
+```elixir
+config :sentry,
+  dsn: "___PUBLIC_DSN___",
+  enable_logs: true,
+  logs: [
+    level: :info,
+    excluded_domains: [:ecto],
+    metadata: [:request_id, :user_id] # or :all
+  ]
+```
+
+### Global Configuration Options
+
+These options are set in your Sentry configuration (`config :sentry`):
+
+- **`:enable_logs`** - Set to `true` to enable the logs feature. When enabled, the SDK automatically attaches a `Sentry.LoggerHandler` and routes log events through the SDK's Telemetry Processor. Default is `false`.
+
+- **`:before_send_log`** - A callback function to filter or modify log events before they are sent.
+
+Log events are buffered by the Telemetry Processor with a capacity of 1000 entries and flushed in batches of 100 or every 5 seconds, whichever comes first. You can customize these defaults through the <PlatformLink to="/configuration/options/#telemetry-processor-options">Telemetry Processor options</PlatformLink>.
+
+```elixir
+config :sentry,
+  dsn: "___PUBLIC_DSN___",
+  enable_logs: true,
+  before_send_log: {MyApp.Sentry, :before_send_log}
+```

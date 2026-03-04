@@ -24,6 +24,8 @@ Choose the features you want to configure, and this guide will show you how:
 
 Run the command for your preferred package manager to add the Sentry SDK to your application:
 
+<OnboardingOption optionId="profiling" hideForThisOption>
+
 ```bash {tabTitle:npm}
 npm install @sentry/remix --save
 ```
@@ -35,6 +37,23 @@ yarn add @sentry/remix
 ```bash {tabTitle:pnpm}
 pnpm add @sentry/remix
 ```
+
+</OnboardingOption>
+
+<OnboardingOption optionId="profiling">
+```bash {tabTitle:npm}
+npm install @sentry/remix @sentry/profiling-node --save
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/remix @sentry/profiling-node
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/remix @sentry/profiling-node
+```
+
+</OnboardingOption>
 
 ## Step 2: Configure
 
@@ -164,6 +183,9 @@ Create an instrumentation file `instrument.server.mjs` in your project's root fo
 
 ```typescript {tabTitle:Server} {filename: instrument.server.mjs}
 import * as Sentry from "@sentry/remix";
+// ___PRODUCT_OPTION_START___ profiling
+import { nodeProfilingIntegration } from "@sentry/profiling-node";
+// ___PRODUCT_OPTION_END___ profiling
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
@@ -171,6 +193,11 @@ Sentry.init({
   // Adds request headers and IP for users, for more info visit: and captures action formData attributes
   // https://docs.sentry.io/platforms/javascript/guides/remix/configuration/options/#sendDefaultPii
   sendDefaultPii: true,
+  // ___PRODUCT_OPTION_START___ profiling
+
+  // Add our Profiling integration
+  integrations: [nodeProfilingIntegration()],
+  // ___PRODUCT_OPTION_END___ profiling
   // ___PRODUCT_OPTION_START___ performance
 
   // Set tracesSampleRate to 1.0 to capture 100%
@@ -180,6 +207,13 @@ Sentry.init({
   // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
   tracesSampleRate: 1.0,
   // ___PRODUCT_OPTION_END___ performance
+  // ___PRODUCT_OPTION_START___ profiling
+
+  // Enable profiling for a percentage of sessions
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/configuration/options/#profileSessionSampleRate
+  profileSessionSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ profiling
   // ___PRODUCT_OPTION_START___ logs
 
   // Enable logs to be sent to Sentry
@@ -223,7 +257,8 @@ const app = express();
 </ PlatformSection>
 
 <PlatformSection supported={["javascript.cloudflare"]}>
-Create a `_middleware.js` file in your `functions` directory if you don't have one already. In this file, import and initialize the Sentry Cloudflare SDK:
+
+<Include name="cloudflare-pages-middleware-intro.mdx" />
 
 ```javascript {filename:functions/_middleware.js}
 import * as Sentry from "@sentry/cloudflare";
@@ -425,6 +460,7 @@ At this point, you should have integrated Sentry into your Remix application and
 
 Now's a good time to customize your setup and look into more advanced topics. Our next recommended steps for you are:
 
+- Explore [practical guides](/guides/) on what to monitor, log, track, and investigate after setup
 - Learn how to <PlatformLink to="/usage">manually capture errors</PlatformLink>
 - Continue to <PlatformLink to="/configuration">customize your configuration</PlatformLink>
 - Get familiar with [Sentry's product features](/product/) like tracing, insights, and alerts

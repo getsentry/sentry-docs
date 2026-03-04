@@ -11,9 +11,9 @@ description: "Migrating between versions of Sentry's SDK for Android."
 
 - `Contexts` no longer extends `ConcurrentHashMap`, instead we offer a selected set of methods.
 - `sentry-android-okhttp` has been removed in favor of `sentry-okhttp`, making the module independent from Android ([#3510](https://github.com/getsentry/sentry-java/pull/3510))
-- Calling `Sentry.init()` on Android now throws a `IllegalArgumentException`, please use `SentryAndroid.init()` instead  ([#3596](https://github.com/getsentry/sentry-java/pull/3596))
-- Metrics have been removed from the SDK ([#3774](https://github.com/getsentry/sentry-java/pull/3774))
-  - Metrics will return but we don't know in what exact form yet
+- Calling `Sentry.init()` on Android now throws a `IllegalArgumentException`, please use `SentryAndroid.init()` instead ([#3596](https://github.com/getsentry/sentry-java/pull/3596))
+- The previous metrics API has been removed from the SDK ([#3774](https://github.com/getsentry/sentry-java/pull/3774))
+  - A new Metrics feature is now available. See the [Metrics documentation](/platforms/android/metrics/) for setup instructions.
 - `enableTracing` option (a.k.a `enable-tracing`) has been removed from the SDK ([#3776](https://github.com/getsentry/sentry-java/pull/3776))
   - Please set `tracesSampleRate` to a value >= 0.0 for enabling performance instead. The default value is `null` which means performance is disabled.
 - Change OkHttp sub-spans to span attributes ([#3556](https://github.com/getsentry/sentry-java/pull/3556))
@@ -22,7 +22,7 @@ description: "Migrating between versions of Sentry's SDK for Android."
   - If you are subclassing any Sentry classes, please check if the parent class used `synchronized` before. Please make sure to use the same lock object as the parent class in that case.
 - `traceOrigins` option (`io.sentry.traces.tracing-origins` in manifest) has been removed, please use `tracePropagationTargets` (`io.sentry.traces.trace-propagation-targets` in manifest`) instead ([#3780](https://github.com/getsentry/sentry-java/pull/3780))
 - `profilingEnabled` option (`io.sentry.traces.profiling.enable` in manifest) has been removed, please use `profilesSampleRate` (`io.sentry.traces.profiling.sample-rate` in manifest) instead ([#3780](https://github.com/getsentry/sentry-java/pull/3780))
-    - Please set `profileSampleRate` to a value >= 0.0 for enabling profiling instead. The default value is `null` which means profiling is disabled.
+  - Please set `profileSampleRate` to a value >= 0.0 for enabling profiling instead. The default value is `null` which means profiling is disabled.
 - `shutdownTimeout` option has been removed, please use `shutdownTimeoutMillis` instead ([#3780](https://github.com/getsentry/sentry-java/pull/3780))
 - `profilingTracesIntervalMillis` option for Android has been removed ([#3780](https://github.com/getsentry/sentry-java/pull/3780))
 - `io.sentry.session-tracking.enable` manifest option has been removed ([#3780](https://github.com/getsentry/sentry-java/pull/3780))
@@ -60,7 +60,6 @@ try (final @NotNull ISentryLifecycleToken ignored = Sentry.pushScope()) {
 ```
 
 as well as:
-
 
 ```
 try (final @NotNull ISentryLifecycleToken ignored = Sentry.pushIsolationScope()) {
@@ -523,7 +522,6 @@ The file `sentry.properties` used by the previous version of the SDK has been di
 
 Example of the configuration in the Manifest:
 
-
 ```xml
 <application>
     <!-- Example of the Sentry DSN setting -->
@@ -552,7 +550,6 @@ To initialize the SDK manually:
   ```
 
 - Initialize the SDK directly in your application:
-
 
 ```java
 SentryAndroid.init(this, options -> {

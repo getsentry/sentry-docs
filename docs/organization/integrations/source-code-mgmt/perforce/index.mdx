@@ -1,0 +1,177 @@
+---
+title: Perforce
+sidebar_order: 1
+description: >-
+  Learn more about Sentry's Perforce integration and how it can track and
+  resolve bugs faster by using data from your Perforce changelists.
+---
+
+<Alert title="Beta — Request-Only Access">
+
+The Perforce integration is currently in **beta** and available by **request only**. To get access, contact your Sentry account team or reach out to [Sentry support](https://sentry.io/support/).
+
+Functionality and UX may change during the beta period.
+
+</Alert>
+
+Sentry's Perforce integration connects your P4 Core server to Sentry, enabling stack trace linking, commit tracking, and suspect commit detection for teams using Perforce Helix Core for version control.
+
+## Features
+
+The Perforce integration supports the following features:
+
+| Feature | Description |
+| --- | --- |
+| **Stack Trace Linking** | Navigate from Sentry error stack traces directly to the corresponding file in your Perforce depot. |
+| **Commit Tracking** | Track Perforce changelists associated with Sentry releases. |
+| **Suspect Commits** | Automatically identify which changelists likely introduced an error. |
+| **Suggested Assignees** | Suggest issue assignees based on who authored the suspect changelist. |
+| **P4 Code Review (Swarm) Support** | Link stack traces to files in your Swarm web viewer for browser-based code browsing. |
+
+## Prerequisites
+
+Before installing, make sure you have:
+
+- **Sentry permissions**: Organization owner, manager, or admin role.
+- **Perforce server access**: A Perforce user account with read access to the depots you want to connect. We recommend creating a dedicated service account (e.g., `sentry-bot`).
+- **SSL fingerprint** (if using SSL): Obtain it by running `p4 -p ssl:<host>:<port> trust -y` on a machine with access to your Perforce server.
+- **Network connectivity**: The Sentry application must be able to reach your Perforce server over the network on the configured port.
+
+<Alert title="Note">
+
+We recommend creating a **dedicated service account** on your Perforce server for this integration rather than using a personal user account. This ensures access isn't disrupted when team members leave and keeps changelist attribution consistent.
+
+</Alert>
+
+## Install
+
+1. In [sentry.io](https://sentry.io), navigate to **Settings > Integrations > Perforce** and click "Add Installation".
+
+2. Fill out the configuration form with your Perforce server details:
+
+   | Field | Required | Description |
+   | --- | --- | --- |
+   | **P4PORT (Server Address)** | Yes | Your Perforce server address. Examples: `ssl:perforce.company.com:1666` (encrypted) or `perforce.company.com:1666` (plaintext). SSL is strongly recommended. |
+   | **Perforce Username** | Yes | Username for authenticating with Perforce. |
+   | **Authentication Type** | Yes | Choose **Password** or **P4 Ticket**. Tickets are obtained via `p4 login -p` and don't require re-authentication. |
+   | **Password / Ticket** | Yes | Your Perforce password or P4 authentication ticket, depending on the authentication type selected. |
+   | **Client/Workspace** | No | Optional Perforce client workspace name. |
+   | **SSL Fingerprint** | Required for SSL | SSL fingerprint for secure connections. Required when using the `ssl:` protocol prefix. Obtain with: `p4 -p ssl:<host>:<port> trust -y` |
+   | **P4 Code Review URL** | No | Optional URL to your P4 Code Review (Swarm) web viewer for browsing files in a browser (e.g., `https://swarm.company.com`). |
+
+3. Sentry will verify the connection to your Perforce server. If the connection is successful, the integration will be installed and enabled for all projects in your organization.
+
+### Authentication Types
+
+Sentry supports two authentication methods:
+
+- **Password**: Sentry sends your password to the Perforce server's `p4 login` command to obtain a session ticket. This is the simplest setup.
+- **P4 Ticket**: Use a pre-generated ticket from `p4 login -p`. This avoids sending the password and is useful when your Perforce server uses external authentication (LDAP, etc.).
+
+## Configure
+
+After installing, you'll need to configure features like commit tracking and stack trace linking for your projects.
+
+### Commit Tracking
+
+Commit tracking allows Sentry to associate Perforce changelists with your releases. This enables suspect commit detection and helps your team pinpoint which changelist introduced an issue.
+
+For more details, see the full documentation on [commit tracking and releases](/product/releases/setup/).
+
+Once commit tracking is configured, the author of the suspect changelist will be listed as a suggested assignee for the issue. Click on their icon to assign the issue.
+
+### Suspect Commits
+
+When an error occurs, Sentry automatically queries your Perforce server to find the most recent changelist that modified the file where the error originated. This changelist is shown as a **suspect commit** on the issue details page, along with:
+
+- **Changelist number** (displayed as the commit ID)
+- **Author name and email** (from the Perforce user record)
+- **Changelist description** (commit message)
+- **Timestamp**
+
+### Stack Trace Linking
+
+Stack trace linking takes you from a file in your Sentry stack trace to that same file in your source code. If you have commit tracking set up, Sentry links to the exact revision of the file. Otherwise, it links to the current state.
+
+If you have a P4 Code Review (Swarm) URL configured, links will open in the Swarm web viewer. Otherwise, Sentry uses `p4://` protocol URLs.
+
+#### Setting Up Code Mappings
+
+1. Navigate to **Settings > Integrations > Perforce > Configurations**.
+
+2. Click the gear icon next to your Perforce instance, then click the **Code Mappings** tab.
+
+3. Click **Add Mapping** and fill out the form:
+
+   - **Project** (required): The Sentry project to map.
+   - **Repo** (required): The Perforce depot associated with this project.
+   - **Branch**: Stream name (optional for Perforce — streams are part of the depot path).
+   - **Stack Trace Root** and **Source Code Root** (optional): See below.
+
+#### Stack Trace Root and Source Code Root
+
+<Alert>
+
+The following information is only valid for platforms which use traditional file paths. Platforms with package names require additional steps.
+
+</Alert>
+
+Find an **In App** frame in your stack trace. The filename (e.g., `src/main.cpp`) is shown in the frame header. Compare this to the path in your Perforce depot (e.g., `//depot/project/src/main.cpp`).
+
+If the stack trace shows `src/main.cpp` and the depot path is `//depot/project/src/main.cpp`, set:
+
+- **Stack Trace Root**: `src/`
+- **Source Code Root**: `project/src/`
+
+This tells Sentry to replace `src/` with `project/src/` when locating source files in your depot.
+
+### Updating Configuration
+
+You can update your Perforce server credentials and settings at any time by navigating to **Settings > Integrations > Perforce > Configurations** and clicking the gear icon next to your instance. Changes take effect immediately.
+
+## How It Works
+
+### Connection Architecture
+
+Each Sentry organization gets its own private Perforce integration instance. Credentials are isolated per organization, even if multiple organizations connect to the same Perforce server.
+
+Sentry connects to your Perforce server using the P4Python library and executes standard P4 commands (`p4 depots`, `p4 files`, `p4 changes`, `p4 user`) to retrieve data.
+
+### Depot Discovery
+
+When you add a repository, Sentry queries your Perforce server for all accessible depots using `p4 depots`. You can then select which depots to associate with your Sentry projects.
+
+### Blame Detection
+
+For suspect commit detection, Sentry uses `p4 changes -m 1 -l <file>` to find the most recent changelist that modified each file in a stack trace. This is a lightweight query that doesn't require fetching full file history.
+
+## Limitations
+
+The following features are **not supported** by the Perforce integration:
+
+- **Pull request comments**: Perforce does not have native pull requests.
+- **Issue management**: Creating or linking Perforce issues from Sentry is not supported.
+- **Resolve via commit**: Automatic issue resolution via commit messages is not supported.
+- **CODEOWNERS**: Importing CODEOWNERS files from Perforce is not supported.
+- **Line-level blame**: Suspect commits are detected at the file level, not per line.
+
+## Troubleshooting
+
+### Connection failures
+
+If you see "Failed to connect to Perforce server", verify:
+
+- Your P4PORT address is correct and reachable from Sentry's network.
+- If using SSL, ensure the SSL fingerprint is correct. Re-obtain it with: `p4 -p ssl:<host>:<port> trust -y`
+- Your firewall allows inbound connections on the Perforce port (typically 1666).
+
+### Authentication failures
+
+If you see "Authentication failed":
+
+- **Password auth**: Verify the username and password are correct.
+- **Ticket auth**: Tickets expire. Generate a new one with `p4 login -p` and update the integration configuration.
+
+### Depot not found
+
+If a depot doesn't appear when adding a repository, verify that the service account has read access to that depot on the Perforce server.

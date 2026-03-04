@@ -38,12 +38,23 @@ supported:
 
 ## Server-Side Usage
 
+<PlatformSection supported={["javascript.nextjs", "javascript.nuxt", "javascript.solidstart", "javascript.sveltekit", "javascript.react-router", "javascript.remix", "javascript.astro", "javascript.tanstackstart-react"]}>
+
+<Alert>
+
+For meta-framework applications using all runtimes, you need to manually create a LangChain callback handler with `createLangChainCallbackHandler`. See instructions in the [Browser-Side Usage](#browser-side-usage) section.
+
+</Alert>
+
+</PlatformSection>
+
+<PlatformSection notSupported={["javascript.nextjs", "javascript.nuxt", "javascript.solidstart", "javascript.sveltekit", "javascript.react-router", "javascript.remix", "javascript.astro", "javascript.tanstackstart-react"]}>
+
 _Import name: `Sentry.langChainIntegration`_
 
 The `langChainIntegration` adds instrumentation for [`langchain`](https://www.npmjs.com/package/langchain) to capture spans by automatically wrapping LangChain operations and recording AI agent interactions with configurable input/output recording.
 
-
-<PlatformSection notSupported={["javascript.nextjs", "javascript.nuxt", "javascript.solidstart", "javascript.sveltekit", "javascript.react-router", "javascript.remix", "javascript.astro", "javascript.tanstackstart-react", "javascript.bun", "javascript.cloudflare"]}>
+<PlatformSection notSupported={["javascript.bun", "javascript.cloudflare"]}>
 
 <Alert>
 
@@ -53,7 +64,7 @@ Enabled by default and automatically captures spans for LangChain SDK calls. Req
 
 </PlatformSection>
 
-<PlatformSection supported={["javascript.nextjs", "javascript.nuxt", "javascript.solidstart", "javascript.sveltekit", "javascript.react-router", "javascript.remix", "javascript.astro", "javascript.tanstackstart-react", "javascript.bun", "javascript.cloudflare"]}>
+<PlatformSection supported={["javascript.bun", "javascript.cloudflare"]}>
 
 <Alert>
 
@@ -66,6 +77,8 @@ For other runtimes, like the Browser or Edge, the instrumentation needs to be ma
 </PlatformSection>
 
 To customize what data is captured (such as inputs and outputs), see the [Options](#options) in the Configuration section.
+
+</PlatformSection>
 
 </PlatformSection>
 
@@ -108,35 +121,6 @@ await model.invoke("Tell me a joke", {
 ```
 
 To customize what data is captured (such as inputs and outputs), see the [Options](#options) in the Configuration section.
-
-</PlatformSection>
-
-<PlatformSection supported={['javascript.nextjs']}>
-
-## Edge runtime
-
-For Next.js applications using the Edge runtime, you need to manually instrument LangChain operations using the callback handler:
-
-```javascript
-import * as Sentry from "@sentry/nextjs";
-import { ChatAnthropic } from "@langchain/anthropic";
-
-// Create a LangChain callback handler
-const callbackHandler = Sentry.createLangChainCallbackHandler({
-  recordInputs: true,
-  recordOutputs: true,
-});
-
-// Use with chat models
-const model = new ChatAnthropic({
-  model: "claude-3-5-sonnet-20241022",
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
-
-await model.invoke("Tell me a joke", {
-  callbacks: [callbackHandler],
-});
-```
 
 </PlatformSection>
 

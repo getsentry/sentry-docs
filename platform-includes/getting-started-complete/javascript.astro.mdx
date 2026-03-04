@@ -1,0 +1,428 @@
+### Install the Sentry SDK
+
+Install and add the Sentry integration using the `astro` CLI:
+
+```bash {tabTitle:npm}
+npx astro add @sentry/astro
+```
+
+```bash {tabTitle:yarn}
+yarn astro add @sentry/astro
+```
+
+```bash {tabTitle:pnpm}
+pnpm astro add @sentry/astro
+```
+
+<PlatformSection notSupported={["javascript.cloudflare"]}>
+
+<OnboardingOption optionId="profiling">
+
+Next, install the Profiling package using your preferred package manager:
+
+```bash {tabTitle:npm}
+npm install @sentry/profiling-node
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/profiling-node
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/profiling-node
+```
+
+</OnboardingOption>
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.cloudflare"]}>
+
+Next, install Sentry's Cloudflare SDK using your favorite package manager:
+
+<PlatformContent includePath="getting-started-install" />
+
+</PlatformSection>
+
+## Step 2: Configure
+
+### Apply Instrumentation to Your App
+
+Register the Sentry integration in your `astro.config.mjs` file:
+
+<PlatformSection supported={["javascript.cloudflare"]}>
+
+Start by following [Astro's Cloudflare deployment guide](https://docs.astro.build/en/guides/deploy/cloudflare/). Add the Sentry integration to your config, alongside the Cloudflare adapter.
+
+```javascript {filename:astro.config.mjs}
+import { defineConfig } from "astro/config";
+import cloudflare from "@astrojs/cloudflare";
+import sentry from "@sentry/astro";
+
+export default defineConfig({
+  adapter: cloudflare(),
+  integrations: [sentry()],
+});
+```
+
+</PlatformSection>
+
+<PlatformSection notSupported={["javascript.cloudflare"]}>
+
+```javascript {filename:astro.config.mjs}
+import { defineConfig } from "astro/config";
+import sentry from "@sentry/astro";
+
+export default defineConfig({
+  integrations: [sentry()],
+});
+```
+
+</PlatformSection>
+
+### Configure Client-side Sentry
+
+Create a `sentry.client.config.(ts|js)` file in the root of your project. In this file, import and initialize Sentry for the client:
+
+```javascript {filename:sentry.client.config.(ts|js)}
+import * as Sentry from "@sentry/astro";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // Adds request headers and IP for users, for more info visit:
+  // https://docs.sentry.io/platforms/javascript/guides/astro/configuration/options/#sendDefaultPii
+  sendDefaultPii: true,
+
+  integrations: [
+    // ___PRODUCT_OPTION_START___ performance
+    Sentry.browserTracingIntegration(),
+    // ___PRODUCT_OPTION_END___ performance
+    // ___PRODUCT_OPTION_START___ session-replay
+    Sentry.replayIntegration(),
+    // ___PRODUCT_OPTION_END___ session-replay
+    // ___PRODUCT_OPTION_START___ user-feedback
+    Sentry.feedbackIntegration({
+      // Additional SDK configuration goes in here, for example:
+      colorScheme: "system",
+    }),
+    // ___PRODUCT_OPTION_END___ user-feedback
+  ],
+  // ___PRODUCT_OPTION_START___ performance
+
+  // Define how likely traces are sampled. Adjust this value in production,
+  // or use tracesSampler for greater control.
+  tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+  // ___PRODUCT_OPTION_START___ session-replay
+
+  // This sets the sample rate to be 10%. You may want this to be 100% while
+  // in development and sample at a lower rate in production
+  replaysSessionSampleRate: 0.1,
+
+  // If the entire session is not sampled, use the below sample rate to sample
+  // sessions when an error occurs.
+  replaysOnErrorSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ session-replay
+  // ___PRODUCT_OPTION_START___ logs
+
+  // Enable logs to be sent to Sentry
+  enableLogs: true,
+  // ___PRODUCT_OPTION_END___ logs
+});
+```
+
+<PlatformSection notSupported={["javascript.cloudflare"]}>
+
+<Expandable title="Want to change your Sentry config files location or name?">
+
+Sentry automatically detects configuration files named `sentry.(client|server).config.(ts|js)` in the root of your project. You can rename these files or move them to a custom folder within your project.
+To change their location or names, specify the paths in the Sentry Astro integration options in your `astro.config.mjs`:
+
+```javascript {filename:astro.config.mjs}
+export default defineConfig({
+  // Other Astro project options
+  integrations: [
+    sentry({
+      clientInitPath: ".config/sentryClientInit.js",
+      serverInitPath: ".config/sentryServerInit.js",
+    }),
+  ],
+});
+```
+
+</Expandable>
+
+</PlatformSection>
+
+### Configure Server-side Sentry
+
+<PlatformSection notSupported={["javascript.cloudflare"]}>
+
+Create a `sentry.server.config.(ts|js)` file in the root of your project. In this file, import and initialize Sentry for the server:
+
+```javascript {filename:sentry.server.config.(ts|js)}
+import * as Sentry from "@sentry/astro";
+// ___PRODUCT_OPTION_START___ profiling
+import { nodeProfilingIntegration } from "@sentry/profiling-node";
+// ___PRODUCT_OPTION_END___ profiling
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // Adds request headers and IP for users, for more info visit:
+  // https://docs.sentry.io/platforms/javascript/guides/astro/configuration/options/#sendDefaultPii
+  sendDefaultPii: true,
+  // ___PRODUCT_OPTION_START___ profiling
+
+  integrations: [
+    // Add our Profiling integration
+    nodeProfilingIntegration(),
+  ],
+  // ___PRODUCT_OPTION_END___ profiling
+  // ___PRODUCT_OPTION_START___ performance
+
+  // Define how likely traces are sampled. Adjust this value in production,
+  // or use tracesSampler for greater control.
+  tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+  // ___PRODUCT_OPTION_START___ profiling
+
+  // Define how many user sessions have profiling enabled.
+  profileSessionSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ profiling
+  // ___PRODUCT_OPTION_START___ logs
+
+  // Enable logs to be sent to Sentry
+  enableLogs: true,
+  // ___PRODUCT_OPTION_END___ logs
+});
+```
+
+<Alert title="Instrumentation for Astro <3.5.2">
+
+For Astro versions below `3.5.2`, you need to manually add server instrumentation via the Sentry middleware as explained on our <PlatformLink to="/configuration/apis/#server-request-instrumentation">APIs page</PlatformLink>.
+
+</Alert>
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.cloudflare"]}>
+
+<Include name="cloudflare-pages-middleware-intro.mdx" />
+
+```javascript {filename:functions/_middleware.js}
+import * as Sentry from "@sentry/cloudflare";
+
+export const onRequest = [
+  // Make sure Sentry is the first middleware
+  Sentry.sentryPagesPlugin((context) => ({
+    dsn: "___PUBLIC_DSN___",
+
+    // Adds request headers and IP for users, for more info visit:
+    // https://docs.sentry.io/platforms/javascript/guides/astro/configuration/options/#sendDefaultPii
+    sendDefaultPii: true,
+    // ___PRODUCT_OPTION_START___ performance
+
+    // Set tracesSampleRate to 1.0 to capture 100% of spans for tracing.
+    // Learn more at
+    // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+    tracesSampleRate: 1.0,
+    // ___PRODUCT_OPTION_END___ performance
+
+    // Optionally capture action formData attributes with errors.
+    // This requires `sendDefaultPii` set to true as well.
+    captureActionFormDataKeys: {
+      key_x: true,
+      key_y: true,
+    },
+  })),
+  // Add more middlewares here
+];
+```
+
+### Configure Cloudflare for Sentry
+
+<PlatformContent includePath="getting-started-config" />
+
+</PlatformSection>
+
+## Step 3: Add Readable Stack Traces With Source Maps
+
+To upload source maps for clear error stack traces, add your Sentry auth token, organization, and project slugs in the `sentry` options inside `astro.config.mjs`:
+
+<PlatformSection supported={["javascript.cloudflare"]}>
+
+```javascript {filename:astro.config.mjs}
+import { defineConfig } from "astro/config";
+import cloudflare from "@astrojs/cloudflare";
+import sentry from "@sentry/astro";
+
+export default defineConfig({
+  adapter: cloudflare(),
+  integrations: [
+    sentry({
+      org: "___ORG_SLUG___",
+      project: "___PROJECT_SLUG___",
+      // store your auth token in an environment variable
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+    }),
+  ],
+});
+```
+
+</PlatformSection>
+
+<PlatformSection notSupported={["javascript.cloudflare"]}>
+
+```javascript {filename:astro.config.mjs}
+import { defineConfig } from "astro/config";
+import sentry from "@sentry/astro";
+
+export default defineConfig({
+  integrations: [
+    sentry({
+      org: "___ORG_SLUG___",
+      project: "___PROJECT_SLUG___",
+      // store your auth token in an environment variable
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+    }),
+  ],
+});
+```
+
+</PlatformSection>
+
+To keep your auth token secure, set the `SENTRY_AUTH_TOKEN` environment variable in your build environment:
+
+<OrgAuthTokenNote />
+
+```bash {filename:.env.sentry-build-plugin}
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
+<PlatformSection notSupported={["javascript.cloudflare"]}>
+
+## Step 4: Avoid Ad Blockers With Tunneling (Optional)
+
+<PlatformContent includePath="getting-started-tunneling" />
+
+## Step 5: Verify Your Setup
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.cloudflare"]}>
+
+## Step 4: Verify Your Setup
+
+</PlatformSection>
+
+Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
+
+### Issues
+
+To verify that Sentry captures errors and creates issues in your Sentry project, create a test page, for example, at `src/pages/test.astro` with two buttons:
+
+```html {filename: test.astro}
+<script>
+  const buttonOne = document.getElementById("one");
+  const buttonTwo = document.getElementById("two");
+
+  buttonOne.addEventListener("click", throwTestError);
+  buttonTwo.addEventListener("click", throwApiError);
+
+  function throwTestError() {
+    throw new Error("Sentry Example Frontend Error");
+  }
+
+  async function throwApiError() {
+    await fetch("/api/test-error");
+  }
+</script>
+
+<button id="one" type="button">Throw a frontend error</button>
+<button id="two" type="button">Throw an API error</button>
+```
+
+Then also create the route we're calling in our test page, like `src/pages/api/test-error.(js|ts)`:
+
+```javascript {filename: test-error.(js|ts)}
+export async function GET() {
+  throw new Error("Sentry Example API Route Error");
+}
+```
+
+Open the page in a browser and click the buttons to trigger a frontend error and an error in the API route.
+
+<PlatformContent includePath="getting-started-browser-sandbox-warning" />
+
+<OnboardingOption optionId="performance">
+
+### Tracing
+
+To test tracing, create a custom span to measure the time it takes for the API request to complete:
+
+```html {filename: test.astro}
+<script>
+  import * as Sentry from "@sentry/astro";
+
+  const button = document.getElementById("one");
+
+  button.addEventListener("click", throwApiError);
+
+  async function throwApiError() {
+    await Sentry.startSpan(
+      {
+        name: "Example Frontend Span",
+        op: "test",
+      },
+      async () => {
+        await fetch("/api/test-error");
+      }
+    );
+  }
+</script>
+
+<button id="one" type="button">Throw an API error with a trace</button>
+```
+
+</OnboardingOption>
+
+### View Captured Data in Sentry
+
+Now, head over to your project on [Sentry.io](https://sentry.io) to view the collected data (it takes a couple of moments for the data to appear).
+
+<PlatformContent includePath="getting-started-verify-locate-data" />
+
+## Next Steps
+
+At this point, you should have integrated Sentry into your Astro application and should already be sending data to your Sentry project.
+
+Now's a good time to customize your setup and look into more advanced topics.
+Our next recommended steps for you are:
+
+<PlatformSection notSupported={["javascript.cloudflare"]}>
+
+- Explore [practical guides](/guides/) on what to monitor, log, track, and investigate after setup
+- Continue to <PlatformLink to="/configuration">customize your configuration</PlatformLink>
+- Learn how to <PlatformLink to="/usage">manually capture errors</PlatformLink>
+- Learn more about [deploying Astro apps to Cloudflare Pages](/platforms/javascript/guides/cloudflare/frameworks/astro/)
+- Get familiar with [Sentry's product features](/product/) like tracing, insights, and alerts
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.cloudflare"]}>
+
+- Explore [practical guides](/guides/) on what to monitor, log, track, and investigate after setup
+- Continue to <PlatformLink to="/configuration">customize your configuration</PlatformLink>
+- Learn how to <PlatformLink to="/usage">manually capture errors</PlatformLink>
+- Get familiar with [Sentry's product features](/product/) like tracing, insights, and alerts
+
+</PlatformSection>
+
+<Expandable permalink={false} title="Are you having problems setting up the SDK?">
+
+- Find various topics in <PlatformLink to="/troubleshooting">Troubleshooting</PlatformLink>
+- [Get support](https://sentry.zendesk.com/hc/en-us/)
+
+</Expandable>
