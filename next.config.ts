@@ -146,6 +146,9 @@ const nextConfig = {
   sassOptions: {
     silenceDeprecations: ['legacy-js-api'],
   },
+  experimental: {
+    nodeMiddleware: true,
+  },
 };
 
 module.exports = withSentryConfig(nextConfig, {
