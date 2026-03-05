@@ -191,6 +191,14 @@ const developerDocsRedirects = [
     destination: '/sdk-setup-wizards/:path*',
   },
   {
+    source: '/sdk/expected-features/',
+    destination: '/sdk/',
+  },
+  {
+    source: '/sdk/features/',
+    destination: '/sdk/',
+  },
+  {
     source: '/sdk/envelopes/:path*',
     destination: '/sdk/foundations/transport/envelopes/:path*',
   },
