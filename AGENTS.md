@@ -4,14 +4,6 @@
 
 Use **pnpm**: `pnpm install`, `pnpm dev`, `pnpm build`, `pnpm test`
 
-## Commit Attribution
-
-AI commits MUST include:
-
-```
-Co-Authored-By: Claude <noreply@anthropic.com>
-```
-
 ## Development
 
 - `pnpm dev` - Start dev server with Sentry sidecar
@@ -82,4 +74,4 @@ When writing requirements in `develop-docs/`:
 
 ## Pull Request generation 
 
-Use .github/PULL_REQUEST_TEMPLATE.md and add Co-Authored-By: Claude
+Use .github/PULL_REQUEST_TEMPLATE.md.
