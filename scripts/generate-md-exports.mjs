@@ -2,7 +2,6 @@
 /* eslint-disable no-console */
 import {ListObjectsV2Command, PutObjectCommand, S3Client} from '@aws-sdk/client-s3';
 import imgLinks from '@pondorasti/remark-img-links';
-import * as Sentry from '@sentry/node';
 import {selectAll} from 'hast-util-select';
 import {createHash} from 'node:crypto';
 import {createReadStream, createWriteStream, existsSync} from 'node:fs';
@@ -27,6 +26,11 @@ import RemarkLinkRewrite from 'remark-link-rewrite';
 import remarkStringify from 'remark-stringify';
 import {unified} from 'unified';
 import {remove} from 'unist-util-remove';
+
+// Only load the full Sentry SDK in the main thread to avoid heavy imports in workers
+const Sentry = isMainThread
+  ? await import('@sentry/node')
+  : {init() {}, startSpan: (_, fn) => fn(), metrics: {gauge() {}, count() {}}, flush: async () => {}};
 
 // Initialize Sentry for build-time tracing (main thread only)
 if (isMainThread && process.env.NEXT_PUBLIC_SENTRY_DSN) {
