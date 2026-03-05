@@ -4412,7 +4412,11 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/sdk/data-model/event-payloads/exception/',
-    to: '/sdk/foundations/transport/event-payloads/exception/',
+    to: '/sdk/telemetry/errors/',
+  },
+  {
+    from: '/sdk/foundations/transport/event-payloads/exception/',
+    to: '/sdk/telemetry/errors/',
   },
   {
     from: '/sdk/data-model/event-payloads/lockreason/',
