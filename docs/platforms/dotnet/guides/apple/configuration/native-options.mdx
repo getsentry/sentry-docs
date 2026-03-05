@@ -33,7 +33,7 @@ See [Screenshots](/platforms/apple/guides/ios/configuration/options/#attach-scre
 
 <SdkOption name="Native.EnableAppHangTracking" type="bool" defaultValue="false">
 
-Detects [App Hangs](/platforms/apple/configuration/app-hangs/) — periods where the main thread is unresponsive for longer than `AppHangTimeoutInterval`. Disabled by default.
+Detects [App Hangs](/platforms/apple/configuration/app-hangs/), which are periods where the main thread is unresponsive for longer than `AppHangTimeoutInterval`. Disabled by default.
 
 </SdkOption>
 
@@ -103,7 +103,7 @@ Adds breadcrumbs for each network request. Requires `EnableAutoPerformanceTracin
 
 Automatically creates transactions for `UIViewController` subclasses.
 
-See [UIViewController Instrumentation](/platforms/apple/performance/instrumentation/automatic-instrumentation/#uiviewcontroller-instrumentation).
+See [UIViewController Tracing](/platforms/apple/performance/instrumentation/automatic-instrumentation/#uiviewcontroller-tracing).
 
 </SdkOption>
 
@@ -111,7 +111,7 @@ See [UIViewController Instrumentation](/platforms/apple/performance/instrumentat
 
 Creates transactions for UI events such as button taps and switch toggles. Disabled by default.
 
-See [User Interaction Instrumentation](/platforms/apple/performance/instrumentation/automatic-instrumentation/#user-interaction-instrumentation).
+See [User Interaction Tracing](/platforms/apple/performance/instrumentation/automatic-instrumentation/#user-interaction-tracing).
 
 </SdkOption>
 
@@ -141,13 +141,13 @@ Controls whether the SDK uses [method swizzling](/platforms/apple/configuration/
 
 ## Profiling
 
-Call `AddProfilingIntegration()` on `SentryOptions` to enable native profiling on Apple platforms. This is automatically added by the SDK, but you can call it explicitly if needed.
+Call `AddProfilingIntegration()` on `SentryOptions.Native` to enable native profiling on Apple platforms. This is automatically added by the SDK, but you can call it explicitly if needed.
 
 ```csharp
 SentrySdk.Init(options =>
 {
     options.Dsn = "___PUBLIC_DSN___";
-    options.AddProfilingIntegration();
+    options.Native.AddProfilingIntegration();
 });
 ```
 
@@ -205,7 +205,7 @@ Sample rate for all sessions, between `0.0` and `1.0`. Set to `0.0` or leave as 
 
 <SdkOption name="Native.ExperimentalOptions.SessionReplay.OnErrorSampleRate" type="double?" defaultValue="null">
 
-Sample rate for sessions that encountered an error, between `0.0` and `1.0`. Set to `0.0` or leave as `null` to disable session replay for errored sessions.
+Sample rate for buffered replays that are triggered when an error occurs. The SDK keeps the previous minute of activity and continues until the session ends when an error is sampled.
 
 </SdkOption>
 
@@ -223,7 +223,7 @@ Masks all images in session replay recordings to protect user privacy. Enabled b
 
 <SdkOption name="Native.ExperimentalOptions.SessionReplay.EnableViewRendererV2" type="bool" defaultValue="true">
 
-Captures session replay on a background thread to avoid interfering with the main thread and reduce potential frame drops. Recommended setting — disable only if you encounter specific issues.
+Captures session replay on a background thread to avoid interfering with the main thread and reduce potential frame drops. This is a recommended setting; disable only if you encounter specific issues.
 
 </SdkOption>
 
@@ -235,7 +235,7 @@ Enables faster view rendering at the cost of some visual fidelity. Disabled by d
 
 <SdkOption name="Native.ExperimentalOptions.SessionReplay.EnableSessionReplayInUnreliableEnvironment" type="bool" defaultValue="false">
 
-Forces session replay to be enabled even in unreliable environments (iOS 26+ with Liquid Glass). By default, session replay is disabled on iOS 26 and later because masking of text and images cannot be reliably guaranteed.
+Due to potential masking issues,  session replay is disabled on iOS 26+ with Liquid Glass. If you [understand these issues](/platforms/apple/guides/ios/session-replay/troubleshooting/#why-is-session-replay-not-running-on-ios-260) and want to force Session Replay to be enabled anyway, you can use this setting to enable it.
 
 <Alert level="warning">
 
