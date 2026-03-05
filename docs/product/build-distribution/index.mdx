@@ -43,9 +43,18 @@ This is useful when you have multiple distribution channels (for example, separa
 
 ### How It Works
 
-When you upload a build, you can assign one or more install groups to it. If the Auto-Update SDK is provided install groups, it only returns builds that have overlapping groups.
+Install groups serve two purposes:
 
-Matching requires two builds to have a non-empty intersection of their install groups. For example, a build tagged `["alpha", "staging"]` will see updates from a build tagged `["alpha", "beta"]` because both share `alpha`.
+1. **At upload time**: Tag each build with one or more group names (for example, `"alpha"`, `"staging"`).
+2. **At runtime**: The Auto-Update SDK sends the device's install groups when checking for updates. The server only returns builds that share at least one group with the request.
+
+Matching requires a non-empty intersection. For example, a build tagged `["alpha", "staging"]` will see updates from a build tagged `["alpha", "beta"]` because both share `alpha`.
+
+<Alert level="info">
+
+When using the [Android Gradle plugin](/platforms/android/build-distribution/install-groups/#gradle-plugin), the `installGroups` config handles both roles automatically — it passes `--install-group` flags to sentry-cli during upload **and** embeds the groups in the app so the Auto-Update SDK can read them at runtime.
+
+</Alert>
 
 ### Use Cases
 

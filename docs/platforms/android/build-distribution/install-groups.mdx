@@ -58,3 +58,26 @@ sentry_upload_build(
   install_groups: ['alpha', 'staging']
 )
 ```
+
+## How Install Groups Work With the Auto-Update SDK
+
+When you use the Gradle plugin's `installGroups` config, it does two things:
+
+1. **Upload**: Passes `--install-group` flags to sentry-cli so the build is tagged on the server.
+2. **Embed**: Writes the groups to `sentry-distribution.properties` inside the APK (as `io.sentry.distribution.install-groups-override`). The [Auto-Update SDK](/platforms/android/build-distribution/auto-update/) reads this value at runtime and sends the groups as query parameters when checking for updates.
+
+The server then only returns builds whose install groups overlap with the ones sent by the SDK.
+
+This means a single `installGroups` config line controls both which groups the build is tagged with **and** which updates the app will see — no extra runtime setup needed.
+
+### Programmatic Override
+
+If you need to change the install groups at runtime (for example, based on a feature flag or user setting), you can override them via `SentryOptions`:
+
+```kotlin
+SentryAndroid.init(context) { options ->
+    options.distribution.installGroups = setOf("beta", "internal")
+}
+```
+
+This overrides the groups embedded by the Gradle plugin for update checks only — it does not change the groups the build was uploaded with.

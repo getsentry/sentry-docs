@@ -70,6 +70,7 @@ This expects to find the environment variable `SENTRY_DISTRIBUTION_AUTH_TOKEN`, 
 | `enabled` | Controls whether variants are uploaded for distribution | `false` |
 | `updateSdkVariants` | Set of Android build variants that should have the auto-update SDK added | `[]` (empty set) |
 | `authToken` | Integration token for build distribution operations | `SENTRY_DISTRIBUTION_AUTH_TOKEN` env var |
+| `installGroups` | Set of group names used to tag the build at upload **and** filter available updates at runtime | `[]` (empty set) |
 
 <Alert level="info">
 
@@ -124,6 +125,38 @@ suspend fun checkForUpdate() {
     }
 }
 ```
+
+## Install Groups
+
+Install groups let you control which builds the Auto-Update SDK considers as available updates. When configured, the SDK only sees builds that share at least one install group with the current app. See the [Install Groups guide](/platforms/android/build-distribution/install-groups/) for full upload instructions.
+
+### Gradle Configuration
+
+Add `installGroups` to the `distribution` block:
+
+```kotlin {filename:build.gradle.kts}
+sentry {
+  distribution {
+    enabled = true
+    updateSdkVariants.set(setOf("nightly", "beta"))
+    installGroups.set(setOf("alpha", "staging"))
+  }
+}
+```
+
+The Gradle plugin handles both sides automatically — it tags the uploaded build with these groups **and** embeds them in the app so the SDK sends them when checking for updates.
+
+### Programmatic Override
+
+You can override install groups at runtime if you need dynamic control (for example, based on a remote config or user setting):
+
+```kotlin
+SentryAndroid.init(context) { options ->
+    options.distribution.installGroups = setOf("beta", "internal")
+}
+```
+
+This only affects which updates the SDK requests — it does not change the groups the build was uploaded with.
 
 ## Security Considerations
 
