@@ -53,6 +53,8 @@ Core options that all SDKs **MUST** or **SHOULD** support:
 | `traces_sample_rate` | `float [0,1]` | Trace/transaction sample rate. |
 | `traces_sampler` | `callback` | Dynamic per-transaction sample rate. |
 | `trace_propagation_targets` | `array` | URL patterns for outgoing trace header injection. |
+| `context_tags` | `array` | List of logging context keys to convert to Sentry tags. See [Log Context](#log-context). |
+| `max_request_body_size` | `string` | Controls how large request bodies may be before the SDK skips attaching them. Server SDKs only. See [Request Body Size](#request-body-size). |
 
 </SpecSection>
 
@@ -172,6 +174,37 @@ To further simplify ignoring certain events from being sent to sentry, it is als
 
 ```python
 ignore_transactions = ['GET /api/health','/api/v1/*']
+```
+
+</SpecSection>
+
+<SpecSection id="request-body-size" status="stable" since="1.0.0">
+
+### Request Body Size
+
+Server SDKs **SHOULD** support attaching the incoming HTTP request body to events. The `max_request_body_size` option controls the maximum body size the SDK will attach. The SDK defines the actual byte thresholds for each setting:
+
+| Value | Max Size |
+|---|---|
+| `none` | Never attach the body |
+| `small` | 1,000 bytes |
+| `medium` | 10,000 bytes (default) |
+| `always` | No limit |
+
+</SpecSection>
+
+<SpecSection id="log-context" status="stable" since="1.0.0">
+
+### Log Context
+
+Some logging frameworks provide an option to set logging context. In Java this is called MDC (Mapped Diagnostic Context).
+
+SDKs that integrate with platform logging frameworks **SHOULD** support a `context_tags` configuration option. This option accepts a list of logging context keys whose values the SDK converts to Sentry tags on captured events.
+
+```python
+sentry_sdk.init(
+    context_tags=["request_id", "tenant"],
+)
 ```
 
 </SpecSection>
