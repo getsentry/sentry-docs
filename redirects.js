@@ -160,15 +160,43 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/data-handling/:path*',
-    destination: '/sdk/expected-features/data-handling/:path*',
+    destination: '/sdk/foundations/data-scrubbing/:path*',
   },
   {
-    source: '/sdk/features/:path*',
-    destination: '/sdk/expected-features/:path*',
+    source: '/sdk/expected-features/data-handling/:path*',
+    destination: '/sdk/foundations/data-scrubbing/:path*',
+  },
+  {
+    source: '/sdk/features/data-handling/:path*',
+    destination: '/sdk/foundations/data-scrubbing/:path*',
   },
   {
     source: '/sdk/rate-limiting/:path*',
-    destination: '/sdk/expected-features/rate-limiting/:path*',
+    destination: '/sdk/foundations/transport/rate-limiting/:path*',
+  },
+  {
+    source: '/sdk/expected-features/rate-limiting/:path*',
+    destination: '/sdk/foundations/transport/rate-limiting/:path*',
+  },
+  {
+    source: '/sdk/features/rate-limiting/:path*',
+    destination: '/sdk/foundations/transport/rate-limiting/:path*',
+  },
+  {
+    source: '/sdk/features/environment-variables/',
+    destination: '/sdk/foundations/client/configuration/',
+  },
+  {
+    source: '/sdk/features/setup-wizards/:path*',
+    destination: '/sdk-setup-wizards/:path*',
+  },
+  {
+    source: '/sdk/expected-features/',
+    destination: '/sdk/',
+  },
+  {
+    source: '/sdk/features/',
+    destination: '/sdk/',
   },
   {
     source: '/sdk/envelopes/:path*',
@@ -303,7 +331,7 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/setup-wizards/:path*',
-    destination: '/sdk/expected-features/setup-wizards/:path*',
+    destination: '/sdk-setup-wizards/:path*',
   },
   {
     source: '/sdk/serverless/:path*',
