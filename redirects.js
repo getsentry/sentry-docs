@@ -528,10 +528,6 @@ const developerDocsRedirects = [
     destination: '/sdk/foundations/trace-propagation/#propagation-decision-matrix',
   },
   {
-    source: '/sdk/telemetry/spans/span-trace-propagation/',
-    destination: '/sdk/foundations/trace-propagation/#continue-trace',
-  },
-  {
     source: '/sdk/expected-features/setup-wizards/:path*',
     destination: '/sdk-setup-wizards/:path*',
   },
