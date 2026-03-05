@@ -183,6 +183,14 @@ const developerDocsRedirects = [
     destination: '/sdk/foundations/transport/rate-limiting/:path*',
   },
   {
+    source: '/sdk/features/environment-variables/',
+    destination: '/sdk/foundations/client/configuration/',
+  },
+  {
+    source: '/sdk/features/setup-wizards/:path*',
+    destination: '/sdk-setup-wizards/:path*',
+  },
+  {
     source: '/sdk/envelopes/:path*',
     destination: '/sdk/foundations/transport/envelopes/:path*',
   },
