@@ -18,7 +18,6 @@ export const config = {
     // - favicon.ico (favicon file)
     '/((?!api|_next/static|_next/image|favicon.ico).*)',
   ],
-  runtime: 'nodejs',
 };
 
 // This function can be marked `async` if using `await` inside
@@ -4413,7 +4412,11 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/sdk/data-model/event-payloads/exception/',
-    to: '/sdk/foundations/transport/event-payloads/exception/',
+    to: '/sdk/telemetry/errors/',
+  },
+  {
+    from: '/sdk/foundations/transport/event-payloads/exception/',
+    to: '/sdk/telemetry/errors/',
   },
   {
     from: '/sdk/data-model/event-payloads/lockreason/',
