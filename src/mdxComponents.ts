@@ -1,3 +1,4 @@
+import {AgentSkillsCallout} from './components/agentSkillsCallout';
 import {Alert} from './components/alert';
 import {Arcade} from './components/arcade';
 import {AvailableSince} from './components/availableSince';
@@ -15,7 +16,6 @@ import {CreateGitHubAppForm} from './components/createGitHubAppForm';
 import {DefinitionList} from './components/definitionList';
 import {DevDocsCardGrid} from './components/devDocsCardGrid';
 import DocImage from './components/docImage';
-import {AgentSkillsCallout} from './components/agentSkillsCallout';
 import {Expandable} from './components/expandable';
 import {FeatureBadge} from './components/featureBadge';
 import {GitHubCodePreview} from './components/githubCodePreview';
