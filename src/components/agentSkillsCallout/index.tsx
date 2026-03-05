@@ -3,8 +3,12 @@
 import {useCallback, useState} from 'react';
 import {ChevronDownIcon, ChevronRightIcon} from '@radix-ui/react-icons';
 import * as Sentry from '@sentry/nextjs';
+import Link from 'next/link';
 
 import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
+
+import {CodeBlock} from '../codeBlock';
+import {CodeTabs} from '../codeTabs';
 
 import styles from './style.module.scss';
 
@@ -102,9 +106,9 @@ export function AgentSkillsCallout({skill, platformName}: Props) {
         <span className={styles.description}>
           {description} Works with Cursor, Claude Code, Codex, and more.
         </span>
-        <a href="/ai/agent-skills/" className={styles.viewDocs}>
+        <Link href="/ai/agent-skills/" className={styles.viewDocs}>
           View docs ↗
-        </a>
+        </Link>
       </div>
 
       <details
@@ -123,16 +127,20 @@ export function AgentSkillsCallout({skill, platformName}: Props) {
         <div className={styles.expandBody}>
           <p>
             Run this in your project to add Sentry agent skills. See the{' '}
-            <a href="/ai/agent-skills/">installation docs</a> for more details.
+            <Link href="/ai/agent-skills/">installation docs</Link> for more details.
           </p>
-          <div className={styles.installCommands}>
-            <pre>
-              <code>{buildDotagentsCommand(skill)}</code>
-            </pre>
-            <pre>
-              <code>{buildNpxSkillsCommand(skill)}</code>
-            </pre>
-          </div>
+          <CodeTabs>
+            <CodeBlock language="bash" title="dotagents">
+              <pre className="language-bash">
+                <code>{buildDotagentsCommand(skill)}</code>
+              </pre>
+            </CodeBlock>
+            <CodeBlock language="bash" title="npx skills">
+              <pre className="language-bash">
+                <code>{buildNpxSkillsCommand(skill)}</code>
+              </pre>
+            </CodeBlock>
+          </CodeTabs>
         </div>
       </details>
     </div>
