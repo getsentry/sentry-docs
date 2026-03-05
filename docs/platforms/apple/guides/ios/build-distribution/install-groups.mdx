@@ -36,3 +36,12 @@ sentry_upload_build(
   install_groups: ['alpha', 'staging']
 )
 ```
+
+## How Install Groups Work With the Auto-Update SDK
+
+When the [Auto-Update SDK](/platforms/apple/guides/ios/build-distribution/auto-update/) checks for updates, the server returns the single latest build (highest semver version, with build number as tiebreaker) whose install groups overlap with the filter:
+
+- If the SDK **sends groups explicitly**, the server uses those to filter.
+- If the SDK **doesn't send groups**, the server looks up the uploaded build using the device's `mainBinaryIdentifier` (Mach-O UUID) and uses that build's upload groups for filtering.
+
+Because the `mainBinaryIdentifier` is unique per binary, the server can reliably identify the correct build. This means tagging builds with install groups at upload time is sufficient on iOS — the server inherits the correct groups automatically when checking for updates.

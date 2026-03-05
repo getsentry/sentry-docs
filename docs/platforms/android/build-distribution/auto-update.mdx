@@ -70,7 +70,7 @@ This expects to find the environment variable `SENTRY_DISTRIBUTION_AUTH_TOKEN`, 
 | `enabled` | Controls whether variants are uploaded for distribution | `false` |
 | `updateSdkVariants` | Set of Android build variants that should have the auto-update SDK added | `[]` (empty set) |
 | `authToken` | Integration token for build distribution operations | `SENTRY_DISTRIBUTION_AUTH_TOKEN` env var |
-| `installGroups` | Set of group names used to tag the build at upload **and** filter available updates at runtime | `[]` (empty set) |
+| `installGroups` | Set of group names to tag the build with at upload time (the server uses these to filter update checks automatically) | `[]` (empty set) |
 
 <Alert level="info">
 
@@ -128,7 +128,7 @@ suspend fun checkForUpdate() {
 
 ## Install Groups
 
-Install groups let you control which builds the Auto-Update SDK considers as available updates. When configured, the SDK only sees builds that share at least one install group with the current app. See the [Install Groups guide](/platforms/android/build-distribution/install-groups/) for full upload instructions.
+Install groups let you control which build the Auto-Update SDK returns when checking for updates. The server always returns a single build — the latest (by semver version, then build number) whose install groups overlap with the filter. See the [Install Groups guide](/platforms/android/build-distribution/install-groups/) for full details on how filtering works.
 
 ### Gradle Configuration
 
@@ -144,11 +144,11 @@ sentry {
 }
 ```
 
-The Gradle plugin handles both sides automatically — it tags the uploaded build with these groups **and** embeds them in the app so the SDK sends them when checking for updates.
+The Gradle plugin tags the uploaded build with these groups **and** embeds them in the app so the SDK sends them explicitly when checking for updates. This is the recommended approach — it ensures deterministic filtering regardless of how many builds share the same version number.
 
 ### Programmatic Override
 
-You can override install groups at runtime if you need dynamic control (for example, based on a remote config or user setting):
+You can override the groups the SDK sends at runtime to filter by different groups than what the build was uploaded with:
 
 ```kotlin
 SentryAndroid.init(context) { options ->
@@ -156,7 +156,7 @@ SentryAndroid.init(context) { options ->
 }
 ```
 
-This only affects which updates the SDK requests — it does not change the groups the build was uploaded with.
+This overrides the groups used for filtering update checks. It does not change the groups the build was tagged with on the server.
 
 ## Security Considerations
 

@@ -37,24 +37,25 @@ By default, Build Distribution processes all uploaded builds. You can configure 
 
 ## Install Groups
 
-Install groups let you tag builds with one or more group names to control update visibility. When a device checks for updates, you can provide a list of install groups — only builds that share at least one install group with this list will be returned as available updates.
+Install groups let you tag builds with one or more group names to control update visibility. When the Auto-Update SDK checks for updates, the server finds the single latest build (by semver version, then build number) that shares at least one install group with the request.
 
 This is useful when you have multiple distribution channels (for example, separate branches, teams, or rollout stages) and want to prevent builds from one channel from being offered as updates to another.
 
 ### How It Works
 
-Install groups serve two purposes:
+Install groups are configured in two places, which can be set independently:
 
 1. **At upload time**: Tag each build with one or more group names (for example, `"alpha"`, `"staging"`).
-2. **At runtime**: The Auto-Update SDK sends the device's install groups when checking for updates. The server only returns builds that share at least one group with the request.
+2. **At runtime (optional)**: The Auto-Update SDK can explicitly send install groups when checking for updates to override the default filtering.
 
-Matching requires a non-empty intersection. For example, a build tagged `["alpha", "staging"]` will see updates from a build tagged `["alpha", "beta"]` because both share `alpha`.
+When the SDK checks for updates, the server returns the single latest build (highest semver version, with build number as tiebreaker) whose install groups overlap with the filter. Install groups for the filter are determined as follows:
 
-<Alert level="info">
+- If the SDK **sends groups explicitly**, the server uses those.
+- If the SDK **doesn't send groups**, the server looks up the uploaded build matching the device's current version and uses that build's upload groups. On iOS, the lookup uses the `mainBinaryIdentifier` (Mach-O UUID), which is unique per binary. On Android, it uses `buildVersion` and `buildNumber` — if multiple builds share the same values, the server picks the most recently uploaded one, which may lead to unexpected results.
 
-When using the [Android Gradle plugin](/platforms/android/build-distribution/install-groups/#gradle-plugin), the `installGroups` config handles both roles automatically — it passes `--install-group` flags to sentry-cli during upload **and** embeds the groups in the app so the Auto-Update SDK can read them at runtime.
+We recommend configuring the SDK to send install groups explicitly rather than relying on server-side inheritance. On Android, the [Gradle plugin](/platforms/android/build-distribution/install-groups/#gradle-plugin) `installGroups` config handles this automatically — it tags the upload **and** embeds the groups in the app so the SDK sends them with every update check.
 
-</Alert>
+Matching uses OR logic: a build matches if it shares **at least one** group with the filter. For example, filtering with `["alpha", "staging"]` will match a build tagged `["alpha", "beta"]` because both share `alpha`. Builds with no install groups will not match any filtered request.
 
 ### Use Cases
 
