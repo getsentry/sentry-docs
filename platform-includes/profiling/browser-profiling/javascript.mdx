@@ -4,101 +4,93 @@ Browser Profiling is currently in beta. Beta features are still in progress and 
 
 </Alert>
 
-The browser profiling integration is built using the [JS Self-Profiling API](https://wicg.github.io/js-self-profiling/) and will likely only move out of beta once the specification progresses and gains adoption. See [platform status](https://chromestatus.com/feature/5170190448852992).
+[Profiling](/product/explore/profiling/) captures function-level data from your production code to enable you to fine-tune your app's performance. It tracks what's being called, how often, and where. In the browser, this helps you pinpoint causes of UI jank, understand why metrics like [Interaction to Next Paint (INP)](/product/insights/web-vitals/web-vitals-concepts/#interaction-to-next-paint-inp) are slow, or identify long tasks blocking repaints and causing frame drops.
 
-Note that since the profiling API is currently only exposed in Chromium, profiles collected only include that demographic. We hope that as the API gains adoption, other browsers will implement it as well.
+<Alert level="info" title="Chromium Only">
 
-<PlatformContent includePath="profiling/index/why-profiling" />
+Browser Profiling uses the [JS Self-Profiling API](https://wicg.github.io/js-self-profiling/), currently only available in Chromium-based browsers (Chrome, Edge). Profiles will only include data from these browsers.
 
-## Prerequisites
+</Alert>
 
-To get started with JavaScript browser profiling, you'll need to:
+## Quick Setup
 
 <PlatformSection notSupported={["javascript.electron"]}>
 
-- Install the <PlatformSdkPackageName fallback="@sentry/browser"/> SDK, minimum version `10.27.0` (UI Profiling) or `7.60.0` (deprecated transaction-based Profiling)
+**Requirements**: <PlatformSdkPackageName fallback="@sentry/browser"/> SDK version `10.27.0`+ (or `7.60.0`+ for deprecated transaction-based profiling)
 
 </PlatformSection>
 
 <PlatformSection supported={["javascript.electron"]}>
 
-- Install the <PlatformSdkPackageName fallback="@sentry/electron"/> SDK, minimum version `7.4.0` (UI Profiling) or `4.16.0` (deprecated transaction-based Profiling)
+**Requirements**: <PlatformSdkPackageName fallback="@sentry/electron"/> SDK version `7.4.0`+ (or `4.16.0`+ for deprecated transaction-based profiling)
 
 </PlatformSection>
 
-- Configure the document response header to include `Document-Policy: js-profiling`
-- Configure the SDK to use the `browserProfilingIntegration` and set `profileSessionSampleRate` (UI Profiling) or `profilesSampleRate` (deprecated transaction-based Profiling)
-
-## Step 1: Install the <PlatformOrGuideName/> SDK
-
-Install our <PlatformOrGuideName/> SDK using either `npm`, `yarn`, or `pnpm`.
+### 1. Install the SDK
 
 <PlatformContent includePath="profiling/automatic-instrumentation-intro" />
 
-## Step 2: Add Document-Policy: js-profiling header
+### 2. Add the Document-Policy Header
 
-For the JavaScript browser profiler to start, the document response header needs to include a `Document-Policy` header key with the `js-profiling` value.
+Your server must return `Document-Policy: js-profiling` in response headers.
 
 <PlatformContent includePath="profiling/automatic-instrumentation-headers" />
 
-## Step 3: Configure the <PlatformOrGuideName/> SDK
-
-Configuration should happen as early as possible in your application's lifecycle. Once this is done, Sentry's JavaScript SDK will capture all unhandled exceptions and transactions.
+### 3. Configure the SDK
 
 <PlatformContent includePath="profiling/automatic-instrumentation-setup" />
 
-<Alert level="warning" title="Local Profiling with Chrome DevTools">
-
-When you enable `browserProfilingIntegration` in your SDK configuration, Chrome will incorrectly attribute regular rendering work as “Profiling Overhead” if you are doing local profiling via the Chrome DevTools Performance panel. To avoid this, disable or remove the integration when profiling with Chrome DevTools.
-
-</Alert>
-
 ## Profiling Modes
 
-Profiling supports two modes: `manual` and `trace`. These modes are mutually exclusive and cannot be used at the same time.
+| Mode | Description | Use When |
+|------|-------------|----------|
+| **Manual** (default) | You control when profiling runs | Profiling specific user flows or interactions |
+| **Trace** | Profiler runs automatically with active spans | You want profiles attached to all traced operations |
 
-In `manual` mode, you can manage the profiling data collection via calls to `Sentry.uiProfiler.startProfiler` and `Sentry.uiProfiler.stopProfiler`. You have full control over when the profiler runs.
+### Manual Mode
 
-In `trace` mode, the profiler manages its own start and stop calls based on spans. It continues to run while at least one span is active, and stops when there are no active spans.
+Start and stop the profiler around code you want to profile:
 
-### Manual Lifecycle Profiling
-
-Manual lifecycle profiling is the default mode and enables you to start and stop the profiler manually.
-
-After enabling the `browserProfilingIntegration` and setting a `profileSessionSampleRate`, you can start and stop the profiler with the following calls:
-
-```javascript {9}
-// All spans (unless those discarded by sampling) will have profiling data attached to them.
+```javascript
 Sentry.uiProfiler.startProfiler();
-// Code executed between these two calls will be profiled
+// Code here will be profiled
 Sentry.uiProfiler.stopProfiler();
 ```
 
-### Trace Lifecycle Profiling
+### Trace Mode
 
-To enable trace lifecycle profiling, <PlatformLink to="/tracing">enable tracing</PlatformLink> and set `profileLifecycle` to `'trace'` in your SDK configuration.
+Profiles automatically attach to spans. Enable by setting `profileLifecycle: "trace"`:
 
-```javascript {9}
+```javascript
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   integrations: [
-    Sentry.browserTracingIntegration(), // Enables tracing
+    Sentry.browserTracingIntegration(),
     Sentry.browserProfilingIntegration(),
   ],
-  tracesSampleRate: 1.0, // Enables tracing
+  tracesSampleRate: 1.0,
   profileSessionSampleRate: 1.0,
   profileLifecycle: "trace",
 });
 ```
 
-## The Difference Between DevTools & Sentry's JavaScript Browser Profiler
+## Sentry vs Chrome DevTools
 
-What does Sentry's JavaScript browser profile offer that Chrome DevTools does not?
+| | Sentry Profiling | Chrome DevTools |
+|---|---|---|
+| **Environment** | Production (real users) | Local development |
+| **Sampling rate** | 100Hz (10ms period) | 1000Hz (1ms period) |
+| **Source maps** | Deobfuscated function names | Minified names |
+| **Data scope** | Aggregated across users | Single session |
 
-- Sentry's JavaScript profiler runs in production and captures real user data, showing real-world performance. DevTools runs locally and only shows profiles of what's running on your machine.
-- Sentry runs at a lower sampling rate of 100Hz with a 10ms sample period versus a sampling rate of 1000Hz and a 1ms sample period for DevTools.
-- Sentry supports deobfuscation, making it so that all the function names in your code are correct. Typically, when you run JavaScript code, it's minified, meaning that all the function names are replaced with machine-generated abbreviations.
+<Expandable title="Troubleshooting">
 
-Please note, that since the browser profiling API is currently only implemented in Chromium-based browsers, the profiles collected with Sentry's JavaScript browser profiling will inherently be biased toward that demographic. This is something that you'll need to consider if you're basing your decisions on the data collected.
+**Chrome DevTools shows "Profiling Overhead"**
 
-We hope that as the JavaScript browser profiling API gains adoption, other browsers will implement it as well. If you find the browser profiling feature helpful and would like to see it gain further adoption, please consider supporting the spec at the official WICG repository.
+When `browserProfilingIntegration` is enabled, Chrome DevTools incorrectly attributes rendering work as profiling overhead. Disable the integration when using DevTools locally.
+
+**Profiles only from Chrome users**
+
+This is expected. The JS Self-Profiling API is currently only implemented in Chromium browsers. Consider this bias when analyzing data.
+
+</Expandable>

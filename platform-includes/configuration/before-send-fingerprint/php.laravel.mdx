@@ -1,15 +1,17 @@
 ```php {filename:config/sentry.php}
-'before_send' => function (\Sentry\Event $event, ?\Sentry\EventHint $hint): ?\Sentry\Event {
-    if ($hint !== null && $hint->exception !== null && str_contains($hint->exception->getMessage(), 'database unavailable')) {
-        $event->setFingerprint(['database-unavailable']);
-    }
-
-    return $event;
-},
+'before_send' => [App\Exceptions\Sentry::class, 'beforeSend'],
 ```
 
-<Alert>
+```php {filename:app/Exceptions/Sentry.php}
+class Sentry
+{
+    public static function beforeSend(\Sentry\Event $event, ?\Sentry\EventHint $hint): ?\Sentry\Event
+    {
+        if ($hint !== null && $hint->exception !== null && str_contains($hint->exception->getMessage(), 'database unavailable')) {
+            $event->setFingerprint(['database-unavailable']);
+        }
 
-Learn more in [Closures and Config Caching](/platforms/php/guides/laravel/configuration/laravel-options/#closures-and-config-caching).
-
-</Alert>
+        return $event;
+    }
+}
+```

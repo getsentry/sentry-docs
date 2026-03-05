@@ -1,14 +1,115 @@
-How you do this will depend on your server. If you're using a server like Express, you'll be able to use the [response.set](https://expressjs.com/en/4x/api.html#res.set) function.
+How you configure this depends on your hosting platform or server. Select your setup below:
 
-```javascript
-app.get("/", (request, response) => {
-  response.set("Document-Policy", "js-profiling");
-  response.sendFile("index.html");
+<Expandable title="Vercel">
+
+Add to `vercel.json`:
+
+```json {filename:vercel.json}
+{
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Document-Policy",
+          "value": "js-profiling"
+        }
+      ]
+    }
+  ]
+}
+```
+
+</Expandable>
+
+<Expandable title="Netlify">
+
+Add to `netlify.toml`:
+
+```toml {filename:netlify.toml}
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Document-Policy = "js-profiling"
+```
+
+Or add to `_headers` file in your publish directory:
+
+```text {filename:_headers}
+/*
+  Document-Policy: js-profiling
+```
+
+</Expandable>
+
+<Expandable title="Express / Node.js">
+
+Use middleware to set the header:
+
+```javascript {filename:server.js}
+app.use((req, res, next) => {
+  res.set("Document-Policy", "js-profiling");
+  next();
+});
+
+// Or for a specific route
+app.get("/", (req, res) => {
+  res.set("Document-Policy", "js-profiling");
+  res.sendFile("index.html");
 });
 ```
 
-```csharp
-// ASP.NET Core
+</Expandable>
+
+<Expandable title="Nginx">
+
+Add to your server or location block:
+
+```nginx {filename:nginx.conf}
+server {
+    location / {
+        add_header Document-Policy "js-profiling";
+        # ... rest of your config
+    }
+}
+```
+
+</Expandable>
+
+<Expandable title="Apache">
+
+Add to `.htaccess` or your server config:
+
+```apache {filename:.htaccess}
+<IfModule mod_headers.c>
+    Header set Document-Policy "js-profiling"
+</IfModule>
+```
+
+</Expandable>
+
+<Expandable title="AWS CloudFront">
+
+Use a CloudFront Response Headers Policy or a CloudFront Function:
+
+```javascript {filename:cloudfront-function.js}
+function handler(event) {
+  var response = event.response;
+  var headers = response.headers;
+  headers['document-policy'] = { value: 'js-profiling' };
+  return response;
+}
+```
+
+Attach this function as a "Viewer Response" function to your CloudFront distribution.
+
+</Expandable>
+
+<Expandable title="ASP.NET Core">
+
+Add middleware to set the header:
+
+```csharp {filename:Program.cs}
 app.Use(async (context, next) => {
     context.Response.OnStarting(() => {
         context.Response.Headers.Append("Document-Policy", "js-profiling");
@@ -17,3 +118,11 @@ app.Use(async (context, next) => {
     await next();
 });
 ```
+
+</Expandable>
+
+<Alert level="warning" title="Can't modify server headers?">
+
+If you're using a hosting provider that doesn't allow custom response headers (some static hosting services, corporate proxies, etc.), browser profiling won't be available for your application. Consider using Sentry's [backend profiling](/product/explore/profiling/) for your server-side code instead.
+
+</Alert>

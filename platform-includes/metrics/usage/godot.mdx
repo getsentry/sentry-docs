@@ -1,0 +1,69 @@
+Once metrics are enabled and the SDK is initialized, you can emit metrics using `SentrySDK.metrics`.
+
+### Metric Types
+
+| Type           | Use For                                       |
+| -------------- | --------------------------------------------- |
+| `Counter`      | Events (matches started, items purchased)     |
+| `Gauge`        | Current values (players online, memory usage) |
+| `Distribution` | Value ranges (load times, frame times)        |
+
+### Counters
+
+Track the number of times something happens. Each increment adds to a cumulative total:
+
+```GDScript
+# Increment by 1 (default)
+SentrySDK.metrics.count("match_started")
+
+# Increment by a specific amount with attributes
+SentrySDK.metrics.count("in_app_purchase", 1, {"item": "sword_of_fire"})
+```
+
+### Gauges
+
+Track current values at a point in time, like a snapshot. Sentry computes aggregates like min, max, avg, sum, and count:
+
+```GDScript
+SentrySDK.metrics.gauge("players_online", lobby.get_player_count())
+
+# With a unit
+SentrySDK.metrics.gauge("memory_usage", OS.get_static_memory_usage(), "byte")
+```
+
+### Distributions
+
+Record numeric values to compute statistical aggregates such as p50, p95, avg, min, and max:
+
+```GDScript
+SentrySDK.metrics.distribution("level_load_time", load_time, "millisecond")
+```
+
+### Custom Attributes
+
+Add attributes to filter and group metrics in Sentry:
+
+```GDScript
+SentrySDK.metrics.count("enemies_spawned", wave_size, {"level": "castle"})
+
+SentrySDK.metrics.distribution("level_load_time", load_time, "millisecond", {
+	"scene": get_tree().current_scene.name
+})
+```
+
+Attributes support `bool`, `int`, `float`, and `String` data types. Other types will be converted to strings.
+
+### Units
+
+For gauge and distribution metrics, you can specify a unit as a string to help Sentry display values in a human-readable format. See [supported units](https://develop.sentry.dev/sdk/foundations/data-model/attributes/#units) for the full list.
+
+```GDScript
+# Duration units
+SentrySDK.metrics.distribution("level_load_time", load_time, "millisecond")
+
+# Information units
+SentrySDK.metrics.gauge("memory_usage", OS.get_static_memory_usage(), "byte")
+
+# Custom units
+SentrySDK.metrics.distribution("frame_rate", Engine.get_frames_per_second(), "fps")
+```

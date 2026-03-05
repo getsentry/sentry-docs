@@ -1,0 +1,129 @@
+---
+title: Introducing Breaking Changes
+spec_id: sdk/playbooks/breaking-changes
+spec_version: 1.0.0
+spec_status: candidate
+spec_depends_on:
+  - id: sdk/getting-started/standards/api-architecture
+    version: ">=1.0.0"
+  - id: sdk/getting-started/standards/release-versioning
+    version: ">=1.0.0"
+spec_changelog:
+  - version: 1.0.0
+    date: 2026-02-25
+    summary: Initial playbook — deciding when a change is breaking and shipping it with minimum user friction
+---
+
+<SpecRfcAlert />
+
+<SpecMeta />
+
+## Overview
+
+This playbook guides SDK maintainers through deciding whether a change is breaking and, if so, how to ship it with minimum friction for users. It covers classifying changes, estimating product impact, planning the release, and writing migration guidance. By following these steps, users will have clear migration paths and the SDK update experience will be as smooth as possible.
+
+Related resources:
+- [Breaking change process](/sdk/getting-started/standards/api-architecture#breaking-change-process) — when a major release is required and what every breaking change must include
+- [Deprecation lifecycle](/sdk/getting-started/standards/api-architecture#deprecation-lifecycle) — the deprecation stages and timelines
+- [Deprecating an API](/sdk/getting-started/playbooks/sdk-lifecycle/deprecating-an-api) — step-by-step deprecation workflow
+- [Release and Versioning](/sdk/getting-started/standards/release-versioning) — SemVer requirements and release tooling
+
+---
+
+## Steps
+
+#### 1. Classify the change
+
+Determine whether the change is breaking. If the answer is unclear after reviewing the categories below, discuss with your team before proceeding.
+
+There are four categories of changes that warrant scrutiny:
+
+**API surface changes** — changes users need to adapt their code to:
+- Dropping or renaming part of the public API
+- Dropping or renaming a function argument
+- Changing an argument's type without accepting the previous type
+
+When the public/private boundary is unclear, look for evidence of external usage. Check if the API appears in user-facing docs, search public repositories for usage (e.g., via GitHub code search), or recall if you have seen it used in issue reproduction examples.
+
+**Product impact changes** — changes that alter how data appears in Sentry without requiring code changes from the user:
+- **Grouping** — changes to event data used by the server's grouping algorithm
+- **Dashboards** — renaming or removing span attributes users may be filtering on
+- **Alerts** — attribute changes that could cause alerts to start or stop firing
+- **Insights** — changes to metrics surfaced in the Insights module (e.g., Web or Mobile Vitals)
+- **Issue detection** — changes to span emission that influence server-side issue detection
+
+**Behavior changes** — changes that don't require code changes but significantly affect user experience:
+- Changes that affect the user's event or span quota (e.g., auto-enabling an integration)
+- Changes that might result in events being dropped (e.g., modifying payload trimming limits)
+
+**Version support drops** — dropping support for a language version, OS version, or major framework version.
+
+If a change fixes a severe bug (e.g., an SDK-induced app crash or hang) and breaking behavior is a side effect of the fix, discuss with your team whether it warrants a major release.
+
+#### 2. Gauge product impact
+
+For product-side changes, estimate how many users are affected before deciding on the release strategy. If only a small number of users rely on the attribute or span being changed, a minor release with direct outreach **MAY** be appropriate. Use internal data tools — see [Resources](#resources).
+
+**Note:** Self-hosted Sentry instances are not included in SaaS usage data, but SaaS stats provide a reliable baseline.
+
+#### 3. Decide on release scope
+
+Breaking changes **MUST** ship in a major version and **MUST NOT** ship in minor versions, per the [Breaking change process](/sdk/getting-started/standards/api-architecture#breaking-change-process). Use the classification and impact data from the previous steps to plan the release.
+
+Consider the following when planning:
+
+- **Bundle or separate**: Avoid accumulating large numbers of breaking changes for a single release. Consider whether each change is necessary and whether a compatibility layer is feasible for some. Smaller, more focused major releases are easier to upgrade to.
+- **Release frequency**: In language communities where major releases are routine, more frequent smaller majors reduce the per-upgrade burden. In communities where major releases cause hesitation, weigh the benefit of the change against the risk of a larger segment of users staying on older versions.
+- **Language community norms**: Some languages provide explicit guidelines on what constitutes a breaking change (e.g., [.NET library change rules](https://learn.microsoft.com/en-gb/dotnet/core/compatibility/library-change-rules)).
+
+#### 4. Add deprecation warnings and a compatibility layer
+
+In a prior minor release, prepare users for the upcoming change per the [Deprecation lifecycle](/sdk/getting-started/standards/api-architecture#deprecation-lifecycle):
+
+- Add runtime deprecation warnings that include: what is changing, what to use instead, and a link to migration docs
+- Where feasible, support a transitional phase where both the old and new behavior work — an SDK option acting as a feature flag is a good pattern
+- Maintain deprecated APIs until the major release that removes them
+
+For full step-by-step deprecation guidance, follow the [Deprecating an API](/sdk/getting-started/playbooks/sdk-lifecycle/deprecating-an-api) playbook.
+
+#### 5. Write a migration guide
+
+Every breaking change **MUST** include a migration guide with copy-pastable before/after examples.
+
+- Cover all changed APIs, removed options, and renamed attributes
+- Show what code looked like before and what it should look like after the upgrade
+- Include platform-specific caveats where applicable
+
+You **MUST** validate the guide by running an LLM through the migration on a real or test project using only your migration guide. If the LLM cannot complete the migration, rewrite the guide until it can.
+
+#### 6. Update docs and changelog
+
+You **MUST** add a `BREAKING CHANGE:` footer in the commit that introduces the removal — this triggers CI checks and changelog generation. You **MUST** also add callouts in relevant docs pages (integration guides, configuration reference) and publish the migration guide before or alongside the major release.
+
+#### 7. Consider upgrade tooling
+
+For high-impact or mechanical migrations, you **MAY** provide a codemod or upgrade script to reduce manual effort. If you do, validate it against real-world usage patterns before advertising it — incomplete tooling that silently misses cases is worse than no tooling.
+
+---
+
+## Resources
+
+Use internal data tools to estimate how many users rely on an attribute or feature before deciding whether a change warrants a major release:
+
+- [Looker](https://sentry.looker.com)
+- [Redash](https://redash.getsentry.net)
+- [Hex](https://app.hex.tech)
+
+If you do not have access, reach out to @sdk-leads, the Data team or request access through the IT helpdesk.
+
+---
+
+## Referenced Standards
+
+- [Breaking change process](/sdk/getting-started/standards/api-architecture#breaking-change-process) — when a major release is required, required artifacts, and enforcement
+- [Deprecation lifecycle](/sdk/getting-started/standards/api-architecture#deprecation-lifecycle) — deprecation timeline and stages
+- [Version format](/sdk/getting-started/standards/release-versioning#version-format) — SemVer requirements for major version bumps
+
+---
+
+<SpecChangelog />

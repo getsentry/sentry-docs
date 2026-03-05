@@ -32,14 +32,6 @@
     ]
   },
   {
-    "type": "Gauge",
-    "name": "attachment.upload.concurrent",
-    "description": "Number of attachment uploads currently in flight.",
-    "features": [
-      "processing"
-    ]
-  },
-  {
     "type": "Timer",
     "name": "attachment.upload.duration",
     "description": "Time needed to upload an attachment to objectstore.\n\nTagged by:\n- `type`: \"envelope\" or \"attachment_v2\".",
@@ -84,7 +76,7 @@
     "features": []
   },
   {
-    "type": "Distribution",
+    "type": "Gauge",
     "name": "buffer.envelopes_count",
     "description": "Number of elements in the envelope buffer across all the stacks.\n\nThis metric is tagged with:\n- `storage_type`: The type of storage used in the envelope buffer.",
     "features": []
@@ -135,6 +127,12 @@
     "type": "Timer",
     "name": "buffer.push.duration",
     "description": "Timing in milliseconds for the time it takes for the buffer to push.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "buffer.service_loop_iteration",
+    "description": "Number of iterations of the envelope buffer service loop.",
     "features": []
   },
   {
@@ -201,6 +199,12 @@
     "type": "Counter",
     "name": "event.corrupted",
     "description": "Number of Events that had corrupted (unprintable) event attributes.\n\nThis currently checks for `environment` and `release`, for which we know that\nsome SDKs may send corrupted values.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "event.error.processed",
+    "description": "Amount of errors have been processed by the error processing pipeline.\n\nThis metric is tagged with:\n- `expansion`: What expansion was used to expand the error (e.g. unreal).",
     "features": []
   },
   {
@@ -623,6 +627,12 @@
     ]
   },
   {
+    "type": "Counter",
+    "name": "processing.standalone_item",
+    "description": "Number of 'standalone' items.\n\nThis metric is tagged with:\n- `item_type`: The type of the item.\n- `attachment_type`: The attachment type of the item, if any.",
+    "features": []
+  },
+  {
     "type": "Timer",
     "name": "processor.message.duration",
     "description": "Timing in milliseconds for processing a message in the internal CPU pool.\n\nThis metric is tagged with:\n\n- `message`: The type of message that was processed.",
@@ -662,6 +672,12 @@
   },
   {
     "type": "Counter",
+    "name": "profile_chunk.no_platform",
+    "description": "Amount of profile chunks without a platform item header.\n\nThe metric is emitted when processing profile chunks, profile chunks which are fast path\nrate limited are not counted in this metric.",
+    "features": []
+  },
+  {
+    "type": "Counter",
     "name": "project_cache.eviction",
     "description": "Number of evicted stale projects from the cache.\n\nRelay scans the in-memory project cache for stale entries in a regular interval configured\nby `cache.eviction_interval`.\n\nThe cache duration for project states can be configured with the following options:\n\n- `cache.project_expiry`: The time after which a project state counts as expired. It is\nautomatically refreshed if a request references the project after it has expired.\n- `cache.project_grace_period`: The time after expiry at which the project state will still\nbe used to ingest events. Once the grace period expires, the cache is evicted and new\nrequests wait for an update.",
     "features": []
@@ -682,6 +698,12 @@
     "type": "Timer",
     "name": "project_cache.latency",
     "description": "Latency of project config updates until they reach Relay.\n\nThe metric is calculated by using the creation timestamp of the project config\nand when Relay updates its local cache with the new project config.\n\nNo metric is emitted when Relay fetches a project config for the first time.\n\nThis metric is tagged with:\n- `delay`: Bucketed amount of seconds passed between fetches.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "project_cache.notification_channel.size",
+    "description": "The number of notifications in the broadcast channel of the project cache.",
     "features": []
   },
   {
@@ -845,6 +867,12 @@
     "features": []
   },
   {
+    "type": "Distribution",
+    "name": "requests.content_length",
+    "description": "The Content-Length of incoming HTTP requests in bytes.\n\nThis metric is tagged with:\n- `has_content_length`: Whether the Content-Length header was present (\"true\"/\"false\").\n- `route`: The matched route pattern.\n- `status_code`: The HTTP response status code.",
+    "features": []
+  },
+  {
     "type": "Timer",
     "name": "requests.duration",
     "description": "Total duration in milliseconds for handling inbound web requests until the HTTP response is\nreturned to the client.\n\nThis does **not** correspond to the full event ingestion time. Requests for events that are\nnot immediately rejected due to bad data or cached rate limits always return `200 OK`. Full\nvalidation and normalization occur asynchronously, which is reported by\n`event.processing_time`.\n\nThis metric is tagged with:\n- `method`: The HTTP method of the request.\n- `route`: Unique dashed identifier of the endpoint.",
@@ -905,8 +933,8 @@
     "features": []
   },
   {
-    "type": "Counter",
-    "name": "runtime.task.count",
+    "type": "Gauge",
+    "name": "runtime.tasks",
     "description": "Number of active runtime tasks.\n\nEvery call to [`spawn`](`crate::spawn()`) increases this counter by one,\nand decrements the counter by one on termination.\n\nThis metric is tagged with:\n- `id`: A unique identifier for the task, derived from its location in code.\n- `file`: The source filename where the task is created.\n- `line`: The source line where the task is created within the file.",
     "features": []
   },
@@ -1022,6 +1050,12 @@
     "type": "Gauge",
     "name": "service.back_pressure",
     "description": "A number of messages queued in a services inbound message channel.\n\nThis metric is emitted once per second for every running service. Without backlogs, this\nnumber should be close to `0`. If this number is monotonically increasing, the service is\nnot able to process the inbound message volume.\n\nThis metric is tagged with:\n- `service`: The fully qualified type name of the service implementation.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "service.concurrency",
+    "description": "Number of messages currently being handled concurrently by a [`ConcurrentService`](crate::ConcurrentService).\nThis metric is tagged with:\n- `service`: The fully qualified type name of the service implementation.",
     "features": []
   },
   {

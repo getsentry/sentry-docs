@@ -1,34 +1,43 @@
-import {DocNode} from 'sentry-docs/docTree';
+'use client';
+
+import Link from 'next/link';
+import {useRouter} from 'next/navigation';
 
 import styles from './style.module.scss';
 
-import {SmartLink} from '../smartLink';
-
-type BreadcrumbsProps = {
-  leafNode: DocNode;
+export type BreadcrumbItem = {
+  title: string;
+  to: string;
 };
 
-export function Breadcrumbs({leafNode}: BreadcrumbsProps) {
-  const breadcrumbs: {title: string; to: string}[] = [];
+type BreadcrumbsProps = {
+  items: BreadcrumbItem[];
+};
 
-  for (let node: DocNode | undefined = leafNode; node; node = node.parent) {
-    if (node && !node.missing) {
-      const to = node.path === '/' ? node.path : `/${node.path}/`;
-      const title = node.frontmatter.sidebar_title ?? node.frontmatter.title;
+export function Breadcrumbs({items}: BreadcrumbsProps) {
+  const router = useRouter();
 
-      breadcrumbs.unshift({
-        to,
-        title,
-      });
-    }
-  }
+  const handlePlatformsClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    // Clear stored platform so SDK selector resets
+    localStorage.removeItem('active-platform');
+    // Navigate after clearing localStorage
+    router.push('/platforms/');
+  };
 
   return (
     <ul className="not-prose list-none flex flex-wrap" style={{margin: 0}}>
-      {breadcrumbs.map(b => {
+      {items.map(b => {
+        const isPlatformsLink = b.to === '/platforms/';
         return (
           <li className={styles['breadcrumb-item']} key={b.to}>
-            <SmartLink to={b.to}>{b.title}</SmartLink>
+            {isPlatformsLink ? (
+              <a href={b.to} onClick={handlePlatformsClick}>
+                {b.title}
+              </a>
+            ) : (
+              <Link href={b.to}>{b.title}</Link>
+            )}
           </li>
         );
       })}

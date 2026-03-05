@@ -1,6 +1,7 @@
 import getPackageRegistry from 'sentry-docs/build/packageRegistry';
 import {getCurrentPlatformOrGuide} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
+import {Platform, PlatformGuide} from 'sentry-docs/types/platform';
 
 type PlatformSdkPackageNameProps = {
   /**
@@ -11,15 +12,14 @@ type PlatformSdkPackageNameProps = {
 };
 
 /**
- * Displays the SDK package name for the current platform or guide.
+ * Gets the SDK package name for a platform or guide.
  * Example: `@sentry/react`
  */
-export async function PlatformSdkPackageName({fallback}: PlatformSdkPackageNameProps) {
-  const fallbackName = fallback || 'Sentry';
-  const {rootNode, path} = serverContext();
-  const platformOrGuide = getCurrentPlatformOrGuide(rootNode, path);
+export async function getSdkPackageName(
+  platformOrGuide: Platform | PlatformGuide | null | undefined
+): Promise<string | null> {
   if (!platformOrGuide) {
-    return <code>{fallbackName} </code>;
+    return null;
   }
 
   const packageRegistry = await getPackageRegistry();
@@ -27,14 +27,26 @@ export async function PlatformSdkPackageName({fallback}: PlatformSdkPackageNameP
   const entries = Object.entries(allSdks || {});
   const pair = entries.find(([sdkName]) => sdkName === platformOrGuide.sdk);
   if (!pair) {
-    return <code>{fallbackName} </code>;
+    return null;
   }
   const [, sdkData] = pair;
   if (!sdkData) {
-    return <code>{fallbackName} </code>;
+    return null;
   }
 
-  const prettifiedName = sdkData.canonical.replace(/^npm:/, '');
+  return sdkData.canonical.replace(/^npm:/, '') || null;
+}
 
-  return <code>{prettifiedName || fallbackName} </code>;
+/**
+ * Displays the SDK package name for the current platform or guide.
+ * Example: `@sentry/react`
+ */
+export async function PlatformSdkPackageName({fallback}: PlatformSdkPackageNameProps) {
+  const fallbackName = fallback || 'Sentry';
+  const {rootNode, path} = serverContext();
+  const platformOrGuide = getCurrentPlatformOrGuide(rootNode, path);
+
+  const sdkPackage = await getSdkPackageName(platformOrGuide);
+
+  return <code>{sdkPackage || fallbackName} </code>;
 }

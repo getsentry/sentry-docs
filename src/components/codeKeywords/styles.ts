@@ -63,7 +63,7 @@ export const Dropdown = styled('div')<{dark: boolean}>`
 `;
 
 export const Selections = styled('div')`
-  overflow: scroll;
+  overflow: auto;
   overscroll-behavior: contain;
   max-height: 210px;
   min-width: 300px;

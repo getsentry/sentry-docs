@@ -104,8 +104,8 @@ export const getRouter = () => {
 +     replaysOnErrorSampleRate: 1.0,
 +     // ___PRODUCT_OPTION_END___ session-replay
 +   });
-  }
-  
++  }
+
   return router;
 }
 ```
@@ -140,10 +140,49 @@ Sentry.init({
 });
 ```
 
-<OnboardingOption optionId="performance">
+#### Add the sentryTanstackStart Vite Plugin
+
+<OrgAuthTokenNote />
+
+**Make sure you add your auth token to your CI, if you are using one to deploy your application.**
+
+Add your auth token to your environment:
+
+```bash {filename:.env}
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
+and configure `sentryTanstackStart` in your `vite.config.ts`:
+
+```typescript {filename:vite.config.ts}
+import { defineConfig } from "vite";
+import { sentryTanstackStart } from "@sentry/tanstackstart-react/vite";
+import { tanstackStart } from "@tanstack/react-start/plugin/vite";
+
+export default defineConfig({
+  plugins: [
+    tanstackStart(),
+    // other plugins - sentryTanstackStart should be last
+    sentryTanstackStart({
+      org: "___ORG_SLUG___",
+      project: "___PROJECT_SLUG___",
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+    }),
+  ],
+});
+```
+
+By default, this plugin manages source map uploads. When tracing is enabled, it also automatically instruments middlewares for tracing. For all available options, see the [Vite Plugin documentation](/platforms/javascript/guides/tanstackstart-react/features/sentryTanstackStart/).
+
 #### Instrument the Server Entry Point
 
-To enable tracing for server-side requests, you need to explicitly define a [server entry point](https://tanstack.com/start/latest/docs/framework/react/guide/server-entry-point) in your application and wrap your request handler with `wrapFetchWithSentry`.
+To capture server-side errors and tracing data, you need to explicitly define a [server entry point](https://tanstack.com/start/latest/docs/framework/react/guide/server-entry-point) in your application and wrap your request handler with `wrapFetchWithSentry`.
+
+Follow the section below that matches your deployment setup:
+
+#### With `--import` Flag (e.g. Node.js Server)
+
+Use this setup when you can configure Node.js CLI flags.
 
 Create a `src/server.ts` file in your project:
 
@@ -160,9 +199,7 @@ export default createServerEntry(
 );
 ```
 
-</OnboardingOption>
-
-#### Moving the Sentry server config file for production usage
+##### Moving the Sentry server config file for production usage
 
 For production monitoring, you need to move the Sentry server config file to your build output. Since [TanStack Start is designed to work with any hosting provider](https://tanstack.com/start/latest/docs/framework/react/guide/hosting), the exact location will depend on where your build artifacts are deployed (for example, `"/dist"`, `".output/server"` or a platform-specific directory).
 
@@ -177,7 +214,7 @@ For example, when using [Nitro](https://nitro.build/), copy the instrumentation 
 }
 ```
 
-#### Load Instrumentation on Startup
+##### Load Instrumentation on Startup
 
 Add a `--import` flag directly or to the `NODE_OPTIONS` environment variable wherever you run your application to import `instrument.server.mjs`.
 
@@ -193,14 +230,66 @@ Add a `--import` flag directly or to the `NODE_OPTIONS` environment variable whe
 }
 ```
 
+#### Without `--import` Flag (e.g. Vercel, Netlify)
+
+If you can't configure Node.js CLI flags or environment variables at runtime (for example, when deploying to serverless platforms like Vercel or Netlify), you can import the server instrumentation file directly at the top of your server entry point instead.
+
+Create a `src/server.ts` file in your project:
+
+```typescript {filename:src/server.ts}
+import "../instrument.server.mjs";
+import { wrapFetchWithSentry } from "@sentry/tanstackstart-react";
+import handler, { createServerEntry } from "@tanstack/react-start/server-entry";
+
+export default createServerEntry(
+  wrapFetchWithSentry({
+    fetch(request: Request) {
+      return handler.fetch(request);
+    },
+  })
+);
+```
+
+<Alert level='warning' title='Restrictions of this installation method'>
+
+This installation method has the fundamental restriction that only native Node.js APIs can be instrumented (such as `fetch` and the `http` module).
+
+As a result, the Sentry SDK will not capture data from database calls, queues, ORMs, third-party libraries, or other framework-specific data.
+
+We recommend using the [setup with the `--import` flag](#with---import-flag-eg-nodejs-server) if possible.
+
+</Alert>
+
+<Alert level="warning">
+  This setup does not currently work for Cloudflare deployments.
+</Alert>
+
 ## Step 3: Capture TanStack Start React Errors
 
-### Instrument Server Requests and Server Functions
+### Capturing Server-Side Errors
+
+To capture server-side errors from HTTP requests and server function calls, add Sentry's global middlewares to `createStart()` in your `src/start.ts` file:
+
+```tsx {filename:src/start.ts}
+import {
+  sentryGlobalFunctionMiddleware,
+  sentryGlobalRequestMiddleware,
+} from "@sentry/tanstackstart-react";
+import { createStart } from "@tanstack/react-start";
+
+export const startInstance = createStart(() => {
+  return {
+    requestMiddleware: [sentryGlobalRequestMiddleware],
+    functionMiddleware: [sentryGlobalFunctionMiddleware],
+  };
+});
+```
+
+The Sentry middleware should be the first middleware in the arrays to ensure all errors are captured.
 
 <Alert level="info">
-  Automatic error monitoring is not yet supported on the server side of TanStack
-  Start. Use `captureException` to manually capture errors in your server-side
-  code.
+  SSR rendering exceptions are not captured by the middleware. Use
+  `captureException` to manually capture those errors.
 </Alert>
 
 ### Capturing Errors in Error Boundaries and Components (Optional)
@@ -250,9 +339,9 @@ const route = createRoute({
 
 ## Step 4: Add Readable Stack Traces With Source Maps (Optional)
 
-The stack traces in your Sentry errors probably won't look like your actual code. To fix this, upload your source maps to Sentry. 
+If you configured the `sentryTanstackStart` Vite plugin in Step 2, source maps are automatically uploaded during production builds.
 
-Since TanStack Start uses Vite, you can use the Sentry Vite plugin to automatically upload source maps. Follow our [TanStack Start source maps guide](/platforms/javascript/guides/tanstackstart-react/sourcemaps) to set this up.
+If you need more control over the upload process, see our [source maps guide](/platforms/javascript/guides/tanstackstart-react/sourcemaps/) for manual configuration options.
 
 ## Step 5: Avoid Ad Blockers With Tunneling (Optional)
 
@@ -292,20 +381,23 @@ To test tracing, create a new file like `src/routes/api/sentry-example.ts` to cr
 import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@tanstack/react-start";
 
-export const Route = createFileRoute('/api/sentry-example')({
+export const Route = createFileRoute("/api/sentry-example")({
   server: {
     handlers: {
       GET: () => {
         throw new Error("Sentry Example Route Error");
-        return new Response(JSON.stringify({ message: "Testing Sentry Error..." }), {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        })
+        return new Response(
+          JSON.stringify({ message: "Testing Sentry Error..." }),
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
       },
     },
   },
-})
+});
 ```
 
 Next, update your test button to call this route and throw an error if the response isn't `ok`:
@@ -341,6 +433,12 @@ Additionally, this starts a performance trace to measure the time it takes for t
 
 </OnboardingOption>
 
+<OnboardingOption optionId="logs">
+
+<Include name="logs/javascript-quick-start-verify-logs" />
+
+</OnboardingOption>
+
 ### View Captured Data in Sentry
 
 Now, head over to your project on [Sentry.io](https://sentry.io) to view the collected data (it takes a couple of moments for the data to appear).
@@ -354,6 +452,7 @@ At this point, you should have integrated Sentry into your TanStack Start React 
 Now's a good time to customize your setup and look into more advanced topics.
 Our next recommended steps for you are:
 
+- Explore [practical guides](/guides/) on what to monitor, log, track, and investigate after setup
 - Learn how to [manually capture errors](/platforms/javascript/guides/tanstackstart-react/usage/)
 - Continue to [customize your configuration](/platforms/javascript/guides/tanstackstart-react/configuration/)
 - Get familiar with [Sentry's product features](/product/) like tracing, insights, and alerts
