@@ -61,10 +61,10 @@ sentry_upload_build(
 
 ## How Install Groups Work With the Auto-Update SDK
 
-When the Auto-Update SDK checks for updates, the server returns the single latest build (highest semver version, with build number as tiebreaker) whose install groups overlap with the filter:
+When the Auto-Update SDK checks for updates, the API returns the single latest build (highest semver version, with build number as tiebreaker) whose install groups overlap with the filter:
 
-- If the SDK **sends groups explicitly**, the server uses those to filter.
-- If the SDK **doesn't send groups**, the server falls back to looking up the uploaded build by `buildVersion` and `buildNumber` and using that build's install groups. If multiple builds share the same version and build number, the server picks the most recently uploaded one, which may lead to unexpected results.
+- If the SDK **sends groups explicitly**, the API uses those to filter.
+- If the SDK **doesn't send groups**, the API falls back to looking up the uploaded build by `buildVersion` and `buildNumber` and using that build's install groups. If multiple builds share the same version and build number, the API picks the most recently uploaded one, which may lead to unexpected results.
 
 We recommend configuring the SDK to send install groups explicitly to ensure deterministic filtering.
 
@@ -72,7 +72,7 @@ We recommend configuring the SDK to send install groups explicitly to ensure det
 
 The Gradle plugin's `installGroups` config handles this automatically:
 
-1. **Upload**: Passes `--install-group` flags to sentry-cli so the build is tagged on the server.
+1. **Upload**: Passes `--install-group` flags to sentry-cli so the build is tagged on Sentry.
 2. **Embed**: Writes the groups to `sentry-distribution.properties` inside the APK (as `io.sentry.distribution.install-groups-override`). The [Auto-Update SDK](/platforms/android/build-distribution/auto-update/) reads this value at runtime and sends the groups explicitly as query parameters.
 
 ### Programmatic Override
@@ -85,4 +85,4 @@ SentryAndroid.init(context) { options ->
 }
 ```
 
-This overrides the groups the SDK sends when checking for updates. It does not change the groups the build was tagged with on the server.
+This overrides the groups the SDK sends when checking for updates. It does not change the groups the build was tagged with on Sentry.
