@@ -74,6 +74,6 @@ When writing requirements in `develop-docs/`:
 
 ## Commit and Pull Request generation 
 
-When committing changes, use the Sentry commit skill when available.
+When committing changes, use the Sentry commit skill if available.
 
-For PRs, use .github/PULL_REQUEST_TEMPLATE.md. Also, use the Sentry pull request skill when available. 
+For PRs, use .github/PULL_REQUEST_TEMPLATE.md. Also, use the Sentry pull request skill if available. 
