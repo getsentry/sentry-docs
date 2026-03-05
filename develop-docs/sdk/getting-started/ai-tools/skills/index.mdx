@@ -4,38 +4,86 @@ description: Learn which skills to use, and when, to boost quality, consistency,
 sidebar_order: 2
 ---
 
-## Skills Package Manager (dotagents)
+Agent skills teach AI coding agents how to perform specific workflows. Encode a workflow once in a skill and the agent loads it on demand. Skills live in a `skills/` directory inside your agent's config folder (e.g., `.claude/skills/`, `.cursor/skills/`) and follow the [Agent Skills open format](https://agentskills.io/specification).
 
-A package manager for .agents directories that enables you to declare agent skill dependencies in `agents.toml`, lock versions for reproducibility, and allow every tool on your team to reliably discover skills from a unified location.
+## Using Skills Safely
 
-https://github.com/getsentry/dotagents
+<Alert level="warning" title="Skills are a potential attack vector">
 
+Skills can inject packages or hide malicious instructions in HTML comments. Only install skills from [`getsentry/skills`](https://github.com/getsentry/skills), [`getsentry/sdk-skills`](https://github.com/getsentry/sdk-skills), or your own repo. Do not use auto-discovery from [skills.sh](https://skills.sh/) or similar.
 
-## Skills
+</Alert>
+
+## dotagents
+
+[dotagents](https://github.com/getsentry/dotagents) is a package manager for `.agents` directories. Declare skill dependencies in `agents.toml`, lock exact versions in `agents.lock`, and dotagents symlinks them into wherever your coding agent looks.
+
+Use [dotagents.sentry.dev](https://dotagents.sentry.dev/) as the Sentry distribution hub — it's wired up to `getsentry/skills` and keeps everything in sync. The main `sentry` repository already has dotagents configured; use it to vend skills into SDK repos or manage personal-scope skills.
+
+### Quick Setup
+
+```bash
+# Initialize dotagents (creates agents.toml)
+npx @sentry/dotagents init
+
+# Add skills from the trusted getsentry/skills repo
+npx @sentry/dotagents add getsentry/skills --name find-bugs
+npx @sentry/dotagents add getsentry/skills --name code-review
+
+# Or add all skills from a repo
+npx @sentry/dotagents add getsentry/skills
+
+# Install / sync all declared skills
+npx @sentry/dotagents install
+```
+
+Commit `agents.toml` and `agents.lock` so every engineer on the team gets the same skills automatically.
+
+| Command | Description |
+|---|---|
+| `init` | Create `agents.toml` and `.agents/skills/` |
+| `add <source>` | Add a skill dependency |
+| `remove <name>` | Remove a skill |
+| `install` | Install all skills from `agents.toml` |
+| `update [name]` | Update skills to latest versions |
+| `list` | Show installed skills and their status |
+| `sync` | Reconcile symlinks and verify state |
+
+## Available Skills
 
 ### Sentry Skills
 
-Agent skills for Sentry employees, following the Agent Skills open format.
+Agent skills for Sentry employees, covering general workflows like committing, opening PRs, code review, finding bugs, and security review.
 
-https://github.com/getsentry/skills/
-
+https://github.com/getsentry/skills
 
 ### Sentry SDK Skills
 
-Agent skills for managing feature development across Sentry SDKs, following the Agent Skills open format.
+Agent skills for managing feature development across Sentry SDKs — cross-SDK rollouts, Linear project setup, daily standups, and more.
 
-https://github.com/getsentry/sdk-skills/
+https://github.com/getsentry/sdk-skills
 
+### Sentry Reproduction Skill
 
-### Sentry Reproduction Skill (repro)
-
-This skill enables agents and developers to quickly generate, store, and share minimal reproduction environments for issues affecting Sentry SDKs and integrations. It automates the creation of reproducible test cases in isolated sandboxes, streamlining bug reporting, verification, and collaborative debugging across the Sentry ecosystem. This skill improves issue turnaround and makes it easier to validate fixes or demonstrate regressions in a consistent environment.
+Generates minimal reproduction environments for SDK issues — reproducible test cases in isolated sandboxes for bug reporting, verification, and collaborative debugging.
 
 https://github.com/getsentry/repro
 
-
 ### Obra's Superpowers
 
-An agentic skills framework that provides structured software development workflows for AI coding agents. It includes composable skills that automatically trigger at appropriate moments — covering brainstorming, implementation planning, test-driven development, subagent-driven parallel execution, code review, and systematic debugging. Rather than letting agents jump straight into writing code, Superpowers enforces disciplined processes that improve quality and maintain alignment with approved designs.
+Structured software development workflows for AI agents: brainstorming, implementation planning, TDD, parallel execution, code review, and systematic debugging.
 
 https://github.com/obra/superpowers
+
+## Contributing a Skill
+
+If you find yourself explaining the same workflow to an agent repeatedly, formalize it as a skill. Skills follow the [Agent Skills specification](https://agentskills.io/specification):
+
+```text
+skill-name/
+  SKILL.md        # YAML frontmatter (name, description) + markdown instructions
+```
+
+Add new skills to [`getsentry/skills`](https://github.com/getsentry/skills) (for general Sentry workflows) or [`getsentry/sdk-skills`](https://github.com/getsentry/sdk-skills) (for SDK-specific workflows) rather than a personal repo, so the whole team benefits.
+
+For guidance on writing effective skills, see [Skill Synthesis](https://cra.mr/skill-synthesis) — using your own codebase's history, past failures, and real patterns as source material produces significantly better results than generic guidance.
