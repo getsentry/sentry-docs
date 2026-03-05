@@ -2,12 +2,15 @@
 title: Client Reports
 description: SDK self-reporting protocol for tracking discarded events and their discard reasons.
 spec_id: sdk/telemetry/client-reports
-spec_version: 1.19.0
+spec_version: 1.20.0
 spec_status: stable
 spec_depends_on:
   - id: sdk/foundations/transport/envelopes
     version: ">=1.0.0"
 spec_changelog:
+  - version: 1.20.0
+    date: 2026-03-04
+    summary: Added architecture guidance and log byte outcomes
   - version: 1.19.0
     date: 2026-02-06
     summary: Added network failure recording rules (send_error for 4xx/5xx, no report for 429)
@@ -201,15 +204,35 @@ If certain spans are dropped in `beforeSendTransaction`, an event processor, etc
 
 </SpecSection>
 
-<SpecSection id="telemetry-processor-integration" status="candidate" since="1.18.0">
+<SpecSection id="log-byte-outcomes" status="stable" since="1.20.0">
+
+### Log Byte Outcomes
+
+When a log is dropped, SDKs **MUST** record an additional `log_byte` category entry containing the serialized byte size of the log. This provides visibility into how much log data is being discarded, complementing the item count reported under the `log` category. Counting the log size is best effort, and the SDKs can send an approximation of the log size (eg. by counting as if serialized).
+
+</SpecSection>
+
+<SpecSection id="aggregation" status="candidate" since="1.20.0">
+
+### Aggregation
+
+SDKs **SHOULD** use a single, centralized `ClientReports` component per client, accessible throughout the SDK. Client reports **MUST** be scoped per client — if an SDK supports multiple client instances, each **MUST** have its own `ClientReports` instance. When client reports are disabled, SDKs **SHOULD** use a no-op implementation to avoid overhead.
+
+`ClientReports` handles aggregation internally — it maintains a map of `(reason, category)` to count, and components call a `Record` method to increment counters directly. The component **MUST** be safe for concurrent access, since multiple SDK components record into it simultaneously. The extraction operation **SHOULD** atomically read and reset all counters to prevent double-counting.
+
+</SpecSection>
+
+<SpecSection id="telemetry-processor-integration" status="candidate" since="1.20.0">
 
 ### Telemetry Processor Integration
 
-SDKs **MAY** keep track of discarded events in the transport. Once SDKs implement the [telemetry processor](/sdk/foundations/processing/telemetry-processor/), they **SHOULD** implement client reports tracking outside the transport, since data can be dropped in multiple places throughout the SDK.
+SDKs **MAY** keep track of discarded events in the transport. Once SDKs implement the [telemetry processor](/sdk/foundations/processing/telemetry-processor/), they **SHOULD** track client reports outside the transport, since data can be dropped at multiple points throughout the SDK. Multiple components record into `ClientReports`; the [telemetry processor](/sdk/foundations/processing/telemetry-processor/) is responsible for extracting and sending the aggregated report.
 
-The [telemetry scheduler](/sdk/foundations/processing/telemetry-processor/#telemetry-scheduler) is then responsible for passing aggregated client reports to the transport. The telemetry scheduler still **MUST** adhere to all requirements in this spec.
+Specifically, the component on the sending path (e.g., the [telemetry scheduler](/sdk/foundations/processing/telemetry-processor/#telemetry-scheduler) or the transport) **SHOULD**:
+- Attach the current aggregated report to each outgoing envelope.
+- Periodically send standalone report envelopes to avoid starvation when no other telemetry is being sent.
 
-See the [telemetry processor spec](/sdk/foundations/processing/telemetry-processor/) for the full architecture and recording points.
+This is separate from the normal telemetry data flow — client reports do not go through buffers or queues. See the [telemetry processor client reports section](/sdk/foundations/processing/telemetry-processor/#client-reports) for the full architecture diagram and recording points.
 
 </SpecSection>
 
