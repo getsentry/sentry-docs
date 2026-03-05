@@ -132,8 +132,9 @@ const nextConfig = {
     return config;
   },
   env: {
-    // This is used on middleware
-    DEVELOPER_DOCS_: process.env.NEXT_PUBLIC_DEVELOPER_DOCS,
+    // Inline NEXT_PUBLIC_DEVELOPER_DOCS into edge middleware at build time.
+    // Edge runtime doesn't have access to server env vars at request time.
+    DEVELOPER_DOCS: process.env.NEXT_PUBLIC_DEVELOPER_DOCS,
   },
   redirects,
   rewrites: () => [

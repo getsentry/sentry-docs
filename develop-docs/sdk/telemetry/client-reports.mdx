@@ -89,7 +89,7 @@ Related specs:
 - [Envelopes](/sdk/foundations/transport/envelopes/) — transport format
 - [Envelope Items](/sdk/foundations/transport/envelope-items/) — envelope item types
 - [Telemetry Processor](/sdk/foundations/processing/telemetry-processor/) — SDK processing architecture
-- [Rate Limiting](/sdk/expected-features/rate-limiting/) — data category definitions
+- [Rate Limiting](/sdk/foundations/transport/rate-limiting/) — data category definitions
 
 ---
 
@@ -101,11 +101,11 @@ An **outcome** describes the fate of a telemetry item — whether it was accepte
 
 ### Discard Reasons
 
-A **discard reason** is a string that explains why a telemetry item was dropped. Each discarded item is categorized by reason and [data category](/sdk/expected-features/rate-limiting/#definitions).
+A **discard reason** is a string that explains why a telemetry item was dropped. Each discarded item is categorized by reason and [data category](/sdk/foundations/transport/rate-limiting/#definitions).
 
 ### Data Categories
 
-Data categories (e.g., `error`, `transaction`, `span`) identify the type of telemetry item that was discarded. These are the same categories used for [rate limits](/sdk/expected-features/rate-limiting/#definitions).
+Data categories (e.g., `error`, `transaction`, `span`) identify the type of telemetry item that was discarded. These are the same categories used for [rate limits](/sdk/foundations/transport/rate-limiting/#definitions).
 
 ---
 
@@ -129,9 +129,9 @@ Client reports do not expect 100 percent correct numbers, and it is acceptable f
 
 </SpecSection>
 
-### Network Failure Recording
-
 <SpecSection id="network-success" status="stable" since="1.8.0">
+
+### Network Failure Recording
 
 #### Successful Sends (HTTP 2xx)
 
@@ -169,7 +169,7 @@ For an [`HTTP 413 Content Too Large`](https://developer.mozilla.org/en-US/docs/W
 
 For an [`HTTP 429 Too Many Requests`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429) response, SDKs:
 
-- **MUST** respect the [rate limiting rules](/sdk/expected-features/rate-limiting/), such as correctly parsing the retry-header.
+- **MUST** respect the [rate limiting rules](/sdk/foundations/transport/rate-limiting/), such as correctly parsing the retry-header.
 - **MUST** discard the envelope, but **MUST NOT** record a client report, because the upstream already does this. Doing this would double-count client reports for discarded envelopes.
 - **MUST NOT** retry sending the envelope.
 
@@ -257,9 +257,9 @@ There is no expectation that such bookkeeping can work transparently for custom 
 
 ## Wire Format
 
-### Envelope Item
-
 <SpecSection id="envelope-item" status="stable" since="1.0.0">
+
+### Envelope Item
 
 Item type `"client_report"` contains a client report payload encoded in JSON.
 
@@ -272,9 +272,9 @@ Item type `"client_report"` contains a client report payload encoded in JSON.
 
 </SpecSection>
 
-### Payload Structure
-
 <SpecSection id="payload-structure" status="stable" since="1.0.0">
+
+### Payload Structure
 
 A client report consists of a JSON payload with the following fields:
 
@@ -288,14 +288,14 @@ Each outcome object in `discarded_events` has:
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `reason` | String | **REQUIRED** | A discard reason that defines why events were lost (see [Discard Reasons](#discard-reasons)). |
-| `category` | String | **REQUIRED** | The [data category](/sdk/expected-features/rate-limiting/#definitions) for which the discard reason applies (since 1.2.0). |
+| `category` | String | **REQUIRED** | The [data category](/sdk/foundations/transport/rate-limiting/#definitions) for which the discard reason applies (since 1.2.0). |
 | `quantity` | Number | **REQUIRED** | The number of events which were lost. |
 
 </SpecSection>
 
-### Discard Reasons
-
 <SpecSection id="discard-reasons" status="stable" since="1.0.0">
+
+### Discard Reasons
 
 The following discard reasons are defined for `discarded_events`:
 
@@ -320,9 +320,9 @@ In case a reason needs to be added, it also has to be added to the allowlist in 
 
 </SpecSection>
 
-### Relay Outcome Types
-
 <SpecSection id="relay-outcome-types" status="stable" since="1.1.0">
+
+### Relay Outcome Types
 
 The following outcome types are reserved for relay use:
 

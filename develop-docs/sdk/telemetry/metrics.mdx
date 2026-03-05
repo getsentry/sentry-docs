@@ -2,14 +2,17 @@
 title: Metrics
 description: Counter, gauge, and distribution metrics sent as batched trace_metric envelope items.
 spec_id: sdk/telemetry/metrics
-spec_version: 2.5.0
+spec_version: 2.6.0
 spec_status: stable
 spec_depends_on:
   - id: sdk/foundations/transport/envelopes
     version: ">=1.0.0"
-  - id: sdk/foundations/data-model/attributes
+  - id: sdk/foundations/state-management/scopes/attributes
     version: ">=1.0.0"
 spec_changelog:
+  - version: 2.6.0
+    date: 2026-03-04
+    summary: Add sentry.timestamp.sequence attribute for deterministic metric ordering
   - version: 2.5.0
     date: 2026-02-12
     summary: Clarified sendDefaultPii gating for user attributes — allowed when user manually sets data
@@ -55,9 +58,8 @@ The envelope item type is named `trace_metric` for internal usage to avoid namin
 
 Related specs:
 - [Envelopes](/sdk/foundations/transport/envelopes/) — transport format
-- [Envelope Items](/sdk/foundations/transport/envelope-items/) — `trace_metric` item type constraints
-- [Attributes](/sdk/foundations/data-model/attributes) — attribute types and structure
-- [Tracing without Performance](/sdk/telemetry/traces/tracing-without-performance/) — required before adding metrics support
+- [Attributes](/sdk/foundations/state-management/scopes/attributes) — attribute types and structure
+- [Tracing without Performance](/sdk/foundations/trace-propagation/#default-propagation) — required before adding metrics support
 - [Telemetry Processor](/sdk/foundations/processing/telemetry-processor/) — buffer data forwarding scenarios
 
 ---
@@ -74,7 +76,7 @@ A metric has a `type` that determines how its values are interpreted:
 
 ### Attributes
 
-Metrics carry typed key-value pairs called **attributes** for dimensional filtering and grouping. Each attribute declares its type (`string`, `boolean`, `integer`, `double`). See [Attributes](/sdk/foundations/data-model/attributes/) for the full type specification.
+Metrics carry typed key-value pairs called **attributes** for dimensional filtering and grouping. Each attribute declares its type (`string`, `boolean`, `integer`, `double`). See [Attributes](/sdk/foundations/state-management/scopes/attributes/) for the full type specification.
 
 ### Batching
 
@@ -86,13 +88,13 @@ Multiple metrics are batched into a single `trace_metric` envelope item for effi
 
 <Alert title="Note" level="warning">
 
-An SDK **SHOULD** implement [Tracing without Performance](/sdk/telemetry/traces/tracing-without-performance/) before adding support for metrics. This is required to ensure that metrics are associated with traces and that the correct trace context is sent to Sentry.
+An SDK **SHOULD** implement [Tracing without Performance](/sdk/foundations/trace-propagation/#default-propagation) before adding support for metrics. This is required to ensure that metrics are associated with traces and that the correct trace context is sent to Sentry.
 
 </Alert>
 
-### Processing Pipeline
-
 <SpecSection id="processing-pipeline" status="stable" since="2.0.0">
+
+### Processing Pipeline
 
 Metric processing **MUST** follow this order:
 
@@ -105,9 +107,9 @@ Metric processing **MUST** follow this order:
 
 </SpecSection>
 
-### Default Attributes
-
 <SpecSection id="default-attributes" status="stable" since="2.0.0">
+
+### Default Attributes
 
 SDKs **MUST** attach the following attributes to every metric by default:
 
@@ -120,11 +122,11 @@ SDKs **SHOULD** minimize the number of default attributes. Metrics cardinality c
 
 </SpecSection>
 
-### User Attributes
-
 <SpecSection id="user-attributes" status="stable" since="2.0.0">
 
-SDKs **MAY** attach user information as attributes, guarded by `sendDefaultPii` ([unless manually set by user](/sdk/expected-features/data-handling/#sensitive-data), since 2.5.0):
+### User Attributes
+
+SDKs **MAY** attach user information as attributes, guarded by `sendDefaultPii` ([unless manually set by user](/sdk/foundations/data-scrubbing/#sensitive-data), since 2.5.0):
 
 1. `user.id` — the user ID. Maps to `id` in the [User](/sdk/foundations/transport/event-payloads/user/) payload.
 2. `user.name` — the username. Maps to `username` in the [User](/sdk/foundations/transport/event-payloads/user/) payload.
@@ -132,9 +134,9 @@ SDKs **MAY** attach user information as attributes, guarded by `sendDefaultPii` 
 
 </SpecSection>
 
-### Browser Attributes (Relay)
-
 <SpecSection id="browser-attributes" status="stable" since="2.0.0">
+
+### Browser Attributes (Relay)
 
 By default, Relay parses the user agent attached to an incoming metric envelope to extract `browser` and `os` information. These attributes are attached by Relay, but client-side SDKs **MAY** attach them if they do not forward a user agent when sending metrics to Sentry.
 
@@ -143,9 +145,9 @@ By default, Relay parses the user agent attached to an incoming metric envelope 
 
 </SpecSection>
 
-### Backend SDK Attributes
-
 <SpecSection id="backend-attributes" status="stable" since="2.1.0">
+
+### Backend SDK Attributes
 
 Backend SDKs (Node.js, Python, PHP, etc.) **SHOULD** attach the following attribute:
 
@@ -153,9 +155,9 @@ Backend SDKs (Node.js, Python, PHP, etc.) **SHOULD** attach the following attrib
 
 </SpecSection>
 
-### Buffering
-
 <SpecSection id="buffering" status="stable" since="2.0.0">
+
+### Buffering
 
 SDKs **MUST** buffer metrics before sending them (since 2.2.0, tightened from SHOULD). SDKs **SHOULD** flush the buffer when specific conditions are met. For initial implementation, a simple strategy is fine, for example: flushing if the buffer length exceeds 100 items or if 5 seconds have passed.
 
@@ -167,9 +169,9 @@ Furthermore:
 
 </SpecSection>
 
-### Tracing Association
-
 <SpecSection id="tracing-association" status="stable" since="2.0.0">
+
+### Tracing Association
 
 Metrics **SHOULD** be associated with traces if possible. If a metric is recorded during an active span, the SDK **SHOULD** set the `span_id` property of the metric to the span ID of the span that was active when the metric was collected.
 
@@ -177,9 +179,9 @@ The `trace_id` field is **REQUIRED** on every metric payload and **MUST** be tak
 
 </SpecSection>
 
-### Replay Association
-
 <SpecSection id="replay-association" status="stable" since="2.3.0">
+
+### Replay Association
 
 Whenever possible, metrics **SHOULD** be linked to replays. If a metric is recorded while an active, sampled replay is in progress, the SDK **SHOULD** attach:
 
@@ -188,17 +190,36 @@ Whenever possible, metrics **SHOULD** be linked to replays. If a metric is recor
 
 </SpecSection>
 
+### Metric Ordering
+
+<SpecSection id="metric-ordering" status="candidate" since="2.6.0">
+
+Some runtimes (notably Cloudflare Workers) freeze timer APIs (`Date.now()`, `performance.now()`) during synchronous execution, causing multiple metrics to share identical timestamps. SDKs that target runtimes where timestamps may be frozen or lack sub-millisecond precision **MUST** attach a `sentry.timestamp.sequence` integer attribute to every metric. SDKs that only target runtimes with reliable sub-millisecond timestamps **MAY** omit it.
+
+When sent, the sequence integer **MUST**:
+- Start at `0` when the SDK initializes.
+- Increment by `1` for each metric that is captured.
+- Reset to `0` when:
+  - The SDK is re-initialized.
+  - The current metric's integer millisecond differs from the previous metric's integer millisecond (i.e., `floor(timestamp_seconds * 1000)` changes).
+
+The sequence provides deterministic ordering within a single SDK instance. It does not guarantee ordering across independent processes or workers, which have separate counters. The reset behavior ensures the sequence only increments for consecutive metrics that share the same timestamp.
+
+</SpecSection>
+
 ### Data Category and Rate Limiting
 
 <SpecSection id="data-category-rate-limiting" status="stable" since="2.0.0">
+
+### Data Category and Rate Limiting
 
 The data category for metrics is `trace_metric`. Rate limiting applies as usual. SDKs **SHOULD** track client outcomes to monitor how often metrics are dropped. If the SDK receives a rate limit, it **MUST NOT** send any trace metrics until the limit expires (based on the communicated end timestamp).
 
 </SpecSection>
 
-### Debug Logging
-
 <SpecSection id="debug-logging" status="stable" since="2.0.0">
+
+### Debug Logging
 
 If `debug` is set to `true` in SDK init, calls to the Sentry metrics API **SHOULD** also print to the console with appropriate details. This will help debugging metrics setups.
 
@@ -208,11 +229,21 @@ If `debug` is set to `true` in SDK init, calls to the Sentry metrics API **SHOUL
 
 ## Wire Format
 
-### `trace_metric` Envelope Item
-
 <SpecSection id="trace-metric-envelope" status="stable" since="2.0.0">
 
+### `trace_metric` Envelope Item
+
 Metrics are sent as a `trace_metric` envelope item containing a JSON object with an `items` array. See the [Examples](#full-trace_metric-envelope) section for a complete envelope.
+
+An envelope **MUST** contain at most one `trace_metric` envelope item — all metrics for a flush are batched into a single item's `items` array. Metrics from different traces **MAY** be mixed into the same `trace_metric` item, but if they are, the envelope **MUST NOT** include a DSC (dynamic sampling context) header.
+
+**Item Headers:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `type` | String | **REQUIRED** | **MUST** be `"trace_metric"`. |
+| `item_count` | Number | **REQUIRED** | Number of metric items in the `items` array. **MUST** match the actual count. |
+| `content_type` | String | **REQUIRED** | **MUST** be `"application/vnd.sentry.items.trace-metric+json"`. |
 
 ```json
 {
@@ -225,17 +256,11 @@ Metrics are sent as a `trace_metric` envelope item containing a JSON object with
 }
 ```
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `type` | String | **REQUIRED** | **MUST** be `"trace_metric"`. |
-| `item_count` | Number | **REQUIRED** | Number of metric items in the `items` array. |
-| `content_type` | String | **REQUIRED** | **MUST** be `"application/vnd.sentry.items.trace-metric+json"`. |
-
 </SpecSection>
 
-### Metric Payload
-
 <SpecSection id="metric-payload" status="stable" since="2.0.0">
+
+### Metric Payload
 
 Each metric in the `items` array is a JSON object with the following fields:
 
@@ -265,7 +290,7 @@ Each metric in the `items` array is a JSON object with the following fields:
 | `trace_id` | String | **REQUIRED** | 2.0.0 | 16 random bytes encoded as a hex string (32 characters). Taken from the current propagation context. |
 | `span_id` | String | **OPTIONAL** | 2.3.0 | 8 random bytes encoded as a hex string (16 characters). The span ID of the span that was active when the metric was emitted. |
 | `unit` | String | **OPTIONAL** | 2.0.0 | The unit of measurement for the metric value. |
-| `attributes` | Object | **OPTIONAL** | 2.0.0 | Typed key-value pairs. See [Attributes](/sdk/foundations/data-model/attributes/) for supported types and structure. |
+| `attributes` | Object | **OPTIONAL** | 2.0.0 | Typed key-value pairs. See [Attributes](/sdk/foundations/state-management/scopes/attributes/) for supported types and structure. |
 
 </SpecSection>
 
@@ -273,9 +298,9 @@ Each metric in the `items` array is a JSON object with the following fields:
 
 ## Public API
 
-### Initialization Options
-
 <SpecSection id="initialization-options" status="stable" since="2.0.0">
+
+### Initialization Options
 
 SDKs **MUST** expose the following configuration options:
 
@@ -297,9 +322,9 @@ Sentry.init({
 
 </SpecSection>
 
-### Metrics Module
-
 <SpecSection id="metrics-module" status="stable" since="2.0.0">
+
+### Metrics Module
 
 SDKs **MUST** expose metrics methods in a `metrics` module or namespace. At minimum, the SDK **MUST** implement the following methods:
 
@@ -312,7 +337,7 @@ SDKs **MUST** expose metrics methods in a `metrics` module or namespace. At mini
 - `name` **String, required** — the name of the metric.
 - `value` **Number, required** — the value of the metric.
 - `options` **Object, optional** — containing:
-  - `unit` **String, optional** — the unit of measurement (only used for `distribution` and `gauge`). SDKs **MUST NOT** restrict what can be sent in (e.g. by using an enum) but **SHOULD** offer constants or similar that help customers send in <Link to="/sdk/foundations/data-model/attributes/#units">units we support</Link> (since 2.4.0).
+  - `unit` **String, optional** — the unit of measurement (only used for `distribution` and `gauge`). SDKs **MUST NOT** restrict what can be sent in (e.g. by using an enum) but **SHOULD** offer constants or similar that help customers send in <Link to="/sdk/foundations/state-management/scopes/attributes/#units">units we support</Link> (since 2.4.0).
   - `attributes` **Object, optional** — a dictionary of attributes (key-value pairs with type information).
   - `scope` **Scope, optional** — the scope to capture the metric with.
 
@@ -544,7 +569,8 @@ SentrySDK.metrics()
         "sentry.sdk.name": { "value": "sentry.javascript.browser", "type": "string" },
         "sentry.sdk.version": { "value": "10.17.0", "type": "string" },
         "sentry.environment": { "value": "production", "type": "string" },
-        "sentry.release": { "value": "1.0.0", "type": "string" }
+        "sentry.release": { "value": "1.0.0", "type": "string" },
+        "sentry.timestamp.sequence": { "value": 0, "type": "integer" }
       }
     },
     {
@@ -559,7 +585,8 @@ SentrySDK.metrics()
         "endpoint": { "value": "/api/users", "type": "string" },
         "method": { "value": "POST", "type": "string" },
         "sentry.sdk.name": { "value": "sentry.javascript.browser", "type": "string" },
-        "sentry.sdk.version": { "value": "10.17.0", "type": "string" }
+        "sentry.sdk.version": { "value": "10.17.0", "type": "string" },
+        "sentry.timestamp.sequence": { "value": 1, "type": "integer" }
       }
     },
     {
@@ -574,7 +601,8 @@ SentrySDK.metrics()
         "cache_name": { "value": "user_sessions", "type": "string" },
         "region": { "value": "us-west-1", "type": "string" },
         "sentry.sdk.name": { "value": "sentry.javascript.browser", "type": "string" },
-        "sentry.sdk.version": { "value": "10.17.0", "type": "string" }
+        "sentry.sdk.version": { "value": "10.17.0", "type": "string" },
+        "sentry.timestamp.sequence": { "value": 0, "type": "integer" }
       }
     },
     {
@@ -590,7 +618,8 @@ SentrySDK.metrics()
         "table": { "value": "users", "type": "string" },
         "sentry.sdk.name": { "value": "sentry.javascript.browser", "type": "string" },
         "sentry.sdk.version": { "value": "10.17.0", "type": "string" },
-        "sentry.origin": { "value": "auto.db.graphql", "type": "string" }
+        "sentry.origin": { "value": "auto.db.graphql", "type": "string" },
+        "sentry.timestamp.sequence": { "value": 1, "type": "integer" }
       }
     },
     {
@@ -604,7 +633,8 @@ SentrySDK.metrics()
         "cohort": { "value": "beta", "type": "string" },
         "sentry.sdk.name": { "value": "sentry.javascript.browser", "type": "string" },
         "sentry.sdk.version": { "value": "10.17.0", "type": "string" },
-        "sentry.replay_id": { "value": "36b75d9fa11f45459412a96c41bdf691", "type": "string" }
+        "sentry.replay_id": { "value": "36b75d9fa11f45459412a96c41bdf691", "type": "string" },
+        "sentry.timestamp.sequence": { "value": 0, "type": "integer" }
       }
     }
   ]

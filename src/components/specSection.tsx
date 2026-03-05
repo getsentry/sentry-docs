@@ -34,20 +34,29 @@ export function SpecSection({
   const {label, borderColor} = STATUS_CONFIG[status];
   const badgeClass = SPEC_STATUS_BADGE[status];
 
+  // Split children: first element is the heading (rendered outside the border),
+  // the rest is body content (rendered inside the colored border strip).
+  const childArray = Array.isArray(children) ? children : [children];
+  const heading = childArray[0];
+  const body = childArray.slice(1);
+
   return (
-    <section id={`spec-${id}`} className={`border-l-4 ${borderColor} pl-5 py-1 mb-8`}>
-      <div className="flex items-center gap-2 mb-4">
-        <span className={`text-xs font-medium px-2 py-0.5 rounded ${badgeClass}`}>
-          {label}
-        </span>
-        <span className="text-xs text-gray-500">since {since}</span>
-        {superseded_by && (
-          <span className="text-xs text-red-600">
-            Superseded by <a href={superseded_by}>{superseded_by}</a>
+    <section id={`spec-${id}`} className="mt-8 mb-8">
+      <div className="[&>*:first-child]:mt-0 [&>*:last-child]:mb-2">{heading}</div>
+      <div className={`border-l-4 ${borderColor} pl-5 py-1`}>
+        <div className="flex items-center gap-2 mb-3">
+          <span className={`text-xs font-medium px-2 py-0.5 rounded ${badgeClass}`}>
+            {label}
           </span>
-        )}
+          <span className="text-xs text-gray-500">specified since {since}</span>
+          {superseded_by && (
+            <span className="text-xs text-red-600">
+              Superseded by <a href={superseded_by}>{superseded_by}</a>
+            </span>
+          )}
+        </div>
+        <div className="[&>*:first-child]:mt-0 [&>*:last-child]:mb-0">{body}</div>
       </div>
-      <div className="[&>*:first-child]:mt-0 [&>*:last-child]:mb-0">{children}</div>
     </section>
   );
 }

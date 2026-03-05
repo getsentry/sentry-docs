@@ -88,7 +88,6 @@ To customize what data is captured (such as inputs and outputs), see the [Option
 
 _Import name: `Sentry.instrumentOpenAiClient`_
 
-
 The `instrumentOpenAiClient` helper adds instrumentation for the [`openai`](https://www.npmjs.com/package/openai) SDK to capture spans by wrapping OpenAI SDK calls and recording LLM interactions with configurable input/output recording. You need to manually wrap your OpenAI client instance with this helper:
 
 ```javascript
@@ -96,7 +95,7 @@ import OpenAI from "openai";
 
 const openai = new OpenAI({
   // Warning: API key will be exposed in browser!
-  apiKey: 'your-api-key', 
+  apiKey: "your-api-key",
 });
 
 const client = Sentry.instrumentOpenAiClient(openai, {
@@ -114,7 +113,6 @@ const response = await client.chat.completions.create({
 To customize what data is captured (such as inputs and outputs), see the [Options](#options) in the Configuration section.
 
 </PlatformSection>
-
 
 ## Configuration
 
@@ -148,7 +146,7 @@ Using the `openAIIntegration` integration:
 Sentry.init({
   dsn: "____PUBLIC_DSN____",
   // Tracing must be enabled for agent monitoring to work
-  tracesSampleRate: 1.0, 
+  tracesSampleRate: 1.0,
   integrations: [
     Sentry.openAIIntegration({
       // your options here
@@ -179,6 +177,12 @@ By default, tracing support is added to the following OpenAI SDK calls:
 - `responses.create()` - Response SDK requests
 
 Streaming and non-streaming requests are automatically detected and handled appropriately.
+
+<Alert>
+
+When using OpenAI's streaming API, you must also pass `stream_options: { include_usage: true }` to receive token usage data. Without this option, OpenAI does not include `prompt_tokens` or `completion_tokens` in streamed responses, and Sentry will be unable to capture `gen_ai.usage.input_tokens` / `gen_ai.usage.output_tokens` on the resulting span. This is an OpenAI API behavior, not a Sentry limitation. See [OpenAI docs on stream options](https://platform.openai.com/docs/api-reference/chat/create#chat-create-stream_options).
+
+</Alert>
 
 ## Supported Versions
 
