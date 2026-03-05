@@ -54,30 +54,32 @@ SENTRY_TRACES_SAMPLE_RATE=1.0
 
 ### Advanced Sample Rate
 
-If you want more control over which requests are monitored, you can use the [`traces_sampler`](/platforms/php/guides/laravel/configuration/options/#traces-sampler) option:
+If you want more control over which requests are monitored, use the [`traces_sampler`](/platforms/php/guides/laravel/configuration/options/#traces-sampler) option as a callable:
 
 ```php {filename:config/sentry.php}
-'traces_sampler' => function (\Sentry\Tracing\SamplingContext $context): float {
-    // We always sample if the front-end indicates it was sampled to have full traces front to back
-    if ($context->getParentSampled()) {
-        return 1.0;
-    }
-
-    if (some_condition()) {
-        // Drop this transaction, by setting its sample rate to 0
-        return 0.0;
-    }
-
-    // Default sample rate for all other transactions
-    return 0.25;
-},
+'traces_sampler' => [App\Exceptions\Sentry::class, 'tracesSampler'],
 ```
 
-<Alert>
+```php {filename:app/Exceptions/Sentry.php}
+class Sentry
+{
+    public static function tracesSampler(\Sentry\Tracing\SamplingContext $context): float
+    {
+        // Keep front-end and back-end traces connected.
+        if ($context->getParentSampled()) {
+            return 1.0;
+        }
 
-Learn more in [Closures and Config Caching](/platforms/php/guides/laravel/configuration/laravel-options/#closures-and-config-caching).
+        if (some_condition()) {
+            // Drop this transaction.
+            return 0.0;
+        }
 
-</Alert>
+        // Default sample rate for all other transactions.
+        return 0.25;
+    }
+}
+```
 
 ### More Configuration
 
@@ -135,32 +137,4 @@ These settings have no effect if `SENTRY_TRACES_SAMPLE_RATE` is set to `0.0` or 
     // Enable the tracing integrations supplied by Sentry (recommended)
     'default_integrations' => env('SENTRY_TRACE_DEFAULT_INTEGRATIONS_ENABLED', true),
 ],
-```
-
-## Closures and Config Caching
-
-Sometimes the SDK requires a closure as an option value. However, this causes problems when using `php artisan config:cache`, resulting in the `Your configuration files are not serializable` error.
-
-We can work around that by providing a callable instead of a closure. In this example we are using the `traces_sampler` option, but this can be used for any other option that accepts a closure:
-
-```php {filename:config/sentry.php}
-'traces_sampler' => [App\Exceptions\Sentry::class, 'tracesSampler'],
-```
-
-This callable points to the `App\Exceptions\Sentry` class and the `tracesSampler` method:
-
-```php {filename:app/Exceptions/Sentry.php}
-<?php
-
-namespace App\Exceptions;
-
-use Sentry\Tracing\SamplingContext;
-
-class Sentry
-{
-    public static function tracesSampler(SamplingContext $context): float
-    {
-        // The code you would have placed in the closure...
-    }
-}
 ```

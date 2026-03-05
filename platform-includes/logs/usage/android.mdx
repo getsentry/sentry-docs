@@ -65,3 +65,59 @@ Sentry.logger().log(
     "param1"
 )
 ```
+
+### Scope Attributes
+
+You can set attributes on the scope that will be automatically included in all log entries captured within that scope. This is useful for attaching contextual information like request IDs or user properties that should appear on every log.
+
+```java {tabTitle: Java}
+import io.sentry.Sentry;
+import io.sentry.SentryAttribute;
+import io.sentry.SentryAttributes;
+
+// Set a single attribute with automatic type inference
+Sentry.setAttribute("request.id", "abc-123");
+
+// Or use a factory method to set the type explicitly
+Sentry.setAttribute(SentryAttribute.integerAttribute("request.duration_ms", 150));
+
+// Set multiple attributes at once
+Sentry.setAttributes(SentryAttributes.of(
+    SentryAttribute.stringAttribute("tenant", "acme-corp"),
+    SentryAttribute.booleanAttribute("is_admin", true)
+));
+
+// All subsequent logs will include these attributes
+Sentry.logger().info("Processing request");
+
+// Remove an attribute when it's no longer relevant
+Sentry.removeAttribute("request.id");
+```
+
+```kotlin {tabTitle: Kotlin}
+import io.sentry.Sentry
+import io.sentry.SentryAttribute
+import io.sentry.SentryAttributes
+
+// Set a single attribute with automatic type inference
+Sentry.setAttribute("request.id", "abc-123")
+
+// Or use a factory method to set the type explicitly
+Sentry.setAttribute(SentryAttribute.integerAttribute("request.duration_ms", 150))
+
+// Set multiple attributes at once
+Sentry.setAttributes(SentryAttributes.of(
+    SentryAttribute.stringAttribute("tenant", "acme-corp"),
+    SentryAttribute.booleanAttribute("is_admin", true)
+))
+
+// All subsequent logs will include these attributes
+Sentry.logger().info("Processing request")
+
+// Remove an attribute when it's no longer relevant
+Sentry.removeAttribute("request.id")
+```
+
+Attribute types are inferred automatically from the value: `String` maps to `string`, `Boolean` to `boolean`, integer types (`Integer`, `Long`, `Short`, `Byte`, `BigInteger`, `AtomicInteger`, `AtomicLong`) to `integer`, floating-point types (`Float`, `Double`, `BigDecimal`) to `double`, and `Collection` or array types to `array`. You can also use typed factory methods like `SentryAttribute.stringAttribute()` to set the type explicitly.
+
+Attributes passed directly to a log call override scope attributes with the same key.
