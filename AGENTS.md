@@ -72,6 +72,8 @@ When writing requirements in `develop-docs/`:
 - Make the plan extremely concise. Sacrifice grammar for the sake of concision.
 - At the end of each plan, give me a list of unresolved questions to answer, if any.
 
-## Pull Request generation 
+## Commit and Pull Request generation 
 
-Use .github/PULL_REQUEST_TEMPLATE.md.
+When committing changes, use the Sentry commit skill when available.
+
+For PRs, use .github/PULL_REQUEST_TEMPLATE.md. Also, use the Sentry pull request skill when available. 
