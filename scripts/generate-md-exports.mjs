@@ -2,7 +2,7 @@
 /* eslint-disable no-console */
 import {ListObjectsV2Command, PutObjectCommand, S3Client} from '@aws-sdk/client-s3';
 import imgLinks from '@pondorasti/remark-img-links';
-import * as Sentry from '@sentry/nextjs';
+import * as Sentry from '@sentry/node';
 import {selectAll} from 'hast-util-select';
 import {createHash} from 'node:crypto';
 import {createReadStream, createWriteStream, existsSync} from 'node:fs';
@@ -843,10 +843,10 @@ async function createWork() {
     unit: 'percent',
     attributes: {build_type: buildType},
   });
-  Sentry.metrics.increment('md_export.cache_hits', globalCacheStats.hits, {
+  Sentry.metrics.count('md_export.cache_hits', globalCacheStats.hits, {
     attributes: {build_type: buildType},
   });
-  Sentry.metrics.increment('md_export.cache_misses', globalCacheStats.misses, {
+  Sentry.metrics.count('md_export.cache_misses', globalCacheStats.misses, {
     attributes: {build_type: buildType},
   });
   Sentry.metrics.gauge('md_export.files_total', numFiles, {
