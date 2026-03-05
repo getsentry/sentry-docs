@@ -1,16 +1,18 @@
 ```php {filename:config/sentry.php}
-'before_send' => function (\Sentry\Event $event, ?\Sentry\EventHint $hint): ?\Sentry\Event {
-    // Ignore the event if the original exception is an instance of MyException
-    if ($hint !== null && $hint->exception instanceof MyException) {
-      return null;
-    }
-
-    return $event;
-},
+'before_send' => [App\Exceptions\Sentry::class, 'beforeSend'],
 ```
 
-<Alert>
+```php {filename:app/Exceptions/Sentry.php}
+class Sentry
+{
+    public static function beforeSend(\Sentry\Event $event, ?\Sentry\EventHint $hint): ?\Sentry\Event
+    {
+        // Ignore the event if the original exception is an instance of MyException.
+        if ($hint !== null && $hint->exception instanceof MyException) {
+            return null;
+        }
 
-Learn more in [Closures and Config Caching](/platforms/php/guides/laravel/configuration/laravel-options/#closures-and-config-caching).
-
-</Alert>
+        return $event;
+    }
+}
+```

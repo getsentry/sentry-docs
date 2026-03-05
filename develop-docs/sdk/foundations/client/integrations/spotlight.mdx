@@ -103,17 +103,17 @@ Any other string value MUST be treated as a Spotlight backend URL, enabling Spot
 def parse_spotlight_env(env_value):
     if not env_value:
         return None
-    
+
     env_value_lower = env_value.lower().strip()
-    
+
     # Truthy values
     if env_value_lower in ("true", "t", "y", "yes", "on", "1"):
         return True
-    
+
     # Falsy values
     if env_value_lower in ("false", "f", "n", "no", "off", "0"):
         return False
-    
+
     # Any other value is treated as a URL
     return env_value
 ```
@@ -197,13 +197,13 @@ When Spotlight is enabled, SDKs MUST implement the following data collection beh
 def send_to_spotlight(envelope):
     # Clone envelope to avoid affecting upstream
     spotlight_envelope = clone_envelope(envelope)
-    
+
     # Override sampling - ensure 100% sample rate
     spotlight_envelope.sample_rate = 1.0
-    
+
     # Enable all PII
     spotlight_envelope.send_default_pii = True
-    
+
     # Send to Spotlight server
     spotlight_transport.send(spotlight_envelope)
 ```
@@ -265,7 +265,7 @@ class SpotlightTransport:
         self.retry_delay = 1.0  # Start with 1 second
         self.max_retry_delay = 60.0  # Max 60 seconds
         self.error_logged = False
-    
+
     def send(self, envelope):
         try:
             # Attempt to send
@@ -278,11 +278,11 @@ class SpotlightTransport:
             if not self.error_logged:
                 logger.error(f"Spotlight server unreachable at {self.url}: {e}")
                 self.error_logged = True
-            
+
             # Wait before retry
             time.sleep(self.retry_delay)
             self.retry_delay = min(self.retry_delay * 2, self.max_retry_delay)
-            
+
             # Retry once, then give up for this envelope
             try:
                 self._send_envelope(envelope)
@@ -337,12 +337,12 @@ interface SpotlightOptions {
 
 function init(options: SpotlightOptions) {
   const spotlightEnabled = resolveSpotlightConfig(options);
-  
+
   if (spotlightEnabled) {
-    const spotlightUrl = typeof spotlightEnabled === 'string' 
-      ? spotlightEnabled 
+    const spotlightUrl = typeof spotlightEnabled === 'string'
+      ? spotlightEnabled
       : 'http://localhost:8969/stream';
-    
+
     setupSpotlightTransport(spotlightUrl);
   }
 }
@@ -352,7 +352,7 @@ function resolveSpotlightConfig(options: SpotlightOptions): boolean | string | n
   if (options.spotlight === false) {
     return null;
   }
-  
+
   if (options.spotlight === true) {
     // Check env var for URL override
     const envValue = process.env.SENTRY_SPOTLIGHT;
@@ -361,17 +361,17 @@ function resolveSpotlightConfig(options: SpotlightOptions): boolean | string | n
     }
     return true; // Use default URL
   }
-  
+
   if (typeof options.spotlight === 'string') {
     return options.spotlight; // Config URL takes precedence
   }
-  
+
   // Check env var
   const envValue = process.env.SENTRY_SPOTLIGHT;
   if (envValue) {
     return parseSpotlightEnv(envValue);
   }
-  
+
   return null;
 }
 ```
@@ -382,10 +382,10 @@ function resolveSpotlightConfig(options: SpotlightOptions): boolean | string | n
 public class SpotlightConfig {
     private Boolean enabled;
     private String url;
-    
+
     public static SpotlightConfig fromOptions(Options options, String envVar) {
         SpotlightConfig config = new SpotlightConfig();
-        
+
         // Config takes precedence
         if (options.getSpotlight() != null) {
             if (options.getSpotlight() instanceof Boolean) {
@@ -406,11 +406,11 @@ public class SpotlightConfig {
                 config.url = (String) parsed;
             }
         }
-        
+
         if (config.enabled == null || !config.enabled) {
             return null; // Spotlight disabled
         }
-        
+
         config.url = config.url != null ? config.url : "http://localhost:8969/stream";
         return config;
     }
