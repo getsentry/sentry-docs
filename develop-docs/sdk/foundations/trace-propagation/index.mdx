@@ -130,21 +130,27 @@ This option replaces the non-standardized `tracingOrigins` option which was prev
 
 ### strictTraceContinuation
 
-This **MUST** be a boolean value. Default is `false`. This option controls trace continuation from unknown 3rd party services that happen to be instrumented by a Sentry SDK.
+This **MUST** be a boolean value. Default is `false`. This option controls continuation when org identity is incomplete.
 
-If the SDK is able to parse an org ID from the configured DSN, it **MUST** be propagated as a baggage entry with the key `sentry-org_id`. Given a DSN of `https://1234@o1.ingest.us.sentry.io/1`, the org ID is `1`, based on `o1`.
+SDKs **MUST** support an optional `orgId: <org-id>` setting. If set, `orgId` **MUST** take precedence over org ID [parsed from the DSN](https://develop.sentry.dev/sdk/foundations/transport/authentication/#parsing-the-dsn).
 
-Additionally, the SDK **MUST** be configurable with an optional `orgId: <org-id>` setting that takes precedence over the parsed value from the DSN. This option **SHOULD** be set when running a self-hosted version of Sentry or if a non-standard Sentry DSN is used, such as when using a local Relay.
+SDK documentation for the `orgId` option **SHOULD** recommend setting `orgId` for self-hosted Sentry and local Relay deployments.
 
-On incoming traces, the SDK **MUST** compare the `sentry-org_id` baggage value against its own parsed value from the DSN or org setting. Only if both match, the trace is continued. If there is no match, neither the trace ID, the parent sampling decision nor the baggage **SHOULD** be taken into account. The SDK **SHOULD** behave like it is the head of trace in this case.
+If the SDK has an org ID (from `orgId` or DSN parsing), it **MUST** propagate that value in baggage as `sentry-org_id`.
 
-This behavior can be disabled by setting `strictTraceContinuation: false` in the SDK init call. Initially, SDKs **MUST** introduce this option with a default value of `false`. Once the majority of SDKs have introduced this option, the default value will change to `true` (in a major version bump), making it opt-out.
+On incoming traces, the SDK **MUST** compare incoming `sentry-org_id` with its own org ID:
 
-Regardless of `strictTraceContinuation` being set to `true` or `false`, if the SDK is either configured with an `org` or was able to parse the value from the DSN, incoming traces containing an `org` value in the baggage that does not match the one from the receiving SDK, the trace is not continued.
+- If both values are present and differ, the SDK **MUST NOT** continue the trace, regardless of `strictTraceContinuation`.
+- If exactly one value is present, the SDK **MUST NOT** continue when `strictTraceContinuation` is `true`, and **SHOULD** continue when it is `false`.
+- If both values are present and equal, or both are absent, the SDK **SHOULD** continue the trace.
+
+When the SDK does not continue a trace, the incoming trace ID, parent sampling decision, and incoming baggage **SHOULD** be ignored. In this case, the SDK **SHOULD** behave as the head of a trace.
+
+Initially, SDKs **MUST** introduce this option with default `false`. Once the majority of SDKs support this option, the default will change to `true` in a major version, making strict mode opt-out.
 
 #### Examples
 
-| Baggage `sentry-org` | SDK `org` | `strictTraceContinuation` | Result |
+| Baggage `sentry-org_id` | SDK org ID | `strictTraceContinuation` | Result |
 | --- | --- | :---: | --- |
 | 1 | 1 | false | continue trace |
 | none | 1 | false | continue trace |
