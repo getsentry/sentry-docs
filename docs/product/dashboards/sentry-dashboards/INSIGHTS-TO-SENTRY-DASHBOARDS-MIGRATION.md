@@ -20,7 +20,7 @@ Use this when updating links and when adding redirects (e.g. in `redirects.js` a
 | `/product/insights/` | `/product/dashboards/sentry-dashboards/` |
 | `/product/insights/overview/` | `/product/dashboards/sentry-dashboards/` (merged into index) |
 | `/product/insights/overview/transaction-summary/` | `/product/dashboards/sentry-dashboards/transaction-summary/` |
-| `/product/insights/overview/metrics/` | `/product/dashboards/sentry-dashboards/performance-metrics/` |
+| `/product/insights/overview/metrics/` | `/product/dashboards/sentry-dashboards/transaction-summary/#metrics-in-this-view` (performance-metrics page retired; content in Transaction Summary) |
 | `/product/insights/overview/filters-display/` | `/product/dashboards/sentry-dashboards/` (page deleted; redirect to index) |
 | `/product/insights/overview/filters-display/widgets/` | `/product/dashboards/sentry-dashboards/` (page deleted; redirect to index) |
 | `/product/insights/getting-started/` | `/product/dashboards/sentry-dashboards/` (Set Up section merged into index; no separate getting-started page) |

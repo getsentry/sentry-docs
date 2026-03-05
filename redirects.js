@@ -1342,6 +1342,14 @@ const userDocsRedirects = [
     source: '/product/insights/retention-priorities/',
     destination: '/organization/dynamic-sampling/',
   },
+  {
+    source: '/product/insights/overview/metrics/',
+    destination: '/product/dashboards/sentry-dashboards/transaction-summary/',
+  },
+  {
+    source: '/product/dashboards/sentry-dashboards/performance-metrics/',
+    destination: '/product/dashboards/sentry-dashboards/transaction-summary/',
+  },
   // End of Insights reduirects.
   {
     source: '/platforms/javascript/guides/astro/manual-setup/',
