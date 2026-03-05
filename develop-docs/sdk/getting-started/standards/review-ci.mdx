@@ -1,0 +1,176 @@
+---
+title: Review and CI
+spec_id: sdk/getting-started/standards/review-ci
+spec_version: 1.0.0
+spec_status: candidate
+spec_platforms:
+  - all
+spec_changelog:
+  - version: 1.0.0
+    date: 2026-02-19
+    summary: Initial Review and CI standard
+sidebar_order: 4
+---
+
+<SpecRfcAlert />
+
+<SpecMeta />
+
+<SpecSection id="required-reviewers" status="candidate" since="1.0.0">
+
+## Required Reviewers
+
+#### Rule
+
+Every PR **REQUIRES** at least one approving review.
+@sdk-leads review **REQUIRED** for:
+
+- Public API ([Public API change approval gate](/sdk/getting-started/standards/api-architecture#public-api-change-approval-gate))
+- New dependencies ([Dependency management](/sdk/getting-started/standards/code-quality#dependency-management))
+- Security-sensitive code ([Security practices](/sdk/getting-started/standards/code-quality#security-practices))
+- Schema changes
+- Frameworks/architectural shifts.
+  External contributor PRs **REQUIRE** review from someone with area context.
+
+#### Enforcement
+
+- GitHub branch protection
+- CODEOWNERS file
+
+#### Suggested skill(s)
+
+- [`sentry-skills:code-review`](https://github.com/getsentry/skills#available-skills)
+
+#### Per-SDK override
+
+<StatusBadge type="yes" /> CODEOWNERS and reviewer count are team-specific.
+
+</SpecSection>
+
+---
+
+<SpecSection id="review-slas" status="candidate" since="1.0.0">
+
+## Review SLAs
+
+#### Rule
+
+Internal PRs: first review within 1 business day.
+External PRs: first response within 2 business days.
+
+"First review" means substantive feedback, not just a reaction.
+
+If an area has only a single reviewer or if that reviewer lacks capacity, the reviewer **MUST** proactively find coverage (another reviewer or AI assist). The PR author **SHOULD** also help identify an appropriate reviewer to avoid blocking the PR.
+
+#### Enforcement
+
+- Dashboard tracking
+- Periodic reporting
+
+#### Per-SDK override
+
+<StatusBadge type="yes" /> Teams can set stricter SLAs. Baseline is universal.
+
+</SpecSection>
+
+---
+
+<SpecSection id="review-feedback-conventions" status="candidate" since="1.0.0">
+
+## Review Feedback Conventions
+
+#### Rule
+
+LOGAF scale:
+
+- `h:` (high) — must fix (bugs, security, breakage, data loss)
+- `m:` (medium) — should fix (design, missing tests, clarity)
+- `l:` (low) — optional nit (style, minor suggestions)
+
+Comments without a prefix are treated as `m:` (medium). A PR **MUST NOT** be merged if it has any unresolved `h:` comments.
+
+#### Enforcement
+
+- Convention
+
+#### Suggested skill(s)
+
+- [`sentry-skills:iterate-pr`](https://github.com/getsentry/skills#available-skills) — triages by LOGAF level.
+- [`sentry-skills:code-review`](https://github.com/getsentry/skills#available-skills) — uses LOGAF in feedback.
+
+#### Per-SDK override
+
+<StatusBadge type="no" />
+
+</SpecSection>
+
+---
+
+<SpecSection id="required-ci-checks" status="candidate" since="1.0.0">
+
+## Required CI Checks Baseline
+
+#### Rule
+
+Every SDK repo **MUST** have as required status checks:
+
+1. Build
+2. Lint ([Linting and formatting in CI](/sdk/getting-started/standards/code-quality#linting-and-formatting-in-ci))
+3. Type check where applicable ([Type checking in CI](/sdk/getting-started/standards/code-quality#type-checking-in-ci))
+4. Tests
+5. Commit message structure and content ([Commit message structure and content](/sdk/getting-started/standards/code-submission#commit-message-structure-and-content)).
+
+Optional/**RECOMMENDED**:
+
+- Size/Performance Check ([SDK size and performance budgets](/sdk/getting-started/standards/code-quality#sdk-size-and-performance-budgets))
+- API Snapshot ([Public API change approval gate](/sdk/getting-started/standards/api-architecture#public-api-change-approval-gate))
+- Changelog Check ([Changelog entry](/sdk/getting-started/standards/code-submission#changelog-entry))
+- Secret Scanning ([Security practices](/sdk/getting-started/standards/code-quality#security-practices)).
+
+#### Enforcement
+
+- GitHub branch protection
+
+#### Suggested skill(s)
+
+- [`sentry-skills:claude-settings-audit`](https://github.com/getsentry/skills#available-skills)
+
+#### Per-SDK override
+
+<StatusBadge type="no" /> Additional checks per SDK. Baseline is universal.
+
+</SpecSection>
+
+---
+
+<SpecSection id="release-gating-criteria" status="candidate" since="1.0.0">
+
+## Release Gating Criteria
+
+#### Rule
+
+A release **MUST NOT** ship if:
+
+- Any required CI check fails
+- Any `h:` comment remains unresolved on merged PRs since last release
+- The changelog is empty for user-facing changes
+- Any known regression remains unresolved
+
+#### Enforcement
+
+- Release tooling checks
+- Human judgment for regressions
+
+See also: [Setting up release infrastructure playbook](/sdk/getting-started/playbooks/setup/setting-up-release-infrastructure) for initial release setup.
+
+#### Per-SDK override
+
+<StatusBadge type="no" /> Additional gates per SDK possible (e.g., beta/rc periods).
+
+</SpecSection>
+
+---
+
+## Changelog
+
+<SpecChangelog />

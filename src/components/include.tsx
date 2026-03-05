@@ -1,6 +1,6 @@
 import {useMemo} from 'react';
-import {getMDXComponent} from 'mdx-bundler/client';
 
+import {getMDXComponent} from 'sentry-docs/getMDXComponent';
 import {getFileBySlugWithCache} from 'sentry-docs/mdx';
 import {mdxComponents} from 'sentry-docs/mdxComponents';
 
@@ -23,7 +23,8 @@ export async function Include({name}: Props) {
   try {
     doc = await getFileBySlugWithCache(`includes/${name}`);
   } catch (e) {
-    if (e.code === 'ENOENT') {
+    // Handle file not found (ENOENT) and runtime MDX compilation attempts gracefully
+    if (e.code === 'ENOENT' || e.code === 'MDX_RUNTIME_ERROR') {
       return null;
     }
     throw e;

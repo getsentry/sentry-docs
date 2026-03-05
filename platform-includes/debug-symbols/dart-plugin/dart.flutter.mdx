@@ -1,3 +1,5 @@
+For a detailed list of features see the [Features](#features) section.
+
 ## Installation
 
 In your `pubspec.yaml`, add `sentry_dart_plugin` as a new dev dependency:
@@ -24,8 +26,12 @@ sentry:
   project: ___PROJECT_SLUG___
   org: ___ORG_SLUG___
   auth_token: ___ORG_AUTH_TOKEN___
-  # Disable automatic upload of debug symbols
-  # upload_debug_symbols: false
+  # Absolute or relative path to the Dart symbol map file
+  # Used to make obfuscated Flutter issue titles readable on iOS and Android
+  # See the "Building Your Application" section below for more details on how to generate the symbol map file
+  # Available since version 3.2.0 of the Sentry Dart Plugin
+  # Only applicable for obfuscated builds
+  dart_symbol_map_path: build/app/obfuscation.map.json
   # ___PRODUCT_OPTION_START___ source-context
   # Enable source context
   upload_sources: true
@@ -36,36 +42,80 @@ sentry:
   # ___PRODUCT_OPTION_END___ source-maps
 ```
 
-<OnboardingOption optionId="dsym">
-The `upload_debug_symbols` option defaults to `true` when not specified.
+```properties {filename:sentry.properties}
+# Add this sentry.properties file to your Flutter project root.
+project=___PROJECT_SLUG___
+org=___ORG_SLUG___
+auth_token=___ORG_AUTH_TOKEN___
+# Absolute or relative path to the Dart symbol map file
+# Used to make obfuscated Flutter issue titles readable on iOS and Android
+# See the "Building Your Application" section below for more details on how to generate the symbol map file
+# Available since version 3.2.0 of the Sentry Dart Plugin
+dart_symbol_map_path=build/app/obfuscation.map.json
+# ___PRODUCT_OPTION_START___ source-context
+# Enable source context
+upload_sources=true
+# ___PRODUCT_OPTION_END___ source-context
+# ___PRODUCT_OPTION_START___ source-maps
+# Enable source maps (only relevant for Flutter Web)
+upload_source_maps=true
+# ___PRODUCT_OPTION_END___ source-maps
+```
+
+<OnboardingOption optionId="source-context">
+<Alert>
+For iOS and Android builds, source context is only supported if you build the Flutter app using the `--split-debug-info` flag.
+
+Additionally source context currently only covers code in the main app package. For example, if your main app package depends on an internal package or a third-party package and an error occurs in that dependency, its source context will not be shown.
+
+</Alert>
 </OnboardingOption>
 
 ### Alternative Configuration Methods
 
-In addition to configuring the plugin in `pubspec.yaml`, you can use:
-- Environment variables
-- Properties file
+You can also set configuration values with environment variables or `--sentry-define`.
 
-For more information, read the [Sentry Dart Plugin README](https://github.com/getsentry/sentry-dart-plugin/tree/main?tab=readme-ov-file#configuration-optional).
+**Environment variables:**
+
+```bash
+export SENTRY_RELEASE=my-app@1.0.0
+```
+
+**Command-line arguments (`--sentry-define`):**
+
+```bash
+dart run sentry_dart_plugin --sentry-define=release=my-app@1.0.0
+```
+
+When the same value is set in multiple places, the highest priority wins in this order (highest to lowest):
+
+- Environment variables
+- `--sentry-define` command-line arguments
+- `pubspec.yaml`
+- `sentry.properties`
+
+For the full list of configuration options, see the [Configuration Reference](#configuration-reference) section.
 
 ## Building Your Application
 
-Before running the plugin, build your Flutter application with one of the following commands. Obfuscated is encouraged for production builds, and will make uploading debug symbols necessary to get readable stack traces.
+Before running the plugin, build your Flutter application. Obfuscation is encouraged for production builds, and will make uploading debug symbols necessary to get readable stack traces.
 
-```bash {tabTitle: Obfuscated}
-flutter build apk --obfuscate --split-debug-info=<output-directory>
-flutter build ios --obfuscate --split-debug-info=<output-directory>
-flutter build macos --obfuscate --split-debug-info=<output-directory>
-flutter build windows --obfuscate --split-debug-info=<output-directory>
-flutter build linux --obfuscate --split-debug-info=<output-directory>
+<Alert>
+  The
+  `--extra-gen-snapshot-options=--save-obfuscation-map=build/app/obfuscation.map.json`
+  option is required to generate the symbol map file which is used to make the
+  obfuscated Flutter issue titles readable on iOS and Android. Make sure to point
+  the `dart_symbol_map_path` option to the location of the `obfuscation.map.json` file.
+</Alert>
+
+```bash {tabTitle: Mobile & Desktop}
+# Replace <target> with the mobile or desktop target you're building for: https://docs.flutter.dev/deployment/obfuscate#supported-targets
+flutter build <target> --obfuscate --split-debug-info=<output-directory> --extra-gen-snapshot-options=--save-obfuscation-map=build/app/obfuscation.map.json
 ```
 
-```bash {tabTitle: Flutter Web}
+```bash {tabTitle: Web}
 flutter build web --release --source-maps
 ```
-<Alert>
-For Flutter web run `flutter build web --release --source-maps` to generate source maps.
-</Alert>
 
 ## Running the Plugin
 
@@ -75,35 +125,29 @@ After building your application, run the plugin to upload debug symbols:
 flutter pub run sentry_dart_plugin
 ```
 
-<Alert>
-
-If you don't obfuscate your build, the plugin won't upload debug symbols. Additionally, source context (viewing source code in stack trace frames on Sentry) is not currently supported for non-obfuscated builds. GitHub Issue: [sentry-dart/#1314](https://github.com/getsentry/sentry-dart/issues/1314)
-
-</Alert>
-
 ## Android ProGuard Integration
 
-If you have ProGuard (`minifyEnabled`) enabled, you must upload Android Proguard/R8 mapping files. You have two options:
+Uploading ProGuard mapping files is recommended in order to see symbolicated stack traces for errors that occur in the native Android layer:
 
-1. **Use the Sentry Android Gradle Plugin (Recommended)**
+- **Use the Sentry Android Gradle Plugin (Recommended).**
 
-   After installing the [Sentry Android Gradle Plugin](/platforms/android/configuration/gradle/), set `autoInstallation` to `false` in your `app/build.gradle` file:
+  After installing the [Sentry Android Gradle Plugin](/platforms/android/configuration/gradle/), set `autoInstallation` to `false` in your `app/build.gradle` file:
 
-   ```groovy {filename: app/build.gradle}
-   sentry {
-       autoInstallation {
-         enabled = false
-       }
-   }
-   ```
+  ```groovy {filename: app/build.gradle}
+  sentry {
+      autoInstallation {
+        enabled = false
+      }
+  }
+  ```
 
-   This is necessary because Sentry Flutter already ships with a compatible Sentry Android SDK, so we need to avoid conflicts.
+  This avoids conflicts because Sentry Flutter already ships with a compatible Sentry Android SDK.
 
-   Follow the [Android Gradle Plugin guide](/platforms/android/configuration/gradle/#proguardr8--dexguard) to complete the ProGuard mapping setup.
+  Follow the [Android Gradle Plugin guide](/platforms/android/configuration/gradle/#proguardr8--dexguard) to complete the ProGuard mapping setup.
 
-2. **Use the Sentry CLI**
+- **Use the Sentry CLI.**
 
-   Alternatively, you can use the [Sentry CLI](/cli/dif/#uploading-files) to manually upload mapping files.
+  Alternatively, you can use the [Sentry CLI](/cli/dif/#uploading-files) to manually upload mapping files.
 
 <Alert>
 
@@ -113,33 +157,131 @@ Sentry's Flutter SDK doesn't currently support the `uploadNativeSymbols` flag fr
 
 ## Configuration Reference
 
-The following table lists all available configuration options for the Sentry Dart Plugin:
+The following table lists all available configuration options for the Sentry Dart Plugin.
 
-<div style={{overflowX: 'auto', display: 'block', width: '100%'}}>
+The **Key** column refers to the option name used in:
 
-| Option | Type | Default | Description | Environment Variable |
-|--------|------|---------|-------------|---------------------|
-| `project` | string | | **Required.** Your project's name (e.g., `sentry-flutter`) | `SENTRY_PROJECT` |
-| `org` | string | | **Required.** Your organization's slug (e.g., `sentry-sdks`) | `SENTRY_ORG` |
-| `auth_token` | string | | **Required.** The Sentry auth token | `SENTRY_AUTH_TOKEN` |
-| `upload_debug_symbols` | boolean | `true` | Enables or disables automatic upload of debug symbols | |
-| `upload_source_maps` | boolean | `false` | Enables or disables automatic upload of source maps | |
-| `upload_sources` | boolean | `false` | Enables or disables source code upload | |
-| `url` | string | | The URL of your Sentry instance | `SENTRY_URL` |
-| `url_prefix` | URL prefix for JS source maps | e.g. ~/app/ (string) | no | - |
-| `wait_for_processing` | boolean | `false` | Whether to wait for server-side processing of uploaded files | |
-| `log_level` | string | `warn` | Configures the log level for sentry-cli (`trace`, `debug`, `info`, `warn`, `error`) | `SENTRY_LOG_LEVEL` |
-| `release` | string | `name@version` from pubspec | The release version for source maps | `SENTRY_RELEASE` |
-| `dist` | string | | Custom distribution identifier | `SENTRY_DIST` |
-| `web_build_path` | string | `build/web` | The web build folder path | |
-| `commits` | string | `auto` | Release commits integration | |
-| `ignore_missing` | boolean | `false` | Ignore missing commits previously used in the release | |
-| `bin_dir` | string | `.dart_tool/pub/bin/sentry_dart_plugin` | The folder where the plugin downloads the sentry-cli binary | |
-| `bin_path` | string | | Path to a sentry-cli binary to use instead of downloading | |
-| `sentry_cli_cdn_url` | string | `https://downloads.sentry-cdn.com/sentry-cli` | Alternative place to download sentry-cli | `SENTRYCLI_CDNURL` |
+- `pubspec.yaml`
+- `sentry.properties`
+- `--sentry-define`
 
-</div>
+When available, environment variable names are listed in the **Environment Variable** column.
+
+| Key                        | Environment Variable        | Type    | Default                                       | Description                                                                        |
+| -------------------------- | ------------------- | ------- | --------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `project`                  | `SENTRY_PROJECT`    | string  |                                               | **(Required)** Your project's name (e.g., `sentry-flutter`)                        |
+| `org`                      | `SENTRY_ORG`        | string  |                                               | **(Required)** Your organization's slug (e.g., `sentry-sdks`)                      |
+| `auth_token`               | `SENTRY_AUTH_TOKEN` | string  |                                               | **(Required)** The Sentry auth token                                               |
+| `upload_debug_symbols`     | —                   | boolean | `true`                                        | Enables or disables automatic upload of debug symbols                              |
+| `upload_source_maps`       | —                   | boolean | `false`                                       | Enables or disables automatic upload of source maps (Flutter Web)                  |
+| `upload_sources`           | —                   | boolean | `false`                                       | Enables or disables source code upload                                             |
+| `dart_symbol_map_path`     | —                   | string  |                                               | Path to the Dart symbol map file for readable obfuscated issue titles              |
+| `release`                  | `SENTRY_RELEASE`    | string  | `name@version` from pubspec                   | The release version for source maps                                                |
+| `dist`                     | `SENTRY_DIST`       | string  | Build number (after `+` in version)           | Custom distribution identifier                                                     |
+| `build_path`               | —                   | string  | `build`                                       | Base build directory                                                               |
+| `web_build_path`           | —                   | string  | `web`                                         | The web build folder path relative to `build_path`                                 |
+| `symbols_path`             | —                   | string  | `.`                                           | The directory containing debug symbols. This recursively searches for debug files. |
+| `url`                      | `SENTRY_URL`        | string  |                                               | The URL of your Sentry instance (for self-hosted)                                  |
+| `url_prefix`               | —                   | string  |                                               | URL prefix for JS source maps (e.g., `~/`). Required for non-root web deployments  |
+| `legacy_web_symbolication` | —                   | boolean | `false`                                       | Uses legacy symbolication for Flutter Web. See [Debug IDs](#debug-ids-flutter-web) |
+| `commits`                  | —                   | string  | `auto`                                        | Release commits integration                                                        |
+| `ignore_missing`           | —                   | boolean | `false`                                       | Ignore missing commits previously used in the release                              |
+| `wait_for_processing`      | —                   | boolean | `false`                                       | Whether to wait for server-side processing of uploaded files                       |
+| `log_level`                | `SENTRY_LOG_LEVEL`  | string  | `warn`                                        | Log level for sentry-cli: `trace`, `debug`, `info`, `warn`, `error`                |
+| `bin_dir`                  | —                   | string  | `.dart_tool/pub/bin/sentry_dart_plugin`       | Folder where the plugin downloads the sentry-cli binary                            |
+| `bin_path`                 | —                   | string  |                                               | Path to a sentry-cli binary to use instead of downloading                          |
+| `sentry_cli_cdn_url`       | `SENTRYCLI_CDNURL`  | string  | `https://downloads.sentry-cdn.com/sentry-cli` | Alternative place to download sentry-cli                                           |
+| `sentry_cli_version`       | —                   | string  |                                               | Override the sentry-cli version to download                                        |
+
+## Features
+
+The Sentry Dart Plugin uploads debug symbols and source maps to make your Flutter errors readable. Here's what you get on each platform:
+
+### Mobile & Desktop — Non-Obfuscated Builds
+
+| Feature              | iOS | Android | macOS | Windows | Linux |
+| -------------------- | --- | ------- | ----- | ------- | ----- |
+| Symbolicated Stacktrace  | ✓   | ✓       | ✓     | ✓       | ✓     |
+| Source Context       | ✓\* | ✓\*     | ✓\*   | ✓\*     | ✓\*   |
+| Symbolicated Issue Title | ✓   | ✓       | ✓     | ✓       | ✓     |
+
+### Mobile & Desktop — Obfuscated Builds (`--obfuscate`)
+
+| Feature              | iOS     | Android | macOS         | Windows       | Linux         |
+| -------------------- | ------- | ------- | ------------- | ------------- | ------------- |
+| Symbolicated Stacktrace  | ✓     | ✓     | ✓           | ✓           | ✓           |
+| Source Context       | ✓\*   | ✓\*   | ✓\*         | ✓\*         | ✓\*         |
+| Symbolicated Issue Title | ✓       | ✓       | Not Supported | Not Supported | Not Supported |
+
+\*Requires `--split-debug-info` build flag supplied to the `flutter build` command
+
+### Web (Always Minified)
+
+| Feature              | Support       |
+| -------------------- | ------------- |
+| Symbolicated Stacktrace  | ✓             |
+| Source Context       | ✓             |
+| Symbolicated Issue Title | Not Supported |
 
 ## Troubleshooting
 
-If you encounter any issues with the Sentry Dart Plugin, refer to [Troubleshooting - Sentry Dart Plugin](/platforms/dart/guides/flutter/troubleshooting#sentry-dart-plugin) for solutions to common problems.
+<Expandable title="Why does the plugin say a release is missing?">
+
+The plugin fails because a previous release cannot be found in the git history.
+
+Set `ignore_missing: true` in your configuration to bypass this validation:
+
+```yaml {filename:pubspec.yaml}
+sentry:
+  ignore_missing: true
+```
+
+</Expandable>
+
+<Expandable title="Why aren't Flutter Web source maps working with older SDKs?">
+
+Source maps aren't working for Flutter Web with plugin version 3.0.0+.
+
+Upgrade your Sentry Flutter SDK to 9.1.0+.
+
+If you're using a version of the Sentry Flutter SDK earlier than 9.1.0, you can set `legacy_web_symbolication: true` to use the legacy symbolication method.
+
+</Expandable>
+
+<Expandable title="Why don't my Flutter Web source maps match when using a URL prefix?">
+
+Source maps aren't matching for a Flutter Web app that's not deployed at the root URL (e.g., `https://example.com/my-app/` instead of `https://example.com/`).
+
+Configure both the `url_prefix` in the plugin and update your stack frame paths in the SDK to match.
+
+**Step 1:** Add the `url_prefix` to your plugin configuration:
+
+```yaml {filename:pubspec.yaml}
+sentry:
+  upload_source_maps: true
+  url_prefix: ~/my-app/
+```
+
+**Step 2:** Update the stack frame paths using `beforeSend` so they include the same prefix. This allows Sentry to match the source maps correctly:
+
+```dart
+options.beforeSend = (event, hint) {
+  for (final exception in event.exceptions ?? <SentryException>[]) {
+    final stackTrace = exception.stackTrace;
+    if (stackTrace != null) {
+      for (final frame in stackTrace.frames) {
+        // Replace with your actual domain and path prefix
+        const baseUrl = 'https://example.com/';
+        final modifiedAbsPath = frame.absPath?.replaceFirst(
+          baseUrl,
+          '${baseUrl}my-app/',
+        );
+        frame.absPath = modifiedAbsPath;
+      }
+    }
+  }
+  return event;
+};
+```
+
+</Expandable>

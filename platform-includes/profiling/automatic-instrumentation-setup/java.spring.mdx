@@ -1,0 +1,111 @@
+
+### Enabling Trace Lifecycle Profiling
+
+To enable trace profiling, set the lifecycle to `TRACE`. Trace profiling requires tracing to be enabled.
+
+Check out the <PlatformLink to="/tracing/">tracing setup documentation</PlatformLink> for more detailed information on how to configure sampling. Setting the sample rate to 1.0 means all transactions will be captured.
+
+```properties {filename:application.properties}
+sentry.traces-sample-rate=1.0
+sentry.profile-session-sample-rate=1.0
+sentry.profile-lifecycle=TRACE
+```
+
+```yaml {filename:application.yml}
+sentry:
+  traces-sample-rate: 1.0
+  profile-session-sample-rate: 1.0
+  profile-lifecycle: TRACE
+```
+
+### Enabling Manual Lifecycle Profiling
+
+To enable manual profiling, set the lifecycle to `MANUAL`. Manual profiling does not require tracing to be enabled.
+
+```properties {filename:application.properties}
+sentry.profile-session-sample-rate=1.0
+sentry.profile-lifecycle=MANUAL
+```
+
+```yaml {filename:application.yml}
+sentry:
+  profile-session-sample-rate: 1.0
+  profile-lifecycle: MANUAL
+```
+
+Then use the `startProfiler` and `stopProfiler` methods to start and stop profiling respectively.
+
+
+```java
+import io.sentry.Sentry;
+
+// Start profiling
+Sentry.startProfiler();
+
+// run some code here
+
+// Stop profiling
+Sentry.stopProfiler();
+```
+
+```kotlin
+import io.sentry.Sentry
+
+// Start profiling
+Sentry.startProfiler()
+
+// run some code here
+
+// Stop profiling
+Sentry.stopProfiler()
+```
+
+### Profiling with OpenTelemetry
+When running our OpenTelemetry Agent in <PlatformLink to="/opentelemetry/setup/agent/auto-init">Agent Auto-Init</PlatformLink> mode. The `SentryProfilerConfiguration` needs to be setup. This is due to the fact that the profiler is not yet on the classpath when the agent initializes `Sentry`. Therefore the profiler needs to be initialized when `Spring` starts.
+
+<Alert level="warning">
+If you are using our OpenTelemetry Agent, profiling when running in the <PlatformLink to="/opentelemetry/setup/agent/auto-init">Agent Auto-Init</PlatformLink> mode is supported from version `8.26.0` onwards.
+</Alert>
+
+In order to set this up, import `SentryProfilerConfiguration` in one of your `@Configuration` classes:
+
+```java {tabTitle:Java (Spring 5)} {diff}
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
++import io.sentry.spring.SentryProfilerConfiguration;
+
++@Import(SentryProfilerConfiguration.class)
+class SentryConfig {
+}
+```
+
+```java {tabTitle:Java (Spring 6)} {diff}
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
++import io.sentry.spring.jakarta.SentryProfilerConfiguration;
+
++@Import(SentryProfilerConfiguration.class)
+class SentryConfig {
+}
+```
+
+```kotlin {tabTitle:Kotlin (Spring 5)} {diff}
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Import
++import io.sentry.spring.SentryProfilerConfiguration;
+
++@Import(SentryProfilerConfiguration::class)
+class SentryConfig {
+}
+```
+
+```kotlin {tabTitle:Kotlin (Spring 6)} {diff}
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Import
++import io.sentry.spring.jakarta.SentryProfilerConfiguration;
+
++@Import(SentryProfilerConfiguration::class)
+class SentryConfig {
+}
+```
+

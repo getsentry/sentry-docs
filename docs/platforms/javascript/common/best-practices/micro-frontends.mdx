@@ -33,10 +33,38 @@ If your app uses micro frontends, it's very useful to be able to track which one
 
 Below you'll find setup instructions for both an automatic and a manual way to route errors to different Sentry projects.
 
+<PlatformSection supported={["javascript.nextjs"]}>
+
+## Vercel Multi-Zone Micro Frontends
+
+Vercel's multi-zone applications let you slice a large app into smaller, independently managed projects. Each project operates as its own application, with its own UI and tech stack. For example, you might use Next.js for one project, SvelteKit for another, and React for a third.
+
+To set up Sentry in a multi-zone setup, configure Sentry separately within each project. Follow the installation steps for the framework each project uses. Here are a few examples:
+
+- **[Next.js](/platforms/javascript/guides/nextjs/)**
+- **[React](/platforms/javascript/guides/react/)**
+- **[SvelteKit](/platforms/javascript/guides/sveltekit/)**
+
+We recommend using a different DSN for each project. This makes it easier to
+identify which project errors are coming from, helping you track issues and
+fix them faster in complex frontend architectures.
+
+<Alert>
+  With the exception of Vercel multi-zone micro frontends, you should call
+  `Sentry.init()` only once in your application. Initializing Sentry multiple
+  times can lead to unexpected behavior.
+</Alert>
+
+</PlatformSection>
+
+<PlatformSection notSupported={["javascript.nextjs"]}>
+
 <Alert>
   In all cases `Sentry.init()` must never be called more than once, doing so
   will result in undefined behavior.
 </Alert>
+
+</PlatformSection>
 
 ## Automatically Route Errors to Different Projects
 
@@ -65,7 +93,7 @@ below is for Webpack, but this is also supported in Vite, Rollup, and esbuild.
 const { sentryWebpackPlugin } = require("@sentry/webpack-plugin");
 
 module.exports = {
-  devtool: "source-map",
+  devtool: "hidden-source-map", // Source map generation must be turned on ("hidden-source-map", "source-map", etc.)
   plugins: [
     sentryWebpackPlugin({
       moduleMetadata: ({ release }) => ({ dsn: "__MODULE_DSN__", release }),
@@ -75,7 +103,8 @@ module.exports = {
 ```
 
 <Alert>
-  **Replace `__MODULE_DSN__` with your actual Sentry project DSN.** You can find your DSN in your Sentry project settings under Client Keys (DSN).
+  **Replace `__MODULE_DSN__` with your actual Sentry project DSN.** You can find
+  your DSN in your Sentry project settings under Client Keys (DSN).
 </Alert>
 
 Once metadata has been injected into modules, the `moduleMetadataIntegration`
@@ -94,27 +123,13 @@ import {
   makeFetchTransport,
   moduleMetadataIntegration,
   makeMultiplexedTransport,
+  MULTIPLEXED_TRANSPORT_EXTRA_KEY,
 } from "@sentry/browser";
-
-const EXTRA_KEY = "ROUTE_TO";
-
-const transport = makeMultiplexedTransport(makeFetchTransport, (args) => {
-  const event = args.getEvent();
-  if (
-    event &&
-    event.extra &&
-    EXTRA_KEY in event.extra &&
-    Array.isArray(event.extra[EXTRA_KEY])
-  ) {
-    return event.extra[EXTRA_KEY];
-  }
-  return [];
-});
 
 init({
   dsn: "__DEFAULT_DSN__",
   integrations: [moduleMetadataIntegration()],
-  transport,
+  transport: makeMultiplexedTransport(makeFetchTransport),
   beforeSend: (event) => {
     if (event?.exception?.values?.[0].stacktrace.frames) {
       const frames = event.exception.values[0].stacktrace.frames;
@@ -127,7 +142,7 @@ init({
       if (routeTo.length) {
         event.extra = {
           ...event.extra,
-          [EXTRA_KEY]: routeTo,
+          [MULTIPLEXED_TRANSPORT_EXTRA_KEY]: routeTo,
         };
       }
     }
@@ -157,28 +172,10 @@ init({
 ></script>
 
 <script>
-  const EXTRA_KEY = "ROUTE_TO";
-
-  const transport = Sentry.makeMultiplexedTransport(
-    Sentry.makeFetchTransport,
-    (args) => {
-      const event = args.getEvent();
-      if (
-        event &&
-        event.extra &&
-        EXTRA_KEY in event.extra &&
-        Array.isArray(event.extra[EXTRA_KEY])
-      ) {
-        return event.extra[EXTRA_KEY];
-      }
-      return [];
-    }
-  );
-
   Sentry.init({
     dsn: "__DEFAULT_DSN__",
     integrations: [Sentry.moduleMetadataIntegration()],
-    transport,
+    transport: Sentry.makeMultiplexedTransport(Sentry.makeFetchTransport),
     beforeSend: (event) => {
       if (event?.exception?.values?.[0].stacktrace.frames) {
         const frames = event.exception.values[0].stacktrace.frames;
@@ -191,7 +188,7 @@ init({
         if (routeTo.length) {
           event.extra = {
             ...event.extra,
-            [EXTRA_KEY]: routeTo,
+            [Sentry.MULTIPLEXED_TRANSPORT_EXTRA_KEY]: routeTo,
           };
         }
       }
@@ -203,7 +200,9 @@ init({
 ```
 
 <Alert>
-  **Replace `__DEFAULT_DSN__` with your actual Sentry project DSN.** This should be the DSN for your default/fallback Sentry project. You can find your DSN in your Sentry project settings under Client Keys (DSN).
+  **Replace `__DEFAULT_DSN__` with your actual Sentry project DSN.** This should
+  be the DSN for your default/fallback Sentry project. You can find your DSN in
+  your Sentry project settings under Client Keys (DSN).
 </Alert>
 
 Once this is set up, errors - both handled and unhandled - will be automatically routed to the right project.
@@ -218,11 +217,42 @@ will return matches for errors, transactions, and replays.
 ## Manually Route Errors to Different Projects
 
 If you want more control to be able to explicitly specify the destination for each individual `captureException`,
-you can use the more advanced interface multiplexed transport offers.
+you can use the multiplexed transport's API to route events to specific projects.
 
-<Alert>equires SDK version `7.59.0` or higher.</Alert>
+<Alert>Requires SDK version `7.59.0` or higher.</Alert>
 
-The example below uses a `feature` tag to determine which Sentry project to
+### Using the Default Matcher
+
+The simplest way to manually route events is by using the default matcher with `MULTIPLEXED_TRANSPORT_EXTRA_KEY`:
+
+```js
+import {
+  captureException,
+  init,
+  makeFetchTransport,
+  makeMultiplexedTransport,
+  MULTIPLEXED_TRANSPORT_EXTRA_KEY,
+} from "@sentry/browser";
+
+init({
+  dsn: "__FALLBACK_DSN__",
+  transport: makeMultiplexedTransport(makeFetchTransport),
+});
+
+// Route a specific error to different projects
+captureException(new Error("oh no!"), {
+  extra: {
+    [MULTIPLEXED_TRANSPORT_EXTRA_KEY]: [
+      { dsn: "__CART_DSN__", release: "cart@1.0.0" },
+      { dsn: "__GALLERY_DSN__", release: "gallery@1.2.0" },
+    ],
+  },
+});
+```
+
+### Using a Custom Matcher
+
+For more advanced routing logic, you can provide a custom matcher function. The example below uses a `feature` tag to determine which Sentry project to
 send the event to. If the event doesn't have a `feature` tag, we send it to the
 fallback DSN defined in `Sentry.init`.
 
@@ -254,10 +284,11 @@ init({
 <Alert>
   **Replace the placeholder DSN values with your actual Sentry project DSNs:**
   - Replace `__FALLBACK_DSN__` with the DSN for your fallback/default Sentry project
-  - Replace `__CART_DSN__` with the DSN for your cart micro frontend's Sentry project  
+  - Replace `__CART_DSN__` with the DSN for your cart micro frontend's Sentry project
   - Replace `__GALLERY_DSN__` with the DSN for your gallery micro frontend's Sentry project
-  
-  You can find your DSNs in each Sentry project's settings under Client Keys (DSN).
+
+You can find your DSNs in each Sentry project's settings under Client Keys (DSN).
+
 </Alert>
 
 You can then set tags/contexts on events in individual micro-frontends to decide which Sentry project to send the event to as follows:

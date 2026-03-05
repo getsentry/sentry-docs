@@ -7,14 +7,19 @@ on:
     branches: [master]
 
 jobs:
-  index:
+  lint-404:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
       - uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a # v4
         id: setup-node
         with:
           node-version-file: 'package.json'
+          cache: 'pnpm'
+
       - uses: dorny/paths-filter@v3
         id: filter
         with:
@@ -23,6 +28,7 @@ jobs:
               - 'docs/**'
               - 'includes/**'
               - 'platform-includes/**'
+              - 'scripts/lint-404s/**'
             dev-docs:
               - 'develop-docs/**'
       - uses: oven-sh/setup-bun@v2
@@ -30,33 +36,29 @@ jobs:
           bun-version: latest
 
       - uses: actions/cache@v4
-        id: cache
         with:
           path: |
-            ${{ github.workspace }}/node_modules
             ${{ github.workspace }}/.next/cache
-            ${{ github.workspace }}/.eslintcache
-          key: node-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+          key: nextjs-${{ runner.os }}-${{ steps.setup-node.outputs.node-version }}-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
-            node-${{ runner.os }}-
+            nextjs-${{ runner.os }}-${{ steps.setup-node.outputs.node-version }}-
 
-      - run: yarn install --frozen-lockfile
-        if: steps.cache.outputs.cache-hit != 'true'
+      - run: pnpm install --frozen-lockfile
 
-      - run: yarn build
+      - run: pnpm build
         if: steps.filter.outputs.docs == 'true'
         env:
           SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
           NEXT_PUBLIC_SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
 
-      - run: yarn build:developer-docs
+      - run: pnpm build:developer-docs
         if: steps.filter.outputs.dev-docs == 'true'
         env:
           SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
           NEXT_PUBLIC_SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
 
       - name: Start Http Server
-        run: yarn start &
+        run: pnpm start &
         if: steps.filter.outputs.docs == 'true' || steps.filter.outputs.dev-docs == 'true'
         env:
           SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0

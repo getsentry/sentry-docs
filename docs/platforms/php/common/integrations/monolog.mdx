@@ -1,10 +1,64 @@
 ---
 title: Monolog
-description: "Learn how to enable Sentry's PHP SDK to capture Monolog events."
+description: "Learn how to enable Sentry's PHP SDK to capture Monolog events and logs."
 ---
 
-When using [Monolog](https://github.com/Seldaek/monolog) you can configure a [breadcrumb](../../enriching-events/breadcrumbs/) handler to capture Monolog messages as breadcrumbs and a handler that captures messages as events in Sentry.
+<Alert level="info" title="Sentry Logs">
+
+  Enable the Sentry Logs feature with `\Sentry\init(['enable_logs' => true])` to unlock Sentry's full logging power. With Sentry Logs, you can search, filter, and analyze logs from across your entire application in one place.
+
+</Alert>
+
+When using [Monolog](https://github.com/Seldaek/monolog) you can configure handlers to capture Monolog messages in several ways:
+
+- **Logs Handler** - Send structured logs to Sentry
+- **Event Handler** - Capture messages as error events in Sentry
+- **Breadcrumb Handler** - Record messages as breadcrumbs attached to future events
+
 The breadcrumb handler will not send anything to Sentry directly, it only records breadcrumbs that will be attached to any event or exception sent to Sentry.
+
+## Logs
+
+<Alert level="info">
+Available in SDK version 4.12.0 and above.
+</Alert>
+
+To send structured logs to Sentry, use the `\Sentry\Monolog\LogsHandler`.
+
+```php
+<?php
+
+use Monolog\Logger;
+use Sentry\Logs\LogLevel;
+
+\Sentry\init([
+    'dsn' => '___PUBLIC_DSN___',
+    'enable_logs' => true, // Enable Sentry logging
+]);
+
+// Create a Monolog channel with a logs handler
+$logger = new Logger('sentry_logs');
+$logger->pushHandler(new \Sentry\Monolog\LogsHandler(
+    LogLevel::info(), // Minimum level to send logs
+));
+
+// Send logs to Sentry
+$logger->info('User logged in', [
+    'user_id' => 12345,
+    'email' => 'user@example.com',
+    'login_method' => 'password',
+]);
+
+$logger->warning('API rate limit approaching', [
+    'endpoint' => '/api/users',
+    'requests_remaining' => 10,
+    'window_seconds' => 60,
+]);
+```
+
+The context array passed to Monolog methods becomes searchable attributes in the Sentry logs interface.
+
+## Events & Breadcrumbs
 
 ```php
 <?php
@@ -41,3 +95,18 @@ try {
     $log->error('Some exception happened', ['exception' => $exception]);
 }
 ```
+
+## Support With Sentry Logs
+
+Monolog logs can also be captured as <PlatformLink to="/logs/">Sentry Logs</PlatformLink> for better searchability and querying.
+
+To enable this, set `enable_logs` to `true` when initializing the SDK:
+
+```php
+\Sentry\init([
+    'dsn' => '___PUBLIC_DSN___',
+    'enable_logs' => true,
+]);
+```
+
+You can control which log levels are sent to Sentry Logs by configuring the Monolog handler's minimum level.

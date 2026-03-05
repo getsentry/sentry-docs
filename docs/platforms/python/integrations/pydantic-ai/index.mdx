@@ -1,0 +1,254 @@
+---
+title: Pydantic AI
+description: "Learn about using Sentry for Pydantic AI."
+---
+
+<Alert title="Beta">
+
+The support for **Pydantic AI** is in beta. Please test locally before using in production.
+
+</Alert>
+
+This integration connects Sentry with the [Pydantic AI](https://ai.pydantic.dev/) library.
+The integration has been confirmed to work with Pydantic AI version 1.0.0+.
+
+Once you've installed this integration, you can use [Sentry AI Agents Insights](https://sentry.io/orgredirect/organizations/:orgslug/insights/ai/agents/), a Sentry dashboard that helps you understand what's going on with your AI agents.
+
+Sentry AI Agents monitoring will automatically collect information about agents, tools, prompts, tokens, and models.
+
+## Install
+
+Install `sentry-sdk` from PyPI:
+
+```bash {tabTitle:pip}
+pip install "sentry-sdk"
+```
+
+```bash {tabTitle:uv}
+uv add "sentry-sdk"
+```
+
+## Configure
+
+Add `PydanticAIIntegration()` to your `integrations` list:
+
+```python {tabTitle:OpenAI}
+import sentry_sdk
+from sentry_sdk.integrations.pydantic_ai import PydanticAIIntegration
+from sentry_sdk.integrations.openai import OpenAIIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    traces_sample_rate=1.0,
+    # Add data like LLM and tool inputs/outputs;
+    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    send_default_pii=True,
+    integrations=[
+        PydanticAIIntegration(),
+    ]
+)
+```
+
+```python {tabTitle:Anthropic}
+import sentry_sdk
+from sentry_sdk.integrations.pydantic_ai import PydanticAIIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    traces_sample_rate=1.0,
+    # Add data like LLM and tool inputs/outputs;
+    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    send_default_pii=True,
+    integrations=[
+        PydanticAIIntegration(),
+    ],
+)
+```
+
+## Verify
+
+Verify that the integration works by running an AI agent. The resulting data should show up in your AI Agents Insights dashboard. In this example, we're creating a customer support agent that analyzes customer inquiries and can optionally look up order information using a tool.
+
+```python {tabTitle:OpenAI}
+import asyncio
+
+import sentry_sdk
+from sentry_sdk.integrations.pydantic_ai import PydanticAIIntegration
+from sentry_sdk.integrations.openai import OpenAIIntegration
+from pydantic_ai import Agent, RunContext
+from pydantic import BaseModel
+
+class SupportResponse(BaseModel):
+    message: str
+    sentiment: str
+    requires_escalation: bool
+
+support_agent = Agent(
+    'openai:gpt-4o-mini',
+    name="Customer Support Agent",
+    system_prompt=(
+        "You are a helpful customer support agent. Analyze customer inquiries, "
+        "provide helpful responses, and determine if escalation is needed. "
+        "If the customer mentions an order number, use the lookup tool to get details."
+    ),
+    result_type=SupportResponse,
+)
+
+@support_agent.tool
+async def lookup_order(ctx: RunContext[None], order_id: str) -> dict:
+    """Look up order details by order ID.
+
+    Args:
+        ctx: The context object.
+        order_id: The order identifier.
+
+    Returns:
+        Order details including status and tracking.
+    """
+    # In a real application, this would query a database
+    return {
+        "order_id": order_id,
+        "status": "shipped",
+        "tracking_number": "1Z999AA10123456784",
+        "estimated_delivery": "2024-03-15"
+    }
+
+async def main() -> None:
+    sentry_sdk.init(
+        dsn="___PUBLIC_DSN___",
+        traces_sample_rate=1.0,
+        # Add data like LLM and tool inputs/outputs;
+        # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+        send_default_pii=True,
+        integrations=[
+            PydanticAIIntegration(),
+        ]
+    )
+
+    result = await support_agent.run(
+        "Hi, I'm wondering about my order #ORD-12345. When will it arrive?"
+    )
+    print(result.data)
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+```python {tabTitle:Anthropic}
+import asyncio
+
+import sentry_sdk
+from sentry_sdk.integrations.pydantic_ai import PydanticAIIntegration
+from pydantic_ai import Agent, RunContext
+from pydantic import BaseModel
+
+class SupportResponse(BaseModel):
+    message: str
+    sentiment: str
+    requires_escalation: bool
+
+support_agent = Agent(
+    'anthropic:claude-3-5-sonnet-latest',
+    name="Customer Support Agent",
+    system_prompt=(
+        "You are a helpful customer support agent. Analyze customer inquiries, "
+        "provide helpful responses, and determine if escalation is needed. "
+        "If the customer mentions an order number, use the lookup tool to get details."
+    ),
+    result_type=SupportResponse,
+)
+
+@support_agent.tool
+async def lookup_order(ctx: RunContext[None], order_id: str) -> dict:
+    """Look up order details by order ID.
+
+    Args:
+        ctx: The context object.
+        order_id: The order identifier.
+
+    Returns:
+        Order details including status and tracking.
+    """
+    # In a real application, this would query a database
+    return {
+        "order_id": order_id,
+        "status": "shipped",
+        "tracking_number": "1Z999AA10123456784",
+        "estimated_delivery": "2024-03-15"
+    }
+
+async def main() -> None:
+    sentry_sdk.init(
+        dsn="___PUBLIC_DSN___",
+        traces_sample_rate=1.0,
+        # Add data like LLM and tool inputs/outputs;
+        # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+        send_default_pii=True,
+        integrations=[
+            PydanticAIIntegration(),
+        ],
+    )
+
+    result = await support_agent.run(
+        "Hi, I'm wondering about my order #ORD-12345. When will it arrive?"
+    )
+    print(result.data)
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+It may take a couple of moments for the data to appear in [sentry.io](https://sentry.io).
+
+## Behavior
+
+Data on the following will be collected:
+
+- AI agents invocations
+- execution of tools
+- number of input and output tokens used
+- LLM models usage
+- model settings (temperature, max_tokens, etc.)
+
+Sentry considers LLM and tool inputs/outputs as PII and doesn't include PII data by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False` as shown in the Options section below.
+
+## Options
+
+By adding `PydanticAIIntegration` to your `sentry_sdk.init()` call explicitly, you can set options for `PydanticAIIntegration` to change its behavior:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.pydantic_ai import PydanticAIIntegration
+
+sentry_sdk.init(
+    # ...
+    # Add data like inputs and responses;
+    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    send_default_pii=True,
+    integrations=[
+        PydanticAIIntegration(
+            include_prompts=False,  # LLM and tool inputs/outputs will be not sent to Sentry, despite send_default_pii=True
+        ),
+    ],
+)
+```
+
+You can pass the following keyword arguments to `PydanticAIIntegration()`:
+
+- `include_prompts`:
+
+  Whether LLM and tool inputs and outputs should be sent to Sentry. Sentry considers this data personal identifiable data (PII) by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False`.
+
+  The default is `True`.
+
+- `handled_tool_call_exceptions`:
+
+  Option to capture tool call exceptions that Pydantic AI prevents from bubbling up. These include validation errors when an agent is configured to
+  retry tool calls. All additional tool call exceptions reported when this option is `True` are handled errors in Sentry. This option has no effect on exceptions that are not handled by Pydantic AI.
+
+  The default is `True`.
+
+## Supported Versions
+
+- Pydantic AI: 1.0.0+
+- Python: 3.9+

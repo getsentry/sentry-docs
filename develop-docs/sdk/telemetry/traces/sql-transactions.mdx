@@ -1,0 +1,32 @@
+---
+title: SQL Transactions
+---
+
+<Alert>
+  This document uses key words such as "MUST", "SHOULD", and "MAY" as defined in [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt) to indicate requirement levels.
+</Alert>
+
+The SDK SHOULD auto-instrument all database transactions for SQL databases like PostgreSQL and MySQL.
+Each BEGIN, COMMIT, and ROLLBACK, or equivalent statement in the database system MUST result in an individual span.
+Spans for other transaction-level statements, such as SAVEPOINT, are RECOMMENDED and, when implemented, MUST also correspond to an individual SQL statement.
+Transaction statements SHOULD produce spans whether they are issued through a database driver or through an ORM.
+
+### Span Data
+
+Refer to <Link to="https://getsentry.github.io/sentry-conventions/generated/attributes/db.html">Database Span Data Conventions</Link> for a full list of attributes that database spans should have.
+The SDK SHOULD set the
+
+- db.system.name
+- db.operation.name
+
+attributes for transaction statement spans.
+Equivalent deprecated attributes MAY be used for backward compatibility, but they SHOULD be marked for deprecation.
+
+The operation names for BEGIN, COMMIT and ROLLBACK statements MUST be "BEGIN", "COMMIT", and "ROLLBACK", respectively.
+For synonyms, like BEGIN TRANSACTION for BEGIN, the operation name MAY reflect the synonym. In this example, "BEGIN TRANSACTION" MAY be used.
+Some statements, like SAVEPOINT, ROLLBACK TO SAVEPOINT and RELEASE SAVEPOINT, take arguments.
+The operation name for statements that accept arguments MUST be the statement without the arguments. For the examples above, the operation names are "SAVEPOINT", "ROLLBACK TO SAVEPOINT", and "RELEASE SAVEPOINT", respectively.
+
+For other transaction-level statements like MySQL's START TRANSACTION, the SDK SHOULD represent the literal statement as closely as possible, omitting control-flow characters like semicolons.
+SQLite's transaction statements can include modifiers. For instance, BEGIN DEFERRED is a modified BEGIN statement. In this case, the operation name MAY be either "BEGIN" or "BEGIN DEFERRED".
+The same rule applies to analogous modified statements.

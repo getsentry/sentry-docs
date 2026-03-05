@@ -1,7 +1,8 @@
 ---
 title: Troubleshooting
 description: "Troubleshoot and resolve common issues with the React Native SDK."
-sidebar_order: 9000
+sidebar_order: 12
+sidebar_section: configuration
 ---
 
 ## Support 16 KB Page Sizes on Android
@@ -133,9 +134,23 @@ The Xcode integration reads `dist` from `CFBundleVersion` but Xcode Cloud builds
 export SENTRY_DIST=$CI_BUILD_NUMBER
 ```
 
+## iOS: Sentry User Feedback UI cannot be used from app extensions.
+
+If you see an error similar to `'SentryUserFeedbackIntegration' is unavailable: not available on iOS - Sentry User Feedback UI cannot be used from app extensions` during the application build process, please make sure that the `APPLICATION_EXTENSION_API_ONLY` is set to `NO`. You can achieve that with the following in your `Podfile`.
+
+```ruby {filename:ios/Podfile}
+installer.pods_project.targets.each do |target|
+  target.build_configurations.each do |config|
+    if target.name == 'Sentry'
+      config.build_settings['APPLICATION_EXTENSION_API_ONLY'] = 'NO'
+    end
+  end
+end
+```
+
 ## Unknown receiver '\<SomeReceiver\>', Use of undeclared identifier '\<SomeIdentifier\>'
 
-If you see an error like `Unknown receiver 'SwiftDescriptor'` or `Use of undeclared identifier 'SentryLog'` during the application build process, there's a conflict stemming from `APPLICATION_EXTENSION_API_ONLY`. By default, the Sentry Cocoapod is configured with `APPLICATION_EXTENSION_API_ONLY=YES`, but some `post_install` script likely changed it. To fix this error, add the following to the `Podfile`.
+If you see an error like `Unknown receiver 'SwiftDescriptor'` or `Use of undeclared identifier 'SentryLog'` during the application build process (in SDK versions prior to `6.18.0`), there's a conflict stemming from `APPLICATION_EXTENSION_API_ONLY`. By default, the Sentry Cocoapod is configured with `APPLICATION_EXTENSION_API_ONLY=YES`, but some `post_install` script likely changed it. To fix this error, add the following to the `Podfile`.
 
 ```ruby {filename:ios/Podfile}
 post_install do |installer|
@@ -380,15 +395,3 @@ plugins {
 AGP 7.4+ introduced new APIs for injecting into assets that the Sentry Android Gradle Plugin uses to avoid this circular dependency. Since AGP 7.4 was released in 2023, we recommend upgrading to the latest stable version.
 
 For more information, see [GitHub issue #756](https://github.com/getsentry/sentry-android-gradle-plugin/issues/756).
-
-## Uninstalling the SDK
-
-To remove the SDK from your project, run the following commands:
-
-```bash
-npx @sentry/wizard -i reactNative -p ios android --uninstall
-yarn remove @sentry/react-native
-cd ios && pod install
-```
-
-Once that's done, remove the `ios/sentry.properties` and `android/sentry.properties` files. Finally, remove all the code using `@sentry/react-native` from your project.

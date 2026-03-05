@@ -1,5 +1,6 @@
 import {Alert} from './components/alert';
 import {Arcade} from './components/arcade';
+import {AvailableSince} from './components/availableSince';
 import {Break} from './components/break';
 import {Card} from './components/card';
 import {CliChecksumTable} from './components/cliChecksumTable';
@@ -8,15 +9,23 @@ import {CodeTabs} from './components/codeTabs';
 import {CommunitySupportedPlatforms} from './components/communitySupportedPlatforms';
 import {ConfigKey} from './components/configKey';
 import {ConfigValue} from './components/configValue';
+import {ContentSeparator} from './components/contentSeparator';
+import {CopyableCard} from './components/copyableCard';
 import {CreateGitHubAppForm} from './components/createGitHubAppForm';
 import {DefinitionList} from './components/definitionList';
 import {DevDocsCardGrid} from './components/devDocsCardGrid';
 import DocImage from './components/docImage';
 import {Expandable} from './components/expandable';
+import {FeatureBadge} from './components/featureBadge';
+import {GitHubCodePreview} from './components/githubCodePreview';
 import {GitHubDomainChecker} from './components/githubDomainChecker';
+import {GradleFeatureConfig} from './components/gradleFeatureConfig';
+import {GradleUploadInstructions} from './components/gradleUploadInstructions';
 import {GuideGrid} from './components/guideGrid';
+import {IntegrationListItem} from './components/integrationLink';
 import {JsBundleList} from './components/jsBundleList';
 import {LambdaLayerDetail} from './components/lambdaLayerDetail';
+import {LinkCard, LinkCardGrid} from './components/linkCard';
 import {LinkWithPlatformIcon} from './components/linkWithPlatformIcon';
 import {LLMSteering} from './components/llmSteering';
 import {
@@ -43,6 +52,18 @@ import {SdkApi} from './components/sdkApi';
 import {SdkOption} from './components/sdkOption';
 import {SignInNote} from './components/signInNote';
 import {SmartLink} from './components/smartLink';
+import {SpecChangelog} from './components/specChangelog';
+import {SpecMeta} from './components/specMeta';
+import {SpecRfcAlert} from './components/specRfcAlert';
+import {SpecSection} from './components/specSection';
+import {
+  SplitLayout,
+  SplitSection,
+  SplitSectionCode,
+  SplitSectionText,
+} from './components/splitLayout';
+import {StatusBadge} from './components/statusBadge';
+import {StepComponent, StepConnector} from './components/stepConnector';
 import {TableOfContents} from './components/tableOfContents';
 import {VersionRequirement} from './components/version-requirement';
 import {VimeoEmbed} from './components/video';
@@ -54,10 +75,12 @@ export function mdxComponents(
   return {
     Alert,
     Arcade,
+    AvailableSince,
     Break,
     Card,
     CliChecksumTable,
     CommunitySupportedPlatforms,
+    ContentSeparator,
     DevDocsCardGrid,
     PlatformFilter,
     CodeBlock,
@@ -68,10 +91,15 @@ export function mdxComponents(
     TableOfContents,
     CreateGitHubAppForm,
     GitHubDomainChecker,
+    GitHubCodePreview,
+    GradleFeatureConfig,
+    GradleUploadInstructions,
     ConfigValue,
     DefinitionList,
     Expandable,
+    FeatureBadge,
     GuideGrid,
+    IntegrationListItem,
     JsBundleList,
     LambdaLayerDetail,
     Link: SmartLink,
@@ -94,12 +122,26 @@ export function mdxComponents(
     OnboardingSteps,
     RelayMetrics,
     SandboxLink,
+    CopyableCard,
     SignInNote,
+    SpecChangelog,
+    SpecMeta,
+    SpecRfcAlert,
+    SpecSection,
+    SplitLayout,
+    SplitSection,
+    SplitSectionText,
+    SplitSectionCode,
+    StatusBadge,
+    StepComponent,
+    StepConnector,
     VimeoEmbed,
     VersionRequirement,
     a: SmartLink,
     img: DocImage,
     ...dynamicComponents,
+    LinkCard,
+    LinkCardGrid,
     wrapper,
   };
 }

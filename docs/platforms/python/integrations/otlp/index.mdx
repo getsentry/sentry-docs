@@ -1,0 +1,89 @@
+---
+title: OpenTelemetry (OTLP)
+description: "Learn about using OTLP to automatically send OpenTelemetry Traces to Sentry."
+keywords: ["otlp", "otel", "opentelemetry"]
+---
+
+The OTLP integration configures the Sentry SDK to automatically send trace data instrumented by an OpenTelemetry SDK to Sentry's [OpenTelemetry Protocol](https://opentelemetry.io/docs/specs/otel/protocol/) [ingestion endpoint](/concepts/otlp).
+
+## Install
+
+Install `sentry-sdk` from PyPI with the `opentelemetry-otlp` extra.
+
+```bash {tabTitle:pip}
+pip install "sentry-sdk[opentelemetry-otlp]"
+```
+```bash {tabTitle:uv}
+uv add "sentry-sdk[opentelemetry-otlp]"
+```
+
+## Configure
+
+You need to configure both the OpenTelemetry and Sentry SDKs to get trace data.
+
+### OpenTelemetry
+
+For the OpenTelemetry SDK, you need to [configure instrumentation](https://opentelemetry.io/docs/languages/python/getting-started/#instrumentation) you want to capture.
+
+### Sentry
+
+For the Sentry SDK, you simply need to enable our `OTLPIntegration` along with your existing configuration.
+
+<OnboardingOptionButtons
+  options={["error-monitoring", "logs"]}
+/>
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.otlp import OTLPIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    # Add data like request headers and IP for users, if applicable;
+    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    send_default_pii=True,
+    # ___PRODUCT_OPTION_START___ logs
+    # Enable logs to be sent to Sentry
+    enable_logs=True,
+    # ___PRODUCT_OPTION_END___ logs
+    integrations=[
+        OTLPIntegration(),
+    ],
+)
+```
+
+## Behavior
+
+Under the hood, the `OTLPIntegration` will setup the following parts:
+
+* A [`SpanExporter`](https://opentelemetry.io/docs/concepts/components/#exporters) that will automatically setup the OTLP ingestion endpoint from your Sentry DSN. This enables tracing in Sentry. **Note:** _Do not_ also set up tracing via the Python SDK.
+* A [`Propagator`](https://opentelemetry.io/docs/concepts/context-propagation/#propagation) that ensures [distributed tracing](/concepts/key-terms/tracing/distributed-tracing/) works
+* Trace/Span linking for all other Sentry events such as Errors, Logs, Crons and Metrics
+
+## Options
+
+You can pass the following keyword arguments to `OTLPIntegration()`:
+
+
+- `setup_otlp_traces_exporter`:
+
+  Automatically configure an Exporter to send OTLP traces to the right project from the DSN, defaults to `True`.
+
+  Set to `False` if using a custom collector or to setup the TracerProvider manually.
+
+- `setup_propagator`:
+
+  Automatically configure the Sentry Propagator for Distributed Tracing, defaults to `True`.
+
+  Set to `False` to configure propagators manually or to disable propagation.
+
+- `capture_exceptions`:
+
+   Set to `True` to intercept and capture exceptions on the OpenTelemetry Span recorded with `Span.record_exception` in Sentry as well, defaults to `False`.
+
+   Caveat: Since Sentry already captures most exceptions, duplicate exceptions might be dropped by [`DedupeIntegration`](/platforms/python/integrations/default-integrations/#deduplication) but that should not affect your overall product experience on the [Issues](/product/issues) page.
+
+## Supported Versions
+
+- Python: 3.7+
+- opentelemetry-distro: 0.35b0+

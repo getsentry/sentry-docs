@@ -1,0 +1,124 @@
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+### Metric Types
+
+| Type | Use For |
+|------|---------|
+| `count` | Events (orders, clicks, API calls) |
+| `gauge` | Current values (queue depth, connections) |
+| `distribution` | Value ranges (response times, payload sizes) |
+
+No setup required beyond SDK initialization.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript
+import * as Sentry from "@sentry/browser";
+
+// Count occurrences
+Sentry.metrics.count("orders_created", 1);
+
+// Track current values
+Sentry.metrics.gauge("active_connections", 42);
+
+// Track distributions
+Sentry.metrics.distribution("api_latency", 187, {
+  unit: "millisecond",
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+### Attributes
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+#### Filtering and Grouping
+
+Attributes let you filter and group metrics in Sentry. Use them for:
+- Environment segmentation
+- Feature flag tracking
+- User tier analysis
+
+Each metric has a **2KB size limit**. If you exceed this, the metric will be dropped.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript
+Sentry.metrics.count("api_calls", 1, {
+  attributes: {
+    endpoint: "/api/orders",
+    user_tier: "pro",
+    region: "us-west",
+    user_id: user.id,
+    order_id: order.id,
+  },
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+#### Scope Attributes
+
+With version `10.33.0`+, use scope APIs to set attributes that apply to all metrics while the scope is active.
+
+Supported types: `string`, `number`, `boolean`
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript
+Sentry.getGlobalScope().setAttributes({
+  is_admin: true,
+  auth_provider: "google",
+});
+
+Sentry.withScope((scope) => {
+  scope.setAttribute("step", "authentication");
+
+  // All scope attributes are added
+  Sentry.metrics.count("clicks", 1);
+  Sentry.metrics.gauge("time_since_refresh", 4, { unit: "hour" });
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+#### Units
+
+For `gauge` and `distribution` metrics, specify a unit to help Sentry display values in a human-readable format.
+
+Common units: `millisecond`, `second`, `byte`, `kilobyte`, `megabyte`. See [supported units](https://develop.sentry.dev/sdk/foundations/data-model/attributes/#units) for the full list.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript
+Sentry.metrics.distribution("response_time", 187.5, {
+  unit: "millisecond",
+});
+
+Sentry.metrics.gauge("memory_usage", 1024, {
+  unit: "byte",
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>

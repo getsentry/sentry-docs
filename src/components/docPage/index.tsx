@@ -1,6 +1,13 @@
 import {ReactNode} from 'react';
 
-import {getCurrentGuide, getCurrentPlatform, nodeForPath} from 'sentry-docs/docTree';
+import {
+  extractPlatforms,
+  getCurrentGuide,
+  getCurrentPlatform,
+  getCurrentPlatformOrGuide,
+  nodeForPath,
+} from 'sentry-docs/docTree';
+import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
 import {serverContext} from 'sentry-docs/serverContext';
 import {FrontMatter} from 'sentry-docs/types';
 import {PaginationNavNode} from 'sentry-docs/types/paginationNavNode';
@@ -11,14 +18,17 @@ import './type.scss';
 
 import {Banner} from '../banner';
 import {Breadcrumbs} from '../breadcrumbs';
+import {buildBreadcrumbs} from '../breadcrumbs/utils';
 import {CodeContextProvider} from '../codeContext';
 import {CopyMarkdownButton} from '../copyMarkdownButton';
+import {DevelopDocsHeader} from '../developDocsHeader';
 import {DocFeedback} from '../docFeedback';
 import {GitHubCTA} from '../githubCTA';
 import {Header} from '../header';
 import Mermaid from '../mermaid';
 import {PaginationNav} from '../paginationNav';
 import {PlatformSdkDetail} from '../platformSdkDetail';
+import {getSdkPackageName} from '../platformSdkPackageName';
 import {Sidebar} from '../sidebar';
 import {SidebarTableOfContents} from '../sidebarTableOfContents';
 import {ReaderDepthTracker} from '../track-reader-depth';
@@ -35,7 +45,7 @@ type Props = {
   sidebar?: ReactNode;
 };
 
-export function DocPage({
+export async function DocPage({
   children,
   frontMatter,
   notoc = false,
@@ -47,6 +57,9 @@ export function DocPage({
   const {rootNode, path} = serverContext();
   const currentPlatform = getCurrentPlatform(rootNode, path);
   const currentGuide = getCurrentGuide(rootNode, path);
+  const platforms = extractPlatforms(rootNode);
+  const platformOrGuide = getCurrentPlatformOrGuide(rootNode, path);
+  const sdkPackage = await getSdkPackageName(platformOrGuide);
 
   const hasToc = (!notoc && !frontMatter.notoc) || !!(currentPlatform || currentGuide);
   const hasGithub = !!path?.length && path[0] !== 'api';
@@ -61,16 +74,23 @@ export function DocPage({
 
   return (
     <div className="tw-app">
-      <Header pathname={pathname} searchPlatforms={searchPlatforms} />
-
+      {isDeveloperDocs ? (
+        <DevelopDocsHeader pathname={pathname} searchPlatforms={searchPlatforms} />
+      ) : (
+        <Header
+          pathname={pathname}
+          searchPlatforms={searchPlatforms}
+          platforms={platforms}
+        />
+      )}
       <section className="px-0 flex relative">
         {sidebar ?? (
           <Sidebar path={unversionedPath.split('/')} versions={frontMatter.versions} />
         )}
-        <main className="main-content flex w-full mt-[var(--header-height)] flex-1 mx-auto">
+        <main className="main-content flex mt-[var(--header-height)] flex-1">
           <div
             className={[
-              'mx-auto pt-6 px-6 prose dark:prose-invert max-w-full text-[var(--gray-12)] prose-a:no-underline hover:prose-a:underline',
+              'pt-6 px-6 prose dark:prose-invert max-w-full text-[var(--gray-12)] prose-a:no-underline hover:prose-a:underline',
               'prose-code:font-normal prose-code:font-mono marker:text-[var(--accent)] prose-li:my-1',
               'prose-headings:mt-0 prose-headings:font-medium prose-headings:relative prose-headings:text-[var(--gray-12)]',
               'prose-blockquote:font-normal prose-blockquote:border-l-[3px] prose-em:font-normal prose-blockquote:text-[var(--gray-12)]',
@@ -86,7 +106,7 @@ export function DocPage({
               <Banner />
             </div>
             <div className="flex items-center">
-              {leafNode && <Breadcrumbs leafNode={leafNode} />}{' '}
+              <Breadcrumbs items={buildBreadcrumbs(leafNode)} />{' '}
               <div className="ml-auto hidden sm:block">
                 <CopyMarkdownButton pathname={pathname} />
               </div>
@@ -98,7 +118,9 @@ export function DocPage({
               </hgroup>
               {/* This exact id is important for Algolia indexing */}
               <div id="main">
-                <CodeContextProvider>{children}</CodeContextProvider>
+                <CodeContextProvider sdkPackage={sdkPackage}>
+                  {children}
+                </CodeContextProvider>
               </div>
 
               <div className="grid grid-cols-2 gap-4 not-prose mt-16">
@@ -128,11 +150,35 @@ export function DocPage({
           </aside>
         )}
       </section>
-      <style>{`:root { --doc-content-w: 1200px; } #doc-content { max-width: var(--doc-content-w); box-sizing: border-box; }`}</style>
+      <style>{`:root { --doc-content-w: 1100px; }`}</style>
       <style>{`
+        #doc-content {
+          max-width: none;
+          box-sizing: border-box;
+        }
+        /* Mobile responsive styles */
+        @media (max-width: 768px) {
+          .main-content {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: hidden;
+          }
+          #doc-content {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: hidden;
+          }
+        }
+        /* At toc breakpoint (1490px), constrain content to leave room for TOC */
+        @media (min-width: 1490px) {
+          #doc-content {
+            /* Calculate max width: viewport - sidebar - TOC */
+            max-width: calc(100vw - 300px - 250px);
+          }
+        }
         @media (min-width: 2057px) {
           :root {
-            --doc-content-w: 1200px;
+            --doc-content-w: 1100px;
             --toc-w: 250px;
             --gap: 24px;
           }
@@ -141,6 +187,8 @@ export function DocPage({
             max-width: var(--doc-content-w);
             padding-left: 2rem;
             padding-right: 2rem;
+            margin-left: auto;
+            margin-right: auto;
           }
           /* Cancel default push so content can center */
           [data-layout-anchor="left"] + .main-content {

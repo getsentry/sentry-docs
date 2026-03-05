@@ -1,23 +1,26 @@
 ```php {filename:config/sentry.php}
-'traces_sampler' => function (\Sentry\Tracing\SamplingContext $context): float {
-    if ($context->getParentSampled()) {
-        // If the parent transaction (for example a JavaScript front-end)
-        // is sampled, also sample the current transaction
-        return 1.0;
-    }
-
-    if (some_condition()) {
-        // Drop this transaction, by setting its sample rate to 0
-        return 0;
-    }
-
-    // Default sample rate for all other transactions (replaces `traces_sample_rate`)
-    return 0.25;
-},
+'traces_sampler' => [App\Exceptions\Sentry::class, 'tracesSampler'],
 ```
 
-<Alert>
+```php {filename:app/Exceptions/Sentry.php}
+class Sentry
+{
+    // `traces_sampler` replaces `traces_sample_rate` when both are configured.
+    public static function tracesSampler(\Sentry\Tracing\SamplingContext $context): float
+    {
+        if ($context->getParentSampled()) {
+            // If the parent transaction (for example a JavaScript front-end)
+            // is sampled, also sample the current transaction.
+            return 1.0;
+        }
 
-Learn more in [Closures and Config Caching](/platforms/php/guides/laravel/configuration/laravel-options/#closures-and-config-caching).
+        if (some_condition()) {
+            // Drop this transaction by setting its sample rate to 0.
+            return 0.0;
+        }
 
-</Alert>
+        // Default sample rate for all other transactions.
+        return 0.25;
+    }
+}
+```

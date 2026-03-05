@@ -12,17 +12,16 @@ To automatically upload source maps during production builds, add the `SENTRY_AU
 SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
 ```
 
-Next, add your project slug to the `sourceMapsUploadOptions` in your Astro config:
+Next, add your project slug to the `sentry` integration options in your Astro config:
 
 ```javascript {filename:astro.config.mjs}
 export default defineConfig({
   integrations: [
     sentry({
-      // Other Sentry options
-      sourceMapsUploadOptions: {
-        project: "___PROJECT_SLUG___",
-        authToken: process.env.SENTRY_AUTH_TOKEN,
-      },
+      // Other Sentry build-time options
+      org: "___ORG_SLUG___",
+      project: "___PROJECT_SLUG___",
+      authToken: process.env.SENTRY_AUTH_TOKEN,
     }),
   ],
 });
@@ -30,7 +29,7 @@ export default defineConfig({
 
 ### Disable Source Maps Upload
 
-You can disable automatic source maps upload in your Astro configuration with `enabled: false` under `sourceMapsUploadOptions`
+You can disable automatic source maps upload in your Astro configuration with `disable: true` under `sourcemaps` in the `sentry` integration options.
 
 ### Setting the Source Maps Assets Directory
 
@@ -41,7 +40,7 @@ If these defaults don't work for you (for example, due to an advanced customized
 export default defineConfig({
   integrations: [
     sentry({
-      sourceMapsUploadOptions: {
+      sourcemaps: {
         assets: [".clientOut/**/*", ".serverOut/**/*"],
       },
     }),
@@ -61,4 +60,4 @@ Source maps work best with [organization-scoped auth tokens](/account/auth-token
 The Astro SDK uses the Sentry Vite plugin to upload source maps.
 This plugin collects telemetry data to help us improve the source map uploading experience.
 Read more about this in our [Vite plugin documentation](https://www.npmjs.com/package/@sentry/vite-plugin#telemetry).
-You can disable telemetry collection by setting `telemetry:false` under `sourceMapsUploadOptions`.
+You can disable telemetry collection by setting `telemetry: false` in the `sentry` integration options.

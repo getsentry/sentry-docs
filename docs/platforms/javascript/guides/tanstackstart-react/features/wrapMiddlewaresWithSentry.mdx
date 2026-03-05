@@ -1,0 +1,42 @@
+---
+title: wrapMiddlewaresWithSentry
+description: "Learn how to add tracing to your TanStack Start middleware."
+---
+
+<AvailableSince version="10.34.0" />
+
+<Alert level="info">
+  If you're using the `sentryTanstackStart` Vite plugin, middlewares are
+  automatically instrumented. Use this wrapper for more granular control or when
+  auto-instrumentation doesn't work for specific cases.
+</Alert>
+
+The `wrapMiddlewaresWithSentry` function allows you to add tracing to your TanStack Start [middleware](https://tanstack.com/start/latest/docs/framework/react/guide/middleware). This feature enables more granular performance monitoring and helps you gather detailed insights into the performance of individual middlewares within your application.
+
+## Usage
+
+Pass your middlewares as an object to `wrapMiddlewaresWithSentry`. The function returns an array of wrapped middlewares in the same order:
+
+```tsx {filename:app/middleware.ts}
+import { wrapMiddlewaresWithSentry } from "@sentry/tanstackstart-react";
+import { createMiddleware } from "@tanstack/react-start";
+
+const authMiddleware = createMiddleware().server(async ({ next }) => {
+  // Your auth logic
+  return next();
+});
+
+const loggingMiddleware = createMiddleware().server(async ({ next }) => {
+  // Your logging logic
+  return next();
+});
+
+const [wrappedAuth, wrappedLogging] = wrapMiddlewaresWithSentry({
+  authMiddleware,
+  loggingMiddleware,
+});
+
+export { wrappedAuth as authMiddleware, wrappedLogging as loggingMiddleware };
+```
+
+The middleware name in Sentry is automatically assigned based on the object key (e.g., `authMiddleware`, `loggingMiddleware`).

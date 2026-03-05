@@ -23,7 +23,7 @@ export default codePush(Sentry.wrap(App));
 
 ## Create CodePush Release
 
-To ensure Sentry can symbolicate events from your CodePush releases, you need to generate and upload the necessary assets. When creating a CodePush release, include the `--sourcemap-output-dir` flag to generate source maps. This allows you to upload these files to Sentry in the next step.
+To ensure Sentry can symbolicate events from your CodePush releases, you need to generate and upload the necessary assets. When creating a CodePush release, include the `--sourcemap-output-dir` flag to generate source maps in a separate directory. This allows you to upload these files to Sentry in the next step.
 
 ```bash {tabTitle:JSC (Standalone)}
 code-push-standalone release-react \
@@ -31,22 +31,22 @@ code-push-standalone release-react \
   "${PLATFORM}" \
   --deploymentName "${DEPLOYMENT_NAME}" \
   --outputDir ./build \
-  --sourcemapOutput ./build
+  --sourcemapOutput ./sourcemaps
 ```
 
 ```bash {tabTitle:Hermes (Standalone)}
-rm -rf ./build
+rm -rf ./build ./sourcemaps
 CODEPUSH_COMMAND="code-push-standalone release-react \
   \"${APP_NAME}\" \
   \"${PLATFORM}\" \
   --deploymentName \"${DEPLOYMENT_NAME}\" \
   --useHermes \
   --outputDir ./build \
-  --sourcemapOutput ./build"
+  --sourcemapOutput ./sourcemaps"
 
 DEBUG_ID=$(eval "$CODEPUSH_COMMAND" | tee /dev/tty | grep -o 'Bundle Debug ID: [0-9a-f-]*' | sed 's/Bundle Debug ID: //')
 
-MAP_FILE=$(find ./build -name "*.map" -type f)
+MAP_FILE=$(find ./sourcemaps -name "*.map" -type f)
 jq -c ". + {\"debug_id\": \"${DEBUG_ID}\"}" "${MAP_FILE}" > "${MAP_FILE}.tmp"
 mv "${MAP_FILE}.tmp" "${MAP_FILE}"
 ```
@@ -56,21 +56,21 @@ appcenter codepush release-react \
   --app "${APP_NAME}" \
   --deployment-name "${DEPLOYMENT_NAME}" \
   --output-dir ./build \
-  --sourcemap-output-dir ./build
+  --sourcemap-output-dir ./sourcemaps
 ```
 
 ```bash {tabTitle:Hermes (AppCenter)}
-rm -rf ./build
+rm -rf ./build ./sourcemaps
 CODEPUSH_COMMAND="appcenter codepush release-react \
   --app \"${APP_NAME}\" \
   --deployment-name \"${DEPLOYMENT_NAME}\" \
   --use-hermes \
   --output-dir ./build \
-  --sourcemap-output-dir ./build"
+  --sourcemap-output-dir ./sourcemaps"
 
 DEBUG_ID=$(eval "$CODEPUSH_COMMAND" | tee /dev/tty | grep -o 'Bundle Debug ID: [0-9a-f-]*' | sed 's/Bundle Debug ID: //')
 
-MAP_FILE=$(find ./build -name "*.map" -type f)
+MAP_FILE=$(find ./sourcemaps -name "*.map" -type f)
 jq -c ". + {\"debug_id\": \"${DEBUG_ID}\"}" "${MAP_FILE}" > "${MAP_FILE}.tmp"
 mv "${MAP_FILE}.tmp" "${MAP_FILE}"
 ```
@@ -97,7 +97,7 @@ To upload source maps for your CodePush release, use the `sourcemaps upload` com
 npx sentry-cli sourcemaps upload \
   --debug-id-reference \
   --strip-prefix /path/to/project/root \
-  ./build
+  ./sourcemaps
 ```
 
 ## Notes

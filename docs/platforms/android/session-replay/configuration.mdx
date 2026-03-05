@@ -1,0 +1,124 @@
+---
+title: Configuration
+sidebar_order: 4110
+description: "Learn about the general Session Replay configuration fields."
+og_image: /og-images/platforms-android-session-replay-configuration.png
+---
+
+## General Configuration
+
+On Android you configure Session Replay by creating `<meta-data>` entries inside your `AndroidManifest.xml` ([Options configuration](/platforms/android/configuration/options/)), or alternatively in code `SentryAndroid.init(context) { options -> ... }` ([Manual Initialization](/platforms/android/manual-setup/#configuration-via-sentryoptions)).
+
+The SDK exposes the following main options to configure Session Replay for your project:
+| Key                     | AndroidManifest                                 | Type                                                                 | Default                              | Description                                                                                                                                                                                                            |
+|-------------------------|--------------------------------------------------------|----------------------------------------------------------------------|-------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+ | sessionSampleRate     | `io.sentry.session-replay.session-sample-rate`          | double                                                             | `0.0`                                | Sample rate for replay sessions that start immediately and last the entirety of the user's session. `1.0` collects all sessions.                                                                                        |
+ | onErrorSampleRate     | `io.sentry.session-replay.on-error-sample-rate`         | double                                                             | `0.0`                                | Sample rate for buffered replays that are triggered when an error occurs. The SDK keeps the previous minute of activity and continues until the session ends when an error is sampled.                                     |
+
+and the following options provide further customization:
+
+| Key                     | AndroidManifest                                 | Type                                                                 | Default                              | Description                                                                                                                                                                                                            |
+|-------------------------|--------------------------------------------------------|----------------------------------------------------------------------|-------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+ | maskAllText        | `io.sentry.session-replay.mask-all-text`                | boolean                                                            | `true`                               | Masks all text-containing views by default. Setting this to `false` adds `TextView` classes to the unmask list so text appears in replays.                                                                                 |
+ | maskAllImages      | `io.sentry.session-replay.mask-all-images`              | boolean                                                            | `true`                               | Masks image views by default. Turning this off moves `ImageView` into the unmask list so bitmap content is visible in replays.                                                                                          |
+ | quality               | `—`                                                      | enum | `SentryReplayQuality.MEDIUM`         | Defines the image quality of the session replay; higher quality yields a more accurate replay at the cost of more data transfer and CPU work.                                                                            |
+ | screenshotStrategy    | `io.sentry.session-replay.screenshot-strategy`         | enum           | `ScreenshotStrategyType.PIXEL_COPY`  | Determines how the SDK captures screenshots. `PIXEL_COPY` is the default and offers better performance with masking, while `CANVAS` always masks text and images and is intended for strict PII environments (See [ScreenshotStrategy](/platforms/android/session-replay/#screenshot-strategy)).          |
+ | networkDetailAllowUrls| `io.sentry.session-replay.network-detail-allow-urls`   | List&lt;String&gt;                                                       | `[]`                         | Regexp patterns of URLs to enable capture of request/response bodies and headers. You can mix plain strings and regexes to capture only the traffic you want.                                   |
+ | networkDetailDenyUrls | `io.sentry.session-replay.network-detail-deny-urls`    | List&lt;String&gt;                                                       | `[]`                         | Regexp patterns of URLs to never enable capture of request/response bodies and headers, even if an allow pattern matches them.                                                                                                                                     |
+ | networkCaptureBodies  | `io.sentry.session-replay.network-capture-bodies`      | boolean                                                            | `true`                               | Controls whether request and response bodies are captured for allowed URLs.                                                                                                                   |
+| networkRequestHeaders | `io.sentry.session-replay.network-request-headers`     | List&lt;String&gt;                                                       | `['Content-Type', 'Content-Length', 'Accept']`                         | Request header names to capture for enabled URLs.                                                                                       |
+| networkResponseHeaders| `io.sentry.session-replay.network-response-headers`    | List&lt;String&gt;                                                       | `['Content-Type', 'Content-Length', 'Accept']`                         | Response header names to capture for enabled URLs. |
+| debug              | `io.sentry.session-replay.debug`                        | boolean                                                            | `false`                              | Enables Session Replay debug logging, which prints diagnostic information when a replay is recorded.                                                                                                                          |
+
+
+## Network Details
+
+By default, Replay will capture basic information about all outgoing http requests in your application. This includes the URL, request and response body sizes, method, and status code. The intention is to limit the chance of collecting private data.
+
+To capture additional information such as request and response headers or bodies, you'll need to opt-in via `networkDetailAllowUrls`. This will make it possible for you to elect to only add URLs that are safe for capturing bodies and avoid any endpoints that may contain Personal Identifiable Information (PII).
+
+<Alert>
+
+Body and header content will be PII-sanitized server-side, based on object keys and values. Refer to [Server-Side Scrubbing](/security-legal-pii/scrubbing/server-side-scrubbing/) for more details.
+
+</Alert>
+
+### Requirements
+- SDK version >= [8.29.0](https://github.com/getsentry/sentry-java/releases/tag/8.29.0)
+- Android Gradle Plugin version >= [6.0.0-beta.3](https://github.com/getsentry/sentry-android-gradle-plugin/releases/tag/6.0.0-beta.3)
+- OkHttp
+
+<Alert>
+
+If you've configured `networkDetailAllowUrls` but don't see request/response bodies or headers in your replays, see our [troubleshooting guide](/platforms/android/session-replay/troubleshooting/#why-cant-i-see-the-full-http-request-body-or-all-the-headers) for help.
+
+</Alert>
+Any URL matching the given pattern(s) will then be captured with additional details:
+```kotlin {tabTitle:Kotlin}
+SentryAndroid.init(this) { options ->
+  options.sessionReplay.networkDetailAllowUrls = listOf("https://example.com")
+}
+```
+
+```java {tabTitle:Java}
+SentryAndroid.init(this, options -> {
+  options
+    .getSessionReplay()
+    .setNetworkDetailAllowUrls(Collections.singletonList("https://example.com"));
+});
+```
+
+```xml {tabTitle:XML}
+<application>
+  <meta-data
+    android:name="io.sentry.session-replay.network-detail-allow-urls"
+    android:value="https://example.com" />
+</application>
+```
+
+If you give us a string, we'll match any URL that contains that string using Java's [`String#matches()`](https://docs.oracle.com/javase/8/docs/api/java/lang/String.html#matches-java.lang.String-)). This way, you can use a regex to handle exact or more complex matches.
+
+Requests to a URL matched by the configured patterns will be enhanced with request and response bodies, as well as the following default headers:
+
+- `Content-Type`
+- `Content-Length`
+- `Accept`
+
+If you want to capture additional headers, you'll have to configure them with the options `networkRequestHeaders` and `networkResponseHeaders`, for example:
+
+```xml
+<application>
+  <meta-data
+    android:name="io.sentry.session-replay.network-request-headers"
+    android:value="Cache-Control,X-My-Header" />
+  <meta-data
+    android:name="io.sentry.session-replay.network-response-headers"
+    android:value="Referrer-Policy,X-Response-Header" />
+</application>
+```
+
+```kotlin {tabTitle:Kotlin} {7-8}
+SentryAndroid.init(this) { options ->
+  options.sessionReplay.networkDetailAllowUrls = listOf(
+    "https://api.example.com/.*",
+  )
+  options.sessionReplay.networkRequestHeaders = listOf("Cache-Control", "X-My-Header")
+  options.sessionReplay.networkResponseHeaders = listOf("Referrer-Policy", "X-Response-Header")
+}
+```
+
+```java {tabTitle:Java} {5-11}
+SentryAndroid.init(this, options -> {
+  options
+      .getSessionReplay()
+      .setNetworkDetailAllowUrls(Collections.singletonList("https://api.example.com/.*"));
+  options
+      .getSessionReplay()
+      .setNetworkRequestHeaders(Arrays.asList("Cache-Control", "X-My-Header"));
+  options
+      .getSessionReplay()
+      .setNetworkResponseHeaders(Arrays.asList("Referrer-Policy", "X-Response-Header"));
+});
+```
+
+<Alert>Captured bodies will be truncated to 150k characters max.</Alert>

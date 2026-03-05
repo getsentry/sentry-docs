@@ -1,0 +1,57 @@
+---
+title: Chrome Extensions
+description: "Learn how to set up the Sentry Flutter SDK for Chrome Extensions with Flutter Web."
+sidebar_order: 500
+sdk: sentry.dart.flutter
+categories:
+  - dart
+  - flutter
+---
+
+## Overview
+
+Chrome Extensions enforce strict Content Security Policy (CSP) rules that prevent dynamically loaded scripts. Since the Sentry Flutter SDK typically loads the Sentry JavaScript SDK dynamically for web platforms, you need to include the Sentry JavaScript bundle as a static asset instead.
+
+## Required Setup
+
+### 1. Download the Sentry JavaScript Bundle
+
+Instead of loading the Sentry JavaScript SDK dynamically, you need to include it as a static asset:
+
+1. Download the minified Sentry JavaScript bundle from the Sentry CDN. Use the version that is compatible with the Sentry Flutter SDK:
+  [bundle.tracing.min.js](https://browser.sentry-cdn.com/9.40.0/bundle.tracing.min.js)
+   
+   <Alert level="info">
+   
+   Download the Sentry Javascript bundle with the appropriate version for your project. Check the [Sentry Flutter SDK releases](https://github.com/getsentry/sentry-dart/releases) to find the version of the Sentry Javascript SDK that is used in a specific Sentry Flutter SDK release.
+   
+   </Alert>
+
+2. Save this file to your Flutter Web project's `web/` directory.
+
+### 2. Include the Script in Your HTML
+
+Add the Sentry JavaScript bundle to your `web/index.html` file:
+
+```html {filename:web/index.html}
+<!DOCTYPE html>
+<html>
+<head>
+  <!-- Other head elements -->
+  <script src="bundle.tracing.min.js" type="application/javascript"></script>
+</head>
+<body>
+  <!-- Your app content -->
+</body>
+</html>
+```
+
+### 3. Configure Your Flutter Build
+
+Build your Flutter Web app for Chrome Extensions.
+
+Ensure that the `bundle.tracing.min.js` file is included in your `web/` directory before building.
+
+### 4. Upload Source Maps
+
+After building your application, upload the generated source maps to Sentry to enable proper symbolication of stack traces using the [sentry_dart_plugin](/platforms/dart/guides/flutter/debug-symbols/dart-plugin/).

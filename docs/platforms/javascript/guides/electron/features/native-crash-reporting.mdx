@@ -1,0 +1,72 @@
+---
+title: Native Crash Reporting
+description: "Learn how Sentry captures and processes native crashes from Electron processes."
+---
+
+Sentry can process Minidumps created when any Electron process crashes. The SDK uploads these files when the application restarts (or immediately after a renderer crash). All event metadata, including user information and breadcrumbs, is included in these uploads.
+
+Due to [macOS App Store sandbox restrictions](https://electronjs.org/docs/tutorial/mac-app-store-submission-guide#limitations-of-mas-build), native crashes can't be collected in Mac App Store builds. Native crash handling is automatically disabled in these environments.
+
+<Expandable level="success" title="A word on data privacy">
+  Minidumps are memory snapshots of a process at the moment it crashes. They may
+  contain sensitive information, such as environment variables, local path
+  names, or even in-memory data from input fields, including passwords. **Sentry
+  does not store these memory dumps**. Once processed, Sentry immediately
+  deletes them and strips all sensitive information from the resulting Issues.
+</Expandable>
+
+<Alert level="warning" title="Known issue">
+  It's currently not possible to send events from native code (such as a C++
+  extension). However, crashes will still be reported to Sentry if they happen
+  in a process where the SDK has been configured. Additionally, crash reports
+  from sub-processes may not be reported automatically on all platforms. This
+  feature will be added in a future SDK update.
+</Alert>
+
+## Symbolication
+
+To allow Sentry to process native crashes and fully provide symbolicated stack traces, you need to upload _Debug Information Files_ (sometimes also referred to as _Debug Symbols_ or just _Symbols_). Without these symbols, crash reports will show memory addresses instead of function names and file locations.
+
+For standard Electron apps, enable the built-in Electron Symbol Server in Sentry:
+
+1. Go **Project Settings > Debug Files**
+2. Select `Electron` from the **Built-in Repositories**
+3. Add symbol servers for the platforms you're deploying to (if needed)
+
+### Custom Code and Extensions
+
+If your application contains custom native extensions or you wish to symbolicate crashes from a spawned child process, upload their debug information manually during your build or release process.
+
+For detailed instructions on uploading and managing debug symbols, see the [Debug Information Files](/platforms/javascript/guides/electron/data-management/debug-files/) documentation.
+
+## Child Processes
+
+The SDK relies on the [Electron crashReporter](https://electronjs.org/docs/api/crash-reporter) to capture crash dumps. To receive crash reports for child processes, make sure the crash reporter is activated by either the SDK or manually (see [Manual Crash Reporting below](#manual-crash-reporting)).
+
+Once active, the SDK automatically captures native crashes for the following processes:
+
+|                             | `event.process` tag | macOS | Windows | Linux          |
+| --------------------------- | ------------------- | ----- | ------- | -------------- |
+| Electron `main` process     | `browser`           | ✓     | ✓       | ✓              |
+| Electron `renderer` process | `renderer`          | ✓     | ✓       | ✓              |
+| Electron `utilityProcess`   | `utility`           | ✓     | ✓       | ✓ <sup>1</sup> |
+| `child_process.fork`        | `node`              | ✓     | ✓       |                |
+| `child_process.exec/spawn`  | `unknown`           | ✓     |         |                |
+
+<sup>1</sup> Not supported in Electron v29.4.6.
+
+## Manual Crash Reporting
+
+You can also capture native crashes by manually starting the [Electron `crashReporter`](https://electronjs.org/docs/api/crash-reporter). This approach provides symbolicated stack traces and system information, but doesn't include Electron-specific metadata, breadcrumbs, or context information.
+
+This is useful when you can't use the full Electron SDK:
+
+```javascript
+const { crashReporter } = require("electron");
+crashReporter.start({
+  companyName: "YourCompany",
+  productName: "YourApp",
+  ignoreSystemCrashHandler: true,
+  submitURL: "___MINIDUMP_URL___",
+});
+```

@@ -2,6 +2,7 @@
 title: Troubleshooting
 description: "Troubleshoot and resolve common issues with the Cocoa SDK."
 sidebar_order: 9000
+sidebar_section: configuration
 ---
 
 ## "Missing API declaration" after App Store review
@@ -50,24 +51,6 @@ Check your app for any procedure that cleans the cache of your app during runtim
 
 Since Xcode 14 App Store Connect doesn't make debug symbols available for download anymore, see [Xcode Release Notes](https://developer.apple.com/documentation/xcode-release-notes/xcode-14-release-notes#Deprecations). Please use a different way of uploading the debug symbols by following the [documentation](/platforms/apple/dsym/).
 
-## Unknown receiver '\<SomeReceiver\>', Use of undeclared identifier '\<SomeIdentifier\>'
-
-If you see an error like `Unknown receiver 'SwiftDescriptor'` or `Use of undeclared identifier 'SentryLog'` during the application build process, there's a conflict stemming from `APPLICATION_EXTENSION_API_ONLY`. By default, the Sentry Cocoapod is configured with `APPLICATION_EXTENSION_API_ONLY=YES`, but some `post_install` script likely changed it. To fix this error, add the following to the `Podfile`.
-
-```ruby {filename:ios/Podfile}
-post_install do |installer|
-  installer.pods_project.targets.each do |target|
-    target.build_configurations.each do |config|
-      if target.name == 'Sentry'
-        config.build_settings['APPLICATION_EXTENSION_API_ONLY'] = 'YES'
-      else
-        # configuration for other targets
-      end
-    end
-  end
-end
-```
-
 ## Crash in `SentrySubClassFinder.actOnSubclassesOfViewControllerInImage`
 
 Suppose your app crashes in `SentrySubClassFinder actOnSubclassesOfViewControllerInImage` with a stacktrace similar to the one below:
@@ -86,7 +69,7 @@ Suppose your app crashes in `SentrySubClassFinder actOnSubclassesOfViewControlle
 #10	0x000000010514b4c0 in __69-[SentrySubClassFinder actOnSubclassesOfViewControllerInImage:block:]
 ```
 
-Such a crash may be due to a [potential bug in Swift](https://github.com/apple/swift/issues/72657)
+Such a crash may be due to a [potential bug in Swift](https://github.com/swiftlang/swift/issues/72657)
 that's triggered when trying to get a class definition that references a RoomPlan or
 ActivityKit class on an older iOS version that doesn't support RoomPlan or ActivityKit.
 For example, running the code below on iOS 15 with the Sentry Cocoa SDK enabled
@@ -102,7 +85,7 @@ class RoomPlanWrapper {
 ```
 
 You can fix this by excluding the above class from swizzling by using `swizzleClassNameExcludes`,
-which is availabe with Sentry Cocoa SDK version `8.23.0` and above:
+which is available with Sentry Cocoa SDK version `8.23.0` and above:
 
 ```swift
 SentrySDK.start { options in
@@ -159,6 +142,10 @@ If the release health page shows fewer events in the unhandled tab, your events 
 We introduced a bug with a refactoring [#4101](https://github.com/getsentry/sentry-cocoa/pull/4101) released in 8.30.1, that caused unhandled/crash events to have the unhandled property and mach info missing, which is required for release health to show events in the unhandled tab. It's essential to mention that this bug doesn't impact release health statistics, such as crash-free session or user rates.
 
 ## Sandbox Error Using Cocoapods
+
+<Alert level="warning" title="Deprecated">
+We will stop publishing to CocoaPods at the end of June 2026. We recommend migrating to <PlatformLink to="/install/swift-package-manager/">Swift Package Manager (SPM)</PlatformLink> or manually installing the [pre-built XCFramework from GitHub releases](https://github.com/getsentry/sentry-cocoa/releases).
+</Alert>
 
 After setting up Cocoapods using a `Podfile` and running `pod install` to set up the project, you might see the following error when building the target:
 

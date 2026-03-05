@@ -5,7 +5,7 @@ import {
   useCallback,
 } from 'react';
 
-// explicitly not usig CSS modules here
+// explicitly not using CSS modules here
 // because there's some prerendered content that depends on these exact class names
 import './styles.scss';
 
