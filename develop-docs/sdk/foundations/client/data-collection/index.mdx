@@ -3,7 +3,7 @@ title: Data Collection
 description: Configuration for what data SDKs collect by default — technical context, PII, and sensitive data.
 spec_id: sdk/foundations/client/data-collection
 spec_version: 1.0.0
-spec_status: candidate
+spec_status: draft
 spec_depends_on:
   - id: sdk/foundations/client
     version: ">=1.0.0"
@@ -34,14 +34,14 @@ Related specs:
 
 Collected data is grouped into three tiers. SDKs **MUST** treat these tiers consistently when applying defaults and user configuration.
 
-<SpecSection id="data-tiers" status="stable" since="1.0.0">
+<SpecSection id="data-tiers" status="draft" since="1.0.0">
 
 ### 1. Technical Context Data
 
 Non-identifying context used for debugging and performance:
 
 - Device and environment context (OS, runtime, non-PII identifiers)
-- Performance and error context (stack traces, breadcrumbs, span metadata)
+- Performance and error context (stack frames, breadcrumbs, span metadata)
 - Framework/routing context where it does not contain PII or secrets
 
 This tier is **not** gated by the data collection configuration. SDKs **MAY** collect it by default.
@@ -74,7 +74,7 @@ SDKs **MUST** never send sensitive **values** through automatic instrumentation;
 
 All data-collection options live under a single key: `dataCollection`.
 
-<SpecSection id="configuration-surface" status="stable" since="1.0.0">
+<SpecSection id="configuration-surface" status="draft" since="1.0.0">
 
 ### Top-Level Shape
 
@@ -94,10 +94,11 @@ init({
       cookies: true,
       httpHeaders: true,
       queryParams: true,
-      stackTraceVariables: false,
       incomingRequestBody: false,
       outgoingRequestBody: false,
-      aiAgentMessages: false
+      aiAgentMessages: true
+      stackFrameVariables: true,
+      frameContextLines: 5,
     },
   },
 });
@@ -113,7 +114,7 @@ For how `includeUserInfo` affects the defaults of collection options, see [How D
 
 ## Option Reference
 
-<SpecSection id="include-user-info" status="stable" since="1.0.0">
+<SpecSection id="include-user-info" status="draft" since="1.0.0">
 
   ### `includeUserInfo`
 
@@ -133,7 +134,7 @@ For how `includeUserInfo` affects the defaults of collection options, see [How D
 
 ---
 
-<SpecSection id="collect-options" status="stable" since="1.0.0">
+<SpecSection id="collect-options" status="draft" since="1.0.0">
 
   ### `collect` Options
 
@@ -144,17 +145,18 @@ For how `includeUserInfo` affects the defaults of collection options, see [How D
   | `cookies` | Collection | `true` | Include cookie values; keys are filtered by the default denylist or by allow/deny lists. |
   | `httpHeaders` | Collection | `true` | Include HTTP header values; keys are filtered by the default denylist or by allow/deny lists. |
   | `queryParams` | Collection | `true` | Include URL query parameter values; keys are filtered by the default denylist or by allow/deny lists. |
-  | `stackTraceVariables` | Boolean | Inherits `includeUserInfo` | Include local variable values captured within stack traces. |
-  | `incomingRequestBody` | Boolean | Inherits `includeUserInfo` | Include full body of the incoming HTTP request. |
-  | `outgoingRequestBody` | Boolean | Inherits `includeUserInfo` | Include full body of outgoing HTTP requests. |
-  | `aiAgentMessages` | Boolean | Inherits `includeUserInfo` | Include AI agent input and output messages. |
+  | `incomingRequestBody` | Boolean | Default TBD | Include full body of the incoming HTTP request. |
+  | `outgoingRequestBody` | Boolean | Default TBD | Include full body of outgoing HTTP requests. |
+  | `aiAgentMessages` | Boolean | `true` | Include AI agent input and output messages. |
+  | `stackFrameVariables` | Boolean | `true` | Include local variable values captured within stack frames. |
+  | `frameContextLines` | Number<br/>(Boolean, if not otherwise possible) | `5`<br/>(`true`) | (Number of) lines of context to include around stack frames. |
 
   <Expandable title="Why are some options boolean-only?">
     Unlike cookies or headers, some data (e.g. request bodies) has no predictable key structure for the SDK to filter. Data can still be redacted in `beforeSend` or event processors if needed.
   </Expandable>
 
 
-  <SpecSection id="option-types" status="stable" since="1.0.0">
+  <SpecSection id="option-types" status="draft" since="1.0.0">
 
     ### Option Types
 
@@ -193,11 +195,11 @@ For how `includeUserInfo` affects the defaults of collection options, see [How D
   </SpecSection>
 
 
-  <SpecSection id="how-defaults-cascade" status="stable" since="1.0.0">
+  <SpecSection id="how-defaults-cascade" status="draft" since="1.0.0">
 
     ### How Defaults Cascade
 
-    Because `includeUserInfo` acts as the main gate for PII, its value determines the defaults for other PII-heavy options. Explicitly set `collect` options always override these defaults.
+    Because `includeUserInfo` acts as the main gate for PII, its value determines the default denylist for the `collect` options. Explicitly set `collect` options always override this default.
 
     | Option type | Default when `includeUserInfo: true` | Default when `includeUserInfo: false` |
     |-------------|--------------------------------------|----------------------------------------|
@@ -216,7 +218,7 @@ For how `includeUserInfo` affects the defaults of collection options, see [How D
 
 For key-value data (HTTP headers, cookies, URL query params), SDKs **MUST** apply a **default denylist** by key name: values for known-sensitive keys are replaced with `"[Filtered]"`; **keys are never scrubbed** by the SDK.
 
-<SpecSection id="default-denylist" status="stable" since="1.0.0">
+<SpecSection id="default-denylist" status="draft" since="1.0.0">
 
 ### Matching Rule
 
@@ -261,7 +263,7 @@ No built-in option scrubs **keys**; users who need to hide header or cookie name
 
 The following examples show how `dataCollection` maps to common configurations.
 
-<SpecSection id="use-case-default" status="stable" since="1.0.0">
+<SpecSection id="use-case-default" status="draft" since="1.0.0">
 
 ### Maximum PII (full collection)
 
@@ -274,7 +276,7 @@ When the user enables full PII collection:
 
 </SpecSection>
 
-<SpecSection id="use-case-debugging" status="stable" since="1.0.0">
+<SpecSection id="use-case-debugging" status="draft" since="1.0.0">
 
 ### Granular Debugging
 
@@ -297,7 +299,7 @@ Because `includeUserInfo` is set, `aiAgentMessages` defaults to `true` unless th
 
 </SpecSection>
 
-<SpecSection id="use-case-migration" status="stable" since="1.0.0">
+<SpecSection id="use-case-migration" status="draft" since="1.0.0">
 
 ### Migration from sendDefaultPii
 
@@ -312,7 +314,7 @@ SDKs **SHOULD** document this mapping and **MAY** implement `send_default_pii` a
 
 ## User-Set Data and Scrubbing
 
-<SpecSection id="user-set-data-scrubbing" status="stable" since="1.0.0">
+<SpecSection id="user-set-data-scrubbing" status="draft" since="1.0.0">
 
 ### Data set by the user
 
