@@ -7,10 +7,10 @@ import Link from 'next/link';
 
 import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
 
+import styles from './style.module.scss';
+
 import {CodeBlock} from '../codeBlock';
 import {CodeTabs} from '../codeTabs';
-
-import styles from './style.module.scss';
 
 const SKILLS_BASE_URL = 'https://skills.sentry.gg';
 const SKILLS_REPO = 'getsentry/sentry-for-ai';
