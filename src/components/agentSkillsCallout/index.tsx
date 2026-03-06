@@ -78,22 +78,16 @@ export function AgentSkillsCallout({skill, platformName}: Props) {
   );
 
   const description = platformName
-    ? `Your agent will analyze your codebase, detect your stack, and set up Sentry in your ${platformName} app automatically.`
-    : 'Your agent will analyze your codebase, detect your stack, and set up Sentry automatically.';
+    ? `Your agent will set up Sentry in your ${platformName} app automatically.`
+    : 'Your agent will set up Sentry automatically.';
 
   return (
     <div className={styles.wrapper} data-mdast="ignore">
-      <div className={styles.header}>
-        <div className={styles.titleRow}>
+      <div className={styles.mainRow}>
+        <div className={styles.left}>
           <span className={styles.title}>Agent-Assisted Setup</span>
-          <span className={styles.badge}>Recommended</span>
         </div>
-      </div>
-
-      <p className={styles.subtitle}>Paste this into your coding agent</p>
-
-      <div className={styles.promptRow}>
-        <div className={styles.promptBox}>
+        <div className={styles.promptArea}>
           <code className={styles.promptText}>{prompt}</code>
         </div>
         <button className={styles.copyButton} onClick={copyPrompt} type="button">
@@ -102,7 +96,7 @@ export function AgentSkillsCallout({skill, platformName}: Props) {
         </button>
       </div>
 
-      <div className={styles.footer}>
+      <div className={styles.subRow}>
         <span className={styles.description}>
           {description} Works with Cursor, Claude Code, Codex, and more.
         </span>
