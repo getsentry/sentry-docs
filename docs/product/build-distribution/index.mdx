@@ -51,7 +51,7 @@ Install groups are configured in two places, which can be set independently:
 When the SDK checks for updates, the API returns the single latest build (highest semver version, with build number as tiebreaker) whose install groups overlap with the filter. Install groups for the filter are determined as follows:
 
 - If the SDK **provides groups explicitly**, the API uses those.
-- If the SDK **doesn't provide groups**, the API looks up the uploaded build matching the device's current version and uses that build's upload groups. On iOS, the lookup uses the UUID of the app binary, which is unique per binary. On Android, it uses `buildVersion` and `buildNumber` — if multiple builds share the same values, the API picks the most recently uploaded one, which may lead to unexpected results.
+- If the SDK **doesn't provide groups**, the API looks up the uploaded build matching the device's current version and uses that build's upload groups. On iOS, the lookup uses the UUID of the app binary. The UUID only changes when the main binary changes, so uploads that differ only in other files (such as images) won't be differentiated. On Android, it uses `buildVersion` and `buildNumber` — if multiple builds share the same values, the API picks the most recently uploaded one, which may lead to unexpected results.
 
 We recommend configuring the SDK to send install groups explicitly rather than relying on API-side inheritance. On Android, the [Gradle plugin](/platforms/android/build-distribution/install-groups/#gradle-plugin) `installGroups` config handles this automatically — it tags the upload **and** embeds the groups in the app so the SDK sends them with every update check.
 
