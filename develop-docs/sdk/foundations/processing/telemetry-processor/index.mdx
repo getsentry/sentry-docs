@@ -158,13 +158,13 @@ To be defined: How exactly does the telemetry scheduler interact with the transp
 
 ## Client Reports
 
-The telemetry scheduler **SHOULD** add [client reports](/sdk/telemetry/client-reports/) to outgoing envelopes or periodically send standalone client report envelopes to the transport, following the [SDK recommendations](/sdk/telemetry/client-reports/#sdk-recommendations).
-
-Client report aggregation **SHOULD NOT** be implemented in the telemetry scheduler. Instead, the SDK **SHOULD** have a centralized `ClientReports` component per client, accessible throughout the SDK, since data can be dropped in multiple places, as shown in the diagram below. `ClientReports` handles aggregation internally. The telemetry scheduler **SHOULD** call an extraction method on `ClientReports` to atomically retrieve and reset the current aggregated report.
+Client reports aggregation **SHOULD NOT** be implemented in the telemetry scheduler. Instead, the SDK **SHOULD** have a centralized `ClientReports` component per client, accessible throughout the SDK, since data can be dropped in multiple places, as shown in the diagram below. `ClientReports` handles aggregation internally. The telemetry scheduler **SHOULD** call an extraction method on `ClientReports` to atomically retrieve and reset the current aggregated client report.
 
 See the [client reports spec](/sdk/telemetry/client-reports/#telemetry-processor-integration) for the full architecture details, per-client scoping requirements, and recording points.
 
-**Recording:** Multiple components call `Record` on `ClientReports` when they drop telemetry.
+### Recording
+
+Multiple components call `Record` on `ClientReports` when they drop telemetry items.
 
 ```mermaid
 flowchart LR
@@ -181,18 +181,25 @@ flowchart LR
   Transport -- "records: send_error, network_error" --> ClientReports
 ```
 
-**Sending:** The component on the sending path extracts the aggregated report and attaches it to outgoing envelopes, or periodically sends it as a standalone envelope.
+### Sending
+
+The telemetry scheduler extracts the aggregated report and attaches it to outgoing envelopes, or periodically sends it as a standalone envelope following the [SDK recommendations](/sdk/telemetry/client-reports/#sdk-recommendations).
 
 ```mermaid
 flowchart LR
   ClientReports["ClientReports"]
-  TelemetryQueue["Telemetry Queue"]
-  Sender["Telemetry Scheduler / Transport"]
 
-  TelemetryQueue -- "envelope" --> Sender
-  ClientReports -- "TakeReport()" --> Sender
-  Sender -- "envelope + client report attached" --> Sentry
-  Sender -- "standalone client report envelope\n(periodic, to avoid starvation)" --> Sentry
+  subgraph TelemetrySchedulerSubGraph["TelemetryScheduler"]
+    TelemetryQueue["**TelemetryQueue**"]
+    TelemetryScheduler["**TelemetryScheduler**"]
+    TelemetryQueue -- "envelope" --> TelemetryScheduler
+    TelemetryScheduler -- "add or remove envelope" --> TelemetryQueue
+  end
+
+  Transport["Transport"]
+
+  ClientReports -- "TakeReport()" --> TelemetryScheduler
+  TelemetryScheduler -- "sendEnvelope" --> Transport
 ```
 
 ## Rate Limiting

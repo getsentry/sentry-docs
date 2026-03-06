@@ -10,7 +10,7 @@ spec_depends_on:
 spec_changelog:
   - version: 1.20.0
     date: 2026-03-04
-    summary: Added architecture guidance and log byte outcomes
+    summary: Added architecture guidance
   - version: 1.19.0
     date: 2026-02-06
     summary: Added network failure recording rules (send_error for 4xx/5xx, no report for 429)
@@ -204,21 +204,18 @@ If certain spans are dropped in `beforeSendTransaction`, an event processor, etc
 
 </SpecSection>
 
-<SpecSection id="log-byte-outcomes" status="stable" since="1.20.0">
-
-### Log Byte Outcomes
-
-When a log is dropped, SDKs **MUST** record an additional `log_byte` category entry containing the serialized byte size of the log. This provides visibility into how much log data is being discarded, complementing the item count reported under the `log` category. Counting the log size is best effort, and the SDKs can send an approximation of the log size (eg. by counting as if serialized).
-
-</SpecSection>
-
 <SpecSection id="aggregation" status="candidate" since="1.20.0">
 
 ### Aggregation
 
-SDKs **SHOULD** use a single, centralized `ClientReports` component per client, accessible throughout the SDK. Client reports **MUST** be scoped per client — if an SDK supports multiple client instances, each **MUST** have its own `ClientReports` instance. When client reports are disabled, SDKs **SHOULD** use a no-op implementation to avoid overhead.
+SDKs **SHOULD** use a single, centralized `ClientReports` component per client that handles aggregation internally:
 
-`ClientReports` handles aggregation internally — it maintains a map of `(reason, category)` to count, and components call a `Record` method to increment counters directly. The component **MUST** be safe for concurrent access, since multiple SDK components record into it simultaneously. The extraction operation **SHOULD** atomically read and reset all counters to prevent double-counting.
+- **MUST** be scoped per client — if an SDK supports multiple client instances, each **MUST** have its own `ClientReports` instance. This is required because clients are already scoped per DSN, so scoping `ClientReports` per client ensures report data is attributed to the correct DSN and avoids mixing data across instances.
+- **SHOULD** be accessible throughout the SDK, so any component that drops telemetry can record into it.
+- **SHOULD** use a no-op implementation when client reports are disabled via the `sendClientReports` option, to avoid overhead.
+- **SHOULD** maintain a map where the key is a `reason-category` string and the value is the number of dropped items. Components call a `Record` method to increment counters directly.
+- **MUST** be safe for concurrent access, since multiple SDK components record into it simultaneously.
+- **MUST** atomically read and reset all counters during extraction to prevent double-counting.
 
 </SpecSection>
 
@@ -226,9 +223,13 @@ SDKs **SHOULD** use a single, centralized `ClientReports` component per client, 
 
 ### Telemetry Processor Integration
 
-SDKs **MAY** keep track of discarded events in the transport. Once SDKs implement the [telemetry processor](/sdk/foundations/processing/telemetry-processor/), they **SHOULD** track client reports outside the transport, since data can be dropped at multiple points throughout the SDK. Multiple components record into `ClientReports` and the [telemetry processor](/sdk/foundations/processing/telemetry-processor/) is responsible for extracting and sending the aggregated report.
+Early SDK implementations tracked client reports inside the transport, but as the number of telemetry data types has grown and data can be dropped at multiple points throughout the SDK, this approach no longer scales well. The transport only sees items at send time and has no visibility into earlier drops.
 
-This is separate from the normal telemetry data flow — client reports do not go through buffers or queues. See the [telemetry processor client reports section](/sdk/foundations/processing/telemetry-processor/#client-reports) for the full architecture diagram and recording points.
+SDKs **SHOULD** own the `ClientReports` component at the client level, regardless of whether they implement the full [telemetry processor](/sdk/foundations/processing/telemetry-processor/) architecture. This keeps the transport focused on delivery.
+
+Once SDKs implement the [telemetry processor](/sdk/foundations/processing/telemetry-processor/), the client **SHOULD NOT** forward reports to the transport directly. Instead, the telemetry processor **SHOULD** be responsible for extracting the aggregated report and attaching it to outgoing envelopes or sending it as a standalone envelope.
+
+Client reports are separate from the normal telemetry data flow — they do not go through buffers or queues. See the [telemetry processor client reports section](/sdk/foundations/processing/telemetry-processor/#client-reports) for the full architecture diagram and recording points.
 
 </SpecSection>
 
