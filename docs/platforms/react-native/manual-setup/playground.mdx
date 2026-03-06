@@ -1,0 +1,120 @@
+---
+title: Playground
+sidebar_order: 10
+description: "Use the Sentry Playground to verify your React Native SDK setup is working correctly."
+---
+
+The Sentry Playground is an interactive testing utility that helps you verify your Sentry React Native SDK is properly configured and functioning. It provides a modal interface that allows you to trigger different types of errors during development to test SDK functionality.
+
+## Install
+
+The Playground is available as a separate export from the `@sentry/react-native` package:
+
+```javascript
+import { withSentryPlayground } from "@sentry/react-native/playground";
+```
+
+## Usage
+
+Wrap your root component with `withSentryPlayground` to enable the Playground modal:
+
+```javascript {filename:App.js}
+import * as Sentry from "@sentry/react-native";
+import { withSentryPlayground } from "@sentry/react-native/playground";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+});
+
+function App() {
+  return <View>{/* Your app content */}</View>;
+}
+
+export default withSentryPlayground(Sentry.wrap(App));
+```
+
+### Link to Your Sentry Project
+
+You can optionally provide your `projectId` and `organizationSlug` to enable the "Open Sentry" button, which opens your Sentry issues stream directly in the browser:
+
+```javascript {filename:App.js}
+export default withSentryPlayground(Sentry.wrap(App), {
+  projectId: "123456",
+  organizationSlug: "my-org",
+});
+```
+
+You can find these values in your Sentry project settings or in your DSN URL.
+
+## Features
+
+When you launch your app with the Playground enabled, a modal appears with three test scenarios:
+
+### captureException()
+
+Tests manual error capture in a try-catch scenario. This verifies that `Sentry.captureException()` is working correctly.
+
+```javascript
+try {
+  throw new Error("This is a test caught error.");
+} catch (e) {
+  Sentry.captureException(e);
+}
+```
+
+### throw new Error()
+
+Tests automatic uncaught error handling. This verifies that the React Native Global Handler is properly catching and reporting uncaught JavaScript errors.
+
+```javascript
+throw new Error("This is a test uncaught error.");
+```
+
+### Native Crash
+
+Tests native crash reporting by triggering a crash in the native layer (Java on Android, Objective-C/Swift on iOS). This verifies that native crash handling is properly configured.
+
+<Alert>
+
+Native crash testing is only available in release builds. It is disabled in:
+- Development mode (`__DEV__`)
+- Expo Go
+- Web builds
+
+To test native crashes, build your app in release mode.
+
+</Alert>
+
+## Removing the Playground
+
+Once you've verified your SDK setup is working correctly, remove the Playground wrapper before deploying to production:
+
+```javascript {filename:App.js}
+import * as Sentry from "@sentry/react-native";
+// Remove this import
+// import { withSentryPlayground } from "@sentry/react-native/playground";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+});
+
+function App() {
+  return <View>{/* Your app content */}</View>;
+}
+
+// Change this:
+// export default withSentryPlayground(Sentry.wrap(App));
+// To this:
+export default Sentry.wrap(App);
+```
+
+## Platform Support
+
+| Platform | Playground Available | Native Crash Test |
+| -------- | -------------------- | ----------------- |
+| iOS (Release) | Yes | Yes |
+| Android (Release) | Yes | Yes |
+| iOS (Debug) | Yes | No |
+| Android (Debug) | Yes | No |
+| Expo Go | Yes | No |
+| Web | No | No |
