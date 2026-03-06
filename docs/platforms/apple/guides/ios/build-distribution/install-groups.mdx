@@ -1,0 +1,47 @@
+---
+title: Install Groups
+sidebar_order: 20
+description: Control which iOS builds can see updates for each other using install groups.
+---
+
+<Include name="feature-available-for-user-group-early-adopter" />
+
+Install groups let you tag builds with one or more group names to control update visibility between builds. See the [product documentation](/product/build-distribution/#install-groups) for a full explanation of how install groups work.
+
+## Uploading With Install Groups
+
+### Sentry CLI
+
+Pass `--install-group` one or more times:
+
+```bash
+sentry-cli build upload app.xcarchive \
+  --org your-org \
+  --project your-project \
+  --build-configuration Release \
+  --install-group alpha \
+  --install-group staging
+```
+
+### Fastlane Plugin
+
+Pass the `install_groups` parameter:
+
+```ruby {filename:Fastfile}
+sentry_upload_build(
+  org_slug: 'your-org',
+  project_slug: 'your-project',
+  xcarchive_path: 'path/to/YourApp.xcarchive',
+  build_configuration: 'Release',
+  install_groups: ['alpha', 'staging']
+)
+```
+
+## How Install Groups Work With the Auto-Update SDK
+
+When the [Auto-Update SDK](/platforms/apple/guides/ios/build-distribution/auto-update/) checks for updates, the API returns the single latest build (highest semver version, with build number as tiebreaker) whose install groups overlap with the filter:
+
+- If the SDK **provides groups explicitly**, the API uses those to filter.
+- If the SDK **doesn't provide groups**, the API looks up the uploaded build using the UUID of the app binary and uses that build's upload groups for filtering.
+
+UUID matching is not guaranteed to identify the build you uploaded. The UUID is only unique to an app's main binary, so an upload that only changes other files such as images won't be differentiated.

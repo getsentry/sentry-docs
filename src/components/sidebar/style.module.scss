@@ -7,6 +7,7 @@
   }
 }
 .sidebar {
+  margin-top: 0px;
   --sidebar-item-bg-hover: var(--accent-purple-light);
   --sidebar-item-color: var(--accent-purple);
   /* Light mode: use pure white background */
@@ -20,8 +21,8 @@
   position: fixed;
   display: none;
   flex-shrink: 0;
-  height: 100vh;
-  overflow-y: auto;
+  height: calc(100vh - var(--header-height, 64px));
+  overflow: hidden;
 
   /* Minimal, accessible scrollbar styling */
   /* Firefox */
@@ -63,15 +64,14 @@
     }
   }
 
-  // the checkbox controls the sidebar visibility on mobile
-  // otherwise it's always visible on desktop
-  @media only screen and (max-width: 1130px) {
+  // the checkbox controls the sidebar visibility on mobile/tablet
+  // otherwise it's always visible on desktop (768px+)
+  @media only screen and (max-width: 767px) {
     &:has(> #navbar-menu-toggle:checked) {
       display: flex;
 
       & + :global(.main-content) {
-        margin-left: var(--sidebar-width);
-        width: calc(100% - var(--sidebar-width));
+        margin-left: 0;
       }
     }
 
@@ -84,17 +84,12 @@
     }
   }
 
-  // 0 margin on mobile for main content
-  @media only screen and (max-width: 768px) {
-    &:has(> #navbar-menu-toggle:checked) + :global(.main-content) {
-      margin-left: 0;
-    }
-  }
-
   .toc {
     font-size: 0.875rem;
     flex: 1;
     overflow: auto;
+    min-height: 0; // Critical for flex children to allow shrinking and enable scrolling
+    -webkit-overflow-scrolling: touch; // Smooth momentum scrolling on iOS
 
     @media only screen and (min-width: 768px) {
       display: block;
@@ -154,6 +149,18 @@
   &.active {
     background-color: var(--brandDecoration);
   }
+}
+
+.sidebar-main {
+  flex: 1;
+  overflow: auto;
+  min-height: 0; // Critical for flex children to allow shrinking and enable scrolling
+  -webkit-overflow-scrolling: touch; // Smooth momentum scrolling on iOS
+}
+
+.sidebar-external-links {
+  flex: 0 0 auto;
+  padding-bottom: 0;
 }
 
 .sidebar-link-content {

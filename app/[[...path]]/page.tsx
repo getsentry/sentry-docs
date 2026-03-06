@@ -126,8 +126,6 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
   const pageNode = nodeForPath(rootNode, params.path ?? '');
 
   if (!pageNode) {
-    // eslint-disable-next-line no-console
-    console.warn('no page node', params.path);
     return notFound();
   }
 
