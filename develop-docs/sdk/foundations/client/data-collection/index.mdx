@@ -45,6 +45,7 @@ Non-identifying context used for debugging and performance:
 - Device and environment context (OS, runtime, non-PII identifiers)
 - Performance and error context (stack frames, breadcrumbs, span metadata)
 - Framework/routing context where it does not contain PII or secrets
+- AI agent messages (input, output, metadata)
 
 This tier is **not** gated by the data collection configuration. SDKs **MAY** collect it by default.
 
@@ -55,7 +56,7 @@ Personally identifiable or user-linked data:
 - User identifiers (user ID, username, email)
 - IP address
 - Cookies and headers that identify the user or session
-- AI agent input and output messages
+- HTTP request data (TBD)
 
 This tier **MUST** be off by default unless the user opts in via `includeUserInfo` and/or explicit `collect` allowlists. See [`includeUserInfo`](#include-user-info-behavior), [`collect` options](#collect-option-behavior), and [Default Denylist](#default-denylist).
 
@@ -137,6 +138,7 @@ Each key under `collect` maps to a category of automatically collected data and 
 | Option type | Default when `includeUserInfo: true` | Default when `includeUserInfo: false` |
 |-------------|--------------------------------------|----------------------------------------|
 | Collection (key-value pairs) | `true` — use default denylist | `true` — use default denylist, plus PII keys denied |
+| PII Boolean (e.g. `incomingRequestBody`) | `true` — attach | `false` — do not attach |
 
 Non-PII boolean options (e.g. `stackFrameVariables`) are not affected by `includeUserInfo` and always default to their configured value.
 
