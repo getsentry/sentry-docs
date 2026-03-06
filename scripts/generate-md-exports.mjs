@@ -30,7 +30,12 @@ import {remove} from 'unist-util-remove';
 // Only load the full Sentry SDK in the main thread to avoid heavy imports in workers
 const Sentry = isMainThread
   ? await import('@sentry/node')
-  : {init() {}, startSpan: (_, fn) => fn(), metrics: {gauge() {}, count() {}}, flush: async () => {}};
+  : {
+      init() {},
+      startSpan: (_, fn) => fn(),
+      metrics: {gauge() {}, count() {}},
+      flush: async () => {},
+    };
 
 // Initialize Sentry for build-time tracing (main thread only)
 if (isMainThread && process.env.NEXT_PUBLIC_SENTRY_DSN) {
