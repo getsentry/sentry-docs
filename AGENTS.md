@@ -4,14 +4,6 @@
 
 Use **pnpm**: `pnpm install`, `pnpm dev`, `pnpm build`, `pnpm test`
 
-## Commit Attribution
-
-AI commits MUST include:
-
-```
-Co-Authored-By: Claude <noreply@anthropic.com>
-```
-
 ## Development
 
 - `pnpm dev` - Start dev server with Sentry sidecar
@@ -80,6 +72,8 @@ When writing requirements in `develop-docs/`:
 - Make the plan extremely concise. Sacrifice grammar for the sake of concision.
 - At the end of each plan, give me a list of unresolved questions to answer, if any.
 
-## Pull Request generation 
+## Commit and Pull Request generation 
 
-Use .github/PULL_REQUEST_TEMPLATE.md and add Co-Authored-By: Claude
+When committing changes, use the Sentry commit skill if available.
+
+For PRs, use .github/PULL_REQUEST_TEMPLATE.md. Also, use the Sentry pull request skill if available. 
