@@ -93,3 +93,4 @@ public:
 - **Packaged builds only**: Hang tracking does not work in the editor or in debug build configurations. The engine's `USE_HANG_DETECTION` macro must be enabled, which is only the case in packaged non-debug builds.
 - **No early-startup detection**: Hangs that occur before `FEngineLoop::Tick()` starts (e.g. during `GameInstance::Init()`) are not detected, because threads must have sent at least one heartbeat before they can be monitored.
 - **Requires engine configuration**: The `HangDuration` setting in `[Core.System]` must be set to a value greater than `0`. Without it, the engine's heartbeat monitor thread doesn't run.
+- **One thread at a time**: If multiple threads become stuck simultaneously, only one hang is reported per episode. The engine's `FThreadHeartBeat` reports one stuck thread at a time, so additional stuck threads are only detected after the first one recovers.
