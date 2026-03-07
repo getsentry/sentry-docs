@@ -10,6 +10,9 @@ spec_depends_on:
   - id: sdk/foundations/state-management/scopes/attributes
     version: ">=1.0.0"
 spec_changelog:
+  - version: 2.7.0
+    date: 2026-03-05
+    summary: Added `settings` to trace_metric envelope item
   - version: 2.6.0
     date: 2026-03-04
     summary: Add sentry.timestamp.sequence attribute for deterministic metric ordering
@@ -252,9 +255,28 @@ An envelope **MUST** contain at most one `trace_metric` envelope item — all me
 	"content_type": "application/vnd.sentry.items.trace-metric+json"
 }
 {
-	"items": [{..metric..}, {..metric..}, {..metric..}]
+	"items": [{..metric..}, {..metric..}, {..metric..}],
+	"settings": {
+		"infer_ip:": "auto",
+		"infer_useragent:": "auto"
+	}
 }
 ```
+
+</SpecSection>
+
+<SpecSection id="trace-metric-envelope-item-settings" status="proposal" since="2.7.0">
+
+### Envelope Item `settings`
+
+The `trace_metric` envelope item `settings` property is an optional JSON object that contains ingestion settings for Relay to infer certain data from the incoming request.
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `infer_ip` | String | **OPTIONAL** | The setting to infer the IP address from the incoming request. One of `auto` or `never` (default). |
+| `infer_useragent` | String | **OPTIONAL** | The setting to infer the user agent from the incoming request. One of `auto` or `never` (default). |
+
+This can be used by SDKs like Browser or React Native to instruct Relay to infer the IP address or user agent from the incoming request and put it onto the metric as an attribute.
 
 </SpecSection>
 
