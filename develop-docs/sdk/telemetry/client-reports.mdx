@@ -2,12 +2,15 @@
 title: Client Reports
 description: SDK self-reporting protocol for tracking discarded events and their discard reasons.
 spec_id: sdk/telemetry/client-reports
-spec_version: 1.19.0
+spec_version: 1.21.0
 spec_status: stable
 spec_depends_on:
   - id: sdk/foundations/transport/envelopes
     version: ">=1.0.0"
 spec_changelog:
+  - version: 1.21.0
+    date: 2026-03-06
+    summary: Added log byte outcomes for tracking discarded log data size
   - version: 1.19.0
     date: 2026-02-06
     summary: Added network failure recording rules (send_error for 4xx/5xx, no report for 429)
@@ -198,6 +201,14 @@ SDKs **MAY** retry sending the envelope when a network error occurs (connection 
 When a transaction is dropped, SDKs **MUST** record an additional `span` category entry containing the number of spans inside the transaction plus one. The plus one stems from the fact that Relay extracts an additional span from the transaction. If a transaction contains no spans, SDKs still report one dropped transaction and one dropped span. This also applies to transactions that are not sampled.
 
 If certain spans are dropped in `beforeSendTransaction`, an event processor, etc., SDKs also report those.
+
+</SpecSection>
+
+<SpecSection id="log-byte-outcomes" status="stable" since="1.21.0">
+
+### Log Byte Outcomes
+
+When a log is dropped, SDKs **MUST** record an additional `log_byte` category entry containing the serialized byte size of the log. This provides visibility into how much log data is being discarded, complementing the item count reported under the `log` category. Counting the log size is best effort, and the SDKs can send an approximation of the log size (eg. by counting as if serialized).
 
 </SpecSection>
 
