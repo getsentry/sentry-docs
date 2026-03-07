@@ -20,6 +20,14 @@ flowchart LR
   TelemetryProcessor -- sendEnvelope --> Transport
 ```
 
+The telemetry processor **SHOULD** expose the following minimal API:
+
+- `Add(item)` — Adds a telemetry item to the processor.
+- `Flush(timeout)` — Flushes all buffered data to the transport within the given timeout.
+- `Close(timeout)` — Flushes all buffered data and closes the processor within the given timeout.
+
+The telemetry processor **MUST** work with existing transport implementations.
+
 SDKs **SHOULD** only add the telemetry processor for high-volume data (spans, logs, metrics). SDKs without these features **MAY** omit it. Once added, SDK clients **SHOULD** forward all data to the processor, not the transport. During migration, SDKs **MAY** temporarily send only some telemetry data through the processor.
 
 The telemetry processor consists of two major components:
@@ -86,7 +94,7 @@ We aim to standardize requirements so SDKs share consistent logic across platfor
 
 # Telemetry Buffer
 
-The telemetry buffer batches high-volume data and forwards it to the telemetry scheduler. This section covers the common requirements for all platforms:
+The telemetry buffer batches high-volume telemetry items and forwards them to the telemetry scheduler. This section covers the common requirements for all platforms:
 
 1. Before adding an item to a specific buffer, the telemetry buffer **SHOULD** drop rate-limited items to avoid overhead. If doing so, it **MUST** record client reports.
 2. When the telemetry buffer overflows and it drops data, it **MUST** record client reports.
@@ -94,17 +102,22 @@ The telemetry buffer batches high-volume data and forwards it to the telemetry s
 4. The telemetry buffer **MUST** start a timeout of 5 seconds when the first item is added. When the timeout expires, the telemetry buffer **MUST** forward all items to the telemetry scheduler.
 5. The telemetry buffer **MUST** define a size limit of `x` items. See [Size Limit Recommendations](#size-limit-recommendations) below for more details.
 6. When the size limit is reached, the telemetry buffer **MUST** forward all items to the telemetry scheduler. The buffer **MAY** forward items in batches.
+7. The telemetry buffer **SHOULD** use separate buffers per telemetry item type (e.g., one for spans, one for logs, one for metrics).
 
+## Batch Size Limit
 
-## Size Limits
+As ingestion sets limits on the [number of items an envelope can carry](/sdk/foundations/transport/envelopes/#size-limits), and Relay is optimized for below defined maximum batch sizes, SDKs must adhere to these limits when sending envelopes. Exceeding them is absolutely discouraged. Consequently, the telemetry buffer must batch telemetry items to comply with size restrictions before forwarding them to the telemetry scheduler.
 
-SDKs **SHOULD** use the following size limits for the telemetry buffer. SDKs **MAY** use lower values, but they **MUST NOT** exceed the following size limits:
+For high-volume telemetry item types, SDKs **SHOULD** use the following batch sizes. SDKs **MAY** use lower values, but they **MUST NOT** exceed these limits:
 
 - 100 items for logs
 - 100 items for metrics
 - 1000 items for spans
 
-While the [envelope size limits](/sdk/foundations/transport/envelopes/#size-limits) would allow higher size limits for specific categories, these limits are optimized for Relay and exceeding them is absolutely discouraged.
+The following telemetry item types **MUST** use a batch size of 1:
+
+- Errors
+- Check-ins
 
 ## Data Forwarding Scenarios
 
