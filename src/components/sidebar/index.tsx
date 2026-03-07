@@ -138,6 +138,7 @@ export async function Sidebar({path, versions}: SidebarProps) {
             )}
           </div>
           <div className={`${styles.toc} px-3`}>
+            <CloseSidebarOnNavigation sidebarToggleId={sidebarToggleId} />
             <ScrollActiveLink activeLinkSelector={activeLinkSelector} />
             <SidebarNavigation path={path} />
           </div>
