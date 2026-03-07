@@ -37,7 +37,7 @@ export function ScrollActiveLink({activeLinkSelector}: Props) {
     }
 
     const scrollContainer = findScrollContainer(firstLink);
-    if (!scrollContainer) {
+    if (!scrollContainer || scrollContainer === document.body || scrollContainer === document.documentElement) {
       return undefined;
     }
 
@@ -64,7 +64,7 @@ export function ScrollActiveLink({activeLinkSelector}: Props) {
 
       // Find the actual scrollable container (could be .toc, .sidebar, or another element)
       const scrollContainer = findScrollContainer(activeLink);
-      if (!scrollContainer) {
+      if (!scrollContainer || scrollContainer === document.body || scrollContainer === document.documentElement) {
         return;
       }
 
