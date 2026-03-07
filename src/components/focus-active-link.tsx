@@ -105,6 +105,7 @@ export function CloseSidebarOnNavigation({sidebarToggleId}: {sidebarToggleId: st
     const checkbox = document.getElementById(sidebarToggleId) as HTMLInputElement | null;
     if (checkbox) {
       checkbox.checked = false;
+      checkbox.dispatchEvent(new Event('change'));
     }
   }, [pathname, sidebarToggleId]);
   return null;
