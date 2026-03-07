@@ -51,7 +51,7 @@ export function Header({
     <header className="bg-[var(--gray-1)] h-[var(--header-height)] w-full z-50 border-b border-[var(--gray-a3)] fixed top-0">
       {/* define a header-height variable for consumption by other components */}
       <style>{':root { --header-height: 80px; }'}</style>
-      <nav className="nav-inner mx-auto px-3 py-2 flex items-center">
+      <nav className="nav-inner mx-auto px-3 py-2 flex items-center w-full">
         {pathname !== '/' && (
           <button className="lg-xl:hidden mr-3">
             <label
