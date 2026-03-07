@@ -36,14 +36,14 @@ export function MobileMenu({pathname, searchPlatforms}: Props) {
           <Theme accentColor="iris">
             <Popover.Content className={styles.PopoverContent} sideOffset={5} align="end">
               <Box display={{xs: 'block', sm: 'none'}}>
-                <ul>
+                <ul className="list-none p-0 m-0">
                   <li className={styles.MenuItem}>
                     <Search path={pathname} searchPlatforms={searchPlatforms} />
                   </li>
                 </ul>
                 <div className={styles.MenuSeparator} />
               </Box>
-              <ul>
+              <ul className="list-none p-0 m-0">
                 {mainSections.map(section => (
                   <li key={section.href} className={styles.MenuItem}>
                     <Link href={section.href}>{section.label}</Link>
