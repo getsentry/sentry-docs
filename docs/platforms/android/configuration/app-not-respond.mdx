@@ -1,7 +1,7 @@
 ---
 title: Application Not Responding (ANR)
 sidebar_order: 4
-description: Learn how to turn off or specify ANR.
+description: Learn how to turn off or configure ANR detection, profiling, and fingerprinting.
 og_image: /og-images/platforms-android-configuration-app-not-respond.png
 ---
 
@@ -104,6 +104,62 @@ SentryAndroid.init(context) { options ->
 ```
 
 ![ANR Thread Dump](./img/app-not-respond-thread-dump.png)
+
+## ANR Profiling (Experimental)
+
+<Alert>
+
+ANR Profiling is available starting in SDK version `8.35.0`. This feature is experimental and may change in future versions.
+
+</Alert>
+
+The SDK can capture stack profiles of the main thread when an ANR is detected. The captured profile is attached to the ANR event on the next app start, providing a flamegraph on the Sentry issue details page. This gives you deeper insight into what the main thread was doing at the time of the ANR.
+
+ANR profiling only captures profiles for foreground ANRs.
+
+To enable ANR profiling, set the `anrProfilingSampleRate` to a value between `0.0` and `1.0`. This controls the probability of collecting a profile for each detected foreground ANR:
+
+```xml {filename:AndroidManifest.xml}
+<application>
+    <meta-data android:name="io.sentry.anr.profiling.sample-rate" android:value="1.0" />
+</application>
+```
+
+```kotlin
+SentryAndroid.init(context) { options ->
+    options.anrProfilingSampleRate = 1.0
+}
+```
+
+```java
+SentryAndroid.init(context, options -> {
+    options.setAnrProfilingSampleRate(1.0);
+});
+```
+
+## ANR Fingerprinting
+
+The SDK assigns a static fingerprint to ANR events whose stack traces contain only system frames (for example, classes from `java.lang` or `android.os`). This groups noisy system-frame-only ANRs into a single issue, reducing noise in your issue stream. Foreground and background system-frame-only ANRs are grouped separately.
+
+ANR fingerprinting is enabled by default starting in SDK version `8.35.0`. To disable it:
+
+```xml {filename:AndroidManifest.xml}
+<application>
+    <meta-data android:name="io.sentry.anr.enable-fingerprinting" android:value="false" />
+</application>
+```
+
+```kotlin
+SentryAndroid.init(context) { options ->
+    options.isEnableAnrFingerprinting = false
+}
+```
+
+```java
+SentryAndroid.init(context, options -> {
+    options.setEnableAnrFingerprinting(false);
+});
+```
 
 ## ANR Root Cause Analysis
 
