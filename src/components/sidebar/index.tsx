@@ -141,9 +141,7 @@ export async function Sidebar({path, versions}: SidebarProps) {
             <CloseSidebarOnNavigation sidebarToggleId={sidebarToggleId} />
             <ScrollActiveLink activeLinkSelector={activeLinkSelector} />
             <SidebarNavigation path={path} />
-          </div>
-          <SidebarSeparator />
-          <div className={`${styles['sidebar-external-links']} px-3`}>
+            <SidebarSeparator />
             <SidebarMoreLinks />
           </div>
         </div>
@@ -162,9 +160,7 @@ export async function Sidebar({path, versions}: SidebarProps) {
         <div className={`${styles['sidebar-main']} px-3`}>
           <ScrollActiveLink activeLinkSelector={activeLinkSelector} />
           <SidebarNavigation path={path} />
-        </div>
-        <SidebarSeparator />
-        <div className={`${styles['sidebar-external-links']} px-3`}>
+          <SidebarSeparator />
           <SidebarMoreLinks />
         </div>
       </div>
