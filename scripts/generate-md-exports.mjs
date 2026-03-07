@@ -27,6 +27,27 @@ import remarkStringify from 'remark-stringify';
 import {unified} from 'unified';
 import {remove} from 'unist-util-remove';
 
+// Only load the full Sentry SDK in the main thread to avoid heavy imports in workers
+const Sentry = isMainThread
+  ? await import('@sentry/node')
+  : {
+      init() {},
+      startSpan: (_, fn) => fn(),
+      metrics: {gauge() {}, count() {}},
+      flush: async () => {},
+    };
+
+// Initialize Sentry for build-time tracing (main thread only)
+if (isMainThread && process.env.NEXT_PUBLIC_SENTRY_DSN) {
+  Sentry.init({
+    dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+    tracesSampleRate: 1.0,
+    environment: process.env.VERCEL_ENV || process.env.NODE_ENV || 'development',
+    release: process.env.VERCEL_GIT_COMMIT_SHA,
+    integrations: [],
+  });
+}
+
 const DOCS_ORIGIN = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
   ? 'https://develop.sentry.dev'
   : 'https://docs.sentry.io';
@@ -481,10 +502,18 @@ async function renderMdxOverrides(root, docTree) {
   return overrides;
 }
 
-// Global set to track which cache files are used across all workers
+// Global tracking for cache files and stats across all workers
 let globalUsedCacheFiles = null;
+let globalCacheStats = {hits: 0, misses: 0};
 
-function taskFinishHandler({id, success, failedTasks, usedCacheFiles}) {
+function taskFinishHandler({
+  id,
+  success,
+  failedTasks,
+  usedCacheFiles,
+  cacheHits,
+  cacheMisses,
+}) {
   // Collect cache files used by this worker into the global set
   if (usedCacheFiles && globalUsedCacheFiles) {
     console.log(`🔍 Worker[${id}]: returned ${usedCacheFiles.size} cache files.`);
@@ -494,6 +523,10 @@ function taskFinishHandler({id, success, failedTasks, usedCacheFiles}) {
       `⚠️ Worker[${id}]: usedCacheFiles=${!!usedCacheFiles}, globalUsedCacheFiles=${!!globalUsedCacheFiles}`
     );
   }
+
+  // Aggregate cache stats
+  globalCacheStats.hits += cacheHits || 0;
+  globalCacheStats.misses += cacheMisses || 0;
 
   if (failedTasks.length === 0) {
     console.log(`✅ Worker[${id}]: converted ${success} files successfully.`);
@@ -805,6 +838,32 @@ async function createWork() {
 
   console.log(`📄 Generated ${numFiles} markdown files from HTML.`);
   console.log('✅ Markdown export generation complete!');
+
+  // Record cache metrics to Sentry for build observability
+  const totalFiles = globalCacheStats.hits + globalCacheStats.misses;
+  const hitRate = totalFiles > 0 ? (globalCacheStats.hits / totalFiles) * 100 : 0;
+  const missRate = totalFiles > 0 ? (globalCacheStats.misses / totalFiles) * 100 : 0;
+  const buildType = process.env.NEXT_PUBLIC_DEVELOPER_DOCS ? 'develop-docs' : 'docs';
+  Sentry.metrics.gauge('md_export.cache_hit_rate', hitRate, {
+    unit: 'percent',
+    attributes: {build_type: buildType},
+  });
+  Sentry.metrics.gauge('md_export.cache_miss_rate', missRate, {
+    unit: 'percent',
+    attributes: {build_type: buildType},
+  });
+  Sentry.metrics.count('md_export.cache_hits', globalCacheStats.hits, {
+    attributes: {build_type: buildType},
+  });
+  Sentry.metrics.count('md_export.cache_misses', globalCacheStats.misses, {
+    attributes: {build_type: buildType},
+  });
+  Sentry.metrics.gauge('md_export.files_total', numFiles, {
+    attributes: {build_type: buildType},
+  });
+  console.log(
+    `📊 Overall cache stats: ${globalCacheStats.hits} hits, ${globalCacheStats.misses} misses (${hitRate.toFixed(1)}% hit rate)`
+  );
 }
 
 const md5 = data => createHash('md5').update(data).digest('hex');
@@ -1069,6 +1128,8 @@ async function processTaskList({id, tasks, cacheDir, noCache, usedCacheFiles}) {
     success,
     failedTasks,
     usedCacheFiles,
+    cacheHits,
+    cacheMisses: cacheMisses.length,
   };
 }
 
@@ -1077,7 +1138,22 @@ async function doWork(work) {
 }
 
 if (isMainThread) {
-  await createWork();
+  // Wrap the main work in a Sentry span for tracing
+  await Sentry.startSpan(
+    {
+      name: 'generate-md-exports',
+      op: 'build.task',
+      attributes: {
+        'build.cache_version': CACHE_VERSION,
+      },
+    },
+    async () => {
+      await createWork();
+    }
+  );
+
+  // Flush Sentry to ensure all events are sent before the script exits
+  await Sentry.flush(5000);
 } else {
   await doWork(workerData);
 }
