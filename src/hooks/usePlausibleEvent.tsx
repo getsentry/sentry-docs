@@ -25,10 +25,6 @@ type PlausibleEventProps = {
     linkText: string;
     page: string;
   };
-  ['Copy AI Prompt']: {
-    page: string;
-    title: string;
-  };
   ['Copy Expandable Content']: {
     page: string;
     title: string;
