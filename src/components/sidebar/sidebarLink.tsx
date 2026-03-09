@@ -13,12 +13,14 @@ export function SidebarLink({
   collapsible,
   onClick,
   topLevel = false,
+  className,
   beta = false,
   isNew = false,
 }: {
   href: string;
   title: string;
   beta?: boolean;
+  className?: string;
   collapsible?: boolean;
   isActive?: boolean;
   isNew?: boolean;
@@ -34,7 +36,7 @@ export function SidebarLink({
       onClick={onClick}
       className={`${styles['sidebar-link']} ${isActive ? 'active' : ''} ${
         topLevel ? styles['sidebar-link-top-level'] : ''
-      }`}
+      } ${className ?? ''}`}
       data-sidebar-link
     >
       <div className={styles['sidebar-link-content']}>
