@@ -80,6 +80,6 @@ When writing requirements in `develop-docs/`:
 - Make the plan extremely concise. Sacrifice grammar for the sake of concision.
 - At the end of each plan, give me a list of unresolved questions to answer, if any.
 
-## Pull Request generation
+## Pull Request generation 
 
 Use .github/PULL_REQUEST_TEMPLATE.md and add Co-Authored-By: Claude
