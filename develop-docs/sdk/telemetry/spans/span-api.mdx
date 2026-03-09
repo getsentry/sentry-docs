@@ -125,8 +125,7 @@ Behaviour:
 - If a `Span` is passed via `parentSpan`, the span will be started as the child of the passed parent span. This has precedence over the currently active span.
 - If `null` is passed via `parentSpan`, the new span will be started as a root/segment span.
 - SDKs MUST NOT end the span automatically. This is the responsibility of the user.
-- `startSpan` MUST always return a span instance, even if the started span's trace is negatively sampled.
-
+- `startSpan` MUST always return a span instance, even if the started span's trace is negatively sampled, in which case it should return a [Noop span](#noop-span).
 
 ### Additional Span Starting APIs
 
@@ -156,6 +155,7 @@ SDKs **MUST** return a Noop span in the following scenarios:
 - All mutating methods (`setAttribute`, `setAttributes`, `removeAttribute`, `setStatus`, `setName`, `addLink`, `addLinks`, `end`) **MUST** be no-ops — they **MUST NOT** record or store any data.
 - Getter methods (`getName`, `getAttributes`) **SHOULD** return empty/default values (e.g., empty string, empty map).
 - A Noop span **MUST NOT** be sent to Sentry.
+- If a Noop span is active, its dummy properties **MUST NOT** be used for populating outgoing trace headers. The headers **MUST** be populated from the propagation context instead.
 
 ### Default Property Values
 
