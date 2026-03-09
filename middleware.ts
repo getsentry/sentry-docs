@@ -2,11 +2,12 @@ import * as Sentry from '@sentry/nextjs';
 import type {NextRequest} from 'next/server';
 import {NextResponse, userAgent} from 'next/server';
 
-import {AI_AGENT_PATTERN, type TrafficType} from './lib/trafficClassification';
+import {AI_AGENT_PATTERN, type TrafficType} from 'sentry-docs/lib/trafficClassification';
 
-// This env var is set in next.config.js based on the `NEXT_PUBLIC_DEVELOPER_DOCS` env var at build time
-// a workaround edge middleware not having access to env vars
-const isDeveloperDocs = process.env.DEVELOPER_DOCS_;
+// DEVELOPER_DOCS is set via next.config.ts env field (inlined at build time for edge runtime).
+// NEXT_PUBLIC_DEVELOPER_DOCS is the canonical env var; DEVELOPER_DOCS is the build-time alias.
+const isDeveloperDocs =
+  process.env.DEVELOPER_DOCS || process.env.NEXT_PUBLIC_DEVELOPER_DOCS;
 
 export const config = {
   // learn more: https://nextjs.org/docs/pages/building-your-application/routing/middleware#matcher
