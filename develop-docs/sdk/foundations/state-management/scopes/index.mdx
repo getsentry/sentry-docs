@@ -94,6 +94,10 @@ When a scope is forked, the new scope receives a copy of all data from the paren
 
 This replaces the manual hub-cloning pattern from the old model. Users no longer need to manage scope isolation — it happens automatically when spans are created or `withScope()` is called.
 
+### Automatic Context Data
+
+SDKs and their integrations automatically populate scopes with useful contextual data such as tags, contexts, and attributes. This typically happens by hooking into a framework (e.g., a web framework middleware setting request-related context on the isolation scope). This automatic enrichment is a key benefit of scopes — users get useful data on events without manual instrumentation. See [Data Scrubbing](/sdk/foundations/data-scrubbing) for considerations around sensitive data.
+
 ### Scope Chain
 
 Clients are resolved by walking the scope chain: current scope -> isolation scope -> global scope. If no client is found, a NoOpClient is used (see [Client Resolution](#client-resolution)).
@@ -341,6 +345,12 @@ Capture functions operate on the **current scope**:
 | `Sentry.captureMessage(message)` | 1.0.0 | Capture a message on the current scope. |
 | `Sentry.captureEvent(event)` | 1.0.0 | Capture a raw event on the current scope. |
 
+### Event ID Retrieval
+
+| Function | Since | Description |
+|---|---|---|
+| `Sentry.lastEventId()` | 1.0.0 | Return the ID of the last event sent from the isolation scope. Useful for correlation, logging, and custom user feedback forms. |
+
 ### Scope Data Methods
 
 These methods are available on any scope instance (see [Behavior: Scope Data Methods](#scope-data-methods) for requirements):
@@ -354,6 +364,8 @@ These methods are available on any scope instance (see [Behavior: Scope Data Met
 | `set_level(level)` | 1.0.0 | Override event severity level. |
 | `set_fingerprint(fingerprint[])` | 1.0.0 | Set grouping fingerprint. |
 | `add_event_processor(fn)` | 1.0.0 | Register an event processor callback. |
+| `set_last_event_id(id)` | 1.0.0 | Store the ID of the last event sent. Typically set on the isolation scope by the SDK after sending an event. |
+| `last_event_id()` | 1.0.0 | Return the ID of the last event sent. Typically read from the isolation scope. |
 | `clear()` | 1.0.0 | Reset scope to defaults, keeping event processors. |
 
 ---

@@ -1,10 +1,71 @@
 ---
 title: AGENTS.md
 sidebar_order: 10
+description: Boilerplate AGENTS.md template for Sentry SDK repositories. Teaches AI coding agents about your project's commands, conventions, and standards.
 ---
 
-<CopyableCard title="AGENTS.md">
+`AGENTS.md` is a Markdown file at the root of your repository that AI coding agents load automatically at the start of every session. Claude Code reads `CLAUDE.md` — symlink it to `AGENTS.md` so there's one source of truth.
 
-TBD
+## What Belongs in AGENTS.md
 
-</CopyableCard>
+Keep it focused on what the agent **cannot easily discover by reading the code**. Generic instructions ("follow existing patterns", "write clean code") add noise without helping. What agents consistently get wrong without explicit guidance:
+
+- **Commands** — exact invocations for test, lint, format, and build. Especially non-obvious ones like tox environments, specific flags, or required env setup.
+- **Non-obvious conventions** — things that look wrong but are intentional, or constraints that aren't visible in the code (e.g. "all migrations must be backward-compatible, we run blue-green deploys").
+- **Changelog and commit format** — agents will guess the wrong format without explicit instruction.
+- **Links to specs and standards** — the SDK spec, platform docs, and cross-SDK alignment references the agent can't find on its own.
+
+**Keep it short.** Every line costs reasoning tokens. Prefer automated enforcement (linters, type checkers, CI) over written rules — tooling catches mistakes reliably; instructions don't always.
+
+**Write instructions positively.** "Always update `CHANGELOG.md` under `## Unreleased`" works better than "don't forget the changelog." Agents struggle with negations.
+
+**Iterate from observed failures.** Add an instruction when you see the agent make a specific mistake, not preemptively. Over time this produces a lean file of rules that actually matter for your repo.
+
+Task-specific workflows (PR format, commit style, changelog) belong in rules files — see [AI Agent Skills](/sdk/getting-started/ai-tools/skills/) for how to set them up alongside skills.
+
+## Good Examples in SDK Repositories
+
+Check if the repository already has one before starting from scratch. The following repos have well-structured examples worth referencing:
+
+- [`getsentry/sentry-cocoa`](https://github.com/getsentry/sentry-cocoa/blob/master/AGENTS.md) — written explicitly for LLM agents: tables over prose, nested `AGENTS.md` per subdirectory for scoped context
+- [`getsentry/sentry-javascript`](https://github.com/getsentry/sentry-javascript/blob/master/AGENTS.md) — monorepo setup, clear commands table, package manager conventions
+- [`getsentry/sentry-dotnet`](https://github.com/getsentry/sentry-dotnet/blob/master/AGENTS.md) — build system detail, solution filter table showing which filter to use when
+- [`getsentry/sentry-react-native`](https://github.com/getsentry/sentry-react-native/blob/main/AGENTS.md) — agent responsibilities section, quick reference command table
+- [`getsentry/sentry-cli`](https://github.com/getsentry/sentry-cli/blob/master/AGENTS.md) — clear language/architecture overview for a multi-language project
+- [`getsentry/sentry-python`](https://github.com/getsentry/sentry-python/blob/master/AGENTS.md) — focused tox workflow: how to test, lint, and type-check correctly
+
+## Template
+
+Use the [`sentry-skills:agents-md`](https://github.com/getsentry/skills/blob/main/plugins/sentry-skills/skills/agents-md/SKILL.md) skill to generate initial content from your codebase — it follows the structure below and pulls in real conventions from your repo.
+
+Remove sections that don't apply and replace all `[placeholder]` values with real content.
+
+```markdown
+# Agent Instructions
+
+[SDK name] SDK for Sentry — error monitoring and performance tracing for [language/platform].
+
+## Commands
+
+| Task | Command |
+|------|---------|
+| Install | `[install command]` |
+| Test (all) | `[test command]` |
+| Test (single) | `[single test command]` |
+| Lint | `[lint command]` |
+| Format | `[format command]` |
+| Build | `[build command]` |
+| Type check | `[type check command]` |
+
+## Conventions
+
+- Always update `CHANGELOG.md` for user-facing changes — add an entry under `## Unreleased`
+- Commit format: `type(scope): description` — e.g. `fix(transport): handle connection timeout`
+- [Any non-obvious constraint specific to this repo]
+
+## References
+
+- SDK spec: https://develop.sentry.dev/sdk/
+- Platform docs: https://docs.sentry.io/platforms/[platform]/
+- Cross-SDK standards: https://develop.sentry.dev/sdk/getting-started/
+```

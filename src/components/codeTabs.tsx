@@ -50,7 +50,9 @@ const showSigninNote = (children: ReactNode) => {
 };
 
 export function CodeTabs({children}: CodeTabProps) {
-  const codeBlocks = Array.isArray(children) ? [...children] : [children];
+  const codeBlocks = (Array.isArray(children) ? [...children] : [children]).filter(
+    child => child?.props
+  );
 
   // The title is what we use for sorting and also for remembering the
   // selection. If there is no title fall back to the title cased language name
