@@ -75,20 +75,6 @@ When writing requirements in `develop-docs/`:
    </Alert>
    ```
 
-## Content Authoring
-
-- **ALWAYS** run `/brand-guidelines` to audit any user-facing content before committing. See `.agents/skills/brand-guidelines/SKILL.md`
-- Use `docs-review` skill for Sentry style and voice review. See `.claude/skills/docs-review/SKILL.md`
-- Use `technical-docs` skill when writing or reviewing SDK documentation. See `.claude/skills/technical-docs/SKILL.md`
-
-## LLM-Friendly MD Exports
-
-- Every page at `docs.sentry.io/<path>` has a `.md` export at `docs.sentry.io/<path>.md`
-- `scripts/generate-md-exports.mjs` generates these as a post-build step
-- Frontmatter metadata (title, description, URL) is emitted as a YAML frontmatter block in MD exports — pages missing descriptions lose LLM relevance signal
-- MDX override templates live in `md-overrides/`
-- Architecture spec: `specs/llm-friendly-docs.md`
-
 ## Plan Mode
 
 - Make the plan extremely concise. Sacrifice grammar for the sake of concision.

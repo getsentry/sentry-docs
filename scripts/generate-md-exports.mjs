@@ -294,6 +294,10 @@ function buildFallbackChildSection(parentPath, children) {
   return childSection;
 }
 
+function normalizeRelativePath(filePath) {
+  return filePath.replace(/\\/g, '/');
+}
+
 /**
  * Walks the doctree to build a map of relativePath → {title, description, url}
  * for YAML frontmatter generation.
@@ -306,7 +310,7 @@ function buildFrontmatterMap(docTree) {
 
   function walk(node) {
     if (node.path) {
-      const relativePath = node.path + '.md';
+      const relativePath = normalizeRelativePath(node.path + '.md');
       map.set(relativePath, {
         title: getTitle(node),
         description: node.frontmatter?.description || '',
@@ -336,10 +340,10 @@ function buildFrontmatterMap(docTree) {
 function formatYamlFrontmatter({title, description, url}) {
   let yaml = '---\n';
   if (title) {
-    yaml += `title: "${title.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, ' ')}"\n`;
+    yaml += `title: ${JSON.stringify(title.replace(/\r?\n/g, ' '))}\n`;
   }
   if (description) {
-    yaml += `description: "${description.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, ' ')}"\n`;
+    yaml += `description: ${JSON.stringify(description.replace(/\r?\n/g, ' '))}\n`;
   }
   if (url) {
     yaml += `url: ${url}\n`;
@@ -656,7 +660,7 @@ async function createWork() {
       );
       await mkdir(targetDir, {recursive: true});
       const targetPath = path.join(targetDir, dirent.name.slice(0, -5) + '.md');
-      const relativePath = path.relative(OUTPUT_DIR, targetPath);
+      const relativePath = normalizeRelativePath(path.relative(OUTPUT_DIR, targetPath));
       // Use MDX override HTML if available, otherwise use Next.js build HTML
       const mdxOverride = mdxOverrides.get(relativePath);
       let taskFrontmatter = null;
@@ -1092,6 +1096,8 @@ async function processTaskList({id, tasks, cacheDir, noCache, usedCacheFiles}) {
         cacheMisses.push(relativePath);
       }
 
+      // Keep metadata outside the cache so description-only changes don't invalidate
+      // the expensive HTML → markdown conversion output.
       // Prepend YAML frontmatter and write to target
       const output = frontmatter ? formatYamlFrontmatter(frontmatter) + data : data;
       await writeFile(targetPath, output, {encoding: 'utf8'});
