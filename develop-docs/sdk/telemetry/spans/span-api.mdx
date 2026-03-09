@@ -56,14 +56,24 @@ interface Span {
 
 ```Python {tabTitle:Python}
 class Span:
-    span_id: str
+    @property
+    def span_id(self) -> str: ... 
 
     def set_attribute(self, key: str, value: SpanAttributeValue) -> None: ...
     def remove_attribute(self, key: str) -> None: ...
-    def set_status(self, status: Literal["ok", "error"]) -> None: ...
-    def get_name(self) -> str: ...
-    def set_name(self, name: str) -> None: ...
     def get_attributes(self) -> SpanAttributes: ...
+
+    @property
+    def status(self) -> str: ...
+
+    @status.setter
+    def status(self, status: Literal["ok", "error"]) -> None: ...
+
+    @property
+    def name(self) -> str: ...
+
+    @name.setter
+    def name(self, name: str) -> None: ...
 ```
 
 When implementing the span interface, consider the following guidelines:
@@ -127,7 +137,6 @@ Behaviour:
 - SDKs MUST NOT end the span automatically. This is the responsibility of the user.
 - `startSpan` MUST always return a span instance, even if the started span's trace is negatively sampled.
 
-
 ### Additional Span Starting APIs
 
 SDKs MAY expose additional span starting APIs or variants of `startSpan` that make sense for the platform. 
@@ -139,6 +148,38 @@ Likewise, additional APIs MAY also adjust the span status based on errors thrown
 
 At this time, SDKs MUST NOT expose APIs like `Span::startChild` or similar functionality that explicitly creates a child span.
 This is still TBD but the `parentSpan` option should suffice to serve this use case.
+
+## Noop Span
+
+A Noop span is a span that implements the full [Span Interface](#span-interface) but does not record any data and has no influence on the trace hierarchy.
+
+`startSpan` **MUST** always return a valid `Span` instance. If a span should not be recorded (for example due to [sampling](../sampling/) or [filtering](../filtering/) decisions), the SDK **MUST** return a Noop span instead. This allows callers to use the span without null checks.
+
+SDKs **MUST** return a Noop span in the following scenarios:
+
+- Unsampled spans: When a span's trace is negatively sampled.
+- Ignored spans: When a span matches an `ignoreSpans` pattern (see [Filtering](../filtering/)).
+
+### Behavior
+
+- All mutating methods (`setAttribute`, `setAttributes`, `removeAttribute`, `setStatus`, `setName`, `addLink`, `addLinks`, `end`) **MUST** be no-ops — they **MUST NOT** record or store any data.
+- Getter methods (`getName`, `getAttributes`) **SHOULD** return empty/default values (e.g., empty string, empty map).
+- A Noop span **MUST NOT** be sent to Sentry.
+- If a Noop span is active, its dummy properties **MUST NOT** be used for populating outgoing trace headers. The headers **MUST** be populated from the propagation context instead. Custom instrumentation API like `getTraceparent` and `getBaggage` **MUST** also use the propagation context.
+
+### Default Property Values
+
+For platforms where span properties are non-nullable, a Noop span **MUST** use the following default values:
+
+| Property      | Default Value                            |
+|---------------|------------------------------------------|
+| `traceId`     | `00000000000000000000000000000000` (32 zero hex chars) |
+| `spanId`      | `0000000000000000` (16 zero hex chars)   |
+| `name`        | Empty string `""`                        |
+| `attributes`  | Empty map `{}`                           |
+| `status`      | `ok`                                     |
+
+For platforms that support properties with nullable types, returning `null` **MUST** be used instead.
 
 ## Utility APIs
 

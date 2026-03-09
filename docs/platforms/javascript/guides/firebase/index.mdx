@@ -103,19 +103,16 @@ exports.helloWorld = onRequest(async (request, response) => {
 });
 
 // Firestore trigger - automatically instrumented
-exports.onUserCreated = onDocumentCreated(
-  "users/{userId}",
-  async (event) => {
-    const userId = event.params.userId;
-    // Your logic here
-  }
-);
+exports.onUserCreated = onDocumentCreated("users/{userId}", async (event) => {
+  const userId = event.params.userId;
+  // Your logic here
+});
 ```
 
 <Alert>
-  The key is to import the initialization file **before** any other `require` calls,
-  including Firebase imports. This ensures Sentry can properly instrument all
-  modules.
+  The key is to import the initialization file **before** any other `require`
+  calls, including Firebase imports. This ensures Sentry can properly instrument
+  all modules.
 </Alert>
 
 ## Step 3: Add Readable Stack Traces With Source Maps (Optional)
@@ -158,17 +155,20 @@ const Sentry = require("@sentry/node");
 const { onRequest } = require("firebase-functions/https");
 
 exports.tracedFunction = onRequest(async (request, response) => {
-  await Sentry.startSpan(
-    { op: "task", name: "My Custom Task" },
-    async () => {
-      // Simulate some work
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    }
-  );
+  await Sentry.startSpan({ op: "task", name: "My Custom Task" }, async () => {
+    // Simulate some work
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  });
 
   response.send("Done!");
 });
 ```
+
+</OnboardingOption>
+
+<OnboardingOption optionId="logs">
+
+<Include name="logs/javascript-quick-start-verify-logs" />
 
 </OnboardingOption>
 
@@ -184,6 +184,7 @@ At this point, you should have integrated Sentry into your Cloud Functions for F
 
 Now's a good time to customize your setup and look into more advanced topics:
 
+- Explore [practical guides](/guides/) on what to monitor, log, track, and investigate after setup
 - Continue to <PlatformLink to="/configuration">customize your configuration</PlatformLink>
 - Learn how to <PlatformLink to="/usage">manually capture errors</PlatformLink>
 - Get familiar with [Sentry's product features](/product/) like tracing, insights, and alerts

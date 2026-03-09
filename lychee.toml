@@ -1,0 +1,58 @@
+# Lychee configuration for external link checking
+# Documentation: https://github.com/lycheeverse/lychee
+
+# Base URL to resolve root-relative links
+base_url = "https://docs.sentry.io"
+
+# Only check HTTP and HTTPS links
+scheme = ["https", "http"]
+
+# Exclude all private IP addresses automatically (localhost, 10.x, 172.16-31.x, 192.168.x, etc.)
+exclude_all_private = true
+
+# Exclude internal links (already handled by lint-404s script)
+exclude = ['^https://docs\.sentry\.io']
+
+# Maximum number of concurrent requests
+max_concurrency = 32
+
+# Maximum number of retries per request
+max_retries = 2
+
+# Request timeout in seconds
+timeout = 30
+
+# Retry wait time in seconds
+retry_wait_time = 2
+
+# User agent (some sites block default user agents)
+user_agent = "Mozilla/5.0 (compatible; Sentry-Docs-Link-Checker; +https://github.com/getsentry/sentry-docs)"
+
+# Accept common status codes that indicate the link works
+# Include 403 (possibly bot blocking) and 418 (freedesktop teapot) to reduce noise
+accept = [200, 201, 202, 203, 204, 206, 301, 302, 308, 403, 418]
+
+# Don't validate URL fragments/anchors (e.g., #section-name)
+# Fragment checking is unreliable: JS-rendered anchors appear broken, and many sites don't validate them
+include_fragments = false
+
+# Only check external links (our internal check handles internal ones)
+include_mail = false
+include_verbatim = false
+
+# Follow redirects
+max_redirects = 10
+
+# Cache settings
+#
+# Strategy: Weekly scheduled runs populate the cache, PR checks consume it.
+# - Successful responses (200, 301, 403, 404) are cached and skipped on subsequent runs
+# - Transient errors (429 rate limits, 5xx server errors) are NOT cached, so they get retried
+# - Cache lifetime is just under 2 weeks so it survives between weekly runs
+#
+# This means each weekly run only re-checks:
+# 1. Links that failed with transient errors last time
+# 2. New links not yet in cache
+cache = true
+max_cache_age = "335h"
+cache_exclude_status = "429, 500.."

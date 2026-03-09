@@ -1,0 +1,104 @@
+---
+title: Hooks
+description: Client lifecycle hooks, the on/emit subscription system, and user-facing hooks like before_send and before_breadcrumb.
+spec_id: sdk/foundations/client/hooks
+spec_version: 1.0.0
+spec_status: candidate
+spec_depends_on:
+  - id: sdk/foundations/client
+    version: ">=2.0.0"
+spec_changelog:
+  - version: 1.0.0
+    date: 2025-02-24
+    summary: Initial spec, extracted from client spec v2.1.0 and expected features
+sidebar_order: 1
+---
+
+<SpecRfcAlert />
+
+<SpecMeta />
+
+## Overview
+
+The Client supports several hook mechanisms for extensibility:
+
+- **Lifecycle hooks** (`on`/`emit`) — an internal event subscription system primarily for integration authors
+- **`before_send`** — a user-facing callback for modifying or discarding error events
+- **`before_send_transaction`** — a user-facing callback for modifying or discarding transaction events
+- **`before_send_check_in`** — an optional callback for modifying or discarding check-in events
+- **`before_breadcrumb`** — a user-facing callback for modifying or discarding breadcrumbs
+
+Related specs:
+- [Client](/sdk/foundations/client/) — event pipeline and capture methods
+- [Configuration](/sdk/foundations/client/configuration/) — `before_send` and `before_breadcrumb` options
+
+---
+
+## Behavior
+
+<SpecSection id="lifecycle-hooks" status="candidate" since="1.0.0">
+
+### Lifecycle Hooks
+
+The Client **SHOULD** support an event subscription system for fine-grained extensibility beyond `before_send` and event processors. This is primarily an internal API for integration authors. (See [RFC 0034](https://github.com/getsentry/rfcs/pull/34).)
+
+```typescript
+interface Client {
+  on(hookName: string, callback: (...args: unknown[]) => void): void;
+  emit(hookName: string, ...args: unknown[]): void;
+}
+```
+
+Hooks are stateless and called in registration order. Data passed into hooks **MAY** be mutated by callbacks. Available hooks vary by SDK but may include:
+
+- `startSpan` / `finishSpan` — span lifecycle
+- `beforeEnvelope` — last chance to inspect/modify outgoing envelopes
+- `startSession` / `endSession` — session lifecycle
+
+This system complements — not replaces — the `before_send` hook and event processors. Use hooks when integrations need to react to lifecycle events that are not part of the event pipeline (e.g., span creation).
+
+</SpecSection>
+
+<SpecSection id="before-send-hook" status="stable" since="1.0.0">
+
+### Before-Send Hook
+
+Hook called with the event (and on some platforms the hint) that allows the user to decide whether an event should be sent or not. This can also be used to further modify the event. This hook **MUST** only apply to `error` events. Other event types like transactions, check-ins, and feedbacks **MUST NOT** go through `beforeSend` — they have their own dedicated hooks.
+
+In the [event pipeline](/sdk/foundations/client/#event-pipeline), `before_send` is invoked after scope application and event processors. Returning `null` discards the event (client report reason: `before_send`).
+
+</SpecSection>
+
+<SpecSection id="before-send-transaction-hook" status="stable" since="1.0.0">
+
+### Before-Send-Transaction Hook
+
+Hook called with the transaction event (and on some platforms the hint) that allows the user to decide whether a transaction should be sent or not. This can also be used to further modify the transaction event. SDKs **SHOULD** support this hook.
+
+This hook **MUST** only apply to transaction events. Returning `null` discards the transaction.
+
+</SpecSection>
+
+<SpecSection id="before-send-check-in-hook" status="stable" since="1.0.0">
+
+### Before-Send-Check-In Hook
+
+SDKs **MAY** implement a dedicated `beforeSendCheckIn` hook that applies only to check-in events. Check-in events **MUST NOT** go through the `beforeSend` hook.
+
+See the <Link to="/sdk/telemetry/check-ins/#hooks">Check-Ins spec</Link> for full details.
+
+</SpecSection>
+
+<SpecSection id="before-breadcrumb-hook" status="stable" since="1.0.0">
+
+### Before-Breadcrumb Hook
+
+Hook called with the breadcrumb (and on some platforms the hint) that allow the user to decide whether and how a breadcrumb should be sent.
+
+</SpecSection>
+
+---
+
+## Changelog
+
+<SpecChangelog />

@@ -1,0 +1,72 @@
+---
+title: AI Code Review
+description: AI-powered code review tools used across Sentry SDK repositories, including how to activate them on your pull requests.
+sidebar_order: 3
+---
+
+Sentry SDK repositories use AI code review tools to catch bugs, enforce standards, and provide feedback on pull requests. As a new engineer, here's what to expect and how to make sure these tools are active on your PRs.
+
+## Sentry Seer
+
+Seer is Sentry's own AI platform. Its AI Code Review feature analyzes pull request diffs to predict errors, highlight potential bugs, and suggest improvements. It provides line-by-line comments, code summaries, risk assessments, and can even generate unit tests.
+
+https://docs.sentry.io/product/ai-in-sentry/seer/ai-code-review/
+
+### Activation
+
+- **Automatic**: Seer runs when a PR transitions to "Ready for Review" (created as non-draft, or moved out of draft). It also runs on every subsequent commit while in ready-for-review mode. Draft PRs do not trigger automatic reviews.
+- **Manual**: Comment `@sentry review` on any PR to trigger analysis.
+- **Test generation**: Comment `@sentry generate-test` on a PR to generate unit tests.
+
+### Status Checks
+
+These checks are configured as optional so they don't block merges during service disruptions.
+
+
+## BugBot
+
+BugBot is Cursor's AI code review bot, enabled on some Sentry repositories. It analyzes PR diffs and leaves comments with explanations and fix suggestions, detecting logic bugs, security issues, and code quality problems.
+
+https://cursor.com/bugbot
+
+### Activation
+
+- **Automatic**: Depending on repo configuration, BugBot may run on every PR update.
+- **Manual**: Comment `@bugbot run` on any PR to trigger a review.
+
+BugBot suggestions should be treated as recommendations, not blocking requirements — accuracy is still evolving and false positives can occur.
+
+
+## Warden
+
+[Warden](https://warden.sentry.dev/) runs AI-powered skills against code changes — locally before you push, or automatically on pull requests in CI.
+
+### How It Works
+
+On every run, Warden:
+
+1. **Detects changes** — identifies modified files, hunks, or directories
+2. **Matches triggers** — compares changes against each skill's activation rules
+3. **Executes skills** — runs the matching AI prompts (via Claude) on the relevant code
+4. **Reports findings** — delivers results with severity, location, and optional fix suggestions
+
+### Why Use It for SDK Development
+
+SDK repos have consistency requirements that are hard to enforce through code review alone. Warden helps by:
+
+- **Running checks consistently** — SDK-specific conventions, security, and API design run on every PR, not only when a reviewer notices something.
+- **Catching issues before human review** — findings surface early, so review time is spent on logic and design.
+- **Using Claude's reasoning, not syntax rules** — detects nuanced issues (broken API contracts, spec violations) that linters can't express.
+- **Turning findings into permanent rules** — the `warden-lint-judge` Claude Code skill can propose lint rules from findings so the same issue can never recur.
+
+### Setup
+
+See the [Warden guide](https://warden.sentry.dev/guide) for installation, local usage, and CI integration via the Warden GitHub Action. For a reference example, see [sentry-python's `warden.toml`](https://github.com/getsentry/sentry-python/blob/master/warden.toml).
+
+
+## Tips for New Engineers
+
+- **Don't ignore AI reviews, but don't blindly follow them either.** Read the suggestions, apply what makes sense, and dismiss false positives.
+- **Make sure your PR is not in draft** if you want Seer to review it automatically.
+- **Use manual triggers** (`@sentry review` or `@bugbot run`) if you want a review on a specific commit or draft PR.
+- **Engage with feedback** — Seer learns from thumbs up/down on its suggestions over time.

@@ -1,0 +1,120 @@
+---
+title: Cutting a Release
+spec_id: sdk/playbooks/cutting-a-release
+spec_version: 1.1.0
+spec_status: candidate
+spec_depends_on:
+  - id: sdk/getting-started/standards/review-ci
+    version: ">=1.0.0"
+  - id: sdk/getting-started/standards/coordination-maintenance
+    version: ">=1.0.0"
+spec_changelog:
+  - version: 1.1.0
+    date: 2026-03-07
+    summary: Replace CLI invocation of Craft with GitHub Actions workflow — releases are always triggered through CI
+  - version: 1.0.0
+    date: 2026-02-23
+    summary: Initial playbook — release process with gating criteria and post-release monitoring
+---
+
+<SpecRfcAlert />
+
+<SpecMeta />
+
+## Overview
+
+This playbook guides SDK maintainers through cutting a release for an SDK repository. It covers release gating criteria verification, triggering the release via GitHub Actions, artifact verification, and post-release monitoring. By following these steps, releases will be high quality, properly monitored, and quickly addressed if regressions occur.
+
+All Sentry SDKs use [Craft](https://github.com/getsentry/craft) for release automation via GitHub Actions. Releases are **always** triggered through CI — never from a local machine. The process follows a prepare → publish workflow coordinated through the [getsentry/publish](https://github.com/getsentry/publish) repository, with a mandatory two-person approval requirement.
+
+Related resources:
+- [Review and CI Standards](/sdk/getting-started/standards/review-ci) — release gating criteria
+- [Coordination and Maintenance Standards](/sdk/getting-started/standards/coordination-maintenance) — post-release monitoring and rollback procedures
+- [Handling a Regression](/sdk/getting-started/playbooks/development/handling-a-regression) — regression response process
+- Your SDK's `CONTRIBUTING.md` or release documentation — SDK-specific procedures and tooling details
+
+---
+
+## Steps
+
+#### 1. Verify release gating criteria
+
+You **MUST** verify all criteria pass ([Release gating criteria](/sdk/getting-started/standards/review-ci#release-gating-criteria)):
+- All required CI checks pass on the default branch
+- No unresolved `h:` (high) review comments on merged PRs since last release
+- Changelog is substantive (not empty or internal-only for a release with user-facing changes)
+- No known unresolved regressions
+
+#### 2. Trigger the release workflow
+
+Navigate to the **Actions** tab of your SDK repository. Find the release workflow (typically named "Release" or "Prepare Release") and click **Run workflow**. Select the default branch and enter the version to release, then click **Run workflow**.
+
+The version input accepts:
+- A specific version string (e.g. `2.5.0`)
+- `auto` — Craft determines the next version from commit history (supported by some SDKs — check your `CONTRIBUTING.md`)
+
+The workflow runs [Craft](https://github.com/getsentry/craft) to:
+- Bump the version in relevant files via the SDK's `bump-version` script
+- Generate or update the changelog
+- Create a `release/<version>` branch with a release PR
+- Build and upload release artifacts
+- Open an issue in [getsentry/publish](https://github.com/getsentry/publish) to track the publishing approval
+
+#### 3. Polish the release branch (optional)
+
+While CI runs on the `release/<version>` branch, you **MAY** check out the branch and polish the auto-generated `CHANGELOG` — adding code snippets, grouping related entries, and improving readability for users.
+
+CI **MUST** be passing on the release branch before publishing proceeds. If CI fails, Craft will not publish the release.
+
+#### 4. Approve and publish the release
+
+Once CI is green on the release branch, notify a second SDK maintainer (or your team lead) to approve. They **MUST** add the `accepted` label to the open issue in [getsentry/publish](https://github.com/getsentry/publish/issues). **You MUST NOT approve your own release.**
+
+Adding the label triggers Craft to publish the release automatically. Craft will:
+- Create a Git tag
+- Publish artifacts to the appropriate package registries
+- Create a GitHub release with the changelog
+- Close the publish issue on success
+
+#### 5. Verify the release artifact
+
+The artifact **MUST** be published and installable. Quick smoke test: install the new version in a clean environment and verify basic functionality.
+
+**Note:** Some SDKs have additional verification steps (example app testing, documentation updates) — check your SDK's release documentation.
+
+#### 6. Post-release monitoring
+
+You **MUST** follow post-release monitoring procedures ([Post-release monitoring](/sdk/getting-started/standards/coordination-maintenance#post-release-monitoring)):
+- Check SDK crash detection within 24 hours
+- Verify dogfooding (Sentry's own products) picks up the new version
+- Monitor the issue tracker for regression reports for 48 hours
+
+#### 7. If a critical regression is found
+
+Trigger the [Handling a Regression](/sdk/getting-started/playbooks/development/handling-a-regression) process.
+
+---
+
+## SDK-Specific Variations
+
+While the core process above applies to all Sentry SDKs, individual SDKs **MAY** have additional requirements or tooling variations. You **MUST** consult your SDK's release documentation:
+
+- **sentry-javascript**: See [docs/publishing-a-release.md](https://github.com/getsentry/sentry-javascript/blob/develop/docs/publishing-a-release.md) for detailed changelog formatting guidelines
+- **Other SDKs**: Check the "Releasing" or "Publishing" section in `CONTRIBUTING.md`
+
+Common SDK-specific variations include:
+- Changelog generation (manual vs. auto-generated)
+- Whether `version: auto` is supported
+- Example app testing requirements
+- Documentation PR requirements
+- Registry-specific verification steps
+
+## Referenced Standards
+
+- [Release gating criteria](/sdk/getting-started/standards/review-ci#release-gating-criteria) — pre-release quality gates
+- [Post-release monitoring](/sdk/getting-started/standards/coordination-maintenance#post-release-monitoring) — monitoring requirements and timeline
+- [Rollback procedures](/sdk/getting-started/standards/coordination-maintenance#rollback-procedures) — emergency rollback process
+
+---
+
+<SpecChangelog />

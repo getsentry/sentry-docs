@@ -14,7 +14,8 @@ import styles from './style.module.scss';
 type Props = {
   children: ReactNode;
   title: string;
-  copy?: boolean;
+  /** If true, shows "Copy Rules" button. If a string, uses it as the button label. */
+  copy?: boolean | string;
   /** If defined, the expandable will be grouped with other expandables that have the same group. */
   group?: string;
   // If true, the expandable will not be rendered in the markdown version of the page
@@ -77,6 +78,9 @@ export function Expandable({
       event.stopPropagation(); // Prevent the details element from toggling
       event.preventDefault(); // Prevent default summary click behavior
 
+      // Expand the section so the user can see what was copied
+      setIsExpanded(true);
+
       if (contentRef.current === null) {
         return;
       }
@@ -88,11 +92,16 @@ export function Expandable({
       let contentToCopy = '';
 
       if (preCodeBlocks.length > 0) {
-        // If there are pre code blocks, concatenate their text content
-        preCodeBlocks.forEach(block => {
-          contentToCopy += (block.textContent || '') + '\n';
-        });
-        contentToCopy = contentToCopy.trim();
+        if (typeof copy === 'string') {
+          // When using a custom copy label, copy only the first code block (primary install command)
+          contentToCopy = (preCodeBlocks[0].textContent || '').trim();
+        } else {
+          // Default behavior: concatenate all code blocks
+          preCodeBlocks.forEach(block => {
+            contentToCopy += (block.textContent || '') + '\n';
+          });
+          contentToCopy = contentToCopy.trim();
+        }
       } else {
         // Fallback: Look for large standalone code blocks (not inline code)
         const allCodeBlocks = contentRef.current.querySelectorAll('code');
@@ -131,7 +140,7 @@ export function Expandable({
         setCopied(false);
       }
     },
-    [emit, title]
+    [copy, emit, title]
   );
 
   function toggleIsExpanded(event: React.MouseEvent<HTMLDetailsElement>) {
@@ -175,7 +184,7 @@ export function Expandable({
             onClick={copyContentOnClick}
             type="button" // Important for buttons in summaries
           >
-            {!copied && 'Copy Rules'}
+            {!copied && (typeof copy === 'string' ? copy : 'Copy Rules')}
             {copied && 'Copied!'}
           </button>
         )}
