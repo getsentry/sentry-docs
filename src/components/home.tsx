@@ -1,12 +1,13 @@
 import {Banner} from 'sentry-docs/components/banner';
 import {extractPlatforms, getDocsRootNode} from 'sentry-docs/docTree';
 import AiInSentryHero from 'sentry-docs/imgs/AI-in-Sentry.jpeg';
-import AiSentryHero from 'sentry-docs/imgs/ai-sentry-hero.png';
+import AiSentryHero from 'sentry-docs/imgs/ai-sentry-hero.jpeg';
 import PlugImage from 'sentry-docs/imgs/api.png';
 import ChatBubble from 'sentry-docs/imgs/chat-bubble.png';
 import TerminalImage from 'sentry-docs/imgs/cli.png';
 import ConceptsImage from 'sentry-docs/imgs/concepts-reference.png';
 import ErrorMonitoringHero from 'sentry-docs/imgs/error-monitoring-hero.png';
+import GuidesImage from 'sentry-docs/imgs/guides.png';
 import AiImage from 'sentry-docs/imgs/integrate.png';
 import OrganizationImage from 'sentry-docs/imgs/organization.png';
 import CalculatorImage from 'sentry-docs/imgs/pricing.png';
@@ -119,20 +120,20 @@ export async function Home() {
                     <a
                       key={platform.key}
                       href={platform.url}
-                      className="sdk-tile flex flex-col items-center justify-center bg-white dark:bg-[var(--gray-2)]"
+                      className="sdk-tile flex flex-col items-center justify-center gap-1.5 bg-white dark:bg-[var(--gray-2)]"
                       style={{
                         textDecoration: 'none',
                         padding: '6px',
                         borderRadius: '6px',
                         width: '70px',
-                        height: '70px',
+                        height: '76px',
                       }}
                     >
                       <PlatformIcon
                         platform={platform.key}
                         size={36}
                         format="lg"
-                        style={{margin: 0, display: 'block', marginBottom: '3px'}}
+                        style={{margin: 0, display: 'block'}}
                       />
                       <span
                         className="text-[var(--gray-12)] whitespace-nowrap"
@@ -359,6 +360,15 @@ export async function Home() {
             imageAlt="AI integration image"
             title="Sentry for AI"
             description="Connect Sentry to your AI coding assistants with agent skills and MCP."
+          />
+
+          <Card
+            className="w-full md:w-[calc(50%-12px)]"
+            href="/guides/"
+            image={GuidesImage}
+            imageAlt="Guides image"
+            title="Guides"
+            description="You've set up Sentry. Now what? Practical guidance on what to instrument, query, and alert on."
           />
 
           <Card
