@@ -2,7 +2,7 @@ import {DocNode, nodeForPath} from 'sentry-docs/docTree';
 
 import styles from './style.module.scss';
 
-import {ScrollActiveLink} from '../focus-active-link';
+import {CloseSidebarOnNavigation, ScrollActiveLink} from '../focus-active-link';
 
 import {DynamicNav, toTree} from './dynamicNav';
 import {SidebarLink, SidebarSeparator} from './sidebarLink';
@@ -22,6 +22,7 @@ const devDocsMenuItems: {root: string; title: string}[] = [
   {root: 'integrations', title: 'Integrations'},
   {root: 'ingestion', title: 'Ingestion'},
   {root: 'sdk', title: 'SDKs'},
+  {root: 'sdk-setup-wizards', title: 'SDK Setup Wizards'},
   {root: 'self-hosted', title: 'Self-Hosted Sentry'},
 ];
 
@@ -43,6 +44,7 @@ export function DevelopDocsSidebar({
   return (
     <aside className={`${styles.sidebar} p-3`} data-layout-anchor="left">
       <input type="checkbox" id={sidebarToggleId} className="hidden" />
+      <CloseSidebarOnNavigation sidebarToggleId={sidebarToggleId} />
       <style>{':root { --sidebar-width: 300px; }'}</style>
       <div className="flex flex-col items-stretch h-full min-h-0">
         <div className={styles.toc}>
