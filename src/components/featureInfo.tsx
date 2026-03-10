@@ -1,3 +1,4 @@
+import type {ReactNode} from 'react';
 import {ExternalLink} from './externalLink';
 
 type FeatureKey = 'issues' | 'tracing' | 'sessionReplay' | 'logs' | 'profiling' | 'userFeedback';
@@ -5,8 +6,8 @@ type FeatureKey = 'issues' | 'tracing' | 'sessionReplay' | 'logs' | 'profiling' 
 const FEATURE_DATA: Record<FeatureKey, {
   title: string;
   link: string;
-  learnMore: React.ReactNode;
-  findInSentry: React.ReactNode;
+  learnMore: ReactNode;
+  findInSentry: ReactNode;
 }> = {
   issues: {
     title: 'Issues',
