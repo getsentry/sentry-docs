@@ -19,6 +19,10 @@ const developerDocsRedirects = [
     source: '/sdk/features/mcp-instrumentation/:path*',
     destination: '/sdk/foundations/client/integrations/mcp/:path*',
   },
+  {
+    source: '/sdk/getting-started/templates/agents-md-template/',
+    destination: '/sdk/getting-started/templates/agents-md/',
+  },
   // Playbook reorganization: flat → grouped subfolders
   {
     source: '/sdk/getting-started/playbooks/adding-a-dependency/',
@@ -372,7 +376,7 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/processes/triaging/',
-    destination: '/sdk/getting-started/playbooks/',
+    destination: '/sdk/getting-started/playbooks/coordination/triaging/',
   },
   {
     source: '/sdk/processes/',

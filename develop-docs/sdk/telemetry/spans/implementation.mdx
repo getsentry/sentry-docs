@@ -49,7 +49,6 @@ If you're implementing Span-First (as a PoC) in your SDK, take an iterative appr
 
 To do: This section needs a few guidelines and implementation hints, including:
 
-- how to set a span active and remove it from the scope once it ends
 - languages having to deal with async context management
 
 ### `parentSpan` option for `startSpan`
@@ -69,6 +68,16 @@ Prefer solutions that preserve the semantic distinction between `undefined` and 
 
 - If `parentSpan` references a span that has already ended, the SDK SHOULD still create the new span and send it as a child of `parentSpan`.
   - Handling and presentation of these relationships is deferred to downstream processing and the frontend/UI.
+
+### Setting a Span as Active
+
+It MUST be possible to attach a span to a scope. In SDKs that implement the three-scope model, the span SHOULD be set on the current scope.
+
+When a span is attached to a scope, a reference to the previous span MUST be stored. The previous span MUST be re-attached to the scope as soon as the currently active span ends.
+
+If a span is started with `active: true`, it MUST be attached to the scope. If a span is started with `active: false`, it SHOULD NOT be attached to the scope so that any spans started while the span is still running don't become its children.
+
+If a span is unsampled (for example, because it has a negative sampling decision or because it matches `ignore_spans`), a [Noop span is created](../span-api#noop-span). If a Noop span would be a segment (i.e., there is no currently running active span, or the user explicitly promoted the span to a segment via `parentSpan: null`), it MAY be set on the scope so that its children easily inherit its negative sampling decision.
 
 ## Single-Span Processing Pipeline
 
