@@ -1,6 +1,6 @@
 ---
 title: Astro on Cloudflare
-description: "Learn how to instrument your Astro app on Cloudflare Pages and capture your first errors."
+description: "Learn how to instrument your Astro app on Cloudflare Workers and capture your first errors."
 ---
 
 ## Prerequisites
@@ -10,6 +10,63 @@ You need:
 - A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/)
 - Your application up and running
 - Astro `3.0.0` or above
+- `@astrojs/cloudflare` v12
+- `@sentry/astro` v10.40.0 or above
+
+If you're using Cloudflare Pages (not Workers), see the section below for
+setup instructions. We recommend migrating to Cloudflare Workers for better
+Sentry integration and full feature support.
+
+<Expandable level="info" title="Using Astro on Cloudflare Pages?">
+
+For Cloudflare Pages, you need to manually set up the `@sentry/cloudflare` SDK using the Pages middleware.
+
+1. Install both SDKs:
+
+```bash {tabTitle:npm}
+npm install @sentry/astro @sentry/cloudflare
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/astro @sentry/cloudflare
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/astro @sentry/cloudflare
+```
+
+2. Add the Sentry Astro integration to your `astro.config.mjs`:
+
+```javascript {filename:astro.config.mjs}
+import { defineConfig } from "astro/config";
+import cloudflare from "@astrojs/cloudflare";
+import sentry from "@sentry/astro";
+
+export default defineConfig({
+  adapter: cloudflare(),
+  integrations: [sentry()],
+});
+```
+
+3. <Include name="cloudflare-pages-middleware-intro.mdx" />
+
+```javascript {filename:functions/_middleware.js}
+import * as Sentry from "@sentry/cloudflare";
+
+export const onRequest = [
+  // Make sure Sentry is the first middleware
+  Sentry.sentryPagesPlugin((context) => ({
+    dsn: "___PUBLIC_DSN___",
+    sendDefaultPii: true,
+    tracesSampleRate: 1.0,
+  })),
+  // Add more middlewares here
+];
+```
+
+4. Make sure to [configure Cloudflare for Sentry](/platforms/javascript/guides/cloudflare/#wrangler-configuration).
+
+</Expandable>
 
 ## Step 1: Install
 
