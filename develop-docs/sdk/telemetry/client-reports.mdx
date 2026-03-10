@@ -211,7 +211,11 @@ If certain spans are dropped in `beforeSendTransaction`, an event processor, etc
 
 ### Log Byte Outcomes
 
-When a log is dropped, SDKs **MUST** record an additional `log_byte` category entry containing the serialized byte size of the log. This provides visibility into how much log data is being discarded, complementing the item count reported under the `log` category. Counting the log size is best effort, and the SDKs can send an approximation of the log size (eg. by counting as if serialized).
+When a log is dropped, SDKs **MUST** record an additional `log_byte` category entry containing the byte size of the log. This provides visibility into the volume of log data being discarded, complementing the item count reported under the `log_item` category.
+
+Since client reports use a `(reason, category) → quantity` map for aggregation, byte sizes are tracked as a separate category rather than an extra field. Each dropped log produces two entries in the map: one incrementing the `log_item` count by 1, and one incrementing the `log_byte` count by the log's byte size.
+
+The byte size does not need to be exact. SDKs **MAY** use an approximation, such as the in-memory size of the log object or the size of its serialized representation. The goal is to provide a useful signal, not a precise measurement.
 
 </SpecSection>
 
@@ -417,6 +421,29 @@ When a transaction with 2 spans is dropped due to queue overflow:
 ```
 
 The span quantity is 3 (2 spans + 1 for the transaction itself, since Relay extracts an additional span from the transaction).
+
+### Log Byte Outcome Example
+
+When 5 logs totaling approximately 12,400 bytes are dropped due to buffer overflow:
+
+```json
+{
+  "discarded_events": [
+    {
+      "reason": "buffer_overflow",
+      "category": "log_item",
+      "quantity": 5
+    },
+    {
+      "reason": "buffer_overflow",
+      "category": "log_byte",
+      "quantity": 12400
+    }
+  ]
+}
+```
+
+The `log_item` entry counts the number of dropped logs, while the `log_byte` entry tracks the total byte size of those logs.
 
 ---
 
