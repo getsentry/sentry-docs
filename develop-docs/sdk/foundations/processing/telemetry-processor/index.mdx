@@ -114,7 +114,7 @@ SDKs using the push-based approach **MUST** follow these requirements:
 
 ## Batch Size Limit
 
-As ingestion sets limits on the [number of items an envelope](/sdk/foundations/transport/envelopes/#size-limits) can carry, and Relay is optimized for below defined maximum batch sizes, SDKs must adhere to these limits when sending envelopes. Exceeding them is absolutely discouraged. Consequently, the telemetry buffer must batch telemetry items to comply with size restrictions before forwarding them to the telemetry scheduler.
+As ingestion sets limits on the [number of items an envelope can carry](/sdk/foundations/transport/envelopes/#size-limits), and Relay is optimized for below defined maximum batch sizes, SDKs must adhere to these limits when sending envelopes. Exceeding them is absolutely discouraged. Consequently, the telemetry buffer must batch telemetry items to comply with size restrictions before forwarding them to the telemetry scheduler.
 
 For high-volume telemetry item types, SDKs **SHOULD** use the following batch sizes. SDKs **MAY** use lower values, but they **MUST NOT** exceed these limits:
 
@@ -143,6 +143,7 @@ For the telemetry span buffer, we recommend using a map of [traceID to span buck
 
 1. When forwarding spans, the span buffer **MUST** forward only spans from a single trace, since each envelope supports only one traceID. This means that the span buffer might forward spans multiple times.
 2. When the span buffer overflows and it drops data, it **SHOULD** drop all spans from a single traceID rather than individual spans. Dropping individual spans creates incomplete traces that are harder to debug, whereas dropping a complete trace preserves the integrity of the remaining traces.
+3. The span buffer **MAY** use FIFO to prioritize forwarding spans: always forward spans from the oldest traceID. FIFO prevents spans from lingering in the buffer.
 
 ### Buckets per TraceID
 
