@@ -1,8 +1,5 @@
-'use client';
-
 import type {ReactNode} from 'react';
 import {Fragment} from 'react';
-import Link from 'next/link';
 
 import {ExternalLink} from './externalLink';
 
@@ -26,9 +23,9 @@ const FEATURE_DATA: Record<FeatureKey, {
         </ExternalLink>{' '}
         page and select an error from the issues list to view the full details
         and context of this error. For more details, see this{' '}
-        <Link href="/product/sentry-basics/integrate-frontend/generate-first-error/#ui-walkthrough">
+        <a href="/product/sentry-basics/integrate-frontend/generate-first-error/#ui-walkthrough">
           interactive walkthrough
-        </Link>
+        </a>
         .
       </Fragment>
     ),
@@ -45,9 +42,9 @@ const FEATURE_DATA: Record<FeatureKey, {
         </ExternalLink>{' '}
         page and select a trace to reveal more information about each span, its
         duration, and any errors. For an interactive UI walkthrough, click{' '}
-        <Link href="/product/sentry-basics/distributed-tracing/generate-first-error/#ui-walkthrough">
+        <a href="/product/sentry-basics/distributed-tracing/generate-first-error/#ui-walkthrough">
           here
-        </Link>
+        </a>
         .
       </Fragment>
     ),
@@ -80,7 +77,7 @@ const FEATURE_DATA: Record<FeatureKey, {
         </ExternalLink>{' '}
         page and filter by service, environment, or search keywords to view log
         entries from your application. For an interactive UI walkthrough, click{' '}
-        <Link href="/product/explore/logs/#overview">here</Link>.
+        <a href="/product/explore/logs/#overview">here</a>.
       </Fragment>
     ),
   },
@@ -96,7 +93,7 @@ const FEATURE_DATA: Record<FeatureKey, {
         </ExternalLink>{' '}
         page, select a transaction, and then a profile ID to view its flame
         graph. For more information, click{' '}
-        <Link href="/product/explore/profiling/profile-details/">here</Link>.
+        <a href="/product/explore/profiling/profile-details/">here</a>.
       </Fragment>
     ),
   },
@@ -112,7 +109,7 @@ const FEATURE_DATA: Record<FeatureKey, {
         </ExternalLink>{' '}
         page and click on individual feedback to see more details all in one
         view. For more information, click{' '}
-        <Link href="/product/user-feedback/">here</Link>.
+        <a href="/product/user-feedback/">here</a>.
       </Fragment>
     ),
   },
