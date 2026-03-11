@@ -23,6 +23,7 @@ const OPTION_IDS = [
   'source-context',
   'dsym',
   'opentelemetry',
+  'metrics',
 ] as const;
 
 const OPTION_IDS_SET = new Set(OPTION_IDS);
@@ -103,6 +104,14 @@ const optionDetails: Record<
       <span>
         Upload your source code to allow Sentry to display snippets of your code next to
         the event stack traces.
+      </span>
+    ),
+  },
+  metrics: {
+    name: 'Metrics',
+    description: (
+      <span>
+        Send metrics from your application to Sentry for viewing alongside relevant errors and searching by metric name or attributes.
       </span>
     ),
   },

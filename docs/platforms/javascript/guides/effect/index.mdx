@@ -1,0 +1,177 @@
+---
+title: Effect
+description: Learn how to set up Sentry in your Effect application with first-class integration for tracing, logging, and metrics.
+---
+
+<Alert>
+
+This SDK is currently in **ALPHA**. Alpha features are still in progress, may have bugs, and might include breaking changes.
+Please reach out on [GitHub](https://github.com/getsentry/sentry-javascript/issues/new/choose) if you have any feedback or concerns.
+
+</Alert>
+
+The `@sentry/effect` SDK provides first-class integration with [Effect](https://effect.website/), enabling automatic tracing, logging, and metrics capture for Effect-based applications.
+
+<PlatformContent includePath="getting-started-prerequisites" />
+
+## Step 1: Install
+
+Choose the features you want to configure, and this guide will show you how:
+
+<OnboardingOptionButtons
+  options={[
+    "error-monitoring",
+    "performance",
+    "logs",
+    "metrics",
+  ]}
+/>
+
+<PlatformContent includePath="getting-started-features-expandable" />
+
+### Install the Sentry SDK
+
+```bash {tabTitle:npm}
+npm install @sentry/effect --save
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/effect
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/effect
+```
+
+## Step 2: Configure
+
+The SDK provides an `effectLayer` that initializes Sentry and provides Effect services for tracing, logging, and metrics.
+
+### Server Usage
+
+```typescript {filename:main.ts}
+import * as Sentry from "@sentry/effect/server";
+import { NodeRuntime } from "@effect/platform-node";
+import { Layer } from "effect";
+import { HttpLive } from "./Http.js";
+
+const MainLive = HttpLive.pipe(
+  Layer.provide(
+    Sentry.effectLayer({
+      dsn: "___PUBLIC_DSN___",
+      // ___PRODUCT_OPTION_START___ performance
+
+      // Set tracesSampleRate to 1.0 to capture 100%
+      // of transactions for tracing.
+      // We recommend adjusting this value in production.
+      tracesSampleRate: 1.0,
+      // ___PRODUCT_OPTION_END___ performance
+      // ___PRODUCT_OPTION_START___ logs
+
+      // Enable logs to be sent to Sentry
+      enableLogs: true,
+
+      // Forward Effect logs to Sentry
+      enableEffectLogs: true,
+      // ___PRODUCT_OPTION_END___ logs
+      // ___PRODUCT_OPTION_START___ metrics
+
+      // Forward Effect metrics to Sentry
+      enableEffectMetrics: true,
+      // ___PRODUCT_OPTION_END___ metrics
+    })
+  )
+);
+
+MainLive.pipe(Layer.launch, NodeRuntime.runMain);
+```
+
+### Client Usage
+
+```typescript {filename:main.ts}
+import * as Sentry from "@sentry/effect/client";
+import { Layer } from "effect";
+
+const MainLive = YourAppLayer.pipe(
+  Layer.provide(
+    Sentry.effectLayer({
+      dsn: "___PUBLIC_DSN___",
+      // ___PRODUCT_OPTION_START___ performance
+
+      // Set tracesSampleRate to 1.0 to capture 100%
+      // of transactions for tracing.
+      // We recommend adjusting this value in production.
+      tracesSampleRate: 1.0,
+      // ___PRODUCT_OPTION_END___ performance
+      // ___PRODUCT_OPTION_START___ logs
+
+      // Enable logs to be sent to Sentry
+      enableLogs: true,
+
+      // Forward Effect logs to Sentry
+      enableEffectLogs: true,
+      // ___PRODUCT_OPTION_END___ logs
+    })
+  )
+);
+```
+
+## Features
+
+The `effectLayer` provides:
+
+<OnboardingOption optionId="performance">
+- **Tracing**: Effect spans are automatically traced as Sentry spans with distributed tracing support
+</OnboardingOption>
+<OnboardingOption optionId="logs">
+- **Logging**: Effect logs are forwarded to Sentry when `enableEffectLogs` is set
+</OnboardingOption>
+<OnboardingOption optionId="metrics">
+- **Metrics**: Effect metrics (counters, gauges, histograms) are sent to Sentry when `enableEffectMetrics` is set
+</OnboardingOption>
+
+<OnboardingOption optionId="logs">
+<Alert level="info">
+
+`enableEffectLogs` requires `enableLogs` to be enabled. If the base option is `false`, the Effect-specific option has no effect.
+
+</Alert>
+</OnboardingOption>
+
+<OnboardingOption optionId="metrics">
+<Alert level="info">
+
+`enableEffectMetrics` requires `enableMetrics` to be enabled. If the base option is `false`, the Effect-specific option has no effect.
+
+</Alert>
+</OnboardingOption>
+
+## Step 3: Verify
+
+Add a test error to verify your setup:
+
+```typescript
+import { Effect } from "effect";
+import * as Sentry from "@sentry/effect/server";
+
+const program = Effect.gen(function* () {
+  yield* Effect.fail(new Error("Sentry Test Error"));
+});
+
+// Run with your layer that includes Sentry.effectLayer
+```
+
+Head over to your project on [Sentry.io](https://sentry.io) to view the collected data.
+
+## Next Steps
+
+- Learn how to [manually capture errors](/platforms/javascript/guides/effect/usage/)
+- Continue to [customize your configuration](/platforms/javascript/guides/effect/configuration/)
+- Get familiar with [Sentry's product features](/product/) like tracing, insights, and alerts
+
+<Expandable permalink={false} title="Are you having problems setting up the SDK?">
+
+- Find various topics in <PlatformLink to="/troubleshooting">Troubleshooting</PlatformLink>
+- [Get support](https://sentry.zendesk.com/hc/en-us/)
+
+</Expandable>
