@@ -31,7 +31,7 @@ export default async function Page(props: {
 
   const pathname = sanitizeNext(next);
   const isTracingAutomatedInstrumentation =
-    pathname === '/tracing/instrumentation/automatic-instrumentation';
+    pathname.replace(/\/$/, '') === '/tracing/instrumentation/automatic-instrumentation';
   const rootNode = await getDocsRootNode();
   const defaultTitle = 'Platform Specific Content';
   let description = '';
