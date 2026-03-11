@@ -36,7 +36,7 @@ Configurable via weights.
 
 #### TelemetryBuffer
 
-The telemetry buffer on the backend must follow the common [telemetry buffer requirements](/sdk/foundations/processing/telemetry-processor/#telemetry-buffer). Here are the additional requirements for the backend-specific implementation:
+Unlike the [push-based approach](/sdk/foundations/processing/telemetry-processor/#push-based-approach), the [telemetry scheduler](#telemetryscheduler) pulls data from the telemetry buffer by iterating over all buffers using weighted round-robin scheduling and flushing a buffer when it is ready. The telemetry buffer **MUST** still follow the common [telemetry buffer requirements](/sdk/foundations/processing/telemetry-processor/#telemetry-buffer). Here are the additional backend-specific requirements:
 
 1. The telemetry buffer **SHOULD** drop older items as the overflow policy. It **MAY** also drop newer items to preserve what's already buffered.
 
@@ -55,11 +55,11 @@ Buffers are mapped to [DataCategories](https://github.com/getsentry/relay/blob/m
 
 #### TelemetryScheduler
 
-The TelemetryScheduler runs as a background worker, coordinating the flow of telemetry from buffers to the transport:
+Unlike the [index spec's push-based approach](/sdk/foundations/processing/telemetry-processor/#push-based-or-pull-based-approach), where telemetry buffers push data to the scheduler when full or on timeout, the TelemetryScheduler here uses a **pull-based approach**: it runs as a background worker, actively pulls ready batches from telemetry buffers, and forwards them to the transport.
 
 - **Initialization**: Constructs a weighted priority cycle (e.g., `[CRITICAL×5, HIGH×4, MEDIUM×3, ...]`) based on configured weights.
 - **Event loop**: Wakes when explicitly signaled from the `captureX` methods on the client when new data is available (if the language does not support this, then a periodic ticker can be used).
-- **Buffer selection**: Iterates through the priority cycle, selecting buffers that are ready to flush and not rate limited.
+- **Buffer selection**: Iterates through the priority cycle, checks whether a buffer is ready to flush and not rate limited, and then pulls the next batch from that buffer.
 - **Rate limit coordination**: Queries the transport's rate limit state before attempting to send any category.
 - **Envelope construction**: Converts buffered items into Sentry protocol envelopes.
   - Log items are batched together into a single envelope with multiple log entries.

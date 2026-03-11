@@ -98,15 +98,23 @@ The telemetry buffer batches high-volume telemetry items and forwards them to th
 
 1. Before adding an item to a specific buffer, the telemetry buffer **SHOULD** drop rate-limited items to avoid overhead. If doing so, it **MUST** record client reports.
 2. When the telemetry buffer overflows and it drops data, it **MUST** record client reports.
-3. The telemetry buffer **MUST** forward low-volume data, such as normal events, session replays, or user feedback, directly to the telemetry scheduler.
-4. The telemetry buffer **MUST** start a timeout of 5 seconds when the first item is added. When the timeout expires, the telemetry buffer **MUST** forward all items to the telemetry scheduler.
-5. The telemetry buffer **MUST** define a size limit of `x` items. See [Size Limit Recommendations](#size-limit-recommendations) below for more details.
-6. When the size limit is reached, the telemetry buffer **MUST** forward all items to the telemetry scheduler. The buffer **MAY** forward items in batches.
-7. The telemetry buffer **SHOULD** use separate buffers per telemetry item type (e.g., one for spans, one for logs, one for metrics).
+3. The telemetry buffer **SHOULD** use separate buffers per telemetry item type (e.g., one for spans, one for logs, one for metrics).
+
+## Push-Based or Pull-Based Approach
+
+SDKs **SHOULD** use the push-based approach, where the telemetry buffers push data to the telemetry scheduler when full or on timeout. For backend SDKs with high-throughput requirements, a [pull-based approach](./backend-telemetry-processor/) **MAY** be used. This section describes the push-based approach.
+
+SDKs using the push-based approach **MUST** follow these requirements:
+
+1. The telemetry buffer **MUST** forward low-volume data, such as normal events, session replays, or user feedback, directly to the telemetry scheduler.
+2. The telemetry buffer **MUST** start a timeout of 5 seconds when the first item is added. When the timeout expires, the telemetry buffer **MUST** forward all items to the telemetry scheduler.
+3. The telemetry buffer **MUST** define a size limit of `x` items. See [Size Limit Recommendations](#size-limit-recommendations) below for more details.
+4. When the size limit is reached, the telemetry buffer **MUST** forward all items to the telemetry scheduler. The buffer **MAY** forward items in batches.
 
 ## Batch Size Limit
 
 As ingestion sets limits on the [number of items an envelope can carry](/sdk/foundations/transport/envelopes/#size-limits), and Relay is optimized for below defined maximum batch sizes, SDKs must adhere to these limits when sending envelopes. Exceeding them is absolutely discouraged. Consequently, the telemetry buffer must batch telemetry items to comply with size restrictions before forwarding them to the telemetry scheduler.
+
 
 For high-volume telemetry item types, SDKs **SHOULD** use the following batch sizes. SDKs **MAY** use lower values, but they **MUST NOT** exceed these limits:
 
