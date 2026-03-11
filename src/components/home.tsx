@@ -263,12 +263,27 @@ export async function Home() {
               </h3>
               <p className="text-sm text-[var(--gray-11)] dark:text-white leading-relaxed">
                 Debug applications automatically with{' '}
-                <a href="/product/ai-in-sentry/seer/" className="text-[#8b5cf6] underline">Seer</a>.
-                Have Seer{' '}
-                <a href="/product/ai-in-sentry/seer/issue-autofix/" className="text-[#8b5cf6] underline">fix issues</a> 
-                {' '}by running automated root cause analysis to generate fixes, and{' '}
-                <a href="/product/ai-in-sentry/seer/code-review/" className="text-[#8b5cf6] underline">review code changes</a>
-                {' '}before merging PRs.
+                <a
+                  href="/product/ai-in-sentry/seer/"
+                  className="text-[#8b5cf6] underline"
+                >
+                  Seer
+                </a>
+                . Have Seer{' '}
+                <a
+                  href="/product/ai-in-sentry/seer/issue-autofix/"
+                  className="text-[#8b5cf6] underline"
+                >
+                  fix issues
+                </a>{' '}
+                by running automated root cause analysis to generate fixes, and{' '}
+                <a
+                  href="/product/ai-in-sentry/seer/code-review/"
+                  className="text-[#8b5cf6] underline"
+                >
+                  review code changes
+                </a>{' '}
+                before merging PRs.
               </p>
             </div>
           </div>

@@ -620,11 +620,6 @@ const userDocsRedirects = [
     destination: '/product/sentry-toolbar/:path*',
   },
   {
-    source: '/product/ai-in-sentry/sentry-prevent-ai/:path*',
-    destination: '/product/ai-in-sentry/seer/ai-code-review/:path*',
-  },
-
-  {
     source: '/organization/integrations/launchdarkly/',
     destination: '/organization/integrations/feature-flag/launchdarkly/',
   },
@@ -1619,12 +1614,24 @@ const userDocsRedirects = [
     destination: '/product/ai-in-sentry/ai-privacy-and-security/',
   },
   {
-    source: '/product/ai-in-sentry/ai-code-review/',
-    destination: '/product/ai-in-sentry/seer/ai-code-review/',
+    source: '/product/ai-in-sentry/seer/issue-fix/:path*',
+    destination: '/product/ai-in-sentry/seer/issue-autofix/:path*',
   },
   {
-    source: '/product/ai-in-sentry/seer/issue-fix/:path*',
-    destination: '/product/ai-in-sentry/seer/root-cause-analysis/:path*',
+    source: '/product/ai-in-sentry/seer/root-cause-analysis/',
+    destination: '/product/ai-in-sentry/seer/issue-autofix/',
+  },
+  {
+    source: '/product/ai-in-sentry/ai-code-review/',
+    destination: '/product/ai-in-sentry/seer/code-review/',
+  },
+  {
+    source: '/product/ai-in-sentry/sentry-prevent-ai/:path*',
+    destination: '/product/ai-in-sentry/seer/code-review/',
+  },
+  {
+    source: '/product/ai-in-sentry/seer/ai-code-review/',
+    destination: '/product/ai-in-sentry/seer/code-review/',
   },
   // .NET profiling guide redirects - consolidate to main profiling page
   {
