@@ -48,7 +48,7 @@ Additional attributes on the span:
 
 | Attribute                          | Type   | Requirement Level | Description                                                                                                                             | Example                                                               |
 | :--------------------------------- | :----- | :---------------- | :-------------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------- |
-| `gen_ai.input.messages`            | string | optional          | List of dictionaries describing the messages (prompts) given to the agent. **[0]**, **[1]**, **[6]**, **[7]**                           | `'[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]'` |
+| `gen_ai.input.messages`            | string | optional          | List of dictionaries describing the messages (prompts) given to the agent. **[0]**, **[1]**, **[6]**, **[7]**, **[9]**                           | `'[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]'` |
 | `gen_ai.tool.definitions`          | string | optional          | List of dictionaries describing the available tools. **[0]**                                                                            | `'[{"name": "random_number", "description": "..."}, ...]'`            |
 | `gen_ai.system_instructions`       | string | optional          | The system instructions passed to the model.                                                                                            | `"You are a helpful assistant."`                                      |
 | `gen_ai.request.max_tokens`        | int    | optional          | Model configuration parameter.                                                                                                          | `500`                                                                 |
@@ -113,7 +113,7 @@ Additional attributes on the span:
 
 | Attribute                          | Type   | Requirement Level | Description                                                                                                                          | Example                                                               |
 | :--------------------------------- | :----- | :---------------- | :----------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------- |
-| `gen_ai.input.messages`            | string | optional          | List of dictionaries describing the messages (prompts) sent to the LLM. **[0]**, **[1]**, **[6]**, **[7]**                           | `'[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]'` |
+| `gen_ai.input.messages`            | string | optional          | List of dictionaries describing the messages (prompts) sent to the LLM. **[0]**, **[1]**, **[6]**, **[7]**, **[9]**                  | `'[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]'` |
 | `gen_ai.tool.definitions`          | string | optional          | List of dictionaries describing the available tools. **[0]**                                                                         | `'[{"name": "random_number", "description": "..."}, ...]'`            |
 | `gen_ai.system_instructions`       | string | optional          | The system instructions passed to the model.                                                                                         | `"You are a helpful assistant."`                                      |
 | `gen_ai.request.max_tokens`        | int    | optional          | Model configuration parameter.                                                                                                       | `500`                                                                 |
@@ -252,3 +252,9 @@ Binary blobs in the input list should be replaced with the string `"[Blob substi
 
 In some agent libraries, the agent name is optional, and some do not provide the user an option to name their agents.
 In these cases, the span name SHOULD be `"invoke_agent {call_id}"`, where `call_id` is some user-provided identifier for the agent invocation. For example, `functionId` in Vercel AI.
+
+**[9]**
+
+Image URLs in the data URL format in the input list **SHOULD** be replaced with the string `"[Blob substitute]"` in positions where binary data is expected. For example, data URLs like `data:image/png;base64` will be redacted, but HTTP URLs like `example.com/data?<a-base64-string>` will not be.
+
+See [this file](https://github.com/getsentry/sentry-python/blob/main/sentry_sdk/integrations/pydantic_ai/consts.py) for the regex used.
