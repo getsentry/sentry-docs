@@ -34,57 +34,63 @@ supported:
   - javascript.gatsby
 ---
 
+<PlatformSection supported={["javascript.nextjs", "javascript.nuxt", "javascript.solidstart", "javascript.sveltekit", "javascript.react-router", "javascript.remix", "javascript.astro", "javascript.tanstackstart-react"]}>
+  <Alert level="warning">
+    For meta-framework applications running on both client and server, we recommend **setting up the integration manually** using the [`instrumentAnthropicAiClient` wrapper](#manual-instrumentation) to ensure consistent instrumentation across all runtimes.
+  </Alert>
+</PlatformSection>
+
 <PlatformSection supported={["javascript.node", "javascript.aws-lambda", "javascript.azure-functions", "javascript.connect", "javascript.express", "javascript.fastify", "javascript.gcp-functions", "javascript.hapi", "javascript.hono", "javascript.koa", "javascript.nestjs", "javascript.nextjs", "javascript.nuxt", "javascript.solidstart", "javascript.sveltekit", "javascript.react-router", "javascript.remix", "javascript.astro", "javascript.tanstackstart-react", "javascript.electron", "javascript.cordova", "javascript.capacitor", "javascript.deno", "javascript.wasm"]}>
 
-## Automatic Instrumentation
+  ## Automatic Instrumentation
 
-_Import name: `Sentry.openAIIntegration`_
+  _Import name: `Sentry.openAIIntegration`_
 
-The `openAIIntegration` adds instrumentation for the [`openai`](https://www.npmjs.com/package/openai) SDK to capture spans by wrapping OpenAI SDK calls and recording LLM interactions.
+    <Alert>
+      <PlatformSection notSupported={["javascript.node", "javascript.connect", "javascript.hapi", "javascript.koa"]}>
+        If you are using a different runtime (like Bun, Cloudflare Workers or a Browser) or experiencing missing spans, you need to use **[Manual Instrumentation](#manual-instrumentation)** to explicitly wrap your AI client instance instead.
+      </PlatformSection>
+    </Alert>
 
-<Alert>
+  The `openAIIntegration` adds instrumentation for the [`openai`](https://www.npmjs.com/package/openai) SDK to capture spans by wrapping OpenAI SDK calls and recording LLM interactions.
 
-In Node.js runtimes, this integration is enabled by default and automatically captures spans for OpenAI SDK calls. Requires Sentry SDK version `10.28.0` or higher.
+  In Node.js runtimes, this integration is enabled by default and automatically captures spans for OpenAI SDK calls (requires Sentry SDK version `10.28.0` or higher).
 
-  <PlatformSection notSupported={["javascript.node", "javascript.connect", "javascript.hapi", "javascript.koa"]}>
-    If you use a different runtime (like Browser, Bun or Cloudflare Workers) or experience missing spans, use [**Manual Instrumentation**](#manual-instrumentation) instead.
-  </PlatformSection>
-
-</Alert>
-
-To customize what data is captured (such as inputs and outputs), see the [Options](#options) in the Configuration section.
+  To customize what data is captured (such as inputs and outputs), see the [Options](#options) in the Configuration section.
 
 </PlatformSection>
 
 <PlatformSection notSupported={["javascript.node", "javascript.connect", "javascript.hapi", "javascript.koa"]}>
 
-## Manual Instrumentation
+  ## Manual Instrumentation
 
-_Import name: `Sentry.instrumentOpenAiClient`_
+  _Import name: `Sentry.instrumentOpenAiClient`_
 
-The `instrumentOpenAiClient` helper adds instrumentation for the [`openai`](https://www.npmjs.com/package/openai) SDK to capture spans by wrapping OpenAI SDK calls and recording LLM interactions with configurable input/output recording. You need to manually wrap your OpenAI client instance with this helper:
+  The `instrumentOpenAiClient` helper adds instrumentation for the [`openai`](https://www.npmjs.com/package/openai) SDK to capture spans by wrapping OpenAI SDK calls and recording LLM interactions with configurable input/output recording. You need to manually wrap your OpenAI client instance with this helper.
 
-```javascript
-import OpenAI from "openai";
+  See example below:
 
-const openai = new OpenAI({
-  // Warning: API key will be exposed in browser!
-  apiKey: "your-api-key",
-});
+  ```javascript
+  import OpenAI from "openai";
 
-const client = Sentry.instrumentOpenAiClient(openai, {
-  recordInputs: true,
-  recordOutputs: true,
-});
+  const openai = new OpenAI({
+    // Warning: API key will be exposed in browser!
+    apiKey: "your-api-key",
+  });
 
-// Use the wrapped client instead of the original openai instance
-const response = await client.chat.completions.create({
-  model: "gpt-4o",
-  messages: [{ role: "user", content: "Hello!" }],
-});
-```
+  const client = Sentry.instrumentOpenAiClient(openai, {
+    recordInputs: true,
+    recordOutputs: true,
+  });
 
-To customize what data is captured (such as inputs and outputs), see the [Options](#options) in the Configuration section.
+  // Use the wrapped client instead of the original openai instance
+  const response = await client.chat.completions.create({
+    model: "gpt-4o",
+    messages: [{ role: "user", content: "Hello!" }],
+  });
+  ```
+
+  To customize what data is captured (such as inputs and outputs), see the [Options](#options) in the Configuration section.
 
 </PlatformSection>
 
