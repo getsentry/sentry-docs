@@ -152,7 +152,7 @@ export default async function Page(props: {
     <DocPage frontMatter={frontMatter}>
       <Alert>{platformInfo}</Alert>
       {isTracingAutomatedInstrumentation && (
-        <Alert>
+        <Alert level="warning">
           This page lists only platforms with automated tracing instrumentation. Some
           platforms may be omitted due to technical limitations.
         </Alert>
