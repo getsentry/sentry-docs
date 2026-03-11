@@ -14,7 +14,9 @@ sidebar_order: 1
   levels.
 </Alert>
 
-For the common specification, refer to the [Telemetry Processor](/sdk/foundations/processing/telemetry-processor/) page. This page describes the backend-specific implementation. The key difference is that backend SDKs use **weighted round-robin scheduling** to ensure critical telemetry (like errors) gets priority over high-volume data (like logs) when the application is under heavy load.
+For the common specification, refer to the [Telemetry Processor](/sdk/foundations/processing/telemetry-processor/) page. This page describes a backend-specific approach, which is optimized for high load. The key difference is that the telemetry scheduler pulls telemetry data from the telemetry buffers using **weighted round-robin scheduling**.
+
+It's worth noting that this approach may not be suitable for SDKs needing to support multiple platforms, such as Java, because this approach doesn't work well with offline caching. Offline caches also need a priority based sending strategy and a priority based overflow strategy to avoid dropping critical data over high volume data. If the telemetry scheduler pulls data from the telemetry buffer and it supports an offline cache, it needs to balance items in the offline cache with items from the telemetry buffer. Each SDK should evaluate its requirements and decide whether to adopt the backend-specific pull-based approach or continue using a push-based model as defined in the [Telemetry Processor](/sdk/foundations/processing/telemetry-processor/) page, depending on its platform constraints and architectural needs.
 
 ## Backend-Specific Design Decisions
 
