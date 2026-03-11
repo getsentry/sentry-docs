@@ -34,30 +34,34 @@ export function MobileMenu({pathname, searchPlatforms}: Props) {
 
         <Popover.Portal>
           <Theme accentColor="iris">
-            <Popover.Content className={styles.PopoverContent} sideOffset={5}>
+            <Popover.Content className={styles.PopoverContent} sideOffset={5} align="end">
               <Box display={{xs: 'block', sm: 'none'}}>
-                <li className={styles.MenuItem}>
-                  <Search path={pathname} searchPlatforms={searchPlatforms} />
-                </li>
+                <ul className="list-none p-0 m-0">
+                  <li className={styles.MenuItem}>
+                    <Search path={pathname} searchPlatforms={searchPlatforms} />
+                  </li>
+                </ul>
                 <div className={styles.MenuSeparator} />
               </Box>
-              {mainSections.map(section => (
-                <li key={section.href} className={styles.MenuItem}>
-                  <Link href={section.href}>{section.label}</Link>
+              <ul className="list-none p-0 m-0">
+                {mainSections.map(section => (
+                  <li key={section.href} className={styles.MenuItem}>
+                    <Link href={section.href}>{section.label}</Link>
+                  </li>
+                ))}
+                <li className={styles.MenuItem}>
+                  <Link href="https://sentry.io/changelog/">Changelog</Link>
                 </li>
-              ))}
-              <li className={styles.MenuItem}>
-                <Link href="https://sentry.io/changelog/">Changelog</Link>
-              </li>
-              <li className={styles.MenuItem}>
-                <Link href="https://sandbox.sentry.io/">Sandbox</Link>
-              </li>
-              <li className={styles.MenuItem}>
-                <Link href="https://sentry.io/">Go to Sentry</Link>
-              </li>
-              <li className={styles.MenuItem}>
-                <Link href="https://sentry.io/signup/">Get Started</Link>
-              </li>
+                <li className={styles.MenuItem}>
+                  <Link href="https://sandbox.sentry.io/">Sandbox</Link>
+                </li>
+                <li className={styles.MenuItem}>
+                  <Link href="https://sentry.io/">Go to Sentry</Link>
+                </li>
+                <li className={styles.MenuItem}>
+                  <Link href="https://sentry.io/signup/">Get Started</Link>
+                </li>
+              </ul>
             </Popover.Content>
           </Theme>
         </Popover.Portal>

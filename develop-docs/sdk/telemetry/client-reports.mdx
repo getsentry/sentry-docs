@@ -2,12 +2,18 @@
 title: Client Reports
 description: SDK self-reporting protocol for tracking discarded events and their discard reasons.
 spec_id: sdk/telemetry/client-reports
-spec_version: 1.19.0
+spec_version: 1.21.0
 spec_status: stable
 spec_depends_on:
   - id: sdk/foundations/transport/envelopes
     version: ">=1.0.0"
 spec_changelog:
+  - version: 1.21.0
+    date: 2026-03-06
+    summary: Added log byte outcomes for tracking discarded log data size
+  - version: 1.20.0
+    date: 2026-03-04
+    summary: Added architecture guidance
   - version: 1.19.0
     date: 2026-02-06
     summary: Added network failure recording rules (send_error for 4xx/5xx, no report for 429)
@@ -89,7 +95,7 @@ Related specs:
 - [Envelopes](/sdk/foundations/transport/envelopes/) — transport format
 - [Envelope Items](/sdk/foundations/transport/envelope-items/) — envelope item types
 - [Telemetry Processor](/sdk/foundations/processing/telemetry-processor/) — SDK processing architecture
-- [Rate Limiting](/sdk/expected-features/rate-limiting/) — data category definitions
+- [Rate Limiting](/sdk/foundations/transport/rate-limiting/) — data category definitions
 
 ---
 
@@ -101,11 +107,11 @@ An **outcome** describes the fate of a telemetry item — whether it was accepte
 
 ### Discard Reasons
 
-A **discard reason** is a string that explains why a telemetry item was dropped. Each discarded item is categorized by reason and [data category](/sdk/expected-features/rate-limiting/#definitions).
+A **discard reason** is a string that explains why a telemetry item was dropped. Each discarded item is categorized by reason and [data category](/sdk/foundations/transport/rate-limiting/#definitions).
 
 ### Data Categories
 
-Data categories (e.g., `error`, `transaction`, `span`) identify the type of telemetry item that was discarded. These are the same categories used for [rate limits](/sdk/expected-features/rate-limiting/#definitions).
+Data categories (e.g., `error`, `transaction`, `span`) identify the type of telemetry item that was discarded. These are the same categories used for [rate limits](/sdk/foundations/transport/rate-limiting/#definitions).
 
 ---
 
@@ -169,7 +175,7 @@ For an [`HTTP 413 Content Too Large`](https://developer.mozilla.org/en-US/docs/W
 
 For an [`HTTP 429 Too Many Requests`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429) response, SDKs:
 
-- **MUST** respect the [rate limiting rules](/sdk/expected-features/rate-limiting/), such as correctly parsing the retry-header.
+- **MUST** respect the [rate limiting rules](/sdk/foundations/transport/rate-limiting/), such as correctly parsing the retry-header.
 - **MUST** discard the envelope, but **MUST NOT** record a client report, because the upstream already does this. Doing this would double-count client reports for discarded envelopes.
 - **MUST NOT** retry sending the envelope.
 
@@ -201,15 +207,44 @@ If certain spans are dropped in `beforeSendTransaction`, an event processor, etc
 
 </SpecSection>
 
-<SpecSection id="telemetry-processor-integration" status="candidate" since="1.18.0">
+<SpecSection id="log-byte-outcomes" status="stable" since="1.21.0">
+
+### Log Byte Outcomes
+
+When a log is dropped, SDKs **MUST** record an additional `log_byte` category entry containing the byte size of the log. This provides visibility into the volume of log data being discarded, complementing the item count reported under the `log_item` category.
+
+Since client reports use a `(reason, category) → quantity` map for aggregation, byte sizes are tracked as a separate category rather than an extra field. Each dropped log produces two entries in the map: one incrementing the `log_item` count by 1, and one incrementing the `log_byte` count by the log's byte size.
+
+The byte size does not need to be exact. SDKs **MAY** use an approximation, such as the in-memory size of the log object or the size of its serialized representation. The goal is to provide a useful signal, not a precise measurement.
+
+</SpecSection>
+
+<SpecSection id="aggregation" status="candidate" since="1.20.0">
+
+### Aggregation
+
+SDKs **SHOULD** use a single, centralized `ClientReports` component per client that handles aggregation internally:
+
+- **MUST** be scoped per client — if an SDK supports multiple client instances, each **MUST** have its own `ClientReports` instance. This is required because clients are already scoped per DSN, so scoping `ClientReports` per client ensures report data is attributed to the correct DSN and avoids mixing data across instances.
+- **SHOULD** be accessible throughout the SDK, so any component that drops telemetry can record into it.
+- **SHOULD** use a no-op implementation when client reports are disabled via the `sendClientReports` option, to avoid overhead.
+- **SHOULD** maintain a map where the key is a `reason-category` string and the value is the number of dropped items. Components call a `Record` method to increment counters directly.
+- **MUST** be thread safe for concurrent read and write access, since multiple SDK components record into it simultaneously.
+- **MUST** atomically read and reset all counters during extraction to prevent double-counting.
+
+</SpecSection>
+
+<SpecSection id="telemetry-processor-integration" status="candidate" since="1.20.0">
 
 ### Telemetry Processor Integration
 
-SDKs **MAY** keep track of discarded events in the transport. Once SDKs implement the [telemetry processor](/sdk/foundations/processing/telemetry-processor/), they **SHOULD** implement client reports tracking outside the transport, since data can be dropped in multiple places throughout the SDK.
+The original specification suggested tracking client reports directly within the transport. However, due to the increase in telemetry data types and the possibility of data loss at various stages in the SDK, this approach no longer scales well. Client reports must be accessible across different parts of the SDK. Thus, we now recommend developing a separate `ClientReports` component rather than integrating it into the transport.
 
-The [telemetry scheduler](/sdk/foundations/processing/telemetry-processor/#telemetry-scheduler) is then responsible for passing aggregated client reports to the transport. The telemetry scheduler still **MUST** adhere to all requirements in this spec.
+SDKs **SHOULD** own the `ClientReports` component at the client level, regardless of whether they implement the full [telemetry processor](/sdk/foundations/processing/telemetry-processor/) architecture. This keeps the transport focused on delivery.
 
-See the [telemetry processor spec](/sdk/foundations/processing/telemetry-processor/) for the full architecture and recording points.
+Once SDKs implement the [telemetry processor](/sdk/foundations/processing/telemetry-processor/), the client **SHOULD NOT** forward reports to the transport directly. Instead, the telemetry processor **SHOULD** be responsible for extracting the aggregated report and attaching it to outgoing envelopes or sending it as a standalone envelope.
+
+Client reports are separate from the normal telemetry data flow — they do not go through buffers or queues. See the [telemetry processor client reports section](/sdk/foundations/processing/telemetry-processor/#client-reports) for the full architecture diagram and recording points.
 
 </SpecSection>
 
@@ -288,7 +323,7 @@ Each outcome object in `discarded_events` has:
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `reason` | String | **REQUIRED** | A discard reason that defines why events were lost (see [Discard Reasons](#discard-reasons)). |
-| `category` | String | **REQUIRED** | The [data category](/sdk/expected-features/rate-limiting/#definitions) for which the discard reason applies (since 1.2.0). |
+| `category` | String | **REQUIRED** | The [data category](/sdk/foundations/transport/rate-limiting/#definitions) for which the discard reason applies (since 1.2.0). |
 | `quantity` | Number | **REQUIRED** | The number of events which were lost. |
 
 </SpecSection>
@@ -386,6 +421,29 @@ When a transaction with 2 spans is dropped due to queue overflow:
 ```
 
 The span quantity is 3 (2 spans + 1 for the transaction itself, since Relay extracts an additional span from the transaction).
+
+### Log Byte Outcome Example
+
+When 5 logs totaling approximately 12,400 bytes are dropped due to buffer overflow:
+
+```json
+{
+  "discarded_events": [
+    {
+      "reason": "buffer_overflow",
+      "category": "log_item",
+      "quantity": 5
+    },
+    {
+      "reason": "buffer_overflow",
+      "category": "log_byte",
+      "quantity": 12400
+    }
+  ]
+}
+```
+
+The `log_item` entry counts the number of dropped logs, while the `log_byte` entry tracks the total byte size of those logs.
 
 ---
 

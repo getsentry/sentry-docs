@@ -154,15 +154,17 @@ Here are the common requirements for all platforms:
 2. The telemetry scheduler **SHOULD** attach the client reports to the envelopes it forwards to the transport.
 3. When the telemetry queue overflows and drops envelopes, it **MUST** record the client report.
 
-To be defined: How exactly does the telemetry scheduler interact with the transport to correctly remove items from the telemetry queue based on the received HTTP info and how to adhere to the [dealing with network failure](/sdk/expected-features/#dealing-with-network-failures) requirements.
+To be defined: How exactly does the telemetry scheduler interact with the transport to correctly remove items from the telemetry queue based on the received HTTP info and how to adhere to the [dealing with network failure](/sdk/foundations/transport/offline-caching/#dealing-with-network-failures) requirements.
 
 ## Client Reports
 
-The telemetry scheduler **SHOULD** add [client reports](/sdk/telemetry/client-reports/) to outgoing envelopes or periodically send standalone client report envelopes to the transport, following the [SDK side recommendations](/sdk/telemetry/client-reports/#sdk-side-recommendations).
+Client reports aggregation **SHOULD NOT** be implemented in the telemetry scheduler. Instead, the SDK **SHOULD** have a centralized `ClientReports` component per client, accessible throughout the SDK, since data can be dropped in multiple places, as shown in the diagram below. `ClientReports` handles aggregation internally. The telemetry scheduler **SHOULD** call an extraction method on `ClientReports` to atomically retrieve and reset the current aggregated client report.
 
-Client report tracking **SHOULD NOT** be implemented in the telemetry scheduler. Instead, the SDK **SHOULD** have `ClientReports` accessible throughout the SDK, since data can be dropped in multiple places, as shown in the diagram below. The telemetry scheduler **SHOULD** request the current client reports from `ClientReports`.
+See the [client reports spec](/sdk/telemetry/client-reports/#telemetry-processor-integration) for the full architecture details, per-client scoping requirements, and recording points.
 
-Here is a diagram showing how `ClientReports` interacts with the telemetry scheduler.
+### Recording
+
+Multiple components call `Record` on `ClientReports` when they drop telemetry items.
 
 ```mermaid
 flowchart LR
@@ -177,14 +179,34 @@ flowchart LR
   TelemetryBuffer -- "records: buffer_overflow, ..." --> ClientReports
   TelemetryScheduler -- "records: queue_overflow, ..." --> ClientReports
   Transport -- "records: send_error, network_error" --> ClientReports
-  ClientReports -- "aggregated reports" --> TelemetryScheduler
+```
+
+### Sending
+
+The telemetry scheduler extracts the aggregated report and attaches it to outgoing envelopes, or periodically sends it as a standalone envelope following the [SDK recommendations](/sdk/telemetry/client-reports/#sdk-recommendations).
+
+```mermaid
+flowchart LR
+  ClientReports["ClientReports"]
+
+  subgraph TelemetrySchedulerSubGraph["TelemetryScheduler"]
+    TelemetryQueue["**TelemetryQueue**"]
+    TelemetryScheduler["**TelemetryScheduler**"]
+    TelemetryQueue -- "envelope" --> TelemetryScheduler
+    TelemetryScheduler -- "add or remove envelope" --> TelemetryQueue
+  end
+
+  Transport["Transport"]
+
+  ClientReports -- "TakeReport()" --> TelemetryScheduler
+  TelemetryScheduler -- "sendEnvelope" --> Transport
 ```
 
 ## Rate Limiting
 
 As mentioned above, the telemetry buffer **SHOULD** drop rate-limited data to reduce overhead, and the telemetry scheduler **MUST** drop rate-limited envelopes before forwarding them to the transport. To do this, the telemetry processor **MUST** have access to active rate limits. If your SDKs keep track of active rate limits in the transport, we recommend extracting them from the transport and making them available to the telemetry processor. Ideally, the transport is unaware of rate limits and only passes update information to the rate limits class, which manages updates.
 
-It's worth noting that [rate limits](/sdk/expected-features/rate-limiting/) **MUST** still be tracked per each DSN. Whatever bookkeeping you do to track rate limits, it **MUST** be done per each DSN.
+It's worth noting that [rate limits](/sdk/foundations/transport/rate-limiting/) **MUST** still be tracked per each DSN. Whatever bookkeeping you do to track rate limits, it **MUST** be done per each DSN.
 
 The following diagram shows how the telemetry processor interacts with the transport and rate limits. SDKs can choose to implement RateLimits inside or outside the telemetry processor, based on their needs.
 

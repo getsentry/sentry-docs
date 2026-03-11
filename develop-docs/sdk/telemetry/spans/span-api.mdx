@@ -56,14 +56,24 @@ interface Span {
 
 ```Python {tabTitle:Python}
 class Span:
-    span_id: str
+    @property
+    def span_id(self) -> str: ... 
 
     def set_attribute(self, key: str, value: SpanAttributeValue) -> None: ...
     def remove_attribute(self, key: str) -> None: ...
-    def set_status(self, status: Literal["ok", "error"]) -> None: ...
-    def get_name(self) -> str: ...
-    def set_name(self, name: str) -> None: ...
     def get_attributes(self) -> SpanAttributes: ...
+
+    @property
+    def status(self) -> str: ...
+
+    @status.setter
+    def status(self, status: Literal["ok", "error"]) -> None: ...
+
+    @property
+    def name(self) -> str: ...
+
+    @name.setter
+    def name(self, name: str) -> None: ...
 ```
 
 When implementing the span interface, consider the following guidelines:
@@ -127,7 +137,6 @@ Behaviour:
 - SDKs MUST NOT end the span automatically. This is the responsibility of the user.
 - `startSpan` MUST always return a span instance, even if the started span's trace is negatively sampled.
 
-
 ### Additional Span Starting APIs
 
 SDKs MAY expose additional span starting APIs or variants of `startSpan` that make sense for the platform. 
@@ -156,6 +165,7 @@ SDKs **MUST** return a Noop span in the following scenarios:
 - All mutating methods (`setAttribute`, `setAttributes`, `removeAttribute`, `setStatus`, `setName`, `addLink`, `addLinks`, `end`) **MUST** be no-ops — they **MUST NOT** record or store any data.
 - Getter methods (`getName`, `getAttributes`) **SHOULD** return empty/default values (e.g., empty string, empty map).
 - A Noop span **MUST NOT** be sent to Sentry.
+- If a Noop span is active, its dummy properties **MUST NOT** be used for populating outgoing trace headers. The headers **MUST** be populated from the propagation context instead. Custom instrumentation API like `getTraceparent` and `getBaggage` **MUST** also use the propagation context.
 
 ### Default Property Values
 
