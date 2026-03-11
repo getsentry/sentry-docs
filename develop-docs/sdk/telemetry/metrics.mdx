@@ -2,7 +2,7 @@
 title: Metrics
 description: Counter, gauge, and distribution metrics sent as batched trace_metric envelope items.
 spec_id: sdk/telemetry/metrics
-spec_version: 2.6.0
+spec_version: 2.7.0
 spec_status: stable
 spec_depends_on:
   - id: sdk/foundations/transport/envelopes
@@ -10,6 +10,9 @@ spec_depends_on:
   - id: sdk/foundations/state-management/scopes/attributes
     version: ">=1.0.0"
 spec_changelog:
+  - version: 2.7.0
+    date: 2026-03-10
+    summary: Auto-emitted metrics and third-party metrics bindings MUST be opt-in
   - version: 2.6.0
     date: 2026-03-04
     summary: Add sentry.timestamp.sequence attribute for deterministic metric ordering
@@ -222,6 +225,22 @@ The data category for metrics is `trace_metric`. Rate limiting applies as usual.
 ### Debug Logging
 
 If `debug` is set to `true` in SDK init, calls to the Sentry metrics API **SHOULD** also print to the console with appropriate details. This will help debugging metrics setups.
+
+</SpecSection>
+
+<SpecSection id="auto-emitted-metrics" status="candidate" since="2.7.0">
+
+### Auto-Emitted Metrics
+
+Metrics emitted via the [public API](#metrics-module) are opt-out. The `enableMetrics`/`enable_metrics` option **MUST** act as a general kill switch for all metrics sent to Sentry — when set to `false`, no metrics **MUST** be sent, regardless of whether they originate from the public API, auto-emitting integrations, or third-party bindings.
+
+However, metrics that are **automatically emitted by integrations or libraries** without an explicit user call follow different rules because they can generate unexpected volume and cost.
+
+**Integrations that auto-emit metrics** — An SDK integration that automatically captures metrics (e.g., recording HTTP request durations, database query counts, or runtime resource usage) **MUST** be opt-in. The integration **MUST NOT** emit any metrics unless the user explicitly enables it. The opt-in mechanism **MAY** be a dedicated integration-level option or requiring the user to explicitly add the integration.
+
+**Third-party metrics bindings** — An SDK feature that binds to an external library's metrics API and mirrors those metrics as Sentry metrics in the background (e.g., syncing from a framework's built-in metrics or an OpenTelemetry metrics pipeline) **MUST** also be opt-in. Users **MUST** explicitly enable the binding before any metrics are forwarded to Sentry.
+
+These rules exist because auto-emitted metrics can cause a high volume of telemetry that directly impacts a user's quota. Unlike spans or errors — where users have prior intuition about volume — silently emitting metrics on their behalf could lead to unexpected costs. Requiring opt-in ensures users remain in control of their metrics volume.
 
 </SpecSection>
 
