@@ -30,6 +30,8 @@ export default async function Page(props: {
   }
 
   const pathname = sanitizeNext(next);
+  const isTracingAutomatedInstrumentation =
+    pathname.replace(/\/$/, '') === '/tracing/instrumentation/automatic-instrumentation';
   const rootNode = await getDocsRootNode();
   const defaultTitle = 'Platform Specific Content';
   let description = '';
@@ -149,6 +151,12 @@ export default async function Page(props: {
   return (
     <DocPage frontMatter={frontMatter}>
       <Alert>{platformInfo}</Alert>
+      {isTracingAutomatedInstrumentation && (
+        <Alert level="warning">
+          This page lists only platforms with automated tracing instrumentation. Some
+          platforms may be omitted due to technical limitations.
+        </Alert>
+      )}
 
       <ul>
         {platformOrGuideList.map(p => (
