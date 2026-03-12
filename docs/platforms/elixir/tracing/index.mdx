@@ -22,7 +22,7 @@ Sentry's Elixir SDK uses OpenTelemetry for tracing. Add the required dependencie
 def deps do
   [
     # Sentry SDK
-    {:sentry, "~> 11.0"},
+    {:sentry, "~> 12.0"},
 
     # OpenTelemetry core packages
     {:opentelemetry, "~> 1.5"},
@@ -32,7 +32,7 @@ def deps do
 
     # Instrumentation libraries (choose what you need)
     {:opentelemetry_phoenix, "~> 2.0"},      # for Phoenix
-    {:opentelemetry_bandit, "~> 0.1"},       # for Bandit (Phoenix 1.7+)
+    {:opentelemetry_bandit, "~> 0.3"},       # for Bandit (Phoenix 1.7+)
     {:opentelemetry_ecto, "~> 1.2"},         # for Ecto
 
     # ... your other dependencies
@@ -108,3 +108,60 @@ config :sentry,
 ```
 
 Learn more about tracing <PlatformLink to="/configuration/options/#tracing-options">options</PlatformLink>.
+
+## Log Correlation
+
+When both tracing and <PlatformLink to="/logs/">structured logs</PlatformLink> are enabled, log events are automatically linked to the active trace. This lets you view logs alongside spans in the Sentry Trace Explorer.
+
+To set up both features together, enable logs and tracing in your Sentry configuration:
+
+```elixir {filename:config/config.exs}
+config :sentry,
+  dsn: "___PUBLIC_DSN___",
+  traces_sample_rate: 1.0,
+  enable_logs: true,
+  logs: [level: :info, metadata: :all]
+
+config :opentelemetry,
+  span_processor: {Sentry.OpenTelemetry.SpanProcessor, []},
+  sampler: {Sentry.OpenTelemetry.Sampler, []}
+```
+
+Then add `opentelemetry_logger_metadata` to your dependencies:
+
+```elixir {filename:mix.exs}
+defp deps do
+  [
+    {:sentry, "~> 12.0"},
+    {:opentelemetry, "~> 1.5"},
+    {:opentelemetry_api, "~> 1.4"},
+    {:opentelemetry_exporter, "~> 1.0"},
+    {:opentelemetry_semantic_conventions, "~> 1.27"},
+    {:opentelemetry_logger_metadata, "~> 0.2"},
+    {:opentelemetry_bandit, "~> 0.3"},
+    {:opentelemetry_phoenix, "~> 2.0"},
+    {:opentelemetry_ecto, "~> 1.2"},
+    # ... your other dependencies
+  ]
+end
+```
+
+Set up the instrumentation in your application's `start/2` callback:
+
+```elixir {filename:lib/my_app/application.ex}
+def start(_type, _args) do
+  OpentelemetryLoggerMetadata.setup()
+  OpentelemetryBandit.setup()
+  OpentelemetryPhoenix.setup(adapter: :bandit)
+  OpentelemetryEcto.setup([:my_app, :repo], db_statement: :enabled)
+
+  children = [
+    # ... your supervision tree
+  ]
+
+  opts = [strategy: :one_for_one, name: MyApp.Supervisor]
+  Supervisor.start_link(children, opts)
+end
+```
+
+With this setup, any `Logger` call made during a traced request will automatically include the trace and span context, linking the log to the request's trace in Sentry.

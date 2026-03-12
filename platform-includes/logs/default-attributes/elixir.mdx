@@ -8,9 +8,11 @@ The Elixir SDK automatically sets several default attributes on all log entries 
 
 ### OpenTelemetry Attributes
 
-If you're using OpenTelemetry with the `opentelemetry_logger_metadata` package, the following attributes are automatically included:
+If you're using OpenTelemetry with the [`opentelemetry_logger_metadata`](https://hex.pm/packages/opentelemetry_logger_metadata) package, the following attributes are automatically included:
 
-- `trace_id`: The OpenTelemetry trace ID associated with the log event.
-- `span_id`: The OpenTelemetry span ID associated with the log event.
+- `trace_id`: The OpenTelemetry trace ID from the active trace context. Links the log to a specific trace in Sentry's Trace Explorer.
+- `span_id`: The OpenTelemetry span ID from the active span context. Links the log to a specific span within the trace.
 
-If no OpenTelemetry context is available, a random trace ID is generated to allow log correlation within Sentry.
+These attributes allow you to navigate from a log entry directly to the trace it occurred within, and vice versa.
+
+If no OpenTelemetry context is available (for example, if `opentelemetry_logger_metadata` is not installed or the log occurs outside a traced operation), the SDK generates a random `trace_id` for each log event. In this case, `span_id` is not set, and logs are not connected to any trace in Sentry.
