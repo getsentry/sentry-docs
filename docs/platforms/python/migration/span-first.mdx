@@ -160,16 +160,14 @@ it would become the direct child of "child 1".
 
 Spans now have attributes. These are key-value pairs, where keys are strings and
 values are of type `int`, `bool`, `str`, `float`, or an array of these primitive
-types (no mixing of types supported, they all have to be the same in one array).
-Notably, `None` attribute values are not supported.
+types. Notably, `None` attribute values are not supported.
 
 <Alert level="warning" title="Unsupported values">
 
-If you set an attribute of an unsupported type (for example, an object, or a
-list with elements of different types), it will be cast to string before it's
-set on the span. If you need access to specific properties on an object or to the
-individual elements of a list, we recommend picking the object apart into
-separate attributes.
+If you set an attribute of an unsupported type (for example, an object), it will
+be cast to string before it's set on the span. If you need access to specific
+properties on an object or to the individual elements of a list, we recommend
+picking the object apart into separate attributes.
 
 </Alert>
 
@@ -317,7 +315,7 @@ its sole argument:
 
 ```python
 def traces_sampler(sampling_context):
-    if sampling_context["name"] in IGNORED_SPAN_NAMES:
+    if sampling_context["span_context"]["name"] in IGNORED_SPAN_NAMES:
         return 0.0
     return 1.0
 
@@ -332,26 +330,25 @@ structure:
 
 ```python
 {
-    "name": ...,
-    "trace_id": ...,
-    "parent_span_id": ...,
-    "parent_sampled": ...,
-    "attributes": ...,
+    "span_context": {
+        "name": ...,
+        "trace_id": ...,
+        "parent_span_id": ...,
+        "parent_sampled": ...,
+        "attributes": ...,
+    },
     # additionally, custom sampling context keys will appear here if provided,
     # see the Custom Sampling Context section
 }
 ```
 
 All starting attributes on the span will be accessible in
-`sampling_context["attributes"]`. You can provide attributes via the `attributes`
-argument to `sentry_sdk.traces.start_span()`.
+`sampling_context["span_context"]["attributes"]`. You can provide attributes via
+the `attributes` argument to `sentry_sdk.traces.start_span()`.
 
-The sampling decision is made on span creation. If you're using the context
-manager way of starting a span (`with start_span(...):`), the span will be
-sampled immediately after the `with` block is entered. If you're using the direct
-`span = start_span(...)` API, the span will be sampled when it's created.
+The sampling decision is made on `start_span(...)`.
 
-As before, sampling will only be applied to top-level spans. Children spans
+As before, sampling is only applied to top-level spans. Children spans
 inherit the sampling decision of their parents, unless specifically filtered
 out via the [`ignore_spans` option](#filtering).
 
@@ -391,7 +388,7 @@ Before, the custom sampling context used to be an optional argument to
 
 - with sentry_sdk.start_span(
 -     name="flow.start",
--     custom_sampling_context=custom_sampling_context
+-     custom_sampling_context=custom_sampling_context,
 - ):
 -     ...
 + sentry_sdk.get_current_scope().set_custom_sampling_context(custom_sampling_context)
