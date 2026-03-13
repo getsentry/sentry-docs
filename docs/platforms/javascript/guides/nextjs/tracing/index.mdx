@@ -353,4 +353,39 @@ Sentry.init({
 
 </SplitSectionCode>
 </SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Detached spans with `after()`
+
+If you're using Next.js's [`after()`](https://nextjs.org/docs/app/api-reference/functions/after) and seeing many small transactions (like individual `db` spans) instead of one cohesive trace, your spans are becoming detached.
+
+This happens because `after()` runs after the response is sent. By then, the request's root span has already ended.
+
+Wrap your deferred work with `startSpan` inside the `after()` callback to group all background spans into a single transaction:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```tsx {filename:app/api/webhook/route.ts}
+import { after } from "next/server";
+import * as Sentry from "@sentry/nextjs";
+
+export async function POST(request: Request) {
+  const data = await request.json();
+
+  after(
+    Sentry.startSpan(
+      { name: "webhook.process", op: "task" },
+      () => processWebhook(data)
+    )
+  );
+
+  return Response.json({ received: true });
+}
+```
+
+</SplitSectionCode>
+</SplitSection>
 </SplitLayout>
