@@ -270,6 +270,50 @@ This registers the task as both:
 - `integrations_tasks:sentry.widgets.tasks.do_work_v2` (new)
 - `issues_tasks:sentry.widgets.tasks.do_work` (old)
 
+## External Tasks
+
+An application can create tasks for another application to execute through the usage of
+**external namespaces**:
+
+```python
+from sentry.taskworker.app import app
+
+# Create an external namespace
+launchpad_tasks = app.create_external_namespace(
+  application="launchpad",
+  name="default"
+)
+```
+
+With an external namespace you can register and spawn **external tasks**.
+
+```python
+@launchpad_tasks.register(name="launchpad.task.name")
+def run_process(org_id: int, project_id: int, payload: bytes) -> None:
+    pass
+
+
+# Schedule the task
+run_process.delay(org_id=1, project_id=123, payload=blob)
+```
+
+Like local tasks, external tasks can typecheck their parameters and support all
+of the retry, deadline and idempotency features tasks provide. When an external
+task is produced, the producing application's task router will be used to
+resolve which topic external task activations are sent to. The task router will
+receive an application prefixed namespace name eg. `launchpad:default`.
+
+External tasks have a few restrictions:
+
+1. They cannot be called synchronously. Eg. `external_task_func(org_id)` will
+   fail with an exception as external tasks do not have an implementation in the
+   producing application.
+2. The `name` assigned to the external task **must** be the same as the task
+   name registered in the application  that will execute the task.
+3. External tasks must be mocked within a testing context manager. Within
+   a testing context manager, tasks become synchronous, and raise exceptions.
+
+
 ## Testing Tasks
 
 Tasks can be tested with a few different approaches. The first is with the
