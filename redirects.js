@@ -1619,11 +1619,15 @@ const userDocsRedirects = [
   },
   {
     source: '/product/ai-in-sentry/seer/issue-fix/:path*',
-    destination: '/product/ai-in-sentry/seer/issue-autofix/:path*',
+    destination: '/product/ai-in-sentry/seer/autofix/:path*',
   },
   {
     source: '/product/ai-in-sentry/seer/root-cause-analysis/',
-    destination: '/product/ai-in-sentry/seer/issue-autofix/',
+    destination: '/product/ai-in-sentry/seer/autofix/',
+  },
+  {
+    source: '/product/ai-in-sentry/seer/issue-autofix/:path*',
+    destination: '/product/ai-in-sentry/seer/autofix/:path*',
   },
   {
     source: '/product/ai-in-sentry/ai-code-review/',

@@ -271,12 +271,12 @@ export async function Home() {
                 </a>
                 . Have Seer{' '}
                 <a
-                  href="/product/ai-in-sentry/seer/issue-autofix/"
+                  href="/product/ai-in-sentry/seer/autofix/"
                   className="text-[#8b5cf6] underline"
                 >
                   fix issues
                 </a>{' '}
-                by running automated root cause analysis to generate fixes, and{' '}
+                by running Autofix to generate fixes, and{' '}
                 <a
                   href="/product/ai-in-sentry/seer/code-review/"
                   className="text-[#8b5cf6] underline"
