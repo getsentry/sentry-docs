@@ -61,7 +61,8 @@ function resolveElement(child: any): ReactElement<CodeBlockProps> | null {
   }
   if (child._init && child._payload) {
     try {
-      return child._init(child._payload);
+      const resolved = child._init(child._payload);
+      return resolved?.props ? resolved : null;
     } catch {
       return null;
     }
