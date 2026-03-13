@@ -375,3 +375,86 @@ A list of React component names to exclude from component annotation.
 Configuration options for tree shaking. Refer to the [tree shaking documentation](/platforms/javascript/guides/nextjs/configuration/tree-shaking) for more details.
 
 </SdkOption>
+
+## Experimental Turbopack Options
+
+<Alert level="warning">
+  These options are experimental and require **Next.js 16+**. Their API may
+  change in future releases.
+</Alert>
+
+<SdkOption name="_experimental.turbopackReactComponentAnnotation.enabled" type="boolean" defaultValue="false">
+
+<AvailableSince version="10.43.0" />
+
+Enables React component name annotation for Turbopack builds. This is the Turbopack equivalent of [`webpack.reactComponentAnnotation`](#webpackreactcomponentannotationenabled).
+
+When enabled, React components are annotated with `data-sentry-component`, `data-sentry-element`, and `data-sentry-source-file` attributes at build time. These attributes allow Sentry to identify which components users interacted with in [Session Replay](/platforms/javascript/guides/nextjs/session-replay/) and [breadcrumbs](/platforms/javascript/guides/nextjs/enriching-events/breadcrumbs/).
+
+```javascript {filename:next.config.ts}
+import { withSentryConfig } from "@sentry/nextjs";
+
+export default withSentryConfig(nextConfig, {
+  _experimental: {
+    turbopackReactComponentAnnotation: {
+      enabled: true,
+    },
+  },
+});
+```
+
+</SdkOption>
+
+<SdkOption name="_experimental.turbopackReactComponentAnnotation.ignoredComponents" type="string[]">
+
+A list of React component names to exclude from annotation in Turbopack builds.
+
+```javascript {filename:next.config.ts}
+import { withSentryConfig } from "@sentry/nextjs";
+
+export default withSentryConfig(nextConfig, {
+  _experimental: {
+    turbopackReactComponentAnnotation: {
+      enabled: true,
+      ignoredComponents: ["SensitiveForm", "InternalDebugPanel"],
+    },
+  },
+});
+```
+
+</SdkOption>
+
+<SdkOption name="_experimental.turbopackApplicationKey" type="string">
+
+<AvailableSince version="10.41.0" />
+
+Application key used by [`thirdPartyErrorFilterIntegration`](/platforms/javascript/configuration/filtering/#using-thirdpartyerrorfilterintegration) to distinguish first-party code from third-party code in Turbopack builds. This is the Turbopack equivalent of setting `applicationKey` via the Sentry Webpack Plugin.
+
+When set, a Turbopack loader injects `_sentryModuleMetadata` into every first-party module, enabling the `thirdPartyErrorFilterIntegration` to filter errors from browser extensions, injected scripts, and third-party widgets.
+
+The value must match the `filterKeys` array in your `thirdPartyErrorFilterIntegration` configuration.
+
+```javascript {filename:next.config.ts}
+import { withSentryConfig } from "@sentry/nextjs";
+
+export default withSentryConfig(nextConfig, {
+  _experimental: {
+    turbopackApplicationKey: "my-nextjs-app",
+  },
+});
+```
+
+```javascript {filename:instrumentation-client.ts}
+import * as Sentry from "@sentry/nextjs";
+
+Sentry.init({
+  integrations: [
+    Sentry.thirdPartyErrorFilterIntegration({
+      filterKeys: ["my-nextjs-app"],
+      behaviour: "drop-error-if-exclusively-contains-third-party-frames",
+    }),
+  ],
+});
+```
+
+</SdkOption>
