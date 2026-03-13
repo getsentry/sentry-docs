@@ -1,7 +1,7 @@
 ---
 title: Application Not Responding (ANR)
 sidebar_order: 4
-description: Learn how to turn off or specify ANR.
+description: Learn how to turn off or configure ANR detection, profiling, and fingerprinting.
 og_image: /og-images/platforms-android-configuration-app-not-respond.png
 ---
 
@@ -104,6 +104,77 @@ SentryAndroid.init(context) { options ->
 ```
 
 ![ANR Thread Dump](./img/app-not-respond-thread-dump.png)
+
+## ANR Profiling (Experimental)
+
+<Alert>
+
+ANR Profiling is available starting in SDK version `8.35.0`. This feature is experimental and may change in future versions.
+
+</Alert>
+
+<Alert>
+
+ANR profiles are powered by the Profiling platform and require a plan with profiling enabled. See the [pricing page](https://sentry.io/pricing/) for more details.
+
+</Alert>
+
+The SDK can capture stack profiles for foreground ANRs of the main thread when an ANR is detected. A profile is a time-based view of your stack trace, showing which functions were executing and for how long. The captured profile is attached to the ANR event on the next app start, providing a flamegraph on the Sentry issue details page. This gives you deeper insight into what the main thread was doing at the time of the ANR.
+
+```mermaid
+flowchart LR
+    A[App start] --> B
+    B[Main thread<br>blocked > 1s] --> C[Collect and store ANR profile to disk]
+    E[Next app start] --> F[Read<br>ApplicationExitInfo] --> G[Match stored<br>ANR profile] --> H[Attach ANR profile<br>to ANR event]
+```
+
+To enable ANR profiling, set the `anrProfilingSampleRate` to a value between `0.0` and `1.0`. This controls the probability of collecting a profile for each detected foreground ANR:
+
+```xml {filename:AndroidManifest.xml}
+<application>
+    <meta-data android:name="io.sentry.anr.profiling.sample-rate" android:value="1.0" />
+</application>
+```
+
+```kotlin
+SentryAndroid.init(context) { options ->
+    options.anrProfilingSampleRate = 1.0
+}
+```
+
+```java
+SentryAndroid.init(context, options -> {
+    options.setAnrProfilingSampleRate(1.0);
+});
+```
+
+Once enabled, ANR events will include a profile section on the issue details page, showing a flamegraph of the main thread activity at the time of the ANR:
+
+![ANR Profile](./img/anr-profile.png)
+
+## ANR Fingerprinting
+
+The SDK assigns a static fingerprint to ANR events whose stack traces contain only system frames (for example, classes from `java.lang` or `android.os`). This groups noisy system-frame-only ANRs into a single issue, reducing noise in your issue stream. Foreground and background system-frame-only ANRs are grouped separately.
+
+ANR fingerprinting is enabled by default starting in SDK version `8.35.0`. To disable it:
+
+```xml {filename:AndroidManifest.xml}
+<application>
+    <meta-data android:name="io.sentry.anr.enable-fingerprinting" android:value="false" />
+</application>
+```
+
+```kotlin
+SentryAndroid.init(context) { options ->
+    options.isEnableAnrFingerprinting = false
+}
+```
+
+```java
+SentryAndroid.init(context, options -> {
+    options.setEnableAnrFingerprinting(false);
+});
+```
 
 ## ANR Root Cause Analysis
 

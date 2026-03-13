@@ -34,93 +34,63 @@ supported:
   - javascript.gatsby
 ---
 
-<PlatformSection notSupported={["javascript", "javascript.react", "javascript.angular", "javascript.vue", "javascript.svelte", "javascript.solid", "javascript.ember", "javascript.gatsby"]}>
-
-## Server-Side Usage
-
 <PlatformSection supported={["javascript.nextjs", "javascript.nuxt", "javascript.solidstart", "javascript.sveltekit", "javascript.react-router", "javascript.remix", "javascript.astro", "javascript.tanstackstart-react"]}>
+  <Alert level="warning">
+    For meta-framework applications running on both client and server, we recommend **setting up the integration manually** using the [`createLangChainCallbackHandler` wrapper](#manual-instrumentation) to ensure consistent instrumentation across all runtimes.
+  </Alert>
+</PlatformSection>
 
-<Alert>
+<PlatformSection supported={["javascript.node", "javascript.aws-lambda", "javascript.azure-functions", "javascript.connect", "javascript.express", "javascript.fastify", "javascript.gcp-functions", "javascript.hapi", "javascript.hono", "javascript.koa", "javascript.nestjs", "javascript.nextjs", "javascript.nuxt", "javascript.solidstart", "javascript.sveltekit", "javascript.react-router", "javascript.remix", "javascript.astro", "javascript.tanstackstart-react", "javascript.electron", "javascript.cordova", "javascript.capacitor", "javascript.deno", "javascript.wasm"]}>
 
-For meta-framework applications using all runtimes, you need to manually create a LangChain callback handler with `createLangChainCallbackHandler`. See instructions in the [Browser-Side Usage](#browser-side-usage) section.
+  ## Automatic Instrumentation
 
-</Alert>
+  _Import name: `Sentry.langChainIntegration`_
+
+  <PlatformSection notSupported={["javascript.node", "javascript.connect", "javascript.hapi", "javascript.koa"]}>
+    <Alert>
+      If you are using a different runtime (like Bun, Cloudflare Workers or a Browser) or experiencing missing spans, you need to use **[Manual Instrumentation](#manual-instrumentation)** to explicitly wrap your AI client instance instead.
+    </Alert>
+  </PlatformSection>
+
+  The `langChainIntegration` adds instrumentation for [`langchain`](https://www.npmjs.com/package/langchain) to capture spans by automatically wrapping LangChain operations and recording AI agent interactions with configurable input/output recording.
+
+  In Node.js runtimes, this integration is enabled by default and automatically captures spans for LangChain SDK calls (requires Sentry SDK version `10.28.0` or higher).
+
+  To customize what data is captured (such as inputs and outputs), see the [Options](#options) in the Configuration section.
 
 </PlatformSection>
 
-<PlatformSection notSupported={["javascript.nextjs", "javascript.nuxt", "javascript.solidstart", "javascript.sveltekit", "javascript.react-router", "javascript.remix", "javascript.astro", "javascript.tanstackstart-react"]}>
+<PlatformSection notSupported={["javascript.node", "javascript.connect", "javascript.hapi", "javascript.koa"]}>
 
-_Import name: `Sentry.langChainIntegration`_
+  ## Manual Instrumentation
 
-The `langChainIntegration` adds instrumentation for [`langchain`](https://www.npmjs.com/package/langchain) to capture spans by automatically wrapping LangChain operations and recording AI agent interactions with configurable input/output recording.
+  _Import name: `Sentry.createLangChainCallbackHandler`_
 
-<PlatformSection notSupported={["javascript.bun", "javascript.cloudflare"]}>
+  The `createLangChainCallbackHandler` helper adds instrumentation for [`langchain`](https://www.npmjs.com/package/langchain) to capture spans by creating a callback handler that wraps LangChain operations and records AI agent interactions with configurable input/output recording. You need to manually create and pass this callback handler to your LangChain operations.
 
-<Alert>
+  See example below:
 
-Enabled by default and automatically captures spans for LangChain SDK calls. Requires Sentry SDK version `10.28.0` or higher.
+  ```javascript
+  import { ChatAnthropic } from "@langchain/anthropic";
 
-</Alert>
+  // Create a LangChain callback handler
+  const callbackHandler = Sentry.createLangChainCallbackHandler({
+    recordInputs: true,
+    recordOutputs: true,
+  });
 
-</PlatformSection>
+  // Use with chat models
+  const model = new ChatAnthropic({
+    model: "claude-3-5-sonnet-20241022",
+    apiKey: "your-api-key", // Warning: API key will be exposed in browser!
+  });
 
-<PlatformSection supported={["javascript.bun", "javascript.cloudflare"]}>
+  await model.invoke("Tell me a joke", {
+    callbacks: [callbackHandler],
+  });
+  ```
 
-<Alert>
-
-Enabled by default and automatically captures spans for LangChain SDK calls. Requires Sentry SDK version `10.28.0` or higher.
-
-For other runtimes, like the Browser or Edge, the instrumentation needs to be manually enabled. See the [setup instructions below](#browser-side-usage).
-
-</Alert>
-
-</PlatformSection>
-
-To customize what data is captured (such as inputs and outputs), see the [Options](#options) in the Configuration section.
-
-</PlatformSection>
-
-</PlatformSection>
-
-<PlatformSection supported={["javascript", "javascript.react", "javascript.angular", "javascript.vue", "javascript.svelte", "javascript.solid", "javascript.ember", "javascript.gatsby", "javascript.nextjs", "javascript.nuxt", "javascript.solidstart", "javascript.sveltekit", "javascript.react-router", "javascript.remix", "javascript.astro", "javascript.tanstackstart-react", "javascript.electron", "javascript.cloudflare"]}>
-
-## Browser-Side Usage
-
-_Import name: `Sentry.createLangChainCallbackHandler`_
-
-<PlatformSection supported={["javascript.cloudflare"]}>
-
-<Alert>
-
-For Cloudflare Workers, manual instrumentation is required using `createLangChainCallbackHandler`.
-
-</Alert>
-
-</PlatformSection>
-
-The `createLangChainCallbackHandler` helper adds instrumentation for [`langchain`](https://www.npmjs.com/package/langchain) to capture spans by creating a callback handler that wraps LangChain operations and records AI agent interactions with configurable input/output recording. You need to manually create and pass this callback handler to your LangChain operations. See example below:
-
-```javascript
-import { ChatAnthropic } from "@langchain/anthropic";
-
-// Create a LangChain callback handler
-const callbackHandler = Sentry.createLangChainCallbackHandler({
-  recordInputs: true,
-  recordOutputs: true,
-});
-
-// Use with chat models
-const model = new ChatAnthropic({
-  model: "claude-3-5-sonnet-20241022",
-  apiKey: "your-api-key", // Warning: API key will be exposed in browser!
-});
-
-await model.invoke("Tell me a joke", {
-  callbacks: [callbackHandler],
-});
-```
-
-To customize what data is captured (such as inputs and outputs), see the [Options](#options) in the Configuration section.
+  To customize what data is captured (such as inputs and outputs), see the [Options](#options) in the Configuration section.
 
 </PlatformSection>
 
@@ -148,9 +118,9 @@ Defaults to `true` if `sendDefaultPii` is `true`.
 
 **Usage**
 
-<PlatformSection notSupported={["javascript", "javascript.react", "javascript.angular", "javascript.vue", "javascript.svelte", "javascript.solid", "javascript.ember", "javascript.gatsby"]}>
+<PlatformSection supported={["javascript.node", "javascript.aws-lambda", "javascript.azure-functions", "javascript.connect", "javascript.express", "javascript.fastify", "javascript.gcp-functions", "javascript.hapi", "javascript.hono", "javascript.koa", "javascript.nestjs", "javascript.nextjs", "javascript.nuxt", "javascript.solidstart", "javascript.sveltekit", "javascript.react-router", "javascript.remix", "javascript.astro", "javascript.tanstackstart-react", "javascript.electron", "javascript.cordova", "javascript.capacitor", "javascript.deno", "javascript.wasm"]}>
 
-Using the `langChainIntegration` integration:
+Using the `langChainIntegration` integration for **automatic instrumentation**:
 
 ```javascript
 Sentry.init({
@@ -167,9 +137,9 @@ Sentry.init({
 
 </PlatformSection>
 
-<PlatformSection supported={["javascript", "javascript.react", "javascript.angular", "javascript.vue", "javascript.svelte", "javascript.solid", "javascript.ember", "javascript.gatsby", "javascript.nextjs", "javascript.nuxt", "javascript.solidstart", "javascript.sveltekit", "javascript.react-router", "javascript.remix", "javascript.astro", "javascript.tanstackstart-react", "javascript.electron", "javascript.cloudflare"]}>
+<PlatformSection notSupported={["javascript.node", "javascript.connect", "javascript.hapi", "javascript.koa"]}>
 
-Using the `createLangChainCallbackHandler` helper:
+Using the `createLangChainCallbackHandler` wrapper for **manual instrumentation**:
 
 ```javascript
 const callbackHandler = Sentry.createLangChainCallbackHandler({
