@@ -107,42 +107,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 ## Expo Setup
 
-If you're using Expo, you can enable native initialization using the Expo plugin. First, create a `sentry.options.json` file in your project root (same location as your `app.json`) [as above](#configuration-file).
-
-Add the `useNativeInit` option to your Expo plugin configuration:
-
-```json {filename:app.json}
-{
-  "expo": {
-    "plugins": [
-      [
-        "@sentry/react-native/expo",
-        {
-          "useNativeInit": true
-        }
-      ]
-    ]
-  }
-}
-```
-
-If you need to use environment variables or dynamic configuration, you can use `app.config.js` with the `withSentry()` wrapper instead of the array form in `app.json`:
-
-```javascript {filename:app.config.js}
-import { withSentry } from "@sentry/react-native/expo";
-
-export default withSentry(config, {
-  useNativeInit: true,
-});
-```
-
-When `useNativeInit` is set to `true`, the Expo plugin automatically:
-- Adds `RNSentrySDK.init()` to your Android `MainApplication`
-- Adds `RNSentrySDK.start()` to your iOS `AppDelegate`
-
-### Setting the Environment
-
-You can set the `environment` for native initialization using the Expo plugin prop or the `SENTRY_ENVIRONMENT` environment variable. The plugin writes the value into `sentry.options.json` during `expo prebuild`.
+If you're using Expo, you can enable native initialization using the Expo plugin. Add the `useNativeInit` option and your SDK options to the plugin configuration:
 
 ```json {filename:app.json}
 {
@@ -152,7 +117,11 @@ You can set the `environment` for native initialization using the Expo plugin pr
         "@sentry/react-native/expo",
         {
           "useNativeInit": true,
-          "environment": "staging"
+          "options": {
+            "dsn": "https://key@example.io/value",
+            "environment": "production",
+            "tracesSampleRate": 1.0
+          }
         }
       ]
     ]
@@ -160,7 +129,32 @@ You can set the `environment` for native initialization using the Expo plugin pr
 }
 ```
 
-For per-environment builds with EAS Build, set `SENTRY_ENVIRONMENT` in your build profiles instead:
+The plugin generates a `sentry.options.json` file from the `options` property during `expo prebuild`. If a `sentry.options.json` file already exists in your project root, the plugin options are merged into it (plugin options take precedence).
+
+If you need to use environment variables or dynamic configuration, you can use `app.config.js` with the `withSentry()` wrapper instead of the array form in `app.json`:
+
+```javascript {filename:app.config.js}
+import { withSentry } from "@sentry/react-native/expo";
+
+export default withSentry(config, {
+  useNativeInit: true,
+  options: {
+    dsn: "https://key@example.io/value",
+    environment: "production",
+    tracesSampleRate: 1.0,
+  },
+});
+```
+
+When `useNativeInit` is set to `true`, the Expo plugin automatically:
+- Adds `RNSentrySDK.init()` to your Android `MainApplication`
+- Adds `RNSentrySDK.start()` to your iOS `AppDelegate`
+
+### Setting the Environment
+
+You can set the `environment` using the plugin `options` property as shown above, or using the `SENTRY_ENVIRONMENT` environment variable. The environment variable takes precedence over the plugin option.
+
+For per-environment builds with EAS Build, set `SENTRY_ENVIRONMENT` in your build profiles:
 
 ```json {filename:eas.json}
 {
@@ -174,5 +168,3 @@ For per-environment builds with EAS Build, set `SENTRY_ENVIRONMENT` in your buil
   }
 }
 ```
-
-The plugin prop takes precedence over the environment variable.
