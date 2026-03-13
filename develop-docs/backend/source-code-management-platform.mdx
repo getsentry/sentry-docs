@@ -1,0 +1,846 @@
+---
+title: Source Code Management Platform
+sidebar_order: 11
+---
+
+## Introduction
+
+The SCM (Source Code Management) platform is a vendor-agnostic abstraction layer for interacting with source code management providers such as GitHub, GitLab, and Bitbucket. It decouples Sentry's product features from provider-specific APIs by presenting a single, declarative interface for both reading and writing SCM resources and for reacting to SCM webhook events.
+
+### Goals
+
+1. **Provider independence.** Product code should never import a provider's client or parse a provider's response format directly. All interaction flows through a common type system so that adding a new provider does not require changes to callers.
+2. **Declarative usage.** Callers describe _what_ they want (e.g. "create a pull request") not _how_ to accomplish it. Initialization, authentication, rate limiting, and response mapping are handled internally.
+3. **Observability by default.** Every outbound action and every inbound webhook listener automatically records success/failure metrics, emits traces, and reports errors to Sentry. Callers do not need to instrument their own usage.
+4. **Safe concurrency.** Referrer-based rate limiting with allocation policies prevents any single caller from exhausting a provider's API budget. Shared and caller-specific quotas are enforced transparently.
+5. **Hybrid-cloud aware.** Inbound webhook events are routed to the correct silo (control or region) and executed asynchronously on the task queue. Listeners are logically isolated from one another; an unhandled exception in one listener does not affect others.
+
+### Features
+
+The platform exposes two subsystems:
+
+- **Actions** — outbound operations initiated by Sentry code. The `SourceCodeManager` class provides 70+ methods covering comments, reactions, pull requests, branches, git objects, reviews, and check runs.
+- **Event Stream** — inbound webhook processing. SCM providers push events which are deserialized into typed, provider-neutral dataclasses (`CheckRunEvent`, `CommentEvent`, `PullRequestEvent`) and dispatched to registered listener functions.
+
+### Current State
+
+- **GitHub** is the only fully implemented provider. GitLab and Bitbucket raise `SCMProviderNotSupported`.
+- Pagination metadata is partially wired; paginated responses return placeholder cursors.
+- Webhook parsing covers `check_run`, `issue_comment`, and `pull_request` event types. Additional types (`push`, `pull_request_review`, `installation`, etc.) are planned.
+
+## Architecture Overview
+
+### Module Layout
+
+```
+src/sentry/scm/
+├── actions.py              # SourceCodeManager — public entry point for outbound operations
+├── types.py                # All public types, TypedDicts, dataclasses, and the Provider protocol
+├── errors.py               # SCMError hierarchy
+├── stream.py               # Listener registration module (import listeners here)
+├── utils.py                # Rollout utilities
+└── private/                # Internal implementation details — do not import from outside scm/
+    ├── event_stream.py     # SourceCodeManagerEventStream singleton and listener registry
+    ├── helpers.py              # Initialization, rate limiting, provider resolution
+    ├── ipc.py              # Serialization, task dispatch, listener execution, metrics
+    ├── stream_producer.py      # Entry point for publishing inbound webhook events
+    ├── providers/
+    │   └── github.py       # GitHubProvider — implements the Provider protocol
+    └── webhooks/
+        └── github.py       # GitHub webhook payload parsing into SCM event types
+```
+
+### Public vs Private Boundary
+
+Everything under `private/` is an internal implementation detail. Code outside the `scm/` package should only import from the top-level modules:
+
+| Import from | For |
+|---|---|
+| `sentry.scm.actions` | `SourceCodeManager` |
+| `sentry.scm.types` | All type definitions, `Provider` protocol |
+| `sentry.scm.errors` | `SCMError` and subclasses |
+| `sentry.scm.stream` | `scm_event_stream` singleton, event types |
+| `sentry.scm.stream_producer` | `produce_event_to_scm_stream` |
+
+### Actions Subsystem (Outbound)
+
+The actions subsystem handles operations that Sentry initiates against an SCM provider's API.
+
+```
+Caller
+  │
+  ▼
+SourceCodeManager          actions.py — declarative interface, delegates to _exec()
+  │
+  ▼
+exec_provider_fn()         helpers.py — rate limit check, metrics, error wrapping
+  │
+  ▼
+Provider.method()          Provider protocol (types.py), implemented by GitHubProvider
+  │
+  ▼
+GitHubApiClient            sentry.integrations.github.client — actual HTTP calls
+```
+
+**Initialization flow.** A `SourceCodeManager` is created through one of two factory methods:
+
+- `make_from_repository_id(organization_id, repository_id)` — looks up the repository and integration from the database, validates the repository is active and belongs to the organization, then resolves the appropriate provider.
+- `make_from_integration(organization_id, repository, integration)` — accepts pre-fetched Django models, skipping the database lookup but still running validation.
+
+Both paths end with a `Provider` instance stored on the `SourceCodeManager`. Every subsequent method call passes through `_exec()` → `exec_provider_fn()` which checks the rate limit, invokes the provider, records metrics, and wraps unexpected exceptions in `SCMUnhandledException`.
+
+**Response shape.** Provider methods return `ActionResult[T]` or `PaginatedActionResult[T]`. These wrappers carry:
+
+- `data` — the typed result (e.g. `PullRequest`, `Comment`)
+- `type` — the `ProviderName` that produced the result
+- `raw` — the unprocessed provider response, available as an escape hatch
+- `meta` — response metadata (ETag, last-modified, pagination cursor)
+
+### Event Stream Subsystem (Inbound)
+
+The event stream subsystem processes webhook events sent by SCM providers.
+
+```
+SCM Provider Webhook
+  │
+  ▼
+produce_event_to_scm_stream()     stream_producer.py — entry point, rollout gate
+  │
+  ▼
+produce_to_listeners()            private/ipc.py — deserialize raw event, fan out
+  │
+  ├─► serialize + enqueue task for listener A
+  ├─► serialize + enqueue task for listener B
+  └─► serialize + enqueue task for listener C
+        │
+        ▼
+      run_webhook_handler_{silo}_task()    private/ipc.py — Celery task per silo
+        │
+        ▼
+      run_listener()              private/ipc.py — deserialize, execute, record metrics
+        │
+        ▼
+      Listener function           registered via @scm_event_stream.listen_for()
+```
+
+**Event lifecycle:**
+
+1. A webhook handler (outside the SCM module) validates the request and constructs a `SubscriptionEvent` — a provider-neutral envelope containing the raw JSON payload, a type hint, and Sentry metadata (integration ID, organization ID).
+2. `produce_event_to_scm_stream()` checks the rollout flag. If enabled, it calls `produce_to_listeners()`.
+3. `produce_to_listeners()` deserializes the raw event into a typed dataclass (`CheckRunEvent`, `CommentEvent`, or `PullRequestEvent`) using the provider-specific webhook parser (e.g. `private/webhooks/github.py`). Unsupported event types are silently dropped.
+4. The typed event is re-serialized to a compact msgspec format and a Celery task is enqueued for each registered listener, routed to the appropriate silo (control or region).
+5. The task deserializes the event and calls the listener function. Comprehensive metrics are recorded: success/failure counts, message size, queue time, task time, and end-to-end real time.
+
+**Listener isolation.** Each listener runs in its own task. An unhandled exception in one listener is captured and reported but does not prevent other listeners from executing.
+
+### Rate Limiting
+
+Rate limiting is checked in `exec_provider_fn()` before every outbound action. Two strategies are supported:
+
+- **Simple rate limiting** — a single counter per `(organization_id, referrer, provider)` tuple, backed by Redis via `sentry.ratelimits`.
+- **Allocation policy** — a budget split between named referrers and a shared pool. A referrer first checks its dedicated allocation; if exhausted, it falls back to the shared pool. For example, GitHub's default policy allocates `{"shared": 4500, "emerge": 500}`.
+
+When the limit is exceeded, `exec_provider_fn()` raises `SCMCodedError` with code `rate_limit_exceeded`.
+
+### Serialization
+
+The event stream uses two serialization formats for different purposes:
+
+- **`TypedDict`** — the public API surface. Callers construct and consume `SubscriptionEvent` dicts. This keeps the calling convention import-free and simple.
+- **`msgspec.Struct`** — the internal wire format. Events are serialized to and deserialized from JSON using msgspec for performance. The msgspec types mirror the TypedDict shapes and are not exposed outside `private/`.
+
+### Error Handling
+
+All errors inherit from `SCMError`:
+
+```
+SCMError (base — catch this in application code)
+├── SCMCodedError          — expected failures with an error code string
+├── SCMUnhandledException  — wraps unexpected exceptions from provider calls
+├── SCMProviderException   — provider returned an API error
+└── SCMProviderNotSupported — provider has no implementation
+```
+
+`exec_provider_fn()` re-raises any `SCMError` subclass directly and wraps all other exceptions in `SCMUnhandledException` so that callers only need to handle the `SCMError` family.
+
+### Metrics
+
+Both subsystems emit metrics under the `sentry.scm` namespace:
+
+| Metric | Source |
+|---|---|
+| `sentry.scm.actions.success` | Every successful outbound action (tagged by provider and referrer) |
+| `sentry.scm.actions.failed` | Unhandled exception during an outbound action |
+| `sentry.scm.produce_event_to_scm_stream.success` | Event successfully dispatched to listeners |
+| `sentry.scm.produce_event_to_scm_stream.failed` | Dispatch failure (tagged by reason) |
+| `sentry.scm.run_listener.success` | Listener executed successfully (tagged by listener name) |
+| `sentry.scm.run_listener.failed` | Listener failed (tagged by reason and listener name) |
+| `sentry.scm.run_listener.message.size` | Serialized event size in bytes |
+| `sentry.scm.run_listener.queue_time` | Time from webhook receipt to task start |
+| `sentry.scm.run_listener.task_time` | Time to execute the listener |
+| `sentry.scm.run_listener.real_time` | End-to-end time from webhook receipt to listener completion |
+
+## Core Concepts
+
+### `SourceCodeManager`
+
+`SourceCodeManager` (`actions.py`) is the single entry point for all outbound SCM operations. It is a thin orchestration layer — it does not contain business logic or know how to talk to any provider. Its responsibilities are:
+
+1. **Construction** — resolve a `Provider` from database-backed models via one of two factory class methods:
+   - `make_from_repository_id(organization_id, repository_id)` — accepts an integer primary key or a `(ProviderName, ExternalId)` tuple.
+   - `make_from_integration(organization_id, repository, integration)` — accepts pre-fetched Django model instances.
+2. **Delegation** — every action method (e.g. `create_pull_request`, `get_commit`) passes a lambda to `_exec()`, which calls `exec_provider_fn()`. The caller never interacts with the provider directly.
+3. **Error contract** — all methods raise `SCMError` subclasses. Callers should catch the base `SCMError` type.
+
+```python
+from sentry.scm.actions import SourceCodeManager
+from sentry.scm.errors import SCMError
+
+scm = SourceCodeManager.make_from_repository_id(org_id, repo_id, referrer="my-feature")
+try:
+    result = scm.create_pull_request(title="Fix bug", body="...", head="feature", base="main")
+    pr = result["data"]  # typed as PullRequest
+except SCMError:
+    ...
+```
+
+### `Provider` Protocol
+
+`Provider` (`types.py`) is a `typing.Protocol` that defines the contract every SCM backend must satisfy. It declares:
+
+- **Properties**: `organization_id: int`, `repository: Repository`
+- **Rate limiting**: `is_rate_limited(referrer) -> bool`
+- **50+ action methods** organized into three categories:
+  - **Single-resource reads** — `get_pull_request`, `get_commit`, `get_branch`, `get_file_content`, `get_tree`, `get_git_commit`, `get_pull_request_diff`, `get_check_run`
+  - **Paginated reads** — `get_issue_comments`, `get_pull_request_comments`, `get_commits`, `get_pull_request_files`, `get_pull_request_commits`, `get_pull_requests`, `get_issue_comment_reactions`, `get_pull_request_comment_reactions`, `get_issue_reactions`, `get_pull_request_reactions`, `compare_commits`
+  - **Mutations** — `create_*`, `update_*`, `delete_*`, `request_review`, `minimize_comment`, `resolve_review_thread`
+
+Providers translate these generic calls into provider-specific API requests and map the responses back to the common type system. The protocol is structural — implementations do not need to inherit from or register with anything; they only need to match the method signatures.
+
+### Type System
+
+All public types live in `types.py`. The module uses three typing constructs:
+
+**Type aliases** define domain vocabulary shared across the codebase:
+
+| Alias | Underlying type | Purpose |
+|---|---|---|
+| `ProviderName` | `Literal["bitbucket", "github", "github_enterprise", "gitlab"]` | Identifies the SCM backend |
+| `ResourceId` | `str` | Opaque provider-assigned identifier (string to support UUIDs) |
+| `ExternalId` | `str` | Provider's repository identifier |
+| `RepositoryId` | `int \| tuple[ProviderName, ExternalId]` | Look up a repo by DB id or by provider + external id |
+| `Referrer` | `str` | Identifies the calling feature for rate limiting and metrics |
+| `CommitSHA` | `str` | A full git commit hash |
+| `BranchName` | `str` | A git branch name |
+| `Reaction` | `Literal["+1", "-1", "laugh", ...]` | Normalized reaction set across providers |
+| `FileStatus` | `Literal["added", "removed", "modified", ...]` | Change type for a file in a commit or PR |
+| `BuildStatus` | `Literal["pending", "running", "completed"]` | CI build lifecycle stage |
+| `BuildConclusion` | `Literal["success", "failure", "cancelled", ...]` | Terminal outcome of a build |
+| `ReviewEvent` | `Literal["approve", "change_request", "comment"]` | Review action type |
+| `HybridCloudSilo` | `Literal["control", "region"]` | Target silo for webhook task dispatch |
+| `EventTypeHint` | `Literal["check_run", "comment", "pull_request"]` | Discriminator for event deserialization |
+
+**TypedDicts** represent domain objects returned by provider methods:
+
+- Resource types: `PullRequest`, `Comment`, `Commit`, `CheckRun`, `Review`, `ReviewComment`, `GitRef`, `GitTree`, `GitBlob`, `FileContent`, `GitCommitObject`, `CommitComparison`, etc.
+- Result wrappers: `ActionResult[T]`, `PaginatedActionResult[T]`
+- Transport: `PaginationParams`, `RequestOptions`, `ResponseMeta`, `PaginatedResponseMeta`
+- Events: `SubscriptionEvent`, `SubscriptionEventSentryMeta`, `CheckRunEventData`, `CommentEventData`, `PullRequestEventData`
+
+**Frozen dataclasses** represent parsed webhook events:
+
+- `CheckRunEvent` — a CI check run was created, completed, or re-requested
+- `CommentEvent` — a comment was created, edited, or deleted on an issue or pull request
+- `PullRequestEvent` — a pull request was opened, closed, edited, etc.
+
+Each event carries an `action` discriminator, a typed data payload, and the original `SubscriptionEvent` for access to raw bytes and Sentry metadata.
+
+### Error Hierarchy
+
+All exceptions inherit from `SCMError`. Application code should catch `SCMError` as the base type.
+
+| Exception | When raised | Key attributes |
+|---|---|---|
+| `SCMCodedError` | Expected, recoverable failures (repository not found, rate limit exceeded, etc.) | `code: ErrorCode`, `message: str` |
+| `SCMUnhandledException` | Unexpected exception during a provider call, wrapped automatically by `exec_provider_fn()` | Chained via `raise ... from e` |
+| `SCMProviderException` | The provider's API returned an error (e.g. HTTP 404, 422, 500) | Raised by the `@catch_provider_exception` decorator in `GitHubProvider` |
+| `SCMProviderNotSupported` | Caller requested a provider that has no implementation | — |
+
+**Error codes** defined in `errors.py`:
+
+| Code | Meaning |
+|---|---|
+| `repository_not_found` | No repository matched the given ID or (provider, external_id) pair |
+| `repository_inactive` | The repository exists but has been deactivated |
+| `repository_organization_mismatch` | The repository belongs to a different organization |
+| `rate_limit_exceeded` | The referrer's or shared rate limit quota is exhausted |
+| `unsupported_integration` | The integration's provider type is not implemented |
+
+### `SubscriptionEvent`
+
+`SubscriptionEvent` (`types.py`) is the provider-neutral envelope for inbound webhook payloads. It is a `TypedDict` so that callers can construct it without importing anything from the SCM package.
+
+Key fields:
+
+- `type: ProviderName` — which provider sent the event
+- `event_type_hint: str | None` — optional header-derived hint (e.g. GitHub's `X-GitHub-Event`) used to skip deserialization of unwanted event types
+- `event: str` — the raw JSON payload as a string
+- `received_at: int` — UTC timestamp in seconds, used to compute queue latency metrics
+- `extra: dict` — provider-specific request headers and environment metadata
+- `sentry_meta: list[SubscriptionEventSentryMeta] | None` — pre-resolved Sentry identifiers (integration ID, organization ID) when available
+
+### `SourceCodeManagerEventStream`
+
+The event stream singleton (`private/event_stream.py`, re-exported from `stream.py`) manages listener registration. It maintains three dictionaries — one per event type — keyed by the listener function's `__name__`.
+
+Registration uses the `listen_for` decorator:
+
+```python
+from sentry.scm.stream import scm_event_stream
+from sentry.scm.types import PullRequestEvent
+
+@scm_event_stream.listen_for(event_type="pull_request")
+def handle_pr(event: PullRequestEvent) -> None:
+    ...
+```
+
+Listeners **must** be imported in `stream.py` to be registered at module load time. The decorator is overloaded per event type so that type checkers enforce the correct callback signature.
+
+### Referrer
+
+A `Referrer` is a plain string that identifies the calling feature (e.g. `"emerge"`, `"autofix"`, `"shared"`). It serves two purposes:
+
+1. **Rate limiting** — each referrer can have a dedicated quota allocation. When exhausted, the referrer falls back to the shared pool.
+2. **Metrics** — action success metrics are tagged by referrer, making it possible to attribute API budget consumption to specific features.
+
+The default referrer is `"shared"`. Pass a custom referrer when constructing a `SourceCodeManager` to isolate your feature's budget and telemetry.
+
+## Actions
+
+All outbound operations are accessed through `SourceCodeManager` methods. Every method follows the same pattern: it delegates to the underlying `Provider` via `_exec()`, which handles rate limiting, metrics, and error wrapping before the call reaches the provider. Methods that return data wrap it in `ActionResult[T]` (single resource) or `PaginatedActionResult[T]` (list). Mutations that have no meaningful return value return `None`.
+
+Read methods accept an optional `RequestOptions` parameter for ETag / If-Modified-Since caching. List methods accept an optional `PaginationParams` for cursor-based pagination.
+
+### Comments
+
+CRUD operations on issue and pull request comments. Comments are a plain `Comment` TypedDict containing an `id`, `body`, and `author`.
+
+- **Issue comments** — `get_issue_comments`, `create_issue_comment`, `delete_issue_comment`
+- **Pull request comments** — `get_pull_request_comments`, `create_pull_request_comment`, `delete_pull_request_comment`
+- **Minimize** — `minimize_comment` collapses a comment (GitHub GraphQL). Accepts a node ID and a reason string.
+
+### Reactions
+
+CRUD operations on reactions attached to issues, pull requests, or their comments. Reactions use the normalized `Reaction` literal type (`"+1"`, `"-1"`, `"laugh"`, `"confused"`, `"heart"`, `"hooray"`, `"rocket"`, `"eyes"`). Each provider maps these to its native representation.
+
+- **Issue comment reactions** — `get_issue_comment_reactions`, `create_issue_comment_reaction`, `delete_issue_comment_reaction`
+- **Pull request comment reactions** — `get_pull_request_comment_reactions`, `create_pull_request_comment_reaction`, `delete_pull_request_comment_reaction`
+- **Issue reactions** — `get_issue_reactions`, `create_issue_reaction`, `delete_issue_reaction`
+- **Pull request reactions** — `get_pull_request_reactions`, `create_pull_request_reaction`, `delete_pull_request_reaction`
+
+### Pull Requests
+
+Operations for managing pull requests and inspecting their contents.
+
+- **Read** — `get_pull_request` (single), `get_pull_requests` (list, filterable by `state` and `head` branch)
+- **Write** — `create_pull_request` (supports `draft`), `update_pull_request` (title, body, state)
+- **Contents** — `get_pull_request_files`, `get_pull_request_commits`, `get_pull_request_diff` (raw diff text)
+- **Reviewers** — `request_review` assigns reviewers to a pull request
+
+### Branches
+
+Operations on git branch references. Branches are represented as `GitRef` (a ref name + SHA pair).
+
+- `get_branch` — resolve a branch name to its current SHA
+- `create_branch` — create a new branch pointing at a given SHA
+- `update_branch` — move a branch pointer to a new SHA (supports `force`)
+
+### Git Objects
+
+Low-level operations on git's object model. These are the building blocks for programmatic commits — create blobs, assemble them into a tree, and create a commit pointing at that tree.
+
+- **Blobs** — `create_git_blob` creates a blob from content + encoding
+- **Trees** — `get_tree` reads a tree (optionally recursive), `create_git_tree` builds a new tree from `InputTreeEntry` items (set `sha` to `None` to delete an entry)
+- **Commits** — `get_git_commit` reads a commit object, `create_git_commit` creates a new commit from a message, tree SHA, and parent SHAs
+- **File content** — `get_file_content` retrieves a file at a given ref (base64-encoded)
+- **Commit history** — `get_commit` (single with files), `get_commits` (list, filterable by SHA and path), `compare_commits` (ahead/behind counts and commit list between two SHAs)
+
+### Reviews
+
+Operations for pull request code review. Review comments are anchored to specific locations in a diff.
+
+- **Inline comments** — four granularity levels:
+  - `create_review_comment_file` — file-level comment
+  - `create_review_comment_line` — single line
+  - `create_review_comment_multiline` — line range (start_line/end_line with sides)
+  - `create_review_comment_reply` — reply to an existing review comment
+- **Batch review** — `create_review` submits multiple `ReviewCommentInput` items as a single review with an event type (`approve`, `change_request`, or `comment`)
+- **Thread resolution** — `resolve_review_thread` marks a review thread as resolved (GitHub GraphQL)
+
+### Check Runs
+
+Operations for CI/CD status reporting. Check runs have a lifecycle: `pending` → `running` → `completed`, with a `BuildConclusion` set on completion.
+
+- `create_check_run` — create a check run on a commit (name, head SHA, optional status/conclusion/output)
+- `get_check_run` — read a check run by ID
+- `update_check_run` — update status, conclusion, or output annotation
+
+## Event Stream
+
+The event stream processes inbound webhooks from SCM providers and dispatches them as typed, provider-neutral events to registered listener functions. Listeners run asynchronously on Celery (taskbroker), are isolated from one another, and are automatically instrumented with metrics and Sentry tracing.
+
+### Event Types
+
+Three event types are currently supported. Each is a frozen dataclass with an `action` discriminator, a typed data payload, and the original `SubscriptionEvent` for access to raw bytes and Sentry metadata.
+
+**`CheckRunEvent`** — a CI check run changed state.
+
+- `action: CheckRunAction` — `"completed"`, `"created"`, `"requested_action"`, `"rerequested"`
+- `check_run: CheckRunEventData` — `external_id`, `html_url`
+
+**`CommentEvent`** — a comment was created, edited, or deleted.
+
+- `action: CommentAction` — `"created"`, `"deleted"`, `"edited"`, `"pinned"`, `"unpinned"`
+- `comment_type: CommentType` — `"issue"` or `"pull_request"`
+- `comment: CommentEventData` — `id`, `body`, `author`
+
+**`PullRequestEvent`** — a pull request was acted upon.
+
+- `action: PullRequestAction` — `"opened"`, `"closed"`, `"edited"`, `"reopened"`, `"ready_for_review"`, `"assigned"`, `"labeled"`, `"review_requested"`, `"review_request_removed"`
+- `pull_request: PullRequestEventData` — `id`, `title`, `description`, `head`, `base`, `is_private_repo`, `author`
+
+All three carry a `subscription_event: SubscriptionEvent` field. This gives listeners access to the raw JSON payload (`subscription_event["event"]`), the provider type, the receive timestamp, and any pre-resolved Sentry metadata (integration ID, organization ID). Use this as an escape hatch when the parsed fields do not cover your use case — and file a request with the SCM team to extend the typed payload.
+
+### Registering a Listener
+
+Listeners are registered with the `scm_event_stream` singleton using the `listen_for` decorator. The decorator is overloaded per event type so that type checkers enforce the correct callback signature.
+
+```python
+# src/sentry/my_feature/listeners.py
+
+from sentry.scm.stream import scm_event_stream
+from sentry.scm.types import PullRequestEvent
+
+@scm_event_stream.listen_for(event_type="pull_request")
+def on_pull_request_opened(event: PullRequestEvent) -> None:
+    if event.action != "opened":
+        return
+    # handle opened PR
+```
+
+After writing your listener, **you must import it in `src/sentry/scm/stream.py`** so that it is registered at module load time:
+
+```python
+# src/sentry/scm/stream.py
+
+from sentry.my_feature.listeners import on_pull_request_opened
+```
+
+Listener function names must be globally unique across all registered listeners of the same event type — the name is used as the dictionary key in the registry and as the metric tag.
+
+### Execution Model
+
+1. **Fan-out.** When `produce_to_listeners()` processes an event, it enqueues one Celery task per registered listener. Listeners do not share a task — each runs independently.
+2. **Silo routing.** The caller of `produce_event_to_scm_stream()` specifies a `HybridCloudSilo` (`"control"` or `"region"`). The task is dispatched to the matching silo's task queue (`run_webhook_handler_control_task` or `run_webhook_handler_region_task`).
+3. **Isolation.** An unhandled exception in one listener is caught, recorded as a `sentry.scm.run_listener.failed` metric (tagged `reason="internal"`), and reported to Sentry. Other listeners for the same event are unaffected.
+4. **Serialization.** Events are serialized to JSON using msgspec structs for transport between the producer and the task. This is an internal detail — listeners receive fully deserialized dataclass instances.
+
+### Rollout Gating
+
+Event dispatch is gated by the `sentry.scm.stream.rollout` option. `produce_event_to_scm_stream()` calls `check_rollout_option()` which reads the option value (a float between 0 and 1) and compares it against a random cohort. When the option is 0 or absent, no events are dispatched. Set it to 1.0 for full rollout.
+
+### Webhook Parsing
+
+Raw webhook payloads are parsed by provider-specific modules under `private/webhooks/`. The parser's job is to transform the provider's native JSON into the common event dataclasses.
+
+For GitHub (`private/webhooks/github.py`), the `event_type_hint` (from the `X-GitHub-Event` header) determines which parser runs:
+
+| `event_type_hint` | Parser | Result |
+|---|---|---|
+| `"check_run"` | `deserialize_github_check_run_event` | `CheckRunEvent` |
+| `"issue_comment"` | `deserialize_github_comment_event` | `CommentEvent` |
+| `"pull_request"` | `deserialize_github_pull_request_event` | `PullRequestEvent` |
+
+Unrecognized event types return `None` and are silently dropped — they are not errors. The following GitHub event types are received by Sentry but not yet parsed by the SCM platform: `installation`, `installation_repositories`, `issues`, `pull_request_review`, `pull_request_review_comment`, `push`.
+
+GitHub Enterprise webhooks use the same parser as GitHub.
+
+### Metrics and Observability
+
+The event stream emits detailed metrics at every stage:
+
+**Producer** (`produce_event_to_scm_stream`):
+- `sentry.scm.produce_event_to_scm_stream.success` — event dispatched
+- `sentry.scm.produce_event_to_scm_stream.failed` — dispatch failed, tagged by `reason` (`"not-supported"` or `"processing"`)
+
+**Listener** (`run_listener`):
+- `sentry.scm.run_listener.success` — listener completed, tagged by `fn` (listener name)
+- `sentry.scm.run_listener.failed` — listener failed, tagged by `fn` and `reason` (`"parse"`, `"not-found"`, `"internal"`)
+- `sentry.scm.run_listener.message.size` — serialized event size in bytes, tagged by `provider` and `event_type_hint`
+- `sentry.scm.run_listener.queue_time` — seconds from `received_at` to task start
+- `sentry.scm.run_listener.task_time` — seconds to execute the listener function
+- `sentry.scm.run_listener.real_time` — end-to-end seconds from `received_at` to listener completion
+
+Failed listeners are reported to Sentry via `sentry_sdk.capture_exception()`. Every listener task runs as an `instrumented_task`, so it automatically has a trace waterfall in Sentry's performance product.
+
+## Error Handling
+
+The SCM platform is designed to throw exceptions. Callers are expected to catch them. The exception hierarchy is intentionally small — application code should catch the base `SCMError` type and handle specific subtypes only when it needs to take targeted recovery action.
+
+### Exception Hierarchy
+
+```
+SCMError
+├── SCMCodedError
+├── SCMUnhandledException
+├── SCMProviderException
+└── SCMProviderNotSupported
+```
+
+**`SCMError`** — the base class. Catch this to handle all SCM failures uniformly.
+
+**`SCMCodedError`** — an expected, categorized failure. Carries a `code: ErrorCode` string and a human-readable `message`. Raised during initialization (repository not found, inactive, wrong org) and during execution (rate limit exceeded, unsupported integration).
+
+**`SCMUnhandledException`** — wraps an unexpected exception that occurred inside a provider call. Chained via `raise SCMUnhandledException from e` so the original traceback is preserved. This is raised by `exec_provider_fn()` when the provider raises something that is not already an `SCMError`.
+
+**`SCMProviderException`** — the provider's HTTP API returned an error (4xx, 5xx). In the GitHub provider, the `@catch_provider_exception` decorator catches `ApiError` from the integration client and re-raises it as `SCMProviderException`. This keeps the integration client's exception types from leaking into callers.
+
+**`SCMProviderNotSupported`** — the requested provider (e.g. GitLab, Bitbucket) has no implementation. Raised by `map_integration_to_provider()` and `deserialize_raw_event()`.
+
+### Error Codes
+
+`SCMCodedError` uses a closed set of error codes defined in `errors.py`:
+
+| Code | Raised by | Meaning |
+|---|---|---|
+| `repository_not_found` | `initialize_provider()` | No repository matched the given ID |
+| `repository_inactive` | `initialize_provider()` | The repository exists but is deactivated |
+| `repository_organization_mismatch` | `initialize_provider()` | The repository belongs to a different organization |
+| `rate_limit_exceeded` | `exec_provider_fn()` | The referrer's and shared rate limit quotas are both exhausted |
+| `unsupported_integration` | `map_integration_to_provider()` | The integration's provider type has no implementation |
+
+### Where Exceptions Are Raised
+
+Exceptions originate at three layers:
+
+1. **Initialization** (`helpers.py: initialize_provider`) — validates the repository exists, is active, and belongs to the correct organization. Raises `SCMCodedError` on failure. This runs during `SourceCodeManager.make_from_repository_id()` and `make_from_integration()`.
+
+2. **Execution** (`helpers.py: exec_provider_fn`) — checks the rate limit before every call. If the limit is exceeded, raises `SCMCodedError` with `rate_limit_exceeded`. After invoking the provider, any `SCMError` subclass is re-raised as-is. Any other exception is wrapped in `SCMUnhandledException`.
+
+3. **Provider** (`private/providers/github.py`) — each method is decorated with `@catch_provider_exception`, which catches `ApiError` and converts it to `SCMProviderException`. This is the only layer that interacts with HTTP.
+
+### Caller Pattern
+
+```python
+from sentry.scm.actions import SourceCodeManager
+from sentry.scm.errors import SCMCodedError, SCMError, SCMProviderException
+
+try:
+    scm = SourceCodeManager.make_from_repository_id(org_id, repo_id, referrer="my-feature")
+    result = scm.get_pull_request(pr_id)
+except SCMCodedError as e:
+    if e.code == "rate_limit_exceeded":
+        # back off and retry
+        ...
+    elif e.code == "repository_not_found":
+        # surface a user-facing message
+        ...
+except SCMProviderException:
+    # the provider API returned an error (e.g. 404, 500)
+    ...
+except SCMError:
+    # catch-all for any other SCM failure
+    ...
+```
+
+### Event Stream Errors
+
+Errors in the event stream are handled differently from action errors. Listeners run in Celery tasks and are not expected to propagate exceptions to a caller:
+
+- **Parse failures** — if msgspec cannot deserialize the event payload, the error is reported to Sentry and the `sentry.scm.run_listener.failed` metric is emitted with `reason="parse"`. The listener is not invoked.
+- **Missing listener** — if the listener name is not found in the registry (e.g. it was removed but a task was already enqueued), the failure is recorded with `reason="not-found"` and no exception is raised.
+- **Listener exception** — unhandled exceptions within a listener are recorded with `reason="internal"` and re-raised so that the task's instrumentation captures the full traceback. Other listeners for the same event are unaffected.
+- **Unsupported provider** — if the event's `type` field names a provider with no webhook parser, `SCMProviderNotSupported` is caught by `produce_event_to_scm_stream()` and recorded as a failed dispatch with `reason="not-supported"`.
+
+## Rate Limiting
+
+Rate limiting prevents any single feature — or all features combined — from exhausting an SCM provider's API budget for a given organization. It is enforced transparently: callers do not need to check limits themselves.
+
+### How It Works
+
+Every call to `SourceCodeManager` passes through `exec_provider_fn()` in `helpers.py`. Before invoking the provider, `exec_provider_fn()` calls `provider.is_rate_limited(referrer)`. If the check returns `True`, execution stops immediately with `SCMCodedError(code="rate_limit_exceeded")`. The provider's API is never contacted.
+
+The underlying check is backed by Redis via `sentry.ratelimits.backend.is_limited()`. Each call increments a counter keyed by `scm_platform.{organization_id}.{referrer}.{provider}` with a sliding window. When the counter exceeds the configured limit within the window, the key is considered rate-limited.
+
+### Allocation Policy
+
+The GitHub provider uses an allocation policy to split its budget between named referrers and a shared pool. The policy is defined in `private/providers/github.py`:
+
+```python
+REFERRER_ALLOCATION: dict[Referrer, int] = {"shared": 4500, "emerge": 500}
+```
+
+The window is 3600 seconds (1 hour), matching GitHub's own rate limit reset cadence.
+
+The lookup logic in `is_rate_limited_with_allocation_policy()` works as follows:
+
+1. If the referrer is not `"shared"` and has a dedicated allocation in the policy, check the referrer-specific counter first. If quota remains, the request is **allowed** — the shared pool is not touched.
+2. If the referrer-specific allocation is exhausted (or the referrer has no dedicated allocation), fall back to the shared pool counter.
+3. If the shared pool is also exhausted, the request is **denied**.
+
+This means a referrer with a dedicated allocation gets two chances: its own budget first, then the shared pool. The `"shared"` referrer only checks the shared pool.
+
+### Redis Key Format
+
+```
+scm_platform.{organization_id}.{referrer}.{provider}
+```
+
+Examples:
+- `scm_platform.42.shared.github` — shared pool for org 42 on GitHub
+- `scm_platform.42.emerge.github` — the `emerge` referrer's dedicated allocation for org 42
+
+### Adding a New Referrer Allocation
+
+To reserve quota for a new feature:
+
+1. Add an entry to the `REFERRER_ALLOCATION` dict in `private/providers/github.py`. The value is the maximum number of requests allowed within the window.
+2. Reduce the `"shared"` value by the same amount to keep the total budget constant.
+3. Pass your referrer name when constructing the `SourceCodeManager`:
+
+```python
+scm = SourceCodeManager.make_from_repository_id(org_id, repo_id, referrer="my-feature")
+```
+
+If you do not add a dedicated allocation, your referrer will draw exclusively from the shared pool — which is the correct default for most callers.
+
+### Behavior on Limit Exceeded
+
+When the rate limit is exceeded:
+
+- `exec_provider_fn()` raises `SCMCodedError` with `code="rate_limit_exceeded"` **before** the provider is called. No HTTP request is made.
+- The exception includes the provider and referrer as positional args for debugging.
+- No success or failure metric is emitted for the action itself — the call never reaches the provider layer.
+
+## Current Limitations and Future Work
+
+### Provider Coverage
+
+Only **GitHub** (and GitHub Enterprise, which shares the same implementation) is supported. Calling any action or parsing any webhook for **GitLab** or **Bitbucket** raises `SCMProviderNotSupported`. Adding these providers is the largest area of planned work.
+
+### Pagination
+
+The types for pagination are fully defined (`PaginationParams`, `PaginatedResponseMeta`, `next_cursor`), but the GitHub provider does not yet extract pagination metadata from API responses. All paginated methods return a placeholder `_DEFAULT_PAGINATED_META` with `next_cursor=None`, meaning callers currently receive only the first page. The `PaginationParams` argument is accepted but not forwarded to the underlying client.
+
+### Webhook Event Types
+
+The GitHub webhook parser handles three event types:
+
+- `check_run`
+- `issue_comment`
+- `pull_request`
+
+Six additional event types are received by Sentry but silently dropped by the SCM platform:
+
+- `installation`
+- `installation_repositories`
+- `issues`
+- `pull_request_review`
+- `pull_request_review_comment`
+- `push`
+
+Parsers for these types need to be added to `private/webhooks/github.py` and corresponding event dataclasses need to be added to `types.py`.
+
+### Dynamic Rate Limits
+
+Rate limit budgets are currently static (`REFERRER_ALLOCATION` is a hardcoded dict). GitHub's actual rate limits vary per organization — some orgs have higher limits based on their GitHub plan. The shared pool size should be dynamically configured per organization rather than fixed at 4500. Dedicated referrer allocations can remain static.
+
+### Request Options and Caching
+
+`RequestOptions` (ETag / If-Modified-Since headers) are accepted as parameters on read methods, but the GitHub provider does not currently pass them through to the integration client. Responses do not populate `ResponseMeta` with ETag or Last-Modified values. Wiring this through would reduce redundant API calls for polling use cases.
+
+### Default Listeners
+
+`stream.py` registers three no-op default listeners (`listen_for_check_run`, `listen_for_comment`, `listen_for_pull_request`) that exist for production testing and are intended to be removed.
+
+### RPC Client and Endpoints
+
+The `client/` and `endpoints/` directories previously contained an RPC client and endpoint for cross-silo SCM access. The source files have been removed (only compiled bytecode remains). Whether this functionality will be restored or replaced by a different mechanism is undetermined.
+
+## Adding a New Provider
+
+A new provider requires changes across four files plus a new implementation module. Use the GitHub provider (`private/providers/github.py`) as the reference implementation.
+
+### 1. Implement the `Provider` protocol
+
+Create a new file under `private/providers/` (e.g. `private/providers/gitlab.py`). The class must satisfy the `Provider` protocol defined in `types.py`:
+
+```python
+class GitLabProvider:
+    def __init__(self, client: GitLabApiClient, organization_id: int, repository: Repository) -> None:
+        self.client = client
+        self.repository = repository
+        self.organization_id = organization_id
+
+    def is_rate_limited(self, referrer: Referrer) -> bool:
+        from sentry.scm.helpers import is_rate_limited_with_allocation_policy
+        return is_rate_limited_with_allocation_policy(
+            self.organization_id, referrer, provider="gitlab", window=3600,
+            allocation_policy=REFERRER_ALLOCATION,
+        )
+
+    def get_pull_request(self, pull_request_id: str, ...) -> ActionResult[PullRequest]:
+        raw = self.client.get_merge_request(...)
+        return map_action(raw, map_merge_request_to_pull_request)
+
+    # ... all other Provider methods
+```
+
+Key requirements:
+
+- **Every method on the `Provider` protocol must be implemented.** The protocol is structural — your class does not inherit from anything, but it must match every method signature.
+- **Decorate mutation and read methods** with an error-catching decorator that converts the integration client's exceptions to `SCMProviderException`, mirroring `@catch_provider_exception` in the GitHub provider.
+- **Write mapping functions** that convert the provider's raw API responses into the common SCM types (`PullRequest`, `Comment`, `Commit`, etc.). Use `map_action()` as a helper to wrap results in `ActionResult`.
+- **Define a `REFERRER_ALLOCATION` dict** and a rate limit window appropriate for the provider's API budget.
+
+### 2. Register the provider in `helpers.py`
+
+Add a branch to `map_integration_to_provider()`:
+
+```python
+def map_integration_to_provider(organization_id, integration, repository) -> Provider:
+    client = get_installation(integration, organization_id).get_client()
+
+    if integration.provider == "github":
+        return GitHubProvider(client, repository)
+    elif integration.provider == "gitlab":
+        return GitLabProvider(client, repository)
+    else:
+        raise SCMCodedError(integration.provider, code="unsupported_integration")
+```
+
+### 3. Add a webhook parser
+
+Create a new file under `private/webhooks/` (e.g. `private/webhooks/gitlab.py`). The parser must expose a function with the signature:
+
+```python
+def deserialize_gitlab_event(event: SubscriptionEvent) -> EventType | None:
+```
+
+This function receives the raw `SubscriptionEvent`, inspects the `event_type_hint` and `event` body, and returns the appropriate dataclass (`CheckRunEvent`, `CommentEvent`, `PullRequestEvent`) or `None` for unsupported event types. Use msgspec structs for fast deserialization of the provider's JSON format.
+
+### 4. Register the webhook parser in `private/ipc.py`
+
+Add a branch to `deserialize_raw_event()`:
+
+```python
+def deserialize_raw_event(event: SubscriptionEvent) -> EventType | None:
+    if event["type"] == "github":
+        return deserialize_github_event(event)
+    elif event["type"] == "gitlab":
+        return deserialize_gitlab_event(event)
+    ...
+```
+
+### 5. Update the `ProviderName` type
+
+If the provider name is not already in the `ProviderName` literal (it likely is — `"bitbucket"`, `"github"`, `"github_enterprise"`, `"gitlab"` are all defined), add it in `types.py`.
+
+## Adding a New Action
+
+A new action requires changes across three layers: the protocol, the provider, and the `SourceCodeManager`. If the action returns a new domain object, add it to `types.py` first.
+
+### 1. Define any new types in `types.py`
+
+If the action introduces a new domain object, add a `TypedDict` for it:
+
+```python
+class Label(TypedDict):
+    id: ResourceId
+    name: str
+    color: str
+```
+
+If the action uses new enum-like values, add a type alias:
+
+```python
+type LabelColor = Literal["red", "green", "blue", ...]
+```
+
+### 2. Add the method to the `Provider` protocol
+
+Add the method signature to the `Provider` protocol in `types.py`. Follow the existing conventions:
+
+- Single-resource reads return `ActionResult[T]` and accept `request_options: RequestOptions | None = None`.
+- List endpoints return `PaginatedActionResult[T]` and accept `pagination: PaginationParams | None = None` plus `request_options`.
+- Mutations that create or update return `ActionResult[T]`.
+- Mutations with no meaningful return value return `None`.
+
+```python
+class Provider(Protocol):
+    ...
+    # -- Place in the appropriate section (reads, lists, mutations) --
+
+    def get_labels(
+        self,
+        issue_id: str,
+        pagination: PaginationParams | None = None,
+        request_options: RequestOptions | None = None,
+    ) -> PaginatedActionResult[Label]: ...
+
+    def create_label(self, name: str, color: str) -> ActionResult[Label]: ...
+```
+
+### 3. Implement in each provider
+
+Add the method to every provider implementation. For the GitHub provider in `private/providers/github.py`:
+
+```python
+@catch_provider_exception
+def get_labels(self, issue_id, pagination=None, request_options=None):
+    raw = self.client.get_labels(self.repository["name"], issue_id)
+    return PaginatedActionResult(
+        data=[map_label(l) for l in raw],
+        type="github",
+        raw=raw,
+        meta=_DEFAULT_PAGINATED_META,
+    )
+
+@catch_provider_exception
+def create_label(self, name, color):
+    raw = self.client.create_label(self.repository["name"], {"name": name, "color": color})
+    return map_action(raw, map_label)
+```
+
+Write a mapping function to convert the provider's raw response to the common type:
+
+```python
+def map_label(raw: dict[str, Any]) -> Label:
+    return Label(id=str(raw["id"]), name=raw["name"], color=raw["color"])
+```
+
+### 4. Expose on `SourceCodeManager`
+
+Add the public method to `SourceCodeManager` in `actions.py`. The method delegates to `_exec()`:
+
+```python
+def get_labels(
+    self,
+    issue_id: str,
+    pagination: PaginationParams | None = None,
+    request_options: RequestOptions | None = None,
+) -> PaginatedActionResult[Label]:
+    return self._exec(lambda p: p.get_labels(issue_id, pagination, request_options))
+
+def create_label(self, name: str, color: str) -> ActionResult[Label]:
+    return self._exec(lambda p: p.create_label(name, color))
+```
+
+### 5. Add tests
+
+Tests live in `tests/sentry/scm/` and follow the existing structure:
+
+- **Unit tests** (`unit/test_github_provider.py`) — test the provider method in isolation using `FakeGitHubApiClient`. Verify the mapping function, error handling, and edge cases (null fields, empty lists).
+- **Unit tests** (`unit/test_scm_actions.py`) — add the new method to the parametrized lists that verify rate limiting, success metrics, and provider exception handling.
+- **Integration tests** (`integration/test_github_provider_integration.py`) — test with `@responses.activate` and real HTTP mocking against the GitHub API shape.
+- **Fixtures** (`test_fixtures.py`) — add a `make_github_label()` factory function and update `BaseTestProvider` and `FakeGitHubApiClient` with the new method.
