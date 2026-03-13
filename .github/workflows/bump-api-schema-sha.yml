@@ -39,6 +39,11 @@ jobs:
           sed -i -e "s|^const SENTRY_API_SCHEMA_SHA =.*$|const SENTRY_API_SCHEMA_SHA = '$sha';|g" "$filepath"
           echo "Updated $filepath"
 
+          if git diff --quiet "$filepath"; then
+            echo "No changes to $filepath, skipping."
+            exit 0
+          fi
+
           branch="bot/bump-api-schema-to-${sha:0:8}"
           git checkout -b "$branch"
           git add "$filepath"
@@ -46,4 +51,4 @@ jobs:
           git push --set-upstream origin "$branch"
 
           gh pr create --fill
-          gh pr merge --squash --auto
+          gh pr merge --squash --admin
