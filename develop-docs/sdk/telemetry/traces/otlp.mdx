@@ -20,24 +20,27 @@ Concurrently to the above SDK work, we also shipped first-class support for inge
 
 ## Integration Spec
 
-The new integration MUST be called `OTLPIntegration` with the following signature:
+The new integration **MUST** be called `OTLPIntegration` with the following signature:
 
 ```python
-OTLPIntegration(setup_otlp_traces_exporter=True, collector_url=None, setup_propagator=True, capture_exceptions=False)
+OTLPIntegration(setup_otlp_traces_exporter=True, collector_url=None)
 ```
 
+`setup_otlp_traces_exporter` **MUST** be a boolean that defaults to `True`.
 
-The arguments `setup_otlp_traces_exporter`, `setup_propagator` and `capture_exceptions` MUST be booleans that default to `True`, `True` and `False` respectively and can be turned off if needed by the user.
+`collector_url` **MUST** be an optional string that defaults to `None`.
 
-`collector_url` MUST be an optional string that defaults to `None`.
+It **MUST** set up the following:
 
-It MUST consist of and setup the following components:
-
-* A `SpanExporter` that automatically configures the OTLP ingestion endpoint from the DSN or from the `collector_url`
-* A `Propagator` that ensures Distributed Tracing works with other upstream and downstream services using Sentry SDKs
-  * Note that we use the `sentry-trace` (NOT `traceparent`) and `baggage` headers here
 * An `external_propagation_context` that extracts the active `trace_id` and `span_id` from the OpenTelemetry SDK
-* An interceptor for OpenTelemetry's `Span.record_exception` method that sends those exceptions to Sentry
+
+It **SHOULD** also set up:
+
+* A `SpanExporter` that automatically configures the OTLP ingestion endpoint from the DSN or from the `collector_url` (controlled by `setup_otlp_traces_exporter`)
+
+The integration **MUST NOT** set up an automatic propagator. Cross-service trace propagation is handled by the [`propagateTraceparent`](/sdk/foundations/trace-propagation/#propagate-traceparent) setting or by user-configured OTel propagators. How to set up an OTel propagator is a documentation concern.
+
+The integration **SHOULD NOT** patch or intercept `Span.record_exception`.
 
 ### SpanExporter
 
@@ -58,16 +61,6 @@ IF `setup_otlp_traces_exporter` is `False`, the integration MUST skip this entir
 
 See the reference Python implementation:
 <GitHubCodePreview url="https://github.com/getsentry/sentry-python/blob/c68c3d6b5152b879bc107f76d9a9c78e95792235/sentry_sdk/integrations/otlp.py#L36-L55" />
-
-### Propagator
-
-The `Propagator` implementation is the same as in the earlier [OpenTelemetry Spec](../opentelemetry/#step-2-implement-the-sentrypropagator-on-your-sdk-add-sentrypropagator).
-
-IF `setup_propagator` is `True`, the integration MUST setup the `Propagator`.
-
-The way to setup the propagator is dependent on the language ecosystem. The Python implementation uses `set_global_textmap`.
-
-IF `setup_propagator` is `False`, the integration MUST skip setting up the `Propagator` and leave it to user to configure manually if they wish to do so.
 
 ### External Propagation Context
 
@@ -98,16 +91,6 @@ The Integration then MUST call `register_external_propagation_context` with a fu
 See the reference Python implementation:
 <GitHubCodePreview url="https://github.com/getsentry/sentry-python/blob/c68c3d6b5152b879bc107f76d9a9c78e95792235/sentry_sdk/integrations/otlp.py#L23-L33" />
 <GitHubCodePreview url="https://github.com/getsentry/sentry-python/blob/c68c3d6b5152b879bc107f76d9a9c78e95792235/sentry_sdk/integrations/otlp.py#L70" />
-
-### Exception interceptor
-
-OpenTelemetry users and instrumentation use `Span.record_exception` to record exceptions on spans during the execution flow. For convenience, where possible, we
-setup a monkeypatch for this method that intercepts and reports this exception to Sentry as well IF `capture_exceptions` is enabled on the integration.
-
-Caveat: Most of the time, some existing Sentry integration will capture those exceptions too so depending on which one is captured first, the `DedupeIntegration` will typically drop either the Sentry or the OpenTelemetry captured exception which is fine from a product experience POV.
-
-See the reference Python implementation:
-<GitHubCodePreview url="https://github.com/getsentry/sentry-python/blob/e275c9e94323b429f39196881fb992d81a2e52ea/sentry_sdk/integrations/otlp.py#L93-L119" />
 
 ## Comparison to POTEL
 
