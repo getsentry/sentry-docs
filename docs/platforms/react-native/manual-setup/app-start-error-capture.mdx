@@ -139,3 +139,40 @@ export default withSentry(config, {
 When `useNativeInit` is set to `true`, the Expo plugin automatically:
 - Adds `RNSentrySDK.init()` to your Android `MainApplication`
 - Adds `RNSentrySDK.start()` to your iOS `AppDelegate`
+
+### Setting the Environment
+
+You can set the `environment` for native initialization using the Expo plugin prop or the `SENTRY_ENVIRONMENT` environment variable. The plugin writes the value into `sentry.options.json` during `expo prebuild`.
+
+```json {filename:app.json}
+{
+  "expo": {
+    "plugins": [
+      [
+        "@sentry/react-native/expo",
+        {
+          "useNativeInit": true,
+          "environment": "staging"
+        }
+      ]
+    ]
+  }
+}
+```
+
+For per-environment builds with EAS Build, set `SENTRY_ENVIRONMENT` in your build profiles instead:
+
+```json {filename:eas.json}
+{
+  "build": {
+    "production": {
+      "env": { "SENTRY_ENVIRONMENT": "production" }
+    },
+    "staging": {
+      "env": { "SENTRY_ENVIRONMENT": "staging" }
+    }
+  }
+}
+```
+
+The plugin prop takes precedence over the environment variable.
