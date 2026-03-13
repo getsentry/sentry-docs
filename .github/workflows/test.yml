@@ -40,8 +40,10 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      # Generate next-env.d.ts (in .gitignore); required before type-check. Replace with `next typegen` when on Next 15.5+
-      - run: pnpm next build
+      # Generate next-env.d.ts (in .gitignore); required before type-check. Use full build deps (doctree) so next build succeeds. Switch to `next typegen` when on Next 15.5+
+      - run: pnpm enforce-redirects && pnpm generate-doctree && pnpm next build
+        env:
+          NEXT_TYPEGEN: 'true'
 
       # Additional checks
       - run: pnpm lint:ts
