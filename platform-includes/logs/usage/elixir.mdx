@@ -52,4 +52,33 @@ Logger.info("User logged in", user_id: 123, action: "create")
 
 ### OpenTelemetry Integration
 
-If you're using OpenTelemetry with the `opentelemetry_logger_metadata` package, trace and span IDs will automatically be extracted from your log metadata and included in the log events sent to Sentry. This allows you to correlate logs with traces in the Sentry UI.
+If you're using <PlatformLink to="/tracing/">tracing</PlatformLink> with OpenTelemetry, you can correlate logs with traces so that log events appear alongside spans in the Sentry Trace Explorer.
+
+To enable this, add the `opentelemetry_logger_metadata` package to your dependencies:
+
+```elixir {filename:mix.exs}
+defp deps do
+  [
+    {:opentelemetry_logger_metadata, "~> 0.2"},
+    # ... your other dependencies
+  ]
+end
+```
+
+Then call `OpentelemetryLoggerMetadata.setup()` in your application's `start/2` callback:
+
+```elixir {filename:lib/my_app/application.ex}
+def start(_type, _args) do
+  OpentelemetryLoggerMetadata.setup()
+
+  # ... rest of your application setup
+end
+```
+
+This package injects the active OpenTelemetry `trace_id` and `span_id` into Elixir's logger metadata. The Sentry SDK automatically picks up these IDs and includes them in every log event sent to Sentry, linking your logs to the trace they occurred within.
+
+<Alert>
+
+Without `opentelemetry_logger_metadata`, the SDK generates a random `trace_id` for each log event. Logs will still appear in Sentry, but they won't be connected to any trace.
+
+</Alert>
