@@ -102,7 +102,7 @@ const FEATURE_DATA: Record<
     findInSentry: (
       <Fragment>
         Open the{' '}
-        <ExternalLink href="https://sentry.io/profiling">
+        <ExternalLink href="https://sentry.io/orgredirect/organizations/:orgslug/profiling">
           <strong>Profiles</strong>
         </ExternalLink>{' '}
         page, select a transaction, and then a profile ID to view its flame graph. For
@@ -158,8 +158,10 @@ type FeatureInfoProps = {
  * @param type - learnMore shows feature descriptions, findInSentry shows navigation help
  */
 export function FeatureInfo({features, type}: FeatureInfoProps) {
+  const ListTag = type === 'findInSentry' ? 'ol' : 'ul';
+
   return (
-    <ul>
+    <ListTag>
       {features.map(key => {
         const feature = FEATURE_DATA[key];
 
@@ -176,6 +178,6 @@ export function FeatureInfo({features, type}: FeatureInfoProps) {
 
         return <li key={key}>{feature.findInSentry}</li>;
       })}
-    </ul>
+    </ListTag>
   );
 }
