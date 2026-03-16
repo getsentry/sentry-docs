@@ -29,7 +29,7 @@ const FEATURE_DATA: Record<
     findInSentry: (
       <Fragment>
         Open the{' '}
-        <ExternalLink href="https://sentry.io/issues">
+        <ExternalLink href="https://sentry.io/orgredirect/organizations/:orgslug/issues/">
           <strong>Issues</strong>
         </ExternalLink>{' '}
         page and select an error from the issues list to view the full details and context
@@ -49,7 +49,7 @@ const FEATURE_DATA: Record<
     findInSentry: (
       <Fragment>
         Open the{' '}
-        <ExternalLink href="https://sentry.io/explore/traces">
+        <ExternalLink href="https://sentry.io/orgredirect/organizations/:orgslug/explore/traces/">
           <strong>Traces</strong>
         </ExternalLink>{' '}
         page and select a trace to reveal more information about each span, its duration,
@@ -69,7 +69,7 @@ const FEATURE_DATA: Record<
     findInSentry: (
       <Fragment>
         Open the{' '}
-        <ExternalLink href="https://sentry.io/explore/replays">
+        <ExternalLink href="https://sentry.io/orgredirect/organizations/:orgslug/replays/">
           <strong>Replays</strong>
         </ExternalLink>{' '}
         page and select an entry from the list to get a detailed view where you can replay
@@ -85,7 +85,7 @@ const FEATURE_DATA: Record<
     findInSentry: (
       <Fragment>
         Open the{' '}
-        <ExternalLink href="https://sentry.io/explore/logs">
+        <ExternalLink href="https://sentry.io/orgredirect/organizations/:orgslug/explore/logs/">
           <strong>Logs</strong>
         </ExternalLink>{' '}
         page and filter by service, environment, or search keywords to view log entries
@@ -102,7 +102,7 @@ const FEATURE_DATA: Record<
     findInSentry: (
       <Fragment>
         Open the{' '}
-        <ExternalLink href="https://sentry.io/profiling">
+        <ExternalLink href="https://sentry.io/orgredirect/organizations/:orgslug/profiling/">
           <strong>Profiles</strong>
         </ExternalLink>{' '}
         page, select a transaction, and then a profile ID to view its flame graph. For
@@ -119,7 +119,7 @@ const FEATURE_DATA: Record<
     findInSentry: (
       <Fragment>
         Open the{' '}
-        <ExternalLink href="https://sentry.io/issues/feedback">
+        <ExternalLink href="https://sentry.io/orgredirect/organizations/:orgslug/feedback/">
           <strong>User Feedback</strong>
         </ExternalLink>{' '}
         page and click on individual feedback to see more details all in one view. For
@@ -135,7 +135,7 @@ const FEATURE_DATA: Record<
     findInSentry: (
       <Fragment>
         Open the{' '}
-        <ExternalLink href="https://sentry.io/explore/metrics">
+        <ExternalLink href="https://sentry.io/orgredirect/organizations/:orgslug/explore/metrics">
           <strong>Metrics</strong>
         </ExternalLink>{' '}
         page to view and analyze your custom metrics. For more details, see this{' '}
