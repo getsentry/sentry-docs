@@ -12,7 +12,7 @@ import styles from './style.module.scss';
 import {CodeBlock} from '../codeBlock';
 import {CodeTabs} from '../codeTabs';
 
-const SKILLS_BASE_URL = 'https://skills.sentry.gg';
+const SKILLS_BASE_URL = 'https://skills.sentry.dev';
 const SKILLS_REPO = 'getsentry/sentry-for-ai';
 
 type Props = {
