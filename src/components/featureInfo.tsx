@@ -139,10 +139,7 @@ const FEATURE_DATA: Record<
           <strong>Metrics</strong>
         </ExternalLink>{' '}
         page to view and analyze your custom metrics. For more details, see this{' '}
-        <a href="/product/explore/metrics/#overview">
-          interactive walkthrough
-        </a>
-        .
+        <a href="/product/explore/metrics/#overview">interactive walkthrough</a>.
       </Fragment>
     ),
   },
