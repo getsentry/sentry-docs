@@ -3,6 +3,12 @@ title: Envelope Items
 sidebar_order: 80
 ---
 
+<Alert>
+  This document uses key words such as "MUST", "SHOULD", and "MAY" as defined
+  in [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt) to indicate requirement
+  levels.
+</Alert>
+
 Each Envelope consists of headers and a potentially empty list of Items, each
 with their own headers. Which Headers are required depends on the Items in an
 Envelope. This section describes all Item types and their respective required
@@ -14,7 +20,26 @@ The type of an Item is declared in the `type` header, as well as the payload
 size in `length`. See Serialization Format for a list of common Item headers.
 The headers described in this section are **in addition to the common headers**.
 
-## Event
+## Envelope Item Constraints
+
+SDKs **MUST NOT** combine different types of telemetry data in the same envelope, because Relay enforces [rate limits](/sdk/foundations/transport/rate-limiting/) per [data category](/sdk/foundations/transport/rate-limiting/#definitions), and mixing types makes this enforcement more expensive. The exceptions to this rule are listed below.
+
+The following constraints apply:
+
+1. **Mutual exclusivity of event types**: [`event`](#event), [`transaction`](#transaction), and [`feedback`](/sdk/telemetry/feedbacks/#envelope-item-constraints) are mutually exclusive; an envelope **MUST** contain at most one. The envelope header's `event_id` **MUST** match the contained event, and other items such as attachments are implicitly scoped to it.
+2. **Spans**: An envelope **MUST** contain at most one envelope item containing spans. The envelope **MUST** include a [DSC](/sdk/foundations/trace-propagation/dynamic-sampling-context/) header, and all spans **MUST** belong to the trace identified by that DSC; see [Span Buffer](/sdk/telemetry/spans/span-buffer/).
+3. **Logs**: An envelope **MUST** contain at most one envelope item containing logs. SDKs **MAY** mix logs from different traces in the same envelope item. The envelope **MUST NOT** include a [DSC](/sdk/foundations/trace-propagation/dynamic-sampling-context/) header; see [Logs](/sdk/telemetry/logs/#log-envelope-item).
+4. **Metrics**: An envelope **MUST** contain at most one envelope item containing metrics. SDKs **MAY** mix metrics from different traces in the same envelope item. The envelope **MUST NOT** include a [DSC](/sdk/foundations/trace-propagation/dynamic-sampling-context/) header; see [Metrics](/sdk/telemetry/metrics/#trace_metric-envelope-item).
+5. **Sessions**: Multiple envelope items containing sessions **MAY** appear in a single envelope. SDKs **SHOULD** send session updates in the same envelope as their associated error or crash event; see [Sessions](/sdk/telemetry/sessions/#session-update-payload).
+6. **Attachments**: Multiple envelope items containing attachments **MAY** appear in a single envelope. SDKs **SHOULD** send attachments in the same envelope as their associated event, so that if the event is filtered, the attachments are also filtered. For minidump and Apple crash report attachments, this is a **MUST**; see [Attachments](/sdk/telemetry/attachments/#standard-attachments).
+7. **Check-ins**: An envelope **MUST** contain at most one envelope item containing a check-in; see [Check-Ins](/sdk/telemetry/check-ins/#envelope-constraints).
+8. **Client reports**: Multiple envelope items containing client reports **MAY** appear in a single envelope; see [Client Reports](/sdk/telemetry/client-reports/#wire-format).
+9. **Replays**: SDKs **MUST** send the `replay_event` and `replay_recording` envelope items together in the same envelope; see [Replay](/sdk/telemetry/replays/#replay-event-payload).
+10. **User reports (deprecated)**: SDKs **SHOULD** send `user_report` envelope items in the same envelope as their associated event; see [User Reports](/sdk/telemetry/user-reports/#envelope-item).
+
+## Envelope Item Types
+
+### Event
 
 Item type `"event"`. This Item contains an error or default [event payload](/sdk/foundations/transport/event-payloads/)
 encoded in JSON.
