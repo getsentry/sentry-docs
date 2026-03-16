@@ -9,7 +9,8 @@ type FeatureKey =
   | 'sessionReplay'
   | 'logs'
   | 'profiling'
-  | 'userFeedback';
+  | 'userFeedback'
+  | 'metrics';
 
 const FEATURE_DATA: Record<
   FeatureKey,
@@ -123,6 +124,25 @@ const FEATURE_DATA: Record<
         </ExternalLink>{' '}
         page and click on individual feedback to see more details all in one view. For
         more information, click <a href="/product/user-feedback/">here</a>.
+      </Fragment>
+    ),
+  },
+  metrics: {
+    title: 'Metrics',
+    link: '/product/explore/metrics',
+    learnMore:
+      "Track and analyze custom metrics, such as response times and database query durations, to understand trends and patterns in your application's performance and behavior over time.",
+    findInSentry: (
+      <Fragment>
+        Open the{' '}
+        <ExternalLink href="https://sentry.io/explore/metrics">
+          <strong>Metrics</strong>
+        </ExternalLink>{' '}
+        page to view and analyze your custom metrics. For more details, see this{' '}
+        <a href="/product/explore/metrics/#overview">
+          interactive walkthrough
+        </a>
+        .
       </Fragment>
     ),
   },
