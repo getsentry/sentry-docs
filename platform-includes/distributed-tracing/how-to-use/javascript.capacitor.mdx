@@ -1,13 +1,14 @@
-If you're using the current version of our React Native SDK distributed tracing will work out of the box.
+If you're using the current version of our Capacitor SDK, distributed tracing will work out of the box.
+
+To get around possible [Browser CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) issues, define your `tracePropagationTargets`.
 
 ```javascript
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
   tracePropagationTargets: ["https://myproject.org", /^\/api\//],
 });
 ```
-
-If you're using version `5.9.x` or below, you'll need to have our <PlatformLink to="/tracing/">tracing feature enabled</PlatformLink> in order for distributed tracing to work.
 
 ### Strict Trace Continuation
 
@@ -36,5 +37,18 @@ Sentry.init({
   strictTraceContinuation: true,
   // Manually provide your organization ID (overrides organization ID parsed from DSN)
   orgId: 12345,
+});
+```
+
+### Disabling Distributed Tracing
+
+If you want to disable distributed tracing and ensure no Sentry trace headers are sent, you can configure your SDK like this:
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // Overwrite the defaults to ensure no trace headers are sent
+  tracePropagationTargets: [],
 });
 ```
