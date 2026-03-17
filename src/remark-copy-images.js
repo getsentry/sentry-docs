@@ -21,7 +21,12 @@ export function copyImagesFromSource(source, sourceFolder, outdir) {
     const cleanUrl = rawUrl.split('?')[0].split('#')[0];
 
     // Skip absolute URLs and data URIs
-    if (cleanUrl.startsWith('http') || cleanUrl.startsWith('//') || cleanUrl.startsWith('data:') || cleanUrl.startsWith('/')) {
+    if (
+      cleanUrl.startsWith('http') ||
+      cleanUrl.startsWith('//') ||
+      cleanUrl.startsWith('data:') ||
+      cleanUrl.startsWith('/')
+    ) {
       continue;
     }
 
@@ -73,7 +78,10 @@ export default function remarkCopyImages({sourceFolder, outdir}) {
       // Strip query params and hash to get the actual file path
       const cleanUrl = url.split('?')[0].split('#')[0];
       // Normalize bare relative paths (e.g. "img/foo.png" → "./img/foo.png")
-      const normalizedUrl = cleanUrl.startsWith('./') || cleanUrl.startsWith('../') ? cleanUrl : `./${cleanUrl}`;
+      const normalizedUrl =
+        cleanUrl.startsWith('./') || cleanUrl.startsWith('../')
+          ? cleanUrl
+          : `./${cleanUrl}`;
       const srcPath = path.resolve(sourceFolder, normalizedUrl);
 
       if (!existsSync(srcPath)) {
