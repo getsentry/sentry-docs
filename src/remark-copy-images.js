@@ -14,13 +14,14 @@ import {visit} from 'unist-util-visit';
 export function copyImagesFromSource(source, sourceFolder, outdir) {
   mkdirSync(outdir, {recursive: true});
 
-  // Match markdown image syntax: ![...](./relative/path.ext)
-  const imageRegex = /!\[[^\]]*\]\((\.[^)]+)\)/g;
+  // Match markdown image syntax: ![...](path.ext) — both ./relative and bare relative
+  const imageRegex = /!\[[^\]]*\]\(([^)\s:]+\.(png|jpe?g|gif|svg)[^)]*)\)/gi;
   for (const match of source.matchAll(imageRegex)) {
     const rawUrl = match[1];
     const cleanUrl = rawUrl.split('?')[0].split('#')[0];
 
-    if (!cleanUrl.startsWith('./') && !cleanUrl.startsWith('../')) {
+    // Skip absolute URLs and data URIs
+    if (cleanUrl.startsWith('http') || cleanUrl.startsWith('//') || cleanUrl.startsWith('data:') || cleanUrl.startsWith('/')) {
       continue;
     }
 
@@ -71,7 +72,9 @@ export default function remarkCopyImages({sourceFolder, outdir}) {
 
       // Strip query params and hash to get the actual file path
       const cleanUrl = url.split('?')[0].split('#')[0];
-      const srcPath = path.resolve(sourceFolder, cleanUrl);
+      // Normalize bare relative paths (e.g. "img/foo.png" → "./img/foo.png")
+      const normalizedUrl = cleanUrl.startsWith('./') || cleanUrl.startsWith('../') ? cleanUrl : `./${cleanUrl}`;
+      const srcPath = path.resolve(sourceFolder, normalizedUrl);
 
       if (!existsSync(srcPath)) {
         return;
