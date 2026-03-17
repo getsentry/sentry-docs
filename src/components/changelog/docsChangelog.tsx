@@ -1,3 +1,7 @@
+'use client';
+
+import {useEffect, useState} from 'react';
+
 interface ChangelogEntry {
   author: string;
   description: string;
@@ -12,27 +16,29 @@ interface ChangelogEntry {
   };
 }
 
-async function getChangelogEntries(): Promise<ChangelogEntry[]> {
-  try {
-    const res = await fetch('https://sentry-content-dashboard.sentry.dev/api/docs', {
-      next: {revalidate: 3600}, // Cache for 1 hour
-    });
+export function DocsChangelog() {
+  const [entries, setEntries] = useState<ChangelogEntry[]>([]);
+  const [loading, setLoading] = useState(true);
 
-    if (!res.ok) {
-      throw new Error(`Failed to fetch changelog: ${res.status} ${res.statusText}`);
-    }
+  useEffect(() => {
+    fetch('https://sentry-content-dashboard.sentry.dev/api/docs')
+      .then(res => (res.ok ? res.json() : []))
+      .then(data => {
+        setEntries(data);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
 
-    return res.json();
-  } catch (error) {
-    // eslint-disable-next-line no-console
-    console.error('Error fetching changelog:', error);
-    // Error fetching changelog - return empty array
-    return [];
+  if (loading) {
+    return (
+      <div className="animate-pulse space-y-4">
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="h-24 rounded-lg bg-gray-100 dark:bg-gray-800" />
+        ))}
+      </div>
+    );
   }
-}
-
-export async function DocsChangelog() {
-  const entries = await getChangelogEntries();
 
   if (entries.length === 0) {
     return (
@@ -43,7 +49,6 @@ export async function DocsChangelog() {
     );
   }
 
-  // Show only the 20 most recent entries
   const recentEntries = entries.slice(0, 20);
 
   return (
@@ -84,18 +89,16 @@ export async function DocsChangelog() {
                 )}
               </div>
             </header>
-
             <p className="mb-4 text-gray-700 dark:[color:rgb(210,199,218)]">
               {entry.description}
             </p>
-
             {entry.filesChanged && totalFiles > 0 && (
               <details className="text-sm">
                 <summary className="cursor-pointer text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200">
                   View changed files
                 </summary>
                 <div className="mt-2 space-y-2 rounded-md bg-gray-50 p-3 dark:bg-gray-800">
-                  {entry.filesChanged.added && entry.filesChanged.added.length > 0 && (
+                  {entry.filesChanged.added?.length > 0 && (
                     <div>
                       <span className="font-semibold text-green-700 dark:text-green-400">
                         Added:
@@ -109,67 +112,40 @@ export async function DocsChangelog() {
                       </ul>
                     </div>
                   )}
-                  {entry.filesChanged.modified &&
-                    entry.filesChanged.modified.length > 0 && (
-                      <div>
-                        <span className="font-semibold text-blue-700 dark:text-blue-400">
-                          Modified:
-                        </span>
-                        <ul className="ml-4 mt-1 list-inside list-disc">
-                          {entry.filesChanged.modified.map(file => (
-                            <li key={file} className="text-gray-700 dark:text-gray-300">
-                              {file}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  {entry.filesChanged.removed &&
-                    entry.filesChanged.removed.length > 0 && (
-                      <div>
-                        <span className="font-semibold text-red-700 dark:text-red-400">
-                          Removed:
-                        </span>
-                        <ul className="ml-4 mt-1 list-inside list-disc">
-                          {entry.filesChanged.removed.map(file => (
-                            <li key={file} className="text-gray-700 dark:text-gray-300">
-                              {file}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
+                  {entry.filesChanged.modified?.length > 0 && (
+                    <div>
+                      <span className="font-semibold text-blue-700 dark:text-blue-400">
+                        Modified:
+                      </span>
+                      <ul className="ml-4 mt-1 list-inside list-disc">
+                        {entry.filesChanged.modified.map(file => (
+                          <li key={file} className="text-gray-700 dark:text-gray-300">
+                            {file}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {entry.filesChanged.removed?.length > 0 && (
+                    <div>
+                      <span className="font-semibold text-red-700 dark:text-red-400">
+                        Removed:
+                      </span>
+                      <ul className="ml-4 mt-1 list-inside list-disc">
+                        {entry.filesChanged.removed.map(file => (
+                          <li key={file} className="text-gray-700 dark:text-gray-300">
+                            {file}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
               </details>
             )}
           </article>
         );
       })}
-      {entries.length > 20 && (
-        <div className="mt-8 rounded-lg border border-gray-200 bg-gray-50 p-4 text-center dark:border-gray-700 dark:bg-gray-800">
-          <p className="text-sm text-gray-600 dark:[color:rgb(210,199,218)]">
-            Showing the 20 most recent updates. View the{' '}
-            <a
-              href="https://sentry-content-dashboard.sentry.dev/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary hover:underline"
-            >
-              full content dashboard
-            </a>{' '}
-            or subscribe to the{' '}
-            <a
-              href="https://sentry-content-dashboard.sentry.dev/api/docs/feed"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary hover:underline"
-            >
-              RSS feed
-            </a>
-            .
-          </p>
-        </div>
-      )}
     </div>
   );
 }

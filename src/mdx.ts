@@ -33,7 +33,7 @@ import rehypeSlug from './rehype-slug.js';
 import remarkCodeTabs from './remark-code-tabs';
 import remarkCodeTitles from './remark-code-title';
 import remarkComponentSpacing from './remark-component-spacing';
-import remarkCopyImages from './remark-copy-images';
+import remarkCopyImages, {copyImagesFromSource} from './remark-copy-images';
 import remarkExtractFrontmatter from './remark-extract-frontmatter';
 import remarkFormatCodeBlocks from './remark-format-code';
 import remarkImageProcessing from './remark-image-processing';
@@ -649,6 +649,11 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
     // continue anyway - images should already exist from build time
   }
 
+  // Copy images referenced in the source to public/mdx-images/ BEFORE the cache check.
+  // This ensures images exist even when MDX compilation is served from cache.
+  const cwd = path.dirname(sourcePath);
+  copyImagesFromSource(source, cwd, outdir);
+
   // Detect if file contains content that depends on the Release Registry
   // If it does, we include the registry hash in the cache key so the cache
   // is invalidated when the registry changes.
@@ -727,9 +732,6 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
   }
 
   const toc: TocNode[] = [];
-
-  // cwd is used to resolve relative paths in MDX content (images, etc.)
-  const cwd = path.dirname(sourcePath);
 
   // Extract frontmatter via gray-matter before compilation.
   // Must strip frontmatter before passing to @mdx-js/mdx because
