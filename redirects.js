@@ -2,6 +2,10 @@ const isDeveloperDocs = !!process.env.NEXT_PUBLIC_DEVELOPER_DOCS;
 
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const developerDocsRedirects = [
+  {
+    source: '/sdk/getting-started/templates/contributing-md-template/',
+    destination: '/sdk/getting-started/templates/contributing-md/',
+  },
   // Spotlight and MCP moved from expected-features to foundations/client/integrations
   {
     source: '/sdk/expected-features/spotlight/',
@@ -1391,7 +1395,11 @@ const userDocsRedirects = [
     source: '/product/insights/retention-priorities/',
     destination: '/organization/dynamic-sampling/',
   },
-  // End of Insights reduirects.
+  {
+    source: '/product/dashboards/sentry-dashboards/performance-metrics/',
+    destination: '/product/dashboards/sentry-dashboards/transaction-summary/',
+  },
+  // End of Insights redirects.
   {
     source: '/platforms/javascript/guides/astro/manual-setup/',
     destination: '/platforms/javascript/guides/astro/',
