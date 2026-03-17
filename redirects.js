@@ -1634,7 +1634,11 @@ const userDocsRedirects = [
     destination: '/product/ai-in-sentry/seer/code-review/',
   },
   {
-    source: '/product/ai-in-sentry/sentry-prevent-ai/:path*',
+    source: '/product/ai-in-sentry/sentry-prevent-ai/',
+    destination: '/product/ai-in-sentry/seer/code-review/',
+  },
+  {
+    source: '/product/ai-in-sentry/sentry-prevent-ai',
     destination: '/product/ai-in-sentry/seer/code-review/',
   },
   {
