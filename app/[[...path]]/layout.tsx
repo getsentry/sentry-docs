@@ -1,4 +1,4 @@
-import 'sentry-docs/styles/prism-sentry.css';
+import 'prism-sentry/index.css';
 
 import type {Metadata} from 'next';
 
