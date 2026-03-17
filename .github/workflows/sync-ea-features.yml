@@ -1,0 +1,134 @@
+name: Sync Early Adopter Features
+
+on:
+  # Run weekly on Mondays at 9am UTC
+  schedule:
+    - cron: '0 9 * * 1'
+  # Allow manual trigger
+  workflow_dispatch:
+
+jobs:
+  sync-ea-features:
+    runs-on: ubuntu-latest
+    name: 'Sync EA Features from Flagpole'
+    steps:
+      - uses: actions/checkout@v4.1.1
+
+      - name: Get auth token
+        id: token
+        uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf # v2.2.1
+        with:
+          app-id: ${{ vars.SENTRY_INTERNAL_APP_ID }}
+          private-key: ${{ secrets.SENTRY_INTERNAL_APP_PRIVATE_KEY }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Clone sentry-options-automator
+        env:
+          GITHUB_TOKEN: ${{ steps.token.outputs.token }}
+        run: |
+          git clone --depth 1 https://x-access-token:${GITHUB_TOKEN}@github.com/getsentry/sentry-options-automator.git /tmp/sentry-options-automator-sync
+
+      - name: Run EA features sync check
+        id: sync-check
+        run: |
+          pnpm ts-node scripts/sync-ea-features.ts --check-only 2>&1 | tee sync-output.txt
+          # Capture exit code
+          exit_code=${PIPESTATUS[0]}
+          
+          # Extract new features count for the summary
+          new_count=$(grep -oP '(?<=NEW UNMAPPED FEATURES \()[0-9]+' sync-output.txt || echo "0")
+          removed_count=$(grep -oP '(?<=REMOVED FEATURES \()[0-9]+' sync-output.txt || echo "0")
+          
+          echo "new_features=$new_count" >> $GITHUB_OUTPUT
+          echo "removed_features=$removed_count" >> $GITHUB_OUTPUT
+          echo "has_changes=$([[ $new_count -gt 0 || $removed_count -gt 0 ]] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+          
+          # Don't fail the workflow, we want to create an issue instead
+          exit 0
+
+      - name: Create issue for new EA features
+        if: steps.sync-check.outputs.has_changes == 'true'
+        env:
+          GITHUB_TOKEN: ${{ steps.token.outputs.token }}
+        run: |
+          # Check if an issue already exists
+          existing_issue=$(gh issue list --label "ea-features-sync" --state open --json number --jq '.[0].number' || echo "")
+          
+          if [ -n "$existing_issue" ]; then
+            echo "Issue #$existing_issue already exists, adding comment"
+            gh issue comment "$existing_issue" --body "$(cat <<EOF
+          ## Weekly EA Features Sync - $(date +%Y-%m-%d)
+          
+          \`\`\`
+          $(cat sync-output.txt)
+          \`\`\`
+          
+          **Action needed:** Update \`src/data/ea-features.json\` with any new features.
+          EOF
+          )"
+          else
+            echo "Creating new issue"
+            gh issue create \
+              --title "🔄 Early Adopter Features Out of Sync" \
+              --label "ea-features-sync,docs,product" \
+              --body "$(cat <<EOF
+          ## Early Adopter Features Sync Report
+          
+          The weekly sync has detected changes in Early Adopter features.
+          
+          \`\`\`
+          $(cat sync-output.txt)
+          \`\`\`
+          
+          ### Action Items
+          
+          1. **For new unmapped features:** Add entries to \`src/data/ea-features.json\` with:
+             - \`displayName\`: Human-readable name
+             - \`docsUrl\`: Link to documentation (or \`null\` if none exists)
+             - \`category\`: Feature category
+          
+          2. **For removed features:** Consider removing from \`src/data/ea-features.json\`
+          
+          3. **For undocumented features:** Create Linear issues for documentation
+          
+          ### How to update
+          
+          \`\`\`bash
+          # Run the sync script locally to see current state
+          pnpm ts-node scripts/sync-ea-features.ts
+          
+          # Edit the mapping file
+          code src/data/ea-features.json
+          \`\`\`
+          
+          ---
+          *This issue was automatically created by the [EA Features Sync workflow](https://github.com/getsentry/sentry-docs/actions/workflows/sync-ea-features.yml).*
+          EOF
+          )"
+          fi
+
+      - name: Summary
+        run: |
+          echo "## EA Features Sync Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- New unmapped features: ${{ steps.sync-check.outputs.new_features }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Removed features: ${{ steps.sync-check.outputs.removed_features }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.sync-check.outputs.has_changes }}" == "true" ]; then
+            echo "⚠️ **Action required:** EA features mapping needs to be updated." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ All EA features are properly mapped!" >> $GITHUB_STEP_SUMMARY
+          fi
