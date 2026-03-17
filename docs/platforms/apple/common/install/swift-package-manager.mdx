@@ -27,3 +27,42 @@ Alternatively, when your project uses a `Package.swift` file to manage dependenc
 ```swift {tabTitle:Swift}
 .package(url: "https://github.com/getsentry/sentry-cocoa", from: "{{@inject packages.version('sentry.cocoa') }}"),
 ```
+
+## Building Without UIKit or AppKit
+
+If you're building a command-line tool, a headless server app, or any other target where UIKit or AppKit isn't available, you can use the `NoUIFramework` package trait to strip out UI framework dependencies entirely. This requires **Sentry SDK 9.7.0+**, **Swift 6.1+**, and **Xcode 26.4+**. When enabled, the SDK compiles from source without linking UIKit, AppKit, or SwiftUI. UI-related features like UIViewController tracing and screenshot capture are excluded.
+
+### Xcode
+
+1. Add the Sentry package as described above.
+2. Select the **`SentrySPM`** product instead of `Sentry` or `Sentry-Dynamic`.
+3. In your project settings, go to **Package Dependencies**, select the Sentry package, and enable the **`NoUIFramework`** trait.
+
+### Package.swift
+
+Add the dependency with the `NoUIFramework` trait and depend on the `SentrySPM` product:
+
+```swift {tabTitle:Swift}
+let package = Package(
+    name: "MyApp",
+    dependencies: [
+        .package(
+            url: "https://github.com/getsentry/sentry-cocoa",
+            from: "{{@inject packages.version('sentry.cocoa') }}",
+            traits: ["NoUIFramework"]
+        ),
+    ],
+    targets: [
+        .executableTarget(
+            name: "MyApp",
+            dependencies: [
+                .product(name: "SentrySPM", package: "sentry-cocoa"),
+            ]
+        ),
+    ]
+)
+```
+
+<Alert level="info">
+  The `SentrySPM` product compiles the SDK from source. This is required for package traits to take effect, since the pre-built binary targets (`Sentry`, `Sentry-Dynamic`) don't support compile-time configuration.
+</Alert>
