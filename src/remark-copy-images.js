@@ -15,7 +15,8 @@ export function copyImagesFromSource(source, sourceFolder, outdir) {
   mkdirSync(outdir, {recursive: true});
 
   // Match markdown image syntax: ![...](path.ext) — both ./relative and bare relative
-  const imageRegex = /!\[[^\]]*\]\(([^)\s:]+\.(png|jpe?g|gif|svg)[^)]*)\)/gi;
+  // Match any image extension to stay in sync with the remark plugin
+  const imageRegex = /!\[[^\]]*\]\(([^)\s:]+\.(png|jpe?g|gif|svg|webp|avif|ico|bmp|tiff?)[^)]*)\)/gi;
   for (const match of source.matchAll(imageRegex)) {
     const rawUrl = match[1];
     const cleanUrl = rawUrl.split('?')[0].split('#')[0];

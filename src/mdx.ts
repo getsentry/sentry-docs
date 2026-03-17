@@ -34,7 +34,7 @@ import remarkCodeTabs from './remark-code-tabs';
 import remarkCodeTitles from './remark-code-title';
 import remarkComponentSpacing from './remark-component-spacing';
 import remarkCopyImages, {copyImagesFromSource} from './remark-copy-images';
-import remarkExtractFrontmatter from './remark-extract-frontmatter';
+// remarkExtractFrontmatter removed — gray-matter strips frontmatter before compile()
 import remarkFormatCodeBlocks from './remark-format-code';
 import remarkImageProcessing from './remark-image-processing';
 import remarkImageResize from './remark-image-resize';
@@ -745,7 +745,6 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
   const compiled = await compile(matterResult.content, {
     outputFormat: 'function-body',
     remarkPlugins: [
-      remarkExtractFrontmatter,
       [remarkTocHeadings, {exportRef: toc}],
       remarkGfm,
       remarkDefList,
