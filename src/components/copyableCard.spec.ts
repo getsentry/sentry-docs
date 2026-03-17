@@ -46,9 +46,7 @@ describe('domToMarkdown', () => {
       expect(domToMarkdown(parse('<p>hello</p>'))).toBe('hello\n\n');
     });
     it('converts ul with li', () => {
-      expect(domToMarkdown(parse('<ul><li>a</li><li>b</li></ul>'))).toBe(
-        '- a\n- b\n\n'
-      );
+      expect(domToMarkdown(parse('<ul><li>a</li><li>b</li></ul>'))).toBe('- a\n- b\n\n');
     });
     it('converts ol with li', () => {
       expect(domToMarkdown(parse('<ol><li>first</li><li>second</li></ol>'))).toBe(
