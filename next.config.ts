@@ -11,7 +11,7 @@ const sharedExcludes = [
   '**/*.map',
   './.git/**/*',
   './apps/**/*',
-  './.next/cache/mdx-bundler/**/*',
+  './.next/cache/mdx-compile/**/*',
   './.next/cache/md-exports/**/*',
   // Heavy build/script-only dependencies (not needed at runtime)
   'node_modules/@aws-sdk/**/*',

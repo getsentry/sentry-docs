@@ -62,7 +62,7 @@ const root = process.cwd();
 // so many files at once.
 const FILE_CONCURRENCY_LIMIT = 200;
 const CACHE_COMPRESS_LEVEL = 4;
-const CACHE_DIR = path.join(root, '.next', 'cache', 'mdx-bundler');
+const CACHE_DIR = path.join(root, '.next', 'cache', 'mdx-compile');
 if (process.env.CI) {
   mkdirSync(CACHE_DIR, {recursive: true});
 }
@@ -733,7 +733,7 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
 
   // Extract frontmatter via gray-matter before compilation.
   // Must strip frontmatter before passing to @mdx-js/mdx because
-  // frontmatter content (e.g. `<=` in descriptions) can be mis-parsed as JSX.
+  // frontmatter content (e.g. `<=` in descriptions) can be incorrectly parsed as JSX.
   const matterResult = matter(source);
   const frontmatter = matterResult.data as Platform;
 
