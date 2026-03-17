@@ -37,7 +37,7 @@ For other dependency managers, check out the [central Maven repository](https://
 
 Enable cache tracing in your Sentry configuration:
 
-```java
+```java {tabTitle:Java}
 Sentry.init(options -> {
     options.setDsn("___DSN___");
     options.setTracesSampleRate(1.0);
@@ -45,9 +45,17 @@ Sentry.init(options -> {
 });
 ```
 
+```kotlin {tabTitle:Kotlin}
+Sentry.init { options ->
+    options.dsn = "___DSN___"
+    options.tracesSampleRate = 1.0
+    options.isEnableCacheTracing = true
+}
+```
+
 Wrap your `javax.cache.Cache` instance with `SentryJCacheWrapper`:
 
-```java
+```java {tabTitle:Java}
 import io.sentry.jcache.SentryJCacheWrapper;
 import javax.cache.Cache;
 import javax.cache.CacheManager;
@@ -65,6 +73,23 @@ sentryCache.put("key", "value");       // cache.put span
 String val = sentryCache.get("key");   // cache.get span (cache.hit = true)
 sentryCache.remove("key");             // cache.remove span
 sentryCache.clear();                   // cache.flush span
+```
+
+```kotlin {tabTitle:Kotlin}
+import io.sentry.jcache.SentryJCacheWrapper
+import javax.cache.Caching
+
+val provider = Caching.getCachingProvider()
+val manager = provider.cacheManager
+
+val cache = manager.getCache<String, String>("myCache")
+val sentryCache = SentryJCacheWrapper(cache)
+
+// Use sentryCache — all operations produce Sentry spans
+sentryCache.put("key", "value")       // cache.put span
+val value = sentryCache.get("key")    // cache.get span (cache.hit = true)
+sentryCache.remove("key")             // cache.remove span
+sentryCache.clear()                   // cache.flush span
 ```
 
 ## Traced Operations
@@ -91,7 +116,7 @@ Bulk operations (`getAll`, `putAll`, `removeAll`) create a single span with all 
 
 To verify, trigger a cache operation within an active transaction and check the [Caches dashboard](https://sentry.io/orgredirect/organizations/:orgslug/insights/backend/caches/) or the trace view in Sentry.
 
-```java
+```java {tabTitle:Java}
 import io.sentry.ITransaction;
 import io.sentry.Sentry;
 
@@ -102,4 +127,15 @@ try (ISentryLifecycleToken ignored = tx.makeCurrent()) {
 } finally {
     tx.finish();
 }
+```
+
+```kotlin {tabTitle:Kotlin}
+import io.sentry.Sentry
+
+val tx = Sentry.startTransaction("test-cache", "task")
+tx.makeCurrent().use {
+    sentryCache.put("greeting", "hello")
+    val value = sentryCache.get("greeting")
+}
+tx.finish()
 ```
