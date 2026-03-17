@@ -1,9 +1,11 @@
 /**
- * Local implementation of getMDXComponent replacing mdx-bundler/client.
+ * Evaluates compiled MDX code and returns a React component.
  *
- * Eliminates the runtime dependency on mdx-bundler/client which has CJS/ESM
- * compatibility issues in Vercel serverless functions. Since getMDXComponent
- * only needs React at runtime, we can safely inline this implementation.
+ * Supports both output formats:
+ * - @mdx-js/mdx compile() with outputFormat: 'function-body'
+ *   → uses arguments[0] for jsx runtime
+ * - Legacy mdx-bundler output (IIFE accessing named scope variables)
+ *   → uses named params: React, ReactDOM, _jsx_runtime
  */
 import type {ComponentType, FunctionComponent} from 'react';
 // Namespace imports required - MDX runtime expects React, ReactDOM, jsx_runtime in scope
@@ -19,7 +21,7 @@ export interface MDXContentProps {
 }
 
 /**
- * Takes compiled MDX code from bundleMDX and returns a React component.
+ * Takes compiled MDX code and returns a React component.
  */
 export function getMDXComponent(
   code: string,
@@ -29,13 +31,17 @@ export function getMDXComponent(
 }
 
 /**
- * Takes compiled MDX code from bundleMDX and returns all exports.
+ * Takes compiled MDX code and returns all exports.
+ *
+ * @mdx-js/mdx function-body output destructures jsx runtime from arguments[0]:
+ *   const {Fragment, jsx, jsxs} = arguments[0];
+ *
+ * We pass jsxRuntime as the sole argument to new Function(code).
  */
 export function getMDXExport<
   ExportedObject = {default: FunctionComponent<MDXContentProps>},
 >(code: string, globals?: Record<string, unknown>): ExportedObject {
-  const scope = {React, ReactDOM, _jsx_runtime: jsxRuntime, ...globals};
   // eslint-disable-next-line @typescript-eslint/no-implied-eval, no-new-func
-  const fn = new Function(...Object.keys(scope), code);
-  return fn(...Object.values(scope));
+  const fn = new Function(code);
+  return fn({...jsxRuntime, React, ReactDOM, ...globals});
 }

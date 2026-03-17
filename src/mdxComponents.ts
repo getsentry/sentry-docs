@@ -4,6 +4,7 @@ import {Arcade} from './components/arcade';
 import {AvailableSince} from './components/availableSince';
 import {Break} from './components/break';
 import {Card} from './components/card';
+import {DocsChangelog} from './components/changelog/docsChangelog';
 import {CliChecksumTable} from './components/cliChecksumTable';
 import {CodeBlock} from './components/codeBlock';
 import {CodeTabs} from './components/codeTabs';
@@ -98,6 +99,7 @@ export function mdxComponents(
     GradleUploadInstructions,
     ConfigValue,
     DefinitionList,
+    DocsChangelog,
     Expandable,
     FeatureBadge,
     GuideGrid,
