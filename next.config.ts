@@ -111,12 +111,6 @@ const nextConfig = {
   images: {
     contentDispositionType: 'inline', // "open image in new tab" instead of downloading
     remotePatterns: REMOTE_IMAGE_PATTERNS,
-    localPatterns: [
-      {
-        pathname: '/mdx-images/**',
-        search: '?v=*',
-      },
-    ],
   },
   webpack: (config, options) => {
     config.plugins.push(
