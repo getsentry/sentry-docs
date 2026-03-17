@@ -1,6 +1,6 @@
 'use client';
 
-import 'prism-sentry/index.css';
+import 'sentry-docs/styles/prism-sentry.css';
 
 import {useEffect} from 'react';
 import * as Sentry from '@sentry/nextjs';

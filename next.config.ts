@@ -45,6 +45,9 @@ const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
         'node_modules/prettier/plugins',
         'node_modules/rollup/dist',
         'public/og-images/**/*',
+        'public/mdx-images/**/*',
+        'public/md-exports/**/*',
+        '**/*.pdf',
       ],
       'sitemap.xml': [
         'public/mdx-images/**/*',
@@ -108,6 +111,12 @@ const nextConfig = {
   images: {
     contentDispositionType: 'inline', // "open image in new tab" instead of downloading
     remotePatterns: REMOTE_IMAGE_PATTERNS,
+    localPatterns: [
+      {
+        pathname: '/mdx-images/**',
+        search: '?v=*',
+      },
+    ],
   },
   webpack: (config, options) => {
     config.plugins.push(
