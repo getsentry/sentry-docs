@@ -92,14 +92,11 @@ Bulk operations (`getAll`, `putAll`, `removeAll`) create a single span with all 
 To verify, trigger a cache operation within an active transaction and check the [Caches dashboard](https://sentry.io/orgredirect/organizations/:orgslug/insights/backend/caches/) or the trace view in Sentry.
 
 ```java
+import io.sentry.ITransaction;
 import io.sentry.Sentry;
 
-Sentry.startNewTrace();
-ITransactionContext txCtx = new TransactionContext("test-cache", "task");
-ITransaction tx = Sentry.startTransaction(txCtx);
-Sentry.getCurrentScopes().getScope().setTransaction(tx);
-
-try {
+ITransaction tx = Sentry.startTransaction("test-cache", "task");
+try (ISentryLifecycleToken ignored = tx.makeCurrent()) {
     sentryCache.put("greeting", "hello");
     String value = sentryCache.get("greeting");
 } finally {
