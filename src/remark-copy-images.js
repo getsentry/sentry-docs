@@ -16,12 +16,10 @@ export function copyImagesFromSource(source, sourceFolder, outdir) {
 
   // Match markdown image syntax: ![...](./relative/path.ext)
   const imageRegex = /!\[[^\]]*\]\((\.[^)]+)\)/g;
-  let match;
-  while ((match = imageRegex.exec(source)) !== null) {
+  for (const match of source.matchAll(imageRegex)) {
     const rawUrl = match[1];
     const cleanUrl = rawUrl.split('?')[0].split('#')[0];
 
-    // Skip non-relative
     if (!cleanUrl.startsWith('./') && !cleanUrl.startsWith('../')) {
       continue;
     }

@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-html-link-for-pages */
 import type {ReactNode} from 'react';
 import {Fragment} from 'react';
 
