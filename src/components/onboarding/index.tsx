@@ -111,7 +111,8 @@ const optionDetails: Record<
     name: 'Metrics',
     description: (
       <span>
-        Send metrics from your application to Sentry for viewing alongside relevant errors and searching by metric name or attributes.
+        Send metrics from your application to Sentry for viewing alongside relevant errors
+        and searching by metric name or attributes.
       </span>
     ),
   },
