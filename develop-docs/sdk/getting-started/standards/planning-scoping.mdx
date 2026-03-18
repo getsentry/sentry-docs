@@ -18,34 +18,48 @@ sidebar_order: 0
 
 These standards define how work gets planned, scoped, and tracked before anyone writes code. Good planning avoids mid-implementation surprises and keeps work visible to the team.
 
-<SpecSection id="issue-quality" status="stable" since="1.0.0">
+Work is organized in three levels: **issues**, **projects**, and **initiatives**. All issues in SDK GitHub repositories are automatically and bi-directionally synced with Linear. Triaging and planning happens in Linear.
 
-## Issue quality
+<SpecSection id="issues" status="stable" since="1.0.0">
 
-All issues in SDK repositories are automatically and bi-directionally synced with Linear. Triaging and planning happens in Linear.
+## Issues
 
-Every Linear issue **MUST** have these attributes before it moves to **In Progress**:
+An issue is the unit of work — one assignee, one thing to do. Issues map directly to GitHub issues and are synced bi-directionally with Linear.
+
+Every issue **MUST** have these attributes set in Linear, before it moves to **In Progress**:
 
 - **Assignee**: a single owner (not a team)
 - **Description**: verbose enough for anyone on the team to understand scope and acceptance criteria without asking the author
-- **SDK label**: the SDK(s) the issue affects
-- **Type label**: one of `Bug`, `Docs`, `Feature`, `Improvement`, `Task`, or `Tests`
+- **Labels**: both an **SDK label** (the SDK(s) the issue affects) and a **Type label** (one of `Bug`, `Docs`, `Feature`, `Improvement`, `Task`, or `Tests`). These are required for workspace-level reporting in Linear.
 - **Estimate**: story-point or t-shirt size agreed by the team's estimation convention
 - **Priority**: set for all issues in the backlog or later states
 
-Issues estimated larger than **M** (or the team's medium equivalent) **MUST NOT** move to **Todo** until they are either split into smaller issues (each ≤ M) or converted to a Linear project.
+Issues estimated larger than **M** (or the team's medium equivalent) **MUST NOT** move to **Todo** until they are either split into smaller issues (each ≤ M) or converted to a project.
+
+### When is an issue done?
+
+- All acceptance criteria in the description are met
+- Code is reviewed and merged
+- Tests cover the changed behavior
+- Any user-facing documentation impact is either shipped or tracked in a follow-up issue
 
 </SpecSection>
 
 ---
 
-<SpecSection id="design-first" status="stable" since="1.0.0">
+<SpecSection id="projects" status="stable" since="1.0.0">
 
-## Design-first gate
+## Projects
+
+A project is a collection of related issues that together deliver a cohesive outcome for a single SDK. Projects live in Linear.
+
+Use a project when work spans multiple issues that need to be tracked together — for example, adding a new feature that requires API changes, tests, and docs. If the work fits in a single issue, don't create a project for it.
+
+### Design-first gate
 
 A design document is required before implementation begins when:
 
-- The issue or project estimate is greater than **M**, or
+- The project estimate is greater than **M**, or
 - The change affects more than one SDK
 
 Acceptable document types (one is sufficient): **Develop Docs** (implementation-heavy, scoped to one or a few SDKs), **RFC** (needs broad stakeholder input), **PRFAQ** (product-facing or user-visible), or **DACI** (needs explicit role clarity).
@@ -54,28 +68,15 @@ The document **MUST** be complete enough that a reviewer can approve the approac
 
 Link the design document in the Linear project's **Documentation** field. The first implementation PR should not be approved until a reviewer verifies the document is present.
 
-### Risk identification
+The design document **MUST** include a risk section identifying technical risks (implementation unknowns, performance concerns, platform-specific challenges), integration risks (upstream API dependencies, cross-SDK coordination), and anything else the team anticipates. High-rated risks **MUST** be addressed before the first implementation issue moves to **In Progress** — either by running a spike or by documenting a concrete mitigation plan. Don't start on the fun parts while high risks remain unresolved.
 
-The design document **MUST** include a risk section identifying technical risks (implementation unknowns, performance concerns, platform-specific challenges), integration risks (upstream API dependencies, cross-SDK coordination), and anything else the team anticipates.
+### Naming
 
-High-rated risks **MUST** be addressed before the first implementation issue moves to **In Progress** — either by running a spike or by documenting a concrete mitigation plan. Don't start on the fun parts while high risks remain unresolved.
+**Standalone projects** should use a clear, action-oriented title that describes what will be delivered, not what will be done.
 
-</SpecSection>
+**Cross-SDK rollout projects** — when the same effort is delivered independently by multiple SDK teams — **MUST** use the format `[Effort name] [SDK name]`. For example: `OTLP Integration [Python]`, `Implement Global Attributes API [Android]`. This makes it unambiguous which team owns the project and easy to filter.
 
----
-
-<SpecSection id="definition-of-done" status="stable" since="1.0.0">
-
-## Definition of done
-
-**Issue level** — an issue is done when:
-
-- All acceptance criteria in the description are met
-- Code is reviewed and merged
-- Tests cover the changed behavior
-- Any user-facing documentation impact is either shipped or tracked in a follow-up issue
-
-**Project level** — a project is done when:
+### When is a project done?
 
 - All issues are **Done** or **Cancelled** (with a note explaining why)
 - User-facing documentation is shipped, or explicitly deferred with a tracked follow-up
@@ -88,13 +89,13 @@ High-rated risks **MUST** be addressed before the first implementation issue mov
 
 ---
 
-<SpecSection id="project-naming" status="stable" since="1.0.0">
+<SpecSection id="initiatives" status="stable" since="1.0.0">
 
-## Project naming
+## Initiatives
 
-**Cross-SDK rollout projects** — when the same effort is delivered independently by multiple SDK teams — **MUST** use the format `[Effort name] [SDK name]`. For example: `OTLP Integration [Python]`, `Implement Global Attributes API [Android]`. This makes it unambiguous which team owns the project and easy to filter.
+An initiative is a cross-SDK effort that spawns one or more projects. Initiatives can contain sub-initiatives (forming a tree), with projects sitting on the leaves.
 
-**Standalone projects** should use a clear, action-oriented title that describes what will be delivered, not what will be done.
+Use an initiative when the same effort needs to be delivered independently by multiple SDK teams. Each SDK gets its own project under the initiative, following the `[Effort name] [SDK name]` naming convention.
 
 </SpecSection>
 
