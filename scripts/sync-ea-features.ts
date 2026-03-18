@@ -102,6 +102,67 @@ function parseFlagpoleYaml(): FlagpoleYaml {
   return yaml.load(content) as FlagpoleYaml;
 }
 
+/**
+ * Check if a segment grants access to non-EA orgs (i.e., is a "GA segment").
+ *
+ * A segment is considered GA if it has rollout > 0 AND:
+ * - Has no conditions (empty array = everyone), OR
+ * - Only has conditions that exclude certain orgs/plans (not require EA)
+ *
+ * Conditions that indicate a GA segment:
+ * - conditions: [] (empty = everyone)
+ * - conditions with only "not_in" operators (excludes certain plans)
+ * - conditions with only "not_equals" operators
+ */
+function isGASegment(segment: Segment): boolean {
+  if ((segment.rollout || 0) <= 0) {
+    return false;
+  }
+
+  const conditions = segment.conditions || [];
+
+  // Empty conditions = applies to everyone = GA
+  if (conditions.length === 0) {
+    return true;
+  }
+
+  // Check if ALL conditions are exclusion-based (not_in, not_equals)
+  // This means the segment applies broadly except for certain exclusions
+  const allExclusionBased = conditions.every(cond => {
+    if (!cond || !cond.operator) {
+      return false;
+    }
+    // These operators exclude certain values, meaning it's broadly available
+    return cond.operator === 'not_in' || cond.operator === 'not_equals';
+  });
+
+  return allExclusionBased;
+}
+
+/**
+ * Check if a segment requires Early Adopter status.
+ */
+function isEASegment(segment: Segment): boolean {
+  if ((segment.rollout || 0) <= 0) {
+    return false;
+  }
+
+  const conditions = segment.conditions || [];
+  return conditions.some(
+    cond => cond && cond.property === 'organization_is-early-adopter'
+  );
+}
+
+/**
+ * Extract features that are exclusively available to Early Adopters.
+ *
+ * A feature is EA-only if:
+ * 1. It has an EA segment with rollout > 0
+ * 2. It does NOT have any GA segment (segment that grants access to non-EA orgs)
+ *
+ * This excludes features that have both EA and GA segments, as those are
+ * effectively available to all users (or all self-serve users).
+ */
 function extractEAFeatures(data: FlagpoleYaml): string[] {
   const options = data.options || {};
   const eaFeatures: string[] = [];
@@ -118,28 +179,29 @@ function extractEAFeatures(data: FlagpoleYaml): string[] {
     }
 
     const segments = value.segments || [];
-    for (const segment of segments) {
-      if (!segment || typeof segment !== 'object') {
-        continue;
-      }
 
-      const conditions = segment.conditions || [];
-      let isEASegment = false;
+    // Check if this feature has an EA segment
+    const hasEASegment = segments.some(
+      segment => segment && typeof segment === 'object' && isEASegment(segment)
+    );
 
-      for (const cond of conditions) {
-        if (cond && cond.property === 'organization_is-early-adopter') {
-          isEASegment = true;
-          break;
-        }
-      }
-
-      if (isEASegment && (segment.rollout || 0) > 0) {
-        // Convert "feature.organizations:foo" to "organizations:foo"
-        const featureName = key.replace('feature.', '');
-        eaFeatures.push(featureName);
-        break;
-      }
+    if (!hasEASegment) {
+      continue;
     }
+
+    // Check if this feature also has a GA segment (would make it not EA-exclusive)
+    const hasGASegment = segments.some(
+      segment => segment && typeof segment === 'object' && isGASegment(segment)
+    );
+
+    if (hasGASegment) {
+      // Feature has both EA and GA segments - it's effectively GA, skip it
+      continue;
+    }
+
+    // Convert "feature.organizations:foo" to "organizations:foo"
+    const featureName = key.replace('feature.', '');
+    eaFeatures.push(featureName);
   }
 
   return eaFeatures.sort();
