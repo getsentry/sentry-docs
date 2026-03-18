@@ -56,19 +56,19 @@ jobs:
             echo "has_changes=true" >> $GITHUB_OUTPUT
             echo "Changes detected"
             
-            # Extract counts for PR description
-            new_count=$(grep -oP '(?<=NEW UNMAPPED FEATURES \()[0-9]+' sync-output.txt || echo "0")
-            removed_count=$(grep -oP '(?<=REMOVED FEATURES \()[0-9]+' sync-output.txt || echo "0")
-            documented_count=$(grep -oP '(?<=DOCUMENTED EA FEATURES \()[0-9]+' sync-output.txt || echo "0")
-            undocumented_count=$(grep -oP '(?<=UNDOCUMENTED EA FEATURES \()[0-9]+' sync-output.txt || echo "0")
+            # Extract counts for PR description (use emoji prefix to avoid UNDOCUMENTED matching DOCUMENTED)
+            new_count=$(grep -oP '(?<=❌ NEW UNMAPPED FEATURES \()[0-9]+' sync-output.txt || echo "0")
+            removed_count=$(grep -oP '(?<=⚠️  REMOVED FEATURES \()[0-9]+' sync-output.txt || echo "0")
+            documented_count=$(grep -oP '(?<=✅ DOCUMENTED EA FEATURES \()[0-9]+' sync-output.txt || echo "0")
+            undocumented_count=$(grep -oP '(?<=📝 UNDOCUMENTED EA FEATURES \()[0-9]+' sync-output.txt || echo "0")
             
             echo "new_count=$new_count" >> $GITHUB_OUTPUT
             echo "removed_count=$removed_count" >> $GITHUB_OUTPUT
             echo "documented_count=$documented_count" >> $GITHUB_OUTPUT
             echo "undocumented_count=$undocumented_count" >> $GITHUB_OUTPUT
             
-            # Extract undocumented features list for PR body
-            sed -n '/UNDOCUMENTED EA FEATURES/,/={60}/p' sync-output.txt | grep "^   - " | sed 's/^   //' > undocumented-features.txt || true
+            # Extract undocumented features list for PR body (use -E for extended regex)
+            sed -E -n '/UNDOCUMENTED EA FEATURES/,/={60}/p' sync-output.txt | grep "^   - " | sed 's/^   //' > undocumented-features.txt || true
           fi
 
       - name: Create Pull Request

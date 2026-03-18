@@ -471,36 +471,36 @@ function main(): void {
 
     // Step 8: Update if requested
     if (update) {
-      let updated = false;
+      let mappingUpdated = false;
 
       if (comparison.newFeatures.length > 0) {
         console.log('\nAdding new features to mapping file...');
         updateMappingWithNewFeatures(mapping, comparison.newFeatures);
-        updated = true;
+        mappingUpdated = true;
       }
 
       if (comparison.removedFeatures.length > 0) {
         console.log('\nRemoving old features from mapping file...');
         removeOldFeatures(mapping, comparison.removedFeatures);
-        updated = true;
+        mappingUpdated = true;
       }
 
-      if (updated) {
+      if (mappingUpdated) {
         saveMappingFile(mapping);
+      }
 
-        // Regenerate MDX only if mapping changed
-        const updatedVisibleFeatures = filterUserVisibleFeatures(
-          allEAFeatures,
-          mapping.excludePatterns
-        );
-        console.log('\nRegenerating MDX documentation page...');
-        const mdxContent = generateMDX(mapping, updatedVisibleFeatures);
-        saveMDX(mdxContent);
+      // Always regenerate MDX when --update is passed
+      // This ensures metadata changes (docsUrl, displayName, category) are reflected
+      // even when no features are added/removed. Git will detect if there are actual changes.
+      console.log('\nRegenerating MDX documentation page...');
+      const mdxContent = generateMDX(mapping, visibleFeatures);
+      saveMDX(mdxContent);
 
+      if (mappingUpdated) {
         console.log('\n✅ Updates complete!');
         console.log('   Review the changes and commit when ready.');
       } else {
-        console.log('\n✅ No changes to mapping file.');
+        console.log('\n✅ MDX regenerated. No changes to feature mapping.');
       }
     }
 
