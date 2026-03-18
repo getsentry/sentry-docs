@@ -16,22 +16,22 @@ Seer is Sentry's AI debugging agent. It uses Sentry's rich context (issue detail
 
 Seer provides end-to-end debugging tools to help you troubleshoot and fix errors and performance issues faster, often before they are even merged:
 
-- [**AI Code Review**](#ai-code-review): Have Seer review your code changes in GitHub, catching bugs before merging pull requests.
-- [**Root Cause Analysis**](#root-cause-analysis): Automatically scans issues as they come into Sentry, feeding additional context to your alerts and automating triage
-- [**PR Creation**](#pr-creation): A collaborative agent, skilled at root cause analysis and solving issues
-- [**Coding Agents**](#coding-agents): Delegate Seer's analysis to an external coding agent for further debugging and fixes
+- [**Autofix**](#autofix): Automatically scan issues as they come into Sentry, feeding additional context to your alerts and automating triage.
+- [**PR Creation**](#pr-creation): Use Autofix to generate a code fix and create a PR.
+- [**Coding Agents**](#coding-agents): Delegate Seer's analysis to an external coding agent for debugging and fixes.
+- [**Code Review**](#code-review): Have Seer review your code changes in GitHub, catching bugs before merging pull requests.
 
 <Arcade src="https://demo.arcade.software/Qv2KLty5r2aC6jCXkyWN?embed" />
 
 ## Getting Started with Seer
 
-To start using Seer's capabilities in your Sentry-enabled projects, follow these steps:
+To start using Seer's capabilities follow these steps:
 
-1. Connect to GitHub through the [Sentry GitHub integration](/organization/integrations/source-code-mgmt/github/). You can follow the steps in [Seer settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/seer/) to get started. **Note:** Seer can only be integrated with the cloud version of GitHub
+1. Connect to GitHub through the [Sentry GitHub integration](/organization/integrations/source-code-mgmt/github/). You can follow the steps in [Seer settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/seer/) to get started. **Note:** Seer can only be integrated with the cloud version of GitHub.
 
-2. Select which repositories you want Seer to have access to
+2. Select which repositories you want to connect to Sentry.
 
-3. Select which features to turn on - AI Code Review, Root Cause Analysis, PR generation of fixes
+3. Turn on Seer features for your projects and repos - Enable Issue Autofix, delegate to Coding Agents, and enable Code Review.
 
 <Alert level="warning">
 
@@ -41,19 +41,15 @@ Seer is an add-on to your Sentry subscription. By enabling it, you are signing u
 
 ## Seer Capabilities
 
-### AI Code Review
+### Autofix
 
-[AI Code Review](/product/ai-in-sentry/seer/ai-code-review/) helps you reviews your code changes, predicting errors and offering suggestions for improvement before merging pull requests. This feature is only available on GitHub.
+Seer is able to automatically analyze issues as they are ingested by Sentry by combining all of the relevant context from your code with Sentry's telemetry data to provide a best-in-class issue debugging experience. [Autofix](/product/ai-in-sentry/seer/autofix/) includes a Root Cause Analysis step that is used to:
 
-### Root Cause Analysis
-
-Seer is able to automatically analyze issues as they are ingested by Sentry by combining all of the relevant context from your code with Sentry's telemetry data to provide a best-in-class issue debugging experience. This initial review is used to:
-
-- Determine if the issue can be automatically analyzed and fixed using Seer's Root Cause Analysis
+- Determine if the issue can be automatically analyzed and fixed using Seer's Autofix
 - Augment issue alerts with a helpful analysis about the problem
 - Add an initial guess for what the potential problem is to the issue details page
 
-Once the Root Cause Analysis has run, Seer will provide remediatiion recommendations. 
+Once Autofix has run, Seer will provide remediation recommendations. 
 
 ### PR Creation
 
@@ -61,7 +57,11 @@ You can prompt Seer to generate PRs to fix your issue, and push it to GitHub. Yo
 
 ### Coding Agents
 
-You can delegate Seer's root cause analysis to an external coding agent, such as [Cursor](/organization/integrations/cursor/), for further debugging and fixes.
+You can delegate Seer's Autofix to an external coding agent, such as [Cursor](/organization/integrations/cursor/), for further debugging and fixes.
+
+### Code Review
+
+[AI Code Review](/product/ai-in-sentry/seer/code-review/) helps you reviews your code changes, predicting errors and offering suggestions for improvement before merging pull requests. This feature is only available on GitHub.
 
 ## What Seer Uses
 
@@ -89,6 +89,8 @@ You can learn more about our data privacy practices [in the security and legal d
 
 - If you want to use some generative AI features, while disabling others, you can bulk manage these settings by going to [Seer settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/seer/) and selecting from the dropdown at the top of the table in each tab. 
 
-- For organizations that need to prevent code generation, or adding additional context in Alerts, you can find these configurations under [Advanced Settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/seer/#enableSeerCoding) in Seer settings. 
+- For organizations that need to prevent Seer from creating PRs, or adding additional context in Alerts, you can find these configurations under [Advanced Settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/seer/#enableSeerCoding) in Seer settings. 
 
-**Note:** Disabling code generation prevents Sentry from automatically generating code, or pushing code to your codebase. This setting does not impact AI chat sessions, where it is possible to prompt AI chat to emit code snippets and examples. None of this affects workflows involving your own coding agent. Learn more about [code generation](/product/ai-in-sentry/seer/root-cause-analysis/#code-generation).
+**Note:** Disabling the setting removes the **Create PR** button from the Autofix flow and prevents anyone from enabling **Allow Root Cause Analysis to create PRs by Default**. Sentry will not create PRs or push code to your codebase. This setting does 
+not impact AI chat sessions, where you can potentially prompt our AI chat to emit code 
+snippets and examples, and does not affect workflows involving your own coding agent.
