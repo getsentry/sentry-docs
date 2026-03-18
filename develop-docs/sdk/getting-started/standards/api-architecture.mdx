@@ -2,7 +2,7 @@
 title: API and Architecture
 spec_id: sdk/getting-started/standards/api-architecture
 spec_version: 1.0.0
-spec_status: candidate
+spec_status: stable
 spec_platforms:
   - all
 spec_changelog:
@@ -16,179 +16,104 @@ sidebar_order: 1
 
 <SpecMeta />
 
-<SpecSection id="relay-decision-gate" status="candidate" since="1.0.0">
+These standards guide how SDKs are designed and evolved. The core philosophy: prefer server-side logic, protect public API stability, and give users smooth upgrade paths. SDKs often stay installed for years after release, so decisions made today have long-lasting consequences.
 
-## Server-side (Relay) vs. SDK-side decision gate
+<SpecSection id="relay-decision-gate" status="stable" since="1.0.0">
 
-#### Rule
+## Server-side (Relay) vs. SDK implementation
 
-New processing or transformation logic **MUST** default to server-side (Relay).
+When deciding where new logic should live, default to server-side (Relay). Processing data in Relay keeps behavior consistent across SDK versions and avoids duplicating logic in clients that may remain deployed indefinitely.
 
-Logic **SHOULD** only be implemented in the SDK when it meets one of these criteria:
+Put logic in the SDK only when it genuinely needs to run client-side:
 
-- **MUST** run before data leaves the customer's application (e.g., user-controlled filtering like `before_send_*`)
-- **REQUIRES** access to platform-specific APIs
-- Is strictly latency-sensitive
-- **MUST** function in offline scenarios
+- It **MUST** run before data leaves the customer's application (e.g., user-controlled filtering like `before_send_*`)
+- It requires access to platform-specific APIs
+- It's strictly latency-sensitive
+- It **MUST** function in offline scenarios
 
-Transformations of data that has already been collected should be handled in Relay. This ensures consistency across SDK versions and avoids duplicating logic in clients that may remain in use indefinitely.
-
-#### Enforcement
-
-- AGENTS.md instruction
-- Human review
-
-#### Per-SDK override
-
-<StatusBadge type="no" /> The default is universal. Justifications are
-SDK-specific.
+If data has already been collected, transform it in Relay.
 
 </SpecSection>
 
 ---
 
-<SpecSection id="forward-compatibility" status="candidate" since="1.0.0">
+<SpecSection id="forward-compatibility" status="stable" since="1.0.0">
 
-## SDK-side logic must not break on server changes
+## Forward compatibility
 
-#### Rule
+SDKs typically outlive individual API versions. A user might stay on an SDK release for months or years, while server responses continue to evolve. SDKs **MUST** handle this gracefully:
 
-SDKs typically outlive individual API versions, so forward compatibility is essential to prevent ecosystem breakage.
+- Ignore unknown fields, categories, or dimensions rather than erroring
+- Tolerate missing optional fields
+- Accept new enum values without crashing
+- Handle rate limiting responses
 
-SDKs **MUST** remain resilient to evolving server responses:
-
-- Additional fields
-- Missing optional fields
-- New enum values
-- Rate limiting
-
-They **MUST NOT** fail due to additive changes. Unknown fields, categories, or dimensions **SHOULD** be safely ignored rather than causing errors.
-
-#### Enforcement
-
-- Integration tests for degraded server scenarios (additional fields, missing optional fields, new enum values, rate limiting)
-- Human review
-
-#### Per-SDK override
-
-<StatusBadge type="yes" /> Specific tests vary. Principle is universal.
+The general principle: additive server-side changes **MUST NOT** break existing SDK versions.
 
 </SpecSection>
 
 ---
 
-<SpecSection id="public-api-approval" status="candidate" since="1.0.0">
+<SpecSection id="public-api-approval" status="stable" since="1.0.0">
 
-## Public API change approval gate
+## Public API changes
 
-#### Rule
+Any change to public API — adding, modifying, deprecating, or removing — **REQUIRES** approval from an [SDK Senior Engineer](https://github.com/orgs/getsentry/teams/sdk-seniors).
 
-Any change to public API (add, change, deprecate, remove) **REQUIRES** @sdk-leads approval. Public API includes anything a user can call, import, configure, subclass, or otherwise reference. If there is any doubt whether something is public, check for usage in public repositories using the SDK. When still unsure, treat it as public.
+Public API includes anything a user can call, import, configure, subclass, or otherwise reference. When in doubt, check for usage in public repositories. If you're still unsure, treat it as public.
 
-#### Enforcement
-
-- CI API snapshot diffs (where feasible)
-- Human review gate (@sdk-leads approval)
-
-#### Suggested skill(s)
-
-- [`sentry-skills:code-review`](https://github.com/getsentry/skills#available-skills) — flags API changes for escalation.
-
-#### Per-SDK override
-
-<StatusBadge type="yes" /> Detection mechanisms are language-specific. Approval
-requirement is universal.
+How each SDK detects API changes (CI snapshot diffs, etc.) varies by language, but the approval requirement applies everywhere.
 
 </SpecSection>
 
 ---
 
-<SpecSection id="semantic-conventions-process" status="candidate" since="1.0.0">
+<SpecSection id="semantic-conventions-process" status="stable" since="1.0.0">
 
-## Semantic conventions process
+## Semantic conventions
 
-#### Rule
+Semantic conventions are shared across SDKs, ingest, and the product — treat them like public API. New attributes **MUST** be defined in [sentry-conventions](https://github.com/getsentry/sentry-conventions) before SDK implementation. The process:
 
-New attributes **MUST** first be defined in [sentry-conventions](https://github.com/getsentry/sentry-conventions).
-Process:
+1. Open a PR to sentry-conventions
+2. Get code owner approval
+3. Wait at least 3 business days
+4. Implement in the SDK
 
-1. PR to sentry-conventions
-2. code owner approval
-3. 3 business day minimum wait
-4. SDK implementation
+This ensures attributes are reviewed and consistent across the ecosystem before any SDK ships them.
 
-#### Enforcement
-
-- CI validation where feasible
-- Human review
-
-#### Per-SDK override
-
-<StatusBadge type="no" />
+Changes to existing attributes (renaming, removing, or changing semantics) are breaking changes and **MUST** follow the [breaking change process](#breaking-and-deprecation). The sentry-conventions repo has its own deprecation lifecycle — deprecated attributes go through a `backfill` period (at least 90 days) before moving to `normalize`, and replacements and aliases **MUST** be maintained for both old and new names during the transition.
 
 </SpecSection>
 
 ---
 
-<SpecSection id="breaking-change-process" status="candidate" since="1.0.0">
+<SpecSection id="breaking-and-deprecation" status="stable" since="1.0.0">
 
-## Breaking change process
+## Breaking changes and deprecations
 
-#### Rule
+Breaking changes and deprecations are closely linked — every breaking change goes through a deprecation period first. Both follow a lifecycle designed to give users time and guidance to migrate.
 
-Breaking changes **MUST** follow the [breaking changes playbook](/sdk/getting-started/playbooks/sdk-lifecycle/breaking-changes).
+### Deprecation lifecycle
 
-Breaking changes **MAY** only ship in a major version. They **MUST NOT** ship in minor versions. Opt-in previews are allowed in minor versions.
+Deprecations of public APIs, integrations, and supported platforms follow three stages:
 
-A deprecation period is **REQUIRED** in a prior minor version, during which dual behavior is allowed to support migration.
+1. **Announce** in a minor release: add a runtime warning (where possible), update the changelog and docs, and publish a migration guide. Warnings **MUST** include the replacement, a code example, and a link to migration docs.
+2. **Keep it working** for at least one subsequent minor release (e.g., deprecated in X.Y, still functional in X.(Y+1)).
+3. **Remove** only in the next major release (X+1.0).
+
+Deprecating an entire SDK is a bigger deal — it requires customer impact analysis, a public announcement, updated documentation, a defined support timeline, and advance EOL notice.
+
+### Breaking changes
+
+Breaking changes **MUST** follow the [breaking changes playbook](/sdk/getting-started/playbooks/sdk-lifecycle/breaking-changes). They can only ship in major versions; opt-in previews are allowed in minor versions.
 
 Every breaking change **MUST** include:
 
 - A migration guide with copy-pastable examples
-- A changelog entry using the BREAKING CHANGE: notation
-- Validation of the migration guide using an LLM to ensure it is clear and complete
+- A changelog entry using the `BREAKING CHANGE:` notation
+- Validation of the migration guide using an LLM to ensure clarity and completeness
 
-#### Enforcement
-
-- [Commit footer BREAKING CHANGE:](/engineering-practices/commit-messages/#footer) triggers CI checks
-- Breaking changes in non-major branches are CI-blocked
-- Human review
-
-#### Suggested skill(s)
-
-- [`sentry-skills:code-review`](https://github.com/getsentry/skills#available-skills)
-
-#### Per-SDK override
-
-<StatusBadge type="yes" /> Deprecation period timelines can vary. Process is
-universal.
-
-</SpecSection>
-
----
-
-<SpecSection id="deprecation-lifecycle" status="candidate" since="1.0.0">
-
-## Deprecation lifecycle
-
-#### Rule
-
-All deprecations of public APIs, user-facing integrations, and supported platforms or frameworks follow three stages:
-
-1. Announce in a minor release with a runtime warning (where possible), updated changelog and documentation, and a migration guide. Warnings **MUST** include the replacement, a code example, and a link to the migration docs.
-2. Keep the deprecated surface fully functional for at least one subsequent minor release (e.g., deprecated in X.Y, still supported in X.(Y+1)).
-3. Remove only in the next major release (X+1.0).
-
-Deprecating an entire SDK **MUST NOT** be silent. It **REQUIRES** clear customer impact analysis, a public announcement, updated documentation, a defined support timeline, and advance EOL notice.
-
-#### Enforcement
-
-- CI checks deprecated APIs still have passing tests
-- Human review
-
-#### Per-SDK override
-
-<StatusBadge type="yes" /> Minimum period can be extended. Stages are universal.
+Deprecation timelines can vary by SDK, but the stages and process apply everywhere.
 
 </SpecSection>
 
