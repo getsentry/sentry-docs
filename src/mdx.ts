@@ -1,10 +1,10 @@
+import {compile} from '@mdx-js/mdx';
 import matter from 'gray-matter';
 import {s} from 'hastscript';
 import yaml from 'js-yaml';
-import {bundleMDX} from 'mdx-bundler';
 import {BinaryLike, createHash} from 'node:crypto';
 import {createReadStream, createWriteStream, mkdirSync} from 'node:fs';
-import {access, cp, mkdir, opendir, readFile} from 'node:fs/promises';
+import {access, mkdir, opendir, readFile} from 'node:fs/promises';
 import path from 'node:path';
 // @ts-expect-error ts(2305) -- For some reason "compose" is not recognized in the types
 import {compose, Readable} from 'node:stream';
@@ -21,7 +21,6 @@ import rehypePresetMinify from 'rehype-preset-minify';
 import rehypePrismDiff from 'rehype-prism-diff';
 import rehypePrismPlus from 'rehype-prism-plus';
 import remarkGfm from 'remark-gfm';
-import remarkMdxImages from 'remark-mdx-images';
 
 import getAppRegistry from './build/appRegistry';
 import getPackageRegistry from './build/packageRegistry';
@@ -34,7 +33,8 @@ import rehypeSlug from './rehype-slug.js';
 import remarkCodeTabs from './remark-code-tabs';
 import remarkCodeTitles from './remark-code-title';
 import remarkComponentSpacing from './remark-component-spacing';
-import remarkExtractFrontmatter from './remark-extract-frontmatter';
+import remarkCopyImages, {copyImagesFromSource} from './remark-copy-images';
+// remarkExtractFrontmatter removed — gray-matter strips frontmatter before compile()
 import remarkFormatCodeBlocks from './remark-format-code';
 import remarkImageProcessing from './remark-image-processing';
 import remarkImageResize from './remark-image-resize';
@@ -62,7 +62,7 @@ const root = process.cwd();
 // so many files at once.
 const FILE_CONCURRENCY_LIMIT = 200;
 const CACHE_COMPRESS_LEVEL = 4;
-const CACHE_DIR = path.join(root, '.next', 'cache', 'mdx-bundler');
+const CACHE_DIR = path.join(root, '.next', 'cache', 'mdx-compile');
 if (process.env.CI) {
   mkdirSync(CACHE_DIR, {recursive: true});
 }
@@ -637,7 +637,6 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
 
   let cacheKey: string | null = null;
   let cacheFile: string | null = null;
-  let assetsCacheDir: string | null = null;
 
   // Always use public/mdx-images during build
   // During runtime (Lambda), this directory is read-only but images are already there from build
@@ -649,6 +648,11 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
     // If we can't create the directory (e.g., read-only filesystem),
     // continue anyway - images should already exist from build time
   }
+
+  // Copy images referenced in the source to public/mdx-images/ BEFORE the cache check.
+  // This ensures images exist even when MDX compilation is served from cache.
+  const cwd = path.dirname(sourcePath);
+  copyImagesFromSource(source, cwd, outdir);
 
   // Detect if file contains content that depends on the Release Registry
   // If it does, we include the registry hash in the cache key so the cache
@@ -687,10 +691,9 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
 
     if (cacheKey) {
       cacheFile = path.join(CACHE_DIR, `${cacheKey}.br`);
-      assetsCacheDir = path.join(CACHE_DIR, cacheKey);
 
       try {
-        // Time only the cache read operation, not the asset copy
+        // Time only the cache read operation
         const cacheStartTime = Date.now();
         const cached = await readCacheFile<SlugFile>(cacheFile);
         const cacheReadDuration = Date.now() - cacheStartTime;
@@ -713,9 +716,6 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
           });
         }
 
-        // Copy assets (wait for completion before returning)
-        await cp(assetsCacheDir, outdir, {recursive: true});
-
         return cached;
       } catch (err) {
         if (
@@ -731,127 +731,87 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
     }
   }
 
-  process.env.ESBUILD_BINARY_PATH = path.join(
-    root,
-    'node_modules',
-    'esbuild',
-    'bin',
-    'esbuild'
-  );
-
   const toc: TocNode[] = [];
 
-  // cwd is how mdx-bundler knows how to resolve relative paths
-  const cwd = path.dirname(sourcePath);
+  // Extract frontmatter via gray-matter before compilation.
+  // Must strip frontmatter before passing to @mdx-js/mdx because
+  // frontmatter content (e.g. `<=` in descriptions) can be incorrectly parsed as JSX.
+  const matterResult = matter(source);
+  const frontmatter = matterResult.data as Platform;
 
   // Track MDX compilation timing
   const compilationStart = Date.now();
 
-  const result = await bundleMDX<Platform>({
-    source,
-    cwd,
-    mdxOptions(options) {
-      // this is the recommended way to add custom remark/rehype plugins:
-      // The syntax might look weird, but it protects you in case we add/remove
-      // plugins in the future.
-      options.remarkPlugins = [
-        ...(options.remarkPlugins ?? []),
-        remarkExtractFrontmatter,
-        [remarkTocHeadings, {exportRef: toc}],
-        remarkGfm,
-        remarkDefList,
-        remarkFormatCodeBlocks,
-        [
-          remarkImageProcessing,
-          {sourceFolder: cwd, publicFolder: path.join(root, 'public')},
-        ],
-        remarkMdxImages,
-        remarkImageResize,
-        remarkCodeTitles,
-        remarkCodeTabs,
-        remarkComponentSpacing,
-        [
-          remarkVariables,
-          {
-            resolveScopeData: async () => {
-              const [apps, packages] = await Promise.all([
-                getAppRegistry(),
-                getPackageRegistry(),
-              ]);
+  const compiled = await compile(matterResult.content, {
+    outputFormat: 'function-body',
+    remarkPlugins: [
+      [remarkTocHeadings, {exportRef: toc}],
+      remarkGfm,
+      remarkDefList,
+      remarkFormatCodeBlocks,
+      [
+        remarkImageProcessing,
+        {sourceFolder: cwd, publicFolder: path.join(root, 'public')},
+      ],
+      [remarkCopyImages, {sourceFolder: cwd, outdir}],
+      remarkImageResize,
+      remarkCodeTitles,
+      remarkCodeTabs,
+      remarkComponentSpacing,
+      [
+        remarkVariables,
+        {
+          resolveScopeData: async () => {
+            const [apps, packages] = await Promise.all([
+              getAppRegistry(),
+              getPackageRegistry(),
+            ]);
 
-              return {apps, packages};
-            },
+            return {apps, packages};
           },
-        ],
-      ];
-      options.rehypePlugins = [
-        ...(options.rehypePlugins ?? []),
-        rehypeSlug,
-        [
-          rehypeAutolinkHeadings,
-          {
-            behavior: 'wrap',
-            properties: {
-              ariaHidden: true,
-              tabIndex: -1,
-              className: 'autolink-heading',
-            },
-            content: [
-              s(
-                'svg.anchorlink.before',
-                {
-                  xmlns: 'http://www.w3.org/2000/svg',
-                  width: 16,
-                  height: 16,
-                  fill: 'currentColor',
-                  viewBox: '0 0 24 24',
-                },
-                s('path', {
-                  d: 'M9.199 13.599a5.99 5.99 0 0 0 3.949 2.345 5.987 5.987 0 0 0 5.105-1.702l2.995-2.994a5.992 5.992 0 0 0 1.695-4.285 5.976 5.976 0 0 0-1.831-4.211 5.99 5.99 0 0 0-6.431-1.242 6.003 6.003 0 0 0-1.905 1.24l-1.731 1.721a.999.999 0 1 0 1.41 1.418l1.709-1.699a3.985 3.985 0 0 1 2.761-1.123 3.975 3.975 0 0 1 2.799 1.122 3.997 3.997 0 0 1 .111 5.644l-3.005 3.006a3.982 3.982 0 0 1-3.395 1.126 3.987 3.987 0 0 1-2.632-1.563A1 1 0 0 0 9.201 13.6zm5.602-3.198a5.99 5.99 0 0 0-3.949-2.345 5.987 5.987 0 0 0-5.105 1.702l-2.995 2.994a5.992 5.992 0 0 0-1.695 4.285 5.976 5.976 0 0 0 1.831 4.211 5.99 5.99 0 0 0 6.431 1.242 6.003 6.003 0 0 0 1.905-1.24l1.723-1.723a.999.999 0 1 0-1.414-1.414L9.836 19.81a3.985 3.985 0 0 1-2.761 1.123 3.975 3.975 0 0 1-2.799-1.122 3.997 3.997 0 0 1-.111-5.644l3.005-3.006a3.982 3.982 0 0 1 3.395-1.126 3.987 3.987 0 0 1 2.632 1.563 1 1 0 0 0 1.602-1.198z',
-                })
-              ),
-            ],
+        },
+      ],
+    ],
+    rehypePlugins: [
+      rehypeSlug,
+      [
+        rehypeAutolinkHeadings,
+        {
+          behavior: 'wrap',
+          properties: {
+            ariaHidden: true,
+            tabIndex: -1,
+            className: 'autolink-heading',
           },
-        ],
-        [rehypePrismPlus, {ignoreMissing: true}] as any,
-        rehypeOnboardingLines,
-        [rehypePrismDiff, {remove: true}] as any,
-        rehypePresetMinify,
-      ];
-      return options;
-    },
-    esbuildOptions: options => {
-      options.loader = {
-        ...options.loader,
-        '.js': 'jsx',
-        '.png': 'file',
-        '.gif': 'file',
-        '.jpg': 'file',
-        '.jpeg': 'file',
-        // inline svgs
-        '.svg': 'dataurl',
-      };
-      // Set the `outdir` to a public location for this bundle.
-      // this is where these images will be copied
-      // the reason we use the cache folder when it's
-      // enabled is because mdx-images is a dumping ground
-      // for all images, so we cannot filter it out only
-      // for this specific slug easily
-      options.outdir = assetsCacheDir || outdir;
-
-      // Set write to false to prevent esbuild from writing files automatically.
-      // We'll handle writing manually to gracefully handle read-only filesystems (e.g., Lambda runtime)
-      // In local dev, we need write=true to avoid images being embedded as binary data
-      options.write =
-        process.env.NODE_ENV === 'development' || !!process.env.CI || !process.env.VERCEL;
-
-      return options;
-    },
+          content: [
+            s(
+              'svg.anchorlink.before',
+              {
+                xmlns: 'http://www.w3.org/2000/svg',
+                width: 16,
+                height: 16,
+                fill: 'currentColor',
+                viewBox: '0 0 24 24',
+              },
+              s('path', {
+                d: 'M9.199 13.599a5.99 5.99 0 0 0 3.949 2.345 5.987 5.987 0 0 0 5.105-1.702l2.995-2.994a5.992 5.992 0 0 0 1.695-4.285 5.976 5.976 0 0 0-1.831-4.211 5.99 5.99 0 0 0-6.431-1.242 6.003 6.003 0 0 0-1.905 1.24l-1.731 1.721a.999.999 0 1 0 1.41 1.418l1.709-1.699a3.985 3.985 0 0 1 2.761-1.123 3.975 3.975 0 0 1 2.799 1.122 3.997 3.997 0 0 1 .111 5.644l-3.005 3.006a3.982 3.982 0 0 1-3.395 1.126 3.987 3.987 0 0 1-2.632-1.563A1 1 0 0 0 9.201 13.6zm5.602-3.198a5.99 5.99 0 0 0-3.949-2.345 5.987 5.987 0 0 0-5.105 1.702l-2.995 2.994a5.992 5.992 0 0 0-1.695 4.285 5.976 5.976 0 0 0 1.831 4.211 5.99 5.99 0 0 0 6.431 1.242 6.003 6.003 0 0 0 1.905-1.24l1.723-1.723a.999.999 0 1 0-1.414-1.414L9.836 19.81a3.985 3.985 0 0 1-2.761 1.123 3.975 3.975 0 0 1-2.799-1.122 3.997 3.997 0 0 1-.111-5.644l3.005-3.006a3.982 3.982 0 0 1 3.395-1.126 3.987 3.987 0 0 1 2.632 1.563 1 1 0 0 0 1.602-1.198z',
+              })
+            ),
+          ],
+        },
+      ],
+      [rehypePrismPlus, {ignoreMissing: true}] as any,
+      rehypeOnboardingLines,
+      [rehypePrismDiff, {remove: true}] as any,
+      rehypePresetMinify,
+    ],
   }).catch(e => {
     // eslint-disable-next-line no-console
-    console.error('Error occurred during MDX compilation:', e.errors);
+    console.error('Error occurred during MDX compilation:', e);
     throw e;
   });
+
+  const code = String(compiled);
 
   // Track MDX compilation metrics for cache miss (server-side only)
   const compilationDuration = Date.now() - compilationStart;
@@ -872,19 +832,13 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
     });
   }
 
-  // Manually write output files from esbuild when available
-  // This only happens during build time (when filesystem is writable)
-  // At runtime (Lambda), files already exist from build time
-
-  const {code, frontmatter} = result;
-
   let mergedFrontmatter = frontmatter;
   if (configFrontmatter) {
     mergedFrontmatter = {...frontmatter, ...configFrontmatter};
   }
 
   const resultObj: SlugFile = {
-    matter: result.matter,
+    matter: matterResult as SlugFile['matter'],
     mdxSource: code,
     toc,
     frontMatter: {
@@ -893,13 +847,7 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
     },
   };
 
-  if (assetsCacheDir && cacheFile && cacheKey) {
-    try {
-      await cp(assetsCacheDir, outdir, {recursive: true});
-    } catch (e) {
-      // If copy fails (e.g., on read-only filesystem), continue anyway
-      // Images should already exist from build time
-    }
+  if (cacheFile && cacheKey) {
     writeCacheFile(cacheFile, JSON.stringify(resultObj)).catch(e => {
       // eslint-disable-next-line no-console
       console.warn(`Failed to write MDX cache: ${cacheFile}`, e);

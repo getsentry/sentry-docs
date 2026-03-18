@@ -6,30 +6,25 @@ import {redirects} from './redirects.js';
 
 // Exclude build-time-only dependencies from serverless function bundles to stay under
 // Vercel's 250MB limit. These packages are only needed during build to compile MDX and
-// optimize assets. We use a local getMDXComponent (src/getMDXComponent.ts) instead of
-// mdx-bundler/client to avoid CJS/ESM compatibility issues at runtime.
+// optimize assets.
 const sharedExcludes = [
   '**/*.map',
   './.git/**/*',
   './apps/**/*',
-  './.next/cache/mdx-bundler/**/*',
+  './.next/cache/mdx-compile/**/*',
   './.next/cache/md-exports/**/*',
-  // Heavy build dependencies
-  'node_modules/@esbuild/**/*',
-  'node_modules/esbuild/**/*',
+  // Heavy build/script-only dependencies (not needed at runtime)
   'node_modules/@aws-sdk/**/*',
   'node_modules/@google-cloud/**/*',
   'node_modules/prettier/**/*',
   'node_modules/@prettier/**/*',
   'node_modules/sharp/**/*',
   'node_modules/mermaid/**/*',
-  // MDX processing dependencies (local getMDXComponent replaces mdx-bundler/client)
-  'node_modules/mdx-bundler/**/*',
+  // MDX processing dependencies (only needed at build time for SSG)
   'node_modules/rehype-preset-minify/**/*',
   'node_modules/rehype-prism-plus/**/*',
   'node_modules/rehype-prism-diff/**/*',
   'node_modules/remark-gfm/**/*',
-  'node_modules/remark-mdx-images/**/*',
   'node_modules/unified/**/*',
   'node_modules/rollup/**/*',
 ];
@@ -50,6 +45,9 @@ const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
         'node_modules/prettier/plugins',
         'node_modules/rollup/dist',
         'public/og-images/**/*',
+        'public/mdx-images/**/*',
+        'public/md-exports/**/*',
+        '**/*.pdf',
       ],
       'sitemap.xml': [
         'public/mdx-images/**/*',
@@ -103,19 +101,10 @@ const nextConfig = {
   trailingSlash: true,
   serverExternalPackages: [
     'rehype-preset-minify',
-    'esbuild',
-    '@esbuild/darwin-arm64',
-    '@esbuild/darwin-x64',
-    '@esbuild/linux-arm64',
-    '@esbuild/linux-x64',
-    '@esbuild/win32-x64',
-    // mdx-bundler fully excluded via outputFileTracingExcludes
     'sharp',
     '@aws-sdk/client-s3',
-    '@google-cloud/storage',
     'prettier',
     '@prettier/plugin-xml',
-    'mermaid',
   ],
   outputFileTracingExcludes,
   outputFileTracingIncludes,

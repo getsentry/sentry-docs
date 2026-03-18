@@ -1,5 +1,5 @@
 import {Fragment, ReactElement, useMemo} from 'react';
-import {bundleMDX} from 'mdx-bundler';
+import {compile} from '@mdx-js/mdx';
 
 import {type API} from 'sentry-docs/build/resolveOpenAPI';
 import {getMDXComponent} from 'sentry-docs/getMDXComponent';
@@ -95,21 +95,11 @@ async function parseMarkdown(source: string): Promise<ReactElement> {
   source = source.replace(/style="([^"]+)"/g, (_, style) => {
     return `style={${JSON.stringify(cssToObj(style))}}`;
   });
-  const {code} = await bundleMDX({
-    source,
-    cwd: process.cwd(),
-    mdxOptions(options) {
-      options.remarkPlugins = [remarkCodeTitles, remarkCodeTabs];
-      return options;
-    },
-    esbuildOptions: options => {
-      options.loader = {
-        ...options.loader,
-        '.js': 'jsx',
-      };
-      return options;
-    },
+  const compiled = await compile(source, {
+    outputFormat: 'function-body',
+    remarkPlugins: [remarkCodeTitles, remarkCodeTabs],
   });
+  const code = String(compiled);
   function MDXLayoutRenderer({mdxSource, ...rest}) {
     const MDXLayout = useMemo(() => getMDXComponent(mdxSource), [mdxSource]);
     return <MDXLayout components={mdxComponents()} {...rest} />;

@@ -4,6 +4,7 @@ import {Arcade} from './components/arcade';
 import {AvailableSince} from './components/availableSince';
 import {Break} from './components/break';
 import {Card} from './components/card';
+import {DocsChangelog} from './components/changelog/docsChangelog';
 import {CliChecksumTable} from './components/cliChecksumTable';
 import {CodeBlock} from './components/codeBlock';
 import {CodeTabs} from './components/codeTabs';
@@ -18,6 +19,7 @@ import {DevDocsCardGrid} from './components/devDocsCardGrid';
 import DocImage from './components/docImage';
 import {Expandable} from './components/expandable';
 import {FeatureBadge} from './components/featureBadge';
+import {FeatureInfo} from './components/featureInfo';
 import {GitHubCodePreview} from './components/githubCodePreview';
 import {GitHubDomainChecker} from './components/githubDomainChecker';
 import {GradleFeatureConfig} from './components/gradleFeatureConfig';
@@ -98,8 +100,10 @@ export function mdxComponents(
     GradleUploadInstructions,
     ConfigValue,
     DefinitionList,
+    DocsChangelog,
     Expandable,
     FeatureBadge,
+    FeatureInfo,
     GuideGrid,
     IntegrationListItem,
     JsBundleList,
