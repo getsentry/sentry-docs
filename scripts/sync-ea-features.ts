@@ -205,9 +205,7 @@ function generateSuggestedMapping(feature: string): EAFeatureMapping {
   // Convert feature name to display name
   const name = feature.replace('organizations:', '').replace('projects:', '');
   const words = name.replace(/-/g, ' ').replace(/_/g, ' ').split(' ');
-  const displayName = words
-    .map(w => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(' ');
+  const displayName = words.map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 
   return {
     category: 'Uncategorized',
@@ -277,7 +275,7 @@ function generateMDX(mapping: EAFeaturesJson, activeFeatures: string[]): string 
     'og_image: /og-images/organization-early-adopter-features.png',
     '---',
     '',
-    'If you\'re interested in being an Early Adopter, you can turn your organization\'s Early Adopter status on/off in **Settings > General Settings**. This will affect all users in your organization and can be turned back off just as easily.',
+    "If you're interested in being an Early Adopter, you can turn your organization's Early Adopter status on/off in **Settings > General Settings**. This will affect all users in your organization and can be turned back off just as easily.",
     '',
     '![The Early Adopter toggle enabled in settings.](./img/early-adopter-toggle.png)',
     '',
