@@ -14,12 +14,12 @@ import {CodeContext} from '../codeContext';
 
 const OPTION_IDS = [
   'error-monitoring',
-  'logs',
-  'session-replay',
   'performance',
   'profiling',
-  'source-maps',
+  'session-replay',
+  'logs',
   'user-feedback',
+  'source-maps',
   'source-context',
   'dsym',
   'opentelemetry',
