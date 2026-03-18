@@ -1,0 +1,89 @@
+---
+title: Screen Loads
+sidebar_order: 30
+description: >-
+  Learn how to monitor your mobile application's performance by using Screen
+  Loads to get better visibility on your application's TTID and TTFD
+  performance.
+og_image: /og-images/product-insights-mobile-mobile-vitals-screen-loads.png
+---
+
+<Alert title="Beta">
+
+This feature is currently in beta. Features in beta are still in-progress and may have bugs. We recognize the irony. Learn more about enabling Early Adopter Features [here](/organization/early-adopter-features/).
+
+</Alert>
+
+{/*![Example of Screen Loads](./img/screen-loads.png)*/}
+
+The **Screen Loads** dashboard in [Sentry Dashboards](https://sentry.io/orgredirect/organizations/:orgslug/dashboards/) shows an overview of the amount of time it takes for your application to load its screens. It helps you identify slow or regressed screens and gives additional information so you can better understand the factors contributing to the slowness of both time to initial display (TTID) and time to full display (TTFD).
+
+Sentry tracks TTID automatically, but [TTFD](/product/dashboards/sentry-dashboards/mobile/mobile-vitals/#time-to-initial-display-and-time-to-full-display) requires that the `reportFullyDisplayed()` API be manually called to report that the screen has loaded all of its content and is fully displayed.
+
+### Minimum SDK Requirements:
+
+**For Android:**
+
+- `>=5.0` for automatic activity transactions
+- `>=6.10.0` for [TTID](/platforms/android/tracing/instrumentation/automatic-instrumentation/#time-to-initial-display)
+- `>=6.17.0` for [TTFD](/platforms/android/tracing/instrumentation/automatic-instrumentation/#time-to-full-display)
+
+**For iOS:**
+
+- `>=7.12.0` for UIViewController transactions
+- `>=8.4.0` for [TTID](/platforms/apple/guides/ios/tracing/instrumentation/automatic-instrumentation/#time-to-initial-display)+[TTFD](/platforms/apple/guides/ios/tracing/instrumentation/automatic-instrumentation/#time-to-full-display) for UIViewController
+- `>=8.44.0` for [TTID+TTFD for SwiftUI](/platforms/apple/tracing/instrumentation/swiftui-instrumentation/#time-to-initial-display-and-time-to-full-display)
+
+**For Flutter:**
+
+- `>=7.18.0` [TTID+TTFD for Routing Instrumentation](/platforms/dart/guides/flutter/integrations/routing-instrumentation/#time-to-initial-display)
+
+**For React Native:**
+
+- `>=5.20.0` [TTID+TTFD for React Navigation](/platforms/react-native/performance/instrumentation/time-to-display/)
+
+By default, the **Screen Loads** dashboard displays metrics related to all releases. To choose a different set of releases to compare, use the **Releases** filter at the top of the dashboard.
+
+The charts section shows a comparison of TTID and TTFD metrics for your selected releases over time.
+
+**Reasons Why You Might Not Be Seeing Any Data:**
+
+- You don't have any transactions with op `ui.load`
+- Your SDKs don't meet the minimum SDK requirements
+
+
+Here, you'll see a breakdown of TTID and TTFD values by [device class](/concepts/search/searchable-properties/#device-classification) (high, medium, low, or unknown), across your selected releases. This will help you understand how users with different device performance levels are being affected.
+
+To see slow TTID and TTFD events and profiles for each release broken out by specific device class, use the "Device Class" filter below the charts.
+
+At the bottom of the dashboard, you'll see a table of spans that occurred during screen load, sorted by the most time your screen spent in that span. Here, you'll be able to:
+
+- Spot span regressions by comparing the average duration of each span across your two releases of choice.
+
+- Find the slowest spans in the release you're interested in by looking at average span duration.
+
+- See which spans occur most frequently by looking at the contribution rates. (This might help you identify excessive io calls or repeated work that might be occurring during screen load.)
+
+**Eligible span operations:**
+
+- file.read
+- file.write
+- ui.load
+- http.client
+- db
+- db.sql.query
+- db.sql.transaction
+
+### TTID and TTFD affecting spans:
+
+If spans end before TTID or TTFD, there's a chance they could be affecting their respective metrics. They're tagged in Sentry and can be viewed on the **Screen Loads** dashboard. But just because a span has been identified as TTID or TTFD-affecting, it doesn't necessarily mean it's the culprit. This information is an approximation and should be used to find potentially problematic spans on an aggregate level so you can narrow down the scope of spans you need to investigate.
+
+![TTID and TTFD Affecting Spans](./img/ttid-ttfd-affecting-spans.png)
+
+## Span Detail View
+
+![Example of Span Detail View](./img/mobile-screen-load-example.png)
+
+Clicking on a span description takes you to the Traces page, where you can see a list of related sampled spans. 
+
+Once on a trace view, you can click over to **Profiles** to investigate [flamegraphs](/product/explore/profiling/flame-charts-graphs/) for the span to see where the most time is being spent.

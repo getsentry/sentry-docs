@@ -49,10 +49,30 @@ const showSigninNote = (children: ReactNode) => {
   });
 };
 
+// Resolve React lazy elements from RSC serialization (Next.js 15.5+).
+// Client component children serialized through RSC boundaries arrive as
+// lazy elements with _init/_payload instead of the usual type/props shape.
+function resolveElement(child: any): ReactElement<CodeBlockProps> | null {
+  if (child == null || typeof child !== 'object') {
+    return null;
+  }
+  if (child.props) {
+    return child;
+  }
+  if (child._init && child._payload) {
+    try {
+      return child._init(child._payload);
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
 export function CodeTabs({children}: CodeTabProps) {
-  const codeBlocks = (Array.isArray(children) ? [...children] : [children]).filter(
-    child => child?.props
-  );
+  const codeBlocks = (Array.isArray(children) ? [...children] : [children])
+    .map(resolveElement)
+    .filter((child): child is ReactElement<CodeBlockProps> => child !== null);
 
   // The title is what we use for sorting and also for remembering the
   // selection. If there is no title fall back to the title cased language name
