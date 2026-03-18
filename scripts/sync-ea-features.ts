@@ -141,6 +141,7 @@ function isGASegment(segment: Segment): boolean {
 
 /**
  * Check if a segment requires Early Adopter status.
+ * Must have: property = organization_is-early-adopter, operator = equals, value = true
  */
 function isEASegment(segment: Segment): boolean {
   if ((segment.rollout || 0) <= 0) {
@@ -149,7 +150,11 @@ function isEASegment(segment: Segment): boolean {
 
   const conditions = segment.conditions || [];
   return conditions.some(
-    cond => cond && cond.property === 'organization_is-early-adopter'
+    cond =>
+      cond &&
+      cond.property === 'organization_is-early-adopter' &&
+      cond.operator === 'equals' &&
+      cond.value === true
   );
 }
 
