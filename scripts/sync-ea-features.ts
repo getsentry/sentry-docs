@@ -307,6 +307,20 @@ function generateMDX(mapping: EAFeaturesJson, activeFeatures: string[]): string 
     lines.push('');
   }
 
+  // Warn about any categories not in CATEGORY_ORDER (would be silently omitted)
+  const knownCategories = new Set(CATEGORY_ORDER);
+  const unknownCategories = Object.keys(byCategory).filter(c => !knownCategories.has(c));
+  if (unknownCategories.length > 0) {
+    console.warn(
+      `\n⚠️  WARNING: The following categories are not in CATEGORY_ORDER and will be omitted from MDX:`
+    );
+    for (const cat of unknownCategories) {
+      const features = byCategory[cat];
+      console.warn(`   - "${cat}" (${features.length} features)`);
+    }
+    console.warn(`   Add these to CATEGORY_ORDER in scripts/sync-ea-features.ts\n`);
+  }
+
   return lines.join('\n');
 }
 
