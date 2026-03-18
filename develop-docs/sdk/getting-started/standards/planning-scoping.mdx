@@ -26,14 +26,72 @@ Work is organized in three levels: **issues**, **projects**, and **initiatives**
 
 An issue is the unit of work — one assignee, one thing to do. Issues map directly to GitHub issues and are synced bi-directionally with Linear.
 
+### Issue lifecycle
+
+```mermaid
+stateDiagram-v2
+    direction LR
+
+    state Triage {
+        triage: Triage
+    }
+
+    state Backlog {
+        backlog: Backlog
+        needs_discussion: Needs Discussion
+    }
+
+    state Unstarted {
+        todo: Todo
+    }
+
+    state Started {
+        blocked: Blocked
+        in_progress: In Progress
+        in_review: In Review
+        ready: Ready
+    }
+
+    state Completed {
+        done: Done
+    }
+
+    state Cancelled {
+        cancelled: Cancelled
+        duplicate: Duplicate
+        wont_do: Won't do
+    }
+
+    [*] --> triage
+    triage --> backlog
+    triage --> needs_discussion
+    triage --> cancelled
+    triage --> duplicate
+    triage --> wont_do
+    backlog --> todo
+    needs_discussion --> backlog
+    needs_discussion --> cancelled
+    todo --> in_progress
+    in_progress --> blocked
+    blocked --> in_progress
+    in_progress --> in_review
+    in_review --> in_progress
+    in_review --> ready
+    ready --> done
+    done --> [*]
+    cancelled --> [*]
+    duplicate --> [*]
+    wont_do --> [*]
+```
+
 Every issue **MUST** have these attributes set in Linear, before it moves to **In Progress**:
 
 - **Assignee**: a single owner (not a team)
 - **Description**: verbose enough for anyone on the team to understand scope and acceptance criteria without asking the author
 - **Labels** (required for workspace-level reporting in Linear):
-  - **SDK label**: the SDK(s) the issue affects
+  - **SDK label**: the SDK(s) the issue affects (e.g., `JavaScript`, `Python` etc.)
   - **Type label**: one of `Bug`, `Docs`, `Feature`, `Improvement`, `Task`, or `Tests`
-- **Estimate**: story-point or t-shirt size agreed by the team's estimation convention
+- **Estimate**: t-shirt size estimation
 - **Priority**: set for all issues in the backlog or later states
 
 Issues estimated larger than **M** (or the team's medium equivalent) **MUST NOT** move to **Todo** until they are either split into smaller issues (each ≤ M) or converted to a project.
