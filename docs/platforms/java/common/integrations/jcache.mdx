@@ -72,7 +72,7 @@ Cache<String, String> sentryCache = new SentryJCacheWrapper<>(cache);
 sentryCache.put("key", "value");       // cache.put span
 String val = sentryCache.get("key");   // cache.get span (cache.hit = true)
 sentryCache.remove("key");             // cache.remove span
-sentryCache.clear();                   // cache.flush span
+sentryCache.clear();                   // cache.clear span
 ```
 
 ```kotlin {tabTitle:Kotlin}
@@ -89,26 +89,21 @@ val sentryCache = SentryJCacheWrapper(cache)
 sentryCache.put("key", "value")       // cache.put span
 val value = sentryCache.get("key")    // cache.get span (cache.hit = true)
 sentryCache.remove("key")             // cache.remove span
-sentryCache.clear()                   // cache.flush span
+sentryCache.clear()                   // cache.clear span
 ```
 
 ## Traced Operations
 
-| JCache Method(s) | Span Op |
-|---|---|
-| `get`, `getAll`, `invoke`, `invokeAll` | `cache.get` |
-| `put`, `getAndPut`, `putAll` | `cache.put` |
-| `remove`, `getAndRemove`, `removeAll(keys)` | `cache.remove` |
-| `clear`, `removeAll()` | `cache.flush` |
-
-Conditional writes — `putIfAbsent`, `replace`, `getAndReplace` — are **not** traced because the outcome (write vs no-op) is not known ahead of time.
+All JCache operations are traced. Each method creates a span with the operation `cache.<methodName>` (e.g. `cache.get`, `cache.putIfAbsent`, `cache.removeAll`).
 
 ## Span Data
 
 | Key | Type | Description |
 |---|---|---|
-| `cache.hit` | boolean | Whether the cache lookup returned a value (`cache.get` spans only) |
+| `cache.hit` | boolean | Whether the cache lookup returned a value (read spans only) |
 | `cache.key` | list of strings | The cache key(s) involved in the operation |
+| `cache.operation` | string | The JCache method name (e.g. `get`, `putIfAbsent`, `removeAll`) |
+| `cache.write` | boolean | Whether the operation modified the cache. Always `true` for unconditional writes (`put`, `putAll`, `remove`, `clear`); reflects the actual outcome for conditional operations (`putIfAbsent`, `replace`, `getAndReplace`) and value-matched removes |
 
 Bulk operations (`getAll`, `putAll`, `removeAll`) create a single span with all keys listed in `cache.key`.
 
