@@ -65,6 +65,9 @@ jobs:
             echo "removed_count=$removed_count" >> $GITHUB_OUTPUT
             echo "documented_count=$documented_count" >> $GITHUB_OUTPUT
             echo "undocumented_count=$undocumented_count" >> $GITHUB_OUTPUT
+            
+            # Extract undocumented features list for PR body
+            sed -n '/UNDOCUMENTED EA FEATURES/,/={60}/p' sync-output.txt | grep "^   - " | sed 's/^   //' > undocumented-features.txt || true
           fi
 
       - name: Create Pull Request
@@ -112,11 +115,22 @@ jobs:
           | Documented features | ${{ steps.sync.outputs.documented_count }} |
           | Undocumented features | ${{ steps.sync.outputs.undocumented_count }} |
 
-          ### Sync Output
+          ### Undocumented EA Features
+
+          The following EA features do not have documentation links and **will not appear on the docs page** until \`docsUrl\` is added:
+
+          $(if [ -s undocumented-features.txt ]; then cat undocumented-features.txt; else echo "(none)"; fi)
+
+          > **Note:** To add a feature to the docs page, edit \`src/data/ea-features.json\` and set the \`docsUrl\` field to the documentation path.
+
+          <details>
+          <summary>Full Sync Output</summary>
 
           \`\`\`
           $(cat sync-output.txt)
           \`\`\`
+
+          </details>
 
           ### Review Checklist
 
