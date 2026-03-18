@@ -269,21 +269,21 @@ export async function Home() {
                 >
                   Seer
                 </a>
-                . Use{' '}
+                . Have Seer{' '}
                 <a
-                  href="/product/ai-in-sentry/seer/root-cause-analysis/"
+                  href="/product/ai-in-sentry/seer/autofix/"
                   className="text-[#8b5cf6] underline"
                 >
-                  AI-powered root cause analysis
+                  fix issues
                 </a>{' '}
-                in debugging your issues. Use{' '}
+                by running Autofix to generate fixes, and{' '}
                 <a
-                  href="/product/ai-in-sentry/seer/ai-code-review/"
+                  href="/product/ai-in-sentry/seer/code-review/"
                   className="text-[#8b5cf6] underline"
                 >
-                  code review
+                  review code changes
                 </a>{' '}
-                to review your PRs and prevent errors.
+                before merging PRs.
               </p>
             </div>
           </div>
