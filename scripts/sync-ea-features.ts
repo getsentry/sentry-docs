@@ -425,20 +425,21 @@ function main(): void {
 
       if (updated) {
         saveMappingFile(mapping);
+
+        // Regenerate MDX only if mapping changed
+        const updatedVisibleFeatures = filterUserVisibleFeatures(
+          allEAFeatures,
+          mapping.excludePatterns
+        );
+        console.log('\nRegenerating MDX documentation page...');
+        const mdxContent = generateMDX(mapping, updatedVisibleFeatures);
+        saveMDX(mdxContent);
+
+        console.log('\n✅ Updates complete!');
+        console.log('   Review the changes and commit when ready.');
+      } else {
+        console.log('\n✅ No changes to mapping file.');
       }
-
-      // Regenerate MDX with current active features
-      // After updates, recalculate the active features list
-      const updatedVisibleFeatures = filterUserVisibleFeatures(
-        allEAFeatures,
-        mapping.excludePatterns
-      );
-      console.log('\nRegenerating MDX documentation page...');
-      const mdxContent = generateMDX(mapping, updatedVisibleFeatures);
-      saveMDX(mdxContent);
-
-      console.log('\n✅ Updates complete!');
-      console.log('   Review the changes and commit when ready.');
     }
 
     // Exit with error if there are changes and we're in check-only mode
