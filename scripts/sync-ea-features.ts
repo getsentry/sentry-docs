@@ -5,13 +5,15 @@
  * 1. Clones/fetches sentry-options-automator repo
  * 2. Parses flagpole.yaml to extract EA features
  * 3. Compares against our mapping file (src/data/ea-features.json)
- * 4. Reports new unmapped features or removed features
+ * 4. Optionally updates the mapping file with new features
+ * 5. Optionally regenerates the MDX documentation page
  *
  * Usage:
- *   pnpm ts-node scripts/sync-ea-features.ts [--check-only]
+ *   pnpm ts-node scripts/sync-ea-features.ts [options]
  *
  * Options:
- *   --check-only  Only check for differences, don't output update suggestions
+ *   --check-only  Only check for differences, exit with error if changes needed
+ *   --update      Update mapping file and regenerate MDX page
  */
 
 /* eslint-disable no-console */
@@ -24,6 +26,7 @@ import yaml from 'js-yaml';
 const REPO_URL = 'https://github.com/getsentry/sentry-options-automator.git';
 const FLAGPOLE_PATH = 'options/default/flagpole.yaml';
 const EA_FEATURES_PATH = 'src/data/ea-features.json';
+const EA_DOCS_PATH = 'docs/organization/early-adopter-features/index.mdx';
 const TEMP_DIR = '/tmp/sentry-options-automator-sync';
 
 interface Segment {
@@ -61,7 +64,22 @@ interface EAFeatureMapping {
 interface EAFeaturesJson {
   excludePatterns: string[];
   features: Record<string, EAFeatureMapping>;
+  $schema?: string;
+  _comment?: string;
 }
+
+// Category display order for the MDX file
+const CATEGORY_ORDER = [
+  'AI & Automation',
+  'Issues & Detection',
+  'Performance & Tracing',
+  'Dashboards',
+  'Size Analysis',
+  'Search & Discovery',
+  'Integrations & Notifications',
+  'Workflow Engine',
+  'Uncategorized',
+];
 
 function cloneOrFetchRepo(): void {
   if (fs.existsSync(TEMP_DIR)) {
@@ -144,6 +162,20 @@ function loadMappingFile(): EAFeaturesJson {
   return JSON.parse(content) as EAFeaturesJson;
 }
 
+function saveMappingFile(mapping: EAFeaturesJson): void {
+  const mappingPath = path.join(process.cwd(), EA_FEATURES_PATH);
+  // Sort features alphabetically by key
+  const sortedFeatures: Record<string, EAFeatureMapping> = {};
+  const keys = Object.keys(mapping.features).sort();
+  for (const key of keys) {
+    sortedFeatures[key] = mapping.features[key];
+  }
+  mapping.features = sortedFeatures;
+
+  fs.writeFileSync(mappingPath, JSON.stringify(mapping, null, 2) + '\n');
+  console.log(`Updated ${EA_FEATURES_PATH}`);
+}
+
 function compareFeatures(
   flagpoleFeatures: string[],
   mappedFeatures: Record<string, EAFeatureMapping>
@@ -166,24 +198,129 @@ function compareFeatures(
     f => mappedKeys.has(f) && !mappedFeatures[f]?.docsUrl
   );
 
-  return {newFeatures, removedFeatures, documentedFeatures, undocumentedFeatures};
+  return {documentedFeatures, newFeatures, removedFeatures, undocumentedFeatures};
 }
 
 function generateSuggestedMapping(feature: string): EAFeatureMapping {
   // Convert feature name to display name
   const name = feature.replace('organizations:', '').replace('projects:', '');
   const words = name.replace(/-/g, ' ').replace(/_/g, ' ').split(' ');
-  const displayName = words.map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+  const displayName = words
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
 
   return {
+    category: 'Uncategorized',
     displayName,
     docsUrl: null,
-    category: 'Uncategorized',
   };
+}
+
+function updateMappingWithNewFeatures(
+  mapping: EAFeaturesJson,
+  newFeatures: string[]
+): void {
+  for (const feature of newFeatures) {
+    mapping.features[feature] = generateSuggestedMapping(feature);
+  }
+}
+
+function removeOldFeatures(mapping: EAFeaturesJson, removedFeatures: string[]): void {
+  for (const feature of removedFeatures) {
+    delete mapping.features[feature];
+  }
+}
+
+function generateMDX(mapping: EAFeaturesJson, activeFeatures: string[]): string {
+  const activeSet = new Set(activeFeatures);
+
+  // Group features by category (only active features with docs)
+  const byCategory: Record<string, Array<{displayName: string; docsUrl: string}>> = {};
+
+  for (const [key, value] of Object.entries(mapping.features)) {
+    // Only include features that are currently active in Flagpole AND have docs
+    if (!activeSet.has(key) || !value.docsUrl) {
+      continue;
+    }
+
+    const category = value.category || 'Uncategorized';
+    if (!byCategory[category]) {
+      byCategory[category] = [];
+    }
+    byCategory[category].push({
+      displayName: value.displayName,
+      docsUrl: value.docsUrl,
+    });
+  }
+
+  // Sort and deduplicate features within each category
+  for (const category of Object.keys(byCategory)) {
+    // Deduplicate by displayName + docsUrl
+    const seen = new Set<string>();
+    byCategory[category] = byCategory[category].filter(f => {
+      const key = `${f.displayName}|${f.docsUrl}`;
+      if (seen.has(key)) {
+        return false;
+      }
+      seen.add(key);
+      return true;
+    });
+    byCategory[category].sort((a, b) => a.displayName.localeCompare(b.displayName));
+  }
+
+  // Build MDX content
+  const lines: string[] = [
+    '---',
+    'title: Early Adopter Features',
+    'sidebar_order: 60',
+    'description: Learn which features are currently in the early adopter phase.',
+    'og_image: /og-images/organization-early-adopter-features.png',
+    '---',
+    '',
+    'If you\'re interested in being an Early Adopter, you can turn your organization\'s Early Adopter status on/off in **Settings > General Settings**. This will affect all users in your organization and can be turned back off just as easily.',
+    '',
+    '![The Early Adopter toggle enabled in settings.](./img/early-adopter-toggle.png)',
+    '',
+    'This page lists the features that you\'ll have access to when you opt-in as "Early Adopter". Note that features are sometimes released to early adopters in waves, so you may not see a feature immediately upon enabling the "Early Adopter" setting.',
+    '',
+    'Limitations:',
+    '',
+    '- This list does not include new features that aren\'t controlled by the "Early Adopter" setting, such as alphas, closed betas, or limited availability features that require manual opt-in.',
+    '',
+    '{/* AUTO-GENERATED CONTENT BELOW - DO NOT EDIT MANUALLY */}',
+    '{/* Run: pnpm ts-node scripts/sync-ea-features.ts --update */}',
+    '',
+    '## Current Early Adopter Features',
+    '',
+  ];
+
+  // Add categories in order
+  for (const category of CATEGORY_ORDER) {
+    const features = byCategory[category];
+    if (!features || features.length === 0) {
+      continue;
+    }
+
+    lines.push(`### ${category}`);
+    lines.push('');
+    for (const feature of features) {
+      lines.push(`- [${feature.displayName}](${feature.docsUrl})`);
+    }
+    lines.push('');
+  }
+
+  return lines.join('\n');
+}
+
+function saveMDX(content: string): void {
+  const mdxPath = path.join(process.cwd(), EA_DOCS_PATH);
+  fs.writeFileSync(mdxPath, content);
+  console.log(`Updated ${EA_DOCS_PATH}`);
 }
 
 function main(): void {
   const checkOnly = process.argv.includes('--check-only');
+  const update = process.argv.includes('--update');
 
   try {
     // Step 1: Clone/fetch repo
@@ -223,7 +360,9 @@ function main(): void {
         console.log(`   - ${feature}`);
         console.log(`     Suggested: "${suggested.displayName}"`);
       }
-      console.log('\n   Add these to src/data/ea-features.json');
+      if (!update) {
+        console.log('\n   Run with --update to add these automatically');
+      }
     }
 
     if (comparison.removedFeatures.length > 0) {
@@ -232,7 +371,9 @@ function main(): void {
       for (const feature of comparison.removedFeatures) {
         console.log(`   - ${feature}`);
       }
-      console.log('\n   Consider removing from src/data/ea-features.json');
+      if (!update) {
+        console.log('\n   Run with --update to remove these automatically');
+      }
     }
 
     console.log(`\n✅ DOCUMENTED EA FEATURES (${comparison.documentedFeatures.length}):`);
@@ -254,13 +395,56 @@ function main(): void {
 
     console.log('\n' + '='.repeat(60));
 
-    // Exit with error if there are new unmapped features (useful for CI)
-    if (checkOnly && comparison.newFeatures.length > 0) {
-      console.log('\n❌ Check failed: New EA features need to be mapped.');
-      process.exit(1);
+    // Step 8: Update if requested
+    if (update) {
+      let updated = false;
+
+      if (comparison.newFeatures.length > 0) {
+        console.log('\nAdding new features to mapping file...');
+        updateMappingWithNewFeatures(mapping, comparison.newFeatures);
+        updated = true;
+      }
+
+      if (comparison.removedFeatures.length > 0) {
+        console.log('\nRemoving old features from mapping file...');
+        removeOldFeatures(mapping, comparison.removedFeatures);
+        updated = true;
+      }
+
+      if (updated) {
+        saveMappingFile(mapping);
+      }
+
+      // Regenerate MDX with current active features
+      // After updates, recalculate the active features list
+      const updatedVisibleFeatures = filterUserVisibleFeatures(
+        allEAFeatures,
+        mapping.excludePatterns
+      );
+      console.log('\nRegenerating MDX documentation page...');
+      const mdxContent = generateMDX(mapping, updatedVisibleFeatures);
+      saveMDX(mdxContent);
+
+      console.log('\n✅ Updates complete!');
+      console.log('   Review the changes and commit when ready.');
     }
 
-    if (comparison.newFeatures.length === 0 && comparison.removedFeatures.length === 0) {
+    // Exit with error if there are changes and we're in check-only mode
+    if (checkOnly) {
+      const hasChanges =
+        comparison.newFeatures.length > 0 || comparison.removedFeatures.length > 0;
+      if (hasChanges) {
+        console.log('\n❌ Check failed: EA features are out of sync.');
+        console.log('   Run with --update to sync automatically.');
+        process.exit(1);
+      }
+    }
+
+    if (
+      comparison.newFeatures.length === 0 &&
+      comparison.removedFeatures.length === 0 &&
+      !update
+    ) {
       console.log('\n✅ All EA features are properly mapped!');
     }
   } catch (error) {
