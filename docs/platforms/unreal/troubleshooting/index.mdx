@@ -7,6 +7,26 @@ description: "Learn more about how to troubleshoot common issues with the Unreal
 
 ## Build Issues
 
+### Linker Errors After Plugin Update
+
+When updating the Sentry plugin by copying new files over an existing installation, leftover files from the previous version can cause linker errors like:
+
+```
+LNK2001: unresolved external symbol
+```
+
+This happens when source files that were removed in a newer version of the plugin remain in your project directory. UBT compiles them, but the symbols they reference no longer exist.
+
+**Solution**
+
+Delete the entire Sentry plugin folder before copying the new version:
+
+```bash
+rm -rf Plugins/sentry-unreal
+```
+
+Then copy the new plugin files into place. Simply overwriting files won't remove sources that were deleted upstream.
+
 ### Perforce: Stale Binaries on Build Machines
 
 When using the Sentry Unreal SDK with Perforce, updated binaries from the plugin's `ThirdParty` directory may not be copied into the `Binaries` directory during the build. This can result in outdated Crashpad or Sentry binaries being used at runtime.
@@ -28,10 +48,5 @@ If your Perforce depot stores binaries with the `+m` (modtime) typemap attribute
 You can resolve this with any of the following approaches:
 
 - **Remove the `+m` attribute from binary files in Perforce.** This ensures synced files receive the current timestamp and are treated as newer by UBT.
-- **Clean the plugin's `Binaries` directory before building.** For example:
-
-  ```bash
-  rm -rf Plugins/sentry-unreal/Binaries
-  ```
-
+- **Clean the plugin's `Binaries` directory before building.**
 - **Avoid pre-populating `Binaries` in VM or build machine images.** Ensure that build environments don't carry over stale binaries from previous SDK versions.
