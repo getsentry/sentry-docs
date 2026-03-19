@@ -26,7 +26,7 @@ export function SidebarMoreLinks() {
             className="font-bold"
           />
 
-          {/* Collapsible "More" section - styled to match SidebarLink */}
+          {/* Collapsible "Manage" section - styled to match SidebarLink */}
           <button
             onClick={() => setIsExpanded(!isExpanded)}
             className={`${styles['sidebar-link']} font-bold`}
