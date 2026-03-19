@@ -10,7 +10,7 @@ import {Platform} from 'sentry-docs/types';
 
 import styles from './style.module.scss';
 
-import {ScrollActiveLink} from '../focus-active-link';
+import {CloseSidebarOnNavigation, ScrollActiveLink} from '../focus-active-link';
 import {PlatformSelector} from '../platformSelector';
 import {VersionSelector} from '../versionSelector';
 
@@ -138,11 +138,10 @@ export async function Sidebar({path, versions}: SidebarProps) {
             )}
           </div>
           <div className={`${styles.toc} px-3`}>
+            <CloseSidebarOnNavigation sidebarToggleId={sidebarToggleId} />
             <ScrollActiveLink activeLinkSelector={activeLinkSelector} />
             <SidebarNavigation path={path} />
-          </div>
-          <SidebarSeparator />
-          <div className={`${styles['sidebar-external-links']} px-3`}>
+            <SidebarSeparator />
             <SidebarMoreLinks />
           </div>
         </div>
@@ -154,15 +153,14 @@ export async function Sidebar({path, versions}: SidebarProps) {
   return (
     <aside className={`${styles.sidebar} py-3`} data-layout-anchor="left">
       <input type="checkbox" id={sidebarToggleId} className="hidden" />
+      <CloseSidebarOnNavigation sidebarToggleId={sidebarToggleId} />
       <style>{':root { --sidebar-width: 300px; }'}</style>
       <div className="flex flex-col items-stretch h-full min-h-0">
         <MobileSidebarNav platforms={basicPlatforms} />
         <div className={`${styles['sidebar-main']} px-3`}>
           <ScrollActiveLink activeLinkSelector={activeLinkSelector} />
           <SidebarNavigation path={path} />
-        </div>
-        <SidebarSeparator />
-        <div className={`${styles['sidebar-external-links']} px-3`}>
+          <SidebarSeparator />
           <SidebarMoreLinks />
         </div>
       </div>

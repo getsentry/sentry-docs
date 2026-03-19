@@ -2,6 +2,10 @@ const isDeveloperDocs = !!process.env.NEXT_PUBLIC_DEVELOPER_DOCS;
 
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const developerDocsRedirects = [
+  {
+    source: '/sdk/getting-started/templates/contributing-md-template/',
+    destination: '/sdk/getting-started/templates/contributing-md/',
+  },
   // Spotlight and MCP moved from expected-features to foundations/client/integrations
   {
     source: '/sdk/expected-features/spotlight/',
@@ -18,6 +22,10 @@ const developerDocsRedirects = [
   {
     source: '/sdk/features/mcp-instrumentation/:path*',
     destination: '/sdk/foundations/client/integrations/mcp/:path*',
+  },
+  {
+    source: '/sdk/getting-started/templates/agents-md-template/',
+    destination: '/sdk/getting-started/templates/agents-md/',
   },
   // Playbook reorganization: flat → grouped subfolders
   {
@@ -160,15 +168,43 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/data-handling/:path*',
-    destination: '/sdk/expected-features/data-handling/:path*',
+    destination: '/sdk/foundations/data-scrubbing/:path*',
   },
   {
-    source: '/sdk/features/:path*',
-    destination: '/sdk/expected-features/:path*',
+    source: '/sdk/expected-features/data-handling/:path*',
+    destination: '/sdk/foundations/data-scrubbing/:path*',
+  },
+  {
+    source: '/sdk/features/data-handling/:path*',
+    destination: '/sdk/foundations/data-scrubbing/:path*',
   },
   {
     source: '/sdk/rate-limiting/:path*',
-    destination: '/sdk/expected-features/rate-limiting/:path*',
+    destination: '/sdk/foundations/transport/rate-limiting/:path*',
+  },
+  {
+    source: '/sdk/expected-features/rate-limiting/:path*',
+    destination: '/sdk/foundations/transport/rate-limiting/:path*',
+  },
+  {
+    source: '/sdk/features/rate-limiting/:path*',
+    destination: '/sdk/foundations/transport/rate-limiting/:path*',
+  },
+  {
+    source: '/sdk/features/environment-variables/',
+    destination: '/sdk/foundations/client/configuration/',
+  },
+  {
+    source: '/sdk/features/setup-wizards/:path*',
+    destination: '/sdk-setup-wizards/:path*',
+  },
+  {
+    source: '/sdk/expected-features/',
+    destination: '/sdk/',
+  },
+  {
+    source: '/sdk/features/',
+    destination: '/sdk/',
   },
   {
     source: '/sdk/envelopes/:path*',
@@ -303,7 +339,7 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/setup-wizards/:path*',
-    destination: '/sdk/expected-features/setup-wizards/:path*',
+    destination: '/sdk-setup-wizards/:path*',
   },
   {
     source: '/sdk/serverless/:path*',
@@ -344,7 +380,7 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/processes/triaging/',
-    destination: '/sdk/getting-started/playbooks/',
+    destination: '/sdk/getting-started/playbooks/coordination/triaging/',
   },
   {
     source: '/sdk/processes/',
@@ -528,10 +564,6 @@ const developerDocsRedirects = [
     destination: '/sdk/foundations/trace-propagation/#propagation-decision-matrix',
   },
   {
-    source: '/sdk/telemetry/spans/span-trace-propagation/',
-    destination: '/sdk/foundations/trace-propagation/#continue-trace',
-  },
-  {
     source: '/sdk/expected-features/setup-wizards/:path*',
     destination: '/sdk-setup-wizards/:path*',
   },
@@ -591,11 +623,6 @@ const userDocsRedirects = [
     source: '/product/dev-toolbar/:path*',
     destination: '/product/sentry-toolbar/:path*',
   },
-  {
-    source: '/product/ai-in-sentry/sentry-prevent-ai/:path*',
-    destination: '/product/ai-in-sentry/seer/ai-code-review/:path*',
-  },
-
   {
     source: '/organization/integrations/launchdarkly/',
     destination: '/organization/integrations/feature-flag/launchdarkly/',
@@ -1363,7 +1390,11 @@ const userDocsRedirects = [
     source: '/product/insights/retention-priorities/',
     destination: '/organization/dynamic-sampling/',
   },
-  // End of Insights reduirects.
+  {
+    source: '/product/dashboards/sentry-dashboards/performance-metrics/',
+    destination: '/product/dashboards/sentry-dashboards/transaction-summary/',
+  },
+  // End of Insights redirects.
   {
     source: '/platforms/javascript/guides/astro/manual-setup/',
     destination: '/platforms/javascript/guides/astro/',
@@ -1591,12 +1622,32 @@ const userDocsRedirects = [
     destination: '/product/ai-in-sentry/ai-privacy-and-security/',
   },
   {
-    source: '/product/ai-in-sentry/ai-code-review/',
-    destination: '/product/ai-in-sentry/seer/ai-code-review/',
+    source: '/product/ai-in-sentry/seer/issue-fix/:path*',
+    destination: '/product/ai-in-sentry/seer/autofix/:path*',
   },
   {
-    source: '/product/ai-in-sentry/seer/issue-fix/:path*',
-    destination: '/product/ai-in-sentry/seer/root-cause-analysis/:path*',
+    source: '/product/ai-in-sentry/seer/root-cause-analysis/',
+    destination: '/product/ai-in-sentry/seer/autofix/',
+  },
+  {
+    source: '/product/ai-in-sentry/seer/issue-autofix/:path*',
+    destination: '/product/ai-in-sentry/seer/autofix/:path*',
+  },
+  {
+    source: '/product/ai-in-sentry/ai-code-review/',
+    destination: '/product/ai-in-sentry/seer/code-review/',
+  },
+  {
+    source: '/product/ai-in-sentry/sentry-prevent-ai/',
+    destination: '/product/ai-in-sentry/seer/code-review/',
+  },
+  {
+    source: '/product/ai-in-sentry/sentry-prevent-ai',
+    destination: '/product/ai-in-sentry/seer/code-review/',
+  },
+  {
+    source: '/product/ai-in-sentry/seer/ai-code-review/',
+    destination: '/product/ai-in-sentry/seer/code-review/',
   },
   // .NET profiling guide redirects - consolidate to main profiling page
   {
