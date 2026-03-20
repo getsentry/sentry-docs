@@ -2,7 +2,7 @@
 title: Review and CI
 spec_id: sdk/getting-started/standards/review-ci
 spec_version: 1.1.0
-spec_status: candidate
+spec_status: stable
 spec_platforms:
   - all
 spec_changelog:
@@ -19,181 +19,89 @@ sidebar_order: 4
 
 <SpecMeta />
 
-<SpecSection id="required-reviewers" status="candidate" since="1.0.0">
+These standards cover how code gets reviewed and what CI must check before anything merges or ships. The goal: catch problems early, keep reviews useful, and make sure releases are safe.
 
-## Required Reviewers
+<SpecSection id="code-review" status="stable" since="1.0.0">
 
-#### Rule
+## Code review
 
-Every PR **REQUIRES** at least one approving review.
-@sdk-leads review **REQUIRED** for:
+### Who needs to review
 
-- Public API ([Public API change approval gate](/sdk/getting-started/standards/api-architecture#public-api-change-approval-gate))
-- New dependencies ([Dependency management](/sdk/getting-started/standards/code-quality#dependency-management))
-- Security-sensitive code ([Security practices](/sdk/getting-started/standards/code-quality#security-practices))
+Every PR **REQUIRES** at least one approving review. Some changes need review from an [SDK Senior Engineer](https://github.com/orgs/getsentry/teams/sdk-seniors):
+
+- [Public API changes](/sdk/getting-started/standards/api-architecture#public-api-changes)
+- [New dependencies](/sdk/getting-started/standards/code-quality#dependencies)
+- [Security-sensitive code](/sdk/getting-started/standards/code-quality#security)
 - Schema changes
-- Frameworks/architectural shifts.
-  External contributor PRs **REQUIRE** review from someone with area context.
+- Frameworks or architectural shifts
 
-#### Enforcement
+PRs from external contributors need review from someone with context on the affected area.
 
-- GitHub branch protection
-- CODEOWNERS file
+### Turnaround time
 
-#### Suggested skill(s)
+Internal PRs should get a first substantive review within 1 business day. External PRs should get a first response within 2 business days. "First review" means real feedback, not just a reaction.
 
-- [`sentry-skills:code-review`](https://github.com/getsentry/skills#available-skills)
+If you're the sole reviewer for an area and don't have capacity, proactively find coverage — another reviewer or AI assist. PR authors should also help identify an appropriate reviewer to avoid blocking.
 
-#### Per-SDK override
+### Feedback conventions
 
-<StatusBadge type="yes" /> CODEOWNERS and reviewer count are team-specific.
+Use the LOGAF scale to signal the weight of your feedback:
 
-</SpecSection>
+- **`h:`** (high) — must fix: bugs, security issues, breakage, data loss
+- **`m:`** (medium) — should fix: design, missing tests, clarity
+- **`l:`** (low) — optional nit: style, minor suggestions
 
----
-
-<SpecSection id="review-slas" status="candidate" since="1.0.0">
-
-## Review SLAs
-
-#### Rule
-
-Internal PRs: first review within 1 business day.
-External PRs: first response within 2 business days.
-
-"First review" means substantive feedback, not just a reaction.
-
-If an area has only a single reviewer or if that reviewer lacks capacity, the reviewer **MUST** proactively find coverage (another reviewer or AI assist). The PR author **SHOULD** also help identify an appropriate reviewer to avoid blocking the PR.
-
-#### Enforcement
-
-- Dashboard tracking
-- Periodic reporting
-
-#### Per-SDK override
-
-<StatusBadge type="yes" /> Teams can set stricter SLAs. Baseline is universal.
+Comments without a prefix are treated as medium. A PR **MUST NOT** merge with unresolved `h:` comments.
 
 </SpecSection>
 
 ---
 
-<SpecSection id="review-feedback-conventions" status="candidate" since="1.0.0">
+<SpecSection id="required-ci-checks" status="stable" since="1.0.0">
 
-## Review Feedback Conventions
+## CI checks
 
-#### Rule
-
-LOGAF scale:
-
-- `h:` (high) — must fix (bugs, security, breakage, data loss)
-- `m:` (medium) — should fix (design, missing tests, clarity)
-- `l:` (low) — optional nit (style, minor suggestions)
-
-Comments without a prefix are treated as `m:` (medium). A PR **MUST NOT** be merged if it has any unresolved `h:` comments.
-
-#### Enforcement
-
-- Convention
-
-#### Suggested skill(s)
-
-- [`sentry-skills:iterate-pr`](https://github.com/getsentry/skills#available-skills) — triages by LOGAF level.
-- [`sentry-skills:code-review`](https://github.com/getsentry/skills#available-skills) — uses LOGAF in feedback.
-
-#### Per-SDK override
-
-<StatusBadge type="no" />
-
-</SpecSection>
-
----
-
-<SpecSection id="required-ci-checks" status="candidate" since="1.0.0">
-
-## Required CI Checks Baseline
-
-#### Rule
-
-Every SDK repo **MUST** have as required status checks:
+Every SDK repo **MUST** have these as required status checks:
 
 1. Build
-2. Lint ([Linting and formatting in CI](/sdk/getting-started/standards/code-quality#linting-and-formatting-in-ci))
-3. Type check where applicable ([Type checking in CI](/sdk/getting-started/standards/code-quality#type-checking-in-ci))
+2. Lint
+3. Type check (where applicable)
 4. Tests
-5. Commit message structure and content ([Commit message structure and content](/sdk/getting-started/standards/code-submission#commit-message-structure-and-content)).
+5. Secret Scanning
 
-Optional/**RECOMMENDED**:
+These are also recommended but not yet required everywhere:
 
-- Size/Performance Check ([SDK size and performance budgets](/sdk/getting-started/standards/code-quality#sdk-size-and-performance-budgets))
-- API Snapshot ([Public API change approval gate](/sdk/getting-started/standards/api-architecture#public-api-change-approval-gate))
-- Changelog Check ([Changelog entry](/sdk/getting-started/standards/code-submission#changelog-entry))
-- Secret Scanning ([Security practices](/sdk/getting-started/standards/code-quality#security-practices)).
-
-#### Enforcement
-
-- GitHub branch protection
-
-#### Suggested skill(s)
-
-- [`sentry-skills:claude-settings-audit`](https://github.com/getsentry/skills#available-skills)
-
-#### Per-SDK override
-
-<StatusBadge type="no" /> Additional checks per SDK. Baseline is universal.
+- Commit message validation
+- Size and performance checks
+- API snapshot diffs
+- Changelog validation
 
 </SpecSection>
 
 ---
 
-<SpecSection id="release-gating-criteria" status="candidate" since="1.0.0">
+<SpecSection id="warden" status="stable" since="1.1.0">
 
-## Release Gating Criteria
+## Warden
 
-#### Rule
+SDK repos **SHOULD** have [Warden](https://warden.sentry.dev/) configured in CI via the Warden GitHub Action. Warden runs AI-powered skills against PR diffs to enforce SDK-specific conventions that static linters can't express. Which skills are active varies by SDK.
+
+</SpecSection>
+
+---
+
+<SpecSection id="release-gating" status="stable" since="1.0.0">
+
+## Release gating
 
 A release **MUST NOT** ship if:
 
 - Any required CI check fails
-- Any `h:` comment remains unresolved on merged PRs since last release
+- Any `h:` review comment remains unresolved on merged PRs since the last release
 - The changelog is empty for user-facing changes
 - Any known regression remains unresolved
 
-#### Enforcement
-
-- Release tooling checks
-- Human judgment for regressions
-
-See also: [Setting up release infrastructure playbook](/sdk/getting-started/playbooks/setup/setting-up-release-infrastructure) for initial release setup.
-
-#### Per-SDK override
-
-<StatusBadge type="no" /> Additional gates per SDK possible (e.g., beta/rc periods).
-
-</SpecSection>
-
----
-
-<SpecSection id="warden" status="candidate" since="1.1.0">
-
-## Warden
-
-#### Rule
-
-SDK repos **SHOULD** have [Warden](https://warden.sentry.dev/) configured in CI via the Warden GitHub Action. Warden runs AI-powered skills against PR diffs to enforce SDK-specific conventions that static linters cannot express.
-
-#### Enforcement
-
-- GitHub Actions (Warden GitHub Action)
-- Human review for follow-up on findings
-
-#### Suggested skill(s)
-
-- [`sentry-skills:warden-lint-judge`](https://github.com/getsentry/skills#available-skills) — converts findings into permanent lint rules.
-
-#### Per-SDK override
-
-<StatusBadge type="yes" /> Which Warden skills are active varies per SDK.
+See [Setting up release infrastructure](/sdk/getting-started/playbooks/setup/setting-up-release-infrastructure) for initial release setup.
 
 </SpecSection>
 

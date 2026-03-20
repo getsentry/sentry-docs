@@ -11,7 +11,7 @@ import Chevron from 'sentry-docs/icons/Chevron';
  * preserve formatting (checkboxes, bold, links, lists) when pasted
  * into GitHub's markdown editor.
  */
-function domToMarkdown(node: Node): string {
+export function domToMarkdown(node: Node): string {
   if (node.nodeType === Node.TEXT_NODE) {
     return node.textContent ?? '';
   }
@@ -34,6 +34,18 @@ function domToMarkdown(node: Node): string {
   const childText = Array.from(el.childNodes).map(domToMarkdown).join('');
 
   switch (tag) {
+    case 'h1':
+      return `# ${childText}\n\n`;
+    case 'h2':
+      return `## ${childText}\n\n`;
+    case 'h3':
+      return `### ${childText}\n\n`;
+    case 'h4':
+      return `#### ${childText}\n\n`;
+    case 'h5':
+      return `##### ${childText}\n\n`;
+    case 'h6':
+      return `###### ${childText}\n\n`;
     case 'strong':
     case 'b':
       return `**${childText}**`;
