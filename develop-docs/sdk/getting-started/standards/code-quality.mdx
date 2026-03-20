@@ -2,7 +2,7 @@
 title: Code Quality
 spec_id: sdk/getting-started/standards/code-quality
 spec_version: 1.0.0
-spec_status: candidate
+spec_status: stable
 spec_platforms:
   - all
 spec_changelog:
@@ -16,199 +16,87 @@ sidebar_order: 3
 
 <SpecMeta />
 
-<SpecSection id="linting-formatting-ci" status="candidate" since="1.0.0">
+These standards define the baseline quality expectations for SDK code. They apply across all SDKs — specific tools and thresholds vary by language, but the principles are universal.
 
-## Linting and Formatting in CI
+<SpecSection id="linting-and-type-checking" status="stable" since="1.0.0">
 
-#### Rule
+## Linting, formatting, and type checking
 
-Every SDK repo **MUST** have automated linting and formatting in CI. Code that doesn't pass **MUST NOT** merge. There are no exceptions to this requirement.
+Every SDK repo **MUST** enforce linting and formatting in CI. Code that doesn't pass can't merge — no exceptions.
 
-#### Enforcement
+Type checking is also **REQUIRED** in CI for statically typed languages (Java, Kotlin, Swift, C#, Go, Rust, Dart) and dynamically typed languages with established type-checking ecosystems (TypeScript, Python, PHP, Elixir). Languages without mature type-checking tooling (e.g., Ruby) may be exempt.
 
-- CI required status check (language-specific linters)
-
-#### Suggested skill(s)
-
-- [`sentry-skills:claude-settings-audit`](https://github.com/getsentry/skills#available-skills) - detects tech stack and recommends linter configuration.
-
-#### Per-SDK override
-
-<StatusBadge type="yes" /> Linter choice, rules, strictness. The standard is
-that a linter exists and is enforced.
+Which linter, what rules, and how strict — that's up to each SDK. The standard is that automated checks exist and block merges.
 
 </SpecSection>
 
 ---
 
-<SpecSection id="type-checking-ci" status="candidate" since="1.0.0">
+<SpecSection id="testing" status="stable" since="1.0.0">
 
-## Type Checking in CI
+## Testing
 
-#### Rule
+### What to test
 
-Type checking is **REQUIRED** in CI for:
+The type of change determines what tests are needed:
 
-- All statically typed languages (Java, Kotlin, Swift, C#, Go, Rust, Dart)
-- Dynamically typed languages with an established type-checking ecosystem (TypeScript, Python, PHP, Elixir)
+- **Bug fix**: a regression test that fails without the fix and passes with it
+- **New feature**: unit tests, plus integration tests where applicable
+- **Refactor**: existing tests should still pass; add new tests only if coverage was missing
+- **Performance change**: benchmark or measurable evidence
+- **Breaking change**: update or remove old tests, add new ones
 
-Dynamically typed languages without an established type-checking system (e.g., Ruby) are TBD or **MAY** be exempt with a valid reason.
+### Test quality
 
-#### Enforcement
+Tests should assert meaningful behavior. Ask yourself: *what user-visible behavior would break if this test were deleted?* If the answer is "nothing," the test isn't useful.
 
-- CI required status check
+Some specific things to watch for:
 
-#### Per-SDK override
-
-<StatusBadge type="yes" /> Configuration and strictness. Gradual typing allowed
-with a tracked plan.
-
-</SpecSection>
-
----
-
-<SpecSection id="test-requirements" status="candidate" since="1.0.0">
-
-## Test Requirements by Change Type
-
-#### Rule
-
-- **Bug fix**: regression test (fails without fix, passes with it).
-- **New feature**: unit tests + integration tests where applicable.
-- **Refactor**: existing tests pass; no new tests required unless coverage was missing.
-- **Performance change**: benchmark or measurable evidence.
-- **Breaking change**: update/remove old tests, add new tests.
-
-#### Enforcement
-
-- AGENTS.md instruction
-- Human review
-
-#### Suggested skill(s)
-
-- [`sentry-skills:code-review`](https://github.com/getsentry/skills#available-skills) - includes test coverage in checklist
-- [`sentry-skills:find-bugs`](https://github.com/getsentry/skills#available-skills) - identifies untested paths
-
-#### Per-SDK override
-
-<StatusBadge type="yes" /> Test categories and boundaries are SDK-specific.
+- "No exception thrown" is only a valid assertion when exception handling is the behavior under test
+- Snapshot tests need to be reviewed for correctness, not auto-accepted
+- AI-generated tests need extra scrutiny — look for hardcoded values, implementation-detail testing, and tests that pass regardless of behavior
 
 </SpecSection>
 
 ---
 
-<SpecSection id="test-quality" status="candidate" since="1.0.0">
+<SpecSection id="dependency-management" status="stable" since="1.0.0">
 
-## Test Quality
+## Dependencies
 
-#### Rule
+Adding a dependency is a decision that affects every user of the SDK, so it deserves scrutiny. New dependencies **REQUIRE** explicit justification in the PR description. Pin them to a version range — no floating versions.
 
-Tests **MUST** assert meaningful behavior:
+Transitive dependencies matter too. If a transitive dependency changes behavior, that deserves the same review as adding a direct dependency. Run dependency audits at least quarterly.
 
-- Assertions **MUST** fail if the tested behavior breaks
-- "No exception thrown" assertions are only acceptable when exception handling is the behavior being tested
-- Snapshot tests **MUST** be reviewed for correctness, not auto-accepted
-- AI-generated tests **REQUIRE** extra scrutiny for:
-  - Hardcoded values
-  - Implementation-detail testing
-  - Tests that pass regardless of behavior
-
-#### Enforcement
-
-- AGENTS.md: "Every test must answer: what user-visible behavior would break if this test were deleted?"
-- Human review
-
-#### Suggested skill(s)
-
-- [`sentry-skills:code-review`](https://github.com/getsentry/skills#available-skills)
-- [`sentry-skills:find-bugs`](https://github.com/getsentry/skills#available-skills)
-
-#### Per-SDK override
-
-<StatusBadge type="no" /> Principle is universal. Language-specific
-anti-patterns documented per-SDK in AGENTS.md.
+See [Adding a Dependency](/sdk/getting-started/playbooks/development/adding-a-dependency) for the step-by-step evaluation and approval workflow.
 
 </SpecSection>
 
 ---
 
-<SpecSection id="dependency-management" status="candidate" since="1.0.0">
+<SpecSection id="size-performance-budgets" status="stable" since="1.0.0">
 
-## Dependency Management
+## Size and performance budgets
 
-#### Rule
+Each SDK **MUST** define and track budgets for:
 
-- New dependency **REQUIRES** explicit justification in the PR description
-- Dependencies **MUST** be pinned to a version range (not floating versions)
-- Transitive dependency behavior changes **MUST** receive the same scrutiny as direct dependency additions
-- Dependency audits **MUST** be conducted quarterly at minimum
+- Package/binary size (where applicable)
+- Initialization time
+- Memory overhead
 
-#### Enforcement
-
-- CI detection of new dependency manifest entries
-- Human review
-
-#### Suggested skill(s)
-
-- [`sentry-skills:security-review`](https://github.com/getsentry/skills#available-skills)
-
-See also: [Adding a Dependency](/sdk/getting-started/playbooks/development/adding-a-dependency) for the step-by-step approval and evaluation workflow.
-
-#### Per-SDK override
-
-<StatusBadge type="yes" /> Tooling varies. Approval requirement is universal.
+The specific numbers are up to each SDK. The standard is that budgets exist, are tracked, and are visible in CI.
 
 </SpecSection>
 
 ---
 
-<SpecSection id="size-performance-budgets" status="candidate" since="1.0.0">
+<SpecSection id="security-practices" status="stable" since="1.0.0">
 
-## SDK Size and Performance Budgets
+## Security
 
-#### Rule
+No secrets, credentials, or PII in code or commits. Data handling follows the [data handling spec](/sdk/foundations/data-scrubbing/).
 
-Each SDK **MUST** define and track:
-
-- Package/binary size budget
-- Initialization time budget
-- Memory overhead budget (where applicable)
-
-#### Enforcement
-
-- CI check where feasible (size comparison, benchmarks); advisory initially, path toward blocking
-
-#### Per-SDK override
-
-<StatusBadge type="yes" /> Budgets and measurement are SDK-specific. The
-standard is that budgets exist and are tracked.
-
-</SpecSection>
-
----
-
-<SpecSection id="security-practices" status="candidate" since="1.0.0">
-
-## Security Practices
-
-#### Rule
-
-No secrets, credentials, or PII in code or commits. Data handling follows the [data handling spec](/sdk/foundations/data-scrubbing/). Security-sensitive changes **REQUIRE** explicit review from someone with security context. Vulnerability patch SLAs: critical 48h, high 1 week, medium next release. Dependency vulnerability alerts **MUST NOT** be ignored or silently dismissed.
-
-#### Enforcement
-
-- CI secret scanning
-- Dependency scanning (GitHub Security Advisories / Dependabot alerts)
-- Human review
-
-#### Suggested skill(s)
-
-- [`sentry-skills:security-review`](https://github.com/getsentry/skills#available-skills)
-- [`sentry-skills:find-bugs`](https://github.com/getsentry/skills#available-skills)
-
-#### Per-SDK override
-
-<StatusBadge type="yes" /> Vulnerability SLAs can be adjusted. Data handling requirements are universal.
+Security-sensitive changes **REQUIRE** review from someone with security context. Dependency vulnerability alerts **MUST NOT** be ignored or silently dismissed.
 
 </SpecSection>
 
