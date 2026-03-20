@@ -1,7 +1,7 @@
 ---
-title: Azure Active Directory SSO
+title: Microsoft Entra ID SSO
 sidebar_order: 1
-description: Set up Azure Active Directory single sign-on (SSO) on Sentry.
+description: Set up Microsoft Entra ID single sign-on (SSO) on Sentry.
 og_image: /og-images/organization-authentication-sso-azure-sso.png
 ---
 
@@ -13,15 +13,21 @@ If you change your organization slug, you'll need to make the same update in the
 
 </Alert>
 
-1. Log in to the [Azure portal](https://portal.azure.com/).
+<Note>
 
-1. Under "Manage Azure Active Directory" (the picture of the shield), click "View". This takes you to the **Organization Overview** page.
+Microsoft renamed Azure Active Directory to Microsoft Entra ID. The steps below use the [Microsoft Entra admin center](https://entra.microsoft.com), but the equivalent steps in the classic Azure portal (`portal.azure.com`) will also work.
+
+</Note>
+
+1. Log in to the [Microsoft Entra admin center](https://entra.microsoft.com) (or the [classic Azure portal](https://portal.azure.com)).
+
+1. Navigate to **Identity > Applications > Enterprise applications**.
 
 1. If you don't require a permission group for Sentry, skip to Step 5.
 
-1. In the search bar, search for "Groups" then navigate to it. From there, create a new group, add an owner and members to the group. Set "Group type" to Office 365. For more details about group creation, see the [Azure docs](https://docs.microsoft.com/en-us/azure/active-directory/fundamentals/active-directory-groups-create-azure-portal).
+1. In the search bar, search for "Groups" then navigate to it. From there, create a new group, add an owner and members to the group. Set "Group type" to Office 365. For more details about group creation, see the [Microsoft Entra docs](https://learn.microsoft.com/en-us/entra/fundamentals/groups-view-azure-portal).
 
-1. Return to the **Overview** page. In the search bar, enter `Enterprise Applications`, then navigate to it. Click "+ New application". Search for `Sentry` to create the application.
+1. Return to **Enterprise applications** and click "+ New application". Search for `Sentry` to create the application.
 
    ![Sentry in Azure Gallery](./img/azure-search-sentry.png)
 
@@ -33,21 +39,20 @@ If you change your organization slug, you'll need to make the same update in the
 
 1. Navigate back to **Overview**, click on "2. Set up single sign-on" and then select SAML as your single sign-on method.
 
-1. For Section (1), labeled "Basic SAML Configuration", enter the following data in each line and save your changes.
-
+1. In the "Basic SAML Configuration" section, enter the following data and save your changes.
    - Identifier (Entity ID): `https://sentry.io/saml/metadata/YOUR_ORG_SLUG/` <Alert level="warning">Ensure that the URL includes a trailing slash to prevent Azure from throwing a misconfiguration error (AADSTS650056).</Alert>
 
    - Reply URL (Assertion Consumer Service URL): `https://sentry.io/saml/acs/YOUR_ORG_SLUG/`
 
    - Sign on URL: `https://sentry.io/auth/login/YOUR_ORG_SLUG/`
 
-   - Relay State: `https://sentry.io/organizations/YOUR_ORG_SLUG/`
+   - Relay State (optional): `https://sentry.io/organizations/YOUR_ORG_SLUG/`
 
-   - Logout URL: `https://sentry.io/saml/sls/YOUR_ORG_SLUG/`
+   - Logout URL (optional): `https://sentry.io/saml/sls/YOUR_ORG_SLUG/`
 
    ![SAML Configuration](./img/azure-basic-saml-configuration1.png)
 
-1. In Section (3), labeled "SAML Signing Certificate", copy the "App Federation Metadata URL".
+1. In the "SAML Signing Certificate" section, copy the "App Federation Metadata URL" (this field may also appear as "App Metadata URL").
 
    ![SAML Signing Certificate](./img/azure-saml-signing-certificate.png)
 
@@ -55,8 +60,7 @@ If you change your organization slug, you'll need to make the same update in the
 
 1. Paste the App Federation Metadata URL from above and click "Get Metadata".
 
-1. In the next page, enter the following keys in their respective fields to map the attributes from AzureAD to Sentry, and then save them.
-
+1. On the next page, enter the following keys in their respective fields to map the attributes from Microsoft Entra ID to Sentry, and then save them.
    - IdP User ID: `http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name`
 
    - User Email: `http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress`
@@ -65,15 +69,14 @@ If you change your organization slug, you'll need to make the same update in the
 
    - Last Name: `http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname`
 
-   For more details about mappings for custom configs, see [The Role of Claims](https://docs.microsoft.com/en-us/windows-server/identity/ad-fs/technical-reference/the-role-of-claims).
+   For more details about mappings for custom configs, see [The Role of Claims](https://learn.microsoft.com/en-us/windows-server/identity/ad-fs/technical-reference/the-role-of-claims).
 
    ![Map Identity with provider attributes](./img/azure-map-identity-provider-attributes.png)
 
-1. Sentry will attempt to authenticate and link your account with Azure. After successful authentication, you'll be redirected to Sentry's SSO configuration page, where you can take the following actions:
-
+1. Sentry will attempt to authenticate and link your account with Microsoft Entra ID. After successful authentication, you'll be redirected to Sentry's SSO configuration page, where you can take the following actions:
    - You can share the "Login URL" value, which will be used for SP-initiated SSO, with the users in your organization.
 
-   - Scroll down to the bottom and ensure that "Require SSO" is checked if you want to enforce logging in with Azure Active Directory.
+   - Scroll down to the bottom and ensure that "Require SSO" is checked if you want to enforce logging in with Microsoft Entra ID.
 
    - Set a "Default Role" for new SSO users. Selecting "Member" should cover most use cases.
 
@@ -93,7 +96,7 @@ If you change your organization slug, you'll need to make the same update in the
 
 </Alert>
 
-Sentry users can manage provisioning using Azure with SCIM. You'll need to have Azure SSO set up and configured for your organization already. Sentry supports User and Group provisioning with Azure.
+Sentry users can manage provisioning using Microsoft Entra ID with SCIM. You'll need to have Microsoft Entra ID SSO set up and configured for your organization already. Sentry supports User and Group provisioning with Microsoft Entra ID.
 
 ### Sentry Configuration
 
@@ -104,16 +107,15 @@ Sentry users can manage provisioning using Azure with SCIM. You'll need to have 
 1. Under General Settings select "Enable SCIM", then "Save Settings"
 
    ![Sentry Enable SCIM Instruction](./img/scim-enable-sentry.png)
-
    - Sentry will display "SCIM Information" that contains your Auth Token and SCIM Base URL.
 
      ![SCIM Credentials Fields](./img/scim-sentry-fields.png)
 
 ### Azure Configuration
 
-1. Log in to the [Azure portal](https://portal.azure.com/).
+1. Log in to the [Microsoft Entra admin center](https://entra.microsoft.com) (or the [classic Azure portal](https://portal.azure.com)).
 
-1. In your Azure portal, navigate to **Enterprise applications** in the sidebar.
+1. Navigate to **Identity > Applications > Enterprise applications**.
 
 1. Select the existing Sentry application.
 
@@ -132,10 +134,10 @@ We recommend that you select the option to "Send an email notification when a fa
 
 As a result of these changes, users who are assigned will be sent an invitation email. When a user is un-assigned, their membership object in Sentry will be deleted.
 
-You can use Use Group Provisioning to sync and assign groups in Azure; they will be reflected in Sentry teams.
+You can use Group Provisioning to sync and assign groups in Microsoft Entra ID; they will be reflected in Sentry teams.
 
 <Alert>
 
-Please see the [Microsoft AD tutorial](https://docs.microsoft.com/en-us/azure/active-directory/saas-apps/sentry-provisioning-tutorial) for further documentation on Azure provisioning setup. If you are using a custom enterprise application, you **must** follow the instructions for only enabling attribute mappings that Sentry supports (Step 5).
+Please see the [Microsoft Entra ID provisioning tutorial](https://learn.microsoft.com/en-us/entra/identity/saas-apps/sentry-provisioning-tutorial) for further documentation on provisioning setup. If you are using a custom enterprise application, you **must** follow the instructions for only enabling attribute mappings that Sentry supports (Step 5).
 
 </Alert>
