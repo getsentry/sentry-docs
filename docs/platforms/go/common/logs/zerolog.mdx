@@ -139,16 +139,12 @@ func main() {
 	}
 	defer sentry.Flush(2 * time.Second)
 
-	// Configure Zerolog to use Sentry as a writer
-	sentryWriter, err := sentryzerolog.New(sentryzerolog.Config{
-		ClientOptions: sentry.ClientOptions{
-			Dsn: "___PUBLIC_DSN___",
-		},
-		Options: sentryzerolog.Options{
-			Levels:          []zerolog.Level{zerolog.ErrorLevel, zerolog.FatalLevel, zerolog.PanicLevel},
-			WithBreadcrumbs: true,
-			FlushTimeout:    3 * time.Second,
-		},
+	// Configure Zerolog to use Sentry as a writer,
+	// reusing the already existing client.
+	sentryWriter, err := sentryzerolog.NewWithHub(sentry.CurrentHub(), sentryzerolog.Options{
+		Levels:          []zerolog.Level{zerolog.ErrorLevel, zerolog.FatalLevel, zerolog.PanicLevel},
+		WithBreadcrumbs: true,
+		FlushTimeout:    3 * time.Second,
 	})
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to create sentry writer")
@@ -179,7 +175,7 @@ You can set a custom hubProvider function using the SetHubProvider method:
 ```go
 sentryHook.SetHubProvider(func() *sentry.Hub {
     // Create or return a specific Sentry hub
-    return sentry.NewHub(sentry.GetCurrentHub().Client(), sentry.NewScope())
+    return sentry.NewHub(sentry.CurrentHub().Client(), sentry.NewScope())
 })
 ```
 

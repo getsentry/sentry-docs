@@ -1,3 +1,4 @@
+import {AgentSkillsCallout} from './components/agentSkillsCallout';
 import {Alert} from './components/alert';
 import {Arcade} from './components/arcade';
 import {AvailableSince} from './components/availableSince';
@@ -73,6 +74,7 @@ export function mdxComponents(
   wrapper: any = ({children}) => children
 ) {
   return {
+    AgentSkillsCallout,
     Alert,
     Arcade,
     AvailableSince,

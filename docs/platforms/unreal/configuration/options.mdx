@@ -181,6 +181,28 @@ This feature is supported on Windows and Linux only.
 
 </SdkOption>
 
+<SdkOption name="EnableHangTracking" type="bool" defaultValue="false">
+
+Tracks application hangs (unresponsive threads) using Unreal Engine's built-in `FThreadHeartBeat`. When enabled, the SDK launches a watchdog thread that monitors engine heartbeat delegates and captures a hang event if a thread remains unresponsive for longer than the configured timeout.
+
+This option is turned off by default.
+
+<Alert>
+
+This feature is available on Windows and Linux only, and only works in packaged non-debug builds. See <PlatformLink to="/configuration/app-hangs/">App Hangs</PlatformLink> for setup details and prerequisites.
+
+</Alert>
+
+</SdkOption>
+
+<SdkOption name="HangTimeoutDuration" type="float" defaultValue="5.0">
+
+Duration in seconds that a thread must be unresponsive before a hang event is captured. The minimum value is `1.0` second. If set below the engine's `StuckDuration` (default 1 second), it is automatically adjusted upward.
+
+Only takes effect when <PlatformIdentifier name="EnableHangTracking" /> is enabled.
+
+</SdkOption>
+
 ## Hooks
 
 These options can be used to hook the SDK in various ways to customize the reporting of events.
@@ -190,6 +212,12 @@ The callbacks you set as hooks will be called on the thread where the event happ
 <Alert>
 
 If your callback handler class is part of another plugin, ensure that plugin is loaded before the Sentry SDK. Otherwise, the handler won't be found during Sentry settings deserialization at engine startup and won't be executed.
+
+</Alert>
+
+<Alert level="info">
+
+Avoid triggering the same hook from within its own handler (for example, adding a breadcrumb inside a <PlatformIdentifier name="BeforeBreadcrumb" /> handler). The SDK guards against this by skipping reentrant invocations of the same hook type — the data will still be captured, but your custom handler won't be called for the reentrant invocation.
 
 </Alert>
 

@@ -1,0 +1,49 @@
+<Alert level="warning">
+  This feature is experimental and may change in future releases.
+</Alert>
+
+The Sentry SDK can automatically collect frame time and per-thread performance metrics from the engine without any manual instrumentation. When enabled, the SDK registers a performance consumer with Unreal Engine's built-in performance tracking system and emits the following metrics:
+
+| Metric | Type | Description |
+|--------|------|-------------|
+| `game.perf.frame_time` | Distribution (ms) | Total frame time |
+| `game.perf.game_thread` | Distribution (ms) | Game thread work time |
+| `game.perf.render_thread` | Distribution (ms) | Render thread work time |
+| `game.perf.gpu` | Distribution (ms) | GPU frame time |
+| `game.perf.fps` | Gauge | Engine-smoothed average FPS |
+
+### Enabling
+
+Enable automatic frame time metrics in **Project Settings > Plugins > Sentry > Metrics > Experimental**:
+
+1. Make sure **Enable Metrics** is checked
+2. Check **Collect frame time metrics**
+
+Or configure programmatically:
+
+```cpp
+SentrySubsystem->InitializeWithSettings(FConfigureSettingsNativeDelegate::CreateLambda([=](USentrySettings* Settings)
+{
+    Settings->EnableMetrics = true;
+    Settings->EnableAutoFrameTimeMetrics = true;
+    Settings->FrameTimeSampleInterval = 30; // Emit every 30th frame (default)
+}));
+```
+
+### Sampling
+
+To avoid flooding the metrics pipeline, the SDK only emits metrics every Nth frame, controlled by the **Sample interval** setting. The default value of 30 produces approximately 2 samples per second at 60 FPS, which is sufficient for accurate percentile computation while keeping overhead minimal.
+
+### Metric Attributes
+
+All emitted metrics include the following attributes for filtering and grouping in Sentry dashboards:
+
+| Attribute | Description |
+|-----------|-------------|
+| `gpu.name` | GPU model name |
+| `cpu.cores` | Number of physical CPU cores |
+| `ram.gb` | Total physical RAM in GB |
+| `res.x`, `res.y` | Screen resolution |
+| `map` | Current game map/level name |
+
+These attributes make it possible to segment performance data by hardware tier, resolution, or game level — for example, identifying that a specific map causes frame time spikes on lower-end GPUs.
