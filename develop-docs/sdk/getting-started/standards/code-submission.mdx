@@ -1,11 +1,14 @@
 ---
 title: Code Submission
 spec_id: sdk/getting-started/standards/code-submission
-spec_version: 1.1.0
-spec_status: candidate
+spec_version: 1.2.0
+spec_status: stable
 spec_platforms:
   - all
 spec_changelog:
+  - version: 1.2.0
+    date: 2026-03-18
+    summary: Remove username prefix from branch naming convention
   - version: 1.1.0
     date: 2026-03-04
     summary: Add username prefix and type descriptions to branch naming
@@ -19,11 +22,13 @@ sidebar_order: 2
 
 <SpecMeta />
 
-<SpecSection id="commit-message-format" status="candidate" since="1.0.0">
+These standards cover how code gets into SDK repositories — from branch names and commit messages through to PR descriptions and changelogs. The goal is consistency across SDKs so that contributors and reviewers can move between repos without friction.
 
-## Commit message format
+<SpecSection id="commit-message-format" status="stable" since="1.0.0">
 
-#### Rule
+## Commit messages
+
+Follow the [conventional commit](https://www.conventionalcommits.org/) format:
 
 ```
 <type>(<scope>): <subject>
@@ -35,199 +40,87 @@ sidebar_order: 2
 
 **Header** (max 100 chars total):
 
-- **Type**: one of:
-  - `feat` – New user-facing functionality
-  - `fix` – Broken behavior now works
-  - `ref` – Same behavior, different structure
-  - `perf` – Same behavior, faster
-  - `style` – CSS, formatting, visual-only
-  - `docs` – Documentation only
-  - `test` – Tests only
-  - `ci` – CI/CD config
-  - `build` – Build system
-  - `chore` – Deps, config, version bumps, updating existing tooling — no new logic
-  - `meta` – Repo metadata changes
-  - `license` – License changes
-- **Subject**: imperative mood, capitalize first letter, no trailing period, max 70 chars
+- **Type**: one of `feat`, `fix`, `ref`, `perf`, `style`, `docs`, `test`, `ci`, `build`, `chore`, `meta`, `license`
+- **Scope**: optional, SDK-specific
+- **Subject**: imperative mood ("Add feature" not "Added feature"), capitalize first letter, no trailing period, max 70 chars
 
-**Body**: explain what and why, not how.
+The **body** should explain what changed and why — not how. The code shows how.
 
-**Footer** (one or more of):
+The **footer** is for issue references (`Fixes SENTRY-1234`, `Refs LINEAR-ABC-123`), breaking change notices (`BREAKING CHANGE:`), and [AI attribution](#ai-attribution).
 
-- Issue references: `Fixes SENTRY-1234`, `Fixes GH-1234`, `Refs LINEAR-ABC-123`
-- Breaking change notices: `BREAKING CHANGE:`
-- AI attribution (see [AI attribution](#ai-attribution))
-
-For additional context on commit message best practices, see [Commit Messages](/engineering-practices/commit-messages/).
-
-#### Enforcement
-
-- [commitlint](https://github.com/conventional-changelog/commitlint) in CI
-
-#### Suggested skill(s)
-
-- [`sentry-skills:commit`](https://github.com/getsentry/skills#available-skills)
-
-#### Per-SDK override
-
-<StatusBadge type="no" /> Scope values are SDK-specific.
+See [Commit Messages](/engineering-practices/commit-messages/) for more examples and guidance.
 
 </SpecSection>
 
 ---
 
-<SpecSection id="branch-naming" status="candidate" since="1.0.0">
+<SpecSection id="branch-naming" status="stable" since="1.0.0">
 
 ## Branch naming
 
-#### Rule
+Use the format `<type>/<short-description>`:
 
-`<username>/<type>/<short-description>` (e.g., `theo/feat/add-client-reports`, `alice/fix/rate-limit-parsing`).
+- **type**: same types as commit messages (`feat`, `fix`, `ref`, etc.)
+- **short-description**: what the change is about, in kebab-case
 
-- **username**: GitHub username (e.g., from `gh api user --jq .login`)
-- **type**: same types as [commit messages](#commit-message-format)
-- **short-description**: overview of the change, in kebab-case
-
-#### Enforcement
-
-- CI advisory (non-blocking)
-
-#### Suggested skill(s)
-
-- [`sentry-skills:create-branch`](https://github.com/getsentry/skills#available-skills)
-
-#### Per-SDK override
-
-<StatusBadge type="no" />
+For example: `feat/add-client-reports` or `fix/rate-limit-parsing`.
 
 </SpecSection>
 
 ---
 
-<SpecSection id="pr-description-quality" status="candidate" since="1.0.0">
+<SpecSection id="pull-requests" status="stable" since="1.0.0">
 
-## PR description quality
+## Pull requests
 
-#### Rule
+### Start as a draft
 
-Every PR **MUST** include a description with:
+Create PRs as drafts. Mark them ready for review once CI passes and the description is complete.
 
-- What the PR does
-- Why these changes are being made
-- Links to relevant issues or tickets (**REQUIRED** except for typo fixes and one-line doc changes)
-- Alternative approaches considered (if any)
+### Write a useful description
+
+Every PR needs a description that tells reviewers:
+
+- What the PR does and why
+- Links to relevant issues or tickets (required except for typo fixes and one-line doc changes)
+- Alternative approaches considered, if any
 - Additional context reviewers need
 
-Test plan sections, checkbox lists, and boilerplate are not allowed. The tests in the diff serve as the test plan. Blank descriptions, template-only descriptions, and AI-generated filler are not acceptable. PR descriptions **MUST NOT** include any customer data or sensitive information.
+Skip boilerplate, checkbox lists, and template filler. Don't include customer data or sensitive information. The tests in the diff are the test plan — no need to restate them in the description.
 
-#### Enforcement
+### Keep PRs focused
 
-- PR template
-- CI bot check: non-empty, issue reference present, override via `trivial` label
-
-#### Suggested skill(s)
-
-- [`sentry-skills:create-pr`](https://github.com/getsentry/skills#available-skills)
-
-#### Per-SDK override
-
-<StatusBadge type="no" /> Template wording can vary. Linked-issue and non-empty
-requirements are universal.
+A PR should do one thing well. Don't mix functional changes with unrelated refactors or cleanup. If the work naturally splits into distinct categories, make separate PRs. Smaller, focused PRs are easier to review, reason about, and revert if needed.
 
 </SpecSection>
 
 ---
 
-<SpecSection id="pr-draft-mode" status="candidate" since="1.0.0">
+<SpecSection id="changelog-entry" status="stable" since="1.0.0">
 
-## PR draft mode
+## Changelog entries
 
-#### Rule
+User-facing changes (`feat`, `fix`, `perf`, breaking changes) need a changelog entry. Internal changes are exempt. If a user-facing change truly doesn't warrant a changelog entry, use the `skip-changelog` label to opt out.
 
-PRs **MUST** be created as drafts. Mark ready when CI passes and description is complete.
-
-#### Enforcement
-
-- Convention
-- AGENTS.md
-
-#### Suggested skill(s)
-
-- [`sentry-skills:create-pr`](https://github.com/getsentry/skills#available-skills)
-
-#### Per-SDK override
-
-<StatusBadge type="no" />
+The format and location of changelog entries varies by SDK, but the requirement itself is universal.
 
 </SpecSection>
 
 ---
 
-<SpecSection id="changelog-entry" status="candidate" since="1.0.0">
-
-## Changelog entry
-
-#### Rule
-
-User-facing changes (`feat`, `fix`, `perf`, breaking) **REQUIRE** a changelog entry. Internal changes exempt. Override with `skip-changelog` label.
-
-#### Enforcement
-
-- CI check
-
-#### Per-SDK override
-
-<StatusBadge type="yes" /> Format and location vary. Requirement is universal.
-
-</SpecSection>
-
----
-
-<SpecSection id="focused-prs" status="candidate" since="1.0.0">
-
-## Keep PRs focused
-
-#### Rule
-
-A PR **SHOULD** do one thing — and do it well. Avoid mixing functional changes with unrelated refactors, cleanup, or reorganizations. If the work falls into distinct categories, split it into multiple PRs. Smaller, focused PRs are easier to review, reason about, and revert.
-
-#### Enforcement
-
-- Human review + AGENTS.md
-- CI advisory for size
-
-#### Suggested skill(s)
-
-- [`sentry-skills:code-review`](https://github.com/getsentry/skills#available-skills)
-
-#### Per-SDK override
-
-<StatusBadge type="yes" /> Size thresholds are SDK-specific.
-
-</SpecSection>
-
----
-
-<SpecSection id="ai-attribution" status="candidate" since="1.0.0">
+<SpecSection id="ai-attribution" status="stable" since="1.0.0">
 
 ## AI attribution
 
-#### Rule
+AI models improve over time, and future models will understand the shortcomings of earlier versions. Tagging commits with the model that produced them gives useful signal when debugging — if you know a commit was generated by an older model, you can focus on the kinds of mistakes that model was prone to.
 
-AI-generated changes get `Co-Authored-By` in commit footer (e.g., `Co-Authored-By: Claude <noreply@anthropic.com>`). This is the only AI involvement indicator. "Generated by AI" or similar markers **MUST NOT** appear anywhere.
+When AI generates or substantially contributes to a commit, add a `Co-Authored-By` line in the commit footer:
 
-#### Enforcement
+```
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
 
-- AGENTS.md instruction
-
-#### Suggested skill(s)
-
-- [`sentry-skills:commit`](https://github.com/getsentry/skills#available-skills) - adds attribution automatically.
-- [`sentry-skills:agents-md`](https://github.com/getsentry/skills#available-skills) - ensures AGENTS.md includes the convention.
-
-#### Per-SDK override
-
-<StatusBadge type="no" />
+This is the only indicator of AI involvement. Don't add "Generated by AI", "Written with Claude", or similar markers anywhere else in the commit.
 
 </SpecSection>
 

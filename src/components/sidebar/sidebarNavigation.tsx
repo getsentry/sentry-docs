@@ -69,7 +69,7 @@ export async function SidebarNavigation({path}: {path: string[]}) {
     );
   }
 
-  // "More" section - Admin Settings + Security, Legal, & PII
+  // "Manage" section - Admin Settings + Security, Legal, & PII
   if (
     path[0] === 'organization' ||
     path[0] === 'account' ||

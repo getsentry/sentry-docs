@@ -185,14 +185,27 @@ SDKs **SHOULD** send placeholders in the same envelope as the event the file is 
 **Workflow:**
 
 1. If an attachment is larger than ~100 MiB, upload it to the [TUS](https://tus.io/protocols/resumable-upload#creation-with-upload)-conformant upload endpoint (requires feature `projects:relay-upload-endpoint`):
-   ```shell
-   curl -X POST https://o0.ingest.sentry.io/api/0/upload/ \
-     --header "Tus-Resumable: 1.0.0" \
-     --header "Content-Type: application/offset+octet-stream" \
-     --header "Upload-Length: ${FILE_SIZE}" \
-     --data @myfile.log
-   ```
-2. Upon successful upload, attach a placeholder item to the event envelope, using the `Location` header from the upload response.
+   1. Create the upload:
+      ```shell
+      curl -X POST https://o0.ingest.sentry.io/api/0/upload/ \
+        --header "Tus-Resumable: 1.0.0" \
+        --header "Upload-Length: ${FILE_SIZE}" \
+      ```
+   1. Get the location response header:
+      ```
+      HTTP/1.1 201 Created
+      Location: https://o0.ingest.sentry.io/api/0/upload/24e533e02ec3bc40c387f1a0e460e216/
+      Tus-Resumable: 1.0.0
+      ```
+   1. Upload the file:
+      ```shell
+      curl -X PATCH https://o0.ingest.sentry.io/api/0/upload/24e533e02ec3bc40c387f1a0e460e216/ \
+        --header "Tus-Resumable: 1.0.0" \
+        --header "Content-Type: application/offset+octet-stream" \
+        --header "Upload-Offset: 0" \
+        --data @myfile.log
+      ```
+1. Upon successful upload, attach a placeholder item to the event envelope, using the `Location` header from the upload response.
 
 </SpecSection>
 
@@ -242,7 +255,7 @@ SDKs **SHOULD** send placeholders in the same envelope as the event the file is 
 | `attachment_length` | Integer | **REQUIRED** | Size of the referenced attachment in bytes. |
 | `filename` | String | **REQUIRED** | The name of the uploaded file without a path component. |
 
-The item header **MAY** also contain `attachment_type` and the original file's `content_type` as an additional field (see [Standard Attachment Item](#standard-attachment-item)).
+The item header **MUST** also contain the original file's `attachment_type` if it was set. The item payload **MUST** contain the original file's `content_type` as a field in the JSON object (see [Standard Attachment Item](#standard-attachment-item)).
 
 **Item payload:**
 
