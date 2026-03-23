@@ -1,10 +1,43 @@
 ---
 title: Migration Guide
+description: "Migrate from an older version of our Sentry Apple SDK."
 sidebar_order: 8000
 sidebar_section: configuration
 ---
 
 To upgrade from version 4.x of the SDK to version 9.x of the SDK, you must first migrate from 4.x to 5.x, then 5.x to 6.x, then 6.x to 7.x, 7.x to 8.x, and finally from 8.x to 9.x.
+
+Here's a list of guides on migrating to a newer version of the Sentry Apple SDK.
+
+<AnchorLinkGrid
+  items={[
+    {
+      href: "#migrating-from-8x-to-9x",
+      title: "Migrate from 8.x to 9.x",
+      description: "Learn about migrating from Sentry Apple SDK 8.x to 9.x",
+    },
+    {
+      href: "#migrating-from-7x-to-8x",
+      title: "Migrate from 7.x to 8.x",
+      description: "Learn about migrating from Sentry Apple SDK 7.x to 8.x",
+    },
+    {
+      href: "#migrating-from-6x-to-7x",
+      title: "Migrate from 6.x to 7.x",
+      description: "Learn about migrating from Sentry Apple SDK 6.x to 7.x",
+    },
+    {
+      href: "#migrating-from-5x-to-6x",
+      title: "Migrate from 5.x to 6.x",
+      description: "Learn about migrating from Sentry Apple SDK 5.x to 6.x",
+    },
+    {
+      href: "#upgrading-from-4x-to-5x",
+      title: "Migrate from 4.x to 5.x",
+      description: "Learn about upgrading from Sentry Apple SDK 4.x to 5.x",
+    },
+  ]}
+/>
 
 ## Migrating From 8.x to 9.x
 
@@ -13,6 +46,7 @@ Migrating to 9.x from 8.x includes several breaking changes. We provide this gui
 ### Changes to Minimum OS Versions and Xcode
 
 We bumped the minimum supported OS versions to:
+
 - **iOS**: 15.0 (previously 11.0)
 - **macOS**: 10.14 (previously 10.13)
 - **tvOS**: 15.0 (previously 11.0)
@@ -33,7 +67,11 @@ We now enabled the following features by default:
 
 - **Performance V2 is enabled by default**: The app start duration now finishes when the first frame is drawn instead of when the OS posts the `UIWindowDidBecomeVisibleNotification`. We removed the `enablePerformanceV2` option.
 - **Pre-warmed app start tracking**: The SDK now collects pre-warmed app starts by default via `enablePreWarmedAppStartTracing`.
-- <PlatformLink to="/configuration/app-hangs/#app-hangs-v2">App hang tracking V2</PlatformLink>: This is now the default only on **iOS and **tvOS** and we removed the option to enable/disable it. macOS still uses V1.
+- <PlatformLink to="/configuration/app-hangs/#app-hangs-v2">
+    App hang tracking V2
+  </PlatformLink>
+  : This is now the default only on **iOS and **tvOS** and we removed the option
+  to enable/disable it. macOS still uses V1.
 
 ### Disable App Hang Tracking for Extensions
 
@@ -58,6 +96,7 @@ We removed all deprecated profiling APIs in version [9.0.0](https://github.com/g
 The only supported profiling method is now <PlatformLink to="/profiling/#enable-ui-profiling">UI Profiling</PlatformLink> (also known as continuous V2 profiling), which was introduced in [version 8.49.0](https://github.com/getsentry/sentry-cocoa/releases/tag/8.49.0).
 
 **Removed deprecated profiling options from `SentryOptions`:**
+
 - `profilesSampleRate` - used for transaction-based profiling (deprecated)
 - `profilesSampler` - used for transaction-based profiling (deprecated)
 - `enableAppLaunchProfiling` - used for launch profiling (deprecated)
@@ -153,12 +192,24 @@ The minimum supported OS versions have been bumped to macOS 10.13, iOS 11, tvOS 
 
 The following features are now enabled by default:
 
-- <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#user-interaction-tracing"> The user interaction tracing integration </PlatformLink>
-- <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#file-io-tracking"> The File I/O tracing integration </PlatformLink>
-- <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#core-data-tracing"> Core Data tracing integration </PlatformLink>
-- <PlatformLink to="/configuration/http-client-errors/"> Capture failed requests </PlatformLink>
-- <PlatformLink to="/configuration/app-hangs/">App Hangs</PlatformLink> (not available
-  for watchOS)
+- <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#user-interaction-tracing">
+    {" "}
+    The user interaction tracing integration{" "}
+  </PlatformLink>
+- <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#file-io-tracking">
+    {" "}
+    The File I/O tracing integration{" "}
+  </PlatformLink>
+- <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#core-data-tracing">
+    {" "}
+    Core Data tracing integration{" "}
+  </PlatformLink>
+- <PlatformLink to="/configuration/http-client-errors/">
+    {" "}
+    Capture failed requests{" "}
+  </PlatformLink>
+- <PlatformLink to="/configuration/app-hangs/">App Hangs</PlatformLink> (not
+  available for watchOS)
 
 ### Changes to Grouping
 
@@ -211,7 +262,6 @@ We cleaned up our public classes by removing a few functions and properties, tha
 #### SDK Inits
 
 We removed the version of `SentrySDK.startWithOptions` that took a dictionary, and renamed `SentrySDK.startWithOptionsObject` to `SentrySDK.startWithOptions`. The recommended way to initialize Sentry has not changed:
-
 
 ```swift {tabTitle:Swift}
 import Sentry
@@ -326,7 +376,6 @@ This version uses the [envelope endpoint](https://develop.sentry.dev/sdk/data-mo
 #### SDK Inits
 
 We removed the [deprecated SDK inits](https://github.com/getsentry/sentry-cocoa/blob/5.2.2/Sources/Sentry/include/SentrySDK.h#L35-L47). The recommended way to initialize Sentry is now:
-
 
 ```swift {tabTitle:Swift}
 import Sentry
@@ -452,7 +501,6 @@ The samples below illustrate how the SDK works:
 
 Example in 4.x:
 
-
 ```swift {tabTitle:Swift}
 do {
     Client.shared = try Client(dsn: "___PUBLIC_DSN___")
@@ -473,7 +521,6 @@ if (nil != error) {
 ```
 
 Example in 5.x:
-
 
 ```swift {tabTitle:Swift}
 SentrySDK.start(options: [

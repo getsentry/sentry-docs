@@ -1,4 +1,5 @@
 import {AgentSkillsCallout} from './components/agentSkillsCallout';
+import {AnchorLinkGrid} from './components/anchorLinkGrid';
 import {Alert} from './components/alert';
 import {Arcade} from './components/arcade';
 import {AvailableSince} from './components/availableSince';
@@ -76,6 +77,7 @@ export function mdxComponents(
   return {
     AgentSkillsCallout,
     Alert,
+    AnchorLinkGrid,
     Arcade,
     AvailableSince,
     Break,
