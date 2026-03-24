@@ -10,7 +10,6 @@ import type {ComponentType, FunctionComponent} from 'react';
 // eslint-disable-next-line no-restricted-imports
 import * as React from 'react';
 import * as jsxRuntime from 'react/jsx-runtime';
-// eslint-disable-next-line no-restricted-imports
 import * as ReactDOM from 'react-dom';
 
 export interface MDXContentProps {
@@ -35,7 +34,7 @@ export function getMDXExport<
   ExportedObject = {default: FunctionComponent<MDXContentProps>},
 >(code: string, globals?: Record<string, unknown>): ExportedObject {
   const scope = {React, ReactDOM, _jsx_runtime: jsxRuntime, ...globals};
-  // eslint-disable-next-line @typescript-eslint/no-implied-eval, no-new-func
+  // eslint-disable-next-line no-new-func
   const fn = new Function(...Object.keys(scope), code);
   return fn(...Object.values(scope));
 }

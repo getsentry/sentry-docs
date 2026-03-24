@@ -29,7 +29,7 @@ export default function NotFound() {
         const currentUrl = new URL(window.location.href);
         // Compare origins for exact match
         refererType = referrerUrl.origin === currentUrl.origin ? 'internal' : 'external';
-      } catch (e) {
+      } catch {
         // Invalid referrer URL
         refererType = 'external';
       }

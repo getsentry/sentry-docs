@@ -90,7 +90,7 @@ export default function DocImage({
     try {
       const srcURL = new URL(finalSrc, 'https://example.com');
       imgPath = srcURL.pathname + srcURL.search;
-    } catch (_error) {
+    } catch {
       imgPath = finalSrc;
     }
   } else {

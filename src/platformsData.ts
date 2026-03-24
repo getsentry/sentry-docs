@@ -3,11 +3,19 @@ import path from 'path';
 
 import yaml from 'js-yaml';
 
+import type {PlatformCaseStyle} from './types';
+
 const root = process.cwd();
 
-let platformsDataCache: {} | undefined;
+interface PlatformData {
+  [key: string]: unknown;
+  slug: string;
+  case_style?: PlatformCaseStyle;
+}
 
-export function platformsData(): {} {
+let platformsDataCache: Record<string, PlatformData> | undefined;
+
+export function platformsData(): Record<string, PlatformData> {
   if (platformsDataCache) {
     return platformsDataCache;
   }
@@ -15,15 +23,15 @@ export function platformsData(): {} {
   return platformsDataCache;
 }
 
-function platformsDataUncached(): {} {
+function platformsDataUncached(): Record<string, PlatformData> {
   try {
     const data = yaml.load(
       // @ts-ignore
       fs.readFileSync(path.join(root, 'src', 'data', 'platforms.yml'))
     );
-    const map = {};
+    const map: Record<string, PlatformData> = {};
     // @ts-ignore
-    data.forEach(platform => {
+    data.forEach((platform: PlatformData) => {
       map[platform.slug] = platform;
     });
     return map;

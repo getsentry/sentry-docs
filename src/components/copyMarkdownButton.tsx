@@ -60,7 +60,7 @@ export function CopyMarkdownButton({pathname}: CopyMarkdownButtonProps) {
 
       // Track successful copy
       DocMetrics.copyPage(pathname, true);
-    } catch (err) {
+    } catch {
       setError(true);
       setTimeout(() => setError(false), 3000);
 
@@ -125,7 +125,7 @@ export function CopyMarkdownButton({pathname}: CopyMarkdownButtonProps) {
         try {
           const content = await fetchMarkdownContent();
           setPrefetchedContent(content);
-        } catch (err) {
+        } catch {
           // Silently fail - we'll fall back to regular fetch on click
         }
       };

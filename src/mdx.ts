@@ -358,7 +358,7 @@ async function getAllFilesFrontMatter(): Promise<FrontMatter[]> {
     const commonPath = path.join(platformsPath, platformName, 'common');
     try {
       await access(commonPath);
-    } catch (err) {
+    } catch {
       continue;
     }
 
@@ -411,7 +411,7 @@ async function getAllFilesFrontMatter(): Promise<FrontMatter[]> {
     const guidesPath = path.join(docsPath, 'platforms', platformName, 'guides');
     try {
       await access(guidesPath);
-    } catch (err) {
+    } catch {
       continue;
     }
 
@@ -645,7 +645,7 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
 
   try {
     await mkdir(outdir, {recursive: true});
-  } catch (e) {
+  } catch {
     // If we can't create the directory (e.g., read-only filesystem),
     // continue anyway - images should already exist from build time
   }
@@ -896,7 +896,7 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
   if (assetsCacheDir && cacheFile && cacheKey) {
     try {
       await cp(assetsCacheDir, outdir, {recursive: true});
-    } catch (e) {
+    } catch {
       // If copy fails (e.g., on read-only filesystem), continue anyway
       // Images should already exist from build time
     }

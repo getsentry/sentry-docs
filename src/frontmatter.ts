@@ -224,7 +224,7 @@ async function getDocsFrontMatterUncached(): Promise<FrontMatter[]> {
           guideNames.push(guide.name);
         }
       }
-    } catch (err) {
+    } catch {
       // No guides directory for this platform, skip
       continue;
     }

@@ -206,7 +206,7 @@ export async function fetchCodeKeywords(): Promise<CodeKeywords> {
     if (data.regions) {
       regions = data.regions;
     }
-  } catch (e) {
+  } catch {
     return makeDefaults();
   }
 
@@ -220,7 +220,7 @@ export async function fetchCodeKeywords(): Promise<CodeKeywords> {
           return makeDefaults();
         }
         return resp.json();
-      } catch (e) {
+      } catch {
         return makeDefaults();
       }
     })
