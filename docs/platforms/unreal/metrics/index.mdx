@@ -91,6 +91,26 @@ SentrySubsystem->InitializeWithSettings(FConfigureSettingsNativeDelegate::Create
 }));
 ```
 
+### Game Stats
+
+When **Collect game stats metrics** is enabled, the SDK periodically samples system-level statistics and emits them as gauge metrics. Unlike frame time metrics which are collected per-frame, game stats are sampled on a fixed time interval to avoid unnecessary overhead — these values change slowly and don't need per-frame resolution.
+
+| Metric | Type | Description |
+|--------|------|-------------|
+| `game.perf.used_memory` | Gauge (bytes) | Physical memory used by the process |
+| `game.perf.uobject_count` | Gauge | Number of active UObjects |
+
+The **Sample interval** setting controls how often game stats are collected. The default value of 60 seconds provides a good balance between visibility and overhead. Memory usage is read from `FPlatformMemory::GetStats()` and UObject count from the engine's global object array.
+
+```cpp
+SentrySubsystem->InitializeWithSettings(FConfigureSettingsNativeDelegate::CreateLambda([=](USentrySettings* Settings)
+{
+    Settings->EnableMetrics = true;
+    Settings->EnableAutoGameStatsMetrics = true;
+    Settings->GameStatsSampleIntervalSeconds = 60; // Sample every 60 seconds (default)
+}));
+```
+
 ## Options
 
 <PlatformContent includePath="metrics/options" />
