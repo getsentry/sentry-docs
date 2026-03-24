@@ -1,0 +1,153 @@
+---
+title: Elysia
+description: Learn how to set up Sentry in your Elysia app to capture errors and monitor performance.
+sdk: sentry.javascript.bun
+fallbackGuide: javascript.bun
+categories:
+  - javascript
+  - server
+  - server-node
+---
+
+<Alert>
+
+This SDK is currently in **ALPHA**. Alpha features are still in progress, may have bugs, and might include breaking changes.
+Please reach out on [GitHub](https://github.com/getsentry/sentry-javascript/issues/new/choose) if you have any feedback or concerns.
+
+</Alert>
+
+## Prerequisites
+
+You need:
+
+- A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/)
+- An Elysia application (v1.4.0+)
+- Bun or Node.js 18+ (with [@elysiajs/node](https://elysiajs.com/plugins/node) adapter)
+
+## Step 1: Install
+
+```bash {tabTitle:Bun}
+bun add @sentry/elysia
+```
+
+```bash {tabTitle:npm}
+npm install @sentry/elysia @elysiajs/node
+```
+
+<Alert>
+  You do **not** need `@elysiajs/opentelemetry`. The `@sentry/elysia` SDK handles all instrumentation natively.
+</Alert>
+
+## Step 2: Configure
+
+Call `Sentry.init()` before creating your Elysia app, then wrap the app with `Sentry.withElysia()` before defining routes.
+
+```javascript {tabTitle:Bun} {filename: index.ts}
+import * as Sentry from "@sentry/elysia";
+import { Elysia } from "elysia";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  // Set tracesSampleRate to 1.0 to capture 100% of transactions
+  // We recommend adjusting this value in production
+  tracesSampleRate: 1.0,
+});
+
+const app = Sentry.withElysia(new Elysia());
+
+app.get("/", () => "Hello World");
+app.listen(3000);
+```
+
+```javascript {tabTitle:Node.js} {filename: index.ts}
+import * as Sentry from "@sentry/elysia";
+import { Elysia } from "elysia";
+import { node } from "@elysiajs/node";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  // Set tracesSampleRate to 1.0 to capture 100% of transactions
+  // We recommend adjusting this value in production
+  tracesSampleRate: 1.0,
+});
+
+const app = Sentry.withElysia(new Elysia({ adapter: node() }));
+
+app.get("/", () => "Hello World");
+app.listen(3000);
+```
+
+`Sentry.withElysia()` returns the app instance, so you can chain routes directly:
+
+```javascript
+const app = Sentry.withElysia(new Elysia())
+  .get("/", () => "Hello World")
+  .post("/users", createUser);
+```
+
+The SDK re-exports everything from `@sentry/bun`, so all Sentry APIs (like `captureException`, `startSpan`, `setUser`, `setTag`) are available directly from `@sentry/elysia`.
+
+## Step 3: Verify Your Setup
+
+Add a test route that throws an error:
+
+```javascript
+app.get("/debug-sentry", () => {
+  throw new Error("My first Sentry error!");
+});
+```
+
+Visit `/debug-sentry` in your browser. The error should appear in your Sentry project within a few moments.
+
+## Features
+
+### Automatic Error Capturing
+
+The SDK captures 5xx errors automatically via a global `onError` hook. Client errors (3xx/4xx) are not captured by default.
+
+You can customize which errors are captured using the `shouldHandleError` option:
+
+```javascript
+Sentry.withElysia(app, {
+  shouldHandleError: (context) => {
+    const status = context.set.status;
+    return status === 500 || status === 503;
+  },
+});
+```
+
+### Automatic Tracing
+
+The SDK creates spans for every Elysia lifecycle phase: Request, Parse, Transform, BeforeHandle, Handle, AfterHandle, MapResponse, AfterResponse, and Error.
+
+- The Handle span uses `op: 'request_handler.elysia'`; all other lifecycle spans use `op: 'middleware.elysia'`
+- Transactions use parameterized route names (e.g., `GET /users/:id`)
+- Named function handlers show their function name in spans; arrow functions show as `anonymous`
+
+### Distributed Tracing
+
+The SDK automatically propagates incoming `sentry-trace` and `baggage` headers and injects trace headers into outgoing responses. No additional configuration needed.
+
+### Manual Spans
+
+You can create manual spans within your route handlers:
+
+```javascript
+app.get("/checkout", () => {
+  return Sentry.startSpan({ name: "process-payment" }, () => {
+    // ... your code
+  });
+});
+```
+
+## Runtime Behavior
+
+- **Bun**: The SDK creates root server spans via Elysia's `.wrap()` API with `continueTrace` for trace propagation. No additional runtime instrumentation needed.
+- **Node.js**: The SDK uses Node's HTTP instrumentation for root spans and updates the transaction name with the parameterized route from Elysia.
+
+## Next Steps
+
+- Explore [practical guides](/guides/) on what to monitor, log, track, and investigate after setup
+- Learn how to <PlatformLink to="/usage">manually capture errors</PlatformLink>
+- Continue to <PlatformLink to="/configuration">customize your configuration</PlatformLink>
+- Get familiar with [Sentry's product features](/product) like tracing, insights, and alerts
