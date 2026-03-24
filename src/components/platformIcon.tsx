@@ -40,6 +40,7 @@ import DotnetSVG from 'platformicons/svg/dotnet.svg';
 import DotnetcoreSVG from 'platformicons/svg/dotnetcore.svg';
 import DotnetfxSVG from 'platformicons/svg/dotnetfx.svg';
 import EchoSVG from 'platformicons/svg/echo.svg';
+import EffectSVG from 'platformicons/svg/effect.svg';
 import ElectronSVG from 'platformicons/svg/electron.svg';
 import ElixirSVG from 'platformicons/svg/elixir.svg';
 import EmberSVG from 'platformicons/svg/ember.svg';
@@ -190,6 +191,7 @@ import DotnetSVGLarge from 'platformicons/svg_80x80/dotnet.svg';
 import DotnetcoreSVGLarge from 'platformicons/svg_80x80/dotnetcore.svg';
 import DotnetfxSVGLarge from 'platformicons/svg_80x80/dotnetfx.svg';
 import EchoSVGLarge from 'platformicons/svg_80x80/echo.svg';
+import EffectSVGLarge from 'platformicons/svg_80x80/effect.svg';
 import ElectronSVGLarge from 'platformicons/svg_80x80/electron.svg';
 import ElixirSVGLarge from 'platformicons/svg_80x80/elixir.svg';
 import EmberSVGLarge from 'platformicons/svg_80x80/ember.svg';
@@ -477,6 +479,10 @@ const formatToSVG = {
   echo: {
     sm: EchoSVG,
     lg: EchoSVGLarge,
+  },
+  effect: {
+    sm: EffectSVG,
+    lg: EffectSVGLarge,
   },
   electron: {
     sm: ElectronSVG,
@@ -985,6 +991,7 @@ export const PLATFORM_TO_ICON = {
   'javascript-cordova': 'cordova',
   'javascript-cloudflare': 'cloudflare',
   'javascript-deno': 'deno',
+  'javascript-effect': 'effect',
   'javascript-electron': 'electron',
   'javascript-ember': 'ember',
   'javascript-express': 'express',
