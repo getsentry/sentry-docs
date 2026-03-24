@@ -25,6 +25,10 @@ export const docNodeToNavNode = (node: DocNode): NavNode => ({
     sidebar_order: node.frontmatter.sidebar_order,
     sidebar_title: node.frontmatter.sidebar_title,
     sidebar_hidden: node.frontmatter.sidebar_hidden,
+    beta: node.frontmatter.beta,
+    new: node.frontmatter.new,
+    section_end_divider: node.frontmatter.section_end_divider,
+    sidebar_section: node.frontmatter.sidebar_section,
   },
   path: '/' + node.path + '/',
 });

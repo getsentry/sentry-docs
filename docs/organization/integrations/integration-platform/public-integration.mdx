@@ -1,7 +1,9 @@
 ---
 title: Public Integrations
 sidebar_order: 1
-description: "Learn more about public integrations, which are available to all Sentry users."
+description: 'Learn more about public integrations, which are available to all Sentry users.'
+og_image: >-
+  /og-images/organization-integrations-integration-platform-public-integration.png
 ---
 
 <Alert>
@@ -64,8 +66,66 @@ All public integrations can be installed via a fixed external url: `https://sent
 Public integrations generate [authentication tokens](/organization/integrations/integration-platform/#auth-tokens) after a successful [OAuth installation](#oauth-process).
 These tokens automatically expire every eight hours, meaning they must be refreshed manually.
 
-### Refreshing Tokens
+### Refreshing Tokens Manually for Integrators (recommended)
+Sometimes technical anomalies can lead to token refreshing being committed on the Sentry side but then the token is lost in transmission on the way back. As a result, we've added a method for integrators to explicitly refresh and request a new token for their installers.
 
+This manual refresh method uses a different authorization scheme where you will need to send a JWT signed with your client secret to the previous
+`/api/0/sentry-app-installations/{}/authorizations/` endpoint with the below claims and payload.
+
+```python
+def manual_token_refresh(install_id):
+    url = u'https://sentry.io/api/0/sentry-app-installations/{}/authorizations/'
+    url = url.format(install_id)
+    
+    now = datetime.now(timezone.utc).timestamp()
+    client_secret = "XXXX-XXXX-XXXX"
+    client_id = "1234-5678-9999"
+    iat = now
+    exp = now + 60 # 1 minute validity period
+    
+    claims = {
+		    'iss': client_id,
+		    'sub': client_id,
+		    'iat': iat,
+		    'exp': exp,
+		    'jti': str(uuid.uuid4()),
+    }
+    jwt_token = jwt.encode(claims, client_secret, algorithm="HS256")
+    
+    headers = {
+            'Authorization': f'Bearer {jwt_token}',
+            'Content-Type': 'application/json'
+    }
+    payload = {
+        'grant_type': 'urn:sentry:params:oauth:grant-type:jwt-bearer',
+    }
+    
+	resp = requests.post(url, json=payload, headers=headers) 
+    data = resp.json()
+
+    new_token = data['token']
+    new_refresh_token = data['refreshToken']
+    # ... Securely update the token and refresh_token in DB...
+
+    return new_token
+```
+
+The data you can expect back for both the initial grant code exchange and subsequent token refreshes is as follows:
+
+```json
+{
+  "id": "38",
+  "token": "ec48bf98637d44c294ead7566513686237e74ab67a074c64b3aaca2d93dbb8f1",
+  "refreshToken": "c866f154a65841638d44ee26364409b0a1a67bd642bd46e7a476f34f810712d6",
+  "dateCreated": "2019-08-07T20:25:09.870Z",
+  "expiresAt": "2019-08-08T04:25:09.870Z",
+  "state": null,
+  "application": null
+}
+```
+### Refreshing Tokens via Refresh Token (not recommended)
+
+We recommend Refreshing Tokens Manually as described above. But if you prefer, you can use Refresh Token. 
 In the initial installation, you'll need the grant code given to you in either the installation webhook request or the redirect URL, in addition to your integration's client ID and client Secret:
 
 ```python
@@ -106,20 +166,6 @@ def refresh_token(install_id):
     return new_token
 ```
 
-The data you can expect back for both the initial grant code exchange and subsequent token refreshes is as follows:
-
-```json
-{
-  "id": "38",
-  "token": "ec48bf98637d44c294ead7566513686237e74ab67a074c64b3aaca2d93dbb8f1",
-  "refreshToken": "c866f154a65841638d44ee26364409b0a1a67bd642bd46e7a476f34f810712d6",
-  "dateCreated": "2019-08-07T20:25:09.870Z",
-  "expiresAt": "2019-08-08T04:25:09.870Z",
-  "state": null,
-  "application": null
-}
-```
-
 ## Verifying Installations
 
 Typically, if you have the redirect URL configured, there is work happening on your end to "finalize" the installation. If this is the case, we recommend enabling the "Verify Install" option for your integration. Once enabled, you'll need to send a request marking the installation as officially "installed":
@@ -155,6 +201,6 @@ If the integration has a [UI component](/organization/integrations/integration-p
 
 ## Publication
 
-When you're ready for the publication process, click "Publish" next to the integration you want to submit. This sends an email to partners@sentry.io, letting us know your integration is ready for review:
+When you're ready for the publication process, click "Publish" next to the integration you want to submit. This sends an email to integrations-platform@sentry.io, letting us know your integration is ready for review:
 
 ![Buttons providing the options to publish or delete.](./img/publish-button.png)

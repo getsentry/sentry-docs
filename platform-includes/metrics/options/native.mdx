@@ -1,0 +1,25 @@
+### before_send_metric
+
+To filter metrics or modify them before they are sent to Sentry, use the `before_send_metric` option:
+
+```c
+static sentry_value_t
+before_send_metric_callback(sentry_value_t metric, void *user_data)
+{
+    (void)user_data;
+
+    // Drop metrics with specific attributes
+    sentry_value_t attributes = sentry_value_get_by_key(metric, "attributes");
+    if (!sentry_value_is_null(sentry_value_get_by_key(attributes, "debug"))) {
+        sentry_value_decref(metric);
+        return sentry_value_new_null();
+    }
+
+    // Return the metric to send it
+    return metric;
+}
+
+sentry_options_set_before_send_metric(options, before_send_metric_callback, NULL);
+```
+
+The `before_send_metric` function receives a metric object and optional `user_data`, and should return the metric object if you want it to be sent to Sentry, or it should free the metric using `sentry_value_decref(metric)` and return a `sentry_value_new_null()` if you want to discard it.

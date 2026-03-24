@@ -1,0 +1,156 @@
+---
+title: Instrument AI Agents
+sidebar_order: 500
+description: "Learn how to instrument your code to use Sentry's AI Agents module with Microsoft.Extensions.AI."
+---
+
+With <Link to="/ai/monitoring/agents/dashboard/">Sentry AI Agent Monitoring</Link>, you can monitor and debug your AI systems with full-stack context. You'll be able to track key insights like token usage, latency, tool usage, and error rates. AI Agent Monitoring data will be fully connected to your other Sentry data like logs, errors, and traces.
+
+As a prerequisite to setting up AI Agent Monitoring with .NET, you'll need to first <PlatformLink to="/tracing/">set up tracing</PlatformLink>. Once this is done, you can use the `Sentry.Extensions.AI` package to automatically instrument AI agents created with `Microsoft.Extensions.AI`.
+
+## Installation
+
+Install the `Sentry.Extensions.AI` package:
+
+```shell {tabTitle:.NET CLI}
+dotnet add package Sentry.Extensions.AI
+```
+
+```shell {tabTitle:Package Manager}
+Install-Package Sentry.Extensions.AI
+```
+
+The `Sentry.Extensions.AI` integration depends on the `Microsoft.Extensions.AI.Abstractions` package (version 9.7.0 or higher).
+
+## Automatic Instrumentation
+
+The `Sentry.Extensions.AI` package provides automatic instrumentation for AI agents built with [Microsoft.Extensions.AI](https://devblogs.microsoft.com/dotnet/introducing-microsoft-extensions-ai-preview/). This works with any AI provider that implements the `IChatClient` interface, including:
+
+- [Microsoft.Extensions.AI.OpenAI](https://www.nuget.org/packages/Microsoft.Extensions.AI.OpenAI/)
+- [Microsoft.Extensions.AI.AzureAIInference](https://www.nuget.org/packages/Microsoft.Extensions.AI.AzureAIInference/)
+- [Anthropic.SDK](https://www.nuget.org/packages/Anthropic.SDK)
+
+### Basic Setup
+
+<Alert level="warning" title="Important">
+AI Agent monitoring is marked as experimental. You may encounter unexpected behaviour from this SDK.
+</Alert>
+
+To instrument your AI agent, simply call `IChatClient.AddSentry()` before building your chat client. If your AI agent uses tools (function calling), you can instrument them using the `AddSentryToolInstrumentation()` extension method on `ChatOptions`:
+
+<Alert level="warning" title="When using tools">
+You must call `IChatClient.AddSentry()` before creating a `ChatClientBuilder` with it. If you run `AddSentry()` on an `IChatClient` that already has function invocation, spans may not show up correctly.
+</Alert>
+
+```csharp
+// Wrap your IChatClient with Sentry instrumentation
+var openAiClient = new OpenAI.Chat.ChatClient("gpt-4o-mini", apiKey)
+    .AsIChatClient()
+    .AddSentry(options =>
+    {
+        options.Experimental.RecordInputs = true;
+        options.Experimental.RecordOutputs = true;
+        options.Experimental.AgentName = "MyAgent";
+    });
+
+// Wrap your client with FunctionInvokingChatClient
+var chatClient = new ChatClientBuilder(openAiClient)
+    .UseFunctionInvocation()
+    .Build();
+
+// Create chat options with tools and add Sentry instrumentation
+var options = new ChatOptions
+{
+    ModelId = "gpt-4o-mini",
+    MaxOutputTokens = 1024,
+    Tools =
+    [
+        // Sample Tool
+        AIFunctionFactory.Create(async (string location) =>
+        {
+            await Task.Delay(500);
+            return $"The weather in {location} is sunny";
+        }, "GetWeather", "Gets the current weather for a location")
+    ]
+}.AddSentryToolInstrumentation();
+
+var response = await chatClient.GetResponseAsync(
+    "What's the weather in New York?",
+    options);
+```
+
+
+## Configuration Options
+
+The `AddSentry()` method accepts an optional configuration delegate to customize the instrumentation:
+
+<SdkOption name="Experimental.RecordInputs" type="bool" defaultValue="true">
+
+Whether to include request messages in spans. When enabled, the content of messages sent to the AI model will be recorded in the span data.
+
+</SdkOption>
+
+<SdkOption name="Experimental.RecordOutputs" type="bool" defaultValue="true">
+
+Whether to include response content in spans. When enabled, the content of responses from the AI model will be recorded in the span data.
+
+</SdkOption>
+
+<SdkOption name="Experimental.AgentName" type="string" defaultValue="Agent">
+
+Name of the AI Agent. This name will be used to identify the agent in the Sentry UI and helps differentiate between multiple agents in your application.
+
+</SdkOption>
+
+<PlatformSection supported={["dotnet.aspnetcore"]}>
+
+## ASP.NET Core Integration
+
+For ASP.NET Core applications, you can integrate Sentry AI Agent monitoring as follows:
+
+```csharp
+var builder = WebApplication.CreateBuilder(args);
+
+// Initialize Sentry for ASP.NET Core
+builder.WebHost.UseSentry(options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
+    options.TracesSampleRate = 1.0;
+});
+
+// Set up the AI client with Sentry instrumentation
+var openAiClient = new OpenAI.Chat.ChatClient("gpt-4o-mini", apiKey)
+    .AsIChatClient()
+    .AddSentry(options =>
+    {
+        options.Experimental.RecordInputs = true;
+        options.Experimental.RecordOutputs = true;
+    });
+
+var chatClient = new ChatClientBuilder(openAiClient)
+    .UseFunctionInvocation()
+    .Build();
+
+// Register as a singleton
+builder.Services.AddSingleton<IChatClient>(chatClient)
+
+var app = builder.Build();
+
+// Use in endpoints
+app.MapGet("/chat", async (IChatClient client, string message) =>
+{
+    var options = new ChatOptions
+    {
+        ModelId = "gpt-4o-mini",
+        Tools = [ /* your tools */ ]
+    }.AddSentryToolInstrumentation();
+
+    var response = await client.GetResponseAsync(message, options);
+    return Results.Ok(response.Message.Text);
+});
+
+app.Run();
+```
+
+</PlatformSection>
+

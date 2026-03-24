@@ -32,8 +32,12 @@ export type NavNode = {
   context: {
     draft: boolean;
     title: string;
+    beta?: boolean;
+    new?: boolean;
+    section_end_divider?: boolean;
     sidebar_hidden?: boolean;
     sidebar_order?: number;
+    sidebar_section?: 'features' | 'configuration';
     sidebar_title?: string;
   };
   path: string;

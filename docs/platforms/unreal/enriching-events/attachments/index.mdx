@@ -1,6 +1,9 @@
 ---
 title: Attachments
-description: "Learn more about how Sentry can store additional files in the same request as event attachments."
+description: >-
+  Learn more about how Sentry can store additional files in the same request as
+  event attachments.
+og_image: /og-images/platforms-unreal-enriching-events-attachments.png
 ---
 
 <Alert>
@@ -79,19 +82,10 @@ Attachments live on the <PlatformLink to="/enriching-events/scopes/">Scope</Plat
 ```cpp
 USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
 
-FConfigureScopeDelegate ScopeDelegate;
-ScopeDelegate.BindDynamic(this, &USomeClass::HandleScopeDelegate);
+USentryAttachment* Attachment = NewObject<USentryAttachment>();
+Attachment->InitializeWithPath("your/path/file.log", "file.log");
 
-SentrySubsystem->ConfigureScope(ScopeDelegate);
-
-// Put scope configuration logic here
-void USomeClass::HandleScopeDelegate(USentryScope* Scope)
-{
-    USentryAttachment* Attachment = NewObject<USentryAttachment>();
-    Attachment->InitializeWithPath("your/path/file.log", "file.log");
-
-    Scope->AddAttachment(Attachment);
-}
+SentrySubsystem->AddAttachment(Attachment);
 ```
 
 The same result can be achieved by calling the corresponding function in blueprint:
@@ -100,7 +94,7 @@ The same result can be achieved by calling the corresponding function in bluepri
 
 <Alert>
 
-Sentry allows at most 20MB for a compressed request, and at most 100MB of uncompressed attachments per event, including the crash report file (if applicable). Uploads exceeding this size are rejected with HTTP error `413 Payload Too Large` and the data is dropped immediately. To add larger or more files, consider secondary storage options.
+Sentry allows at most 40MB for a compressed request, and at most 200MB of uncompressed attachments per event, including the crash report file (if applicable). Uploads exceeding this size are rejected with HTTP error `413 Payload Too Large` and the data is dropped immediately. To add larger or more files, consider secondary storage options.
 
 </Alert>
 

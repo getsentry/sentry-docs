@@ -63,7 +63,7 @@ export const Dropdown = styled('div')<{dark: boolean}>`
 `;
 
 export const Selections = styled('div')`
-  overflow: scroll;
+  overflow: auto;
   overscroll-behavior: contain;
   max-height: 210px;
   min-width: 300px;
@@ -162,7 +162,7 @@ export const KeywordSpan = styled(motion.span, {
   grid-row: 1;
   grid-column: 1;
   display: inline-block;
-  margin-top: ${p => (p.hasPreview ? '24px' : '0')};
+  margin-top: 0;
 `;
 
 export const KeywordSearchInput = styled('input')<{dark: boolean}>`

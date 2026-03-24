@@ -19,7 +19,13 @@ Here's how the benchmarks were conducted:
 - **User Flow:** The same flow was executed 10 times to ensure consistency.
 - **Real-World Representation:** This approach closely mirrors performance in real-world scenarios.
 
-The benchmarks were run on an iPhone 14 Pro and a Pixel 2XL. Note that active Session Replay recording can introduce slow frames on older lower-end iOS devices (for example iPhone 8).
+The benchmarks were run on an iPhone 14 Pro and a Pixel 2XL.
+
+<Alert level="warning" title="iOS: Older Device Performance">
+
+On older iOS devices (iPhone 8 and earlier), Session Replay can cause **visible scrolling stutter** and dropped frames during UI animations. This is due to the screenshot capture process blocking the main thread longer than the available frame budget. See the [iOS Performance Overhead](/platforms/apple/guides/ios/session-replay/performance-overhead/#performance-on-older-devices) documentation for details on affected devices and mitigation strategies.
+
+</Alert>
 
 ## iOS
 
@@ -60,3 +66,16 @@ To minimize the performance impact of the Replay SDK on iOS and Android, conside
 ```
 
 Note that the default value for `replaysSessionQuality` is `medium` and a `high` quality setting is also available.
+
+## Excluding Session Replay from Android
+
+If you don’t plan to use Session Replay, you can exclude the sentry-android-replay module from your Android targets to reduce the bundle size by about 40KB compressed and 80KB uncompressed. Here's how you can do it:
+
+```gradle
+// from the android's root build.gradle file
+subprojects {
+  configurations.all {
+    exclude group: 'io.sentry', module: 'sentry-android-replay'
+  }
+}
+```

@@ -1,0 +1,96 @@
+---
+title: App Hangs
+sidebar_order: 11
+description: "Learn how to detect and report application hangs in your Unreal Engine game."
+---
+
+Application hang errors are triggered when a thread monitored by Unreal Engine's heartbeat system becomes unresponsive for longer than a configurable timeout. The Unreal SDK reports hang errors as Sentry events.
+
+Trying to play an unresponsive game is extremely frustrating for users. There are many reasons why an app may become unresponsive, such as long-running computations on the game thread, infinite loops, deadlocks, and so on. With app hang tracking you can detect and fix them.
+
+<Alert>
+
+This feature is available on Windows and Linux only. On macOS and iOS, the Cocoa SDK provides its own <PlatformLink to="/configuration/options/#enableAppNotRespondingTracking">app hang detection</PlatformLink>. On Android, the Java SDK provides its own <PlatformLink to="/configuration/options/#enableAppNotRespondingTracking">ANR detection</PlatformLink>.
+
+</Alert>
+
+## How It Works
+
+The SDK hooks into Unreal Engine's built-in `FThreadHeartBeat` system, which monitors threads that participate in the engine's heartbeat (game thread, render thread, audio thread, etc.):
+
+1. The engine runs a background thread that periodically checks whether monitored threads are still sending heartbeats.
+2. When a thread misses heartbeats for longer than the engine's `StuckDuration` (default 1 second), the engine fires an `OnThreadStuck` delegate.
+3. The SDK's watchdog thread then waits for the remaining time up to the configured hang timeout.
+4. If the thread is still unresponsive when the timeout expires, the SDK captures a hang event with the stuck thread's stack trace and sends it to Sentry.
+5. If the thread recovers before the timeout, the hang is not reported.
+
+The hang event includes:
+- Event level: `error`
+- Exception type: `App Hanging`
+- Exception value: `Application not responding`
+- Mechanism type: `AppHang`
+- Stack trace of the hung thread
+
+## Prerequisites
+
+The engine's heartbeat monitor thread must be enabled for hang tracking to work. By default, `HangDuration` in `[Core.System]` is set to `0`, which disables the heartbeat monitor. Set it to a value greater than `0` in your project's `DefaultEngine.ini`:
+
+```ini {filename:DefaultEngine.ini}
+[Core.System]
+HangDuration=25
+```
+
+`HangDuration` is the threshold (in seconds) after which the engine reports a hang to the [Crash Reporter Client](/platforms/unreal/configuration/setup-crashreporter/). The Sentry SDK's hang tracking coexists with the engine's mechanism — the SDK hooks into the heartbeat system independently and captures its own events based on the <PlatformLink to="/configuration/app-hangs/#hang-timeout">hang timeout</PlatformLink> you configure.
+
+## Configuration
+
+App hang tracking is disabled by default. To enable it, navigate to **Project Settings > Plugins > Sentry > General > Native** and toggle **Enable hang tracking**.
+
+Alternatively, add the following to your project's configuration file:
+
+```ini {filename:DefaultEngine.ini}
+[/Script/Sentry.SentrySettings]
+EnableHangTracking=True
+```
+
+### Hang Timeout
+
+The hang timeout controls how long a thread must be unresponsive before a hang event is captured. The default is 5 seconds, with a minimum of 1 second.
+
+You can adjust it in **Project Settings > Plugins > Sentry > General > Native > Hang timeout (seconds)**, or via the configuration file:
+
+```ini {filename:DefaultEngine.ini}
+[/Script/Sentry.SentrySettings]
+HangTimeoutDuration=5.0
+```
+
+If the configured timeout is shorter than the engine's `StuckDuration`, it will be automatically adjusted upward to match, since the SDK can only start tracking after the engine reports a thread as stuck.
+
+## Filtering Hang Events
+
+You can filter or modify hang events using the `BeforeSend` callback. The `USentryEvent` class provides an `IsAnr()` method that returns `true` for hang events (exception type `App Hanging`):
+
+```cpp
+UCLASS()
+class UHangFilterHandler : public USentryBeforeSendHandler
+{
+    GENERATED_BODY()
+
+public:
+    virtual USentryEvent* HandleBeforeSend_Implementation(USentryEvent* Event, USentryHint* Hint) override
+    {
+        if (Event->IsAnr())
+        {
+            // Modify or return nullptr to discard the event
+        }
+        return Event;
+    }
+};
+```
+
+## Limitations
+
+- **Packaged builds only**: Hang tracking does not work in the editor or in debug build configurations. The engine's `USE_HANG_DETECTION` macro must be enabled, which is only the case in packaged non-debug builds.
+- **No early-startup detection**: Hangs that occur before `FEngineLoop::Tick()` starts (e.g. during `GameInstance::Init()`) are not detected, because threads must have sent at least one heartbeat before they can be monitored.
+- **Requires engine configuration**: The `HangDuration` setting in `[Core.System]` must be set to a value greater than `0`. Without it, the engine's heartbeat monitor thread doesn't run.
+- **One thread at a time**: If multiple threads become stuck simultaneously, only one hang is reported per episode. The engine's `FThreadHeartBeat` reports one stuck thread at a time, so additional stuck threads are only detected after the first one recovers.

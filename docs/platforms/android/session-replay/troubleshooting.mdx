@@ -29,3 +29,32 @@ Recording only happens on Android 8 (API level 26) or newer. For devices running
 An issue may be missing a replay because the user's device was [offline](/product/explore/session-replay/mobile#frequently-asked-questions) while `sessionSampleRate` was specified, your project/organization was rate-limited, or (in rare cases) the device failed to capture the replay video.
 
 </Expandable>
+
+<Expandable title="Why can't I see the full HTTP request body or all the headers?" permalink>
+
+By default, Replay will capture basic information about all outgoing HTTP requests in your application. This includes the URL, request and response body size, method, and status code.
+The intention is to limit the chance of collecting private data. You can <PlatformLink to="/session-replay/configuration/">configure the SDK to capture bodies and additional headers</PlatformLink>.
+
+Another reason you might not see the body is that network details are only captured for OkHttp requests. If you've configured `networkDetailAllowUrls` and don't see request/response bodies or headers in your replays, verify that the request was made by the OkHttp stack.
+
+<Alert>
+OkHttp body and header extraction relies on [SentryOkHttpInterceptor](/platforms/android/integrations/okhttp/) to instrument HTTP requests. The [Sentry gradle plugin](/platforms/android/configuration/gradle/) automatically adds this, so it works out of the box. If you're not using the plugin, add the interceptor manually:
+
+```java {tabTitle:Java}
+OkHttpClient client = new OkHttpClient.Builder()
+  .addInterceptor(new SentryOkHttpInterceptor())
+  .build();
+```
+
+```kotlin {tabTitle:Kotlin}
+val client = OkHttpClient.Builder()
+  .addInterceptor(SentryOkHttpInterceptor())
+  .build()
+```
+
+</Alert>
+
+Also consider if the format is supported. We only capture text-based bodies, including JSON, XML, FormData, and similar data types. Any captured body will be truncated to 150k bytes. Bodies of byte, file, or media types are not captured.
+
+
+</Expandable>

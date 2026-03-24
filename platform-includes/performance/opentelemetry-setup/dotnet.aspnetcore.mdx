@@ -21,5 +21,10 @@ builder.WebHost.UseSentry(options =>
     options.SendDefaultPii = true;
     options.TracesSampleRate = 1.0;
     options.UseOpenTelemetry(); // <-- Configure Sentry to use OpenTelemetry trace information
+    options.DisableSentryHttpMessageHandler = true; // <-- Disable Sentry's HttpClient instrumentation to avoid duplicate spans
 });
 ```
+
+<Alert level="info" title="Important Note">
+When using OpenTelemetry to instrument HttpClient spans via `AddHttpClientInstrumentation`, you **must** set `DisableSentryHttpMessageHandler = true` in the Sentry options to disable Sentry's built-in HttpClient instrumentation. This prevents the creation of duplicate spans for HTTP requests.
+</Alert>

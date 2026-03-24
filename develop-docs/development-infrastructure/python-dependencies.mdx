@@ -14,20 +14,26 @@ data if they turn out to be malicious.
 
 Any new dependency needs to be thoroughly reviewed and approved by [owners-python-build](https://github.com/orgs/getsentry/teams/owners-python-build/members). This group is already automatically tagged in your PR to `sentry` or `getsentry` as soon as you edit relevant files. For other repos you might need to do it manually.
 
+Dependencies must:
+- be on [internal pypi](https://github.com/getsentry/pypi)
+- not be added to repos as non-specifier requirements (see sentry's `tools/lint_requirements.py`)
+
 To add or update a dependency:
 
 1. Clone https://github.com/getsentry/pypi/.
 2. `cd` into your clone and run `python3 -m add_pkg PKGNAME` (or `python3 -m add_pkg PKGNAME==PKGVERSION` if you want a version other than the latest).
 3. Commit the resulting changes to a branch, open a PR in `getsentry/pypi`, and tag someone on your team (any engineer can approve PRs on this repo).
 4. Once your PR is merged, go back to the main repo whose dependencies you want to change (`sentry`, `getsentry`, etc.).
-5. In that repo, add to or update the dependency in `pyproject.toml`.
+5. In that repo, add to or update the dependency in `pyproject.toml` (or `requirements*.txt` if the repo isn't [using `uv` yet](https://www.notion.so/Standard-Spec-python-uv-2248b10e4b5d8045b8fff30f8b8b67ca)).
 - In sentry, you can do this with the [bump-version action](https://github.com/getsentry/sentry/actions/workflows/bump-version.yml).
   - Click the **Run workflow** dropdown.
   - Fill in your package name and version.
   - Click the **Run workflow** button.
-- Some projects are still using `requirements*.txt`, in which case update those files.
-- The eventual goal is that every python project will [use `uv` to lock python dependencies](https://www.notion.so/Standard-Spec-python-uv-2248b10e4b5d8045b8fff30f8b8b67ca).
-- Note that dependencies should pinned with lower bounds only, to encourage updating to latest versions.
+
+<Alert level="warning" title="Note">
+Dependencies should pinned with lower bounds `>=`, to encourage updating to latest versions.
+</Alert>
+
 6. Run `make freeze-requirements` (or `uv lock`). You might need to wait a few minutes for the changes to `getsentry/pypi` to be deployed before this will work without erroring.
 7. Commit your changes (which should consist of changes to both one of the `requirements` files and its corresponding lockfile) to a branch and open a PR in the relevant repo. If it's not obvious, explain why you're adding or updating the dependency. Tag `owners-python-build` if they haven't already been auto-tagged.
 8. Merge your PR, pull `master`, and run `devenv sync`.
@@ -36,15 +42,12 @@ To add or update a dependency:
 ## Depending on forks
 
 If you need to make modifications to a dependency and need to deploy the result
-before it is accepted upstream, you can fork the dependency.
+before it is accepted upstream, you must fork the dependency and publish it to pypi and internal pypi.
 
-Depending on forks is generally discouraged unless necessary, and you should
-make sure that the changes in your fork are **not required for self-hosted to
-function,** because they won't be included in the PyPI distribution of Sentry.
+1. Fork into the `getsentry` organization and make your changes.
+2. Add craft configuration to publish to pypi+internal pypi ([example](https://github.com/getsentry/sentry-forked-djangorestframework-stubs/pull/1)).
+3. Add the dependency to your repository.
 
-1. Fork into the `getsentry` organization.
-2. Depend on the fork using `library-name @ https://github.com/getsentry/<repo>/archive/<40 char sha>.zip` in `getsentry`'s `requirements-base.txt`.
-3. The requirement in `sentry` stays the same, because we upload `sentry` to PyPI, and PyPI does not allow us to depend on URLs.
 
 ## Unclear?
 

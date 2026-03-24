@@ -1,0 +1,67 @@
+To enable metrics, set the `enable_metrics` option during SDK initialization:
+
+```c
+sentry_options_t *options = sentry_options_new();
+sentry_options_set_enable_metrics(options, true);
+// set other options
+sentry_init(options);
+```
+
+Once enabled, you can send metrics using the `sentry_metrics_*()` APIs.
+
+### Metric Types
+
+| Type           | Use For                                      |
+| -------------- | -------------------------------------------- |
+| `count`        | Events (orders, clicks, API calls)           |
+| `gauge`        | Current values (queue depth, connections)    |
+| `distribution` | Value ranges (response times, payload sizes) |
+
+### Counters
+
+Track the number of times something happens:
+
+```c
+sentry_metrics_count("api.requests", 1, sentry_value_new_null());
+```
+
+### Gauges
+
+Track current values that can go up or down:
+
+```c
+sentry_metrics_gauge("active_connections", 42, NULL, sentry_value_new_null());
+```
+
+### Distributions
+
+Track a range of values (e.g., response times):
+
+```c
+sentry_metrics_distribution("response.time", 150.5, SENTRY_UNIT_MILLISECOND, sentry_value_new_null());
+```
+
+### Custom Attributes
+
+Add attributes to filter and group metrics in Sentry:
+
+```c
+sentry_value_t attributes = sentry_value_new_object();
+sentry_value_set_by_key(attributes, "endpoint",
+    sentry_value_new_attribute(sentry_value_new_string("/api/orders"), NULL));
+sentry_value_set_by_key(attributes, "region",
+    sentry_value_new_attribute(sentry_value_new_string("us-west"), NULL));
+
+sentry_metrics_count("api.calls", 1, attributes);
+```
+
+When no custom attributes are needed, pass `sentry_value_new_null()`.
+
+### Units
+
+For `gauge` and `distribution` metrics, specify a unit to help Sentry display values in a human-readable format. The SDK provides `SENTRY_UNIT_*` constants for common units like `SENTRY_UNIT_MILLISECOND`, `SENTRY_UNIT_BYTE`, etc. Pass `NULL` when no specific unit applies.
+
+```c
+sentry_metrics_gauge("memory.usage", 1024, SENTRY_UNIT_BYTE, sentry_value_new_null());
+sentry_metrics_distribution("latency", 42.5, SENTRY_UNIT_MILLISECOND, sentry_value_new_null());
+```

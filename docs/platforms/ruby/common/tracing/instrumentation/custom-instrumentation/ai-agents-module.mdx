@@ -1,0 +1,122 @@
+---
+title: Instrument AI Agents
+sidebar_order: 500
+description: "Learn how to manually instrument your code to use Sentry's Agents module."
+---
+
+With <Link to="/ai/monitoring/agents/dashboard/">Sentry AI Agent Monitoring</Link>, you can monitor and debug your AI systems with full-stack context. You'll be able to track key insights like token usage, latency, tool usage, and error rates. AI Agent Monitoring data will be fully connected to your other Sentry data like logs, errors, and traces.
+
+As a prerequisite to setting up AI Agent Monitoring with Ruby, you'll need to first <PlatformLink to="/tracing/">set up tracing</PlatformLink>. Once this is done, you can use the custom instrumentation described below to capture AI agent spans.
+
+## Manual Instrumentation
+
+For your AI agents data to show up in the Sentry [AI Agents Insights](https://sentry.io/orgredirect/organizations/:orgslug/insights/ai/agents/), at least one of the AI spans needs to be created and have well-defined names and data attributes. See details below.
+
+Make sure that there's a transaction running when you create the spans. If you're using a web framework like Rails those transactions will be created for you automatically.
+
+## Spans
+
+### AI Request span
+
+This span represents a request to a LLM model or service that generates a response based on the input prompt.
+
+<Expandable title="AI Request span attributes">
+  <Include name="tracing/ai-agents-module/ai-client-span" />
+</Expandable>
+
+#### Example AI Request span
+
+```ruby
+require 'json'
+
+messages = [{ role: 'user', content: 'Tell me a joke' }]
+
+Sentry.with_child_span(op: 'gen_ai.request', description: 'chat o3-mini') do |span|
+  span.set_data('gen_ai.request.model', 'o3-mini')
+  span.set_data('gen_ai.request.messages', messages.to_json)
+  span.set_data('gen_ai.operation.name', 'invoke_agent')
+
+  # Call your LLM here
+  result = client.chat(model: 'o3-mini', messages: messages)
+
+  span.set_data('gen_ai.response.text', [result.choices[0].message.content].to_json)
+  # Set token usage
+  span.set_data('gen_ai.usage.input_tokens', result.usage.prompt_tokens)
+  span.set_data('gen_ai.usage.output_tokens', result.usage.completion_tokens)
+end
+```
+
+### Invoke Agent Span
+
+This span represents the execution of an AI agent, capturing the full lifecycle from receiving a task to producing a final response.
+
+<Expandable title="Invoke Agent span attributes">
+  <Include name="tracing/ai-agents-module/invoke-agent-span" />
+</Expandable>
+
+#### Example of an Invoke Agent Span:
+
+```ruby
+Sentry.with_child_span(op: 'gen_ai.invoke_agent', description: 'invoke_agent Weather Agent') do |span|
+  span.set_data('gen_ai.request.model', 'o3-mini')
+  span.set_data('gen_ai.agent.name', 'Weather Agent')
+
+  # Run the agent
+  result = my_agent.run
+
+  span.set_data('gen_ai.response.text', result.to_s)
+  # Set token usage
+  span.set_data('gen_ai.usage.input_tokens', result.usage.input_tokens)
+  span.set_data('gen_ai.usage.output_tokens', result.usage.output_tokens)
+end
+```
+
+### Execute Tool Span
+
+This span represents the execution of a tool or function that was requested by an AI model, including the input arguments and resulting output.
+
+<Expandable title="Execute Tool span attributes">
+  <Include name="tracing/ai-agents-module/execute-tool-span" />
+</Expandable>
+
+#### Example Execute Tool Span
+
+```ruby
+require 'json'
+
+Sentry.with_child_span(op: 'gen_ai.execute_tool', description: 'execute_tool get_weather') do |span|
+  span.set_data('gen_ai.tool.name', 'get_weather')
+  span.set_data('gen_ai.tool.input', { location: 'Paris' }.to_json)
+
+  # Call the tool
+  result = get_weather(location: 'Paris')
+
+  span.set_data('gen_ai.tool.output', result.to_json)
+end
+```
+
+### Handoff Span
+
+This span marks the transition of control from one agent to another, typically when the current agent determines another agent is better suited to handle the task.
+
+<Expandable title="Handoff span attributes">
+  <Include name="tracing/ai-agents-module/handoff-span" />
+</Expandable>
+
+#### Example of a Handoff Span
+
+```ruby
+Sentry.with_child_span(op: 'gen_ai.handoff', description: 'handoff from Weather Agent to Travel Agent') do |span|
+  # Handoff span just marks the transition
+end
+
+Sentry.with_child_span(op: 'gen_ai.invoke_agent', description: 'invoke_agent Travel Agent') do |span|
+  # Run the target agent here
+end
+```
+
+## Common Span Attributes
+
+<Include name="tracing/ai-agents-module/common-span-attributes" />
+
+<Include name="tracing/ai-agents-module/token-cost-gotchas" />

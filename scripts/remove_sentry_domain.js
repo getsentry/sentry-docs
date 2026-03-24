@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable no-console */
 /**
  * Script to remove 'https://docs.sentry.io/' domain from URLs in MDX files.
  *

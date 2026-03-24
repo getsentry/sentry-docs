@@ -1,0 +1,100 @@
+---
+title: Set Up Metrics
+sidebar_title: Metrics
+description: "Metrics allow you to send, view and query counters, gauges and distributions from your Unreal Engine game to track application health and drill down into related traces, logs, and errors."
+sidebar_order: 5700
+beta: true
+sidebar_section: features
+---
+
+With Sentry Metrics, you can send counters, gauges, and distributions from your Unreal Engine game to Sentry. Once in Sentry, these metrics can be viewed alongside relevant errors, and searched using their individual attributes.
+
+<Alert>
+  This feature is currently in open beta. Features in beta are still in progress
+  and may have bugs.
+</Alert>
+
+## Requirements
+
+<PlatformContent includePath="metrics/requirements" />
+
+## Setup
+
+<PlatformContent includePath="metrics/setup" />
+
+## Usage
+
+<PlatformContent includePath="metrics/usage" />
+
+## Automatic Metrics
+
+<Alert level="warning">
+  Automatic metrics are experimental and may change in future releases.
+</Alert>
+
+The SDK can automatically collect performance metrics from the engine without any manual instrumentation. All automatic metrics are configured under **Project Settings > Plugins > Sentry > Metrics > Experimental** and require **Enable Metrics** to be checked.
+
+All automatic metrics include the following attributes for filtering and grouping in Sentry dashboards:
+
+| Attribute | Description |
+|-----------|-------------|
+| `gpu.name` | GPU model name |
+| `cpu.cores` | Number of physical CPU cores |
+| `ram.gb` | Total physical RAM in GB |
+| `res.x`, `res.y` | Screen resolution |
+| `map` | Current game map/level name |
+
+These attributes make it possible to segment performance data by hardware tier, resolution, or game level.
+
+### Frame Time
+
+When **Collect frame time metrics** is enabled, the SDK registers a performance consumer with Unreal Engine's built-in performance tracking system and emits the following metrics:
+
+| Metric | Type | Description |
+|--------|------|-------------|
+| `game.perf.frame_time` | Distribution (ms) | Total frame time |
+| `game.perf.game_thread` | Distribution (ms) | Game thread work time |
+| `game.perf.render_thread` | Distribution (ms) | Render thread work time |
+| `game.perf.gpu` | Distribution (ms) | GPU frame time |
+| `game.perf.fps` | Gauge | Engine-smoothed average FPS |
+
+To avoid flooding the metrics pipeline, the SDK only emits metrics every Nth frame, controlled by the **Sample interval** setting. The default value of 30 produces approximately 2 samples per second at 60 FPS, which is sufficient for accurate percentile computation while keeping overhead minimal.
+
+```cpp
+SentrySubsystem->InitializeWithSettings(FConfigureSettingsNativeDelegate::CreateLambda([=](USentrySettings* Settings)
+{
+    Settings->EnableMetrics = true;
+    Settings->EnableAutoFrameTimeMetrics = true;
+    Settings->FrameTimeSampleInterval = 30; // Emit every 30th frame (default)
+}));
+```
+
+### GC Pauses
+
+<Alert>
+  GC pause metrics require Unreal Engine 5.5 or later. On older engine versions, this setting has no effect.
+</Alert>
+
+When **Collect GC pause metrics** is enabled, the SDK measures the blocking garbage collection pause and emits it as a metric after each collection cycle.
+
+| Metric | Type | Description |
+|--------|------|-------------|
+| `game.perf.gc_time` | Distribution (ms) | Duration of the blocking GC pause |
+
+GC pauses are a common source of hitches in Unreal Engine games — a single GC pass can freeze the game thread for 10–50ms or more, causing visible stutters. The metric captures the interval between the GC lock being acquired and released. By default, the engine runs GC approximately every 60 seconds, so this metric has negligible impact on metric volume.
+
+```cpp
+SentrySubsystem->InitializeWithSettings(FConfigureSettingsNativeDelegate::CreateLambda([=](USentrySettings* Settings)
+{
+    Settings->EnableMetrics = true;
+    Settings->EnableAutoGCMetrics = true;
+}));
+```
+
+## Options
+
+<PlatformContent includePath="metrics/options" />
+
+## Default Attributes
+
+<PlatformContent includePath="metrics/default-attributes" />

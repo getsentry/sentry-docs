@@ -3,7 +3,6 @@ import Image from 'next/image';
 import {ExternalLink} from '../externalLink';
 
 import clojure from './icons/clojure.png';
-import cloudflare from './icons/cloudflare.png';
 import coldfusion from './icons/coldfusion.png';
 import crystal from './icons/crystal.png';
 import defold from './icons/defold.png';
@@ -30,11 +29,6 @@ const CommunityPlatforms = [
     name: 'Clojure (Raven Clj)',
     url: 'https://github.com/sethtrain/raven-clj#alternatives',
     icon: clojure,
-  },
-  {
-    name: 'Cloudflare Workers',
-    url: 'https://github.com/robertcepa/toucan-js',
-    icon: cloudflare,
   },
   {
     name: 'ColdFusion',

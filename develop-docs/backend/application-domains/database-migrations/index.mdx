@@ -1,6 +1,7 @@
 ---
 title: Database Migrations
 sidebar_order: 20
+og_image: /og-images/backend-application-domains-database-migrations.png
 ---
 
 Django migrations are how we handle changes to the database in Sentry.
@@ -292,6 +293,7 @@ Extra care is needed here if the table is referenced as a foreign key in other t
 - Make another pull request to:
     - Remove any database level foreign key constraints from this table to other tables by setting `db_constraint=False` on the columns. If it's a hybrid cloud foreign key, set `null=True` instead.
     - Remove the model and in the generated migration use `SafeDeleteModel(..., deletion_action=DeletionAction.MOVE_TO_PENDING)` to replace `DeleteModel(...)`. This only marks the state for the model as removed.
+    - Update the `historical_silo_assignments` in [sentry](https://github.com/getsentry/sentry/blob/51a435cef008af63385a1d8c02996aedbb59fcca/src/sentry/db/router.py#L68) or [getsentry](https://github.com/getsentry/getsentry/blob/7481ac9c6fff0eb2ca4e3befa2720f6451d90d59/getsentry/db/router.py#L283).
 - Deploy. It's important that all previous pull requests are in production before we remove the actual table.
 - Make a pull request that creates a new migration that has the same `SafeDeleteModel` operation as before, but set `deletion_action=DeletionAction.DELETE` instead. This deletes the actual table from Postgres.
 - Deploy
@@ -573,6 +575,7 @@ Post-deploy migrations **should not** be used for:
 
 * Column additions, removals or renames.
 * Table creation.
+* Table deletion.
 
 Using post-deploy migrations for these operations will cause an outage.
 

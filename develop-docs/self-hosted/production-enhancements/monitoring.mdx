@@ -1,0 +1,156 @@
+---
+title: Self-Hosted Monitoring
+sidebar_title: Monitoring
+sidebar_order: 2
+---
+
+Everyone will have different setup and requirements for their monitoring system, it is best to use your existing monitoring system, and try to integrate Sentry with it, instead of spinning up a new one.
+
+Most containers have a `statsd` client that you can point to your monitoring system. If you have a native `statsd` server instance, you can directly use it. If you don't, you might want to add some kind of converter that converts the ingested `statsd` format into your own. For example, if you are using Prometheus, you can use [prometheus-statsd-exporter](https://github.com/prometheus/statsd_exporter) to bridge the gap.
+
+If you are using DataDog as your monitoring system, it is recommended to use [DogStatsD](https://docs.datadoghq.com/developers/dogstatsd/?tab=hostagent) as the collector.
+
+We recommend [the original `statsd` server made by Etsy](https://github.com/statsd/statsd) or the others on the [server re-implementations](https://github.com/statsd/statsd/blob/master/docs/server_implementations.md).
+
+Sentry does not provide any alerts if your host instance is low on resources such as free memory or disk space. You will need to configure this own your own relative to your needs. It is critical for you to monitor the disk space as once it gets full, it will be much harder to recover from there.
+
+<Alert title="Note">
+    After changing configuration files, re-run the <code>./install.sh</code> script, to rebuild and restart the containers. See the <Link to="/self-hosted/#configuration">configuration section</Link> for more information.
+</Alert>
+
+## Configuration
+
+This documentation assumes `100.100.123.123` as your statsd host IP address. On most services, it is recommended to provide an IP address for the host like this, instead of a domain name like `statsd.yourcompany.com`.
+
+To start, simply uncomment and change the value of `STATSD_ADDR` on your `.env` or `.env.custom` file to your statsd host IP address.
+
+### Manual Configuration
+
+If you don't have the liberty of using the `.env` file, or you want to be very specific about the configuration, you can configure it manually too.
+
+#### Sentry
+
+You can configure Sentry to send metrics to Statsd server by configuring your `sentry/sentry.conf.py` file:
+
+```python
+SENTRY_METRICS_BACKEND = 'sentry.metrics.statsd.StatsdMetricsBackend'
+SENTRY_METRICS_OPTIONS: dict[str, Any] = {
+    'host': '100.100.123.123', # It's recommended to use IP address instead of domain name
+    'port': 8125,
+}
+# SENTRY_METRICS_SAMPLE_RATE = 1.0   # Adjust this to your needs, default is 1.0
+# SENTRY_METRICS_PREFIX = "sentry."  # Adjust this to your needs, default is "sentry."
+```
+
+#### Snuba
+
+You can configure Snuba to send metrics to Statsd server by configuring your `docker-compose.yml` file:
+
+```yaml
+# The rest of your Docker Compose file
+
+x-snuba-defaults: &snuba_defaults
+  <<: *restart_policy
+  depends_on:
+    clickhouse:
+      <<: *depends_on-healthy
+    kafka:
+      <<: *depends_on-healthy
+    redis:
+      <<: *depends_on-healthy
+  image: "$SNUBA_IMAGE"
+  environment:
+    SNUBA_SETTINGS: self_hosted
+    CLICKHOUSE_HOST: clickhouse
+    DEFAULT_BROKERS: "kafka:9092"
+    REDIS_HOST: redis
+    UWSGI_MAX_REQUESTS: "10000"
+    UWSGI_DISABLE_LOGGING: "true"
+    # Leaving the value empty to just pass whatever is set
+    # on the host system (or in the .env file)
+    SENTRY_EVENT_RETENTION_DAYS:
+    SNUBA_STATSD_HOST: "100.100.123.123" # Must be an IP address, not domain name
+    SNUBA_STATSD_PORT: 8125
+
+# The rest of your Docker Compose file
+```
+
+#### Relay
+
+You can configure Relay to send metrics to Statsd server by configuring your `relay/config.yml` file:
+
+```yaml
+# The rest of your config.yml file
+metrics:
+  statsd: "100.100.123.123:8125" # It's recommended to use IP address instead of domain name
+  # prefix: "sentry.relay" # Adjust this to your needs, default is "sentry.relay"
+  # sample_rate: 1.0 # Adjust this to your needs, default is 1.0
+  # `periodic_secs` is the interval for periodic metrics emitted from Relay.
+  # Setting it to `0` seconds disables the periodic metrics.
+  # periodic_secs: 5
+```
+
+Defined metric keys are specified on [statsd.rs file](https://github.com/getsentry/relay/blob/master/relay-server/src/statsd.rs).
+
+#### Symbolicator
+
+You can configure Symbolicator to send metrics to Statsd server by configuring your `symbolicator/config.yml` file:
+
+```yaml
+# The rest of your config.yml file
+metrics:
+  statsd: "100.100.123.123:8125" # It's recommended to use IP address instead of domain name
+  prefix: "sentry.symbolicator" # Adjust this to your needs, default is "symbolicator"
+```
+
+#### Uptime Checker
+
+You can configure Uptime Checker to send metrics to Statsd server by configuring your `docker-compose.yml` file:
+
+```yaml
+services:
+  # Other services
+  uptime-checker:
+    # ...
+    environment:
+      UPTIME_CHECKER_STATSD_ADDR: "100.100.123.123:8125" # It's recommended to use IP address instead of domain name
+```
+
+#### Taskbroker
+
+You can configure Taskbroker to send metrics to Statsd server by configuring your `docker-compose.yml` file:
+
+```yaml
+services:
+  # Other services
+  taskbroker:
+    # ...
+    environment:
+      TASKBROKER_STATSD_ADDR: "100.100.123.123:8125" # It's recommended to use IP address instead of domain name
+```
+
+## Notable Metric Keys
+
+You can query these keys on your statsd server to get a better understanding of what is happening in your Sentry instance.
+
+**API request volume**
+
+- `sentry.view.response` - has tags for url-name and method. Which gives visibility into what API requests are being made to Sentry (`web` container), and what endpoints are being used.
+- `sentry.view.duration` - has the same tags as `sentry.view.response`, but gives duration for API requests.
+
+**Task throughput**
+
+- `sentry.taskworker.registry.send_task.scheduled` - has tags for taskname, gives throughput of tasks being created.
+- `sentry.taskworker.worker.execute_task` - has tags for taskname, gives throughput of tasks being completed.
+- `sentry.taskworker.worker.execution_duration` - has tags for taskname, gives task execution duration.
+
+**Error processing**
+
+- `sentry.relay.event.accepted` - The event volume Relay is accepting.
+- `sentry.relay.event.items` - has tag for item_type which maps to event categories. Measures the volume of event items being handled by Relay.
+- `sentry.event_manager.save_error_events.count` - The number of events being processed.
+- `sentry.events.since_received` - has tags for each major step in the pipeline, and measures duration between the event being received by Relay and reaching each stage.
+
+## Other Sentry dependencies
+
+We don't provide configurations for Sentry's dependencies such as PostgreSQL, Kafka, Redis, Memcached and ClickHouse that are bundled with the Docker Compose file. You will need to provide monitoring configuration for those service yourself adjusted to your needs.

@@ -1,0 +1,60 @@
+---
+title: Segment
+sidebar_order: 2
+description: >-
+  Learn about Sentry's Segment data forwarder, which enables tracking Sentry errors as Segment events.
+---
+
+Segment is useful for collecting, responsibly managing, and integrating your customer data with many other applications, including Sentry.
+
+Sentry supports Segment as a first-party **Data Forwarder**, which currently only supports forwarding error events. For more details on Data Forwarding in general (including basic setup and overrides), check out the [Data Forwarding](/organization/integrations/data-forwarding/) documentation.
+
+## Installation
+
+Navigate to **Settings » Data Forwarding** and add a new forwarder.
+
+Ensure you have selected _Segment_ as the provider. The only required field for Segment is the **Write Key**.
+
+![Segment data forwarder configuration form](./img/sentry-config-form.png)
+
+You can get this value in your Segment workspace by navigating to **Connections > Catalog** and searching for **HTTP API**. This is a generic server forwarder that has the write key we'll need.
+
+![Segment HTTP API source in catalog](./img/segment-source-catalog.png)
+
+Click on **Add Source**, and it should provide you with a write key you can copy into Sentry's configuration form.
+
+![Segment source configuration view](./img/segment-source-config.png)
+
+Once you’ve filled in the required fields, and added any projects you'd like events forwarded for, click **Complete Setup**. These projects will now begin forwarding events to your Segment workspace!
+
+If you modify the Segment write key later on, you'll have to update the forwarder you've configured in Sentry as well, manually.
+
+If you wish to modify your forwarder configuration per project, you can do so by following the [Project Overrides documentation](/organization/integrations/data-forwarding/#project-overrides).
+
+## Troubleshooting
+
+- Sentry rate limits its sending of events to Segment at approximately 200 requests per second per organization. This is separate from the rate limit Segment enforces. Keep that in mind if you are noticing inconsistencies in your data, or missing events.
+- Sentry will only forward error events to Segment when a [User, with an ID](/platforms/python/enriching-events/identify-user/) is present in the event context.
+- Sentry uses a fixed event name of "Error Captured" for the event that is forwarded to Segment. At the moment, this cannot be modified. The general shape of the event will look roughly similar to:
+
+```json
+{
+  "userId": "1",
+  "event": "Error Captured",
+  "properties": {
+    "environment": "production",
+    "eventId": "002c8bbde8324dae9f12a0b96f5b1e51",
+    "exceptionType": "ValueError",
+    "release": "a2def1",
+    "transaction": "/api/0/users/{user}/",
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64; rv:54.0) Gecko/20100101 Firefox/54.0",
+    "page": {
+      "url": "https://sentry.io/api/0/users/{user}/",
+      "method": "GET",
+      "search": "",
+      "referer": "https://sentry.io/"
+    }
+  },
+  "timestamp": "2017-05-20T15:29:06Z"
+}
+```

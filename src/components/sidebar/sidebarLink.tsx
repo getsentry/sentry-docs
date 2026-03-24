@@ -13,11 +13,17 @@ export function SidebarLink({
   collapsible,
   onClick,
   topLevel = false,
+  className,
+  beta = false,
+  isNew = false,
 }: {
   href: string;
   title: string;
+  beta?: boolean;
+  className?: string;
   collapsible?: boolean;
   isActive?: boolean;
+  isNew?: boolean;
   onClick?: () => void;
   topLevel?: boolean;
 }) {
@@ -30,10 +36,14 @@ export function SidebarLink({
       onClick={onClick}
       className={`${styles['sidebar-link']} ${isActive ? 'active' : ''} ${
         topLevel ? styles['sidebar-link-top-level'] : ''
-      }`}
+      } ${className ?? ''}`}
       data-sidebar-link
     >
-      <div>{title}</div>
+      <div className={styles['sidebar-link-content']}>
+        <span>{title}</span>
+        {beta && <span className={styles['beta-badge']}>BETA</span>}
+        {isNew && <span className={styles['new-badge']}>NEW</span>}
+      </div>
       {collapsible && <NavChevron direction={isActive ? 'down' : 'right'} />}
     </LinkComponent>
   );

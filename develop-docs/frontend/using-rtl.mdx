@@ -20,7 +20,7 @@ As a part of this goal, we avoid testing implementation details so refactors (ch
 We are generally in favor of Use Case Coverage over Code Coverage.
 
 ## Use our built-in contexts
-By default, `render()` has some default contexts setup for you. The organization context is set to `OrganizationFixture()` and the router context has some default params like orgId and projectId. These can be overriden by passing a proptery to the 2nd argument of the `render()` function.
+By default, `render()` has some default contexts setup for you. The organization context is set to `OrganizationFixture()` and the router context has some default params like orgId and projectId. These can be overridden by passing a property to the 2nd argument of the `render()` function.
 
 Example of overriding the default organization features and access:
 ```tsx
@@ -32,9 +32,25 @@ const organization = OrganizationFixture({access: ['org:admin'], features: ['my-
 render(<Example />, {organization});
 ```
 
+### Add extra providers
+
+If your component needs more context, pass an `additionalWrapper` to `render()` to compose extra providers inside our default test providers.
+
+```tsx
+import {render, screen} from "sentry-test/reactTestingLibrary";
+
+function MyExtraProviders({children}: {children: React.ReactNode}) {
+  return <SomeContext.Provider value={{}}>{children}</SomeContext.Provider>;
+}
+
+render(<Example />, {additionalWrapper: MyExtraProviders});
+
+expect(screen.getByText(/example/i)).toBeInTheDocument();
+```
+
 ## Testing route changes
 
-When using `render()`, an in-memory router is used, which will react to navigations with `useNavigate()` or interations with `Link` components. If your component relies on the URL, you can define the initial state in `initialRouterConfig`. You can access the current router state by referencing the returned `router` class, as well as navigate programmatically with `router.navigate()`.
+When using `render()`, an in-memory router is used, which will react to navigations with `useNavigate()` or interactions with `Link` components. If your component relies on the URL, you can define the initial state in `initialRouterConfig`. You can access the current router state by referencing the returned `router` class, as well as navigate programmatically with `router.navigate()`.
 
 ```tsx
 const {router} = render(<TestComponent />, {
@@ -61,6 +77,8 @@ router.navigate('/new/path/');
 router.navigate(-1); // Simulates clicking the back button
 ```
 
+### Route Param Values
+
 If you need to test route param values (as in `useParams()`), the `route` will need to be provided in the config:
 
 ```tsx
@@ -81,6 +99,106 @@ const {router} = render(<TestComponent />, {
 expect(screen.getByText('123')).toBeInTheDocument();
 ```
 
+### Outlet Context
+
+If you need to test outlet param values (as in `useOutletContext()`), you can pass them inside the `initialRouterConfig` object.
+
+```tsx
+function TestComponent() {
+  const { id } = useOutletContext();
+  return <div>{id}</div>;
+}
+
+const { router } = render(<TestComponent />, {
+  initialRouterConfig: {
+    outletContext: { id: '123' },
+  },
+});
+
+expect(screen.getByText('123')).toBeInTheDocument();
+```
+
+### Nested Routes
+
+If directly setting outlet context isn't enough, instead you want to render some nested routes you can do that too!
+
+Suppose routes.tsx defines some nested routes like:
+```tsx
+{
+  path: 'settings/',
+  component: SettingsWrapper,
+  children: [
+    {index: true, component: SettingsIndex},
+    {path: ':projectId/', component: ProjectSettings},
+  ]
+}
+```
+
+We can configure the in-memory router to know about just the route tree that you need. Remember to render the wrapper component itself, and the router + route child components will render themselves.
+```tsx
+// settingsWrapper.tsx
+interface OutletContext {
+  name: string;
+}
+
+export function useCustomOutletContext() {
+  return useOutletContext<OutletContext>();
+}
+
+export default function SettingsWrapper() {
+  const context: OutletContext = {name: "Default"};
+  return <Outlet context={context} />;
+}
+
+// settingsIndex.tsx
+function SettingsIndex() {
+  const {name} = useCustomOutletContext();
+  return <div>Settings > {name}</div>;
+}
+
+// projectSettings.tsx
+function ProjectSettings() {
+  const {name} = useCustomOutletContext();
+  const {projectId} = useParams();
+  return <div>Settings > {name} > Project: {projectId}</div>;
+}
+
+// settingsIndex.spec.tsx
+render(<SettingsWrapper />, {
+  initialRouterConfig: {
+    location: {
+      pathname: '/settings/',
+    },
+    route: '/settings/',
+    children: [
+      {
+        index: true,
+        element: <SettingsIndex />,
+      },
+    ],
+  },
+});
+expect(screen.getByText('Settings > Default')).toBeInTheDocument();
+
+// projectSettings.spec.tsx
+render(<SettingsWrapper />, {
+  initialRouterConfig: {
+    location: {
+      pathname: '/settings/123/',
+    },
+    route: '/settings/:projectId',
+    children: [
+      {
+        path: ':projectId/',
+        element: <ProjectSettings />,
+      },
+    ],
+  },
+});
+expect(screen.getByText('Settings > Default > Project: 123')).toBeInTheDocument();
+```
+
+
 ## Querying
 
 - use `getBy...` as much as possible
@@ -90,7 +208,7 @@ expect(screen.getByText('123')).toBeInTheDocument();
 To ensure that the tests resemble how users interact with our code we recommend the following priority for querying:
 
 1. `getByRole` - This should be the go-to selector for almost everything. As a nice bonus with this selector, we make sure that our app is accessible. It will most likely be used together with the name option `getByRole('button', {name: /save/i})`. The name is usually the label of a form element or the text content of a button, or the value of the aria-label attribute. If unsure, use the [logRoles](https://testing-library.com/docs/dom-testing-library/api-accessibility/#logroles) feature or consult the [list of available roles](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/ARIA_Techniques#roles).
-2. `getByLabelText`/`getByPlaceholderText` - Users find form elements using label text, therefore this option is prefered when testing forms.
+2. `getByLabelText`/`getByPlaceholderText` - Users find form elements using label text, therefore this option is preferred when testing forms.
 3. `getByText` - Outside of forms, text content is the main way users find elements. This method can be used to find non-interactive elements (like divs, spans, and paragraphs).
 4. `getByTestId` - As this does not reflect how users interact with the app, it is only recommended for cases where you can't use any other selector
 
@@ -220,4 +338,56 @@ fireEvent.change(screen.getByLabelText("Search by name"), {
 import {render, screen, userEvent} from "sentry-test/reactTestingLibrary";
 render(<Example />);
 userEvent.type(screen.getByLabelText("Search by name"), "sentry");
+```
+
+## Testing hooks with providers
+
+Use `renderHookWithProviders()` to test hooks with the same built-in providers as `render()` (organization, theme, query client, and an in-memory router). It returns the regular `renderHook` result plus a `router` helper you can use to inspect location and navigate.
+
+Set the initial URL and define route patterns via `initialRouterConfig` (use `route` for a single route or `routes` for multiple):
+
+```tsx
+import {useParams} from 'react-router-dom';
+import {renderHookWithProviders, waitFor} from 'sentry-test/reactTestingLibrary';
+
+function useRouteId() {
+  const {id} = useParams();
+  return id;
+}
+
+const {result, router} = renderHookWithProviders(useRouteId, {
+  initialRouterConfig: {
+    location: {pathname: '/foo/123/'},
+    route: '/foo/:id/',
+  },
+});
+
+expect(result.current).toBe('123');
+
+// Navigate programmatically
+router.navigate('/foo/456/');
+
+await waitFor(() => expect(result.current).toBe('456'));
+```
+
+You can also provide additional providers or override the default organization via options:
+
+```tsx
+import {OrganizationFixture} from 'sentry-fixture/organization';
+import {renderHookWithProviders} from 'sentry-test/reactTestingLibrary';
+
+function useFeatureFlag() {
+  // implementation under test
+}
+
+function MyExtraProviders({children}: {children: React.ReactNode}) {
+  return <SomeContext.Provider value={{}}>{children}</SomeContext.Provider>;
+}
+
+const organization = OrganizationFixture({features: ['my-feature-flag']});
+
+const {result} = renderHookWithProviders(useFeatureFlag, {
+  organization,
+  additionalWrapper: MyExtraProviders,
+});
 ```
