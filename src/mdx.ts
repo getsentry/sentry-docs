@@ -95,7 +95,7 @@ async function getRegistryHashWithRetry(
 
       if (attempt < maxRetries) {
         const delay = initialDelayMs * Math.pow(2, attempt);
-         
+
         console.warn(
           `Failed to fetch registry (attempt ${attempt + 1}/${maxRetries + 1}). Retrying in ${delay}ms...`,
           err
@@ -115,7 +115,6 @@ async function getRegistryHashWithRetry(
  */
 function getRegistryHash(): Promise<string> {
   if (!cachedRegistryHash) {
-     
     console.info('Fetching registry hash for the first time in this worker');
     cachedRegistryHash = getRegistryHashWithRetry();
   }
@@ -669,13 +668,13 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
       try {
         const registryHash = await getRegistryHash();
         cacheKey = `${sourceHash}-${registryHash}`;
-         
+
         console.info(
           `Using registry-aware cache for ${sourcePath} (registry hash: ${registryHash.slice(0, 8)}...)`
         );
       } catch (err) {
         // If we can't get registry hash, skip cache for this file
-         
+
         console.warn(
           `Failed to get registry hash for ${sourcePath}, skipping cache:`,
           err
@@ -725,7 +724,7 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
           err.code !== 'Z_BUF_ERROR'
         ) {
           // If cache is corrupted, ignore and proceed
-           
+
           console.warn(`Failed to read MDX cache: ${cacheFile}`, err);
         }
       }
@@ -849,7 +848,6 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
       return options;
     },
   }).catch(e => {
-     
     console.error('Error occurred during MDX compilation:', e.errors);
     throw e;
   });
@@ -902,7 +900,6 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
       // Images should already exist from build time
     }
     writeCacheFile(cacheFile, JSON.stringify(resultObj)).catch(e => {
-       
       console.warn(`Failed to write MDX cache: ${cacheFile}`, e);
     });
   }

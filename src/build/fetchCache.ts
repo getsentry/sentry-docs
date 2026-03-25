@@ -14,7 +14,6 @@ async function fetchRetry(url: string, opts: RequestInit & {retry?: number}) {
       return await fetch(url, opts);
     } catch (e) {
       if (retry !== 0) {
-         
         console.warn(`failed to fetch \`${url}\`. Retrying for ${retry} more times`);
         retry -= 1;
         continue;
@@ -53,14 +52,12 @@ export function makeFetchCache<DataType>({dataUrl, name}: Options) {
 
     async function fetchData() {
       try {
-         
         console.log(`Fetching registry ${name} (${dataUrl})`);
         const result = await fetchRetry(dataUrl, {retry: 5});
         data = await result?.json();
-         
+
         console.log(`Got data for registry ${name} (${dataUrl})`);
       } catch (err) {
-         
         console.error(`Unable to fetch for ${name}: ${err.message}`);
         data = null;
 

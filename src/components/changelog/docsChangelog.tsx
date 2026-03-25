@@ -24,7 +24,6 @@ async function getChangelogEntries(): Promise<ChangelogEntry[]> {
 
     return res.json();
   } catch (error) {
-     
     console.error('Error fetching changelog:', error);
     // Error fetching changelog - return empty array
     return [];

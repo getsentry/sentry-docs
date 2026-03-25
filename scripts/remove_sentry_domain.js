@@ -1,5 +1,5 @@
 #!/usr/bin/env node
- 
+
 /**
  * Script to remove 'https://docs.sentry.io/' domain from URLs in MDX files.
  *

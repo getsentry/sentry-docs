@@ -32,7 +32,6 @@ export const SUPPORTED_LANGUAGES = [
 
 export function codeToJsx(code: string, lang = 'json') {
   if (!SUPPORTED_LANGUAGES.includes(lang)) {
-     
     console.error(`Unsupported language for syntax highlighting: ${lang}`);
   }
   return toJsxRuntime(refractor.highlight(code, lang) as Nodes, {Fragment, jsx, jsxs});

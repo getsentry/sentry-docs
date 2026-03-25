@@ -72,7 +72,7 @@ export function PlatformSection({
   const platformsToSearch = getPlatformsWithFallback(rootNode, currentPlatformOrGuide);
 
   let result: boolean | null = null;
-   
+
   for (let platformKey: string, i = 0; (platformKey = platformsToSearch[i]); i++) {
     if (!platformKey) {
       continue;

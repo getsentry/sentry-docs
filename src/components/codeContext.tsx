@@ -179,7 +179,6 @@ function getHost(): string {
 }
 
 function makeDefaults() {
-   
   console.warn('Unable to fetch codeContext - using defaults.');
   return DEFAULTS;
 }

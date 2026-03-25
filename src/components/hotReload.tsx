@@ -15,13 +15,11 @@ function HotReload_() {
     };
     ws.onmessage = function incoming(msg) {
       if (msg.data === 'reload') {
-         
         console.info('[REFRESHING]');
         router.refresh();
       }
     };
     ws.onerror = function error(...err) {
-       
       console.error('Hot reload ws error', err);
     };
     ws.onclose = function close() {};

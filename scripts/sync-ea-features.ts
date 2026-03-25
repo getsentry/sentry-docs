@@ -16,7 +16,6 @@
  *   --update      Update mapping file and regenerate MDX page
  */
 
- 
 import {execSync} from 'child_process';
 import fs from 'fs';
 import yaml from 'js-yaml';

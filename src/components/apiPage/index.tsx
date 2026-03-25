@@ -76,13 +76,13 @@ const getScopes = (data, securityScheme) => {
 // https://stackoverflow.com/a/38137700
 function cssToObj(css) {
   const obj = {};
-    const s = css
-      .toLowerCase()
-      .replace(/-(.)/g, function (_, g) {
-        return g.toUpperCase();
-      })
-      .replace(/;\s?$/g, '')
-      .split(/:|;/g);
+  const s = css
+    .toLowerCase()
+    .replace(/-(.)/g, function (_, g) {
+      return g.toUpperCase();
+    })
+    .replace(/;\s?$/g, '')
+    .split(/:|;/g);
   for (let i = 0; i < s.length; i += 2) {
     obj[s[i].replace(/\s/g, '')] = s[i + 1].replace(/^\s+|\s+$/g, '');
   }

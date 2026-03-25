@@ -1,5 +1,5 @@
 #!/usr/bin/env node
- 
+
 /**
  * Pre-compute the doc tree at build time and save it as JSON.
  * This prevents runtime filesystem access in serverless functions.

@@ -35,7 +35,6 @@ function platformsDataUncached(): Record<string, PlatformData> {
     });
     return map;
   } catch (e) {
-     
     console.error('failed to read platforms.yml:', e);
     return {};
   }

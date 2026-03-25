@@ -44,7 +44,7 @@ function getCopiableText(element: HTMLDivElement) {
   });
 
   let node: Node | null;
-   
+
   while ((node = walker.nextNode())) {
     text += node.textContent;
   }
@@ -121,7 +121,6 @@ export function CodeBlock({filename, language, children, externalLink}: CodeBloc
 
       setTimeout(() => setShowCopied(false), 1200);
     } catch (error) {
-       
       console.error('Failed to copy:', error);
     }
   }

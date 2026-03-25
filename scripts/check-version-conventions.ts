@@ -1,4 +1,3 @@
- 
 import fs from 'fs';
 import path from 'path';
 
@@ -16,13 +15,13 @@ function checkVersionConventions(dir: string): string[] {
     if (stat.isDirectory()) {
       faultyFiles = faultyFiles.concat(checkVersionConventions(filePath));
     } else if (isVersioned(filePath)) {
-        const versionPattern = /^.*__v\d+\.x\.mdx$|^.*__v\d+\.\d+\.\d+\.mdx$/;
-        const basename = path.basename(filePath);
+      const versionPattern = /^.*__v\d+\.x\.mdx$|^.*__v\d+\.\d+\.\d+\.mdx$/;
+      const basename = path.basename(filePath);
 
-        if (!versionPattern.test(basename)) {
-          faultyFiles.push(filePath);
-        }
+      if (!versionPattern.test(basename)) {
+        faultyFiles.push(filePath);
       }
+    }
   }
 
   return faultyFiles;

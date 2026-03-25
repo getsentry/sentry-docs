@@ -113,7 +113,6 @@ export function CopyableCard({title, children}: CopyableCardProps) {
       setIsOpen(false);
       setTimeout(() => setCopiedItem(null), 1500);
     } catch (error) {
-       
       console.error('Failed to copy:', error);
     }
   }

@@ -1,5 +1,4 @@
 /* eslint import/no-nodejs-modules:0 */
- 
 
 import {promises as fs} from 'fs';
 

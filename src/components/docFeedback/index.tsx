@@ -50,7 +50,6 @@ export function DocFeedback({pathname}: Props) {
       sessionStorage.setItem(`feedback_${pathname}`, 'submitted');
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-         
         console.error('Failed to submit feedback:', error);
       }
       Sentry.captureException(error);

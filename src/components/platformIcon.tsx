@@ -1174,7 +1174,6 @@ export function PlatformIcon({
   const icon = getIcon(platform);
   const svg = formatToSVG[icon][format];
   if (!svg) {
-     
     console.log('svg is null');
   }
 
