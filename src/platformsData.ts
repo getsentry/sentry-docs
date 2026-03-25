@@ -1,7 +1,6 @@
 import fs from 'fs';
-import path from 'path';
-
 import yaml from 'js-yaml';
+import path from 'path';
 
 import type {PlatformCaseStyle} from './types';
 
@@ -36,7 +35,7 @@ function platformsDataUncached(): Record<string, PlatformData> {
     });
     return map;
   } catch (e) {
-    // eslint-disable-next-line no-console
+     
     console.error('failed to read platforms.yml:', e);
     return {};
   }

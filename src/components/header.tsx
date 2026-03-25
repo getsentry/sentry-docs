@@ -1,20 +1,18 @@
 'use client';
 
-import {useCallback, useEffect, useState} from 'react';
 import {Cross1Icon, HamburgerMenuIcon} from '@radix-ui/react-icons';
 import {Button} from '@radix-ui/themes';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import Link from 'next/link';
-
+import {useCallback, useEffect, useState} from 'react';
 import SentryLogoSVG from 'sentry-docs/logos/sentry-logo-dark.svg';
 import {Platform} from 'sentry-docs/types';
-
-import sidebarStyles from './sidebar/style.module.scss';
 
 import {MagicIcon} from './cutomIcons/magic';
 import {useHomeSearchVisibility} from './homeSearchVisibility';
 import {mainSections} from './navigationData';
+import sidebarStyles from './sidebar/style.module.scss';
 import {ThemeToggle} from './theme-toggle';
 import TopNavClient from './TopNavClient';
 

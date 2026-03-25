@@ -1,10 +1,9 @@
 'use client';
 
+import Link from 'next/link';
 import {Fragment, useCallback, useEffect, useRef, useState} from 'react';
 import {createPortal} from 'react-dom';
 import {Clipboard} from 'react-feather';
-import Link from 'next/link';
-
 import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
 import ChatGPT from 'sentry-docs/icons/chatgpt';
 import Chevron from 'sentry-docs/icons/Chevron';

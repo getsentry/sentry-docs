@@ -1,4 +1,4 @@
-/* eslint-disable no-console */
+ 
 
 import {readFileSync} from 'fs';
 import path, {dirname} from 'path';

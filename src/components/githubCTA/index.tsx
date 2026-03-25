@@ -1,5 +1,4 @@
 import Link from 'next/link';
-
 import {nodeForPath} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
 

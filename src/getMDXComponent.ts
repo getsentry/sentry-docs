@@ -7,7 +7,6 @@
  */
 import type {ComponentType, FunctionComponent} from 'react';
 // Namespace imports required - MDX runtime expects React, ReactDOM, jsx_runtime in scope
-// eslint-disable-next-line no-restricted-imports
 import * as React from 'react';
 import * as jsxRuntime from 'react/jsx-runtime';
 import * as ReactDOM from 'react-dom';

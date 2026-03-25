@@ -1,5 +1,4 @@
 import path from 'path';
-
 import {isExternalImage} from 'sentry-docs/config/images';
 import {serverContext} from 'sentry-docs/serverContext';
 

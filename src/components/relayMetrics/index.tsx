@@ -1,11 +1,9 @@
-import {Fragment} from 'react';
 import {micromark} from 'micromark';
-
+import {Fragment} from 'react';
 import metrics from 'sentry-docs/data/relay_metrics.json';
 
-import styles from './styles.module.scss';
-
 import {Alert} from '../alert';
+import styles from './styles.module.scss';
 
 export function RelayMetrics() {
   const metricsWithMarkdown = metrics.map(metric => ({

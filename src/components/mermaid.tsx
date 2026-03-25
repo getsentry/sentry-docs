@@ -1,6 +1,6 @@
 'use client';
-import {useEffect, useState} from 'react';
 import {useTheme} from 'next-themes';
+import {useEffect, useState} from 'react';
 
 export default function Mermaid() {
   const [isDoneRendering, setDoneRendering] = useState(false);

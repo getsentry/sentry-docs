@@ -1,4 +1,4 @@
-/* eslint-disable no-console */
+ 
 import {execFileSync} from 'child_process';
 import fs from 'fs';
 import path from 'path';
@@ -486,9 +486,9 @@ if (require.main === module) {
 }
 
 export {
-  validateRedirects,
   filePathToUrls,
-  parseRedirectsJs,
   parseMiddlewareTs,
+  parseRedirectsJs,
   redirectMatches,
+  validateRedirects,
 };

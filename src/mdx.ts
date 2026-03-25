@@ -1,7 +1,3 @@
-import matter from 'gray-matter';
-import {s} from 'hastscript';
-import yaml from 'js-yaml';
-import {bundleMDX} from 'mdx-bundler';
 import {BinaryLike, createHash} from 'node:crypto';
 import {createReadStream, createWriteStream, mkdirSync} from 'node:fs';
 import {access, cp, mkdir, opendir, readFile} from 'node:fs/promises';
@@ -15,6 +11,11 @@ import {
   createBrotliCompress,
   createBrotliDecompress,
 } from 'node:zlib';
+
+import matter from 'gray-matter';
+import {s} from 'hastscript';
+import yaml from 'js-yaml';
+import {bundleMDX} from 'mdx-bundler';
 import pLimit from 'p-limit';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import rehypePresetMinify from 'rehype-preset-minify';
@@ -94,7 +95,7 @@ async function getRegistryHashWithRetry(
 
       if (attempt < maxRetries) {
         const delay = initialDelayMs * Math.pow(2, attempt);
-        // eslint-disable-next-line no-console
+         
         console.warn(
           `Failed to fetch registry (attempt ${attempt + 1}/${maxRetries + 1}). Retrying in ${delay}ms...`,
           err
@@ -114,7 +115,7 @@ async function getRegistryHashWithRetry(
  */
 function getRegistryHash(): Promise<string> {
   if (!cachedRegistryHash) {
-    // eslint-disable-next-line no-console
+     
     console.info('Fetching registry hash for the first time in this worker');
     cachedRegistryHash = getRegistryHashWithRetry();
   }
@@ -668,13 +669,13 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
       try {
         const registryHash = await getRegistryHash();
         cacheKey = `${sourceHash}-${registryHash}`;
-        // eslint-disable-next-line no-console
+         
         console.info(
           `Using registry-aware cache for ${sourcePath} (registry hash: ${registryHash.slice(0, 8)}...)`
         );
       } catch (err) {
         // If we can't get registry hash, skip cache for this file
-        // eslint-disable-next-line no-console
+         
         console.warn(
           `Failed to get registry hash for ${sourcePath}, skipping cache:`,
           err
@@ -724,7 +725,7 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
           err.code !== 'Z_BUF_ERROR'
         ) {
           // If cache is corrupted, ignore and proceed
-          // eslint-disable-next-line no-console
+           
           console.warn(`Failed to read MDX cache: ${cacheFile}`, err);
         }
       }
@@ -848,7 +849,7 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
       return options;
     },
   }).catch(e => {
-    // eslint-disable-next-line no-console
+     
     console.error('Error occurred during MDX compilation:', e.errors);
     throw e;
   });
@@ -901,7 +902,7 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
       // Images should already exist from build time
     }
     writeCacheFile(cacheFile, JSON.stringify(resultObj)).catch(e => {
-      // eslint-disable-next-line no-console
+       
       console.warn(`Failed to write MDX cache: ${cacheFile}`, e);
     });
   }

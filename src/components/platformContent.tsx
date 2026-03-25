@@ -1,7 +1,5 @@
 import fs from 'fs';
-
 import {cache, useMemo} from 'react';
-
 import {getCurrentGuide, getDocsRootNode, getPlatform} from 'sentry-docs/docTree';
 import {getMDXComponent} from 'sentry-docs/getMDXComponent';
 import {getFileBySlugWithCache} from 'sentry-docs/mdx';

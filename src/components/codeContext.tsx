@@ -1,8 +1,7 @@
 'use client';
 
-import {createContext, useEffect, useState} from 'react';
 import Cookies from 'js-cookie';
-
+import {createContext, useEffect, useState} from 'react';
 import {isLocalStorageAvailable} from 'sentry-docs/utils';
 
 import {OnboardingOptionType} from './onboarding';
@@ -180,7 +179,7 @@ function getHost(): string {
 }
 
 function makeDefaults() {
-  // eslint-disable-next-line no-console
+   
   console.warn('Unable to fetch codeContext - using defaults.');
   return DEFAULTS;
 }
@@ -340,7 +339,7 @@ export function CodeContextProvider({
   sdkPackage = null,
 }: CodeContextProviderProps) {
   const [codeKeywords, setCodeKeywords] = useState(cachedCodeKeywords ?? DEFAULTS);
-  const [isLoading, setIsLoading] = useState<boolean>(cachedCodeKeywords ? false : true);
+  const [isLoading, setIsLoading] = useState<boolean>(!cachedCodeKeywords);
   const [storedCodeSelection, setStoredCodeSelection] = useState<SelectedCodeTabs>({});
   const [onboardingOptions, setOnboardingOptions] = useState<OnboardingOptionType[]>([]);
 
