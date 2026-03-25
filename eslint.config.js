@@ -23,7 +23,7 @@ module.exports = [
   // Base JavaScript recommended rules
   js.configs.recommended,
 
-  // TypeScript configuration
+  // TypeScript configuration (from eslint-config-sentry-docs)
   {
     files: ['**/*.{ts,tsx}'],
     languageOptions: {
@@ -40,27 +40,42 @@ module.exports = [
       '@typescript-eslint': typescriptPlugin,
     },
     rules: {
-      // TypeScript recommended rules (subset)
+      // Disable base rules that TypeScript handles
+      'no-undef': 'off',
+
+      // Use TypeScript version of no-shadow (from eslint-config-sentry-docs)
+      'no-shadow': 'off',
+      '@typescript-eslint/no-shadow': 'error',
+
+      // Use TypeScript version of no-redeclare (from eslint-config-sentry-docs)
+      'no-redeclare': 'off',
+      '@typescript-eslint/no-redeclare': 'error',
+
+      // TypeScript no-unused-vars (from eslint-config-sentry-docs)
+      'no-unused-vars': 'off',
       '@typescript-eslint/no-unused-vars': [
         'error',
         {
+          vars: 'all',
           args: 'all',
-          argsIgnorePattern: '^_',
           varsIgnorePattern: '^_',
+          argsIgnorePattern: '^_',
           caughtErrorsIgnorePattern: '^_',
         },
       ],
-      '@typescript-eslint/no-explicit-any': 'warn',
+
+      // Turned off in eslint-config-sentry-docs
+      'no-use-before-define': 'off',
+      '@typescript-eslint/no-use-before-define': 'off',
+
+      // Replacement rules for deprecated @typescript-eslint/ban-types (removed in v8)
+      // Original ban-types config banned String, Number, Boolean, Symbol, BigInt, Object, [], [[]], [[[]]]
       '@typescript-eslint/no-empty-object-type': [
         'error',
         {allowInterfaces: 'with-single-extends'},
       ],
       '@typescript-eslint/no-unsafe-function-type': 'error',
       '@typescript-eslint/no-wrapper-object-types': 'error',
-
-      // Disable base rules that TypeScript handles
-      'no-unused-vars': 'off',
-      'no-undef': 'off', // TypeScript handles this
     },
   },
 
@@ -78,7 +93,7 @@ module.exports = [
     },
   },
 
-  // React configuration
+  // React configuration (from eslint-config-sentry-react/rules/react.js)
   {
     files: ['**/*.{js,jsx,ts,tsx}'],
     plugins: {
@@ -91,28 +106,49 @@ module.exports = [
       },
     },
     rules: {
-      // React recommended rules (key subset from eslint-config-sentry-react)
+      // React rules from eslint-config-sentry-react/rules/react.js
+      'react/display-name': 'off',
+      'react/no-multi-comp': 'off',
+      'react/jsx-fragments': ['error', 'element'],
+      'react/jsx-handler-names': 'off',
       'react/jsx-key': 'error',
-      'react/jsx-no-duplicate-props': 'error',
       'react/jsx-no-undef': 'error',
-      'react/jsx-uses-react': 'error',
+      'react/jsx-uses-react': 'off', // Not needed with React 17+ JSX transform
       'react/jsx-uses-vars': 'error',
+      'react/no-deprecated': 'error',
+      'react/no-is-mounted': 'warn',
+      'react/no-find-dom-node': 'warn',
+      'react/no-render-return-value': 'error',
       'react/no-children-prop': 'error',
       'react/no-danger-with-children': 'error',
       'react/no-direct-mutation-state': 'error',
+      'react/no-did-mount-set-state': 'error',
+      'react/no-did-update-set-state': 'error',
+      'react/no-redundant-should-component-update': 'error',
+      'react/no-typos': 'error',
+      'react/no-string-refs': 'warn',
+      'react/no-unescaped-entities': 'off',
+      'react/no-unknown-property': ['error', {ignore: ['css']}],
+      'react/no-unused-prop-types': 'off',
+      'react/prop-types': 'off',
       'react/require-render-return': 'error',
+      'react/react-in-jsx-scope': 'off', // Not needed with React 17+ JSX transform
+      'react/self-closing-comp': 'error',
+      'react/sort-comp': 'warn',
+      'react/jsx-wrap-multilines': 'off',
+      'react/jsx-boolean-value': ['error', 'never'],
+      'react/function-component-definition': [
+        'error',
+        {namedComponents: 'function-declaration'},
+      ],
 
-      // React hooks rules
+      // React hooks rules from eslint-config-sentry-react
       'react-hooks/rules-of-hooks': 'error',
-      'react-hooks/exhaustive-deps': 'warn',
-
-      // Disable rules not needed with React 17+ JSX transform
-      'react/react-in-jsx-scope': 'off',
-      'react/jsx-uses-react': 'off',
+      'react-hooks/exhaustive-deps': 'error',
     },
   },
 
-  // Import sorting (from eslint-config-sentry-docs)
+  // Import rules (from eslint-config-sentry-docs and eslint-config-sentry-react/rules/imports.js)
   {
     files: ['**/*.{js,jsx,ts,tsx}'],
     plugins: {
@@ -120,11 +156,52 @@ module.exports = [
       import: importPlugin,
     },
     rules: {
+      // Import sorting from eslint-config-sentry-docs
+      'sort-imports': 'off',
+      'import/order': 'off', // Disabled in favor of simple-import-sort
       'simple-import-sort/imports': 'error',
       'simple-import-sort/exports': 'error',
-      'import/first': 'error',
-      'import/newline-after-import': 'error',
+
+      // Import rules from eslint-config-sentry-react/rules/imports.js
+      'import/no-unresolved': 'off',
+      'import/named': 'off',
+      'import/default': 'off',
+      'import/export': 'off',
+      'import/no-named-as-default-member': 'off',
+      'import/no-named-as-default': 'off',
+      'import/no-deprecated': 'off',
+      'import/no-mutable-exports': 'off',
+      'import/no-commonjs': 'off',
+      'import/no-amd': 'error',
       'import/no-duplicates': 'error',
+      'import/no-namespace': 'off',
+      'import/extensions': 'off',
+      'import/newline-after-import': 'error',
+      'import/prefer-default-export': 'off',
+      'import/no-restricted-paths': 'off',
+      'import/max-dependencies': 'off',
+      'import/no-absolute-path': 'error',
+      'import/no-dynamic-require': 'off',
+      'import/dynamic-import-chunkname': 'off',
+      'import/no-internal-modules': 'off',
+      'import/unambiguous': 'off',
+      'import/no-webpack-loader-syntax': 'error',
+      'import/no-unassigned-import': 'off',
+      'import/no-named-default': 'error',
+      'import/no-anonymous-default-export': [
+        'error',
+        {
+          allowArray: false,
+          allowArrowFunction: false,
+          allowAnonymousClass: false,
+          allowAnonymousFunction: false,
+          allowCallExpression: true,
+          allowLiteral: false,
+          allowObject: false,
+        },
+      ],
+
+      // Override from original .eslintrc.js
       'import/no-nodejs-modules': 'off',
     },
   },
