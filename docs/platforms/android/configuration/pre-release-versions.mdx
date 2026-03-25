@@ -16,17 +16,6 @@ Snapshot versions are for testing only and should not be used in production. The
 
 Add the Maven Central Snapshots repository to `pluginManagement` in your project's `settings.gradle` file:
 
-```groovy {filename:settings.gradle}
-pluginManagement {
-    repositories {
-        maven {
-            url "https://central.sonatype.com/repository/maven-snapshots/"
-        }
-        // existing repositories
-    }
-}
-```
-
 ```kotlin {filename:settings.gradle.kts}
 pluginManagement {
     repositories {
@@ -38,16 +27,20 @@ pluginManagement {
 }
 ```
 
+```groovy {filename:settings.gradle}
+pluginManagement {
+    repositories {
+        maven {
+            url "https://central.sonatype.com/repository/maven-snapshots/"
+        }
+        // existing repositories
+    }
+}
+```
+
 ## Set the Snapshot Version
 
 Replace the plugin version in your `app/build.gradle` file with the snapshot version:
-
-```groovy {filename:app/build.gradle}
-plugins {
-    id "com.android.application"
-    id "io.sentry.android.gradle" version "6.3.0-SNAPSHOT"
-}
-```
 
 ```kotlin {filename:app/build.gradle.kts}
 plugins {
@@ -56,19 +49,26 @@ plugins {
 }
 ```
 
+```groovy {filename:app/build.gradle}
+plugins {
+    id "com.android.application"
+    id "io.sentry.android.gradle" version "6.3.0-SNAPSHOT"
+}
+```
+
 ## Kotlin Compiler Plugin
 
 The [Sentry Kotlin Compiler Plugin](/platforms/android/enhance/kotlin-compiler-plugin/) snapshots are published from the same repository with the same version. If you're using it, update its version as well:
 
-```groovy {filename:app/build.gradle}
-plugins {
-    id "io.sentry.kotlin.compiler.gradle" version "6.3.0-SNAPSHOT"
-}
-```
-
 ```kotlin {filename:app/build.gradle.kts}
 plugins {
     id("io.sentry.kotlin.compiler.gradle") version "6.3.0-SNAPSHOT"
+}
+```
+
+```groovy {filename:app/build.gradle}
+plugins {
+    id "io.sentry.kotlin.compiler.gradle" version "6.3.0-SNAPSHOT"
 }
 ```
 
@@ -85,16 +85,15 @@ For example, if the file contains `version = 6.3.0`, the snapshot version is `6.
 Gradle caches snapshot dependencies by default for 24 hours. To always fetch the latest snapshot, pass `--refresh-dependencies` when building, or configure the repository to skip caching:
 
 ```kotlin
-maven {
-    url = uri("https://central.sonatype.com/repository/maven-snapshots/")
-    content {
-        includeGroup("io.sentry")
-    }
+configurations.all {
+    resolutionStrategy.cacheChangingModulesFor(0, "seconds")
 }
 ```
 
 ```groovy
-resolutionStrategy.cacheChangingModulesFor(0, "seconds")
+configurations.all {
+    resolutionStrategy.cacheChangingModulesFor(0, "seconds")
+}
 ```
 
 </Alert>
