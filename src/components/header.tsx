@@ -278,11 +278,11 @@ export function Header({
       {/* Mobile search overlay */}
       {mobileSearchOpen && (
         <div
-          className="md:hidden fixed inset-0 bg-[var(--gray-1)] z-50"
+          className="md:hidden fixed inset-0 bg-[var(--gray-1)] z-50 overflow-hidden flex flex-col"
           style={{top: 'var(--header-height)'}}
         >
-          <div className="p-4">
-            <div className="flex items-center gap-2 mb-4">
+          <div className="flex flex-col flex-1 overflow-hidden px-4">
+            <div className="flex items-center gap-2 py-4">
               <button
                 onClick={() => setMobileSearchOpen(false)}
                 className="flex items-center justify-center p-2 rounded-md hover:bg-[var(--gray-a3)] transition-colors"
@@ -292,12 +292,14 @@ export function Header({
               </button>
               <span className="text-sm font-medium text-[var(--foreground)]">Search</span>
             </div>
-            <Search
-              path={pathname}
-              searchPlatforms={searchPlatforms}
-              autoFocus
-              useStoredSearchPlatforms={useStoredSearchPlatforms}
-            />
+            <div className="flex-1 overflow-auto">
+              <Search
+                path={pathname}
+                searchPlatforms={searchPlatforms}
+                autoFocus
+                useStoredSearchPlatforms={useStoredSearchPlatforms}
+              />
+            </div>
           </div>
         </div>
       )}
