@@ -1,6 +1,6 @@
 'use client';
 
-import {Cross1Icon, HamburgerMenuIcon} from '@radix-ui/react-icons';
+import {Cross1Icon, HamburgerMenuIcon, MagnifyingGlassIcon} from '@radix-ui/react-icons';
 import {Button} from '@radix-ui/themes';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
@@ -51,6 +51,7 @@ export function Header({
   const [homeSearchVisible, setHomeSearchVisible] = useState(true);
   const [homeMobileNavOpen, setHomeMobileNavOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   // Listen for home search visibility changes
   useHomeSearchVisibility(
@@ -171,8 +172,17 @@ export function Header({
           <div className="hidden md:block flex-1 min-w-0">
             <TopNavClient platforms={platforms} />
           </div>
-          {/* Mobile: show Ask AI button and theme toggle (below md breakpoint) */}
+          {/* Mobile: show search, Ask AI button and theme toggle (below md breakpoint) */}
           <div className="flex items-center md:hidden ml-auto gap-3">
+            {!noSearch && (
+              <button
+                className="flex items-center text-[var(--foreground)] p-1.5 rounded-md hover:bg-[var(--gray-a3)] transition-colors"
+                onClick={() => setMobileSearchOpen(true)}
+                aria-label="Search"
+              >
+                <MagnifyingGlassIcon width="20" height="20" />
+              </button>
+            )}
             <button
               className="kapa-ai-class flex items-center gap-1.5 text-sm font-medium text-[var(--foreground)] px-2 py-1.5 rounded-md hover:bg-[var(--gray-a3)] transition-colors"
               aria-label="Ask AI"
@@ -251,6 +261,33 @@ export function Header({
               Go to Sentry
             </a>
           </nav>
+        </div>
+      )}
+
+      {/* Mobile search overlay */}
+      {mobileSearchOpen && (
+        <div
+          className="md:hidden fixed inset-0 bg-[var(--gray-1)] z-50"
+          style={{top: 'var(--header-height)'}}
+        >
+          <div className="p-4">
+            <div className="flex items-center gap-2 mb-4">
+              <button
+                onClick={() => setMobileSearchOpen(false)}
+                className="flex items-center justify-center p-2 rounded-md hover:bg-[var(--gray-a3)] transition-colors"
+                aria-label="Close search"
+              >
+                <Cross1Icon width="20" height="20" />
+              </button>
+              <span className="text-sm font-medium text-[var(--foreground)]">Search</span>
+            </div>
+            <Search
+              path={pathname}
+              searchPlatforms={searchPlatforms}
+              autoFocus
+              useStoredSearchPlatforms={useStoredSearchPlatforms}
+            />
+          </div>
         </div>
       )}
     </header>
