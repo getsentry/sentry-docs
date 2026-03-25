@@ -60,6 +60,11 @@ export function Header({
     }, [])
   );
 
+  // Close mobile search overlay on navigation
+  useEffect(() => {
+    setMobileSearchOpen(false);
+  }, [pathname]);
+
   // Track sidebar checkbox state for non-home pages
   useEffect(() => {
     if (isHomePage) {
@@ -110,7 +115,10 @@ export function Header({
           {isHomePage ? (
             <button
               className="md:hidden mr-3 flex items-center"
-              onClick={() => setHomeMobileNavOpen(!homeMobileNavOpen)}
+              onClick={() => {
+                setHomeMobileNavOpen(!homeMobileNavOpen);
+                setMobileSearchOpen(false);
+              }}
               aria-label={homeMobileNavOpen ? 'Close menu' : 'Open menu'}
             >
               {homeMobileNavOpen ? (
@@ -177,7 +185,10 @@ export function Header({
             {!noSearch && (
               <button
                 className="flex items-center text-[var(--foreground)] p-1.5 rounded-md hover:bg-[var(--gray-a3)] transition-colors"
-                onClick={() => setMobileSearchOpen(true)}
+                onClick={() => {
+                  setMobileSearchOpen(true);
+                  setHomeMobileNavOpen(false);
+                }}
                 aria-label="Search"
               >
                 <MagnifyingGlassIcon width="20" height="20" />
