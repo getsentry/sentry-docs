@@ -278,7 +278,7 @@ export function Header({
       {/* Mobile search overlay */}
       {mobileSearchOpen && (
         <div
-          className="md:hidden fixed inset-0 bg-[var(--gray-1)] z-50 overflow-hidden flex flex-col"
+          className="mobile-search-overlay md:hidden fixed inset-0 bg-[var(--gray-1)] z-50 overflow-hidden flex flex-col"
           style={{top: 'var(--header-height)'}}
         >
           <div className="flex flex-col flex-1 overflow-hidden px-4">
