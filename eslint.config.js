@@ -91,6 +91,10 @@ module.exports = [
         },
       },
     },
+    rules: {
+      // Use base no-shadow for JS files (TS files use @typescript-eslint/no-shadow)
+      'no-shadow': 'error',
+    },
   },
 
   // React configuration (from eslint-config-sentry-react/rules/react.js)
@@ -266,8 +270,7 @@ module.exports = [
       'wrap-iife': ['error', 'any'],
       'object-shorthand': ['error', 'properties'],
 
-      // Variables
-      'no-shadow': 'error',
+      // Variables (no-shadow is handled in TypeScript config block for TS files)
       'no-shadow-restricted-names': 'error',
 
       // Turn off rules not in original eslint-config-sentry
