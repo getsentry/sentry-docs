@@ -1,6 +1,6 @@
 ---
 title: Source Code Management Platform
-sidebar_order: 11
+sidebar_order: 40
 ---
 
 ## Introduction
@@ -12,8 +12,8 @@ The SCM (Source Code Management) platform is a vendor-agnostic abstraction layer
 1. **Provider independence.** Product code should never import a provider's client or parse a provider's response format directly. All interaction flows through a common type system so that adding a new provider does not require changes to callers.
 2. **Declarative usage.** Callers describe _what_ they want (e.g. "create a pull request") not _how_ to accomplish it. Initialization, authentication, rate limiting, and response mapping are handled internally.
 3. **Observability by default.** Every outbound action and every inbound webhook listener automatically records success/failure metrics, emits traces, and reports errors to Sentry. Callers do not need to instrument their own usage.
-4. **Safe concurrency.** Referrer-based rate limiting with allocation policies prevents any single caller from exhausting a provider's API budget. Shared and caller-specific quotas are enforced transparently.
-5. **Hybrid-cloud aware.** Inbound webhook events are routed to the correct silo (control or region) and executed asynchronously on the task queue. Listeners are logically isolated from one another; an unhandled exception in one listener does not affect others.
+4. **Fair access.** Referrer-based rate limiting with allocation policies prevents any single caller from exhausting a provider's API budget. Shared and caller-specific quotas are enforced transparently.
+5. **Centrally enforced access controls.** Access controls must be strictly and consistently enforced across all SCM providers to prevent unprivileged access to sensitive customer data, ensuring the security model is implemented once and applied universally.
 
 ### Features
 
@@ -182,3 +182,20 @@ The event stream supports the following event types.
 - `CheckRunEvent`
 - `CommentEvent`
 - `PullRequestEvent`
+
+### Observability
+
+Both subsystems emit metrics under the `sentry.scm` namespace:
+
+| Metric | Source |
+|---|---|
+| `sentry.scm.actions.success` | Every successful outbound action (tagged by provider and referrer) |
+| `sentry.scm.actions.failed` | Unhandled exception during an outbound action |
+| `sentry.scm.produce_event_to_scm_stream.success` | Event successfully dispatched to listeners |
+| `sentry.scm.produce_event_to_scm_stream.failed` | Dispatch failure (tagged by reason) |
+| `sentry.scm.run_listener.success` | Listener executed successfully (tagged by listener name) |
+| `sentry.scm.run_listener.failed` | Listener failed (tagged by reason and listener name) |
+| `sentry.scm.run_listener.message.size` | Serialized event size in bytes |
+| `sentry.scm.run_listener.queue_time` | Time from webhook receipt to task start |
+| `sentry.scm.run_listener.task_time` | Time to execute the listener |
+| `sentry.scm.run_listener.real_time` | End-to-end time from webhook receipt to listener completion |
