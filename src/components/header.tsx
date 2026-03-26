@@ -65,7 +65,7 @@ export function Header({
     setMobileSearchOpen(false);
   }, [pathname]);
 
-  // Lock body scroll when mobile search overlay is open and close on resize to desktop
+  // Lock body scroll when mobile search overlay is open, close on resize to desktop or escape key
   useEffect(() => {
     if (mobileSearchOpen) {
       document.body.style.overflow = 'hidden';
@@ -77,10 +77,19 @@ export function Header({
         }
       };
 
+      // Close mobile search on escape key
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          setMobileSearchOpen(false);
+        }
+      };
+
       window.addEventListener('resize', handleResize);
+      window.addEventListener('keydown', handleKeyDown);
       return () => {
         document.body.style.overflow = '';
         window.removeEventListener('resize', handleResize);
+        window.removeEventListener('keydown', handleKeyDown);
       };
     }
     return undefined;
