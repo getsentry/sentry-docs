@@ -65,6 +65,18 @@ export function Header({
     setMobileSearchOpen(false);
   }, [pathname]);
 
+  // Lock body scroll when mobile search overlay is open
+  useEffect(() => {
+    if (mobileSearchOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [mobileSearchOpen]);
+
   // Track sidebar checkbox state for non-home pages
   useEffect(() => {
     if (isHomePage) {
