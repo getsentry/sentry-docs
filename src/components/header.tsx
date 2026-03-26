@@ -77,10 +77,17 @@ export function Header({
         }
       };
 
-      // Close mobile search on escape key
+      // Close mobile search on escape key (only if search input is empty)
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === 'Escape') {
-          setMobileSearchOpen(false);
+          // Check if search input has a value - if so, let the Search component
+          // handle the escape key to clear the query first
+          const searchInput = document.querySelector(
+            '.mobile-search-overlay input[type="text"]'
+          ) as HTMLInputElement | null;
+          if (!searchInput?.value) {
+            setMobileSearchOpen(false);
+          }
         }
       };
 
