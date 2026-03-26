@@ -82,7 +82,7 @@ SDKs **MUST** never send sensitive **values** through automatic instrumentation.
 
 ### Configuration Requirements
 
-All data-collection options reside under a single top-level key: `dataCollection`. SDKs **MUST** support at least `includeUserInfo` and the `collect` object. SDKs **MAY** omit options that do not apply to their platform (e.g., `outgoingRequestBody` on a browser-only SDK).
+All data-collection options reside under a single top-level key: `dataCollection`. SDKs **MUST** support at least `includeUserInfo` and the `collect` object. SDKs **MAY** omit options that do not apply to their platform (e.g., `outgoingResponseBody` on a client-only SDK).
 
 `dataCollection` accepts two fields:
 
@@ -141,7 +141,7 @@ Each key under `collect` maps to a category of automatically collected data. The
 | Option type | Default when `includeUserInfo: true` | Default when `includeUserInfo: false` |
 |-------------|--------------------------------------|----------------------------------------|
 | Collection (key-value pairs) | `true` — use default denylist | `true` — use default denylist, plus PII keys denied |
-| PII Boolean (e.g. `incomingRequestBody`) | `true` — attach | `false` — do not attach |
+| PII Boolean (e.g. `incomingRequestBody`, `incomingResponseBody`) | `true` — attach | `false` — do not attach |
 
 Non-PII boolean options (e.g. `stackFrameVariables`) are not affected by `includeUserInfo` and always default to their configured value.
 
@@ -183,9 +183,9 @@ Effective denylist when PII is disabled: Base list + `["forwarded", "-ip", "remo
 - SDKs **SHOULD** maintain a default denylist of cookie names using the same matching rule (e.g., `session`, `auth`, `identity`). Values for matching cookie names **MUST** be replaced with `"[Filtered]"`.
 - **When individual cookie key-value pairs cannot be extracted** (e.g., malformed or opaque cookie string), the entire `Cookie` or `Set-Cookie` header value **MUST** be replaced with `"[Filtered]"`. Unfiltered raw cookie header values **MUST NOT** be sent. When in doubt, treat the entire cookie header as sensitive.
 
-#### Request Bodies
+#### Request and Response Bodies
 
-When request or response bodies are collected (`incomingRequestBody` / `outgoingRequestBody`):
+When request or response bodies are collected (`incomingRequestBody` / `incomingResponseBody` / `outgoingRequestBody` / `outgoingResponseBody`):
 
 - **Parseable as JSON or form data:** SDKs **MAY** extract key-value pairs and apply the same denylist rules to keys. Values for matching keys **MUST** be replaced with `"[Filtered]"`. This allows selective scrubbing while retaining non-sensitive fields.
 - **Not parseable (raw bodies):** The body **MUST NOT** be attached to the event. When the SDK cannot parse the body into a key-value structure, the entire body **MUST** be replaced with `"[Filtered]"`.
@@ -222,8 +222,10 @@ init({
       queryParams: Collection,           // default: true
       aiAgentMessages: boolean,          // default: true
       stackFrameVariables: boolean,      // default: true
-      incomingRequestBody: boolean,      // default: TBD
       outgoingRequestBody: boolean,      // default: TBD
+      incomingResponseBody: boolean,     // default: TBD
+      incomingRequestBody?: boolean,     // default: TBD
+      outgoingResponseBody?: boolean,    // default: TBD
       frameContextLines: number,         // default: 5 (boolean fallback: true)
     },
   },
@@ -248,8 +250,10 @@ init({
 | `queryParams` | Collection | `true` | 1.0.0 | Include URL query parameter values; keys filtered by the default denylist or by allow/deny lists. |
 | `aiAgentMessages` | Boolean | `true` | 1.0.0 | Include AI agent input and output messages. |
 | `stackFrameVariables` | Boolean | `true` | 1.0.0 | Include local variable values captured within stack frames. |
-| `incomingRequestBody` | Boolean | TBD | 1.0.0 | Include full body of the incoming HTTP request. |
 | `outgoingRequestBody` | Boolean | TBD | 1.0.0 | Include full body of outgoing HTTP requests. |
+| `incomingResponseBody` | Boolean | TBD | 1.0.0 | Include full body of the incoming HTTP response. |
+| `incomingRequestBody` | Boolean? | TBD | 1.0.0 | Include full body of the incoming HTTP request (applicable in server-environments). |
+| `outgoingResponseBody` | Boolean? | TBD | 1.0.0 | Include full body of outgoing HTTP responses (applicable in server-environments). |
 | `frameContextLines` | Number (Boolean fallback) | `5` (`true`) | 1.0.0 | Number of lines of context to include around stack frames. |
 
 <Expandable title="Why are some options boolean-only?">
@@ -296,8 +300,10 @@ init({
       queryParams: true,
       aiAgentMessages: true,
       stackFrameVariables: true,
-      incomingRequestBody: false,
       outgoingRequestBody: false,
+      incomingResponseBody: false,
+      incomingRequestBody: false,
+      outgoingResponseBody: false,
       frameContextLines: 5,
     },
   },
@@ -314,8 +320,10 @@ init({
   dataCollection: {
     includeUserInfo: true,
     collect: {
-      incomingRequestBody: true,
       outgoingRequestBody: true,
+      incomingResponseBody: true,
+      incomingRequestBody: true,
+      outgoingResponseBody: true,
     },
   },
 });
