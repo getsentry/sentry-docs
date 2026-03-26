@@ -170,10 +170,13 @@ Values for keys that match **MUST** be replaced with `"[Filtered]"`.
 When `includeUserInfo` is `false`, SDKs **MUST** apply the base denylist **and** treat the following as sensitive:
 
 - Any data containing email, user ID, IP address, username, or machine name (if applicable).
-- Any key containing **`x-forwarded-`** (e.g., `x-forwarded-for`, `x-forwarded-host`) — these often carry client IP or host.
-- Any key ending with or containing **`-user`** (e.g., `x-user-id`, `remote-user`) — these often carry user identifiers.
+- Any key containing **`forwarded`** (e.g., `forwarded`, `x-forwarded-for`) — often carries client IP or host information.
+- Any key containing **`-ip`** (e.g., `x-real-ip`, `cf-connecting-ip`) — non-standard headers carrying IP addresses.
+- Any key containing **`remote-`** (e.g., `remote-addr`, `remote-host`) — commonly maps to the originating client or proxy.
+- Any key equal to or containing **`via`** (e.g., `via`) — often carries proxy host information.
+- Any key containing **`-user`** (e.g., `x-user-id`, `remote-user`) — often carries user identifiers.
 
-Effective denylist when PII is disabled: Base list + `["x-forwarded-", "-user"]` (partial match, case-insensitive).
+Effective denylist when PII is disabled: Base list + `["forwarded", "-ip", "remote-", "via", "-user"]` (partial match, case-insensitive).
 
 #### Cookies and Cookie Headers
 
