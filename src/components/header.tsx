@@ -65,16 +65,25 @@ export function Header({
     setMobileSearchOpen(false);
   }, [pathname]);
 
-  // Lock body scroll when mobile search overlay is open
+  // Lock body scroll when mobile search overlay is open and close on resize to desktop
   useEffect(() => {
     if (mobileSearchOpen) {
       document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
+
+      // Close mobile search if viewport is resized to desktop width
+      const handleResize = () => {
+        if (window.innerWidth >= 768) {
+          setMobileSearchOpen(false);
+        }
+      };
+
+      window.addEventListener('resize', handleResize);
+      return () => {
+        document.body.style.overflow = '';
+        window.removeEventListener('resize', handleResize);
+      };
     }
-    return () => {
-      document.body.style.overflow = '';
-    };
+    return undefined;
   }, [mobileSearchOpen]);
 
   // Track sidebar checkbox state for non-home pages
@@ -292,6 +301,9 @@ export function Header({
         <div
           className="mobile-search-overlay md:hidden fixed inset-0 bg-[var(--gray-1)] z-50 overflow-hidden flex flex-col"
           style={{top: 'var(--header-height)'}}
+          // Stop propagation to prevent Search's useOnClickOutside from dismissing results
+          // when clicking on the overlay header or padding areas
+          onClick={e => e.stopPropagation()}
         >
           <div className="flex flex-col flex-1 overflow-hidden px-4">
             <div className="flex items-center gap-2 py-4">
