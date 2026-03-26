@@ -227,6 +227,21 @@ To use your custom build, replace the crash reporter executable in the plugin's 
 
 After replacing the executable, delete the project's `Build` and `Intermediate` directories and rebuild the project to ensure the updated binary is picked up.
 
+### Stacktrace Display
+
+The Sentry Crash Reporter can display a symbolicated stacktrace of the crashed thread, allowing users to review the call stack directly in the crash dialog before submitting the report.
+
+This feature requires client-side stack walking, which is supported through two backend configurations:
+
+- **[Native backend](/platforms/unreal/configuration/native-backend/)**: Performs stack walking and symbolication automatically using the platform's debug APIs. No additional configuration is needed.
+- **Crashpad backend**: Requires a custom build of `sentry-native` with the `CRASHPAD_ENABLE_STACKTRACE` CMake flag enabled.
+
+<Alert>
+
+For **Shipping builds**, the stacktrace can only be symbolicated if debug information is available at runtime. Enable **Include Debug Files in Shipping Builds** in **Project Settings > Packaging** to ensure function names are resolved in the crash reporter dialog.
+
+</Alert>
+
 ## Upload Debug Symbols
 
 To allow Sentry to fully process native crashes and provide you with
