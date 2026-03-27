@@ -16,12 +16,10 @@
  *   --update      Update mapping file and regenerate MDX page
  */
 
-/* eslint-disable no-console */
 import {execSync} from 'child_process';
 import fs from 'fs';
-import path from 'path';
-
 import yaml from 'js-yaml';
+import path from 'path';
 
 const REPO_URL = 'https://github.com/getsentry/sentry-options-automator.git';
 const FLAGPOLE_PATH = 'options/default/flagpole.yaml';

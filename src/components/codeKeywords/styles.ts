@@ -1,8 +1,8 @@
 'use client';
 
-import {ArrowDown} from 'react-feather';
 import styled from '@emotion/styled';
 import {motion} from 'framer-motion';
+import {ArrowDown} from 'react-feather';
 
 export const ProjectPreview = styled('div')`
   position: absolute;

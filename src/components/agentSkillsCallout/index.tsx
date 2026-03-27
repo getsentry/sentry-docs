@@ -1,16 +1,14 @@
 'use client';
 
-import {useCallback, useState} from 'react';
 import {ChevronDownIcon, ChevronRightIcon} from '@radix-ui/react-icons';
 import * as Sentry from '@sentry/nextjs';
 import Link from 'next/link';
-
+import {useCallback, useState} from 'react';
 import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
-
-import styles from './style.module.scss';
 
 import {CodeBlock} from '../codeBlock';
 import {CodeTabs} from '../codeTabs';
+import styles from './style.module.scss';
 
 const SKILLS_BASE_URL = 'https://skills.sentry.dev';
 const SKILLS_REPO = 'getsentry/sentry-for-ai';

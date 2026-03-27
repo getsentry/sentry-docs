@@ -1,11 +1,9 @@
 import {DocNode, nodeForPath} from 'sentry-docs/docTree';
 
-import styles from './style.module.scss';
-
 import {CloseSidebarOnNavigation, ScrollActiveLink} from '../focus-active-link';
-
 import {DynamicNav, toTree} from './dynamicNav';
 import {SidebarLink, SidebarSeparator} from './sidebarLink';
+import styles from './style.module.scss';
 import {NavNode} from './types';
 import {docNodeToNavNode, getNavNodes} from './utils';
 

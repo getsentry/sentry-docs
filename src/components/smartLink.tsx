@@ -1,7 +1,7 @@
 'use client';
 
-import {useCallback} from 'react';
 import Link from 'next/link';
+import {useCallback} from 'react';
 
 import {ExternalLink} from './externalLink';
 

@@ -3,29 +3,28 @@ import {serverContext} from 'sentry-docs/serverContext';
 
 import {ExternalLink} from './externalLink';
 
-const scenarios = [
-  'performance',
-  'releases',
-  'alerts',
-  'discover',
-  'dashboards',
-  'projects',
-  'oneDiscoverQuery',
-  'oneIssue',
-  'oneBreadcrumb',
-  'oneStackTrace',
-  'oneTransaction',
-  'oneWebVitals',
-  'oneTransactionSummary',
-  'oneRelease',
-] as const;
+type Scenario =
+  | 'performance'
+  | 'releases'
+  | 'alerts'
+  | 'discover'
+  | 'dashboards'
+  | 'projects'
+  | 'oneDiscoverQuery'
+  | 'oneIssue'
+  | 'oneBreadcrumb'
+  | 'oneStackTrace'
+  | 'oneTransaction'
+  | 'oneWebVitals'
+  | 'oneTransactionSummary'
+  | 'oneRelease';
 
 type Props = {
   children: React.ReactNode;
   errorType?: string;
   platform?: string;
   projectSlug?: string;
-  scenario?: (typeof scenarios)[number];
+  scenario?: Scenario;
   target?: string;
 };
 
@@ -45,7 +44,7 @@ export function getSandboxURL({
 }: {
   errorType?: string;
   projectSlug?: string;
-  scenario?: (typeof scenarios)[number];
+  scenario?: Scenario;
 } = {}) {
   const url = new URL('https://sandbox.sentry.io/');
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* eslint-disable no-console */
+
 /**
  * Script to automatically add og_image frontmatter to all MDX files that contain images.
  * This script:
@@ -9,9 +9,8 @@
  */
 
 import {copyFile, mkdir, readFile, writeFile} from 'fs/promises';
-import path from 'path';
-
 import matter from 'gray-matter';
+import path from 'path';
 
 import getAllFilesRecursively from '../src/files';
 
