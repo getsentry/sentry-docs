@@ -60,7 +60,7 @@ This sensitivity level is **not** gated by the `dataCollection` configuration. S
 
 Personally Identifiable Information (PII) or user-linked data. Examples include, but are not limited to:
 
-- Identity (name, username, user ID, username)
+- Identity (name, email, user ID, username)
 - Contact (email, phone number, address)
 - IP address
 - Cookies and headers that identify the user or session
@@ -79,7 +79,7 @@ Credentials and secrets that **MUST NOT** be sent by default. Examples include, 
 
 For the canonical list of terms used to detect sensitive values at collection time, see the [Default Denylist](#default-denylist) in this spec.
 
-SDKs **MUST** never send sensitive **values** through automatic instrumentation. Values are replaced with `"[Filtered]"`, while keys are retained (see [Default Denylist](#default-denylist)). Users can use `beforeSend` (or equivalent) to remove or redact keys if needed.
+SDKs **MUST** never send sensitive **values** through automatic instrumentation. The SDK replaces sensitive values with `"[Filtered]"` and retains key names (see [Default Denylist](#default-denylist)). Users can use `beforeSend` (or equivalent) to remove or redact keys if needed.
 
 </SpecSection>
 
@@ -110,9 +110,9 @@ The `userInfo` option controls whether the SDK automatically attaches user ident
 | `true` | Attach user identity fields captured by automatic instrumentation from any source. Equivalent to the legacy `sendDefaultPii` flag scoped to user data. |
 | `false` | Do not attach user identity fields from automatic instrumentation. |
 
-This distinction matters because collecting a header value and setting a user identity field are two separate concerns. A developer may explicitly allow `x-forwarded-for` in `httpHeaders`. In that case the SDK **MUST** capture and attach that raw header value regardless of `userInfo`. The `userInfo` option only governs whether the SDK automatically infers and sets `user.*` fields on the event from instrumentation sources (e.g., a web framework passing the client IP, or the SDK reading request context and calling the equivalent of `Sentry.setUser({ ip_address: "..." })`).
+This distinction matters because collecting a header value and setting a user identity field are two separate concerns. A developer may explicitly allow `x-forwarded-for` in `httpHeaders`. The SDK **MUST** capture and attach that raw header value regardless of `userInfo`. The `userInfo` option only governs whether the SDK automatically infers and sets `user.*` fields from instrumentation sources (e.g., a web framework passing the client IP, or the SDK reading request context and calling the equivalent of `Sentry.setUser({ ip_address: "..." })`).
 
-For example: a developer can set `httpHeaders: { allow: ["x-forwarded-for"] }` to see the real value of that header in events (instead of `"[Filtered]"`), while keeping `userInfo: false` to prevent the SDK from ever automatically populating `user.ip_address`. Conversely, with `userInfo: true`, the SDK **SHOULD** automatically populate `user.ip_address` from any instrumentation source where an IP address can be reliably determined.
+For example: `httpHeaders: { allow: ["x-forwarded-for"] }` exposes the real value of that header in events (instead of `"[Filtered]"`), while `userInfo: false` prevents the SDK from ever automatically populating `user.ip_address`. Conversely, with `userInfo: true`, the SDK **SHOULD** automatically populate `user.ip_address` from any instrumentation source where an IP address can be reliably determined.
 
 When user data is set **explicitly** on the scope via `Sentry.setUser()` (or equivalent), it is **always** attached regardless of this setting. See [User-Set Data and Scrubbing](#user-set-data-and-scrubbing).
 
@@ -122,7 +122,7 @@ When user data is set **explicitly** on the scope via `Sentry.setUser()` (or equ
 
 ### Option Types
 
-Each option in `dataCollection` maps to a single category of automatically collected data. The format depends on whether the data is structured as key-value pairs.
+Each option in `dataCollection` maps to a single category of automatically collected data. The option type depends on whether the data has a key-value structure.
 
 **Boolean Options**: Used where data cannot be meaningfully filtered at the key level. The SDK either collects the entire category or skips it.
 
@@ -135,10 +135,10 @@ Each option in `dataCollection` maps to a single category of automatically colle
 
 | Value | Behavior |
 |-------|----------|
-| `true` | Collect this category. All key names are included. Values for keys matching the denylist are replaced with `"[Filtered]"`; all other values are sent as-is (see [Default Denylist](#default-denylist)). |
+| `true` | Collect this category. All key names are included. The SDK replaces values for keys matching the denylist with `"[Filtered]"`; all other values are sent as-is (see [Default Denylist](#default-denylist)). |
 | `false` | Do not collect this category at all — no keys or values are attached to the event. |
-| `{ deny: string[] }` | Collect values for keys matching the base denylist **plus** the specified extra terms are replaced with `"[Filtered]"`; all other values are sent as-is. |
-| `{ allow: string[] }` | **Only** keys in this list send their real value; values for all other keys are replaced with `"[Filtered]"`. Value scrubbing from the base denylist still applies. A value matching a sensitive pattern is always scrubbed even if its key is in the allow list. |
+| `{ deny: string[] }` | Collect values for keys matching the base denylist **plus** the specified extra terms; the SDK replaces values for those keys with `"[Filtered]"`. All other values are sent as-is. |
+| `{ allow: string[] }` | **Only** keys in this list send their real value; the SDK replaces values for all other keys with `"[Filtered]"`. Base denylist scrubbing still applies — a value matching a sensitive pattern is always scrubbed even if its key is in the allow list. |
 
 > **Note:** `allow` and `deny` are mutually exclusive forms and cannot be combined.
 
@@ -214,7 +214,7 @@ DataCollection.withUserData() → {
 
 ### Default Denylist
 
-For key-value data (HTTP headers, cookies, URL query params), key names are **always included** in the event. SDKs **MUST** apply a **default denylist** to decide which values are sent in plaintext and which are replaced with `"[Filtered]"`. The denylist matches on key name. Keys themselves are never removed or redacted by the SDK.
+For key-value data (HTTP headers, cookies, URL query params), key names are **always included** in the event. SDKs **MUST** apply a **default denylist** to decide which values are sent in plaintext and which the SDK replaces with `"[Filtered]"`. The denylist matches on key name. The SDK never removes or redacts keys themselves.
 
 
 #### Matching Rule
@@ -231,7 +231,7 @@ Values for keys that match **MUST** be replaced with `"[Filtered]"`.
 
 #### Extended Deny Terms (`DataCollection.default()`)
 
-The `DataCollection.default()` preset adds the following terms to the deny list for `CollectBehavior` options (cookies, headers, query params). Values of keys matching these terms are replaced with `"[Filtered]"` because they commonly carry user-identifying information. Key names are still included in the event.
+The `DataCollection.default()` preset adds the following terms to the deny list for `CollectBehavior` options (cookies, headers, query params). The SDK replaces values of keys matching these terms with `"[Filtered]"` because they commonly carry user-identifying information. Key names are still included in the event.
 
 - Any key containing data about email, user ID, IP address, username, or machine name (if applicable).
 - Any key containing **`forwarded`** (e.g., `forwarded`, `x-forwarded-for`) — often carries client IP or host information.
@@ -248,7 +248,7 @@ These terms are **not** added when using `DataCollection.withUserData()`, which 
 
 Cookies and query params may arrive as a single unparsed string (e.g., `Cookie: user_session=abc; theme=dark-mode`) rather than pre-split key-value pairs. SDKs **MAY** handle both cases:
 
-**When the string can be parsed into individual key-value pairs**, apply the denylist per-key — the same matching rule and terms used for headers apply to cookie names and query param keys. Values for sensitive keys are replaced with `"[Filtered]"` while non-sensitive values are kept as-is. This selective filtering retains harmless contextual information for debugging while protecting sensitive fields.
+**When the string can be parsed into individual key-value pairs**, apply the denylist per-key — the same matching rule and terms used for headers apply to cookie names and query param keys. The SDK replaces values for sensitive keys with `"[Filtered]"` while keeping non-sensitive values as-is. This selective filtering retains harmless contextual information for debugging while protecting sensitive fields.
 
 For example, a `Cookie` header parsed into individual cookies:
 
@@ -293,7 +293,7 @@ Users can register callbacks (e.g., `beforeSend`, event processors) to remove or
 
 ## Public API
 
-The `dataCollection` option is passed to the SDK's init function. Users can construct the object manually, use a preset factory, or tweak a factory's output. All fields are optional when constructing manually; omitting a field uses the same default as `DataCollection.default()`.
+Pass the `dataCollection` option to the SDK's `init` function. Users can construct the object manually, use a preset factory, or tweak a factory's output. All fields are optional when constructing manually; omitting a field uses the same default as `DataCollection.default()`.
 
 ```pseudocode
 init({
@@ -318,9 +318,9 @@ init({
 | Key | Option Type | Default | Since | Description |
 |-----|-------------|---------|-------|-------------|
 | `userInfo` | Boolean | `false` | 0.1.0 | Attach user identity fields (`user.id`, `user.email`, `user.username`, `user.ip_address`) from automatic instrumentation. |
-| `cookies` | CollectBehavior | `true` | 0.1.0 | Collect cookies. All key names are always included; values are scrubbed based on the denylist or allow/deny configuration. |
-| `httpHeaders` | CollectBehavior | `true` | 0.1.0 | Collect HTTP headers. All key names are always included; values are scrubbed based on the denylist or allow/deny configuration. |
-| `queryParams` | CollectBehavior | `true` | 0.1.0 | Collect URL query parameters. All key names are always included; values are scrubbed based on the denylist or allow/deny configuration. |
+| `cookies` | CollectBehavior | `true` | 0.1.0 | Collect cookies. All key names are always included; the SDK scrubs values based on the denylist or allow/deny configuration. |
+| `httpHeaders` | CollectBehavior | `true` | 0.1.0 | Collect HTTP headers. All key names are always included; the SDK scrubs values based on the denylist or allow/deny configuration. |
+| `queryParams` | CollectBehavior | `true` | 0.1.0 | Collect URL query parameters. All key names are always included; the SDK scrubs values based on the denylist or allow/deny configuration. |
 | `aiAgentMessages` | Boolean | `true` | 0.1.0 | Include AI agent input and output messages. |
 | `stackFrameVariables` | Boolean | `true` | 0.1.0 | Include local variable values captured within stack frames. |
 | `outgoingRequestBody` | Boolean | `false` | 0.1.0 | Include full body of outgoing HTTP requests. |
@@ -348,9 +348,11 @@ SDKs **MAY** provide additional factories. All factories **MUST** return a mutab
 
 ## Examples
 
+The following examples show common configurations using presets and manual construction.
+
 ### Using the Default Preset
 
-The most minimal configuration uses the factory directly:
+The minimal configuration uses the factory directly:
 
 ```typescript
 init({
