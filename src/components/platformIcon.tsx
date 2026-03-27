@@ -490,13 +490,13 @@ const formatToSVG = {
     sm: ElectronSVG,
     lg: ElectronSVGLarge,
   },
-  elysia: {
-    sm: ElysiaSVG,
-    lg: ElysiaSVGLarge,
-  },
   elixir: {
     sm: ElixirSVG,
     lg: ElixirSVGLarge,
+  },
+  elysia: {
+    sm: ElysiaSVG,
+    lg: ElysiaSVGLarge,
   },
   ember: {
     sm: EmberSVG,
