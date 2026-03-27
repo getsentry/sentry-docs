@@ -1,7 +1,6 @@
-import {Fragment} from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-
+import {Fragment} from 'react';
 import getPackageRegistry from 'sentry-docs/build/packageRegistry';
 
 import {CodeBlock} from './codeBlock';

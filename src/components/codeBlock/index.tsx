@@ -2,16 +2,14 @@
 
 import {RefObject, useContext, useEffect, useLayoutEffect, useRef, useState} from 'react';
 import {Clipboard, ExternalLink} from 'react-feather';
-
 import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
 import {DocMetrics} from 'sentry-docs/metrics';
-
-import styles from './code-blocks.module.scss';
 
 import {CodeContext} from '../codeContext';
 import {makeHighlightBlocks} from '../codeHighlights';
 import {makeKeywordsClickable} from '../codeKeywords';
 import {updateElementsVisibilityForOptions} from '../onboarding';
+import styles from './code-blocks.module.scss';
 
 export interface CodeBlockProps {
   children: React.ReactNode;
@@ -46,7 +44,7 @@ function getCopiableText(element: HTMLDivElement) {
   });
 
   let node: Node | null;
-  // eslint-disable-next-line no-cond-assign
+
   while ((node = walker.nextNode())) {
     text += node.textContent;
   }
@@ -123,7 +121,6 @@ export function CodeBlock({filename, language, children, externalLink}: CodeBloc
 
       setTimeout(() => setShowCopied(false), 1200);
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.error('Failed to copy:', error);
     }
   }

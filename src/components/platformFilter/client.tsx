@@ -1,17 +1,15 @@
 'use client';
-import {useMemo, useState} from 'react';
 import * as Collapsible from '@radix-ui/react-collapsible';
 import {TriangleRightIcon} from '@radix-ui/react-icons';
 import classNames from 'classnames';
 import {matchSorter, rankings} from 'match-sorter';
 import Link from 'next/link';
-
+import {useMemo, useState} from 'react';
 import {type Platform} from 'sentry-docs/types';
 import {splitToChunks, uniqByReference} from 'sentry-docs/utils';
 
-import styles from './style.module.scss';
-
 import {PlatformIcon} from '../platformIcon';
+import styles from './style.module.scss';
 
 export function PlatformFilterClient({platforms}: {platforms: Platform[]}) {
   const platformsAndGuides = platforms

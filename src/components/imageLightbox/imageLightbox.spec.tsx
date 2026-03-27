@@ -1,7 +1,6 @@
-import {describe, expect, it, vi} from 'vitest';
-
 import {getImageUrl, getValidDimensions} from 'sentry-docs/components/imageLightbox';
 import {isAllowedRemoteImage, isExternalImage} from 'sentry-docs/config/images';
+import {describe, expect, it, vi} from 'vitest';
 
 // Mock image config functions
 vi.mock('sentry-docs/config/images', () => ({
