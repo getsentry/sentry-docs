@@ -41,7 +41,7 @@ Related specs:
 
 ### Data Sensitivity Levels
 
-Collected data is grouped into three sensitivity levels. SDKs **MUST** treat these levels consistently when applying defaults and user configuration.
+Collected data is grouped into three sensitivity levels. These levels form the organizing principle for `dataCollection` defaults and user configuration.
 
 #### 1. Technical Context Data
 
@@ -55,8 +55,6 @@ Non-identifying context used for debugging and performance. Examples include, bu
 
 For the full list of supported context types (device, OS, runtime, app, browser, GPU, culture, cloud resource, memory info, and more), see the [Contexts Interface](/sdk/foundations/transport/event-payloads/contexts/).
 
-This sensitivity level is **not** gated by the `dataCollection` configuration. SDKs **SHOULD** collect it by default.
-
 #### 2. PII Data
 
 Personally Identifiable Information (PII) or user-linked data. Examples include, but are not limited to:
@@ -69,18 +67,14 @@ Personally Identifiable Information (PII) or user-linked data. Examples include,
 
 For context types that may carry PII fields (e.g. `device_unique_identifier` in [Device Context](/sdk/foundations/transport/event-payloads/contexts/#device-context), or fields in the [User Interface](/sdk/foundations/transport/event-payloads/user/)), see the linked specs.
 
-This sensitivity level **MUST** be disabled by default unless the user opts in via `userInfo: true` or explicit allowlists. See [`userInfo`](#user-info-behavior), [Option Types](#option-types), and [Default Denylist](#default-denylist).
-
 #### 3. Sensitive Data
 
-Credentials and secrets that **MUST NOT** be sent by default. Examples include, but are not limited to:
+Credentials and secrets that must never be sent by default. Examples include, but are not limited to:
 
 - Passwords, tokens, API keys, bearer tokens
 - Header or cookie values matching known sensitive names (auth, token, secret, password, key, jwt, etc.)
 
 For the canonical list of terms used to detect sensitive values at collection time, see the [Default Denylist](#default-denylist) in this spec.
-
-SDKs **MUST** never send sensitive **values** through automatic instrumentation. The SDK replaces sensitive values with `"[Filtered]"` and retains key names (see [Default Denylist](#default-denylist)). Users can use `beforeSend` (or equivalent) to remove or redact keys if needed.
 
 </SpecSection>
 
@@ -94,9 +88,21 @@ SDKs **MUST** never send sensitive **values** through automatic instrumentation.
 
 All data-collection options reside under a single top-level key: `dataCollection`. Each option within the object has a fixed default that does not depend on any other option.
 
-SDKs **MUST** support at least the `userInfo` option and the `CollectBehavior` / Boolean options listed in the [Public API](#public-api). SDKs **MAY** omit body types that do not apply to their platform (e.g., a client-only SDK **MAY** ignore `"incomingRequest"` and `"outgoingResponse"` in the `httpBodies` array).
+SDKs **MUST** support at least the `userInfo` option and the `CollectBehavior` / Boolean options defined in [Option Types](#option-types). SDKs **MAY** omit body types that do not apply to their platform (e.g., a client-only SDK **MAY** ignore `"incomingRequest"` and `"outgoingResponse"` in the `httpBodies` array).
 
 SDKs **MUST** also provide preset factory methods (or language-idiomatic equivalents such as static builders, profiles, or named constructors) that return a fully resolved `DataCollection` object. See [Preset Factories](#preset-factories).
+
+</SpecSection>
+
+<SpecSection id="collection-defaults" status="draft" since="0.1.0">
+
+### Default Collection Behavior
+
+The three sensitivity levels determine whether data is collected by default:
+
+- **Technical Context Data**: SDKs **SHOULD** collect this data automatically. This level is not gated by any `dataCollection` option.
+- **PII Data**: SDKs **MUST NOT** attach PII automatically unless the user opts in. The `userInfo` option controls identity fields; `CollectBehavior` options and the default denylist govern key-value PII in headers, cookies, and query params. See [`userInfo` Behavior](#user-info), [Option Types](#option-types), and [Default Denylist](#default-denylist).
+- **Sensitive Data**: SDKs **MUST** never send sensitive values through automatic instrumentation. Values for keys matching the denylist **MUST** be replaced with `"[Filtered]"`; key names are always retained. Users can use `beforeSend` (or equivalent) to remove or redact keys if needed. See [Default Denylist](#default-denylist).
 
 </SpecSection>
 
@@ -119,60 +125,18 @@ When user data is set **explicitly** on the scope via `Sentry.setUser()` (or equ
 
 </SpecSection>
 
-<SpecSection id="option-types" status="draft" since="0.1.0">
-
-### Option Types
-
-Each option in `dataCollection` maps to a single category of automatically collected data. The option type depends on whether the data has a key-value structure.
-
-**Boolean Options**: Used where data cannot be meaningfully filtered at the key level. The SDK either collects the entire category or skips it.
-
-| Value | Behavior |
-|-------|----------|
-| `true` | Collect and attach this data category. |
-| `false` | Do not collect this data category. |
-
----
-
-**`CollectBehavior` options** — used for key-value data (cookies, headers, query params). Key names are **always included** in the event. The allow/deny configuration controls only which **values** are sent in plaintext vs. replaced with `"[Filtered]"`.
-
-| Value | Behavior |
-|-------|----------|
-| `true` | Collect this category. All key names are included. The SDK replaces values for keys matching the denylist with `"[Filtered]"`; all other values are sent as-is (see [Default Denylist](#default-denylist)). |
-| `false` | Do not collect this category at all — no keys or values are attached to the event. |
-| `{ deny: string[] }` | Collect values for keys matching the base denylist **plus** the specified extra terms; the SDK replaces values for those keys with `"[Filtered]"`. All other values are sent as-is. |
-| `{ allow: string[] }` | **Only** keys in this list send their real value; the SDK replaces values for all other keys with `"[Filtered]"`. Base denylist scrubbing still applies — a value matching a sensitive pattern is always scrubbed even if its key is in the allow list. |
-
-> **Note:** `allow` and `deny` are mutually exclusive forms and cannot be combined.
-
-**Example:** `httpHeaders: { allow: ["x-request-id", "content-type"] }` → all header key names are present in the event, but only `x-request-id` and `content-type` show their real values; every other header value appears as `"[Filtered]"`.
-
----
-
-**`BodyOption`** — used for request and response bodies. Because body data has no predictable key structure the SDK can filter at collection time, the option controls which body types are enabled rather than filtering individual values.
-
-| Value | Behavior |
-|-------|----------|
-| `true` | Collect all body types (`incomingRequest`, `outgoingRequest`, `incomingResponse`, `outgoingResponse`). |
-| `false` | Do not collect any body. |
-| `string[]` | Collect only the body types named in the array. Valid values: `"incomingRequest"`, `"outgoingRequest"`, `"incomingResponse"`, `"outgoingResponse"`. |
-
-Body data can still be redacted in `beforeSend` or event processors if needed.
-
-</SpecSection>
-
 <SpecSection id="preset-factories" status="draft" since="0.1.0">
 
 ### Preset Factories
 
-Because the `dataCollection` object is flat, the runtime configuration is fully explicit — no option implicitly changes the behavior of another option. To make common configurations easy to reach, SDKs **MUST** provide **preset factory methods** (or language-idiomatic equivalents) that return a complete, ready-to-use `DataCollection` object.
+The `dataCollection` object is fully explicit. No option implicitly changes the behavior of another. When constructing the object manually, all fields **MUST** be specified; there is no fallback for omitted fields. Preset factories exist precisely to provide a complete starting point so users can tweak individual fields without having to supply every option by hand. SDKs **MUST** provide **preset factory methods** (or language-idiomatic equivalents) that return a complete, ready-to-use `DataCollection` object.
 
 #### Requirements
 
 - SDKs **MUST** provide at least `DataCollection.default()` and `DataCollection.withUserData()`.
 - Factory methods **MUST** return a mutable object so users can override individual fields before passing it to `init`.
-- SDKs **MAY** offer additional presets (e.g., `DataCollection.minimal()`) as long as they return the same flat structure.
-- SDKs **SHOULD** use idiomatic naming for factories (e.g., `DataCollection.default()` in JavaScript/TypeScript, `DataCollection.with_user_data()` in Python, `DataCollectionConfig.withUserData()` in Java).
+- SDKs **MAY** offer additional presets (e.g., `DataCollection.minimal()`) as long as they return the same flat structure (TBD).
+- SDKs **SHOULD** use idiomatic naming for factories (e.g., `DataCollection.default()` in JavaScript/TypeScript, `DataCollection.with_user_data()` in Python).
 
 The two required presets differ in two dimensions: whether user identity fields are attached automatically, and which deny terms are applied to `CollectBehavior` options (cookies, headers, query params).
 
@@ -182,42 +146,7 @@ The two required presets differ in two dimensions: whether user identity fields 
 | `CollectBehavior` deny terms | Base denylist **+** extended PII terms (see [Extended Deny Terms](#extended-deny-terms)) | Base denylist only |
 | `httpBodies` | `false` — no body content is collected | `true` — all body types are collected (TBD) |
 
-#### `DataCollection.default()`
-
-Returns the safe-by-default configuration. User identity is not collected automatically and `CollectBehavior` options apply the extended PII deny terms on top of the base denylist. See [Extended Deny Terms](#extended-deny-terms).
-
-```pseudocode
-DataCollection.default() → {
-  userInfo: false,
-  cookies: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
-  httpHeaders: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
-  queryParams: { deny: ["forwarded", "-ip", "remote-", "via", "-user" ] },
-  generativeAIInputs: true,
-  generativeAIOutputs: true,
-  stackFrameVariables: true,
-  httpBodies: false,
-  frameContextLines: 5,
-}
-```
-
-
-#### `DataCollection.withUserData()`
-
-Returns a configuration with user data collection enabled. User identity fields are attached automatically, request/response bodies are enabled, and `CollectBehavior` options apply only the base denylist (no extended PII terms).
-
-```pseudocode
-DataCollection.withUserData() → {
-  userInfo: true,
-  cookies: true,
-  httpHeaders: true,
-  queryParams: true,
-  generativeAIInputs: true,
-  generativeAIOutputs: true,
-  stackFrameVariables: true,
-  httpBodies: true,
-  frameContextLines: 5,
-}
-```
+See [Preset Factories](#preset-factories-api) in the Public API section for the concrete field values returned by each factory.
 
 </SpecSection>
 
@@ -304,23 +233,73 @@ Users can register callbacks (e.g., `beforeSend`, event processors) to remove or
 
 ## Public API
 
-Pass the `dataCollection` option to the SDK's `init` function. Users can construct the object manually, use a preset factory, or tweak a factory's output. All fields are optional when constructing manually; omitting a field uses the same default as `DataCollection.default()`.
+<SpecSection id="option-types" status="draft" since="0.1.0">
+
+### Option Types
+
+Each option in `dataCollection` maps to a single category of automatically collected data. The option type depends on whether the data has a key-value structure.
+
+**Boolean Options** — used where data cannot be meaningfully filtered at the key level. The SDK either collects the entire category or skips it.
+
+| Value | Behavior |
+|-------|----------|
+| `true` | Collect and attach this data category. |
+| `false` | Do not collect this data category. |
+
+---
+
+**`CollectBehavior`** — used for key-value data (cookies, headers, query params). Key names are **always included** in the event. The allow/deny configuration controls only which **values** are sent in plaintext vs. replaced with `"[Filtered]"`.
+
+| Value | Behavior |
+|-------|----------|
+| `true` | Collect this category. All key names are included. The SDK replaces values for keys matching the denylist with `"[Filtered]"`; all other values are sent as-is (see [Default Denylist](#default-denylist)). |
+| `false` | Do not collect this category at all — no keys or values are attached to the event. |
+| `{ deny: string[] }` | Collect values for keys matching the base denylist **plus** the specified extra terms; the SDK replaces values for those keys with `"[Filtered]"`. All other values are sent as-is. |
+| `{ allow: string[] }` | **Only** keys in this list send their real value; the SDK replaces values for all other keys with `"[Filtered]"`. Base denylist scrubbing still applies — a value matching a sensitive pattern is always scrubbed even if its key is in the allow list. |
+
+> **Note:** `allow` and `deny` are mutually exclusive forms and cannot be combined.
+
+**Example:** `httpHeaders: { allow: ["x-request-id", "content-type"] }` → all header key names are present in the event, but only `x-request-id` and `content-type` show their real values; every other header value appears as `"[Filtered]"`.
+
+---
+
+**`BodyOption`** — used for request and response bodies. Because body data has no predictable key structure the SDK can filter at collection time, the option controls which body types are enabled rather than filtering individual values.
+
+| Value | Behavior |
+|-------|----------|
+| `true` | Collect all body types (`incomingRequest`, `outgoingRequest`, `incomingResponse`, `outgoingResponse`). |
+| `false` | Do not collect any body. |
+| `string[]` | Collect only the body types named in the array. Valid values: `"incomingRequest"`, `"outgoingRequest"`, `"incomingResponse"`, `"outgoingResponse"`. |
+
+<Expandable title="Why does `httpBodies` not support allow/deny filtering?">
+  Unlike cookies or headers, body content has no predictable key structure for the SDK to filter at collection time. The entire body is either collected (and scrubbed if parseable as JSON or form data) or not. Use `beforeSend` or event processors for further redaction.
+</Expandable>
+
+Body data can still be redacted in `beforeSend` or event processors if needed.
+
+</SpecSection>
+
+<SpecSection id="datacollection-options" status="draft" since="0.1.0">
+
+### `dataCollection` Options
+
+Pass the `dataCollection` option to the SDK's `init` function. The recommended approach is to start from a preset factory and modify individual fields — manual construction requires all fields to be specified explicitly (no fallbacks).
 
 ```pseudocode
 init({
   dataCollection: {
-    userInfo: boolean,                              // default: false
-    cookies: CollectBehavior,                       // default: true
-    httpHeaders: CollectBehavior | {                // default: true
+    userInfo: boolean,
+    cookies: CollectBehavior,
+    httpHeaders: CollectBehavior | {
       request?: CollectBehavior,
       response?: CollectBehavior,
     },
-    queryParams: CollectBehavior,                   // default: true
-    generativeAIInputs: boolean,                    // default: true
-    generativeAIOutputs: boolean,                   // default: true
-    stackFrameVariables: boolean,                   // default: true
-    httpBodies: boolean | BodyType[],                   // default: false
-    frameContextLines: number,                      // default: 5 (boolean fallback: true)
+    queryParams: CollectBehavior,
+    generativeAIInputs: boolean,
+    generativeAIOutputs: boolean,
+    stackFrameVariables: boolean,
+    httpBodies: boolean | BodyType[],
+    frameContextLines: number,
   },
 })
 
@@ -328,34 +307,72 @@ init({
 // BodyType = "incomingRequest" | "outgoingRequest" | "incomingResponse" | "outgoingResponse"
 ```
 
-### `dataCollection` Options
-
-| Key | Option Type | Default | Since | Description |
-|-----|-------------|---------|-------|-------------|
+| Key | Option Type | Factory Default | Since | Description |
+|-----|-------------|-----------------|-------|-------------|
 | `userInfo` | Boolean | `false` | 0.1.0 | Attach user identity fields (`user.id`, `user.email`, `user.username`, `user.ip_address`) from automatic instrumentation. |
-| `cookies` | CollectBehavior | `true` | 0.1.0 | Collect cookies. All key names are always included; the SDK scrubs values based on the denylist or allow/deny configuration. |
-| `httpHeaders` | CollectBehavior \| `{ request?, response? }` | `true` | 0.1.0 | Collect HTTP headers. Flat form applies to all headers; object form applies independent `CollectBehavior` to request vs. response headers. All key names are always included. |
-| `queryParams` | CollectBehavior | `true` | 0.1.0 | Collect URL query parameters. All key names are always included; the SDK scrubs values based on the denylist or allow/deny configuration. |
+| `cookies` | CollectBehavior | `{ deny: [...] }` | 0.1.0 | Collect cookies. All key names are always included; the SDK scrubs values based on the denylist or allow/deny configuration. |
+| `httpHeaders` | CollectBehavior \| `{ request?, response? }` | `{ deny: [...] }` | 0.1.0 | Collect HTTP headers. Flat form applies to all headers; object form applies independent `CollectBehavior` to request vs. response headers. All key names are always included. |
+| `queryParams` | CollectBehavior | `{ deny: [...] }` | 0.1.0 | Collect URL query parameters. All key names are always included; the SDK scrubs values based on the denylist or allow/deny configuration. |
 | `generativeAIInputs` | Boolean | `true` | 0.2.0 | Include the content of generative AI inputs (e.g. prompt text, tool call arguments). Metadata such as model name and token counts is always collected regardless of this setting. |
 | `generativeAIOutputs` | Boolean | `true` | 0.2.0 | Include the content of generative AI outputs (e.g. completion text, tool call results). Metadata such as model name and token counts is always collected regardless of this setting. |
 | `stackFrameVariables` | Boolean | `true` | 0.1.0 | Include local variable values captured within stack frames. |
 | `httpBodies` | Boolean \| BodyType[] | `false` | 0.2.0 | Control which HTTP body types are collected. `true` enables all; `false` disables all; an array enables only the listed types (`"incomingRequest"`, `"outgoingRequest"`, `"incomingResponse"`, `"outgoingResponse"`). |
 | `frameContextLines` | Number (Boolean fallback) | `5` (`true`) | 0.1.0 | Number of lines of context to include around stack frames. |
 
-<Expandable title="Why does `httpBodies` not support allow/deny filtering?">
-  Unlike cookies or headers, body content has no predictable key structure for the SDK to filter at collection time. The entire body is either collected (and scrubbed if parseable as JSON or form data) or not. Use `beforeSend` or event processors for further redaction.
-</Expandable>
+> The "Factory Default" column shows the values returned by `DataCollection.default()`. See [Preset Factories](#preset-factories-api) for `DataCollection.withUserData()` values.
+
+</SpecSection>
+
+<SpecSection id="preset-factories-api" status="draft" since="0.1.0">
 
 ### Preset Factories
 
-SDKs **MUST** expose the following factory methods (or language-idiomatic equivalents):
-
 | Factory | Description |
 |---------|-------------|
-| `DataCollection.default()` | Returns the safe-by-default configuration: `userInfo: false`, bodies disabled, and known PII fields explicitly denied. |
-| `DataCollection.withUserData()` | Returns a full-collection configuration: `userInfo: true`, bodies enabled, and standard collection defaults without explicit PII denials. |
+| `DataCollection.default()` | Returns the safe-by-default configuration: `userInfo: false`, bodies disabled, and extended PII terms added to the denylist for `CollectBehavior` options. |
+| `DataCollection.withUserData()` | Returns a full-collection configuration: `userInfo: true`, bodies enabled, and only the base denylist applied to `CollectBehavior` options. |
 
-SDKs **MAY** provide additional factories. All factories **MUST** return a mutable `DataCollection` object that users can modify before passing to `init`.
+--- 
+
+#### `DataCollection.default()`
+
+Safe-by-default: user identity not collected automatically; `CollectBehavior` options extend the base denylist with PII terms. See [Extended Deny Terms](#extended-deny-terms).
+
+```pseudocode
+DataCollection.default() → {
+  userInfo: false,
+  cookies: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
+  httpHeaders: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
+  queryParams: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
+  generativeAIInputs: true,
+  generativeAIOutputs: true,
+  stackFrameVariables: true,
+  httpBodies: false,
+  frameContextLines: 5,
+}
+```
+
+---
+
+#### `DataCollection.withUserData()`
+
+Full collection: user identity attached automatically; request/response bodies enabled; only the base denylist applied.
+
+```pseudocode
+DataCollection.withUserData() → {
+  userInfo: true,
+  cookies: true,
+  httpHeaders: true,
+  queryParams: true,
+  generativeAIInputs: true,
+  generativeAIOutputs: true,
+  stackFrameVariables: true,
+  httpBodies: true,
+  frameContextLines: 5,
+}
+```
+
+</SpecSection>
 
 ---
 
@@ -406,29 +423,41 @@ init({
 
 **Result:** User identity fields, request/response bodies, headers, cookies, query params, and generative AI inputs and outputs are all collected. The base denylist still scrubs sensitive values.
 
-### Granular Debugging (Manual Construction)
+### Full Manual Construction
 
-Users can also construct the object manually without a factory:
+Manual construction requires all fields to be specified. Use this only when you need complete control and cannot start from a factory. For partial overrides, prefer [tweaking a preset](#tweaking-a-preset).
 
 ```typescript
 init({
   dsn: "...",
   dataCollection: {
     userInfo: true,
+    cookies: true,
     httpHeaders: { allow: ["x-request-id", "x-trace-id", "x-correlation-id"] },
     queryParams: false,
+    generativeAIInputs: true,
+    generativeAIOutputs: true,
+    stackFrameVariables: true,
+    httpBodies: false,
+    frameContextLines: 5,
   },
 });
 ```
 
-Omitted fields use the same defaults as `DataCollection.default()`.
-
 ### Migration from `sendDefaultPii`
 
-- **`sendDefaultPii: true`** (legacy) → `dataCollection: DataCollection.withUserData()` (or manually: `{ userInfo: true, httpBodies: true, ... }`)
-- **`sendDefaultPii: false`** (legacy) → `dataCollection: DataCollection.default()` (or omit entirely — same as default)
+- **`sendDefaultPii: true`** (legacy) → `dataCollection: DataCollection.withUserData()`
+- **`sendDefaultPii: false`** (legacy) → `dataCollection: DataCollection.default()` (or omit `dataCollection` entirely)
 
-SDKs **SHOULD** document this mapping and **MAY** implement `send_default_pii` as a compatibility shim that maps to the appropriate preset.
+Note that `DataCollection.default()` enables `generativeAIInputs` and `generativeAIOutputs` by default (`true`). If the previous `sendDefaultPii: false` setting was intended to suppress that data, explicitly override those fields:
+
+```typescript
+const config = DataCollection.default();
+config.generativeAIInputs = false;
+config.generativeAIOutputs = false;
+
+init({ dsn: "...", dataCollection: config });
+```
 
 ---
 
