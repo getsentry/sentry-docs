@@ -1,6 +1,4 @@
-/* eslint-env node */
 /* eslint import/no-nodejs-modules:0 */
-/* eslint-disable no-console */
 
 import {promises as fs} from 'fs';
 

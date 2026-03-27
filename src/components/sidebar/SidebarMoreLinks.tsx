@@ -1,11 +1,10 @@
 'use client';
 
-import {Fragment, useState} from 'react';
 import {ChevronDownIcon, ChevronRightIcon} from '@radix-ui/react-icons';
-
-import styles from './style.module.scss';
+import {Fragment, useState} from 'react';
 
 import {SidebarLink} from './sidebarLink';
+import styles from './style.module.scss';
 
 export function SidebarMoreLinks() {
   const [isExpanded, setIsExpanded] = useState(false);

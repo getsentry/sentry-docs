@@ -1,13 +1,12 @@
-import {Fragment, ReactElement, useMemo} from 'react';
-import {bundleMDX} from 'mdx-bundler';
+import './styles.scss';
 
+import {bundleMDX} from 'mdx-bundler';
+import {Fragment, ReactElement, useMemo} from 'react';
 import {type API} from 'sentry-docs/build/resolveOpenAPI';
 import {getMDXComponent} from 'sentry-docs/getMDXComponent';
 import {mdxComponents} from 'sentry-docs/mdxComponents';
 import remarkCodeTabs from 'sentry-docs/remark-code-tabs';
 import remarkCodeTitles from 'sentry-docs/remark-code-title';
-
-import './styles.scss';
 
 import {ApiExamples} from '../apiExamples/apiExamples';
 import {DocPage} from '../docPage';
@@ -76,14 +75,14 @@ const getScopes = (data, securityScheme) => {
 
 // https://stackoverflow.com/a/38137700
 function cssToObj(css) {
-  const obj = {},
-    s = css
-      .toLowerCase()
-      .replace(/-(.)/g, function (_, g) {
-        return g.toUpperCase();
-      })
-      .replace(/;\s?$/g, '')
-      .split(/:|;/g);
+  const obj = {};
+  const s = css
+    .toLowerCase()
+    .replace(/-(.)/g, function (_, g) {
+      return g.toUpperCase();
+    })
+    .replace(/;\s?$/g, '')
+    .split(/:|;/g);
   for (let i = 0; i < s.length; i += 2) {
     obj[s[i].replace(/\s/g, '')] = s[i + 1].replace(/^\s+|\s+$/g, '');
   }

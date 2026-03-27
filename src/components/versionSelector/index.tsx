@@ -1,15 +1,13 @@
 'use client';
-import {useCallback, useEffect, useState} from 'react';
 import {ChevronDownIcon} from '@radix-ui/react-icons';
 import * as RadixSelect from '@radix-ui/react-select';
 import {usePathname, useRouter} from 'next/navigation';
-
+import {useCallback, useEffect, useState} from 'react';
 import {stripTrailingSlash} from 'sentry-docs/utils';
 import {getLocalStorageVersionKey, VERSION_INDICATOR} from 'sentry-docs/versioning';
 
-import styles from './style.module.scss';
-
 import {VersionBanner} from '../versionBanner';
+import styles from './style.module.scss';
 
 function sortVersions(versions: string[]) {
   return versions.sort((a, b) => {
