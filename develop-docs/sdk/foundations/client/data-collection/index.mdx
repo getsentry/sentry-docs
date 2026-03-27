@@ -50,7 +50,8 @@ Non-identifying context used for debugging and performance. Examples include, bu
 - Device and environment context (OS, runtime, non-PII identifiers)
 - Performance and error context (stack frames, breadcrumbs, span metadata)
 - Framework/routing context where it does not contain PII or secrets
-- AI agent messages (input, output, metadata)
+- Generative AI metadata (model name, token counts, tool names, etc.)
+- Generative AI inputs and outputs (prompt content, completion content)
 
 For the full list of supported context types (device, OS, runtime, app, browser, GPU, culture, cloud resource, memory info, and more), see the [Contexts Interface](/sdk/foundations/transport/event-payloads/contexts/).
 
@@ -93,7 +94,7 @@ SDKs **MUST** never send sensitive **values** through automatic instrumentation.
 
 All data-collection options reside under a single top-level key: `dataCollection`. Each option within the object has a fixed default that does not depend on any other option.
 
-SDKs **MUST** support at least the `userInfo` option and the `CollectBehavior` / Boolean options listed in the [Public API](#public-api). SDKs **MAY** omit options that do not apply to their platform (e.g., `outgoingResponseBody` on a client-only SDK).
+SDKs **MUST** support at least the `userInfo` option and the `CollectBehavior` / Boolean options listed in the [Public API](#public-api). SDKs **MAY** omit body types that do not apply to their platform (e.g., a client-only SDK **MAY** ignore `"incomingRequest"` and `"outgoingResponse"` in the `httpBodies` array).
 
 SDKs **MUST** also provide preset factory methods (or language-idiomatic equivalents such as static builders, profiles, or named constructors) that return a fully resolved `DataCollection` object. See [Preset Factories](#preset-factories).
 
@@ -131,6 +132,8 @@ Each option in `dataCollection` maps to a single category of automatically colle
 | `true` | Collect and attach this data category. |
 | `false` | Do not collect this data category. |
 
+---
+
 **`CollectBehavior` options** — used for key-value data (cookies, headers, query params). Key names are **always included** in the event. The allow/deny configuration controls only which **values** are sent in plaintext vs. replaced with `"[Filtered]"`.
 
 | Value | Behavior |
@@ -143,6 +146,18 @@ Each option in `dataCollection` maps to a single category of automatically colle
 > **Note:** `allow` and `deny` are mutually exclusive forms and cannot be combined.
 
 **Example:** `httpHeaders: { allow: ["x-request-id", "content-type"] }` → all header key names are present in the event, but only `x-request-id` and `content-type` show their real values; every other header value appears as `"[Filtered]"`.
+
+---
+
+**`BodyOption`** — used for request and response bodies. Because body data has no predictable key structure the SDK can filter at collection time, the option controls which body types are enabled rather than filtering individual values.
+
+| Value | Behavior |
+|-------|----------|
+| `true` | Collect all body types (`incomingRequest`, `outgoingRequest`, `incomingResponse`, `outgoingResponse`). |
+| `false` | Do not collect any body. |
+| `string[]` | Collect only the body types named in the array. Valid values: `"incomingRequest"`, `"outgoingRequest"`, `"incomingResponse"`, `"outgoingResponse"`. |
+
+Body data can still be redacted in `beforeSend` or event processors if needed.
 
 </SpecSection>
 
@@ -165,7 +180,7 @@ The two required presets differ in two dimensions: whether user identity fields 
 |---|---|---|
 | `userInfo` | `false` — user identity fields are not collected automatically | `true` — user identity fields are collected automatically |
 | `CollectBehavior` deny terms | Base denylist **+** extended PII terms (see [Extended Deny Terms](#extended-deny-terms)) | Base denylist only |
-| Request/response bodies | Disabled | Enabled |
+| `httpBodies` | `false` — no body content is collected | `true` — all body types are collected (TBD) |
 
 #### `DataCollection.default()`
 
@@ -177,12 +192,10 @@ DataCollection.default() → {
   cookies: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
   httpHeaders: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
   queryParams: { deny: ["forwarded", "-ip", "remote-", "via", "-user" ] },
-  aiAgentMessages: true,
+  generativeAIInputs: true,
+  generativeAIOutputs: true,
   stackFrameVariables: true,
-  incomingRequestBody: false,
-  incomingResponseBody: false,
-  outgoingRequestBody: false,
-  outgoingResponseBody: false,
+  httpBodies: false,
   frameContextLines: 5,
 }
 ```
@@ -198,12 +211,10 @@ DataCollection.withUserData() → {
   cookies: true,
   httpHeaders: true,
   queryParams: true,
-  aiAgentMessages: true,
+  generativeAIInputs: true,
+  generativeAIOutputs: true,
   stackFrameVariables: true,
-  incomingRequestBody: true,
-  incomingResponseBody: true,
-  outgoingRequestBody: true,
-  outgoingResponseBody: true,
+  httpBodies: true,
   frameContextLines: 5,
 }
 ```
@@ -268,7 +279,7 @@ Unfiltered, raw cookie header values **MUST NOT** be sent. When in doubt, treat 
 
 #### Request and Response Bodies
 
-When request or response bodies are collected (`incomingRequestBody` / `incomingResponseBody` / `outgoingRequestBody` / `outgoingResponseBody`):
+When body collection is enabled via the `httpBodies` option (either `true` or an array listing one or more body types):
 
 - **Parseable as JSON or form data:** SDKs **MAY** extract key-value pairs and apply the same denylist rules to keys. Values for matching keys **MUST** be replaced with `"[Filtered]"`. This allows selective scrubbing while retaining non-sensitive fields.
 - **Not parseable (raw bodies):** The body **MUST NOT** be attached to the event. When the SDK cannot parse the body into a key-value structure, the entire body **MUST** be replaced with `"[Filtered]"`.
@@ -298,19 +309,23 @@ Pass the `dataCollection` option to the SDK's `init` function. Users can constru
 ```pseudocode
 init({
   dataCollection: {
-    userInfo: boolean,                   // default: false
-    cookies: CollectBehavior,            // default: true
-    httpHeaders: CollectBehavior,        // default: true
-    queryParams: CollectBehavior,        // default: true
-    aiAgentMessages: boolean,            // default: true
-    stackFrameVariables: boolean,        // default: true
-    outgoingRequestBody: boolean,      // default: TBD
-    incomingResponseBody: boolean,     // default: TBD
-    incomingRequestBody?: boolean,     // default: TBD
-    outgoingResponseBody?: boolean,    // default: TBD
-    frameContextLines: number,           // default: 5 (boolean fallback: true)
+    userInfo: boolean,                              // default: false
+    cookies: CollectBehavior,                       // default: true
+    httpHeaders: CollectBehavior | {                // default: true
+      request?: CollectBehavior,
+      response?: CollectBehavior,
+    },
+    queryParams: CollectBehavior,                   // default: true
+    generativeAIInputs: boolean,                    // default: true
+    generativeAIOutputs: boolean,                   // default: true
+    stackFrameVariables: boolean,                   // default: true
+    httpBodies: boolean | BodyType[],                   // default: false
+    frameContextLines: number,                      // default: 5 (boolean fallback: true)
   },
 })
+
+// CollectBehavior = true | false | { allow: string[] } | { deny: string[] }
+// BodyType = "incomingRequest" | "outgoingRequest" | "incomingResponse" | "outgoingResponse"
 ```
 
 ### `dataCollection` Options
@@ -319,18 +334,16 @@ init({
 |-----|-------------|---------|-------|-------------|
 | `userInfo` | Boolean | `false` | 0.1.0 | Attach user identity fields (`user.id`, `user.email`, `user.username`, `user.ip_address`) from automatic instrumentation. |
 | `cookies` | CollectBehavior | `true` | 0.1.0 | Collect cookies. All key names are always included; the SDK scrubs values based on the denylist or allow/deny configuration. |
-| `httpHeaders` | CollectBehavior | `true` | 0.1.0 | Collect HTTP headers. All key names are always included; the SDK scrubs values based on the denylist or allow/deny configuration. |
+| `httpHeaders` | CollectBehavior \| `{ request?, response? }` | `true` | 0.1.0 | Collect HTTP headers. Flat form applies to all headers; object form applies independent `CollectBehavior` to request vs. response headers. All key names are always included. |
 | `queryParams` | CollectBehavior | `true` | 0.1.0 | Collect URL query parameters. All key names are always included; the SDK scrubs values based on the denylist or allow/deny configuration. |
-| `aiAgentMessages` | Boolean | `true` | 0.1.0 | Include AI agent input and output messages. |
+| `generativeAIInputs` | Boolean | `true` | 0.2.0 | Include the content of generative AI inputs (e.g. prompt text, tool call arguments). Metadata such as model name and token counts is always collected regardless of this setting. |
+| `generativeAIOutputs` | Boolean | `true` | 0.2.0 | Include the content of generative AI outputs (e.g. completion text, tool call results). Metadata such as model name and token counts is always collected regardless of this setting. |
 | `stackFrameVariables` | Boolean | `true` | 0.1.0 | Include local variable values captured within stack frames. |
-| `outgoingRequestBody` | Boolean | `false` | 0.1.0 | Include full body of outgoing HTTP requests. |
-| `incomingResponseBody` | Boolean | `false` | 0.1.0 | Include full body of the incoming HTTP response. |
-| `incomingRequestBody` | Boolean? | `false` | 0.1.0 | Include full body of the incoming HTTP request (applicable in server-environments). |
-| `outgoingResponseBody` | Boolean? | `false` | 0.1.0 | Include full body of outgoing HTTP responses (applicable in server-environments). |
+| `httpBodies` | Boolean \| BodyType[] | `false` | 0.2.0 | Control which HTTP body types are collected. `true` enables all; `false` disables all; an array enables only the listed types (`"incomingRequest"`, `"outgoingRequest"`, `"incomingResponse"`, `"outgoingResponse"`). |
 | `frameContextLines` | Number (Boolean fallback) | `5` (`true`) | 0.1.0 | Number of lines of context to include around stack frames. |
 
-<Expandable title="Why are some options boolean-only?">
-  Unlike cookies or headers, some data (e.g. request bodies) has no predictable key structure for the SDK to filter. Data can still be redacted in `beforeSend` or event processors if needed.
+<Expandable title="Why does `httpBodies` not support allow/deny filtering?">
+  Unlike cookies or headers, body content has no predictable key structure for the SDK to filter at collection time. The entire body is either collected (and scrubbed if parseable as JSON or form data) or not. Use `beforeSend` or event processors for further redaction.
 </Expandable>
 
 ### Preset Factories
@@ -369,7 +382,7 @@ Start from a preset and override individual fields before passing to `init`:
 
 ```typescript
 const config = DataCollection.default();
-config.incomingRequestBody = true;
+config.httpBodies = ["incomingRequest"];
 config.httpHeaders = { allow: ["x-request-id"] };
 
 init({
@@ -391,7 +404,7 @@ init({
 });
 ```
 
-**Result:** User identity fields, request/response bodies, headers, cookies, query params, and AI agent messages are all collected. The base denylist still scrubs sensitive values.
+**Result:** User identity fields, request/response bodies, headers, cookies, query params, and generative AI inputs and outputs are all collected. The base denylist still scrubs sensitive values.
 
 ### Granular Debugging (Manual Construction)
 
@@ -412,7 +425,7 @@ Omitted fields use the same defaults as `DataCollection.default()`.
 
 ### Migration from `sendDefaultPii`
 
-- **`sendDefaultPii: true`** (legacy) → `dataCollection: DataCollection.withUserData()` (or manually: `{ userInfo: true, incomingRequestBody: true, ... }`)
+- **`sendDefaultPii: true`** (legacy) → `dataCollection: DataCollection.withUserData()` (or manually: `{ userInfo: true, httpBodies: true, ... }`)
 - **`sendDefaultPii: false`** (legacy) → `dataCollection: DataCollection.default()` (or omit entirely — same as default)
 
 SDKs **SHOULD** document this mapping and **MAY** implement `send_default_pii` as a compatibility shim that maps to the appropriate preset.
