@@ -19,9 +19,9 @@ Sentry uses the `gen_ai.agent.name` span attribute to identify agents in the [AI
 | OpenAI Agents SDK       | Python   | `Agent(name="...")`                                                |
 | Pydantic AI             | Python   | `Agent(..., name="...")`                                           |
 | LangChain               | Python   | `create_agent(model, tools, name="...")`                           |
-| LangGraph               | Python   | `create_react_agent(model, tools, name="...")`                     |
+| LangGraph               | Python   | `.compile(name="...")` or `create_react_agent(..., name="...")`    |
 | Vercel AI SDK           | JS       | `experimental_telemetry: { functionId: "..." }`                    |
-| LangGraph               | JS       | `createReactAgent({ name: "..." })` or `.compile({ name: "..." })` |
+| LangGraph               | JS       | `.compile({ name: "..." })` or `createReactAgent({ name: "..." })` |
 | LangChain               | JS       | `createAgent({ name: "..." })`                                     |
 | Mastra                  | JS       | `Agent({ id: "...", name: "..." })`                                |
 | .NET (M.E.AI)           | .NET     | `options.Experimental.AgentName = "..."`                           |
@@ -87,13 +87,21 @@ agent = create_agent(model, tools, name="dice_agent")
 
 #### LangGraph
 
-Pass `name` to `create_react_agent`.
+Pass `name` to `StateGraph.compile()` or `create_react_agent`.
+
+```python
+from langgraph.graph import StateGraph
+
+graph = StateGraph(AgentState)
+# ... add nodes and edges ...
+agent = graph.compile(name="dice_agent")
+```
+
+Or with the prebuilt helper:
 
 ```python
 from langgraph.prebuilt import create_react_agent
-from langchain.chat_models import init_chat_model
 
-model = init_chat_model("gpt-4o-mini", model_provider="openai")
 agent = create_react_agent(model, tools, name="dice_agent")
 ```
 
@@ -130,7 +138,17 @@ const result = await generateText({
 
 #### LangGraph
 
-Pass `name` to `createReactAgent` or to `.compile()`.
+Pass `name` to `.compile()` or `createReactAgent`.
+
+```javascript
+import { StateGraph } from "@langchain/langgraph";
+
+const graph = new StateGraph(AgentState);
+// ... add nodes and edges ...
+const agent = graph.compile({ name: "weather_agent" });
+```
+
+Or with the prebuilt helper:
 
 ```javascript
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
@@ -140,12 +158,6 @@ const agent = createReactAgent({
   tools: [getWeather],
   name: "weather_agent",
 });
-```
-
-Or when using `StateGraph` directly:
-
-```javascript
-const graph = agent.compile({ name: "weather_agent" });
 ```
 
 <PlatformLink
