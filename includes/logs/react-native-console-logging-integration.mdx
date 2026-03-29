@@ -1,0 +1,33 @@
+### Console Logging Integration
+
+Console Logging integration is enabled by default which means calls to the `console` API will be captured as logs in Sentry. By default the integration instruments `console.debug`, `console.info`, `console.warn`, `console.error`, `console.log`, `console.trace`, and `console.assert`.
+
+#### Disabling Console Logging Integration
+
+To disable the integration, filter it out from the integrations array:
+
+```js
+Sentry.init({
+  ...,
+  integrations(integrations) {
+    return integrations.filter(i => i.name !== 'ConsoleLogs');
+  },
+  ...
+})
+```
+
+You can also filter out the automatically captured logs in `beforeSendLog`:
+
+```js
+Sentry.init({
+  ...,
+  beforeSendLog: (log) => {
+    if (log.attributes?.['sentry.origin'] === 'auto.log.console') {
+      return null;
+    }
+    return log;
+  },
+  ...
+})
+
+```

@@ -82,19 +82,10 @@ Attachments live on the <PlatformLink to="/enriching-events/scopes/">Scope</Plat
 ```cpp
 USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
 
-FConfigureScopeDelegate ScopeDelegate;
-ScopeDelegate.BindDynamic(this, &USomeClass::HandleScopeDelegate);
+USentryAttachment* Attachment = NewObject<USentryAttachment>();
+Attachment->InitializeWithPath("your/path/file.log", "file.log");
 
-SentrySubsystem->ConfigureScope(ScopeDelegate);
-
-// Put scope configuration logic here
-void USomeClass::HandleScopeDelegate(USentryScope* Scope)
-{
-    USentryAttachment* Attachment = NewObject<USentryAttachment>();
-    Attachment->InitializeWithPath("your/path/file.log", "file.log");
-
-    Scope->AddAttachment(Attachment);
-}
+SentrySubsystem->AddAttachment(Attachment);
 ```
 
 The same result can be achieved by calling the corresponding function in blueprint:

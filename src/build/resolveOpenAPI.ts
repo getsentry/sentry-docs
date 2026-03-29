@@ -1,6 +1,4 @@
-/* eslint-env node */
 /* eslint import/no-nodejs-modules:0 */
-/* eslint-disable no-console */
 
 import {promises as fs} from 'fs';
 
@@ -8,7 +6,7 @@ import {DeRefedOpenAPI} from './open-api/types';
 
 // SENTRY_API_SCHEMA_SHA is used in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
 // DO NOT change variable name unless you change it in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
-const SENTRY_API_SCHEMA_SHA = '22b478f0984d0047b4f7e53b3c3bdb7a99bf418d';
+const SENTRY_API_SCHEMA_SHA = 'ad6b9fd6d7953fdac6c6bb6234fb1c290b7be42a';
 
 const activeEnv = process.env.GATSBY_ENV || process.env.NODE_ENV || 'development';
 
@@ -65,6 +63,7 @@ type APIData = DeRefedOpenAPI['paths'][string][string];
 export type API = {
   apiPath: string;
   bodyParameters: APIParameter[];
+  deprecated: boolean;
   method: string;
   name: string;
   pathParameters: APIParameter[];
@@ -96,6 +95,16 @@ function slugify(s: string): string {
     .toLowerCase();
 }
 
+const DEPRECATED_PREFIX_REGEX = /^\(DEPRECATED\)\s*/;
+
+function isDeprecatedOperationId(operationId: string | undefined): boolean {
+  return operationId ? DEPRECATED_PREFIX_REGEX.test(operationId) : false;
+}
+
+function stripDeprecatedPrefix(operationId: string): string {
+  return operationId.replace(DEPRECATED_PREFIX_REGEX, '');
+}
+
 let apiCategoriesCache: Promise<APICategory[]> | undefined;
 
 export function apiCategories(): Promise<APICategory[]> {
@@ -121,6 +130,9 @@ async function apiCategoriesUncached(): Promise<APICategory[]> {
 
   Object.entries(data.paths).forEach(([apiPath, methods]) => {
     Object.entries(methods).forEach(([method, apiData]) => {
+      const isDeprecated = isDeprecatedOperationId(apiData.operationId);
+      const cleanOperationId = stripDeprecatedPrefix(apiData.operationId ?? '');
+
       let server = 'https://sentry.io';
       if (apiData.servers && apiData.servers[0]) {
         server = apiData.servers[0].url;
@@ -129,9 +141,10 @@ async function apiCategoriesUncached(): Promise<APICategory[]> {
         categoryMap[tag].apis.push({
           apiPath,
           method,
-          name: apiData.operationId,
+          name: cleanOperationId,
+          deprecated: isDeprecated,
           server,
-          slug: slugify(apiData.operationId),
+          slug: slugify(cleanOperationId),
           summary: apiData.summary,
           descriptionMarkdown: apiData.description,
           pathParameters: (apiData.parameters || []).filter(

@@ -1,28 +1,26 @@
 'use client';
 
-// eslint-disable-next-line no-restricted-imports -- Required for JSX in test environment
-import React, {ReactNode, useContext, useEffect, useReducer, useState} from 'react';
 import {QuestionMarkCircledIcon} from '@radix-ui/react-icons';
 import * as Tooltip from '@radix-ui/react-tooltip';
 import {Button, Checkbox, Theme} from '@radix-ui/themes';
-
+import React, {ReactNode, useContext, useEffect, useReducer, useState} from 'react';
 import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
 
-import styles from './styles.module.scss';
-
 import {CodeContext} from '../codeContext';
+import styles from './styles.module.scss';
 
 const OPTION_IDS = [
   'error-monitoring',
-  'logs',
-  'session-replay',
   'performance',
   'profiling',
-  'source-maps',
+  'session-replay',
+  'logs',
   'user-feedback',
+  'source-maps',
   'source-context',
   'dsym',
   'opentelemetry',
+  'metrics',
 ] as const;
 
 const OPTION_IDS_SET = new Set(OPTION_IDS);
@@ -103,6 +101,15 @@ const optionDetails: Record<
       <span>
         Upload your source code to allow Sentry to display snippets of your code next to
         the event stack traces.
+      </span>
+    ),
+  },
+  metrics: {
+    name: 'Metrics',
+    description: (
+      <span>
+        Send metrics from your application to Sentry for viewing alongside relevant errors
+        and searching by metric name or attributes.
       </span>
     ),
   },
@@ -436,7 +443,7 @@ export function OnboardingOptionButtons({
   }, [options, touchOptions, touchedOptions]);
 
   return (
-    <div className="onboarding-options flex flex-wrap gap-3 py-2 bg-[var(--white)] dark:bg-[var(--gray-1)] lg:sticky top-[80px] z-[4] shadow-[var(--shadow-6)] transition">
+    <div className="onboarding-options flex flex-wrap gap-3 py-2 bg-[var(--white)] dark:bg-[var(--gray-1)] lg:sticky top-[var(--header-height)] z-[4] shadow-[var(--shadow-6)] transition">
       {options.map(option => (
         <Button
           variant="surface"

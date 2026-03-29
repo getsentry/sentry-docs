@@ -50,7 +50,9 @@ Both backends are comparable in how they differ from `crashpad`. However, there 
 * `inproc` only provides the backtrace of the crashing thread. `breakpad` records all threads in the minidump.
 * similar to `crashpad`, `breakpad` uses the lowest level error handling mechanism on each platform (macOS: mach exception ports, Windows: `UnhandledExceptionFilter`, Linux: signal handlers), it does cover a smaller range of errors, though, as mentioned above.
 * `inproc` uses signal handling on macOS, meaning you only get a `POSIX` compatibility layer over Mach exception ports. It relies on the same mechanisms as `breakpad` on Windows and Linux.
-* as a result of choosing signal handling on macOS, `inproc` is currently broken on macOS since Apple eliminated unwinding from signal handlers
+* on all platforms, `inproc` delegates crash processing from the signal handler (or `UnhandledExceptionFilter` on Windows) to a separate handler thread. The signal handler does minimal work (exchanging crash context and waking the handler thread) while the handler thread performs stack walking, event construction, and reporting.
+* if the handler thread is unavailable (for example, because synchronization failed, the thread crashed, or never started), `inproc` falls back to processing directly in the signal handler.
+* on macOS, the handler thread uses a frame-pointer-based stack walker for arm64 and x86-64, which avoids the limitations that previously made `inproc` unusable on recent macOS versions.
 * `inproc` is exceptionally lightweight and written entirely in C, meaning it does not rely on a weighty C++ runtime library, which is also more often affected by ABI incompatibilities
 * `breakpad` generates minidumps (like `crashpad` does), whereas `inproc` follows the Sentry event structure and primarily defers to the OS-provided unwinder and symbolication capabilities. Sentry processing infrastructure can extract more information from the provided minidump than from just a stack trace and registers. However, it also means that the crash context inside the minidump will remain opaque until it is processed in the backend. In contrast, if required, a local `relay` instance (or another application-level proxy) could process an entire `inproc` event with only JSON parsing capabilities.
 
@@ -62,8 +64,10 @@ Both backends are comparable in how they differ from `crashpad`. However, there 
 
 * want minimal dependencies
 * want the smallest footprint for the resulting artifact
-* don't need to support the latest macOS versions
 * find the minimal feature set compared to `breakpad` and `crashpad` sufficient for your scenario
+* want primarily client-side stack traces
+* want to inspect the fully available event context in a hook
+* look for a backend that runs on all supported platforms with an equivalent support for the user-facing API
 
 ### Summary
 

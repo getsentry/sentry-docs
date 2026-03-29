@@ -1,0 +1,766 @@
+---
+title: "Adding Custom Spans"
+sidebar_order: 30
+description: "Add custom instrumentation for visibility beyond auto-instrumentation and set up alerts."
+---
+
+You've got your Sentry SDK [auto-instrumentation](/product/explore/trace-explorer/) running. Now what?
+
+Auto-instrumentation captures HTTP, database, and framework operations. But it can't see business logic, third-party APIs without auto-instrumentation, or background jobs. This guide shows you where to add custom spans to fill in those gaps.
+
+## Anatomy of a Span
+
+```javascript {tabTitle: JavaScript}
+Sentry.startSpan({ name: "operation-name", op: "category" }, async (span) => {
+  span.setAttribute("key", value);
+  // ... your code ...
+});
+```
+
+```python {tabTitle: Python}
+import sentry_sdk
+
+with sentry_sdk.start_span(name="operation-name", op="category") as span:
+    span.set_data("key", value)
+    # ... your code ...
+```
+
+```php {tabTitle: PHP}
+$spanContext = \Sentry\Tracing\SpanContext::make()
+    ->setOp('category')
+    ->setDescription('operation-name')
+    ->setData(['key' => $value]);
+
+\Sentry\trace(function () {
+    // ... your code ...
+}, $spanContext);
+```
+
+```csharp {tabTitle: .NET}
+using Sentry;
+
+var transaction = SentrySdk.StartTransaction("operation-name", "category");
+var span = transaction.StartChild("category", "operation-name");
+span.SetExtra("key", value);
+// ... your code ...
+span.Finish();
+transaction.Finish();
+```
+
+```ruby {tabTitle: Ruby}
+Sentry.with_child_span(op: :category, description: 'operation-name') do |span|
+  span.set_data(:key, value)
+  # ... your code ...
+end
+```
+
+```dart {tabTitle: Flutter}
+import 'package:sentry/sentry.dart';
+
+final transaction = Sentry.startTransaction('operation-name', 'category');
+final span = transaction.startChild('category', description: 'operation-name');
+span.setData('key', value);
+// ... your code ...
+await span.finish();
+await transaction.finish();
+```
+
+```swift {tabTitle: Swift}
+import Sentry
+
+let transaction = SentrySDK.startTransaction(name: "operation-name", operation: "category")
+let span = transaction.startChild(operation: "category", description: "operation-name")
+span.setData(value: value, key: "key")
+// ... your code ...
+span.finish()
+transaction.finish()
+```
+
+```kotlin {tabTitle: Kotlin}
+import io.sentry.Sentry
+
+val transaction = Sentry.startTransaction("operation-name", "category")
+val span = transaction.startChild("category", "operation-name")
+span.setData("key", value)
+// ... your code ...
+span.finish()
+transaction.finish()
+```
+
+Numeric attributes become metrics you can aggregate with `sum()`, `avg()`, `p90()` in [Trace Explorer](https://sentry.io/orgredirect/organizations/:orgslug/explore/traces/).
+
+## Where to Add Spans
+
+Start with these five areas and you'll have visibility into the operations that matter most.
+
+### 1. Business-Critical User Flows
+
+Track the full journey through critical paths. When checkout is slow, you need to know which step is responsible.
+
+```javascript {tabTitle: JavaScript}
+Sentry.startSpan({ name: "checkout-flow", op: "user.action" }, async (span) => {
+  span.setAttribute("cart.itemCount", 3);
+  span.setAttribute("user.tier", "premium");
+
+  await validateCart();
+  await processPayment();
+  await createOrder();
+});
+```
+
+```python {tabTitle: Python}
+import sentry_sdk
+
+with sentry_sdk.start_span(name="checkout-flow", op="user.action") as span:
+    span.set_data("cart.itemCount", 3)
+    span.set_data("user.tier", "premium")
+
+    validate_cart()
+    process_payment()
+    create_order()
+```
+
+```php {tabTitle: PHP}
+$spanContext = \Sentry\Tracing\SpanContext::make()
+    ->setOp('user.action')
+    ->setDescription('checkout-flow')
+    ->setData([
+        'cart.itemCount' => 3,
+        'user.tier' => 'premium',
+    ]);
+
+\Sentry\trace(function () {
+    $this->validateCart();
+    $this->processPayment();
+    $this->createOrder();
+}, $spanContext);
+```
+
+```csharp {tabTitle: .NET}
+var transaction = SentrySdk.StartTransaction("checkout-flow", "user.action");
+SentrySdk.ConfigureScope(scope => scope.Transaction = transaction);
+
+transaction.SetExtra("cart.itemCount", 3);
+transaction.SetExtra("user.tier", "premium");
+
+await ValidateCart();
+await ProcessPayment();
+await CreateOrder();
+
+transaction.Finish();
+```
+
+```ruby {tabTitle: Ruby}
+Sentry.with_child_span(op: 'user.action', description: 'checkout-flow') do |span|
+  span.set_data('cart.itemCount', 3)
+  span.set_data('user.tier', 'premium')
+
+  validate_cart
+  process_payment
+  create_order
+end
+```
+
+```dart {tabTitle: Flutter}
+final transaction = Sentry.startTransaction('checkout-flow', 'user.action');
+transaction.setData('cart.itemCount', 3);
+transaction.setData('user.tier', 'premium');
+
+await validateCart();
+await processPayment();
+await createOrder();
+
+await transaction.finish();
+```
+
+```swift {tabTitle: Swift}
+import Sentry
+
+let transaction = SentrySDK.startTransaction(name: "checkout-flow", operation: "user.action")
+transaction.setData(value: 3, key: "cart.itemCount")
+transaction.setData(value: "premium", key: "user.tier")
+
+validateCart()
+processPayment()
+createOrder()
+
+transaction.finish()
+```
+
+```kotlin {tabTitle: Kotlin}
+import io.sentry.Sentry
+
+val transaction = Sentry.startTransaction("checkout-flow", "user.action")
+transaction.setData("cart.itemCount", 3)
+transaction.setData("user.tier", "premium")
+
+validateCart()
+processPayment()
+createOrder()
+
+transaction.finish()
+```
+
+**Query in [Explore > Traces](https://sentry.io/orgredirect/organizations/:orgslug/explore/traces/):** `span.op:user.action` grouped by `user.tier`, visualize `p90(span.duration)`.
+
+**Alert idea:** `p90(span.duration) > 10s` for checkout flows.
+
+### 2. Third-Party API Calls
+
+Measure dependencies you don't control. They're often the source of slowdowns.
+
+```javascript {tabTitle: JavaScript}
+Sentry.startSpan(
+  { name: "shipping-rates-api", op: "http.client" },
+  async (span) => {
+    span.setAttribute("http.url", "api.shipper.com/rates");
+    span.setAttribute("request.itemCount", items.length);
+
+    const start = Date.now();
+    const response = await fetch("https://api.shipper.com/rates");
+
+    span.setAttribute("http.status_code", response.status);
+    span.setAttribute("response.timeMs", Date.now() - start);
+
+    return response.json();
+  }
+);
+```
+
+```python {tabTitle: Python}
+import time
+import sentry_sdk
+
+with sentry_sdk.start_span(name="shipping-rates-api", op="http.client") as span:
+    span.set_data("http.url", "api.shipper.com/rates")
+    span.set_data("request.itemCount", len(items))
+
+    start = time.time()
+    response = requests.get("https://api.shipper.com/rates")
+
+    span.set_data("http.status_code", response.status_code)
+    span.set_data("response.timeMs", int((time.time() - start) * 1000))
+```
+
+```php {tabTitle: PHP}
+$spanContext = \Sentry\Tracing\SpanContext::make()
+    ->setOp('http.client')
+    ->setDescription('shipping-rates-api')
+    ->setData([
+        'http.url' => 'api.shipper.com/rates',
+        'request.itemCount' => count($items),
+    ]);
+
+\Sentry\trace(function () use ($spanContext) {
+    $start = microtime(true);
+    $response = $this->httpClient->get('https://api.shipper.com/rates');
+
+    $span = \Sentry\SentrySdk::getCurrentHub()->getSpan();
+    $span->setData([
+        'http.status_code' => $response->getStatusCode(),
+        'response.timeMs' => (int)((microtime(true) - $start) * 1000),
+    ]);
+
+    return $response;
+}, $spanContext);
+```
+
+```csharp {tabTitle: .NET}
+var transaction = SentrySdk.StartTransaction("shipping-rates-api", "http.client");
+SentrySdk.ConfigureScope(scope => scope.Transaction = transaction);
+
+transaction.SetExtra("http.url", "api.shipper.com/rates");
+transaction.SetExtra("request.itemCount", items.Count);
+
+var stopwatch = Stopwatch.StartNew();
+var response = await httpClient.GetAsync("https://api.shipper.com/rates");
+
+transaction.SetExtra("http.status_code", (int)response.StatusCode);
+transaction.SetExtra("response.timeMs", stopwatch.ElapsedMilliseconds);
+transaction.Finish();
+```
+
+```ruby {tabTitle: Ruby}
+Sentry.with_child_span(op: 'http.client', description: 'shipping-rates-api') do |span|
+  span.set_data('http.url', 'api.shipper.com/rates')
+  span.set_data('request.itemCount', items.length)
+
+  start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+  response = HTTParty.get('https://api.shipper.com/rates')
+
+  span.set_data('http.status_code', response.code)
+  span.set_data('response.timeMs', ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - start) * 1000).to_i)
+end
+```
+
+```dart {tabTitle: Flutter}
+final transaction = Sentry.startTransaction('shipping-rates-api', 'http.client');
+transaction.setData('http.url', 'api.shipper.com/rates');
+transaction.setData('request.itemCount', items.length);
+
+final stopwatch = Stopwatch()..start();
+final response = await http.get(Uri.parse('https://api.shipper.com/rates'));
+
+transaction.setData('http.status_code', response.statusCode);
+transaction.setData('response.timeMs', stopwatch.elapsedMilliseconds);
+await transaction.finish();
+```
+
+```swift {tabTitle: Swift}
+import Sentry
+
+let transaction = SentrySDK.startTransaction(name: "shipping-rates-api", operation: "http.client")
+transaction.setData(value: "api.shipper.com/rates", key: "http.url")
+transaction.setData(value: items.count, key: "request.itemCount")
+
+let start = Date()
+let response = try await fetchShippingRates()
+
+transaction.setData(value: response.statusCode, key: "http.status_code")
+transaction.setData(value: Int(Date().timeIntervalSince(start) * 1000), key: "response.timeMs")
+transaction.finish()
+```
+
+```kotlin {tabTitle: Kotlin}
+import io.sentry.Sentry
+
+val transaction = Sentry.startTransaction("shipping-rates-api", "http.client")
+transaction.setData("http.url", "api.shipper.com/rates")
+transaction.setData("request.itemCount", items.size)
+
+val start = System.currentTimeMillis()
+val response = fetchShippingRates()
+
+transaction.setData("http.status_code", response.code)
+transaction.setData("response.timeMs", System.currentTimeMillis() - start)
+transaction.finish()
+```
+
+**Query in [Explore > Traces](https://sentry.io/orgredirect/organizations/:orgslug/explore/traces/):** `span.op:http.client response.timeMs:>2000` to find slow external calls.
+
+**Alert idea:** `p95(span.duration) > 3s` where `http.url` contains your critical dependencies.
+
+### 3. Database Queries with Business Context
+
+Auto-instrumentation catches queries, but custom spans let you add context that explains why a query matters.
+
+```javascript {tabTitle: JavaScript}
+Sentry.startSpan(
+  { name: "load-user-dashboard", op: "db.query" },
+  async (span) => {
+    span.setAttribute("db.system", "postgres");
+    span.setAttribute("query.type", "aggregation");
+    span.setAttribute("query.dateRange", "30d");
+
+    const results = await db.query(dashboardQuery);
+    span.setAttribute("result.rowCount", results.length);
+
+    return results;
+  }
+);
+```
+
+```python {tabTitle: Python}
+import sentry_sdk
+
+with sentry_sdk.start_span(name="load-user-dashboard", op="db.query") as span:
+    span.set_data("db.system", "postgres")
+    span.set_data("query.type", "aggregation")
+    span.set_data("query.dateRange", "30d")
+
+    results = db.execute(dashboard_query).fetchall()
+    span.set_data("result.rowCount", len(results))
+```
+
+```php {tabTitle: PHP}
+$spanContext = \Sentry\Tracing\SpanContext::make()
+    ->setOp('db.query')
+    ->setDescription('load-user-dashboard')
+    ->setData([
+        'db.system' => 'postgres',
+        'query.type' => 'aggregation',
+        'query.dateRange' => '30d',
+    ]);
+
+$results = \Sentry\trace(function () use ($dashboardQuery) {
+    $results = $this->db->query($dashboardQuery)->fetchAll();
+
+    $span = \Sentry\SentrySdk::getCurrentHub()->getSpan();
+    $span->setData(['result.rowCount' => count($results)]);
+
+    return $results;
+}, $spanContext);
+```
+
+```csharp {tabTitle: .NET}
+var transaction = SentrySdk.StartTransaction("load-user-dashboard", "db.query");
+SentrySdk.ConfigureScope(scope => scope.Transaction = transaction);
+
+transaction.SetExtra("db.system", "postgres");
+transaction.SetExtra("query.type", "aggregation");
+transaction.SetExtra("query.dateRange", "30d");
+
+var results = await database.QueryAsync(dashboardQuery);
+transaction.SetExtra("result.rowCount", results.Count);
+transaction.Finish();
+```
+
+```ruby {tabTitle: Ruby}
+Sentry.with_child_span(op: 'db.query', description: 'load-user-dashboard') do |span|
+  span.set_data('db.system', 'postgres')
+  span.set_data('query.type', 'aggregation')
+  span.set_data('query.dateRange', '30d')
+
+  results = database.execute(dashboard_query)
+  span.set_data('result.rowCount', results.length)
+end
+```
+
+```dart {tabTitle: Flutter}
+final transaction = Sentry.startTransaction('load-user-dashboard', 'db.query');
+transaction.setData('db.system', 'postgres');
+transaction.setData('query.type', 'aggregation');
+transaction.setData('query.dateRange', '30d');
+
+final results = await database.query(dashboardQuery);
+transaction.setData('result.rowCount', results.length);
+await transaction.finish();
+```
+
+```swift {tabTitle: Swift}
+import Sentry
+
+let transaction = SentrySDK.startTransaction(name: "load-user-dashboard", operation: "db.query")
+transaction.setData(value: "postgres", key: "db.system")
+transaction.setData(value: "aggregation", key: "query.type")
+transaction.setData(value: "30d", key: "query.dateRange")
+
+let results = try database.execute(dashboardQuery)
+transaction.setData(value: results.count, key: "result.rowCount")
+transaction.finish()
+```
+
+```kotlin {tabTitle: Kotlin}
+import io.sentry.Sentry
+
+val transaction = Sentry.startTransaction("load-user-dashboard", "db.query")
+transaction.setData("db.system", "postgres")
+transaction.setData("query.type", "aggregation")
+transaction.setData("query.dateRange", "30d")
+
+val results = database.query(dashboardQuery)
+transaction.setData("result.rowCount", results.size)
+transaction.finish()
+```
+
+**Why this matters:** Without these attributes, you see "a database query took 2 seconds." With them, you know it was aggregating 30 days of data and returned 50,000 rows. That's actionable.
+
+**Query ideas in [Explore > Traces](https://sentry.io/orgredirect/organizations/:orgslug/explore/traces/):**
+
+- "Which aggregation queries are slowest?" Group by `query.type`, sort by `p90(span.duration)`
+- "Does date range affect performance?" Filter by name, group by `query.dateRange`
+
+### 4. Background Jobs
+
+Jobs run outside of request context. Custom spans make them visible.
+
+```javascript {tabTitle: JavaScript}
+async function processEmailDigest(job) {
+  return Sentry.startSpan(
+    { name: `job:${job.type}`, op: "queue.process" },
+    async (span) => {
+      span.setAttribute("job.id", job.id);
+      span.setAttribute("job.type", "email-digest");
+      span.setAttribute("queue.name", "notifications");
+
+      const users = await getDigestRecipients();
+      span.setAttribute("job.recipientCount", users.length);
+
+      for (const user of users) {
+        await sendDigest(user);
+      }
+
+      span.setAttribute("job.status", "completed");
+    }
+  );
+}
+```
+
+```python {tabTitle: Python}
+import sentry_sdk
+
+def process_email_digest(job):
+    with sentry_sdk.start_span(name=f"job:{job.type}", op="queue.process") as span:
+        span.set_data("job.id", job.id)
+        span.set_data("job.type", "email-digest")
+        span.set_data("queue.name", "notifications")
+
+        users = get_digest_recipients()
+        span.set_data("job.recipientCount", len(users))
+
+        for user in users:
+            send_digest(user)
+
+        span.set_data("job.status", "completed")
+```
+
+```php {tabTitle: PHP}
+public function processEmailDigest($job)
+{
+    $spanContext = \Sentry\Tracing\SpanContext::make()
+        ->setOp('queue.process')
+        ->setDescription("job:{$job->type}")
+        ->setData([
+            'job.id' => $job->id,
+            'job.type' => 'email-digest',
+            'queue.name' => 'notifications',
+        ]);
+
+    \Sentry\trace(function () use ($job) {
+        $users = $this->getDigestRecipients();
+
+        $span = \Sentry\SentrySdk::getCurrentHub()->getSpan();
+        $span->setData(['job.recipientCount' => count($users)]);
+
+        foreach ($users as $user) {
+            $this->sendDigest($user);
+        }
+
+        $span->setData(['job.status' => 'completed']);
+    }, $spanContext);
+}
+```
+
+```csharp {tabTitle: .NET}
+public async Task ProcessEmailDigest(Job job)
+{
+    var transaction = SentrySdk.StartTransaction($"job:{job.Type}", "queue.process");
+    SentrySdk.ConfigureScope(scope => scope.Transaction = transaction);
+
+    transaction.SetExtra("job.id", job.Id);
+    transaction.SetExtra("job.type", "email-digest");
+    transaction.SetExtra("queue.name", "notifications");
+
+    var users = await GetDigestRecipients();
+    transaction.SetExtra("job.recipientCount", users.Count);
+
+    foreach (var user in users)
+    {
+        await SendDigest(user);
+    }
+
+    transaction.SetExtra("job.status", "completed");
+    transaction.Finish();
+}
+```
+
+```ruby {tabTitle: Ruby}
+def process_email_digest(job)
+  Sentry.with_child_span(op: 'queue.process', description: "job:#{job.type}") do |span|
+    span.set_data('job.id', job.id)
+    span.set_data('job.type', 'email-digest')
+    span.set_data('queue.name', 'notifications')
+
+    users = get_digest_recipients
+    span.set_data('job.recipientCount', users.length)
+
+    users.each { |user| send_digest(user) }
+
+    span.set_data('job.status', 'completed')
+  end
+end
+```
+
+```dart {tabTitle: Flutter}
+Future<void> processEmailDigest(Job job) async {
+  final transaction = Sentry.startTransaction('job:${job.type}', 'queue.process');
+  transaction.setData('job.id', job.id);
+  transaction.setData('job.type', 'email-digest');
+  transaction.setData('queue.name', 'notifications');
+
+  final users = await getDigestRecipients();
+  transaction.setData('job.recipientCount', users.length);
+
+  for (final user in users) {
+    await sendDigest(user);
+  }
+
+  transaction.setData('job.status', 'completed');
+  await transaction.finish();
+}
+```
+
+```swift {tabTitle: Swift}
+import Sentry
+
+func processEmailDigest(job: Job) {
+    let transaction = SentrySDK.startTransaction(name: "job:\(job.type)", operation: "queue.process")
+    transaction.setData(value: job.id, key: "job.id")
+    transaction.setData(value: "email-digest", key: "job.type")
+    transaction.setData(value: "notifications", key: "queue.name")
+
+    let users = getDigestRecipients()
+    transaction.setData(value: users.count, key: "job.recipientCount")
+
+    for user in users {
+        sendDigest(to: user)
+    }
+
+    transaction.setData(value: "completed", key: "job.status")
+    transaction.finish()
+}
+```
+
+```kotlin {tabTitle: Kotlin}
+import io.sentry.Sentry
+
+fun processEmailDigest(job: Job) {
+    val transaction = Sentry.startTransaction("job:${job.type}", "queue.process")
+    transaction.setData("job.id", job.id)
+    transaction.setData("job.type", "email-digest")
+    transaction.setData("queue.name", "notifications")
+
+    val users = getDigestRecipients()
+    transaction.setData("job.recipientCount", users.size)
+
+    users.forEach { user ->
+        sendDigest(user)
+    }
+
+    transaction.setData("job.status", "completed")
+    transaction.finish()
+}
+```
+
+**Query in [Explore > Traces](https://sentry.io/orgredirect/organizations/:orgslug/explore/traces/):** `span.op:queue.process` grouped by `job.type`, visualize `p90(span.duration)`.
+
+**Alert idea:** `p90(span.duration) > 60s` for queue processing.
+
+### 5. AI/LLM Operations
+
+For AI workloads, use [Sentry Agent Monitoring](/product/insights/ai/agents/) instead of manual instrumentation when possible. It automatically captures agent workflows, tool calls, and token usage.
+
+If you're not using a supported framework or need custom attributes:
+
+```javascript {tabTitle: JavaScript}
+Sentry.startSpan(
+  { name: "generate-summary", op: "ai.inference" },
+  async (span) => {
+    span.setAttribute("ai.model", "gpt-4");
+    span.setAttribute("ai.feature", "document-summary");
+
+    const response = await openai.chat.completions.create({...});
+
+    span.setAttribute("ai.tokens.total", response.usage.total_tokens);
+    return response;
+  }
+);
+```
+
+```python {tabTitle: Python}
+import sentry_sdk
+
+with sentry_sdk.start_span(name="generate-summary", op="ai.inference") as span:
+    span.set_data("ai.model", "gpt-4")
+    span.set_data("ai.feature", "document-summary")
+
+    response = openai.chat.completions.create(...)
+
+    span.set_data("ai.tokens.total", response.usage.total_tokens)
+```
+
+```php {tabTitle: PHP}
+$spanContext = \Sentry\Tracing\SpanContext::make()
+    ->setOp('ai.inference')
+    ->setDescription('generate-summary')
+    ->setData([
+        'ai.model' => 'gpt-4',
+        'ai.feature' => 'document-summary',
+    ]);
+
+$response = \Sentry\trace(function () {
+    $response = $this->openai->chat()->completions()->create([...]);
+
+    $span = \Sentry\SentrySdk::getCurrentHub()->getSpan();
+    $span->setData(['ai.tokens.total' => $response->usage->totalTokens]);
+
+    return $response;
+}, $spanContext);
+```
+
+```csharp {tabTitle: .NET}
+var transaction = SentrySdk.StartTransaction("generate-summary", "ai.inference");
+SentrySdk.ConfigureScope(scope => scope.Transaction = transaction);
+
+transaction.SetExtra("ai.model", "gpt-4");
+transaction.SetExtra("ai.feature", "document-summary");
+
+var response = await openai.ChatCompletion.CreateAsync(...);
+
+transaction.SetExtra("ai.tokens.total", response.Usage.TotalTokens);
+transaction.Finish();
+```
+
+```ruby {tabTitle: Ruby}
+Sentry.with_child_span(op: 'ai.inference', description: 'generate-summary') do |span|
+  span.set_data('ai.model', 'gpt-4')
+  span.set_data('ai.feature', 'document-summary')
+
+  response = openai.chat(...)
+
+  span.set_data('ai.tokens.total', response.dig('usage', 'total_tokens'))
+end
+```
+
+```dart {tabTitle: Flutter}
+final transaction = Sentry.startTransaction('generate-summary', 'ai.inference');
+transaction.setData('ai.model', 'gpt-4');
+transaction.setData('ai.feature', 'document-summary');
+
+final response = await openai.chat.completions.create(...);
+
+transaction.setData('ai.tokens.total', response.usage.totalTokens);
+await transaction.finish();
+```
+
+```swift {tabTitle: Swift}
+import Sentry
+
+let transaction = SentrySDK.startTransaction(name: "generate-summary", operation: "ai.inference")
+transaction.setData(value: "gpt-4", key: "ai.model")
+transaction.setData(value: "document-summary", key: "ai.feature")
+
+let response = try await openai.chat.completions.create(...)
+
+transaction.setData(value: response.usage.totalTokens, key: "ai.tokens.total")
+transaction.finish()
+```
+
+```kotlin {tabTitle: Kotlin}
+import io.sentry.Sentry
+
+val transaction = Sentry.startTransaction("generate-summary", "ai.inference")
+transaction.setData("ai.model", "gpt-4")
+transaction.setData("ai.feature", "document-summary")
+
+val response = openai.chat.completions.create(...)
+
+transaction.setData("ai.tokens.total", response.usage.totalTokens)
+transaction.finish()
+```
+
+**Alert idea:** `p95(span.duration) > 5s` for AI inference.
+
+## Quick Reference
+
+| Category        | `op` Value      | Example Attributes           |
+| --------------- | --------------- | ---------------------------- |
+| User flows      | `user.action`   | cart.itemCount, user.tier    |
+| External APIs   | `http.client`   | http.url, response.timeMs    |
+| Database        | `db.query`      | query.type, result.rowCount  |
+| Background jobs | `queue.process` | job.type, job.id, queue.name |
+| AI/LLM          | `ai.inference`  | ai.model, ai.tokens.total    |
+
+## Next Steps
+
+Explore the [Trace Explorer product walkthrough guides](/product/explore/trace-explorer/) to learn more about the Sentry interface and discover additional tips.

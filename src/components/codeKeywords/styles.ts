@@ -1,8 +1,8 @@
 'use client';
 
-import {ArrowDown} from 'react-feather';
 import styled from '@emotion/styled';
 import {motion} from 'framer-motion';
+import {ArrowDown} from 'react-feather';
 
 export const ProjectPreview = styled('div')`
   position: absolute;
@@ -63,7 +63,7 @@ export const Dropdown = styled('div')<{dark: boolean}>`
 `;
 
 export const Selections = styled('div')`
-  overflow: scroll;
+  overflow: auto;
   overscroll-behavior: contain;
   max-height: 210px;
   min-width: 300px;

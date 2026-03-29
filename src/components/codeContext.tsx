@@ -1,8 +1,7 @@
 'use client';
 
-import {createContext, useEffect, useState} from 'react';
 import Cookies from 'js-cookie';
-
+import {createContext, useEffect, useState} from 'react';
 import {isLocalStorageAvailable} from 'sentry-docs/utils';
 
 import {OnboardingOptionType} from './onboarding';
@@ -110,6 +109,7 @@ type CodeContextType = {
   codeKeywords: CodeKeywords;
   isLoading: boolean;
   onboardingOptions: OnboardingOptionType[];
+  sdkPackage: string | null;
   sharedKeywordSelection: [
     Record<string, number>,
     React.Dispatch<Record<string, number>>,
@@ -179,7 +179,6 @@ function getHost(): string {
 }
 
 function makeDefaults() {
-  // eslint-disable-next-line no-console
   console.warn('Unable to fetch codeContext - using defaults.');
   return DEFAULTS;
 }
@@ -205,7 +204,7 @@ export async function fetchCodeKeywords(): Promise<CodeKeywords> {
     if (data.regions) {
       regions = data.regions;
     }
-  } catch (e) {
+  } catch {
     return makeDefaults();
   }
 
@@ -219,7 +218,7 @@ export async function fetchCodeKeywords(): Promise<CodeKeywords> {
           return makeDefaults();
         }
         return resp.json();
-      } catch (e) {
+      } catch {
         return makeDefaults();
       }
     })
@@ -329,9 +328,17 @@ const getLocallyStoredSelections = (): SelectedCodeTabs => {
   return {};
 };
 
-export function CodeContextProvider({children}: {children: React.ReactNode}) {
+type CodeContextProviderProps = {
+  children: React.ReactNode;
+  sdkPackage?: string | null;
+};
+
+export function CodeContextProvider({
+  children,
+  sdkPackage = null,
+}: CodeContextProviderProps) {
   const [codeKeywords, setCodeKeywords] = useState(cachedCodeKeywords ?? DEFAULTS);
-  const [isLoading, setIsLoading] = useState<boolean>(cachedCodeKeywords ? false : true);
+  const [isLoading, setIsLoading] = useState<boolean>(!cachedCodeKeywords);
   const [storedCodeSelection, setStoredCodeSelection] = useState<SelectedCodeTabs>({});
   const [onboardingOptions, setOnboardingOptions] = useState<OnboardingOptionType[]>([]);
 
@@ -381,6 +388,7 @@ export function CodeContextProvider({children}: {children: React.ReactNode}) {
     isLoading,
     onboardingOptions,
     updateOnboardingOptions: options => setOnboardingOptions(options),
+    sdkPackage,
   };
 
   return <CodeContext.Provider value={result}>{children}</CodeContext.Provider>;

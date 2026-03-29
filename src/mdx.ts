@@ -1,7 +1,3 @@
-import matter from 'gray-matter';
-import {s} from 'hastscript';
-import yaml from 'js-yaml';
-import {bundleMDX} from 'mdx-bundler';
 import {BinaryLike, createHash} from 'node:crypto';
 import {createReadStream, createWriteStream, mkdirSync} from 'node:fs';
 import {access, cp, mkdir, opendir, readFile} from 'node:fs/promises';
@@ -15,7 +11,12 @@ import {
   createBrotliCompress,
   createBrotliDecompress,
 } from 'node:zlib';
-import {limitFunction} from 'p-limit';
+
+import matter from 'gray-matter';
+import {s} from 'hastscript';
+import yaml from 'js-yaml';
+import {bundleMDX} from 'mdx-bundler';
+import pLimit from 'p-limit';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import rehypePresetMinify from 'rehype-preset-minify';
 import rehypePrismDiff from 'rehype-prism-diff';
@@ -36,8 +37,8 @@ import remarkCodeTitles from './remark-code-title';
 import remarkComponentSpacing from './remark-component-spacing';
 import remarkExtractFrontmatter from './remark-extract-frontmatter';
 import remarkFormatCodeBlocks from './remark-format-code';
+import remarkImageProcessing from './remark-image-processing';
 import remarkImageResize from './remark-image-resize';
-import remarkImageSize from './remark-image-size';
 import remarkTocHeadings, {TocNode} from './remark-toc-headings';
 import remarkVariables from './remark-variables';
 import {FrontMatter, Platform, PlatformConfig} from './types';
@@ -94,7 +95,7 @@ async function getRegistryHashWithRetry(
 
       if (attempt < maxRetries) {
         const delay = initialDelayMs * Math.pow(2, attempt);
-        // eslint-disable-next-line no-console
+
         console.warn(
           `Failed to fetch registry (attempt ${attempt + 1}/${maxRetries + 1}). Retrying in ${delay}ms...`,
           err
@@ -114,7 +115,6 @@ async function getRegistryHashWithRetry(
  */
 function getRegistryHash(): Promise<string> {
   if (!cachedRegistryHash) {
-    // eslint-disable-next-line no-console
     console.info('Fetching registry hash for the first time in this worker');
     cachedRegistryHash = getRegistryHashWithRetry();
   }
@@ -174,6 +174,22 @@ const isSupported = (
 let getDocsFrontMatterCache: Promise<FrontMatter[]> | undefined;
 
 export function getDocsFrontMatter(): Promise<FrontMatter[]> {
+  // Block filesystem scanning at Vercel runtime.
+  // Frontmatter should only be scanned during CI builds - the doc tree is pre-computed.
+  // See: DOCS-83Q, DOCS-9A5, DOCS-9RE
+  const isVercelRuntime =
+    process.env.VERCEL && !process.env.CI && process.env.NODE_ENV !== 'development';
+
+  if (isVercelRuntime) {
+    return Promise.reject(
+      new Error(
+        `[MDX Runtime Error] Attempted to scan docs frontmatter at Vercel runtime. ` +
+          `This should not happen - the doc tree should be pre-computed during CI. ` +
+          `If you're seeing this error, the requested path may not exist or was not included in generateStaticParams().`
+      )
+    );
+  }
+
   if (!getDocsFrontMatterCache) {
     getDocsFrontMatterCache = getDocsFrontMatterUncached();
   }
@@ -240,35 +256,49 @@ export async function getDevDocsFrontMatterUncached(): Promise<FrontMatter[]> {
   const folder = 'develop-docs';
   const docsPath = path.join(root, folder);
   const files = await getAllFilesRecursively(docsPath);
+  const limit = pLimit(FILE_CONCURRENCY_LIMIT);
   const frontMatters = (
     await Promise.all(
-      files.map(
-        limitFunction(
-          async file => {
-            const fileName = file.slice(docsPath.length + 1);
-            if (path.extname(fileName) !== '.md' && path.extname(fileName) !== '.mdx') {
-              return undefined;
-            }
+      files.map(file =>
+        limit(async () => {
+          const fileName = file.slice(docsPath.length + 1);
+          if (path.extname(fileName) !== '.md' && path.extname(fileName) !== '.mdx') {
+            return undefined;
+          }
 
-            const source = await readFile(file, 'utf8');
-            const {data: frontmatter} = matter(source);
-            return {
-              ...(frontmatter as FrontMatter),
-              slug: fileName.replace(/\/index.mdx?$/, '').replace(/\.mdx?$/, ''),
-              sourcePath: path.join(folder, fileName),
-            };
-          },
-          {concurrency: FILE_CONCURRENCY_LIMIT}
-        )
+          const source = await readFile(file, 'utf8');
+          const {data: frontmatter} = matter(source);
+          return {
+            ...(frontmatter as FrontMatter),
+            slug: fileName.replace(/\/index.mdx?$/, '').replace(/\.mdx?$/, ''),
+            sourcePath: path.join(folder, fileName),
+          };
+        })
       )
     )
-  ).filter(isNotNil);
+  ).filter(isNotNil) as FrontMatter[];
   return frontMatters;
 }
 
 let getDevDocsFrontMatterCache: Promise<FrontMatter[]> | undefined;
 
 export function getDevDocsFrontMatter(): Promise<FrontMatter[]> {
+  // Block filesystem scanning at Vercel runtime.
+  // Frontmatter should only be scanned during CI builds - the doc tree is pre-computed.
+  // See: DOCS-83Q, DOCS-9A5, DOCS-9RE
+  const isVercelRuntime =
+    process.env.VERCEL && !process.env.CI && process.env.NODE_ENV !== 'development';
+
+  if (isVercelRuntime) {
+    return Promise.reject(
+      new Error(
+        `[MDX Runtime Error] Attempted to scan develop-docs frontmatter at Vercel runtime. ` +
+          `This should not happen - the doc tree should be pre-computed during CI. ` +
+          `If you're seeing this error, the requested path may not exist or was not included in generateStaticParams().`
+      )
+    );
+  }
+
   if (!getDevDocsFrontMatterCache) {
     getDevDocsFrontMatterCache = getDevDocsFrontMatterUncached();
   }
@@ -279,30 +309,28 @@ async function getAllFilesFrontMatter(): Promise<FrontMatter[]> {
   const docsPath = path.join(root, 'docs');
   const files = await getAllFilesRecursively(docsPath);
   const allFrontMatter: FrontMatter[] = [];
+  const limit = pLimit(FILE_CONCURRENCY_LIMIT);
 
   await Promise.all(
-    files.map(
-      limitFunction(
-        async file => {
-          const fileName = file.slice(docsPath.length + 1);
-          if (path.extname(fileName) !== '.md' && path.extname(fileName) !== '.mdx') {
-            return;
-          }
+    files.map(file =>
+      limit(async () => {
+        const fileName = file.slice(docsPath.length + 1);
+        if (path.extname(fileName) !== '.md' && path.extname(fileName) !== '.mdx') {
+          return;
+        }
 
-          if (fileName.indexOf('/common/') !== -1) {
-            return;
-          }
+        if (fileName.indexOf('/common/') !== -1) {
+          return;
+        }
 
-          const source = await readFile(file, 'utf8');
-          const {data: frontmatter} = matter(source);
-          allFrontMatter.push({
-            ...(frontmatter as FrontMatter),
-            slug: formatSlug(fileName),
-            sourcePath: path.join('docs', fileName),
-          });
-        },
-        {concurrency: FILE_CONCURRENCY_LIMIT}
-      )
+        const source = await readFile(file, 'utf8');
+        const {data: frontmatter} = matter(source);
+        allFrontMatter.push({
+          ...(frontmatter as FrontMatter),
+          slug: formatSlug(fileName),
+          sourcePath: path.join('docs', fileName),
+        });
+      })
     )
   );
 
@@ -330,7 +358,7 @@ async function getAllFilesFrontMatter(): Promise<FrontMatter[]> {
     const commonPath = path.join(platformsPath, platformName, 'common');
     try {
       await access(commonPath);
-    } catch (err) {
+    } catch {
       continue;
     }
 
@@ -339,57 +367,51 @@ async function getAllFilesFrontMatter(): Promise<FrontMatter[]> {
     );
 
     const commonFiles = await Promise.all(
-      commonFileNames.map(
-        limitFunction(
-          async commonFileName => {
-            const source = await readFile(commonFileName, 'utf8');
-            const {data: frontmatter} = matter(source);
-            return {commonFileName, frontmatter: frontmatter as FrontMatter};
-          },
-          {concurrency: FILE_CONCURRENCY_LIMIT}
-        )
+      commonFileNames.map(commonFileName =>
+        limit(async () => {
+          const source = await readFile(commonFileName, 'utf8');
+          const {data: frontmatter} = matter(source);
+          return {commonFileName, frontmatter: frontmatter as FrontMatter};
+        })
       )
     );
 
     await Promise.all(
-      commonFiles.map(
-        limitFunction(
-          async f => {
-            if (!isSupported(f.frontmatter, platformName)) {
-              return;
-            }
+      commonFiles.map(f =>
+        limit(async () => {
+          if (!isSupported(f.frontmatter, platformName)) {
+            return;
+          }
 
-            const subpath = f.commonFileName.slice(commonPath.length + 1);
-            const slug = f.commonFileName
-              .slice(docsPath.length + 1)
-              .replace(/\/common\//, '/');
-            const noFrontMatter = (
-              await Promise.allSettled([
-                access(path.join(docsPath, slug)),
-                access(path.join(docsPath, slug.replace('/index.mdx', '.mdx'))),
-              ])
-            ).every(r => r.status === 'rejected');
-            if (noFrontMatter) {
-              let frontmatter = f.frontmatter;
-              if (subpath === 'index.mdx') {
-                frontmatter = {...frontmatter, ...platformFrontmatter};
-              }
-              allFrontMatter.push({
-                ...frontmatter,
-                slug: formatSlug(slug),
-                sourcePath: 'docs/' + f.commonFileName.slice(docsPath.length + 1),
-              });
+          const subpath = f.commonFileName.slice(commonPath.length + 1);
+          const slug = f.commonFileName
+            .slice(docsPath.length + 1)
+            .replace(/\/common\//, '/');
+          const noFrontMatter = (
+            await Promise.allSettled([
+              access(path.join(docsPath, slug)),
+              access(path.join(docsPath, slug.replace('/index.mdx', '.mdx'))),
+            ])
+          ).every(r => r.status === 'rejected');
+          if (noFrontMatter) {
+            let frontmatter = f.frontmatter;
+            if (subpath === 'index.mdx') {
+              frontmatter = {...frontmatter, ...platformFrontmatter};
             }
-          },
-          {concurrency: FILE_CONCURRENCY_LIMIT}
-        )
+            allFrontMatter.push({
+              ...frontmatter,
+              slug: formatSlug(slug),
+              sourcePath: 'docs/' + f.commonFileName.slice(docsPath.length + 1),
+            });
+          }
+        })
       )
     );
 
     const guidesPath = path.join(docsPath, 'platforms', platformName, 'guides');
     try {
       await access(guidesPath);
-    } catch (err) {
+    } catch {
       continue;
     }
 
@@ -412,40 +434,37 @@ async function getAllFilesFrontMatter(): Promise<FrontMatter[]> {
       }
 
       await Promise.all(
-        commonFiles.map(
-          limitFunction(
-            async f => {
-              if (!isSupported(f.frontmatter, platformName, guideName)) {
-                return;
-              }
+        commonFiles.map(f =>
+          limit(async () => {
+            if (!isSupported(f.frontmatter, platformName, guideName)) {
+              return;
+            }
 
-              const subpath = f.commonFileName.slice(commonPath.length + 1);
-              const slug = path.join(
-                'platforms',
-                platformName,
-                'guides',
-                guideName,
-                subpath
-              );
-              try {
-                await access(path.join(docsPath, slug));
-                return;
-              } catch {
-                // pass
-              }
+            const subpath = f.commonFileName.slice(commonPath.length + 1);
+            const slug = path.join(
+              'platforms',
+              platformName,
+              'guides',
+              guideName,
+              subpath
+            );
+            try {
+              await access(path.join(docsPath, slug));
+              return;
+            } catch {
+              // pass
+            }
 
-              let frontmatter = f.frontmatter;
-              if (subpath === 'index.mdx') {
-                frontmatter = {...frontmatter, ...guideFrontmatter};
-              }
-              allFrontMatter.push({
-                ...frontmatter,
-                slug: formatSlug(slug),
-                sourcePath: 'docs/' + f.commonFileName.slice(docsPath.length + 1),
-              });
-            },
-            {concurrency: FILE_CONCURRENCY_LIMIT}
-          )
+            let frontmatter = f.frontmatter;
+            if (subpath === 'index.mdx') {
+              frontmatter = {...frontmatter, ...guideFrontmatter};
+            }
+            allFrontMatter.push({
+              ...frontmatter,
+              slug: formatSlug(slug),
+              sourcePath: 'docs/' + f.commonFileName.slice(docsPath.length + 1),
+            });
+          })
         )
       );
     }
@@ -487,6 +506,30 @@ export const addVersionToFilePath = (filePath: string, version: string) => {
 };
 
 export async function getFileBySlug(slug: string): Promise<SlugFile> {
+  // Block MDX compilation at Vercel runtime.
+  // MDX should only be compiled during CI builds - all pages are statically generated.
+  // If this code path is hit at runtime, it means:
+  // 1. A 404 page is being accessed (Next.js tries to render before showing not-found)
+  // 2. Some edge case in routing is bypassing static generation
+  //
+  // Without this check, runtime MDX compilation would:
+  // - Fetch from release-registry.services.sentry.io (hammering the registry)
+  // - Fail with "read-only file system" errors from esbuild
+  //
+  // See: DOCS-915, DOCS-9H5, DOCS-9N0, DOCS-9HB
+  const isVercelRuntime =
+    process.env.VERCEL && !process.env.CI && process.env.NODE_ENV !== 'development';
+
+  if (isVercelRuntime) {
+    const error = new Error(
+      `[MDX Runtime Error] Attempted to compile MDX at Vercel runtime for slug "${slug}". ` +
+        `This should not happen - all pages should be pre-built during CI. ` +
+        `If you're seeing this error, the requested path may not exist or was not included in generateStaticParams().`
+    ) as Error & {code: string};
+    error.code = 'MDX_RUNTIME_ERROR';
+    throw error;
+  }
+
   // no versioning on a config file
   const configPath = path.join(root, slug.split(VERSION_INDICATOR)[0], 'config.yml');
 
@@ -574,9 +617,22 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
     }
   }
   if (source === undefined || sourcePath === undefined) {
-    throw new Error(
-      `Failed to find a valid source file for slug "${slug}". Tried:\n${sourcePaths.join('\n')}\nErrors:\n${errors.map(e => e.message).join('\n')}`
+    // Check if we have any non-ENOENT errors (permission, file system errors, etc.)
+    const nonEnoentError = errors.find(
+      err => err && typeof err === 'object' && 'code' in err && err.code !== 'ENOENT'
     );
+
+    // If there's a non-ENOENT error, throw it directly to preserve the original error
+    if (nonEnoentError) {
+      throw nonEnoentError;
+    }
+
+    // Otherwise, all errors are ENOENT (file not found), so we can safely report as such
+    const error = new Error(
+      `Failed to find a valid source file for slug "${slug}". Tried:\n${sourcePaths.join('\n')}\nErrors:\n${errors.map(e => e.message).join('\n')}`
+    ) as Error & {code: string};
+    error.code = 'ENOENT';
+    throw error;
   }
 
   let cacheKey: string | null = null;
@@ -589,7 +645,7 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
 
   try {
     await mkdir(outdir, {recursive: true});
-  } catch (e) {
+  } catch {
     // If we can't create the directory (e.g., read-only filesystem),
     // continue anyway - images should already exist from build time
   }
@@ -600,7 +656,8 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
   const dependsOnRegistry =
     source.includes('@inject') ||
     source.includes('<PlatformSDKPackageName') ||
-    source.includes('<LambdaLayerDetail');
+    source.includes('<LambdaLayerDetail') ||
+    source.includes('<GradleUploadInstructions');
 
   // Check cache in CI environments
   if (process.env.CI) {
@@ -611,13 +668,13 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
       try {
         const registryHash = await getRegistryHash();
         cacheKey = `${sourceHash}-${registryHash}`;
-        // eslint-disable-next-line no-console
+
         console.info(
           `Using registry-aware cache for ${sourcePath} (registry hash: ${registryHash.slice(0, 8)}...)`
         );
       } catch (err) {
         // If we can't get registry hash, skip cache for this file
-        // eslint-disable-next-line no-console
+
         console.warn(
           `Failed to get registry hash for ${sourcePath}, skipping cache:`,
           err
@@ -667,7 +724,7 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
           err.code !== 'Z_BUF_ERROR'
         ) {
           // If cache is corrupted, ignore and proceed
-          // eslint-disable-next-line no-console
+
           console.warn(`Failed to read MDX cache: ${cacheFile}`, err);
         }
       }
@@ -704,7 +761,10 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
         remarkGfm,
         remarkDefList,
         remarkFormatCodeBlocks,
-        [remarkImageSize, {sourceFolder: cwd, publicFolder: path.join(root, 'public')}],
+        [
+          remarkImageProcessing,
+          {sourceFolder: cwd, publicFolder: path.join(root, 'public')},
+        ],
         remarkMdxImages,
         remarkImageResize,
         remarkCodeTitles,
@@ -782,12 +842,12 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
       // Set write to false to prevent esbuild from writing files automatically.
       // We'll handle writing manually to gracefully handle read-only filesystems (e.g., Lambda runtime)
       // In local dev, we need write=true to avoid images being embedded as binary data
-      options.write = process.env.NODE_ENV === 'development' || !!process.env.CI;
+      options.write =
+        process.env.NODE_ENV === 'development' || !!process.env.CI || !process.env.VERCEL;
 
       return options;
     },
   }).catch(e => {
-    // eslint-disable-next-line no-console
     console.error('Error occurred during MDX compilation:', e.errors);
     throw e;
   });
@@ -835,12 +895,11 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
   if (assetsCacheDir && cacheFile && cacheKey) {
     try {
       await cp(assetsCacheDir, outdir, {recursive: true});
-    } catch (e) {
+    } catch {
       // If copy fails (e.g., on read-only filesystem), continue anyway
       // Images should already exist from build time
     }
     writeCacheFile(cacheFile, JSON.stringify(resultObj)).catch(e => {
-      // eslint-disable-next-line no-console
       console.warn(`Failed to write MDX cache: ${cacheFile}`, e);
     });
   }

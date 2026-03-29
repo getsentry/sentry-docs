@@ -1,0 +1,107 @@
+---
+title: Code Quality
+spec_id: sdk/getting-started/standards/code-quality
+spec_version: 1.0.0
+spec_status: stable
+spec_platforms:
+  - all
+spec_changelog:
+  - version: 1.0.0
+    date: 2026-02-19
+    summary: Initial Code Quality standard
+sidebar_order: 3
+---
+
+<SpecRfcAlert />
+
+<SpecMeta />
+
+These standards define the baseline quality expectations for SDK code. They apply across all SDKs — specific tools and thresholds vary by language, but the principles are universal.
+
+<SpecSection id="linting-and-type-checking" status="stable" since="1.0.0">
+
+## Linting, formatting, and type checking
+
+Every SDK repo **MUST** enforce linting and formatting in CI. Code that doesn't pass can't merge — no exceptions.
+
+Type checking is also **REQUIRED** in CI for statically typed languages (Java, Kotlin, Swift, C#, Go, Rust, Dart) and dynamically typed languages with established type-checking ecosystems (TypeScript, Python, PHP, Elixir). Languages without mature type-checking tooling (e.g., Ruby) may be exempt.
+
+Which linter, what rules, and how strict — that's up to each SDK. The standard is that automated checks exist and block merges.
+
+</SpecSection>
+
+---
+
+<SpecSection id="testing" status="stable" since="1.0.0">
+
+## Testing
+
+### What to test
+
+The type of change determines what tests are needed:
+
+- **Bug fix**: a regression test that fails without the fix and passes with it
+- **New feature**: unit tests, plus integration tests where applicable
+- **Refactor**: existing tests should still pass; add new tests only if coverage was missing
+- **Performance change**: benchmark or measurable evidence
+- **Breaking change**: update or remove old tests, add new ones
+
+### Test quality
+
+Tests should assert meaningful behavior. Ask yourself: *what user-visible behavior would break if this test were deleted?* If the answer is "nothing," the test isn't useful.
+
+Some specific things to watch for:
+
+- "No exception thrown" is only a valid assertion when exception handling is the behavior under test
+- Snapshot tests need to be reviewed for correctness, not auto-accepted
+- AI-generated tests need extra scrutiny — look for hardcoded values, implementation-detail testing, and tests that pass regardless of behavior
+
+</SpecSection>
+
+---
+
+<SpecSection id="dependency-management" status="stable" since="1.0.0">
+
+## Dependencies
+
+Adding a dependency is a decision that affects every user of the SDK, so it deserves scrutiny. New dependencies **REQUIRE** explicit justification in the PR description. Pin them to a version range — no floating versions.
+
+Transitive dependencies matter too. If a transitive dependency changes behavior, that deserves the same review as adding a direct dependency. Run dependency audits at least quarterly.
+
+See [Adding a Dependency](/sdk/getting-started/playbooks/development/adding-a-dependency) for the step-by-step evaluation and approval workflow.
+
+</SpecSection>
+
+---
+
+<SpecSection id="size-performance-budgets" status="stable" since="1.0.0">
+
+## Size and performance budgets
+
+Each SDK **MUST** define and track budgets for:
+
+- Package/binary size (where applicable)
+- Initialization time
+- Memory overhead
+
+The specific numbers are up to each SDK. The standard is that budgets exist, are tracked, and are visible in CI.
+
+</SpecSection>
+
+---
+
+<SpecSection id="security-practices" status="stable" since="1.0.0">
+
+## Security
+
+No secrets, credentials, or PII in code or commits. Data handling follows the [data handling spec](/sdk/foundations/data-scrubbing/).
+
+Security-sensitive changes **REQUIRE** review from someone with security context. Dependency vulnerability alerts **MUST NOT** be ignored or silently dismissed.
+
+</SpecSection>
+
+---
+
+## Changelog
+
+<SpecChangelog />
