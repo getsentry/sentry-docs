@@ -1,15 +1,13 @@
 'use client';
-import {useEffect, useRef, useState} from 'react';
-import ReactDOM from 'react-dom';
 import Link from 'next/link';
 import {usePathname, useRouter} from 'next/navigation';
-
+import {useEffect, useRef, useState} from 'react';
+import ReactDOM from 'react-dom';
 import {Platform} from 'sentry-docs/types';
-
-import platformSelectorStyles from './platformSelector/style.module.scss';
 
 import {mainSectionsWithDropdowns} from './navigationData';
 import {PlatformSelector} from './platformSelector';
+import platformSelectorStyles from './platformSelector/style.module.scss';
 
 const mainSections = mainSectionsWithDropdowns;
 
@@ -301,7 +299,7 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
                       </svg>
                     </button>
                   </div>
-                ) : section.label === 'More' ? (
+                ) : section.label === 'Manage' ? (
                   <div
                     style={{display: 'inline-block'}}
                     onMouseEnter={() => {
@@ -320,7 +318,7 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
                       ref={moreBtnRef}
                       className={`text-[var(--gray-12)] transition-all duration-150 inline-block py-2 px-1 rounded-t-md flex items-center gap-1 text-[0.875rem] font-normal border-b-2 ${
                         mainSections
-                          .find(s => s.label === 'More')
+                          .find(s => s.label === 'Manage')
                           ?.dropdown?.some(d => pathname?.startsWith(d.href))
                           ? 'border-[var(--accent-purple)]'
                           : moreDropdownOpen
@@ -576,7 +574,7 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
             }
           `}</style>
             {mainSections
-              .find(s => s.label === 'More')
+              .find(s => s.label === 'Manage')
               ?.dropdown?.map(dropdown => (
                 <Link
                   key={dropdown.href}

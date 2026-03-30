@@ -1,20 +1,18 @@
 'use client';
 
-import {useCallback, useEffect, useState} from 'react';
-import {Cross1Icon, HamburgerMenuIcon} from '@radix-ui/react-icons';
+import {Cross1Icon, HamburgerMenuIcon, MagnifyingGlassIcon} from '@radix-ui/react-icons';
 import {Button} from '@radix-ui/themes';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import Link from 'next/link';
-
+import {useCallback, useEffect, useState} from 'react';
 import SentryLogoSVG from 'sentry-docs/logos/sentry-logo-dark.svg';
 import {Platform} from 'sentry-docs/types';
-
-import sidebarStyles from './sidebar/style.module.scss';
 
 import {MagicIcon} from './cutomIcons/magic';
 import {useHomeSearchVisibility} from './homeSearchVisibility';
 import {mainSections} from './navigationData';
+import sidebarStyles from './sidebar/style.module.scss';
 import {ThemeToggle} from './theme-toggle';
 import TopNavClient from './TopNavClient';
 
@@ -53,6 +51,7 @@ export function Header({
   const [homeSearchVisible, setHomeSearchVisible] = useState(true);
   const [homeMobileNavOpen, setHomeMobileNavOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   // Listen for home search visibility changes
   useHomeSearchVisibility(
@@ -60,6 +59,48 @@ export function Header({
       setHomeSearchVisible(isVisible);
     }, [])
   );
+
+  // Close mobile search overlay on navigation
+  useEffect(() => {
+    setMobileSearchOpen(false);
+  }, [pathname]);
+
+  // Lock body scroll when mobile search overlay is open, close on resize to desktop or escape key
+  useEffect(() => {
+    if (mobileSearchOpen) {
+      document.body.style.overflow = 'hidden';
+
+      // Close mobile search if viewport is resized to desktop width
+      const handleResize = () => {
+        if (window.innerWidth >= 768) {
+          setMobileSearchOpen(false);
+        }
+      };
+
+      // Close mobile search on escape key (only if search input is empty)
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          // Check if search input has a value - if so, let the Search component
+          // handle the escape key to clear the query first
+          const searchInput = document.querySelector(
+            '.mobile-search-overlay input[type="text"]'
+          ) as HTMLInputElement | null;
+          if (!searchInput?.value) {
+            setMobileSearchOpen(false);
+          }
+        }
+      };
+
+      window.addEventListener('resize', handleResize);
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.body.style.overflow = '';
+        window.removeEventListener('resize', handleResize);
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+    return undefined;
+  }, [mobileSearchOpen]);
 
   // Track sidebar checkbox state for non-home pages
   useEffect(() => {
@@ -111,7 +152,10 @@ export function Header({
           {isHomePage ? (
             <button
               className="md:hidden mr-3 flex items-center"
-              onClick={() => setHomeMobileNavOpen(!homeMobileNavOpen)}
+              onClick={() => {
+                setHomeMobileNavOpen(!homeMobileNavOpen);
+                setMobileSearchOpen(false);
+              }}
               aria-label={homeMobileNavOpen ? 'Close menu' : 'Open menu'}
             >
               {homeMobileNavOpen ? (
@@ -173,8 +217,20 @@ export function Header({
           <div className="hidden md:block flex-1 min-w-0">
             <TopNavClient platforms={platforms} />
           </div>
-          {/* Mobile: show Ask AI button and theme toggle (below md breakpoint) */}
+          {/* Mobile: show search, Ask AI button and theme toggle (below md breakpoint) */}
           <div className="flex items-center md:hidden ml-auto gap-3">
+            {!noSearch && (
+              <button
+                className="flex items-center text-[var(--foreground)] p-1.5 rounded-md hover:bg-[var(--gray-a3)] transition-colors"
+                onClick={() => {
+                  setMobileSearchOpen(true);
+                  setHomeMobileNavOpen(false);
+                }}
+                aria-label="Search"
+              >
+                <MagnifyingGlassIcon width="20" height="20" />
+              </button>
+            )}
             <button
               className="kapa-ai-class flex items-center gap-1.5 text-sm font-medium text-[var(--foreground)] px-2 py-1.5 rounded-md hover:bg-[var(--gray-a3)] transition-colors"
               aria-label="Ask AI"
@@ -253,6 +309,38 @@ export function Header({
               Go to Sentry
             </a>
           </nav>
+        </div>
+      )}
+
+      {/* Mobile search overlay */}
+      {mobileSearchOpen && (
+        <div
+          className="mobile-search-overlay md:hidden fixed inset-0 bg-[var(--gray-1)] z-50 overflow-hidden flex flex-col"
+          style={{top: 'var(--header-height)'}}
+          // Stop propagation to prevent Search's useOnClickOutside from dismissing results
+          // when clicking on the overlay header or padding areas
+          onClick={e => e.stopPropagation()}
+        >
+          <div className="flex flex-col flex-1 overflow-hidden px-4">
+            <div className="flex items-center gap-2 py-4">
+              <button
+                onClick={() => setMobileSearchOpen(false)}
+                className="flex items-center justify-center p-2 rounded-md hover:bg-[var(--gray-a3)] transition-colors"
+                aria-label="Close search"
+              >
+                <Cross1Icon width="20" height="20" />
+              </button>
+              <span className="text-sm font-medium text-[var(--foreground)]">Search</span>
+            </div>
+            <div className="flex-1 overflow-auto">
+              <Search
+                path={pathname}
+                searchPlatforms={searchPlatforms}
+                autoFocus
+                useStoredSearchPlatforms={useStoredSearchPlatforms}
+              />
+            </div>
+          </div>
         </div>
       )}
     </header>

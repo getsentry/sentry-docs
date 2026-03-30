@@ -1,7 +1,6 @@
 import 'server-only';
 
 import {cache} from 'react';
-
 import {DocNode} from 'sentry-docs/docTree';
 
 interface ServerContext {
