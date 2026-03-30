@@ -1,9 +1,8 @@
 'use client';
 
-import {useEffect, useState} from 'react';
 import {Button} from '@radix-ui/themes';
 import {usePathname} from 'next/navigation';
-
+import {useEffect, useState} from 'react';
 import {DevelopDocsHeader} from 'sentry-docs/components/developDocsHeader';
 import {Header} from 'sentry-docs/components/header';
 import {Search} from 'sentry-docs/components/search';
@@ -29,7 +28,7 @@ export default function NotFound() {
         const currentUrl = new URL(window.location.href);
         // Compare origins for exact match
         refererType = referrerUrl.origin === currentUrl.origin ? 'internal' : 'external';
-      } catch (e) {
+      } catch {
         // Invalid referrer URL
         refererType = 'external';
       }

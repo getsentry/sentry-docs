@@ -1,10 +1,9 @@
 import {extractPlatforms} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
 
-import styles from './styles.module.scss';
-
 import {PlatformIcon} from '../platformIcon';
 import {SmartLink} from '../smartLink';
+import styles from './styles.module.scss';
 
 export function PlatformGrid({noGuides = false}) {
   const {rootNode} = serverContext();

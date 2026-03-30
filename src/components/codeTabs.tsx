@@ -1,5 +1,6 @@
 'use client';
 
+import styled from '@emotion/styled';
 import {
   Children,
   ReactElement,
@@ -9,7 +10,6 @@ import {
   useRef,
   useState,
 } from 'react';
-import styled from '@emotion/styled';
 
 import {CodeBlockProps} from './codeBlock';
 import {CodeContext} from './codeContext';

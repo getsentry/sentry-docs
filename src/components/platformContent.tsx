@@ -1,7 +1,5 @@
 import fs from 'fs';
-
 import {cache, useMemo} from 'react';
-
 import {getCurrentGuide, getDocsRootNode, getPlatform} from 'sentry-docs/docTree';
 import {getMDXComponent} from 'sentry-docs/getMDXComponent';
 import {getFileBySlugWithCache} from 'sentry-docs/mdx';
@@ -78,7 +76,7 @@ export async function PlatformContent({includePath, platform, noGuides}: Props) 
 
     try {
       doc = await getFileBySlugWithCache(guidePath);
-    } catch (e) {
+    } catch {
       // It's fine - keep looking.
     }
   }
@@ -94,7 +92,7 @@ export async function PlatformContent({includePath, platform, noGuides}: Props) 
     if (guideObject?.fallbackGuide) {
       try {
         doc = await getFileBySlugWithCache(fallbackGuidePath);
-      } catch (e) {
+      } catch {
         // It's fine - keep looking.
       }
     }
@@ -107,7 +105,7 @@ export async function PlatformContent({includePath, platform, noGuides}: Props) 
       );
 
       doc = await getFileBySlugWithCache(platformPath);
-    } catch (e) {
+    } catch {
       // It's fine - keep looking.
     }
   }
@@ -123,7 +121,7 @@ export async function PlatformContent({includePath, platform, noGuides}: Props) 
     if (platformObject?.fallbackPlatform) {
       try {
         doc = await getFileBySlugWithCache(fallbackPlatformPath);
-      } catch (e) {
+      } catch {
         // It's fine - keep looking.
       }
     }
@@ -132,7 +130,7 @@ export async function PlatformContent({includePath, platform, noGuides}: Props) 
   if (!doc) {
     try {
       doc = await getFileBySlugWithCache(`platform-includes/${includePath}/_default`);
-    } catch (e) {
+    } catch {
       // Couldn't find anything.
       return null;
     }

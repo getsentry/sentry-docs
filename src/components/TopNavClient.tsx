@@ -1,15 +1,13 @@
 'use client';
-import {useEffect, useRef, useState} from 'react';
-import ReactDOM from 'react-dom';
 import Link from 'next/link';
 import {usePathname, useRouter} from 'next/navigation';
-
+import {useEffect, useRef, useState} from 'react';
+import ReactDOM from 'react-dom';
 import {Platform} from 'sentry-docs/types';
-
-import platformSelectorStyles from './platformSelector/style.module.scss';
 
 import {mainSectionsWithDropdowns} from './navigationData';
 import {PlatformSelector} from './platformSelector';
+import platformSelectorStyles from './platformSelector/style.module.scss';
 
 const mainSections = mainSectionsWithDropdowns;
 

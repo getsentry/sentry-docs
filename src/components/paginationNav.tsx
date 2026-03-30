@@ -1,5 +1,4 @@
 import {DoubleArrowLeftIcon, DoubleArrowRightIcon} from '@radix-ui/react-icons';
-
 import {PaginationNavNode} from 'sentry-docs/types/paginationNavNode';
 
 export function PaginationNav({
