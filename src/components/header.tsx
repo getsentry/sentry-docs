@@ -161,9 +161,9 @@ export function Header({
         @media (min-width: 1024px) {
           .header-content-home {
             /* 50px (content) - 12px (nav md:pl-3) = 38px on left */
-            /* 50px (content) - 16px (nav md:pr-4) = 34px on right */
+            /* 50px (content) - 24px (right div lg:pr-6) = 26px on right */
             padding-left: 38px;
-            padding-right: 34px;
+            padding-right: 26px;
           }
         }
         /* Doc pages: align header with sidebar and TOC at large viewports */
