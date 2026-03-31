@@ -33,10 +33,6 @@ Before starting, ensure:
 
 How you add `SentryNavigatorObserver` depends on which navigation approach you use.
 
-Flutter has two navigation models:
-- **Imperative** (`Navigator`): uses `Navigator.push()` / `Navigator.pop()` with `MaterialApp`.
-- **Declarative** (`Router`): uses `MaterialApp.router` with a custom `RouterDelegate`, or with a routing package like GoRouter or auto_route. This is sometimes referred to as "Navigator 2.0" in the Flutter community.
-
 Pick the tab that matches your setup:
 
 ```dart {14-16} {tabTitle: Navigator}
@@ -62,7 +58,7 @@ class MyApp extends StatelessWidget {
 }
 ```
 
-```dart {tabTitle: Router}
+```dart {15} {tabTitle: Router}
 import 'package:flutter/material.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
@@ -136,7 +132,7 @@ class MyApp extends StatelessWidget {
 }
 ```
 
-```dart {tabTitle: auto_route}
+```dart {19-21} {tabTitle: auto_route}
 import 'package:flutter/material.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:auto_route/auto_route.dart';
@@ -164,11 +160,9 @@ class MyApp extends StatelessWidget {
 }
 ```
 
-
 ### 2. Define Route Names
 
-By default, the application's main route name is `"/"`.
-The instrumentation sets the span `operation` to `navigation` and the span `name` to the provided route name.
+The instrumentation sets the span `operation` to `ui.load` and the span `name` to the provided route name.
 
 How you define route names depends on your navigation approach:
 
@@ -183,14 +177,14 @@ If the SDK cannot determine a route name, it will not create transactions, bread
 
 </Alert>
 
-```dart {tabTitle: Navigator}
+```dart {3} {tabTitle: Navigator}
 MaterialPageRoute(
   builder: (BuildContext context) => MyWidget(),
   settings: RouteSettings(name: 'My Widget'),
 )
 ```
 
-```dart {tabTitle: Router}
+```dart {3} {tabTitle: Router}
 // Set the name on the Page objects in your RouterDelegate's pages list.
 MaterialPage(
   name: 'My Widget',
@@ -198,7 +192,7 @@ MaterialPage(
 )
 ```
 
-```dart {tabTitle: GoRouter}
+```dart {4-5} {tabTitle: GoRouter}
 // The path is used as the route name by default.
 // You can optionally set name to override it.
 GoRoute(
@@ -210,7 +204,7 @@ GoRoute(
 )
 ```
 
-```dart {tabTitle: auto_route}
+```dart {3} {tabTitle: auto_route}
 // Route names are auto-generated from your page annotations.
 // No additional configuration is needed.
 @RoutePage()
