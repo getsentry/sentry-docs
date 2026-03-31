@@ -180,7 +180,9 @@ export function Header({
           }
         }
       `}</style>
-      <div className={`header-content flex items-center w-full ${isHomePage ? 'header-content-home' : ''}`}>
+      <div
+        className={`header-content flex items-center w-full ${isHomePage ? 'header-content-home' : ''}`}
+      >
         {/* Left: logo + nav links, capped so right block can anchor to viewport edge */}
         <nav className="nav-inner flex items-center gap-4 min-h-[64px] min-w-0 flex-1 px-4 md:pl-3 md:pr-4">
           {/* Hamburger menu - different behavior on home page vs other pages */}
