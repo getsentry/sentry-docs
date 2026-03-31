@@ -725,6 +725,14 @@ const userDocsRedirects = [
     destination: '/organization/integrations/third-party-integrations/',
   },
   {
+    source: '/organization/integrations/xurrent-imr/',
+    destination: '/organization/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/shiprail/',
+    destination: '/organization/integrations/third-party-integrations/',
+  },
+  {
     source: '/development/sdk-dev/:path*',
     destination: 'https://develop.sentry.dev',
   },
