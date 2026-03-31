@@ -1,0 +1,207 @@
+---
+title: Set Up
+sidebar_order: 0
+description: "Learn how to set up Sentry MCP Monitoring"
+keywords:
+  - MCP setup
+  - MCP integration
+  - MCP SDK
+  - FastMCP
+  - Python MCP
+  - JavaScript MCP
+  - Node.js MCP
+---
+
+Sentry MCP Observability helps you track and debug Model Context Protocol (MCP) implementations using our supported SDKs and integrations. Monitor your complete MCP workflows from client connections to server responses, including tool executions, resource access, and protocol communications.
+
+To start sending MCP data to Sentry, make sure you've created a Sentry project for your MCP-enabled repository and follow the guide below:
+
+## Supported SDKs
+
+### JavaScript - MCP Server
+
+<VersionRequirement
+  product="MCP Observability"
+  sdk="Node SDK"
+  minVersion="9.46.0"
+/>
+
+The Sentry JavaScript SDK supports MCP observability by wrapping the MCP Server from the [@modelcontextprotocol/sdk](https://www.npmjs.com/package/@modelcontextprotocol/sdk) package. This wrapper automatically captures spans for your MCP server workflows including tool executions, resource access, and client connections.
+
+#### Quick Start with MCP Server
+
+```javascript
+import * as Sentry from "@sentry/node";
+import { McpServer } from "@modelcontextprotocol/sdk";
+
+// Sentry init needs to be above everything else
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+});
+
+// Your MCP server with optional input/output recording
+const server = Sentry.wrapMcpServerWithSentry(
+  new McpServer({
+    name: "my-mcp-server",
+    version: "1.0.0",
+  }),
+  {
+    recordInputs: true,
+    recordOutputs: true,
+  }
+);
+
+...
+```
+
+#### Options
+
+##### `recordInputs`
+
+_Type: `boolean`_
+
+Records inputs to MCP tool and prompt calls (such as tool arguments and prompt parameters).
+
+Defaults to `true` if `sendDefaultPii` is `true`.
+
+##### `recordOutputs`
+
+_Type: `boolean`_
+
+Records outputs from MCP tool and prompt calls (such as tool results and prompt messages).
+
+Defaults to `true` if `sendDefaultPii` is `true`.
+
+### Python - MCP Server
+
+<VersionRequirement
+  product="MCP Observability"
+  sdk="Python SDK"
+  minVersion="2.43.0"
+/>
+
+The Sentry Python SDK supports MCP observability for the [MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk) (both low-level and FastMCP APIs) and [standalone FastMCP](https://gofastmcp.com/getting-started/welcome). The integration automatically captures spans for your MCP server workflows including tool executions, resource access, and prompt handling.
+
+#### Quick Start
+
+```python {tabTitle:MCP Python SDK}
+import sentry_sdk
+from sentry_sdk.integrations.mcp import MCPIntegration
+from mcp.server.fastmcp import FastMCP
+
+# Sentry init needs to be above everything else
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    traces_sample_rate=1.0,
+    # Optional: Enable to capture tool call arguments and results in Sentry, which may include PII
+    send_default_pii=True,
+    integrations=[MCPIntegration()],
+)
+
+# Create the MCP server
+mcp = FastMCP("Example MCP Server")
+
+# Define a tool
+@mcp.tool()
+async def calculate_sum(a: int, b: int) -> int:
+    """Add two numbers together."""
+    return a + b
+
+# Run the server
+mcp.run()
+```
+
+```python {tabTitle:FastMCP}
+import sentry_sdk
+from sentry_sdk.integrations.mcp import MCPIntegration
+from fastmcp import FastMCP
+
+# Sentry init needs to be above everything else
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    traces_sample_rate=1.0,
+    # Optional: Enable to capture tool call arguments and results in Sentry, which may include PII
+    send_default_pii=True,
+    integrations=[MCPIntegration()],
+)
+
+# Create the MCP server
+mcp = FastMCP("Example MCP Server")
+
+# Define a tool
+@mcp.tool()
+async def calculate_sum(a: int, b: int) -> int:
+    """Add two numbers together."""
+    return a + b
+
+# Run the server
+mcp.run()
+```
+
+```python {tabTitle:MCP Low-Level API}
+import asyncio
+from typing import Any
+
+import sentry_sdk
+from sentry_sdk.integrations.mcp import MCPIntegration
+from mcp.server.lowlevel import Server
+from mcp.server import stdio
+from mcp.types import Tool, TextContent
+
+# Sentry init needs to be above everything else
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    traces_sample_rate=1.0,
+    # Optional: Enable to capture tool call arguments and results in Sentry, which may include PII
+    send_default_pii=True,
+    integrations=[MCPIntegration()],
+)
+
+# Create the MCP server
+server = Server("Example MCP Server")
+
+# Define tools
+@server.list_tools()
+async def list_tools() -> list[Tool]:
+    """List all available tools."""
+    return [
+        Tool(
+            name="calculate_sum",
+            description="Add two numbers together",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "a": {"type": "number", "description": "First number"},
+                    "b": {"type": "number", "description": "Second number"},
+                },
+                "required": ["a", "b"],
+            },
+        )
+    ]
+
+# Handle tool execution
+@server.call_tool()
+async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
+    if name == "calculate_sum":
+        a = arguments.get("a", 0)
+        b = arguments.get("b", 0)
+        result = a + b
+        return [TextContent(type="text", text=f"The sum is {result}")]
+
+    return [TextContent(type="text", text=f"Unknown tool: {name}")]
+
+# Run the server
+async def main():
+    """Run the MCP server using stdio transport."""
+    async with stdio.stdio_server() as (read_stream, write_stream):
+        await server.run(
+            read_stream,
+            write_stream,
+            server.create_initialization_options(),
+        )
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```

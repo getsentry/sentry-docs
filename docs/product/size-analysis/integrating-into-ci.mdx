@@ -3,7 +3,7 @@ title: Integrating Into CI
 sidebar_order: 40
 description: Set up the integration in CI to receive automated size change notifications
 og_image: /og-images/product-size-analysis-integrating-into-ci.png
-beta: true
+new: true
 ---
 
 <Include name="size-analysis/github-only" />
@@ -38,10 +38,11 @@ on:
 
 jobs:
   build_and_upload:
-    // Add your upload command here from the respective iOS or Android guide
+    # Add your upload command here from the respective iOS or Android guide
 ```
 
 **Example workflows:**
+
 - [Android main branch workflow](https://github.com/EmergeTools/hackernews/blob/main/.github/workflows/android_emerge_upload.yml) - Handles both push to main and pull requests in a single workflow
 - [iOS main branch workflow](https://github.com/EmergeTools/hackernews/blob/main/.github/workflows/ios_emerge_upload_main.yml) - Separate workflow for main branch
 
@@ -58,10 +59,11 @@ on:
 
 jobs:
   build_and_upload:
-    // Add your upload command here from the respective iOS or Android guide
+    # Add your upload command here from the respective iOS or Android guide
 ```
 
 **Example workflows:**
+
 - [Android pull request workflow](https://github.com/EmergeTools/hackernews/blob/main/.github/workflows/android_emerge_upload.yml) - Combined main and PR workflow
 - [iOS pull request workflow](https://github.com/EmergeTools/hackernews/blob/main/.github/workflows/ios_emerge_upload_pr.yml) - Separate PR workflow
 
@@ -80,6 +82,75 @@ After configuring both workflows and sending the correct metadata, the status ch
 Clicking on the "Details" button above should bring you to a more detailed breakdown of the changes.
 
 ![Example Status Check](./images/status-check.png)
+
+## Configuring Status Check Rules
+
+By default, status checks appear as neutral and won't block pull requests. You can configure rules to automatically fail status checks when size thresholds are exceeded.
+
+### Accessing Status Check Settings
+
+1. Go to **Settings > Projects**, then select your project
+2. In the left sidebar, click on **Mobile Builds**
+3. Toggle **Enable Status Checks** if not already enabled
+4. Click **Create Status Check Rule** to create a new status check rule
+
+![Status Checks Settings Page =600x](./images/status-check-enabled.png)
+
+### Creating a Rule
+
+Each rule consists of:
+
+**Metric:** Choose what to measure
+
+- Install/Uncompressed Size - Total unpacked application size
+- Download Size - Compressed/downloadable application size
+
+**Measurement Type:** How the threshold is applied
+
+- Absolute Size - Fail if current size exceeds threshold (e.g., max 50 MB)
+- Absolute Diff - Fail if size increases by more than threshold (e.g., max 5 MB increase)
+- Relative Diff - Fail if size increases by more than threshold percentage (e.g., max 10% increase)
+
+**Threshold:** Numeric value for the limit
+
+- For Absolute and Absolute Diff: value in MB
+- For Relative Diff: percentage value
+
+**Filters (Optional):** Apply rule only to specific builds
+
+- `app_id` - Target specific app ids (e.g., `com.example.app`)
+- `git_head_ref` - Target specific branches (e.g., `main`, `release/*`)
+- `build_configuration_name` - Target specific build types (e.g., `Release`)
+- `platform_name` - Target specific platforms (e.g., `apple`, `android`)
+
+### Example: Preventing Large Size Increases
+
+Here's an example configuration that prevents install size from increasing by more than 5 MB:
+
+- Metric: Install/Uncompressed Size
+- Measurement: Absolute Diff
+- Threshold: 5 MB
+- Filters: `build_configuration_name` is `Release`
+
+![Status Check Rule Configuration =600x](./images/status-check-rule.png)
+
+When this rule triggers, the status check will fail on the pull request.
+
+### Multiple Rules
+
+You can create multiple rules for different scenarios:
+
+- Enforce absolute maximum size limits
+- Prevent large incremental increases
+- Apply different thresholds to different platforms or configurations
+
+Rules are evaluated independently. If any rule's threshold is exceeded, the status check fails.
+
+### Default Behavior
+
+- If status checks are **disabled**, no checks will appear on pull requests
+- If status checks are **enabled** but **no rules are configured**, checks will post as **neutral** (won't block PRs) but will still show size change information
+- If rules are configured, checks will pass or fail based on whether thresholds are exceeded
 
 ## Troubleshooting
 

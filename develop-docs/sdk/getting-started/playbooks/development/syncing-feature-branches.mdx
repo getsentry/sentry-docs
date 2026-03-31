@@ -1,0 +1,76 @@
+---
+title: Syncing Feature Branches
+spec_id: sdk/playbooks/syncing-feature-branches
+spec_version: 1.0.0
+spec_status: candidate
+spec_changelog:
+  - version: 1.0.0
+    date: 2026-02-21
+    summary: Initial playbook — migrated from sdk/miscellaneous/feature-branches
+---
+
+<SpecRfcAlert />
+
+<SpecMeta />
+
+## Overview
+
+Sometimes we have long-running feature branches that can't be merged into `master` yet because they contain breaking changes (e.g. `sentry-sdk-2.0`, `potel-base` in python SDK, `8.x.x` in Java SDK). They have to be kept in sync with `master`/`main`.
+
+You might be tempted to branch off the feature branch and do the merge there, maybe make a PR so that you can double-check the changes in the UI and make sure CI is green. In that case you need to make sure you **don't actually commit the merge from another branch** — the merge commit needs to be directly on the feature branch, otherwise `git` doesn't set the parent commits for the merge commit properly and the feature branch will still have unresolved conflicts.
+
+---
+
+## Steps
+
+#### 1. Merge main into the feature branch
+
+You **MUST** perform the merge directly on the feature branch so that git records the correct parent commits:
+
+```bash
+git checkout feature-branch
+git merge master
+```
+
+#### 2. Resolve conflicts
+
+Resolve all conflicts while still on the feature branch and commit the merge.
+
+#### 3. Verify (optional)
+
+If you want a GitHub diff and CI run before pushing:
+
+- Open a new branch from the feature branch: `git checkout -b sync-feature-with-master`
+- Push and create a PR to review the diff and CI results
+- **Do NOT merge the PR** — merging from the temporary branch will not mark the merge conflicts as resolved on the feature branch
+
+#### 4. Push the feature branch
+
+Once satisfied, push directly from the feature branch:
+
+```bash
+git checkout feature-branch
+git push
+```
+
+## Alternative Approaches
+
+#### Alternative A — merge PR then empty merge (used for Java SDK `8.x.x`)
+
+Note: this approach does not preserve full per-file history — history only works on the full repo.
+
+1. Create a PR for merging `main` into the feature branch (e.g. `8.x.x`)
+2. Once that PR is merged, the reverse PR (feature branch back to `main`) will still show conflicts
+3. Do another merge of `main` into the feature branch where you accept all changes on the feature branch side and create an empty merge commit
+4. **Caveat:** if there are new commits on `main` between steps, this won't work correctly
+
+#### Alternative B — merge commit PR (untested)
+
+1. Create a merge PR for merging `main` into the feature branch
+2. When merging the PR, do not squash — create a merge commit (may need to enable this in repo settings)
+
+---
+
+## Changelog
+
+<SpecChangelog />

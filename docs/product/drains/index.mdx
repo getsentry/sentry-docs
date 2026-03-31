@@ -1,58 +1,37 @@
 ---
 title: Log and Trace Drains
 sidebar_order: 75
-description: Learn how to set up drains and forwarders to send logs and traces to Sentry.
+description: Learn how to set up log and trace drains to send logs and traces to Sentry from managed hosting platforms.
 ---
 
-## Overview
+Log and trace drains connect your hosting platform's native telemetry system directly to Sentry, letting you send [logs](/product/explore/logs/) and [traces](/product/explore/trace-explorer/) without modifying your application code.
 
-Drains and forwarders let you send [logs](/product/explore/logs/) and [traces](/product/explore/trace-explorer/) to Sentry without modifying your application code. They're ideal when:
+<Alert>
 
-- You want to capture **platform-level telemetry** from your hosting infrastructure (e.g., Vercel Build Logs, Cloudflare Workers Traces).
-- You **can't install Sentry SDKs** directly in your application (e.g., Nginx Traces, Postgres Logs)
-- You're using an existing OpenTelemetry pipeline and want to start routing logs and traces data to Sentry via Sentry's [OpenTelemetry support](/concepts/otlp/).
-
-<Alert level="info">
-
-Sending error events via drains or forwarders is not currently supported. To capture errors you'll need to add the [Sentry SDK](/platforms/) to your application.
+**How is this different from OTLP Forwarding?** Log and trace drains use your hosting platform's built-in telemetry export feature—you just configure a destination and the platform handles the rest. [OTLP Forwarding](/concepts/otlp/forwarding/) is for when you need to run your own pipeline (like the OpenTelemetry Collector) to collect data from infrastructure sources.
 
 </Alert>
 
-## Platform Drains
+## Supported Platforms
 
-**Platform drains** connect your hosting platform's native telemetry system directly to Sentry (e.g., Vercel, Cloudflare, Heroku)
+| Platform                                                | Logs | Traces |
+| ------------------------------------------------------- | :--: | :----: |
+| [Vercel](/product/drains/vercel/)                       |  ✅  |   ✅   |
+| [Cloudflare Workers](/product/drains/cloudflare/)       |  ✅  |   ✅   |
+| [Heroku](/product/drains/heroku/)                       |  ✅  |   ✅   |
+| [OpenRouter](/product/drains/openrouter/)               |  ❌  |   ✅   |
+| [Supabase](/product/drains/supabase/)                   |  ✅  |   ❌   |
+| [Shopify Hydrogen](/product/drains/shopify-hydrogen/)   |  ❌  |   ✅   |
 
-| Platform                                                          | Logs | Traces |
-| ----------------------------------------------------------------- | :--: | :----: |
-| [Vercel](/product/drains/integration/vercel/)                     |  ✅  |   ✅   |
-| [Cloudflare Workers](/product/drains/integration/cloudflare/)     |  ✅  |   ✅   |
-| [Heroku](/product/drains/integration/heroku/)                     |  ✅  |   ✅   |
-| [OpenRouter](/product/drains/integration/openrouter/)             |  ❌  |   ✅   |
-| [Supabase](/product/drains/integration/supabase/)                 |  ✅  |   ❌   |
-| [Shopify Hydrogen](/product/drains/integration/shopify-hydrogen/) |  ❌  |   ✅   |
+## Limitations
 
-## Forwarders
+Log and trace drains support logs and traces only:
 
-**Forwarders** collect logs and traces from various sources and route them to Sentry.
-
-| Forwarder                                                                                     | Logs | Traces |
-| --------------------------------------------------------------------------------------------- | :--: | :----: |
-| [OpenTelemetry Collector](/product/drains/integration/opentelemetry-collector/) (recommended) |  ✅  |   ✅   |
-| [Vector](/product/drains/integration/vector/)                                                 |  ✅  |   ❌   |
-| [Fluent Bit](/product/drains/integration/fluentbit/)                                          |  ✅  |   ✅   |
-
-### OpenTelemetry Collector guides
-
-<Include name="opentelemetry-collector-guides.mdx" />
+- **Errors**: To capture errors, add the [Sentry SDK](/platforms/) to your application.
+- **Metrics**: Not currently supported. If you're interested in this, reach out on [GitHub](https://github.com/getsentry/sentry/issues/103486) or email [feedback-metrics@sentry.io](mailto:feedback-metrics@sentry.io).
 
 ## Learn More
 
+- [OpenTelemetry Protocol (OTLP)](/concepts/otlp/): Send OTLP data to Sentry via SDK, OpenTelemetry Collector, Vector, or Fluent Bit
 - [Logs](/product/explore/logs/): View, search, and analyze logs in Sentry
 - [Trace Explorer](/product/explore/trace-explorer/): View, search, and analyze traces in Sentry
-- [OpenTelemetry Protocol](/concepts/otlp/): Learn about Sentry's OpenTelemetry support and how to export OTLP data to Sentry
-
-<Alert level="warning">
-
-Sending [metrics](/product/explore/metrics/) via drains or forwarders is not currently supported. If you're interested this support for this please reach out on [GitHub](https://github.com/getsentry/sentry/issues/103486) or or email us at [feedback-metrics@sentry.io](mailto:feedback-metrics@sentry.io).
-
-</Alert>

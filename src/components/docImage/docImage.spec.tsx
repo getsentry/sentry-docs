@@ -1,5 +1,3 @@
-import {beforeEach, describe, expect, it, vi} from 'vitest';
-
 import {
   cleanUrl,
   DIMENSION_PATTERN,
@@ -7,6 +5,7 @@ import {
   parseDimensionsFromHash,
 } from 'sentry-docs/components/docImage';
 import {serverContext} from 'sentry-docs/serverContext';
+import {beforeEach, describe, expect, it, vi} from 'vitest';
 
 // Mock the serverContext
 vi.mock('sentry-docs/serverContext', () => ({

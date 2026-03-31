@@ -49,7 +49,13 @@ In `session` mode, Replay will continuously record and send data to Sentry. Afte
 
 ## Buffer Mode
 
-In `buffer` mode, Replay will continuously record data, but won't send any of it. It will instead keep up to the last 60 seconds in memory. When an error occurs, `replaysOnErrorSampleRate` will be checked and if it's sampled, the replay will be uploaded to Sentry and continue recording normally. After 15 minutes of user inactivity, or a maximum duration of 60 minutes, the session will end and the replay will stop.
+In `buffer` mode, Replay will continuously record data, but won't send any of it. It stores the last 60 seconds of event logs in a memory ring buffer (approximately 2-5MB).
+
+<Alert level="info">
+**What's stored:** Web Session Replay captures lightweight DOM event logs (clicks, scrolls, mutations), not video files. These logs are automatically converted to video-like replays by Sentry's servers.
+</Alert>
+
+When an error occurs, `replaysOnErrorSampleRate` will be checked and if it's sampled, the buffered 60 seconds _before_ the error plus everything _after_ is uploaded to Sentry and recording continues normally. After 15 minutes of user inactivity, or a maximum duration of 60 minutes, the session will end and the replay will stop.
 
 ## Manually Add Replay Integration
 

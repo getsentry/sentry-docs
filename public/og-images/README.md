@@ -7,10 +7,11 @@ This directory contains Open Graph images for documentation pages.
 Images in this directory are automatically generated during the build process by running:
 
 ```bash
-yarn generate-og-images
+pnpm generate-og-images
 ```
 
 This script:
+
 1. Scans all MDX files in `docs/` and `develop-docs/`
 2. Finds the first image in each file
 3. Copies it here with a predictable name based on the page slug
@@ -18,7 +19,7 @@ This script:
 
 ## Local Development
 
-These files are gitignored to keep the repository clean. Run `yarn generate-og-images` or `yarn build` to generate them locally.
+These files are gitignored to keep the repository clean. Run `pnpm generate-og-images` or `pnpm build` to generate them locally.
 
 ## Production
 

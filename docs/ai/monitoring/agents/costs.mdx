@@ -1,0 +1,71 @@
+---
+title: Model Costs
+sidebar_order: 15
+description: Learn how Sentry calculates AI model costs, where pricing data comes from, and what's not covered.
+---
+
+The **Model Cost** widget in the [AI Agents Dashboard](/ai/monitoring/agents/dashboard/) Models tab shows estimated costs for your LLM usage. This page explains how those costs are calculated.
+
+## Data Sources
+
+Sentry calculates costs by mapping token usage to per-token prices from two external providers:
+
+- **[models.dev](https://models.dev)**: A community-maintained database of AI model pricing.
+- **[OpenRouter](https://openrouter.ai)**: An LLM routing service that publishes pricing for the models it supports.
+
+Sentry periodically fetches pricing data from these providers and caches it. Each model's pricing entry includes rates for:
+
+- Input tokens (standard)
+- Input tokens (cached) — at a reduced rate
+- Input tokens (cache write)
+- Output tokens (standard)
+- Output tokens (reasoning) — for models like OpenAI o-series that distinguish reasoning tokens
+
+## How Costs Are Calculated
+
+When your spans report token counts and a model name, Sentry looks up the model's pricing and calculates cost using this formula:
+
+```
+input cost  = (input_tokens - cached_tokens) × input_rate
+            + cached_tokens × cached_rate
+            + cache_write_tokens × cache_write_rate
+
+output cost = (output_tokens - reasoning_tokens) × output_rate
+            + reasoning_tokens × reasoning_rate
+
+total cost  = input cost + output cost
+```
+
+If a model doesn't have a specific reasoning token rate, the standard output rate is used for reasoning tokens as well.
+
+## Required Span Attributes
+
+Cost calculation relies on attributes set on AI spans:
+
+- **Model name** (`gen_ai.request.model` or `gen_ai.response.model`): Used to look up pricing. This must match a model known to models.dev or OpenRouter.
+- **Input tokens** (`gen_ai.usage.input_tokens`): Total number of input tokens.
+- **Output tokens** (`gen_ai.usage.output_tokens`): Total number of output tokens.
+
+Optionally, for more accurate cost calculation:
+
+- **Cached input tokens** (`gen_ai.usage.input_tokens.cached`): Number of input tokens served from cache (subset of input tokens).
+- **Cache write tokens** (`gen_ai.usage.input_tokens.cache_write`): Number of input tokens written to cache (subset of input tokens).
+- **Reasoning tokens** (`gen_ai.usage.output_tokens.reasoning`): Number of reasoning tokens (subset of output tokens).
+
+If no tokens are reported, or the model name doesn't match a known model, cost will be zero.
+
+## Costs Not Covered
+
+Cost estimates only account for **token-based pricing**. The following are **not** included:
+
+- **Non-token costs**: Some providers charge for features that aren't based on token counts, such as web searches, image generation, audio processing, or file storage. These costs are not reflected in Sentry at the moment.
+- **Unknown models**: If the model name in your spans doesn't match any model in models.dev or OpenRouter, the cost will be zero. This can happen with custom fine-tuned models, self-hosted models, or newly released models that haven't been added to the pricing databases yet.
+- **Non-standard pricing tiers**: Some providers offer volume discounts, committed-use pricing, or batch API pricing that differs from their published per-token rates. Sentry uses the standard published rates.
+
+## Troubleshooting
+
+If you're using manual instrumentation and your costs look unexpected (for example, negative costs), the most common cause is incorrectly set token attributes. See the "Token Usage and Cost Gotchas" section on the manual instrumentation page for your platform:
+
+- [Python](/platforms/python/tracing/instrumentation/custom-instrumentation/ai-agents-module/#token-usage-and-cost-gotchas)
+- [JavaScript](/platforms/javascript/guides/node/ai-agent-monitoring/#token-usage-and-cost-gotchas)
+- [Ruby](/platforms/ruby/tracing/instrumentation/custom-instrumentation/ai-agents-module/#token-usage-and-cost-gotchas)

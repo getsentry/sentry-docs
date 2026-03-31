@@ -6,6 +6,8 @@ sidebar_order: 5
 sidebar_section: features
 ---
 
+<AgentSkillsCallout skill="sentry-nextjs-sdk" platformName="Next.js" />
+
 Tracing captures the timing and flow of requests through your Next.js application. Learn more about [tracing](/concepts/key-terms/tracing/) and how Sentry uses traces to track performance across services.
 
 Sentry automatically instruments most operations, but Server Actions require manual setup.
@@ -118,7 +120,8 @@ Server Actions are **not** automatically instrumented. Without wrapping, they ap
 Use `withServerActionInstrumentation` to:
 - Create named spans for each action
 - Capture timing and errors
-- Connect client and server traces
+- Connect client and server traces via `headers`
+- Attach form data to Sentry events via `formData`
 
 </SplitSectionText>
 <SplitSectionCode>
@@ -148,9 +151,9 @@ export async function createOrder(formData: FormData) {
 <SplitSection>
 <SplitSectionText>
 
-### With Headers
+### With Headers and Form Data
 
-Pass headers to connect client-side traces with server-side spans. This enables full distributed tracing across the browser-to-server boundary.
+Pass `headers` to connect client-side traces with server-side spans for full distributed tracing across the browser-to-server boundary. Pass `formData` to attach submitted form data to Sentry events for easier debugging.
 
 </SplitSectionText>
 <SplitSectionCode>
@@ -164,7 +167,11 @@ import { headers } from "next/headers";
 export async function submitForm(formData: FormData) {
   return Sentry.withServerActionInstrumentation(
     "submitForm",
-    { headers: await headers() },
+    {
+      headers: await headers(), // Connect client and server traces
+      formData, // Attach form data to events
+      recordResponse: true, // Include response data
+    },
     async () => {
       // Action logic with full trace context
     }
@@ -342,6 +349,41 @@ Sentry.init({
     return 0.1;
   },
 });
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Detached spans with `after()`
+
+If you're using Next.js's [`after()`](https://nextjs.org/docs/app/api-reference/functions/after) and you see multiple root spans (like individual `db` spans) instead of one cohesive trace, your spans are becoming detached.
+
+This happens when `after()` runs after the response is sent. By then, the request's root span has already ended.
+
+Wrap your deferred work with `startSpan` inside the `after()` callback to group all background spans into a single transaction:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```tsx {filename:app/api/webhook/route.ts}
+import { after } from "next/server";
+import * as Sentry from "@sentry/nextjs";
+
+export async function POST(request: Request) {
+  const data = await request.json();
+
+  after(
+    Sentry.startSpan(
+      { name: "webhook.process", op: "task" },
+      () => processWebhook(data)
+    )
+  );
+
+  return Response.json({ received: true });
+}
 ```
 
 </SplitSectionCode>

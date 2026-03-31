@@ -1,7 +1,6 @@
 'use client';
 
 import {Children, useState} from 'react';
-
 import {getUnversionedPath} from 'sentry-docs/versioning';
 
 import {SidebarLink} from './sidebarLink';

@@ -34,89 +34,59 @@ supported:
   - javascript.gatsby
 ---
 
-<PlatformSection notSupported={["javascript", "javascript.react", "javascript.angular", "javascript.vue", "javascript.svelte", "javascript.solid", "javascript.ember", "javascript.gatsby"]}>
+<PlatformSection supported={["javascript.nextjs", "javascript.nuxt", "javascript.solidstart", "javascript.sveltekit", "javascript.react-router", "javascript.remix", "javascript.astro", "javascript.tanstackstart-react"]}>
+  <Alert level="warning">
+    For meta-framework applications running on both client and server, we recommend **setting up the integration manually** using the [`instrumentGoogleGenAIClient` wrapper](#manual-instrumentation) to ensure consistent instrumentation across all runtimes.
+  </Alert>
+</PlatformSection>
 
-## Server-Side Usage
+<PlatformSection supported={["javascript.node", "javascript.aws-lambda", "javascript.azure-functions", "javascript.connect", "javascript.express", "javascript.fastify", "javascript.gcp-functions", "javascript.hapi", "javascript.hono", "javascript.koa", "javascript.nestjs", "javascript.nextjs", "javascript.nuxt", "javascript.solidstart", "javascript.sveltekit", "javascript.react-router", "javascript.remix", "javascript.astro", "javascript.tanstackstart-react", "javascript.electron", "javascript.cordova", "javascript.capacitor", "javascript.deno", "javascript.wasm"]}>
 
-_Import name: `Sentry.googleGenAIIntegration`_
+  ## Automatic Instrumentation
 
-The `googleGenAIIntegration` adds instrumentation for the [`@google/genai`](https://www.npmjs.com/package/@google/genai) SDK to capture spans by wrapping Google Gen AI SDK calls and recording LLM interactions.
+  _Import name: `Sentry.googleGenAIIntegration`_
 
-<PlatformSection notSupported={["javascript.nextjs", "javascript.nuxt", "javascript.solidstart", "javascript.sveltekit", "javascript.react-router", "javascript.remix", "javascript.astro", "javascript.tanstackstart-react", "javascript.bun", "javascript.cloudflare"]}>
+  <PlatformSection notSupported={["javascript.node", "javascript.connect", "javascript.hapi", "javascript.koa"]}>
+    <Alert>
+      If you are using a different runtime (like Bun, Cloudflare Workers or a Browser) or experiencing missing spans, you need to use **[Manual Instrumentation](#manual-instrumentation)** to explicitly wrap your AI client instance instead.
+    </Alert>
+  </PlatformSection>
 
-<Alert>
+  The `googleGenAIIntegration` adds instrumentation for the [`@google/genai`](https://www.npmjs.com/package/@google/genai) SDK to capture spans by wrapping Google Gen AI SDK calls and recording LLM interactions.
 
-Enabled by default and automatically captures spans for Google Gen AI SDK calls. Requires Sentry SDK version `10.28.0` or higher.
+  In Node.js runtimes, this integration is enabled by default and automatically captures spans for Google Gen AI SDK calls (requires Sentry SDK version `10.28.0` or higher).
 
-</Alert>
+  To customize what data is captured (such as inputs and outputs), see the [Options](#options) in the Configuration section.
 
 </PlatformSection>
 
-<PlatformSection supported={["javascript.nextjs", "javascript.nuxt", "javascript.solidstart", "javascript.sveltekit", "javascript.react-router", "javascript.remix", "javascript.astro", "javascript.tanstackstart-react", "javascript.bun", "javascript.cloudflare"]}>
+<PlatformSection notSupported={["javascript.node", "javascript.connect", "javascript.hapi", "javascript.koa"]}>
 
-<Alert>
+  ## Manual Instrumentation
 
-Enabled by default and automatically captures spans for Google Gen AI SDK calls. Requires Sentry SDK version `10.28.0` or higher.
+  _Import name: `Sentry.instrumentGoogleGenAIClient`_
 
-For other runtimes, like the Browser, the instrumentation needs to be manually enabled. See the [setup instructions below](#browser-side-usage).
+  The `instrumentGoogleGenAIClient` helper adds instrumentation for the [`@google/genai`](https://www.npmjs.com/package/@google/genai) SDK to capture spans by wrapping Google Gen AI SDK calls and recording LLM interactions with configurable input/output recording. You need to manually wrap your Google Gen AI client instance with this helper.
 
-</Alert>
+  See example below:
 
-</PlatformSection>
+  ```javascript
+  import { GoogleGenAI } from "@google/genai";
 
-To customize what data is captured (such as inputs and outputs), see the [Options](#options) in the Configuration section.
+  const genAI = new GoogleGenAI({
+    apiKey: "your-api-key", // Warning: API key will be exposed in browser!
+  });
 
-</PlatformSection>
+  const client = Sentry.instrumentGoogleGenAIClient(genAI, {
+    recordInputs: true,
+    recordOutputs: true,
+  });
 
-<PlatformSection supported={["javascript", "javascript.react", "javascript.angular", "javascript.vue", "javascript.svelte", "javascript.solid", "javascript.ember", "javascript.gatsby", "javascript.nextjs", "javascript.nuxt", "javascript.solidstart", "javascript.sveltekit", "javascript.react-router", "javascript.remix", "javascript.astro", "javascript.tanstackstart-react", "javascript.electron", "javascript.cloudflare"]}>
+  // Use the wrapped client instead of the original genAI instance
+  const result = await client.models.generateContent("Hello!");
+  ```
 
-## Browser-Side Usage
-
-_Import name: `Sentry.instrumentGoogleGenAIClient`_
-
-The `instrumentGoogleGenAIClient` helper adds instrumentation for the [`@google/genai`](https://www.npmjs.com/package/@google/genai) SDK to capture spans by wrapping Google Gen AI SDK calls and recording LLM interactions with configurable input/output recording. You need to manually wrap your Google Gen AI client instance with this helper. See example below:
-
-```javascript
-import { GoogleGenAI } from "@google/genai";
-
-const genAI = new GoogleGenAI({
-  apiKey: "your-api-key", // Warning: API key will be exposed in browser!
-});
-
-const client = Sentry.instrumentGoogleGenAIClient(genAI, {
-  recordInputs: true,
-  recordOutputs: true,
-});
-
-// Use the wrapped client instead of the original genAI instance
-const result = await client.models.generateContent("Hello!");
-```
-
-To customize what data is captured (such as inputs and outputs), see the [Options](#options) in the Configuration section.
-
-</PlatformSection>
-
-<PlatformSection supported={['javascript.nextjs']}>
-
-## Edge runtime
-
-For Next.js applications using the Edge runtime, you need to manually wrap your Google Gen AI client instance with the `instrumentGoogleGenAIClient` helper:
-
-```javascript
-import { GoogleGenAI } from "@google/genai";
-
-const genAI = new GoogleGenAI({
-  apiKey: "your-api-key", // Warning: API key will be exposed in browser!
-});
-
-const client = Sentry.instrumentGoogleGenAIClient(genAI, {
-  recordInputs: true,
-  recordOutputs: true,
-});
-
-// Use the wrapped client instead of the original genAI instance
-const result = await client.models.generateContent("Hello!");
-```
+  To customize what data is captured (such as inputs and outputs), see the [Options](#options) in the Configuration section.
 
 </PlatformSection>
 
@@ -144,9 +114,9 @@ Defaults to `true` if `sendDefaultPii` is `true`.
 
 **Usage**
 
-<PlatformSection notSupported={["javascript", "javascript.react", "javascript.angular", "javascript.vue", "javascript.svelte", "javascript.solid", "javascript.ember", "javascript.gatsby"]}>
+<PlatformSection supported={["javascript.node", "javascript.aws-lambda", "javascript.azure-functions", "javascript.connect", "javascript.express", "javascript.fastify", "javascript.gcp-functions", "javascript.hapi", "javascript.hono", "javascript.koa", "javascript.nestjs", "javascript.nextjs", "javascript.nuxt", "javascript.solidstart", "javascript.sveltekit", "javascript.react-router", "javascript.remix", "javascript.astro", "javascript.tanstackstart-react", "javascript.electron", "javascript.cordova", "javascript.capacitor", "javascript.deno", "javascript.wasm"]}>
 
-Using the `googleGenAIIntegration` integration:
+Using the `googleGenAIIntegration` integration for **automatic instrumentation**:
 
 ```javascript
 Sentry.init({
@@ -163,9 +133,9 @@ Sentry.init({
 
 </PlatformSection>
 
-<PlatformSection supported={["javascript", "javascript.react", "javascript.angular", "javascript.vue", "javascript.svelte", "javascript.solid", "javascript.ember", "javascript.gatsby", "javascript.nextjs", "javascript.nuxt", "javascript.solidstart", "javascript.sveltekit", "javascript.react-router", "javascript.remix", "javascript.astro", "javascript.tanstackstart-react", "javascript.electron", "javascript.cloudflare"]}>
+<PlatformSection notSupported={["javascript.node", "javascript.connect", "javascript.hapi", "javascript.koa"]}>
 
-Using the `instrumentGoogleGenAIClient` helper:
+Using the `instrumentGoogleGenAIClient` wrapper for **manual instrumentation**:
 
 ```javascript
 const client = Sentry.instrumentGoogleGenAIClient(genAI, {

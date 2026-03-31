@@ -30,13 +30,46 @@ import {remove} from 'unist-util-remove';
 const DOCS_ORIGIN = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
   ? 'https://develop.sentry.dev'
   : 'https://docs.sentry.io';
-const CACHE_VERSION = 4;
+const CACHE_VERSION = 7;
 const CACHE_COMPRESS_LEVEL = 4;
 const R2_BUCKET = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
   ? 'sentry-develop-docs'
   : 'sentry-docs';
 const accessKeyId = process.env.R2_ACCESS_KEY_ID;
 const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
+
+// --- Doc tree helpers for generating structured navigation ---
+
+function findNode(node, pathParts) {
+  for (const part of pathParts) {
+    node = node.children?.find(c => c.slug === part);
+    if (!node) {
+      return null;
+    }
+  }
+  return node;
+}
+
+function getTitle(node) {
+  return node.frontmatter?.sidebar_title || node.frontmatter?.title || node.slug;
+}
+
+function isVisible(node) {
+  return (
+    !node.frontmatter?.sidebar_hidden &&
+    !node.frontmatter?.draft &&
+    !node.path?.includes('__v') &&
+    (node.frontmatter?.title || node.frontmatter?.sidebar_title)
+  );
+}
+
+function getVisibleChildren(node) {
+  return (node.children || []).filter(isVisible).sort((a, b) => {
+    const orderDiff =
+      (a.frontmatter?.sidebar_order ?? 99) - (b.frontmatter?.sidebar_order ?? 99);
+    return orderDiff !== 0 ? orderDiff : getTitle(a).localeCompare(getTitle(b));
+  });
+}
 
 function getS3Client() {
   return new S3Client({
@@ -58,7 +91,452 @@ async function uploadToCFR2(s3Client, relativePath, data) {
     ContentType: 'text/markdown',
   });
   await s3Client.send(command);
-  return;
+}
+
+// --- Shared link resolver utilities for page overrides ---
+
+function nodeLinks(node, subtreePath) {
+  if (!node) {
+    return [];
+  }
+  const subtree = subtreePath ? findNode(node, subtreePath.split('/')) : node;
+  if (!subtree) {
+    return [];
+  }
+  return getVisibleChildren(subtree).map(child => ({
+    title: getTitle(child),
+    url: `${DOCS_ORIGIN}/${child.path}.md`,
+  }));
+}
+
+function childLinks(ctx, filter) {
+  let pages = ctx.children;
+  if (filter) {
+    pages = pages.filter(filter);
+  }
+  return pages
+    .map(p => {
+      const parts = p.replace(/\.md$/, '').split('/');
+      const node = findNode(ctx.docTree, parts);
+      return {
+        title: node ? getTitle(node) : parts[parts.length - 1],
+        url: `${DOCS_ORIGIN}/${p}`,
+        order: node?.frontmatter?.sidebar_order ?? 99,
+      };
+    })
+    .sort((a, b) => {
+      const orderDiff = a.order - b.order;
+      return orderDiff !== 0 ? orderDiff : a.title.localeCompare(b.title);
+    });
+}
+
+function siblingGuideLinks(ctx) {
+  const platformSlug = ctx.pathParts[1];
+  const guideSlug = ctx.pathParts[3];
+  const platformNode = findNode(ctx.docTree, ['platforms', platformSlug]);
+  if (!platformNode) {
+    return [];
+  }
+  const guidesNode = findNode(platformNode, ['guides']);
+  if (!guidesNode) {
+    return [];
+  }
+  return getVisibleChildren(guidesNode)
+    .filter(g => g.slug !== guideSlug)
+    .map(g => ({
+      title: getTitle(g),
+      url: `${DOCS_ORIGIN}/platforms/${platformSlug}/guides/${g.slug}.md`,
+    }));
+}
+
+function platformTitle(ctx) {
+  const platformNode = findNode(ctx.docTree, ['platforms', ctx.pathParts[1]]);
+  return platformNode ? getTitle(platformNode) : ctx.pathParts[1];
+}
+
+function renderSections(ctx, sections) {
+  let result = '';
+  for (const section of sections) {
+    const heading =
+      typeof section.heading === 'function' ? section.heading(ctx) : section.heading;
+    const items =
+      typeof section.items === 'function' ? section.items(ctx) : section.items;
+    if (items.length === 0) {
+      continue;
+    }
+    result += `\n## ${heading}\n\n`;
+    result += items.map(item => `- [${item.title}](${item.url})`).join('\n');
+    result += '\n';
+  }
+  return result;
+}
+
+// Escape hatch for platforms.md which needs complex grouped structure
+function buildPlatformsSection(ctx) {
+  const platformsNode = findNode(ctx.docTree, ['platforms']);
+  if (!platformsNode) {
+    return '';
+  }
+
+  const platforms = getVisibleChildren(platformsNode);
+  let section = `\n## Platforms\n\n`;
+  section += platforms
+    .map(p => `- [${getTitle(p)}](${DOCS_ORIGIN}/platforms/${p.slug}.md)`)
+    .join('\n');
+
+  const frameworkLines = [];
+  for (const platform of platforms) {
+    const guidesNode = findNode(platform, ['guides']);
+    if (!guidesNode) {
+      continue;
+    }
+    const guides = getVisibleChildren(guidesNode);
+    if (guides.length === 0) {
+      continue;
+    }
+    frameworkLines.push(`\n### ${getTitle(platform)}\n`);
+    for (const guide of guides) {
+      frameworkLines.push(
+        `- [${getTitle(guide)}](${DOCS_ORIGIN}/platforms/${platform.slug}/guides/${guide.slug}.md)`
+      );
+    }
+  }
+  if (frameworkLines.length > 0) {
+    section += `\n\n## Frameworks\n${frameworkLines.join('\n')}\n`;
+  }
+
+  return section + '\n';
+}
+
+// Declarative page overrides for appended navigation sections.
+// First match wins. Unmatched pages with children get default "Pages in this section".
+const pageOverrides = [
+  {
+    match: 'platforms.md',
+    build: ctx => buildPlatformsSection(ctx),
+  },
+  {
+    // Platform index pages (e.g., platforms/javascript.md)
+    match: ctx => ctx.pathParts[0] === 'platforms' && ctx.pathParts.length === 2,
+    sections: [
+      {heading: 'Frameworks', items: ctx => nodeLinks(ctx.node, 'guides')},
+      {heading: 'Topics', items: ctx => childLinks(ctx, p => !p.includes('/guides/'))},
+    ],
+  },
+  {
+    // Guide index pages (e.g., platforms/javascript/guides/nextjs.md)
+    match: ctx =>
+      ctx.pathParts.length === 4 &&
+      ctx.pathParts[0] === 'platforms' &&
+      ctx.pathParts[2] === 'guides',
+    sections: [
+      {
+        heading: ctx => `Other ${platformTitle(ctx)} Frameworks`,
+        items: ctx => siblingGuideLinks(ctx),
+      },
+      {heading: 'Topics', items: ctx => childLinks(ctx)},
+    ],
+  },
+];
+
+function buildChildSection(ctx) {
+  for (const override of pageOverrides) {
+    const matches =
+      typeof override.match === 'string'
+        ? ctx.relativePath === override.match
+        : override.match(ctx);
+    if (!matches) {
+      continue;
+    }
+    if (override.build) {
+      return override.build(ctx);
+    }
+    if (override.sections) {
+      return renderSections(ctx, override.sections);
+    }
+    return '';
+  }
+
+  // Default: list children sorted by sidebar_order
+  return renderSections(ctx, [
+    {heading: 'Pages in this section', items: () => childLinks(ctx)},
+  ]);
+}
+
+function buildFallbackChildSection(parentPath, children) {
+  const isPlatformIndex =
+    parentPath.startsWith('platforms/') && parentPath.split('/').length === 2;
+
+  const guides = isPlatformIndex ? children.filter(p => p.includes('/guides/')) : [];
+  const otherPages = isPlatformIndex
+    ? children.filter(p => !p.includes('/guides/'))
+    : children;
+
+  let childSection = '';
+  if (guides.length > 0) {
+    const guideList = guides
+      .map(p => {
+        const name = p.replace(/\.md$/, '').split('/').pop();
+        return `- [${name}](${DOCS_ORIGIN}/${p})`;
+      })
+      .join('\n');
+    childSection += `\n## Guides\n\n${guideList}\n`;
+  }
+  if (otherPages.length > 0) {
+    const pageList = otherPages
+      .map(p => {
+        const name = p.replace(/\.md$/, '').split('/').pop();
+        return `- [${name}](${DOCS_ORIGIN}/${p})`;
+      })
+      .join('\n');
+    childSection += `\n## Pages in this section\n\n${pageList}\n`;
+  }
+  return childSection;
+}
+
+function normalizeRelativePath(filePath) {
+  return filePath.replace(/\\/g, '/');
+}
+
+/**
+ * Walks the doctree to build a map of relativePath → {title, description, url}
+ * for YAML frontmatter generation.
+ */
+function buildFrontmatterMap(docTree) {
+  const map = new Map();
+  if (!docTree) {
+    return map;
+  }
+
+  function walk(node) {
+    if (node.path) {
+      const relativePath = normalizeRelativePath(node.path + '.md');
+      map.set(relativePath, {
+        title: getTitle(node),
+        description: node.frontmatter?.description || '',
+        url: `${DOCS_ORIGIN}/${node.path}/`,
+      });
+    }
+    if (node.children) {
+      for (const child of node.children) {
+        walk(child);
+      }
+    }
+  }
+
+  if (docTree.children) {
+    for (const child of docTree.children) {
+      walk(child);
+    }
+  }
+
+  return map;
+}
+
+/**
+ * Formats a YAML frontmatter block for a markdown file.
+ * Only includes fields that have non-empty values.
+ */
+function formatYamlFrontmatter({title, description, url}) {
+  let yaml = '---\n';
+  if (title) {
+    yaml += `title: ${JSON.stringify(title.replace(/\r?\n/g, ' '))}\n`;
+  }
+  if (description) {
+    yaml += `description: ${JSON.stringify(description.replace(/\r?\n/g, ' '))}\n`;
+  }
+  if (url) {
+    yaml += `url: ${url}\n`;
+  }
+  yaml += '---\n\n';
+  return yaml;
+}
+
+// --- MDX template rendering for full-page overrides ---
+
+function buildMdxComponents(docTree, createElement) {
+  function PlatformList() {
+    if (!docTree) {
+      return null;
+    }
+    const platformsNode = findNode(docTree, ['platforms']);
+    if (!platformsNode) {
+      return null;
+    }
+    const platforms = getVisibleChildren(platformsNode);
+    return createElement(
+      'ul',
+      null,
+      platforms.map(p =>
+        createElement(
+          'li',
+          {key: p.slug},
+          createElement('a', {href: `/platforms/${p.slug}`}, getTitle(p))
+        )
+      )
+    );
+  }
+
+  function FrameworkGroups() {
+    if (!docTree) {
+      return null;
+    }
+    const platformsNode = findNode(docTree, ['platforms']);
+    if (!platformsNode) {
+      return null;
+    }
+    const platforms = getVisibleChildren(platformsNode);
+    const groups = [];
+    for (const platform of platforms) {
+      const guidesNode = findNode(platform, ['guides']);
+      if (!guidesNode) {
+        continue;
+      }
+      const guides = getVisibleChildren(guidesNode);
+      if (guides.length === 0) {
+        continue;
+      }
+      groups.push(
+        createElement('h3', {key: `h-${platform.slug}`}, getTitle(platform)),
+        createElement(
+          'ul',
+          {key: `ul-${platform.slug}`},
+          guides.map(g =>
+            createElement(
+              'li',
+              {key: g.slug},
+              createElement(
+                'a',
+                {href: `/platforms/${platform.slug}/guides/${g.slug}`},
+                getTitle(g)
+              )
+            )
+          )
+        )
+      );
+    }
+    return createElement('div', null, ...groups);
+  }
+
+  function DocSectionList({exclude = []}) {
+    if (!docTree) {
+      return null;
+    }
+    const sections = getVisibleChildren(docTree).filter(
+      child => !exclude.includes(child.slug)
+    );
+    return createElement(
+      'ul',
+      null,
+      sections.map(child =>
+        createElement(
+          'li',
+          {key: child.slug},
+          createElement('a', {href: `/${child.slug}`}, getTitle(child))
+        )
+      )
+    );
+  }
+
+  // Renders every top-level section with its visible children as a nested list.
+  // Used for the root index.md sitemap.
+  function SectionTree({exclude = []}) {
+    if (!docTree) {
+      return null;
+    }
+    const sections = getVisibleChildren(docTree).filter(
+      child => !exclude.includes(child.slug)
+    );
+    const elements = [];
+    for (const section of sections) {
+      elements.push(createElement('h2', {key: `h-${section.slug}`}, getTitle(section)));
+      const children = getVisibleChildren(section);
+      if (children.length > 0) {
+        elements.push(
+          createElement(
+            'ul',
+            {key: `ul-${section.slug}`},
+            children.map(child =>
+              createElement(
+                'li',
+                {key: child.slug},
+                createElement('a', {href: `/${child.path}`}, getTitle(child))
+              )
+            )
+          )
+        );
+      }
+    }
+    return createElement('div', null, ...elements);
+  }
+
+  return {PlatformList, FrameworkGroups, DocSectionList, SectionTree};
+}
+
+async function renderMdxOverrides(root, docTree) {
+  const overrideDir = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
+    ? path.join(root, 'md-overrides', 'dev')
+    : path.join(root, 'md-overrides');
+
+  const overrides = new Map();
+
+  if (!existsSync(overrideDir)) {
+    return overrides;
+  }
+
+  const tempDir = path.join(root, '.next', 'cache', 'md-override-html');
+  await rm(tempDir, {recursive: true, force: true});
+  await mkdir(tempDir, {recursive: true});
+
+  const {evaluate} = await import('@mdx-js/mdx');
+  const jsxRuntime = await import('react/jsx-runtime');
+  const React = await import('react');
+  const {renderToStaticMarkup} = await import('react-dom/server');
+  const grayMatter = (await import('gray-matter')).default;
+
+  const components = buildMdxComponents(docTree, React.createElement);
+  // Non-recursive: only read .mdx files directly in overrideDir.
+  // This prevents dev/ overrides from leaking into production builds.
+  const files = await readdir(overrideDir);
+
+  for (const file of files) {
+    if (!file.endsWith('.mdx')) {
+      continue;
+    }
+
+    const mdxSource = await readFile(path.join(overrideDir, file), {encoding: 'utf8'});
+    const {data: frontmatter, content} = grayMatter(mdxSource);
+
+    const {default: MDXContent} = await evaluate(content, {
+      jsx: jsxRuntime.jsx,
+      jsxs: jsxRuntime.jsxs,
+      Fragment: jsxRuntime.Fragment,
+    });
+
+    const bodyHtml = renderToStaticMarkup(React.createElement(MDXContent, {components}));
+
+    const relativePath = file.replace(/\.mdx$/, '.md');
+    const urlPath = file.replace(/\.mdx$/, '').replace(/^index$/, '');
+    const canonicalUrl = `${DOCS_ORIGIN}/${urlPath}`;
+
+    const html = [
+      '<!DOCTYPE html><html><head>',
+      `<title>${frontmatter.title || ''}</title>`,
+      `<link rel="canonical" href="${canonicalUrl}" />`,
+      '</head><body>',
+      `<main><div id="main">${bodyHtml}</div></main>`,
+      '</body></html>',
+    ].join('\n');
+
+    const htmlPath = path.join(tempDir, file.replace(/\.mdx$/, '.html'));
+    await mkdir(path.dirname(htmlPath), {recursive: true});
+    await writeFile(htmlPath, html, {encoding: 'utf8'});
+
+    overrides.set(relativePath, {htmlPath, frontmatter});
+    console.log(`📝 Rendered MDX override: ${file} → ${relativePath}`);
+  }
+
+  return overrides;
 }
 
 // Global set to track which cache files are used across all workers
@@ -98,6 +576,26 @@ async function createWork() {
 
   console.log(`🚀 Starting markdown generation from: ${INPUT_DIR}`);
   console.log(`📁 Output directory: ${OUTPUT_DIR}`);
+
+  // Load doctree for structured navigation
+  const doctreeFilename = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
+    ? 'doctree-dev.json'
+    : 'doctree.json';
+  const doctreePath = path.join(root, 'public', doctreeFilename);
+  let docTree = null;
+  try {
+    docTree = JSON.parse(await readFile(doctreePath, {encoding: 'utf8'}));
+    console.log(`🌳 Loaded doc tree from ${doctreePath}`);
+  } catch (err) {
+    console.warn(`⚠️ Could not load doctree (${doctreePath}): ${err.message}`);
+    console.warn('   Falling back to slug-based navigation');
+  }
+
+  // Build frontmatter map for YAML metadata in markdown output
+  const frontmatterMap = buildFrontmatterMap(docTree);
+
+  // Render MDX template overrides (full-page content replacements)
+  const mdxOverrides = await renderMdxOverrides(root, docTree);
 
   // Clear output directory
   await rm(OUTPUT_DIR, {recursive: true, force: true});
@@ -162,15 +660,45 @@ async function createWork() {
       );
       await mkdir(targetDir, {recursive: true});
       const targetPath = path.join(targetDir, dirent.name.slice(0, -5) + '.md');
-      const relativePath = path.relative(OUTPUT_DIR, targetPath);
+      const relativePath = normalizeRelativePath(path.relative(OUTPUT_DIR, targetPath));
+      // Use MDX override HTML if available, otherwise use Next.js build HTML
+      const mdxOverride = mdxOverrides.get(relativePath);
+      let taskFrontmatter = null;
+      if (mdxOverride) {
+        const fm = mdxOverride.frontmatter;
+        const urlPath = relativePath.replace(/\.md$/, '').replace(/\/index$|^index$/, '');
+        taskFrontmatter = {
+          title: fm.title || '',
+          description: fm.description || '',
+          url: `${DOCS_ORIGIN}/${urlPath}${urlPath ? '/' : ''}`,
+        };
+      } else {
+        taskFrontmatter = frontmatterMap.get(relativePath) || null;
+      }
       workerTasks[workerIdx].push({
-        sourcePath,
+        sourcePath: mdxOverride ? mdxOverride.htmlPath : sourcePath,
         targetPath,
         relativePath,
         r2Hash: existingFilesOnR2 ? existingFilesOnR2.get(relativePath) : null,
+        frontmatter: taskFrontmatter,
       });
       workerIdx = (workerIdx + 1) % numWorkers;
       numFiles++;
+    }
+  }
+
+  // Warn about MDX overrides that didn't match any HTML file
+  const usedOverrides = new Set(
+    workerTasks
+      .flat()
+      .filter(t => mdxOverrides.has(t.relativePath))
+      .map(t => t.relativePath)
+  );
+  for (const [key] of mdxOverrides) {
+    if (!usedOverrides.has(key)) {
+      console.warn(
+        `⚠️ MDX override "${key}" did not match any HTML file and will be ignored`
+      );
     }
   }
 
@@ -217,63 +745,20 @@ async function createWork() {
 
   await Promise.all(workerPromises);
 
-  // Generate hierarchical sitemaps
+  // Collect all generated paths
   const allPaths = workerTasks
     .flat()
     .map(task => task.relativePath)
-    .filter(p => p !== 'index.md')
     .sort();
-
-  // Root index.md - only top-level pages (no slashes in path)
-  const topLevelPaths = allPaths.filter(p => !p.includes('/'));
-  const rootSitemapContent = `# Sentry Documentation
-
-Sentry is a developer-first application monitoring platform that helps you identify and fix issues in real-time. It provides error tracking, performance monitoring, session replay, and more across all major platforms and frameworks.
-
-## Key Features
-
-- **Error Monitoring**: Capture and diagnose errors with full stack traces, breadcrumbs, and context
-- **Tracing**: Track requests across services to identify performance bottlenecks
-- **Session Replay**: Watch real user sessions to understand what led to errors
-- **Profiling**: Identify slow functions and optimize application performance
-- **Crons**: Monitor scheduled jobs and detect failures
-- **Logs**: Collect and analyze application logs in context
-
-## Documentation Sections
-
-${topLevelPaths
-  .filter(p => p !== '_not-found.md')
-  .map(p => `- [${p.replace(/\.md$/, '')}](${DOCS_ORIGIN}/${p})`)
-  .join('\n')}
-
-${
-  process.env.NEXT_PUBLIC_DEVELOPER_DOCS
-    ? `## Quick Links
-
-- [Backend Development](${DOCS_ORIGIN}/backend.md) - Backend service architecture
-- [Frontend Development](${DOCS_ORIGIN}/frontend.md) - Frontend development guide
-- [SDK Development](${DOCS_ORIGIN}/sdk.md) - SDK development documentation
-`
-    : `## Quick Links
-
-- [Platform SDKs](${DOCS_ORIGIN}/platforms.md) - Install Sentry for your language/framework
-- [API Reference](${DOCS_ORIGIN}/api.md) - Programmatic access to Sentry
-- [CLI](${DOCS_ORIGIN}/cli.md) - Command-line interface for Sentry operations
-`
-}`;
-
-  const indexPath = path.join(OUTPUT_DIR, 'index.md');
-  await writeFile(indexPath, rootSitemapContent, {encoding: 'utf8'});
-  console.log(
-    `📑 Generated root index.md with ${topLevelPaths.length} top-level sections`
-  );
 
   // Append child page listings to section index pages
   // Group paths by their DIRECT parent (handling guides specially)
   const pathsByParent = new Map();
   for (const p of allPaths) {
     const parts = p.replace(/\.md$/, '').split('/');
-    if (parts.length <= 1) continue;
+    if (parts.length <= 1) {
+      continue;
+    }
 
     // Determine the parent path - always direct parent, except:
     // Guide index pages (platforms/X/guides/Y.md) -> parent is platform (platforms/X.md)
@@ -299,9 +784,19 @@ ${
     pathsByParent.get(parentPath).push(p);
   }
 
-  // Append child listings to parent index files
+  // Append child listings to parent index files.
+  // Skip pages whose MDX override sets append_sections: false.
+  const hasR2 = !!(accessKeyId && secretAccessKey && existingFilesOnR2);
   let updatedCount = 0;
+  // Store the latest content per key for R2 upload after child section append.
+  const r2Uploads = new Map();
+
   for (const [parentPath, children] of pathsByParent) {
+    const overrideFm = mdxOverrides.get(parentPath)?.frontmatter;
+    if (overrideFm?.append_sections === false) {
+      continue;
+    }
+
     const parentFile = path.join(OUTPUT_DIR, parentPath);
     let existingContent;
     try {
@@ -313,62 +808,46 @@ ${
       throw err;
     }
 
-    // Only show "## Guides" section for platform index pages (e.g., platforms/javascript.md)
-    // These are the only pages that have guide children (platforms/X/guides/Y.md)
-    const isPlatformIndex =
-      parentPath.startsWith('platforms/') && parentPath.split('/').length === 2; // e.g., "platforms/javascript.md"
+    const pathParts = parentPath.replace(/\.md$/, '').split('/');
+    const node = docTree ? findNode(docTree, pathParts) : null;
+    const ctx = {
+      docTree,
+      relativePath: parentPath,
+      pathParts,
+      node,
+      children,
+    };
 
-    const guides = isPlatformIndex ? children.filter(p => p.includes('/guides/')) : [];
-    const otherPages = isPlatformIndex
-      ? children.filter(p => !p.includes('/guides/'))
-      : children;
-
-    let childSection = '';
-    if (guides.length > 0) {
-      const guideList = guides
-        .map(p => {
-          const name = p.replace(/\.md$/, '').split('/').pop();
-          return `- [${name}](${DOCS_ORIGIN}/${p})`;
-        })
-        .join('\n');
-      childSection += `\n## Guides\n\n${guideList}\n`;
-    }
-    if (otherPages.length > 0) {
-      const pageList = otherPages
-        .map(p => {
-          const name = p.replace(/\.md$/, '').split('/').pop();
-          return `- [${name}](${DOCS_ORIGIN}/${p})`;
-        })
-        .join('\n');
-      childSection += `\n## Pages in this section\n\n${pageList}\n`;
-    }
+    const childSection = docTree
+      ? buildChildSection(ctx)
+      : buildFallbackChildSection(parentPath, children);
 
     if (childSection) {
       const updatedContent = existingContent + childSection;
       await writeFile(parentFile, updatedContent, {encoding: 'utf8'});
       updatedCount++;
-
-      // Upload modified parent file to R2 if configured
-      if (accessKeyId && secretAccessKey && existingFilesOnR2) {
-        const fileHash = md5(updatedContent);
-        const existingHash = existingFilesOnR2.get(parentPath);
-        if (existingHash !== fileHash) {
-          const s3Client = getS3Client();
-          await uploadToCFR2(s3Client, parentPath, updatedContent);
-        }
+      if (hasR2) {
+        r2Uploads.set(parentPath, updatedContent);
       }
     }
   }
   console.log(`📑 Added child page listings to ${updatedCount} section index files`);
 
-  // Upload index.md to R2 if configured
-  if (accessKeyId && secretAccessKey) {
-    const s3Client = getS3Client();
-    const indexHash = md5(rootSitemapContent);
-    const existingHash = existingFilesOnR2?.get('index.md');
-    if (existingHash !== indexHash) {
-      await uploadToCFR2(s3Client, 'index.md', rootSitemapContent);
-      console.log(`📤 Uploaded updated index.md to R2`);
+  // Upload modified files to R2, skipping those whose hash already matches
+  if (r2Uploads.size > 0) {
+    const toUpload = [];
+    for (const [key, data] of r2Uploads) {
+      if (existingFilesOnR2.get(key) !== md5(data)) {
+        toUpload.push([key, data]);
+      }
+    }
+    if (toUpload.length > 0) {
+      const limit = pLimit(50);
+      const s3Client = getS3Client();
+      await Promise.all(
+        toUpload.map(([key, data]) => limit(() => uploadToCFR2(s3Client, key, data)))
+      );
+      console.log(`📤 Uploaded ${toUpload.length} modified files to R2`);
     }
   }
 
@@ -408,22 +887,22 @@ ${
 const md5 = data => createHash('md5').update(data).digest('hex');
 
 /**
- * Strips build-specific elements from HTML for stable cache keys and faster processing.
+ * Strips build-specific HTML elements that are irrelevant for markdown generation.
  *
- * Next.js build output contains non-deterministic elements that change between builds
- * even when content is unchanged:
+ * Next.js build output contains elements that change between builds:
  * - <script> tags: RSC/Flight payloads, JS chunk references with content hashes
  * - <link> tags referencing /_next/static/: CSS files, fonts, JS preloads with hashes
  * - <style> tags with href: inlined CSS with build-specific hash in href attribute
  *
  * These elements are irrelevant for markdown generation (we only use title, canonical
  * link, and div#main content), so stripping them:
- * 1. Makes cache keys stable across builds
- * 2. Speeds up HTML parsing by reducing input size significantly
+ * 1. Speeds up HTML parsing by reducing input size significantly
+ * 2. Removes most build-specific variation from the HTML
  *
- * We use regex instead of proper HTML parsing for performance - this runs on every file
- * and regex is much faster. The input is trusted (Next.js build output), and worst case
- * for any regex edge cases is a cache miss, which is acceptable.
+ * IMPORTANT: This function's output is used as pipeline input for .process(), so it must
+ * only remove complete HTML elements — never modify text content or attribute values.
+ * For additional normalization that's only safe for cache key computation, see
+ * normalizeForCacheKey().
  */
 function stripUnstableElements(html) {
   return (
@@ -437,19 +916,62 @@ function stripUnstableElements(html) {
   );
 }
 
-async function genMDFromHTML(source, target, {cacheDir, noCache, usedCacheFiles}) {
+/**
+ * Extracts only the content-relevant portions of HTML for stable cache key computation.
+ *
+ * The unified pipeline only uses three pieces of data from each page:
+ * 1. <title> — the page title (becomes the H1 heading)
+ * 2. <link rel="canonical"> — the canonical URL (used for link rewriting)
+ * 3. <div id="main"> — the main content area (becomes the markdown body)
+ *
+ * Everything else (header, sidebar, footer, scripts, styles, fonts) is irrelevant for
+ * markdown output. By extracting only these three elements, we make the cache key immune
+ * to layout changes (sidebar updates from merged PRs), CSS hash changes (Emotion, CSS
+ * modules), font hash changes, and any other build-specific variation in the surrounding
+ * HTML shell.
+ *
+ * Within the extracted content, we still normalize build-specific hashes that can appear
+ * inside div#main (e.g., Emotion classes on code block components, CSS module hashes on
+ * interactive elements). These are irrelevant for text content extraction but would
+ * otherwise cause cache misses between builds.
+ */
+function extractContentForCacheKey(html) {
+  const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+  const canonicalMatch = html.match(/<link[^>]*rel="canonical"[^>]*href="([^"]*)"/i);
+  const mainMatch = html.match(/<div id="main"[^>]*>([\s\S]*)<\/main>/i);
+
+  const title = titleMatch ? titleMatch[1] : '';
+  const canonical = canonicalMatch ? canonicalMatch[1] : '';
+  const mainContent = mainMatch ? mainMatch[1] : '';
+
+  // Normalize build-specific hashes that appear inside main content
+  // (e.g., Emotion CSS classes on code block tabs, CSS module hashes)
+  const normalizedMain = mainContent
+    // Remove Emotion style tags entirely (e.g., <style data-emotion="css o2ofml">...</style>)
+    .replace(/<style data-emotion[^>]*>[\s\S]*?<\/style>/gi, '')
+    // Normalize Emotion class names (e.g., css-o2ofml -> css-X)
+    .replace(/css-[a-z0-9]+/g, 'css-X')
+    // Normalize CSS module hashes (e.g., style_sidebar__iEJoR -> style_sidebar__X)
+    .replace(/(\w+__)[a-zA-Z0-9]{5}/g, '$1X');
+
+  return title + '\0' + canonical + '\0' + normalizedMain;
+}
+
+async function genMDFromHTML(source, {cacheDir, noCache, usedCacheFiles}) {
   const rawHTML = await readFile(source, {encoding: 'utf8'});
-  // Strip build-specific elements for stable cache keys and faster parsing.
+  // Strip build-specific HTML elements for faster parsing.
   // See stripUnstableElements() for details on what's removed and why.
   const strippedHTML = stripUnstableElements(rawHTML);
-  const cacheKey = `v${CACHE_VERSION}_${md5(strippedHTML)}`;
+  // Extract only content-relevant portions (title, canonical URL, main content)
+  // for cache key computation. This makes the key immune to layout/sidebar/header
+  // changes and most build-specific hash variations. See extractContentForCacheKey().
+  const cacheKey = `v${CACHE_VERSION}_${md5(extractContentForCacheKey(rawHTML))}`;
   const cacheFile = path.join(cacheDir, cacheKey);
   if (!noCache) {
     try {
       const data = await text(
         compose(createReadStream(cacheFile), createBrotliDecompress())
       );
-      await writeFile(target, data, {encoding: 'utf8'});
 
       // Track that we used this cache file
       if (usedCacheFiles) {
@@ -463,6 +985,7 @@ async function genMDFromHTML(source, target, {cacheDir, noCache, usedCacheFiles}
       }
     }
   }
+
   let baseUrl = DOCS_ORIGIN;
   const data = String(
     await unified()
@@ -529,28 +1052,18 @@ async function genMDFromHTML(source, target, {cacheDir, noCache, usedCacheFiles}
       .use(remarkStringify)
       .process(strippedHTML)
   );
-  const reader = Readable.from(data);
-
-  await Promise.all([
-    pipeline(
-      reader,
-      createWriteStream(target, {
-        encoding: 'utf8',
-      })
-    ),
-    pipeline(
-      reader,
-      createBrotliCompress({
-        chunkSize: 32 * 1024,
-        params: {
-          [zlibConstants.BROTLI_PARAM_MODE]: zlibConstants.BROTLI_MODE_TEXT,
-          [zlibConstants.BROTLI_PARAM_QUALITY]: CACHE_COMPRESS_LEVEL,
-          [zlibConstants.BROTLI_PARAM_SIZE_HINT]: data.length,
-        },
-      }),
-      createWriteStream(cacheFile)
-    ).catch(err => console.warn('Error writing cache file:', err)),
-  ]);
+  await pipeline(
+    Readable.from(data),
+    createBrotliCompress({
+      chunkSize: 32 * 1024,
+      params: {
+        [zlibConstants.BROTLI_PARAM_MODE]: zlibConstants.BROTLI_MODE_TEXT,
+        [zlibConstants.BROTLI_PARAM_QUALITY]: CACHE_COMPRESS_LEVEL,
+        [zlibConstants.BROTLI_PARAM_SIZE_HINT]: data.length,
+      },
+    }),
+    createWriteStream(cacheFile)
+  ).catch(err => console.warn('Error writing cache file:', err));
 
   // Track that we created this cache file
   if (usedCacheFiles) {
@@ -566,14 +1079,15 @@ async function processTaskList({id, tasks, cacheDir, noCache, usedCacheFiles}) {
     usedCacheFiles = new Set();
   }
 
-  const s3Client = getS3Client();
+  const hasR2 = tasks.some(t => t.r2Hash !== null);
+  const s3Client = hasR2 ? getS3Client() : null;
   const failedTasks = [];
   let cacheMisses = [];
   let r2CacheMisses = [];
   console.log(`🤖 Worker[${id}]: Starting to process ${tasks.length} files...`);
-  for (const {sourcePath, targetPath, relativePath, r2Hash} of tasks) {
+  for (const {sourcePath, targetPath, relativePath, r2Hash, frontmatter} of tasks) {
     try {
-      const {data, cacheHit} = await genMDFromHTML(sourcePath, targetPath, {
+      const {data, cacheHit} = await genMDFromHTML(sourcePath, {
         cacheDir,
         noCache,
         usedCacheFiles,
@@ -582,12 +1096,18 @@ async function processTaskList({id, tasks, cacheDir, noCache, usedCacheFiles}) {
         cacheMisses.push(relativePath);
       }
 
-      if (r2Hash !== null) {
-        const fileHash = md5(data);
+      // Keep metadata outside the cache so description-only changes don't invalidate
+      // the expensive HTML → markdown conversion output.
+      // Prepend YAML frontmatter and write to target
+      const output = frontmatter ? formatYamlFrontmatter(frontmatter) + data : data;
+      await writeFile(targetPath, output, {encoding: 'utf8'});
+
+      if (r2Hash !== null && s3Client) {
+        const fileHash = md5(output);
         if (r2Hash !== fileHash) {
           r2CacheMisses.push(relativePath);
 
-          await uploadToCFR2(s3Client, relativePath, data);
+          await uploadToCFR2(s3Client, relativePath, output);
         }
       }
     } catch (error) {
@@ -605,8 +1125,10 @@ async function processTaskList({id, tasks, cacheDir, noCache, usedCacheFiles}) {
     );
   }
   const cacheHits = success - cacheMisses.length;
+  const missRate =
+    success > 0 ? ((cacheMisses.length / success) * 100).toFixed(1) : '0.0';
   console.log(
-    `📈 Worker[${id}]: Cache stats: ${cacheHits} hits, ${cacheMisses.length} misses (${((cacheMisses.length / success) * 100).toFixed(1)}% miss rate)`
+    `📈 Worker[${id}]: Cache stats: ${cacheHits} hits, ${cacheMisses.length} misses (${missRate}% miss rate)`
   );
 
   if (cacheMisses.length / tasks.length > 0.1) {
