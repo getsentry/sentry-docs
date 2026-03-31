@@ -91,7 +91,9 @@ function getFirstSupportedGuide(filePath) {
     }
 
     // Look for supported: array in frontmatter
-    const supportedMatch = frontmatterMatch[1].match(/supported:\s*\n((?:\s+-\s+.+\n?)+)/);
+    const supportedMatch = frontmatterMatch[1].match(
+      /supported:\s*\n((?:\s+-\s+.+\n?)+)/
+    );
     if (supportedMatch) {
       // Get first supported platform (e.g., "  - javascript.bun")
       const firstSupported = supportedMatch[1].match(/^\s+-\s+(.+)/m);
@@ -136,14 +138,16 @@ function fileToUrl(filePath) {
 
   let url = filePath.replace(/^docs\//, '/').replace(/\.mdx?$/, '/');
 
-  // Handle /common/ paths - replace with /guides/<first-supported-guide>/
+  // Handle /common/ paths
   if (filePath.includes('/common/')) {
+    // First, check if the file specifies a supported guide in frontmatter
     const guide = getFirstSupportedGuide(filePath);
     if (guide) {
+      // File specifies a guide - use /guides/<guide>/ path
       url = url.replace('/common/', `/guides/${guide}/`);
     } else {
-      // No supported guide found, can't generate valid URL
-      return null;
+      // No specific guide - just remove /common/ (works for most platforms)
+      url = url.replace('/common/', '/');
     }
   }
 
