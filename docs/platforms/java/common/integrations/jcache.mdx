@@ -125,9 +125,12 @@ try (ISentryLifecycleToken ignored = tx.makeCurrent()) {
 import io.sentry.Sentry
 
 val tx = Sentry.startTransaction("test-cache", "task")
-tx.makeCurrent().use {
-    sentryCache.put("greeting", "hello")
-    val value = sentryCache.get("greeting")
+try {
+    tx.makeCurrent().use {
+        sentryCache.put("greeting", "hello")
+        val value = sentryCache.get("greeting")
+    }
+} finally {
+    tx.finish()
 }
-tx.finish()
 ```
