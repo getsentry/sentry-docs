@@ -39,7 +39,7 @@ If you're implementing Span-First (as a PoC) in your SDK, take an iterative appr
    - Either reuse existing heuristics (e.g. flush when segment span ends) or build a simple span buffer to flush spans (e.g. similar to the existing buffers for logs or metrics).
    - Implementing the more complex [Telemetry Processor](/sdk/foundations/processing/telemetry-processor/) buffer and scheduler can happen at a later stage.
 6. Achieve data parity with the existing transaction events.
-   - Ensure that the data added by SDK integrations, event processors, etc. to transaction events is also added to the spans (see [Event Processors](#tbd-event-processors)).
+   - Ensure that the data added by SDK integrations, event processors, etc. to transaction events is also added to the spans (see [Event Processors](#replacing-event-processors)).
    - Most additional data MUST only be added to the segment span. See [Common Attributes](../span-protocol/#common-attribute-keys) for attributes that MUST be added to every span.
    - Mental model: All data our SDKs _automatically_ add to a transaction, MUST also be added to the segment span.
 7. Implement the span telemetry buffer for proper, weighted span flushing. See [Span Buffer](/sdk/telemetry/spans/span-buffer/) for more details.
@@ -120,7 +120,7 @@ For user-facing migration, we should aim to solve every use case with [`ignore_s
 
 For SDK-internal processing, SDKs are free to implement further processing mechanisms as they see fit. 
 It's strongly recommended to implement client [lifecycle hooks](https://github.com/getsentry/rfcs/blob/main/text/0034-sdk-lifecycle-hooks.md). 
-The `captureSpan` pipeline emits a `processSpan` event that any consumer (e.g. an integration) can subscribe to. 
+The `captureSpan` pipeline emits a `process_span` message that any consumer (e.g. an integration) can subscribe to. 
 The consumer can then apply its logic to spans, similarly to how it might have applied it in event processors before. 
 SDKs having alternative processing patterns established can also use them. 
 
