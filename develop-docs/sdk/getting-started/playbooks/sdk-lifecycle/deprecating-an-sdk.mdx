@@ -1,0 +1,161 @@
+---
+title: Deprecating an SDK
+spec_id: sdk/playbooks/deprecating-an-sdk
+spec_version: 1.0.0
+spec_status: candidate
+spec_depends_on:
+  - id: sdk/getting-started/standards/api-architecture
+    version: ">=1.0.0"
+  - id: sdk/getting-started/standards/coordination-maintenance
+    version: ">=1.0.0"
+spec_changelog:
+  - version: 1.0.0
+    date: 2026-03-26
+    summary: Initial playbook — full SDK deprecation lifecycle from impact analysis through repo archival and documentation cleanup
+---
+
+<SpecRfcAlert />
+
+<SpecMeta />
+
+## Overview
+
+This playbook guides SDK maintainers through deprecating an entire SDK. Unlike [deprecating an API](/sdk/getting-started/playbooks/sdk-lifecycle/deprecating-an-api) or [dropping a platform version](/sdk/getting-started/playbooks/sdk-lifecycle/dropping-platform-support), deprecating an SDK means ending all active development and eventually archiving the repository. It covers impact analysis, approval, final release, public announcement, documentation updates, package registry deprecation, repo archival, and post-EOL cleanup.
+
+Related resources:
+
+- [Deprecation lifecycle](/sdk/getting-started/standards/api-architecture#breaking-changes-and-deprecations) — deprecation timeline and requirements
+- [Documenting decisions](/sdk/getting-started/standards/coordination-maintenance#documenting-decisions) — traceability requirement for decisions
+- [Cutting a Release](/sdk/getting-started/playbooks/sdk-lifecycle/cutting-a-release) — release process for the final release
+- [Deprecating an API](/sdk/getting-started/playbooks/sdk-lifecycle/deprecating-an-api) — related playbook for API-level deprecation
+- [Dropping Platform or Language Version Support](/sdk/getting-started/playbooks/sdk-lifecycle/dropping-platform-support) — related playbook for version-level support drops
+
+Two examples of this are [sentry-cordova](https://github.com/getsentry/sentry-cordova) (archived March 2026, users migrated to Capacitor, React Native, or Flutter) and [sentry-xamarin](https://github.com/getsentry/sentry-xamarin) (archived after Xamarin reached end of life, users migrated to .NET MAUI via `sentry-dotnet`).
+
+---
+
+## Steps
+
+### Phase 1: Build the Case
+
+Before committing to a deprecation, build a clear evidence-based case that justifies the decision and identifies alternatives for affected users.
+
+#### 1. Assess industry and usage
+
+Before proposing to deprecate an SDK, you **MUST** gather and document evidence covering:
+
+- **Upstream project health**: Has the platform reached end of life? Is it still actively maintained? Has corporate sponsorship been withdrawn?
+- **Usage data**: How many orgs, DSNs, and projects actively use the SDK? Is usage growing or declining?
+- **Package download trends**: Compare the SDK's download numbers against alternatives using registry-specific statistics (e.g., [npmtrends](https://npmtrends.com/), PyPI Stats, NuGet Gallery, Maven Central)
+
+Use internal data tools (analytics dashboards, usage queries) to gather org and DSN counts.
+
+#### 2. Quantify revenue impact
+
+You **MUST** calculate the true at-risk revenue, not the total ARR of orgs that happen to use the SDK:
+
+- Identify orgs that use the SDK exclusively (no other Sentry SDKs) — this is the true at-risk segment
+- Compare ongoing maintenance cost against the revenue the SDK protects
+- Document the opportunity cost — what could the same engineering time deliver if invested in higher-growth SDKs?
+
+#### 3. Identify migration paths
+
+You **MUST** confirm that affected users have a viable path forward:
+
+- List alternative SDKs (successor SDK, competing platforms with Sentry support)
+- Verify that an upstream migration path exists (e.g., framework-provided migration guides)
+- Determine whether Sentry-specific migration guidance is needed or if upstream guides are sufficient
+
+#### 4. Get approval
+
+Work with the engineering manager responsible for the SDK to get approval. The decision **MUST** be documented in Linear or GitHub per the [Documenting decisions](/sdk/getting-started/standards/coordination-maintenance#documenting-decisions) standard.
+
+---
+
+### Phase 2: Execute the Deprecation
+
+Once approved, execute these steps in sequence. The order matters — cut the final release before announcing, and announce before archiving.
+
+#### 5. Cut a final release
+
+You **SHOULD** cut a final release with up-to-date dependencies to give users a stable baseline. Follow the [Cutting a Release](/sdk/getting-started/playbooks/sdk-lifecycle/cutting-a-release) playbook. Even if the release contains no new features, a clean final release is better than leaving users on a months-old version. The changelog **SHOULD** note that this is the final planned release and that the SDK is entering deprecation.
+
+#### 6. Create a public deprecation announcement
+
+You **MUST** open a GitHub issue on the SDK repo explaining:
+
+- That the SDK is being deprecated
+- Why (upstream EOL, low usage, maintenance burden — keep it factual)
+- What alternatives users should migrate to, with links
+- Any remaining support timeline (e.g., security-only fixes for N months)
+
+Pin this issue so it's visible to anyone who visits the repo. This is the single canonical place for users to understand the deprecation and ask questions.
+
+#### 7. Close backlog with consistent messaging
+
+You **MUST** close all open issues and PRs with a uniform note that references the announcement issue and names the alternatives. Every issue and PR **MUST** get this note — don't leave some closed without explanation. Use `state_reason: not_planned` where supported by the platform.
+
+#### 8. Update the README
+
+You **MUST** add a prominent deprecation notice at the top of the README. On GitHub, use the `> [!IMPORTANT]` callout:
+
+```markdown
+> [!IMPORTANT]
+> This SDK is no longer maintained. We recommend migrating to
+> [Alternative A](link), [Alternative B](link), or [Alternative C](link).
+```
+
+The notice **MUST** name the successor SDKs with links.
+
+#### 9. Update documentation
+
+You **MUST** add a deprecation alert to **all** pages under the SDK's documentation tree on the docs site:
+
+```mdx
+<Alert level="warning" title="Deprecation Notice">
+  This SDK is no longer maintained. If you are starting a new project or
+  planning a migration, consider using [Alternative A](/path), [Alternative
+  B](/path), or [Alternative C](/path) instead.
+</Alert>
+```
+
+Don't delete documentation pages immediately — users on existing versions still need them.
+
+#### 10. Deprecate on the package registry
+
+You **MUST** mark the package as deprecated on its public registry so users see the notice at install time. The deprecation message **MUST** name the successor SDKs. Not every registry supports formal deprecation — where no mechanism exists, update the project description and README instead.
+
+#### 11. Archive the GitHub repo
+
+Archive the repository to make it read-only. Update the repo description to reflect the deprecation.
+
+#### 12. Notify internal stakeholders
+
+You **MUST** notify support, customer-facing, and go-to-market teams so they can proactively communicate with affected customers. High-impact deprecations **SHOULD** include a blog post or public announcement to reach users who don't regularly check changelogs.
+
+---
+
+### Phase 3: Post-EOL Cleanup
+
+After the SDK has been archived for a while, clean up the documentation footprint.
+
+#### 13. Clean up documentation
+
+After a grace period (6–12 months post-archival), you **SHOULD**:
+
+- Set `noindex: true` on the SDK's doc pages to remove them from search engine indexing
+- Set `draft: true` to hide them from site navigation
+- Keep content accessible via direct URL for users still on old versions
+- Consider adding redirects from the SDK's doc URLs to the successor SDK or a migration page
+
+---
+
+## Referenced Standards
+
+- [Deprecation lifecycle](/sdk/getting-started/standards/api-architecture#breaking-changes-and-deprecations) — deprecation timeline and stages
+- [Documenting decisions](/sdk/getting-started/standards/coordination-maintenance#documenting-decisions) — traceability requirement
+- [Cutting a Release](/sdk/getting-started/playbooks/sdk-lifecycle/cutting-a-release) — release process for the final release
+
+---
+
+<SpecChangelog />
