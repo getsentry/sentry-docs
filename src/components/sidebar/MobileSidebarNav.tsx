@@ -1,9 +1,8 @@
 'use client';
 
-import {useEffect, useState} from 'react';
 import Link from 'next/link';
 import {usePathname} from 'next/navigation';
-
+import {useEffect, useState} from 'react';
 import {Platform} from 'sentry-docs/types';
 
 import {mainSections} from '../navigationData';

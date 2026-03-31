@@ -121,6 +121,37 @@ Sampling allows you to control how much of your website's traffic will result in
 
 Sampling begins as soon as a session starts. `sessionSampleRate` is evaluated first. If it's sampled, the replay recording will begin. Otherwise, `onErrorSampleRate` is evaluated and if it's sampled, the integration will begin buffering the replay and will only upload it to Sentry if an error occurs. The remainder of the replay will behave similarly to a whole-session replay.
 
+### Ignore Certain Errors from Error Sampling
+
+Once you've enabled `onErrorSampleRate`, you can further customize which errors should trigger a replay capture by using the `beforeErrorSampling` callback. This is useful if you want to capture replays only for unhandled errors, or exclude certain error types from replay capture.
+
+The `beforeErrorSampling` callback is called when an error occurs and receives the event and hint as arguments. Returning `false` will prevent the replay from being captured for that specific error. If the callback throws an exception, replay capture proceeds normally (fail-open).
+
+```kotlin {tabTitle:Kotlin}
+SentryAndroid.init(context) { options ->
+  options.dsn = "___PUBLIC_DSN___"
+  options.sessionReplay.onErrorSampleRate = 1.0
+
+  options.sessionReplay.beforeErrorSampling =
+    SentryReplayOptions.BeforeErrorSamplingCallback { event, hint ->
+      // Only capture replays for unhandled/crashed events
+      event.isCrashed
+    }
+}
+```
+
+```java {tabTitle:Java}
+SentryAndroid.init(context, options -> {
+  options.setDsn("___PUBLIC_DSN___");
+  options.getSessionReplay().setOnErrorSampleRate(1.0);
+
+  options.getSessionReplay().setBeforeErrorSampling((event, hint) -> {
+    // Only capture replays for unhandled/crashed events
+    return event.isCrashed();
+  });
+});
+```
+
 ## Privacy
 
 The SDK is recording and aggressively masking all text, images, and webviews by default. If your app has any sensitive data, you should only turn the default masking off after explicitly masking out the sensitive data, using the APIs described below.

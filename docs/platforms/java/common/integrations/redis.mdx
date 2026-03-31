@@ -1,0 +1,43 @@
+---
+title: Redis Integration
+description: "Learn how to trace Redis cache operations with Sentry."
+---
+
+Sentry can trace cache operations performed through [Redis](https://redis.io/) using Jedis or Lettuce as the client library. Cache spans appear in Sentry's [Caches dashboard](https://sentry.io/orgredirect/organizations/:orgslug/insights/backend/caches/).
+
+<PlatformSection supported={["java.spring-boot"]}>
+
+## Spring Boot
+
+If you're using Redis (via Spring Data Redis with Jedis or Lettuce) as your Spring Boot cache provider, cache tracing is built into the Sentry Spring Boot starter. Enable it in your configuration:
+
+```properties {tabTitle:application.properties}
+sentry.enable-cache-tracing=true
+sentry.traces-sample-rate=1.0
+```
+
+```yaml {tabTitle:application.yml}
+sentry:
+  enable-cache-tracing: true
+  traces-sample-rate: 1.0
+```
+
+All `@Cacheable`, `@CachePut`, and `@CacheEvict` operations will automatically produce Sentry spans — no additional dependencies or code changes required.
+
+See <PlatformLink to="/configuration/options/#enableCacheTracing">`enableCacheTracing`</PlatformLink> for more details on this option.
+
+</PlatformSection>
+
+<PlatformSection notSupported={["java.spring-boot"]}>
+
+## Plain Java
+
+Jedis provides a [JCache (JSR-107)](https://github.com/redis/jedis/wiki/JCache-Support) adapter. Use it together with the <PlatformLink to="/integrations/jcache/">Sentry JCache integration</PlatformLink> to trace cache operations.
+
+<Alert>
+
+Lettuce does not provide a JCache adapter, so the JCache-based approach described here only works with Jedis. For Lettuce-based cache tracing, use Spring Boot with Spring Data Redis.
+
+</Alert>
+
+</PlatformSection>

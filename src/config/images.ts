@@ -21,7 +21,7 @@ export function isAllowedRemoteImage(src: string): boolean {
       url.protocol === 'https:' &&
       (REMOTE_IMAGE_HOSTNAMES as readonly string[]).includes(url.hostname)
     );
-  } catch (_error) {
+  } catch {
     return false;
   }
 }

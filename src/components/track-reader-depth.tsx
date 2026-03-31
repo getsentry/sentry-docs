@@ -1,6 +1,5 @@
 'use client';
 import {useEffect} from 'react';
-
 import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
 import {PROGRESS_MILESTONES, ReadProgressMilestone} from 'sentry-docs/types/plausible';
 import {debounce} from 'sentry-docs/utils';

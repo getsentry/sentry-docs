@@ -2,9 +2,8 @@ import getPackageRegistry from 'sentry-docs/build/packageRegistry';
 import {getCurrentPlatformOrGuide, nodeForPath} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
 
-import styles from './styles.module.scss';
-
 import {SmartLink} from '../smartLink';
+import styles from './styles.module.scss';
 
 export async function PlatformSdkDetail() {
   const {rootNode, path} = serverContext();

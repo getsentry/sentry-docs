@@ -1,7 +1,6 @@
 import Image from 'next/image';
 
 import {ExternalLink} from '../externalLink';
-
 import clojure from './icons/clojure.png';
 import coldfusion from './icons/coldfusion.png';
 import crystal from './icons/crystal.png';
