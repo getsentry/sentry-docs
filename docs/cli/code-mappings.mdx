@@ -6,40 +6,32 @@ description: "Upload code mappings to Sentry via the CLI. Code mappings link sta
 
 Code mappings link stack trace paths to source code paths in your repository. They enable features like [source context](/platforms/java/source-context/), [suspect commits](/product/issues/suspect-commits/), [stack trace linking](/organization/integrations/source-code-mgmt/github/#stack-trace-linking), and [code owners](/product/issues/ownership-rules/).
 
-You can manage code mappings through the Sentry web UI (see [Setting Up Code Mappings](/product/issues/suspect-commits/#set-up-code-mappings)), or upload them in bulk using `sentry-cli`.
+You can [manage code mappings through the Sentry web UI](/product/issues/suspect-commits/#set-up-code-mappings), or upload them in bulk using Sentry CLI. It is also possible to upload code mappings automatically in your CI process to keep them in sync with your repository structure.
 
 ## Permissions
 
-The `sentry-cli` requires an [Organization Token](https://sentry.io/orgredirect/organizations/:orgslug/settings/auth-tokens/) with the `org:ci` scope to upload code mappings.
+Sentry CLI requires an [Organization Token](https://sentry.io/orgredirect/organizations/:orgslug/settings/auth-tokens/) with the `org:ci` scope to upload code mappings.
 
 ## Upload Code Mappings
 
-<Alert>
-
-You need to specify the organization and project you are working with because code mappings work on projects. For more information about this refer to [Working with Projects](/cli/configuration/#sentry-cli-working-with-projects).
-
-</Alert>
+Use the `sentry-cli code-mappings upload` command to upload code mappings:
 
 ```bash
-sentry-cli code-mappings upload ./mappings.json \
-  --org my-org \
-  --project my-project \
-  --repo owner/repo \
-  --default-branch main
+sentry-cli code-mappings upload ./mappings.json
 ```
 
-### Options
-
-| Option | Required | Description |
-|--------|----------|-------------|
-| `--org` | Required | The organization slug. Can also be set via `SENTRY_ORG` or in `.sentryclirc`. |
-| `--project` | Required | The project slug. Can also be set via `SENTRY_PROJECT` or in `.sentryclirc`. |
-| `--repo` | Optional | The repository name (e.g. `getsentry/sentry`). Defaults to the git remote origin. Required if not running from within a git repository. |
-| `--default-branch` | Optional | The default branch name. Defaults to the git remote HEAD or `main`. Required if not running from within a git repository. |
+Run `sentry-cli code-mappings upload --help` to see all available options.
 
 ### JSON File Format
 
-The input file should be a JSON array of mapping objects, each with a `stackRoot` and `sourceRoot`.
+The input file should be a JSON array of mapping objects, each with a `stackRoot` and `sourceRoot`:
+
+- **stackRoot**: The path prefix as it appears in stack traces (e.g. `io/sentry/android/core` for Java, `src/` for Python/JS).
+- **sourceRoot**: The corresponding path in your repository where the source code lives.
+
+Multiple mappings can share the same `stackRoot` if they point to different `sourceRoot` paths. This is useful for monorepos where the same package prefix exists in multiple modules. Sentry evaluates mappings from most specific to least specific, using the first one that resolves to a real file in the repository.
+
+#### Example
 
 The following example is based on the [getsentry/sentry-java](https://github.com/getsentry/sentry-java) monorepo, which has multiple modules sharing the `io/sentry` package prefix:
 
@@ -64,51 +56,3 @@ The following example is based on the [getsentry/sentry-java](https://github.com
 ]
 ```
 
-- **stackRoot**: The path prefix as it appears in stack traces (e.g. `io/sentry/android/core` for Java, `src/` for Python/JS).
-- **sourceRoot**: The corresponding path in your repository where the source code lives.
-
-Multiple mappings can share the same `stackRoot` if they point to different `sourceRoot` paths. In the example above, `io/sentry/opentelemetry` maps to two different modules. Sentry evaluates mappings from most specific to least specific, using the first one that resolves to a real file in the repository.
-
-### Batching
-
-Mappings are uploaded in batches of up to 300 per request. If your file contains more than 300 mappings, the CLI will automatically split them into multiple batches.
-
-### Output
-
-The CLI reports the result of each batch:
-
-```
-Uploading 47 code mapping(s)...
-Created: 42, Updated: 5, Errors: 0
-```
-
-- **Created**: New mappings that were added.
-- **Updated**: Existing mappings (matched by project, stack root, and source root) whose metadata was updated.
-- **Errors**: Mappings that failed to save.
-
-If any errors occur, the CLI exits with a non-zero exit code and prints a table showing which mappings failed.
-
-## Stack Trace Root and Source Code Root
-
-<Include name="common-imgs/code-mappings-stacktrace" />
-
-For platforms that use file paths in stack traces (Python, JavaScript, etc.), the `stackRoot` and `sourceRoot` are typically file path prefixes. For example, if your stack traces show `src/app/utils.py` and the file lives at `backend/src/app/utils.py` in your repo:
-
-- `stackRoot`: `src/`
-- `sourceRoot`: `backend/src/`
-
-For Java and other JVM languages, stack traces use package names (e.g. `com.example.app.MyClass`), which are converted to paths (`com/example/app`). The `sourceRoot` is the path in the repository to the corresponding source directory. Read more in the [Java source context docs](/platforms/java/source-context/#setting-up-code-mappings).
-
-## CI/CD Integration
-
-You can run `sentry-cli code-mappings upload` as part of your CI/CD pipeline to keep code mappings in sync with your repository structure:
-
-```bash
-sentry-cli code-mappings upload ./mappings.json \
-  --org $SENTRY_ORG \
-  --project $SENTRY_PROJECT \
-  --repo $GITHUB_REPOSITORY \
-  --default-branch $GITHUB_REF_NAME
-```
-
-For authentication, set the `SENTRY_AUTH_TOKEN` environment variable. See [Configuration](/cli/configuration/) for details.
