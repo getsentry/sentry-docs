@@ -2,6 +2,10 @@ const isDeveloperDocs = !!process.env.NEXT_PUBLIC_DEVELOPER_DOCS;
 
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const developerDocsRedirects = [
+  {
+    source: '/sdk/getting-started/templates/contributing-md-template/',
+    destination: '/sdk/getting-started/templates/contributing-md/',
+  },
   // Spotlight and MCP moved from expected-features to foundations/client/integrations
   {
     source: '/sdk/expected-features/spotlight/',
@@ -620,11 +624,6 @@ const userDocsRedirects = [
     destination: '/product/sentry-toolbar/:path*',
   },
   {
-    source: '/product/ai-in-sentry/sentry-prevent-ai/:path*',
-    destination: '/product/ai-in-sentry/seer/ai-code-review/:path*',
-  },
-
-  {
     source: '/organization/integrations/launchdarkly/',
     destination: '/organization/integrations/feature-flag/launchdarkly/',
   },
@@ -667,6 +666,71 @@ const userDocsRedirects = [
   {
     source: '/organization/integrations/goastai/',
     destination: '/organization/integrations/issue-tracking/goast/',
+  },
+  // Third-party integrations consolidated page
+  {
+    source: '/organization/integrations/sonarly-integration/',
+    destination: '/organization/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/work-os/',
+    destination: '/organization/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/watchdog-security/',
+    destination: '/organization/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/releasetag/',
+    destination: '/organization/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/kawachai/',
+    destination: '/organization/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/opsbrief/',
+    destination: '/organization/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/twill/',
+    destination: '/organization/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/glue-tools/',
+    destination: '/organization/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/synkrony/',
+    destination: '/organization/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/bosun/',
+    destination: '/organization/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/steadwing-rca/',
+    destination: '/organization/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/aether/',
+    destination: '/organization/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/toolbar/',
+    destination: '/organization/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/vanta-gov/',
+    destination: '/organization/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/xurrent-imr/',
+    destination: '/organization/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/shiprail/',
+    destination: '/organization/integrations/third-party-integrations/',
   },
   {
     source: '/development/sdk-dev/:path*',
@@ -1623,12 +1687,32 @@ const userDocsRedirects = [
     destination: '/product/ai-in-sentry/ai-privacy-and-security/',
   },
   {
-    source: '/product/ai-in-sentry/ai-code-review/',
-    destination: '/product/ai-in-sentry/seer/ai-code-review/',
+    source: '/product/ai-in-sentry/seer/issue-fix/:path*',
+    destination: '/product/ai-in-sentry/seer/autofix/:path*',
   },
   {
-    source: '/product/ai-in-sentry/seer/issue-fix/:path*',
-    destination: '/product/ai-in-sentry/seer/root-cause-analysis/:path*',
+    source: '/product/ai-in-sentry/seer/root-cause-analysis/',
+    destination: '/product/ai-in-sentry/seer/autofix/',
+  },
+  {
+    source: '/product/ai-in-sentry/seer/issue-autofix/:path*',
+    destination: '/product/ai-in-sentry/seer/autofix/:path*',
+  },
+  {
+    source: '/product/ai-in-sentry/ai-code-review/',
+    destination: '/product/ai-in-sentry/seer/code-review/',
+  },
+  {
+    source: '/product/ai-in-sentry/sentry-prevent-ai/',
+    destination: '/product/ai-in-sentry/seer/code-review/',
+  },
+  {
+    source: '/product/ai-in-sentry/sentry-prevent-ai',
+    destination: '/product/ai-in-sentry/seer/code-review/',
+  },
+  {
+    source: '/product/ai-in-sentry/seer/ai-code-review/',
+    destination: '/product/ai-in-sentry/seer/code-review/',
   },
   // .NET profiling guide redirects - consolidate to main profiling page
   {

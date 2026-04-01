@@ -1,6 +1,5 @@
-import {Fragment} from 'react';
 import Link from 'next/link';
-
+import {Fragment} from 'react';
 import {serverContext} from 'sentry-docs/serverContext';
 import {sortPages} from 'sentry-docs/utils';
 import {getUnversionedPath, VERSION_INDICATOR} from 'sentry-docs/versioning';

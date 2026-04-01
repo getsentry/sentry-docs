@@ -1,0 +1,79 @@
+---
+title: EAS Build Hooks
+description: "Capture EAS build failures and lifecycle events in Sentry."
+sidebar_order: 10
+---
+
+EAS Build runs your app builds on Expo's infrastructure. When a build fails, the error can be hard to diagnose — it happens outside your local environment and outside your app. EAS Build Hooks let you send build lifecycle events directly to Sentry so you can track failures, correlate them with releases, and get notified when production builds break.
+
+## Setup
+
+Add the Sentry EAS build hook scripts to your `package.json`:
+
+```json {filename:package.json}
+{
+  "scripts": {
+    "eas-build-on-error": "sentry-eas-build-on-error",
+    "eas-build-on-success": "sentry-eas-build-on-success",
+    "eas-build-on-complete": "sentry-eas-build-on-complete"
+  }
+}
+```
+
+EAS Build automatically runs `package.json` scripts with these names at the corresponding lifecycle events. See the [Expo npm hooks documentation](https://docs.expo.dev/build-reference/npm-hooks/) for more details.
+
+Set your DSN as an EAS secret or environment variable so it's available during builds:
+
+```bash
+eas secret:create --scope project --name SENTRY_DSN --value <your-dsn>
+```
+
+## What Gets Captured
+
+**`eas-build-on-error`** — Sends an `EASBuildError` event to Sentry when a build fails. The event includes:
+
+- Build platform (`ios` / `android`)
+- Build profile (for example, `production`, `preview`)
+- Build ID, project ID, git commit hash
+- Whether the build ran on CI
+
+**`eas-build-on-success`** — Optionally sends an info event when a build succeeds. Disabled by default; enable it with `SENTRY_EAS_BUILD_CAPTURE_SUCCESS=true`.
+
+**`eas-build-on-complete`** — A single hook that captures either a failure or success event depending on the build outcome. Use this instead of `on-error` + `on-success` if you prefer a single hook entry point.
+
+All events are tagged with `eas.*` tags so you can filter and group them in Sentry.
+
+## Environment Variables
+
+| Variable | Required | Description |
+|---|---|---|
+| `SENTRY_DSN` | Yes | Your project's DSN |
+| `SENTRY_EAS_BUILD_CAPTURE_SUCCESS` | No | Set to `true` to capture successful builds |
+| `SENTRY_EAS_BUILD_TAGS` | No | JSON object of additional tags, for example `{"team":"mobile"}` |
+| `SENTRY_EAS_BUILD_ERROR_MESSAGE` | No | Custom error message for failed builds |
+| `SENTRY_EAS_BUILD_SUCCESS_MESSAGE` | No | Custom message for successful builds |
+| `SENTRY_RELEASE` | No | Override the release name (defaults to `{appVersion}+{buildNumber}`) |
+
+## Environment Files
+
+The hook automatically loads environment variables from the following sources (without overwriting values already set by EAS):
+
+1. `@expo/env` (if available)
+2. `.env` file in the project root (via `dotenv`, if available)
+3. `.env.sentry-build-plugin` file in the project root
+
+This means you can store the DSN in `.env.sentry-build-plugin` locally, and use an EAS secret in CI — the hook will use whichever value is already set.
+
+## Using `on-complete` Instead of Separate Hooks
+
+If you only need to track failures but want the option to add success tracking later, `eas-build-on-complete` is the most flexible option. It reads `EAS_BUILD_STATUS` (set by EAS) to determine the outcome and captures the appropriate event:
+
+```json {filename:package.json}
+{
+  "scripts": {
+    "eas-build-on-complete": "sentry-eas-build-on-complete"
+  }
+}
+```
+
+To also capture successful builds, set `SENTRY_EAS_BUILD_CAPTURE_SUCCESS=true` in your build environment.

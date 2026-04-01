@@ -8,17 +8,15 @@ import {
 import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
 import {Platform} from 'sentry-docs/types';
 
-import styles from './style.module.scss';
-
 import {CloseSidebarOnNavigation, ScrollActiveLink} from '../focus-active-link';
 import {PlatformSelector} from '../platformSelector';
 import {VersionSelector} from '../versionSelector';
-
 import {DevelopDocsSidebar} from './developDocsSidebar';
 import {MobileSidebarNav} from './MobileSidebarNav';
 import {SidebarSeparator} from './sidebarLink';
 import {SidebarMoreLinks} from './SidebarMoreLinks';
 import {SidebarNavigation} from './sidebarNavigation';
+import styles from './style.module.scss';
 import {SidebarProps} from './types';
 
 // Pages that have different paths on different platforms but are conceptually equivalent

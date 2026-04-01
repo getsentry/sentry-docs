@@ -1,5 +1,4 @@
 import {usePlausible} from 'next-plausible';
-
 import {ReadProgressMilestone} from 'sentry-docs/types/plausible';
 
 // Adding custom events here will make them available via the hook
