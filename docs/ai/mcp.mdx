@@ -2,8 +2,8 @@
 title: Sentry MCP Server
 sidebar_order: 20
 description: >-
-  Enable secure connectivity between Sentry issues and debugging data, and LLM
-  clients, using a Model Context Protocol (MCP) server.
+  Connect your AI coding tools to Sentry using the Model Context Protocol (MCP)
+  for direct access to issues, errors, and debugging data.
 keywords:
   - MCP
   - Model Context Protocol
@@ -19,25 +19,26 @@ og_image: /og-images/ai-mcp.png
 ---
 
 <Alert>
-  The Sentry MCP Server has been released for production, however MCP is a
-  developing technology and changes should be expected. There will be bugs.
-  Please reach out on [GitHub](https://github.com/getsentry/sentry-mcp/issues)
-  if you have any feedback or concerns.
+  The Sentry MCP Server is production-ready, but MCP is still evolving. Expect
+  rough edges. File bugs on
+  [GitHub](https://github.com/getsentry/sentry-mcp/issues).
 </Alert>
 
-The [Sentry MCP Server](https://mcp.sentry.dev) connects your LLM client to Sentry using the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction), giving your AI tools direct access to issues, errors, projects, and [Seer](/product/ai-in-sentry/seer/) analysis. Sentry hosts and manages a remote MCP server with OAuth authentication, so there's nothing to install.
+The [Sentry MCP Server](https://mcp.sentry.dev) connects your AI coding tools to Sentry using the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction). It gives your agent direct access to issues, errors, projects, and [Seer](/product/ai-in-sentry/seer/) analysis.
 
-## Getting Started
+## Setup
 
-Add the Sentry MCP server to your client automatically:
+Sentry hosts the MCP server at `https://mcp.sentry.dev/mcp`. Your client connects over Streamable HTTP with OAuth — there's nothing to install.
+
+Add the server automatically:
 
 ```bash
 npx add-mcp https://mcp.sentry.dev/mcp
 ```
 
-Or add the server manually by placing this in your client's MCP configuration:
+Or add it manually to your client's MCP configuration:
 
-```json {tabTitle: OAuth (Recommended)}
+```json
 {
   "mcpServers": {
     "Sentry": {
@@ -47,28 +48,73 @@ Or add the server manually by placing this in your client's MCP configuration:
 }
 ```
 
-```bash {tabTitle: Self-Hosted (STDIO)}
-npx @sentry/mcp-server@latest --access-token=YOUR_TOKEN --host=sentry.example.com
-```
-
-**Most clients support the OAuth configuration.** When you first connect, you'll be prompted to:
-
-1. Log in with your Sentry organization
-2. Accept the OAuth authorization
-3. Grant access to the necessary permissions
-
-During authentication you'll be able to select which tool groups you want to use in MCP. This helps keep the context window focused on only tools that matter to you.
+When you first connect, you'll be prompted to log in with your Sentry organization and grant access. During authentication, you select which tool groups to expose — this keeps the context window focused on the tools you actually need.
 
 ![Available Sentry MCP Tools](./img/mcp-tools.png)
+
+See [Client Instructions](#client-instructions) for setup steps specific to your editor or IDE.
 
 <Alert>
   If you've joined a new Sentry organization, log out of your LLM's MCP
   integration and log back in to refresh access.
 </Alert>
 
-<Expandable title="Self-Hosted STDIO Setup Details">
+### Stdio Transport
 
-If you're running a self-hosted Sentry installation, use the STDIO transport instead. You'll need a Sentry User Auth Token with the following scopes:
+Alternatively, you can run the MCP server locally via `npx @sentry/mcp-server`. Your IDE spawns the process and communicates over stdin/stdout. This is required for [self-hosted Sentry](#self-hosted-sentry).
+
+For sentry.io users, the server uses **device-code authentication**. On first run it opens your browser to log in — no manual token creation needed. The token is cached at `~/.sentry/mcp.json` for future sessions.
+
+If you're in a non-interactive environment (CI, piped stdio), authenticate ahead of time:
+
+```bash
+npx @sentry/mcp-server@latest auth login
+```
+
+You can check or clear your auth state with `auth status` and `auth logout`.
+
+Add the server to your client's MCP configuration:
+
+```json
+{
+  "mcpServers": {
+    "Sentry": {
+      "command": "npx",
+      "args": ["@sentry/mcp-server@latest"]
+    }
+  }
+}
+```
+
+<Alert>
+  When using stdio, the AI-powered search tools (`search_events`,
+  `search_issues`) require an `OPENAI_API_KEY` environment variable for natural
+  language query translation. The Cloud transport handles this automatically.
+</Alert>
+
+## Configuration
+
+### Scope to an Organization or Project
+
+Restrict the MCP session to a specific organization or project to keep context focused.
+
+**Cloud:** Append the slug to the URL path:
+
+- `https://mcp.sentry.dev/mcp/my-org` — one organization
+- `https://mcp.sentry.dev/mcp/my-org/my-project` — one project
+
+**Stdio:** Use CLI flags:
+
+- `--organization-slug=my-org`
+- `--project-slug=my-project`
+
+When scoped, redundant discovery tools are hidden automatically.
+
+## Self-Hosted Sentry
+
+Self-hosted instances use the stdio transport with an access token. The Cloud endpoint and device-code OAuth are only available for sentry.io.
+
+Create a token in **User Settings → Auth Tokens** with these scopes:
 
 - `org:read`
 - `project:read`
@@ -77,30 +123,77 @@ If you're running a self-hosted Sentry installation, use the STDIO transport ins
 - `team:write`
 - `event:write`
 
-You can also set these as environment variables:
+Configure the server with your hostname:
 
 ```bash
-SENTRY_ACCESS_TOKEN=your-token
-SENTRY_HOST=your-sentry-host
+npx @sentry/mcp-server@latest --access-token=YOUR_TOKEN --host=sentry.example.com
 ```
 
-</Expandable>
+Or as environment variables:
 
-## Set Up Your Client
+```bash
+SENTRY_ACCESS_TOKEN=YOUR_TOKEN
+SENTRY_HOST=sentry.example.com
+```
 
-Select your client below for specific setup instructions. All clients use the remote OAuth server at `https://mcp.sentry.dev/mcp` unless noted otherwise.
+JSON config for clients that support it:
+
+```json
+{
+  "mcpServers": {
+    "Sentry": {
+      "command": "npx",
+      "args": [
+        "@sentry/mcp-server@latest",
+        "--access-token=YOUR_TOKEN",
+        "--host=sentry.example.com"
+      ]
+    }
+  }
+}
+```
+
+Some cloud-only features like Seer aren't available on self-hosted. Disable them:
+
+```bash
+npx @sentry/mcp-server@latest --access-token=YOUR_TOKEN --host=sentry.example.com --disable-skills=seer
+```
+
+<Alert>
+  The MCP server targets the cloud service. Some tools may call APIs that aren't
+  available in your self-hosted version yet.
+</Alert>
+
+## Common Workflows
+
+### Debug an Issue from a Link
+
+Paste a Sentry issue URL into your agent. The MCP server pulls the stack trace, event details, and tags so the agent can investigate and propose a fix. Try prompts like:
+
+- "Fix this issue: `https://sentry.io/issues/6811213890/`"
+- "What's the root cause of `https://my-org.sentry.io/issues/PROJECT-123/`?"
+
+### Analyze Incidents with Search
+
+Ask questions in plain English. The `search_issues` and `search_events` tools translate your queries into Sentry's search syntax:
+
+- "What are the top unresolved errors in production this week?"
+- "Show me errors that started after the last deploy."
+- "Compare error rates between v2.3 and v2.4 for my-project."
+
+## Client Instructions
+
+Setup steps for specific editors and IDEs. All instructions default to the Cloud transport — see [Stdio Transport](#stdio-transport) if you need the local server.
 
 ### Claude Code
 
 <Expandable title="Setup Instructions" group="clients">
 
-Run the following command in your terminal:
-
 ```bash
 claude mcp add --transport http sentry https://mcp.sentry.dev/mcp
 ```
 
-Then launch Claude Code with `claude`. You'll be prompted to authenticate with OAuth to Sentry.
+Launch Claude Code with `claude`. You'll be prompted to authenticate via OAuth.
 
 </Expandable>
 
@@ -108,9 +201,9 @@ Then launch Claude Code with `claude`. You'll be prompted to authenticate with O
 
 <Expandable title="Setup Instructions" group="clients">
 
-Go to `Cursor` → `Settings` → `Cursor Settings` → `MCP` and follow the prompts to add the Sentry MCP server. Cursor 1.0+ includes native OAuth and Streamable HTTP support.
+Go to `Cursor` → `Settings` → `Cursor Settings` → `MCP` and add the Sentry MCP server. Cursor 1.0+ supports OAuth and Streamable HTTP natively.
 
-You can also add the server manually by editing your `mcp.json` file:
+You can also edit your `mcp.json` directly:
 
 ```json
 {
@@ -128,7 +221,7 @@ You can also add the server manually by editing your `mcp.json` file:
 
 <Expandable title="Setup Instructions" group="clients">
 
-Open developer tools via `CMD + ,` → `Developer` → `Edit Config`, then add the Sentry server to your `claude_desktop_config.json`:
+Open `CMD + ,` → `Developer` → `Edit Config`, then add to `claude_desktop_config.json`:
 
 ```json
 {
@@ -148,7 +241,7 @@ Restart Claude Desktop to pick up the changes.
 
 <Expandable title="Setup Instructions" group="clients">
 
-Navigate to `Settings` → `Profile` → scroll to `Integrations`, select `Add More`, and add the Sentry MCP server URL:
+Go to `Settings` → `Profile` → `Integrations` → `Add More`, and add:
 
 ```
 https://mcp.sentry.dev/mcp
@@ -160,7 +253,7 @@ https://mcp.sentry.dev/mcp
 
 <Expandable title="Setup Instructions" group="clients">
 
-Open the Command Palette with `CMD+Shift+P` and select `MCP: Add Server`. Enter the Sentry MCP server URL:
+Open the Command Palette (`CMD+Shift+P`) → `MCP: Add Server` and enter:
 
 ```
 https://mcp.sentry.dev/mcp
@@ -172,13 +265,11 @@ https://mcp.sentry.dev/mcp
 
 <Expandable title="Setup Instructions" group="clients">
 
-Run the following command in your terminal:
-
 ```bash
 codex mcp add sentry --url https://mcp.sentry.dev/mcp
 ```
 
-Then launch Codex with `codex`. You'll be prompted to authenticate with Sentry using OAuth.
+Launch Codex with `codex`. You'll be prompted to authenticate via OAuth.
 
 </Expandable>
 
@@ -186,7 +277,7 @@ Then launch Codex with `codex`. You'll be prompted to authenticate with Sentry u
 
 <Expandable title="Setup Instructions" group="clients">
 
-Configure via the `Configure MCP` option in Cascade (`CMD + L`). Add the Sentry MCP server URL:
+Open Cascade (`CMD + L`) → `Configure MCP` and add:
 
 ```
 https://mcp.sentry.dev/mcp
@@ -198,7 +289,7 @@ https://mcp.sentry.dev/mcp
 
 <Expandable title="Setup Instructions" group="clients">
 
-Go to `Settings` → `MCP Servers` → `+ Add` and select **Streamable HTTP or SSE Server (URL)**. Enter the following configuration:
+Go to `Settings` → `MCP Servers` → `+ Add` → **Streamable HTTP or SSE Server (URL)**:
 
 ```json
 {
@@ -208,15 +299,13 @@ Go to `Settings` → `MCP Servers` → `+ Add` and select **Streamable HTTP or S
 }
 ```
 
-Warp supports OAuth one-click installation and will open a browser window to authenticate with Sentry.
-
 </Expandable>
 
 ### Amp
 
 <Expandable title="Setup Instructions" group="clients">
 
-**VS Code Extension:** Add the Sentry server via the Amp VS Code extension settings, or update your `settings.json`:
+**VS Code Extension** — update `settings.json`:
 
 ```json
 "amp.mcpServers": {
@@ -226,7 +315,7 @@ Warp supports OAuth one-click installation and will open a browser window to aut
 }
 ```
 
-**Amp CLI:** Add via the `amp mcp add` command:
+**CLI:**
 
 ```bash
 amp mcp add sentry --url https://mcp.sentry.dev/mcp
@@ -238,9 +327,7 @@ amp mcp add sentry --url https://mcp.sentry.dev/mcp
 
 <Expandable title="Setup Instructions" group="clients">
 
-Launch Factory Droid CLI and open the MCP menu with `/mcp`. Select `Add MCP Server from Registry` and search for `sentry`.
-
-You can also add it manually using the Sentry MCP server URL `https://mcp.sentry.dev/mcp`.
+Open the MCP menu with `/mcp` → `Add MCP Server from Registry` → search for `sentry`.
 
 </Expandable>
 
@@ -248,7 +335,7 @@ You can also add it manually using the Sentry MCP server URL `https://mcp.sentry
 
 <Expandable title="Setup Instructions" group="clients">
 
-Select `Prompt Tools` in the [v0.app](https://v0.app) UI, then select `Add MCP` and choose Sentry from the list.
+In the [v0.app](https://v0.app) UI: `Prompt Tools` → `Add MCP` → select Sentry.
 
 </Expandable>
 
@@ -256,7 +343,7 @@ Select `Prompt Tools` in the [v0.app](https://v0.app) UI, then select `Add MCP` 
 
 <Expandable title="Setup Instructions" group="clients">
 
-Add the Sentry MCP server to your `opencode.jsonc` config file:
+Add to your `opencode.jsonc`:
 
 ```json
 {
@@ -271,13 +358,11 @@ Add the Sentry MCP server to your `opencode.jsonc` config file:
 }
 ```
 
-Then authenticate with Sentry:
+Then authenticate:
 
 ```bash
 opencode mcp auth sentry
 ```
-
-This opens a browser window to complete the OAuth flow. Once authenticated, Sentry tools are available in your OpenCode sessions.
 
 </Expandable>
 
@@ -285,97 +370,53 @@ This opens a browser window to complete the OAuth flow. Once authenticated, Sent
 
 <Expandable title="Setup Instructions" group="clients">
 
-The Sentry MCP Server follows standard MCP protocols and works with any client that supports:
+The Sentry MCP Server works with any client that supports **OAuth** and **Streamable HTTP** (with SSE fallback). Use `https://mcp.sentry.dev/mcp` in your client's config.
 
-- **OAuth authentication** (recommended)
-- **Streamable HTTP** with automatic SSE fallback
-
-Use the server URL `https://mcp.sentry.dev/mcp` in your client's MCP configuration.
-
-If your client doesn't yet support native OAuth or Streamable HTTP, you can use the [`mcp-remote`](https://www.npmjs.com/package/mcp-remote) bridge as a temporary workaround.
+If your client doesn't support OAuth or Streamable HTTP yet, use the [`mcp-remote`](https://www.npmjs.com/package/mcp-remote) bridge as a workaround.
 
 </Expandable>
 
 ### Test the Connection
 
-The [Sentry MCP page](https://mcp.sentry.dev) provides a web-based interface where you can authenticate with your Sentry organization and test the MCP server directly in your browser.
+The [Sentry MCP page](https://mcp.sentry.dev) has a web interface where you can authenticate and test the server directly in your browser.
 
 ![Sentry MCP live demo](./img/mcpdev.png)
 
 <VimeoEmbed id="1080588938?h=1e437d4874" />
 
-## Example Usage
-
-Once connected, try these prompts to start using Sentry context in your LLM:
-
-- Tell me about the issues in my `project-name`
-- Check Sentry for errors in `components/UserProfile.tsx` and propose solutions
-- Diagnose issue `PROJECT-123` and propose solutions
-- Create a new project in Sentry for `new-service-name` and set up local instrumentation
-- Use Sentry's Seer to analyze and propose a solution for issue `PROJECT-456`
-- Show me the most recent releases for my organization
-- Find all unresolved crashes in my React Native app
-
-![Sentry MCP using Autofix](./img/mcp-autofix1.png)
-
-## Available Tools
-
-The Sentry MCP Server provides 16+ tools for interacting with Sentry data:
-
-**Core Tools** — Organizations, Projects, Teams, Issues, and DSN management
-
-**Analysis Tools** — Error searching across files and projects, detailed issue investigation, and Seer integration for Autofix (AI-powered root cause analysis and code fixes)
-
-**Advanced Features** — Release management, performance monitoring, and custom queries
-
-## Integration with Seer
-
-The Sentry MCP Server provides seamless integration with [Seer](/product/ai-in-sentry/seer/), Sentry's AI agent. Through MCP, you can trigger Seer analysis, get AI-generated fix recommendations, and monitor fix status — all from within your LLM client.
-
-MCP and Seer are complementary tools. MCP brings Sentry context into your LLM, while Seer is purpose-built for deep issue analysis and automated debugging. Use MCP to invoke Seer for complex debugging workflows.
-
 ## Troubleshooting
 
 **OAuth Authentication Problems**
 
-- Ensure your client supports OAuth authentication
-- Check that you have the necessary permissions in your Sentry organization
-- Try reauthenticating using your client's MCP management flow (see below)
+- Ensure your client supports OAuth
+- Check that you have the right permissions in your Sentry organization
+- Try reauthenticating (see below)
 
 **Reauthenticating in Claude Code**
 
-If your OAuth token has expired or you need to switch Sentry accounts in Claude Code:
-
 1. Type `/mcp` in the Claude Code prompt
-2. Select the **Sentry** MCP server from the list
-3. Choose **"Clear authentication"** to remove your current credentials, or **"Authenticate"** to re-trigger the OAuth flow
-4. Follow the browser-based OAuth prompts to log back into Sentry
+2. Select the **Sentry** server
+3. Choose **"Clear authentication"** or **"Authenticate"** to re-trigger OAuth
 
 **Reauthenticating in OpenCode**
 
-If you need to reauthenticate the Sentry MCP server in OpenCode:
-
-1. Check your MCP servers and auth status with `opencode mcp auth list`
-2. Log out with `opencode mcp logout sentry`
-3. Log back in with `opencode mcp auth sentry`
+1. `opencode mcp auth list` — check status
+2. `opencode mcp logout sentry` — log out
+3. `opencode mcp auth sentry` — log back in
 
 **Reauthenticating in Factory Droid**
 
-If you need to reauthenticate the Sentry MCP server in Factory Droid:
-
-1. Type `/mcp` in the Factory Droid prompt
-2. Select the **Sentry** MCP server from the list
-3. Choose **"Reauthenticate"** to re-trigger the OAuth flow
+1. Type `/mcp` → select **Sentry** → **"Reauthenticate"**
 
 **Connection Issues**
 
-- Verify the MCP server URL is correct: `https://mcp.sentry.dev/mcp`
-- Check your client's MCP configuration syntax
+- Verify the URL: `https://mcp.sentry.dev/mcp`
+- Check your client's MCP config syntax
 
 **Missing Tools**
 
-- Ensure authentication completed successfully
-- Verify your Sentry organization access
-- Check for error messages in your client's console
+- Verify authentication completed
+- Check your Sentry org access
+- Look for errors in your client's console
 
-For additional support, visit the [GitHub repository](https://github.com/getsentry/sentry-mcp) or contact Sentry support.
+For additional help, visit the [GitHub repository](https://github.com/getsentry/sentry-mcp) or contact Sentry support.

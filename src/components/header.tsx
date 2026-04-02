@@ -132,8 +132,43 @@ export function Header({
       {/* define a header-height variable for consumption by other components */}
       <style>{`
         :root { --header-height: 64px; }
+        /* Home page: align header content with max-w-screen-xl (1280px) content */
+        /* The nav element has px-4 (16px) on mobile, md:pl-3 (12px) on desktop */
+        /* Home content uses px-4 (16px), sm:px-8 (32px), lg:px-[50px] */
+        /* So we subtract the nav's padding from the content's padding */
+        .header-content-home {
+          max-width: 1280px;
+          margin-left: auto;
+          margin-right: auto;
+          padding-left: 0;
+          padding-right: 0;
+        }
+        @media (min-width: 640px) {
+          .header-content-home {
+            /* 32px (content) - 16px (nav px-4) = 16px */
+            padding-left: 16px;
+            padding-right: 16px;
+          }
+        }
+        @media (min-width: 768px) {
+          .header-content-home {
+            /* 32px (content) - 12px (nav md:pl-3) = 20px on left */
+            /* 32px (content) - 16px (nav md:pr-4) = 16px on right */
+            padding-left: 20px;
+            padding-right: 16px;
+          }
+        }
+        @media (min-width: 1024px) {
+          .header-content-home {
+            /* 50px (content) - 12px (nav md:pl-3) = 38px on left */
+            /* 50px (content) - 24px (right div lg:pr-6) = 26px on right */
+            padding-left: 38px;
+            padding-right: 26px;
+          }
+        }
+        /* Doc pages: align header with sidebar and TOC at large viewports */
         @media (min-width: 2057px) {
-          .header-content {
+          .header-content:not(.header-content-home) {
             --sidebar-width: 300px;
             --doc-content-w: 1100px;
             --toc-w: 250px;
@@ -145,7 +180,9 @@ export function Header({
           }
         }
       `}</style>
-      <div className="header-content flex items-center w-full">
+      <div
+        className={`header-content flex items-center w-full ${isHomePage ? 'header-content-home' : ''}`}
+      >
         {/* Left: logo + nav links, capped so right block can anchor to viewport edge */}
         <nav className="nav-inner flex items-center gap-4 min-h-[64px] min-w-0 flex-1 px-4 md:pl-3 md:pr-4">
           {/* Hamburger menu - different behavior on home page vs other pages */}
