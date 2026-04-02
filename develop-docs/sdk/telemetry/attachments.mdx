@@ -175,7 +175,7 @@ Trace attachments use item type `"attachment"` with content type `"application/v
 ### Attachment Placeholders
 
 <Alert level="warning">
-Attachment placeholders are an experimental feature, the protocol is subject to change.
+Attachment placeholders are an experimental feature, the protocol is subject to change and requires the feature `projects:relay-upload-endpoint` enabled on the server.
 </Alert>
 
 Attachment placeholders use item type `"attachment"` with content type `"application/vnd.sentry.attachment-ref+json"`. A placeholder contains a **reference** to an attachment uploaded elsewhere — it does _not_ contain the actual attachment payload. The purpose is for the attachment to be handled (rate limited, filtered, etc.) together with the event payload, even if it was uploaded separately.
@@ -184,7 +184,7 @@ SDKs **SHOULD** send placeholders in the same envelope as the event the file is 
 
 **Workflow:**
 
-1. If an attachment is larger than ~100 MiB, upload it to the [TUS](https://tus.io/protocols/resumable-upload#creation-with-upload)-conformant upload endpoint (requires feature `projects:relay-upload-endpoint`):
+1. If an attachment is larger than ~100 MiB and does not require special processing (that is, it has [attachment type `event.attachment`](#attachment-types)), upload it to the [TUS](https://tus.io/protocols/resumable-upload#creation-with-upload)-conformant upload endpoint:
    1. Create the upload:
       ```shell
       curl -X POST https://o0.ingest.sentry.io/api/0/upload/ \
@@ -251,11 +251,12 @@ SDKs **SHOULD** send placeholders in the same envelope as the event the file is 
 |-------|------|----------|-------------|
 | `type` | String | **REQUIRED** | **MUST** be `"attachment"`. |
 | `content_type` | String | **REQUIRED** | **MUST** be `"application/vnd.sentry.attachment-ref+json"`. |
+| `attachment_type` | String | **REQUIRED** | **MUST** be `event.attachment` (no special processing). |
 | `length` | Integer | **REQUIRED** | Size of the placeholder payload in bytes. |
 | `attachment_length` | Integer | **REQUIRED** | Size of the referenced attachment in bytes. |
 | `filename` | String | **REQUIRED** | The name of the uploaded file without a path component. |
 
-The item header **MUST** also contain the original file's `attachment_type` if it was set. The item payload **MUST** contain the original file's `content_type` as a field in the JSON object (see [Standard Attachment Item](#standard-attachment-item)).
+For attachment placeholders, the `attachment_type` **MUST** be `event.attachment`. Other attachment types cannot be uploaded via the [upload endpoint](#attachment-placeholders) because they require [#special processing](#attachment-types), which the upload endpoint bypasses. The item header **MUST** also contain the original file's `attachment_type` if it was set. The item payload **MUST** contain the original file's `content_type` as a field in the JSON object (see [Standard Attachment Item](#standard-attachment-item)).
 
 **Item payload:**
 
