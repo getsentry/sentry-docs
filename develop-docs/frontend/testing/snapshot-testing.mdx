@@ -7,21 +7,40 @@ Snapshot tests catch unintended visual regressions in UI components. Instead of 
 
 Snapshot tests leverage Sentry's upcoming snapshot testing product which hosts and diffs images using Git data as the source of truth. Snapshot tests will appear as a status check on your PRs.
 
+## Working with snapshot tests
+
+Snapshot tests run on all PRs against the `master` branch. Snapshot tests uses Git as the source of truth, meaning it will always diff the HEAD of your branch against the base of your branch on `master`. This means any changes you see in your PR are caused by your changes only.
+
+### Snapshot results
+
+Any change in snapshot tests (removed, changed, renamed) will result in a failing status check on your PR. Only added and unchanged snapshots will resunt in a green check. This is intentional to get you to review the changes, as often times these tests will catch real regressions.
+
+Any failing check can be approved in the Sentry UI in the top right of the page or directly in the GitHub status check UI by clicking the approve button. 
+
+| GitHub Approve Button | Sentry Approve Button |
+|-----------|-----------|
+| <img src="/product/snapshots/github-ui-approve-button.png" alt="GitHub approval UI" style={{maxWidth: 300}} /> | <img src="/product/snapshots/sentry-ui-snapshot-approval-required.png" alt="Sentry approval UI" style={{maxWidth: 300}} /> |
+
+Once approved, your status check will show a green check and the Sentry UI will show approved.
+| GitHub Approved UI | Sentry Approved UI |
+|-----------|-----------|
+| <img src="/product/snapshots/github-ui-success-check.png" alt="GitHub approved" style={{maxWidth: 300}} /> | <img src="/product/snapshots/sentry-ui-snapshot-approved.png" alt="Approved UI Snapshot" style={{maxWidth: 300}} /> |
+
 ## Writing Snapshot Tests
 
 ### What makes a good snapshot test?
 
-Stability is key for a good snapshot test. We want to avoid flakes in our system. Flakes are almost always a result of rendering noise or indeterminism.
+We want to avoid flakes - stability is key for a good snapshot test. Flakes are almost always a result of rendering noise or indeterminism.
 
 A few key tenets to focus on when choosing to create a snapshot test:
 - Stability: avoid snapshotting components with heavy animations or dynamic data (like timestamps). You can always mock or pass data as props to fake this.
-- UI-only: avoid snapshotting components that have heavy business logic built into the component. Snapshots are not meant to be a full integration test (but can be used as a light test to ensure rendering works).
+- UI-only: avoid snapshotting components that have heavy business logic. Snapshots are not meant to be a full integration test (but can be used as a light test to ensure rendering works).
 
 ### Creating a new test
 
 #### Agents
 
-Have claude (or your favorite agent) create a snapshot test for you! Point it to an existing snapshot test (like `button.snapshots.tsx`) and ask it to generate a similar snapshot test for your component.
+Have claude (or your favorite agent) create a snapshot test for you! Use the `/generate-snapshot-tests` skill to create a new snapshot tests.
 
 #### Manually create a snapshot test
 
