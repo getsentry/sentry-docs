@@ -89,50 +89,6 @@ class SentryContext
 }
 ```
 
-### Log Channels
-
-<Alert title="Note">
-
-If you're using log channels to log your exceptions and are also logging exceptions to Sentry in your exception handler, exceptions might show up in Sentry twice.
-
-</Alert>
-
-To configure Sentry as a log channel, add the following config to the `channels` section in `config/logging.php`.
-If this file does not exist, run `php artisan config:publish logging` to publish it.
-
-```php {filename:config/logging.php}
-'channels' => [
-    // ...
-    'sentry' => [
-        'driver' => 'sentry',
-    ],
-],
-```
-
-After you configured the Sentry log channel, you can configure your app to both log to a log file and to Sentry by modifying the log stack:
-
-```bash {filename:.env}
-# ...
-LOG_CHANNEL=stack
-LOG_STACK=single,sentry
-# ...
-```
-
-Optionally, you can set the [logging level](https://laravel.com/docs/8.x/logging#log-levels) and if events should bubble on the driver:
-
-```php {filename:config/logging.php}
-'channels' => [
-    // ...
-    'sentry' => [
-        'driver' => 'sentry',
-        // The minimum logging level at which this handler will be triggered
-        // Available levels: debug, info, notice, warning, error, critical, alert, emergency
-        'level' => env('LOG_LEVEL', 'error'),
-        'bubble' => true, // Whether the messages that are handled can bubble up the stack or not
-    ],
-],
-```
-
 ### Queue Jobs
 
 When you have defined a `failed` method on your job class ([documentation](https://laravel.com/docs/8.x/queues#cleaning-up-after-failed-jobs)), that failed method acts as if your job runs inside a `try {} catch (\Exception $e) {}`. This will prevent reporting exception, causing the job to have failed to be reported to Sentry.
@@ -156,32 +112,6 @@ public function failed(\Exception $exception)
     }
 }
 ```
-
-#### Naming Your Log Channels
-
-To filter on multiple log channels inside Sentry, you can add the `name` attribute to the log channel.
-It will show up in Sentry as the `logger` tag, which is filterable.
-
-For example:
-
-```php {filename:config/logging.php}
-'channels' => [
-    'my_stacked_channel' => [
-        'driver' => 'stack',
-        'channels' => ['single', 'sentry'],
-        'name' => 'my-channel'
-    ],
-    //...
-],
-```
-
-As a result, you can log errors to your channel:
-
-```php
-\Log::channel('my_stacked_channel')->error('My error');
-```
-
-And Sentry's `logger` tag now has the channel's `name`. You can filter on the "my-channel" value.
 
 ### Resolve Name Conflicts
 
