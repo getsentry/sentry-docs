@@ -176,10 +176,9 @@ module.exports = withSentryConfig(nextConfig, {
     reactComponentAnnotation: {
       enabled: true,
     },
-  },
-
-  unstable_sentryWebpackPluginOptions: {
-    applicationKey: 'sentry-docs',
+    unstable_sentryWebpackPluginOptions: {
+      applicationKey: 'sentry-docs',
+    },
   },
 
   _experimental: {
