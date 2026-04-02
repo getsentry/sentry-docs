@@ -1,7 +1,3 @@
-import matter from 'gray-matter';
-import {s} from 'hastscript';
-import yaml from 'js-yaml';
-import {bundleMDX} from 'mdx-bundler';
 import {BinaryLike, createHash} from 'node:crypto';
 import {createReadStream, createWriteStream, mkdirSync} from 'node:fs';
 import {access, cp, mkdir, opendir, readFile} from 'node:fs/promises';
@@ -15,7 +11,12 @@ import {
   createBrotliCompress,
   createBrotliDecompress,
 } from 'node:zlib';
-import {limitFunction} from 'p-limit';
+
+import matter from 'gray-matter';
+import {s} from 'hastscript';
+import yaml from 'js-yaml';
+import {bundleMDX} from 'mdx-bundler';
+import pLimit from 'p-limit';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import rehypePresetMinify from 'rehype-preset-minify';
 import rehypePrismDiff from 'rehype-prism-diff';
@@ -94,7 +95,7 @@ async function getRegistryHashWithRetry(
 
       if (attempt < maxRetries) {
         const delay = initialDelayMs * Math.pow(2, attempt);
-        // eslint-disable-next-line no-console
+
         console.warn(
           `Failed to fetch registry (attempt ${attempt + 1}/${maxRetries + 1}). Retrying in ${delay}ms...`,
           err
@@ -114,7 +115,6 @@ async function getRegistryHashWithRetry(
  */
 function getRegistryHash(): Promise<string> {
   if (!cachedRegistryHash) {
-    // eslint-disable-next-line no-console
     console.info('Fetching registry hash for the first time in this worker');
     cachedRegistryHash = getRegistryHashWithRetry();
   }
@@ -256,30 +256,27 @@ export async function getDevDocsFrontMatterUncached(): Promise<FrontMatter[]> {
   const folder = 'develop-docs';
   const docsPath = path.join(root, folder);
   const files = await getAllFilesRecursively(docsPath);
+  const limit = pLimit(FILE_CONCURRENCY_LIMIT);
   const frontMatters = (
     await Promise.all(
-      files.map(
-        limitFunction(
-          async file => {
-            const fileName = file.slice(docsPath.length + 1);
-            if (path.extname(fileName) !== '.md' && path.extname(fileName) !== '.mdx') {
-              return undefined;
-            }
+      files.map(file =>
+        limit(async () => {
+          const fileName = file.slice(docsPath.length + 1);
+          if (path.extname(fileName) !== '.md' && path.extname(fileName) !== '.mdx') {
+            return undefined;
+          }
 
-            const source = await readFile(file, 'utf8');
-            const {data: frontmatter} = matter(source);
-
-            return {
-              ...(frontmatter as FrontMatter),
-              slug: fileName.replace(/\/index.mdx?$/, '').replace(/\.mdx?$/, ''),
-              sourcePath: path.join(folder, fileName),
-            };
-          },
-          {concurrency: FILE_CONCURRENCY_LIMIT}
-        )
+          const source = await readFile(file, 'utf8');
+          const {data: frontmatter} = matter(source);
+          return {
+            ...(frontmatter as FrontMatter),
+            slug: fileName.replace(/\/index.mdx?$/, '').replace(/\.mdx?$/, ''),
+            sourcePath: path.join(folder, fileName),
+          };
+        })
       )
     )
-  ).filter(isNotNil);
+  ).filter(isNotNil) as FrontMatter[];
   return frontMatters;
 }
 
@@ -312,30 +309,28 @@ async function getAllFilesFrontMatter(): Promise<FrontMatter[]> {
   const docsPath = path.join(root, 'docs');
   const files = await getAllFilesRecursively(docsPath);
   const allFrontMatter: FrontMatter[] = [];
+  const limit = pLimit(FILE_CONCURRENCY_LIMIT);
 
   await Promise.all(
-    files.map(
-      limitFunction(
-        async file => {
-          const fileName = file.slice(docsPath.length + 1);
-          if (path.extname(fileName) !== '.md' && path.extname(fileName) !== '.mdx') {
-            return;
-          }
+    files.map(file =>
+      limit(async () => {
+        const fileName = file.slice(docsPath.length + 1);
+        if (path.extname(fileName) !== '.md' && path.extname(fileName) !== '.mdx') {
+          return;
+        }
 
-          if (fileName.indexOf('/common/') !== -1) {
-            return;
-          }
+        if (fileName.indexOf('/common/') !== -1) {
+          return;
+        }
 
-          const source = await readFile(file, 'utf8');
-          const {data: frontmatter} = matter(source);
-          allFrontMatter.push({
-            ...(frontmatter as FrontMatter),
-            slug: formatSlug(fileName),
-            sourcePath: path.join('docs', fileName),
-          });
-        },
-        {concurrency: FILE_CONCURRENCY_LIMIT}
-      )
+        const source = await readFile(file, 'utf8');
+        const {data: frontmatter} = matter(source);
+        allFrontMatter.push({
+          ...(frontmatter as FrontMatter),
+          slug: formatSlug(fileName),
+          sourcePath: path.join('docs', fileName),
+        });
+      })
     )
   );
 
@@ -363,7 +358,7 @@ async function getAllFilesFrontMatter(): Promise<FrontMatter[]> {
     const commonPath = path.join(platformsPath, platformName, 'common');
     try {
       await access(commonPath);
-    } catch (err) {
+    } catch {
       continue;
     }
 
@@ -372,57 +367,51 @@ async function getAllFilesFrontMatter(): Promise<FrontMatter[]> {
     );
 
     const commonFiles = await Promise.all(
-      commonFileNames.map(
-        limitFunction(
-          async commonFileName => {
-            const source = await readFile(commonFileName, 'utf8');
-            const {data: frontmatter} = matter(source);
-            return {commonFileName, frontmatter: frontmatter as FrontMatter};
-          },
-          {concurrency: FILE_CONCURRENCY_LIMIT}
-        )
+      commonFileNames.map(commonFileName =>
+        limit(async () => {
+          const source = await readFile(commonFileName, 'utf8');
+          const {data: frontmatter} = matter(source);
+          return {commonFileName, frontmatter: frontmatter as FrontMatter};
+        })
       )
     );
 
     await Promise.all(
-      commonFiles.map(
-        limitFunction(
-          async f => {
-            if (!isSupported(f.frontmatter, platformName)) {
-              return;
-            }
+      commonFiles.map(f =>
+        limit(async () => {
+          if (!isSupported(f.frontmatter, platformName)) {
+            return;
+          }
 
-            const subpath = f.commonFileName.slice(commonPath.length + 1);
-            const slug = f.commonFileName
-              .slice(docsPath.length + 1)
-              .replace(/\/common\//, '/');
-            const noFrontMatter = (
-              await Promise.allSettled([
-                access(path.join(docsPath, slug)),
-                access(path.join(docsPath, slug.replace('/index.mdx', '.mdx'))),
-              ])
-            ).every(r => r.status === 'rejected');
-            if (noFrontMatter) {
-              let frontmatter = f.frontmatter;
-              if (subpath === 'index.mdx') {
-                frontmatter = {...frontmatter, ...platformFrontmatter};
-              }
-              allFrontMatter.push({
-                ...frontmatter,
-                slug: formatSlug(slug),
-                sourcePath: 'docs/' + f.commonFileName.slice(docsPath.length + 1),
-              });
+          const subpath = f.commonFileName.slice(commonPath.length + 1);
+          const slug = f.commonFileName
+            .slice(docsPath.length + 1)
+            .replace(/\/common\//, '/');
+          const noFrontMatter = (
+            await Promise.allSettled([
+              access(path.join(docsPath, slug)),
+              access(path.join(docsPath, slug.replace('/index.mdx', '.mdx'))),
+            ])
+          ).every(r => r.status === 'rejected');
+          if (noFrontMatter) {
+            let frontmatter = f.frontmatter;
+            if (subpath === 'index.mdx') {
+              frontmatter = {...frontmatter, ...platformFrontmatter};
             }
-          },
-          {concurrency: FILE_CONCURRENCY_LIMIT}
-        )
+            allFrontMatter.push({
+              ...frontmatter,
+              slug: formatSlug(slug),
+              sourcePath: 'docs/' + f.commonFileName.slice(docsPath.length + 1),
+            });
+          }
+        })
       )
     );
 
     const guidesPath = path.join(docsPath, 'platforms', platformName, 'guides');
     try {
       await access(guidesPath);
-    } catch (err) {
+    } catch {
       continue;
     }
 
@@ -445,40 +434,37 @@ async function getAllFilesFrontMatter(): Promise<FrontMatter[]> {
       }
 
       await Promise.all(
-        commonFiles.map(
-          limitFunction(
-            async f => {
-              if (!isSupported(f.frontmatter, platformName, guideName)) {
-                return;
-              }
+        commonFiles.map(f =>
+          limit(async () => {
+            if (!isSupported(f.frontmatter, platformName, guideName)) {
+              return;
+            }
 
-              const subpath = f.commonFileName.slice(commonPath.length + 1);
-              const slug = path.join(
-                'platforms',
-                platformName,
-                'guides',
-                guideName,
-                subpath
-              );
-              try {
-                await access(path.join(docsPath, slug));
-                return;
-              } catch {
-                // pass
-              }
+            const subpath = f.commonFileName.slice(commonPath.length + 1);
+            const slug = path.join(
+              'platforms',
+              platformName,
+              'guides',
+              guideName,
+              subpath
+            );
+            try {
+              await access(path.join(docsPath, slug));
+              return;
+            } catch {
+              // pass
+            }
 
-              let frontmatter = f.frontmatter;
-              if (subpath === 'index.mdx') {
-                frontmatter = {...frontmatter, ...guideFrontmatter};
-              }
-              allFrontMatter.push({
-                ...frontmatter,
-                slug: formatSlug(slug),
-                sourcePath: 'docs/' + f.commonFileName.slice(docsPath.length + 1),
-              });
-            },
-            {concurrency: FILE_CONCURRENCY_LIMIT}
-          )
+            let frontmatter = f.frontmatter;
+            if (subpath === 'index.mdx') {
+              frontmatter = {...frontmatter, ...guideFrontmatter};
+            }
+            allFrontMatter.push({
+              ...frontmatter,
+              slug: formatSlug(slug),
+              sourcePath: 'docs/' + f.commonFileName.slice(docsPath.length + 1),
+            });
+          })
         )
       );
     }
@@ -659,7 +645,7 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
 
   try {
     await mkdir(outdir, {recursive: true});
-  } catch (e) {
+  } catch {
     // If we can't create the directory (e.g., read-only filesystem),
     // continue anyway - images should already exist from build time
   }
@@ -682,13 +668,13 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
       try {
         const registryHash = await getRegistryHash();
         cacheKey = `${sourceHash}-${registryHash}`;
-        // eslint-disable-next-line no-console
+
         console.info(
           `Using registry-aware cache for ${sourcePath} (registry hash: ${registryHash.slice(0, 8)}...)`
         );
       } catch (err) {
         // If we can't get registry hash, skip cache for this file
-        // eslint-disable-next-line no-console
+
         console.warn(
           `Failed to get registry hash for ${sourcePath}, skipping cache:`,
           err
@@ -738,7 +724,7 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
           err.code !== 'Z_BUF_ERROR'
         ) {
           // If cache is corrupted, ignore and proceed
-          // eslint-disable-next-line no-console
+
           console.warn(`Failed to read MDX cache: ${cacheFile}`, err);
         }
       }
@@ -862,7 +848,6 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
       return options;
     },
   }).catch(e => {
-    // eslint-disable-next-line no-console
     console.error('Error occurred during MDX compilation:', e.errors);
     throw e;
   });
@@ -910,12 +895,11 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
   if (assetsCacheDir && cacheFile && cacheKey) {
     try {
       await cp(assetsCacheDir, outdir, {recursive: true});
-    } catch (e) {
+    } catch {
       // If copy fails (e.g., on read-only filesystem), continue anyway
       // Images should already exist from build time
     }
     writeCacheFile(cacheFile, JSON.stringify(resultObj)).catch(e => {
-      // eslint-disable-next-line no-console
       console.warn(`Failed to write MDX cache: ${cacheFile}`, e);
     });
   }

@@ -1,6 +1,4 @@
-/* eslint-env node */
 /* eslint import/no-nodejs-modules:0 */
-/* eslint-disable no-console */
 
 import {promises as fs} from 'fs';
 
@@ -8,7 +6,7 @@ import {DeRefedOpenAPI} from './open-api/types';
 
 // SENTRY_API_SCHEMA_SHA is used in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
 // DO NOT change variable name unless you change it in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
-const SENTRY_API_SCHEMA_SHA = '870543550802cd0ec186a6e1c3f7e21e520b4361';
+const SENTRY_API_SCHEMA_SHA = '40d0216c968d6215b504712e0dc9d000b89d5e39';
 
 const activeEnv = process.env.GATSBY_ENV || process.env.NODE_ENV || 'development';
 

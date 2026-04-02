@@ -2,7 +2,7 @@
 title: Monolog
 sidebar_order: 5
 sidebar_section: configuration
-description: "Learn how to enable Sentry's Symfony SDK to capture Monolog events."
+description: "Learn how to use Monolog with Sentry's Symfony SDK."
 ---
 
 Monolog logs can be captured as <PlatformLink to="/logs/">Sentry Logs</PlatformLink> for better searchability and querying.
@@ -11,8 +11,8 @@ To enable this, set `enable_logs` to `true` in your Sentry configuration:
 
 ```yaml {filename:config/packages/sentry.yaml}
 sentry:
-    options:
-        enable_logs: true
+  options:
+    enable_logs: true
 ```
 
 Then configure the Monolog handler for logs:
@@ -24,46 +24,32 @@ services:
       - !php/const Monolog\Logger::WARNING
 
 monolog:
-    handlers:
-        sentry_logs:
-            type: service
-            id: Sentry\SentryBundle\Monolog\LogsHandler
+  handlers:
+    sentry_logs:
+      type: service
+      id: Sentry\SentryBundle\Monolog\LogsHandler
 ```
 
 You can control which log levels are sent to Sentry Logs by configuring the handler's minimum level in your services configuration.
 
 ## Breadcrumbs
 
-When using [Monolog](https://github.com/Seldaek/monolog) you can configure a [breadcrumb](../../enriching-events/breadcrumbs/) handler to capture Monolog messages as breadcrumbs and a handler that captures messages as events in Sentry.
-The breadcrumb handler will not send anything to Sentry directly, it only records breadcrumbs that will be attached to any event or exception sent to Sentry.
+When using [Monolog](https://github.com/Seldaek/monolog) you can configure a [breadcrumb](../../enriching-events/breadcrumbs/) handler to capture Monolog messages as breadcrumbs.
+The breadcrumb handler does not send anything to Sentry directly. It records breadcrumbs that are attached to a later event or exception.
 
-```yaml {filename:config/packages/sentry.yaml}
-sentry:
-    register_error_listener: false # Disables the ErrorListener to avoid duplicated log in sentry
-    register_error_handler: false # Disables the ErrorListener, ExceptionListener and FatalErrorListener integrations of the base PHP SDK
-
+```yaml {filename:config/services.yaml}
 services:
-    # (Optionally) Configure the breadcrumb handler as a service (needed for the breadcrumb Monolog handler)
-    Sentry\Monolog\BreadcrumbHandler:
-        arguments:
-            - '@Sentry\State\HubInterface'
-            - !php/const Monolog\Logger::INFO # Configures the level of messages to capture as breadcrumbs
+  Sentry\Monolog\BreadcrumbHandler:
+    arguments:
+      $hub: '@Sentry\State\HubInterface'
+      $level: !php/const Monolog\Logger::INFO
+```
 
-    Sentry\Monolog\Handler:
-        arguments:
-            $hub: '@Sentry\State\HubInterface'
-            $level: !php/const Monolog\Logger::ERROR
-            $fillExtraContext: true
-
+```yaml {filename:config/packages/monolog.yaml}
 monolog:
-    handlers:
-        # (Optionally) Register the breadcrumb handler as a Monolog handler
-        sentry_breadcrumbs:
-            type: service
-            name: sentry_breadcrumbs
-            id: Sentry\Monolog\BreadcrumbHandler
-        # Register the handler as a Monolog handler to capture messages as events
-        sentry:
-            type: service
-            id: Sentry\Monolog\Handler
+  handlers:
+    sentry_breadcrumbs:
+      type: service
+      name: sentry_breadcrumbs
+      id: Sentry\Monolog\BreadcrumbHandler
 ```

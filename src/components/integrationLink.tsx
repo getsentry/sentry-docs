@@ -1,5 +1,4 @@
 import type {ReactNode} from 'react';
-
 import {serverContext} from 'sentry-docs/serverContext';
 
 import {SmartLink} from './smartLink';

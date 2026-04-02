@@ -22,12 +22,14 @@ import sentryhttpclient "github.com/getsentry/sentry-go/httpclient"
 func main() {
   // need to have tracing enabled
   _ = sentry.Init(sentry.ClientOptions{
-  	Dsn:           "___PUBLIC_DSN___",
+  	Dsn:              "___PUBLIC_DSN___",
   	EnableTracing:    true,
   	TracesSampleRate: 1.0,
   })
 
-  client := sentryhttpclient.SentryHTTPClient
+  client := &http.Client{
+  	Transport: sentryhttpclient.NewSentryRoundTripper(nil),
+  }
   response, err := client.Do(request)
   if err != nil {
   	return

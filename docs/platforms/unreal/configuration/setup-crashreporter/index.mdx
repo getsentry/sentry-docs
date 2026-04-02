@@ -41,7 +41,7 @@ to the user:
 
 ### Using the UE Crash Reporter on Windows
 
-The UE Crash Reporter works if the Sentry SDK is installed. Sentry SDK can help with configuring the UE Crash Reporter, uploading debug symbols, and enriching crash reports with custom data. **Starting from UE 5.2** users have to choose between the two available crash capturing mechanisms - the UE Crash Reporter or the `sentry-native` library that's integrated into the Sentry plugin. By default, the `sentry-native` library is used instead of the UE Crash Reporter. (See "Enable automatic crash capturing (Windows, UE 5.2+)" in the plugin settings.) The two solutions are mutually exclusive and can't be used simultaneously.
+The UE Crash Reporter works if the Sentry SDK is installed. Sentry SDK can help with configuring the UE Crash Reporter, uploading debug symbols, and enriching crash reports with custom data. **Starting from UE 5.2** users have to choose between the two available crash capturing mechanisms - the UE Crash Reporter or the `sentry-native` library that's integrated into the Sentry plugin. By default, the `sentry-native` library is used instead of the UE Crash Reporter (see "Enable automatic crash capturing (Windows, UE 5.2+)" in the plugin settings). The two solutions are mutually exclusive and can't be used simultaneously.
 
 ## Sentry SDK and UE Crash Reporter feature comparison
 
@@ -187,7 +187,7 @@ Available starting from Sentry Unreal SDK version 1.8.0. Supported on Windows an
 
 Starting from version 1.8.0, the Sentry Unreal plugin ships with an optional **Sentry Crash Reporter** - a standalone application that can be used instead of the default UE Crash Reporter. When enabled, it displays a dialog to users after a crash, allowing them to review crash details and provide feedback before the report is submitted to Sentry.
 
-Unlike the built-in UE Crash Reporter, the Sentry Crash Reporter works through the Sentry SDK pipeline and doesn't require modifying engine configuration files.
+Unlike the built-in UE Crash Reporter, the Sentry Crash Reporter works through the Sentry SDK pipeline and doesn't require modifying engine configuration files. This also means it requires Sentry's own crash capturing to be enabled (see "Enable automatic crash capturing (Windows, UE 5.2+)" in the plugin settings).
 
 ![Sentry Crash Reporter](./img/sentry-crash-reporter.png)
 
@@ -204,7 +204,21 @@ EnableExternalCrashReporter=True
 
 ### Customizing the Crash Reporter
 
-The Sentry Crash Reporter is built from the [sentry-desktop-crash-reporter](https://github.com/getsentry/sentry-desktop-crash-reporter) project. You can customize its appearance (branding, colors, layout) by forking the repository and building a custom version following the instructions in its documentation.
+You can customize the appearance of the Sentry Crash Reporter directly from the plugin settings. Navigate to **Project Settings > Plugins > Sentry > General > Native** and expand the **External crash reporter appearance** section. Each property has an override toggle - only properties you explicitly enable will be applied:
+
+- **Window title** - Custom title for the crash reporter window.
+- **Header text** - Header text shown in the crash reporter dialog.
+- **Header description** - Description text shown below the header. Leave empty to hide.
+- **Submit button label** - Label for the submit/send button.
+- **Cancel button label** - Label for the cancel button. Set to empty string to hide the button.
+- **Accent color** - Primary accent color used for the crash reporter UI elements.
+- **Window closable** - When disabled, the user cannot close the crash reporter window without submitting the report. The native close button is disabled and the cancel button is hidden. Enabled by default.
+
+These settings are applied each time the SDK initializes. Properties that are not overridden will use the crash reporter's built-in defaults.
+
+#### Using a Custom Crash Reporter Build
+
+For more advanced customization (such as custom logos or layout changes), you can fork the [sentry-desktop-crash-reporter](https://github.com/getsentry/sentry-desktop-crash-reporter) project and build a custom version following the instructions in its documentation.
 
 To use your custom build, replace the crash reporter executable in the plugin's ThirdParty binaries directory:
 
@@ -212,6 +226,21 @@ To use your custom build, replace the crash reporter executable in the plugin's 
 - **Linux**: `Plugins/sentry-unreal/Source/ThirdParty/Linux/bin/Sentry.CrashReporter`
 
 After replacing the executable, delete the project's `Build` and `Intermediate` directories and rebuild the project to ensure the updated binary is picked up.
+
+### Stacktrace Display
+
+The Sentry Crash Reporter can display a symbolicated stacktrace of the crashed thread, allowing users to review the call stack directly in the crash dialog before submitting the report.
+
+This feature requires client-side stack walking, which is supported through two backend configurations:
+
+- **[Native backend](/platforms/unreal/configuration/native-backend/)**: Performs stack walking and symbolication automatically using the platform's debug APIs. No additional configuration is needed.
+- **Crashpad backend**: Requires a custom build of `sentry-native` with the `CRASHPAD_ENABLE_STACKTRACE` CMake flag enabled.
+
+<Alert>
+
+For **Shipping builds**, the stacktrace can only be symbolicated if debug information is available at runtime. Enable **Include Debug Files in Shipping Builds** in **Project Settings > Packaging** to ensure function names are resolved in the crash reporter dialog.
+
+</Alert>
 
 ## Upload Debug Symbols
 

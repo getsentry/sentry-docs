@@ -1,8 +1,7 @@
 'use client';
 
-import {useState} from 'react';
 import Image from 'next/image';
-
+import {useState} from 'react';
 import {Lightbox} from 'sentry-docs/components/lightbox';
 import {isAllowedRemoteImage, isExternalImage} from 'sentry-docs/config/images';
 

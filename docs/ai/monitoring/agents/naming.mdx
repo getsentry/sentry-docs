@@ -1,0 +1,276 @@
+---
+title: Naming Your Agents
+sidebar_order: 12
+description: "Set the agent name so Sentry can identify, filter, and alert on individual agents in the AI Agents Dashboard."
+keywords:
+  - AI agents
+  - agent name
+  - gen_ai.agent.name
+  - agent monitoring
+  - agent identification
+---
+
+Sentry uses the `gen_ai.agent.name` span attribute to identify agents in the [AI Agents Dashboard](/ai/monitoring/agents/dashboard/). Without a name, you won't be able to filter for a specific agent, group results by agent, or set up alerts for individual agents.
+
+## Quick Reference
+
+| Framework               | Platform | How to Name                                                        |
+| ----------------------- | -------- | ------------------------------------------------------------------ |
+| OpenAI Agents SDK       | Python   | `Agent(name="...")`                                                |
+| Pydantic AI             | Python   | `Agent(..., name="...")`                                           |
+| LangChain               | Python   | `create_agent(model, tools, name="...")`                           |
+| LangGraph               | Python   | `.compile(name="...")` or `create_react_agent(..., name="...")`    |
+| Vercel AI SDK           | JS       | `experimental_telemetry: { functionId: "..." }`                    |
+| LangGraph               | JS       | `.compile({ name: "..." })` or `createReactAgent({ name: "..." })` |
+| LangChain               | JS       | `createAgent({ name: "..." })`                                     |
+| Mastra                  | JS       | `Agent({ id: "...", name: "..." })`                                |
+| .NET (M.E.AI)           | .NET     | `options.Experimental.AgentName = "..."`                           |
+| Other / raw LLM clients | Any      | [Manual instrumentation](#manual-instrumentation)                  |
+
+## Framework Integrations
+
+Most AI agent frameworks have a built-in name parameter that Sentry picks up automatically.
+
+### Python
+
+#### OpenAI Agents SDK
+
+The `name` parameter is required by the SDK. Sentry reads it automatically.
+
+```python
+from openai import agents
+
+agent = agents.Agent(
+    name="Weather Agent",
+    instructions="You are a helpful weather assistant.",
+    model="gpt-4o-mini",
+)
+```
+
+<PlatformLink platform="python" to="/integrations/openai-agents/">
+  OpenAI Agents integration docs
+</PlatformLink>
+
+#### Pydantic AI
+
+Pass `name` when creating the agent.
+
+```python
+from pydantic_ai import Agent
+
+agent = Agent(
+    "openai:gpt-4o-mini",
+    name="Customer Support Agent",
+    system_prompt="You help customers with their questions.",
+)
+```
+
+<PlatformLink platform="python" to="/integrations/pydantic-ai/">
+  Pydantic AI integration docs
+</PlatformLink>
+
+#### LangChain
+
+Pass `name` to `create_agent`.
+
+```python
+from langchain.agents import create_agent
+from langchain.chat_models import init_chat_model
+
+model = init_chat_model("gpt-4o-mini", model_provider="openai")
+agent = create_agent(model, tools, name="dice_agent")
+```
+
+<PlatformLink platform="python" to="/integrations/langchain/">
+  LangChain integration docs
+</PlatformLink>
+
+#### LangGraph
+
+Pass `name` to `StateGraph.compile()` or `create_react_agent`.
+
+```python
+from langgraph.graph import StateGraph
+
+graph = StateGraph(AgentState)
+# ... add nodes and edges ...
+agent = graph.compile(name="dice_agent")
+```
+
+Or with the prebuilt helper:
+
+```python
+from langgraph.prebuilt import create_react_agent
+
+agent = create_react_agent(model, tools, name="dice_agent")
+```
+
+<PlatformLink platform="python" to="/integrations/langgraph/">
+  LangGraph integration docs
+</PlatformLink>
+
+### JavaScript / Node.js
+
+#### Vercel AI SDK
+
+Vercel AI SDK doesn't have a dedicated agent name field. Instead, set `functionId` in `experimental_telemetry` — Sentry uses this as the agent identifier.
+
+```javascript
+import { generateText } from "ai";
+import { openai } from "@ai-sdk/openai";
+
+const result = await generateText({
+  model: openai("gpt-4o"),
+  prompt: "Tell me a joke",
+  experimental_telemetry: {
+    isEnabled: true,
+    functionId: "joke_agent",
+  },
+});
+```
+
+<PlatformLink
+  platform="javascript.node"
+  to="/configuration/integrations/vercelai/"
+>
+  Vercel AI SDK integration docs
+</PlatformLink>
+
+#### LangGraph
+
+Pass `name` to `.compile()` or `createReactAgent`.
+
+```javascript
+import { StateGraph } from "@langchain/langgraph";
+
+const graph = new StateGraph(AgentState);
+// ... add nodes and edges ...
+const agent = graph.compile({ name: "weather_agent" });
+```
+
+Or with the prebuilt helper:
+
+```javascript
+import { createReactAgent } from "@langchain/langgraph/prebuilt";
+
+const agent = createReactAgent({
+  llm: model,
+  tools: [getWeather],
+  name: "weather_agent",
+});
+```
+
+<PlatformLink
+  platform="javascript.node"
+  to="/configuration/integrations/langgraph/"
+>
+  LangGraph integration docs
+</PlatformLink>
+
+#### LangChain
+
+Pass `name` to `createAgent`.
+
+```javascript
+import { createAgent } from "langchain";
+
+const agent = createAgent({
+  llm: model,
+  tools: [getWeather],
+  name: "weather_agent",
+});
+```
+
+<PlatformLink
+  platform="javascript.node"
+  to="/configuration/integrations/langchain/"
+>
+  LangChain integration docs
+</PlatformLink>
+
+#### Mastra
+
+Mastra requires both `id` and `name` on the agent definition. The Mastra exporter sends the name to Sentry automatically.
+
+```javascript
+const agent = new Agent({
+  id: "weather-agent",
+  name: "Weather Agent",
+  instructions: "You are a helpful weather assistant.",
+  model: "openai/gpt-4o",
+});
+```
+
+<PlatformLink platform="javascript.node" to="/ai-agent-monitoring/mastra/">
+  Mastra integration docs
+</PlatformLink>
+
+### .NET
+
+Set `AgentName` in the Sentry AI instrumentation options.
+
+```csharp
+var client = new OpenAI.Chat.ChatClient("gpt-4o-mini", apiKey)
+    .AsIChatClient()
+    .AddSentry(options =>
+    {
+        options.Experimental.AgentName = "WeatherAgent";
+    });
+```
+
+See the [.NET AI Agents instrumentation docs](/platforms/dotnet/tracing/instrumentation/ai-agents-module/) for the full setup.
+
+## Manual Instrumentation
+
+For frameworks without built-in naming, or when using raw LLM clients (OpenAI, Anthropic, Google GenAI, LiteLLM), wrap your agent logic in an `invoke_agent` span and set `gen_ai.agent.name`.
+
+### Python
+
+```python
+import sentry_sdk
+
+with sentry_sdk.start_span(
+    op="gen_ai.invoke_agent",
+    name="invoke_agent Weather Agent",
+) as span:
+    span.set_data("gen_ai.agent.name", "Weather Agent")
+    span.set_data("gen_ai.request.model", "gpt-4o-mini")
+
+    result = my_agent.run()
+
+    span.set_data("gen_ai.usage.input_tokens", result.usage.input_tokens)
+    span.set_data("gen_ai.usage.output_tokens", result.usage.output_tokens)
+```
+
+See [Python manual instrumentation](/platforms/python/tracing/instrumentation/custom-instrumentation/ai-agents-module/#invoke-agent-span) for full span attributes.
+
+### JavaScript
+
+```javascript
+import * as Sentry from "@sentry/node";
+
+await Sentry.startSpan(
+  {
+    op: "gen_ai.invoke_agent",
+    name: "invoke_agent Weather Agent",
+    attributes: {
+      "gen_ai.agent.name": "Weather Agent",
+      "gen_ai.request.model": "gpt-4o-mini",
+    },
+  },
+  async (span) => {
+    const result = await myAgent.run();
+
+    span.setAttribute("gen_ai.usage.input_tokens", result.usage.inputTokens);
+    span.setAttribute("gen_ai.usage.output_tokens", result.usage.outputTokens);
+  }
+);
+```
+
+See [JavaScript manual instrumentation](/platforms/javascript/guides/node/ai-agent-monitoring/#invoke-agent-span) for full span attributes.
+
+## Next Steps
+
+- [AI Agents Dashboard](/ai/monitoring/agents/dashboard/) — view and filter agents by name
+- [Data Privacy](/ai/monitoring/agents/privacy/) — control what data is sent to Sentry
+- [Model Costs](/ai/monitoring/agents/costs/) — track token usage and estimated costs

@@ -1,8 +1,7 @@
-import {Fragment, useMemo} from 'react';
 import * as Sentry from '@sentry/nextjs';
 import {Metadata} from 'next';
 import {notFound} from 'next/navigation';
-
+import {Fragment, useMemo} from 'react';
 import {apiCategories} from 'sentry-docs/build/resolveOpenAPI';
 import {ApiCategoryPage} from 'sentry-docs/components/apiCategoryPage';
 import {ApiPage} from 'sentry-docs/components/apiPage';
@@ -126,8 +125,6 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
   const pageNode = nodeForPath(rootNode, params.path ?? '');
 
   if (!pageNode) {
-    // eslint-disable-next-line no-console
-    console.warn('no page node', params.path);
     return notFound();
   }
 
@@ -297,7 +294,7 @@ function formatCanonicalTag(tag: string) {
     tag = '/' + tag;
   }
   if (tag.charAt(tag.length - 1) !== '/') {
-    tag = tag + '/';
+    tag += '/';
   }
   return tag;
 }

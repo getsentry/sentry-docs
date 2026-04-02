@@ -1,7 +1,7 @@
 'use client';
 
-import {useState} from 'react';
 import {Button} from '@radix-ui/themes';
+import {useState} from 'react';
 
 const MAX_COMPONENTS_ON_PAGE = 100;
 

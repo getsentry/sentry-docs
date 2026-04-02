@@ -1,7 +1,7 @@
-import {Fragment} from 'react';
-import {jsx, jsxs} from 'react/jsx-runtime';
 import {toJsxRuntime} from 'hast-util-to-jsx-runtime';
 import {Nodes} from 'hastscript/lib/create-h';
+import {Fragment} from 'react';
+import {jsx, jsxs} from 'react/jsx-runtime';
 import bash from 'refractor/lang/bash.js';
 import groovy from 'refractor/lang/groovy.js';
 import javascript from 'refractor/lang/javascript.js';
@@ -32,7 +32,6 @@ export const SUPPORTED_LANGUAGES = [
 
 export function codeToJsx(code: string, lang = 'json') {
   if (!SUPPORTED_LANGUAGES.includes(lang)) {
-    // eslint-disable-next-line no-console
     console.error(`Unsupported language for syntax highlighting: ${lang}`);
   }
   return toJsxRuntime(refractor.highlight(code, lang) as Nodes, {Fragment, jsx, jsxs});

@@ -87,7 +87,11 @@ const outputFileTracingIncludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
       'sitemap.xml': ['public/doctree.json'],
     };
 
-if (process.env.NODE_ENV !== 'development' && !process.env.NEXT_PUBLIC_SENTRY_DSN) {
+if (
+  process.env.NODE_ENV !== 'development' &&
+  !process.env.NEXT_PUBLIC_SENTRY_DSN &&
+  !process.env.NEXT_TYPEGEN
+) {
   throw new Error(
     'Missing required environment variable: NEXT_PUBLIC_SENTRY_DSN must be set in production'
   );
@@ -132,8 +136,9 @@ const nextConfig = {
     return config;
   },
   env: {
-    // This is used on middleware
-    DEVELOPER_DOCS_: process.env.NEXT_PUBLIC_DEVELOPER_DOCS,
+    // Inline NEXT_PUBLIC_DEVELOPER_DOCS into edge middleware at build time.
+    // Edge runtime doesn't have access to server env vars at request time.
+    DEVELOPER_DOCS: process.env.NEXT_PUBLIC_DEVELOPER_DOCS,
   },
   redirects,
   rewrites: () => [
@@ -157,22 +162,23 @@ module.exports = withSentryConfig(nextConfig, {
 
   // Upload a larger set of source maps for prettier stack traces (increases build time)
   widenClientFileUpload: true,
-
-  // Automatically tree-shake Sentry logger statements to reduce bundle size
-  disableLogger: true,
-
-  // Enables automatic instrumentation of Vercel Cron Monitors
-  // See the following for more information:
-  // https://docs.sentry.io/product/crons/
-  // https://vercel.com/docs/cron-jobs
-  automaticVercelMonitors: true,
-
-  reactComponentAnnotation: {
-    enabled: true,
-  },
-
-  unstable_sentryWebpackPluginOptions: {
-    applicationKey: 'sentry-docs',
+  
+  webpack: {
+    treeshake: {
+      // Automatically tree-shake Sentry logger statements to reduce bundle size
+      removeDebugLogging: true,
+    },
+    // Enables automatic instrumentation of Vercel Cron Monitors
+    // See the following for more information:
+    // https://docs.sentry.io/product/crons/
+    // https://vercel.com/docs/cron-jobs
+    automaticVercelMonitors: true,
+    reactComponentAnnotation: {
+      enabled: true,
+    },
+    unstable_sentryWebpackPluginOptions: {
+      applicationKey: 'sentry-docs',
+    },
   },
 
   _experimental: {

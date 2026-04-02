@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import {execFileSync} from 'child_process';
 import fs from 'fs';
 import path from 'path';
@@ -144,7 +143,6 @@ function parseRedirectsJs(filePath: string): {
     const resolvedPath = path.resolve(filePath);
     delete require.cache[resolvedPath];
 
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const redirects = require(resolvedPath);
     return {
       developerDocsRedirects: redirects.developerDocsRedirects || [],
@@ -319,7 +317,7 @@ function validateRedirects(): MissingRedirect[] {
   // If modified in the PR, validate against the PR version
   // Otherwise, validate against the base branch version
   let redirectsFilePath = 'redirects.js';
-  let middlewareFilePath = 'src/middleware.ts';
+  let middlewareFilePath = 'middleware.ts';
 
   try {
     // Check if redirects.js was modified in this PR
@@ -335,7 +333,7 @@ function validateRedirects(): MissingRedirect[] {
       .trim();
 
     const redirectsJsModified = modifiedFiles.includes('redirects.js');
-    const middlewareModified = modifiedFiles.includes('src/middleware.ts');
+    const middlewareModified = modifiedFiles.includes('middleware.ts');
 
     if (redirectsJsModified) {
       console.log('📝 redirects.js was modified in this PR, using PR version');
@@ -352,7 +350,7 @@ function validateRedirects(): MissingRedirect[] {
         fs.writeFileSync(tmpFile, baseRedirects);
         redirectsFilePath = tmpFile;
         console.log('📝 redirects.js was not modified, using base branch version');
-      } catch (err) {
+      } catch {
         // If we can't get base version, use current file
         console.log(
           '⚠️  Could not get base version of redirects.js, using current version'
@@ -364,26 +362,25 @@ function validateRedirects(): MissingRedirect[] {
     // Determine which version of middleware.ts to check
     if (middlewareModified) {
       console.log('📝 middleware.ts was modified in this PR, using PR version');
-      middlewareFilePath = 'src/middleware.ts';
+      middlewareFilePath = 'middleware.ts';
     } else {
       try {
-        const baseMiddleware = execFileSync(
-          'git',
-          ['show', `${baseSha}:src/middleware.ts`],
-          {encoding: 'utf8', stdio: 'pipe'}
-        );
+        const baseMiddleware = execFileSync('git', ['show', `${baseSha}:middleware.ts`], {
+          encoding: 'utf8',
+          stdio: 'pipe',
+        });
         const tmpMiddleware = path.join(process.cwd(), 'middleware-base.ts');
         fs.writeFileSync(tmpMiddleware, baseMiddleware);
         middlewareFilePath = tmpMiddleware;
         console.log('📝 middleware.ts was not modified, using base branch version');
-      } catch (err) {
+      } catch {
         console.log(
           '⚠️  Could not get base version of middleware.ts, using current version'
         );
-        middlewareFilePath = 'src/middleware.ts';
+        middlewareFilePath = 'middleware.ts';
       }
     }
-  } catch (err) {
+  } catch {
     // If we can't determine, use current files
     console.log(
       '⚠️  Could not determine file modification status, using current versions'
@@ -488,9 +485,9 @@ if (require.main === module) {
 }
 
 export {
-  validateRedirects,
   filePathToUrls,
-  parseRedirectsJs,
   parseMiddlewareTs,
+  parseRedirectsJs,
   redirectMatches,
+  validateRedirects,
 };

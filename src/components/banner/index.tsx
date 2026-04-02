@@ -54,17 +54,6 @@ const BANNERS: BannerType[] = [
     linkURL: 'https://docs.sentry.io/contributing/pages/banners/',
     linkText: 'CTA',
   },
-  {
-    appearsOn: [
-      '^/platforms/dart/guides/flutter/',
-      '^/platforms/react-native/',
-      '^/platforms/android/',
-      '^/platforms/apple/guides/ios/',
-    ],
-    text: 'Session Replay is now generally available for mobile.',
-    linkURL: 'https://docs.sentry.io/product/explore/session-replay/mobile/',
-    linkText: 'Get started today.',
-  },
 ];
 
 const LOCALSTORAGE_NAMESPACE = 'banner-manifest';
@@ -78,7 +67,7 @@ const fastHash = (input: string) => {
   for (let i = 0; i < input.length; i++) {
     const char = input.charCodeAt(i);
     hash = (hash << 5) - hash + char;
-    hash = hash & hash; // Convert to 32bit integer
+    hash &= hash; // Convert to 32bit integer
   }
   return hash;
 };
@@ -91,7 +80,7 @@ const readOrResetLocalStorage = () => {
 
   try {
     return JSON.parse(stored);
-  } catch (e) {
+  } catch {
     localStorage.removeItem(LOCALSTORAGE_NAMESPACE);
     return null;
   }

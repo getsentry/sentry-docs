@@ -12,6 +12,8 @@
  * Usage
  * <ContentSeparator message="Advanced configuration" />
  */
+import styles from './style.module.scss';
+
 type Props = {
   /** The message displayed in the center label. */
   message: string;
@@ -22,8 +24,6 @@ type Props = {
   /** Optional visual style; default 'info'. */
   variant?: 'neutral' | 'info' | 'warning' | 'success' | 'danger';
 };
-
-import styles from './style.module.scss';
 
 /**
  * ContentSeparator

@@ -1,7 +1,5 @@
-import path from 'path';
-
 import Link from 'next/link';
-
+import path from 'path';
 import {DocNode, nodeForPath} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
 import {isNotNil, sortPages} from 'sentry-docs/utils';

@@ -291,3 +291,25 @@ _Internally, we display breadcrumbs of type `default` that contain category `ui.
   "timestamp": 1598613151.875368
 }
 ```
+
+## Structuring Data for Scrubbing
+
+For better data scrubbing on the server side, SDKs should save breadcrumb data in a structured way when possible. See [RFC-0038](https://github.com/getsentry/rfcs/blob/main/text/0038-scrubbing-sensitive-data.md) for background.
+
+If the `message` in a breadcrumb contains a URL, it should be formatted the same way as in `http` spans: `HTTP_METHOD scheme://host/path`. If query strings are present in the URL or fragments (Browser SDKs only) are present in the URI, both should be set in the `data` attribute rather than included in the URL.
+
+```js
+Sentry.addBreadcrumb({
+  type: "http",
+  category: "xhr",
+  data: {
+    method: "POST",
+    url: "https://example.com/api/users/create.php",
+    "http.query": "username=ada&password=123&newsletter=0",
+    "http.fragment": "#foo",
+  },
+});
+```
+
+Additionally, all semantic conventions of OpenTelemetry for database spans should be set in the `data` if applicable:
+https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/database/

@@ -28,6 +28,7 @@ Markdown exports are not just raw dumps of HTML content. They are adapted for LL
 | **Links**                | Relative HTML paths                   | Absolute `.md` URLs (e.g., `https://docs.sentry.io/platforms/javascript.md`) |
 | **Images**               | Relative paths                        | Absolute URLs                                                                |
 | **Page structure**       | Header, sidebar, main content, footer | Title + main content + navigation sections                                   |
+| **Description**          | HTML meta tag only                    | YAML frontmatter block with title, description, and canonical URL            |
 
 ## Page Customization Architecture
 
@@ -140,6 +141,33 @@ Pages without a matching override get a generic "Pages in this section" listing 
 - Sorted by `sidebar_order`, then alphabetically by title
 - Hidden/draft/versioned pages filtered out
 
+## YAML Frontmatter
+
+Every markdown export includes a YAML frontmatter block with metadata from the doctree. This gives LLM agents a relevance signal before the content begins and provides the canonical URL for navigation.
+
+**How it works:**
+
+1. Before workers start, `buildFrontmatterMap(docTree)` walks the doctree and creates a map of `relativePath → {title, description, url}`
+2. Each task carries its frontmatter metadata (from the map, or from MDX override frontmatter)
+3. After `genMDFromHTML` returns cached/converted markdown, `processTaskList` prepends the YAML frontmatter
+4. The combined output (frontmatter + markdown) is written to the target file and used for R2 hash comparison
+
+**Result:**
+
+```markdown
+---
+title: "Sentry for Python"
+description: "Sentry's Python SDK enables automatic reporting of errors and performance data."
+url: https://docs.sentry.io/platforms/python/
+---
+
+# Python | Sentry for Python
+
+## Prerequisites
+```
+
+Pages without a doctree entry (e.g., error pages) get no frontmatter. The cache stores raw markdown without frontmatter, so metadata changes don't cause unnecessary cache invalidation.
+
 ## Current Override Registry
 
 ### MDX Template Overrides
@@ -178,10 +206,10 @@ pnpm generate-md-exports →  public/md-exports/**/*.md  (+ R2 sync)
 
 During `generate-md-exports`:
 
-1. Load doctree
+1. Load doctree, build frontmatter map
 2. Render MDX templates from `md-overrides/` → HTML in `.next/cache/md-override-html/`
-3. Discover HTML files, swapping source path for MDX override pages
-4. Workers convert HTML → Markdown (parallel, cached, with R2 sync)
+3. Discover HTML files, swapping source path for MDX override pages, attaching frontmatter to tasks
+4. Workers convert HTML → Markdown, prepend YAML frontmatter, write to target (parallel, cached, with R2 sync)
 5. Append navigation sections to parent pages using `pageOverrides`
 
 ## Adding a New Override
