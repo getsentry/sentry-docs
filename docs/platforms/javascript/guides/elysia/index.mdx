@@ -1,0 +1,235 @@
+---
+title: Elysia
+description: Learn how to set up Sentry in your Elysia app to capture errors and monitor performance.
+sdk: sentry.javascript.elysia
+fallbackGuide: javascript.bun
+categories:
+  - javascript
+  - server
+  - server-node
+---
+
+<Alert>
+
+This SDK is currently in **ALPHA**. Alpha features are still in progress, may have bugs, and might include breaking changes.
+Please reach out on [GitHub](https://github.com/getsentry/sentry-javascript/issues/new/choose) if you have any feedback or concerns.
+
+</Alert>
+
+## Prerequisites
+
+You need:
+
+- A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/)
+- An Elysia application (v1.4.0+)
+- Bun or Node.js 18+ (with [@elysiajs/node](https://elysiajs.com/integrations/node) adapter)
+
+## Step 1: Install
+
+Choose the features you want to configure, and this guide will show you how:
+
+<OnboardingOptionButtons
+  options={["error-monitoring", "performance", "logs"]}
+/>
+
+<Include name="quick-start-features-expandable" />
+
+### Install the Sentry SDK
+
+Run the command for your preferred package manager to add the Sentry SDK to your application:
+
+```bash {tabTitle:Bun}
+bun add @sentry/elysia
+```
+
+```bash {tabTitle:Node.js}
+npm install @sentry/elysia @elysiajs/node
+# or
+yarn add @sentry/elysia @elysiajs/node
+# or
+pnpm add @sentry/elysia @elysiajs/node
+```
+
+<Alert>
+  You do **not** need `@elysiajs/opentelemetry`. The `@sentry/elysia` SDK handles all instrumentation natively.
+</Alert>
+
+## Step 2: Configure
+
+Call `Sentry.init()` before creating your Elysia app, then wrap the app with `Sentry.withElysia()` before defining routes.
+
+```javascript {tabTitle:Bun} {filename: index.ts}
+import * as Sentry from "@sentry/elysia";
+import { Elysia } from "elysia";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  // Adds request headers and IP for users, for more info visit:
+  // https://docs.sentry.io/platforms/javascript/guides/elysia/configuration/options/#sendDefaultPii
+  sendDefaultPii: true,
+  // ___PRODUCT_OPTION_START___ performance
+
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for tracing.
+  // We recommend adjusting this value in production
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/guides/elysia/configuration/options/#tracesSampleRate
+  tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+  // ___PRODUCT_OPTION_START___ logs
+
+  // Enable logs to be sent to Sentry
+  enableLogs: true,
+  // ___PRODUCT_OPTION_END___ logs
+});
+
+// withElysia returns the app instance, so you can chain routes directly
+const app = Sentry.withElysia(new Elysia())
+  .get("/", () => "Hello World")
+  .listen(3000);
+```
+
+```javascript {tabTitle:Node.js} {filename: index.ts}
+import * as Sentry from "@sentry/elysia";
+import { Elysia } from "elysia";
+import { node } from "@elysiajs/node";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  // Adds request headers and IP for users, for more info visit:
+  // https://docs.sentry.io/platforms/javascript/guides/elysia/configuration/options/#sendDefaultPii
+  sendDefaultPii: true,
+  // ___PRODUCT_OPTION_START___ performance
+
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for tracing.
+  // We recommend adjusting this value in production
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/guides/elysia/configuration/options/#tracesSampleRate
+  tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+  // ___PRODUCT_OPTION_START___ logs
+
+  // Enable logs to be sent to Sentry
+  enableLogs: true,
+  // ___PRODUCT_OPTION_END___ logs
+});
+
+// withElysia returns the app instance, so you can chain routes directly
+const app = Sentry.withElysia(new Elysia({ adapter: node() }))
+  .get("/", () => "Hello World")
+  .listen(3000);
+```
+
+## Step 3: Add Readable Stack Traces With Source Maps (Optional)
+
+<PlatformContent includePath="getting-started-sourcemaps-short-version" />
+
+## Step 4: Verify Your Setup
+
+Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
+
+### Issues
+
+First, let's verify that Sentry captures errors and creates issues in your Sentry project. Add the following route to your app, which triggers an error that Sentry will capture:
+
+```javascript
+app.get("/debug-sentry", () => {
+  throw new Error("My first Sentry error!");
+});
+```
+
+<OnboardingOption optionId="performance">
+
+### Tracing
+
+To test your tracing configuration, update the previous code snippet by starting a trace to measure the time it takes for the execution of your code:
+
+```javascript
+app.get("/debug-sentry", async () => {
+  await Sentry.startSpan(
+    {
+      op: "test",
+      name: "My First Test Transaction",
+    },
+    async () => {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      throw new Error("My first Sentry error!");
+    }
+  );
+});
+```
+
+</OnboardingOption>
+
+<OnboardingOption optionId="logs">
+
+<Include name="logs/javascript-quick-start-verify-logs" />
+
+</OnboardingOption>
+
+### View Captured Data in Sentry
+
+Finally, head over to your project on [Sentry.io](https://sentry.io/) to view the collected data (it takes a couple of moments for the data to appear).
+
+<Include name="quick-start-locate-data-expandable" />
+
+## Features
+
+### Automatic Error Capturing
+
+The SDK captures 5xx errors automatically via a global `onError` hook. Client errors (3xx/4xx) are not captured by default.
+
+You can customize which errors are captured using the `shouldHandleError` option:
+
+```javascript
+const app = Sentry.withElysia(new Elysia(), {
+  shouldHandleError: (context) => {
+    const status = context.set.status;
+    return status === 500 || status === 503;
+  },
+});
+```
+
+### Automatic Tracing
+
+The SDK creates spans for every Elysia lifecycle phase: Request, Parse, Transform, BeforeHandle, Handle, AfterHandle, MapResponse, AfterResponse, and Error.
+
+- The Handle span uses `op: 'request_handler.elysia'`; all other lifecycle spans use `op: 'middleware.elysia'`
+- Transactions use parameterized route names (e.g., `GET /users/:id`)
+- Named function handlers show their function name in spans; arrow functions show as `anonymous`
+
+### Distributed Tracing
+
+The SDK automatically propagates incoming `sentry-trace` and `baggage` headers and injects trace headers into outgoing responses. No additional configuration needed.
+
+### Manual Spans
+
+You can create manual spans within your route handlers:
+
+```javascript
+app.get("/checkout", () => {
+  return Sentry.startSpan({ name: "process-payment" }, () => {
+    // ... your code
+  });
+});
+```
+
+## Runtime Behavior
+
+- **Bun**: The SDK creates root server spans via Elysia's `.wrap()` API with `continueTrace` for trace propagation. No additional runtime instrumentation needed.
+- **Node.js**: The SDK uses Node's HTTP instrumentation for root spans and updates the transaction name with the parameterized route from Elysia.
+
+## Next Steps
+
+- Explore [practical guides](/guides/) on what to monitor, log, track, and investigate after setup
+- Learn how to <PlatformLink to="/usage">manually capture errors</PlatformLink>
+- Continue to <PlatformLink to="/configuration">customize your configuration</PlatformLink>
+- Get familiar with [Sentry's product features](/product) like tracing, insights, and alerts
+
+<Expandable permalink={false} title="Are you having problems setting up the SDK?">
+
+- Find various topics in <PlatformLink to="/troubleshooting">Troubleshooting</PlatformLink>
+- [Get support](https://sentry.zendesk.com/hc/en-us/)
+
+</Expandable>

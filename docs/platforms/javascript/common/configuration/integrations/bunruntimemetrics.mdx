@@ -1,0 +1,86 @@
+---
+title: BunRuntimeMetrics
+description: "Collect Bun runtime health metrics such as memory usage, CPU utilization, and event loop utilization."
+supported:
+  - javascript.bun
+---
+
+<Alert>
+
+This integration only works in the Bun runtime.
+
+</Alert>
+
+_Import name: `Sentry.bunRuntimeMetricsIntegration`_
+
+The `bunRuntimeMetricsIntegration` periodically collects Bun runtime health metrics and sends them to Sentry. Metrics include memory usage, CPU utilization, event loop utilization, and process uptime.
+
+```javascript
+import * as Sentry from "@sentry/bun";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [Sentry.bunRuntimeMetricsIntegration()],
+});
+```
+
+## Default Metrics
+
+The following metrics are emitted every 30 seconds by default:
+
+| Metric | Type | Unit | Description |
+|---|---|---|---|
+| `bun.runtime.mem.rss` | gauge | byte | Resident Set Size — actual process memory footprint |
+| `bun.runtime.mem.heap_used` | gauge | byte | Heap memory currently in use |
+| `bun.runtime.mem.heap_total` | gauge | byte | Total heap memory allocated |
+| `bun.runtime.cpu.utilization` | gauge | ratio | CPU time / wall-clock time ratio |
+| `bun.runtime.event_loop.utilization` | gauge | ratio | Fraction of time the event loop was active |
+| `bun.runtime.process.uptime` | counter | second | Cumulative process uptime |
+
+<Alert>
+
+Unlike the [Node.js equivalent](/platforms/javascript/guides/node/configuration/integrations/noderuntimemetrics), event loop delay histogram metrics are not available in Bun because `monitorEventLoopDelay` is not supported by the Bun runtime.
+
+</Alert>
+
+## Options
+
+### `collect`
+
+_Type: `object`_
+
+Configure which metrics to collect. You can enable opt-in metrics or disable default ones.
+
+**Opt-in metrics (off by default):**
+
+```javascript
+Sentry.bunRuntimeMetricsIntegration({
+  collect: {
+    cpuTime: true, // bun.runtime.cpu.user + bun.runtime.cpu.system
+    memExternal: true, // bun.runtime.mem.external + bun.runtime.mem.array_buffers
+  },
+});
+```
+
+**Disabling default metrics:**
+
+```javascript
+Sentry.bunRuntimeMetricsIntegration({
+  collect: {
+    uptime: false,
+    eventLoopUtilization: false,
+  },
+});
+```
+
+### `collectionIntervalMs`
+
+_Type: `number`_
+
+The interval in milliseconds between metric collections. Defaults to `30000` (30 seconds).
+
+```javascript
+Sentry.bunRuntimeMetricsIntegration({
+  collectionIntervalMs: 60_000,
+});
+```

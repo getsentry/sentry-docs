@@ -16,7 +16,7 @@ export function SidebarMoreLinks() {
           {/* Always visible links */}
           <SidebarLink
             href="https://sentry.io/changelog/"
-            title="Changelog"
+            title="Product Changelog"
             className="font-bold"
           />
           <SidebarLink

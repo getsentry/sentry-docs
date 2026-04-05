@@ -1,0 +1,70 @@
+name: Update Docs Changelog
+
+on:
+  # Run daily at midnight UTC
+  schedule:
+    - cron: '0 0 * * *'
+  # Allow manual trigger
+  workflow_dispatch:
+
+jobs:
+  update-changelog:
+    runs-on: ubuntu-latest
+    # Only run on the main repo, not forks
+    if: github.repository == 'getsentry/sentry-docs'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get auth token
+        id: token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.SENTRY_INTERNAL_APP_ID }}
+          private-key: ${{ secrets.SENTRY_INTERNAL_APP_PRIVATE_KEY }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Update docs changelog
+        env:
+          GITHUB_TOKEN: ${{ steps.token.outputs.token }}
+        run: node scripts/update-docs-changelog.mjs
+
+      - name: Check for changes
+        id: changes
+        run: |
+          if git diff --quiet includes/docs-changelog.mdx; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create PR with changes
+        if: steps.changes.outputs.changed == 'true'
+        env:
+          GITHUB_TOKEN: ${{ steps.token.outputs.token }}
+        run: |
+          git config user.email "bot@getsentry.com"
+          git config user.name "getsentry-bot"
+
+          branch="bot/update-docs-changelog-$(date +%Y%m%d)"
+          git checkout -b "$branch"
+          git add includes/docs-changelog.mdx
+          git commit -m "chore: Update docs changelog"
+          git push --set-upstream origin "$branch" --force
+
+          # Check if PR already exists
+          existing_pr=$(gh pr list --head "$branch" --json number --jq '.[0].number')
+          if [ -n "$existing_pr" ]; then
+            echo "PR #$existing_pr already exists, updated branch"
+          else
+            gh pr create \
+              --title "chore: Update docs changelog" \
+              --body "Automated update of the docs changelog from recent merged PRs." \
+              --label "Type: Maintenance"
+            gh pr merge --squash --auto
+          fi
