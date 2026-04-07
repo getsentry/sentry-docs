@@ -51,7 +51,9 @@ Here's an overview of the current support:
 
 </PlatformSection>
 
-## Step 1: Install
+<StepComponent>
+
+## Install
 
 Choose the features you want to configure, and this guide will show you how:
 
@@ -78,7 +80,17 @@ Choose the features you want to configure, and this guide will show you how:
 
 ### Install the Sentry SDK
 
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
 Run the command for your preferred package manager to add the Sentry SDK to your application:
+
+If you're updating your Sentry SDK to the latest version, check out our [migration guide](https://github.com/getsentry/sentry-javascript/blob/master/MIGRATION.md) to learn more about breaking changes.
+
+</SplitSectionText>
+
+<SplitSectionCode>
 
 ```bash {tabTitle:npm}
 npm install @sentry/sveltekit --save
@@ -92,15 +104,25 @@ yarn add @sentry/sveltekit
 pnpm add @sentry/sveltekit
 ```
 
-If you're updating your Sentry SDK to the latest version, check out our [migration guide](https://github.com/getsentry/sentry-javascript/blob/master/MIGRATION.md) to learn more about breaking changes.
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
-## Step 2: Configure
+## Configure
 
 You need to initialize and configure the Sentry SDK in three places: the client side, the server side, and your Vite config.
 
 ### Configure Client-Side Sentry
 
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
 Create a client hooks file `src/hooks.client.(js|ts)` in your project if you don't have one already. In this file, import and initialize the Sentry SDK and add the `handleErrorWithSentry` function to the [`handleError` hook](https://svelte.dev/docs/kit/hooks#Shared-hooks-handleError).
+
+</SplitSectionText>
+
+<SplitSectionCode>
 
 ```javascript {filename:src/hooks.client.(js|ts)} {1, 3-43, 49}
 import * as Sentry from "@sentry/sveltekit";
@@ -157,20 +179,33 @@ export const handleError = Sentry.handleErrorWithSentry(myErrorHandler);
 // export const handleError = handleErrorWithSentry();
 ```
 
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
 ### Configure Server-Side Sentry
 
 <PlatformSection notSupported={["javascript.cloudflare"]}>
-  _Requires SvelteKit `2.31.0` or higher and `@sentry/sveltekit` `10.8.0` or
-  higher._ If you're using older versions, check out [this
-  guide](../manual-setup__v10.7.0#configure-server-side-sentry) instead.
+
+_Requires SvelteKit `2.31.0` or higher and `@sentry/sveltekit` `10.8.0` or higher._ If you're using older versions, check out [this guide](../manual-setup__v10.7.0#configure-server-side-sentry) instead.
+
 </PlatformSection>
 
 <PlatformSection supported={["javascript.cloudflare"]}>
-  _Requires SvelteKit `2.31.0` or higher and `@sentry/sveltekit` `10.8.0` or
-  higher._
+
+_Requires SvelteKit `2.31.0` or higher and `@sentry/sveltekit` `10.8.0` or higher._
+
 </PlatformSection>
 
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
 Configure server-side instrumentation and tracing in your `svelte.config.js` file:
+
+</SplitSectionText>
+
+<SplitSectionCode>
 
 ```js {filename:svelte.config.js} {3-12}
 const config = {
@@ -191,9 +226,19 @@ const config = {
 export default config;
 ```
 
+</SplitSectionCode>
+</SplitSection>
+
 <PlatformSection notSupported={["javascript.cloudflare"]}>
 
+<SplitSection>
+<SplitSectionText>
+
 Create a `src/instrumentation.server.(js|ts)` file (if you don't have one already) to initialize the server-side SDK:
+
+</SplitSectionText>
+
+<SplitSectionCode>
 
 ```js {filename:src/instrumentation.server.(js|ts)} {1, 3-23}
 import * as Sentry from "@sentry/sveltekit";
@@ -221,7 +266,17 @@ Sentry.init({
 });
 ```
 
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
 Create a server hooks file `src/hooks.server.(js|ts)` in your project if you don't have one already. In this file, add the `handleErrorWithSentry` function to the [`handleError` hook](https://svelte.dev/docs/kit/hooks#Shared-hooks-handleError) and the Sentry request handler to the [`handle` hook](https://kit.svelte.dev/docs/hooks#server-hooks-handle).
+
+</SplitSectionText>
+
+<SplitSectionCode>
 
 ```javascript {filename:src/hooks.server.(js|ts)} {1,7,11}
 import * as Sentry from "@sentry/sveltekit";
@@ -239,6 +294,9 @@ export const handle = Sentry.sentryHandle();
 // export const handle = sequence(Sentry.sentryHandle(), yourHandler());
 ```
 
+</SplitSectionCode>
+</SplitSection>
+
 <Expandable title="Having CSP issues with `fetch` instrumentation on older SvelteKit versions?">
 
 If you're using SvelteKit versions older than `2.16.0` and encounter Content Security Policy (CSP) errors related to Sentry's `fetch` instrumentation, you can find support in our [Troubleshooting guide](/platforms/javascript/guides/sveltekit/troubleshooting/#configure-csp-for-client-side-fetch-instrumentation).
@@ -249,7 +307,14 @@ If you're using SvelteKit versions older than `2.16.0` and encounter Content Sec
 
 <PlatformSection supported={["javascript.cloudflare"]}>
 
+<SplitSection>
+<SplitSectionText>
+
 Create a server hooks file `src/hooks.server.(js|ts)` in your project if you don't have one already. In this file, import and initialize the Sentry SDK and add the `handleErrorWithSentry` function to the [`handleError` hook](https://svelte.dev/docs/kit/hooks#Shared-hooks-handleError) and Sentry's Cloudflare request handler to the [`handle` hook](https://kit.svelte.dev/docs/hooks#server-hooks-handle).
+
+</SplitSectionText>
+
+<SplitSectionCode>
 
 ```javascript {filename:src/hooks.server.(js|ts)}
 import {
@@ -294,11 +359,23 @@ export const handleError = Sentry.handleErrorWithSentry(myErrorHandler);
 // export const handleError = handleErrorWithSentry();
 ```
 
+</SplitSectionCode>
+</SplitSection>
 </PlatformSection>
+
+</SplitLayout>
 
 ### Configure Vite
 
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
 Add the `sentrySvelteKit` plugin **before** `sveltekit` in your `vite.config.(js|ts)` file to automatically upload source maps to Sentry and instrument `load` functions for tracing if it's configured.
+
+</SplitSectionText>
+
+<SplitSectionCode>
 
 ```javascript {filename:vite.config.(js|ts)} {2,6}
 import { sveltekit } from "@sveltejs/kit/vite";
@@ -311,17 +388,32 @@ export default defineConfig({
 });
 ```
 
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
 <PlatformSection supported={["javascript.cloudflare"]}>
 
 ### Configure Cloudflare for Sentry
 
-<PlatformContent includePath="getting-started-config" />
+<PlatformContent
+  includePath="getting-started-config"
+  platform="javascript.cloudflare.sveltekit"
+/>
 
 </PlatformSection>
 
-## Step 3: Add Readable Stack Traces With Source Maps (Optional)
+### Add Readable Stack Traces With Source Maps (Optional)
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
 
 To upload source maps for clear error stack traces, add your Sentry auth token, organization, and project slug in your `vite.config.(js|ts)` file:
+
+</SplitSectionText>
+
+<SplitSectionCode>
 
 ```javascript {filename:vite.config.(js|ts)} {6-13}
 import { sveltekit } from "@sveltejs/kit/vite";
@@ -341,20 +433,42 @@ export default {
 };
 ```
 
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
 To keep your auth token secure, always store it in an environment variable instead of directly in your files:
 
 <OrgAuthTokenNote />
+
+<Include name="vite-loadenv-hint.mdx" />
+
+</SplitSectionText>
+
+<SplitSectionCode>
 
 ```bash {filename:.env}
 SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
 ```
 
-<Include name="vite-loadenv-hint.mdx" />
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
 <PlatformSection notSupported={["javascript.cloudflare"]}>
 ### Override Adapter Detection
 
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
 `sentrySvelteKit` tries to auto-detect your SvelteKit adapter to configure source maps upload correctly. If you're using an unsupported adapter or the wrong one is detected, set it using the `adapter` option:
+
+</SplitSectionText>
+
+<SplitSectionCode>
 
 ```javascript {filename:vite.config.(js|ts)} {7}
 import { sveltekit } from "@sveltejs/kit/vite";
@@ -371,28 +485,40 @@ export default {
 };
 ```
 
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 </PlatformSection>
 
 <PlatformSection notSupported={["javascript.cloudflare"]}>
-## Step 4: Avoid Ad Blockers With Tunneling (Optional)
+### Avoid Ad Blockers With Tunneling (Optional)
 
 <PlatformContent includePath="getting-started-tunneling" />
 
 </PlatformSection>
 
-<PlatformSection notSupported={["javascript.cloudflare"]}>
-  ## Step 5: Verify Your Setup
-</PlatformSection>
-
-<PlatformSection supported={["javascript.cloudflare"]}>
-  ## Step 4: Verify Your Setup
-</PlatformSection>
+## Verify Your Setup
 
 Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
 
 ### Issues
 
-To verify that Sentry captures errors and creates issues in your Sentry project, create a test page, for example, at `src/routes/sentry-example/+page.svelte` with a button that throws an error when clicked:
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+To verify that Sentry captures errors and creates issues in your Sentry project, create a test page, for example, at `src/routes/sentry-example/+page.svelte` with a button that throws an error when clicked.
+
+<OnboardingOption optionId="performance" hideForThisOption>
+  Open the page `sentry-example` in a browser and click the button to trigger a
+  frontend error.
+</OnboardingOption>
+
+<PlatformContent includePath="getting-started-browser-sandbox-warning" />
+
+</SplitSectionText>
+
+<SplitSectionCode>
 
 ```html {filename:+page.svelte}
 <script>
@@ -404,16 +530,21 @@ To verify that Sentry captures errors and creates issues in your Sentry project,
 <button type="button" onclick="{throwTestError}">Throw error</button>
 ```
 
-<OnboardingOption optionId="performance" hideForThisOption>
-  Open the page `sentry-example` in a browser and click the button to trigger a
-  frontend error.
-</OnboardingOption>
-
-<PlatformContent includePath="getting-started-browser-sandbox-warning" />
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
 <OnboardingOption optionId="performance">
 ### Tracing
-To test tracing, create a test API route like `src/routes/sentry-example/+server.(js|ts)`:
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+To test tracing, create a test API route like `src/routes/sentry-example/+server.(js|ts)`.
+
+</SplitSectionText>
+
+<SplitSectionCode>
 
 ```javascript {filename:+server.(js|ts)}
 export const GET = async () => {
@@ -421,7 +552,24 @@ export const GET = async () => {
 };
 ```
 
-Next, update your test button to call this route and throw an error if the response isn't `ok`:
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+Next, update your test button to call this route and throw an error if the response isn't `ok`.
+
+Open the page `sentry-example` in a browser and click the button to trigger two errors:
+
+- a frontend error
+- an error within the API route
+
+Additionally, this starts a trace to measure the time it takes for the API request to complete.
+
+</SplitSectionText>
+
+<SplitSectionCode>
 
 ```html {filename:+page.svelte}
 <script>
@@ -446,18 +594,15 @@ Next, update your test button to call this route and throw an error if the respo
 <button type="button" onclick="{throwTestError}">Throw error with trace</button>
 ```
 
-Open the page `sentry-example` in a browser and click the button to trigger two errors:
-
-- a frontend error
-- an error within the API route
-
-Additionally, this starts a trace to measure the time it takes for the API request to complete.
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
 </OnboardingOption>
 
 <OnboardingOption optionId="logs">
 
-<Include name="logs/javascript-quick-start-verify-logs" />
+<Include name="logs/javascript-quick-start-verify-logs-splitlayout" />
 
 </OnboardingOption>
 
@@ -515,3 +660,5 @@ Our next recommended steps for you are:
 
 </Expandable>
 </PlatformSection>
+
+</StepComponent>
