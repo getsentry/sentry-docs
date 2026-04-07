@@ -2,7 +2,7 @@
 title: Metrics
 description: Counter, gauge, and distribution metrics sent as batched trace_metric envelope items.
 spec_id: sdk/telemetry/metrics
-spec_version: 2.7.0
+spec_version: 2.8.0
 spec_status: stable
 spec_depends_on:
   - id: sdk/foundations/transport/envelopes
@@ -12,7 +12,7 @@ spec_depends_on:
 spec_changelog:
   - version: 2.8.0
     date: 2026-04-07
-    summary: Added `settings` to trace_metric envelope item
+    summary: Added `ingest_settings` and `version` to trace_metric envelope item
   - version: 2.7.0
     date: 2026-03-10
     summary: Auto-emitted metrics and third-party metrics bindings MUST be opt-in
@@ -276,28 +276,31 @@ An envelope **MUST** contain at most one `trace_metric` envelope item — all me
 	"content_type": "application/vnd.sentry.items.trace-metric+json"
 }
 {
-	"items": [{..metric..}, {..metric..}, {..metric..}],
-	"settings": {
-		"infer_ip:": "auto",
-		"infer_useragent:": "auto"
-	}
+	"version": 2,
+	"ingest_settings": {
+		"infer_ip": "auto",
+		"infer_useragent": "auto"
+	},
+	"items": [{..metric..}, {..metric..}, {..metric..}]
 }
 ```
 
 </SpecSection>
 
-<SpecSection id="trace-metric-envelope-item-settings" status="proposal" since="2.7.0">
+<SpecSection id="trace-metric-envelope-item-ingest-settings" status="candidate" since="2.8.0">
 
-### Envelope Item `settings`
+### `version` and `ingest_settings` properties
 
-The `trace_metric` envelope item `settings` property is an optional JSON object that contains ingestion settings for Relay to infer certain data from the incoming request.
+The `trace_metric` envelope item `ingest_settings` property is an optional JSON object that contains ingestion settings for Relay, for example, to infer certain data from the incoming request.
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `infer_ip` | String | **OPTIONAL** | The setting to infer the IP address from the incoming request. One of `auto` or `never` (default). |
 | `infer_useragent` | String | **OPTIONAL** | The setting to infer the user agent from the incoming request. One of `auto` or `never` (default). |
 
-This can be used by SDKs like Browser or React Native to instruct Relay to infer the IP address or user agent from the incoming request and put it onto the metric as an attribute.
+SDKs like Browser or React Native **MAY** set these to `"auto"` to instruct Relay to infer the IP address or user agent from the incoming request and put it onto the metric as an attribute.
+
+For ingestion settings to take effect, the SDK **MUST** also set the `version` property to `2` (`number`) or higher.
 
 </SpecSection>
 
