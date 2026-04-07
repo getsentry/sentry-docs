@@ -11,7 +11,7 @@ platforms:
 ---
 
 Sentry's routing instrumentation for Flutter automatically tracks and reports page navigation events in your app.
-It supports both [traditional Flutter routing](https://docs.flutter.dev/ui/navigation) and the [GoRouter](https://pub.dev/packages/go_router) package.
+It supports imperative navigation (`Navigator.push()`), the declarative `Router` API (`MaterialApp.router`), and popular routing packages like [GoRouter](https://pub.dev/packages/go_router) and [auto_route](https://pub.dev/packages/auto_route).
 
 <Alert>
 
@@ -29,11 +29,12 @@ Before starting, ensure:
 
 ## Configure
 
-### 1. Add `SentryNavigationObserver`
+### 1. Add `SentryNavigatorObserver`
 
-Add an instance of `SentryNavigationObserver` to your application's `navigatorObservers`.
+How you add `SentryNavigatorObserver` depends on which navigation approach you use.
 
-```dart {14-16} {tabTitle: Flutter Routing}
+
+```dart {14-16} {tabTitle: Navigator}
 import 'package:flutter/material.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
@@ -51,6 +52,52 @@ class MyApp extends StatelessWidget {
           SentryNavigatorObserver(),
         ],
         ...
+    );
+  }
+}
+```
+
+```dart {15} {tabTitle: Router}
+import 'package:flutter/material.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+
+// When using a custom RouterDelegate, pass the observer
+// to the Navigator you build inside the delegate's build() method.
+class MyRouterDelegate extends RouterDelegate<MyRoutePath>
+    with ChangeNotifier, PopNavigatorRouterDelegateMixin<MyRoutePath> {
+  @override
+  final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+  @override
+  Widget build(BuildContext context) {
+    return Navigator(
+      key: navigatorKey,
+      observers: [SentryNavigatorObserver()],
+      pages: [
+        // Your pages based on app state
+      ],
+      onDidRemovePage: (page) {
+        // Update your app state based on the removed page
+        notifyListeners();
+      },
+    );
+  }
+
+  // ... implement setNewRoutePath and other required methods
+}
+
+Future<void> main() async {
+  await SentryFlutter.init((options) {
+    options.dsn = '___DSN___';
+  }, appRunner: () => runApp(SentryWidget(child: MyApp())));
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp.router(
+      routerDelegate: MyRouterDelegate(),
+      routeInformationParser: MyRouteInformationParser(),
     );
   }
 }
@@ -82,54 +129,101 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+```
 
+```dart {19-21} {tabTitle: AutoRoute}
+import 'package:flutter/material.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:auto_route/auto_route.dart';
+
+// Your generated router
+final _appRouter = AppRouter();
+
+Future<void> main() async {
+  await SentryFlutter.init((options) {
+    options.dsn = '___DSN___';
+  }, appRunner: () => runApp(SentryWidget(child: MyApp())));
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp.router(
+      routerConfig: _appRouter.config(
+        navigatorObservers: () => [
+          SentryNavigatorObserver(),
+        ],
+      ),
+    );
+  }
+}
 ```
 
 ### 2. Define Route Names
 
-By default the application's main route name is `"/"`.
-The instrumentation sets the span `operation` to `navigation` and the span `name` to the provided route name.
-For transactions to be created and breadcrumbs to be added when navigation changes, you need to provide route names:
+The instrumentation sets the span `operation` to `ui.load` and the span `name` to the provided route name.
 
-- Flutter routing: use `RouteSettings` and set the name in the constructor.
-- GoRouter: use the `name` parameter to set the route name.
+How you define route names depends on your navigation approach:
+
+- **Navigator (imperative)**: Pass a `name` in the `RouteSettings` when pushing routes.
+- **Router**: Set the `name` on the `Page` objects you return in your `pages` list (for example, `MaterialPage(name: 'My Widget', child: ...)`).
+- **GoRouter**: GoRouter automatically uses the route `path` as the name. You can optionally set the `name` parameter on your `GoRoute` to override it.
+- **auto_route**: Route names are generated automatically from your `@RoutePage()` annotations — no extra configuration needed.
 
 <Alert>
 
-Make sure that you set the route name for all routes.
-If you do not set the route name, the SDK will not instrument performance insights such as [TTID](/platforms/dart/guides/flutter/integrations/routing-instrumentation/#time-to-initial-display) or [TTFD](/platforms/dart/guides/flutter/integrations/routing-instrumentation/#time-to-full-display) or create breadcrumbs for the route.
+If the SDK cannot determine a route name, it will not create transactions, breadcrumbs, or performance insights such as [TTID](/platforms/dart/guides/flutter/integrations/routing-instrumentation/#time-to-initial-display) or [TTFD](/platforms/dart/guides/flutter/integrations/routing-instrumentation/#time-to-full-display) for that route.
 
 </Alert>
 
-```dart {tabTitle: Flutter Routing}
+```dart {3} {tabTitle: Navigator}
 MaterialPageRoute(
   builder: (BuildContext context) => MyWidget(),
   settings: RouteSettings(name: 'My Widget'),
 )
 ```
 
-```dart {tabTitle: GoRouter}
-GoRoute(
-  path: 'mywidget',
+```dart {3} {tabTitle: Router}
+// Set the name on the Page objects in your RouterDelegate's pages list.
+MaterialPage(
   name: 'My Widget',
+  child: MyWidget(),
+)
+```
+
+```dart {4-5} {tabTitle: GoRouter}
+// The path is used as the route name by default.
+// You can optionally set name to override it.
+GoRoute(
+  path: '/mywidget',
+  name: 'My Widget', // optional, falls back to path
   builder: (BuildContext context, GoRouterState state) {
     return const MyWidget();
   }
 )
 ```
 
+```dart {3} {tabTitle: AutoRoute}
+// Route names are auto-generated from your page annotations.
+// No additional configuration is needed.
+@RoutePage()
+class MyWidgetPage extends StatelessWidget {
+  // ...
+}
+```
+
 ## Time to Initial Display
 
-Time to initial display (TTID) provides insight into how long it takes your Widget to launch and draw their first frame. 
-This is measured by adding a span for navigation to a Widget. 
+Time to initial display (TTID) provides insight into how long it takes your Widget to launch and draw their first frame.
+This is measured by adding a span for navigation to a Widget.
 The SDK then sets the span operation to `ui.load.initial-display` and the span description to the Widget's route name, followed by initial display (for example, `MyWidget initial display`).
 
 TTID is enabled by default.
 
 ## Time to Full Display
 
-Time to full display (TTFD) provides insight into how long it would take your Widget to launch and load all of its content. 
-This is measured by adding a span for each navigation to a Widget. 
+Time to full display (TTFD) provides insight into how long it would take your Widget to launch and load all of its content.
+This is measured by adding a span for each navigation to a Widget.
 The SDK then sets the span operation to `ui.load.full-display` and the span description to the Widget's route name, followed by full display (for example, `MyWidget full display`).
 
 TTFD is disabled by default. To enable TTFD measurements, follow these steps:
@@ -255,7 +349,7 @@ class MyWidgetState extends State<MyWidget> {
 
 Use the navigator to transition to your widget. This should create and send a transaction named after the widget's route.
 
-```dart {tabTitle: Flutter Routing}
+```dart {tabTitle: Navigator}
 import 'package:flutter/material.dart';
 import 'my_widget.dart';
 
@@ -269,11 +363,23 @@ Navigator.push(
 );
 ```
 
+```dart {tabTitle: Router}
+// Update your delegate's state to trigger a page change.
+final delegate = Router.of(context).routerDelegate as MyRouterDelegate;
+delegate.showDetail();
+```
+
 ```dart {tabTitle: GoRouter}
 import 'package:go_router/go_router.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 context.push('/mywidget')
+```
+
+```dart {tabTitle: AutoRoute}
+import 'package:auto_route/auto_route.dart';
+
+context.pushRoute(const MyWidgetRoute());
 ```
 
 Log into [sentry.io](https://sentry.io) and open your project's performance page to see the transaction `MyWidget`.
