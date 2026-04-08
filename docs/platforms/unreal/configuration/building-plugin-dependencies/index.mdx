@@ -9,13 +9,23 @@ The Sentry Unreal plugin ships with pre-built binaries for all supported platfor
 - **Testing or debugging** unreleased changes to the underlying platform SDKs
 - **Applying custom patches** to the platform SDKs for your project's specific needs
 
+## Prerequisites
+
+- **[GitHub CLI](https://cli.github.com/)**
+- **PowerShell** 7+ (or Windows PowerShell 5.1)
+- **Git**
+- **CMake** 3.16+
+- **Platform toolchain**: Visual Studio 2019+ on Windows, Clang 13+ on Linux, Xcode on macOS
+- **Android builds**: Java 17, Android SDK (API 33), Android NDK r25b
+
 ## Overview
 
-The plugin depends on platform-specific SDKs that are pre-built in CI and bundled into the `Source/ThirdParty/` directory:
+The plugin depends on platform-specific SDKs and other tools that are pre-built in CI and bundled into the `Source/ThirdParty/` directory:
 
-- **[sentry-native](https://github.com/getsentry/sentry-native)** — Windows and Linux (Crashpad and Native backends)
+- **[sentry-native](https://github.com/getsentry/sentry-native)** — Windows and Linux
 - **[sentry-cocoa](https://github.com/getsentry/sentry-cocoa)** — macOS and iOS
 - **[sentry-java](https://github.com/getsentry/sentry-java)** — Android
+- **[sentry-desktop-crash-reporter](https://github.com/getsentry/sentry-desktop-crash-reporter)** — External crash reporter application for desktop platforms
 
 The [sentry-unreal](https://github.com/getsentry/sentry-unreal) repository includes a `build-deps.ps1` script that automates building these SDKs and copying the resulting binaries to the correct locations within the plugin. The `plugin-dev/` directory then serves as the complete plugin package that can be copied into any Unreal project.
 
@@ -37,18 +47,7 @@ git checkout 1.XX.0  # match your installed plugin version
 ./scripts/init.sh
 ```
 
-<Alert>
-
-The initialization scripts require [GitHub CLI](https://cli.github.com/) to be installed. You also need a local clone of the SDK you want to build (see links in [Overview](#overview)). Each SDK version is pinned as a Git submodule under `modules/` in the sentry-unreal repository — check out the same commit or tag in your local clone. You can find the expected version by looking at the submodule reference for your plugin's release tag on [GitHub](https://github.com/getsentry/sentry-unreal).
-
-</Alert>
-
-### Prerequisites
-
-- **PowerShell** 7+ (or Windows PowerShell 5.1)
-- **Git**
-- **CMake** 3.16+
-- **Platform toolchain**: Visual Studio 2019+ on Windows, Clang 13+ on Linux, Xcode on macOS
+You also need a local clone of the SDK you want to build (see links in [Overview](#overview)). Each SDK version is pinned as a Git submodule under `modules/` in the sentry-unreal repository — check out the same commit or tag in your local clone. You can find the expected version by looking at the submodule reference for your plugin's release tag on [GitHub](https://github.com/getsentry/sentry-unreal).
 
 ## Using the Build Script
 
@@ -85,3 +84,5 @@ Each flag has a corresponding path parameter (e.g., `-NativePath`, `-CocoaPath`)
 **macOS**: `-All` builds Cocoa + Java + CrashReporter.
 
 </Alert>
+
+The script uses a fixed set of build flags that match the plugin's CI builds. If you need to customize the build (for example, passing additional CMake flags to sentry-native), you can modify the corresponding build function in `scripts/build-deps.ps1` before running it.

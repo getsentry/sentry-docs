@@ -218,14 +218,26 @@ These settings are applied each time the SDK initializes. Properties that are no
 
 #### Using a Custom Crash Reporter Build
 
-For more advanced customization (such as custom logos or layout changes), you can fork the [sentry-desktop-crash-reporter](https://github.com/getsentry/sentry-desktop-crash-reporter) project and build a custom version following the instructions in its documentation.
+For more advanced customization (such as custom logos or layout changes), you can fork the [sentry-desktop-crash-reporter](https://github.com/getsentry/sentry-desktop-crash-reporter) project and build a custom version. The crash reporter is a .NET/Uno Platform application — you need the [.NET 9.0 SDK](https://dotnet.microsoft.com/download/dotnet/9.0) to build it.
 
-To use your custom build, replace the crash reporter executable in the plugin's ThirdParty binaries directory:
+To build on Windows:
+
+```powershell
+cd sentry-desktop-crash-reporter
+dotnet publish -f net9.0-desktop -r win-x64 Sentry.CrashReporter/Sentry.CrashReporter.csproj -o build-output
+```
+
+For other platforms, replace the runtime identifier: `linux-x64`, `linux-arm64`, or `osx-arm64`.
+
+Copy the output executable into the plugin's ThirdParty binaries directory:
 
 - **Windows**: `Plugins/sentry-unreal/Source/ThirdParty/Win64/bin/Sentry.CrashReporter.exe`
 - **Linux**: `Plugins/sentry-unreal/Source/ThirdParty/Linux/bin/Sentry.CrashReporter`
+- **macOS**: `Plugins/sentry-unreal/Source/ThirdParty/Mac/bin/Sentry.CrashReporter`
 
-After replacing the executable, delete the project's `Build` and `Intermediate` directories and rebuild the project to ensure the updated binary is picked up.
+After replacing the executable, delete the project's `Build` and `Intermediate` directories and rebuild to ensure the updated binary is picked up.
+
+Refer to the project's [customization guide](https://github.com/getsentry/sentry-desktop-crash-reporter/blob/main/CUSTOMIZATION.md) for details on what can be changed.
 
 ### Stacktrace Display
 
