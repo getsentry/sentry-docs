@@ -1,8 +1,7 @@
 'use client';
 
-import {Fragment, useEffect} from 'react';
 import {useSearchParams} from 'next/navigation';
-
+import {Fragment, useEffect} from 'react';
 import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
 
 export default function AskAiSearchParams() {

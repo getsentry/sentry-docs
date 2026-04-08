@@ -1,5 +1,4 @@
 import {Fragment} from 'react';
-
 import {getDocsRootNode, nodeForPath} from 'sentry-docs/docTree';
 
 import {DynamicNav, toTree} from './dynamicNav';

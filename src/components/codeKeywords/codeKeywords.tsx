@@ -86,7 +86,7 @@ function runRegex(
 
   let match: RegExpExecArray | null;
   let lastIndex = 0;
-  // eslint-disable-next-line no-cond-assign
+
   while ((match = regex.exec(str)) !== null) {
     const afterMatch = regex.lastIndex - match[0].length;
     const before = str.substring(lastIndex, afterMatch);

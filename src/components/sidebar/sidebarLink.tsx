@@ -1,10 +1,8 @@
 import Link from 'next/link';
 
-import styles from './style.module.scss';
-
 import {ExternalLink} from '../externalLink';
-
 import {NavChevron} from './navChevron';
+import styles from './style.module.scss';
 
 export function SidebarLink({
   title,

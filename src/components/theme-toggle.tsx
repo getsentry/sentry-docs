@@ -1,8 +1,8 @@
 'use client';
-import {Fragment} from 'react';
 import {MoonIcon, SunIcon} from '@radix-ui/react-icons';
 import {IconButton, Tooltip} from '@radix-ui/themes';
 import {useTheme} from 'next-themes';
+import {Fragment} from 'react';
 
 export function ThemeToggle({
   ...props

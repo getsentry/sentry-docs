@@ -1,9 +1,8 @@
 'use client';
-import {Fragment, useEffect, useState} from 'react';
 import {CheckIcon as Check} from '@radix-ui/react-icons';
 import {Button} from '@radix-ui/themes';
 import * as Sentry from '@sentry/browser';
-
+import {Fragment, useEffect, useState} from 'react';
 import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
 
 type Props = {
@@ -51,7 +50,6 @@ export function DocFeedback({pathname}: Props) {
       sessionStorage.setItem(`feedback_${pathname}`, 'submitted');
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
         console.error('Failed to submit feedback:', error);
       }
       Sentry.captureException(error);
