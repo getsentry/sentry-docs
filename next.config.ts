@@ -157,6 +157,9 @@ module.exports = withSentryConfig(nextConfig, {
   project: process.env.NEXT_PUBLIC_DEVELOPER_DOCS ? 'develop-docs' : 'docs',
   authToken: process.env.SENTRY_AUTH_TOKEN,
 
+  // Routes browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers
+  tunnelRoute: '/monitoring',
+
   // Suppresses source map uploading logs during build
   silent: !process.env.CI,
 
