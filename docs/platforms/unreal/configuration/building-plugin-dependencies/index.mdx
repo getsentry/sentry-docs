@@ -8,7 +8,6 @@ The Sentry Unreal plugin ships with pre-built binaries for all supported platfor
 
 - **Testing or debugging** unreleased changes to the underlying platform SDKs
 - **Applying custom patches** to the platform SDKs for your project's specific needs
-- **Enabling client-side stacktrace display** in the [Sentry Crash Reporter](/platforms/unreal/configuration/setup-crashreporter/#stacktrace-display) when using the Crashpad backend
 
 ## Overview
 
@@ -17,7 +16,6 @@ The plugin depends on platform-specific SDKs that are pre-built in CI and bundle
 - **[sentry-native](https://github.com/getsentry/sentry-native)** — Windows and Linux (Crashpad and Native backends)
 - **[sentry-cocoa](https://github.com/getsentry/sentry-cocoa)** — macOS and iOS
 - **[sentry-java](https://github.com/getsentry/sentry-java)** — Android
-- **[sentry-desktop-crash-reporter](https://github.com/getsentry/sentry-desktop-crash-reporter)** — External crash reporter application (Windows and Linux)
 
 The [sentry-unreal](https://github.com/getsentry/sentry-unreal) repository includes a `build-deps.ps1` script that automates building these SDKs and copying the resulting binaries to the correct locations within the plugin. The `plugin-dev/` directory then serves as the complete plugin package that can be copied into any Unreal project.
 
@@ -41,22 +39,15 @@ git checkout 1.XX.0  # match your installed plugin version
 
 <Alert>
 
-The initialization scripts require [GitHub CLI](https://cli.github.com/) to be installed.
-
-</Alert>
-
-You also need a local clone of the SDK you want to build (see links in [Overview](#overview)).
-
-<Alert>
-
-Each SDK version is pinned as a Git submodule under `modules/` in the sentry-unreal repository. When cloning an SDK to build locally, check out the same commit or tag in your local clone. You can find the expected version by looking at the submodule reference for your plugin's release tag on [GitHub](https://github.com/getsentry/sentry-unreal).
+The initialization scripts require [GitHub CLI](https://cli.github.com/) to be installed. You also need a local clone of the SDK you want to build (see links in [Overview](#overview)). Each SDK version is pinned as a Git submodule under `modules/` in the sentry-unreal repository — check out the same commit or tag in your local clone. You can find the expected version by looking at the submodule reference for your plugin's release tag on [GitHub](https://github.com/getsentry/sentry-unreal).
 
 </Alert>
 
 ### Prerequisites
 
 - **PowerShell** 7+ (or Windows PowerShell 5.1)
-- **Git** and **CMake** 3.16+
+- **Git**
+- **CMake** 3.16+
 - **Platform toolchain**: Visual Studio 2019+ on Windows, Clang 13+ on Linux, Xcode on macOS
 
 ## Using the Build Script
@@ -90,106 +81,7 @@ Each flag has a corresponding path parameter (e.g., `-NativePath`, `-CocoaPath`)
 
 <Alert>
 
-**Windows**: `-All` builds Native + Java + CrashReporter (Cocoa requires macOS).
-**macOS**: `-All` builds Cocoa + Java + CrashReporter (Native requires Windows).
+**Windows**: `-All` builds Native + Java + CrashReporter.
+**macOS**: `-All` builds Cocoa + Java + CrashReporter.
 
 </Alert>
-
-## Building sentry-native
-
-The `scripts/build-deps.ps1` script uses a fixed set of CMake flags that match the plugin's CI builds. If you need to pass additional CMake flags (such as `CRASHPAD_ENABLE_STACKTRACE`), you can either edit the script locally or build sentry-native manually with CMake.
-
-Refer to the [sentry-native README](https://github.com/getsentry/sentry-native#build-and-installation) for full build documentation and available options.
-
-### Customizing the Build Script
-
-To add custom CMake flags, modify the `cmake` configure invocation inside the `buildSentryNative()` function in `scripts/build-deps.ps1`, then run the build as usual:
-
-```powershell
-./scripts/build-deps.ps1 -Native -NativePath "D:\projects\sentry-native"
-```
-
-### Enabling Client-Side Stacktrace Support
-
-To enable stacktrace display in the [Sentry Crash Reporter](/platforms/unreal/configuration/setup-crashreporter/#stacktrace-display) when using the Crashpad backend, rebuild sentry-native with the `CRASHPAD_ENABLE_STACKTRACE` CMake flag:
-
-1. Open `scripts/build-deps.ps1` and locate the Crashpad backend's `cmake` configure line inside `buildSentryNative()`:
-
-    ```powershell
-    cmake -B "build" -D SENTRY_BACKEND=crashpad -D SENTRY_SDK_NAME=sentry.native.unreal -D SENTRY_BUILD_SHARED_LIBS=OFF
-    ```
-
-2. Add the stacktrace flag:
-
-    ```powershell
-    cmake -B "build" -D SENTRY_BACKEND=crashpad -D SENTRY_SDK_NAME=sentry.native.unreal -D SENTRY_BUILD_SHARED_LIBS=OFF -D CRASHPAD_ENABLE_STACKTRACE=ON
-    ```
-
-3. Run the build:
-
-    ```powershell
-    ./scripts/build-deps.ps1 -Native -NativePath "D:\projects\sentry-native"
-    ```
-
-4. Copy the updated `plugin-dev/` contents to your project's plugin directory.
-
-<Alert>
-
-The `CRASHPAD_ENABLE_STACKTRACE` feature is experimental. On Linux, it requires the `libunwind-ptrace` development package to be installed.
-
-</Alert>
-
-### Building Manually
-
-If you prefer to build [sentry-native](https://github.com/getsentry/sentry-native) outside of the `build-deps.ps1` script, you can do so directly with CMake.
-
-When building for Unreal, the following CMake flags are required for compatibility:
-
-| Flag | Value | Purpose |
-|------|-------|---------|
-| `SENTRY_BACKEND` | `crashpad` or `native` | Select crash handling backend |
-| `SENTRY_SDK_NAME` | `sentry.native.unreal` | SDK identifier reported in events |
-| `SENTRY_BUILD_SHARED_LIBS` | `OFF` | Build static libraries (required for Unreal) |
-
-### Windows
-
-```powershell
-cd D:\projects\sentry-native
-
-# Configure (Crashpad backend)
-cmake -G "Visual Studio 17 2022" -S . -B build `
-    -D SENTRY_BACKEND=crashpad `
-    -D SENTRY_SDK_NAME=sentry.native.unreal `
-    -D SENTRY_BUILD_SHARED_LIBS=OFF
-
-# Build
-cmake --build build --target sentry --config RelWithDebInfo --parallel
-cmake --build build --target crashpad_handler --config RelWithDebInfo --parallel
-
-# Install to a local directory
-cmake --install build --prefix install --config RelWithDebInfo
-```
-
-Add `-D CRASHPAD_ENABLE_STACKTRACE=ON` to the configure command to enable [client-side stacktrace support](#enabling-client-side-stacktrace-support).
-
-### Linux
-
-Building for Linux requires a two-pass build with different standard libraries for runtime compatibility with Unreal Engine. Refer to the [CI build scripts](https://github.com/getsentry/sentry-unreal/tree/main/scripts) (`build-linux-crashpad.sh`, `build-linux-native.sh`) for the full build process.
-
-### Replacing Plugin Binaries
-
-After building, copy the output files into your project's plugin directory. The plugin expects the following layout relative to `YourProject/Plugins/sentry-unreal/Source/ThirdParty/`:
-
-| Platform | Crashpad backend | Native backend |
-|----------|-----------------|----------------|
-| Windows | `Win64/Crashpad/` | `Win64/Native/` |
-| Linux | `Linux/Crashpad/` | `Linux/Native/` |
-
-Each backend directory contains:
-- `bin/` — executables (`crashpad_handler` for Crashpad, `sentry-crash` for Native)
-- `lib/` — static libraries (`sentry.lib` / `libsentry.a` and backend-specific libraries)
-- `include/` — headers (`sentry.h`)
-
-Make sure to replace **all** files in the target directory — partial updates can cause linker errors or runtime crashes.
-
-After replacing binaries, delete your project's `Build` and `Intermediate` directories and rebuild to ensure the updated files are picked up by Unreal Build Tool.
