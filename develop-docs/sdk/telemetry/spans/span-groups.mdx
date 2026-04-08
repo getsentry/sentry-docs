@@ -1,0 +1,98 @@
+---
+title: Span Groups
+---
+
+<Alert level="info">
+  This document uses key words such as "MUST", "SHOULD", and "MAY" as defined
+  in [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt) to indicate requirement
+  levels.
+</Alert>
+
+Span groups provide logical grouping of spans that can cross trace boundaries. While traces represent a single causal chain of operations, span groups connect spans that share a logical relationship — such as belonging to the same AI conversation or user session — even when those spans live in different traces.
+
+## Motivation
+
+Traces are the only built-in grouping mechanism in OpenTelemetry, but many real-world concepts don't map cleanly to a single trace:
+
+- **AI conversations** can span multiple sessions and traces, and multiple conversations can exist within the same trace.
+- **User sessions** (e.g. a single visit to a webpage) may produce multiple traces, or a single trace may cover multiple sessions.
+
+These relationships require a lightweight, extensible grouping concept that works across trace boundaries without infrastructure changes.
+
+## Protocol
+
+Span groups are regular span attributes under the `sentry.span_group` namespace. Each group is identified by a key (the concept) and a value (the group ID):
+
+```json
+{
+  "sentry.span_group.conversation_id": "conv_88234",
+  "sentry.span_group.session_id": "sess_00192"
+}
+```
+
+A span **MAY** belong to multiple groups simultaneously.
+
+### Attribute Format
+
+In the Span v2 wire format, span group attributes follow the standard [attribute encoding](/sdk/foundations/state-management/scopes/attributes/):
+
+```json
+{
+  "attributes": {
+    "sentry.span_group.conversation_id": {
+      "type": "string",
+      "value": "conv_88234"
+    },
+    "sentry.span_group.session_id": {
+      "type": "string",
+      "value": "sess_00192"
+    }
+  }
+}
+```
+
+### Naming Convention
+
+New span group concepts **MUST** use a `<concept>_id` suffix under the `sentry.span_group` namespace. For example:
+
+| Concept | Attribute Key |
+|---|---|
+| Conversation | `sentry.span_group.conversation_id` |
+| Session | `sentry.span_group.session_id` |
+
+Values **MUST** be non-empty strings.
+
+## Propagation
+
+Span groups **SHOULD** be propagated between services via the `baggage` header, following the same mechanism as [trace propagation](/sdk/telemetry/spans/span-trace-propagation/):
+
+```
+baggage: sentry.span_group.conversation_id=conv_88234,sentry.span_group.session_id=sess_00192
+```
+
+When a downstream service receives span group entries in baggage, it **SHOULD** apply them to all spans created within that context.
+
+## SDK Implementation
+
+SDKs **MUST** allow users to set span group attributes via the standard span attributes API. No dedicated public API is required — span groups are just attributes.
+
+```js {tabTitle:JavaScript}
+Sentry.startSpan(
+  {
+    name: "ai.chat",
+    attributes: {
+      "sentry.span_group.conversation_id": "conv_88234",
+      "sentry.span_group.session_id": "sess_00192",
+    },
+  },
+  () => {
+    // ...
+  }
+);
+```
+
+```python {tabTitle:Python}
+with sentry_sdk.start_span(name="ai.chat") as span:
+    span.set_attribute("sentry.span_group.conversation_id", "conv_88234")
+    span.set_attribute("sentry.span_group.session_id", "sess_00192")
+```
