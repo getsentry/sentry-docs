@@ -218,14 +218,25 @@ These settings are applied each time the SDK initializes. Properties that are no
 
 #### Using a Custom Crash Reporter Build
 
-For more advanced customization (such as custom logos or layout changes), you can fork the [sentry-desktop-crash-reporter](https://github.com/getsentry/sentry-desktop-crash-reporter) project and build a custom version following the instructions in its documentation.
+For more advanced customization (such as custom logos or layout changes), you can fork the [sentry-desktop-crash-reporter](https://github.com/getsentry/sentry-desktop-crash-reporter) project and build a custom version.
 
-To use your custom build, replace the crash reporter executable in the plugin's ThirdParty binaries directory:
+To build on Windows:
+
+```powershell
+cd sentry-desktop-crash-reporter
+dotnet publish -f net9.0-desktop -r win-x64 Sentry.CrashReporter/Sentry.CrashReporter.csproj -o build-output
+```
+
+For other platforms, replace the runtime identifier with `win-arm64`, `linux-x64`, or `linux-arm64`.
+
+Copy the output executable into the plugin's ThirdParty binaries directory:
 
 - **Windows**: `Plugins/sentry-unreal/Source/ThirdParty/Win64/bin/Sentry.CrashReporter.exe`
 - **Linux**: `Plugins/sentry-unreal/Source/ThirdParty/Linux/bin/Sentry.CrashReporter`
 
-After replacing the executable, delete the project's `Build` and `Intermediate` directories and rebuild the project to ensure the updated binary is picked up.
+After replacing the executable, delete the project's `Build` and `Intermediate` directories and rebuild to ensure the updated binary is picked up.
+
+Refer to the project's [customization guide](https://github.com/getsentry/sentry-desktop-crash-reporter/blob/main/CUSTOMIZATION.md) for details on what can be changed.
 
 ### Stacktrace Display
 
@@ -234,11 +245,45 @@ The Sentry Crash Reporter can display a symbolicated stacktrace of the crashed t
 This feature requires client-side stack walking, which is supported through two backend configurations:
 
 - **[Native backend](/platforms/unreal/configuration/native-backend/)**: Performs stack walking and symbolication automatically using the platform's debug APIs. No additional configuration is needed.
-- **Crashpad backend**: Requires a custom build of `sentry-native` with the `CRASHPAD_ENABLE_STACKTRACE` CMake flag enabled.
+- **Crashpad backend**: Requires a custom build of `sentry-native` with the `CRASHPAD_ENABLE_STACKTRACE` CMake flag enabled. See [below](#building-sentry-native-with-stacktrace-support) for instructions.
 
 <Alert>
 
 For **Shipping builds**, the stacktrace can only be symbolicated if debug information is available at runtime. Enable **Include Debug Files in Shipping Builds** in **Project Settings > Packaging** to ensure function names are resolved in the crash reporter dialog.
+
+</Alert>
+
+#### Building sentry-native With Stacktrace Support
+
+To enable client-side stacktrace display when using the Crashpad backend, you need to rebuild `sentry-native` with the `CRASHPAD_ENABLE_STACKTRACE` CMake flag. The example below shows a Windows build — for other platforms, refer to the [sentry-native build documentation](https://github.com/getsentry/sentry-native#build-and-installation) and the [CI build scripts](https://github.com/getsentry/sentry-unreal/tree/main/scripts) in the sentry-unreal repository.
+
+Clone [sentry-native](https://github.com/getsentry/sentry-native) and check out the version that matches your plugin (pinned under `modules/sentry-native` in the [sentry-unreal](https://github.com/getsentry/sentry-unreal) repository). Then build:
+
+```powershell
+cd D:\projects\sentry-native
+
+cmake -G "Visual Studio 17 2022" -S . -B build `
+    -D SENTRY_BACKEND=crashpad `
+    -D SENTRY_SDK_NAME=sentry.native.unreal `
+    -D SENTRY_BUILD_SHARED_LIBS=OFF `
+    -D CRASHPAD_ENABLE_STACKTRACE=ON
+
+cmake --build build --target sentry --config RelWithDebInfo --parallel
+cmake --build build --target crashpad_handler --config RelWithDebInfo --parallel
+cmake --install build --prefix install --config RelWithDebInfo
+```
+
+Copy the build output into your project's plugin directory:
+
+- `install/lib/*` → `Plugins/sentry-unreal/Source/ThirdParty/Win64/Crashpad/lib/`
+- `install/bin/crashpad_handler.exe` → `Plugins/sentry-unreal/Source/ThirdParty/Win64/Crashpad/bin/`
+- `install/include/sentry.h` → `Plugins/sentry-unreal/Source/ThirdParty/Win64/Crashpad/include/`
+
+After replacing binaries, delete your project's `Build` and `Intermediate` directories and rebuild.
+
+<Alert>
+
+The `CRASHPAD_ENABLE_STACKTRACE` feature is experimental. On Linux, it requires the `libunwind-ptrace` development package.
 
 </Alert>
 
