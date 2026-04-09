@@ -36,13 +36,13 @@ spec_changelog:
     summary: Hub/Scope MUST offer same logger methods as static API, Client SHOULD offer generic captureLog
   - version: 1.9.0
     date: 2025-10-09
-    summary: Consolidated sentry.origin rules. No origin for manual calls, auto.log.* for libraries, auto.*.* for instrumentation
+    summary: Consolidated sentry.origin rules — no origin for manual calls, auto.log.* for libraries, auto.*.* for instrumentation
   - version: 1.8.0
     date: 2025-09-10
     summary: Added sentry.replay_id as default attribute and replay association behavior
   - version: 1.7.0
     date: 2025-08-28
-    summary: Added message template constraint. MUST NOT send sentry.message.template without parameters
+    summary: Added message template constraint — MUST NOT send sentry.message.template without parameters
   - version: 1.6.0
     date: 2025-06-10
     summary: User attributes no longer gated behind sendDefaultPii
@@ -63,7 +63,7 @@ spec_changelog:
     summary: Documented log envelope item structure (items array wrapper)
   - version: 1.0.0
     date: 2025-04-22
-    summary: Initial spec. Log protocol, severity model, logger API, init options, otel_log format
+    summary: Initial spec — log protocol, severity model, logger API, init options, otel_log format
 ---
 
 <SpecRfcAlert />
@@ -77,10 +77,10 @@ Logs allow Sentry to ingest structured log data from SDKs. SDKs send log envelop
 There are two wire protocols: the `log` envelope with the Sentry Log protocol (preferred), and the `otel_log` envelope with the OpenTelemetry Log protocol. All SDKs **MUST** send logs via the `log` envelope and Sentry Log protocol. The `otel_log` format is documented in [Appendix: `otel_log` Format](#otel_log-envelope-item-payload) for completeness.
 
 Related specs:
-- [Envelopes](/sdk/foundations/transport/envelopes/) - transport format
-- [Attributes](/sdk/foundations/state-management/scopes/attributes) - attribute type system
-- [Tracing without Performance](/sdk/foundations/trace-propagation/#default-propagation) - required for trace context
-- [Trace Origin](/sdk/telemetry/traces/trace-origin/) - origin attribute format
+- [Envelopes](/sdk/foundations/transport/envelopes/) — transport format
+- [Attributes](/sdk/foundations/state-management/scopes/attributes) — attribute type system
+- [Tracing without Performance](/sdk/foundations/trace-propagation/#default-propagation) — required for trace context
+- [Trace Origin](/sdk/telemetry/traces/trace-origin/) — origin attribute format
 
 ---
 
@@ -130,7 +130,7 @@ Logs are buffered before sending. SDKs collect logs into a buffer and flush them
 Log processing **MUST** follow this order:
 
 1. Capture log via [Public APIs](#logger-module) (e.g. `Sentry.logger.info`) or via [SDK integrations](#sdk-integrations).
-2. Check if logging is enabled via `enableLogs`/`enable_logs`. If not, skip remaining steps.
+2. Check if logging is enabled via `enableLogs`/`enable_logs` — if not, skip remaining steps.
 3. Pass the log to Hub/Scope via a generic method (e.g., `captureLog`).
 4. Pass the log to the Client via a generic method (e.g., `captureLog`).
 5. Process captured log (attach attributes per [Default Attributes](#default-attributes)).
@@ -357,7 +357,7 @@ SDKs **MUST** report count (`log_item`) and size in bytes (`log_byte`) of discar
 
 The `log` envelope item contains an array of log payloads encoded as JSON, allowing multiple logs per envelope item.
 
-An envelope **MUST** contain at most one `log` envelope item. All log entries for a flush are batched into a single item's `items` array. Logs from different traces **MAY** be mixed into the same `log` item, but if they are, the envelope **MUST NOT** include a DSC (dynamic sampling context) header.
+An envelope **MUST** contain at most one `log` envelope item — all log entries for a flush are batched into a single item's `items` array. Logs from different traces **MAY** be mixed into the same `log` item, but if they are, the envelope **MUST NOT** include a DSC (dynamic sampling context) header.
 
 **Item Headers:**
 
@@ -475,7 +475,7 @@ SDKs **MUST** expose the following configuration options:
 | Option | Type | Default | Since | Description |
 |--------|------|---------|-------|-------------|
 | `enableLogs` / `enable_logs` | Boolean | `true` | 1.0.0 | Controls whether log envelopes are generated and sent. If `false`, the SDK **MUST NOT** send logs. |
-| `beforeSendLog` / `before_send_log` | Function | - | 1.0.0 | **OPTIONAL** callback receiving a log object. Returns a modified log or `null` to drop it. |
+| `beforeSendLog` / `before_send_log` | Function | — | 1.0.0 | **OPTIONAL** callback receiving a log object. Returns a modified log or `null` to drop it. |
 
 The default for `enableLogs`/`enable_logs` was changed from `false` to `true` in version 2.0.0. The previous default required users to explicitly opt in before they could use the logging primitives. By defaulting to `true`, adding a `Sentry.logger.*` statement is itself the opt-in. Users can start logging without additional configuration. This aligns the behavior with [`enableMetrics`/`enable_metrics`](/sdk/telemetry/metrics/#initialization-options), which also defaults to `true`.
 
