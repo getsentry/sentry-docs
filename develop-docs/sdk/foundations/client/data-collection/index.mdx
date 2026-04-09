@@ -97,23 +97,8 @@ SDKs **MUST** support at least the `userInfo` option, key-value collection modes
 The three sensitivity levels determine whether data is collected by default:
 
 - **Technical Context Data**: SDKs **SHOULD** collect this data automatically. This level is not gated by any `dataCollection` option.
-- **PII Data**: The `userInfo` option controls whether the SDK automatically populates user identity fields (`user.*`). See [`userInfo` Behavior](#user-info).
+- **PII Data**: The `userInfo` option controls whether the SDK automatically populates user identity fields (`user.*`). See [`dataCollection` Options](#datacollection-options).
 - **Sensitive Data**: SDKs **MUST** never send sensitive values through automatic instrumentation. Values for keys matching the denylist **MUST** be replaced with `"[Filtered]"`; key names are always retained. Users can use `beforeSend` (or equivalent) to remove or redact keys if needed. See [Sensitive Denylist](#sensitive-denylist).
-
-</SpecSection>
-
-<SpecSection id="user-info" status="draft" since="0.1.0">
-
-### `userInfo` Behavior
-
-The `userInfo` option controls whether the SDK automatically populates the `user.*` object on events, which are typically set by `Sentry.setUser()`. It has no effect on cookies, headers, query params, or any other data category.
-
-| Value | Behavior |
-|-------|----------|
-| `true` | The SDK automatically populates `user.*` fields (e.g., `user.id`, `user.email`, `user.username`, `user.ip_address`) from instrumentation sources such as the web framework request context. |
-| `false` | The SDK does not automatically populate `user.*` fields from instrumentation. |
-
-When user data is set **explicitly** on the scope via `Sentry.setUser()` (or equivalent), it is **always** attached regardless of this setting. See [User-Set Data and Scrubbing](#user-set-data-and-scrubbing).
 
 </SpecSection>
 
@@ -218,7 +203,7 @@ Data **explicitly** set by the user on the scope (user, request, response, tags,
 
 SDKs **SHOULD** only replace sensitive values with `"[Filtered]"` when the data is gathered **automatically** through instrumentation. If the user explicitly provides data (e.g., by setting a request object on the scope), the SDK **MUST NOT** modify it; the user is responsible for the data they attach.
 
-Users can register callbacks (e.g., `beforeSend`, event processors) to remove or redact any data — including keys — before events are sent. This spec does not replace those hooks; they remain the primary mechanism for custom filtering and key removal.
+Users can register callbacks (e.g., `beforeSend`, event processors) to remove or redact any data (including keys) before events are sent. This spec does not replace those hooks; they remain the primary mechanism for custom filtering and key removal.
 
 </SpecSection>
 
@@ -483,8 +468,8 @@ init({
       response?: KeyValueCollectionBehavior,       // default: { mode: "denyList" }
     },
     queryParams?: KeyValueCollectionBehavior,      // default: { mode: "denyList" }
-    generativeAIInputs?: boolean,                  // default: true
-    generativeAIOutputs?: boolean,                 // default: true
+    genAIInputs?: boolean,                         // default: true
+    genAIOutputs?: boolean,                        // default: true
     stackFrameVariables?: boolean,                 // default: true
     httpBodies?: string[],                         // default: [] (off)
     frameContextLines?: integer,                   // default: 5 (see boolean fallback below)
@@ -492,14 +477,14 @@ init({
 })
 ```
 
-| Key | Option Type | Default | Since | Description |
+  | Key | Option Type | Default | Since | Description |
 |-----|-------------|---------|-------|-------------|
-| `userInfo` | Boolean | `false` | 0.1.0 | Automatically populate `user.*` fields (`user.id`, `user.email`, `user.username`, `user.ip_address`) from instrumentation sources. Does not affect any other data category. |
+| `userInfo` | Boolean | `false` | 0.1.0 | Automatically populate `user.*` fields (`user.id`, `user.email`, `user.username`, `user.ip_address`) from instrumentation sources (typically set by `Sentry.setUser()`). Does not affect any other data category. |
 | `cookies` | Key-value collection | `{ mode: "denyList" }` | 0.1.0 | Collect cookies. All key names are always included; the SDK scrubs values for keys matching the sensitive denylist or custom allow/deny terms. |
 | `httpHeaders` | `{ request?, response? }` | Both `{ mode: "denyList" }` | 0.1.0 | Collect HTTP headers. Configure request and response independently using key-value collection modes. All key names are always included. |
 | `queryParams` | Key-value collection | `{ mode: "denyList" }` | 0.1.0 | Collect URL query parameters. All key names are always included; the SDK scrubs values for keys matching the sensitive denylist or custom allow/deny terms. |
-| `generativeAIInputs` | Boolean | `true` | 0.2.0 | Include the content of generative AI inputs (e.g. prompt text, tool call arguments). Metadata such as model name and token counts is always collected regardless of this setting. |
-| `generativeAIOutputs` | Boolean | `true` | 0.2.0 | Include the content of generative AI outputs (e.g. completion text, tool call results). Metadata such as model name and token counts is always collected regardless of this setting. |
+| `genAIInputs` | Boolean | `true` | 0.2.0 | Include the content of generative AI inputs (e.g. prompt text, tool call arguments). Metadata such as model name and token counts is always collected regardless of this setting. |
+| `genAIOutputs` | Boolean | `true` | 0.2.0 | Include the content of generative AI outputs (e.g. completion text, tool call results). Metadata such as model name and token counts is always collected regardless of this setting. |
 | `stackFrameVariables` | Boolean | `true` | 0.1.0 | Include local variable values captured within stack frames. |
 | `httpBodies` | `string[]` (body types) | `[]` (off) | 0.2.0 | List of body types to collect. Empty or omitted = off. Valid values: `"incomingRequest"`, `"outgoingRequest"`, `"incomingResponse"`, `"outgoingResponse"`. |
 | `frameContextLines` | Integer (`Boolean` fallback) | `5` (`true`) | 0.1.0 | Number of source code lines to include above and below each stack frame. <br/> **`Boolean` fallback:** Not all platforms support integer configuration values. SDKs **MAY** accept a boolean, where `true` is equivalent to the platform default (typically `5`) and `false` is equivalent to `0` (no context lines). SDKs **SHOULD** prefer accepting an integer when their platform supports it. |
@@ -583,8 +568,8 @@ The new defaults collect **more** than `sendDefaultPii: false` did. Generative A
 init({
   dsn: "...",
   dataCollection: {
-    generativeAIInputs: false,
-    generativeAIOutputs: false,
+    genAIInputs: false,
+    genAIOutputs: false,
     httpHeaders: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
     cookies: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
     queryParams: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
