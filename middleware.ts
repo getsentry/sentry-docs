@@ -3417,7 +3417,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/insights/llm-monitoring/getting-started/the-dashboard/',
-    to: '/ai/monitoring/agents/dashboard/',
+    to: '/ai/monitoring/agents/dashboards/',
   },
   {
     from: '/product/insights/ai/',
@@ -3433,7 +3433,11 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/insights/ai/agents/dashboard/',
-    to: '/ai/monitoring/agents/dashboard/',
+    to: '/ai/monitoring/agents/dashboards/',
+  },
+  {
+    from: '/ai/monitoring/agents/dashboard/',
+    to: '/ai/monitoring/agents/dashboards/',
   },
   {
     from: '/product/insights/ai/agents/costs/',

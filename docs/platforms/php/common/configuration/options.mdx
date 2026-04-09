@@ -235,6 +235,18 @@ This option enables the logging integration, which allows the SDK to capture log
 
 </SdkOption>
 
+<SdkOption name="log_flush_threshold" type='int|null' defaultValue='null'>
+
+Set this to a positive integer to flush buffered logs automatically after that many logs have been added. When set to `null`, the SDK does not auto flush buffered logs.
+
+For example, if this is set to `5`, the SDK flushes when the fifth buffered log is added. After that call completes, the buffer is empty and new logs start a new batch.
+
+This is especially useful for requests or jobs that generate a high volume of logs, where waiting until the very end to flush isn’t practical.
+
+Each automatic flush sends a request to Sentry, so lower thresholds can increase network overhead.
+
+</SdkOption>
+
 <SdkOption name="before_send_log" type='function (\Sentry\Logs\Log $log): ?\Sentry\Logs\Log'>
 
 This function is called with a log object, and can return a modified log event object, or `null` to skip reporting the event.
@@ -310,6 +322,14 @@ When enabled, the SDK will use the native OS certificate store.
 <SdkOption name="http_compression" type="bool" defaultValue="true">
 
 When enabled, request payloads are gzipped if the `zlib` extension is available.
+
+</SdkOption>
+
+<SdkOption name="http_enable_curl_share_handle" type="bool" defaultValue="true">
+
+When enabled, the SDK reuses cURL share state for outbound requests. On PHP 8.5 and above, this uses a persistent cURL share handle. On older PHP versions, it falls back to a regular share handle.
+
+Leave this enabled if you want to reduce connection setup overhead for frequent sends.
 
 </SdkOption>
 

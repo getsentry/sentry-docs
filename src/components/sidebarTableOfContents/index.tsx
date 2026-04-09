@@ -1,7 +1,6 @@
 'use client';
 
 import {useEffect, useState} from 'react';
-
 import {isNotNil} from 'sentry-docs/utils';
 
 import styles from './style.module.scss';

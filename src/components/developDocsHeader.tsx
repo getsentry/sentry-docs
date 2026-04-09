@@ -6,13 +6,11 @@ import {Box, Button, Theme} from '@radix-ui/themes';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import Link from 'next/link';
-
 import SentryLogoSVG from 'sentry-docs/logos/sentry-logo-dark.svg';
 
 import mobileMenuStyles from './mobileMenu/styles.module.scss';
-import sidebarStyles from './sidebar/style.module.scss';
-
 import {NavLink} from './navlink';
+import sidebarStyles from './sidebar/style.module.scss';
 import {ThemeToggle} from './theme-toggle';
 
 // Lazy load Search to reduce initial bundle size.

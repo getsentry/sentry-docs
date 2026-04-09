@@ -1,0 +1,57 @@
+### Apdex
+
+Apdex is an industry-standard metric used to track and measure user satisfaction based on your application response times. A higher Apdex score is better than a lower one; the score can go up to 1.0, representing 100% of users having a satisfactory experience. The Apdex score provides the ratio of satisfactory, tolerable, and frustrated requests in a specific transaction or endpoint.
+
+- **T**: Threshold for the target response time.
+- **Satisfactory**: Page load times less than or equal to T.
+- **Tolerable**: Greater than T and less than or equal to 4T.
+- **Frustrated**: Greater than 4T.
+- **Formula**: (Satisfactory + (Tolerable/2)) / Total Requests
+
+Configure the satisfactory response time threshold (ms) in **Settings > Performance** per project, or override at the transaction level in **Transaction Summary > Settings** ([custom thresholds](#custom-thresholds)).
+
+### Failure Rate
+
+`failure_rate()` indicates the percentage of unsuccessful transactions. Sentry treats transactions with a status other than "ok," "cancelled," and "unknown" as failures. See [possible status values](https://develop.sentry.dev/sdk/foundations/transport/event-payloads/span/).
+
+### Throughput (Total, TPM, TPS)
+
+Throughput is the number of transactions over a given time range (Total), average transactions per minute (TPM), or average transactions per second (TPS).
+
+### Latency
+
+#### Average Transaction Duration
+
+Average transaction duration is the average response time for all occurrences of a given transaction. Sentry aggregates durations with percentiles (p50, p75, p95, p99, p100) and maximum. With [sampled tracing](/product/sentry-basics/tracing/distributed-tracing/#data-sampling), averages and percentiles can be directionally correct but not exact; small sample sizes affect percentiles more than averages.
+
+#### P50 Threshold
+
+The p50 (median) is the value at which 50% of transaction durations are slower than this value.
+
+#### P75 Threshold
+
+The p75 is the value at which 25% of transaction durations are slower than this value.
+
+#### P95 Threshold
+
+The p95 is the value at which 5% of transaction durations are slower than this value.
+
+#### P99 Threshold
+
+The p99 is the value at which 1% of transaction durations are slower than this value.
+
+### User Misery
+
+User Misery counts the number of unique users who were frustrated (response time greater than four times the satisfactory threshold). It highlights transactions with the highest user impact. The calculation uses a probability distribution to avoid false positives at low volume. Set the satisfactory threshold in [custom thresholds](#custom-thresholds). In Discover, use the `count_miserable()` function to query the underlying data.
+
+### Time Spent
+
+Time Spent is the total cumulative time your application spends on a specific operation (e.g. database queries, API calls) over a given period — the sum of all durations, or average duration × rate. It indicates relative performance impact (e.g. 240ms average × 10,000 calls/hour ≈ 40 minutes time spent).
+
+### Custom Thresholds
+
+For each project, configure how [Apdex](#apdex) and [User Misery](#user-misery) are calculated in your project's [Performance settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/performance/). You can override project-level settings at the transaction level in **Transaction Summary > Settings**. The response time threshold (ms) defines the satisfactory baseline; the calculation method can use full transaction duration or a [Web Vital](/product/dashboards/sentry-dashboards/frontend/web-vitals/) such as LCP.
+
+### Custom Performance Measurements
+
+<Include name="custom-measurements-blurb.mdx" />
