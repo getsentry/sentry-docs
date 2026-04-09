@@ -188,7 +188,3 @@ module.exports = withSentryConfig(nextConfig, {
     thirdPartyOriginStackFrames: true,
   },
 });
-
-export const config = {
-  matcher: ['/((?!sentry-tunnel|_next/static|_next/image|favicon.ico).*)'],
-};
