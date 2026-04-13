@@ -1,5 +1,4 @@
 import {Fragment} from 'react';
-
 import {getCurrentPlatform} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
 import {PlatformCategory} from 'sentry-docs/types';

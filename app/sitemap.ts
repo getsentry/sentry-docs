@@ -1,5 +1,4 @@
 import type {MetadataRoute} from 'next';
-
 import {type DocNode, getDocsRootNode} from 'sentry-docs/docTree';
 import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
 

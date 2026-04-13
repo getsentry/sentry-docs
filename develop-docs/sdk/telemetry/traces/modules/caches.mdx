@@ -8,6 +8,8 @@ The SDK's caching integration is agnostic to the underlying engine used. In most
 
 ### Span Operations
 
+The span operation should reflect the specific cache method being called, using the format `cache.<methodName>` (e.g. `cache.get`, `cache.putIfAbsent`, `cache.removeAll`). The following are common examples:
+
 | Span OP | Description |
 |:--|:--|
 | `cache.get` | A single item or multiple items are retrieved from the cache |
@@ -17,7 +19,7 @@ The SDK's caching integration is agnostic to the underlying engine used. In most
 
 ### Span Description
 
-The description of cache spans should be set to the cache key(s), sepreated by commas, e.g. `posts`, or `article1, article2`.
+The description of cache spans should be set to the cache key(s), separated by commas, e.g. `posts`, or `article1, article2`.
 
 ### Span Data
 
@@ -25,6 +27,8 @@ The description of cache spans should be set to the cache key(s), sepreated by c
 |:--|:--|:--|:--|
 | `cache.hit` | bool | cache hit or miss | required only on read-operations (`cache.get`)
 | `cache.key` | array | the key(s) involved in the operation | required only on operations that have a key
+| `cache.operation` | string | the specific cache operation performed (e.g. `get`, `putIfAbsent`, `removeAll`) | optional; useful when the SDK uses granular span operations beyond the four base ops
+| `cache.write` | bool | whether the operation resulted in a write to the cache | required only on write-operations (`cache.put`, `cache.remove`, `cache.flush`); reflects the actual outcome for conditional operations (e.g. `putIfAbsent`, `replace`); always `true` for unconditional writes
 
 The following data attributes are only to be set if exposed by the instrumented cache abstraction or retrievable with minimal overhead.
 

@@ -1,6 +1,5 @@
 import {Metadata} from 'next';
 import {redirect} from 'next/navigation';
-
 import {Alert} from 'sentry-docs/components/alert';
 import {DocPage} from 'sentry-docs/components/docPage';
 import {PlatformIcon} from 'sentry-docs/components/platformIcon';
@@ -118,7 +117,7 @@ export default async function Page(props: {
           title: guide.title ?? guide.name ?? '',
           url: guide.url ?? '', // Always use the guide-specific URL
           icon: `${platformEntry.key}-${guide.name}`,
-          shouldBeNested: mainPlatformNode ? true : false, // Only nest if parent exists
+          shouldBeNested: !!mainPlatformNode, // Only nest if parent exists
           parentPlatform: platformEntry.key,
         });
       }

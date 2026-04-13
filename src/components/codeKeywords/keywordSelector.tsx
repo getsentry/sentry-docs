@@ -1,16 +1,14 @@
 'use client';
 
+import {AnimatePresence} from 'framer-motion';
+import {useTheme} from 'next-themes';
 import {ComponentProps, Fragment, useContext, useState} from 'react';
 import {createPortal} from 'react-dom';
 import {usePopper} from 'react-popper';
-import {AnimatePresence} from 'framer-motion';
-import {useTheme} from 'next-themes';
-
 import {useOnClickOutside} from 'sentry-docs/clientUtils';
 import {useIsMounted} from 'sentry-docs/hooks/isMounted';
 
 import {CodeContext} from '../codeContext';
-
 import {AnimatedContainer} from './animatedContainer';
 import {Keyword} from './keyword';
 import {

@@ -3,12 +3,24 @@ title: React Error Boundary
 excerpt: ''
 description: >-
   Learn how the React Native SDK exports an error boundary component that
-  leverages React component APIs.
+  leverages React component APIs to catch rendering errors and display fallback UIs.
 sidebar_order: 60
 og_image: /og-images/platforms-react-native-integrations-error-boundary.png
 ---
 
-The React Native SDK exports an error boundary component that uses [React component APIs](https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary) to automatically catch and send JavaScript errors from inside a React component tree to Sentry.
+The React Native SDK exports an error boundary component that uses [React component APIs](https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary) to automatically catch and send JavaScript errors from inside a React component tree to Sentry, and render a fallback UI.
+
+<Alert level="warning" title="Render errors only">
+
+React error boundaries **only catch errors during rendering, in lifecycle methods, and in constructors**. They do **not** catch errors in event handlers, asynchronous code (`setTimeout`, `Promise`), or native errors. See [Handling Non-Render Errors](#handling-non-render-errors) for how to handle those.
+
+</Alert>
+
+<Alert level="info" title="Recommended on Android">
+
+On Android, some render-time errors (such as `TypeError` from calling a non-function) can bypass the global error handler entirely. Wrapping your app or error-prone components with `ErrorBoundary` ensures these errors are reliably captured and reported to Sentry.
+
+</Alert>
 
 ## Prerequisites
 
@@ -18,9 +30,10 @@ To use the Error Boundary component, you need to have the React Native SDK [inst
 
 ```javascript
 import React from "react";
+import { Text } from "react-native";
 import * as Sentry from "@sentry/react-native";
 
-<Sentry.ErrorBoundary fallback={<p>An error has occurred</p>}>
+<Sentry.ErrorBoundary fallback={<Text>An error has occurred</Text>}>
   <Example />
 </Sentry.ErrorBoundary>;
 ```
@@ -29,9 +42,12 @@ The Sentry Error Boundary is also available as a higher-order component.
 
 ```javascript
 import React from "react";
+import { Text } from "react-native";
 import * as Sentry from "@sentry/react-native";
 
-Sentry.withErrorBoundary(Example, { fallback: <p>an error has occurred</p> });
+Sentry.withErrorBoundary(Example, {
+  fallback: <Text>An error has occurred</Text>,
+});
 ```
 
 <Alert level="warning" title="Note">
@@ -44,12 +60,13 @@ In the example below, when the `<Example />` component hits an error, the `<Sent
 
 ```javascript
 import React from "react";
+import { Text } from "react-native";
 import * as Sentry from "@sentry/react-native";
 
 import { Example } from "../example";
 
 function FallbackComponent() {
-  return <div>An error has occurred</div>;
+  return <Text>An error has occurred</Text>;
 }
 
 const myFallback = <FallbackComponent />;
@@ -80,6 +97,114 @@ By default, React [logs all errors to the console](https://github.com/facebook/r
 In [React v17 and above](https://reactjs.org/blog/2020/08/10/react-v17-rc.html#native-component-stacks), the SDK will automatically parse the [error boundary](https://react.dev/reference/react/Component#componentdidcatch-parameters) `componentStack` and attach the full stacktrace to the event via `error.cause`. This requires the `nativeLinkedErrorsIntegration` to be enabled. (It's enabled by default.) To get the full source context, we recommend setting up [source maps](/platforms/react-native/sourcemaps/) for your project.
 
 ![React Error Boundary stacktrace](./img/errorboundary-error.png)
+
+## Handling Non-Render Errors
+
+Errors in event handlers, `async` functions, `setTimeout`, and other non-render code won't be caught by `ErrorBoundary`. This is a [React limitation](https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary), not specific to Sentry.
+
+Sentry's [`reactNativeErrorHandlersIntegration`](/platforms/react-native/integrations/default/#reactnativeerrorhandlersintegration) (enabled by default) **automatically reports** these errors to Sentry — you don't need to do anything extra for error reporting. However, it won't display a fallback UI.
+
+### Component-Level Error Handling
+
+For errors in event handlers or async code within a specific component, use `try`/`catch` with local state:
+
+```javascript
+import React, { useState } from "react";
+import { Button, Text } from "react-native";
+import * as Sentry from "@sentry/react-native";
+
+function MyComponent() {
+  const [error, setError] = useState(null);
+
+  const handlePress = async () => {
+    try {
+      await riskyOperation();
+    } catch (e) {
+      Sentry.captureException(e);
+      setError(e);
+    }
+  };
+
+  if (error) {
+    return (
+      <>
+        <Text>Something went wrong.</Text>
+        <Button onPress={() => setError(null)} title="Retry" />
+      </>
+    );
+  }
+
+  return <Button onPress={handlePress} title="Do thing" />;
+}
+```
+
+### Global Error Handling With Fallback UI
+
+To show a fallback UI for **any** unhandled JavaScript error (not just render errors), you can create a provider that listens to React Native's global error handler and combines it with `ErrorBoundary`:
+
+```javascript
+import React, { useState, useEffect } from "react";
+import { Button, DeviceEventEmitter, Text, View } from "react-native";
+import * as Sentry from "@sentry/react-native";
+
+// Set up the global error listener before Sentry.init()
+const globalHandler = global.ErrorUtils?.getGlobalHandler();
+global.ErrorUtils?.setGlobalHandler((error, isFatal) => {
+  DeviceEventEmitter.emit("GLOBAL_UNHANDLED_ERROR", error);
+
+  // Call the default handler in development for the React Native red box.
+  // In production, we skip the default handler to prevent the app from
+  // crashing so the fallback UI can be shown instead.
+  if (__DEV__ && globalHandler) {
+    globalHandler(error, isFatal);
+  }
+});
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+});
+
+function GlobalFallback({ onReset }) {
+  return (
+    <View>
+      <Text>Something went wrong.</Text>
+      <Button onPress={onReset} title="Restart" />
+    </View>
+  );
+}
+
+function AppErrorProvider({ children }) {
+  const [globalError, setGlobalError] = useState(null);
+
+  useEffect(() => {
+    const subscription = DeviceEventEmitter.addListener(
+      "GLOBAL_UNHANDLED_ERROR",
+      (error) => setGlobalError(error)
+    );
+    return () => subscription.remove();
+  }, []);
+
+  if (globalError) {
+    return <GlobalFallback onReset={() => setGlobalError(null)} />;
+  }
+
+  return (
+    <Sentry.ErrorBoundary
+      fallback={({ resetError }) => (
+        <GlobalFallback onReset={resetError} />
+      )}
+    >
+      {children}
+    </Sentry.ErrorBoundary>
+  );
+}
+```
+
+<Alert level="info" title="Note">
+
+When intercepting the global error handler, unhandled errors will still be reported to Sentry by the `reactNativeErrorHandlersIntegration`. You do **not** need to call `Sentry.captureException` manually in the global handler.
+
+</Alert>
 
 ## Options
 
@@ -195,3 +320,25 @@ function MyComponent({ props }) {
 
 export default MyComponent;
 ```
+
+## Troubleshooting
+
+### Fallback Not Rendering
+
+If your `ErrorBoundary` fallback isn't appearing, make sure the error is happening **during rendering**. Errors thrown in event handlers (like `onPress`), `setTimeout`, `async` functions, or Promises won't trigger the fallback. See [Handling Non-Render Errors](#handling-non-render-errors).
+
+To verify your ErrorBoundary is working, trigger a render error via component state:
+
+```javascript
+const [crash, setCrash] = useState(false);
+
+if (crash) {
+  throw new Error("Test render error");
+}
+
+return <Button onPress={() => setCrash(true)} title="Test ErrorBoundary" />;
+```
+
+### Screenshots Capture the Fallback Instead of the Error
+
+When using `attachScreenshot: true` with `ErrorBoundary`, the captured screenshot may show the fallback component instead of the screen at the time of the error. This happens because the screenshot is taken shortly after the error is captured, by which time React has already rendered the fallback UI. This is a known limitation.
