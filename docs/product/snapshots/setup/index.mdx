@@ -1,0 +1,126 @@
+---
+title: Upload Snapshots
+sidebar_order: 10
+description: Structure your snapshot directory and upload from CI with sentry-cli.
+---
+
+<Include name="feature-available-for-user-group-early-adopter" />
+
+Each snapshot consists of two files: a `.png` image and a `.json` metadata sidecar with the same base name. You can organize snapshots into subdirectories — the CLI reads the entire directory tree.
+
+```
+snapshots/
+├── homepage.png
+├── homepage.json
+├── settings/
+│   ├── profile.png
+│   ├── profile.json
+│   ├── billing.png
+│   └── billing.json
+```
+
+Filenames are the identity key for each snapshot. Keep them stable across runs so Sentry can accurately diff head against base.
+
+## Metadata
+
+The `.json` sidecar describes its paired `.png`:
+
+```json
+{
+  "display_name": "Billing Page",
+  "group": "Settings"
+}
+```
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `display_name` | string | Human-readable label shown in the comparison viewer. |
+| `group` | string | Groups related snapshots in the comparison viewer sidebar. |
+
+You can add arbitrary custom key-value pairs to the JSON file — they are preserved as metadata.
+
+The CLI automatically computes and adds `content_hash`, `width`, and `height` at upload time. Do not set these yourself.
+
+## Upload With CI
+
+To see the workflow Sentry uses on its own codebase, view the [frontend snapshots workflow](https://github.com/getsentry/sentry/blob/master/.github/workflows/frontend-snapshots.yml).
+
+Below is a complete GitHub Actions workflow you can copy into your repository. Replace the placeholder values with your own snapshot generation command, app ID, and Sentry project slug.
+
+```yml {filename:.github/workflows/snapshots.yml}
+name: Snapshots
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+env:
+  SNAPSHOT_OUTPUT_DIR: .artifacts/snapshots
+
+jobs:
+  snapshots:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Use PR head SHA, not the merge commit — avoids phantom diffs
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      # -------------------------------------------------------
+      # YOUR SNAPSHOT GENERATION STEP(S) HERE
+      # -------------------------------------------------------
+      # Generate PNG + JSON pairs into $SNAPSHOT_OUTPUT_DIR.
+      # Examples:
+      #   - Playwright screenshots
+      #   - Storybook captures
+      #   - iOS/Android simulator screenshots
+      #   - Any tool that produces PNGs
+      # -------------------------------------------------------
+      - name: Generate snapshots
+        run: <your-snapshot-command>
+
+      - name: Install sentry-cli
+        if: ${{ !cancelled() }}
+        run: curl -sL https://sentry.io/get-cli/ | SENTRY_CLI_VERSION=3.3.4 sh
+
+      - name: Upload snapshots
+        if: ${{ !cancelled() }}
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_SNAPSHOTS_AUTH_TOKEN }}
+        run: |
+          ARGS=(
+            --auth-token "$SENTRY_AUTH_TOKEN"
+            build snapshots "${{ env.SNAPSHOT_OUTPUT_DIR }}"
+            --app-id <your-app-id>
+            --project <your-sentry-project>
+            --head-sha "${{ github.event.pull_request.head.sha || github.sha }}"
+            --vcs-provider github
+            --head-repo-name "${{ github.repository }}"
+          )
+
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            ARGS+=(
+              --base-sha "${{ github.event.pull_request.base.sha }}"
+              --base-repo-name "${{ github.repository }}"
+              --head-ref "${{ github.head_ref }}"
+              --base-ref "${{ github.base_ref }}"
+              --pr-number "${{ github.event.number }}"
+            )
+          fi
+
+          sentry-cli "${ARGS[@]}"
+```
+
+A few things to note about this workflow:
+
+- **Checkout at PR head SHA** — Using `ref: ${{ github.event.pull_request.head.sha || github.sha }}` avoids phantom diffs caused by the merge commit GitHub generates by default.
+- **Upload even on partial failure** — The `if: ${{ !cancelled() }}` condition ensures partial results still get uploaded if some snapshot tests fail.
+- **Keep `--app-id` consistent** — The `app_id` ties head and base uploads together. Sentry finds the baseline by matching the same `app_id` at the `base_sha`. Use one `app_id` per logical app or bundle.
+
+Other CI systems work by passing the same flags to `sentry-cli build snapshots` explicitly.

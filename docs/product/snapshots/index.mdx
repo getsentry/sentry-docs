@@ -1,0 +1,29 @@
+---
+title: Snapshots
+sidebar_order: 138
+description: Detect visual changes by comparing PNG snapshots against a baseline on every pull request.
+new: true
+---
+
+<Include name="feature-available-for-user-group-early-adopter" />
+
+Snapshots catches visual regressions before they reach users. Your CI pipeline generates PNG screenshots, uploads them to Sentry, and Sentry compares each image against a baseline from your main branch using pixel-level diffing.
+
+When a snapshot changes, Sentry posts a failing GitHub Check on your pull request. You review the diff in Sentry's comparison viewer and approve or reject the changes.
+
+## How It Works
+
+1. **Generate snapshots** — Your CI job produces PNG screenshots however you like: Playwright, Storybook, simulator captures, or any tool that outputs PNGs.
+2. **Upload to Sentry** — `sentry-cli` uploads the snapshot directory along with Git metadata so Sentry can associate each upload with a commit.
+3. **Sentry diffs against the baseline** — Sentry finds the most recent snapshot set from your base branch (matched by `app_id`) and categorizes each image as added, removed, modified, renamed, or unchanged.
+4. **Result posted to your PR** — A "Snapshot Testing" GitHub Check appears on the pull request. It passes if nothing changed and fails if any snapshots need approval.
+5. **Review and approve** — Click through to Sentry's comparison viewer to inspect diffs, then approve to resolve the failing check.
+
+## Prerequisites
+
+- **Early Adopter access** — Enable the Early Adopter toggle in your [organization settings](/organization/early-adopter-features/).
+- **Auth token** — A Sentry auth token with `project:write` scope (personal token) or `org:ci` scope (org-level token).
+- **sentry-cli >= 3.3.4** — The `build snapshots` command requires version 3.3.4 or later.
+- **GitHub integration** — Install the [Sentry GitHub App](/organization/integrations/source-code-mgmt/github/) and grant it access to your repository so Sentry can post Check Runs.
+
+<PageGrid />
