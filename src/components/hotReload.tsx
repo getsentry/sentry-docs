@@ -1,6 +1,6 @@
 'use client';
-import {useEffect} from 'react';
 import {useRouter} from 'next/navigation';
+import {useEffect} from 'react';
 
 function HotReload_() {
   const router = useRouter();
@@ -15,13 +15,11 @@ function HotReload_() {
     };
     ws.onmessage = function incoming(msg) {
       if (msg.data === 'reload') {
-        // eslint-disable-next-line no-console
         console.info('[REFRESHING]');
         router.refresh();
       }
     };
     ws.onerror = function error(...err) {
-      // eslint-disable-next-line no-console
       console.error('Hot reload ws error', err);
     };
     ws.onclose = function close() {};

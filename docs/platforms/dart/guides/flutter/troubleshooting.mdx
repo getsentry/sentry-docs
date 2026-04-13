@@ -119,6 +119,47 @@ The `--split-debug-info` option requires setting an output directory. The direct
 
 Flutter's `build web` command requires setting the `--source-maps` parameter to generate source maps. See [Flutter GitHub Issue](https://github.com/flutter/flutter/issues/72150#issuecomment-755541599) for more information.
 
+### Symbolication issues with `--split-debug-info` and Android flavors
+
+<Alert>Affected versions: Flutter 3.32.0 and later</Alert>
+
+When using Android product flavors together with `--split-debug-info`, Flutter/Gradle may compile another release flavor and overwrite the selected flavor's `.symbols` files. This can leave you with mismatched or unusable debug symbols.
+
+#### Workaround
+
+1. In `android/app/build.gradle.kts`, ignore release variants you are not actively building. This prevents another flavor from overwriting the selected flavor's symbols.
+2. Pass the active flavor in the build command so Gradle only keeps the variant you want.
+
+```kotlin
+android {
+    variantFilter {
+        // Only keep the selected release flavor to avoid split-debug-info
+        // being overwritten by other release variants.
+        if (buildType?.name != "release") return@variantFilter
+
+        val activeFlavor = (project.findProperty("active-flavor") as String?)
+            ?.lowercase()
+            ?: return@variantFilter
+
+        val variantFlavors = flavors.map { flavor -> flavor.name.lowercase() }
+        if (activeFlavor !in variantFlavors) {
+            ignore = true
+        }
+    }
+}
+```
+
+Build with matching values for `--flavor` and `active-flavor`:
+
+```bash
+flutter build appbundle \
+  --flavor=googlePlay \
+  --target=lib/main_googlePlay.dart \
+  --obfuscate \
+  --split-debug-info=debug_info/googlePlay \
+  --android-project-arg=active-flavor=googlePlay
+```
+
 ## Issues with native crashes on Linux and/or Windows
 
 By default the Sentry Flutter SDK will enable native crash reporting on Linux and Windows with `crashpad`.
@@ -131,7 +172,7 @@ On Linux, compiling your Flutter Desktop app with the crashpad backend can fail 
 
  - Update your clang to at least version 13, then try again.
  - If you still encounter errors, please file an issue on our [Sentry Dart GitHub repository](https://github.com/getsentry/sentry-dart/issues/).
- 
+
 ### Java or JNI Errors when compiling on Flutter Desktop
 
 Since Sentry Flutter SDK version `9.0.0`, we improved how the SDK works on Android by switching from method channels to JNI (Java Native Interface) for certain operations.

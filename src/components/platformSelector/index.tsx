@@ -1,4 +1,9 @@
 'use client';
+import {Combobox, ComboboxItem, ComboboxList, ComboboxProvider} from '@ariakit/react';
+import {CaretRightIcon, CaretSortIcon, MagnifyingGlassIcon} from '@radix-ui/react-icons';
+import * as RadixSelect from '@radix-ui/react-select';
+import {matchSorter} from 'match-sorter';
+import {usePathname} from 'next/navigation';
 import {
   Fragment,
   Ref,
@@ -9,19 +14,12 @@ import {
   useRef,
   useState,
 } from 'react';
-import {Combobox, ComboboxItem, ComboboxList, ComboboxProvider} from '@ariakit/react';
-import {CaretRightIcon, CaretSortIcon, MagnifyingGlassIcon} from '@radix-ui/react-icons';
-import * as RadixSelect from '@radix-ui/react-select';
-import {matchSorter} from 'match-sorter';
-import {usePathname} from 'next/navigation';
-
 import {PlatformIcon} from 'sentry-docs/components/platformIcon';
 import {Platform, PlatformGuide, PlatformIntegration} from 'sentry-docs/types';
 import {uniqByReference} from 'sentry-docs/utils';
 
-import styles from './style.module.scss';
-
 import {SidebarLink, SidebarSeparator} from '../sidebar/sidebarLink';
+import styles from './style.module.scss';
 
 export function PlatformSelector({
   platforms,

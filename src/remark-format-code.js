@@ -53,7 +53,7 @@ async function formatCode(node) {
     });
     // get rid of the trailing newline
     node.value = formattedCode.trimEnd();
-  } catch (e) {
+  } catch {
     // noop - logging here would spam the build logs to a degree of unusability
   }
 }

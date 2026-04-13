@@ -84,7 +84,7 @@ Sentry.init({
 </PlatformSection>
 
 <PlatformSection supported={['javascript.cloudflare', 'javascript.nextjs']}>
-To correctly capture spans, pass the `experimental_telemetry` object with `isEnabled: true` to every `generateText`, `generateObject`, and `streamText` function call. For more details, see the [AI SDK Telemetry Metadata docs](https://sdk.vercel.ai/docs/ai-sdk-core/telemetry#telemetry-metadata).
+To correctly capture spans, pass the `experimental_telemetry` object with `isEnabled: true` to every `generateText`, `generateObject`, `streamText`, and `ToolLoopAgent` call. For more details, see the [AI SDK Telemetry Metadata docs](https://sdk.vercel.ai/docs/ai-sdk-core/telemetry#telemetry-metadata).
 
 ```javascript
 const result = await generateText({
@@ -160,6 +160,34 @@ Sentry.init({
 
 </PlatformSection>
 
+## ToolLoopAgent
+
+The integration also captures spans for the [`ToolLoopAgent`](https://ai-sdk.dev/docs/agents/overview#toolloopagent-class) class. Each call to `generate()` or `stream()` creates an agent span with individual LLM requests and tool executions as child spans.
+
+<PlatformSection notSupported={["javascript.cloudflare", "javascript.nextjs"]}>
+
+No additional configuration is needed — `ToolLoopAgent` spans are captured automatically.
+
+</PlatformSection>
+
+<PlatformSection supported={['javascript.cloudflare', 'javascript.nextjs']}>
+
+Pass `experimental_telemetry` with `isEnabled: true` to the `ToolLoopAgent` constructor to correctly capture spans:
+
+</PlatformSection>
+
+```javascript
+const agent = new ToolLoopAgent({
+  model: openai("gpt-4o"),
+  tools: { /* ... */ },
+  experimental_telemetry: { isEnabled: true },
+});
+
+const result = await agent.generate({
+  prompt: "What is the weather in San Francisco?",
+});
+```
+
 ## Identifying functions
 
 In order to make it easier to correlate captured spans with the function calls we recommend setting `functionId` in `experimental_telemetry` in all generation function calls:
@@ -170,6 +198,19 @@ const result = await generateText({
   experimental_telemetry: {
     isEnabled: true,
     functionId: "my-awesome-function",
+  },
+});
+```
+
+For `ToolLoopAgent`, set `functionId` in the constructor:
+
+```javascript
+const agent = new ToolLoopAgent({
+  model: openai("gpt-4o"),
+  tools: { /* ... */ },
+  experimental_telemetry: {
+    isEnabled: true,
+    functionId: "weather-agent",
   },
 });
 ```

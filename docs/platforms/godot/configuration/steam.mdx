@@ -1,0 +1,37 @@
+---
+title: Steam, SteamOS, and Proton
+description: Learn about Sentry SDK support for Steam environments, including SteamOS, Wine/Proton, and Steam Deck.
+sidebar_order: 101
+---
+
+The Sentry Godot SDK automatically detects Steam environments — including SteamOS, Wine/Proton, and Steam Deck — and enriches your error reports with platform-specific context like OS and device context, and Proton Runtime version.
+
+A `steam: "true"` tag is added to all events when a Steam environment is detected. Use this tag to filter events from Steam users in Sentry. You can also filter by `runtime` and `runtime.name` tags to narrow down issues by Proton version.
+
+<Alert level="info">
+
+Steam environment detection requires SDK version **1.5.0** or later.
+
+</Alert>
+
+## Troubleshooting
+
+### Library Loading Fails With SteamLinuxRuntime
+
+If you distribute your game on Steam using the oldest Linux runtime (`scout`), the SDK may fail to load with an error like:
+
+```
+ERROR: Can't open dynamic library: libsentry.linux.debug.x86_64.so.
+Error: libcurl.so.4: version `CURL_OPENSSL_4` not found
+(required by libsentry.linux.debug.x86_64.so).
+```
+
+This happens because `scout` bundles an outdated version of `libcurl` that is incompatible with the Sentry native SDK.
+
+**Solution:** Switch to the `sniper` runtime for your game's Linux distribution on Steam. This is the runtime [recommended by Valve](https://partner.steamgames.com/doc/store/application/platforms/linux) for all new Linux-native games.
+
+<Alert level="warning" title="Godot Editor on Steam">
+
+The Godot editor installed via Steam is locked to the `scout` runtime and doesn't allow switching to `sniper`. If you need the Sentry SDK during development, use the standalone Godot editor from [godotengine.org](https://godotengine.org/download/) instead.
+
+</Alert>
