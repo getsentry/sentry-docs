@@ -19,9 +19,23 @@ You need:
 - Your application up and running
 - Angular version `14.0.0` or above
 
-## Step 1: Install
+<StepComponent>
 
-### Install the Sentry SDK
+## Install
+
+<SplitLayout>
+
+<SplitSection>
+
+<SplitSectionText>
+
+Run the command for your preferred package manager to add the Sentry SDK to your application.
+
+If you're updating your Sentry SDK to the latest version, check out our [migration guide](https://github.com/getsentry/sentry-javascript/blob/master/MIGRATION.md) to learn more about breaking changes.
+
+</SplitSectionText>
+
+<SplitSectionCode>
 
 ```bash {tabTitle:npm}
 npm install @sentry/angular --save
@@ -34,6 +48,10 @@ yarn add @sentry/angular
 ```bash {tabTitle:pnpm}
 pnpm add @sentry/angular
 ```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
 <Expandable title="Which SDK version should you use with your Angular version?" permalink="true" level="warning">
 
@@ -59,9 +77,7 @@ Since version 8, `@sentry/angular-ivy` was <PlatformLink to="/migration/v7-to-v8
 
 </Expandable>
 
-If you're updating your Sentry SDK to the latest version, check out our [migration guide](https://github.com/getsentry/sentry-javascript/blob/master/MIGRATION.md) to learn more about breaking changes.
-
-## Step 2: Configure
+## Configure
 
 Choose the features you want to configure, and this guide will show you how:
 
@@ -77,10 +93,19 @@ Choose the features you want to configure, and this guide will show you how:
 
 <Include name="quick-start-features-expandable" />
 
-The main configuration should happen as early as possible in your app's lifecycle. Typically that means in your `main.ts` file.
-In addition, you'll need to register some providers to fully instrument your application.
-
 ### Initialize the SDK
+
+<SplitLayout>
+
+<SplitSection>
+
+<SplitSectionText>
+
+The main configuration should happen as early as possible in your app's lifecycle. Typically that means in your `main.ts` file.
+
+</SplitSectionText>
+
+<SplitSectionCode>
 
 ```typescript {tabTitle: App Config} {filename: main.ts} {5-48}
 import { bootstrapApplication } from "@angular/platform-browser";
@@ -213,9 +238,29 @@ platformBrowserDynamic()
   .catch((err) => console.error(err));
 ```
 
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
 ### Register Sentry Providers
 
+<SplitLayout>
+
+<SplitSection>
+
+<SplitSectionText>
+
 The Sentry Angular SDK exports a couple of Angular providers that are necessary to fully instrument your application. We recommend registering them in your `app.config.ts` or main `app.module.ts`:
+
+<Alert level="warning">
+
+If your Angular app is configured for SSR, make sure that the Sentry providers are not accidentally passed to the SSR config (`app.config.server.ts`). The Sentry Angular SDK can only be used in the browser.
+
+</Alert>
+
+</SplitSectionText>
+
+<SplitSectionCode>
 
 ```typescript {tabTitle: App Config (Angular 19+)} {filename: app.config.ts} {9, 14-25}
 import {
@@ -312,11 +357,9 @@ import * as Sentry from "@sentry/angular";
 export class AppModule {}
 ```
 
-<Alert>
-
-If your Angular app is configured for SSR, make sure that the Sentry providers are not accidentally passed to the SSR config (`app.config.server.ts`). The Sentry Angular SDK can only be used in the browser.
-
-</Alert>
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
 <OnboardingOption optionId="performance">
 
@@ -337,23 +380,35 @@ export class AppModule {
 
 </OnboardingOption>
 
-## Step 3: Add Readable Stack Traces With Source Maps (Optional)
+### Add Readable Stack Traces With Source Maps (Optional)
 
-<PlatformContent includePath="getting-started-sourcemaps-short-version" />
+<PlatformContent includePath="getting-started-sourcemaps-short-version-splitlayout" />
 
-Alternatively, take a look at our <PlatformLink to="/sourcemaps">Uploading Source Maps</PlatformLink> docs
+### Avoid Ad Blockers With Tunneling (Optional)
 
-## Step 4: Avoid Ad Blockers With Tunneling (Optional)
+<PlatformContent includePath="getting-started-tunneling-splitlayout" />
 
-<PlatformContent includePath="getting-started-tunneling" />
-
-## Step 5: Verify
+## Verify
 
 Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
 
 ### Issues
 
-To verify that Sentry captures errors and creates issues in your Sentry project, add the following test button to one of your components (e.g. `app.component.ts`), which will trigger an error that Sentry will capture when you click it:
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+To verify that Sentry captures errors and creates issues in your Sentry project, add the following test button to one of your components (e.g. `app.component.ts`), which will trigger an error that Sentry will capture when you click it.
+
+<OnboardingOption optionId="performance" hideForThisOption>
+  Open the page in a browser and click the button to trigger a frontend error.
+</OnboardingOption>
+
+<PlatformContent includePath="getting-started-browser-sandbox-warning" />
+
+</SplitSectionText>
+
+<SplitSectionCode>
 
 ```javascript {filename: app.component.ts} {5, 9-11}
 @Component({
@@ -370,16 +425,24 @@ class AppComponent {
 }
 ```
 
-<OnboardingOption optionId="performance" hideForThisOption>
-  Open the page in a browser and click the button to trigger a frontend error.
-</OnboardingOption>
-
-<PlatformContent includePath="getting-started-browser-sandbox-warning" />
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
 <OnboardingOption optionId="performance">
 ### Tracing
 
-To test your tracing configuration, update the previous code snippet to start a trace to measure the time it takes to execute your code:
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+To test your tracing configuration, update the previous code snippet to start a trace to measure the time it takes to execute your code.
+
+Open the page in a browser and click the button to trigger a frontend error and performance trace.
+
+</SplitSectionText>
+
+<SplitSectionCode>
 
 ```javascript {filename: app.component.ts} {10-11, 13-14}
 @Component({
@@ -400,13 +463,15 @@ class AppComponent {
 }
 ```
 
-Open the page in a browser and click the button to trigger a frontend error and performance trace.
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
 </OnboardingOption>
 
 <OnboardingOption optionId="logs">
 
-<Include name="logs/javascript-quick-start-verify-logs" />
+<Include name="logs/javascript-quick-start-verify-logs-splitlayout" />
 
 </OnboardingOption>
 
@@ -422,6 +487,7 @@ At this point, you should have integrated Sentry into your Angular application a
 
 Now's a good time to customize your setup and look into more advanced topics. Our next recommended steps for you are:
 
+- Explore [practical guides](/guides/) on what to monitor, log, track, and investigate after setup
 - Extend Sentry to your backend using one of our [SDKs](/)
 - Continue to <PlatformLink to="/configuration">customize your configuration</PlatformLink>
 - Make use of <PlatformLink to="/features">Angular-specific features</PlatformLink>
@@ -434,3 +500,5 @@ Now's a good time to customize your setup and look into more advanced topics. Ou
 - [Get support](https://sentry.zendesk.com/hc/en-us/)
 
 </Expandable>
+
+</StepComponent>

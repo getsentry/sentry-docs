@@ -39,7 +39,7 @@ If you're implementing Span-First (as a PoC) in your SDK, take an iterative appr
    - Either reuse existing heuristics (e.g. flush when segment span ends) or build a simple span buffer to flush spans (e.g. similar to the existing buffers for logs or metrics).
    - Implementing the more complex [Telemetry Processor](/sdk/foundations/processing/telemetry-processor/) buffer and scheduler can happen at a later stage.
 6. Achieve data parity with the existing transaction events.
-   - Ensure that the data added by SDK integrations, event processors, etc. to transaction events is also added to the spans (see [Event Processors](#tbd-event-processors)).
+   - Ensure that the data added by SDK integrations, event processors, etc. to transaction events is also added to the spans (see [Event Processors](#replacing-event-processors)).
    - Most additional data MUST only be added to the segment span. See [Common Attributes](../span-protocol/#common-attribute-keys) for attributes that MUST be added to every span.
    - Mental model: All data our SDKs _automatically_ add to a transaction, MUST also be added to the segment span.
 7. Implement the span telemetry buffer for proper, weighted span flushing. See [Span Buffer](/sdk/telemetry/spans/span-buffer/) for more details.
@@ -81,7 +81,7 @@ If a span is unsampled (for example, because it has a negative sampling decision
 
 ## Single-Span Processing Pipeline
 
-SDKs MUST expose a `captureSpan` API that takes a single span once it ends, and then processes and enqueues it into the span buffer. In most cases, this API SHOULD be exposed as a method on the `Client`. SDKs (e.g. JS Browser) MAY chose a different location if necessary.
+SDKs MUST implement a `captureSpan` API that takes a single span once it ends, and then processes and enqueues it into the span buffer. In most cases, this API SHOULD be exposed as a method on the `Client`. SDKs (e.g. JS Browser) MAY chose a different location if necessary.
 
 Here's a rough overview of what `captureSpan` should do in which order:
 
@@ -90,7 +90,7 @@ Here's a rough overview of what `captureSpan` should do in which order:
 3. Apply [common span attributes](../span-protocol/#common-attribute-keys) from the client and the merged scope data to every span.
 4. Apply [scope attributes](../../scopes/#setting-attributes) from the merged scope data to every span.
 5. Apply `contexts` and `request` data from the merged scopes to the segment span only.
-6. Apply any span processing hooks (i.e. event processor replacements) to the span.
+6. Apply any span processing hooks (i.e. [event processor replacements](#replacing-event-processors)) to the span.
 7. Apply the `before_send_span` callback to the span.
 8. Enqueue the span into the span buffer.
 
@@ -98,48 +98,49 @@ The `captureSpan` pipeline MUST NOT
 
 - drop any span
 - buffer spans before enqueuing them
+- modify span relationships
 
-### [TMP solution] Span Filtering
+### Span Filtering
 
-For the moment, we settled on `ignore_spans` being applied prior to span start. This means that the `captureSpan` pipeline doesn't have to handle filtering spans. However, there are some drawbacks with this approach, most prominently:
+For details and specifications, see [Span Filtering](../filtering).
+
+We settled on `ignore_spans` being applied prior to span start. This means that the `captureSpan` pipeline doesn't have to handle filtering spans. However, there are some drawbacks with this approach, most prominently:
 
 - Not being able to filter on span names or data that is added/updated post span start
 - Not being able to filter entire segments (e.g. `http.server` segments for bot requests resulting in 404 errors)
 
 We might revisit this, which could require changes to the single-span processing pipeline.
 
-For now, this means though:
+### Replacing Event Processors
 
-- Whenever `ignore_spans` is applied, SDKs MUST NOT start an actual span. Instead, they SHOULD start a No-op ("non-recording") span, which has no influence on the trace hierarchy.
-- SDKS MUST record client outcomes for ignored spans
-- SDKs MUST apply `ignore_spans` to every span if at all possible (POTel SDKs are excepted, but encouraged to do so as well)
+Given that spans no longer are events (as opposed to transactions), they don't go through SDK event processors, which are extensively used throughout the SDKs (clients, integrations) but also by users.
+Instead, we defined replacement APIs for users and SDK-internal use cases.
 
-### [TBD] Event Processors
+For user-facing migration, we should aim to solve every use case with [`ignore_spans`](../filtering/#filter-with-ignorespans) for filtering and [`before_send_span`](../scrubbing-data/#scrubbing-data-with-beforesendspan) for span data enrichment and scrubbing.
 
-Given that spans no longer are events (as opposed to transactions), they don't go through our event processors, which are exensively used throughout the SDKs (clients, integrations) but also by users.
-Instead, we need to find another way for users or integrations to enrich and mutate spans.
+For SDK-internal processing, SDKs are free to implement further processing mechanisms as they see fit. 
+It's strongly recommended to implement client [lifecycle hooks](https://github.com/getsentry/rfcs/blob/main/text/0034-sdk-lifecycle-hooks.md). 
+The `captureSpan` pipeline emits a `process_span` message that any consumer (e.g. an integration) can subscribe to. 
+The consumer can then apply its logic to spans, similarly to how it might have applied it in event processors before. 
+SDKs having alternative processing patterns established can also use them. 
 
-For user-facing migration, we should try to solve every use case with `ignore_spans` (for filtering) and `before_send_span` (for enrichment, data scrubbing and span mutation).
+```txt
+// in captureSpan:
+processed_span = client.emit("process_span", captured_span)
 
-For SDK-internal processing, we're still evaluating the preferred approach but there are two main options:
+// Somewhere in e.g. an integration:
+client.on("process_span", (span) => {
+   span.attributes["sentry.origin"] = "auto.http.server"
+})
+```
 
-1. Expose new APIs for integrations (and secondarily users) to process a span.
-   For example via SDK lifecycle hooks (implemented in the JS SDK).
-   Every integration would have to listen to this hook and apply its logic to spans.
-   SDKs need to add a subscriber to the hook everywhere where they currently add an event processor.
-   - Pro: Clear separation and semantics
-   - Pro: Easy to implement and maintain
-   - Con: Leads to a lot of duplication whenever event processors apply to more than transaction events (these we can eventually drop once span-first becomes the default)
-   - Con: Users have to rewrite their event processors or perhaps their integrations. Not many users write their own processors but they definitely exist. Also 3rd party published integrations would be affected.
-2. Construct a pseudo-event from the span and invoke event processors during `captureSpan`.
-   Once the processors were applied, back-merge the modified pseudo event into the span.
-   - Pro: Less duplication of code
-   - Pro: No/less need to rewrite existing instrumentations/integrations to support span-first
-   - Con: Because of the single-span processing approach, we cannot add child spans to the pseudo event. Even if we somehow made this possible, we have no guarantee that the entire span tree would be present. Similarly to the [span filtering implications](#tmp-solution-span-filtering).
-   - Con: back-merging is complex and might not be able to cover every aspect
-   - Con: Very obscure behaviour (to us and users) and contradicts our commitment to move away from events in the future.
+SDK authors working on Span-First are encouraged to evaluate this approach and provide feedback and perspective.
 
-SDK authors working on Span-First are encouraged to evaluate both options, try them out and provide perspective as well as better solutions.
+**Out of scope**: Event processors could be registered on scopes. 
+For now, we don't see a need to continue supporting scoped processing. 
+We can re-evaluate if a use case comes up that can't be solved with client-wide processing hooks.
+
+**To sum up**: Spans no longer going through event processors is a behaviour-breaking change. For users, `ignore_spans` and `before_send_span` should be the way forward. Internally, SDKs may use further processing mechanisms.
 
 ## Span Buffer
 

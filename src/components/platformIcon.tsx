@@ -43,6 +43,7 @@ import EchoSVG from 'platformicons/svg/echo.svg';
 import EffectSVG from 'platformicons/svg/effect.svg';
 import ElectronSVG from 'platformicons/svg/electron.svg';
 import ElixirSVG from 'platformicons/svg/elixir.svg';
+import ElysiaSVG from 'platformicons/svg/elysia.svg';
 import EmberSVG from 'platformicons/svg/ember.svg';
 import ExpressSVG from 'platformicons/svg/express.svg';
 import FalconSVG from 'platformicons/svg/falcon.svg';
@@ -194,6 +195,7 @@ import EchoSVGLarge from 'platformicons/svg_80x80/echo.svg';
 import EffectSVGLarge from 'platformicons/svg_80x80/effect.svg';
 import ElectronSVGLarge from 'platformicons/svg_80x80/electron.svg';
 import ElixirSVGLarge from 'platformicons/svg_80x80/elixir.svg';
+import ElysiaSVGLarge from 'platformicons/svg_80x80/elysia.svg';
 import EmberSVGLarge from 'platformicons/svg_80x80/ember.svg';
 import ExpressSVGLarge from 'platformicons/svg_80x80/express.svg';
 import FalconSVGLarge from 'platformicons/svg_80x80/falcon.svg';
@@ -491,6 +493,10 @@ const formatToSVG = {
   elixir: {
     sm: ElixirSVG,
     lg: ElixirSVGLarge,
+  },
+  elysia: {
+    sm: ElysiaSVG,
+    lg: ElysiaSVGLarge,
   },
   ember: {
     sm: EmberSVG,
@@ -993,6 +999,7 @@ export const PLATFORM_TO_ICON = {
   'javascript-deno': 'deno',
   'javascript-effect': 'effect',
   'javascript-electron': 'electron',
+  'javascript-elysia': 'elysia',
   'javascript-ember': 'ember',
   'javascript-express': 'express',
   'javascript-gatsby': 'gatsby',

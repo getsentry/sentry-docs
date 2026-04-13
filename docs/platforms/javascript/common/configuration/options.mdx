@@ -12,6 +12,10 @@ sidebar_order: 1
 ## Core Options
 
 <SdkOption name='dsn' type='string' envVar='SENTRY_DSN'>
+  <PlatformSection supported={["javascript.electron"]}>
+    **Note:** Electron `main` process only.
+  </PlatformSection>
+
   The DSN tells the SDK where to send the events. If this is not set, the SDK will not send any events.
   Learn more about [DSN utilization](/product/sentry-basics/dsn-explainer/#dsn-utilization).
 <PlatformContent includePath="configuration/dsn" />
@@ -36,6 +40,9 @@ Turns debug mode on or off. If debug is enabled SDK will attempt to print out us
 </SdkOption>
 
 <SdkOption name="release" type='string' envVar="SENTRY_RELEASE">
+  <PlatformSection supported={["javascript.electron"]}>
+    **Note:** Electron `main` process only.
+  </PlatformSection>
 
 Sets the release. Release names are strings, but some formats are detected by Sentry and might be rendered differently. Learn more about how to send release data so Sentry can tell you about regressions between releases and identify the potential source in [the releases documentation](/product/releases/) or the <SandboxLink scenario="releases">sandbox</SandboxLink>.
 
@@ -57,6 +64,9 @@ Sets the release. Release names are strings, but some formats are detected by Se
 </SdkOption>
 
 <SdkOption name="environment" type='string' defaultValue='production' envVar='SENTRY_ENVIRONMENT'>
+  <PlatformSection supported={["javascript.electron"]}>
+    **Note:** Electron `main` process only.
+  </PlatformSection>
 
 Sets the environment. Defaults to `development` or `production` depending on whether the application is packaged.
 
@@ -88,6 +98,10 @@ This variable controls the total amount of breadcrumbs that should be captured. 
 
 <SdkOption name="attachStacktrace" type='boolean' defaultValue='false'>
 
+<PlatformSection supported={["javascript.electron"]}>
+  Enabled per Electron process.
+</PlatformSection>
+
 When enabled, stack traces are automatically attached to all messages logged. Stack traces are always attached to exceptions; however, when this option is set, stack traces are also sent with messages. This option, for instance, means that stack traces appear next to all messages captured with `Sentry.captureMessage()`.
 
 Grouping in Sentry is different for events with stack traces and without. As a result, you will get new groups as you enable or disable this flag for certain events.
@@ -105,12 +119,17 @@ Most SDKs will attempt to auto-discover this value.
 <PlatformSection supported={['javascript.electron']}>
 <SdkOption name="autoSessionTracking" type='boolean' defaultValue='true'>
 
+**Note:** Electron `main` process only.
+
 When not set to `false`, the SDK tracks sessions linked to the lifetime of the Electron main process.
 
 </SdkOption>
 </PlatformSection>
 
 <SdkOption name="initialScope" type="CaptureContext">
+  <PlatformSection supported={["javascript.electron"]}>
+    **Note:** Electron `main` process only.
+  </PlatformSection>
 
 Data to be set to the initial scope. Initial scope can be defined either as an object or a callback function, as shown below.
 
@@ -196,6 +215,10 @@ See <PlatformLink to="/configuration/integrations/#modifying-default-integration
 
 <SdkOption name="beforeBreadcrumb" type='(breadcrumb: Breadcrumb, hint?: BreadcrumbHint) => Breadcrumb | null'>
 
+<PlatformSection supported={["javascript.electron"]}>
+  Controls breadcrumb capture in the Electron process where callback is set.
+</PlatformSection>
+
 This function is called with a breadcrumb object before the breadcrumb is added to the scope. When nothing is returned from the function, the breadcrumb is dropped. To pass the breadcrumb through, return the first argument, which contains the breadcrumb object.
 The callback gets a second argument (called a "hint") which contains the original object from which the breadcrumb was created to further customize what the breadcrumb should look like.
 
@@ -203,7 +226,9 @@ The callback gets a second argument (called a "hint") which contains the origina
 
 <SdkOption name="transport" type="(transportOptions: TransportOptions) => Transport">
 
-The JavaScript SDK uses a transport to send events to Sentry. On modern browsers, most transports use the browsers' fetch API to send events. Transports will drop an event if it fails to send due to a lack of connection.
+<PlatformSection notSupported={["javascript.electron"]}>
+  The JavaScript SDK uses a transport to send events to Sentry. On modern browsers, most transports use the browsers' fetch API to send events. Transports will drop an event if it fails to send due to a lack of connection.
+</PlatformSection>
 
 <PlatformCategorySection supported={["browser"]}>
   In the browser, a `fetch`-based transport is used by default.
@@ -212,6 +237,10 @@ The JavaScript SDK uses a transport to send events to Sentry. On modern browsers
 <PlatformCategorySection supported={["server", "serverless"]}>
   On the server, a `https`-based transport is used by default.
 </PlatformCategorySection>
+
+<PlatformSection supported={["javascript.electron"]}>
+  In the Electron `main` process, the default transport handles queuing events when the users device is offline. In Electron `renderer` processes, the default transport forwards events to the main process.
+</PlatformSection>
 
 </SdkOption>
 
@@ -249,8 +278,8 @@ Options used to configure the transport. This is an object with the following po
 
 The Electron SDK provides built-in offline support that queues events when the app is offline and automatically sends them once the connection is restored. These options let you configure the following behavior:
 
-- `maxAgeDays`: The maximum number of envelopes to keep in the queue.
-- `maxQueueSize`: The maximum number of days to keep an envelope in the queue.
+- `maxAgeDays`: The maximum number of days to keep an envelope in the queue.
+- `maxQueueSize`: The maximum number of envelopes to keep in the queue.
 - `flushAtStartup`: Whether the offline store should flush shortly after application startup. Defaults to `false`.
 - `shouldSend`: Called before the SDK attempts to send an envelope to Sentry. If this function returns false, `shouldStore` will be called to determine if the envelope should be stored. Defaults to `() => true`.
 - `shouldStore`: Called before an event is stored. Return `false` to drop the envelope rather than store it. Defaults to `() => true`.
@@ -283,6 +312,7 @@ This means the SDK detected that the library hasn't been wrapped for automatic p
 
 <PlatformSection supported={['javascript.electron']}>
 <SdkOption name="ipcMode" type="'IPCMode.Classic' | 'IPCMode.Protocol' | 'IPCMode.Both'" defaultValue="'IPCMode.Both'">
+**Note:** Electron `main` process only.
 
 Inter-process communication mode to receive event and scope updates from renderer processes.
 
@@ -331,6 +361,10 @@ If the callback is not set, or it returns `undefined`, the default naming scheme
 
 Configures the sample rate for error events, in the range of `0.0` to `1.0`. The default is `1.0`, which means that 100% of error events will be sent. If set to `0.1`, only 10% of error events will be sent. Events are picked randomly.
 
+<PlatformSection supported={["javascript.electron"]}>
+  In the Electron `main` process `sampleRate` applies to events captured all processes. In Electron `renderer` processes, the `sampleRate` only applies to that process.
+</PlatformSection>
+
 </SdkOption>
 
 <SdkOption name="beforeSend" type='(event: Event, hint: EventHint) => Event | null'>
@@ -338,6 +372,10 @@ Configures the sample rate for error events, in the range of `0.0` to `1.0`. The
 This function is called with an SDK-specific message or error event object, and can return a modified event object, or `null` to skip reporting the event. This can be used, for instance, for manual PII stripping before sending.
 
 By the time `beforeSend` is executed, all scope data has already been applied to the event. Further modification of the scope won't have any effect.
+
+<PlatformSection supported={["javascript.electron"]}>
+  In the Electron `main` process `beforeSend` is called for events captured in all processes. In Electron `renderer` processes, `beforeSend` only applies to that process.
+</PlatformSection>
 
 </SdkOption>
 
@@ -356,6 +394,10 @@ Available options:
 <SdkOption name="ignoreErrors" type='Array<string | RegExp>' defaultValue='[]'>
 
 <Include name="platforms/configuration/options/ignore-errors.mdx" />
+
+<PlatformSection supported={["javascript.electron"]}>
+  In the Electron `main` process `ignoreErrors` applies to events captured in all processes. In Electron `renderer` processes, `ignoreErrors` applies only to that process.
+</PlatformSection>
 
 </SdkOption>
 
@@ -392,6 +434,10 @@ For example, the Sentry Nuxt SDK does not attach an error handler as it's captur
 </PlatformSection>
 
 ## Tracing Options
+
+<PlatformSection supported={["javascript.electron"]}>
+  **Note:** For Electron, tracing options apply to the process where these options are set.
+</PlatformSection>
 
 <SdkOption name="tracesSampleRate" type='number' envVar='SENTRY_TRACES_SAMPLE_RATE'>
 
@@ -527,6 +573,10 @@ See <PlatformLink to="/tracing/distributed-tracing/dealing-with-cors-issues/">De
 </SdkOption>
 
 ## Logs Options
+
+<PlatformSection supported={["javascript.electron"]}>
+  **Note:** For Electron, log options apply to the process where these options are set.
+</PlatformSection>
 
 <SdkOption name="enableLogs" type='boolean' defaultValue='false'>
 
