@@ -121,7 +121,14 @@ Flutter's `build web` command requires setting the `--source-maps` parameter to 
 
 ### Symbolication issues with `--split-debug-info` and Android flavors
 
-If your app uses Android product flavors together with `--split-debug-info`, Flutter/Gradle may compile another release flavor and overwrite the selected flavor's `.symbols` files. This was confirmed for Flutter version 3.32.0 and later. As a workaround, ignore non-selected release variants in `android/app/build.gradle.kts` and pass the active flavor through the build command:
+<Alert>Affected versions: Flutter 3.32.0 and later</Alert>
+
+When using Android product flavors together with `--split-debug-info`, Flutter/Gradle may compile another release flavor and overwrite the selected flavor's `.symbols` files. This can leave you with mismatched or unusable debug symbols.
+
+#### Workaround
+
+1. In `android/app/build.gradle.kts`, ignore release variants you are not actively building. This prevents another flavor from overwriting the selected flavor's symbols.
+2. Pass the active flavor in the build command so Gradle only keeps the variant you want.
 
 ```kotlin
 android {
