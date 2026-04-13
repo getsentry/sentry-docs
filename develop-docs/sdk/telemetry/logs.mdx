@@ -2,7 +2,7 @@
 title: Logs
 description: Structured logging protocol with severity levels, trace context, and batched envelope delivery.
 spec_id: sdk/telemetry/logs
-spec_version: 1.16.0
+spec_version: 2.0.0
 spec_status: stable
 spec_depends_on:
   - id: sdk/foundations/transport/envelopes
@@ -10,6 +10,12 @@ spec_depends_on:
   - id: sdk/foundations/state-management/scopes/attributes
     version: ">=1.0.0"
 spec_changelog:
+  - version: 2.0.0
+    date: 2026-04-09
+    summary: Default enableLogs to true, add auto-emitted logs opt-in requirements for integrations
+  - version: 1.17.0
+    date: 2026-03-05
+    summary: Added `ingest_settings` and `version` to log envelope item
   - version: 1.16.0
     date: 2026-03-04
     summary: Add sentry.timestamp.sequence attribute for deterministic log ordering
@@ -277,6 +283,22 @@ SDKs **MAY** introduce additional options beyond `enableLogs`/`enable_logs` to g
 
 </SpecSection>
 
+<SpecSection id="auto-emitted-logs" status="candidate" since="2.0.0">
+
+### Auto-Emitted Logs
+
+Logs emitted via the [public API](#logger-module) are opt-out. The `enableLogs`/`enable_logs` option **MUST** act as a general kill switch for all logs sent to Sentry. When set to `false`, no logs **MUST** be sent, regardless of whether they originate from the public API, auto-emitting integrations, or third-party bindings.
+
+However, logs that are **automatically emitted by integrations or libraries** without an explicit user call follow different rules because they can generate unexpected volume and cost.
+
+**Integrations that auto-emit logs** - An SDK integration that automatically captures logs (e.g., forwarding `console.log` calls, capturing framework-level diagnostic output) **MUST** be opt-in. The integration **MUST NOT** emit any logs unless the user explicitly enables it. The opt-in mechanism **MAY** be a dedicated integration-level option or requiring the user to explicitly add the integration.
+
+**Third-party log bindings** - An SDK feature that binds to an external library's logging API and mirrors those logs as Sentry logs in the background (e.g., syncing from Python's `logging` module or a framework's built-in logger) **MUST** also be opt-in. Users **MUST** explicitly enable the binding before any logs are forwarded to Sentry.
+
+These rules exist because auto-emitted logs can cause a high volume of telemetry that directly impacts a user's quota. Unlike errors, where users have prior intuition about volume, silently emitting logs on their behalf could lead to unexpected costs. Requiring opt-in ensures users remain in control of their log volume.
+
+</SpecSection>
+
 <SpecSection id="tracing-association" status="candidate" since="1.0.0">
 
 ### Tracing Association
@@ -336,7 +358,7 @@ SDKs **MUST** report count (`log_item`) and size in bytes (`log_byte`) of discar
 
 ### `log` Envelope Item
 
-The `log` envelope item contains an array of log payloads encoded as JSON, allowing multiple logs per envelope item.
+The `log` envelope item payload is a JSON object that **MUST** include an `items` array of log entries, allowing multiple logs per envelope item. The payload **MAY** also include top-level `version` and `ingest_settings` fields as specified in the next section.
 
 An envelope **MUST** contain at most one `log` envelope item — all log entries for a flush are batched into a single item's `items` array. Logs from different traces **MAY** be mixed into the same `log` item, but if they are, the envelope **MUST NOT** include a DSC (dynamic sampling context) header.
 
@@ -355,9 +377,31 @@ An envelope **MUST** contain at most one `log` envelope item — all log entries
   "content_type": "application/vnd.sentry.items.log+json"
 }
 {
+  "version": 2,
+  "ingest_settings": {
+    "infer_ip": "auto",
+    "infer_useragent": "auto"
+  },
   "items": [{..log..}, {..log..}, {..log..}, {..log..}, {..log..}]
 }
 ```
+
+</SpecSection>
+
+<SpecSection id="log-envelope-item-ingest-settings" status="candidate" since="1.17.0">
+
+### `version` and `ingest_settings` properties
+
+The `log` envelope item `ingest_settings` property is an optional JSON object that contains ingestion settings for Relay, for example, to infer certain data from the incoming request.
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `infer_ip` | String | **OPTIONAL** | The setting to infer the IP address from the incoming request. One of `auto` or `never` (default). |
+| `infer_useragent` | String | **OPTIONAL** | The setting to infer the user agent from the incoming request. One of `auto` or `never` (default). |
+
+SDKs like Browser or React Native **MAY** set these to `"auto"` to instruct Relay to infer the IP address or user agent from the incoming request and put it onto the log as an attribute.
+
+For ingestion settings to take effect, the SDK **MUST** also set the `version` property to `2` (`number`) or higher. If `version` is omitted, Relay treats the payload as version `1` and doesn't apply `ingest_settings`.
 
 </SpecSection>
 
@@ -455,13 +499,19 @@ SDKs **MUST** expose the following configuration options:
 
 | Option | Type | Default | Since | Description |
 |--------|------|---------|-------|-------------|
-| `enableLogs` / `enable_logs` | Boolean | `false` | 1.0.0 | Controls whether log envelopes are generated and sent. If `false`, the SDK **MUST NOT** send logs. |
+| `enableLogs` / `enable_logs` | Boolean | `true` | 1.0.0 | Controls whether log envelopes are generated and sent. If `false`, the SDK **MUST NOT** send logs. |
 | `beforeSendLog` / `before_send_log` | Function | — | 1.0.0 | **OPTIONAL** callback receiving a log object. Returns a modified log or `null` to drop it. |
 
-While logs functionality is in an experimental state, SDKs **SHOULD** put these options in an experimental namespace:
+The default for `enableLogs`/`enable_logs` was changed from `false` to `true` in version 2.0.0. The previous default required users to explicitly opt in before they could use the logging primitives. By defaulting to `true`, adding a `Sentry.logger.*` statement is itself the opt-in. Users can start logging without additional configuration. This aligns the behavior with [`enableMetrics`/`enable_metrics`](/sdk/telemetry/metrics/#initialization-options), which also defaults to `true`.
+
+While logs functionality is in an experimental state, SDKs **SHOULD** put these options in an experimental namespace to avoid breaking changes:
 
 ```js
 Sentry.init({
+  // stable
+  enableLogs: true,
+
+  // experimental
   _experiments: { enableLogs: true },
 });
 ```
