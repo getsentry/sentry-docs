@@ -14,18 +14,18 @@ Sentry uses the `gen_ai.agent.name` span attribute to identify agents in the [AI
 
 ## Quick Reference
 
-| Framework               | Platform | How to Name                                                        |
-| ----------------------- | -------- | ------------------------------------------------------------------ |
-| OpenAI Agents SDK       | Python   | `Agent(name="...")`                                                |
-| Pydantic AI             | Python   | `Agent(..., name="...")`                                           |
-| LangChain               | Python   | `create_agent(model, tools, name="...")`                           |
-| LangGraph               | Python   | `.compile(name="...")` or `create_react_agent(..., name="...")`    |
-| Vercel AI SDK           | JS       | `experimental_telemetry: { functionId: "..." }`                    |
-| LangGraph               | JS       | `.compile({ name: "..." })` or `createReactAgent({ name: "..." })` |
-| LangChain               | JS       | `createAgent({ name: "..." })`                                     |
-| Mastra                  | JS       | `Agent({ id: "...", name: "..." })`                                |
-| .NET (M.E.AI)           | .NET     | `options.Experimental.AgentName = "..."`                           |
-| Other / raw LLM clients | Any      | [Manual instrumentation](#manual-instrumentation)                  |
+| Framework               | Platform | How to Name                                                                          |
+| ----------------------- | -------- | ------------------------------------------------------------------------------------ |
+| OpenAI Agents SDK       | Python   | `Agent(name="...")`                                                                  |
+| Pydantic AI             | Python   | `Agent(..., name="...")`                                                             |
+| LangChain               | Python   | `create_agent(model, tools, name="...")`                                             |
+| LangGraph               | Python   | `.compile(name="...")` or `create_react_agent(..., name="...")`                      |
+| Vercel AI SDK           | JS       | `experimental_telemetry: { functionId: "..." }` on `generateText` or `ToolLoopAgent` |
+| LangGraph               | JS       | `.compile({ name: "..." })` or `createReactAgent({ name: "..." })`                   |
+| LangChain               | JS       | `createAgent({ name: "..." })`                                                       |
+| Mastra                  | JS       | `Agent({ id: "...", name: "..." })`                                                  |
+| .NET (M.E.AI)           | .NET     | `options.Experimental.AgentName = "..."`                                             |
+| Other / raw LLM clients | Any      | [Manual instrumentation](#manual-instrumentation)                                    |
 
 ## Framework Integrations
 
@@ -113,7 +113,7 @@ agent = create_react_agent(model, tools, name="dice_agent")
 
 #### Vercel AI SDK
 
-Vercel AI SDK doesn't have a dedicated agent name field. Instead, set `functionId` in `experimental_telemetry` — Sentry uses this as the agent identifier.
+Set `functionId` in `experimental_telemetry` — Sentry uses this as the agent identifier. This works for both `generateText` and `ToolLoopAgent`:
 
 ```javascript
 import { generateText } from "ai";
@@ -125,6 +125,24 @@ const result = await generateText({
   experimental_telemetry: {
     isEnabled: true,
     functionId: "joke_agent",
+  },
+});
+```
+
+For the `ToolLoopAgent` class, set `functionId` in the constructor:
+
+```javascript
+import { ToolLoopAgent } from "ai";
+import { openai } from "@ai-sdk/openai";
+
+const agent = new ToolLoopAgent({
+  model: openai("gpt-4o"),
+  tools: {
+    /* ... */
+  },
+  experimental_telemetry: {
+    isEnabled: true,
+    functionId: "weather_agent",
   },
 });
 ```

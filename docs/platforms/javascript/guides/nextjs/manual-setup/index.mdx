@@ -353,13 +353,13 @@ Prevent ad blockers from blocking Sentry events by routing them through your Nex
   This increases server load. Consider the trade-off for your application.
 </Alert>
 
-<Expandable title="Using Next.js middleware with tunneling">
+<Expandable title="Using Next.js proxy (middleware) with tunneling">
 
-If you're using Next.js middleware (`middleware.ts`) that intercepts requests, exclude the tunnel route:
+If you're using Next.js proxy/middleware that intercepts requests, exclude the tunnel route. The file is called `proxy.ts` in Next.js 16+ and `middleware.ts` in Next.js 15:
 
-```typescript {filename:middleware.ts}
+```typescript {filename:proxy.ts}
 export const config = {
-  matcher: ["/((?!monitoring|_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!sentry-tunnel|_next/static|_next/image|favicon.ico).*)"],
 };
 ```
 
@@ -371,7 +371,7 @@ export const config = {
 ```typescript {filename:next.config.ts}
 export default withSentryConfig(nextConfig, {
   // Use a fixed route (recommended)
-  tunnelRoute: "/monitoring",
+  tunnelRoute: "/sentry-tunnel",
 });
 ```
 

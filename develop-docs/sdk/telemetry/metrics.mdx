@@ -2,7 +2,7 @@
 title: Metrics
 description: Counter, gauge, and distribution metrics sent as batched trace_metric envelope items.
 spec_id: sdk/telemetry/metrics
-spec_version: 2.7.0
+spec_version: 2.8.0
 spec_status: stable
 spec_depends_on:
   - id: sdk/foundations/transport/envelopes
@@ -10,6 +10,9 @@ spec_depends_on:
   - id: sdk/foundations/state-management/scopes/attributes
     version: ">=1.0.0"
 spec_changelog:
+  - version: 2.8.0
+    date: 2026-04-07
+    summary: Added `ingest_settings` and `version` to trace_metric envelope item
   - version: 2.7.0
     date: 2026-03-10
     summary: Auto-emitted metrics and third-party metrics bindings MUST be opt-in
@@ -254,7 +257,7 @@ These rules exist because auto-emitted metrics can cause a high volume of teleme
 
 ### `trace_metric` Envelope Item
 
-Metrics are sent as a `trace_metric` envelope item containing a JSON object with an `items` array. See the [Examples](#full-trace_metric-envelope) section for a complete envelope.
+The `trace_metric` envelope item payload is a JSON object that **MUST** include an `items` array of metric entries, allowing multiple metrics per envelope item. The payload **MAY** also include top-level `version` and `ingest_settings` fields as specified in the next section. See the [Examples](#full-trace_metric-envelope) section for a complete envelope.
 
 An envelope **MUST** contain at most one `trace_metric` envelope item — all metrics for a flush are batched into a single item's `items` array. Metrics from different traces **MAY** be mixed into the same `trace_metric` item, but if they are, the envelope **MUST NOT** include a DSC (dynamic sampling context) header.
 
@@ -273,9 +276,31 @@ An envelope **MUST** contain at most one `trace_metric` envelope item — all me
 	"content_type": "application/vnd.sentry.items.trace-metric+json"
 }
 {
+	"version": 2,
+	"ingest_settings": {
+		"infer_ip": "auto",
+		"infer_useragent": "auto"
+	},
 	"items": [{..metric..}, {..metric..}, {..metric..}]
 }
 ```
+
+</SpecSection>
+
+<SpecSection id="trace-metric-envelope-item-ingest-settings" status="candidate" since="2.8.0">
+
+### `version` and `ingest_settings` properties
+
+The `trace_metric` envelope item `ingest_settings` property is an optional JSON object that contains ingestion settings for Relay, for example, to infer certain data from the incoming request.
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `infer_ip` | String | **OPTIONAL** | The setting to infer the IP address from the incoming request. One of `auto` or `never` (default). |
+| `infer_useragent` | String | **OPTIONAL** | The setting to infer the user agent from the incoming request. One of `auto` or `never` (default). |
+
+SDKs like Browser or React Native **MAY** set these to `"auto"` to instruct Relay to infer the IP address or user agent from the incoming request and put it onto the metric as an attribute.
+
+For ingestion settings to take effect, the SDK **MUST** also set the `version` property to `2` (`number`) or higher. If `version` is omitted, Relay treats the payload as version `1` and doesn't apply `ingest_settings`.
 
 </SpecSection>
 
