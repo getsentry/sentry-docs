@@ -151,53 +151,13 @@ startTransition(() => {
   hydrateRoot(
     document,
     <StrictMode>
-      <HydratedRouter />
+      <HydratedRouter onError={Sentry.sentryOnError} />
     </StrictMode>
   );
 });
 ```
 
-#### Report Errors from Error Boundaries
-
-Update your `app/root.tsx` file to capture unhandled errors in your error boundary:
-
-```tsx {diff} {filename: app/root.tsx}
-+import * as Sentry from "@sentry/react-router";
-
-export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  let message = "Oops!";
-  let details = "An unexpected error occurred.";
-  let stack: string | undefined;
-
-  if (isRouteErrorResponse(error)) {
-    message = error.status === 404 ? "404" : "Error";
-    details =
-      error.status === 404
-        ? "The requested page could not be found."
-        : error.statusText || details;
-  } else if (error && error instanceof Error) {
-    // you only want to capture non 404-errors that reach the boundary
-+   Sentry.captureException(error);
-    if (import.meta.env.DEV) {
-      details = error.message;
-      stack = error.stack;
-    }
-  }
-
-  return (
-    <main>
-      <h1>{message}</h1>
-      <p>{details}</p>
-      {stack && (
-        <pre>
-          <code>{stack}</code>
-        </pre>
-      )}
-    </main>
-  );
-}
-// ...
-```
+The `sentryOnError` handler integrates with React Router's [`onError` hook](https://reactrouter.com/how-to/error-reporting) to automatically capture and report client-side errors to Sentry.
 
 ### Configure Server-side Sentry
 

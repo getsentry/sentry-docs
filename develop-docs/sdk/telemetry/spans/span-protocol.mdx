@@ -42,7 +42,41 @@ The envelope item header must contain the following properties:
 
 ## Span v2 Envelope Item Payload
 
-The envelope item payload must contain an `items` array with span one and up to 1000 span objects:
+The span v2 envelope item payload is a JSON object that **MUST** include an `items` array of span objects. The payload **MAY** also include top-level `version` and `ingest_settings` fields as specified in the next section.
+
+The container is defined as follows:
+
+```json
+{
+  "version": 2,
+  "ingest_settings": {
+    "infer_ip": "auto",
+    "infer_useragent": "auto"
+  },
+  "items": [{..span..}, {..span..}, {..span..}]
+}
+```
+
+<SpecSection id="span-envelope-item-ingest-settings" status="candidate" since="0.0.0">
+
+### `version` and `ingest_settings` properties
+
+The span envelope item `ingest_settings` property is an optional JSON object that contains ingestion settings for Relay, for example, to infer certain data from the incoming request.
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `infer_ip` | String | **OPTIONAL** | The setting to infer the IP address from the incoming request. One of `auto` or `never` (default). |
+| `infer_useragent` | String | **OPTIONAL** | The setting to infer the user agent from the incoming request. One of `auto` or `never` (default). |
+
+SDKs like Browser or React Native **MAY** set these to `"auto"` to instruct Relay to infer the IP address or user agent from the incoming request and put it onto the span as an attribute.
+
+For ingestion settings to take effect, the SDK **MUST** also set the `version` property to `2` (`number`) or higher. If `version` is omitted, Relay treats the payload as version `1` and doesn't apply `ingest_settings`. 
+
+</SpecSection>
+
+### `items` property - `span` Item Payload
+
+The `items` array **MUST** contain at least one and at most 1000 span objects:
 
 ```json
 {
