@@ -469,8 +469,10 @@ init({
     },
     httpBodies?: string[],                         // default: [] (off)
     queryParams?: KeyValueCollectionBehavior,      // default: { mode: "denyList" }
-    genAIInputs?: boolean,                         // default: true
-    genAIOutputs?: boolean,                        // default: true
+    genAI?: {
+      inputs?: boolean                              // default: true
+      outputs?: boolean                             // default: true
+    },
     stackFrameVariables?: boolean,                 // default: true
     frameContextLines?: integer,                   // default: 5 (see boolean fallback below)
   },
@@ -484,8 +486,7 @@ init({
 | `httpHeaders` | `{ request?, response? }` | Both `{ mode: "denyList" }` | 0.1.0 | Collect HTTP headers. Configure request and response independently using key-value collection modes. All key names are always included. |
 | `httpBodies` | `string[]` (body types) | `[]` (off) | 0.1.0 | List of body types to collect. Empty or omitted = off. Valid values: `"incomingRequest"`, `"outgoingRequest"`, `"incomingResponse"`, `"outgoingResponse"`. |
 | `queryParams` | Key-value collection | `{ mode: "denyList" }` | 0.1.0 | Collect URL query parameters. All key names are always included; the SDK scrubs values for keys matching the sensitive denylist or custom allow/deny terms. |
-| `genAIInputs` | Boolean | `true` | 0.1.0 | Include the content of generative AI inputs (e.g. prompt text, tool call arguments). Metadata such as model name and token counts is always collected regardless of this setting. |
-| `genAIOutputs` | Boolean | `true` | 0.1.0 | Include the content of generative AI outputs (e.g. completion text, tool call results). Metadata such as model name and token counts is always collected regardless of this setting. |
+| `genAI` | `{ inputs?, outputs? }` | Both `true` | 0.1.0 | For `inputs`: Include the content of generative AI inputs (e.g. prompt text, tool call arguments). <br /><br /> For `outputs`: Include the content of generative AI outputs (e.g. completion text, tool call results). Metadata such as model name and token counts is always collected regardless of these settings. |
 | `stackFrameVariables` | Boolean | `true` | 0.1.0 | Include local variable values captured within stack frames. |
 | `frameContextLines` | Integer (`Boolean` fallback) | `5` (`true`) | 0.1.0 | Number of source code lines to include above and below each stack frame. <br/> **`Boolean` fallback:** Not all platforms support integer configuration values. SDKs **MAY** accept a boolean, where `true` is equivalent to the platform default (typically `5`) and `false` is equivalent to `0` (no context lines). SDKs **SHOULD** prefer accepting an integer when their platform supports it. |
 
@@ -568,8 +569,10 @@ The new defaults collect **more** than `sendDefaultPii: false` did. Generative A
 init({
   dsn: "...",
   dataCollection: {
-    genAIInputs: false,
-    genAIOutputs: false,
+    genAI: {
+      inputs: false,
+      outputs: false,
+    },
     httpHeaders: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
     cookies: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
     queryParams: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
