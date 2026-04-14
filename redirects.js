@@ -1761,6 +1761,23 @@ const userDocsRedirects = [
     source: '/platforms/javascript/guides/javascript/:path*',
     destination: '/platforms/javascript/:path*',
   },
+  // Cron + uptime docs live under Monitors (monitors-and-alerts)
+  {
+    source: '/product/crons/getting-started/cli/',
+    destination: '/cli/crons/',
+  },
+  {
+    source: '/product/crons/:path*',
+    destination: '/product/monitors-and-alerts/monitors/crons/:path*',
+  },
+  {
+    source: '/product/uptime-monitoring/:path*',
+    destination: '/product/monitors-and-alerts/monitors/uptime-monitoring/:path*',
+  },
+  {
+    source: '/product/new-monitors-and-alerts/:path*',
+    destination: '/product/monitors-and-alerts/:path*',
+  },
 ];
 
 /**

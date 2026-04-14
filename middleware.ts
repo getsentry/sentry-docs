@@ -1,7 +1,6 @@
 import * as Sentry from '@sentry/nextjs';
 import type {NextRequest} from 'next/server';
 import {NextResponse, userAgent} from 'next/server';
-
 import {AI_AGENT_PATTERN, type TrafficType} from 'sentry-docs/lib/trafficClassification';
 
 // DEVELOPER_DOCS is set via next.config.ts env field (inlined at build time for edge runtime).
@@ -364,10 +363,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/organization/integrations/cloud-monitoring/cloudflare-workers/',
     to: '/platforms/javascript/guides/cloudflare/',
-  },
-  {
-    from: '/product/crons/getting-started/cli/',
-    to: '/cli/crons/',
   },
   {
     from: '/product/data-management-settings/dynamic-sampling/',
@@ -2688,7 +2683,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/crons/alerts/',
-    to: '/product/crons/getting-started/',
+    to: '/product/monitors-and-alerts/monitors/crons/getting-started/',
   },
   {
     from: '/meta/relay/best-practices/',
@@ -3739,22 +3734,22 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     from: '/security-legal-pii/security/security-policy-reporting/',
     to: '/platform-redirect/?next=/security-policy-reporting/',
   },
-  /* Uptime Monitoring */
+  /* Uptime Monitoring (legacy paths under /product/alerts/) */
   {
     from: '/product/alerts/uptime-monitoring/',
-    to: '/product/uptime-monitoring/',
+    to: '/product/monitors-and-alerts/monitors/uptime-monitoring/',
   },
   {
     from: '/product/alerts/uptime-monitoring/automatic-detection/',
-    to: '/product/uptime-monitoring/automatic-detection/',
+    to: '/product/monitors-and-alerts/monitors/uptime-monitoring/automatic-detection/',
   },
   {
     from: '/product/alerts/uptime-monitoring/uptime-tracing/',
-    to: '/product/uptime-monitoring/uptime-tracing/',
+    to: '/product/monitors-and-alerts/monitors/uptime-monitoring/uptime-tracing/',
   },
   {
     from: '/product/alerts/uptime-monitoring/troubleshooting/',
-    to: '/product/uptime-monitoring/troubleshooting/',
+    to: '/product/monitors-and-alerts/monitors/uptime-monitoring/troubleshooting/',
   },
 ];
 
