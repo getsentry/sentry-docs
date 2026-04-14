@@ -11,19 +11,23 @@ Snapshots catches visual regressions before they reach users. Your CI pipeline g
 
 When a snapshot changes, Sentry posts a failing GitHub Check on your pull request. You review the diff in Sentry's comparison viewer and approve or reject the changes.
 
+TODO: some sort of image
+
 ## How It Works
 
 1. **Generate snapshots** — Your CI job produces PNG screenshots however you like: Playwright, Storybook, simulator captures, or any tool that outputs PNGs.
 2. **Upload to Sentry** — `sentry-cli` uploads the snapshot directory along with Git metadata so Sentry can associate each upload with a commit.
-3. **Sentry diffs against the baseline** — Sentry finds the most recent snapshot set from your base branch (matched by `app_id`) and categorizes each image as added, removed, modified, renamed, or unchanged.
-4. **Result posted to your PR** — A "Snapshot Testing" GitHub Check appears on the pull request. It passes if nothing changed and fails if any snapshots need approval.
-5. **Review and approve** — Click through to Sentry's comparison viewer to inspect diffs, then approve to resolve the failing check.
+3. **Sentry diffs against the baseline** — Sentry compares uploaded snapshots against snapshots corresponding to the upload's `base_sha`. With Sentry, you do not have to manage "Golden" images and everything is determined via git metadata.
+4. **Results post to your PR** — Snapshot results post to your PR\*. You can configure settings to control status check and comment behavior.
+5. **Review and approve** — You can view snapshot results on the Sentry UI. If the Snapshot "failed" you can approve it from either the PR or the Sentry UI.
+
+\*Note: Snapshots EA only supports Github
 
 ## Prerequisites
 
 - **Early Adopter access** — Enable the Early Adopter toggle in your [organization settings](/organization/early-adopter-features/).
 - **Auth token** — A Sentry auth token with `project:write` scope (personal token) or `org:ci` scope (org-level token).
 - **sentry-cli >= 3.3.4** — The `build snapshots` command requires version 3.3.4 or later.
-- **GitHub integration** — Install the [Sentry GitHub App](/organization/integrations/source-code-mgmt/github/) and grant it access to your repository so Sentry can post Check Runs.
+- **GitHub integration** — Snapshots can be used with any VCS provider, but only Github is supported for status check integration and PR comments. Install the [Sentry GitHub App](/organization/integrations/source-code-mgmt/github/) and grant it access to your repository for PR integration.
 
 <PageGrid />

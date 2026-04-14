@@ -8,9 +8,25 @@ description: Structure your snapshot directory and upload from CI with sentry-cl
 
 Snapshots can be used with any frontend screenshot framework. We have examples in different platform documentaiton pages (TODO: EXAMPLES). This page covers the general upload structure and metadata schema.
 
-## Snapshots Upload Structure
+## Upload command
 
-Each snapshot consists of two files: a `.png` image and a `.json` metadata sidecar with the same base name. You can organize snapshots into subdirectories — the CLI reads the entire directory tree.
+You upload snapshots with the `sentry-cli build snapshots` command, which takes a directory of images and optional JSON metadata files.
+
+```bash
+sentry-cli build snapshots <output-dir> \
+  --auth-token "$SENTRY_SNAPSHOTS_AUTH_TOKEN" \
+  --app-id <app-id> \
+  --project <project-slug> \
+  --head-sha <head-commit-sha> \
+  --vcs-provider github \
+  --head-repo-name <owner/repo>
+```
+
+You can reference our [example workflow](#upload-with-ci) and [full flag reference](#sentry-cli-build-snapshots-reference) below.
+
+### Upload Structure
+
+Each snapshot consists of two files: a `.png` image and an optional `.json` metadata file with the same base name and path. You can organize snapshots into subdirectories, but is not required and will not affect the UX.
 
 ```
 snapshots/
@@ -25,9 +41,9 @@ snapshots/
 
 Filenames are the identity key for each snapshot. Keep them stable across runs so Sentry can accurately diff head against base.
 
-## Metadata
+### JSON Metadata
 
-The `.json` sidecar describes its paired `.png`:
+You can optionally include a JSON file to add metadata to each image:
 
 ```json
 {
@@ -47,7 +63,7 @@ TODO: IMAGE OF DISPLAY NAME AND GROUP
 
 To see the workflow Sentry uses on its own codebase, view the [frontend snapshots workflow](https://github.com/getsentry/sentry/blob/master/.github/workflows/frontend-snapshots.yml).
 
-Below is a complete GitHub Actions workflow you can copy into your repository. Replace the placeholder values with your own snapshot generation command, app ID, and Sentry project slug.
+Below is an example GitHub Actions workflow you can use as a starting point. Replace the placeholder values with your own snapshot generation command, app ID, and Sentry project slug.
 
 ```yml {filename:.github/workflows/snapshots.yml}
 name: Snapshots
@@ -80,8 +96,8 @@ jobs:
       # Generate PNG + JSON pairs into $SNAPSHOT_OUTPUT_DIR.
       # Examples:
       #   - Playwright screenshots
-      #   - Storybook captures
-      #   - iOS/Android simulator screenshots
+      #   - iOS/Android screenshots
+      #   - Laravel Dusk screenshots
       #   - Any tool that produces PNGs
       # -------------------------------------------------------
       - name: Generate snapshots
@@ -126,3 +142,30 @@ A few things to note about this workflow:
 - **Keep `--app-id` consistent** — The `app_id` ties head and base uploads together. Sentry finds the baseline by matching the same `app_id` at the `base_sha`. Use one `app_id` per logical app or bundle.
 
 Other CI systems work by passing the same flags to `sentry-cli build snapshots` explicitly.
+
+## `sentry-cli build snapshots` Reference
+
+```bash
+sentry-cli build snapshots [OPTIONS] --app-id <APP_ID> <PATH>
+```
+
+| Flag                            | Description                                                                                                                                                                  |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `<PATH>`                        | Directory containing `.png` images (and optional `.json`).                                                                                                                   |
+| `--app-id <APP_ID>`             | Identifier for the app or bundle (e.g., `web-frontend`, `ios-app`). Must be consistent across uploads — Sentry uses it to match head and base snapshots. Max 255 characters. |
+| `--auth-token <TOKEN>`          | Sentry auth token with `project:write` or `org:ci` scope. Can also be set via `SENTRY_AUTH_TOKEN`.                                                                           |
+| `-o`, `--org <ORG>`             | Sentry organization slug. Can also be set via `SENTRY_ORG`.                                                                                                                  |
+| `-p`, `--project <PROJECT>`     | Sentry project slug. Can also be set via `SENTRY_PROJECT`.                                                                                                                   |
+| `--head-sha <SHA>`              | 40-character commit SHA of the snapshot build. Auto-detected in CI.                                                                                                          |
+| `--base-sha <SHA>`              | Base branch commit SHA for comparison (PR only). Auto-detected in CI.                                                                                                        |
+| `--vcs-provider <PROVIDER>`     | VCS provider, e.g., `github`. Auto-detected from git remote.                                                                                                                 |
+| `--head-repo-name <OWNER/REPO>` | Repository in `owner/repo` format. Auto-detected from git remote.                                                                                                            |
+| `--base-repo-name <OWNER/REPO>` | Base repository in `owner/repo` format (PR only, for forks). Auto-detected in CI.                                                                                            |
+| `--head-ref <BRANCH>`           | Head branch name. Auto-detected in CI.                                                                                                                                       |
+| `--base-ref <BRANCH>`           | Base branch name (PR only). Auto-detected in CI.                                                                                                                             |
+| `--pr-number <NUMBER>`          | Pull request number (PR only). Auto-detected in GitHub Actions.                                                                                                              |
+| `--diff-threshold <THRESHOLD>`  | Float between 0.0 and 1.0. Sentry only reports images as changed if the percentage of changed pixels exceeds this value. For example, `0.01` ignores changes under 1%.       |
+| `--no-git-metadata`             | Skip automatic git metadata detection.                                                                                                                                       |
+| `--force-git-metadata`          | Force git metadata collection even outside CI.                                                                                                                               |
+| `--log-level <LEVEL>`           | Logging verbosity: `debug`, `info`, `warn`, or `error`.                                                                                                                      |
+| `--url <URL>`                   | Sentry instance URL. Defaults to `https://sentry.io`.                                                                                                                        |
