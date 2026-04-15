@@ -1771,6 +1771,10 @@ const userDocsRedirects = [
     destination: '/cli/crons/',
   },
   {
+    source: '/product/monitors-and-alerts/monitors/crons/getting-started/cli/',
+    destination: '/cli/crons/',
+  },
+  {
     source: '/product/crons/:path*',
     destination: '/product/monitors-and-alerts/monitors/crons/:path*',
   },
