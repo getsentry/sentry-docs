@@ -1,0 +1,58 @@
+---
+title: Migrate from 3.x to 4.x
+sidebar_order: 7918
+description: "Learn about migrating from Sentry Capacitor SDK 3.x to 4.x"
+---
+
+Version 4 of the Sentry Capacitor SDK shifts to a focused maintenance model centered on error and crash monitoring. Session Replay and Profiling features have been removed.
+
+## What's Changing
+
+Starting with Sentry Capacitor SDK v4, the following features are no longer supported:
+
+- **Session Replay** - Removed due to architectural limitations with Capacitor's WebView-based implementation
+- **Profiling** - Removed as part of the focus on core error monitoring
+
+All other features continue to be supported, including error and crash reporting, performance monitoring, and breadcrumbs.
+
+## Why These Changes?
+
+Capacitor's WebView-based architecture creates unique challenges for features like Session Replay that need to bridge the native and web layers. Rather than ship a subpar experience, we're focusing on making error monitoring rock-solid.
+
+Additionally, Sentry is investing heavily in [`@sentry/react-native`](/platforms/react-native/) and [`sentry-dart`](/platforms/flutter/) as primary cross-platform mobile SDKs. Both support the full Sentry feature set including Session Replay, Profiling, and Performance Monitoring.
+
+## Migration Path
+
+If you need Session Replay or Profiling in your Capacitor app, consider migrating to one of our full-featured cross-platform SDKs. Both React Native and Flutter receive full support for all Sentry features:
+
+- **[React Native](/platforms/react-native/)**
+- **[Flutter](/platforms/flutter/)**
+
+By migrating to either platform, you'll gain access to Session Replay, Profiling, Performance Monitoring, and all other Sentry features with native integration.
+
+## Code Changes Required
+
+No code changes are strictly required for existing users. However, you should remove any configuration related to Session Replay:
+
+```javascript diff
+Sentry.init({
+  dsn: '...',
+- replaysSessionSampleRate: 1.0,
+- replaysOnErrorSampleRate: 1.0,
+});
+```
+
+If you're still initializing replay-related integrations, remove them:
+
+```javascript diff
+import * as Sentry from '@sentry/capacitor';
+
+Sentry.init({
+  dsn: '...',
+- integrations: [Sentry.replayIntegration()],
+});
+```
+
+## Continued Support
+
+The Capacitor SDK will continue to receive updates for error monitoring, security patches, and dependency updates.

@@ -1,10 +1,9 @@
 'use client';
 
+import Link from 'next/link';
 import {Fragment, useCallback, useEffect, useRef, useState} from 'react';
 import {createPortal} from 'react-dom';
 import {Clipboard} from 'react-feather';
-import Link from 'next/link';
-
 import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
 import ChatGPT from 'sentry-docs/icons/chatgpt';
 import Chevron from 'sentry-docs/icons/Chevron';
@@ -60,7 +59,7 @@ export function CopyMarkdownButton({pathname}: CopyMarkdownButtonProps) {
 
       // Track successful copy
       DocMetrics.copyPage(pathname, true);
-    } catch (err) {
+    } catch {
       setError(true);
       setTimeout(() => setError(false), 3000);
 
@@ -125,7 +124,7 @@ export function CopyMarkdownButton({pathname}: CopyMarkdownButtonProps) {
         try {
           const content = await fetchMarkdownContent();
           setPrefetchedContent(content);
-        } catch (err) {
+        } catch {
           // Silently fail - we'll fall back to regular fetch on click
         }
       };

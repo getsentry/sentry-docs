@@ -3,7 +3,6 @@
 import {Fragment, useEffect, useRef, useState} from 'react';
 import {createPortal} from 'react-dom';
 import {Clipboard} from 'react-feather';
-
 import Chevron from 'sentry-docs/icons/Chevron';
 
 /**
@@ -114,7 +113,6 @@ export function CopyableCard({title, children}: CopyableCardProps) {
       setIsOpen(false);
       setTimeout(() => setCopiedItem(null), 1500);
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.error('Failed to copy:', error);
     }
   }

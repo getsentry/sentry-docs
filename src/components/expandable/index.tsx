@@ -1,14 +1,14 @@
 'use client';
 
-import {ReactNode, useCallback, useEffect, useRef, useState} from 'react';
-import {ChevronDownIcon, ChevronRightIcon} from '@radix-ui/react-icons';
-import * as Sentry from '@sentry/nextjs';
-
-import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
-
 // explicitly not using CSS modules here
 // because there's some prerendered content that depends on these exact class names
 import '../callout/styles.scss';
+
+import {ChevronDownIcon, ChevronRightIcon} from '@radix-ui/react-icons';
+import * as Sentry from '@sentry/nextjs';
+import {ReactNode, useCallback, useEffect, useRef, useState} from 'react';
+import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
+
 import styles from './style.module.scss';
 
 type Props = {
