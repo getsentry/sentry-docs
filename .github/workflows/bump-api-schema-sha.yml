@@ -11,16 +11,19 @@ jobs:
     runs-on: ubuntu-latest
     name: 'Bump API Schema SHA'
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       - name: Get auth token
         id: token
-        uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf # v2.2.1
+        uses: actions/create-github-app-token@v3
         with:
           app-id: ${{ vars.SENTRY_API_SCHEMA_UPDATER_APP_CLIENT_ID }}
           private-key: ${{ secrets.SENTRY_API_SCHEMA_UPDATER_PRIVATE_KEY }}
+          owner: getsentry
           repositories: |
             sentry-docs
             sentry-api-schema
+      - uses: actions/checkout@v6 # v6
+        with:
+          token: ${{ steps.token.outputs.token }}
       - name: 'Bump API Schema SHA'
         shell: bash
         env:
@@ -54,4 +57,4 @@ jobs:
           git push --set-upstream origin "$branch"
 
           gh pr create --fill
-          gh pr merge --squash --admin
+          gh pr merge --squash --admin -d

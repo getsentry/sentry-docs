@@ -115,6 +115,51 @@ SentrySubsystem->InitializeWithSettings(FConfigureSettingsNativeDelegate::Create
 }));
 ```
 
+### Network
+
+<Alert>
+  Network metrics require Unreal Engine 5.7 or later. On older engine versions, this setting has no effect.
+</Alert>
+
+When **Collect network metrics** is enabled, the SDK periodically polls Unreal Engine's network metrics database (`UNetworkMetricsDatabase`) and emits gauge metrics for the active network session. These metrics are only collected when a `UNetDriver` is present — that is, during multiplayer sessions (client connected to a server, or a server with connected clients). In singleplayer games without networking, no metrics are emitted.
+
+The engine only populates the network metrics database when the `net.EnableNetStats` console variable is set to `true`. Add the following to your `DefaultEngine.ini` to enable it:
+
+```ini
+[SystemSettings]
+net.EnableNetStats=1
+```
+
+| Metric | Type | Description |
+|--------|------|-------------|
+| `game.perf.net.in_rate` | Gauge (bytes/sec) | Incoming bandwidth |
+| `game.perf.net.out_rate` | Gauge (bytes/sec) | Outgoing bandwidth |
+| `game.perf.net.in_packets` | Gauge | Incoming packets per second |
+| `game.perf.net.out_packets` | Gauge | Outgoing packets per second |
+| `game.perf.net.in_packets_lost` | Gauge | Incoming packets lost |
+| `game.perf.net.out_packets_lost` | Gauge | Outgoing packets lost |
+| `game.perf.net.ping` | Gauge (ms) | Client ping to server |
+| `game.perf.net.jitter` | Gauge (ms) | Client connection jitter (latency variation) |
+| `game.perf.net.num_clients` | Gauge | Number of connected clients (server only) |
+| `game.perf.net.ping_client_avg` | Gauge (ms) | Average ping across all clients (server only) |
+| `game.perf.net.ping_client_max` | Gauge (ms) | Maximum ping across all clients (server only) |
+| `game.perf.net.in_rate_client_avg` | Gauge (bytes/sec) | Average incoming bandwidth per client (server only) |
+| `game.perf.net.out_rate_client_avg` | Gauge (bytes/sec) | Average outgoing bandwidth per client (server only) |
+| `game.perf.net.sat_connections` | Gauge | Connections skipped due to bandwidth saturation (server only) |
+
+Not all metrics are available in every context — client-specific metrics (ping, jitter) are only populated on clients, while server-specific metrics (num_clients, per-client stats, saturation) are only populated on servers. Listen servers report both sets.
+
+The **Network metrics sample interval** setting controls how often network stats are polled. The default value of 10 seconds provides good visibility into network health without excessive overhead.
+
+```cpp
+SentrySubsystem->InitializeWithSettings(FConfigureSettingsNativeDelegate::CreateLambda([=](USentrySettings* Settings)
+{
+    Settings->EnableMetrics = true;
+    Settings->EnableAutoNetworkMetrics = true;
+    Settings->NetworkMetricsSampleInterval = 10; // Poll every 10 seconds (default)
+}));
+```
+
 ## Options
 
 <PlatformContent includePath="metrics/options" />

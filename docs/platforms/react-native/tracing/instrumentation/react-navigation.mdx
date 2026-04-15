@@ -39,12 +39,18 @@ This ensures that transactions that are from routes that've been seen and don't 
 
 ### useDispatchedActionData
 
-This option defines whether to use the dispatched action data to populate the transaction metadata. When set to true, the integration will filter out navigation actions that should not create spans. The default value is `false`.
+This option defines whether to use the dispatched action data to populate the transaction metadata. When set to true, the integration will:
+
+- **Name spans immediately** using the route name from the action payload (e.g., `NAVIGATE`, `PUSH`, `REPLACE`, `JUMP_TO` actions carry `payload.name`). The span name is updated with the final route once the router processes the action.
+- **Skip spans for actions without a known route name** (e.g., `GO_BACK`, `POP`, `POP_TO_TOP`, `RESET`), reducing noise.
+- **Filter out non-navigation actions** (e.g., `SET_PARAMS`, `OPEN_DRAWER`, `CLOSE_DRAWER`, `TOGGLE_DRAWER`) that should not create spans.
+
+The default value is `false`.
 
 ## Notes
 
 - This instrumentation supports React Navigation version 5 and above. Starting with SDK version 6, React Navigation version 4 will no longer be supported. Please upgrade.
 
-- The instrumentation creates a transaction on every route change including `goBack` navigations.
+- The instrumentation creates a transaction on every route change including `goBack` navigations. When `useDispatchedActionData` is enabled, `goBack` and other actions without a known target route are skipped.
 
 - If you are coming from a version prior to 2.3.0, make sure you update where `registerNavigationContainer` is called. For more detailed instructions, see [our migration guide](/platforms/react-native/migration/#react-navigation-instrumentation-from-230).

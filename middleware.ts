@@ -1,7 +1,6 @@
 import * as Sentry from '@sentry/nextjs';
 import type {NextRequest} from 'next/server';
 import {NextResponse, userAgent} from 'next/server';
-
 import {AI_AGENT_PATTERN, type TrafficType} from 'sentry-docs/lib/trafficClassification';
 
 // DEVELOPER_DOCS is set via next.config.ts env field (inlined at build time for edge runtime).
@@ -17,7 +16,7 @@ export const config = {
     // - _next/static (static files)
     // - _next/image (image optimization files)
     // - favicon.ico (favicon file)
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|sentry-tunnel).*)',
   ],
 };
 
@@ -3417,7 +3416,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/insights/llm-monitoring/getting-started/the-dashboard/',
-    to: '/ai/monitoring/agents/dashboard/',
+    to: '/ai/monitoring/agents/dashboards/',
   },
   {
     from: '/product/insights/ai/',
@@ -3433,7 +3432,11 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/insights/ai/agents/dashboard/',
-    to: '/ai/monitoring/agents/dashboard/',
+    to: '/ai/monitoring/agents/dashboards/',
+  },
+  {
+    from: '/ai/monitoring/agents/dashboard/',
+    to: '/ai/monitoring/agents/dashboards/',
   },
   {
     from: '/product/insights/ai/agents/costs/',

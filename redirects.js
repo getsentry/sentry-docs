@@ -573,7 +573,11 @@ const developerDocsRedirects = [
 const userDocsRedirects = [
   {
     source: '/integrations/cursor/',
-    destination: '/organization/integrations/cursor/',
+    destination: '/organization/integrations/coding-agents/cursor/',
+  },
+  {
+    source: '/organization/integrations/cursor/',
+    destination: '/organization/integrations/coding-agents/cursor/',
   },
   {
     source: '/concepts/data-management/advanced-datascrubbing/',
@@ -666,6 +670,71 @@ const userDocsRedirects = [
   {
     source: '/organization/integrations/goastai/',
     destination: '/organization/integrations/issue-tracking/goast/',
+  },
+  // Third-party integrations consolidated page
+  {
+    source: '/organization/integrations/sonarly-integration/',
+    destination: '/organization/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/work-os/',
+    destination: '/organization/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/watchdog-security/',
+    destination: '/organization/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/releasetag/',
+    destination: '/organization/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/kawachai/',
+    destination: '/organization/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/opsbrief/',
+    destination: '/organization/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/twill/',
+    destination: '/organization/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/glue-tools/',
+    destination: '/organization/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/synkrony/',
+    destination: '/organization/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/bosun/',
+    destination: '/organization/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/steadwing-rca/',
+    destination: '/organization/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/aether/',
+    destination: '/organization/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/toolbar/',
+    destination: '/organization/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/vanta-gov/',
+    destination: '/organization/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/xurrent-imr/',
+    destination: '/organization/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/shiprail/',
+    destination: '/organization/integrations/third-party-integrations/',
   },
   {
     source: '/development/sdk-dev/:path*',
