@@ -37,6 +37,13 @@ otel.SetTracerProvider(tp)
 
 Now, spans produced by OpenTelemetry will be exported to Sentry over OTLP.
 
+### Distributed Tracing
+
+The OTLP integration does not set up a propagator for you. How you configure propagation depends on your setup:
+
+- **Sentry frontend → OTel backend:** If a Sentry SDK on your frontend sends requests to this OTel-instrumented service, enable [`propagateTraceparent`](/concepts/otlp/sentry-with-otel/#linking-sentry-and-otlp-traces) in your frontend SDK. This sends the W3C `traceparent` header, which your OTel-instrumented backend will pick up automatically.
+- **OTel ↔ OTel:** If all your services use OpenTelemetry, configure propagators using the standard OpenTelemetry API (for example, `propagation.TraceContext{}`). See the [OpenTelemetry propagation documentation](https://opentelemetry.io/docs/languages/go/instrumentation/#propagators-and-context) for details.
+
 If you're exporting through an OpenTelemetry Collector instead of sending traces directly to Sentry, you only need to keep the same `sentry.Init(...)` with `sentryotel.NewOtelIntegration()` in your Go app. Then configure the collector's `otlphttp` exporter to send traces to Sentry's OTLP endpoints. See the [OpenTelemetry Collector](/concepts/otlp/forwarding/pipelines/collector/) guide.
 
 ### Linking Errors to Transactions
