@@ -39,11 +39,11 @@ export interface FrontMatter {
    * A list of keywords for indexing with search.
    */
   keywords?: string[];
+
   /**
    * Set this to true to show a "new" badge next to the title in the sidebar
    */
   new?: boolean;
-
   /**
    * Set this to true to show an "EA" (early access) badge next to the title in the sidebar
    */
@@ -58,6 +58,7 @@ export interface FrontMatter {
    * takes precedence over children when present
    */
   next_steps?: string[];
+
   /**
    * Set this to true to disable indexing (robots, algolia) of this content.
    */

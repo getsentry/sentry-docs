@@ -3,6 +3,7 @@ To start tracing, you'll need to add Sentry to the tracer provider. This will ma
 ```csharp
 using var tracerProvider = Sdk.CreateTracerProviderBuilder()
     .AddSource(serviceName) // <-- The name of an activity sources you care about
+    .AddHttpClientInstrumentation() // <-- Instruments outgoing HTTP requests (requires OpenTelemetry.Instrumentation.Http)
     .AddSentry() // <-- Configure OpenTelemetry to send traces to Sentry
     .Build();
 ```
@@ -16,5 +17,10 @@ SentrySdk.Init(options =>
     // options.SendDefaultPii = true;
     options.TracesSampleRate = 1.0;
     options.UseOpenTelemetry(); // <-- Configure Sentry to use OpenTelemetry trace information
+    options.DisableSentryHttpMessageHandler = true; // <-- Disable Sentry's HttpClient instrumentation to avoid duplicate spans
 });
 ```
+
+<Alert level="info" title="HTTP Client Instrumentation">
+When using `AddHttpClientInstrumentation()` from `OpenTelemetry.Instrumentation.Http`, you **must** set `DisableSentryHttpMessageHandler = true` in the Sentry options. This prevents Sentry's built-in `SentryHttpMessageHandler` from also instrumenting HTTP requests and creating duplicate spans.
+</Alert>

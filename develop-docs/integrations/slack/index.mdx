@@ -6,11 +6,11 @@ og_image: /og-images/integrations-slack.png
 
 ## Create a Slack App
 
-To use Sentry’s Slack integration you’ll need to create a Slack app. Navigate to [Your Apps](https://api.slack.com/apps/) and click __Create New App__.
+To use Sentry’s Slack integration you’ll need to create a Slack app. Navigate to [Your Apps](https://api.slack.com/apps/) and click **Create New App**.
 
 ![Create](./create.png)
 
-After naming your app and connecting your workspace, navigate to __Basic Information__. Here you’ll find your Client ID, Client Secret, and Verification token that lets your app access the Slack API.
+After naming your app and connecting your workspace, navigate to **Basic Information**. Here you’ll find your Client ID, Client Secret, and Verification token that lets your app access the Slack API.
 
 Here’s where you’ll connect your self-hosted Sentry instance to your newly created Slack app.
 
@@ -29,12 +29,14 @@ If you're a Sentry employee, you can set the `slack.client-id` and `slack.client
 After you update the `config.yml`, `sentry.conf.py`, or `devlocal.py` you need to restart your Sentry server to continue configuring the Slack app.
 
 <Alert title="Note (for self-hosted users)">
-    After changing configuration files, re-run the <code>./install.sh</code> script, to rebuild and restart the containers. See the <Link to="/self-hosted/#configuration">configuration section</Link> for more information.
+  After changing configuration files, re-run the <code>./install.sh</code> script, to rebuild and
+  restart the containers. See the{" "}
+  <Link to="/self-hosted/#configuration">configuration section</Link> for more information.
 </Alert>
 
-Now that you’ve created your app and updated your Sentry config, you can navigate to __Interactivity & Shortcuts__ under __Features__.
+Now that you’ve created your app and updated your Sentry config, you can navigate to **Interactivity & Shortcuts** under **Features**.
 
-Toggle on __Interactivity & Shortcuts__.
+Toggle on **Interactivity & Shortcuts**.
 
 Now you’ll be able to enter your **Request URL** (this is the location of your self-hosted Sentry) and **Options Load URL**:
 
@@ -43,92 +45,109 @@ Request URL: {YOUR_DOMAIN}/extensions/slack/action/
 Options Load URL: {YOUR_DOMAIN}/extensions/slack/options-load/
 ```
 
-Navigate to __OAuth & Permissions__ to configure the Redirect URLs.
+Navigate to **OAuth & Permissions** to configure the Redirect URLs.
 
 ![OAuth](./oauth.png)
 
-Click __Add a new Redirect URL__, enter the URL, and click __Add__. Set the URL to:
+Click **Add a new Redirect URL**, enter the URL, and click **Add**. Set the URL to:
 
 ```
 {YOUR_DOMAIN}/extensions/slack/setup/
 ```
 
-Click __Save URLs__.
+Click **Save URLs**.
 
 ## Scopes
 
-On the same page under __Scopes__ you'll need to add __Bot Scopes__ and __User Scopes__.
+On the same page under **Scopes** you'll need to add **Bot Scopes** and **User Scopes**.
 
-Add the following scopes to __Bot Scopes__:
+Add the following scopes to **Bot Scopes**:
 
-| Scope | Reason |
-|---|---|
-| `channels:read` | List and validate public channels when configuring alert-rule destinations, and resolve channel names to IDs. |
-| `groups:read` | Same as `channels:read` but for private channels. |
-| `users:read` | Look up workspace users to validate alert-rule recipients, search by username/display name, and automatically link Sentry accounts to Slack identities by email after installation. |
-| `chat:write` | Send issue alert, metric alert, and activity notifications. Also used to post ephemeral identity-linking prompts, update existing messages, unfurl Sentry URLs, and verify channel accessibility. |
-| `chat:write.public` | Post notifications to public channels the bot hasn't been invited to. |
-| `chat:write.customize` | Allow sending messages with a custom bot name and icon. |
-| `links:read` | Receive `link_shared` events when a user pastes a Sentry URL in Slack so the integration can generate a rich preview. |
-| `links:write` | Attach rich unfurl previews (issues, Discover queries, metric alerts) to Sentry URLs shared in Slack. |
-| `team:read` | Fetch the workspace name and icon during installation for display in the Sentry integration settings page. |
-| `im:read` | Receive direct-message events and resolve DM channel metadata, enabling slash commands and messages sent directly to the bot. |
-| `im:history` | Receive `message.im` events for the bot's help responses in DMs, and fetch DM thread history for Seer Explorer context. |
-| `commands` | Power the `/sentry` slash command: `link`/`unlink` (identity), `link team`/`unlink team` (channel-to-team mapping), and `help`. |
+<Alert title="Note (for self-hosted users)">
+  `channels:history`, `groups:history`, and `app_mentions:read` are used to trigger Seer which is
+  not currently available for self-hosted, meaning they're not required permissions to add.
+</Alert>
 
-Add the following scopes to __User Scopes__:
+| Scope                  | Reason                                                                                                                                                                              |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `app_mentions:read`    | Receive `app_mention` events when the bot is mentioned (e.g. @Sentry) in a message.                                                                                                 |
+| `channels:read`        | List and validate public channels when configuring alert-rule destinations, and resolve channel names to IDs.                                                                       |
+| `channels:history`     | (Optional) Allows Sentry to read messages from public channels. Sentry uses this to gather context of individual threads for conversations with Seer Explorer.                      |
+| `chat:write`           | Send and update messages, such as alerts, notifications, and responses.                                                                                                             |
+| `chat:write.customize` | Allow sending messages with a custom bot name and icon.                                                                                                                             |
+| `chat:write.public`    | Post notifications to public channels the bot hasn't been invited to.                                                                                                               |
+| `commands`             | Power the `/sentry` slash command: `link`/`unlink` (identity), `link team`/`unlink team` (channel-to-team mapping), and `help`.                                                     |
+| `groups:read`          | Same as `channels:read` but for private channels.                                                                                                                                   |
+| `groups:history`       | (Optional) Same as `channels:history` but for private channels.                                                                                                                     |
+| `im:history`           | Receive `message.im` events for the bot's help responses in DMs, and fetch DM thread history for Seer Explorer context.                                                             |
+| `im:read`              | Receive direct-message events and resolve DM channel metadata, enabling slash commands and messages sent directly to the bot.                                                       |
+| `links:read`           | Receive `link_shared` events when a user pastes a Sentry URL in Slack so the integration can generate a rich preview.                                                               |
+| `links:write`          | Attach rich unfurl previews (issues, Discover queries, metric alerts) to Sentry URLs shared in Slack.                                                                               |
+| `team:read`            | Fetch the workspace name and icon during installation for display in the Sentry integration settings page.                                                                          |
+| `users:read`           | Look up workspace users to validate alert-rule recipients, search by username/display name, and automatically link Sentry accounts to Slack identities by email after installation. |
 
-| Scope | Reason |
-|---|---|
-| `links:read` | Show rich previews when you share Sentry links in Slack. |
-| `users:read` | Read your Slack profile to connect it with your Sentry account. |
+Add the following scopes to **User Scopes**:
+
+| Scope              | Reason                                                                           |
+| ------------------ | -------------------------------------------------------------------------------- |
+| `links:read`       | Show rich previews when you share Sentry links in Slack.                         |
+| `users:read`       | Read your Slack profile to connect it with your Sentry account.                  |
 | `users:read.email` | Use your Slack email address to find and link your Sentry account automatically. |
 
 <Alert>
-You have the option to set 'Restrict API Token Usage' on this page if you want to limit use of your app’s OAuth tokens to a list of IP addresses and ranges you provide.
+  You have the option to set 'Restrict API Token Usage' on this page if you want to limit use of
+  your app’s OAuth tokens to a list of IP addresses and ranges you provide.
 </Alert>
 
-Navigate to __Event Subscriptions__ and toggle “On”. Here you will enter another Request URL: `{YOUR_DOMAIN}/extensions/slack/event/`
+Navigate to **Event Subscriptions** and toggle “On”. Here you will enter another Request URL: `{YOUR_DOMAIN}/extensions/slack/event/`
 
 You’ll see “Verified” when you’ve entered the correct URL.
 
 ![Events](./events.png)
 
 <Alert>
-When you enter the 'Request URL', Slack tries to verify it. The request will fail if you didn’t configure the client keys/secret and restart Sentry to ensure those config changes were picked up. If it fails to validate, first make sure your Sentry instance is running and Slack can talk to it (Slack <Link to="https://twitter.com/slackapi/status/567110311476350976?lang=en">doesn’t have an IP range</Link>).
+When you enter the 'Request URL', Slack tries to verify it. The request will fail if you didn’t
+configure the client keys/secret and restart Sentry to ensure those config changes were picked up.
+If it fails to validate, first make sure your Sentry instance is running and Slack can talk to it.
+
+<Link to="https://twitter.com/slackapi/status/567110311476350976?lang=en">
+  <span>Slack doesn’t have an IP range.</span>
+</Link>
 </Alert>
 
-Still on the __Event Subscription__ page, go to __Subscribe to bot events__ and add the following bot user events:
+Still on the **Event Subscription** page, go to **Subscribe to bot events** and add the following bot user events:
 
-* `link_shared`
-* `message.im`
+- `app_mention` (Not supported for self-hosted)
+- `link_shared`
+- `message.im`
 
-and next go to __Subscribe to events on behalf of users__ and add the following event:
+and next go to **Subscribe to events on behalf of users** and add the following event:
 
-* `link_shared`
+- `link_shared`
 
-Lastly, still on that page, go to __App Unfurl Domains__, click __Add Domain__ to enter your domain and click Done.
+Lastly, still on that page, go to **App Unfurl Domains**, click **Add Domain** to enter your domain and click Done.
 
-At the bottom of the page, click __Save Changes__.
+At the bottom of the page, click **Save Changes**.
 
-Navigate to __App Home__, under __Features__. Here is where you can edit your bot's display name (this is the name that will be displayed when alerts are triggered).
+Navigate to **App Home**, under **Features**. Here is where you can edit your bot's display name (this is the name that will be displayed when alerts are triggered).
 
 ![Bot](./bot.png)
 
-If you plan on having Slack alerts sent to specific users (`@person`) in addition to channels, toggle on the __Messages Tab__ under __Show Tabs__ in the __App Home__ page.
+If you plan on having Slack alerts sent to specific users (`@person`) in addition to channels, toggle on the **Messages Tab** under **Show Tabs** in the **App Home** page.
 
-Navigate to __Slash Commands__ under __Features__. Click __Create New Command__ and enter the following values:
+Navigate to **Slash Commands** under **Features**. Click **Create New Command** and enter the following values:
 
-| Setting                         | Value                                         |
-| ------------------------------- | --------------------------------------------- |
-| Command                         | `/{yourname}-sentry`                          |
-| Request URL                     | `{YOUR_DOMAIN}/extensions/slack/commands/`    |
+| Setting     | Value                                      |
+| ----------- | ------------------------------------------ |
+| Command     | `/{yourname}-sentry`                       |
+| Request URL | `{YOUR_DOMAIN}/extensions/slack/commands/` |
 
-
-<Alert title="Note">
-    If you're a Sentry employee, when creating the slash command avoid using `/sentry`, try something like `/{your_name}-sentry`. If multiple apps are installed with the same slash command, the most recently installed one takes over.
+<Alert title="Note (for Sentry employees)">
+  When creating the slash command avoid using `/sentry`, try something like `/{your_name}-sentry`,
+  if using a shared test workspace. When multiple apps are installed with the same slash command,
+  the most recently installed one takes precedence.
 </Alert>
 
-At the bottom of the page, click __Save__.
+At the bottom of the page, click **Save**.
 
 Now you can use Slack with Sentry! See our [documentation on installing and configuring the Slack integration for your projects](https://docs.sentry.io/product/integrations/notification-incidents/slack/) to take advantage of multi-channel Alert routing.
