@@ -1,20 +1,24 @@
-In the Laravel config, a closure can be used to modify the event or return a completely new one. If you return `null`, the event will be discarded.
+In Laravel, use a callable to modify the check-in event or return a completely new one. If you return `null`, the event will be discarded.
 
 ```php {filename:config/sentry.php}
-'before_send_check_in' => function (\Sentry\Event $event): ?\Sentry\Event {
-    $checkIn = $event->getCheckIn();
-    $checkInEnvironment = $checkIn->getEnvironment();
-
-    if ($checkInEnvironment !== 'production') {
-        return null;
-    }
-
-    return $event;
-},
+'before_send_check_in' => [App\Exceptions\Sentry::class, 'beforeSendCheckIn'],
 ```
 
-<Alert>
+Then implement the callback:
 
-Learn more in [Closures and Config Caching](/platforms/php/guides/laravel/configuration/laravel-options/#closures-and-config-caching).
+```php {filename:app/Exceptions/Sentry.php}
+class Sentry
+{
+    public static function beforeSendCheckIn(\Sentry\Event $event): ?\Sentry\Event
+    {
+        $checkIn = $event->getCheckIn();
+        $checkInEnvironment = $checkIn->getEnvironment();
 
-</Alert>
+        if ($checkInEnvironment !== 'production') {
+            return null;
+        }
+
+        return $event;
+    }
+}
+```

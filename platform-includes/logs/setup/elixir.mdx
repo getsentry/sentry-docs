@@ -1,0 +1,33 @@
+To enable logging, set `enable_logs: true` in your Sentry configuration:
+
+```elixir
+# In config/config.exs or config/runtime.exs
+config :sentry,
+  dsn: "___PUBLIC_DSN___",
+  enable_logs: true
+```
+
+When `enable_logs` is `true`, the SDK **automatically attaches** a `Sentry.LoggerHandler` (registered as `:sentry_log_handler`) on application startup. No manual handler setup is required.
+
+<Alert>
+If you already have a `Sentry.LoggerHandler` registered (for example, for crash and error reporting), the SDK will not add a second one — your existing handler will also capture logs.
+</Alert>
+
+To configure the minimum log level and other options, use the `:logs` key:
+
+```elixir
+config :sentry,
+  dsn: "___PUBLIC_DSN___",
+  enable_logs: true,
+  logs: [
+    level: :info,         # minimum log level (default: :info)
+    excluded_domains: [], # logger domains to exclude (default: [])
+    metadata: []          # metadata keys to include as attributes (default: [])
+  ]
+```
+
+<Alert>
+
+Log events are automatically batched and delivered through the SDK's Telemetry Processor, which buffers log entries and sends them to Sentry efficiently. See the <PlatformLink to="/configuration/options/#telemetry-processor-options">Telemetry Processor options</PlatformLink> for configuration details.
+
+</Alert>

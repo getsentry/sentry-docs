@@ -1,5 +1,5 @@
 ---
-title: HTTP Client Integration
+title: HTTP Client
 description: Guidelines for HTTP client integrations — breadcrumbs, spans, trace headers, DSN exclusion, and automatic error capture.
 spec_id: sdk/foundations/client/integrations/http-client
 spec_version: 1.0.0
@@ -59,8 +59,8 @@ If Performance Monitoring is both supported by the SDK and enabled in the client
 
 - operation: `http.client`
 - description: `$METHOD $url` (uppercase HTTP method), e.g. `GET https://sentry.io`
-- HTTP requests must be enhanced with a [`sentry-trace` HTTP header](/sdk/telemetry/traces/#header-sentry-trace) to support [distributed tracing](https://docs.sentry.io/product/sentry-basics/tracing/distributed-tracing)
-- HTTP requests must be enhanced with a [`baggage` HTTP header](/sdk/telemetry/traces/dynamic-sampling-context/#baggage-header) to support [dynamic sampling](/sdk/telemetry/traces/dynamic-sampling-context/)
+- HTTP requests must be enhanced with a [`sentry-trace` HTTP header](/sdk/foundations/trace-propagation/#sentry-trace-header) to support [distributed tracing](https://docs.sentry.io/product/sentry-basics/tracing/distributed-tracing)
+- HTTP requests must be enhanced with a [`baggage` HTTP header](/sdk/foundations/trace-propagation/dynamic-sampling-context/#baggage-header) to support [dynamic sampling](/sdk/foundations/trace-propagation/dynamic-sampling-context/)
 - span status must match HTTP response status code ([see Span status to HTTP status code mapping](/sdk/foundations/transport/event-payloads/span/))
 - when network error occurs, span status must be set to `internal_error`
 - span data must follow the [Span Data Conventions](/sdk/telemetry/traces/span-data-conventions/)
@@ -80,9 +80,9 @@ The HTTP Client integration should have 3 configuration options:
 - `failedRequestStatusCodes` defaults to `500 - 599`, this configuration option accepts a `List` of `HttpStatusCodeRange` which is a range of HTTP status code -> `min` to `max` or a single `status_code`.
   - The SDK will only capture HTTP Client errors if the HTTP Response status code is within the defined ranges in `failedRequestStatusCodes`.
   - If the language has a `Range` type, it should be used instead of `HttpStatusCodeRange`.
-- `failedRequestTargets` defaults to (`.*`), this configuration option accepts a `List` of `String` that may be Regular expressions as well, similar to <Link to="/sdk/telemetry/traces/#tracepropagationtargets">tracePropagationTargets</Link>.
+- `failedRequestTargets` defaults to (`.*`), this configuration option accepts a `List` of `String` that may be Regular expressions as well, similar to <Link to="/sdk/foundations/trace-propagation/#trace-propagation-targets">tracePropagationTargets</Link>.
   - The SDK will only capture HTTP Client errors if the HTTP Request URL is a match for any of the `failedRequestsTargets`.
--  While the keys of sensitive HTTP headers (e.g. `Authorization` and `Cookie`) are included, their values must be replaced with `"[Filtered]"` (also see <Link to="/sdk/expected-features/data-handling/#sensitive-data">Data Handling: Sensitive Data</Link>).
+-  While the keys of sensitive HTTP headers (e.g. `Authorization` and `Cookie`) are included, their values must be replaced with `"[Filtered]"` (also see <Link to="/sdk/foundations/data-scrubbing/#sensitive-data">Data Handling: Sensitive Data</Link>).
 
 The HTTP Client integration should capture error events with the following properties:
 
@@ -107,11 +107,11 @@ The Response context, see the <Link to="/sdk/foundations/transport/event-payload
 }
 ```
 
-The Exception Interface, see the <Link to="/sdk/foundations/transport/event-payloads/exception/">Spec</Link> for details.
+The Exception Interface, see the <Link to="/sdk/telemetry/errors/">Errors spec</Link> for details.
 
-If the HTTP Client integration does not throw an exception for unsuccessful requests, you can create a synthetic exception following this Spec:
+If the HTTP Client integration does not throw an exception for unsuccessful requests, you can create a synthetic exception following this spec:
 
-- Set the <Link to="/sdk/foundations/transport/event-payloads/exception/#exception-mechanism">Exception Mechanism</Link> with a proper `type` such as `SentryOkHttpInterceptor`.
+- Set the <Link to="/sdk/telemetry/errors/#exception-mechanism">Exception Mechanism</Link> with a proper `type` such as `SentryOkHttpInterceptor`.
 - Set the <Link to="/sdk/foundations/transport/event-payloads/stacktrace/">Stack Trace Interface</Link> with `snapshot=true`.
   - `HTTP Client Error with status code: $code`.
 

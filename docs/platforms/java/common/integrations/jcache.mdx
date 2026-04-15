@@ -1,0 +1,136 @@
+---
+title: JCache Integration
+description: "Learn how to trace cache operations using the Sentry JCache (JSR-107) integration."
+notSupported:
+  - java.spring-boot
+---
+
+Sentry's [JCache (JSR-107)](https://www.jcp.org/en/jsr/detail?id=107) integration automatically creates spans for cache operations like `get`, `put`, `remove`, and `clear`. It works with any JCache provider (Caffeine, Ehcache, Hazelcast, etc.).
+
+Cache spans appear in Sentry's [Caches dashboard](https://sentry.io/orgredirect/organizations/:orgslug/insights/backend/caches/).
+
+## Install
+
+```groovy {tabTitle:Gradle}
+implementation 'io.sentry:sentry-jcache:{{@inject packages.version('sentry.java.jcache', '8.35.0') }}'
+```
+
+```xml {tabTitle:Maven}
+<dependency>
+    <groupId>io.sentry</groupId>
+    <artifactId>sentry-jcache</artifactId>
+    <version>{{@inject packages.version('sentry.java.jcache', '8.35.0') }}</version>
+</dependency>
+```
+
+```scala {tabTitle: SBT}
+libraryDependencies += "io.sentry" % "sentry-jcache" % "{{@inject packages.version('sentry.java.jcache', '8.35.0') }}"
+```
+
+For other dependency managers, check out the [central Maven repository](https://search.maven.org/artifact/io.sentry/sentry-jcache).
+
+## Set Up
+
+Enable cache tracing in your Sentry configuration:
+
+```java {tabTitle:Java}
+Sentry.init(options -> {
+    options.setDsn("___DSN___");
+    options.setTracesSampleRate(1.0);
+    options.setEnableCacheTracing(true);
+});
+```
+
+```kotlin {tabTitle:Kotlin}
+Sentry.init { options ->
+    options.dsn = "___DSN___"
+    options.tracesSampleRate = 1.0
+    options.isEnableCacheTracing = true
+}
+```
+
+Wrap your `javax.cache.Cache` instance with `SentryJCacheWrapper`:
+
+```java {tabTitle:Java}
+import io.sentry.jcache.SentryJCacheWrapper;
+import javax.cache.Cache;
+import javax.cache.CacheManager;
+import javax.cache.Caching;
+import javax.cache.spi.CachingProvider;
+
+CachingProvider provider = Caching.getCachingProvider();
+CacheManager manager = provider.getCacheManager();
+
+Cache<String, String> cache = manager.getCache("myCache");
+Cache<String, String> sentryCache = new SentryJCacheWrapper<>(cache);
+
+// Use sentryCache — all operations produce Sentry spans
+sentryCache.put("key", "value");       // cache.put span
+String val = sentryCache.get("key");   // cache.get span (cache.hit = true)
+sentryCache.remove("key");             // cache.remove span
+sentryCache.clear();                   // cache.clear span
+```
+
+```kotlin {tabTitle:Kotlin}
+import io.sentry.jcache.SentryJCacheWrapper
+import javax.cache.Caching
+
+val provider = Caching.getCachingProvider()
+val manager = provider.cacheManager
+
+val cache = manager.getCache<String, String>("myCache")
+val sentryCache = SentryJCacheWrapper(cache)
+
+// Use sentryCache — all operations produce Sentry spans
+sentryCache.put("key", "value")       // cache.put span
+val value = sentryCache.get("key")    // cache.get span (cache.hit = true)
+sentryCache.remove("key")             // cache.remove span
+sentryCache.clear()                   // cache.clear span
+```
+
+## Traced Operations
+
+All JCache operations are traced. Each method creates a span with the operation `cache.<methodName>` (e.g. `cache.get`, `cache.putIfAbsent`, `cache.removeAll`).
+
+## Span Data
+
+| Key | Type | Description |
+|---|---|---|
+| `cache.hit` | boolean | Whether the cache lookup returned a value (read spans only) |
+| `cache.key` | list of strings | The cache key(s) involved in the operation |
+| `cache.operation` | string | The JCache method name (e.g. `get`, `putIfAbsent`, `removeAll`) |
+| `cache.write` | boolean | Whether the operation modified the cache. Always `true` for unconditional writes (`put`, `putAll`, `remove`, `clear`); reflects the actual outcome for conditional operations (`putIfAbsent`, `replace`, `getAndReplace`) and value-matched removes |
+
+Bulk operations (`getAll`, `putAll`, `removeAll`) create a single span with all keys listed in `cache.key`.
+
+## Verify
+
+To verify, trigger a cache operation within an active transaction and check the [Caches dashboard](https://sentry.io/orgredirect/organizations/:orgslug/insights/backend/caches/) or the trace view in Sentry.
+
+```java {tabTitle:Java}
+import io.sentry.ISentryLifecycleToken;
+import io.sentry.ITransaction;
+import io.sentry.Sentry;
+
+ITransaction tx = Sentry.startTransaction("test-cache", "task");
+try (ISentryLifecycleToken ignored = tx.makeCurrent()) {
+    sentryCache.put("greeting", "hello");
+    String value = sentryCache.get("greeting");
+} finally {
+    tx.finish();
+}
+```
+
+```kotlin {tabTitle:Kotlin}
+import io.sentry.Sentry
+
+val tx = Sentry.startTransaction("test-cache", "task")
+try {
+    tx.makeCurrent().use {
+        sentryCache.put("greeting", "hello")
+        val value = sentryCache.get("greeting")
+    }
+} finally {
+    tx.finish()
+}
+```

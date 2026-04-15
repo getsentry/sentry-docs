@@ -1,0 +1,172 @@
+name: Sync Early Adopter Features
+
+on:
+  # Run weekly on Mondays at 9am UTC
+  schedule:
+    - cron: '0 9 * * 1'
+  # Allow manual trigger
+  workflow_dispatch:
+
+jobs:
+  sync-ea-features:
+    runs-on: ubuntu-latest
+    name: 'Sync EA Features from Flagpole'
+    steps:
+      - uses: actions/checkout@v4.1.1
+
+      - name: Get auth token
+        id: token
+        uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf # v2.2.1
+        with:
+          app-id: ${{ vars.SENTRY_INTERNAL_APP_ID }}
+          private-key: ${{ secrets.SENTRY_INTERNAL_APP_PRIVATE_KEY }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Clone sentry-options-automator
+        env:
+          GITHUB_TOKEN: ${{ steps.token.outputs.token }}
+        run: |
+          git clone --depth 1 https://x-access-token:${GITHUB_TOKEN}@github.com/getsentry/sentry-options-automator.git /tmp/sentry-options-automator-sync
+
+      - name: Run EA features sync with update
+        id: sync
+        run: |
+          set -o pipefail
+          # Run sync and capture output (pipefail ensures we catch script failures)
+          pnpm ts-node scripts/sync-ea-features.ts --update 2>&1 | tee sync-output.txt
+          
+          # Check if any files changed
+          if git diff --quiet; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "No changes detected"
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "Changes detected"
+            
+            # Extract counts for PR description (use emoji prefix to avoid UNDOCUMENTED matching DOCUMENTED)
+            new_count=$(grep -oP '(?<=❌ NEW UNMAPPED FEATURES \()[0-9]+' sync-output.txt || echo "0")
+            removed_count=$(grep -oP '(?<=⚠️  REMOVED FEATURES \()[0-9]+' sync-output.txt || echo "0")
+            documented_count=$(grep -oP '(?<=✅ DOCUMENTED EA FEATURES \()[0-9]+' sync-output.txt || echo "0")
+            undocumented_count=$(grep -oP '(?<=📝 UNDOCUMENTED EA FEATURES \()[0-9]+' sync-output.txt || echo "0")
+            
+            echo "new_count=$new_count" >> $GITHUB_OUTPUT
+            echo "removed_count=$removed_count" >> $GITHUB_OUTPUT
+            echo "documented_count=$documented_count" >> $GITHUB_OUTPUT
+            echo "undocumented_count=$undocumented_count" >> $GITHUB_OUTPUT
+            
+            # Extract undocumented features list for PR body (use -E for extended regex)
+            sed -E -n '/UNDOCUMENTED EA FEATURES/,/={60}/p' sync-output.txt | grep "^   - " | sed 's/^   //' > undocumented-features.txt || true
+          fi
+
+      - name: Create Pull Request
+        if: steps.sync.outputs.has_changes == 'true'
+        env:
+          GITHUB_TOKEN: ${{ steps.token.outputs.token }}
+        run: |
+          git config user.email "bot@getsentry.com"
+          git config user.name "getsentry-bot"
+          
+          # Create branch with timestamp to avoid collisions on same-day runs
+          branch="bot/sync-ea-features-$(date +%Y%m%d-%H%M%S)"
+          git checkout -b "$branch"
+          
+          # Stage changes
+          git add src/data/ea-features.json docs/organization/early-adopter-features/index.mdx
+          
+          # Commit
+          git commit -m "Sync Early Adopter features from Flagpole
+
+          Automated sync detected changes in EA features:
+          - New features added: ${{ steps.sync.outputs.new_count }}
+          - Removed features: ${{ steps.sync.outputs.removed_count }}
+          - Documented features: ${{ steps.sync.outputs.documented_count }}
+          - Undocumented features: ${{ steps.sync.outputs.undocumented_count }}"
+          
+          # Push
+          git push --set-upstream origin "$branch"
+          
+          # Create PR
+          gh pr create \
+            --title "Sync Early Adopter features from Flagpole" \
+            --label "ea-features-sync" \
+            --body "$(cat <<EOF
+          ## Summary
+
+          Automated weekly sync detected changes in Early Adopter features from Flagpole configuration.
+
+          ### Changes
+
+          | Metric | Count |
+          |--------|-------|
+          | New features added | ${{ steps.sync.outputs.new_count }} |
+          | Removed features | ${{ steps.sync.outputs.removed_count }} |
+          | Documented features | ${{ steps.sync.outputs.documented_count }} |
+          | Undocumented features | ${{ steps.sync.outputs.undocumented_count }} |
+
+          ### Undocumented EA Features
+
+          The following EA features do not have documentation links and **will not appear on the docs page** until \`docsUrl\` is added:
+
+          $(if [ -s undocumented-features.txt ]; then cat undocumented-features.txt; else echo "(none)"; fi)
+
+          > **Note:** To add a feature to the docs page, edit \`src/data/ea-features.json\` and set the \`docsUrl\` field to the documentation path.
+
+          <details>
+          <summary>Full Sync Output</summary>
+
+          \`\`\`
+          $(cat sync-output.txt)
+          \`\`\`
+
+          </details>
+
+          ### Review Checklist
+
+          - [ ] Review new feature display names (auto-generated from flag names)
+          - [ ] Assign appropriate categories to new features
+          - [ ] Add documentation links for undocumented features (if docs exist)
+          - [ ] Verify removed features should actually be removed
+
+          ### How to update feature metadata
+
+          Edit \`src/data/ea-features.json\` to update:
+          - \`displayName\`: Human-readable name
+          - \`docsUrl\`: Link to documentation (or \`null\` if none exists)
+          - \`category\`: Feature category for grouping
+
+          ---
+          *This PR was automatically created by the [EA Features Sync workflow](https://github.com/getsentry/sentry-docs/actions/workflows/sync-ea-features.yml).*
+          EOF
+          )"
+
+      - name: Summary
+        run: |
+          echo "## EA Features Sync Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.sync.outputs.has_changes }}" == "true" ]; then
+            echo "### Changes Detected" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "| Metric | Count |" >> $GITHUB_STEP_SUMMARY
+            echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+            echo "| New features added | ${{ steps.sync.outputs.new_count }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| Removed features | ${{ steps.sync.outputs.removed_count }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| Documented features | ${{ steps.sync.outputs.documented_count }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| Undocumented features | ${{ steps.sync.outputs.undocumented_count }} |" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "A PR has been created with the changes." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ No changes detected. All EA features are in sync!" >> $GITHUB_STEP_SUMMARY
+          fi

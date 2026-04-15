@@ -40,8 +40,10 @@ import DotnetSVG from 'platformicons/svg/dotnet.svg';
 import DotnetcoreSVG from 'platformicons/svg/dotnetcore.svg';
 import DotnetfxSVG from 'platformicons/svg/dotnetfx.svg';
 import EchoSVG from 'platformicons/svg/echo.svg';
+import EffectSVG from 'platformicons/svg/effect.svg';
 import ElectronSVG from 'platformicons/svg/electron.svg';
 import ElixirSVG from 'platformicons/svg/elixir.svg';
+import ElysiaSVG from 'platformicons/svg/elysia.svg';
 import EmberSVG from 'platformicons/svg/ember.svg';
 import ExpressSVG from 'platformicons/svg/express.svg';
 import FalconSVG from 'platformicons/svg/falcon.svg';
@@ -190,8 +192,10 @@ import DotnetSVGLarge from 'platformicons/svg_80x80/dotnet.svg';
 import DotnetcoreSVGLarge from 'platformicons/svg_80x80/dotnetcore.svg';
 import DotnetfxSVGLarge from 'platformicons/svg_80x80/dotnetfx.svg';
 import EchoSVGLarge from 'platformicons/svg_80x80/echo.svg';
+import EffectSVGLarge from 'platformicons/svg_80x80/effect.svg';
 import ElectronSVGLarge from 'platformicons/svg_80x80/electron.svg';
 import ElixirSVGLarge from 'platformicons/svg_80x80/elixir.svg';
+import ElysiaSVGLarge from 'platformicons/svg_80x80/elysia.svg';
 import EmberSVGLarge from 'platformicons/svg_80x80/ember.svg';
 import ExpressSVGLarge from 'platformicons/svg_80x80/express.svg';
 import FalconSVGLarge from 'platformicons/svg_80x80/falcon.svg';
@@ -478,6 +482,10 @@ const formatToSVG = {
     sm: EchoSVG,
     lg: EchoSVGLarge,
   },
+  effect: {
+    sm: EffectSVG,
+    lg: EffectSVGLarge,
+  },
   electron: {
     sm: ElectronSVG,
     lg: ElectronSVGLarge,
@@ -485,6 +493,10 @@ const formatToSVG = {
   elixir: {
     sm: ElixirSVG,
     lg: ElixirSVGLarge,
+  },
+  elysia: {
+    sm: ElysiaSVG,
+    lg: ElysiaSVGLarge,
   },
   ember: {
     sm: EmberSVG,
@@ -985,7 +997,9 @@ export const PLATFORM_TO_ICON = {
   'javascript-cordova': 'cordova',
   'javascript-cloudflare': 'cloudflare',
   'javascript-deno': 'deno',
+  'javascript-effect': 'effect',
   'javascript-electron': 'electron',
+  'javascript-elysia': 'elysia',
   'javascript-ember': 'ember',
   'javascript-express': 'express',
   'javascript-gatsby': 'gatsby',
@@ -1097,6 +1111,7 @@ export const PLATFORM_TO_ICON = {
   'rust-tracing': 'tracing',
   'rust-axum': 'axum',
   scala: 'scala',
+  sentry: 'sentry',
   stride3d: 'stride3d',
   sql: 'sql',
   sqlserver: 'sqlserver',
@@ -1148,6 +1163,7 @@ type Props = React.HTMLAttributes<HTMLDivElement | HTMLImageElement> & {
   languageIconStyles?: React.CSSProperties;
   radius?: number | null;
   size?: number;
+  title?: string;
   withLanguageIcon?: boolean;
 };
 
@@ -1159,12 +1175,12 @@ export function PlatformIcon({
   withLanguageIcon,
   languageIconStyles = {},
   style = {},
+  title,
   ...otherProps
 }: Props) {
   const icon = getIcon(platform);
   const svg = formatToSVG[icon][format];
   if (!svg) {
-    // eslint-disable-next-line no-console
     console.log('svg is null');
   }
 
@@ -1181,6 +1197,7 @@ export function PlatformIcon({
           style={{borderRadius: `${radius}px`}}
           alt={`${platform} icon`}
           loading="eager"
+          title={title}
         />
         <Image
           src={languageSvg}
@@ -1199,6 +1216,20 @@ export function PlatformIcon({
           alt={`${platform} icon`}
         />
       </div>
+    );
+  }
+
+  if (title) {
+    return (
+      <img
+        src={typeof svg === 'string' ? svg : svg?.src}
+        width={size}
+        height={size}
+        style={{borderRadius: `${radius}px`, marginTop: 0, marginBottom: 0, ...style}}
+        alt={`${platform} icon`}
+        title={title}
+        {...otherProps}
+      />
     );
   }
 

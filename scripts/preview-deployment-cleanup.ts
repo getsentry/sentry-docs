@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 const {VERCEL_PROJECT_ID, VERCEL_API_TOKEN, VERCEL_TEAM_ID} = process.env;
 
 if (!VERCEL_PROJECT_ID || !VERCEL_API_TOKEN || !VERCEL_TEAM_ID) {

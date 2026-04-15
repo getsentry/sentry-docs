@@ -5,7 +5,6 @@ import type {Metadata} from 'next';
 import {Rubik} from 'next/font/google';
 import Script from 'next/script';
 import PlausibleProvider from 'next-plausible';
-
 import {ThemeProvider} from 'sentry-docs/components/theme-provider';
 
 const rubik = Rubik({

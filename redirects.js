@@ -2,6 +2,31 @@ const isDeveloperDocs = !!process.env.NEXT_PUBLIC_DEVELOPER_DOCS;
 
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const developerDocsRedirects = [
+  {
+    source: '/sdk/getting-started/templates/contributing-md-template/',
+    destination: '/sdk/getting-started/templates/contributing-md/',
+  },
+  // Spotlight and MCP moved from expected-features to foundations/client/integrations
+  {
+    source: '/sdk/expected-features/spotlight/',
+    destination: '/sdk/foundations/client/integrations/spotlight/',
+  },
+  {
+    source: '/sdk/expected-features/mcp-instrumentation/:path*',
+    destination: '/sdk/foundations/client/integrations/mcp/:path*',
+  },
+  {
+    source: '/sdk/features/spotlight/',
+    destination: '/sdk/foundations/client/integrations/spotlight/',
+  },
+  {
+    source: '/sdk/features/mcp-instrumentation/:path*',
+    destination: '/sdk/foundations/client/integrations/mcp/:path*',
+  },
+  {
+    source: '/sdk/getting-started/templates/agents-md-template/',
+    destination: '/sdk/getting-started/templates/agents-md/',
+  },
   // Playbook reorganization: flat → grouped subfolders
   {
     source: '/sdk/getting-started/playbooks/adding-a-dependency/',
@@ -13,7 +38,8 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/getting-started/playbooks/handling-external-contributor-pr/',
-    destination: '/sdk/getting-started/playbooks/development/handling-external-contributor-pr/',
+    destination:
+      '/sdk/getting-started/playbooks/development/handling-external-contributor-pr/',
   },
   {
     source: '/sdk/getting-started/playbooks/opening-a-pr/',
@@ -25,7 +51,8 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/getting-started/playbooks/reviewing-ai-generated-code/',
-    destination: '/sdk/getting-started/playbooks/development/reviewing-ai-generated-code/',
+    destination:
+      '/sdk/getting-started/playbooks/development/reviewing-ai-generated-code/',
   },
   {
     source: '/sdk/getting-started/playbooks/syncing-feature-branches/',
@@ -33,7 +60,8 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/getting-started/playbooks/aligning-cross-sdk-changes/',
-    destination: '/sdk/getting-started/playbooks/coordination/aligning-cross-sdk-changes/',
+    destination:
+      '/sdk/getting-started/playbooks/coordination/aligning-cross-sdk-changes/',
   },
   {
     source: '/sdk/getting-started/playbooks/quarterly-cross-sdk-retro/',
@@ -53,7 +81,8 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/getting-started/playbooks/dropping-platform-support/',
-    destination: '/sdk/getting-started/playbooks/sdk-lifecycle/dropping-platform-support/',
+    destination:
+      '/sdk/getting-started/playbooks/sdk-lifecycle/dropping-platform-support/',
   },
   {
     source: '/sdk/getting-started/playbooks/setting-up-new-sdk-repo/',
@@ -61,7 +90,8 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/getting-started/playbooks/setting-up-release-infrastructure/',
-    destination: '/sdk/getting-started/playbooks/setup/setting-up-release-infrastructure/',
+    destination:
+      '/sdk/getting-started/playbooks/setup/setting-up-release-infrastructure/',
   },
   {
     source: '/sdk/miscellaneous/unified-api/tracing/:path*',
@@ -82,6 +112,23 @@ const developerDocsRedirects = [
   {
     source: '/api/:path*',
     destination: '/application/api/:path*',
+  },
+  // Context propagation consolidation (must be before the /sdk/performance/ wildcard)
+  {
+    source: '/sdk/performance/dynamic-sampling-context/',
+    destination: '/sdk/foundations/trace-propagation/dynamic-sampling-context/',
+  },
+  {
+    source: '/sdk/performance/dynamic-sampling-context/:path*',
+    destination: '/sdk/foundations/trace-propagation/dynamic-sampling-context/:path*',
+  },
+  {
+    source: '/sdk/performance/distributed-tracing/',
+    destination: '/sdk/foundations/trace-propagation/',
+  },
+  {
+    source: '/sdk/performance/distributed-tracing/:path*',
+    destination: '/sdk/foundations/trace-propagation/:path*',
   },
   {
     source: '/sdk/performance/:path*',
@@ -121,15 +168,43 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/data-handling/:path*',
-    destination: '/sdk/expected-features/data-handling/:path*',
+    destination: '/sdk/foundations/data-scrubbing/:path*',
   },
   {
-    source: '/sdk/features/:path*',
-    destination: '/sdk/expected-features/:path*',
+    source: '/sdk/expected-features/data-handling/:path*',
+    destination: '/sdk/foundations/data-scrubbing/:path*',
+  },
+  {
+    source: '/sdk/features/data-handling/:path*',
+    destination: '/sdk/foundations/data-scrubbing/:path*',
   },
   {
     source: '/sdk/rate-limiting/:path*',
-    destination: '/sdk/expected-features/rate-limiting/:path*',
+    destination: '/sdk/foundations/transport/rate-limiting/:path*',
+  },
+  {
+    source: '/sdk/expected-features/rate-limiting/:path*',
+    destination: '/sdk/foundations/transport/rate-limiting/:path*',
+  },
+  {
+    source: '/sdk/features/rate-limiting/:path*',
+    destination: '/sdk/foundations/transport/rate-limiting/:path*',
+  },
+  {
+    source: '/sdk/features/environment-variables/',
+    destination: '/sdk/foundations/client/configuration/',
+  },
+  {
+    source: '/sdk/features/setup-wizards/:path*',
+    destination: '/sdk-setup-wizards/:path*',
+  },
+  {
+    source: '/sdk/expected-features/',
+    destination: '/sdk/',
+  },
+  {
+    source: '/sdk/features/',
+    destination: '/sdk/',
   },
   {
     source: '/sdk/envelopes/:path*',
@@ -264,7 +339,7 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/setup-wizards/:path*',
-    destination: '/sdk/expected-features/setup-wizards/:path*',
+    destination: '/sdk-setup-wizards/:path*',
   },
   {
     source: '/sdk/serverless/:path*',
@@ -300,11 +375,24 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/processes/releases/',
-    destination: '/sdk/getting-started/playbooks/setup/setting-up-release-infrastructure/',
+    destination:
+      '/sdk/getting-started/playbooks/setup/setting-up-release-infrastructure/',
   },
   {
     source: '/sdk/processes/triaging/',
-    destination: '/sdk/getting-started/playbooks/',
+    destination: '/sdk/getting-started/playbooks/coordination/triaging/',
+  },
+  {
+    source: '/sdk/processes/',
+    destination: '/sdk/getting-started/',
+  },
+  {
+    source: '/sdk/processes/breaking_changes/',
+    destination: '/sdk/getting-started/playbooks/sdk-lifecycle/breaking-changes/',
+  },
+  {
+    source: '/sdk/processes/breaking-changes/',
+    destination: '/sdk/getting-started/playbooks/sdk-lifecycle/breaking-changes/',
   },
   {
     source: '/sdk/miscellaneous/feature-branches/',
@@ -450,13 +538,46 @@ const developerDocsRedirects = [
     source: '/sdk/expected-features/environment-variables/',
     destination: '/sdk/foundations/client/configuration/',
   },
+  // Context propagation consolidation
+  {
+    source: '/sdk/telemetry/traces/distributed-tracing/',
+    destination: '/sdk/foundations/trace-propagation/',
+  },
+  {
+    source: '/sdk/telemetry/traces/distributed-tracing/:path*',
+    destination: '/sdk/foundations/trace-propagation/:path*',
+  },
+  {
+    source: '/sdk/telemetry/traces/dynamic-sampling-context/',
+    destination: '/sdk/foundations/trace-propagation/dynamic-sampling-context/',
+  },
+  {
+    source: '/sdk/telemetry/traces/dynamic-sampling-context/:path*',
+    destination: '/sdk/foundations/trace-propagation/dynamic-sampling-context/:path*',
+  },
+  {
+    source: '/sdk/telemetry/traces/tracing-without-performance/',
+    destination: '/sdk/foundations/trace-propagation/#default-propagation',
+  },
+  {
+    source: '/sdk/telemetry/traces/trace-propagation-cheat-sheet/',
+    destination: '/sdk/foundations/trace-propagation/#propagation-decision-matrix',
+  },
+  {
+    source: '/sdk/expected-features/setup-wizards/:path*',
+    destination: '/sdk-setup-wizards/:path*',
+  },
 ];
 
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const userDocsRedirects = [
   {
     source: '/integrations/cursor/',
-    destination: '/organization/integrations/cursor/',
+    destination: '/organization/integrations/coding-agents/cursor/',
+  },
+  {
+    source: '/organization/integrations/cursor/',
+    destination: '/organization/integrations/coding-agents/cursor/',
   },
   {
     source: '/concepts/data-management/advanced-datascrubbing/',
@@ -507,11 +628,6 @@ const userDocsRedirects = [
     destination: '/product/sentry-toolbar/:path*',
   },
   {
-    source: '/product/ai-in-sentry/sentry-prevent-ai/:path*',
-    destination: '/product/ai-in-sentry/seer/ai-code-review/:path*',
-  },
-
-  {
     source: '/organization/integrations/launchdarkly/',
     destination: '/organization/integrations/feature-flag/launchdarkly/',
   },
@@ -554,6 +670,71 @@ const userDocsRedirects = [
   {
     source: '/organization/integrations/goastai/',
     destination: '/organization/integrations/issue-tracking/goast/',
+  },
+  // Third-party integrations consolidated page
+  {
+    source: '/organization/integrations/sonarly-integration/',
+    destination: '/organization/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/work-os/',
+    destination: '/organization/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/watchdog-security/',
+    destination: '/organization/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/releasetag/',
+    destination: '/organization/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/kawachai/',
+    destination: '/organization/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/opsbrief/',
+    destination: '/organization/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/twill/',
+    destination: '/organization/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/glue-tools/',
+    destination: '/organization/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/synkrony/',
+    destination: '/organization/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/bosun/',
+    destination: '/organization/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/steadwing-rca/',
+    destination: '/organization/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/aether/',
+    destination: '/organization/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/toolbar/',
+    destination: '/organization/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/vanta-gov/',
+    destination: '/organization/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/xurrent-imr/',
+    destination: '/organization/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/shiprail/',
+    destination: '/organization/integrations/third-party-integrations/',
   },
   {
     source: '/development/sdk-dev/:path*',
@@ -1278,7 +1459,11 @@ const userDocsRedirects = [
     source: '/product/insights/retention-priorities/',
     destination: '/organization/dynamic-sampling/',
   },
-  // End of Insights reduirects.
+  {
+    source: '/product/dashboards/sentry-dashboards/performance-metrics/',
+    destination: '/product/dashboards/sentry-dashboards/transaction-summary/',
+  },
+  // End of Insights redirects.
   {
     source: '/platforms/javascript/guides/astro/manual-setup/',
     destination: '/platforms/javascript/guides/astro/',
@@ -1506,12 +1691,32 @@ const userDocsRedirects = [
     destination: '/product/ai-in-sentry/ai-privacy-and-security/',
   },
   {
-    source: '/product/ai-in-sentry/ai-code-review/',
-    destination: '/product/ai-in-sentry/seer/ai-code-review/',
+    source: '/product/ai-in-sentry/seer/issue-fix/:path*',
+    destination: '/product/ai-in-sentry/seer/autofix/:path*',
   },
   {
-    source: '/product/ai-in-sentry/seer/issue-fix/:path*',
-    destination: '/product/ai-in-sentry/seer/root-cause-analysis/:path*',
+    source: '/product/ai-in-sentry/seer/root-cause-analysis/',
+    destination: '/product/ai-in-sentry/seer/autofix/',
+  },
+  {
+    source: '/product/ai-in-sentry/seer/issue-autofix/:path*',
+    destination: '/product/ai-in-sentry/seer/autofix/:path*',
+  },
+  {
+    source: '/product/ai-in-sentry/ai-code-review/',
+    destination: '/product/ai-in-sentry/seer/code-review/',
+  },
+  {
+    source: '/product/ai-in-sentry/sentry-prevent-ai/',
+    destination: '/product/ai-in-sentry/seer/code-review/',
+  },
+  {
+    source: '/product/ai-in-sentry/sentry-prevent-ai',
+    destination: '/product/ai-in-sentry/seer/code-review/',
+  },
+  {
+    source: '/product/ai-in-sentry/seer/ai-code-review/',
+    destination: '/product/ai-in-sentry/seer/code-review/',
   },
   // .NET profiling guide redirects - consolidate to main profiling page
   {
@@ -1555,6 +1760,10 @@ const userDocsRedirects = [
   {
     source: '/platforms/javascript/guides/nextjs/usage/',
     destination: '/platforms/javascript/guides/nextjs/capturing-errors/',
+  },
+  {
+    source: '/platforms/javascript/guides/javascript/:path*',
+    destination: '/platforms/javascript/:path*',
   },
 ];
 
