@@ -34,16 +34,22 @@ After you update the `config.yml`, `sentry.conf.py`, or `devlocal.py` you need t
   <Link to="/self-hosted/#configuration">configuration section</Link> for more information.
 </Alert>
 
+## App Settings
+
+### Interactivity & Shortcuts
+
 Now that you’ve created your app and updated your Sentry config, you can navigate to **Interactivity & Shortcuts** under **Features**.
 
 Toggle on **Interactivity & Shortcuts**.
 
 Now you’ll be able to enter your **Request URL** (this is the location of your self-hosted Sentry) and **Options Load URL**:
 
-```
+```text
 Request URL: {YOUR_DOMAIN}/extensions/slack/action/
 Options Load URL: {YOUR_DOMAIN}/extensions/slack/options-load/
 ```
+
+### OAuth & Permissions
 
 Navigate to **OAuth & Permissions** to configure the Redirect URLs.
 
@@ -51,25 +57,26 @@ Navigate to **OAuth & Permissions** to configure the Redirect URLs.
 
 Click **Add a new Redirect URL**, enter the URL, and click **Add**. Set the URL to:
 
-```
+```text
 {YOUR_DOMAIN}/extensions/slack/setup/
 ```
 
 Click **Save URLs**.
 
-## Scopes
+#### Scopes
 
 On the same page under **Scopes** you'll need to add **Bot Scopes** and **User Scopes**.
 
 Add the following scopes to **Bot Scopes**:
 
 <Alert title="Note (for self-hosted users)">
-  `channels:history`, `groups:history`, and `app_mentions:read` are used to trigger Seer which is
-  not currently available for self-hosted, meaning they're not required permissions to add.
+  `app_mentions:read`, `assistant:write`, `channels:history` and `groups:history` are used for Seer
+  Features which are not currently available for self-hosted. You can freely omit them.
 </Alert>
 
 | Scope                  | Reason                                                                                                                                                                              |
 | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `assistant:write`      | Enables accessing the app as a personal Slack Agent.                                                                                                                                |
 | `app_mentions:read`    | Receive `app_mention` events when the bot is mentioned (e.g. @Sentry) in a message.                                                                                                 |
 | `channels:read`        | List and validate public channels when configuring alert-rule destinations, and resolve channel names to IDs.                                                                       |
 | `channels:history`     | (Optional) Allows Sentry to read messages from public channels. Sentry uses this to gather context of individual threads for conversations with Seer Explorer.                      |
@@ -99,6 +106,8 @@ Add the following scopes to **User Scopes**:
   your app’s OAuth tokens to a list of IP addresses and ranges you provide.
 </Alert>
 
+### Event Subscriptions
+
 Navigate to **Event Subscriptions** and toggle “On”. Here you will enter another Request URL: `{YOUR_DOMAIN}/extensions/slack/event/`
 
 You’ll see “Verified” when you’ve entered the correct URL.
@@ -117,7 +126,8 @@ If it fails to validate, first make sure your Sentry instance is running and Sla
 
 Still on the **Event Subscription** page, go to **Subscribe to bot events** and add the following bot user events:
 
-- `app_mention` (Not supported for self-hosted)
+- `app_mention` (Not necessary for self-hosted, Seer is not available)
+- `assistant_thread_started` (Not necessary for self-hosted, Seer is not available)
 - `link_shared`
 - `message.im`
 
@@ -129,11 +139,15 @@ Lastly, still on that page, go to **App Unfurl Domains**, click **Add Domain** t
 
 At the bottom of the page, click **Save Changes**.
 
+### App Home
+
 Navigate to **App Home**, under **Features**. Here is where you can edit your bot's display name (this is the name that will be displayed when alerts are triggered).
 
 ![Bot](./bot.png)
 
 If you plan on having Slack alerts sent to specific users (`@person`) in addition to channels, toggle on the **Messages Tab** under **Show Tabs** in the **App Home** page.
+
+### Slash Commands
 
 Navigate to **Slash Commands** under **Features**. Click **Create New Command** and enter the following values:
 
@@ -151,3 +165,21 @@ Navigate to **Slash Commands** under **Features**. Click **Create New Command** 
 At the bottom of the page, click **Save**.
 
 Now you can use Slack with Sentry! See our [documentation on installing and configuring the Slack integration for your projects](https://docs.sentry.io/product/integrations/notification-incidents/slack/) to take advantage of multi-channel Alert routing.
+
+### Agents & AI Apps
+
+<Alert title="Note (for self-hosted users)">
+  Seer is not currently available for self-hosted. You can skip this section of settings changes.
+</Alert>
+
+Navigate to **Agents & AI Apps** under **Features**.
+
+Enable the Agent or Assistant toggle and add an overview for your users. For example:
+
+```text
+👋 Hey, I'm Seer — Sentry's AI debugging agent.
+
+I live in your Sentry data and I'm very good at finding out why things are on fire.
+```
+
+Under **Suggested Prompts**, ensure _Dynamic_ is selected.
