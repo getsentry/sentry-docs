@@ -1778,6 +1778,15 @@ const userDocsRedirects = [
     source: '/product/new-monitors-and-alerts/:path*',
     destination: '/product/monitors-and-alerts/:path*',
   },
+  // Notifications docs live at /product/notifications/ (no longer under alerts or monitors-and-alerts)
+  {
+    source: '/product/alerts/notifications/:path*',
+    destination: '/product/notifications/:path*',
+  },
+  {
+    source: '/product/monitors-and-alerts/alerts/notifications/:path*',
+    destination: '/product/notifications/:path*',
+  },
 ];
 
 /**

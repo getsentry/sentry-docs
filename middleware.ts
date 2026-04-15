@@ -1922,31 +1922,43 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/workflow/alerts-notifications/notifications/',
-    to: '/product/alerts/notifications/',
+    to: '/product/notifications/',
   },
   {
     from: '/workflow/notifications/workflow/',
-    to: '/product/alerts/notifications/',
+    to: '/product/notifications/',
   },
   {
     from: '/workflow/notifications/',
-    to: '/product/alerts/notifications/',
-  },
-  {
-    from: '/product/notifications/',
-    to: '/product/alerts/notifications/',
+    to: '/product/notifications/',
   },
   {
     from: '/learn/notifications/',
-    to: '/product/alerts/notifications/',
+    to: '/product/notifications/',
   },
   {
     from: '/product/alerts-notifications/notifications/',
-    to: '/product/alerts/notifications/',
+    to: '/product/notifications/',
   },
   {
     from: '/product/sentry-basics/guides/alert-notifications/notifications/',
-    to: '/product/alerts/notifications/',
+    to: '/product/notifications/',
+  },
+  {
+    from: '/product/alerts/notifications/',
+    to: '/product/notifications/',
+  },
+  {
+    from: '/product/alerts/notifications/notification-settings/',
+    to: '/product/notifications/notification-settings/',
+  },
+  {
+    from: '/product/monitors-and-alerts/alerts/notifications/',
+    to: '/product/notifications/',
+  },
+  {
+    from: '/product/monitors-and-alerts/alerts/notifications/notification-settings/',
+    to: '/product/notifications/notification-settings/',
   },
   {
     from: '/workflow/integrations/amazon-sqs/',
