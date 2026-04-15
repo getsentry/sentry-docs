@@ -1874,7 +1874,11 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/alerts/create-alerts/best-practices/',
-    to: '/product/alerts/best-practices/',
+    to: '/product/alerts/create-alerts/',
+  },
+  {
+    from: '/product/alerts/best-practices/',
+    to: '/product/alerts/create-alerts/',
   },
   {
     from: '/product/sentry-basics/guides/alert-notifications/routing-alerts/',
