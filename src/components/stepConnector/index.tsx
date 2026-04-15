@@ -148,7 +148,6 @@ export function StepComponent({
     } catch {
       // Ignore storage errors
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storageKey, checkable]);
 
   useEffect(() => {

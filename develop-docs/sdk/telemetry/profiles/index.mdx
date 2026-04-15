@@ -1,14 +1,601 @@
 ---
 title: Profiles
-sidebar_order: 6
+description: Stack trace sampling at regular intervals for flamecharts and performance bottleneck analysis.
+spec_id: sdk/telemetry/profiles
+spec_version: 2.5.0
+spec_status: stable
+spec_depends_on:
+  - id: sdk/foundations/transport/envelopes
+    version: ">=1.0.0"
+spec_changelog:
+  - version: 2.5.0
+    date: 2026-02-20
+    summary: Deprecated V1 transaction-based profiling in favor of V2 continuous profiling
+  - version: 2.4.0
+    date: 2026-01-23
+    summary: Added platform item header requirement for profile_chunk envelope
+  - version: 2.3.1
+    date: 2025-11-27
+    summary: Clarified trace mode profiling behavior for UI profiling
+  - version: 2.3.0
+    date: 2025-10-22
+    summary: Added Continuous/UI Profiling public API (start_profiler, stop_profiler, configuration)
+  - version: 2.2.1
+    date: 2025-06-27
+    summary: Fixed V2 sample timestamp documentation
+  - version: 2.2.0
+    date: 2025-06-27
+    summary: Tightened client_sdk to required in V2 format
+  - version: 2.1.1
+    date: 2024-11-21
+    summary: Added lockstep sampling explanation (101Hz frequency rationale)
+  - version: 2.1.0
+    date: 2024-09-11
+    summary: Added transaction/span context requirements for linking continuous profiles to traces
+  - version: 2.0.0
+    date: 2024-09-03
+    summary: Added V2 sample format for continuous profiling
+  - version: 1.1.1
+    date: 2023-03-31
+    summary: Clarified stack ordering and clock type for V1 format
+  - version: 1.1.0
+    date: 2023-03-15
+    summary: Added frame details and validation requirements to V1 format
+  - version: 1.0.1
+    date: 2023-03-13
+    summary: Fixed typo in V1 format documentation
+  - version: 1.0.0
+    date: 2023-03-07
+    summary: Initial spec — V1 transaction-based profiling sample format
 ---
 
-This document defines the Sample format used by Sentry to ingest profiles. This
-document is meant for Sentry SDK developers and maintainers of the profile
-ingestion pipeline.
+<SpecRfcAlert />
 
-This format is meant to be cross platform and allow to represent samples
-collected by a profiler.
+<SpecMeta />
 
+## Overview
 
-<PageGrid />
+Profiling captures stack traces at regular intervals during program execution, enabling Sentry to reconstruct flamecharts and identify performance bottlenecks. SDKs collect profile data and send it to Sentry as `profile_chunk` envelope items using the V2 sample format.
+
+- **V2 (Continuous):** Profile chunks exist independently and are sent as `profile_chunk` envelope items. Used for continuous and UI profiling. **This is the current format — all new SDK implementations SHOULD use V2.**
+- **V1 (Transaction-based):** *(Deprecated)* Profile is bound to a transaction and sent in the same envelope. SDKs **SHOULD** migrate to V2.
+
+Related specs:
+- [Envelopes](/sdk/foundations/transport/envelopes/) — transport format
+- [Envelope Items](/sdk/foundations/transport/envelope-items/) — `profile` and `profile_chunk` item type constraints
+- [Frame Attributes](/sdk/foundations/transport/event-payloads/stacktrace/#frame-attributes) — frame object format
+
+---
+
+## Concepts
+
+### Sample Formats
+
+Two sample format versions exist:
+
+- **V2** (`"version": "2"`) — A profile chunk exists independently of transactions. It is sent in its own envelope using the `profile_chunk` item type. Used for continuous and UI profiling. **This is the current format.**
+- **V1** (`"version": "1"`) — *(Deprecated since 2.5.0)* A profile is always associated with a transaction. It is sent in the same envelope as the associated transaction using the `profile` item type. SDKs **SHOULD** migrate to V2.
+
+### Profile Data Structure
+
+Both formats share a common profile data structure consisting of:
+- **Samples** — timestamps with corresponding thread and stack references
+- **Stacks** — lists of frame indices forming stack traces
+- **Frames** — function/line information for each position in a stacktrace
+- **Thread metadata** — names and priorities for profiled threads
+
+### Profiling Modes (V2)
+
+Continuous profiling operates in one of two lifecycle modes:
+
+- **Manual mode** (`profile_lifecycle: 'manual'`) — The profiler is controlled via explicit `start_profiler()` and `stop_profiler()` calls.
+- **Trace mode** (`profile_lifecycle: 'trace'`) — The profiler starts/stops automatically based on active root spans.
+
+---
+
+## Behavior
+
+<SpecSection id="sampling-frequency" status="stable" since="1.0.0">
+
+### Sampling Frequency
+
+SDKs **SHOULD** collect profile samples at a frequency of 101Hz (roughly once every 10 milliseconds).
+
+The 101Hz value is intentional to avoid [lockstep sampling](https://stackoverflow.com/a/45471031/1181370) — a condition where profiling samples occur at the same frequency as a loop in the application. (since 2.1.1) 101 was chosen for its primality; 99 (1 below 100) is evenly divisible by several smaller numbers, which could lead to similar lockstep behavior.
+
+</SpecSection>
+
+<SpecSection id="profile-lifecycle-modes" status="stable" since="2.3.0">
+
+### Profile Lifecycle Modes
+
+SDKs implementing continuous profiling **MUST** support two lifecycle modes:
+
+**Manual mode** (`profile_lifecycle: 'manual'`):
+- The profiler is controlled via `start_profiler()` and `stop_profiler()`.
+- Profiling only respects `profile_session_sample_rate` (independent of spans).
+- If the session is sampled, `start_profiler()` starts the profiler.
+
+**Trace mode** (`profile_lifecycle: 'trace'`):
+- **This mode requires tracing to be enabled.** SDKs **SHOULD** log a warning if `profile_lifecycle` is set to `'trace'` but tracing is disabled.
+- The profiler starts automatically when there is at least one active root span and stops when there are no active root spans (letting the current chunk finish).
+- Profiling respects **both** `profile_session_sample_rate` and the tracing sampling configuration (`traces_sample_rate` or `traces_sampler`).
+- `profile_session_sample_rate` is checked first. If the session is not sampled, no profiling will occur.
+- (since 2.3.1) Only if a root span is sampled (based on `traces_sample_rate` / `traces_sampler`), profiling will start. Profile sampling is re-evaluated for each root span.
+- The profiler runs as long as there is at least one **sampled** root span. If multiple root spans overlap, profiling continues until the last sampled root span finishes.
+
+</SpecSection>
+
+<SpecSection id="tracing-context-linking" status="stable" since="2.1.0">
+
+### Tracing Context Linking
+
+For continuous profiling (V2), additional context **MUST** be attached to transaction and span payloads to link them to profile data.
+
+**Profile context** (`.contexts.profile`):
+SDKs **MUST** include the `profiler_id` in the profile context of transactions so the profile can be associated back to the transaction.
+
+**Trace context** (`.contexts.trace.data`):
+SDKs **MUST** include `thread.id` in the trace context data to identify which thread is associated with the transaction. `thread.name` **MAY** be included.
+
+**Span data** (`.spans[].data`):
+SDKs **MUST** include `thread.id` in span data. `thread.name` and `profiler_id` (to override the trace context value) **MAY** be included.
+
+</SpecSection>
+
+---
+
+## Wire Format
+
+<SpecSection id="v1-sample-format" status="deprecated" since="1.0.0" superseded_by="#v2-sample-format">
+
+### V1 Sample Format Payload
+
+A V1 profile **MUST** be associated with a transaction and sent in the same envelope.
+
+#### V1 Metadata Fields
+
+| Field | Type | Required | Since | Description |
+|-------|------|----------|-------|-------------|
+| `version` | String | **REQUIRED** | 1.0.0 | **MUST** be `"1"`. |
+| `event_id` | String | **REQUIRED** | 1.0.0 | Hexadecimal UUID v4, exactly 32 characters, lowercase, no dashes. |
+| `platform` | String | **REQUIRED** | 1.0.0 | Platform identifier (e.g., `cocoa`, `node`, `python`, `rust`). |
+| `release` | String | **REQUIRED** | 1.0.0 | Release version of the application. |
+| `device` | Object | **REQUIRED** | 1.0.0 | Device information. See [V1 Device Object](#v1-device-object). |
+| `os` | Object | **REQUIRED** | 1.0.0 | OS information: `name` (required), `version` (required), `build_number` (optional, cocoa only). |
+| `profile` | Object | **REQUIRED** | 1.0.0 | Profile data. See [Profile Data](#profile-data). |
+| `transaction` | Object | **REQUIRED** | 1.0.0 | Associated transaction: `id` (required), `name` (required), `trace_id` (required), `active_thread_id` (required, uint64 as string). |
+| `timestamp` | String | **RECOMMENDED** | 1.0.0 | RFC 3339 timestamp of when the profile was captured. **SHOULD** match the transaction's `start_timestamp`. |
+| `environment` | String | **RECOMMENDED** | 1.0.0 | Environment name. Default: `production`. |
+| `debug_meta` | Object | **REQUIRED** (native) | 1.0.0 | Debug metadata for symbolication. Required on native platforms (`cocoa`, `rust`). Same payload as the [`debug_meta` interface](/sdk/foundations/transport/event-payloads/sdk/). |
+| `measurements` | Object | **OPTIONAL** | 1.0.0 | Metrics collected during profiling (e.g., `frozen_frame_renders`, `slow_frame_renders`). See [Measurements](#measurements). |
+| `runtime` | Object | **OPTIONAL** | 1.0.0 | Runtime information (`name`, `version`). Used for platforms with multiple runtimes. |
+
+#### V1 Device Object
+
+| Field | Type | Required | Since | Description |
+|-------|------|----------|-------|-------------|
+| `architecture` | String | **REQUIRED** | 1.0.0 | CPU architecture (e.g., `arm64e`). |
+| `is_emulator` | Boolean | **OPTIONAL** | 1.0.0 | Whether running in an emulator. Usually mobile only. |
+| `locale` | String | **OPTIONAL** | 1.0.0 | System locale. Usually mobile only. |
+| `manufacturer` | String | **OPTIONAL** | 1.0.0 | Device manufacturer. Usually mobile only. |
+| `model` | String | **OPTIONAL** | 1.0.0 | Device model. Usually mobile only. |
+
+</SpecSection>
+
+<SpecSection id="v2-sample-format" status="stable" since="2.0.0">
+
+### V2 Sample Format Payload
+
+A V2 profile chunk exists independently and is sent as a `profile_chunk` envelope item.
+
+#### V2 Metadata Fields
+
+| Field | Type | Required | Since | Description |
+|-------|------|----------|-------|-------------|
+| `version` | String | **REQUIRED** | 2.0.0 | **MUST** be `"2"`. |
+| `profiler_id` | String | **REQUIRED** | 2.0.0 | Hexadecimal UUID v4, exactly 32 characters, lowercase, no dashes. Random UUID for each profiler session. |
+| `chunk_id` | String | **REQUIRED** | 2.0.0 | Hexadecimal UUID v4, exactly 32 characters, lowercase, no dashes. Random UUID identifying this chunk. |
+| `platform` | String | **REQUIRED** | 2.0.0 | Platform identifier. |
+| `release` | String | **REQUIRED** | 2.0.0 | Release version of the application. |
+| `client_sdk` | Object | **REQUIRED** | 2.0.0 | SDK information: `name` and `version`. (since 2.2.0) Changed from optional to required. |
+| `profile` | Object | **REQUIRED** | 2.0.0 | Profile data. See [Profile Data](#profile-data). |
+| `environment` | String | **RECOMMENDED** | 2.0.0 | Environment name. Default: `production`. |
+| `debug_meta` | Object | **REQUIRED** (native) | 2.0.0 | Debug metadata for symbolication. Required on native platforms. Same payload as the [`debug_meta` interface](/sdk/foundations/transport/event-payloads/sdk/). |
+| `measurements` | Object | **OPTIONAL** | 2.0.0 | Metrics collected during profiling. See [Measurements](#measurements). |
+
+</SpecSection>
+
+<SpecSection id="profile-data" status="stable" since="1.0.0">
+
+### Profile Data
+
+Both V1 and V2 formats share the same `profile` object structure:
+
+| Field | Type | Required | Since | Description |
+|-------|------|----------|-------|-------------|
+| `samples` | List | **REQUIRED** | 1.0.0 | List of sample objects. Each sample contains `stack_id` (integer), `thread_id` (string), and a timestamp — V1 uses `elapsed_since_start_ns` (uint64 as string, wall time nanoseconds since profile start); V2 uses `timestamp` (float64, Unix seconds with microsecond precision). |
+| `stacks` | List | **REQUIRED** | 1.0.0 | List of frame index arrays forming stack traces. Frames **SHOULD** be ordered from leaf to root (main frame at end). SDKs **SHOULD** deduplicate stacks. |
+| `frames` | List | **REQUIRED** | 1.0.0 | List of [frame objects](/sdk/foundations/transport/event-payloads/stacktrace/#frame-attributes). (since 1.1.0) Each frame **MUST** contain at least one of `filename`, `function`, or `instruction_addr`. For native platforms, `instruction_addr` is **REQUIRED** for symbolication. `module` or `package` is used for frame grouping. |
+| `thread_metadata` | Object | **REQUIRED** | 1.0.0 | Object keyed by thread ID. Each entry **MAY** contain `name` (string) and `priority` (number). Used in the flamechart thread selector. |
+
+#### Measurements
+
+Measurement values differ between V1 and V2:
+- **V1:** Uses `elapsed_since_start_ns` (nanoseconds since profile start, uint64 as string) and `value` (float64).
+- **V2:** Uses `timestamp` (Unix timestamp in seconds with microsecond precision, float64) and `value` (float64).
+
+Currently supported measurements: `frozen_frame_renders` and `slow_frame_renders`.
+
+Accepted measurement units: `nanosecond`, `ns`, `hertz`, `hz`, `byte`, `percent`.
+
+</SpecSection>
+
+<SpecSection id="v1-validation" status="deprecated" since="1.1.0" superseded_by="#v2-validation">
+
+### V1 Validation
+
+Relay rejects a V1 profile if any of these conditions are true:
+- Profile data is missing (no frames, no samples, no stacks)
+- Fewer than 2 samples
+- No transaction associated with the profile
+- Required metadata is missing
+- Profile size exceeds 50 MB
+- Profile duration exceeds 30 seconds (difference between last and first sample timestamp)
+
+SDKs **SHOULD** validate these conditions before sending.
+
+SDKs **SHOULD** remove unnecessary data like thread entries without samples from `thread_metadata`.
+
+</SpecSection>
+
+<SpecSection id="v2-validation" status="stable" since="2.0.0">
+
+### V2 Validation
+
+Relay rejects a V2 profile chunk if any of these conditions are true:
+- Chunk data is missing (no frames, no samples, no stacks)
+- Required metadata is missing
+- Chunk size exceeds 50 MB
+
+SDKs **SHOULD** validate these conditions before sending.
+
+SDKs **SHOULD** remove unnecessary data like thread entries without samples from `thread_metadata`.
+
+</SpecSection>
+
+<SpecSection id="v1-envelope" status="deprecated" since="1.0.0" superseded_by="#v2-envelope">
+
+### V1 Envelope Format
+
+A V1 profile **MUST** be serialized as JSON and sent in the same [envelope](/sdk/foundations/transport/envelopes/) as the associated transaction with item type `profile`. An envelope **MUST** contain at most one `profile` item.
+
+```json
+{"event_id":"a229377b82ad4898be7c3a6272d052d9"}
+{"type":"transaction"}
+{ /* transaction JSON payload */ }
+{"type":"profile"}
+{ /* profile JSON payload */ }
+```
+
+</SpecSection>
+
+<SpecSection id="v2-envelope" status="stable" since="2.0.0">
+
+### V2 Envelope Format
+
+A V2 profile chunk **MUST** be serialized as JSON and sent in an [envelope](/sdk/foundations/transport/envelopes/) with item type `profile_chunk`.
+
+(since 2.4.0) The `platform` item header is **REQUIRED** for rate limiting and categorization and **MUST** match the `platform` field in the payload.
+
+```json
+{"event_id":"a229377b82ad4898be7c3a6272d052d9"}
+{"type":"profile_chunk", "platform":"node"}
+{ /* profile_chunk JSON payload */ }
+```
+
+</SpecSection>
+
+<SpecSection id="tracing-context-payload" status="stable" since="2.1.0">
+
+### Tracing Context Payload
+
+For V2 continuous profiling, SDKs **MUST** modify transaction and span payloads to enable profile linking.
+
+**Profile context** (`.contexts.profile`):
+
+| Field | Type | Required | Since | Description |
+|-------|------|----------|-------|-------------|
+| `profiler_id` | String | **REQUIRED** | 2.1.0 | UUID matching the profiler session. |
+
+**Trace context data** (`.contexts.trace.data`):
+
+| Field | Type | Required | Since | Description |
+|-------|------|----------|-------|-------------|
+| `thread.id` | String | **REQUIRED** | 2.1.0 | Thread ID matching `thread_metadata` in the profile chunk. Often the thread the transaction was started on. |
+| `thread.name` | String | **OPTIONAL** | 2.1.0 | Thread name matching `thread_metadata` in the profile chunk. |
+
+**Span data** (`.spans[].data`):
+
+| Field | Type | Required | Since | Description |
+|-------|------|----------|-------|-------------|
+| `thread.id` | String | **REQUIRED** | 2.1.0 | Thread ID matching `thread_metadata` in the profile chunk. |
+| `thread.name` | String | **OPTIONAL** | 2.1.0 | Thread name matching `thread_metadata` in the profile chunk. |
+| `profiler_id` | String | **OPTIONAL** | 2.1.0 | Override for the profile context `profiler_id`. |
+
+</SpecSection>
+
+---
+
+## Public API
+
+<SpecSection id="profile-session-sample-rate" status="stable" since="2.3.0">
+
+### Profile Session Sample Rate
+
+SDKs implementing continuous profiling **MUST** accept a `profileSessionSampleRate` configuration option (number, 0.0–1.0, default 0). The sampling decision is made once when the SDK is initialized.
+
+The definition of a profiling session depends on the profiling type:
+
+- **Continuous Profiling:** The session starts when the SDK is configured and stops when the service terminates. `profileSessionSampleRate` controls the percentage of service instances with profiling enabled. Sampling is re-evaluated on restart or redeployment.
+- **UI Profiling:** The session corresponds to a user session (SDK initialization to tab close or session end). On mobile, backgrounding and foregrounding starts a new session with re-evaluated sampling. If a trace is active when the app is foregrounded, the existing profiling session continues until the last root span in that trace finishes.
+
+If `profilesSampleRate` or `profilesSampler` are configured for transaction-based profiling, `profileSessionSampleRate` has no effect. SDKs **SHOULD** log a warning in this case.
+
+Naming **SHOULD** follow the SDK's language conventions:
+- `profileSessionSampleRate` (JavaScript)
+- `profile_session_sample_rate` (Python)
+
+</SpecSection>
+
+<SpecSection id="profile-lifecycle" status="stable" since="2.3.0">
+
+### Profile Lifecycle
+
+SDKs implementing continuous profiling **MUST** accept a `profileLifecycle` configuration option with values `'trace'` or `'manual'` (default: `'manual'`).
+
+See [Profile Lifecycle Modes](#profile-lifecycle-modes) for behavior details.
+
+Naming **SHOULD** follow the SDK's language conventions:
+- `profileLifecycle` (JavaScript)
+- `profile_lifecycle` (Python)
+
+</SpecSection>
+
+<SpecSection id="start-profiler-on-app-start" status="stable" since="2.3.0">
+
+### Start Profiler on App Start
+
+Mobile SDKs **MAY** accept a `startProfilerOnAppStart` configuration option (boolean, default `false`).
+
+When `true`, profiling starts as early as possible during app startup, before `startProfiler()` can be manually called. The `profileSessionSampleRate` for app start profiling is evaluated on the **previous** app launch and applied on the **next** launch, since the sample rate cannot be evaluated at launch time.
+
+Behavior with `profileLifecycle`:
+- **`'manual'`**: Profiling starts on startup. The developer **MUST** call `stopProfiler()` when startup is complete.
+- **`'trace'`**: Profiling starts on startup and stops automatically when the root span associated with app startup ends.
+
+Naming **SHOULD** follow the SDK's language conventions:
+- `start_profiler_on_app_start` (Python)
+
+</SpecSection>
+
+<SpecSection id="start-profiler" status="stable" since="2.3.0">
+
+### Start Profiler
+
+SDKs implementing continuous profiling **SHOULD** expose a function to start the profiler:
+
+```
+startProfiler() -> void
+```
+
+This is a no-op if any of the following conditions are met:
+- The profiling session is sampled and the profiler is already running.
+- The profiling session is not sampled.
+- `profileLifecycle` is set to `'trace'` (profiler lifecycle is bound to trace collection).
+
+SDKs **SHOULD** log a warning in debug mode if this function is called but results in a no-op.
+
+Naming **SHOULD** follow the SDK's language conventions:
+- `Sentry.startProfiler()` (JavaScript)
+- `sentry_sdk.start_profiler()` (Python)
+
+</SpecSection>
+
+<SpecSection id="stop-profiler" status="stable" since="2.3.0">
+
+### Stop Profiler
+
+SDKs implementing continuous profiling **SHOULD** expose a function to stop the profiler:
+
+```
+stopProfiler() -> void
+```
+
+Behavior depends on `profileLifecycle`:
+- **`'manual'`**: Stops the current profiling session. The profiler can be started again by calling `startProfiler()`.
+- **`'trace'`**: This is a no-op. The profiler stops automatically when there are no active root spans.
+
+SDKs **SHOULD** log a warning in debug mode if this function is called while `profileLifecycle` is `'trace'`.
+
+Naming **SHOULD** follow the SDK's language conventions:
+- `Sentry.stopProfiler()` (JavaScript)
+- `sentry_sdk.stop_profiler()` (Python)
+
+</SpecSection>
+
+---
+
+## Examples
+
+### V1 Profile Payload
+
+```json
+{
+  "debug_meta": {
+    "images": [
+      {
+        "debug_id": "32420279-25E2-34E6-8BC7-8A006A8F2425",
+        "image_addr": "0x000000010258c000",
+        "code_file": "/private/var/containers/Bundle/Application/C3511752-DD67-4FE8-9DA2-ACE18ADFAA61/TrendingMovies.app/TrendingMovies",
+        "type": "macho",
+        "image_size": 1720320,
+        "image_vmaddr": "0x0000000100000000"
+      }
+    ]
+  },
+  "device": {
+    "architecture": "arm64e",
+    "is_emulator": true,
+    "locale": "en_US",
+    "manufacturer": "Apple",
+    "model": "iPhone14,8"
+  },
+  "environment": "development",
+  "event_id": "41fed0925670468bb0457f61a74688ec",
+  "os": {
+    "build_number": "20D47",
+    "name": "iOS",
+    "version": "16.3"
+  },
+  "platform": "cocoa",
+  "release": "1.0 (9999)",
+  "runtime": {
+    "name": "",
+    "version": ""
+  },
+  "timestamp": "2023-01-01T00:00:00.000Z",
+  "transaction": {
+    "active_thread_id": "259",
+    "id": "30976f2ddbe04ac9b6bffe6e35d4710c",
+    "name": "example_ios_movies_sources.MoviesViewController",
+    "trace_id": "4b25bc58f14243d8b208d1e22a054164"
+  },
+  "version": "1",
+  "profile": {
+    "samples": [
+      {
+        "elapsed_since_start_ns": "1234567890",
+        "stack_id": 0,
+        "thread_id": "259"
+      }
+    ],
+    "stacks": [[0]],
+    "frames": [
+      {
+        "instruction_addr": "0xa722447ffffffffc"
+      }
+    ],
+    "thread_metadata": {
+      "259": {
+        "priority": 31
+      }
+    }
+  }
+}
+```
+
+### V2 Profile Chunk Payload
+
+```json
+{
+  "debug_meta": {
+    "images": [
+      {
+        "debug_id": "5819FF25-01CB-3D32-B84F-0634B37D3BBC",
+        "image_addr": "0x00000001023a8000",
+        "type": "macho",
+        "image_size": 16384,
+        "code_file": "/Library/Developer/CoreSimulator/Volumes/iOS_21C62/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 17.2.simruntime/Contents/Resources/RuntimeRoot/usr/lib/libLogRedirect.dylib"
+      }
+    ]
+  },
+  "profiler_id": "71bba98d90b545c39f2ae73f702d7ef4",
+  "chunk_id": "3e11a5c9831f4e49939c0a81944ea2cb",
+  "client_sdk": {
+    "name": "sentry.cocoa",
+    "version": "8.36.0"
+  },
+  "platform": "cocoa",
+  "release": "io.sentry.sample.iOS-Swift@8.36.0+1",
+  "environment": "simulator",
+  "version": "2",
+  "profile": {
+    "samples": [
+      {
+        "thread_id": "259",
+        "stack_id": 0,
+        "timestamp": 1724777211.5037799
+      }
+    ],
+    "stacks": [[0]],
+    "frames": [
+      {
+        "instruction_addr": "0x000000010232d144",
+        "function": "_ZNK5dyld311MachOLoaded17findClosestSymbolEyPPKcPy"
+      }
+    ],
+    "thread_metadata": {
+      "259": {
+        "name": "main"
+      }
+    }
+  }
+}
+```
+
+### V1 Envelope
+
+```
+{"event_id":"a229377b82ad4898be7c3a6272d052d9"}
+{"type":"transaction"}
+{ /* transaction JSON payload */ }
+{"type":"profile"}
+{ /* V1 profile JSON payload */ }
+```
+
+### V2 Envelope
+
+```
+{"event_id":"a229377b82ad4898be7c3a6272d052d9"}
+{"type":"profile_chunk", "platform":"node"}
+{ /* V2 profile_chunk JSON payload */ }
+```
+
+### Tracing Context for V2
+
+Profile context on transaction:
+
+```json
+{
+  "contexts": {
+    "profile": {
+      "profiler_id": "42928c7ee9174231956f077581145489"
+    },
+    "trace": {
+      "data": {
+        "thread.id": "259",
+        "thread.name": "com.apple.main-thread"
+      }
+    }
+  }
+}
+```
+
+Span data:
+
+```json
+{
+  "data": {
+    "thread.id": "259",
+    "thread.name": "com.apple.main-thread",
+    "profiler_id": "42928c7ee9174231956f077581145489"
+  }
+}
+```
+
+---
+
+## Changelog
+
+<SpecChangelog />

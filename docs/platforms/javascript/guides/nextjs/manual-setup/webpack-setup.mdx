@@ -22,7 +22,7 @@ For a complete reference of all build configuration options, see the [Build Conf
 | Middleware instrumentation      | Automatic via Next.js telemetry | Build-time code injection                            |
 | Source map upload               | Post-compile during build       | During build via plugin (default)                    |
 | Route exclusion                 | Not supported                   | Supported via `webpack.excludeServerRoutes`          |
-| React component annotation      | Not supported                   | Supported via `webpack.reactComponentAnnotation`     |
+| React component annotation      | Experimental (Next.js 16+)      | Supported via `webpack.reactComponentAnnotation`     |
 | Logger tree-shaking             | Not supported                   | Supported via `webpack.treeshake.removeDebugLogging` |
 
 ## Auto-Instrumentation Options
@@ -268,8 +268,10 @@ export async function submitForm(formData: FormData) {
 With Webpack, you can enable React component name tracking. This annotates React components with `data-sentry-*` attributes that allow Sentry to identify which components users interacted with in [Session Replay](/platforms/javascript/guides/nextjs/session-replay/) and [breadcrumbs](/platforms/javascript/guides/nextjs/enriching-events/breadcrumbs/).
 
 <Alert level="info">
-  This feature is only available with Webpack. Turbopack does not support React
-  component annotation.
+  For Turbopack builds, component annotation is available as an experimental
+  feature requiring Next.js 16+. See
+  [`_experimental.turbopackReactComponentAnnotation`](/platforms/javascript/guides/nextjs/configuration/build/#_experimentalturbopackreactcomponentannotationenabled)
+  in the build options reference.
 </Alert>
 
 <SplitLayout>
@@ -362,7 +364,7 @@ import { withSentryConfig } from "@sentry/nextjs";
 
 export default withSentryConfig(nextConfig, {
   // Use a fixed route (recommended)
-  tunnelRoute: "/monitoring",
+  tunnelRoute: "/sentry-tunnel",
 });
 ```
 
@@ -383,13 +385,13 @@ If you're upgrading to Turbopack:
 // Before (Webpack)
 export default withSentryConfig(nextConfig, {
   excludeServerRoutes: ["/api/health"],
-  tunnelRoute: "/monitoring",
+  tunnelRoute: "/sentry-tunnel",
 });
 
 // After (Turbopack)
 export default withSentryConfig(nextConfig, {
   // excludeServerRoutes is not supported with Turbopack
-  tunnelRoute: "/monitoring",
+  tunnelRoute: "/sentry-tunnel",
 });
 ```
 
@@ -397,6 +399,6 @@ export default withSentryConfig(nextConfig, {
 
 - [Logs Integrations](/platforms/javascript/guides/nextjs/logs/#integrations) - Connect popular logging libraries like Pino, Winston, and Bunyan
 - [Distributed Tracing](/platforms/javascript/guides/nextjs/tracing/distributed-tracing/) - Trace requests across services and microservices
-- [AI Agent Monitoring](/platforms/javascript/guides/nextjs/tracing/instrumentation/ai-agents-module/) - Monitor AI agents built with Vercel AI SDK, LangChain, and more
+- [AI Agent Monitoring](/platforms/javascript/guides/nextjs/ai-agent-monitoring/) - Monitor AI agents built with Vercel AI SDK, LangChain, and more
 - [Connect GitHub + Seer](/organization/integrations/source-code-mgmt/github/#installing-github) - Enable AI-powered [root cause analysis](/product/ai-in-sentry/seer/)
 - [Configuration Options](/platforms/javascript/guides/nextjs/configuration/) - Explore extended SDK configuration

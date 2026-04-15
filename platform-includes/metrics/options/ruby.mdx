@@ -1,0 +1,35 @@
+#### before_send_metric
+
+To filter metrics, or update them before they are sent to Sentry, you can use the `before_send_metric` option. If the callback returns `nil`, the metric is not emitted. Attributes can also be updated in the callback function.
+
+```ruby
+Sentry.init do |config|
+  config.dsn = "___PUBLIC_DSN___"
+
+  config.before_send_metric = lambda do |metric|
+    # filter metric
+    return nil if metric.name == "removed-metric"
+
+    # add attributes
+    metric.attributes[:extra] = "foo"
+
+    # remove attributes
+    metric.attributes.delete(:browser) if metric.attributes.has_key?(:browser)
+
+    metric
+  end
+end
+```
+
+The `before_send_metric` function receives a `MetricEvent` object, and should return a `MetricEvent` object if you want it to be sent to Sentry, or `nil` if you want to discard it.
+
+The `MetricEvent` object has the following attributes:
+
+- `name`: (`String`) The name of the metric.
+- `type`: (`Symbol`) - one of `:counter`, `:gauge`, `:distribution`) The type of metric.
+- `value`: (`Float`) The numeric value of the metric.
+- `unit`: (`Optional[String]`) The unit of measurement for the metric value.
+- `attributes`: (`Hash`) Additional attributes to be sent with the metric.
+- `timestamp`: (`Time`) Timestamp indicating when the metric was recorded.
+- `trace_id`: (`Optional[String]`) The trace ID of the trace this metric belongs to.
+- `span_id`: (`Optional[String]`) The span ID of the span that was active when the metric was emitted.

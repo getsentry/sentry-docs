@@ -1,0 +1,53 @@
+---
+title: Span Buffer
+sidebar_order: 11
+---
+
+<Alert>
+  This document uses key words such as "MUST", "SHOULD", and "MAY" as defined in
+  [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt) to indicate requirement
+  levels.
+</Alert>
+
+The span buffer is responsible for batching spans, constructing span envelopes and forwarding them to the transport. It is used in the [Span Streaming](/sdk/telemetry/spans/implementation/) flow, where spans are captured via `captureSpan` and enqueued into the span buffer instead of being sent as transaction events.
+
+This page specifies requirements for the span buffer. It intentionally does not specify as much as the [Telemetry Processor](/sdk/foundations/processing/telemetry-processor/) page. SDKs MAY implement and extend the span buffer with platform-specific behaviour,
+as long as the core requirements adquately are met.
+
+## Span Buffer Requirements
+
+1. The buffer MUST [bucket spans by trace ID](#buckets-per-trace-id). When flushing spans (i.e. forwarding span envelopes to the transport), the buffer MUST create distinct envelopes for each trace ID.
+2. When creating span envelopes the buffer MUST NOT add more than 1000 spans to an envelope. If more than 1000 spans are currently held in memory, the buffer MUST batch the spans into multiple envelopes.
+3. When the buffer drops spans, it MUST record a client report, containing the exact number of spans dropped.
+4. For the time being, the buffer MAY ignore priority-based scheduling with other telemetry item categories.
+5. The buffer MUST implement the following flushing behaviour:
+   - Flush on a regular interval, every 5 seconds (SDKs MAY choose a different value based on platform-specific needs)
+   - Flush a trace bucket when it reaches the 1000 spans limit
+   - Flush when the trace bucket has reached a size of 5MB (SDKs MAY choose a different value based on platform-specific needs, but the value MUST NOT exceed 10MB)
+   - Flush when `SentrySDK.flush()` is called
+   - Flush and stop further flushes when `SentrySDK.close()` is called. The buffer MUST stop accepting new spans at this time to prevent infinite memory consumption.
+
+### Buckets per Trace ID
+
+A recommended simple design is a map of **trace ID → list of spans** (buckets per trace). SDKs **MAY** use other structures (e.g. a fixed ring buffer) as long as the requirements above are met.
+
+```
+spanBuffer = {
+  "trace-a": [span1, span2, span3],
+  "trace-b": [span4],
+  "trace-c": [span5, span6]
+}
+```
+
+Requirements for buckets per trace ID:
+
+1. When the span buffer adds a span, it **MUST** add it to the bucket for that span's trace ID.
+2. When no bucket exists for that trace ID, the span buffer **MUST** create a new bucket.
+3. After forwarding the spans in a bucket, the span buffer **MUST** remove all spans from that bucket and delete the bucket.
+
+### Serialization and Dynamic Sampling Context (DSC)
+
+To ensure the best [Dynamic Sampling Context](/sdk/foundations/trace-propagation/dynamic-sampling-context/) (DSC) consistency, SDKs **SHOULD** materialize and freeze the DSC as late as possible. In practice:
+
+- The span buffer **SHOULD** enqueue spans but only create the final envelope at **flush time**, not at enqueue time.
+- At flush time, the span buffer **SHOULD** materialize and freeze the DSC on the segment span if not already done. That way the `trace` envelope header (e.g. for transaction names in the DSC) reflects the latest data.

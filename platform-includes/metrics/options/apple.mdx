@@ -1,0 +1,96 @@
+The Sentry Cocoa SDK provides several options to configure how metrics are captured and sent to Sentry.
+
+### Enabling/Disabling Metrics
+
+Metrics are enabled by default, but are not collected automatically. You must manually call the `SentrySDK.metrics` API to record metrics. If you need to disable metrics entirely, set `options.experimental.enableMetrics` to `false` when initializing the SDK:
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.experimental.enableMetrics = false // Metrics are enabled by default
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.experimental.enableMetrics = NO; // Metrics are enabled by default
+}];
+```
+
+### Filtering and Modifying Metrics
+
+Use the `beforeSendMetric` callback to filter or modify metrics before they're sent to Sentry. This is useful for:
+
+- Removing sensitive data from metric attributes
+- Dropping metrics you don't want to send
+- Adding or modifying attributes
+- Changing metric names or units
+
+The callback receives a `SentryMetric` struct and must return either a modified metric or `nil` to drop it.
+
+**Available `SentryMetric` properties:**
+- `name`: The metric name (e.g., "api.response_time")
+- `value`: The metric value (`SentryMetricValue` - counter, distribution, or gauge)
+- `unit`: The unit of measurement (`SentryUnit?`)
+- `attributes`: Dictionary of attributes (`[String: SentryAttributeContent]`)
+- `timestamp`: When the metric was recorded
+- `traceId`: Associated trace ID for distributed tracing correlation
+
+When modifying `attributes`, you can assign values directly using literals thanks to Swift's `ExpressibleBy...Literal` protocols. The SDK supports `String`, `Bool`, `Int`, `Double`, and arrays of these types.
+
+```swift
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    // Metrics are enabled by default, no need to set enableMetrics = true
+    options.experimental.beforeSendMetric = { metric in
+        // Create a mutable copy (SentryMetric is a struct)
+        var metric = metric
+
+        // Drop metrics based on attributes
+        if case .boolean(let dropMe) = metric.attributes["dropMe"], dropMe {
+            return nil
+        }
+
+        // Drop metrics by name
+        if metric.name.hasPrefix("internal.") {
+            return nil
+        }
+
+        // Modify or add attributes using literals (recommended)
+        metric.attributes["processed"] = true          // Boolean literal
+        metric.attributes["environment"] = "production" // String literal
+        metric.attributes["retry_count"] = 3           // Integer literal
+        metric.attributes["latency"] = 42.5            // Double literal
+
+        // You can also use enum cases for explicitness
+        metric.attributes["explicit"] = .boolean(true)
+        metric.attributes["tags"] = .stringArray(["tag1", "tag2"])
+
+        // Change the metric name
+        if metric.name == "legacy_metric" {
+            metric.name = "new_metric_name"
+        }
+
+        return metric
+    }
+}
+```
+
+### Flushing Metrics
+
+By default, metrics are buffered and flushed depending on buffer size and time. If you need to manually flush metrics before the automatic interval, you can use the `flush` method. Note that this is a **blocking** call that will wait until all pending data is sent or the timeout is reached:
+
+```swift
+import Sentry
+
+SentrySDK.flush(timeout: 5.0)
+```
+
+This will flush all pending metrics and events to Sentry.

@@ -1,6 +1,7 @@
 ---
 title: Features
 sidebar_order: 1
+sidebar_hidden: true
 description: "Here's a list of Sentry's Apple SDK features."
 ---
 
@@ -12,8 +13,9 @@ The SDK builds a crash report that persists to disk. While it attempts to send t
 
 </Alert>
 
+All features listed below are **enabled by default** unless otherwise noted. Some features have platform-specific limitations or version requirements, which are indicated where applicable.
 
-**Features:**
+## Error & Crash Detection
 
 - Multiple types of errors are captured, including:
   - Mach exceptions
@@ -21,20 +23,16 @@ The SDK builds a crash report that persists to disk. While it attempts to send t
   - Unhandled exceptions
   - C++ exceptions
   - Objective-C exceptions
-  - Error messages of fatalError, assert, and precondition
-  - <PlatformLink to="/configuration/app-hangs/">App Hang Detection</PlatformLink>
-  - <PlatformLink to="/configuration/watchdog-terminations/"> Watchdog Terminations</PlatformLink>
-  - <PlatformLink to="/configuration/http-client-errors">HTTP Client Errors</PlatformLink>
+  - Error messages of `fatalError`, `assert`, and `precondition`
   - Start-up crashes. The SDK init waits synchronously for up to 5 seconds to flush out events if the app crashes within 2 seconds after the SDK init.
-- Events <PlatformLink to="/enriching-events/context">enriched</PlatformLink> with device data
-- Offline caching when a device is unable to connect; we send a report once we receive another event
-- <PlatformLink to="/enriching-events/breadcrumbs/#automatic-breadcrumbs">Breadcrumbs automatically</PlatformLink> captured for
-  - Application lifecycle events (`didBecomeActive`, `didEnterBackground`, `viewDidAppear`)
-  - Touch events
-  - System events (battery level or state changed, memory warnings, device orientation changed, keyboard did show and did hide, screenshot taken, time zone changed or significant time change)
-  - Outgoing HTTP requests
-- <Link to="/product/releases/health">Release health</Link> tracks crash free users and sessions
-- Automatic <PlatformLink to="/tracing/instrumentation">Performance Tracking</PlatformLink>
+- <PlatformLink to="/configuration/app-hangs/">App Hang Detection</PlatformLink>
+  - On iOS and tvOS: Differentiates between fully-blocking and non-fully-blocking app hangs, and measures app hang duration (AppHangsV2, enabled by default since SDK version 9.0.0)
+- <PlatformLink to="/configuration/watchdog-terminations/">Watchdog Terminations</PlatformLink> (only available on iOS, tvOS, and visionOS)
+- <PlatformLink to="/configuration/http-client-errors">HTTP Client Errors</PlatformLink>
+
+## Performance Monitoring
+
+- Automatic <PlatformLink to="/tracing/instrumentation">Performance Tracking</PlatformLink> for:
   - Rendering of UIViewControllers
   - Performance of HTTP requests
   - Distributed tracing
@@ -45,9 +43,55 @@ The SDK builds a crash report that persists to disk. While it attempts to send t
   - Performance of <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#file-io-tracing">File I/O</PlatformLink> operations
   - Performance of <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#core-data-tracing">Core Data</PlatformLink> queries
   - <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#user-interaction-tracing">User Interaction</PlatformLink> transactions for UI clicks
-- <PlatformLink to="/enriching-events/attachments">Attachments</PlatformLink> enrich your event by storing additional files, such as config or log files
-- <PlatformLink to="/user-feedback">User Feedback</PlatformLink> provides the ability to collect user information when an event occurs
+  - Frame rate tracking for UI performance (only available on iOS, tvOS, and visionOS)
+  - App start time measurement for cold and warm starts (only available on iOS, tvOS, and visionOS)
+- <PlatformLink to="/profiling">Profiling</PlatformLink> (requires configuration, only available on iOS and macOS)
+  - Transaction-based profiling (deprecated)
+  - Continuous profiling
+  - UI Profiling (recommended)
+  - Launch profiling
+- Swift Async/Await support for stitching together stack traces of Swift concurrency code
 
-- [View Hierarchy](/platforms/apple/guides/ios/enriching-events/viewhierarchy/) and [Screenshot](/platforms/apple/guides/ios/enriching-events/screenshots/) attachments for errors
+## Session & User Tracking
+
+- <Link to="/product/releases/health">Release health</Link> tracks crash-free users and sessions
+- Session tracking automatically tracks user sessions for release health metrics
+- <PlatformLink to="/session-replay">Session Replay</PlatformLink> (only available on iOS 16+ and tvOS 16+)
+  - Requires SDK version 8.31.1 or later
+  - tvOS is not officially supported
+
+## Event Enrichment
+
+- Events <PlatformLink to="/enriching-events/context">enriched</PlatformLink> with device data, environment information, and app state
+- <PlatformLink to="/enriching-events/breadcrumbs/#automatic-breadcrumbs">Breadcrumbs are automatically</PlatformLink> captured for:
+  - Application lifecycle events (`didBecomeActive`, `didEnterBackground`, `viewDidAppear`)
+  - Touch events
+  - System events (battery level or state changed, memory warnings, device orientation changed, keyboard did show and did hide, screenshot taken, time zone changed or significant time change)
+  - Outgoing HTTP requests
+- <PlatformLink to="/enriching-events/attachments">Attachments</PlatformLink> enrich your event by storing additional files, such as config or log files
 - <PlatformLink to="/data-management/debug-files/source-context">Source Context</PlatformLink> shows snippets of code around the location of stack frames
-- <PlatformLink to="/configuration/metric-kit">MetricKit</PlatformLink> integration
+- <PlatformLink to="/guides/ios/enriching-events/viewhierarchy/">View Hierarchy</PlatformLink> and <PlatformLink to="/guides/ios/enriching-events/screenshots/">Screenshot</PlatformLink> attachments for errors (only available on iOS and tvOS)
+- <PlatformLink to="/user-feedback">User Feedback</PlatformLink> provides the ability to collect user information when an event occurs (User Feedback UI only available on iOS 13+)
+
+## Platform-Specific Features
+
+- <PlatformLink to="/configuration/metric-kit">MetricKit</PlatformLink> integration (only available on iOS 15+ and macOS 12+, requires enabling `enableMetricKit` option)
+- Logs capturing (requires <PlatformLink to="/configuration/options#enableLogs">`enableLogs`</PlatformLink> option, only available on iOS, tvOS, visionOS, and macOS)
+
+## Data Management
+
+- Offline caching when a device is unable to connect; we send a report once we receive another event
+- Event persistence: crash reports persist to disk and are sent upon application start if not sent immediately after a crash
+
+## Experimental Features
+
+For information about experimental features, see the <PlatformLink to="/features/experimental-features">Experimental Features</PlatformLink> page.
+
+## Platform-Specific Documentation
+
+For platform-specific feature details and limitations, see:
+- <PlatformLink to="/guides/ios/features">iOS Features</PlatformLink>
+- <PlatformLink to="/guides/macos/features">macOS Features</PlatformLink>
+- <PlatformLink to="/guides/tvos/features">tvOS Features</PlatformLink>
+- <PlatformLink to="/guides/watchos/features">watchOS Features</PlatformLink>
+- <PlatformLink to="/guides/visionos/features">visionOS Features</PlatformLink>

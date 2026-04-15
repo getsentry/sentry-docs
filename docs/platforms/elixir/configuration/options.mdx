@@ -146,3 +146,25 @@ config :sentry,
 If both `:traces_sampler` and `:traces_sample_rate` are configured, `:traces_sampler` takes precedence.
 
 </SdkOption>
+
+## Telemetry Processor Options
+
+The Telemetry Processor is a buffered, priority-based event delivery mechanism. It batches events and sends them to Sentry using a weighted scheduler that prioritizes critical events (like errors) over lower-priority ones (like logs). Logs are routed through the Telemetry Processor by default. You can opt in to route other event types through the processor as well. In a future major release, the Telemetry Processor will become the default delivery mechanism for all event types.
+
+<SdkOption name="telemetry_processor_categories" type='list' defaultValue='[:log]'>
+
+A list of event categories to route through the Telemetry Processor. By default, only `:log` events use the processor. You can opt in to route additional event types through it.
+
+Valid categories:
+
+- `:error` — error events (critical priority)
+- `:check_in` — cron check-in events (high priority)
+- `:transaction` — transaction events (medium priority)
+- `:log` — log events (low priority)
+
+```elixir
+config :sentry,
+  telemetry_processor_categories: [:error, :check_in, :transaction, :log]
+```
+
+</SdkOption>

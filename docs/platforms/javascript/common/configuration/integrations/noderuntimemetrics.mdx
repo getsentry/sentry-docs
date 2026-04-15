@@ -1,0 +1,105 @@
+---
+title: NodeRuntimeMetrics
+description: "Collect Node.js runtime health metrics such as memory usage, CPU utilization, and event loop delay."
+supported:
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.hono
+  - javascript.koa
+  - javascript.nestjs
+  - javascript.electron
+  - javascript.nextjs
+  - javascript.nuxt
+  - javascript.solidstart
+  - javascript.sveltekit
+  - javascript.remix
+  - javascript.react-router
+  - javascript.astro
+  - javascript.tanstackstart-react
+---
+
+<Alert>
+
+This integration only works in the Node.js runtime.
+
+</Alert>
+
+_Import name: `Sentry.nodeRuntimeMetricsIntegration`_
+
+The `nodeRuntimeMetricsIntegration` periodically collects Node.js runtime health metrics and sends them to Sentry. Metrics include memory usage, CPU utilization, event loop delay, and process uptime.
+
+```javascript
+import * as Sentry from "@sentry/node";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [Sentry.nodeRuntimeMetricsIntegration()],
+});
+```
+
+## Default Metrics
+
+The following metrics are emitted every 30 seconds by default:
+
+| Metric | Type | Unit | Description |
+|---|---|---|---|
+| `node.runtime.mem.rss` | gauge | byte | Resident Set Size — actual process memory footprint |
+| `node.runtime.mem.heap_used` | gauge | byte | V8 heap currently in use |
+| `node.runtime.mem.heap_total` | gauge | byte | Total V8 heap allocated |
+| `node.runtime.cpu.utilization` | gauge | ratio | CPU time / wall-clock time ratio |
+| `node.runtime.event_loop.delay.p50` | gauge | second | Median event loop delay |
+| `node.runtime.event_loop.delay.p99` | gauge | second | 99th percentile event loop delay |
+| `node.runtime.event_loop.utilization` | gauge | ratio | Fraction of time the event loop was active |
+| `node.runtime.process.uptime` | counter | second | Cumulative process uptime |
+
+## Options
+
+### `collect`
+
+_Type: `object`_
+
+Configure which metrics to collect. You can enable opt-in metrics or disable default ones.
+
+**Opt-in metrics (off by default):**
+
+```javascript
+Sentry.nodeRuntimeMetricsIntegration({
+  collect: {
+    cpuTime: true, // node.runtime.cpu.user + node.runtime.cpu.system
+    memExternal: true, // node.runtime.mem.external + node.runtime.mem.array_buffers
+    eventLoopDelayMin: true,
+    eventLoopDelayMax: true,
+    eventLoopDelayMean: true,
+    eventLoopDelayP90: true,
+  },
+});
+```
+
+**Disabling default metrics:**
+
+```javascript
+Sentry.nodeRuntimeMetricsIntegration({
+  collect: {
+    uptime: false,
+    eventLoopDelayP50: false,
+  },
+});
+```
+
+### `collectionIntervalMs`
+
+_Type: `number`_
+
+The interval in milliseconds between metric collections. Defaults to `30000` (30 seconds).
+
+```javascript
+Sentry.nodeRuntimeMetricsIntegration({
+  collectionIntervalMs: 60_000,
+});
+```

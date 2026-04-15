@@ -143,6 +143,7 @@ export const DocMetrics = {
  */
 export type PageType =
   // Main product docs (from productSidebarItems in sidebarNavigation.tsx)
+  | 'guides' // Guides
   | 'account' // Account Settings
   | 'organization' // Organization Settings
   | 'product' // Product Walkthroughs

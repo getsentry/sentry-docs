@@ -1,0 +1,52 @@
+---
+title: Direct OTLP Logs
+sidebar_title: Logs
+sidebar_order: 20
+description: "Send OpenTelemetry logs directly to Sentry without a Sentry SDK."
+keywords: ["otlp", "otel", "opentelemetry", "logs", "logging"]
+---
+
+<Include name="feature-available-open-beta-logs.mdx" />
+
+Send logs directly from your OpenTelemetry SDK to Sentry's OTLP endpoint. You can find your endpoint URL and auth key in [Project settings > Client Keys (DSN)](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/keys/).
+
+## Environment Variables
+
+The simplest way to configure your OTel SDK:
+
+```bash {filename: .env}
+export OTEL_EXPORTER_OTLP_LOGS_ENDPOINT="___OTLP_LOGS_URL___"
+export OTEL_EXPORTER_OTLP_LOGS_HEADERS="x-sentry-auth=sentry sentry_key=___PUBLIC_KEY___"
+```
+
+## SDK Configuration
+
+You can also configure the exporter directly in your application code. Here's an example with the OTel Node SDK:
+
+```typescript {filename: app.ts}
+import {
+  LoggerProvider,
+  BatchLogRecordProcessor,
+} from "@opentelemetry/sdk-logs";
+import { OTLPLogExporter } from "@opentelemetry/exporter-logs-otlp-http";
+
+const logExporter = new OTLPLogExporter({
+  url: "___OTLP_LOGS_URL___",
+  headers: {
+    "x-sentry-auth": "sentry sentry_key=___PUBLIC_KEY___",
+  },
+});
+const loggerProvider = new LoggerProvider({
+  processors: [new BatchLogRecordProcessor(logExporter)],
+});
+
+const logger = loggerProvider.getLogger("default", "1.0.0");
+```
+
+## Known Limitations
+
+- Array attributes are partially supported. We ingest and display array attributes, but they cannot be searched, filtered, or aggregated.
+
+## Using a Collector Instead
+
+If you need to collect logs from infrastructure sources (files, syslog, cloud services), see the [Forwarding](/concepts/otlp/forwarding/) guides.
