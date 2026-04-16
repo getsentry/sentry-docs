@@ -29,23 +29,31 @@ The platform exposes two subsystems:
 To use the Source Code Manager interfaces first import the SourceCodeManager class from the scm module and initialize it with your repository id.
 
 ```python
-from sentry.scm.actions import SourceCodeManager
+from scm.manager import SourceCodeManager
 
-scm = SourceCodeManager.make_from_repository_id(organization_id=1, repository_id=2)
+scm = SourceCodeManager.make_from_repository_id(organization_id=1, repository_id=2, fetch_repository=..., fetch_provider=...)
 ```
 
 This will initialize a new SCM class with its capabilities scoped to what the repository's service-provider can offer.
 
+If you're in the `getsentry/sentry` repository a helper function can orchestrate the scm instance for you.
+
+```
+from sentry.scm import new
+
+scm = new(organization_id, repository_id)
+```
+
 Now import the actions your use case requires.
 
 ```python
-from sentry.scm.actions import SourceCodeManager, create_issue_reaction, create_issue_comment
+from scm.actions import SourceCodeManager, create_issue_reaction, create_issue_comment
 ```
 
 By default the SourceCodeManager class can not execute any methods without the type checker complaining. To smooth over service-provider variations, the SCM ships a capability system. You must statically assert that your "scm" instance is capable of executing a particular action or set of actions prior to calling an action function.
 
 ```python
-from sentry.scm.types import CreateIssueReactionProtocol, CreateIssueCommentProtocol
+from scm.types import CreateIssueReactionProtocol, CreateIssueCommentProtocol
 
 
 if isinstance(scm, CreateIssueReactionProtocol):
@@ -77,19 +85,19 @@ if isinstance(scm, GitInteractionProtocol):
 Alternatively if you want to target a specific platform you may.
 
 ```python
-from sentry.scm.private.providers.github import GitHubProvider
+from scm.providers.github.provider import GitHubProvider
 
 if isinstance(scm, GitHubProvider):
     # do github specific work.
     ...
 ```
 
-This pattern is discouraged, however, and is hidden within the `private` module. It is preferred that you interact with service-providers on a capability basis so that your feature is automatically enabled for new service-providers but we understand that this is not always desired.
+This pattern is discouraged. It is preferred that you interact with service-providers on a capability basis so that your feature is automatically enabled for new service-providers but we understand that this is not always desired.
 
 SCM actions will raise exceptions on failure. All exceptions are subclassed by `SCMError`. It is recommended that you catch these failures and handle them in some way.
 
 ```python
-from sentry.scm.errors import SCMError
+from scm.errors import SCMError
 
 try:
     create_issue_reaction(scm, issue_id="1", reaction="+1")
@@ -150,10 +158,12 @@ The SCM exposes the following actions. For more information (and more up to date
 
 ### Source Code Manager RPC
 
-The Source Code Manager is exposed over RPC and may be accessed with the client library in your microservice.
+The Source Code Management Platform exposes an RPC server and may be accessed with the `scm` library in your service.
 
 ```python
-scm = SourceCodeManagerRpcClient.make_from_repository_id(organization_id=1, repository_id=1)
+from scm.rpc.client import SourceCodeManager
+
+scm = SourceCodeManager.make_from_repository_id(organization_id=1, repository_id=1)
 
 if isinstance(scm, CreateIssueReactionProtocol):
     try:
