@@ -1,0 +1,106 @@
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+### Wide Events Over Scattered Logs
+
+Instead of many thin logs that are hard to correlate, emit one comprehensive log per operation with all relevant context.
+
+This makes debugging dramatically faster — one query returns everything about a specific order, user, or request.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```rust
+// ❌ Scattered thin logs
+sentry::logger::info!("Starting checkout");
+sentry::logger::info!("Validating cart");
+sentry::logger::info!("Processing payment");
+sentry::logger::info!("Checkout complete");
+
+// ✅ One wide event with full context
+sentry::logger::info!(
+    "Checkout completed";
+    "order_id" => order.id,
+    "user_id" => user.id,
+    "user_tier" => user.subscription,
+    "cart_value" => cart.total,
+    "item_count" => cart.items.len(),
+    "payment_method" => "stripe",
+    "duration_ms" => start_time.elapsed().as_millis(),
+);
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Include Business Context
+
+Add attributes that help you prioritize and debug:
+
+- **User context** — tier, account age, lifetime value
+- **Transaction data** — order value, item count
+- **Feature state** — active feature flags
+- **Request metadata** — endpoint, method, duration
+
+This lets you filter logs by high-value customers or specific features.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```rust
+sentry::logger::info!(
+    "API request completed";
+    // User context
+    "user_id" => user.id,
+    "user_tier" => user.plan, // "free" | "pro" | "enterprise"
+    "account_age_days" => user.age_days,
+
+    // Request data
+    "endpoint" => "/api/orders",
+    "method" => "POST",
+    "duration_ms" => 234,
+
+    // Business context
+    "order_value" => 149.99,
+);
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Consistent Attribute Naming
+
+Pick a naming convention and stick with it across your codebase. Inconsistent names make queries impossible.
+
+**Recommended:** Use `snake_case` for custom attributes to match Rust conventions.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```rust
+// ❌ Inconsistent naming
+"user" => "123"
+"userId" => "123"
+"user_id" => "123"
+"UserID" => "123"
+
+// ✅ Consistent snake_case
+sentry::logger::info!(
+    "Order processed";
+    "user_id" => "123",
+    "order_id" => "456",
+    "cart_value" => 99.99,
+    "item_count" => 3,
+);
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
