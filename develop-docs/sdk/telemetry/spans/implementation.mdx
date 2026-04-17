@@ -164,7 +164,10 @@ client.on("process_span", (span) => {
 
 #### Replacing filtering event processors
 
-To filter out spans (or segments), we should preset the `ignore_spans` option and leverage the existing span filtering logic to drop segments or child spans **upfront**.
+Ideally, we can replace retroactive filtering in event processors with configuring an integration to not emit these spans upfront. 
+This should be the first step we try when implementing span streaming.
+
+If this doesn't apply to the use case, we should pre-configure the SDK's `ignore_spans` option and leverage the existing span filtering logic to drop segments or child spans **upfront**.
 
 ```txt
 // someIntegration:
@@ -184,7 +187,6 @@ client.options.ignore_spans = [
 ```
 
 Note that if the SDK implements `ignore_spans` also for transactions, this _might_ allow us to entirely get rid of the event processor.
-
 
 #### Cases we cannot* replace
 
