@@ -274,7 +274,7 @@ export async function Home() {
                   href="/product/ai-in-sentry/seer/#seer-agent"
                   className="text-[#8b5cf6] underline"
                 >
-                  AI powered answers
+                  AI-powered answers
                 </a>{' '}
                 to questions using your application data in Sentry. Have{' '}
                 <a
