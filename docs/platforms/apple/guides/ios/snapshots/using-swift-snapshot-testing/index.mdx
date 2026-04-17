@@ -1,0 +1,139 @@
+---
+title: Using swift-snapshot-testing
+sidebar_order: 4820
+description: Generate snapshot images with Point-Free's swift-snapshot-testing and upload them to Sentry.
+---
+
+[swift-snapshot-testing](https://github.com/pointfreeco/swift-snapshot-testing) is a popular open-source library from Point-Free that supports snapshot testing for SwiftUI views, UIKit views, and view controllers. Refer to the [repo](https://github.com/pointfreeco/swift-snapshot-testing) for full documentation.
+
+## Generating Images
+
+### 1. Add the Dependency
+
+Add the `swift-snapshot-testing` package to your project:
+
+```
+https://github.com/pointfreeco/swift-snapshot-testing
+```
+
+Link `SnapshotTesting` to your test target.
+
+### 2. Write Snapshot Tests
+
+Create test cases using `assertSnapshot`:
+
+```swift
+import SnapshotTesting
+import SwiftUI
+import XCTest
+
+@testable import YourApp
+
+final class YourSnapshotTests: XCTestCase {
+
+  @MainActor
+  func testHomeScreen() {
+    let view = HomeScreen()
+    let hostingController = UIHostingController(rootView: view)
+    hostingController.view.frame = UIScreen.main.bounds
+
+    assertSnapshot(
+      of: hostingController,
+      as: .image(on: .iPhone13Pro),
+      named: "HomeScreen-iPhone13Pro"
+    )
+
+    assertSnapshot(
+      of: hostingController,
+      as: .image(
+        on: .iPhone13Pro,
+        traits: .init(userInterfaceStyle: .dark)
+      ),
+      named: "HomeScreen-iPhone13Pro-DarkMode"
+    )
+  }
+}
+```
+
+Snapshot images are saved to a `__Snapshots__` directory next to your test file, organized by test class name:
+
+```
+YourAppTests/__Snapshots__/YourSnapshotTests/
+```
+
+This is the directory you'll upload to Sentry.
+
+### 3. Configure Recording for CI
+
+By default, swift-snapshot-testing compares against existing reference images and fails if they don't match. For Sentry, you want CI to always generate fresh images for upload.
+
+Set the `TEST_RUNNER_SNAPSHOT_TESTING_RECORD` environment variable to `all` in your CI environment:
+
+```bash
+export TEST_RUNNER_SNAPSHOT_TESTING_RECORD=all
+```
+
+This tells the library to record all snapshots. Locally (without this variable), tests default to comparison mode — so developers can still use reference-based diffing during development.
+
+> **Note:** In record mode, swift-snapshot-testing reports every test as a "failure" since it's recording rather than comparing. Use `continue-on-error: true` on your CI test step to ensure the upload step still runs.
+
+### 4. Run the Tests
+
+```bash
+xcodebuild test \
+  -scheme YourScheme \
+  -sdk iphonesimulator \
+  -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
+  -only-testing:YourAppTests/YourSnapshotTests \
+  CODE_SIGNING_ALLOWED=NO
+```
+
+After tests complete, the `__Snapshots__/YourSnapshotTests/` directory contains your snapshot images ready for upload. You can optionally add [JSON metadata](/product/snapshots/uploading-snapshots/#json-metadata) alongside the image files to supplement how the image is displayed in Sentry.
+
+## Integrating into CI
+
+Sample Github Action workflow for uploading snapshots to Sentry:
+
+```yaml {filename:.github/workflows/snapshots.yml}
+name: iOS Snapshots
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  snapshots:
+    runs-on: macos-15
+
+    env:
+      TEST_RUNNER_SNAPSHOT_TESTING_RECORD: all
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Boot simulator
+        run: xcrun simctl boot "iPhone 17 Pro" || true
+
+      - name: Generate snapshots
+        continue-on-error: true
+        run: |
+          set -o pipefail && xcodebuild test \
+            -scheme YourScheme \
+            -sdk iphonesimulator \
+            -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+            -only-testing:YourAppTests/YourSnapshotTests \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcpretty
+
+      - name: Upload snapshots to Sentry
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          APP_ID: com.example.your-app
+        run: |
+          sentry-cli build snapshots --app-id $APP_ID YourAppTests/__Snapshots__/YourSnapshotTests
+```
+
+You can also upload with Fastlane — see [Uploading to Sentry](../#uploading-to-sentry).

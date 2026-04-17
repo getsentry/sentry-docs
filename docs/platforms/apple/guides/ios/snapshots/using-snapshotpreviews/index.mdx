@@ -1,0 +1,130 @@
+---
+title: Using SnapshotPreviews
+sidebar_order: 4810
+description: Generate snapshot images from SwiftUI Previews and upload them to Sentry.
+---
+
+[SnapshotPreviews](https://github.com/EmergeTools/SnapshotPreviews) automatically discovers Previews in your app and renders them as snapshot images. You don't have to maintain any explicit test code to produce snapshot images. SnapshotPreviews includes a CI export mode that writes PNG files and JSON metadata sidecars directly to a directory you specify, ready for upload to Sentry.
+
+## Generating Images
+
+### 1. Add the Dependency
+
+Add the `SnapshotPreviews` package (v0.12.0 or later) to your project. In your `Package.swift` or via Xcode's package manager:
+
+```
+https://github.com/EmergeTools/SnapshotPreviews
+```
+
+Link the `SnapshottingTests` library to your **test target**:
+
+```swift
+// In Package.swift
+.testTarget(
+  name: "YourAppTests",
+  dependencies: [
+    .product(name: "SnapshottingTests", package: "SnapshotPreviews"),
+  ]
+)
+```
+
+Or in Xcode, add `SnapshottingTests` under your test target's **Frameworks and Libraries**.
+
+### 2. Create a Snapshot Test
+
+Create a new test file that subclasses `SnapshotTest`:
+
+```swift
+import SnapshottingTests
+
+class YourAppSnapshotTest: SnapshotTest {
+  override class func snapshotPreviews() -> [String]? {
+    // Return nil to snapshot all previews,
+    // or return an array of preview names to include.
+    // Regex patterns are also supported.
+    return nil
+  }
+
+  override class func excludedSnapshotPreviews() -> [String]? {
+    // Return an array of preview names to exclude, or nil.
+    return nil
+  }
+}
+```
+
+`SnapshotTest` automatically discovers all SwiftUI `#Preview` and `PreviewProvider` declarations in your app and test targets, renders each one, and generates a snapshot image.
+
+### 3. Enable CI Export
+
+Set the `TEST_RUNNER_SNAPSHOTS_EXPORT_DIR` environment variable in your CI environment to specify where snapshot images should be written:
+
+```bash
+export TEST_RUNNER_SNAPSHOTS_EXPORT_DIR="$PWD/snapshot-images"
+```
+
+When this variable is set, SnapshotPreviews writes PNG images and JSON metadata sidecars to the specified directory.
+
+When running locally without this variable, snapshots are attached to the XCTest results — useful for development but not for Sentry uploads.
+
+### 4. Run the Tests
+
+```bash
+xcodebuild test \
+  -scheme YourScheme \
+  -sdk iphonesimulator \
+  -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
+  -only-testing:YourAppTests/YourAppSnapshotTest \
+  CODE_SIGNING_ALLOWED=NO
+```
+
+After tests complete, the export directory contains your snapshot images ready for upload. The SnapshotPreviews library automatically uses (TODO: WHAT GETS PULLED INTO THE METADATA??).
+
+## Integrating into CI
+
+To see a live example you can refer to this repo (TODO: HACKERNEWS LINK MAYBE WE HAVE THIS HIGHER AS WELL). Below is a sample Github Action workflow for uploading snapshots to Sentry:
+
+```yaml {filename:.github/workflows/snapshots.yml}
+name: iOS Snapshots
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  snapshots:
+    runs-on: macos-15
+
+    env:
+      TEST_RUNNER_SNAPSHOTS_EXPORT_DIR: "${{ github.workspace }}/snapshot-images"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Boot simulator
+        run: xcrun simctl boot "iPhone 17 Pro" || true
+
+      - name: Generate snapshots
+        run: |
+          set -o pipefail && xcodebuild test \
+            -scheme YourScheme \
+            -sdk iphonesimulator \
+            -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+            -only-testing:YourAppTests/YourAppSnapshotTest \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcpretty
+
+      - name: Upload snapshots to Sentry
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+        run: |
+          sentry-cli build snapshots --app-id com.example.your-app snapshot-images
+```
+
+You can also upload with Fastlane — see [Uploading to Sentry](../#uploading-to-sentry).
+
+## MISC TODOS
+
+- i think we may need to redo the readme on the repo to be more supplementary + more complete reference. i.e. i've sent https://github.com/EmergeTools/SnapshotPreviews/blob/main/Examples/DemoApp/DemoApp/TestViews/PreviewVariants.swift to people frequently, but now that's just a hidden example
