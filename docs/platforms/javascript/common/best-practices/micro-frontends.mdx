@@ -225,7 +225,7 @@ you can use the multiplexed transport's API to route events to specific projects
 
 The simplest way to manually route events is by using the default matcher with `MULTIPLEXED_TRANSPORT_EXTRA_KEY`:
 
-```js
+```javascript {tabTitle:NPM}
 import {
   captureException,
   init,
@@ -250,13 +250,44 @@ captureException(new Error("oh no!"), {
 });
 ```
 
+```html {tabTitle:CDN/Loader Bundle}
+<script
+  src="https://browser.sentry-cdn.com/{{@inject packages.version('sentry.javascript.browser') }}/bundle.min.js"
+  integrity="sha384-{{@inject packages.checksum('sentry.javascript.browser', 'bundle.min.js', 'sha384-base64') }}"
+  crossorigin="anonymous"
+></script>
+
+<script
+  src="https://browser.sentry-cdn.com/{{@inject packages.version('sentry.javascript.browser') }}/multiplexedtransport.min.js"
+  integrity="sha384-{{@inject packages.checksum('sentry.javascript.browser', 'multiplexedtransport.min.js', 'sha384-base64') }}"
+  crossorigin="anonymous"
+></script>
+
+<script>
+  Sentry.init({
+    dsn: "__FALLBACK_DSN__",
+    transport: Sentry.makeMultiplexedTransport(Sentry.makeFetchTransport),
+  });
+
+  // Route a specific error to different projects
+  Sentry.captureException(new Error("oh no!"), {
+    extra: {
+      [Sentry.MULTIPLEXED_TRANSPORT_EXTRA_KEY]: [
+        { dsn: "__CART_DSN__", release: "cart@1.0.0" },
+        { dsn: "__GALLERY_DSN__", release: "gallery@1.2.0" },
+      ],
+    },
+  });
+</script>
+```
+
 ### Using a Custom Matcher
 
 For more advanced routing logic, you can provide a custom matcher function. The example below uses a `feature` tag to determine which Sentry project to
 send the event to. If the event doesn't have a `feature` tag, we send it to the
 fallback DSN defined in `Sentry.init`.
 
-```js
+```javascript {tabTitle:NPM}
 import {
   captureException,
   init,
@@ -279,6 +310,41 @@ init({
     }
   }),
 });
+```
+
+```html {tabTitle:CDN/Loader Bundle}
+<script
+  src="https://browser.sentry-cdn.com/{{@inject packages.version('sentry.javascript.browser') }}/bundle.min.js"
+  integrity="sha384-{{@inject packages.checksum('sentry.javascript.browser', 'bundle.min.js', 'sha384-base64') }}"
+  crossorigin="anonymous"
+></script>
+
+<script
+  src="https://browser.sentry-cdn.com/{{@inject packages.version('sentry.javascript.browser') }}/multiplexedtransport.min.js"
+  integrity="sha384-{{@inject packages.checksum('sentry.javascript.browser', 'multiplexedtransport.min.js', 'sha384-base64') }}"
+  crossorigin="anonymous"
+></script>
+
+<script>
+  Sentry.init({
+    dsn: "__FALLBACK_DSN__",
+    transport: Sentry.makeMultiplexedTransport(
+      Sentry.makeFetchTransport,
+      ({ getEvent }) => {
+        const event = getEvent();
+
+        // Send to different DSNs, based on the event payload
+        if (event?.tags?.feature === "cart") {
+          return [{ dsn: "__CART_DSN__", release: "cart@1.0.0" }];
+        } else if (event?.tags?.feature === "gallery") {
+          return [{ dsn: "__GALLERY_DSN__", release: "gallery@1.2.0" }];
+        } else {
+          return [];
+        }
+      }
+    ),
+  });
+</script>
 ```
 
 <Alert>

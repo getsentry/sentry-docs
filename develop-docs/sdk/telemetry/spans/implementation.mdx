@@ -113,7 +113,7 @@ We might revisit this, which could require changes to the single-span processing
 
 ### Replacing Event Processors
 
-Given that spans no longer are events (as opposed to transactions), they don't go through SDK event processors, which are extensively used throughout the SDKs (clients, integrations) but also by users.
+Given that streamed spans no longer are events (as opposed to transactions), they don't go through SDK event processors, which are extensively used throughout the SDKs (clients, integrations) but also by users.
 Instead, we defined replacement APIs for users and SDK-internal use cases.
 
 For user-facing migration, we should aim to solve every use case with [`ignore_spans`](../filtering/#filter-with-ignorespans) for filtering and [`before_send_span`](../scrubbing-data/#scrubbing-data-with-beforesendspan) for span data enrichment and scrubbing.
@@ -134,11 +134,75 @@ client.on("process_span", (span) => {
 })
 ```
 
-SDK authors working on Span-First are encouraged to evaluate this approach and provide feedback and perspective.
+With a few exceptions, event processors for transactions do two things: 
+1. Add and modify transaction and child span data
+2. Drop transaction events or remove child spans
 
-**Out of scope**: Event processors could be registered on scopes. 
-For now, we don't see a need to continue supporting scoped processing. 
-We can re-evaluate if a use case comes up that can't be solved with client-wide processing hooks.
+#### Replacing mutating event processors
+
+For event processors mutating data, we need to replace the mutation logic with span processing hooks. 
+SDK-internally, this means configure the integration or call site that registers an event processor, to also register a hook to process that span.
+As written above, this could be realized via a client lifecycle hook, or a similar mechanism.
+
+```txt
+// someIntegration:
+
+client.addEventProcessor(event => {
+   event.transaction = parameterizedRouteName;
+   event.context.trace.data["http.route"] = parameterizedRouteName;
+   event.spans.foreach(s => {s.data["http.route"] = parameterizedRouteName});
+})
+
+// for span streaming, add:
+client.on("process_span", (span) => {
+   if (span.is_segment) {
+      span.name = parameterizedRouteName;
+   }
+   span.attributes["http.route"] = parameterizedRouteName;
+})
+```
+
+#### Replacing filtering event processors
+
+Ideally, we can replace retroactive filtering in event processors with configuring an integration to not emit these spans upfront. 
+This should be the first step we try when implementing span streaming.
+
+If this doesn't apply to the use case, we should pre-configure the SDK's `ignore_spans` option and leverage the existing span filtering logic to drop segments or child spans **upfront**.
+
+```txt
+// someIntegration:
+
+client.addEventProcessor(event => {
+   if (event.type === "transaction" && event.transaction === "unknown") {
+      return null;
+   }
+   return event;
+})
+
+// for span streaming, add:
+client.options.ignore_spans = [
+   ...client.options.ignore_spans,
+   /^unknown$/
+];
+```
+
+Note that if the SDK implements `ignore_spans` also for transactions, this _might_ allow us to entirely get rid of the event processor.
+
+#### Cases we cannot* replace
+
+- Filtering spans based on data that is unknown prior to child span start.
+  For example, on a span attribute that only gets added to the span after it was started.
+- Filtering entire segments based on data that is unknown prior to segment start.
+  For example, `http.server` segments ending in a 404 response.
+- Use cases where we mutata or make decisions on multiple spans at once (e.g. calculating and setting the total token usage on parent spans of `gen_ai` spans).
+  There's no guarantee anymore that we actually "see" all spans in time to safely aggregate on their data.
+  Previously, this was trivial, by iterating over `event.spans`. 
+  Now, we'd need a guarantee that the child spans finish prior to their parent span, which we often don't have.
+- Scoped event processors: Event processors could be registered on scopes. 
+  For now, we don't see a need to continue supporting scoped processing. 
+  We can re-evaluate if a use case comes up that can't be solved with client-wide processing hooks.
+  
+\* This reflects our current span streaming strategies. We might reconsider cases in the future based on feedback and demand.   
 
 **To sum up**: Spans no longer going through event processors is a behaviour-breaking change. For users, `ignore_spans` and `before_send_span` should be the way forward. Internally, SDKs may use further processing mechanisms.
 

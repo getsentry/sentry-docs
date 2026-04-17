@@ -308,7 +308,7 @@ When you remove the environmental variable in front of your build command, your 
 
 ## Expo Transactions Never Finish
 
-If you're using [expo-dev-client](https://docs.expo.dev/development/introduction/#what-is-an-expo-dev-client), you might notice that transactions never finish in your dev builds. This is due to logs that the dev client is continuously sending to the development server. To fix this, you can stop creating spans for the HTTP requests to the log endpoint in your dev builds by adding the following to your `Sentry.init()`:
+If you're using [expo-dev-client](https://docs.expo.dev/develop/development-builds/introduction/), you might notice that transactions never finish in your dev builds. This is due to logs that the dev client is continuously sending to the development server. To fix this, you can stop creating spans for the HTTP requests to the log endpoint in your dev builds by adding the following to your `Sentry.init()`:
 
 ```javascript
 import * as Sentry from "sentry-expo";
@@ -358,6 +358,32 @@ You can also use [Advanced Data Scrubbing](/security-legal-pii/scrubbing/advance
 [Replace] [Anything] from [contexts.trace.data.route.params]
 [Replace] [Anything] from [contexts.trace.data.previousRoute.params]
 ```
+
+## Android: IllegalStateException Mix of Versions
+
+If your Android app crashes on startup with:
+
+```
+IllegalStateException: Sentry SDK has detected a mix of versions
+```
+
+This is caused by the Sentry Android Gradle Plugin (AGP) auto-installing a `sentry-android` version that conflicts with the one shipped by `@sentry/react-native`.
+
+### Solution
+
+Set `autoInstallation.enabled = false` in your `android/app/build.gradle`:
+
+```groovy {filename:android/app/build.gradle}
+sentry {
+    autoInstallation {
+      enabled = false
+    }
+}
+```
+
+The React Native SDK manages its own compatible `sentry-android` dependency, so the Gradle plugin should not auto-install one. See the [manual setup guide](/platforms/react-native/manual-setup/manual-setup/#enable-sentry-agp) for the full configuration.
+
+For more information, see [GitHub issue #5682](https://github.com/getsentry/sentry-react-native/issues/5682).
 
 ## Sentry Android Gradle Plugin Circular Dependency
 

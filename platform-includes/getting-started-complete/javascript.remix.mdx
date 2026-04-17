@@ -1,8 +1,15 @@
-## Step 2: Configure
+## Configure
 
 ### Configure Client-Side Sentry
 
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
 Create a client file `entry.client.tsx` in the `app` folder of your project if you don't have one already. In this file, import and initialize the Sentry SDK:
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```typescript {tabTitle:Client} {filename: entry.client.tsx}
 import { useLocation, useMatches } from "@remix-run/react";
@@ -64,11 +71,22 @@ Sentry.init({
 });
 ```
 
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
 #### Remix ErrorBoundary
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
 
 To capture errors from your [ErrorBoundary](https://remix.run/docs/en/main/route/error-boundary), define it in `root.tsx` to act as a fallback for all routes or create route-specific error boundaries in your route components.
 
 In your `ErrorBoundary` component, use `Sentry.captureRemixErrorBoundaryError` to send the captured error to Sentry:
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```tsx {filename: root.tsx}
 import { captureRemixErrorBoundaryError } from "@sentry/remix";
@@ -82,9 +100,20 @@ export const ErrorBoundary = () => {
 };
 ```
 
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
 #### Performance Monitoring
 
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
 Wrap your Remix root component with `withSentry` to capture performance data:
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```tsx {filename: root.tsx}
 import {
@@ -118,11 +147,22 @@ function App() {
 export default withSentry(App);
 ```
 
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
 ### Configure Server-Side Sentry
 
 <PlatformSection notSupported={["javascript.cloudflare"]}>
 
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
 Create an instrumentation file `instrument.server.mjs` in your project's root folder and initialize the Sentry SDK within it:
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```typescript {tabTitle:Server} {filename: instrument.server.mjs}
 import * as Sentry from "@sentry/remix";
@@ -172,7 +212,16 @@ Sentry.init({
 });
 ```
 
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
 Then run your Remix server using the `--import` command line option and point it to this file to make sure the Sentry module loads before any other application code runs:
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```bash
 NODE_OPTIONS='--import=./instrument.server.mjs' remix-serve build
@@ -180,8 +229,20 @@ NODE_OPTIONS='--import=./instrument.server.mjs' remix-serve build
 NODE_OPTIONS='--require=./instrument.server.cjs' remix-serve build
 ```
 
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
 <Expandable title="Are you using Express?">
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
 If you use the Express server instead of the built-in Remix server, you can import your instrumentation file directly at the top of your server implementation.
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```typescript {filename: server.(mjs|cjs)}
 // import the Sentry instrumentation file before anything else.
@@ -195,13 +256,24 @@ const app = express();
 // ...
 ```
 
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
 </Expandable>
 
 </ PlatformSection>
 
 <PlatformSection supported={["javascript.cloudflare"]}>
 
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
 <Include name="cloudflare-pages-middleware-intro.mdx" />
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```javascript {filename:functions/_middleware.js}
 import * as Sentry from "@sentry/cloudflare";
@@ -240,11 +312,28 @@ export const onRequest = [
 ];
 ```
 
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
 </ PlatformSection>
 
 ### Capture Server-Side Errors
 
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
 To automatically capture server-side errors, instrument the [`handleError`](https://remix.run/docs/en/main/file-conventions/entry.server#handleerror) function in your server entry point (`entry.server.tsx`). You can wrap your custom error handler with `wrapHandleErrorWithSentry` or directly use `sentryHandleError`:
+
+<Alert level="success" title="Tip">
+
+Sentry's Remix SDK automatically records your [`action`](https://remix.run/docs/en/main/route/action) and [`loader`](https://remix.run/docs/en/main/route/loader) transactions for performance monitoring. You can also initialize Sentry's database integrations, such as [Prisma](/platforms/javascript/guides/node/configuration/integrations/prisma/), to get spans for your database calls.
+
+</Alert>
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```typescript {filename: entry.server.tsx}
 import * as Sentry from "@sentry/remix";
@@ -259,21 +348,26 @@ export const handleError = Sentry.wrapHandleErrorWithSentry(
 export const handleError = Sentry.sentryHandleError;
 ```
 
-<Alert level="success" title="Tip">
-
-Sentry's Remix SDK automatically records your [`action`](https://remix.run/docs/en/main/route/action) and [`loader`](https://remix.run/docs/en/main/route/loader) transactions for performance monitoring. You can also initialize Sentry's database integrations, such as [Prisma](/platforms/javascript/guides/node/configuration/integrations/prisma/), to get spans for your database calls.
-
-</Alert>
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
 <PlatformSection supported={["javascript.cloudflare"]}>
 
 ### Configure Cloudflare for Sentry
 
-<PlatformContent includePath="getting-started-config" />
+<PlatformContent
+  includePath="getting-started-config"
+  platform="javascript.cloudflare.splitlayout"
+/>
 
 </ PlatformSection>
 
-## Step 3: Add Readable Stack Traces With Source Maps (Optional)
+### Add Readable Stack Traces With Source Maps (Optional)
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
 
 To upload source maps for clear error stack traces, add your Sentry auth token, organization, and project slug in your `vite.config.ts` file:
 
@@ -283,6 +377,9 @@ Check our [Source Maps documentation](/platforms/javascript/guides/remix/sourcem
 alternative setup options.
 
 </Alert>
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```javascript {filename:vite.config.ts} {3, 10-17,20-23}
 import { defineConfig } from "vite";
@@ -311,36 +408,58 @@ export default defineConfig({
 });
 ```
 
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
 To keep your auth token secure, always store it in an environment variable instead of directly in your files:
 
 <OrgAuthTokenNote />
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```bash {filename:.env}
 SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
 ```
 
-<Include name="vite-loadenv-hint.mdx" />
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+<Include name="vite-loadenv-hint-splitlayout.mdx" />
 
 <PlatformSection notSupported={["javascript.cloudflare"]}>
-## Step 4: Avoid Ad Blockers With Tunneling (Optional)
+### Avoid Ad Blockers With Tunneling (Optional)
 
-<PlatformContent includePath="getting-started-tunneling" />
-
-## Step 5: Verify Your Setup
+<PlatformContent includePath="getting-started-tunneling-splitlayout" />
 
 </PlatformSection>
 
-<PlatformSection supported={["javascript.cloudflare"]}>
-
-## Step 4: Verify Your Setup
-
-</PlatformSection>
+## Verify Your Setup
 
 Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
 
 ### Issues
 
-To verify that Sentry captures errors and creates issues in your Sentry project, add a test button to one of your pages:
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+<PlatformContent includePath="getting-started-browser-sandbox-warning" />
+
+To verify that Sentry captures errors and creates issues in your Sentry project, add a test button to one of your pages.
+
+<OnboardingOption optionId="performance" hideForThisOption>
+
+Open the page in a browser and click the button to trigger a frontend error.
+
+</OnboardingOption>
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```javascript
 <button
@@ -353,17 +472,24 @@ To verify that Sentry captures errors and creates issues in your Sentry project,
 </button>
 ```
 
-<OnboardingOption optionId="performance" hideForThisOption>
-
-Open the page in a browser and click the button to trigger a frontend error.
-
-</OnboardingOption>
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
 <OnboardingOption optionId="performance">
 
 ### Tracing
 
-To test your tracing configuration, update the previous code snippet by calling a non-existing route and starting a trace to measure the time it takes for the execution of your code:
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+To test your tracing configuration, update the previous code snippet by calling a non-existing route and starting a trace to measure the time it takes for the execution of your code.
+
+Open the page in a browser and click the button to trigger the frontend error and a trace.
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```javascript
 <button
@@ -387,17 +513,17 @@ To test your tracing configuration, update the previous code snippet by calling 
 </button>
 ```
 
-Open the page in a browser (for most Remix applications, this will be at localhost:3000) and click the button to trigger the frontend error and a trace.
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
 </OnboardingOption>
 
 <OnboardingOption optionId="logs">
 
-<Include name="logs/javascript-quick-start-verify-logs" />
+<Include name="logs/javascript-quick-start-verify-logs-splitlayout" />
 
 </OnboardingOption>
-
-<PlatformContent includePath="getting-started-browser-sandbox-warning" />
 
 ### View Captured Data in Sentry
 

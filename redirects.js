@@ -573,7 +573,11 @@ const developerDocsRedirects = [
 const userDocsRedirects = [
   {
     source: '/integrations/cursor/',
-    destination: '/organization/integrations/cursor/',
+    destination: '/organization/integrations/coding-agents/cursor/',
+  },
+  {
+    source: '/organization/integrations/cursor/',
+    destination: '/organization/integrations/coding-agents/cursor/',
   },
   {
     source: '/concepts/data-management/advanced-datascrubbing/',

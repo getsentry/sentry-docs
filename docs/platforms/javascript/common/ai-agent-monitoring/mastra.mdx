@@ -25,12 +25,6 @@ supported:
   - javascript.tanstackstart-react
 ---
 
-<Alert>
-
-This is a server-side exporter for Mastra AI tracing that uses the Node.js Sentry SDK. It requires Node.js or compatible runtimes. Requires `@mastra/sentry@beta` package.
-
-</Alert>
-
 [Mastra](https://mastra.ai/) is a framework for building AI-powered applications and agents with a modern TypeScript stack. The Mastra Sentry Exporter sends tracing data to Sentry using OpenTelemetry semantic conventions, providing insights into model performance, token usage, and tool executions.
 
 ## Installation
@@ -38,42 +32,64 @@ This is a server-side exporter for Mastra AI tracing that uses the Node.js Sentr
 Install the Mastra Sentry exporter package:
 
 ```bash {tabTitle:npm}
-npm install @mastra/sentry@beta
+npm install @mastra/sentry@latest
 ```
 
 ```bash {tabTitle:yarn}
-yarn add @mastra/sentry@beta
+yarn add @mastra/sentry@latest
 ```
 
 ```bash {tabTitle:pnpm}
-pnpm add @mastra/sentry@beta
+pnpm add @mastra/sentry@latest
 ```
 
 ## Configuration
 
 ### Zero-Config Setup
 
-The Sentry exporter can automatically read configuration from environment variables:
+The Sentry exporter can automatically read configuration from environment variables (`SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`):
 
 ```javascript
+import { Mastra } from "@mastra/core";
+import { Observability } from "@mastra/observability";
 import { SentryExporter } from "@mastra/sentry";
 
-// Reads from SENTRY_DSN, SENTRY_ENVIRONMENT, SENTRY_RELEASE
-const exporter = new SentryExporter();
+export const mastra = new Mastra({
+  observability: new Observability({
+    configs: {
+      sentry: {
+        serviceName: "my-service",
+        exporters: [new SentryExporter()],
+      },
+    },
+  }),
+});
 ```
 
 ### Explicit Configuration
 
-You can also configure the exporter explicitly:
+You can also pass configuration directly:
 
 ```javascript
+import { Mastra } from "@mastra/core";
+import { Observability } from "@mastra/observability";
 import { SentryExporter } from "@mastra/sentry";
 
-const exporter = new SentryExporter({
-  dsn: process.env.SENTRY_DSN,
-  environment: "production",
-  tracesSampleRate: 1.0,
-  release: "1.0.0",
+export const mastra = new Mastra({
+  observability: new Observability({
+    configs: {
+      sentry: {
+        serviceName: "my-service",
+        exporters: [
+          new SentryExporter({
+            dsn: process.env.SENTRY_DSN,
+            environment: "production",
+            tracesSampleRate: 1.0,
+          }),
+        ],
+      },
+    },
+  }),
 });
 ```
 
@@ -178,4 +194,4 @@ For complete documentation on using Mastra with Sentry, see the [Mastra Sentry E
 
 ## Supported Versions
 
-- `@mastra/sentry`: `>=1.0.0-beta.2`
+- `@mastra/sentry`: `>=1.0.0`

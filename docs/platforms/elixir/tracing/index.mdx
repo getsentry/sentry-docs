@@ -60,11 +60,32 @@ Set up OpenTelemetry to send traces to Sentry:
 config :opentelemetry, span_processor: {Sentry.OpenTelemetry.SpanProcessor, []}
 
 config :opentelemetry, sampler: {Sentry.OpenTelemetry.Sampler, []}
+
+# Enable distributed tracing across services via sentry-trace and baggage headers
+config :opentelemetry,
+  text_map_propagators: [
+    :trace_context,
+    :baggage,
+    Sentry.OpenTelemetry.Propagator
+  ]
 ```
 
 ## Set Up Phoenix Instrumentation
 
-In your `application.ex`, set up the OpenTelemetry instrumentation:
+In your `application.ex`, set up the OpenTelemetry instrumentation.
+
+
+<Alert title="Note">
+
+`OpentelemetryPhoenix` requires your Phoenix endpoint to include `Plug.Telemetry` in order to correctly trace endpoint calls. Make sure your endpoint contains:
+
+```elixir
+plug Plug.Telemetry, event_prefix: [:phoenix, :endpoint]
+```
+
+This is included by default in the Phoenix endpoint template.
+
+</Alert>
 
 ```elixir
 # lib/my_app/application.ex
@@ -72,6 +93,9 @@ defmodule MyApp.Application do
   use Application
 
   def start(_type, _args) do
+    # Set up LiveView trace propagation (must be BEFORE OpentelemetryPhoenix)
+    Sentry.OpenTelemetry.LiveViewPropagator.setup()
+
     # Set up OpenTelemetry instrumentation
     OpentelemetryBandit.setup()           # for Bandit (Phoenix 1.7+)
     # OR OpentelemetryPhoenix.setup(adapter: :cowboy2)  # for Cowboy
@@ -89,6 +113,20 @@ defmodule MyApp.Application do
     opts = [strategy: :one_for_one, name: MyApp.Supervisor]
     Supervisor.start_link(children, opts)
   end
+end
+```
+
+Then add `Sentry.Plug.LiveViewContext` to your router's browser pipeline, after `:fetch_session`. This stores the trace context in the session so that LiveView processes can restore it during `mount`, `handle_params`, and `handle_event` callbacks.
+
+```elixir {filename:lib/my_app_web/router.ex}
+pipeline :browser do
+  plug :accepts, ["html"]
+  plug :fetch_session
+  plug :fetch_live_flash
+  plug :put_root_layout, html: {MyAppWeb.Layouts, :root}
+  plug :protect_from_forgery
+  plug :put_secure_browser_headers
+  plug Sentry.Plug.LiveViewContext
 end
 ```
 

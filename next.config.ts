@@ -1,8 +1,8 @@
 import {codecovNextJSWebpackPlugin} from '@codecov/nextjs-webpack-plugin';
 import {withSentryConfig} from '@sentry/nextjs';
 
-import {REMOTE_IMAGE_PATTERNS} from './src/config/images';
 import {redirects} from './redirects.js';
+import {REMOTE_IMAGE_PATTERNS} from './src/config/images';
 
 // Exclude build-time-only dependencies from serverless function bundles to stay under
 // Vercel's 250MB limit. These packages are only needed during build to compile MDX and
@@ -157,12 +157,15 @@ module.exports = withSentryConfig(nextConfig, {
   project: process.env.NEXT_PUBLIC_DEVELOPER_DOCS ? 'develop-docs' : 'docs',
   authToken: process.env.SENTRY_AUTH_TOKEN,
 
+  // Routes browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers
+  tunnelRoute: '/sentry-tunnel',
+
   // Suppresses source map uploading logs during build
   silent: !process.env.CI,
 
   // Upload a larger set of source maps for prettier stack traces (increases build time)
   widenClientFileUpload: true,
-  
+
   webpack: {
     treeshake: {
       // Automatically tree-shake Sentry logger statements to reduce bundle size

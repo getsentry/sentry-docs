@@ -25,7 +25,9 @@ This integration is enabled by default, so you get automatic performance monitor
 
 <PlatformContent includePath="getting-started-prerequisites" />
 
-## Step 1: Install
+<StepConnector selector="h2" showNumbers={true}>
+
+## Install
 
 Choose the features you want to configure, and this guide will show you how:
 
@@ -37,7 +39,16 @@ Choose the features you want to configure, and this guide will show you how:
 
 ### Install the Sentry SDK
 
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
 Run the command for your preferred package manager to add the Sentry SDK to your Firebase Functions project:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+<OnboardingOption optionId="profiling" hideForThisOption>
 
 ```bash {tabTitle:npm}
 npm install @sentry/node --save
@@ -51,9 +62,38 @@ yarn add @sentry/node
 pnpm add @sentry/node
 ```
 
-## Step 2: Configure
+</OnboardingOption>
 
-Create an initialization file (for example, `instrument.js`) that imports and initializes Sentry. This file must be imported at the very top of your functions entry point, before any other imports.
+<OnboardingOption optionId="profiling">
+
+```bash {tabTitle:npm}
+npm install @sentry/node @sentry/profiling-node --save
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/node @sentry/profiling-node
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/node @sentry/profiling-node
+```
+
+</OnboardingOption>
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+## Configure
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Create an initialization file (for example, `instrument.js`) that imports and initializes Sentry.
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```javascript {filename:instrument.js}
 const Sentry = require("@sentry/node");
@@ -86,7 +126,21 @@ Sentry.init({
 });
 ```
 
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
 Import the initialization file at the very top of your functions entry point (for example, `index.js`), before any other imports:
+
+<Alert>
+  It's important that you import the initialization file **before** any other `require`
+  calls, including Firebase imports. This ensures Sentry can properly instrument
+  all modules.
+</Alert>
+</SplitSectionText>
+<SplitSectionCode>
 
 ```javascript {filename:index.js}
 require("./instrument"); // Require Sentry initialization first
@@ -109,15 +163,13 @@ exports.onUserCreated = onDocumentCreated("users/{userId}", async (event) => {
 });
 ```
 
-<Alert>
-  The key is to import the initialization file **before** any other `require`
-  calls, including Firebase imports. This ensures Sentry can properly instrument
-  all modules.
-</Alert>
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
-## Step 3: Add Readable Stack Traces With Source Maps (Optional)
+### Add Readable Stack Traces With Source Maps (Optional)
 
-<PlatformContent includePath="getting-started-sourcemaps-short-version" />
+<PlatformContent includePath="getting-started-sourcemaps-short-version-splitlayout" />
 
 ## Step 4: Verify Your Setup
 
@@ -125,7 +177,14 @@ Let's test your setup and confirm that Sentry is working correctly and sending d
 
 ### Issues
 
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
 Add a test function that throws an error to verify Sentry is capturing errors:
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```javascript {filename:index.js}
 require("./instrument"); // Import Sentry initialization first
@@ -136,18 +195,38 @@ exports.testSentry = onRequest(async (request, response) => {
 });
 ```
 
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
 Deploy your functions and trigger the test endpoint:
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```bash
 firebase deploy --only functions
 curl https://<region>-<project-id>.cloudfunctions.net/testSentry
 ```
 
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
 <OnboardingOption optionId="performance">
 
 ### Tracing
 
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
 Firebase Functions are automatically instrumented for tracing. You can also create custom spans:
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```javascript {filename:index.js}
 require("./instrument");
@@ -164,11 +243,15 @@ exports.tracedFunction = onRequest(async (request, response) => {
 });
 ```
 
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
 </OnboardingOption>
 
 <OnboardingOption optionId="logs">
 
-<Include name="logs/javascript-quick-start-verify-logs" />
+<Include name="logs/javascript-quick-start-verify-logs-splitlayout" />
 
 </OnboardingOption>
 
@@ -195,3 +278,5 @@ Now's a good time to customize your setup and look into more advanced topics:
 - [Get support](https://sentry.zendesk.com/hc/en-us/)
 
 </Expandable>
+
+</StepConnector>
