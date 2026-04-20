@@ -54,7 +54,7 @@ for (const line of input.split('\n')) {
 
 // Collect SDKs that exceed the line threshold, ignoring trivial touches.
 const violating = [...sdkLines.entries()]
-  .filter(([, n]) => n >= LINE_THRESHOLD)
+  .filter(([, n]) => n > LINE_THRESHOLD)
   .map(([sdk]) => sdk)
   .sort();
 
