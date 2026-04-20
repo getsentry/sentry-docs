@@ -14,7 +14,7 @@ You upload snapshots with the `sentry-cli build snapshots` command, which takes 
 
 ```bash
 sentry-cli build snapshots <output-dir> \
-  --auth-token "$SENTRY_SNAPSHOTS_AUTH_TOKEN" \
+  --auth-token "$SENTRY_AUTH_TOKEN" \
   --app-id <app-id> \
   --project <project-slug> \
 ```
@@ -116,20 +116,8 @@ jobs:
             build snapshots "${{ env.SNAPSHOT_OUTPUT_DIR }}"
             --app-id <your-app-id>
             --project <your-sentry-project>
-            --head-sha "${{ github.event.pull_request.head.sha || github.sha }}"
-            --vcs-provider github
-            --head-repo-name "${{ github.repository }}"
           )
 
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            ARGS+=(
-              --base-sha "${{ github.event.pull_request.base.sha }}"
-              --base-repo-name "${{ github.repository }}"
-              --head-ref "${{ github.head_ref }}"
-              --base-ref "${{ github.base_ref }}"
-              --pr-number "${{ github.event.number }}"
-            )
-          fi
 
           sentry-cli "${ARGS[@]}"
 ```
