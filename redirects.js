@@ -741,6 +741,18 @@ const userDocsRedirects = [
     destination: '/organization/integrations/third-party-integrations/',
   },
   {
+    source: '/organization/integrations/mendral/',
+    destination: '/organization/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/terramind/',
+    destination: '/organization/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/flow-relay/',
+    destination: '/organization/integrations/third-party-integrations/',
+  },
+  {
     source: '/development/sdk-dev/:path*',
     destination: 'https://develop.sentry.dev',
   },
