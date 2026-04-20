@@ -737,6 +737,10 @@ const userDocsRedirects = [
     destination: '/organization/integrations/third-party-integrations/',
   },
   {
+    source: '/organization/integrations/specsource/',
+    destination: '/organization/integrations/third-party-integrations/',
+  },
+  {
     source: '/development/sdk-dev/:path*',
     destination: 'https://develop.sentry.dev',
   },
