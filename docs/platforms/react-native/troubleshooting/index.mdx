@@ -70,6 +70,31 @@ If you're using an older version of the SDK (version `3.2.12` or lower) or `sent
   ../node_modules/react-native/scripts/react-native-xcode.sh --force-foreground
 ```
 
+## Different `sentry.properties` Per Scheme or Build Configuration (iOS)
+
+Unlike Android's `flavorAware` option, iOS doesn't auto-select a `sentry.properties` file per configuration. If your app has multiple schemes or build configurations that need to upload to different Sentry projects, select the file at build time with a User-Defined Build Setting.
+
+1. In Xcode, open the **Build Settings** tab, click **+**, and choose **Add User-Defined Setting**. Name it `SENTRY_PROPERTIES_FILE`.
+2. Expand the new setting and set a value per configuration, for example `sentry-staging.properties` for `Staging` and `sentry-production.properties` for `Production`.
+3. Reference the setting from the Sentry build phases by exporting `SENTRY_PROPERTIES`:
+
+```bash {filename:Bundle React Native code and images}
+export SENTRY_PROPERTIES="$SENTRY_PROPERTIES_FILE"
+
+WITH_ENVIRONMENT="../node_modules/react-native/scripts/xcode/with-environment.sh"
+SENTRY_XCODE="../node_modules/@sentry/react-native/scripts/sentry-xcode.sh"
+
+/bin/sh -c "$WITH_ENVIRONMENT $SENTRY_XCODE"
+```
+
+```bash {filename:Upload Debug Symbols to Sentry}
+export SENTRY_PROPERTIES="$SENTRY_PROPERTIES_FILE"
+
+/bin/sh ../node_modules/@sentry/react-native/scripts/sentry-xcode-debug-files.sh
+```
+
+Xcode substitutes the User-Defined Build Setting for the active configuration, so each build uploads to the matching Sentry project. The same pattern works for `SENTRY_RELEASE`, `SENTRY_DIST`, and other per-build environment variables.
+
 ## Release Health
 
 If your release health statistics are being attributed to the wrong release, confirm that you [pass the `release` and `dist` to the `init` call](/platforms/react-native/configuration/releases/#bind-the-version).
