@@ -1230,11 +1230,15 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/platforms/unreal/setup-crashreport/',
-    to: '/platforms/unreal/configuration/setup-crashreporter/',
+    to: '/platforms/unreal/configuration/crash-reporter/crash-reporter-client/',
   },
   {
     from: '/platforms/unreal/setup-crashreporter/',
-    to: '/platforms/unreal/configuration/setup-crashreporter/',
+    to: '/platforms/unreal/configuration/crash-reporter/crash-reporter-client/',
+  },
+  {
+    from: '/platforms/unreal/configuration/setup-crashreporter/',
+    to: '/platforms/unreal/configuration/crash-reporter/crash-reporter-client/',
   },
   {
     from: '/platforms/unreal/debug-symbols/',
