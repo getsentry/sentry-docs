@@ -10,7 +10,7 @@ Sentry Crons allows you to monitor the uptime and performance of any scheduled, 
 
 To begin monitoring your recurring, scheduled job:
 
-1. [Create a new monitor](https://sentry.io/issues/alerts/new/crons/) in Sentry.
+1. [Create a new monitor](https://sentry.io/monitors/new/) in Sentry (choose **Cron** as the monitor type).
 2. Configure check-ins or a heartbeat for your job.
 
 Optionally, you can skip the first step and [create or update (upsert) a monitor through a check-in](#creating-or-updating-a-monitor-through-a-check-in-optional). See more below.
@@ -18,7 +18,6 @@ Optionally, you can skip the first step and [create or update (upsert) a monitor
 ## Check-Ins (Recommended)
 
 Check-in monitoring allows you to track a job's progress by completing two check-ins: one at the start of your job and another at the end of your job. This two-step process allows Sentry to notify you if your job didn't start when expected (missed) or if it exceeded its maximum runtime (failed).
-
 
 ```bash {tabTitle: cURL}
 SENTRY_INGEST="https://___ORG_INGEST_DOMAIN___"
@@ -42,7 +41,6 @@ Host: ___ORG_INGEST_DOMAIN___
 ```
 
 If your job execution fails:
-
 
 ```bash {tabTitle: cURL}
 # 🔴 Notify Sentry your job has failed:
@@ -76,7 +74,6 @@ schedule or delete the monitor environment; otherwise, it will be marked as miss
 
 </Alert>
 
-
 ```bash {tabTitle: cURL}
 SENTRY_INGEST="https://___ORG_INGEST_DOMAIN___"
 SENTRY_CRONS="${SENTRY_INGEST}/api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/"
@@ -93,7 +90,6 @@ curl "${SENTRY_CRONS}?environment=dev&status=ok"
 ### Creating or Updating a Monitor Through a Check-In (Optional)
 
 Sentry enables the automatic creation or update of a monitor (upsert) through the check-in payload. This can be useful if you have many scheduled tasks or need to create them dynamically.
-
 
 ```bash {tabTitle: cURL}
 SENTRY_INGEST="https://___ORG_INGEST_DOMAIN___"
@@ -182,7 +178,6 @@ If this happens, you have to provide a stable check-in ID for your execution wit
 
 Usage example:
 
-
 ```bash {tabTitle: cURL}
 CHECK_IN_ID="$(uuidgen)"
 
@@ -202,7 +197,6 @@ curl "${SENTRY_CRONS}?check_in_id=${CHECK_IN_ID}&status=ok"
 
 Heartbeat monitoring notifies Sentry of a job's status through one check-in. This setup will only notify you if your job didn't start when expected (missed). If you need to track a job to see if it exceeded its maximum runtime (failed), use check-ins instead.
 
-
 ```bash {tabTitle: cURL}
 SENTRY_INGEST="https://___ORG_INGEST_DOMAIN___"
 SENTRY_CRONS="${SENTRY_INGEST}/api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/"
@@ -218,7 +212,6 @@ Host: ___ORG_INGEST_DOMAIN___
 
 If your job execution fails:
 
-
 ```bash {tabTitle: cURL}
 # 🔴 Notify Sentry your job has failed:
 curl "${SENTRY_CRONS}?status=error"
@@ -233,16 +226,16 @@ Host: ___ORG_INGEST_DOMAIN___
 
 When your recurring job fails to check in (missed), runs beyond its configured maximum runtime (failed), or manually reports a failure, Sentry will create an error event with a tag to your monitor.
 
-To receive alerts about these events:
+To receive notifications about these events:
 
-1. Navigate to **Alerts** in the sidebar.
-2. Create a new alert and select "Issues" under "Errors" as the alert type.
-3. Configure your alert and define a filter match to use: `The event's tags match {key} {match} {value}`.
+1. Open [**Alerts**](https://sentry.io/monitors/alerts) click **Create Alert**.
+2. Choose the Projects or Monitors that should drive the rule.
+3. Set **triggers** and **filters** so the rule runs for the monitor failures you care about—for example, a filter on event tags such as `monitor.slug`.
 
-Example: `The event's tags match monitor.slug equals my-monitor-slug-here`
+Example filter intent: match when `monitor.slug` equals `my-monitor-slug-here`.
 
 <Include name="common-imgs/crons-alerts-example" />
 
-Learn more in [Issue Alert Configuration](/product/alerts/create-alerts/issue-alert-config/).
+Learn more in [Alerts](/product/monitors-and-alerts/alerts/).
 
 <Include name="crons-rate-limits" />
