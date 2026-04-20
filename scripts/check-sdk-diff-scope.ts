@@ -29,12 +29,12 @@ const MIN_VIOLATING_SDKS = 2;
  *     e.g. `javascript.angular.mdx` → `javascript`, `react-native.mdx` → `react-native`
  */
 function sdkForPath(path: string): string | null {
-  const segs = path.split("/");
-  if (segs[0] === "docs" && segs[1] === "platforms") {
+  const segs = path.split('/');
+  if (segs[0] === 'docs' && segs[1] === 'platforms') {
     return segs[2] ?? null;
   }
-  if (segs[0] === "platform-includes") {
-    return segs.at(-1)!.split(".")[0];
+  if (segs[0] === 'platform-includes') {
+    return segs.at(-1)!.split('.')[0];
   }
   return null;
 }
@@ -43,9 +43,9 @@ function sdkForPath(path: string): string | null {
 const sdkLines = new Map<string, number>();
 
 const input = readFileSync(0, 'utf-8');
-for (const line of input.split("\n")) {
-  const [added, deleted, path] = line.split("\t");
-  if (!path || added === "-") continue; // binary file or empty line
+for (const line of input.split('\n')) {
+  const [added, deleted, path] = line.split('\t');
+  if (!path || added === '-') continue; // binary file or empty line
   const sdk = sdkForPath(path.trim());
   if (sdk) {
     sdkLines.set(sdk, (sdkLines.get(sdk) ?? 0) + +added + +deleted);
@@ -60,6 +60,6 @@ const violating = [...sdkLines.entries()]
 
 if (violating.length >= MIN_VIOLATING_SDKS) {
   // Print the list for the CI step to capture and include in the PR comment.
-  console.log(violating.map(s => `\`${s}\``).join(", "));
+  console.log(violating.map(s => `\`${s}\``).join(', '));
   process.exit(1);
 }
