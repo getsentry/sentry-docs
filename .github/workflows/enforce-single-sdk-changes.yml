@@ -1,0 +1,101 @@
+name: Enforce Single SDK Changes
+
+on:
+  pull_request:
+    paths:
+      - 'docs/platforms/**'
+      - 'platform-includes/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  check-sdk-diff-scope:
+    name: Check SDK diff scope
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+
+      - name: Compute diff and evaluate
+        id: evaluate
+        run: |
+          set +e
+          SDK_LIST=$(git diff --numstat origin/${{ github.base_ref }}...HEAD | bun scripts/check-sdk-diff-scope.ts)
+          EXIT=$?
+          if [ $EXIT -eq 0 ]; then
+            echo "violation=false" >> "$GITHUB_OUTPUT"
+          elif [ -n "$SDK_LIST" ]; then
+            echo "violation=true" >> "$GITHUB_OUTPUT"
+            echo "sdk_list=$SDK_LIST" >> "$GITHUB_OUTPUT"
+          else
+            echo "error=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Post, update, or delete PR comment
+        if: steps.evaluate.outputs.error != 'true'
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          script: |
+            const MARKER = '<!-- enforce-single-sdk-changes -->';
+            const violation = '${{ steps.evaluate.outputs.violation }}' === 'true';
+
+            const {data: comments} = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c => c.body.includes(MARKER));
+
+            if (violation) {
+              const sdkList = ${{ toJSON(steps.evaluate.outputs.sdk_list) }};
+              const body = `${MARKER}
+            ### 🚫 Non-trivial changes to multiple SDKs
+
+            This PR contains non-trivial changes to multiple SDKs: ${sdkList}.
+            Changes to multiple SDKs should be submitted as separate PRs: **one PR per SDK**.
+
+            Please **split this PR** accordingly. Thank you in advance! 🙏`;
+
+              if (existing && existing.body !== body) {
+                await github.rest.issues.updateComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: existing.id,
+                  body,
+                });
+              } else if (!existing) {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.issue.number,
+                  body,
+                });
+              }
+            } else if (existing) {
+              await github.rest.issues.deleteComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+              });
+            }
+
+      - name: Fail on unexpected error
+        if: steps.evaluate.outputs.error == 'true'
+        run: |
+          echo "::error::SDK diff check failed unexpectedly — the script produced no output. Check the job logs for details."
+          exit 1
+
+      - name: Fail check
+        if: steps.evaluate.outputs.violation == 'true'
+        run: exit 1
