@@ -6,6 +6,8 @@ description: Structure your snapshot directory and upload from CI with sentry-cl
 
 <Include name="feature-available-for-user-group-early-adopter" />
 
+<Include name="snapshots/ci-alert" />
+
 Snapshots works for any platform with a frontend. You can view specific platform examples [here](/product/snapshots#supported-platforms). This page covers the general upload structure and metadata schema.
 
 ## Upload command
@@ -19,7 +21,7 @@ sentry-cli build snapshots <output-dir> \
   --project <project-slug> \
 ```
 
-You can reference our [example workflow](#upload-with-ci) and [full flag reference](#sentry-cli-build-snapshots-reference) below.
+For an end-to-end CI setup, see [Integrating Into CI](/product/snapshots/integrating-into-ci/). The full flag reference is [below](#sentry-cli-build-snapshots-reference).
 
 ### Upload Structure
 
@@ -63,64 +65,6 @@ Snapshots supports the following image formats:
 
 - PNG
 - JPEG
-
-## Upload With CI
-
-For a production example, Sentry's Github action is available [here](https://github.com/getsentry/sentry/blob/master/.github/workflows/frontend-snapshots.yml). Below is an example GitHub Actions workflow you can use as a starting point. Replace the placeholder values with your own snapshot generation command, app ID, and Sentry project slug.
-
-```yml {filename:.github/workflows/snapshots.yml}
-name: Snapshots
-
-on:
-  push:
-    branches: [main]
-  pull_request:
-
-env:
-  SNAPSHOT_OUTPUT_DIR: .artifacts/snapshots
-
-jobs:
-  snapshots:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          # Use PR head SHA, not the merge commit — avoids phantom diffs
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
-
-      # -------------------------------------------------------
-      # YOUR SNAPSHOT GENERATION STEP(S) HERE
-      # -------------------------------------------------------
-      # Generate PNG + JSON pairs into $SNAPSHOT_OUTPUT_DIR.
-      # Examples:
-      #   - Playwright screenshots
-      #   - iOS/Android screenshots
-      #   - Laravel Dusk screenshots
-      #   - Any tool that produces PNGs
-      # -------------------------------------------------------
-      - name: Generate snapshots
-        run: <your-snapshot-command>
-
-      - name: Install sentry-cli
-        if: ${{ !cancelled() }}
-        run: curl -sL https://sentry.io/get-cli/ | SENTRY_CLI_VERSION=3.3.4 sh
-
-      - name: Upload snapshots
-        if: ${{ !cancelled() }}
-        env:
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-        run: |
-          ARGS=(
-            --auth-token "$SENTRY_AUTH_TOKEN"
-            build snapshots "${{ env.SNAPSHOT_OUTPUT_DIR }}"
-            --app-id <your-app-id>
-            --project <your-sentry-project>
-          )
-
-
-          sentry-cli "${ARGS[@]}"
-```
 
 ## `sentry-cli build snapshots` Reference
 
