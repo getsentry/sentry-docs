@@ -6,7 +6,7 @@ description: Set up snapshot testing for Android apps with the Sentry Android Gr
 
 <Include name="feature-available-for-user-group-early-adopter" />
 
-Set up snapshot testing for your Android app with the Sentry Android Gradle Plugin. Run snapshot tests locally or in your own CI using your preferred snapshot library, then upload the generated images to Sentry for image diffing, visual review, and GitHub check status updates.
+Set up [Snapshots](/product/snapshots) for your Android app with the Sentry Android Gradle Plugin. Run snapshot tests locally or in your own CI using your preferred snapshot library, then upload the generated images to Sentry for image diffing, visual review, and GitHub status checks.
 
 ## Step 1: Enable Snapshots
 
@@ -22,26 +22,18 @@ sentry {
 }
 ```
 
-## Step 2: Connect Your Snapshot Tool
+## Step 2: Generate Images
 
-### Paparazzi (Recommended)
+There are two paths for generating snapshot images on Android:
 
-If you already have [Paparazzi](https://github.com/cashapp/paparazzi) configured, add `generateSnapshotTests = false` to your snapshot config:
+- **From Compose Previews (recommended)** — if you don't have snapshot tests yet, Sentry auto-wires Paparazzi with ComposePreviewScanner so every `@Preview` composable becomes a snapshot. No test code required.
+- **From existing snapshot tests** — if you already use Paparazzi, Roborazzi, or another tool, point Sentry at your existing output instead.
 
-```kotlin
-sentry {
-  snapshots {
-    enabled = true
-    generateSnapshotTests = false
-  }
-}
-```
+### From Compose Previews (Recommended)
 
-Then continue to [Step 3](#step-3-test-locally).
+Use this path if you don't have a snapshot test suite yet. Paparazzi and ComposePreviewScanner turn every `@Preview` composable in your project into a snapshot automatically.
 
----
-
-If you don't have Paparazzi yet, first choose a version compatible with your project:
+First, choose a Paparazzi version compatible with your project:
 
 | Version         | Gradle         | compileSdk | JDK | compose-bom  |
 | --------------- | -------------- | ---------- | --- | ------------ |
@@ -57,11 +49,28 @@ plugins {
 }
 ```
 
-Paparazzi integrates with ComposePreviewScanner to automatically generate snapshots for all Compose Previews in your project — no test-writing required.
+Continue to [Step 3](#step-3-test-locally).
 
-Then continue to [Step 3](#step-3-test-locally).
+### From Existing Snapshot Tests
 
-### Roborazzi
+Use this path if you already have a snapshot test suite. The configuration depends on which tool you use.
+
+#### Paparazzi
+
+If you already have [Paparazzi](https://github.com/cashapp/paparazzi) configured, set `generateSnapshotTests = false` so Sentry uses your existing tests instead of auto-generating preview-based ones:
+
+```kotlin
+sentry {
+  snapshots {
+    enabled = true
+    generateSnapshotTests = false
+  }
+}
+```
+
+Continue to [Step 3](#step-3-test-locally).
+
+#### Roborazzi
 
 If you already have [Roborazzi](https://github.com/takahirom/roborazzi) configured, wire the Sentry upload task to the output of your Roborazzi record task:
 
@@ -76,9 +85,9 @@ afterEvaluate {
 }
 ```
 
-Then continue to [Step 3](#step-3-test-locally).
+Continue to [Step 3](#step-3-test-locally).
 
-### Other Tools
+#### Other Tools
 
 The same pattern works with any snapshot tool. Set `snapshotsPath` to the directory your tool writes images to, and add a `dependsOn` for the task that generates them:
 
@@ -101,4 +110,6 @@ Verify your setup by running:
 ./gradlew sentryUploadSnapshotsDebug
 ```
 
-If that succeeds, you can proceed with integrating into CI. See [Uploading Snapshots](/product/snapshots/uploading-snapshots/#upload-with-ci) for an example CI workflow.
+## Step 4: Integrate Into CI
+
+Once the local upload succeeds, wire the same command into your CI. See [Uploading Snapshots](/product/snapshots/uploading-snapshots/#upload-with-ci) for an example GitHub Actions workflow.
