@@ -1,7 +1,6 @@
 import * as Sentry from '@sentry/nextjs';
 import type {NextRequest} from 'next/server';
 import {NextResponse, userAgent} from 'next/server';
-
 import {AI_AGENT_PATTERN, type TrafficType} from 'sentry-docs/lib/trafficClassification';
 
 // DEVELOPER_DOCS is set via next.config.ts env field (inlined at build time for edge runtime).
@@ -17,7 +16,7 @@ export const config = {
     // - _next/static (static files)
     // - _next/image (image optimization files)
     // - favicon.ico (favicon file)
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|sentry-tunnel).*)',
   ],
 };
 
@@ -364,10 +363,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/organization/integrations/cloud-monitoring/cloudflare-workers/',
     to: '/platforms/javascript/guides/cloudflare/',
-  },
-  {
-    from: '/product/crons/getting-started/cli/',
-    to: '/cli/crons/',
   },
   {
     from: '/product/data-management-settings/dynamic-sampling/',
@@ -1231,11 +1226,15 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/platforms/unreal/setup-crashreport/',
-    to: '/platforms/unreal/configuration/setup-crashreporter/',
+    to: '/platforms/unreal/configuration/crash-reporter/crash-reporter-client/',
   },
   {
     from: '/platforms/unreal/setup-crashreporter/',
-    to: '/platforms/unreal/configuration/setup-crashreporter/',
+    to: '/platforms/unreal/configuration/crash-reporter/crash-reporter-client/',
+  },
+  {
+    from: '/platforms/unreal/configuration/setup-crashreporter/',
+    to: '/platforms/unreal/configuration/crash-reporter/crash-reporter-client/',
   },
   {
     from: '/platforms/unreal/debug-symbols/',
@@ -1879,7 +1878,11 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/alerts/create-alerts/best-practices/',
-    to: '/product/alerts/best-practices/',
+    to: '/product/alerts/create-alerts/',
+  },
+  {
+    from: '/product/alerts/best-practices/',
+    to: '/product/alerts/create-alerts/',
   },
   {
     from: '/product/sentry-basics/guides/alert-notifications/routing-alerts/',
@@ -1927,31 +1930,43 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/workflow/alerts-notifications/notifications/',
-    to: '/product/alerts/notifications/',
+    to: '/product/notifications/',
   },
   {
     from: '/workflow/notifications/workflow/',
-    to: '/product/alerts/notifications/',
+    to: '/product/notifications/',
   },
   {
     from: '/workflow/notifications/',
-    to: '/product/alerts/notifications/',
-  },
-  {
-    from: '/product/notifications/',
-    to: '/product/alerts/notifications/',
+    to: '/product/notifications/',
   },
   {
     from: '/learn/notifications/',
-    to: '/product/alerts/notifications/',
+    to: '/product/notifications/',
   },
   {
     from: '/product/alerts-notifications/notifications/',
-    to: '/product/alerts/notifications/',
+    to: '/product/notifications/',
   },
   {
     from: '/product/sentry-basics/guides/alert-notifications/notifications/',
-    to: '/product/alerts/notifications/',
+    to: '/product/notifications/',
+  },
+  {
+    from: '/product/alerts/notifications/',
+    to: '/product/notifications/',
+  },
+  {
+    from: '/product/alerts/notifications/notification-settings/',
+    to: '/product/notifications/notification-settings/',
+  },
+  {
+    from: '/product/monitors-and-alerts/alerts/notifications/',
+    to: '/product/notifications/',
+  },
+  {
+    from: '/product/monitors-and-alerts/alerts/notifications/notification-settings/',
+    to: '/product/notifications/notification-settings/',
   },
   {
     from: '/workflow/integrations/amazon-sqs/',
@@ -2688,7 +2703,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/crons/alerts/',
-    to: '/product/crons/getting-started/',
+    to: '/product/monitors-and-alerts/monitors/crons/getting-started/',
   },
   {
     from: '/meta/relay/best-practices/',
@@ -3417,7 +3432,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/insights/llm-monitoring/getting-started/the-dashboard/',
-    to: '/ai/monitoring/agents/dashboard/',
+    to: '/ai/monitoring/agents/dashboards/',
   },
   {
     from: '/product/insights/ai/',
@@ -3433,7 +3448,11 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/insights/ai/agents/dashboard/',
-    to: '/ai/monitoring/agents/dashboard/',
+    to: '/ai/monitoring/agents/dashboards/',
+  },
+  {
+    from: '/ai/monitoring/agents/dashboard/',
+    to: '/ai/monitoring/agents/dashboards/',
   },
   {
     from: '/product/insights/ai/agents/costs/',
@@ -3735,22 +3754,22 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     from: '/security-legal-pii/security/security-policy-reporting/',
     to: '/platform-redirect/?next=/security-policy-reporting/',
   },
-  /* Uptime Monitoring */
+  /* Uptime Monitoring (legacy paths under /product/alerts/) */
   {
     from: '/product/alerts/uptime-monitoring/',
-    to: '/product/uptime-monitoring/',
+    to: '/product/monitors-and-alerts/monitors/uptime-monitoring/',
   },
   {
     from: '/product/alerts/uptime-monitoring/automatic-detection/',
-    to: '/product/uptime-monitoring/automatic-detection/',
+    to: '/product/monitors-and-alerts/monitors/uptime-monitoring/automatic-detection/',
   },
   {
     from: '/product/alerts/uptime-monitoring/uptime-tracing/',
-    to: '/product/uptime-monitoring/uptime-tracing/',
+    to: '/product/monitors-and-alerts/monitors/uptime-monitoring/uptime-tracing/',
   },
   {
     from: '/product/alerts/uptime-monitoring/troubleshooting/',
-    to: '/product/uptime-monitoring/troubleshooting/',
+    to: '/product/monitors-and-alerts/monitors/uptime-monitoring/troubleshooting/',
   },
 ];
 

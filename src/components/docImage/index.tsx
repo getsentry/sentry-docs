@@ -1,5 +1,4 @@
 import path from 'path';
-
 import {isExternalImage} from 'sentry-docs/config/images';
 import {serverContext} from 'sentry-docs/serverContext';
 
@@ -90,7 +89,7 @@ export default function DocImage({
     try {
       const srcURL = new URL(finalSrc, 'https://example.com');
       imgPath = srcURL.pathname + srcURL.search;
-    } catch (_error) {
+    } catch {
       imgPath = finalSrc;
     }
   } else {

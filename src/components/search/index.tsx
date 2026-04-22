@@ -1,6 +1,5 @@
 'use client';
 
-import {Fragment, useCallback, useEffect, useRef, useState} from 'react';
 import {ArrowRightIcon} from '@radix-ui/react-icons';
 import {Button} from '@radix-ui/themes';
 import {captureException} from '@sentry/nextjs';
@@ -11,17 +10,15 @@ import {
   standardSDKSlug,
 } from '@sentry-internal/global-search';
 import {usePathname} from 'next/navigation';
+import {Fragment, useCallback, useEffect, useRef, useState} from 'react';
 import algoliaInsights from 'search-insights';
-
 import {useOnClickOutside} from 'sentry-docs/clientUtils';
 import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
 import {DocMetrics} from 'sentry-docs/metrics';
 
-import styles from './search.module.scss';
-
 import {MagicIcon} from '../cutomIcons/magic';
 import {Logo} from '../logo';
-
+import styles from './search.module.scss';
 import {SearchResultItems} from './searchResultItems';
 import {relativizeUrl} from './util';
 

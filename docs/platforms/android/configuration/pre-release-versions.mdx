@@ -1,0 +1,101 @@
+---
+title: Pre-Release Versions
+sidebar_order: 1001
+description: "Learn how to test snapshot (pre-release) versions of the Sentry Android Gradle Plugin."
+---
+
+The Sentry Android Gradle Plugin publishes snapshot builds to Maven Central Snapshots on every push to the `main` branch. These snapshots let you test unreleased fixes and features before a stable release.
+
+<Alert level="warning">
+
+Snapshot versions are for testing only and should not be used in production. They may contain breaking changes, incomplete features, or undiscovered bugs.
+
+</Alert>
+
+## Add the Snapshots Repository
+
+Add the Maven Central Snapshots repository to `pluginManagement` in your project's `settings.gradle` file:
+
+```kotlin {filename:settings.gradle.kts}
+pluginManagement {
+    repositories {
+        maven {
+            url = uri("https://central.sonatype.com/repository/maven-snapshots/")
+        }
+        // existing repositories
+    }
+}
+```
+
+```groovy {filename:settings.gradle}
+pluginManagement {
+    repositories {
+        maven {
+            url "https://central.sonatype.com/repository/maven-snapshots/"
+        }
+        // existing repositories
+    }
+}
+```
+
+## Set the Snapshot Version
+
+Replace the plugin version in your `app/build.gradle` file with the snapshot version:
+
+```kotlin {filename:app/build.gradle.kts}
+plugins {
+    id("com.android.application")
+    id("io.sentry.android.gradle") version "6.3.0-SNAPSHOT"
+}
+```
+
+```groovy {filename:app/build.gradle}
+plugins {
+    id "com.android.application"
+    id "io.sentry.android.gradle" version "6.3.0-SNAPSHOT"
+}
+```
+
+## Kotlin Compiler Plugin
+
+The [Sentry Kotlin Compiler Plugin](/platforms/android/enhance-errors/kotlin-compiler-plugin/) snapshots are published from the same repository with the same version. If you're using it, update its version as well:
+
+```kotlin {filename:app/build.gradle.kts}
+plugins {
+    id("io.sentry.kotlin.compiler.gradle") version "6.3.0-SNAPSHOT"
+}
+```
+
+```groovy {filename:app/build.gradle}
+plugins {
+    id "io.sentry.kotlin.compiler.gradle" version "6.3.0-SNAPSHOT"
+}
+```
+
+## Finding the Current Snapshot Version
+
+The snapshot version matches the development version on the `main` branch with `-SNAPSHOT` appended. To find the current snapshot version, check the `version` property in [`plugin-build/gradle.properties`](https://github.com/getsentry/sentry-android-gradle-plugin/blob/main/plugin-build/gradle.properties) and append `-SNAPSHOT`.
+
+For example, if the file contains `version = 6.3.0`, the snapshot version is `6.3.0-SNAPSHOT`.
+
+## Gradle Caching
+
+<Alert level="info">
+
+Gradle caches snapshot dependencies by default for 24 hours. To always fetch the latest snapshot, pass `--refresh-dependencies` when building, or configure the repository to skip caching:
+
+```kotlin
+configurations.all {
+    resolutionStrategy.cacheChangingModulesFor(0, "seconds")
+}
+```
+
+```groovy
+configurations.all {
+    resolutionStrategy.cacheChangingModulesFor(0, "seconds")
+}
+```
+
+</Alert>
+
+Once you're done testing, remember to revert to a stable release version and remove the snapshots repository before shipping your app.

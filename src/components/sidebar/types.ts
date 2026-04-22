@@ -34,6 +34,7 @@ export type NavNode = {
     title: string;
     beta?: boolean;
     new?: boolean;
+    early_access?: boolean;
     section_end_divider?: boolean;
     sidebar_hidden?: boolean;
     sidebar_order?: number;

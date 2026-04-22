@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import {execFileSync} from 'child_process';
 import fs from 'fs';
 import path from 'path';
@@ -144,7 +143,6 @@ function parseRedirectsJs(filePath: string): {
     const resolvedPath = path.resolve(filePath);
     delete require.cache[resolvedPath];
 
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const redirects = require(resolvedPath);
     return {
       developerDocsRedirects: redirects.developerDocsRedirects || [],
@@ -352,7 +350,7 @@ function validateRedirects(): MissingRedirect[] {
         fs.writeFileSync(tmpFile, baseRedirects);
         redirectsFilePath = tmpFile;
         console.log('📝 redirects.js was not modified, using base branch version');
-      } catch (err) {
+      } catch {
         // If we can't get base version, use current file
         console.log(
           '⚠️  Could not get base version of redirects.js, using current version'
@@ -375,14 +373,14 @@ function validateRedirects(): MissingRedirect[] {
         fs.writeFileSync(tmpMiddleware, baseMiddleware);
         middlewareFilePath = tmpMiddleware;
         console.log('📝 middleware.ts was not modified, using base branch version');
-      } catch (err) {
+      } catch {
         console.log(
           '⚠️  Could not get base version of middleware.ts, using current version'
         );
         middlewareFilePath = 'middleware.ts';
       }
     }
-  } catch (err) {
+  } catch {
     // If we can't determine, use current files
     console.log(
       '⚠️  Could not determine file modification status, using current versions'
@@ -487,9 +485,9 @@ if (require.main === module) {
 }
 
 export {
-  validateRedirects,
   filePathToUrls,
-  parseRedirectsJs,
   parseMiddlewareTs,
+  parseRedirectsJs,
   redirectMatches,
+  validateRedirects,
 };

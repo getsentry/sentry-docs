@@ -1,0 +1,74 @@
+---
+title: Expo Updates
+description: "Automatic context and alerts for Expo OTA updates."
+sidebar_order: 20
+---
+
+When you ship OTA updates with Expo Updates, events captured by Sentry are automatically enriched with information about which update is running. This lets you filter issues by update channel, runtime version, or update ID — and get alerted when an emergency launch occurs.
+
+These integrations are enabled by default in Expo projects. No additional setup is required.
+
+## Expo Updates Context
+
+Every Sentry event includes an `ota_updates` context with the current update state:
+
+| Field | Description |
+|---|---|
+| `update_id` | UUID of the currently running OTA update |
+| `channel` | Expo Updates channel (for example, `production`, `staging`) |
+| `runtime_version` | Runtime version of the update |
+| `is_enabled` | Whether Expo Updates is enabled |
+| `is_embedded_launch` | Whether the app launched from the embedded bundle |
+| `is_using_embedded_assets` | Whether the app is using embedded assets |
+| `is_emergency_launch` | Whether this was an emergency launch (fallback to embedded) |
+| `emergency_launch_reason` | Reason for the emergency launch (if applicable) |
+| `check_automatically` | Automatic update check policy |
+| `launch_duration` | How long the update launch took (ms) |
+| `created_at` | When the update was created |
+
+## Searchable Tags
+
+The SDK also sets the following tags on every event so you can filter and group issues in Sentry:
+
+| Tag | Value |
+|---|---|
+| `expo.updates.update_id` | UUID of the running update |
+| `expo.updates.channel` | Update channel name |
+| `expo.updates.runtime_version` | Runtime version string |
+
+To find all issues from a specific update channel, use `expo.updates.channel:production` in the Sentry issue search.
+
+## Emergency Launch Warnings
+
+Expo Updates performs an _emergency launch_ when it fails to load the latest OTA update and falls back to the embedded bundle. This can silently degrade user experience.
+
+When the SDK detects an emergency launch at startup, it automatically sends a `warning`-level event to Sentry with:
+
+- Message: `Expo Updates emergency launch: <reason>` (or `Expo Updates emergency launch` if no reason is available)
+- Tag: `expo.updates.emergency_launch: true`
+
+You can set up a Sentry alert on this tag to get notified whenever an emergency launch happens in production.
+
+<Alert>
+
+Emergency launch detection only runs in native builds, not in Expo Go.
+
+</Alert>
+
+## Expo Constants Context
+
+The SDK automatically captures Expo Constants as an `expo_constants` context on every event. This provides metadata about the execution environment and app configuration:
+
+| Field | Description |
+|---|---|
+| `execution_environment` | Where the app is running (`storeClient`, `standalone`, `bare`) |
+| `app_ownership` | Whether the app runs in Expo Go or standalone |
+| `debug_mode` | Whether debug mode is enabled |
+| `expo_version` | Expo client version |
+| `expo_runtime_version` | Runtime version from app config |
+| `session_id` | Current session ID |
+| `app_name` | App name from `app.json` |
+| `app_slug` | App slug from `app.json` |
+| `app_version` | App version from `app.json` |
+| `expo_sdk_version` | Expo SDK version |
+| `eas_project_id` | EAS project ID |

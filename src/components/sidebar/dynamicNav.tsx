@@ -1,6 +1,5 @@
-import {Fragment} from 'react';
 import Link from 'next/link';
-
+import {Fragment} from 'react';
 import {serverContext} from 'sentry-docs/serverContext';
 import {sortPages} from 'sentry-docs/utils';
 import {getUnversionedPath, VERSION_INDICATOR} from 'sentry-docs/versioning';
@@ -27,6 +26,7 @@ type Node = {
     [key: string]: any;
     beta?: boolean;
     new?: boolean;
+    early_access?: boolean;
     section_end_divider?: boolean;
     sidebar_hidden?: boolean;
     sidebar_order?: number;
@@ -130,6 +130,7 @@ export const renderChildren = (
           path={path}
           beta={node.context.beta}
           isNew={node.context.new}
+          earlyAccess={node.context.early_access}
         >
           {renderChildren(nodeChildren, exclude, path, showDepth, depth + 1, rootPath)}
         </CollapsibleSidebarLink>
@@ -194,6 +195,7 @@ export const renderChildren = (
             path={path}
             beta={node.context.beta}
             isNew={node.context.new}
+            earlyAccess={node.context.early_access}
           >
             {renderChildren(nodeChildren, exclude, path, showDepth, depth + 1, rootPath)}
           </CollapsibleSidebarLink>
@@ -221,6 +223,7 @@ export const renderChildren = (
           path={path}
           beta={node.context.beta}
           isNew={node.context.new}
+          earlyAccess={node.context.early_access}
         >
           {renderChildren(nodeChildren, exclude, path, showDepth, depth + 1, rootPath)}
         </CollapsibleSidebarLink>
@@ -313,6 +316,9 @@ export function DynamicNav({
       topLevel
       beta={parentNode.node?.context.beta ?? entity.node?.context.beta}
       isNew={parentNode.node?.context.new ?? entity.node?.context.new}
+      earlyAccess={
+        parentNode.node?.context.early_access ?? entity.node?.context.early_access
+      }
       data-sidebar-link
     />
   );
