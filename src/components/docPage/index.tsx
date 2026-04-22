@@ -1,5 +1,6 @@
-import {ReactNode} from 'react';
+import './type.scss';
 
+import {ReactNode} from 'react';
 import {
   extractPlatforms,
   getCurrentGuide,
@@ -13,8 +14,6 @@ import {FrontMatter} from 'sentry-docs/types';
 import {PaginationNavNode} from 'sentry-docs/types/paginationNavNode';
 import {isNotNil} from 'sentry-docs/utils';
 import {getUnversionedPath} from 'sentry-docs/versioning';
-
-import './type.scss';
 
 import {Banner} from '../banner';
 import {Breadcrumbs} from '../breadcrumbs';

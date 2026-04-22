@@ -287,6 +287,23 @@ Fingerprints](https://docs.sentry.io/data-management/event-grouping/).
 Event ingestion imposes limits on the size of events.
 See [Envelope Size Limits](/sdk/foundations/transport/envelopes/#size-limits) for further details.
 
+### Variable Size
+
+Fields in the event payload that allow user-specified or dynamic values are restricted in size. This applies to most meta data fields, such as variables in a stack trace, as well as contexts, tags and extra data:
+
+- Event IDs are limited to 36 characters and must be valid UUIDs.
+- Flag keys are limited to 32 characters.
+- Flag values are limited to 200 characters.
+- Tag keys are limited to 200 characters.
+- Tag values are limited to 200 characters.
+- Culprits are limited to 200 characters.
+- Context objects are limited to 8kB.
+- Individual extra data items are limited to 16kB. Total extra data is limited to 256kb.
+- Messages are limited to 8192 characters.
+- HTTP data (the body) is limited to 8kB. Always trim HTTP data before attaching it to the event.
+- Stack traces are limited to 50 frames. If more are sent, data will be removed from the middle of the stack.
+- Input messages in AI integrations recorded in the span attribute `gen_ai.request.messages` are limited to 20kB per span. Messages are trimmed and truncated if they exceed the limit, retaining the most recent messages.
+
 ## Core Interfaces
 
 All values in the event payload that are not basic attributes are data
@@ -299,7 +316,7 @@ any point in the future.
 
 The core data interfaces are:
 
-- [Exception Interface](exception/)
+- [Exception Interface](/sdk/telemetry/errors/#wire-format)
 - [Message Interface](message/)
 - [Stack Trace Interface](stacktrace/)
 - [Template Interface](template/)

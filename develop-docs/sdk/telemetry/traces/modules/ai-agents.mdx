@@ -11,7 +11,7 @@ For your AI agents data to show up in the Sentry [AI Agents Insights](https://se
 We try to follow [v1.36.0](https://github.com/open-telemetry/semantic-conventions/blob/v1.36.0/docs/gen-ai/README.md) of the [OpenTelemetry Semantic Conventions](https://opentelemetry.io/docs/specs/semconv/gen-ai/) for Generative AI as close as possible. Being 100% compatible is not yet possible, because OpenTelemetry has "Span Events" which Sentry does not support. The input from/output to an AI model is stored in span events in OpenTelemetry. Since this is not possible in Sentry, we add this data onto span attributes as a list.
 
 <Alert level="success" title="Hint">
-The [Sentry Conventions](https://getsentry.github.io/sentry-conventions/generated/attributes/) have all the detailed specifications for `"gen_ai.*"` span attributes.
+The [Sentry Conventions](https://github.com/getsentry/sentry-conventions/) have all the detailed specifications for `"gen_ai.*"` span attributes.
 
 Sentry Conventions is the single source of truth.
 
@@ -35,7 +35,7 @@ Describes AI agent invocation.
 Agent invocations represent operations that can include multiple model calls, or some auxiliary work that goes beyond transforming the model input and output.
 
 - Span `op` SHOULD be `"gen_ai.invoke_agent"`.
-- Span `name` SHOULD be `"invoke_agent {gen_ai.agent.name}"`. (e.g. `"invoke_agent Weather Agent"`)
+- Span `name` SHOULD be `"invoke_agent {gen_ai.agent.name}"`. (e.g. `"invoke_agent Weather Agent"`)  **[8]**
 - Attribute `gen_ai.operation.name` MUST be `"invoke_agent"`.
 - Attribute `gen_ai.agent.name` SHOULD be set to the agents name. (e.g. `"Weather Agent"`)
 - If provided, the attribute `gen_ai.request.model` MUST be the agent's default request model. (e.g. `"gpt-4o"`)
@@ -48,7 +48,7 @@ Additional attributes on the span:
 
 | Attribute                          | Type   | Requirement Level | Description                                                                                                                             | Example                                                               |
 | :--------------------------------- | :----- | :---------------- | :-------------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------- |
-| `gen_ai.input.messages`            | string | optional          | List of dictionaries describing the messages (prompts) given to the agent. **[0]**, **[1]**, **[6]**, **[7]**                           | `'[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]'` |
+| `gen_ai.input.messages`            | string | optional          | List of dictionaries describing the messages (prompts) given to the agent. **[0]**, **[1]**, **[6]**, **[7]**, **[9]**                           | `'[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]'` |
 | `gen_ai.tool.definitions`          | string | optional          | List of dictionaries describing the available tools. **[0]**                                                                            | `'[{"name": "random_number", "description": "..."}, ...]'`            |
 | `gen_ai.system_instructions`       | string | optional          | The system instructions passed to the model.                                                                                            | `"You are a helpful assistant."`                                      |
 | `gen_ai.request.max_tokens`        | int    | optional          | Model configuration parameter.                                                                                                          | `500`                                                                 |
@@ -113,7 +113,7 @@ Additional attributes on the span:
 
 | Attribute                          | Type   | Requirement Level | Description                                                                                                                          | Example                                                               |
 | :--------------------------------- | :----- | :---------------- | :----------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------- |
-| `gen_ai.input.messages`            | string | optional          | List of dictionaries describing the messages (prompts) sent to the LLM. **[0]**, **[1]**, **[6]**, **[7]**                           | `'[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]'` |
+| `gen_ai.input.messages`            | string | optional          | List of dictionaries describing the messages (prompts) sent to the LLM. **[0]**, **[1]**, **[6]**, **[7]**, **[9]**                  | `'[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]'` |
 | `gen_ai.tool.definitions`          | string | optional          | List of dictionaries describing the available tools. **[0]**                                                                         | `'[{"name": "random_number", "description": "..."}, ...]'`            |
 | `gen_ai.system_instructions`       | string | optional          | The system instructions passed to the model.                                                                                         | `"You are a helpful assistant."`                                      |
 | `gen_ai.request.max_tokens`        | int    | optional          | Model configuration parameter.                                                                                                       | `500`                                                                 |
@@ -247,3 +247,14 @@ The input list should include the most recent messages up to and including the m
 **[7]**
 
 Binary blobs in the input list should be replaced with the string `"[Blob substitute]"` in positions where binary data is expected in a given schema. Only binary blobs in positions where binary data is explicitly expected must be redacted. For example, in OpenAI Completions schema, only binary blobs in content blocks with type `image_url`, `input_audio` or `file` should be redacted.
+
+**[8]**
+
+In some agent libraries, the agent name is optional, and some do not provide the user an option to name their agents.
+In these cases, the span name SHOULD be `"invoke_agent {call_id}"`, where `call_id` is some user-provided identifier for the agent invocation. For example, `functionId` in Vercel AI.
+
+**[9]**
+
+Image URLs in the data URL format in the input list should be replaced with the string `"[Blob substitute]"` in positions where binary data is expected. For example, data URLs like `data:image/png;base64` will be redacted, but HTTP URLs like `example.com/data?<a-base64-string>` will not be.
+
+See [here](https://github.com/getsentry/sentry-python/blob/5379537fcd2925374fa617e49bb618fc9979509b/sentry_sdk/integrations/pydantic_ai/consts.py#L6) for the regex used.

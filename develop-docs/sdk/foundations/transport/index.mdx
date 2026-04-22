@@ -4,7 +4,26 @@ description: How SDKs send data to Sentry - envelope format, authentication, com
 sidebar_order: 20
 ---
 
-The transport layer handles all communication between an SDK and the Sentry server. SDKs serialize data into [envelopes](envelopes/), [authenticate](authentication/) requests using DSN-derived credentials, optionally [compress](compression/) payloads, and respect [rate limits](rate-limiting/) communicated via response headers.
+The transport layer handles all communication between an SDK and the Sentry server. SDKs serialize data into [envelopes](envelopes/), [authenticate](authentication/) requests using DSN-derived credentials, optionally [compress](compression/) payloads, respect [rate limits](rate-limiting/) communicated via response headers, and optionally [buffer envelopes to disk](offline-caching/) for retry on network failure.
+
+## Background Sending
+
+Envelopes **SHOULD** be transmitted in a background thread or equivalent asynchronous mechanism so that sending does not block the application. The send queue **MUST** be flushed when the application shuts down, with a configurable timeout. This is typically exposed to users as [shutdown and draining](https://docs.sentry.io/platforms/javascript/configuration/draining/).
+
+## HTTP Proxy
+
+SDKs **SHOULD** support routing requests through an HTTP proxy. The proxy **SHOULD** be configurable via a `proxy` option in `Sentry.init()` and **SHOULD** also be picked up from the system environment when not explicitly configured.
+
+SDKs **SHOULD** respect the following environment variables, in order of precedence:
+
+1. `options.proxy` — explicit SDK configuration (highest priority)
+2. `https_proxy` — for HTTPS requests to Sentry
+3. `http_proxy` — fallback for all requests
+4. `no_proxy` — comma-separated list of hostnames that bypass the proxy
+
+When a proxy is configured, the SDK **MUST** use it for all outgoing requests to Sentry. When `no_proxy` matches the Sentry hostname, the proxy **MUST** be bypassed.
+
+SDKs **MAY** support proxy authentication (username/password) and custom CA certificates for secure proxy connections.
 
 ## Reading the Response
 

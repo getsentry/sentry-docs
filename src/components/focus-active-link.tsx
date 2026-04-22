@@ -1,4 +1,5 @@
 'use client';
+import {usePathname} from 'next/navigation';
 import {useEffect} from 'react';
 
 type Props = {
@@ -36,7 +37,11 @@ export function ScrollActiveLink({activeLinkSelector}: Props) {
     }
 
     const scrollContainer = findScrollContainer(firstLink);
-    if (!scrollContainer) {
+    if (
+      !scrollContainer ||
+      scrollContainer === document.body ||
+      scrollContainer === document.documentElement
+    ) {
       return undefined;
     }
 
@@ -63,7 +68,11 @@ export function ScrollActiveLink({activeLinkSelector}: Props) {
 
       // Find the actual scrollable container (could be .toc, .sidebar, or another element)
       const scrollContainer = findScrollContainer(activeLink);
-      if (!scrollContainer) {
+      if (
+        !scrollContainer ||
+        scrollContainer === document.body ||
+        scrollContainer === document.documentElement
+      ) {
         return;
       }
 
@@ -94,5 +103,18 @@ export function ScrollActiveLink({activeLinkSelector}: Props) {
     return () => cancelAnimationFrame(timeoutId);
   }, [activeLinkSelector]);
   // don't render anything, just exist as a client-side component for the useEffect.
+  return null;
+}
+
+/** Uncheck the sidebar toggle checkbox whenever the route changes, closing it on mobile. */
+export function CloseSidebarOnNavigation({sidebarToggleId}: {sidebarToggleId: string}) {
+  const pathname = usePathname();
+  useEffect(() => {
+    const checkbox = document.getElementById(sidebarToggleId) as HTMLInputElement | null;
+    if (checkbox) {
+      checkbox.checked = false;
+      checkbox.dispatchEvent(new Event('change'));
+    }
+  }, [pathname, sidebarToggleId]);
   return null;
 }

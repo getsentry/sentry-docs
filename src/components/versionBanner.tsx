@@ -1,5 +1,5 @@
-import {useState} from 'react';
 import {Button} from '@radix-ui/themes';
+import {useState} from 'react';
 
 export function VersionBanner({
   version,

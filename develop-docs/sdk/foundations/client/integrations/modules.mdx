@@ -1,0 +1,107 @@
+---
+title: Modules
+description: Integration for attaching loaded libraries and their versions to events, populating the event modules field.
+spec_id: sdk/foundations/client/integrations/modules
+spec_version: 1.0.0
+spec_status: stable
+spec_depends_on:
+  - id: sdk/foundations/client/integrations
+    version: ">=1.0.0"
+spec_changelog:
+  - version: 1.0.0
+    date: 2026-03-04
+    summary: Initial spec, extracted from expected features
+sidebar_order: 4
+---
+
+<SpecRfcAlert />
+
+<SpecMeta />
+
+## Overview
+
+The Modules integration attaches a list of loaded libraries (packages, modules) and their versions to events. This populates the [`modules` field](/sdk/foundations/transport/event-payloads/#optional-attributes) on the event payload, which Sentry displays in the event detail view to help users identify dependency-related issues.
+
+This integration **SHOULD** be a default integration.
+
+---
+
+## Behavior
+
+<SpecSection id="event-enrichment" status="stable" since="1.0.0">
+
+### Event Enrichment
+
+The integration **MUST** use the `processEvent` lifecycle hook to attach module information to events.
+
+The integration **MUST** populate `event.modules` as a map of module name to version string:
+
+```json
+{
+  "modules": {
+    "flask": "2.3.1",
+    "requests": "2.31.0",
+    "sqlalchemy": "2.0.19"
+  }
+}
+```
+
+The integration **SHOULD** cache the module list, since installed packages rarely change during a process lifetime.
+
+</SpecSection>
+
+<SpecSection id="module-sources" status="stable" since="1.0.0">
+
+### Module Sources
+
+How modules are discovered is platform-specific. SDKs **SHOULD** use the most reliable mechanism available on their platform. Common strategies include:
+
+- **Package manager metadata** — reading installed package registries (e.g., `pkg_resources` or `importlib.metadata` in Python, `package.json` dependencies in Node.js)
+- **Runtime module cache** — inspecting loaded modules from the runtime (e.g., `require.cache` in Node.js CJS)
+- **Build-time injection** — embedding module information at build time when runtime discovery is unavailable or incomplete (e.g., bundled environments)
+
+SDKs **MAY** combine multiple sources to produce the most complete list. When the same module appears in multiple sources, the more specific version (e.g., from a lockfile or runtime cache) **SHOULD** take precedence.
+
+</SpecSection>
+
+<SpecSection id="event-type-filtering" status="stable" since="1.0.0">
+
+### Event Type Filtering
+
+SDKs **MAY** skip attaching modules to certain event types (e.g., transactions) where the information is less useful, to reduce payload size.
+
+</SpecSection>
+
+---
+
+## Examples
+
+### JavaScript (Node.js)
+
+```javascript
+// modulesIntegration is a default integration in @sentry/node
+Sentry.init({
+  dsn: "https://examplePublicKey@o0.ingest.sentry.io/0",
+});
+
+// Modules are automatically attached to error events.
+// The integration reads from package.json and require.cache (CJS).
+```
+
+### Python
+
+```python
+import sentry_sdk
+
+# ModulesIntegration is a default integration
+sentry_sdk.init(dsn="https://examplePublicKey@o0.ingest.sentry.io/0")
+
+# Modules are automatically attached to error events.
+# The integration reads from importlib.metadata / pkg_resources.
+```
+
+---
+
+## Changelog
+
+<SpecChangelog />

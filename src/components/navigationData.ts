@@ -17,12 +17,13 @@ export const conceptsSections: NavSection[] = [
   {label: 'Sentry CLI', href: '/cli/'},
 ];
 
-// "More" sub-sections (combines Admin + Security, Legal, & PII)
+// "Manage" sub-sections (combines Admin + Security, Legal, & PII)
 export const moreSections: NavSection[] = [
   {label: 'Account Settings', href: '/account/'},
   {label: 'Organization Settings', href: '/organization/'},
   {label: 'Pricing & Billing', href: '/pricing/'},
   {label: 'Security, Legal, & PII', href: '/security-legal-pii/'},
+  {label: 'Docs Changelog', href: '/changelog/'},
 ];
 
 // Main navigation sections with dropdowns (used in TopNavClient)
@@ -34,7 +35,7 @@ export const mainSectionsWithDropdowns: NavSection[] = [
   {label: 'Guides', href: '/guides/'},
   {label: 'Concepts', href: '/concepts/', dropdown: conceptsSections},
   {label: 'API', href: '/api/'},
-  {label: 'More', href: '/organization/', dropdown: moreSections},
+  {label: 'Manage', href: '/organization/', dropdown: moreSections},
 ];
 
 // Main navigation sections as simple links (used in mobile nav, header, sidebar)
@@ -50,4 +51,5 @@ export const mainSections: NavSection[] = [
   {label: 'Organization Settings', href: '/organization/'},
   {label: 'Pricing & Billing', href: '/pricing/'},
   {label: 'Security, Legal, & PII', href: '/security-legal-pii/'},
+  {label: 'Docs Changelog', href: '/changelog/'},
 ];

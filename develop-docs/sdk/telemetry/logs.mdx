@@ -2,7 +2,7 @@
 title: Logs
 description: Structured logging protocol with severity levels, trace context, and batched envelope delivery.
 spec_id: sdk/telemetry/logs
-spec_version: 1.15.0
+spec_version: 2.0.0
 spec_status: stable
 spec_depends_on:
   - id: sdk/foundations/transport/envelopes
@@ -10,6 +10,15 @@ spec_depends_on:
   - id: sdk/foundations/state-management/scopes/attributes
     version: ">=1.0.0"
 spec_changelog:
+  - version: 2.0.0
+    date: 2026-04-09
+    summary: Default enableLogs to true, add auto-emitted logs opt-in requirements for integrations
+  - version: 1.17.0
+    date: 2026-03-05
+    summary: Added `ingest_settings` and `version` to log envelope item
+  - version: 1.16.0
+    date: 2026-03-04
+    summary: Add sentry.timestamp.sequence attribute for deterministic log ordering
   - version: 1.15.0
     date: 2026-02-03
     summary: Clarified 100 logs per envelope hard limit, SDKs MAY use lower buffer limit
@@ -125,8 +134,8 @@ Log processing **MUST** follow this order:
 
 1. Capture log via [Public APIs](#logger-module) (e.g. `Sentry.logger.info`) or via [SDK integrations](#sdk-integrations).
 2. Check if logging is enabled via `enableLogs`/`enable_logs` — if not, skip remaining steps.
-3. Pass the log to Hub/Scope, which **MUST** offer the same methods as the static API `Sentry.logger.X`.
-4. Pass the log to the Client via a generic method (e.g., `captureLog(log, scope)`).
+3. Pass the log to Hub/Scope via a generic method (e.g., `captureLog`).
+4. Pass the log to the Client via a generic method (e.g., `captureLog`).
 5. Process captured log (attach attributes per [Default Attributes](#default-attributes)).
 6. Run `beforeSendLog`/`before_send_log` to filter or modify the log.
 7. Add log to buffer/batch processor per [Buffering](#buffering).
@@ -274,6 +283,22 @@ SDKs **MAY** introduce additional options beyond `enableLogs`/`enable_logs` to g
 
 </SpecSection>
 
+<SpecSection id="auto-emitted-logs" status="candidate" since="2.0.0">
+
+### Auto-Emitted Logs
+
+Logs emitted via the [public API](#logger-module) are opt-out. The `enableLogs`/`enable_logs` option **MUST** act as a general kill switch for all logs sent to Sentry. When set to `false`, no logs **MUST** be sent, regardless of whether they originate from the public API, auto-emitting integrations, or third-party bindings.
+
+However, logs that are **automatically emitted by integrations or libraries** without an explicit user call follow different rules because they can generate unexpected volume and cost.
+
+**Integrations that auto-emit logs** - An SDK integration that automatically captures logs (e.g., forwarding `console.log` calls, capturing framework-level diagnostic output) **MUST** be opt-in. The integration **MUST NOT** emit any logs unless the user explicitly enables it. The opt-in mechanism **MAY** be a dedicated integration-level option or requiring the user to explicitly add the integration.
+
+**Third-party log bindings** - An SDK feature that binds to an external library's logging API and mirrors those logs as Sentry logs in the background (e.g., syncing from Python's `logging` module or a framework's built-in logger) **MUST** also be opt-in. Users **MUST** explicitly enable the binding before any logs are forwarded to Sentry.
+
+These rules exist because auto-emitted logs can cause a high volume of telemetry that directly impacts a user's quota. Unlike errors, where users have prior intuition about volume, silently emitting logs on their behalf could lead to unexpected costs. Requiring opt-in ensures users remain in control of their log volume.
+
+</SpecSection>
+
 <SpecSection id="tracing-association" status="candidate" since="1.0.0">
 
 ### Tracing Association
@@ -289,6 +314,25 @@ Logs **SHOULD** be associated with traces. If a log is recorded during an active
 Logs **SHOULD** be associated with replays. If a log is recorded during an active replay, SDKs **SHOULD** set the `sentry.replay_id` attribute to the active replay's ID.
 
 </SpecSection>
+
+### Log Ordering
+
+<SpecSection id="log-ordering" status="candidate" since="1.16.0">
+
+Some runtimes (notably Cloudflare Workers) freeze timer APIs (`Date.now()`, `performance.now()`) during synchronous execution, causing multiple logs to share identical timestamps. SDKs that target runtimes where timestamps may be frozen or lack sub-millisecond precision **MUST** attach a `sentry.timestamp.sequence` integer attribute to every log. SDKs that only target runtimes with reliable sub-millisecond timestamps **MAY** omit it.
+
+When sent, the sequence integer **MUST**:
+- Start at `0` when the SDK initializes.
+- Increment by `1` for each log that is captured.
+- Reset to `0` when:
+  - The SDK is re-initialized.
+  - The current log's integer millisecond differs from the previous log's integer millisecond (i.e., `floor(timestamp_seconds * 1000)` changes).
+
+The sequence provides deterministic ordering within a single SDK instance. It does not guarantee ordering across independent processes or workers, which have separate counters. The reset behavior ensures the sequence only increments for consecutive logs that share the same timestamp.
+
+</SpecSection>
+
+### Debug Mode
 
 <SpecSection id="debug-mode" status="candidate" since="1.0.0">
 
@@ -314,7 +358,7 @@ SDKs **MUST** report count (`log_item`) and size in bytes (`log_byte`) of discar
 
 ### `log` Envelope Item
 
-The `log` envelope item contains an array of log payloads encoded as JSON, allowing multiple logs per envelope item.
+The `log` envelope item payload is a JSON object that **MUST** include an `items` array of log entries, allowing multiple logs per envelope item. The payload **MAY** also include top-level `version` and `ingest_settings` fields as specified in the next section.
 
 An envelope **MUST** contain at most one `log` envelope item — all log entries for a flush are batched into a single item's `items` array. Logs from different traces **MAY** be mixed into the same `log` item, but if they are, the envelope **MUST NOT** include a DSC (dynamic sampling context) header.
 
@@ -333,9 +377,31 @@ An envelope **MUST** contain at most one `log` envelope item — all log entries
   "content_type": "application/vnd.sentry.items.log+json"
 }
 {
+  "version": 2,
+  "ingest_settings": {
+    "infer_ip": "auto",
+    "infer_useragent": "auto"
+  },
   "items": [{..log..}, {..log..}, {..log..}, {..log..}, {..log..}]
 }
 ```
+
+</SpecSection>
+
+<SpecSection id="log-envelope-item-ingest-settings" status="candidate" since="1.17.0">
+
+### `version` and `ingest_settings` properties
+
+The `log` envelope item `ingest_settings` property is an optional JSON object that contains ingestion settings for Relay, for example, to infer certain data from the incoming request.
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `infer_ip` | String | **OPTIONAL** | The setting to infer the IP address from the incoming request. One of `auto` or `never` (default). |
+| `infer_useragent` | String | **OPTIONAL** | The setting to infer the user agent from the incoming request. One of `auto` or `never` (default). |
+
+SDKs like Browser or React Native **MAY** set these to `"auto"` to instruct Relay to infer the IP address or user agent from the incoming request and put it onto the log as an attribute.
+
+For ingestion settings to take effect, the SDK **MUST** also set the `version` property to `2` (`number`) or higher. If `version` is omitted, Relay treats the payload as version `1` and doesn't apply `ingest_settings`.
 
 </SpecSection>
 
@@ -433,13 +499,19 @@ SDKs **MUST** expose the following configuration options:
 
 | Option | Type | Default | Since | Description |
 |--------|------|---------|-------|-------------|
-| `enableLogs` / `enable_logs` | Boolean | `false` | 1.0.0 | Controls whether log envelopes are generated and sent. If `false`, the SDK **MUST NOT** send logs. |
+| `enableLogs` / `enable_logs` | Boolean | `true` | 1.0.0 | Controls whether log envelopes are generated and sent. If `false`, the SDK **MUST NOT** send logs. |
 | `beforeSendLog` / `before_send_log` | Function | — | 1.0.0 | **OPTIONAL** callback receiving a log object. Returns a modified log or `null` to drop it. |
 
-While logs functionality is in an experimental state, SDKs **SHOULD** put these options in an experimental namespace:
+The default for `enableLogs`/`enable_logs` was changed from `false` to `true` in version 2.0.0. The previous default required users to explicitly opt in before they could use the logging primitives. By defaulting to `true`, adding a `Sentry.logger.*` statement is itself the opt-in. Users can start logging without additional configuration. This aligns the behavior with [`enableMetrics`/`enable_metrics`](/sdk/telemetry/metrics/#initialization-options), which also defaults to `true`.
+
+While logs functionality is in an experimental state, SDKs **SHOULD** put these options in an experimental namespace to avoid breaking changes:
 
 ```js
 Sentry.init({
+  // stable
+  enableLogs: true,
+
+  // experimental
   _experiments: { enableLogs: true },
 });
 ```
@@ -461,9 +533,7 @@ SDKs **MUST** expose logging methods in a `logger` module or namespace, with one
 
 These methods accept a string template and parameters for structured logging. They **MAY** also accept arbitrary attributes.
 
-The Hub/Scope **MUST** offer the same methods as the static `Sentry.logger.X` API (since 1.10.0). The Client **SHOULD** only offer one generic method (e.g., `captureLog(log, scope)`).
-
-SDKs **MAY** add additional helpers (e.g., decorators, string template helpers) as appropriate for their platform.
+The Hub/Scope and Client **MUST** exclusively provide a generic logging method (e.g., `captureLog`). They **MUST NOT** replicate the static `Sentry.logger.X` API methods to avoid increasing our API surface. Users utilizing multiple Hub/Scope or Clients will need to rely on the generic method for logging.
 
 </SpecSection>
 
@@ -563,7 +633,8 @@ A complete `log` envelope with six log entries at different severity levels:
         },
         "sentry.message.parameter.0": { "value": 120, "type": "integer" },
         "sentry.message.parameter.1": { "value": 85, "type": "integer" },
-        "sentry.message.parameter.2": { "value": 60, "type": "integer" }
+        "sentry.message.parameter.2": { "value": 60, "type": "integer" },
+        "sentry.timestamp.sequence": { "value": 0, "type": "integer" }
       }
     },
     {
@@ -588,7 +659,8 @@ A complete `log` envelope with six log entries at different severity levels:
           "value": "ProductCard",
           "type": "string"
         },
-        "sentry.message.parameter.1": { "value": 3, "type": "integer" }
+        "sentry.message.parameter.1": { "value": 3, "type": "integer" },
+        "sentry.timestamp.sequence": { "value": 1, "type": "integer" }
       }
     },
     {
@@ -613,7 +685,8 @@ A complete `log` envelope with six log entries at different severity levels:
           "value": "checkout_form",
           "type": "string"
         },
-        "sentry.message.parameter.1": { "value": 8, "type": "integer" }
+        "sentry.message.parameter.1": { "value": 8, "type": "integer" },
+        "sentry.timestamp.sequence": { "value": 2, "type": "integer" }
       }
     },
     {
@@ -639,7 +712,8 @@ A complete `log` envelope with six log entries at different severity levels:
           "type": "string"
         },
         "sentry.message.parameter.1": { "value": 2500, "type": "integer" },
-        "sentry.message.parameter.2": { "value": 1000, "type": "integer" }
+        "sentry.message.parameter.2": { "value": 1000, "type": "integer" },
+        "sentry.timestamp.sequence": { "value": 3, "type": "integer" }
       }
     },
     {
@@ -666,7 +740,8 @@ A complete `log` envelope with six log entries at different severity levels:
         "sentry.message.parameter.0": {
           "value": "prod_123, prod_456",
           "type": "string"
-        }
+        },
+        "sentry.timestamp.sequence": { "value": 4, "type": "integer" }
       }
     },
     {
@@ -695,7 +770,8 @@ A complete `log` envelope with six log entries at different severity levels:
         "sentry.message.parameter.1": {
           "value": "UPDATE_CART",
           "type": "string"
-        }
+        },
+        "sentry.timestamp.sequence": { "value": 5, "type": "integer" }
       }
     }
   ]

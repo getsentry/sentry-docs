@@ -34,7 +34,7 @@
   {
     "type": "Timer",
     "name": "attachment.upload.duration",
-    "description": "Time needed to upload an attachment to objectstore.\n\nTagged by:\n- `type`: \"envelope\" or \"attachment_v2\".",
+    "description": "Time needed to upload an attachment to objectstore.\n\nThis metric measures the duration of a download attempt.\nEvery retry contributes to the metric individually.\n\nTagged by:\n- `type`: \"envelope\" or \"attachment_v2\".",
     "features": [
       "processing"
     ]
@@ -199,6 +199,12 @@
     "type": "Counter",
     "name": "event.corrupted",
     "description": "Number of Events that had corrupted (unprintable) event attributes.\n\nThis currently checks for `environment` and `release`, for which we know that\nsome SDKs may send corrupted values.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "event.error.processed",
+    "description": "Amount of errors have been processed by the error processing pipeline.\n\nThis metric is tagged with:\n- `expansion`: What expansion was used to expand the error (e.g. unreal).",
     "features": []
   },
   {
@@ -580,12 +586,6 @@
     "features": []
   },
   {
-    "type": "Counter",
-    "name": "metrics.transaction_name",
-    "description": "Count extraction of transaction names. Tag with the decision to drop / replace / use original.",
-    "features": []
-  },
-  {
     "type": "Timer",
     "name": "outcomes.aggregator.flush_time",
     "description": "The time it takes the outcome aggregator to flush aggregated outcomes.",
@@ -619,6 +619,18 @@
       "sentry",
       "processing"
     ]
+  },
+  {
+    "type": "Distribution",
+    "name": "processing.standalone_attachment_count",
+    "description": "Number of standalone attachments per envelope.\n\nThis metric is tagged with:\n- `sdk`: The name of the Sentry SDK sending the attachment.",
+    "features": []
+  },
+  {
+    "type": "Distribution",
+    "name": "processing.standalone_attachment_size",
+    "description": "Size of individual standalone attachments in bytes.\n\nThis metric is tagged with:\n- `sdk`: The name of the Sentry SDK sending the attachments.\n- `attachment_type`: The attachment type, if any.",
+    "features": []
   },
   {
     "type": "Timer",
@@ -1075,9 +1087,27 @@
     ]
   },
   {
+    "type": "Timer",
+    "name": "stream.consumer.latency",
+    "description": "Time spent waiting for the consumer of an async stream.\n\nTagged by:\n- `name`: Name of the stream, for example \"upload\".",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "stream.producer.latency",
+    "description": "Time spent waiting for the producer of an async stream.\n\nTagged by:\n- `name`: Name of the stream, for example \"upload\".",
+    "features": []
+  },
+  {
     "type": "Distribution",
     "name": "trace_item.canonical_size",
     "description": "Canonical size of a Trace Item.\n\nThis is not the size in bytes, this is using the same algorithm we're using for the logs\nbilling category.\n\nThis metric is tagged with:\n- `item`: the trace item type.\n- `too_large`: `true` or `false`, whether the item is bigger than the allowed size limit.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "unreal.endpoint_expansion",
+    "description": "The number of times the new unreal expansion logic in the endpoint is hit.",
     "features": []
   },
   {

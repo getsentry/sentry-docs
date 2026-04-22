@@ -73,7 +73,7 @@ Choose the features you want to configure, and this guide will show you how:
   ]}
 />
 
-<PlatformContent includePath="getting-started-features-expandable" />
+<Include name="quick-start-features-expandable" />
 
 ### Expose Entry Point Files
 
@@ -151,53 +151,13 @@ startTransition(() => {
   hydrateRoot(
     document,
     <StrictMode>
-      <HydratedRouter />
+      <HydratedRouter onError={Sentry.sentryOnError} />
     </StrictMode>
   );
 });
 ```
 
-#### Report Errors from Error Boundaries
-
-Update your `app/root.tsx` file to capture unhandled errors in your error boundary:
-
-```tsx {diff} {filename: app/root.tsx}
-+import * as Sentry from "@sentry/react-router";
-
-export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  let message = "Oops!";
-  let details = "An unexpected error occurred.";
-  let stack: string | undefined;
-
-  if (isRouteErrorResponse(error)) {
-    message = error.status === 404 ? "404" : "Error";
-    details =
-      error.status === 404
-        ? "The requested page could not be found."
-        : error.statusText || details;
-  } else if (error && error instanceof Error) {
-    // you only want to capture non 404-errors that reach the boundary
-+   Sentry.captureException(error);
-    if (import.meta.env.DEV) {
-      details = error.message;
-      stack = error.stack;
-    }
-  }
-
-  return (
-    <main>
-      <h1>{message}</h1>
-      <p>{details}</p>
-      {stack && (
-        <pre>
-          <code>{stack}</code>
-        </pre>
-      )}
-    </main>
-  );
-}
-// ...
-```
+The `sentryOnError` handler integrates with React Router's [`onError` hook](https://reactrouter.com/how-to/error-reporting) to automatically capture and report client-side errors to Sentry.
 
 ### Configure Server-side Sentry
 
@@ -480,6 +440,8 @@ To keep your auth token secure, always store it in an environment variable inste
 SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
 ```
 
+<Include name="vite-loadenv-hint.mdx" />
+
 Next, include the `sentryOnBuildEnd` hook in `react-router.config.ts`:
 
 ```typescript {filename: react-router.config.ts} {diff}
@@ -555,11 +517,17 @@ Open the route in your browser. You should start a trace and trigger an error.
 
 </OnboardingOption>
 
+<OnboardingOption optionId="logs">
+
+<Include name="logs/javascript-quick-start-verify-logs" />
+
+</OnboardingOption>
+
 ### View Captured Data in Sentry
 
 Now, head over to your project on [Sentry.io](https://sentry.io) to view the collected data (it takes a couple of moments for the data to appear).
 
-<PlatformContent includePath="getting-started-verify-locate-data" />
+<Include name="quick-start-locate-data-expandable" />
 
 ## Next Steps
 

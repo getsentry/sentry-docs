@@ -7,6 +7,7 @@ import ChatBubble from 'sentry-docs/imgs/chat-bubble.png';
 import TerminalImage from 'sentry-docs/imgs/cli.png';
 import ConceptsImage from 'sentry-docs/imgs/concepts-reference.png';
 import ErrorMonitoringHero from 'sentry-docs/imgs/error-monitoring-hero.png';
+import GuidesImage from 'sentry-docs/imgs/guides.png';
 import AiImage from 'sentry-docs/imgs/integrate.png';
 import OrganizationImage from 'sentry-docs/imgs/organization.png';
 import CalculatorImage from 'sentry-docs/imgs/pricing.png';
@@ -268,21 +269,21 @@ export async function Home() {
                 >
                   Seer
                 </a>
-                . Use{' '}
+                . Have Seer{' '}
                 <a
-                  href="/product/ai-in-sentry/seer/root-cause-analysis/"
+                  href="/product/ai-in-sentry/seer/autofix/"
                   className="text-[#8b5cf6] underline"
                 >
-                  AI-powered root cause analysis
+                  fix issues
                 </a>{' '}
-                in debugging your issues. Use{' '}
+                by running Autofix to generate fixes, and{' '}
                 <a
-                  href="/product/ai-in-sentry/seer/ai-code-review/"
+                  href="/product/ai-in-sentry/seer/code-review/"
                   className="text-[#8b5cf6] underline"
                 >
-                  code review
+                  review code changes
                 </a>{' '}
-                to review your PRs and prevent errors.
+                before merging PRs.
               </p>
             </div>
           </div>
@@ -359,6 +360,15 @@ export async function Home() {
             imageAlt="AI integration image"
             title="Sentry for AI"
             description="Connect Sentry to your AI coding assistants with agent skills and MCP."
+          />
+
+          <Card
+            className="w-full md:w-[calc(50%-12px)]"
+            href="/guides/"
+            image={GuidesImage}
+            imageAlt="Guides image"
+            title="Guides"
+            description="You've set up Sentry. Now what? Practical guidance on what to instrument, query, and alert on."
           />
 
           <Card

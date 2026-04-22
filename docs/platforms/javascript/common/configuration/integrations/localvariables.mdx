@@ -44,6 +44,14 @@ Sentry.init({
 
 The local variables integration only captures local variables from application code (`in_app = true`). Frames of a stacktrace originating from `node_modules` will not have local variables attached to them.
 
+<Alert level="info" title="Shallow Capture of Local Variables">
+
+For performance reasons, the integration only captures the top-level properties of local variables. Nested objects will not be fully serialized. This is because the integration uses the V8 debugger to walk all variables up the call stack, and deep inspection would significantly impact application performance.
+
+If you need to capture the full contents of a specific object, you can either destructure it into top-level variables or use [`Sentry.setExtra()`](/platforms/javascript/enriching-events/context/#extra-context) to selectively attach the data you need.
+
+</Alert>
+
 <Alert level="warning" title="Issues with ESM">
 
 Due to an [open Node.js issue](https://github.com/nodejs/node/issues/38439), we are currently unable to capture local variables for unhandled errors when using JavaScript modules (ESM).

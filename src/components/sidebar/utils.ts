@@ -27,6 +27,7 @@ export const docNodeToNavNode = (node: DocNode): NavNode => ({
     sidebar_hidden: node.frontmatter.sidebar_hidden,
     beta: node.frontmatter.beta,
     new: node.frontmatter.new,
+    early_access: node.frontmatter.early_access,
     section_end_divider: node.frontmatter.section_end_divider,
     sidebar_section: node.frontmatter.sidebar_section,
   },
