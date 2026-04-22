@@ -16,7 +16,7 @@ Agent runs can produce many spans per execution. You either capture the full spa
 
 ## Sample Standalone Agent Runs at 100%
 
-When agent runs are the root span (cron jobs, queue consumers, CLI scripts), match on the `gen_ai.*` operation prefix:
+When agent runs are the root span (cron jobs, queue consumers, CLI scripts), match on the presence of the `gen_ai.operation.name` attribute:
 
 ### JavaScript
 
@@ -24,10 +24,7 @@ When agent runs are the root span (cron jobs, queue consumers, CLI scripts), mat
 Sentry.init({
   dsn: process.env.SENTRY_DSN,
   tracesSampler: ({ name, attributes, inheritOrSampleWith }) => {
-    if (
-      attributes?.["sentry.op"]?.startsWith("gen_ai.") ||
-      attributes?.["gen_ai.system"]
-    ) {
+    if (attributes?.["gen_ai.operation.name"]) {
       return 1.0;
     }
 
@@ -40,9 +37,9 @@ Sentry.init({
 
 ```python
 def traces_sampler(sampling_context):
-    op = sampling_context.get("transaction_context", {}).get("op", "")
+    attributes = sampling_context.get("transaction_context", {}).get("data") or {}
 
-    if op.startswith("gen_ai."):
+    if attributes.get("gen_ai.operation.name"):
         return 1.0
 
     parent = sampling_context.get("parent_sampled")
@@ -65,10 +62,7 @@ Sentry.init({
   dsn: process.env.SENTRY_DSN,
   tracesSampler: ({ name, attributes, inheritOrSampleWith }) => {
     // Standalone gen_ai root spans
-    if (
-      attributes?.["sentry.op"]?.startsWith("gen_ai.") ||
-      attributes?.["gen_ai.system"]
-    ) {
+    if (attributes?.["gen_ai.operation.name"]) {
       return 1.0;
     }
 
@@ -91,11 +85,12 @@ Sentry.init({
 ```python
 def traces_sampler(sampling_context):
     tx_context = sampling_context.get("transaction_context", {})
+    attributes = tx_context.get("data") or {}
     op = tx_context.get("op", "")
     name = tx_context.get("name", "")
 
     # Standalone gen_ai root spans
-    if op.startswith("gen_ai."):
+    if attributes.get("gen_ai.operation.name"):
         return 1.0
 
     # HTTP routes that serve AI features
