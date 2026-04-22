@@ -4,11 +4,11 @@ If you're using version `7.10.0` or below, you'll need to have our <PlatformLink
 
 ### Strict Trace Continuation
 
-When your application receives requests, they might include `sentry-trace` and `baggage` headers from an upstream service that is also using Sentry.
-By default, the SDK will continue the trace from these incoming headers. However, this behavior can be undesirable if the requests are from a third-party service,
+When your application communicates with backend services, responses might include `sentry-trace` and `baggage` headers from an upstream service that is also using Sentry.
+By default, the SDK will continue the trace from these incoming headers. However, this behavior can be undesirable if the responses are from a third-party service,
 as it can lead to unwanted traces, increased billing, and skewed performance data.
 
-To prevent this, you can enable `strictTraceContinuation`. When this option is set to `true`, the SDK checks the incoming trace for Sentry trace information and only continues it if it belongs to the same Sentry organization.
+To prevent this, you can enable `strictTraceContinuation`. When this option is set to `true`, the SDK only continues a trace if it belongs to the same Sentry organization.
 Otherwise, it starts a new trace.
 
 ```dart {4}
@@ -31,3 +31,9 @@ await SentryFlutter.init((options) {
   options.orgId = '12345';
 });
 ```
+
+<Alert level="info">
+
+On iOS, only the Dart layer enforces strict trace continuation. Native iOS coverage will be enabled in a future release.
+
+</Alert>
