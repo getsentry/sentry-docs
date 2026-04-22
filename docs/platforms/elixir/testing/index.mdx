@@ -198,7 +198,9 @@ end
 
 ## Metrics
 
-Metric events are also asynchronous. Use `assert_sentry_report(:metric, criteria)` — it awaits internally just like `assert_sentry_log`. Given an `Orders` module that tracks completed orders by plan tier:
+Metric events flow through an async telemetry pipeline. Both assertion helpers below handle the wait automatically — they flush the pipeline and poll the collector until a matching metric appears or the timeout elapses (default: 1000 ms).
+
+Use `assert_sentry_report(:metric, criteria)` when your test emits exactly one metric and you want a straight criteria match. Given an `Orders` module that tracks completed orders by plan tier:
 
 ```elixir {filename:lib/my_app/orders.ex}
 def complete(%Order{} = order) do
@@ -212,7 +214,7 @@ def complete(%Order{} = order) do
 end
 ```
 
-The test asserts that the metric was emitted with the correct type, name, and attributes:
+With that in place, a test can assert on the reported metric:
 
 ```elixir {filename:test/my_app/orders_test.exs}
 test "increments the completed orders counter by plan" do
@@ -224,6 +226,47 @@ test "increments the completed orders counter by plan" do
     name: "orders.completed",
     attributes: %{plan: %{value: "pro"}}
   )
+end
+```
+
+### `assert_sentry_metric/2`
+
+`assert_sentry_metric/2` is the preferred helper for metric assertions. It takes the metric type (`:counter`, `:distribution`, or `:gauge`) as a positional first argument and uses **find semantics** — it finds the first matching metric among all captured metrics rather than requiring exactly one. This makes it resilient when a single request records several measurements at once.
+
+```elixir {filename:test/my_app/orders_test.exs}
+test "increments the completed orders counter by plan" do
+  order = insert(:order, user: build(:user, plan: "pro"))
+  Orders.complete(order)
+
+  assert_sentry_metric(:counter,
+    name: "orders.completed",
+    attributes: %{plan: %{value: "pro"}}
+  )
+end
+```
+
+Because `assert_sentry_metric` uses find semantics, you can call it multiple times in the same test to assert on several metrics independently — each call removes the matched item, leaving the rest available for subsequent assertions. Given a checkout flow that records multiple measurements:
+
+```elixir {filename:lib/my_app/checkout.ex}
+def process(%Cart{} = cart) do
+  with {:ok, order} <- place_order(cart),
+       {:ok, _} <- Payments.charge(order) do
+    Sentry.Metrics.count("checkout.completed", 1)
+    Sentry.Metrics.distribution("checkout.value", order.total_cents)
+    {:ok, order}
+  end
+end
+```
+
+The test asserts on both metrics in a single pass — each `assert_sentry_metric` call consumes the matched item and leaves the other available:
+
+```elixir {filename:test/my_app/checkout_test.exs}
+test "records a count and a value distribution on successful checkout" do
+  cart = build(:cart, items: [build(:item, price_cents: 4999)])
+  Checkout.process(cart)
+
+  assert_sentry_metric(:counter, name: "checkout.completed")
+  assert_sentry_metric(:distribution, name: "checkout.value")
 end
 ```
 
@@ -327,5 +370,5 @@ For slow background jobs or high-latency async pipelines, override the default 1
 
 ```elixir
 assert_sentry_log(:info, "PDF report generated", timeout: 5000)
-assert_sentry_report(:metric, [name: "report.duration"], timeout: 5000)
+assert_sentry_metric(:distribution, name: "report.duration", timeout: 5000)
 ```
