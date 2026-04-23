@@ -97,6 +97,7 @@ import NestjsSVG from 'platformicons/svg/nestjs.svg';
 import NextjsSVG from 'platformicons/svg/nextjs.svg';
 import NintendoSwitchSVG from 'platformicons/svg/nintendo-switch.svg';
 import NodejsSVG from 'platformicons/svg/nodejs.svg';
+import NitroSVG from 'platformicons/svg/nitro.svg';
 import NuxtSVG from 'platformicons/svg/nuxt.svg';
 import OpenaiSVG from 'platformicons/svg/openai.svg';
 import PerlSVG from 'platformicons/svg/perl.svg';
@@ -249,6 +250,7 @@ import NestjsSVGLarge from 'platformicons/svg_80x80/nestjs.svg';
 import NextjsSVGLarge from 'platformicons/svg_80x80/nextjs.svg';
 import NintendoSwitchSVGLarge from 'platformicons/svg_80x80/nintendo-switch.svg';
 import NodejsSVGLarge from 'platformicons/svg_80x80/nodejs.svg';
+import NitroSVGLarge from 'platformicons/svg_80x80/nitro.svg';
 import NuxtSVGLarge from 'platformicons/svg_80x80/nuxt.svg';
 import OpenaiSVGLarge from 'platformicons/svg_80x80/openai.svg';
 import PerlSVGLarge from 'platformicons/svg_80x80/perl.svg';
@@ -702,6 +704,10 @@ const formatToSVG = {
     sm: NintendoSwitchSVG,
     lg: NintendoSwitchSVGLarge,
   },
+  nitro: {
+    sm: NitroSVG,
+    lg: NitroSVGLarge,
+  },
   nuxt: {
     sm: NuxtSVG,
     lg: NuxtSVGLarge,
@@ -1013,6 +1019,7 @@ export const PLATFORM_TO_ICON = {
   'javascript-nestjs': 'nestjs',
   'javascript-nextjs': 'nextjs',
   'javascript-nuxt': 'nuxt',
+  'javascript-nitro': 'nitro',
   'javascript-node': 'nodejs',
   'javascript-react': 'react',
   'javascript-react-router': 'react-router',
