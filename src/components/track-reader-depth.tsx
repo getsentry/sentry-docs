@@ -48,7 +48,7 @@ export function ReaderDepthTracker() {
     return () => {
       window.removeEventListener('scroll', debouncedTrackProgress);
     };
-  });
+  }, []);
   // do not render anything
   return null;
 }
