@@ -84,7 +84,7 @@ Sentry.init({
 </PlatformSection>
 
 <PlatformSection supported={['javascript.cloudflare', 'javascript.nextjs']}>
-To correctly capture spans, pass the `experimental_telemetry` object with `isEnabled: true` to every `generateText`, `generateObject`, and `streamText` function call. For more details, see the [AI SDK Telemetry Metadata docs](https://sdk.vercel.ai/docs/ai-sdk-core/telemetry#telemetry-metadata).
+To correctly capture spans, pass the `experimental_telemetry` object with `isEnabled: true` to every `generateText`, `generateObject`, `streamText`, and `ToolLoopAgent` call. For more details, see the [AI SDK Telemetry Metadata docs](https://sdk.vercel.ai/docs/ai-sdk-core/telemetry#telemetry-metadata).
 
 ```javascript
 const result = await generateText({
@@ -160,6 +160,34 @@ Sentry.init({
 
 </PlatformSection>
 
+## ToolLoopAgent
+
+The integration also captures spans for the [`ToolLoopAgent`](https://ai-sdk.dev/docs/agents/overview#toolloopagent-class) class. Each call to `generate()` or `stream()` creates an agent span with individual LLM requests and tool executions as child spans.
+
+<PlatformSection notSupported={["javascript.cloudflare", "javascript.nextjs"]}>
+
+No additional configuration is needed — `ToolLoopAgent` spans are captured automatically.
+
+</PlatformSection>
+
+<PlatformSection supported={['javascript.cloudflare', 'javascript.nextjs']}>
+
+Pass `experimental_telemetry` with `isEnabled: true` to the `ToolLoopAgent` constructor to correctly capture spans:
+
+</PlatformSection>
+
+```javascript
+const agent = new ToolLoopAgent({
+  model: openai("gpt-4o"),
+  tools: { /* ... */ },
+  experimental_telemetry: { isEnabled: true },
+});
+
+const result = await agent.generate({
+  prompt: "What is the weather in San Francisco?",
+});
+```
+
 ## Identifying functions
 
 In order to make it easier to correlate captured spans with the function calls we recommend setting `functionId` in `experimental_telemetry` in all generation function calls:
@@ -170,6 +198,19 @@ const result = await generateText({
   experimental_telemetry: {
     isEnabled: true,
     functionId: "my-awesome-function",
+  },
+});
+```
+
+For `ToolLoopAgent`, set `functionId` in the constructor:
+
+```javascript
+const agent = new ToolLoopAgent({
+  model: openai("gpt-4o"),
+  tools: { /* ... */ },
+  experimental_telemetry: {
+    isEnabled: true,
+    functionId: "weather-agent",
   },
 });
 ```
@@ -200,4 +241,29 @@ const result = await generateText({
 
 ## Supported Versions
 
-- `ai`: `>=3.0.0 <6`
+- `ai`: `>=3.0.0 <=6`
+
+## Troubleshooting
+
+<PlatformSection supported={['javascript.nextjs']}>
+
+<Expandable title="Why do my AI spans show 'ai.toolCall' instead of 'gen_ai.execute_tool' on Vercel?">
+
+When deploying to Vercel, you may notice that AI SDK spans have raw names like `ai.toolCall` or `ai.streamText` instead of the expected semantic names like `gen_ai.execute_tool` or `gen_ai.stream_text`.
+
+This happens because the `ai` package is bundled (not externalized) in Next.js production builds, which prevents the integration from automatically detecting and instrumenting the module.
+
+To fix this, explicitly enable the integration with `force: true` in your `sentry.server.config.ts`:
+
+```javascript
+Sentry.init({
+  dsn: "____PUBLIC_DSN____",
+  integrations: [Sentry.vercelAIIntegration({ force: true })],
+});
+```
+
+The `force` option ensures the integration registers its span processors regardless of module detection.
+
+</Expandable>
+
+</PlatformSection>

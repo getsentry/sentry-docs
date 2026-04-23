@@ -108,3 +108,39 @@ void testLogging() {
 - **Breadcrumbs**: All three log calls will appear as breadcrumbs on the error event
 - **Error Event**: The `severe` log creates a full error event with stack trace
 - **Structured Logs**: (if `enableLogs` is `true`) Navigate to **Logs** in your Sentry project to see all three entries as searchable structured logs
+
+## Stack Traces
+
+The Dart `logging` package only includes a stack trace in a `LogRecord` if one is explicitly provided. When no stack trace is available, Sentry falls back to calling `StackTrace.current` internally, which points to Sentry's own internals rather than the actual call site. This means error events may show inaccurate stack traces unless you take one of the following approaches.
+
+### Set `recordStackTraceAtLevel`
+
+Configure the `logging` package to automatically capture a stack trace at the call site for specific log levels:
+
+```dart
+import 'package:logging/logging.dart';
+
+// Automatically captures stack traces for SEVERE and above
+recordStackTraceAtLevel = Level.SEVERE;
+
+final log = Logger('MyLogger');
+
+// The logging framework will now call StackTrace.current at this call site
+log.severe('Something went wrong');
+```
+
+### Pass the Stack Trace Manually
+
+When catching exceptions, pass both the error and the stack trace directly:
+
+```dart
+final log = Logger('MyLogger');
+
+try {
+  // code that may throw
+} catch (error, stackTrace) {
+  log.severe('Something went wrong', error, stackTrace);
+}
+```
+
+This gives Sentry the most accurate stack trace since it's captured at the point where the exception occurred.

@@ -1,0 +1,32 @@
+---
+title: Isolate Background Job Scopes
+description: "Learn how to isolate Sentry scopes in NestJS background jobs to prevent breadcrumb leakage into HTTP request events."
+---
+
+In NestJS, background job handlers like `@Cron()`, `@Interval()`, `@OnEvent()`, or BullMQ `@Processor()` handlers share the default isolation scope with incoming HTTP requests. This means breadcrumbs and tags added inside background jobs can leak into error events from unrelated HTTP requests, making it harder to debug issues.
+
+To prevent this, wrap each background job handler with `Sentry.withIsolationScope()` to give it its own isolated scope. Here's an example using `@Cron()`:
+
+```typescript
+import * as Sentry from "@sentry/nestjs";
+import { Injectable } from "@nestjs/common";
+import { Cron, CronExpression } from "@nestjs/schedule";
+
+@Injectable()
+export class MyJobService {
+  @Cron(CronExpression.EVERY_HOUR)
+  handleCron() {
+    Sentry.withIsolationScope(() => {
+      // Breadcrumbs and tags added here won't leak into HTTP request events
+      Sentry.addBreadcrumb({ message: "Processing scheduled job" });
+      this.doWork();
+    });
+  }
+
+  private doWork() {
+    // your job logic
+  }
+}
+```
+
+Apply the same pattern to `@Interval()`, `@OnEvent()`, `@Processor()`, and any other background task that runs outside the context of a request lifecycle.

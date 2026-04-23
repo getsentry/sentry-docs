@@ -116,7 +116,28 @@ A glob or an array of globs that specifies which build artifacts should not be u
 
 <SdkOption name="sourcemaps.deleteSourcemapsAfterUpload" type="boolean" defaultValue="true">
 
-Toggle whether generated source maps within your Next.js build folder should be automatically deleted after being uploaded to Sentry.
+Toggle whether generated **client-side** source maps within your Next.js build folder will be automatically deleted after being uploaded to Sentry. When enabled, source maps in `.next/static/` are deleted but **server-side source maps** (in `.next/server/`) are intentionally kept because:
+
+- They are required for server-side error reporting at runtime.
+- They are not a security concern since they are not publicly accessible to users.
+
+To customize which files are deleted after upload (for example, to include additional paths), use the `sourcemaps.filesToDeleteAfterUpload` option instead.
+
+</SdkOption>
+
+<SdkOption name="sourcemaps.filesToDeleteAfterUpload" type="string | string[]">
+
+An array of glob patterns that specifies which source map files will be deleted after being uploaded to Sentry. When set, this overrides the default deletion behavior of `deleteSourcemapsAfterUpload`.
+
+Use this option when you need fine-grained control over which source maps are deleted. Make sure to also enable [hidden source maps](https://webpack.js.org/configuration/devtool/) for any files you plan to delete, otherwise your build output will contain broken `sourceMappingURL` references.
+
+```javascript
+withSentryConfig(nextConfig, {
+  sourcemaps: {
+    filesToDeleteAfterUpload: [".next/static/**/*.map"],
+  },
+});
+```
 
 </SdkOption>
 
@@ -222,18 +243,52 @@ Enables the use of the [`runAfterProductionCompile` hook from Next.js](https://n
 
 </SdkOption>
 
-<SdkOption name="disableManifestInjection" type="boolean|undefined" defaultValue="false">
+<SdkOption name="routeManifestInjection" type="boolean|object" defaultValue="true">
 
-Disables automatic injection of the route manifest into the client bundle.
+<AvailableSince version="10.34.0" />
 
-The route manifest is a build-time generated mapping of your Next.js App Router routes that enables Sentry to group transactions by parameterized route names (e.g., `/users/:id` instead of `/users/123`, `/users/456`, etc.).
+<Alert level="info" title="App Router only">
+  `routeManifestInjection` option is only supported in the App Router.
+</Alert>
+
+Controls injection and filtering of the route manifest in the client bundle.
+
+The route manifest is a build-time generated mapping of your Next.js App Router routes that enables Sentry to group transactions by parameterized route names (for example, `/users/:id` instead of `/users/123` or `/users/456`).
+
+You can set this option to `false` to disable the route manifest injection.
 
 **Disable this option if:**
 
 - You want to minimize client bundle size
 - You're experiencing build issues related to route scanning
 - You prefer raw URLs in transaction names
-- You're only using the Pages Router (this feature is only supported in the App Router)
+
+You can also pass in an object with an `exclude` property to control which routes should be excluded from the route manifest. The `exclude` property accepts an array of strings or regular expressions, or a function that returns `true` to exclude a route.
+
+```javascript
+withSentryConfig(nextConfig, {
+  // Exclude specific routes using an array of strings or RegExps
+  routeManifestInjection: {
+    exclude: ["/api/health", "/api/excluded/[parameter]", /^\/internal\//],
+  },
+});
+```
+
+```javascript
+withSentryConfig(nextConfig, {
+  // Or use a function for dynamic exclusion
+  routeManifestInjection: {
+    exclude: (route) => route.includes("/excluded"),
+  },
+});
+```
+
+Excluded routes will appear as raw URLs in transaction names instead of parameterized routes.
+
+**Use `exclude` if:**
+
+- You want to hide internal or unreleased routes from appearing in the client bundle
+- You want to reduce bundle size by excluding routes that don't benefit from parameterized grouping (for example, static routes with no dynamic segments)
 
 </SdkOption>
 
@@ -318,5 +373,88 @@ A list of React component names to exclude from component annotation.
 <SdkOption name="webpack.treeshake" type="object">
 
 Configuration options for tree shaking. Refer to the [tree shaking documentation](/platforms/javascript/guides/nextjs/configuration/tree-shaking) for more details.
+
+</SdkOption>
+
+## Experimental Turbopack Options
+
+<Alert level="warning">
+  These options are experimental and require **Next.js 16+**. Their API may
+  change in future releases.
+</Alert>
+
+<SdkOption name="_experimental.turbopackReactComponentAnnotation.enabled" type="boolean" defaultValue="false">
+
+<AvailableSince version="10.43.0" />
+
+Enables React component name annotation for Turbopack builds. This is the Turbopack equivalent of [`webpack.reactComponentAnnotation`](#webpackreactcomponentannotationenabled).
+
+When enabled, React components are annotated with `data-sentry-component`, `data-sentry-element`, and `data-sentry-source-file` attributes at build time. These attributes allow Sentry to identify which components users interacted with in [Session Replay](/platforms/javascript/guides/nextjs/session-replay/) and [breadcrumbs](/platforms/javascript/guides/nextjs/enriching-events/breadcrumbs/).
+
+```javascript {filename:next.config.ts}
+import { withSentryConfig } from "@sentry/nextjs";
+
+export default withSentryConfig(nextConfig, {
+  _experimental: {
+    turbopackReactComponentAnnotation: {
+      enabled: true,
+    },
+  },
+});
+```
+
+</SdkOption>
+
+<SdkOption name="_experimental.turbopackReactComponentAnnotation.ignoredComponents" type="string[]">
+
+A list of React component names to exclude from annotation in Turbopack builds.
+
+```javascript {filename:next.config.ts}
+import { withSentryConfig } from "@sentry/nextjs";
+
+export default withSentryConfig(nextConfig, {
+  _experimental: {
+    turbopackReactComponentAnnotation: {
+      enabled: true,
+      ignoredComponents: ["SensitiveForm", "InternalDebugPanel"],
+    },
+  },
+});
+```
+
+</SdkOption>
+
+<SdkOption name="_experimental.turbopackApplicationKey" type="string">
+
+<AvailableSince version="10.41.0" />
+
+Application key used by [`thirdPartyErrorFilterIntegration`](/platforms/javascript/configuration/filtering/#using-thirdpartyerrorfilterintegration) to distinguish first-party code from third-party code in Turbopack builds. This is the Turbopack equivalent of setting `applicationKey` via the Sentry Webpack Plugin.
+
+When set, a Turbopack loader injects `_sentryModuleMetadata` into every first-party module, enabling the `thirdPartyErrorFilterIntegration` to filter errors from browser extensions, injected scripts, and third-party widgets.
+
+The value must match the `filterKeys` array in your `thirdPartyErrorFilterIntegration` configuration.
+
+```javascript {tabTitle:Config} {filename:next.config.ts}
+import { withSentryConfig } from "@sentry/nextjs";
+
+export default withSentryConfig(nextConfig, {
+  _experimental: {
+    turbopackApplicationKey: "my-nextjs-app",
+  },
+});
+```
+
+```javascript {tabTitle:Client} {filename:instrumentation-client.ts}
+import * as Sentry from "@sentry/nextjs";
+
+Sentry.init({
+  integrations: [
+    Sentry.thirdPartyErrorFilterIntegration({
+      filterKeys: ["my-nextjs-app"],
+      behaviour: "drop-error-if-exclusively-contains-third-party-frames",
+    }),
+  ],
+});
+```
 
 </SdkOption>

@@ -1,5 +1,4 @@
 import path from 'path';
-
 import {isExternalImage} from 'sentry-docs/config/images';
 import {serverContext} from 'sentry-docs/serverContext';
 
@@ -86,11 +85,11 @@ export default function DocImage({
       finalSrc = `/${pagePath.join('/')}/${src}`;
     }
 
-    // For internal images, imgPath should be the pathname only
+    // For internal images, imgPath should be pathname + query string (for cache busting)
     try {
       const srcURL = new URL(finalSrc, 'https://example.com');
-      imgPath = srcURL.pathname;
-    } catch (_error) {
+      imgPath = srcURL.pathname + srcURL.search;
+    } catch {
       imgPath = finalSrc;
     }
   } else {

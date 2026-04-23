@@ -62,15 +62,11 @@ In addition to fingerprint-based grouping, Sentry uses AI to further improve iss
 
 This system will not apply to any events that have fully custom fingerprints (either set via SDK or [fingerprint rules](/product/issues/grouping-and-fingerprints/#fingerprint-rules)). However, events with fingerprints containing `{{ default }}` will use AI grouping to calculate the `{{ default }}` portion of the fingerprint.
 
-When Sentry's default fingerprinting algorithm generates a new hash, it automatically sends the error data to Seer, our AI/ML service. That error data includes the message and in-app stack frames (including those configured with stack trace rules), or all frames when no in-app frames are present.
+When Sentry's default fingerprinting algorithm generates a new hash, it performs the following steps:
 
-Seer performs the following steps:
-
-1. It generates a vector representation of the error's stack trace using a transformer-based text embedding model
-2. It compares this embedding against existing error embeddings for that project in the database
+1. It generates a vector representation of the error's message and in-app stack frames, or all frames when no in-app frames are present, using a transformer-based text embedding model
+2. It compares this embedding against existing error embeddings for that project
 3. If a semantically similar error is found within the configured threshold, Sentry merges the new error into the existing issue
-
-![Sentry Seer PostgreSQL.](./img/sentry-seer-postgresql.png)
 
 This algorithm is particularly effective at handling cases where:
 

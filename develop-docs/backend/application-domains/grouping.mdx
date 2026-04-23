@@ -33,11 +33,10 @@ by the client yet, three systems start operating:
    the special `{{ default }}` value.
 
 It's important to know that the grouping algorithm can produce more than one fingerprint hash.  These hashes
-are collected and associated with issues.  There are two types of hashes that can be created:
-
-* flat hashes: these are traditional hashes where all hashes are equal.  If any of these hashes exists in a group
-  it is associated with it and any hash not yet associated with the group is added.
-* hierarchical hashes: these are secondary hashes that can be used to subdivide a group in the grouping tab.
+are collected and associated with issues via the `GroupHash` model.  If any of these hashes exists in a group
+the event is associated with it, and any hash not yet associated with the group is added.  In practice this
+means an event may produce both an "app" hash (using only in-app frames) and a "system" hash (using all frames),
+and either one matching an existing group is sufficient.
 
 # Issue / Group Creation
 
@@ -56,8 +55,39 @@ event as it flows further through the system to make it's way towards snuba, is 
 which also means that the group is persisted in snuba along with the event.
 
 Upon group creation, additional code runs such as the triggering of alerts, regression detection and more.
-It is thus relatively expensively to create a group due to the number of additional actions that can be
+It is thus relatively expensive to create a group due to the number of additional actions that can be
 triggered from it.
+
+# AI Grouping
+
+In addition to fingerprint-based grouping, Sentry uses AI to further improve issue grouping accuracy.
+This system identifies issues with similar stacktraces and error messages that might have different fingerprints 
+due to minor code variations. AI grouping works alongside traditional fingerprinting, occurring *after* hash-based lookup
+ and *before* new group creation:
+
+1. The event's hashes are computed via the standard grouping algorithm.
+2. Sentry checks whether any of those hashes already belong to an existing group via the hash-based lookup.
+3. If no existing group is found, and the event is eligible, Sentry generates an embedding
+   of the error's message and in-app stack frames, compares this embedding against existing 
+   error embeddings for that project, and merges the new error into an existing issue if a similar
+   issue is found within the configured threshold.
+4. If no match is found (or the event is ineligible), a new group is created as before.
+
+Eligibility is determined by [`should_call_seer_for_grouping`](https://github.com/getsentry/sentry/blob/master/src/sentry/grouping/ingest/seer.py)
+in `src/sentry/grouping/ingest/seer.py`.  Beyond the fingerprint check above, it also considers:
+
+- Whether the event has a usable stacktrace
+- Whether the event's platform is supported
+- Whether the project has AI-enhanced grouping enabled
+- Rate limits (both global and per-project)
+- A circuit breaker that trips if error rates are too high
+- Stacktrace size limits
+
+Results — including the matched grouphash, match distance, and model version — are
+persisted in the [`GroupHashMetadata`](https://github.com/getsentry/sentry/blob/master/src/sentry/models/grouphashmetadata.py)
+model alongside the event's hash-based grouping metadata.
+
+More details on the AI grouping process can be found on the public facing docs [here](https://docs.sentry.io/concepts/data-management/event-grouping/#ai-enhanced-grouping).
 
 # Merges and Splits
 
@@ -148,8 +178,7 @@ existing group.
 Sentry at the moment feeds the entire stack into the group.  There is a way to limit the number of frames
 contributed down to a smaller set by setting a maximum number of frames that should be considered.  This
 has a hypothetical advantage when working with different paths that lead to a bug but have the consequence
-that very large groups can be created.  Creating larger groups is tricker in Sentry as without hierarchical
-grouping there are no good ways to dive into the different stacks in an issue.
+that very large groups can be created.
 
 ## Fallback Grouping
 
@@ -171,37 +200,28 @@ think of grouping as a problem of the source of the error.  At any point the que
 source of the error is "how we call a function" (caller error) or "in the function" (callee error).  Making
 this decision is impossible to make in a general sense, but over time it can be easier to make this call.
 
-Sentry has an experimental grouping system called "hierarchical" grouping where we allow diving into the
-different paths towards a bug by preferring to over-group and then provide a grouping tab that can show
-the different paths by which we came to the error.  However the limitation of this with the current group
-system is that since the group has been created, there is now way to split out, you can end up with a much
-larger group than you desired.
-
 # Paths Forward
 
-The grouping system as implemented relates very close to the work flow that is established with the groups
-that are created.  It is the creator of the groups and as the creator, it drives a big part of the user
-experience that derives from it.  If it were to create a single issue per event, or a single issue for all
-events nothing in Sentry would properly function any more.  It is thus our first point of balancing the
-quality of the workflow.  Unfortunately with the tools available today there we are sitting in a pretty
-tough spot at the time of grouping.  If we get it wrong, the user is likely stuck.
+The grouping system is tightly coupled to the workflow that issues drive.  It is the creator of the groups
+and as the creator, it drives a big part of the user experience.  If it were to create a single issue per
+event, or a single issue for all events, nothing in Sentry would properly function.  It is thus our first
+point of balancing the quality of the workflow.
 
-The following general paths forward are current envisioned:
+## Improving AI-Enhanced Grouping
+
+The introduction of AI-enhanced grouping has already improved the caller-vs-callee problem described
+above, but there is ongoing work to improve model accuracy, expand platform support, and reduce latency.
+Key areas include better handling of hybrid fingerprints, improving confidence thresholds, and training on
+broader datasets.
 
 ## Groups of Groups
 
 The consequences of making too many groups today are alert spam and the inability to work with multiple
 issues at once.  If Sentry were to no longer be alerting on all new groups and tools existed to work
-across multiple groups more opportunities arise.  In particular the grouping algorithm could continue to
+across multiple groups, more opportunities arise.  In particular the grouping algorithm could continue to
 just fingerprint the stack trace but a secondary process could come in periodically and sweep up related
 fingerprints into a larger group.  If we take the `get_current_user` example the creation of 50 independent
-groups is not much of an issue if no alerts are fired.  If after 5 minute the system detected that they are
+groups is not much of an issue if no alerts are fired.  If after 5 minutes the system detected that they are
 in fact all very related (eg: the bug is "in `get_current_user`") it could leave the 50 generated groups
 alone but create a new group that links the other 50 groups, hide/deemphasize the individual 50 groups in
 the UI and let the user work with the larger group instead.
-
-## Evaluate Hierarchical Grouping
-
-We also have the hierarchical grouping prototype which tries to group on fewer inputs.  This system has
-some limitations but it's less likely to create many groups.  Unfortunately the user experience is
-not fleshed out as working with parts of the group is not an option.

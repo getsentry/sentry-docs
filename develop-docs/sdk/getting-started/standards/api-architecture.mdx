@@ -1,0 +1,124 @@
+---
+title: API and Architecture
+spec_id: sdk/getting-started/standards/api-architecture
+spec_version: 1.0.0
+spec_status: stable
+spec_platforms:
+  - all
+spec_changelog:
+  - version: 1.0.0
+    date: 2026-02-18
+    summary: Initial API and Architecture standard
+sidebar_order: 1
+---
+
+<SpecRfcAlert />
+
+<SpecMeta />
+
+These standards guide how SDKs are designed and evolved. The core philosophy: prefer server-side logic, protect public API stability, and give users smooth upgrade paths. SDKs often stay installed for years after release, so decisions made today have long-lasting consequences.
+
+<SpecSection id="relay-decision-gate" status="stable" since="1.0.0">
+
+## Server-side (Relay) vs. SDK implementation
+
+When deciding where new logic should live, default to server-side (Relay). Processing data in Relay keeps behavior consistent across SDK versions and avoids duplicating logic in clients that may remain deployed indefinitely.
+
+Put logic in the SDK only when it genuinely needs to run client-side:
+
+- It needs to run before data leaves the customer's application (e.g., user-controlled filtering like `before_send_*`)
+- It requires access to platform-specific APIs
+- It's strictly latency-sensitive
+- It needs to function in offline scenarios
+
+If data has already been collected, transform it in Relay.
+
+</SpecSection>
+
+---
+
+<SpecSection id="forward-compatibility" status="stable" since="1.0.0">
+
+## Forward compatibility
+
+SDKs typically outlive individual API versions. A user might stay on an SDK release for months or years, while server responses continue to evolve. SDKs **MUST** handle this gracefully:
+
+- Ignore unknown fields, categories, or dimensions rather than erroring
+- Tolerate missing optional fields
+- Accept new enum values without crashing
+- Handle rate limiting responses
+
+The general principle: additive server-side changes **MUST NOT** break existing SDK versions.
+
+</SpecSection>
+
+---
+
+<SpecSection id="public-api-approval" status="stable" since="1.0.0">
+
+## Public API changes
+
+Any change to public API — adding, modifying, deprecating, or removing — **REQUIRES** approval from an [SDK Senior Engineer](https://github.com/orgs/getsentry/teams/sdk-seniors).
+
+Public API includes anything a user can call, import, configure, subclass, or otherwise reference. When in doubt, check for usage in public repositories. If you're still unsure, treat it as public.
+
+How each SDK detects API changes (CI snapshot diffs, etc.) varies by language, but the approval requirement applies everywhere.
+
+</SpecSection>
+
+---
+
+<SpecSection id="semantic-conventions-process" status="stable" since="1.0.0">
+
+## Semantic conventions
+
+Semantic conventions are shared across SDKs, ingest, and the product — treat them like public API. New attributes **MUST** be defined in [sentry-conventions](https://github.com/getsentry/sentry-conventions) before SDK implementation. The process:
+
+1. Open a PR to sentry-conventions
+2. Get code owner approval
+3. Wait at least 3 business days
+4. Implement in the SDK
+
+This ensures attributes are reviewed and consistent across the ecosystem before any SDK ships them.
+
+Changes to existing attributes (renaming, removing, or changing semantics) are breaking changes and **MUST** follow the [breaking change process](#breaking-and-deprecation). The sentry-conventions repo has its own deprecation lifecycle — deprecated attributes go through a `backfill` period (at least 90 days) before moving to `normalize`, and replacements and aliases **MUST** be maintained for both old and new names during the transition.
+
+</SpecSection>
+
+---
+
+<SpecSection id="breaking-and-deprecation" status="stable" since="1.0.0">
+
+## Breaking changes and deprecations
+
+Breaking changes and deprecations are closely linked — every breaking change goes through a deprecation period first. Both follow a lifecycle designed to give users time and guidance to migrate.
+
+### Deprecation lifecycle
+
+Deprecations of public APIs, integrations, and supported platforms follow three stages:
+
+1. **Announce** in a minor release: add a runtime warning (where possible), update the changelog and docs, and publish a migration guide. Warnings **MUST** include the replacement, a code example, and a link to migration docs.
+2. **Keep it working** for at least one subsequent minor release (e.g., deprecated in X.Y, still functional in X.(Y+1)).
+3. **Remove** only in the next major release (X+1.0).
+
+Deprecating an entire SDK follows a separate, more involved process — see the [Deprecating an SDK](/sdk/getting-started/playbooks/sdk-lifecycle/deprecating-an-sdk) playbook.
+
+### Breaking changes
+
+Breaking changes **MUST** follow the [breaking changes playbook](/sdk/getting-started/playbooks/sdk-lifecycle/breaking-changes). They can only ship in major versions; opt-in previews are allowed in minor versions.
+
+Every breaking change **MUST** include:
+
+- A migration guide with copy-pastable examples
+- A changelog entry using the `BREAKING CHANGE:` notation
+- Validation of the migration guide using an LLM to ensure clarity and completeness
+
+Deprecation timelines can vary by SDK, but the stages and process apply everywhere.
+
+</SpecSection>
+
+---
+
+## Changelog
+
+<SpecChangelog />

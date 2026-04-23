@@ -1,0 +1,190 @@
+---
+title: Lightweight Mode
+sidebar_order: 15
+description: "Learn about running Sentry in lightweight mode without OpenTelemetry, or with optional OTLP integration for existing OTel setups."
+supported:
+  - javascript.node
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.hapi
+  - javascript.hono
+  - javascript.koa
+---
+
+<Alert level="warning">
+  Lightweight mode is experimental and may have breaking changes in minor or
+  patch releases.
+</Alert>
+
+<Alert>
+  Are you unsure if you should use this installation method? Review our
+  [installation methods](../).
+</Alert>
+
+If you don't need automatic spans/transactions, you can use `@sentry/node-core/light` which doesn't require OpenTelemetry dependencies. This mode is ideal when:
+
+- You only need error tracking, logs, or metrics without tracing data (no automatic span creation)
+- You want to minimize bundle size and runtime overhead
+- You don't need spans emitted by OpenTelemetry instrumentation
+
+You still get error tracking, logs, metrics, breadcrumbs, context/user data, local variables capture, distributed tracing (via `sentry-trace` and `baggage` headers), and automatic request isolation (Node.js 22+).
+
+If needed, you can still manually create spans by using Sentry's <PlatformLink to="/tracing/instrumentation/">custom instrumentation APIs</PlatformLink> like `startSpan`.
+
+If you already have your own OpenTelemetry setup, you can also use the [OTLP integration](#using-with-opentelemetry-otlp) to link Sentry errors to your OTel traces and export spans to Sentry.
+
+## Prerequisites
+
+- **Node.js 22.12.0+** is recommended for full functionality (automatic request isolation)
+- Lower Node.js versions work but with limited capabilities (see [Request Isolation](#request-isolation) below)
+
+## Step 1: Install
+
+```bash {tabTitle:npm}
+npm install @sentry/node-core --save
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/node-core
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/node-core
+```
+
+## Step 2: Configure
+
+Import from `@sentry/node-core/light` and call `Sentry.init()` as early as possible in your application lifecycle:
+
+```javascript {tabTitle:ESM}
+import * as Sentry from "@sentry/node-core/light";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+});
+
+// Now create your HTTP server or framework app
+```
+
+```javascript {tabTitle:CJS}
+const Sentry = require("@sentry/node-core/light");
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+});
+
+// Now create your HTTP server or framework app
+```
+
+## Step 3: Verify
+
+To verify that Sentry is working, capture a test error:
+
+```javascript
+Sentry.captureException(new Error("Sentry lightweight mode test"));
+```
+
+After running your application, you should see this error appear in your [Sentry dashboard](https://sentry.io).
+
+## Request Isolation
+
+Request isolation ensures that errors, breadcrumbs, and context are correctly scoped to individual requests.
+
+### Node.js 22.12.0+
+
+Request isolation works automatically. No additional setup is needed — just make sure `Sentry.init()` is called before you create your HTTP server.
+
+### Node.js < 22
+
+You need to manually wrap your request handler with `Sentry.withIsolationScope()`:
+
+```javascript
+import * as Sentry from "@sentry/node-core/light";
+import http from "http";
+
+const server = http.createServer((req, res) => {
+  Sentry.withIsolationScope(() => {
+    // Your request handling code
+    Sentry.setUser({ id: "user-id" });
+    res.end("OK");
+  });
+});
+```
+
+<Alert level="warning">
+  When using manual isolation on Node.js < 22, distributed tracing will not
+  work correctly.
+</Alert>
+
+## When to Use Lightweight Mode vs `@sentry/node`
+
+|                                 | `@sentry/node`     | `@sentry/node-core/light`                     |
+| ------------------------------- | ------------------- | ---------------------------------------------- |
+| **Error tracking**              | Yes                 | Yes                                            |
+| **Logs and metrics**            | Yes                 | Yes                                            |
+| **Automatic spans**             | Yes                 | No                                             |
+| **OpenTelemetry auto-included** | Yes                 | No                                             |
+| **Dependency footprint**        | Larger              | Minimal                                        |
+| **Best for**                    | Full observability  | No auto-instrumentation, manual tracing setup  |
+
+If you need automatic spans for HTTP requests, database queries, and other operations, use `@sentry/node` (the default). If you don't need automatically created spans and want minimal dependencies, use lightweight mode.
+
+## Using with OpenTelemetry (OTLP)
+
+<AvailableSince version="10.47.0" />
+
+If you already have your own OpenTelemetry setup and want to bridge it with Sentry, you can use the `otlpIntegration` from `@sentry/node-core/light/otlp`. This integration:
+
+- Links Sentry errors and logs to the active OpenTelemetry trace context
+- Exports OpenTelemetry spans to Sentry via [OTLP](/concepts/otlp/)
+
+### Install OpenTelemetry Dependencies
+
+In addition to `@sentry/node-core`, install the OpenTelemetry packages you need:
+
+```bash {tabTitle:npm}
+npm install @opentelemetry/api @opentelemetry/sdk-trace-node @opentelemetry/exporter-trace-otlp-http
+```
+
+```bash {tabTitle:yarn}
+yarn add @opentelemetry/api @opentelemetry/sdk-trace-node @opentelemetry/exporter-trace-otlp-http
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @opentelemetry/api @opentelemetry/sdk-trace-node @opentelemetry/exporter-trace-otlp-http
+```
+
+### Configure
+
+Set up your OpenTelemetry `TracerProvider` first, then initialize Sentry with the `otlpIntegration`:
+
+```javascript
+import { NodeTracerProvider } from "@opentelemetry/sdk-trace-node";
+import * as Sentry from "@sentry/node-core/light";
+import { otlpIntegration } from "@sentry/node-core/light/otlp";
+
+// Set up your OpenTelemetry TracerProvider as usual
+const provider = new NodeTracerProvider();
+provider.register();
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [otlpIntegration()],
+});
+```
+
+The integration automatically derives the OTLP endpoint from your DSN. To send traces to your own collector instead, pass a `collectorUrl`:
+
+```javascript
+otlpIntegration({
+  collectorUrl: "https://my-collector.example.com/v1/traces",
+});
+```
+
+### Options
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `setupOtlpTracesExporter` | `boolean` | `true` | Automatically configure an exporter to send OTLP traces to the right project from the DSN or `collectorUrl`. Set to `false` to set up the `TracerProvider` manually. |
+| `collectorUrl` | `string` | `undefined` | URL of your own OpenTelemetry collector. When set, traces are sent here instead of the Sentry OTLP endpoint derived from the DSN. |

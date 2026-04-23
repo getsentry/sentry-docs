@@ -1,6 +1,6 @@
 ---
 title: LangGraph
-description: "Adds instrumentation for LangGraph."
+description: "Adds instrumentation for the LangGraph SDK."
 supported:
   - javascript.node
   - javascript.aws-lambda
@@ -25,206 +25,159 @@ supported:
   - javascript.tanstackstart-react
   - javascript.cloudflare
   - javascript
+  - javascript.react
+  - javascript.angular
+  - javascript.vue
+  - javascript.svelte
+  - javascript.solid
+  - javascript.ember
+  - javascript.gatsby
 ---
 
-<Alert>
+<PlatformSection supported={["javascript.nextjs", "javascript.nuxt", "javascript.solidstart", "javascript.sveltekit", "javascript.react-router", "javascript.remix", "javascript.astro", "javascript.tanstackstart-react"]}>
+  <Alert level="warning">
+    For meta-framework applications running on both client and server, we recommend **setting up the integration manually** using the [`instrumentLangGraph` wrapper](#manual-instrumentation) to ensure consistent instrumentation across all runtimes.
+  </Alert>
+</PlatformSection>
 
-This integration works in the Node.js, Cloudflare Workers, Vercel Edge Functions, and browser runtimes. It requires SDK version `10.25.0` or higher.
+<PlatformSection supported={["javascript.node", "javascript.aws-lambda", "javascript.azure-functions", "javascript.connect", "javascript.express", "javascript.fastify", "javascript.gcp-functions", "javascript.hapi", "javascript.hono", "javascript.koa", "javascript.nestjs", "javascript.nextjs", "javascript.nuxt", "javascript.solidstart", "javascript.sveltekit", "javascript.react-router", "javascript.remix", "javascript.astro", "javascript.tanstackstart-react", "javascript.electron", "javascript.cordova", "javascript.capacitor", "javascript.deno", "javascript.wasm"]}>
 
-</Alert>
+  ## Automatic Instrumentation
 
-_Import name: `Sentry.langGraphIntegration`_
+  _Import name: `Sentry.langGraphIntegration`_
 
-LangGraph is instrumented via the [`langGraphIntegration`](./langgraph), which automatically captures spans for LangGraph operations including agent invocations, graph executions, and node operations.
+  <PlatformSection notSupported={["javascript.node", "javascript.connect", "javascript.hapi", "javascript.koa"]}>
+    <Alert>
+      If you are using a different runtime (like Bun, Cloudflare Workers or a Browser) or experiencing missing spans, you need to use **[Manual Instrumentation](#manual-instrumentation)** to explicitly wrap your AI client instance instead.
+    </Alert>
+  </PlatformSection>
 
-<PlatformSection notSupported={["javascript.cloudflare", "javascript.nextjs", "javascript"]}>
+  The `langGraphIntegration` adds instrumentation for [`@langchain/langgraph`](https://www.npmjs.com/package/@langchain/langgraph) to capture spans by automatically wrapping LangGraph operations and recording AI agent interactions including agent invocations, graph executions, and node operations.
 
-It is enabled by default and will automatically capture spans for LangGraph operations. You can opt-in to capture inputs and outputs by setting `recordInputs` and `recordOutputs` in the integration config:
+  In Node.js runtimes, this integration is enabled by default and automatically captures spans for LangGraph SDK calls (requires Sentry SDK version `10.28.0` or higher).
 
-```javascript
-Sentry.init({
-  dsn: "____PUBLIC_DSN____",
-  tracesSampleRate: 1.0,
-  integrations: [
-    Sentry.langGraphIntegration({
-      recordInputs: true,
-      recordOutputs: true,
-    }),
-  ],
-});
-```
-
-## Usage Example
-
-```javascript
-import { ChatOpenAI } from "@langchain/openai";
-import { StateGraph, MessagesAnnotation, START, END } from '@langchain/langgraph';
-
-// Create LLM call
-const llm = new ChatOpenAI({
-  modelName: "gpt-4o",
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-async function callLLM(state) {
-  const response = await llm.invoke(state.messages);
-
-  return {
-    messages: [...state.messages, response],
-  };
-}
-
-// Create the agent
-const agent = new StateGraph(MessagesAnnotation)
-  .addNode('agent', callLLM)
-  .addEdge(START, 'agent')
-  .addEdge('agent', END);
-
-const compiledAgent = agent.compile({ name: 'my_agent' });
-
-// Invoke the agent - automatically instrumented
-const result = await compiledAgent.invoke({
-  messages: [
-    new SystemMessage("You are a helpful assistant."),
-    new HumanMessage("Hello!"),
-  ],
-});
-```
+  To customize what data is captured (such as inputs and outputs), see the [Options](#options) in the Configuration section.
 
 </PlatformSection>
 
-<PlatformSection supported={["javascript.cloudflare"]}>
+<PlatformSection notSupported={["javascript.node", "javascript.connect", "javascript.hapi", "javascript.koa"]}>
 
-For Cloudflare Workers, you need to manually instrument the LangGraph graph using the `instrumentLangGraph` helper:
+  ## Manual Instrumentation
 
-```javascript
-import * as Sentry from "@sentry/cloudflare";
-import { ChatOpenAI } from "@langchain/openai";
-import { StateGraph, MessagesAnnotation, START, END } from '@langchain/langgraph';
+  _Import name: `Sentry.instrumentLangGraph`_
 
-// Create LLM call
-const llm = new ChatOpenAI({
-  modelName: "gpt-4o",
-  apiKey: process.env.OPENAI_API_KEY,
-});
+  The `instrumentLangGraph` helper adds instrumentation for [`@langchain/langgraph`](https://www.npmjs.com/package/@langchain/langgraph) to capture spans by wrapping a `StateGraph` before compilation and recording AI agent interactions with configurable input/output recording. You need to call this helper on the graph **before** calling `.compile()`.
 
-async function callLLM(state) {
-  const response = await llm.invoke(state.messages);
+  See example below:
 
-  return {
-    messages: [...state.messages, response],
-  };
-}
+  ```javascript
+  import { ChatOpenAI } from "@langchain/openai";
+  import { StateGraph, MessagesAnnotation, START, END } from '@langchain/langgraph';
+  import { SystemMessage, HumanMessage } from '@langchain/core/messages';
 
-// Create the agent
-const agent = new StateGraph(MessagesAnnotation)
-  .addNode('agent', callLLM)
-  .addEdge(START, 'agent')
-  .addEdge('agent', END);
+  // Create LLM call
+  const llm = new ChatOpenAI({
+    modelName: "gpt-4o",
+    apiKey: "your-api-key", // Warning: API key will be exposed in browser!
+  });
 
-const graph = agent.compile({ name: 'my_agent' });
+  async function callLLM(state) {
+    const response = await llm.invoke(state.messages);
 
-// Manually instrument the graph
-Sentry.instrumentLangGraph(graph, {
-  recordInputs: true,
-  recordOutputs: true,
-});
+    return {
+      messages: [...state.messages, response],
+    };
+  }
 
-// Invoke the agent
-const result = await graph.invoke({
-  messages: [
-    new SystemMessage("You are a helpful assistant."),
-    new HumanMessage("Hello!"),
-  ],
-});
-```
+  // Create the agent
+  const agent = new StateGraph(MessagesAnnotation)
+    .addNode('agent', callLLM)
+    .addEdge(START, 'agent')
+    .addEdge('agent', END);
 
-</PlatformSection>
+  // Instrument the graph before compiling
+  Sentry.instrumentLangGraph(agent, {
+    recordInputs: true,
+    recordOutputs: true,
+  });
 
-<PlatformSection supported={["javascript"]}>
+  const graph = agent.compile({ name: 'my_agent' });
 
-For browser applications, you need to manually instrument the LangGraph graph using the `instrumentLangGraph` helper:
+  // Invoke the agent
+  const result = await graph.invoke({
+    messages: [
+      new SystemMessage("You are a helpful assistant."),
+      new HumanMessage("Hello!"),
+    ],
+  });
+  ```
 
-```javascript
-import * as Sentry from "@sentry/browser";
-import { ChatOpenAI } from "@langchain/openai";
-import { StateGraph, MessagesAnnotation, START, END } from '@langchain/langgraph';
-
-// Create LLM call
-const llm = new ChatOpenAI({
-  modelName: "gpt-4o",
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-async function callLLM(state) {
-  const response = await llm.invoke(state.messages);
-
-  return {
-    messages: [...state.messages, response],
-  };
-}
-
-// Create the agent
-const agent = new StateGraph(MessagesAnnotation)
-  .addNode('agent', callLLM)
-  .addEdge(START, 'agent')
-  .addEdge('agent', END);
-
-const graph = agent.compile({ name: 'my_agent' });
-
-// Manually instrument the graph
-Sentry.instrumentLangGraph(graph, {
-  recordInputs: true,
-  recordOutputs: true,
-});
-
-// Invoke the agent
-const result = await graph.invoke({
-  messages: [
-    new SystemMessage("You are a helpful assistant."),
-    new HumanMessage("Hello!"),
-  ],
-});
-```
+  To customize what data is captured (such as inputs and outputs), see the [Options](#options) in the Configuration section.
 
 </PlatformSection>
 
-## Options
+## Configuration
 
-### `recordInputs`
+### Options
 
-_Type: `boolean`_
+The following options control what data is captured from LangGraph operations:
+
+#### `recordInputs`
+
+_Type: `boolean` (optional)_
 
 Records inputs to LangGraph operations (such as messages and state data passed to the graph).
 
 Defaults to `true` if `sendDefaultPii` is `true`.
 
-```javascript
-Sentry.init({
-  integrations: [Sentry.langGraphIntegration({ recordInputs: true })],
-});
-```
+#### `recordOutputs`
 
-### `recordOutputs`
-
-_Type: `boolean`_
+_Type: `boolean` (optional)_
 
 Records outputs from LangGraph operations (such as generated responses, agent outputs, and final state).
 
 Defaults to `true` if `sendDefaultPii` is `true`.
 
+**Usage**
+
+<PlatformSection supported={["javascript.node", "javascript.aws-lambda", "javascript.azure-functions", "javascript.connect", "javascript.express", "javascript.fastify", "javascript.gcp-functions", "javascript.hapi", "javascript.hono", "javascript.koa", "javascript.nestjs", "javascript.nextjs", "javascript.nuxt", "javascript.solidstart", "javascript.sveltekit", "javascript.react-router", "javascript.remix", "javascript.astro", "javascript.tanstackstart-react", "javascript.electron", "javascript.cordova", "javascript.capacitor", "javascript.deno", "javascript.wasm"]}>
+
+Using the `langGraphIntegration` integration for **automatic instrumentation**:
+
 ```javascript
 Sentry.init({
-  integrations: [Sentry.langGraphIntegration({ recordOutputs: true })],
+  dsn: "____PUBLIC_DSN____",
+  // Tracing must be enabled for agent monitoring to work
+  tracesSampleRate: 1.0,
+  integrations: [
+    Sentry.langGraphIntegration({
+      // your options here
+    }),
+  ],
 });
 ```
 
-## Configuration
+</PlatformSection>
 
-By default this integration adds tracing support for LangGraph operations including:
+<PlatformSection notSupported={["javascript.node", "javascript.connect", "javascript.hapi", "javascript.koa"]}>
+
+Using the `instrumentLangGraph` wrapper for **manual instrumentation**:
+
+```javascript
+Sentry.instrumentLangGraph(graph, {
+  // your options here
+});
+```
+
+</PlatformSection>
+
+## Supported Operations
+
+By default, tracing support is added to the following LangGraph SDK calls:
 
 - **Agent Creation** (`gen_ai.create_agent`) - Captures spans when compiling a StateGraph into an executable agent
 - **Agent Invocation** (`gen_ai.invoke_agent`) - Captures spans for agent execution via `invoke()`
+
 
 ## Supported Versions
 

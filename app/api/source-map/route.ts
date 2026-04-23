@@ -1,5 +1,4 @@
 import {NextResponse} from 'next/server';
-
 import {getDevDocsFrontMatter, getDocsFrontMatter} from 'sentry-docs/frontmatter';
 import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
 

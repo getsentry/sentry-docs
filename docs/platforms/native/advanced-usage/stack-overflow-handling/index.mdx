@@ -125,6 +125,9 @@ or care than other crashes.
 
 <Alert>
 Be aware that, in contrast to Mach exception port usage, signal handlers on macOS run on the same thread that caused the
-signal and thus also need a `sigaltstack` to handle any crash from a stack overflow. Only the `inproc` backend on macOS
-currently relies entirely on signal handlers, and its signal stack is set up equivalently to Linux or other POSIX platforms.
+signal and thus also need a `sigaltstack` to handle any crash from a stack overflow. The `inproc` backend relies on signal
+handlers on macOS and Linux but, on all platforms, delegates crash processing to a separate handler thread.
+
+Both the thread on which the SDK was initialized and the handler thread receive a `sigaltstack` if one is not already
+configured, which helps prevent stack overflow from interfering with crash reporting.
 </Alert>

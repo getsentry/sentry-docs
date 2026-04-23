@@ -1,0 +1,98 @@
+---
+title: Spotlight
+description: "Learn how to use Sentry Spotlight for local development observability in your Java app."
+---
+
+[Sentry Spotlight](https://spotlightjs.com/) is a local development tool that provides real-time observability for errors, traces, logs, and performance data during development. It allows you to see Sentry events in real-time without sending them to Sentry's servers, making it ideal for local debugging.
+
+The `sentry-spotlight` module provides a `SpotlightIntegration` that sends a copy of all Sentry events to your local Spotlight instance.
+
+## Install
+
+To install use:
+
+```groovy {tabTitle:Gradle}
+implementation 'io.sentry:sentry-spotlight:{{@inject packages.version('sentry.java.spotlight', '8.32.0') }}'
+```
+
+```xml {tabTitle:Maven}
+<dependency>
+    <groupId>io.sentry</groupId>
+    <artifactId>sentry-spotlight</artifactId>
+    <version>{{@inject packages.version('sentry.java.spotlight', '8.32.0') }}</version>
+</dependency>
+```
+
+```scala {tabTitle: SBT}
+libraryDependencies += "io.sentry" % "sentry-spotlight" % "{{@inject packages.version('sentry.java.spotlight', '8.32.0') }}"
+```
+
+For other dependency managers, check out the [central Maven repository](https://search.maven.org/artifact/io.sentry/sentry-spotlight).
+
+## Configure
+
+<PlatformSection supported={["java.spring-boot"]}>
+
+```text {tabTitle:Properties} {filename:application.properties}
+sentry.enable-spotlight=true
+# Optional: override the default Spotlight URL (defaults to http://localhost:8969/stream)
+sentry.spotlight-connection-url=http://localhost:8969/stream
+```
+
+</PlatformSection>
+
+<PlatformSection notSupported={["java.spring-boot"]}>
+
+```text {tabTitle:Properties} {filename:sentry.properties}
+enable-spotlight=true
+# Optional: override the default Spotlight URL (defaults to http://localhost:8969/stream)
+spotlight-connection-url=http://localhost:8969/stream
+```
+
+</PlatformSection>
+
+```java {tabTitle:Java}
+import io.sentry.Sentry;
+
+Sentry.init(options -> {
+    options.setDsn("___PUBLIC_DSN___");
+    options.setEnableSpotlight(true);
+    // Optional: override the default Spotlight URL (defaults to http://localhost:8969/stream)
+    options.setSpotlightConnectionUrl("http://localhost:8969/stream");
+});
+```
+
+```kotlin {tabTitle:Kotlin}
+import io.sentry.Sentry
+
+Sentry.init { options ->
+    options.dsn = "___PUBLIC_DSN___"
+    options.isEnableSpotlight = true
+    // Optional: override the default Spotlight URL (defaults to http://localhost:8969/stream)
+    options.spotlightConnectionUrl = "http://localhost:8969/stream"
+}
+```
+
+<Alert level="info">
+
+The default Spotlight URL is `http://localhost:8969/stream`. You only need to set `spotlightConnectionUrl` if your Spotlight instance is running on a different host or port.
+
+</Alert>
+
+## Verify
+
+To verify the integration is working, capture a test exception and check the Spotlight UI:
+
+```java
+import io.sentry.Sentry;
+
+Sentry.captureException(new Exception("Spotlight test from Java!"));
+```
+
+```kotlin
+import io.sentry.Sentry
+
+Sentry.captureException(Exception("Spotlight test from Java!"))
+```
+
+Open the Spotlight UI and confirm that the error event appears.

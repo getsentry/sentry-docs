@@ -26,7 +26,7 @@ There are no special requirements for the Span v2 envelope header.
 }
 ```
 
-Also see [Envelope Headers](/sdk/data-model/envelopes/#headers).
+Unlike transactions, envelope headers for spans **require** [Dynamic sampling context](/sdk/telemetry/traces/dynamic-sampling-context/). Also see [Envelope Headers](/sdk/foundations/transport/envelopes/#headers).
 
 ## Span v2 Envelope Item Header
 
@@ -42,7 +42,41 @@ The envelope item header must contain the following properties:
 
 ## Span v2 Envelope Item Payload
 
-The envelope item payload must contain an `items` array with span one and up to 1000 span objects:
+The span v2 envelope item payload is a JSON object that **MUST** include an `items` array of span objects. The payload **MAY** also include top-level `version` and `ingest_settings` fields as specified in the next section.
+
+The container is defined as follows:
+
+```json
+{
+  "version": 2,
+  "ingest_settings": {
+    "infer_ip": "auto",
+    "infer_user_agent": "auto"
+  },
+  "items": [{..span..}, {..span..}, {..span..}]
+}
+```
+
+<SpecSection id="span-envelope-item-ingest-settings" status="candidate" since="0.0.0">
+
+### `version` and `ingest_settings` properties
+
+The span envelope item `ingest_settings` property is an optional JSON object that contains ingestion settings for Relay, for example, to infer certain data from the incoming request.
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `infer_ip` | String | **OPTIONAL** | The setting to infer the IP address from the incoming request. One of `auto` or `never` (default). |
+| `infer_user_agent` | String | **OPTIONAL** | The setting to infer the user agent from the incoming request. One of `auto` or `never` (default). |
+
+SDKs like Browser or React Native **MAY** set these to `"auto"` to instruct Relay to infer the IP address or user agent from the incoming request and put it onto the span as an attribute.
+
+For ingestion settings to take effect, the SDK **MUST** also set the `version` property to `2` (`number`) or higher. If `version` is omitted, Relay treats the payload as version `1` and doesn't apply `ingest_settings`.
+
+</SpecSection>
+
+### `items` property - `span` Item Payload
+
+The `items` array **MUST** contain at least one and at most 1000 span objects:
 
 ```json
 {
@@ -164,20 +198,26 @@ Empty attributes must be omitted.
 
 | Attribute Key | Type | Description |
 |---------------|------|-------------|
+| `sentry.op` | string | The [span op](../../traces/span-operations/) (e.g., "http.client", "db.query") of the span |
 | `sentry.release` | string | The release version of the application |
 | `sentry.environment` | string | The environment name (e.g., "production", "staging", "development") |
 | `sentry.segment.name` | string | The segment name (e.g., "GET /users") |
 | `sentry.segment.id` | string | The segment span id |
+| `sentry.span.source` | string | The source of the span name. **MUST** be set on segment spans, **MAY** be set on child spans. <br/> See [Sentry Conventions](https://github.com/getsentry/sentry-conventions/blob/main/model/attributes/sentry/sentry__span__source.json) for all supported sources. <br/>See [Transaction Annotations](/sdk/foundations/transport/event-payloads/transaction/#transaction-annotations) and [Clustering](/backend/application-domains/transaction-clustering/#automatic-transaction-clustering) for more information.|
+| `sentry.profiler_id` | string | The id of the currently running profiler (continuous profiling) |
+| `sentry.replay_id` | string | The id of the currently running replay (if available) |
 | `os.name` | string | The operating system name (e.g., "Linux", "Windows", "macOS") |
 | `browser.name` | string | The browser name (e.g., "Chrome", "Firefox", "Safari") |
-| `user.id` | string | The user ID (gated by `sendDefaultPii`) |
-| `user.email` | string | The user email (gated by `sendDefaultPii`) |
-| `user.ip_address` | string | The user IP address (gated by `sendDefaultPii`) |
-| `user.name` | string | The user username (gated by `sendDefaultPii`) |
+| `user.id` | string | The user ID |
+| `user.email` | string | The user email |
+| `user.ip_address` | string | The user IP address |
+| `user.name` | string | The user username |
 | `thread.id` | string | The thread ID |
 | `thread.name` | string | The thread name |
 | `sentry.sdk.name` | string | Name of the Sentry SDK (e.g., "sentry.php", "sentry.javascript") |
 | `sentry.sdk.version` | string | Version of the Sentry SDK |
+
+Attributes outside of the above list MUST only be attached to the span they conceptually belong on, and not propagated to children spans. For instance, attributes mirroring transaction context data should only be set on the segment span. See also [the implementation guidelines](/sdk/telemetry/spans/implementation/#how-to-approach-span-first-in-sdks).
 
 See [Sentry Conventions](https://github.com/getsentry/sentry-conventions/) for a full list of supported attributes.
 
@@ -222,7 +262,7 @@ span_id: "438f40bd3b4a41ee"
 Span attachments are an experimental feature that is still under development.
 </Alert>
 
-To associate an attachment with a span, submit a [trace attachment](/sdk/data-model/envelope-items/#trace-attachment) item with an additional `span_id` item header. The trace attachment _should_ be submitted in the same envelope as the span itself.
+To associate an attachment with a span, submit a [trace attachment](/sdk/telemetry/attachments/#trace-attachments) item with an additional `span_id` item header. The trace attachment _should_ be submitted in the same envelope as the span itself.
 
 - `span_id` is the ID of the span that owns the attachment. If set, the attachment will be dropped with the span if the span is dropped by dynamic sampling, inbound filters or rate limits. That is, Relay treats `span_id` as the owner of the attachment.
 - The SDK _may_ set the `span_id` item header to an explicit `null` value. `span_id: null` is treated as “owned by spans”, but not owned by a specific span. That is, the attachment can be dropped if the span quota is exceeded, but it will not be dropped with a specific span because of e.g. inbound filters.
