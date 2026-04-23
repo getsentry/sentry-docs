@@ -1,6 +1,6 @@
 ---
 title: Echo
-description: "Echo is a high-performance web framework for building robust and scalable applications in Go. Learn how to set it up with Sentry."
+description: "Echo is a high-performance web framework for building robust and scalable applications in Go. Learn how to set it up with Sentry. Requires Echo v5."
 ---
 
 For a quick reference, there is a [complete example](https://github.com/getsentry/sentry-go/tree/master/_examples/echo) at the Go SDK source code repository.
@@ -63,7 +63,7 @@ app.Use(sentryecho.New(sentryecho.Options{
 }))
 
 // Set up routes
-app.GET("/", func(ctx echo.Context) error {
+app.GET("/", func(ctx *echo.Context) error {
     // capturing an error intentionally to simulate usage
     sentry.CaptureMessage("It works!")
 
@@ -75,7 +75,7 @@ app.Logger.Fatal(app.Start(":3000"))
 
 ## Usage
 
-`sentryecho` attaches an instance of `*sentry.Hub` (https://pkg.go.dev/github.com/getsentry/sentry-go#Hub) to the `echo.Context`, which makes it available throughout the rest of the request's lifetime.
+`sentryecho` attaches an instance of `*sentry.Hub` (https://pkg.go.dev/github.com/getsentry/sentry-go#Hub) to the `*echo.Context`, which makes it available throughout the rest of the request's lifetime.
 You can access it by using the `sentryecho.GetHubFromContext()` method on the context itself in any of your proceeding middleware and routes.
 And it should be used instead of the global `sentry.CaptureMessage`, `sentry.CaptureException` or any other calls, as it keeps the separation of data between the requests.
 
@@ -94,7 +94,7 @@ app.Use(sentryecho.New(sentryecho.Options{
 }))
 
 app.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
-	return func(ctx echo.Context) error {
+	return func(ctx *echo.Context) error {
 		if hub := sentryecho.GetHubFromContext(ctx); hub != nil {
 			hub.Scope().SetTag("someRandomTag", "maybeYouNeedIt")
 		}
@@ -102,7 +102,7 @@ app.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 	}
 })
 
-app.GET("/", func(ctx echo.Context) error {
+app.GET("/", func(ctx *echo.Context) error {
 	if hub := sentryecho.GetHubFromContext(ctx); hub != nil {
 		hub.WithScope(func(scope *sentry.Scope) {
 			scope.SetExtra("unwantedQuery", "someQueryDataMaybe")
@@ -112,7 +112,7 @@ app.GET("/", func(ctx echo.Context) error {
 	return ctx.String(http.StatusOK, "Hello, World!")
 })
 
-app.GET("/foo", func(ctx echo.Context) error {
+app.GET("/foo", func(ctx *echo.Context) error {
 	// sentryecho handler will catch it just fine. Also, because we attached "someRandomTag"
 	// in the middleware before, it will be sent through as well
 	panic("y tho")

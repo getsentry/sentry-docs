@@ -45,6 +45,11 @@ export interface FrontMatter {
    */
   new?: boolean;
   /**
+   * Set this to true to show an "EA" (early access) badge next to the title in the sidebar
+   */
+  early_access?: boolean;
+
+  /**
    * The next page in the bottom pagination navigation.
    */
   nextPage?: PaginationNavNode;
