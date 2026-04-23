@@ -2,7 +2,7 @@
 title: Replay
 description: Session recording protocol for capturing and streaming browser or mobile user sessions to Sentry.
 spec_id: sdk/telemetry/replays
-spec_version: 1.2.0
+spec_version: 1.3.0
 spec_status: stable
 spec_platforms:
   - browser
@@ -11,6 +11,9 @@ spec_depends_on:
   - id: sdk/foundations/transport/envelopes
     version: ">=1.0.0"
 spec_changelog:
+  - version: 1.3.0
+    date: 2026-02-26
+    summary: Added traces_by_timestamp field for timestamped trace association
   - version: 1.2.0
     date: 2025-07-30
     summary: Added session mode hard limit behavior (stop recording, clear replay_id, remove from scope)
@@ -103,7 +106,8 @@ A `replay_event` envelope item **MUST** always be sent together with a `replay_r
 | `segment_id` | Number | **REQUIRED** | 1.0.0 | The segment identifier, starting at 0. |
 | `replay_start_timestamp` | Number | **REQUIRED** (first segment) | 1.0.0 | UNIX timestamp of the start of the replay (in seconds). Only required on the first segment. |
 | `urls` | List[String] | **OPTIONAL** | 1.0.0 | List of URLs in order of visitation. |
-| `trace_ids` | List[String] | **OPTIONAL** | 1.0.0 | List of trace IDs that occurred during the replay. |
+| `trace_ids` | List[String] | **OPTIONAL** | 1.0.0 | List of unique trace IDs that occurred during the segment. |
+| `traces_by_timestamp` | List[[Number, String]] | **OPTIONAL** | 1.3.0 | List of `[timestamp, trace_id]` pairs. Each entry is a tuple of the transaction's start timestamp (UNIX seconds) and its trace ID. Provides temporal ordering so Sentry can associate replay events with the correct trace. SDKs **SHOULD** send this alongside `trace_ids` for backwards compatibility. |
 | `error_ids` | List[String] | **DEPRECATED** | 1.0.0 | Deprecated. Do not use. |
 
 #### Event Attributes
@@ -323,6 +327,7 @@ sentry_sdk.init(
   "replay_type": "session",
   "segment_id": 0,
   "trace_ids": ["905aef2282af5fe2ab2c93aa7a340521"],
+  "traces_by_timestamp": [[1710861501.234, "905aef2282af5fe2ab2c93aa7a340521"]],
   "urls": [
     "https://sentry.io/issues/",
     "https://sentry.io/issues/?project=0&statsPeriod=7d&utc=true"
@@ -376,6 +381,7 @@ sentry_sdk.init(
   "replay_type": "session",
   "segment_id": 0,
   "trace_ids": ["905aef2282af5fe2ab2c93aa7a340521"],
+  "traces_by_timestamp": [[1710861501.234, "905aef2282af5fe2ab2c93aa7a340521"]],
   "urls": [
     "https://sentry.io/issues/",
     "https://sentry.io/issues/?project=0&statsPeriod=7d&utc=true"
