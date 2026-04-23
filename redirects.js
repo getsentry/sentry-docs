@@ -745,6 +745,10 @@ const userDocsRedirects = [
     destination: '/organization/integrations/third-party-integrations/',
   },
   {
+    source: '/organization/integrations/nominal/',
+    destination: '/organization/integrations/third-party-integrations/',
+  },
+  {
     source: '/organization/integrations/terramind/',
     destination: '/organization/integrations/third-party-integrations/',
   },
