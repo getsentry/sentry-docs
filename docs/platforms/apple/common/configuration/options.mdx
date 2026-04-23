@@ -102,9 +102,7 @@ You can also override this option on a per-call basis by passing the `attachAllT
 
 </SdkOption>
 
-<SdkOption name="enableSigtermReporting" type="bool" availableSince="8.27.0">
-
-_(New in [sentry-cocoa version 8.27.0](https://github.com/getsentry/sentry-cocoa/blob/main/CHANGELOG.md#8270))_
+<SdkOption name="enableSigtermReporting" type="bool" defaultValue="false" availableSince="8.27.0">
 
 When enabled, the SDK reports SIGTERM signals to Sentry.
 
@@ -123,7 +121,7 @@ Note that disabling this option will also disable <PlatformLink to="/configurati
 
 <PlatformSection supported={["apple.macos"]}>
 
-<SdkOption name="enableUncaughtNSExceptionReporting" type="bool" defaultValue="false">
+<SdkOption name="enableUncaughtNSExceptionReporting" type="bool" defaultValue="false" availableSince="8.40.0">
 
 When enabled, the SDK captures uncaught NSExceptions. As this feature uses swizzling, disabling `enableSwizzling` also disables this feature.
 
@@ -131,7 +129,7 @@ This option registers the `NSApplicationCrashOnExceptions` UserDefault, so your 
 
 **Warning:** Don't use this in combination with `SentryCrashExceptionApplication`. Having both enabled can lead to duplicated reports.
 
-This option is available as of SDK version 8.40.0. Learn more in the <PlatformLink to="/usage/#capturing-uncaught-exceptions">capturing uncaught exceptions</PlatformLink> documentation.
+Learn more in the <PlatformLink to="/usage/#capturing-uncaught-exceptions">capturing uncaught exceptions</PlatformLink> documentation.
 
 </SdkOption>
 
@@ -171,17 +169,31 @@ Learn more about session tracking in the <PlatformLink to="/configuration/releas
 
 </SdkOption>
 
-<SdkOption name="inAppInclude" type="array">
+<SdkOption name="inAppIncludes" type="array">
 
-A list of string prefixes of module names that belong to the app.
+A list of string prefixes of framework names that belong to the app. By default, this contains `CFBundleExecutable` to mark the app's main executable as "in-app".
 
-Sentry differentiates stack frames that are directly related to your application ("in application") from stack frames that come from other packages such as the standard library, frameworks, or other dependencies. The application package is automatically marked as `inApp`. The difference is visible in [sentry.io](https://sentry.io), where only the "in application" frames are displayed by default.
+Sentry differentiates stack frames that are directly related to your application ("in application") from stack frames that come from other packages such as the standard library, frameworks, or other dependencies. The difference is visible in [sentry.io](https://sentry.io), where only the "in application" frames are displayed by default.
+
+This property is read-only. Use the `add(inAppInclude:)` method to append additional framework name prefixes:
+
+```swift {tabTitle:Swift}
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.add(inAppInclude: "MyFramework")
+}
+```
+
+```objc {tabTitle:Objective-C}
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    [options addInAppInclude:@"MyFramework"];
+}];
+```
 
 </SdkOption>
 
 <SdkOption name="inAppExclude" type="array" removedSince="9.0.0">
-
-**Removed in version 9.0.0** - This option had no effect and was removed.
 
 A list of string prefixes of module names that do not belong to the app, but rather to third-party packages. Modules considered not part of the app will be hidden from stack traces by default.
 
@@ -218,29 +230,27 @@ SentrySDK.start { options in
 }];
 ```
 
-_(New in [sentry-cocoa version 8.7.0](https://github.com/getsentry/sentry-cocoa/blob/main/CHANGELOG.md#870))_
-
 </SdkOption>
 
 <PlatformSection supported={["apple.ios"]}>
 
-<SdkOption name="attachScreenshot" type="bool">
+<SdkOption name="attachScreenshot" type="bool" defaultValue="false">
 
 Takes a screenshot of the application when an error happens and includes it as an attachment.
 Learn more about enriching events with screenshots in our <PlatformLink to="/enriching-events/screenshots/">Screenshots documentation</PlatformLink>.
 
 </SdkOption>
 
-<SdkOption name="attachViewHierarchy" type="bool">
+<SdkOption name="attachViewHierarchy" type="bool" defaultValue="false">
 
 Renders a JSON representation of the entire view hierarchy of the application when an error happens and includes it as an attachment.
 Learn more about enriching events with the view hierarchy in our <PlatformLink to="/enriching-events/viewhierarchy/">View Hierarchy documentation</PlatformLink>.
 
 </SdkOption>
 
-<SdkOption name="idleTimeout" type="int" defaultValue="3000">
+<SdkOption name="idleTimeout" type="double" defaultValue="3.0">
 
-The idle time, measured in ms, to wait until a <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#user-interaction-tracing">user interaction transaction</PlatformLink> will be automatically finished. The transaction will use the end timestamp of the last finished span as the endtime for the transaction.
+The idle time, measured in seconds, to wait until a <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#user-interaction-tracing">user interaction transaction</PlatformLink> will be automatically finished. The transaction will use the end timestamp of the last finished span as the end time for the transaction.
 
 </SdkOption>
 
@@ -280,7 +290,7 @@ Learn more in the <PlatformLink to="/user-feedback/">User Feedback documentation
 
 </PlatformSection>
 
-<SdkOption name="sendClientReports" type="bool">
+<SdkOption name="sendClientReports" type="bool" defaultValue="true">
 
 Set this boolean to `false` to disable sending of client reports. Client reports are a protocol feature that let clients send status reports about themselves to Sentry. They are currently mainly used to emit outcomes for events that were never sent.
 
@@ -530,7 +540,9 @@ SentrySDK.start { options in
 
 <SdkOption name="onCrashedLastRun" type="function">
 
-A block called after SDK initialization when the last execution terminated with a crash. This callback is invoked synchronously during SDK initialization, so keep any work here minimal.
+**Deprecated.** Use <PlatformIdentifier name="onLastRunStatusDetermined" /> instead, which is called regardless of whether the app crashed.
+
+A block called after SDK initialization when the last execution terminated with a crash. This callback is invoked synchronously during SDK initialization, so keep any work here minimal. It is only executed once during the entire run of the program. Crash reporting is automatically disabled if a debugger is attached, and there is no guarantee this callback runs on the main thread.
 
 ```swift {tabTitle:Swift}
 import Sentry
@@ -552,6 +564,50 @@ SentrySDK.start { options in
     options.onCrashedLastRun = ^(SentryEvent * _Nonnull event) {
         // Perform actions when a crash was detected on last run
         NSLog(@"App crashed on last run");
+    };
+}];
+```
+
+</SdkOption>
+
+<SdkOption name="onLastRunStatusDetermined" type="function">
+
+A block called shortly after SDK initialization when the crash status of the last program execution has been determined. Unlike <PlatformIdentifier name="onCrashedLastRun" />, this callback is invoked regardless of whether the app crashed:
+
+- If the last run ended with a crash, `status` is `SentryLastRunStatus.didCrash` and `crashEvent` contains the crash event.
+- If the last run did not end with a crash, `status` is `SentryLastRunStatus.didNotCrash` and `crashEvent` is `nil`.
+
+This callback is only executed once per `SentrySDK.start(configureOptions:)` lifecycle, and it is not guaranteed to be called on the main thread. Crash reporting is automatically disabled while a debugger is attached, in which case the callback reports `didNotCrash` even if the app crashed.
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.onLastRunStatusDetermined = { status, crashEvent in
+        switch status {
+        case .didCrash:
+            print("App crashed on last run: \(String(describing: crashEvent))")
+        case .didNotCrash:
+            print("App did not crash on last run")
+        @unknown default:
+            break
+        }
+    }
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.onLastRunStatusDetermined = ^(SentryLastRunStatus status, SentryEvent * _Nullable crashEvent) {
+        if (status == SentryLastRunStatusDidCrash) {
+            NSLog(@"App crashed on last run: %@", crashEvent);
+        } else {
+            NSLog(@"App did not crash on last run");
+        }
     };
 }];
 ```
