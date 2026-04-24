@@ -100,6 +100,21 @@ You can compare several metrics side-by-side in a single Explorer view and deriv
 - Click **Add Metric** to add another metric query to the page. Each query gets its own panel and a short label (`A`, `B`, `C`, …) so you can reference it elsewhere. You can reorder queries by dragging their panels, and add up to 26 queries at once.
 - Click **Add Equation** to create a calculated series that references existing metric labels — for example, `A / B` to compute a ratio between two counters, or `A - B` to subtract a baseline from a current value. Equations appear alongside your metric queries and can be added to dashboards and monitors alongside the underlying metrics.
 
+#### Example: A Custom Apdex Score
+
+One common use of multiple queries and equations together is deriving a ratio-based KPI from a single latency metric. The screenshot below shows a board inspired by [Apdex](https://en.wikipedia.org/wiki/Apdex) (Application Performance Index), a user-satisfaction score that buckets response times into Satisfied and Tolerating zones relative to a target threshold `T`.
+
+In this example, the source metric is `dashboards.widget.onEdit`, which captures the duration of each widget edit:
+
+- **A** counts **Satisfied** events with the filter `value < 100` (where `T = 100ms`).
+- **B** counts events in a **Tolerating** band with the filters `value > 200` and `value < 400`.
+- **C** counts **Total** events with no filter applied.
+- **f1** combines the buckets with the equation `(A + (B / 2)) / C` to produce a single Apdex-inspired score.
+
+This example demonstrates how threshold filters split one source metric into buckets, and an equation composes those buckets into a single KPI. The same approach works for error rates, conversion rates, SLO scores, and other ratio-style metrics.
+
+![Metric equation example =800x](./img/metric-equation-example.png)
+
 ## Turning Metrics Into Monitors
 
 Any metric query you build in the Explorer can be turned into a [Monitor](/product/monitors-and-alerts/monitors/) so you get notified when its behavior changes.
@@ -141,6 +156,12 @@ Application Metrics debugging workflow:
 
 Instead of "metric alert → guesswork," debugging becomes a **single flow**: Metric spike → sample → trace → root cause.
 
+### When a Sample Doesn't Have a Trace
+
+Application Metrics are typically sampled at 100% while traces are usually sampled at a much lower rate, so some metric events won't have a trace attached to them. When that happens, use the metric's attributes (such as release, environment, or route) to find a comparable trace in [Trace Explorer](/product/explore/trace-explorer/). 
+
+[Cross-Event Querying](/product/explore/trace-explorer/#cross-event-querying-beta) (currently in Beta) makes this easier by letting you filter traces based on related spans and logs. The comparable trace gives you the same debugging context as a directly attached one.
+
 ## Metric Attributes
 
 Each metric event automatically includes:
@@ -170,7 +191,7 @@ Application Metrics are best for **application and code-based health signals**, 
 - Success/failure rates
 
 **Not ideal for Application Metrics:**
-- Infrastructure metrics (CPU, memory, disk) - use APM tools
+- Infrastructure metrics (CPU, memory, disk) - a tool purpose-built for this, like Prometheus, is a better fit
 - Log aggregation - use [Logs](/product/explore/logs/)
 - Full request tracing - use [Traces](/product/explore/trace-explorer/)
 
