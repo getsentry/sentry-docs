@@ -1,0 +1,196 @@
+---
+title: Sampling Strategies
+sidebar_order: 17
+description: "Configure trace sampling to capture 100% of AI agent runs without sampling all traffic."
+keywords:
+  - AI sampling
+  - tracesSampler
+  - agent tracing
+  - head-based sampling
+  - gen_ai spans
+---
+
+Sentry uses head-based sampling, which means the sampling decision happens once at the root span. All child spans, including `gen_ai.*` operations, inherit that decision. If the root span is dropped, every nested LLM call, tool execution, and agent handoff in the trace is lost with it.
+
+Agent runs can produce many spans per execution. You either capture the full span tree or lose it entirely. A 10% sample rate means you lose visibility into 90% of agent failures.
+
+## Sample Standalone Agent Runs at 100%
+
+When agent runs are the root span (cron jobs, queue consumers, CLI scripts), match on the presence of the `gen_ai.operation.name` attribute:
+
+### JavaScript
+
+```javascript
+Sentry.init({
+  dsn: process.env.SENTRY_DSN,
+  tracesSampler: ({ name, attributes, inheritOrSampleWith }) => {
+    if (attributes?.["gen_ai.operation.name"]) {
+      return 1.0;
+    }
+
+    return inheritOrSampleWith(0.2);
+  },
+});
+```
+
+### Python
+
+```python
+def traces_sampler(sampling_context):
+    attributes = sampling_context.get("transaction_context", {}).get("data") or {}
+
+    if attributes.get("gen_ai.operation.name"):
+        return 1.0
+
+    parent = sampling_context.get("parent_sampled")
+    if parent is not None:
+        return float(parent)
+
+    return 0.2
+
+sentry_sdk.init(dsn="...", traces_sampler=traces_sampler)
+```
+
+## Sample HTTP Routes That Serve AI Features
+
+When agent runs are nested inside HTTP request handlers (the more common case), the root span is the HTTP transaction. You need to identify the routes that trigger AI work and sample those at 100%:
+
+### JavaScript
+
+```javascript
+Sentry.init({
+  dsn: process.env.SENTRY_DSN,
+  tracesSampler: ({ name, attributes, inheritOrSampleWith }) => {
+    // Standalone gen_ai root spans
+    if (attributes?.["gen_ai.operation.name"]) {
+      return 1.0;
+    }
+
+    // HTTP routes that serve AI features
+    if (
+      name?.includes("/api/chat") ||
+      name?.includes("/api/agent") ||
+      name?.includes("/api/generate")
+    ) {
+      return 1.0;
+    }
+
+    return inheritOrSampleWith(0.2);
+  },
+});
+```
+
+### Python
+
+```python
+def traces_sampler(sampling_context):
+    tx_context = sampling_context.get("transaction_context", {})
+    attributes = tx_context.get("data") or {}
+    op = tx_context.get("op", "")
+    name = tx_context.get("name", "")
+
+    # Standalone gen_ai root spans
+    if attributes.get("gen_ai.operation.name"):
+        return 1.0
+
+    # HTTP routes that serve AI features
+    if op == "http.server" and any(
+        p in name for p in ["/api/chat", "/api/agent", "/api/generate"]
+    ):
+        return 1.0
+
+    # Honor parent decision in distributed traces
+    parent = sampling_context.get("parent_sampled")
+    if parent is not None:
+        return float(parent)
+
+    return 0.2
+
+sentry_sdk.init(dsn="...", traces_sampler=traces_sampler)
+```
+
+<Alert level="info">
+
+Replace `/api/chat`, `/api/agent`, and `/api/generate` with the actual routes in your application that handle AI requests.
+
+</Alert>
+
+## Cost Comparison
+
+LLM API calls cost significantly more per agent run than the trace events Sentry ingests for the same run. Dropping AI traces to save on observability doesn't make sense when the LLM calls behind them cost orders of magnitude more.
+
+## Supplement With Metrics and Logs
+
+If 100% trace sampling isn't feasible at your scale, you can supplement lower trace rates with metrics and structured logs that are emitted on every LLM call, regardless of sampling.
+
+### Metrics
+
+Emit [custom metrics](/product/explore/metrics/) on every LLM call to track token usage, latency, and error rates independently of traces:
+
+```javascript
+import * as Sentry from "@sentry/node";
+
+Sentry.metrics.distribution("gen_ai.token_usage", result.usage.totalTokens, {
+  unit: "none",
+  attributes: {
+    model: "claude-sonnet-4-6",
+    endpoint: "/api/chat",
+  },
+});
+
+Sentry.metrics.distribution("gen_ai.latency", responseTimeMs, {
+  unit: "millisecond",
+  attributes: { model: "claude-sonnet-4-6" },
+});
+```
+
+```python
+import sentry_sdk
+
+sentry_sdk.metrics.distribution(
+    "gen_ai.token_usage",
+    result.usage.total_tokens,
+    attributes={
+        "model": "claude-sonnet-4-6",
+        "endpoint": "/api/chat",
+    },
+)
+
+sentry_sdk.metrics.distribution(
+    "gen_ai.latency",
+    response_time_ms,
+    unit="millisecond",
+    attributes={"model": "claude-sonnet-4-6"},
+)
+```
+
+### Structured Logs
+
+Use [Sentry structured logging](/product/explore/logs/) to capture per-call details:
+
+```javascript
+Sentry.logger.info("LLM call completed", {
+  model: "claude-sonnet-4-6",
+  input_tokens: result.usage.promptTokens,
+  output_tokens: result.usage.completionTokens,
+  latency_ms: responseTimeMs,
+  status: "success",
+});
+```
+
+```python
+sentry_sdk.logger.info(
+    "LLM call completed",
+    model="claude-sonnet-4-6",
+    input_tokens=result.usage.prompt_tokens,
+    output_tokens=result.usage.completion_tokens,
+    latency_ms=response_time_ms,
+    status="success",
+)
+```
+
+## Next Steps
+
+- [Getting Started](/ai/monitoring/agents/getting-started/)
+- [Model Costs](/ai/monitoring/agents/costs/)
+- [AI Agents Dashboard](/ai/monitoring/agents/dashboards/)
