@@ -1,0 +1,106 @@
+---
+title: Set Up Snapshots
+sidebar_title: Snapshots
+sidebar_order: 4950
+sidebar_section: features
+description: Set up snapshots for iOS apps using Snapshot Previews or your preferred snapshot library.
+beta: true
+---
+
+<Include name="feature-available-for-user-group-early-adopter" />
+
+Set up [Snapshots](/product/snapshots/) for your iOS app. Generate snapshots locally or in your own CI using your preferred snapshot library, then upload the generated images to Sentry for image diffing, visual review, and GitHub status checks.
+
+## Step 1: Generate Images
+
+There are two paths for generating snapshot images on iOS:
+
+- **From Snapshot Previews (recommended)** — if you don't generate snapshots yet, use [SnapshotPreviews](https://github.com/EmergeTools/SnapshotPreviews), our no code snapshot generation Swift package that turns every `#Preview` macro and `PreviewProvider` in your project into a snapshot.
+- **From an existing snapshot tool** — if you already use [swift-snapshot-testing](https://github.com/pointfreeco/swift-snapshot-testing) or another tool, just point `sentry-cli` at the directory it writes images to.
+
+### From Snapshot Previews (Recommended)
+
+If you don't generate snapshots yet, we recommend using [SnapshotPreviews](https://github.com/EmergeTools/SnapshotPreviews), our no code snapshot generation Swift package that turns every `#Preview` and `PreviewProvider` in your project into a snapshot.
+
+Create a test that subclasses `SnapshotTest`:
+
+```swift
+import SnapshottingTests
+
+class YourAppSnapshotTest: SnapshotTest {
+  // Return nil to snapshot all previews, or an array of preview
+  // names (regex supported) to include.
+  override class func snapshotPreviews() -> [String]? { nil }
+
+  // Return preview names to exclude, or nil.
+  override class func excludedSnapshotPreviews() -> [String]? { nil }
+}
+```
+
+Set `TEST_RUNNER_SNAPSHOTS_EXPORT_DIR` before running the tests so SnapshotPreviews writes images to disk instead of attaching them to the XCTest result bundle:
+
+```bash
+export TEST_RUNNER_SNAPSHOTS_EXPORT_DIR="$PWD/snapshot-images"
+```
+
+Continue to [Step 2](#step-2-test-locally).
+
+### From an Existing Snapshot Tool
+
+Use this path if you already generate snapshots with another tool. `sentry-cli` is directory-based — any tool that writes PNG or JPEG files to a directory works.
+
+#### swift-snapshot-testing
+
+If you use Point-Free's [swift-snapshot-testing](https://github.com/pointfreeco/swift-snapshot-testing), set the record environment variable so CI always writes fresh images for upload:
+
+```bash
+export TEST_RUNNER_SNAPSHOT_TESTING_RECORD=all
+```
+
+Images land in `__Snapshots__/<TestClass>/` next to your test file — that's the directory you upload to Sentry.
+
+<Alert>
+In record mode, swift-snapshot-testing reports every test as a "failure" because it's recording rather than comparing. Use `continue-on-error: true` on your CI test step so the upload step still runs.
+</Alert>
+
+For a full working setup, see the [swift-snapshot-testing CI workflow](https://github.com/EmergeTools/hackernews/blob/main/.github/workflows/ios_sentry_upload_swift_snapshots.yml) in our Hacker News sample app.
+
+Continue to [Step 2](#step-2-test-locally).
+
+#### Other Tools
+
+Any tool that produces PNG or JPEG images works — custom `XCTest` render helpers, other open-source libraries, or manual screenshot workflows. Point your upload command at the directory your tool writes to. See [Uploading Snapshots](/product/snapshots/uploading-snapshots/) for the expected file and metadata layout.
+
+## Step 2: Test Locally
+
+Run your snapshot tests, then upload the resulting directory with `sentry-cli`:
+
+```bash
+ export TEST_RUNNER_SNAPSHOTS_EXPORT_DIR="$PWD/snapshot-images"
+
+ xcodebuild test \
+  -scheme YourScheme \
+  -sdk iphonesimulator \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+  -only-testing:YourAppTests/YourAppSnapshotTest \
+  CODE_SIGNING_ALLOWED=NO
+
+sentry-cli build snapshots --app-id com.example.your-app $TEST_RUNNER_SNAPSHOTS_EXPORT_DIR
+```
+
+Replace the path with the directory your library writes to (for swift-snapshot-testing, that's `YourAppTests/__Snapshots__/YourSnapshotTests`). See [Uploading Snapshots](/product/snapshots/uploading-snapshots/) for the full CLI reference and metadata schema.
+
+## Step 3: Integrate Into CI
+
+Once the local upload succeeds, wire the same commands into your CI. See [Uploading Snapshots](/product/snapshots/uploading-snapshots/#upload-with-ci) for the general GitHub Actions structure.
+
+For end-to-end iOS examples, see the workflows in our [Hacker News sample app](https://github.com/EmergeTools/hackernews):
+
+- [SnapshotPreviews workflow](https://github.com/EmergeTools/hackernews/blob/main/.github/workflows/ios_sentry_upload_snapshots.yml) — builds once, fans out across multiple simulators in a matrix, then aggregates all images into a single upload.
+- [swift-snapshot-testing workflow](https://github.com/EmergeTools/hackernews/blob/main/.github/workflows/ios_sentry_upload_swift_snapshots.yml) — records all snapshots in one job and uploads them via the [Sentry Fastlane plugin](https://github.com/getsentry/sentry-fastlane-plugin).
+
+## Best Practices
+
+- **Pin your simulator device and Xcode version.** Use the same simulator model, OS, and Xcode across CI runs to avoid spurious diffs caused by rendering differences.
+- **Isolate snapshot tests.** Put them in a dedicated test class or test plan so you can run them independently with `-only-testing`.
+- **Build once, run many.** If you snapshot across multiple simulators, `xcodebuild build-for-testing` once and share the products with downstream `test-without-building` jobs — see the [SnapshotPreviews workflow](https://github.com/EmergeTools/hackernews/blob/main/.github/workflows/ios_sentry_upload_snapshots.yml) for a working pattern.
