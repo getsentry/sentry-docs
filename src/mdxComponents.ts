@@ -51,6 +51,7 @@ import {RelayMetrics} from './components/relayMetrics';
 import {SandboxLink} from './components/sandboxLink';
 import {SdkApi} from './components/sdkApi';
 import {SdkOption} from './components/sdkOption';
+import {SignedInCheck} from './components/signedInCheck';
 import {SignInNote} from './components/signInNote';
 import {SmartLink} from './components/smartLink';
 import {SpecChangelog} from './components/specChangelog';
@@ -125,6 +126,7 @@ export function mdxComponents(
     RelayMetrics,
     SandboxLink,
     CopyableCard,
+    SignedInCheck,
     SignInNote,
     SpecChangelog,
     SpecMeta,
