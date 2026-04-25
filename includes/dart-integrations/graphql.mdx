@@ -1,0 +1,559 @@
+---
+title: GraphQL Integration
+description: "Learn more about the Sentry GraphQL (sentry_link) integration for the Dart SDK."
+sidebar_order: 5
+platforms:
+  - dart
+  - flutter
+---
+
+The `sentry_link` integration adds Sentry instrumentation to GraphQL clients built on the [gql](https://pub.dev/packages/gql) ecosystem.
+
+It helps you capture:
+
+- **Link exceptions** (transport/client failures such as network and parsing issues)
+- **GraphQL response errors** (entries in `response.errors`)
+- **Tracing spans** for queries, mutations, and subscriptions
+- **Breadcrumbs** for successful GraphQL operations (operation name and duration)
+- **Request context** (operation name, query, variables, and response data) attached to captured events
+
+## Compatibility
+
+`sentry_link` works with the `gql` ecosystem and is commonly used with:
+
+- [`gql_link`](https://pub.dev/packages/gql_link)
+- [`graphql`](https://pub.dev/packages/graphql)
+
+Other clients built on `gql` packages generally work too.
+
+## Install
+
+Add `sentry_link` and your GraphQL client dependency:
+
+```yml {filename:pubspec.yaml}
+dependencies:
+  sentry: ^{{@inject packages.version('sentry.dart', '8.13.0') }}
+  sentry_link: ^{{@inject packages.version('sentry.dart.link', '8.13.0') }}
+  graphql: ^5.1.3
+```
+
+## Configure
+
+After you initialize Sentry in your app, add `SentryGql.link()` to your GraphQL client:
+
+<Alert level="warning" title="Place SentryGql.link Before Your Terminating Link">
+
+`SentryGql.link()` must be placed before your terminating link (`HttpLink`, `DioLink`, etc.), since it works by wrapping the downstream request.
+
+For the widest coverage, place `SentryGql.link()` as the first link in the chain. That way it captures errors and traces time spent in any middleware (for example, `AuthLink`) as well as in the terminating link.
+
+</Alert>
+
+```dart
+import 'package:graphql/client.dart';
+import 'package:sentry/sentry.dart';
+import 'package:sentry_link/sentry_link.dart';
+
+final link = Link.from([
+  SentryGql.link(
+    shouldStartTransaction: false,
+    graphQlErrorsMarkTransactionAsFailed: false,
+  ),
+  // Add any middleware links (for example, AuthLink) here.
+  HttpLink(
+    'https://your-graphql-endpoint.com/graphql',
+    httpClient: SentryHttpClient(),
+    serializer: SentryRequestSerializer(),
+    parser: SentryResponseParser(),
+  ),
+]);
+
+final client = GraphQLClient(
+  cache: GraphQLCache(),
+  link: link,
+);
+```
+
+For better error context and grouping, add the recommended init options from [Advanced Configuration](#advanced-configuration).
+
+## `SentryGql.link()` Options
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| `shouldStartTransaction` | `bool` | _required_ | Set to `true` to start a transaction per GraphQL operation when no active span/transaction exists. |
+| `graphQlErrorsMarkTransactionAsFailed` | `bool` | _required_ | Set to `true` to mark GraphQL spans/transactions as `unknownError` when `response.errors` exists. |
+| `enableBreadcrumbs` | `bool` | `true` | Records breadcrumbs for successful GraphQL operations. |
+| `reportExceptions` | `bool` | `true` | Captures `LinkException` failures as Sentry events. |
+| `reportExceptionsAsBreadcrumbs` | `bool` | `false` | Records `LinkException` failures as breadcrumbs instead of events. |
+| `reportGraphQlErrors` | `bool` | `true` | Captures GraphQL response errors as Sentry events. |
+| `reportGraphQlErrorsAsBreadcrumbs` | `bool` | `false` | Records GraphQL response errors as breadcrumbs instead of events. |
+
+## Error Reporting Layers
+
+`sentry_link` reports two different failure layers:
+
+1. **Link exceptions (`reportExceptions*`)**: transport/client-side failures from the link chain, such as `ServerException`, `NetworkException`, and parser/serialization failures.
+2. **GraphQL response errors (`reportGraphQlErrors*`)**: application-layer errors returned in `response.errors` (for example, resolver, validation, or authorization errors).
+
+## Enable Tracing
+
+<Alert>
+
+Capturing transactions requires that you first <PlatformLink to="/tracing/">set up tracing</PlatformLink> if you haven't already.
+
+</Alert>
+
+When you want GraphQL transactions and spans, enable tracing in your SDK initialization and start transactions in `SentryGql.link()`:
+
+<PlatformSection supported={["dart"]}>
+
+```dart
+import 'package:graphql/client.dart';
+import 'package:sentry/sentry.dart';
+import 'package:sentry_link/sentry_link.dart';
+
+await Sentry.init((options) {
+  options.dsn = '___PUBLIC_DSN___';
+  options.tracesSampleRate = 1.0;
+});
+
+final link = Link.from([
+  SentryGql.link(
+    shouldStartTransaction: true,
+    graphQlErrorsMarkTransactionAsFailed: true,
+  ),
+  HttpLink(
+    'https://your-graphql-endpoint.com/graphql',
+    httpClient: SentryHttpClient(),
+    serializer: SentryRequestSerializer(),
+    parser: SentryResponseParser(),
+  ),
+]);
+
+final client = GraphQLClient(cache: GraphQLCache(), link: link);
+```
+
+</PlatformSection>
+
+<PlatformSection supported={["dart.flutter"]}>
+
+```dart
+import 'package:graphql/client.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:sentry_link/sentry_link.dart';
+
+await SentryFlutter.init((options) {
+  options.dsn = '___PUBLIC_DSN___';
+  options.tracesSampleRate = 1.0;
+});
+
+final link = Link.from([
+  SentryGql.link(
+    shouldStartTransaction: true,
+    graphQlErrorsMarkTransactionAsFailed: true,
+  ),
+  HttpLink(
+    'https://your-graphql-endpoint.com/graphql',
+    httpClient: SentryHttpClient(),
+    serializer: SentryRequestSerializer(),
+    parser: SentryResponseParser(),
+  ),
+]);
+
+final client = GraphQLClient(cache: GraphQLCache(), link: link);
+```
+
+</PlatformSection>
+
+Tracing behavior:
+
+- Span descriptions follow `GraphQL: "{operationName}" {type}`, for example `GraphQL: "LoadPosts" query`.
+- Span operations are `http.graphql.query`, `http.graphql.mutation`, and `http.graphql.subscription`.
+- If no active transaction exists and `shouldStartTransaction` is `true`, the SDK creates one automatically.
+- Span status is set as follows:
+  - Success → `SpanStatus.ok()`
+  - `response.errors` present and `graphQlErrorsMarkTransactionAsFailed` is `true` → `SpanStatus.unknownError()`
+  - `response.errors` present and `graphQlErrorsMarkTransactionAsFailed` is `false` → `SpanStatus.ok()`
+  - A thrown `LinkException` → `SpanStatus.unknownError()` (regardless of flag values)
+- `SentryRequestSerializer` and `SentryResponseParser` add child spans with operation `serialize.http.client` for request serialization and response parsing.
+
+## Advanced Configuration
+
+For better context and issue grouping, we recommend this initialization setup:
+
+<PlatformSection supported={["dart"]}>
+
+```dart
+import 'package:sentry/sentry.dart';
+import 'package:sentry_link/sentry_link.dart';
+
+await Sentry.init((options) {
+  // ... your existing Sentry options
+
+  // Filter duplicate HTTP breadcrumbs for GraphQL requests.
+  options.beforeBreadcrumb = graphQlFilter();
+
+  // Preserve nested LinkException causes for better error context.
+  options.addGqlExtractors();
+
+  // Improve stack trace grouping by excluding sentry_link internals.
+  options.addSentryLinkInAppExcludes();
+});
+```
+
+</PlatformSection>
+
+<PlatformSection supported={["dart.flutter"]}>
+
+```dart
+import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:sentry_link/sentry_link.dart';
+
+await SentryFlutter.init((options) {
+  // ... your existing Sentry options
+
+  // Filter duplicate HTTP breadcrumbs for GraphQL requests.
+  options.beforeBreadcrumb = graphQlFilter();
+
+  // Preserve nested LinkException causes for better error context.
+  options.addGqlExtractors();
+
+  // Improve stack trace grouping by excluding sentry_link internals.
+  options.addSentryLinkInAppExcludes();
+});
+```
+
+</PlatformSection>
+
+### Use DioLink Instead of HttpLink
+
+If you use [Dio](https://pub.dev/packages/dio), replace `HttpLink` with `DioLink` and use `sentry_dio`:
+
+```dart
+import 'package:dio/dio.dart';
+import 'package:gql_link/gql_link.dart';
+import 'package:sentry_dio/sentry_dio.dart';
+import 'package:sentry_link/sentry_link.dart';
+import 'package:gql_dio_link/gql_dio_link.dart';
+
+final link = Link.from([
+  SentryGql.link(
+    shouldStartTransaction: true,
+    graphQlErrorsMarkTransactionAsFailed: true,
+  ),
+  DioLink(
+    'https://your-graphql-endpoint.com/graphql',
+    client: Dio()..addSentry(),
+    serializer: SentryRequestSerializer(),
+    parser: SentryResponseParser(),
+  ),
+]);
+```
+
+### Customize GraphQL Breadcrumb Filtering
+
+You can either disable HTTP breadcrumbs globally or filter only GraphQL HTTP duplicates.
+For targeted filtering, set `beforeBreadcrumb` with your own `graphQlFilter()` callback:
+
+<PlatformSection supported={["dart"]}>
+
+```dart
+import 'package:sentry/sentry.dart';
+import 'package:sentry_link/sentry_link.dart';
+
+await Sentry.init((options) {
+  // ... your existing Sentry options
+  options.beforeBreadcrumb = graphQlFilter((breadcrumb, hint) {
+    // Add your custom filtering or mutation logic here.
+    return breadcrumb;
+  });
+});
+```
+
+</PlatformSection>
+
+<PlatformSection supported={["dart.flutter"]}>
+
+```dart
+import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:sentry_link/sentry_link.dart';
+
+await SentryFlutter.init((options) {
+  // ... your existing Sentry options
+  options.beforeBreadcrumb = graphQlFilter((breadcrumb, hint) {
+    // Add your custom filtering or mutation logic here.
+    return breadcrumb;
+  });
+});
+```
+
+</PlatformSection>
+
+### Improve LinkException Reports
+
+`LinkException` instances can contain nested causes. Add GraphQL extractors in your SDK initialization options callback so Sentry preserves that exception chain:
+
+<PlatformSection supported={["dart"]}>
+
+```dart
+import 'package:sentry/sentry.dart';
+import 'package:sentry_link/sentry_link.dart';
+
+await Sentry.init((options) {
+  // ... your existing Sentry options
+  options.addGqlExtractors();
+});
+```
+
+</PlatformSection>
+
+<PlatformSection supported={["dart.flutter"]}>
+
+```dart
+import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:sentry_link/sentry_link.dart';
+
+await SentryFlutter.init((options) {
+  // ... your existing Sentry options
+  options.addGqlExtractors();
+});
+```
+
+</PlatformSection>
+
+### Improve Stack Trace Grouping for sentry_link
+
+To keep `sentry_link` internals out of in-app stack frames, add:
+
+<PlatformSection supported={["dart"]}>
+
+```dart
+import 'package:sentry/sentry.dart';
+import 'package:sentry_link/sentry_link.dart';
+
+await Sentry.init((options) {
+  // ... your existing Sentry options
+  options.addSentryLinkInAppExcludes();
+});
+```
+
+</PlatformSection>
+
+<PlatformSection supported={["dart.flutter"]}>
+
+```dart
+import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:sentry_link/sentry_link.dart';
+
+await SentryFlutter.init((options) {
+  // ... your existing Sentry options
+  options.addSentryLinkInAppExcludes();
+});
+```
+
+</PlatformSection>
+
+<Expandable title="Advanced HttpLink response-decoder tracing (optional)">
+
+This pattern adds a custom span around `HttpLink` response decoding.
+Use it when you need deeper visibility into JSON decoding time.
+
+```dart
+import 'dart:async';
+import 'dart:convert';
+
+import 'package:graphql/client.dart';
+import 'package:http/http.dart' as http;
+import 'package:sentry/sentry.dart';
+import 'package:sentry_link/sentry_link.dart';
+
+final link = Link.from([
+  SentryGql.link(
+    shouldStartTransaction: true,
+    graphQlErrorsMarkTransactionAsFailed: true,
+  ),
+  HttpLink(
+    'https://your-graphql-endpoint.com/graphql',
+    httpClient: SentryHttpClient(),
+    serializer: SentryRequestSerializer(),
+    parser: SentryResponseParser(),
+    httpResponseDecoder: sentryResponseDecoder,
+  ),
+]);
+
+Map<String, dynamic>? sentryResponseDecoder(
+  http.Response response, {
+  Hub? hub,
+}) {
+  final currentHub = hub ?? HubAdapter();
+  final span = currentHub.getSpan()?.startChild(
+        'serialize.http.client',
+        description: 'http response deserialization',
+      );
+  Map<String, dynamic>? result;
+  try {
+    result = _defaultHttpResponseDecoder(response);
+    span?.status = const SpanStatus.ok();
+  } catch (error) {
+    span?.status = const SpanStatus.unknownError();
+    span?.throwable = error;
+    rethrow;
+  } finally {
+    unawaited(span?.finish());
+  }
+  return result;
+}
+
+Map<String, dynamic>? _defaultHttpResponseDecoder(http.Response response) {
+  return json.decode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>?;
+}
+```
+
+</Expandable>
+
+<Expandable title="Additional extractors for graphql package exceptions (optional)">
+
+If you use [`graphql`](https://pub.dev/packages/graphql) and want even deeper exception-cause chains, you can add custom extractors:
+
+<PlatformSection supported={["dart"]}>
+
+```dart
+import 'package:graphql/graphql.dart';
+import 'package:sentry/sentry.dart';
+import 'package:sentry_link/sentry_link.dart';
+
+await Sentry.init((options) {
+  // ... your existing Sentry options
+  options.addExceptionCauseExtractor(UnknownExceptionExtractor());
+  options.addExceptionCauseExtractor(NetworkExceptionExtractor());
+  options.addExceptionCauseExtractor(CacheMissExceptionExtractor());
+  options.addExceptionCauseExtractor(OperationExceptionExtractor());
+  options.addExceptionCauseExtractor(CacheMisconfigurationExceptionExtractor());
+  options.addExceptionCauseExtractor(MismatchedDataStructureExceptionExtractor());
+  options.addExceptionCauseExtractor(UnexpectedResponseStructureExceptionExtractor());
+});
+
+class UnknownExceptionExtractor extends LinkExceptionExtractor<UnknownException> {}
+
+class NetworkExceptionExtractor extends LinkExceptionExtractor<NetworkException> {}
+
+class CacheMissExceptionExtractor extends LinkExceptionExtractor<CacheMissException> {}
+
+class CacheMisconfigurationExceptionExtractor
+    extends LinkExceptionExtractor<CacheMisconfigurationException> {}
+
+class MismatchedDataStructureExceptionExtractor
+    extends LinkExceptionExtractor<MismatchedDataStructureException> {}
+
+class UnexpectedResponseStructureExceptionExtractor
+    extends LinkExceptionExtractor<UnexpectedResponseStructureException> {}
+
+class OperationExceptionExtractor extends ExceptionCauseExtractor<OperationException> {
+  @override
+  ExceptionCause? cause(OperationException error) {
+    return ExceptionCause(error.linkException, error.originalStackTrace);
+  }
+}
+```
+
+</PlatformSection>
+
+<PlatformSection supported={["dart.flutter"]}>
+
+```dart
+import 'package:graphql/graphql.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:sentry_link/sentry_link.dart';
+
+await SentryFlutter.init((options) {
+  // ... your existing Sentry options
+  options.addExceptionCauseExtractor(UnknownExceptionExtractor());
+  options.addExceptionCauseExtractor(NetworkExceptionExtractor());
+  options.addExceptionCauseExtractor(CacheMissExceptionExtractor());
+  options.addExceptionCauseExtractor(OperationExceptionExtractor());
+  options.addExceptionCauseExtractor(CacheMisconfigurationExceptionExtractor());
+  options.addExceptionCauseExtractor(MismatchedDataStructureExceptionExtractor());
+  options.addExceptionCauseExtractor(UnexpectedResponseStructureExceptionExtractor());
+});
+
+class UnknownExceptionExtractor extends LinkExceptionExtractor<UnknownException> {}
+
+class NetworkExceptionExtractor extends LinkExceptionExtractor<NetworkException> {}
+
+class CacheMissExceptionExtractor extends LinkExceptionExtractor<CacheMissException> {}
+
+class CacheMisconfigurationExceptionExtractor
+    extends LinkExceptionExtractor<CacheMisconfigurationException> {}
+
+class MismatchedDataStructureExceptionExtractor
+    extends LinkExceptionExtractor<MismatchedDataStructureException> {}
+
+class UnexpectedResponseStructureExceptionExtractor
+    extends LinkExceptionExtractor<UnexpectedResponseStructureException> {}
+
+class OperationExceptionExtractor extends ExceptionCauseExtractor<OperationException> {
+  @override
+  ExceptionCause? cause(OperationException error) {
+    return ExceptionCause(error.linkException, error.originalStackTrace);
+  }
+}
+```
+
+</PlatformSection>
+
+</Expandable>
+
+## Verify
+
+### 1. Trigger a GraphQL Error
+
+Run a query with an intentional schema mistake (for example, misspelling a field):
+
+```dart
+import 'package:sentry/sentry.dart';
+import 'package:sentry_link/sentry_link.dart';
+import 'package:graphql/client.dart';
+
+final link = Link.from([
+  SentryGql.link(
+    shouldStartTransaction: false,
+    graphQlErrorsMarkTransactionAsFailed: false,
+  ),
+  HttpLink(
+    'https://your-graphql-endpoint.com/graphql',
+    httpClient: SentryHttpClient(),
+    serializer: SentryRequestSerializer(),
+    parser: SentryResponseParser(),
+  ),
+]);
+
+final client = GraphQLClient(cache: GraphQLCache(), link: link);
+
+final result = await client.query(
+  QueryOptions(
+    operationName: 'LoadPosts',
+    document: gql(r'''
+      query LoadPosts($id: ID!) {
+        post(id: $id) {
+          id
+          titl
+          body
+        }
+      }
+    '''),
+    variables: {'id': 50},
+  ),
+);
+```
+
+### 2. Confirm the Event in Issues
+
+Open your project in [sentry.io](https://sentry.io):
+
+- In **Issues**, confirm a GraphQL event includes operation name, query, variables, and response details.
+
+### 3. If Tracing Is Enabled, Confirm Transactions in Performance
+
+If you enabled tracing in [Enable Tracing](#enable-tracing), also verify:
+
+- In **Performance**, confirm a `GraphQL: "LoadPosts" query` transaction/span with GraphQL and serialization/parsing timing data.

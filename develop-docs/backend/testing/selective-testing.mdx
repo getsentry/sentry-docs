@@ -1,0 +1,56 @@
+---
+title: Selective Testing
+---
+
+Sentry's backend has a large test suite that takes a very long time to run. To mitigate long runtimes as part of a PR workflow, we employ a selective testing strategy.
+
+## How it works
+
+Selective testing uses code coverage data and direct import analysis to choose what tests to run based on what files changed in a PR.
+
+- Code coverage shows which tests execute specific source code.
+- Direct import analysis catches tests that import changed files, covering gaps in code coverage.
+
+# Using selective tests 
+
+## Locally (Sentry employees only)
+
+Both `sentry` and `getsentry` have a `make test-selective` make command that will leverage the same mechanisms to run only the tests you need locally. Try it out!
+
+You'll need the GCloud CLI authenticated with your `@sentry.io` Google workspace account to access the coverage data.
+
+## In CI
+
+Selective testing will automatically run for any PR created in the `sentry`/`getsentry` repos. 
+
+`master` will always run the full testing suite.
+
+### Opting-out in CI
+
+Have a particularly sensitive PR you want to run all tests on? Add the “Trigger: Override Selective Testing” label and your PR will run all tests.
+
+<img src="/selective-testing/selective-testing-override-label.png" alt="Selective testing override" style={{maxWidth: 300}} />
+
+There are a few key exceptions that will always run a full testing suite:
+
+- DB Migrations
+- Changes to specific options and configuration areas of `sentry`
+- Notable “core” files
+
+## Limitations
+
+### Code coverage holes
+
+The main limitation of selective testing is code coverage gaps. Code coverage is not perfect and can miss some spots. One example when a method in a base class is used, the implementing class might not be marked as executed. Take this example:
+
+```bash
+# my-model.py
+class MyModel
+
+# Usage in another file
+MyModel.dict()
+```
+
+While you might think `MyModel` would be marked as executed by the `MyModel.dict()` call, `dict()` is a function on `BaseModel` in pydantic, so code coverage sees this as `BaseModel` being used, not `MyModel`. This means if I changed `MyModel`, selective testing might miss usages of `MyModel.dict()` and therefore could miss breaking tests.
+
+The workaround here is simple - also run tests that directly import any changed file.

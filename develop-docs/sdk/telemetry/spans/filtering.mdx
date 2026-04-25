@@ -44,7 +44,7 @@ type IgnoreSpans = Array<IgnoreSpanNamePattern | IgnoreSpanFilter>
 
 Example:
 
-```js
+```js {tabTitle:TypeScript}
 Sentry.init({
   ignoreSpans: [
     // apply on span name
@@ -74,8 +74,42 @@ Sentry.init({
     }
   ]
 })
+
+// Note: The glob patterns used in the example serve an illustrative purpose.
+// They are not supported in JavaScript.
 ```
-(Note: The glob patterns used in the example serve an illustrative purpose. They are not supported in JavaScript.)
+
+```python {tabTitle:Python}
+sentry_sdk.init(
+    ignore_spans=[
+        # apply on span name
+        "GET /about",
+        "events.signal *",
+        r"api\/\d+",
+        # ignore health check GET requests with 200 status code
+        {
+            "name": r"healthz?",
+            "attributes": {
+                "http.method": "GET",
+                "http.status_code": 200,
+            }
+        },
+        # ignore all GET requests to /api/ with 200 status code
+        # (i.e. span name doesn't matter)
+        {
+            "attributes": {
+                "http.method": r"GET \/api\/.*",
+                "http.status_code": 200,
+            }
+        },
+        # ignore all spans with name starting with /imprint-
+        # if glob patterns are supported
+        {
+            "name": "/imprint-*"
+        },
+    ],
+)
+```
 
 ### Implementation Requirements
 
