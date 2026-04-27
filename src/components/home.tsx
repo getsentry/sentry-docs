@@ -262,21 +262,28 @@ export async function Home() {
                 Fix Bugs Faster with Seer
               </h3>
               <p className="text-sm text-[var(--gray-11)] dark:text-white leading-relaxed">
-                Debug applications automatically with{' '}
+                Debug applications with{' '}
                 <a
                   href="/product/ai-in-sentry/seer/"
                   className="text-[#8b5cf6] underline"
                 >
                   Seer
                 </a>
-                . Have Seer{' '}
+                . Get{' '}
+                <a
+                  href="/product/ai-in-sentry/seer/#seer-agent"
+                  className="text-[#8b5cf6] underline"
+                >
+                  AI-powered answers
+                </a>{' '}
+                to questions using your application data in Sentry. Have{' '}
                 <a
                   href="/product/ai-in-sentry/seer/autofix/"
                   className="text-[#8b5cf6] underline"
                 >
-                  fix issues
+                  Autofix
                 </a>{' '}
-                by running Autofix to generate fixes, and{' '}
+                generate fixes, and{' '}
                 <a
                   href="/product/ai-in-sentry/seer/code-review/"
                   className="text-[#8b5cf6] underline"
