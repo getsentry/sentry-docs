@@ -1,0 +1,78 @@
+---
+title: LangChain
+description: "Manually instrument LangChain in React Native to capture spans for chat models, chains, and tools."
+---
+
+_Import name: `Sentry.createLangChainCallbackHandler`_
+
+The `createLangChainCallbackHandler` helper creates a Sentry-aware [LangChain callback handler](https://js.langchain.com/docs/concepts/callbacks/) that records spans for chat models, LLM calls, chains, and tools with configurable input/output capture. The OpenTelemetry-based automatic integration available for Node.js does not work in React Native, so passing the handler explicitly to your LangChain operations is the only supported path.
+
+## Usage
+
+```javascript
+import * as Sentry from "@sentry/react-native";
+import { ChatAnthropic } from "@langchain/anthropic";
+
+// Create a Sentry-aware LangChain callback handler
+const callbackHandler = Sentry.createLangChainCallbackHandler({
+  recordInputs: true,
+  recordOutputs: true,
+});
+
+const model = new ChatAnthropic({
+  model: "claude-3-5-sonnet-20241022",
+  // Warning: API keys included in your app bundle will be visible to anyone who
+  // inspects the bundle. Proxy LLM calls through your own backend whenever possible.
+  apiKey: "your-api-key",
+});
+
+await model.invoke("Tell me a joke", {
+  callbacks: [callbackHandler],
+});
+```
+
+Make sure <PlatformLink to="/tracing/">tracing is enabled</PlatformLink> for the spans produced by this integration to be captured.
+
+## Configuration
+
+### Options
+
+The following options control what data is captured from LangChain operations:
+
+#### `recordInputs`
+
+_Type: `boolean` (optional)_
+
+Records inputs to LangChain operations (such as prompts and messages).
+
+Defaults to `true` if `sendDefaultPii` is `true`.
+
+#### `recordOutputs`
+
+_Type: `boolean` (optional)_
+
+Records outputs from LangChain operations (such as generated text and responses).
+
+Defaults to `true` if `sendDefaultPii` is `true`.
+
+## Supported Operations
+
+When the callback handler is attached, spans are produced for:
+
+- **Chat model invocations** - chat model calls
+- **LLM invocations** - LLM pipeline executions
+- **Chain executions** - chain invocations
+- **Tool executions** - tool calls
+
+The handler covers the following runnable entry points: `invoke()`, `stream()`, and `batch()`. It supports the following provider packages:
+
+- `@langchain/anthropic`
+- `@langchain/openai`
+- `@langchain/google-genai`
+- `@langchain/mistralai`
+- `@langchain/google-vertexai`
+- `@langchain/groq`
+
+## Supported Versions
+
+- `langchain`: `>=0.1.0 <2.0.0`
