@@ -2,8 +2,7 @@
 title: Slack
 sidebar_order: 1
 description: >-
-  Learn more about Sentry's Slack integration and how you can triage, resolve,
-  and archive Sentry issues directly from Slack.
+  Learn more about Sentry's Slack integration and how you can receive alerts, debug issues, and chat with Seer directly from Slack.
 og_image: /og-images/organization-integrations-notification-incidents-slack.png
 ---
 
@@ -37,7 +36,7 @@ In the next section, we'll walk you through configuring your notification settin
 
 ## Configure
 
-Use Slack for notifications and [alerts](#alert-rules) regarding issues, environments, deployment, etc.
+Use Slack for notifications and [alerts](#alerting) regarding issues, environments, deployment, etc.
 
 ### Personal Notifications
 
@@ -49,58 +48,94 @@ In order to receive personal notifications from our Slack integration, your Slac
 
 ### Team Notifications
 
-You can receive [team alert notifications](/product/alerts/create-alerts/issue-alert-config/#then-conditions-actions) from our Slack integration. To enable this feature, type `/sentry link team` in the desired Slack channel. To view a team's associated Slack channel in [sentry.io](https://sentry.io), navigate to **Settings > Teams > [Team] > Notifications**.
+You can receive [team alert notifications](/product/alerts/create-alerts/issue-alert-config/#then-conditions-actions) from our Slack integration. To enable this feature, type `/sentry link team [organization_slug]` in the desired Slack channel. To view a team's associated Slack channel in [sentry.io](https://sentry.io), navigate to **Settings > Teams > [Team] > Notifications**.
 
-### Alert Rules
+### Alerting
 
-Set up an alert rule by going to **Alerts** and clicking "Create Alert". From here, you can configure alerts to route notifications to your Slack workspace(s).
+After installing the Slack integration, you'll have the option to select Slack as an action for your alerts.
 
-#### Issue Alerts
+![Slack alert action form](./img/slack-alert-config.png)
 
-In [issue alerts](/product/alerts/alert-types/#issue-alerts), select "Send a Slack notification" in the actions dropdown and then select your workspace and channel. You can optionally select any tags to include in the alert as well as other text in the "notes" section. Mentions are supported in the "notes" section - to @ a user, include their user id like `<@USER_ID>`.
+Select the Slack workspace, and provide a channel or user you wish to notify. Optionally, you can specify any tags you'd like to include in the notification, as well as arbitrary text, like mentions or links to internal documentation.
 
-![Slack issue alert action](./img/slack_issue_alert.png)
+Sentry will validate access when saving the alert, but you can also send a test notification to double check.
 
-Once you receive a Slack notification for an issue alert, you can use the "Resolve", "Archive", or "Select Assignee..." buttons to update the Issue in Sentry.
+All issue types have their own appearance in Slack, and may differ slightly based on the alert, and available features.
 
-![Slack notification of Sentry issue](./img/slack-alert-message.png)
+![Slack notification of an error alert](./img/slack-alert-error.png)
 
-#### Metric Alerts
+For example, Error alerts will have tools to "Resolve", "Archive" and "Assignee" right from Slack, but with Seer access, you will get an initial guess at the root cause and the option to fix the issue right from Slack. These enhancements can be modified under **Settings > Seer > Advanced Settings > Enable Seer Context in Alerts**.
 
-In [metric alerts](/product/alerts/alert-types/#metric-alerts), select the Slack option in the dropdown that corresponds to your workspace and then select your channel:
+For metric issues, a chart of the metric's history will be included in the alert, with a follow-up alert appearing as a threaded reply for future status changes.
 
-![Slack metric alert action](./img/slack_metric_alert.png)
+![Slack notification of a metric alert](./img/slack-alert-metric.png)
 
-Metric alert Slack notifications include a chart of the metric's status and a link to investigate the alert further:
+## Seer Agent
 
-![Slack notification of Sentry metric alert](./img/slack-metric-alert-message.png)
+<Alert>
+  This is a new feature which may not be available to all organizations just yet, but stay tuned!
+</Alert>
 
-Slack notifications in metric alerts are also contained within threads, so all notifications related to a singular issue will be replies to the original notification.
+If your organization has access to Seer Agent, you'll be able to prompt it directly from Slack to help you debug issues and incidents. To trigger it, just invite the bot to a channel, and @mention it with whatever you need. If you haven't already, any interaction with Seer Agent will prompt you to link your Sentry account to the Slack Workspace, so it can verify your identity. It'll take a moment to figure out how to help, and add a message to the thread with its findings.
 
-Critical-level notifications will still be sent to the channel, and also contained in a thread.
+It has all the capabilities of the web version, but also automatically gathers context from any linked issues, or conversations in the thread, but keep in mind, it'll only reply to direct mentions when in a channel.
 
-An example of the experience looks like this:
+![Seer Agent initially mentioned in a Slack channel](./img/slack-agent-mention.png)
 
-![Slack Issue Alert Thread Example](./img/slack-issue-alert-thread-example.png)
+For [paid Slack Workspaces with access to AI assistant apps](https://slack.com/pricing), you can also open it as an Agent in Slack, using the dropdown in the top-right of your Slack window. This will open a new persistent panel in your Slack window for private conversations with Seer Agent. In these conversations, you don't have to mention it every time and new chats will open with a few example prompts to get you started.
 
-### Troubleshooting
+![Open Seer Agent conversation panel in Slack with suggested prompts](./img/slack-agent-panel.png)
 
-#### Rate Limiting Error
+If you happen to have a single Slack Workspace connected to multiple Sentry organizations, Seer Agent will automatically try to infer the Sentry organization to search based on thread context (e.g. Sentry links). If this behaviour doesn't fit your needs, you can use `/sentry set org [organization_slug]` command to manually set your preference when interacting with Seer Agent. Your chats and mentions will fallback to this set organization if no organization could be inferred.
 
-If you're attempting to save a Slack alert rule and are receiving the following error: "Requests to slack were rate limited. Please try again later.", you may enter in the channel or user ID in addition to the channel name.
+![Example set default organization Slack command](./img/slack-preference-command.png)
+
+## Permissions
+
+In order for Sentry to be able to notify and debug your issues from Slack, we request the following permission when you install the app. The following are required, and apply to the Slack app being added to your workspace.
+
+| Required Bot Scope     | Usage                                                                                                                                            |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `assistant:write`      | Allows Seer to act as an [AI Assistant in Slack](https://slack.com/help/articles/33076000248851-Understand-AI-apps-in-Slack).                    |
+| `app_mentions:read`    | Allows Slack to notify Sentry when a user has @mentioned the bot.                                                                                |
+| `channels:read`        | Allows Sentry to view info about, list, and validate public channels in your workspace. Used primarily for configuring alerts.                   |
+| `chat:write`           | Allows Sentry to send/update messages, such as alerts, notifications, and responses.                                                             |
+| `chat:write.customize` | Allows Sentry to customize the bot's appearance when sending messages.                                                                           |
+| `chat:write.public`    | Allows Sentry to post messages to public channels the bot hasn't been invited to. It cannot read the contents of these channels with this scope. |
+| `commands`             | Enables the `/sentry` slash command, for controlling your Sentry integration settings, and account linking from Slack.                           |
+| `groups:read`          | Allows Sentry to view info about, list and validate private channels **that the bot has been added to** in your workspace.                       |
+| `im:history`           | Allows Slack to notify Sentry when a user direct messages the bot, and enables the bot to read through the conversation history when responding. |
+| `im:read`              | Allows Sentry to read basic information about direct messages sent to the bot.                                                                   |
+| `links:read`           | Allows Slack to notify Sentry when `sentry.io` links are shared in your workspace, allowing for rich previews.                                   |
+| `links:write`          | Allows Sentry to unfurl `sentry.io` links shared in your workspace into rich previews.                                                           |
+| `team:read`            | Allows Sentry to read the basic information (e.g. name, icon) of your workspace.                                                                 |
+| `users:read`           | Allows Sentry to view info about, list, and validate users in your workspace. Used primarily for configuring alerts, and linking accounts.       |
+
+Additionally we request the following optional bot scopes for the best experience when using Seer Agent.
+
+| Optional Bot Scope | Usage                                                                                        |
+| ------------------ | -------------------------------------------------------------------------------------------- |
+| `channels:history` | Allows Sentry to read the contents of threads in public channels                             |
+| `groups:history`   | Allows Sentry to read the contents of threads in private channels that it has been added to. |
+
+Lastly, we also require the following scopes on each Slack user's behalf. These are limited to read-only access, meant for unfurls and account linking.
+
+| User Scope         | Reason                                                                           |
+| ------------------ | -------------------------------------------------------------------------------- |
+| `links:read`       | Show rich previews when you share Sentry links in Slack.                         |
+| `users:read`       | Read your Slack profile to connect it with your Sentry account.                  |
+| `users:read.email` | Use your Slack email address to find and link your Sentry account automatically. |
+
+More details on the scopes and their technical usage can be found on the [self-hosted Slack integration docs](https://develop.sentry.dev/integrations/slack/#scopes).
+
+## Troubleshooting
+
+### Rate Limiting Error
+
+If you're attempting to save a Slack alert and are receiving the following error: "Requests to slack were rate limited. Please try again later.", you may enter in the channel or user ID in addition to the channel name.
 
 To find a channel's ID in Slack click the name of the channel at the top of the application and the channel ID will be shown at the bottom of the pop up. To find a user's ID click on their avatar >> "View full profile" >> ... >> "Copy member ID".
 
-#### Can't Add Alert Rule to Channel
+### Can't Use Channel for an Alert
 
-If you receive an error “The slack resource `example-channel` does not exist or has not been granted access in the `example-workspace` Slack workspace” while trying to add an alert rule, we recommend checking whether our app is installed in the channel. In Slack, right click on your channel's name from the left bar and select "Open channel settings". Then click on the "Integrations" tab; the Sentry app should be listed under "Apps".
-
-### Permissions
-
-For a full list of OAuth scopes the Sentry Slack app requests and why each is needed, see the [Slack app development page](https://develop.sentry.dev/integrations/slack/#scopes).
-
-## Deleting the legacy project-based Slack integration
-
-We recommend disabling the legacy project-based integration after setting up the global integration.
-
-Once you configure the global Slack integration and alert rules, you can disable the old project-based Slack integration. Go to each project that has the old project-based Slack enabled and disable it.
+If you receive an error “The slack resource `example-channel` does not exist or has not been granted access in the `example-workspace` Slack workspace” while trying to set up an alert, we recommend checking whether our app is installed in the channel. In Slack, right click on your channel's name from the left bar and select "Open channel settings". Then click on the "Integrations" tab; the Sentry app should be listed under "Apps".
