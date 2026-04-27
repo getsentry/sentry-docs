@@ -349,8 +349,9 @@ export async function Home() {
         </div>
         <h2 className="text-2xl mt-16 mb-6 font-medium">Get to know us</h2>
         <div className="flex flex-wrap gap-6">
+          {/* Row 1: What is Sentry and Sentry for AI */}
           <Card
-            className="w-full"
+            className="w-full md:w-[calc(50%-12px)]"
             href="/product/"
             image={RocketImage}
             imageAlt="Rocket image"
@@ -369,6 +370,7 @@ export async function Home() {
             description="Connect Sentry to your AI coding assistants with agent skills and MCP."
           />
 
+          {/* Row 2: Guides and Pricing & Billing */}
           <Card
             className="w-full md:w-[calc(50%-12px)]"
             href="/guides/"
@@ -380,15 +382,6 @@ export async function Home() {
 
           <Card
             className="w-full md:w-[calc(50%-12px)]"
-            href="/organization"
-            image={OrganizationImage}
-            imageAlt="Organization image"
-            title="Organization settings"
-            description="Information for setting up your organization's Sentry account."
-          />
-
-          <Card
-            className="w-full md:w-[calc(50%-12px)]"
             href="/pricing"
             image={CalculatorImage}
             imageAlt="Calculator image"
@@ -396,6 +389,26 @@ export async function Home() {
             description="All about our pricing and billing structure."
           />
 
+          {/* Row 3: Organization Settings and Integrations */}
+          <Card
+            className="w-full md:w-[calc(50%-12px)]"
+            href="/organization"
+            image={OrganizationImage}
+            imageAlt="Organization image"
+            title="Organization Settings"
+            description="Information for setting up your organization's Sentry account."
+          />
+
+          <Card
+            className="w-full md:w-[calc(50%-12px)]"
+            href="/integrations"
+            image={AiImage}
+            imageAlt="Integrations image"
+            title="Integrations"
+            description="Connect Sentry to your favorite tools for source control, issue tracking, notifications, and more."
+          />
+
+          {/* Row 4: API and CLI */}
           <Card
             className="w-full md:w-[calc(50%-12px)]"
             href="/api"
@@ -414,6 +427,7 @@ export async function Home() {
             description="How to use 'sentry-cli' on the command line."
           />
 
+          {/* Row 5: Security, Legal & PII and Concepts & References */}
           <Card
             className="w-full md:w-[calc(50%-12px)]"
             href="/security-legal-pii"
