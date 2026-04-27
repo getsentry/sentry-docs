@@ -572,10 +572,6 @@ const developerDocsRedirects = [
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const userDocsRedirects = [
   {
-    source: '/product/snapshots/android/',
-    destination: '/platforms/android/snapshots/',
-  },
-  {
     source: '/integrations/cursor/',
     destination: '/organization/integrations/coding-agents/cursor/',
   },
