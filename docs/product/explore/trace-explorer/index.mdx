@@ -154,6 +154,46 @@ If, for example, you see that 80% of spans in your selection come from a specifi
 - **Check coverage percentages**: Low coverage (e.g., `4.7% | 0.5%`) means the attribute isn't populated for most spans — take findings with caution.
 - **Use Group By together**: Combine attribute comparison with the Group By feature in Visualize to see trends broken down by your suspect attribute over time.
 
+## Cross-Event Querying (Beta)
+
+<Alert level="info">
+
+Cross-Event Querying is currently in beta. To access this feature, enable the Early Adopter flag in your [organization settings](https://sentry.io/orgredirect/settings/:orgslug/).
+
+</Alert>
+
+Cross-Event Querying lets you refine your span search by joining on additional Sentry event types connected by the same trace. This is useful when the data you need to filter on lives in a related event. For example, finding backend services that logged errors, or locating a representative trace based on attributes from an [Application Metrics](/product/explore/metrics/) sample, where the data is not in the span itself.
+
+Spans, logs, and application metrics are supported as join targets.
+
+### How to Use Cross-Event Querying
+
+1. In [Trace Explorer](https://sentry.io/orgredirect/organizations/:orgslug/traces/), click the **Plus (+)** button next to the search bar.
+2. Choose the event type you want to join on: **Spans**, **Logs**, or **Metrics**.
+3. If you chose **Metrics**, pick the specific metric you want to join on (for example, `checkout.duration`).
+4. Add filters for that event type, such as `severity:error` on a logs join, `db.query:"SELECT *"` on a spans join, or `value > 5000` on a metrics join.
+
+Trace Explorer returns spans whose trace also contains at least one event matching your join filter.
+
+### Example: Backend Services That Logged Errors
+
+To surface traces where a backend span ran alongside an error log:
+
+1. Enter your span filter, for example `span.op:http.server`.
+2. Click the **+** next to the search bar and choose **Logs**.
+3. Add `severity:error` to the Logs filter.
+
+The span results now include only traces that also contain at least one error log.
+
+### Example: Finding a Comparable Trace for a Metric
+
+[Application Metrics](/product/explore/metrics/) are typically sampled at 100%, while traces are sampled at a much lower rate, so a specific metric sample often won't have a trace attached to it. Joining on **Application Metrics** lets you search directly for traces that contain a matching metric event, giving you a comparable trace for the pattern you're investigating:
+
+1. In Trace Explorer, click the **Plus (+)** next to the search bar and choose **Application Metrics**.
+2. Pick the metric you want to trace back (for example, `checkout.duration`).
+3. Add filters that match the pattern you're investigating — for example, `value > 5000` for slow checkouts, or a custom attribute like `region:eu` to scope by segment.
+4. Pick a trace from the results. It contains at least one event of that metric matching your filter, giving you the same debugging context (spans, logs, related errors) as a trace directly attached to the metric sample would.
+
 ## Create Alerts and Dashboard Widgets From Queries or Compare Queries
 
 You can create Alerts and Dashboard widgets from your queries by clicking the "Save As" button:
