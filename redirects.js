@@ -756,6 +756,11 @@ const userDocsRedirects = [
     source: '/organization/integrations/flow-relay/',
     destination: '/integrations/third-party-integrations/',
   },
+  // DOCS-2426: WorkOS is an SSO provider; no dedicated page exists
+  {
+    source: '/organization/integrations/workos/',
+    destination: '/organization/authentication/sso/',
+  },
   // /integrations/<slug>/ redirects handle the /product/integrations/<slug>/ chain
   // via the wildcard redirect at the bottom of this file
   {
@@ -2026,11 +2031,6 @@ const userDocsRedirects = [
   {
     source: '/api/alerts/create-an-issue-alert-rule-for-a-project/:path*',
     destination: '/product/alerts/',
-  },
-  // DOCS-2426: WorkOS is an SSO provider; no dedicated page exists
-  {
-    source: '/organization/integrations/workos/',
-    destination: '/organization/authentication/sso/',
   },
 ];
 
