@@ -1,16 +1,14 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
-import { useEffect, useRef } from 'react';
+import {usePathname} from 'next/navigation';
+import {useEffect, useRef} from 'react';
 
 export function SkipToContent() {
-  /*
-    Watches the current URL. Every time you navigate to a new page, this value changes and triggers the useEffect below.
-    This is used to reset the focus navigation to the top of the page.
-  */
+  // Watches the current URL. Every time you navigate to a new page, this value
+  // changes and triggers the useEffect below. This is used to reset the focus
+  // navigation to the top of the page.
   const pathname = usePathname();
-  const ref = useRef<HTMLAnchorElement>(null);
-  // a flag so we skip the very first page load 
+  // a flag so we skip the very first page load
   const isFirstRender = useRef(true);
 
   useEffect(() => {
@@ -20,12 +18,12 @@ export function SkipToContent() {
     }
     document.body.setAttribute('tabindex', '-1');
     // focus the body element so the user can start tabbing from the top of the page
-    document.body.focus({ preventScroll: true });
+    document.body.focus({preventScroll: true});
     document.body.removeAttribute('tabindex');
   }, [pathname]);
 
   return (
-    <a ref={ref} href="#main" className="skip-to-content">
+    <a href="#main" className="skip-to-content">
       Skip to content
     </a>
   );
