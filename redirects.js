@@ -737,6 +737,112 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/organization/integrations/specsource/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/mendral/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/nominal/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/terramind/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/flow-relay/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  // /integrations/<slug>/ redirects handle the /product/integrations/<slug>/ chain
+  // via the wildcard redirect at the bottom of this file
+  {
+    source: '/integrations/sonarly-integration/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/work-os/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/watchdog-security/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/releasetag/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/kawachai/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/opsbrief/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/twill/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/glue-tools/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/synkrony/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/bosun/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/steadwing-rca/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/aether/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/toolbar/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/vanta-gov/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/xurrent-imr/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/shiprail/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/specsource/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/mendral/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/nominal/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/terramind/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/flow-relay/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/development/sdk-dev/:path*',
     destination: 'https://develop.sentry.dev',
   },
