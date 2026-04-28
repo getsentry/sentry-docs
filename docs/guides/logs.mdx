@@ -15,8 +15,7 @@ Sentry.logger.<level>(message, { attributes });
 ```
 
 ```python {tabTitle: Python}
-from sentry_sdk import logger
-logger.<level>(message, attribute=value)
+sentry_sdk.logger.<level>(message, attribute=value)
 ```
 
 ```php {tabTitle: PHP}
@@ -63,9 +62,7 @@ Sentry.logger.info("Order completed", {
 ```
 
 ```python {tabTitle: Python}
-from sentry_sdk import logger as sentry_logger
-
-sentry_logger.info("Order completed",
+sentry_sdk.logger.info("Order completed",
     order_id="order_123",
     user_id=user.id,
     amount=149.99,
@@ -155,17 +152,17 @@ Sentry.logger.warn("Login failed", {
 ```
 
 ```python {tabTitle: Python}
-from sentry_sdk import logger as sentry_logger
+import sentry_sdk
 
 # After successful authentication
-sentry_logger.info("User logged in",
+sentry_sdk.logger.info("User logged in",
     user_id=user.id,
     auth_method="oauth",
     provider="google"
 )
 
 # After authentication fails
-sentry_logger.warning("Login failed",
+sentry_sdk.logger.warning("Login failed",
     email=masked_email,
     reason="invalid_password",
     attempt_count=3
@@ -282,10 +279,12 @@ Sentry.logger.error("Payment failed", {
 ```
 
 ```python {tabTitle: Python}
-from sentry_sdk import logger as sentry_logger
+import sentry_sdk
+
+sentry_sdk.init(...)
 
 # After payment gateway returns an error
-sentry_logger.error("Payment failed",
+sentry_sdk.logger.error("Payment failed",
     order_id="order_123",
     amount=99.99,
     gateway="stripe",
@@ -388,13 +387,15 @@ Sentry.logger.info("Webhook received", {
 
 ```python {tabTitle: Python}
 import time
-from sentry_sdk import logger as sentry_logger
+import sentry_sdk
+
+sentry_sdk.init(...)
 
 # Third-party API call
 start = time.time()
 response = shipping_api.get_rates(items)
 
-sentry_logger.info("Shipping rates fetched",
+sentry_sdk.logger.info("Shipping rates fetched",
     service="shipping-provider",
     endpoint="/rates",
     duration_ms=int((time.time() - start) * 1000),
@@ -402,7 +403,7 @@ sentry_logger.info("Shipping rates fetched",
 )
 
 # Webhook received
-sentry_logger.info("Webhook received",
+sentry_sdk.logger.info("Webhook received",
     source="stripe",
     event_type="payment_intent.succeeded",
     payment_id=event["data"]["object"]["id"]
@@ -549,16 +550,18 @@ Sentry.logger.error("Job failed", {
 ```
 
 ```python {tabTitle: Python}
-from sentry_sdk import logger as sentry_logger
+import sentry_sdk
+
+sentry_sdk.init(...)
 
 # Inside background job handler
-sentry_logger.info("Job started",
+sentry_sdk.logger.info("Job started",
     job_type="email-digest",
     job_id="job_456",
     queue="notifications"
 )
 
-sentry_logger.error("Job failed",
+sentry_sdk.logger.error("Job failed",
     job_type="email-digest",
     job_id="job_456",
     retry_count=3,
@@ -680,16 +683,18 @@ Sentry.logger.warn("Config reloaded", {
 ```
 
 ```python {tabTitle: Python}
-from sentry_sdk import logger as sentry_logger
+import sentry_sdk
+
+sentry_sdk.init(...)
 
 # When feature flag is checked or config changes
-sentry_logger.info("Feature flag evaluated",
+sentry_sdk.logger.info("Feature flag evaluated",
     flag="new-checkout-flow",
     enabled=True,
     user_id=user.id
 )
 
-sentry_logger.warning("Config reloaded",
+sentry_sdk.logger.warning("Config reloaded",
     reason="env-change",
     changed_keys=["API_TIMEOUT", "MAX_CONNECTIONS"]
 )
@@ -902,9 +907,9 @@ Sentry.logger.error("Payment failed", { reason: "Insufficient Funds" });
 ```
 
 ```python {tabTitle: Python}
-sentry_logger.info("Checkout started", user_id="882")
-sentry_logger.info("Discount applied", code="WINTER20")
-sentry_logger.error("Payment failed", reason="Insufficient Funds")
+sentry_sdk.logger.info("Checkout started", user_id="882")
+sentry_sdk.logger.info("Discount applied", code="WINTER20")
+sentry_sdk.logger.error("Payment failed", reason="Insufficient Funds")
 ```
 
 ```php {tabTitle: PHP}
@@ -960,7 +965,7 @@ Sentry.logger.error("Checkout failed", {
 ```
 
 ```python {tabTitle: Python}
-sentry_logger.error("Checkout failed",
+sentry_sdk.logger.error("Checkout failed",
     user_id="882",
     order_id="order_pc_991",
     cart_total=142.50,
