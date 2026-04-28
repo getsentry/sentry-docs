@@ -116,3 +116,26 @@ NODE_OPTIONS="--import ./instrument.js"
 ```
 
 That's it — make sure to re-deploy your function and you're all set!
+
+## Lambda Extension
+
+The Sentry Lambda Layer also bundles a Sentry Lambda extension that runs as a sidecar process and forwards envelopes to Sentry. Because the extension stays alive across Lambda's freeze/thaw boundary, events queued at the moment of a freeze are still delivered.
+
+When the SDK detects it's running inside the Sentry Lambda Layer, it automatically routes events through the extension at `http://localhost:9000/envelope`. There's nothing to configure.
+
+To opt out — for example, when using a custom `tunnel` or running behind an HTTP proxy that intercepts `localhost` — set `useLayerExtension: false`:
+
+```javascript {filename:instrument.js}
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  useLayerExtension: false,
+});
+```
+
+Or via environment variable:
+
+```bash
+SENTRY_LAYER_EXTENSION="false"
+```
+
+If you're deploying a container image-based Lambda function and can't attach the layer, see the [Container Image guide](/platforms/javascript/guides/aws-lambda/install/container-image/) to install the extension into your Docker image instead.
