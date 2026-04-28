@@ -16,8 +16,9 @@ sidebar_order: 1
     **Note:** Electron `main` process only.
   </PlatformSection>
 
-  The DSN tells the SDK where to send the events. If this is not set, the SDK will not send any events.
-  Learn more about [DSN utilization](/product/sentry-basics/dsn-explainer/#dsn-utilization).
+The DSN tells the SDK where to send the events. If this is not set, the SDK will not send any events.
+Learn more about [DSN utilization](/product/sentry-basics/dsn-explainer/#dsn-utilization).
+
 <PlatformContent includePath="configuration/dsn" />
 
 </SdkOption>
@@ -83,6 +84,20 @@ Environments are case-sensitive. The environment name can't contain newlines, sp
 Sets the URL that will be used to transport captured events. This can be used to work around ad-blockers or to have more granular control over events sent to Sentry. Adding your DSN is still required when using this option so necessary attributes can be set on the generated Sentry data. This option **requires the implementation** of a custom server endpoint. Learn more and find examples in [Dealing with Ad-Blockers](/platforms/javascript/troubleshooting/#dealing-with-ad-blockers).
 
 </SdkOption>
+
+<PlatformSection supported={['javascript.aws-lambda']}>
+
+<SdkOption name="useLayerExtension" type='boolean' defaultValue='true' envVar='SENTRY_LAYER_EXTENSION'>
+
+Controls whether the SDK proxies envelopes through the Sentry Lambda extension at `http://localhost:9000/envelope`. The extension keeps running across Lambda's freeze/thaw boundary, so events queued just before a freeze still get delivered.
+
+Defaults to `true` when the SDK detects it's running inside the [Sentry Lambda Layer](/platforms/javascript/guides/aws-lambda/install/layer/). Has no effect outside the layer — set [`tunnel`](#tunnel) explicitly instead, for example, when [installing the extension into a container image](/platforms/javascript/guides/aws-lambda/install/container-image/).
+
+Set to `false` to opt out, for example, when using a custom `tunnel` or when running behind an HTTP proxy that intercepts `localhost`.
+
+</SdkOption>
+
+</PlatformSection>
 
 <SdkOption name="sendDefaultPii" type='boolean' defaultValue='false'>
 
@@ -227,7 +242,9 @@ The callback gets a second argument (called a "hint") which contains the origina
 <SdkOption name="transport" type="(transportOptions: TransportOptions) => Transport">
 
 <PlatformSection notSupported={["javascript.electron"]}>
-  The JavaScript SDK uses a transport to send events to Sentry. On modern browsers, most transports use the browsers' fetch API to send events. Transports will drop an event if it fails to send due to a lack of connection.
+  The JavaScript SDK uses a transport to send events to Sentry. On modern
+  browsers, most transports use the browsers' fetch API to send events.
+  Transports will drop an event if it fails to send due to a lack of connection.
 </PlatformSection>
 
 <PlatformCategorySection supported={["browser"]}>
@@ -239,7 +256,9 @@ The callback gets a second argument (called a "hint") which contains the origina
 </PlatformCategorySection>
 
 <PlatformSection supported={["javascript.electron"]}>
-  In the Electron `main` process, the default transport handles queuing events when the users device is offline. In Electron `renderer` processes, the default transport forwards events to the main process.
+  In the Electron `main` process, the default transport handles queuing events
+  when the users device is offline. In Electron `renderer` processes, the
+  default transport forwards events to the main process.
 </PlatformSection>
 
 </SdkOption>
@@ -362,7 +381,9 @@ If the callback is not set, or it returns `undefined`, the default naming scheme
 Configures the sample rate for error events, in the range of `0.0` to `1.0`. The default is `1.0`, which means that 100% of error events will be sent. If set to `0.1`, only 10% of error events will be sent. Events are picked randomly.
 
 <PlatformSection supported={["javascript.electron"]}>
-  In the Electron `main` process `sampleRate` applies to events captured all processes. In Electron `renderer` processes, the `sampleRate` only applies to that process.
+  In the Electron `main` process `sampleRate` applies to events captured all
+  processes. In Electron `renderer` processes, the `sampleRate` only applies to
+  that process.
 </PlatformSection>
 
 </SdkOption>
@@ -374,7 +395,9 @@ This function is called with an SDK-specific message or error event object, and 
 By the time `beforeSend` is executed, all scope data has already been applied to the event. Further modification of the scope won't have any effect.
 
 <PlatformSection supported={["javascript.electron"]}>
-  In the Electron `main` process `beforeSend` is called for events captured in all processes. In Electron `renderer` processes, `beforeSend` only applies to that process.
+  In the Electron `main` process `beforeSend` is called for events captured in
+  all processes. In Electron `renderer` processes, `beforeSend` only applies to
+  that process.
 </PlatformSection>
 
 </SdkOption>
@@ -396,7 +419,9 @@ Available options:
 <Include name="platforms/configuration/options/ignore-errors.mdx" />
 
 <PlatformSection supported={["javascript.electron"]}>
-  In the Electron `main` process `ignoreErrors` applies to events captured in all processes. In Electron `renderer` processes, `ignoreErrors` applies only to that process.
+  In the Electron `main` process `ignoreErrors` applies to events captured in
+  all processes. In Electron `renderer` processes, `ignoreErrors` applies only
+  to that process.
 </PlatformSection>
 
 </SdkOption>
@@ -436,7 +461,8 @@ For example, the Sentry Nuxt SDK does not attach an error handler as it's captur
 ## Tracing Options
 
 <PlatformSection supported={["javascript.electron"]}>
-  **Note:** For Electron, tracing options apply to the process where these options are set.
+  **Note:** For Electron, tracing options apply to the process where these
+  options are set.
 </PlatformSection>
 
 <SdkOption name="tracesSampleRate" type='number' envVar='SENTRY_TRACES_SAMPLE_RATE'>
@@ -575,7 +601,8 @@ See <PlatformLink to="/tracing/distributed-tracing/dealing-with-cors-issues/">De
 ## Logs Options
 
 <PlatformSection supported={["javascript.electron"]}>
-  **Note:** For Electron, log options apply to the process where these options are set.
+  **Note:** For Electron, log options apply to the process where these options
+  are set.
 </PlatformSection>
 
 <SdkOption name="enableLogs" type='boolean' defaultValue='false'>
