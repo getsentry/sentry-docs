@@ -204,6 +204,8 @@ A `queue.publish` span is created only when there is an active transaction in sc
 
 Wrap each record's processing callback with `SentryKafkaConsumerTracing.withTracing()`. This creates a `queue.process` transaction per record, continues the distributed trace from producer headers, and calculates receive latency automatically.
 
+If you're also using OpenTelemetry Kafka instrumentation, don't instrument the same consumer callback with `withTracing()`. This helper is not automatically suppressed under OpenTelemetry today, so using both can create duplicate `queue.process` transactions.
+
 ```java {12-14} {tabTitle:Java}
 import io.sentry.kafka.SentryKafkaConsumerTracing;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -266,4 +268,4 @@ SentryKafkaConsumerTracing.withTracing(record, () -> {
 ## Limitations
 
 - **Async listeners not supported.** `@KafkaListener` methods that return a `CompletableFuture` or `Mono`/`Flux` are not instrumented correctly; use synchronous listeners.
-- **Not active with OpenTelemetry.** When using the Sentry OpenTelemetry agent or `opentelemetry-spring-boot-starter` alongside Sentry, OpenTelemetry's messaging instrumentation provides the Kafka spans instead.
+- **Spring Boot auto-instrumentation is disabled when using Sentry OpenTelemetry integrations.**
