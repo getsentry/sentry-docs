@@ -8,10 +8,9 @@ categories:
 ---
 
 <Alert level="warning" title="Important">
-  This SDK is currently in **beta**. Beta features are still in progress and may
-  have bugs. Please reach out on
-  [GitHub](https://github.com/getsentry/sentry-javascript/issues/new/choose) if
-  you have any feedback or concerns.
+
+This SDK is currently in **beta**. Beta features are still in progress and may have bugs. Please reach out on [GitHub](https://github.com/getsentry/sentry-javascript/issues/new/choose) if you have any feedback or concerns.
+
 </Alert>
 
 <Alert>
@@ -21,7 +20,9 @@ categories:
 
 <PlatformContent includePath="getting-started-prerequisites" />
 
-## Step 1: Install
+<StepConnector selector="h2" showNumbers={true}>
+
+## Install
 
 Choose the features you want to configure, and this guide will show you how:
 
@@ -39,7 +40,14 @@ Choose the features you want to configure, and this guide will show you how:
 
 ### Install the Sentry SDK
 
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
 Run the command for your preferred package manager to add the Sentry SDK to your application:
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```bash {tabTitle:npm}
 npm install @sentry/solidstart --save
@@ -53,24 +61,35 @@ yarn add @sentry/solidstart
 pnpm add @sentry/solidstart
 ```
 
-## Step 2: Configure
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+## Configure
 
 You need to initialize and configure the Sentry SDK in two places: the client side and the server side.
 
 <Alert>
-  The examples in this guide will use TypeScript with a `src` folder structure.
-  Make sure to adjust the file paths and extensions (`.js`, `.jsx`, `.ts`,
-  `.tsx`) to match your project setup.
+
+The examples in this guide will use TypeScript with a `src` folder structure. Make sure to adjust the file paths and extensions (`.js`, `.jsx`, `.ts`, `.tsx`) to match your project setup.
+
 </Alert>
 
-### Configure Client-side Sentry
+### Configure Client-Side Sentry
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
 
 Import and initialize the Sentry SDK in your `/src/entry-client.tsx` file.
 
 <OnboardingOption optionId="performance">
   If you're using Solid Router, make sure to import and add the
-  `solidRouterBrowserTracingIntegration` to enable tracing in your app:
+  `solidRouterBrowserTracingIntegration` to enable tracing in your app.
 </OnboardingOption>
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```jsx {filename:src/entry-client.tsx}
 import * as Sentry from "@sentry/solidstart";
@@ -129,9 +148,20 @@ Sentry.init({
 mount(() => <StartClient />, document.getElementById("app"));
 ```
 
-### Configure Server-side Sentry
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+### Configure Server-Side Sentry
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
 
 Create a file named `instrument.server.ts` in your `src` folder. In this file, initialize and import Sentry for your server:
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```javascript {filename:src/instrument.server.ts}
 import * as Sentry from "@sentry/solidstart";
@@ -158,11 +188,22 @@ Sentry.init({
 });
 ```
 
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
 ### Server Instrumentation
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
 
 The Sentry SDK provides [middleware lifecycle](https://docs.solidjs.com/solid-start/advanced/middleware) handlers that enhance the data collected by Sentry on the server side, enabling distributed tracing between the client and server.
 
 Create or update your `src/middleware.ts` file and add the `sentryBeforeResponseMiddleware` handler:
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```typescript {filename:src/middleware.ts} {6}
 import { sentryBeforeResponseMiddleware } from "@sentry/solidstart";
@@ -176,8 +217,16 @@ export default createMiddleware({
 });
 ```
 
+</SplitSectionCode>
+</SplitSection>
+<SplitSection>
+<SplitSectionText>
+
 Wrap your SolidStart config in `app.config.ts` with `withSentry` so that the instrumentation file gets included in your build output.
 Then, specify the middleware that you've just created:
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```javascript {filename:app.config.ts} {5-15}
 import { withSentry } from "@sentry/solidstart";
@@ -198,9 +247,22 @@ export default defineConfig(
 );
 ```
 
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
 <OnboardingOption optionId="performance">
+
 ### Configure Solid Router
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
 If you're using Solid Router and the Sentry `solidRouterBrowserTracingIntegration` integration, wrap your Solid Router with `withSentryRouterRouting` to enable Sentry to collect navigation spans:
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```tsx {filename:app.tsx} {5,9,11}
 import { Router } from "@solidjs/router";
@@ -218,9 +280,16 @@ export default function App() {
 }
 ```
 
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 </OnboardingOption>
 
 ### Run Your Application
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
 
 Instrumentation needs to happen as early as possible to make sure Sentry works as intended. To do this, add an `--import` flag to the `NODE_OPTIONS` environment variable when you run your application and set it to import the instrumentation file created by the build output: `.output/server/instrument.server.mjs`.
 
@@ -232,7 +301,12 @@ Run your build command to generate the `instrument.server.mjs` file before runni
 
 </Alert>
 
-For example, update your scripts in `package.json`.
+If you're not able to use the `--import` flag, check the alternative <PlatformLink to="/install">installation methods</PlatformLink>.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+For example, update your scripts in `package.json`:
 
 ```json {filename:package.json}
 {
@@ -243,17 +317,37 @@ For example, update your scripts in `package.json`.
 }
 ```
 
-If you're not able to use the `--import` flag, check the alternative <PlatformLink to="/install">installation methods</PlatformLink>.
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
-## Step 3: Capture Solid Errors
+### Capture Solid Errors
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
 
 To automatically report exceptions from inside a component tree to Sentry, wrap Solid's `ErrorBoundary` with Sentry's helper function:
 
+</SplitSectionText>
+<SplitSectionCode>
+
 <PlatformContent includePath="getting-started-capture-errors" />
 
-## Step 4: Add Readable Stack Traces With Source Maps (Optional)
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+### Add Readable Stack Traces With Source Maps (Optional)
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
 
 To upload source maps for clear error stack traces, add your Sentry auth token, organization, and project slug in your SolidStart configuration:
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```TypeScript {filename:app.config.ts}
 import { withSentry } from '@sentry/solidstart';
@@ -274,7 +368,15 @@ export default defineConfig(
 );
 ```
 
+</SplitSectionCode>
+</SplitSection>
+<SplitSection>
+<SplitSectionText>
+
 To keep your auth token secure, always store it in an environment variable instead of directly in your files:
+
+</SplitSectionText>
+<SplitSectionCode>
 
 <OrgAuthTokenNote />
 
@@ -282,7 +384,16 @@ To keep your auth token secure, always store it in an environment variable inste
 SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
 ```
 
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
 Alternatively, you can create a `.env.sentry-build-plugin` file:
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```bash {filename:.env.sentry-build-plugin}
 SENTRY_ORG="___ORG_SLUG___"
@@ -290,19 +401,36 @@ SENTRY_PROJECT="___PROJECT_SLUG___"
 SENTRY_AUTH_TOKEN="___ORG_AUTH_TOKEN___"
 ```
 
-<Include name="vite-loadenv-hint.mdx" />
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
-## Step 5: Avoid Ad Blockers With Tunneling (Optional)
+<Include name="vite-loadenv-hint-splitlayout.mdx" />
 
-<PlatformContent includePath="getting-started-tunneling" />
+### Avoid Ad Blockers With Tunneling (Optional)
 
-## Step 6: Verify Your Setup
+<PlatformContent includePath="getting-started-tunneling-splitlayout" />
+
+## Verify Your Setup
 
 Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
 
 ### Issues
 
-To verify that Sentry captures errors and creates issues in your Sentry project, add a test button to an existing page or create a new one:
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+To verify that Sentry captures errors and creates issues in your Sentry project, add a test button to an existing page or create a new one.
+
+<OnboardingOption optionId="performance" hideForThisOption>
+  Then, open the page in a browser and click the button to trigger a frontend
+  error.
+</OnboardingOption>
+
+<PlatformContent includePath="getting-started-browser-sandbox-warning" />
+</SplitSectionText>
+<SplitSectionCode>
 
 ```javascript
 <button
@@ -315,16 +443,21 @@ To verify that Sentry captures errors and creates issues in your Sentry project,
 </button>
 ```
 
-<OnboardingOption optionId="performance" hideForThisOption>
-  Open the page in a browser and click the button to trigger a frontend error.
-</OnboardingOption>
-
-<PlatformContent includePath="getting-started-browser-sandbox-warning" />
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
 <OnboardingOption optionId="performance">
 ### Tracing
 
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
 To test tracing, create a test API route like `src/routes/sentry-test.tsx`:
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```javascript {filename:sentry-test.tsx}
 export async function GET() {
@@ -332,7 +465,17 @@ export async function GET() {
 }
 ```
 
-Next, update your test button to call this route and throw an error if the response isn't `ok`:
+</SplitSectionCode>
+</SplitSection>
+<SplitSection>
+<SplitSectionText>
+
+Next, update your test button to call this route and throw an error if the response isn't `ok`.
+
+Then, open the page in the browser and click the button to trigger a frontend error, an error in the API route, and a trace to measure the time it takes for the API request to complete.
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```javascript
 <button
@@ -356,13 +499,15 @@ Next, update your test button to call this route and throw an error if the respo
 </button>
 ```
 
-Open the page in the browser and click the button to trigger a frontend error, an error in the API route, and a trace to measure the time it takes for the API request to complete.
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
 </OnboardingOption>
 
 <OnboardingOption optionId="logs">
 
-<Include name="logs/javascript-quick-start-verify-logs" />
+<Include name="logs/javascript-quick-start-verify-logs-splitlayout" />
 
 </OnboardingOption>
 
@@ -391,3 +536,5 @@ Now's a good time to customize your setup and look into more advanced topics. Ou
 - [Get support](https://sentry.zendesk.com/hc/en-us/)
 
 </Expandable>
+
+</StepConnector>
