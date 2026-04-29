@@ -756,6 +756,11 @@ const userDocsRedirects = [
     source: '/organization/integrations/flow-relay/',
     destination: '/integrations/third-party-integrations/',
   },
+  // DOCS-2426: WorkOS is an SSO provider; no dedicated page exists
+  {
+    source: '/organization/integrations/workos/',
+    destination: '/organization/authentication/sso/',
+  },
   // /integrations/<slug>/ redirects handle the /product/integrations/<slug>/ chain
   // via the wildcard redirect at the bottom of this file
   {
@@ -1908,6 +1913,124 @@ const userDocsRedirects = [
   {
     source: '/product/monitors-and-alerts/alerts/notifications/:path*',
     destination: '/product/notifications/:path*',
+  },
+  // DOCS-2550: /product/logs/ moved under /product/explore/
+  {
+    source: '/product/logs/',
+    destination: '/product/explore/logs/',
+  },
+  {
+    source: '/product/logs/:path*',
+    destination: '/product/explore/logs/:path*',
+  },
+  // DOCS-2227: retention-priorities page removed; dynamic-sampling is the closest equivalent
+  {
+    source: '/product/performance/retention-priorities/',
+    destination: '/organization/dynamic-sampling/',
+  },
+  // DOCS-2229: Flutter uses Dart SDK, not JS
+  {
+    source: '/platforms/javascript/guides/flutter/sourcemaps/',
+    destination: '/platforms/dart/guides/flutter/',
+  },
+  {
+    source: '/platforms/javascript/guides/flutter/sourcemaps/:path*',
+    destination: '/platforms/dart/guides/flutter/',
+  },
+  // DOCS-2251: .NET is not a JS guide
+  {
+    source: '/platforms/javascript/guides/dotnet/sourcemaps/',
+    destination: '/platforms/dotnet/',
+  },
+  {
+    source: '/platforms/javascript/guides/dotnet/sourcemaps/:path*',
+    destination: '/platforms/dotnet/',
+  },
+  // DOCS-2319: iOS uses Apple SDK, not JS
+  {
+    source: '/platforms/javascript/guides/apple-ios/sourcemaps/',
+    destination: '/platforms/apple/guides/ios/',
+  },
+  {
+    source: '/platforms/javascript/guides/apple-ios/sourcemaps/:path*',
+    destination: '/platforms/apple/guides/ios/',
+  },
+  // DOCS-2355: ASP.NET Core uses .NET SDK, not JS
+  {
+    source: '/platforms/javascript/guides/dotnet-aspnetcore/sourcemaps/',
+    destination: '/platforms/dotnet/guides/aspnetcore/',
+  },
+  {
+    source: '/platforms/javascript/guides/dotnet-aspnetcore/sourcemaps/:path*',
+    destination: '/platforms/dotnet/guides/aspnetcore/',
+  },
+  // DOCS-2364: wrong prefix; react-router guide is valid under JS
+  {
+    source: '/platforms/javascript/guides/javascript-react-router/sourcemaps/',
+    destination: '/platforms/javascript/guides/react-router/sourcemaps/',
+  },
+  {
+    source: '/platforms/javascript/guides/javascript-react-router/sourcemaps/:path*',
+    destination: '/platforms/javascript/guides/react-router/sourcemaps/:path*',
+  },
+  // DOCS-2384/2390: python-fastapi is not a JS guide
+  {
+    source: '/platforms/javascript/guides/python-fastapi/sourcemaps/',
+    destination: '/platforms/javascript/sourcemaps/',
+  },
+  {
+    source: '/platforms/javascript/guides/python-fastapi/sourcemaps/:path*',
+    destination: '/platforms/javascript/sourcemaps/',
+  },
+  // DOCS-2408: php-laravel is not a JS guide
+  {
+    source: '/platforms/javascript/guides/php-laravel/sourcemaps/',
+    destination: '/platforms/javascript/sourcemaps/',
+  },
+  {
+    source: '/platforms/javascript/guides/php-laravel/sourcemaps/:path*',
+    destination: '/platforms/javascript/sourcemaps/',
+  },
+  // DOCS-2411: java is not a JS guide
+  {
+    source: '/platforms/javascript/guides/java/sourcemaps/',
+    destination: '/platforms/javascript/sourcemaps/',
+  },
+  {
+    source: '/platforms/javascript/guides/java/sourcemaps/:path*',
+    destination: '/platforms/javascript/sourcemaps/',
+  },
+  // DOCS-2433: python is not a JS guide
+  {
+    source: '/platforms/javascript/guides/python/sourcemaps/',
+    destination: '/platforms/javascript/sourcemaps/',
+  },
+  {
+    source: '/platforms/javascript/guides/python/sourcemaps/:path*',
+    destination: '/platforms/javascript/sourcemaps/',
+  },
+  // DOCS-2446: javascript-browser is not a valid guide name
+  {
+    source: '/platforms/javascript/guides/javascript-browser/sourcemaps/',
+    destination: '/platforms/javascript/sourcemaps/',
+  },
+  {
+    source: '/platforms/javascript/guides/javascript-browser/sourcemaps/:path*',
+    destination: '/platforms/javascript/sourcemaps/',
+  },
+  // DOCS-2328: no uninstall page exists; root is the best fallback
+  {
+    source: '/platforms/react-native/uninstall/',
+    destination: '/platforms/react-native/',
+  },
+  // DOCS-2409: API alerts endpoint removed from docs; point to alerts product docs
+  {
+    source: '/api/alerts/create-an-issue-alert-rule-for-a-project/',
+    destination: '/product/alerts/',
+  },
+  {
+    source: '/api/alerts/create-an-issue-alert-rule-for-a-project/:path*',
+    destination: '/product/alerts/',
   },
 ];
 
