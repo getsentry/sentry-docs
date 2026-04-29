@@ -1,5 +1,5 @@
 ---
-title: Metrics
+title: Application Metrics
 sidebar_order: 75
 description: >-
   Send counters, gauges, and distributions from your code to track application
@@ -7,28 +7,24 @@ description: >-
 og_image: /og-images/product-explore-metrics.png
 ---
 
-<Alert level="info">
-  Metrics is currently in Open Beta for non-Enterprise plans. Metrics are supported across a wide range of SDKs including JavaScript, Python, Ruby, Go, Java, PHP, .NET, Native (C/C++), Dart/Flutter, React Native, Android, Apple platforms, Unreal, Unity, and Godot. If you have any questions or feedback comment on this [GitHub discussion](https://github.com/getsentry/sentry/discussions/102275) or contact us at feedback-metrics@sentry.io . Features in beta are still in-progress and may have bugs. We recognize the irony.
-</Alert>
-
 ## Overview
 
-With Sentry Metrics, you can send [counters](#counters), [gauges](#gauges), and [distributions](#distributions) from your code to track application health signals like `email.sent`, `checkout.failed`, or `queue.depth`. What makes Sentry's Metrics unique is that every metric event is **trace-connected**, meaning you can click directly into the related traces, logs, and errors when something looks off.
+With Sentry's Application Metrics, you can send [counters](#counters), [gauges](#gauges), and [distributions](#distributions) from your code to track application health signals like `email.sent`, `checkout.failed`, or `queue.depth`. What makes Sentry's Application Metrics unique is that every metric event is **trace-connected**, meaning you can click directly into the related traces, logs, and errors when something looks off.
 
 <Arcade src="https://demo.arcade.software/wNDJOXTJw64xiuVi7Hp6?embed" />
 
 Unlike traditional metrics tools that only show _if_ something's changed, Sentry's trace-connected metrics let you understand _why_ it changed. When a `checkout.failed` counter spikes, you can click into a sample and see the exact trace, spans, logs, and errors that produced that metric event.
 
-Not everything in your application generates an error or requires full tracing. Metrics are perfect for tracking:
+Not everything in your application generates an error or requires full tracing. Application Metrics are perfect for tracking:
 
 - **Business events**: `checkout.started`, `checkout.failed`, `payment.declined`, `refund.issued`
 - **Application health**: `email.sent`, `email.failed`, `job.processed`, `job.retried`
 - **Resource utilization**: `queue.depth`, `pool.in_use`, `cache.hit_rate`
 - **User behavior**: `search.zero_results`, `feature.enabled`, `configuration.loaded`
 
-## Set up Metrics
+## Set Up Application Metrics
 
-To get started with Metrics, navigate to the [Getting Started](/product/explore/metrics/getting-started/) page and select your SDK from the list.
+To get started, navigate to the [Getting Started](/product/explore/metrics/getting-started/) page and select your SDK from the list.
 
 ## Metric Types
 
@@ -60,14 +56,14 @@ Gauges set a specific value at a point in time, like a snapshot. The latest valu
 
 Distributions record numeric values to compute statistical aggregates.
 
-**Aggregation methods**: `p50`, `p75`, `p95`, `p99`, `avg`, `sum`, `min`, `max`, `count`, `per_second`, and `per_minute`.
+**Aggregation methods**: `p50`, `p75`, `p90`, `p95`, `p99`, `avg`, `sum`, `min`, `max`, `count`, `per_second`, and `per_minute`.
 
 **Use cases**: values that vary and need statistical analysis
 - `cart.amount_usd` - Purchase amounts for revenue tracking
 - `query.duration_ms` - Query latency for performance monitoring
 - `file.size_bytes` - File sizes for storage analysis
 
-## Viewing and Exploring Metrics
+## Viewing and Exploring Application Metrics
 
 The Metrics Explorer provides two main views:
 
@@ -97,9 +93,60 @@ The Samples tab shows individual metric events with **direct links to their trac
 
 When you notice a spike or dip in the Aggregates view, switch to Samples to drill into specific occurrences and find the root cause.
 
+### Multiple Metrics and Equations
+
+You can compare several metrics side-by-side in a single Explorer view and derive new values from them without leaving the page:
+
+- Click **Add Metric** to add another metric query to the page. Each query gets its own panel and a short label (`A`, `B`, `C`, …) so you can reference it elsewhere. You can reorder queries by dragging their panels, and add up to 26 queries at once.
+- Click **Add Equation** to create a calculated series that references existing metric labels — for example, `A / B` to compute a ratio between two counters, or `A - B` to subtract a baseline from a current value. Equations appear alongside your metric queries and can be added to dashboards and monitors alongside the underlying metrics.
+
+#### Example: A Custom Apdex Score
+
+One common use of multiple queries and equations together is deriving a ratio-based KPI from a single latency metric. The screenshot below shows a board inspired by [Apdex](https://en.wikipedia.org/wiki/Apdex) (Application Performance Index), a user-satisfaction score that buckets response times into Satisfied and Tolerating zones relative to a target threshold `T`.
+
+In this example, the source metric is `dashboards.widget.onEdit`, which captures the duration of each widget edit:
+
+- **A** counts **Satisfied** events with the filter `value < 100` (where `T = 100ms`).
+- **B** counts events in a **Tolerating** band with the filters `value > 200` and `value < 400`.
+- **C** counts **Total** events with no filter applied.
+- **f1** combines the buckets with the equation `(A + (B / 2)) / C` to produce a single Apdex-inspired score.
+
+This example demonstrates how threshold filters split one source metric into buckets, and an equation composes those buckets into a single KPI. The same approach works for error rates, conversion rates, SLO scores, and other ratio-style metrics.
+
+![Metric equation example =800x](./img/metric-equation-example.png)
+
+## Turning Metrics Into Monitors
+
+Any metric query you build in the Explorer can be turned into a [Monitor](/product/monitors-and-alerts/monitors/) so you get notified when its behavior changes.
+
+- From the **Metrics Explorer**, open **Save As → Monitor for** and choose the metric/aggregate you want to monitor. Sentry will pre-fill the Monitor with the metric, aggregate, filters, group-by, and time interval from your current query.
+- From **Discover**, use the **Create Monitor** button on an Application Metrics query to jump into the Monitor creation flow with the metric pre-selected.
+
+When creating a [Monitor](/product/monitors-and-alerts/monitors/), **Application Metrics** is available as a dataset alongside Errors, Spans, Logs, and Releases, and there's a dedicated **Application Metrics** template in the Monitor form to get you started quickly. The Monitor detects threshold breaches, percentage changes, or dynamic anomalies on the metric and creates an issue when conditions are met — which you can then route through [Alerts](/product/monitors-and-alerts/alerts/) to Slack, PagerDuty, email, and more.
+
+## Adding Metrics to Dashboards
+
+You can pin any metric query as a widget on a [Dashboard](/product/dashboards/) for longer-term tracking:
+
+- From the Metrics Explorer, open **Save As → Dashboard widget** and choose the metric query you want to visualize.
+- If you have multiple metric queries on the page, you can add them individually or pick **All Metrics** to create a single widget containing all of them.
+
+<Alert level="info">
+  Equations can't currently be added as dashboard widgets — add the underlying metric queries instead.
+</Alert>
+
+## Saving Queries
+
+Frequently-used metric queries can be saved and re-opened from the [Explorer](https://sentry.io/explore/metrics/):
+
+- **Save As → New Query** stores your current metric queries, filters, group-bys, and time range under a name of your choosing.
+- **Save As → Existing Query** updates a previously-saved query with your current configuration.
+
+Saved queries show up in the Explorer's saved-query list and are accessible to everyone in your organization with Explorer access.
+
 ## Trace-Connected Debugging Flow
 
-Sentry's metrics enable a seamless debugging workflow:
+Application Metrics debugging workflow:
 
 1. **Spot the anomaly**: Notice a spike in your Aggregates view (e.g., `checkout.failed` increased 3x)
 2. **Open samples**: Switch to the Samples tab to see individual metric events
@@ -109,45 +156,42 @@ Sentry's metrics enable a seamless debugging workflow:
 
 Instead of "metric alert → guesswork," debugging becomes a **single flow**: Metric spike → sample → trace → root cause.
 
+### When a Sample Doesn't Have a Trace
+
+Application Metrics are typically sampled at 100% while traces are usually sampled at a much lower rate, so some metric events won't have a trace attached to them. When that happens, use the metric's attributes (such as release, environment, or route) to find a comparable trace in [Trace Explorer](/product/explore/trace-explorer/). 
+
+[Cross-Event Querying](/product/explore/trace-explorer/#cross-event-querying-beta) (currently in Beta) makes this easier by letting you filter traces based on related spans, logs, and application metrics. The comparable trace gives you the same debugging context as a directly attached one.
+
 ## Metric Attributes
 
 Each metric event automatically includes:
 
-| **Field**           | **Description**                                                                 |
-|----------------------|---------------------------------------------------------------------------------|
-| **name**             | The metric identifier (e.g., `checkout.failed`)                                |
-| **kind**             | The metric type (counter, gauge, or distribution)                              |
-| **value**            | The numeric value                                                              |
-| **trace_id**         | Links to the active trace when the metric was recorded                         |
-| **span_id**          | Links to the specific span within the trace                                    |
-| **unit** *(optional)*| Unit of measurement (e.g., `usd`, `ms`, `bytes`)                               |
-| **custom attributes**| Any key-value pairs you add for grouping and filtering                         |
+| **Field**            | **Description**                                                                   |
+|----------------------|-----------------------------------------------------------------------------------|
+| **name**             | The metric identifier (e.g., `checkout.failed`)                                   |
+| **kind**             | The metric type (counter, gauge, or distribution)                                 |
+| **value**            | The numeric value                                                                 |
+| **unit** *(optional)*| Unit of measurement (e.g., `usd`, `ms`, `bytes`). Rendered in the Samples table, trace view, and chart axes when set. |
+| **timestamp**        | When the metric was recorded                                                      |
+| **project**          | The project the metric belongs to                                                 |
+| **trace_id**         | Links to the active trace when the metric was recorded                            |
+| **span_id**          | Links to the specific span within the trace                                       |
+| **client_sample_rate** *(optional)* | The client-side sample rate applied when the metric was captured    |
+| **custom attributes**| Any key-value pairs you add for grouping and filtering                            |
 
-## Alerts and Dashboard Widgets
+## When to Use Application Metrics
 
-<Alert level="info">
-  Alerts and dashboard widgets for Metrics are coming soon.
-</Alert>
+Application Metrics are best for **application and code-based health signals**, numeric indicators of whether your application logic is behaving as expected.
 
-You'll soon be able to:
-- Create alert rules based on metric queries
-- Add metric visualizations to dashboards
-- Set up notifications when metrics cross thresholds
-- Save common queries for quick access
-
-## When to Use Metrics
-
-Metrics are best for **application and code-based health signals** — numeric indicators of whether your application logic is behaving as expected.
-
-**Good candidates for metrics:**
+**Good candidates for Application Metrics:**
 - Business KPIs tied to code execution
 - Application health indicators
 - Resource utilization tracking
 - User action counts
 - Success/failure rates
 
-**Not ideal for metrics:**
-- Infrastructure metrics (CPU, memory, disk) - use APM tools
+**Not ideal for Application Metrics:**
+- Infrastructure metrics (CPU, memory, disk) - a tool purpose-built for this, like Prometheus, is a better fit
 - Log aggregation - use [Logs](/product/explore/logs/)
 - Full request tracing - use [Traces](/product/explore/trace-explorer/)
 
@@ -157,13 +201,3 @@ Your Sentry metrics can be leveraged with AI agents and tooling for debugging an
 
 - **[Sentry MCP Server](/ai/mcp/)**: Enables natural language queries and deep integration with AI tools like Claude, Cursor, and VS Code using the Model Context Protocol
 - **[Seer](/product/ai-in-sentry/seer/)**: Sentry's AI debugging agent can use metrics alongside traces, logs, and errors to provide intelligent issue analysis
-
-## Beta Feedback
-
-We'd love to hear your feedback:
-
-- Are the SDK APIs easy enough to send your desired metrics?
-- Any feedback about the Metrics Explorer UX - what could make this better?
-- Any default metrics you'd like Sentry to send automatically?
-
-Share your thoughts on [GitHub](https://github.com/getsentry/sentry/discussions/102275) or email us at [feedback-metrics@sentry.io](mailto:feedback-metrics@sentry.io).

@@ -573,11 +573,11 @@ const developerDocsRedirects = [
 const userDocsRedirects = [
   {
     source: '/integrations/cursor/',
-    destination: '/organization/integrations/coding-agents/cursor/',
+    destination: '/integrations/coding-agents/cursor/',
   },
   {
     source: '/organization/integrations/cursor/',
-    destination: '/organization/integrations/coding-agents/cursor/',
+    destination: '/integrations/coding-agents/cursor/',
   },
   {
     source: '/concepts/data-management/advanced-datascrubbing/',
@@ -585,11 +585,11 @@ const userDocsRedirects = [
   },
   {
     source: '/organization/integrations/height/',
-    destination: '/organization/integrations/issue-tracking/height/',
+    destination: '/integrations/issue-tracking/height/',
   },
   {
     source: '/organization/integrations/rootly/',
-    destination: '/organization/integrations/notification-incidents/rootly/',
+    destination: '/integrations/notification-incidents/rootly/',
   },
   {
     source: '/account/cli/configuration/',
@@ -597,7 +597,7 @@ const userDocsRedirects = [
   },
   {
     source: '/organization/integrations/telegram-alerts-bot/',
-    destination: '/organization/integrations/notification-incidents/telegram-alerts-bot/',
+    destination: '/integrations/notification-incidents/telegram-alerts-bot/',
   },
   {
     source: '/platforms/python-fastapi/logs/',
@@ -621,7 +621,7 @@ const userDocsRedirects = [
   },
   {
     source: '/organization/integrations/msteams/',
-    destination: '/organization/integrations/notification-incidents/msteams/',
+    destination: '/integrations/notification-incidents/msteams/',
   },
   {
     source: '/product/dev-toolbar/:path*',
@@ -629,7 +629,7 @@ const userDocsRedirects = [
   },
   {
     source: '/organization/integrations/launchdarkly/',
-    destination: '/organization/integrations/feature-flag/launchdarkly/',
+    destination: '/integrations/feature-flag/launchdarkly/',
   },
   {
     source: '/platforms/javascript/guides/aws-lambda/layer__v9.x/',
@@ -653,7 +653,7 @@ const userDocsRedirects = [
   },
   {
     source: '/organization/integrations/vercel/',
-    destination: '/organization/integrations/deployment/vercel/',
+    destination: '/integrations/deployment/vercel/',
   },
   {
     source: '/product/accounts/quotas/org-stats/',
@@ -669,72 +669,178 @@ const userDocsRedirects = [
   },
   {
     source: '/organization/integrations/goastai/',
-    destination: '/organization/integrations/issue-tracking/goast/',
+    destination: '/integrations/issue-tracking/goast/',
   },
   // Third-party integrations consolidated page
   {
     source: '/organization/integrations/sonarly-integration/',
-    destination: '/organization/integrations/third-party-integrations/',
+    destination: '/integrations/third-party-integrations/',
   },
   {
     source: '/organization/integrations/work-os/',
-    destination: '/organization/integrations/third-party-integrations/',
+    destination: '/integrations/third-party-integrations/',
   },
   {
     source: '/organization/integrations/watchdog-security/',
-    destination: '/organization/integrations/third-party-integrations/',
+    destination: '/integrations/third-party-integrations/',
   },
   {
     source: '/organization/integrations/releasetag/',
-    destination: '/organization/integrations/third-party-integrations/',
+    destination: '/integrations/third-party-integrations/',
   },
   {
     source: '/organization/integrations/kawachai/',
-    destination: '/organization/integrations/third-party-integrations/',
+    destination: '/integrations/third-party-integrations/',
   },
   {
     source: '/organization/integrations/opsbrief/',
-    destination: '/organization/integrations/third-party-integrations/',
+    destination: '/integrations/third-party-integrations/',
   },
   {
     source: '/organization/integrations/twill/',
-    destination: '/organization/integrations/third-party-integrations/',
+    destination: '/integrations/third-party-integrations/',
   },
   {
     source: '/organization/integrations/glue-tools/',
-    destination: '/organization/integrations/third-party-integrations/',
+    destination: '/integrations/third-party-integrations/',
   },
   {
     source: '/organization/integrations/synkrony/',
-    destination: '/organization/integrations/third-party-integrations/',
+    destination: '/integrations/third-party-integrations/',
   },
   {
     source: '/organization/integrations/bosun/',
-    destination: '/organization/integrations/third-party-integrations/',
+    destination: '/integrations/third-party-integrations/',
   },
   {
     source: '/organization/integrations/steadwing-rca/',
-    destination: '/organization/integrations/third-party-integrations/',
+    destination: '/integrations/third-party-integrations/',
   },
   {
     source: '/organization/integrations/aether/',
-    destination: '/organization/integrations/third-party-integrations/',
+    destination: '/integrations/third-party-integrations/',
   },
   {
     source: '/organization/integrations/toolbar/',
-    destination: '/organization/integrations/third-party-integrations/',
+    destination: '/integrations/third-party-integrations/',
   },
   {
     source: '/organization/integrations/vanta-gov/',
-    destination: '/organization/integrations/third-party-integrations/',
+    destination: '/integrations/third-party-integrations/',
   },
   {
     source: '/organization/integrations/xurrent-imr/',
-    destination: '/organization/integrations/third-party-integrations/',
+    destination: '/integrations/third-party-integrations/',
   },
   {
     source: '/organization/integrations/shiprail/',
-    destination: '/organization/integrations/third-party-integrations/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/specsource/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/mendral/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/nominal/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/terramind/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/flow-relay/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  // /integrations/<slug>/ redirects handle the /product/integrations/<slug>/ chain
+  // via the wildcard redirect at the bottom of this file
+  {
+    source: '/integrations/sonarly-integration/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/work-os/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/watchdog-security/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/releasetag/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/kawachai/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/opsbrief/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/twill/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/glue-tools/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/synkrony/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/bosun/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/steadwing-rca/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/aether/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/toolbar/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/vanta-gov/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/xurrent-imr/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/shiprail/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/specsource/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/mendral/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/nominal/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/terramind/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/flow-relay/',
+    destination: '/integrations/third-party-integrations/',
   },
   {
     source: '/development/sdk-dev/:path*',
@@ -810,7 +916,15 @@ const userDocsRedirects = [
   },
   {
     source: '/product/integrations/:path*',
-    destination: '/organization/integrations/:path*',
+    destination: '/integrations/:path*',
+  },
+  {
+    source: '/organization/integrations/:path*',
+    destination: '/integrations/:path*',
+  },
+  {
+    source: '/organization/integrations',
+    destination: '/integrations/',
   },
   {
     source: '/product/accounts/:path*',
@@ -1366,7 +1480,7 @@ const userDocsRedirects = [
   },
   {
     source: '/organization/integrations/launchdarkly/',
-    destination: '/organization/integrations/feature-flag/launchdarkly/',
+    destination: '/integrations/feature-flag/launchdarkly/',
   },
   {
     source:
@@ -1538,7 +1652,7 @@ const userDocsRedirects = [
   },
   {
     source: '/organization/integrations/shortcut/',
-    destination: '/organization/integrations/issue-tracking/shortcut/',
+    destination: '/integrations/issue-tracking/shortcut/',
   },
   // Redirects for JavaScript tracing docs
   {
@@ -1680,7 +1794,7 @@ const userDocsRedirects = [
   },
   {
     source: '/organization/integrations/expo/',
-    destination: '/organization/integrations/deployment/expo/',
+    destination: '/integrations/deployment/expo/',
   },
   {
     source: '/product/issues/issue-details/sentry-seer/',
