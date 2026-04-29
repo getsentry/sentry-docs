@@ -125,6 +125,38 @@ class OrderConsumer {
 }
 ```
 
+### Enable Retry Count
+
+Sentry sets `messaging.message.retry.count` from Spring Kafka's
+`kafka_deliveryAttempt` header. Spring Kafka only adds this header when delivery
+attempt headers are enabled and the listener uses an error handler or after-rollback
+processor that supports delivery attempts.
+
+The following example uses Spring Kafka's `DefaultErrorHandler`. If your app already
+uses retry handling that supports delivery attempts, keep your existing handler and
+enable the header on the listener container:
+
+```java {tabTitle:Java}
+import org.springframework.context.annotation.Bean;
+import org.springframework.kafka.config.ContainerCustomizer;
+import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
+import org.springframework.kafka.listener.DefaultErrorHandler;
+import org.springframework.util.backoff.FixedBackOff;
+
+@Bean
+DefaultErrorHandler kafkaErrorHandler() {
+    return new DefaultErrorHandler(new FixedBackOff(0L, 1L));
+}
+
+@Bean
+ContainerCustomizer<Object, Object, ConcurrentMessageListenerContainer<Object, Object>>
+    kafkaContainerCustomizer() {
+    return container -> container.getContainerProperties().setDeliveryAttemptHeader(true);
+}
+```
+
+Without that header, Sentry does not set `messaging.message.retry.count`.
+
 </PlatformSection>
 
 <PlatformSection notSupported={["java.spring-boot"]}>
