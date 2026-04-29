@@ -1,7 +1,7 @@
 develop: setup-git
 	[ -f .env.development ] || cp .env.example .env.development
 	pnpm install
-	npx @sentry/dotagents install
+	npx -y @sentry/dotagents install
 
 setup-git:
 ifneq (, $(shell which pre-commit))

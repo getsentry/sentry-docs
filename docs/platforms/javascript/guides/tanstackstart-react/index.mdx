@@ -347,7 +347,28 @@ If you need more control over the upload process, see our [source maps guide](/p
 
 ## Step 5: Avoid Ad Blockers With Tunneling (Optional)
 
-<PlatformContent includePath="getting-started-tunneling" />
+Ad blockers and corporate firewalls often block requests to `*.sentry.io`, which can cause events to be dropped before they reach Sentry. To work around this, you can tunnel events through a same-origin route in your TanStack Start app.
+
+The `sentryTanstackStart` Vite plugin can register a tunnel route for you and automatically wire up the client `tunnel` option:
+
+```typescript {filename:vite.config.ts} {9}
+import { defineConfig } from "vite";
+import { tanstackStart } from "@tanstack/react-start/plugin/vite";
+import { sentryTanstackStart } from "@sentry/tanstackstart-react/vite";
+
+export default defineConfig({
+  plugins: [
+    tanstackStart(),
+    sentryTanstackStart({
+      tunnelRoute: true,
+    }),
+  ],
+});
+```
+
+With `tunnelRoute: true`, an opaque route path is generated for each dev session and production build, making it harder for ad blockers to target. See the [`sentryTanstackStart`](/platforms/javascript/guides/tanstackstart-react/features/sentryTanstackStart/#tunnel-route) feature page for static paths and the full set of options.
+
+If you can't use the Vite plugin, or you need full control over the route file and DSN allowlist, use [`createSentryTunnelRoute`](/platforms/javascript/guides/tanstackstart-react/features/createSentryTunnelRoute/) to define the route yourself.
 
 ## Step 6: Verify
 
