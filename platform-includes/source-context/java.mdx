@@ -329,11 +329,17 @@ You can also use a `.sentryclirc` or a `.properties` file, which you can link us
 
 ### Creating the Source Bundle
 
-First, create the source bundle containing your source files:
+First, create the source bundle containing your source files. The path can be a project or module root — `sentry-cli` collects JVM source files (`.java`, `.kt`, `.scala`, `.groovy`, `.clj`) and skips build output directories and `.gitignore`d paths automatically.
 
 ```
-sentry-cli debug-files bundle-jvm --output path/to/store/bundle --debug-id A_VALID_UUID path/to/source-code
+sentry-cli debug-files bundle-jvm --output path/to/store/bundle --debug-id A_VALID_UUID path/to/project/root
 ```
+
+<PlatformSection supported={["android"]}>
+
+If multiple source sets in your project define the same fully-qualified class name (for example, when both `src/main/` and `src/debug/` contain `com.example.Foo`), `bundle-jvm` keeps the first occurrence and warns about the rest. Use `--exclude` to scope the bundle to a single source set — see [Debug Information Files](/cli/dif/#jvm-source-bundles) for details.
+
+</PlatformSection>
 
 ### Uploading the Source Bundle
 
