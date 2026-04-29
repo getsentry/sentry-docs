@@ -14,11 +14,12 @@ The automatically added top-level `import` will then import the Sentry server-si
 In this case, Sentry isn’t initialized before the app starts, but is set up as early as possible.
 
 <Alert level='warning' title='Restrictions of this installation method'>
-  This installation method has fundamental restrictions:
-  - Only basic `http` and `fetch` instrumentation will work.
-  - No DB or framework-specific instrumentation will be available.
 
-  We recommend using this only if the `--import` flag is not an option for you.
+This installation method has the fundamental restriction that only native Node.js APIs can be instrumented (such as `fetch` and the `http` module).
+As a result, the Sentry SDK will not capture data from database calls, queues, ORMs, third-party libraries, or other framework-specific data.
+
+We recommend using this only if the `--import` flag is not an option for you.
+
 </Alert>
 
 ## Initializing Sentry With a Top-level `import`
@@ -26,15 +27,17 @@ In this case, Sentry isn’t initialized before the app starts, but is set up as
 Enable the top-level `import` by setting `autoInjectServerSentry`:
 
 ```typescript {filename:app.config.ts} {8}
-import { defineConfig } from '@solidjs/start/config';
-import { withSentry } from '@sentry/solidstart';
+import { defineConfig } from "@solidjs/start/config";
+import { withSentry } from "@sentry/solidstart";
 
-export default defineConfig(withSentry(
+export default defineConfig(
+  withSentry(
     {},
     {
-    autoInjectServerSentry: 'top-level-import'
-    })
- );
+      autoInjectServerSentry: "top-level-import",
+    }
+  )
+);
 ```
 
 By default, the SDK will add the Sentry server instrumentation file to the build output (typically, `.output/server/instrument.server.mjs`).

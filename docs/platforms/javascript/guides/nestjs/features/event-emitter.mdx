@@ -15,4 +15,25 @@ The NestJS SDK wraps the `@OnEvent` decorator automatically to:
 
 When an event handler is executed, a new span is created to track its performance, and any errors are automatically reported to Sentry while preserving the original error behavior.
 
+<Alert level="info" title="Multiple decorators">
+  If multiple decorators are used, we will collect all event names to determine the span's name.
+  In case you want to map each event to a specific handler, use one decorator per handler and handle any shared logic through a separate function.
+  
+  ```typescript
+  @OnEvent('event.A')
+  function myHandlerA(payload: any) {
+    commonHandler(payload)  
+  }
+  
+  @OnEvent('event.B')
+  function myHandlerB(payload: any) {
+    commonHandler(payload)  
+  }
+  
+  function commonHandler(payload: any) {
+    // handle stuff 
+  }
+  ```
+</Alert>
+
 This instrumentation works transparently with existing NestJS event handlers without requiring any code changes to your application.

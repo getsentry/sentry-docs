@@ -1,15 +1,21 @@
 ```python
 import sentry_sdk
 
-scope = sentry_sdk.get_current_scope()
-scope.set_tag("my-tag", "my value")
-scope.user = {"id": 42, "email": "john.doe@example.com"}
+sentry_sdk.init(...)
 
-# reset all scope data
-scope.clear()
+with sentry_sdk.new_scope() as scope:
+    scope.set_tag("inside-new-scope", "yes")
+    try:
+        raise RuntimeError("With new_scope")
+    except:
+        # This exception will have the tag set
+        sentry_sdk.capture_exception()
 
-# Or:
-
-sentry_sdk.set_tag("my-tag", "my value")
-sentry_sdk.set_user({"id": 42, "email": "john.doe@example.com"})
+# The scope is automatically cleared and the previous scope
+# is restored after the `with` block
+try:
+    raise RuntimeError("Outside of new_scope")
+except:
+    # This exception won't have the custom tag set
+    sentry_sdk.capture_exception()
 ```

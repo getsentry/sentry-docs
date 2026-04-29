@@ -99,3 +99,31 @@ We'll use `bundles/bundle1.js` as an example full path to your file for the tabl
 | `RewriteFrames()`                      | `app:///bundle1.js` | The default behavior is to replace the absolute path, minus the filename, and add the default prefix (`app:///`).                |
 | `RewriteFrames({root: '/bundles'})`    | `app:///bundle1.js` | The `root` is defined as `/bundles`. Only that part is trimmed from the beginning of the path.                                   |
 | `RewriteFrames({iteratee: () => {} })` | `app:///bundle.js`  | The number at the end of a bundle can be a file hash. This is common in Expo apps. You can remove it in the `iteratee` callback. |
+
+### Supabase
+
+_Import name: `Sentry.supabaseIntegration`_
+
+The `supabaseIntegration` adds instrumentation for the Supabase client to capture spans for both authentication and database operations.
+
+You need to have both the Sentry React Native SDK and the Supabase library installed. For Supabase installation instructions, refer to the [Supabase JavaScript documentation](https://supabase.com/docs/reference/javascript/introduction).
+
+#### Configuration
+
+This is the preferred method for most use cases. and follows Sentry's standard integration pattern.
+
+```javascript
+import * as Sentry from "@sentry/react-native";
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseClient = createClient('YOUR_SUPABASE_URL', 'YOUR_SUPABASE_KEY');
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.supabaseIntegration({ supabaseClient })
+  ],
+});
+```
+
+For more information, please refer to [the Supabase integration documentation for the JavaScript SDK](/platforms/javascript/guides/node/configuration/integrations/supabase/).

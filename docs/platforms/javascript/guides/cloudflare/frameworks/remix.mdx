@@ -1,57 +1,61 @@
 ---
-title: Cloudflare Remix Framework Guide
-description: "Learn how to add Cloudflare instrumentation to your Remix app."
+title: Remix on Cloudflare
+description: "Learn how to instrument your Remix app on Cloudflare Workers and Pages and capture your first errors with Sentry."
 ---
 
-If you're running your Remix app on Cloudflare Pages, you can use the Sentry Remix SDK in combination with the Sentry Cloudflare SDK to add Sentry instrumentation.
+<PlatformContent
+  includePath="getting-started-prerequisites"
+  platform="javascript.remix"
+/>
 
-## 1. Installing Sentry Remix SDK
+<StepConnector selector="h2" showNumbers={true}>
 
-First, install the Sentry Remix SDK in your application. We recommend using the Sentry wizard to automatically install the SDK:
+## Install
 
-```bash
-npx @sentry/wizard@latest -i remix
+Choose the features you want to configure, and this guide will show you how:
+
+<OnboardingOptionButtons
+  options={[
+    "error-monitoring",
+    "performance",
+    "session-replay",
+    "user-feedback",
+    "logs",
+  ]}
+/>
+
+<Include name="quick-start-features-expandable-cloudflare-frameworks" />
+
+### Install the Sentry SDK
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Run the command for your preferred package manager to add the Sentry SDK to your application:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```bash {tabTitle:npm}
+npm install @sentry/remix --save
 ```
 
-If the setup through the wizard doesn't work for you, you can also [set up the Remix SDK manually](/platforms/javascript/guides/remix/manual-setup/).
-
-## 2. Installing Sentry Cloudflare SDK
-
-After installing the Sentry Remix SDK, delete the newly generated `instrumentation.server.mjs` file. This instrumentation is not needed when using the Cloudflare SDK.
-
-Now you can install the Sentry Cloudflare SDK. First, install the SDK with your package manager:
-
-<PlatformContent includePath="getting-started-install" />
-
-To use the SDK, you'll need to set either the `nodejs_als` or `nodejs_compat` compatibility flags in your `wrangler.jsonc`/`wrangler.toml` config. This is because the SDK
-needs access to the `AsyncLocalStorage` API to work correctly.
-
-```jsonc {tabTitle:JSON} {filename:wrangler.jsonc}
-{
-  "compatibility_flags": [
-    "nodejs_als",
-    // "nodejs_compat"
-  ],
-}
+```bash {tabTitle:yarn}
+yarn add @sentry/remix
 ```
 
-```toml {tabTitle:Toml} {filename:wrangler.toml}
-compatibility_flags = ["nodejs_als"]
-# compatibility_flags = ["nodejs_compat"]
+```bash {tabTitle:pnpm}
+pnpm add @sentry/remix
 ```
 
-Then create a `_middleware.js` file in your `functions` directory and add the following code:
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
-```javascript {filename:functions/_middleware.js}
-import * as Sentry from "@sentry/cloudflare";
+<PlatformContent
+  includePath="getting-started-complete"
+  platform="javascript.remix"
+/>
 
-export const onRequest = [
-  // Make sure Sentry is the first middleware
-  Sentry.sentryPagesPlugin((context) => ({
-    dsn: "___PUBLIC_DSN___",
-    // Set tracesSampleRate to 1.0 to capture 100% of spans for tracing.
-    tracesSampleRate: 1.0,
-  })),
-  // Add more middlewares here
-];
-```
+</StepConnector>

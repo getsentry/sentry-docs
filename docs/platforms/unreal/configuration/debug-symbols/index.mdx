@@ -1,6 +1,7 @@
 ---
 title: Debug Symbols Uploading
-description: "Learn how the Unreal Engine SDK handles debug symbols upload."
+description: Learn how the Unreal Engine SDK handles debug symbols upload.
+og_image: /og-images/platforms-unreal-configuration-debug-symbols.png
 ---
 
 Sentry requires [debug information files](/platforms/unreal/data-management/debug-files/) to symbolicate crashes. The Unreal Engine SDK provides an automated upload functionality for those symbol files that rely on the [sentry-cli](/cli/). This is done automatically, so running the `sentry-cli` manually isn't required. The symbol upload happens during the execution of `PostBuildSteps`, as specified in the `Sentry.uplugin` file. The `sentry-cli` executables for Windows, macOS, and Linux are included as part of the Unreal Engine SDK package. They can also be downloaded manually via the settings menu if the plugin was installed from the UE Marketplace.
@@ -50,3 +51,21 @@ To upload debug symbols to Sentry manually, run `sentry-cli` through the command
 ```bash
 sentry-cli --auth-token ___ORG_AUTH_TOKEN___ debug-files upload --org ___ORG_SLUG___ --project ___PROJECT_SLUG___ PATH_TO_SYMBOLS
 ```
+
+## Debug symbols for macOS and iOS
+
+Sentry requires [_dSYM files_](/platforms/unreal/data-management/debug-files/file-formats/#mach-o-and-dsym) to fully symbolicate your stack traces for macOS/iOS games. To ensure that the debug symbols are generated and can be processed by the Sentry Unreal plugin during the execution of `PostBuildSteps`, add the following build settings to your project `.Target.cs` file:
+
+```csharp
+// For Mac
+MacPlatform.bUseDSYMFiles = true;
+
+// For iOS
+IOSPlatform.bGeneratedSYM = true;
+```
+
+<Alert>
+
+Unreal Engine 5.3 and newer supports [Modernized Xcode Workflow](https://dev.epicgames.com/documentation/en-us/unreal-engine/using-modern-xcode-in-unreal-engine-5.3-and-newer) which aligns more closely with standard Apple development practices. In this case, symbol upload can be handled during the custom [Xcode Build Phase](/platforms/apple/guides/macos/dsym/#xcode-build-phase).
+
+</Alert>

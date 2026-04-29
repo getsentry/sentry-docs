@@ -1,0 +1,139 @@
+---
+title: Event Loop Block Detection
+sidebar_order: 70
+description: "Monitor for blocked event loops in Electron applications"
+keywords:
+  [
+    "anr",
+    "Application Not Responding",
+    "Event Loop Blocked",
+    "Event Loop Stalls",
+  ]
+---
+
+Event Loop Block errors, or Application Not Responding (ANR) errors are
+triggered when the Electron main or renderer processes event loop is blocked for
+more than the configured threshold. The Electron SDK reports ANR errors as
+Sentry events and can attach a stack trace of the blocking code to the ANR
+event.
+
+<Include name="feature-stage-beta.mdx" />
+
+_(Available in version 6.9.0 and above)_
+
+Event loop blocked detection can be individually enabled for the main and
+renderer processes.
+
+# Main Process:
+
+## Installation
+
+Install `@sentry/node-native` to use the `eventLoopBlockIntegration` in the main
+process.
+
+```bash {tabTitle:npm}
+npm install @sentry/node-native
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/node-native
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/node-native
+```
+
+## Usage
+
+```javascript
+import * as Sentry from "@sentry/electron/main";
+import { eventLoopBlockIntegration } from "@sentry/electron/native";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [eventLoopBlockIntegration({ threshold: 500 })],
+});
+```
+
+## Configuration options
+
+```typescript
+export interface ThreadBlockedIntegrationOptions {
+  /**
+   * Threshold in milliseconds to trigger an event.
+   *
+   * Defaults to 1000ms.
+   */
+  threshold: number;
+  /**
+   * Maximum number of blocked events to send per clock hour.
+   *
+   * Defaults to 1.
+   */
+  maxEventsPerHour: number;
+  /**
+   * Tags to include with blocked events.
+   */
+  staticTags: { [key: string]: Primitive };
+}
+```
+
+# Renderer Processes:
+
+```javascript
+import * as Sentry from "@sentry/electron/renderer";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  anrDetection: { captureStackTrace: true },
+});
+```
+
+## Configuration options
+
+You can pass a configuration object for `anrDetection` in the renderer to
+customize the ANR detection behavior.
+
+```Typescript
+interface Options {
+  /**
+   * Interval to send heartbeat messages to the child process.
+   *
+   * Main process: Defaults to 50ms.
+   * Renderer process: Defaults to 1000ms.
+   */
+  pollInterval: number;
+  /**
+   * Threshold in milliseconds to trigger an ANR event.
+   *
+   * Defaults to 5000ms.
+   */
+  anrThreshold: number;
+  /**
+   * Whether to capture a stack trace when the ANR event is triggered.
+   *
+   * Defaults to `false`.
+   */
+  captureStackTrace: boolean;
+}
+```
+
+## Event Loop Block Detection Implementation and Overhead
+
+In the main process, the `eventLoopBlockIntegration` uses a native module to
+track threads and capture stack traces via v8's native APIs. A worker thread is
+used to capture events even if the main thread is blocked. Overhead with no
+event loop blocking should be minimal. Each thread notifies the native module
+that it is alive every `threshold / 2` milliseconds. Once an event loop block is
+detected, v8's native APIs are used to pause all threads and capture stack
+traces. The pause time is considered inconsequential if the event loop has
+already been blocked for hundreds of milliseconds.
+
+In the renderer processes, a similar polling mechanism is used to detect event
+loop blocks. In Electron v34 or newer, the
+[`frame.collectJavaScriptCallStack()`](https://www.electronjs.org/docs/latest/api/web-frame-main#framecollectjavascriptcallstack-experimental)
+API is used to capture stack traces when an event loop block is detected. In
+older Electron versions, the `v8` inspector API is used to capture stack traces.
+The inspector API can have a slight negative impact on performance since it can
+cause v8 to de-optimize some code paths. For this reason we recommend updating
+to Electron v34 or newer to use this feature in production.

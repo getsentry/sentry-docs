@@ -1,11 +1,30 @@
 ---
 title: Laravel Options
 sidebar_order: 1
-description: "Learn about Sentry's integration with Laravel and its options for breadcrumbs, and tracing."
+sidebar_section: configuration
+description: "Learn about Sentry's integration with Laravel and its options for logs, breadcrumbs, and tracing."
 ---
 
 Most configuration for Laravel is done in your `.env` file.
-You can also add additonal config options to your `config/sentry.php` file.
+You can also add additional config options to your `config/sentry.php` file.
+
+## Logs
+
+To send Laravel logs to Sentry, enable logs in your `.env` file or in `config/sentry.php`. If a single request, command, or job can produce a high volume of logs, `SENTRY_LOG_FLUSH_THRESHOLD` lets the SDK send partial log batches before it finishes.
+
+For setup and usage details, see the [Laravel logs docs](../../logs/).
+
+### `enable_logs`
+
+This configures the base SDK [`enable_logs`](/platforms/php/configuration/options/#enable_logs) option.
+
+### `log_flush_threshold`
+
+```bash {filename:.env}
+SENTRY_LOG_FLUSH_THRESHOLD=5
+```
+
+When this is unset, the SDK does not auto flush buffered logs. Set it to a positive integer to flush as soon as that many logs have been buffered.
 
 ## Breadcrumbs
 
@@ -53,30 +72,61 @@ SENTRY_TRACES_SAMPLE_RATE=1.0
 
 ### Advanced Sample Rate
 
-If you want more control over which requests are monitored, you can use the [`traces_sampler`](/platforms/php/guides/laravel/configuration/options/#traces-sampler) option:
+If you want more control over which requests are monitored, use the [`traces_sampler`](/platforms/php/guides/laravel/configuration/options/#traces-sampler) option as a callable:
 
 ```php {filename:config/sentry.php}
-'traces_sampler' => function (\Sentry\Tracing\SamplingContext $context): float {
-    // We always sample if the front-end indicates it was sampled to have full traces front to back
-    if ($context->getParentSampled()) {
-        return 1.0;
-    }
-
-    if (some_condition()) {
-        // Drop this transaction, by setting its sample rate to 0
-        return 0.0;
-    }
-
-    // Default sample rate for all other transactions
-    return 0.25;
-},
+'traces_sampler' => [App\Exceptions\Sentry::class, 'tracesSampler'],
 ```
 
-<Alert>
+Then implement the sampler:
 
-Learn more in [Closures and Config Caching](/platforms/php/guides/laravel/configuration/laravel-options/#closures-and-config-caching).
+```php {filename:app/Exceptions/Sentry.php}
+class Sentry
+{
+    public static function tracesSampler(\Sentry\Tracing\SamplingContext $context): float
+    {
+        // Keep front-end and back-end traces connected.
+        if ($context->getParentSampled()) {
+            return 1.0;
+        }
 
-</Alert>
+        if (some_condition()) {
+            // Drop this transaction.
+            return 0.0;
+        }
+
+        // Default sample rate for all other transactions.
+        return 0.25;
+    }
+}
+```
+
+### Lower Sample Rate for Specific Jobs
+
+If your application processes a large number of queued jobs, tracing every job at the same rate as your HTTP requests can create more transaction volume than you need. Use the `Sentry\Laravel\Jobs\Middleware\SentryTracesSampleRate` job middleware to keep fewer traces for specific jobs while leaving your global tracing configuration unchanged.
+
+This middleware only affects queue job transactions, so `tracing.queue_job_transactions` must stay enabled. It can only lower the sample rate for jobs that were already sampled by your global `traces_sample_rate` or `traces_sampler`; it does not upsample jobs that were excluded earlier.
+
+```php {filename:app/Jobs/ProcessPodcast.php}
+<?php
+
+namespace App\Jobs;
+
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Sentry\Laravel\Jobs\Middleware\SentryTracesSampleRate;
+
+class ProcessPodcast implements ShouldQueue
+{
+    public function middleware(): array
+    {
+        return [
+            new SentryTracesSampleRate(0.1), // Keep 10% of already-sampled traces for this job
+        ];
+    }
+}
+```
+
+This is useful for high-volume or lower-priority background work, such as imports, notifications, fan-out jobs, or other queue consumers where you still want representative performance data without sending every transaction.
 
 ### More Configuration
 
@@ -134,32 +184,4 @@ These settings have no effect if `SENTRY_TRACES_SAMPLE_RATE` is set to `0.0` or 
     // Enable the tracing integrations supplied by Sentry (recommended)
     'default_integrations' => env('SENTRY_TRACE_DEFAULT_INTEGRATIONS_ENABLED', true),
 ],
-```
-
-## Closures and Config Caching
-
-Sometimes the SDK requires a closure as an option value. However, this causes problems when using `php artisan config:cache`, resulting in the `Your configuration files are not serializable` error.
-
-We can work around that by providing a callable instead of a closure. In this example we are using the `traces_sampler` option, but this can be used for any other option that accepts a closure:
-
-```php {filename:config/sentry.php}
-'traces_sampler' => [App\Exceptions\Sentry::class, 'tracesSampler'],
-```
-
-This callable points to the `App\Exceptions\Sentry` class and the `tracesSampler` method:
-
-```php {filename:app/Exceptions/Sentry.php}
-<?php
-
-namespace App\Exceptions;
-
-use Sentry\Tracing\SamplingContext;
-
-class Sentry
-{
-    public static function tracesSampler(SamplingContext $context): float
-    {
-        // The code you would have placed in the closure...
-    }
-}
 ```

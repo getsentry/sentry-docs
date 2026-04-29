@@ -1,0 +1,52 @@
+---
+title: Troubleshooting
+sidebar_order: 9000
+sidebar_section: configuration
+description: "Learn more about how to troubleshoot common issues with the Unreal Engine SDK."
+---
+
+## Build Issues
+
+### Linker Errors After Plugin Update
+
+When updating the Sentry plugin by copying new files over an existing installation, leftover files from the previous version can cause linker errors like:
+
+```
+LNK2001: unresolved external symbol
+```
+
+This happens when source files that were removed in a newer version of the plugin remain in your project directory. UBT compiles them, but the symbols they reference no longer exist.
+
+**Solution**
+
+Delete the entire Sentry plugin folder before copying the new version:
+
+```bash
+rm -rf Plugins/sentry-unreal
+```
+
+Then copy the new plugin files into place. Simply overwriting files won't remove sources that were deleted upstream.
+
+### Perforce: Stale Binaries on Build Machines
+
+When using the Sentry Unreal SDK with Perforce, updated binaries from the plugin's `ThirdParty` directory may not be copied into the `Binaries` directory during the build. This can result in outdated Crashpad or Sentry binaries being used at runtime.
+
+**Cause**
+
+Unreal Build Tool (UBT) determines whether to copy files based on file modification timestamps. A file is only copied if the source is newer than the destination.
+
+If your Perforce depot stores binaries with the `+m` (modtime) typemap attribute, synced files retain their original submission timestamps rather than receiving the current time. On CI or build machines where `Binaries` already contains a previous version of these files (for example, from a VM image or earlier build), the existing files may have newer timestamps than the freshly synced `ThirdParty` sources. UBT then skips the copy, assuming the existing binaries are up to date.
+
+**Symptoms**
+
+- Sentry fails to initialize on build machines but works locally
+- Old versions of `crashpad_handler.exe` or `crashpad_wer.dll` are used at runtime
+- Plugin updates appear to have no effect on packaged builds
+
+**Solutions**
+
+You can resolve this with any of the following approaches:
+
+- **Remove the `+m` attribute from binary files in Perforce.** This ensures synced files receive the current timestamp and are treated as newer by UBT.
+- **Clean the plugin's `Binaries` directory before building.**
+- **Avoid pre-populating `Binaries` in VM or build machine images.** Ensure that build environments don't carry over stale binaries from previous SDK versions.

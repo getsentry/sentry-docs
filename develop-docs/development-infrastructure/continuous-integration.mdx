@@ -1,43 +1,25 @@
 ---
 title: Continuous Integration
-description: Sentry uses a variety of continuous integration services to help ensure we don't accidentally break the application.
+description: Continuous Integration at Sentry validates code changes by running test suites, linters, and other checks to catch bugs and regressions before they reach production, maintaining a high bar for code quality and reliability. CI also builds deployable artifacts like container images, ensuring consistent and reproducible environments across local development and production.
 sidebar_order: 80
 ---
 
-## Deployments
-
-[GoCD](https://deploy.getsentry.net) is used for deployments. Please refer to the [internal user guide](https://www.notion.so/sentry/GoCD-User-Guide-4f8456d2477c458095c4aa0e67fc38a6).
-
 ## GitHub Actions
 
-GitHub actions is our primary CI system and runs our tests on every pull request and on merges to master. It is required that tests pass before changes can be merged.
+We use Github Actions as our primary CI system. With it, we run many quality checks, including but not limited to testing, linting, and code coverage. We only run front end tests if there are front end changes, and vice versa for back end tests. We also run acceptance tests to verify end-to-end functionality. These actions run in pull requests and also merges into the mainline. Pull requests must successfully run all actions in order to be merged into the mainline.
 
 ## Docker images
 
-We use Google Cloud Build to build our Docker containers. Every single commit (including from PRs) gets built, tested and becomes available at `us.gcr.io/sentryio/sentry:<sha>` with no retention guarantees. Every push to `master` gets built, tested and [pushed to Docker Hub](https://hub.docker.com/r/getsentry/sentry/tags) permanently. You can set `SENTRY_IMAGE` to the following, when working with [getsentry/self-hosted](https://github.com/getsentry/self-hosted):
+We primarily use [a composite GitHub action](https://github.com/getsentry/action-build-and-push-images) for building and pushing images. This ensures that the workflows for building and publishing images are standardized, and appropriate metadata is available in the images. The standard for artifact management can be found [here](https://www.notion.so/sentry/Standard-Spec-Artifact-Management-22a8b10e4b5d80ecb6dcca3eb4558f5b).
 
-* `getsentry/sentry:<sha>`, `getsentry/sentry:<short_sha>`, or `getsentry/sentry:latest` to pull from a commit in [getsentry/sentry](https://github.com/getsentry/sentry) `master`
-* `us.gcr.io/sentryio/sentry:<sha>` to pull from a commit in any other branch or PR
+Our other shared composite actions are [documented internally](https://www.notion.so/sentry/Sentry-Composite-Actions-2ab8b10e4b5d80c6bc03fcd3079aed2a).
 
+We use GHCR (github container registry) for images that are used in CI, self-hosted, and local development. GAR (google artifact registry) is used for images that are used in prod.
 
 ## CI workflow for testing changes with getsentry
 
-See [Workflow](/development/workflow/).
+See [Workflow](/development/workflow/) for information on testing and reverting.
 
-## Troubleshooting CI
+## Deployments
 
-You might also be interested in <Link to="/development/environment/#troubleshooting">troubleshooting the dev environment</Link>.
-
----
-
-**Problem:**
-
-When pushing your build to staging and it fails the `Ensure test image` step on Travis.
-
-**Solution:**
-
-You probably forgot to push your branch on Sentry to GitHub.
-
-## Old Systems
-
-For historical reference, we used to use Travis and Percy which have been replaced by GitHub actions and [a GitHub action](https://github.com/getsentry/action-visual-snapshot) respectively.
+At Sentry we use [GoCD](https://deploy.getsentry.net) for our deployments. Please refer to the [internal deployments documentation](https://www.notion.so/sentry/Deployments-GoCD-2d197a53f2464807962a503cd14d8973) for more information.

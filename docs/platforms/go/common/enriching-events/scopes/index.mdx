@@ -1,11 +1,10 @@
 ---
 title: Scopes and Hubs
-description: "SDKs will typically automatically manage the scopes for you in the framework integrations. Learn what a scope is and how you can use it to your advantage."
+description: "The SDK will in most cases automatically manage the scopes for you in the framework integrations. Learn what a scope is and how you can use it to your advantage."
 ---
 
 When an event is captured and sent to Sentry, SDKs will merge that event data with extra
-information from the current scope. SDKs will typically automatically manage the scopes
-for you in the framework integrations and you don't need to think about them. However,
+information from the current scope. The SDK will in most cases automatically manage the scopes for you in the framework integrations and you don't need to think about them. However,
 you should know what a scope is and how you can use it for your advantage.
 
 ## What's a Scope, What's a Hub
@@ -72,3 +71,28 @@ On the other hand, <PlatformIdentifier name="with-scope" /> creates a clone of t
 made will stay isolated within the <PlatformIdentifier name="with-scope" /> callback function. This allows you to
 more easily isolate pieces of context information to specific locations in your code or
 even call <PlatformIdentifier name="clear" /> to briefly remove all context information.
+
+## Setting Attributes
+
+You can set typed attributes on the scope using `SetAttributes`. These attributes are attached to logs and metrics emitted within the scope. Attributes use the `attribute` package for type safety.
+
+```go
+import "github.com/getsentry/sentry-go/attribute"
+
+sentry.ConfigureScope(func(scope *sentry.Scope) {
+	scope.SetAttributes(
+		attribute.String("user.role", "admin"),
+		attribute.Int("retry.count", 3),
+		attribute.Bool("feature.enabled", true),
+		attribute.Float64("score", 99.5),
+	)
+})
+```
+
+To remove an attribute from the scope, use `RemoveAttribute`:
+
+```go
+sentry.ConfigureScope(func(scope *sentry.Scope) {
+	scope.RemoveAttribute("user.role")
+})
+```

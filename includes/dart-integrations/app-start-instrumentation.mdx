@@ -46,6 +46,12 @@ Before starting, ensure:
 
 This instrumentation is automatically enabled. There is no need for further configuration.
 
+<Alert>
+
+App start instrumentation is designed specifically for pure Flutter applications and requires UI rendering to function properly. If you're using Flutter in an add-to-app integration scenario, the app start metrics will not provide accurate measurements. In such cases, we recommend disabling this instrumentation.
+
+</Alert>
+
 ## Verify
 
 ### 1. Launch Your App:
@@ -59,3 +65,18 @@ Open the [sentry.io performance page](https://sentry.io/performance), find, and 
 ### 3. View App Start Metrics:
 
 Select the event within your transaction. Sentry displays the app start metrics on the right side of the screen in the **Mobile Vitals** section.
+
+## Disable App Start Instrumentation
+
+To disable the app start instrumentation, you can remove the `NativeAppStartIntegration` from the `integrations` list in your `SentryFlutter.init` call.
+
+```dart
+// ignore: implementation_imports
+import 'package:sentry_flutter/src/integrations/native_app_start_integration.dart';
+
+await SentryFlutter.init((options) {
+  final integration = options.integrations.firstWhere(
+    (integration) => integration is NativeAppStartIntegration);
+  options.removeIntegration(integration);
+});
+```

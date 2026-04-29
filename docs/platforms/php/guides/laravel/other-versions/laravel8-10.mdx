@@ -1,7 +1,8 @@
 ---
 title: Laravel 8.x, 9.x and 10.x
 description: "Learn about using Sentry with Laravel 8.x, 9.x and 10.x."
-sidebar_order: 100
+sidebar_order: 5.1
+sidebar_section: configuration
 ---
 
 Laravel is supported using a native package: [sentry-laravel](https://github.com/getsentry/sentry-laravel).
@@ -29,16 +30,11 @@ public function register(): void
 }
 ```
 
-<Alert>
-
-Alternatively, you can configure Sentry in your [Laravel Log Channel](/platforms/php/guides/laravel/usage/#log-channels), allowing you to log `info` and `debug` as well.
-
-</Alert>
+If you also want to send structured logs to Sentry, see the [Logs guide](/platforms/php/guides/laravel/logs/).
 
 ## Configure
 
 Configure the Sentry DSN with this command:
-
 
 ```shell
 php artisan sentry:publish --dsn=___PUBLIC_DSN___
@@ -46,13 +42,13 @@ php artisan sentry:publish --dsn=___PUBLIC_DSN___
 
 It creates the config file (`config/sentry.php`) and adds the `DSN` to your `.env` file.
 
-
 ```shell {filename:.env}
 SENTRY_LARAVEL_DSN=___PUBLIC_DSN___
 ```
 
 <Alert level="warning">
-  In order to receive stack trace arguments in your errors, make sure to set `zend.exception_ignore_args: Off` in your php.ini
+  In order to receive stack trace arguments in your errors, make sure to set
+  `zend.exception_ignore_args: Off` in your php.ini
 </Alert>
 
 ## Verify
@@ -89,6 +85,8 @@ SENTRY_TRACES_SAMPLE_RATE=1.0
 The example configuration above will transmit 100% of captured traces. Be sure to lower this value in production or you could use up your quota quickly.
 
 You can also be more granular with the sample rate by using the `traces_sampler` option. Learn more in [Using Sampling to Filter Transaction Events](/platforms/php/guides/laravel/configuration/filtering/#using-sampling-to-filter-transaction-events).
+
+If your queued jobs generate more traces than your web requests, you can also lower the sample rate for specific jobs with `Sentry\Laravel\Jobs\Middleware\SentryTracesSampleRate`. See [Laravel Options](/platforms/php/guides/laravel/configuration/laravel-options/#lower-sample-rate-for-specific-jobs).
 
 Performance data is transmitted using a new event type called "transactions", which you can learn about in [Distributed Tracing](/product/sentry-basics/tracing/distributed-tracing/#traces-transactions-and-spans).
 

@@ -1,7 +1,8 @@
 ---
 title: Hydration Error
 sidebar_order: 50
-description: "Learn about Session Replay hydration errors."
+description: Learn about Session Replay hydration errors.
+og_image: /og-images/product-issues-issue-details-replay-issues-hydration-error.gif
 ---
 
 Hydration errors are a React-specific problem that happen when the initial client UI does not match what was rendered on the server. They can result in extra work for the browser, and a slower pageload experience for users.
@@ -62,6 +63,22 @@ Sometimes the diff Sentry shows doesn't contain any visible changes. This is a l
 To make debugging easier, adjust the diff boundary to show more changes before or after the error was detected. Click the icon in the top-right corner of the screen and select timestamps that are further away from the error in the center. This will show more changes that may have contributed to the hydration error.
 
 ![html diff tool](./img/hydration-error-adjust-bounds.png)
+
+### The HTML view shows extra changes that do not impact the HTML rendering
+
+Sometimes you will see changes to the HTML like attribute being removed, order changing, spaces being removed, or strange classes like `:hover` appearing. These parts of the diff do not impact the HTML that the user sees, and often are not the cause of the hydration error.
+
+This is expected and a side effect of how we capture debugging data after a Hyration Error has occurred.
+
+Some common examples:
+
+![html diff tool](./img/hydration-diff-hover.png)
+
+An attribute `xmlns="http://www.w3.org/2000/svg"` was removed. This is an XML attribute and is not needed within a valid HTML page, so React did not include it in the render.
+
+![html diff tool](./img/hydration-diff-xmlns.png)
+
+The class name `:hover` was added Session Replay when it serialized the page, React didn't see this class and it has no impact on hydration. This means the user was hovering and interacting with the page before react was finished hydrating (this is the whole point of hydration; to make the page react for interaction sooner!). By the time hydration was complete the user had moved their mouse so the :hover class is changed.
 
 ## Privacy
 

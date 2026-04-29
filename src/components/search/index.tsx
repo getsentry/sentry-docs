@@ -1,6 +1,5 @@
 'use client';
 
-import {Fragment, useCallback, useEffect, useRef, useState} from 'react';
 import {ArrowRightIcon} from '@radix-ui/react-icons';
 import {Button} from '@radix-ui/themes';
 import {captureException} from '@sentry/nextjs';
@@ -11,16 +10,15 @@ import {
   standardSDKSlug,
 } from '@sentry-internal/global-search';
 import {usePathname} from 'next/navigation';
+import {Fragment, useCallback, useEffect, useRef, useState} from 'react';
 import algoliaInsights from 'search-insights';
-
 import {useOnClickOutside} from 'sentry-docs/clientUtils';
 import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
-
-import styles from './search.module.scss';
+import {DocMetrics} from 'sentry-docs/metrics';
 
 import {MagicIcon} from '../cutomIcons/magic';
 import {Logo} from '../logo';
-
+import styles from './search.module.scss';
 import {SearchResultItems} from './searchResultItems';
 import {relativizeUrl} from './util';
 
@@ -165,7 +163,10 @@ export function Search({
   }, [autoFocus]);
 
   const searchFor = useCallback(
-    async (inputQuery: string, args: Parameters<typeof search.query>[1] = {}) => {
+    async (
+      inputQuery: string,
+      args: Parameters<typeof search.query>[1] & {skipMetrics?: boolean} = {}
+    ) => {
       setQuery(inputQuery);
       if (inputQuery.length === 2) {
         setShowOffsiteResults(false);
@@ -179,6 +180,8 @@ export function Search({
         return;
       }
 
+      const {skipMetrics, ...searchArgs} = args;
+
       const queryResults = await search
         .query(
           inputQuery,
@@ -188,7 +191,7 @@ export function Search({
               platform => standardSDKSlug(platform)?.slug ?? ''
             ),
             searchAllIndexes: showOffsiteResults,
-            ...args,
+            ...searchArgs,
           },
           {clickAnalytics: true, analyticsTags: ['source:documentation']}
         )
@@ -220,9 +223,30 @@ export function Search({
         setLoading(false);
       }
 
+      // Calculate total results and track metrics
+      const totalResults = queryResults.reduce((sum, site) => sum + site.hits.length, 0);
+      const hasResults = totalResults > 0;
+
+      // Track search query metrics (skip on recursive calls to avoid duplicates)
+      if (!skipMetrics) {
+        DocMetrics.searchQuery(hasResults, totalResults, {
+          query_length: inputQuery.length,
+          includes_platform_filter: currentSearchPlatforms.length > 0,
+          search_all_indexes: showOffsiteResults,
+        });
+
+        // Track zero results specifically (indicates content gaps)
+        if (!hasResults) {
+          DocMetrics.searchZeroResults(inputQuery.length, {
+            includes_platform_filter: currentSearchPlatforms.length > 0,
+          });
+        }
+      }
+
       if (queryResults.length === 1 && queryResults[0].hits.length === 0) {
         setShowOffsiteResults(true);
-        searchFor(inputQuery, {searchAllIndexes: true});
+        // Skip metrics on recursive call to avoid duplicate tracking
+        searchFor(inputQuery, {searchAllIndexes: true, skipMetrics: true});
       } else {
         setResults(queryResults);
       }
@@ -319,7 +343,7 @@ export function Search({
             color="gray"
             size="3"
             radius="medium"
-            className="font-medium text-[var(--foreground)] py-2 px-3 uppercase cursor-pointer kapa-ai-class hidden md:flex"
+            className="font-medium text-[var(--foreground)] py-2 px-3 uppercase cursor-pointer kapa-ai-class hidden md:flex mr-4"
           >
             <div>
               <MagicIcon />
@@ -374,7 +398,9 @@ export function Search({
               <button
                 className={styles['sgs-expand-results-button']}
                 onClick={() => setShowOffsiteResults(true)}
-                onMouseOver={() => searchFor(query, {searchAllIndexes: true})}
+                onMouseOver={() =>
+                  searchFor(query, {searchAllIndexes: true, skipMetrics: true})
+                }
               >
                 Search <em>{query}</em> across all Sentry sites
               </button>

@@ -115,3 +115,56 @@ The maximum number of connections to keep in the pool. Only applied if `client` 
 The maximum time to wait (in milliseconds) for a connection to become available. Only applied if `client` is set to `Sentry.HackneyClient`.
 
 </SdkOption>
+
+## Tracing Options
+
+<SdkOption name="traces_sample_rate" type='float' defaultValue='nil'>
+
+A number between `0.0` and `1.0` that determines the percentage of transactions that will be sent to Sentry. Either this or `traces_sampler` must be defined to enable tracing.
+
+```elixir
+config :sentry,
+  traces_sample_rate: 0.2  # Sample 20% of transactions
+```
+
+</SdkOption>
+
+<SdkOption name="traces_sampler" type='function'>
+
+A function that determines the sample rate for transaction events. This function receives a sampling context map and should return a boolean or a float between `0.0` and `1.0`.
+
+```elixir
+config :sentry,
+  traces_sampler: fn sampling_context ->
+    case sampling_context.transaction_context.op do
+      "http.server" -> 0.1  # Sample 10% of HTTP requests
+      _ -> 0.05             # Sample 5% of other operations
+    end
+  end
+```
+
+If both `:traces_sampler` and `:traces_sample_rate` are configured, `:traces_sampler` takes precedence.
+
+</SdkOption>
+
+## Telemetry Processor Options
+
+The Telemetry Processor is a buffered, priority-based event delivery mechanism. It batches events and sends them to Sentry using a weighted scheduler that prioritizes critical events (like errors) over lower-priority ones (like logs). Logs are routed through the Telemetry Processor by default. You can opt in to route other event types through the processor as well. In a future major release, the Telemetry Processor will become the default delivery mechanism for all event types.
+
+<SdkOption name="telemetry_processor_categories" type='list' defaultValue='[:log]'>
+
+A list of event categories to route through the Telemetry Processor. By default, only `:log` events use the processor. You can opt in to route additional event types through it.
+
+Valid categories:
+
+- `:error` — error events (critical priority)
+- `:check_in` — cron check-in events (high priority)
+- `:transaction` — transaction events (medium priority)
+- `:log` — log events (low priority)
+
+```elixir
+config :sentry,
+  telemetry_processor_categories: [:error, :check_in, :transaction, :log]
+```
+
+</SdkOption>

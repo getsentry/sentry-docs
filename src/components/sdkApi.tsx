@@ -1,9 +1,9 @@
 import {Fragment} from 'react';
-
 import {getCurrentPlatform} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
 import {PlatformCategory} from 'sentry-docs/types';
 
+import {AvailableSince} from './availableSince';
 import {Expandable} from './expandable';
 import {codeToJsx} from './highlightCode';
 import {SdkDefinition} from './sdkDefinition';
@@ -26,6 +26,7 @@ type Props = {
   name: string;
   parameters: ParameterDef[];
   signature: string;
+  availableSince?: string;
   categorySupported?: PlatformCategory[];
   children?: React.ReactNode;
   language?: string;
@@ -35,6 +36,7 @@ export function SdkApi({
   name,
   children,
   signature,
+  availableSince,
   parameters = [],
   language,
   categorySupported = [],
@@ -51,9 +53,8 @@ export function SdkApi({
       {showServerLikeOnly && (
         <div className="italic text-sm">Only available on Server</div>
       )}
-
       <pre className="mt-2 mb-2 text-sm">{codeToJsx(signature, lang)}</pre>
-
+      {availableSince && <AvailableSince version={availableSince} />}
       {parameters.length ? (
         <Expandable title="Parameters">
           <div className="space-y-3">
@@ -63,7 +64,6 @@ export function SdkApi({
           </div>
         </Expandable>
       ) : null}
-
       {children}
     </SdkDefinition>
   );

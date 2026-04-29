@@ -1,0 +1,52 @@
+---
+title: Offline Support
+description: "Learn how to customize the automatic caching of Sentry events while being offline."
+---
+
+Sentry automatically handles offline event caching across the main and renderer processes to make sure you don't miss important information.
+
+You can customize the queueing behavior with these optional [`transportOptions`](/platforms/javascript/guides/electron/configuration/options/#transportOptions) properties:
+
+```javascript
+import * as Sentry from "@sentry/electron/main";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  transportOptions: {
+    /* The maximum number of days to keep an envelope in the queue. */
+    maxAgeDays: 30,
+    /* The maximum number of envelopes to keep in the queue. */
+    maxQueueSize: 30,
+    /**
+     * Called before we attempt to send an envelope to Sentry.
+     *
+     * If this function returns false, `shouldStore` will be called to determine if the envelope should be stored.
+     *
+     * Default: () => true
+     *
+     * @param envelope The envelope that will be sent.
+     * @returns Whether we should attempt to send the envelope
+     */
+    shouldSend: (envelope: Envelope) => boolean | Promise<boolean>;
+    /**
+     * Called before an event is stored.
+     *
+     * Return false to drop the envelope rather than store it.
+     *
+     * Default: () => true
+     *
+     * @param envelope The envelope that failed to send.
+     * @param error The error that occurred.
+     * @param retryDelay The current retry delay in milliseconds.
+     * @returns Whether we should store the envelope in the queue
+     */
+    shouldStore: (envelope: Envelope, error: Error, retryDelay: number) => boolean | Promise<boolean>;
+    /**
+     * Should the offline store flush shortly after startup.
+     *
+     * Defaults: false
+     */
+    flushAtStartup: false;
+  },
+});
+```

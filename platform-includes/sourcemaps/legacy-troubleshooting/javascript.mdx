@@ -1,21 +1,4 @@
-Setting up source maps can be tricky, but it's worth it to get it right. To troubleshoot your source maps set up, you can either:
-
-1. Use our automated verification tool inside `sentry-cli`, or
-2. Follow the manual steps listed below
-
-## Use the Sentry CLI
-
-To use the automated verification process, install and configure the Sentry [Command Line Interface](/cli/). Then, use the `sourcemaps explain` command, calling it with the relevant event ID, found in the top-left corner of the **Issue Details** page in [sentry.io](https://sentry.io).
-
-For example, "Event ID: c2ad049f":
-
-![Image highlighting where to find the ID of an event on Sentry](./img/event_id.png)
-
-```shell
-sentry-cli sourcemaps explain c2ad049fd9e448ada7849df94575e019
-```
-
-The CLI output should give you useful information about what went wrong with your source maps setup.
+Setting up source maps can be tricky, but it's worth it to get it right. You can follow the steps below to troubleshoot your source maps set up.
 
 <PlatformSection notSupported={["javascript.electron"]}>
 
@@ -221,17 +204,11 @@ new sourceMap.SourceMapConsumer(rawSourceMap).then(function (smc) {
 
 If you have the same (incorrect) results locally as you do via Sentry, double-check your source map generation configuration.
 
-## Verify your source files are not too large
-
-For an individual artifact, Sentry accepts a max filesize of **40 MB**.
-
-Often users hit this limit because they are transmitting source files at an interim build stage. For example, after your bundler has combined all your source files, but before minification has taken place. If possible, send the original source files.
-
 ## Verify artifacts are not gzipped
 
 The Sentry API currently only works with source maps and source files that are uploaded as plain text (UTF-8 encoded). If the files are uploaded in a compressed format (for example, gzip), they will be not be interpreted correctly.
 
-If you are using `sentry-cli` to upload your artifacts, starting with version `2.4.0` you can add the `--decompress` flag to your `sourcemaps upload` or `files upload` commands.
+If you are using `sentry-cli` to upload your artifacts, starting with version `2.4.0` you can add the `--decompress` flag to your `sourcemaps upload` commands.
 
 Sometimes build scripts and plugins produce pre-compressed minified files (for example, webpack's [compression plugin](https://github.com/webpack/compression-webpack-plugin)). In these cases, you'll need to disable such plugins and perform the compression **after** the generated source maps/source files have been uploaded to Sentry.
 

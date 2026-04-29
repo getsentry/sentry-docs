@@ -1,0 +1,80 @@
+The Rails SDK automatically sets several default attributes on all log entries to provide context and improve debugging:
+
+<Include name="logs/default-attributes/core" />
+
+<Include name="logs/default-attributes/message-template" />
+
+<Include name="logs/default-attributes/server" />
+
+<Include name="logs/default-attributes/user" />
+
+<Include name="logs/default-attributes/integration" />
+
+### Rails-Specific Attributes
+
+When using structured logging with Log Subscribers, additional Rails-specific attributes are automatically included:
+
+#### ActiveRecord Logs
+- `sql` - The SQL query executed
+- `duration_ms` - Query execution time in milliseconds
+- `cached` - Whether the query result was cached
+- `statement_name` - SQL statement name (when available and not "SQL")
+- `connection_id` - Database connection identifier (when available)
+- `db_system` - Database adapter (e.g., "postgresql", "mysql2", "sqlite3")
+- `db_name` - Database name (sanitized for SQLite file paths)
+- `server_address` - Database host (when available)
+- `server_port` - Database port (when available)
+- `server_socket_address` - Database socket path (when available)
+
+#### ActionController Logs
+- `controller` - Controller class name
+- `action` - Action method name
+- `duration_ms` - Request processing time in milliseconds
+- `method` - HTTP request method
+- `path` - Request path
+- `format` - Response format (html, json, etc.)
+- `status` - HTTP response status code (when available)
+- `view_runtime_ms` - View rendering time in milliseconds (when available)
+- `db_runtime_ms` - Database query time in milliseconds (when available)
+- `params` - Filtered request parameters (only when `send_default_pii` is enabled)
+
+#### ActiveJob Logs (when enabled)
+
+**Common attributes for all ActiveJob events:**
+- `job_class` - Job class name
+- `job_id` - Unique job identifier
+- `queue_name` - Queue name where job is processed
+- `executions` - Number of execution attempts
+- `priority` - Job priority
+
+**For `perform` events:**
+- `duration_ms` - Job execution time in milliseconds
+- `adapter` - Queue adapter class name
+- `scheduled_at` - When job was scheduled in ISO8601 format (for delayed jobs)
+- `delay_ms` - Delay between scheduling and execution in milliseconds (for delayed jobs)
+- `arguments` - Job arguments (only when `send_default_pii` is enabled, filtered for sensitive data)
+
+**For `enqueue` events:**
+- `adapter` - Queue adapter class name (when available)
+- `scheduled_at` - When job was scheduled in ISO8601 format (for delayed jobs)
+- `delay_seconds` - Delay between current time and scheduled time in seconds (for delayed jobs)
+
+**For `retry_stopped` and `discard` events:**
+- `error_class` - Error class name (when error is present)
+- `error_message` - Error message (when error is present)
+
+#### ActionMailer Logs (when enabled)
+
+**For `deliver` events:**
+- `mailer` - Mailer class name
+- `duration_ms` - Email delivery time in milliseconds
+- `perform_deliveries` - Whether deliveries are enabled
+- `delivery_method` - Email delivery method used (when available)
+- `date` - Email date header as string (when available)
+- `message_id` - Email message ID (only when `send_default_pii` is enabled)
+
+**For `process` events:**
+- `mailer` - Mailer class name
+- `action` - Mailer action method name
+- `duration_ms` - Email processing time in milliseconds
+- `params` - Mailer parameters (only when `send_default_pii` is enabled, filtered for sensitive data)

@@ -39,9 +39,9 @@ pnpm add @sentry/vite-plugin --save-dev
 
 ### Configuration
 
-To upload source maps you have to configure an [Organization Auth Token](https://sentry.io/orgredirect/organizations/:orgslug/settings/auth-tokens/).
+To upload source maps you have to configure an [Organization Token](https://sentry.io/orgredirect/organizations/:orgslug/settings/auth-tokens/).
 
-Alternatively, you can also use a [User Auth Token](https://sentry.io/orgredirect/organizations/:orgslug/settings/account/api/auth-tokens/), with the "Project: Read & Write" and "Release: Admin" permissions.
+Alternatively, you can also use a [Personal Token](https://sentry.io/orgredirect/organizations/:orgslug/settings/account/api/auth-tokens/), with the "Project: Read & Write" and "Release: Admin" permissions.
 
 Auth tokens can be passed to the plugin explicitly with the `authToken` option, with a `SENTRY_AUTH_TOKEN` environment variable, or with an `.env.sentry-build-plugin` file (don't forget to add it to your `.gitignore` file, as this is sensitive data) in the working directory when building your project.
 We recommend you add the auth token to your CI/CD environment as an environment variable.
@@ -54,6 +54,14 @@ Learn more about configuring the plugin in our [Sentry Vite Plugin documentation
 SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
 ```
 
+<Include name="vite-loadenv-hint.mdx" />
+
+<Alert level="info" title="Plugin Order Matters">
+
+Place the Sentry Vite plugin **after all other plugins** in your `plugins` array. This ensures source maps are generated correctly and tree-shaking doesn't remove Sentry's instrumentation.
+
+</Alert>
+
 Example:
 
 ```javascript {filename:vite.config.js}
@@ -62,21 +70,27 @@ import { sentryVitePlugin } from "@sentry/vite-plugin";
 
 export default defineConfig({
   build: {
-    sourcemap: true, // Source map generation must be turned on
+    sourcemap: "hidden", // Source map generation must be turned on ("hidden", true, etc.)
   },
   plugins: [
-    // Put the Sentry vite plugin after all other plugins
+    // Put the Sentry Vite plugin after all other plugins
     sentryVitePlugin({
       org: "___ORG_SLUG___",
       project: "___PROJECT_SLUG___",
       authToken: process.env.SENTRY_AUTH_TOKEN,
+
+      sourcemaps: {
+        // As you're enabling client source maps, you probably want to delete them after they're uploaded to Sentry.
+        // Set the appropriate glob pattern for your output folder - some glob examples below:
+        filesToDeleteAfterUpload: ["./**/*.map", ".*/**/public/**/*.map", "./dist/**/client/**/*.map"]
+      }
     }),
   ],
 });
 ```
 
-<Alert>
-  Generating sourcemaps may expose them to the public, potentially causing your
+<Alert level="warning">
+  Generating source maps **may expose them to the public**, potentially causing your
   source code to be leaked. You can prevent this by configuring your server to
   deny access to `.js.map` files, or by using [Sentry Vite Plugin's
   `sourcemaps.filesToDeleteAfterUpload`](https://www.npmjs.com/package/@sentry/vite-plugin#sourcemapsfilestodeleteafterupload)
@@ -89,3 +103,15 @@ The Sentry Vite plugin doesn't upload source maps in watch-mode/development-mode
 We recommend running a production build to test your configuration.
 
 </Alert>
+
+## Troubleshooting
+
+<Expandable permalink={true} title="Sentry Vite plugin shows high plugin timings warning">
+
+When using Vite 6+ with the Rolldown bundler, you may see a `[PLUGIN_TIMINGS]` warning reporting that `sentry-vite-plugin` is taking a high percentage of total build time. This warning comes from [Rolldown's plugin timings check](https://rolldown.rs/reference/InputOptions.checks#plugintimings), not from Sentry, and appears when a single plugin uses more than 50% of total build time.
+
+This is expected behavior. The Sentry Vite plugin uploads source maps to Sentry during the build, which involves network requests. In projects with fast compilation (common with Rolldown), the upload step can dominate the total build time percentage even though the absolute duration hasn't increased.
+
+Make sure you only upload source maps for production builds and in CI. See the [configuration section](#configuration) above for setup details.
+
+</Expandable>

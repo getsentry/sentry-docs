@@ -1,0 +1,18 @@
+```csharp
+options =>
+{
+    options.SetBeforeSendTransaction(transaction =>
+    {
+        // Set the attribute on the root span (transaction's trace context)
+        transaction.Contexts.Trace.SetData("myAttribute", "myValue");
+
+        // And on all child spans
+        foreach (var span in transaction.Spans)
+        {
+            span.SetData("myAttribute", "myValue");
+        }
+
+        return transaction;
+    });
+};
+```

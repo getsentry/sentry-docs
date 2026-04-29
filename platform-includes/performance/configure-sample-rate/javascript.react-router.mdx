@@ -1,0 +1,39 @@
+To enable automatic tracing you need to update the configuration of your client and server instrumentation:
+- For client-side tracing, include the `reactRouterTracingIntegration` to your integrations array.
+- Additionally you need to set the `tracesSampleRate` in your `Sentry.init()` calls.
+
+```javascript {tabTitle:Client} {filename:entry.client.tsx} {7,11}
+import * as Sentry from "@sentry/react-router";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // This enables automatic instrumentation for client-side navigations
+  integrations: [Sentry.reactRouterTracingIntegration()],
+
+  // We recommend adjusting this value in production, or using tracesSampler
+  // for finer control
+  tracesSampleRate: 1.0,
+  
+  // Set `tracePropagationTargets` to control for which URLs trace propagation should be enabled
+  tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+
+  // ... rest of your config
+});
+
+// ... rest of the file
+```
+
+```javascript {tabTitle:Server} {filename:instrument.server.(mjs|ts)} {8}
+import * as Sentry from "@sentry/react-router";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // We recommend adjusting this value in production, or using tracesSampler
+  // for finer control
+  tracesSampleRate: 1.0,
+
+  // ... rest of your config
+});
+```
