@@ -12,6 +12,8 @@ In `docs/organization/integrations/third-party-integrations/index.mdx`, add a ne
 
 The slug is the URL-safe identifier used for the redirect (e.g. `glue-tools`, `vanta-gov`).
 
+**The list must remain in alphabetical order by integration name.** Insert the new entry in the correct alphabetical position.
+
 ## Step 2 — Add a redirect
 
 In `redirects.js`, add a new entry to `userDocsRedirects` redirecting the integration's slug to the consolidated page:

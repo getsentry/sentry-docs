@@ -12,7 +12,7 @@ The React Native SDK exports an error boundary component that uses [React compon
 
 <Alert level="warning" title="Render errors only">
 
-React error boundaries **only catch errors during rendering, in lifecycle methods, and in constructors**. They do **not** catch errors in event handlers, asynchronous code (`setTimeout`, `Promise`), or native errors. See [Handling Non-Render Errors](#handling-non-render-errors) for how to handle those.
+React error boundaries **only catch errors during rendering, in lifecycle methods, and in constructors**. They do **not** catch errors in event handlers, asynchronous code (`setTimeout`, `Promise`), or native errors. For a fallback UI that covers those cases too, use [`Sentry.GlobalErrorBoundary`](#showing-a-fallback-ui-for-fatal-errors).
 
 </Alert>
 
@@ -102,7 +102,7 @@ In [React v17 and above](https://reactjs.org/blog/2020/08/10/react-v17-rc.html#n
 
 Errors in event handlers, `async` functions, `setTimeout`, and other non-render code won't be caught by `ErrorBoundary`. This is a [React limitation](https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary), not specific to Sentry.
 
-Sentry's [`reactNativeErrorHandlersIntegration`](/platforms/react-native/integrations/default/#reactnativeerrorhandlersintegration) (enabled by default) **automatically reports** these errors to Sentry — you don't need to do anything extra for error reporting. However, it won't display a fallback UI.
+Sentry's [`reactNativeErrorHandlersIntegration`](/platforms/react-native/integrations/default/#reactnativeerrorhandlersintegration) (enabled by default) **automatically reports** these errors to Sentry — you don't need to do anything extra for error reporting. For a fallback UI on fatal non-render errors, use [`Sentry.GlobalErrorBoundary`](#showing-a-fallback-ui-for-fatal-errors).
 
 ### Component-Level Error Handling
 
@@ -138,73 +138,93 @@ function MyComponent() {
 }
 ```
 
-### Global Error Handling With Fallback UI
+### Showing a Fallback UI for Fatal Errors
 
-To show a fallback UI for **any** unhandled JavaScript error (not just render errors), you can create a provider that listens to React Native's global error handler and combines it with `ErrorBoundary`:
+To show a fallback UI for fatal JavaScript errors that are thrown **outside** the React render tree — event handlers, `setTimeout`, async code, and errors routed through `ErrorUtils` — wrap your app in `Sentry.GlobalErrorBoundary`:
 
 ```javascript
-import React, { useState, useEffect } from "react";
-import { Button, DeviceEventEmitter, Text, View } from "react-native";
+import React from "react";
+import { Button, Text, View } from "react-native";
 import * as Sentry from "@sentry/react-native";
 
-// Set up the global error listener before Sentry.init()
-const globalHandler = global.ErrorUtils?.getGlobalHandler();
-global.ErrorUtils?.setGlobalHandler((error, isFatal) => {
-  DeviceEventEmitter.emit("GLOBAL_UNHANDLED_ERROR", error);
-
-  // Call the default handler in development for the React Native red box.
-  // In production, we skip the default handler to prevent the app from
-  // crashing so the fallback UI can be shown instead.
-  if (__DEV__ && globalHandler) {
-    globalHandler(error, isFatal);
-  }
-});
-
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-});
-
-function GlobalFallback({ onReset }) {
+function App() {
   return (
-    <View>
-      <Text>Something went wrong.</Text>
-      <Button onPress={onReset} title="Restart" />
-    </View>
-  );
-}
-
-function AppErrorProvider({ children }) {
-  const [globalError, setGlobalError] = useState(null);
-
-  useEffect(() => {
-    const subscription = DeviceEventEmitter.addListener(
-      "GLOBAL_UNHANDLED_ERROR",
-      (error) => setGlobalError(error)
-    );
-    return () => subscription.remove();
-  }, []);
-
-  if (globalError) {
-    return <GlobalFallback onReset={() => setGlobalError(null)} />;
-  }
-
-  return (
-    <Sentry.ErrorBoundary
-      fallback={({ resetError }) => (
-        <GlobalFallback onReset={resetError} />
+    <Sentry.GlobalErrorBoundary
+      fallback={({ error, eventId, resetError }) => (
+        <View>
+          <Text>Something went wrong.</Text>
+          <Text>{error?.message}</Text>
+          <Text>Event ID: {eventId}</Text>
+          <Button onPress={resetError} title="Restart" />
+        </View>
       )}
     >
-      {children}
-    </Sentry.ErrorBoundary>
+      <RestOfYourApp />
+    </Sentry.GlobalErrorBoundary>
   );
 }
 ```
 
-<Alert level="info" title="Note">
+`GlobalErrorBoundary` is a superset of `ErrorBoundary`: it catches everything `ErrorBoundary` catches **and** fatal non-rendering errors routed through React Native's `ErrorUtils` global handler. The error is captured through Sentry's normal pipeline (with the correct `mechanism` and `fatal` level) before the fallback is rendered — no duplicate events, no need to call `Sentry.captureException` yourself.
 
-When intercepting the global error handler, unhandled errors will still be reported to Sentry by the `reactNativeErrorHandlersIntegration`. You do **not** need to call `Sentry.captureException` manually in the global handler.
+In release builds, `GlobalErrorBoundary` takes over React Native's default fatal handler so the fallback can own the screen instead of the app being torn down. In development, LogBox still appears — the fallback renders alongside it.
+
+#### Opt-In Options
+
+By default, only fatal errors trigger the fallback. Two props extend coverage:
+
+```javascript
+<Sentry.GlobalErrorBoundary
+  // Also render the fallback for non-fatal ErrorUtils errors
+  includeNonFatalGlobalErrors
+  // Also render the fallback for unhandled promise rejections
+  includeUnhandledRejections
+  fallback={/* ... */}
+>
+  <App />
+</Sentry.GlobalErrorBoundary>
+```
+
+Most apps should leave both off: non-fatals are often recoverable, and unhandled rejections are frequently surfaced as toasts or inline errors rather than as a full-screen fallback.
+
+#### HOC Alternative
+
+```javascript
+import * as Sentry from "@sentry/react-native";
+
+export default Sentry.withGlobalErrorBoundary(App, {
+  fallback: ({ error, resetError }) => (
+    <Fallback error={error} onRetry={resetError} />
+  ),
+});
+```
+
+<Alert level="info" title="Reset semantics">
+
+`resetError()` clears the fallback and remounts the children, but it does **not** restore JavaScript state that was corrupted by the error. Use `onReset` to navigate to a safe screen, reload data, or reset your state container.
 
 </Alert>
+
+#### Migration From a Hand-Rolled `setGlobalHandler`
+
+Before `GlobalErrorBoundary`, showing a fallback for non-render errors required overriding `ErrorUtils.setGlobalHandler`, bridging through `DeviceEventEmitter`, and combining with `ErrorBoundary`. This is **no longer recommended** — the manual approach bypasses Sentry's flush and fatal deduplication, risks running the app in a corrupted state, and is fragile across React Native versions.
+
+```javascript
+// ❌ Before: manual global handler + ErrorBoundary
+const defaultHandler = global.ErrorUtils?.getGlobalHandler();
+global.ErrorUtils?.setGlobalHandler((error, isFatal) => {
+  DeviceEventEmitter.emit("GLOBAL_UNHANDLED_ERROR", error);
+  if (__DEV__) defaultHandler?.(error, isFatal);
+});
+// ...plus a provider subscribing to the event and an ErrorBoundary
+
+// ✅ After: one component
+<Sentry.GlobalErrorBoundary fallback={/* ... */}>
+  <App />
+</Sentry.GlobalErrorBoundary>
+```
+
+If you previously disabled the `onerror` integration to avoid duplicate reports, re-enable it (or remove the `reactNativeErrorHandlersIntegration({ onerror: false })` override) — `GlobalErrorBoundary` relies on it for capture.
 
 ## Options
 
@@ -229,6 +249,18 @@ A function that gets called on ErrorBoundary `componentWillUnmount()`.
 `beforeCapture` (Function)
 
 A function that gets called before an error is sent to Sentry, allowing for extra tags or context to be added to the error.
+
+### `GlobalErrorBoundary`-Only Options
+
+`GlobalErrorBoundary` accepts every `ErrorBoundary` option above plus:
+
+`includeNonFatalGlobalErrors` (boolean, default `false`)
+
+Also render the fallback when a non-fatal error is reported through `ErrorUtils`. Off by default to match the semantics of React Native's native red-screen, which only appears for fatals.
+
+`includeUnhandledRejections` (boolean, default `false`)
+
+Also render the fallback when an unhandled promise rejection occurs. Off by default because many apps prefer to surface rejections as toasts or inline errors rather than as a full-screen fallback.
 
 ## Examples
 

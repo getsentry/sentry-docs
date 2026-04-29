@@ -128,17 +128,17 @@ const FEATURE_DATA: Record<
     ),
   },
   metrics: {
-    title: 'Metrics',
+    title: 'Application Metrics',
     link: '/product/explore/metrics',
     learnMore:
-      "Track and analyze custom metrics, such as response times and database query durations, to understand trends and patterns in your application's performance and behavior over time.",
+      "Track and analyze custom application metrics, such as response times and database query durations, to understand trends and patterns in your application's performance and behavior over time.",
     findInSentry: (
       <Fragment>
         Open the{' '}
         <ExternalLink href="https://sentry.io/orgredirect/organizations/:orgslug/explore/metrics">
-          <strong>Metrics</strong>
+          <strong>Application Metrics</strong>
         </ExternalLink>{' '}
-        page to view and analyze your custom metrics. For more details, see this{' '}
+        page to view and analyze your metrics. For more details, see this{' '}
         <a href="/product/explore/metrics/#overview">interactive walkthrough</a>.
       </Fragment>
     ),

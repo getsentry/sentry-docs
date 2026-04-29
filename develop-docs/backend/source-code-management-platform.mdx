@@ -17,46 +17,46 @@ The SCM (Source Code Management) platform is a vendor-agnostic abstraction layer
 
 ### Features
 
-The platform exposes two subsystems:
+The platform exposes three subsystems:
 
 - **Actions** — outbound operations initiated by Sentry code. The `SourceCodeManager` class provides 70+ methods covering comments, reactions, pull requests, branches, git objects, reviews, and check runs.
+- **Actions RPC** — the same `SourceCodeManager` interface exposed over the network, enabling use from services outside the monolith.
 - **Event Stream** — inbound webhook processing. SCM providers push events which are deserialized into typed, provider-neutral dataclasses (`CheckRunEvent`, `CommentEvent`, `PullRequestEvent`) and dispatched to registered listener functions.
 
 ## Quick Start
 
-### Source Code Manager
+### In-Process Usage (Monolith)
 
-To use the Source Code Manager interfaces first import the SourceCodeManager class from the scm module and initialize it with your repository id.
+Import `SourceCodeManager` from the `scm` module and initialize it with a repository ID:
 
 ```python
-from sentry.scm.actions import SourceCodeManager
+from scm.actions import SourceCodeManager
 
 scm = SourceCodeManager.make_from_repository_id(organization_id=1, repository_id=2)
 ```
 
-This will initialize a new SCM class with its capabilities scoped to what the repository's service-provider can offer.
+This scopes the instance to what the repository's provider can offer.
 
-Now import the actions your use case requires.
+Import the actions your use case requires:
 
 ```python
-from sentry.scm.actions import SourceCodeManager, create_issue_reaction, create_issue_comment
+from scm.actions import SourceCodeManager, create_issue_reaction, create_issue_comment
 ```
 
-By default the SourceCodeManager class can not execute any methods without the type checker complaining. To smooth over service-provider variations, the SCM ships a capability system. You must statically assert that your "scm" instance is capable of executing a particular action or set of actions prior to calling an action function.
+By default the `SourceCodeManager` cannot execute methods without a capability assertion. Use `isinstance` guards to assert that the provider supports the action you need:
 
 ```python
-from sentry.scm.types import CreateIssueReactionProtocol, CreateIssueCommentProtocol
-
+from scm.types import CreateIssueReactionProtocol, CreateIssueCommentProtocol
 
 if isinstance(scm, CreateIssueReactionProtocol):
     create_issue_reaction(scm, issue_id="1", reaction="eyes")
 elif isinstance(scm, CreateIssueCommentProtocol):
     create_issue_comment(scm, issue_id="1", body="We've seen your request.")
 else:
-    return None # Unsupported providers do nothing.
+    return None  # Unsupported provider — do nothing.
 ```
 
-Capabilities may be composed when granularity is not required.
+Capabilities can be composed when granularity is not required:
 
 ```python
 class GitInteractionProtocol(
@@ -68,92 +68,36 @@ class GitInteractionProtocol(
 ):
     ...
 
-
 if isinstance(scm, GitInteractionProtocol):
     # do work
     ...
 ```
 
-Alternatively if you want to target a specific platform you may.
+If you need to target a specific provider directly, you may — but this is discouraged:
 
 ```python
-from sentry.scm.private.providers.github import GitHubProvider
+from scm.providers.github.provider import GitHubProvider
 
 if isinstance(scm, GitHubProvider):
-    # do github specific work.
+    # GitHub-specific work
     ...
 ```
 
-This pattern is discouraged, however, and is hidden within the `private` module. It is preferred that you interact with service-providers on a capability basis so that your feature is automatically enabled for new service-providers but we understand that this is not always desired.
+Prefer capability-based checks so your feature is automatically available to new providers.
 
-SCM actions will raise exceptions on failure. All exceptions are subclassed by `SCMError`. It is recommended that you catch these failures and handle them in some way.
+### RPC Client Usage (External Services)
 
-```python
-from sentry.scm.errors import SCMError
-
-try:
-    create_issue_reaction(scm, issue_id="1", reaction="+1")
-except SCMError:
-    retry_this_action(...)
-```
-
-The SCM exposes the following actions. For more information (and more up to date information) browse the `/src/sentry/scm/actions.py` file in the `getsentry/sentry` repository.
-
-- `compare_commits`
-- `create_branch`
-- `create_check_run`
-- `create_git_blob`
-- `create_git_commit`
-- `create_git_tree`
-- `create_issue_comment`
-- `create_issue_comment_reaction`
-- `create_issue_reaction`
-- `create_pull_request`
-- `create_pull_request_comment`
-- `create_pull_request_comment_reaction`
-- `create_pull_request_draft`
-- `create_pull_request_reaction`
-- `create_review`
-- `create_review_comment_file`
-- `create_review_comment_reply`
-- `delete_issue_comment`
-- `delete_issue_comment_reaction`
-- `delete_issue_reaction`
-- `delete_pull_request_comment`
-- `delete_pull_request_comment_reaction`
-- `delete_pull_request_reaction`
-- `get_archive_link`
-- `get_branch`
-- `get_check_run`
-- `get_commit`
-- `get_commits`
-- `get_commits_by_path`
-- `get_file_content`
-- `get_git_commit`
-- `get_issue_comment_reactions`
-- `get_issue_comments`
-- `get_issue_reactions`
-- `get_pull_request`
-- `get_pull_request_comment_reactions`
-- `get_pull_request_comments`
-- `get_pull_request_commits`
-- `get_pull_request_diff`
-- `get_pull_request_files`
-- `get_pull_request_reactions`
-- `get_pull_requests`
-- `get_tree`
-- `minimize_comment`
-- `request_review`
-- `update_branch`
-- `update_check_run`
-- `update_pull_request`
-
-### Source Code Manager RPC
-
-The Source Code Manager is exposed over RPC and may be accessed with the client library in your microservice.
+The `SourceCodeManager` is fully accessible over RPC from services outside the monolith:
 
 ```python
-scm = SourceCodeManagerRpcClient.make_from_repository_id(organization_id=1, repository_id=1)
+from scm.rpc.client import SourceCodeManager
+
+scm = SourceCodeManager.make_from_repository_id(
+    organization_id=1,
+    repository_id=("github", "owner/repo"),
+    base_url="http://127.0.0.1:8080",
+    signing_secret="secret",
+)
 
 if isinstance(scm, CreateIssueReactionProtocol):
     try:
@@ -162,9 +106,43 @@ if isinstance(scm, CreateIssueReactionProtocol):
         retry_this_action(...)
 ```
 
-### Event Stream
+The RPC client implements the same protocol interfaces as the in-process client, so all `isinstance` guards and action functions work identically.
 
-Source code management service providers will push events to Sentry. The Source Code Management Platform exposes a typed, event-stream interface which may be listened to by interested implementers.
+## Error Handling
+
+All SCM actions raise exceptions on failure. Every exception is a subclass of `SCMError`:
+
+```python
+from scm.errors import SCMError
+
+try:
+    create_issue_reaction(scm, issue_id="1", reaction="+1")
+except SCMError:
+    retry_this_action(...)
+```
+
+## Pagination
+
+List endpoints return a typed dict result. Use `PaginationParams` to traverse pages:
+
+```python
+from scm.types import PaginationParams
+
+page1 = get_issue_comments(scm, issue_id="1")
+cursor = page1["meta"]["next_cursor"]
+
+if cursor:
+    page2 = get_issue_comments(scm, issue_id="1", pagination=PaginationParams(cursor=cursor, per_page=50))
+```
+
+- `cursor`: opaque token from the previous page's `next_cursor`
+- `per_page`: number of items per page
+- `next_cursor` is `None` when there are no more pages
+
+
+## Event Stream
+
+SCM providers push events to Sentry. Register typed listeners using the `@scm_event_stream.listen_for` decorator:
 
 ```python
 from sentry.scm.stream import CheckRunEvent, scm_event_stream
@@ -175,15 +153,19 @@ def listen_for_check_run(event: CheckRunEvent):
     return None
 ```
 
-Event stream listeners are isolated. They run asynchronously in their own worker process.
+Listeners are isolated and run asynchronously in their own worker processes.
 
-The event stream supports the following event types.
+Supported event types:
 
 - `CheckRunEvent`
 - `CommentEvent`
 - `PullRequestEvent`
 
-### Observability
+## Actions Reference
+
+For the full list of available actions and their signatures, see [`src/scm/actions.py`](https://github.com/getsentry/scm-platform/blob/main/src/scm/actions.py).
+
+## Observability
 
 Both subsystems emit metrics under the `sentry.scm` namespace:
 
@@ -199,3 +181,35 @@ Both subsystems emit metrics under the `sentry.scm` namespace:
 | `sentry.scm.run_listener.queue_time` | Time from webhook receipt to task start |
 | `sentry.scm.run_listener.task_time` | Time to execute the listener |
 | `sentry.scm.run_listener.real_time` | End-to-end time from webhook receipt to listener completion |
+
+## Local Development
+
+The `scm-platform` repo includes CLI scripts for running an RPC server and client locally against the real GitHub API.
+
+### Start the RPC server
+
+```bash
+# Populate .credentials with your GitHub App credentials (KEY=VALUE, one per line):
+# GITHUB_APP_ID=<id>
+# GITHUB_PRIVATE_KEY_PATH=<path-to-.pem>
+# GITHUB_INSTALLATION_ID=<id>
+# SCM_RPC_SIGNING_SECRET=secret
+
+bin/github-server
+# or override inline:
+bin/github-server --app-id 12345 --private-key key.pem --installation-id 67890 --port 8080
+```
+
+See [Creating a GitHub App](https://develop.sentry.dev/integrations/github/) for how to obtain App ID, private key, and installation ID.
+
+### Run client commands
+
+Supported clients:
+
+- [`bin/github-client`](https://github.com/getsentry/scm-platform/blob/main/bin/github-client) — GitHub
+- [`bin/gitlab-client`](https://github.com/getsentry/scm-platform/blob/main/bin/gitlab-client) — GitLab
+
+```bash
+bin/github-client --repo owner/repo get-pull-request 42
+bin/github-client --repo owner/repo create-issue-comment 10 "Hello from the RPC client"
+```

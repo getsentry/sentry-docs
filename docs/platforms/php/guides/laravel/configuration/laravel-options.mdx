@@ -101,6 +101,33 @@ class Sentry
 }
 ```
 
+### Lower Sample Rate for Specific Jobs
+
+If your application processes a large number of queued jobs, tracing every job at the same rate as your HTTP requests can create more transaction volume than you need. Use the `Sentry\Laravel\Jobs\Middleware\SentryTracesSampleRate` job middleware to keep fewer traces for specific jobs while leaving your global tracing configuration unchanged.
+
+This middleware only affects queue job transactions, so `tracing.queue_job_transactions` must stay enabled. It can only lower the sample rate for jobs that were already sampled by your global `traces_sample_rate` or `traces_sampler`; it does not upsample jobs that were excluded earlier.
+
+```php {filename:app/Jobs/ProcessPodcast.php}
+<?php
+
+namespace App\Jobs;
+
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Sentry\Laravel\Jobs\Middleware\SentryTracesSampleRate;
+
+class ProcessPodcast implements ShouldQueue
+{
+    public function middleware(): array
+    {
+        return [
+            new SentryTracesSampleRate(0.1), // Keep 10% of already-sampled traces for this job
+        ];
+    }
+}
+```
+
+This is useful for high-volume or lower-priority background work, such as imports, notifications, fan-out jobs, or other queue consumers where you still want representative performance data without sending every transaction.
+
 ### More Configuration
 
 You can also configure which parts of your application are traced automatically.

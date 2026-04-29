@@ -343,7 +343,6 @@ The following discard reasons are defined for `discarded_events`:
 | `cache_overflow` | 1.0.0 | SDK internal cache (e.g., offline event cache) overflowed. |
 | `ratelimit_backoff` | 1.0.0 | Rate limit instructed the SDK to back off. |
 | `network_error` | 1.0.0 | Network errors, not retried. |
-| `no_parent_span` | 1.22.0 | Span was not started or dropped because no parent span was present at span start (for example, auto-instrumented spans suppressed when the request happens outside an active span). |
 | `sample_rate` | 1.0.0 | Configured sample rate. |
 | `before_send` | 1.0.0 | Dropped in `before_send`. |
 | `event_processor` | 1.0.0 | Dropped by event processor; may also be used for ignored exceptions/errors (since 1.6.0). |
@@ -354,8 +353,18 @@ The following discard reasons are defined for `discarded_events`:
 | `buffer_overflow` | 1.15.0 | SDK internal buffer (e.g., breadcrumbs buffer) overflowed. |
 | `ignored` | 1.16.0 | Telemetry item was ignored by the SDK (e.g., a span was ignored by `ignore_spans`; can also be used by other deny-list mechanisms). |
 | `invalid` | 1.17.0 | Failed validation (e.g., replay session exceeded maximum allowed length). |
+| `no_parent_span` | 1.22.0 | Span was not started or dropped because no parent span was present at span start (for example, auto-instrumented spans suppressed when the request happens outside an active span). |
 
-In case a reason needs to be added, it also has to be added to the allowlist in [snuba](https://github.com/getsentry/snuba/blob/master/rust_snuba/src/processors/outcomes.rs#L15).
+#### Adding a new discard reason:
+
+Adding a new reason involves multiple repos in Sentry but is very straight-forward:
+
+1. Register the new reason in [snuba](https://github.com/getsentry/snuba/blob/dd7ca91d81484455953653f59ed4ab90ecbc9719/rust_snuba/src/processors/outcomes.rs#L15). The list MUST be ordered alphabetically ([Example PR](https://github.com/getsentry/snuba/pull/7866)).
+2. Add the new reason to the Sentry frontend to show it in the Usage Stats and `_admin` pages ([Example PR](https://github.com/getsentry/sentry/pull/112937)).
+3. Add the new reason to this develop doc ([Example PR](https://github.com/getsentry/sentry-docs/pull/17292)).
+4. Add the new reason to product docs ([Example PR](https://github.com/getsentry/sentry-docs/pull/17346)).
+
+Once all these PRs are merged and deployed, the new reason can be shipped in SDKs.
 
 </SpecSection>
 

@@ -298,7 +298,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/account/early-adopter-features/discord/',
-    to: '/organization/integrations/notification-incidents/discord/',
+    to: '/integrations/notification-incidents/discord/',
   },
   {
     from: '/platforms/python/migration/configuration/filtering/',
@@ -306,67 +306,63 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/organization/integrations/github/',
-    to: '/organization/integrations/source-code-mgmt/github/',
+    to: '/integrations/source-code-mgmt/github/',
   },
   {
     from: '/organization/integrations/gitlab/',
-    to: '/organization/integrations/source-code-mgmt/gitlab/',
+    to: '/integrations/source-code-mgmt/gitlab/',
   },
   {
     from: '/organization/integrations/bitbucket/',
-    to: '/organization/integrations/source-code-mgmt/bitbucket/',
+    to: '/integrations/source-code-mgmt/bitbucket/',
   },
   {
     from: '/organization/integrations/rookout/',
-    to: '/organization/integrations/debugging/rookout/',
+    to: '/integrations/debugging/rookout/',
   },
   {
     from: '/organization/integrations/split/',
-    to: '/organization/integrations/feature-flag/split/',
+    to: '/integrations/feature-flag/split/',
   },
   {
     from: '/organization/integrations/teamwork/',
-    to: '/organization/integrations/issue-tracking/teamwork/',
+    to: '/integrations/issue-tracking/teamwork/',
   },
   {
     from: '/organization/integrations/jira/',
-    to: '/organization/integrations/issue-tracking/jira/',
+    to: '/integrations/issue-tracking/jira/',
   },
   {
     from: '/organization/integrations/linear/',
-    to: '/organization/integrations/issue-tracking/linear/',
+    to: '/integrations/issue-tracking/linear/',
   },
   {
     from: '/organization/integrations/clickup/',
-    to: '/organization/integrations/issue-tracking/clickup/',
+    to: '/integrations/issue-tracking/clickup/',
   },
   {
     from: '/organization/integrations/project-mgmt/shortcut/',
-    to: '/organization/integrations/issue-tracking/shortcut/',
+    to: '/integrations/issue-tracking/shortcut/',
   },
   {
     from: '/organization/integrations/slack/',
-    to: '/organization/integrations/notification-incidents/slack/',
+    to: '/integrations/notification-incidents/slack/',
   },
   {
     from: '/organization/integrations/pagerduty/',
-    to: '/organization/integrations/notification-incidents/pagerduty/',
+    to: '/integrations/notification-incidents/pagerduty/',
   },
   {
     from: '/organization/integrations/vanta/',
-    to: '/organization/integrations/compliance/vanta/',
+    to: '/integrations/compliance/vanta/',
   },
   {
     from: '/organization/integrations/jam/',
-    to: '/organization/integrations/session-replay/jam/',
+    to: '/integrations/session-replay/jam/',
   },
   {
     from: '/organization/integrations/cloud-monitoring/cloudflare-workers/',
     to: '/platforms/javascript/guides/cloudflare/',
-  },
-  {
-    from: '/product/crons/getting-started/cli/',
-    to: '/cli/crons/',
   },
   {
     from: '/product/data-management-settings/dynamic-sampling/',
@@ -1230,11 +1226,15 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/platforms/unreal/setup-crashreport/',
-    to: '/platforms/unreal/configuration/setup-crashreporter/',
+    to: '/platforms/unreal/configuration/crash-reporter/crash-reporter-client/',
   },
   {
     from: '/platforms/unreal/setup-crashreporter/',
-    to: '/platforms/unreal/configuration/setup-crashreporter/',
+    to: '/platforms/unreal/configuration/crash-reporter/crash-reporter-client/',
+  },
+  {
+    from: '/platforms/unreal/configuration/setup-crashreporter/',
+    to: '/platforms/unreal/configuration/crash-reporter/crash-reporter-client/',
   },
   {
     from: '/platforms/unreal/debug-symbols/',
@@ -1878,7 +1878,11 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/alerts/create-alerts/best-practices/',
-    to: '/product/alerts/best-practices/',
+    to: '/product/alerts/create-alerts/',
+  },
+  {
+    from: '/product/alerts/best-practices/',
+    to: '/product/alerts/create-alerts/',
   },
   {
     from: '/product/sentry-basics/guides/alert-notifications/routing-alerts/',
@@ -1926,83 +1930,95 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/workflow/alerts-notifications/notifications/',
-    to: '/product/alerts/notifications/',
+    to: '/product/notifications/',
   },
   {
     from: '/workflow/notifications/workflow/',
-    to: '/product/alerts/notifications/',
+    to: '/product/notifications/',
   },
   {
     from: '/workflow/notifications/',
-    to: '/product/alerts/notifications/',
-  },
-  {
-    from: '/product/notifications/',
-    to: '/product/alerts/notifications/',
+    to: '/product/notifications/',
   },
   {
     from: '/learn/notifications/',
-    to: '/product/alerts/notifications/',
+    to: '/product/notifications/',
   },
   {
     from: '/product/alerts-notifications/notifications/',
-    to: '/product/alerts/notifications/',
+    to: '/product/notifications/',
   },
   {
     from: '/product/sentry-basics/guides/alert-notifications/notifications/',
-    to: '/product/alerts/notifications/',
+    to: '/product/notifications/',
+  },
+  {
+    from: '/product/alerts/notifications/',
+    to: '/product/notifications/',
+  },
+  {
+    from: '/product/alerts/notifications/notification-settings/',
+    to: '/product/notifications/notification-settings/',
+  },
+  {
+    from: '/product/monitors-and-alerts/alerts/notifications/',
+    to: '/product/notifications/',
+  },
+  {
+    from: '/product/monitors-and-alerts/alerts/notifications/notification-settings/',
+    to: '/product/notifications/notification-settings/',
   },
   {
     from: '/workflow/integrations/amazon-sqs/',
-    to: '/organization/integrations/data-forwarding/amazon-sqs/',
+    to: '/integrations/data-forwarding/amazon-sqs/',
   },
   {
     from: '/workflow/integrations/legacy-integrations/amazon-sqs/',
-    to: '/organization/integrations/data-forwarding/amazon-sqs/',
+    to: '/integrations/data-forwarding/amazon-sqs/',
   },
   {
     from: '/product/integrations/amazon-sqs/',
-    to: '/organization/integrations/data-forwarding/amazon-sqs/',
+    to: '/integrations/data-forwarding/amazon-sqs/',
   },
   {
     from: '/product/integrations/segment/',
-    to: '/organization/integrations/data-forwarding/segment/',
+    to: '/integrations/data-forwarding/segment/',
   },
   {
     from: '/workflow/integrations/splunk/',
-    to: '/organization/integrations/data-forwarding/splunk/',
+    to: '/integrations/data-forwarding/splunk/',
   },
   {
     from: '/workflow/integrations/legacy-integrations/splunk/',
-    to: '/organization/integrations/data-forwarding/splunk/',
+    to: '/integrations/data-forwarding/splunk/',
   },
   {
     from: '/product/integrations/splunk/',
-    to: '/organization/integrations/data-forwarding/splunk/',
+    to: '/integrations/data-forwarding/splunk/',
   },
   {
     from: '/organization/integrations/data-visualization/splunk/',
-    to: '/organization/integrations/data-forwarding/splunk/',
+    to: '/integrations/data-forwarding/splunk/',
   },
   {
     from: '/organization/integrations/data-visualization/segment/',
-    to: '/organization/integrations/data-forwarding/segment/',
+    to: '/integrations/data-forwarding/segment/',
   },
   {
     from: '/organization/integrations/data-visualization/amazon-sqs/',
-    to: '/organization/integrations/data-forwarding/amazon-sqs/',
+    to: '/integrations/data-forwarding/amazon-sqs/',
   },
   {
     from: '/organization/integrations/data-visualization/grafana/',
-    to: '/organization/integrations/data-forwarding/grafana/',
+    to: '/integrations/data-forwarding/grafana/',
   },
   {
     from: '/organization/integrations/data-visualization/',
-    to: '/organization/integrations/data-forwarding/',
+    to: '/integrations/data-forwarding/',
   },
   {
     from: '/concepts/data-management/data-forwarding/',
-    to: '/organization/integrations/data-forwarding/',
+    to: '/integrations/data-forwarding/',
   },
   {
     from: '/concepts/otlp/otlp-logs/',
@@ -2070,123 +2086,123 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/workflow/integrations/gitlab/',
-    to: '/organization/integrations/source-code-mgmt/gitlab/',
+    to: '/integrations/source-code-mgmt/gitlab/',
   },
   {
     from: '/workflow/integrations/global-integrations/gitlab/',
-    to: '/organization/integrations/source-code-mgmt/gitlab/',
+    to: '/integrations/source-code-mgmt/gitlab/',
   },
   {
     from: '/product/integrations/gitlab/',
-    to: '/organization/integrations/source-code-mgmt/gitlab/',
+    to: '/integrations/source-code-mgmt/gitlab/',
   },
   {
     from: '/workflow/integrations/azure-devops/',
-    to: '/organization/integrations/source-code-mgmt/azure-devops/',
+    to: '/integrations/source-code-mgmt/azure-devops/',
   },
   {
     from: '/workflow/integrations/legacy-integrations/azure-devops/',
-    to: '/organization/integrations/source-code-mgmt/azure-devops/',
+    to: '/integrations/source-code-mgmt/azure-devops/',
   },
   {
     from: '/workflow/integrations/global-integrations/azure-devops/',
-    to: '/organization/integrations/source-code-mgmt/azure-devops/',
+    to: '/integrations/source-code-mgmt/azure-devops/',
   },
   {
     from: '/product/integrations/azure-devops/',
-    to: '/organization/integrations/source-code-mgmt/azure-devops/',
+    to: '/integrations/source-code-mgmt/azure-devops/',
   },
   {
-    from: '/integrations/azure-devops/',
-    to: '/organization/integrations/source-code-mgmt/azure-devops/',
+    from: '/organization/integrations/azure-devops/',
+    to: '/integrations/source-code-mgmt/azure-devops/',
   },
   {
     from: '/workflow/integrations/github/',
-    to: '/organization/integrations/source-code-mgmt/github/',
+    to: '/integrations/source-code-mgmt/github/',
   },
   {
     from: '/workflow/integrations/legacy-integrations/github/',
-    to: '/organization/integrations/source-code-mgmt/github/',
+    to: '/integrations/source-code-mgmt/github/',
   },
   {
     from: '/workflow/integrations/global-integrations/github/',
-    to: '/organization/integrations/source-code-mgmt/github/',
+    to: '/integrations/source-code-mgmt/github/',
   },
   {
     from: '/product/integrations/github/',
-    to: '/organization/integrations/source-code-mgmt/github/',
+    to: '/integrations/source-code-mgmt/github/',
   },
   {
-    from: '/integrations/github-enterprise/',
-    to: '/organization/integrations/source-code-mgmt/github/',
+    from: '/organization/integrations/github-enterprise/',
+    to: '/integrations/source-code-mgmt/github/',
   },
   {
-    from: '/integrations/github/',
-    to: '/organization/integrations/source-code-mgmt/github/',
+    from: '/organization/integrations/github/',
+    to: '/integrations/source-code-mgmt/github/',
   },
   {
     from: '/workflow/integrations/bitbucket/',
-    to: '/organization/integrations/source-code-mgmt/bitbucket/',
+    to: '/integrations/source-code-mgmt/bitbucket/',
   },
   {
     from: '/workflow/integrations/legacy-integrations/bitbucket/',
-    to: '/organization/integrations/source-code-mgmt/bitbucket/',
+    to: '/integrations/source-code-mgmt/bitbucket/',
   },
   {
     from: '/workflow/integrations/global-integrations/bitbucket/',
-    to: '/organization/integrations/source-code-mgmt/bitbucket/',
+    to: '/integrations/source-code-mgmt/bitbucket/',
   },
   {
     from: '/product/integrations/bitbucket/',
-    to: '/organization/integrations/source-code-mgmt/bitbucket/',
+    to: '/integrations/source-code-mgmt/bitbucket/',
   },
   {
-    from: '/integrations/bitbucket/',
-    to: '/organization/integrations/source-code-mgmt/bitbucket/',
+    from: '/organization/integrations/bitbucket/',
+    to: '/integrations/source-code-mgmt/bitbucket/',
   },
   {
-    from: '/integrations/',
-    to: '/organization/integrations/',
+    from: '/organization/integrations/',
+    to: '/integrations/',
   },
   {
     from: '/workflow/integrations/',
-    to: '/organization/integrations/',
+    to: '/integrations/',
   },
   {
     from: '/workflow/integrations/legacy-integrations/',
-    to: '/organization/integrations/',
+    to: '/integrations/',
   },
   {
     from: '/workflow/integrations/global-integrations/',
-    to: '/organization/integrations/',
+    to: '/integrations/',
   },
   {
     from: '/workflow/legacy-integrations/',
-    to: '/organization/integrations/',
+    to: '/integrations/',
   },
   {
     from: '/workflow/global-integrations/',
-    to: '/organization/integrations/',
+    to: '/integrations/',
   },
   {
     from: '/workflow/integrations/rookout/',
-    to: '/organization/integrations/debugging/rookout/',
+    to: '/integrations/debugging/rookout/',
   },
   {
     from: '/workflow/integrations/global-integrations/rookout/',
-    to: '/organization/integrations/debugging/rookout/',
+    to: '/integrations/debugging/rookout/',
   },
   {
     from: '/product/integrations/rookout/',
-    to: '/organization/integrations/debugging/rookout/',
+    to: '/integrations/debugging/rookout/',
   },
   {
     from: '/product/integrations/gcp-cloud-run/',
-    to: '/organization/integrations/cloud-monitoring/gcp-cloud-run/',
+    to: '/integrations/cloud-monitoring/gcp-cloud-run/',
   },
   {
     from: '/product/integrations/aws-lambda/',
-    to: '/organization/integrations/cloud-monitoring/aws-lambda/',
+    to: '/integrations/cloud-monitoring/aws-lambda/',
   },
   {
     from: '/product/integrations/cloudflare-workers/',
@@ -2194,51 +2210,51 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/integrations/vanta/',
-    to: '/organization/integrations/compliance/vanta/',
+    to: '/integrations/compliance/vanta/',
   },
   {
     from: '/product/integrations/truto/',
-    to: '/organization/integrations/compliance/truto/',
+    to: '/integrations/compliance/truto/',
   },
   {
-    from: '/integrations/discord/',
-    to: '/organization/integrations/notification-incidents/discord/',
+    from: '/organization/integrations/discord/',
+    to: '/integrations/notification-incidents/discord/',
   },
   {
     from: '/product/integrations/discord/',
-    to: '/organization/integrations/notification-incidents/discord/',
+    to: '/integrations/notification-incidents/discord/',
   },
   {
     from: '/product/accounts/early-adopter-features/discord/',
-    to: '/organization/integrations/notification-incidents/discord/',
+    to: '/integrations/notification-incidents/discord/',
   },
   {
     from: '/workflow/integrations/pagerduty/',
-    to: '/organization/integrations/notification-incidents/pagerduty/',
+    to: '/integrations/notification-incidents/pagerduty/',
   },
   {
     from: '/workflow/integrations/legacy-integrations/pagerduty/',
-    to: '/organization/integrations/notification-incidents/pagerduty/',
+    to: '/integrations/notification-incidents/pagerduty/',
   },
   {
     from: '/workflow/integrations/global-integrations/pagerduty/',
-    to: '/organization/integrations/notification-incidents/pagerduty/',
+    to: '/integrations/notification-incidents/pagerduty/',
   },
   {
     from: '/product/integrations/pagerduty/',
-    to: '/organization/integrations/notification-incidents/pagerduty/',
+    to: '/integrations/notification-incidents/pagerduty/',
   },
   {
     from: '/product/integrations/notification-incidents/amixr/',
-    to: '/organization/integrations/notification-incidents/',
+    to: '/integrations/notification-incidents/',
   },
   {
     from: '/product/integrations/msteams/',
-    to: '/organization/integrations/notification-incidents/msteams/',
+    to: '/integrations/notification-incidents/msteams/',
   },
   {
     from: '/product/integrations/rootly/',
-    to: '/organization/integrations/notification-incidents/rootly/',
+    to: '/integrations/notification-incidents/rootly/',
   },
   {
     from: '/product/integrations/spikesh/',
@@ -2257,7 +2273,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/product/integrations/notification-incidents/slack/',
   },
   {
-    from: '/integrations/slack/',
+    from: '/organization/integrations/slack/',
     to: '/product/integrations/notification-incidents/slack/',
   },
   {
@@ -2389,7 +2405,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/product/integrations/issue-tracking/clickup/',
   },
   {
-    from: '/integrations/clickup/',
+    from: '/organization/integrations/clickup/',
     to: '/product/integrations/issue-tracking/clickup/',
   },
   {
@@ -2433,7 +2449,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/product/integrations/issue-tracking/jira/',
   },
   {
-    from: '/integrations/jira/',
+    from: '/organization/integrations/jira/',
     to: '/product/integrations/issue-tracking/jira/',
   },
   {
@@ -2687,7 +2703,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/crons/alerts/',
-    to: '/product/crons/getting-started/',
+    to: '/product/monitors-and-alerts/monitors/crons/getting-started/',
   },
   {
     from: '/meta/relay/best-practices/',
@@ -3620,11 +3636,11 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/organization/integrations/project-mgmt/jira/',
-    to: '/organization/integrations/issue-tracking/jira/',
+    to: '/integrations/issue-tracking/jira/',
   },
   {
     from: '/organization/integrations/source-code-/',
-    to: '/organization/integrations/source-code-mgmt/',
+    to: '/integrations/source-code-mgmt/',
   },
   {
     from: '/product/explore/session-replay/getting-started/',
@@ -3728,7 +3744,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/organization/integrations/incidentio/',
-    to: '/organization/integrations/issue-tracking/incidentio/',
+    to: '/integrations/issue-tracking/incidentio/',
   },
   {
     from: '/contributing/onboarding-wizard/',
@@ -3738,22 +3754,22 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     from: '/security-legal-pii/security/security-policy-reporting/',
     to: '/platform-redirect/?next=/security-policy-reporting/',
   },
-  /* Uptime Monitoring */
+  /* Uptime Monitoring (legacy paths under /product/alerts/) */
   {
     from: '/product/alerts/uptime-monitoring/',
-    to: '/product/uptime-monitoring/',
+    to: '/product/monitors-and-alerts/monitors/uptime-monitoring/',
   },
   {
     from: '/product/alerts/uptime-monitoring/automatic-detection/',
-    to: '/product/uptime-monitoring/automatic-detection/',
+    to: '/product/monitors-and-alerts/monitors/uptime-monitoring/automatic-detection/',
   },
   {
     from: '/product/alerts/uptime-monitoring/uptime-tracing/',
-    to: '/product/uptime-monitoring/uptime-tracing/',
+    to: '/product/monitors-and-alerts/monitors/uptime-monitoring/uptime-tracing/',
   },
   {
     from: '/product/alerts/uptime-monitoring/troubleshooting/',
-    to: '/product/uptime-monitoring/troubleshooting/',
+    to: '/product/monitors-and-alerts/monitors/uptime-monitoring/troubleshooting/',
   },
 ];
 
@@ -4312,67 +4328,67 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   /*  integration platform    */
   {
     from: '/organization/integrations/kitemaker/',
-    to: '/organization/integrations/issue-tracking/kitemaker/',
+    to: '/integrations/issue-tracking/kitemaker/',
   },
   {
     from: '/organization/integrations/pagertree/',
-    to: '/organization/integrations/notification-incidents/pagertree/',
+    to: '/integrations/notification-incidents/pagertree/',
   },
   {
     from: '/organization/integrations/goast/',
-    to: '/organization/integrations/issue-tracking/goast/',
+    to: '/integrations/issue-tracking/goast/',
   },
   {
     from: '/organization/integrations/betterbugs/',
-    to: '/organization/integrations/session-replay/betterbugs/',
+    to: '/integrations/session-replay/betterbugs/',
   },
   {
     from: '/organization/integrations/blar/',
-    to: '/organization/integrations/notification-incidents/blar/',
+    to: '/integrations/notification-incidents/blar/',
   },
   {
     from: '/organization/integrations/apigene/',
-    to: '/organization/integrations/debugging/apigene/',
+    to: '/integrations/debugging/apigene/',
   },
   {
     from: '/organization/integrations/revisedev/',
-    to: '/organization/integrations/debugging/revisedev/',
+    to: '/integrations/debugging/revisedev/',
   },
   {
     from: '/organization/integrations/foamai/',
-    to: '/organization/integrations/debugging/foamai/',
+    to: '/integrations/debugging/foamai/',
   },
   {
     from: '/organization/integrations/telegram-alerts-bot/',
-    to: '/organization/integrations/notification-incidents/telegram-alerts-bot/',
+    to: '/integrations/notification-incidents/telegram-alerts-bot/',
   },
   {
     from: '/organization/integrations/vanta-eu/',
-    to: '/organization/integrations/compliance/vanta-eu/',
+    to: '/integrations/compliance/vanta-eu/',
   },
   {
     from: '/organization/integrations/sourcery/',
-    to: '/organization/integrations/debugging/sourcery/',
+    to: '/integrations/debugging/sourcery/',
   },
   {
     from: '/organization/integrations/codecomet/',
-    to: '/organization/integrations/debugging/codecomet/',
+    to: '/integrations/debugging/codecomet/',
   },
   {
     from: '/organization/integrations/glueai/',
-    to: '/organization/integrations/notification-incidents/glueai/',
+    to: '/integrations/notification-incidents/glueai/',
   },
   {
     from: '/organization/integrations/factory/',
-    to: '/organization/integrations/issue-tracking/factory/',
+    to: '/integrations/issue-tracking/factory/',
   },
   {
     from: '/organization/integrations/teamcamp/',
-    to: '/organization/integrations/issue-tracking/teamcamp/',
+    to: '/integrations/issue-tracking/teamcamp/',
   },
   {
     from: '/organization/integrations/elba/',
-    to: '/organization/integrations/compliance/elba/',
+    to: '/integrations/compliance/elba/',
   },
   {
     from: '/sdk/philosophy/',
