@@ -258,14 +258,24 @@ Before you can upload source files, you must configure the Sentry CLI with the o
 
 ### Creating a Source Bundle
 
-Run the `debug-files bundle-jvm` command to create a source bundle for a
-source directory.
+Run the `debug-files bundle-jvm` command to create a source bundle. The path argument can be a single source directory, a module, or a Gradle/Maven project root — `sentry-cli` collects only JVM source files (`.java`, `.kt`, `.scala`, `.groovy`, `.clj`) and automatically skips common build output and IDE directories (`build`, `.gradle`, `.idea`, etc.) as well as anything matched by `.gitignore`.
 
 ```bash
 sentry-cli debug-files bundle-jvm \
     --output some/dir \
     --debug-id A_VALID_UUID \
-    path/to/source/dir
+    path/to/project/root
+```
+
+Use `--exclude '<glob>'` (repeatable) to drop additional paths. This is useful when multiple source sets contribute the same fully-qualified class name — for example, an Android app where `src/main/` and `src/debug/` both define `com.example.Foo`. By default, `bundle-jvm` keeps the first occurrence and prints a warning for the rest; pass `--exclude` to scope the bundle to a single source set:
+
+```bash
+sentry-cli debug-files bundle-jvm \
+    --output some/dir \
+    --debug-id A_VALID_UUID \
+    --exclude '**/src/debug/**' \
+    --exclude '**/src/release/**' \
+    path/to/project/root
 ```
 
 You must provide the UUID of the source bundle for the Java/Android SDK to send.

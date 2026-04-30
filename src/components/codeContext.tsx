@@ -9,6 +9,7 @@ import {OnboardingOptionType} from './onboarding';
 type ProjectCodeKeywords = {
   API_URL: string;
   DSN: string;
+  JS_SDK_LOADER_HOST: string;
   MINIDUMP_URL: string;
   ORG_ID: number;
   ORG_INGEST_DOMAIN: string;
@@ -86,6 +87,7 @@ export const DEFAULTS: CodeKeywords = {
       ORG_ID: 0,
       ORG_SLUG: 'example-org',
       ORG_INGEST_DOMAIN: 'o0.ingest.sentry.io',
+      JS_SDK_LOADER_HOST: 'js.sentry-cdn.com',
       MINIDUMP_URL:
         'https://o0.ingest.sentry.io/api/0/minidump/?sentry_key=examplePublicKey',
       UNREAL_URL: 'https://o0.ingest.sentry.io/api/0/unreal/examplePublicKey/',
@@ -171,6 +173,10 @@ const formatApiUrl = ({scheme, host}: Dsn) => {
   return `${scheme}${apiHost}/api`;
 };
 
+const getJsSdkLoaderHost = ({host}: Dsn) => {
+  return host.includes('.ingest.de.') ? 'js-de.sentry-cdn.com' : 'js.sentry-cdn.com';
+};
+
 function getHost(): string {
   if (process.env.NODE_ENV === 'development') {
     return 'http://dev.getsentry.net:8000';
@@ -254,6 +260,7 @@ export async function fetchCodeKeywords(): Promise<CodeKeywords> {
         ORG_SLUG: project.organizationSlug,
         ORG_INGEST_DOMAIN:
           parsedDsn.host ?? `o${project.organizationId}.ingest.sentry.io`,
+        JS_SDK_LOADER_HOST: getJsSdkLoaderHost(parsedDsn),
         MINIDUMP_URL: formatMinidumpURL(parsedDsn),
         UNREAL_URL: formatUnrealEngineURL(parsedDsn),
         OTLP_URL: formatOtlpUrl(parsedDsn),
