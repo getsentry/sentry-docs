@@ -349,6 +349,51 @@ Next, upload that source bundle to Sentry:
 sentry-cli debug-files upload --type jvm path/to/bundle
 ```
 
+### Inspecting and Downloading a Source Bundle
+
+After uploading, you can find your source bundle under **Project Settings > Debug Files**. Search by the debug ID you used during the upload to locate it, and use the **Download** button to grab a copy.
+
+![Source bundle in Debug Files settings](./img/debug-files-source-bundle.png)
+
+The downloaded file is a ZIP archive. Unzip it to inspect the contents:
+
+```bash
+unzip <debug-id>.zip -d bundle/
+tree bundle/
+```
+
+For a multi-module project like [sentry-java](https://github.com/getsentry/sentry-java), the tree looks like this:
+
+```
+bundle/
+└── files
+    └── _
+        └── ~
+            └── io
+                └── sentry
+                    └── android
+                        ├── core
+                        │   ├── ANRWatchDog.jvm
+                        │   ├── ActivityLifecycleIntegration.jvm
+                        │   ├── AppLifecycleIntegration.jvm
+                        │   └── ...
+                        ├── distribution
+                        │   ├── DistributionHttpClient.jvm
+                        │   ├── DistributionIntegration.jvm
+                        │   └── UpdateResponseParser.jvm
+                        ├── fragment
+                        │   ├── FragmentLifecycleIntegration.jvm
+                        │   ├── FragmentLifecycleState.jvm
+                        │   └── SentryFragmentLifecycleCallbacks.jvm
+                        ├── navigation
+                        │   └── SentryNavigationListener.jvm
+                        └── ...
+```
+
+Module directories (like `sentry-android-core/src/main/java/`) and source-set paths (like `src/main/kotlin/`) are stripped away — the bundle contains only the package path (e.g. `io/sentry/android/core/ANRWatchDog.jvm`). This is because JVM stack traces reference classes by their fully-qualified name, with no knowledge of the Gradle module or source-set layout on disk. Sentry's server looks up source files by this package path, so the bundle must match.
+
+File extensions are normalized to `.jvm` regardless of the original language (`.java`, `.kt`, `.scala`, etc.) to match the lookup keys used during symbolication.
+
 ### Configuring the SDK
 
 You'll need to tell the SDK which source bundle it should use for providing Source Context via one of the following options:
