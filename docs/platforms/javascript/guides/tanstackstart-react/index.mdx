@@ -2,7 +2,7 @@
 title: TanStack Start React
 ---
 
-<Alert>
+<Alert level="warning">
 
 This SDK is compatible with TanStack Start 1.0 RC and is currently in **ALPHA**. Alpha features are still in progress, may have bugs and might include breaking changes.
 Please reach out on [GitHub](https://github.com/getsentry/sentry-javascript/issues/new/choose) if you have any feedback or concerns.
@@ -14,7 +14,9 @@ For [TanStack Router (React)](https://tanstack.com/router/latest/docs/framework/
 
 <PlatformContent includePath="getting-started-prerequisites" />
 
-## Step 1: Install
+<StepConnector selector="h2" showNumbers={true}>
+
+## Install
 
 Choose the features you want to configure, and this guide will show you how:
 
@@ -32,7 +34,14 @@ Choose the features you want to configure, and this guide will show you how:
 
 ### Install the Sentry SDK
 
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
 Run the command for your preferred package manager to add the SDK package to your application:
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```bash {tabTitle:npm}
 npm install @sentry/tanstackstart-react --save
@@ -46,11 +55,22 @@ yarn add @sentry/tanstackstart-react
 pnpm add @sentry/tanstackstart-react
 ```
 
-## Step 2: Configure
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+## Configure
 
 ### Configure Client-Side Sentry
 
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
 Initialize Sentry in your `src/router.tsx` file:
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```tsx {diff} {filename:src/router.tsx}
 +import * as Sentry from "@sentry/tanstackstart-react";
@@ -110,9 +130,20 @@ export const getRouter = () => {
 }
 ```
 
-### Configure Server-side Sentry
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+### Configure Server-Side Sentry
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
 
 Create an instrument file `instrument.server.mjs` in the root of your project. In this file, initialize the Sentry SDK for your server:
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```tsx {filename:instrument.server.mjs}
 import * as Sentry from "@sentry/tanstackstart-react";
@@ -140,21 +171,22 @@ Sentry.init({
 });
 ```
 
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
 #### Add the sentryTanstackStart Vite Plugin
 
-<OrgAuthTokenNote />
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
 
-**Make sure you add your auth token to your CI, if you are using one to deploy your application.**
+Configure `sentryTanstackStart` in your `vite.config.ts`.
 
-Add your auth token to your environment:
+By default, this plugin manages source map uploads. When tracing is enabled, it also automatically instruments middlewares for tracing. For all available options, see the [Vite Plugin documentation](/platforms/javascript/guides/tanstackstart-react/features/sentryTanstackStart/).
 
-```bash {filename:.env}
-SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
-```
-
-<Include name="vite-loadenv-hint.mdx" />
-
-Configure `sentryTanstackStart` in your `vite.config.ts`:
+</SplitSectionText>
+<SplitSectionCode>
 
 ```typescript {filename:vite.config.ts}
 import { defineConfig } from "vite";
@@ -174,7 +206,34 @@ export default defineConfig({
 });
 ```
 
-By default, this plugin manages source map uploads. When tracing is enabled, it also automatically instruments middlewares for tracing. For all available options, see the [Vite Plugin documentation](/platforms/javascript/guides/tanstackstart-react/features/sentryTanstackStart/).
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+To keep your auth token secure, always store it in an environment variable instead of directly in your files:
+
+<Alert>
+  Make sure to add your auth token to your CI, if you're using one to deploy
+  your application.
+</Alert>
+
+</SplitSectionText>
+<SplitSectionCode>
+<OrgAuthTokenNote />
+
+```bash {filename:.env}
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+<Include name="vite-loadenv-hint-splitlayout.mdx" />
 
 #### Instrument the Server Entry Point
 
@@ -186,7 +245,14 @@ Follow the section below that matches your deployment setup:
 
 Use this setup when you can configure Node.js CLI flags.
 
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
 Create a `src/server.ts` file in your project:
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```typescript {filename:src/server.ts}
 import { wrapFetchWithSentry } from "@sentry/tanstackstart-react";
@@ -201,11 +267,20 @@ export default createServerEntry(
 );
 ```
 
-##### Moving the Sentry server config file for production usage
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
-For production monitoring, you need to move the Sentry server config file to your build output. Since [TanStack Start is designed to work with any hosting provider](https://tanstack.com/start/latest/docs/framework/react/guide/hosting), the exact location will depend on where your build artifacts are deployed (for example, `"/dist"`, `".output/server"` or a platform-specific directory).
+##### Move the Sentry Server Config File for Production Usage
 
-For example, when using [Nitro](https://nitro.build/), copy the instrumentation file to `".output/server"`:
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+For production monitoring, you need to move the Sentry server config file to your build output. The exact location depends on where your build artifacts are deployed (for example, `"/dist"`, `".output/server"` or a platform-specific directory). For example, when using Nitro, copy the instrumentation file to `".output/server"` as shown in the example on the right.
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```json {diff}  {filename:package.json}
 {
@@ -216,9 +291,20 @@ For example, when using [Nitro](https://nitro.build/), copy the instrumentation 
 }
 ```
 
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
 ##### Load Instrumentation on Startup
 
-Add a `--import` flag directly or to the `NODE_OPTIONS` environment variable wherever you run your application to import `instrument.server.mjs`.
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+To load `instrument.server.mjs`, add the `--import` flag either directly to your run command or to the `NODE_OPTIONS` environment variable.
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```json {diff} {filename:package.json}
 {
@@ -232,11 +318,32 @@ Add a `--import` flag directly or to the `NODE_OPTIONS` environment variable whe
 }
 ```
 
-#### Without `--import` Flag (e.g. Vercel, Netlify)
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
-If you can't configure Node.js CLI flags or environment variables at runtime (for example, when deploying to serverless platforms like Vercel or Netlify), you can import the server instrumentation file directly at the top of your server entry point instead.
+#### Without `--import` Flag
 
-Create a `src/server.ts` file in your project:
+Use this setup when you can't configure Node.js CLI flags or environment variables at runtime (for example, when deploying to serverless platforms like Vercel or Netlify).
+
+<Alert level='warning' title='Restrictions'>
+
+You can only instrument native Node.js APIs (such as `fetch` and the `http` module) with this installation method.
+This means that the Sentry SDK will not capture data from database calls, queues, ORMs, third-party libraries, or other framework-specific data.
+Thus, we recommend you follow the [`--import` flag setup instructions](#with---import-flag-eg-nodejs-server) if possible.
+
+This setup doesn't work for Cloudflare deployments.
+
+</Alert>
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Create a `src/server.ts` file in your project and import the server instrumentation file directly at the top of your server entry point.
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```typescript {filename:src/server.ts}
 import "../instrument.server.mjs";
@@ -252,25 +359,29 @@ export default createServerEntry(
 );
 ```
 
-<Alert level='warning' title='Restrictions of this installation method'>
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
-This installation method has the fundamental restriction that only native Node.js APIs can be instrumented (such as `fetch` and the `http` module).
+### Capture TanStack Start React Errors
 
-As a result, the Sentry SDK will not capture data from database calls, queues, ORMs, third-party libraries, or other framework-specific data.
+#### Capture Server-Side Errors
 
-We recommend using the [setup with the `--import` flag](#with---import-flag-eg-nodejs-server) if possible.
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
 
+To capture server-side errors from HTTP requests and server function calls, add Sentry's global middlewares to `createStart()` in your `src/start.ts` file.
+
+The Sentry middleware should be the first middleware in the arrays to ensure all errors are captured.
+
+<Alert level="info">
+  SSR rendering exceptions are not captured by the middleware. Use
+  `captureException` to manually capture those errors.
 </Alert>
 
-<Alert level="warning">
-  This setup does not currently work for Cloudflare deployments.
-</Alert>
-
-## Step 3: Capture TanStack Start React Errors
-
-### Capturing Server-Side Errors
-
-To capture server-side errors from HTTP requests and server function calls, add Sentry's global middlewares to `createStart()` in your `src/start.ts` file:
+</SplitSectionText>
+<SplitSectionCode>
 
 ```tsx {filename:src/start.ts}
 import {
@@ -287,20 +398,24 @@ export const startInstance = createStart(() => {
 });
 ```
 
-The Sentry middleware should be the first middleware in the arrays to ensure all errors are captured.
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
-<Alert level="info">
-  SSR rendering exceptions are not captured by the middleware. Use
-  `captureException` to manually capture those errors.
-</Alert>
-
-### Capturing Errors in Error Boundaries and Components (Optional)
+#### Capture Errors in Error Boundaries and Components (Optional)
 
 Sentry automatically captures unhandled client-side errors. Errors caught by your own error boundaries aren't captured unless you report them manually:
 
-#### Custom Error Boundary
+##### Custom Error Boundary
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
 
 Wrap your custom `ErrorBoundary` component with [`withErrorBoundary`](/platforms/javascript/guides/react/features/error-boundary/):
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```tsx
 import React from "react";
@@ -318,9 +433,20 @@ export const MySentryWrappedErrorBoundary = Sentry.withErrorBoundary(
 );
 ```
 
-#### TanStack Router `errorComponent`
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+##### TanStack Router `errorComponent`
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
 
 Use Sentry's `captureException` function inside a `useEffect` hook within your `errorComponent`:
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```tsx {2,6-8}
 import { createRoute } from "@tanstack/react-router";
@@ -339,17 +465,32 @@ const route = createRoute({
 })
 ```
 
-## Step 4: Add Readable Stack Traces With Source Maps (Optional)
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
-If you configured the `sentryTanstackStart` Vite plugin in Step 2, source maps are automatically uploaded during production builds.
+### Add Readable Stack Traces With Source Maps (Optional)
+
+If you configured the `sentryTanstackStart` Vite plugin [in an earlier step](#add-the-sentrytanstackstart-vite-plugin), source maps are automatically uploaded during production builds.
 
 If you need more control over the upload process, see our [source maps guide](/platforms/javascript/guides/tanstackstart-react/sourcemaps/) for manual configuration options.
 
-## Step 5: Avoid Ad Blockers With Tunneling (Optional)
+### Avoid Ad Blockers With Tunneling (Optional)
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
 
 Ad blockers and corporate firewalls often block requests to `*.sentry.io`, which can cause events to be dropped before they reach Sentry. To work around this, you can tunnel events through a same-origin route in your TanStack Start app.
 
-The `sentryTanstackStart` Vite plugin can register a tunnel route for you and automatically wire up the client `tunnel` option:
+The `sentryTanstackStart` Vite plugin can register a tunnel route for you and automatically wire up the client `tunnel` option.
+
+Setting `tunnelRoute: true` generates an opaque route for each dev session and production build, making it harder for ad blockers to target. See the [`sentryTanstackStart`](/platforms/javascript/guides/tanstackstart-react/features/sentryTanstackStart/#tunnel-route) feature page for static paths and the full set of options.
+
+If you can't use the Vite plugin, or need full control over the route file and DSN allowlist, use [`createSentryTunnelRoute`](/platforms/javascript/guides/tanstackstart-react/features/createSentryTunnelRoute/) to define the route yourself.
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```typescript {filename:vite.config.ts} {9}
 import { defineConfig } from "vite";
@@ -366,17 +507,31 @@ export default defineConfig({
 });
 ```
 
-With `tunnelRoute: true`, an opaque route path is generated for each dev session and production build, making it harder for ad blockers to target. See the [`sentryTanstackStart`](/platforms/javascript/guides/tanstackstart-react/features/sentryTanstackStart/#tunnel-route) feature page for static paths and the full set of options.
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
-If you can't use the Vite plugin, or you need full control over the route file and DSN allowlist, use [`createSentryTunnelRoute`](/platforms/javascript/guides/tanstackstart-react/features/createSentryTunnelRoute/) to define the route yourself.
-
-## Step 6: Verify
+## Verify
 
 Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
 
 ### Issues
 
-To verify that Sentry captures errors and creates issues in your Sentry project, add a test button to one of your pages, which will trigger an error that Sentry will capture when you click it:
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+To verify that Sentry captures errors and creates issues in your Sentry project, add a test button to one of your pages, which will trigger an error that Sentry will capture when you click it.
+
+<OnboardingOption optionId="performance" hideForThisOption>
+  Then, open the page in a browser and click the button to trigger a frontend
+  error.
+</OnboardingOption>
+
+<PlatformContent includePath="getting-started-browser-sandbox-warning" />
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```tsx
 <button
@@ -389,16 +544,21 @@ To verify that Sentry captures errors and creates issues in your Sentry project,
 </button>
 ```
 
-<OnboardingOption optionId="performance" hideForThisOption>
-  Open the page in a browser and click the button to trigger a frontend error.
-</OnboardingOption>
-
-<PlatformContent includePath="getting-started-browser-sandbox-warning" />
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
 <OnboardingOption optionId="performance">
 ### Tracing
 
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
 To test tracing, create a new file like `src/routes/api/sentry-example.ts` to create a test route `/api/sentry-example`:
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```typescript {filename:src/routes/api/sentry-example.ts}
 import { createFileRoute } from "@tanstack/react-router";
@@ -423,7 +583,22 @@ export const Route = createFileRoute("/api/sentry-example")({
 });
 ```
 
-Next, update your test button to call this route and throw an error if the response isn't `ok`:
+</SplitSectionCode>
+</SplitSection>
+<SplitSection>
+<SplitSectionText>
+
+Next, update your test button to call this route and throw an error if the response isn't `ok`.
+
+Open the page in a browser and click the button to trigger two errors:
+
+- a frontend error
+- an error within the API route
+
+Additionally, this starts a performance trace to measure the time it takes for the API request to complete.
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```tsx
 <button
@@ -447,18 +622,15 @@ Next, update your test button to call this route and throw an error if the respo
 </button>
 ```
 
-Open the page in a browser and click the button to trigger two errors:
-
-- a frontend error
-- an error within the API route
-
-Additionally, this starts a performance trace to measure the time it takes for the API request to complete.
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
 </OnboardingOption>
 
 <OnboardingOption optionId="logs">
 
-<Include name="logs/javascript-quick-start-verify-logs" />
+<Include name="logs/javascript-quick-start-verify-logs-splitlayout" />
 
 </OnboardingOption>
 
@@ -486,3 +658,5 @@ Our next recommended steps for you are:
 - [Get support](https://sentry.zendesk.com/hc/en-us/)
 
 </Expandable>
+
+</StepConnector>
