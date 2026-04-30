@@ -64,6 +64,12 @@ If you use a custom `release` or `dist` in `Sentry.init()`, you should set match
 }
 ```
 
+For dynamic values that change per build, set the `SENTRY_RELEASE` and `SENTRY_DIST` environment variables at build time. The SDK build scripts will use these to override the values in your `sentry.options.json`, similar to how `SENTRY_ENVIRONMENT` works.
+
+```bash
+SENTRY_RELEASE="my-app@1.0.0+42" SENTRY_DIST="42" npx react-native run-ios
+```
+
 <Alert level="warning" title="Release Alignment">
 
 If the `release` or `dist` in `sentry.options.json` doesn't match what you pass to `Sentry.init()`, you'll see two separate releases in Sentry — one for native crashes captured before JS loads and another for events captured after. Make sure both sources use the same values.
@@ -184,16 +190,22 @@ When `useNativeInit` is set to `true`, the Expo plugin automatically:
 
 You can set the `environment` using the plugin `options` property as shown above, or using the `SENTRY_ENVIRONMENT` environment variable. The environment variable takes precedence over the plugin option.
 
-For per-environment builds with EAS Build, set `SENTRY_ENVIRONMENT` in your build profiles:
+For per-environment builds with EAS Build, set `SENTRY_ENVIRONMENT` in your build profiles. You can also set `SENTRY_RELEASE` and `SENTRY_DIST` if you use custom release names:
 
 ```json {filename:eas.json}
 {
   "build": {
     "production": {
-      "env": { "SENTRY_ENVIRONMENT": "production" }
+      "env": {
+        "SENTRY_ENVIRONMENT": "production",
+        "SENTRY_RELEASE": "my-app@1.0.0+42",
+        "SENTRY_DIST": "42"
+      }
     },
     "staging": {
-      "env": { "SENTRY_ENVIRONMENT": "staging" }
+      "env": {
+        "SENTRY_ENVIRONMENT": "staging"
+      }
     }
   }
 }
