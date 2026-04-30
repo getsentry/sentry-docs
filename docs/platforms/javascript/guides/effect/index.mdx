@@ -1,21 +1,21 @@
 ---
 title: Effect
 sdk: sentry.javascript.effect
-description: Learn how to set up Sentry in your Effect application with first-class integration for tracing, logging, and metrics.
+description: Learn how to set up and configure Sentry in your Effect application, capture your first errors, and view them in Sentry.
 ---
 
-<Alert>
+<Alert level="warning" title="Important">
 
 This SDK is currently in **ALPHA**. Alpha features are still in progress, may have bugs, and might include breaking changes.
 Please reach out on [GitHub](https://github.com/getsentry/sentry-javascript/issues/new/choose) if you have any feedback or concerns.
 
 </Alert>
 
-This guide will show you how to integrate Sentry into your [Effect](https://effect.website/) project using the `@sentry/effect` SDK.
-
 <PlatformContent includePath="getting-started-prerequisites" />
 
-## Step 1: Install
+<StepConnector selector="h2" showNumbers={true}>
+
+## Install
 
 Choose the features you want to configure, and this guide will show you how:
 
@@ -26,6 +26,15 @@ Choose the features you want to configure, and this guide will show you how:
 <Include name="quick-start-features-expandable" />
 
 ### Install the Sentry SDK
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Run the command for your preferred package manager to add the Sentry SDK to your application.
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```bash {tabTitle:npm}
 npm install @sentry/effect --save
@@ -39,11 +48,24 @@ yarn add @sentry/effect
 pnpm add @sentry/effect
 ```
 
-## Step 2: Configure
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
-The SDK provides an `effectLayer` that initializes Sentry. You can compose it with additional Effect layers to enable tracing, logging, and metrics.
+## Configure
 
-### Server Usage
+### Initialize Sentry on the Server-Side
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Import and initialize the Sentry SDK in your application's entry point (for example, `main.ts`) using the SDK's `effectLayer`.
+
+Depending on the features you've selected, merge the `effectLayer` with the corresponding feature layers.
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```typescript {filename:main.ts}
 import * as Sentry from "@sentry/effect/server";
@@ -62,6 +84,8 @@ const SentryLive = Layer.mergeAll(
     // Set tracesSampleRate to 1.0 to capture 100%
     // of transactions for tracing.
     // We recommend adjusting this value in production.
+    // Learn more at
+    // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
     tracesSampleRate: 1.0,
     // ___PRODUCT_OPTION_END___ performance
     // ___PRODUCT_OPTION_START___ logs
@@ -83,7 +107,7 @@ const SentryLive = Layer.mergeAll(
   // ___PRODUCT_OPTION_START___ metrics
 
   // Forward Effect metrics to Sentry
-  Sentry.SentryEffectMetricsLayer,
+  Sentry.SentryEffectMetricsLayer
   // ___PRODUCT_OPTION_END___ metrics
 );
 
@@ -92,9 +116,24 @@ const MainLive = HttpLive.pipe(Layer.provide(SentryLive));
 MainLive.pipe(Layer.launch, NodeRuntime.runMain);
 ```
 
-### Client Usage
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
-```typescript {filename:main.ts}
+### Initialize Sentry on the Client-Side
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Import and initialize the Sentry SDK in your application's entry point (for example, `index.ts`) using the SDK's `effectLayer`.
+
+Depending on the features you've selected, merge the `effectLayer` with the corresponding feature layers.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {filename:index.ts}
 import * as Sentry from "@sentry/effect/client";
 // ___PRODUCT_OPTION_START___ logs
 import { Logger } from "effect";
@@ -109,6 +148,8 @@ const SentryLive = Layer.mergeAll(
     // Set tracesSampleRate to 1.0 to capture 100%
     // of transactions for tracing.
     // We recommend adjusting this value in production.
+    // Learn more at
+    // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
     tracesSampleRate: 1.0,
     integrations: [Sentry.browserTracingIntegration()],
     // ___PRODUCT_OPTION_END___ performance
@@ -120,36 +161,41 @@ const SentryLive = Layer.mergeAll(
   }),
   // ___PRODUCT_OPTION_START___ performance
 
-  // Enable Effect tracing
+  // Enable Effect tracing for the browser
   Layer.setTracer(Sentry.SentryEffectTracer),
   // ___PRODUCT_OPTION_END___ performance
   // ___PRODUCT_OPTION_START___ logs
 
   // Forward Effect logs to Sentry
-  Logger.replace(Logger.defaultLogger, Sentry.SentryEffectLogger),
+  Logger.replace(Logger.defaultLogger, Sentry.SentryEffectLogger)
   // ___PRODUCT_OPTION_END___ logs
 );
 
 const MainLive = YourAppLayer.pipe(Layer.provide(SentryLive));
 ```
 
-## Features
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
-The SDK provides composable layers for Effect integration:
+### Add Readable Stack Traces With Source Maps (Optional)
 
-<OnboardingOption optionId="performance">
-- **Tracing** via `Sentry.SentryEffectTracer`: Effect spans are automatically traced as Sentry spans with distributed tracing support
-</OnboardingOption>
-<OnboardingOption optionId="logs">
-- **Logging** via `Sentry.SentryEffectLogger`: Effect logs are forwarded to Sentry (requires `enableLogs: true`)
-</OnboardingOption>
-<OnboardingOption optionId="metrics">
-- **Metrics** via `Sentry.SentryEffectMetricsLayer`: Effect metrics (counters, gauges, histograms) are sent to Sentry
-</OnboardingOption>
+<PlatformContent includePath="getting-started-sourcemaps-short-version-splitlayout" />
 
-## Step 3: Verify
+## Verify
 
-Add a test error to verify your setup:
+Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
+
+### Issues
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+To verify that Sentry captures errors and creates issues in your Sentry project, add a test error:
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```typescript
 import { Effect } from "effect";
@@ -162,12 +208,96 @@ const program = Effect.gen(function* () {
 // Run with your layer that includes Sentry.effectLayer
 ```
 
-Head over to your project on [Sentry.io](https://sentry.io) to view the collected data.
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+<OnboardingOption optionId="performance">
+### Tracing
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+To test your tracing configuration, update the previous code snippet to create a custom span:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript
+import { Effect } from "effect";
+import * as Sentry from "@sentry/effect/server";
+
+const program = Effect.gen(function* () {
+  yield* Effect.gen(function* () {
+    // Simulate some work
+    yield* Effect.sleep("100 millis");
+    yield* Effect.fail(new Error("Sentry Test Error"));
+  }).pipe(
+    Effect.withSpan("My First Test Transaction", {
+      attributes: { op: "test" },
+    })
+  );
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+</OnboardingOption>
+
+<OnboardingOption optionId="logs">
+
+### Logs <FeatureBadge type="new" size="small" />
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+To verify that Sentry catches your logs, add some log statements to your application:
+
+</SplitSectionText>
+
+<SplitSectionCode>
+
+```typescript
+import { Effect } from "effect";
+import * as Sentry from "@sentry/effect/server";
+
+const program = Effect.gen(function* () {
+  yield* Effect.log("User example action completed");
+
+  yield* Effect.logWarning("Slow operation detected").pipe(
+    Effect.annotateLogs({
+      operation: "data_fetch",
+      duration: "3500ms",
+    })
+  );
+
+  yield* Effect.logError("Validation failed").pipe(
+    Effect.annotateLogs({
+      field: "email",
+      reason: "Invalid email",
+    })
+  );
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+</OnboardingOption>
+
+### View Captured Data in Sentry
+
+Now, head over to your project on [Sentry.io](https://sentry.io/) to view the collected data (it takes a couple of moments for the data to appear).
 
 <Include name="quick-start-locate-data-expandable" />
 
 ## Next Steps
 
+- Explore [practical guides](/guides/) on what to monitor, log, track, and investigate after setup
 - Learn how to [manually capture errors](/platforms/javascript/guides/effect/usage/)
 - Continue to [customize your configuration](/platforms/javascript/guides/effect/configuration/)
 - Get familiar with [Sentry's product features](/product/) like tracing, insights, and alerts
@@ -178,3 +308,5 @@ Head over to your project on [Sentry.io](https://sentry.io) to view the collecte
 - [Get support](https://sentry.zendesk.com/hc/en-us/)
 
 </Expandable>
+
+</StepConnector>
