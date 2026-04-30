@@ -36,7 +36,9 @@ Create a `sentry.options.json` file in your React Native project root with the s
 
 <Alert level="info" title="Options Merging">
 
-Options from `sentry.options.json` are merged with options from `Sentry.init()` in JavaScript. Options specified in JavaScript take precedence over the configuration file, allowing you to override settings at runtime.
+When `Sentry.init()` runs in JavaScript, the native SDK is re-initialized with the JS options merged on top of the file options. This means JavaScript options take precedence for events captured **after** JS loads.
+
+However, crashes and errors that occur **before** JavaScript loads (which is the purpose of this feature) are captured using only the values from `sentry.options.json` and native auto-detection. If you set a custom `release` or `dist` in `Sentry.init()`, make sure the same values are also in `sentry.options.json`. Otherwise, pre-JS crashes will be attributed to a different release than post-JS events.
 
 </Alert>
 
@@ -49,6 +51,24 @@ SENTRY_ENVIRONMENT=staging npx react-native run-android
 ```
 
 This works in any CI/CD system by setting the environment variable in your build configuration.
+
+### Setting Release and Distribution
+
+If you use a custom `release` or `dist` in `Sentry.init()`, you should set matching values in `sentry.options.json` so that pre-JavaScript crashes are attributed to the correct release:
+
+```json {filename:sentry.options.json}
+{
+  "dsn": "https://key@example.io/value",
+  "release": "my-app@1.0.0+42",
+  "dist": "42"
+}
+```
+
+<Alert level="warning" title="Release Alignment">
+
+If the `release` or `dist` in `sentry.options.json` doesn't match what you pass to `Sentry.init()`, you'll see two separate releases in Sentry — one for native crashes captured before JS loads and another for events captured after. Make sure both sources use the same values.
+
+</Alert>
 
 ## Android Setup
 
