@@ -53,22 +53,26 @@ plugins {
 
 #### Customize Preview Generation
 
-The `snapshots` block on the Sentry extension exposes two options that shape the generated Paparazzi tests. Both only apply when `generateSnapshotTests` is `true` (the default).
+The `previews` block inside `snapshots` exposes options that shape the generated Paparazzi tests. These only apply when `generateTests` is `true` (the default).
 
 ```kotlin
 sentry {
   snapshots {
     enabled = true
-    theme = "@style/Theme.MyApp"   // optional
-    includePrivatePreviews = false // optional, defaults to true
+    previews {
+      theme = "@style/Theme.MyApp"          // optional
+      includePrivatePreviews = false        // optional, defaults to true
+      packageTrees = listOf("com.example")  // optional, defaults to Android namespace
+    }
   }
 }
 ```
 
-| Option                   | Default                                                             | Description                                                                                                                         |
-| ------------------------ | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `theme`                  | Paparazzi default (`android:Theme.Material.NoActionBar.Fullscreen`) | Android theme resource used when rendering previews. Set this if your previews rely on a specific theme.                            |
-| `includePrivatePreviews` | `true`                                                              | Whether `@Preview` composables declared `private` are snapshotted. Set to `false` to exclude in-progress or internal-only previews. |
+| Option                   | Default                                                             | Description                                                                                                                                  |
+| ------------------------ | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `theme`                  | Paparazzi default (`android:Theme.Material.NoActionBar.Fullscreen`) | Android theme resource used when rendering previews. Set this if your previews rely on a specific theme.                                     |
+| `includePrivatePreviews` | `true`                                                              | Whether `@Preview` composables declared `private` are snapshotted. Set to `false` to exclude in-progress or internal-only previews.          |
+| `packageTrees`           | `[]` (falls back to Android namespace)                              | Package prefixes to scan for `@Preview` composables. When empty, the plugin uses the Android namespace from the build variant.               |
 
 If you don't set a `theme`, Paparazzi uses its own default (`android:Theme.Material.NoActionBar.Fullscreen`). If the background of your previews isn't important — for example, when you just want to compare component geometry — you can use a translucent platform theme such as `android:Theme.Translucent.NoTitleBar`:
 
@@ -76,7 +80,9 @@ If you don't set a `theme`, Paparazzi uses its own default (`android:Theme.Mater
 sentry {
   snapshots {
     enabled = true
-    theme = "android:Theme.Translucent.NoTitleBar"
+    previews {
+      theme = "android:Theme.Translucent.NoTitleBar"
+    }
   }
 }
 ```
@@ -96,13 +102,15 @@ Use this path if you already generate snapshots with another tool. The configura
 
 #### Paparazzi
 
-If you already have [Paparazzi](https://github.com/cashapp/paparazzi) configured, set `generateSnapshotTests = false` so Sentry uses your existing tests instead of auto-generating preview-based ones:
+If you already have [Paparazzi](https://github.com/cashapp/paparazzi) configured, set `generateTests = false` inside the `previews` block so Sentry uses your existing tests instead of auto-generating preview-based ones:
 
 ```kotlin
 sentry {
   snapshots {
     enabled = true
-    generateSnapshotTests = false
+    previews {
+      generateTests = false
+    }
   }
 }
 ```
