@@ -124,6 +124,27 @@ export function Header({
     return () => checkbox.removeEventListener('change', handleChange);
   }, [isHomePage]);
 
+  // Lock body scroll when sidebar is open on mobile (fixes iOS Safari touch scrolling)
+  useEffect(() => {
+    if (sidebarOpen) {
+      document.body.style.overflow = 'hidden';
+
+      // Restore scroll on resize to desktop width
+      const handleResize = () => {
+        if (window.innerWidth >= 768) {
+          document.body.style.overflow = '';
+        }
+      };
+
+      window.addEventListener('resize', handleResize);
+      return () => {
+        document.body.style.overflow = '';
+        window.removeEventListener('resize', handleResize);
+      };
+    }
+    return undefined;
+  }, [sidebarOpen]);
+
   // Show header search if: not on home page, OR on home page but home search is scrolled out of view
   const showHeaderSearch = !isHomePage || !homeSearchVisible;
 
