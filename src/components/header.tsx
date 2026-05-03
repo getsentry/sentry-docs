@@ -129,10 +129,16 @@ export function Header({
     if (sidebarOpen) {
       document.body.style.overflow = 'hidden';
 
-      // Restore scroll on resize to desktop width
+      // Close sidebar if viewport is resized to desktop width
       const handleResize = () => {
         if (window.innerWidth >= 768) {
-          document.body.style.overflow = '';
+          const checkbox = document.getElementById(
+            sidebarToggleId
+          ) as HTMLInputElement | null;
+          if (checkbox) {
+            checkbox.checked = false;
+            setSidebarOpen(false);
+          }
         }
       };
 
@@ -283,6 +289,14 @@ export function Header({
                 onClick={() => {
                   setMobileSearchOpen(true);
                   setHomeMobileNavOpen(false);
+                  // Close sidebar to prevent competing scroll locks
+                  const checkbox = document.getElementById(
+                    sidebarToggleId
+                  ) as HTMLInputElement | null;
+                  if (checkbox) {
+                    checkbox.checked = false;
+                    setSidebarOpen(false);
+                  }
                 }}
                 aria-label="Search"
               >
