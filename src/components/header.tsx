@@ -105,6 +105,8 @@ export function Header({
   // Track sidebar checkbox state for non-home pages
   useEffect(() => {
     if (isHomePage) {
+      // Reset sidebar state when navigating to home page to prevent stale scroll lock
+      setSidebarOpen(false);
       return undefined;
     }
 
