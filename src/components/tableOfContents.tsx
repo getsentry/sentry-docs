@@ -1,6 +1,6 @@
 'use client';
 
-import {useEffect, useState} from 'react';
+import {useEffect, useRef, useState} from 'react';
 
 type TreeItem = {
   children: TreeItem[];
@@ -74,14 +74,16 @@ export function TableOfContents({ignoreIds = []}: Props) {
   // Re-scroll to hash anchor after TOC renders to compensate for layout shift.
   // The TOC starts empty and populates client-side, which pushes content down
   // and causes the browser's initial anchor scroll to land on the wrong section.
+  const hasScrolledToHash = useRef(false);
   useEffect(() => {
-    if (treeItems.length === 0) {
+    if (hasScrolledToHash.current || treeItems.length === 0) {
       return;
     }
     const hash = window.location.hash;
     if (!hash) {
       return;
     }
+    hasScrolledToHash.current = true;
     requestAnimationFrame(() => {
       const id = decodeURIComponent(hash.slice(1));
       document.getElementById(id)?.scrollIntoView();
