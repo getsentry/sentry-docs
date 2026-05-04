@@ -46,6 +46,9 @@ However, we generally recommend the following:
 
   You do not need to separately install Sentry CLI on your build server, as it is already provided by the Sentry NuGet package.
 
+- If building inside a **Docker container**, use a [BuildKit secret](https://docs.docker.com/build/building/secrets/) to pass the auth token securely.
+  See [Building with Docker](#building-with-docker) below for a complete example.
+
 ## Configuration
 
 In addition to authentication, you must configure your Sentry organization and project slugs.
@@ -259,3 +262,75 @@ them, be very careful that their values are not committed to source control or a
 A more secure approach is to set authentication via environment variable or `~/.sentryclirc` file,
 
 </Alert>
+
+## Building with Docker
+
+When building inside a Docker container, there are two things to handle: passing the auth token securely, and avoiding errors in multi-stage builds.
+
+### Passing the Auth Token
+
+Use Docker BuildKit's `--secret` flag to pass the auth token at build time. Unlike `ARG`/`ENV`, BuildKit secrets are never written to any image layer and do not appear in `docker history`.
+
+Pass the secret when building the image:
+
+```bash
+docker build --secret id=sentry_auth_token,env=SENTRY_AUTH_TOKEN .
+```
+
+In your Dockerfile, add a [syntax directive](https://docs.docker.com/reference/dockerfile/#syntax) at the top, then mount the secret for the `RUN` instruction that performs the build:
+
+```dockerfile
+# syntax=docker/dockerfile:1
+...
+RUN --mount=type=secret,id=sentry_auth_token,env=SENTRY_AUTH_TOKEN \
+    dotnet build "MyWebApp.csproj" --no-restore -c Release -o /app/build
+```
+
+The `env=` option (available since Dockerfile syntax v1.10) exposes the secret as the `SENTRY_AUTH_TOKEN` environment variable for the duration of that `RUN` instruction only — exactly what the Sentry CLI needs — without persisting it to a layer. The `# syntax=` directive ensures Docker uses a frontend that supports `env=`, regardless of the Docker Engine version.
+
+<Alert>
+
+BuildKit is enabled by default in Docker 23.0 and later. For older versions, set `DOCKER_BUILDKIT=1` in your environment before running `docker build`.
+
+</Alert>
+
+### Multi-Stage Dockerfiles
+
+If your Dockerfile has separate stages for `dotnet build` and `dotnet publish` (a common pattern for ASP.NET Core apps), Sentry CLI only needs to run during the **build** stage. The publish stage copies compiled output and doesn't have access to the full project source, so running Sentry CLI there will fail.
+
+Disable Sentry CLI in the publish stage by passing `-p:UseSentryCLI=false` to `dotnet publish`:
+
+```dockerfile
+RUN dotnet publish "MyWebApp.csproj" -c Release -o /app/publish -p:UseAppHost=false -p:UseSentryCLI=false
+```
+
+### Complete Example
+
+The following is a complete multi-stage Dockerfile for an ASP.NET Core app. It assumes `<SentryOrg>`, `<SentryProject>`, `<SentryUploadSymbols>`, and `<SentryUploadSources>` are configured in your `.csproj` or `Directory.Build.props`.
+
+```dockerfile
+# syntax=docker/dockerfile:1
+# Build: docker build --secret id=sentry_auth_token,env=SENTRY_AUTH_TOKEN .
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+WORKDIR /app
+EXPOSE 8080
+
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+COPY ["MyWebApp.csproj", "./"]
+RUN dotnet restore "MyWebApp.csproj"
+COPY . .
+
+# The secret is available only for this RUN instruction and is never written to a layer.
+RUN --mount=type=secret,id=sentry_auth_token,env=SENTRY_AUTH_TOKEN \
+    dotnet build "MyWebApp.csproj" --no-restore -c Release -o /app/build
+
+# Sentry CLI already ran during the build stage, so disable it here.
+FROM build AS publish
+RUN dotnet publish "MyWebApp.csproj" -c Release -o /app/publish -p:UseAppHost=false -p:UseSentryCLI=false
+
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app/publish .
+ENTRYPOINT ["dotnet", "MyWebApp.dll"]
+```
