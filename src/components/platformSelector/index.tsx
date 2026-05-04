@@ -157,17 +157,7 @@ export function PlatformSelector({
     } else if (isOnPlatformsIndex) {
       const stored = localStorage.getItem('active-platform');
       setStoredPlatformKey(stored);
-
-      // If we have a stored platform, redirect to it immediately
-      if (stored) {
-        const storedPlatformData = platformsAndGuides.find(p => p.key === stored);
-        if (storedPlatformData) {
-          setIsRedirecting(true);
-          // Use hard navigation for instant redirect
-          window.location.replace(storedPlatformData.url);
-          return;
-        }
-      }
+      // Don't redirect when on /platforms/ - let users stay on the page they navigated to
     } else {
       setStoredPlatformKey(localStorage.getItem('active-platform'));
     }
