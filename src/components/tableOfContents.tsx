@@ -68,9 +68,25 @@ export function TableOfContents({ignoreIds = []}: Props) {
       }
     }
 
-    // Remove groups without children
     setTreeItems(_tocItems);
   }, [ignoreIds]);
+
+  // Re-scroll to hash anchor after TOC renders to compensate for layout shift.
+  // The TOC starts empty and populates client-side, which pushes content down
+  // and causes the browser's initial anchor scroll to land on the wrong section.
+  useEffect(() => {
+    if (treeItems.length === 0) {
+      return;
+    }
+    const hash = window.location.hash;
+    if (!hash) {
+      return;
+    }
+    requestAnimationFrame(() => {
+      const id = decodeURIComponent(hash.slice(1));
+      document.getElementById(id)?.scrollIntoView();
+    });
+  }, [treeItems]);
 
   return (
     <ul>
