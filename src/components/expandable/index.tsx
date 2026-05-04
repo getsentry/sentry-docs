@@ -64,8 +64,7 @@ export function Expandable({
 
       const isOwnId = targetId === id;
       const targetElement = document.getElementById(targetId);
-      const containsTarget =
-        targetElement && detailsRef.current?.contains(targetElement);
+      const containsTarget = targetElement && detailsRef.current?.contains(targetElement);
 
       if (isOwnId || containsTarget) {
         setIsExpanded(true);
