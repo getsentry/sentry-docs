@@ -171,12 +171,11 @@ export function Expandable({
     const newVal = event.currentTarget.open;
     setIsExpanded(newVal);
 
-    if (newVal) {
+    // Don't emit analytics or overwrite the hash when triggered by hash navigation
+    if (newVal && !expandedByHashRef.current) {
       emit('Open Expandable', {props: {page: window.location.pathname, title}});
     }
 
-    // Don't overwrite the hash when the expand was triggered by hash navigation
-    // (e.g. clicking #child-heading should keep that hash, not replace with #expandable-id)
     if (id && !expandedByHashRef.current) {
       if (newVal) {
         window.history.pushState({}, '', `#${id}`);
