@@ -1,0 +1,81 @@
+---
+title: Default Context
+sidebar_order: 500
+description: "The React Native SDK automatically enriches context with additional information about the device, system, runtime, and release version of your application."
+---
+
+The React Native SDK automatically enriches context with additional information about the device, system, runtime, and release version of your application.
+
+Default context helps correlate errors with factors such as specific device types, OS versions, and React Native runtime details so that you can find the root cause of the problem faster.
+
+## React Native Context
+
+The SDK collects runtime information specific to React Native and stores it in the `react_native_context` context:
+
+- `turbo_module` — whether TurboModule is enabled
+- `fabric` — whether Fabric (new renderer) is enabled
+- `react_native_version` — React Native version
+- `expo` — whether the app is running on Expo
+- `js_engine` — JavaScript engine name (for example, `hermes`)
+- `hermes_version` — Hermes version (if Hermes is enabled)
+- `hermes_debug_info` — whether the Hermes bundle includes debug info
+- `component_stack` — React component stack (when available on errors)
+- `expo_go_version` — Expo Go version (if running in Expo Go)
+- `expo_sdk_version` — Expo SDK version (if running on Expo)
+
+## SDK Info
+
+- `name` — SDK name (for example, `sentry.javascript.react-native`)
+- `version` — SDK version
+- `packages` — native SDK dependencies and their versions (for example, `sentry-cocoa` and `sentry-android`)
+
+## Native Device and System Context
+
+The SDK collects device, operating system, app, screen, memory, storage, and battery information from the underlying native SDKs. The available fields depend on the platform:
+
+- **Android**: See [Android Default Context](/platforms/android/enriching-events/context/default-context/) for the full list of fields, including device info, screen, memory, storage, battery, locale, and more.
+- **iOS**: The Sentry Cocoa SDK provides device, OS, app state, memory, and battery information natively. See [Apple Context](/platforms/apple/enriching-events/context/) for more details.
+
+In addition, the React Native SDK sets `in_foreground` in the app context to indicate whether the app is in the foreground at the time of the event.
+
+## Modules
+
+The SDK collects a list of JavaScript packages and their versions used by your application. During the build process, the SDK analyzes the bundle source map to extract package names and versions into a `modules.json` file. At runtime, this data is loaded and attached to each event as `event.modules`, helping you identify which dependency versions are running when an error occurs.
+
+## Expo-Specific Context
+
+If your app runs on Expo, the SDK collects additional context.
+
+### OTA Updates
+
+Stored in the `ota_updates` context:
+
+- `is_enabled` — whether OTA updates are enabled
+- `is_embedded_launch` — whether this is an embedded launch
+- `is_emergency_launch` — whether this is an emergency launch
+- `emergency_launch_reason` — reason for emergency launch
+- `is_using_embedded_assets` — whether using embedded assets
+- `update_id` — current update ID
+- `channel` — EAS Update channel
+- `runtime_version` — runtime version
+- `check_automatically` — automatic update check setting
+- `launch_duration` — launch duration in milliseconds
+- `created_at` — update creation timestamp
+
+### Expo Constants
+
+Stored in the `expo_constants` context:
+
+- `execution_environment` — where the app is running
+- `app_ownership` — app ownership type
+- `debug_mode` — whether the app is in debug mode
+- `expo_version` — Expo version
+- `expo_runtime_version` — Expo runtime version
+- `session_id` — unique session ID
+- `status_bar_height` — status bar height in pixels
+- `app_name` — app name from Expo config
+- `app_slug` — app slug from Expo config
+- `app_version` — app version from Expo config
+- `expo_sdk_version` — Expo SDK version from Expo config
+- `eas_project_id` — EAS project ID
+
