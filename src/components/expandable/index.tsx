@@ -68,8 +68,11 @@ export function Expandable({
 
       if (isOwnId || containsTarget) {
         setIsExpanded(true);
+        // Double rAF: first waits for React to commit, second for browser layout
         requestAnimationFrame(() => {
-          (targetElement ?? document.getElementById(targetId))?.scrollIntoView();
+          requestAnimationFrame(() => {
+            document.getElementById(targetId)?.scrollIntoView();
+          });
         });
       }
     };
