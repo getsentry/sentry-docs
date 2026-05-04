@@ -54,6 +54,7 @@ export function SmartLink({
         href={realTo}
         className={className}
         onClick={e => {
+          handleAutolinkClick(e);
           const targetId = realTo.slice(1);
           const target = targetId ? document.getElementById(targetId) : null;
           if (target?.closest('details:not([open])')) {
