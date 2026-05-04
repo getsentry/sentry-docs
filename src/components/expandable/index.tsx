@@ -47,29 +47,38 @@ export function Expandable({
   const contentRef = useRef<HTMLDivElement>(null);
   const {emit} = usePlausibleEvent();
 
-  // Ensure we scroll to the element if the URL hash matches
+  const detailsRef = useRef<HTMLDetailsElement>(null);
+
+  // Expand and scroll when the URL hash matches this expandable's id
+  // OR any element inside it (e.g. a heading anchor within the content).
   useEffect(() => {
-    if (!id) {
-      return () => {};
-    }
+    const expandIfHashInside = () => {
+      const hash = window.location.hash;
+      if (!hash) {
+        return;
+      }
+      const targetId = hash.slice(1);
+      if (!targetId) {
+        return;
+      }
 
-    if (window.location.hash === `#${id}`) {
-      document.querySelector(`#${id}`)?.scrollIntoView();
-      setIsExpanded(true);
-    }
+      const isOwnId = targetId === id;
+      const targetElement = document.getElementById(targetId);
+      const containsTarget =
+        targetElement && detailsRef.current?.contains(targetElement);
 
-    // When the hash changes (e.g. when the back/forward browser buttons are used),
-    // we want to ensure to jump to the correct section
-    const onHashChange = () => {
-      if (window.location.hash === `#${id}`) {
+      if (isOwnId || containsTarget) {
         setIsExpanded(true);
-        document.querySelector(`#${id}`)?.scrollIntoView();
+        requestAnimationFrame(() => {
+          (targetElement ?? document.getElementById(targetId))?.scrollIntoView();
+        });
       }
     };
-    // listen for hash changes and expand the section if the hash matches the title
-    window.addEventListener('hashchange', onHashChange);
+
+    expandIfHashInside();
+    window.addEventListener('hashchange', expandIfHashInside);
     return () => {
-      window.removeEventListener('hashchange', onHashChange);
+      window.removeEventListener('hashchange', expandIfHashInside);
     };
   }, [id]);
 
@@ -162,6 +171,7 @@ export function Expandable({
 
   return (
     <details
+      ref={detailsRef}
       name={group}
       className={`${styles.expandable} callout !block ${'callout-' + level}`}
       open={isExpanded}
