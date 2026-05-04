@@ -18,11 +18,17 @@ Please reach out on [GitHub](https://github.com/getsentry/sentry-javascript/issu
 
 The `@sentry/hono` SDK supports Hono 4+ across multiple runtimes: Cloudflare Workers, Node.js, and Bun. It works as Hono middleware, so you can drop it into your existing app with minimal setup.
 
-<Alert>
+<Expandable title="Are you using @hono/sentry?">
 
-The community middleware `@hono/sentry` has been deprecated in favor of `@sentry/hono`, which provides better performance and more features. If you're currently using `@hono/sentry`, see the [migration section](#migrating-from-honosentry) below.
+The community middleware `@hono/sentry` has been deprecated in favor of `@sentry/hono`, which provides better performance and more features. To migrate:
 
-</Alert>
+1. Uninstall `@hono/sentry` and `toucan-js`
+2. Follow the install and configure steps below for your runtime
+3. Replace the old middleware with the new `sentry()` middleware
+
+</Expandable>
+
+<PlatformContent includePath="getting-started-prerequisites" />
 
 <StepConnector selector="h2" showNumbers={true}>
 
@@ -31,7 +37,7 @@ The community middleware `@hono/sentry` has been deprecated in favor of `@sentry
 Choose the features you want to configure, and this guide will show you how:
 
 <OnboardingOptionButtons
-  options={["error-monitoring", "performance", "logs"]}
+  options={["error-monitoring", "performance", "profiling", "logs"]}
 />
 
 <Include name="quick-start-features-expandable" />
@@ -90,11 +96,49 @@ npm install @sentry/bun
 </SplitSection>
 </SplitLayout>
 
+<OnboardingOption optionId="profiling">
+
+### Install the Profiling Package (Node.js Only)
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Profiling is available for the Node.js runtime. Install the `@sentry/profiling-node` package:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```bash {tabTitle:npm}
+npm install @sentry/profiling-node --save
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/profiling-node
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/profiling-node
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+</OnboardingOption>
+
 ## Configure
 
 <Expandable title="Cloudflare Workers: Enable Node.js Compatibility">
 
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
 If you're deploying to Cloudflare Workers, set the `nodejs_compat` compatibility flag. The SDK needs `AsyncLocalStorage`, which requires this flag.
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```jsonc {tabTitle:JSON} {filename:wrangler.jsonc}
 {
@@ -106,14 +150,28 @@ If you're deploying to Cloudflare Workers, set the `nodejs_compat` compatibility
 compatibility_flags = ["nodejs_compat"]
 ```
 
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
 </Expandable>
 
 <Expandable title="Node.js: Initialize Sentry Before Your App">
 
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
 Node.js requires Sentry to initialize before your application loads so it can instrument third-party libraries (like database clients). Create a separate initialization file:
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```typescript {filename:instrument.mjs}
 import * as Sentry from "@sentry/hono/node";
+// ___PRODUCT_OPTION_START___ profiling
+import { nodeProfilingIntegration } from "@sentry/profiling-node";
+// ___PRODUCT_OPTION_END___ profiling
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
@@ -121,6 +179,10 @@ Sentry.init({
   // Adds request headers and IP for users, for more info visit:
   // https://docs.sentry.io/platforms/javascript/guides/hono/configuration/options/#sendDefaultPii
   sendDefaultPii: true,
+  // ___PRODUCT_OPTION_START___ profiling
+
+  integrations: [nodeProfilingIntegration()],
+  // ___PRODUCT_OPTION_END___ profiling
   // ___PRODUCT_OPTION_START___ performance
 
   // Set tracesSampleRate to 1.0 to capture 100%
@@ -130,6 +192,13 @@ Sentry.init({
   // https://docs.sentry.io/platforms/javascript/guides/hono/configuration/options/#tracesSampleRate
   tracesSampleRate: 1.0,
   // ___PRODUCT_OPTION_END___ performance
+  // ___PRODUCT_OPTION_START___ profiling
+
+  // Set profilesSampleRate relative to tracesSampleRate
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/configuration/options/#profileSessionSampleRate
+  profileSessionSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ profiling
   // ___PRODUCT_OPTION_START___ logs
 
   // Enable logs to be sent to Sentry
@@ -138,23 +207,45 @@ Sentry.init({
 });
 ```
 
-Load this file with the `--import` flag when starting your app:
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Load this file with the `--import` flag when starting your app. You can also set this as an environment variable instead:
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```bash
 node --import ./instrument.mjs app.js
 ```
 
-You can also set this as an environment variable:
-
 ```bash
 NODE_OPTIONS="--import ./instrument.mjs"
 ```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
 </Expandable>
 
 ### Add the Sentry Middleware
 
-Add the `sentry()` middleware as early as possible in your main Hono app. For Cloudflare Workers and Bun, pass your Sentry options directly to the middleware. For Node.js, Sentry is already initialized in the instrument file, so no options are needed here.
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Add the `sentry()` middleware as early as possible in your Hono app.
+
+Before continuing, make sure you've completed the runtime-specific steps above: **Cloudflare Workers** users need to enable Node.js compatibility, and **Node.js** users need to create the instrument file. Since Node.js initializes Sentry in that file, the middleware doesn't take any options.
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```typescript {tabTitle:Cloudflare Workers} {filename:index.ts}
 import { Hono } from "hono";
@@ -231,12 +322,23 @@ app.use(
 
 // Your routes here
 
-export default app
+export default app;
 ```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
 <Expandable title="Cloudflare Workers: Accessing env from Worker Bindings">
 
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
 To access environment variables from your Cloudflare Worker bindings (for example, to store the DSN as a secret), pass a callback instead of a plain options object. The function receives the Worker `env`:
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```typescript {filename:index.ts}
 import { Hono } from "hono";
@@ -250,6 +352,10 @@ app.use(sentry(app, (env) => ({ dsn: env.SENTRY_DSN })));
 
 export default app;
 ```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
 </Expandable>
 
@@ -288,13 +394,5 @@ Now's a good time to customize your setup and look into more advanced topics:
 - [Get support](https://sentry.zendesk.com/hc/en-us/)
 
 </Expandable>
-
-### Migrating from @hono/sentry
-
-If you're using the deprecated community middleware `@hono/sentry`, switch to `@sentry/hono`:
-
-1. Uninstall `@hono/sentry` and `toucan-js`
-2. Follow the install and configure steps above for your runtime
-3. Replace the old middleware with the new `sentry()` middleware
 
 </StepConnector>
