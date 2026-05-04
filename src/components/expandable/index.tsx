@@ -48,8 +48,9 @@ export function Expandable({
   const {emit} = usePlausibleEvent();
 
   const detailsRef = useRef<HTMLDetailsElement>(null);
+  const scrollTargetRef = useRef<string | null>(null);
 
-  // Expand and scroll when the URL hash matches this expandable's id
+  // Expand when the URL hash matches this expandable's id
   // OR any element inside it (e.g. a heading anchor within the content).
   useEffect(() => {
     const expandIfHashInside = () => {
@@ -64,16 +65,12 @@ export function Expandable({
 
       const isOwnId = targetId === id;
       const targetElement = document.getElementById(targetId);
-      const containsTarget = targetElement && detailsRef.current?.contains(targetElement);
+      const containsTarget =
+        targetElement && detailsRef.current?.contains(targetElement);
 
       if (isOwnId || containsTarget) {
+        scrollTargetRef.current = targetId;
         setIsExpanded(true);
-        // Double rAF: first waits for React to commit, second for browser layout
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            document.getElementById(targetId)?.scrollIntoView();
-          });
-        });
       }
     };
 
@@ -83,6 +80,17 @@ export function Expandable({
       window.removeEventListener('hashchange', expandIfHashInside);
     };
   }, [id]);
+
+  // Scroll after React commits the expanded state and the browser lays out.
+  useEffect(() => {
+    if (isExpanded && scrollTargetRef.current) {
+      const targetId = scrollTargetRef.current;
+      scrollTargetRef.current = null;
+      requestAnimationFrame(() => {
+        document.getElementById(targetId)?.scrollIntoView();
+      });
+    }
+  }, [isExpanded]);
 
   const copyContentOnClick = useCallback(
     async (event: React.MouseEvent<HTMLButtonElement>) => {

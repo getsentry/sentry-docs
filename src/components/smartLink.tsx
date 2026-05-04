@@ -45,11 +45,21 @@ export function SmartLink({
     );
   }
 
-  // Hash-only links use a plain <a> so the browser fires hashchange,
-  // which lets Expandable components auto-open when targeted.
+  // Hash-only links: prevent the browser's native scroll (which fires
+  // before expandables open) and let our hashchange handler do the scroll
+  // after the target expandable has expanded.
   if (realTo.startsWith('#')) {
     return (
-      <a href={realTo} className={className} {...props}>
+      <a
+        href={realTo}
+        className={className}
+        onClick={e => {
+          e.preventDefault();
+          window.history.pushState(null, '', realTo);
+          window.dispatchEvent(new HashChangeEvent('hashchange'));
+        }}
+        {...props}
+      >
         {children || to || href}
       </a>
     );
