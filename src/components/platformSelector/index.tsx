@@ -87,10 +87,6 @@ export function PlatformSelector({
   // Auto-open selector when on /platforms/ index page (no SDK selected)
   const isOnPlatformsIndex = pathname === '/platforms/' || pathname === '/platforms';
 
-  // Track if we're redirecting to prevent flash of selector
-  // Always initialize to false to avoid SSR hydration mismatch
-  // The useLayoutEffect below will set this to true before paint if redirecting
-  const [isRedirecting, setIsRedirecting] = useState(false);
   const [open, setOpen] = useState(alwaysOpen || isOnPlatformsIndex);
   const [searchValue, setSearchValue] = useState('');
 
@@ -153,7 +149,6 @@ export function PlatformSelector({
   useLayoutEffect(() => {
     if (currentPlatformKey) {
       localStorage.setItem('active-platform', currentPlatformKey);
-      setIsRedirecting(false);
     } else if (isOnPlatformsIndex) {
       const stored = localStorage.getItem('active-platform');
       setStoredPlatformKey(stored);
@@ -177,11 +172,6 @@ export function PlatformSelector({
     storedPlatformKey &&
     storedPlatform &&
     pathname !== '/platforms/';
-
-  // Don't render anything while redirecting to prevent flash
-  if (isRedirecting) {
-    return null;
-  }
 
   if (listOnly) {
     return (
