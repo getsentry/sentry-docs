@@ -49,6 +49,7 @@ export function Expandable({
 
   const detailsRef = useRef<HTMLDetailsElement>(null);
   const scrollTargetRef = useRef<string | null>(null);
+  const expandedByHashRef = useRef(false);
 
   // Expand when the URL hash matches this expandable's id
   // OR any element inside it (e.g. a heading anchor within the content).
@@ -68,8 +69,13 @@ export function Expandable({
       const containsTarget = targetElement && detailsRef.current?.contains(targetElement);
 
       if (isOwnId || containsTarget) {
-        scrollTargetRef.current = targetId;
-        setIsExpanded(true);
+        if (detailsRef.current?.open) {
+          document.getElementById(targetId)?.scrollIntoView();
+        } else {
+          expandedByHashRef.current = true;
+          scrollTargetRef.current = targetId;
+          setIsExpanded(true);
+        }
       }
     };
 
@@ -169,13 +175,16 @@ export function Expandable({
       emit('Open Expandable', {props: {page: window.location.pathname, title}});
     }
 
-    if (id) {
+    // Don't overwrite the hash when the expand was triggered by hash navigation
+    // (e.g. clicking #child-heading should keep that hash, not replace with #expandable-id)
+    if (id && !expandedByHashRef.current) {
       if (newVal) {
         window.history.pushState({}, '', `#${id}`);
       } else {
         window.history.pushState({}, '', '#');
       }
     }
+    expandedByHashRef.current = false;
   }
 
   return (
