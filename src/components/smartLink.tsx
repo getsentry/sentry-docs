@@ -45,6 +45,16 @@ export function SmartLink({
     );
   }
 
+  // Hash-only links use a plain <a> so the browser fires hashchange,
+  // which lets Expandable components auto-open when targeted.
+  if (realTo.startsWith('#')) {
+    return (
+      <a href={realTo} className={className} {...props}>
+        {children || to || href}
+      </a>
+    );
+  }
+
   return (
     <Link
       href={to || href || ''}
