@@ -1,6 +1,13 @@
 'use client';
 
-import {Cross1Icon} from '@radix-ui/react-icons';
+import {
+  ArrowUpIcon,
+  ChatBubbleIcon,
+  CopyIcon,
+  Cross1Icon,
+  PlusIcon,
+  ReloadIcon,
+} from '@radix-ui/react-icons';
 import type {ReactNode} from 'react';
 import {Fragment, useCallback, useEffect, useRef, useState} from 'react';
 import {MagicIcon} from 'sentry-docs/components/cutomIcons/magic';
@@ -15,12 +22,19 @@ interface Message {
   content: string;
 }
 
+const EXAMPLE_QUESTIONS = [
+  {label: 'Set up Sentry', question: 'How do I set up Sentry for Next.js?'},
+  {label: 'Distributed tracing', question: 'How do I set up distributed tracing?'},
+  {label: 'Session Replay', question: 'How do I configure Session Replay?'},
+];
+
 export function AskAiModal() {
   const {isOpen, initialQuery, autoSubmit, close} = useAskAi();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const hasAutoSubmitted = useRef(false);
@@ -141,7 +155,6 @@ export function AskAiModal() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, close]);
 
-  // Lock body scroll when modal is open
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -174,17 +187,39 @@ export function AskAiModal() {
     setMessages([]);
     setInput('');
     setError(null);
+    setCopiedIndex(null);
     inputRef.current?.focus();
   }, []);
+
+  const handleCopy = useCallback((text: string, index: number) => {
+    navigator.clipboard.writeText(text);
+    setCopiedIndex(index);
+    setTimeout(() => setCopiedIndex(null), 2000);
+  }, []);
+
+  const handleRetry = useCallback(() => {
+    if (messages.length < 2) {
+      return;
+    }
+    const lastUserMsg = [...messages].reverse().find(m => m.role === 'user');
+    if (lastUserMsg) {
+      setMessages(prev => {
+        const lastUserIndex = prev.findLastIndex(m => m.role === 'user');
+        return prev.slice(0, lastUserIndex);
+      });
+      setTimeout(() => submitMessage(lastUserMsg.content), 0);
+    }
+  }, [messages, submitMessage]);
 
   if (!isOpen) {
     return null;
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center">
+    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center">
+      {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
         onClick={close}
         onKeyDown={e => {
           if (e.key === 'Enter' || e.key === ' ') {
@@ -196,148 +231,256 @@ export function AskAiModal() {
         aria-label="Close dialog"
       />
 
+      {/* Modal */}
       <div
-        className="relative w-full max-w-2xl mx-4 max-h-[80vh] bg-[var(--gray-1)] rounded-xl border border-[var(--gray-a3)] shadow-2xl flex flex-col overflow-hidden"
+        className="relative w-full sm:max-w-[680px] sm:mx-4 h-[85vh] sm:max-h-[720px] bg-[var(--gray-1)] sm:rounded-2xl border border-[var(--gray-a3)] shadow-2xl flex flex-col overflow-hidden animate-[slideUp_0.2s_ease-out]"
         role="dialog"
         aria-label="Ask AI"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--gray-a3)]">
-          <div className="flex items-center gap-2">
-            <MagicIcon className="size-5 text-[var(--accent-purple)]" />
-            <h2 className="text-base font-semibold text-[var(--foreground)]">Ask AI</h2>
+        <div className="flex items-center justify-between px-4 sm:px-5 h-14 border-b border-[var(--gray-a3)] flex-shrink-0">
+          <div className="flex items-center gap-2.5">
+            <div className="size-7 rounded-lg bg-[var(--accent-purple)] flex items-center justify-center">
+              <MagicIcon className="size-4 text-white" />
+            </div>
+            <div>
+              <h2 className="text-sm font-semibold text-[var(--foreground)] leading-tight">
+                Sentry AI
+              </h2>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             {messages.length > 0 && (
               <button
                 onClick={handleNewConversation}
-                className="text-xs text-[var(--gray-11)] hover:text-[var(--foreground)] px-2 py-1 rounded transition-colors"
+                className="flex items-center gap-1.5 text-xs text-[var(--gray-11)] hover:text-[var(--foreground)] h-7 px-2.5 rounded-lg hover:bg-[var(--gray-a3)] transition-colors"
+                title="New conversation"
               >
-                New chat
+                <PlusIcon width="12" height="12" />
+                <span className="hidden sm:inline">New chat</span>
               </button>
             )}
             <button
               onClick={close}
-              className="p-1.5 rounded-md hover:bg-[var(--gray-a3)] transition-colors text-[var(--gray-11)]"
+              className="size-7 flex items-center justify-center rounded-lg hover:bg-[var(--gray-a3)] transition-colors text-[var(--gray-11)] hover:text-[var(--foreground)]"
               aria-label="Close"
             >
-              <Cross1Icon width="16" height="16" />
+              <Cross1Icon width="14" height="14" />
             </button>
           </div>
         </div>
 
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4 min-h-0">
-          {messages.length === 0 && (
-            <div className="text-center py-12">
-              <MagicIcon className="size-10 text-[var(--gray-8)] mx-auto mb-4" />
-              <p className="text-[var(--gray-11)] text-sm mb-6">
-                Ask me anything about Sentry
-              </p>
-              <div className="flex flex-wrap justify-center gap-2">
-                {[
-                  'How do I set up Sentry for Next.js?',
-                  'What are tracePropagationTargets?',
-                  'How do I set up distributed tracing?',
-                ].map(q => (
-                  <button
-                    key={q}
-                    onClick={() => submitMessage(q)}
-                    className="text-xs px-3 py-1.5 rounded-full border border-[var(--gray-a3)] text-[var(--gray-11)] hover:border-[var(--accent-purple)] hover:text-[var(--accent-purple)] transition-colors"
-                  >
-                    {q}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+        {/* Messages area */}
+        <div className="flex-1 overflow-y-auto min-h-0">
+          {messages.length === 0 ? (
+            <EmptyState onSubmit={submitMessage} />
+          ) : (
+            <div className="px-4 sm:px-5 py-4">
+              {messages.map((msg, i) => (
+                <div key={i} className="mb-5 last:mb-0">
+                  {msg.role === 'user' ? (
+                    <UserMessage content={msg.content} />
+                  ) : (
+                    <AssistantMessage
+                      content={msg.content}
+                      isStreaming={isStreaming && i === messages.length - 1}
+                      isCopied={copiedIndex === i}
+                      isLast={i === messages.length - 1}
+                      onCopy={() => handleCopy(msg.content, i)}
+                      onRetry={handleRetry}
+                    />
+                  )}
+                </div>
+              ))}
 
-          {messages.map((msg, i) => (
-            <div
-              key={i}
-              className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
-              <div
-                className={`max-w-[85%] rounded-lg px-4 py-3 text-sm ${
-                  msg.role === 'user'
-                    ? 'bg-[var(--accent-purple)] text-white'
-                    : 'bg-[var(--gray-a2)] text-[var(--foreground)]'
-                }`}
-              >
-                {msg.role === 'assistant' ? (
-                  <div className="prose prose-sm dark:prose-invert max-w-none [&_pre]:bg-[var(--gray-a3)] [&_pre]:rounded-md [&_pre]:p-3 [&_code]:text-xs [&_a]:text-[var(--accent-purple)]">
-                    {msg.content === '' && isStreaming ? (
-                      <div className="flex gap-1 py-1">
-                        <span className="size-1.5 bg-[var(--gray-8)] rounded-full animate-bounce [animation-delay:0ms]" />
-                        <span className="size-1.5 bg-[var(--gray-8)] rounded-full animate-bounce [animation-delay:150ms]" />
-                        <span className="size-1.5 bg-[var(--gray-8)] rounded-full animate-bounce [animation-delay:300ms]" />
-                      </div>
-                    ) : (
-                      <MarkdownContent content={msg.content} />
-                    )}
+              {error && (
+                <div className="flex items-start gap-3 mb-5">
+                  <div className="size-6 rounded-full bg-red-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-red-500 text-xs">!</span>
                   </div>
-                ) : (
-                  <p className="whitespace-pre-wrap m-0">{msg.content}</p>
-                )}
-              </div>
-            </div>
-          ))}
+                  <div className="text-sm text-red-500 bg-red-500/5 rounded-xl px-4 py-3 border border-red-500/10">
+                    {error}
+                  </div>
+                </div>
+              )}
 
-          {error && (
-            <div className="text-sm text-red-500 bg-red-500/10 rounded-lg px-4 py-3">
-              {error}
+              <div ref={messagesEndRef} />
             </div>
           )}
-
-          <div ref={messagesEndRef} />
         </div>
 
-        {/* Input */}
-        <form
-          onSubmit={handleSubmit}
-          className="border-t border-[var(--gray-a3)] px-5 py-3"
-        >
-          <div className="flex items-end gap-2">
+        {/* Input area */}
+        <div className="flex-shrink-0 px-4 sm:px-5 pb-4 pt-2">
+          <form
+            onSubmit={handleSubmit}
+            className="relative rounded-xl border border-[var(--gray-a4)] bg-[var(--gray-2)] focus-within:border-[var(--accent-purple)]/40 focus-within:ring-1 focus-within:ring-[var(--accent-purple)]/20 transition-all"
+          >
             <textarea
               ref={inputRef}
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Ask about Sentry..."
+              placeholder="Ask a question about Sentry..."
               rows={1}
-              className="flex-1 resize-none bg-[var(--gray-a2)] rounded-lg px-4 py-2.5 text-sm text-[var(--foreground)] placeholder:text-[var(--gray-9)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-purple)]/50 max-h-32"
+              className="w-full resize-none bg-transparent px-4 pt-3 pb-10 text-sm text-[var(--foreground)] placeholder:text-[var(--gray-9)] focus:outline-none max-h-36"
               disabled={isStreaming}
               style={{
                 height: 'auto',
-                minHeight: '40px',
+                minHeight: '44px',
               }}
               onInput={e => {
                 const target = e.target as HTMLTextAreaElement;
                 target.style.height = 'auto';
-                target.style.height = `${Math.min(target.scrollHeight, 128)}px`;
+                target.style.height = `${Math.min(target.scrollHeight, 144)}px`;
               }}
             />
+            <div className="absolute bottom-2 right-2 left-2 flex items-center justify-between">
+              <span className="text-[10px] text-[var(--gray-8)] pl-2">
+                Powered by Sentry docs
+              </span>
+              <button
+                type="submit"
+                disabled={!input.trim() || isStreaming}
+                className="size-7 flex items-center justify-center rounded-lg bg-[var(--accent-purple)] text-white disabled:opacity-30 disabled:cursor-not-allowed hover:opacity-90 transition-all"
+                aria-label="Send message"
+              >
+                {isStreaming ? (
+                  <div className="size-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <ArrowUpIcon width="14" height="14" />
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes slideUp {
+          from { opacity: 0; transform: translateY(12px) scale(0.98); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes blink {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0; }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+function EmptyState({onSubmit}: {onSubmit: (q: string) => void}) {
+  return (
+    <div className="flex flex-col items-center justify-center h-full px-6 py-12">
+      <div className="size-12 rounded-2xl bg-gradient-to-br from-[var(--accent-purple)] to-[var(--accent-purple)]/70 flex items-center justify-center mb-5 shadow-lg shadow-[var(--accent-purple)]/20">
+        <MagicIcon className="size-6 text-white" />
+      </div>
+      <h3 className="text-lg font-semibold text-[var(--foreground)] mb-1.5">
+        Ask Sentry AI
+      </h3>
+      <p className="text-sm text-[var(--gray-10)] mb-8 text-center max-w-sm">
+        Get answers from the official Sentry documentation. Ask about setup,
+        configuration, troubleshooting, and more.
+      </p>
+      <div className="w-full max-w-sm space-y-2">
+        {EXAMPLE_QUESTIONS.map(({label, question}) => (
+          <button
+            key={question}
+            onClick={() => onSubmit(question)}
+            className="w-full flex items-center gap-3 text-left px-4 py-3 rounded-xl border border-[var(--gray-a3)] hover:border-[var(--gray-a5)] hover:bg-[var(--gray-a2)] text-sm text-[var(--gray-12)] transition-all group"
+          >
+            <ChatBubbleIcon
+              width="14"
+              height="14"
+              className="text-[var(--gray-8)] group-hover:text-[var(--accent-purple)] transition-colors flex-shrink-0"
+            />
+            <span>{label}</span>
+            <ArrowUpIcon
+              width="12"
+              height="12"
+              className="ml-auto text-[var(--gray-7)] group-hover:text-[var(--gray-10)] -rotate-45 transition-colors flex-shrink-0"
+            />
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function UserMessage({content}: {content: string}) {
+  return (
+    <div className="flex justify-end">
+      <div className="max-w-[85%] rounded-2xl rounded-br-md bg-[var(--accent-purple)] text-white px-4 py-2.5 text-sm">
+        <p className="whitespace-pre-wrap m-0 leading-relaxed">{content}</p>
+      </div>
+    </div>
+  );
+}
+
+function AssistantMessage({
+  content,
+  isStreaming,
+  isCopied,
+  isLast,
+  onCopy,
+  onRetry,
+}: {
+  content: string;
+  isStreaming: boolean;
+  isCopied: boolean;
+  isLast: boolean;
+  onCopy: () => void;
+  onRetry: () => void;
+}) {
+  const isEmpty = content === '';
+  return (
+    <div className="flex gap-3">
+      <div className="size-6 rounded-lg bg-[var(--gray-a3)] flex items-center justify-center flex-shrink-0 mt-0.5">
+        <MagicIcon className="size-3.5 text-[var(--accent-purple)]" />
+      </div>
+      <div className="flex-1 min-w-0">
+        {isEmpty && isStreaming ? (
+          <div className="flex items-center gap-1.5 py-2">
+            <div className="flex gap-1">
+              <span className="size-1.5 bg-[var(--gray-8)] rounded-full animate-bounce [animation-delay:0ms]" />
+              <span className="size-1.5 bg-[var(--gray-8)] rounded-full animate-bounce [animation-delay:150ms]" />
+              <span className="size-1.5 bg-[var(--gray-8)] rounded-full animate-bounce [animation-delay:300ms]" />
+            </div>
+            <span className="text-xs text-[var(--gray-9)] ml-1">Searching docs...</span>
+          </div>
+        ) : (
+          <div className="prose prose-sm dark:prose-invert max-w-none text-[var(--foreground)] [&_p]:leading-relaxed [&_p]:my-2 [&_p:first-child]:mt-0 [&_pre]:bg-[var(--gray-a3)] [&_pre]:rounded-lg [&_pre]:p-3.5 [&_pre]:my-3 [&_pre]:overflow-x-auto [&_code]:text-xs [&_code]:font-[var(--font-family-monospace)] [&_:not(pre)>code]:bg-[var(--gray-a3)] [&_:not(pre)>code]:px-1.5 [&_:not(pre)>code]:py-0.5 [&_:not(pre)>code]:rounded-md [&_a]:text-[var(--accent-purple)] [&_a]:underline [&_a]:underline-offset-2 [&_a:hover]:opacity-80 [&_ul]:my-2 [&_ol]:my-2 [&_li]:my-0.5 [&_h2]:text-base [&_h2]:font-semibold [&_h2]:mt-4 [&_h2]:mb-2 [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:mt-3 [&_h3]:mb-1.5 [&_h4]:text-sm [&_h4]:font-medium [&_h4]:mt-3 [&_h4]:mb-1">
+            <MarkdownContent content={content} />
+            {isStreaming && (
+              <span
+                className="inline-block w-[2px] h-4 bg-[var(--accent-purple)] ml-0.5 align-middle"
+                style={{animation: 'blink 1s step-end infinite'}}
+              />
+            )}
+          </div>
+        )}
+
+        {/* Action buttons */}
+        {!isEmpty && !isStreaming && isLast && (
+          <div className="flex items-center gap-1 mt-2 -ml-1.5">
             <button
-              type="submit"
-              disabled={!input.trim() || isStreaming}
-              className="flex-shrink-0 bg-[var(--accent-purple)] text-white rounded-lg px-4 py-2.5 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
+              onClick={onCopy}
+              className="flex items-center gap-1.5 h-7 px-2 rounded-md text-[var(--gray-9)] hover:text-[var(--foreground)] hover:bg-[var(--gray-a3)] transition-colors text-xs"
+              title="Copy response"
             >
-              {isStreaming ? 'Thinking...' : 'Send'}
+              <CopyIcon width="12" height="12" />
+              <span>{isCopied ? 'Copied' : 'Copy'}</span>
+            </button>
+            <button
+              onClick={onRetry}
+              className="flex items-center gap-1.5 h-7 px-2 rounded-md text-[var(--gray-9)] hover:text-[var(--foreground)] hover:bg-[var(--gray-a3)] transition-colors text-xs"
+              title="Retry"
+            >
+              <ReloadIcon width="12" height="12" />
+              <span>Retry</span>
             </button>
           </div>
-          <p className="text-[10px] text-[var(--gray-9)] mt-2">
-            AI answers are generated from{' '}
-            <a
-              href="https://docs.sentry.io"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline"
-            >
-              Sentry docs
-            </a>
-            . Do not share sensitive information.
-          </p>
-        </form>
+        )}
       </div>
     </div>
   );
@@ -345,22 +488,20 @@ export function AskAiModal() {
 
 /**
  * Renders markdown content as React elements without dangerouslySetInnerHTML.
- * Handles: code blocks, inline code, headings, bold, italic, links, lists, paragraphs.
  */
 function MarkdownContent({content}: {content: string}) {
   const blocks = parseBlocks(content);
   return (
-    <div className="[&>:first-child]:mt-0 [&>:last-child]:mb-0">
+    <Fragment>
       {blocks.map((block, i) => (
         <Fragment key={i}>{block}</Fragment>
       ))}
-    </div>
+    </Fragment>
   );
 }
 
 function parseBlocks(md: string): ReactNode[] {
   const nodes: ReactNode[] = [];
-  // Split into code blocks and everything else
   const parts = md.split(/(```\w*\n[\s\S]*?```)/g);
 
   for (const part of parts) {
@@ -376,7 +517,6 @@ function parseBlocks(md: string): ReactNode[] {
       continue;
     }
 
-    // Split remaining text into paragraphs by double newline
     const paragraphs = part.split(/\n\n+/);
     for (const para of paragraphs) {
       const trimmed = para.trim();
@@ -384,7 +524,6 @@ function parseBlocks(md: string): ReactNode[] {
         continue;
       }
 
-      // Headings
       const headingMatch = trimmed.match(/^(#{1,4}) (.+)$/);
       if (headingMatch) {
         const level = headingMatch[1].length;
@@ -394,7 +533,6 @@ function parseBlocks(md: string): ReactNode[] {
         continue;
       }
 
-      // List items (consecutive lines starting with - or * or 1.)
       const lines = trimmed.split('\n');
       const isUnorderedList = lines.every(l => /^[*-] /.test(l));
       const isOrderedList = lines.every(l => /^\d+\. /.test(l));
@@ -421,7 +559,6 @@ function parseBlocks(md: string): ReactNode[] {
         continue;
       }
 
-      // Regular paragraph
       nodes.push(<p key={nodes.length}>{renderInline(trimmed)}</p>);
     }
   }
@@ -431,7 +568,6 @@ function parseBlocks(md: string): ReactNode[] {
 
 function renderInline(text: string): ReactNode[] {
   const nodes: ReactNode[] = [];
-  // Pattern matches: inline code, bold, italic, links, or plain text
   const pattern = /(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*|\[[^\]]+\]\([^)]+\))/g;
   let lastIndex = 0;
 
