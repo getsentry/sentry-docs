@@ -47,8 +47,8 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
             <Theme accentColor="iris" grayColor="sand" radius="large" scaling="95%">
               <SkipToContent />
               {children}
+              <AskAiModal />
             </Theme>
-            <AskAiModal />
           </AskAiProvider>
         </ThemeProvider>
       </body>
