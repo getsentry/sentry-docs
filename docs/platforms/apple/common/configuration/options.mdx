@@ -1094,49 +1094,9 @@ This option is only used when <PlatformIdentifier name="enableSpotlight" /> is s
 
 </SdkOption>
 
-## Experimental Options
+## Metrics Options
 
-These options are under `options.experimental` and control experimental features that are subject to change or may be removed in future versions.
-
-<SdkOption name="experimental.enableUnhandledCPPExceptionsV2" type="bool" defaultValue="false">
-
-Enables a more reliable mechanism for reporting unhandled C++ exceptions. This approach hooks into all instances of `__cxa_throw`, which provides more comprehensive and consistent exception handling across an app's runtime, regardless of the number of C++ modules or how they're linked.
-
-<Alert level="warning">
-
-The mechanism of hooking into `__cxa_throw` could cause issues with symbolication on iOS due to caching of symbol references.
-
-</Alert>
-
-</SdkOption>
-
-<SdkOption name="experimental.enableWatchdogTerminationsV2" type="bool" defaultValue="false">
-
-When enabled, the SDK uses a more efficient mechanism for detecting watchdog terminations.
-
-</SdkOption>
-
-<SdkOption name="experimental.enableSessionReplayInUnreliableEnvironment" type="bool" defaultValue="false">
-
-Forces enabling of session replay in environments where masking of text and images cannot be reliably guaranteed (such as iOS 26.0+ with Liquid Glass).
-
-The SDK normally disables session replay in these environments unless it can detect indicators of a reliable environment (iOS 18 or earlier, `UIDesignRequiresCompatibility` set to `YES` in Info.plist, or built with Xcode before 26.0).
-
-<Alert level="warning">
-
-Enabling this flag on iOS 26.0+ may result in text and images not being masked as expected in session replays.
-
-</Alert>
-
-</SdkOption>
-
-### Metrics Options
-
-<Alert>
-This feature is currently in open beta. Please reach out on [GitHub](https://github.com/getsentry/sentry-cocoa/discussions) if you have feedback or questions. Features in beta are still in-progress and may have bugs. We recognize the irony.
-</Alert>
-
-<SdkOption name="experimental.enableMetrics" type="bool" defaultValue="true" availableSince="9.2.0">
+<SdkOption name="enableMetrics" type="bool" defaultValue="true" availableSince="9.12.0">
 
 When enabled, the SDK can send metrics to Sentry. Note that metrics are not collected automatically — you must manually call the `SentrySDK.metrics` API to record counters, gauges, and distributions.
 
@@ -1144,7 +1104,7 @@ Learn more in the <PlatformLink to="/metrics/">Metrics documentation</PlatformLi
 
 </SdkOption>
 
-<SdkOption name="experimental.beforeSendMetric" type="function" availableSince="9.2.0">
+<SdkOption name="beforeSendMetric" type="function" availableSince="9.12.0">
 
 Use this callback to filter or modify metrics before they're sent to Sentry. Return `nil` to drop the metric.
 
@@ -1156,7 +1116,7 @@ import Sentry
 SentrySDK.start { options in
     options.dsn = "___PUBLIC_DSN___"
     // Metrics are enabled by default, no need to set enableMetrics = true
-    options.experimental.beforeSendMetric = { metric in
+    options.beforeSendMetric = { metric in
         // Create a mutable copy (SentryMetric is a struct)
         var metric = metric
 
@@ -1173,5 +1133,17 @@ SentrySDK.start { options in
     }
 }
 ```
+
+</SdkOption>
+
+<SdkOption name="experimental.enableMetrics" type="bool" defaultValue="true" availableSince="9.4.0" removedSince="9.12.0">
+
+**Removed in version 9.12.0** — Metrics has graduated to GA. Use the top-level <PlatformIdentifier name="enableMetrics" /> option instead. See [sentry-cocoa#7842](https://github.com/getsentry/sentry-cocoa/pull/7842).
+
+</SdkOption>
+
+<SdkOption name="experimental.beforeSendMetric" type="function" availableSince="9.4.0" removedSince="9.12.0">
+
+**Removed in version 9.12.0** — Metrics has graduated to GA. Use the top-level <PlatformIdentifier name="beforeSendMetric" /> option instead. See [sentry-cocoa#7842](https://github.com/getsentry/sentry-cocoa/pull/7842).
 
 </SdkOption>

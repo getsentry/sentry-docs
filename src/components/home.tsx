@@ -55,418 +55,423 @@ export async function Home() {
         useStoredSearchPlatforms={false}
         platforms={platforms}
       />
-      <div className="mt-[var(--header-height)]">
-        <Banner />
-      </div>
-      {/* Hero Banner with Two-Column Layout */}
-      <div className="w-full relative hero-gradient">
-        {/* Single decorative squiggle at top right */}
-        <img
-          src={SquiggleSVG.src}
-          alt=""
-          className="pointer-events-none absolute overflow-hidden"
-          style={{
-            right: 0,
-            top: '-80px',
-            width: '30%',
-            opacity: 0.1,
-            zIndex: 0,
-          }}
-        />
+      <main id="main">
+        <div className="mt-[var(--header-height)]">
+          <Banner />
+        </div>
+        {/* Hero Banner with Two-Column Layout */}
+        <div className="w-full relative hero-gradient">
+          {/* Single decorative squiggle at top right */}
+          <img
+            src={SquiggleSVG.src}
+            alt=""
+            className="pointer-events-none absolute overflow-hidden"
+            style={{
+              right: 0,
+              top: '-80px',
+              width: '30%',
+              opacity: 0.1,
+              zIndex: 0,
+            }}
+          />
 
-        {/* Content Container */}
-        <div className="max-w-screen-xl mx-auto px-4 sm:px-8 lg:px-[50px] pt-10 pb-6 relative z-10">
-          <div className="flex flex-col lg:flex-row items-start gap-8">
-            {/* Left Column: Welcome Text + Search */}
-            <div className="flex-1 flex flex-col items-center lg:items-start justify-center lg:w-[50%]">
-              <h1
-                className="font-bold mb-3 text-center lg:text-left text-[var(--gray-12)] dark:text-white"
-                style={{
-                  fontWeight: 700,
-                  fontSize: '32px',
-                  lineHeight: 1.2,
-                }}
-              >
-                Welcome To Sentry Docs
-              </h1>
-              <p
-                className="mb-5 text-center lg:text-left text-[var(--gray-11)] dark:text-white"
-                style={{
-                  lineHeight: '1.5',
-                  fontWeight: 400,
-                  fontSize: '15px',
-                }}
-              >
-                Sentry provides end-to-end distributed tracing, enabling developers to
-                identify and debug performance issues and errors across their systems and
-                services.
-              </p>
-              <HomeSearchObserver>
-                <div className="home-search-bar relative z-50 self-stretch">
-                  <Search
-                    path="/"
-                    searchPlatforms={[]}
-                    useStoredSearchPlatforms={false}
-                  />
-                </div>
-              </HomeSearchObserver>
-            </div>
-
-            {/* Right Column: SDK Section */}
-            <div className="flex-shrink-0 w-full lg:w-[50%] lg:pt-[20px] flex flex-col items-center lg:items-end">
-              <div>
-                <div className="grid grid-cols-4 lg:grid-cols-6 gap-2 mb-4">
-                  {mostViewedSDKs.map(platform => (
-                    <a
-                      key={platform.key}
-                      href={platform.url}
-                      className="sdk-tile flex flex-col items-center justify-center gap-1.5 bg-white dark:bg-[var(--gray-2)]"
-                      style={{
-                        textDecoration: 'none',
-                        padding: '6px',
-                        borderRadius: '6px',
-                        width: '70px',
-                        height: '76px',
-                      }}
-                    >
-                      <PlatformIcon
-                        platform={platform.key}
-                        size={36}
-                        format="lg"
-                        style={{margin: 0, display: 'block'}}
-                      />
-                      <span
-                        className="text-[var(--gray-12)] whitespace-nowrap"
-                        style={{
-                          fontSize: '0.6rem',
-                          fontWeight: 500,
-                          textAlign: 'center',
-                          lineHeight: 1.1,
-                        }}
-                      >
-                        {platform.title}
-                      </span>
-                    </a>
-                  ))}
-                </div>
-                <a
-                  href="#all-sdks"
-                  className="hover:underline font-bold text-center lg:text-left block uppercase tracking-wider mt-2"
+          {/* Content Container */}
+          <div className="max-w-screen-xl mx-auto px-4 sm:px-8 lg:px-[50px] pt-10 pb-6 relative z-10">
+            <div className="flex flex-col lg:flex-row items-start gap-8">
+              {/* Left Column: Welcome Text + Search */}
+              <div className="flex-1 flex flex-col items-center lg:items-start justify-center lg:w-[50%]">
+                <h1
+                  className="font-bold mb-3 text-center lg:text-left text-[var(--gray-12)] dark:text-white"
                   style={{
-                    color: '#8b5cf6',
-                    fontSize: '0.875rem',
-                    letterSpacing: '0.05em',
+                    fontWeight: 700,
+                    fontSize: '32px',
+                    lineHeight: 1.2,
                   }}
                 >
-                  GO TO ALL SDKS
-                </a>
+                  Welcome To Sentry Docs
+                </h1>
+                <p
+                  className="mb-5 text-center lg:text-left text-[var(--gray-11)] dark:text-white"
+                  style={{
+                    lineHeight: '1.5',
+                    fontWeight: 400,
+                    fontSize: '15px',
+                  }}
+                >
+                  Sentry provides end-to-end distributed tracing, enabling developers to
+                  identify and debug performance issues and errors across their systems
+                  and services.
+                </p>
+                <HomeSearchObserver>
+                  <div className="home-search-bar relative z-50 self-stretch">
+                    <Search
+                      path="/"
+                      searchPlatforms={[]}
+                      useStoredSearchPlatforms={false}
+                    />
+                  </div>
+                </HomeSearchObserver>
+              </div>
+
+              {/* Right Column: SDK Section */}
+              <div className="flex-shrink-0 w-full lg:w-[50%] lg:pt-[20px] flex flex-col items-center lg:items-end">
+                <div>
+                  <div className="grid grid-cols-4 lg:grid-cols-6 gap-2 mb-4">
+                    {mostViewedSDKs.map(platform => (
+                      <a
+                        key={platform.key}
+                        href={platform.url}
+                        className="sdk-tile flex flex-col items-center justify-center gap-1.5 bg-white dark:bg-[var(--gray-2)]"
+                        style={{
+                          textDecoration: 'none',
+                          padding: '6px',
+                          borderRadius: '6px',
+                          width: '70px',
+                          height: '76px',
+                        }}
+                      >
+                        <PlatformIcon
+                          platform={platform.key}
+                          size={36}
+                          format="lg"
+                          style={{margin: 0, display: 'block'}}
+                        />
+                        <span
+                          className="text-[var(--gray-12)] whitespace-nowrap"
+                          style={{
+                            fontSize: '0.6rem',
+                            fontWeight: 500,
+                            textAlign: 'center',
+                            lineHeight: 1.1,
+                          }}
+                        >
+                          {platform.title}
+                        </span>
+                      </a>
+                    ))}
+                  </div>
+                  <a
+                    href="#all-sdks"
+                    className="hover:underline font-bold text-center lg:text-left block uppercase tracking-wider mt-2"
+                    style={{
+                      color: '#8b5cf6',
+                      fontSize: '0.875rem',
+                      letterSpacing: '0.05em',
+                    }}
+                  >
+                    GO TO ALL SDKS
+                  </a>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-      <div className="hero max-w-screen-xl mx-auto px-4 sm:px-8 lg:px-[50px] py-2">
-        {/* Sentry Features Header */}
-        <h2 className="text-2xl mt-0 mb-6 font-medium">Sentry Features</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Debugging in Sentry */}
-          <div
-            className="bg-white dark:bg-[var(--gray-2)] rounded-xl p-6 flex items-start gap-4"
-            style={{
-              boxShadow:
-                '0 4px 20px 0 rgba(0, 0, 0, 0.08), 0 1px 3px 0 rgba(0, 0, 0, 0.05)',
-            }}
-          >
+        <div className="hero max-w-screen-xl mx-auto px-4 sm:px-8 lg:px-[50px] py-2">
+          {/* Sentry Features Header */}
+          <h2 className="text-2xl mt-0 mb-6 font-medium">Sentry Features</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Debugging in Sentry */}
             <div
-              className="flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden"
+              className="bg-white dark:bg-[var(--gray-2)] rounded-xl p-6 flex items-start gap-4"
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
+                boxShadow:
+                  '0 4px 20px 0 rgba(0, 0, 0, 0.08), 0 1px 3px 0 rgba(0, 0, 0, 0.05)',
               }}
             >
-              <img
-                src={ErrorMonitoringHero.src}
-                alt="Debugging in Sentry"
+              <div
+                className="flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden"
                 style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover',
-                  objectPosition: 'center',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                 }}
-              />
+              >
+                <img
+                  src={ErrorMonitoringHero.src}
+                  alt="Debugging in Sentry"
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    objectPosition: 'center',
+                  }}
+                />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold mb-2 text-[var(--gray-12)]">
+                  Debugging in Sentry
+                </h3>
+                <p className="text-sm text-[var(--gray-11)] dark:text-white leading-relaxed">
+                  Monitor, identify, and resolve errors and performance issues across your
+                  applications using{' '}
+                  <a
+                    href="/product/error-monitoring/"
+                    className="text-[#8b5cf6] underline"
+                  >
+                    Error Monitoring
+                  </a>
+                  ,{' '}
+                  <a
+                    href="/product/explore/trace-explorer/"
+                    className="text-[#8b5cf6] underline"
+                  >
+                    Tracing
+                  </a>
+                  ,{' '}
+                  <a href="/product/session-replay/" className="text-[#8b5cf6] underline">
+                    Session Replay
+                  </a>
+                  ,{' '}
+                  <a href="/product/drains/" className="text-[#8b5cf6] underline">
+                    Logs
+                  </a>
+                  , and{' '}
+                  <a href="/product/" className="text-[#8b5cf6] underline">
+                    more
+                  </a>
+                  .
+                </p>
+              </div>
             </div>
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold mb-2 text-[var(--gray-12)]">
-                Debugging in Sentry
-              </h3>
-              <p className="text-sm text-[var(--gray-11)] dark:text-white leading-relaxed">
-                Monitor, identify, and resolve errors and performance issues across your
-                applications using{' '}
-                <a href="/product/error-monitoring/" className="text-[#8b5cf6] underline">
-                  Error Monitoring
-                </a>
-                ,{' '}
-                <a
-                  href="/product/explore/trace-explorer/"
-                  className="text-[#8b5cf6] underline"
-                >
-                  Tracing
-                </a>
-                ,{' '}
-                <a href="/product/session-replay/" className="text-[#8b5cf6] underline">
-                  Session Replay
-                </a>
-                ,{' '}
-                <a href="/product/drains/" className="text-[#8b5cf6] underline">
-                  Logs
-                </a>
-                , and{' '}
-                <a href="/product/" className="text-[#8b5cf6] underline">
-                  more
-                </a>
-                .
-              </p>
-            </div>
-          </div>
 
-          {/* Fix Bugs Faster with Seer */}
-          <div
-            className="bg-white dark:bg-[var(--gray-2)] rounded-xl p-6 flex items-start gap-4"
-            style={{
-              boxShadow:
-                '0 4px 20px 0 rgba(0, 0, 0, 0.08), 0 1px 3px 0 rgba(0, 0, 0, 0.05)',
-            }}
-          >
+            {/* Fix Bugs Faster with Seer */}
             <div
-              className="flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden"
+              className="bg-white dark:bg-[var(--gray-2)] rounded-xl p-6 flex items-start gap-4"
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
+                boxShadow:
+                  '0 4px 20px 0 rgba(0, 0, 0, 0.08), 0 1px 3px 0 rgba(0, 0, 0, 0.05)',
               }}
             >
-              <img
-                src={AiSentryHero.src}
-                alt="Fix Bugs Faster with Seer"
+              <div
+                className="flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden"
                 style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover',
-                  objectPosition: 'center',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                 }}
-              />
+              >
+                <img
+                  src={AiSentryHero.src}
+                  alt="Fix Bugs Faster with Seer"
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    objectPosition: 'center',
+                  }}
+                />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold mb-2 text-[var(--gray-12)]">
+                  Fix Bugs Faster with Seer
+                </h3>
+                <p className="text-sm text-[var(--gray-11)] dark:text-white leading-relaxed">
+                  Debug applications with{' '}
+                  <a
+                    href="/product/ai-in-sentry/seer/"
+                    className="text-[#8b5cf6] underline"
+                  >
+                    Seer
+                  </a>
+                  . Get{' '}
+                  <a
+                    href="/product/ai-in-sentry/seer/#seer-agent"
+                    className="text-[#8b5cf6] underline"
+                  >
+                    AI-powered answers
+                  </a>{' '}
+                  to questions using your application data in Sentry. Have{' '}
+                  <a
+                    href="/product/ai-in-sentry/seer/autofix/"
+                    className="text-[#8b5cf6] underline"
+                  >
+                    Autofix
+                  </a>{' '}
+                  generate fixes, and{' '}
+                  <a
+                    href="/product/ai-in-sentry/seer/code-review/"
+                    className="text-[#8b5cf6] underline"
+                  >
+                    review code changes
+                  </a>{' '}
+                  before merging PRs.
+                </p>
+              </div>
             </div>
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold mb-2 text-[var(--gray-12)]">
-                Fix Bugs Faster with Seer
-              </h3>
-              <p className="text-sm text-[var(--gray-11)] dark:text-white leading-relaxed">
-                Debug applications with{' '}
-                <a
-                  href="/product/ai-in-sentry/seer/"
-                  className="text-[#8b5cf6] underline"
-                >
-                  Seer
-                </a>
-                . Get{' '}
-                <a
-                  href="/product/ai-in-sentry/seer/#seer-agent"
-                  className="text-[#8b5cf6] underline"
-                >
-                  AI-powered answers
-                </a>{' '}
-                to questions using your application data in Sentry. Have{' '}
-                <a
-                  href="/product/ai-in-sentry/seer/autofix/"
-                  className="text-[#8b5cf6] underline"
-                >
-                  Autofix
-                </a>{' '}
-                generate fixes, and{' '}
-                <a
-                  href="/product/ai-in-sentry/seer/code-review/"
-                  className="text-[#8b5cf6] underline"
-                >
-                  review code changes
-                </a>{' '}
-                before merging PRs.
-              </p>
-            </div>
-          </div>
 
-          {/* AI in Sentry */}
-          <div
-            className="bg-white dark:bg-[var(--gray-2)] rounded-xl p-6 flex items-start gap-4"
-            style={{
-              boxShadow:
-                '0 4px 20px 0 rgba(0, 0, 0, 0.08), 0 1px 3px 0 rgba(0, 0, 0, 0.05)',
-            }}
-          >
+            {/* AI in Sentry */}
             <div
-              className="flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden"
+              className="bg-white dark:bg-[var(--gray-2)] rounded-xl p-6 flex items-start gap-4"
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
+                boxShadow:
+                  '0 4px 20px 0 rgba(0, 0, 0, 0.08), 0 1px 3px 0 rgba(0, 0, 0, 0.05)',
               }}
             >
-              <img
-                src={AiInSentryHero.src}
-                alt="AI in Sentry"
+              <div
+                className="flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden"
                 style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover',
-                  objectPosition: 'center',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                 }}
-              />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold mb-2 text-[var(--gray-12)]">
-                AI in Sentry
-              </h3>
-              <p className="text-sm text-[var(--gray-11)] dark:text-white leading-relaxed">
-                Integrate Sentry into your AI coding assistants using Sentry's{' '}
-                <a href="/ai/agent-skills/" className="text-[#8b5cf6] underline">
-                  Skills
-                </a>{' '}
-                and{' '}
-                <a href="/ai/mcp/" className="text-[#8b5cf6] underline">
-                  MCP server
-                </a>{' '}
-                with your agents. Debug agents and MCP servers by{' '}
-                <a href="/ai/monitoring/" className="text-[#8b5cf6] underline">
-                  monitoring your AI features
-                </a>
-                .
-              </p>
+              >
+                <img
+                  src={AiInSentryHero.src}
+                  alt="AI in Sentry"
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    objectPosition: 'center',
+                  }}
+                />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold mb-2 text-[var(--gray-12)]">
+                  AI in Sentry
+                </h3>
+                <p className="text-sm text-[var(--gray-11)] dark:text-white leading-relaxed">
+                  Integrate Sentry into your AI coding assistants using Sentry's{' '}
+                  <a href="/ai/agent-skills/" className="text-[#8b5cf6] underline">
+                    Skills
+                  </a>{' '}
+                  and{' '}
+                  <a href="/ai/mcp/" className="text-[#8b5cf6] underline">
+                    MCP server
+                  </a>{' '}
+                  with your agents. Debug agents and MCP servers by{' '}
+                  <a href="/ai/monitoring/" className="text-[#8b5cf6] underline">
+                    monitoring your AI features
+                  </a>
+                  .
+                </p>
+              </div>
             </div>
           </div>
+          <div id="all-sdks">
+            <PlatformFilter />
+          </div>
+          <h2 className="text-2xl mt-16 mb-6 font-medium">Get to know us</h2>
+          <div className="flex flex-wrap gap-6">
+            {/* Row 1: What is Sentry and Sentry for AI */}
+            <Card
+              className="w-full md:w-[calc(50%-12px)]"
+              href="/product/"
+              image={RocketImage}
+              imageAlt="Rocket image"
+              title="What is Sentry?"
+              description={
+                'Application monitoring and debugging software considered "not bad" by 4 million developers.'
+              }
+            />
+
+            <Card
+              className="w-full md:w-[calc(50%-12px)]"
+              href="/ai/"
+              image={AiImage}
+              imageAlt="AI integration image"
+              title="Sentry for AI"
+              description="Connect Sentry to your AI coding assistants with agent skills and MCP."
+            />
+
+            {/* Row 2: Guides and Pricing & Billing */}
+            <Card
+              className="w-full md:w-[calc(50%-12px)]"
+              href="/guides/"
+              image={GuidesImage}
+              imageAlt="Guides image"
+              title="Guides"
+              description="You've set up Sentry. Now what? Practical guidance on what to instrument, query, and alert on."
+            />
+
+            <Card
+              className="w-full md:w-[calc(50%-12px)]"
+              href="/pricing"
+              image={CalculatorImage}
+              imageAlt="Calculator image"
+              title="Pricing & Billing"
+              description="All about our pricing and billing structure."
+            />
+
+            {/* Row 3: Organization Settings and Integrations */}
+            <Card
+              className="w-full md:w-[calc(50%-12px)]"
+              href="/organization"
+              image={OrganizationImage}
+              imageAlt="Organization image"
+              title="Organization Settings"
+              description="Information for setting up your organization's Sentry account."
+            />
+
+            <Card
+              className="w-full md:w-[calc(50%-12px)]"
+              href="/integrations"
+              image={AiImage}
+              imageAlt="Integrations image"
+              title="Integrations"
+              description="Connect Sentry to your favorite tools for source control, issue tracking, notifications, and more."
+            />
+
+            {/* Row 4: API and CLI */}
+            <Card
+              className="w-full md:w-[calc(50%-12px)]"
+              href="/api"
+              image={PlugImage}
+              imageAlt="Plug image"
+              title="API"
+              description="APIs for accessing Sentry programmatically."
+            />
+
+            <Card
+              className="w-full md:w-[calc(50%-12px)]"
+              href="/cli"
+              image={TerminalImage}
+              imageAlt="Terminal image"
+              title="CLI"
+              description="How to use 'sentry-cli' on the command line."
+            />
+
+            {/* Row 5: Security, Legal & PII and Concepts & References */}
+            <Card
+              className="w-full md:w-[calc(50%-12px)]"
+              href="/security-legal-pii"
+              image={SecurityImage}
+              imageAlt="Stamped paper image"
+              title="Security, Legal & PII"
+              description="Security, compliance, and data-scrubbing processes."
+            />
+
+            <Card
+              className="w-full md:w-[calc(50%-12px)]"
+              href="/concepts"
+              image={ConceptsImage}
+              imageAlt="Concept and references image"
+              title="Concepts & Reference"
+              description="Core concepts that make Sentry, Sentry."
+            />
+          </div>
+          <h2 className="text-2xl mt-10 mb-6 font-medium">Talk to us</h2>
+          <div className="flex flex-col md:flex-row gap-6">
+            <Card
+              className="w-full"
+              href="https://discord.com/invite/sentry"
+              image={ChatBubble}
+              imageAlt="Chat bubble image"
+              title="Sentry Discord"
+              description="Real talk in real time. Get in it."
+            />
+
+            <Card
+              className="w-full"
+              href="https://sentry.zendesk.com/hc/en-us/"
+              image={SupportImage}
+              imageAlt="Support image"
+              title="Support"
+              description="See how we can help."
+            />
+          </div>
         </div>
-        <div id="all-sdks">
-          <PlatformFilter />
-        </div>
-        <h2 className="text-2xl mt-16 mb-6 font-medium">Get to know us</h2>
-        <div className="flex flex-wrap gap-6">
-          {/* Row 1: What is Sentry and Sentry for AI */}
-          <Card
-            className="w-full md:w-[calc(50%-12px)]"
-            href="/product/"
-            image={RocketImage}
-            imageAlt="Rocket image"
-            title="What is Sentry?"
-            description={
-              'Application monitoring and debugging software considered "not bad" by 4 million developers.'
-            }
-          />
-
-          <Card
-            className="w-full md:w-[calc(50%-12px)]"
-            href="/ai/"
-            image={AiImage}
-            imageAlt="AI integration image"
-            title="Sentry for AI"
-            description="Connect Sentry to your AI coding assistants with agent skills and MCP."
-          />
-
-          {/* Row 2: Guides and Pricing & Billing */}
-          <Card
-            className="w-full md:w-[calc(50%-12px)]"
-            href="/guides/"
-            image={GuidesImage}
-            imageAlt="Guides image"
-            title="Guides"
-            description="You've set up Sentry. Now what? Practical guidance on what to instrument, query, and alert on."
-          />
-
-          <Card
-            className="w-full md:w-[calc(50%-12px)]"
-            href="/pricing"
-            image={CalculatorImage}
-            imageAlt="Calculator image"
-            title="Pricing & Billing"
-            description="All about our pricing and billing structure."
-          />
-
-          {/* Row 3: Organization Settings and Integrations */}
-          <Card
-            className="w-full md:w-[calc(50%-12px)]"
-            href="/organization"
-            image={OrganizationImage}
-            imageAlt="Organization image"
-            title="Organization Settings"
-            description="Information for setting up your organization's Sentry account."
-          />
-
-          <Card
-            className="w-full md:w-[calc(50%-12px)]"
-            href="/integrations"
-            image={AiImage}
-            imageAlt="Integrations image"
-            title="Integrations"
-            description="Connect Sentry to your favorite tools for source control, issue tracking, notifications, and more."
-          />
-
-          {/* Row 4: API and CLI */}
-          <Card
-            className="w-full md:w-[calc(50%-12px)]"
-            href="/api"
-            image={PlugImage}
-            imageAlt="Plug image"
-            title="API"
-            description="APIs for accessing Sentry programmatically."
-          />
-
-          <Card
-            className="w-full md:w-[calc(50%-12px)]"
-            href="/cli"
-            image={TerminalImage}
-            imageAlt="Terminal image"
-            title="CLI"
-            description="How to use 'sentry-cli' on the command line."
-          />
-
-          {/* Row 5: Security, Legal & PII and Concepts & References */}
-          <Card
-            className="w-full md:w-[calc(50%-12px)]"
-            href="/security-legal-pii"
-            image={SecurityImage}
-            imageAlt="Stamped paper image"
-            title="Security, Legal & PII"
-            description="Security, compliance, and data-scrubbing processes."
-          />
-
-          <Card
-            className="w-full md:w-[calc(50%-12px)]"
-            href="/concepts"
-            image={ConceptsImage}
-            imageAlt="Concept and references image"
-            title="Concepts & Reference"
-            description="Core concepts that make Sentry, Sentry."
-          />
-        </div>
-        <h2 className="text-2xl mt-10 mb-6 font-medium">Talk to us</h2>
-        <div className="flex flex-col md:flex-row gap-6">
-          <Card
-            className="w-full"
-            href="https://discord.com/invite/sentry"
-            image={ChatBubble}
-            imageAlt="Chat bubble image"
-            title="Sentry Discord"
-            description="Real talk in real time. Get in it."
-          />
-
-          <Card
-            className="w-full"
-            href="https://sentry.zendesk.com/hc/en-us/"
-            image={SupportImage}
-            imageAlt="Support image"
-            title="Support"
-            description="See how we can help."
-          />
-        </div>
-      </div>
+      </main>
       <footer className="mt-12 pb-10 w-full z-50 max-w-7xl mx-auto md:px-6 space-y-4 px-6 lg:px-8">
         <div className="px-3 pt-10 border-t border-gray">
           {/* First row */}
