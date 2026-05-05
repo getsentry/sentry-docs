@@ -590,14 +590,20 @@ function renderInline(text: string): ReactNode[] {
     } else if (token.startsWith('[')) {
       const linkMatch = token.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
       if (linkMatch) {
-        const url = linkMatch[2];
-        // Only allow safe URL schemes to prevent javascript: injection
-        const safeUrl =
-          url.startsWith('https://') || url.startsWith('http://') ? url : '#';
+        // Parse through URL constructor to break taint chain and sanitize scheme
+        let safeHref = '#';
+        try {
+          const parsed = new URL(linkMatch[2]);
+          if (parsed.protocol === 'https:' || parsed.protocol === 'http:') {
+            safeHref = parsed.href;
+          }
+        } catch {
+          // Invalid URL — keep '#'
+        }
         nodes.push(
           <a
             key={`a${match.index}`}
-            href={safeUrl}
+            href={safeHref}
             target="_blank"
             rel="noopener noreferrer"
           >
