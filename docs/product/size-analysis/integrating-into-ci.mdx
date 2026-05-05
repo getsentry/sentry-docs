@@ -152,6 +152,18 @@ Rules are evaluated independently. If any rule's threshold is exceeded, the stat
 - If status checks are **enabled** but **no rules are configured**, checks will post as **neutral** (won't block PRs) but will still show size change information
 - If rules are configured, checks will pass or fail based on whether thresholds are exceeded
 
+### Fetching Status Check Rules for External CI
+
+If you're consuming the `preprod_artifact.size_analysis_completed` webhook in your own CI, you can fetch the project's current status check rule config from the Size Analysis status check rules API:
+
+```http
+GET /api/0/projects/{organization_id_or_slug}/{project_id_or_slug}/preprod/size-analysis/status-check-rules/
+```
+
+Use this when you want external CI to evaluate the same thresholds that Sentry uses for Size Analysis status checks, without duplicating rule configuration outside Sentry. Once the generated API reference is available, it will document the response shape, filter operators, AND/OR grouping semantics, wildcard matching behavior, and invalid-filter handling.
+
+The endpoint returns the **current project configuration**, not a historical snapshot from when the webhook was emitted. If rules change between webhook delivery and your API request, you'll receive the updated rules.
+
 ## Troubleshooting
 
 ### Not Seeing Status Checks
