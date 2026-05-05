@@ -80,24 +80,16 @@ export function AskAiModal() {
           done = result.done;
           if (result.value) {
             const chunk = decoder.decode(result.value, {stream: true});
-            const lines = chunk.split('\n');
-            for (const line of lines) {
-              if (line.startsWith('0:')) {
-                try {
-                  const parsed = JSON.parse(line.slice(2)) as string;
-                  setMessages(prev => {
-                    const updated = [...prev];
-                    const last = updated[updated.length - 1];
-                    updated[updated.length - 1] = {
-                      role: 'assistant',
-                      content: last.content + parsed,
-                    };
-                    return updated;
-                  });
-                } catch {
-                  // skip malformed chunks
-                }
-              }
+            if (chunk) {
+              setMessages(prev => {
+                const updated = [...prev];
+                const last = updated[updated.length - 1];
+                updated[updated.length - 1] = {
+                  role: 'assistant',
+                  content: last.content + chunk,
+                };
+                return updated;
+              });
             }
           }
         }
@@ -598,10 +590,14 @@ function renderInline(text: string): ReactNode[] {
     } else if (token.startsWith('[')) {
       const linkMatch = token.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
       if (linkMatch) {
+        const url = linkMatch[2];
+        // Only allow safe URL schemes to prevent javascript: injection
+        const safeUrl =
+          url.startsWith('https://') || url.startsWith('http://') ? url : '#';
         nodes.push(
           <a
             key={`a${match.index}`}
-            href={linkMatch[2]}
+            href={safeUrl}
             target="_blank"
             rel="noopener noreferrer"
           >
