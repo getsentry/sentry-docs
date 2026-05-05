@@ -11,6 +11,10 @@ Please reach out on [GitHub](https://github.com/getsentry/sentry-javascript/issu
 
 </Alert>
 
+This guide will show you how to integrate Sentry into your [Effect](https://effect.website/) project using the `@sentry/effect` SDK.
+
+`@sentry/effect` supports **Effect v3** and **Effect v4**. The integration automatically detects which version you have installed, but the `Tracer` and `Logger` layer APIs differ between major versions. Make sure to follow the correct code snippets for your version below.
+
 <PlatformContent includePath="getting-started-prerequisites" />
 
 <StepConnector selector="h2" showNumbers={true}>
@@ -54,21 +58,26 @@ pnpm add @sentry/effect
 
 ## Configure
 
-### Initialize Sentry on the Server-Side
+The SDK provides an `effectLayer` that initializes Sentry. You can compose it with additional Effect layers to enable tracing, logging, and metrics. The `effectLayer`, `SentryEffectTracer`, `SentryEffectLogger`, and `SentryEffectMetricsLayer` exports are the same for Effect v3 and v4. The only difference between versions is how you compose layers for tracing and logging, which is covered in the snippets below.
+
+### Effect v3
 
 <SplitLayout>
 <SplitSection>
 <SplitSectionText>
 
-Import and initialize the Sentry SDK in your application's entry point (for example, `main.ts`) using the SDK's `effectLayer`.
+<AvailableSince version="10.44.0" />
 
-Depending on the features you've selected, merge the `effectLayer` with the corresponding feature layers.
+- Node: Provide `SentryLive` before launching your HTTP layer (for example, with `NodeRuntime`).
+- Browser: Provide `SentryLive` to your app layer.
+
+In both cases, use `Layer.setTracer` to configure tracing and `Logger.replace` to configure logging.
 
 </SplitSectionText>
 <SplitSectionCode>
 
-```typescript {filename:main.ts}
-import * as Sentry from "@sentry/effect/server";
+```typescript {tabTitle: Server} {filename: main.ts}
+import * as Sentry from "@sentry/effect";
 import { NodeRuntime } from "@effect/platform-node";
 // ___PRODUCT_OPTION_START___ logs
 import * as Logger from "effect/Logger";
@@ -116,25 +125,8 @@ const MainLive = HttpLive.pipe(Layer.provide(SentryLive));
 MainLive.pipe(Layer.launch, NodeRuntime.runMain);
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
-### Initialize Sentry on the Client-Side
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
-Import and initialize the Sentry SDK in your application's entry point (for example, `index.ts`) using the SDK's `effectLayer`.
-
-Depending on the features you've selected, merge the `effectLayer` with the corresponding feature layers.
-
-</SplitSectionText>
-<SplitSectionCode>
-
-```typescript {filename:index.ts}
-import * as Sentry from "@sentry/effect/client";
+```typescript {tabTitle: Client} {filename: main.ts}
+import * as Sentry from "@sentry/effect";
 // ___PRODUCT_OPTION_START___ logs
 import { Logger } from "effect";
 // ___PRODUCT_OPTION_END___ logs
@@ -178,6 +170,115 @@ const MainLive = YourAppLayer.pipe(Layer.provide(SentryLive));
 </SplitSection>
 </SplitLayout>
 
+### Effect v4
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+<AvailableSince version="10.50.0" />
+
+Effect v4 changes how you install the default `Tracer` and `Logger` services. Use `Layer.succeed(Tracer.Tracer, …)` plus `Logger.layer([…])`.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {tabTitle: Server} {filename: main.ts}
+import * as Sentry from "@sentry/effect";
+import { NodeRuntime } from "@effect/platform-node";
+// ___PRODUCT_OPTION_START___ logs
+import * as Logger from "effect/Logger";
+// ___PRODUCT_OPTION_END___ logs
+import * as Layer from "effect/Layer";
+// ___PRODUCT_OPTION_START___ performance
+import * as Tracer from "effect/Tracer";
+// ___PRODUCT_OPTION_END___ performance
+import { HttpLive } from "./Http.js";
+
+const SentryLive = Layer.mergeAll(
+  Sentry.effectLayer({
+    dsn: "___PUBLIC_DSN___",
+    // ___PRODUCT_OPTION_START___ performance
+
+    // Set tracesSampleRate to 1.0 to capture 100%
+    // of transactions for tracing.
+    // We recommend adjusting this value in production.
+    tracesSampleRate: 1.0,
+    // ___PRODUCT_OPTION_END___ performance
+    // ___PRODUCT_OPTION_START___ logs
+
+    // Enable logs to be sent to Sentry
+    enableLogs: true,
+    // ___PRODUCT_OPTION_END___ logs
+  }),
+  // ___PRODUCT_OPTION_START___ performance
+
+  // Enable Effect tracing
+  Layer.succeed(Tracer.Tracer, Sentry.SentryEffectTracer),
+  // ___PRODUCT_OPTION_END___ performance
+  // ___PRODUCT_OPTION_START___ logs
+
+  // Forward Effect logs to Sentry
+  Logger.layer([Sentry.SentryEffectLogger]),
+  // ___PRODUCT_OPTION_END___ logs
+  // ___PRODUCT_OPTION_START___ metrics
+
+  // Forward Effect metrics to Sentry
+  Sentry.SentryEffectMetricsLayer,
+  // ___PRODUCT_OPTION_END___ metrics
+);
+
+const MainLive = HttpLive.pipe(Layer.provide(SentryLive));
+
+MainLive.pipe(Layer.launch, NodeRuntime.runMain);
+```
+
+```typescript {tabTitle: Client} {filename: main.ts}
+import * as Sentry from "@sentry/effect";
+// ___PRODUCT_OPTION_START___ logs
+import * as Logger from "effect/Logger";
+// ___PRODUCT_OPTION_END___ logs
+import * as Layer from "effect/Layer";
+// ___PRODUCT_OPTION_START___ performance
+import * as Tracer from "effect/Tracer";
+// ___PRODUCT_OPTION_END___ performance
+
+const SentryLive = Layer.mergeAll(
+  Sentry.effectLayer({
+    dsn: "___PUBLIC_DSN___",
+    // ___PRODUCT_OPTION_START___ performance
+
+    // Set tracesSampleRate to 1.0 to capture 100%
+    // of transactions for tracing.
+    // We recommend adjusting this value in production.
+    tracesSampleRate: 1.0,
+    integrations: [Sentry.browserTracingIntegration()],
+    // ___PRODUCT_OPTION_END___ performance
+    // ___PRODUCT_OPTION_START___ logs
+
+    // Enable logs to be sent to Sentry
+    enableLogs: true,
+    // ___PRODUCT_OPTION_END___ logs
+  }),
+  // ___PRODUCT_OPTION_START___ performance
+
+  // Enable Effect tracing
+  Layer.succeed(Tracer.Tracer, Sentry.SentryEffectTracer),
+  // ___PRODUCT_OPTION_END___ performance
+  // ___PRODUCT_OPTION_START___ logs
+
+  // Forward Effect logs to Sentry
+  Logger.layer([Sentry.SentryEffectLogger]),
+  // ___PRODUCT_OPTION_END___ logs
+);
+
+const MainLive = YourAppLayer.pipe(Layer.provide(SentryLive));
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
 ### Add Readable Stack Traces With Source Maps (Optional)
 
 <PlatformContent includePath="getting-started-sourcemaps-short-version-splitlayout" />
@@ -199,7 +300,7 @@ To verify that Sentry captures errors and creates issues in your Sentry project,
 
 ```typescript
 import { Effect } from "effect";
-import * as Sentry from "@sentry/effect/server";
+import * as Sentry from "@sentry/effect";
 
 const program = Effect.gen(function* () {
   yield* Effect.fail(new Error("Sentry Test Error"));
@@ -226,7 +327,7 @@ To test your tracing configuration, update the previous code snippet to create a
 
 ```typescript
 import { Effect } from "effect";
-import * as Sentry from "@sentry/effect/server";
+import * as Sentry from "@sentry/effect";
 
 const program = Effect.gen(function* () {
   yield* Effect.gen(function* () {
@@ -262,7 +363,7 @@ To verify that Sentry catches your logs, add some log statements to your applica
 
 ```typescript
 import { Effect } from "effect";
-import * as Sentry from "@sentry/effect/server";
+import * as Sentry from "@sentry/effect";
 
 const program = Effect.gen(function* () {
   yield* Effect.log("User example action completed");
