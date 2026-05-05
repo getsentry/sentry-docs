@@ -326,10 +326,7 @@ export function AskAiModal() {
                 target.style.height = `${Math.min(target.scrollHeight, 144)}px`;
               }}
             />
-            <div className="absolute bottom-2 right-2 left-2 flex items-center justify-between">
-              <span className="text-[10px] text-[var(--gray-8)] pl-2">
-                Powered by Sentry docs
-              </span>
+            <div className="absolute bottom-2 right-2 left-2 flex items-center justify-end">
               <button
                 type="submit"
                 disabled={!input.trim() || isStreaming}
