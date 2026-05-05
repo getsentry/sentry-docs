@@ -140,8 +140,6 @@ export function PlatformSelector({
   const storedPlatform = platformsAndGuides.find(
     platform => platform.key === storedPlatformKey
   );
-  // Check for stored platform and redirect if on /platforms/ index
-  // Use useLayoutEffect to redirect before paint for faster UX
   useLayoutEffect(() => {
     setHasMounted(true);
   }, []);
@@ -149,14 +147,10 @@ export function PlatformSelector({
   useLayoutEffect(() => {
     if (currentPlatformKey) {
       localStorage.setItem('active-platform', currentPlatformKey);
-    } else if (isOnPlatformsIndex) {
-      const stored = localStorage.getItem('active-platform');
-      setStoredPlatformKey(stored);
-      // Don't redirect when on /platforms/ - let users stay on the page they navigated to
     } else {
       setStoredPlatformKey(localStorage.getItem('active-platform'));
     }
-  }, [currentPlatformKey, isOnPlatformsIndex, platformsAndGuides]);
+  }, [currentPlatformKey, platformsAndGuides]);
 
   const isPlatformPage = Boolean(
     pathname?.startsWith('/platforms/') &&
