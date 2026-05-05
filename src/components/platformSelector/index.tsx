@@ -150,7 +150,7 @@ export function PlatformSelector({
     } else {
       setStoredPlatformKey(localStorage.getItem('active-platform'));
     }
-  }, [currentPlatformKey, platformsAndGuides]);
+  }, [currentPlatformKey]);
 
   const isPlatformPage = Boolean(
     pathname?.startsWith('/platforms/') &&
