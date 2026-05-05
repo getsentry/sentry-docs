@@ -301,6 +301,14 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/integrations/notification-incidents/discord/',
   },
   {
+    from: '/integrations/slack/',
+    to: '/integrations/notification-incidents/slack/',
+  },
+  {
+    from: '/integrations/project-mgmt/jira/',
+    to: '/integrations/issue-tracking/jira/',
+  },
+  {
     from: '/platforms/python/migration/configuration/filtering/',
     to: '/platforms/python/configuration/filtering/',
   },
