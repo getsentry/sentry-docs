@@ -113,7 +113,7 @@ For PRs, use .github/PULL_REQUEST_TEMPLATE.md. Also, use the Sentry pull request
 ### Decision
 
 <!-- lore:019dfa02-6cec-71c2-a455-f3ef94c28324 -->
-* **Replacing Kapa AI with first-party docs-mcp ask endpoint**: Plan: replace the Kapa AI third-party widget with a custom \`POST /api/ask\` streaming endpoint on the docs-mcp Cloudflare Worker (deployed at \`https://docs-mcp.getsentry.workers.dev/\`). The backend uses Vercel AI SDK \`streamText\` + Claude Sonnet 4 agent with \`search\_docs\` and \`fetch\_doc\_page\` tools that read from docs.sentry.io \`.md\` exports and doctree.json. The frontend replaces Kapa with a React context (\`AskAiProvider\`) and custom modal (\`AskAiModal\`). All four existing trigger points (search button, mobile header, inline result, \`?askAI=true\` URL) are preserved but rewired to the new modal.
+* **Replacing Kapa AI with first-party docs-mcp ask endpoint**: Plan: replace the Kapa AI third-party widget with a custom \`POST /api/ask\` streaming endpoint on the docs-mcp Cloudflare Worker (deployed as \`docs-mcp.getsentry.workers.dev\`). The backend uses Vercel AI SDK \`streamText\` + Claude Sonnet 4 agent with \`search\_docs\` and \`fetch\_doc\_page\` tools that read from docs.sentry.io \`.md\` exports and doctree.json. The frontend replaces Kapa with a React context (\`AskAiProvider\`) and custom modal (\`AskAiModal\`). All four existing trigger points (search button, mobile header, inline result, \`?askAI=true\` URL) are preserved but rewired to the new modal.
 
 ### Gotcha
 

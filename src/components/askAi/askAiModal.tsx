@@ -1,7 +1,8 @@
 'use client';
 
 import {Cross1Icon} from '@radix-ui/react-icons';
-import {useCallback, useEffect, useRef, useState} from 'react';
+import type {ReactNode} from 'react';
+import {Fragment, useCallback, useEffect, useRef, useState} from 'react';
 import {MagicIcon} from 'sentry-docs/components/cutomIcons/magic';
 
 import {useAskAi} from './askAiContext';
@@ -342,64 +343,156 @@ export function AskAiModal() {
   );
 }
 
+/**
+ * Renders markdown content as React elements without dangerouslySetInnerHTML.
+ * Handles: code blocks, inline code, headings, bold, italic, links, lists, paragraphs.
+ */
 function MarkdownContent({content}: {content: string}) {
+  const blocks = parseBlocks(content);
   return (
-    <div
-      dangerouslySetInnerHTML={{__html: renderMarkdown(content)}}
-      className="[&>:first-child]:mt-0 [&>:last-child]:mb-0"
-    />
+    <div className="[&>:first-child]:mt-0 [&>:last-child]:mb-0">
+      {blocks.map((block, i) => (
+        <Fragment key={i}>{block}</Fragment>
+      ))}
+    </div>
   );
 }
 
-function renderMarkdown(md: string): string {
-  let html = md;
+function parseBlocks(md: string): ReactNode[] {
+  const nodes: ReactNode[] = [];
+  // Split into code blocks and everything else
+  const parts = md.split(/(```\w*\n[\s\S]*?```)/g);
 
-  // Code blocks
-  html = html.replace(
-    /```(\w*)\n([\s\S]*?)```/g,
-    '<pre><code class="language-$1">$2</code></pre>'
-  );
-  // Inline code
-  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
-  // Headings
-  html = html.replace(/^#### (.+)$/gm, '<h5>$1</h5>');
-  html = html.replace(/^### (.+)$/gm, '<h4>$1</h4>');
-  html = html.replace(/^## (.+)$/gm, '<h3>$1</h3>');
-  html = html.replace(/^# (.+)$/gm, '<h2>$1</h2>');
-  // Bold
-  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-  // Italic
-  html = html.replace(/(?<!\*)\*([^*]+?)\*(?!\*)/g, '<em>$1</em>');
-  // Links
-  html = html.replace(
-    /\[([^\]]+)\]\(([^)]+)\)/g,
-    '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>'
-  );
-  // Unordered lists
-  html = html.replace(/^[*-] (.+)$/gm, '<li>$1</li>');
-  // Ordered lists
-  html = html.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
-  // Wrap consecutive <li> items in <ul>
-  html = html.replace(/(<li>[\s\S]*?<\/li>(\s*))+/g, match => `<ul>${match}</ul>`);
-  // Paragraphs
-  html = html
-    .split('\n\n')
-    .map(block => {
-      const trimmed = block.trim();
+  for (const part of parts) {
+    const codeBlockMatch = part.match(/^```(\w*)\n([\s\S]*?)```$/);
+    if (codeBlockMatch) {
+      nodes.push(
+        <pre key={nodes.length}>
+          <code className={codeBlockMatch[1] ? `language-${codeBlockMatch[1]}` : ''}>
+            {codeBlockMatch[2]}
+          </code>
+        </pre>
+      );
+      continue;
+    }
+
+    // Split remaining text into paragraphs by double newline
+    const paragraphs = part.split(/\n\n+/);
+    for (const para of paragraphs) {
+      const trimmed = para.trim();
       if (!trimmed) {
-        return '';
+        continue;
       }
-      if (
-        trimmed.startsWith('<h') ||
-        trimmed.startsWith('<pre') ||
-        trimmed.startsWith('<ul') ||
-        trimmed.startsWith('<ol')
-      ) {
-        return trimmed;
-      }
-      return `<p>${trimmed.replace(/\n/g, '<br>')}</p>`;
-    })
-    .join('\n');
 
-  return html;
+      // Headings
+      const headingMatch = trimmed.match(/^(#{1,4}) (.+)$/);
+      if (headingMatch) {
+        const level = headingMatch[1].length;
+        const text = headingMatch[2];
+        const HeadingTag = `h${level + 1}` as keyof JSX.IntrinsicElements;
+        nodes.push(<HeadingTag key={nodes.length}>{renderInline(text)}</HeadingTag>);
+        continue;
+      }
+
+      // List items (consecutive lines starting with - or * or 1.)
+      const lines = trimmed.split('\n');
+      const isUnorderedList = lines.every(l => /^[*-] /.test(l));
+      const isOrderedList = lines.every(l => /^\d+\. /.test(l));
+
+      if (isUnorderedList) {
+        nodes.push(
+          <ul key={nodes.length}>
+            {lines.map((line, li) => (
+              <li key={li}>{renderInline(line.replace(/^[*-] /, ''))}</li>
+            ))}
+          </ul>
+        );
+        continue;
+      }
+
+      if (isOrderedList) {
+        nodes.push(
+          <ol key={nodes.length}>
+            {lines.map((line, li) => (
+              <li key={li}>{renderInline(line.replace(/^\d+\. /, ''))}</li>
+            ))}
+          </ol>
+        );
+        continue;
+      }
+
+      // Regular paragraph
+      nodes.push(<p key={nodes.length}>{renderInline(trimmed)}</p>);
+    }
+  }
+
+  return nodes;
+}
+
+function renderInline(text: string): ReactNode[] {
+  const nodes: ReactNode[] = [];
+  // Pattern matches: inline code, bold, italic, links, or plain text
+  const pattern = /(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*|\[[^\]]+\]\([^)]+\))/g;
+  let lastIndex = 0;
+
+  for (const match of text.matchAll(pattern)) {
+    const before = text.slice(lastIndex, match.index);
+    if (before) {
+      nodes.push(
+        ...before
+          .split('\n')
+          .flatMap((segment, i, arr) =>
+            i < arr.length - 1
+              ? [
+                  <Fragment key={`t${nodes.length}-${i}`}>{segment}</Fragment>,
+                  <br key={`br${nodes.length}-${i}`} />,
+                ]
+              : [<Fragment key={`t${nodes.length}-${i}`}>{segment}</Fragment>]
+          )
+      );
+    }
+
+    const token = match[0];
+    if (token.startsWith('`')) {
+      nodes.push(<code key={`c${match.index}`}>{token.slice(1, -1)}</code>);
+    } else if (token.startsWith('**')) {
+      nodes.push(<strong key={`b${match.index}`}>{token.slice(2, -2)}</strong>);
+    } else if (token.startsWith('*')) {
+      nodes.push(<em key={`i${match.index}`}>{token.slice(1, -1)}</em>);
+    } else if (token.startsWith('[')) {
+      const linkMatch = token.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+      if (linkMatch) {
+        nodes.push(
+          <a
+            key={`a${match.index}`}
+            href={linkMatch[2]}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {linkMatch[1]}
+          </a>
+        );
+      }
+    }
+
+    lastIndex = (match.index ?? 0) + token.length;
+  }
+
+  const remaining = text.slice(lastIndex);
+  if (remaining) {
+    nodes.push(
+      ...remaining
+        .split('\n')
+        .flatMap((segment, i, arr) =>
+          i < arr.length - 1
+            ? [
+                <Fragment key={`r${nodes.length}-${i}`}>{segment}</Fragment>,
+                <br key={`rbr${nodes.length}-${i}`} />,
+              ]
+            : [<Fragment key={`r${nodes.length}-${i}`}>{segment}</Fragment>]
+        )
+    );
+  }
+
+  return nodes;
 }
