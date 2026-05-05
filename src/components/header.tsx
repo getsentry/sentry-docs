@@ -9,6 +9,7 @@ import {useCallback, useEffect, useState} from 'react';
 import SentryLogoSVG from 'sentry-docs/logos/sentry-logo-dark.svg';
 import {Platform} from 'sentry-docs/types';
 
+import {useAskAi} from './askAi';
 import {MagicIcon} from './cutomIcons/magic';
 import {useHomeSearchVisibility} from './homeSearchVisibility';
 import {mainSections} from './navigationData';
@@ -47,6 +48,7 @@ export function Header({
   useStoredSearchPlatforms,
   platforms = [],
 }: Props) {
+  const {open: openAskAi} = useAskAi();
   const isHomePage = pathname === '/';
   const [homeSearchVisible, setHomeSearchVisible] = useState(true);
   const [homeMobileNavOpen, setHomeMobileNavOpen] = useState(false);
@@ -306,8 +308,9 @@ export function Header({
               </button>
             )}
             <button
-              className="kapa-ai-class flex items-center gap-1.5 text-sm font-medium text-[var(--foreground)] px-2 py-1.5 rounded-md hover:bg-[var(--gray-a3)] transition-colors"
+              className="flex items-center gap-1.5 text-sm font-medium text-[var(--foreground)] px-2 py-1.5 rounded-md hover:bg-[var(--gray-a3)] transition-colors"
               aria-label="Ask AI"
+              onClick={() => openAskAi()}
             >
               <MagicIcon className="size-4" />
               <span className="uppercase text-xs">Ask AI</span>
