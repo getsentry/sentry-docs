@@ -1,0 +1,338 @@
+---
+title: Kafka Integration
+description: "Learn how to trace Kafka queue operations with Sentry."
+---
+
+Sentry's Kafka integration lets you trace both production and consumption. In Spring Boot, this happens automatically. If you're using raw `kafka-clients`, you'll need to instrument producers and consumers with `sentry-kafka`.
+
+Once configured, queue spans will appear in Sentry's [Queues dashboard](https://sentry.io/orgredirect/organizations/:orgslug/insights/backend/queues/).
+
+Kafka queue tracing is available in Sentry Java SDK version `8.41.0` and later.
+
+<PlatformSection supported={["java.spring-boot"]}>
+
+If you're using Spring Kafka (`KafkaTemplate` / `@KafkaListener`), Sentry instruments your producers and consumers automatically. If you're using `kafka-clients` directly, see the [Java Kafka docs](/platforms/java/integrations/kafka/) for manual instrumentation with `sentry-kafka`.
+
+### Install
+
+Add `sentry-kafka` alongside your existing Spring Kafka dependency:
+
+```groovy {tabTitle:Gradle}
+implementation 'io.sentry:sentry-kafka:{{@inject packages.version('sentry.java.kafka', '8.41.0') }}'
+implementation 'org.springframework.kafka:spring-kafka'
+```
+
+```xml {tabTitle:Maven}
+<dependency>
+    <groupId>io.sentry</groupId>
+    <artifactId>sentry-kafka</artifactId>
+    <version>{{@inject packages.version('sentry.java.kafka', '8.41.0') }}</version>
+</dependency>
+<dependency>
+    <groupId>org.springframework.kafka</groupId>
+    <artifactId>spring-kafka</artifactId>
+</dependency>
+```
+
+### Configure
+
+Enable queue tracing in your application properties:
+
+```properties {2} {tabTitle:application.properties}
+sentry.dsn=___DSN___
+sentry.enable-queue-tracing=true
+sentry.traces-sample-rate=1.0
+```
+
+```yaml {3} {tabTitle:application.yml}
+sentry:
+  dsn: ___DSN___
+  enable-queue-tracing: true
+  traces-sample-rate: 1.0
+```
+
+Now every `KafkaTemplate.send(...)` call produces a `queue.publish` span if there's a transaction running, and record-based `@KafkaListener` methods produce `queue.process` transactions. Sentry injects propagation headers (`sentry-trace`, `baggage`) into outgoing records and continues the trace on the consumer side.
+
+### Producer
+
+```java {tabTitle:Java}
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+public class OrderController {
+
+    private final KafkaTemplate<String, String> kafkaTemplate;
+
+    public OrderController(KafkaTemplate<String, String> kafkaTemplate) {
+        this.kafkaTemplate = kafkaTemplate;
+    }
+
+    @GetMapping("/order")
+    public String placeOrder() {
+        // Sentry automatically records a queue.publish span for this send.
+        kafkaTemplate.send("orders", "order-payload");
+        return "ok";
+    }
+}
+```
+
+```kotlin {tabTitle:Kotlin}
+import org.springframework.kafka.core.KafkaTemplate
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.RestController
+
+@RestController
+class OrderController(private val kafkaTemplate: KafkaTemplate<String, String>) {
+
+    @GetMapping("/order")
+    fun placeOrder(): String {
+        // Sentry automatically records a queue.publish span for this send.
+        kafkaTemplate.send("orders", "order-payload")
+        return "ok"
+    }
+}
+```
+
+### Consumer
+
+```java {tabTitle:Java}
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.stereotype.Component;
+
+@Component
+public class OrderConsumer {
+
+    @KafkaListener(topics = "orders", groupId = "order-group")
+    public void onOrder(ConsumerRecord<String, String> record) {
+        // Sentry automatically records a queue.process transaction for this method.
+        processOrder(record.value());
+    }
+}
+```
+
+```kotlin {tabTitle:Kotlin}
+import org.apache.kafka.clients.consumer.ConsumerRecord
+import org.springframework.kafka.annotation.KafkaListener
+import org.springframework.stereotype.Component
+
+@Component
+class OrderConsumer {
+
+    @KafkaListener(topics = "orders", groupId = "order-group")
+    fun onOrder(record: ConsumerRecord<String, String>) {
+        // Sentry automatically records a queue.process transaction for this method.
+        processOrder(record.value())
+    }
+}
+```
+
+### Enable Retry Count
+
+Sentry sets `messaging.message.retry.count` from Spring Kafka's
+`kafka_deliveryAttempt` header. Spring Kafka only adds this header when delivery
+attempt headers are enabled and the listener uses an error handler or after-rollback
+processor that supports delivery attempts.
+
+The following example uses Spring Kafka's `DefaultErrorHandler`. If your app already
+uses retry handling that supports delivery attempts, keep your existing handler and
+enable the header on the listener container:
+
+```java {tabTitle:Java}
+import org.springframework.context.annotation.Bean;
+import org.springframework.kafka.config.ContainerCustomizer;
+import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
+import org.springframework.kafka.listener.DefaultErrorHandler;
+import org.springframework.util.backoff.FixedBackOff;
+
+@Bean
+DefaultErrorHandler kafkaErrorHandler() {
+    return new DefaultErrorHandler(new FixedBackOff(0L, 1L));
+}
+
+@Bean
+ContainerCustomizer<Object, Object, ConcurrentMessageListenerContainer<Object, Object>>
+    kafkaContainerCustomizer() {
+    return container -> container.getContainerProperties().setDeliveryAttemptHeader(true);
+}
+```
+
+```kotlin {tabTitle:Kotlin}
+import org.springframework.context.annotation.Bean
+import org.springframework.kafka.config.ContainerCustomizer
+import org.springframework.kafka.listener.ConcurrentMessageListenerContainer
+import org.springframework.kafka.listener.DefaultErrorHandler
+import org.springframework.util.backoff.FixedBackOff
+
+@Bean
+fun kafkaErrorHandler(): DefaultErrorHandler {
+    return DefaultErrorHandler(FixedBackOff(0L, 1L))
+}
+
+@Bean
+fun kafkaContainerCustomizer() =
+    ContainerCustomizer<Any, Any, ConcurrentMessageListenerContainer<Any, Any>> { container ->
+        container.containerProperties.setDeliveryAttemptHeader(true)
+    }
+```
+
+Without that header, Sentry does not set `messaging.message.retry.count`.
+
+</PlatformSection>
+
+<PlatformSection notSupported={["java.spring-boot"]}>
+
+For applications using `kafka-clients` directly (without Spring), use the `sentry-kafka` module. If you're using Kafka through Spring Boot, use the [Spring Boot Kafka docs](/platforms/java/guides/spring-boot/integrations/kafka/) instead.
+
+### Install
+
+```groovy {tabTitle:Gradle}
+implementation 'io.sentry:sentry-kafka:{{@inject packages.version('sentry.java.kafka', '8.41.0') }}'
+```
+
+```xml {tabTitle:Maven}
+<dependency>
+    <groupId>io.sentry</groupId>
+    <artifactId>sentry-kafka</artifactId>
+    <version>{{@inject packages.version('sentry.java.kafka', '8.41.0') }}</version>
+</dependency>
+```
+
+```scala {tabTitle:SBT}
+libraryDependencies += "io.sentry" % "sentry-kafka" % "{{@inject packages.version('sentry.java.kafka', '8.41.0') }}"
+```
+
+For other dependency managers, use the same Maven coordinates: `io.sentry:sentry-kafka`.
+
+### Configure
+
+Enable queue tracing when initializing Sentry:
+
+```java {4} {tabTitle:Java}
+Sentry.init(options -> {
+    options.setDsn("___DSN___");
+    options.setTracesSampleRate(1.0);
+    options.setEnableQueueTracing(true);
+});
+```
+
+```kotlin {4} {tabTitle:Kotlin}
+Sentry.init { options ->
+    options.dsn = "___DSN___"
+    options.tracesSampleRate = 1.0
+    options.isEnableQueueTracing = true
+}
+```
+
+### Instrument the Producer
+
+Wrap your `KafkaProducer` with `SentryKafkaProducer.wrap()`. Every `send()` call then records a `queue.publish` span and injects Sentry propagation headers into the record.
+
+```java {7} {tabTitle:Java}
+import io.sentry.kafka.SentryKafkaProducer;
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.Producer;
+import org.apache.kafka.clients.producer.ProducerRecord;
+
+KafkaProducer<String, String> rawProducer = new KafkaProducer<>(producerProps);
+Producer<String, String> producer = SentryKafkaProducer.wrap(rawProducer);
+
+producer.send(new ProducerRecord<>("orders", "order-payload"));
+```
+
+```kotlin {6} {tabTitle:Kotlin}
+import io.sentry.kafka.SentryKafkaProducer
+import org.apache.kafka.clients.producer.KafkaProducer
+import org.apache.kafka.clients.producer.ProducerRecord
+
+val rawProducer = KafkaProducer<String, String>(producerProps)
+val producer = SentryKafkaProducer.wrap(rawProducer)
+
+producer.send(ProducerRecord("orders", "order-payload"))
+```
+
+A `queue.publish` span is created only when there is an active transaction in scope. Sentry trace headers are always injected (even without an active span) so the consumer can continue the trace.
+
+### Instrument the Consumer
+
+Wrap each record's processing callback with `SentryKafkaConsumerTracing.withTracing()`. This creates a `queue.process` transaction per record, continues the distributed trace from producer headers, and calculates receive latency automatically.
+
+If you're also using OpenTelemetry Kafka instrumentation, don't instrument the same consumer callback with `withTracing()`. This helper is not automatically suppressed under OpenTelemetry today, so using both can create duplicate `queue.process` transactions.
+
+```java {12-14} {tabTitle:Java}
+import io.sentry.kafka.SentryKafkaConsumerTracing;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+
+try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(consumerProps)) {
+    consumer.subscribe(List.of("orders"));
+
+    while (running) {
+        ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(500));
+        for (ConsumerRecord<String, String> record : records) {
+            SentryKafkaConsumerTracing.withTracing(record, () -> {
+                processOrder(record.value());
+            });
+        }
+    }
+}
+```
+
+```kotlin {tabTitle:Kotlin}
+import io.sentry.kafka.SentryKafkaConsumerTracing
+import org.apache.kafka.clients.consumer.KafkaConsumer
+
+KafkaConsumer<String, String>(consumerProps).use { consumer ->
+    consumer.subscribe(listOf("orders"))
+
+    while (running) {
+        val records = consumer.poll(Duration.ofMillis(500))
+        for (record in records) {
+            SentryKafkaConsumerTracing.withTracing(record) {
+                processOrder(record.value())
+            }
+        }
+    }
+}
+```
+
+Use the `Callable` overload when your processing code throws checked exceptions:
+
+```java {tabTitle:Java (Callable)}
+SentryKafkaConsumerTracing.withTracing(record, () -> {
+    return processOrder(record.value()); // can throw checked exceptions
+});
+```
+
+```kotlin {tabTitle:Kotlin (Callable)}
+import java.util.concurrent.Callable
+
+SentryKafkaConsumerTracing.withTracing(
+    record,
+    Callable {
+        processOrder(record.value())
+    },
+)
+```
+
+</PlatformSection>
+
+## Span Data
+
+| Attribute                           | Type   | Description                                                                                          |
+| ----------------------------------- | ------ | ---------------------------------------------------------------------------------------------------- |
+| `messaging.system`                  | string | Always `"kafka"`                                                                                     |
+| `messaging.destination.name`        | string | Kafka topic name                                                                                     |
+| `messaging.message.id`              | string | Value of the `messaging.message.id` record header, if present                                        |
+| `messaging.message.body.size`       | int    | Serialized value size in bytes                                                                       |
+| `messaging.message.retry.count`     | int    | Number of previous delivery attempts (from Kafka's `kafka_deliveryAttempt` header), if present       |
+| `messaging.message.receive.latency` | int    | Time in milliseconds between the producer sending the record and the consumer starting to process it |
+
+## Limitations
+
+- **Async listeners not supported.** `@KafkaListener` methods that return a `CompletableFuture` or `Mono`/`Flux` are not instrumented correctly; use synchronous listeners.
+- **Batch listeners not supported.** `@KafkaListener` methods that consume batches, such as `ConsumerRecords<?, ?>` or `List<ConsumerRecord<...>>`, are not instrumented yet.
+- **Spring Boot auto-instrumentation is disabled when using Sentry OpenTelemetry integrations.**
