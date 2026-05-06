@@ -578,36 +578,38 @@ function friendlyError(raw: string): string {
 
 function EmptyState({onSubmit}: {onSubmit: (q: string) => void}) {
   return (
-    <div className="flex flex-col items-center justify-center h-full px-6 py-12">
-      <div className="size-12 rounded-2xl bg-[var(--accent-purple)] flex items-center justify-center mb-5">
-        <MagicIcon className="size-6 text-white" />
+    <div className="flex flex-col items-center justify-center h-full px-5 py-8">
+      <div className="size-10 rounded-xl bg-[var(--accent-purple)] flex items-center justify-center mb-4">
+        <MagicIcon className="size-5 text-white" />
       </div>
-      <h3 className="text-lg font-semibold text-[var(--foreground)] mb-1.5">
+      <h3 className="text-base font-semibold text-[var(--foreground)] mb-1">
         Ask Sentry AI
       </h3>
-      <p className="text-sm text-[var(--gray-10)] mb-8 text-center max-w-sm">
-        Get answers from the official Sentry documentation. Ask about setup,
-        configuration, troubleshooting, and more.
+      <p className="text-[13px] text-[var(--gray-11)] mb-6 text-center max-w-xs leading-relaxed">
+        Get answers from the official Sentry documentation
       </p>
-      <div className="w-full max-w-sm space-y-2">
+      <div className="w-full max-w-xs space-y-2">
+        <p className="text-[11px] font-medium text-[var(--gray-9)] uppercase tracking-wider mb-2 px-1">
+          Try asking
+        </p>
         {EXAMPLE_QUESTIONS.map(({label, question}) => (
           <button
             type="button"
             key={question}
             onClick={() => onSubmit(question)}
             aria-label={question}
-            className="w-full flex items-center gap-3 text-left px-4 py-3 rounded-xl border border-[var(--gray-5)] hover:border-[var(--gray-7)] hover:bg-[var(--gray-3)] text-sm text-[var(--gray-12)] transition-all group"
+            className="w-full flex items-center gap-2.5 text-left px-3.5 py-2.5 rounded-lg border border-[var(--gray-5)] bg-[var(--gray-3)] hover:border-[var(--accent-purple)] hover:bg-[var(--gray-4)] text-[13px] text-[var(--gray-12)] transition-all group"
           >
             <ChatBubbleIcon
-              width={14}
-              height={14}
-              className="text-[var(--gray-8)] group-hover:text-[var(--accent-purple)] transition-colors shrink-0"
+              width={13}
+              height={13}
+              className="text-[var(--gray-9)] group-hover:text-[var(--accent-purple)] transition-colors shrink-0"
             />
-            <span>{label}</span>
+            <span className="flex-1">{label}</span>
             <ArrowUpIcon
-              width={12}
-              height={12}
-              className="ml-auto text-[var(--gray-7)] group-hover:text-[var(--gray-10)] -rotate-45 transition-colors shrink-0"
+              width={11}
+              height={11}
+              className="text-[var(--gray-8)] group-hover:text-[var(--accent-purple)] -rotate-45 transition-colors shrink-0"
             />
           </button>
         ))}
