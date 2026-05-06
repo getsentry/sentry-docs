@@ -27,14 +27,6 @@ There are hooks available so you can react when the user opens or closes the for
 
 Example:
 
-```java
-SentryAndroid.init(context, options -> {
-    options.getFeedbackOptions().setOnFormOpen(() -> System.out.println("Form opened"));
-    options.getFeedbackOptions().setOnFormClose(() -> System.out.println("Form closed"));
-    options.getFeedbackOptions().setOnSubmitSuccess((feedback) -> System.out.println("Feedback submitted successfully: " + feedback.toString()));
-    options.getFeedbackOptions().setOnSubmitError((feedback) -> System.out.println("Failed to submit feedback: " + feedback.toString()));
-});
-```
 ```kotlin
 SentryAndroid.init(this) { options ->
     options.feedbackOptions.onFormOpen = Runnable { println("Form opened") }
@@ -46,6 +38,14 @@ SentryAndroid.init(this) { options ->
         println("Failed to submit feedback: $it")
     }
 }
+```
+```java
+SentryAndroid.init(context, options -> {
+    options.getFeedbackOptions().setOnFormOpen(() -> System.out.println("Form opened"));
+    options.getFeedbackOptions().setOnFormClose(() -> System.out.println("Form closed"));
+    options.getFeedbackOptions().setOnSubmitSuccess((feedback) -> System.out.println("Feedback submitted successfully: " + feedback.toString()));
+    options.getFeedbackOptions().setOnSubmitError((feedback) -> System.out.println("Failed to submit feedback: " + feedback.toString()));
+});
 ```
 
 ### Form Configuration
@@ -75,17 +75,6 @@ Example:
     <meta-data android:name="io.sentry.feedback.use-shake-gesture" android:value="true" />
 </application>
 ```
-```java
-SentryAndroid.init(context, options -> {
-    options.getFeedbackOptions().setNameRequired(true);
-    options.getFeedbackOptions().setShowName(false);
-    options.getFeedbackOptions().setEmailRequired(true);
-    options.getFeedbackOptions().setShowEmail(false);
-    options.getFeedbackOptions().setUseSentryUser(false);
-    options.getFeedbackOptions().setShowBranding(false);
-    options.getFeedbackOptions().setUseShakeGesture(true);
-});
-```
 ```kotlin
 SentryAndroid.init(this) { options ->
     options.feedbackOptions.isNameRequired = true
@@ -96,6 +85,17 @@ SentryAndroid.init(this) { options ->
     options.feedbackOptions.isShowBranding = false
     options.feedbackOptions.isUseShakeGesture = true
 }
+```
+```java
+SentryAndroid.init(context, options -> {
+    options.getFeedbackOptions().setNameRequired(true);
+    options.getFeedbackOptions().setShowName(false);
+    options.getFeedbackOptions().setEmailRequired(true);
+    options.getFeedbackOptions().setShowEmail(false);
+    options.getFeedbackOptions().setUseSentryUser(false);
+    options.getFeedbackOptions().setShowBranding(false);
+    options.getFeedbackOptions().setUseShakeGesture(true);
+});
 ```
 
 ### Form Label Customization
@@ -119,21 +119,6 @@ Note: manifest options are not supported here, due to internationalization:
 
 Example:
 
-```java
-SentryAndroid.init(context, options -> {
-    options.getFeedbackOptions().setFormTitle("We want to hear from you!");
-    options.getFeedbackOptions().setMessageLabel("Feedback");
-    options.getFeedbackOptions().setMessagePlaceholder("Type your feedback");
-    options.getFeedbackOptions().setIsRequiredLabel(" *");
-    options.getFeedbackOptions().setSuccessMessageText("Thanks for the feedback!");
-    options.getFeedbackOptions().setNameLabel("Full Name");
-    options.getFeedbackOptions().setNamePlaceholder("Type your full name");
-    options.getFeedbackOptions().setEmailLabel("Email Address");
-    options.getFeedbackOptions().setEmailPlaceholder("Type your email");
-    options.getFeedbackOptions().setSubmitButtonLabel("Submit");
-    options.getFeedbackOptions().setCancelButtonLabel("Back");
-});
-```
 ```kotlin
 SentryAndroid.init(this) { options ->
     options.feedbackOptions.formTitle = "We want to hear from you!"
@@ -148,6 +133,21 @@ SentryAndroid.init(this) { options ->
     options.feedbackOptions.submitButtonLabel = "Submit"
     options.feedbackOptions.cancelButtonLabel = "Back"
 }
+```
+```java
+SentryAndroid.init(context, options -> {
+    options.getFeedbackOptions().setFormTitle("We want to hear from you!");
+    options.getFeedbackOptions().setMessageLabel("Feedback");
+    options.getFeedbackOptions().setMessagePlaceholder("Type your feedback");
+    options.getFeedbackOptions().setIsRequiredLabel(" *");
+    options.getFeedbackOptions().setSuccessMessageText("Thanks for the feedback!");
+    options.getFeedbackOptions().setNameLabel("Full Name");
+    options.getFeedbackOptions().setNamePlaceholder("Type your full name");
+    options.getFeedbackOptions().setEmailLabel("Email Address");
+    options.getFeedbackOptions().setEmailPlaceholder("Type your email");
+    options.getFeedbackOptions().setSubmitButtonLabel("Submit");
+    options.getFeedbackOptions().setCancelButtonLabel("Back");
+});
 ```
 
 ### Theme Customization
@@ -169,11 +169,11 @@ Here are the attributes used by the form:
 The theme used by the form is the one set in the application theme as the `android:dialogTheme`.
 A custom theme can be also set when instantiating it:
 
-```java
-SentryUserFeedbackForm form = new SentryUserFeedbackForm.Builder(context, R.style.MyAppDialogTheme).create();
-```
 ```kotlin
 val form = SentryUserFeedbackForm.Builder(context, R.style.MyAppDialogTheme).create()
+```
+```java
+SentryUserFeedbackForm form = new SentryUserFeedbackForm.Builder(context, R.style.MyAppDialogTheme).create();
 ```
 
 Here is an example of how the feedback form can be customized:
@@ -219,18 +219,6 @@ Here is an example of how the feedback form can be customized:
 
 You can also use your own UI components to gather feedback and pass the feedback data object to the `Sentry.feedback().capture(Feedback)` method:
 
-```java
-import io.sentry.Sentry;
-import io.sentry.protocol.Feedback;
-
-Feedback feedback = new Feedback("I encountered a bug while using the app.");
-feedback.setName("John Doe");
-feedback.setContactEmail("john.doe@example.com");
-// Optionally associate the feedback with an event
-SentryId sentryId = Sentry.captureMessage("My message");
-feedback.setAssociatedEventId(sentryId);
-Sentry.feedback().capture(feedback);
-```
 ```kotlin
 import io.sentry.Sentry
 import io.sentry.protocol.Feedback
@@ -242,4 +230,16 @@ feedback.contactEmail = "john.doe@example.com"
 val sentryId = Sentry.captureMessage("My message")
 feedback.associatedEventId = sentryId
 Sentry.feedback().capture(feedback)
+```
+```java
+import io.sentry.Sentry;
+import io.sentry.protocol.Feedback;
+
+Feedback feedback = new Feedback("I encountered a bug while using the app.");
+feedback.setName("John Doe");
+feedback.setContactEmail("john.doe@example.com");
+// Optionally associate the feedback with an event
+SentryId sentryId = Sentry.captureMessage("My message");
+feedback.setAssociatedEventId(sentryId);
+Sentry.feedback().capture(feedback);
 ```
