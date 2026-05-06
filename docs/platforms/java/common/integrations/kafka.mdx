@@ -3,7 +3,7 @@ title: Kafka Integration
 description: "Learn how to trace Kafka queue operations with Sentry."
 ---
 
-Sentry's Kafka integration lets you trace both production and consumption. In Spring Boot, this happens automatically. If you're using raw `kafka-clients`, you'll need to instrument producers and consumers with `sentry-kafka`. 
+Sentry's Kafka integration lets you trace both production and consumption. In Spring Boot, this happens automatically. If you're using raw `kafka-clients`, you'll need to instrument producers and consumers with `sentry-kafka`.
 
 Once configured, queue spans will appear in Sentry's [Queues dashboard](https://sentry.io/orgredirect/organizations/:orgslug/insights/backend/queues/).
 
@@ -157,6 +157,25 @@ ContainerCustomizer<Object, Object, ConcurrentMessageListenerContainer<Object, O
 }
 ```
 
+```kotlin {tabTitle:Kotlin}
+import org.springframework.context.annotation.Bean
+import org.springframework.kafka.config.ContainerCustomizer
+import org.springframework.kafka.listener.ConcurrentMessageListenerContainer
+import org.springframework.kafka.listener.DefaultErrorHandler
+import org.springframework.util.backoff.FixedBackOff
+
+@Bean
+fun kafkaErrorHandler(): DefaultErrorHandler {
+    return DefaultErrorHandler(FixedBackOff(0L, 1L))
+}
+
+@Bean
+fun kafkaContainerCustomizer() =
+    ContainerCustomizer<Any, Any, ConcurrentMessageListenerContainer<Any, Any>> { container ->
+        container.containerProperties.setDeliveryAttemptHeader(true)
+    }
+```
+
 Without that header, Sentry does not set `messaging.message.retry.count`.
 
 </PlatformSection>
@@ -183,7 +202,7 @@ implementation 'io.sentry:sentry-kafka:{{@inject packages.version('sentry.java.k
 libraryDependencies += "io.sentry" % "sentry-kafka" % "{{@inject packages.version('sentry.java.kafka', '8.37.0') }}"
 ```
 
-For other dependency managers, check out the [central Maven repository](https://search.maven.org/artifact/io.sentry/sentry-kafka).
+For other dependency managers, use the same Maven coordinates: `io.sentry:sentry-kafka`.
 
 ### Configure
 
@@ -284,6 +303,17 @@ Use the `Callable` overload when your processing code throws checked exceptions:
 SentryKafkaConsumerTracing.withTracing(record, () -> {
     return processOrder(record.value()); // can throw checked exceptions
 });
+```
+
+```kotlin {tabTitle:Kotlin (Callable)}
+import java.util.concurrent.Callable
+
+SentryKafkaConsumerTracing.withTracing(
+    record,
+    Callable {
+        processOrder(record.value())
+    },
+)
 ```
 
 </PlatformSection>
