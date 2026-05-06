@@ -195,7 +195,11 @@ export function Header({
             padding-right: 26px;
           }
         }
-        
+        /* Doc pages: fluid centering to match sidebar offset at wide viewports */
+        .header-content:not(.header-content-home) {
+          padding-left: var(--layout-offset, 0px);
+          padding-right: var(--layout-offset, 0px);
+        }
       `}</style>
       <div
         className={`header-content flex items-center w-full ${isHomePage ? 'header-content-home' : ''}`}

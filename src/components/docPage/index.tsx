@@ -141,6 +141,7 @@ export async function DocPage({
           <aside
             data-layout-anchor="right"
             className="sticky h-[calc(100vh-var(--header-height))] top-[var(--header-height)] overflow-y-auto hidden toc:block flex-none w-[250px] min-w-[250px]"
+            style={{marginRight: 'var(--layout-offset, 0px)'}}
           >
             <div className="sidebar">
               <SidebarTableOfContents />
@@ -149,10 +150,18 @@ export async function DocPage({
           </aside>
         )}
       </section>
-      <style>{`:root { --doc-content-w: 1100px; }`}</style>
       <style>{`
+        :root {
+          --doc-content-w: 1100px;
+          --toc-w: 250px;
+          --layout-total: calc(var(--sidebar-width, 300px) + var(--doc-content-w) + var(--toc-w));
+          /* Fluid centering offset: 0 when viewport <= total layout width,
+             grows equally on both sides when viewport > total layout width.
+             This shifts the entire sidebar+content+ToC assembly toward center. */
+          --layout-offset: max(0px, (100vw - var(--layout-total)) / 2);
+        }
         #doc-content {
-          max-width: none;
+          max-width: var(--doc-content-w);
           box-sizing: border-box;
         }
         /* Mobile responsive styles */
@@ -166,14 +175,6 @@ export async function DocPage({
             width: 100%;
             max-width: 100%;
             overflow-x: hidden;
-          }
-        }
-        /* At toc breakpoint (1490px), cap content width at --doc-content-w.
-           Sidebar stays fixed-left; extra space appears on the right at
-           ultra-wide viewports. */
-        @media (min-width: 1490px) {
-          #doc-content {
-            max-width: min(var(--doc-content-w), calc(100vw - 300px - 250px));
           }
         }
       `}</style>

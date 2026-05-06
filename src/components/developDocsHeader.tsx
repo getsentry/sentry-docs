@@ -140,7 +140,14 @@ export function DevelopDocsHeader({
           </div>
         </div>
       </nav>
-      
+      <style>{`
+        /* Fluid centering to match sidebar offset at wide viewports.
+           Use max() to preserve the nav's base 0.75rem (px-3) padding. */
+        header .nav-inner {
+          padding-left: max(0.75rem, var(--layout-offset, 0px));
+          padding-right: max(0.75rem, var(--layout-offset, 0px));
+        }
+      `}</style>
     </header>
   );
 }
