@@ -47,31 +47,55 @@ export function Expandable({
   const contentRef = useRef<HTMLDivElement>(null);
   const {emit} = usePlausibleEvent();
 
-  // Ensure we scroll to the element if the URL hash matches
+  const detailsRef = useRef<HTMLDetailsElement>(null);
+  const scrollTargetRef = useRef<string | null>(null);
+  const expandedByHashRef = useRef(false);
+
+  // Expand when the URL hash matches this expandable's id
+  // OR any element inside it (e.g. a heading anchor within the content).
   useEffect(() => {
-    if (!id) {
-      return () => {};
-    }
+    const expandIfHashInside = () => {
+      const hash = window.location.hash;
+      if (!hash) {
+        return;
+      }
+      const targetId = hash.slice(1);
+      if (!targetId) {
+        return;
+      }
 
-    if (window.location.hash === `#${id}`) {
-      document.querySelector(`#${id}`)?.scrollIntoView();
-      setIsExpanded(true);
-    }
+      const isOwnId = targetId === id;
+      const targetElement = document.getElementById(targetId);
+      const containsTarget = targetElement && detailsRef.current?.contains(targetElement);
 
-    // When the hash changes (e.g. when the back/forward browser buttons are used),
-    // we want to ensure to jump to the correct section
-    const onHashChange = () => {
-      if (window.location.hash === `#${id}`) {
-        setIsExpanded(true);
-        document.querySelector(`#${id}`)?.scrollIntoView();
+      if (isOwnId || containsTarget) {
+        if (detailsRef.current?.open) {
+          document.getElementById(targetId)?.scrollIntoView();
+        } else {
+          expandedByHashRef.current = true;
+          scrollTargetRef.current = targetId;
+          setIsExpanded(true);
+        }
       }
     };
-    // listen for hash changes and expand the section if the hash matches the title
-    window.addEventListener('hashchange', onHashChange);
+
+    expandIfHashInside();
+    window.addEventListener('hashchange', expandIfHashInside);
     return () => {
-      window.removeEventListener('hashchange', onHashChange);
+      window.removeEventListener('hashchange', expandIfHashInside);
     };
   }, [id]);
+
+  // Scroll after React commits the expanded state and the browser lays out.
+  useEffect(() => {
+    if (isExpanded && scrollTargetRef.current) {
+      const targetId = scrollTargetRef.current;
+      scrollTargetRef.current = null;
+      requestAnimationFrame(() => {
+        document.getElementById(targetId)?.scrollIntoView();
+      });
+    }
+  }, [isExpanded]);
 
   const copyContentOnClick = useCallback(
     async (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -147,21 +171,24 @@ export function Expandable({
     const newVal = event.currentTarget.open;
     setIsExpanded(newVal);
 
-    if (newVal) {
+    // Don't emit analytics or overwrite the hash when triggered by hash navigation
+    if (newVal && !expandedByHashRef.current) {
       emit('Open Expandable', {props: {page: window.location.pathname, title}});
     }
 
-    if (id) {
+    if (id && !expandedByHashRef.current) {
       if (newVal) {
         window.history.pushState({}, '', `#${id}`);
       } else {
         window.history.pushState({}, '', '#');
       }
     }
+    expandedByHashRef.current = false;
   }
 
   return (
     <details
+      ref={detailsRef}
       name={group}
       className={`${styles.expandable} callout !block ${'callout-' + level}`}
       open={isExpanded}

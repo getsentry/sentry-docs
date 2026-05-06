@@ -3,11 +3,13 @@ import Sentry
 
 let eventId = SentrySDK.capture(message: "My message.")
 
-let userFeedback = UserFeedback(eventId: eventId)
-userFeedback.comments = "It broke."
-userFeedback.email = "john.doe@example.com"
-userFeedback.name = "John Doe"
-SentrySDK.capture(userFeedback: userFeedback)
+SentrySDK.capture(feedback: SentryFeedback(
+    message: "It broke.",
+    name: "John Doe",
+    email: "john.doe@example.com",
+    source: .custom,
+    associatedEventId: eventId
+))
 ```
 
 ```objc {tabTitle:Objective-C}
@@ -15,11 +17,13 @@ SentrySDK.capture(userFeedback: userFeedback)
 
 SentryId *eventId = [SentrySDK captureMessage:@"My message"];
 
-SentryUserFeedback *userFeedback = [[SentryUserFeedback alloc] initWithEventId:eventId];
-userFeedback.comments = @"It broke.";
-userFeedback.email = @"john.doe@example.com";
-userFeedback.name = @"John Doe";
-[SentrySDK captureUserFeedback:userFeedback];
+SentryFeedback *feedback = [[SentryFeedback alloc] initWithMessage:@"It broke."
+                                                              name:@"John Doe"
+                                                             email:@"john.doe@example.com"
+                                                            source:SentryFeedbackSourceCustom
+                                                 associatedEventId:eventId
+                                                       attachments:nil];
+[SentrySDK captureFeedback:feedback];
 ```
 
 To capture user feedback regarding a crash, use the `SentryOptions.onCrashedLastRun` callback.
@@ -32,7 +36,7 @@ import Sentry
 
 SentrySDK.start { options in
     options.dsn = "___PUBLIC_DSN___"
-    options.onCrashedLastRun = { event in
+    options.onCrashedLastRun = { _ in
         // capture user feedback
     }
 }

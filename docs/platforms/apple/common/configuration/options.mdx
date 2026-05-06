@@ -14,9 +14,7 @@ Options that can be read from an environment variable (`SENTRY_DSN`, `SENTRY_ENV
 
 <SdkOption name="dsn" type="string" envVar="SENTRY_DSN">
 
-The DSN tells the SDK where to send the events. If this value is not provided, the SDK will try to read it from the `SENTRY_DSN` environment variable. If that variable also does not exist, the SDK will just not send any events.
-
-In runtimes without a process environment (such as the browser) that fallback does not apply.
+The DSN tells the SDK where to send the events. If this value is not provided, the SDK will try to read it from the `SENTRY_DSN` environment variable on macOS. On iOS, tvOS, watchOS, and visionOS, the environment variable fallback does not apply. If neither is set, the SDK will not send any events.
 
 Learn more about [DSN utilization](/product/sentry-basics/dsn-explainer/#dsn-utilization).
 
@@ -60,9 +58,9 @@ Sets the distribution of the application. Distributions are used to disambiguate
 
 </SdkOption>
 
-<SdkOption name="environment" type="string" envVar="SENTRY_ENVIRONMENT">
+<SdkOption name="environment" type="string" defaultValue="production" envVar="SENTRY_ENVIRONMENT">
 
-Sets the environment. This string is freeform and not set by default. A release can be associated with more than one environment to separate them in the UI (think `staging` vs `prod` or similar).
+Sets the environment. This string is freeform and defaults to `production`. A release can be associated with more than one environment to separate them in the UI (think `staging` vs `prod` or similar).
 
 By default the SDK will try to read this value from the `SENTRY_ENVIRONMENT` environment variable (except for the browser SDK where this is not applicable).
 
@@ -104,9 +102,7 @@ You can also override this option on a per-call basis by passing the `attachAllT
 
 </SdkOption>
 
-<SdkOption name="enableSigtermReporting" type="bool" availableSince="8.27.0">
-
-_(New in [sentry-cocoa version 8.27.0](https://github.com/getsentry/sentry-cocoa/blob/main/CHANGELOG.md#8270))_
+<SdkOption name="enableSigtermReporting" type="bool" defaultValue="false" availableSince="8.27.0">
 
 When enabled, the SDK reports SIGTERM signals to Sentry.
 
@@ -125,7 +121,7 @@ Note that disabling this option will also disable <PlatformLink to="/configurati
 
 <PlatformSection supported={["apple.macos"]}>
 
-<SdkOption name="enableUncaughtNSExceptionReporting" type="bool" defaultValue="false">
+<SdkOption name="enableUncaughtNSExceptionReporting" type="bool" defaultValue="false" availableSince="8.40.0">
 
 When enabled, the SDK captures uncaught NSExceptions. As this feature uses swizzling, disabling `enableSwizzling` also disables this feature.
 
@@ -133,7 +129,7 @@ This option registers the `NSApplicationCrashOnExceptions` UserDefault, so your 
 
 **Warning:** Don't use this in combination with `SentryCrashExceptionApplication`. Having both enabled can lead to duplicated reports.
 
-This option is available as of SDK version 8.40.0. Learn more in the <PlatformLink to="/usage/#capturing-uncaught-exceptions">capturing uncaught exceptions</PlatformLink> documentation.
+Learn more in the <PlatformLink to="/usage/#capturing-uncaught-exceptions">capturing uncaught exceptions</PlatformLink> documentation.
 
 </SdkOption>
 
@@ -173,17 +169,31 @@ Learn more about session tracking in the <PlatformLink to="/configuration/releas
 
 </SdkOption>
 
-<SdkOption name="inAppInclude" type="array">
+<SdkOption name="inAppIncludes" type="array">
 
-A list of string prefixes of module names that belong to the app.
+A list of string prefixes of framework names that belong to the app. By default, this contains `CFBundleExecutable` to mark the app's main executable as "in-app".
 
-Sentry differentiates stack frames that are directly related to your application ("in application") from stack frames that come from other packages such as the standard library, frameworks, or other dependencies. The application package is automatically marked as `inApp`. The difference is visible in [sentry.io](https://sentry.io), where only the "in application" frames are displayed by default.
+Sentry differentiates stack frames that are directly related to your application ("in application") from stack frames that come from other packages such as the standard library, frameworks, or other dependencies. The difference is visible in [sentry.io](https://sentry.io), where only the "in application" frames are displayed by default.
+
+This property is read-only. Use the `add(inAppInclude:)` method to append additional framework name prefixes:
+
+```swift {tabTitle:Swift}
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.add(inAppInclude: "MyFramework")
+}
+```
+
+```objc {tabTitle:Objective-C}
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    [options addInAppInclude:@"MyFramework"];
+}];
+```
 
 </SdkOption>
 
 <SdkOption name="inAppExclude" type="array" removedSince="9.0.0">
-
-**Removed in version 9.0.0** - This option had no effect and was removed.
 
 A list of string prefixes of module names that do not belong to the app, but rather to third-party packages. Modules considered not part of the app will be hidden from stack traces by default.
 
@@ -220,29 +230,27 @@ SentrySDK.start { options in
 }];
 ```
 
-_(New in [sentry-cocoa version 8.7.0](https://github.com/getsentry/sentry-cocoa/blob/main/CHANGELOG.md#870))_
-
 </SdkOption>
 
 <PlatformSection supported={["apple.ios"]}>
 
-<SdkOption name="attachScreenshot" type="bool">
+<SdkOption name="attachScreenshot" type="bool" defaultValue="false">
 
 Takes a screenshot of the application when an error happens and includes it as an attachment.
 Learn more about enriching events with screenshots in our <PlatformLink to="/enriching-events/screenshots/">Screenshots documentation</PlatformLink>.
 
 </SdkOption>
 
-<SdkOption name="attachViewHierarchy" type="bool">
+<SdkOption name="attachViewHierarchy" type="bool" defaultValue="false">
 
 Renders a JSON representation of the entire view hierarchy of the application when an error happens and includes it as an attachment.
 Learn more about enriching events with the view hierarchy in our <PlatformLink to="/enriching-events/viewhierarchy/">View Hierarchy documentation</PlatformLink>.
 
 </SdkOption>
 
-<SdkOption name="idleTimeout" type="int" defaultValue="3000">
+<SdkOption name="idleTimeout" type="double" defaultValue="3.0">
 
-The idle time, measured in ms, to wait until a <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#user-interaction-tracing">user interaction transaction</PlatformLink> will be automatically finished. The transaction will use the end timestamp of the last finished span as the endtime for the transaction.
+The idle time, measured in seconds, to wait until a <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#user-interaction-tracing">user interaction transaction</PlatformLink> will be automatically finished. The transaction will use the end timestamp of the last finished span as the end time for the transaction.
 
 </SdkOption>
 
@@ -262,9 +270,27 @@ Learn more in the <PlatformLink to="/configuration/app-hangs/">App Hangs</Platfo
 
 </SdkOption>
 
+<SdkOption name="configureUserFeedback" type="function">
+
+A closure that configures the User Feedback widget. The closure receives a `SentryUserFeedbackConfiguration` object that you can use to customize the feedback form's appearance and behavior.
+
+```swift
+options.configureUserFeedback = { config in
+    config.animations = false
+    config.configureForm = { form in
+        form.useSentryUser = true
+        form.showBranding = false
+    }
+}
+```
+
+Learn more in the <PlatformLink to="/user-feedback/">User Feedback documentation</PlatformLink>.
+
+</SdkOption>
+
 </PlatformSection>
 
-<SdkOption name="sendClientReports" type="bool">
+<SdkOption name="sendClientReports" type="bool" defaultValue="true">
 
 Set this boolean to `false` to disable sending of client reports. Client reports are a protocol feature that let clients send status reports about themselves to Sentry. They are currently mainly used to emit outcomes for events that were never sent.
 
@@ -458,7 +484,7 @@ import Sentry
 SentrySDK.start { options in
     options.dsn = "___PUBLIC_DSN___"
     options.attachScreenshot = true
-    options.beforeCaptureScreenshot = {
+    options.beforeCaptureScreenshot = { _ in
         // Prevent screenshots in certain views
         return !isSensitiveView()
     }
@@ -471,7 +497,7 @@ SentrySDK.start { options in
 [SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
     options.dsn = @"___PUBLIC_DSN___";
     options.attachScreenshot = YES;
-    options.beforeCaptureScreenshot = ^BOOL {
+    options.beforeCaptureScreenshot = ^BOOL(SentryEvent * _Nonnull event) {
         // Prevent screenshots in certain views
         return !isSensitiveView();
     };
@@ -490,7 +516,7 @@ import Sentry
 SentrySDK.start { options in
     options.dsn = "___PUBLIC_DSN___"
     options.attachViewHierarchy = true
-    options.beforeCaptureViewHierarchy = {
+    options.beforeCaptureViewHierarchy = { _ in
         // Prevent view hierarchy capture in certain views
         return !isSensitiveView()
     }
@@ -503,7 +529,7 @@ SentrySDK.start { options in
 [SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
     options.dsn = @"___PUBLIC_DSN___";
     options.attachViewHierarchy = YES;
-    options.beforeCaptureViewHierarchy = ^BOOL {
+    options.beforeCaptureViewHierarchy = ^BOOL(SentryEvent * _Nonnull event) {
         // Prevent view hierarchy capture in certain views
         return !isSensitiveView();
     };
@@ -514,14 +540,16 @@ SentrySDK.start { options in
 
 <SdkOption name="onCrashedLastRun" type="function">
 
-A block called after SDK initialization when the last execution terminated with a crash. This callback is invoked synchronously during SDK initialization, so keep any work here minimal.
+**Deprecated.** Use <PlatformIdentifier name="onLastRunStatusDetermined" /> instead, which is called regardless of whether the app crashed.
+
+A block called after SDK initialization when the last execution terminated with a crash. This callback is invoked synchronously during SDK initialization, so keep any work here minimal. It is only executed once during the entire run of the program. Crash reporting is automatically disabled if a debugger is attached, and there is no guarantee this callback runs on the main thread.
 
 ```swift {tabTitle:Swift}
 import Sentry
 
 SentrySDK.start { options in
     options.dsn = "___PUBLIC_DSN___"
-    options.onCrashedLastRun = {
+    options.onCrashedLastRun = { _ in
         // Perform actions when a crash was detected on last run
         print("App crashed on last run")
     }
@@ -533,9 +561,53 @@ SentrySDK.start { options in
 
 [SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
     options.dsn = @"___PUBLIC_DSN___";
-    options.onCrashedLastRun = ^{
+    options.onCrashedLastRun = ^(SentryEvent * _Nonnull event) {
         // Perform actions when a crash was detected on last run
         NSLog(@"App crashed on last run");
+    };
+}];
+```
+
+</SdkOption>
+
+<SdkOption name="onLastRunStatusDetermined" type="function">
+
+A block called shortly after SDK initialization when the crash status of the last program execution has been determined. Unlike <PlatformIdentifier name="onCrashedLastRun" />, this callback is invoked regardless of whether the app crashed:
+
+- If the last run ended with a crash, `status` is `SentryLastRunStatus.didCrash` and `crashEvent` contains the crash event.
+- If the last run did not end with a crash, `status` is `SentryLastRunStatus.didNotCrash` and `crashEvent` is `nil`.
+
+This callback is only executed once per `SentrySDK.start(configureOptions:)` lifecycle, and it is not guaranteed to be called on the main thread. Crash reporting is automatically disabled while a debugger is attached, in which case the callback reports `didNotCrash` even if the app crashed.
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.onLastRunStatusDetermined = { status, crashEvent in
+        switch status {
+        case .didCrash:
+            print("App crashed on last run: \(String(describing: crashEvent))")
+        case .didNotCrash:
+            print("App did not crash on last run")
+        @unknown default:
+            break
+        }
+    }
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.onLastRunStatusDetermined = ^(SentryLastRunStatus status, SentryEvent * _Nullable crashEvent) {
+        if (status == SentryLastRunStatusDidCrash) {
+            NSLog(@"App crashed on last run: %@", crashEvent);
+        } else {
+            NSLog(@"App did not crash on last run");
+        }
     };
 }];
 ```
@@ -664,9 +736,89 @@ When enabled, uses faster but potentially incomplete view rendering for screensh
 
 Session Replay options allow you to configure how session replays are recorded and sent to Sentry. These options are available under `options.sessionReplay`.
 
+<SdkOption name="sessionReplay.sessionSampleRate" type="float" defaultValue="0">
+
+The sample rate for replays that begin recording immediately and last the entirety of the user's session. Specifying `0` means no sessions are recorded, `1.0` means all sessions are recorded.
+
+Learn more in the <PlatformLink to="/session-replay/">Session Replay documentation</PlatformLink>.
+
+</SdkOption>
+
+<SdkOption name="sessionReplay.onErrorSampleRate" type="float" defaultValue="0">
+
+The sample rate for replays that are recorded when an error occurs. A 30-second replay buffer prior to the error is included. Specifying `0` means no error replays are recorded, `1.0` means all error replays are recorded.
+
+Learn more in the <PlatformLink to="/session-replay/">Session Replay documentation</PlatformLink>.
+
+</SdkOption>
+
+<SdkOption name="sessionReplay.maskAllText" type="bool" defaultValue="true">
+
+When enabled, all text in the app is masked during session replay by drawing a black rectangle over it.
+
+Learn more in the <PlatformLink to="/session-replay/customredact/">Using Custom Masking for Session Replay</PlatformLink> documentation.
+
+</SdkOption>
+
+<SdkOption name="sessionReplay.maskAllImages" type="bool" defaultValue="true">
+
+When enabled, all non-bundled images in the app are masked during session replay by drawing a black rectangle over them.
+
+Learn more in the <PlatformLink to="/session-replay/customredact/">Using Custom Masking for Session Replay</PlatformLink> documentation.
+
+</SdkOption>
+
+<SdkOption name="sessionReplay.quality" type="enum" defaultValue="medium">
+
+The quality of the session replay video. Higher quality increases CPU and bandwidth usage. Available values: `low` (80% scale, 20k bitrate), `medium` (100% scale, 40k bitrate), `high` (100% scale, 60k bitrate).
+
+</SdkOption>
+
+<SdkOption name="sessionReplay.maskedViewClasses" type="array" defaultValue="[]">
+
+A list of custom `UIView` subclasses that should be masked during session replay. Every child of a masked view is also masked.
+
+Learn more in the <PlatformLink to="/session-replay/customredact/">Using Custom Masking for Session Replay</PlatformLink> documentation.
+
+</SdkOption>
+
+<SdkOption name="sessionReplay.unmaskedViewClasses" type="array" defaultValue="[]">
+
+A list of custom `UIView` subclasses to be ignored during the masking step of session replay. Views of these classes are not masked, but their children may be. This property takes precedence over `maskedViewClasses`.
+
+Learn more in the <PlatformLink to="/session-replay/customredact/">Using Custom Masking for Session Replay</PlatformLink> documentation.
+
+</SdkOption>
+
+<SdkOption name="sessionReplay.excludeViewTypeFromSubtreeTraversal" type="method">
+
+Adds a view type pattern to the set of excluded view types, preventing the SDK from traversing their subtrees during redaction. Matching uses partial string containment against `type(of: view).description()`. Use this to prevent crashes caused by traversing problematic view hierarchies.
+
+```swift
+options.sessionReplay.excludeViewTypeFromSubtreeTraversal("MyProblematicView")
+```
+
+</SdkOption>
+
+<SdkOption name="sessionReplay.includeViewTypeInSubtreeTraversal" type="method">
+
+Removes a view type from the excluded set, allowing its subtree to be traversed again. Matching uses exact string matching. Use this to re-enable traversal for a view type that was excluded by default.
+
+```swift
+options.sessionReplay.includeViewTypeInSubtreeTraversal("CameraUI.ChromeSwiftUIView")
+```
+
+</SdkOption>
+
+<SdkOption name="sessionReplay.enableViewRendererV2" type="bool" defaultValue="true">
+
+When enabled, uses a faster view renderer for session replays that can be up to 4-5x faster than the default renderer. This reduces main thread interruptions and visual lag.
+
+</SdkOption>
+
 <SdkOption name="sessionReplay.enableFastViewRendering" type="bool" defaultValue="false">
 
-When enabled, uses faster but potentially incomplete view rendering for session replays. This can improve performance but may result in some views not being fully rendered in the replay.
+When enabled, uses faster but potentially incomplete view rendering for session replays. This can improve performance but may result in some views not being fully rendered in the replay. Requires `enableViewRendererV2` to be enabled.
 
 <Alert level="warning">
 
@@ -680,11 +832,46 @@ Learn more about session replay performance in the <PlatformLink to="/session-re
 
 ## Profiling Options
 
-Profiling options allow you to configure how profiling data is collected. These options are available under `options.configureProfiling`.
+Profiling options allow you to configure how profiling data is collected. Set these via the `options.configureProfiling` closure, which receives a `SentryProfileOptions` object.
+
+```swift
+options.configureProfiling = { profiling in
+    profiling.lifecycle = .trace
+    profiling.sessionSampleRate = 1.0
+    profiling.profileAppStarts = true
+}
+```
+
+```objc
+options.configureProfiling = ^(SentryProfileOptions *profiling) {
+    profiling.lifecycle = SentryProfileLifecycleTrace;
+    profiling.sessionSampleRate = 1.0;
+    profiling.profileAppStarts = YES;
+};
+```
+
+<SdkOption name="profiling.lifecycle" type="enum" defaultValue="manual">
+
+The mode for starting and stopping the profiler:
+
+- `manual` — Profiling is controlled manually via `SentrySDK.startProfiler()` and `SentrySDK.stopProfiler()`. Profiling is independent of transactions and spans.
+- `trace` — Profiling starts automatically when there is at least one active root span, and stops when there are no root spans. This mode requires tracing to be enabled.
+
+</SdkOption>
+
+<SdkOption name="profiling.sessionSampleRate" type="float" defaultValue="0">
+
+The percentage of profile sessions to sample. Specifying `0` means no profiles are collected, `1.0` means all sessions are profiled.
+
+The sample decision is evaluated when the SDK starts and on each subsequent foreground event. Backgrounding and foregrounding the app starts a new profile session.
+
+</SdkOption>
 
 <SdkOption name="profiling.profileAppStarts" type="bool" defaultValue="false">
 
-When enabled, the profiler starts as early as possible during the app lifecycle, allowing you to profile app startup performance.
+When enabled, the profiler starts as early as possible during the app lifecycle, allowing you to profile app startup performance. The `sessionSampleRate` is evaluated on the previous launch and only takes effect when app start profiling activates on the next launch.
+
+If `lifecycle` is `manual`, profiling starts automatically on startup but you must call `SentrySDK.stopProfiler()` when your app startup is complete. If `lifecycle` is `trace`, profiling starts automatically on startup and stops when the root span associated with app startup ends.
 
 Learn more about profiling in the <PlatformLink to="/profiling/">Profiling documentation</PlatformLink>.
 
