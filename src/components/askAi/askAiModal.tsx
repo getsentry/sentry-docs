@@ -361,12 +361,12 @@ export function AskAiModal() {
 
       {/* Modal */}
       <div
-        className="ask-ai-modal relative w-full sm:max-w-2xl sm:mx-4 h-[85vh] sm:max-h-[min(740px,85vh)] rounded-t-xl sm:rounded-xl bg-[var(--gray-2)] border border-[var(--gray-a5)] flex flex-col overflow-hidden"
+        className="ask-ai-modal relative w-full sm:max-w-2xl sm:mx-4 h-[85vh] sm:max-h-[min(740px,85vh)] rounded-t-xl sm:rounded-xl bg-[var(--gray-2)] border border-[var(--gray-6)] flex flex-col overflow-hidden"
         role="dialog"
         aria-modal="true"
         aria-label="Ask AI"
         style={{
-          boxShadow: '0 8px 40px rgba(0, 0, 0, 0.15), 0 2px 12px rgba(0, 0, 0, 0.1)',
+          boxShadow: '0 8px 40px rgba(0, 0, 0, 0.25), 0 2px 12px rgba(0, 0, 0, 0.15)',
           animation: 'askAiSlideUp 0.15s ease-out',
         }}
       >
@@ -376,7 +376,7 @@ export function AskAiModal() {
         </div>
 
         {/* Header */}
-        <div className="flex items-center justify-between px-4 sm:px-5 h-12 border-b border-[var(--gray-a5)] shrink-0">
+        <div className="flex items-center justify-between px-4 sm:px-5 h-12 border-b border-[var(--gray-5)] shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="size-7 rounded-lg bg-[var(--accent-purple)] flex items-center justify-center">
               <MagicIcon className="size-4 text-white" />
@@ -388,7 +388,7 @@ export function AskAiModal() {
               <button
                 type="button"
                 onClick={handleNewConversation}
-                className="flex items-center gap-1.5 text-xs text-[var(--gray-11)] hover:text-[var(--foreground)] h-7 px-2.5 rounded-lg hover:bg-[var(--gray-a4)] transition-colors"
+                className="flex items-center gap-1.5 text-xs text-[var(--gray-11)] hover:text-[var(--foreground)] h-7 px-2.5 rounded-lg hover:bg-[var(--gray-4)] transition-colors"
                 title="New conversation"
               >
                 <PlusIcon width={12} height={12} />
@@ -398,7 +398,7 @@ export function AskAiModal() {
             <button
               type="button"
               onClick={close}
-              className="size-7 flex items-center justify-center rounded-lg hover:bg-[var(--gray-a4)] transition-colors text-[var(--gray-11)] hover:text-[var(--foreground)]"
+              className="size-7 flex items-center justify-center rounded-lg hover:bg-[var(--gray-4)] transition-colors text-[var(--gray-11)] hover:text-[var(--foreground)]"
               aria-label="Close"
             >
               <Cross1Icon width={14} height={14} />
@@ -454,7 +454,7 @@ export function AskAiModal() {
         <div className="shrink-0 px-4 sm:px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-2">
           <form
             onSubmit={handleSubmit}
-            className="ask-ai-input relative rounded-xl border border-[var(--gray-a5)] bg-[var(--gray-3)] transition-[border-color,box-shadow] duration-150"
+            className="ask-ai-input relative rounded-xl border border-[var(--gray-5)] bg-[var(--gray-3)] transition-[border-color,box-shadow] duration-150"
           >
             <textarea
               ref={inputRef}
@@ -477,7 +477,7 @@ export function AskAiModal() {
                 <button
                   type="button"
                   onClick={handleStop}
-                  className="size-7 flex items-center justify-center rounded-lg bg-[var(--gray-a4)] text-[var(--foreground)] hover:bg-[var(--gray-a5)] transition-colors"
+                  className="size-7 flex items-center justify-center rounded-lg bg-[var(--gray-4)] text-[var(--foreground)] hover:bg-[var(--gray-5)] transition-colors"
                   aria-label="Stop generating"
                   title="Stop generating"
                 >
@@ -546,9 +546,9 @@ export function AskAiModal() {
         .ask-ai-prose pre { font-family: var(--font-family-monospace); }
         .ask-ai-prose > :first-child { margin-top: 0; }
 
-        /* Modal shadow for dark mode */
+        /* Modal shadow + border for dark mode */
         .dark .ask-ai-modal {
-          box-shadow: 0 8px 40px rgba(0, 0, 0, 0.4), 0 2px 12px rgba(0, 0, 0, 0.3) !important;
+          box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5), 0 2px 12px rgba(0, 0, 0, 0.4) !important;
         }
       `}</style>
     </div>
@@ -596,7 +596,7 @@ function EmptyState({onSubmit}: {onSubmit: (q: string) => void}) {
             key={question}
             onClick={() => onSubmit(question)}
             aria-label={question}
-            className="w-full flex items-center gap-3 text-left px-4 py-3 rounded-xl border border-[var(--gray-a5)] hover:border-[var(--gray-a7)] hover:bg-[var(--gray-a4)] text-sm text-[var(--gray-12)] transition-all group"
+            className="w-full flex items-center gap-3 text-left px-4 py-3 rounded-xl border border-[var(--gray-5)] hover:border-[var(--gray-7)] hover:bg-[var(--gray-3)] text-sm text-[var(--gray-12)] transition-all group"
           >
             <ChatBubbleIcon
               width={14}
@@ -655,7 +655,7 @@ function AssistantMessage({
 
   return (
     <div className="flex gap-3">
-      <div className="hidden sm:flex size-6 rounded-lg bg-[var(--gray-a4)] items-center justify-center shrink-0 mt-0.5">
+      <div className="hidden sm:flex size-6 rounded-lg bg-[var(--gray-4)] items-center justify-center shrink-0 mt-0.5">
         <MagicIcon className="size-3.5 text-[var(--accent-purple)]" />
       </div>
 
@@ -681,7 +681,7 @@ function AssistantMessage({
             <button
               type="button"
               onClick={onCopy}
-              className="flex items-center gap-1.5 h-7 px-2 rounded-md text-[var(--gray-9)] hover:text-[var(--foreground)] hover:bg-[var(--gray-a4)] transition-colors text-xs"
+              className="flex items-center gap-1.5 h-7 px-2 rounded-md text-[var(--gray-9)] hover:text-[var(--foreground)] hover:bg-[var(--gray-4)] transition-colors text-xs"
               title="Copy response"
             >
               <CopyIcon width={12} height={12} />
@@ -690,7 +690,7 @@ function AssistantMessage({
             <button
               type="button"
               onClick={onRetry}
-              className="flex items-center gap-1.5 h-7 px-2 rounded-md text-[var(--gray-9)] hover:text-[var(--foreground)] hover:bg-[var(--gray-a4)] transition-colors text-xs"
+              className="flex items-center gap-1.5 h-7 px-2 rounded-md text-[var(--gray-9)] hover:text-[var(--foreground)] hover:bg-[var(--gray-4)] transition-colors text-xs"
               title="Retry"
             >
               <ReloadIcon width={12} height={12} />
@@ -841,7 +841,7 @@ function parseBlock(text: string, keyBase: number): ReactNode {
   const lines = text.split('\n');
 
   if (/^(-{3,}|\*{3,}|_{3,})$/.test(text)) {
-    return <hr key={keyBase} className="my-4 border-[var(--gray-a4)]" />;
+    return <hr key={keyBase} className="my-4 border-[var(--gray-5)]" />;
   }
 
   const hMatch = lines[0].match(/^(#{1,4})\s+(.+)$/);
@@ -859,7 +859,7 @@ function parseBlock(text: string, keyBase: number): ReactNode {
     return (
       <blockquote
         key={keyBase}
-        className="border-l-2 border-[var(--gray-a5)] pl-4 my-3 text-[var(--gray-11)]"
+        className="border-l-2 border-[var(--gray-6)] pl-4 my-3 text-[var(--gray-11)]"
       >
         <p className="my-0">
           {renderInline(lines.map(l => (l === '>' ? '' : l.slice(2))).join('\n'))}
@@ -924,7 +924,7 @@ function renderTable(lines: string[], key: number): ReactNode {
             {header.map((cell, i) => (
               <th
                 key={i}
-                className="text-left font-semibold pb-2 pr-4 border-b border-[var(--gray-a4)]"
+                className="text-left font-semibold pb-2 pr-4 border-b border-[var(--gray-5)]"
               >
                 {renderInline(cell)}
               </th>
@@ -938,7 +938,7 @@ function renderTable(lines: string[], key: number): ReactNode {
                 {split(row).map((cell, ci) => (
                   <td
                     key={ci}
-                    className="py-1.5 pr-4 border-b border-[var(--gray-a3)] align-top"
+                    className="py-1.5 pr-4 border-b border-[var(--gray-4)] align-top"
                   >
                     {renderInline(cell)}
                   </td>
@@ -974,7 +974,7 @@ function renderInline(text: string): ReactNode[] {
       out.push(
         <code
           key={k}
-          className="bg-[var(--gray-a4)] px-1.5 py-0.5 rounded text-[0.8em] font-[var(--font-family-monospace)] text-[var(--codeColor)]"
+          className="bg-[var(--gray-4)] px-1.5 py-0.5 rounded text-[0.8em] font-[var(--font-family-monospace)] text-[var(--codeColor)]"
         >
           {token.slice(1, -1)}
         </code>
