@@ -7,9 +7,13 @@ import {
   Cross1Icon,
   PlusIcon,
   ReloadIcon,
+  StopIcon,
 } from '@radix-ui/react-icons';
+import {toJsxRuntime} from 'hast-util-to-jsx-runtime';
 import type {ReactNode} from 'react';
-import {Fragment, useCallback, useEffect, useRef, useState} from 'react';
+import {Fragment, useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import {jsx, jsxs} from 'react/jsx-runtime';
+import {refractor} from 'refractor/lib/common';
 import {MagicIcon} from 'sentry-docs/components/cutomIcons/magic';
 
 import {useAskAi} from './askAiContext';
@@ -17,16 +21,76 @@ import {useAskAi} from './askAiContext';
 const ASK_AI_API_URL =
   process.env.NEXT_PUBLIC_ASK_AI_API_URL ?? 'https://docs-mcp.getsentry.workers.dev';
 
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
 interface Message {
   role: 'user' | 'assistant';
   content: string;
 }
+
+type ToolStatus = {tool: string; state: 'running' | 'done'};
+
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
 
 const EXAMPLE_QUESTIONS = [
   {label: 'Set up Sentry', question: 'How do I set up Sentry for Next.js?'},
   {label: 'Distributed tracing', question: 'How do I set up distributed tracing?'},
   {label: 'Session Replay', question: 'How do I configure Session Replay?'},
 ];
+
+const TOOL_LABELS: Record<string, string> = {
+  search_docs: 'Searching documentation',
+  fetch_doc_page: 'Reading page',
+};
+
+// ---------------------------------------------------------------------------
+// SSE helpers
+// ---------------------------------------------------------------------------
+
+interface SSEEvent {
+  type: string;
+  data: Record<string, unknown>;
+}
+
+function parseSSEChunk(buffer: string): {events: SSEEvent[]; remaining: string} {
+  const events: SSEEvent[] = [];
+  const blocks = buffer.split('\n\n');
+  const remaining = blocks.pop() ?? '';
+
+  for (const block of blocks) {
+    if (!block.trim()) {
+      continue;
+    }
+    let eventType = 'message';
+    let data = '';
+
+    for (const line of block.split('\n')) {
+      if (line.startsWith('event: ')) {
+        eventType = line.slice(7).trim();
+      } else if (line.startsWith('data: ')) {
+        data = line.slice(6);
+      }
+    }
+
+    if (data) {
+      try {
+        events.push({type: eventType, data: JSON.parse(data)});
+      } catch {
+        // skip malformed JSON
+      }
+    }
+  }
+
+  return {events, remaining};
+}
+
+// ---------------------------------------------------------------------------
+// AskAiModal
+// ---------------------------------------------------------------------------
 
 export function AskAiModal() {
   const {isOpen, initialQuery, autoSubmit, close} = useAskAi();
@@ -35,9 +99,17 @@ export function AskAiModal() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const [toolStatus, setToolStatus] = useState<ToolStatus | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const hasAutoSubmitted = useRef(false);
+  const abortRef = useRef<AbortController | null>(null);
+
+  // -- actions ---------------------------------------------------------------
+
+  const handleStop = useCallback(() => {
+    abortRef.current?.abort();
+  }, []);
 
   const submitMessage = useCallback(
     async (messageText?: string) => {
@@ -47,17 +119,22 @@ export function AskAiModal() {
       }
 
       setError(null);
+      setToolStatus(null);
       const userMessage: Message = {role: 'user', content: text};
       const newMessages = [...messages, userMessage];
       setMessages(newMessages);
       setInput('');
       setIsStreaming(true);
 
+      const abort = new AbortController();
+      abortRef.current = abort;
+
       try {
         const response = await fetch(`${ASK_AI_API_URL}/api/ask`, {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({messages: newMessages}),
+          signal: abort.signal,
         });
 
         if (!response.ok) {
@@ -71,51 +148,79 @@ export function AskAiModal() {
         }
 
         const decoder = new TextDecoder();
-
         setMessages(prev => [...prev, {role: 'assistant', content: ''}]);
 
+        let sseBuffer = '';
         let done = false;
         while (!done) {
           const result = await reader.read();
           done = result.done;
           if (result.value) {
-            const chunk = decoder.decode(result.value, {stream: true});
-            if (chunk) {
-              setMessages(prev => {
-                const updated = [...prev];
-                const last = updated[updated.length - 1];
-                updated[updated.length - 1] = {
-                  role: 'assistant',
-                  content: last.content + chunk,
-                };
-                return updated;
-              });
+            sseBuffer += decoder.decode(result.value, {stream: true});
+            const {events, remaining} = parseSSEChunk(sseBuffer);
+            sseBuffer = remaining;
+
+            for (const evt of events) {
+              switch (evt.type) {
+                case 'text':
+                  if (typeof evt.data.text === 'string') {
+                    setMessages(prev => {
+                      const updated = [...prev];
+                      const last = updated[updated.length - 1];
+                      updated[updated.length - 1] = {
+                        role: 'assistant',
+                        content: last.content + evt.data.text,
+                      };
+                      return updated;
+                    });
+                  }
+                  break;
+                case 'tool_start':
+                  setToolStatus({tool: String(evt.data.tool), state: 'running'});
+                  break;
+                case 'tool_end':
+                  setToolStatus({tool: String(evt.data.tool), state: 'done'});
+                  break;
+                case 'error':
+                  setError(String(evt.data.message));
+                  break;
+                case 'done':
+                  break;
+                default:
+                  break;
+              }
             }
           }
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to get response');
-        setMessages(prev => {
-          if (prev.length > 0 && prev[prev.length - 1].content === '') {
-            return prev.slice(0, -1);
-          }
-          return prev;
-        });
+        if (err instanceof DOMException && err.name === 'AbortError') {
+          // User cancelled — not an error
+        } else {
+          setError(err instanceof Error ? err.message : 'Failed to get response');
+          setMessages(prev => {
+            if (prev.length > 0 && prev[prev.length - 1].content === '') {
+              return prev.slice(0, -1);
+            }
+            return prev;
+          });
+        }
       } finally {
         setIsStreaming(false);
+        setToolStatus(null);
+        abortRef.current = null;
       }
     },
     [input, messages, isStreaming]
   );
+
+  // -- effects ---------------------------------------------------------------
 
   useEffect(() => {
     if (isOpen && initialQuery && !hasAutoSubmitted.current) {
       setInput(initialQuery);
       if (autoSubmit) {
         hasAutoSubmitted.current = true;
-        setTimeout(() => {
-          submitMessage(initialQuery);
-        }, 0);
+        setTimeout(() => submitMessage(initialQuery), 0);
       }
     }
     if (!isOpen) {
@@ -132,19 +237,19 @@ export function AskAiModal() {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({behavior: 'smooth'});
-  }, [messages]);
+  }, [messages, toolStatus]);
 
   useEffect(() => {
     if (!isOpen) {
       return undefined;
     }
-    const handleKeyDown = (e: KeyboardEvent) => {
+    const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         close();
       }
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
   }, [isOpen, close]);
 
   useEffect(() => {
@@ -176,10 +281,12 @@ export function AskAiModal() {
   );
 
   const handleNewConversation = useCallback(() => {
+    abortRef.current?.abort();
     setMessages([]);
     setInput('');
     setError(null);
     setCopiedIndex(null);
+    setToolStatus(null);
     inputRef.current?.focus();
   }, []);
 
@@ -196,12 +303,14 @@ export function AskAiModal() {
     const lastUserMsg = [...messages].reverse().find(m => m.role === 'user');
     if (lastUserMsg) {
       setMessages(prev => {
-        const lastUserIndex = prev.findLastIndex(m => m.role === 'user');
-        return prev.slice(0, lastUserIndex);
+        const idx = prev.findLastIndex(m => m.role === 'user');
+        return prev.slice(0, idx);
       });
       setTimeout(() => submitMessage(lastUserMsg.content), 0);
     }
   }, [messages, submitMessage]);
+
+  // -- render ----------------------------------------------------------------
 
   if (!isOpen) {
     return null;
@@ -211,7 +320,7 @@ export function AskAiModal() {
     <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={close}
         onKeyDown={e => {
           if (e.key === 'Enter' || e.key === ' ') {
@@ -225,72 +334,75 @@ export function AskAiModal() {
 
       {/* Modal */}
       <div
-        className="relative w-full sm:max-w-[680px] sm:mx-4 h-[85vh] sm:max-h-[720px] bg-[var(--gray-1)] sm:rounded-2xl border border-[var(--gray-a3)] shadow-2xl flex flex-col overflow-hidden animate-[slideUp_0.2s_ease-out]"
+        className="relative w-full sm:max-w-2xl sm:mx-4 h-[85vh] sm:max-h-[740px] bg-[var(--gray-1)] sm:rounded-xl border border-[var(--gray-a3)] shadow-2xl flex flex-col overflow-hidden animate-[askAiSlideUp_0.15s_ease-out]"
         role="dialog"
         aria-label="Ask AI"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 sm:px-5 h-14 border-b border-[var(--gray-a3)] flex-shrink-0">
+        <div className="flex items-center justify-between px-4 sm:px-5 h-13 border-b border-[var(--gray-a3)] shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="size-7 rounded-lg bg-[var(--accent-purple)] flex items-center justify-center">
               <MagicIcon className="size-4 text-white" />
             </div>
-            <div>
-              <h2 className="text-sm font-semibold text-[var(--foreground)] leading-tight">
-                Sentry AI
-              </h2>
-            </div>
+            <h2 className="text-sm font-semibold text-[var(--foreground)]">Sentry AI</h2>
           </div>
           <div className="flex items-center gap-1">
             {messages.length > 0 && (
               <button
+                type="button"
                 onClick={handleNewConversation}
                 className="flex items-center gap-1.5 text-xs text-[var(--gray-11)] hover:text-[var(--foreground)] h-7 px-2.5 rounded-lg hover:bg-[var(--gray-a3)] transition-colors"
                 title="New conversation"
               >
-                <PlusIcon width="12" height="12" />
+                <PlusIcon width={12} height={12} />
                 <span className="hidden sm:inline">New chat</span>
               </button>
             )}
             <button
+              type="button"
               onClick={close}
               className="size-7 flex items-center justify-center rounded-lg hover:bg-[var(--gray-a3)] transition-colors text-[var(--gray-11)] hover:text-[var(--foreground)]"
               aria-label="Close"
             >
-              <Cross1Icon width="14" height="14" />
+              <Cross1Icon width={14} height={14} />
             </button>
           </div>
         </div>
 
         {/* Messages area */}
-        <div className="flex-1 overflow-y-auto min-h-0">
+        <div className="flex-1 overflow-y-auto min-h-0 scroll-smooth">
           {messages.length === 0 ? (
             <EmptyState onSubmit={submitMessage} />
           ) : (
-            <div className="px-4 sm:px-5 py-4">
-              {messages.map((msg, i) => (
-                <div key={i} className="mb-5 last:mb-0">
-                  {msg.role === 'user' ? (
-                    <UserMessage content={msg.content} />
-                  ) : (
-                    <AssistantMessage
-                      content={msg.content}
-                      isStreaming={isStreaming && i === messages.length - 1}
-                      isCopied={copiedIndex === i}
-                      isLast={i === messages.length - 1}
-                      onCopy={() => handleCopy(msg.content, i)}
-                      onRetry={handleRetry}
-                    />
-                  )}
-                </div>
-              ))}
+            <div className="px-4 sm:px-5 py-4 space-y-5">
+              {messages.map((msg, i) => {
+                const isLastAssistant =
+                  msg.role === 'assistant' && i === messages.length - 1;
+                return (
+                  <div key={i}>
+                    {msg.role === 'user' ? (
+                      <UserMessage content={msg.content} />
+                    ) : (
+                      <AssistantMessage
+                        content={msg.content}
+                        isStreaming={isStreaming && isLastAssistant}
+                        toolStatus={isStreaming && isLastAssistant ? toolStatus : null}
+                        isCopied={copiedIndex === i}
+                        isLast={isLastAssistant}
+                        onCopy={() => handleCopy(msg.content, i)}
+                        onRetry={handleRetry}
+                      />
+                    )}
+                  </div>
+                );
+              })}
 
               {error && (
-                <div className="flex items-start gap-3 mb-5">
-                  <div className="size-6 rounded-full bg-red-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <span className="text-red-500 text-xs">!</span>
+                <div className="flex items-start gap-3">
+                  <div className="size-6 rounded-full bg-red-500/10 flex items-center justify-center shrink-0 mt-0.5">
+                    <span className="text-red-500 text-xs font-bold">!</span>
                   </div>
-                  <div className="text-sm text-red-500 bg-red-500/5 rounded-xl px-4 py-3 border border-red-500/10">
+                  <div className="text-sm text-red-400 bg-red-500/5 rounded-lg px-4 py-3 border border-red-500/10">
                     {error}
                   </div>
                 </div>
@@ -302,7 +414,7 @@ export function AskAiModal() {
         </div>
 
         {/* Input area */}
-        <div className="flex-shrink-0 px-4 sm:px-5 pb-4 pt-2">
+        <div className="shrink-0 px-4 sm:px-5 pb-4 pt-2">
           <form
             onSubmit={handleSubmit}
             className="relative rounded-xl border border-[var(--gray-a4)] bg-[var(--gray-2)] focus-within:border-[var(--accent-purple)]/40 focus-within:ring-1 focus-within:ring-[var(--accent-purple)]/20 transition-all"
@@ -316,47 +428,68 @@ export function AskAiModal() {
               rows={1}
               className="w-full resize-none bg-transparent px-4 pt-3 pb-10 text-sm text-[var(--foreground)] placeholder:text-[var(--gray-9)] focus:outline-none max-h-36"
               disabled={isStreaming}
-              style={{
-                height: 'auto',
-                minHeight: '44px',
-              }}
+              style={{height: 'auto', minHeight: '44px'}}
               onInput={e => {
-                const target = e.target as HTMLTextAreaElement;
-                target.style.height = 'auto';
-                target.style.height = `${Math.min(target.scrollHeight, 144)}px`;
+                const t = e.target as HTMLTextAreaElement;
+                t.style.height = 'auto';
+                t.style.height = `${Math.min(t.scrollHeight, 144)}px`;
               }}
             />
-            <div className="absolute bottom-2 right-2 left-2 flex items-center justify-end">
-              <button
-                type="submit"
-                disabled={!input.trim() || isStreaming}
-                className="size-7 flex items-center justify-center rounded-lg bg-[var(--accent-purple)] text-white disabled:opacity-30 disabled:cursor-not-allowed hover:opacity-90 transition-all"
-                aria-label="Send message"
-              >
-                {isStreaming ? (
-                  <div className="size-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                ) : (
-                  <ArrowUpIcon width="14" height="14" />
-                )}
-              </button>
+            <div className="absolute bottom-2 right-2 flex items-center">
+              {isStreaming ? (
+                <button
+                  type="button"
+                  onClick={handleStop}
+                  className="size-7 flex items-center justify-center rounded-lg bg-[var(--gray-a4)] text-[var(--foreground)] hover:bg-[var(--gray-a5)] transition-all"
+                  aria-label="Stop generating"
+                  title="Stop generating"
+                >
+                  <StopIcon width={14} height={14} />
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  disabled={!input.trim()}
+                  className="size-7 flex items-center justify-center rounded-lg bg-[var(--accent-purple)] text-white disabled:opacity-30 disabled:cursor-not-allowed hover:opacity-90 transition-all"
+                  aria-label="Send message"
+                >
+                  <ArrowUpIcon width={14} height={14} />
+                </button>
+              )}
             </div>
           </form>
         </div>
       </div>
 
       <style>{`
-        @keyframes slideUp {
+        @keyframes askAiSlideUp {
           from { opacity: 0; transform: translateY(12px) scale(0.98); }
-          to { opacity: 1; transform: translateY(0) scale(1); }
+          to   { opacity: 1; transform: translateY(0)    scale(1);    }
         }
-        @keyframes blink {
+        @keyframes askAiBlink {
           0%, 100% { opacity: 1; }
-          50% { opacity: 0; }
+          50%      { opacity: 0; }
         }
+        /* Scoped prose styles for AI responses */
+        .ask-ai-prose p { margin: 0.5rem 0; }
+        .ask-ai-prose p:first-child { margin-top: 0; }
+        .ask-ai-prose p:last-child { margin-bottom: 0; }
+        .ask-ai-prose ul, .ask-ai-prose ol { margin: 0.5rem 0; }
+        .ask-ai-prose li { margin: 0.125rem 0; }
+        .ask-ai-prose li > p { margin: 0; }
+        .ask-ai-prose a { color: var(--accent-purple); text-decoration: underline; text-underline-offset: 2px; }
+        .ask-ai-prose a:hover { opacity: 0.8; }
+        .ask-ai-prose strong { font-weight: 600; }
+        .ask-ai-prose pre { font-family: var(--font-family-monospace); }
+        .ask-ai-prose > :first-child { margin-top: 0; }
       `}</style>
     </div>
   );
 }
+
+// ---------------------------------------------------------------------------
+// EmptyState
+// ---------------------------------------------------------------------------
 
 function EmptyState({onSubmit}: {onSubmit: (q: string) => void}) {
   return (
@@ -374,20 +507,21 @@ function EmptyState({onSubmit}: {onSubmit: (q: string) => void}) {
       <div className="w-full max-w-sm space-y-2">
         {EXAMPLE_QUESTIONS.map(({label, question}) => (
           <button
+            type="button"
             key={question}
             onClick={() => onSubmit(question)}
             className="w-full flex items-center gap-3 text-left px-4 py-3 rounded-xl border border-[var(--gray-a3)] hover:border-[var(--gray-a5)] hover:bg-[var(--gray-a2)] text-sm text-[var(--gray-12)] transition-all group"
           >
             <ChatBubbleIcon
-              width="14"
-              height="14"
-              className="text-[var(--gray-8)] group-hover:text-[var(--accent-purple)] transition-colors flex-shrink-0"
+              width={14}
+              height={14}
+              className="text-[var(--gray-8)] group-hover:text-[var(--accent-purple)] transition-colors shrink-0"
             />
             <span>{label}</span>
             <ArrowUpIcon
-              width="12"
-              height="12"
-              className="ml-auto text-[var(--gray-7)] group-hover:text-[var(--gray-10)] -rotate-45 transition-colors flex-shrink-0"
+              width={12}
+              height={12}
+              className="ml-auto text-[var(--gray-7)] group-hover:text-[var(--gray-10)] -rotate-45 transition-colors shrink-0"
             />
           </button>
         ))}
@@ -396,19 +530,28 @@ function EmptyState({onSubmit}: {onSubmit: (q: string) => void}) {
   );
 }
 
+// ---------------------------------------------------------------------------
+// UserMessage
+// ---------------------------------------------------------------------------
+
 function UserMessage({content}: {content: string}) {
   return (
     <div className="flex justify-end">
-      <div className="max-w-[85%] rounded-2xl rounded-br-md bg-[var(--accent-purple)] text-white px-4 py-2.5 text-sm">
-        <p className="whitespace-pre-wrap m-0 leading-relaxed">{content}</p>
+      <div className="max-w-[85%] rounded-2xl rounded-br-md bg-[var(--accent-purple)] text-white px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap">
+        {content}
       </div>
     </div>
   );
 }
 
+// ---------------------------------------------------------------------------
+// AssistantMessage
+// ---------------------------------------------------------------------------
+
 function AssistantMessage({
   content,
   isStreaming,
+  toolStatus,
   isCopied,
   isLast,
   onCopy,
@@ -416,57 +559,60 @@ function AssistantMessage({
 }: {
   content: string;
   isStreaming: boolean;
+  toolStatus: ToolStatus | null;
   isCopied: boolean;
   isLast: boolean;
   onCopy: () => void;
   onRetry: () => void;
 }) {
-  const isEmpty = content === '';
+  const isEmpty = content.length === 0;
+
   return (
     <div className="flex gap-3">
-      <div className="size-6 rounded-lg bg-[var(--gray-a3)] flex items-center justify-center flex-shrink-0 mt-0.5">
+      {/* Avatar */}
+      <div className="size-6 rounded-lg bg-[var(--gray-a3)] flex items-center justify-center shrink-0 mt-0.5">
         <MagicIcon className="size-3.5 text-[var(--accent-purple)]" />
       </div>
-      <div className="flex-1 min-w-0">
-        {isEmpty && isStreaming ? (
-          <div className="flex items-center gap-1.5 py-2">
-            <div className="flex gap-1">
-              <span className="size-1.5 bg-[var(--gray-8)] rounded-full animate-bounce [animation-delay:0ms]" />
-              <span className="size-1.5 bg-[var(--gray-8)] rounded-full animate-bounce [animation-delay:150ms]" />
-              <span className="size-1.5 bg-[var(--gray-8)] rounded-full animate-bounce [animation-delay:300ms]" />
-            </div>
-            <span className="text-xs text-[var(--gray-9)] ml-1">Searching docs...</span>
-          </div>
-        ) : (
-          <div className="prose prose-sm dark:prose-invert max-w-none text-[var(--foreground)] [&_p]:leading-relaxed [&_p]:my-2 [&_p:first-child]:mt-0 [&_pre]:bg-[var(--gray-a3)] [&_pre]:rounded-lg [&_pre]:p-3.5 [&_pre]:my-3 [&_pre]:overflow-x-auto [&_code]:text-xs [&_code]:font-[var(--font-family-monospace)] [&_:not(pre)>code]:bg-[var(--gray-a3)] [&_:not(pre)>code]:px-1.5 [&_:not(pre)>code]:py-0.5 [&_:not(pre)>code]:rounded-md [&_a]:text-[var(--accent-purple)] [&_a]:underline [&_a]:underline-offset-2 [&_a:hover]:opacity-80 [&_ul]:my-2 [&_ol]:my-2 [&_li]:my-0.5 [&_h2]:text-base [&_h2]:font-semibold [&_h2]:mt-4 [&_h2]:mb-2 [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:mt-3 [&_h3]:mb-1.5 [&_h4]:text-sm [&_h4]:font-medium [&_h4]:mt-3 [&_h4]:mb-1">
+
+      <div className="min-w-0 flex-1">
+        {/* Tool status — shown when content is empty OR when a tool is running */}
+        {isStreaming && (isEmpty || toolStatus?.state === 'running') && (
+          <ToolStatusIndicator toolStatus={toolStatus} />
+        )}
+
+        {/* Content */}
+        {!isEmpty && (
+          <div className="ask-ai-prose text-sm text-[var(--foreground)] leading-relaxed">
             <MarkdownContent content={content} />
             {isStreaming && (
               <span
-                className="inline-block w-[2px] h-4 bg-[var(--accent-purple)] ml-0.5 align-middle"
-                style={{animation: 'blink 1s step-end infinite'}}
+                className="inline-block w-0.5 h-[1.1em] bg-[var(--accent-purple)] ml-0.5 align-text-bottom"
+                style={{animation: 'askAiBlink 1s step-end infinite'}}
               />
             )}
           </div>
         )}
 
-        {/* Action buttons */}
+        {/* Actions */}
         {!isEmpty && !isStreaming && isLast && (
-          <div className="flex items-center gap-1 mt-2 -ml-1.5">
+          <div className="flex items-center gap-1 mt-2.5">
             <button
+              type="button"
               onClick={onCopy}
               className="flex items-center gap-1.5 h-7 px-2 rounded-md text-[var(--gray-9)] hover:text-[var(--foreground)] hover:bg-[var(--gray-a3)] transition-colors text-xs"
               title="Copy response"
             >
-              <CopyIcon width="12" height="12" />
-              <span>{isCopied ? 'Copied' : 'Copy'}</span>
+              <CopyIcon width={12} height={12} />
+              {isCopied ? 'Copied' : 'Copy'}
             </button>
             <button
+              type="button"
               onClick={onRetry}
               className="flex items-center gap-1.5 h-7 px-2 rounded-md text-[var(--gray-9)] hover:text-[var(--foreground)] hover:bg-[var(--gray-a3)] transition-colors text-xs"
               title="Retry"
             >
-              <ReloadIcon width="12" height="12" />
-              <span>Retry</span>
+              <ReloadIcon width={12} height={12} />
+              Retry
             </button>
           </div>
         )}
@@ -475,159 +621,364 @@ function AssistantMessage({
   );
 }
 
-/**
- * Renders markdown content as React elements without dangerouslySetInnerHTML.
- */
-function MarkdownContent({content}: {content: string}) {
-  const blocks = parseBlocks(content);
+// ---------------------------------------------------------------------------
+// ToolStatusIndicator
+// ---------------------------------------------------------------------------
+
+function ToolStatusIndicator({toolStatus}: {toolStatus: ToolStatus | null}) {
+  const label = toolStatus
+    ? (TOOL_LABELS[toolStatus.tool] ?? toolStatus.tool)
+    : 'Thinking';
+
   return (
-    <Fragment>
-      {blocks.map((block, i) => (
-        <Fragment key={i}>{block}</Fragment>
-      ))}
-    </Fragment>
+    <div className="flex items-center gap-2.5 py-1.5 text-xs text-[var(--gray-9)]">
+      <span className="flex gap-1">
+        <span className="size-1.5 rounded-full bg-[var(--gray-8)] animate-bounce [animation-delay:0ms]" />
+        <span className="size-1.5 rounded-full bg-[var(--gray-8)] animate-bounce [animation-delay:150ms]" />
+        <span className="size-1.5 rounded-full bg-[var(--gray-8)] animate-bounce [animation-delay:300ms]" />
+      </span>
+      {label}...
+    </div>
   );
 }
 
-function parseBlocks(md: string): ReactNode[] {
-  const nodes: ReactNode[] = [];
-  const parts = md.split(/(```\w*\n[\s\S]*?```)/g);
+// ---------------------------------------------------------------------------
+// Markdown rendering
+// ---------------------------------------------------------------------------
+
+function MarkdownContent({content}: {content: string}) {
+  const rendered = useMemo(() => renderMarkdown(content), [content]);
+  return <Fragment>{rendered}</Fragment>;
+}
+
+/**
+ * Runtime Prism highlighting via refractor.
+ * Returns JSX for highlighted code, or the raw string as fallback.
+ */
+function highlightCode(code: string, lang: string): ReactNode {
+  try {
+    if (lang && refractor.registered(lang)) {
+      const tree = refractor.highlight(code, lang);
+      return toJsxRuntime(tree as Parameters<typeof toJsxRuntime>[0], {
+        Fragment,
+        jsx,
+        jsxs,
+      });
+    }
+  } catch {
+    // fall through
+  }
+  return code;
+}
+
+// ---------------------------------------------------------------------------
+// AiCodeBlock — matches the docs site's code block look
+// ---------------------------------------------------------------------------
+
+function AiCodeBlock({code, language}: {code: string; language: string}) {
+  const [copied, setCopied] = useState(false);
+  const highlighted = useMemo(() => highlightCode(code, language), [code, language]);
+
+  const onCopy = useCallback(() => {
+    navigator.clipboard.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1200);
+  }, [code]);
+
+  return (
+    <div className="relative my-3 group">
+      {/* Action bar — sits above the code block */}
+      <div className="flex items-center justify-end gap-2 h-7 px-1">
+        {language && language !== 'text' && (
+          <span className="text-[11px] text-[var(--gray-9)] font-mono select-none">
+            {language}
+          </span>
+        )}
+        <button
+          type="button"
+          onClick={onCopy}
+          className="flex items-center gap-1 text-[11px] text-[var(--gray-9)] hover:text-[var(--foreground)] transition-colors"
+          title="Copy code"
+        >
+          <CopyIcon width={12} height={12} />
+          {copied ? 'Copied' : 'Copy'}
+        </button>
+      </div>
+      {/* Code block — styled to match prism-sentry theme */}
+      <pre
+        className={`language-${language || 'text'} !my-0 !rounded-md !border !border-[var(--gray-a3)] !text-[13px] !leading-relaxed overflow-x-auto`}
+      >
+        <code className={language ? `language-${language}` : ''}>{highlighted}</code>
+      </pre>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Block-level markdown parser
+// ---------------------------------------------------------------------------
+
+/**
+ * Parse a markdown string into React nodes.
+ *
+ * We split on fenced code blocks first (which are the only multi-line
+ * constructs the AI commonly produces), then parse the remaining text
+ * block-by-block.
+ *
+ * This is intentionally NOT a full CommonMark parser — it covers the
+ * subset that Anthropic's models actually produce in practice.
+ */
+function renderMarkdown(md: string): ReactNode[] {
+  const out: ReactNode[] = [];
+
+  // Split on code fences. The regex also allows language names with dashes/dots.
+  // Incomplete fences (streaming) won't match and are rendered as plain text.
+  const parts = md.split(/(```[\w.+-]*\n[\s\S]*?```)/g);
 
   for (const part of parts) {
-    const codeBlockMatch = part.match(/^```(\w*)\n([\s\S]*?)```$/);
-    if (codeBlockMatch) {
-      nodes.push(
-        <pre key={nodes.length}>
-          <code className={codeBlockMatch[1] ? `language-${codeBlockMatch[1]}` : ''}>
-            {codeBlockMatch[2]}
-          </code>
-        </pre>
+    const fenceMatch = part.match(/^```([\w.+-]*)\n([\s\S]*?)```$/);
+    if (fenceMatch) {
+      out.push(
+        <AiCodeBlock
+          key={out.length}
+          language={fenceMatch[1] || 'text'}
+          code={fenceMatch[2]}
+        />
       );
       continue;
     }
 
-    const paragraphs = part.split(/\n\n+/);
-    for (const para of paragraphs) {
-      const trimmed = para.trim();
+    // Process non-code text as block-level elements
+    const blocks = part.split(/\n\n+/);
+    for (const block of blocks) {
+      const trimmed = block.trim();
       if (!trimmed) {
         continue;
       }
 
-      const headingMatch = trimmed.match(/^(#{1,4}) (.+)$/);
-      if (headingMatch) {
-        const level = headingMatch[1].length;
-        const text = headingMatch[2];
-        const HeadingTag = `h${level + 1}` as keyof JSX.IntrinsicElements;
-        nodes.push(<HeadingTag key={nodes.length}>{renderInline(text)}</HeadingTag>);
-        continue;
+      const node = parseBlock(trimmed, out.length);
+      if (node) {
+        out.push(node);
       }
-
-      const lines = trimmed.split('\n');
-      const isUnorderedList = lines.every(l => /^[*-] /.test(l));
-      const isOrderedList = lines.every(l => /^\d+\. /.test(l));
-
-      if (isUnorderedList) {
-        nodes.push(
-          <ul key={nodes.length}>
-            {lines.map((line, li) => (
-              <li key={li}>{renderInline(line.replace(/^[*-] /, ''))}</li>
-            ))}
-          </ul>
-        );
-        continue;
-      }
-
-      if (isOrderedList) {
-        nodes.push(
-          <ol key={nodes.length}>
-            {lines.map((line, li) => (
-              <li key={li}>{renderInline(line.replace(/^\d+\. /, ''))}</li>
-            ))}
-          </ol>
-        );
-        continue;
-      }
-
-      nodes.push(<p key={nodes.length}>{renderInline(trimmed)}</p>);
     }
   }
 
-  return nodes;
+  return out;
 }
 
-function renderInline(text: string): ReactNode[] {
-  const nodes: ReactNode[] = [];
-  const pattern = /(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*|\[[^\]]+\]\([^)]+\))/g;
-  let lastIndex = 0;
+function parseBlock(text: string, keyBase: number): ReactNode {
+  const lines = text.split('\n');
 
-  for (const match of text.matchAll(pattern)) {
-    const before = text.slice(lastIndex, match.index);
-    if (before) {
-      nodes.push(
-        ...before
-          .split('\n')
-          .flatMap((segment, i, arr) =>
-            i < arr.length - 1
-              ? [
-                  <Fragment key={`t${nodes.length}-${i}`}>{segment}</Fragment>,
-                  <br key={`br${nodes.length}-${i}`} />,
-                ]
-              : [<Fragment key={`t${nodes.length}-${i}`}>{segment}</Fragment>]
-          )
-      );
+  // Horizontal rule
+  if (/^(-{3,}|\*{3,}|_{3,})$/.test(text)) {
+    return <hr key={keyBase} className="my-4 border-[var(--gray-a4)]" />;
+  }
+
+  // Heading
+  const hMatch = lines[0].match(/^(#{1,4})\s+(.+)$/);
+  if (hMatch && lines.length === 1) {
+    const depth = hMatch[1].length; // 1-4
+    const Tag = `h${Math.min(depth + 1, 6)}` as keyof JSX.IntrinsicElements;
+    return (
+      <Tag key={keyBase} className={HEADING_CLASSES[depth] ?? HEADING_CLASSES[4]}>
+        {renderInline(hMatch[2])}
+      </Tag>
+    );
+  }
+
+  // Blockquote — every line starts with >
+  if (lines.every(l => l.startsWith('> ') || l === '>')) {
+    return (
+      <blockquote
+        key={keyBase}
+        className="border-l-2 border-[var(--gray-a5)] pl-4 my-3 text-[var(--gray-11)]"
+      >
+        <p className="my-0">
+          {renderInline(lines.map(l => (l === '>' ? '' : l.slice(2))).join('\n'))}
+        </p>
+      </blockquote>
+    );
+  }
+
+  // Table — at least header + separator
+  if (lines.length >= 2 && lines[0].includes('|') && /^\|?[\s:|-]+\|?$/.test(lines[1])) {
+    return renderTable(lines, keyBase);
+  }
+
+  // Unordered list
+  if (lines.length > 0 && lines.every(l => /^\s*[-*]\s/.test(l))) {
+    return (
+      <ul key={keyBase} className="my-2 pl-5 list-disc space-y-1">
+        {lines.map((l, i) => (
+          <li key={i}>{renderInline(l.replace(/^\s*[-*]\s+/, ''))}</li>
+        ))}
+      </ul>
+    );
+  }
+
+  // Ordered list
+  if (lines.length > 0 && lines.every(l => /^\s*\d+[.)]\s/.test(l))) {
+    return (
+      <ol key={keyBase} className="my-2 pl-5 list-decimal space-y-1">
+        {lines.map((l, i) => (
+          <li key={i}>{renderInline(l.replace(/^\s*\d+[.)]\s+/, ''))}</li>
+        ))}
+      </ol>
+    );
+  }
+
+  // Default: paragraph
+  return (
+    <p key={keyBase} className="my-2 first:mt-0">
+      {renderInline(text)}
+    </p>
+  );
+}
+
+const HEADING_CLASSES: Record<number, string> = {
+  1: 'text-base font-semibold mt-5 mb-2',
+  2: 'text-base font-semibold mt-4 mb-2',
+  3: 'text-sm font-semibold mt-3 mb-1.5',
+  4: 'text-sm font-medium mt-3 mb-1',
+};
+
+function renderTable(lines: string[], key: number): ReactNode {
+  const split = (row: string) =>
+    row
+      .replace(/^\||\|$/g, '')
+      .split('|')
+      .map(c => c.trim());
+
+  const header = split(lines[0]);
+  const rows = lines.slice(2).filter(l => l.includes('|'));
+
+  return (
+    <div key={key} className="my-3 overflow-x-auto">
+      <table className="w-full text-sm border-collapse">
+        <thead>
+          <tr>
+            {header.map((cell, i) => (
+              <th
+                key={i}
+                className="text-left font-semibold pb-2 pr-4 border-b border-[var(--gray-a4)]"
+              >
+                {renderInline(cell)}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        {rows.length > 0 && (
+          <tbody>
+            {rows.map((row, ri) => (
+              <tr key={ri}>
+                {split(row).map((cell, ci) => (
+                  <td
+                    key={ci}
+                    className="py-1.5 pr-4 border-b border-[var(--gray-a3)] align-top"
+                  >
+                    {renderInline(cell)}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        )}
+      </table>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Inline markdown parser
+// ---------------------------------------------------------------------------
+
+const INLINE_RE = /(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*|~~[^~]+~~|\[[^\]]+\]\([^)]+\))/g;
+
+function renderInline(text: string): ReactNode[] {
+  const out: ReactNode[] = [];
+  let cursor = 0;
+
+  for (const match of text.matchAll(INLINE_RE)) {
+    // Plain text before this match
+    if ((match.index ?? 0) > cursor) {
+      pushTextWithBreaks(out, text.slice(cursor, match.index));
     }
 
     const token = match[0];
+    const k = `${match.index}`;
+
     if (token.startsWith('`')) {
-      nodes.push(<code key={`c${match.index}`}>{token.slice(1, -1)}</code>);
+      out.push(
+        <code
+          key={k}
+          className="bg-[var(--gray-a3)] px-1.5 py-0.5 rounded text-[0.8em] font-[var(--font-family-monospace)]"
+        >
+          {token.slice(1, -1)}
+        </code>
+      );
     } else if (token.startsWith('**')) {
-      nodes.push(<strong key={`b${match.index}`}>{token.slice(2, -2)}</strong>);
+      out.push(<strong key={k}>{token.slice(2, -2)}</strong>);
+    } else if (token.startsWith('~~')) {
+      out.push(<del key={k}>{token.slice(2, -2)}</del>);
     } else if (token.startsWith('*')) {
-      nodes.push(<em key={`i${match.index}`}>{token.slice(1, -1)}</em>);
+      out.push(<em key={k}>{token.slice(1, -1)}</em>);
     } else if (token.startsWith('[')) {
-      const linkMatch = token.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
-      if (linkMatch) {
-        // Parse through URL constructor to break taint chain and sanitize scheme
-        let safeHref = '#';
-        try {
-          const parsed = new URL(linkMatch[2]);
-          if (parsed.protocol === 'https:' || parsed.protocol === 'http:') {
-            safeHref = parsed.href;
-          }
-        } catch {
-          // Invalid URL — keep '#'
-        }
-        nodes.push(
+      const lm = token.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+      if (lm) {
+        out.push(
           <a
-            key={`a${match.index}`}
-            href={safeHref}
+            key={k}
+            href={sanitizeHref(lm[2])}
             target="_blank"
             rel="noopener noreferrer"
+            className="text-[var(--accent-purple)] underline underline-offset-2 hover:opacity-80"
           >
-            {linkMatch[1]}
+            {lm[1]}
           </a>
         );
       }
     }
 
-    lastIndex = (match.index ?? 0) + token.length;
+    cursor = (match.index ?? 0) + token.length;
   }
 
-  const remaining = text.slice(lastIndex);
-  if (remaining) {
-    nodes.push(
-      ...remaining
-        .split('\n')
-        .flatMap((segment, i, arr) =>
-          i < arr.length - 1
-            ? [
-                <Fragment key={`r${nodes.length}-${i}`}>{segment}</Fragment>,
-                <br key={`rbr${nodes.length}-${i}`} />,
-              ]
-            : [<Fragment key={`r${nodes.length}-${i}`}>{segment}</Fragment>]
-        )
-    );
+  // Remaining text
+  if (cursor < text.length) {
+    pushTextWithBreaks(out, text.slice(cursor));
   }
 
-  return nodes;
+  return out;
+}
+
+/** Convert newlines in plain-text runs into <br/> elements. */
+function pushTextWithBreaks(out: ReactNode[], text: string) {
+  const segs = text.split('\n');
+  for (let i = 0; i < segs.length; i++) {
+    if (segs[i]) {
+      out.push(<Fragment key={`t${out.length}`}>{segs[i]}</Fragment>);
+    }
+    if (i < segs.length - 1) {
+      out.push(<br key={`br${out.length}`} />);
+    }
+  }
+}
+
+/**
+ * Accept both absolute and relative URLs.
+ * Relative paths like /platforms/javascript/ are prefixed with docs.sentry.io.
+ */
+function sanitizeHref(raw: string): string {
+  // Relative path — common in AI responses citing Sentry docs
+  if (raw.startsWith('/')) {
+    return `https://docs.sentry.io${raw}`;
+  }
+  try {
+    const u = new URL(raw);
+    if (u.protocol === 'https:' || u.protocol === 'http:') {
+      return u.href;
+    }
+  } catch {
+    // not a valid URL
+  }
+  return '#';
 }
