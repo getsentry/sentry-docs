@@ -1,0 +1,174 @@
+---
+title: Setting Up Alerts
+sidebar_order: 25
+description: "Practical guidance on building an alerting strategy that routes to the right people while reducing noise and alert fatigue."
+---
+
+A misconfigured alert strategy creates noise; too many notifications leads to alert fatigue, the wrong people get paged, and critical issues eventually get ignored.
+
+This guide covers common alerting strategies, how to get more signal with less noise, and three real-world use case walkthroughs.
+
+## Alert Types
+
+Sentry has three alert types. Each serves a different purpose:
+
+| Type | Triggered By | Best For |
+| ---- | ------------ | -------- |
+| [Issue alert](/product/alerts/alert-types/#issue-alerts) | An individual issue meeting specified criteria | New errors, regressions, issues affecting specific users or tags |
+| [Metric alert](/product/alerts/alert-types/#metric-alerts) | A project-level metric crossing a threshold | Crash rates, error rates, transaction volume, p95 latency |
+| [Uptime alert](/product/alerts/alert-types/#uptime-alerts) | HTTP check failing | Endpoint availability |
+
+Most teams start with issue alerts, then add metric alerts for high-level health signals and/or uptime monitoring for critical endpoints.
+
+## Getting More Signal With Less Noise
+
+The most common mistake is alerting too much. Every additional notification that doesn't require action trains your team to ignore alerts.
+
+### Don't Alert on Every State Change
+
+Your first instinct might be to alert whenever an issue changes state: new issues, regressions, escalations, etc. In practice, this generates too many notifications. Regressions are especially common because Sentry auto-resolves issues after 14 days of silence, so many issues resurface repeatedly.
+
+Instead, use the [**For Review** tab](/product/issues/states-triage/) in Issues as your low-priority inbox. It shows issues with state changes in the last seven days, with no alert required. Reserve real-time alerts for issues that genuinely require immediate action.
+
+### Filter Before You Alert
+
+Every issue alert has an "if" condition: a filter that further narrows when the alert fires. These are your primary noise-reduction tools:
+
+- **Priority filter**: Add `issue.priority:high` to only fire on high-priority issues. This is the single most effective noise reducer for most teams.
+- **Tag filters**: Scope alerts to what matters, like `customer_type:enterprise` or `environment:production`. Create your own tag filters in [project settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/tags/).
+- **Age filter**: Use `The issue is newer than X days` to avoid repeated alerts on old, known issues.
+- **Frequency floor**: Use `Issue has happened at least {X} times` to filter one-offs that may resolve themselves.
+- **Latest release only**: Use `The event is from the latest release` to focus post-deploy monitoring.
+
+### Use Change Alerts for Fluctuating Metrics
+
+Fixed thresholds work when you know what "bad" looks like. But some metrics are seasonal, like error counts are naturally lower on weekends and higher during launches. A fixed threshold requires constant manual adjustment.
+
+Use **change alerts** when:
+- Traffic patterns vary significantly (daily, weekly, by region)
+- You're growing fast and thresholds go stale quickly
+- You don't yet know what "normal" looks like for a new feature
+
+A change alert fires when a metric is X% higher than the same window from one week ago — no manual tuning needed as baseline traffic grows.
+
+Use **fixed thresholds** when you have a clear definition of "bad":
+- Crash-free session rate drops below 99%
+- Any enterprise customer is affected by an error
+- Response time for `/checkout` exceeds 500ms
+
+Most teams use both: fixed thresholds for absolute failure conditions and change alerts for relative degradations.
+
+## Routing Strategies
+
+Getting the right alert to the right person matters as much as whether the alert fires.
+
+### Route by Urgency
+
+Match the delivery channel to the severity of the problem:
+
+| Urgency | Channel | Example |
+| ------- | ------- | ------- |
+| Critical — needs immediate response | PagerDuty or OpsGenie | Crash-free session rate below 95%, uptime down |
+| High — needs same-day response | Slack `#oncall` | New issue affecting enterprise customers |
+| Medium — review within 1-2 days | Slack team channel | Error rate increased 30% from last week |
+| Low — review when convenient | Email or Review List | Non-production issues, known recurring errors |
+
+### Use Ownership Rules
+
+[Ownership rules](/product/issues/ownership-rules/) let Sentry automatically route issues to the right team based on file paths, URLs, or tags. This removes the configuration burden from alert rules and keeps routing logic in one place.
+
+```
+# In Project Settings > Ownership Rules
+path:src/payments/* payments-team@example.com
+path:src/auth/* security-team@example.com
+url:/api/v1/checkout* payments-team@example.com
+tags.feature:matching-service multiplayer-team@example.com
+```
+
+End your ownership rules with a catch-all fallback so there's always a clear owner:
+
+```
+*:platform-oncall@example.com
+```
+
+Without a fallback, unmatched issues go to all project members — a common source of alert fatigue.
+
+### Alert the Team, Page the Person
+
+Slack channels are good for high-priority issues that a team should see. PagerDuty or OpsGenie is for issues that require a specific person to wake up and act immediately. Keep paging to a minimum — every false or low-priority page erodes trust in the system.
+
+A simple rule: if ignoring an alert for four hours would cause a production incident, page someone. Otherwise, Slack.
+
+## Use Case Walkthroughs
+
+### Gaming
+
+A multiplayer game with real-money purchases has a few categories of errors that matter more than others: crashes that end a session, payment failures, post-patch regressions, and server errors affecting matchmaking. Here's how to set up alerts for that context.
+
+**Start with these alerts:**
+
+| Alert | Type | Trigger | Filter | Route to |
+| ----- | ---- | ------- | ------ | -------- |
+| Crash rate spike | Metric | Crash-free session rate drops below 98% | — | PagerDuty `#game-oncall` |
+| Payment failure | Issue | New issue created | `transaction:/purchase/* environment:production` | Slack `#payments` + PagerDuty |
+| Post-patch regression | Issue | New issue created | `event.latest_release:true environment:production` | Slack `#game-ops` |
+| Matchmaking error surge | Issue | Issue affects > 200 users in 1 hour | `transaction:/matchmaking/*` | Slack `#backend-oncall` |
+| Region-specific server error | Issue | New issue created | `tags.region:eu-west environment:production` | Slack `#eu-ops` |
+
+**Noise reduction:** Games often see spikes of transient errors after a patch that resolve in minutes. Add `Issue has happened at least 5 times` to your post-patch regression alert to avoid false positives from errors that self-resolve.
+
+**Routing consideration:** Tag events with `game_mode` (competitive, casual, tutorial) and `platform` (ios, android, pc, console) so you can filter alerts to specific surfaces. A crash in a tutorial is very different from a crash in a ranked match.
+
+### SaaS
+
+A B2B SaaS product has a spectrum of customers with very different expectations. Enterprise customers on annual contracts expect near-zero downtime. Free-tier users expect less. Your alert strategy should reflect that.
+
+**Start with these alerts:**
+
+| Alert | Type | Trigger | Filter | Route to |
+| ----- | ---- | ------- | ------ | -------- |
+| Enterprise customer error | Issue | New issue created | `tags.customer_type:enterprise environment:production` | PagerDuty `#enterprise-oncall` |
+| Auth failure surge | Issue | Issue affects > 50 users in 1 hour | `transaction:/auth/* tags.error_type:authentication` | Slack `#security` |
+| Billing/subscription error | Issue | New issue created | `transaction:/billing/* environment:production` | Slack `#billing-eng` + email |
+| API latency degradation | Metric | p95 > 500ms for `/api/*` | — | Slack `#backend` |
+| Uptime check | Uptime | `/api/health` returns non-2xx | — | PagerDuty `#oncall` |
+
+**Noise reduction:** Add `issue.priority:high` to catch-all alerts so low-signal issues don't flood your channels. For enterprise-customer alerts, you're deliberately not filtering by priority — any new error touching an enterprise customer deserves attention.
+
+**Routing consideration:** Set up ownership rules by module (billing, auth, API) and route to separate Slack channels per team. This way each team only sees alerts for their domain. Use a single cross-team `#alerts-critical` channel for anything that requires all-hands attention.
+
+### Mobile
+
+Mobile apps face constraints that web apps don't: OS version fragmentation, low-memory environments, and users who can't reload the page when something breaks. The most important signal for mobile is crash rate by platform and release.
+
+**Start with these alerts:**
+
+| Alert | Type | Trigger | Filter | Route to |
+| ----- | ---- | ------- | ------ | -------- |
+| Crash rate by platform | Metric | Crash-free session rate drops below 99% | Filter by `platform:ios` and separately `platform:android` | PagerDuty `#mobile-oncall` |
+| New issue on latest release | Issue | New issue created | `event.latest_release:true environment:production` | Slack `#mobile-releases` |
+| Widespread user impact | Issue | Issue affects > 500 users in 1 hour | `environment:production` | Slack `#mobile-oncall` |
+| App hang / ANR | Issue | New issue created, high priority | `tags.mechanism:anr` or `tags.mechanism:app_hang` | Slack `#mobile-performance` |
+| Startup crash | Issue | New issue created | `transaction:app.launch environment:production` | PagerDuty `#mobile-oncall` |
+
+**Noise reduction:** Mobile apps see a long tail of device-specific errors on old OS versions that can't be fixed. Archive these issues when they're not actionable to stop them from triggering alerts. Use `The issue is newer than 7 days` to stop getting re-alerted as these resurface after auto-resolve.
+
+**Routing consideration:** Tag events with `os.name`, `os.version`, and `device.model`. This lets you add filters like `os.version:>=17` for iOS alerts — problems only on outdated OS versions are low priority for most teams. When a crash affects users across all OS versions, it's a code bug; when it's isolated to one OS version, it's usually a system API change.
+
+## Quick Reference
+
+| Goal | What to Set Up |
+| ---- | -------------- |
+| Know about critical failures immediately | Metric alert on crash-free session rate + uptime monitor → PagerDuty |
+| Catch regressions after each deploy | Issue alert: new issue, latest release, production environment → Slack |
+| Protect high-value customers | Issue alert: new issue, tag filter for enterprise/paid tier → Slack |
+| Reduce noise without missing problems | Add `issue.priority:high` filter + age filter to broad alerts |
+| Route to the right team automatically | Ownership rules with path and tag conditions + catch-all fallback |
+| Handle seasonal or growing traffic | Change alerts comparing to previous week instead of fixed threshold |
+
+## Next Steps
+
+- [Create an issue alert](/product/alerts/create-alerts/issue-alert-config/) — configure triggers, filters, and actions
+- [Create a metric alert](/product/alerts/create-alerts/metric-alert-config/) — set thresholds and change alerts
+- [Configure alert routing](/product/alerts/create-alerts/routing-alerts/) — connect Slack, PagerDuty, and other integrations
+- [Set up ownership rules](/product/issues/ownership-rules/) — auto-route issues to the right team
