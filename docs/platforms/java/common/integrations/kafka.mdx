@@ -49,7 +49,7 @@ sentry:
   traces-sample-rate: 1.0
 ```
 
-Now every `KafkaTemplate.send(...)` call produces a `queue.publish` span if there's a transaction running, and every `@KafkaListener` method produces a `queue.process` transaction. Sentry injects propagation headers (`sentry-trace`, `baggage`) into outgoing records and continues the trace on the consumer side.
+Now every `KafkaTemplate.send(...)` call produces a `queue.publish` span if there's a transaction running, and record-based `@KafkaListener` methods produce `queue.process` transactions. Sentry injects propagation headers (`sentry-trace`, `baggage`) into outgoing records and continues the trace on the consumer side.
 
 ### Producer
 
@@ -332,4 +332,5 @@ SentryKafkaConsumerTracing.withTracing(
 ## Limitations
 
 - **Async listeners not supported.** `@KafkaListener` methods that return a `CompletableFuture` or `Mono`/`Flux` are not instrumented correctly; use synchronous listeners.
+- **Batch listeners not supported.** `@KafkaListener` methods that consume batches, such as `ConsumerRecords<?, ?>` or `List<ConsumerRecord<...>>`, are not instrumented yet.
 - **Spring Boot auto-instrumentation is disabled when using Sentry OpenTelemetry integrations.**
