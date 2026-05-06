@@ -511,10 +511,16 @@ export function AskAiModal() {
           0%, 80%, 100% { opacity: 0.4; transform: scale(0.85); }
           40% { opacity: 1; transform: scale(1); }
         }
+        /* Fix focus ring using real rgba (Tailwind can't decompose CSS vars) */
         .ask-ai-input:focus-within {
           border-color: var(--accent-9);
           box-shadow: 0 0 0 1px var(--accent-a5);
         }
+        /* Fix Radix ScrollArea forcing fit-content on children */
+        .ask-ai-modal .rt-ScrollAreaViewport > * {
+          width: 100% !important;
+        }
+        /* Prose styles for AI responses */
         .ask-ai-prose p { margin: 0.5rem 0; }
         .ask-ai-prose p:first-child { margin-top: 0; }
         .ask-ai-prose strong { font-weight: 500; }
@@ -534,6 +540,7 @@ export function AskAiModal() {
         .ask-ai-prose h4, .ask-ai-prose h5 { font-size: 0.8125rem; }
         .ask-ai-prose a { color: var(--accent-11); text-decoration: underline; text-underline-offset: 2px; }
         .ask-ai-prose a:hover { color: var(--accent-12); }
+        /* Code block styles matching the site */
         .ask-ai-code pre[class*="language-"] {
           margin: 0 !important;
           border-radius: 0 0 6px 6px !important;
@@ -546,7 +553,8 @@ export function AskAiModal() {
         .ask-ai-code pre[class*="language-"]::-webkit-scrollbar { height: 6px; }
         .ask-ai-code pre[class*="language-"]::-webkit-scrollbar-track { background: transparent; }
         .ask-ai-code pre[class*="language-"]::-webkit-scrollbar-thumb { background-color: rgba(148,129,164,0.4); border-radius: 9999px; }
-        .dark .ask-ai-modal { box-shadow: 0 8px 40px rgba(0,0,0,0.5), 0 2px 12px rgba(0,0,0,0.4); }
+        /* Dark mode shadow */
+        .dark .ask-ai-modal { box-shadow: 0 0 0 1px var(--gray-5), 0 8px 40px rgba(0,0,0,0.5), 0 2px 12px rgba(0,0,0,0.4); }
       `}</style>
     </div>
   );
@@ -738,7 +746,7 @@ function highlightCode(code: string, lang: string): ReactNode {
 }
 
 // ---------------------------------------------------------------------------
-// AiCodeBlock — matches the site's code block look
+// AiCodeBlock — matches the site's CodeBlock look
 // ---------------------------------------------------------------------------
 
 function AiCodeBlock({code, language}: {code: string; language: string}) {
