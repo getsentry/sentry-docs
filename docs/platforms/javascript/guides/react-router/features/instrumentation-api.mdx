@@ -4,13 +4,7 @@ description: "Automatic tracing for loaders, actions, middleware, navigations, f
 sidebar_order: 10
 ---
 
-<Alert level="warning" title="Experimental">
-
-React Router's instrumentation API is experimental and uses the `unstable_instrumentations` name. The `unstable_` prefix indicates the API may change in minor releases.
-
-</Alert>
-
-React Router 7.9.5+ provides an [instrumentation API](https://reactrouter.com/how-to/instrumentation) that enables automatic span creation for loaders, actions, middleware, navigations, fetchers, lazy routes, and request handlers without the need for manual wrapper functions. Transaction names (for HTTP requests, pageloads, and navigations) use parameterized route patterns, such as `/users/:id`, and errors are automatically captured with proper context.
+React Router 7.15+ provides an [instrumentation API](https://reactrouter.com/how-to/instrumentation) that enables automatic span creation for loaders, actions, middleware, navigations, fetchers, lazy routes, and request handlers without the need for manual wrapper functions. Transaction names (for HTTP requests, pageloads, and navigations) use parameterized route patterns, such as `/users/:id`, and errors are automatically captured with proper context.
 
 ## Server-Side Setup
 
@@ -18,7 +12,7 @@ React Router 7.9.5+ provides an [instrumentation API](https://reactrouter.com/ho
 <SplitSection>
 <SplitSectionText>
 
-Export `unstable_instrumentations` from your `entry.server.tsx` to enable automatic server-side tracing.
+Export `instrumentations` from your `entry.server.tsx` to enable automatic server-side tracing.
 
 The `createSentryServerInstrumentation()` function creates spans for:
 
@@ -46,7 +40,7 @@ export default Sentry.createSentryHandleRequest({
 export const handleError = Sentry.createSentryHandleError();
 
 // Enable automatic server-side instrumentation
-export const unstable_instrumentations = [
+export const instrumentations = [
   Sentry.createSentryServerInstrumentation(),
 ];
 ```
@@ -120,7 +114,7 @@ startTransition(() => {
     document,
     <StrictMode>
       <HydratedRouter
-        unstable_instrumentations={[tracing.clientInstrumentation]}
+        instrumentations={[tracing.clientInstrumentation]}
       />
     </StrictMode>
   );
@@ -204,7 +198,7 @@ export async function action({ request }) {
 If you're not seeing spans for your loaders and actions:
 
 1. Check that the React Router version is 7.9.5 or later
-2. Make sure `unstable_instrumentations` is exported from `entry.server.tsx`
+2. Make sure `instrumentations` is exported from `entry.server.tsx`
 3. Verify `tracesSampleRate` is set in your server configuration
 
 </Expandable>
