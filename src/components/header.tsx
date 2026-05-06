@@ -105,6 +105,8 @@ export function Header({
   // Track sidebar checkbox state for non-home pages
   useEffect(() => {
     if (isHomePage) {
+      // Reset sidebar state when navigating to home page to prevent stale scroll lock
+      setSidebarOpen(false);
       return undefined;
     }
 
@@ -123,6 +125,33 @@ export function Header({
     checkbox.addEventListener('change', handleChange);
     return () => checkbox.removeEventListener('change', handleChange);
   }, [isHomePage]);
+
+  // Lock body scroll when sidebar is open on mobile (fixes iOS Safari touch scrolling)
+  useEffect(() => {
+    if (sidebarOpen) {
+      document.body.style.overflow = 'hidden';
+
+      // Close sidebar if viewport is resized to desktop width
+      const handleResize = () => {
+        if (window.innerWidth >= 768) {
+          const checkbox = document.getElementById(
+            sidebarToggleId
+          ) as HTMLInputElement | null;
+          if (checkbox) {
+            checkbox.checked = false;
+            setSidebarOpen(false);
+          }
+        }
+      };
+
+      window.addEventListener('resize', handleResize);
+      return () => {
+        document.body.style.overflow = '';
+        window.removeEventListener('resize', handleResize);
+      };
+    }
+    return undefined;
+  }, [sidebarOpen]);
 
   // Show header search if: not on home page, OR on home page but home search is scrolled out of view
   const showHeaderSearch = !isHomePage || !homeSearchVisible;
@@ -262,6 +291,14 @@ export function Header({
                 onClick={() => {
                   setMobileSearchOpen(true);
                   setHomeMobileNavOpen(false);
+                  // Close sidebar to prevent competing scroll locks
+                  const checkbox = document.getElementById(
+                    sidebarToggleId
+                  ) as HTMLInputElement | null;
+                  if (checkbox) {
+                    checkbox.checked = false;
+                    setSidebarOpen(false);
+                  }
                 }}
                 aria-label="Search"
               >

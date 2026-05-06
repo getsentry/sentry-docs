@@ -1,0 +1,166 @@
+---
+title: Set Up Snapshots
+sidebar_title: Snapshots
+sidebar_order: 5275
+sidebar_section: features
+description: Set up snapshots for Android apps with the Sentry Android Gradle Plugin.
+beta: true
+---
+
+<Include name="feature-available-for-user-group-early-adopter" />
+
+Set up [Snapshots](/product/snapshots/) for your Android app with the Sentry Android Gradle Plugin. Generate snapshots locally or in your own CI using your preferred snapshot library, then upload the generated images to Sentry for image diffing, visual review, and GitHub status checks.
+
+## Step 1: Enable Snapshots
+
+Ensure the [Sentry Android Gradle Plugin](/platforms/android/configuration/gradle/) version 6.6.0 or higher is applied and configured.
+
+Then enable snapshots in your `build.gradle`:
+
+```kotlin
+sentry {
+  snapshots {
+    enabled = true
+  }
+}
+```
+
+## Step 2: Generate Images
+
+On Android you can either [generate images from compose previews (recommended)](/platforms/android/snapshots/#generate-snapshots-from-compose-previews-recommended) or [from an existing snapshot tool](/platforms/android/snapshots/#generate-snapshots-from-an-existing-snapshot-tool) like Roborazzi or Paparazzi.
+
+These methods are not mutually exclusive — you can generate and upload snapshots from your previews and any existing snapshot tests.
+
+### Generate Snapshots From Compose Previews (Recommended)
+
+Paparazzi and ComposePreviewScanner automatically turns every `@Preview` composable in your project into a snapshot image, so you don't have to maintain explicit snapshot tests.
+
+First, choose a Paparazzi version compatible with your project:
+
+| Version         | Gradle         | compileSdk | JDK | compose-bom  |
+| --------------- | -------------- | ---------- | --- | ------------ |
+| `2.0.0-alpha04` | 9.1.x or 9.2.x | 36         | 21+ | > 2025.05.00 |
+| `1.3.5`         | 8.x or 9.x     | ≤ 35       | 17+ | ≤ 2025.04.00 |
+
+Then apply the plugin:
+
+```kotlin
+plugins {
+  // existing plugins
+  id("app.cash.paparazzi") version "<paparazzi_version>"
+}
+```
+
+#### Customize Preview Generation
+
+The `previews` block inside `snapshots` exposes options that shape the generated Paparazzi tests. These only apply when `generateTests` is `true` (the default).
+
+```kotlin
+sentry {
+  snapshots {
+    enabled = true
+    previews {
+      theme = "@style/Theme.MyApp"          // optional
+      includePrivatePreviews = false        // optional, defaults to true
+      packageTrees = listOf("com.example")  // optional, defaults to Android namespace
+    }
+  }
+}
+```
+
+| Option                   | Default                                                             | Description                                                                                                                         |
+| ------------------------ | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `theme`                  | Paparazzi default (`android:Theme.Material.NoActionBar.Fullscreen`) | Android theme resource used when rendering previews. Set this if your previews rely on a specific theme.                            |
+| `includePrivatePreviews` | `true`                                                              | Whether `@Preview` composables declared `private` are snapshotted. Set to `false` to exclude in-progress or internal-only previews. |
+| `packageTrees`           | `[]` (falls back to Android namespace)                              | Package prefixes to scan for `@Preview` composables. When empty, the plugin uses the Android namespace from the build variant.      |
+
+If you don't set a `theme`, Paparazzi uses its own default (`android:Theme.Material.NoActionBar.Fullscreen`). If the background of your previews isn't important — for example, when you just want to compare component geometry — you can use a translucent platform theme such as `android:Theme.Translucent.NoTitleBar`:
+
+```kotlin
+sentry {
+  snapshots {
+    enabled = true
+    previews {
+      theme = "android:Theme.Translucent.NoTitleBar"
+    }
+  }
+}
+```
+
+<Alert level="warning">
+  If `theme` references a style the renderer can't resolve (typo, wrong prefix, or a theme not on the classpath), neither Sentry nor Paparazzi raises an error or warning. Snapshots still generate, but with incorrect visuals. Double-check the theme string if rendered output looks unexpected.
+</Alert>
+
+Continue to [Step 3](#step-3-test-locally).
+
+### Generate Snapshots From an Existing Snapshot Tool
+
+Use this path if you already generate snapshots with another tool. The configuration depends on which tool you use.
+
+#### Paparazzi
+
+If you already have [Paparazzi](https://github.com/cashapp/paparazzi) configured, set `generateTests = false` inside the `previews` block so Sentry uses your existing tests instead of auto-generating preview-based ones:
+
+```kotlin
+sentry {
+  snapshots {
+    enabled = true
+    previews {
+      generateTests = false
+    }
+  }
+}
+```
+
+Continue to [Step 3](#step-3-test-locally).
+
+#### Roborazzi
+
+If you already have [Roborazzi](https://github.com/takahirom/roborazzi) configured, wire the Sentry upload task to the output of your Roborazzi record task:
+
+```kotlin
+afterEvaluate {
+  tasks.named<SentryUploadSnapshotsTask>("sentryUploadSnapshotsDebug") {
+    dependsOn(tasks.named("recordRoborazziDebug"))
+    snapshotsPath.set(
+      project.extensions.getByType<RoborazziExtension>().outputDir
+    )
+  }
+}
+```
+
+Continue to [Step 3](#step-3-test-locally).
+
+#### Other Tools
+
+The same pattern works with any snapshot tool. Set `snapshotsPath` to the directory your tool writes images to, and add a `dependsOn` for the task that generates them:
+
+```kotlin
+afterEvaluate {
+  tasks.named<SentryUploadSnapshotsTask>("sentryUploadSnapshotsDebug") {
+    dependsOn(tasks.named("yourSnapshotTask"))
+    snapshotsPath.set(layout.projectDirectory.dir("path/to/snapshots"))
+  }
+}
+```
+
+Alternatively, you can skip the Gradle plugin entirely and upload with [`sentry-cli build snapshots`](/cli/snapshots/):
+
+```bash
+sentry-cli build snapshots ./build/paparazzi/snapshots \
+  --app-id android-app
+```
+
+Use this path if your build pipeline doesn't use Gradle, or if you want to run the upload outside of a Gradle task. See [Uploading Snapshots](/product/snapshots/uploading-snapshots/) for the expected directory layout.
+
+## Step 3: Test Locally
+
+Verify your setup by running:
+
+```bash
+./gradlew sentryUploadSnapshotsDebug
+```
+
+## Step 4: Integrate Into CI
+
+Once the local upload succeeds, wire the same command into your CI. See [Integrating Into CI](/product/snapshots/integrating-into-ci/) for an example GitHub Actions workflow.
