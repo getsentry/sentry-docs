@@ -25,15 +25,15 @@ A custom hook like `useApiQuery` can only be used inside React components. By bu
 import {useQuery} from '@tanstack/react-query';
 import {apiOptions} from 'sentry/utils/api/apiOptions';
 
-function ProjectList({organization}) {
+function IssueDetail({organization, issueId}) {
   const {data, isPending, isError} = useQuery(
-    apiOptions.as<Project[]>()('/organizations/$organizationIdOrSlug/projects/', {
-      path: {organizationIdOrSlug: organization.slug},
+    apiOptions.as<Group>()('/organizations/$organizationIdOrSlug/issues/$issueId/', {
+      path: {organizationIdOrSlug: organization.slug, issueId},
       staleTime: 30_000,
     })
   );
 
-  // data is Project[] | undefined
+  // data is Group | undefined
 }
 ```
 
@@ -41,7 +41,7 @@ The `.as<T>()` call provides the response type (until we can infer it from the e
 
 The first argument is a URL pattern from a **generated list of known API endpoints**. This list is derived from the backend route definitions and lives in `knownSentryApiUrls.generated.ts` (with a manual companion for getsentry routes in `knownGetsentryApiUrls.ts`). TypeScript restricts the URL to one of these known patterns, so typos and invalid endpoints are caught at compile time.
 
-URL patterns use `$param` placeholders (e.g. `$organizationIdOrSlug`, `$projectIdOrSlug`) which TypeScript extracts to enforce a matching `path` object. If the URL has parameters, you must supply all of them - or pass `skipToken` to disable the query.
+URL patterns use `$param` placeholders (e.g. `$organizationIdOrSlug`, `$issueId`) which TypeScript extracts to enforce a matching `path` object. If the URL has parameters, you must supply all of them - or pass `skipToken` to disable the query.
 
 ### `staleTime` is required
 
