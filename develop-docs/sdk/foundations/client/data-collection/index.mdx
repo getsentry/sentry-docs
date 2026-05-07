@@ -205,6 +205,18 @@ SDKs **SHOULD** only replace sensitive values with `"[Filtered]"` when the data 
 
 Users can register callbacks (e.g., `beforeSend`, event processors) to remove or redact any data (including keys) before events are sent. This spec does not replace those hooks; they remain the primary mechanism for custom filtering and key removal.
 
+#### Scope Data: Write-Time Gating, Not Read-Time Gating
+
+`dataCollection` (and its predecessor `sendDefaultPii`) guards **writing** data to the scope through auto-instrumentation. It does **not** guard **reading** data from the scope when attaching it to outgoing telemetry (events, logs, metrics, etc.).
+
+Concretely:
+
+- **Auto-instrumentation writes to scope** — When SDK instrumentation automatically populates scope data (e.g., inferring `user.ip_address` from an HTTP request), the write **MUST** be gated by the relevant `dataCollection` option (e.g., `userInfo`). If the option is disabled, the SDK **MUST NOT** write that data to the scope.
+- **Reading from scope to attach to telemetry** — When the SDK reads data already present on the scope to attach it as attributes on logs, metrics, or other telemetry, it **MUST NOT** re-apply `dataCollection` gating. The data was already accepted at write time.
+- **User-set data** — Data the user explicitly sets (e.g., via `Sentry.setUser()`, `scope.setTag()`, or direct attribute assignment) is **never** gated by `dataCollection`. The user has made a deliberate choice to include that data.
+
+This means if a user calls `Sentry.setUser({ email: "jane@example.com" })`, that email **MUST** appear on logs, metrics, and events regardless of `dataCollection.userInfo` or `sendDefaultPii`. The gate only applies to auto-instrumentation that would populate user fields without the user's explicit action.
+
 </SpecSection>
 
 ---

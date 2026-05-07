@@ -52,7 +52,7 @@ SentrySDK.start { options in
 [SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
     options.dsn = @"___PUBLIC_DSN___";
     options.beforeSend = ^SentryEvent * _Nullable(SentryEvent * _Nonnull event) {
-        if ([self.exceptions.count == 1 && event.exceptions.firstObject.type isEqualToString:@"App Hanging"]) {
+        if (event.exceptions.count == 1 && [event.exceptions.firstObject.type isEqualToString:@"App Hanging"]) {
           // modify event here or return nil to discard the event
         }
         return event;
@@ -138,14 +138,16 @@ As of version 8.50.0, you can enable AppHangsV2, which is available only on **iO
 
 The SDK sets the `exception.type` to `App Hang Fully Blocked` or `App Hang Non Fully Blocked`, so you can filter for App Hangs via `error.type` in Sentry.
 
-To enable the feature in version 8.50.0 and later (enabled by default starting with 9.0.0):
+Starting with version 9.0.0, App Hangs V2 is the default on iOS and tvOS, and the `enableAppHangTrackingV2` option has been removed.
+
+For version 8.50.0 to 8.x, you can enable it with:
 
 ```swift {tabTitle:Swift}
 import Sentry
 
 SentrySDK.start { options in
     options.dsn = "___PUBLIC_DSN___"
-    options.enableAppHangTrackingV2 = true
+    options.enableAppHangTrackingV2 = true // Only available in 8.50.0–8.x
 }
 ```
 
@@ -154,7 +156,7 @@ SentrySDK.start { options in
 
 [SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
     options.dsn = @"___PUBLIC_DSN___";
-    options.enableAppHangTrackingV2 = YES;
+    options.enableAppHangTrackingV2 = YES; // Only available in 8.50.0–8.x
 }];
 ```
 

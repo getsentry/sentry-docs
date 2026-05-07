@@ -15,12 +15,13 @@ The User Feedback Widget offers many customization options, and if the available
 
 The following options can be configured for the integration in `SentryUserFeedbackConfiguration`:
 
-| Option                   | Type            | Default | Description                                                                                                                                                |
-| ------------------------ | --------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `animations`             | `Bool`          | `true`  | Whether or not to show animations, like for presenting and dismissing the form.                                                                            |
-| `useShakeGesture`        | `Bool`          | `false` | Use a shake gesture to display the form. Only supported on iOS and iPadOS; this is a no-op on macOS, tvOS, watchOS, and visionOS.                                     |
-| `showFormForScreenshots` | `Bool`          | `false` | Any time a user takes a screenshot, bring up the form with the screenshot attached.                                                                        |
-| `tags`                   | `[String: Any]` | `nil`   | Tags to set on the feedback event. This is a dictionary where keys are strings and values can be different data types such as `NSNumber`, `NSString`, etc. |
+| Option                   | Type            | Default                | Description                                                                                                                                                                                                       |
+| ------------------------ | --------------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `animations`             | `Bool`          | `true`                 | Whether or not to show animations, like for presenting and dismissing the form.                                                                                                                                   |
+| `useShakeGesture`        | `Bool`          | `false`                | Use a shake gesture to display the form. Only supported on iOS and iPadOS; this is a no-op on macOS, tvOS, watchOS, and visionOS.                                                                                 |
+| `showFormForScreenshots` | `Bool`          | `false`                | Any time a user takes a screenshot, bring up the form with the screenshot attached.                                                                                                                               |
+| `customButton`           | `UIButton?`     | `nil`                  | Install a hook for the specified button to show the form when it is pressed. If this is set, `configureWidget` is ignored.                                                                                        |
+| `tags`                   | `[String: Any]` | `nil`                  | Tags to set on the feedback event. This is a dictionary where keys are strings and values can be different data types such as `NSNumber`, `NSString`, etc.                                                        |
 
 Some hooks are available so you can react to the user opening and closing the form, when the user successfully submits the form or when there is an error:
 
@@ -42,8 +43,8 @@ Example:
 
 ```swift
 SentrySDK.start { options in
-    options.showFormForScreenshots = true
-    options.configureUserFeedback { config in
+    options.configureUserFeedback = { config in
+        config.showFormForScreenshots = true
         config.onSubmitSuccess = { data in
             print("Feedback submitted successfully from \(data["name"]) at \(data["email"]): \(data["message"])")
         }
@@ -59,7 +60,6 @@ The following options can be configured for the integration in `SentryUserFeedba
 | ---------------- | ------------------------- | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `location`       | `[NSDirectionalRectEdge]` | `[.bottom, .trailing]`      | The location of the widget on the screen.                                                                                                                                                                         |
 | `autoInject`     | `Bool`                    | `true`                      | Injects the Feedback widget into the application when the integration is added. Set `autoInject: false` if you want to call `SentrySDK.feedback.showWidget()` directly, e.g. to show the widget on certain views. |
-| `customButton`   | `UIButton?`               | `nil`                       | Install a hook for the specified button to show the form when it is pressed. If this is set, `configureWidget` is ignored.                                                                                        |
 | `windowLevel`    | `UIWindow.Level`          | `UIWindow.Level.normal + 1` | The window level of the widget.                                                                                                                                                                                   |
 | `showIcon`       | `Bool`                    | `true`                      | Whether to show the widget icon.                                                                                                                                                                                  |
 | `labelText`      | `String?`                 | `"Report a Bug"`            | The text of the widget label. If `nil`, then only the icon is shown. It is an error to set both `labelText` to `nil` and `showIcon` to `false`.                                                                   |
@@ -76,8 +76,7 @@ You can customize which form elements are shown, whether they are required, and 
 | `messageLabel`                | `String` | `"Description"`                          | The label of the feedback description input field.                                                                        |
 | `messagePlaceholder`          | `String` | `"What's the bug? What did you expect?"` | The placeholder in the feedback description input field.                                                                  |
 | `isRequiredLabel`             | `String` | `"(Required)"`                           | The text to attach to the title label for a required field.                                                               |
-| `successMessageText`          | `String` | `"Screenshot"`                           | The label of the screenshot button.                                                                                       |
-| `removeScreenshotButtonLabel` | `String` | `"Remove Screenshot"`                    | The label of the remove screenshot button.                                                                                |
+| `removeScreenshotButtonLabel` | `String` | `"Remove screenshot"`                    | The label of the remove screenshot button.                                                                                |
 | `isNameRequired`              | `Bool`   | `false`                                  | Requires the name field on the feedback form to be filled in.                                                             |
 | `showName`                    | `Bool`   | `true`                                   | Displays the name field on the feedback form. Ignored if `isNameRequired` is `true`.                                      |
 | `nameLabel`                   | `String` | `"Name"`                                 | The label next to the name input field.                                                                                   |
@@ -89,16 +88,15 @@ You can customize which form elements are shown, whether they are required, and 
 | `submitButtonLabel`           | `String` | `"Send Bug Report"`                      | The label of the submit button.                                                                                           |
 | `cancelButtonLabel`           | `String` | `"Cancel"`                               | The label of the cancel button.                                                                                           |
 | `useSentryUser`               | `Bool`   | `true`                                   | Sets the `email` and `name` fields to the corresponding Sentry SDK user fields that were called with `SentrySDK.setUser`. |
-| `isRequiredText`              | `String` | `(required)`                             | The text displayed next to a required field.                                                                              |
 
 Example:
 
 ```swift
 SentrySDK.start { options in
-    options.configureUserFeedback { config in
-        config.configureForm { form in
-            form.isRequiredText = "*"
-            form.title = "We want to hear from you!"
+    options.configureUserFeedback = { config in
+        config.configureForm = { form in
+            form.isRequiredLabel = "*"
+            form.formTitle = "We want to hear from you!"
             form.useSentryUser = false
         }
     }
@@ -137,13 +135,13 @@ Here is an example of customizing only the background color for the light theme 
 
 ```swift
 SentrySDK.start { options in
-    options.configureUserFeedback { config in
+    options.configureUserFeedback = { config in
         // configureTheme is used for light themes on iOS versions that support dark mode, and as the sole theme configuration for earlier iOS versions that don't support dark mode
-        config.theme { theme in
-            theme.background = .init(color: .yellow)
+        config.configureTheme = { theme in
+            theme.background = .yellow
         }
-        config.darkTheme { theme in
-            theme.background = .init(color: .darkGray)
+        config.configureDarkTheme = { theme in
+            theme.background = .darkGray
         }
     }
 }
@@ -174,11 +172,11 @@ Example:
 
 ```swift
 SentrySDK.start { options in
-    options.configureUserFeedback { config in
-        config.configureWidget { widget in
+    options.configureUserFeedback = { config in
+        config.configureWidget = { widget in
             widget.widgetAccessibilityLabel = "Report an Issue" // default: "Report a Bug"
         }
-        config.configureForm { form in
+        config.configureForm = { form in
             form.messageTextViewAccessibilityLabel = "What happened?" // default: "What's the bug? What did you expect?"
         }
     }
@@ -195,7 +193,7 @@ SentrySDK.capture(feedback: .init(
     name: "Jane Doe", // optional
     email: "email@example.org", // optional
     source: .custom,
-    screenshot: somePngImageData // optional
+    attachments: [Attachment(data: somePngImageData, filename: "screenshot.png")] // optional
 ));
 ```
 
