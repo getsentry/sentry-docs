@@ -34,6 +34,10 @@ export async function getSdkPackageName(
     return null;
   }
 
+  const useNpmSpecifier = platformOrGuide.name === 'deno';
+  if (useNpmSpecifier && sdkData.canonical.startsWith('npm:')) {
+    return sdkData.canonical;
+  }
   return sdkData.canonical.replace(/^npm:/, '') || null;
 }
 
@@ -47,6 +51,7 @@ export async function PlatformSdkPackageName({fallback}: PlatformSdkPackageNameP
   const platformOrGuide = getCurrentPlatformOrGuide(rootNode, path);
 
   const sdkPackage = await getSdkPackageName(platformOrGuide);
+  const displayName = sdkPackage?.replace(/^npm:/, '') || fallbackName;
 
-  return <code>{sdkPackage || fallbackName} </code>;
+  return <code>{displayName} </code>;
 }
