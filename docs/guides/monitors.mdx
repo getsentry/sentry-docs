@@ -1,0 +1,208 @@
+---
+title: Setting Up Monitors
+sidebar_order: 26
+description: "Practical guidance on when to use metric, cron, uptime, and mobile build monitors to customize issue creation thresholds."
+early_access: true
+---
+
+Monitors help you catch reliability problems early—anything from recurring errors crossing a threshold, to a drifting metric, a scheduled job that never ran, an HTTP probe that failed, or a mobile build regression.
+
+On the **[Monitors](https://sentry.io/monitors/)** page, you can filter by **All Monitors**, **My Monitors**, **Errors**, **Metrics**, **Crons**, **Uptime**, and **Mobile Builds**. While Monitors define conditions that create [issues](/product/issues/); [Alerts](/guides/alerts/) decide how your team gets notified. Pair [Custom Alerts](/product/monitors-and-alerts/alerts/) with Monitors for notifying, ticketing, and more integration actions. See the [Monitors](/product/monitors-and-alerts/monitors/) product docs for creation flows and settings.
+
+Assign an [owner](/product/monitors-and-alerts/monitors/crons/job-monitoring/#ownership) to every monitor — either a team or a specific person. Unowned monitors notify all project members, which is the fastest path to alert fatigue. The owner also receives escalation notifications when a monitor becomes broken.
+
+Let's do a quick review of what each type of Monitor does before getting to some best practices.
+
+## Monitor Types
+
+| Type | What it does | When to use |
+| --- | --- | --- |
+| [Errors](/product/monitors-and-alerts/monitors/) | Controls when error events become issues | Comes default with Sentry. Can be customized through Issue Grouping |
+| [Metrics](/product/monitors-and-alerts/monitors/#metric-monitor-settings) | Evaluates thresholds on errors, spans, logs, or [application metrics](/product/explore/metrics/) using absolute, change, or anomaly detection | You need to alert on a quantitative signal over time |
+| [Crons](/product/monitors-and-alerts/monitors/crons/) | Tracks scheduled jobs for missed check-ins, late runs, and timeouts | You have background jobs whose failures won’t surface as errors |
+| [Uptime](/product/monitors-and-alerts/monitors/uptime-monitoring/) | Probes HTTP endpoints for availability on a set interval | You want to detect downtime on customer-facing or critical URLs |
+| [Mobile Builds](/product/monitors-and-alerts/monitors/#mobile-builds-monitor-settings) | Tracks iOS and Android app size and enforces size thresholds | You want to catch binary size regressions before release |
+
+**Alerts** in the sidebar is not a monitor type: it opens [alert rules](/product/monitors-and-alerts/alerts/) that notify your team when monitors or issues satisfy your criteria. See [Setting Up Alerts](/guides/alerts/) for strategy and configuration.
+
+## What to Monitor
+
+You may be tempted to add monitors for everything. The better approach is to start with jobs and endpoints where a silent failure has a direct, delayed impact, allowing you to catch problems before they impact users.
+
+### Cron Jobs Worth Monitoring
+
+Not every background job needs a monitor. Focus on jobs where a missed or failed run causes visible impact:
+
+- **Revenue-critical**: Invoice generation, payment processing, subscription renewals
+- **Data-critical**: Database backups, data exports, sync jobs with external systems
+- **User-facing delivery**: Emails, push notification delivery, digest generation
+- **Compliance or audit**: Log archival, GDPR deletion jobs, report generation
+
+Lower priority: maintenance cleanup jobs, cache warming, analytics aggregation etc.
+
+### Endpoints Worth Uptime Monitoring
+
+Monitor endpoints at the level your users experience, not just your internal health checks:
+
+- **Customer-facing entry points**: Login, signup, checkout, the homepage
+- **Mobile/API entry points**: The base API endpoint your apps hit on launch
+- **Webhooks you receive**: Payment processor callbacks, third-party integrations you depend on
+- **Internal health checks**: Only if a failure there means something users would feel
+
+Don't monitor every endpoint — that generates noise and makes it harder to act on real downtime.
+
+### Metrics Worth Monitoring
+
+Metric monitors are best used for signals that degrade gradually rather than fail outright — things that won't produce an error event but will affect users if left unchecked.
+
+**Best practices:**
+
+- **Monitor outcomes, not internals.** Track crash-free session rate, checkout completion rate, or API error rate — not queue depth or CPU usage in isolation. Internals are useful context; outcomes are what users feel.
+- **Set thresholds on stable baselines.** Use dynamic anomaly detection or percentage-change detection for metrics that fluctuate with traffic (weekends vs. weekdays, post-launch spikes). Fixed absolute thresholds work better for metrics with predictable ranges.
+- **Avoid low-cardinality vanity metrics.** A metric that's always 100% until it's catastrophically 0% doesn't need a monitor — it needs an uptime check. Metric monitors add value in the middle ground.
+- **One metric, one concern.** Resist combining multiple signals into a single monitor. A combined "health score" is hard to act on. Separate monitors per metric make it obvious what's wrong.
+
+**Quick examples:**
+
+| Signal | Monitor type | Threshold approach |
+| --- | --- | --- |
+| Crash-free session rate drops | Metric (change) | Alert if rate drops > 5% compared to previous 24h |
+| Checkout error rate rises | Metric (absolute) | Alert if error rate exceeds 2% over a 5-minute window |
+| API p95 latency increases | Metric (change) | Alert if p95 rises > 20% week-over-week |
+| New user signup rate collapses | Metric (anomaly) | Alert on dynamic anomaly detection to handle traffic variation |
+
+## Configuration Tips
+
+The product docs cover full setup for each monitor type: [Cron](/product/monitors-and-alerts/monitors/crons/getting-started/), [Metric](/product/monitors-and-alerts/monitors/#metric-monitor-settings), and [Uptime](/product/monitors-and-alerts/monitors/uptime-monitoring/). Below are the opinionated shortcuts that could save you from learning the hard way.
+
+### Cron Monitors
+
+- **Set checkin margin to 5–10% of your job's interval.** A job that runs every hour should have a ~5-minute margin. This absorbs scheduler jitter and queue delay without hiding real misses.
+- **Set max runtime to your P99 + buffer, not the average.** A job that normally takes 30 seconds might take 3 minutes under load. A 5-minute max runtime catches genuine hangs without false-firing on slow runs.
+- **Link SDK errors to the monitor.** If you use the SDK's cron integration (`@monitor` decorator, `withMonitor`, etc.), errors are automatically associated via the monitor slug. If you use plain HTTP check-ins alongside a separately initialized SDK, set the monitor slug in your SDK context so errors surface on the monitor's detail page. See [Job Monitoring](/product/monitors-and-alerts/monitors/crons/job-monitoring/) for more.
+
+### Metric Monitors
+
+- **Start with absolute or change detection for critical metrics.** Anomaly detection needs historical data to build a baseline and can be slow to fire on novel regressions. Use it where traffic patterns make fixed thresholds impractical (weekday/weekend variation, seasonal traffic), not as a default.
+- **Don't guess at thresholds.** Open the metric in [Discover](/product/explore/discover-queries/) or [Application Metrics](/product/explore/metrics/), review the last 30 days, and set the threshold just outside your worst legitimate spike. Revisit after two weeks — zero fires means too loose, multiple false positives means too tight or wrong detection type.
+- **Match the evaluation window to the signal's cadence.** Error rate on a high-traffic endpoint: 5–10 minutes. p95 latency: 15–30 minutes. Crash-free session rate: 1–4 hours. Low-volume business metrics: 1–24 hours. Start longer and tighten once you know your baseline noise level.
+- **One metric, one monitor.** A combined "health score" monitor is hard to act on. Separate monitors per metric make it obvious what's wrong.
+- **Scope to production from the start.** Metric monitors on staging or development almost always generate noise.
+
+### Uptime Monitors
+
+- **Check automatic detection first.** Sentry [automatically configures an uptime monitor](/product/monitors-and-alerts/monitors/uptime-monitoring/automatic-detection/) for the most frequently seen hostname in your error data. You may already have one.
+- **Keep the default failure threshold (3 consecutive failures).** This catches transient network blips and one-off timeouts. Lower it only for internal services with strict uptime expectations.
+- **Monitor a real code path, not just `/health`.** A health endpoint that returns 200 without touching application code gives false confidence. Where possible, probe an endpoint that exercises a lightweight real path — fetching a record, verifying auth, etc.
+
+## Handling Noise
+
+### Use Environments
+
+Set alert rules for cron monitors to only fire for specific environments. A missed job in staging isn't worth a page — the same job missed in production is. [Configure environment filters](/product/monitors-and-alerts/monitors/crons/job-monitoring/#alerting-on-specific-environments) on your monitor alerts.
+
+### Pause vs. Mute
+
+**Pause** a monitor when you know the job won't run — during planned maintenance, deployments that disable a feature, or scheduled downtime. Pausing stops recording check-ins and stops notifications.
+
+**Mute** a monitor when it's broken and you're not ready to fix it yet. Sentry will also automatically mute a monitor that has been consistently broken for 28 days to reduce notification noise.
+
+Note: muting does not stop billing. To stop billing, deactivate or delete the monitor.
+
+## Use Case Walkthroughs
+
+### Gaming
+
+A multiplayer game backend runs scheduled jobs that affect player experience directly: leaderboard updates, season reward distribution, matchmaking queue cleanup. Silent failures show up as stale data or missing rewards, as support tickets, not error alerts. Server-side crashes and matchmaking degradation need metric-level detection.
+
+**Cron Monitors:**
+
+| Monitor                    | Schedule                                   | Grace Period | Max Runtime | Failure Tolerance | Owner               |
+| -------------------------- | ------------------------------------------ | ------------ | ----------- | ----------------- | ------------------- |
+| Leaderboard recalculation  | Interval: every 5 minutes                  | 1 min        | 3 min       | 1                 | `#game-backend`     |
+| Season reward distribution | Crontab: `0 0 * * 0` (weekly)             | 5 min        | 30 min      | 1                 | `#game-ops`         |
+| Matchmaking queue cleanup  | Interval: every 1 minute                   | 15 sec       | 30 sec      | 2                 | `#matchmaking-team` |
+| Server asset sync          | Crontab: `0 3 * * *` (nightly at 3 AM)    | 5 min        | 20 min      | 1                 | `#infra`            |
+
+**Metric Monitors:**
+
+| Monitor                  | Dataset  | Aggregate                 | Detection | Threshold / Comparison                                                   | Interval | Environment  | Owner               |
+| ------------------------ | -------- | ------------------------- | --------- | ------------------------------------------------------------------------ | -------- | ------------ | -------------------- |
+| Crash-free session rate  | Releases | `crash_free_rate(session)` | Change   | Below, High: 5%, compared to previous 1 day                              | 1 hour   | `production` | `#game-oncall`       |
+| Matchmaking error rate   | Errors   | `count()`                 | Threshold | Above, High: 50 errors; query: `transaction:/api/matchmaking/*`          | 5 min    | `production` | `#matchmaking-team`  |
+
+**Uptime Monitors:**
+
+| Monitor                        | URL                                        | Method | Interval   | Failure Threshold | Environment  | Owner           |
+| ------------------------------ | ------------------------------------------ | ------ | ---------- | ----------------- | ------------ | --------------- |
+| Game API entry point           | `https://api.game.example.com/v1/profile`   | GET    | Every 1 min | 3                | `production` | `#game-oncall`  |
+| Match results webhook receiver | `https://api.game.example.com/webhooks/match` | POST | Every 5 min | 3                | `production` | `#game-backend` |
+
+**Noise strategy:** Set the matchmaking queue cleanup to **Failure Tolerance: 2** — a single missed check-in on a 1-minute job is often scheduler jitter, not a real failure. For the crash-free rate metric monitor, use **Change** detection with a 1-hour interval to smooth out transient session drops; a 5-minute spike is noise, a sustained drop relative to the previous day is a release regression. Tag cron jobs with `game_region` and use separate monitor environments per region so a failed leaderboard job in one region doesn't mask a systemic outage across all three.
+
+### SaaS
+
+SaaS products depend on a pipeline of billing, notification, and data jobs all running reliably. A missed billing job means invoices don't go out; a failed data export job means a customer's Monday workflow breaks. Metric monitors on checkout error rates and API latency catch degradation before it becomes an outage.
+
+**Key monitors to set up:**
+
+| Monitor                      | Type   | Configuration                                                                                        | Owner           |
+| ---------------------------- | ------ | ---------------------------------------------------------------------------------------------------- | --------------- |
+| Invoice generation           | Cron   | Schedule: daily (end of billing period); max runtime: 15 min                                         | `#billing-eng`  |
+| Payment retry processing     | Cron   | Schedule: every 6 hours; max runtime: 10 min                                                         | `#billing-eng`  |
+| Trial expiration enforcement | Cron   | Schedule: daily; max runtime: 5 min                                                                  | `#growth-eng`   |
+| Scheduled data exports       | Cron   | Schedule: varies per customer; max runtime: 30 min                                                   | `#data-eng`     |
+| Notification delivery job    | Cron   | Schedule: every 2 min; max runtime: 90 sec                                                           | `#platform-eng` |
+| API base endpoint            | Uptime | Probe: every 1 min; failure threshold: 3 consecutive                                                 | `#oncall`       |
+| Payment error rate           | Metric | Signal: error rate on checkout/billing spans; detection: absolute; threshold: > 1% in 5 min window  | `#billing-eng`  |
+| API p95 latency              | Metric | Signal: p95 response time; detection: change; threshold: increases > 20% vs. previous 24h           | `#oncall`       |
+
+**Noise strategy:** Add a `checkin_margin` generous enough for the billing job to handle end-of-month volume spikes. Use a separate monitor environment for `production`, `staging`, and `eu` (if you run a separate EU instance) and only alert on `production`. For the payment error rate metric monitor, use an absolute threshold rather than change detection — even a small baseline error rate on checkout is unacceptable, so percentage-change detection would set the wrong expectation.
+
+### Mobile
+
+Mobile apps run backend jobs that affect users indirectly: push notification delivery, app store review sync, analytics aggregation, and device registration cleanup. When these fail silently, users see stale content or stop receiving notifications. Metric monitors on crash-free rates per platform catch release regressions, and mobile build monitors catch binary size bloat before it reaches the app store, or impacts users.
+
+**Key monitors to set up:**
+
+| Monitor                          | Type          | Configuration                                                                                              | Owner              |
+| -------------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------- | ------------------ |
+| Push notification delivery       | Cron          | Schedule: every 1 min; max runtime: 45 sec                                                                 | `#mobile-backend`  |
+| App store review sync            | Cron          | Schedule: every 4 hours; max runtime: 10 min                                                               | `#mobile-platform` |
+| Device token cleanup             | Cron          | Schedule: weekly; max runtime: 20 min                                                                      | `#mobile-backend`  |
+| Analytics aggregation            | Cron          | Schedule: hourly; max runtime: 15 min                                                                      | `#data-eng`        |
+| Mobile API base endpoint         | Uptime        | Probe: every 1 min; failure threshold: 3 consecutive                                                       | `#mobile-oncall`   |
+| Push notification service health | Uptime        | Probe: every 5 min; failure threshold: 3 consecutive                                                       | `#mobile-backend`  |
+| Crash-free session rate (iOS)    | Metric        | Signal: crash-free sessions, iOS; detection: change; threshold: drops > 3% vs. previous 24h               | `#mobile-oncall`   |
+| Crash-free session rate (Android)| Metric        | Signal: crash-free sessions, Android; detection: change; threshold: drops > 3% vs. previous 24h           | `#mobile-oncall`   |
+| App binary size (iOS)            | Mobile Build  | Platform: iOS; threshold: size diff > 3 MB per build                                                      | `#mobile-platform` |
+| App binary size (Android)        | Mobile Build  | Platform: Android; threshold: size diff > 2 MB per build                                                  | `#mobile-platform` |
+
+**Noise strategy:** Push notification delivery runs frequently and is sensitive to queue depth — add a `checkin_margin` of 15 seconds to absorb burst delays. Separate the crash-free rate metric monitors by platform (iOS and Android) rather than combining them: a crash spike on one platform is almost always release- or device-specific, and a combined monitor would obscure which platform is affected. Set mobile build size thresholds conservatively at first using **Absolute Diff** (size change from previous build) rather than absolute values — you want to catch regressions, not block every PR that adds a dependency. Tighten after a few releases.
+
+## Quick Reference
+
+| Goal                                           | What to Configure                                                                    |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Detect missed cron runs                        | Cron monitor with schedule + checkin margin                                          |
+| Detect timed-out jobs                          | Set max runtime to P99 + buffer                                                      |
+| Surface job errors on the monitor              | Link Sentry SDK errors using the monitor slug                                        |
+| Avoid staging noise                            | Set alert rules to fire only for `environment:production`                            |
+| Route to the right team                        | Assign owner (team or user) to each monitor                                          |
+| Detect downtime proactively                    | Uptime monitor on your primary customer-facing endpoint                              |
+| Avoid false positive downtime alerts           | Keep failure threshold at 3 consecutive failures (default)                           |
+| Detect gradual error rate increases            | Metric monitor; absolute threshold; 5–10 min window; scoped to production            |
+| Detect latency regressions after deploys       | Metric monitor; percentage change vs. previous week; p95 on key transactions         |
+| Detect traffic anomalies without fixed ceiling | Metric monitor; dynamic/anomaly detection; longer window to capture seasonal pattern |
+| Build a metric monitor from an existing query  | Open Discover or Application Metrics → Save As → Monitor                             |
+| Catch a drop in conversion or session rate     | Metric monitor; change detection; 1–4 hour window; crash-free sessions or custom metric |
+
+## Next Steps
+
+- [Monitors overview](/product/monitors-and-alerts/monitors/) — Early Adopter program, monitor types, creation shortcuts, and CRUD in the UI
+- [Application metrics](/product/explore/metrics/) — emit and explore custom metrics to power metric monitors
+- [Discover](/product/explore/discover-queries/) — build and validate queries before converting them to metric monitors
+- [Set up cron monitoring](/product/monitors-and-alerts/monitors/crons/getting-started/) — instrument your first job via SDK, CLI, or HTTP
+- [Configure uptime monitoring](/product/monitors-and-alerts/monitors/uptime-monitoring/) — set up URL monitoring with custom headers and verification
+- [Job monitoring UI walkthrough](/product/monitors-and-alerts/monitors/crons/job-monitoring/) — understand the check-in timeline and status views
+- [Cron troubleshooting](/product/monitors-and-alerts/monitors/crons/troubleshooting/) — fix common issues with missed check-ins and broken monitors

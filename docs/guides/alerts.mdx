@@ -1,0 +1,171 @@
+---
+title: Setting Up Alerts
+sidebar_order: 25
+description: "Practical guidance on Alerts -- routing to the right people while reducing noise and alert fatigue."
+early_access: true
+---
+<Include name="feature-available-for-user-group-early-adopter" />
+A misconfigured alert strategy creates noise; too many notifications leads to alert fatigue, the wrong people get paged, and critical issues eventually get ignored. This guide covers strategy—sources and triggers, filters, actions, noise reduction—and three walkthroughs with example configurations.
+
+
+
+## How Alerts Work
+
+**[Alerts](/product/monitors-and-alerts/alerts/)** run when **issues** match your rules. Each Alert defines:
+
+| Piece                                                                                   | Role                                                                                                                                       |
+| --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| **[Sources](/product/monitors-and-alerts/alerts/#select-sources-and-environments)** | One or more [projects](/product/projects/) or **[Monitors](/product/monitors-and-alerts/monitors/)** whose issues this Alert evaluates |
+| **[Triggers](/product/monitors-and-alerts/alerts/#set-triggers)**                   | Issue-state changes that must occur (for example issue created or assigned); multiple triggers combine with `ANY`                          |
+| **[Filters](/product/monitors-and-alerts/alerts/#set-filters)**                     | Extra conditions—group as `ANY` or `ALL` to narrow which matching issues actually notify                                                   |
+| **[Actions](/product/monitors-and-alerts/alerts/#add-actions)**                     | Where to notify or integrate (chat, email, on-call, issue trackers, webhooks—see [integrations](/organization/integrations/))              |
+
+Create and manage Alerts from [`sentry.io/monitors/alerts`](https://sentry.io/monitors/alerts). For UI walkthroughs and concepts, read **[Creating an Alert](/product/monitors-and-alerts/alerts/#creating-an-alert)**, [examples](/product/monitors-and-alerts/alerts/#some-examples-of-when-you-could-use-an-alert), and how **[Notifications](/product/monitors-and-alerts/alerts/#notifications)** relate to alert-driven vs general product notifications.
+
+**Tip:** Pair Alerts with **[Monitors](/product/monitors-and-alerts/monitors/)** so issues are opened only when something actually crosses your thresholds—then Alerts decide who hears about those issues.
+
+## Getting More Signal With Less Noise
+
+The most common mistake is alerting too much. Every additional notification that doesn't require action trains your team to ignore alerts.
+
+### Don't Alert on Every State Change
+
+Your first instinct might be to notify whenever an issue changes state: new issues, regressions, escalations, and so on. In practice, that generates too many notifications. Regressions are especially common because Sentry auto-resolves issues after 14 days of silence, so many issues resurface repeatedly.
+
+Instead, use the  **is:for_review** filter in Issues as your low-priority inbox without paging anyone. These are issues with state changes in the last seven days. Reserve **`Alerts`** to set conditions for issues that genuinely require immediate action.
+
+### Use Filters as Your Noise Gate
+
+**[Filters](/product/monitors-and-alerts/alerts/#set-filters)** are the main way to keep Alerts actionable:
+
+- **Priority**: Scope to high-priority issues when your workflow supports it (`issue.priority:high` where applicable).
+- **Event Attributes/Tagged Events**: Use out of the box attributes like `error.handled/unhandled`, `exception.type`, and `environment`, `user.*` to narrow to what matters. Custom tags like `customer_type`, `region`, or `feature_flag` make the Alerts even more relevant to your team's priorities.
+- **Age**: Prefer newer issues when older noise keeps resurfacing (`The issue is newer than X days`).
+- **Frequency**: Skip one-offs that often self-resolve (`Issue has happened at least {X} times`).
+- **Release**: Focus post-deploy windows (`The event is from the latest release`).
+
+Define tags in [project settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/tags/) so filters stay expressive.
+
+### Customize Thresholds
+
+When **[Monitors](/product/monitors-and-alerts/monitors/)** evaluate metrics (crash-free rate, latency, volume), use thresholds— or **[dynamic](/product/monitors-and-alerts/monitors/#metric-monitor-settings)** or comparative detection— that tolerate normal drift (weekends vs weekdays, launches, growth). An Alert should usually attach to **issue outcomes** you care about from those monitors, not every intermediate blip.
+
+## Routing Strategies
+
+Getting the right notification to the right person matters as much as whether the Alert runs.
+
+### Route by Urgency
+
+Match the action channel to severity:
+
+| Urgency                             | Channel               | Example                                                 |
+| ----------------------------------- | --------------------- | ------------------------------------------------------- |
+| Critical — needs immediate response | PagerDuty or OpsGenie | Crash-free rate collapse, widespread outage-type issues |
+| High — needs same-day response      | Slack `#oncall`       | New critical issue affecting enterprise-tier traffic    |
+| Medium — review within 1–2 days     | Slack team channel    | Elevated error volume from a specific service           |
+| Low — review when convenient        | Email or Review List  | Non-production, known recurring noise                   |
+
+### Use Ownership Rules
+
+[Ownership rules](/product/issues/ownership-rules/) route issues to teams by path, URL, or tags. Align **Alert** filters with ownership where it helps triage. For example, a filter you could set would be `issue is assigned to team backend`. 
+
+**Note:** You can also automatically assign issues in [Monitors](/product/monitors-and-alerts/monitors/). 
+
+```
+# In Project Settings > Ownership Rules
+path:src/payments/* payments-team@example.com
+path:src/auth/* security-team@example.com
+url:/api/v1/checkout* payments-team@example.com
+tags.feature:matching-service multiplayer-team@example.com
+```
+
+End with a catch-all fallback:
+
+```
+*:platform-oncall@example.com
+```
+
+Without a fallback, unmatched issues go to all project members—a common source of fatigue.
+
+### Alert the Team, Page the Person
+
+Slack channels suit issues a whole squad should see. PagerDuty or OpsGenie is for wake-up urgency. A simple rule: if ignoring the Alert for four hours would cause a production incident, page someone; otherwise keep it in-channel.
+
+## Use Case Walkthroughs
+
+These examples outline **sources**, **alert conditions**, and **actions** that would create valuable alerting for teams. You can use them as inspiration, and create your own alerts in [`sentry.io/monitors/alerts`](https://sentry.io/monitors/alerts) using your actual monitors and projects.
+
+### Gaming
+
+A multiplayer game with real-money purchases cares most about session-ending crashes, payments, patch regressions, and matchmaking issue surge.
+
+**Starting patterns:**
+
+| Scenario                     | Sources & signal                                          | Alert filters                                                                                                                              | Actions                       |
+| ---------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------- |
+| Unhandled crash              | Monitor(s) scoped to crash-free sessions                  | Event attribute `error.unhandled` equals `true`; `environment:production`                                                                  | PagerDuty `#game-oncall`      |
+| Payment failure              | Monitor or project scoped to checkout/purchase errors     | Event attribute `http.url` contains `/purchase`; event attribute `http.status_code` starts with `5`; `environment:production`              | Slack `#payments` + PagerDuty |
+| Post-patch regression        | Monitor or project                                        | Filter "The event is from the latest release"; event attribute `error.handled` equals `false`; issue is newer than 1 day                   | Slack `#game-ops`             |
+| Ranked matchmaking surge     | Monitor or project scoped to matchmaking services         | Tagged Event `game_mode` equals `ranked`; affects > 200 users / hour; `environment:production`                                                      | Slack `#backend-oncall`       |
+| Region-specific server error | Project                                                   | Tagged Event `region` equals `eu-west`; `environment:production`                                                                                    | Slack `#eu-ops`               |
+| Main-thread crash            | Project                                                   | Event attributes (ALL): `error.unhandled` equals `true`, `error.main_thread` equals `true`; `environment:production`                       | PagerDuty `#game-oncall`      |
+
+**Noise reduction:** After patches, transient spikes often self-resolve—add a frequency floor (`Issue has happened at least 5 times`) before notifying.
+
+**Routing:** Tag events with `game_mode` and `platform` so filters separate casual vs ranked crashes.
+
+### SaaS
+
+Enterprise buyers expect fast response; free tiers tolerate more latency—reflect that in filters and actions.
+
+**Starting patterns:**
+
+| Scenario                   | Sources & signal                                               | Alert filters                                                                                                                                        | Actions                        |
+| -------------------------- | -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
+| Enterprise unhandled error | Project                                                        | Tagged Event `customer_type` equals `enterprise`; Event Attribute `error.unhandled` equals `true`; `environment:production`                                    | PagerDuty `#enterprise-oncall` |
+| Auth failure by provider   | Monitor or project scoped to auth services                     | Event Attribute `http.url` contains `/auth`; tag `auth_provider` equals `saml`; `environment:production`                                              | Slack `#security`              |
+| Billing exception          | Monitor or project scoped to billing services                  | Event Attribute `exception.type` contains `PaymentError`; Tagged Event `plan_tier` is in `enterprise,business`; `environment:production`                       | Slack `#billing-eng` + email   |
+| API latency degradation    | Monitor scoped to API SLO — issues open when thresholds breach | `environment:production`                                                                                                                              | Slack `#backend`               |
+| Availability regression    | Uptime or HTTP Monitor — issues open on failing checks         | `environment:production`                                                                                                                              | PagerDuty `#oncall`            |
+| VIP user error             | Project                                                        | Event Attribute `user.email` is in `cto@bigcorp.com, eng@bigcorp.com`; `environment:production`                                                        | Slack `#enterprise-support`    |
+
+**Noise reduction:** Use priority filters on broad Alerts so low-signal issues do not flood channels—except enterprise-critical paths where any new issue warrants attention.
+
+**Routing:** Ownership rules per module (billing, auth, API) keep Alerts scoped to team channels.
+
+### Mobile
+
+Crash rate by platform/release and widespread-impact issues matter most on mobile.
+
+**Starting patterns:**
+
+| Scenario                  | Sources & signal                                            | Alert filters                                                                                                                                    | Actions                     |
+| ------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------- |
+| Crash rate by platform    | Monitors scoped per platform (iOS / Android)                | Event Attribute `error.unhandled` equals `true`; `environment:production`                                                                        | PagerDuty `#mobile-oncall`  |
+| Latest-release regression | Monitor or project                                          | Filter "The event is from the latest release"; Event Attribute `error.handled` equals `false`; issue is newer than 1 day                         | Slack `#mobile-releases`    |
+| Broad user impact         | Project                                                     | Event Attribute `error.unhandled` equals `true`; affects > 500 users / hour; `environment:production`                                            | Slack `#mobile-oncall`      |
+| Hang / ANR                | Project                                                     | Event Attribute `error.mechanism` equals `anr` or `app_hang`; Tagged Event `screen_name` equals `checkout`; `environment:production`                      | Slack `#mobile-performance` |
+| Startup crash             | Monitor or project scoped to app launch                     | Event Attribute `app.in_foreground` equals `true`; Event Attribute `error.unhandled` equals `true`; `environment:production`                     | PagerDuty `#mobile-oncall`  |
+| Old-version noise filter  | Project                                                     | Tagged Event `os.name` equals `iOS`; tag `release` starts with `3.`; Event Attribute `error.unhandled` equals `true`; `environment:production`            | Slack `#mobile-platform`    |
+
+**Noise reduction:** Archive non-actionable legacy-OS noise; combine with **Age** filters (`The issue is newer than 7 days`) so stale devices do not re-page after auto-resolve cycles.
+
+**Routing:** Tag `os.name`, `os.version`, and device class so filters distinguish outdated OS buckets from widespread regressions.
+
+## Quick Reference
+
+| Goal                                 | Approach                                                                                                                              |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Critical failures wake someone       | Strict filters + PagerDuty/OpsGenie **actions** on high-severity issue signals                                                        |
+| Catch regressions after deploy       | Filters on latest release + production; Slack first                                                                                   |
+| Protect high-value customers         | Tag filters (`enterprise`, plan tier) + tighter triggers                                                                              |
+| Reduce noise without missing signal  | Frequency floors, age caps, priority filters, environment scoping                                                                     |
+| Route without duplicating logic      | [Ownership rules](/product/issues/ownership-rules/) + focused Alert filters                                                           |
+| Drifting traffic or seasonal metrics | Configure **[Monitors](/product/monitors-and-alerts/monitors/)** so thresholds fit reality—then Alerts notify on resulting issues |
+
+## Next Steps
+
+- [Alerts](/product/monitors-and-alerts/alerts/) — sources, triggers, filters, actions ([`sentry.io/monitors/alerts`](https://sentry.io/monitors/alerts))
+- [Sentry notifications](/product/notifications/)
+- [Monitors](/product/monitors-and-alerts/monitors/) — define what becomes an issue before Alerts route it
+- [Ownership rules](/product/issues/ownership-rules/) — default routing for Issues
