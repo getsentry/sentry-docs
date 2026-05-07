@@ -41,33 +41,30 @@ You need to have both the Sentry SDK and the Supabase library installed. For Sup
 
 This is the preferred method for most use cases and follows Sentry's standard integration pattern.
 
+### Imports
+
+<PlatformSection supported={["javascript.deno"]}>
+
+```javascript
+// Import Sentry from npm and ensure it appears before other imports
+import * as Sentry from 'npm:@sentry/deno';
+import { createClient } from 'npm:@supabase/supabase-js';
+```
+
+</PlatformSection>
+
 <PlatformSection notSupported={["javascript.deno"]}>
 
 ```javascript
 import * as Sentry from "___SDK_PACKAGE___";
 import { createClient } from '@supabase/supabase-js';
-
-const supabaseClient = createClient('YOUR_SUPABASE_URL', 'YOUR_SUPABASE_KEY');
-
-Sentry.init({
-  dsn: 'YOUR_DSN',
-  integrations: [
-    Sentry.supabaseIntegration({ supabaseClient })
-  ],
-  tracesSampleRate: 1.0,
-});
 ```
 
 </PlatformSection>
 
-<PlatformSection supported={["javascript.deno"]}>
-
-In Deno, import the Sentry SDK from the npm registry **before** any other imports to ensure it can instrument your application correctly:
+### Initialize
 
 ```javascript
-import * as Sentry from 'npm:@sentry/deno';
-import { createClient } from 'npm:@supabase/supabase-js';
-
 const supabaseClient = createClient('YOUR_SUPABASE_URL', 'YOUR_SUPABASE_KEY');
 
 Sentry.init({
@@ -79,7 +76,9 @@ Sentry.init({
 });
 ```
 
-</PlatformSection>
+<Note>
+For Deno, always place the `npm:@sentry/deno` import before other imports so instrumentation can attach correctly.
+</Note>
 
 ## Generated Spans
 
