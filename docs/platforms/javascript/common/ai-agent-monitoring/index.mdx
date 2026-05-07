@@ -181,7 +181,7 @@ When instrumenting an agent loop, spans nest like this:
 
 `gen_ai.invoke_agent` is the container. `gen_ai.chat` and `gen_ai.execute_tool` spans are its children (siblings of each other). A `gen_ai.chat` span can also appear without an agent parent for standalone LLM calls.
 
-### AI Client Span
+### AI Request Span
 
 <SplitLayout>
 <SplitSection>
@@ -206,7 +206,7 @@ const messages = [
 
 await Sentry.startSpan(
   {
-    op: "gen_ai.chat",
+    op: "gen_ai.request",
     name: "chat o3-mini",
     attributes: {
       "gen_ai.operation.name": "chat",
@@ -250,7 +250,7 @@ await Sentry.startSpan(
 </SplitSection>
 </SplitLayout>
 
-<Expandable title="AI Client span attributes">
+<Expandable title="AI Request span attributes">
   <Include name="tracing/ai-agents-module/ai-client-span" />
 </Expandable>
 
@@ -403,7 +403,7 @@ When the LLM returns a stream, the span must outlive the initial callback. Use `
 async function callLLMStreaming(model, messages) {
   const span = Sentry.startInactiveSpan({
     name: `chat ${model}`,
-    op: "gen_ai.chat",
+    op: "gen_ai.request",
     attributes: {
       "gen_ai.operation.name": "chat",
       "gen_ai.request.model": model,
