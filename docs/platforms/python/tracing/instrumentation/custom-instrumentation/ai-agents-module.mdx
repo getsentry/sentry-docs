@@ -64,7 +64,7 @@ messages = [{"role": "user", "parts": [{"type": "text", "content": "Tell me a jo
 with sentry_sdk.start_span(op="gen_ai.chat", name="chat o3-mini") as span:
     span.set_data("gen_ai.operation.name", "chat")
     span.set_data("gen_ai.request.model", "o3-mini")
-    span.set_data("gen_ai.system", "openai")
+    span.set_data("gen_ai.provider.name", "openai")
     span.set_data("gen_ai.input.messages", json.dumps(messages))
 
     result = client.chat.completions.create(model="o3-mini", messages=messages)
@@ -73,7 +73,7 @@ with sentry_sdk.start_span(op="gen_ai.chat", name="chat o3-mini") as span:
     span.set_data("gen_ai.output.messages", json.dumps([
         {"role": "assistant", "parts": [{"type": "text", "content": result.choices[0].message.content}]}
     ]))
-    span.set_data("gen_ai.response.finish_reasons", result.choices[0].finish_reason)
+    span.set_data("gen_ai.response.finish_reasons", json.dumps([result.choices[0].finish_reason]))
     span.set_data("gen_ai.usage.input_tokens", result.usage.prompt_tokens)
     span.set_data("gen_ai.usage.output_tokens", result.usage.completion_tokens)
 ```

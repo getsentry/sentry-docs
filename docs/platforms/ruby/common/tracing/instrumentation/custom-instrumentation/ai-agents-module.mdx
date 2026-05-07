@@ -48,7 +48,7 @@ messages = [{ role: 'user', parts: [{ type: 'text', content: 'Tell me a joke' }]
 Sentry.with_child_span(op: 'gen_ai.chat', description: 'chat o3-mini') do |span|
   span.set_data('gen_ai.operation.name', 'chat')
   span.set_data('gen_ai.request.model', 'o3-mini')
-  span.set_data('gen_ai.system', 'openai')
+  span.set_data('gen_ai.provider.name', 'openai')
   span.set_data('gen_ai.input.messages', messages.to_json)
 
   result = client.chat(model: 'o3-mini', messages: messages)
@@ -57,7 +57,7 @@ Sentry.with_child_span(op: 'gen_ai.chat', description: 'chat o3-mini') do |span|
   span.set_data('gen_ai.output.messages', [
     { role: 'assistant', parts: [{ type: 'text', content: result.choices[0].message.content }] }
   ].to_json)
-  span.set_data('gen_ai.response.finish_reasons', result.choices[0].finish_reason)
+  span.set_data('gen_ai.response.finish_reasons', [result.choices[0].finish_reason].to_json)
   span.set_data('gen_ai.usage.input_tokens', result.usage.prompt_tokens)
   span.set_data('gen_ai.usage.output_tokens', result.usage.completion_tokens)
 end
