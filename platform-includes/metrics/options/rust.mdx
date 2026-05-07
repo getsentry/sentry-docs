@@ -1,0 +1,35 @@
+### Filtering Metrics
+
+Use [`before_send_metric`](https://docs.rs/sentry/latest/sentry/struct.ClientOptions.html#structfield.before_send_metric) to drop or update metrics before Sentry sends them. Return `None` to drop a metric.
+
+For example, to filter all metrics with the name `"debug.metric"`, you could use the following `before_send_metric`:
+
+```rust {filename:main.rs}
+let _guard = sentry::init((
+    "___PUBLIC_DSN___",
+    sentry::ClientOptions {
+        before_send_metric: Some(std::sync::Arc::new(|metric| {
+            if metric.name == "debug.metric" {
+                return None;
+            }
+
+            Some(metric)
+        })),
+        ..Default::default()
+    },
+));
+```
+
+### Disabling Metrics
+
+Metrics are enabled by default when the `sentry` crate is compiled with the `metrics` feature. To stop sending metrics, set [`enable_metrics: false`](https://docs.rs/sentry/latest/sentry/struct.ClientOptions.html#structfield.enable_metrics) in the [`ClientOptions`](https://docs.rs/sentry/latest/sentry/struct.ClientOptions.html).
+
+```rust {filename:main.rs}
+let _guard = sentry::init((
+    "___PUBLIC_DSN___",
+    sentry::ClientOptions {
+        enable_metrics: false,
+        ..Default::default()
+    },
+));
+```
