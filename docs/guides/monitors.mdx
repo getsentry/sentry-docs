@@ -155,7 +155,28 @@ SaaS products depend on a pipeline of billing, notification, and data jobs all r
 | Notification delivery job    | Cron   | Schedule: every 2 min; max runtime: 90 sec                                                           | `#platform-eng` |
 | API base endpoint            | Uptime | Probe: every 1 min; failure threshold: 3 consecutive                                                 | `#oncall`       |
 | Payment error rate           | Metric | Signal: error rate on checkout/billing spans; detection: absolute; threshold: > 1% in 5 min window  | `#billing-eng`  |
-| API p95 latency              | Metric | Signal: p95 response time; detection: change; threshold: increases > 20% vs. previous 24h           | `#oncall`       |
+**Cron Monitors:**
+
+| Monitor                      | Schedule                                    | Grace Period | Max Runtime | Failure Tolerance | Owner           |
+| ---------------------------- | ------------------------------------------- | ------------ | ----------- | ----------------- | --------------- |
+| Invoice generation           | Crontab: `0 23 * * *` (daily at 11 PM)     | 10 min       | 15 min      | 1                 | `#billing-eng`  |
+| Payment retry processing     | Interval: every 6 hours                     | 5 min        | 10 min      | 1                 | `#billing-eng`  |
+| Trial expiration enforcement | Crontab: `0 6 * * *` (daily at 6 AM)       | 5 min        | 5 min       | 1                 | `#growth-eng`   |
+| Scheduled data exports       | Interval: varies per customer               | 10 min       | 30 min      | 1                 | `#data-eng`     |
+| Notification delivery        | Interval: every 2 minutes                   | 30 sec       | 90 sec      | 2                 | `#platform-eng` |
+
+**Metric Monitors:**
+
+| Monitor              | Dataset | Aggregate                 | Detection | Threshold / Comparison                                                                 | Interval | Environment  | Owner          |
+| -------------------- | ------- | ------------------------- | --------- | -------------------------------------------------------------------------------------- | -------- | ------------ | -------------- |
+| Payment error rate   | Spans   | `failure_rate()`          | Threshold | Above, High: 1%; query: `span.op:http transaction:/api/checkout/*`                     | 5 min    | `production` | `#billing-eng` |
+| API p95 latency      | Spans   | `p95(span.duration)`      | Change    | Above, High: 20%, compared to previous 1 day                                           | 15 min   | `production` | `#oncall`      |
+
+**Uptime Monitors:**
+
+| Monitor            | URL                                         | Method | Interval    | Failure Threshold | Environment  | Owner    |
+| ------------------ | ------------------------------------------- | ------ | ----------- | ----------------- | ------------ | -------- |
+| API base endpoint  | `https://api.example.com/v1/me`  | GET | Every 1 min | 3 | `production` | `#oncall` |
 
 **Noise strategy:** Set a generous **Grace Period** on the invoice generation job to handle end-of-month volume spikes — 10 minutes instead of the default 1. Use separate monitor environments for `production` and `eu` (if you run a separate EU instance) and only connect alerts to production monitors. For the payment error rate monitor, use **Threshold** (absolute) detection rather than **Change**. Even a small baseline error rate on checkout is unacceptable, so percentage-change detection would set the wrong expectation.
 
