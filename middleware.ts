@@ -1874,67 +1874,67 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/workflow/alerts-notifications/',
-    to: '/product/alerts/',
+    to: '/product/monitors-and-alerts/alerts/',
   },
   {
     from: '/product/alerts-notifications/',
-    to: '/product/alerts/',
+    to: '/product/monitors-and-alerts/alerts/',
   },
   {
     from: '/product/sentry-basics/guides/alert-notifications/',
-    to: '/product/alerts/',
+    to: '/product/monitors-and-alerts/alerts/',
   },
   {
     from: '/product/alerts/create-alerts/best-practices/',
-    to: '/product/alerts/create-alerts/',
+    to: '/product/monitors-and-alerts/alerts/',
   },
   {
     from: '/product/alerts/best-practices/',
-    to: '/product/alerts/create-alerts/',
+    to: '/product/monitors-and-alerts/alerts/',
   },
   {
     from: '/product/sentry-basics/guides/alert-notifications/routing-alerts/',
-    to: '/product/alerts/create-alerts/routing-alerts/',
+    to: '/product/monitors-and-alerts/alerts/',
   },
   {
     from: '/product/sentry-basics/guides/alert-notifications/issue-alerts/',
-    to: '/product/alerts/create-alerts/issue-alert-config/',
+    to: '/product/monitors-and-alerts/alerts/',
   },
   {
     from: '/product/alerts/alert-settings/',
-    to: '/product/alerts/create-alerts/issue-alert-config/',
+    to: '/product/monitors-and-alerts/alerts/',
   },
   {
     from: '/product/alerts-notifications/alert-settings/',
-    to: '/product/alerts/create-alerts/issue-alert-config/',
+    to: '/product/monitors-and-alerts/alerts/',
   },
   {
     from: '/product/sentry-basics/guides/alert-notifications/metric-alerts/',
-    to: '/product/alerts/create-alerts/metric-alert-config/',
+    to: '/product/monitors-and-alerts/monitors/',
   },
   {
     from: '/workflow/alerts-notifications/alerts/',
-    to: '/product/alerts/alert-types/',
+    to: '/product/monitors-and-alerts/alerts/',
   },
   {
     from: '/workflow/notifications/alerts/',
-    to: '/product/alerts/alert-types/',
+    to: '/product/monitors-and-alerts/alerts/',
   },
   {
     from: '/product/alerts-notifications/alerts/',
-    to: '/product/alerts/alert-types/',
+    to: '/product/monitors-and-alerts/alerts/',
   },
   {
     from: '/product/alerts-notifications/metric-alerts/',
-    to: '/product/alerts/alert-types/',
+    to: '/product/monitors-and-alerts/alerts/',
   },
   {
     from: '/product/alerts-notifications/issue-alerts/',
-    to: '/product/alerts/alert-types/',
+    to: '/product/monitors-and-alerts/alerts/',
   },
   {
     from: '/product/alerts/create-alerts/crash-rate-alert-config/',
-    to: '/product/alerts/alert-types/',
+    to: '/product/monitors-and-alerts/alerts/',
   },
   {
     from: '/workflow/alerts-notifications/notifications/',
