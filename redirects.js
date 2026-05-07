@@ -1555,15 +1555,15 @@ const userDocsRedirects = [
   },
   {
     source: '/product/insights/backend/:path*',
-    destination: '/product/dashboards/sentry-dashboards/backend/:path*',
+    destination: '/product/dashboards/sentry-dashboards/backend/',
   },
   {
     source: '/product/insights/frontend/:path*',
-    destination: '/product/dashboards/sentry-dashboards/frontend/:path*',
+    destination: '/product/dashboards/sentry-dashboards/frontend/',
   },
   {
     source: '/product/insights/mobile/:path*',
-    destination: '/product/dashboards/sentry-dashboards/mobile/:path*',
+    destination: '/product/dashboards/sentry-dashboards/mobile/',
   },
   {
     source: '/product/insights/:path*',
