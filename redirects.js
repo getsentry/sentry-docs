@@ -1492,62 +1492,82 @@ const userDocsRedirects = [
       '/platforms/react-native/data-management/debug-files/source-context/data-management/debug-files/upload/',
     destination: '/platforms/react-native/data-management/debug-files/upload/',
   },
-  // Redirects for prior Insights information architecture:
-  {
-    source: '/product/insights/requests/',
-    destination: '/product/insights/backend/requests/',
-  },
-  {
-    source: '/product/insights/queries/',
-    destination: '/product/insights/backend/queries/',
-  },
-  {
-    source: '/product/insights/assets/',
-    destination: '/product/insights/frontend/assets/',
-  },
-  {
-    source: '/product/insights/mobile-vitals/',
-    destination: '/product/insights/mobile/',
-  },
-  {
-    source: '/product/insights/mobile-vitals/app-starts/',
-    destination: '/product/insights/mobile/mobile-screens/app-starts/',
-  },
-  {
-    source: '/product/insights/mobile-vitals/screen-loads/',
-    destination: '/product/insights/mobile/mobile-screens/screen-loads/',
-  },
-  {
-    source: '/product/insights/web-vitals/',
-    destination: '/product/insights/frontend/web-vitals/',
-  },
-  {
-    source: '/product/insights/web-vitals/web-vitals-concepts/',
-    destination: '/product/insights/frontend/web-vitals/web-vitals-concepts/',
-  },
-  {
-    source: '/product/insights/caches/',
-    destination: '/product/insights/backend/caches/',
-  },
-  {
-    source: '/product/insights/caches/cache-page/',
-    destination: '/product/insights/backend/caches/cache-page/',
-  },
-  {
-    source: '/product/insights/queue-monitoring/',
-    destination: '/product/insights/backend/queue-monitoring/',
-  },
-  {
-    source: '/product/insights/queue-monitoring/queues-page/',
-    destination: '/product/insights/backend/queue-monitoring/queues-page/',
-  },
+  // Redirects for Insights → Sentry Dashboards migration
   {
     source: '/product/insights/llm-monitoring/:path*',
-    destination: '/ai/monitoring/',
+    destination: '/ai/monitoring/:path*',
   },
   {
     source: '/product/insights/agents/:path*',
     destination: '/ai/monitoring/agents/:path*',
+  },
+  {
+    source: '/product/insights/retention-priorities/',
+    destination: '/organization/dynamic-sampling/',
+  },
+  {
+    source: '/product/insights/mcp/',
+    destination: '/ai/monitoring/mcp/',
+  },
+  {
+    source: '/product/insights/ai/:path*',
+    destination: '/ai/monitoring/:path*',
+  },
+  {
+    source: '/product/insights/requests/',
+    destination: '/product/dashboards/sentry-dashboards/outbound-api-requests/',
+  },
+  {
+    source: '/product/insights/backend/requests/',
+    destination: '/product/dashboards/sentry-dashboards/outbound-api-requests/',
+  },
+  {
+    source: '/product/insights/queries/',
+    destination: '/product/dashboards/sentry-dashboards/backend/queries/',
+  },
+  {
+    source: '/product/insights/assets/',
+    destination: '/product/dashboards/sentry-dashboards/frontend/assets/',
+  },
+  {
+    source: '/product/insights/web-vitals/:path*',
+    destination: '/product/dashboards/sentry-dashboards/frontend/web-vitals/:path*',
+  },
+  {
+    source: '/product/insights/caches/:path*',
+    destination: '/product/dashboards/sentry-dashboards/backend/caches/',
+  },
+  {
+    source: '/product/insights/queue-monitoring/:path*',
+    destination: '/product/dashboards/sentry-dashboards/backend/queues/',
+  },
+  {
+    source: '/product/insights/mobile-vitals/app-starts/',
+    destination: '/product/dashboards/sentry-dashboards/mobile/mobile-vitals/app-starts/',
+  },
+  {
+    source: '/product/insights/mobile-vitals/screen-loads/',
+    destination: '/product/dashboards/sentry-dashboards/mobile/mobile-vitals/screen-loads/',
+  },
+  {
+    source: '/product/insights/mobile-vitals/:path*',
+    destination: '/product/dashboards/sentry-dashboards/mobile/mobile-vitals/',
+  },
+  {
+    source: '/product/insights/backend/:path*',
+    destination: '/product/dashboards/sentry-dashboards/backend/',
+  },
+  {
+    source: '/product/insights/frontend/:path*',
+    destination: '/product/dashboards/sentry-dashboards/frontend/',
+  },
+  {
+    source: '/product/insights/mobile/:path*',
+    destination: '/product/dashboards/sentry-dashboards/mobile/',
+  },
+  {
+    source: '/product/insights/:path*',
+    destination: '/product/dashboards/sentry-dashboards/',
   },
   // AI Agent Monitoring moved to top-level feature
   {
@@ -1573,10 +1593,6 @@ const userDocsRedirects = [
   {
     source: '/platforms/javascript/ai-agent-monitoring/',
     destination: '/platforms/javascript/ai-agent-monitoring-browser/',
-  },
-  {
-    source: '/product/insights/retention-priorities/',
-    destination: '/organization/dynamic-sampling/',
   },
   {
     source: '/product/dashboards/sentry-dashboards/performance-metrics/',
@@ -1870,10 +1886,6 @@ const userDocsRedirects = [
   {
     source: '/platforms/dotnet/guides/google-cloud-functions/profiling/:path*',
     destination: '/platforms/dotnet/profiling/',
-  },
-  {
-    source: '/product/insights/mcp/',
-    destination: '/ai/monitoring/mcp/',
   },
   // Next.js usage -> capturing-errors rename
   {
