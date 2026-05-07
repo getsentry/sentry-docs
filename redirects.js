@@ -576,6 +576,286 @@ const userDocsRedirects = [
     destination: '/integrations/issue-tracking/incidentio/',
   },
   {
+    source: '/integrations/aws-lambda/',
+    destination: '/integrations/cloud-monitoring/aws-lambda/',
+  },
+  {
+    source: '/integrations/cloudflare-workers/',
+    destination: '/integrations/cloud-monitoring/cloudflare-workers/',
+  },
+  {
+    source: '/integrations/gcp-cloud-run/',
+    destination: '/integrations/cloud-monitoring/gcp-cloud-run/',
+  },
+  {
+    source: '/integrations/claude/',
+    destination: '/integrations/coding-agents/claude/',
+  },
+  {
+    source: '/integrations/cloudeagle/',
+    destination: '/integrations/compliance/cloudeagle/',
+  },
+  {
+    source: '/integrations/elba/',
+    destination: '/integrations/compliance/elba/',
+  },
+  {
+    source: '/integrations/truto/',
+    destination: '/integrations/compliance/truto/',
+  },
+  {
+    source: '/integrations/vanta/',
+    destination: '/integrations/compliance/vanta/',
+  },
+  {
+    source: '/integrations/vanta-eu/',
+    destination: '/integrations/compliance/vanta-eu/',
+  },
+  {
+    source: '/integrations/amazon-sqs/',
+    destination: '/integrations/data-forwarding/amazon-sqs/',
+  },
+  {
+    source: '/integrations/grafana/',
+    destination: '/integrations/data-forwarding/grafana/',
+  },
+  {
+    source: '/integrations/segment/',
+    destination: '/integrations/data-forwarding/segment/',
+  },
+  {
+    source: '/integrations/splunk/',
+    destination: '/integrations/data-forwarding/splunk/',
+  },
+  {
+    source: '/integrations/apigene/',
+    destination: '/integrations/debugging/apigene/',
+  },
+  {
+    source: '/integrations/codecomet/',
+    destination: '/integrations/debugging/codecomet/',
+  },
+  {
+    source: '/integrations/foamai/',
+    destination: '/integrations/debugging/foamai/',
+  },
+  {
+    source: '/integrations/logicstar/',
+    destination: '/integrations/debugging/logicstar/',
+  },
+  {
+    source: '/integrations/phoebeai/',
+    destination: '/integrations/debugging/phoebeai/',
+  },
+  {
+    source: '/integrations/qckfx/',
+    destination: '/integrations/debugging/qckfx/',
+  },
+  {
+    source: '/integrations/revisedev/',
+    destination: '/integrations/debugging/revisedev/',
+  },
+  {
+    source: '/integrations/rookout/',
+    destination: '/integrations/debugging/rookout/',
+  },
+  {
+    source: '/integrations/sevvy/',
+    destination: '/integrations/debugging/sevvy/',
+  },
+  {
+    source: '/integrations/sourcery/',
+    destination: '/integrations/debugging/sourcery/',
+  },
+  {
+    source: '/integrations/tembo/',
+    destination: '/integrations/debugging/tembo/',
+  },
+  {
+    source: '/integrations/expo/',
+    destination: '/integrations/deployment/expo/',
+  },
+  {
+    source: '/integrations/heroku/',
+    destination: '/integrations/deployment/heroku/',
+  },
+  {
+    source: '/integrations/vercel/',
+    destination: '/integrations/deployment/vercel/',
+  },
+  {
+    source: '/integrations/flagsmith/',
+    destination: '/integrations/feature-flag/flagsmith/',
+  },
+  {
+    source: '/integrations/generic/',
+    destination: '/integrations/feature-flag/generic/',
+  },
+  {
+    source: '/integrations/keyflow/',
+    destination: '/integrations/feature-flag/keyflow/',
+  },
+  {
+    source: '/integrations/launchdarkly/',
+    destination: '/integrations/feature-flag/launchdarkly/',
+  },
+  {
+    source: '/integrations/split/',
+    destination: '/integrations/feature-flag/split/',
+  },
+  {
+    source: '/integrations/statsig/',
+    destination: '/integrations/feature-flag/statsig/',
+  },
+  {
+    source: '/integrations/unleash/',
+    destination: '/integrations/feature-flag/unleash/',
+  },
+  {
+    source: '/integrations/ui-components/',
+    destination: '/integrations/integration-platform/ui-components/',
+  },
+  {
+    source: '/integrations/asana/',
+    destination: '/integrations/issue-tracking/asana/',
+  },
+  {
+    source: '/integrations/bugsniff/',
+    destination: '/integrations/issue-tracking/bugsniff/',
+  },
+  {
+    source: '/integrations/clickup/',
+    destination: '/integrations/issue-tracking/clickup/',
+  },
+  {
+    source: '/integrations/factory/',
+    destination: '/integrations/issue-tracking/factory/',
+  },
+  {
+    source: '/integrations/goast/',
+    destination: '/integrations/issue-tracking/goast/',
+  },
+  {
+    source: '/integrations/height/',
+    destination: '/integrations/issue-tracking/height/',
+  },
+  {
+    source: '/integrations/jira/',
+    destination: '/integrations/issue-tracking/jira/',
+  },
+  {
+    source: '/integrations/kitemaker/',
+    destination: '/integrations/issue-tracking/kitemaker/',
+  },
+  {
+    source: '/integrations/linear/',
+    destination: '/integrations/issue-tracking/linear/',
+  },
+  {
+    source: '/integrations/makeplane/',
+    destination: '/integrations/issue-tracking/makeplane/',
+  },
+  {
+    source: '/integrations/sentry-linear-agent/',
+    destination: '/integrations/issue-tracking/sentry-linear-agent/',
+  },
+  {
+    source: '/integrations/shortcut/',
+    destination: '/integrations/issue-tracking/shortcut/',
+  },
+  {
+    source: '/integrations/starsling/',
+    destination: '/integrations/issue-tracking/starsling/',
+  },
+  {
+    source: '/integrations/teamcamp/',
+    destination: '/integrations/issue-tracking/teamcamp/',
+  },
+  {
+    source: '/integrations/teamwork/',
+    destination: '/integrations/issue-tracking/teamwork/',
+  },
+  {
+    source: '/integrations/cased/',
+    destination: '/integrations/notification-incidents/cased/',
+  },
+  {
+    source: '/integrations/discord/',
+    destination: '/integrations/notification-incidents/discord/',
+  },
+  {
+    source: '/integrations/glueai/',
+    destination: '/integrations/notification-incidents/glueai/',
+  },
+  {
+    source: '/integrations/msteams/',
+    destination: '/integrations/notification-incidents/msteams/',
+  },
+  {
+    source: '/integrations/opsgenie/',
+    destination: '/integrations/notification-incidents/opsgenie/',
+  },
+  {
+    source: '/integrations/pagerduty/',
+    destination: '/integrations/notification-incidents/pagerduty/',
+  },
+  {
+    source: '/integrations/pagertree/',
+    destination: '/integrations/notification-incidents/pagertree/',
+  },
+  {
+    source: '/integrations/rootly/',
+    destination: '/integrations/notification-incidents/rootly/',
+  },
+  {
+    source: '/integrations/signl4/',
+    destination: '/integrations/notification-incidents/signl4/',
+  },
+  {
+    source: '/integrations/slack/',
+    destination: '/integrations/notification-incidents/slack/',
+  },
+  {
+    source: '/integrations/spikesh/',
+    destination: '/integrations/notification-incidents/spikesh/',
+  },
+  {
+    source: '/integrations/telegram-alerts-bot/',
+    destination: '/integrations/notification-incidents/telegram-alerts-bot/',
+  },
+  {
+    source: '/integrations/atlas/',
+    destination: '/integrations/session-replay/atlas/',
+  },
+  {
+    source: '/integrations/azure-devops/',
+    destination: '/integrations/source-code-mgmt/azure-devops/',
+  },
+  {
+    source: '/integrations/bitbucket/',
+    destination: '/integrations/source-code-mgmt/bitbucket/',
+  },
+  {
+    source: '/integrations/continuedev/',
+    destination: '/integrations/source-code-mgmt/continuedev/',
+  },
+  {
+    source: '/integrations/github/',
+    destination: '/integrations/source-code-mgmt/github/',
+  },
+  {
+    source: '/integrations/gitlab/',
+    destination: '/integrations/source-code-mgmt/gitlab/',
+  },
+  {
+    source: '/integrations/perforce/',
+    destination: '/integrations/source-code-mgmt/perforce/',
+  },
+  {
+    source: '/integrations/source-context/',
+    destination: '/integrations/source-code-mgmt/source-context/',
+  },
+  {
     source: '/integrations/cursor/',
     destination: '/integrations/coding-agents/cursor/',
   },
@@ -594,6 +874,250 @@ const userDocsRedirects = [
   {
     source: '/organization/integrations/incidentio/',
     destination: '/integrations/issue-tracking/incidentio/',
+  },
+  {
+    source: '/organization/integrations/aws-lambda/',
+    destination: '/integrations/cloud-monitoring/aws-lambda/',
+  },
+  {
+    source: '/organization/integrations/gcp-cloud-run/',
+    destination: '/integrations/cloud-monitoring/gcp-cloud-run/',
+  },
+  {
+    source: '/organization/integrations/claude/',
+    destination: '/integrations/coding-agents/claude/',
+  },
+  {
+    source: '/organization/integrations/cloudeagle/',
+    destination: '/integrations/compliance/cloudeagle/',
+  },
+  {
+    source: '/organization/integrations/elba/',
+    destination: '/integrations/compliance/elba/',
+  },
+  {
+    source: '/organization/integrations/truto/',
+    destination: '/integrations/compliance/truto/',
+  },
+  {
+    source: '/organization/integrations/vanta/',
+    destination: '/integrations/compliance/vanta/',
+  },
+  {
+    source: '/organization/integrations/vanta-eu/',
+    destination: '/integrations/compliance/vanta-eu/',
+  },
+  {
+    source: '/organization/integrations/amazon-sqs/',
+    destination: '/integrations/data-forwarding/amazon-sqs/',
+  },
+  {
+    source: '/organization/integrations/grafana/',
+    destination: '/integrations/data-forwarding/grafana/',
+  },
+  {
+    source: '/organization/integrations/segment/',
+    destination: '/integrations/data-forwarding/segment/',
+  },
+  {
+    source: '/organization/integrations/splunk/',
+    destination: '/integrations/data-forwarding/splunk/',
+  },
+  {
+    source: '/organization/integrations/apigene/',
+    destination: '/integrations/debugging/apigene/',
+  },
+  {
+    source: '/organization/integrations/codecomet/',
+    destination: '/integrations/debugging/codecomet/',
+  },
+  {
+    source: '/organization/integrations/foamai/',
+    destination: '/integrations/debugging/foamai/',
+  },
+  {
+    source: '/organization/integrations/logicstar/',
+    destination: '/integrations/debugging/logicstar/',
+  },
+  {
+    source: '/organization/integrations/phoebeai/',
+    destination: '/integrations/debugging/phoebeai/',
+  },
+  {
+    source: '/organization/integrations/qckfx/',
+    destination: '/integrations/debugging/qckfx/',
+  },
+  {
+    source: '/organization/integrations/revisedev/',
+    destination: '/integrations/debugging/revisedev/',
+  },
+  {
+    source: '/organization/integrations/rookout/',
+    destination: '/integrations/debugging/rookout/',
+  },
+  {
+    source: '/organization/integrations/sevvy/',
+    destination: '/integrations/debugging/sevvy/',
+  },
+  {
+    source: '/organization/integrations/sourcery/',
+    destination: '/integrations/debugging/sourcery/',
+  },
+  {
+    source: '/organization/integrations/tembo/',
+    destination: '/integrations/debugging/tembo/',
+  },
+  {
+    source: '/organization/integrations/heroku/',
+    destination: '/integrations/deployment/heroku/',
+  },
+  {
+    source: '/organization/integrations/flagsmith/',
+    destination: '/integrations/feature-flag/flagsmith/',
+  },
+  {
+    source: '/organization/integrations/generic/',
+    destination: '/integrations/feature-flag/generic/',
+  },
+  {
+    source: '/organization/integrations/keyflow/',
+    destination: '/integrations/feature-flag/keyflow/',
+  },
+  {
+    source: '/organization/integrations/split/',
+    destination: '/integrations/feature-flag/split/',
+  },
+  {
+    source: '/organization/integrations/statsig/',
+    destination: '/integrations/feature-flag/statsig/',
+  },
+  {
+    source: '/organization/integrations/unleash/',
+    destination: '/integrations/feature-flag/unleash/',
+  },
+  {
+    source: '/organization/integrations/ui-components/',
+    destination: '/integrations/integration-platform/ui-components/',
+  },
+  {
+    source: '/organization/integrations/asana/',
+    destination: '/integrations/issue-tracking/asana/',
+  },
+  {
+    source: '/organization/integrations/bugsniff/',
+    destination: '/integrations/issue-tracking/bugsniff/',
+  },
+  {
+    source: '/organization/integrations/clickup/',
+    destination: '/integrations/issue-tracking/clickup/',
+  },
+  {
+    source: '/organization/integrations/factory/',
+    destination: '/integrations/issue-tracking/factory/',
+  },
+  {
+    source: '/organization/integrations/goast/',
+    destination: '/integrations/issue-tracking/goast/',
+  },
+  {
+    source: '/organization/integrations/jira/',
+    destination: '/integrations/issue-tracking/jira/',
+  },
+  {
+    source: '/organization/integrations/kitemaker/',
+    destination: '/integrations/issue-tracking/kitemaker/',
+  },
+  {
+    source: '/organization/integrations/linear/',
+    destination: '/integrations/issue-tracking/linear/',
+  },
+  {
+    source: '/organization/integrations/makeplane/',
+    destination: '/integrations/issue-tracking/makeplane/',
+  },
+  {
+    source: '/organization/integrations/sentry-linear-agent/',
+    destination: '/integrations/issue-tracking/sentry-linear-agent/',
+  },
+  {
+    source: '/organization/integrations/starsling/',
+    destination: '/integrations/issue-tracking/starsling/',
+  },
+  {
+    source: '/organization/integrations/teamcamp/',
+    destination: '/integrations/issue-tracking/teamcamp/',
+  },
+  {
+    source: '/organization/integrations/teamwork/',
+    destination: '/integrations/issue-tracking/teamwork/',
+  },
+  {
+    source: '/organization/integrations/cased/',
+    destination: '/integrations/notification-incidents/cased/',
+  },
+  {
+    source: '/organization/integrations/discord/',
+    destination: '/integrations/notification-incidents/discord/',
+  },
+  {
+    source: '/organization/integrations/glueai/',
+    destination: '/integrations/notification-incidents/glueai/',
+  },
+  {
+    source: '/organization/integrations/opsgenie/',
+    destination: '/integrations/notification-incidents/opsgenie/',
+  },
+  {
+    source: '/organization/integrations/pagerduty/',
+    destination: '/integrations/notification-incidents/pagerduty/',
+  },
+  {
+    source: '/organization/integrations/pagertree/',
+    destination: '/integrations/notification-incidents/pagertree/',
+  },
+  {
+    source: '/organization/integrations/signl4/',
+    destination: '/integrations/notification-incidents/signl4/',
+  },
+  {
+    source: '/organization/integrations/slack/',
+    destination: '/integrations/notification-incidents/slack/',
+  },
+  {
+    source: '/organization/integrations/spikesh/',
+    destination: '/integrations/notification-incidents/spikesh/',
+  },
+  {
+    source: '/organization/integrations/atlas/',
+    destination: '/integrations/session-replay/atlas/',
+  },
+  {
+    source: '/organization/integrations/azure-devops/',
+    destination: '/integrations/source-code-mgmt/azure-devops/',
+  },
+  {
+    source: '/organization/integrations/bitbucket/',
+    destination: '/integrations/source-code-mgmt/bitbucket/',
+  },
+  {
+    source: '/organization/integrations/continuedev/',
+    destination: '/integrations/source-code-mgmt/continuedev/',
+  },
+  {
+    source: '/organization/integrations/github/',
+    destination: '/integrations/source-code-mgmt/github/',
+  },
+  {
+    source: '/organization/integrations/gitlab/',
+    destination: '/integrations/source-code-mgmt/gitlab/',
+  },
+  {
+    source: '/organization/integrations/perforce/',
+    destination: '/integrations/source-code-mgmt/perforce/',
+  },
+  {
+    source: '/organization/integrations/source-context/',
+    destination: '/integrations/source-code-mgmt/source-context/',
   },
   {
     source: '/organization/integrations/rootly/',
@@ -1490,10 +2014,6 @@ const userDocsRedirects = [
   {
     source: '/platforms/react-native/manual-setup/codepush/',
     destination: '/platforms/react-native/sourcemaps/uploading/codepush/',
-  },
-  {
-    source: '/organization/integrations/launchdarkly/',
-    destination: '/integrations/feature-flag/launchdarkly/',
   },
   {
     source:
