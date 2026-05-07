@@ -167,6 +167,20 @@ Sentry.setConversationId(null);
 
 If you're using a library that Sentry does not automatically instrument, you can manually instrument your code to capture spans. For your AI agents data to show up in the [AI Agents Dashboards](https://sentry.io/orgredirect/organizations/:orgslug/dashboards/?filter=onlyPrebuilt&query=agents&sort=mostPopular), spans must have well-defined names and data attributes.
 
+### Span Hierarchy
+
+When instrumenting an agent loop, spans nest like this:
+
+```
+── invoke_agent My Agent          (gen_ai.invoke_agent)
+   ├── chat gpt-4o                (gen_ai.chat)         ← 1st LLM call
+   ├── execute_tool get_weather   (gen_ai.execute_tool)  ← tool run
+   ├── chat gpt-4o                (gen_ai.chat)         ← 2nd LLM call
+   └── ...
+```
+
+`gen_ai.invoke_agent` is the container. `gen_ai.chat` and `gen_ai.execute_tool` spans are its children (siblings of each other). A `gen_ai.chat` span can also appear without an agent parent for standalone LLM calls.
+
 ### AI Request Span
 
 <SplitLayout>
@@ -176,38 +190,53 @@ If you're using a library that Sentry does not automatically instrument, you can
 This span represents a request to an LLM model or service that generates a response based on the input prompt.
 
 **Key attributes:**
+- `gen_ai.operation.name` — Required. Set to `"chat"` for chat completions
 - `gen_ai.request.model` — The model name (required)
-- `gen_ai.request.messages` — The prompts sent to the LLM
-- `gen_ai.response.text` — The model's response
+- `gen_ai.input.messages` — The prompts sent to the LLM
+- `gen_ai.output.messages` — The model's response
 - `gen_ai.usage.input_tokens` / `output_tokens` — Token counts
 
 </SplitSectionText>
 <SplitSectionCode>
 
 ```javascript
-const messages = [{ role: "user", content: "Tell me a joke" }];
+const messages = [
+  { role: "user", parts: [{ type: "text", content: "Tell me a joke" }] },
+];
 
 await Sentry.startSpan(
   {
-    op: "gen_ai.request",
-    name: "request o3-mini",
+    op: "gen_ai.chat",
+    name: "chat o3-mini",
     attributes: {
+      "gen_ai.operation.name": "chat",
       "gen_ai.request.model": "o3-mini",
-      "gen_ai.request.messages": JSON.stringify(messages),
+      "gen_ai.provider.name": "openai",
+      "gen_ai.input.messages": JSON.stringify(messages),
     },
   },
   async (span) => {
-    // Call your LLM here
     const result = await client.chat.completions.create({
       model: "o3-mini",
       messages,
     });
 
+    span.setAttribute("gen_ai.response.model", result.model);
     span.setAttribute(
-      "gen_ai.response.text",
-      JSON.stringify([result.choices[0].message.content])
+      "gen_ai.output.messages",
+      JSON.stringify([
+        {
+          role: "assistant",
+          parts: [
+            { type: "text", content: result.choices[0].message.content },
+          ],
+        },
+      ])
     );
-    // Set token usage
+    span.setAttribute(
+      "gen_ai.response.finish_reasons",
+      JSON.stringify([result.choices[0].finish_reason])
+    );
     span.setAttribute("gen_ai.usage.input_tokens", result.usage.prompt_tokens);
     span.setAttribute(
       "gen_ai.usage.output_tokens",
@@ -240,9 +269,10 @@ For a complete guide on naming agents across all supported frameworks, see [Nami
 This span represents the execution of an AI agent, capturing the full lifecycle from receiving a task to producing a final response.
 
 **Key attributes:**
+- `gen_ai.operation.name` — Required. Set to `"invoke_agent"`
 - `gen_ai.agent.name` — The agent's name (e.g., "Weather Agent")
 - `gen_ai.request.model` — The underlying model used
-- `gen_ai.response.text` — The agent's final output
+- `gen_ai.output.messages` — The agent's final output
 - `gen_ai.usage.input_tokens` / `output_tokens` — Total token counts
 
 </SplitSectionText>
@@ -254,16 +284,23 @@ await Sentry.startSpan(
     op: "gen_ai.invoke_agent",
     name: "invoke_agent Weather Agent",
     attributes: {
+      "gen_ai.operation.name": "invoke_agent",
       "gen_ai.request.model": "o3-mini",
       "gen_ai.agent.name": "Weather Agent",
     },
   },
   async (span) => {
-    // Run the agent
     const result = await myAgent.run();
 
-    span.setAttribute("gen_ai.response.text", JSON.stringify([result.output]));
-    // Set token usage
+    span.setAttribute(
+      "gen_ai.output.messages",
+      JSON.stringify([
+        {
+          role: "assistant",
+          parts: [{ type: "text", content: result.output }],
+        },
+      ])
+    );
     span.setAttribute("gen_ai.usage.input_tokens", result.usage.inputTokens);
     span.setAttribute("gen_ai.usage.output_tokens", result.usage.outputTokens);
   }
@@ -287,9 +324,10 @@ await Sentry.startSpan(
 This span represents the execution of a tool or function that was requested by an AI model, including the input arguments and resulting output.
 
 **Key attributes:**
+- `gen_ai.operation.name` — Required. Set to `"execute_tool"`
 - `gen_ai.tool.name` — The tool's name (e.g., "get_weather")
-- `gen_ai.tool.input` — The arguments passed to the tool
-- `gen_ai.tool.output` — The tool's return value
+- `gen_ai.tool.call.arguments` — The arguments passed to the tool
+- `gen_ai.tool.call.result` — The tool's return value
 
 </SplitSectionText>
 <SplitSectionCode>
@@ -300,15 +338,15 @@ await Sentry.startSpan(
     op: "gen_ai.execute_tool",
     name: "execute_tool get_weather",
     attributes: {
+      "gen_ai.operation.name": "execute_tool",
       "gen_ai.tool.name": "get_weather",
-      "gen_ai.tool.input": JSON.stringify({ location: "Paris" }),
+      "gen_ai.tool.call.arguments": JSON.stringify({ location: "Paris" }),
     },
   },
   async (span) => {
-    // Call the tool
     const result = await getWeather({ location: "Paris" });
 
-    span.setAttribute("gen_ai.tool.output", JSON.stringify(result));
+    span.setAttribute("gen_ai.tool.call.result", JSON.stringify(result));
   }
 );
 ```
@@ -356,6 +394,58 @@ await Sentry.startSpan(
 </SplitSectionCode>
 </SplitSection>
 </SplitLayout>
+
+### Streaming Responses
+
+When the LLM returns a stream, the span must outlive the initial callback. Use `Sentry.startInactiveSpan` to create the span, then end it when the stream finishes:
+
+```javascript
+async function callLLMStreaming(model, messages) {
+  const span = Sentry.startInactiveSpan({
+    name: `chat ${model}`,
+    op: "gen_ai.chat",
+    attributes: {
+      "gen_ai.operation.name": "chat",
+      "gen_ai.request.model": model,
+      "gen_ai.input.messages": JSON.stringify(messages),
+    },
+  });
+
+  try {
+    const stream = await Sentry.withActiveSpan(span, () =>
+      yourLLMClient.stream({ model, messages })
+    );
+
+    stream.on("end", (finalMessage) => {
+      span.setAttribute(
+        "gen_ai.output.messages",
+        JSON.stringify([
+          {
+            role: "assistant",
+            parts: [{ type: "text", content: finalMessage.text }],
+          },
+        ])
+      );
+      span.setAttribute("gen_ai.usage.input_tokens", finalMessage.usage.input);
+      span.setAttribute(
+        "gen_ai.usage.output_tokens",
+        finalMessage.usage.output
+      );
+      span.setAttribute("gen_ai.response.model", finalMessage.model);
+      span.setAttribute("gen_ai.response.streaming", true);
+      span.end();
+    });
+
+    stream.on("error", () => span.end());
+    return stream;
+  } catch (error) {
+    span.end();
+    throw error;
+  }
+}
+```
+
+`startInactiveSpan` creates a span without automatically ending it. `Sentry.withActiveSpan` propagates context so any child spans nest correctly. Call `span.end()` when the stream completes or errors.
 
 ## Common Span Attributes
 
