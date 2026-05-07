@@ -184,20 +184,35 @@ SaaS products depend on a pipeline of billing, notification, and data jobs all r
 
 Mobile apps run backend jobs that affect users indirectly: push notification delivery, app store review sync, analytics aggregation, and device registration cleanup. When these fail silently, users see stale content or stop receiving notifications. Metric monitors on crash-free rates per platform catch release regressions, and mobile build monitors catch binary size bloat before it reaches the app store, or impacts users.
 
-**Key monitors to set up:**
+**Cron Monitors:**
 
-| Monitor                          | Type          | Configuration                                                                                              | Owner              |
-| -------------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------- | ------------------ |
-| Push notification delivery       | Cron          | Schedule: every 1 min; max runtime: 45 sec                                                                 | `#mobile-backend`  |
-| App store review sync            | Cron          | Schedule: every 4 hours; max runtime: 10 min                                                               | `#mobile-platform` |
-| Device token cleanup             | Cron          | Schedule: weekly; max runtime: 20 min                                                                      | `#mobile-backend`  |
-| Analytics aggregation            | Cron          | Schedule: hourly; max runtime: 15 min                                                                      | `#data-eng`        |
-| Mobile API base endpoint         | Uptime        | Probe: every 1 min; failure threshold: 3 consecutive                                                       | `#mobile-oncall`   |
-| Push notification service health | Uptime        | Probe: every 5 min; failure threshold: 3 consecutive                                                       | `#mobile-backend`  |
-| Crash-free session rate (iOS)    | Metric        | Signal: crash-free sessions, iOS; detection: change; threshold: drops > 3% vs. previous 24h               | `#mobile-oncall`   |
-| Crash-free session rate (Android)| Metric        | Signal: crash-free sessions, Android; detection: change; threshold: drops > 3% vs. previous 24h           | `#mobile-oncall`   |
-| App binary size (iOS)            | Mobile Build  | Platform: iOS; threshold: size diff > 3 MB per build                                                      | `#mobile-platform` |
-| App binary size (Android)        | Mobile Build  | Platform: Android; threshold: size diff > 2 MB per build                                                  | `#mobile-platform` |
+| Monitor                    | Schedule                                  | Grace Period | Max Runtime | Failure Tolerance | Owner              |
+| -------------------------- | ----------------------------------------- | ------------ | ----------- | ----------------- | ------------------ |
+| Push notification delivery | Interval: every 1 minute                  | 15 sec       | 45 sec      | 2                 | `#mobile-backend`  |
+| App store review sync      | Interval: every 4 hours                   | 5 min        | 10 min      | 1                 | `#mobile-platform` |
+| Device token cleanup       | Crontab: `0 2 * * 0` (weekly at 2 AM)    | 5 min        | 20 min      | 1                 | `#mobile-backend`  |
+| Analytics aggregation      | Interval: every 1 hour                    | 5 min        | 15 min      | 1                 | `#data-eng`        |
+
+**Metric Monitors:**
+
+| Monitor                       | Dataset  | Aggregate                  | Detection | Threshold / Comparison                                    | Interval | Environment  | Owner             |
+| ----------------------------- | -------- | -------------------------- | --------- | --------------------------------------------------------- | -------- | ------------ | ----------------- |
+| Crash-free sessions (iOS)     | Releases | `crash_free_rate(session)` | Change    | Below, High: 3%, compared to previous 1 day               | 1 hour   | `production` | `#mobile-oncall`  |
+| Crash-free sessions (Android) | Releases | `crash_free_rate(session)` | Change    | Below, High: 3%, compared to previous 1 day               | 1 hour   | `production` | `#mobile-oncall`  |
+
+**Uptime Monitors:**
+
+| Monitor                          | URL                                              | Method | Interval    | Failure Threshold | Environment  | Owner             |
+| -------------------------------- | ------------------------------------------------ | ------ | ----------- | ----------------- | ------------ | ----------------- |
+| Mobile API base endpoint         | `https://mobile-api.example.com/v1/bootstrap`    | GET    | Every 1 min | 3                 | `production` | `#mobile-oncall`  |
+| Push notification service health | `https://push.example.com/v1/me`                | GET    | Every 5 min | 3                 | `production` | `#mobile-backend` |
+
+**Mobile Build Monitors:**
+
+| Monitor                  | Measurement  | Threshold Type | High Priority | Low Priority | Owner              |
+| ------------------------ | ------------ | -------------- | ------------- | ------------ | ------------------ |
+| App binary size (iOS)    | Install Size | Absolute Diff  | 3 MB          | 1 MB         | `#mobile-platform` |
+| App binary size (Android)| Install Size | Absolute Diff  | 2 MB          | 0.5 MB       | `#mobile-platform` |
 
 **Noise strategy:** Push notification delivery runs frequently and is sensitive to queue depth — add a `checkin_margin` of 15 seconds to absorb burst delays. Separate the crash-free rate metric monitors by platform (iOS and Android) rather than combining them: a crash spike on one platform is almost always release- or device-specific, and a combined monitor would obscure which platform is affected. Set mobile build size thresholds conservatively at first using **Absolute Diff** (size change from previous build) rather than absolute values — you want to catch regressions, not block every PR that adds a dependency. Tighten after a few releases.
 
