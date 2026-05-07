@@ -572,6 +572,10 @@ const developerDocsRedirects = [
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const userDocsRedirects = [
   {
+    source: '/integrations/incidentio/',
+    destination: '/integrations/issue-tracking/incidentio/',
+  },
+  {
     source: '/integrations/cursor/',
     destination: '/integrations/coding-agents/cursor/',
   },
@@ -586,6 +590,10 @@ const userDocsRedirects = [
   {
     source: '/organization/integrations/height/',
     destination: '/integrations/issue-tracking/height/',
+  },
+  {
+    source: '/organization/integrations/incidentio/',
+    destination: '/integrations/issue-tracking/incidentio/',
   },
   {
     source: '/organization/integrations/rootly/',
