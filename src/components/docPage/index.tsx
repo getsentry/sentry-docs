@@ -141,6 +141,7 @@ export async function DocPage({
           <aside
             data-layout-anchor="right"
             className="sticky h-[calc(100vh-var(--header-height))] top-[var(--header-height)] overflow-y-auto hidden toc:block flex-none w-[250px] min-w-[250px]"
+            style={{marginRight: 'var(--layout-offset, 0px)'}}
           >
             <div className="sidebar">
               <SidebarTableOfContents />
@@ -149,10 +150,18 @@ export async function DocPage({
           </aside>
         )}
       </section>
-      <style>{`:root { --doc-content-w: 1100px; }`}</style>
       <style>{`
+        :root {
+          --doc-content-w: 1100px;
+          --toc-w: 250px;
+          --layout-total: calc(var(--sidebar-width, 300px) + var(--doc-content-w) + var(--toc-w));
+          /* Fluid centering offset: 0 when viewport <= total layout width,
+             grows equally on both sides when viewport > total layout width.
+             This shifts the entire sidebar+content+ToC assembly toward center. */
+          --layout-offset: max(0px, (100vw - var(--layout-total)) / 2);
+        }
         #doc-content {
-          max-width: none;
+          max-width: var(--doc-content-w);
           box-sizing: border-box;
         }
         /* Mobile responsive styles */
@@ -166,42 +175,6 @@ export async function DocPage({
             width: 100%;
             max-width: 100%;
             overflow-x: hidden;
-          }
-        }
-        /* At toc breakpoint (1490px), constrain content to leave room for TOC */
-        @media (min-width: 1490px) {
-          #doc-content {
-            /* Calculate max width: viewport - sidebar - TOC */
-            max-width: calc(100vw - 300px - 250px);
-          }
-        }
-        @media (min-width: 2057px) {
-          :root {
-            --doc-content-w: 1100px;
-            --toc-w: 250px;
-            --gap: 24px;
-          }
-          /* Cap content width and center (reinforced at this breakpoint) */
-          #doc-content {
-            max-width: var(--doc-content-w);
-            padding-left: 2rem;
-            padding-right: 2rem;
-            margin-left: auto;
-            margin-right: auto;
-          }
-          /* Cancel default push so content can center */
-          [data-layout-anchor="left"] + .main-content {
-            margin-left: 0 !important;
-            width: 100% !important;
-          }
-          /* Anchor sidebars to content edges */
-          [data-layout-anchor="left"] {
-            left: calc(50% - (var(--doc-content-w) / 2) - var(--gap) - var(--sidebar-width));
-          }
-          [data-layout-anchor="right"] {
-            position: fixed !important;
-            left: calc(50% + (var(--doc-content-w) / 2) + var(--gap));
-            width: var(--toc-w);
           }
         }
       `}</style>

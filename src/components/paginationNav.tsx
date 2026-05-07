@@ -8,8 +8,9 @@ export function PaginationNav({
   node: PaginationNavNode;
   title: 'Previous' | 'Next';
 }) {
+  const href = node.path === '' || node.path === '/' ? '/' : `/${node.path}/`;
   return (
-    <a href={`/${node.path}`} className="no-underline">
+    <a href={href} className="no-underline">
       <div
         className={`py-3 px-4 border-2 dark:[border-color:var(--gray-4)]  rounded-md transition-colors hover:[border-color:var(--accent)] ${
           title === 'Previous' ? 'text-left' : 'text-right'
