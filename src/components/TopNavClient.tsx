@@ -14,7 +14,13 @@ const mainSections = mainSectionsWithDropdowns;
 // Helper hook for dropdown positioning
 // Returns both absolute (for portals) and fixed (for inline) coordinates
 function useDropdownPosition(triggerRef, open) {
-  const [position, setPosition] = useState<{top: number; left: number; width: number; fixedTop: number; fixedLeft: number} | null>(null);
+  const [position, setPosition] = useState<{
+    top: number;
+    left: number;
+    width: number;
+    fixedTop: number;
+    fixedLeft: number;
+  } | null>(null);
   useEffect(() => {
     function updatePosition() {
       if (triggerRef.current && open) {
