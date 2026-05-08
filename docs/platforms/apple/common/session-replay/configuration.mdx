@@ -19,7 +19,7 @@ notSupported:
 
 ## General Configuration
 
-Configure Session Replay inside your `SentrySDK.start` call by setting properties on `options.sessionReplay` ([Manual Initialization](/platforms/apple/guides/ios/configuration/options/)).
+Configure Session Replay inside your `SentrySDK.start` call by setting properties on `options.sessionReplay` ([Session Replay Options](/platforms/apple/guides/ios/configuration/options/#session-replay-options)).
 
 The SDK exposes the following main options to configure Session Replay for your project:
 
@@ -39,19 +39,26 @@ The following options provide further customization:
 | `enableFastViewRendering` | `Bool` | `false` | Enables additional rendering speed by using the underlying `CALayer` instead of `UIView.drawHierarchy`. May produce incomplete renders for complex custom views. Only takes effect when `enableViewRendererV2` is also enabled. |
 | `networkDetailAllowUrls` | `[String \| NSRegularExpression]` | `[]` | URL patterns that enable capture of request/response bodies and headers. String patterns use substring matching; `NSRegularExpression` patterns use full regex matching. See [Network Details](#network-details) below. |
 | `networkDetailDenyUrls` | `[String \| NSRegularExpression]` | `[]` | URL patterns to never capture request/response bodies and headers, even if an allow pattern matches them. String patterns use substring matching; `NSRegularExpression` patterns use full regex matching. See [Network Details](#network-details) below. |
-| `networkCaptureBodies` | `Bool` | `true` | Controls whether request and response bodies are captured for allowed URLs. |
-| `networkRequestHeaders` | `[String]` | `["Content-Type", "Content-Length", "Accept"]` | Request header names to capture for enabled URLs. Default headers are always included alongside any additional headers you configure. |
-| `networkResponseHeaders` | `[String]` | `["Content-Type", "Content-Length", "Accept"]` | Response header names to capture for enabled URLs. Default headers are always included alongside any additional headers you configure. |
+| `networkCaptureBodies` | `Bool` | `true` | Controls whether request and response bodies are captured for allowed URLs. See [Network Details](#network-details) below. |
+| `networkRequestHeaders` | `[String]` | `["Content-Type", "Content-Length", "Accept"]` | Request header names to capture for enabled URLs. Default headers are always included alongside any additional headers you configure. See [Network Details](#network-details) below. |
+| `networkResponseHeaders` | `[String]` | `["Content-Type", "Content-Length", "Accept"]` | Response header names to capture for enabled URLs. Default headers are always included alongside any additional headers you configure. See [Network Details](#network-details) below. |
 
 To configure masking by view class, see [Custom Masking](/platforms/apple/guides/ios/session-replay/customredact/).
 
 ## Network Details
 
-By default, Replay captures basic information about all outgoing HTTP requests in your application, including the URL, request and response body sizes, method, and status code. This limits the chance of collecting private data.
+<Alert level="warning">
+
+`enableReplayNetworkDetailsCapturing` is an experimental feature and is **disabled by default**.
+
+</Alert>
+
+When enabled, Replay can capture basic information about all outgoing HTTP requests in your application, including the URL, request and response body sizes, method, and status code. This limits the chance of collecting private data.
 
 To capture additional information such as request and response headers or bodies, you need to:
 
-1. Specify which URLs to capture via `networkDetailAllowUrls`
+1. Enable the experimental flag `options.experimental.enableReplayNetworkDetailsCapturing`
+2. Specify which URLs to capture via `networkDetailAllowUrls`
 
 This opt-in approach lets you choose only URLs that are safe for capturing bodies and avoid any endpoints that may contain Personally Identifiable Information (PII).
 
@@ -68,6 +75,7 @@ Any URL matching the given pattern(s) will be captured with additional details:
 
 ```swift {tabTitle:Swift}
 SentrySDK.start { options in
+    options.experimental.enableReplayNetworkDetailsCapturing = true
     options.sessionReplay.networkDetailAllowUrls = ["https://example.com"]
 }
 ```
@@ -78,6 +86,7 @@ String patterns use substring matching — any URL containing the string will ma
 let apiRegex = try! NSRegularExpression(pattern: "^https://api\\.example\\.com/.*")
 
 SentrySDK.start { options in
+    options.experimental.enableReplayNetworkDetailsCapturing = true
     options.sessionReplay.networkDetailAllowUrls = [
         "api.example.com",  // substring match
         apiRegex,           // regex match
@@ -95,6 +104,7 @@ To capture additional headers, configure `networkRequestHeaders` and `networkRes
 
 ```swift {tabTitle:Swift}
 SentrySDK.start { options in
+    options.experimental.enableReplayNetworkDetailsCapturing = true
     options.sessionReplay.networkDetailAllowUrls = ["https://api.example.com"]
     options.sessionReplay.networkRequestHeaders = ["Cache-Control", "X-My-Header"]
     options.sessionReplay.networkResponseHeaders = ["Referrer-Policy", "X-Response-Header"]
