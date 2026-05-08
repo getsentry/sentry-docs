@@ -164,6 +164,13 @@ export async function DocPage({
           max-width: var(--doc-content-w);
           box-sizing: border-box;
         }
+        /* When the TOC is visible but the full layout doesn't fit yet, shrink content
+           to fill available space rather than overflowing. */
+        @media (min-width: 1490px) and (max-width: 1649px) {
+          #doc-content {
+            max-width: calc(100vw - var(--sidebar-width, 300px) - var(--toc-w) - 2rem);
+          }
+        }
         /* Mobile responsive styles */
         @media (max-width: 768px) {
           .main-content {
