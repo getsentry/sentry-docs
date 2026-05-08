@@ -41,7 +41,7 @@ The `.as<T>()` call provides the response type (until we can infer it from the e
 
 The first argument is a URL pattern from a **generated list of known API endpoints**. This list is derived from the backend route definitions and lives in `knownSentryApiUrls.generated.ts` (with a manual companion for getsentry routes in `knownGetsentryApiUrls.ts`). TypeScript restricts the URL to one of these known patterns, so typos and invalid endpoints are caught at compile time.
 
-URL patterns use `$param` placeholders (e.g. `$organizationIdOrSlug`, `$issueId`) which TypeScript extracts to enforce a matching `path` object. If the URL has parameters, you must supply all of them - or pass `skipToken` to disable the query.
+URL patterns use `$param` placeholders (e.g. `$organizationIdOrSlug`, `$issueId`) which TypeScript extracts to enforce a matching `path` object. If the URL has parameters, you must supply all of them - [or pass `skipToken`](#conditional-fetching-with-skiptoken) to disable the query.
 
 ### `staleTime` is required
 
@@ -246,7 +246,8 @@ queryClient.invalidateQueries({queryKey: opts.queryKey});
 Since the return value of `apiOptions` matches the `QueryFilter` that needs to be passed `invalidateQueries`, you can also pass it directly:
 
 ```tsx
-queryClient.invalidateQueries(sentryAppApiOptions({ appSlug: "my-app" }));
+const opts = sentryAppApiOptions({ appSlug: "my-app" });
+queryClient.invalidateQueries(opts);
 ```
 
 ### Infinite queries
