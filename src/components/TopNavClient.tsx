@@ -342,14 +342,6 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
                           msOverflowStyle: 'none',
                         }}
                         onClick={e => e.stopPropagation()}
-                        onMouseEnter={() => {
-                          clearTimeout(closeTimers.current.concepts);
-                        }}
-                        onMouseLeave={() => {
-                          closeTimers.current.concepts = setTimeout(() => {
-                            setConceptsDropdownOpen(false);
-                          }, 150);
-                        }}
                       >
                         <style>{`
                           .dark .concepts-dropdown-link {
@@ -435,14 +427,6 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
                           msOverflowStyle: 'none',
                         }}
                         onClick={e => e.stopPropagation()}
-                        onMouseEnter={() => {
-                          clearTimeout(closeTimers.current.more);
-                        }}
-                        onMouseLeave={() => {
-                          closeTimers.current.more = setTimeout(() => {
-                            setMoreDropdownOpen(false);
-                          }, 150);
-                        }}
                       >
                         <style>{`
                           .dark .more-dropdown-link {
