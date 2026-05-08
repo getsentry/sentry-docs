@@ -14,13 +14,7 @@ const mainSections = mainSectionsWithDropdowns;
 // Helper hook for dropdown positioning
 // Returns both absolute (for portals) and fixed (for inline) coordinates
 function useDropdownPosition(triggerRef, open) {
-  const [position, setPosition] = useState({
-    top: 0,
-    left: 0,
-    width: 0,
-    fixedTop: 0,
-    fixedLeft: 0,
-  });
+  const [position, setPosition] = useState<{top: number; left: number; width: number; fixedTop: number; fixedLeft: number} | null>(null);
   useEffect(() => {
     function updatePosition() {
       if (triggerRef.current && open) {
@@ -328,7 +322,7 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
                         />
                       </svg>
                     </button>
-                    {conceptsDropdownOpen && (
+                    {conceptsDropdownOpen && conceptsPosition && (
                       <div
                         ref={conceptsDropdownRef}
                         className="bg-white dark:bg-black border border-[var(--gray-a3)] dark:border-[var(--gray-7)] shadow-lg z-50 min-w-[220px] p-2 rounded-b-md rounded-t-none"
@@ -421,7 +415,7 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
                         />
                       </svg>
                     </button>
-                    {moreDropdownOpen && (
+                    {moreDropdownOpen && morePosition && (
                       <div
                         ref={moreDropdownRef}
                         className="bg-white dark:bg-black border border-[var(--gray-a3)] dark:border-[var(--gray-7)] shadow-lg z-50 min-w-[220px] p-2 rounded-b-md rounded-t-none"
@@ -494,6 +488,7 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
       </div>
       {/* Portal-based dropdowns */}
       {platformDropdownOpen &&
+        sdksPosition &&
         ReactDOM.createPortal(
           <div
             ref={platformDropdownRef}
