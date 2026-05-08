@@ -9,11 +9,20 @@ categories:
 
 <PlatformContent includePath="getting-started-prerequisites" />
 
-## Step 1: Install
+<StepConnector selector="h2" showNumbers={true}>
+
+## Install
 
 ### Install the Sentry SDK
 
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
 Run the command for your preferred package manager to add the Sentry SDK to your application:
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```bash {tabTitle:npm}
 npm install @sentry/electron --save
@@ -27,7 +36,11 @@ yarn add @sentry/electron
 pnpm add @sentry/electron
 ```
 
-## Step 2: Configure
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+## Configure
 
 Choose the features you want to configure, and this guide will show you how:
 
@@ -47,7 +60,14 @@ You should initialize the SDK in both the `main` process and every `renderer` pr
 
 ### Configure the Main Process
 
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
 Initialize the SDK in your Electron `main` process as early as possible:
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```javascript
 import * as Sentry from "@sentry/electron/main";
@@ -72,9 +92,20 @@ Sentry.init({
 });
 ```
 
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
 ### Configure the Renderer Process
 
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
 Initialize the SDK in your Electron renderer processes as early as possible. All renderer events are sent through the main process so passing `dsn`, `release` or `environment` to renderer `init` will have no effect.
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```javascript
 import * as Sentry from "@sentry/electron/renderer";
@@ -123,7 +154,20 @@ Sentry.init({
 });
 ```
 
-### Configure any Utility Processes
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+### Configure Any Utility Processes
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+If your app uses utility processes, initialize Sentry in each one.
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```javascript
 import * as Sentry from "@sentry/electron/utility";
@@ -136,8 +180,19 @@ Sentry.init({
 });
 ```
 
-<Alert>
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+<Alert title="Capturing errors in the preload context">
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
 If your app uses a preload script and `contextIsolation: true`, Sentry can't automatically capture errors that occur in the preload context. To include those, initialize Sentry in your preload script as well:
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```javascript
 import * as Sentry from "@sentry/electron/renderer";
@@ -145,10 +200,22 @@ import * as Sentry from "@sentry/electron/renderer";
 Sentry.init(); // don't forget to add your configuration options
 ```
 
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
 </Alert>
 
 <Expandable title="Did you change the userData directory?" level="warning">
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
 If you change the `userData` directory used by your app, ensure this change is made before you configure the SDK as this path is used to cache scope and events between application restarts.
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```javascript
 import { app } from "electron";
@@ -158,11 +225,22 @@ app.setPath("userData", "~/.config/my-app");
 Sentry.init({ dsn: "___PUBLIC_DSN___" });
 ```
 
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
 </Expandable>
 
 ### Using Framework-Specific SDKs
 
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
 If you're using a framework in your renderers, you can combine the Electron SDK with the framework SDK:
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```javascript
 import { init } from "@sentry/electron/renderer";
@@ -180,19 +258,30 @@ init(
 );
 ```
 
-## Step 3: Add Readable Stack Traces With Source Maps (Optional)
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
-<PlatformContent includePath="getting-started-sourcemaps-short-version" />
+### Add Readable Stack Traces With Source Maps (Optional)
 
-## Step 4: Verify Your Setup
+<PlatformContent includePath="getting-started-sourcemaps-short-version-splitlayout" />
+
+## Verify Your Setup
 
 Let's test your setup and confirm that Sentry is working correctly.
 
 ### Issues
 
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
 **Main process error**
 
 Add an event listener that throws an error in your main process:
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```javascript
 import { app } from "electron";
@@ -203,9 +292,18 @@ app.on("ready", () => {
 });
 ```
 
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
 **Renderer process error**
 
 Add a test button in one of your HTML pages:
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```html {filename: index.html}
 <button id="testError">Break the world</button>
@@ -213,7 +311,20 @@ Add a test button in one of your HTML pages:
 <script src="renderer.js"></script>
 ```
 
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
 Then, in your renderer, add the following:
+
+<OnboardingOption optionId="performance" hideForThisOption>
+  Finally, start your app and trigger two errors that Sentry will capture: one from the
+  main process and one from the renderer.
+</OnboardingOption>
+</SplitSectionText>
+<SplitSectionCode>
 
 ```javascript
 document.getElementById("testError").addEventListener("click", () => {
@@ -221,14 +332,23 @@ document.getElementById("testError").addEventListener("click", () => {
 });
 ```
 
-<OnboardingOption optionId="performance" hideForThisOption>
-  Start your app and trigger two errors that Sentry will capture: one from the
-  main process and one from the renderer.
-</OnboardingOption>
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
 <OnboardingOption optionId="performance">
 ### Tracing
-To test tracing in your renderer, start a trace to measure the time it takes to execute your code:
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+To test tracing in your renderer, start a trace to measure the time it takes to execute your code.
+
+Then, start your app and trigger two errors that Sentry will capture: one from the main process and one from the renderer. It will also start a trace with the defined name.
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```javascript
 document.getElementById("testError").addEventListener("click", () => {
@@ -238,13 +358,15 @@ document.getElementById("testError").addEventListener("click", () => {
 });
 ```
 
-Start your app and trigger two errors that Sentry will capture: one from the main process and one from the renderer. It will also start a trace with the defined name.
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
 </OnboardingOption>
 
 <OnboardingOption optionId="logs">
 
-<Include name="logs/javascript-quick-start-verify-logs" />
+<Include name="logs/javascript-quick-start-verify-logs-splitlayout" />
 
 </OnboardingOption>
 
@@ -272,3 +394,5 @@ Now's a good time to customize your setup and look into more advanced topics. Ou
 - [Get support](https://sentry.zendesk.com/hc/en-us/)
 
 </Expandable>
+
+</StepConnector>
