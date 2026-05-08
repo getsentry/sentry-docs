@@ -105,6 +105,8 @@ export function Header({
   // Track sidebar checkbox state for non-home pages
   useEffect(() => {
     if (isHomePage) {
+      // Reset sidebar state when navigating to home page to prevent stale scroll lock
+      setSidebarOpen(false);
       return undefined;
     }
 
@@ -123,6 +125,33 @@ export function Header({
     checkbox.addEventListener('change', handleChange);
     return () => checkbox.removeEventListener('change', handleChange);
   }, [isHomePage]);
+
+  // Lock body scroll when sidebar is open on mobile (fixes iOS Safari touch scrolling)
+  useEffect(() => {
+    if (sidebarOpen) {
+      document.body.style.overflow = 'hidden';
+
+      // Close sidebar if viewport is resized to desktop width
+      const handleResize = () => {
+        if (window.innerWidth >= 768) {
+          const checkbox = document.getElementById(
+            sidebarToggleId
+          ) as HTMLInputElement | null;
+          if (checkbox) {
+            checkbox.checked = false;
+            setSidebarOpen(false);
+          }
+        }
+      };
+
+      window.addEventListener('resize', handleResize);
+      return () => {
+        document.body.style.overflow = '';
+        window.removeEventListener('resize', handleResize);
+      };
+    }
+    return undefined;
+  }, [sidebarOpen]);
 
   // Show header search if: not on home page, OR on home page but home search is scrolled out of view
   const showHeaderSearch = !isHomePage || !homeSearchVisible;
@@ -166,18 +195,10 @@ export function Header({
             padding-right: 26px;
           }
         }
-        /* Doc pages: align header with sidebar and TOC at large viewports */
-        @media (min-width: 2057px) {
-          .header-content:not(.header-content-home) {
-            --sidebar-width: 300px;
-            --doc-content-w: 1100px;
-            --toc-w: 250px;
-            --gap: 24px;
-            /* Match sidebar left edge position */
-            padding-left: calc(50% - (var(--doc-content-w) / 2) - var(--gap) - var(--sidebar-width));
-            /* Match TOC right edge position */
-            padding-right: calc(50% - (var(--doc-content-w) / 2) - var(--gap) - var(--toc-w));
-          }
+        /* Doc pages: fluid centering to match sidebar offset at wide viewports */
+        .header-content:not(.header-content-home) {
+          padding-left: var(--layout-offset, 0px);
+          padding-right: var(--layout-offset, 0px);
         }
       `}</style>
       <div
@@ -262,6 +283,14 @@ export function Header({
                 onClick={() => {
                   setMobileSearchOpen(true);
                   setHomeMobileNavOpen(false);
+                  // Close sidebar to prevent competing scroll locks
+                  const checkbox = document.getElementById(
+                    sidebarToggleId
+                  ) as HTMLInputElement | null;
+                  if (checkbox) {
+                    checkbox.checked = false;
+                    setSidebarOpen(false);
+                  }
                 }}
                 aria-label="Search"
               >
