@@ -2232,6 +2232,10 @@ const userDocsRedirects = [
     source: '/product/performance/retention-priorities/',
     destination: '/organization/dynamic-sampling/',
   },
+  {
+    source: '/concepts/key-terms/key-terms/tracing/trace-view/',
+    destination: '/concepts/key-terms/tracing/trace-view/',
+  },
   // DOCS-2229: Flutter uses Dart SDK, not JS
   {
     source: '/platforms/javascript/guides/flutter/sourcemaps/',
