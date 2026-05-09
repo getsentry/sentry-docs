@@ -888,6 +888,14 @@ const userDocsRedirects = [
     destination: '/platforms/python/integrations/fastapi/',
   },
   {
+    source: '/platforms/go/guides/slog/logs/',
+    destination: '/platforms/go/logs/slog/',
+  },
+  {
+    source: '/platforms/go/guides/slog/logs/:path*',
+    destination: '/platforms/go/logs/slog/:path*',
+  },
+  {
     source: '/platforms/php/configuration/integrations/',
     destination: '/platforms/php/integrations/',
   },
