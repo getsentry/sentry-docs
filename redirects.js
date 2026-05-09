@@ -1782,6 +1782,14 @@ const userDocsRedirects = [
   },
   // Redirects for Insights → Sentry Dashboards migration
   {
+    source: '/product/insights/ai/llm-monitoring/',
+    destination: '/ai/monitoring/',
+  },
+  {
+    source: '/product/insights/ai/llm-monitoring/:path*',
+    destination: '/ai/monitoring/:path*',
+  },
+  {
     source: '/product/insights/llm-monitoring/:path*',
     destination: '/ai/monitoring/:path*',
   },
