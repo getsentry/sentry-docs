@@ -1,6 +1,6 @@
 import {BinaryLike, createHash} from 'node:crypto';
 import {createReadStream, createWriteStream, mkdirSync} from 'node:fs';
-import {access, cp, mkdir, opendir, readFile} from 'node:fs/promises';
+import {access, cp, mkdir, readFile} from 'node:fs/promises';
 import path from 'node:path';
 // @ts-expect-error ts(2305) -- For some reason "compose" is not recognized in the types
 import {compose, Readable} from 'node:stream';
@@ -16,7 +16,6 @@ import matter from 'gray-matter';
 import {s} from 'hastscript';
 import yaml from 'js-yaml';
 import {bundleMDX} from 'mdx-bundler';
-import pLimit from 'p-limit';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import rehypePresetMinify from 'rehype-preset-minify';
 import rehypePrismDiff from 'rehype-prism-diff';
@@ -26,8 +25,6 @@ import remarkMdxImages from 'remark-mdx-images';
 
 import getAppRegistry from './build/appRegistry';
 import getPackageRegistry from './build/packageRegistry';
-import {apiCategories} from './build/resolveOpenAPI';
-import getAllFilesRecursively from './files';
 import remarkDefList from './mdx-deflist';
 import {DocMetrics} from './metrics';
 import rehypeOnboardingLines from './rehype-onboarding-lines';
@@ -41,8 +38,7 @@ import remarkImageProcessing from './remark-image-processing';
 import remarkImageResize from './remark-image-resize';
 import remarkTocHeadings, {TocNode} from './remark-toc-headings';
 import remarkVariables from './remark-variables';
-import {FrontMatter, Platform, PlatformConfig} from './types';
-import {isNotNil} from './utils';
+import {Platform, PlatformConfig} from './types';
 import {isVersioned, VERSION_INDICATOR} from './versioning';
 
 type SlugFile = {
@@ -56,12 +52,6 @@ type SlugFile = {
 };
 
 const root = process.cwd();
-// We need to limit this as we have code doing things like Promise.all(allFiles.map(...))
-// where `allFiles` is in the order of thousands. This not only slows down the build but
-// it also crashes the dynamic pages such as `/platform-redirect` as these run on Vercel
-// Functions which looks like AWS Lambda and we get `EMFILE` errors when trying to open
-// so many files at once.
-const FILE_CONCURRENCY_LIMIT = 200;
 const CACHE_COMPRESS_LEVEL = 4;
 const CACHE_DIR = path.join(root, '.next', 'cache', 'mdx-bundler');
 const SHOULD_CACHE_MDX_BUNDLES =
@@ -144,334 +134,6 @@ async function writeCacheFile(file: string, data: string) {
     }),
     createWriteStream(file)
   );
-}
-
-function formatSlug(slug: string) {
-  return slug.replace(/\.(mdx|md)/, '');
-}
-const isSupported = (
-  frontmatter: FrontMatter,
-  platformName: string,
-  guideName?: string
-): boolean => {
-  const canonical = guideName ? `${platformName}.${guideName}` : platformName;
-  if (frontmatter.supported && frontmatter.supported.length) {
-    if (frontmatter.supported.indexOf(canonical) !== -1) {
-      return true;
-    }
-    if (frontmatter.supported.indexOf(platformName) === -1) {
-      return false;
-    }
-  }
-  if (
-    frontmatter.notSupported &&
-    (frontmatter.notSupported.indexOf(canonical) !== -1 ||
-      frontmatter.notSupported.indexOf(platformName) !== -1)
-  ) {
-    return false;
-  }
-  return true;
-};
-
-let getDocsFrontMatterCache: Promise<FrontMatter[]> | undefined;
-
-export function getDocsFrontMatter(): Promise<FrontMatter[]> {
-  // Block filesystem scanning at Vercel runtime.
-  // Frontmatter should only be scanned during CI builds - the doc tree is pre-computed.
-  // See: DOCS-83Q, DOCS-9A5, DOCS-9RE
-  const isVercelRuntime =
-    process.env.VERCEL && !process.env.CI && process.env.NODE_ENV !== 'development';
-
-  if (isVercelRuntime) {
-    return Promise.reject(
-      new Error(
-        `[MDX Runtime Error] Attempted to scan docs frontmatter at Vercel runtime. ` +
-          `This should not happen - the doc tree should be pre-computed during CI. ` +
-          `If you're seeing this error, the requested path may not exist or was not included in generateStaticParams().`
-      )
-    );
-  }
-
-  if (!getDocsFrontMatterCache) {
-    getDocsFrontMatterCache = getDocsFrontMatterUncached();
-  }
-  return getDocsFrontMatterCache;
-}
-
-/**
- * collect all available versions for a given document path
- */
-export const getVersionsFromDoc = (frontMatter: FrontMatter[], docPath: string) => {
-  const versions = frontMatter
-    .filter(({slug}) => {
-      return (
-        slug.includes(VERSION_INDICATOR) &&
-        slug.split(VERSION_INDICATOR)[0] === docPath.split(VERSION_INDICATOR)[0]
-      );
-    })
-    .map(({slug}) => {
-      const segments = slug.split(VERSION_INDICATOR);
-      return segments[segments.length - 1];
-    });
-
-  // remove duplicates
-  return [...new Set(versions)];
-};
-
-async function getDocsFrontMatterUncached(): Promise<FrontMatter[]> {
-  const frontMatter = await getAllFilesFrontMatter();
-
-  const categories = await apiCategories();
-  categories.forEach(category => {
-    frontMatter.push({
-      title: category.name,
-      slug: `api/${category.slug}`,
-    });
-
-    category.apis.forEach(api => {
-      frontMatter.push({
-        title: api.name,
-        slug: `api/${category.slug}/${api.slug}`,
-      });
-    });
-  });
-
-  // Remove a trailing /index, since that is also removed from the path by Next.
-  frontMatter.forEach(fm => {
-    const trailingIndex = '/index';
-    if (fm.slug.endsWith(trailingIndex)) {
-      fm.slug = fm.slug.slice(0, fm.slug.length - trailingIndex.length);
-    }
-
-    //  versioned index files get appended to the path (e.g. /path/index__v1 becomes /path__v1)
-    const versionedIndexFileIndicator = `${trailingIndex}${VERSION_INDICATOR}`;
-    if (fm.slug.includes(versionedIndexFileIndicator)) {
-      const segments = fm.slug.split(versionedIndexFileIndicator);
-      fm.slug = `${segments[0]}${VERSION_INDICATOR}${segments[1]}`;
-    }
-  });
-
-  return frontMatter;
-}
-
-export async function getDevDocsFrontMatterUncached(): Promise<FrontMatter[]> {
-  const folder = 'develop-docs';
-  const docsPath = path.join(root, folder);
-  const files = await getAllFilesRecursively(docsPath);
-  const limit = pLimit(FILE_CONCURRENCY_LIMIT);
-  const frontMatters = (
-    await Promise.all(
-      files.map(file =>
-        limit(async () => {
-          const fileName = file.slice(docsPath.length + 1);
-          if (path.extname(fileName) !== '.md' && path.extname(fileName) !== '.mdx') {
-            return undefined;
-          }
-
-          const source = await readFile(file, 'utf8');
-          const {data: frontmatter} = matter(source);
-          return {
-            ...(frontmatter as FrontMatter),
-            slug: fileName.replace(/\/index.mdx?$/, '').replace(/\.mdx?$/, ''),
-            sourcePath: path.join(folder, fileName),
-          };
-        })
-      )
-    )
-  ).filter(isNotNil) as FrontMatter[];
-  return frontMatters;
-}
-
-let getDevDocsFrontMatterCache: Promise<FrontMatter[]> | undefined;
-
-export function getDevDocsFrontMatter(): Promise<FrontMatter[]> {
-  // Block filesystem scanning at Vercel runtime.
-  // Frontmatter should only be scanned during CI builds - the doc tree is pre-computed.
-  // See: DOCS-83Q, DOCS-9A5, DOCS-9RE
-  const isVercelRuntime =
-    process.env.VERCEL && !process.env.CI && process.env.NODE_ENV !== 'development';
-
-  if (isVercelRuntime) {
-    return Promise.reject(
-      new Error(
-        `[MDX Runtime Error] Attempted to scan develop-docs frontmatter at Vercel runtime. ` +
-          `This should not happen - the doc tree should be pre-computed during CI. ` +
-          `If you're seeing this error, the requested path may not exist or was not included in generateStaticParams().`
-      )
-    );
-  }
-
-  if (!getDevDocsFrontMatterCache) {
-    getDevDocsFrontMatterCache = getDevDocsFrontMatterUncached();
-  }
-  return getDevDocsFrontMatterCache;
-}
-
-async function getAllFilesFrontMatter(): Promise<FrontMatter[]> {
-  const docsPath = path.join(root, 'docs');
-  const files = await getAllFilesRecursively(docsPath);
-  const allFrontMatter: FrontMatter[] = [];
-  const limit = pLimit(FILE_CONCURRENCY_LIMIT);
-
-  await Promise.all(
-    files.map(file =>
-      limit(async () => {
-        const fileName = file.slice(docsPath.length + 1);
-        if (path.extname(fileName) !== '.md' && path.extname(fileName) !== '.mdx') {
-          return;
-        }
-
-        if (fileName.indexOf('/common/') !== -1) {
-          return;
-        }
-
-        const source = await readFile(file, 'utf8');
-        const {data: frontmatter} = matter(source);
-        allFrontMatter.push({
-          ...(frontmatter as FrontMatter),
-          slug: formatSlug(fileName),
-          sourcePath: path.join('docs', fileName),
-        });
-      })
-    )
-  );
-
-  // Add all `common` files in the right place.
-  const platformsPath = path.join(docsPath, 'platforms');
-  for await (const platform of await opendir(platformsPath)) {
-    if (platform.isFile()) {
-      continue;
-    }
-    const platformName = platform.name;
-
-    let platformFrontmatter: PlatformConfig = {};
-    const configPath = path.join(platformsPath, platformName, 'config.yml');
-    try {
-      platformFrontmatter = yaml.load(
-        await readFile(configPath, 'utf8')
-      ) as PlatformConfig;
-    } catch (err) {
-      // the file may not exist and that's fine, for anything else we throw
-      if (err.code !== 'ENOENT') {
-        throw err;
-      }
-    }
-
-    const commonPath = path.join(platformsPath, platformName, 'common');
-    try {
-      await access(commonPath);
-    } catch {
-      continue;
-    }
-
-    const commonFileNames: string[] = (await getAllFilesRecursively(commonPath)).filter(
-      p => path.extname(p) === '.mdx'
-    );
-
-    const commonFiles = await Promise.all(
-      commonFileNames.map(commonFileName =>
-        limit(async () => {
-          const source = await readFile(commonFileName, 'utf8');
-          const {data: frontmatter} = matter(source);
-          return {commonFileName, frontmatter: frontmatter as FrontMatter};
-        })
-      )
-    );
-
-    await Promise.all(
-      commonFiles.map(f =>
-        limit(async () => {
-          if (!isSupported(f.frontmatter, platformName)) {
-            return;
-          }
-
-          const subpath = f.commonFileName.slice(commonPath.length + 1);
-          const slug = f.commonFileName
-            .slice(docsPath.length + 1)
-            .replace(/\/common\//, '/');
-          const noFrontMatter = (
-            await Promise.allSettled([
-              access(path.join(docsPath, slug)),
-              access(path.join(docsPath, slug.replace('/index.mdx', '.mdx'))),
-            ])
-          ).every(r => r.status === 'rejected');
-          if (noFrontMatter) {
-            let frontmatter = f.frontmatter;
-            if (subpath === 'index.mdx') {
-              frontmatter = {...frontmatter, ...platformFrontmatter};
-            }
-            allFrontMatter.push({
-              ...frontmatter,
-              slug: formatSlug(slug),
-              sourcePath: 'docs/' + f.commonFileName.slice(docsPath.length + 1),
-            });
-          }
-        })
-      )
-    );
-
-    const guidesPath = path.join(docsPath, 'platforms', platformName, 'guides');
-    try {
-      await access(guidesPath);
-    } catch {
-      continue;
-    }
-
-    for await (const guide of await opendir(guidesPath)) {
-      if (guide.isFile()) {
-        continue;
-      }
-      const guideName = guide.name;
-
-      let guideFrontmatter: FrontMatter | null = null;
-      const guideConfigPath = path.join(guidesPath, guideName, 'config.yml');
-      try {
-        guideFrontmatter = yaml.load(
-          await readFile(guideConfigPath, 'utf8')
-        ) as FrontMatter;
-      } catch (err) {
-        if (err.code !== 'ENOENT') {
-          throw err;
-        }
-      }
-
-      await Promise.all(
-        commonFiles.map(f =>
-          limit(async () => {
-            if (!isSupported(f.frontmatter, platformName, guideName)) {
-              return;
-            }
-
-            const subpath = f.commonFileName.slice(commonPath.length + 1);
-            const slug = path.join(
-              'platforms',
-              platformName,
-              'guides',
-              guideName,
-              subpath
-            );
-            try {
-              await access(path.join(docsPath, slug));
-              return;
-            } catch {
-              // pass
-            }
-
-            let frontmatter = f.frontmatter;
-            if (subpath === 'index.mdx') {
-              frontmatter = {...frontmatter, ...guideFrontmatter};
-            }
-            allFrontMatter.push({
-              ...frontmatter,
-              slug: formatSlug(slug),
-              sourcePath: 'docs/' + f.commonFileName.slice(docsPath.length + 1),
-            });
-          })
-        )
-      );
-    }
-  }
-  return allFrontMatter;
 }
 
 /**
