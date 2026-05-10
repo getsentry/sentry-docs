@@ -1,6 +1,6 @@
-import {BinaryLike, createHash} from 'node:crypto';
+import {BinaryLike, createHash, randomUUID} from 'node:crypto';
 import {createReadStream, createWriteStream, mkdirSync} from 'node:fs';
-import {access, cp, mkdir, readFile} from 'node:fs/promises';
+import {access, cp, mkdir, readFile, rename, unlink} from 'node:fs/promises';
 import path from 'node:path';
 // @ts-expect-error ts(2305) -- For some reason "compose" is not recognized in the types
 import {compose, Readable} from 'node:stream';
@@ -121,19 +121,27 @@ async function readCacheFile<T>(file: string): Promise<T> {
 }
 
 async function writeCacheFile(file: string, data: string) {
+  const tempFile = `${file}.${process.pid}.${randomUUID()}.tmp`;
   const bufferData = Buffer.from(data);
-  await pipeline(
-    Readable.from(bufferData),
-    createBrotliCompress({
-      chunkSize: 32 * 1024,
-      params: {
-        [zlibConstants.BROTLI_PARAM_MODE]: zlibConstants.BROTLI_MODE_TEXT,
-        [zlibConstants.BROTLI_PARAM_QUALITY]: CACHE_COMPRESS_LEVEL,
-        [zlibConstants.BROTLI_PARAM_SIZE_HINT]: bufferData.length,
-      },
-    }),
-    createWriteStream(file)
-  );
+
+  try {
+    await pipeline(
+      Readable.from(bufferData),
+      createBrotliCompress({
+        chunkSize: 32 * 1024,
+        params: {
+          [zlibConstants.BROTLI_PARAM_MODE]: zlibConstants.BROTLI_MODE_TEXT,
+          [zlibConstants.BROTLI_PARAM_QUALITY]: CACHE_COMPRESS_LEVEL,
+          [zlibConstants.BROTLI_PARAM_SIZE_HINT]: bufferData.length,
+        },
+      }),
+      createWriteStream(tempFile)
+    );
+    await rename(tempFile, file);
+  } catch (err) {
+    await unlink(tempFile).catch(() => {});
+    throw err;
+  }
 }
 
 /**
