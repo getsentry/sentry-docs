@@ -64,7 +64,9 @@ const root = process.cwd();
 const FILE_CONCURRENCY_LIMIT = 200;
 const CACHE_COMPRESS_LEVEL = 4;
 const CACHE_DIR = path.join(root, '.next', 'cache', 'mdx-bundler');
-if (process.env.CI) {
+const SHOULD_CACHE_MDX_BUNDLES =
+  !!process.env.CI || (process.env.NODE_ENV === 'production' && !process.env.VERCEL);
+if (SHOULD_CACHE_MDX_BUNDLES) {
   mkdirSync(CACHE_DIR, {recursive: true});
 }
 
@@ -659,8 +661,8 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
     source.includes('<LambdaLayerDetail') ||
     source.includes('<GradleUploadInstructions');
 
-  // Check cache in CI environments
-  if (process.env.CI) {
+  // Check cache in CI and local production builds.
+  if (SHOULD_CACHE_MDX_BUNDLES) {
     const sourceHash = md5(source);
 
     // Include registry hash in cache key for registry-dependent files
