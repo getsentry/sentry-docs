@@ -21,14 +21,14 @@ import {
   getPreviousNode,
   nodeForPath,
 } from 'sentry-docs/docTree';
-import {getMDXComponent} from 'sentry-docs/getMDXComponent';
-import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
 import {
   getDevDocsFrontMatter,
   getDocsFrontMatter,
-  getFileBySlugWithCache,
   getVersionsFromDoc,
-} from 'sentry-docs/mdx';
+} from 'sentry-docs/frontmatter';
+import {getMDXComponent} from 'sentry-docs/getMDXComponent';
+import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
+import {getFileBySlugWithCache} from 'sentry-docs/mdx';
 import {mdxComponents} from 'sentry-docs/mdxComponents';
 import {PageType} from 'sentry-docs/metrics';
 import {setServerContext} from 'sentry-docs/serverContext';

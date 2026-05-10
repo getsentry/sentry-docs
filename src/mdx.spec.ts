@@ -1,6 +1,7 @@
 import {describe, expect, test} from 'vitest';
 
-import {addVersionToFilePath, getVersionedIndexPath, getVersionsFromDoc} from './mdx';
+import {getVersionsFromDoc} from './frontmatter';
+import {addVersionToFilePath, getVersionedIndexPath} from './mdx';
 import {FrontMatter} from './types';
 
 const mockFm: FrontMatter[] = [

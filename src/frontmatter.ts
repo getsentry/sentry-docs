@@ -54,6 +54,25 @@ export function getDocsFrontMatter(): Promise<FrontMatter[]> {
   return getDocsFrontMatterCache;
 }
 
+/**
+ * Collect all available versions for a given document path.
+ */
+export const getVersionsFromDoc = (frontMatter: FrontMatter[], docPath: string) => {
+  const versions = frontMatter
+    .filter(({slug}) => {
+      return (
+        slug.includes(VERSION_INDICATOR) &&
+        slug.split(VERSION_INDICATOR)[0] === docPath.split(VERSION_INDICATOR)[0]
+      );
+    })
+    .map(({slug}) => {
+      const segments = slug.split(VERSION_INDICATOR);
+      return segments[segments.length - 1];
+    });
+
+  return [...new Set(versions)];
+};
+
 async function getDocsFrontMatterUncached(): Promise<FrontMatter[]> {
   const docsPath = path.join(root, 'docs');
   const files = await getAllFilesRecursively(docsPath);
@@ -61,6 +80,9 @@ async function getDocsFrontMatterUncached(): Promise<FrontMatter[]> {
 
   // Create a Set of existing file paths for fast lookups
   const existingFilesSet = new Set(files);
+  const existingFilesLowercaseSet = new Set(files.map(file => file.toLowerCase()));
+  const hasExistingFile = (file: string) =>
+    existingFilesSet.has(file) || existingFilesLowercaseSet.has(file.toLowerCase());
 
   // First, collect all non-common files
   await Promise.all(
@@ -191,10 +213,8 @@ async function getDocsFrontMatterUncached(): Promise<FrontMatter[]> {
               .replace(/\/common\//, '/');
             // Check if the file exists using the pre-computed Set
             const noFrontMatter =
-              !existingFilesSet.has(path.join(docsPath, slug)) &&
-              !existingFilesSet.has(
-                path.join(docsPath, slug.replace('/index.mdx', '.mdx'))
-              );
+              !hasExistingFile(path.join(docsPath, slug)) &&
+              !hasExistingFile(path.join(docsPath, slug.replace('/index.mdx', '.mdx')));
             if (noFrontMatter) {
               let frontmatter = commonFile.frontmatter;
               if (subpath === 'index.mdx') {
@@ -278,7 +298,7 @@ async function getDocsFrontMatterUncached(): Promise<FrontMatter[]> {
                 subpath
               );
               // Check if file exists using pre-computed Set
-              if (existingFilesSet.has(path.join(docsPath, slug))) {
+              if (hasExistingFile(path.join(docsPath, slug))) {
                 return;
               }
 
