@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/node';
 import {
   extrapolate,
   htmlToAlgoliaRecord,
@@ -5,6 +6,7 @@ import {
   standardSDKSlug,
 } from '@sentry-internal/global-search';
 import algoliasearch, {SearchIndex} from 'algoliasearch';
+import {createHash} from 'crypto';
 import fs from 'fs';
 import pLimit from 'p-limit';
 import {join} from 'path';
@@ -12,6 +14,11 @@ import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
 
 import {getDevDocsFrontMatter, getDocsFrontMatter} from '../src/mdx';
 import {FrontMatter} from '../src/types';
+
+const ALGOLIA_SENTRY_DSN = process.env.ALGOLIA_SENTRY_DSN;
+if (ALGOLIA_SENTRY_DSN) {
+  Sentry.init({dsn: ALGOLIA_SENTRY_DSN});
+}
 
 const staticHtmlFilesPath = join(process.cwd(), '.next', 'server', 'app');
 
@@ -34,10 +41,18 @@ const client = algoliasearch(ALGOLIA_APP_ID, ALGOLIA_API_KEY);
 const index = client.initIndex(DOCS_INDEX_NAME);
 
 const CONCURRENCY = 50;
+const CACHE_VERSION = 1;
+const CACHE_DIR = join(process.cwd(), '.next', 'cache', 'algolia-records');
+
+function md5(data: string): string {
+  return createHash('md5').update(data).digest('hex');
+}
 
 indexAndUpload();
 async function indexAndUpload() {
   const startTime = performance.now();
+
+  fs.mkdirSync(CACHE_DIR, {recursive: true});
 
   const pageFrontMatters = await (isDeveloperDocs
     ? getDevDocsFrontMatter()
@@ -46,35 +61,35 @@ async function indexAndUpload() {
   const pages = pageFrontMatters.filter(
     frontMatter => !frontMatter.draft && !frontMatter.noindex && frontMatter.title
   );
-  console.log('📄 Processing %d pages with concurrency %d', pages.length, CONCURRENCY);
+  console.log(`📄 Processing ${pages.length} pages with concurrency ${CONCURRENCY}`);
 
-  const records = await generateAlgoliaRecords(pages);
+  const {records, cacheHits, cacheMisses} = await generateAlgoliaRecords(pages);
   const generateTime = performance.now();
+  const generateSeconds = (generateTime - startTime) / 1000;
   console.log(
-    '🔥 Generated %d records from %d pages in %.1fs',
-    records.length,
-    pages.length,
-    (generateTime - startTime) / 1000
+    `🔥 Generated ${records.length} records from ${pages.length} pages in ${generateSeconds.toFixed(1)}s (cache: ${cacheHits} hits, ${cacheMisses} misses)`
   );
+
+  Sentry.metrics.gauge('algolia.pages_total', pages.length);
+  Sentry.metrics.gauge('algolia.records_total', records.length);
+  Sentry.metrics.distribution('algolia.generate_duration_seconds', generateSeconds);
+  Sentry.metrics.gauge('algolia.cache_hits', cacheHits);
+  Sentry.metrics.gauge('algolia.cache_misses', cacheMisses);
 
   const existingRecordIds = await fetchExistingRecordIds(index);
-  console.log(
-    '🔥 Found %d existing records in `%s`',
-    existingRecordIds.length,
-    DOCS_INDEX_NAME
-  );
+  console.log(`🔥 Found ${existingRecordIds.length} existing records in \`${DOCS_INDEX_NAME}\``);
 
-  console.log('🔥 Saving records to `%s`...', DOCS_INDEX_NAME);
+  console.log(`🔥 Saving records to \`${DOCS_INDEX_NAME}\`...`);
   const saveResult = await index.saveObjects(records, {
     batchSize: 10000,
     autoGenerateObjectIDIfNotExist: true,
   });
   const newRecordIDs = new Set(saveResult.objectIDs);
-  console.log('🔥 Saved %d records', newRecordIDs.size);
+  console.log(`🔥 Saved ${newRecordIDs.size} records`);
 
   const recordsToDelete = existingRecordIds.filter(id => !newRecordIDs.has(id));
   if (recordsToDelete.length > 0) {
-    console.log('🔥 Deleting %d stale records...', recordsToDelete.length);
+    console.log(`🔥 Deleting ${recordsToDelete.length} stale records...`);
     await index.deleteObjects(recordsToDelete);
   }
 
@@ -82,8 +97,11 @@ async function indexAndUpload() {
     await index.setSettings(sentryAlgoliaIndexSettings);
   }
 
-  const totalTime = performance.now();
-  console.log('✅ Done in %.1fs', (totalTime - startTime) / 1000);
+  const totalSeconds = (performance.now() - startTime) / 1000;
+  Sentry.metrics.distribution('algolia.total_duration_seconds', totalSeconds);
+  console.log(`✅ Done in ${totalSeconds.toFixed(1)}s`);
+
+  await Sentry.flush(5000);
 }
 
 async function fetchExistingRecordIds(algoliaIndex: SearchIndex) {
@@ -101,8 +119,23 @@ async function fetchExistingRecordIds(algoliaIndex: SearchIndex) {
 
 async function generateAlgoliaRecords(pages: FrontMatter[]) {
   const limit = pLimit(CONCURRENCY);
-  const results = await Promise.all(pages.map(fm => limit(() => getRecords(fm))));
-  return results.flat();
+  let cacheHits = 0;
+  let cacheMisses = 0;
+
+  const results = await Promise.all(
+    pages.map(fm =>
+      limit(async () => {
+        const {records: pageRecords, cached} = await getRecords(fm);
+        if (cached) {
+          cacheHits++;
+        } else {
+          cacheMisses++;
+        }
+        return pageRecords;
+      })
+    )
+  );
+  return {records: results.flat(), cacheHits, cacheMisses};
 }
 
 const frameworkPopularity: Record<string, number> = {
@@ -135,7 +168,9 @@ const getPopularity = (sdk: string | undefined, framework: string | undefined) =
   return Number.MAX_SAFE_INTEGER;
 };
 
-async function getRecords(pageFm: FrontMatter) {
+async function getRecords(
+  pageFm: FrontMatter
+): Promise<{records: any[]; cached: boolean}> {
   let sdk: string | undefined;
   let framework: string | undefined;
   if (pageFm.slug.includes('platforms/')) {
@@ -150,6 +185,17 @@ async function getRecords(pageFm: FrontMatter) {
   try {
     const htmlFile = join(staticHtmlFilesPath, pageFm.slug + '.html');
     const html = fs.readFileSync(htmlFile).toString();
+
+    const cacheKey = `v${CACHE_VERSION}_${md5(html)}`;
+    const cacheFile = join(CACHE_DIR, cacheKey + '.json');
+
+    try {
+      const cached = JSON.parse(fs.readFileSync(cacheFile, 'utf-8'));
+      return {records: cached, cached: true};
+    } catch {
+      // cache miss
+    }
+
     const pageRecords = await htmlToAlgoliaRecord(
       html,
       {
@@ -164,14 +210,16 @@ async function getRecords(pageFm: FrontMatter) {
       '#main'
     );
 
-    return pageRecords;
+    fs.writeFileSync(cacheFile, JSON.stringify(pageRecords));
+
+    return {records: pageRecords, cached: false};
   } catch (e) {
     const error = new Error(`🔴 Error processing ${pageFm.slug}: ${e.message}`, {
       cause: e,
     });
     if (ALOGOLIA_SKIP_ON_ERROR) {
       console.error(error);
-      return [];
+      return {records: [], cached: false};
     }
     throw error;
   }
