@@ -223,6 +223,40 @@ Server-side spans will display `0ms` for their durations. In the Cloudflare Work
 
 This is expected behavior in the Cloudflare Workers environment and affects all frameworks deployed to Cloudflare Workers, including Next.js, Astro, Remix, and others.
 
+### Missing Spans in `waitUntil()`
+
+If you're using Cloudflare's [`waitUntil()`](https://developers.cloudflare.com/workers/runtime-apis/handlers/fetch/#contextwaituntil) to run background tasks, spans created inside `waitUntil()` may not appear in Sentry because the request's root span has already finished before the background work starts.
+
+To capture spans inside `waitUntil()`, wrap your deferred work with `startSpan` and set `forceTransaction: true`. This creates a separate transaction for the background work:
+
+```javascript {filename:index.js}
+import * as Sentry from "@sentry/cloudflare";
+
+export default {
+  async fetch(request, env, ctx) {
+    // Main request handling
+    const response = processRequest(request);
+
+    // Background work with proper tracing
+    ctx.waitUntil(
+      Sentry.startSpan(
+        { name: "background.task", op: "task", forceTransaction: true },
+        () => updateCacheAndDatabase()
+      )
+    );
+
+    return response;
+  },
+};
+
+async function updateCacheAndDatabase() {
+  // Database operations
+  // Any spans created here will be captured
+}
+```
+
+The `forceTransaction: true` option is required because it creates a separate transaction for the `waitUntil()` work. Without it, spans created after the request ends might get lost.
+
 ## Next Steps
 
 At this point, you should have integrated Sentry and should already be sending data to your Sentry project.
