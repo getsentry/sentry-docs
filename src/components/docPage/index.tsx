@@ -86,7 +86,7 @@ export async function DocPage({
         {sidebar ?? (
           <Sidebar path={unversionedPath.split('/')} versions={frontMatter.versions} />
         )}
-        <main className="main-content flex mt-[var(--header-height)] flex-1">
+        <main className="main-content flex mt-[var(--header-height)] flex-1 min-w-0">
           <div
             className={[
               'pt-6 px-6 prose dark:prose-invert max-w-full text-[var(--gray-12)] prose-a:no-underline hover:prose-a:underline',
