@@ -186,7 +186,17 @@ async function getRecords(
     const htmlFile = join(staticHtmlFilesPath, pageFm.slug + '.html');
     const html = fs.readFileSync(htmlFile).toString();
 
-    const cacheKey = `v${CACHE_VERSION}_${md5(html)}`;
+    const meta = {
+      title: pageFm.title,
+      url: '/' + pageFm.slug + '/',
+      pathSegments: extrapolate(pageFm.slug, '/').map(x => `/${x}/`),
+      keywords: pageFm.keywords,
+      sdk,
+      framework,
+      ...(!isDeveloperDocs && {popularity: getPopularity(sdk, framework)}),
+    };
+
+    const cacheKey = `v${CACHE_VERSION}_${md5(html + JSON.stringify(meta))}`;
     const cacheFile = join(CACHE_DIR, cacheKey + '.json');
 
     try {
@@ -196,21 +206,13 @@ async function getRecords(
       // cache miss
     }
 
-    const pageRecords = await htmlToAlgoliaRecord(
-      html,
-      {
-        title: pageFm.title,
-        url: '/' + pageFm.slug + '/',
-        pathSegments: extrapolate(pageFm.slug, '/').map(x => `/${x}/`),
-        keywords: pageFm.keywords,
-        sdk,
-        framework,
-        ...(!isDeveloperDocs && {popularity: getPopularity(sdk, framework)}),
-      },
-      '#main'
-    );
+    const pageRecords = await htmlToAlgoliaRecord(html, meta, '#main');
 
-    fs.writeFileSync(cacheFile, JSON.stringify(pageRecords));
+    try {
+      fs.writeFileSync(cacheFile, JSON.stringify(pageRecords));
+    } catch {
+      // cache write failure is non-critical
+    }
 
     return {records: pageRecords, cached: false};
   } catch (e) {
