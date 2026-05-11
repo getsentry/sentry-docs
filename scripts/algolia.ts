@@ -77,7 +77,9 @@ async function indexAndUpload() {
   Sentry.metrics.gauge('algolia.cache_misses', cacheMisses);
 
   const existingRecordIds = await fetchExistingRecordIds(index);
-  console.log(`🔥 Found ${existingRecordIds.length} existing records in \`${DOCS_INDEX_NAME}\``);
+  console.log(
+    `🔥 Found ${existingRecordIds.length} existing records in \`${DOCS_INDEX_NAME}\``
+  );
 
   console.log(`🔥 Saving records to \`${DOCS_INDEX_NAME}\`...`);
   const saveResult = await index.saveObjects(records, {
