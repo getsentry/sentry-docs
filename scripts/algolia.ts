@@ -78,7 +78,10 @@ async function indexAndUpload() {
 
   Sentry.metrics.gauge('algolia.pages_total', pages.length, {attributes: metricTags});
   Sentry.metrics.gauge('algolia.records_total', records.length, {attributes: metricTags});
-  Sentry.metrics.distribution('algolia.generate_duration', generateSeconds, {attributes: metricTags, unit: 'second'});
+  Sentry.metrics.distribution('algolia.generate_duration', generateSeconds, {
+    attributes: metricTags,
+    unit: 'second',
+  });
   Sentry.metrics.gauge('algolia.cache_hits', cacheHits, {attributes: metricTags});
   Sentry.metrics.gauge('algolia.cache_misses', cacheMisses, {attributes: metricTags});
 
@@ -106,7 +109,10 @@ async function indexAndUpload() {
   }
 
   const totalSeconds = (performance.now() - startTime) / 1000;
-  Sentry.metrics.distribution('algolia.total_duration', totalSeconds, {attributes: metricTags, unit: 'second'});
+  Sentry.metrics.distribution('algolia.total_duration', totalSeconds, {
+    attributes: metricTags,
+    unit: 'second',
+  });
   console.log(`✅ Done in ${totalSeconds.toFixed(1)}s`);
 
   await Sentry.flush(5000);
