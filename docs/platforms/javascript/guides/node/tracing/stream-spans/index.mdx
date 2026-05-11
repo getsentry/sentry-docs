@@ -163,6 +163,64 @@ function processJob(job) {
 
 Any spans created inside the `startNewTrace` callback belong to a fresh trace with a new trace ID. Once the callback ends, the SDK continues the previous trace (if one was active).
 
+## Scrub Span Data
+
+To modify or redact data on spans before they are sent, use `beforeSendSpan`. When using streamed spans, the hook must be wrapped with `Sentry.withStreamedSpan()` so the SDK applies it to spans as they are flushed rather than only at transaction time.
+
+If you don't have a `beforeSendSpan` hook, no extra setup is needed.
+
+```javascript {filename:instrument.js}
+const Sentry = require("@sentry/node");
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+  traceLifecycle: "stream",
+  beforeSendSpan: Sentry.withStreamedSpan((span) => {
+    if (span.op === "db.query") {
+      span.description = "[filtered]";
+    }
+    return span;
+  }),
+});
+```
+
+Without the wrapper, `beforeSendSpan` is silently skipped for streamed spans.
+
+`beforeSendSpan` can only modify span data — you cannot use it to drop spans. To prevent spans from being created entirely, use [`ignoreSpans`](#drop-spans-with-ignorespans) instead.
+
+### Drop Spans With `ignoreSpans`
+
+To prevent specific spans from being created, use the `ignoreSpans` option. Unlike `beforeSendSpan` (which can only modify spans), `ignoreSpans` drops matching spans before they start. You can match by span name using strings or regular expressions, or use an object to also match on span attributes:
+
+```javascript {filename:instrument.js}
+const Sentry = require("@sentry/node");
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+  traceLifecycle: "stream",
+  ignoreSpans: [
+    // Drop spans whose name contains "healthcheck"
+    "healthcheck",
+    // Drop spans whose name matches a pattern
+    /^GET \/api\/v1\/internal/,
+    // Drop spans matching name and attribute conditions
+    {
+      name: /^GET \//,
+      attributes: {
+        "http.response.status_code": 200,
+        "http.route": "/api/status",
+      },
+    },
+  ],
+});
+```
+
+If a matching span is a root span, all of its child spans are dropped as well. If a child span matches, only that span is dropped and its children are reparented to the next ancestor.
+
+If you need to redact or modify data on spans that aren't dropped, use [`beforeSendSpan`](#scrub-span-data) instead.
+
 ## How Span Flushing Works
 
 When span streaming is enabled, the SDK maintains an internal buffer that groups spans by trace ID. Spans are flushed:
