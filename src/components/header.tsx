@@ -195,18 +195,10 @@ export function Header({
             padding-right: 26px;
           }
         }
-        /* Doc pages: align header with sidebar and TOC at large viewports */
-        @media (min-width: 2057px) {
-          .header-content:not(.header-content-home) {
-            --sidebar-width: 300px;
-            --doc-content-w: 1100px;
-            --toc-w: 250px;
-            --gap: 24px;
-            /* Match sidebar left edge position */
-            padding-left: calc(50% - (var(--doc-content-w) / 2) - var(--gap) - var(--sidebar-width));
-            /* Match TOC right edge position */
-            padding-right: calc(50% - (var(--doc-content-w) / 2) - var(--gap) - var(--toc-w));
-          }
+        /* Doc pages: fluid centering to match sidebar offset at wide viewports */
+        .header-content:not(.header-content-home) {
+          padding-left: var(--layout-offset, 0px);
+          padding-right: var(--layout-offset, 0px);
         }
       `}</style>
       <div

@@ -1,0 +1,334 @@
+---
+title: Nitro
+description: Learn how to set up Sentry in your Nitro app to capture errors and monitor performance.
+sdk: sentry.javascript.nitro
+fallbackGuide: javascript.node
+categories:
+  - javascript
+  - server
+  - server-node
+---
+
+<Alert>
+
+This SDK is currently in **BETA**. Beta features are still in progress and may have bugs. Please reach out on [GitHub](https://github.com/getsentry/sentry-javascript/issues/new/choose) if you have any feedback or concerns.
+
+</Alert>
+
+## Prerequisites
+
+You need:
+
+- A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/)
+- A Nitro application (`3.0.260415-beta` or newer)
+- Node.js 18.19.0+
+
+<StepConnector selector="h2" showNumbers={true}>
+
+## Install
+
+Choose the features you want to configure, and this guide will show you how:
+
+<OnboardingOptionButtons
+  options={["error-monitoring", "performance", "logs"]}
+/>
+
+<Include name="quick-start-features-expandable" />
+
+### Install the Sentry SDK
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Run the command for your preferred package manager to add the Sentry SDK to your application:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```bash {tabTitle:npm}
+npm install @sentry/nitro --save
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/nitro
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/nitro
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+## Configure
+
+The Nitro SDK is configured in two places: a build-time wrapper that registers a Nitro module, and a runtime file that initializes the SDK before your server starts.
+
+### Configure the Nitro Build
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Wrap your Nitro config with `withSentryConfig` so the Sentry module is registered during the build. Provide your auth token, organization, and project slugs so that source maps are automatically uploaded during production builds.
+
+<OrgAuthTokenNote />
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```bash {filename:.env}
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
+```typescript {tabTitle:nitro.config.ts} {filename: nitro.config.ts}
+import { defineNitroConfig } from "nitro/config";
+import { withSentryConfig } from "@sentry/nitro";
+
+const config = defineNitroConfig({
+  // your Nitro options...
+});
+
+export default withSentryConfig(config, {
+  org: "___ORG_SLUG___",
+  project: "___PROJECT_SLUG___",
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+});
+```
+
+```typescript {tabTitle:vite.config.ts} {filename: vite.config.ts}
+import { defineConfig } from "vite";
+import { nitro } from "nitro/vite";
+import { withSentryConfig } from "@sentry/nitro";
+
+export default defineConfig({
+  plugins: [
+    nitro(
+      withSentryConfig(
+        {
+          // your Nitro options...
+        },
+        {
+          org: "___ORG_SLUG___",
+          project: "___PROJECT_SLUG___",
+          authToken: process.env.SENTRY_AUTH_TOKEN,
+        }
+      )
+    ),
+  ],
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+### Initialize the Sentry SDK
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Create an `instrument.mjs` file in your project root:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript {filename: instrument.mjs}
+import * as Sentry from "@sentry/nitro";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  // Adds request headers and IP for users, for more info visit:
+  // https://docs.sentry.io/platforms/javascript/guides/nitro/configuration/options/#sendDefaultPii
+  sendDefaultPii: true,
+  // ___PRODUCT_OPTION_START___ performance
+
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for tracing.
+  // We recommend adjusting this value in production
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/guides/nitro/configuration/options/#tracesSampleRate
+  tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+  // ___PRODUCT_OPTION_START___ logs
+
+  // Enable logs to be sent to Sentry
+  enableLogs: true,
+  // ___PRODUCT_OPTION_END___ logs
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+### Source Maps
+
+By default, `withSentryConfig` generates hidden source maps, uploads them to Sentry, and deletes the `.map` files after the build. This gives you readable stack traces in Sentry without shipping source maps to production. If you already set `sourcemap` in your Nitro config, the SDK respects your setting.
+
+### Run Your Application
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Load the instrumentation file with Node's `--import` flag before any Nitro command. This works for `nitro dev`, `nitro preview`, and your production start script:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```json {filename: package.json}
+{
+  "scripts": {
+    "dev": "NODE_OPTIONS='--import ./instrument.mjs' nitro dev",
+    "preview": "NODE_OPTIONS='--import ./instrument.mjs' nitro preview",
+    "start": "NODE_OPTIONS='--import ./instrument.mjs' node .output/server/index.mjs"
+  }
+}
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+## Verify Your Setup
+
+Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
+
+### Issues
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Add a test route that throws an error, then open `/debug-sentry` in your browser (or `curl` it) to trigger the error:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript {filename: routes/debug-sentry.ts}
+import { defineHandler } from "nitro/h3";
+
+export default defineHandler(() => {
+  throw new Error("My first Sentry error!");
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+<OnboardingOption optionId="performance">
+
+### Tracing
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+To verify tracing, add a handler that starts a manual span:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript {filename: routes/debug-sentry.ts}
+import { defineHandler } from "nitro/h3";
+import * as Sentry from "@sentry/nitro";
+
+export default defineHandler(async () => {
+  await Sentry.startSpan(
+    {
+      op: "test",
+      name: "My First Test Transaction",
+    },
+    async () => {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      throw new Error("My first Sentry error!");
+    }
+  );
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+</OnboardingOption>
+
+<OnboardingOption optionId="logs">
+
+<Include name="logs/javascript-quick-start-verify-logs-splitlayout" />
+
+</OnboardingOption>
+
+### View Captured Data in Sentry
+
+Finally, head over to your project on [Sentry.io](https://sentry.io/) to view the collected data (it takes a couple of moments for the data to appear).
+
+<Include name="quick-start-locate-data-expandable" />
+
+## Features
+
+### Automatic Error Capturing
+
+The SDK registers a Nitro `error` hook that captures unhandled errors from route handlers and middleware. `HTTPError`s with 3xx or 4xx status codes are skipped.
+
+To disable the built-in error hook, set `enableNitroErrorHandler: false` in `Sentry.init`:
+
+```javascript {filename: instrument.mjs}
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  enableNitroErrorHandler: false,
+});
+```
+
+### Automatic Tracing
+
+The SDK creates transactions for incoming requests using Nitro's tracing channels (`h3.request` and `srvx.request`). `withSentryConfig` enables `tracingChannel: true` on your Nitro config automatically.
+
+- Root request spans use `op: 'http.server'` with parameterized route names (e.g. `GET /users/:id`)
+- Middleware spans use `op: 'middleware.nitro'`
+- Path parameters are attached as `url.path.parameter.<key>` attributes
+- 3xx/4xx `HTTPError`s do not mark the span as errored
+
+### Distributed Tracing
+
+The SDK appends `sentry-trace` and `baggage` values to `Server-Timing` response headers so the browser SDK can link pageload traces to their server trace. Incoming `sentry-trace` and `baggage` headers are honored by the underlying `@sentry/node` SDK. No additional configuration needed.
+
+### Manual Spans
+
+You can create manual spans inside your route handlers:
+
+```javascript
+import { defineHandler } from "nitro/h3";
+import * as Sentry from "@sentry/nitro";
+
+export default defineHandler(() => {
+  return Sentry.startSpan({ name: "process-payment" }, () => {
+    // ... your code
+  });
+});
+```
+
+## Runtime Behavior
+
+The SDK is a wrapper around `@sentry/node` and re-exports its full API. All Node.js instrumentation from `@sentry/node` (HTTP clients, databases, etc.) works out of the box, and the Nitro-specific tracing channels add parameterized routes and middleware spans on top.
+
+## Next Steps
+
+- Explore [practical guides](/guides/) on what to monitor, log, track, and investigate after setup
+- Learn how to <PlatformLink to="/usage">manually capture errors</PlatformLink>
+- Continue to <PlatformLink to="/configuration">customize your configuration</PlatformLink>
+- Get familiar with [Sentry's product features](/product) like tracing, insights, and alerts
+
+<Expandable permalink={false} title="Are you having problems setting up the SDK?">
+
+- Find various topics in <PlatformLink to="/troubleshooting">Troubleshooting</PlatformLink>
+- [Get support](https://sentry.zendesk.com/hc/en-us/)
+
+</Expandable>
+
+</StepConnector>

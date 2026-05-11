@@ -1,3 +1,39 @@
 If you're using the current version of our Flutter SDK, distributed tracing will work out of the box.
 
 If you're using version `7.10.0` or below, you'll need to have our <PlatformLink to="/tracing/">tracing feature enabled</PlatformLink> in order for distributed tracing to work.
+
+### Strict Trace Continuation
+
+When your application communicates with backend services, responses might include `sentry-trace` and `baggage` headers from an upstream service that is also using Sentry.
+By default, the SDK will continue the trace from these incoming headers. However, this behavior can be undesirable if the responses are from a third-party service,
+as it can lead to unwanted traces, increased billing, and skewed performance data.
+
+To prevent this, you can enable `strictTraceContinuation`. When this option is set to `true`, the SDK only continues a trace if it belongs to the same Sentry organization.
+Otherwise, it starts a new trace.
+
+```dart {4}
+await SentryFlutter.init((options) {
+  options.dsn = '___PUBLIC_DSN___';
+  options.tracesSampleRate = 1.0;
+  // Ensure that only traces from your own organization are continued
+  options.strictTraceContinuation = true;
+});
+```
+
+The SDK automatically parses the organization ID from your DSN. If you use a DSN format that doesn't include the organization ID (number followed by the letter `"o"`), or if you need to override it, you can provide it manually using the `orgId` option:
+
+```dart {5}
+await SentryFlutter.init((options) {
+  options.dsn = '___PUBLIC_DSN___';
+  options.tracesSampleRate = 1.0;
+  options.strictTraceContinuation = true;
+  // Manually provide your organization ID (overrides organization ID parsed from DSN)
+  options.orgId = '12345';
+});
+```
+
+<Alert level="info">
+
+On iOS, only the Dart layer enforces strict trace continuation. Native iOS coverage will be enabled in a future release.
+
+</Alert>

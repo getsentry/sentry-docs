@@ -141,29 +141,11 @@ export function DevelopDocsHeader({
         </div>
       </nav>
       <style>{`
-        /* Align header width with content + sidebars at wide screens */
-        @media (min-width: 2057px) {
-          header .nav-inner {
-            /* total layout width = sidebar + gap + content + gap + toc */
-            max-width: calc(
-              var(--sidebar-width, 300px)
-              + var(--gap, 24px)
-              + var(--doc-content-w, 1200px)
-              + var(--gap, 24px)
-              + var(--toc-w, 250px)
-            );
-            margin-left: auto;
-            margin-right: auto;
-            /* center, then compensate if sidebar != toc */
-            transform: translateX(calc((var(--toc-w, 250px) - var(--sidebar-width, 300px)) / 2));
-            /* restore small internal padding (≈ Tailwind px-3) */
-            padding-left: 0.75rem;
-            padding-right: 0.75rem;
-          }
-          /* Ensure the left logo area equals sidebar width */
-          header .nav-inner .logo-slot {
-            width: var(--sidebar-width, 300px);
-          }
+        /* Fluid centering to match sidebar offset at wide viewports.
+           Use max() to preserve the nav's base 0.75rem (px-3) padding. */
+        header .nav-inner {
+          padding-left: max(0.75rem, var(--layout-offset, 0px));
+          padding-right: max(0.75rem, var(--layout-offset, 0px));
         }
       `}</style>
     </header>
