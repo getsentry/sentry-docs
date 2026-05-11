@@ -12,7 +12,7 @@ SentrySDK.start { options in
 +   // sampling context
 +   options.tracesSampler = { context in
 +       // Don't miss any transactions for VIP users
-+       if context?["vip"] as? Bool == true {
++       if context.customSamplingContext?["vip"] as? Bool == true {
 +           return 1.0
 +       } else {
 +           return 0.25 // 25% for everything else
@@ -25,7 +25,7 @@ SentrySDK.start { options in
 @import Sentry;
 
 [SentrySDK startWithConfigureOptions:^(SentryOptions * options) {
-    options.Dsn = @"___PUBLIC_DSN___";
+    options.dsn = @"___PUBLIC_DSN___";
 
 +   // Example uniform sample rate: capture 100% of transactions
 +   // In Production you will probably want a smaller number such as 0.5 for 50%
@@ -34,7 +34,7 @@ SentrySDK.start { options in
 +   // OR if you prefer, determine traces sample rate based on the sampling context
 +   options.tracesSampler = ^NSNumber * (SentrySamplingContext * samplingContext) {
 +       // Don't miss any transactions for VIP users
-+       if ([samplingContext[@"vip"] boolValue] == YES) {
++       if ([samplingContext.customSamplingContext[@"vip"] boolValue] == YES) {
 +           return @1.0;
 +       } else {
 +           return @0.25; // 25% for everything else

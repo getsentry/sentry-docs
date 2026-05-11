@@ -1,0 +1,69 @@
+---
+title: Google Gen AI
+description: "Manually instrument the Google Gen AI SDK in React Native to capture spans and LLM interactions."
+---
+
+_Import name: `Sentry.instrumentGoogleGenAIClient`_
+
+The `instrumentGoogleGenAIClient` helper adds instrumentation for the [`@google/genai`](https://www.npmjs.com/package/@google/genai) SDK by wrapping a Google Gen AI client instance and recording LLM interactions with configurable input/output capture. The OpenTelemetry-based automatic integration available for Node.js does not work in React Native, so wrapping the client manually is the only supported path.
+
+## Usage
+
+```javascript
+import * as Sentry from "@sentry/react-native";
+import { GoogleGenAI } from "@google/genai";
+
+const genAI = new GoogleGenAI({
+  // Warning: API keys included in your app bundle will be visible to anyone who
+  // inspects the bundle. Proxy LLM calls through your own backend whenever possible.
+  apiKey: "your-api-key",
+});
+
+const client = Sentry.instrumentGoogleGenAIClient(genAI, {
+  recordInputs: true,
+  recordOutputs: true,
+});
+
+// Use the wrapped client instead of the original genAI instance
+const result = await client.models.generateContent("Hello!");
+```
+
+Make sure <PlatformLink to="/tracing/">tracing is enabled</PlatformLink> for the spans produced by this integration to be captured.
+
+## Configuration
+
+### Options
+
+The following options control what data is captured from Google Gen AI SDK calls:
+
+#### `recordInputs`
+
+_Type: `boolean` (optional)_
+
+Records inputs to Google Gen AI SDK calls (such as prompts and messages).
+
+Defaults to `true` if `sendDefaultPii` is `true`.
+
+#### `recordOutputs`
+
+_Type: `boolean` (optional)_
+
+Records outputs from Google Gen AI SDK calls (such as generated text and responses).
+
+Defaults to `true` if `sendDefaultPii` is `true`.
+
+## Supported Operations
+
+By default, tracing support is added to the following Google Gen AI SDK calls:
+
+- `models.generateContent()` - Generate content with a given model
+- `models.generateContentStream()` - Stream content generation with a given model
+- `chats.create()` - Create chat sessions
+- `sendMessage()` - Send messages in chat sessions
+- `sendMessageStream()` - Stream messages in chat sessions
+
+Streaming and non-streaming requests are automatically detected and handled appropriately.
+
+## Supported Versions
+
+- `@google/genai`: `>=0.10.0 <2`

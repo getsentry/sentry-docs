@@ -72,12 +72,14 @@ export async function SidebarNavigation({path}: {path: string[]}) {
   if (
     path[0] === 'organization' ||
     path[0] === 'account' ||
+    path[0] === 'integrations' ||
     path[0] === 'pricing' ||
     path[0] === 'security-legal-pii'
   ) {
     const moreItems = [
       {title: 'Account Settings', root: 'account'},
       {title: 'Organization Settings', root: 'organization'},
+      {title: 'Integrations', root: 'integrations'},
       {title: 'Pricing & Billing', root: 'pricing'},
       {title: 'Security, Legal, & PII', root: 'security-legal-pii'},
     ];

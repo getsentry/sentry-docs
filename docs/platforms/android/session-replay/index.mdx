@@ -201,6 +201,26 @@ options.sessionReplay.screenshotStrategy = ScreenshotStrategyType.CANVAS // or S
 <meta-data android:name="io.sentry.session-replay.screenshot-strategy" android:value="canvas|pixelCopy" />
 ```
 
+## SurfaceView Capture
+
+By default, Android `SurfaceView` components (used by Unity, video players, map SDKs, and other frameworks that render outside the normal View hierarchy) appear as black or transparent regions in session replays. This happens because `SurfaceView` renders to its own surface, which is composited by SurfaceFlinger independently from the Window and is not captured by the standard PixelCopy window capture.
+
+When `captureSurfaceViews` is enabled, the SDK captures each visible `SurfaceView` separately via `PixelCopy` and composites the result onto the replay frame. This option only works with the `PixelCopy` screenshot strategy (the default).
+
+<Alert level="warning">
+
+This option is experimental. The SDK cannot mask individual elements rendered inside a `SurfaceView` (e.g. native Unity UI, map labels, video frames) — masking granularity is at the `SurfaceView` level only. Only enable this for `SurfaceView` components whose content is safe to record.
+
+</Alert>
+
+```kotlin
+options.sessionReplay.isCaptureSurfaceViews = true
+```
+
+```XML {filename:AndroidManifest.xml}
+<meta-data android:name="io.sentry.session-replay.capture-surface-views" android:value="true" />
+```
+
 ## Error Linking
 
 Errors that happen while a replay is running will be linked to the replay, making it possible to jump between related issues and replays. However, it's **possible** that in some cases the error count reported on the **Replays Details** page won't match the actual errors that have been captured. That's because errors can be lost, and while this is uncommon, there are a few reasons why it could happen:

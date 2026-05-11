@@ -70,6 +70,31 @@ If you're using an older version of the SDK (version `3.2.12` or lower) or `sent
   ../node_modules/react-native/scripts/react-native-xcode.sh --force-foreground
 ```
 
+## Different `sentry.properties` Per Scheme or Build Configuration (iOS)
+
+Unlike Android's `flavorAware` option, iOS doesn't auto-select a `sentry.properties` file per configuration. If your app has multiple schemes or build configurations that need to upload to different Sentry projects, select the file at build time with a User-Defined Build Setting.
+
+1. In Xcode, open the **Build Settings** tab, click **+**, and choose **Add User-Defined Setting**. Name it `SENTRY_PROPERTIES_FILE`.
+2. Expand the new setting and set a value per configuration, for example `sentry-staging.properties` for `Staging` and `sentry-production.properties` for `Production`.
+3. Reference the setting from the Sentry build phases by exporting `SENTRY_PROPERTIES`:
+
+```bash {filename:Bundle React Native code and images}
+export SENTRY_PROPERTIES="$SENTRY_PROPERTIES_FILE"
+
+WITH_ENVIRONMENT="../node_modules/react-native/scripts/xcode/with-environment.sh"
+SENTRY_XCODE="../node_modules/@sentry/react-native/scripts/sentry-xcode.sh"
+
+/bin/sh -c "$WITH_ENVIRONMENT $SENTRY_XCODE"
+```
+
+```bash {filename:Upload Debug Symbols to Sentry}
+export SENTRY_PROPERTIES="$SENTRY_PROPERTIES_FILE"
+
+/bin/sh ../node_modules/@sentry/react-native/scripts/sentry-xcode-debug-files.sh
+```
+
+Xcode substitutes the User-Defined Build Setting for the active configuration, so each build uploads to the matching Sentry project. The same pattern works for `SENTRY_RELEASE`, `SENTRY_DIST`, and other per-build environment variables.
+
 ## Release Health
 
 If your release health statistics are being attributed to the wrong release, confirm that you [pass the `release` and `dist` to the `init` call](/platforms/react-native/configuration/releases/#bind-the-version).
@@ -308,7 +333,7 @@ When you remove the environmental variable in front of your build command, your 
 
 ## Expo Transactions Never Finish
 
-If you're using [expo-dev-client](https://docs.expo.dev/development/introduction/#what-is-an-expo-dev-client), you might notice that transactions never finish in your dev builds. This is due to logs that the dev client is continuously sending to the development server. To fix this, you can stop creating spans for the HTTP requests to the log endpoint in your dev builds by adding the following to your `Sentry.init()`:
+If you're using [expo-dev-client](https://docs.expo.dev/develop/development-builds/introduction/), you might notice that transactions never finish in your dev builds. This is due to logs that the dev client is continuously sending to the development server. To fix this, you can stop creating spans for the HTTP requests to the log endpoint in your dev builds by adding the following to your `Sentry.init()`:
 
 ```javascript
 import * as Sentry from "sentry-expo";
@@ -358,6 +383,32 @@ You can also use [Advanced Data Scrubbing](/security-legal-pii/scrubbing/advance
 [Replace] [Anything] from [contexts.trace.data.route.params]
 [Replace] [Anything] from [contexts.trace.data.previousRoute.params]
 ```
+
+## Android: IllegalStateException Mix of Versions
+
+If your Android app crashes on startup with:
+
+```
+IllegalStateException: Sentry SDK has detected a mix of versions
+```
+
+This is caused by the Sentry Android Gradle Plugin (AGP) auto-installing a `sentry-android` version that conflicts with the one shipped by `@sentry/react-native`.
+
+### Solution
+
+Set `autoInstallation.enabled = false` in your `android/app/build.gradle`:
+
+```groovy {filename:android/app/build.gradle}
+sentry {
+    autoInstallation {
+      enabled = false
+    }
+}
+```
+
+The React Native SDK manages its own compatible `sentry-android` dependency, so the Gradle plugin should not auto-install one. See the [manual setup guide](/platforms/react-native/manual-setup/manual-setup/#enable-sentry-agp) for the full configuration.
+
+For more information, see [GitHub issue #5682](https://github.com/getsentry/sentry-react-native/issues/5682).
 
 ## Sentry Android Gradle Plugin Circular Dependency
 

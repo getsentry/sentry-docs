@@ -9,7 +9,7 @@ categories:
   - server-node
 ---
 
-<Alert>
+<Alert level="warning">
 
 This SDK is currently in **ALPHA**. Alpha features are still in progress, may have bugs, and might include breaking changes.
 Please reach out on [GitHub](https://github.com/getsentry/sentry-javascript/issues/new/choose) if you have any feedback or concerns.
@@ -21,10 +21,12 @@ Please reach out on [GitHub](https://github.com/getsentry/sentry-javascript/issu
 You need:
 
 - A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/)
-- An Elysia application (v1.4.0+)
+- An Elysia application (`v1.4.0+`)
 - Bun or Node.js 18+ (with [@elysiajs/node](https://elysiajs.com/integrations/node) adapter)
 
-## Step 1: Install
+<StepConnector selector="h2" showNumbers={true}>
+
+## Install
 
 Choose the features you want to configure, and this guide will show you how:
 
@@ -36,7 +38,19 @@ Choose the features you want to configure, and this guide will show you how:
 
 ### Install the Sentry SDK
 
-Run the command for your preferred package manager to add the Sentry SDK to your application:
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Run the command for your runtime and preferred package manager to add the Sentry SDK to your application:
+
+<Alert>
+  You do **not** need `@elysiajs/opentelemetry`. The `@sentry/elysia` SDK
+  handles all instrumentation natively.
+</Alert>
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```bash {tabTitle:Bun}
 bun add @sentry/elysia
@@ -50,13 +64,20 @@ yarn add @sentry/elysia @elysiajs/node
 pnpm add @sentry/elysia @elysiajs/node
 ```
 
-<Alert>
-  You do **not** need `@elysiajs/opentelemetry`. The `@sentry/elysia` SDK handles all instrumentation natively.
-</Alert>
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
-## Step 2: Configure
+## Configure
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
 
 Call `Sentry.init()` before creating your Elysia app, then wrap the app with `Sentry.withElysia()` before defining routes.
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```javascript {tabTitle:Bun} {filename: index.ts}
 import * as Sentry from "@sentry/elysia";
@@ -121,17 +142,53 @@ const app = Sentry.withElysia(new Elysia({ adapter: node() }))
   .listen(3000);
 ```
 
-## Step 3: Add Readable Stack Traces With Source Maps (Optional)
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
-<PlatformContent includePath="getting-started-sourcemaps-short-version" />
+### Customize Automatic Error Capturing (Optional)
 
-## Step 4: Verify Your Setup
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+The SDK captures 5xx errors automatically via a global `onError` hook. Client errors (3xx/4xx) are not captured by default.
+You can customize which errors are captured using the `shouldHandleError` option.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript
+const app = Sentry.withElysia(new Elysia(), {
+  shouldHandleError: (context) => {
+    const status = context.set.status;
+    return status === 500 || status === 503;
+  },
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+### Add Readable Stack Traces With Source Maps (Optional)
+
+<PlatformContent includePath="getting-started-sourcemaps-short-version-splitlayout" />
+
+## Verify Your Setup
 
 Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
 
 ### Issues
 
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
 First, let's verify that Sentry captures errors and creates issues in your Sentry project. Add the following route to your app, which triggers an error that Sentry will capture:
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```javascript
 app.get("/debug-sentry", () => {
@@ -139,11 +196,22 @@ app.get("/debug-sentry", () => {
 });
 ```
 
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
 <OnboardingOption optionId="performance">
 
 ### Tracing
 
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
 To test your tracing configuration, update the previous code snippet by starting a trace to measure the time it takes for the execution of your code:
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```javascript
 app.get("/debug-sentry", async () => {
@@ -160,11 +228,15 @@ app.get("/debug-sentry", async () => {
 });
 ```
 
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
 </OnboardingOption>
 
 <OnboardingOption optionId="logs">
 
-<Include name="logs/javascript-quick-start-verify-logs" />
+<Include name="logs/javascript-quick-start-verify-logs-splitlayout" />
 
 </OnboardingOption>
 
@@ -173,52 +245,6 @@ app.get("/debug-sentry", async () => {
 Finally, head over to your project on [Sentry.io](https://sentry.io/) to view the collected data (it takes a couple of moments for the data to appear).
 
 <Include name="quick-start-locate-data-expandable" />
-
-## Features
-
-### Automatic Error Capturing
-
-The SDK captures 5xx errors automatically via a global `onError` hook. Client errors (3xx/4xx) are not captured by default.
-
-You can customize which errors are captured using the `shouldHandleError` option:
-
-```javascript
-const app = Sentry.withElysia(new Elysia(), {
-  shouldHandleError: (context) => {
-    const status = context.set.status;
-    return status === 500 || status === 503;
-  },
-});
-```
-
-### Automatic Tracing
-
-The SDK creates spans for every Elysia lifecycle phase: Request, Parse, Transform, BeforeHandle, Handle, AfterHandle, MapResponse, AfterResponse, and Error.
-
-- The Handle span uses `op: 'request_handler.elysia'`; all other lifecycle spans use `op: 'middleware.elysia'`
-- Transactions use parameterized route names (e.g., `GET /users/:id`)
-- Named function handlers show their function name in spans; arrow functions show as `anonymous`
-
-### Distributed Tracing
-
-The SDK automatically propagates incoming `sentry-trace` and `baggage` headers and injects trace headers into outgoing responses. No additional configuration needed.
-
-### Manual Spans
-
-You can create manual spans within your route handlers:
-
-```javascript
-app.get("/checkout", () => {
-  return Sentry.startSpan({ name: "process-payment" }, () => {
-    // ... your code
-  });
-});
-```
-
-## Runtime Behavior
-
-- **Bun**: The SDK creates root server spans via Elysia's `.wrap()` API with `continueTrace` for trace propagation. No additional runtime instrumentation needed.
-- **Node.js**: The SDK uses Node's HTTP instrumentation for root spans and updates the transaction name with the parameterized route from Elysia.
 
 ## Next Steps
 
@@ -233,3 +259,5 @@ app.get("/checkout", () => {
 - [Get support](https://sentry.zendesk.com/hc/en-us/)
 
 </Expandable>
+
+</StepConnector>

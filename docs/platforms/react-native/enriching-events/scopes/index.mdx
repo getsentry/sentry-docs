@@ -132,6 +132,36 @@ Sentry.setUser({
 To learn what useful information can be associated with scopes see
 [context](../context/), [tags](../tags), [users](../identify-user) and [breadcrumbs](../breadcrumbs/).
 
+## Scope Attributes
+
+Scope attributes are key-value pairs that are automatically included in structured logs and metrics. You can set, update, and remove attributes on the scope:
+
+```javascript
+// Set a single attribute
+Sentry.getIsolationScope().setAttribute("org_id", "abc123");
+
+// Set multiple attributes at once
+Sentry.getIsolationScope().setAttributes({
+  user_tier: "premium",
+  request_count: 42,
+  is_admin: true,
+});
+
+// Remove an attribute
+Sentry.getIsolationScope().removeAttribute("org_id");
+```
+
+Attributes support primitive values: strings, numbers, and booleans. Non-primitive values (objects, arrays, etc.) are not synced to the native layer.
+
+You can also set attributes within a specific scope using `withScope`:
+
+```javascript
+Sentry.withScope((scope) => {
+  scope.setAttribute("request_id", "req-123");
+  Sentry.logger.info("Processing request");
+});
+```
+
 ## Using `withScope`
 
 In the following example we use <PlatformIdentifier name="with-scope" /> to attach a `level` and a `tag` to only one specific error:

@@ -173,7 +173,7 @@ module.exports = withSentryConfig(nextConfig, {
     },
     // Enables automatic instrumentation of Vercel Cron Monitors
     // See the following for more information:
-    // https://docs.sentry.io/product/crons/
+    // https://docs.sentry.io/product/monitors-and-alerts/monitors/crons/
     // https://vercel.com/docs/cron-jobs
     automaticVercelMonitors: true,
     reactComponentAnnotation: {
