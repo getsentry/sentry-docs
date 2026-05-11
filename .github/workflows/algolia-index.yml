@@ -47,7 +47,7 @@ jobs:
       # without introducing another dependency like ts-node or tsx for everyone else
 
       - name: Build index for user docs
-        run: pnpm enforce-redirects && pnpm generate-doctree && pnpm next build && bun ./scripts/algolia.ts
+        run: pnpm build && bun ./scripts/algolia.ts
         if: steps.filter.outputs.docs == 'true'
         env:
           ALGOLIA_APP_ID: ${{ secrets.ALGOLIA_APP_ID }}
@@ -59,7 +59,7 @@ jobs:
           NEXT_PUBLIC_SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
 
       - name: Build index for developer docs
-        run: git submodule init && git submodule update && pnpm enforce-redirects && pnpm generate-doctree && NEXT_PUBLIC_DEVELOPER_DOCS=1 pnpm next build && bun ./scripts/algolia.ts
+        run: pnpm build:developer-docs && bun ./scripts/algolia.ts
         if: steps.filter.outputs.dev-docs == 'true'
         env:
           ALGOLIA_APP_ID: ${{ secrets.ALGOLIA_APP_ID }}
