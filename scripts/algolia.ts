@@ -1,4 +1,4 @@
-import * as Sentry from '@sentry/node';
+import * as Sentry from '@sentry/nextjs';
 import {
   extrapolate,
   htmlToAlgoliaRecord,
@@ -44,6 +44,12 @@ const CONCURRENCY = 50;
 const CACHE_VERSION = 1;
 const CACHE_DIR = join(process.cwd(), '.next', 'cache', 'algolia-records');
 
+const docsType = isDeveloperDocs ? 'developer-docs' : 'user-docs';
+const metricTags = {
+  docs_type: docsType,
+  commit_sha: process.env.GITHUB_SHA?.slice(0, 8) ?? 'local',
+};
+
 function md5(data: string): string {
   return createHash('md5').update(data).digest('hex');
 }
@@ -70,11 +76,11 @@ async function indexAndUpload() {
     `🔥 Generated ${records.length} records from ${pages.length} pages in ${generateSeconds.toFixed(1)}s (cache: ${cacheHits} hits, ${cacheMisses} misses)`
   );
 
-  Sentry.metrics.gauge('algolia.pages_total', pages.length);
-  Sentry.metrics.gauge('algolia.records_total', records.length);
-  Sentry.metrics.distribution('algolia.generate_duration_seconds', generateSeconds);
-  Sentry.metrics.gauge('algolia.cache_hits', cacheHits);
-  Sentry.metrics.gauge('algolia.cache_misses', cacheMisses);
+  Sentry.metrics.gauge('algolia.pages_total', pages.length, {attributes: metricTags});
+  Sentry.metrics.gauge('algolia.records_total', records.length, {attributes: metricTags});
+  Sentry.metrics.distribution('algolia.generate_duration', generateSeconds, {attributes: metricTags, unit: 'second'});
+  Sentry.metrics.gauge('algolia.cache_hits', cacheHits, {attributes: metricTags});
+  Sentry.metrics.gauge('algolia.cache_misses', cacheMisses, {attributes: metricTags});
 
   const existingRecordIds = await fetchExistingRecordIds(index);
   console.log(
@@ -100,7 +106,7 @@ async function indexAndUpload() {
   }
 
   const totalSeconds = (performance.now() - startTime) / 1000;
-  Sentry.metrics.distribution('algolia.total_duration_seconds', totalSeconds);
+  Sentry.metrics.distribution('algolia.total_duration', totalSeconds, {attributes: metricTags, unit: 'second'});
   console.log(`✅ Done in ${totalSeconds.toFixed(1)}s`);
 
   await Sentry.flush(5000);
