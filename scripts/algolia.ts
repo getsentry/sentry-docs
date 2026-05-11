@@ -131,6 +131,8 @@ async function fetchExistingRecordIds(algoliaIndex: SearchIndex) {
   return Array.from(existingRecordIds);
 }
 
+const usedCacheFiles = new Set<string>();
+
 async function generateAlgoliaRecords(pages: FrontMatter[]) {
   const limit = pLimit(CONCURRENCY);
   let cacheHits = 0;
@@ -149,6 +151,16 @@ async function generateAlgoliaRecords(pages: FrontMatter[]) {
       })
     )
   );
+
+  const allFiles = fs.readdirSync(CACHE_DIR);
+  const stale = allFiles.filter(f => !usedCacheFiles.has(f));
+  for (const f of stale) {
+    fs.unlinkSync(join(CACHE_DIR, f));
+  }
+  if (stale.length > 0) {
+    console.log(`🧹 Cleaned up ${stale.length} stale cache files`);
+  }
+
   return {records: results.flat(), cacheHits, cacheMisses};
 }
 
@@ -210,8 +222,9 @@ async function getRecords(
       ...(!isDeveloperDocs && {popularity: getPopularity(sdk, framework)}),
     };
 
-    const cacheKey = `v${CACHE_VERSION}_${md5(html + JSON.stringify(meta))}`;
-    const cacheFile = join(CACHE_DIR, cacheKey + '.json');
+    const cacheFileName = `v${CACHE_VERSION}_${md5(html + JSON.stringify(meta))}.json`;
+    const cacheFile = join(CACHE_DIR, cacheFileName);
+    usedCacheFiles.add(cacheFileName);
 
     try {
       const cached = JSON.parse(fs.readFileSync(cacheFile, 'utf-8'));
