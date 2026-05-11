@@ -72,7 +72,7 @@ export async function DocPage({
   const leafNode = nodeForPath(rootNode, unversionedPath);
 
   return (
-    <div className="tw-app">
+    <div className={`tw-app${hasToc ? ' has-toc' : ''}`}>
       {isDeveloperDocs ? (
         <DevelopDocsHeader pathname={pathname} searchPlatforms={searchPlatforms} />
       ) : (
@@ -165,9 +165,10 @@ export async function DocPage({
           box-sizing: border-box;
         }
         /* When the TOC is visible but the full layout doesn't fit yet, shrink content
-           to fill available space rather than overflowing. */
+           to fill available space rather than overflowing. Only applies when the TOC
+           is actually rendered (has-toc class). */
         @media (min-width: 1490px) and (max-width: 1649px) {
-          #doc-content {
+          .has-toc #doc-content {
             max-width: calc(100vw - var(--sidebar-width, 300px) - var(--toc-w) - 2rem);
           }
         }
