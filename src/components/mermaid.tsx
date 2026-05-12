@@ -1,6 +1,6 @@
 'use client';
-import {useEffect, useState} from 'react';
 import {useTheme} from 'next-themes';
+import {useEffect, useState} from 'react';
 
 export default function Mermaid() {
   const [isDoneRendering, setDoneRendering] = useState(false);
@@ -70,7 +70,7 @@ export default function Mermaid() {
         svgPanZoom(svgElement, {
           zoomEnabled: true,
           panEnabled: true,
-          controlIconsEnabled: true,
+          controlIconsEnabled: false,
           fit: true,
           center: true,
           minZoom: 0.1,

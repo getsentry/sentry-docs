@@ -1,0 +1,215 @@
+---
+title: Source Code Management Platform
+sidebar_order: 40
+---
+
+## Introduction
+
+The SCM (Source Code Management) platform is a vendor-agnostic abstraction layer for interacting with source code management providers such as GitHub, GitLab, and Bitbucket. It decouples Sentry's product features from provider-specific APIs by presenting a single, declarative interface for both reading and writing SCM resources and for reacting to SCM webhook events.
+
+### Goals
+
+1. **Provider independence.** Product code should never import a provider's client or parse a provider's response format directly. All interaction flows through a common type system so that adding a new provider does not require changes to callers.
+2. **Declarative usage.** Callers describe _what_ they want (e.g. "create a pull request") not _how_ to accomplish it. Initialization, authentication, rate limiting, and response mapping are handled internally.
+3. **Observability by default.** Every outbound action and every inbound webhook listener automatically records success/failure metrics, emits traces, and reports errors to Sentry. Callers do not need to instrument their own usage.
+4. **Fair access.** Referrer-based rate limiting with allocation policies prevents any single caller from exhausting a provider's API budget. Shared and caller-specific quotas are enforced transparently.
+5. **Centrally enforced access controls.** Access controls must be strictly and consistently enforced across all SCM providers to prevent unprivileged access to sensitive customer data, ensuring the security model is implemented once and applied universally.
+
+### Features
+
+The platform exposes three subsystems:
+
+- **Actions** — outbound operations initiated by Sentry code. The `SourceCodeManager` class provides 70+ methods covering comments, reactions, pull requests, branches, git objects, reviews, and check runs.
+- **Actions RPC** — the same `SourceCodeManager` interface exposed over the network, enabling use from services outside the monolith.
+- **Event Stream** — inbound webhook processing. SCM providers push events which are deserialized into typed, provider-neutral dataclasses (`CheckRunEvent`, `CommentEvent`, `PullRequestEvent`) and dispatched to registered listener functions.
+
+## Quick Start
+
+### In-Process Usage (Monolith)
+
+Import `SourceCodeManager` from the `scm` module and initialize it with a repository ID:
+
+```python
+from scm.actions import SourceCodeManager
+
+scm = SourceCodeManager.make_from_repository_id(organization_id=1, repository_id=2)
+```
+
+This scopes the instance to what the repository's provider can offer.
+
+Import the actions your use case requires:
+
+```python
+from scm.actions import SourceCodeManager, create_issue_reaction, create_issue_comment
+```
+
+By default the `SourceCodeManager` cannot execute methods without a capability assertion. Use `isinstance` guards to assert that the provider supports the action you need:
+
+```python
+from scm.types import CreateIssueReactionProtocol, CreateIssueCommentProtocol
+
+if isinstance(scm, CreateIssueReactionProtocol):
+    create_issue_reaction(scm, issue_id="1", reaction="eyes")
+elif isinstance(scm, CreateIssueCommentProtocol):
+    create_issue_comment(scm, issue_id="1", body="We've seen your request.")
+else:
+    return None  # Unsupported provider — do nothing.
+```
+
+Capabilities can be composed when granularity is not required:
+
+```python
+class GitInteractionProtocol(
+    GetTreeProtocol,
+    GetGitCommitProtocol,
+    CreateGitBlobProtocol,
+    CreateGitTreeProtocol,
+    CreateGitCommitProtocol,
+):
+    ...
+
+if isinstance(scm, GitInteractionProtocol):
+    # do work
+    ...
+```
+
+If you need to target a specific provider directly, you may — but this is discouraged:
+
+```python
+from scm.providers.github.provider import GitHubProvider
+
+if isinstance(scm, GitHubProvider):
+    # GitHub-specific work
+    ...
+```
+
+Prefer capability-based checks so your feature is automatically available to new providers.
+
+### RPC Client Usage (External Services)
+
+The `SourceCodeManager` is fully accessible over RPC from services outside the monolith:
+
+```python
+from scm.rpc.client import SourceCodeManager
+
+scm = SourceCodeManager.make_from_repository_id(
+    organization_id=1,
+    repository_id=("github", "owner/repo"),
+    base_url="http://127.0.0.1:8080",
+    signing_secret="secret",
+)
+
+if isinstance(scm, CreateIssueReactionProtocol):
+    try:
+        create_issue_reaction(scm, issue_id="1", reaction="+1")
+    except SCMError:
+        retry_this_action(...)
+```
+
+The RPC client implements the same protocol interfaces as the in-process client, so all `isinstance` guards and action functions work identically.
+
+## Error Handling
+
+All SCM actions raise exceptions on failure. Every exception is a subclass of `SCMError`:
+
+```python
+from scm.errors import SCMError
+
+try:
+    create_issue_reaction(scm, issue_id="1", reaction="+1")
+except SCMError:
+    retry_this_action(...)
+```
+
+## Pagination
+
+List endpoints return a typed dict result. Use `PaginationParams` to traverse pages:
+
+```python
+from scm.types import PaginationParams
+
+page1 = get_issue_comments(scm, issue_id="1")
+cursor = page1["meta"]["next_cursor"]
+
+if cursor:
+    page2 = get_issue_comments(scm, issue_id="1", pagination=PaginationParams(cursor=cursor, per_page=50))
+```
+
+- `cursor`: opaque token from the previous page's `next_cursor`
+- `per_page`: number of items per page
+- `next_cursor` is `None` when there are no more pages
+
+
+## Event Stream
+
+SCM providers push events to Sentry. Register typed listeners using the `@scm_event_stream.listen_for` decorator:
+
+```python
+from sentry.scm.stream import CheckRunEvent, scm_event_stream
+
+@scm_event_stream.listen_for(event_type="check_run")
+def listen_for_check_run(event: CheckRunEvent):
+    # do work
+    return None
+```
+
+Listeners are isolated and run asynchronously in their own worker processes.
+
+Supported event types:
+
+- `CheckRunEvent`
+- `CommentEvent`
+- `PullRequestEvent`
+
+## Actions Reference
+
+For the full list of available actions and their signatures, see [`src/scm/actions.py`](https://github.com/getsentry/scm-platform/blob/main/src/scm/actions.py).
+
+## Observability
+
+Both subsystems emit metrics under the `sentry.scm` namespace:
+
+| Metric | Source |
+|---|---|
+| `sentry.scm.actions.success` | Every successful outbound action (tagged by provider and referrer) |
+| `sentry.scm.actions.failed` | Unhandled exception during an outbound action |
+| `sentry.scm.produce_event_to_scm_stream.success` | Event successfully dispatched to listeners |
+| `sentry.scm.produce_event_to_scm_stream.failed` | Dispatch failure (tagged by reason) |
+| `sentry.scm.run_listener.success` | Listener executed successfully (tagged by listener name) |
+| `sentry.scm.run_listener.failed` | Listener failed (tagged by reason and listener name) |
+| `sentry.scm.run_listener.message.size` | Serialized event size in bytes |
+| `sentry.scm.run_listener.queue_time` | Time from webhook receipt to task start |
+| `sentry.scm.run_listener.task_time` | Time to execute the listener |
+| `sentry.scm.run_listener.real_time` | End-to-end time from webhook receipt to listener completion |
+
+## Local Development
+
+The `scm-platform` repo includes CLI scripts for running an RPC server and client locally against the real GitHub API.
+
+### Start the RPC server
+
+```bash
+# Populate .credentials with your GitHub App credentials (KEY=VALUE, one per line):
+# GITHUB_APP_ID=<id>
+# GITHUB_PRIVATE_KEY_PATH=<path-to-.pem>
+# GITHUB_INSTALLATION_ID=<id>
+# SCM_RPC_SIGNING_SECRET=secret
+
+bin/github-server
+# or override inline:
+bin/github-server --app-id 12345 --private-key key.pem --installation-id 67890 --port 8080
+```
+
+See [Creating a GitHub App](https://develop.sentry.dev/integrations/github/) for how to obtain App ID, private key, and installation ID.
+
+### Run client commands
+
+Supported clients:
+
+- [`bin/github-client`](https://github.com/getsentry/scm-platform/blob/main/bin/github-client) — GitHub
+- [`bin/gitlab-client`](https://github.com/getsentry/scm-platform/blob/main/bin/gitlab-client) — GitLab
+
+```bash
+bin/github-client --repo owner/repo get-pull-request 42
+bin/github-client --repo owner/repo create-issue-comment 10 "Hello from the RPC client"
+```

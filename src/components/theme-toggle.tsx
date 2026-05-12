@@ -1,8 +1,8 @@
 'use client';
-import {Fragment} from 'react';
 import {MoonIcon, SunIcon} from '@radix-ui/react-icons';
 import {IconButton, Tooltip} from '@radix-ui/themes';
 import {useTheme} from 'next-themes';
+import {Fragment} from 'react';
 
 export function ThemeToggle({
   ...props
@@ -13,12 +13,12 @@ export function ThemeToggle({
     <Fragment>
       <style>{`
      :root, .light, .light-theme {
-       --theme-toggle-sun-icon-display: block;
-       --theme-toggle-moon-icon-display: none;
-     }
-     .dark, .dark-theme {
        --theme-toggle-sun-icon-display: none;
        --theme-toggle-moon-icon-display: block;
+     }
+     .dark, .dark-theme {
+       --theme-toggle-sun-icon-display: block;
+       --theme-toggle-moon-icon-display: none;
      }
    `}</style>
 

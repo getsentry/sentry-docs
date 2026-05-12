@@ -1,5 +1,4 @@
 import {usePlausible} from 'next-plausible';
-
 import {ReadProgressMilestone} from 'sentry-docs/types/plausible';
 
 // Adding custom events here will make them available via the hook
@@ -24,6 +23,10 @@ type PlausibleEventProps = {
     link: string;
     linkText: string;
     page: string;
+  };
+  ['Copy AI Prompt']: {
+    page: string;
+    title: string;
   };
   ['Copy Expandable Content']: {
     page: string;

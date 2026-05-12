@@ -48,6 +48,7 @@ Lets you track your application version in Sentry.
 We intelligently guess the release in the following order of preference:
 
 - The `SENTRY_RELEASE` environment variable
+- Kamal’s deploy metadata via the `KAMAL_VERSION` environment variable
 - Commit SHA of the last commit (git)
 - Reading from the `REVISION` file in the app root (used by Capistrano)
 - Heroku’s dyno metadata via the `HEROKU_SLUG_COMMIT` environment variable (must have been enabled via Heroku Labs)
@@ -326,6 +327,20 @@ config.trace_ignore_status_codes = [404, (502..511)]
 
 </SdkOption>
 
+<SdkOption name="capture_queue_time" type="Boolean" defaultValue="true">
+
+Automatically capture how long requests wait in the web server queue before processing begins. The SDK reads the `X-Request-Start` header set by reverse proxies (Nginx, HAProxy, Heroku) and attaches queue time to transactions as `http.server.request.time_in_queue`.
+
+This helps identify when requests are delayed due to insufficient worker threads or server capacity, which is especially useful under load. Learn more about <PlatformLink to="/tracing/instrumentation/performance-metrics/#automatic-queue-time-capture">automatic queue time capture</PlatformLink>.
+
+To disable queue time capture:
+
+```ruby
+config.capture_queue_time = false
+```
+
+</SdkOption>
+
 <SdkOption name="instrumenter" type="Symbol" defaultValue=":sentry">
 
 The instrumenter to use, `:sentry` or `:otel` for [use with OpenTelemetry](../../tracing/instrumentation/opentelemetry).
@@ -359,6 +374,16 @@ Provides a lambda or proc that's called with a transaction event object, and can
 Provides a lambda or proc that's called with an SDK-specific log object, and can return a modified log object, or `nil` to skip reporting the log. This can be used to filter logs before they are sent to Sentry.
 
 <PlatformContent includePath="configuration/before-send-log/" />
+
+</SdkOption>
+
+<SdkOption name="std_lib_logger_filter" type="lambda | proc">
+
+Provides a lambda or proc that's called to filter log messages from Ruby's standard library logger before they are sent to Sentry. This option is only used when the `:logger` patch is enabled via `config.enabled_patches`.
+
+The callback receives three arguments: `logger` (the logger instance), `message` (the log message string), and `severity` (the log severity level). Return `true` to send the log to Sentry, or `false` to skip it.
+
+<PlatformContent includePath="configuration/std-lib-logger-filter" />
 
 </SdkOption>
 
@@ -456,7 +481,7 @@ end
 
 <SdkOption name="spotlight" type="Boolean | String" defaultValue="false">
 
-Whether to also capture events and traces into [Spotlight](https://spotlightjs.com/setup/other/).
+Whether to also capture events and traces into [Spotlight](https://spotlightjs.com/).
 
 If you set this to true, Sentry will send events and traces to the local Sidecar proxy at `http://localhost:8969/stream`.
 

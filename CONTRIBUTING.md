@@ -6,16 +6,18 @@
 
 ## Setting up an Environment
 
-We use Next.js, `yarn` and `volta` to manage the environment.
+We use Next.js, `pnpm` and `volta` to manage the environment.
 
 ```
 make
 
 # Start dev server for user docs
-yarn dev
+pnpm dev
 
 # Start dev server for developer docs
-yarn dev:developer-docs
+pnpm dev:developer-docs
 ```
 
 With that, the repo is fully set up and you are ready to open local docs under http://localhost:3000
+
+`next-env.d.ts` is in `.gitignore` and is generated when you run `pnpm dev` or `pnpm build`. When we upgrade to Next 15.5+, we can run `next typegen` in CI and in `lint:ts` so the file is generated before type-check.

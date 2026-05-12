@@ -24,8 +24,33 @@ Once you <PlatformLink to="/tracing/">set up tracing</PlatformLink>, the SDK ena
 
 This feature is available for iOS, tvOS, and Mac Catalyst, is enabled by default, and works for `UIViewControllers`.
 
-UIViewController Tracing is enabled by default once you <PlatformLink to="/tracing/">set up tracing</PlatformLink>. This feature captures transactions when your app loads an in-app [UIViewController][UIViewController]. However, the SDK doesn't capture transactions for UIViewControllers of third-party libraries or SwiftUI.
+UIViewController Tracing is enabled by default once you <PlatformLink to="/tracing/">set up tracing</PlatformLink>. This feature captures transactions when your app loads an in-app [UIViewController][UIViewController]. By default, the SDK only instruments UIViewControllers that are considered "in-app" (those in your main application bundle) to avoid instrumenting third-party library view controllers that would create noise in your performance data. However, the SDK doesn't capture transactions for UIViewControllers of third-party libraries or SwiftUI.
+
 The SDK sets the transaction name to the name of the ViewController, including the module — for example, `Your_App.MainViewController` — and the transaction operation to `ui.load`.
+
+### Including Framework Bundle View Controllers
+
+If you have view controllers in framework bundles that you want to instrument, you can include them using the [`inAppIncludes`](/platforms/apple/configuration/options/#inAppIncludes) option. This tells the SDK to treat those frameworks as part of your application, which enables UIViewController tracing for their view controllers:
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.add(inAppInclude: "MyFramework")
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    [options addInAppInclude:@"MyFramework"];
+}];
+```
+
+This is particularly useful for modularized applications or apps using third-party UI frameworks where you want to track performance metrics for view controllers in those frameworks.
 
 The SDK creates spans to provide insight into the time consumed by each of the methods shown in the screenshot below. Due to implementation limitations, the SDK only adds a span for loadView if the instrumented view controller implements it. The SDK adds spans for all other methods, whether you implement them in your view controller or not.
 
@@ -98,7 +123,25 @@ This feature is available for iOS, tvOS, and Mac Catalyst.
 App Start Tracing is enabled by default once you <PlatformLink to="/tracing/">set up tracing</PlatformLink>. This feature provides insight into how long your application takes to launch. It adds spans for different phases, from the application launch to the first auto-generated UI transaction.
 
 The SDK adds these spans to the first transaction that starts during the app launch with the operation `ui.load`. This is what UIViewController tracing uses. If the duration between the transaction start time and the end timestamp of the app start is more than 5 seconds, the SDK doesn't attach the spans from the app start. This helps prevent attaching spans to unrelated transactions.
-To enable this feature, enable `enableAutoPerformanceTracing`.
+
+We don't have a fine-grained way to only disable this feature. If you want to disable it, you have to also disable all other automatic instrumentations:
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.enableAutoPerformanceTracing = false
+}
+```
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.enableAutoPerformanceTracing = NO;
+}];
+```
 
 The SDK differentiates between a cold and a warm start, but doesn't track hot starts/resumes.
 
@@ -122,8 +165,7 @@ The Cocoa SDK creates the following app start spans:
 
 ![App Start Transaction](./img/app-start-transaction.png)
 
-Cold and warm start are Mobile Vitals, which you can learn about in the [full documentation](/product/insights/mobile/mobile-vitals).
-
+Cold and warm start are Mobile Vitals, which you can learn about in the [full documentation](/product/dashboards/sentry-dashboards/mobile/mobile-vitals).
 ### Prewarmed App Start Tracing
 
 Starting with iOS 15, the operating system might [prewarm](https://developer.apple.com/documentation/uikit/app_and_environment/responding_to_the_launch_of_your_app/about_the_app_launch_sequence#3894431) your app by creating the process before the user opens it. Starting with SDK version [9.0.0](https://github.com/getsentry/sentry-cocoa/releases/tag/9.0.0), the `enablePreWarmedAppStartTracing` is enabled by default.
@@ -169,7 +211,7 @@ The detail view of the transaction displays the slow, frozen, and total frames:
 
 ![Slow and Frozen Frames](./img/slow-frozen-frames.png)
 
-Slow and frozen frames are Mobile Vitals, which you can learn about in the [full documentation](/product/insights/mobile/mobile-vitals).
+Slow and frozen frames are Mobile Vitals, which you can learn about in the [full documentation](/product/dashboards/sentry-dashboards/mobile/mobile-vitals).
 
 ## Network Tracking
 
@@ -202,7 +244,7 @@ SentrySDK.start { options in
 
 Sentry adds an extra header with the trace id in the outgoing HTTP requests to continue the transaction in the backend.
 
-You can set the `tracePropagationTarget` option to filter which requests Sentry adds the extra header to.
+You can set the `tracePropagationTargets` option to filter which requests Sentry adds the extra header to.
 For example, to ensure that only your app backend will receive the trace id.
 
 ```swift {tabTitle:Swift}
@@ -275,7 +317,7 @@ SentrySDK.start { options in
 @import Sentry;
 
 [SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
-    options.dsn = "___PUBLIC_DSN___"
+    options.dsn = @"___PUBLIC_DSN___";
     options.enableFileIOTracing = YES;
     options.enableFileManagerSwizzling = YES;
 }];
@@ -297,7 +339,7 @@ SentrySDK.start { options in
 @import Sentry;
 
 [SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
-    options.dsn = "___PUBLIC_DSN___"
+    options.dsn = @"___PUBLIC_DSN___";
     options.enableFileIOTracing = YES;
     options.experimental.enableFileManagerSwizzling = YES;
 }];
@@ -481,7 +523,7 @@ SentrySDK.start { options in
 }];
 ```
 
-The SDK composes the transaction name out of the host `UIViewController` and the method that the `UIView` is calling; for example, `YourApp_LoginUIViewController.loginButton`. The SDK sets the transaction operation to `ui.action`. If the SDK detects the interaction's origin was a click, it adds `click` as a suffix to the operation. The transaction finishes automatically after it reaches the specified [idleTimeout](/platforms/apple/guides/ios/configuration/options/#idleTimeout) and all of its child spans are finished. The `idleTimeoout` defaults to `3000` milliseconds (three seconds).
+The SDK composes the transaction name out of the host `UIViewController` and the method that the `UIView` is calling; for example, `YourApp_LoginUIViewController.loginButton`. The SDK sets the transaction operation to `ui.action`. If the SDK detects the interaction's origin was a click, it adds `click` as a suffix to the operation. The transaction finishes automatically after it reaches the specified [idleTimeout](/platforms/apple/guides/ios/configuration/options/#idleTimeout) and all of its child spans are finished. The `idleTimeout` defaults to `3.0` seconds.
 
 <Alert>
 
@@ -583,13 +625,11 @@ If a call to `reportFullyDisplayed()` happens before the view controller appears
 
 ## Performance V2
 
-_(New in version 8.18.0), stable since 8.42.0._
+_(New in version 8.18.0, stable since 8.42.0, default since 9.0.0.)_
 
-We're working to update our **Performance** product offering in order to be able to provide better insights and highlight specific actions you can take to improve your mobile app's overall performance. The `performanceV2` option changes the following behavior:
+Starting with version 9.0.0, Performance V2 is enabled by default and the `enablePerformanceV2` option has been removed. The app start duration now finishes when the first frame is drawn instead of when the OS posts the `UIWindowDidBecomeVisibleNotification`.
 
-- The app start duration will now finish when the first frame is drawn instead of when the OS posts the `UIWindowDidBecomeVisibleNotification`.
-
-This change will be the default in the next major version.
+For version 8.x, you could opt in to this behavior by setting `options.enablePerformanceV2 = true`.
 
 ## Opt Out
 

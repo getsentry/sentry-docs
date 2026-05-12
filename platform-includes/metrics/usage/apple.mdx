@@ -1,0 +1,148 @@
+Once the SDK is initialized, you can send metrics using the `SentrySDK.metrics` APIs. Metrics are enabled by default.
+
+The `metrics` namespace exposes three methods that you can use to capture different types of metric information: `count`, `gauge` and `distribution`.
+
+<Alert>
+Objective-C support for metrics is not currently available. If you need Objective-C support, please [open an issue](https://github.com/getsentry/sentry-cocoa/issues) to show demand for this feature.
+</Alert>
+
+### Counter
+
+Counters track discrete occurrence counts. Use this to increment or set a count associated with a metric key, such as the number of events, requests, or errors.
+
+**Key characteristics:**
+- Values are typically non-negative integers
+- Use descriptive, lowercase, dot-delimited names (e.g., `"network.request.count"`)
+
+```swift
+import Sentry
+
+// Simple counter
+SentrySDK.metrics.count(key: "button_click", value: 1)
+
+// Counter with unit and attributes
+SentrySDK.metrics.count(
+    key: "network.request.count",
+    value: 1,
+    unit: .generic("request"),
+    attributes: ["endpoint": "/api/users", "method": "POST"]
+)
+```
+
+### Gauge
+
+Gauges track values that can go up and down over time, representing a current state rather than an incrementing counter. Use this for metrics like current memory usage, queue depth, or active connections.
+
+**Key characteristics:**
+- Values can increase or decrease
+- Represents the state at the time of recording
+- Supports aggregates like min, max, avg, sum, and count
+- Cannot be used to calculate percentiles (use distributions for that)
+
+```swift
+import Sentry
+
+// Simple gauge
+SentrySDK.metrics.gauge(key: "queue_depth", value: 42.0)
+
+// Gauge with unit
+SentrySDK.metrics.gauge(
+    key: "memory.usage",
+    value: 1024.0,
+    unit: .megabyte
+)
+```
+
+### Distribution
+
+Distributions track the distribution of a value over time, allowing you to analyze statistical properties like mean, median, and percentiles. Use this for measurable quantities like response times or request durations.
+
+**Key characteristics:**
+- Enables percentile calculations (p50, p90, p99, etc.)
+- Best for analyzing statistical properties of measurements
+- Use for values where you need to understand distribution, not just aggregates
+
+```swift
+import Sentry
+
+// Simple distribution
+SentrySDK.metrics.distribution(key: "response_time", value: 187.5)
+
+// Distribution with unit and attributes
+SentrySDK.metrics.distribution(
+    key: "http.request.duration",
+    value: 187.5,
+    unit: .millisecond,
+    attributes: ["endpoint": "/api/data", "cached": false]
+)
+```
+
+### Adding Attributes
+
+You can also pass additional attributes to any of the metric methods via the `attributes` parameter. Attributes allow you to filter and group metrics.
+
+The SDK uses the `SentryAttributeValue` protocol to provide **compile-time type safety** for attribute values. This means you can pass native Swift types directly without wrapping them, and the compiler will ensure only valid types are accepted.
+
+**Supported attribute types:**
+- **Scalar types**: `String`, `Bool`, `Int`, `Double`, `Float`
+- **Array types**: `[String]`, `[Bool]`, `[Int]`, `[Double]`, `[Float]`
+
+The protocol automatically handles type conversion and validation, so you can use Swift's native types directly in your code. Invalid types will be caught at compile time, preventing runtime errors.
+
+```swift
+import Sentry
+
+SentrySDK.metrics.count(
+    key: "button_click",
+    value: 1,
+    unit: nil,
+    attributes: [
+        "browser": "Firefox",           // String - passed directly
+        "app_version": "1.0.0",         // String - passed directly
+        "build_number": 123,            // Int - passed directly
+        "is_premium": true,             // Bool - passed directly
+        "success_rate": 0.95,           // Double - passed directly
+        "tags": ["production", "v2"]     // [String] - passed directly
+    ]
+)
+```
+
+The `SentryAttributeValue` protocol ensures that all these types are automatically converted to the correct internal representation, providing both type safety and a clean, idiomatic Swift API.
+
+### Specifying Units
+
+All metric types (`count`, `gauge`, and `distribution`) support the optional `unit` parameter. Units help Sentry display metric values in a human-readable format.
+
+The SDK provides the `SentryUnit` enum with type-safe unit values:
+
+```swift
+import Sentry
+
+// Use enum cases for type safety (recommended)
+SentrySDK.metrics.distribution(
+    key: "response_time",
+    value: 187.5,
+    unit: .millisecond
+)
+
+SentrySDK.metrics.gauge(
+    key: "memory_usage",
+    value: 1024.0,
+    unit: .byte
+)
+
+SentrySDK.metrics.distribution(
+    key: "cache_latency",
+    value: 42.3,
+    unit: .microsecond
+)
+```
+
+**Available unit categories:**
+
+- **Duration**: `.nanosecond`, `.microsecond`, `.millisecond`, `.second`, `.minute`, `.hour`, `.day`, `.week`
+- **Information**: `.bit`, `.byte`, `.kilobyte`, `.kibibyte`, `.megabyte`, `.mebibyte`, `.gigabyte`, `.gibibyte`, `.terabyte`, `.tebibyte`, `.petabyte`, `.pebibyte`, `.exabyte`, `.exbibyte`
+- **Fraction**: `.ratio`, `.percent`
+- **Custom**: `.generic("custom_unit")` for any other unit
+
+You can also use string literals (e.g., `unit: "millisecond"`), which are automatically converted to the corresponding enum case. However, using enum cases is recommended for compile-time safety.

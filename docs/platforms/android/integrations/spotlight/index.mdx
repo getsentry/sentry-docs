@@ -1,0 +1,79 @@
+---
+title: Spotlight
+description: "Learn how to use Sentry Spotlight for local development observability on Android."
+---
+
+[Sentry Spotlight](https://spotlightjs.com/) is a local development tool that provides real-time observability for errors, traces, logs, and performance data during development. It allows you to see Sentry events in real-time without sending them to Sentry's servers, making it ideal for local debugging.
+
+The `sentry-spotlight` module provides a `SpotlightIntegration` that sends a copy of all Sentry events to your local Spotlight instance. By using `debugImplementation`, you can ensure Spotlight is excluded from release builds, preventing insecure HTTP URLs from leaking into production APKs.
+
+## Install
+
+We recommend using `debugImplementation` so the Spotlight dependency is excluded from release builds:
+
+```groovy {filename:app/build.gradle}
+debugImplementation 'io.sentry:sentry-spotlight:{{@inject packages.version('sentry.java.spotlight', '8.32.0') }}'
+```
+
+```kotlin {filename:app/build.gradle.kts}
+debugImplementation("io.sentry:sentry-spotlight:{{@inject packages.version('sentry.java.spotlight', '8.32.0') }}")
+```
+
+If you need Spotlight in all build types, use `implementation` instead of `debugImplementation`.
+
+## Configure
+
+```xml {tabTitle:XML}
+<application>
+    <!-- Enable Spotlight -->
+    <meta-data android:name="io.sentry.spotlight.enable" android:value="true" />
+    <!-- Optional: override the default Spotlight URL -->
+    <meta-data android:name="io.sentry.spotlight.url" android:value="http://10.0.2.2:8969/stream" />
+</application>
+```
+
+```java {tabTitle:Java}
+import io.sentry.android.core.SentryAndroid;
+
+SentryAndroid.init(this, options -> {
+    options.setDsn("___PUBLIC_DSN___");
+    options.setEnableSpotlight(true);
+    // Optional: override the default Spotlight URL
+    options.setSpotlightConnectionUrl("http://10.0.2.2:8969/stream");
+});
+```
+
+```kotlin {tabTitle:Kotlin}
+import io.sentry.android.core.SentryAndroid
+
+SentryAndroid.init(this) { options ->
+    options.dsn = "___PUBLIC_DSN___"
+    options.isEnableSpotlight = true
+    // Optional: override the default Spotlight URL
+    options.spotlightConnectionUrl = "http://10.0.2.2:8969/stream"
+}
+```
+
+<Alert level="info">
+
+The default Spotlight URL is `http://10.0.2.2:8969/stream`. The `10.0.2.2` address is the Android emulator's bridge to the host machine's `localhost`. If you're running on a physical device, replace this with your machine's local IP address.
+
+</Alert>
+
+## Verify
+
+To verify the integration is working, capture a test exception and check the Spotlight UI:
+
+```java
+import io.sentry.Sentry;
+
+Sentry.captureException(new Exception("Spotlight test from Android!"));
+```
+
+```kotlin
+import io.sentry.Sentry
+
+Sentry.captureException(Exception("Spotlight test from Android!"))
+```
+
+Open the Spotlight UI and confirm that the error event appears.

@@ -16,6 +16,10 @@ uv add "sentry-sdk"
 
 ## Configure
 
+`AsyncioIntegration` works by instrumenting the current event loop, which is why it needs to be enabled when there's an event loop running.
+
+### Enable `Asynciointegration` At `Init` Time
+
 Add `AsyncioIntegration()` to your list of `integrations`, enable tracing and be sure to call `sentry_sdk.init()` **at the beginning of the first `async` function you call**, as shown in the example below.
 
 <OnboardingOptionButtons
@@ -60,6 +64,43 @@ async def main():
 asyncio.run(main())
 ```
 
+### Enable `AsyncioIntegration` After `init`
+
+Alternatively, if you're not in control of the event loop, you have multiple event loops, or you simply need a way to enable the integration on demand without setting up the whole SDK each time, you can use the `sentry_sdk.integrations.asyncio.enable_asyncio_integration` helper function.
+
+```python {filename:main.py}
+import sentry_sdk
+from sentry_sdk.integrations.asyncio import enable_asyncio_integration
+
+# Initializing the SDK as early as possible, when there is no event loop yet
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    # Add data like request headers and IP for users, if applicable;
+    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    send_default_pii=True,
+    # ___PRODUCT_OPTION_START___ performance
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for tracing.
+    traces_sample_rate=1.0,
+    # ___PRODUCT_OPTION_END___ performance
+    # ___PRODUCT_OPTION_START___ profiling
+    # To collect profiles for all profile sessions,
+    # set `profile_session_sample_rate` to 1.0.
+    profile_session_sample_rate=1.0,
+    # Profiles will be automatically collected while
+    # there is an active span.
+    profile_lifecycle="trace",
+    # ___PRODUCT_OPTION_END___ profiling
+    # No AsyncioIntegration in explicitly provided `integrations`
+)
+
+
+async def main():
+    enable_asyncio_integration()  # instruments the current event loop
+    # Your code...
+```
+
+
 ## Verify
 
 Trigger an error in your code and see it show up in [sentry.io](https://sentry.io).
@@ -68,7 +109,6 @@ Trigger an error in your code and see it show up in [sentry.io](https://sentry.i
 import asyncio
 
 import sentry_sdk
-from sentry_sdk.integrations.asyncio import AsyncioIntegration
 
 async def my_task():
     1 / 0  # raises an error!
@@ -82,15 +122,33 @@ asyncio.run(main())
 
 ## Behavior
 
-- All unhandled exceptions in tasks will be captured
-- Every executed Task will be instrumented and show up in the performance waterfall on Sentry.io
+- All unhandled exceptions in tasks will be captured.
+- By default, every executed task will be instrumented and show up in the performance waterfall on Sentry.io. This behavior can be disabled by providing the `task_spans=False` flag to the `AsyncioIntegration()` or to the `enable_asyncio_integration()` helper:
 
+```python
+import sentry_sdk
+from sentry_sdk.integrations.asyncio import AsyncioIntegration, enable_asyncio_integration
+
+sentry_sdk.init(
+    integrations=[AsyncioIntegration(task_spans=False)],
+)
+
+# Or:
+
+enable_asyncio_integration(task_spans=False)
+```
 
 ## Troubleshooting
 
-<Expandable title="Asyncio integration not working">
+<Expandable title="The asyncio integration isn't working.">
 
   The SDK needs the event loop to be running when instrumenting asyncio. Make sure to call `sentry_sdk.init()` inside of an `async` function.
+
+</Expandable>
+
+<Expandable title="There is no event loop when I need to initialize the SDK. How do I initialize the asyncio integration?">
+
+  You can initialize the SDK without `AsyncioIntegration` and then run `sentry_sdk.integrations.asyncio.enable_asyncio_integration()` once there is an event loop running. See [this section](#enable-asynciointegration-after-init) for an example.
 
 </Expandable>
 

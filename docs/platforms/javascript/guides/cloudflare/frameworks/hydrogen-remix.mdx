@@ -36,7 +36,7 @@ import { wrapRequestHandler } from "@sentry/cloudflare/request";
 import { instrumentBuild } from "@sentry/remix/cloudflare";
 import { createRequestHandler } from "@remix-run/cloudflare";
 // Virtual entry point for the app
-import * as remixBuild from 'virtual:remix/server-build';
+import * as remixBuild from "virtual:remix/server-build";
 
 /**
  * Export a fetch handler in module format.
@@ -133,3 +133,38 @@ Sentry.init({
   replaysOnErrorSampleRate: 1.0,
 });
 ```
+
+## Trace Propagation
+
+<AvailableSince version="10.45.0" />
+
+Because Hydrogen uses a custom `entry.server.tsx` that bypasses the default Remix document request handler, the SDK cannot automatically inject trace propagation headers. To connect server-side traces with client-side `pageload` spans, you need to manually add the `Server-Timing` header using `generateSentryServerTimingHeader()`.
+
+Update your `entry.server.tsx` to generate and append the header to your response:
+
+```tsx {filename:app/entry.server.tsx} {1, 18-21}
+import { generateSentryServerTimingHeader } from "@sentry/remix/cloudflare";
+
+export default async function handleRequest(
+  request: Request,
+  responseStatusCode: number,
+  responseHeaders: Headers,
+  remixContext: EntryContext
+) {
+  // ...
+
+  const response = new Response(body, {
+    headers: responseHeaders,
+    status: responseStatusCode,
+  });
+
+  const serverTimingValue = generateSentryServerTimingHeader();
+  if (serverTimingValue) {
+    response.headers.append("Server-Timing", serverTimingValue);
+  }
+
+  return response;
+}
+```
+
+The browser SDK automatically reads the `Server-Timing` header via the [Performance API](https://developer.mozilla.org/en-US/docs/Web/API/Performance_API) and uses it to connect the client-side `pageload` span with the server-side transaction. No additional client-side configuration is needed beyond having `browserTracingIntegration` configured.

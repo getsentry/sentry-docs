@@ -1,0 +1,43 @@
+Logs are sent to Sentry through Erlang's `:logger` system via `Sentry.LoggerHandler`. When `enable_logs: true` is set in your Sentry configuration, the SDK automatically attaches the handler — no manual setup is needed. Any logs from your application or libraries that use Elixir's `Logger` or Erlang's `:logger` will be captured and sent to Sentry at or above the configured level.
+
+The logs behavior is configured globally via the `:logs` key — not through the handler config map:
+
+```elixir
+config :sentry,
+  enable_logs: true,
+  logs: [
+    level: :info,
+    metadata: [:request_id, :user_id]
+  ]
+```
+
+With this configuration, logs at or above `:info` will be sent to Sentry:
+
+```elixir
+require Logger
+
+Logger.debug("Debug message")  # Not sent (below :info level)
+Logger.info("Info message")    # Sent to Sentry
+Logger.warning("Warning")      # Sent to Sentry
+Logger.error("Error occurred") # Sent to Sentry
+```
+
+### Excluding Domains
+
+You can exclude specific logger domains from being sent to Sentry using the `:excluded_domains` option under `:logs`:
+
+```elixir
+config :sentry,
+  enable_logs: true,
+  logs: [
+    level: :info,
+    excluded_domains: [:ecto, :phoenix]
+  ]
+```
+
+<Alert level="info" title="Logs vs Error Reporting">
+  The logs feature (configured under `:logs`) is separate from error
+  reporting (configured via `Sentry.LoggerHandler`'s `:level` option). Error reporting captures crash reports and
+  exceptions, while logs captures structured log events. You can configure both
+  independently.
+</Alert>

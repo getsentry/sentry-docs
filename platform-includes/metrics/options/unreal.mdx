@@ -1,0 +1,47 @@
+The following configuration options are available for Sentry's [Application Metrics](/product/explore/metrics/) in Unreal Engine:
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| **Enable Metrics** | Master toggle for the metrics feature | `true` |
+| **Collect frame time metrics** | Automatically emit frame time and per-thread performance metrics. | `false` |
+| **Frame time sample interval (frames)** | Emit performance metrics every Nth frame. | `30` |
+| **Collect GC pause metrics** | Emit a metric for each garbage collection pause duration. | `false` |
+| **Collect game stats metrics** | Periodically collect game stats such as process memory usage and active UObject count. | `false` |
+| **Game stats sample interval (seconds)** | How often to sample game stats metrics. | `60` |
+| **Before Metric Handler** | Handler to modify or filter metrics before sending | None |
+
+### Before-Metric Handler
+
+To filter metrics or modify them before they are sent to Sentry, create a custom before-metric handler class:
+
+```cpp
+UCLASS()
+class UCustomMetricFilter : public USentryBeforeMetricHandler
+{
+    GENERATED_BODY()
+public:
+    virtual USentryMetric* HandleBeforeMetric_Implementation(USentryMetric* Metric) override
+    {
+        // Drop metrics with specific names
+        if (Metric->GetName().Contains(TEXT("debug")))
+        {
+            return nullptr; // Return null to prevent sending
+        }
+
+        // Modify metric attributes
+        Metric->SetAttribute(TEXT("build"), FSentryVariant(TEXT("production")));
+
+        return Metric; // Return the metric to send it
+    }
+};
+```
+
+Configure the handler in project settings under **Hooks > Custom `beforeMetric` event handler**, or set it programmatically:
+
+```cpp
+SentrySubsystem->InitializeWithSettings(FConfigureSettingsNativeDelegate::CreateLambda([=](USentrySettings* Settings)
+{
+    Settings->EnableMetrics = true;
+    Settings->BeforeMetricHandler = UCustomMetricFilter::StaticClass();
+}));
+```
