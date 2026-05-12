@@ -7,8 +7,6 @@ jobs:
   index:
     name: Update Algolia index
     runs-on: ubuntu-latest
-    env:
-      NODE_OPTIONS: '--max-old-space-size=6144'
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
@@ -49,7 +47,7 @@ jobs:
       # without introducing another dependency like ts-node or tsx for everyone else
 
       - name: Build index for user docs
-        run: pnpm enforce-redirects && pnpm generate-og-images && pnpm generate-doctree && pnpm next build && bun ./scripts/algolia.ts
+        run: pnpm enforce-redirects && pnpm generate-doctree && pnpm next build && bun ./scripts/algolia.ts
         if: steps.filter.outputs.docs == 'true'
         env:
           ALGOLIA_APP_ID: ${{ secrets.ALGOLIA_APP_ID }}
@@ -57,6 +55,7 @@ jobs:
           DOCS_INDEX_NAME: ${{ secrets.DOCS_INDEX_NAME }}
           NEXT_PUBLIC_ALGOLIA_APP_ID: ${{ secrets.NEXT_PUBLIC_ALGOLIA_APP_ID }}
           NEXT_PUBLIC_ALGOLIA_SEARCH_KEY: ${{ secrets.NEXT_PUBLIC_ALGOLIA_SEARCH_KEY }}
+          ALGOLIA_SENTRY_DSN: ${{ secrets.ALGOLIA_SENTRY_DSN }}
           SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
           NEXT_PUBLIC_SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
 
@@ -69,6 +68,7 @@ jobs:
           DOCS_INDEX_NAME: ${{ secrets.DEVELOP_DOCS_INDEX_NAME }}
           NEXT_PUBLIC_ALGOLIA_APP_ID: ${{ secrets.NEXT_PUBLIC_ALGOLIA_APP_ID }}
           NEXT_PUBLIC_ALGOLIA_SEARCH_KEY: ${{ secrets.NEXT_PUBLIC_ALGOLIA_SEARCH_KEY }}
+          ALGOLIA_SENTRY_DSN: ${{ secrets.ALGOLIA_SENTRY_DSN }}
           SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
           NEXT_PUBLIC_SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
           NEXT_PUBLIC_DEVELOPER_DOCS: 1

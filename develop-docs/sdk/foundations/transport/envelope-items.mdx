@@ -117,7 +117,45 @@ _None_
 
 _None_
 
-### Reserved Types
+## Ingest Settings
+
+Several envelope item types ([spans](/sdk/telemetry/spans/span-protocol/#spec-span-envelope-item-ingest-settings), [logs](/sdk/telemetry/logs/#spec-log-envelope-item-ingest-settings), [metrics](/sdk/telemetry/metrics/#spec-trace-metric-envelope-item-ingest-settings)) support an optional `ingest_settings` object on their envelope item payload. This object instructs Relay to infer certain data from the incoming HTTP request and attach it as attributes to the telemetry item.
+
+The `ingest_settings` object is a top-level property on the envelope item payload, alongside `version` and `items`:
+
+```json
+{
+  "version": 2,
+  "ingest_settings": {
+    "infer_ip": "auto",
+    "infer_user_agent": "auto"
+  },
+  "items": [...]
+}
+```
+
+### `version` Property
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `version` | Number | **REQUIRED** when using `ingest_settings` | Payload version. **MUST** be `2` or higher for `ingest_settings` to take effect. If omitted, Relay treats the payload as version `1` and ignores `ingest_settings`. |
+
+### `ingest_settings` Properties
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `infer_ip` | String | **OPTIONAL** | Instructs Relay to infer the IP address from the incoming request. One of `"auto"` or `"never"` (default). |
+| `infer_user_agent` | String | **OPTIONAL** | Instructs Relay to infer the user agent from the incoming request. One of `"auto"` or `"never"` (default). |
+
+Both fields default to `"never"`, meaning Relay does not infer any data unless the SDK explicitly opts in.
+
+When `infer_ip` is set to `"auto"`, Relay extracts the client IP address from the incoming request and attaches it as an attribute to the telemetry item (e.g., `user.ip_address` on spans).
+
+When `infer_user_agent` is set to `"auto"`, Relay parses the `User-Agent` header from the incoming request and attaches browser and OS information as attributes (e.g., `browser.name`, `browser.version`).
+
+SDKs like Browser or React Native **MAY** set these to `"auto"`. Server-side SDKs typically do not need this because they can attach the information directly.
+
+## Reserved Types
 
 Reserved types may not be written by any implementation. They are reserved for
 future or internal use. This is the exhaustive list of reserved Item types:

@@ -39,8 +39,28 @@ First, choose a Paparazzi version compatible with your project:
 
 | Version         | Gradle         | compileSdk | JDK | compose-bom  |
 | --------------- | -------------- | ---------- | --- | ------------ |
-| `2.0.0-alpha04` | 9.1.x or 9.2.x | 36         | 21+ | > 2025.05.00 |
+| `2.0.0-alpha04` | 9.1+            | 36         | 21+ | > 2025.05.00 |
 | `1.3.5`         | 8.x or 9.x     | ≤ 35       | 17+ | ≤ 2025.04.00 |
+
+<Alert level="warning">
+
+Paparazzi `2.0.0-alpha04` has known compatibility issues with newer Gradle versions:
+
+- **Gradle 9.2+**: Test tasks fail because Paparazzi tries to configure HTML reports in a way Gradle no longer allows. Add this workaround to your module's `build.gradle.kts` ([cashapp/paparazzi#2111](https://github.com/cashapp/paparazzi/issues/2111)):
+
+  ```kotlin
+  tasks.withType<Test>().configureEach {
+    reports.html.required = false
+  }
+  ```
+
+- **AGP 9.x**: Paparazzi doesn't support the new Android DSL yet. Add this to your `gradle.properties`:
+
+  ```properties
+  android.newDsl=false
+  ```
+
+</Alert>
 
 Then apply the plugin:
 
@@ -50,46 +70,6 @@ plugins {
   id("app.cash.paparazzi") version "<paparazzi_version>"
 }
 ```
-
-#### Customize Preview Generation
-
-The `previews` block inside `snapshots` exposes options that shape the generated Paparazzi tests. These only apply when `generateTests` is `true` (the default).
-
-```kotlin
-sentry {
-  snapshots {
-    enabled = true
-    previews {
-      theme = "@style/Theme.MyApp"          // optional
-      includePrivatePreviews = false        // optional, defaults to true
-      packageTrees = listOf("com.example")  // optional, defaults to Android namespace
-    }
-  }
-}
-```
-
-| Option                   | Default                                                             | Description                                                                                                                         |
-| ------------------------ | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `theme`                  | Paparazzi default (`android:Theme.Material.NoActionBar.Fullscreen`) | Android theme resource used when rendering previews. Set this if your previews rely on a specific theme.                            |
-| `includePrivatePreviews` | `true`                                                              | Whether `@Preview` composables declared `private` are snapshotted. Set to `false` to exclude in-progress or internal-only previews. |
-| `packageTrees`           | `[]` (falls back to Android namespace)                              | Package prefixes to scan for `@Preview` composables. When empty, the plugin uses the Android namespace from the build variant.      |
-
-If you don't set a `theme`, Paparazzi uses its own default (`android:Theme.Material.NoActionBar.Fullscreen`). If the background of your previews isn't important — for example, when you just want to compare component geometry — you can use a translucent platform theme such as `android:Theme.Translucent.NoTitleBar`:
-
-```kotlin
-sentry {
-  snapshots {
-    enabled = true
-    previews {
-      theme = "android:Theme.Translucent.NoTitleBar"
-    }
-  }
-}
-```
-
-<Alert level="warning">
-  If `theme` references a style the renderer can't resolve (typo, wrong prefix, or a theme not on the classpath), neither Sentry nor Paparazzi raises an error or warning. Snapshots still generate, but with incorrect visuals. Double-check the theme string if rendered output looks unexpected.
-</Alert>
 
 Continue to [Step 3](#step-3-test-locally).
 
@@ -164,3 +144,87 @@ Verify your setup by running:
 ## Step 4: Integrate Into CI
 
 Once the local upload succeeds, wire the same command into your CI. See [Integrating Into CI](/product/snapshots/integrating-into-ci/) for an example GitHub Actions workflow.
+
+## Customize Preview Generation
+
+The options below apply when using the [Compose Previews](#generate-snapshots-from-compose-previews-recommended) path with `generateTests = true` (the default).
+
+### Preview Options
+
+The `previews` block inside `snapshots` exposes options that shape the generated Paparazzi tests.
+
+```kotlin
+sentry {
+  snapshots {
+    enabled = true
+    previews {
+      theme = "@style/Theme.MyApp"          // optional
+      includePrivatePreviews = false        // optional, defaults to true
+      packageTrees = listOf("com.example")  // optional, defaults to Android namespace
+    }
+  }
+}
+```
+
+| Option                   | Default                                                             | Description                                                                                                                         |
+| ------------------------ | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `theme`                  | Paparazzi default (`android:Theme.Material.NoActionBar.Fullscreen`) | Android theme resource used when rendering previews. Set this if your previews rely on a specific theme.                            |
+| `includePrivatePreviews` | `true`                                                              | Whether `@Preview` composables declared `private` are snapshotted. Set to `false` to exclude in-progress or internal-only previews. |
+| `packageTrees`           | `[]` (falls back to Android namespace)                              | Package prefixes to scan for `@Preview` composables. When empty, the plugin uses the Android namespace from the build variant.      |
+
+If you don't set a `theme`, Paparazzi uses its own default (`android:Theme.Material.NoActionBar.Fullscreen`). If the background of your previews isn't important — for example, when you just want to compare component geometry — you can use a translucent platform theme such as `android:Theme.Translucent.NoTitleBar`:
+
+```kotlin
+sentry {
+  snapshots {
+    enabled = true
+    previews {
+      theme = "android:Theme.Translucent.NoTitleBar"
+    }
+  }
+}
+```
+
+<Alert level="warning">
+  If `theme` references a style the renderer can't resolve (typo, wrong prefix, or a theme not on the classpath), neither Sentry nor Paparazzi raises an error or warning. Snapshots still generate, but with incorrect visuals. Double-check the theme string if rendered output looks unexpected.
+</Alert>
+
+### Set a Global Diff Threshold
+
+To ignore small pixel changes across all snapshots, set `diffThreshold` in the plugin configuration:
+
+```kotlin
+sentry {
+  snapshots {
+    enabled = true
+    diffThreshold = 0.01 // ignore changes of 1% or less
+  }
+}
+```
+
+The `diffThreshold` is a value between `0.0` and `1.0`. Sentry reports a snapshot as changed only when the share of changed pixels exceeds this value. The default is `0.0` (report any difference).
+
+### Set Diff Thresholds Per Preview
+
+To override the global threshold for specific previews, annotate them with `@SentrySnapshot` and set a diff threshold. First, add the runtime dependency:
+
+```kotlin
+dependencies {
+  testImplementation("io.sentry:sentry-snapshots-runtime:{{@inject packages.version('sentry.java.android.gradle-plugin', 'LATEST') }}")
+}
+```
+
+Then annotate any `@Preview` composable:
+
+```kotlin
+import io.sentry.snapshots.runtime.SentrySnapshot
+
+@SentrySnapshot(diffThreshold = 0.01f) // ignore changes of 1% or less
+@Preview
+@Composable
+fun BillingPagePreview() {
+  BillingPage()
+}
+```
+
+Per-preview values take precedence over the global `diffThreshold`. See [Diff Thresholds](/product/snapshots/reviewing-snapshots/#diff-thresholds) for other ways to configure thresholds.
