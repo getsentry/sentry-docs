@@ -63,13 +63,22 @@ When deploying TanStack Start to Cloudflare Workers, you need to wrap the server
 <SplitSection>
 <SplitSectionText>
 
-Create a `src/server.ts` file that wraps the TanStack Start handler with Sentry:
+Create a `src/server.ts` file that wraps the TanStack Start handler with Sentry.
+
+Use `wrapFetchWithSentry` from `@sentry/tanstackstart-react` to instrument TanStack Start server functions with tracing.
+
+<Alert level="info">
+
+Due to type differences between TanStack Start and Cloudflare Workers, you'll need to add a `// @ts-expect-error` comment as shown in the example. This is expected and doesn't affect functionality.
+
+</Alert>
 
 </SplitSectionText>
 <SplitSectionCode>
 
 ```typescript {filename:src/server.ts}
 import * as Sentry from "@sentry/cloudflare";
+import { wrapFetchWithSentry } from "@sentry/tanstackstart-react";
 import handler from "@tanstack/react-start/server-entry";
 
 export default Sentry.withSentry(
@@ -90,7 +99,8 @@ export default Sentry.withSentry(
     tracesSampleRate: 1.0,
     // ___PRODUCT_OPTION_END___ performance
   }),
-  handler
+  // @ts-expect-error - handler is not typed as a Cloudflare handler
+  wrapFetchWithSentry(handler)
 );
 ```
 
