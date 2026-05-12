@@ -31,7 +31,7 @@ Sentry.init({
     }),
     Sentry.thirdPartyErrorFilterIntegration({
       filterKeys: ['sentry-docs'],
-      behaviour: 'apply-tag-if-contains-third-party-frames',
+      behaviour: 'drop-error-if-exclusively-contains-third-party-frames',
     }),
     Sentry.browserTracingIntegration({
       linkPreviousTrace: 'session-storage',
