@@ -2206,6 +2206,10 @@ const userDocsRedirects = [
     source: '/product/monitors-and-alerts/alerts/notifications/:path*',
     destination: '/product/notifications/:path*',
   },
+  {
+    source: '/product/monitors-and-alerts/alerts/best-practices/',
+    destination: '/product/monitors-and-alerts/alerts/',
+  },
   // DOCS-2550: /product/logs/ moved under /product/explore/
   {
     source: '/product/logs/',
