@@ -19,14 +19,16 @@ Use this guide for general instructions on using the Sentry SDK with Cloudflare.
 - **[Remix](/platforms/javascript/guides/cloudflare/frameworks/remix/)**
 - **[SvelteKit](/platforms/javascript/guides/cloudflare/frameworks/sveltekit/)**
 
-<Alert>
+<Alert level="warning" title="Cloudflare Workers limitations">
   The Cloudflare Workers runtime has some platform-specific limitations that
   affect tracing. See [Known Limitations](#known-limitations) for details.
 </Alert>
 
 <PlatformContent includePath="getting-started-prerequisites" />
 
-## Step 1: Install
+<StepConnector selector="h2" showNumbers={true}>
+
+## Install
 
 Choose the features you want to configure, and this guide will show you how:
 
@@ -38,17 +40,31 @@ Choose the features you want to configure, and this guide will show you how:
 
 ### Install the Sentry SDK
 
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
 Run the command for your preferred package manager to add the Sentry SDK to your application:
+
+</SplitSectionText>
+<SplitSectionCode>
 
 <PlatformContent includePath="getting-started-install" />
 
-## Step 2: Configure
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+## Configure
 
 The main Sentry configuration should happen as early as possible in your app's lifecycle.
 
 ### Wrangler Configuration
 
-<PlatformContent includePath="getting-started-config" />
+<PlatformContent
+  includePath="getting-started-config"
+  platform="javascript.cloudflare.splitlayout"
+/>
 
 ### Setup for Cloudflare Workers
 
@@ -59,9 +75,16 @@ The main Sentry configuration should happen as early as possible in your app's l
 
 ### Setup for Cloudflare Pages
 
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
 To use the Sentry SDK, add the `sentryPagesPlugin` as [middleware to your Cloudflare Pages application](https://developers.cloudflare.com/pages/functions/middleware/).
 
 <Include name="cloudflare-pages-middleware-intro.mdx" />
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```javascript {filename:functions/_middleware.js}
 import * as Sentry from "@sentry/cloudflare";
@@ -91,8 +114,19 @@ export const onRequest = [
 ];
 ```
 
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
 <Expandable title="Don't have access to onRequest?">
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
 If you don't have access to the `onRequest` middleware API, you can use the `wrapRequestHandler` API instead. For example:
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```javascript
 // hooks.server.js
@@ -111,13 +145,17 @@ export const handle = ({ event, resolve }) => {
 };
 ```
 
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
 </Expandable>
 
-## Step 3: Add Readable Stack Traces With Source Maps (Optional)
+### Add Readable Stack Traces With Source Maps (Optional)
 
-<PlatformContent includePath="getting-started-sourcemaps-short-version" />
+<PlatformContent includePath="getting-started-sourcemaps-short-version-splitlayout" />
 
-## Step 4: Verify Your Setup
+## Verify Your Setup
 
 Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
 
@@ -127,7 +165,14 @@ First, let's make sure Sentry is correctly capturing errors and creating issues 
 
 #### Cloudflare Workers
 
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
 Add the following code snippet to your main worker file to create a `/debug-sentry` route that triggers an error when called:
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```javascript {filename:index.js}
 export default {
@@ -144,15 +189,30 @@ export default {
 };
 ```
 
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
 #### Cloudflare Pages
 
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
 Create a new route that throws an error when called by adding the following code snippet to a file in your `functions` directory, such as `functions/debug-sentry.js`:
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```javascript {filename:debug-sentry.js}
 export async function onRequest(context) {
   throw new Error("My first Sentry error!");
 }
 ```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
 <OnboardingOption optionId="performance">
 ### Tracing
@@ -205,7 +265,7 @@ export async function onRequest(context) {
 
 <OnboardingOption optionId="logs">
 
-<Include name="logs/javascript-quick-start-verify-logs" />
+<Include name="logs/javascript-quick-start-verify-logs-splitlayout" />
 
 </OnboardingOption>
 
@@ -225,9 +285,18 @@ This is expected behavior in the Cloudflare Workers environment and affects all 
 
 ### Missing Spans in `waitUntil()`
 
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
 If you're using Cloudflare's [`waitUntil()`](https://developers.cloudflare.com/workers/runtime-apis/handlers/fetch/#contextwaituntil) to run background tasks, spans created inside `waitUntil()` may not appear in Sentry because the request's root span has already finished before the background work starts.
 
-To capture spans inside `waitUntil()`, wrap your deferred work with `startSpan` and set `forceTransaction: true`. This creates a separate transaction for the background work:
+To capture spans inside `waitUntil()`, wrap your deferred work with `startSpan` and set `forceTransaction: true`. This creates a separate transaction for the background work.
+
+The `forceTransaction: true` option is required because it creates a separate transaction for the `waitUntil()` work. Without it, spans created after the request ends might get lost.
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```javascript {filename:index.js}
 import * as Sentry from "@sentry/cloudflare";
@@ -255,7 +324,9 @@ async function updateCacheAndDatabase() {
 }
 ```
 
-The `forceTransaction: true` option is required because it creates a separate transaction for the `waitUntil()` work. Without it, spans created after the request ends might get lost.
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
 ## Next Steps
 
@@ -276,3 +347,5 @@ Now's a good time to customize your setup and look into more advanced topics. Ou
 - [Get support](https://sentry.zendesk.com/hc/en-us/)
 
 </Expandable>
+
+</StepConnector>
