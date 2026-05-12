@@ -572,6 +572,10 @@ const developerDocsRedirects = [
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const userDocsRedirects = [
   {
+    source: '/api/guides/oauth/',
+    destination: '/api/auth/',
+  },
+  {
     source: '/integrations/incidentio/',
     destination: '/integrations/issue-tracking/incidentio/',
   },
