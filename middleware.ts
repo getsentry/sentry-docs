@@ -3644,7 +3644,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/concepts/key-terms/key-terms/tracing/trace-view/#operations-breakdown/',
-    to: '/product/dashboards/sentry-dashboards/',
+    to: '/concepts/key-terms/tracing/trace-view/',
   },
   {
     from: '/platforms/javascript/guides/aws-lambda/container-image/',
