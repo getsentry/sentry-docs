@@ -1,0 +1,295 @@
+---
+title: TanStack Start on Cloudflare
+description: "Learn how to instrument your TanStack Start app on Cloudflare Workers and capture your first errors with Sentry."
+---
+
+<PlatformContent includePath="getting-started-primer" />
+
+<Alert level="warning">
+
+This guide is for TanStack Start deployed to **Cloudflare Workers** using the `@cloudflare/vite-plugin`. For Node.js-based deployments, see our [TanStack Start guide](/platforms/javascript/guides/tanstackstart-react/).
+
+</Alert>
+
+<StepConnector selector="h2" showNumbers={true}>
+
+## Install
+
+Choose the features you want to configure, and this guide will show you how:
+
+<OnboardingOptionButtons
+  options={[
+    "error-monitoring",
+    "performance",
+    "session-replay",
+    "user-feedback",
+    "logs",
+  ]}
+/>
+
+<Include name="quick-start-features-expandable-cloudflare-frameworks" />
+
+### Install the Sentry SDK
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Run the command for your preferred package manager to add the Sentry SDK to your application:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+<PlatformContent includePath="getting-started-install" />
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+## Configure
+
+When deploying TanStack Start to Cloudflare Workers, you need to wrap the server entry point with `Sentry.withSentry` from `@sentry/cloudflare`. TanStack Start allows you to create a custom server entry file for this purpose.
+
+### Wrangler Configuration
+
+<PlatformContent
+  includePath="getting-started-config"
+  platform="javascript.cloudflare.splitlayout"
+/>
+
+### Create a Custom Server Entry
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Create a `src/server.ts` file that wraps the TanStack Start handler with Sentry.
+
+Use `wrapFetchWithSentry` from `@sentry/tanstackstart-react` to instrument TanStack Start server functions with tracing.
+
+<Alert level="info">
+
+Due to type differences between TanStack Start and Cloudflare Workers, you'll need to add a `// @ts-expect-error` comment as shown in the example. This is expected and doesn't affect functionality.
+
+</Alert>
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {filename:src/server.ts}
+import * as Sentry from "@sentry/cloudflare";
+import { wrapFetchWithSentry } from "@sentry/tanstackstart-react";
+import handler from "@tanstack/react-start/server-entry";
+
+export default Sentry.withSentry(
+  () => ({
+    dsn: "___PUBLIC_DSN___",
+
+    // Adds request headers and IP for users, for more info visit:
+    // https://docs.sentry.io/platforms/javascript/guides/cloudflare/configuration/options/#sendDefaultPii
+    sendDefaultPii: true,
+    // ___PRODUCT_OPTION_START___ logs
+
+    // Enable logs to be sent to Sentry
+    enableLogs: true,
+    // ___PRODUCT_OPTION_END___ logs
+    // ___PRODUCT_OPTION_START___ performance
+
+    // Set tracesSampleRate to 1.0 to capture 100% of spans for tracing.
+    tracesSampleRate: 1.0,
+    // ___PRODUCT_OPTION_END___ performance
+  }),
+  // @ts-expect-error - handler is not typed as a Cloudflare handler
+  wrapFetchWithSentry(handler)
+);
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+### Update Wrangler Configuration
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Update your `wrangler.jsonc` (or `wrangler.toml`) to use your custom server entry:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```json {diff} {filename:wrangler.jsonc}
+ {
+   "name": "my-tanstack-app",
++     "main": "src/server.ts",
+   // ... rest of config
+ }
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+### Configure Client-Side Sentry
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Initialize Sentry in your `src/router.tsx` file for client-side error tracking:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```tsx {diff} {filename:src/router.tsx}
++import * as Sentry from "@sentry/tanstackstart-react";
+ import { createRouter } from '@tanstack/react-router'
+
+export const getRouter = () => {
+  const router = createRouter();
+
++ if (!router.isServer) {
++   Sentry.init({
++     dsn: "___PUBLIC_DSN___",
++
++     // Adds request headers and IP for users, for more info visit:
++     // https://docs.sentry.io/platforms/javascript/guides/tanstackstart-react/configuration/options/#sendDefaultPii
++     sendDefaultPii: true,
++
++     integrations: [
++       // ___PRODUCT_OPTION_START___ performance
++       Sentry.tanstackRouterBrowserTracingIntegration(router),
++       // ___PRODUCT_OPTION_END___ performance
++       // ___PRODUCT_OPTION_START___ session-replay
++       Sentry.replayIntegration(),
++       // ___PRODUCT_OPTION_END___ session-replay
++       // ___PRODUCT_OPTION_START___ user-feedback
++       Sentry.feedbackIntegration({
++         // Additional SDK configuration goes in here, for example:
++         colorScheme: "system",
++       }),
++       // ___PRODUCT_OPTION_END___ user-feedback
++     ],
++     // ___PRODUCT_OPTION_START___ logs
++
++     // Enable logs to be sent to Sentry
++     enableLogs: true,
++     // ___PRODUCT_OPTION_END___ logs
++     // ___PRODUCT_OPTION_START___ performance
++
++     // Set tracesSampleRate to 1.0 to capture 100% of spans for tracing.
++     tracesSampleRate: 1.0,
++     // ___PRODUCT_OPTION_END___ performance
++     // ___PRODUCT_OPTION_START___ session-replay
++
++     // Capture Replay for 10% of all sessions,
++     // plus for 100% of sessions with an error.
++     replaysSessionSampleRate: 0.1,
++     replaysOnErrorSampleRate: 1.0,
++     // ___PRODUCT_OPTION_END___ session-replay
++   });
++ }
+
+  return router;
+}
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+### Capture Server-Side Errors
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+To capture server-side errors from HTTP requests and server function calls, add Sentry's global middlewares to `createStart()` in your `src/start.ts` file.
+
+The Sentry middleware should be the first middleware in the arrays to ensure all errors are captured.
+
+<Alert level="info">
+  SSR rendering exceptions are not captured by the middleware. Use
+  `captureException` to manually capture those errors.
+</Alert>
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```tsx {filename:src/start.ts}
+import {
+  sentryGlobalFunctionMiddleware,
+  sentryGlobalRequestMiddleware,
+} from "@sentry/tanstackstart-react";
+import { createStart } from "@tanstack/react-start";
+
+export const startInstance = createStart(() => {
+  return {
+    requestMiddleware: [sentryGlobalRequestMiddleware],
+    functionMiddleware: [sentryGlobalFunctionMiddleware],
+  };
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+### Add Readable Stack Traces With Source Maps (Optional)
+
+<PlatformContent
+  includePath="getting-started-sourcemaps-short-version-splitlayout"
+  platform="javascript"
+/>
+
+## Verify Your Setup
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+To verify Sentry is capturing errors, add a test button to one of your pages:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```tsx
+<button
+  type="button"
+  onClick={() => {
+    throw new Error("Sentry Test Error");
+  }}
+>
+  Break the world
+</button>
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+Run your app with `wrangler dev` (or through your Vite build with Cloudflare plugin), click the button, and check your Sentry project for the error.
+
+<Include name="quick-start-locate-data-expandable" />
+
+## Next Steps
+
+At this point, you should have integrated Sentry and should already be sending data to your Sentry project.
+
+Now's a good time to customize your setup and look into more advanced topics. Our next recommended steps for you are:
+
+- Learn how to [manually capture errors](/platforms/javascript/guides/cloudflare/usage/)
+- Continue to [customize your configuration](/platforms/javascript/guides/cloudflare/configuration/)
+- Make use of [Cloudflare-specific features](/platforms/javascript/guides/cloudflare/features)
+- Get familiar with [Sentry's product features](/product) like tracing, insights, and alerts
+
+<Expandable permalink={false} title="Are you having problems setting up the SDK?">
+
+- Check out setup instructions for other popular [frameworks on Cloudflare](/platforms/javascript/guides/cloudflare/frameworks/)
+- Find various support topics in <PlatformLink to="/troubleshooting">troubleshooting</PlatformLink>
+- [Get support](https://sentry.zendesk.com/hc/en-us/)
+
+</Expandable>
+
+</StepConnector>
