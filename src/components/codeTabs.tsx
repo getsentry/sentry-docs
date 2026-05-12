@@ -47,7 +47,7 @@ export const showSigninNote = (children: ReactNode) => {
       KEYWORDS_REGEX.lastIndex = 0;
       ORG_AUTH_TOKEN_REGEX.lastIndex = 0;
 
-      // it does have a project keyword like but not it's not a PRODUCT_OPTION_*
+      // it has a project keyword that is not a PRODUCT_OPTION_*
       const hasProjectKeyword = [...node.matchAll(KEYWORDS_REGEX)].some(
         match => match[2] !== 'PRODUCT_OPTION_START' && match[2] !== 'PRODUCT_OPTION_END'
       );
