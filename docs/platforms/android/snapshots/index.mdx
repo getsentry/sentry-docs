@@ -189,9 +189,24 @@ sentry {
   If `theme` references a style the renderer can't resolve (typo, wrong prefix, or a theme not on the classpath), neither Sentry nor Paparazzi raises an error or warning. Snapshots still generate, but with incorrect visuals. Double-check the theme string if rendered output looks unexpected.
 </Alert>
 
+### Set a Global Diff Threshold
+
+To ignore small pixel changes across all snapshots, set `diffThreshold` in the plugin configuration:
+
+```kotlin
+sentry {
+  snapshots {
+    enabled = true
+    diffThreshold = 0.01 // ignore changes of 1% or less
+  }
+}
+```
+
+The `diffThreshold` is a value between `0.0` and `1.0`. Sentry reports a snapshot as changed only when the share of changed pixels exceeds this value. The default is `0.0` (report any difference).
+
 ### Set Diff Thresholds Per Preview
 
-To ignore small pixel changes for specific previews, annotate them with `@SentrySnapshot`. First, add the runtime dependency:
+To override the global threshold for specific previews, annotate them with `@SentrySnapshot` and set a diff threshold. First, add the runtime dependency:
 
 ```kotlin
 dependencies {
@@ -212,6 +227,4 @@ fun BillingPagePreview() {
 }
 ```
 
-The `diffThreshold` is a float between `0.0` and `1.0`. Sentry reports the snapshot as changed only when the share of changed pixels exceeds this value. The default is `0.0` (report any difference).
-
-Per-preview values take precedence over a global `--diff-threshold` set via the CLI. See [Diff Thresholds](/product/snapshots/reviewing-snapshots/#diff-thresholds) for other ways to configure thresholds.
+Per-preview values take precedence over the global `diffThreshold`. See [Diff Thresholds](/product/snapshots/reviewing-snapshots/#diff-thresholds) for other ways to configure thresholds.
