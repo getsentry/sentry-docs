@@ -18,7 +18,7 @@ In order for Relay to perform sampling, it needs to be able to **compute the sam
 
 ### Trace and Transaction Sampling
 
-Sentry supports **two fundamentally different types of sampling**, that are described in more detail [here](/dynamic-sampling/fidelity-and-biases/#trace-and-transaction-sampling).
+Sentry supports **two fundamentally different types of sampling**, that are described in more detail [here](/dynamic-sampling/biases/#how-traces-are-sampled).
 
 ### Sampling Configuration
 
@@ -181,13 +181,13 @@ Certain biases require data that **must be computed from other parts of the syst
 
 For such use cases, we decided to use a separate Redis instance, which is used to store many kinds of information, such as sample rates and boosted releases. During rule generation, we connect to this Redis instance and fetch the necessary data to compute the rules.
 
-An illustration on how Redis is used for tracking boosted releases (which are used by the [boost new releases bias](/dynamic-sampling/fidelity-and-biases/#boost-new-releases)):
+An illustration on how Redis is used for tracking boosted releases (which are used by the [prioritize new releases bias](/dynamic-sampling/biases/#prioritize-new-releases)):
 
 ![Usage of Redis for Boosted Releases](./images/redisBoostedRelease.png)
 
 #### Celery Tasks for Asynchronous Processing
 
-Certain biases require data that **must be computed asynchronously by background tasks** due to the complexity of the computation (e.g., running cross-org queries on Snuba). This is the case for the [boost low-volume projects bias](/dynamic-sampling/fidelity-and-biases/#boost-low-volume-projects) and [boost low-volume transactions bias](/dynamic-sampling/fidelity-and-biases/#boost-low-volume-transactions), which need expensive queries to obtain all the necessary data to run the rebalancing algorithms. These tasks are handled by Celery workers, that are scheduled automatically by cron jobs configured in Sentry.
+Certain biases require data that **must be computed asynchronously by background tasks** due to the complexity of the computation (e.g., running cross-org queries on Snuba). This is the case for the [prioritize low-volume projects bias](/dynamic-sampling/biases/#prioritize-low-volume-projects) and [prioritize low-volume transactions bias](/dynamic-sampling/biases/#prioritize-low-volume-transactions), which need expensive queries to obtain all the necessary data to run the rebalancing algorithms. These tasks are handled by Celery workers, that are scheduled automatically by cron jobs configured in Sentry.
 
 _The data computed by these tasks could theoretically be computed sequentially during rules generation but for scalability reasons we opted to use Celery tasks instead. This way, the computation of the data can be parallelized and the rules generation can be performed faster._
 
