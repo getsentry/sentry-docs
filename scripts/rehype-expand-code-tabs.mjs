@@ -34,8 +34,7 @@ export function rehypeExpandCodeTabs() {
       node.children = exportBlocks.flatMap(block => {
         const title = block.properties.dataCodeTabTitle;
         const filename = block.properties.dataCodeTabFilename;
-        const label =
-          filename && title ? `[${title}] ${filename}` : filename || title;
+        const label = filename && title ? `[${title}] ${filename}` : filename || title;
 
         const preElements = collectAll(block, el => el.tagName === 'pre');
         if (preElements.length === 0) {

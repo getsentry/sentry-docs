@@ -144,7 +144,12 @@ describe('rehypeExpandCodeTabs', () => {
     const standalone =
       '<pre class="language-bash"><code>npm install @sentry/node</code></pre>';
     const tabs = buildCodeTabsHTML([
-      {title: 'Node.js', filename: 'instrument.mjs', lang: 'javascript', code: 'Sentry.init();'},
+      {
+        title: 'Node.js',
+        filename: 'instrument.mjs',
+        lang: 'javascript',
+        code: 'Sentry.init();',
+      },
       {title: 'Bun', lang: 'javascript', code: 'init();'},
     ]);
 
