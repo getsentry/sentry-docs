@@ -144,22 +144,4 @@ The rules are generated [here](https://github.com/getsentry/sentry/blob/master/s
 2. Determine the base sample rate for each project.
 3. Compute the rules for each bias.
 
-#### Redis for Shared State
-
-Certain biases require data that **must be computed from other parts of the system** (e.g., when a new release is created) or by background tasks that are run asynchronously.
-
-For such use cases, we decided to use a separate Redis instance, which is used to store many kinds of information, such as sample rates and boosted releases. During rule generation, we connect to this Redis instance and fetch the necessary data to compute the rules.
-
-An illustration on how Redis is used for tracking boosted releases (which are used by the [prioritize new releases bias](/dynamic-sampling/biases/#prioritize-new-releases)):
-
-![Usage of Redis for Boosted Releases](./images/redisBoostedRelease.png)
-
-#### Celery Tasks for Asynchronous Processing
-
-Certain biases require data that **must be computed asynchronously by background tasks** due to the complexity of the computation (e.g., running cross-org queries on Snuba). This is the case for the [prioritize low-volume projects bias](/dynamic-sampling/biases/#prioritize-low-volume-projects) and [prioritize low-volume transactions bias](/dynamic-sampling/biases/#prioritize-low-volume-transactions), which need expensive queries to obtain all the necessary data to run the rebalancing algorithms. These tasks are handled by Celery workers, that are scheduled automatically by cron jobs configured in Sentry.
-
-_The data computed by these tasks could theoretically be computed sequentially during rules generation but for scalability reasons we opted to use Celery tasks instead. This way, the computation of the data can be parallelized and the rules generation can be performed faster._
-
-An illustration on how multiple Celery tasks are scheduled for computing data required for rule generation:
-
-![Usage of Celery Tasks for Asynchronous Processing](./images/celeryTasks.png)
+Data underlying the rules is computed asynchronously for scalability reasons. Multiple biases require data that must be computed from incoming volume data for the org in question. These biases are calculated asynchronously by background tasks that are executed by Celery and write results to Redis. 
