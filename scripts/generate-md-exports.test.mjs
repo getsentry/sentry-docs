@@ -26,28 +26,6 @@ function htmlToMarkdown(html) {
   );
 }
 
-/**
- * Builds HTML matching what the remark-code-tabs plugin + CodeTabs component
- * produce in the static build output:
- *
- * <div class="code-tabs-wrapper">
- *   <!-- CodeTabs renders the first (active) tab only -->
- *   <div>
- *     <button>tab1</button><button>tab2</button>
- *     <div class="code-block">
- *       <code class="filename">file1</code>
- *       <pre class="language-x"><code>code1</code></pre>
- *     </div>
- *   </div>
- *   <!-- Hidden export blocks from remark-code-tabs (always present) -->
- *   <div hidden data-code-tab-title="tab1" data-code-tab-filename="file1">
- *     <pre class="language-x"><code>code1</code></pre>
- *   </div>
- *   <div hidden data-code-tab-title="tab2" data-code-tab-filename="file2">
- *     <pre class="language-y"><code>code2</code></pre>
- *   </div>
- * </div>
- */
 function buildCodeTabsHTML(tabs) {
   const firstTab = tabs[0];
 
@@ -75,7 +53,7 @@ function buildCodeTabsHTML(tabs) {
 }
 
 describe('rehypeExpandCodeTabs', () => {
-  it('replaces wrapper content with all tabs, not just the active one', () => {
+  it('outputs one fenced code block per tab with "[Title] filename" headings', () => {
     const html = buildCodeTabsHTML([
       {
         title: 'Cloudflare Workers',
@@ -98,18 +76,18 @@ describe('rehypeExpandCodeTabs', () => {
     ]);
 
     const md = htmlToMarkdown(html);
-    const codeBlocks = md.match(/```[\s\S]*?```/g);
 
+    const codeBlocks = md.match(/```[\s\S]*?```/g);
     expect(codeBlocks).toHaveLength(3);
-    expect(md).toContain('**\\[Cloudflare Workers] index.ts**');
-    expect(md).toContain('**\\[Node.js] app.ts**');
-    expect(md).toContain('**\\[Bun] index.ts**');
     expect(codeBlocks[0]).toContain('@sentry/hono/cloudflare');
     expect(codeBlocks[1]).toContain('@sentry/hono/node');
     expect(codeBlocks[2]).toContain('@sentry/hono/bun');
+    expect(md).toContain('**\\[Cloudflare Workers] index.ts**');
+    expect(md).toContain('**\\[Node.js] app.ts**');
+    expect(md).toContain('**\\[Bun] index.ts**');
   });
 
-  it('removes CodeTabs-rendered content (tab buttons, filename display, active tab)', () => {
+  it('removes the CodeTabs-rendered active tab to avoid duplication', () => {
     const html = buildCodeTabsHTML([
       {title: 'ESM', filename: 'instrument.mjs', lang: 'javascript', code: 'import init'},
       {title: 'CJS', filename: 'instrument.js', lang: 'javascript', code: 'require init'},
@@ -120,19 +98,7 @@ describe('rehypeExpandCodeTabs', () => {
     expect(md).not.toContain('`instrument.mjs`');
   });
 
-  it('includes both tab title and filename in heading when both exist', () => {
-    const html = buildCodeTabsHTML([
-      {title: 'ESM', filename: 'instrument.mjs', lang: 'javascript', code: 'init();'},
-      {title: 'CommonJS', filename: 'instrument.js', lang: 'javascript', code: 'init();'},
-    ]);
-
-    const md = htmlToMarkdown(html);
-
-    expect(md).toContain('**\\[ESM] instrument.mjs**');
-    expect(md).toContain('**\\[CommonJS] instrument.js**');
-  });
-
-  it('falls back to tab title when no filename is set', () => {
+  it('uses tab title alone when filename is absent', () => {
     const html = buildCodeTabsHTML([
       {title: 'Cloudflare Workers', lang: 'javascript', code: 'workers();'},
       {title: 'Bun', lang: 'javascript', code: 'bun();'},
@@ -140,11 +106,29 @@ describe('rehypeExpandCodeTabs', () => {
 
     const md = htmlToMarkdown(html);
 
-    expect(md).toContain('**Cloudflare Workers**');
-    expect(md).toContain('**Bun**');
+    const headings = md.match(/\*\*.*?\*\*/g);
+    expect(headings).toHaveLength(2);
+    expect(headings[0]).toBe('**Cloudflare Workers**');
+    expect(headings[1]).toBe('**Bun**');
   });
 
-  it('does not affect code blocks outside of tab wrappers', () => {
+  it('treats empty filename attribute the same as missing filename', () => {
+    const html =
+      '<div class="code-tabs-wrapper">' +
+      '<div><button>Tab</button><div class="code-block"><code class="filename"></code>' +
+      '<pre class="language-js"><code>active()</code></pre></div></div>' +
+      '<div hidden data-code-tab-title="JavaScript" data-code-tab-filename="">' +
+      '<pre class="language-js"><code>hello();</code></pre></div>' +
+      '</div>';
+
+    const md = htmlToMarkdown(html);
+
+    const headings = md.match(/\*\*.*?\*\*/g);
+    expect(headings).toHaveLength(1);
+    expect(headings[0]).toBe('**JavaScript**');
+  });
+
+  it('does not modify code blocks outside tab wrappers', () => {
     const html =
       '<div><pre class="language-bash"><code>curl -sL https://sentry.io/get-cli/ | bash</code></pre></div>';
 
@@ -152,25 +136,19 @@ describe('rehypeExpandCodeTabs', () => {
 
     const codeBlocks = md.match(/```[\s\S]*?```/g);
     expect(codeBlocks).toHaveLength(1);
-    expect(md).not.toMatch(/\*\*.*\*\*\n/);
     expect(codeBlocks[0]).toContain('curl -sL');
+    expect(md).not.toMatch(/\*\*.*\*\*\n/);
   });
 
-  it('keeps standalone blocks intact when mixed with tabs on the same page', () => {
+  it('preserves standalone code blocks when mixed with tab groups', () => {
     const standalone =
       '<pre class="language-bash"><code>npm install @sentry/node</code></pre>';
     const tabs = buildCodeTabsHTML([
-      {
-        title: 'Node.js',
-        filename: 'instrument.mjs',
-        lang: 'javascript',
-        code: 'Sentry.init();',
-      },
+      {title: 'Node.js', filename: 'instrument.mjs', lang: 'javascript', code: 'Sentry.init();'},
       {title: 'Bun', lang: 'javascript', code: 'init();'},
     ]);
-    const html = `<div>${standalone}${tabs}</div>`;
 
-    const md = htmlToMarkdown(html);
+    const md = htmlToMarkdown(`<div>${standalone}${tabs}</div>`);
 
     const codeBlocks = md.match(/```[\s\S]*?```/g);
     expect(codeBlocks).toHaveLength(3);
@@ -179,7 +157,7 @@ describe('rehypeExpandCodeTabs', () => {
     expect(md).toContain('**Bun**');
   });
 
-  it('handles two separate tab groups on the same page', () => {
+  it('expands multiple tab groups independently on the same page', () => {
     const group1 = buildCodeTabsHTML([
       {title: 'ESM', filename: 'instrument.mjs', lang: 'javascript', code: 'import init'},
       {title: 'CJS', filename: 'instrument.js', lang: 'javascript', code: 'require init'},
@@ -188,19 +166,18 @@ describe('rehypeExpandCodeTabs', () => {
       {title: 'Python', filename: 'main.py', lang: 'python', code: 'import sentry_sdk'},
       {title: 'Ruby', filename: 'config.rb', lang: 'ruby', code: 'require "sentry-ruby"'},
     ]);
-    const html = `<div>${group1}${group2}</div>`;
 
-    const md = htmlToMarkdown(html);
+    const md = htmlToMarkdown(`<div>${group1}${group2}</div>`);
 
     const codeBlocks = md.match(/```[\s\S]*?```/g);
     expect(codeBlocks).toHaveLength(4);
-    expect(md).toContain('**\\[ESM] instrument.mjs**');
-    expect(md).toContain('**\\[CJS] instrument.js**');
-    expect(md).toContain('**\\[Python] main.py**');
-    expect(md).toContain('**\\[Ruby] config.rb**');
+    expect(codeBlocks[0]).toContain('import init');
+    expect(codeBlocks[1]).toContain('require init');
+    expect(codeBlocks[2]).toContain('import sentry_sdk');
+    expect(codeBlocks[3]).toContain('require "sentry-ruby"');
   });
 
-  it('skips export block with no pre element', () => {
+  it('drops export blocks that contain no pre element', () => {
     const html =
       '<div class="code-tabs-wrapper">' +
       '<div><pre class="language-js"><code>active tab</code></pre></div>' +
@@ -210,9 +187,26 @@ describe('rehypeExpandCodeTabs', () => {
 
     const md = htmlToMarkdown(html);
 
+    const codeBlocks = md.match(/```[\s\S]*?```/g);
+    expect(codeBlocks).toHaveLength(1);
+    expect(codeBlocks[0]).toContain('works()');
     expect(md).toContain('**ok**');
-    expect(md).toContain('works()');
-    expect(md).not.toContain('**broken**');
+    expect(md).not.toContain('broken');
     expect(md).not.toContain('active tab');
+  });
+
+  it('leaves wrapper unchanged when it has no export blocks', () => {
+    const html =
+      '<div class="code-tabs-wrapper">' +
+      '<div><button>Only Tab</button>' +
+      '<div class="code-block"><pre class="language-js"><code>solo();</code></pre></div>' +
+      '</div>' +
+      '</div>';
+
+    const md = htmlToMarkdown(html);
+
+    const codeBlocks = md.match(/```[\s\S]*?```/g);
+    expect(codeBlocks).toHaveLength(1);
+    expect(codeBlocks[0]).toContain('solo()');
   });
 });
