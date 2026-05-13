@@ -39,9 +39,7 @@ function buildCodeTabsHTML(tabs) {
 
   const panels = tabs
     .map((t, i) => {
-      const filenameAttr = t.filename
-        ? ` data-code-tab-filename="${t.filename}"`
-        : '';
+      const filenameAttr = t.filename ? ` data-code-tab-filename="${t.filename}"` : '';
       const hiddenAttr = i > 0 ? ' hidden' : '';
 
       return (
@@ -146,7 +144,12 @@ describe('rehypeExpandCodeTabs', () => {
     const standalone =
       '<pre class="language-bash"><code>npm install @sentry/node</code></pre>';
     const tabs = buildCodeTabsHTML([
-      {title: 'Node.js', filename: 'instrument.mjs', lang: 'javascript', code: 'Sentry.init();'},
+      {
+        title: 'Node.js',
+        filename: 'instrument.mjs',
+        lang: 'javascript',
+        code: 'Sentry.init();',
+      },
       {title: 'Bun', lang: 'javascript', code: 'init();'},
     ]);
     const html = `<div>${standalone}${tabs}</div>`;
