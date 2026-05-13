@@ -572,6 +572,10 @@ const developerDocsRedirects = [
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const userDocsRedirects = [
   {
+    source: '/api/guides/oauth/',
+    destination: '/api/auth/',
+  },
+  {
     source: '/integrations/incidentio/',
     destination: '/integrations/issue-tracking/incidentio/',
   },
@@ -2201,6 +2205,10 @@ const userDocsRedirects = [
   {
     source: '/product/monitors-and-alerts/alerts/notifications/:path*',
     destination: '/product/notifications/:path*',
+  },
+  {
+    source: '/product/monitors-and-alerts/alerts/best-practices/',
+    destination: '/product/monitors-and-alerts/alerts/',
   },
   // DOCS-2550: /product/logs/ moved under /product/explore/
   {
