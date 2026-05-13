@@ -6,7 +6,7 @@ import {describe, expect, it} from 'vitest';
 import {unified} from 'unified';
 import {remove} from 'unist-util-remove';
 
-import {rehypeExpandCodeTabs} from './generate-md-exports.mjs';
+import {rehypeExpandCodeTabs} from './rehype-expand-code-tabs.mjs';
 
 function htmlToMarkdown(html) {
   return String(
