@@ -27,56 +27,74 @@ function htmlToMarkdown(html) {
 }
 
 /**
- * Builds a minimal CodeTabs HTML structure matching what the component renders.
- * Each tab panel contains the CodeBlock chrome (filename display, copy button)
- * wrapping the actual <pre><code> block. The first tab is visible; subsequent
- * tabs have the `hidden` attribute.
+ * Builds HTML matching what the remark-code-tabs plugin + CodeTabs component
+ * produce in the static build output:
+ *
+ * <div class="code-tabs-wrapper">
+ *   <!-- CodeTabs renders the first (active) tab only -->
+ *   <div>
+ *     <button>tab1</button><button>tab2</button>
+ *     <div class="code-block">
+ *       <code class="filename">file1</code>
+ *       <pre class="language-x"><code>code1</code></pre>
+ *     </div>
+ *   </div>
+ *   <!-- Hidden export blocks from remark-code-tabs (always present) -->
+ *   <div hidden data-code-tab-title="tab1" data-code-tab-filename="file1">
+ *     <pre class="language-x"><code>code1</code></pre>
+ *   </div>
+ *   <div hidden data-code-tab-title="tab2" data-code-tab-filename="file2">
+ *     <pre class="language-y"><code>code2</code></pre>
+ *   </div>
+ * </div>
  */
 function buildCodeTabsHTML(tabs) {
-  const buttons = tabs
-    .map((t, i) => `<button data-active="${i === 0}">${t.title}</button>`)
-    .join('');
+  const firstTab = tabs[0];
 
-  const panels = tabs
-    .map((t, i) => {
-      const filenameAttr = t.filename ? ` data-code-tab-filename="${t.filename}"` : '';
-      const hiddenAttr = i > 0 ? ' hidden' : '';
+  const codeTabsRendered =
+    '<div>' +
+    tabs.map((t, i) => `<button data-active="${i === 0}">${t.title}</button>`).join('') +
+    '<div class="code-block">' +
+    `<code class="filename">${firstTab.filename || ''}</code>` +
+    `<pre class="language-${firstTab.lang}"><code>${firstTab.code}</code></pre>` +
+    '</div>' +
+    '</div>';
 
+  const exportBlocks = tabs
+    .map(t => {
+      const filenameAttr = t.filename
+        ? ` data-code-tab-filename="${t.filename}"`
+        : '';
       return (
-        `<div data-code-tab-title="${t.title}"${filenameAttr}${hiddenAttr}>` +
-        `<div class="code-block">` +
-        `<div class="code-actions">` +
-        `<code class="filename">${t.filename || ''}</code>` +
-        `<button class="copy"><svg></svg></button>` +
-        `</div>` +
-        `<div class="copied">Copied</div>` +
-        `<div><pre class="language-${t.lang}"><code>${t.code}</code></pre></div>` +
-        `</div>` +
-        `</div>`
+        `<div hidden data-code-tab-title="${t.title}"${filenameAttr}>` +
+        `<pre class="language-${t.lang}"><code>${t.code}</code></pre>` +
+        '</div>'
       );
     })
     .join('');
 
-  return `<div><div>${buttons}</div>${panels}</div>`;
+  return `<div class="code-tabs-wrapper">${codeTabsRendered}${exportBlocks}</div>`;
 }
 
 describe('rehypeExpandCodeTabs', () => {
-  it('expands hidden tabs and labels each with a bold heading', () => {
+  it('replaces wrapper content with all tabs, not just the active one', () => {
     const html = buildCodeTabsHTML([
       {
         title: 'Cloudflare Workers',
-        lang: 'javascript',
+        filename: 'index.ts',
+        lang: 'typescript',
         code: 'import { sentry } from "@sentry/hono/cloudflare";',
       },
       {
         title: 'Node.js',
-        filename: 'instrument.mjs',
-        lang: 'javascript',
-        code: 'import * as Sentry from "@sentry/hono/node";',
+        filename: 'app.ts',
+        lang: 'typescript',
+        code: 'import { sentry } from "@sentry/hono/node";',
       },
       {
         title: 'Bun',
-        lang: 'javascript',
+        filename: 'index.ts',
+        lang: 'typescript',
         code: 'import { sentry } from "@sentry/hono/bun";',
       },
     ]);
@@ -85,12 +103,24 @@ describe('rehypeExpandCodeTabs', () => {
     const codeBlocks = md.match(/```[\s\S]*?```/g);
 
     expect(codeBlocks).toHaveLength(3);
-    expect(md).toContain('**Cloudflare Workers**');
-    expect(md).toContain('**instrument.mjs**');
-    expect(md).toContain('**Bun**');
+    expect(md).toContain('**index.ts**');
+    expect(md).toContain('**app.ts**');
     expect(codeBlocks[0]).toContain('@sentry/hono/cloudflare');
     expect(codeBlocks[1]).toContain('@sentry/hono/node');
     expect(codeBlocks[2]).toContain('@sentry/hono/bun');
+  });
+
+  it('removes CodeTabs-rendered content (tab buttons, filename display, active tab)', () => {
+    const html = buildCodeTabsHTML([
+      {title: 'ESM', filename: 'instrument.mjs', lang: 'javascript', code: 'import init'},
+      {title: 'CJS', filename: 'instrument.js', lang: 'javascript', code: 'require init'},
+    ]);
+
+    const md = htmlToMarkdown(html);
+
+    expect(md).not.toContain('`instrument.mjs`');
+    expect(md).not.toContain('ESM');
+    expect(md).not.toContain('CJS');
   });
 
   it('prefers filename over tab title for the heading', () => {
@@ -110,25 +140,16 @@ describe('rehypeExpandCodeTabs', () => {
   it('falls back to tab title when no filename is set', () => {
     const html = buildCodeTabsHTML([
       {title: 'Cloudflare Workers', lang: 'javascript', code: 'workers();'},
+      {title: 'Bun', lang: 'javascript', code: 'bun();'},
     ]);
 
     const md = htmlToMarkdown(html);
 
     expect(md).toContain('**Cloudflare Workers**');
+    expect(md).toContain('**Bun**');
   });
 
-  it('strips CodeBlock chrome (filename display, copy button, copied indicator)', () => {
-    const html = buildCodeTabsHTML([
-      {title: 'Node.js', filename: 'instrument.mjs', lang: 'javascript', code: 'init();'},
-    ]);
-
-    const md = htmlToMarkdown(html);
-
-    expect(md).not.toContain('Copied');
-    expect(md).not.toContain('`instrument.mjs`');
-  });
-
-  it('does not affect code blocks outside of tabs', () => {
+  it('does not affect code blocks outside of tab wrappers', () => {
     const html =
       '<div><pre class="language-bash"><code>curl -sL https://sentry.io/get-cli/ | bash</code></pre></div>';
 
@@ -144,12 +165,7 @@ describe('rehypeExpandCodeTabs', () => {
     const standalone =
       '<pre class="language-bash"><code>npm install @sentry/node</code></pre>';
     const tabs = buildCodeTabsHTML([
-      {
-        title: 'Node.js',
-        filename: 'instrument.mjs',
-        lang: 'javascript',
-        code: 'Sentry.init();',
-      },
+      {title: 'Node.js', filename: 'instrument.mjs', lang: 'javascript', code: 'Sentry.init();'},
       {title: 'Bun', lang: 'javascript', code: 'init();'},
     ]);
     const html = `<div>${standalone}${tabs}</div>`;
@@ -184,13 +200,12 @@ describe('rehypeExpandCodeTabs', () => {
     expect(md).toContain('**config.rb**');
   });
 
-  it('handles tab panel with no pre element gracefully', () => {
+  it('skips export block with no pre element', () => {
     const html =
-      '<div>' +
-      '<div data-code-tab-title="broken"><p>Not a code block</p></div>' +
-      '<div data-code-tab-title="ok" hidden>' +
-      '<pre class="language-javascript"><code>works();</code></pre>' +
-      '</div>' +
+      '<div class="code-tabs-wrapper">' +
+      '<div><pre class="language-js"><code>active tab</code></pre></div>' +
+      '<div hidden data-code-tab-title="broken"><p>Not a code block</p></div>' +
+      '<div hidden data-code-tab-title="ok"><pre class="language-js"><code>works();</code></pre></div>' +
       '</div>';
 
     const md = htmlToMarkdown(html);
@@ -198,5 +213,6 @@ describe('rehypeExpandCodeTabs', () => {
     expect(md).toContain('**ok**');
     expect(md).toContain('works()');
     expect(md).not.toContain('**broken**');
+    expect(md).not.toContain('active tab');
   });
 });

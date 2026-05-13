@@ -157,17 +157,7 @@ export function CodeTabs({children}: CodeTabProps) {
     <Container ref={containerRef}>
       {showSigninNote(codeBlocks[selectedTabIndex]) && <SignInNote />}
       <TabBar>{buttons}</TabBar>
-      {codeBlocks.map((block, idx) => (
-        <CodeBlockWrapper
-          key={idx}
-          data-sentry-mask
-          data-code-tab-title={possibleChoices[idx]}
-          data-code-tab-filename={block.props.filename || undefined}
-          hidden={idx !== selectedTabIndex || undefined}
-        >
-          {block}
-        </CodeBlockWrapper>
-      ))}
+      <CodeBlockWrapper data-sentry-mask>{codeBlocks[selectedTabIndex]}</CodeBlockWrapper>
     </Container>
   );
 }
