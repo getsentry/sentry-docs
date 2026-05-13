@@ -13,8 +13,9 @@ import {visit} from 'unist-util-visit';
  *  1. Finds parent elements that contain [data-code-tab-title] children
  *  2. Replaces ALL children with expanded export blocks (removing the
  *     CodeTabs-rendered content to avoid duplication)
- *  3. Each export block becomes a bold heading + fenced code block,
- *     preferring filename over tab title for the heading
+ *  3. Each export block becomes a bold heading + fenced code block.
+ *     The heading format is "[Tab Title] filename" when both exist,
+ *     or just the tab title / filename when only one is present
  */
 export function rehypeExpandCodeTabs() {
   return tree => {
@@ -33,7 +34,8 @@ export function rehypeExpandCodeTabs() {
       node.children = exportBlocks.flatMap(block => {
         const title = block.properties.dataCodeTabTitle;
         const filename = block.properties.dataCodeTabFilename;
-        const label = filename || title;
+        const label =
+          filename && title ? `[${title}] ${filename}` : filename || title;
 
         const preElements = collectAll(block, el => el.tagName === 'pre');
         if (preElements.length === 0) {

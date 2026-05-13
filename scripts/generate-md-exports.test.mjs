@@ -101,8 +101,9 @@ describe('rehypeExpandCodeTabs', () => {
     const codeBlocks = md.match(/```[\s\S]*?```/g);
 
     expect(codeBlocks).toHaveLength(3);
-    expect(md).toContain('**index.ts**');
-    expect(md).toContain('**app.ts**');
+    expect(md).toContain('**\\[Cloudflare Workers] index.ts**');
+    expect(md).toContain('**\\[Node.js] app.ts**');
+    expect(md).toContain('**\\[Bun] index.ts**');
     expect(codeBlocks[0]).toContain('@sentry/hono/cloudflare');
     expect(codeBlocks[1]).toContain('@sentry/hono/node');
     expect(codeBlocks[2]).toContain('@sentry/hono/bun');
@@ -117,11 +118,9 @@ describe('rehypeExpandCodeTabs', () => {
     const md = htmlToMarkdown(html);
 
     expect(md).not.toContain('`instrument.mjs`');
-    expect(md).not.toContain('ESM');
-    expect(md).not.toContain('CJS');
   });
 
-  it('prefers filename over tab title for the heading', () => {
+  it('includes both tab title and filename in heading when both exist', () => {
     const html = buildCodeTabsHTML([
       {title: 'ESM', filename: 'instrument.mjs', lang: 'javascript', code: 'init();'},
       {title: 'CommonJS', filename: 'instrument.js', lang: 'javascript', code: 'init();'},
@@ -129,10 +128,8 @@ describe('rehypeExpandCodeTabs', () => {
 
     const md = htmlToMarkdown(html);
 
-    expect(md).toContain('**instrument.mjs**');
-    expect(md).toContain('**instrument.js**');
-    expect(md).not.toContain('**ESM**');
-    expect(md).not.toContain('**CommonJS**');
+    expect(md).toContain('**\\[ESM] instrument.mjs**');
+    expect(md).toContain('**\\[CommonJS] instrument.js**');
   });
 
   it('falls back to tab title when no filename is set', () => {
@@ -178,7 +175,7 @@ describe('rehypeExpandCodeTabs', () => {
     const codeBlocks = md.match(/```[\s\S]*?```/g);
     expect(codeBlocks).toHaveLength(3);
     expect(codeBlocks[0]).toContain('npm install');
-    expect(md).toContain('**instrument.mjs**');
+    expect(md).toContain('**\\[Node.js] instrument.mjs**');
     expect(md).toContain('**Bun**');
   });
 
@@ -197,10 +194,10 @@ describe('rehypeExpandCodeTabs', () => {
 
     const codeBlocks = md.match(/```[\s\S]*?```/g);
     expect(codeBlocks).toHaveLength(4);
-    expect(md).toContain('**instrument.mjs**');
-    expect(md).toContain('**instrument.js**');
-    expect(md).toContain('**main.py**');
-    expect(md).toContain('**config.rb**');
+    expect(md).toContain('**\\[ESM] instrument.mjs**');
+    expect(md).toContain('**\\[CJS] instrument.js**');
+    expect(md).toContain('**\\[Python] main.py**');
+    expect(md).toContain('**\\[Ruby] config.rb**');
   });
 
   it('skips export block with no pre element', () => {
