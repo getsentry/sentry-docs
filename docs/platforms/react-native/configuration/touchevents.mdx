@@ -85,7 +85,13 @@ You don't have to worry about Typescript errors when passing the `sentry-label` 
 
 </Alert>
 
-### Automatic `sentry-label` Injection
+## Automatic `sentry-label` Injection
+
+<Alert>
+
+Available in SDK version `8.12.0` and above.
+
+</Alert>
 
 When [Component Names](/platforms/react-native/integrations/component-names/) are enabled (`annotateReactComponents` option), the Babel plugin automatically injects `sentry-label` props from static text content at build time. This means components like:
 
@@ -107,13 +113,33 @@ will automatically have a `sentry-label="Save workout"` prop added to `Pressable
 
 To disable automatic injection while keeping component name annotations:
 
-```javascript {filename:metro.config.js}
+```javascript {tabTitle:React Native} {filename:metro.config.js}
+const { getDefaultConfig } = require("@react-native/metro-config");
+const { withSentryConfig } = require('@sentry/react-native/metro');
+
+const config = getDefaultConfig(__dirname);
 module.exports = withSentryConfig(config, {
   annotateReactComponents: { autoInjectSentryLabel: false },
 });
 ```
 
-### Automatic Text Extraction from Children
+```javascript {tabTitle:Expo} {filename:metro.config.js}
+const { getSentryExpoConfig } = require("@sentry/react-native/metro");
+
+const config = getSentryExpoConfig(__dirname, {
+  annotateReactComponents: { autoInjectSentryLabel: false },
+});
+```
+
+See [Component Names — Automatic `sentry-label` Injection](/platforms/react-native/integrations/component-names/#automatic-sentry-label-injection) for more details.
+
+## Automatic Text Extraction from Children
+
+<Alert>
+
+Available in SDK version `8.12.0` and above.
+
+</Alert>
 
 When no label is found from props (steps 1–5 above), the SDK attempts to extract text from the touched component's children at runtime. For example, if you touch a button:
 
@@ -130,15 +156,9 @@ Text extraction has the following limits:
 - Visits up to **5 sibling** nodes at each level
 - Truncates text at **64 characters**
 
-To disable runtime text extraction:
+To disable runtime text extraction, set `extractTextFromChildren` to `false` (see [Options](#options)).
 
-```javascript
-<Sentry.TouchEventBoundary extractTextFromChildren={false}>
-  <RestOfTheApp />
-</Sentry.TouchEventBoundary>
-```
-
-### Interaction with Session Replay Masking
+## Interaction with Session Replay Masking
 
 To prevent masked content from leaking into breadcrumbs, the SDK respects [Session Replay](/platforms/react-native/session-replay/) masking boundaries:
 
@@ -201,6 +221,10 @@ _Array&lt;string | RegExp>, Accepts strings and regular expressions_. Component 
 `labelName`
 
 _String_. The name of a custom prop to look for when determining the label of a component. Takes priority over the automatic `accessibilityLabel`, `aria-label`, and `testID` fallbacks.
+
+`extractTextFromChildren`
+
+_boolean, default: true_. When enabled, the SDK extracts text from child components as a label fallback when no explicit label prop is set. Automatically disabled when Session Replay's `maskAllText` is enabled. See [Automatic Text Extraction from Children](#automatic-text-extraction-from-children).
 
 ## Minified Names in Production
 
