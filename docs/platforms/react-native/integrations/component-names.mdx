@@ -71,6 +71,44 @@ Here's what the resulting node would look like if your bundler had applied the p
 
 The Sentry browser SDK will pick off the value from these `data` attributes and collect them when your components are interacted with.
 
+## Automatic `sentry-label` Injection
+
+When component name capturing is enabled, the Babel plugin also automatically injects `sentry-label` props derived from static text content in your JSX. This provides meaningful labels for [touch event breadcrumbs](/platforms/react-native/configuration/touchevents/) without any manual annotation.
+
+For example, this component:
+
+```javascript
+function SaveButton() {
+  return (
+    <Pressable>
+      <Text>Save workout</Text>
+    </Pressable>
+  );
+}
+```
+
+will have `sentry-label="Save workout"` added to `Pressable` at build time. The injection:
+
+- Only uses static string children (dynamic expressions like `{variable}` are skipped)
+- Caps the label at 64 characters
+- Skips components that already have an explicit `sentry-label` prop
+- Recognizes `Text` components by default, with support for custom text components via `textComponentNames`
+
+To disable automatic label injection while keeping component name annotations:
+
+```javascript {tabTitle:React Native} {filename:metro.config.js}
+const config = getDefaultConfig(__dirname);
+module.exports = withSentryConfig(config, {
+  annotateReactComponents: { autoInjectSentryLabel: false },
+});
+```
+
+```javascript {tabTitle:Expo} {filename:metro.config.js}
+const config = getSentryExpoConfig(__dirname, {
+  annotateReactComponents: { autoInjectSentryLabel: false },
+});
+```
+
 ## Options
 
 By default only components located in your project (outside of `node_modules`) are annotated. To avoid annotating other components, use the `ignoredComponents` option. The ignored components won't have `data-sentry-*` annotations added. 
