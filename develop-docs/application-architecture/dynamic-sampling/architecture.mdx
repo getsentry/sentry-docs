@@ -89,14 +89,14 @@ Suppose Relay receives an incoming transaction with the following data:
 }
 ```
 
-And suppose this is the merged configuration from the non-root and root project:
+And suppose this is the configuration:
 
 ```json
 {
   "rules": [
     {
       "id": 1,
-      "type": "transaction",
+      "type": "trace",
       "samplingValue": {
         "type": "factor",
         "value": 2.0
@@ -124,37 +124,26 @@ And suppose this is the merged configuration from the non-root and root project:
 
 In this case, the matching will happen from **top to bottom** and the following will occur:
 
-1. Rule `1` is matched against the event payload, since it is of type `transaction`. The `samplingValue` is a `factor`, thus the accumulated factors will now be `2.0 * 1.0`, where `1.0` is the identity for the multiplication.
-2. Because rule `1` was a factor rule, the matching continues and rule `2` will be matched against the DSC, since it is of type `trace`. The `samplingValue` is a `sampleRate`, thus the matching will stop and the sample rate will be computed as `2.0 * 0.5 = 1.0`, where `2.0` is the factor accumulated from the previous rule and `0.5` is the sample rate of the current rule.
-
-<Alert title="✨ Note">
-
-It is important to note that a `sampleRate` rule must match in order for a sampling decision to be made; in case this condition is not met, the event will be kept. In practice, each project will have a uniform trace rule which will always match and contain the base sample rate of the organization.
-
-</Alert>
+1. Rule `1` is matched against the DSC, since it is of type `trace`. The `samplingValue` is a `factor` with value `2.0`.
+2. Because rule `1` was a factor rule, the matching continues and rule `2` will again be matched against the DSC, since it is of type `trace`. The `samplingValue` is a `sampleRate`, thus the matching will stop and the sample rate will be computed as `2.0 * 0.5 = 1.0`, where `2.0` is the factor accumulated from the previous rule and `0.5` is the sample rate of the current rule.
 
 ## Rules Generation in Sentry
 
-Sentry is the second component involved in the Dynamic Sampling pipeline. It is responsible for generating the rules used by Relay to perform sampling.
-
-Generating rules is the most complicated step of the pipeline, since rules and their sampling values directly impact how far off the system is from the target fidelity rate.
+Sentry is responsible for generating the rules used by Relay to perform sampling.
 
 ### Generation of the Rules
 
 The generation of rules is performed as part of the **project configuration recomputation**, which happens:
 
-1. Whenever Relay requests the configuration and it is not cached in Redis;
-2. Whenever the configuration is manually invalidated.
+1. When Relay requests the configuration and it is not cached in Redis.
+2. When the configuration is invalidated on demand by calling [this function](https://github.com/getsentry/sentry/blob/master/src/sentry/tasks/relay.py#L244-L244). Some examples are when a new release is detected, when certain project settings change, or when the dynamic sampling tasks for computing sample rates are finished executing.
 
-The invalidation of the configuration can happen under **several circumstances**, by calling the [following function](https://github.com/getsentry/sentry/blob/master/src/sentry/tasks/relay.py#L244-L244). Some examples of cases when the recomputation happens are when a new release is detected, when some project settings change, or when the Celery tasks for computing the variable sample rates are finished executing.
+The rules are generated [here](https://github.com/getsentry/sentry/blob/master/src/sentry/dynamic_sampling/rules/base.py#L126-L143) by performing the following steps:
 
-The generation of the rules that will be part of the project configuration recalculation is defined [here](https://github.com/getsentry/sentry/blob/master/src/sentry/dynamic_sampling/rules/base.py#L72-L72) and works by performing the following steps:
-
-1. Fetching the list of active biases, since some of them can be enabled or disabled by the user in the Sentry UI;
-2. Determining the base sample rate specific for each project.
-3. Computing the rules for each bias by using all the information available at the time (e.g., in memory, fetched from Redis);
-4. Packing the rules into the `dynamicSampling.rulesV2` field of the project configuration;
-5. Returning all the set of rules that will be stored in the project configuration.
+1. Fetch the list of active biases (since some of them can be enabled or disabled by the user in the Sentry UI)
+2. Determine the base sample rate for each project.
+3. Compute the rules for each bias.
+4. Return the rules that will be stored in the project configuration.
 
 #### Redis for Shared State
 
