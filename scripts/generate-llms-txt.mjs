@@ -37,13 +37,11 @@ function isVisible(node) {
 }
 
 function getVisibleChildren(node) {
-  return (node.children || [])
-    .filter(isVisible)
-    .sort((a, b) => {
-      const orderDiff =
-        (a.frontmatter?.sidebar_order ?? 99) - (b.frontmatter?.sidebar_order ?? 99);
-      return orderDiff !== 0 ? orderDiff : getTitle(a).localeCompare(getTitle(b));
-    });
+  return (node.children || []).filter(isVisible).sort((a, b) => {
+    const orderDiff =
+      (a.frontmatter?.sidebar_order ?? 99) - (b.frontmatter?.sidebar_order ?? 99);
+    return orderDiff !== 0 ? orderDiff : getTitle(a).localeCompare(getTitle(b));
+  });
 }
 
 function mdUrl(nodePath) {
@@ -109,7 +107,9 @@ async function main() {
   try {
     docTree = JSON.parse(await readFile(doctreePath, 'utf8'));
   } catch {
-    console.error('Error: public/doctree.json not found. Run `pnpm generate-doctree` first.');
+    console.error(
+      'Error: public/doctree.json not found. Run `pnpm generate-doctree` first.'
+    );
     process.exit(1);
   }
 
