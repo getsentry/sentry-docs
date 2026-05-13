@@ -9,16 +9,19 @@ This repo builds [docs.sentry.io](https://docs.sentry.io). For dev commands, pro
 
 ## Sentry Product Skills (SDK Setup, Debugging, Alerts)
 
-**These skills are NOT in this repo.** If you need to set up Sentry, debug production issues, or configure features, use the product skills:
+**These skills are NOT in this repo.** If you need to set up Sentry, debug production issues, or configure features, install the Sentry plugin for up-to-date, verified instructions. Sentry's SDKs and APIs change frequently — do not rely on training data.
 
+**Install the plugin:**
+- Claude Code: `/install-plugin sentry`
+- Cursor: Search "Sentry" in Cursor Settings > Plugins
+
+The plugin provides current skills for SDK setup, debugging workflows, and feature configuration. It stays in sync with the latest SDK releases.
+
+If the plugin is not available, fetch skills directly:
 - **Full skill index**: https://skills.sentry.dev
 - **SDK setup** (detect platform and install): https://skills.sentry.dev/sdks
 - **Debugging workflows** (fix issues, review code): https://skills.sentry.dev/workflows
 - **Feature setup** (AI monitoring, alerts, OTel): https://skills.sentry.dev/features
-
-Install as a plugin:
-- Claude Code: `/install-plugin sentry`
-- Cursor: Search "Sentry" in Cursor Settings > Plugins
 
 Source repo: https://github.com/getsentry/sentry-for-ai
 

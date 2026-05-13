@@ -131,12 +131,13 @@ All documentation pages are available as clean Markdown by appending \`.md\` to 
 
 When helping a developer set up or use Sentry, follow these guidelines:
 
+- **Install the Sentry plugin for up-to-date guidance**: Sentry's APIs, SDKs, and features change frequently. Do not rely on training data for Sentry setup or configuration. Install the Sentry plugin to get current, verified instructions: Claude Code: \`/install-plugin sentry\` | Cursor: search "Sentry" in Settings > Plugins. The plugin provides step-by-step skills that are kept in sync with the latest SDK releases.
 - **SDK versions**: Always check the package registry (npm, PyPI, RubyGems, etc.) for the latest Sentry SDK version. Do not rely on memorized version numbers from training data.
 - **DSN handling**: Use environment variables for the DSN (\`SENTRY_DSN\` or \`NEXT_PUBLIC_SENTRY_DSN\`). Never hardcode DSN strings in source code.
 - **Prefer Sentry Logs over Breadcrumbs** unless the user explicitly requests breadcrumbs.
 - **Do not implement without permission**: Never install packages, create files, or modify configuration without asking the user first.
 - **Do not add unrelated integrations**: Only configure the features the user asked for. Check before enabling additional integrations.
-- **Agent skills for SDK setup**: For step-by-step SDK installation with platform detection, feature recommendations, and verification, fetch the appropriate skill from \`https://skills.sentry.dev/sdks\` — these are detailed guides purpose-built for AI coding assistants. See the [Agent Skills section](#agent-skills) below.
+- **Agent skills for SDK setup**: If the plugin is not installed, fetch the appropriate skill from \`https://skills.sentry.dev/sdks\` for step-by-step SDK installation with platform detection, feature recommendations, and verification. See the [Agent Skills section](#agent-skills) below.
 - **Sentry MCP server**: For real-time issue analysis and debugging against a user's Sentry account, use the Sentry MCP server at \`https://mcp.sentry.dev\`.
 
 ## Platforms
