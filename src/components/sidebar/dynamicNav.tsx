@@ -343,20 +343,25 @@ export function DynamicNav({
             </CollapsibleSidebarLink>
           )}
           <Children
-            tree={extraLinks
-              ? [...entity.children, ...extraLinks.map(link => ({
-                  name: link.href,
-                  node: {
-                    path: link.href,
-                    context: {
-                      title: link.title,
-                      sidebar_order: link.order,
-                      draft: false,
-                    },
-                  },
-                  children: [],
-                }))]
-              : entity.children}
+            tree={
+              extraLinks
+                ? [
+                    ...entity.children,
+                    ...extraLinks.map(link => ({
+                      name: link.href,
+                      node: {
+                        path: link.href,
+                        context: {
+                          title: link.title,
+                          sidebar_order: link.order,
+                          draft: false,
+                        },
+                      },
+                      children: [],
+                    })),
+                  ]
+                : entity.children
+            }
             exclude={exclude}
             showDepth={0}
             path={linkPath}
