@@ -336,7 +336,12 @@ export async function Home() {
                     Skills
                   </a>{' '}
                   and{' '}
-                  <a href="/ai/mcp/" className="text-[#8b5cf6] underline">
+                  <a
+                    href="https://mcp.sentry.dev"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#8b5cf6] underline"
+                  >
                     MCP server
                   </a>{' '}
                   with your agents. Debug agents and MCP servers by{' '}

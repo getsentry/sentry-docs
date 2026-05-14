@@ -3436,7 +3436,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/sentry-mcp/',
-    to: '/ai/mcp/',
+    to: 'https://mcp.sentry.dev',
   },
   {
     from: '/product/metrics/',
