@@ -1,5 +1,5 @@
 #!/usr/bin/env node
- 
+
 /**
  * Generates /llms.txt and /index.md from public/doctree.json.
  *
