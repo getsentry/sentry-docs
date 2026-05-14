@@ -27,6 +27,7 @@ export async function SidebarNavigation({path}: {path: string[]}) {
         extraLinks={[
           {title: 'Sentry MCP Server', href: 'https://mcp.sentry.dev', order: 20},
           {title: 'Sentry CLI', href: 'https://cli.sentry.dev', order: 25},
+          {title: 'Warden', href: 'https://warden.sentry.dev', order: 30},
         ]}
       />
     );
