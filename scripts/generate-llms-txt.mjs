@@ -75,6 +75,9 @@ function linkEntry(node) {
 
 /** llms.txt format: compact, frameworks inline per platform */
 function buildPlatformsCompact(platformsNode) {
+  if (!platformsNode) {
+    return '## Platforms\n';
+  }
   const lines = [];
   for (const platform of getVisibleChildren(platformsNode)) {
     const title = getTitle(platform);
@@ -94,6 +97,9 @@ function buildPlatformsCompact(platformsNode) {
 
 /** index.md format: separate Platforms list + Frameworks grouped by platform */
 function buildPlatformsExpanded(platformsNode) {
+  if (!platformsNode) {
+    return '## Platforms\n';
+  }
   const platforms = getVisibleChildren(platformsNode);
   const lines = [];
 
