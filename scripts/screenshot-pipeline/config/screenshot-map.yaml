@@ -1,0 +1,34 @@
+# Screenshot URL Mapping
+#
+# Maps each screenshot to the Sentry UI page it depicts.
+# The capture script uses this to navigate and screenshot the correct page.
+#
+# Fields:
+#   asset_path: Path to the image file relative to repo root
+#   ui_page_url: Full Sentry URL. Use {org} as placeholder for the org slug.
+#   element_selector: CSS selector for element screenshot; null for full viewport.
+#   viewport: { width, height } for the browser viewport.
+#   auth_required: Whether the page needs Sentry authentication.
+#   deterministic: Whether the page looks the same every time (no dynamic data).
+#   wait_for: Optional CSS selector to wait for before capturing.
+#   ignore_regions: Optional list of {x, y, width, height} regions to mask from diff.
+#
+# Tips:
+#   - Start with full viewport (element_selector: null) and add selectors as needed.
+#   - Mark pages with user-specific data as deterministic: false.
+#   - DO include nav, sidebar, and top bar in captures -- these changed in the UI
+#     refresh and are a valid signal of staleness.
+#   - Only use ignore_regions for truly ephemeral content that changes every render:
+#     timestamps, notification badge counts, "last seen X ago" strings, user avatars.
+
+# --- POC: /product/insights/ section ---
+
+# Example entry (uncomment and fill in real values):
+# - asset_path: docs/product/insights/img/insights-overview.png
+#   ui_page_url: https://sentry.io/organizations/{org}/insights/
+#   element_selector: null
+#   viewport: { width: 1280, height: 800 }
+#   auth_required: true
+#   deterministic: true
+#   wait_for: null
+#   ignore_regions: []  # keep empty unless masking timestamps or user-specific data

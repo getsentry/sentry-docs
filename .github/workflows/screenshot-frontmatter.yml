@@ -1,0 +1,115 @@
+name: Auto-add sentry_ui_url
+
+# Automatically adds sentry_ui_url to MDX frontmatter when a PR
+# adds or modifies image references in docs pages. This ensures
+# the screenshot pipeline can always find the right Sentry UI page
+# to capture, without writers having to remember a manual step.
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    paths:
+      - 'docs/**/*.mdx'
+      - 'docs/**/*.md'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  add-screenshot-urls:
+    runs-on: ubuntu-latest
+    # Don't run on PRs from the screenshot pipeline itself
+    if: ${{ !startsWith(github.head_ref, 'docs/auto-screenshot-update') }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: pnpm/action-setup@v2
+
+      - name: Install root dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check for missing sentry_ui_url
+        id: check
+        run: |
+          # Get list of changed MDX files in this PR
+          CHANGED_FILES=$(git diff --name-only --diff-filter=ACMR origin/${{ github.base_ref }}...HEAD -- 'docs/**/*.mdx' 'docs/**/*.md')
+
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "No changed MDX files found"
+            echo "needs_fix=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Check each changed file for images without sentry_ui_url
+          MISSING_FILES=""
+          for file in $CHANGED_FILES; do
+            if [ ! -f "$file" ]; then
+              continue
+            fi
+
+            # Check if file has image references (skip external URLs)
+            HAS_IMAGES=$(grep -cE '!\[[^\]]*\]\([^)]+\.(png|jpg|jpeg|gif|webp)\)' "$file" 2>/dev/null || true)
+            if [ "$HAS_IMAGES" -eq "0" ] 2>/dev/null; then
+              continue
+            fi
+
+            # Check if frontmatter has sentry_ui_url
+            HAS_URL=$(head -30 "$file" | grep -c 'sentry_ui_url:' || true)
+            if [ "$HAS_URL" -eq "0" ]; then
+              MISSING_FILES="$MISSING_FILES $file"
+            fi
+          done
+
+          if [ -z "$MISSING_FILES" ]; then
+            echo "All changed files with images have sentry_ui_url"
+            echo "needs_fix=false" >> $GITHUB_OUTPUT
+          else
+            echo "Files missing sentry_ui_url:$MISSING_FILES"
+            echo "needs_fix=true" >> $GITHUB_OUTPUT
+            echo "missing_files=$MISSING_FILES" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Install pipeline dependencies
+        if: steps.check.outputs.needs_fix == 'true'
+        run: npm install
+        working-directory: scripts/screenshot-pipeline
+
+      - name: Run auto-map and inject
+        if: steps.check.outputs.needs_fix == 'true'
+        run: |
+          # Run the crawler to build manifest
+          npx ts-node src/crawl-inventory.ts --scope docs/product
+          # Run auto-mapper
+          npx ts-node tools/auto-map-urls.ts
+          # Inject URLs into frontmatter
+          npx ts-node tools/inject-frontmatter-urls.ts
+        working-directory: scripts/screenshot-pipeline
+        env:
+          UI_REFRESH_CUTOFF: '2025-06-01'
+
+      - name: Commit changes
+        if: steps.check.outputs.needs_fix == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Only commit the MDX files that were changed (not pipeline output)
+          git add 'docs/**/*.mdx' 'docs/**/*.md'
+
+          # Check if there are actual changes
+          if git diff --cached --quiet; then
+            echo "No frontmatter changes to commit"
+          else
+            git commit -m "chore(docs): auto-add sentry_ui_url to screenshot pages"
+            git push
+            echo "Committed sentry_ui_url additions"
+          fi
