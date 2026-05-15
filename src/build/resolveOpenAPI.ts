@@ -2,7 +2,11 @@
 
 import {promises as fs} from 'fs';
 
-import {type DeRefedOpenAPI, type ServerMeta, type ServerVariable} from './open-api/types';
+import {
+  type DeRefedOpenAPI,
+  type ServerMeta,
+  type ServerVariable,
+} from './open-api/types';
 
 // SENTRY_API_SCHEMA_SHA is used in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
 // DO NOT change variable name unless you change it in the sentry-docs GHA workflow in getsentry/sentry-api-schema.

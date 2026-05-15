@@ -54,9 +54,7 @@ export function ApiExamples({api}: Props) {
       ? detectRegionFromApiUrl(codeContext.codeKeywords.PROJECT[0].API_URL)
       : undefined;
 
-  const [selectedRegion, setSelectedRegion] = useState(
-    regionVar?.default ?? 'us'
-  );
+  const [selectedRegion, setSelectedRegion] = useState(regionVar?.default ?? 'us');
 
   useEffect(() => {
     if (userRegion && regionOptions.includes(userRegion)) {
@@ -64,11 +62,9 @@ export function ApiExamples({api}: Props) {
     }
   }, [userRegion, regionOptions]);
 
-  const resolvedServer = resolveServerUrl(
-    api.server,
-    api.serverVariables,
-    {region: selectedRegion}
-  );
+  const resolvedServer = resolveServerUrl(api.server, api.serverVariables, {
+    region: selectedRegion,
+  });
 
   const apiExample = [
     `curl ${resolvedServer}${api.apiPath}`,
