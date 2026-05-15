@@ -1,7 +1,7 @@
 ---
 title: Lightweight Mode
 sidebar_order: 15
-description: "Learn about using @sentry/node-core in lightweight mode without OpenTelemetry."
+description: "Learn about running Sentry in lightweight mode without OpenTelemetry, or with optional OTLP integration for existing OTel setups."
 supported:
   - javascript.node
   - javascript.connect
@@ -31,6 +31,8 @@ If you don't need automatic spans/transactions, you can use `@sentry/node-core/l
 You still get error tracking, logs, metrics, breadcrumbs, context/user data, local variables capture, distributed tracing (via `sentry-trace` and `baggage` headers), and automatic request isolation (Node.js 22+).
 
 If needed, you can still manually create spans by using Sentry's <PlatformLink to="/tracing/instrumentation/">custom instrumentation APIs</PlatformLink> like `startSpan`.
+
+If you already have your own OpenTelemetry setup, you can also use the [OTLP integration](#using-with-opentelemetry-otlp) to link Sentry errors to your OTel traces and export spans to Sentry.
 
 ## Prerequisites
 
@@ -127,3 +129,62 @@ const server = http.createServer((req, res) => {
 | **Best for**                    | Full observability  | No auto-instrumentation, manual tracing setup  |
 
 If you need automatic spans for HTTP requests, database queries, and other operations, use `@sentry/node` (the default). If you don't need automatically created spans and want minimal dependencies, use lightweight mode.
+
+## Using with OpenTelemetry (OTLP)
+
+<AvailableSince version="10.47.0" />
+
+If you already have your own OpenTelemetry setup and want to bridge it with Sentry, you can use the `otlpIntegration` from `@sentry/node-core/light/otlp`. This integration:
+
+- Links Sentry errors and logs to the active OpenTelemetry trace context
+- Exports OpenTelemetry spans to Sentry via [OTLP](/concepts/otlp/)
+
+### Install OpenTelemetry Dependencies
+
+In addition to `@sentry/node-core`, install the OpenTelemetry packages you need:
+
+```bash {tabTitle:npm}
+npm install @opentelemetry/api @opentelemetry/sdk-trace-node @opentelemetry/exporter-trace-otlp-http
+```
+
+```bash {tabTitle:yarn}
+yarn add @opentelemetry/api @opentelemetry/sdk-trace-node @opentelemetry/exporter-trace-otlp-http
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @opentelemetry/api @opentelemetry/sdk-trace-node @opentelemetry/exporter-trace-otlp-http
+```
+
+### Configure
+
+Set up your OpenTelemetry `TracerProvider` first, then initialize Sentry with the `otlpIntegration`:
+
+```javascript
+import { NodeTracerProvider } from "@opentelemetry/sdk-trace-node";
+import * as Sentry from "@sentry/node-core/light";
+import { otlpIntegration } from "@sentry/node-core/light/otlp";
+
+// Set up your OpenTelemetry TracerProvider as usual
+const provider = new NodeTracerProvider();
+provider.register();
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [otlpIntegration()],
+});
+```
+
+The integration automatically derives the OTLP endpoint from your DSN. To send traces to your own collector instead, pass a `collectorUrl`:
+
+```javascript
+otlpIntegration({
+  collectorUrl: "https://my-collector.example.com/v1/traces",
+});
+```
+
+### Options
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `setupOtlpTracesExporter` | `boolean` | `true` | Automatically configure an exporter to send OTLP traces to the right project from the DSN or `collectorUrl`. Set to `false` to set up the `TracerProvider` manually. |
+| `collectorUrl` | `string` | `undefined` | URL of your own OpenTelemetry collector. When set, traces are sent here instead of the Sentry OTLP endpoint derived from the DSN. |

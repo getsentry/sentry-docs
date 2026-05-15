@@ -43,6 +43,7 @@ import EchoSVG from 'platformicons/svg/echo.svg';
 import EffectSVG from 'platformicons/svg/effect.svg';
 import ElectronSVG from 'platformicons/svg/electron.svg';
 import ElixirSVG from 'platformicons/svg/elixir.svg';
+import ElysiaSVG from 'platformicons/svg/elysia.svg';
 import EmberSVG from 'platformicons/svg/ember.svg';
 import ExpressSVG from 'platformicons/svg/express.svg';
 import FalconSVG from 'platformicons/svg/falcon.svg';
@@ -95,6 +96,7 @@ import NativecSVG from 'platformicons/svg/nativec.svg';
 import NestjsSVG from 'platformicons/svg/nestjs.svg';
 import NextjsSVG from 'platformicons/svg/nextjs.svg';
 import NintendoSwitchSVG from 'platformicons/svg/nintendo-switch.svg';
+import NitroSVG from 'platformicons/svg/nitro.svg';
 import NodejsSVG from 'platformicons/svg/nodejs.svg';
 import NuxtSVG from 'platformicons/svg/nuxt.svg';
 import OpenaiSVG from 'platformicons/svg/openai.svg';
@@ -194,6 +196,7 @@ import EchoSVGLarge from 'platformicons/svg_80x80/echo.svg';
 import EffectSVGLarge from 'platformicons/svg_80x80/effect.svg';
 import ElectronSVGLarge from 'platformicons/svg_80x80/electron.svg';
 import ElixirSVGLarge from 'platformicons/svg_80x80/elixir.svg';
+import ElysiaSVGLarge from 'platformicons/svg_80x80/elysia.svg';
 import EmberSVGLarge from 'platformicons/svg_80x80/ember.svg';
 import ExpressSVGLarge from 'platformicons/svg_80x80/express.svg';
 import FalconSVGLarge from 'platformicons/svg_80x80/falcon.svg';
@@ -246,6 +249,7 @@ import NativecSVGLarge from 'platformicons/svg_80x80/nativec.svg';
 import NestjsSVGLarge from 'platformicons/svg_80x80/nestjs.svg';
 import NextjsSVGLarge from 'platformicons/svg_80x80/nextjs.svg';
 import NintendoSwitchSVGLarge from 'platformicons/svg_80x80/nintendo-switch.svg';
+import NitroSVGLarge from 'platformicons/svg_80x80/nitro.svg';
 import NodejsSVGLarge from 'platformicons/svg_80x80/nodejs.svg';
 import NuxtSVGLarge from 'platformicons/svg_80x80/nuxt.svg';
 import OpenaiSVGLarge from 'platformicons/svg_80x80/openai.svg';
@@ -492,6 +496,10 @@ const formatToSVG = {
     sm: ElixirSVG,
     lg: ElixirSVGLarge,
   },
+  elysia: {
+    sm: ElysiaSVG,
+    lg: ElysiaSVGLarge,
+  },
   ember: {
     sm: EmberSVG,
     lg: EmberSVGLarge,
@@ -695,6 +703,10 @@ const formatToSVG = {
   'nintendo-switch': {
     sm: NintendoSwitchSVG,
     lg: NintendoSwitchSVGLarge,
+  },
+  nitro: {
+    sm: NitroSVG,
+    lg: NitroSVGLarge,
   },
   nuxt: {
     sm: NuxtSVG,
@@ -993,6 +1005,7 @@ export const PLATFORM_TO_ICON = {
   'javascript-deno': 'deno',
   'javascript-effect': 'effect',
   'javascript-electron': 'electron',
+  'javascript-elysia': 'elysia',
   'javascript-ember': 'ember',
   'javascript-express': 'express',
   'javascript-gatsby': 'gatsby',
@@ -1006,6 +1019,7 @@ export const PLATFORM_TO_ICON = {
   'javascript-nestjs': 'nestjs',
   'javascript-nextjs': 'nextjs',
   'javascript-nuxt': 'nuxt',
+  'javascript-nitro': 'nitro',
   'javascript-node': 'nodejs',
   'javascript-react': 'react',
   'javascript-react-router': 'react-router',

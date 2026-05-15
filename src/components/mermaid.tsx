@@ -70,7 +70,7 @@ export default function Mermaid() {
         svgPanZoom(svgElement, {
           zoomEnabled: true,
           panEnabled: true,
-          controlIconsEnabled: true,
+          controlIconsEnabled: false,
           fit: true,
           center: true,
           minZoom: 0.1,

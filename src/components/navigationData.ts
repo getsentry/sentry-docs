@@ -21,8 +21,10 @@ export const conceptsSections: NavSection[] = [
 export const moreSections: NavSection[] = [
   {label: 'Account Settings', href: '/account/'},
   {label: 'Organization Settings', href: '/organization/'},
+  {label: 'Integrations', href: '/integrations/'},
   {label: 'Pricing & Billing', href: '/pricing/'},
   {label: 'Security, Legal, & PII', href: '/security-legal-pii/'},
+  {label: 'Docs Changelog', href: '/changelog/'},
 ];
 
 // Main navigation sections with dropdowns (used in TopNavClient)
@@ -50,4 +52,5 @@ export const mainSections: NavSection[] = [
   {label: 'Organization Settings', href: '/organization/'},
   {label: 'Pricing & Billing', href: '/pricing/'},
   {label: 'Security, Legal, & PII', href: '/security-legal-pii/'},
+  {label: 'Docs Changelog', href: '/changelog/'},
 ];

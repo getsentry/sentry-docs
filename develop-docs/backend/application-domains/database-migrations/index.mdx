@@ -472,22 +472,28 @@ Alternatively, if the table is small enough and has low enough volume it should 
 
 ### Altering Column Types
 
-Altering the type of a column is usually dangerous, since it will require a whole table rewrite. There are some exceptions:
+Altering the type of a column is usually dangerous, since it will require a whole table rewrite. There are some exceptions where Postgres can change the type without rewriting:
 
 - Altering a `varchar(<size>)` to a `varchar` with a larger size.
-- Altering any `varchar` to `text`
-- Altering a `numeric` to a `numeric` where the `precision` is higher but the `scale` is the same.
+- Altering any `varchar` to `text`.
+- Altering a `numeric` to a `numeric` where the precision is higher but the scale is the same.
 
-For any other types, the best path forward is usually:
+**Even when no rewrite is needed, altering the type of a column that participates in an index can be unsafe** — including unique constraints, primary keys, the implicit FK index, and any explicit `models.Index`. Postgres does not rewrite the table, but it does invalidate the column statistics on every index that references the column. Once the planner loses its row-count estimates it can pick  bad plans, which have caused hard producion downtimes in the past.
 
-- Create a column with the new type
-- Start dual-writing to both the old and new column.
-- Backfill and convert the old column values into the new column.
-- Change the code to use the new field.
-- Stop writing to the old column and remove references from the code.
-- Drop the old column from the database.
+If you need to change the type of an indexed column, pick one of these, in roughly increasing order of effort:
 
-Generally this can be worth a discussion in #discuss-backend.
+- **The table is small and low-traffic.** A few hundred thousand rows with light query volume is usually fine. Set `checked = False` on the migration and run `ANALYZE <table>` immediately after the deploy. Get an approval from `owners-migrations` first, since a mistake here can cause downtime.
+- **Alter the column and `ANALYZE` inline.** Override the check, run the `ALTER`, then `ANALYZE <table>` in the same migration. Reads and writes use stale statistics from the moment of the `ALTER` until `ANALYZE` completes, which on a large table can take minutes — so this is trading bounded downtime for migration simplicity. This is risky and not recommended on large tables.
+- **Dual-write to a new column** (preferred for large or hot tables):
+  1. Create a column with the new type.
+  2. Start dual-writing to both the old and new column.
+  3. Backfill and convert the old column's values into the new column.
+  4. Point the old django model field to the new database column, remove the new django model field and remove dual writes.
+  5. Drop the old column from the database.
+- **Replica table + hot swap.** Create a copy of the table with the desired schema, replicate writes into both, then atomically swap the table names once the replica is caught up. Heavier than dual-writing a single column, but useful when dual-writing through the application is impractical (e.g. the type change cascades into many call sites or you also want to reshape indexes at the same time).
+
+Any of these is worth a discussion in #discuss-backend before you commit to an approach.
+
 
 ### Renaming Columns
 

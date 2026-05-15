@@ -36,6 +36,11 @@ interface SidebarLinkProps {
    * Shows a new badge next to the title
    */
   isNew?: boolean;
+
+  /**
+   * Shows an early access badge next to the title
+   */
+  earlyAccess?: boolean;
 }
 
 /**
@@ -51,6 +56,7 @@ export function CollapsibleSidebarLink({
   className = '',
   beta = false,
   isNew = false,
+  earlyAccess = false,
 }: SidebarLinkProps) {
   const isActive = path?.indexOf(to) === 0;
   const enableSubtree = isActive || collapsed === false;
@@ -68,6 +74,7 @@ export function CollapsibleSidebarLink({
         title={title}
         beta={beta}
         isNew={isNew}
+        earlyAccess={earlyAccess}
         onClick={() => {
           // Allow toggling the sidebar subtree only if the item is selected
           if (path === to) {

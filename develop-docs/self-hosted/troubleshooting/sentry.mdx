@@ -84,3 +84,45 @@ To fix this, you can trigger a manual project configuration invalidation by runn
 ```bash
 docker compose exec web ./bin/invalidate-project-configs
 ```
+
+## Disabling SSO providers
+
+In case of downtime or misconfiguration of your SSO provider (SAML, OIDC, etc.), you can disable SSO authentication by manually modifying the entry in PostgreSQL. This will allow you to log in with the default email/password method.
+
+First, you need to access the PostgreSQL container, and run `psql` to access the database:
+
+```bash
+docker compose exec postgres psql -U postgres
+```
+
+Then, view the `sentry_authprovider` table to find the row ID of the SSO provider you want to disable:
+
+```sql
+-- Execute `\x on` to make the output more readable
+\x on
+SELECT * FROM sentry_authprovider;
+```
+
+If you're using SAML, the result will look something like this (notice the `id` for the provider you want to disable; in this case, it's `1`):
+
+```
+id                    | 1
+provider              | saml2
+config                | {"idp": {"slo_url": "[REDACTED]", "sso_url": "[REDACTED]", "x509cert": "[REDACTED]", "entity_id": "[REDACTED]"}, "auth_attributes": {"Email": ["[REDACTED]"], "UserID": ["[REDACTED]"], "SureName": ["S"], "FullName": ["[REDACTED]"], "UserName": ["[REDACTED]"], "FirstName": ["[REDACTED]"]}, "attribute_mapping": {"last_name": "SureName", "first_name": "FirstName", "identifier": "UserID", "user_email": "Email"}}
+date_added            | 2025-04-21 22:51:30.750328+00
+sync_time             |
+last_sync             |
+default_role          | 50
+default_global_access | t
+flags                 | 0
+organization_id       | 1
+```
+
+You can delete the row and set up the SSO provider again later:
+
+```sql
+DELETE FROM sentry_authidentity WHERE auth_provider_id = 1;
+DELETE FROM sentry_authprovider WHERE id = 1;
+```
+
+No restart of the Sentry services is needed, and you should be able to log in with email/password immediately after running these commands.
