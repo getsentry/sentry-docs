@@ -892,6 +892,14 @@ const userDocsRedirects = [
     destination: '/platforms/python/integrations/fastapi/',
   },
   {
+    source: '/platforms/go/guides/slog/logs/',
+    destination: '/platforms/go/logs/slog/',
+  },
+  {
+    source: '/platforms/go/guides/slog/logs/:path*',
+    destination: '/platforms/go/logs/slog/:path*',
+  },
+  {
     source: '/platforms/php/configuration/integrations/',
     destination: '/platforms/php/integrations/',
   },
@@ -2232,6 +2240,10 @@ const userDocsRedirects = [
   {
     source: '/product/performance/retention-priorities/',
     destination: '/organization/dynamic-sampling/',
+  },
+  {
+    source: '/concepts/key-terms/key-terms/tracing/trace-view/',
+    destination: '/concepts/key-terms/tracing/trace-view/',
   },
   // DOCS-2229: Flutter uses Dart SDK, not JS
   {
