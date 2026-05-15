@@ -1,6 +1,6 @@
 'use client';
 
-import {Fragment, useContext, useEffect, useState} from 'react';
+import {Fragment, useContext, useEffect, useMemo, useState} from 'react';
 import {Clipboard} from 'react-feather';
 import {type API} from 'sentry-docs/build/resolveOpenAPI';
 
@@ -47,7 +47,7 @@ type Props = {
 export function ApiExamples({api}: Props) {
   const codeContext = useContext(CodeContext);
   const regionVar = api.serverVariables?.region;
-  const regionOptions = regionVar?.enum ?? [];
+  const regionOptions = useMemo(() => regionVar?.enum ?? [], [regionVar?.enum]);
 
   const userRegion =
     codeContext?.codeKeywords.USER && codeContext.codeKeywords.PROJECT[0]
