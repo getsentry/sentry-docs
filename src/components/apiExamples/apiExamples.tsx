@@ -49,10 +49,18 @@ export function ApiExamples({api}: Props) {
   const regionVar = api.serverVariables?.region;
   const regionOptions = useMemo(() => regionVar?.enum ?? [], [regionVar?.enum]);
 
-  const userRegion =
-    codeContext?.codeKeywords.USER && codeContext.codeKeywords.PROJECT[0]
-      ? detectRegionFromApiUrl(codeContext.codeKeywords.PROJECT[0].API_URL)
+  const [sharedSelection] = codeContext?.sharedKeywordSelection ?? [
+    {} as Record<string, number>,
+  ];
+  const projectIdx = sharedSelection.PROJECT ?? 0;
+  const selectedProject =
+    codeContext?.codeKeywords.USER && codeContext.codeKeywords.PROJECT[projectIdx]
+      ? codeContext.codeKeywords.PROJECT[projectIdx]
       : undefined;
+
+  const userRegion = selectedProject
+    ? detectRegionFromApiUrl(selectedProject.API_URL)
+    : undefined;
 
   const [selectedRegion, setSelectedRegion] = useState(regionVar?.default ?? 'us');
 
