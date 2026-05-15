@@ -36,7 +36,7 @@ function resolveServerUrl(
 }
 
 function detectRegionFromApiUrl(apiUrl: string): string | undefined {
-  const match = apiUrl.match(/^https?:\/\/(\w+)\.sentry\.io/);
+  const match = apiUrl.match(/^https?:\/\/(\w+)\.sentry\.io\//);
   return match?.[1];
 }
 
