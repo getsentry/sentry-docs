@@ -1,0 +1,75 @@
+---
+title: Anthropic
+description: "Manually instrument the Anthropic SDK in React Native to capture spans and LLM interactions."
+---
+
+_Import name: `Sentry.instrumentAnthropicAiClient`_
+
+The `instrumentAnthropicAiClient` helper adds instrumentation for the [`@anthropic-ai/sdk`](https://www.npmjs.com/package/@anthropic-ai/sdk) by wrapping an Anthropic client instance and recording LLM interactions with configurable input/output capture. The OpenTelemetry-based automatic integration available for Node.js does not work in React Native, so wrapping the client manually is the only supported path.
+
+## Usage
+
+```javascript
+import * as Sentry from "@sentry/react-native";
+import Anthropic from "@anthropic-ai/sdk";
+
+const anthropic = new Anthropic({
+  // Warning: API keys included in your app bundle will be visible to anyone who
+  // inspects the bundle. Proxy LLM calls through your own backend whenever possible.
+  apiKey: "your-api-key",
+});
+
+const client = Sentry.instrumentAnthropicAiClient(anthropic, {
+  recordInputs: true,
+  recordOutputs: true,
+});
+
+// Use the wrapped client instead of the original anthropic instance
+const response = await client.messages.create({
+  model: "claude-3-5-sonnet-20241022",
+  max_tokens: 1024,
+  messages: [{ role: "user", content: "Hello!" }],
+});
+```
+
+Make sure <PlatformLink to="/tracing/">tracing is enabled</PlatformLink> for the spans produced by this integration to be captured.
+
+## Configuration
+
+### Options
+
+The following options control what data is captured from Anthropic SDK calls:
+
+#### `recordInputs`
+
+_Type: `boolean` (optional)_
+
+Records inputs to Anthropic SDK calls (such as prompts and messages).
+
+Defaults to `true` if `sendDefaultPii` is `true`.
+
+#### `recordOutputs`
+
+_Type: `boolean` (optional)_
+
+Records outputs from Anthropic SDK calls (such as generated text and responses).
+
+Defaults to `true` if `sendDefaultPii` is `true`.
+
+## Supported Operations
+
+By default, tracing support is added to the following Anthropic SDK calls:
+
+- `messages.create()` - Create messages with Claude models
+- `messages.stream()` - Stream messages with Claude models
+- `messages.countTokens()` - Count tokens for messages
+- `models.get()` - Get model information
+- `completions.create()` - Create completions (legacy)
+- `models.retrieve()` - Retrieve model details
+- `beta.messages.create()` - Beta messages API
+
+Streaming and non-streaming requests are automatically detected and handled appropriately.
+
+## Supported Versions
+
+- `@anthropic-ai/sdk`: `>=0.19.2 <1.0.0`

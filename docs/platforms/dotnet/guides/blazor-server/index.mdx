@@ -1,0 +1,143 @@
+---
+title: Blazor Interactive SSR
+sdk: sentry.dotnet.aspnetcore
+description: "Learn about Sentry's .NET integration with Blazor Interactive Server-Side Rendering."
+---
+
+Blazor Interactive SSR (also known as Blazor Server) runs components on the server and streams UI updates to the browser over a SignalR connection (circuit). Sentry integrates with Blazor Interactive SSR through the [Sentry.AspNetCore NuGet package](https://www.nuget.org/packages/Sentry.AspNetCore), which captures unhandled exceptions and provides optional tracing via OpenTelemetry.
+
+## Install
+
+<OnboardingOptionButtons options={['error-monitoring', 'performance']}/>
+
+Add the Sentry dependency to your Blazor Server application:
+
+```shell {tabTitle:.NET Core CLI}
+dotnet add package Sentry.AspNetCore -v {{@inject packages.version('sentry.dotnet.aspnetcore') }}
+```
+
+```powershell {tabTitle:Package Manager}
+Install-Package Sentry.AspNetCore -Version {{@inject packages.version('sentry.dotnet.aspnetcore') }}
+```
+
+This package extends [Sentry.Extensions.Logging](/platforms/dotnet/guides/extensions-logging/). In addition to Blazor Server features, you'll also get the `ILogger<T>` integration and all features available in the main [Sentry](/platforms/dotnet/) SDK.
+
+## Configure
+
+Initialize Sentry by calling `UseSentry` on your `WebHostBuilder`:
+
+```csharp {filename:Program.cs}
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddRazorPages();
+builder.Services.AddServerSideBlazor();
+
+builder.WebHost.UseSentry(options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
+    // When configuring for the first time, to see what the SDK is doing:
+    options.Debug = true;
+    // Adds request URL and headers, IP and name for users, etc.
+    options.SendDefaultPii = true;
+    // ___PRODUCT_OPTION_START___ performance
+    options.TracesSampleRate = 0.1;
+    // ___PRODUCT_OPTION_END___ performance
+});
+
+var app = builder.Build();
+
+app.UseHttpsRedirection();
+app.UseStaticFiles();
+app.UseRouting();
+
+app.MapBlazorHub();
+app.MapFallbackToPage("/_Host");
+
+app.Run();
+```
+
+## Limited Tracing on .NET 10 and Later
+
+Tracing events in Blazor Server applications is challenging due to the socket based nature of communications.
+
+However, on .NET 10 and later, Blazor emits OpenTelemetry activities for circuit lifecycle events, component navigation, and UI interactions that can be used to provide some limited tracing. The [Sentry.Samples.AspNetCore.Blazor.Server](https://github.com/getsentry/sentry-dotnet/tree/main/samples/Sentry.Samples.AspNetCore.Blazor.Server) sample project gives an example of this.
+
+### Install OpenTelemetry
+
+See <PlatformLink to="/tracing/instrumentation/opentelemetry/">OpenTelemetry Support</PlatformLink> for installation and setup instructions.
+
+### Configure OpenTelemetry
+
+Wire up Sentry as an OpenTelemetry exporter, subscribe to the Blazor activity sources, and register helper services for circuit and breadcrumb tracking:
+
+```csharp {filename:Program.cs}
+using Microsoft.AspNetCore.Components.Server.Circuits;
+using OpenTelemetry.Trace;
+using Sentry.OpenTelemetry;
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddRazorPages();
+builder.Services.AddServerSideBlazor();
+
+builder.Services.AddOpenTelemetry()
+    .WithTracing(tracing =>
+    {
+        tracing.AddSource("Microsoft.AspNetCore.Components");
+        tracing.AddSource("Microsoft.AspNetCore.Components.Server.Circuits");
+        tracing.AddAspNetCoreInstrumentation();
+        // Export traces to Sentry
+        tracing.AddSentry();
+    });
+
+builder.WebHost.UseSentry(options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
+    options.UseOpenTelemetry();
+    options.TracesSampleRate = 0.1;
+    // Rewrites /_blazor SignalR transaction names to the actual Blazor route
+    options.AddEventProcessor(new BlazorEventProcessor());
+});
+
+// Track circuit lifecycle events and add navigation/UI breadcrumbs
+builder.Services.AddSingleton<BlazorSentryIntegration>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<BlazorSentryIntegration>());
+builder.Services.AddScoped<CircuitHandler, SentryCircuitHandler>();
+
+var app = builder.Build();
+
+app.UseHttpsRedirection();
+app.UseStaticFiles();
+app.UseRouting();
+
+app.MapBlazorHub();
+app.MapFallbackToPage("/_Host");
+
+app.Run();
+```
+
+### Circuit Lifecycle Tracking Services
+
+The `BlazorSentryIntegration`, `SentryCircuitHandler`, and `BlazorEventProcessor` services shown above are not part of the Sentry integration. You can copy them from the [Blazor Server sample](https://github.com/getsentry/sentry-dotnet/tree/main/samples/Sentry.Samples.AspNetCore.Blazor.Server/Services) into your application if they prove useful for your use case.
+
+They provide the following features:
+
+| Service | Purpose |
+|---|---|
+| `BlazorSentryIntegration` | Subscribes to Blazor activity sources and adds navigation/event breadcrumbs to the active Sentry scope |
+| `SentryCircuitHandler` | Hooks into circuit open/close events to track circuit lifetime and prevent memory leaks |
+| `BlazorEventProcessor` | Rewrites uninformative SignalR transaction names (e.g. `/_blazor`) to the actual Blazor route |
+
+## Verify
+
+This snippet includes an intentional error, so you can test that everything is working as soon as you set it up.
+
+<PlatformContent includePath="getting-started-verify" />
+
+## Samples
+
+- This [integration with Blazor Interactive SSR](https://github.com/getsentry/sentry-dotnet/tree/main/samples/Sentry.Samples.AspNetCore.Blazor.Server) sample demonstrates using Sentry with Blazor Server, including enhanced circuit tracking on .NET 10. (**C#**)
+
+## Next Steps
+
+- Explore [practical guides](/guides/) on what to monitor, log, track, and investigate after setup

@@ -15,8 +15,14 @@ export function LinkCard({
   icon?: string;
   iconSrc?: string;
 }) {
+  const isExternal = href.includes('://');
+  const Wrapper = isExternal ? 'a' : Link;
+  const externalProps = isExternal
+    ? {target: '_blank' as const, rel: 'noopener noreferrer'}
+    : {};
+
   return (
-    <Link href={href} className={`no-underline ${className}`}>
+    <Wrapper href={href} className={`no-underline ${className}`} {...externalProps}>
       <div className="flex flex-col shadow dark:bg-[var(--gray-4)] p-6 rounded gap-4 h-full text-[var(--foreground)]">
         <div className="flex flex-row items-center gap-4">
           <span className="text-4xl flex-shrink-0 flex items-center justify-center w-12 h-12 !border-0 !shadow-none !outline-none !ring-0">
@@ -35,7 +41,7 @@ export function LinkCard({
         </div>
         <p className="text-[length:--font-size-3] m-0">{description}</p>
       </div>
-    </Link>
+    </Wrapper>
   );
 }
 

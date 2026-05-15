@@ -17,9 +17,16 @@ export type DefaultSidebarProps = SidebarProps & {
   path: string[];
 };
 
+export type ExternalSidebarLink = {
+  href: string;
+  order: number;
+  title: string;
+};
+
 export type ProductSidebarProps = {
   items: {root: string; title: string}[];
   rootNode: DocNode;
+  extraLinks?: ExternalSidebarLink[];
 };
 
 export type PlatformSidebarProps = {
@@ -34,6 +41,7 @@ export type NavNode = {
     title: string;
     beta?: boolean;
     new?: boolean;
+    early_access?: boolean;
     section_end_divider?: boolean;
     sidebar_hidden?: boolean;
     sidebar_order?: number;

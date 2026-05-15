@@ -85,6 +85,17 @@ When writing requirements in `develop-docs/`:
 - MDX override templates live in `md-overrides/`
 - Architecture spec: `specs/llm-friendly-docs.md`
 
+## llms.txt
+
+- `docs.sentry.io/llms.txt` is the root LLM discovery index (follows [llmstxt.org](https://llmstxt.org) spec)
+- Auto-generated from `public/doctree.json` by `scripts/generate-llms-txt.mjs`
+- Run `pnpm generate-llms-txt` to regenerate, or it runs automatically as part of `pnpm build`
+- Includes: product description, AI agent instructions, platform/section index, links to agent skills at `skills.sentry.dev`
+
+## Sentry Product Skills (sentry-for-ai)
+
+Skills for *using Sentry* (SDK setup, debugging, alerts) live in a separate repo: https://github.com/getsentry/sentry-for-ai. The skills in *this* repo (`.claude/skills/`, `.agents/skills/`) are for *contributing to the docs*. See `SKILL.md` at the repo root for a routing guide.
+
 ## Plan Mode
 
 - Make the plan extremely concise. Sacrifice grammar for the sake of concision.

@@ -61,3 +61,61 @@ sentryTanstackStart({
   autoInstrumentMiddleware: false,
 }),
 ```
+
+## Tunnel Route
+
+<AvailableSince version="10.51.0" />
+
+The `tunnelRoute` option registers a same-origin TanStack Start server route that forwards Sentry envelopes to Sentry's ingest servers. It also automatically sets the client `tunnel` option in `Sentry.init()` so browser events go through that route. This helps avoid ad blockers and corporate firewalls that block requests to `*.sentry.io`.
+
+`tunnelRoute` accepts three shapes:
+
+### `tunnelRoute: true` (recommended)
+
+Generates an opaque, unguessable route path for each dev session and production build. Because the path changes between builds, ad blockers can't reliably target it.
+
+```typescript {filename:vite.config.ts}
+sentryTanstackStart({
+  tunnelRoute: true,
+}),
+```
+
+### Static path
+
+Pass a string to use a fixed route path. This is easier to reason about, but a known path is easier for ad blockers to add to a list.
+
+```typescript {filename:vite.config.ts}
+sentryTanstackStart({
+  tunnelRoute: "/monitor",
+}),
+```
+
+### Object form
+
+Use the object form to control the DSN allowlist or set a static path explicitly:
+
+```typescript {filename:vite.config.ts}
+sentryTanstackStart({
+  tunnelRoute: {
+    allowedDsns: ["___PUBLIC_DSN___"],
+    path: "/monitor",
+  },
+}),
+```
+
+- **`allowedDsns`** — only envelopes targeting one of these DSNs are forwarded. If omitted or empty, the route falls back to the DSN of the active server-side Sentry SDK at runtime.
+- **`path`** — the public route path. If omitted, an opaque path is generated (same behavior as `tunnelRoute: true`).
+
+<Alert
+  level="info"
+  title="Setting `tunnel` in `Sentry.init()` overrides this option"
+>
+  If you also pass `tunnel` to `Sentry.init()`, the runtime option wins and the
+  managed tunnel route is bypassed. The SDK logs a warning when this happens.
+</Alert>
+
+<Alert level="warning" title="Opaque paths are not stable">
+  When using `tunnelRoute: true` (or the object form without `path`), the
+  generated path changes for each dev session and each production build. Don't
+  hard-code it elsewhere in your app or infrastructure.
+</Alert>
