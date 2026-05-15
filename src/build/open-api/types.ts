@@ -36,12 +36,20 @@ type Tag = {
   'x-sidebar-name': string;
 };
 
-type ServerMeta = {
-  description: string;
+export type ServerVariable = {
+  default: string;
+  description?: string;
+  enum?: string[];
+};
+
+export type ServerMeta = {
+  description?: string;
   url: string;
+  variables?: Record<string, ServerVariable>;
 };
 
 export type DeRefedOpenAPI = {
+  servers?: ServerMeta[];
   paths: {
     [key: string]: {
       [key: string]: {

@@ -1,11 +1,12 @@
 'use client';
 
-import {Fragment, useEffect, useState} from 'react';
+import {Fragment, useContext, useEffect, useState} from 'react';
 import {Clipboard} from 'react-feather';
 import {type API} from 'sentry-docs/build/resolveOpenAPI';
 
 import {CodeBlock} from '../codeBlock';
 import codeBlockStyles from '../codeBlock/code-blocks.module.scss';
+import {CodeContext} from '../codeContext';
 import {CodeTabs} from '../codeTabs';
 import {codeToJsx} from '../highlightCode';
 import styles from './apiExamples.module.scss';
@@ -18,13 +19,59 @@ const strFormat = (str: string) => {
   return s + '.';
 };
 
+function resolveServerUrl(
+  serverTemplate: string,
+  variables: Record<string, {default: string; enum?: string[]}> | undefined,
+  overrides?: Record<string, string>
+): string {
+  if (!variables) {
+    return serverTemplate;
+  }
+  let url = serverTemplate;
+  for (const [name, variable] of Object.entries(variables)) {
+    const value = overrides?.[name] ?? variable.default;
+    url = url.replace(`{${name}}`, value);
+  }
+  return url;
+}
+
+function detectRegionFromApiUrl(apiUrl: string): string | undefined {
+  const match = apiUrl.match(/^https?:\/\/(\w+)\.sentry\.io/);
+  return match?.[1];
+}
+
 type Props = {
   api: API;
 };
 
 export function ApiExamples({api}: Props) {
+  const codeContext = useContext(CodeContext);
+  const regionVar = api.serverVariables?.region;
+  const regionOptions = regionVar?.enum ?? [];
+
+  const userRegion =
+    codeContext?.codeKeywords.USER && codeContext.codeKeywords.PROJECT[0]
+      ? detectRegionFromApiUrl(codeContext.codeKeywords.PROJECT[0].API_URL)
+      : undefined;
+
+  const [selectedRegion, setSelectedRegion] = useState(
+    regionVar?.default ?? 'us'
+  );
+
+  useEffect(() => {
+    if (userRegion && regionOptions.includes(userRegion)) {
+      setSelectedRegion(userRegion);
+    }
+  }, [userRegion, regionOptions]);
+
+  const resolvedServer = resolveServerUrl(
+    api.server,
+    api.serverVariables,
+    {region: selectedRegion}
+  );
+
   const apiExample = [
-    `curl ${api.server}${api.apiPath}`,
+    `curl ${resolvedServer}${api.apiPath}`,
     ` -H 'Authorization: Bearer <auth_token>'`,
   ];
   if (['put', 'options', 'delete'].includes(api.method.toLowerCase())) {
@@ -84,6 +131,22 @@ export function ApiExamples({api}: Props) {
 
   return (
     <Fragment>
+      {regionOptions.length > 1 && (
+        <div className={styles['region-selector']}>
+          <span className={styles['region-label']}>Region</span>
+          <div className={styles['region-tabs']}>
+            {regionOptions.map(region => (
+              <button
+                key={region}
+                className={`${styles['region-tab']} ${selectedRegion === region ? styles['region-tab-selected'] : ''}`}
+                onClick={() => setSelectedRegion(region)}
+              >
+                {region.toUpperCase()}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
       <CodeTabs>
         <CodeBlock language="bash">
           <pre>{codeToJsx(apiExample.join(' \\\n'), 'bash')}</pre>
