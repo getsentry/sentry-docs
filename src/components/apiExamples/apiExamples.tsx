@@ -40,6 +40,22 @@ function detectRegionFromApiUrl(apiUrl: string): string | undefined {
   return match?.[1];
 }
 
+type ProjectContext = {
+  ORG_SLUG: string;
+  PROJECT_SLUG: string;
+};
+
+function resolveApiPath(apiPath: string, project: ProjectContext | undefined): string {
+  if (!project) {
+    return apiPath;
+  }
+  return apiPath
+    .replace('{organization_id_or_slug}', project.ORG_SLUG)
+    .replace('{organization_slug}', project.ORG_SLUG)
+    .replace('{project_id_or_slug}', project.PROJECT_SLUG)
+    .replace('{project_slug}', project.PROJECT_SLUG);
+}
+
 type Props = {
   api: API;
 };
@@ -49,10 +65,17 @@ export function ApiExamples({api}: Props) {
   const regionVar = api.serverVariables?.region;
   const regionOptions = useMemo(() => regionVar?.enum ?? [], [regionVar?.enum]);
 
-  const userRegion =
-    codeContext?.codeKeywords.USER && codeContext.codeKeywords.PROJECT[0]
-      ? detectRegionFromApiUrl(codeContext.codeKeywords.PROJECT[0].API_URL)
-      : undefined;
+  const [sharedSelection] = codeContext?.sharedKeywordSelection ?? [
+    {} as Record<string, number>,
+  ];
+  const projectIdx = sharedSelection.PROJECT ?? 0;
+  const selectedProject = codeContext?.codeKeywords.USER
+    ? codeContext.codeKeywords.PROJECT[projectIdx]
+    : undefined;
+
+  const userRegion = selectedProject
+    ? detectRegionFromApiUrl(selectedProject.API_URL)
+    : undefined;
 
   const [selectedRegion, setSelectedRegion] = useState(regionVar?.default ?? 'us');
 
@@ -65,9 +88,10 @@ export function ApiExamples({api}: Props) {
   const resolvedServer = resolveServerUrl(api.server, api.serverVariables, {
     region: selectedRegion,
   });
+  const resolvedPath = resolveApiPath(api.apiPath, selectedProject);
 
   const apiExample = [
-    `curl ${resolvedServer}${api.apiPath}`,
+    `curl ${resolvedServer}${resolvedPath}`,
     ` -H 'Authorization: Bearer <auth_token>'`,
   ];
   if (['put', 'options', 'delete'].includes(api.method.toLowerCase())) {
