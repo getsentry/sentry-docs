@@ -3,17 +3,6 @@ title: Backend Tradeoffs
 description: "How to choose the right crash backend in the Native SDK."
 sidebar_order: 1000
 ---
-The Native SDK lets users decide at compile-time between multiple crash backends, with support varying by target OS:
-
-| OS | `crashpad` | `native` | `breakpad` | `inproc` |
-| -------- | ---------- | -------- | ---------- | -------- |
-| Windows | ✅ Default | ⚠️ Experimental | ✅ | ✅ |
-| macOS | ✅ Default | ⚠️ Experimental | ✅ | ✅ |
-| Linux | ✅ Default | ⚠️ Experimental | ✅ | ✅ |
-| Android | ❌ | ❌ | ⚠️ Untested <sup>1</sup> | ✅ Default |
-| iOS | ❌ | ❌ | ⚠️ Untested <sup>1</sup> | ⚠️ Untested <sup>1</sup> |
-
-<sup>1</sup> Builds and should work, but is untested.
 
 ### Why is `crashpad` the default?
 
@@ -66,7 +55,7 @@ In the above cases, if you cannot loosen the requirements of your environment, y
 
 Since SDK version [0.13.2](https://github.com/getsentry/sentry-native/releases/tag/0.13.2), the Native SDK comes with a new experimental out-of-process backend called `native`. It is implemented as part of the Native SDK and built on the SDK's own event, envelope, transport, attachment, options, and hook infrastructure.
 
-The main advantages are tighter integration with the Native SDK and no external crash-handler dependency. As an out-of-process backend, `native` runs crash handling in the lightweight `sentry-crash` daemon and can send crash reports at crash time, similar to `crashpad`. Because crash collection is implemented in the SDK, `native` can call SDK-level hooks such as `before_screenshot`, and can report an event, a minidump, or both. The backend is also fully compatible with TSAN and ASAN builds.
+The main advantages are tighter integration with the Native SDK and no external crash-handler dependency. As an out-of-process backend, `native` runs crash handling in the lightweight `sentry-crash` daemon and can send crash reports at crash time, similar to `crashpad`. Because crash collection is implemented in the SDK, `native` can call SDK-level hooks such as `before_screenshot`, and can [report an event, a minidump, or both](/platforms/native/configuration/backends/native/). The backend is also fully compatible with TSAN and ASAN builds.
 
 Consider `native` when you want out-of-process crash handling with SDK-managed crash collection, when you need sanitizer compatibility, or when `crashpad` does not fit your deployment model.
 
@@ -97,18 +86,18 @@ from most feature-complete to least, where a step down should only be triggered 
 
 | Feature | `crashpad` | `native` | `breakpad` | `inproc` |
 | ------- | ---------- | -------- | ---------- | -------- |
-| Deployment | Library <sup>2</sup> + executable | Library <sup>2</sup> + executable | Library <sup>2</sup> | Library <sup>2</sup> |
+| Deployment | Library <sup>1</sup> + executable | Library <sup>1</sup> + executable | Library <sup>1</sup> | Library <sup>1</sup> |
 | Crash handler | Out-of-process | Out-of-process | In-process | In-process |
 | Crash upload | At crash time | At crash time | Next restart | Next restart |
 | Crash report | Minidump | Event/minidump/both | Minidump | Event |
-| Screenshots | Windows <sup>3</sup> | Windows | Windows | Windows |
+| Screenshots | Windows <sup>2</sup> | Windows | Windows | Windows |
 | Stack walking | Server-side<br />+ client-side build option | Client-side<br />+ server-side minidump mode | Server-side | Client-side |
 | Captured threads | All | All | All | Crashing |
 | Crash hooks | ✅ Windows/Linux<br />❌ macOS | ✅ | ✅ Windows/macOS<br />⚠️ Linux (no context) | ✅ |
 | Windows WER / fast-fail | ✅ | ✅ | ❌ | ❌ |
 | macOS App Sandbox | ❌ | ✅ | ✅ | ✅ |
 
-* <sup>2</sup> The library supports shared and static builds.
-* <sup>3</sup> The `before_screenshot` hook is not supported with `crashpad`.
+* <sup>1</sup> The library supports shared and static builds.
+* <sup>2</sup> The `before_screenshot` hook is not supported with `crashpad`.
 
 With the above, you now have exemplary decision points to help guide you before you start evaluating your error reporting scenario.
