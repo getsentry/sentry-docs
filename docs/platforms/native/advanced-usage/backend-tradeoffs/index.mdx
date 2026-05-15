@@ -3,11 +3,17 @@ title: Backend Tradeoffs
 description: "How to choose the right crash backend in the Native SDK."
 sidebar_order: 1000
 ---
-The Native SDK lets users decide at compile-time between three crash backends:
+The Native SDK lets users decide at compile-time between multiple crash backends, with support varying by target OS:
 
-* `crashpad`
-* `breakpad`
-* `inproc`
+| OS | `crashpad` | `native` | `breakpad` | `inproc` |
+| -------- | ---------- | -------- | ---------- | -------- |
+| Windows | ✅ Default | ⚠️ Experimental | ✅ | ✅ |
+| macOS | ✅ Default | ⚠️ Experimental | ✅ | ✅ |
+| Linux | ✅ Default | ⚠️ Experimental | ✅ | ✅ |
+| Android | ❌ | ❌ | ⚠️ Untested <sup>1</sup> | ✅ Default |
+| iOS | ❌ | ❌ | ⚠️ Untested <sup>1</sup> | ⚠️ Untested <sup>1</sup> |
+
+<sup>1</sup> Builds and should work, but is untested.
 
 ### Why is `crashpad` the default?
 
@@ -16,7 +22,7 @@ Currently, `crashpad` is the default on all desktop platforms because it
 * has an external `handler` process that allows for external snapshots and sending crash reports immediately (instead of on the next successful start of your application)
 * further, snapshotting, report management, and uploading outside the crashed process are safer because the `crashpad_handler` is not affected by any corruptions that led to a crash
 * supports more error types on [Linux](/platforms/native/advanced-usage/signal-handling/#signals-of-interest) and Windows (`abort()` and other `fast-fail` crashes, handling of heap corruptions)
-* on macOS, the `crashpad_handler` will receive `EXC_CRASH` Mach exceptions, which the kernel generates during process exit if a terminal POSIX signal hasn't been handled. None of the two other backends will catch this exception.
+* on macOS, the `crashpad_handler` will receive `EXC_CRASH` Mach exceptions, which the kernel generates during process exit if a terminal POSIX signal hasn't been handled. None of the other backends will catch this exception.
 * is more maintained upstream (although most changes affect new platforms like Fuchsia)
 * is the primary target for Sentry-developed extensions to the upstream implementation of backend handlers (most of which aren't a particular upside vs. the other backends, but changes to reach parity), including
   * client-side stack traces (this is currently not available on `breakpad`)
@@ -75,8 +81,26 @@ If you dive into the details, you will find many trade-offs in the selection of 
 
 Sentry suggests the following sequence for your backend evaluations:
 
-* `crashpad` (default)
+* `crashpad` (default on Windows, macOS, and Linux), or `native` (experimental)
 * `breakpad`
-* `inproc`
+* `inproc` (default on Android)
 
-from most feature-complete to least, where a step down should only be triggered by environmental inhibitors. With the above, you now have exemplary decision points to help guide you before you start evaluating your error reporting scenario.
+from most feature-complete to least, where a step down should only be triggered by environmental inhibitors, as summarized in the following table:
+
+| Feature | `crashpad` | `native` | `breakpad` | `inproc` |
+| ------- | ---------- | -------- | ---------- | -------- |
+| Deployment | Library <sup>2</sup> + executable | Library <sup>2</sup> + executable | Library <sup>2</sup> | Library <sup>2</sup> |
+| Crash handler | Out-of-process | Out-of-process | In-process | In-process |
+| Crash upload | At crash time | At crash time | Next restart | Next restart |
+| Crash report | Minidump | Event/minidump/both | Minidump | Event |
+| Screenshots | Windows <sup>3</sup> | Windows | Windows | Windows |
+| Stack walking | Server-side<br />+ client-side build option | Client-side<br />+ server-side minidump mode | Server-side | Client-side |
+| Captured threads | All | All | All | Crashing |
+| Crash hooks | ✅ Windows/Linux<br />❌ macOS | ✅ | ✅ Windows/macOS<br />⚠️ Linux (no context) | ✅ |
+| Windows WER / fast-fail | ✅ | ✅ | ❌ | ❌ |
+| macOS App Sandbox | ❌ | ✅ | ✅ | ✅ |
+
+* <sup>2</sup> The library supports shared and static builds.
+* <sup>3</sup> The `before_screenshot` hook is not supported with `crashpad`.
+
+With the above, you now have exemplary decision points to help guide you before you start evaluating your error reporting scenario.
