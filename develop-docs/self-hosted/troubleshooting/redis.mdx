@@ -4,4 +4,46 @@ sidebar_title: Redis
 sidebar_order: 5
 ---
 
-Redis is used both as a transactional data store and a work queue of Celery in the self-hosted setup. For this reason, it may get overwhelmed during event spikes. We have made some significant improvements regarding this starting from version `20.10.1`. If you are still having issues, you may look into scaling out Redis itself or switching to a different Celery broker, such as [RabbitMQ](https://www.rabbitmq.com/).
+Redis is not used only as a cache data store in the self-hosted setup. It is used for several purposes:
+
+1. A communication channel between `sentry` and `relay` for storing project configurations, so `relay` can validate an incoming DSN public key and its corresponding project ID. The `taskworker` container is responsible for seeding project configurations to Redis.
+2. Locks for various Kafka consumer workers (snuba containers and sentry consumers) to prevent multiple workers from processing the same event at the same time.
+3. Rate limiter for requests to Sentry and Snuba.
+4. As a buffer for events during error & transaction processing.
+5. As a buffer for span ingestion.
+
+## Out of Memory Error
+
+There are multiple causes for Redis running out of memory, one of which is an event-processing backlog or ingestion spikes. The first thing you can do is check which product is causing a large number of items in Redis with the following command:
+
+```bash
+docker compose exec redis redis-cli --scan | cut -d: -f1 | sort | uniq -c | sort -n
+```
+
+If the results show that the majority of keys are from `e`, it means the event-processing backlog is causing the issue. In this case, you can try increasing the memory limit for Redis, or reducing the number of ingested events by applying server-side rate limiting or decreasing the client-side sample rate. These keys are supposedly transient and have a TTL, so they should be automatically removed after the events have been processed.
+
+### Hard recovery
+
+In some cases, the out-of-memory error is not transient and your server may not be able to keep up, causing a service disruption for your self-hosted Sentry. In this case, the last resort is to delete all data in Redis, but be aware that this will cause data loss and may cause ingestion lag until the system recovers. To delete all data in Redis, you can run the following command:
+
+```bash
+docker compose exec redis redis-cli flushall
+```
+
+It is not recommended to delete the `sentry-redis` volume, as you may need to shut down the `redis` container and all other containers that depend on it, which may cause longer downtime.
+
+## WRONGTYPE Operation against a key holding the wrong kind of value
+
+Around the 26.2.0 release, we saw some users encounter the following error in their `process-spans` logs:
+
+```
+redis.exceptions.ResponseError: Command # 1 (SSCAN b'span-buf:z:{23:7de4...71c}:d5ff...274' 0 b'COUNT' 100) of pipeline caused error: WRONGTYPE Operation against a key holding the wrong kind of value
+```
+
+This error is caused by a change in code logic that changed the type of a Redis key. This error is expected to be transient and should resolve itself after a while. However, it may cause the `process-spans` worker to crash and restart repeatedly until the error is resolved. If you see this error, you can try deleting the affected keys in Redis.
+
+Most Redis keys are expected to have a prefix (e.g., `span-buf:`). Therefore, to delete the affected keys, you can run the following command:
+
+```bash
+docker compose exec redis sh -c "redis-cli --scan --pattern 'span-buf:*' | xargs redis-cli del"
+```
