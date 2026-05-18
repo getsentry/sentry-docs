@@ -2,7 +2,11 @@
 
 import {promises as fs} from 'fs';
 
-import {DeRefedOpenAPI} from './open-api/types';
+import {
+  type DeRefedOpenAPI,
+  type ServerMeta,
+  type ServerVariable,
+} from './open-api/types';
 
 // SENTRY_API_SCHEMA_SHA is used in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
 // DO NOT change variable name unless you change it in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
@@ -75,6 +79,7 @@ export type API = {
   descriptionMarkdown?: string;
   requestBodyContent?: any;
   security?: {[key: string]: string[]};
+  serverVariables?: Record<string, ServerVariable>;
   summary?: string;
 };
 
@@ -133,17 +138,16 @@ async function apiCategoriesUncached(): Promise<APICategory[]> {
       const isDeprecated = isDeprecatedOperationId(apiData.operationId);
       const cleanOperationId = stripDeprecatedPrefix(apiData.operationId ?? '');
 
-      let server = 'https://sentry.io';
-      if (apiData.servers && apiData.servers[0]) {
-        server = apiData.servers[0].url;
-      }
+      const resolvedServer: ServerMeta = apiData.servers?.[0] ??
+        data.servers?.[0] ?? {url: 'https://sentry.io'};
       apiData.tags.forEach(tag => {
         categoryMap[tag].apis.push({
           apiPath,
           method,
           name: cleanOperationId,
           deprecated: isDeprecated,
-          server,
+          server: resolvedServer.url,
+          serverVariables: resolvedServer.variables,
           slug: slugify(cleanOperationId),
           summary: apiData.summary,
           descriptionMarkdown: apiData.description,
