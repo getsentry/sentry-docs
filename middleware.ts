@@ -301,60 +301,20 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/integrations/notification-incidents/discord/',
   },
   {
+    from: '/integrations/slack/',
+    to: '/integrations/notification-incidents/slack/',
+  },
+  {
+    from: '/integrations/project-mgmt/jira/',
+    to: '/integrations/issue-tracking/jira/',
+  },
+  {
     from: '/platforms/python/migration/configuration/filtering/',
     to: '/platforms/python/configuration/filtering/',
   },
   {
-    from: '/organization/integrations/github/',
-    to: '/integrations/source-code-mgmt/github/',
-  },
-  {
-    from: '/organization/integrations/gitlab/',
-    to: '/integrations/source-code-mgmt/gitlab/',
-  },
-  {
-    from: '/organization/integrations/bitbucket/',
-    to: '/integrations/source-code-mgmt/bitbucket/',
-  },
-  {
-    from: '/organization/integrations/rookout/',
-    to: '/integrations/debugging/rookout/',
-  },
-  {
-    from: '/organization/integrations/split/',
-    to: '/integrations/feature-flag/split/',
-  },
-  {
-    from: '/organization/integrations/teamwork/',
-    to: '/integrations/issue-tracking/teamwork/',
-  },
-  {
-    from: '/organization/integrations/jira/',
-    to: '/integrations/issue-tracking/jira/',
-  },
-  {
-    from: '/organization/integrations/linear/',
-    to: '/integrations/issue-tracking/linear/',
-  },
-  {
-    from: '/organization/integrations/clickup/',
-    to: '/integrations/issue-tracking/clickup/',
-  },
-  {
     from: '/organization/integrations/project-mgmt/shortcut/',
     to: '/integrations/issue-tracking/shortcut/',
-  },
-  {
-    from: '/organization/integrations/slack/',
-    to: '/integrations/notification-incidents/slack/',
-  },
-  {
-    from: '/organization/integrations/pagerduty/',
-    to: '/integrations/notification-incidents/pagerduty/',
-  },
-  {
-    from: '/organization/integrations/vanta/',
-    to: '/integrations/compliance/vanta/',
   },
   {
     from: '/organization/integrations/jam/',
@@ -366,7 +326,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/data-management-settings/dynamic-sampling/',
-    to: '/product/insights/overview/',
+    to: '/product/dashboards/sentry-dashboards/',
   },
   {
     from: '/product/data-management-settings/event-grouping/',
@@ -1866,67 +1826,67 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/workflow/alerts-notifications/',
-    to: '/product/alerts/',
+    to: '/product/monitors-and-alerts/alerts/',
   },
   {
     from: '/product/alerts-notifications/',
-    to: '/product/alerts/',
+    to: '/product/monitors-and-alerts/alerts/',
   },
   {
     from: '/product/sentry-basics/guides/alert-notifications/',
-    to: '/product/alerts/',
+    to: '/product/monitors-and-alerts/alerts/',
   },
   {
     from: '/product/alerts/create-alerts/best-practices/',
-    to: '/product/alerts/create-alerts/',
+    to: '/product/monitors-and-alerts/alerts/',
   },
   {
     from: '/product/alerts/best-practices/',
-    to: '/product/alerts/create-alerts/',
+    to: '/product/monitors-and-alerts/alerts/',
   },
   {
     from: '/product/sentry-basics/guides/alert-notifications/routing-alerts/',
-    to: '/product/alerts/create-alerts/routing-alerts/',
+    to: '/product/monitors-and-alerts/alerts/',
   },
   {
     from: '/product/sentry-basics/guides/alert-notifications/issue-alerts/',
-    to: '/product/alerts/create-alerts/issue-alert-config/',
+    to: '/product/monitors-and-alerts/alerts/',
   },
   {
     from: '/product/alerts/alert-settings/',
-    to: '/product/alerts/create-alerts/issue-alert-config/',
+    to: '/product/monitors-and-alerts/alerts/',
   },
   {
     from: '/product/alerts-notifications/alert-settings/',
-    to: '/product/alerts/create-alerts/issue-alert-config/',
+    to: '/product/monitors-and-alerts/alerts/',
   },
   {
     from: '/product/sentry-basics/guides/alert-notifications/metric-alerts/',
-    to: '/product/alerts/create-alerts/metric-alert-config/',
+    to: '/product/monitors-and-alerts/monitors/',
   },
   {
     from: '/workflow/alerts-notifications/alerts/',
-    to: '/product/alerts/alert-types/',
+    to: '/product/monitors-and-alerts/alerts/',
   },
   {
     from: '/workflow/notifications/alerts/',
-    to: '/product/alerts/alert-types/',
+    to: '/product/monitors-and-alerts/alerts/',
   },
   {
     from: '/product/alerts-notifications/alerts/',
-    to: '/product/alerts/alert-types/',
+    to: '/product/monitors-and-alerts/alerts/',
   },
   {
     from: '/product/alerts-notifications/metric-alerts/',
-    to: '/product/alerts/alert-types/',
+    to: '/product/monitors-and-alerts/alerts/',
   },
   {
     from: '/product/alerts-notifications/issue-alerts/',
-    to: '/product/alerts/alert-types/',
+    to: '/product/monitors-and-alerts/alerts/',
   },
   {
     from: '/product/alerts/create-alerts/crash-rate-alert-config/',
-    to: '/product/alerts/alert-types/',
+    to: '/product/monitors-and-alerts/alerts/',
   },
   {
     from: '/workflow/alerts-notifications/notifications/',
@@ -2747,119 +2707,119 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/performance/getting-started/',
-    to: '/product/insights/getting-started/',
+    to: '/product/dashboards/sentry-dashboards/',
   },
   {
     from: '/product/performance/filters-display/',
-    to: '/product/insights/overview/filters-display/',
+    to: '/product/dashboards/sentry-dashboards/',
   },
   {
     from: '/product/performance/filters-display/widgets/',
-    to: '/product/insights/overview/filters-display/widgets/',
+    to: '/product/dashboards/sentry-dashboards/',
   },
   {
     from: '/product/performance/trends/',
-    to: '/product/insights/overview/trends/',
+    to: '/product/dashboards/sentry-dashboards/',
   },
   {
     from: '/product/performance/transaction-summary/',
-    to: '/product/insights/overview/transaction-summary/',
+    to: '/product/dashboards/sentry-dashboards/transaction-summary/',
   },
   {
     from: '/product/performance/metrics/',
-    to: '/product/insights/overview/metrics/',
+    to: '/product/dashboards/sentry-dashboards/',
   },
   {
     from: '/product/performance/performance-overhead/',
-    to: '/product/insights/performance-overhead/',
+    to: '/product/dashboards/sentry-dashboards/',
   },
   {
     from: '/product/performance/database/',
-    to: '/product/insights/backend/queries/',
+    to: '/product/dashboards/sentry-dashboards/backend/queries/',
   },
   {
     from: '/product/performance/query-insights/',
-    to: '/product/insights/backend/queries/',
+    to: '/product/dashboards/sentry-dashboards/backend/queries/',
   },
   {
     from: '/product/sentry-basics/metrics/',
-    to: '/product/insights/retention-priorities/',
+    to: '/organization/dynamic-sampling/',
   },
   {
     from: '/product/sentry-basics/sampling/',
-    to: '/product/insights/retention-priorities/',
+    to: '/organization/dynamic-sampling/',
   },
   {
     from: '/product/data-management-settings/server-side-sampling/',
-    to: '/product/insights/retention-priorities/',
+    to: '/organization/dynamic-sampling/',
   },
   {
     from: '/product/data-management-settings/server-side-sampling/getting-started/',
-    to: '/product/insights/retention-priorities/',
+    to: '/organization/dynamic-sampling/',
   },
   {
     from: '/product/data-management-settings/server-side-sampling/current-limitations/',
-    to: '/product/insights/retention-priorities/',
+    to: '/organization/dynamic-sampling/',
   },
   {
     from: '/product/data-management-settings/server-side-sampling/sampling-configurations/',
-    to: '/product/insights/retention-priorities/',
+    to: '/organization/dynamic-sampling/',
   },
   {
     from: '/product/data-management-settings/dynamic-sampling/current-limitations/',
-    to: '/product/insights/retention-priorities/',
+    to: '/organization/dynamic-sampling/',
   },
   {
     from: '/product/data-management-settings/dynamic-sampling/sampling-configurations/',
-    to: '/product/insights/retention-priorities/',
+    to: '/organization/dynamic-sampling/',
   },
   {
     from: '/product/performance/performance-at-scale/',
-    to: '/product/insights/retention-priorities/',
+    to: '/organization/dynamic-sampling/',
   },
   {
     from: '/product/performance/performance-at-scale/getting-started/',
-    to: '/product/insights/retention-priorities/',
+    to: '/organization/dynamic-sampling/',
   },
   {
     from: '/product/performance/performance-at-scale/benefits-performance-at-scale/',
-    to: '/product/insights/retention-priorities/',
+    to: '/organization/dynamic-sampling/',
   },
   {
     from: '/performance/',
-    to: '/product/insights/',
+    to: '/product/dashboards/sentry-dashboards/',
   },
   {
     from: '/performance/display/',
-    to: '/product/insights/',
+    to: '/product/dashboards/sentry-dashboards/',
   },
   {
     from: '/performance-monitoring/performance/',
-    to: '/product/insights/',
+    to: '/product/dashboards/sentry-dashboards/',
   },
   {
     from: '/performance/performance-tab/',
-    to: '/product/insights/overview',
+    to: '/product/dashboards/sentry-dashboards/',
   },
   {
     from: '/performance/performance-homepage/',
-    to: '/product/insights/',
+    to: '/product/dashboards/sentry-dashboards/',
   },
   {
     from: '/performance-monitoring/setup/',
-    to: '/product/insights/getting-started/',
+    to: '/product/dashboards/sentry-dashboards/',
   },
   {
     from: '/performance-monitoring/getting-started/',
-    to: '/product/insights/getting-started/',
+    to: '/product/dashboards/sentry-dashboards/',
   },
   {
     from: '/performance-monitoring/performance/metrics/',
-    to: '/product/insights/overview/metrics/',
+    to: '/product/dashboards/sentry-dashboards/',
   },
   {
     from: '/product/performance/display/',
-    to: '/product/insights/overview/filters-display/',
+    to: '/product/dashboards/sentry-dashboards/',
   },
   {
     from: '/product/issues/issue-owners/',
@@ -3044,7 +3004,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/support/',
-    to: 'https://sentry.zendesk.com/hc/en-us/',
+    to: 'https://www.sentry.help/en/',
   },
   {
     from: '/clients/python/',
@@ -3476,7 +3436,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/sentry-mcp/',
-    to: '/ai/mcp/',
+    to: 'https://mcp.sentry.dev',
   },
   {
     from: '/product/metrics/',
@@ -3520,7 +3480,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/support/',
-    to: 'https://sentry.zendesk.com/hc/en-us/',
+    to: 'https://www.sentry.help/en/',
   },
   {
     from: '/product/security-policy-reporting/',
@@ -3536,55 +3496,55 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/performance/requests/',
-    to: '/product/insights/requests/',
+    to: '/product/dashboards/sentry-dashboards/outbound-api-requests/',
   },
   {
     from: '/product/performance/queries/',
-    to: '/product/insights/queries/',
+    to: '/product/dashboards/sentry-dashboards/backend/queries/',
   },
   {
     from: '/product/performance/resources/',
-    to: '/product/insights/assets/',
+    to: '/product/dashboards/sentry-dashboards/frontend/assets/',
   },
   {
     from: '/product/performance/assets/',
-    to: '/product/insights/assets/',
+    to: '/product/dashboards/sentry-dashboards/frontend/assets/',
   },
   {
     from: '/product/performance/mobile-vitals/',
-    to: '/product/insights/mobile-vitals/',
+    to: '/product/dashboards/sentry-dashboards/mobile/mobile-vitals/',
   },
   {
     from: '/product/performance/mobile-vitals/screen-loads/',
-    to: '/product/insights/mobile-vitals/screen-loads/',
+    to: '/product/dashboards/sentry-dashboards/mobile/mobile-vitals/screen-loads/',
   },
   {
     from: '/product/performance/mobile-vitals/app-starts/',
-    to: '/product/insights/mobile-vitals/app-starts/',
+    to: '/product/dashboards/sentry-dashboards/mobile/mobile-vitals/app-starts/',
   },
   {
     from: '/product/performance/web-vitals/',
-    to: '/product/insights/web-vitals/',
+    to: '/product/dashboards/sentry-dashboards/frontend/web-vitals/',
   },
   {
     from: '/product/performance/web-vitals/web-vitals-concepts/',
-    to: '/product/insights/web-vitals/web-vitals-concepts/',
+    to: '/product/dashboards/sentry-dashboards/frontend/web-vitals/web-vitals-concepts/',
   },
   {
     from: '/product/performance/caches/',
-    to: '/product/insights/caches/',
+    to: '/product/dashboards/sentry-dashboards/backend/caches/',
   },
   {
     from: '/product/performance/caches/cache-page/',
-    to: '/product/insights/caches/cache-page/',
+    to: '/product/dashboards/sentry-dashboards/backend/caches/',
   },
   {
     from: '/product/performance/queue-monitoring/',
-    to: '/product/insights/queue-monitoring/',
+    to: '/product/dashboards/sentry-dashboards/backend/queues/',
   },
   {
     from: '/product/performance/queue-monitoring/queues-page/',
-    to: '/product/insights/queue-monitoring/queues-page/',
+    to: '/product/dashboards/sentry-dashboards/backend/queues/',
   },
   {
     from: '/product/explore/session-replay/protecting-user-privacy/',
@@ -3684,7 +3644,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/concepts/key-terms/key-terms/tracing/trace-view/#operations-breakdown/',
-    to: '/product/insights/',
+    to: '/product/dashboards/sentry-dashboards/',
   },
   {
     from: '/platforms/javascript/guides/aws-lambda/container-image/',

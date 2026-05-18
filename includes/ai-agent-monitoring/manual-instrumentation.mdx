@@ -71,7 +71,7 @@ This span represents the execution of an AI agent, capturing the full lifecycle 
 **Key attributes:**
 - `gen_ai.agent.name` — The agent's name (e.g., "Weather Agent")
 - `gen_ai.request.model` — The underlying model used
-- `gen_ai.response.text` — The agent's final output
+- `gen_ai.output.messages` — The agent's final output
 - `gen_ai.usage.input_tokens` / `output_tokens` — Total token counts
 
 </SplitSectionText>
@@ -110,7 +110,9 @@ Sentry.startSpan(
     const result = await myAgent.run();
 
     // set agent response
-    span.setAttribute("gen_ai.response.text", JSON.stringify([result.output]));
+    span.setAttribute("gen_ai.output.messages", JSON.stringify([
+      { role: "assistant", parts: [{ type: "text", content: result.output }] },
+    ]));
 
     // set token usage
     span.setAttribute("gen_ai.usage.input_tokens", result.usage.inputTokens);
@@ -139,9 +141,9 @@ This span represents a chat or completion request to an LLM, capturing the messa
 
 **Key attributes:**
 - `gen_ai.request.model` — The model name (required)
-- `gen_ai.request.messages` — Chat messages sent to the LLM
+- `gen_ai.input.messages` — Chat messages sent to the LLM
 - `gen_ai.request.max_tokens` — Token limit for the response
-- `gen_ai.response.text` — The model's response
+- `gen_ai.output.messages` — The model's response
 
 </SplitSectionText>
 <SplitSectionCode>
@@ -179,10 +181,10 @@ Sentry.startSpan(
   async (span) => {
     // set up messages for LLM
     const maxTokens = 1024;
-    const messages = [{ role: "user", content: "Tell me a joke" }];
+    const messages = [{ role: "user", parts: [{ type: "text", content: "Tell me a joke" }] }];
 
     // set chat request data
-    span.setAttribute("gen_ai.request.messages", JSON.stringify(messages));
+    span.setAttribute("gen_ai.input.messages", JSON.stringify(messages));
     span.setAttribute("gen_ai.request.max_tokens", maxTokens);
     span.setAttribute("gen_ai.request.temperature", myAi.modelConfig.temperature);
 
@@ -190,7 +192,9 @@ Sentry.startSpan(
     const result = await myAi.createMessage(messages, maxTokens);
 
     // set response
-    span.setAttribute("gen_ai.response.text", JSON.stringify([result.output]));
+    span.setAttribute("gen_ai.output.messages", JSON.stringify([
+      { role: "assistant", parts: [{ type: "text", content: result.output }] },
+    ]));
 
     // set token usage
     span.setAttribute("gen_ai.usage.input_tokens", result.usage.inputTokens);
@@ -220,8 +224,8 @@ This span represents the execution of a tool or function that was requested by a
 **Key attributes:**
 - `gen_ai.tool.name` — The tool's name (e.g., "random_number")
 - `gen_ai.tool.description` — Description of what the tool does
-- `gen_ai.tool.input` — The arguments passed to the tool
-- `gen_ai.tool.output` — The tool's return value
+- `gen_ai.tool.call.arguments` — The arguments passed to the tool
+- `gen_ai.tool.call.result` — The tool's return value
 
 </SplitSectionText>
 <SplitSectionCode>
@@ -262,11 +266,11 @@ if (result.toolCalls && result.toolCalls.length > 0) {
       op: "gen_ai.execute_tool",
       name: `execute_tool ${tool.name}`,
       attributes: {
-        "gen_ai.request.model": myAi.model,
+        "gen_ai.operation.name": "execute_tool",
         "gen_ai.tool.type": "function",
         "gen_ai.tool.name": tool.name,
         "gen_ai.tool.description": tool.description,
-        "gen_ai.tool.input": JSON.stringify(tool.arguments),
+        "gen_ai.tool.call.arguments": JSON.stringify(tool.arguments),
       },
     },
     async (span) => {
@@ -274,7 +278,7 @@ if (result.toolCalls && result.toolCalls.length > 0) {
       const toolResult = Math.floor(Math.random() * tool.arguments.max);
 
       // set tool result
-      span.setAttribute("gen_ai.tool.output", String(toolResult));
+      span.setAttribute("gen_ai.tool.call.result", String(toolResult));
 
       return toolResult;
     }
@@ -346,13 +350,9 @@ if (result.handoffTo) {
     {
       op: "gen_ai.handoff",
       name: `handoff from ${myAgent.name} to ${otherAgent.name}`,
-      attributes: {
-        "gen_ai.request.model": myAgent.model,
-      },
     },
     () => {
       // the handoff span just marks the handoff
-      // no actual work is done here
     }
   );
 
