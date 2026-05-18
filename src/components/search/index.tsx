@@ -16,6 +16,7 @@ import {useOnClickOutside} from 'sentry-docs/clientUtils';
 import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
 import {DocMetrics} from 'sentry-docs/metrics';
 
+import {useAskAi} from '../askAi';
 import {MagicIcon} from '../cutomIcons/magic';
 import {Logo} from '../logo';
 import styles from './search.module.scss';
@@ -80,6 +81,7 @@ export function Search({
   searchPlatforms = [],
   useStoredSearchPlatforms = true,
 }: Props) {
+  const {open: openAskAi} = useAskAi();
   const ref = useRef<HTMLDivElement>(null);
   const [query, setQuery] = useState(``);
   const [results, setResults] = useState([] as Result[]);
@@ -338,17 +340,15 @@ export function Search({
         <Fragment>
           <span className="text-[var(--desatPurple10)] hidden md:inline">or</span>
           <Button
-            asChild
             variant="ghost"
             color="gray"
             size="3"
             radius="medium"
-            className="font-medium text-[var(--foreground)] py-2 px-3 uppercase cursor-pointer kapa-ai-class hidden md:flex mr-4"
+            className="font-medium text-[var(--foreground)] py-2 px-3 uppercase cursor-pointer hidden md:flex mr-4"
+            onClick={() => openAskAi()}
           >
-            <div>
-              <MagicIcon />
-              <span>Ask AI</span>
-            </div>
+            <MagicIcon />
+            <span>Ask AI</span>
           </Button>
         </Fragment>
       </div>
@@ -359,12 +359,8 @@ export function Search({
               id="ai-list-entry"
               className={styles['sgs-ai-button']}
               onClick={() => {
-                if (window.Kapa?.open) {
-                  // close search results
-                  setInputFocus(false);
-                  // open kapa modal
-                  window.Kapa.open({query, submit: true});
-                }
+                setInputFocus(false);
+                openAskAi({query, submit: true});
               }}
             >
               <MagicIcon className="size-6 text-[var(--sgs-color-hit-highlight)] flex-shrink-0" />
