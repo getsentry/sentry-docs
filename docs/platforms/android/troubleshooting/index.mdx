@@ -5,6 +5,29 @@ sidebar_order: 9000
 sidebar_section: configuration
 ---
 
+## `NoSuchMethodError` During Gradle Configuration With Sentry Android Gradle Plugin 6.x
+
+If you upgrade to `io.sentry.android.gradle` `6.x` and your build fails during Gradle configuration (often when assembling a release variant) with a stack trace similar to the one below, the cause is a Gradle ABI incompatibility, not a problem with native symbol upload:
+
+```
+Caused by: java.lang.NoSuchMethodError: 'org.gradle.api.tasks.Exec org.gradle.api.tasks.Exec.setIgnoreExitValue(boolean)'
+        at io.sentry.android.gradle.util.SentryCliExecKt.asSentryCliExec(SentryCliExec.kt:19)
+        at io.sentry.android.gradle.tasks.SentryUploadNativeSymbolsTask$Companion$register$...
+```
+
+The Sentry Android Gradle Plugin `6.x` is built against Gradle `8.14.2` and requires Gradle `8.14.2` or later at runtime. Older Gradle versions (including `8.10.x`) don't expose the exact `Exec.setIgnoreExitValue(boolean)` signature the plugin was compiled against, so registration of any task that wraps `sentry-cli` (native symbols, ProGuard mapping upload, source context, debug files) fails with `NoSuchMethodError`.
+
+To resolve this, update your Gradle wrapper to `8.14.2` or later. From your Android project root run:
+
+```bash
+./gradlew wrapper --gradle-version=8.14.2 --distribution-type=bin
+./gradlew wrapper --gradle-version=8.14.2 --distribution-type=bin
+```
+
+Running the command twice is intentional so the wrapper regenerates itself with the new version. If you can't update Gradle yet, stay on `io.sentry.android.gradle:5.x` until you can.
+
+Disabling `uploadNativeSymbols`, `includeSourceContext`, or `autoUploadProguardMapping` may appear to "fix" the build, but it only sidesteps the failing task registration. The underlying ABI mismatch remains and other Sentry tasks will hit the same error as soon as they run.
+
 ## Obfuscated stack traces, missing Android-specific context
 
 If stack traces don't get deobfuscated properly, even though <PlatformLink to="/enhance-errors/proguard/">mapping files are uploaded correctly</PlatformLink>, or if Android context information is missing from events, a possible reason is that the SDK is initialized with `Sentry.init` instead of `SentryAndroid.init`.
