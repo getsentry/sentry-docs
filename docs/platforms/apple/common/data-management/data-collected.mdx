@@ -18,7 +18,7 @@ The category types and amount of data collected vary, depending on the integrati
 
 ## HTTP Headers
 
-The <PlatformLink to="/configuration/http-client-errors">HTTP Client Errors</PlatformLink>, which are enabled by default, send the HTTP headers of the failed request and response to Sentry. The SDK uses a [denylist](https://github.com/getsentry/sentry-cocoa/blob/main/Sources/Swift/Tools/HTTPHeaderSanitizer.swift) to filter out any headers that contain sensitive data.
+The <PlatformLink to="/configuration/http-client-errors">HTTP Client Errors</PlatformLink>, which are enabled by default, send the HTTP headers of the failed request and response to Sentry. The SDK uses a [denylist](https://github.com/getsentry/sentry-cocoa/blob/main/Sources/Swift/Core/Tools/HTTPHeaderSanitizer.swift) to filter out any headers that contain sensitive data.
 
 ## Users' IP Addresses
 
@@ -33,6 +33,12 @@ When the Apple SDK sends URLs to Sentry it always sends a sanitized URL which me
 Network breadcrumbs and HTTP Client Errors, both enabled by default, send a sanitized URL for outgoing HTTP requests. You can disable network breadcrumbs by setting the option `enableNetworkBreadcrumbs` to `false` and you can disable HTTP Client Errors by setting the option `enableCaptureFailedRequests` to `false`.
 
 When you enable <PlatformLink to="/tracing">tracing</PlatformLink>, which is disabled per default, <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#network-tracking"> network tracing</PlatformLink> sends a sanitized URL for outgoing HTTP requests.
+
+## Request Query String
+
+When tracing is enabled, the `http.query` span attribute captures the query string of outgoing HTTP requests and is **always sent to Sentry**. Depending on your application, this could contain PII data.
+
+Please note that `sendDefaultPii` is not considered for a request query string. We recommend utilizing your own redactions in `beforeSend` or similar hooks.
 
 ## Source Context
 
