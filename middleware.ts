@@ -4008,6 +4008,10 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
     to: '/application-architecture/dynamic-sampling/biases/',
   },
   {
+    from: '/application-architecture/dynamic-sampling/fidelity-and-biases/',
+    to: '/application-architecture/dynamic-sampling/biases/',
+  },
+  {
     from: '/application/dynamic-sampling/architecture/',
     to: '/application-architecture/dynamic-sampling/architecture/',
   },
