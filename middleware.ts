@@ -3884,7 +3884,11 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/dynamic-sampling/fidelity-and-biases/',
-    to: '/application/dynamic-sampling/fidelity-and-biases/',
+    to: '/application/dynamic-sampling/biases/',
+  },
+  {
+    from: '/dynamic-sampling/biases/',
+    to: '/application/dynamic-sampling/biases/',
   },
   {
     from: '/dynamic-sampling/the-big-picture/',
@@ -3997,7 +4001,11 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/application/dynamic-sampling/fidelity-and-biases/',
-    to: '/application-architecture/dynamic-sampling/fidelity-and-biases/',
+    to: '/application-architecture/dynamic-sampling/biases/',
+  },
+  {
+    from: '/application/dynamic-sampling/biases/',
+    to: '/application-architecture/dynamic-sampling/biases/',
   },
   {
     from: '/application/dynamic-sampling/architecture/',
