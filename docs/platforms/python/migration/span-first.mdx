@@ -491,7 +491,46 @@ with start_span(name="custom1"):
             ...
 ```
 
-
 ## Scrubbing Data
 
-`<TODO: before_send_span>`
+In span streaming mode, the SDK provides a new `before_send_span` configuration
+option. It accepts a function that takes two arguments, `span` and `hint`, and
+returns a span.
+
+```python
+import sentry_sdk
+
+
+def scrub_spans(span, hint):
+    if span["name"] == "GET /some/endpoint":
+        span["name"] = "List items"
+
+    attributes_to_sanitize = [
+        "http.request.header.custom-auth",
+        "http.request.header.custom-user-id",
+    ]
+
+    for attribute in attributes_to_sanitize:
+        if span["attributes"].get(attribute):
+            span["attributes"][attribute] = "[Sanitized]"
+
+    return span
+
+
+sentry_sdk.init(
+    _experiments={
+        "trace_lifecycle": "stream",
+        "before_send_span": scrub_spans,
+    }
+)
+```
+
+The callback must return a span. If the return value is anything other than a
+span dictionary, it'll be ignored. `before_send_span` can't be used to drop a
+span. See the [Filtering](#filtering) section for that.
+
+`before_send_span` can be used to modify a span's name or attributes before it
+leaves the SDK, for example to sanitize sensitive values.
+
+Currently, the `hint` argument is an empty dictionary, but it might contain
+further contextual information in the future.
