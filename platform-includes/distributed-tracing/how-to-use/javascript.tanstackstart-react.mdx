@@ -1,0 +1,72 @@
+To connect server-side and client-side traces in TanStack Start, inject trace metadata into your HTML so the browser SDK can continue the trace started on the server.
+
+In your root route (`routes/__root.tsx`), use `getTraceData()` to retrieve the current trace context and inject it as meta tags:
+
+```typescript {filename:routes/__root.tsx}
+import type { ReactNode } from "react";
+import {
+  Outlet,
+  createRootRoute,
+  HeadContent,
+  Scripts,
+} from "@tanstack/react-router";
+import { getTraceData } from "@sentry/tanstackstart-react";
+
+export const Route = createRootRoute({
+  head: () => {
+    const traceData = getTraceData();
+    const sentryMeta = Object.entries(traceData).map(([key, value]) => ({
+      name: key,
+      content: value,
+    }));
+
+    return {
+      meta: [
+        ...sentryMeta,
+      ],
+    };
+  },
+  component: RootComponent,
+});
+
+function RootComponent() {
+  return (
+    <RootDocument>
+      <Outlet />
+    </RootDocument>
+  );
+}
+
+function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
+  return (
+    <html>
+      <head>
+        <HeadContent />
+      </head>
+      <body>
+        {children}
+        <Scripts />
+      </body>
+    </html>
+  );
+}
+```
+
+This injects `sentry-trace` and `baggage` meta tags into the HTML. The browser SDK automatically reads these tags on page load and continues the server trace, connecting your full-stack traces in Sentry.
+
+To get around possible [Browser CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) issues, define `tracePropagationTargets` for client-side:
+
+<Alert>
+
+Note: port numbers are relevant for trace propagation and the origin. You may need to configure the `tracePropagationTargets` to ensure that traces are propagated across your services if they run on different ports.
+
+</Alert>
+
+```typescript {filename:sentry.client.config.ts}
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [Sentry.tanstackRouterBrowserTracingIntegration(router)],
+  tracesSampleRate: 1.0,
+  tracePropagationTargets: ["https://myproject.org", /^\/api\//],
+});
+```
