@@ -22,26 +22,23 @@ dependencies:
 
 ## Configure
 
-Configuration should happen as early as possible in your application's lifecycle.
-
+To instrument Dio with Sentry, call `addSentry()` on your Dio instance as the very last step. 
+Perform any other configurations such as adding interceptors, transformers, or a custom HTTP client adapter before calling `addSentry()`.
 
 ```dart
 import 'package:sentry_dio/sentry_dio.dart';
-import 'package:sentry/sentry.dart';
+import 'package:dio/dio.dart';
 
-Future<void> main() async {
-  await Sentry.init(
-    (options) {
-      options.dsn = '___PUBLIC_DSN___';
-    },
-    appRunner: initApp, // Init your App.
-  );
-}
-
+// 1. Create your Dio instance
 final dio = Dio();
 
-// This *must* be the last initialization step of the Dio setup.
-dio.addSentry(...);
+// 2. (Optional) Customize Dio as needed
+// dio.transformer = ExampleTransformer();
+// dio.httpClientAdapter = ExampleHttpClientAdapter();
+// dio.interceptors.add(ExampleInterceptor());
+
+// 3. Add Sentry – always LAST
+dio.addSentry();
 ```
 
 ## Reporting Bad HTTP Requests as Errors
@@ -50,6 +47,7 @@ The `Interceptors` can also catch exceptions that may occur during requests — 
 
 ```dart
 import 'package:sentry_dio/sentry_dio.dart';
+import 'package:dio/dio.dart';
 
 final dio = Dio();
 
@@ -134,24 +132,13 @@ Before starting, ensure:
 1. The Sentry Flutter SDK is initialized. Learn more [here](/platforms/dart/guides/flutter/#configure).
 2. Tracing is set up. Learn more [here](/platforms/dart/guides/flutter/tracing/).
 
-### Configure
-
-Call `addSentry()` on your instance of `Dio:
-
-```dart
-import 'package:sentry_dio/sentry_dio.dart';
-
-final dio = Dio();
-
-dio.addSentry();
-```
-
 ### Verify
 
 #### 1. Execute the Code
 
 ```dart
 import 'package:sentry_dio/sentry_dio.dart';
+import 'package:dio/dio.dart';
 
 Future<void> makeWebRequestWithDio() async {
   final dio = Dio();
