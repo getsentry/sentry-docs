@@ -2,7 +2,7 @@
 title: Metrics
 description: Counter, gauge, and distribution metrics sent as batched trace_metric envelope items.
 spec_id: sdk/telemetry/metrics
-spec_version: 2.8.0
+spec_version: 2.9.0
 spec_status: stable
 spec_depends_on:
   - id: sdk/foundations/transport/envelopes
@@ -10,6 +10,9 @@ spec_depends_on:
   - id: sdk/foundations/state-management/scopes/attributes
     version: ">=1.0.0"
 spec_changelog:
+  - version: 2.9.0
+    date: 2026-05-18
+    summary: Added optional `timestamp` parameter to metrics public API
   - version: 2.8.0
     date: 2026-04-07
     summary: Added `ingest_settings` and `version` to trace_metric envelope item
@@ -377,6 +380,7 @@ SDKs **MUST** expose metrics methods in a `metrics` module or namespace. At mini
   - `unit` **String, optional** — the unit of measurement (only used for `distribution` and `gauge`). SDKs **MUST NOT** restrict what can be sent in (e.g. by using an enum) but **SHOULD** offer constants or similar that help customers send in <Link to="/sdk/foundations/state-management/scopes/attributes/#units">units we support</Link> (since 2.4.0).
   - `attributes` **Object, optional** — a dictionary of attributes (key-value pairs with type information).
   - `scope` **Scope, optional** — the scope to capture the metric with.
+  - `timestamp` **Timestamp, optional** — indicates when the metric was recorded (since 2.9.0). SDKs **SHOULD** accept the language's native date/time type (e.g. `Date` in JavaScript/Swift, `datetime` in Python, `Instant` in Java, `DateTimeInterface` in PHP). When provided, the SDK **MUST** convert the value to seconds since epoch and use it as the `timestamp` field in the [metric payload](#metric-payload). When not provided, the SDK **MUST** default to the current time at the moment the metric is captured. If no such type exists, SDKs **MUST** accept a numeric Unix timestamp in seconds (epoch time) as a fallback instead.
 
 The Hub/Scope and Client **MUST** exclusively provide a generic method for capturing metrics (e.g., `captureMetric(metric)`). They **MUST NOT** replicate the static `Sentry.metrics.X` API methods to avoid increasing our API surface. Users utilizing multiple Hub/Scope or Clients will need to rely on the generic method for capturing metrics.
 
@@ -455,9 +459,11 @@ Sentry.metrics.gauge("db.connection_pool.active", 42, {
   },
 });
 
-// Record a distribution
+// Record a distribution with an explicit timestamp
+const recordedAt = new Date("2024-05-18T16:00:00Z");
 Sentry.metrics.distribution("page.load_time", 245.7, {
   unit: "millisecond",
+  timestamp: recordedAt,
   attributes: {
     page: "/dashboard",
     browser: "chrome",
@@ -480,11 +486,14 @@ Sentry.metrics.gauge(
   attributes={'pool_name': 'main_db', 'database': 'postgres'},
 )
 
-# Record a distribution
+# Record a distribution with an explicit timestamp
+from datetime import datetime, timezone
+recorded_at = datetime(2024, 5, 18, 16, 0, 0, tzinfo=timezone.utc)
 Sentry.metrics.distribution(
   'page.load_time',
   245.7,
   unit='millisecond',
+  timestamp=recorded_at,
   attributes={'page': '/dashboard', 'browser': 'chrome'},
 )
 ```
@@ -500,8 +509,11 @@ metrics()->gauge('db.connection_pool.active', 42, [
   'attributes' => ['pool_name' => 'main_db', 'database' => 'postgres']
 ]);
 
+// Record a distribution with an explicit timestamp
+$recordedAt = new DateTimeImmutable('2024-05-18T16:00:00Z');
 metrics()->distribution('page.load_time', 245.7, [
   'unit' => 'millisecond',
+  'timestamp' => $recordedAt,
   'attributes' => ['page' => '/dashboard', 'browser' => 'chrome']
 ]);
 ```
@@ -519,9 +531,12 @@ Sentry.metrics().gauge("db.connection_pool.active", 42,
   )
 );
 
+// Record a distribution with an explicit timestamp
+Instant recordedAt = Instant.parse("2024-05-18T16:00:00Z");
 Sentry.metrics().distribution("page.load_time", 245.7,
   Map.of(
     "unit", "millisecond",
+    "timestamp", recordedAt,
     "attributes", Map.of("page", "/dashboard", "browser", "chrome")
   )
 );
@@ -542,11 +557,14 @@ SentrySDK.metrics()
     attributes: ["pool_name": "main_db", "database": "postgres"]
   )
 
+// Record a distribution with an explicit timestamp
+let recordedAt = ISO8601DateFormatter().date(from: "2024-05-18T16:00:00Z")!
 SentrySDK.metrics()
   .distribution(
     name: "page.load_time",
     value: 245.7,
     unit: "millisecond",
+    timestamp: recordedAt,
     attributes: ["page": "/dashboard", "browser": "chrome"]
   )
 ```
