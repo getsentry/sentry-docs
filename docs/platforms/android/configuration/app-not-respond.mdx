@@ -52,6 +52,26 @@ You can also specify how long the thread should be blocked before the ANR is rep
 </application>
 ```
 
+#### Known limitations on Android 10 and below
+
+The Watchdog (v1) implementation has structural limitations imposed by the platform that can cause genuine ANRs to be missed, even when the system displays the "App isn't responding" dialog:
+
+- **`ActivityManager.getProcessesInErrorState()` gate.** After the watchdog detects a main-thread hang, it cross-checks with `ActivityManager.getProcessesInErrorState()`. On Android 10 and above this API is restricted for non-system apps and frequently returns `null`, an empty list, or omits the caller's own process. When that happens, the SDK suppresses the event even though the main thread is provably stuck. This is most visible on Android 10 (API 29).
+- **Process termination before flush.** v1 must serialize and persist the ANR event to the offline cache before the process exits. If the user taps "Kill" on the system ANR dialog quickly, or the OS terminates the app, the event can be lost with no recovery on next launch (unlike v2, which reads `ApplicationExitInfo`).
+- **No historical recovery.** v1 only captures ANRs that happen while the watchdog is running. Any ANR that occurred before SDK init or while the app was killed is invisible.
+- **Background ANRs are best-effort.** Background ANRs may not be marked by the OS at all, even when the watchdog observes the hang.
+
+If reliable ANR capture on these devices is critical, prefer Android 11 and above where the SDK uses `ApplicationExitInfo` (v2). For Android 10 coverage gaps, you can supplement v1 with manual instrumentation around suspect code paths, for example wrapping the operation in a Sentry transaction or posting a delayed check from a background thread that calls `Sentry.captureMessage(...)` with a warning level if the operation exceeds a threshold.
+
+#### Troubleshooting "missing" v1 ANRs
+
+If you expect an ANR but don't see it in Sentry on an Android 10 or older device:
+
+1. Enable SDK debug logging temporarily by setting `io.sentry.debug` to `true` in `AndroidManifest.xml`.
+2. Reproduce the ANR. At the moment of the hang you should see an INFO log: `ANR triggered with message: Application Not Responding for at least N ms.` If this line is absent, the watchdog detected the hang but the gate above suppressed the event.
+3. Cross-reference Google Play Console > Android Vitals > ANRs & crashes. If Play Console shows the ANR but Sentry doesn't, you've hit the v1 limitation, not a misconfiguration.
+4. Verify on an Android 11 or above device. If the same repro is captured on 11 and above but not on 10, that confirms it.
+
 ### ApplicationExitInfo (v2)
 
 This approach reads the [ApplicationExitInfo](https://developer.android.com/reference/android/app/ApplicationExitInfo) API on the next app launch
@@ -205,6 +225,8 @@ ANR rate is the percentage of unique users who have experienced an ANR during th
 <Alert level="info">
 
 Since there's two implementations for ANR detection, Sentry calculates the ANR Rate depending on the implementation. On Android 11 and above Sentry only accounts for **Fatal ANRs** - ANRs that lead to your app being terminated, either by the user or the OS. On Android 10 and below both Fatal and Non-Fatal ANRs contribute to the ANR Rate calculation.
+
+Due to the v1 watchdog limitations described in [Known limitations on Android 10 and below](#known-limitations-on-android-10-and-below), ANR rates calculated from Android 10 and below devices may significantly under-report compared to Google Play Console's user-perceived ANR rate. Treat them as a lower bound, and rely on Android 11 and above data for the most accurate trend.
 
 </Alert>
 
