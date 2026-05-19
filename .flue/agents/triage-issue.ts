@@ -1,4 +1,5 @@
-import {Type, type FlueContext, type ToolDef} from '@flue/runtime/client';
+import {Type, type FlueContext, type ToolDef} from '@flue/runtime';
+import {local} from '@flue/runtime/node';
 import * as v from 'valibot';
 
 export const triggers = {};
@@ -109,7 +110,7 @@ export default async function ({init, payload, env}: FlueContext) {
 
   const agent = await init({
     model: 'anthropic/claude-sonnet-4-6',
-    sandbox: 'local',
+    sandbox: local(),
     tools: githubTools(token),
   });
 
