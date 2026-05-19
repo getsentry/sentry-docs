@@ -185,7 +185,7 @@ export async function submitForm(formData: FormData) {
 
 ## Web Vitals
 
-The SDK automatically captures [Web Vitals](/product/insights/web-vitals/) on every page load. These metrics measure real user experience:
+The SDK automatically captures [Web Vitals](/product/dashboards/sentry-dashboards/frontend/web-vitals/) on every page load. These metrics measure real user experience:
 
 | Metric | What It Measures | Threshold (Good) |
 |--------|------------------|------------------|
@@ -195,7 +195,7 @@ The SDK automatically captures [Web Vitals](/product/insights/web-vitals/) on ev
 | **FCP** | First Contentful Paint — initial render | ≤ 1s |
 | **TTFB** | Time to First Byte — server response | ≤ 100ms |
 
-Web Vitals appear as measurements on page load transactions and feed into your [Performance Score](/product/insights/web-vitals/#performance-score). See [Web Vitals Concepts](/product/insights/web-vitals/web-vitals-concepts/) for detailed explanations of each metric.
+Web Vitals appear as measurements on page load transactions and feed into your [Performance Score](/product/dashboards/sentry-dashboards/frontend/web-vitals/#performance-score). See [Web Vitals Concepts](/product/dashboards/sentry-dashboards/frontend/web-vitals/web-vitals-concepts/) for detailed explanations of each metric.
 
 ## Custom Instrumentation
 
@@ -349,6 +349,49 @@ Sentry.init({
     return 0.1;
   },
 });
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Detached spans with `after()` or `waitUntil()`
+
+If you're using Next.js's [`after()`](https://nextjs.org/docs/app/api-reference/functions/after) or [`waitUntil`](https://vercel.com/docs/functions/functions-api-reference/vercel-functions-package#waituntil) and you see multiple root spans (like individual `db` spans) instead of one cohesive trace, your spans are becoming detached.
+
+This happens when `after()` or `waitUntil()` runs after the response is sent. By then, the request's root span has already ended.
+
+Wrap your deferred work with `startSpan` inside the `after()` or `waitUntil()` callback to group all background spans into a single transaction:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```tsx {filename:app/api/webhook/route.ts}
+import { after } from "next/server";
+import { waitUntil } from '@vercel/functions';
+import * as Sentry from "@sentry/nextjs";
+
+export async function POST(request: Request) {
+  const data = await request.json();
+
+  after(
+    Sentry.startSpan(
+      { name: "webhook.process", op: "task" },
+      () => processWebhook(data)
+    )
+  );
+
+  waitUntil(
+    Sentry.startSpan(
+      { name: "webhook.process", op: "task" },
+      () => processWebhook(data)
+    )
+  );
+
+  return Response.json({ received: true });
+}
 ```
 
 </SplitSectionCode>

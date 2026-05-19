@@ -1,12 +1,12 @@
-import {Fragment} from 'react';
 import Link from 'next/link';
-
+import {Fragment} from 'react';
 import {serverContext} from 'sentry-docs/serverContext';
 import {sortPages} from 'sentry-docs/utils';
 import {getUnversionedPath, VERSION_INDICATOR} from 'sentry-docs/versioning';
 
 import {CollapsibleSidebarLink} from './collapsibleSidebarLink';
 import {SidebarLink, SidebarSeparator} from './sidebarLink';
+import type {ExternalSidebarLink} from './types';
 
 // Section configuration for sidebar organization
 const SECTION_LABELS: Record<string, string> = {
@@ -27,6 +27,7 @@ type Node = {
     [key: string]: any;
     beta?: boolean;
     new?: boolean;
+    early_access?: boolean;
     section_end_divider?: boolean;
     sidebar_hidden?: boolean;
     sidebar_order?: number;
@@ -130,6 +131,7 @@ export const renderChildren = (
           path={path}
           beta={node.context.beta}
           isNew={node.context.new}
+          earlyAccess={node.context.early_access}
         >
           {renderChildren(nodeChildren, exclude, path, showDepth, depth + 1, rootPath)}
         </CollapsibleSidebarLink>
@@ -194,6 +196,7 @@ export const renderChildren = (
             path={path}
             beta={node.context.beta}
             isNew={node.context.new}
+            earlyAccess={node.context.early_access}
           >
             {renderChildren(nodeChildren, exclude, path, showDepth, depth + 1, rootPath)}
           </CollapsibleSidebarLink>
@@ -221,6 +224,7 @@ export const renderChildren = (
           path={path}
           beta={node.context.beta}
           isNew={node.context.new}
+          earlyAccess={node.context.early_access}
         >
           {renderChildren(nodeChildren, exclude, path, showDepth, depth + 1, rootPath)}
         </CollapsibleSidebarLink>
@@ -256,6 +260,7 @@ type Props = {
   tree: EntityTree[];
   collapsible?: boolean;
   exclude?: string[];
+  extraLinks?: ExternalSidebarLink[];
   title?: string;
 };
 
@@ -265,6 +270,7 @@ export function DynamicNav({
   tree,
   collapsible = false,
   exclude = [],
+  extraLinks,
 }: Props) {
   if (root.startsWith('/')) {
     root = root.substring(1);
@@ -313,6 +319,9 @@ export function DynamicNav({
       topLevel
       beta={parentNode.node?.context.beta ?? entity.node?.context.beta}
       isNew={parentNode.node?.context.new ?? entity.node?.context.new}
+      earlyAccess={
+        parentNode.node?.context.early_access ?? entity.node?.context.early_access
+      }
       data-sidebar-link
     />
   );
@@ -334,7 +343,25 @@ export function DynamicNav({
             </CollapsibleSidebarLink>
           )}
           <Children
-            tree={entity.children}
+            tree={
+              extraLinks
+                ? [
+                    ...entity.children,
+                    ...extraLinks.map(link => ({
+                      name: link.href,
+                      node: {
+                        path: link.href,
+                        context: {
+                          title: link.title,
+                          sidebar_order: link.order,
+                          draft: false,
+                        },
+                      },
+                      children: [],
+                    })),
+                  ]
+                : entity.children
+            }
             exclude={exclude}
             showDepth={0}
             path={linkPath}

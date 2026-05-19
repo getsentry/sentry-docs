@@ -1,5 +1,4 @@
 import {Fragment} from 'react';
-
 import {getDocsRootNode, nodeForPath} from 'sentry-docs/docTree';
 
 import {DynamicNav, toTree} from './dynamicNav';
@@ -25,6 +24,11 @@ export async function SidebarNavigation({path}: {path: string[]}) {
       <ProductSidebar
         rootNode={rootNode}
         items={[{title: 'Sentry for AI', root: 'ai'}]}
+        extraLinks={[
+          {title: 'Sentry MCP Server', href: 'https://mcp.sentry.dev', order: 20},
+          {title: 'Sentry CLI', href: 'https://cli.sentry.dev', order: 25},
+          {title: 'Warden', href: 'https://warden.sentry.dev', order: 30},
+        ]}
       />
     );
   }
@@ -69,16 +73,18 @@ export async function SidebarNavigation({path}: {path: string[]}) {
     );
   }
 
-  // "More" section - Admin Settings + Security, Legal, & PII
+  // "Manage" section - Admin Settings + Security, Legal, & PII
   if (
     path[0] === 'organization' ||
     path[0] === 'account' ||
+    path[0] === 'integrations' ||
     path[0] === 'pricing' ||
     path[0] === 'security-legal-pii'
   ) {
     const moreItems = [
       {title: 'Account Settings', root: 'account'},
       {title: 'Organization Settings', root: 'organization'},
+      {title: 'Integrations', root: 'integrations'},
       {title: 'Pricing & Billing', root: 'pricing'},
       {title: 'Security, Legal, & PII', root: 'security-legal-pii'},
     ];

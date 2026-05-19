@@ -1,10 +1,8 @@
 import Link from 'next/link';
 
-import styles from './style.module.scss';
-
 import {ExternalLink} from '../externalLink';
-
 import {NavChevron} from './navChevron';
+import styles from './style.module.scss';
 
 export function SidebarLink({
   title,
@@ -16,6 +14,7 @@ export function SidebarLink({
   className,
   beta = false,
   isNew = false,
+  earlyAccess = false,
 }: {
   href: string;
   title: string;
@@ -24,6 +23,7 @@ export function SidebarLink({
   collapsible?: boolean;
   isActive?: boolean;
   isNew?: boolean;
+  earlyAccess?: boolean;
   onClick?: () => void;
   topLevel?: boolean;
 }) {
@@ -43,6 +43,11 @@ export function SidebarLink({
         <span>{title}</span>
         {beta && <span className={styles['beta-badge']}>BETA</span>}
         {isNew && <span className={styles['new-badge']}>NEW</span>}
+        {earlyAccess && (
+          <span className={styles['ea-badge']} title="Early access">
+            EA
+          </span>
+        )}
       </div>
       {collapsible && <NavChevron direction={isActive ? 'down' : 'right'} />}
     </LinkComponent>

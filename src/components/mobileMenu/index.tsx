@@ -3,12 +3,10 @@ import {TriangleRightIcon} from '@radix-ui/react-icons';
 import * as Popover from '@radix-ui/react-popover';
 import {Box, Button, Theme} from '@radix-ui/themes';
 import Link from 'next/link';
-
 import {Search} from 'sentry-docs/components/search';
 
-import styles from './styles.module.scss';
-
 import {mainSections} from '../navigationData';
+import styles from './styles.module.scss';
 
 type Props = {
   pathname: string;
@@ -50,7 +48,7 @@ export function MobileMenu({pathname, searchPlatforms}: Props) {
                   </li>
                 ))}
                 <li className={styles.MenuItem}>
-                  <Link href="https://sentry.io/changelog/">Changelog</Link>
+                  <Link href="https://sentry.io/changelog/">Product Changelog</Link>
                 </li>
                 <li className={styles.MenuItem}>
                   <Link href="https://sandbox.sentry.io/">Sandbox</Link>

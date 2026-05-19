@@ -116,8 +116,6 @@ By default, no errors are ignored.
 
 </SdkOption>
 
-
-
 <SdkOption name="MaxErrorDepth" type="int" defaultValue="100">
 
 This is the maximum number of errors reported in a chain of errors. This protects the SDK from an arbitrarily long chain of wrapped errors.
@@ -142,6 +140,14 @@ When set to `true`, the SDK does not emit metrics. By default, metrics are enabl
 
 </SdkOption>
 
+## Client Reports Options
+
+<SdkOption name="DisableClientReports" type="bool" defaultValue="false">
+
+When set to `true`, the SDK does not send client reports. Client reports track the number of discarded events and their reasons, helping you monitor SDK health. By default, client reports are enabled.
+
+</SdkOption>
+
 ## Tracing Options
 
 <SdkOption name="EnableTracing" type="bool" defaultValue="false">
@@ -150,7 +156,7 @@ Enables performance tracing. When enabled, the SDK will create transactions and 
 
 </SdkOption>
 
-<SdkOption name="TracesSampleRate" type="float64" defaultValue="0.0" envVar="SENTRY_TRACES_SAMPLE_RATE">
+<SdkOption name="TracesSampleRate" type="float64" defaultValue="0.0">
 
 A number between `0.0` and `1.0`, controlling the percentage chance a given transaction will be sent to Sentry (`0.0` represents 0% while `1.0` represents 100%.) Applies equally to all transactions created in the app. Either this or `TracesSampler` must be defined to enable tracing.
 
@@ -170,7 +176,6 @@ See https://develop.sentry.dev/sdk/envelopes/#size-limits for size limits applie
 
 </SdkOption>
 
-
 <SdkOption name="IgnoreTransactions" type="[]string">
 
 A list of regexp strings that will be used to match against a transaction's name. If a match is found, then the transaction will be dropped.
@@ -188,6 +193,18 @@ Controls which URLs will have trace propagation enabled. Does not support regex 
 <SdkOption name="PropagateTraceparent" type="bool" defaultValue="false">
 
 When set to `true`, the W3C Trace Context HTTP `traceparent` header is propagated on outgoing HTTP requests.
+
+</SdkOption>
+
+<SdkOption name="StrictTraceContinuation" type="bool" defaultValue="false">
+
+When set to `true`, the SDK requires matching organization IDs in the incoming baggage header for continuing a trace. This is useful for preventing trace continuation from 3rd-party services that happen to be instrumented by Sentry but belong to a different organization.
+
+</SdkOption>
+
+<SdkOption name="OrgID" type="uint64">
+
+Configures the organization ID used for trace propagation and features like `StrictTraceContinuation`. In most cases, the organization ID is already parsed from the DSN. This option should be used when non-standard Sentry DSNs are used, such as self-hosted or when using a local Relay.
 
 </SdkOption>
 
@@ -301,10 +318,15 @@ An optional set of SSL certificates to use. See the [Providing SSL Certificates]
 
 </SdkOption>
 
+<SdkOption name="DisableTelemetryBuffer" type="bool" defaultValue="false">
+
+When set to `true`, disables the telemetry buffer layer for prioritizing events and uses the legacy transport layer instead.
+
+</SdkOption>
+
 ### Providing SSL Certificates
 
 By default, TLS uses the host's root CA set. If you don't have `ca-certificates` (which should be your go-to way of fixing the issue of the missing certificates) and want to use `gocertifi` instead, you can provide pre-loaded cert files as one of the options to the `sentry.Init` call:
-
 
 ```go
 sentryClientOptions := sentry.ClientOptions{
@@ -335,7 +357,7 @@ sentry.Init(sentry.ClientOptions{
 	Integrations: func(integrations []sentry.Integration) []sentry.Integration {
 		var filteredIntegrations []sentry.Integration
 		for _, integration := range integrations {
-			if integration.Name() == "ContextifyFrames" {
+			if integration.Name() == "GlobalTags" {
 				continue
 			}
 			filteredIntegrations = append(filteredIntegrations, integration)

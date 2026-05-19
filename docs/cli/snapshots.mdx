@@ -1,0 +1,100 @@
+---
+title: Snapshots (CLI)
+sidebar_order: 6
+description: "Upload snapshot images to Sentry with sentry-cli for visual diffing and GitHub status checks."
+beta: true
+---
+
+<Include name="feature-available-for-user-group-early-adopter" />
+
+The `sentry-cli build snapshots` command uploads a directory of images to [Snapshots](/product/snapshots/) for visual diffing against a base build.
+
+<Alert level="warning">
+  `sentry-cli build snapshots` is experimental. The command is subject to
+  breaking changes, including removal, in any Sentry CLI release.
+</Alert>
+
+## Requirements
+
+- `sentry-cli` version 3.4.0 or later. See [Installation](/cli/installation/).
+- A Sentry auth token with `project:write` scope (personal) or `org:ci` scope (org-level). See [Configuration](/cli/configuration/#to-authenticate-manually).
+- A directory of `.png` or `.jpeg` images, optionally with `.json` sidecar metadata. See [Uploading Snapshots](/product/snapshots/uploading-snapshots/) for the directory layout.
+
+## Basic Usage
+
+With `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, and `SENTRY_PROJECT` configured:
+
+```bash
+sentry-cli build snapshots ./snapshots --app-id web-frontend
+```
+
+`--app-id` identifies your app or bundle (for example, `web-frontend`, `ios-app`). Keep it consistent across uploads — Sentry uses it to match head and base snapshots.
+
+The `<PATH>` argument is the directory containing images. Images may be nested in subdirectories; subdirectory paths become part of each snapshot's filename in the Sentry UI.
+
+## Git Metadata
+
+When run in a supported CI environment, `sentry-cli` automatically detects:
+
+- `--head-sha` — the current commit SHA.
+- `--base-sha` — the merge-base against the remote tracking branch (PR builds only).
+- `--vcs-provider` — inferred from the git remote (for example, `github`).
+- `--head-repo-name` / `--base-repo-name` — inferred from the git remote.
+- `--head-ref` / `--base-ref` — current and base branch names.
+- `--pr-number` — detected from GitHub Actions environment variables on `pull_request` workflows.
+
+Pass any of these flags explicitly to override auto-detection, or use:
+
+- `--no-git-metadata` to skip detection entirely (for example, when uploading snapshots not tied to a commit).
+- `--force-git-metadata` to require detection outside CI (for example, when testing CI behavior locally).
+
+For PRs from forks, set `--base-repo-name` to the upstream repository so Sentry can locate the base build.
+
+## Selective Uploads
+
+If you shard snapshot generation across parallel CI jobs and upload each shard separately, pass `--selective` on every upload:
+
+```bash
+sentry-cli build snapshots ./shard-1 --app-id web-frontend --selective
+sentry-cli build snapshots ./shard-2 --app-id web-frontend --selective
+```
+
+Sentry merges selective uploads that share the same commit SHA and `app-id`. Removals and renames cannot be detected on PRs when using `--selective`, because Sentry cannot distinguish an intentionally deleted snapshot from one that simply wasn't part of this shard.
+
+## Diff Threshold
+
+Use `--diff-threshold` to ignore sub-pixel or anti-aliasing noise. The value is a float between `0.0` and `1.0` representing the fraction of pixels that must change before Sentry reports an image as changed:
+
+```bash
+sentry-cli build snapshots ./snapshots --app-id web-frontend --diff-threshold 0.01
+```
+
+With a value of `0.01`, images with less than 1% of pixels changed are reported as unchanged.
+
+## Flag Reference
+
+```bash
+sentry-cli build snapshots [OPTIONS] --app-id <APP_ID> <PATH>
+```
+
+| Flag                            | Description                                                                                                                                                                    |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `<PATH>`                        | Directory containing `.png` or `.jpeg` images (and optional `.json` sidecars).                                                                                                 |
+| `--app-id <APP_ID>`             | Identifier for the app or bundle (for example, `web-frontend`, `ios-app`). Must be consistent across uploads — Sentry uses it to match head and base snapshots. Max 255 chars. |
+| `--auth-token <TOKEN>`          | Sentry auth token. Can also be set via `SENTRY_AUTH_TOKEN`.                                                                                                                    |
+| `-o`, `--org <ORG>`             | Sentry organization slug. Can also be set via `SENTRY_ORG`.                                                                                                                    |
+| `-p`, `--project <PROJECT>`     | Sentry project slug. Can also be set via `SENTRY_PROJECT`.                                                                                                                     |
+| `--selective`                   | Mark the upload as a subset. Use when sharding snapshot generation across parallel jobs.                                                                                       |
+| `--diff-threshold <THRESHOLD>`  | Float between `0.0` and `1.0`. Sentry only reports images as changed if the percentage of changed pixels exceeds this value.                                                   |
+| `--head-sha <SHA>`              | Commit SHA for the upload. Auto-detected in CI.                                                                                                                                |
+| `--base-sha <SHA>`              | Base commit SHA for comparison (PR only). Auto-detected from merge-base.                                                                                                       |
+| `--vcs-provider <PROVIDER>`     | VCS provider (for example, `github`). Auto-detected from the git remote.                                                                                                       |
+| `--head-repo-name <OWNER/REPO>` | Repository in `owner/repo` format. Auto-detected from the git remote.                                                                                                          |
+| `--base-repo-name <OWNER/REPO>` | Base repository in `owner/repo` format (required for PRs from forks).                                                                                                          |
+| `--head-ref <BRANCH>`           | Head branch name. Auto-detected in CI.                                                                                                                                         |
+| `--base-ref <BRANCH>`           | Base branch name (PR only). Auto-detected from the remote tracking branch.                                                                                                     |
+| `--pr-number <NUMBER>`          | Pull request number. Auto-detected in GitHub Actions `pull_request` workflows.                                                                                                 |
+| `--no-git-metadata`             | Skip automatic git metadata detection.                                                                                                                                         |
+| `--force-git-metadata`          | Force git metadata collection outside CI.                                                                                                                                      |
+| `--log-level <LEVEL>`           | Logging verbosity: `trace`, `debug`, `info`, `warn`, or `error`.                                                                                                               |
+| `--quiet`                       | Suppress output while preserving exit codes. Alias: `--silent`.                                                                                                                |

@@ -1,5 +1,4 @@
 import Link from 'next/link';
-
 import {nodeForPath} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
 
@@ -31,7 +30,7 @@ export function GitHubCTA() {
             Create a docs issue
           </Link>{' '}
           &nbsp;&nbsp;|&nbsp;&nbsp;
-          <Link href="https://sentry.zendesk.com/hc/en-us/">Get support</Link>{' '}
+          <Link href="https://www.sentry.help/en/">Get support</Link>{' '}
         </div>
       </small>
     </div>

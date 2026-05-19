@@ -1,13 +1,15 @@
-You need to register the Sentry-provided SpanProcessor and Propagator as shown below:
+Create a trace exporter and register Sentry's OTel integration:
 
 
 ```go
 import (
+	"context"
 	"go.opentelemetry.io/otel"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 
 	"github.com/getsentry/sentry-go"
 	sentryotel "github.com/getsentry/sentry-go/otel"
+	sentryotlp "github.com/getsentry/sentry-go/otel/otlp"
 	// ...
 )
 
@@ -16,22 +18,37 @@ sentry.Init(sentry.ClientOptions{
 	EnableTracing:    true,
 	TracesSampleRate: 1.0,
 	Debug:            true,
+	Integrations: func(integrations []sentry.Integration) []sentry.Integration {
+		return append(integrations, sentryotel.NewOtelIntegration())
+	},
 })
 
+ctx := context.Background()
+exporter, err := sentryotlp.NewTraceExporter(ctx, "___PUBLIC_DSN___")
+if err != nil {
+	panic(err)
+}
+
 tp := sdktrace.NewTracerProvider(
-	sdktrace.WithSpanProcessor(sentryotel.NewSentrySpanProcessor()),
+	sdktrace.WithBatcher(exporter),
 )
 otel.SetTracerProvider(tp)
-otel.SetTextMapPropagator(sentryotel.NewSentryPropagator())
 ```
 
-Now, all spans produced by OpenTelemetry will also be captured and sent to Sentry.
+Now, spans produced by OpenTelemetry will be exported to Sentry over OTLP.
+
+### Distributed Tracing
+
+The OTLP integration does not set up a propagator for you. How you configure propagation depends on your setup:
+
+- **Sentry frontend → OTel backend:** If a Sentry SDK on your frontend sends requests to this OTel-instrumented service, enable [`propagateTraceparent`](/concepts/otlp/sentry-with-otel/#linking-sentry-and-otlp-traces) in your frontend SDK. This sends the W3C `traceparent` header, which your OTel-instrumented backend will pick up automatically.
+- **OTel ↔ OTel:** If all your services use OpenTelemetry, configure propagators using the standard OpenTelemetry API (for example, `propagation.TraceContext{}`). See the [OpenTelemetry propagation documentation](https://opentelemetry.io/docs/languages/go/instrumentation/#propagators-and-context) for details.
+
+If you're exporting through an OpenTelemetry Collector instead of sending traces directly to Sentry, you only need to keep the same `sentry.Init(...)` with `sentryotel.NewOtelIntegration()` in your Go app. Then configure the collector's `otlphttp` exporter to send traces to Sentry's OTLP endpoints. See the [OpenTelemetry Collector](/concepts/otlp/forwarding/pipelines/collector/) guide.
 
 ### Linking Errors to Transactions
 
-If you want the errors and messages the SDK produces (for example, via `CaptureException` or
-`CaptureMessage`) to be linked to transactions in the UI, a couple of extra steps are required. Most importantly, the current OpenTelemetry-enhanced context has to be passed as part
-of `EventHint` to `client.Capture*` methods:
+To link errors and messages captured by the Sentry SDK to the active trace in the UI, pass the current OpenTelemetry-enhanced context in the `EventHint`:
 
 ```go
 hub := sentry.CurrentHub()
@@ -45,5 +62,4 @@ client.CaptureException(
 )
 ```
 
-Events captured with the high-level `sentry.CaptureException` or `sentry.CaptureMessage` functions are
-NOT linked to transactions or spans at the moment. This will be improved in future releases.
+Events captured with the high-level `sentry.CaptureException` or `sentry.CaptureMessage` functions are not linked unless the active context is included in the event hint.

@@ -5,7 +5,14 @@ To make sure Sentry captures all your app's errors, configure error handling bas
 
 ### Using a Custom Global Filter
 
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
 If you have a global catch-all exception filter, add a `@SentryExceptionCaptured()` decorator to the filter's `catch()` method:
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```typescript {2, 6}
 import { Catch, ExceptionFilter } from "@nestjs/common";
@@ -20,9 +27,20 @@ export class YourCatchAllExceptionFilter implements ExceptionFilter {
 }
 ```
 
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
 ### Not Using a Custom Global Filter
 
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
 If you don't have a global catch-all exception filter, add the `SentryGlobalFilter` to the providers of your main module, **before** any other exception filters:
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```typescript {2-3, 7-10}
 import { Module } from "@nestjs/common";
@@ -41,9 +59,20 @@ import { SentryGlobalFilter } from "@sentry/nestjs/setup";
 export class AppModule {}
 ```
 
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
 ### Using Error Filters for Specific Exception Types
 
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
 If you have error filters for specific types of exceptions (for example, `@Catch(HttpException)`) and you want to report these errors to Sentry, you need to capture them in the `catch()` handler using `Sentry.captureException()`:
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```typescript {4,9}
 import { ArgumentsHost, BadRequestException, Catch } from "@nestjs/common";
@@ -60,11 +89,23 @@ export class ExampleExceptionFilter extends BaseExceptionFilter {
 }
 ```
 
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
 <Expandable title="Are you using Microservices?">
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
 If you're using `@nestjs/microservices` make sure to handle errors in RPC contexts correctly by providing your own `RpcExceptionFilter` (see [Nest.js Microservices documentation](https://docs.nestjs.com/microservices/exception-filters)).
 `SentryGlobalFilter` in a [hybrid application](https://docs.nestjs.com/faq/hybrid-application) doesn't extend `BaseRpcExceptionFilter` since this depends on `@nestjs/microservices`.
 
-Use `Sentry.captureException(exception)` in your custom filter in case you want to send these errors to Sentry:
+Use `Sentry.captureException(exception)` in your custom filter in case you want to send these errors to Sentry, as shown in the example on the right.
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```typescript
 import { Catch, RpcExceptionFilter, ArgumentsHost } from "@nestjs/common";
@@ -80,5 +121,9 @@ export class ExceptionFilter implements RpcExceptionFilter<RpcException> {
   }
 }
 ```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
 </Expandable>

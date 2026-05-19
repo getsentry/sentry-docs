@@ -25,9 +25,9 @@
 
 'use client';
 
+import * as Dialog from '@radix-ui/react-dialog';
 import {Fragment, useState} from 'react';
 import {X} from 'react-feather';
-import * as Dialog from '@radix-ui/react-dialog';
 
 import styles from './lightbox.module.scss';
 

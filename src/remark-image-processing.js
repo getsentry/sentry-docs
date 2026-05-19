@@ -1,8 +1,8 @@
-import path from 'path';
-
-import getImageSize from 'image-size';
 import {createHash} from 'node:crypto';
 import {readFileSync} from 'node:fs';
+
+import getImageSize from 'image-size';
+import path from 'path';
 import {visit} from 'unist-util-visit';
 
 /**
@@ -34,6 +34,6 @@ export default function remarkImageProcessing(options) {
       const contentHash = createHash('md5').update(imageBuffer).digest('hex').slice(0, 8);
 
       // Add content hash as query param (for CDN cache busting) and size as hash
-      node.url = node.url + `?v=${contentHash}#${imageSize.width}x${imageSize.height}`;
+      node.url += `?v=${contentHash}#${imageSize.width}x${imageSize.height}`;
     });
 }

@@ -1,7 +1,8 @@
-import matter from 'gray-matter';
-import yaml from 'js-yaml';
 import {opendir, readFile} from 'node:fs/promises';
 import path from 'node:path';
+
+import matter from 'gray-matter';
+import yaml from 'js-yaml';
 import {limitFunction} from 'p-limit';
 
 import {apiCategories} from './build/resolveOpenAPI';
@@ -224,7 +225,7 @@ async function getDocsFrontMatterUncached(): Promise<FrontMatter[]> {
           guideNames.push(guide.name);
         }
       }
-    } catch (err) {
+    } catch {
       // No guides directory for this platform, skip
       continue;
     }

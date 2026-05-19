@@ -1,0 +1,151 @@
+For optimal processing speeds, strip `__swift_ast` from your dSYMs before uploading to Sentry. This section of the binary is a copy of your code's swiftmodule file and is only used for runtime debugging with LLDB. It is not required for symbolication, Size Analysis, or Build Distribution.
+
+The script below can be used to strip `__swift_ast` from your dSYMs. The xcarchive is modified in-place. Back up first if needed.
+
+**Prerequisites**: Xcode command line tools (otool, lipo), Python 3
+
+```bash
+#!/bin/bash
+set -euo pipefail
+
+if [[ $# -ne 1 ]]; then
+  echo "Usage: $0 <path-to-xcarchive>" >&2
+  exit 1
+fi
+
+XCARCHIVE="$1"
+DSYMS_DIR="$XCARCHIVE/dSYMs"
+
+if [[ ! -d "$DSYMS_DIR" ]]; then
+  echo "Error: No dSYMs directory found at $DSYMS_DIR" >&2
+  exit 1
+fi
+
+TOTAL_ZEROED=0
+STRIPPED_COUNT=0
+
+# Zero out __swift_ast in a single-arch Mach-O binary.
+# Prints the number of bytes zeroed (0 if section not found).
+strip_thin_binary() {
+  local binary="$1"
+
+  local ast_info
+  ast_info=$(xcrun otool -l "$binary" 2>/dev/null | awk '
+    /sectname __swift_ast/ { found = 1 }
+    found && /^[[:space:]]+size / {
+      cmd = "printf \"%d\" " $2
+      cmd | getline dec_size
+      close(cmd)
+    }
+    found && /^[[:space:]]+offset / {
+      print dec_size " " $2
+      found = 0
+    }
+  ')
+
+  if [[ -z "$ast_info" ]]; then
+    echo "0"
+    return
+  fi
+
+  local ast_size ast_offset
+  ast_size=$(echo "$ast_info" | awk '{print $1}')
+  ast_offset=$(echo "$ast_info" | awk '{print $2}')
+
+  if [[ "$ast_size" -eq 0 ]]; then
+    echo "0"
+    return
+  fi
+
+  # Skip if already zeroed
+  local already_zeroed
+  already_zeroed=$(/usr/bin/python3 -c "
+import sys
+with open(sys.argv[1], 'rb') as f:
+    f.seek(int(sys.argv[2]))
+    print('1' if f.read(int(sys.argv[3])) == b'\0' * int(sys.argv[3]) else '0')
+" "$binary" "$ast_offset" "$ast_size")
+
+  if [[ "$already_zeroed" == "1" ]]; then
+    echo "0"
+    return
+  fi
+
+  chmod u+w "$binary" 2>/dev/null || true
+  /usr/bin/python3 -c "
+import sys
+with open(sys.argv[1], 'r+b') as f:
+    f.seek(int(sys.argv[2]))
+    f.write(b'\0' * int(sys.argv[3]))
+" "$binary" "$ast_offset" "$ast_size"
+
+  echo "$ast_size"
+}
+
+# Handle both fat (multi-arch) and thin (single-arch) binaries.
+strip_binary() {
+  local binary="$1"
+
+  local lipo_info
+  lipo_info=$(xcrun lipo -info "$binary" 2>/dev/null) || true
+
+  if echo "$lipo_info" | grep -q "Architectures in the fat file"; then
+    local archs
+    archs=$(echo "$lipo_info" | sed 's/.*: //')
+
+    local tmp_dir
+    tmp_dir=$(mktemp -d)
+    local thin_files=()
+    local saved=0
+
+    for arch in $archs; do
+      local thin_file="$tmp_dir/$arch"
+      xcrun lipo "$binary" -thin "$arch" -output "$thin_file"
+
+      local bytes_str
+      bytes_str=$(strip_thin_binary "$thin_file")
+      saved=$((saved + bytes_str))
+
+      thin_files+=("$thin_file")
+    done
+
+    if [[ $saved -gt 0 ]]; then
+      chmod u+w "$binary" 2>/dev/null || true
+      xcrun lipo -create "${thin_files[@]}" -output "$binary"
+    fi
+
+    rm -rf "$tmp_dir"
+    echo "$saved"
+  else
+    strip_thin_binary "$binary"
+  fi
+}
+
+echo "Zeroing __swift_ast in dSYMs in: $DSYMS_DIR"
+echo ""
+
+while IFS= read -r dsym_bundle; do
+  dsym_name=$(basename "$dsym_bundle")
+  dwarf_dir="$dsym_bundle/Contents/Resources/DWARF"
+
+  if [[ ! -d "$dwarf_dir" ]]; then
+    continue
+  fi
+
+  for binary in "$dwarf_dir"/*; do
+    [[ -f "$binary" ]] || continue
+
+    zeroed=$(strip_binary "$binary")
+    if [[ "$zeroed" -gt 0 ]]; then
+      zeroed_mb=$(echo "scale=1; $zeroed / 1048576" | bc)
+      echo "  $dsym_name — zeroed ${zeroed_mb} MB"
+      TOTAL_ZEROED=$((TOTAL_ZEROED + zeroed))
+      STRIPPED_COUNT=$((STRIPPED_COUNT + 1))
+    fi
+  done
+done < <(find "$DSYMS_DIR" -name "*.dSYM" -type d)
+
+TOTAL_MB=$(echo "scale=1; $TOTAL_ZEROED / 1000000" | bc)
+echo ""
+echo "Done. Processed $STRIPPED_COUNT dSYM(s), zeroed ${TOTAL_MB} MB of __swift_ast data."
+```

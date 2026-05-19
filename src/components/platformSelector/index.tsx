@@ -1,4 +1,9 @@
 'use client';
+import {Combobox, ComboboxItem, ComboboxList, ComboboxProvider} from '@ariakit/react';
+import {CaretRightIcon, CaretSortIcon, MagnifyingGlassIcon} from '@radix-ui/react-icons';
+import * as RadixSelect from '@radix-ui/react-select';
+import {matchSorter} from 'match-sorter';
+import {usePathname} from 'next/navigation';
 import {
   Fragment,
   Ref,
@@ -9,19 +14,12 @@ import {
   useRef,
   useState,
 } from 'react';
-import {Combobox, ComboboxItem, ComboboxList, ComboboxProvider} from '@ariakit/react';
-import {CaretRightIcon, CaretSortIcon, MagnifyingGlassIcon} from '@radix-ui/react-icons';
-import * as RadixSelect from '@radix-ui/react-select';
-import {matchSorter} from 'match-sorter';
-import {usePathname} from 'next/navigation';
-
 import {PlatformIcon} from 'sentry-docs/components/platformIcon';
 import {Platform, PlatformGuide, PlatformIntegration} from 'sentry-docs/types';
 import {uniqByReference} from 'sentry-docs/utils';
 
-import styles from './style.module.scss';
-
 import {SidebarLink, SidebarSeparator} from '../sidebar/sidebarLink';
+import styles from './style.module.scss';
 
 export function PlatformSelector({
   platforms,
@@ -89,10 +87,6 @@ export function PlatformSelector({
   // Auto-open selector when on /platforms/ index page (no SDK selected)
   const isOnPlatformsIndex = pathname === '/platforms/' || pathname === '/platforms';
 
-  // Track if we're redirecting to prevent flash of selector
-  // Always initialize to false to avoid SSR hydration mismatch
-  // The useLayoutEffect below will set this to true before paint if redirecting
-  const [isRedirecting, setIsRedirecting] = useState(false);
   const [open, setOpen] = useState(alwaysOpen || isOnPlatformsIndex);
   const [searchValue, setSearchValue] = useState('');
 
@@ -146,8 +140,6 @@ export function PlatformSelector({
   const storedPlatform = platformsAndGuides.find(
     platform => platform.key === storedPlatformKey
   );
-  // Check for stored platform and redirect if on /platforms/ index
-  // Use useLayoutEffect to redirect before paint for faster UX
   useLayoutEffect(() => {
     setHasMounted(true);
   }, []);
@@ -155,25 +147,10 @@ export function PlatformSelector({
   useLayoutEffect(() => {
     if (currentPlatformKey) {
       localStorage.setItem('active-platform', currentPlatformKey);
-      setIsRedirecting(false);
-    } else if (isOnPlatformsIndex) {
-      const stored = localStorage.getItem('active-platform');
-      setStoredPlatformKey(stored);
-
-      // If we have a stored platform, redirect to it immediately
-      if (stored) {
-        const storedPlatformData = platformsAndGuides.find(p => p.key === stored);
-        if (storedPlatformData) {
-          setIsRedirecting(true);
-          // Use hard navigation for instant redirect
-          window.location.replace(storedPlatformData.url);
-          return;
-        }
-      }
     } else {
       setStoredPlatformKey(localStorage.getItem('active-platform'));
     }
-  }, [currentPlatformKey, isOnPlatformsIndex, platformsAndGuides]);
+  }, [currentPlatformKey]);
 
   const isPlatformPage = Boolean(
     pathname?.startsWith('/platforms/') &&
@@ -189,11 +166,6 @@ export function PlatformSelector({
     storedPlatformKey &&
     storedPlatform &&
     pathname !== '/platforms/';
-
-  // Don't render anything while redirecting to prevent flash
-  if (isRedirecting) {
-    return null;
-  }
 
   if (listOnly) {
     return (
