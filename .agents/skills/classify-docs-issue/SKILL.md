@@ -24,7 +24,15 @@ The following fields are provided as arguments:
 - `author` — GitHub username of the issue author
 - `createdAt` — issue creation timestamp
 
-## Step 1: Classify
+## Step 1: Check for Existing Fix
+
+**Before doing any analysis**, use the `get_linked_prs` tool with the issue number. If a PR exists:
+
+- **Merged PR**: Note it in the summary, recommend closing the issue, and skip deep codebase analysis. The fix is already shipped.
+- **Open PR**: Note it in the summary and recommended action. Still classify the issue but skip root cause analysis — it's already being worked on.
+- **No linked PRs**: Continue with full classification below.
+
+## Step 2: Classify
 
 Based on the issue's existing labels (auto-applied by the issue template) and content, determine the classification:
 
@@ -106,12 +114,13 @@ Search the local codebase to find existing docs pages related to the issue:
 
 Report up to 5 relevant file paths.
 
-## Step 6: Assess Impact and Effort
+## Step 6: Assess Priority and Effort
 
-**Impact** (how many users are affected):
-- `large`: Core SDK setup, getting started guides, popular platforms (JavaScript, Python, React)
-- `medium`: Specific features, less common platforms, product docs
-- `small`: Edge cases, typos, minor clarifications
+**Priority** (matches Linear's scale):
+- `urgent`: Broken getting started guides, wrong code examples causing errors, security-related docs gaps
+- `high`: Core SDK setup docs, popular platform issues (JavaScript, Python, React), missing docs for GA features
+- `medium`: Specific features, less common platforms, product docs improvements
+- `low`: Edge cases, typos, minor clarifications, cosmetic issues
 
 **Effort** (how much work to fix):
 - `small`: Typo fix, link update, minor clarification
@@ -122,7 +131,6 @@ Report up to 5 relevant file paths.
 
 Collect all applicable GitHub labels into `suggestedLabels`. Always include:
 - The team label
-- Impact label (e.g., `Impact: Medium`)
 - Effort label (e.g., `Effort: Small`)
 
 Also include when applicable:
@@ -147,7 +155,7 @@ Write a concise triage report as `triageReport`:
 **Classification:** <classification>
 **Platform:** <platform or "N/A">
 **Product Area:** <product area or "N/A">
-**Impact:** <impact> | **Effort:** <effort>
+**Priority:** <priority> | **Effort:** <effort>
 
 ### Summary
 <1-2 sentences describing the issue and what needs to happen>

@@ -56,11 +56,38 @@ function githubTools(token: string): ToolDef[] {
           {headers}
         );
         const data = await res.json();
-        return (data.items ?? []).map((i: Record<string, unknown>) => ({
+        const items = (data.items ?? []).map((i: Record<string, unknown>) => ({
           number: i.number,
           title: i.title,
           state: i.state,
         }));
+        return JSON.stringify(items);
+      },
+    },
+    {
+      name: 'get_linked_prs',
+      description: 'Get PRs that reference a given issue number. Returns cross-referenced PRs.',
+      parameters: Type.Object({
+        issueNumber: Type.Number({description: 'The issue number'}),
+      }),
+      execute: async (args) => {
+        const res = await fetch(
+          `https://api.github.com/repos/${REPO}/issues/${args.issueNumber}/timeline?per_page=100`,
+          {headers}
+        );
+        const events = await res.json();
+        if (!Array.isArray(events)) return JSON.stringify([]);
+        const prs = events
+          .filter((e: Record<string, unknown>) =>
+            e.event === 'cross-referenced' && (e as any).source?.issue?.pull_request
+          )
+          .map((e: any) => ({
+            number: e.source.issue.number,
+            title: e.source.issue.title,
+            state: e.source.issue.state,
+            merged: e.source.issue.pull_request?.merged_at != null,
+          }));
+        return JSON.stringify(prs);
       },
     },
   ];
@@ -116,6 +143,29 @@ export default async function ({init, payload, env}: FlueContext) {
 
   const session = await agent.session();
 
+  const triageSchema = v.object({
+    classification: v.picklist([
+      'sdk-docs',
+      'product-docs',
+      'developer-docs',
+      'platform-bug',
+      'platform-improvement',
+      'broken-link',
+      'duplicate',
+      'support-question',
+    ]),
+    platform: v.optional(v.string()),
+    productArea: v.optional(v.string()),
+    team: v.optional(v.string()),
+    priority: v.picklist(['urgent', 'high', 'medium', 'low']),
+    effort: v.picklist(['small', 'medium', 'large']),
+    summary: v.string(),
+    relatedDocs: v.array(v.string()),
+    suggestedLabels: v.array(v.string()),
+    linearLabel: v.picklist(['Docs Content', 'Docs Platform']),
+    triageReport: v.string(),
+  });
+
   const {data} = await session.skill('classify-docs-issue', {
     args: {
       issueNumber: issue.number,
@@ -126,29 +176,63 @@ export default async function ({init, payload, env}: FlueContext) {
       createdAt: issue.created_at,
       dryRun,
     },
-    schema: v.object({
-      classification: v.picklist([
-        'sdk-docs',
-        'product-docs',
-        'developer-docs',
-        'platform-bug',
-        'platform-improvement',
-        'broken-link',
-        'duplicate',
-        'support-question',
-      ]),
-      platform: v.optional(v.string()),
-      productArea: v.optional(v.string()),
-      team: v.optional(v.string()),
-      impact: v.picklist(['small', 'medium', 'large']),
-      effort: v.picklist(['small', 'medium', 'large']),
-      summary: v.string(),
-      relatedDocs: v.array(v.string()),
-      suggestedLabels: v.array(v.string()),
-      linearLabel: v.picklist(['Docs Content', 'Docs Platform']),
-      triageReport: v.string(),
-    }),
+    schema: triageSchema,
   });
+
+  if (!dryRun && env.LINEAR_API_KEY) {
+    const priorityMap: Record<string, number> = {
+      urgent: 1, high: 2, medium: 3, low: 4,
+    };
+
+    const linearLabel = data.linearLabel === 'Docs Platform'
+      ? '4fabaa78-16de-409c-aef9-ae444f9a1b64'
+      : 'cf546561-75df-421d-981e-b51b41151351';
+
+    const searchRes = await fetch('https://api.linear.app/graphql', {
+      method: 'POST',
+      headers: {
+        Authorization: env.LINEAR_API_KEY,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query: `query($filter: IssueFilter) {
+          issues(filter: $filter, first: 1) {
+            nodes { id identifier }
+          }
+        }`,
+        variables: {
+          filter: {
+            team: {key: {eq: 'DOCS'}},
+            attachments: {url: {contains: `sentry-docs/issues/${issue.number}`}},
+          },
+        },
+      }),
+    });
+    const searchData = await searchRes.json() as any;
+    const existingIssue = searchData?.data?.issues?.nodes?.[0];
+
+    if (existingIssue) {
+      await fetch('https://api.linear.app/graphql', {
+        method: 'POST',
+        headers: {
+          Authorization: env.LINEAR_API_KEY,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query: `mutation($id: String!, $input: IssueUpdateInput!) {
+            issueUpdate(id: $id, input: $input) { success }
+          }`,
+          variables: {
+            id: existingIssue.id,
+            input: {
+              priority: priorityMap[data.priority] ?? 3,
+              labelIds: [linearLabel],
+            },
+          },
+        }),
+      });
+    }
+  }
 
   return data;
 }
