@@ -127,45 +127,21 @@ Report up to 5 relevant file paths.
 - `medium`: New section, significant rewrite, multi-file change
 - `large`: New page, cross-platform change, requires SME input
 
-## Step 7: Build Label List
-
-Collect all applicable GitHub labels into `suggestedLabels`. Always include:
-- The team label
-- Effort label (e.g., `Effort: Small`)
-
-Also include when applicable:
-- Platform label (e.g., `Platform: JavaScript`)
-- Product area label (e.g., `Product Area: Replays`)
-
-Do NOT include labels already on the issue.
-
-## Step 8: Determine Linear Label
+## Step 7: Determine Linear Label
 
 - If classification is `platform-bug` or `platform-improvement` → `Docs Platform`
 - Everything else → `Docs Content`
 
 ## Step 9: Write Triage Report
 
-Write a concise triage report as `triageReport`:
+Write a concise triage report as `triageReport`. Keep it short — this is a Linear comment, not a document. Only include sections that have real content (skip empty/N/A sections).
 
 ```
-## Triage: #<number>
+<1-2 sentences: what this issue is about and the key finding>
 
-**Title:** <title>
-**Classification:** <classification>
-**Platform:** <platform or "N/A">
-**Product Area:** <product area or "N/A">
-**Priority:** <priority> | **Effort:** <effort>
+**Effort:** <effort>
+<if linked PRs exist: **Linked PR:** #<number> (<open|merged|closed>) — <1 sentence about it>>
+<if related docs found: **Related files:** <comma-separated file paths>>
 
-### Summary
-<1-2 sentences describing the issue and what needs to happen>
-
-### Related Docs
-<list of related file paths found, or "No related docs found">
-
-### Suggested Labels
-<comma-separated list of labels to add>
-
-### Recommended Action
-<1-2 sentences: what should happen next>
+**Next step:** <1 sentence: the single most important thing to do>
 ```
