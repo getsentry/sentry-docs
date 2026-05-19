@@ -567,6 +567,22 @@ const developerDocsRedirects = [
     source: '/sdk/expected-features/setup-wizards/:path*',
     destination: '/sdk-setup-wizards/:path*',
   },
+  {
+    source: '/sdk/foundations/transport/envelopes/',
+    destination: '/sdk/foundations/envelopes',
+  },
+  {
+    source: '/sdk/foundations/transport/envelope-items/',
+    destination: '/sdk/foundations/envelopes/envelope-items/',
+  },
+  {
+    source: '/sdk/foundations/transport/event-payloads/',
+    destination: '/sdk/foundations/event-payloads/',
+  },
+  {
+    source: '/sdk/foundations/transport/event-payloads/:path*',
+    destination: '/sdk/foundations/event-payloads/:path*',
+  },
 ];
 
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
