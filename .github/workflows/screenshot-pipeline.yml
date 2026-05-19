@@ -45,18 +45,13 @@ jobs:
         with:
           node-version: 20
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
-
-      - name: Install root dependencies
-        run: pnpm install
-
       - name: Install pipeline dependencies
         run: npm install
         working-directory: scripts/screenshot-pipeline
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
+        working-directory: scripts/screenshot-pipeline
 
       - name: Restore auth state
         if: ${{ !inputs.dry_run }}
@@ -82,6 +77,7 @@ jobs:
         env:
           SENTRY_STORAGE_STATE_PATH: /tmp/storageState.json
           SENTRY_ORG_SLUG: ${{ secrets.SENTRY_ORG_SLUG }}
+          SENTRY_BASE_URL: ${{ secrets.SENTRY_BASE_URL }}
           DIFF_THRESHOLD_LOW: ${{ inputs.diff_threshold_low || '0.01' }}
           DIFF_THRESHOLD_HIGH: ${{ inputs.diff_threshold_high || '0.50' }}
 
@@ -97,6 +93,7 @@ jobs:
         env:
           LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
           LINEAR_TEAM_ID: ${{ vars.LINEAR_TEAM_ID }}
+          SENTRY_BASE_URL: ${{ secrets.SENTRY_BASE_URL }}
 
       - name: Upload pipeline artifacts
         uses: actions/upload-artifact@v4
