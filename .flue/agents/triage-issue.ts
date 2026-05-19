@@ -1,4 +1,4 @@
-import {Type, type FlueContext, type ToolDef} from '@flue/runtime';
+import {type FlueContext, type ToolDef, Type} from '@flue/runtime';
 import {local} from '@flue/runtime/node';
 import * as v from 'valibot';
 
@@ -23,7 +23,7 @@ const INJECTION_PATTERNS = [
 ];
 
 function detectInjection(text: string): boolean {
-  return INJECTION_PATTERNS.some((p) => p.test(text));
+  return INJECTION_PATTERNS.some(p => p.test(text));
 }
 
 interface GitHubIssue {
@@ -49,7 +49,7 @@ function githubTools(token: string): ToolDef[] {
       parameters: Type.Object({
         query: Type.String({description: 'Search terms'}),
       }),
-      execute: async (args) => {
+      execute: async args => {
         const q = encodeURIComponent(`${args.query} repo:${REPO} type:issue`);
         const res = await fetch(
           `https://api.github.com/search/issues?q=${q}&per_page=5`,
@@ -66,11 +66,12 @@ function githubTools(token: string): ToolDef[] {
     },
     {
       name: 'get_linked_prs',
-      description: 'Get PRs that reference a given issue number. Returns cross-referenced PRs.',
+      description:
+        'Get PRs that reference a given issue number. Returns cross-referenced PRs.',
       parameters: Type.Object({
         issueNumber: Type.Number({description: 'The issue number'}),
       }),
-      execute: async (args) => {
+      execute: async args => {
         const res = await fetch(
           `https://api.github.com/repos/${REPO}/issues/${args.issueNumber}/timeline?per_page=100`,
           {headers}
@@ -78,8 +79,9 @@ function githubTools(token: string): ToolDef[] {
         const events = await res.json();
         if (!Array.isArray(events)) return JSON.stringify([]);
         const prs = events
-          .filter((e: Record<string, unknown>) =>
-            e.event === 'cross-referenced' && (e as any).source?.issue?.pull_request
+          .filter(
+            (e: Record<string, unknown>) =>
+              e.event === 'cross-referenced' && (e as any).source?.issue?.pull_request
           )
           .map((e: any) => ({
             number: e.source.issue.number,
@@ -94,22 +96,19 @@ function githubTools(token: string): ToolDef[] {
 }
 
 async function fetchIssue(token: string, issueNumber: number): Promise<GitHubIssue> {
-  const res = await fetch(
-    `https://api.github.com/repos/${REPO}/issues/${issueNumber}`,
-    {
-      headers: {
-        Authorization: `token ${token}`,
-        Accept: 'application/vnd.github+json',
-      },
-    }
-  );
+  const res = await fetch(`https://api.github.com/repos/${REPO}/issues/${issueNumber}`, {
+    headers: {
+      Authorization: `token ${token}`,
+      Accept: 'application/vnd.github+json',
+    },
+  });
   if (!res.ok) {
     throw new Error(`GitHub API error: ${res.status} ${res.statusText}`);
   }
   return (await res.json()) as GitHubIssue;
 }
 
-export default async function ({init, payload, env}: FlueContext) {
+export default async function triageIssue({init, payload, env}: FlueContext) {
   const dryRun = env.DRY_RUN !== 'false';
   const issueNumber = payload.issueNumber as number;
   const token = env.GH_TOKEN ?? '';
@@ -171,7 +170,7 @@ export default async function ({init, payload, env}: FlueContext) {
       issueNumber: issue.number,
       title: issue.title,
       body: issue.body ?? '',
-      labels: issue.labels.map((l) => l.name),
+      labels: issue.labels.map(l => l.name),
       author: issue.user.login,
       createdAt: issue.created_at,
       dryRun,
@@ -181,12 +180,16 @@ export default async function ({init, payload, env}: FlueContext) {
 
   if (!dryRun && env.LINEAR_API_KEY) {
     const priorityMap: Record<string, number> = {
-      urgent: 1, high: 2, medium: 3, low: 4,
+      urgent: 1,
+      high: 2,
+      medium: 3,
+      low: 4,
     };
 
-    const linearLabel = data.linearLabel === 'Docs Platform'
-      ? '4fabaa78-16de-409c-aef9-ae444f9a1b64'
-      : 'cf546561-75df-421d-981e-b51b41151351';
+    const linearLabel =
+      data.linearLabel === 'Docs Platform'
+        ? '4fabaa78-16de-409c-aef9-ae444f9a1b64'
+        : 'cf546561-75df-421d-981e-b51b41151351';
 
     const searchRes = await fetch('https://api.linear.app/graphql', {
       method: 'POST',
@@ -208,7 +211,7 @@ export default async function ({init, payload, env}: FlueContext) {
         },
       }),
     });
-    const searchData = await searchRes.json() as any;
+    const searchData = (await searchRes.json()) as any;
     const existingIssue = searchData?.data?.issues?.nodes?.[0];
 
     if (existingIssue) {
