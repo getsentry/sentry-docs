@@ -5,6 +5,36 @@ export const triggers = {};
 
 const REPO = 'getsentry/sentry-docs';
 
+const INJECTION_PATTERNS = [
+  /ignore\s+(all\s+)?previous\s+instructions/i,
+  /ignore\s+(all\s+)?above/i,
+  /disregard\s+(all\s+)?previous/i,
+  /you\s+are\s+now\s+/i,
+  /new\s+instructions?\s*:/i,
+  /system\s*:\s*/i,
+  /\bact\s+as\b/i,
+  /reveal\s+(your|the)\s+(system\s+)?prompt/i,
+  /what\s+are\s+your\s+instructions/i,
+  /echo\s+\$\w+/i,
+  /curl\s+.*\|\s*sh/i,
+  /base64\s+-d/i,
+  /\beval\b.*\(/i,
+];
+
+function detectInjection(text: string): boolean {
+  return INJECTION_PATTERNS.some((p) => p.test(text));
+}
+
+interface GitHubIssue {
+  number: number;
+  title: string;
+  body: string;
+  labels: Array<{name: string}>;
+  user: {login: string};
+  created_at: string;
+  state: string;
+}
+
 function githubTools(token: string): ToolDef[] {
   const headers = {
     Authorization: `token ${token}`,
@@ -12,20 +42,6 @@ function githubTools(token: string): ToolDef[] {
   };
 
   return [
-    {
-      name: 'fetch_issue',
-      description: 'Fetch a GitHub issue by number. Returns the issue JSON.',
-      parameters: Type.Object({
-        issueNumber: Type.Number({description: 'The issue number'}),
-      }),
-      execute: async (args) => {
-        const res = await fetch(
-          `https://api.github.com/repos/${REPO}/issues/${args.issueNumber}`,
-          {headers}
-        );
-        return await res.json();
-      },
-    },
     {
       name: 'search_issues',
       description: 'Search for related issues. Returns up to 5 results.',
@@ -49,19 +65,66 @@ function githubTools(token: string): ToolDef[] {
   ];
 }
 
+async function fetchIssue(token: string, issueNumber: number): Promise<GitHubIssue> {
+  const res = await fetch(
+    `https://api.github.com/repos/${REPO}/issues/${issueNumber}`,
+    {
+      headers: {
+        Authorization: `token ${token}`,
+        Accept: 'application/vnd.github+json',
+      },
+    }
+  );
+  if (!res.ok) {
+    throw new Error(`GitHub API error: ${res.status} ${res.statusText}`);
+  }
+  return (await res.json()) as GitHubIssue;
+}
+
 export default async function ({init, payload, env}: FlueContext) {
   const dryRun = env.DRY_RUN !== 'false';
+  const issueNumber = payload.issueNumber as number;
+  const token = env.GH_TOKEN ?? '';
+
+  const issue = await fetchIssue(token, issueNumber);
+
+  const titleFlagged = detectInjection(issue.title);
+  const bodyFlagged = detectInjection(issue.body ?? '');
+
+  if (titleFlagged || bodyFlagged) {
+    return {
+      classification: 'support-question' as const,
+      issueNumber: issue.number,
+      flagged: true,
+      flaggedFields: [
+        ...(titleFlagged ? ['title'] : []),
+        ...(bodyFlagged ? ['body'] : []),
+      ],
+      summary: `Issue #${issue.number} flagged for potential prompt injection. Skipping AI triage.`,
+      suggestedLabels: [],
+      relatedDocs: [],
+      triageReport: `## Triage: #${issue.number}\n\n**Flagged:** Potential prompt injection detected. Manual review required.`,
+    };
+  }
 
   const agent = await init({
     model: 'anthropic/claude-sonnet-4-6',
     sandbox: 'local',
-    tools: githubTools(env.GH_TOKEN ?? ''),
+    tools: githubTools(token),
   });
 
   const session = await agent.session();
 
   const {data} = await session.skill('classify-docs-issue', {
-    args: {issueNumber: payload.issueNumber, dryRun},
+    args: {
+      issueNumber: issue.number,
+      title: issue.title,
+      body: issue.body ?? '',
+      labels: issue.labels.map((l) => l.name),
+      author: issue.user.login,
+      createdAt: issue.created_at,
+      dryRun,
+    },
     schema: v.object({
       classification: v.picklist([
         'sdk-docs',
