@@ -113,7 +113,7 @@ Fetches device and app context from the native layer and merges it into events. 
 
 _Import name: `Sentry.eventOriginIntegration`_
 
-Tags every event processed by the JavaScript SDK with `event.origin: 'javascript'` and `event.environment: 'javascript'`. This helps distinguish JS-layer events from native events when viewing them in Sentry.
+Sets the tags `event.origin` to `'javascript'` and `event.environment` to `'javascript'` on every event processed by the JavaScript layer. This helps distinguish JS-layer events from native events when viewing them in Sentry.
 
 ### ReactNativeInfo
 
@@ -127,7 +127,10 @@ Adds React Native runtime context to every event under `contexts.react_native_co
 - `turbo_module` — whether TurboModule is enabled
 - `fabric` — whether Fabric (new renderer) is enabled
 - `expo` — whether the app is running in Expo
+- `expo_go_version` — Expo Go version (if applicable)
+- `expo_sdk_version` — Expo SDK version (if applicable)
 - `component_stack` — React component stack from error boundaries
+- `hermes_debug_info` — whether the Hermes bundle includes debug info
 
 Also sets the tag `hermes: true` when the Hermes engine is detected.
 
@@ -156,29 +159,30 @@ Attaches HTTP request information such as URL, user-agent, referrer, and other h
 
 _Import name: `Sentry.breadcrumbsIntegration`_
 
-Wraps native APIs to capture breadcrumbs. By default, the SDK wraps all available APIs.
+Wraps native APIs to capture breadcrumbs.
 
 Available options:
 
 ```javascript
 {
-  // Log calls to console.log, console.debug, etc.
+  // Log calls to console.log, console.debug, etc. (default: true)
   console: boolean;
 
   // Log HTTP requests done with the Fetch API
+  // (default: true on web, false on mobile to avoid duplicates with xhr)
   fetch: boolean;
 
-  // Log HTTP requests done with the XHR API
+  // Log HTTP requests done with the XHR API (default: true)
   xhr: boolean;
 
-  // Log whenever we send an event to the server
+  // Log whenever we send an event to the server (default: true)
   sentry: boolean;
 }
 ```
 
 <Alert level="info">
 
-On mobile, additional breadcrumbs (touch events, navigation, app lifecycle) are captured by the native layer and merged via the `DeviceContext` integration. The `dom` and `history` options from the browser SDK do not apply on mobile.
+On mobile, additional breadcrumbs (touch events, navigation, app lifecycle) are captured by the native layer and merged via the `DeviceContext` integration. The `dom` and `history` options from the browser SDK only apply when using `react-native-web`.
 
 </Alert>
 
