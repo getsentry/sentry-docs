@@ -188,8 +188,8 @@ export default async function triageIssue({init, payload, env}: FlueContext) {
 
     const linearLabel =
       data.linearLabel === 'Docs Platform'
-        ? '4fabaa78-16de-409c-aef9-ae444f9a1b64'
-        : 'cf546561-75df-421d-981e-b51b41151351';
+        ? '3c20b421-3f10-46f1-b8c5-0186d18646fc'
+        : '3f843dec-1c10-4a4c-a475-550684d26258';
 
     const searchRes = await fetch('https://api.linear.app/graphql', {
       method: 'POST',
@@ -220,39 +220,42 @@ export default async function triageIssue({init, payload, env}: FlueContext) {
         'Content-Type': 'application/json',
       };
 
-      await Promise.all([
+      const linearCall = (query: string, variables: Record<string, unknown>) =>
         fetch('https://api.linear.app/graphql', {
           method: 'POST',
           headers: linearHeaders,
-          body: JSON.stringify({
-            query: `mutation($id: String!, $input: IssueUpdateInput!) {
-              issueUpdate(id: $id, input: $input) { success }
-            }`,
-            variables: {
-              id: existingIssue.id,
-              input: {
-                priority: priorityMap[data.priority] ?? 3,
-                labelIds: [linearLabel],
-              },
+          body: JSON.stringify({query, variables}),
+        }).then(r => r.json() as Promise<any>);
+
+      const results = await Promise.all([
+        linearCall(
+          `mutation($id: String!, $input: IssueUpdateInput!) {
+            issueUpdate(id: $id, input: $input) { success }
+          }`,
+          {id: existingIssue.id, input: {priority: priorityMap[data.priority] ?? 3}}
+        ),
+        linearCall(
+          `mutation($id: String!, $labelId: String!) {
+            issueAddLabel(id: $id, labelId: $labelId) { success }
+          }`,
+          {id: existingIssue.id, labelId: linearLabel}
+        ),
+        linearCall(
+          `mutation($input: CommentCreateInput!) {
+            commentCreate(input: $input) { success }
+          }`,
+          {
+            input: {
+              issueId: existingIssue.id,
+              body: `🤖 **Auto-triage report**\n\n${data.triageReport}`,
             },
-          }),
-        }),
-        fetch('https://api.linear.app/graphql', {
-          method: 'POST',
-          headers: linearHeaders,
-          body: JSON.stringify({
-            query: `mutation($input: CommentCreateInput!) {
-              commentCreate(input: $input) { success }
-            }`,
-            variables: {
-              input: {
-                issueId: existingIssue.id,
-                body: `🤖 **Auto-triage report**\n\n${data.triageReport}`,
-              },
-            },
-          }),
-        }),
+          }
+        ),
       ]);
+
+      for (const r of results) {
+        if (r.errors) console.error('Linear error:', JSON.stringify(r.errors));
+      }
     }
   }
 
