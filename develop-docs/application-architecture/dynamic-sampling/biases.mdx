@@ -1,20 +1,14 @@
 ---
-title: Fidelity and Biases
+title: Biases
 sidebar_order: 2
-og_image: /og-images/application-architecture-dynamic-sampling-fidelity-and-biases.png
+og_image: /og-images/application-architecture-dynamic-sampling-biases.png
 ---
 
 Dynamic Sampling allows Sentry to automatically adjust the amount of data retained based on how valuable the data is to the user. This is technically achieved by applying a **sample rate** to every event, which is determined by a **set of rules** that are evaluated for each event.
 
-<Alert title="✨ Note">
+### Target Sample Rate
+Dynamic Sampling defines a target sample rate for each project that specifies the amount of data to retain. This target sample rate is a number between 0 and 1 and is used to calculate the sample rate for each event, based on the project and transaction that the trace started from rather than the project and transaction of the event itself. This is because traces should be sampled or discarded in their entirety, not partially sampled. To keep that consistent, sampling decisions can only use information available at the start of the trace.
 
-A sample rate is a number in the interval `[0.0, 1.0]` that will determine the likelihood of a transaction to be retained. For example, a sample rate of `0.5` means that the transaction will be retained on average 50% of the time.
-
-</Alert>
-
-## The Concept of Fidelity
-
-At the core of Dynamic Sampling there is the concept of **fidelity**, which translates to an overall **target sample rate** that should be applied across all spans and transactions of an organization.
 
 ### Dynamic Sampling Modes
 There are two available modes to govern the target sample rates for Dynamic Sampling. The definition of both the mode and the target sample rates are implemented using the organization options `sentry:sampling_mode` and `sentry:target_sample_rate` as well as the project option `sentry:target_sample_rate`.
@@ -28,29 +22,13 @@ When the user switches between modes, target sample rates are transferred unless
 
 The [sample rates are periodically recalibrated](https://github.com/getsentry/sentry/blob/9b98be6b97323a78809a829e06dcbef26a16365c/src/sentry/dynamic_sampling/rules/biases/recalibration_bias.py#L11-L44) to ensure that the overall target sample rate is met. This recalibration is done on a project level or organization level, depending on the dynamic sampling mode. Within the target sample rate, Dynamic Sampling **biases towards more meaningful data**. This is achieved by constantly updating and communicating special rules to Relay, via a project configuration, which then applies targeted sampling to every event.
 
-![Concept of Fidelity](./images/fidelityAndPriorities.png)
-
 <Alert title="✨ Note">
 For orgs under AM2, Dynamic sampling uses a [sliding window function](https://github.com/getsentry/sentry/blob/cc8cc38c8a108719d068e5622b24a8d0c744e84c/src/sentry/dynamic_sampling/tasks/sliding_window_org.py#L37-L61) over the incoming volume to calculate the target sample rate.
 </Alert>
 
-### Approximate Fidelity
+The purpose of dynamic sampling is to achieve the target sample rate across all projects and transactions, while weighting the data based on the value of the data. These weights are applied on top of the base sample rate for each project.
 
-It is important to note that fidelity only determines an **approximate target sample rate**, so there is flexibility in creating exact sample rates. The ingestion pipeline, composed of [Relay](https://docs.sentry.io/product/relay/) and other components, does not have the infrastructure to track volume, so it cannot create an actual weighted distribution within the target sample rate.
-
-Instead, the Sentry backend **computes a set of rules** whose goal is to cooperatively achieve the target sample rate. Determining when and how to set these rules is part of the Dynamic Sampling infrastructure.
-
-<Alert title="✨ Note">
-
-The effectively applied sample rate, in the end, depends on how much data matches each of the bias overrides.
-
-</Alert>
-
-## Trace and Transaction Sampling
-
-Sentry supports **two fundamentally different types of sampling**. While this is completely opaque to the user, these rule types provide the basic building blocks for every dynamic sampling functionality and bias.
-
-### Trace Sampling
+### How traces are sampled
 
 A trace is a **collection of events that are related to each other**. For example, a trace could contain events started from your frontend that are then generating events in your backend.
 
@@ -65,10 +43,6 @@ To achieve trace sampling, SDKs pass all fields that can be sampled by [Dynamic 
 In order to achieve full trace sampling, the random number generator used by Relay is seeded with the trace ID inside of the DSC sent by the SDK. This ensures that traces with the same trace ID will always yield the same sampling decision.
 
 </Alert>
-
-### Transaction Sampling
-
-Transaction Sampling **does not guarantee complete traces** and instead **applies to individual transactions** by looking at the incoming transaction's body. It can be used to remove unwanted transactions from traces, or to individually boost transactions at the expense of incomplete contextual traces.
 
 ## Biases for Sampling
 
@@ -114,7 +88,7 @@ The list of development environments is available [here](https://github.com/gets
 This bias is only active in Automatic Mode (and not in Manual Mode). It applies to any incoming trace and is defined on a per-project basis.
 </Alert>
 
-This bias uses an algorithm to increase the sample rate for low-volume projects, which might otherwise be overshadowed by high-volume projects. It calculates a new sample rate for each project based on the organization’s overall sample rate and the number of transactions each project receives, aiming for a more balanced distribution. The algorithm dynamically adjusts these rates by measuring _the volume of incoming transactions over a sliding time window_ (also known as the target fidelity rate). At regular intervals, the system calls the `get_sampling_tier_for_volume` function (defined [here](https://github.com/getsentry/sentry/blob/f3a2220ccd3a2118a1255a4c96a9ec2010dab0d8/src/sentry/quotas/base.py#L481)) to determine the appropriate sample rate for each project.
+This bias uses an algorithm to increase the sample rate for low-volume projects, which might otherwise be overshadowed by high-volume projects. It calculates a new sample rate for each project based on the organization’s overall sample rate and the number of transactions each project receives, aiming for a more balanced distribution. The algorithm dynamically adjusts these rates by measuring _the volume of incoming transactions over a sliding time window_. At regular intervals, the system calls the `get_sampling_tier_for_volume` function (defined [here](https://github.com/getsentry/sentry/blob/f3a2220ccd3a2118a1255a4c96a9ec2010dab0d8/src/sentry/quotas/base.py#L481)) to determine the appropriate sample rate for each project.
 
 
 
@@ -156,3 +130,4 @@ For deprioritizing health checks, we compute a new sample rate by dividing the b
 
 
 If you want to learn more about the architecture behind Dynamic Sampling, continue to the [next page](/dynamic-sampling/architecture/).
+
