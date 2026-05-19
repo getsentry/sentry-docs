@@ -1,0 +1,43 @@
+---
+title: Spotlight
+description: "Forward Sentry events to Spotlight for local debugging during development."
+sidebar_order: 110
+---
+
+_Import name: `Sentry.spotlightIntegration`_
+
+The `spotlightIntegration` forwards Sentry events to [Spotlight](https://spotlightjs.com/), a local debugging tool that lets you inspect errors, traces, and other Sentry data during development.
+
+<Alert level="info">
+
+This integration is only active in development (`__DEV__` mode). It has no effect in production builds.
+
+</Alert>
+
+## Setup
+
+Enable Spotlight by passing `spotlight: true` in your `Sentry.init()` options:
+
+```javascript
+import * as Sentry from "@sentry/react-native";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  spotlight: true,
+});
+```
+
+By default, the integration connects to a Spotlight Sidecar at `http://localhost:8969/stream`. If your Sidecar runs at a different URL, pass it directly:
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  spotlight: "http://my-host:8969/stream",
+});
+```
+
+The integration auto-detects the dev server hostname when available, so it works with devices and emulators connected to your development machine.
+
+## How It Works
+
+When enabled, the integration intercepts envelopes before they are sent to Sentry and forwards them to the Spotlight Sidecar via HTTP. Events are still sent to Sentry as normal — Spotlight receives a copy for local inspection.

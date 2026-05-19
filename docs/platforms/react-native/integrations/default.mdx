@@ -1,71 +1,57 @@
 ---
 title: Default Integrations
-description: "Learn more about system integrations: Dedupe, FunctionToString, Breadcrumbs, LinkedErrors, and HttpContext (UserAgent), which are integrated into the standard library or the interpreter itself by default."
+description: "Learn about the integrations enabled by default in the Sentry React Native SDK, including React Native-specific integrations for error handling, device context, and runtime information."
 ---
 
-The below system integrations are part of the standard library or the interpreter itself and are enabled by default. To understand what they do and how to disable them if they cause issues, read on.
+The default integrations are enabled automatically when you call `Sentry.init()`. They handle error capturing, context enrichment, and event processing. You can disable or reconfigure any of them.
 
-## What's Enabled by Default
+## Error Handling
 
-### InboundFilters
+### ReactNativeErrorHandlers
 
-_Import name: `Sentry.inboundFiltersIntegration`_
+_Import name: `Sentry.reactNativeErrorHandlersIntegration`_
 
-This integration allows you to ignore specific errors based on the type,
-message, or URLs in a given exception.
+_(Mobile only)_
 
-By default, it'll ignore errors that start with `Script error` or `JavaScript error: Script error`.
-
-To configure this integration, use the `ignoreErrors`, `ignoreTransactions`, `denyUrls`,
-and `allowUrls` SDK options directly. Keep in mind that `denyURLs` and `allowURLs`
-only work for captured exceptions, not raw message events.
-
-### FunctionToString
-
-_Import name: `Sentry.functionToStringIntegration`_
-
-This integration allows the SDK to provide original functions and method names, even when those functions or methods are wrapped by our error or breadcrumb handlers.
-
-### Breadcrumbs
-
-_Import name: `Sentry.breadcrumbsIntegration`_
-
-This integration wraps native APIs to capture breadcrumbs. By default, the Sentry SDK wraps all APIs.
+Captures unhandled errors and promise rejections in React Native. This integration hooks into React Native's `ErrorUtils` global handler for error capturing and supports engine-specific promise rejection tracking.
 
 Available options:
 
 ```javascript
 {
-  // Log calls to `console.log`, `console.debug`, etc
-  console: boolean;
+  // Capture unhandled errors via ErrorUtils (default: true)
+  onerror: boolean;
 
-  // Log all click and keypress events
-  // - When an object with `serializeAttribute` key is provided,
-  //   Breadcrumbs integration will look for given attribute(s) in DOM elements,
-  //   while generating the breadcrumb trails.
-  //   Matched elements will be followed by their custom attributes,
-  //   instead of their `id`s or `class` names.
-  dom: boolean | { serializeAttribute: string | string[] };
+  // Capture unhandled promise rejections (default: true)
+  onunhandledrejection: boolean;
 
-  // Log HTTP requests done with the Fetch API
-  fetch: boolean;
-
-  // Log calls to `history.pushState` and friends
-  history: boolean;
-
-  // Log whenever we send an event to the server
-  sentry: boolean;
-
-  // Log HTTP requests done with the XHR API
-  xhr: boolean;
+  // Polyfill Promise for JavaScriptCore environments (default: true)
+  // Ignored when using Hermes or react-native-web
+  patchGlobalPromise: boolean;
 }
 ```
+
+For details on engine-specific promise rejection behavior (Hermes vs. JSC vs. Web), see [Unhandled Promise Rejections](./unhandled-rejections/).
+
+### InboundFilters
+
+_Import name: `Sentry.inboundFiltersIntegration`_
+
+Allows you to ignore specific errors based on the type, message, or URLs in a given exception.
+
+By default, it ignores errors that start with `Script error` or `JavaScript error: Script error`.
+
+To configure this integration, use the `ignoreErrors`, `ignoreTransactions`, `denyUrls`,
+and `allowUrls` SDK options directly. Keep in mind that `denyUrls` and `allowUrls`
+only work for captured exceptions, not raw message events.
 
 ### NativeLinkedErrors
 
 _Import name: `Sentry.nativeLinkedErrorsIntegration`_
 
-This integration allows you to configure linked errors which are recursively read up to a specified limit. A lookup by a specific key on the captured Error object is then performed. By default, the integration records up to five errors and the key used for recursion is `"cause"`.
+_(Mobile only)_
+
+Recursively reads linked errors up to a specified limit using a lookup key on the captured Error object. This is the React Native-specific version that also processes linked errors from native layers (Java, Objective-C, C++) and collects debug images.
 
 Available options:
 
@@ -95,18 +81,11 @@ Here's a code example of how this could be implemented:
 />
 ```
 
-### HttpContext
-
-_Import name: `Sentry.httpContextIntegration`_
-
-This integration attaches HTTP request information, such as URL, user-agent, referrer, and other headers to the event.
-It allows us to correctly catalog and tag events with specific OS, browser, and version information.
-
 ### Dedupe
 
 _Import name: `Sentry.dedupeIntegration`_
 
-This integration is enabled by default, but only deduplicates certain events. It can be helpful if you're receiving many duplicate errors. Note, that Sentry only compares stack traces and fingerprints.
+Deduplicates certain events by comparing stack traces and fingerprints. Enabled by default.
 
 ```javascript
 Sentry.init({
@@ -115,11 +94,99 @@ Sentry.init({
 });
 ```
 
+## Context & Enrichment
+
+### DeviceContext
+
+_Import name: `Sentry.deviceContextIntegration`_
+
+_(Mobile only — requires `enableNative: true`)_
+
+Fetches device and app context from the native layer and merges it into events. This includes:
+
+- Device information (model, OS, memory)
+- App state (foreground/background, synced with React Native's `AppState`)
+- Native breadcrumbs (merged with JS breadcrumbs, sorted by timestamp)
+- Native tags and extra data (JS values take priority on conflicts)
+
+### EventOrigin
+
+_Import name: `Sentry.eventOriginIntegration`_
+
+Tags every event processed by the JavaScript SDK with `event.origin: 'javascript'` and `event.environment: 'javascript'`. This helps distinguish JS-layer events from native events when viewing them in Sentry.
+
+### ReactNativeInfo
+
+_Import name: `Sentry.reactNativeInfoIntegration`_
+
+Adds React Native runtime context to every event under `contexts.react_native_context`:
+
+- `js_engine` — `hermes` or the engine name from the exception
+- `hermes_version` — Hermes version string (if applicable)
+- `react_native_version` — React Native version
+- `turbo_module` — whether TurboModule is enabled
+- `fabric` — whether Fabric (new renderer) is enabled
+- `expo` — whether the app is running in Expo
+- `component_stack` — React component stack from error boundaries
+
+Also sets the tag `hermes: true` when the Hermes engine is detected.
+
+### NativeRelease
+
+_Import name: `Sentry.nativeReleaseIntegration`_
+
+Automatically sets the `release` and `dist` fields on events using native build metadata. The priority order is:
+
+1. Values passed to `Sentry.init()` (`release` and `dist` options)
+2. Native build metadata (format: `bundleId@version+buildNumber`)
+
+### FunctionToString
+
+_Import name: `Sentry.functionToStringIntegration`_
+
+Provides original function and method names, even when those functions or methods are wrapped by error or breadcrumb handlers.
+
+### HttpContext
+
+_Import name: `Sentry.httpContextIntegration`_
+
+Attaches HTTP request information such as URL, user-agent, referrer, and other headers to events. This allows Sentry to catalog and tag events with specific OS, browser, and version information.
+
+### Breadcrumbs
+
+_Import name: `Sentry.breadcrumbsIntegration`_
+
+Wraps native APIs to capture breadcrumbs. By default, the SDK wraps all available APIs.
+
+Available options:
+
+```javascript
+{
+  // Log calls to console.log, console.debug, etc.
+  console: boolean;
+
+  // Log HTTP requests done with the Fetch API
+  fetch: boolean;
+
+  // Log HTTP requests done with the XHR API
+  xhr: boolean;
+
+  // Log whenever we send an event to the server
+  sentry: boolean;
+}
+```
+
+<Alert level="info">
+
+On mobile, additional breadcrumbs (touch events, navigation, app lifecycle) are captured by the native layer and merged via the `DeviceContext` integration. The `dom` and `history` options from the browser SDK do not apply on mobile.
+
+</Alert>
+
 ## Modifying System Integrations
 
 To disable system integrations, set `defaultIntegrations: false` when calling `init()`.
 
-To override their settings, provide a new instance with your config to the `integrations` option. For example, to turn off browser capturing console calls:
+To override their settings, provide a new instance with your config to the `integrations` option. For example, to turn off capturing console calls as breadcrumbs:
 
 
 ```javascript {3-7}
