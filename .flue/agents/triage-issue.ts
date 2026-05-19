@@ -109,7 +109,6 @@ async function fetchIssue(token: string, issueNumber: number): Promise<GitHubIss
 }
 
 export default async function triageIssue({init, payload, env}: FlueContext) {
-  const dryRun = env.DRY_RUN !== 'false';
   const issueNumber = payload.issueNumber as number;
   const token = env.GH_TOKEN ?? '';
 
@@ -128,7 +127,6 @@ export default async function triageIssue({init, payload, env}: FlueContext) {
         ...(bodyFlagged ? ['body'] : []),
       ],
       summary: `Issue #${issue.number} flagged for potential prompt injection. Skipping AI triage.`,
-      suggestedLabels: [],
       relatedDocs: [],
       triageReport: `## Triage: #${issue.number}\n\n**Flagged:** Potential prompt injection detected. Manual review required.`,
     };
@@ -160,7 +158,6 @@ export default async function triageIssue({init, payload, env}: FlueContext) {
     effort: v.picklist(['small', 'medium', 'large']),
     summary: v.string(),
     relatedDocs: v.array(v.string()),
-    suggestedLabels: v.array(v.string()),
     linearLabel: v.picklist(['Docs Content', 'Docs Platform']),
     triageReport: v.string(),
   });
@@ -173,101 +170,9 @@ export default async function triageIssue({init, payload, env}: FlueContext) {
       labels: issue.labels.map(l => l.name),
       author: issue.user.login,
       createdAt: issue.created_at,
-      dryRun,
     },
     schema: triageSchema,
   });
-
-  if (!dryRun && env.LINEAR_API_KEY) {
-    const priorityMap: Record<string, number> = {
-      urgent: 1,
-      high: 2,
-      medium: 3,
-      low: 4,
-    };
-
-    const linearLabel =
-      data.linearLabel === 'Docs Platform'
-        ? '3c20b421-3f10-46f1-b8c5-0186d18646fc'
-        : '3f843dec-1c10-4a4c-a475-550684d26258';
-
-    const searchRes = await fetch('https://api.linear.app/graphql', {
-      method: 'POST',
-      headers: {
-        Authorization: env.LINEAR_API_KEY,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        query: `query($filter: IssueFilter) {
-          issues(filter: $filter, first: 1) {
-            nodes { id identifier labels { nodes { id name } } }
-          }
-        }`,
-        variables: {
-          filter: {
-            team: {key: {eq: 'DOCS'}},
-            attachments: {url: {contains: `sentry-docs/issues/${issue.number}`}},
-          },
-        },
-      }),
-    });
-    const searchData = (await searchRes.json()) as any;
-    const existingIssue = searchData?.data?.issues?.nodes?.[0];
-
-    if (existingIssue) {
-      const linearHeaders = {
-        Authorization: env.LINEAR_API_KEY,
-        'Content-Type': 'application/json',
-      };
-
-      const linearCall = (query: string, variables: Record<string, unknown>) =>
-        fetch('https://api.linear.app/graphql', {
-          method: 'POST',
-          headers: linearHeaders,
-          body: JSON.stringify({query, variables}),
-        }).then(r => r.json() as Promise<any>);
-
-      const existingLabelIds = new Set(
-        (existingIssue.labels?.nodes ?? []).map((l: any) => l.id as string)
-      );
-
-      const mutations: Array<Promise<any>> = [
-        linearCall(
-          `mutation($id: String!, $input: IssueUpdateInput!) {
-            issueUpdate(id: $id, input: $input) { success }
-          }`,
-          {id: existingIssue.id, input: {priority: priorityMap[data.priority] ?? 3}}
-        ),
-        linearCall(
-          `mutation($input: CommentCreateInput!) {
-            commentCreate(input: $input) { success }
-          }`,
-          {
-            input: {
-              issueId: existingIssue.id,
-              body: `🤖 **Auto-triage report**\n\n${data.triageReport}`,
-            },
-          }
-        ),
-      ];
-
-      if (!existingLabelIds.has(linearLabel)) {
-        mutations.push(
-          linearCall(
-            `mutation($id: String!, $labelId: String!) {
-              issueAddLabel(id: $id, labelId: $labelId) { success }
-            }`,
-            {id: existingIssue.id, labelId: linearLabel}
-          )
-        );
-      }
-
-      const results = await Promise.all(mutations);
-      for (const r of results) {
-        if (r.errors) console.error('Linear error:', JSON.stringify(r.errors));
-      }
-    }
-  }
 
   return data;
 }
