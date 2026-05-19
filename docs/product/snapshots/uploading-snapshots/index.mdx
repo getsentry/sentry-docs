@@ -1,0 +1,68 @@
+---
+title: Uploading Snapshots
+sidebar_order: 10
+description: Structure your snapshot directory and upload from CI with sentry-cli.
+---
+
+<Include name="feature-available-for-user-group-early-adopter" />
+
+<Include name="snapshots/ci-alert" />
+
+Snapshots works for any platform with a frontend. You can view specific platform examples [here](/product/snapshots#supported-platforms). This page covers the general upload structure and metadata schema.
+
+## Upload command
+
+You upload snapshots with the `sentry-cli build snapshots` command, which takes a directory of images and optional JSON metadata files.
+
+```bash
+sentry-cli build snapshots <output-dir> \
+  --auth-token "$SENTRY_AUTH_TOKEN" \
+  --app-id <app-id> \
+  --project <project-slug> \
+```
+
+For the full command reference, including auto-detected git metadata and sharding behavior, see [Snapshots (CLI)](/cli/snapshots/). For an end-to-end CI setup, see [Integrating Into CI](/product/snapshots/integrating-into-ci/).
+
+### Upload Structure
+
+Each snapshot consists of two files: a `.png` image and an optional `.json` metadata file with the same base name and path. You can optionally organize snapshots into subdirectories. If using subdirectories, the filename property in the Sentry UX will include the subdirectory path.
+
+```
+snapshots/
+├── homepage.png
+├── homepage.json
+├── settings/
+│   ├── profile.png
+│   ├── profile.json
+│   ├── billing.png
+│   └── billing.json
+```
+
+Filenames are the identity key for each snapshot. Keep them stable across runs so Sentry can accurately diff head against base.
+
+### JSON Metadata
+
+You can include an optional JSON file to add metadata to each image:
+
+```json
+{
+  "display_name": "Billing Page",
+  "group": "Settings",
+  "diff_threshold": 0.01
+}
+```
+
+| Field            | Type   | Description                                                                                                                                                            |
+| ---------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `display_name`   | string | Human-readable label shown in the comparison. viewer.                                                                                                                  |
+| `group`          | string | Groups related snapshots in the UI. sidebar.                                                                                                                           |
+| `diff_threshold` | number | Value from `0.0` to `1.0`. Sentry reports the image as changed only when the share of changed pixels is greater than this value. `0.01` ignores changes of 1% or less. |
+
+### Supported Formats
+
+Snapshots supports the following image formats:
+
+- PNG
+- JPEG
+
+For the full `sentry-cli build snapshots` flag reference, see [Snapshots (CLI)](/cli/snapshots/).
