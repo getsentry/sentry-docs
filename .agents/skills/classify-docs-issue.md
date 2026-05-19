@@ -18,7 +18,7 @@ The issue number is provided as `{{issueNumber}}`.
 
 ## Step 1: Fetch the Issue
 
-Run `gh api repos/getsentry/sentry-docs/issues/{{issueNumber}}` to get the issue JSON.
+Use the `fetch_issue` tool with `issueNumber: {{issueNumber}}` to get the issue JSON.
 
 Extract: title, body, labels, author, creation date.
 
@@ -38,7 +38,7 @@ Based on the issue's existing labels (auto-applied by the issue template) and co
 If the issue doesn't match a template pattern, infer the best classification from the content.
 
 Also check for:
-- **duplicate**: Search for related issues with `gh api search/issues -X GET -f "q=<key terms>+repo:getsentry/sentry-docs+type:issue+state:open"`. If a strong match exists, classify as `duplicate`.
+- **duplicate**: Use the `search_issues` tool with key terms from the issue. If a strong match exists, classify as `duplicate`.
 - **support-question**: If the issue is asking how to use Sentry rather than reporting a docs problem.
 
 ## Step 3: Extract Platform
