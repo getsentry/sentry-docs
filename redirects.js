@@ -572,6 +572,10 @@ const developerDocsRedirects = [
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const userDocsRedirects = [
   {
+    source: '/api/guides/oauth/',
+    destination: '/api/auth/',
+  },
+  {
     source: '/integrations/incidentio/',
     destination: '/integrations/issue-tracking/incidentio/',
   },
@@ -1772,6 +1776,15 @@ const userDocsRedirects = [
       '/platforms/react-native/data-management/debug-files/source-context/data-management/debug-files/upload/',
     destination: '/platforms/react-native/data-management/debug-files/upload/',
   },
+  // Redirect MCP and CLI pages to their dedicated sites
+  {
+    source: '/ai/mcp/',
+    destination: 'https://mcp.sentry.dev',
+  },
+  {
+    source: '/ai/sentry-cli/',
+    destination: 'https://cli.sentry.dev',
+  },
   // Redirects for Insights → Sentry Dashboards migration
   {
     source: '/product/insights/llm-monitoring/:path*',
@@ -2201,6 +2214,10 @@ const userDocsRedirects = [
   {
     source: '/product/monitors-and-alerts/alerts/notifications/:path*',
     destination: '/product/notifications/:path*',
+  },
+  {
+    source: '/product/monitors-and-alerts/alerts/best-practices/',
+    destination: '/product/monitors-and-alerts/alerts/',
   },
   // DOCS-2550: /product/logs/ moved under /product/explore/
   {
