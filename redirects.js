@@ -577,11 +577,11 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/foundations/transport/event-payloads/',
-    destination: '/sdk/foundations/event-payloads/',
+    destination: '/sdk/foundations/envelopes/event-payloads/',
   },
   {
     source: '/sdk/foundations/transport/event-payloads/:path*',
-    destination: '/sdk/foundations/event-payloads/:path*',
+    destination: '/sdk/foundations/envelopes/event-payloads/:path*',
   },
 ];
 
