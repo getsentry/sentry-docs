@@ -12,7 +12,6 @@ export default async function ({init, payload, env}: FlueContext) {
     sandbox: local({
       env: {
         GH_TOKEN: env.GH_TOKEN,
-        LINEAR_API_KEY: env.LINEAR_API_KEY,
       },
     }),
   });
