@@ -34,7 +34,8 @@ Use **pnpm**: `pnpm install`, `pnpm dev`, `pnpm build`, `pnpm test`
 
 ## Code Style
 
-- ESLint + Prettier enforced via pre-commit hooks
+- ESLint + Prettier enforced via pre-commit hooks using `prek`
+  - If you previously installed `pre-commit` and `prek` is available on your system, reinstall the Git shims with `prek install -f`.
 - Use TypeScript strict mode
 - Follow existing patterns in codebase
 
