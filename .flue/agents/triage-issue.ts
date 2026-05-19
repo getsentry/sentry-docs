@@ -19,20 +19,25 @@ const LINEAR_LABEL_IDS: Record<string, string> = {
   'Docs Content': '3f843dec-1c10-4a4c-a475-550684d26258',
 };
 
+const VALID_TEAMS = new Set([
+  'Team: Docs',
+  'Team: JavaScript SDKs',
+  'Team: Web Backend SDKs',
+  'Team: Mobile Platform',
+  'Team: Native Platform',
+  'Team: Replay',
+  'Team: Crons',
+  'Team: Ecosystem',
+]);
+
 const INJECTION_PATTERNS = [
   /ignore\s+(all\s+)?previous\s+instructions/i,
   /ignore\s+(all\s+)?above/i,
   /disregard\s+(all\s+)?previous/i,
-  /you\s+are\s+now\s+/i,
+  /you\s+are\s+now\s+a\b/i,
   /new\s+instructions?\s*:/i,
-  /system\s*:\s*/i,
-  /\bact\s+as\b/i,
   /reveal\s+(your|the)\s+(system\s+)?prompt/i,
   /what\s+are\s+your\s+instructions/i,
-  /echo\s+\$\w+/i,
-  /curl\s+.*\|\s*sh/i,
-  /base64\s+-d/i,
-  /\beval\b.*\(/i,
 ];
 
 function detectInjection(text: string): boolean {
@@ -80,7 +85,7 @@ function githubTools(token: string): ToolDef[] {
     {
       name: 'get_linked_prs',
       description:
-        'Get PRs that reference a given issue number. Returns cross-referenced PRs.',
+        'Get PRs that reference a given issue number. Returns cross-referenced PRs with state (open/closed) and whether merged.',
       parameters: Type.Object({
         issueNumber: Type.Number({description: 'The issue number'}),
       }),
@@ -91,17 +96,29 @@ function githubTools(token: string): ToolDef[] {
         );
         const events = await res.json();
         if (!Array.isArray(events)) return JSON.stringify([]);
-        const prs = events
-          .filter(
-            (e: Record<string, unknown>) =>
-              e.event === 'cross-referenced' && (e as any).source?.issue?.pull_request
-          )
-          .map((e: any) => ({
-            number: e.source.issue.number,
-            title: e.source.issue.title,
-            state: e.source.issue.state,
-            merged: e.source.issue.pull_request?.merged_at != null,
-          }));
+
+        const prRefs = events.filter(
+          (e: Record<string, unknown>) =>
+            e.event === 'cross-referenced' && (e as any).source?.issue?.pull_request
+        );
+
+        const prs = await Promise.all(
+          prRefs.map(async (e: any) => {
+            const prNum = e.source.issue.number;
+            const prRes = await fetch(
+              `https://api.github.com/repos/${REPO}/pulls/${prNum}`,
+              {headers}
+            );
+            const pr = (await prRes.json()) as Record<string, unknown>;
+            return {
+              number: prNum,
+              title: pr.title ?? e.source.issue.title,
+              state: pr.state,
+              merged: pr.merged === true,
+            };
+          })
+        );
+
         return JSON.stringify(prs);
       },
     },
@@ -126,16 +143,21 @@ async function linearQuery(
   query: string,
   variables: Record<string, unknown>
 ): Promise<any> {
-  const res = await fetch('https://api.linear.app/graphql', {
-    method: 'POST',
-    headers: {Authorization: apiKey, 'Content-Type': 'application/json'},
-    body: JSON.stringify({query, variables}),
-  });
-  const json = (await res.json()) as any;
-  if (json.errors) {
-    console.error('Linear error:', JSON.stringify(json.errors));
+  try {
+    const res = await fetch('https://api.linear.app/graphql', {
+      method: 'POST',
+      headers: {Authorization: apiKey, 'Content-Type': 'application/json'},
+      body: JSON.stringify({query, variables}),
+    });
+    const json = (await res.json()) as any;
+    if (json.errors) {
+      console.error('Linear error:', JSON.stringify(json.errors));
+    }
+    return json;
+  } catch (e) {
+    console.error('Linear request failed:', e);
+    return {errors: [{message: String(e)}]};
   }
-  return json;
 }
 
 async function applyTriage(
@@ -149,20 +171,9 @@ async function applyTriage(
     Accept: 'application/vnd.github+json',
   };
 
-  // --- Idempotency: check if already triaged on GitHub ---
-  const commentsRes = await fetch(
-    `https://api.github.com/repos/${REPO}/issues/${issue.number}/comments?per_page=100`,
-    {headers: ghHeaders}
-  );
-  const comments = (await commentsRes.json()) as any[];
-  if (Array.isArray(comments) && comments.some(c => c.body?.includes(TRIAGE_MARKER))) {
-    console.log(`Already triaged: #${issue.number}`);
-    return;
-  }
-
-  // --- Apply missing GitHub labels ---
+  // --- Apply missing GitHub labels (allowlisted only) ---
   const existingLabels = new Set(issue.labels.map(l => l.name));
-  if (data.team && !existingLabels.has(data.team)) {
+  if (data.team && VALID_TEAMS.has(data.team) && !existingLabels.has(data.team)) {
     await fetch(`https://api.github.com/repos/${REPO}/issues/${issue.number}/labels`, {
       method: 'POST',
       headers: {...ghHeaders, 'Content-Type': 'application/json'},
@@ -237,25 +248,47 @@ async function applyTriage(
           );
         }
 
-        await Promise.all(mutations);
-        console.log(`Triaged on Linear: ${linearIssue.identifier}`);
-        linearOk = true;
+        const results = await Promise.all(mutations);
+        const commentResult = results[1];
+        linearOk = commentResult?.data?.commentCreate?.success === true;
+
+        if (linearOk) {
+          console.log(`Triaged on Linear: ${linearIssue.identifier}`);
+        } else {
+          console.error(`Linear comment may have failed for ${linearIssue.identifier}`);
+        }
       }
     } else {
       console.log('Linear ticket not found (sync may be pending)');
     }
   }
 
-  // --- Fallback: post to GitHub if Linear unavailable ---
+  // --- Fallback: post to GitHub only if Linear didn't work ---
+  // No TRIAGE_MARKER so re-runs can retry Linear when ticket exists
   if (!linearOk) {
-    await fetch(`https://api.github.com/repos/${REPO}/issues/${issue.number}/comments`, {
-      method: 'POST',
-      headers: {...ghHeaders, 'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        body: `${TRIAGE_MARKER}\n🤖 **Auto-triage report**\n\n${data.triageReport}`,
-      }),
-    }).catch(e => console.error('GitHub comment error:', e));
-    console.log(`Triaged on GitHub: #${issue.number} (Linear unavailable)`);
+    const commentsRes = await fetch(
+      `https://api.github.com/repos/${REPO}/issues/${issue.number}/comments?per_page=100`,
+      {headers: ghHeaders}
+    );
+    const comments = (await commentsRes.json()) as any[];
+    const alreadyPosted =
+      Array.isArray(comments) && comments.some(c => c.body?.includes(TRIAGE_MARKER));
+
+    if (!alreadyPosted) {
+      await fetch(
+        `https://api.github.com/repos/${REPO}/issues/${issue.number}/comments`,
+        {
+          method: 'POST',
+          headers: {...ghHeaders, 'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            body: `${TRIAGE_MARKER}\n🤖 **Auto-triage report**\n\n${data.triageReport}`,
+          }),
+        }
+      ).catch(e => console.error('GitHub comment error:', e));
+      console.log(`Triaged on GitHub: #${issue.number} (Linear unavailable)`);
+    } else {
+      console.log(`Already triaged on GitHub: #${issue.number}`);
+    }
   }
 }
 
@@ -307,7 +340,18 @@ export default async function triageIssue({init, payload, env}: FlueContext) {
       ]),
       platform: v.optional(v.string()),
       productArea: v.optional(v.string()),
-      team: v.optional(v.string()),
+      team: v.optional(
+        v.picklist([
+          'Team: Docs',
+          'Team: JavaScript SDKs',
+          'Team: Web Backend SDKs',
+          'Team: Mobile Platform',
+          'Team: Native Platform',
+          'Team: Replay',
+          'Team: Crons',
+          'Team: Ecosystem',
+        ])
+      ),
       priority: v.picklist(['urgent', 'high', 'medium', 'low']),
       effort: v.picklist(['small', 'medium', 'large']),
       summary: v.string(),

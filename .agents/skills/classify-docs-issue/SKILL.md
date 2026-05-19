@@ -51,7 +51,7 @@ Also check for:
 - **duplicate**: Use the `search_issues` tool with key terms from the issue. If a strong match exists, classify as `duplicate`.
 - **support-question**: If the issue is asking how to use Sentry rather than reporting a docs problem.
 
-## Step 2: Extract Platform
+## Step 3: Extract Platform
 
 For `sdk-docs` issues, the body contains an "SDK" dropdown. Map the value to the GitHub label:
 
@@ -79,7 +79,7 @@ For `sdk-docs` issues, the body contains an "SDK" dropdown. Map the value to the
 
 For `product-docs`, extract the product area from the "Which part?" field.
 
-## Step 3: Map Product Area
+## Step 4: Map Product Area
 
 For `product-docs` issues, map the free-text product area to the closest existing GitHub label:
 
@@ -87,7 +87,7 @@ For `product-docs` issues, map the free-text product area to the closest existin
 
 If no match, use `Product Area: Other`.
 
-## Step 4: Map Team
+## Step 5: Map Team
 
 Based on platform and product area, suggest the responsible team label:
 
@@ -104,7 +104,7 @@ Based on platform and product area, suggest the responsible team label:
 
 Default to `Team: Docs` if unclear.
 
-## Step 5: Search for Related Docs
+## Step 6: Search for Related Docs
 
 Search the local codebase to find existing docs pages related to the issue:
 
@@ -114,7 +114,7 @@ Search the local codebase to find existing docs pages related to the issue:
 
 Report up to 5 relevant file paths.
 
-## Step 6: Assess Priority and Effort
+## Step 7: Assess Priority and Effort
 
 **Priority** (matches Linear's scale):
 - `urgent`: Broken getting started guides, wrong code examples causing errors, security-related docs gaps
@@ -127,14 +127,16 @@ Report up to 5 relevant file paths.
 - `medium`: New section, significant rewrite, multi-file change
 - `large`: New page, cross-platform change, requires SME input
 
-## Step 7: Determine Linear Label
+## Step 8: Determine Linear Label
 
 - If classification is `platform-bug` or `platform-improvement` → `Docs Platform`
 - Everything else → `Docs Content`
 
-## Step 9: Write Triage Report
+## Step 9: Write Summary and Triage Report
 
-Write a concise triage report as `triageReport`. Keep it short — this is a Linear comment, not a document. Only include sections that have real content (skip empty/N/A sections).
+**`summary`**: Write a 1-2 sentence summary of the issue and key finding. This is required.
+
+**`triageReport`**: Write a concise triage report. Keep it short — this is a Linear comment, not a document. Only include sections that have real content (skip empty/N/A sections).
 
 ```
 <1-2 sentences: what this issue is about and the key finding>
