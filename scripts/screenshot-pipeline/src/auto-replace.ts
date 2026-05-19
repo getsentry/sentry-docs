@@ -86,6 +86,10 @@ async function main() {
   console.log(`\nCreating branch: ${branchName}`);
 
   try {
+    // Configure git identity for CI
+    execSync('git config user.name "github-actions[bot]"', {cwd: repoRoot, stdio: 'pipe'});
+    execSync('git config user.email "github-actions[bot]@users.noreply.github.com"', {cwd: repoRoot, stdio: 'pipe'});
+
     // Create and switch to new branch
     execSync(`git checkout -b ${branchName}`, {cwd: repoRoot, stdio: 'pipe'});
 
