@@ -51,7 +51,7 @@ _Import name: `Sentry.nativeLinkedErrorsIntegration`_
 
 _(Mobile only)_
 
-Recursively reads linked errors up to a specified limit using a lookup key on the captured Error object. This is the React Native-specific version that also processes linked errors from native layers (Java, Objective-C, C++) and collects debug images.
+Recursively reads linked errors up to a specified limit using a lookup key on the captured Error object. This is the React Native-specific version that also processes linked errors from native layers (Java, Objective-C) and collects debug images.
 
 Available options:
 
@@ -62,23 +62,18 @@ Available options:
 }
 ```
 
-Here's a code example of how this could be implemented:
+Here's a code example of how this could be used:
 
 ```javascript
-<Button
-  title="Get Reviews"
-  onPress={async () => {
-    const movie = event.target.dataset.title;
-    try {
-      await fetchMovieReviews(movie);
-    } catch (e) {
-      const fetchError = new Error(`Failed to fetch reviews for: ${movie}`);
-      // @ts-expect-error cause is not exposed on default error class.
-      fetchError.cause = e;
-      Sentry.captureException(fetchError);
-    }
-  }}
-/>
+async function fetchReviews(movieTitle) {
+  try {
+    await fetchMovieReviews(movieTitle);
+  } catch (e) {
+    const fetchError = new Error(`Failed to fetch reviews for: ${movieTitle}`);
+    fetchError.cause = e;
+    Sentry.captureException(fetchError);
+  }
+}
 ```
 
 ### Dedupe
@@ -86,13 +81,6 @@ Here's a code example of how this could be implemented:
 _Import name: `Sentry.dedupeIntegration`_
 
 Deduplicates certain events by comparing stack traces and fingerprints. Enabled by default.
-
-```javascript
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  integrations: [Sentry.dedupeIntegration()],
-});
-```
 
 ## Context & Enrichment
 
