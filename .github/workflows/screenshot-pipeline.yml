@@ -10,7 +10,7 @@ on:
   workflow_dispatch: # Manual trigger
     inputs:
       scope:
-        description: 'Limit crawl to a specific directory (e.g., docs/product/insights)'
+        description: 'Limit crawl to a specific directory (e.g., docs/product/issues)'
         required: false
         type: string
       dry_run:
@@ -60,36 +60,56 @@ jobs:
         env:
           SENTRY_STORAGE_STATE: ${{ secrets.SENTRY_STORAGE_STATE }}
 
+      - name: Validate scope input
+        if: ${{ inputs.scope != '' }}
+        run: |
+          # Validate scope is a safe directory path (alphanumeric, hyphens, slashes, dots only)
+          if ! echo "$PIPELINE_SCOPE" | grep -qE '^[a-zA-Z0-9/_.-]+$'; then
+            echo "Error: Invalid scope input. Must be a directory path (e.g., docs/product/issues)"
+            exit 1
+          fi
+        env:
+          PIPELINE_SCOPE: ${{ inputs.scope }}
+
       - name: Run inventory crawler
         run: |
-          SCOPE_ARG=""
-          if [ -n "${{ inputs.scope }}" ]; then
-            SCOPE_ARG="--scope ${{ inputs.scope }}"
+          SCOPE_ARGS=()
+          if [ -n "$PIPELINE_SCOPE" ]; then
+            SCOPE_ARGS=(--scope "$PIPELINE_SCOPE")
           fi
-          npx ts-node scripts/screenshot-pipeline/src/crawl-inventory.ts $SCOPE_ARG
+          npx ts-node src/crawl-inventory.ts "${SCOPE_ARGS[@]}"
+        working-directory: scripts/screenshot-pipeline
         env:
           UI_REFRESH_CUTOFF: '2025-06-01'
+          PIPELINE_SCOPE: ${{ inputs.scope }}
 
       - name: Run screenshot capture & diff
         run: |
-          npx ts-node scripts/screenshot-pipeline/src/capture-and-diff.ts \
-            ${{ inputs.dry_run && '--dry-run' || '' }}
+          DRY_RUN_ARGS=()
+          if [ "$PIPELINE_DRY_RUN" = "true" ]; then
+            DRY_RUN_ARGS=(--dry-run)
+          fi
+          npx ts-node src/capture-and-diff.ts "${DRY_RUN_ARGS[@]}"
+        working-directory: scripts/screenshot-pipeline
         env:
           SENTRY_STORAGE_STATE_PATH: /tmp/storageState.json
           SENTRY_ORG_SLUG: ${{ secrets.SENTRY_ORG_SLUG }}
           SENTRY_BASE_URL: ${{ secrets.SENTRY_BASE_URL }}
           DIFF_THRESHOLD_LOW: ${{ inputs.diff_threshold_low || '0.01' }}
           DIFF_THRESHOLD_HIGH: ${{ inputs.diff_threshold_high || '0.50' }}
+          PIPELINE_DRY_RUN: ${{ inputs.dry_run }}
 
       - name: Auto-replace and open PR
         if: ${{ !inputs.dry_run }}
-        run: npx ts-node scripts/screenshot-pipeline/src/auto-replace.ts
+        run: npx ts-node src/auto-replace.ts
+        working-directory: scripts/screenshot-pipeline
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create Linear issues
         if: ${{ !inputs.dry_run }}
-        run: npx ts-node scripts/screenshot-pipeline/src/create-linear-issues.ts
+        run: npx ts-node src/create-linear-issues.ts
+        working-directory: scripts/screenshot-pipeline
         env:
           LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
           LINEAR_TEAM_ID: ${{ vars.LINEAR_TEAM_ID }}
