@@ -47,48 +47,13 @@ jobs:
             echo "number=$INPUT_ISSUE_NUMBER" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Run triage agent (read-only)
-        id: triage
+      - name: Run triage agent
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ISSUE_NUMBER: ${{ steps.issue.outputs.number }}
-        run: |
-          set +e
-          npx flue run triage-issue --target node \
-            --id "triage-${ISSUE_NUMBER}" \
-            --payload "{\"issueNumber\": ${ISSUE_NUMBER}}" \
-            2> triage-log.txt > triage-raw.txt
-          AGENT_EXIT=$?
-          set -e
-
-          python3 -c "
-          import sys, json
-          text = open('triage-raw.txt').read()
-          start = text.rfind('{')
-          if start >= 0:
-              try:
-                  obj = json.loads(text[start:])
-                  json.dump(obj, open('triage-output.json', 'w'))
-                  sys.exit(0)
-              except: pass
-          open('triage-output.json', 'w').write('{}')
-          " || true
-
-          if [ $AGENT_EXIT -eq 0 ] && jq -e '.classification' triage-output.json > /dev/null 2>&1; then
-            echo "status=success" >> "$GITHUB_OUTPUT"
-            echo "Agent output:"
-            jq '.' triage-output.json
-          else
-            echo "status=failed" >> "$GITHUB_OUTPUT"
-            echo "Agent exited with code $AGENT_EXIT"
-            tail -20 triage-log.txt
-          fi
-
-      - name: Apply triage results
-        if: steps.triage.outputs.status == 'success'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
           ISSUE_NUMBER: ${{ steps.issue.outputs.number }}
-        run: bash .flue/scripts/apply-triage.sh triage-output.json
+        run: |
+          npx flue run triage-issue --target node \
+            --id "triage-${ISSUE_NUMBER}" \
+            --payload "{\"issueNumber\": ${ISSUE_NUMBER}}"
