@@ -25,7 +25,12 @@ This installation method has the fundamental restriction that only native Node.j
 
 As a result, the Sentry SDK will not capture data from database calls, queues, ORMs, third-party libraries, or other framework-specific data.
 
-We recommend using this only if the `--import` flag is not an option for you.
+We recommend using these setups only if the `--import` flag is not an option for you.
+
+This restriction applies when your application statically imports
+`instrument.mjs` from the same ESM module graph. If you use a Node.js Single
+Executable Application (SEA), use the <PlatformLink to="/install/esm-without-import/#nodejs-single-executable-applications">SEA
+bootstrap setup</PlatformLink> instead.
 
 </Alert>
 
@@ -55,3 +60,68 @@ import http from "http";
 
 // Your application code goes here
 ```
+
+## Node.js Single Executable Applications
+
+Node.js Single Executable Applications (SEA) may not load your Sentry instrumentation early enough, so you need to package a small bootstrap file as the SEA main instead of packaging your app entrypoint directly.
+
+The embedded SEA main should only load a filesystem bootstrap file next to the
+executable:
+
+```javascript {filename: sea-main.cjs}
+const { createRequire } = require("node:module");
+
+createRequire(__filename)("./sea-bootstrap.cjs");
+```
+
+The filesystem bootstrap imports Sentry first, then imports your real app
+entrypoint:
+
+```javascript {filename: sea-bootstrap.cjs}
+async function startApp() {
+  await import("./instrument.mjs");
+  await import("./app.mjs");
+}
+
+startApp();
+```
+
+Keep your Sentry setup in `instrument.mjs`:
+
+```javascript {tabTitle:ESM} {filename: instrument.mjs}
+import * as Sentry from "@sentry/node";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+});
+```
+
+Then configure SEA to use `sea-main.cjs` as its main script and disable code
+cache:
+
+```json {filename: sea-config.json}
+{
+  "main": "sea-main.cjs",
+  "output": "sea-prep.blob",
+  "disableExperimentalSEAWarning": true,
+  "useSnapshot": false,
+  "useCodeCache": false
+}
+```
+
+Keep `sea-bootstrap.cjs`, `instrument.mjs`, and `app.mjs` available on the
+filesystem next to the executable. If you want a fully self-contained
+executable, bundle your instrumentation and app into the SEA main instead.
+
+This setup lets the Sentry SDK register ESM instrumentation hooks before your
+application imports instrumented modules, such as Express or database clients.
+Your instrumentation file and app entrypoint can stay ESM. The verified
+bootstrap pattern shown here uses CommonJS only for the small SEA entry files.
+
+Node.js SEA support is still evolving, including how embedded ESM entrypoints
+and module loading are configured. The embedded SEA main may not be able to
+load filesystem modules with `import()` directly, so the example above uses
+`module.createRequire()` to bridge from the embedded main to a normal
+filesystem bootstrap. The important requirement is startup order: load Sentry
+before loading the application modules you want Sentry to instrument.
