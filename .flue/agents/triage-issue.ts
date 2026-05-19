@@ -319,6 +319,7 @@ export default async function triageIssue({init, payload, env}: FlueContext) {
   const session = await agent.session();
 
   const {data} = await session.skill('classify-docs-issue', {
+    signal: AbortSignal.timeout(120_000),
     args: {
       issueNumber: issue.number,
       title: issue.title,
