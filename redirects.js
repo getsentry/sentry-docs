@@ -569,7 +569,7 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/foundations/transport/envelopes/',
-    destination: '/sdk/foundations/envelopes',
+    destination: '/sdk/foundations/envelopes/',
   },
   {
     source: '/sdk/foundations/transport/envelope-items/',
