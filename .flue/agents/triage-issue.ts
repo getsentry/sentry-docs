@@ -200,7 +200,7 @@ export default async function triageIssue({init, payload, env}: FlueContext) {
       body: JSON.stringify({
         query: `query($filter: IssueFilter) {
           issues(filter: $filter, first: 1) {
-            nodes { id identifier }
+            nodes { id identifier labels { nodes { id name } } }
           }
         }`,
         variables: {
@@ -227,18 +227,16 @@ export default async function triageIssue({init, payload, env}: FlueContext) {
           body: JSON.stringify({query, variables}),
         }).then(r => r.json() as Promise<any>);
 
-      const results = await Promise.all([
+      const existingLabelIds = new Set(
+        (existingIssue.labels?.nodes ?? []).map((l: any) => l.id as string)
+      );
+
+      const mutations: Array<Promise<any>> = [
         linearCall(
           `mutation($id: String!, $input: IssueUpdateInput!) {
             issueUpdate(id: $id, input: $input) { success }
           }`,
           {id: existingIssue.id, input: {priority: priorityMap[data.priority] ?? 3}}
-        ),
-        linearCall(
-          `mutation($id: String!, $labelId: String!) {
-            issueAddLabel(id: $id, labelId: $labelId) { success }
-          }`,
-          {id: existingIssue.id, labelId: linearLabel}
         ),
         linearCall(
           `mutation($input: CommentCreateInput!) {
@@ -251,8 +249,20 @@ export default async function triageIssue({init, payload, env}: FlueContext) {
             },
           }
         ),
-      ]);
+      ];
 
+      if (!existingLabelIds.has(linearLabel)) {
+        mutations.push(
+          linearCall(
+            `mutation($id: String!, $labelId: String!) {
+              issueAddLabel(id: $id, labelId: $labelId) { success }
+            }`,
+            {id: existingIssue.id, labelId: linearLabel}
+          )
+        );
+      }
+
+      const results = await Promise.all(mutations);
       for (const r of results) {
         if (r.errors) console.error('Linear error:', JSON.stringify(r.errors));
       }
