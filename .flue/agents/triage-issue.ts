@@ -212,25 +212,44 @@ export default async function ({init, payload, env}: FlueContext) {
     const existingIssue = searchData?.data?.issues?.nodes?.[0];
 
     if (existingIssue) {
-      await fetch('https://api.linear.app/graphql', {
-        method: 'POST',
-        headers: {
-          Authorization: env.LINEAR_API_KEY,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          query: `mutation($id: String!, $input: IssueUpdateInput!) {
-            issueUpdate(id: $id, input: $input) { success }
-          }`,
-          variables: {
-            id: existingIssue.id,
-            input: {
-              priority: priorityMap[data.priority] ?? 3,
-              labelIds: [linearLabel],
+      const linearHeaders = {
+        Authorization: env.LINEAR_API_KEY,
+        'Content-Type': 'application/json',
+      };
+
+      await Promise.all([
+        fetch('https://api.linear.app/graphql', {
+          method: 'POST',
+          headers: linearHeaders,
+          body: JSON.stringify({
+            query: `mutation($id: String!, $input: IssueUpdateInput!) {
+              issueUpdate(id: $id, input: $input) { success }
+            }`,
+            variables: {
+              id: existingIssue.id,
+              input: {
+                priority: priorityMap[data.priority] ?? 3,
+                labelIds: [linearLabel],
+              },
             },
-          },
+          }),
         }),
-      });
+        fetch('https://api.linear.app/graphql', {
+          method: 'POST',
+          headers: linearHeaders,
+          body: JSON.stringify({
+            query: `mutation($input: CommentCreateInput!) {
+              commentCreate(input: $input) { success }
+            }`,
+            variables: {
+              input: {
+                issueId: existingIssue.id,
+                body: `🤖 **Auto-triage report**\n\n${data.triageReport}`,
+              },
+            },
+          }),
+        }),
+      ]);
     }
   }
 
