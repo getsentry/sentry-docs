@@ -90,7 +90,7 @@ export async function DocPage({
           <div
             className={[
               'pt-6 px-6 prose dark:prose-invert max-w-full text-[var(--gray-12)] prose-a:no-underline hover:prose-a:underline',
-              'prose-code:font-normal prose-code:font-mono marker:text-[var(--accent)] prose-li:my-1',
+              'prose-code:font-normal prose-code:font-mono marker:text-[var(--darkPurple)] marker:font-medium prose-li:my-1',
               'prose-headings:mt-0 prose-headings:font-medium prose-headings:relative prose-headings:text-[var(--gray-12)]',
               'prose-blockquote:font-normal prose-blockquote:border-l-[3px] prose-em:font-normal prose-blockquote:text-[var(--gray-12)]',
               'prose-img:my-2',

@@ -3004,7 +3004,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/support/',
-    to: 'https://sentry.zendesk.com/hc/en-us/',
+    to: 'https://www.sentry.help/en/',
   },
   {
     from: '/clients/python/',
@@ -3436,7 +3436,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/sentry-mcp/',
-    to: '/ai/mcp/',
+    to: 'https://mcp.sentry.dev',
   },
   {
     from: '/product/metrics/',
@@ -3480,7 +3480,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/support/',
-    to: 'https://sentry.zendesk.com/hc/en-us/',
+    to: 'https://www.sentry.help/en/',
   },
   {
     from: '/product/security-policy-reporting/',

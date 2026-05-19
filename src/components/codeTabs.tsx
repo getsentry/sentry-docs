@@ -40,10 +40,19 @@ interface CodeTabProps {
   children: React.ReactElement<CodeBlockProps> | React.ReactElement<CodeBlockProps>[];
 }
 
-const showSigninNote = (children: ReactNode) => {
+export const showSigninNote = (children: ReactNode) => {
   return Children.toArray(children).some(node => {
     if (typeof node === 'string') {
-      return KEYWORDS_REGEX.test(node) || ORG_AUTH_TOKEN_REGEX.test(node);
+      // reset regex lastIndex before testing to avoid stale state from previous matches
+      KEYWORDS_REGEX.lastIndex = 0;
+      ORG_AUTH_TOKEN_REGEX.lastIndex = 0;
+
+      // it has a project keyword that is not a PRODUCT_OPTION_*
+      const hasProjectKeyword = [...node.matchAll(KEYWORDS_REGEX)].some(
+        match => match[2] !== 'PRODUCT_OPTION_START' && match[2] !== 'PRODUCT_OPTION_END'
+      );
+
+      return hasProjectKeyword || ORG_AUTH_TOKEN_REGEX.test(node);
     }
     return showSigninNote((node as ReactElement).props.children);
   });
