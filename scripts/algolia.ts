@@ -105,7 +105,26 @@ async function indexAndUpload() {
   }
 
   if (!isDeveloperDocs) {
-    await index.setSettings(sentryAlgoliaIndexSettings);
+    await index.setSettings({
+      ...sentryAlgoliaIndexSettings,
+      searchableAttributes: [
+        'unordered(title)',
+        'unordered(section)',
+        'unordered(keywords)',
+        'text',
+      ],
+      ranking: [
+        'filters',
+        'typo',
+        'words',
+        'attribute',
+        'exact',
+        'proximity',
+        'desc(sectionRank)',
+        'asc(position)',
+        'asc(popularity)',
+      ],
+    });
   }
 
   const totalSeconds = (performance.now() - startTime) / 1000;
