@@ -1,0 +1,232 @@
+---
+title: Stream Spans
+description: "Learn how to use streamed spans to remove the 1000 span limit, reduce memory usage, and get faster visibility into your traces."
+sidebar_order: 50
+new: true
+---
+
+By default, the Sentry Node.js SDK collects all spans in memory and sends them as a single transaction once the root span ends. Streamed spans change this model: spans are sent incrementally in batches as they finish, rather than waiting for the entire transaction to complete.
+
+## Why Use Streamed Spans
+
+- **No 1000 span limit.** Transactions are capped at 1000 spans. With streamed spans, there is no upper limit since spans are sent in batches.
+- **Lower memory usage.** Spans are flushed periodically and don't need to be held in memory until the root span ends. This is especially useful for long-running processes like queue consumers or cron jobs.
+- **Faster visibility.** Span data arrives in Sentry as your application runs, instead of only after the entire operation completes.
+- **No data loss from crashes.** If your process terminates unexpectedly, spans that were already flushed are preserved. With transactions, a crash before the root span ends means all span data is lost.
+
+## Enable Streamed Spans
+
+Opt in by setting the `traceLifecycle` option to `'stream'` when initializing the SDK:
+
+```javascript {filename:instrument.js}
+const Sentry = require("@sentry/node");
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+  traceLifecycle: "stream",
+});
+```
+
+When `traceLifecycle` is set to `'static'` (the default), traces are sent as transactions. Setting it to `'stream'` enables span streaming.
+
+## Start a Span
+
+Starting spans works the same way as with transactions. Use `Sentry.startSpan()` to create a span that is automatically ended when the callback completes:
+
+```javascript
+const result = await Sentry.startSpan(
+  { name: "my-operation", attributes: { "my.attribute": "value" } },
+  async () => {
+    // Your code here
+    return await doWork();
+  }
+);
+```
+
+Child spans created inside the callback are automatically associated with the parent:
+
+```javascript
+await Sentry.startSpan({ name: "parent-operation" }, async () => {
+  await Sentry.startSpan({ name: "child-step-1" }, async () => {
+    await stepOne();
+  });
+
+  await Sentry.startSpan({ name: "child-step-2" }, async () => {
+    await stepTwo();
+  });
+});
+```
+
+With streaming enabled, each span is flushed to Sentry shortly after it ends instead of being held until the parent completes.
+
+For more details on span creation APIs (`startSpan`, `startSpanManual`, `startInactiveSpan`), see <PlatformLink to="/tracing/instrumentation/">Instrumentation</PlatformLink>.
+
+## Attach Attributes
+
+Attributes let you attach structured metadata to spans. You can set them when starting a span:
+
+```javascript
+Sentry.startSpan(
+  {
+    name: "process-order",
+    op: "queue.process",
+    attributes: {
+      "order.id": "abc-123",
+      "order.item_count": 5,
+      "order.priority": true,
+    },
+  },
+  () => {
+    // Process the order
+  }
+);
+```
+
+Or add them to an already running span:
+
+```javascript
+Sentry.startSpan({ name: "handle-request" }, (span) => {
+  // Set a single attribute
+  span.setAttribute("http.response.status_code", 200);
+
+  // Set multiple attributes at once
+  span.setAttributes({
+    "http.route": "/api/users",
+    "user.id": "user-42",
+  });
+});
+```
+
+Attribute values can be `string`, `number`, or `boolean`, as well as arrays of these types.
+
+## Continue a Trace
+
+When you receive a request from an upstream service that includes Sentry trace headers, use `Sentry.continueTrace()` to connect your spans to the existing distributed trace:
+
+```javascript {filename:server.js}
+const http = require("http");
+const Sentry = require("@sentry/node");
+
+http.createServer((req, res) => {
+  Sentry.continueTrace(
+    {
+      sentryTrace: req.headers["sentry-trace"],
+      baggage: req.headers["baggage"],
+    },
+    () => {
+      Sentry.startSpan({ name: `${req.method} ${req.url}` }, () => {
+        // Handle the request
+        res.end("OK");
+      });
+    }
+  );
+});
+```
+
+To propagate the trace to downstream services, inject the trace headers into your outgoing requests:
+
+```javascript
+await Sentry.startSpan({ name: "call-downstream" }, async () => {
+  const traceData = Sentry.getTraceData();
+
+  await fetch("https://downstream.example.com/api", {
+    headers: {
+      "sentry-trace": traceData["sentry-trace"],
+      baggage: traceData["baggage"],
+    },
+  });
+});
+```
+
+## Start a New Trace
+
+If you need to start a completely new trace that is not connected to the current one, use `Sentry.startNewTrace()`. This is useful for background jobs or scheduled tasks where you want a clean trace boundary:
+
+```javascript {filename:worker.js}
+const Sentry = require("@sentry/node");
+
+function processJob(job) {
+  Sentry.startNewTrace(() => {
+    Sentry.startSpan(
+      {
+        name: "process-job",
+        attributes: { "job.id": job.id, "job.type": job.type },
+      },
+      async () => {
+        await job.execute();
+      }
+    );
+  });
+}
+```
+
+Any spans created inside the `startNewTrace` callback belong to a fresh trace with a new trace ID. Once the callback ends, the SDK continues the previous trace (if one was active).
+
+## Scrub Span Data
+
+To modify or redact data on spans before they are sent, use `beforeSendSpan`. When using streamed spans, the hook must be wrapped with `Sentry.withStreamedSpan()` so the SDK applies it to spans as they are flushed rather than only at transaction time.
+
+If you don't have a `beforeSendSpan` hook, no extra setup is needed.
+
+```javascript {filename:instrument.js}
+const Sentry = require("@sentry/node");
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+  traceLifecycle: "stream",
+  beforeSendSpan: Sentry.withStreamedSpan((span) => {
+    if (span.op === "db.query") {
+      span.description = "[filtered]";
+    }
+    return span;
+  }),
+});
+```
+
+Without the wrapper, `beforeSendSpan` is silently skipped for streamed spans.
+
+`beforeSendSpan` can only modify span data — you cannot use it to drop spans. To prevent spans from being created entirely, use [`ignoreSpans`](#drop-spans-with-ignorespans) instead.
+
+### Drop Spans With `ignoreSpans`
+
+To prevent specific spans from being created, use the `ignoreSpans` option. Unlike `beforeSendSpan` (which can only modify spans), `ignoreSpans` drops matching spans before they start. You can match by span name using strings or regular expressions, or use an object to also match on span attributes:
+
+```javascript {filename:instrument.js}
+const Sentry = require("@sentry/node");
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+  traceLifecycle: "stream",
+  ignoreSpans: [
+    // Drop spans whose name contains "healthcheck"
+    "healthcheck",
+    // Drop spans whose name matches a pattern
+    /^GET \/api\/v1\/internal/,
+    // Drop spans matching name and attribute conditions
+    {
+      name: /^GET \//,
+      attributes: {
+        "http.response.status_code": 200,
+        "http.route": "/api/status",
+      },
+    },
+  ],
+});
+```
+
+If a matching span is a root span, all of its child spans are dropped as well. If a child span matches, only that span is dropped and its children are reparented to the next ancestor.
+
+If you need to redact or modify data on spans that aren't dropped, use [`beforeSendSpan`](#scrub-span-data) instead.
+
+## How Span Flushing Works
+
+When span streaming is enabled, the SDK maintains an internal buffer that groups spans by trace ID. Spans are flushed:
+
+- On a regular interval (every 5 seconds by default).
+- When a trace's buffer reaches 1000 spans.
+- When you call `Sentry.flush()` or `Sentry.close()`.
+
+Each flush sends only the spans that have accumulated since the last flush, grouped into envelopes by trace ID.
