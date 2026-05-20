@@ -212,7 +212,7 @@ export async function Home() {
                   </a>
                   ,{' '}
                   <a
-                    href="/product/explore/trace-explorer/"
+                    href="/product/trace-explorer/"
                     className="text-[#8b5cf6] underline"
                   >
                     Tracing

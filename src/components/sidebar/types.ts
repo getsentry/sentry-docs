@@ -45,7 +45,14 @@ export type NavNode = {
     section_end_divider?: boolean;
     sidebar_hidden?: boolean;
     sidebar_order?: number;
-    sidebar_section?: 'features' | 'configuration';
+    sidebar_section?:
+      | 'features'
+      | 'configuration'
+      | 'detect'
+      | 'debug'
+      | 'measure'
+      | 'automate'
+      | 'platform';
     sidebar_title?: string;
   };
   path: string;
