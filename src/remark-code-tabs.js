@@ -66,6 +66,24 @@ export default function remarkCodeTabs() {
         []
       );
 
+      const exportBlocks = pendingCode.map(([node]) => {
+        const title = getTabTitle(node);
+        const filename = getFilename(node);
+        const lang = fixLanguage(node);
+        const hProperties = {
+          hidden: true,
+          dataCodeTabTitle: title || lang,
+        };
+        if (filename) {
+          hProperties.dataCodeTabFilename = filename;
+        }
+        return {
+          type: 'element',
+          data: {hName: 'div', hProperties},
+          children: [{type: 'code', lang, value: node.value}],
+        };
+      });
+
       rootNode.type = 'element';
       rootNode.data = {
         hName: 'div',
@@ -79,6 +97,7 @@ export default function remarkCodeTabs() {
           name: 'CodeTabs',
           children,
         },
+        ...exportBlocks,
       ];
 
       toRemove = toRemove.concat(pendingCode.splice(1));
