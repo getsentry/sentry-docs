@@ -2237,6 +2237,15 @@ const userDocsRedirects = [
     destination: '/product/monitors-and-alerts/alerts/',
   },
   // DOCS-2550: /product/logs/ redirects now handled in the flatten-explore block above
+  // Old /guides/integrate-* paths (broken links from sentry-basics tutorials)
+  {
+    source: '/guides/integrate-backend/:path*',
+    destination: '/product/sentry-basics/integrate-backend/:path*',
+  },
+  {
+    source: '/guides/integrate-frontend/:path*',
+    destination: '/product/sentry-basics/integrate-frontend/:path*',
+  },
   // DOCS-2227: retention-priorities page removed; dynamic-sampling is the closest equivalent
   {
     source: '/product/performance/retention-priorities/',
