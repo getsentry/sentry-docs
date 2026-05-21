@@ -95,6 +95,30 @@ function SaveButton() {
 
 will have `sentry-label="Save workout"` added to `Pressable` at build time. The injection only uses static string children, caps the label at 64 characters, and skips components that already have an explicit `sentry-label` prop.
 
+By default, only React Native's `Text` component is recognized as a text source. If your app uses custom text wrapper components, use the `textComponentNames` option:
+
+```javascript {tabTitle:React Native} {filename:metro.config.js}
+const { getDefaultConfig } = require("@react-native/metro-config");
+const { withSentryConfig } = require('@sentry/react-native/metro');
+
+const config = getDefaultConfig(__dirname);
+module.exports = withSentryConfig(config, {
+  annotateReactComponents: {
+    textComponentNames: ['Text', 'MyText', 'Typography'],
+  },
+});
+```
+
+```javascript {tabTitle:Expo} {filename:metro.config.js}
+const { getSentryExpoConfig } = require("@sentry/react-native/metro");
+
+const config = getSentryExpoConfig(__dirname, {
+  annotateReactComponents: {
+    textComponentNames: ['Text', 'MyText', 'Typography'],
+  },
+});
+```
+
 To disable automatic label injection while keeping component name annotations:
 
 ```javascript {tabTitle:React Native} {filename:metro.config.js}
