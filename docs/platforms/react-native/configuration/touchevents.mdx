@@ -63,11 +63,17 @@ The **label** is determined by the first available value from:
 3. `accessibilityLabel` prop
 4. `aria-label` prop
 5. `testID` prop
-6. Text extracted from children
+6. Text content extracted from children (e.g. `<Text>Save workout</Text>` → `"Save workout"`)
 
 The **name** comes from the Babel plugin annotation (`data-sentry-component`) or `displayName`. See [Component Names](/platforms/react-native/integrations/component-names/) for details.
 
-This means apps that use accessibility labels or test IDs get meaningful touch breadcrumbs automatically, without any extra configuration.
+This means apps that use accessibility labels, test IDs, or simply have text inside their touchable components get meaningful touch breadcrumbs automatically, without any extra configuration.
+
+<Alert>
+
+Text extraction from children (item 6) is automatically disabled when Session Replay's `maskAllText` is enabled (the default). Set `maskAllText: false` in your `mobileReplayIntegration` config to enable it. Per-view `Sentry.Mask` boundaries are also respected.
+
+</Alert>
 
 ```javascript
 const YourCoolComponent = (props) => {
@@ -190,11 +196,11 @@ _Array&lt;string | RegExp>, Accepts strings and regular expressions_. Component 
 
 `labelName`
 
-_String_. The name of a custom prop to look for when determining the label of a component. Takes priority over the automatic `accessibilityLabel`, `aria-label`, and `testID` fallbacks.
+_String_. The name of a custom prop to look for when determining the label of a component. Takes priority over the automatic `accessibilityLabel`, `aria-label`, `testID`, and text extraction from children fallbacks.
 
 `extractTextFromChildren`
 
-_boolean, default: true_. When enabled, the SDK extracts text from child components as a label fallback when no explicit label prop is set. Automatically disabled when Session Replay's `maskAllText` is enabled. See [Automatic Text Extraction from Children](#automatic-text-extraction-from-children).
+_boolean, default: true_. Extract text content from children of touched components as a label fallback. Automatically disabled when Session Replay's `maskAllText` is enabled. Text inside `Sentry.Mask` boundaries is never extracted. Set to `false` to opt out entirely.
 
 ## Minified Names in Production
 
