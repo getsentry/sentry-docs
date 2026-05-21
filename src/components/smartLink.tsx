@@ -30,10 +30,14 @@ export function SmartLink({
 }: Props) {
   const realTo = to || href || '';
 
-  const handleAutolinkClick = useCallback((e: React.MouseEvent) => {
+  const handleAutolinkClick = useCallback(async (e: React.MouseEvent) => {
     const link = e.currentTarget as HTMLAnchorElement;
     if (link.classList.contains('autolink-heading')) {
-      navigator.clipboard.writeText(link.href);
+      try {
+        await navigator.clipboard.writeText(link.href);
+      } catch {
+        // Clipboard write permission may be denied in some environments; ignore silently
+      }
     }
   }, []);
 
