@@ -122,7 +122,7 @@ For more details on span creation APIs, such as `startSpan`, `startSpanManual`, 
 
 ### Add Span Attributes
 
-Attach structured metadata to spans using attributes, which can be `string`, `number`, or `boolean`, as well as arrays of these types.
+Attach structured metadata to spans using <PlatformLink to="/configuration/apis/#startSpan">`attributes`</PlatformLink>, which can be `string`, `number`, or `boolean`, as well as arrays of these types.
 
 <SplitLayout>
 <SplitSection>
@@ -176,6 +176,9 @@ Sentry.startSpan({ name: "handle-request" }, (span) => {
 
 </SplitSectionCode>
 </SplitSection>
+
+Find more examples in our <PlatformLink to="/tracing/span-metrics/">Sending Span Metrics</PlatformLink> documentation.
+
 </SplitLayout>
 
 ## Distributed Tracing (Optional)
@@ -191,11 +194,10 @@ when the SDK can't instrument automatically, see <PlatformLink to="/tracing/dist
 <SplitSection>
 <SplitSectionText>
 
-To modify or redact span data before it's sent, use <PlatformLink to="/configuration/options/#beforeSendSpan">`beforeSendSpan`</PlatformLink>. In stream mode, wrap it with `Sentry.withStreamedSpan()` so the SDK applies it to spans as they are
-flushed rather than only at transaction time.
+To modify or redact span data before it's sent, use <PlatformLink to="/configuration/options/#beforeSendSpan">`beforeSendSpan`</PlatformLink>. In stream mode, wrap it with `Sentry.withStreamedSpan()` so the SDK applies it to spans as they are flushed rather than only at transaction time.
 
 <Alert>
-  `beforeSendSpan` can only modify span data and you cannot use it to drop
+  `beforeSendSpan` can only modify span data, and you cannot use it to drop
   spans. Use [`ignoreSpans`](#drop-spans) instead.
 </Alert>
 
@@ -210,8 +212,10 @@ Sentry.init({
   tracesSampleRate: 1.0,
   traceLifecycle: "stream",
   beforeSendSpan: Sentry.withStreamedSpan((span) => {
-    if (span.op === "db.query") {
-      span.description = "[filtered]";
+    // In stream mode, 'op' is accessed via attributes
+    if (span.attributes?.["sentry.op"] === "db.query") {
+      // In stream mode, 'description' is now renamed to 'name'
+      span.name = "[filtered]";
     }
     return span;
   }),
@@ -233,8 +237,10 @@ Sentry.init({
     Sentry.spanStreamingIntegration(),
   ],
   beforeSendSpan: Sentry.withStreamedSpan((span) => {
-    if (span.op === "db.query") {
-      span.description = "[filtered]";
+    // In stream mode, 'op' is accessed via attributes
+    if (span.attributes?.["sentry.op"] === "db.query") {
+      // In stream mode, 'description' is now renamed to 'name'
+      span.name = "[filtered]";
     }
     return span;
   }),
@@ -250,8 +256,8 @@ Sentry.init({
 
 <Alert level="warning" title="Migrating from transaction mode?">
 
-If you're using `beforeSendSpan`, wrap it with `Sentry.withStreamedSpan()` as shown above, otherwise the SDK falls back to transaction mode. The span object also has
-different property names in stream mode; see <PlatformLink to="/configuration/options/#beforesendspan">`beforeSendSpan`</PlatformLink> for the full reference.
+If you're using `beforeSendSpan`, wrap it with `Sentry.withStreamedSpan()` as shown above, otherwise the SDK falls back to transaction mode.
+The callback signature and properties of the span object are also shaped differently. See <PlatformLink to="/configuration/options/#beforesendspan">`beforeSendSpan`</PlatformLink> for the full reference.
 
 If you're using `beforeSendTransaction` to drop spans, use [`ignoreSpans`](#drop-spans) instead, since `beforeSendTransaction` is not available in stream mode.
 
@@ -333,11 +339,13 @@ Sentry.init({
 
 If a matching span is a root span, all of its child spans are dropped as well. If a child span matches, only that span is dropped and its children are reparented to the nearest ancestor.
 
-In stream mode, `ignoreSpans` is evaluated before a span is created, so only the span name and attributes available at that point are taken into account.
+In stream mode, `ignoreSpans` is evaluated at span start, so only the span name and attributes available at that point are taken into account. Any name updates or additional attributes added while the span is active won't invluence whether the span is dropped.
 
 <Alert level="warning" title="Migrating from transaction mode?">
 
-In transaction mode, `ignoreSpans` is evaluated at root span end rather than before span creation. Review your existing rules to make sure the attributes you're matching on are passed when the span is created.
+In transaction mode, `ignoreSpans` is evaluated at root span end rather than at span start. Review your existing rules to make sure the attributes you're matching on are passed when the span is created.
+
+If you're auto-instrumenting and don't know what the initial name of a span is when it starts, enable SDK debug logging during development by setting <PlatformLink to="/configuration/options/#debug">`debug: true`</PlatformLink> when initializing the SDK.
 
 </Alert>
 

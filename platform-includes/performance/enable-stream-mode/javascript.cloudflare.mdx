@@ -1,0 +1,62 @@
+<SplitLayout>
+<SplitSection>
+
+### Cloudflare Pages
+
+<SplitSectionText>
+
+Opt in by setting the `traceLifecycle` option to `'stream'` when initializing the SDK:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript {filename: functions/_middleware.js}
+import * as Sentry from "@sentry/cloudflare";
+
+export const onRequest = [
+  Sentry.sentryPagesPlugin((context) => ({
+    dsn: "___PUBLIC_DSN___",
+    tracesSampleRate: 0.2
+    // enables stream mode
+    traceLifecycle: "stream",
+  })),
+];
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+
+### Cloudflare Workers
+
+<SplitSectionText>
+
+Opt in by setting the `traceLifecycle` option to `'stream'` when initializing the SDK:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript {filename: index.ts}
+import * as Sentry from "@sentry/cloudflare";
+
+export default Sentry.withSentry(
+  (env: Env) => ({
+    dsn: "___PUBLIC_DSN___",
+    tracesSampleRate: 1.0,
+    // Enables stream mode
+    traceLifecycle: "stream",
+  }),
+  {
+    async fetch(request, env, ctx) {
+      return new Response("Hello World!");
+    },
+  } satisfies ExportedHandler<Env>,
+);
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+To revert to transaction mode, set `traceLifecycle` to `'static'` (the default) or remove the option entirely.

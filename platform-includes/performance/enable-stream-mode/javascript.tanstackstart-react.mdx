@@ -9,16 +9,24 @@ Opt in by adding `spanStreamingIntegration()` to your list of integrations when 
 
 ```javascript {filename: src/router.tsx}
 import * as Sentry from "@sentry/tanstackstart-react";
+import { createRouter } from "@tanstack/react-router";
 
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  tracesSampleRate: 1.0,
-  integrations: [
-    Sentry.tanstackRouterBrowserTracingIntegration(),
-    // enables stream mode
-    Sentry.spanStreamingIntegration(),
-  ],
-});
+export const getRouter = () => {
+  const router = createRouter();
+
+  if (!router.isServer) {
+    Sentry.init({
+      dsn: "___PUBLIC_DSN___",
+      tracesSampleRate: 1.0,
+      integrations: [
+        Sentry.tanstackRouterBrowserTracingIntegration(router),
+        // enables stream mode
+        Sentry.spanStreamingIntegration(),
+      ],
+    });
+  }
+  return router;
+};
 ```
 
 </SplitSectionCode>
