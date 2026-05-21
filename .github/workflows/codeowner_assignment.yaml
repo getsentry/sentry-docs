@@ -12,7 +12,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-      
+
       - uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf # v2.2.1
         id: token
         with:
@@ -45,9 +45,9 @@ jobs:
           echo "Changed files:"
           echo "$CHANGED_FILES" | tr ' ' '\n' | sed 's/^/- /'
           echo "----------------------------------------"
-          
+
           # Get existing reviewers
-          # merge reqeusted teams and users into a single array
+          # merge requested teams and users into a single array
           REQUESTED_REVIEWERS=$(gh pr view $PR_NUMBER --json reviewRequests --jq '[.reviewRequests[] | if .__typename == "Team" then .slug else .login end]')
           echo "Requested reviewers:"
           echo "$REQUESTED_REVIEWERS" | tr ' ' '\n' | sed 's/^/- /'
@@ -56,7 +56,7 @@ jobs:
           # Parse CODEOWNERS and find commented lines
           # Add newline to the end of the file if it doesn't have one, otherwise sed will not read the last line
           sed -i -e '$a\' $codeowner_path
-          
+
           while read -r LINE; do
             # Skip lines that are not commented, GitHub will take care of un-commented lines
             if [[ ! "$LINE" =~ ^# ]]; then continue; fi
@@ -73,7 +73,7 @@ jobs:
 
             # Convert pattern to a regex for matching
             REGEX_PATTERN=$(echo "$PATTERN" | sed -e 's/\./\\./g' -e 's/\*/.*/g' -e 's/\?/./g' -e 's|^/||')
-            
+
             # Match changed files to the pattern
             for FILE in $CHANGED_FILES; do
               # For glob patterns(e.g. "**/"), use a different matching approach
@@ -134,4 +134,3 @@ jobs:
               fi
             done
           done < $codeowner_path
-

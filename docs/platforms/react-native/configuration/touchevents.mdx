@@ -91,6 +91,67 @@ You don't have to worry about Typescript errors when passing the `sentry-label` 
 
 </Alert>
 
+## Automatic `sentry-label` Injection
+
+<Alert>
+
+Available in SDK version `8.12.0` and above.
+
+</Alert>
+
+When [Component Names](/platforms/react-native/integrations/component-names/) are enabled (`annotateReactComponents` option), the Babel plugin automatically injects `sentry-label` props from static text content at build time. For example, a `<Pressable>` wrapping `<Text>Save workout</Text>` will automatically receive `sentry-label="Save workout"` during the build, without any manual annotation.
+
+See [Component Names — Automatic `sentry-label` Injection](/platforms/react-native/integrations/component-names/#automatic-sentry-label-injection) for configuration details.
+
+## Automatic Text Extraction from Children
+
+<Alert>
+
+Available in SDK version `8.12.0` and above.
+
+</Alert>
+
+When no label is found from props (steps 1–5 above), the SDK attempts to extract text from the touched component's children at runtime. This complements the [build-time injection](#automatic-sentry-label-injection) — it handles dynamic text, components not processed by the Babel plugin, or cases where `annotateReactComponents` is not enabled. For example, if you touch a button:
+
+```javascript
+<Pressable>
+  <Text>Add to cart</Text>
+</Pressable>
+```
+
+The breadcrumb label will automatically be `"Add to cart"` without needing any props.
+
+Text extraction has the following limits:
+- Traverses up to **3 levels** deep into the component tree
+- Visits up to **5 sibling** nodes at each level
+- Truncates text at **64 characters**
+
+To disable runtime text extraction, set `extractTextFromChildren` to `false` (see [Options](#options)).
+
+## Interaction with Session Replay Masking
+
+To prevent masked content from leaking into breadcrumbs, the SDK respects [Session Replay](/platforms/react-native/session-replay/) masking boundaries:
+
+- When `maskAllText` is enabled on `mobileReplayIntegration` (the default), `sentry-label` and text extraction from children are both skipped, since they may contain user-visible text content.
+- When the touched element is inside a `Sentry.Mask` boundary, `sentry-label` and text extraction are skipped for that element.
+- Developer-provided labels (custom `labelName`, `accessibilityLabel`, `aria-label`, `testID`) are never affected by masking.
+
+<Alert level="info">
+
+Currently, both manually set and auto-injected `sentry-label` props are skipped when masking is active, because the SDK cannot distinguish between them at runtime. If you rely on manual `sentry-label` props for tracking, use `accessibilityLabel` or a custom `labelName` instead, which are never affected by masking.
+
+</Alert>
+
+To enable `sentry-label` and text extraction alongside Session Replay, set `maskAllText: false`:
+
+```javascript
+Sentry.init({
+  integrations: [
+    Sentry.mobileReplayIntegration({ maskAllText: false }),
+  ],
+});
+```
+
 ## Options
 
 You can pass specific options to configure the boundary either as props to the `Sentry.TouchEventBoundary` component or as the second argument to the `Sentry.withTouchEventBoundary` higher-order component (HOC).
@@ -140,6 +201,10 @@ _String_. The name of a custom prop to look for when determining the label of a 
 `extractTextFromChildren`
 
 _boolean, default: true_. Extract text content from children of touched components as a label fallback. Automatically disabled when Session Replay's `maskAllText` is enabled. Text inside `Sentry.Mask` boundaries is never extracted. Set to `false` to opt out entirely.
+
+`extractTextFromChildren`
+
+_boolean, default: true_. When enabled, the SDK extracts text from child components as a label fallback when no explicit label prop is set. Automatically disabled when Session Replay's `maskAllText` is enabled. See [Automatic Text Extraction from Children](#automatic-text-extraction-from-children).
 
 ## Minified Names in Production
 

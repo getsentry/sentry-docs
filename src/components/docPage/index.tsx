@@ -72,7 +72,7 @@ export async function DocPage({
   const leafNode = nodeForPath(rootNode, unversionedPath);
 
   return (
-    <div className="tw-app">
+    <div className={`tw-app${hasToc ? ' has-toc' : ''}`}>
       {isDeveloperDocs ? (
         <DevelopDocsHeader pathname={pathname} searchPlatforms={searchPlatforms} />
       ) : (
@@ -90,7 +90,7 @@ export async function DocPage({
           <div
             className={[
               'pt-6 px-6 prose dark:prose-invert max-w-full text-[var(--gray-12)] prose-a:no-underline hover:prose-a:underline',
-              'prose-code:font-normal prose-code:font-mono marker:text-[var(--accent)] prose-li:my-1',
+              'prose-code:font-normal prose-code:font-mono marker:text-[var(--darkPurple)] marker:font-medium prose-li:my-1',
               'prose-headings:mt-0 prose-headings:font-medium prose-headings:relative prose-headings:text-[var(--gray-12)]',
               'prose-blockquote:font-normal prose-blockquote:border-l-[3px] prose-em:font-normal prose-blockquote:text-[var(--gray-12)]',
               'prose-img:my-2',
@@ -163,6 +163,14 @@ export async function DocPage({
         #doc-content {
           max-width: var(--doc-content-w);
           box-sizing: border-box;
+        }
+        /* When the TOC is visible but the full layout doesn't fit yet, shrink content
+           to fill available space rather than overflowing. Only applies when the TOC
+           is actually rendered (has-toc class). */
+        @media (min-width: 1490px) and (max-width: 1649px) {
+          .has-toc #doc-content {
+            max-width: calc(100vw - var(--sidebar-width, 300px) - var(--toc-w) - 2rem);
+          }
         }
         /* Mobile responsive styles */
         @media (max-width: 768px) {
