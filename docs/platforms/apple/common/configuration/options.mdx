@@ -106,8 +106,7 @@ You can also override this option on a per-call basis by passing the `attachAllT
 
 When enabled, the SDK reports SIGTERM signals to Sentry.
 
-It's crucial for developers to understand that the OS sends a SIGTERM to their app as a prelude to a graceful shutdown, before resorting to a SIGKILL. This SIGKILL, which your app can't catch or ignore, is a direct order to terminate your app's process immediately. Developers should be aware that their app can receive a SIGTERM in various scenarios, such as  CPU or disk overuse, watchdog terminations, or when the OS updates your app.
-
+It's crucial for developers to understand that the OS sends a SIGTERM to their app as a prelude to a graceful shutdown, before resorting to a SIGKILL. This SIGKILL, which your app can't catch or ignore, is a direct order to terminate your app's process immediately. Developers should be aware that their app can receive a SIGTERM in various scenarios, such as CPU or disk overuse, watchdog terminations, or when the OS updates your app.
 
 </SdkOption>
 
@@ -205,7 +204,6 @@ This option can be overridden using <PlatformIdentifier name="inAppInclude" />.
 
 A block that configures the initial scope when starting the SDK.
 
-
 ```swift
 import Sentry
 
@@ -301,6 +299,7 @@ Set this boolean to `false` to disable sending of client reports. Client reports
 When enabled, the SDK adds breadcrumbs for each network request. This feature uses swizzling, so disabling <PlatformLink to="/configuration/swizzling/">`enableSwizzling`</PlatformLink> also disables this feature.
 
 If you want to enable or disable network tracking for performance monitoring, use <PlatformLink to="/configuration/options/#enableNetworkTracking">`enableNetworkTracking`</PlatformLink> instead.
+
 </SdkOption>
 
 <SdkOption name="enableCaptureFailedRequests" type="bool" defaultValue="true">
@@ -640,7 +639,6 @@ If <PlatformIdentifier name="tracePropagationTargets" /> is not provided, trace 
 
 </SdkOption>
 
-
 <SdkOption name="strictTraceContinuation" type="Bool" defaultValue="false">
 
 If set to `true`, the SDK will only continue a trace if the organization ID of the incoming trace found in the `baggage` header matches the organization ID of the current Sentry client.
@@ -672,7 +670,6 @@ Use <PlatformIdentifier name="tracePropagationTargets" /> to control which reque
 </SdkOption>
 
 <SdkOption name="enablePersistingTracesWhenCrashing" type="bool" defaultValue="false" availableSince="8.41.0">
-
 
 <Alert>
 
@@ -851,8 +848,6 @@ Requires `options.experimental.enableReplayNetworkDetailsCapturing = true`.
 When enabled, request and response bodies are captured for URLs matching `networkDetailAllowUrls`. When disabled, only headers and metadata are captured. Bodies are truncated to 150KB.
 
 Requires `options.experimental.enableReplayNetworkDetailsCapturing = true`.
-
-
 
 </SdkOption>
 
@@ -1108,6 +1103,7 @@ Learn more in the <PlatformLink to="/features/experimental-features/">Experiment
 <SdkOption name="cacheDirectoryPath" type="string">
 
 The path where the SDK stores data before sending it to Sentry. By default, the SDK uses `NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, true)`, which resolves to:
+
 - `~/Library/Caches/` for non-sandboxed macOS apps
 - `~/Library/Containers/{BundleID}/Data/Library/Caches/` for sandboxed macOS apps
 - `~/Library/Caches/` (within the app's sandbox) for iOS apps
@@ -1183,6 +1179,24 @@ SentrySDK.start { options in
 When enabled, the SDK can capture request and response headers and bodies for network requests during session replay. You must also configure `options.sessionReplay.networkDetailAllowUrls` to specify which requests are captured.
 
 Learn more in the <PlatformLink to="/session-replay/configuration/#network-details">Network Details</PlatformLink> documentation.
+
+</SdkOption>
+
+<SdkOption name="experimental.enableStandaloneAppStartTracing" type="bool" defaultValue="false" availableSince="9.14.0">
+
+When enabled, the SDK sends app start data as a standalone `app.start` transaction instead of attaching it as spans to the first UIViewController transaction. This makes app starts easier to find, sample, and analyze independently.
+
+Learn more in the <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#standalone-app-start-tracing">Standalone App Start Tracing</PlatformLink> documentation.
+
+</SdkOption>
+
+<SdkOption name="experimental.appStartSampleRate" type="float" defaultValue="nil">
+
+The sample rate for standalone app start transactions, overriding <PlatformIdentifier name="tracesSampleRate" />. When set, standalone app start transactions use this rate instead of <PlatformIdentifier name="tracesSampleRate" />. A custom <PlatformIdentifier name="tracesSampler" /> callback still takes precedence.
+
+Requires <PlatformIdentifier name="experimental.enableStandaloneAppStartTracing" /> to be enabled.
+
+The value must be between `0.0` and `1.0`. Setting `nil` (the default) falls back to <PlatformIdentifier name="tracesSampleRate" />. Setting `0` discards all app start transactions, and `1.0` collects all of them. Values outside the valid range are clamped to `0`.
 
 </SdkOption>
 
