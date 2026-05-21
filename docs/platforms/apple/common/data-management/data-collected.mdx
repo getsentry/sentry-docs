@@ -18,7 +18,7 @@ The category types and amount of data collected vary, depending on the integrati
 
 ## HTTP Headers
 
-The <PlatformLink to="/configuration/http-client-errors">HTTP Client Errors</PlatformLink>, which are enabled by default, send the HTTP headers of the failed request and response to Sentry. The SDK uses a [denylist](https://github.com/getsentry/sentry-cocoa/blob/main/Sources/Swift/Tools/HTTPHeaderSanitizer.swift) to filter out any headers that contain sensitive data.
+The <PlatformLink to="/configuration/http-client-errors">HTTP Client Errors</PlatformLink>, which are enabled by default, send the HTTP headers of the failed request and response to Sentry. The SDK uses a [denylist](https://github.com/getsentry/sentry-cocoa/blob/main/Sources/Swift/Core/Tools/HTTPHeaderSanitizer.swift) to filter out any headers that contain sensitive data.
 
 ## Users' IP Addresses
 
@@ -65,5 +65,18 @@ The <PlatformLink to="/enriching-events/viewhierarchy">view hierarchy feature</P
 ## Session Replay
 
 By default, our Session Replay SDK masks all text content, images, webviews, and user input. This helps ensure that no sensitive data is exposed. You can find <PlatformLink to="/session-replay/#privacy">more details in the Session Replay documentation</PlatformLink>.
+
+### Network Details in Session Replay
+
+When you enable the experimental `enableReplayNetworkDetailsCapturing` option and configure `sessionReplay.networkDetailAllowUrls`, the SDK captures HTTP request and response details for matching URLs during session replay. This data is attached to replay breadcrumbs and may include:
+
+- **Request and response headers**: By default, only `Content-Type`, `Content-Length`, and `Accept` are captured. You can configure additional headers via `networkRequestHeaders` and `networkResponseHeaders`.
+- **Request and response bodies**: Enabled by default when network details are active (controlled by `networkCaptureBodies`). Only JSON, text, and form-urlencoded bodies are captured — binary content types are not. Bodies are truncated at 150KB.
+
+This feature requires explicit opt-in and URL allowlisting. URLs matching `networkDetailDenyUrls` are excluded even if they match the allowlist. No network body data is captured unless both the experimental flag and the URL allowlist are configured.
+
+<Alert level="warning">
+  Network request and response bodies can contain PII. Review your `networkDetailAllowUrls` patterns carefully to avoid capturing sensitive data.
+</Alert>
 
 </PlatformSection>
