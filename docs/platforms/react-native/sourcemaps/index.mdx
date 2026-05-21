@@ -52,6 +52,40 @@ sentry {
 }
 ```
 
+#### Expo
+
+In Expo managed projects, you can disable uploads directly in the plugin configuration using the `disableAutoUpload` option. This bakes the setting into the native projects during `expo prebuild`, so uploads are disabled even when building from the Xcode GUI where environment variables aren't available.
+
+```javascript
+// app.config.js
+module.exports = withSentry(config, {
+  project: "my-project",
+  organization: "my-org",
+  disableAutoUpload: true,
+});
+```
+
+You can also set the environment variable when running builds from the CLI:
+
+```bash
+SENTRY_DISABLE_AUTO_UPLOAD=true npx expo run:ios
+SENTRY_DISABLE_AUTO_UPLOAD=true npx expo run:android
+```
+
+Or in `eas.json` for EAS builds:
+
+```json
+{
+  "build": {
+    "development": {
+      "env": {
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
+      }
+    }
+  }
+}
+```
+
 ### Debug Builds
 
 Symbolication is handled directly by the Metro development server, automatically providing the symbolication needed to translate stack traces into readable source code in a development environment. There's no need to upload source maps for these types of builds which is why the automatic uploading of source maps is disabled.
