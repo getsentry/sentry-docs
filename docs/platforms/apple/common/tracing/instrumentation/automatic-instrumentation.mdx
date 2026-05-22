@@ -233,7 +233,7 @@ SentrySDK.start { options in
 }];
 ```
 
-When enabled, you can also set a dedicated sample rate for app start transactions using `experimental.appStartSampleRate`. This overrides `tracesSampleRate` for app start transactions only, so you can collect all app starts without increasing your overall sample rate. A custom `tracesSampler` callback still takes precedence.
+Since standalone app start transactions use the `app.start` operation, you can use a custom `tracesSampler` to set a dedicated sample rate for app starts without increasing your overall sample rate:
 
 ```swift {tabTitle:Swift}
 import Sentry
@@ -242,7 +242,12 @@ SentrySDK.start { options in
     options.dsn = "___PUBLIC_DSN___"
     options.tracesSampleRate = 0.1
     options.experimental.enableStandaloneAppStartTracing = true
-    options.experimental.appStartSampleRate = 1.0
+    options.tracesSampler = { context in
+        if context.transactionContext.operation == "app.start" {
+            return 1.0
+        }
+        return nil
+    }
 }
 ```
 
@@ -253,7 +258,12 @@ SentrySDK.start { options in
     options.dsn = @"___PUBLIC_DSN___";
     options.tracesSampleRate = @0.1;
     options.experimental.enableStandaloneAppStartTracing = YES;
-    options.experimental.appStartSampleRate = @1.0;
+    options.tracesSampler = ^NSNumber * _Nullable(SentrySamplingContext * context) {
+        if ([context.transactionContext.operation isEqualToString:@"app.start"]) {
+            return @1.0;
+        }
+        return nil;
+    };
 }];
 ```
 
