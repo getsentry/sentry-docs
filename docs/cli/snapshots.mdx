@@ -2,7 +2,7 @@
 title: Snapshots (CLI)
 sidebar_order: 6
 description: "Upload snapshot images to Sentry with sentry-cli for visual diffing and GitHub status checks."
-beta: true
+early_access: true
 ---
 
 <Include name="feature-available-for-user-group-early-adopter" />
@@ -52,14 +52,13 @@ For PRs from forks, set `--base-repo-name` to the upstream repository so Sentry 
 
 ## Selective Uploads
 
-If you shard snapshot generation across parallel CI jobs and upload each shard separately, pass `--selective` on every upload:
+If you only upload a subset of your snapshots per CI run — for example, because you run only affected tests — pass `--selective`:
 
 ```bash
-sentry-cli build snapshots ./shard-1 --app-id web-frontend --selective
-sentry-cli build snapshots ./shard-2 --app-id web-frontend --selective
+sentry-cli build snapshots ./snapshots --app-id web-frontend --selective
 ```
 
-Sentry merges selective uploads that share the same commit SHA and `app-id`. Removals and renames cannot be detected on PRs when using `--selective`, because Sentry cannot distinguish an intentionally deleted snapshot from one that simply wasn't part of this shard.
+When an upload is marked as selective, Sentry only diffs the snapshots you uploaded. Any snapshot that exists in the base build but was not included in the upload is treated as unchanged rather than removed. Removals and renames cannot be detected when using `--selective`, because Sentry cannot distinguish a deliberately deleted snapshot from one that was not part of the subset.
 
 ## Diff Threshold
 
@@ -84,7 +83,7 @@ sentry-cli build snapshots [OPTIONS] --app-id <APP_ID> <PATH>
 | `--auth-token <TOKEN>`          | Sentry auth token. Can also be set via `SENTRY_AUTH_TOKEN`.                                                                                                                    |
 | `-o`, `--org <ORG>`             | Sentry organization slug. Can also be set via `SENTRY_ORG`.                                                                                                                    |
 | `-p`, `--project <PROJECT>`     | Sentry project slug. Can also be set via `SENTRY_PROJECT`.                                                                                                                     |
-| `--selective`                   | Mark the upload as a subset. Use when sharding snapshot generation across parallel jobs.                                                                                       |
+| `--selective`                   | Mark the upload as a subset. Use when uploading only a portion of your snapshots (for example, affected tests only).                                                           |
 | `--diff-threshold <THRESHOLD>`  | Float between `0.0` and `1.0`. Sentry only reports images as changed if the percentage of changed pixels exceeds this value.                                                   |
 | `--head-sha <SHA>`              | Commit SHA for the upload. Auto-detected in CI.                                                                                                                                |
 | `--base-sha <SHA>`              | Base commit SHA for comparison (PR only). Auto-detected from merge-base.                                                                                                       |
