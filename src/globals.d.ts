@@ -1,4 +1,4 @@
-import type * as Sentry from '@sentry/browser';
+import type * as Sentry from '@sentry/nextjs';
 
 declare global {
   interface Window {
