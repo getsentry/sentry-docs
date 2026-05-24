@@ -756,6 +756,26 @@ const userDocsRedirects = [
     source: '/organization/integrations/flow-relay/',
     destination: '/integrations/third-party-integrations/',
   },
+  {
+    source: '/organization/integrations/deviera/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/fencer/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/leroy/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/logbrew/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/supernaut/',
+    destination: '/integrations/third-party-integrations/',
+  },
   // /integrations/<slug>/ redirects handle the /product/integrations/<slug>/ chain
   // via the wildcard redirect at the bottom of this file
   {
@@ -840,6 +860,26 @@ const userDocsRedirects = [
   },
   {
     source: '/integrations/flow-relay/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/deviera/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/fencer/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/leroy/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/logbrew/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/supernaut/',
     destination: '/integrations/third-party-integrations/',
   },
   {
