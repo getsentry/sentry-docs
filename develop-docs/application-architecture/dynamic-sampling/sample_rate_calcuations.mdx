@@ -65,12 +65,11 @@ final_sample_rate =
 The Boost Latest Releases multiplier is calculated when Sentry generates the latest release bias rules in [`BoostLatestReleasesBias`](https://github.com/getsentry/sentry/blob/master/src/sentry/dynamic_sampling/rules/biases/boost_latest_releases_bias.py). The rule starts with the constant `LATEST_RELEASES_BOOST_FACTOR`, which is currently `1.5`, and then applies the dynamic factor function:
 
 ```
-boost_latest_releases_multiplier = boost_factor / (boost_factor ** base_sample_rate)
+boost_latest_releases_multiplier = boost_factor**(1 - base_sample_rate)
 ```
 
-The dynamic factor function makes the multiplier smaller as the base sample rate gets larger. This prevents the boost from oversampling too aggressively when the project is already sampling a large share of its traffic.
-
-Sentry only emits these rules for releases that are currently in the boosted release set for a project. The rule matches on `trace.release` and `trace.environment`, starts when the release was first boosted, and decays linearly back to `1.0` over the platform-specific time-to-adoption window.
+As the base sample rate decreases, the boost factor is increased to compensate and ensure that there is a higher likelihood of transactions being sampled. 
+Sentry only emits these rules for releases that are currently in the boosted release set for a project. Releases are boosted at 1.5x the base sample rate and then decay back to `1.0` over the platform-specific time-to-adoption window (see [time-to-adoption implementation](https://github.com/getsentry/sentry/blob/master/src/sentry/dynamic_sampling/rules/helpers/time_to_adoptions.py#L25-L26)).
 
 ## Calculation of the Rebalance Transactions multiplier
 
