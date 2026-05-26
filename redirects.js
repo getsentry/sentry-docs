@@ -592,6 +592,14 @@ const userDocsRedirects = [
     destination: '/api/auth/',
   },
   {
+    source: '/product/codecov/:path*',
+    destination: '/integrations/code-coverage/codecov/:path*',
+  },
+  {
+    source: '/product/codecov/',
+    destination: '/integrations/code-coverage/codecov/',
+  },
+  {
     source: '/integrations/incidentio/',
     destination: '/integrations/issue-tracking/incidentio/',
   },
