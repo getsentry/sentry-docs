@@ -159,6 +159,79 @@ You can opt out of Activity Instrumentation and App Start Instrumentation using 
 
 Cold and warm start are Mobile Vitals, which you can learn about in the [full documentation](/product/dashboards/sentry-dashboards/mobile/mobile-vitals).
 
+### Standalone App Start Tracing
+
+<Alert>
+
+This feature is experimental.
+
+</Alert>
+
+By default, the SDK attaches app start data as spans to the first Activity `ui.load` transaction. With standalone app start tracing enabled, the SDK sends a dedicated `App Start` transaction with operation `app.start` instead. When an Activity starts, this transaction shares the same trace ID as the Activity `ui.load` transaction.
+
+Standalone app start tracing can also report app starts that don't launch an Activity, such as starts from broadcast receivers, foreground services, or content providers. If `Application.onCreate` instrumentation isn't available, these transactions may include fewer phase spans.
+
+To enable standalone app start tracing:
+
+```xml {filename:AndroidManifest.xml}
+<application>
+    <meta-data android:name="io.sentry.standalone-app-start-tracing.enable" android:value="true" />
+</application>
+```
+
+```java {tabTitle:Java}
+import io.sentry.android.core.SentryAndroid;
+
+SentryAndroid.init(this, options -> {
+    options.setDsn("___PUBLIC_DSN___");
+    options.setEnableStandaloneAppStartTracing(true);
+});
+```
+
+```kotlin {tabTitle:Kotlin}
+import io.sentry.android.core.SentryAndroid
+
+SentryAndroid.init(this) { options ->
+    options.dsn = "___PUBLIC_DSN___"
+    options.isEnableStandaloneAppStartTracing = true
+}
+```
+
+Since standalone app start transactions use the `app.start` operation, you can use a custom `tracesSampler` to set a dedicated sample rate for app starts without increasing your overall sample rate:
+
+```java {tabTitle:Java}
+import io.sentry.android.core.SentryAndroid;
+
+SentryAndroid.init(this, options -> {
+    options.setDsn("___PUBLIC_DSN___");
+    options.setTracesSampleRate(0.1);
+    options.setEnableStandaloneAppStartTracing(true);
+    options.setTracesSampler(context -> {
+        if ("app.start".equals(context.getTransactionContext().getOperation())) {
+            return 1.0;
+        }
+        return null;
+    });
+});
+```
+
+```kotlin {tabTitle:Kotlin}
+import io.sentry.SentryOptions.TracesSamplerCallback
+import io.sentry.android.core.SentryAndroid
+
+SentryAndroid.init(this) { options ->
+    options.dsn = "___PUBLIC_DSN___"
+    options.tracesSampleRate = 0.1
+    options.isEnableStandaloneAppStartTracing = true
+    options.tracesSampler = TracesSamplerCallback { context ->
+        if (context.transactionContext.operation == "app.start") {
+            return@TracesSamplerCallback 1.0
+        }
+        null
+    }
+}
+```
+
 ### Slow and Frozen Frames
 
 <Alert>
@@ -352,6 +425,7 @@ To change the timeouts you can:
     <meta-data android:name="io.sentry.traces.deadline-timeout" android:value="0" /> <!-- 0 disable deadline timeout -->
 </application>
 ```
+
 ```java
 import io.sentry.android.core.SentryAndroid;
 
@@ -360,6 +434,7 @@ SentryAndroid.init(this, options -> {
     options.setDeadlineTimeout(0); // disable deadline timeout
 });
 ```
+
 ```kotlin
 import io.sentry.android.core.SentryAndroid
 
@@ -436,7 +511,7 @@ When the UI transaction is not finished yet, but the user makes a new interactio
 
 _(New in version 6.10.0)_
 
-By adding a span for each launch of an activity, time to initial display (TTID) provides insight into how long it takes for your activities to launch and draw their first UI frame. The SDK sets the span operation to `ui.load.initial-display` and the span description to the activity's name, followed by `initial display` -  for example, `MainActivity initial display`.
+By adding a span for each launch of an activity, time to initial display (TTID) provides insight into how long it takes for your activities to launch and draw their first UI frame. The SDK sets the span operation to `ui.load.initial-display` and the span description to the activity's name, followed by `initial display` - for example, `MainActivity initial display`.
 
 The span starts when each Activity is launched, which is defined as an application launch for the first Activity, and the `onPause` method of the previous Activity for each subsequent Activity launched.
 
