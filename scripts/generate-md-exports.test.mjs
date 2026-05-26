@@ -95,8 +95,18 @@ describe('rehypeExpandCodeTabs', () => {
 
     it('removes the CodeTabs-rendered active tab to avoid duplication', () => {
       const html = buildCodeTabsHTML([
-        {title: 'ESM', filename: 'instrument.mjs', lang: 'javascript', code: 'import init'},
-        {title: 'CJS', filename: 'instrument.js', lang: 'javascript', code: 'require init'},
+        {
+          title: 'ESM',
+          filename: 'instrument.mjs',
+          lang: 'javascript',
+          code: 'import init',
+        },
+        {
+          title: 'CJS',
+          filename: 'instrument.js',
+          lang: 'javascript',
+          code: 'require init',
+        },
       ]);
 
       const md = htmlToMarkdown(html);
@@ -106,8 +116,18 @@ describe('rehypeExpandCodeTabs', () => {
 
     it('does not add bold headings to the code block', () => {
       const html = buildCodeTabsHTML([
-        {title: 'ESM', filename: 'instrument.mjs', lang: 'javascript', code: 'import init'},
-        {title: 'CJS', filename: 'instrument.js', lang: 'javascript', code: 'require init'},
+        {
+          title: 'ESM',
+          filename: 'instrument.mjs',
+          lang: 'javascript',
+          code: 'import init',
+        },
+        {
+          title: 'CJS',
+          filename: 'instrument.js',
+          lang: 'javascript',
+          code: 'require init',
+        },
       ]);
 
       const md = htmlToMarkdown(html);
@@ -214,7 +234,12 @@ describe('rehypeExpandCodeTabs', () => {
       ]);
       const expanded = buildCodeTabsHTML(
         [
-          {title: 'Cloudflare Workers', filename: 'index.ts', lang: 'typescript', code: 'cf()'},
+          {
+            title: 'Cloudflare Workers',
+            filename: 'index.ts',
+            lang: 'typescript',
+            code: 'cf()',
+          },
           {title: 'Node.js', filename: 'app.ts', lang: 'typescript', code: 'node()'},
         ],
         {expand: true}
