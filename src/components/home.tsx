@@ -102,6 +102,13 @@ export async function Home() {
                   identify and debug performance issues and errors across their systems
                   and services.
                 </p>
+                <a
+                  href="/get-started/"
+                  className="mb-4 inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-white no-underline hover:opacity-90 transition-opacity text-sm"
+                  style={{backgroundColor: '#8b5cf6'}}
+                >
+                  Get Started
+                </a>
                 <HomeSearchObserver>
                   <div className="home-search-bar relative z-50 self-stretch">
                     <Search

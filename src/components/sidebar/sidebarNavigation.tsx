@@ -11,6 +11,16 @@ import {docNodeToNavNode, getNavNodes} from './utils';
 export async function SidebarNavigation({path}: {path: string[]}) {
   const rootNode = await getDocsRootNode();
 
+  // Get Started section
+  if (path[0] === 'get-started') {
+    return (
+      <ProductSidebar
+        rootNode={rootNode}
+        items={[{title: 'Get Started', root: 'get-started'}]}
+      />
+    );
+  }
+
   // Product section: just show the sidebar for /product/ and its children
   if (path[0] === 'product') {
     return (
