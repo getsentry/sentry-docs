@@ -222,7 +222,7 @@ export async function Home() {
                     Session Replay
                   </a>
                   ,{' '}
-                  <a href="/product/drains/" className="text-[#8b5cf6] underline">
+                   <a href="/product/logs/" className="text-[#8b5cf6] underline">
                     Logs
                   </a>
                   , and{' '}
