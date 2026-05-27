@@ -1,5 +1,6 @@
 'use client';
 
+import * as Sentry from '@sentry/nextjs';
 import Link from 'next/link';
 import {useCallback} from 'react';
 
@@ -36,7 +37,10 @@ export function SmartLink({
       try {
         await navigator.clipboard.writeText(link.href);
       } catch {
-        // Clipboard write permission may be denied in some environments; ignore silently
+        Sentry.logger.warn('clipboard.writeText permission denied', {
+          url: link.href,
+          userAgent: navigator.userAgent,
+        });
       }
     }
   }, []);
