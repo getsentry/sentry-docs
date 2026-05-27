@@ -7,8 +7,6 @@ notSupported:
   - javascript.cordova
 ---
 
-<AvailableSince version="10.53.1" />
-
 By default, the Sentry JavaScript SDKs collect all spans in memory and send them to Sentry as a single transaction once the root span ends. This is called transaction mode.
 Stream mode changes this by sending spans to Sentry in batches as they finish. Service spans, which represent a service's entry point, replace transactions as the main grouping for each service.
 
@@ -20,6 +18,25 @@ Stream mode changes this by sending spans to Sentry in batches as they finish. S
 - **No data loss from crashes.** If your process terminates unexpectedly, spans that were already flushed are preserved. In transaction mode, a crash before the root span ends means all span data is lost.
 
 </Expandable>
+
+You can find the following span types mentioned throughout this page:
+
+- **Root span**: The topmost span in a trace. It has no parent span and is always a service span.
+- **Service span**: A parent-level span at the entry of a service. In transaction mode, this is called transaction.
+- **Child span**: Any span nested under a parent span within the same trace.
+
+This graph shows how these span types relate to each other within a trace:
+
+```
+Trace
+│
+└── Root span [service A]
+     ├── Child span
+     │    └── Child span
+     └── Service span [service B]
+          ├── Child span
+          └── Child span
+```
 
 ## Prerequisites
 
@@ -199,6 +216,8 @@ To modify or redact span data before it's sent, use <PlatformLink to="/configura
   spans. Use [`ignoreSpans`](#drop-spans) instead.
 </Alert>
 
+The `span` object also has different property names in stream mode. For example, `span.op` becomes `span.attributes?.["sentry.op"]` and `span.description` becomes `span.name`. See the migration note below for the full list.
+
 </SplitSectionText>
 <SplitSectionCode>
 
@@ -252,16 +271,27 @@ Sentry.init({
 </SplitSection>
 </SplitLayout>
 
-<Alert level="warning" title="Migrating from transaction mode?">
+<Expandable level="warning" title="Migrating from transaction mode?">
 
 If you're using `beforeSendSpan`, wrap it with `Sentry.withStreamedSpan()` as shown above, otherwise the SDK falls back to transaction mode.
-The callback signature and properties of the span object are also shaped differently. See <PlatformLink to="/configuration/options/#beforesendspan">`beforeSendSpan`</PlatformLink> for the full reference.
+
+Note that the `span` object is `StreamedSpanJSON` instead of `SpanJSON` and has different property names:
+
+| Transaction Mode (`SpanJSON`)      | Stream Mode (`StreamedSpanJSON`)    |
+| ---------------------------------- | ----------------------------------- |
+| `span.description`                 | `span.name`                         |
+| `span.data` (processed attributes) | `span.attributes` (raw attributes)  |
+| `span.timestamp` (end time)        | `span.end_timestamp`                |
+| `span.status` (optional string)    | `span.status` (`'ok'` or `'error'`) |
+| `span.op`                          | `span.attributes['sentry.op']`      |
 
 If you're using `beforeSendTransaction` to drop spans, use [`ignoreSpans`](#drop-spans) instead, since `beforeSendTransaction` is not available in stream mode.
 
-</Alert>
+</Expandable>
 
 ### Drop Spans
+
+In stream mode, `ignoreSpans` is evaluated at span start, so only the span name and attributes available at that point are taken into account. Any name updates or additional attributes added while the span is active won't influence whether the span is dropped.
 
 <SplitLayout>
 <SplitSection>
@@ -335,8 +365,6 @@ Sentry.init({
 </SplitLayout>
 
 If a matching span is a service span, all of its child spans are dropped as well. If a child span matches, only that span is dropped and its children are reparented to the nearest ancestor.
-
-In stream mode, `ignoreSpans` is evaluated at span start, so only the span name and attributes available at that point are taken into account. Any name updates or additional attributes added while the span is active won't influence whether the span is dropped.
 
 <Alert level="warning" title="Migrating from transaction mode?">
 
