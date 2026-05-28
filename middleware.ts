@@ -325,6 +325,22 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/platforms/javascript/guides/cloudflare/',
   },
   {
+    from: '/integrations/debugging/revisedev/',
+    to: '/integrations/debugging/',
+  },
+  {
+    from: '/integrations/debugging/phoebeai/',
+    to: '/integrations/debugging/',
+  },
+  {
+    from: '/integrations/debugging/qckfx/',
+    to: '/integrations/debugging/',
+  },
+  {
+    from: '/integrations/debugging/sevvy/',
+    to: '/integrations/debugging/corelayer/',
+  },
+  {
     from: '/product/data-management-settings/dynamic-sampling/',
     to: '/product/dashboards/sentry-dashboards/',
   },
@@ -4324,7 +4340,7 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/organization/integrations/revisedev/',
-    to: '/integrations/debugging/revisedev/',
+    to: '/integrations/debugging/',
   },
   {
     from: '/organization/integrations/foamai/',

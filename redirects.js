@@ -665,15 +665,15 @@ const userDocsRedirects = [
   },
   {
     source: '/integrations/phoebeai/',
-    destination: '/integrations/debugging/phoebeai/',
+    destination: '/integrations/debugging/',
   },
   {
     source: '/integrations/qckfx/',
-    destination: '/integrations/debugging/qckfx/',
+    destination: '/integrations/debugging/',
   },
   {
     source: '/integrations/revisedev/',
-    destination: '/integrations/debugging/revisedev/',
+    destination: '/integrations/debugging/',
   },
   {
     source: '/integrations/rookout/',
@@ -681,7 +681,7 @@ const userDocsRedirects = [
   },
   {
     source: '/integrations/sevvy/',
-    destination: '/integrations/debugging/sevvy/',
+    destination: '/integrations/debugging/corelayer/',
   },
   {
     source: '/integrations/sourcery/',
