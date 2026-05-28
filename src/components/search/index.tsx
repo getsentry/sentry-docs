@@ -99,8 +99,13 @@ export function Search({
       searchPlatforms.length === 0 &&
       useStoredSearchPlatforms
     ) {
-      const platforms = JSON.parse(storedPlatforms);
-      setCurrentSearchPlatforms(platforms);
+      try {
+        const platforms = JSON.parse(storedPlatforms);
+        setCurrentSearchPlatforms(platforms);
+      } catch {
+        // If the stored value is not valid JSON, reset it
+        localStorage.removeItem(STORAGE_KEY);
+      }
     }
   }, [useStoredSearchPlatforms, searchPlatforms]);
 
