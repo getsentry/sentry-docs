@@ -144,6 +144,21 @@ init({
 })
 ```
 
+#### URLs
+
+URL strings in span descriptions follow the format defined in [Structuring Data](/sdk/telemetry/traces/structuring-data/): `METHOD scheme://host/path` — query strings and fragments are excluded. Authority credentials (`userinfo@`) are always replaced with `[Filtered]@`.
+
+The `queryParams` option controls query parameter filtering wherever query strings appear — including `url.full`, `url.query`, and `event.request.query_string`. `url.path` and the span description are unaffected since they never contain query strings.
+
+**Example:** Given a request to `https://user:pass@example.com/api/users?token=abc123&page=5`:
+
+| Attribute | `queryParams` enabled | `queryParams` off |
+|---|---|---|
+| Span description | `GET https://[Filtered]:[Filtered]@example.com/api/users` | same |
+| `url.full` | `https://example.com/api/users?token=[Filtered]&page=5` | `https://example.com/api/users` |
+| `url.path` | `/api/users` | same |
+| `url.query` | `token=[Filtered]&page=5` | not collected |
+
 #### Cookies and Query Params
 
 Cookies and query params may arrive as a single unparsed string (e.g., `Cookie: user_session=abc; theme=dark-mode`) rather than pre-split key-value pairs. SDKs **MAY** handle both cases:
