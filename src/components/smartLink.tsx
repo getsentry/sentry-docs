@@ -1,5 +1,6 @@
 'use client';
 
+import * as Sentry from '@sentry/nextjs';
 import Link from 'next/link';
 import {useCallback} from 'react';
 
@@ -30,10 +31,17 @@ export function SmartLink({
 }: Props) {
   const realTo = to || href || '';
 
-  const handleAutolinkClick = useCallback((e: React.MouseEvent) => {
+  const handleAutolinkClick = useCallback(async (e: React.MouseEvent) => {
     const link = e.currentTarget as HTMLAnchorElement;
     if (link.classList.contains('autolink-heading')) {
-      navigator.clipboard.writeText(link.href);
+      try {
+        await navigator.clipboard.writeText(link.href);
+      } catch {
+        Sentry.logger.warn('clipboard.writeText permission denied', {
+          url: link.href,
+          userAgent: navigator.userAgent,
+        });
+      }
     }
   }, []);
 
