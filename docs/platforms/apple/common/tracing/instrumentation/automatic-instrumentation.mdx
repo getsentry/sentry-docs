@@ -267,6 +267,95 @@ SentrySDK.start { options in
 }];
 ```
 
+#### Extending the App Launch
+
+<Alert>
+
+Available since [version 9.15.0](https://github.com/getsentry/sentry-cocoa/blob/main/CHANGELOG.md#9150).
+
+</Alert>
+
+By default, the standalone app start transaction ends when the `didFinishLaunchingNotification` notification is posted (after `application(_:didFinishLaunchingWithOptions:)` function returns). If your app performs additional work after that — such as loading initial data from a server or database — you can extend the app start transaction to include that time by calling `SentrySDK.extendAppLaunch()` and `SentrySDK.finishExtendedAppLaunch()`.
+
+Call `extendAppLaunch()` after `SentrySDK.start(options:)` and before `application(_:didFinishLaunchingWithOptions:)` returns, so the SDK doesn't automatically finish the app start transaction. Then call `finishExtendedAppLaunch()` once your app is fully ready. This adds an "Extended App Start" child span covering the time between the two calls.
+
+**UIKit:**
+
+```swift {tabTitle:Swift}
+import Sentry
+
+func application(
+    _ application: UIApplication,
+    didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
+) -> Bool {
+    SentrySDK.start { options in
+        options.dsn = "___PUBLIC_DSN___"
+        options.experimental.enableStandaloneAppStartTracing = true
+    }
+    SentrySDK.extendAppLaunch()
+    return true
+}
+
+// Later, when your app is fully ready:
+func onDataLoaded() {
+    SentrySDK.finishExtendedAppLaunch()
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+- (BOOL)application:(UIApplication *)application
+    didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+    [SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+        options.dsn = @"___PUBLIC_DSN___";
+        options.experimental.enableStandaloneAppStartTracing = YES;
+    }];
+    [SentrySDK extendAppLaunch];
+    return YES;
+}
+
+// Later, when your app is fully ready:
+- (void)onDataLoaded {
+    [SentrySDK finishExtendedAppLaunch];
+}
+```
+
+**SwiftUI:**
+
+```swift {tabTitle:Swift}
+import Sentry
+
+@main
+struct MyApp: App {
+    init() {
+        SentrySDK.start { options in
+            options.dsn = "___PUBLIC_DSN___"
+            options.experimental.enableStandaloneAppStartTracing = true
+        }
+        SentrySDK.extendAppLaunch()
+    }
+
+    var body: some Scene {
+        WindowGroup {
+            ContentView(onReady: {
+                SentrySDK.finishExtendedAppLaunch()
+            })
+        }
+    }
+}
+```
+
+<Alert>
+
+`extendAppLaunch()` must be called before the `didFinishLaunchingNotification` notification is posted. If called after the app start transaction has already been created, it has no effect and the SDK logs a warning.
+
+Calling `finishExtendedAppLaunch()` without a prior `extendAppLaunch()` call, or after the extended launch was already finished, is a no-op.
+
+These APIs are only available on iOS, tvOS, and visionOS, and require `enableStandaloneAppStartTracing` to be enabled.
+
+</Alert>
+
 ## Slow and Frozen Frames
 
 This feature is available for iOS, tvOS, and Mac Catalyst.
