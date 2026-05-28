@@ -40,10 +40,33 @@ Seer's Issue Autofix flow follows a three step process:
 2. [Solution Identification](#solution-identification): Identify a solution based on the analysis
 3. [Code Generation](#code-generation): Generate a code fix and (optionally) open a PR, or hand off to a coding agent
 
-You can always manually trigger the Autofix flow from the Issue Details page. Issues will automatically trigger the flow when an agent is configured for background handoff and the Issue is highly actionable with 10+ events captured and high medium or above fixability score.
+You can always manually trigger the Autofix flow from the Issue Details page.
+
+### When Autofix Runs Automatically
+
+When automation is enabled in your project's Seer settings, Sentry can also trigger Autofix automatically on issues that meet the following criteria:
+
+1. **The issue has 10 or more events** — Sentry waits until the issue has captured at least 10 events to ensure it's worth investigating.
+2. **The issue occurred within the last 14 days** — Only recent issues are eligible for automatic runs.
+3. **The issue has a sufficient fixability score** — Sentry's ML model must estimate the issue is reasonably fixable (see below).
+
+#### How Far Autofix Goes
+
+How far Autofix automatically goes depends on two factors:
+
+1. **Fixability confidence** — Sentry's ML model evaluates each issue and estimates how straightforward it is to resolve. Issues with higher confidence may proceed through more automation steps.
+2. **Your automation preferences** — In your project's [Seer settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/seer/projects), you can cap how far automation goes, regardless of the fixability confidence.
+
+Your automation settings decide the stopping point. Even if an issue has high fixability confidence, Autofix will only automate as far as you've set it. The available stopping points are:
+
+- **Stop after Root Cause** — Autofix identifies the cause but doesn't suggest code changes.
+- **Stop after Plan** — Autofix suggests a fix but doesn't open a PR.
+- **Stop after PR Drafted** — Autofix can open a PR to apply the suggested fix.
+
+For example, if you've set **Stop after Plan**, Autofix will perform root cause analysis and solution planning, but won't create a PR, even for issues with very high fixability confidence. 
 
 <Alert>
-If you've recently set up Seer, existing issues will need Autofix to be run manually. 
+If you've recently set up Seer, existing issues will need Autofix to be run manually.
 </Alert>
 
 ### Root Cause Analysis

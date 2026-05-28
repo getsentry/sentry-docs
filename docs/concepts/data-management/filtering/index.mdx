@@ -207,3 +207,13 @@ touch 1.2.4
 echo 1.2.*
 echo 1.2.[!3]
 ```
+
+## Troubleshooting
+
+### Error Message Filters Do Not Match Deobfuscated Exception Types
+
+Inbound filters run immediately after Sentry receives an event. They do not wait for later processing such as symbolication, deobfuscation, or ProGuard mapping. For error events, Sentry matches the filter against `{exception.type}: {exception.value}` from the ingested event.
+
+If an error message filter does not filter an event, compare the filter against the event as Sentry received it, not only the issue title shown after processing. To find the original exception type, open the event JSON by clicking **{} View JSON** in the event header, then check `exception.values.raw_type`.
+
+For example, a filter such as `MyExceptionType: *` only matches events whose incoming exception type is `MyExceptionType`. If the app sent an obfuscated exception type, such as `x`, and Sentry later deobfuscated it to `MyExceptionType`, the event JSON may show `raw_type: "x"` while the issue title shows `MyExceptionType`. In that case, filter on the incoming exception type or configure your obfuscator to keep that exception type unchanged.
