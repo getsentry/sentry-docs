@@ -153,7 +153,7 @@ SentrySDK.capture(error: error)
 
 The `.md` export (mainly used by LLMs via the "Copy page" button) **collapses tab groups
 by default**: only the first tab is included, with a note listing the other tabs
-(e.g. *Also available for: yarn, pnpm*). This keeps context lean when tabs show
+(e.g. *Other available variations of the above snippet: yarn, pnpm*). This keeps context lean when tabs show
 trivial variations an LLM can infer on its own.
 
 Add `{mdExpandTabs}` to the first code fence in a group when the tabs contain code an LLM

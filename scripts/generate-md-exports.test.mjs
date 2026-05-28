@@ -69,7 +69,7 @@ describe('rehypeExpandCodeTabs', () => {
       expect(codeBlocks[0]).toContain('npm install @sentry/node');
     });
 
-    it('appends "Also available for" note listing other tab titles', () => {
+    it('appends note listing other tab titles', () => {
       const html = buildCodeTabsHTML([
         {title: 'npm', lang: 'bash', code: 'npm install @sentry/node'},
         {title: 'yarn', lang: 'bash', code: 'yarn add @sentry/node'},
@@ -78,7 +78,9 @@ describe('rehypeExpandCodeTabs', () => {
 
       const md = htmlToMarkdown(html);
 
-      expect(md).toContain('*Also available for: yarn, pnpm*');
+      expect(md).toContain(
+        '*Other available variations of the above snippet: yarn, pnpm*'
+      );
     });
 
     it('omits the note for a single-tab group', () => {
@@ -90,7 +92,7 @@ describe('rehypeExpandCodeTabs', () => {
 
       const codeBlocks = md.match(/```[\s\S]*?```/g);
       expect(codeBlocks).toHaveLength(1);
-      expect(md).not.toContain('Also available for');
+      expect(md).not.toContain('Other available variations of the above snippet');
     });
 
     it('removes the CodeTabs-rendered active tab to avoid duplication', () => {
@@ -252,7 +254,7 @@ describe('rehypeExpandCodeTabs', () => {
       expect(codeBlocks[0]).toContain('npm install');
       expect(codeBlocks[1]).toContain('cf()');
       expect(codeBlocks[2]).toContain('node()');
-      expect(md).toContain('*Also available for: yarn*');
+      expect(md).toContain('*Other available variations of the above snippet: yarn*');
       expect(md).toContain('**\\[Cloudflare Workers] index.ts**');
       expect(md).toContain('**\\[Node.js] app.ts**');
     });
@@ -271,7 +273,7 @@ describe('rehypeExpandCodeTabs', () => {
       expect(codeBlocks).toHaveLength(2);
       expect(codeBlocks[0]).toContain('npm install');
       expect(codeBlocks[1]).toContain('import init');
-      expect(md).toContain('*Also available for: CJS*');
+      expect(md).toContain('*Other available variations of the above snippet: CJS*');
     });
   });
 

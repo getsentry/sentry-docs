@@ -96,7 +96,10 @@ function collapseToFirstTab(exportBlocks) {
           tagName: 'em',
           properties: {},
           children: [
-            {type: 'text', value: `Also available for: ${otherTitles.join(', ')}`},
+            {
+              type: 'text',
+              value: `Other available variations of the above snippet: ${otherTitles.join(', ')}`,
+            },
           ],
         },
       ],
