@@ -105,7 +105,26 @@ async function indexAndUpload() {
   }
 
   if (!isDeveloperDocs) {
-    await index.setSettings(sentryAlgoliaIndexSettings);
+    await index.setSettings({
+      ...sentryAlgoliaIndexSettings,
+      searchableAttributes: [
+        'unordered(title)',
+        'unordered(section)',
+        'unordered(keywords)',
+        'text',
+      ],
+      ranking: [
+        'filters',
+        'typo',
+        'words',
+        'attribute',
+        'exact',
+        'proximity',
+        'desc(sectionRank)',
+        'asc(position)',
+        'asc(popularity)',
+      ],
+    });
   }
 
   const totalSeconds = (performance.now() - startTime) / 1000;
@@ -184,12 +203,27 @@ const frameworkPopularity: Record<string, number> = {
   unity: 17,
 };
 
-const getPopularity = (sdk: string | undefined, framework: string | undefined) => {
+const PRODUCT_DOC_PREFIXES = [
+  'product/',
+  'concepts/',
+  'cli/',
+  'guides/',
+  'integrations/',
+];
+
+const getPopularity = (
+  slug: string,
+  sdk: string | undefined,
+  framework: string | undefined
+) => {
   if (sdk && frameworkPopularity[sdk]) {
     return frameworkPopularity[sdk];
   }
   if (framework && frameworkPopularity[framework]) {
     return frameworkPopularity[framework];
+  }
+  if (PRODUCT_DOC_PREFIXES.some(prefix => slug.startsWith(prefix))) {
+    return 0;
   }
   return Number.MAX_SAFE_INTEGER;
 };
@@ -219,7 +253,7 @@ async function getRecords(
       keywords: pageFm.keywords,
       sdk,
       framework,
-      ...(!isDeveloperDocs && {popularity: getPopularity(sdk, framework)}),
+      ...(!isDeveloperDocs && {popularity: getPopularity(pageFm.slug, sdk, framework)}),
     };
 
     const cacheFileName = `v${CACHE_VERSION}_${md5(html + JSON.stringify(meta))}.json`;
