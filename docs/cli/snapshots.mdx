@@ -66,19 +66,31 @@ By default, `--selective` cannot detect removals or renames because Sentry canno
 
 - `--all-image-file-names <NAMES>` — a comma-separated list of all image file names.
 - `--all-image-file-names-file <PATH>` — a path to a file (`.txt`, `.csv`, etc.) containing all image file names, one per line.
+- `--all-image-file-names-as-regex <PATTERNS>` — a comma-separated list of regex patterns matching all image file names.
+- `--all-image-file-names-as-regex-file <PATH>` — a path to a file containing regex patterns, one per line.
 
-Either flag implicitly enables `--selective`.
+<Alert level="warning">
+  These four flags are mutually exclusive — you can only use one per upload.
+</Alert>
+
+All four flags implicitly enable `--selective`.
 
 ```bash
+# Literal names
 sentry-cli build snapshots ./snapshots \
   --app-id web-frontend \
   --all-image-file-names "homepage.png,settings/profile.png,settings/billing.png"
+
+# Regex patterns
+sentry-cli build snapshots ./snapshots \
+  --app-id web-frontend \
+  --all-image-file-names-as-regex ".*\.png"
 ```
 
-With this list, Sentry can tell apart three categories of missing images:
+With the image names or patterns provided, Sentry can tell apart three categories of missing images:
 
-- **Skipped** — in the list but not uploaded (part of the test suite, just not run in this CI job).
-- **Removed** — not in the list and not uploaded (deliberately deleted from the test suite).
+- **Skipped** — matched by the list/pattern but not uploaded (part of the test suite, just not run in this CI job).
+- **Removed** — not matched and not uploaded (deliberately deleted from the test suite).
 - **Renamed** — a new image has the same content hash as a missing one.
 
 ## Diff Threshold
@@ -105,8 +117,10 @@ sentry-cli build snapshots [OPTIONS] --app-id <APP_ID> <PATH>
 | `-o`, `--org <ORG>`             | Sentry organization slug. Can also be set via `SENTRY_ORG`.                                                                                                                    |
 | `-p`, `--project <PROJECT>`     | Sentry project slug. Can also be set via `SENTRY_PROJECT`.                                                                                                                     |
 | `--selective`                          | Mark the upload as a subset. Use when uploading only a portion of your snapshots (for example, affected tests only).                                                  |
-| `--all-image-file-names <NAMES>`       | Comma-separated list of all image file names in the full test suite. Enables removal and rename detection in selective mode. Implicitly enables `--selective`.         |
-| `--all-image-file-names-file <PATH>`   | Path to a file (`.txt`, `.csv`, etc.) containing all image file names, one per line. Enables removal and rename detection in selective mode. Implicitly enables `--selective`. |
+| `--all-image-file-names <NAMES>`       | Comma-separated list of all image file names in the full test suite. Enables removal and rename detection in selective mode. Implicitly enables `--selective`. Mutually exclusive with the other `--all-image-*` flags. |
+| `--all-image-file-names-file <PATH>`   | Path to a file (`.txt`, `.csv`, etc.) containing all image file names, one per line. Enables removal and rename detection in selective mode. Implicitly enables `--selective`. Mutually exclusive with the other `--all-image-*` flags. |
+| `--all-image-file-names-as-regex <PATTERNS>` | Comma-separated list of regex patterns matching all image file names in the full test suite. Enables removal and rename detection in selective mode. Implicitly enables `--selective`. Mutually exclusive with the other `--all-image-*` flags. |
+| `--all-image-file-names-as-regex-file <PATH>` | Path to a file containing regex patterns matching all image file names, one per line. Enables removal and rename detection in selective mode. Implicitly enables `--selective`. Mutually exclusive with the other `--all-image-*` flags. |
 | `--diff-threshold <THRESHOLD>`         | Float between `0.0` and `1.0`. Sentry only reports images as changed if the percentage of changed pixels exceeds this value.                                          |
 | `--head-sha <SHA>`              | Commit SHA for the upload. Auto-detected in CI.                                                                                                                                |
 | `--base-sha <SHA>`              | Base commit SHA for comparison (PR only). Auto-detected from merge-base.                                                                                                       |

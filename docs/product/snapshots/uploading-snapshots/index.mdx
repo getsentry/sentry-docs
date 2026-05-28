@@ -77,7 +77,9 @@ When an upload is marked as selective, Sentry only diffs the snapshots you uploa
 
 ### Detecting Removals and Renames
 
-By default, selective mode cannot detect removals or renames. If you want Sentry to distinguish deliberately deleted snapshots from ones that simply weren't run, pass the full list of image file names from your test suite:
+By default, selective mode cannot detect removals or renames. If you want Sentry to distinguish deliberately deleted snapshots from ones that simply weren't run, pass the full list of image file names from your test suite.
+
+You can provide literal file names:
 
 ```bash
 sentry-cli build snapshots ./snapshots \
@@ -93,16 +95,35 @@ sentry-cli build snapshots ./snapshots \
   --all-image-file-names-file ./all-snapshot-names.txt
 ```
 
-Either flag implicitly enables `--selective`. With the full list provided, Sentry categorizes missing images as:
+Alternatively, you can use regex patterns to match image names:
 
-- **Skipped** — in the list but not uploaded (part of the suite, just not run in this job).
-- **Removed** — not in the list and not uploaded (deleted from the suite).
+```bash
+sentry-cli build snapshots ./snapshots \
+  --app-id web-frontend \
+  --all-image-file-names-as-regex ".*\.png"
+```
+
+Or a file of regex patterns, one per line:
+
+```bash
+sentry-cli build snapshots ./snapshots \
+  --app-id web-frontend \
+  --all-image-file-names-as-regex-file ./snapshot-patterns.txt
+```
+
+<Alert level="warning">
+  These four flags are mutually exclusive — you can only use one per upload.
+</Alert>
+
+All four flags implicitly enable `--selective`. With the image names or patterns provided, Sentry categorizes missing images as:
+
+- **Skipped** — matched by the list/pattern but not uploaded (part of the suite, just not run in this job).
+- **Removed** — not matched and not uploaded (deleted from the suite).
 - **Renamed** — a new image has the same content hash as a missing one.
 
 <Alert level="info">
-  Without `--all-image-file-names` or `--all-image-file-names-file`, selective
-  uploads treat all missing base images as skipped. Removals and renames cannot
-  be detected.
+  Without one of the `--all-image-file-names*` flags, selective uploads treat
+  all missing base images as skipped. Removals and renames cannot be detected.
 </Alert>
 
 For the full `sentry-cli build snapshots` flag reference, see [Snapshots (CLI)](/cli/snapshots/).
