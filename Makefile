@@ -4,8 +4,8 @@ develop: setup-git
 	npx -y @sentry/dotagents install
 
 setup-git:
-ifneq (, $(shell which pre-commit))
-	pre-commit install
+ifneq (, $(shell which prek))
+	prek install
 endif
 	git config branch.autosetuprebase always
 
