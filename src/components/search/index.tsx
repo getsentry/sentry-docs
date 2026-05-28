@@ -1,6 +1,7 @@
 'use client';
 
 import {ArrowRightIcon} from '@radix-ui/react-icons';
+import {Button} from '@radix-ui/themes';
 import {captureException} from '@sentry/nextjs';
 import {
   Hit,
@@ -336,14 +337,19 @@ export function Search({
         </div>
         <Fragment>
           <span className="text-[var(--desatPurple10)] hidden md:inline">or</span>
-          <button
-            type="button"
-            aria-label="Ask AI"
-            className="font-medium text-[var(--foreground)] py-2 px-3 uppercase cursor-pointer kapa-ai-class hidden md:flex mr-4 items-center gap-2"
+          <Button
+            asChild
+            variant="ghost"
+            color="gray"
+            size="3"
+            radius="medium"
+            className="font-medium text-[var(--foreground)] py-2 px-3 uppercase cursor-pointer kapa-ai-class hidden md:flex mr-4"
           >
-            <MagicIcon />
-            <span>Ask AI</span>
-          </button>
+            <button type="button" aria-label="Ask AI">
+              <MagicIcon />
+              <span>Ask AI</span>
+            </button>
+          </Button>
         </Fragment>
       </div>
       {query.length >= 2 && inputFocus && (
