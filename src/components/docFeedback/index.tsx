@@ -1,7 +1,7 @@
 'use client';
 import {CheckIcon as Check} from '@radix-ui/react-icons';
 import {Button} from '@radix-ui/themes';
-import * as Sentry from '@sentry/browser';
+import * as Sentry from '@sentry/nextjs';
 import {Fragment, useEffect, useState} from 'react';
 import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
 
