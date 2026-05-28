@@ -137,7 +137,9 @@ Sentry.withScope((scope) => {
   <Expandable title='What is the difference to `beforeSend`, `beforeSendTransaction`, and `beforeSendSpan`?'>
     `beforeSend`, `beforeSendTransaction`, and `beforeSendSpan` are guaranteed to be run last, after all other event processors, (which means they get the final version of the event right before it's sent, hence the name). Event processors added with `addEventProcessor` are run in an undetermined order, which means changes to the event may still be made after the event processor runs.
 
-    There can only be a single `beforeSend` / `beforeSendTransaction` / `beforeSendSpan` processor, but you can add multiple event processors via `addEventProcessor()`.
+    There can only be a single `beforeSend` / `beforeSendTransaction` / `beforeSendSpan` callback, but you can add multiple event processors via `addEventProcessor()`.
+
+    If you're using <PlatformLink to="/tracing/new-spans/">stream mode</PlatformLink>, use `beforeSendSpan`, since event processors are not applied to spans.
 
   </Expandable>
 </SdkApi>
@@ -507,12 +509,6 @@ Sentry.setContext("character", {
 
 ## Tracing
 
-<Alert>
-
-If you're using <PlatformLink to="/tracing/new-spans/">stream mode</PlatformLink>, the Tracing APIs work the same way unless noted otherwise.
-
-</Alert>
-
 <SdkApi
 name="startSpan"
 signature="function startSpan<T>(options: StartSpanOptions, callback: (span: Span) => T): T"
@@ -793,16 +789,18 @@ Sentry.reportPageLoaded();
 
 These utilities can be used for more advanced tracing use cases.
 
-<SdkApi name="spanToJSON" signature="function spanToJSON(span: Span): SpanJSON | StreamedSpanJSON">
-  Convert a span to a JSON object.
+<SdkApi name="spanToJSON" signature="function spanToJSON(span: Span): SpanJSON">
+  Convert a span to a JSON object. If you're using{" "}
+  <PlatformLink to="/tracing/new-spans/">stream mode</PlatformLink>, we
+  recommend using [`spanToStreamedSpanJSON`](#spanToStreamedSpanJSON) instead.
+</SdkApi>
 
-  The shape of the returned object depends on your tracing mode:
-
-  - In transaction mode (default), `spanToJSON` returns a `SpanJSON` object.
-  - In <PlatformLink to="/tracing/new-spans">stream mode</PlatformLink>, it returns a `StreamedSpanJSON` object.
-
-See <PlatformLink to="/configuration/options/#beforeSendSpan">`beforeSendSpan`</PlatformLink> for more information about these objects.
-
+<SdkApi
+  name="spanToStreamedSpanJSON"
+  signature="function spanToStreamedSpanJSON(span: Span): StreamedSpanJSON"
+>
+  Convert a span to a JSON object. Only available if you're using{" "}
+  <PlatformLink to="/tracing/new-spans/">stream mode</PlatformLink>.
 </SdkApi>
 
 <SdkApi
