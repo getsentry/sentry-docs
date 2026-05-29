@@ -160,58 +160,37 @@ Add `{mdExpandTabs}` to the first code fence in a group when the tabs contain co
 **cannot reliably derive** from seeing just one tab. This is rare — most times, adding only
 one tab to the produced `.md` is enough.
 
-**Primary test:** Would an LLM reading only the first tab produce a correct and complete implementation for the other tabs? If yes → collapse. If it'd miss something (an absent integration, a required import, a structurally different API) → expand.
-
-**Expand** — structural or content differences the LLM cannot infer:
-- Different runtimes or environments that require distinct setup flows (e.g. edge vs serverless vs traditional server)
-- Different API wrappers for the same conceptual operation (e.g. async vs sync handlers, different cloud function signatures)
-- Tabs that represent mutually exclusive approaches a developer must consciously choose between
-- When the choice has meaningful implications and the alternative approach wouldn't be obvious from the first tab alone (e.g., global vs. per-instance hooks, scoped vs. unscoped tracking)
-- Library or framework versions with incompatible imports or APIs
-- Deployment context splits (client/server, frontend/backend) where each context includes or omits entire integrations — not just the same code with a different import
-- Different platform targets (mobile/web/desktop) that require distinct SDKs or build steps
-- Different installation paradigms with fundamentally different integration patterns (e.g. package import vs CDN script tag vs loader callback)
-- SDK major version migrations where the API has changed
-
-**Collapse** (default) — an LLM can figure it out from one tab:
-- Package manager alternatives (e.g. npm/yarn/pnpm, pip/uv) — same concept, different tool name
-- Module format variants (e.g. ESM/CommonJS) — same API, different import syntax
-- Configuration file format alternatives (e.g. JSON/TOML, YAML/properties) — same keys, different syntax
-- Same-platform language pairs where translation is mechanical (e.g. Java/Kotlin, Swift/Objective-C). Expand only if the tabs use APIs that differ structurally between the languages, not just syntactically.
-- Import path variants where only the package scope or sub-path changes but the API is identical
-- Build tool alternatives where only dependency declaration syntax differs (e.g. Gradle/Maven)
-
 ~~~
-// EXPAND: different installation paradigms — an LLM reading only the NPM tab
-// cannot derive the CDN tab (different file, different callback, no import)
-```javascript {tabTitle:NPM} {mdExpandTabs}
-import * as Sentry from "@sentry/browser";
-
-Sentry.init({ dsn: "..." });
-```
-```html {tabTitle:CDN}
-<script src="https://browser.sentry-cdn.com/x.y.z/bundle.min.js"></script>
-<script>
-  Sentry.onLoad(function () {
-    Sentry.init({ dsn: "..." });
-  });
-</script>
-```
-
-// COLLAPSE: same-platform language pair, translation is mechanical — no {mdExpandTabs}
-```swift {tabTitle:Swift}
+```swift {tabTitle:Swift} {mdExpandTabs}
 SentrySDK.start { options in
     options.dsn = "..."
-    options.tracesSampleRate = 1.0
 }
 ```
+
 ```objc {tabTitle:Objective-C}
 [SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
     options.dsn = @"...";
-    options.tracesSampleRate = @1.0;
 }];
 ```
 ~~~
+
+**Expand** — the code is too different for an LLM to infer:
+- Different languages: Swift / Objective-C, cross-language guides (JS/Python/PHP/Ruby/...)
+- Different setup flows: Hono guide init (Cloudflare vs Node.js `--import` vs Bun)
+- Different APIs or wrappers: GCP Cloud Functions (`wrapHttpFunction` vs `wrapCloudEventFunction`), serverless async/sync handlers
+- Different framework versions with distinct imports: Spring 5/6/7, Spring Boot 2/3/4, Svelte v5+ / v3
+- Client / Server splits: Next.js, Remix, React Router (Replay + browser tracing vs Node integrations)
+- Different platform tooling: KMP (`commonMain` / `iosApp` / `androidApp`), Flutter navigation (Navigator / GoRouter / AutoRoute)
+- Install methods with different patterns: npm (`import`) vs CDN (`<script>`) vs Loader (`sentryOnLoad`)
+- SDK version migration: SDK 2.x vs 1.x when APIs differ
+
+**Collapse** (default) — an LLM can figure it out from one tab:
+- Package managers: npm / yarn / pnpm, pip / uv, .NET CLI / NuGet
+- Module format: ESM / CommonJS (same API, different import syntax)
+- Config file formats: JSON / TOML, properties / yml
+- Java / Kotlin on the same platform (same APIs, syntactic sugar differences)
+- Runtime tabs where only the import path changes (e.g. `@sentry/hono/cloudflare` vs `@sentry/hono/node` in `platform-includes/` snippets)
+- Build tools when only dependency declaration syntax differs: Gradle / Maven / SBT
 
 ## Review Checklist
 

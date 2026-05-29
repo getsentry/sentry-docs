@@ -75,10 +75,55 @@ sentry-cli build snapshots ./snapshots --app-id web-frontend --selective
 
 When an upload is marked as selective, Sentry only diffs the snapshots you uploaded. Any snapshot that exists in the base build but was not included in the upload is treated as **unchanged** (skipped) rather than removed.
 
+### Detecting Removals and Renames
+
+By default, selective mode cannot detect removals or renames. If you want Sentry to distinguish deliberately deleted snapshots from ones that simply weren't run, pass the full list of image file names from your test suite.
+
+You can provide literal file names:
+
+```bash
+sentry-cli build snapshots ./snapshots \
+  --app-id web-frontend \
+  --all-image-file-names "homepage.png,settings/profile.png,settings/billing.png"
+```
+
+Or, for large test suites, use a file (`.txt`, `.csv`, etc.) with one name per line:
+
+```bash
+sentry-cli build snapshots ./snapshots \
+  --app-id web-frontend \
+  --all-image-file-names-file ./all-snapshot-names.txt
+```
+
+Alternatively, you can use regex patterns to match image names:
+
+```bash
+sentry-cli build snapshots ./snapshots \
+  --app-id web-frontend \
+  --all-image-file-names-as-regex ".*\.png"
+```
+
+Or a file of regex patterns, one per line:
+
+```bash
+sentry-cli build snapshots ./snapshots \
+  --app-id web-frontend \
+  --all-image-file-names-as-regex-file ./snapshot-patterns.txt
+```
+
 <Alert level="warning">
-  Because Sentry cannot distinguish a deliberately deleted snapshot from one
-  that was not part of the subset, removals and renames cannot be detected when
-  using `--selective`.
+  These four flags are mutually exclusive — you can only use one per upload.
+</Alert>
+
+All four flags implicitly enable `--selective`. With the image names or patterns provided, Sentry categorizes missing images as:
+
+- **Skipped** — matched by the list/pattern but not uploaded (part of the suite, just not run in this job).
+- **Removed** — not matched and not uploaded (deleted from the suite).
+- **Renamed** — a new image has the same content hash as a missing one.
+
+<Alert level="info">
+  Without one of the `--all-image-file-names*` flags, selective uploads treat
+  all missing base images as skipped. Removals and renames cannot be detected.
 </Alert>
 
 For the full `sentry-cli build snapshots` flag reference, see [Snapshots (CLI)](/cli/snapshots/).
