@@ -5,9 +5,22 @@ description: "Learn how Sentry's Hono SDK captures errors and how to customize w
 
 The `sentry()` middleware automatically captures unhandled errors from Hono's `onError` handler.
 
+## Default Behavior
+
+The default logic checks whether the error carries a numeric `status` property (as Hono's `HTTPException` and similar error types do).
+
+The middleware captures:
+
+- **5xx errors** — anything with a numeric `status >= 500`
+- **Non-HTTP errors** — errors without a numeric `status` property, including standard `Error` instances, non-object throws, and `null`
+
+The middleware ignores:
+
+- **3xx–4xx errors** — anything with a numeric `status` in the range 300–499 (redirects, client errors)
+
 Use `shouldHandleError` when you need to capture errors outside this default range, for example to track 401 and 403 responses as security signals.
 
-## Configuration
+## Using `shouldHandleError`
 
 Pass a `shouldHandleError` callback to the `sentry()` middleware. The callback receives the raw error as `unknown` and must return `true` to capture it or `false` to suppress it.
 
@@ -87,17 +100,3 @@ app.use(
 
 export default app;
 ```
-
-## Default Behavior
-
-The default logic checks whether the error carries a numeric `status` property (as Hono's `HTTPException` and similar error types do).
-Errors in the 3xx–4xx range are skipped; everything else is captured.
-
-Without `shouldHandleError`, the middleware captures:
-
-- **5xx errors**: Anything with a numeric `status >= 500`
-- **Non-HTTP errors**: Errors without a numeric `status` property, including standard `Error` instances, non-object throws, and `null`
-
-The middleware ignores:
-
-- **3xx–4xx errors**: Anything with a numeric `status` in the range 300–499 (redirects, client errors)
