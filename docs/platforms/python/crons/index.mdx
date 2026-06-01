@@ -21,7 +21,7 @@ You can create and update your monitors programmatically with code rather than [
 To create or update a monitor, use `monitor` as outlined above and pass in your monitor configuration as `monitor_config`. This requires SDK version `1.45.0` or higher.
 
 ```python
-# All keys except `schedule` are optional
+# All keys except `schedule` are optional. If a key is not set, there is no default value set for it.
 monitor_config = {
     "schedule": {"type": "crontab", "value": "0 0 * * *"},
     "timezone": "Europe/Vienna",
@@ -44,6 +44,15 @@ monitor_config = {
 @monitor(monitor_slug='<monitor-slug>', monitor_config=monitor_config)
 def tell_the_world():
     print('My scheduled task...')
+```
+
+If you are using an `interval` instead of a `crontab`, note that the `value` must be an integer, not a string.
+
+```python
+monitor_config = {
+    "schedule": {"type": "interval", "value": 1, "unit": "hour"},
+    "timezone": "Europe/Vienna",
+}
 ```
 
 If you're using [manual check-ins](#check-ins), you can pass your `monitor_config` to the `capture_checkin` call:
