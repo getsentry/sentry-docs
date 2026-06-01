@@ -60,6 +60,21 @@ worker1:
 
 To see a more complete example, please see [a sample solution on our community forum](https://forum.sentry.io/t/how-to-clear-backlog-and-monitor-it/10715/14?u=byk).
 
+## Monitor check-ins stop ingesting
+
+If `ingest-monitors` or `ingest-occurrences` stops making progress after an upgrade, the consumer may be wedged (meaning the process is still alive, but it is stuck on one operation and no longer makes forward progress) in the memcached client path. A low-effort check is to add a socket timeout to the default cache config on `sentry/sentry.conf.py` and see whether ingestion recovers immediately after restarting the affected container using `docker compose restart <container_name>`.
+
+```python
+CACHES["default"]["OPTIONS"].update({
+    "timeout": 5,
+    "connect_timeout": 3,
+})
+```
+
+If this fixes the wedge, you most likely hit the `pymemcache` hang described in [issue #4301](https://github.com/getsentry/self-hosted/issues/4301). In that case, also check that your Sentry stack is using `django.core.cache.backends.memcached.PyMemcacheCache`, and watch for worker logs that stop partway through monitor check-in processing.
+
+If the timeout change does not help, collect a process dump or `strace` from the wedged consumer and look for blocked calls in `pymemcache/client/base.py::_recv()` or similar memcached client frames.
+
 ## Cannot Load JavaScript or CSS Files From Web Interface
 
 If you are running your Sentry instance behind a CDN like Cloudflare, Fastify, or the like, you may see some errors of invalid JavaScript or CSS files being loaded from the web interface. This is caused by some static asset files that are already optimized by the bundlers, but aren't being served with minified extensions (for example, `.min.js`). Therefore, the CDN that you are using will try to optimize the files a second time, which will result in corrupted files.

@@ -29,9 +29,10 @@ Sentry.init({
       maskAllText: false,
       blockAllMedia: false,
     }),
+    Sentry.spanStreamingIntegration(),
     Sentry.thirdPartyErrorFilterIntegration({
       filterKeys: ['sentry-docs'],
-      behaviour: 'apply-tag-if-contains-third-party-frames',
+      behaviour: 'drop-error-if-exclusively-contains-third-party-frames',
     }),
     Sentry.browserTracingIntegration({
       linkPreviousTrace: 'session-storage',

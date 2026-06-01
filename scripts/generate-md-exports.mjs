@@ -27,10 +27,12 @@ import remarkStringify from 'remark-stringify';
 import {unified} from 'unified';
 import {remove} from 'unist-util-remove';
 
+import {rehypeExpandCodeTabs} from './rehype-expand-code-tabs.mjs';
+
 const DOCS_ORIGIN = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
   ? 'https://develop.sentry.dev'
   : 'https://docs.sentry.io';
-const CACHE_VERSION = 7;
+const CACHE_VERSION = 9;
 const CACHE_COMPRESS_LEVEL = 4;
 const R2_BUCKET = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
   ? 'sentry-develop-docs'
@@ -1004,6 +1006,7 @@ async function genMDFromHTML(source, {cacheDir, noCache, usedCacheFiles}) {
         properties: {},
         children: tree,
       }))
+      .use(rehypeExpandCodeTabs)
       .use(rehypeRemark, {
         document: false,
         handlers: {

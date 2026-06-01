@@ -4,7 +4,7 @@ import {DynamicNav, toTree} from './dynamicNav';
 import {NavNode, ProductSidebarProps} from './types';
 import {docNodeToNavNode, getNavNodes} from './utils';
 
-export function ProductSidebar({rootNode, items}: ProductSidebarProps) {
+export function ProductSidebar({rootNode, items, extraLinks}: ProductSidebarProps) {
   const itemTree = (item: string) => {
     const node = nodeForPath(rootNode, item);
     if (!node) {
@@ -26,12 +26,12 @@ export function ProductSidebar({rootNode, items}: ProductSidebarProps) {
                 title={item.title}
                 tree={tree}
                 collapsible={false}
+                extraLinks={extraLinks}
               />
             )
           );
         })}
       </ul>
-      {/* External links menu removed from here */}
     </div>
   );
 }
