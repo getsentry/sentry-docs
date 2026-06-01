@@ -336,7 +336,12 @@ export async function Home() {
                     Skills
                   </a>{' '}
                   and{' '}
-                  <a href="/ai/mcp/" className="text-[#8b5cf6] underline">
+                  <a
+                    href="https://mcp.sentry.dev"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#8b5cf6] underline"
+                  >
                     MCP server
                   </a>{' '}
                   with your agents. Debug agents and MCP servers by{' '}
@@ -463,7 +468,7 @@ export async function Home() {
 
             <Card
               className="w-full"
-              href="https://sentry.zendesk.com/hc/en-us/"
+              href="https://www.sentry.help/en/"
               image={SupportImage}
               imageAlt="Support image"
               title="Support"
@@ -478,7 +483,7 @@ export async function Home() {
           <div className="flex flex-col items-start md:flex-row md:flex-wrap md:gap-x-6 gap-y-2 mb-2">
             <FooterLink href="/security-legal-pii/">Security, Legal & PII</FooterLink>
             <FooterLink href="/contributing">Contribute</FooterLink>
-            <FooterLink href="https://sentry.zendesk.com/hc/en-us/" external>
+            <FooterLink href="https://www.sentry.help/en/" external>
               Support
             </FooterLink>
             <FooterLink href="https://sentry.io/changelog/" external>
