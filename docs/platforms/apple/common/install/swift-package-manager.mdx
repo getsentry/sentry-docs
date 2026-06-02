@@ -80,11 +80,17 @@ let package = Package(
 
 <Alert level="info">Available from SDK **9.16.0+**.</Alert>
 
-**SentryObjC** is a pure Objective-C wrapper around the Sentry SDK, recommended for projects that use Objective-C++ (`.mm` files), have Clang modules disabled (`-fmodules=NO`), or otherwise can't use `@import` or `-Swift.h`. It provides a standalone ObjC interface with no Swift dependencies in your headers.
+**SentryObjC** is a pure Objective-C wrapper around the Sentry SDK. It is the recommended integration for any Objective-C project — including those that use Objective-C++ (`.mm` files), have Clang modules disabled (`-fmodules=NO`), or otherwise can't use semantic imports (`@import`) or `-Swift.h`. All public types use the `SentryObjC` prefix and no Swift-related headers appear in the public surface.
+
+### Why SentryObjC?
+
+With Clang modules disabled, `@import Sentry` doesn't work and `#import <Sentry/Sentry-Swift.h>` fails with forward-declaration errors in `.mm` files. This makes `SentrySDK`, `SentryOptions`, and other Swift-bridged APIs unavailable. SentryObjC solves this by providing hand-written Objective-C headers that don't depend on Swift modules or the Swift compiler.
 
 ### Installation
 
-The `SentryObjC` SPM product compiles the SDK from source. In Xcode, add the Sentry package as described above and select the **`SentryObjC`** product. A pre-compiled dynamic framework is also available via <PlatformLink to="/install/manual-install/">manual download</PlatformLink>.
+SentryObjC is available as both a compile-from-source SPM product and pre-compiled xcframeworks.
+
+**Via SPM (compile from source):** In Xcode, add the Sentry package as described above and select the **`SentryObjC`** product.
 
 With `Package.swift`:
 
@@ -102,6 +108,14 @@ Then depend on the `SentryObjC` product:
     ]
 )
 ```
+
+**Via SPM (pre-compiled):** The `SentryObjC-Static` and `SentryObjC-Dynamic` products use pre-built binary frameworks, so they don't add to your project's compile time. Select one of these products instead of `SentryObjC` when adding the package in Xcode, or reference them in `Package.swift`:
+
+```swift {tabTitle:Swift}
+.product(name: "SentryObjC-Static", package: "sentry-cocoa"),
+```
+
+Pre-compiled xcframeworks are also available for <PlatformLink to="/install/manual-install/">manual download</PlatformLink>.
 
 ### Configuration
 
