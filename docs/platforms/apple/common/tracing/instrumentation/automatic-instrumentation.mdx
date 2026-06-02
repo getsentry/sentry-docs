@@ -134,6 +134,7 @@ SentrySDK.start { options in
     options.enableAutoPerformanceTracing = false
 }
 ```
+
 ```objc {tabTitle:Objective-C}
 @import Sentry;
 
@@ -166,6 +167,7 @@ The Cocoa SDK creates the following app start spans:
 ![App Start Transaction](./img/app-start-transaction.png)
 
 Cold and warm start are Mobile Vitals, which you can learn about in the [full documentation](/product/dashboards/sentry-dashboards/mobile/mobile-vitals).
+
 ### Prewarmed App Start Tracing
 
 Starting with iOS 15, the operating system might [prewarm](https://developer.apple.com/documentation/uikit/app_and_environment/responding_to_the_launch_of_your_app/about_the_app_launch_sequence#3894431) your app by creating the process before the user opens it. Starting with SDK version [9.0.0](https://github.com/getsentry/sentry-cocoa/releases/tag/9.0.0), the `enablePreWarmedAppStartTracing` is enabled by default.
@@ -198,6 +200,70 @@ SentrySDK.start { options in
 [SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
     options.dsn = @"___PUBLIC_DSN___";
     options.enablePreWarmedAppStartTracing = NO;
+}];
+```
+
+### Standalone App Start Tracing
+
+<Alert>
+
+This feature is experimental and available since [version 9.14.0](https://github.com/getsentry/sentry-cocoa/blob/main/CHANGELOG.md#9140).
+
+</Alert>
+
+By default, the SDK attaches app start data as spans to the first UIViewController transaction. With standalone app start tracing enabled, the SDK sends a dedicated `app.start` transaction instead. This gives app starts their own transaction, making them easier to find, sample, and analyze independently.
+
+![Standalone App Start Transaction](./img/standalone-app-start.png)
+
+To enable standalone app start tracing:
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.experimental.enableStandaloneAppStartTracing = true
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.experimental.enableStandaloneAppStartTracing = YES;
+}];
+```
+
+Since standalone app start transactions use the `app.start` operation, you can use a custom `tracesSampler` to set a dedicated sample rate for app starts without increasing your overall sample rate:
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.experimental.enableStandaloneAppStartTracing = true
+    options.tracesSampler = { context in
+        if context.transactionContext.operation == "app.start" {
+            return 1.0
+        }
+        return 0.1
+    }
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.experimental.enableStandaloneAppStartTracing = YES;
+    options.tracesSampler = ^NSNumber * _Nullable(SentrySamplingContext * context) {
+        if ([context.transactionContext.operation isEqualToString:@"app.start"]) {
+            return @1.0;
+        }
+        return @0.1;
+    };
 }];
 ```
 
@@ -361,6 +427,7 @@ Starting with version 8.48.0, the Sentry SDK offers extensions for the types `Da
 The method signatures of these extensions resemble those of the original types, but they add a span to the current transaction. These methods can be used even when the Sentry SDK is not enabled—they will fall back to the original methods in that case.
 
 **Behavior:**
+
 - The SDK only creates spans when there is an active transaction on the scope
 - Only file URLs are tracked (non-file URLs like HTTP URLs are ignored, as they are handled by network tracing)
 - File size is automatically tracked for read and write operations
