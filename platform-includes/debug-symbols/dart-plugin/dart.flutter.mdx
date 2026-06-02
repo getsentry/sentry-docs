@@ -98,13 +98,11 @@ For the full list of configuration options, see the [Configuration Reference](#c
 
 ## Configure the Android Gradle Plugin
 
+This step is only required if R8 or ProGuard is enabled for your Android build. Without it, JVM stack traces are already readable and no mapping file upload is required.
+
+<Expandable title="Using R8 or ProGuard? Configure the Sentry Android Gradle Plugin">
+
 For Android, the Sentry Android Gradle Plugin uploads the files needed to symbolicate JVM frames. It runs automatically during your Android build, so configure it before building your app.
-
-<Alert>
-
-You only need to configure the Sentry Android Gradle Plugin if R8 or ProGuard is enabled for your Android build. Without it, JVM stack traces are already readable and no mapping file upload is required.
-
-</Alert>
 
 After installing the [Sentry Android Gradle Plugin](/platforms/android/configuration/gradle/), configure it in your `app/build.gradle.kts` file:
 
@@ -132,6 +130,8 @@ ProGuard mapping upload is enabled automatically by the Sentry Android Gradle Pl
 Alternatively, you can use the [Sentry CLI](/cli/dif/#proguard-mapping-upload) to manually upload ProGuard mapping files.
 For more information, see the [Android Gradle Plugin guide](/platforms/android/configuration/gradle).
 
+</Expandable>
+
 ## Building Your Application
 
 Before running the plugin, build your Flutter application. Obfuscation is encouraged for production builds, and will make uploading debug symbols necessary to get readable stack traces.
@@ -156,7 +156,8 @@ flutter build web --release --source-maps
 
 <Alert>
 
-For iOS and macOS, we recommend running the Sentry Dart Plugin even for non-obfuscated builds to upload the dSYM files Xcode generates. This lets Sentry symbolicate native Swift, Objective-C, and C/C++ stack traces.
+Even if you don't use `split-debug-info` or `obfuscate`, we recommend uploading all available debug files with the Sentry Dart Plugin.
+The more you upload, the more Sentry can symbolicate out of the box — including native frames (for example, on iOS) that aren't readable otherwise.
 
 </Alert>
 
