@@ -275,9 +275,9 @@ Available since [version 9.15.0](https://github.com/getsentry/sentry-cocoa/blob/
 
 </Alert>
 
-By default, the standalone app start transaction ends when the `didFinishLaunchingNotification` notification is posted (after `application(_:didFinishLaunchingWithOptions:)` function returns). If your app performs additional work after that — such as loading initial data from a server or database — you can extend the app start transaction to include that time by calling `SentrySDK.extendAppLaunch()` and `SentrySDK.finishExtendedAppLaunch()`.
+By default, the standalone app start transaction ends when the `didFinishLaunchingNotification` notification is posted (after `application(_:didFinishLaunchingWithOptions:)` function returns). If your app performs additional work after that — such as loading initial data from a server or database — you can extend the app start transaction to include that time by calling `SentrySDK.extendAppLaunch()`.
 
-Call `extendAppLaunch()` after `SentrySDK.start(options:)` and before `application(_:didFinishLaunchingWithOptions:)` returns, so the SDK doesn't automatically finish the app start transaction. Then call `finishExtendedAppLaunch()` once your app is fully ready. This adds an "Extended App Start" child span covering the time between the two calls.
+Call `extendAppLaunch()` after `SentrySDK.start(options:)` and before `application(_:didFinishLaunchingWithOptions:)` returns, so the SDK doesn't automatically finish the app start transaction. The method returns the extended app launch span, which you can use to add child spans that break down the extended launch period. Call `finish()` on the returned span when your app is fully ready. This adds an "Extended App Start" child span covering the time between the two calls.
 
 ![Extended App Start](./img/extended-app-start.png)
 
@@ -286,26 +286,42 @@ Call `extendAppLaunch()` after `SentrySDK.start(options:)` and before `applicati
 ```swift {tabTitle:Swift}
 import Sentry
 
-func application(
-    _ application: UIApplication,
-    didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
-) -> Bool {
-    SentrySDK.start { options in
-        options.dsn = "___PUBLIC_DSN___"
-        options.experimental.enableStandaloneAppStartTracing = true
-    }
-    SentrySDK.extendAppLaunch()
-    return true
-}
+class AppDelegate: UIResponder, UIApplicationDelegate {
+    var appStartSpan: (any Span)?
 
-// Later, when your app is fully ready:
-func onDataLoaded() {
-    SentrySDK.finishExtendedAppLaunch()
+    func application(
+        _ application: UIApplication,
+        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
+    ) -> Bool {
+        SentrySDK.start { options in
+            options.dsn = "___PUBLIC_DSN___"
+            options.experimental.enableStandaloneAppStartTracing = true
+        }
+        appStartSpan = SentrySDK.extendAppLaunch()
+
+        let configSpan = appStartSpan?.startChild(
+            operation: "app.init",
+            description: "fetch remote config"
+        )
+        fetchRemoteConfig()
+        configSpan?.finish()
+
+        return true
+    }
+
+    // Later, when your app is fully ready:
+    func onDataLoaded() {
+        appStartSpan?.finish()
+    }
 }
 ```
 
 ```objc {tabTitle:Objective-C}
 @import Sentry;
+
+@interface AppDelegate ()
+@property (nonatomic, strong) id<SentrySpan> appStartSpan;
+@end
 
 - (BOOL)application:(UIApplication *)application
     didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
@@ -313,15 +329,23 @@ func onDataLoaded() {
         options.dsn = @"___PUBLIC_DSN___";
         options.experimental.enableStandaloneAppStartTracing = YES;
     }];
-    [SentrySDK extendAppLaunch];
+    self.appStartSpan = [SentrySDK extendAppLaunch];
+
+    id<SentrySpan> configSpan = [self.appStartSpan startChildWithOperation:@"app.init"
+                                                               description:@"fetch remote config"];
+    [self fetchRemoteConfig];
+    [configSpan finish];
+
     return YES;
 }
 
 // Later, when your app is fully ready:
 - (void)onDataLoaded {
-    [SentrySDK finishExtendedAppLaunch];
+    [self.appStartSpan finish];
 }
 ```
+
+You can also call `SentrySDK.finishExtendedAppLaunch()` instead of `finish()` on the span — both are equivalent.
 
 **SwiftUI:**
 
@@ -330,18 +354,27 @@ import Sentry
 
 @main
 struct MyApp: App {
+    var appStartSpan: (any Span)?
+    
     init() {
         SentrySDK.start { options in
             options.dsn = "___PUBLIC_DSN___"
             options.experimental.enableStandaloneAppStartTracing = true
         }
-        SentrySDK.extendAppLaunch()
+        appStartSpan = SentrySDK.extendAppLaunch()
+
+        let configSpan = appStartSpan?.startChild(
+            operation: "app.init",
+            description: "load configuration"
+        )
+        loadConfiguration()
+        configSpan?.finish()
     }
 
     var body: some Scene {
         WindowGroup {
             ContentView(onReady: {
-                SentrySDK.finishExtendedAppLaunch()
+                appStartSpan?.finish()
             })
         }
     }
@@ -350,7 +383,9 @@ struct MyApp: App {
 
 <Alert>
 
-`extendAppLaunch()` must be called before the `didFinishLaunchingNotification` notification is posted. If called after the app start transaction has already been created, it has no effect and the SDK logs a warning.
+`extendAppLaunch()` returns the extended app launch span, or `nil` if the SDK is not started or the app start transaction was already created. The return value is `@discardableResult`, so existing code that doesn't use the return value will continue to work.
+
+`extendAppLaunch()` must be called before the `didFinishLaunchingNotification` notification is posted. If called after the app start transaction has already been created, it returns `nil` and the SDK logs a warning.
 
 Calling `finishExtendedAppLaunch()` without a prior `extendAppLaunch()` call, or after the extended launch was already finished, is a no-op.
 
