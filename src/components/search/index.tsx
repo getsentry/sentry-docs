@@ -345,10 +345,10 @@ export function Search({
             radius="medium"
             className="font-medium text-[var(--foreground)] py-2 px-3 uppercase cursor-pointer kapa-ai-class hidden md:flex mr-4"
           >
-            <div>
+            <button type="button" aria-label="Ask AI">
               <MagicIcon />
               <span>Ask AI</span>
-            </div>
+            </button>
           </Button>
         </Fragment>
       </div>
