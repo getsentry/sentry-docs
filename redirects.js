@@ -2407,6 +2407,15 @@ const userDocsRedirects = [
     source: '/product/alerts/:path*',
     destination: '/product/monitors-and-alerts/alerts/',
   },
+  // Drains reorg: integration/ subfolder flattened, OTLP collector moved to concepts
+  {
+    source: '/product/drains/integration/opentelemetry-collector/',
+    destination: '/concepts/otlp/forwarding/pipelines/collector/',
+  },
+  {
+    source: '/product/drains/integration/:path*',
+    destination: '/product/drains/:path*',
+  },
 ];
 
 /**
