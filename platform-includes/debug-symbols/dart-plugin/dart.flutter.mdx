@@ -98,7 +98,13 @@ For the full list of configuration options, see the [Configuration Reference](#c
 
 ## Configure the Android Gradle Plugin
 
-For Android, the Sentry Android Gradle Plugin uploads the files needed to symbolicate JVM and native frames. It runs automatically during your Android build, so configure it before building your app.
+For Android, the Sentry Android Gradle Plugin uploads the files needed to symbolicate JVM frames. It runs automatically during your Android build, so configure it before building your app.
+
+<Alert>
+
+You only need to configure the Sentry Android Gradle Plugin if R8 or ProGuard is enabled for your Android build. Without it, JVM stack traces are already readable and no mapping file upload is required.
+
+</Alert>
 
 After installing the [Sentry Android Gradle Plugin](/platforms/android/configuration/gradle/), configure it in your `app/build.gradle.kts` file:
 
@@ -109,26 +115,22 @@ sentry {
         enabled.set(false)
     }
 
-    // Enable native symbol upload. This allows Sentry to symbolicate
-    // stack traces that occur in the native Android layer, such as ANR events.
-    uploadNativeSymbols.set(true)
-
-    // The slug of the Sentry organization to use for uploading native symbols and proguard mappings/source contexts.
+    // The slug of the Sentry organization to use for uploading ProGuard mappings.
     org.set("___ORG_SLUG___")
 
-    // The slug of the Sentry project to use for uploading proguard mappings/source contexts.
+    // The slug of the Sentry project to use for uploading ProGuard mappings.
     projectName.set("___PROJECT_SLUG___")
 
-    // The authentication token to use for uploading proguard mappings/source contexts.
+    // The authentication token to use for uploading ProGuard mappings.
     // WARNING: Do not expose this token in your build.gradle files, but rather set an environment
     // variable and read it into this property.
     authToken.set(System.getenv("SENTRY_AUTH_TOKEN"))
 }
 ```
 
-ProGuard and R8 mapping upload is enabled automatically by the Sentry Android Gradle Plugin. The `uploadNativeSymbols` option enables uploading native symbols for native Android stack frames.
-
-Alternatively, you can use the [Sentry CLI](/cli/dif/#uploading-files) to manually upload mapping files. For more information, see the [Android Gradle Plugin guide](/platforms/android/configuration/gradle).
+ProGuard mapping upload is enabled automatically by the Sentry Android Gradle Plugin.
+Alternatively, you can use the [Sentry CLI](/cli/dif/#proguard-mapping-upload) to manually upload ProGuard mapping files.
+For more information, see the [Android Gradle Plugin guide](/platforms/android/configuration/gradle).
 
 ## Building Your Application
 
