@@ -50,26 +50,21 @@ async function main() {
     return;
   }
 
-  // Copy new captures over old images
-  const replaced: {assetPath: string; diffPct: number}[] = [];
+  // Collect replacement info (don't copy yet -- we'll copy after branching off master)
+  const replaced: {assetPath: string; diffPct: number; capturePath: string}[] = [];
 
   for (const result of toReplace) {
-    const targetPath = path.join(repoRoot, result.inventory_item.asset_path);
-    const sourcePath = result.capture_path!;
-
     console.log(`Replacing: ${result.inventory_item.asset_path}`);
     console.log(`  Diff: ${((result.diff_pct || 0) * 100).toFixed(2)}%`);
 
     if (dryRun) {
-      console.log(`  [DRY RUN] Would copy ${sourcePath} -> ${targetPath}`);
-    } else {
-      fs.mkdirSync(path.dirname(targetPath), {recursive: true});
-      fs.copyFileSync(sourcePath, targetPath);
+      console.log(`  [DRY RUN] Would copy ${result.capture_path} -> ${result.inventory_item.asset_path}`);
     }
 
     replaced.push({
       assetPath: result.inventory_item.asset_path,
       diffPct: result.diff_pct || 0,
+      capturePath: result.capture_path!,
     });
   }
 
@@ -90,8 +85,34 @@ async function main() {
     execSync('git config user.name "github-actions[bot]"', {cwd: repoRoot, stdio: 'pipe'});
     execSync('git config user.email "github-actions[bot]@users.noreply.github.com"', {cwd: repoRoot, stdio: 'pipe'});
 
-    // Create and switch to new branch
-    execSync(`git checkout -b ${branchName}`, {cwd: repoRoot, stdio: 'pipe'});
+    // Fetch latest master to branch from
+    execSync('git fetch origin master', {cwd: repoRoot, stdio: 'pipe'});
+
+    // Delete the branch if it already exists (from a previous run)
+    try {
+      execSync(`git branch -D ${branchName}`, {cwd: repoRoot, stdio: 'pipe'});
+    } catch {
+      // Branch doesn't exist locally, that's fine
+    }
+    try {
+      execSync(`git push origin --delete ${branchName}`, {cwd: repoRoot, stdio: 'pipe'});
+    } catch {
+      // Branch doesn't exist remotely, that's fine
+    }
+
+    // Create new branch off master (not the current branch)
+    // This ensures the PR only contains image changes, not pipeline code
+    execSync(`git checkout -b ${branchName} origin/master`, {cwd: repoRoot, stdio: 'pipe'});
+
+    // Copy the captured images into the working tree (they were saved to temp paths)
+    for (const r of replaced) {
+      const targetPath = path.join(repoRoot, r.assetPath);
+      const sourcePath = r.capturePath;
+      if (sourcePath && fs.existsSync(sourcePath)) {
+        fs.mkdirSync(path.dirname(targetPath), {recursive: true});
+        fs.copyFileSync(sourcePath, targetPath);
+      }
+    }
 
     // Stage all replaced images
     for (const r of replaced) {
@@ -129,7 +150,7 @@ async function main() {
 async function createPullRequest(
   token: string,
   branchName: string,
-  replaced: {assetPath: string; diffPct: number}[],
+  replaced: {assetPath: string; diffPct: number; capturePath: string}[],
   title: string
 ): Promise<void> {
   const octokit = new Octokit({auth: token});
