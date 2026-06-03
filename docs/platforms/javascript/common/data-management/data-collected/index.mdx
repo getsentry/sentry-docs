@@ -28,9 +28,9 @@ Use the `dataCollection.httpHeaders` option to control this. For example, set `d
 
 ## Cookies
 
-By default, the Sentry SDK doesn't send cookies.
+By default, the Sentry SDK doesn't send cookies. When using `dataCollection`, however, cookies are collected with sensitive values (like `token` or `key`) scrubbed. Opt out by setting `dataCollection: { cookies: false }`.
 
-To collect cookies, set `dataCollection: { cookies: true }` in the `Sentry.init()` call (or the deprecated `sendDefaultPii: true`). This sends the `Cookie` and `Set-Cookie` headers from fetch and XHR requests, scrubbing values whose keys match the sensitive denylist. You can restrict which cookies are sent using `{ allow: [...] }` or `{ deny: [...] }`.
+To collect cookies when not using `dataCollection`, set the deprecated `sendDefaultPii: true` in `Sentry.init()`. To disable cookie collection when using `dataCollection`, set `dataCollection: { cookies: false }`. You can also restrict which cookie values are sent using `{ allow: [...] }` or `{ deny: [...] }`.
 
 ## Information About Logged-in User
 
@@ -71,9 +71,9 @@ The full request URL of outgoing and incoming HTTP requests is **always sent to 
 
 ## Request Query String
 
-The full request query string of outgoing and incoming HTTP requests is **always sent to Sentry**. Depending on your application, this could contain PII data. For example, a query string like `?user_id=1234`, where `1234` is a user id (which may be considered PII).
+By default, the full request query string of outgoing and incoming HTTP requests is sent to Sentry. Depending on your application, this could contain PII data. For example, a query string like `?user_id=1234`, where `1234` is a user id (which may be considered PII).
 
-You can control query parameter collection with the `dataCollection.queryParams` option, for example `dataCollection: { queryParams: false }` to disable it. When `dataCollection` is used, query parameter values whose keys match the denylist are scrubbed before being sent. Sentry also has a built-in sensitive denylist for query parameters that scrubs values whose keys partially-match terms like `auth`, `token`, `password`, and `secret`.
+Use the `dataCollection.queryParams` option to control this. Set it to `false` to disable collection entirely, or use `{ allow: [...] }` / `{ deny: [...] }` to filter which values are sent. When `dataCollection` is used, values whose keys match the built-in sensitive denylist (terms like `auth`, `token`, `password`, and `secret`) are scrubbed automatically.
 
 Sentry also has some additional [server-side data scrubbing](/security-legal-pii/scrubbing/server-side-scrubbing/) in place to remove sensitive data from the query string.
 
