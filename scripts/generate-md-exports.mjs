@@ -1155,7 +1155,9 @@ async function processTaskList({id, tasks, cacheDir, noCache, usedCacheFiles}) {
       //   - applyKeywordDefaults: replaces ___KEYWORD___ placeholders with defaults
       //   - formatYamlFrontmatter: prepends YAML metadata
       const resolved = applyKeywordDefaults(data);
-      const output = frontmatter ? formatYamlFrontmatter(frontmatter) + resolved : resolved;
+      const output = frontmatter
+        ? formatYamlFrontmatter(frontmatter) + resolved
+        : resolved;
       await writeFile(targetPath, output, {encoding: 'utf8'});
 
       if (r2Hash !== null && s3Client) {
