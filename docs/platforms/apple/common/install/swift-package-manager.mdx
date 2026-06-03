@@ -158,13 +158,20 @@ If your project has Clang modules enabled and you're using the dynamic variant (
 
 #### SentryObjC-Static
 
-When using the static variant (`SentryObjC-Static`), two additional steps are needed because the static framework bundles C++ and Swift code that pure Objective-C targets don't link automatically:
+When using the static variant (`SentryObjC-Static`) in a pure Objective-C target, additional linker flags are needed because the static framework bundles C++ and Swift code that Xcode doesn't link automatically. If your target already contains at least one `.swift` file, Xcode links the Swift runtime for you and you only need `-lc++`.
 
-1. **Add `-lc++` to Other Linker Flags.** In Xcode, go to your target's **Build Settings > Linking - General > Other Linker Flags** and add `-lc++`. The static framework bundles C++ code (profiler, crash reporter) that requires the C++ standard library.
+Add the following to your target's **Build Settings > Linking - General > Other Linker Flags**:
 
-2. **Add an empty Swift file to your target.** Create a file such as `SwiftRuntime.swift` with no content (or just a comment). This forces Xcode to link the Swift runtime, which is required because the static framework contains Swift code internally.
+```
+-lc++ -lswiftCore -force_load $(DT_TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME)/libswiftCompatibility56.a
+```
 
-```swift {tabTitle:SwiftRuntime.swift}
+- **`-lc++`** links the C++ standard library, required by the profiler and crash reporter bundled in the static framework.
+- **`-lswiftCore`** and the **`-force_load`** flag link the Swift runtime and backward-compatibility stubs. These are only needed when your target has no Swift files. If your target already contains a `.swift` file, Xcode links the Swift runtime automatically and you can omit these two flags.
+
+As a fallback (for example, if the toolchain path causes issues in your build system), you can add an empty Swift file to your target instead of the explicit flags. Create a file such as `Dummy.swift` with no content and its presence forces Xcode to link the Swift runtime:
+
+```swift {tabTitle:Dummy.swift}
 // Forces Xcode to link the Swift runtime into this pure-ObjC target.
 ```
 
