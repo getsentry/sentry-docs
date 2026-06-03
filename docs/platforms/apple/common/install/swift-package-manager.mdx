@@ -143,7 +143,45 @@ All SentryObjC types use the `SentryObjC` prefix. Import the umbrella header and
 }
 ```
 
+If your project has Clang modules enabled and you're using the dynamic variant (`SentryObjC-Dynamic`), you can also use a module import instead:
+
+```objc
+@import SentryObjC;
+```
+
 <Alert level="info">
   SentryObjC embeds the full Sentry SDK. Do not link both `Sentry` and
   `SentryObjC` in the same target.
 </Alert>
+
+### Additional Build Settings
+
+#### SentryObjC-Static
+
+When using the static variant (`SentryObjC-Static`), two additional steps are needed because the static framework bundles C++ and Swift code that pure Objective-C targets don't link automatically:
+
+1. **Add `-lc++` to Other Linker Flags.** In Xcode, go to your target's **Build Settings > Linking - General > Other Linker Flags** and add `-lc++`. The static framework bundles C++ code (profiler, crash reporter) that requires the C++ standard library.
+
+2. **Add an empty Swift file to your target.** Create a file such as `SwiftRuntime.swift` with no content (or just a comment). This forces Xcode to link the Swift runtime, which is required because the static framework contains Swift code internally.
+
+```swift {tabTitle:SwiftRuntime.swift}
+// Forces Xcode to link the Swift runtime into this pure-ObjC target.
+```
+
+These steps are not needed for `SentryObjC-Dynamic` or the compile-from-source `SentryObjC` product, as dynamic frameworks and SPM source targets handle runtime linking automatically.
+
+#### Clang Modules Disabled / Objective-C++
+
+When your project has Clang modules disabled (`CLANG_ENABLE_MODULES = NO`) or uses Objective-C++ (`.mm` files):
+
+1. **Use `#import` instead of `@import`.** Module imports (`@import SentryObjC;`) require Clang modules to be enabled. Use the header import instead:
+
+   ```objc
+   #import <SentryObjC/SentryObjC.h>
+   ```
+
+2. **Link system frameworks explicitly.** Without modules, automatic framework linking is unavailable. Add the system frameworks your app uses to **Other Linker Flags**:
+
+   ```
+   -framework UIKit -framework Foundation
+   ```
