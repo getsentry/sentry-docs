@@ -121,9 +121,13 @@ Here are some common properties we surface via our Sentry and GetSentry context 
 
 **System Context Properties**
 
-`sentry_region` [str]
+`sentry_cell` [str]
 
-: The sentry region or single-tenant the flag check is being performed in.
+: The sentry cell or single-tenant the flag check is being performed in.
+
+`sentry_region` [str] *(deprecated — use `sentry_cell` instead)*
+
+: The sentry region or single-tenant the flag check is being performed in. This property is deprecated in favor of `sentry_cell` and will be removed in a future release.
 
 `sentry_singletenant` [bool]
 
@@ -227,8 +231,20 @@ options:
     flagpole.allowed_features: ["organizations:is_sentry"]
 ```
 
-You can also use the `sentry_singletenant` and `sentry_region` context values in
-your feature conditions as required.
+You can also use the `sentry_singletenant` and `sentry_cell` context values in
+your feature conditions as required. For example, to roll out a feature to
+specific cells:
+
+```yaml
+- conditions:
+  - operator: in
+    value:
+      - us
+      - de
+    property: sentry_cell
+  name: multi-region rollout
+  rollout: 100
+```
 
 ## Testing a Flagpole feature locally
 
