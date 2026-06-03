@@ -74,6 +74,18 @@ type Props = {
 
 const STORAGE_KEY = 'sentry-docs-search-platforms';
 
+// Paths outside `/platforms/` whose pages are not about any specific SDK.
+// Restoring the user's last-used SDK on these pages biases query results
+// toward irrelevant SDK pages instead of the product/concept docs they're
+// actually reading. Mirrors PRODUCT_DOC_PREFIXES in scripts/algolia.ts.
+const SDK_AGNOSTIC_PATH_PREFIXES = [
+  '/product/',
+  '/concepts/',
+  '/cli/',
+  '/guides/',
+  '/integrations/',
+];
+
 export function Search({
   path,
   autoFocus,
@@ -91,6 +103,9 @@ export function Search({
 
   // Load stored platforms on mount
   useEffect(() => {
+    const isSdkAgnosticPath = SDK_AGNOSTIC_PATH_PREFIXES.some(prefix =>
+      pathname?.startsWith(prefix)
+    );
     const storedPlatforms = localStorage.getItem(STORAGE_KEY) ?? '[]';
     if (!storedPlatforms) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(searchPlatforms));
@@ -99,10 +114,14 @@ export function Search({
       searchPlatforms.length === 0 &&
       useStoredSearchPlatforms
     ) {
-      const platforms = JSON.parse(storedPlatforms);
-      setCurrentSearchPlatforms(platforms);
+      if (isSdkAgnosticPath) {
+        setCurrentSearchPlatforms([]);
+      } else {
+        const platforms = JSON.parse(storedPlatforms);
+        setCurrentSearchPlatforms(platforms);
+      }
     }
-  }, [useStoredSearchPlatforms, searchPlatforms]);
+  }, [useStoredSearchPlatforms, searchPlatforms, pathname]);
 
   // Update stored platforms when they change
   useEffect(() => {
