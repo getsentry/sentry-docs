@@ -60,9 +60,9 @@ const MD_KEYWORD_DEFAULTS = {
   // Org auth token: rendered as an interactive token-creator in the browser;
   // must be clearly non-functional for markdown consumers.
   ORG_AUTH_TOKEN: '<your-sentry-auth-token>',
-  // SDK package: platform-specific in the browser (e.g. @sentry/react);
-  // @sentry/browser is the documented fallback for generic JS contexts.
-  SDK_PACKAGE: '@sentry/browser',
+  // SDK_PACKAGE is intentionally omitted: the correct package varies per platform
+  // (e.g. @sentry/react, @sentry/nextjs, sentry-sdk). The markdown generator has no
+  // reliable platform context, so ___SDK_PACKAGE___ is left as-is for agents to resolve.
 };
 
 /**
