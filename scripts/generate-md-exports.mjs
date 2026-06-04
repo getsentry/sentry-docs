@@ -57,6 +57,12 @@ const MD_KEYWORD_DEFAULTS = {
     'https://o<orgId>.ingest.sentry.io/api/<projectId>/integration/otlp/v1/logs',
   VERCEL_LOG_DRAIN_URL:
     'https://o<orgId>.ingest.sentry.io/api/<projectId>/integration/vercel/logs/',
+  // Org auth token: rendered as an interactive token-creator in the browser;
+  // must be clearly non-functional for markdown consumers.
+  ORG_AUTH_TOKEN: '<your-sentry-auth-token>',
+  // SDK package: platform-specific in the browser (e.g. @sentry/react);
+  // @sentry/browser is the documented fallback for generic JS contexts.
+  SDK_PACKAGE: '@sentry/browser',
 };
 
 /**
