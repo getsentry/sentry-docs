@@ -15,6 +15,9 @@ function htmlToMarkdown(html) {
       .use(rehypeExpandCodeTabs)
       .use(rehypeRemark, {
         document: false,
+        nodeHandlers: {
+          comment() {},
+        },
         handlers: {
           button() {},
         },
@@ -304,5 +307,25 @@ describe('rehypeExpandCodeTabs', () => {
       expect(codeBlocks).toHaveLength(1);
       expect(codeBlocks[0]).toContain('solo()');
     });
+  });
+});
+
+describe('comment stripping', () => {
+  it('drops React text-node separator comments emitted on component-rendered pages', () => {
+    const html =
+      '<p><code>organization_id_or_slug</code><em> (<!-- -->string<!-- -->)</em></p>';
+
+    const md = htmlToMarkdown(html);
+
+    expect(md).not.toContain('<!--');
+    expect(md).toContain('string');
+  });
+
+  it('drops standalone HTML comments', () => {
+    const md = htmlToMarkdown('<p>before<!-- a real comment -->after</p>');
+
+    expect(md).not.toContain('<!--');
+    expect(md).toContain('before');
+    expect(md).toContain('after');
   });
 });
