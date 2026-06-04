@@ -45,7 +45,6 @@ type SentryGlobalSearchConfig = ConstructorParameters<typeof SentryGlobalSearch>
 
 const developerDocsSites: SentryGlobalSearchConfig = [
   'develop',
-  'zendesk_sentry_articles',
   'docs',
   'blog',
 ];
