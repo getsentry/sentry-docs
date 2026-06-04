@@ -83,8 +83,12 @@ jobs:
   smoke-test:
     name: Smoke-test Algolia indexing (dry run)
     runs-on: ubuntu-latest
-    # PRs run the build + indexing script in dry-run mode (no secrets, no upload) purely to verify
-    # the script can be built and its full import graph resolved under the configured runner.
+    # PRs run the indexing script in dry-run mode (no secrets, no upload) purely to verify the
+    # script and its full import graph resolve under the configured runner -- the regression class
+    # that the Bun->tsx swap introduced, which happens at module load. This deliberately skips
+    # `next build`: building the ~10k-page site takes minutes and only validates build output,
+    # which Vercel's PR preview deploy already covers. With no build there are no .next HTML files,
+    # so ALGOLIA_SKIP_ON_ERROR lets the script tolerate the missing pages and finish in seconds.
     if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -97,13 +101,12 @@ jobs:
           node-version-file: 'package.json'
           cache: 'pnpm'
 
-      # No .next/cache restore here: the smoke test runs cold on purpose so it can never read or
-      # overwrite the shared algolia-records cache that the real (push) index job relies on.
       - run: pnpm install --frozen-lockfile
 
-      - name: Build and dry-run index for user docs
-        run: pnpm enforce-redirects && pnpm generate-doctree && pnpm next build && npx tsx --tsconfig ./scripts/tsconfig.json ./scripts/algolia.ts
+      - name: Dry-run index for user docs
+        run: npx tsx --tsconfig ./scripts/tsconfig.json ./scripts/algolia.ts
         env:
           ALGOLIA_DRY_RUN: 'true'
+          ALOGOLIA_SKIP_ON_ERROR: 'true'
           SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
           NEXT_PUBLIC_SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
