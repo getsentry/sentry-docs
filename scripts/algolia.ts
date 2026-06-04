@@ -26,19 +26,26 @@ const ALGOLIA_APP_ID = process.env.ALGOLIA_APP_ID;
 const ALGOLIA_API_KEY = process.env.ALGOLIA_API_KEY;
 const DOCS_INDEX_NAME = process.env.DOCS_INDEX_NAME;
 const ALOGOLIA_SKIP_ON_ERROR = process.env.ALOGOLIA_SKIP_ON_ERROR === 'true';
+// Dry run generates records but skips all Algolia API calls. Used by PR CI to exercise the
+// build + indexing import graph without secrets or mutating the production index.
+const DRY_RUN = process.env.ALGOLIA_DRY_RUN === 'true';
 
-if (!ALGOLIA_APP_ID) {
-  throw new Error('`ALGOLIA_APP_ID` env var must be configured in repo secrets');
-}
-if (!ALGOLIA_API_KEY) {
-  throw new Error('`ALGOLIA_API_KEY` env var must be configured in repo secrets');
-}
-if (!DOCS_INDEX_NAME) {
-  throw new Error('`DOCS_INDEX_NAME` env var must be configured in repo secrets');
+if (!DRY_RUN) {
+  if (!ALGOLIA_APP_ID) {
+    throw new Error('`ALGOLIA_APP_ID` env var must be configured in repo secrets');
+  }
+  if (!ALGOLIA_API_KEY) {
+    throw new Error('`ALGOLIA_API_KEY` env var must be configured in repo secrets');
+  }
+  if (!DOCS_INDEX_NAME) {
+    throw new Error('`DOCS_INDEX_NAME` env var must be configured in repo secrets');
+  }
 }
 
-const client = algoliasearch(ALGOLIA_APP_ID, ALGOLIA_API_KEY);
-const index = client.initIndex(DOCS_INDEX_NAME);
+const index =
+  ALGOLIA_APP_ID && ALGOLIA_API_KEY && DOCS_INDEX_NAME
+    ? algoliasearch(ALGOLIA_APP_ID, ALGOLIA_API_KEY).initIndex(DOCS_INDEX_NAME)
+    : null;
 
 const CONCURRENCY = 50;
 const CACHE_VERSION = 1;
@@ -85,46 +92,52 @@ async function indexAndUpload() {
   Sentry.metrics.gauge('algolia.cache_hits', cacheHits, {attributes: metricTags});
   Sentry.metrics.gauge('algolia.cache_misses', cacheMisses, {attributes: metricTags});
 
-  const existingRecordIds = await fetchExistingRecordIds(index);
-  console.log(
-    `🔥 Found ${existingRecordIds.length} existing records in \`${DOCS_INDEX_NAME}\``
-  );
+  if (DRY_RUN || !index) {
+    console.log(
+      `🧪 Dry run: generated ${records.length} records, skipping Algolia upload`
+    );
+  } else {
+    const existingRecordIds = await fetchExistingRecordIds(index);
+    console.log(
+      `🔥 Found ${existingRecordIds.length} existing records in \`${DOCS_INDEX_NAME}\``
+    );
 
-  console.log(`🔥 Saving records to \`${DOCS_INDEX_NAME}\`...`);
-  const saveResult = await index.saveObjects(records, {
-    batchSize: 10000,
-    autoGenerateObjectIDIfNotExist: true,
-  });
-  const newRecordIDs = new Set(saveResult.objectIDs);
-  console.log(`🔥 Saved ${newRecordIDs.size} records`);
-
-  const recordsToDelete = existingRecordIds.filter(id => !newRecordIDs.has(id));
-  if (recordsToDelete.length > 0) {
-    console.log(`🔥 Deleting ${recordsToDelete.length} stale records...`);
-    await index.deleteObjects(recordsToDelete);
-  }
-
-  if (!isDeveloperDocs) {
-    await index.setSettings({
-      ...sentryAlgoliaIndexSettings,
-      searchableAttributes: [
-        'unordered(title)',
-        'unordered(section)',
-        'unordered(keywords)',
-        'text',
-      ],
-      ranking: [
-        'filters',
-        'typo',
-        'words',
-        'attribute',
-        'exact',
-        'proximity',
-        'desc(sectionRank)',
-        'asc(position)',
-        'asc(popularity)',
-      ],
+    console.log(`🔥 Saving records to \`${DOCS_INDEX_NAME}\`...`);
+    const saveResult = await index.saveObjects(records, {
+      batchSize: 10000,
+      autoGenerateObjectIDIfNotExist: true,
     });
+    const newRecordIDs = new Set(saveResult.objectIDs);
+    console.log(`🔥 Saved ${newRecordIDs.size} records`);
+
+    const recordsToDelete = existingRecordIds.filter(id => !newRecordIDs.has(id));
+    if (recordsToDelete.length > 0) {
+      console.log(`🔥 Deleting ${recordsToDelete.length} stale records...`);
+      await index.deleteObjects(recordsToDelete);
+    }
+
+    if (!isDeveloperDocs) {
+      await index.setSettings({
+        ...sentryAlgoliaIndexSettings,
+        searchableAttributes: [
+          'unordered(title)',
+          'unordered(section)',
+          'unordered(keywords)',
+          'text',
+        ],
+        ranking: [
+          'filters',
+          'typo',
+          'words',
+          'attribute',
+          'exact',
+          'proximity',
+          'desc(sectionRank)',
+          'asc(position)',
+          'asc(popularity)',
+        ],
+      });
+    }
   }
 
   const totalSeconds = (performance.now() - startTime) / 1000;
