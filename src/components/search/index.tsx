@@ -52,7 +52,6 @@ const userDocsSites: SentryGlobalSearchConfig = [
     platformBias: true,
     legacyBias: true,
   },
-  'zendesk_sentry_articles',
   'develop',
   'blog',
 ];
