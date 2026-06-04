@@ -89,7 +89,7 @@ function applyKeywordDefaults(markdown) {
 const DOCS_ORIGIN = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
   ? 'https://develop.sentry.dev'
   : 'https://docs.sentry.io';
-const CACHE_VERSION = 9;
+const CACHE_VERSION = 10;
 const CACHE_COMPRESS_LEVEL = 4;
 const R2_BUCKET = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
   ? 'sentry-develop-docs'
@@ -1066,6 +1066,12 @@ async function genMDFromHTML(source, {cacheDir, noCache, usedCacheFiles}) {
       .use(rehypeExpandCodeTabs)
       .use(rehypeRemark, {
         document: false,
+        // Drop React's empty `<!-- -->` text-node separators, which otherwise leak into the
+        // markdown on component-rendered pages like the API docs. Comments dispatch by node
+        // type, so this must live in nodeHandlers rather than handlers.
+        nodeHandlers: {
+          comment() {},
+        },
         handlers: {
           // HACK: Extract the canonical URL during parsing
           link: (_state, node) => {
