@@ -48,6 +48,9 @@ const index =
     : null;
 
 const CONCURRENCY = 50;
+// In dry-run we only need enough pages to exercise the build + import graph, not the full corpus.
+// Processing all ~10k pages cold (no warm cache) exhausts the heap, so cap it.
+const DRY_RUN_PAGE_LIMIT = 200;
 const CACHE_VERSION = 1;
 const CACHE_DIR = join(process.cwd(), '.next', 'cache', 'algolia-records');
 
@@ -71,10 +74,13 @@ async function indexAndUpload() {
     ? getDevDocsFrontMatter()
     : getDocsFrontMatter());
 
-  const pages = pageFrontMatters.filter(
+  const allPages = pageFrontMatters.filter(
     frontMatter => !frontMatter.draft && !frontMatter.noindex && frontMatter.title
   );
-  console.log(`📄 Processing ${pages.length} pages with concurrency ${CONCURRENCY}`);
+  const pages = DRY_RUN ? allPages.slice(0, DRY_RUN_PAGE_LIMIT) : allPages;
+  console.log(
+    `📄 Processing ${pages.length}${DRY_RUN ? ` of ${allPages.length} (dry-run cap)` : ''} pages with concurrency ${CONCURRENCY}`
+  );
 
   const {records, cacheHits, cacheMisses} = await generateAlgoliaRecords(pages);
   const generateTime = performance.now();
@@ -184,13 +190,17 @@ async function generateAlgoliaRecords(pages: FrontMatter[]) {
     )
   );
 
-  const allFiles = fs.readdirSync(CACHE_DIR);
-  const stale = allFiles.filter(f => !usedCacheFiles.has(f));
-  for (const f of stale) {
-    fs.unlinkSync(join(CACHE_DIR, f));
-  }
-  if (stale.length > 0) {
-    console.log(`🧹 Cleaned up ${stale.length} stale cache files`);
+  // Skip cleanup in dry-run: we only processed a subset of pages, so most cache files would look
+  // "stale" and get wrongly deleted, poisoning the shared cache.
+  if (!DRY_RUN) {
+    const allFiles = fs.readdirSync(CACHE_DIR);
+    const stale = allFiles.filter(f => !usedCacheFiles.has(f));
+    for (const f of stale) {
+      fs.unlinkSync(join(CACHE_DIR, f));
+    }
+    if (stale.length > 0) {
+      console.log(`🧹 Cleaned up ${stale.length} stale cache files`);
+    }
   }
 
   return {records: results.flat(), cacheHits, cacheMisses};
