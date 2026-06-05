@@ -34,9 +34,9 @@ To collect cookies when not using `dataCollection`, set the deprecated `sendDefa
 
 ## Information About Logged-in User
 
-By default, the Sentry SDK doesn't send any information about the logged-in user, such as email address, user ID, or username.
+When using `dataCollection`, the SDK automatically populates user identity fields (`user.id`, `user.email`, `user.username`) from instrumentation. To disable this, set `dataCollection: { userInfo: false }`.
 
-The type of logged-in user information you'll be able to send depends on the integrations you enable in Sentry's SDK. Most integrations won't send any user information. Some integrations (e.g. <PlatformLink to="/user-feedback/">User Feedback</PlatformLink>) make it possible to send data like the user ID, username, and email address.
+Without `dataCollection` (and with `sendDefaultPii` unset or `false`), user identity fields are not sent automatically. Some integrations (e.g. <PlatformLink to="/user-feedback/">User Feedback</PlatformLink>) may still send data like the user ID, username, and email address when explicitly configured.
 
 <PlatformSection supported={["javascript.electron"]}>
   ### Local Device User
@@ -46,9 +46,9 @@ The type of logged-in user information you'll be able to send depends on the int
 
 ## Users' IP Address and Location
 
-By default, the Sentry SDK doesn't send the user's IP address.
+When using `dataCollection`, the SDK sends the user's IP address by default. To disable it, set <PlatformLink to="/configuration/options/#dataCollection">`dataCollection: { userInfo: false }`</PlatformLink>.
 
-To enable sending the user's IP address and infer the location, set <PlatformLink to="/configuration/options/#dataCollection">`dataCollection: { userInfo: true }`</PlatformLink> (or the deprecated `sendDefaultPii: true`). This also populates the other `user.*` fields (`id`, `email`, `username`) from instrumentation. In some integrations such as <PlatformLink to="/guides/astro/#customize-server-instrumentation">`handleRequest`</PlatformLink> in Astro, you can send the user's IP address by enabling `trackClientIp`.
+Without `dataCollection` (and with `sendDefaultPii` unset or `false`), the user's IP address is not sent. You can enable it with the deprecated `sendDefaultPii: true`. In some integrations such as <PlatformLink to="/guides/astro/#customize-server-instrumentation">`handleRequest`</PlatformLink> in Astro, the user's IP address can also be sent by enabling `trackClientIp`.
 
 If sending the IP address is enabled we will try to infer the IP address or use the IP address provided by `ip_address` in <PlatformLink to="/apis/#setUser">`Sentry.setUser()`</PlatformLink>. If you set `ip_address: null`, the IP address won't be inferred.
 
@@ -79,9 +79,7 @@ Sentry also has some additional [server-side data scrubbing](/security-legal-pii
 
 ## Request Body
 
-By default, Sentry sends the size of the body content of incoming HTTP requests. This is inferred from the `content-length` header. Sentry does not send the request body itself on the client-side.
-
-You can control which HTTP body types are collected with the `dataCollection.httpBodies` option. It accepts an array of body types (`"incomingRequest"`, `"outgoingRequest"`, `"incomingResponse"`, and `"outgoingResponse"`) and is empty (no bodies collected) by default. For example, to collect incoming and outgoing request bodies:
+When using `dataCollection`, incoming and outgoing request bodies are collected by default. To disable body collection, set `dataCollection: { httpBodies: [] }`. You can also collect only specific body types by providing a subset: `"incomingRequest"`, `"outgoingRequest"`, `"incomingResponse"`, and `"outgoingResponse"`.
 
 ```js
 Sentry.init({
@@ -92,12 +90,14 @@ Sentry.init({
 });
 ```
 
+Without `dataCollection` (and with `sendDefaultPii` unset or `false`), Sentry only sends the body size inferred from the `content-length` header, not the body content itself.
+
 <PlatformSection notSupported={["javascript", "javascript.angular", "javascript.capacitor", "javascript.cordova", "javascript.ember", "javascript.gatsby", "javascript.react", "javascript.solid", "javascript.svelte", "javascript.vue", "javascript.wasm", "javascript.cloudflare", "javascript.deno"]}>
   On the server-side, the incoming request body is captured by default. You can disable sending the incoming request body by configuring `ignoreIncomingRequestBody` in the <PlatformLink to="/configuration/integrations/http/">HTTP Integration</PlatformLink>.
 </PlatformSection>
 
 <PlatformSection supported={["javascript.remix"]}>
-  If HTTP body collection is enabled (`dataCollection: { httpBodies: ['incomingRequest'] }`, or the deprecated `sendDefaultPii: true`), you can send Form Data with `captureActionFormDataKeys` in the Remix <PlatformLink to="/manual-setup/#server-side-configuration">server-side configuration</PlatformLink>.
+  When `dataCollection` is used, HTTP body collection is enabled by default, so Form Data can be sent with `captureActionFormDataKeys` in the Remix <PlatformLink to="/manual-setup/#server-side-configuration">server-side configuration</PlatformLink>. When not using `dataCollection`, this requires the deprecated `sendDefaultPii: true`.
 </PlatformSection>
 
 <PlatformSection notSupported={["javascript", "javascript.angular", "javascript.capacitor", "javascript.cordova", "javascript.ember", "javascript.gatsby", "javascript.react", "javascript.solid", "javascript.svelte", "javascript.vue", "javascript.wasm"]}>
@@ -112,18 +112,9 @@ On the server-side, the <PlatformLink to="/configuration/integrations/requestdat
 
 ## Response Body
 
-By default, the Sentry SDK doesn't send the body content of responses received from outgoing requests. By default, the SDK will send the response body size based on the `content-length` header.
+When using `dataCollection`, incoming and outgoing response bodies are collected by default. To disable response body collection, set `dataCollection: { httpBodies: [] }` (which disables all body types), or provide a subset that excludes the response types.
 
-To collect response bodies, add the relevant response body types to `dataCollection.httpBodies`:
-
-```js
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  dataCollection: {
-    httpBodies: ["incomingResponse", "outgoingResponse"],
-  },
-});
-```
+Without `dataCollection` (and with `sendDefaultPii` unset or `false`), Sentry only sends the response body size based on the `content-length` header, not the content itself.
 
 ## Source Context
 
@@ -201,9 +192,9 @@ By default, the Sentry SDK sends information about the device and runtime to Sen
 
   ## tRPC Context
 
-  By default, the Sentry SDK doesn't send tRPC input from the tRPC context.
+  When using `dataCollection`, tRPC input is collected by default because `httpBodies` includes `"incomingRequest"` by default. To disable it, set `dataCollection: { httpBodies: [] }` or use a list that excludes `"incomingRequest"`.
 
-  If you want to send the tRPC input you can enable it by setting `dataCollection: { userInfo: true }` (or the deprecated `sendDefaultPii: true`) in the `Sentry.init()` call, or by setting `attachRpcInput: true` in the <PlatformLink to="/configuration/integrations/trpc/">`Sentry.trpcMiddleware()`</PlatformLink> options.
+  Without `dataCollection` (and with `sendDefaultPii` unset or `false`), tRPC input is not collected. You can still opt in per-middleware by setting `attachRpcInput: true` in the <PlatformLink to="/configuration/integrations/trpc/">`Sentry.trpcMiddleware()`</PlatformLink> options, regardless of the global `dataCollection` setting.
 
 </PlatformSection>
 
