@@ -6,6 +6,16 @@ vi.mock('node:fs/promises', () => ({
   readFile: vi.fn(),
 }));
 
+// Stable mock fn (via vi.hoisted) so assertions survive the vi.resetModules() in
+// beforeEach, which otherwise re-runs the mock factory with a fresh spy.
+const {metricsCount} = vi.hoisted(() => ({
+  metricsCount: vi.fn(),
+}));
+
+vi.mock('@sentry/nextjs', () => ({
+  metrics: {count: metricsCount},
+}));
+
 const SAMPLE_DOCTREE = {
   path: '',
   slug: '',
@@ -52,12 +62,15 @@ const SAMPLE_DOCTREE = {
 describe('md-exports 404 catch-all route', () => {
   beforeEach(() => {
     vi.resetModules();
+    metricsCount.mockClear();
     vi.mocked(readFile).mockResolvedValue(JSON.stringify(SAMPLE_DOCTREE));
   });
 
-  async function callRoute(pathSegments: string[]) {
+  async function callRoute(pathSegments: string[], userAgent?: string) {
     const {GET} = await import('./route');
-    const request = new Request('https://docs.sentry.io/test');
+    const request = new Request('https://docs.sentry.io/test', {
+      headers: userAgent ? {'user-agent': userAgent} : {},
+    });
     return GET(request, {params: Promise.resolve({path: pathSegments})});
   }
 
@@ -137,5 +150,32 @@ describe('md-exports 404 catch-all route', () => {
     expect(body).toMatch(/^---\n/);
     expect(body).toContain('title: "Page Not Found"');
     expect(body).toContain('url: "https://docs.sentry.io/platforms/javascript/foo"');
+  });
+
+  it('emits a not-found metric with the full path and normalized agent', async () => {
+    await callRoute(
+      ['platforms', 'javascript', 'made', 'up', 'page.md'],
+      'Claude-User (claude-code/2.1.165; +https://support.anthropic.com/)'
+    );
+    expect(metricsCount).toHaveBeenCalledWith(
+      'docs.md_export.not_found',
+      1,
+      expect.objectContaining({
+        attributes: {
+          requested_path: 'platforms/javascript/made/up/page',
+          has_suggestions: true,
+          agent: 'claude',
+        },
+      })
+    );
+  });
+
+  it('falls back to "other" for unrecognized agents', async () => {
+    await callRoute(['platforms', 'javascript', 'foo.md'], 'Mozilla/5.0');
+    expect(metricsCount).toHaveBeenCalledWith(
+      'docs.md_export.not_found',
+      1,
+      expect.objectContaining({attributes: expect.objectContaining({agent: 'other'})})
+    );
   });
 });

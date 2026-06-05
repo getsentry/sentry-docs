@@ -2,6 +2,8 @@ import {readFile} from 'node:fs/promises';
 import {join} from 'node:path';
 
 import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
+import {AI_AGENT_PATTERN, matchPattern} from 'sentry-docs/lib/trafficClassification';
+import {DocMetrics} from 'sentry-docs/metrics';
 
 interface DocTreeNode {
   path: string;
@@ -65,13 +67,14 @@ function renderSiblingList(siblings: DocTreeNode[], baseUrl: string): string {
 }
 
 export async function GET(
-  _request: Request,
+  request: Request,
   {params}: {params: Promise<{path: string[]}>}
 ) {
   const {path: pathSegments} = await params;
   const requestedPath = pathSegments.join('/').replace(/\.md$/, '');
 
   let body: string;
+  let hasSuggestions = false;
 
   try {
     const tree = await getDocTree();
@@ -90,6 +93,7 @@ export async function GET(
     ];
 
     if (ancestor && ancestor.children?.length) {
+      hasSuggestions = true;
       const ancestorTitle =
         ancestor.frontmatter?.title || ancestor.slug || 'this section';
       lines.push(`## Pages in ${ancestorTitle}`);
@@ -125,6 +129,15 @@ export async function GET(
       '',
     ].join('\n');
   }
+
+  // Normalize the agent to a low-cardinality name (e.g. "claude", "gptbot") rather
+  // than the raw User-Agent, matching the convention in tracesSampler.ts.
+  const agent =
+    matchPattern(request.headers.get('user-agent') ?? '', AI_AGENT_PATTERN) ?? 'other';
+
+  // Track the full invented URL by agent so we can see which agents make up which
+  // pages most (and whether the soft-404 had suggestions to offer them).
+  DocMetrics.mdExportNotFound(requestedPath.split('/'), hasSuggestions, agent);
 
   // Return 200 (not 404) on purpose. This route serves a Markdown "page not found"
   // helper that links to real nearby pages so AI agents can self-correct. Many agent

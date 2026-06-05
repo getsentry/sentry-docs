@@ -79,6 +79,31 @@ export const DocMetrics = {
   },
 
   /**
+   * Track requests for Markdown exports that don't exist (agent-facing `.md` route).
+   *
+   * These are almost entirely AI agents guessing URLs. The route returns a soft-404
+   * helper with suggestions so the agent can recover; this metric surfaces exactly
+   * which URLs agents invent most, broken down by agent, plus whether recovery
+   * suggestions were available.
+   *
+   * The full path is intentional here (and safe): metrics are EAP-backed, so
+   * high-cardinality attributes are fine, and an agent-invented not-found path is a
+   * public docs-namespace path, not user PII — unlike the truncation other metrics use.
+   * @param path - Full requested path segments (the invented URL is the signal)
+   * @param hasSuggestions - Whether sibling/section suggestions were returned
+   * @param agent - Normalized agent name (e.g. "claude", "gptbot"), or "other"
+   */
+  mdExportNotFound: (path: string[], hasSuggestions: boolean, agent: string) => {
+    Sentry.metrics.count('docs.md_export.not_found', 1, {
+      attributes: {
+        requested_path: path.join('/'),
+        has_suggestions: hasSuggestions,
+        agent,
+      },
+    });
+  },
+
+  /**
    * Track search queries with zero results (indicates content gaps)
    * @param queryLength - Length of the search query
    * @param attributes - Additional context
