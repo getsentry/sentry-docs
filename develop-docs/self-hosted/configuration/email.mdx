@@ -11,21 +11,44 @@ description: Set up and configure email notifications for your self-hosted Sentr
 
 ## Outbound Email
 
-Sentry only supports SMTP for sending outbound email notifications. It does not supports other protocols or APIs for sending email. However, Sentry's built-in SMTP server powered by [egos-tech/smtp](https://gitlab.com/egos-tech/smtp) is sufficient enough to handle multiple use-cases. For more details on other use-cases, please refer to their documentation.
+Sentry sends all outbound email over **SMTP**. It does not support provider HTTP APIs (such as the SendGrid, Mailgun, or AWS SES APIs) for sending mail. Every configuration option below is therefore SMTP under the hood — they differ only in what delivers your mail to the internet.
 
-### As built-in SMTP server
+### Why email matters
 
-This is the default configuration for self-hosted Sentry installations. Yet, this is not recommended for production use-cases due to various email provider requirements regarding sender reputation, SPF, DKIM, DMARC, etc.
+Without a working email configuration, Sentry can't send verification emails. This means:
+- Users can't verify their primary email address
+- Users can't add secondary or backup emails
+- Password reset flows won't work
 
-All you need to do is to set a valid address for `mail.from` setting in `config.yml` and the [FQDN](https://en.wikipedia.org/wiki/Fully_qualified_domain_name) of your Sentry instance for `SENTRY_MAIL_HOST` in `.env`.
+Email verification confirms that a user owns the address on their account, which protects against unauthorized access. Even if you don't need alert notifications, we recommend configuring email for account security.
 
-### As AWS SES relay
+## Get set up
 
-This is recommended to use in production if you are using AWS SES for sending emails. You need to provide `SES_USER`, `SES_PASSWORD`, and `SES_REGION` values in your `.env` file. Set the mail configuration on `sentry/config.yml` file as it is.
+For evaluation, development, or internal/low-volume instances, the built-in SMTP server is the fastest way to get email working with no extra infrastructure.
+
+### Built-in SMTP server
+
+This is the default configuration for self-hosted Sentry, powered by [egos-tech/smtp](https://gitlab.com/egos-tech/smtp).
+
+All you need to do is set a valid address for the `mail.from` setting in `config.yml`, and the [FQDN](https://en.wikipedia.org/wiki/Fully_qualified_domain_name) of your Sentry instance for `SENTRY_MAIL_HOST` in `.env`.
+
+<Alert title="Not recommended for production" level="warning">
+  The built-in server delivers mail directly to recipients. Because it has no established sender reputation and isn't covered by SPF, DKIM, or DMARC records, mailbox providers (like Gmail) will often flag or drop its messages. For production, relay through a dedicated provider instead.
+</Alert>
+
+## Run in production
+
+For production, keep using SMTP but **relay** your mail through a service that handles deliverability (sender reputation, SPF, DKIM, DMARC). Both options below are still SMTP from Sentry's perspective.
+
+### AWS SES relay
+
+Recommended if you are using AWS SES for sending emails. AWS SES exposes an SMTP endpoint, and the built-in server relays your mail to it.
+
+Provide `SES_USER`, `SES_PASSWORD`, and `SES_REGION` values in your `.env` file, and leave the mail configuration in `sentry/config.yml` as it is.
 
 ### External SMTP relay
 
-This is recommended to use in production if you have an external SMTP server for sending emails. There are two ways to configure Sentry to use an external SMTP server:
+Recommended if you have an external SMTP server for sending emails. There are two ways to configure Sentry to use an external SMTP server:
 1. Set the relevant `mail.*` settings in `config.yml` file to point directly to your external SMTP server. Refer to our [email service documentation](/backend/email/) for all the details on what each setting means and does.
 2. Use the built-in SMTP server as a relay by setting a few environment variables on the `docker-compose.yml` file. You will need to leave the configuration on `sentry/config.yml` file as it is.
 
