@@ -25,7 +25,7 @@ const staticHtmlFilesPath = join(process.cwd(), '.next', 'server', 'app');
 const ALGOLIA_APP_ID = process.env.ALGOLIA_APP_ID;
 const ALGOLIA_API_KEY = process.env.ALGOLIA_API_KEY;
 const DOCS_INDEX_NAME = process.env.DOCS_INDEX_NAME;
-const ALOGOLIA_SKIP_ON_ERROR = process.env.ALOGOLIA_SKIP_ON_ERROR === 'true';
+const ALGOLIA_SKIP_ON_ERROR = process.env.ALGOLIA_SKIP_ON_ERROR === 'true';
 // Dry run generates records but skips all Algolia API calls. Used by PR CI to exercise the
 // build + indexing import graph without secrets or mutating the production index.
 const DRY_RUN = process.env.ALGOLIA_DRY_RUN === 'true';
@@ -303,7 +303,7 @@ async function getRecords(
     const error = new Error(`🔴 Error processing ${pageFm.slug}: ${e.message}`, {
       cause: e,
     });
-    if (ALOGOLIA_SKIP_ON_ERROR) {
+    if (ALGOLIA_SKIP_ON_ERROR) {
       console.error(error);
       return {records: [], cached: false};
     }
