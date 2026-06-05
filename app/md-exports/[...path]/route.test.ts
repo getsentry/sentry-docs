@@ -61,9 +61,18 @@ describe('md-exports 404 catch-all route', () => {
     return GET(request, {params: Promise.resolve({path: pathSegments})});
   }
 
-  it('returns 404 status', async () => {
+  // Intentionally 200, not 404: agent fetchers (e.g. Claude Code's WebFetch) drop the
+  // response body on non-2xx, which would strip the helpful not-found content. The
+  // not-found signal lives in the body and the X-Sentry-Docs-Not-Found header instead.
+  it('returns 200 status so agent fetchers keep the body', async () => {
     const res = await callRoute(['platforms', 'javascript', 'ai-monitoring.md']);
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(200);
+  });
+
+  it('marks the soft miss with noindex and a not-found header', async () => {
+    const res = await callRoute(['platforms', 'javascript', 'ai-monitoring.md']);
+    expect(res.headers.get('X-Robots-Tag')).toBe('noindex');
+    expect(res.headers.get('X-Sentry-Docs-Not-Found')).toBe('1');
   });
 
   it('returns text/markdown content type', async () => {
@@ -117,7 +126,7 @@ describe('md-exports 404 catch-all route', () => {
     vi.mocked(readFile).mockRejectedValue(new Error('file not found'));
     const res = await callRoute(['platforms', 'javascript', 'foo.md']);
     const body = await res.text();
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(200);
     expect(body).toContain('Page Not Found');
     expect(body).toContain('llms.txt');
   });

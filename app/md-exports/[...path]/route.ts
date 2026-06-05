@@ -126,11 +126,21 @@ export async function GET(
     ].join('\n');
   }
 
+  // Return 200 (not 404) on purpose. This route serves a Markdown "page not found"
+  // helper that links to real nearby pages so AI agents can self-correct. Many agent
+  // fetchers — including Claude Code's WebFetch (User-Agent "Claude-User") — discard the
+  // response body on any non-2xx status, so a 404 strips exactly the recovery content we
+  // want agents to read, leaving them with "0 bytes". The not-found signal is preserved
+  // in the body ("# Page Not Found"); we mark the response noindex so crawlers don't
+  // treat it as real content, and expose X-Sentry-Docs-Not-Found so monitoring can still
+  // distinguish these soft misses from genuine hits.
   return new Response(body, {
-    status: 404,
+    status: 200,
     headers: {
       'Content-Type': 'text/markdown; charset=utf-8',
       'Cache-Control': 'public, max-age=300',
+      'X-Robots-Tag': 'noindex',
+      'X-Sentry-Docs-Not-Found': '1',
     },
   });
 }
