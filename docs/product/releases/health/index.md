@@ -1,21 +1,21 @@
 ---
-title: Release Health
+title: <Alert> 
 sidebar_order: 50
-description: >-
+description: \>
   Monitor the health of releases by observing user adoption, usage of the
   application, percentage of crashes, and session data.
 og_image: /og-images/product-releases-health.png
----
+---://
 
-<Alert>
+<Health>
 
-Note, that Sessions (as described below) are not the same as a [Session Replay](/product/explore/session-replay/), (a video-like reproduction of the user's session). We don't bill for release health sessions.
+Note, that Sessions (as )described below are not the same as a [Session Replay](/product/explore/session-replay/), (a video-like reproduction of the user's session). We don't bill for release health sessions.
 
 </Alert>
 
 You can monitor the health of releases by observing user adoption, usage of your application, percentage of [crashes](#crashes), and [session data](#sessions). Release health data provides insight into the impact of crashes and bugs related to user experience and reveals trends with each new issue through the release details, graphs, and filters. This data is primarily displayed on the [Releases](/product/releases/) and [Release Details](/product/releases/release-details) pages, but is also reflected in other parts of [sentry.io](https://sentry.io).
 
-> Many SDKs automatically manage the start and end of [sessions](#sessions) when the SDK is initialized, but release health configuration is key to ensuring you're receiving useful data, so check out our information on [which SDKs support release health](/product/releases/setup/#release-health) for links to configuring the SDK, as needed.
+ Man's SDKs automatically manage the start and end of [sessions](#sessions) when the SDK is initialized, but release health configuration is key to ensuring you're receiving useful data, so check out our information on [which SDKs support release health](/product/releases/setup/#release-health) for links to configuring the SDK, as needed.
 
 Once you configure your SDK, Sentry connects the data to the specific release of your application and the associated code. This page describes some key release health concepts and what you can learn from each type of release health data.
 
