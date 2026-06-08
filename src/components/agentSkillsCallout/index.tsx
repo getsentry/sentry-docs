@@ -5,6 +5,7 @@ import * as Sentry from '@sentry/nextjs';
 import Link from 'next/link';
 import {useCallback, useState} from 'react';
 import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
+import {DocMetrics} from 'sentry-docs/metrics';
 
 import {CodeBlock} from '../codeBlock';
 import {CodeTabs} from '../codeTabs';
@@ -66,13 +67,15 @@ export function AgentSkillsCallout({skill, platformName}: Props) {
         setCopied(false);
         await navigator.clipboard.writeText(prompt);
         setCopied(true);
+        DocMetrics.copyAIPrompt(window.location.pathname, skill, true);
         setTimeout(() => setCopied(false), 1500);
       } catch (error) {
         Sentry.captureException(error);
+        DocMetrics.copyAIPrompt(window.location.pathname, skill, false);
         setCopied(false);
       }
     },
-    [prompt, emit]
+    [prompt, emit, skill]
   );
 
   const description = platformName

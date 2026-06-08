@@ -134,6 +134,7 @@ SentrySDK.start { options in
     options.enableAutoPerformanceTracing = false
 }
 ```
+
 ```objc {tabTitle:Objective-C}
 @import Sentry;
 
@@ -166,6 +167,7 @@ The Cocoa SDK creates the following app start spans:
 ![App Start Transaction](./img/app-start-transaction.png)
 
 Cold and warm start are Mobile Vitals, which you can learn about in the [full documentation](/product/dashboards/sentry-dashboards/mobile/mobile-vitals).
+
 ### Prewarmed App Start Tracing
 
 Starting with iOS 15, the operating system might [prewarm](https://developer.apple.com/documentation/uikit/app_and_environment/responding_to_the_launch_of_your_app/about_the_app_launch_sequence#3894431) your app by creating the process before the user opens it. Starting with SDK version [9.0.0](https://github.com/getsentry/sentry-cocoa/releases/tag/9.0.0), the `enablePreWarmedAppStartTracing` is enabled by default.
@@ -200,6 +202,196 @@ SentrySDK.start { options in
     options.enablePreWarmedAppStartTracing = NO;
 }];
 ```
+
+### Standalone App Start Tracing
+
+<Alert>
+
+This feature is experimental and available since [version 9.14.0](https://github.com/getsentry/sentry-cocoa/blob/main/CHANGELOG.md#9140).
+
+</Alert>
+
+By default, the SDK attaches app start data as spans to the first UIViewController transaction. With standalone app start tracing enabled, the SDK sends a dedicated `app.start` transaction instead. This gives app starts their own transaction, making them easier to find, sample, and analyze independently.
+
+![Standalone App Start Transaction](./img/standalone-app-start.png)
+
+To enable standalone app start tracing:
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.experimental.enableStandaloneAppStartTracing = true
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.experimental.enableStandaloneAppStartTracing = YES;
+}];
+```
+
+Since standalone app start transactions use the `app.start` operation, you can use a custom `tracesSampler` to set a dedicated sample rate for app starts without increasing your overall sample rate:
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.experimental.enableStandaloneAppStartTracing = true
+    options.tracesSampler = { context in
+        if context.transactionContext.operation == "app.start" {
+            return 1.0
+        }
+        return 0.1
+    }
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.experimental.enableStandaloneAppStartTracing = YES;
+    options.tracesSampler = ^NSNumber * _Nullable(SentrySamplingContext * context) {
+        if ([context.transactionContext.operation isEqualToString:@"app.start"]) {
+            return @1.0;
+        }
+        return @0.1;
+    };
+}];
+```
+
+#### Extending the App Launch
+
+<Alert>
+
+Available since [version 9.15.0](https://github.com/getsentry/sentry-cocoa/blob/main/CHANGELOG.md#9150).
+
+</Alert>
+
+By default, the standalone app start transaction ends when the `didFinishLaunchingNotification` notification is posted (after `application(_:didFinishLaunchingWithOptions:)` function returns). If your app performs additional work after that — such as loading initial data from a server or database — you can extend the app start transaction to include that time by calling `SentrySDK.extendAppLaunch()`.
+
+Call `extendAppLaunch()` after `SentrySDK.start(options:)` and before `application(_:didFinishLaunchingWithOptions:)` returns, so the SDK doesn't automatically finish the app start transaction. The method returns the extended app launch span, which you can use to add child spans that break down the extended launch period. Call `finish()` on the returned span when your app is fully ready. This adds an "Extended App Start" child span covering the time between the two calls.
+
+![Extended App Start](./img/extended-app-start.png)
+
+**UIKit:**
+
+```swift {tabTitle:Swift}
+import Sentry
+
+class AppDelegate: UIResponder, UIApplicationDelegate {
+    var appStartSpan: (any Span)?
+
+    func application(
+        _ application: UIApplication,
+        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
+    ) -> Bool {
+        SentrySDK.start { options in
+            options.dsn = "___PUBLIC_DSN___"
+            options.experimental.enableStandaloneAppStartTracing = true
+        }
+        appStartSpan = SentrySDK.extendAppLaunch()
+
+        let configSpan = appStartSpan?.startChild(
+            operation: "app.init",
+            description: "fetch remote config"
+        )
+        fetchRemoteConfig()
+        configSpan?.finish()
+
+        return true
+    }
+
+    // Later, when your app is fully ready:
+    func onDataLoaded() {
+        appStartSpan?.finish()
+    }
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+@interface AppDelegate ()
+@property (nonatomic, strong) id<SentrySpan> appStartSpan;
+@end
+
+- (BOOL)application:(UIApplication *)application
+    didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+    [SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+        options.dsn = @"___PUBLIC_DSN___";
+        options.experimental.enableStandaloneAppStartTracing = YES;
+    }];
+    self.appStartSpan = [SentrySDK extendAppLaunch];
+
+    id<SentrySpan> configSpan = [self.appStartSpan startChildWithOperation:@"app.init"
+                                                               description:@"fetch remote config"];
+    [self fetchRemoteConfig];
+    [configSpan finish];
+
+    return YES;
+}
+
+// Later, when your app is fully ready:
+- (void)onDataLoaded {
+    [self.appStartSpan finish];
+}
+```
+
+You can also call `SentrySDK.finishExtendedAppLaunch()` instead of `finish()` on the span — both are equivalent.
+
+**SwiftUI:**
+
+```swift {tabTitle:Swift}
+import Sentry
+
+@main
+struct MyApp: App {
+    var appStartSpan: (any Span)?
+    
+    init() {
+        SentrySDK.start { options in
+            options.dsn = "___PUBLIC_DSN___"
+            options.experimental.enableStandaloneAppStartTracing = true
+        }
+        appStartSpan = SentrySDK.extendAppLaunch()
+
+        let configSpan = appStartSpan?.startChild(
+            operation: "app.init",
+            description: "load configuration"
+        )
+        loadConfiguration()
+        configSpan?.finish()
+    }
+
+    var body: some Scene {
+        WindowGroup {
+            ContentView(onReady: {
+                appStartSpan?.finish()
+            })
+        }
+    }
+}
+```
+
+<Alert>
+
+`extendAppLaunch()` returns the extended app launch span, or `nil` if the SDK is not started or the app start transaction was already created. The return value is `@discardableResult`, so existing code that doesn't use the return value will continue to work.
+
+`extendAppLaunch()` must be called before the `didFinishLaunchingNotification` notification is posted. If called after the app start transaction has already been created, it returns `nil` and the SDK logs a warning.
+
+Calling `finishExtendedAppLaunch()` without a prior `extendAppLaunch()` call, or after the extended launch was already finished, is a no-op.
+
+These APIs are only available on iOS, tvOS, and visionOS, and require `enableStandaloneAppStartTracing` to be enabled.
+
+</Alert>
 
 ## Slow and Frozen Frames
 
@@ -361,6 +553,7 @@ Starting with version 8.48.0, the Sentry SDK offers extensions for the types `Da
 The method signatures of these extensions resemble those of the original types, but they add a span to the current transaction. These methods can be used even when the Sentry SDK is not enabled—they will fall back to the original methods in that case.
 
 **Behavior:**
+
 - The SDK only creates spans when there is an active transaction on the scope
 - Only file URLs are tracked (non-file URLs like HTTP URLs are ignored, as they are handled by network tracing)
 - File size is automatically tracked for read and write operations
