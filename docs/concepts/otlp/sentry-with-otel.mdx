@@ -16,6 +16,16 @@ This gives you end-to-end visibility:
 
 ![Sentry Distributed Trace](./img/sentry-distributed-trace.png)
 
+<Alert level="warning" title="Tail-Based Sampling Interaction">
+
+When `propagateTraceparent` is enabled, the frontend SDK encodes its sampling decision in the `traceparent` header. If your OTel backend uses a `parentbased_*` sampler (the default is `parentbased_always_on`), it honors that decision and skips your collector's tail-based sampler entirely.
+
+To preserve tail-based sampling, set your backend's sampler to `always_on` so all spans reach the collector for evaluation:
+
+`OTEL_TRACES_SAMPLER=always_on`
+
+</Alert>
+
 The following SDKs support the `propagateTraceparent` option:
 
 <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1.5rem'}}>
