@@ -134,7 +134,7 @@ If `true`, enables automatic detection and reporting of application hangs. The S
 
 <Alert title="Note">
 
-This feature is only supported on Android, iOS, and macOS platforms.
+This feature applies to iOS and macOS only. On Android, ANR (Application Not Responding) detection is configured separately — see [`android.enable_anr_detection`](#android.enable_anr_detection).
 
 </Alert>
 
@@ -143,6 +143,36 @@ This feature is only supported on Android, iOS, and macOS platforms.
 <SdkOption name="app_hang_timeout_sec" type="float" defaultValue="5.0">
 
 Specifies the timeout duration in seconds after which the application is considered to have hanged. When `app_hang_tracking` is enabled, if the main thread is blocked for longer than this duration, it will be reported as an application hang event to Sentry.
+
+</SdkOption>
+
+## Android Options
+
+These options configure Android-specific behavior, such as ANR (Application Not Responding) detection. Set them programmatically through `options.android`, or in the **Project Settings** under **Sentry > Android > Application Not Responding**.
+
+<SdkOption name="android.enable_anr_detection" type="bool" defaultValue="true">
+
+If `true`, detects and reports ANR (Application Not Responding) errors. The SDK monitors the main thread for unresponsiveness and reports an event when an ANR occurs.
+
+Android 11 and later use the system-based V2 implementation, while earlier versions use the watchdog-based V1 implementation. See `android.anr_timeout_interval_ms` and `android.attach_anr_thread_dump` for the options specific to each implementation. On Apple platforms, `app_hang_tracking` configures the equivalent app hang detection.
+
+To learn more, see the [Application Not Responding documentation](/platforms/android/configuration/app-not-respond/).
+
+</SdkOption>
+
+<SdkOption name="android.anr_timeout_interval_ms" type="int" defaultValue="5000">
+
+Specifies how long, in milliseconds, the main thread must stay blocked before the SDK reports an ANR.
+
+Applies only when `android.enable_anr_detection` is enabled, and only to the V1 implementation used on Android versions before 11. On Android 11 and later, the operating system determines when the application stops responding, so this value has no effect.
+
+</SdkOption>
+
+<SdkOption name="android.attach_anr_thread_dump" type="bool" defaultValue="false">
+
+If `true`, attaches the operating system's thread dump to the ANR event as a plain-text attachment, adding detail for investigating where the application became unresponsive.
+
+Applies only when `android.enable_anr_detection` is enabled, and only to the V2 implementation used on Android 11 and later.
 
 </SdkOption>
 
