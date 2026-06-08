@@ -2,7 +2,7 @@
 
 To filter logs, or update them before they are sent to Sentry, you can use the `before_send_log` option.
 
-```GDScript
+```gdscript {tabTitle:GDScript} {mdExpandTabs}
 SentrySDK.init(func(options: SentryOptions) -> void:
 	options.enable_logs = true
 	options.before_send_log = _before_send_log
@@ -17,6 +17,24 @@ func _before_send_log(log_entry: SentryLog) -> SentryLog:
 	# Add custom attributes.
 	log_entry.set_attribute("current_scene", current_scene.name)
 	return log_entry
+```
+
+```csharp {tabTitle:C#}
+SentrySdk.Init(options =>
+{
+    options.EnableLogs = true;
+    options.SetBeforeSendLog(log =>
+    {
+        // Filter junk.
+        if (log.Message == "Junk message")
+        {
+            return null;
+        }
+        // Add custom attributes.
+        log.SetAttribute("current_scene", currentScene.Name);
+        return log;
+    });
+});
 ```
 
 The `before_send_log` function receives a `SentryLog` object, and should return either the same log object, with or without modifications, or `null` if you want to discard it.
