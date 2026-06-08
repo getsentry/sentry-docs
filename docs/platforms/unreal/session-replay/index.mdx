@@ -21,10 +21,11 @@ Unlike the [web](/platforms/javascript/session-replay/) and [mobile](/platforms/
 | Platform    | What gets captured                                                              | Requirements                                                                                        |
 | ----------- | ------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
 | **Windows** | A rolling video clip of the game's backbuffer, attached to crash reports.       | The `AVCodecsCore` and `NVCodecs` plugins enabled, an NVIDIA GPU (NVENC), and a plugin rebuild after enabling (see [below](#windows)). |
+| **macOS**   | A rolling video clip of the game's backbuffer, attached to crash reports.       | The `AVCodecsCore` and `VTCodecs` plugins enabled, and a plugin rebuild after enabling (see [below](#macos)). |
 | **Xbox**    | An OS-captured gameplay clip, attached to crash reports.                        | Development kits only.                                                                               |
 | **Android** | A full-session replay via the Android SDK, with default text and image masking. | None beyond the standard Android setup.                                                             |
 
-All other platforms (Linux, macOS, iOS, PlayStation, and Nintendo Switch) are not currently supported. On those platforms the setting is a no-op.
+All other platforms (Linux, iOS, PlayStation, and Nintendo Switch) are not currently supported. On those platforms the setting is a no-op.
 
 ## Enabling Session Replay
 
@@ -42,11 +43,11 @@ AttachSessionReplay=True
 The following settings are available under the **Session Replay** section in the plugin settings:
 
 - **Enable session replay (experimental)** (`AttachSessionReplay`, default `False`) — Master toggle for the feature.
-- **Replay duration (ms)** (`SessionReplayDurationMs`, default `5000`, range `1000`–`60000`) — The requested length of the retroactive replay window. On Windows this is the rolling clip length kept on disk for crash attachment; on Xbox it's the requested length of the OS-captured clip (which may be shorter if not enough frames are buffered). This value is ignored on Android, where the underlying SDK determines the duration.
+- **Replay duration (ms)** (`SessionReplayDurationMs`, default `5000`, range `1000`–`60000`) — The requested length of the retroactive replay window. On Windows and macOS this is the rolling clip length kept on disk for crash attachment; on Xbox it's the requested length of the OS-captured clip (which may be shorter if not enough frames are buffered). This value is ignored on Android, where the underlying SDK determines the duration.
 
-### Advanced Recording Options (Windows)
+### Advanced Recording Options (Windows & macOS)
 
-The **Advanced recording options (Windows)** group (`SessionReplayOptions`) provides low-level encoder and muxer tuning for the Windows recorder. The defaults are sensible for most projects.
+The **Advanced recording options** group (`SessionReplayOptions`) provides low-level encoder and muxer tuning for the desktop recorders. The defaults are sensible for most projects.
 
 - **Fragment duration (seconds)** (`FragmentSeconds`, default `0.5`, range `0.1`–`2.0`) — Length of each video fragment. Shorter values reduce the worst-case amount of footage lost at crash time, but increase keyframe frequency and lower compression efficiency.
 - **Rotation interval (seconds)** (`RotationIntervalSeconds`, default `1.0`, range `0.25`–`5.0`) — How often the on-disk attachment file is refreshed.
@@ -76,6 +77,19 @@ The most recent fraction of a second of footage (up to one fragment duration) ma
 
 </Alert>
 
+### macOS
+
+On macOS, Session Replay encodes the game's backbuffer via Apple's VideoToolbox framework. Both Apple Silicon and Intel Macs are supported — VideoToolbox uses a dedicated hardware media engine on Apple Silicon and a software fallback elsewhere.
+
+- **The `AVCodecsCore` and `VTCodecs` engine plugins must be enabled** in your project. The Sentry plugin only compiles the recorder when these are present.
+- **A plugin rebuild is required after toggling the setting.** Whether Session Replay is compiled in is decided at build time from `AttachSessionReplay`, so after enabling or disabling it, delete your project's `Binaries` and `Intermediate` directories and rebuild.
+
+<Alert>
+
+As with Windows, the most recent fraction of a second of footage (up to one fragment duration) may be missing from the attached clip.
+
+</Alert>
+
 ### Xbox
 
 On Xbox, Session Replay uses the operating system's game-capture facility to grab a clip of recent gameplay at crash time. This is supported on **development kits only** and is not available in retail builds.
@@ -88,7 +102,7 @@ On Android, enabling the setting turns on the [Android SDK's Session Replay](/pl
 
 <Alert level="warning">
 
-On Windows and Xbox, Session Replay records the rendered game frames as-is — there is **no automatic masking**. Any sensitive information shown on screen (player names, chat, email addresses, in-game purchases, and so on) will be present in the captured video. Only enable this feature if the content rendered by your game is safe to record, and make sure your data-handling and privacy policies account for it.
+On Windows, macOS, and Xbox, Session Replay records the rendered game frames as-is — there is **no automatic masking**. Any sensitive information shown on screen (player names, chat, email addresses, in-game purchases, and so on) will be present in the captured video. Only enable this feature if the content rendered by your game is safe to record, and make sure your data-handling and privacy policies account for it.
 
 </Alert>
 
