@@ -2,15 +2,15 @@
 title: Data Collection
 description: Configuration for what data SDKs collect by default, including technical context, PII, and sensitive data.
 spec_id: sdk/foundations/client/data-collection
-spec_version: 1.0.0
+spec_version: 0.3.0
 spec_status: candidate
 spec_depends_on:
   - id: sdk/foundations/client
     version: ">=1.0.0"
 spec_changelog:
-  - version: 1.0.0
+  - version: 0.3.0
     date: 2026-06-05
-    summary: Promoted to candidate following the initial JavaScript SDK implementation.
+    summary: Promoted to candidate following the initial JavaScript SDK implementation. Version stays `0.x` until the contract is frozen at `stable`.
   - version: 0.2.0
     date: 2026-06-05
     summary: Collect more data by default. `userInfo` now defaults to `true` and `httpBodies` now defaults to all valid body types. Both can be disabled to opt out.
@@ -41,7 +41,7 @@ Related specs:
 
 ## Concepts
 
-<SpecSection id="data-sensitivity-levels" status="candidate" since="1.0.0">
+<SpecSection id="data-sensitivity-levels" status="candidate" since="0.1.0">
 
 ### Data Sensitivity Levels
 
@@ -86,7 +86,7 @@ For the canonical list of terms used to detect sensitive values at collection ti
 
 ## Behavior
 
-<SpecSection id="configuration-surface" status="candidate" since="1.0.0">
+<SpecSection id="configuration-surface" status="candidate" since="0.1.0">
 
 ### Configuration Requirements
 
@@ -96,7 +96,7 @@ SDKs **MUST** support at least the `userInfo` option, key-value collection modes
 
 </SpecSection>
 
-<SpecSection id="collection-defaults" status="candidate" since="1.0.0">
+<SpecSection id="collection-defaults" status="candidate" since="0.2.0">
 
 ### Default Collection Behavior
 
@@ -108,7 +108,7 @@ The three sensitivity levels determine whether data is collected by default:
 
 </SpecSection>
 
-<SpecSection id="sensitive-denylist" status="candidate" since="1.0.0">
+<SpecSection id="sensitive-denylist" status="candidate" since="0.1.0">
 
 ### Sensitive Denylist
 
@@ -199,7 +199,7 @@ No built-in option scrubs **keys**; users who need to hide header or cookie name
 
 </SpecSection>
 
-<SpecSection id="integration-overrides" status="candidate" since="1.0.0">
+<SpecSection id="integration-overrides" status="candidate" since="0.1.0">
 
 ### Integration-Level Overrides
 
@@ -217,7 +217,7 @@ corresponding global `dataCollection` values for the data that integration colle
 
 </SpecSection>
 
-<SpecSection id="user-set-data-scrubbing" status="candidate" since="1.0.0">
+<SpecSection id="user-set-data-scrubbing" status="candidate" since="0.1.0">
 
 ### User-Set Data and Scrubbing
 
@@ -245,7 +245,7 @@ This means if a user calls `Sentry.setUser({ email: "jane@example.com" })`, that
 
 ## Public API
 
-<SpecSection id="option-types" status="candidate" since="1.0.0">
+<SpecSection id="option-types" status="candidate" since="0.2.0">
 
 ### Option Types
 
@@ -481,7 +481,7 @@ public enum BodyType {
 
 </SpecSection>
 
-<SpecSection id="datacollection-options" status="candidate" since="1.0.0">
+<SpecSection id="datacollection-options" status="candidate" since="0.2.0">
 
 ### `dataCollection` Options
 
@@ -515,14 +515,14 @@ init({
 
   | Key | Option Type | Default | Since | Description |
 |-----|-------------|---------|-------|-------------|
-| `userInfo` | Boolean | `true` | 1.0.0 | Automatically populate `user.*` fields (`user.id`, `user.email`, `user.username`, `user.ip_address`) from auto-instrumentation (e.g., inferring `user.ip_address` from an incoming HTTP request, or deriving user identity from framework session/auth context). Does **not** gate data explicitly set via `Sentry.setUser()`, which is always attached (see [User-Set Data and Scrubbing](#user-set-data-scrubbing)). Does not affect any other data category. |
-| `cookies` | Key-value collection | `{ mode: "denyList" }` | 1.0.0 | Collect cookies. All key names are always included; the SDK scrubs values for keys matching the sensitive denylist or custom allow/deny terms. |
-| `httpHeaders` | `{ request?, response? }` | Both `{ mode: "denyList" }` | 1.0.0 | Collect HTTP headers. Configure request and response independently using key-value collection modes. All key names are always included. |
-| `httpBodies` | `string[]` (body types) | all valid body types | 1.0.0 | List of body types to collect. Omitted = all body types valid for the platform; empty array (`[]`) = off. Valid values: `"incomingRequest"`, `"outgoingRequest"`, `"incomingResponse"`, `"outgoingResponse"`. |
-| `queryParams` | Key-value collection | `{ mode: "denyList" }` | 1.0.0 | Collect URL query parameters. All key names are always included; the SDK scrubs values for keys matching the sensitive denylist or custom allow/deny terms. |
-| `genAI` | `{ inputs?, outputs? }` | Both `true` | 1.0.0 | For `inputs`: Include the content of generative AI inputs (e.g. prompt text, tool call arguments). <br /><br /> For `outputs`: Include the content of generative AI outputs (e.g. completion text, tool call results). Metadata such as model name and token counts is always collected regardless of these settings. |
-| `stackFrameVariables` | Boolean | `true` | 1.0.0 | Include local variable values captured within stack frames. |
-| `frameContextLines` | Integer (`Boolean` fallback) | `5` (`true`) | 1.0.0 | Number of source code lines to include above and below each stack frame. <br/> **`Boolean` fallback:** Not all platforms support integer configuration values. SDKs **MAY** accept a boolean, where `true` is equivalent to the platform default (typically `5`) and `false` is equivalent to `0` (no context lines). SDKs **SHOULD** prefer accepting an integer when their platform supports it. |
+| `userInfo` | Boolean | `true` | 0.1.0 | Automatically populate `user.*` fields (`user.id`, `user.email`, `user.username`, `user.ip_address`) from auto-instrumentation (e.g., inferring `user.ip_address` from an incoming HTTP request, or deriving user identity from framework session/auth context). Does **not** gate data explicitly set via `Sentry.setUser()`, which is always attached (see [User-Set Data and Scrubbing](#user-set-data-scrubbing)). Does not affect any other data category. Default changed to `true` in 0.2.0. |
+| `cookies` | Key-value collection | `{ mode: "denyList" }` | 0.1.0 | Collect cookies. All key names are always included; the SDK scrubs values for keys matching the sensitive denylist or custom allow/deny terms. |
+| `httpHeaders` | `{ request?, response? }` | Both `{ mode: "denyList" }` | 0.1.0 | Collect HTTP headers. Configure request and response independently using key-value collection modes. All key names are always included. |
+| `httpBodies` | `string[]` (body types) | all valid body types | 0.1.0 | List of body types to collect. Omitted = all body types valid for the platform; empty array (`[]`) = off. Valid values: `"incomingRequest"`, `"outgoingRequest"`, `"incomingResponse"`, `"outgoingResponse"`. Default changed from `[]` (off) to all valid body types in 0.2.0. |
+| `queryParams` | Key-value collection | `{ mode: "denyList" }` | 0.1.0 | Collect URL query parameters. All key names are always included; the SDK scrubs values for keys matching the sensitive denylist or custom allow/deny terms. |
+| `genAI` | `{ inputs?, outputs? }` | Both `true` | 0.1.0 | For `inputs`: Include the content of generative AI inputs (e.g. prompt text, tool call arguments). <br /><br /> For `outputs`: Include the content of generative AI outputs (e.g. completion text, tool call results). Metadata such as model name and token counts is always collected regardless of these settings. |
+| `stackFrameVariables` | Boolean | `true` | 0.1.0 | Include local variable values captured within stack frames. |
+| `frameContextLines` | Integer (`Boolean` fallback) | `5` (`true`) | 0.1.0 | Number of source code lines to include above and below each stack frame. <br/> **`Boolean` fallback:** Not all platforms support integer configuration values. SDKs **MAY** accept a boolean, where `true` is equivalent to the platform default (typically `5`) and `false` is equivalent to `0` (no context lines). SDKs **SHOULD** prefer accepting an integer when their platform supports it. |
 
 
 
