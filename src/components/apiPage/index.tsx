@@ -20,10 +20,9 @@ function Params({params}) {
           <Fragment key={param.name}>
             <dt>
               <div>
-                <code data-index>{param.name}</code>
+                <code data-index>{param.name}</code>{' '}
                 {!!param.schema?.type && (
                   <em>
-                    {' '}
                     ({param.schema.type}
                     {param.schema.items && `(${param.schema.items.type})`})
                   </em>
