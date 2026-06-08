@@ -4,6 +4,44 @@ description: "Learn more about migrating to the current version."
 sidebar_order: 8000
 ---
 
+## Migrating to 2.0.0
+
+### Breaking changes
+
+`enable_logs` now defaults to `true`, and the Godot logger integration no longer captures Godot's log output as Sentry Logs automatically. See [Changes to logging](#changes-to-logging) below.
+
+On Android, ANR (Application Not Responding) detection replaces App Hang Tracking and is now enabled by default. See [Android ANR detection](#android-anr-detection) below.
+
+### Changes to logging
+
+The Godot logger options are now grouped under `SentryOptions.godot_logger`. All options that were previously available as `SentryOptions.logger_*` properties have moved there. For example, `logger_event_mask` becomes `godot_logger.event_mask` and `logger_limits` becomes `godot_logger.limits`. The old flat `logger_*` properties still work as deprecated aliases that forward to the new object. As part of the move, `logger_include_source` was renamed to `godot_logger.include_source_context`. Existing **Project Settings** under **Sentry > Logger** are migrated automatically to **Sentry > Godot Logger**.
+
+By default, the Godot logger integration no longer sends Godot log output to [Sentry Logs](/product/explore/logs/). If you want to capture those logs, you must opt in by setting `godot_logger.log_mask` to the event types you want to send:
+
+```gdscript {tabTitle:GDScript} {mdExpandTabs}
+SentrySDK.init(func(options: SentryOptions) -> void:
+	options.godot_logger.log_mask = SentryOptions.MASK_ERROR | SentryOptions.MASK_SCRIPT | SentryOptions.MASK_SHADER
+)
+```
+
+```csharp {tabTitle:C#}
+SentrySdk.Init(options =>
+{
+	options.GodotLogger.LogMask =
+		GodotLoggerEventMask.Error | GodotLoggerEventMask.Script | GodotLoggerEventMask.Shader;
+});
+```
+
+The `GodotErrorMask` enum was renamed to `GodotLoggerEventMask`, and a new `MASK_MESSAGE` flag captures log messages such as `print()` statements. Update the enum name if you reference these masks in code.
+
+`logger_messages_as_breadcrumbs` is deprecated. Set the `MASK_MESSAGE` flag in `godot_logger.breadcrumb_mask` instead — it's included in the default mask.
+
+### Android ANR detection
+
+ANR (Application Not Responding) detection is now enabled by default on Android and is configured through Android-specific options under `SentryOptions.android`, or in the **Project Settings** under **Sentry > Android > Application Not Responding**. Set `SentryOptions.android.enable_anr_detection` to `false` to opt out.
+
+The App Hang Tracking options (`app_hang_tracking`, `app_hang_timeout_sec`) now apply to Apple platforms only. See the [configuration options](/platforms/godot/configuration/options/) for the available `options.android` settings.
+
 ## Migrating to 1.0.0
 
 ### Breaking changes
@@ -18,7 +56,6 @@ The `attach_screenshot` and `screenshot_level` options have moved to the experim
 
 `enabled` and `disabled_in_editor_play` project settings were renamed to `auto_init` and `skip_auto_init_on_editor_play` for clarity.
 
-
 ### Changes to breadcrumbs API
 
 Previously, `add_breadcrumb()` method accepted 5 parameters (3 of which were strings), making it confusing to use. The new approach uses a dedicated `SentryBreadcrumb` class:
@@ -31,6 +68,7 @@ SentrySDK.add_breadcrumb(crumb)
 ```
 
 For simple breadcrumbs, you can use a one-liner:
+
 ```gdscript
 SentrySDK.add_breadcrumb(SentryBreadcrumb.create("Something happened"))
 ```
@@ -41,6 +79,7 @@ Configuration scripts and the `SentryConfiguration` class have been removed. To 
 
 1. Disable **Auto Init** in Godot's **Project Settings** window under **Sentry** category.
 2. Create a main loop script with a `class_name` attribute, and init Sentry inside `_initialize()` method.
+
 ```gdscript
 class_name MyMainLoop
 extends SceneTree
@@ -60,4 +99,5 @@ func _before_send(ev: SentryEvent) -> SentryEvent:
 	# Return the event (with or without modifications) or null to skip reporting.
 	return ev
 ```
+
 3. Assign your main loop type in Godot's **Project Settings** under **Application > Run > Main Loop Type** ("MyMainLoop" in the example code).
