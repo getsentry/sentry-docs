@@ -365,7 +365,7 @@ export function Header({
       {/* Home page mobile navigation overlay */}
       {isHomePage && homeMobileNavOpen && (
         <div
-          className="md:hidden fixed inset-0 bg-[var(--gray-1)] z-40"
+          className="md:hidden fixed inset-0 bg-[var(--gray-1)] z-40 overflow-y-auto overscroll-contain"
           style={{top: 'var(--header-height)'}}
         >
           <nav className="px-4 py-4 space-y-1">

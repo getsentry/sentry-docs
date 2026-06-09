@@ -9,6 +9,10 @@ let lockCount = 0;
 
 function lockBodyScroll() {
   if (lockCount === 0) {
+    // Lock the documentElement (the actual scroll container) as well as body —
+    // body-only overflow doesn't reliably stop overscroll/rubber-band chaining
+    // to the document at the scroll bounds.
+    document.documentElement.style.overflow = 'hidden';
     document.body.style.overflow = 'hidden';
   }
   lockCount += 1;
@@ -22,6 +26,7 @@ function unlockBodyScroll() {
   if (lockCount === 0) {
     // Clear, don't restore a captured value — it may be a third party's
     // transient lock (e.g. Kapa); re-applying it would strand the page.
+    document.documentElement.style.overflow = '';
     document.body.style.overflow = '';
   }
 }
