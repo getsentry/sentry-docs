@@ -32,7 +32,7 @@ you need event filtering, data scrubbing, or a general ingestion proxy, use
 
 ## Installation
 
-The `sentry/sentry-agent` package can be installed independently from your PHP
+The `sentry/sentry-agent` package can be installed independently of your PHP
 application. You don't need to add it to every application unless that
 application is also responsible for installing and running the agent binary.
 
@@ -54,16 +54,17 @@ The agent is built with the assumption that it runs on the same machine as your
 PHP application. Running it on another machine can add enough latency for the
 SDK to use fallback delivery instead.
 
-To change the listen address or port, pass them as the first two arguments:
+The agent accepts named options. To change the listen address or port, pass
+the full address to `--listen`:
 
 ```bash
-vendor/bin/sentry-agent [listen_address] [listen_port]
+vendor/bin/sentry-agent --listen=127.0.0.1:5148
 ```
 
-For example:
+For other runtime settings, use the same `--name=value` form:
 
 ```bash
-vendor/bin/sentry-agent 127.0.0.1 5148
+vendor/bin/sentry-agent --upstream-timeout=2.0 --queue-limit=1000
 ```
 
 ## Configure the SDK
@@ -109,9 +110,8 @@ Sentry:
 \Sentry\captureMessage('PHP Agent test event');
 ```
 
-To confirm that the event was routed through the agent, open the event's JSON
-and look for `ingest_path`. Events sent through the PHP Agent include an entry
-with a `version` value starting with `sentry.php.agent/`.
+To confirm that the event was routed through the agent, check if a tag named
+`sentry.php.agent` exists and is `true`.
 
 ## Fallback Delivery
 
