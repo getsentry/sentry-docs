@@ -105,7 +105,45 @@ Set to `false` to opt out, for example, when using a custom `tunnel` or when run
 
 <SdkOption name="sendDefaultPii" type='boolean' defaultValue='false'>
 
+<Alert level="warning">
+  `sendDefaultPii` is deprecated and will be removed in the next major version
+  (v11). Use [`dataCollection`](#dataCollection) instead.
+</Alert>
+
 Set this option to `true` to send default PII data to Sentry. Among other things, enabling this will enable automatic IP address collection on events.
+
+For backwards compatibility, `sendDefaultPii: true` behaves like enabling all [`dataCollection`](#dataCollection) categories.
+If both options are set, `dataCollection` takes precedence.
+
+</SdkOption>
+
+<SdkOption name="dataCollection" type='DataCollection' availableSince="10.57.0">
+
+Controls which categories of data the SDK collects automatically. All fields are optional.
+  By default the SDK collects rich debugging context (including user identity, request/response bodies, and generative AI content) and scrubs values whose keys match the built-in sensitive denylist (`auth`, `token`, `password`, and similar).
+
+For more on what data Sentry collects and how to control it, see <PlatformLink to="/data-management/">Data Management</PlatformLink>.
+
+| Key                   | Type                         | Default    | Description                                                                                                                              |
+| --------------------- | ---------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `userInfo`            | `boolean`                    | `true`     | Populate `user.*` fields (`id`, `email`, `username`, `ip_address`) from instrumentation.                                                 |
+| `cookies`             | `CollectBehavior`            | `true`     | Collect cookies.                                                                                                                         |
+| `httpHeaders`         | `{ request?, response? }`    | both `true`| Collect HTTP request and response headers.                                                                                               |
+| `httpBodies`          | `HttpBodyCollectionTarget[]` | all types  | Body types to collect: `"incomingRequest"`, `"outgoingRequest"`, `"incomingResponse"`, `"outgoingResponse"`. Set to `[]` to disable.    |
+| `queryParams`         | `CollectBehavior`            | `true`     | Collect URL query parameters.                                                                                                            |
+| `genAI`               | `{ inputs?, outputs? }`      | both `true`| Collect generative AI input/output content. Metadata is always collected.                                                                |
+| `stackFrameVariables` | `boolean`                    | `true`     | Capture local variable values in stack frames.                                                                                           |
+| `frameContextLines`   | `number`                     | `5`        | Source code lines captured around each stack frame.                                                                                      |
+
+The `cookies`, `httpHeaders`, and `queryParams` categories accept a `CollectBehavior` value:
+
+```typescript
+type CollectBehavior = boolean | { allow: string[] } | { deny: string[] };
+// true          → collect all (sensitive denylist still scrubs values)
+// false         → collect nothing
+// { deny: [] }  → collect all, extending the denylist with the given terms
+// { allow: [] } → only the listed keys send their real value
+```
 
 </SdkOption>
 
@@ -599,6 +637,8 @@ Use the [`tracePropagationTargets` option](#tracepropagationtargets) to control 
 See <PlatformLink to="/tracing/distributed-tracing/dealing-with-cors-issues/">Dealing with CORS Issues</PlatformLink> for more information.
 
 </PlatformSection>
+
+<Include name="platforms/configuration/options/propagate-traceparent-tail-sampling.mdx" />
 
 </SdkOption>
 
