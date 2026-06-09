@@ -2,14 +2,10 @@
 
 import {useEffect} from 'react';
 
-// Restore the prior value (not ''), so we don't clobber a lock a third party
-// (e.g. the Kapa modal) set after us.
 let lockCount = 0;
-let previousOverflow = '';
 
 function lockBodyScroll() {
   if (lockCount === 0) {
-    previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
   }
   lockCount += 1;
@@ -21,7 +17,10 @@ function unlockBodyScroll() {
   }
   lockCount -= 1;
   if (lockCount === 0) {
-    document.body.style.overflow = previousOverflow;
+    // Clear our inline lock rather than restoring a captured value: a captured
+    // value could be a third party's transient 'hidden' (e.g. Kapa), which we'd
+    // wrongly re-apply on release and leave the page unscrollable.
+    document.body.style.overflow = '';
   }
 }
 
