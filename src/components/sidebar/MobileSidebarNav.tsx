@@ -73,7 +73,7 @@ export function MobileSidebarNav({platforms = []}: {platforms?: Platform[]}) {
         aria-expanded={menuOpen}
         className="flex items-center justify-between w-full py-2 px-2 rounded text-sm font-medium text-[var(--gray-12)] hover:bg-[var(--gray-a3)] transition-colors"
       >
-        Menu
+        {menuOpen ? 'Close Main Menu' : 'Open Main Menu'}
         <ChevronDownIcon
           className={`transition-transform ${menuOpen ? 'rotate-180' : ''}`}
           width="18"
