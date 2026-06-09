@@ -43,12 +43,7 @@ const randomUserToken = (() => {
 // this type is not exported from the global-search package
 type SentryGlobalSearchConfig = ConstructorParameters<typeof SentryGlobalSearch>[0];
 
-const developerDocsSites: SentryGlobalSearchConfig = [
-  'develop',
-  'zendesk_sentry_articles',
-  'docs',
-  'blog',
-];
+const developerDocsSites: SentryGlobalSearchConfig = ['develop', 'docs', 'blog'];
 
 const userDocsSites: SentryGlobalSearchConfig = [
   {
@@ -57,7 +52,6 @@ const userDocsSites: SentryGlobalSearchConfig = [
     platformBias: true,
     legacyBias: true,
   },
-  'zendesk_sentry_articles',
   'develop',
   'blog',
 ];
