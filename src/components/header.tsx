@@ -66,6 +66,14 @@ export function Header({
     setMobileSearchOpen(false);
   }, [pathname]);
 
+  const closeSidebar = useCallback(() => {
+    const checkbox = document.getElementById(sidebarToggleId) as HTMLInputElement | null;
+    if (checkbox) {
+      checkbox.checked = false;
+    }
+    setSidebarOpen(false);
+  }, []);
+
   useBodyScrollLock(mobileSearchOpen);
 
   // Close mobile search on resize to desktop or escape key
@@ -281,14 +289,7 @@ export function Header({
                 onClick={() => {
                   setMobileSearchOpen(true);
                   setHomeMobileNavOpen(false);
-                  // Close sidebar to prevent competing scroll locks
-                  const checkbox = document.getElementById(
-                    sidebarToggleId
-                  ) as HTMLInputElement | null;
-                  if (checkbox) {
-                    checkbox.checked = false;
-                    setSidebarOpen(false);
-                  }
+                  closeSidebar();
                 }}
                 aria-label="Search"
               >
@@ -402,7 +403,12 @@ export function Header({
                 searchPlatforms={searchPlatforms}
                 autoFocus
                 useStoredSearchPlatforms={useStoredSearchPlatforms}
-                onAskAi={() => setMobileSearchOpen(false)}
+                // Release every overlay's scroll lock before Kapa opens, so it
+                // owns the body lock exclusively (the sidebar can be open too).
+                onAskAi={() => {
+                  setMobileSearchOpen(false);
+                  closeSidebar();
+                }}
               />
             </div>
           </div>
