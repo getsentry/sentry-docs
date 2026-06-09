@@ -40,6 +40,26 @@ Sentry.init({
     Sentry.consoleLoggingIntegration(),
   ],
 
+  // Drop frameless errors caught by the global unhandled error handler.
+  // These are typically from browser extensions or third-party scripts injected
+  // into the page — they have no stack frames and no app context.
+  beforeSend(event) {
+    const framelessUnhandled =
+      event.exception?.values?.length &&
+      event.exception.values.every(ex => {
+        const frames = ex.stacktrace?.frames;
+        const noFrames = !frames || frames.length === 0;
+        const mechanism = ex.mechanism;
+        const isGlobalHandler =
+          mechanism?.type === 'onerror' || mechanism?.type === 'onunhandledrejection';
+        return noFrames && isGlobalHandler;
+      });
+    if (framelessUnhandled) {
+      return null;
+    }
+    return event;
+  },
+
   // Filter sensitive metric attributes (no PII in metrics)
   beforeSendMetric: metric => {
     // Remove any accidentally added PII attributes
