@@ -61,9 +61,10 @@ export function Header({
     }, [])
   );
 
-  // Close mobile search overlay on navigation
+  // Close mobile overlays on navigation
   useEffect(() => {
     setMobileSearchOpen(false);
+    setHomeMobileNavOpen(false);
   }, [pathname]);
 
   const closeSidebar = useCallback(() => {
@@ -75,6 +76,21 @@ export function Header({
   }, []);
 
   useBodyScrollLock(mobileSearchOpen);
+  useBodyScrollLock(homeMobileNavOpen);
+
+  // Close the home mobile nav if the viewport is resized to desktop width
+  useEffect(() => {
+    if (!homeMobileNavOpen) {
+      return undefined;
+    }
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setHomeMobileNavOpen(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [homeMobileNavOpen]);
 
   // Close mobile search on resize to desktop or escape key
   useEffect(() => {
