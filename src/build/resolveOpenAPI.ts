@@ -150,7 +150,9 @@ async function apiCategoriesUncached(): Promise<APICategory[]> {
           deprecated: isDeprecated,
           server,
           slug: slugify(cleanName),
-          summary: apiData.summary,
+          summary: apiData.summary
+            ? stripDeprecatedPrefix(apiData.summary)
+            : apiData.summary,
           descriptionMarkdown: apiData.description,
           pathParameters: (apiData.parameters || []).filter(
             p => p.in === 'path'
