@@ -130,12 +130,6 @@ async function apiCategoriesUncached(): Promise<APICategory[]> {
 
   Object.entries(data.paths).forEach(([apiPath, methods]) => {
     Object.entries(methods).forEach(([method, apiData]) => {
-      // Prefer the human-readable `summary` for the rendered title and the URL
-      // slug, falling back to `operationId`. This lets the backend use
-      // `operationId` as a proper machine token (e.g. `addProjectTeam`) without
-      // changing titles or — SEO-critical — slugs, since `summary` carries the
-      // original sentence. The deprecation prefix is detected/stripped from
-      // whichever source wins, so deprecated endpoints keep their exact slug too.
       const titleSource = apiData.summary || apiData.operationId || '';
       const isDeprecated = isDeprecatedOperationId(titleSource);
       const cleanName = stripDeprecatedPrefix(titleSource);
