@@ -130,8 +130,12 @@ async function apiCategoriesUncached(): Promise<APICategory[]> {
 
   Object.entries(data.paths).forEach(([apiPath, methods]) => {
     Object.entries(methods).forEach(([method, apiData]) => {
+      // Detect deprecation from either field independently — the (DEPRECATED)
+      // marker may sit on operationId even when a summary is present.
+      const isDeprecated =
+        isDeprecatedOperationId(apiData.operationId) ||
+        isDeprecatedOperationId(apiData.summary);
       const titleSource = apiData.summary || apiData.operationId || '';
-      const isDeprecated = isDeprecatedOperationId(titleSource);
       const cleanName = stripDeprecatedPrefix(titleSource);
 
       let server = 'https://sentry.io';
