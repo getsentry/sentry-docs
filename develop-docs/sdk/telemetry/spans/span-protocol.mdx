@@ -97,6 +97,10 @@ The `items` array **MUST** contain at least one and at most 1000 span objects:
           "type": "string",
           "value": "local"
         },
+        "sentry.op": {
+          "type": "string",
+          "value": "http.server"
+        },
         "sentry.platform": {
           "type": "string",
           "value": "php"
@@ -163,6 +167,10 @@ The `items` array **MUST** contain at least one and at most 1000 span objects:
           "type": "string",
           "value": "438f40bd3b4a41ee"
         },
+        "sentry.op": {
+          "type": "string",
+          "value": "middleware"
+        },
         "sentry.release": {
           "type": "string",
           "value": "1.0.0"
@@ -222,7 +230,7 @@ All attributes mentioned below MUST be attached to every span being emitted from
 |---------------|------|----------|-------------|
 | `sentry.segment.name` | string | **Strictly Required** | The segment name (e.g., `"GET /users"`) |
 | `sentry.segment.id` | string | **Strictly Required** | The segment span id |
-| `sentry.op` | string | Required | The [span op](../../traces/span-operations/) (e.g., `"http.client"`, `"db.query"`) of the span |
+| `sentry.op` | string | Required, see note | The [span op](../../traces/span-operations/) (e.g., `"http.client"`, `"db.query"`) of the span. MUST be set on spans from auto instrumentation, MAY be set by manually started spans. |
 | `sentry.release` | string | Required | The release version of the application |
 | `sentry.environment` | string | Required | The environment name (e.g., `"production"`, `"staging"`, `"development"`) |
 | `sentry.span.source` | string | Required, see note | The source of the span name. **MUST** be set on segment spans, **MAY** be set on child spans. <br/> See [Sentry Conventions](https://github.com/getsentry/sentry-conventions/blob/main/model/attributes/sentry/sentry__span__source.json) for all supported sources. <br/>See [Transaction Annotations](/sdk/foundations/transport/event-payloads/transaction/#transaction-annotations) and [Clustering](/backend/application-domains/transaction-clustering/#automatic-transaction-clustering) for more information.|
@@ -239,7 +247,7 @@ All attributes mentioned below MUST be attached to every span being emitted from
 | `sentry.sdk.name` | string | Required  | Name of the Sentry SDK (e.g., "sentry.php", "sentry.javascript") |
 | `sentry.sdk.version` | string | Required | Version of the Sentry SDK |
 
-Spans missing **Strictly Required** attributes will be rejected by Relay. 
+Spans missing **Strictly Required** attributes MAY be rejected by Relay.
 All other attributes in the table are required _if_ they are available to the SDK.
 For example, `sentry.release` MUST be sent, if and only if the SDK has a `release` value set (or auto-detected it).
 
