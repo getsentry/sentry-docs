@@ -9,10 +9,8 @@ import {DocMetrics} from 'sentry-docs/metrics';
 
 import {CodeBlock} from '../codeBlock';
 import {CodeTabs} from '../codeTabs';
+import {buildDotagentsCommand, buildNpxSkillsCommand, buildPrompt} from './shared';
 import styles from './style.module.scss';
-
-const SKILLS_BASE_URL = 'https://skills.sentry.dev';
-const SKILLS_REPO = 'getsentry/sentry-for-ai';
 
 type Props = {
   /** Display name for the platform, e.g. "Next.js", "Python". Omit for generic. */
@@ -20,32 +18,6 @@ type Props = {
   /** Skill package name, e.g. "sentry-nextjs-sdk". Omit for generic/all skills. */
   skill?: string;
 };
-
-function buildPromptUrl(skill?: string): string {
-  if (!skill) {
-    return SKILLS_BASE_URL + '/';
-  }
-  return `${SKILLS_BASE_URL}/${skill}/SKILL.md`;
-}
-
-function buildPrompt(skill?: string): string {
-  const url = buildPromptUrl(skill);
-  return `Use curl to download, read and follow: ${url}`;
-}
-
-function buildDotagentsCommand(skill?: string): string {
-  if (!skill) {
-    return `npx @sentry/dotagents add ${SKILLS_REPO} --all`;
-  }
-  return `npx @sentry/dotagents add ${SKILLS_REPO} --name ${skill}`;
-}
-
-function buildNpxSkillsCommand(skill?: string): string {
-  if (!skill) {
-    return `npx skills add ${SKILLS_REPO}`;
-  }
-  return `npx skills add ${SKILLS_REPO} --skill ${skill}`;
-}
 
 export function AgentSkillsCallout({skill, platformName}: Props) {
   const [copied, setCopied] = useState(false);
