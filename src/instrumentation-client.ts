@@ -4,8 +4,8 @@ import * as Spotlight from '@spotlightjs/spotlight';
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
 
-  // Ignore errors injected by Brave/Firefox iOS browser scripts (third-party browser noise)
-  ignoreErrors: [/__firefox__/, /DarkReader/],
+  // Ignore errors from third-party/injected scripts (browser extensions, ad-blockers, etc.)
+  ignoreErrors: [/__firefox__/, /DarkReader/, /^he$/],
 
   // Adjust this value in production, or use tracesSampler for greater control
   tracesSampleRate: 0.3,
@@ -39,6 +39,17 @@ Sentry.init({
     }),
     Sentry.consoleLoggingIntegration(),
   ],
+
+  beforeSend(event) {
+    const values = event.exception?.values;
+    if (values?.length === 1) {
+      const frames = values[0].stacktrace?.frames;
+      if (!frames || frames.length === 0) {
+        return null;
+      }
+    }
+    return event;
+  },
 
   // Filter sensitive metric attributes (no PII in metrics)
   beforeSendMetric: metric => {
