@@ -403,8 +403,7 @@ export function Header({
                 searchPlatforms={searchPlatforms}
                 autoFocus
                 useStoredSearchPlatforms={useStoredSearchPlatforms}
-                // Release every overlay's scroll lock before Kapa opens, so it
-                // owns the body lock exclusively (the sidebar can be open too).
+                // Release every overlay's lock before Kapa opens so it owns scrolling alone.
                 onAskAi={() => {
                   setMobileSearchOpen(false);
                   closeSidebar();

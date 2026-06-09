@@ -378,9 +378,8 @@ export function Search({
                 if (window.Kapa?.open) {
                   setInputFocus(false);
                   onAskAi?.();
-                  // Defer a frame so the overlay unmounts and releases its scroll
-                  // lock before Kapa applies its own; otherwise the competing
-                  // locks trap scroll on the document on mobile.
+                  // Open next frame, after the overlay's scroll lock is released
+                  // on commit, so Kapa's lock and ours never overlap.
                   requestAnimationFrame(() => {
                     window.Kapa?.open({query, submit: true});
                   });

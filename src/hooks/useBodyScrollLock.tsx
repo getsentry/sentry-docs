@@ -1,6 +1,9 @@
 'use client';
 
-import {useEffect} from 'react';
+import {useEffect, useLayoutEffect} from 'react';
+
+const useIsomorphicLayoutEffect =
+  typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 
 let lockCount = 0;
 
@@ -17,16 +20,19 @@ function unlockBodyScroll() {
   }
   lockCount -= 1;
   if (lockCount === 0) {
-    // Clear our inline lock rather than restoring a captured value: a captured
-    // value could be a third party's transient 'hidden' (e.g. Kapa), which we'd
-    // wrongly re-apply on release and leave the page unscrollable.
+    // Clear, don't restore a captured value — it may be a third party's
+    // transient lock (e.g. Kapa); re-applying it would strand the page.
     document.body.style.overflow = '';
   }
 }
 
-/** Reference-counted body scroll lock; safe to use from several overlays at once. */
+/**
+ * Reference-counted body scroll lock; safe to use from several overlays at once.
+ * Runs as a layout effect so the release happens synchronously on commit, before
+ * any rAF that hands the lock off to a third-party modal.
+ */
 export function useBodyScrollLock(active: boolean) {
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     if (!active) {
       return undefined;
     }
