@@ -141,3 +141,23 @@ DELETE FROM sentry_authprovider WHERE id = 1;
 ```
 
 No restart of the Sentry services is needed, and you should be able to log in with email/password immediately after running these commands.
+
+## Database migration issue for `notifmsg_metric_or_workflow_exclusive` check constraint
+
+During the upgrade to 26.5.0, you may encounter an error similar to this message:
+```
+django.db.utils.IntegrityError: check constraint "notifmsg_metric_or_workflow_exclusive" of relation "sentry_notificationmessage" is violated by some row
+```
+
+You can resolve this by running the following SQL command in your PostgreSQL database (using `docker compose exec postgres psql -U postgres -d postgres`). This will delete all rows that violate the check constraint, which should allow the migration to complete successfully. Note that this will lead to data loss in notification messages.
+
+```sql
+DELETE FROM sentry_notificationmessage WHERE NOT ((action_id IS NULL AND group_id IS NULL AND incident_id IS NOT NULL AND trigger_action_id IS NOT NULL) OR (action_id IS NOT NULL AND group_id IS NOT NULL AND incident_id IS NULL AND trigger_action_id IS NULL));
+```
+
+If that fails, you can try to drop the check constraint:
+```sql
+ALTER TABLE "sentry_notificationmessage" DROP CONSTRAINT "notifmsg_metric_or_workflow_exclusive";
+```
+
+Credits to [@fpotter](https://github.com/getsentry/self-hosted/issues/4341#issuecomment-4494954925) and [@acuD1](https://github.com/getsentry/self-hosted/issues/4341#issuecomment-4517103961) for the workaround.
