@@ -55,3 +55,29 @@ id<SentrySpan> transaction =
     [innerSpan finish];
 }
 ```
+
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+SentryObjCSpan *transaction =
+    [SentryObjCSDK startTransactionWithName:@"processOrderBatch"
+                              operation:@"task"
+                            bindToScope:YES];
+
+
+[self processOrderBatch];
+[transaction finish];
+
+- (void)processOrderBatch {
+    SentryObjCSpan *span = SentryObjCSDK.span;
+
+    if (span == nil) {
+        span = [SentryObjCSDK startTransactionWithName:@"processOrderBatch"
+                                         operation:@"task"];
+    }
+
+    SentryObjCSpan *innerSpan = [span startChildWithOperation:@"subtask"];
+    // omitted code
+    [innerSpan finish];
+}
+```
