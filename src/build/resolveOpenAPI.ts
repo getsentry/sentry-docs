@@ -130,8 +130,13 @@ async function apiCategoriesUncached(): Promise<APICategory[]> {
 
   Object.entries(data.paths).forEach(([apiPath, methods]) => {
     Object.entries(methods).forEach(([method, apiData]) => {
-      const isDeprecated = isDeprecatedOperationId(apiData.operationId);
-      const cleanOperationId = stripDeprecatedPrefix(apiData.operationId ?? '');
+      // Detect deprecation from either field independently — the (DEPRECATED)
+      // marker may sit on operationId even when a summary is present.
+      const isDeprecated =
+        isDeprecatedOperationId(apiData.operationId) ||
+        isDeprecatedOperationId(apiData.summary);
+      const titleSource = apiData.summary || apiData.operationId || '';
+      const cleanName = stripDeprecatedPrefix(titleSource);
 
       let server = 'https://sentry.io';
       if (apiData.servers && apiData.servers[0]) {
@@ -141,11 +146,13 @@ async function apiCategoriesUncached(): Promise<APICategory[]> {
         categoryMap[tag].apis.push({
           apiPath,
           method,
-          name: cleanOperationId,
+          name: cleanName,
           deprecated: isDeprecated,
           server,
-          slug: slugify(cleanOperationId),
-          summary: apiData.summary,
+          slug: slugify(cleanName),
+          summary: apiData.summary
+            ? stripDeprecatedPrefix(apiData.summary)
+            : apiData.summary,
           descriptionMarkdown: apiData.description,
           pathParameters: (apiData.parameters || []).filter(
             p => p.in === 'path'
