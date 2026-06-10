@@ -70,11 +70,11 @@ export function CopyPromptButton({skill}: Props) {
         setCopied(false);
         await navigator.clipboard.writeText(prompt);
         setCopied(true);
-        DocMetrics.copyAIPrompt(window.location.pathname, skill, true);
+        DocMetrics.copyAIPrompt(window.location.pathname, skill, true, 'inline_link');
         setTimeout(() => setCopied(false), 1500);
       } catch (error) {
         Sentry.captureException(error);
-        DocMetrics.copyAIPrompt(window.location.pathname, skill, false);
+        DocMetrics.copyAIPrompt(window.location.pathname, skill, false, 'inline_link');
         setCopied(false);
       }
     },
