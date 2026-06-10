@@ -25,6 +25,7 @@ Inbound filters include:
 - Events from certain IP addresses
 - Events with certain error messages
 - Events from specific release versions of your code
+- Events from non-allowed domains (origin-based; see [Allowed Domains](#allowed-domains))
 
 ### Legacy Browser Filters
 
@@ -54,6 +55,12 @@ The supported IP address formats are:
 - **IPv6 Addresses**: Standard colon-separated hexadecimal notation (e.g., aaaa:bbbb::cccc, a:b:c::1).
 - **IPv4 Network Ranges (CIDR Notation)**: IPv4 address with a subnet mask (e.g., 122.33.230.0/30, 127.0.0.0/8).
 - **IPv6 Network Ranges (CIDR Notation)**: IPv6 address with a subnet mask (e.g., a:b:c::0/126).
+
+### Allowed Domains
+
+Sentry checks the `Origin` or `Referer` HTTP header of each inbound request against your project's allowed domain list. Requests from unrecognized origins are rejected and appear as **Disallowed Domain** in your [Stats](/product/stats/).
+
+This filter only applies to requests that include an `Origin` or `Referer` header. Requests without one — common for server-side SDKs and direct API submissions — are always accepted, even when an allowed domain list is configured. To restrict server-side ingestion, use a [project rate limit](/pricing/quotas/#rate-limits) or an allowlist at the network level.
 
 ### Transactions Coming from Health Check
 
