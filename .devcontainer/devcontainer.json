@@ -1,0 +1,37 @@
+{
+  // Dev Container config for sentry-docs.
+  //
+  // Standard devcontainer.json (VS Code Dev Containers / GitHub Codespaces) that
+  // also serves as the source-of-truth environment config for Sentry's
+  // coding-agent sandbox (Per-Repo Environments).
+  //
+  // What the coding-agent sandbox honors vs ignores:
+  //   honored: onCreateCommand / updateContentCommand / postCreateCommand,
+  //            containerEnv, remoteEnv
+  //   ignored (by design, for security): image, build/dockerfile, features
+  //
+  // The sandbox runs on its own hardened, multi-language base image; the image
+  // + features below only apply to local Dev Containers / Codespaces. The repo
+  // pins node 22.16.0 / pnpm 10.30.0 via package.json (volta + packageManager).
+  "name": "Sentry Docs",
+
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:22",
+
+  // Honored everywhere. Next.js builds are memory-hungry; give node headroom.
+  // next.config.ts requires NEXT_PUBLIC_SENTRY_DSN to be set for a production
+  // build — it's a public client-side key, so a placeholder is fine for dev/CI
+  // builds (override with the real DSN for a production deploy).
+  "containerEnv": {
+    "NODE_OPTIONS": "--max-old-space-size=8192",
+    "NEXT_PUBLIC_SENTRY_DSN": "https://examplePublicKey@o0.ingest.sentry.io/0"
+  },
+
+  // One-time, cacheable setup: activate the pinned pnpm (from package.json's
+  // packageManager field) via corepack, then install with the committed lockfile.
+  "onCreateCommand": "corepack enable && pnpm install --frozen-lockfile",
+
+  // Re-run on repo content changes (e.g. lockfile drift).
+  "updateContentCommand": "corepack enable && pnpm install --frozen-lockfile",
+
+  "postCreateCommand": "echo 'sentry-docs dev environment ready: pnpm deps installed (run: pnpm dev)'"
+}
