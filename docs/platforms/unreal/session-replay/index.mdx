@@ -20,12 +20,13 @@ Unlike the [web](/platforms/javascript/session-replay/) and [mobile](/platforms/
 
 | Platform    | What gets captured                                                              | Requirements                                                                                        |
 | ----------- | ------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| **Windows** | A rolling video clip of the game's backbuffer, attached to crash reports.       | The `AVCodecsCore` and `NVCodecs` plugins enabled, an NVIDIA GPU (NVENC), and a plugin rebuild after enabling (see [below](#windows)). |
+| **Windows** | A rolling video clip of the game's backbuffer, attached to crash reports.       | The `AVCodecsCore` and `NVCodecs` plugins enabled, an NVIDIA GPU (NVENC), and a plugin rebuild after enabling (see [below](#windows-and-linux)). |
+| **Linux**   | A rolling video clip of the game's backbuffer, attached to crash reports.       | The `AVCodecsCore` and `NVCodecs` plugins enabled, an NVIDIA GPU (NVENC), and a plugin rebuild after enabling (see [below](#windows-and-linux)). |
 | **macOS**   | A rolling video clip of the game's backbuffer, attached to crash reports.       | The `AVCodecsCore` and `VTCodecs` plugins enabled, and a plugin rebuild after enabling (see [below](#macos)). |
 | **Xbox**    | An OS-captured gameplay clip, attached to crash reports.                        | Development kits only.                                                                               |
 | **Android** | A full-session replay via the Android SDK, with default text and image masking. | None beyond the standard Android setup.                                                             |
 
-All other platforms (Linux, iOS, PlayStation, and Nintendo Switch) are not currently supported. On those platforms the setting is a no-op.
+All other platforms (iOS, PlayStation, and Nintendo Switch) are not currently supported. On those platforms the setting is a no-op.
 
 ## Enabling Session Replay
 
@@ -45,7 +46,7 @@ The following settings are available under the **Session Replay** section in the
 - **Enable session replay (experimental)** (`AttachSessionReplay`, default `False`) — Master toggle for the feature.
 - **Replay duration (ms)** (`SessionReplayDurationMs`, default `5000`, range `1000`–`60000`) — The requested length of the retroactive replay window. On Windows and macOS this is the rolling clip length kept on disk for crash attachment; on Xbox it's the requested length of the OS-captured clip (which may be shorter if not enough frames are buffered). This value is ignored on Android, where the underlying SDK determines the duration.
 
-### Advanced Recording Options (Windows & macOS)
+### Advanced Recording Options (Windows, macOS & Linux)
 
 The **Advanced recording options** group (`SessionReplayOptions`) provides low-level encoder and muxer tuning for the desktop recorders. The defaults are sensible for most projects.
 
@@ -63,12 +64,12 @@ SessionReplayOptions=(FragmentSeconds=0.500000,RotationIntervalSeconds=1.000000,
 
 ## Platform Notes
 
-### Windows
+### Windows and Linux
 
-On Windows, Session Replay continuously encodes the game's backbuffer into a rolling video clip that's attached to crash reports captured by the native crash handler. It relies on hardware-accelerated H.264 encoding and has the following requirements:
+On Windows and Linux, Session Replay continuously encodes the game's backbuffer into a rolling video clip that's attached to crash reports captured by the native crash handler. It relies on hardware-accelerated H.264 encoding and has the following requirements:
 
 - **The `AVCodecsCore` and `NVCodecs` engine plugins must be enabled** in your project. The Sentry plugin only compiles the recorder when these are present.
-- **An NVIDIA GPU is required.** Encoding goes through NVIDIA NVENC; machines without a compatible NVIDIA GPU fall back to no recording (the feature self-disables and logs a warning).
+- **An NVIDIA GPU with a recent driver is required.** Encoding goes through NVIDIA NVENC; machines without a compatible NVIDIA GPU fall back to no recording (the feature self-disables and logs a warning). The engine's NVENC integration requires a minimum NVIDIA driver version of **531.61 on Windows** and **530.41 on Linux**. On Linux, the proprietary NVIDIA driver is required — NVENC isn't available with the open-source Nouveau driver.
 - **A plugin rebuild is required after toggling the setting.** Whether Session Replay is compiled in is decided at build time from `AttachSessionReplay`, so after enabling or disabling it, delete your project's `Binaries` and `Intermediate` directories and rebuild.
 
 <Alert>
@@ -102,7 +103,7 @@ On Android, enabling the setting turns on the [Android SDK's Session Replay](/pl
 
 <Alert level="warning">
 
-On Windows, macOS, and Xbox, Session Replay records the rendered game frames as-is — there is **no automatic masking**. Any sensitive information shown on screen (player names, chat, email addresses, in-game purchases, and so on) will be present in the captured video. Only enable this feature if the content rendered by your game is safe to record, and make sure your data-handling and privacy policies account for it.
+On Windows, Linux, macOS, and Xbox, Session Replay records the rendered game frames as-is — there is **no automatic masking**. Any sensitive information shown on screen (player names, chat, email addresses, in-game purchases, and so on) will be present in the captured video. Only enable this feature if the content rendered by your game is safe to record, and make sure your data-handling and privacy policies account for it.
 
 </Alert>
 
