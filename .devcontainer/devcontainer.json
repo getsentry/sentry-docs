@@ -1,26 +1,20 @@
 {
-  // Dev Container config for sentry-docs.
+  // Environment config for Sentry's coding-agent sandbox (Per-Repo Environments).
   //
-  // Standard devcontainer.json (VS Code Dev Containers / GitHub Codespaces) that
-  // also serves as the source-of-truth environment config for Sentry's
-  // coding-agent sandbox (Per-Repo Environments).
+  // The sandbox honors only the lifecycle commands + env below. It deliberately
+  // does NOT accept a repo-provided base image or tooling — `image`,
+  // `build`/`dockerfile`, and `features` are intentionally omitted, because the
+  // sandbox runs on its own hardened, multi-language base (Python + Node) and
+  // provisions runtime versions via `mise`, not via a repo image.
   //
-  // What the coding-agent sandbox honors vs ignores:
-  //   honored: onCreateCommand / updateContentCommand / postCreateCommand,
-  //            containerEnv, remoteEnv
-  //   ignored (by design, for security): image, build/dockerfile, features
-  //
-  // The sandbox runs on its own hardened, multi-language base image; the image
-  // + features below only apply to local Dev Containers / Codespaces. The repo
-  // pins node 22.16.0 / pnpm 10.30.0 via package.json (volta + packageManager).
+  // honored: onCreateCommand / updateContentCommand / postCreateCommand,
+  //          containerEnv, remoteEnv
   "name": "Sentry Docs",
 
-  "image": "mcr.microsoft.com/devcontainers/javascript-node:22",
-
-  // Honored everywhere. Next.js builds are memory-hungry; give node headroom.
-  // next.config.ts requires NEXT_PUBLIC_SENTRY_DSN to be set for a production
-  // build — it's a public client-side key, so a placeholder is fine for dev/CI
-  // builds (override with the real DSN for a production deploy).
+  // NODE_OPTIONS gives the memory-hungry Next.js build headroom.
+  // next.config.ts requires NEXT_PUBLIC_SENTRY_DSN for a production build — it's
+  // a public client-side key, so a placeholder is fine for dev/CI builds
+  // (override with the real DSN for a production deploy).
   "containerEnv": {
     "NODE_OPTIONS": "--max-old-space-size=8192",
     "NEXT_PUBLIC_SENTRY_DSN": "https://examplePublicKey@o0.ingest.sentry.io/0"
