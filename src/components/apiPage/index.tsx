@@ -137,7 +137,7 @@ export function ApiPage({api}: Props) {
       </div>
       <div className="flex flex-col md:flex-row gap-4">
         <div className="w-full md:w-1/2">
-          {api.summary && <p>{api.summary}</p>}
+          {api.summary && api.summary !== api.name && <p>{api.summary}</p>}
 
           {api.descriptionMarkdown && parseMarkdown(api.descriptionMarkdown)}
 

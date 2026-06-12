@@ -60,6 +60,8 @@ const search = new SentryGlobalSearch(config);
 
 type Props = {
   autoFocus?: boolean;
+  /** Called before the Kapa modal opens, so a parent overlay can close itself first. */
+  onAskAi?: () => void;
   path?: string;
   searchPlatforms?: string[];
   showChatBot?: boolean;
@@ -83,6 +85,7 @@ const SDK_AGNOSTIC_PATH_PREFIXES = [
 export function Search({
   path,
   autoFocus,
+  onAskAi,
   searchPlatforms = [],
   useStoredSearchPlatforms = true,
 }: Props) {
@@ -373,10 +376,13 @@ export function Search({
               className={styles['sgs-ai-button']}
               onClick={() => {
                 if (window.Kapa?.open) {
-                  // close search results
                   setInputFocus(false);
-                  // open kapa modal
-                  window.Kapa.open({query, submit: true});
+                  onAskAi?.();
+                  // Open next frame, after the overlay's scroll lock is released
+                  // on commit, so Kapa's lock and ours never overlap.
+                  requestAnimationFrame(() => {
+                    window.Kapa?.open({query, submit: true});
+                  });
                 }
               }}
             >
