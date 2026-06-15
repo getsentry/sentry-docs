@@ -50,6 +50,15 @@ SentrySDK.start { options in
 }];
 ```
 
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    [options addInAppInclude:@"MyFramework"];
+}];
+```
+
 This is particularly useful for modularized applications or apps using third-party UI frameworks where you want to track performance metrics for view controllers in those frameworks.
 
 The SDK creates spans to provide insight into the time consumed by each of the methods shown in the screenshot below. Due to implementation limitations, the SDK only adds a span for loadView if the instrumented view controller implements it. The SDK adds spans for all other methods, whether you implement them in your view controller or not.
@@ -91,6 +100,19 @@ SentrySDK.start { options in
 }];
 ```
 
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.enableUIViewControllerTracing = NO;
+
+
+    // Before 8.0.0
+    options.enableUIViewControllerTracking = NO;
+}];
+```
+
 You can deactivate tracing for specific UIViewControllers by configuring <PlatformLink to="/configuration/swizzling#skip-swizzling-for-specific-classes">`swizzleClassNameExcludes`</PlatformLink>:
 
 ```swift {tabTitle:Swift}
@@ -107,6 +129,17 @@ SentrySDK.start { options in
 @import Sentry;
 
 [SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.swizzleClassNameExcludes = [NSSet setWithObjects:
+      @"MyUIViewController",
+      nil
+    ];
+}];
+```
+
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
     options.swizzleClassNameExcludes = [NSSet setWithObjects:
       @"MyUIViewController",
       nil
@@ -139,6 +172,15 @@ SentrySDK.start { options in
 @import Sentry;
 
 [SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.enableAutoPerformanceTracing = NO;
+}];
+```
+
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
     options.dsn = @"___PUBLIC_DSN___";
     options.enableAutoPerformanceTracing = NO;
 }];
@@ -203,6 +245,15 @@ SentrySDK.start { options in
 }];
 ```
 
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.enablePreWarmedAppStartTracing = NO;
+}];
+```
+
 ### Standalone App Start Tracing
 
 <Alert>
@@ -235,6 +286,15 @@ SentrySDK.start { options in
 }];
 ```
 
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.experimental.enableStandaloneAppStartTracing = YES;
+}];
+```
+
 Since standalone app start transactions use the `app.start` operation, you can use a custom `tracesSampler` to set a dedicated sample rate for app starts without increasing your overall sample rate:
 
 ```swift {tabTitle:Swift}
@@ -259,6 +319,21 @@ SentrySDK.start { options in
     options.dsn = @"___PUBLIC_DSN___";
     options.experimental.enableStandaloneAppStartTracing = YES;
     options.tracesSampler = ^NSNumber * _Nullable(SentrySamplingContext * context) {
+        if ([context.transactionContext.operation isEqualToString:@"app.start"]) {
+            return @1.0;
+        }
+        return @0.1;
+    };
+}];
+```
+
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.experimental.enableStandaloneAppStartTracing = YES;
+    options.tracesSampler = ^NSNumber * _Nullable(SentryObjCSamplingContext * context) {
         if ([context.transactionContext.operation isEqualToString:@"app.start"]) {
             return @1.0;
         }
@@ -345,6 +420,35 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 }
 ```
 
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+@interface AppDelegate ()
+@property (nonatomic, strong) id<SentryObjCSpan> appStartSpan;
+@end
+
+- (BOOL)application:(UIApplication *)application
+    didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+    [SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+        options.dsn = @"___PUBLIC_DSN___";
+        options.experimental.enableStandaloneAppStartTracing = YES;
+    }];
+    self.appStartSpan = [SentryObjCSDK extendAppLaunch];
+
+    id<SentryObjCSpan> configSpan = [self.appStartSpan startChildWithOperation:@"app.init"
+                                                               description:@"fetch remote config"];
+    [self fetchRemoteConfig];
+    [configSpan finish];
+
+    return YES;
+}
+
+// Later, when your app is fully ready:
+- (void)onDataLoaded {
+    [self.appStartSpan finish];
+}
+```
+
 You can also call `SentrySDK.finishExtendedAppLaunch()` instead of `finish()` on the span — both are equivalent.
 
 **SwiftUI:**
@@ -355,7 +459,7 @@ import Sentry
 @main
 struct MyApp: App {
     var appStartSpan: (any Span)?
-    
+
     init() {
         SentrySDK.start { options in
             options.dsn = "___PUBLIC_DSN___"
@@ -429,6 +533,15 @@ SentrySDK.start { options in
 }];
 ```
 
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.enableNetworkTracking = NO;
+}];
+```
+
 [NSURLSession]: https://developer.apple.com/documentation/foundation/nsurlsession
 [NSURLConnection]: https://developer.apple.com/documentation/foundation/nsurlconnection
 
@@ -452,6 +565,15 @@ SentrySDK.start { options in
 @import Sentry;
 
 [SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.tracePropagationTargets = @[@"MyAppDomain.com"]
+}];
+```
+
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
     options.dsn = @"___PUBLIC_DSN___";
     options.tracePropagationTargets = @[@"MyAppDomain.com"]
 }];
@@ -491,6 +613,18 @@ SentrySDK.start { options in
 }];
 ```
 
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.enableFileIOTracing = NO;
+
+    // Before 8.0.0
+    options.enableFileIOTracking = NO;
+}];
+```
+
 Starting with iOS 18, macOS 15, and tvOS 18, the `NSFileManager` is no longer backed by `NSData` and needs to be swizzled directly.
 This feature is currently experimental and disabled by default.
 To use automatic file I/O tracing for `NSFileManager` you need to enable it:
@@ -515,6 +649,16 @@ SentrySDK.start { options in
 }];
 ```
 
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.enableFileIOTracing = YES;
+    options.enableFileManagerSwizzling = YES;
+}];
+```
+
 Before 9.0.0, this option was experimental:
 
 ```swift {tabTitle:Swift}
@@ -531,6 +675,16 @@ SentrySDK.start { options in
 @import Sentry;
 
 [SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.enableFileIOTracing = YES;
+    options.experimental.enableFileManagerSwizzling = YES;
+}];
+```
+
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
     options.dsn = @"___PUBLIC_DSN___";
     options.enableFileIOTracing = YES;
     options.experimental.enableFileManagerSwizzling = YES;
@@ -645,6 +799,17 @@ SentrySDK.start { options in
 }];
 ```
 
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.enableFileIOTracing = YES;
+    options.enableDataSwizzling = NO;
+    options.enableFileManagerSwizzling = NO;
+}];
+```
+
 Before 9.0.0, these options were experimental:
 
 ```swift {tabTitle:Swift}
@@ -694,6 +859,18 @@ SentrySDK.start { options in
 }];
 ```
 
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.enableCoreDataTracing = NO;
+
+    // Before 8.0.0
+    options.enableCoreDataTracking = NO
+}];
+```
+
 ## User Interaction Tracing
 
 User interaction tracing, once enabled, captures transactions for clicks. This feature is unavailable for SwiftUI. Since 8.0.0, this feature has been enabled by default. To disable it:
@@ -711,6 +888,15 @@ SentrySDK.start { options in
 @import Sentry;
 
 [SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.enableUserInteractionTracing = NO;
+}];
+```
+
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
     options.dsn = @"___PUBLIC_DSN___";
     options.enableUserInteractionTracing = NO;
 }];
@@ -743,6 +929,17 @@ func loadUserDataOnClick() {
 - (void)loadUserDataOnClick {
     id<SentrySpan> span = SentrySDK.span;
     id<SentrySpan> innerSpan = [span startChildWithOperation:@"loadUserData"];
+    // omitted code
+    [innerSpan finish];
+}
+```
+
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+- (void)loadUserDataOnClick {
+    id<SentryObjCSpan> span = SentryObjCSDK.span;
+    id<SentryObjCSpan> innerSpan = [span startChildWithOperation:@"loadUserData"];
     // omitted code
     [innerSpan finish];
 }
@@ -798,6 +995,15 @@ SentrySDK.start { options in
 }];
 ```
 
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.enableTimeToFullDisplayTracing = YES;
+}];
+```
+
 We can't detect when your UIViewController is fully loaded. Only you, the user, can achieve this. Therefore, you have to manually call the API to get proper statistics.
 _You can achieve this by using the following code:_
 
@@ -811,6 +1017,12 @@ SentrySDK.reportFullyDisplayed()
 @import Sentry;
 
 [SentrySDK reportFullyDisplayed];
+```
+
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK reportFullyDisplayed];
 ```
 
 If the span finishes through the API, its `status` is set to `SpanStatus.OK`. If the span doesn't finish after 30 seconds, it will be finished by the SDK automatically, and its `status` will be set to `SpanStatus.DEADLINE_EXCEEDED`, also its duration will match the same of the `Time to initial display` span and the description will contain `Deadline Exceeded` suffix.
@@ -844,6 +1056,18 @@ SentrySDK.start { options in
 @import Sentry;
 
 [SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.enableAutoPerformanceTracing = NO;
+
+    // Before 8.0.0
+    options.enableAutoPerformanceTracking = NO;
+}];
+```
+
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
     options.dsn = @"___PUBLIC_DSN___";
     options.enableAutoPerformanceTracing = NO;
 
