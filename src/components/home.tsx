@@ -199,7 +199,9 @@ export async function Home() {
               </div>
               <div className="flex-1">
                 <h3 className="text-lg font-semibold mb-2 text-[var(--gray-12)]">
-                  Debugging in Sentry
+                  <a href="/product/" className="text-[var(--gray-12)] hover:underline">
+                    Debugging in Sentry
+                  </a>
                 </h3>
                 <p className="text-sm text-[var(--gray-11)] dark:text-white leading-relaxed">
                   Monitor, identify, and resolve errors and performance issues across your
@@ -263,7 +265,12 @@ export async function Home() {
               </div>
               <div className="flex-1">
                 <h3 className="text-lg font-semibold mb-2 text-[var(--gray-12)]">
-                  Fix Bugs Faster with Seer
+                  <a
+                    href="/product/ai-in-sentry/seer/"
+                    className="text-[var(--gray-12)] hover:underline"
+                  >
+                    Fix Bugs Faster with Seer
+                  </a>
                 </h3>
                 <p className="text-sm text-[var(--gray-11)] dark:text-white leading-relaxed">
                   Debug applications with{' '}
@@ -328,7 +335,9 @@ export async function Home() {
               </div>
               <div className="flex-1">
                 <h3 className="text-lg font-semibold mb-2 text-[var(--gray-12)]">
-                  AI in Sentry
+                  <a href="/ai/" className="text-[var(--gray-12)] hover:underline">
+                    AI in Sentry
+                  </a>
                 </h3>
                 <p className="text-sm text-[var(--gray-11)] dark:text-white leading-relaxed">
                   Integrate Sentry into your AI coding assistants using Sentry's{' '}
