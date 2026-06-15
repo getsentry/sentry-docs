@@ -244,7 +244,7 @@ export async function Home() {
               </div>
             </div>
 
-            {/* Fix Bugs Faster with Seer */}
+            {/* Fix Faster with Seer */}
             <div
               className="bg-white dark:bg-[var(--gray-2)] rounded-xl p-6 flex items-start gap-4"
               style={{
@@ -263,7 +263,7 @@ export async function Home() {
               >
                 <img
                   src={AiSentryHero.src}
-                  alt="Fix Bugs Faster with Seer"
+                  alt="Fix Faster with Seer"
                   style={{
                     width: '100%',
                     height: '100%',
@@ -278,7 +278,7 @@ export async function Home() {
                     href="/product/ai-in-sentry/seer/"
                     className="text-[var(--gray-12)] hover:underline"
                   >
-                    Fix Bugs Faster with Seer
+                    Fix Faster with Seer
                   </Link>
                 </h3>
                 <p className="text-sm text-[var(--gray-11)] dark:text-white leading-relaxed">
