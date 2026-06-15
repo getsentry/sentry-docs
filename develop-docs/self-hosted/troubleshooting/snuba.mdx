@@ -4,44 +4,31 @@ sidebar_title: Snuba
 sidebar_order: 2
 ---
 
-## 1. What Snuba subscription consumers are responsible for
+Snuba is the service that handles Sentry's search and analytics. It's separated into two: a consumer that ingest data from Kafka into ClickHouse, and a queryer that queries ClickHouse and returns the results into Sentry.
 
-Snuba subscriptions implement Sentry's *alert rules* — periodic queries that
-run on schedule and emit results back to Sentry. There are two roles per
-dataset (events, transactions, metrics, generic-metrics, eap-items):
+## What Snuba subscription consumers are responsible for
 
-- **Subscription scheduler** — decides *when* to run each subscribed query.
-  It does **not** consume event data. Instead, it tails a small "clock" topic
-  (the commit log) and emits one Kafka message per scheduled query.
-- **Subscription executor** — picks up those scheduled queries, runs them
-  against ClickHouse, and produces the answers to a results topic that Sentry
-  consumes.
+Snuba subscriptions implement Sentry's alert rules, meaning periodic queries that run on schedule and emit results back to Sentry. There are two roles per dataset (events, transactions, metrics, generic-metrics, eap-items):
 
-There is also a combined `subscriptions-scheduler-executor` binary that fuses
-both stages in one process (this is what self-hosted typically runs for
-`events` / `transactions` / `metrics`).
+- **Subscription scheduler** — decides *when* to run each subscribed query. It does **not** consume event data. Instead, it tails a small "clock" topic (the commit log) and emits one Kafka message per scheduled query.
+- **Subscription executor** — picks up those scheduled queries, runs them against ClickHouse, and produces the answers to a results topic that Sentry consumes.
 
-## 2. Which topics they consume from — and why this matters
+There is also a combined `subscriptions-scheduler-executor` binary that fuses both stages in one process (this is what self-hosted typically runs for  `events` / `transactions` / `metrics`).
+
+### Which topics they consume from — and why this matters
 
 | Role | Reads from | Writes to | Where defined |
 |---|---|---|---|
 | Scheduler | `snuba-commit-log` (events) / `snuba-transactions-commit-log` / `snuba-metrics-commit-log` / `snuba-generic-metrics-*-commit-log` | `scheduled-subscriptions-<entity>` | `commit_log_topic` + `subscription_scheduled_topic` in each storage YAML |
 | Executor | `scheduled-subscriptions-<entity>` | `<entity>-subscription-results` | `subscription_scheduled_topic` + `subscription_result_topic` |
 
-Critically: **the scheduler does not consume from `events` / `transactions` /
-`snuba-metrics`.** It consumes the *commit log* of those topics. The commit log
-is written by the main ingest consumer once per commit (i.e. periodically
-batched), so it has dramatically lower throughput than the data topic itself.
+Critically: the scheduler does not consume from `events` / `transactions` / `snuba-metrics`. It consumes the *commit log* of those topics. The commit log is written by the main ingest consumer once per commit (i.e. periodically batched), so it has dramatically lower throughput than the data topic itself.
 
-The scheduler reads the `orig_message_ts` header from each commit-log message
-and uses that as a clock to decide which subscriptions are due. See
-`subscriptions_scheduler.py` for the design — tick consumer → tick buffer →
-commit-strategy step → query producer.
+The scheduler reads the `orig_message_ts` header from each commit-log message and uses that as a clock to decide which subscriptions are due. See `subscriptions_scheduler.py` for the design — tick consumer → tick buffer → commit-strategy step → query producer.
 
-## 3. Why offsets may appear static or end offsets missing
+### Why offsets may appear static or end offsets missing
 
-This is **expected** in most healthy self-hosted deployments. Reasons, in
-order of likelihood:
+This is **expected** in most healthy self-hosted deployments. Reasons, in order of likelihood:
 
 1. **Low traffic on the source topic.** The scheduler reads the *commit log*,
    which only gets a record when the upstream events/transactions consumer
@@ -68,7 +55,7 @@ order of likelihood:
    deliberately holds the committed offset back relative to the read
    position; small static lag is normal.
 
-## 4. What "healthy" looks like
+### What "healthy" looks like
 
 - **Scheduler:** committed offset on `snuba-*-commit-log` advances roughly in
   lockstep with whatever the upstream data consumer commits (so: as fast as
@@ -93,7 +80,7 @@ Quick sanity checks from the host:
 - `kafka-consumer-groups.sh --describe --group snuba-events-subscription-executor`
   — authoritative `LAG` view.
 
-## 5. Differences vs. the events / regular Snuba consumers
+### Differences vs. the events / regular Snuba consumers
 
 | | Ingest consumer (e.g. errors, transactions) | Subscription scheduler | Subscription executor |
 |---|---|---|---|
@@ -103,7 +90,4 @@ Quick sanity checks from the host:
 | Expected lag pattern | Continuous offset advance under normal load | Periodic, batched advance — long flat stretches between commits are normal | Static if no alerts are configured; otherwise advances per alert tick |
 | If offset is static | Likely a problem (ingestion stalled) | Probably fine (no upstream commits or no alerts) | Probably fine (no Sentry alert rules for this dataset) |
 
-The headline point: **a static offset on a subscription consumer is only a
-problem if the corresponding feature in Sentry is broken.** Verify by
-checking whether (a) ingestion is working and (b) any alert rules exist for
-the dataset — not by staring at offsets in isolation.
+The headline point: **a static offset on a subscription consumer is only a problem if the corresponding feature in Sentry is broken.** Verify by checking whether (a) ingestion is working and (b) any alert rules exist for the dataset — not by staring at offsets in isolation.
