@@ -106,8 +106,7 @@ You can also override this option on a per-call basis by passing the `attachAllT
 
 When enabled, the SDK reports SIGTERM signals to Sentry.
 
-It's crucial for developers to understand that the OS sends a SIGTERM to their app as a prelude to a graceful shutdown, before resorting to a SIGKILL. This SIGKILL, which your app can't catch or ignore, is a direct order to terminate your app's process immediately. Developers should be aware that their app can receive a SIGTERM in various scenarios, such as  CPU or disk overuse, watchdog terminations, or when the OS updates your app.
-
+It's crucial for developers to understand that the OS sends a SIGTERM to their app as a prelude to a graceful shutdown, before resorting to a SIGKILL. This SIGKILL, which your app can't catch or ignore, is a direct order to terminate your app's process immediately. Developers should be aware that their app can receive a SIGTERM in various scenarios, such as CPU or disk overuse, watchdog terminations, or when the OS updates your app.
 
 </SdkOption>
 
@@ -205,7 +204,6 @@ This option can be overridden using <PlatformIdentifier name="inAppInclude" />.
 
 A block that configures the initial scope when starting the SDK.
 
-
 ```swift
 import Sentry
 
@@ -301,6 +299,7 @@ Set this boolean to `false` to disable sending of client reports. Client reports
 When enabled, the SDK adds breadcrumbs for each network request. This feature uses swizzling, so disabling <PlatformLink to="/configuration/swizzling/">`enableSwizzling`</PlatformLink> also disables this feature.
 
 If you want to enable or disable network tracking for performance monitoring, use <PlatformLink to="/configuration/options/#enableNetworkTracking">`enableNetworkTracking`</PlatformLink> instead.
+
 </SdkOption>
 
 <SdkOption name="enableCaptureFailedRequests" type="bool" defaultValue="true">
@@ -640,7 +639,6 @@ If <PlatformIdentifier name="tracePropagationTargets" /> is not provided, trace 
 
 </SdkOption>
 
-
 <SdkOption name="strictTraceContinuation" type="Bool" defaultValue="false">
 
 If set to `true`, the SDK will only continue a trace if the organization ID of the incoming trace found in the `baggage` header matches the organization ID of the current Sentry client.
@@ -669,10 +667,11 @@ Set this option to `true` if your backend services are instrumented with a W3C T
 
 Use <PlatformIdentifier name="tracePropagationTargets" /> to control which requests the `traceparent` header is attached to.
 
+<Include name="platforms/configuration/options/propagate-traceparent-tail-sampling.mdx" />
+
 </SdkOption>
 
 <SdkOption name="enablePersistingTracesWhenCrashing" type="bool" defaultValue="false" availableSince="8.41.0">
-
 
 <Alert>
 
@@ -830,6 +829,46 @@ Learn more about session replay performance in the <PlatformLink to="/session-re
 
 </SdkOption>
 
+<SdkOption name="sessionReplay.networkDetailAllowUrls" type="array" defaultValue="[]" availableSince="9.12.0">
+
+URL patterns that enable detailed capture of request/response bodies and headers for matching network requests during session replay. Supports `String` (substring match) and `NSRegularExpression` (full regex match) patterns.
+
+Requires `options.experimental.enableReplayNetworkDetailsCapturing = true`.
+
+</SdkOption>
+
+<SdkOption name="sessionReplay.networkDetailDenyUrls" type="array" defaultValue="[]" availableSince="9.12.0">
+
+URL patterns to exclude from detailed network capture, even if they match `networkDetailAllowUrls`. Supports `String` (substring match) and `NSRegularExpression` (full regex match) patterns.
+
+Requires `options.experimental.enableReplayNetworkDetailsCapturing = true`.
+
+</SdkOption>
+
+<SdkOption name="sessionReplay.networkCaptureBodies" type="bool" defaultValue="true" availableSince="9.12.0">
+
+When enabled, request and response bodies are captured for URLs matching `networkDetailAllowUrls`. When disabled, only headers and metadata are captured. Bodies are truncated to 150KB.
+
+Requires `options.experimental.enableReplayNetworkDetailsCapturing = true`.
+
+</SdkOption>
+
+<SdkOption name="sessionReplay.networkRequestHeaders" type="array" defaultValue='["Content-Type", "Content-Length", "Accept"]' availableSince="9.12.0">
+
+Request header names to capture for URLs matching `networkDetailAllowUrls`. The default headers (`Content-Type`, `Content-Length`, `Accept`) are always included alongside any additional headers you configure.
+
+Requires `options.experimental.enableReplayNetworkDetailsCapturing = true`.
+
+</SdkOption>
+
+<SdkOption name="sessionReplay.networkResponseHeaders" type="array" defaultValue='["Content-Type", "Content-Length", "Accept"]' availableSince="9.12.0">
+
+Response header names to capture for URLs matching `networkDetailAllowUrls`. The default headers (`Content-Type`, `Content-Length`, `Accept`) are always included alongside any additional headers you configure.
+
+Requires `options.experimental.enableReplayNetworkDetailsCapturing = true`.
+
+</SdkOption>
+
 ## Profiling Options
 
 Profiling options allow you to configure how profiling data is collected. Set these via the `options.configureProfiling` closure, which receives a `SentryProfileOptions` object.
@@ -863,7 +902,7 @@ The mode for starting and stopping the profiler:
 
 The percentage of profile sessions to sample. Specifying `0` means no profiles are collected, `1.0` means all sessions are profiled.
 
-The sample decision is evaluated when the SDK starts and on each subsequent foreground event. Backgrounding and foregrounding the app starts a new profile session.
+The SDK evaluates the sample decision when profiling is configured at SDK start, and then only when a new Sentry user session starts. Foregrounding the app keeps the same profile sampling decision unless it starts a new session.
 
 </SdkOption>
 
@@ -1059,13 +1098,12 @@ This feature is only available from Xcode 13 and from macOS 12.0, iOS 15.0, tvOS
 
 This is an experimental feature and may still have bugs. When enabled, the SDK stitches the call to Swift Async functions in one consecutive stack trace.
 
-Learn more in the <PlatformLink to="/features/experimental-features/">Experimental Features</PlatformLink> documentation.
-
 </SdkOption>
 
 <SdkOption name="cacheDirectoryPath" type="string">
 
 The path where the SDK stores data before sending it to Sentry. By default, the SDK uses `NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, true)`, which resolves to:
+
 - `~/Library/Caches/` for non-sandboxed macOS apps
 - `~/Library/Containers/{BundleID}/Data/Library/Caches/` for sandboxed macOS apps
 - `~/Library/Caches/` (within the app's sandbox) for iOS apps
@@ -1133,6 +1171,38 @@ SentrySDK.start { options in
     }
 }
 ```
+
+</SdkOption>
+
+<SdkOption name="experimental.enableReplayNetworkDetailsCapturing" type="bool" defaultValue="false" availableSince="9.12.0">
+
+When enabled, the SDK can capture request and response headers and bodies for network requests during session replay. You must also configure `options.sessionReplay.networkDetailAllowUrls` to specify which requests are captured.
+
+Learn more in the <PlatformLink to="/session-replay/configuration/#network-details">Network Details</PlatformLink> documentation.
+
+</SdkOption>
+
+<SdkOption name="experimental.enableStandaloneAppStartTracing" type="bool" defaultValue="false" availableSince="9.14.0">
+
+When enabled, the SDK sends app start data as a standalone `app.start` transaction instead of attaching it as spans to the first UIViewController transaction. This makes app starts easier to find, sample, and analyze independently.
+
+Learn more in the <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#standalone-app-start-tracing">Standalone App Start Tracing</PlatformLink> documentation.
+
+</SdkOption>
+
+<SdkOption name="experimental.enableUnhandledCPPExceptionsV2" type="bool" defaultValue="false">
+
+When enabled, the SDK captures fatal C++ exceptions using a more reliable mechanism that hooks into all `__cxa_throw` calls. This provides more comprehensive and consistent exception handling across your app's runtime, regardless of the number of C++ modules or how they're linked.
+
+**Note:** The mechanism of hooking into `__cxa_throw` could cause issues with symbolication on iOS due to caching of symbol references.
+
+
+</SdkOption>
+
+<SdkOption name="experimental.enableWatchdogTerminationsV2" type="bool" defaultValue="false">
+
+When enabled, the SDK uses a more efficient mechanism for detecting watchdog terminations.
+
 
 </SdkOption>
 

@@ -2,7 +2,7 @@
 title: Metrics
 description: Counter, gauge, and distribution metrics sent as batched trace_metric envelope items.
 spec_id: sdk/telemetry/metrics
-spec_version: 2.8.0
+spec_version: 2.9.0
 spec_status: stable
 spec_depends_on:
   - id: sdk/foundations/transport/envelopes
@@ -10,6 +10,9 @@ spec_depends_on:
   - id: sdk/foundations/state-management/scopes/attributes
     version: ">=1.0.0"
 spec_changelog:
+  - version: 2.9.0
+    date: 2026-05-18
+    summary: Added optional `timestamp` parameter to metrics public API. Changed `sentry.timestamp.sequence` to a continuously incrementing Int64 that never resets on timestamp change.
   - version: 2.8.0
     date: 2026-04-07
     summary: Added `ingest_settings` and `version` to trace_metric envelope item
@@ -202,16 +205,16 @@ Whenever possible, metrics **SHOULD** be linked to replays. If a metric is recor
 
 <SpecSection id="metric-ordering" status="candidate" since="2.6.0">
 
-Some runtimes (notably Cloudflare Workers) freeze timer APIs (`Date.now()`, `performance.now()`) during synchronous execution, causing multiple metrics to share identical timestamps. SDKs that target runtimes where timestamps may be frozen or lack sub-millisecond precision **MUST** attach a `sentry.timestamp.sequence` integer attribute to every metric. SDKs that only target runtimes with reliable sub-millisecond timestamps **MAY** omit it.
+Multiple metrics can share the same timestamp in certain cases. This happens when the runtime freezes timer APIs during synchronous execution (notably Cloudflare Workers freeze `Date.now()` and `performance.now()`), or when the caller supplies the same [user-provided timestamp](#metrics-module) for a batch of metrics. SDKs **MUST** attach a `sentry.timestamp.sequence` integer attribute to every metric to allow deterministic ordering within a single SDK instance.
 
 When sent, the sequence integer **MUST**:
+- Be a 64-bit signed integer (`Int64`).
 - Start at `0` when the SDK initializes.
 - Increment by `1` for each metric that is captured.
-- Reset to `0` when:
-  - The SDK is re-initialized.
-  - The current metric's integer millisecond differs from the previous metric's integer millisecond (i.e., `floor(timestamp_seconds * 1000)` changes).
+- Never reset during the SDK's lifetime. The counter **MUST** increment continuously across all metrics regardless of their timestamps.
+- Reset to `0` only when the SDK is re-initialized, or when the counter reaches the maximum `Int64` value (`2^63 - 1`). Overflow to `0` is acceptable because the probability of reaching this limit within a single SDK lifetime is negligible.
 
-The sequence provides deterministic ordering within a single SDK instance. It does not guarantee ordering across independent processes or workers, which have separate counters. The reset behavior ensures the sequence only increments for consecutive metrics that share the same timestamp.
+The sequence provides deterministic ordering within a single SDK instance. It does not guarantee ordering across independent processes or workers, which have separate counters.
 
 </SpecSection>
 
@@ -320,7 +323,7 @@ Each metric in the `items` array is a JSON object with the following fields:
 
 | Field | Type | Required | Since | Description |
 |-------|------|----------|-------|-------------|
-| `timestamp` | Number | **REQUIRED** | 2.0.0 | Timestamp in seconds (epoch time) indicating when the metric was recorded. |
+| `timestamp` | Number or String | **REQUIRED** | 2.0.0 | Timestamp indicating when the metric was recorded. Relay accepts a numeric Unix timestamp in seconds (epoch time) or an RFC 3339 string. |
 | `type` | String | **REQUIRED** | 2.0.0 | The type of metric. One of `counter`, `gauge`, `distribution`. |
 | `name` | String | **REQUIRED** | 2.0.0 | The name of the metric. **SHOULD** follow a hierarchical naming convention using dots as separators (e.g., `api.response_time`, `db.query.duration`). |
 | `value` | Number | **REQUIRED** | 2.0.0 | The numeric value. For `counter`: the count to increment by (default 1). For `gauge`: the current value. For `distribution`: a single measured value. Integers **MUST** be 64-bit signed; doubles **MUST** be 64-bit floating point. |
@@ -377,6 +380,7 @@ SDKs **MUST** expose metrics methods in a `metrics` module or namespace. At mini
   - `unit` **String, optional** — the unit of measurement (only used for `distribution` and `gauge`). SDKs **MUST NOT** restrict what can be sent in (e.g. by using an enum) but **SHOULD** offer constants or similar that help customers send in <Link to="/sdk/foundations/state-management/scopes/attributes/#units">units we support</Link> (since 2.4.0).
   - `attributes` **Object, optional** — a dictionary of attributes (key-value pairs with type information).
   - `scope` **Scope, optional** — the scope to capture the metric with.
+  - `timestamp` **Timestamp, optional** — indicates when the metric was recorded (since 2.9.0). SDKs **SHOULD** accept the language's native date/time type (e.g. `Date` in JavaScript/Swift, `datetime` in Python, `Instant` in Java, `DateTimeInterface` in PHP). When provided, the SDK **MUST** convert the value and use it as the `timestamp` field in the [metric payload](#metric-payload). Relay accepts both a numeric Unix timestamp in seconds (epoch time) and an RFC 3339 string, so SDKs **MAY** use either format. When not provided, the SDK **MUST** default to the current time at the moment the metric is captured. If no native date/time type exists, SDKs **MUST** accept a numeric Unix timestamp in seconds (epoch time) as a fallback instead.
 
 The Hub/Scope and Client **MUST** exclusively provide a generic method for capturing metrics (e.g., `captureMetric(metric)`). They **MUST NOT** replicate the static `Sentry.metrics.X` API methods to avoid increasing our API surface. Users utilizing multiple Hub/Scope or Clients will need to rely on the generic method for capturing metrics.
 
@@ -455,9 +459,11 @@ Sentry.metrics.gauge("db.connection_pool.active", 42, {
   },
 });
 
-// Record a distribution
+// Record a distribution with an explicit timestamp
+const recordedAt = new Date("2024-05-18T16:00:00Z");
 Sentry.metrics.distribution("page.load_time", 245.7, {
   unit: "millisecond",
+  timestamp: recordedAt,
   attributes: {
     page: "/dashboard",
     browser: "chrome",
@@ -480,11 +486,14 @@ Sentry.metrics.gauge(
   attributes={'pool_name': 'main_db', 'database': 'postgres'},
 )
 
-# Record a distribution
+# Record a distribution with an explicit timestamp
+from datetime import datetime, timezone
+recorded_at = datetime(2024, 5, 18, 16, 0, 0, tzinfo=timezone.utc)
 Sentry.metrics.distribution(
   'page.load_time',
   245.7,
   unit='millisecond',
+  timestamp=recorded_at,
   attributes={'page': '/dashboard', 'browser': 'chrome'},
 )
 ```
@@ -500,8 +509,11 @@ metrics()->gauge('db.connection_pool.active', 42, [
   'attributes' => ['pool_name' => 'main_db', 'database' => 'postgres']
 ]);
 
+// Record a distribution with an explicit timestamp
+$recordedAt = new DateTimeImmutable('2024-05-18T16:00:00Z');
 metrics()->distribution('page.load_time', 245.7, [
   'unit' => 'millisecond',
+  'timestamp' => $recordedAt,
   'attributes' => ['page' => '/dashboard', 'browser' => 'chrome']
 ]);
 ```
@@ -519,9 +531,12 @@ Sentry.metrics().gauge("db.connection_pool.active", 42,
   )
 );
 
+// Record a distribution with an explicit timestamp
+Instant recordedAt = Instant.parse("2024-05-18T16:00:00Z");
 Sentry.metrics().distribution("page.load_time", 245.7,
   Map.of(
     "unit", "millisecond",
+    "timestamp", recordedAt,
     "attributes", Map.of("page", "/dashboard", "browser", "chrome")
   )
 );
@@ -542,11 +557,14 @@ SentrySDK.metrics()
     attributes: ["pool_name": "main_db", "database": "postgres"]
   )
 
+// Record a distribution with an explicit timestamp
+let recordedAt = ISO8601DateFormatter().date(from: "2024-05-18T16:00:00Z")!
 SentrySDK.metrics()
   .distribution(
     name: "page.load_time",
     value: 245.7,
     unit: "millisecond",
+    timestamp: recordedAt,
     attributes: ["page": "/dashboard", "browser": "chrome"]
   )
 ```
@@ -641,7 +659,7 @@ SentrySDK.metrics()
         "region": { "value": "us-west-1", "type": "string" },
         "sentry.sdk.name": { "value": "sentry.javascript.browser", "type": "string" },
         "sentry.sdk.version": { "value": "10.17.0", "type": "string" },
-        "sentry.timestamp.sequence": { "value": 0, "type": "integer" }
+        "sentry.timestamp.sequence": { "value": 2, "type": "integer" }
       }
     },
     {
@@ -658,7 +676,7 @@ SentrySDK.metrics()
         "sentry.sdk.name": { "value": "sentry.javascript.browser", "type": "string" },
         "sentry.sdk.version": { "value": "10.17.0", "type": "string" },
         "sentry.origin": { "value": "auto.db.graphql", "type": "string" },
-        "sentry.timestamp.sequence": { "value": 1, "type": "integer" }
+        "sentry.timestamp.sequence": { "value": 3, "type": "integer" }
       }
     },
     {
@@ -673,7 +691,7 @@ SentrySDK.metrics()
         "sentry.sdk.name": { "value": "sentry.javascript.browser", "type": "string" },
         "sentry.sdk.version": { "value": "10.17.0", "type": "string" },
         "sentry.replay_id": { "value": "36b75d9fa11f45459412a96c41bdf691", "type": "string" },
-        "sentry.timestamp.sequence": { "value": 0, "type": "integer" }
+        "sentry.timestamp.sequence": { "value": 4, "type": "integer" }
       }
     }
   ]

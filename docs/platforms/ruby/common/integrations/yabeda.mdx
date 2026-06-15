@@ -1,0 +1,127 @@
+---
+title: Yabeda
+description: "Send Yabeda metrics to Sentry using the sentry-yabeda adapter gem."
+---
+
+The `sentry-yabeda` gem is a Yabeda adapter that connects [Yabeda](https://github.com/yabeda-rb/yabeda) to Sentry's [Application Metrics](/platforms/ruby/metrics/). Any metric you define with Yabeda, or that a Yabeda plugin collects, automatically forwards to Sentry with no changes to plugin code.
+
+This is especially useful when you already have Yabeda plugins collecting process-level runtime data (GC pressure, thread pool utilization, connection pool stats) that tracing alone can't capture.
+
+## Install
+
+Add the gems to your `Gemfile`:
+
+```ruby
+gem "sentry-ruby"
+gem "sentry-yabeda"
+```
+
+Then run:
+
+```bash
+bundle install
+```
+
+## Configure
+
+Initialize Sentry with metrics enabled. The Yabeda adapter registers itself automatically when `sentry-yabeda` is required — there's no extra setup:
+
+```ruby
+Sentry.init do |config|
+  config.dsn = ENV["SENTRY_DSN"]
+  config.enable_metrics = true
+end
+```
+
+All Yabeda metrics now flow to Sentry.
+
+## Metric Type Mapping
+
+Yabeda metric types translate to Sentry as follows:
+
+| Yabeda type | Sentry method                 | Notes                      |
+| ----------- | ----------------------------- | -------------------------- |
+| `counter`   | `Sentry.metrics.count`        |                            |
+| `gauge`     | `Sentry.metrics.gauge`        |                            |
+| `histogram` | `Sentry.metrics.distribution` |                            |
+| `summary`   | `Sentry.metrics.distribution` | Sentry has no summary type |
+
+Metric names combine the Yabeda group and name with a dot separator. A counter named `orders_created` in group `myapp` becomes `myapp.orders_created` in Sentry.
+
+Tags are passed through as metric attributes.
+
+## Usage With Yabeda Plugins
+
+Yabeda has a rich plugin ecosystem. Some examples that work well with Sentry:
+
+| Plugin                                                                  | What it captures                          |
+| ----------------------------------------------------------------------- | ----------------------------------------- |
+| [yabeda-puma-plugin](https://github.com/yabeda-rb/yabeda-puma-plugin)   | Thread pool utilization, backlog, workers |
+| [yabeda-gc](https://github.com/ianks/yabeda-gc)                         | GC pause time, heap stats                 |
+| [yabeda-activerecord](https://github.com/yabeda-rb/yabeda-activerecord) | Connection pool size, busy/idle/waiting   |
+
+Add the plugin gems and they'll start forwarding metrics to Sentry immediately.
+
+### Pull-Based vs Push-Based Collection
+
+Some Yabeda plugins use `collect` blocks to gather metrics. This is a pull-based pattern designed for Prometheus, where a scrape request triggers collection. Since Sentry is push-based, `sentry-yabeda` runs a background thread that calls `Yabeda.collect!` every 15 seconds to drive these plugins.
+
+This collector starts automatically when `enable_metrics` is `true`. Event-driven metrics (counters, histograms) flow to Sentry immediately — only pull-based gauges (like GC stats or Puma thread pool metrics) depend on the collector.
+
+<Alert>
+
+Metrics collected by the background thread won't carry trace context since they aren't tied to a specific request.
+
+</Alert>
+
+### Puma Configuration
+
+If you're using `yabeda-puma-plugin`, enable the Puma control app so the plugin can fetch thread and backlog stats:
+
+```ruby
+# config/puma.rb
+activate_control_app "unix://tmp/pumactl.sock", no_token: true
+plugin :yabeda
+```
+
+## Defining Custom Metrics
+
+You can define your own metrics with Yabeda and they'll automatically appear in Sentry:
+
+```ruby
+Yabeda.configure do
+  group :myapp do
+    counter   :orders_created, comment: "Orders placed", tags: %i[region]
+    gauge     :queue_depth,    comment: "Jobs waiting",  tags: %i[queue_name]
+    histogram :response_time,  comment: "Response time", unit: :milliseconds, tags: %i[controller]
+  end
+end
+```
+
+Then use them in your application code:
+
+```ruby
+Yabeda.myapp.orders_created.increment({ region: "us-east" })
+Yabeda.myapp.queue_depth.set({ queue_name: "default" }, 42)
+Yabeda.myapp.response_time.measure({ controller: "orders" }, 150.5)
+```
+
+## When to Use Yabeda vs. Direct Sentry Metrics
+
+Use **Yabeda** when:
+
+- You already have Yabeda plugins in your stack and want their data in Sentry.
+- You want vendor-neutral metric definitions that can target multiple adapters (Sentry, Prometheus, Datadog) simultaneously.
+
+Use **direct `Sentry.metrics.*` calls** when:
+
+- You're tracking a one-off business event and don't need a full metrics framework.
+- You want trace-correlated metrics tied to specific transactions.
+
+Both approaches can coexist in the same application.
+
+## Scaling Considerations
+
+Routing Yabeda metrics to Sentry works well for application-level data: business events, runtime diagnostics, and the kind of process-level gauges the plugins above collect. Sentry stores a row per metric event, so tracking anything from a handful of custom counters up to a moderate volume of plugin gauges is absolutely viable.
+
+At very high collection volumes (think: hundreds of nodes in a Kubernetes cluster each emitting per-second metrics), tools like Prometheus that pre-aggregate and compact data are purpose-built for that scale.

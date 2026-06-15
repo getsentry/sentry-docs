@@ -25,6 +25,7 @@ Inbound filters include:
 - Events from certain IP addresses
 - Events with certain error messages
 - Events from specific release versions of your code
+- Events from non-allowed domains (origin-based; see [Allowed Domains](#allowed-domains))
 
 ### Legacy Browser Filters
 
@@ -54,6 +55,12 @@ The supported IP address formats are:
 - **IPv6 Addresses**: Standard colon-separated hexadecimal notation (e.g., aaaa:bbbb::cccc, a:b:c::1).
 - **IPv4 Network Ranges (CIDR Notation)**: IPv4 address with a subnet mask (e.g., 122.33.230.0/30, 127.0.0.0/8).
 - **IPv6 Network Ranges (CIDR Notation)**: IPv6 address with a subnet mask (e.g., a:b:c::0/126).
+
+### Allowed Domains
+
+Sentry checks the `Origin` or `Referer` HTTP header of each inbound request against your project's allowed domain list. Requests from unrecognized origins are rejected and appear as **Disallowed Domain** in your [Stats](/product/stats/).
+
+This filter only applies to requests that include an `Origin` or `Referer` header. Requests without one — common for server-side SDKs and direct API submissions — are always accepted, even when an allowed domain list is configured. To restrict server-side ingestion, use a [project rate limit](/pricing/quotas/#rate-limits) or an allowlist at the network level.
 
 ### Transactions Coming from Health Check
 
@@ -207,3 +214,13 @@ touch 1.2.4
 echo 1.2.*
 echo 1.2.[!3]
 ```
+
+## Troubleshooting
+
+### Error Message Filters Do Not Match Deobfuscated Exception Types
+
+Inbound filters run immediately after Sentry receives an event. They do not wait for later processing such as symbolication, deobfuscation, or ProGuard mapping. For error events, Sentry matches the filter against `{exception.type}: {exception.value}` from the ingested event.
+
+If an error message filter does not filter an event, compare the filter against the event as Sentry received it, not only the issue title shown after processing. To find the original exception type, open the event JSON by clicking **{} View JSON** in the event header, then check `exception.values.raw_type`.
+
+For example, a filter such as `MyExceptionType: *` only matches events whose incoming exception type is `MyExceptionType`. If the app sent an obfuscated exception type, such as `x`, and Sentry later deobfuscated it to `MyExceptionType`, the event JSON may show `raw_type: "x"` while the issue title shows `MyExceptionType`. In that case, filter on the incoming exception type or configure your obfuscator to keep that exception type unchanged.

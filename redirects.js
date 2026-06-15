@@ -567,6 +567,22 @@ const developerDocsRedirects = [
     source: '/sdk/expected-features/setup-wizards/:path*',
     destination: '/sdk-setup-wizards/:path*',
   },
+  {
+    source: '/sdk/foundations/transport/envelopes/',
+    destination: '/sdk/foundations/envelopes/',
+  },
+  {
+    source: '/sdk/foundations/transport/envelope-items/',
+    destination: '/sdk/foundations/envelopes/envelope-items/',
+  },
+  {
+    source: '/sdk/foundations/transport/event-payloads/',
+    destination: '/sdk/foundations/envelopes/event-payloads/',
+  },
+  {
+    source: '/sdk/foundations/transport/event-payloads/:path*',
+    destination: '/sdk/foundations/envelopes/event-payloads/:path*',
+  },
 ];
 
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
@@ -574,6 +590,18 @@ const userDocsRedirects = [
   {
     source: '/api/guides/oauth/',
     destination: '/api/auth/',
+  },
+  {
+    source: '/product/codecov/:path*',
+    destination: '/integrations/',
+  },
+  {
+    source: '/product/codecov/',
+    destination: '/integrations/',
+  },
+  {
+    source: '/integrations/code-coverage/:path*',
+    destination: '/integrations/',
   },
   {
     source: '/integrations/incidentio/',
@@ -649,15 +677,15 @@ const userDocsRedirects = [
   },
   {
     source: '/integrations/phoebeai/',
-    destination: '/integrations/debugging/phoebeai/',
+    destination: '/integrations/debugging/',
   },
   {
     source: '/integrations/qckfx/',
-    destination: '/integrations/debugging/qckfx/',
+    destination: '/integrations/debugging/',
   },
   {
     source: '/integrations/revisedev/',
-    destination: '/integrations/debugging/revisedev/',
+    destination: '/integrations/debugging/',
   },
   {
     source: '/integrations/rookout/',
@@ -665,7 +693,7 @@ const userDocsRedirects = [
   },
   {
     source: '/integrations/sevvy/',
-    destination: '/integrations/debugging/sevvy/',
+    destination: '/integrations/debugging/corelayer/',
   },
   {
     source: '/integrations/sourcery/',
@@ -1775,6 +1803,15 @@ const userDocsRedirects = [
     source:
       '/platforms/react-native/data-management/debug-files/source-context/data-management/debug-files/upload/',
     destination: '/platforms/react-native/data-management/debug-files/upload/',
+  },
+  // Redirect MCP and CLI pages to their dedicated sites
+  {
+    source: '/ai/mcp/',
+    destination: 'https://mcp.sentry.dev',
+  },
+  {
+    source: '/ai/sentry-cli/',
+    destination: 'https://cli.sentry.dev',
   },
   // Redirects for Insights → Sentry Dashboards migration
   {

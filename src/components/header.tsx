@@ -6,6 +6,7 @@ import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import Link from 'next/link';
 import {useCallback, useEffect, useState} from 'react';
+import {useBodyScrollLock} from 'sentry-docs/hooks/useBodyScrollLock';
 import SentryLogoSVG from 'sentry-docs/logos/sentry-logo-dark.svg';
 import {Platform} from 'sentry-docs/types';
 
@@ -60,46 +61,70 @@ export function Header({
     }, [])
   );
 
-  // Close mobile search overlay on navigation
+  // Close mobile overlays on navigation
   useEffect(() => {
     setMobileSearchOpen(false);
+    setHomeMobileNavOpen(false);
   }, [pathname]);
 
-  // Lock body scroll when mobile search overlay is open, close on resize to desktop or escape key
-  useEffect(() => {
-    if (mobileSearchOpen) {
-      document.body.style.overflow = 'hidden';
+  const closeSidebar = useCallback(() => {
+    const checkbox = document.getElementById(sidebarToggleId) as HTMLInputElement | null;
+    if (checkbox) {
+      checkbox.checked = false;
+    }
+    setSidebarOpen(false);
+  }, []);
 
-      // Close mobile search if viewport is resized to desktop width
-      const handleResize = () => {
-        if (window.innerWidth >= 768) {
+  useBodyScrollLock(mobileSearchOpen);
+  useBodyScrollLock(homeMobileNavOpen);
+
+  // Close the home mobile nav if the viewport is resized to desktop width
+  useEffect(() => {
+    if (!homeMobileNavOpen) {
+      return undefined;
+    }
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setHomeMobileNavOpen(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [homeMobileNavOpen]);
+
+  // Close mobile search on resize to desktop or escape key
+  useEffect(() => {
+    if (!mobileSearchOpen) {
+      return undefined;
+    }
+
+    // Close mobile search if viewport is resized to desktop width
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setMobileSearchOpen(false);
+      }
+    };
+
+    // Close mobile search on escape key (only if search input is empty)
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        // Check if search input has a value - if so, let the Search component
+        // handle the escape key to clear the query first
+        const searchInput = document.querySelector(
+          '.mobile-search-overlay input[type="text"]'
+        ) as HTMLInputElement | null;
+        if (!searchInput?.value) {
           setMobileSearchOpen(false);
         }
-      };
+      }
+    };
 
-      // Close mobile search on escape key (only if search input is empty)
-      const handleKeyDown = (e: KeyboardEvent) => {
-        if (e.key === 'Escape') {
-          // Check if search input has a value - if so, let the Search component
-          // handle the escape key to clear the query first
-          const searchInput = document.querySelector(
-            '.mobile-search-overlay input[type="text"]'
-          ) as HTMLInputElement | null;
-          if (!searchInput?.value) {
-            setMobileSearchOpen(false);
-          }
-        }
-      };
-
-      window.addEventListener('resize', handleResize);
-      window.addEventListener('keydown', handleKeyDown);
-      return () => {
-        document.body.style.overflow = '';
-        window.removeEventListener('resize', handleResize);
-        window.removeEventListener('keydown', handleKeyDown);
-      };
-    }
-    return undefined;
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, [mobileSearchOpen]);
 
   // Track sidebar checkbox state for non-home pages
@@ -126,31 +151,28 @@ export function Header({
     return () => checkbox.removeEventListener('change', handleChange);
   }, [isHomePage]);
 
-  // Lock body scroll when sidebar is open on mobile (fixes iOS Safari touch scrolling)
+  useBodyScrollLock(sidebarOpen);
+
+  // Close sidebar if viewport is resized to desktop width
   useEffect(() => {
-    if (sidebarOpen) {
-      document.body.style.overflow = 'hidden';
-
-      // Close sidebar if viewport is resized to desktop width
-      const handleResize = () => {
-        if (window.innerWidth >= 768) {
-          const checkbox = document.getElementById(
-            sidebarToggleId
-          ) as HTMLInputElement | null;
-          if (checkbox) {
-            checkbox.checked = false;
-            setSidebarOpen(false);
-          }
-        }
-      };
-
-      window.addEventListener('resize', handleResize);
-      return () => {
-        document.body.style.overflow = '';
-        window.removeEventListener('resize', handleResize);
-      };
+    if (!sidebarOpen) {
+      return undefined;
     }
-    return undefined;
+
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        const checkbox = document.getElementById(
+          sidebarToggleId
+        ) as HTMLInputElement | null;
+        if (checkbox) {
+          checkbox.checked = false;
+          setSidebarOpen(false);
+        }
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, [sidebarOpen]);
 
   // Show header search if: not on home page, OR on home page but home search is scrolled out of view
@@ -283,14 +305,7 @@ export function Header({
                 onClick={() => {
                   setMobileSearchOpen(true);
                   setHomeMobileNavOpen(false);
-                  // Close sidebar to prevent competing scroll locks
-                  const checkbox = document.getElementById(
-                    sidebarToggleId
-                  ) as HTMLInputElement | null;
-                  if (checkbox) {
-                    checkbox.checked = false;
-                    setSidebarOpen(false);
-                  }
+                  closeSidebar();
                 }}
                 aria-label="Search"
               >
@@ -350,7 +365,7 @@ export function Header({
       {/* Home page mobile navigation overlay */}
       {isHomePage && homeMobileNavOpen && (
         <div
-          className="md:hidden fixed inset-0 bg-[var(--gray-1)] z-40"
+          className="md:hidden fixed inset-0 bg-[var(--gray-1)] z-40 overflow-y-auto overscroll-none"
           style={{top: 'var(--header-height)'}}
         >
           <nav className="px-4 py-4 space-y-1">
@@ -404,6 +419,11 @@ export function Header({
                 searchPlatforms={searchPlatforms}
                 autoFocus
                 useStoredSearchPlatforms={useStoredSearchPlatforms}
+                // Release every overlay's lock before Kapa opens so it owns scrolling alone.
+                onAskAi={() => {
+                  setMobileSearchOpen(false);
+                  closeSidebar();
+                }}
               />
             </div>
           </div>
