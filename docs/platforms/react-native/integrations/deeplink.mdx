@@ -1,0 +1,45 @@
+---
+title: Deep Link
+description: "Capture deep link navigation as breadcrumbs in your React Native application."
+sidebar_order: 100
+---
+
+_(Available in version 8.8.0 and above)_
+
+_Import name: `Sentry.deeplinkIntegration`_
+
+The `deeplinkIntegration` automatically captures breadcrumbs when your app receives deep links via React Native's [`Linking`](https://reactnative.dev/docs/linking) API. It tracks both cold start URLs (the link that opened the app) and warm open URLs (links received while the app is running).
+
+<Alert level="info" title="Note">
+
+This integration relies on React Native's `Linking` module. To receive URLs, your app must have native deep linking configured using URL schemes or universal links.
+
+</Alert>
+
+## Setup
+
+```javascript
+import * as Sentry from "@sentry/react-native";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [Sentry.deeplinkIntegration()],
+});
+```
+
+## What It Captures
+
+Each deep link creates a breadcrumb with:
+- **category:** `deeplink`
+- **type:** `navigation`
+- **data.url:** the deep link URL
+
+### PII Handling
+
+When `sendDefaultPii` is `false` (the default), the integration sanitizes URLs before recording them:
+- Query strings are removed
+- Path segments that look like IDs (numeric values, UUIDs, hex strings of 8+ characters) are replaced with `<id>`
+
+For example, `myapp://user/123/profile?token=xyz` becomes `myapp://user/<id>/profile`.
+
+Set `sendDefaultPii: true` in your `Sentry.init()` options to capture the full, unsanitized URL.

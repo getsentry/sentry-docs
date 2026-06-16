@@ -1,0 +1,102 @@
+---
+title: SnapshotPreviews Metadata
+sidebar_title: SnapshotPreviews Metadata
+sidebar_order: 4951
+sidebar_section: features
+description: Add tags, context, and diff thresholds to SnapshotPreviews sidecar metadata.
+---
+
+<Include name="feature-available-for-user-group-early-adopter" />
+
+SnapshotPreviews writes a JSON metadata sidecar next to each exported image when `TEST_RUNNER_SNAPSHOTS_EXPORT_DIR` is set. Sentry uploads this metadata with the image and uses it to group snapshots, apply local diff thresholds, and provide context for review.
+
+For the platform-agnostic sidecar schema, see [Uploading Snapshots](/product/snapshots/uploading-snapshots/#json-metadata).
+
+## Add Per-Preview Metadata
+
+Link the `SnapshotPreferences` target to the app target that contains your previews, then import it where you define previews.
+
+Use modifiers on a preview view to add metadata:
+
+```swift
+import SnapshotPreferences
+
+#Preview("Billing page") {
+  BillingView()
+    .snapshotTags([
+      "surface": "billing",
+      "team": "growth",
+    ])
+    .snapshotAdditionalContext([
+      "component": "BillingView",
+      "variant": [
+        "plan": "team",
+        "trial": true,
+      ],
+    ])
+    .snapshotDiffThreshold(0.01)
+}
+```
+
+## SnapshotPreviews Modifiers
+
+| Modifier                                    | Description                                                                                                                                           |
+| ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.snapshotTags([String: String])`           | Adds top-level `tags` to the sidecar for filtering or grouping snapshots.                                                                             |
+| `.snapshotAdditionalContext([String: Any])` | Adds arbitrary key-value context to the sidecar `context` object. Values can be strings, numbers, booleans, or nested objects.                        |
+| `.snapshotDiffThreshold(Float?)`            | Adds a local `diff_threshold` for this preview. Sentry reports the image as changed only when the share of changed pixels is greater than this value. |
+
+## Generated Sidecar Metadata
+
+SnapshotPreviews generates default sidecar metadata for each preview. The exact values depend on the preview and simulator, but the sidecar can look like this:
+
+```json
+{
+  "display_name": "Billing page",
+  "group": "Checkout Preview",
+  "tags": {
+    "surface": "billing",
+    "team": "growth"
+  },
+  "diff_threshold": 0.01,
+  "context": {
+    "test_name": "-[YourAppSnapshotTest portrait-Checkout Preview-1-6]",
+    "accessibility_enabled": false,
+    "component": "BillingView",
+    "variant": {
+      "plan": "team",
+      "trial": true
+    },
+    "preview": {
+      "container_display_name": "Checkout Preview",
+      "container_type_name": "YourApp.CheckoutPreview",
+      "display_name": "Billing page",
+      "index": 1,
+      "orientation": "portrait",
+      "preferred_color_scheme": "dark"
+    },
+    "simulator": {
+      "device_name": "iPhone 17 Pro",
+      "model_identifier": "iPhone18,1"
+    }
+  }
+}
+```
+
+## Generated Context Keys
+
+SnapshotPreviews automatically generates these `context` keys:
+
+- `test_name`
+- `accessibility_enabled`
+- `simulator.device_name`
+- `simulator.model_identifier`
+- `preview.index`
+- `preview.display_name`
+- `preview.container_type_name`
+- `preview.container_display_name`
+- `preview.preferred_color_scheme`
+- `preview.orientation`
+- `preview.line`
+
+Additional context is merged into the generated `context` object. If a custom key matches a generated key, the custom value overrides the generated value.

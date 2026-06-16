@@ -10,36 +10,76 @@ To integrate Sentry into your Xcode project using Swift Package Manager (SPM), o
 https://github.com/getsentry/sentry-cocoa.git
 ```
 
-You can define your dependency rule by selecting the SDK version (or branch), and then click the "Add Package" button.
-You will then be prompted to choose one of the options `Sentry`, `Sentry-Dynamic`, `SentrySwiftUI`, or `SentrySPM`.
-
-- `Sentry` is the static pre-built framework, which is the recommended option if you prefer a fast app start time.
-- `Sentry-Dynamic` is the dynamic pre-built framework.
-- `SentrySwiftUI` is used to track performance of SwiftUI views, see more information in the [docs](/platforms/apple/guides/ios/tracing/instrumentation/swiftui-instrumentation/).
-- `SentrySPM` compiles the SDK from source as part of your project build instead of using a pre-built binary. This is useful if you want to step through SDK code while debugging. Not all product variants are available yet with this option.
+You can define your dependency rule by selecting the SDK version (or branch), and then click the "Add Package" button. You will then be prompted to choose a product — see below for which one to pick.
 
 <Alert>
   Xcode allows you to choose many options, but you should choose only one of the
-  options above.
+  options below.
 </Alert>
 
-Alternatively, when your project uses a `Package.swift` file to manage dependencies, you can specify the target with:
+## Sentry (Swift)
+
+This is the recommended integration for Swift projects and most Objective-C projects.
+
+### Compile From Source (Recommended)
+
+The **`SentrySPM`** product compiles the SDK from source as part of your project build instead of using a pre-built binary. This is the recommended choice because it allows you to step through SDK code while debugging and supports compile-time configuration such as package traits.
+
+In Xcode, add the Sentry package as described above and select the **`SentrySPM`** product.
+
+When your project uses a `Package.swift` file to manage dependencies, you can specify the target with:
 
 ```swift {tabTitle:Swift}
 .package(url: "https://github.com/getsentry/sentry-cocoa", from: "{{@inject packages.version('sentry.cocoa') }}"),
 ```
 
-## Building Without UIKit or AppKit
+Then depend on the `SentrySPM` product:
+
+```swift {tabTitle:Swift}
+.target(
+    name: "MyApp",
+    dependencies: [
+        .product(name: "SentrySPM", package: "sentry-cocoa"),
+    ]
+)
+```
+
+### Pre-Compiled
+
+These products use pre-built binary frameworks. They don't add to your project's compile time, but they do not support compile-time configuration such as package traits, and you cannot step through SDK code while debugging.
+
+- **`Sentry`** — Static pre-built framework. Provides the fastest app start time among the pre-compiled options.
+- **`Sentry-Dynamic`** — Dynamic pre-built framework. Use this if your project requires dynamic linking.
+- **`SentrySwiftUI`** — Deprecated. SwiftUI view performance tracking is now included in the main `Sentry` product. Do not add this to new projects.
+
+In Xcode, add the Sentry package as described above and select either the **`Sentry`** or **`Sentry-Dynamic`** product.
+
+When your project uses a `Package.swift` file, add the dependency and select the product:
+
+```swift {tabTitle:Swift}
+.package(url: "https://github.com/getsentry/sentry-cocoa", from: "{{@inject packages.version('sentry.cocoa') }}"),
+```
+
+```swift {tabTitle:Swift}
+.target(
+    name: "MyApp",
+    dependencies: [
+        .product(name: "Sentry", package: "sentry-cocoa"),
+    ]
+)
+```
+
+### Building Without UIKit or AppKit
 
 If you're building a command-line tool, a headless server app, or any other target where UIKit or AppKit isn't available, you can use the `NoUIFramework` package trait to strip out UI framework dependencies entirely. This requires **Sentry SDK 9.7.0+**, **Swift 6.1+**, and **Xcode 26.4+**. When enabled, the SDK compiles from source without linking UIKit, AppKit, or SwiftUI. UI-related features like UIViewController tracing and screenshot capture are excluded.
 
-### Xcode
+#### Xcode
 
 1. Add the Sentry package as described above.
 2. Select the **`SentrySPM`** product instead of `Sentry` or `Sentry-Dynamic`.
 3. In your project settings, go to **Package Dependencies**, select the Sentry package, and enable the **`NoUIFramework`** trait.
 
-### Package.swift
+#### Package.swift
 
 Add the dependency with the `NoUIFramework` trait and depend on the `SentrySPM` product:
 
@@ -65,5 +105,89 @@ let package = Package(
 ```
 
 <Alert level="info">
-  The `SentrySPM` product compiles the SDK from source. This is required for package traits to take effect, since the pre-built binary targets (`Sentry`, `Sentry-Dynamic`) don't support compile-time configuration.
+  The `SentrySPM` product compiles the SDK from source. This is required for
+  package traits to take effect, since the pre-built binary targets (`Sentry`,
+  `Sentry-Dynamic`) don't support compile-time configuration.
 </Alert>
+
+## SentryObjC (Objective-C)
+
+<Alert level="info">Available from SDK **9.16.0+**.</Alert>
+
+**SentryObjC** is a pure Objective-C wrapper around the Sentry SDK. It is the recommended integration for Objective-C projects, including those that use Objective-C++ (`.mm` files), have Clang modules disabled (`-fmodules=NO`), or otherwise can't use semantic imports (`@import`) or `-Swift.h`. All public types use the prefix `SentryObjC` and no Swift-related headers appear in the public surface.
+
+With Clang modules disabled, `@import Sentry` doesn't work and `#import <Sentry/Sentry-Swift.h>` fails with forward-declaration errors in `.mm` files. This makes `SentrySDK`, `SentryOptions`, and other Swift-bridged APIs unavailable. SentryObjC solves this by providing hand-written Objective-C headers that don't depend on Swift modules or the Swift compiler.
+
+<Alert level="warning">
+SentryObjC embeds the full Sentry SDK. Do not link both `Sentry` and `SentryObjC` in the same target.
+</Alert>
+
+### Compile From Source
+
+In Xcode, add the Sentry package as described above and select the **`SentryObjC`** product.
+
+With `Package.swift`:
+
+```swift {tabTitle:Swift}
+.package(url: "https://github.com/getsentry/sentry-cocoa", from: "{{@inject packages.version('sentry.cocoa') }}"),
+```
+
+Then depend on the `SentryObjC` product:
+
+```swift {tabTitle:Swift}
+.target(
+    name: "MyApp",
+    dependencies: [
+        .product(name: "SentryObjC", package: "sentry-cocoa"),
+    ]
+)
+```
+
+### Pre-Compiled
+
+The `SentryObjC-Static` and `SentryObjC-Dynamic` products use pre-built binary frameworks, so they don't add to your project's compile time. Select one of these products instead of `SentryObjC` when adding the package in Xcode, or reference them in `Package.swift`:
+
+```swift {tabTitle:Swift}
+.product(name: "SentryObjC-Static", package: "sentry-cocoa"),
+```
+
+Pre-compiled xcframeworks are also available for <PlatformLink to="/install/manual-install/">manual download</PlatformLink>.
+
+### Additional Build Settings
+
+#### SentryObjC-Static
+
+When using the static variant (`SentryObjC-Static`) in a pure Objective-C target, additional linker flags are needed because the static framework bundles C++ and Swift code that Xcode doesn't link automatically. If your target already contains at least one `.swift` file, Xcode links the Swift runtime for you and you only need `-lc++`.
+
+Add the following to your target's **Build Settings > Linking - General > Other Linker Flags**:
+
+```
+-lc++ -lswiftCore -force_load $(DT_TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME)/libswiftCompatibility56.a
+```
+
+- **`-lc++`** links the C++ standard library, required by the profiler and crash reporter bundled in the static framework.
+- **`-lswiftCore`** and the **`-force_load`** flag link the Swift runtime and backward-compatibility stubs. These are only needed when your target has no Swift files. If your target already contains a `.swift` file, Xcode links the Swift runtime automatically and you can omit these two flags.
+
+As a fallback (for example, if the toolchain path causes issues in your build system), you can add an empty Swift file to your target instead of the explicit flags. Create a file such as `Dummy.swift` with no content and its presence forces Xcode to link the Swift runtime:
+
+```swift {tabTitle:Dummy.swift}
+// Forces Xcode to link the Swift runtime into this pure-ObjC target.
+```
+
+These steps are not needed for `SentryObjC-Dynamic` or the compile-from-source `SentryObjC` product, as dynamic frameworks and SPM source targets handle runtime linking automatically.
+
+#### Clang Modules Disabled / Objective-C++
+
+When your project has Clang modules disabled (`CLANG_ENABLE_MODULES = NO`) or uses Objective-C++ (`.mm` files):
+
+1. **Use `#import` instead of `@import`.** Module imports (`@import SentryObjC;`) require Clang modules to be enabled. Use the header import instead:
+
+   ```objc
+   #import <SentryObjC/SentryObjC.h>
+   ```
+
+2. **Link system frameworks explicitly.** Without modules, automatic framework linking is unavailable. Add the system frameworks your app uses to **Other Linker Flags**:
+
+   ```
+   -framework UIKit -framework Foundation
+   ```
