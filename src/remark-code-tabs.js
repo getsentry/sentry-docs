@@ -32,6 +32,11 @@ function getTabTitle(node) {
   return (match && match[1]) || '';
 }
 
+function getMdExpandTabs(node) {
+  const meta = getFullMeta(node);
+  return /\{mdExpandTabs}/.test(meta || '');
+}
+
 // TODO(dcramer): this should only operate on MDX
 export default function remarkCodeTabs() {
   return markdownAST => {
@@ -84,11 +89,14 @@ export default function remarkCodeTabs() {
         };
       });
 
+      const shouldExpand = pendingCode.some(([node]) => getMdExpandTabs(node));
+
       rootNode.type = 'element';
       rootNode.data = {
         hName: 'div',
         hProperties: {
           className: 'code-tabs-wrapper',
+          ...(shouldExpand && {dataCodeTabMdExpandTabs: true}),
         },
       };
       rootNode.children = [
