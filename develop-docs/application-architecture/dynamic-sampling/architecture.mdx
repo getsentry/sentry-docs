@@ -129,13 +129,13 @@ In this case, the matching will happen from **top to bottom** and the following 
 
 ### Interpreting the Dynamic Sampling Context
 
-The existence of a dynamic sampling context does not necessarily mean it is valid. Relay differentiates between three cases:
-1. **No dynamic sampling context**: If an envelope received by Relay does not contain a dynamic sampling context it is always sampled, unless the payload requires a DSC to always be present.
+Before sampling, Relay validates the incoming DSC and, in some cases, reconstructs it. Relay differentiates between three cases:
 
-2. **A dynamic sampling context originating in a project of the same organization**: A dynamic sampling context which originates from either the same project or a project within the same organization is considered valid and Relay will apply the sampling rules from the root project as described in the previous section.
+1. **No DSC**: For transaction spans, Relay will try to reconstruct the DSC using fields from the transaction event. If this fails, for example, due to the public key being missing, the DSC is removed and the item is always sampled. For v2 spans, a missing DSC instead causes the spans to be rejected - unless they were produced by the OTel integration, in which case a missing DSC is allowed.
 
-3. **A dynamic sampling context originating in a project of a different organization or an unknown project**: DSCs originating in different organizations or unknown projects are discarded and Relay will re-compute a DSC based on the data of the payload and scoped to the current project. The computed dynamic sampling context is then used to apply the dynamic sampling rules.
+2. **A DSC originating in a project of the same organization**: A DSC that originates from either the same project or another project within the same organization is considered valid and Relay will apply the sampling rules from the root project as described in the previous section.
 
+3. **A DSC originating in a project of a different organization or an unknown project**: A DSC originating in a different organization or unknown project is discarded and Relay will reconstruct a DSC based on the data of the payload and scoped to the current project. For transactions, the data used includes event fields like `release`, `environment`, and `transaction`. For v2 spans, the reconstructed DSC is minimal and only contains trace id and public key. Span attributes like `release`, `environment`, and `segment.name` are not used because there is no guarantee that an envelope's v2 spans all share the same value for these attributes.
 
 ![Interpreting the Dynamic Sampling Context](./images/interpreteDsc.png)
 
