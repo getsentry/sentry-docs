@@ -145,6 +145,25 @@ type CollectBehavior = boolean | { allow: string[] } | { deny: string[] };
 // { allow: [] } → only the listed keys send their real value
 ```
 
+<Alert>
+  Passing `dataCollection` (even an empty `dataCollection: {}`) opts you into the more permissive `dataCollection` defaults. To preserve the old behavior while using `dataCollection`, opt out of each category explicitly:
+
+```javascript
+Sentry.init({
+  dataCollection: {
+    userInfo: false,
+    genAI: { inputs: false, outputs: false },
+    httpBodies: [],
+    httpHeaders: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
+    cookies: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
+    queryParams: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
+  },
+});
+```
+
+Data you set explicitly (for example, via <PlatformLink to="/apis/#setUser">`Sentry.setUser()`</PlatformLink>) is always sent, regardless of `dataCollection`.
+</Alert>
+
 </SdkOption>
 
 <SdkOption name="maxBreadcrumbs" type='number' defaultValue="100">
