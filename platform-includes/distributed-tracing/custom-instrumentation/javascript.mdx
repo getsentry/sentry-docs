@@ -76,8 +76,8 @@ If you make outgoing requests from your project to other services, check if the 
 function sentryInterceptor(methodDescriptor, nextCall) {
   // Extract Sentry trace headers from the incoming metadata
   const metadata = nextCall.metadata.getMap();
-  const sentryTrace = metadata['sentry-trace'];
-  const baggage = metadata['baggage'];
+  const sentryTrace = metadata["sentry-trace"];
+  const baggage = metadata["baggage"];
 
   return new grpc.ServerInterceptingCall(nextCall, {
     start: (next) => {
@@ -87,12 +87,14 @@ function sentryInterceptor(methodDescriptor, nextCall) {
         Sentry.startSpanManual(
           {
             name: methodDescriptor.path,
-            op: 'grpc.server',
-            forceTransaction: true, // Make this a transaction in the Sentry UI
+            op: "grpc.server",
+            // Make this a transaction in the Sentry UI.
+            // Not available in stream mode – use `parentSpan: null` to make this a service span.
+            forceTransaction: true,
             attributes: {
-              'grpc.method': methodDescriptor.path,
-              'grpc.service': methodDescriptor.service.serviceName,
-              'grpc.status_code': grpc.status.OK,
+              "grpc.method": methodDescriptor.path,
+              "grpc.service": methodDescriptor.service.serviceName,
+              "grpc.status_code": grpc.status.OK,
             },
           },
           (span) => {
@@ -108,21 +110,21 @@ function sentryInterceptor(methodDescriptor, nextCall) {
       if (span) {
         // Update status based on the gRPC result
         if (status.code !== grpc.status.OK) {
-          span.setStatus({ code: 2, message: 'error' });
-          span.setAttribute('grpc.status_code', status.code);
-          span.setAttribute('grpc.status_description', status.details);
+          span.setStatus({ code: 2, message: "error" });
+          span.setAttribute("grpc.status_code", status.code);
+          span.setAttribute("grpc.status_description", status.details);
         }
         // End the span when the call completes
         span.end();
       }
       next(status);
-    }
+    },
   });
 }
 
 // Add the interceptor to your gRPC server
 const server = new grpc.Server({
-  interceptors: [sentryInterceptor]
+  interceptors: [sentryInterceptor],
 });
 
 // In your service implementation, use the active span
@@ -130,24 +132,27 @@ const serviceImplementation = {
   myMethod: async (call, callback) => {
     try {
       const span = call.call?.nextCall?.sentrySpan;
-      
+
       // Use withActiveSpan to make the span active during service execution
       await Sentry.withActiveSpan(span, async () => {
         // Create child spans for operations within the service
-        await Sentry.startSpan({ name: 'database.query', op: 'db' }, async (childSpan) => {
-          // Database operations here
-          const result = await database.query('SELECT * FROM table');
-          childSpan.setAttribute('db.rows_affected', result.rowCount);
-        });
-        
-        callback(null, { result: 'success' });
+        await Sentry.startSpan(
+          { name: "database.query", op: "db" },
+          async (childSpan) => {
+            // Database operations here
+            const result = await database.query("SELECT * FROM table");
+            childSpan.setAttribute("db.rows_affected", result.rowCount);
+          }
+        );
+
+        callback(null, { result: "success" });
       });
     } catch (error) {
       // Capture the error with the current span as context
       Sentry.captureException(error);
       callback(error);
     }
-  }
+  },
 };
 ```
 
@@ -163,22 +168,24 @@ function createGrpcClient() {
           start: (callMetadata, listener, next) => {
             // `callMetadata` is the metadata object for the outgoing gRPC call.
             // We will add our Sentry tracing headers to this object.
-            
+
             // Get current trace information from Sentry
             const traceData = Sentry.getTraceData();
-            
+
             // Add Sentry trace and baggage headers to the call's metadata
             if (traceData) {
-              callMetadata.set('sentry-trace', traceData['sentry-trace']);
-              callMetadata.set('baggage', traceData['baggage']);
+              callMetadata.set("sentry-trace", traceData["sentry-trace"]);
+              callMetadata.set("baggage", traceData["baggage"]);
             }
-            
+
             // Proceed with the call, now including the Sentry headers in its metadata
             next(callMetadata, listener);
-          }
+          },
         });
-    }]
+      },
+    ],
   });
 }
 ```
+
 </PlatformCategorySection>
