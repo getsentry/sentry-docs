@@ -8,6 +8,8 @@ import {AI_AGENT_PATTERN, type TrafficType} from 'sentry-docs/lib/trafficClassif
 const isDeveloperDocs =
   process.env.DEVELOPER_DOCS || process.env.NEXT_PUBLIC_DEVELOPER_DOCS;
 
+const BASE_URL = isDeveloperDocs ? 'https://develop.sentry.dev' : 'https://docs.sentry.io';
+
 export const config = {
   // learn more: https://nextjs.org/docs/pages/building-your-application/routing/middleware#matcher
   matcher: [
@@ -90,13 +92,13 @@ function classifyTraffic(request: NextRequest): {
 }
 
 /**
- * Detects if client wants markdown via Accept header (standards-compliant)
+ * Detects if client wants markdown via Accept header (standards-compliant).
+ * Only matches explicit markdown MIME types — not text/plain, which is too broad
+ * and matches clients like Axios (`Accept: application/json, text/plain, *\/\/`).
  */
 function wantsMarkdownViaAccept(acceptHeader: string): boolean {
   return (
-    acceptHeader.includes('text/markdown') ||
-    acceptHeader.includes('text/x-markdown') ||
-    acceptHeader.includes('text/plain')
+    acceptHeader.includes('text/markdown') || acceptHeader.includes('text/x-markdown')
   );
 }
 
@@ -152,6 +154,19 @@ function rewriteWithClassification(request: NextRequest, destination: URL): Next
 }
 
 /**
+ * Derives the canonical HTML URL path from a .md pathname.
+ * Examples:
+ *   /platforms/apple/cocoa.md  →  /platforms/apple/cocoa/
+ *   /index.md                  →  /
+ *   /platforms.md              →  /platforms/
+ */
+function mdToCanonicalPath(mdPathname: string): string {
+  const withoutExt = mdPathname.replace(/\.md$/, '');
+  if (withoutExt === '/index') return '/';
+  return withoutExt.endsWith('/') ? withoutExt : `${withoutExt}/`;
+}
+
+/**
  * Handles redirection to markdown versions for AI/LLM clients
  */
 const handleAIClientRedirect = (request: NextRequest) => {
@@ -188,8 +203,13 @@ const handleAIClientRedirect = (request: NextRequest) => {
   }
 
   // Skip if already requesting a markdown file - pass through with classification headers
+  // and set a Link rel=canonical header pointing to the rendered HTML page so that search
+  // engine crawlers consolidate ranking to the human-readable URL instead of indexing the
+  // raw markdown. AI agents don't act on this header, so LLM ingestion is unaffected.
   if (url.pathname.endsWith('.md')) {
-    return nextWithClassification(request);
+    const response = nextWithClassification(request);
+    response.headers.set('Link', `<${BASE_URL}${mdToCanonicalPath(url.pathname)}>; rel="canonical"`);
+    return response;
   }
 
   // Skip API routes and static assets (should already be filtered by matcher)
