@@ -131,21 +131,21 @@ In this case, the matching will happen from **top to bottom** and the following 
 
 Before sampling, Relay validates the incoming DSC and, in some cases, reconstructs it. Relay differentiates between the following cases:
 
-#### DSC originating from a project within the same organization
+1. **DSC originating from a project within the same organization**
 
-**Transactions and spans v2**: The DSC is treated as valid and the sampling rules from the root project are applied as described in the previous section.
+    - **Transactions and spans v2**: The DSC is treated as valid and the sampling rules from the root project are applied as described in the previous section.
 
-#### Missing DSC
+2. **Missing DSC**
 
-- **Transactions**: The DSC is reconstructed using fields from the transaction event. If reconstruction fails, for example, due to the public key being missing, the DSC is removed and the item is guaranteed to be sampled.
+    - **Transactions**: The DSC is reconstructed using event fields like `release`, `environment`, and `transaction`, and scoped to the transaction's project. If reconstruction fails, for example, due to the public key being missing, the DSC is removed and the item is guaranteed to be sampled.
 
-- **Spans v2**: The spans are rejected - unless they are from the OTel integration, in which case a missing DSC is allowed and the sample rate is 100%.
+    - **Spans v2**: The spans are rejected - unless they are from the OTel integration, in which case a missing DSC is allowed and the sample rate is 100%.
 
-#### DSC originating from an unknown project or another organization
+3. **DSC originating from an unknown project or another organization**
 
-- **Transactions**: The DSC is reconstructed based on event fields like `release`, `environment`, and `transaction`. The reconstructed DSC is scoped to the transaction's project.
+    - **Transactions**: The DSC is treated as missing (see point 2 above).
 
-- **Spans v2**: The DSC is reconstructed, but minimally so; the reconstructed DSC only contains public key and trace id. Span attributes like `release`, `environment`, and `segment.name` are not used because there is no guarantee that an envelope's v2 spans all share the same value for these attributes. The reconstructed DSC is scoped to the spans' project.
+    - **Spans v2**: The DSC is reconstructed, but minimally so; it only contains public key and trace id. Span attributes like `release`, `environment`, and `segment.name` are not used because there is no guarantee that an envelope's v2 spans all share the same value for these attributes. The reconstructed DSC is scoped to the spans' project.
 
 
 ## Rules Generation in Sentry
