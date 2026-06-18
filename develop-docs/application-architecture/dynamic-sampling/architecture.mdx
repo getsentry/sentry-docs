@@ -133,19 +133,19 @@ Before sampling, Relay validates the incoming DSC and, in some cases, reconstruc
 
 1. **DSC originating from a project within the same organization**
 
-    - **Transactions and spans v2**: The DSC is treated as valid and the sampling rules from the root project are applied as described in the previous section.
+    - **Transactions and spans**: The DSC is treated as valid and the sampling rules from the root project are applied as described in the previous section.
 
 2. **Missing DSC**
 
     - **Transactions**: The DSC is reconstructed using event fields like `release`, `environment`, and `transaction`, and scoped to the transaction's project. If reconstruction fails, for example, due to the public key being missing, the DSC is removed and the item is guaranteed to be sampled.
 
-    - **Spans v2**: The spans are rejected - unless they are from the OTel integration, in which case a missing DSC is allowed and the sample rate is 100%.
+    - **Spans**: The spans are rejected - unless they are from the OTel integration, in which case a missing DSC is allowed and the sample rate is 100%.
 
 3. **DSC originating from an unknown project or another organization**
 
     - **Transactions**: The DSC is treated as missing (see point 2 above).
 
-    - **Spans v2**: The DSC is reconstructed, but minimally so; it only contains public key and trace id. Span attributes like `release`, `environment`, and `segment.name` are not used because there is no guarantee that an envelope's v2 spans all share the same value for these attributes. The reconstructed DSC is scoped to the spans' project.
+    - **Spans**: The DSC is reconstructed, but minimally so; it only contains public key and trace id. Span attributes like `release`, `environment`, and `segment.name` are not used because there is no guarantee that an envelope's spans all share the same value for these attributes. The reconstructed DSC is scoped to the spans' project.
 
 
 ## Rules Generation in Sentry
