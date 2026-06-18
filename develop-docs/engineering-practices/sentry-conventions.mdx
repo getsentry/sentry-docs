@@ -32,7 +32,7 @@ yarn create:attribute \
   --key my.attribute.name \
   --description "What this attribute represents" \
   --type string \
-  --has_pii maybe \
+  --apply_scrubbing manual \
   --is_in_otel false \
   --visibility public \
   --example "example_value"
@@ -46,7 +46,10 @@ yarn create:attribute \
 
 ### Before opening a PR
 
-- Set `pii` to `"maybe"` for string attributes unless scrubbing would break product features.
+- Set `apply_scrubbing` appropriately:
+  - `"manual"` (default) — the attribute may contain PII; scrubbing is left to the user's data scrubbing settings.
+  - `"auto"` — the attribute is expected to contain PII in normal use; scrubbing is applied automatically.
+  - `"never"` — the attribute is not expected to contain PII, and scrubbing it would break product features.
 - Add a `changelog` entry with `"version": "next"`.
 - Run `yarn generate` to regenerate the JS and Python code.
 - Run `npx vitest run` to verify all tests pass (including alias symmetry, name template validation, etc.).
@@ -80,7 +83,7 @@ Relay uses `sentry-conventions` as a **git submodule**. The build script reads t
    git add relay-conventions/sentry-conventions
    ```
 2. If the release **deprecates** attributes, check for Rust compilation errors — clippy treats deprecated constant usage as errors. Migrate to the new constant names.
-3. Add a CHANGELOG entry.
+3. If the update includes user-observable changes, add a CHANGELOG entry.
 4. Open + merge PR at [`getsentry/relay`](https://github.com/getsentry/relay).
 
 ### Snuba
