@@ -9,12 +9,7 @@ If you can't (or prefer not to) run the [automatic setup](/platforms/dart/guides
 ## Install
 
 <OnboardingOptionButtons
-  options={[
-    'error-monitoring',
-    'performance',
-    'profiling',
-    'logs',
-  ]}
+  options={["error-monitoring", "performance", "profiling", "logs"]}
 />
 
 Sentry captures data by using an SDK within your application's runtime. These are platform-specific and allow Sentry to have a deep understanding of how your application works.
@@ -67,6 +62,55 @@ Future<void> main() async {
 }
 ```
 
+## Add Readable Stack Traces With Debug Symbols
+
+To get readable stack traces for obfuscated Flutter builds and native frames, configure the Sentry Dart Plugin to upload debug symbols during your release workflow.
+
+1. Add `sentry_dart_plugin` as a dev dependency:
+
+```yml {filename:pubspec.yaml}
+dev_dependencies:
+  sentry_dart_plugin: ^{{@inject packages.version('sentry.dart.plugin', '2.0.0') }}
+```
+
+2. Add the non-secret plugin configuration to `pubspec.yaml`:
+
+```yml {filename:pubspec.yaml}
+sentry:
+  upload_debug_symbols: true
+  upload_source_maps: true
+  project: ___PROJECT_SLUG___
+  org: ___ORG_SLUG___
+```
+
+3. Configure Sentry auth for local builds with an ignored `sentry.properties` file, or set `SENTRY_AUTH_TOKEN` in your CI/CD environment:
+
+<OrgAuthTokenNote />
+
+```properties {filename:sentry.properties}
+auth_token=___ORG_AUTH_TOKEN___
+```
+
+```text {filename:.gitignore}
+sentry.properties
+```
+
+4. For production builds, build with debug information and then run the plugin:
+
+```bash
+flutter build <target> --obfuscate --split-debug-info=build/debug-info
+flutter pub run sentry_dart_plugin
+```
+
+For Flutter Web, build with source maps before running the plugin:
+
+```bash
+flutter build web --release --source-maps
+flutter pub run sentry_dart_plugin
+```
+
+For more details, see <PlatformLink to="/debug-symbols/dart-plugin/">Sentry Dart Plugin</PlatformLink>.
+
 ## Verify
 
 Verify that your app is sending events to Sentry by adding the following snippet, which includes an intentional error. You should see the error reported in Sentry within a few minutes.
@@ -86,6 +130,12 @@ try {
 
 ## Next Steps
 
-- <PlatformLink to="/features">Learn about the features of Sentry's Flutter SDK</PlatformLink>
-- <PlatformLink to="/upload-debug/#when-to-upload/">Add readable stack traces to errors</PlatformLink>
-- <PlatformLink to="/tracing/instrumentation">Add performance instrumentation to your app</PlatformLink>
+- <PlatformLink to="/features">
+    Learn about the features of Sentry's Flutter SDK
+  </PlatformLink>
+- <PlatformLink to="/upload-debug/#when-to-upload/">
+    Add readable stack traces to errors
+  </PlatformLink>
+- <PlatformLink to="/tracing/instrumentation">
+    Add performance instrumentation to your app
+  </PlatformLink>
