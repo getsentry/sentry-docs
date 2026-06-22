@@ -80,7 +80,7 @@ SDKs **MUST** expose at least one API to start a span.
 - If `active: false`, the span **MUST** be started as inactive — spans started while it is running **MUST NOT** become its children.
 - If a `Span` is passed via `parentSpan`, it **MUST** take precedence over the currently active span.
 - If `null` is passed via `parentSpan`, the new span **MUST** be started as a root/segment span.
-- SDKs **MUST NOT** end spans automatically from the default `startSpan` API. SDKs **MAY** provide additional APIs that auto-end spans (e.g. callback-based, context managers).
+- SDKs **MUST NOT** end spans automatically from the default `startSpan` API. SDKs **MAY** provide additional APIs that auto-end spans (e.g. callback-based, context managers). Additional APIs **MAY** also adjust the span status based on errors thrown.
 - `startSpan` **MUST** always return a span instance, even if the trace is negatively sampled.
 
 The span-first API **MUST NOT** expose old transaction properties or concepts (e.g. `op`, `description`, `tags`).
@@ -170,7 +170,7 @@ The SDK **MUST** implement a mechanism for users to filter spans. The result **M
 
 #### `ignoreSpans`
 
-The `ignoreSpans` option **MUST** accept a string, RegExp, or glob pattern matched against the span name.
+The `ignoreSpans` option **MUST** accept a string and either RegExp or glob pattern (whichever the platform supports) matched against the span name.
 
 Furthermore, `ignoreSpans` **SHOULD** accept objects with patterns matching the span name and/or span attributes:
 
@@ -461,7 +461,7 @@ The `items` array **MUST** contain at least one and at most 1000 span objects. A
 
 #### `version` and `ingest_settings` Properties
 
-The payload **MAY** also include top-level `version` and `ingest_settings` fields to instruct Relay to infer IP address and user agent from the incoming request:
+The payload **SHOULD** include top-level `version` and `ingest_settings` fields to instruct Relay to infer IP address and user agent from the incoming request:
 
 ```json
 {
