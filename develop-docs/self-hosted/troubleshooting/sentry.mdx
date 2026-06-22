@@ -60,6 +60,21 @@ worker1:
 
 To see a more complete example, please see [a sample solution on our community forum](https://forum.sentry.io/t/how-to-clear-backlog-and-monitor-it/10715/14?u=byk).
 
+## Monitor check-ins stop ingesting
+
+If `ingest-monitors` or `ingest-occurrences` stops making progress after an upgrade, the consumer may be wedged (meaning the process is still alive, but it is stuck on one operation and no longer makes forward progress) in the memcached client path. A low-effort check is to add a socket timeout to the default cache config on `sentry/sentry.conf.py` and see whether ingestion recovers immediately after restarting the affected container using `docker compose restart <container_name>`.
+
+```python
+CACHES["default"]["OPTIONS"].update({
+    "timeout": 5,
+    "connect_timeout": 3,
+})
+```
+
+If this fixes the wedge, you most likely hit the `pymemcache` hang described in [issue #4301](https://github.com/getsentry/self-hosted/issues/4301). In that case, also check that your Sentry stack is using `django.core.cache.backends.memcached.PyMemcacheCache`, and watch for worker logs that stop partway through monitor check-in processing.
+
+If the timeout change does not help, collect a process dump or `strace` from the wedged consumer and look for blocked calls in `pymemcache/client/base.py::_recv()` or similar memcached client frames.
+
 ## Cannot Load JavaScript or CSS Files From Web Interface
 
 If you are running your Sentry instance behind a CDN like Cloudflare, Fastify, or the like, you may see some errors of invalid JavaScript or CSS files being loaded from the web interface. This is caused by some static asset files that are already optimized by the bundlers, but aren't being served with minified extensions (for example, `.min.js`). Therefore, the CDN that you are using will try to optimize the files a second time, which will result in corrupted files.
@@ -84,3 +99,65 @@ To fix this, you can trigger a manual project configuration invalidation by runn
 ```bash
 docker compose exec web ./bin/invalidate-project-configs
 ```
+
+## Disabling SSO providers
+
+In case of downtime or misconfiguration of your SSO provider (SAML, OIDC, etc.), you can disable SSO authentication by manually modifying the entry in PostgreSQL. This will allow you to log in with the default email/password method.
+
+First, you need to access the PostgreSQL container, and run `psql` to access the database:
+
+```bash
+docker compose exec postgres psql -U postgres
+```
+
+Then, view the `sentry_authprovider` table to find the row ID of the SSO provider you want to disable:
+
+```sql
+-- Execute `\x on` to make the output more readable
+\x on
+SELECT * FROM sentry_authprovider;
+```
+
+If you're using SAML, the result will look something like this (notice the `id` for the provider you want to disable; in this case, it's `1`):
+
+```
+id                    | 1
+provider              | saml2
+config                | {"idp": {"slo_url": "[REDACTED]", "sso_url": "[REDACTED]", "x509cert": "[REDACTED]", "entity_id": "[REDACTED]"}, "auth_attributes": {"Email": ["[REDACTED]"], "UserID": ["[REDACTED]"], "SureName": ["S"], "FullName": ["[REDACTED]"], "UserName": ["[REDACTED]"], "FirstName": ["[REDACTED]"]}, "attribute_mapping": {"last_name": "SureName", "first_name": "FirstName", "identifier": "UserID", "user_email": "Email"}}
+date_added            | 2025-04-21 22:51:30.750328+00
+sync_time             |
+last_sync             |
+default_role          | 50
+default_global_access | t
+flags                 | 0
+organization_id       | 1
+```
+
+You can delete the row and set up the SSO provider again later:
+
+```sql
+DELETE FROM sentry_authidentity WHERE auth_provider_id = 1;
+DELETE FROM sentry_authprovider WHERE id = 1;
+```
+
+No restart of the Sentry services is needed, and you should be able to log in with email/password immediately after running these commands.
+
+## Database migration issue for `notifmsg_metric_or_workflow_exclusive` check constraint
+
+During the upgrade to 26.5.0, you may encounter an error similar to this message:
+```
+django.db.utils.IntegrityError: check constraint "notifmsg_metric_or_workflow_exclusive" of relation "sentry_notificationmessage" is violated by some row
+```
+
+You can resolve this by running the following SQL command in your PostgreSQL database (using `docker compose exec postgres psql -U postgres -d postgres`). This will delete all rows that violate the check constraint, which should allow the migration to complete successfully. Note that this will lead to data loss in notification messages.
+
+```sql
+DELETE FROM sentry_notificationmessage WHERE NOT ((action_id IS NULL AND group_id IS NULL AND incident_id IS NOT NULL AND trigger_action_id IS NOT NULL) OR (action_id IS NOT NULL AND group_id IS NOT NULL AND incident_id IS NULL AND trigger_action_id IS NULL));
+```
+
+If that fails, you can try to drop the check constraint:
+```sql
+ALTER TABLE "sentry_notificationmessage" DROP CONSTRAINT "notifmsg_metric_or_workflow_exclusive";
+```
+
+Credits to [@fpotter](https://github.com/getsentry/self-hosted/issues/4341#issuecomment-4494954925) and [@acuD1](https://github.com/getsentry/self-hosted/issues/4341#issuecomment-4517103961) for the workaround.

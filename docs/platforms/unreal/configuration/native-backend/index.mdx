@@ -48,3 +48,22 @@ Available modes:
 - `Minidump` - Write and send a minidump for server-side symbolication. No client-side stack unwinding is performed.
 - `NativeStackwalking` - Walk the stack client-side in the crash daemon and send a JSON event with stack traces. No minidump is generated, resulting in faster uploads and smaller payloads.
 - `NativeStackwalkingWithMinidump` (default) - Perform client-side stack unwinding and also attach a minidump for deep debugging when needed.
+
+### Enabling Network Access on macOS
+
+<Alert>
+
+Applies only to **packaged macOS builds in the Shipping configuration**. Editor and Development/Test/DebugGame builds already include the required network entitlements.
+
+</Alert>
+
+The native backend's out-of-process crash daemon uploads crash envelopes to Sentry from its own process, which requires the `com.apple.security.network.client` entitlement on the packaged macOS game. Unreal's default Shipping entitlements file (`Engine/Build/Mac/Resources/Sandbox.NoNet.entitlements`) does **not** include it, so uploads fail silently with a DNS resolution error.
+
+To fix this, override the Shipping entitlements in your project's `Config/DefaultEngine.ini` with either the engine-provided `Sandbox.Server.entitlements` (which includes `network.client` and `network.server`) or your own custom file:
+
+```ini
+[/Script/MacTargetPlatform.XcodeProjectSettings]
+ShippingSpecificMacEntitlements=(FilePath="/Game/Build/Mac/Resources/Sandbox.Server.entitlements")
+```
+
+The same setting is available in the Editor under **Project Settings → Platforms → Mac → Entitlements → Mac: Entitlements (Shipping config override)**.

@@ -1,4 +1,70 @@
-The Sentry Cloudflare SDK has out of the box support for distributed tracing if you've setup the SDK to send traces.
+The Sentry Cloudflare SDK automatically propagates traces for incoming and outgoing HTTP requests if you've setup the SDK to send traces.
+
+For RPC calls within Cloudflare (Worker-to-Durable Object, Worker-to-Worker via service bindings), trace propagation must be explicitly enabled. See [RPC Trace Propagation](#rpc-trace-propagation) below.
+
+### RPC Trace Propagation
+
+<AvailableSince version="10.52.0" />
+
+By default, traces are not propagated across [RPC calls](https://developers.cloudflare.com/workers/runtime-apis/bindings/service-bindings/rpc/) between Workers and Durable Objects. This is because [Cap'n Proto](https://capnproto.org/) (which powers Cloudflare RPC) has no native support for headers or metadata.
+
+To enable trace propagation for RPC method calls, set `enableRpcTracePropagation: true` on **both** the caller and receiver sides.
+
+<Alert level="warning" title="Performance Consideration">
+  RPC trace propagation requires instrumenting the environment bindings, which adds overhead to every RPC call. Only enable this option if you need distributed tracing across service boundaries.
+</Alert>
+
+**Worker Side (Caller):**
+
+```typescript
+import * as Sentry from "@sentry/cloudflare";
+
+export default Sentry.withSentry(
+  (env) => ({
+    dsn: env.SENTRY_DSN,
+    tracesSampleRate: 1.0,
+    enableRpcTracePropagation: true,
+  }),
+  {
+    async fetch(request, env, ctx) {
+      const id = env.MY_DURABLE_OBJECT.idFromName("test");
+      const stub = env.MY_DURABLE_OBJECT.get(id);
+
+      // This RPC call will now propagate trace context
+      const result = await stub.sayHello("World");
+
+      return new Response(result);
+    },
+  }
+);
+```
+
+**Durable Object Side (Receiver):**
+
+```typescript
+import * as Sentry from "@sentry/cloudflare";
+
+class MyDurableObjectBase extends DurableObject<Env> {
+  sayHello(name: string): string {
+    return `Hello, ${name}!`;
+  }
+}
+
+export const MyDurableObject = Sentry.instrumentDurableObjectWithSentry(
+  (env: Env) => ({
+    dsn: env.SENTRY_DSN,
+    tracesSampleRate: 1.0,
+    enableRpcTracePropagation: true,
+  }),
+  MyDurableObjectBase
+);
+```
+
+The SDK propagates trace context (`sentry-trace` and `baggage`) by appending a trailing argument to outgoing RPC calls. The receiving SDK automatically strips it before your method is executed. Your method signatures are unaffected.
+
+<Alert>
+  If the receiving Worker is not instrumented with Sentry (or `enableRpcTracePropagation` is not enabled), the trailing trace argument won't be stripped and will be passed through to your method. This is harmless for methods with fixed parameter lists, but may cause unexpected behavior if your method relies on rest parameters `(...args)` or `arguments.length`.
+</Alert>
 
 ### Custom Instrumentation
 

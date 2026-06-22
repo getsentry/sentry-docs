@@ -4,6 +4,9 @@ import * as Spotlight from '@spotlightjs/spotlight';
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
 
+  // Ignore errors injected by Brave/Firefox iOS browser scripts (third-party browser noise)
+  ignoreErrors: [/__firefox__/, /DarkReader/],
+
   // Adjust this value in production, or use tracesSampler for greater control
   tracesSampleRate: 0.3,
 
@@ -26,9 +29,10 @@ Sentry.init({
       maskAllText: false,
       blockAllMedia: false,
     }),
+    Sentry.spanStreamingIntegration(),
     Sentry.thirdPartyErrorFilterIntegration({
       filterKeys: ['sentry-docs'],
-      behaviour: 'apply-tag-if-contains-third-party-frames',
+      behaviour: 'drop-error-if-exclusively-contains-third-party-frames',
     }),
     Sentry.browserTracingIntegration({
       linkPreviousTrace: 'session-storage',

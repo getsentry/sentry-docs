@@ -11,14 +11,6 @@ description: "Learn how to enable Session Replay in your mobile app."
 
 By default, our Session Replay SDK masks all text content, images, and user input, giving you heightened confidence that no sensitive data will leave the device. To learn more, see [product docs](/product/explore/session-replay/).
 
-<Alert level="warning">
-
-<strong>Potential masking issues introduced when using Apple's Liquid Glass rendering in iOS 26.0</strong>
-
-Due to potential masking issues introduced by Apple's Liquid Glass rendering changes in iOS 26.0 we recommend that you thoroughly test your application before enabling Session Replay on iOS 26+ to prevent potential PII leaks. [Please refer to our iOS documentation for more details on the issue](/platforms/apple/guides/ios/session-replay/) and follow the progress on fixing masking for iOS 26.0 (Liquid Glass) in <a href="https://github.com/getsentry/sentry-cocoa/issues/6390">GitHub issue #6390</a>
-
-</Alert>
-
 ## Pre-requisites
 
 Make sure your Sentry React Native SDK version is at least 6.5.0.
@@ -43,7 +35,7 @@ pnpm add @sentry/react-native
 
 To set up the integration, add the following to your Sentry initialization.
 
-```javascript {tabTitle:Mobile}
+```javascript {tabTitle:Mobile} {mdExpandTabs}
 import * as Sentry from "@sentry/react-native";
 
 Sentry.init({
@@ -141,7 +133,7 @@ If you are manually initializing native SDKs before JS, use Sentry React Native 
 
 To disable redaction altogether (not to be used on applications with sensitive data):
 
-```javascript {tabTitle:Mobile}
+```javascript {tabTitle:Mobile} {mdExpandTabs}
 integrations: [
   // You can pass options to the mobileReplayIntegration function during init:
   Sentry.mobileReplayIntegration({
@@ -204,6 +196,112 @@ integrations: [
 ]
 ```
 
+## SurfaceView Capture (Android only)
+
+By default, content rendered inside `SurfaceView` components (e.g. video players, map SDKs) appears as black or transparent regions in Session Replay. You can enable `captureSurfaceViews` to include this content in recordings.
+
+<Alert level="warning">
+
+This option is **experimental**. Masking granularity is at the `SurfaceView` level only — individual elements inside a `SurfaceView` cannot be masked separately. Only works with the `pixelCopy` screenshot strategy (the default). See the [Android SurfaceView Capture docs](/platforms/android/session-replay/#surfaceview-capture) for more details.
+
+</Alert>
+
+```javascript {tabTitle:Mobile}
+integrations: [
+  Sentry.mobileReplayIntegration({
+    captureSurfaceViews: true,
+  }),
+]
+```
+
+## Network Details
+
+_Available in React Native SDK 8.15.0 and later_
+
+By default, Replay captures basic information about all outgoing HTTP requests in your application &mdash; URL, request and response body sizes, method, and status code. To limit the chance of collecting private data, request/response **headers** and **bodies** are _not_ captured unless you explicitly opt in.
+
+You opt in by listing the URLs you want enriched in `networkDetailAllowUrls`. Pick only URLs that are safe for capturing bodies and avoid any endpoints that may contain Personally Identifiable Information (PII).
+
+<Alert>
+
+Body and header content will be PII-sanitized server-side, based on object keys and values. Refer to [Server-Side Scrubbing](/security-legal-pii/scrubbing/server-side-scrubbing/) for more details.
+
+</Alert>
+
+<Alert level="warning">
+
+Only **XHR**-based requests are currently supported (this covers `axios` and most popular HTTP clients on React Native). Native `fetch` body capture will be added in a follow-up.
+
+</Alert>
+
+The SDK exposes the following options on `mobileReplayIntegration`:
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `networkDetailAllowUrls` | `(string \| RegExp)[]` | `[]` | URL patterns to enable capture of request/response headers (and bodies, when `networkCaptureBodies` is `true`). String patterns use substring matching; `RegExp` is matched via `.test(url)`. |
+| `networkDetailDenyUrls` | `(string \| RegExp)[]` | `[]` | URL patterns to **never** enable capture for, even if an allow pattern matches them. |
+| `networkCaptureBodies` | `boolean` | `false` | Controls whether request and response bodies are captured for allow-listed URLs. Disabled by default since bodies can contain sensitive payloads &mdash; opt in explicitly. |
+| `networkRequestHeaders` | `string[]` | `[]` | Additional request header names to capture for allow-listed URLs, in addition to the defaults (`Content-Type`, `Content-Length`, `Accept`). |
+| `networkResponseHeaders` | `string[]` | `[]` | Additional response header names to capture for allow-listed URLs, in addition to the defaults (`Content-Type`, `Content-Length`, `Accept`). |
+
+Any URL matching the given pattern(s) will be enriched with headers and (optionally) bodies:
+
+```javascript {tabTitle:Mobile}
+import * as Sentry from "@sentry/react-native";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  replaysSessionSampleRate: 1.0,
+  replaysOnErrorSampleRate: 1.0,
+  integrations: [
+    Sentry.mobileReplayIntegration({
+      networkDetailAllowUrls: ["https://api.example.com"],
+      networkCaptureBodies: true,
+    }),
+  ],
+});
+```
+
+String patterns use substring matching &mdash; any URL containing the string will match. For exact or more complex matches, pass a `RegExp`:
+
+```javascript {tabTitle:Mobile}
+integrations: [
+  Sentry.mobileReplayIntegration({
+    networkDetailAllowUrls: [
+      "api.example.com",                 // substring match
+      /^https:\/\/api\.example\.com\/.*/, // regex match
+    ],
+    networkDetailDenyUrls: [/\/auth\//],  // never capture details for auth endpoints
+    networkCaptureBodies: true,
+  }),
+]
+```
+
+Requests to a matching URL will include request and response bodies (when `networkCaptureBodies` is `true`) as well as the following default headers:
+
+- `Content-Type`
+- `Content-Length`
+- `Accept`
+
+To capture additional headers, configure `networkRequestHeaders` and `networkResponseHeaders`. The defaults are always included:
+
+```javascript {tabTitle:Mobile}
+integrations: [
+  Sentry.mobileReplayIntegration({
+    networkDetailAllowUrls: ["https://api.example.com"],
+    networkCaptureBodies: true,
+    networkRequestHeaders: ["Cache-Control", "X-My-Header"],
+    networkResponseHeaders: ["Referrer-Policy", "X-Response-Header"],
+  }),
+]
+```
+
+<Alert>
+
+Authorization-like headers (`Authorization`, `Cookie`, `Set-Cookie`, `X-API-Key`, `X-Auth-Token`, `Proxy-Authorization`) are always stripped, regardless of configuration. Captured bodies are truncated to ~150 KB; truncated payloads include a `MAX_BODY_SIZE_EXCEEDED` warning. Binary bodies (`Blob`, `ArrayBuffer`, typed arrays) are skipped with an `UNPARSEABLE_BODY_TYPE` warning instead of being inlined.
+
+</Alert>
+
 ## React Component Names
 
 Sentry helps you capture your React components and unlock additional insights in your application. You can set it up to use React component names.
@@ -222,7 +320,7 @@ MyCard (View, MyCard.ts) > MyButton (Touchable, MyCard.ts) > View > Text
 
 To add React Component Names use `annotateReactComponents` in `metro.config.js`.
 
-```js {tabTitle: React Native}
+```js {tabTitle: React Native} {mdExpandTabs}
 const { getDefaultConfig } = require("@react-native/metro-config");
 const { withSentryConfig } = require("@sentry/react-native/metro");
 module.exports = withSentryConfig(getDefaultConfig(__dirname), {
