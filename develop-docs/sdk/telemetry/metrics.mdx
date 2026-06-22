@@ -2,7 +2,7 @@
 title: Metrics
 description: Counter, gauge, and distribution metrics sent as batched trace_metric envelope items.
 spec_id: sdk/telemetry/metrics
-spec_version: 2.9.0
+spec_version: 2.10.0
 spec_status: stable
 spec_depends_on:
   - id: sdk/foundations/transport/envelopes
@@ -10,6 +10,9 @@ spec_depends_on:
   - id: sdk/foundations/state-management/scopes/attributes
     version: ">=1.0.0"
 spec_changelog:
+  - version: 2.10.0
+    date: 2026-06-22
+    summary: Added client reports requirement (trace_metric count, trace_metric_byte size)
   - version: 2.9.0
     date: 2026-05-18
     summary: Added optional `timestamp` parameter to metrics public API. Changed `sentry.timestamp.sequence` to a continuously incrementing Int64 that never resets on timestamp change.
@@ -249,6 +252,14 @@ However, metrics that are **automatically emitted by integrations or libraries**
 **Third-party metrics bindings** — An SDK feature that binds to an external library's metrics API and mirrors those metrics as Sentry metrics in the background (e.g., syncing from a framework's built-in metrics or an OpenTelemetry metrics pipeline) **MUST** also be opt-in. Users **MUST** explicitly enable the binding before any metrics are forwarded to Sentry.
 
 These rules exist because auto-emitted metrics can cause a high volume of telemetry that directly impacts a user's quota. Unlike spans or errors — where users have prior intuition about volume — silently emitting metrics on their behalf could lead to unexpected costs. Requiring opt-in ensures users remain in control of their metrics volume.
+
+</SpecSection>
+
+<SpecSection id="client-reports" status="candidate" since="2.10.0">
+
+### Client Reports
+
+SDKs **MUST** report count (`trace_metric`) and size in bytes (`trace_metric_byte`) of discarded metrics. An approximation of metric size is sufficient (e.g., by counting as if serialized).
 
 </SpecSection>
 

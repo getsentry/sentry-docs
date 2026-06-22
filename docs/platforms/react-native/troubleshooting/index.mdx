@@ -331,6 +331,36 @@ Note that if the source maps upload fails, you'll have to do it [manually](/plat
 
 When you remove the environmental variable in front of your build command, your build will work as before.
 
+## Conflicts With Other Build-Phase Tools
+
+Sentry wraps the iOS _Bundle React Native code and images_ Xcode build phase to upload source maps. If another tool wraps the same build phase, your iOS build may fail, or your app may crash on launch with `No bundle URL present`. Both wrappers rewrite the same script, so the combined result either drops required arguments or skips generating the JavaScript bundle. The exact symptom depends on the order in which the wrappers run.
+
+<Alert level="warning" title="Multiple Monitoring SDKs">
+
+We don't recommend using multiple monitoring and crash-reporting SDKs at the same time, as it might result in unexpected behavior. Always test your application and verify you're receiving correct data from all the SDKs in use.
+
+</Alert>
+
+To resolve the conflict, use one of the following approaches:
+
+- **Use only one tool to wrap the build phase.** If only one of the SDKs captures errors, only that SDK needs to wrap the build phase. The other SDK, if it's not used for error reporting, doesn't need automatic debug-file upload.
+
+- **Upload debug files manually.** Disable both tools' automatic upload and upload source maps yourself. See [Manual Upload for Hermes Release](/platforms/react-native/sourcemaps/uploading/expo-advanced/).
+
+### Expo
+
+With Expo, config plugins rewrite the build phase during `prebuild`, so the conflict appears automatically. As an unstable workaround, list `@sentry/react-native/expo` _before_ the other build-phase plugin in the `plugins` array of your `app.json`, and add the following to your `ios/.xcode.env`:
+
+```bash
+export SOURCEMAP_FILE=$DERIVED_FILE_DIR/main.jsbundle.map
+```
+
+This currently produces a working build, but it relies on the internal ordering of both plugins and may break with future updates.
+
+### Bare React Native
+
+In a bare React Native project the build phase is edited directly, so the conflict is visible in the _Bundle React Native code and images_ script in Xcode. Edit the script so that only one tool wraps `react-native-xcode.sh`, or chain the wrappers explicitly so each receives the arguments it expects.
+
 ## Expo Transactions Never Finish
 
 If you're using [expo-dev-client](https://docs.expo.dev/develop/development-builds/introduction/), you might notice that transactions never finish in your dev builds. This is due to logs that the dev client is continuously sending to the development server. To fix this, you can stop creating spans for the HTTP requests to the log endpoint in your dev builds by adding the following to your `Sentry.init()`:
