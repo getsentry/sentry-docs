@@ -24,6 +24,8 @@ sidebar_order: 10
 
 Spans are the primary telemetry type for Sentry's performance monitoring. A span measures the duration of an operation and carries attributes, links, and status information. This spec covers the span-first ("span streaming") model where spans are sent individually in batched envelopes rather than grouped into transaction events.
 
+The APIs specified in this document **MUST** be implemented by all SDKs that don't use OpenTelemetry as their underlying tracing implementation. SDKs using OTel **SHOULD** follow their own already established span APIs but **MAY** orient themselves on this document if applicable.
+
 Related specs:
 - [Envelopes](/sdk/foundations/transport/envelopes/) — transport format
 - [Envelope Items](/sdk/foundations/transport/envelope-items/) — item headers and ingest settings
@@ -80,6 +82,8 @@ SDKs **MUST** expose at least one API to start a span.
 - If `null` is passed via `parentSpan`, the new span **MUST** be started as a root/segment span.
 - SDKs **MUST NOT** end spans automatically from the default `startSpan` API. SDKs **MAY** provide additional APIs that auto-end spans (e.g. callback-based, context managers).
 - `startSpan` **MUST** always return a span instance, even if the trace is negatively sampled.
+
+The span-first API **MUST NOT** expose old transaction properties or concepts (e.g. `op`, `description`, `tags`).
 
 SDKs **MUST NOT** expose APIs like `Span::startChild`. The `parentSpan` option serves this purpose.
 
@@ -162,20 +166,63 @@ If no `tracesSampler` is configured, a propagated sampling decision via the trac
 
 ### Filtering
 
-The SDK **MUST** implement a mechanism for users to filter spans. The result **MUST** be binary.
+The SDK **MUST** implement a mechanism for users to filter spans. The result **MUST** be binary (`true` or `false`). Any filtering APIs **MUST** be optimized for trace completeness and conclusive sampling decisions.
 
 #### `ignoreSpans`
 
 The `ignoreSpans` option **MUST** accept a string, RegExp, or glob pattern matched against the span name.
 
-Furthermore, `ignoreSpans` **SHOULD** accept objects with patterns matching the span name and/or span attributes. String attribute values **MUST** be matched the same way as span names (contains for strings, match for patterns). Other attribute value types **MUST** strictly equal the provided value.
+Furthermore, `ignoreSpans` **SHOULD** accept objects with patterns matching the span name and/or span attributes:
+
+```ts
+type IgnoreSpanNamePattern = string | RegExp | GlobPattern;
+
+type AttributeValueTypes = string | boolean | number | Array<string> | Array<boolean> | Array<number>;
+type EnhancedAttributeValueTypes = AttributeValueTypes | RegExp | GlobPattern;
+
+type IgnoreSpanFilter = {
+  name: IgnoreSpanNamePattern;
+  attributes?: Record<string, EnhancedAttributeValueTypes>;
+} | {
+  name?: IgnoreSpanNamePattern;
+  attributes?: Record<string, EnhancedAttributeValueTypes>;
+}
+
+type IgnoreSpans = Array<IgnoreSpanNamePattern | IgnoreSpanFilter>
+```
+
+(`GlobPattern` is used as an illustrative type for platforms that support matching glob patterns. It is not a valid TypeScript type.)
+
+If an SDK accepts `IgnoreSpanFilter` objects, string attribute values **MUST** be matched the same way as span names (contains for strings, match for patterns). Other attribute value types **MUST** strictly equal the provided value. This includes attributes whose values are arrays.
+
+#### Filter with `integrations`
+
+The `integrations` option **MAY** perform in similar fashion as the `ignoreSpans` option, or make explicit opt-out possible via a boolean flag.
+
+```js
+Sentry.init({
+  integrations: [
+    fsIntegration: {
+      ignoreSpans: [
+        'fs.read',
+      ],
+      readSpans: true,
+      writeSpans: false,
+    }
+  ]
+})
+```
+
+#### Other Approaches
+
+If both options mentioned above are not feasible to be implemented in certain SDKs, other approaches **MUST** be explored that have the same outcome.
 
 #### Implementation Requirements
 
 1. `ignoreSpans` patterns **MUST** be evaluated **before** the span is started.
 2. Patterns **MUST** apply to all spans, including root/segment spans.
    - If a pattern matches the root span, the span and all its children **MUST** be ignored.
-   - If a pattern matches a child span, the child **MUST** be ignored but its children **MUST** be reparented to the ignored span's parent.
+   - If a pattern matches a child span, the child **MUST** be ignored but its children **MUST** be attempted to be reparented to the ignored span's parent.
 3. If a span is ignored, the SDK **MUST** record a client report with the `ignored` discard reason and `span` category.
    - For each ignored child span, emit one outcome per span.
    - For each ignored segment span, emit one outcome for the segment and one per child span.
@@ -188,9 +235,21 @@ Furthermore, `ignoreSpans` **SHOULD** accept objects with patterns matching the 
 
 #### `beforeSendSpan`
 
-The `beforeSendSpan` callback **MUST NOT** allow removal of spans from the span tree. It receives a deep copy of a span.
+The `beforeSendSpan` callback **MUST NOT** allow removal of spans from the span tree. It receives a deep copy of a span:
 
-Users **MAY** mutate any exposed properties for sanitization. The return value **MUST** be merged with the original span prior to emission.
+```
+[
+  {
+    'name': 'GET /',
+    'attributes': [
+      'http.request.method': 'GET',
+      'http.response.status_code': 200,
+    ]
+  },
+]
+```
+
+Users **MAY** mutate any exposed properties to perform sanitization on sensitive data or PII. The return value **MUST** be merged with the original span prior to emission.
 
 </SpecSection>
 
@@ -200,9 +259,9 @@ Users **MAY** mutate any exposed properties for sanitization. The return value *
 
 #### Continue an Incoming Trace
 
-The SDK **MUST** expose a method to extract traceparent and baggage from incoming headers and apply them to the applicable scope. The method **MUST NOT** create a new segment span on its own.
+The SDK **MUST** expose a method to extract traceparent and baggage from incoming headers and apply them to the applicable scope. The method **MUST NOT** create a new segment span on its own. Newly created root spans **SHOULD** contain the extracted properties, such as `trace_id` and `parent_span_id`.
 
-The function signature **MAY** require explicitly passing `sentry-trace` and `baggage`, or **MAY** accept a dictionary of headers.
+The function signature **MAY** require explicitly passing `sentry-trace` and `baggage`, or **MAY** accept a dictionary of headers or environment variables.
 
 #### Continue an Outgoing Trace
 
@@ -235,6 +294,38 @@ The `captureSpan` pipeline **MUST NOT**:
 - Drop any span
 - Buffer spans before enqueuing
 - Modify span relationships
+
+#### Span Filtering in the Pipeline
+
+`ignoreSpans` is applied prior to span start, so `captureSpan` does not handle filtering. This means certain cases cannot be handled by the pipeline:
+- Filtering spans based on data that is unknown prior to child span start.
+- Filtering entire segments based on data that is unknown prior to segment start (e.g. `http.server` segments ending in a 404 response).
+
+#### Replacing Event Processors
+
+Streamed spans no longer go through SDK event processors. For user-facing migration, `ignoreSpans` covers filtering and `beforeSendSpan` covers data enrichment and scrubbing.
+
+For SDK-internal processing, SDKs **SHOULD** implement client lifecycle hooks. The `captureSpan` pipeline emits a `process_span` message that any consumer (e.g. an integration) can subscribe to:
+
+```js
+// in captureSpan:
+processed_span = client.emit("process_span", captured_span)
+
+// Somewhere in e.g. an integration:
+client.on("process_span", (span) => {
+   span.attributes["sentry.origin"] = "auto.http.server"
+})
+```
+
+For mutating event processors, replace the mutation logic with `process_span` hooks. For filtering event processors, prefer configuring the integration to not emit spans upfront, or pre-configure `ignoreSpans`.
+
+#### Known Limitations
+
+The following use cases cannot be directly replaced with span streaming:
+- Filtering spans based on data added after span start.
+- Filtering entire segments based on data unknown at segment start.
+- Mutating or making decisions on multiple spans at once (e.g. aggregating `gen_ai` token usage across child spans).
+- Scoped event processors — currently not supported; can be re-evaluated if a use case arises.
 
 </SpecSection>
 
@@ -289,6 +380,8 @@ The `sentry.link.type` attribute on a link defines predefined semantics:
 |---------------------|-------|
 | `previous_trace` | Linking a navigation span to the previous pageload span |
 | `next_trace` | Linking a pageload span to the next navigation span |
+| `child_of` | Linking a span to its causal parent in another trace |
+| `follows_from` | Linking a span to a preceding span it follows from |
 
 #### `previous_trace` Behavior
 
@@ -300,9 +393,13 @@ Sampled root spans **SHOULD** still link to a previous negatively sampled root s
 
 </SpecSection>
 
-<SpecSection id="span-attachments" status="stable" since="1.0.0">
+<SpecSection id="span-attachments" status="candidate" since="1.0.0">
 
 ### Span Attachments
+
+<Alert level="warning">
+Span attachments are an experimental feature that is still under development.
+</Alert>
 
 To associate an attachment with a span, submit a [trace attachment](/sdk/telemetry/attachments/#trace-attachments) item with an additional `span_id` item header. The attachment **SHOULD** be in the same envelope as the span.
 
@@ -331,7 +428,20 @@ Empty attributes **MUST** be omitted.
 
 The envelope header **MUST** contain the same properties as previously with transactions. There are no special requirements beyond those for standard envelopes.
 
-Unlike transactions, envelope headers for spans **REQUIRE** [Dynamic Sampling Context](/sdk/foundations/trace-propagation/dynamic-sampling-context/). See also [Envelope Headers](/sdk/foundations/transport/envelopes/#headers).
+```json
+{
+  "sent_at": "2025-02-07T14:16:00Z",
+  "dsn": "https://e12d836b15bb49d7bbf99e64295d995b@sentry.io/42",
+  "sdk": {
+    // ...
+  },
+  "trace": {
+    // ...
+  }
+}
+```
+
+Unlike transactions, envelope headers for spans **REQUIRE** [Dynamic Sampling Context](/sdk/telemetry/traces/dynamic-sampling-context/). See also [Envelope Headers](/sdk/foundations/transport/envelopes/#headers).
 
 ### Span v2 Envelope Item Header
 
@@ -343,7 +453,15 @@ Unlike transactions, envelope headers for spans **REQUIRE** [Dynamic Sampling Co
 
 ### Span v2 Envelope Item Payload
 
-The payload is a JSON object that **MUST** include an `items` array of span objects. The payload **MAY** also include top-level `version` and `ingest_settings` fields.
+The payload is a JSON object that **MUST** include an `items` array of span objects.
+
+The `items` array **MUST** contain at least one and at most 1000 span objects. An envelope **MUST** only contain spans from one trace, as the trace envelope header is shared.
+
+<SpecSection id="span-envelope-item-ingest-settings" status="candidate" since="1.0.0">
+
+#### `version` and `ingest_settings` Properties
+
+The payload **MAY** also include top-level `version` and `ingest_settings` fields to instruct Relay to infer IP address and user agent from the incoming request:
 
 ```json
 {
@@ -356,17 +474,17 @@ The payload is a JSON object that **MUST** include an `items` array of span obje
 }
 ```
 
-The `items` array **MUST** contain at least one and at most 1000 span objects.
-
 See the [Ingest Settings](/sdk/foundations/transport/envelope-items/#ingest-settings) spec for the full `ingest_settings` field reference.
+
+</SpecSection>
 
 ### Span Properties
 
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
-| `trace_id` | string | Yes | 32-character lowercase hexadecimal string |
-| `span_id` | string | Yes | 16-character lowercase hexadecimal string |
-| `parent_span_id` | string | No | 16-character lowercase hexadecimal string |
+| `trace_id` | string | Yes | 32-character lowercase hexadecimal string (a valid uuid4 without dashes) |
+| `span_id` | string | Yes | 16-character lowercase hexadecimal string (a valid uuid4 without dashes) |
+| `parent_span_id` | string | No | 16-character lowercase hexadecimal string (a valid uuid4 without dashes) |
 | `name` | string | Yes | Low-cardinality description (e.g. `"GET /users"`) |
 | `status` | string | Yes | Either `"ok"` or `"error"` |
 | `is_segment` | boolean | Yes | Whether the span is a segment span |
@@ -386,7 +504,7 @@ All attributes below **MUST** be attached to every span emitted from the SDK, de
 | `sentry.op` | string | Required, see note | The [span op](/sdk/telemetry/traces/span-operations/). **MUST** be set on spans from auto instrumentation, **MAY** be set by manually started spans. |
 | `sentry.release` | string | Required | Application release version |
 | `sentry.environment` | string | Required | Environment name |
-| `sentry.span.source` | string | Required, see note | Source of the span name. **MUST** be set on segment spans, **MAY** be set on child spans. See [Sentry Conventions](https://github.com/getsentry/sentry-conventions/blob/main/model/attributes/sentry/sentry__span__source.json). |
+| `sentry.span.source` | string | Required, see note | Source of the span name. **MUST** be set on segment spans, **MAY** be set on child spans. See [Sentry Conventions](https://github.com/getsentry/sentry-conventions/blob/main/model/attributes/sentry/sentry__span__source.json), [Transaction Annotations](/sdk/foundations/transport/event-payloads/transaction/#transaction-annotations), and [Clustering](/backend/application-domains/transaction-clustering/#automatic-transaction-clustering). |
 | `sentry.profiler_id` | string | Required | ID of the running continuous profiler |
 | `sentry.replay_id` | string | Required | ID of the running replay |
 | `os.name` | string | Required | Operating system name |
@@ -394,7 +512,7 @@ All attributes below **MUST** be attached to every span emitted from the SDK, de
 | `user.id` | string | Required | User ID |
 | `user.email` | string | Required | User email |
 | `user.ip_address` | string | Required | User IP address |
-| `user.name` | string | Required | User name |
+| `user.name` | string | Required | User username |
 | `thread.id` | string | Required | Thread ID |
 | `thread.name` | string | Required | Thread name |
 | `sentry.sdk.name` | string | Required | Sentry SDK name |
@@ -433,18 +551,24 @@ Each attribute value is an object with `type`, `value`, and optional `unit`:
 
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
-| `span_id` | string | Yes | 16-character hexadecimal string |
-| `trace_id` | string | Yes | 32-character hexadecimal string |
+| `span_id` | string | Yes | 16-character hexadecimal string (a valid uuid4 without dashes) |
+| `trace_id` | string | Yes | 32-character hexadecimal string (a valid uuid4 without dashes) |
 | `sampled` | boolean | No | Whether the linked trace was sampled |
 | `attributes` | object | No | Metadata about the link relationship |
+
+#### Link Attribute Keys
+
+| Attribute Key | Type | Description |
+|---------------|------|-------------|
+| `sentry.link.type` | string | Type of link relationship (e.g. `"previous_trace"`, `"child_of"`, `"follows_from"`) |
 
 ### Data Types and Formats
 
 **Timestamps** use Unix time with fractional microseconds: `1742921669.158209`
 
-**Trace ID**: 32-character (128-bit) lowercase hexadecimal string.
+**Trace ID**: 32-character (128-bit) lowercase hexadecimal string (a valid uuid4 without dashes).
 
-**Span ID**: 16-character (64-bit) lowercase hexadecimal string.
+**Span ID**: 16-character (64-bit) lowercase hexadecimal string (a valid uuid4 without dashes).
 
 ---
 
@@ -533,6 +657,7 @@ processOrder().then((result) => {
   processSpan.end();
 }).catch((error) => {
   processSpan.setStatus('error');
+  processSpan.setAttribute('order-processed', 'error');
   processSpan.end();
 });
 
@@ -560,6 +685,7 @@ with sentry_sdk.start_span(name="checkout", attributes={"user.id": "123"}) as ch
             process_payment_span.set_attribute("order-status", result.message)
         except:
             process_payment_span.status = "error"
+            process_payment_span.set_attribute("order-status", "error")
 
     span = sentry_sdk.start_span(name="log-order", parent_span=None)
     log_order()
@@ -584,6 +710,7 @@ processOrder().then((result) {
   processSpan.end();
 }).catchError((error) {
   processSpan.status = SpanV2Status.error;
+  processSpan.setAttribute('order-processed', SentryAttribute.string('error'));
   processSpan.end();
 });
 
@@ -642,33 +769,61 @@ with sentry_sdk.start_span(name="new-operation"):
 ```js {tabTitle:TypeScript}
 Sentry.init({
   ignoreSpans: [
+    // apply on span name
     'GET /about',
+    'events.signal *',
     /api\/\d+/,
+    // ignore health check GET requests
     {
       name: /healthz?/,
       attributes: {
         'http.method': 'GET',
       }
     },
+    // ignore all GET requests to /api/
+    // (i.e. span name doesn't matter)
     {
       attributes: {
         'http.method': /GET \/api\/.*/,
       }
     },
+    // ignore all spans with name starting with /imprint-
+    // if glob patterns are supported
+    {
+      name: '/imprint-*'
+    }
   ]
 })
+
+// Note: The glob patterns used in the example serve an illustrative purpose.
+// They are not supported in JavaScript.
 ```
 
 ```python {tabTitle:Python}
 sentry_sdk.init(
     ignore_spans=[
+        # apply on span name
         "GET /about",
+        "events.signal *",
         r"api\/\d+",
+        # ignore health check GET requests
         {
             "name": r"healthz?",
             "attributes": {
                 "http.method": "GET",
             }
+        },
+        # ignore all GET requests to /api/
+        # (i.e. span name doesn't matter)
+        {
+            "attributes": {
+                "http.method": r"GET \/api\/.*",
+            }
+        },
+        # ignore all spans with name starting with /imprint-
+        # if glob patterns are supported
+        {
+            "name": "/imprint-*"
         },
     ],
 )
@@ -711,7 +866,7 @@ sentry_sdk.init(
         },
         "sentry.environment": {
           "type": "string",
-          "value": "production"
+          "value": "local"
         },
         "sentry.span.source": {
           "type": "string",
@@ -733,9 +888,18 @@ sentry_sdk.init(
           "type": "string",
           "value": "auto"
         },
+        "server.address": {
+          "type": "string",
+          "value": "127.0.0.1"
+        },
         "http.response.status_code": {
           "type": "integer",
           "value": 200
+        },
+        "session.duration": {
+          "type": "integer",
+          "value": 164,
+          "unit": "second"
         }
       },
       "links": [
@@ -780,7 +944,7 @@ sentry_sdk.init(
         },
         "sentry.environment": {
           "type": "string",
-          "value": "production"
+          "value": "local"
         },
         "sentry.sdk.name": {
           "type": "string",
