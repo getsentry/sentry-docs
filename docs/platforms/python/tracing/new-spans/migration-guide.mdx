@@ -122,17 +122,7 @@ A few ways of referencing the current span or transaction change in stream mode:
 - current_span = scope.span
 + current_span = sentry_sdk.traces.get_current_span()
 
-# Getting the service span (formerly the transaction)
-- scope = sentry_sdk.get_current_scope()
-- transaction = scope.transaction
-+ service_span = sentry_sdk.traces.get_current_span()._segment
-
-# Getting the service span from a child span
-- transaction = span.containing_transaction
-+ service_span = span._segment
 ```
-
-`_segment` returns the service span of the current trace (the equivalent of what used to be the transaction). It is a private API — prefer restructuring the code to avoid needing the service span where possible.
 
 If your code reads specific fields off the trace context, access them as direct properties instead of calling `get_trace_context()`, which no longer exists on streaming spans:
 
@@ -143,8 +133,6 @@ If your code reads specific fields off the trace context, access them as direct 
 + trace_id = span.trace_id
 + span_id = span.span_id
 ```
-
-If you genuinely need the full trace context dict, for example to pass it to an external system, use the private `span._get_trace_context()` method instead. Prefer the direct properties where possible.
 
 ## Trace Propagation
 
@@ -237,4 +225,4 @@ sentry_sdk.init(
 )
 ```
 
-Both `ignore_spans` and `before_send_span` only have access to the span name and attributes set at creation time — not attributes added later in the span's lifetime, like an HTTP status code set after the request completes. If your `before_send_transaction` logic depended on that kind of late-set data, it can't be replicated in stream mode. Consider server-side filtering with Sentry inbound data filters or Relay rules instead.
+Both `ignore_spans` and `before_send_span` only have access to the span name and attributes set at creation time — not attributes added later in the span's lifetime, like an HTTP status code set after the request completes. If your `before_send_transaction` logic depended on that kind of late-set data, it can't be replicated in stream mode. Consider server-side filtering with Sentry [inbound data filters](/concepts/data-management/filtering/) or [Relay](/product/relay/) rules instead.
