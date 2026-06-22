@@ -43,12 +43,7 @@ const randomUserToken = (() => {
 // this type is not exported from the global-search package
 type SentryGlobalSearchConfig = ConstructorParameters<typeof SentryGlobalSearch>[0];
 
-const developerDocsSites: SentryGlobalSearchConfig = [
-  'develop',
-  'zendesk_sentry_articles',
-  'docs',
-  'blog',
-];
+const developerDocsSites: SentryGlobalSearchConfig = ['develop', 'docs', 'blog'];
 
 const userDocsSites: SentryGlobalSearchConfig = [
   {
@@ -57,7 +52,6 @@ const userDocsSites: SentryGlobalSearchConfig = [
     platformBias: true,
     legacyBias: true,
   },
-  'zendesk_sentry_articles',
   'develop',
   'blog',
 ];
@@ -66,6 +60,8 @@ const search = new SentryGlobalSearch(config);
 
 type Props = {
   autoFocus?: boolean;
+  /** Called before the Kapa modal opens, so a parent overlay can close itself first. */
+  onAskAi?: () => void;
   path?: string;
   searchPlatforms?: string[];
   showChatBot?: boolean;
@@ -74,9 +70,22 @@ type Props = {
 
 const STORAGE_KEY = 'sentry-docs-search-platforms';
 
+// Paths outside `/platforms/` whose pages are not about any specific SDK.
+// Restoring the user's last-used SDK on these pages biases query results
+// toward irrelevant SDK pages instead of the product/concept docs they're
+// actually reading. Mirrors PRODUCT_DOC_PREFIXES in scripts/algolia.ts.
+const SDK_AGNOSTIC_PATH_PREFIXES = [
+  '/product/',
+  '/concepts/',
+  '/cli/',
+  '/guides/',
+  '/integrations/',
+];
+
 export function Search({
   path,
   autoFocus,
+  onAskAi,
   searchPlatforms = [],
   useStoredSearchPlatforms = true,
 }: Props) {
@@ -91,6 +100,9 @@ export function Search({
 
   // Load stored platforms on mount
   useEffect(() => {
+    const isSdkAgnosticPath = SDK_AGNOSTIC_PATH_PREFIXES.some(prefix =>
+      pathname?.startsWith(prefix)
+    );
     const storedPlatforms = localStorage.getItem(STORAGE_KEY) ?? '[]';
     if (!storedPlatforms) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(searchPlatforms));
@@ -99,10 +111,14 @@ export function Search({
       searchPlatforms.length === 0 &&
       useStoredSearchPlatforms
     ) {
-      const platforms = JSON.parse(storedPlatforms);
-      setCurrentSearchPlatforms(platforms);
+      if (isSdkAgnosticPath) {
+        setCurrentSearchPlatforms([]);
+      } else {
+        const platforms = JSON.parse(storedPlatforms);
+        setCurrentSearchPlatforms(platforms);
+      }
     }
-  }, [useStoredSearchPlatforms, searchPlatforms]);
+  }, [useStoredSearchPlatforms, searchPlatforms, pathname]);
 
   // Update stored platforms when they change
   useEffect(() => {
@@ -345,10 +361,10 @@ export function Search({
             radius="medium"
             className="font-medium text-[var(--foreground)] py-2 px-3 uppercase cursor-pointer kapa-ai-class hidden md:flex mr-4"
           >
-            <div>
+            <button type="button" aria-label="Ask AI">
               <MagicIcon />
               <span>Ask AI</span>
-            </div>
+            </button>
           </Button>
         </Fragment>
       </div>
@@ -360,10 +376,13 @@ export function Search({
               className={styles['sgs-ai-button']}
               onClick={() => {
                 if (window.Kapa?.open) {
-                  // close search results
                   setInputFocus(false);
-                  // open kapa modal
-                  window.Kapa.open({query, submit: true});
+                  onAskAi?.();
+                  // Open next frame, after the overlay's scroll lock is released
+                  // on commit, so Kapa's lock and ours never overlap.
+                  requestAnimationFrame(() => {
+                    window.Kapa?.open({query, submit: true});
+                  });
                 }
               }}
             >

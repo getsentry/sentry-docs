@@ -6,6 +6,7 @@ import {getUnversionedPath, VERSION_INDICATOR} from 'sentry-docs/versioning';
 
 import {CollapsibleSidebarLink} from './collapsibleSidebarLink';
 import {SidebarLink, SidebarSeparator} from './sidebarLink';
+import type {ExternalSidebarLink} from './types';
 
 // Section configuration for sidebar organization
 const SECTION_LABELS: Record<string, string> = {
@@ -259,6 +260,7 @@ type Props = {
   tree: EntityTree[];
   collapsible?: boolean;
   exclude?: string[];
+  extraLinks?: ExternalSidebarLink[];
   title?: string;
 };
 
@@ -268,6 +270,7 @@ export function DynamicNav({
   tree,
   collapsible = false,
   exclude = [],
+  extraLinks,
 }: Props) {
   if (root.startsWith('/')) {
     root = root.substring(1);
@@ -340,7 +343,25 @@ export function DynamicNav({
             </CollapsibleSidebarLink>
           )}
           <Children
-            tree={entity.children}
+            tree={
+              extraLinks
+                ? [
+                    ...entity.children,
+                    ...extraLinks.map(link => ({
+                      name: link.href,
+                      node: {
+                        path: link.href,
+                        context: {
+                          title: link.title,
+                          sidebar_order: link.order,
+                          draft: false,
+                        },
+                      },
+                      children: [],
+                    })),
+                  ]
+                : entity.children
+            }
             exclude={exclude}
             showDepth={0}
             path={linkPath}

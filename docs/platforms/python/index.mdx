@@ -1,6 +1,6 @@
 ---
 title: Python
-description: Sentry's Python SDK enables automatic reporting of errors and performance data in your application.
+description: Learn how to set up Sentry in your Python app, capture your first errors and traces, and view them in Sentry.
 caseStyle: snake_case
 supportLevel: production
 sdk: sentry.python
@@ -10,14 +10,28 @@ categories:
   - serverless
 ---
 
-## Prerequisites
+<AgentSkillsCallout skill="sentry-python-sdk" platformName="Python" />
 
-- You need a Sentry [account](https://sentry.io/signup/) and [project](/product/projects/)
-- Read one of our dedicated guides if you use any of the <PlatformLink to="/integrations/#web-frameworks">frameworks</PlatformLink> we support
+<Alert level="warning" title="Using a framework?">
+
+This guide focuses on plain Python. If you're working with Django, FastAPI, Starlette, or any other web framework, choose the respective guide from the list of supported <PlatformLink to="/integrations/#web-frameworks">frameworks</PlatformLink>.
+
+</Alert>
+
+<PlatformContent includePath="getting-started-prerequisites" />
+
+<StepConnector selector="h2" showNumbers={true}>
 
 ## Install
 
-Install the Sentry SDK using [`pip`](https://pip.pypa.io/en/stable/):
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Run the command for your preferred package manager to add the Sentry SDK to your application:
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```bash {tabTitle:pip}
 pip install "sentry-sdk"
@@ -27,50 +41,98 @@ pip install "sentry-sdk"
 uv add "sentry-sdk"
 ```
 
+```bash {tabTitle:poetry}
+poetry add "sentry-sdk"
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
 ## Configure
 
 Choose the features you want to configure, and this guide will show you how:
 
 <OnboardingOptionButtons
-  options={["error-monitoring", "performance", "profiling", "logs"]}
+  options={["error-monitoring", "performance", "profiling", "logs", "metrics"]}
 />
+
+<Include name="quick-start-features-expandable" />
+
+### Initialize the Sentry SDK
 
 Configuration should happen as **early as possible** in your application's lifecycle.
 
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Import and initialize the SDK in your app's entry point:
+
+</SplitSectionText>
+<SplitSectionCode>
+
 ```python
 import sentry_sdk
+# ___PRODUCT_OPTION_START___ metrics
+from sentry_sdk import metrics
+# ___PRODUCT_OPTION_END___ metrics
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
+
     # Add request headers and IP for users,
     # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
     send_default_pii=True,
     # ___PRODUCT_OPTION_START___ performance
+
     # Set traces_sample_rate to 1.0 to capture 100%
     # of transactions for tracing.
+    # see https://docs.sentry.io/platforms/python/configuration/options/#traces_sample_rate for more info
     traces_sample_rate=1.0,
     # ___PRODUCT_OPTION_END___ performance
     # ___PRODUCT_OPTION_START___ profiling
+
+    # Enables continuous profiling.
     # To collect profiles for all profile sessions,
     # set `profile_session_sample_rate` to 1.0.
+    # see https://docs.sentry.io/platforms/python/configuration/options/#profile_session_sample_rate for more info
     profile_session_sample_rate=1.0,
+
     # Profiles will be automatically collected while
     # there is an active span.
+    # see https://docs.sentry.io/platforms/python/configuration/options/#profile_lifecycle for more info
     profile_lifecycle="trace",
     # ___PRODUCT_OPTION_END___ profiling
     # ___PRODUCT_OPTION_START___ logs
 
     # Enable logs to be sent to Sentry
+    # see https://docs.sentry.io/platforms/python/configuration/options/#enable_logs for more info
     enable_logs=True,
     # ___PRODUCT_OPTION_END___ logs
 )
 ```
 
-In async programs, it's recommended to call `sentry_sdk.init()` inside an `async` function to ensure async code is instrumented properly. If possible, we recommend calling `sentry_sdk.init()` at the beginning of the first `async` function you call.
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+In async programs, we recommend to initialize the Sentry SDK inside an `async` function to ensure async code is instrumented properly. If possible, call `sentry_sdk.init()` at the beginning of the first `async` function you call:
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```python
 import asyncio
 import sentry_sdk
+# ___PRODUCT_OPTION_START___ metrics
+from sentry_sdk import metrics
+# ___PRODUCT_OPTION_END___ metrics
+
 
 async def main():
     sentry_sdk.init(
@@ -80,28 +142,176 @@ async def main():
 asyncio.run(main())
 ```
 
-## Verify
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
-Add this intentional error to your application to test that everything is working right away.
+<OnboardingOption optionId="performance">
+### Instrumenting Your App
+
+The Sentry SDK automatically enables integrations for <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/">many popular libraries</PlatformLink>, so operations like HTTP requests or database queries made with supported libraries will be captured as spans automatically.
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+However, spans are only created within an existing transaction. If you're not using a supported framework that creates transactions automatically, you'll need to create them manually using `sentry_sdk.start_transaction()`.
+
+See <PlatformLink to="/tracing/instrumentation/custom-instrumentation/">Custom Instrumentation</PlatformLink> for more info.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```python
+import sentry_sdk
+
+def some_function():
+    with sentry_sdk.start_transaction(op="task", name="Test Transaction"):
+        ...
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+</OnboardingOption>
+
+## Verify Your Setup
+
+Let's test your setup and confirm that data reaches your Sentry project.
+
+<Alert level="warning">
+
+Errors triggered from a Python shell like IPython will not trigger Sentry's error monitoring. Make sure you're running the examples from a file instead.
+
+</Alert>
+
+### Issues
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+To verify that Sentry captures errors and creates issues in your Sentry project, add this intentional error to your application:
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```py
+import sentry_sdk
+
 division_by_zero = 1 / 0
 ```
 
-<Alert>
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
-Learn more about manually capturing an error or message in our <PlatformLink to="/usage/">Usage documentation</PlatformLink>.
+<OnboardingOption optionId="performance">
 
-</Alert>
+### Tracing
 
-To view and resolve the recorded error, log into [sentry.io](https://sentry.io) and select your project. Clicking on the error's title will open a page where you can see detailed information and mark it as resolved.
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
 
-<Alert>
+To test your tracing configuration, create a custom transaction and span:
 
-Not seeing your error in Sentry? Make sure you're running the above example from a file and not from a Python shell like IPython.
+</SplitSectionText>
+<SplitSectionCode>
 
-</Alert>
+```py
+import sentry_sdk
+
+with sentry_sdk.start_transaction(op="task", name="Transaction Name"):
+    span = sentry_sdk.start_span(name="Custom Span Name")
+    span.finish()
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+</OnboardingOption>
+
+<OnboardingOption optionId="logs">
+
+### Logs
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+To verify that Sentry catches your logs, add some log statements to your application:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```py
+import sentry_sdk
+
+sentry_sdk.logger.info("This is an info log message")
+sentry_sdk.logger.warning("This is a warning message")
+sentry_sdk.logger.error("This is an error message")
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+</OnboardingOption>
+
+<OnboardingOption optionId="metrics">
+
+### Metrics
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Send test metrics from your app to verify metrics are arriving in Sentry:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```py
+from sentry_sdk import metrics
+
+metrics.count("checkout.failed", 1)
+metrics.gauge("queue.depth", 42)
+metrics.distribution("cart.amount_usd", 187.5)
+
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+</OnboardingOption>
+
+### View Captured Data in Sentry
+
+Now, head over to your project on [Sentry.io](https://sentry.io) to view the collected data (it takes a couple of moments for the data to appear).
+
+<Include name="quick-start-locate-data-expandable" />
 
 ## Next Steps
 
+At this point, you should have integrated Sentry into your Python application and should already be sending data to your Sentry project.
+
+Now's a good time to customize your setup and look into more advanced topics.
+Our next recommended steps for you are:
+
 - Explore [practical guides](/guides/) on what to monitor, log, track, and investigate after setup
+- Continue to <PlatformLink to="/configuration/">customize your configuration</PlatformLink>
+- Learn more about <PlatformLink to="/usage/">manually capturing errors or messages</PlatformLink>
+- Dive straight into the API with our [API docs](https://getsentry.github.io/sentry-python/)
+
+<Expandable permalink={false} title="Are you having problems setting up the SDK?">
+
+- Find various topics in <PlatformLink to="/troubleshooting/">Troubleshooting</PlatformLink>
+- [Get support](https://www.sentry.help/en/)
+
+</Expandable>
+
+</StepConnector>

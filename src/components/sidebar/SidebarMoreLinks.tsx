@@ -42,9 +42,8 @@ export function SidebarMoreLinks() {
           </button>
           {isExpanded && (
             <Fragment>
-              <SidebarLink href="https://about.codecov.io/" title="Codecov" />
               <SidebarLink href="https://discord.gg/sentry" title="Discord" />
-              <SidebarLink href="https://sentry.zendesk.com/hc/en-us/" title="Support" />
+              <SidebarLink href="https://www.sentry.help/en/" title="Support" />
               <SidebarLink
                 href="https://develop.sentry.dev/self-hosted/"
                 title="Self-Hosting Sentry"

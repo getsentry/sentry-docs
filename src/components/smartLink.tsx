@@ -1,5 +1,6 @@
 'use client';
 
+import * as Sentry from '@sentry/nextjs';
 import Link from 'next/link';
 import {useCallback} from 'react';
 
@@ -30,10 +31,17 @@ export function SmartLink({
 }: Props) {
   const realTo = to || href || '';
 
-  const handleAutolinkClick = useCallback((e: React.MouseEvent) => {
+  const handleAutolinkClick = useCallback(async (e: React.MouseEvent) => {
     const link = e.currentTarget as HTMLAnchorElement;
     if (link.classList.contains('autolink-heading')) {
-      navigator.clipboard.writeText(link.href);
+      try {
+        await navigator.clipboard.writeText(link.href);
+      } catch {
+        Sentry.logger.warn('clipboard.writeText permission denied', {
+          url: link.href,
+          userAgent: navigator.userAgent,
+        });
+      }
     }
   }, []);
 
@@ -42,6 +50,31 @@ export function SmartLink({
       <ExternalLink href={realTo} className={className} {...props}>
         {children || to || href}
       </ExternalLink>
+    );
+  }
+
+  // Hash-only links: use a plain <a> so the browser fires hashchange.
+  // When the target is inside a closed <details>, prevent the browser's
+  // premature scroll and let the Expandable handler scroll after opening.
+  if (realTo.startsWith('#')) {
+    return (
+      <a
+        href={realTo}
+        className={className}
+        onClick={e => {
+          handleAutolinkClick(e);
+          const targetId = realTo.slice(1);
+          const target = targetId ? document.getElementById(targetId) : null;
+          if (target?.closest('details:not([open])')) {
+            e.preventDefault();
+            window.history.pushState(null, '', realTo);
+            window.dispatchEvent(new HashChangeEvent('hashchange'));
+          }
+        }}
+        {...props}
+      >
+        {children || to || href}
+      </a>
     );
   }
 
