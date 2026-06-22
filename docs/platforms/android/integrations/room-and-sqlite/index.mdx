@@ -1,5 +1,5 @@
 ---
-title: SQLite (Room & SQLDelight)
+title: SQLite
 caseStyle: camelCase
 supportLevel: production
 sdk: sentry.java.android.sqlite
@@ -53,7 +53,7 @@ dependencies {
 ```
 
 <small>
-  † For now the SAGP only auto-wraps uses of `SQLiteDriver` with Room. Any
+  † For now, the SAGP only auto-wraps uses of `SQLiteDriver` with Room. Any
   non-Room uses of the driver must be wrapped manually. SAGP auto-wraps open
   helpers in all contexts.
 </small>
@@ -68,7 +68,7 @@ The type or call site wrapped depends on the SAGP version:
 
 ### Configure
 
-No further configuration is required as database auto-instrumentation is enabled by default. To disable it – including `SQLiteDriver` wrapping, `SupportSQLiteOpenHelper` wrapping, and Room DAO spans – use the `DATABASE` instrumentation feature:
+No additional configuration is required, as database auto-instrumentation is enabled by default. To disable it, use the `DATABASE` instrumentation feature:
 
 ```groovy {filename:build.gradle}
 import io.sentry.android.gradle.extensions.InstrumentationFeature
@@ -92,6 +92,8 @@ sentry {
   }
 }
 ```
+
+Disabling `DATABASE` instrumentation disables `SQLiteDriver` wrapping, `SupportSQLiteOpenHelper` wrapping, and Room DAO spans.
 
 See our [Gradle](/platforms/android/configuration/gradle/) page for other SAGP configuration options.
 
@@ -195,7 +197,7 @@ AndroidSqliteDriver driver = new AndroidSqliteDriver(
 
 This section doesn't apply to migrations to AndroidX's [`SupportSQLiteDriver`](https://developer.android.com/reference/kotlin/androidx/sqlite/driver/SupportSQLiteDriver) (the bridge adapter for Room `[2.7, 3.0)`).
 
-The support driver consumes your existing `SupportSQLiteOpenHelper`, so you should continue to use `SentrySupportSQLiteOpenHelper` to wrap your helper as before.
+The support driver consumes your existing `SupportSQLiteOpenHelper`, so continue to use `SentrySupportSQLiteOpenHelper` to wrap your helper as before.
 
 </Alert>
 
@@ -209,12 +211,14 @@ If you're switching your app's SQLite API from `SupportSQLiteOpenHelper` to `SQL
 <small>
   † SAGP installs `sentry-android-sqlite` transitively when your project depends
   on `androidx.sqlite:sqlite`, so you typically don't need to add it. But if your
-  project explicitly pins `sentry-android-sqlite`, be sure to bump it to `8.45.0+`.
+  project explicitly pins `sentry-android-sqlite`, bump it to `≥8.45.0`.
 </small>
 
-Replace `SentrySupportSQLiteOpenHelper.create(openHelper)` with `SentrySQLiteDriver.create(driver)` – and you're all set! (See [Manual Instrumentation → Room](#room) for the full call-site context.)
+Replace `SentrySupportSQLiteOpenHelper.create(openHelper)` with `SentrySQLiteDriver.create(driver)`, and you're all set! (See [Manual Instrumentation → Room](#room) for the full call-site context.)
 
-**Note**: Due to underlying API differences, `SQLiteDriver` and `SupportSQLiteOpenHelper` spans can sometimes differ. The driver's spans are tailored to work performed by the database itself during statement execution, while the open helper may also track time spent on statement preparation and work your app performs consuming native SQLite output.
+**Note on span attributes**: `SentrySQLiteDriver` derives the `db.name` span attribute from the base name of the file path passed to `open()` (for example, `/data/.../my.db` → `my.db`), while `SentrySupportSQLiteOpenHelper` uses AndroidX's `databaseName` verbatim.
+
+**Note on span durations**: Due to underlying API differences, `SQLiteDriver` and `SupportSQLiteOpenHelper` span durations may differ. Driver spans are limited to work performed by the database during statement execution, while open helpers may also track time spent on statement preparation or work the owning app performs consuming native SQLite output.
 
 ## Verify
 
@@ -256,7 +260,7 @@ openHelper.writableDatabase.query("SELECT 1").use { it.moveToFirst() }
 transaction.finish(SpanStatus.OK)
 ```
 
-To view the recorded transaction, log into [sentry.io](https://sentry.io) and open the [Traces](https://sentry.io/orgredirect/organizations/:orgslug/traces/) page. Filter by `transaction:"DB Smoke Test"`, then open the trace. You should see a SQL-level span emitted by the Sentry wrapper around your driver or open helper, with the executed query as its description:
+To view the recorded transaction, log into [sentry.io](https://sentry.io) and open the [Traces](https://sentry.io/orgredirect/organizations/:orgslug/traces/) page. Filter by your transaction name (for example, `transaction:"DB Smoke Test"`), then open the trace. You should see a SQL-level span emitted by the Sentry wrapper around your driver or open helper, with the executed query as its description:
 
 ![SQLite instrumentation](./img/sqlite-instrumentation.png)
 
