@@ -48,7 +48,7 @@ This is **expected** in most healthy self-hosted deployments. Reasons, in order 
    scheduling without that being a bug.
 4. **kafka-ui showing "no end offset."** kafka-ui sometimes can't render an
    end offset for a topic with zero recent produces; this is a UI artifact,
-   not a consumer problem. `kafka-consumer-groups.sh --describe` will show
+   not a consumer problem. `docker compose exec kafka kafka-consumer-groups --bootstrap-server kafka:9092 --describe` will show
    the real `LOG-END-OFFSET`.
 5. **At-least-once commit policy.** The scheduler only commits the *earliest*
    commit-log offset whose tick has been fully scheduled and produced. It
@@ -73,11 +73,11 @@ This is **expected** in most healthy self-hosted deployments. Reasons, in order 
 
 Quick sanity checks from the host:
 
-- `kafka-console-consumer --topic scheduled-subscriptions-events --from-beginning --max-messages 5`
+- `docker compose exec kafka kafka-console-consumer --bootstrap-server kafka:9092 --topic scheduled-subscriptions-events --from-beginning --max-messages 5`
   — if you see scheduled queries, the scheduler is producing.
-- `kafka-console-consumer --topic events-subscription-results --from-beginning --max-messages 5`
+- `docker compose exec kafka kafka-console-consumer --bootstrap-server kafka:9092 --topic events-subscription-results --from-beginning --max-messages 5`
   — if you see results, the executor is running and Sentry is being fed.
-- `kafka-consumer-groups.sh --describe --group snuba-events-subscription-executor`
+- `docker compose exec kafka kafka-consumer-groups --bootstrap-server kafka:9092 --describe --group snuba-events-subscription-executor`
   — authoritative `LAG` view.
 
 ### Differences vs. the events / regular Snuba consumers
