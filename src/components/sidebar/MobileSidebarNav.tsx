@@ -1,5 +1,6 @@
 'use client';
 
+import {ChevronDownIcon} from '@radix-ui/react-icons';
 import Link from 'next/link';
 import {usePathname} from 'next/navigation';
 import {useEffect, useState} from 'react';
@@ -11,6 +12,11 @@ export function MobileSidebarNav({platforms = []}: {platforms?: Platform[]}) {
   const pathname = usePathname();
 
   const isActive = (href: string) => pathname?.startsWith(href);
+
+  // Collapse all top-level sections behind a single "Menu" disclosure so the
+  // current section's page nav stays near the top on mobile. Collapsed by
+  // default; the active section is conveyed by the page nav heading below.
+  const [menuOpen, setMenuOpen] = useState(false);
 
   // Compute the SDK link href - use stored platform URL if available
   const [sdkLinkHref, setSdkLinkHref] = useState('/platforms/');
@@ -61,37 +67,52 @@ export function MobileSidebarNav({platforms = []}: {platforms?: Platform[]}) {
 
   return (
     <div className="md:hidden px-3 pb-3 border-b border-[var(--gray-a3)]">
-      {/* Main navigation sections - simple links that navigate to index pages */}
-      <nav className="space-y-1">
-        {mainSections.map(section =>
-          section.label === 'SDKs' ? (
-            <a
-              key={section.href}
-              href={sdkLinkHref}
-              onClick={handleSdkClick}
-              className={`block py-2 px-2 rounded text-sm font-medium transition-colors ${
-                isActive('/platforms/')
-                  ? 'text-[var(--accent-purple)] bg-[var(--accent-purple-light)]'
-                  : 'text-[var(--gray-12)] hover:bg-[var(--gray-a3)]'
-              }`}
-            >
-              {section.label}
-            </a>
-          ) : (
-            <Link
-              key={section.href}
-              href={section.href}
-              className={`block py-2 px-2 rounded text-sm font-medium transition-colors ${
-                isActive(section.href)
-                  ? 'text-[var(--accent-purple)] bg-[var(--accent-purple-light)]'
-                  : 'text-[var(--gray-12)] hover:bg-[var(--gray-a3)]'
-              }`}
-            >
-              {section.label}
-            </Link>
-          )
-        )}
-      </nav>
+      <button
+        type="button"
+        onClick={() => setMenuOpen(open => !open)}
+        aria-expanded={menuOpen}
+        className="flex items-center justify-between w-full py-2 px-2 rounded text-sm font-medium text-[var(--gray-12)] hover:bg-[var(--gray-a3)] transition-colors"
+      >
+        {menuOpen ? 'Close Main Menu' : 'Open Main Menu'}
+        <ChevronDownIcon
+          className={`transition-transform ${menuOpen ? 'rotate-180' : ''}`}
+          width="18"
+          height="18"
+        />
+      </button>
+      {menuOpen && (
+        // Main navigation sections - simple links that navigate to index pages
+        <nav className="space-y-1 mt-1">
+          {mainSections.map(section =>
+            section.label === 'SDKs' ? (
+              <a
+                key={section.href}
+                href={sdkLinkHref}
+                onClick={handleSdkClick}
+                className={`block py-2 px-2 rounded text-sm font-medium transition-colors ${
+                  isActive('/platforms/')
+                    ? 'text-[var(--accent-purple)] bg-[var(--accent-purple-light)]'
+                    : 'text-[var(--gray-12)] hover:bg-[var(--gray-a3)]'
+                }`}
+              >
+                {section.label}
+              </a>
+            ) : (
+              <Link
+                key={section.href}
+                href={section.href}
+                className={`block py-2 px-2 rounded text-sm font-medium transition-colors ${
+                  isActive(section.href)
+                    ? 'text-[var(--accent-purple)] bg-[var(--accent-purple-light)]'
+                    : 'text-[var(--gray-12)] hover:bg-[var(--gray-a3)]'
+                }`}
+              >
+                {section.label}
+              </Link>
+            )
+          )}
+        </nav>
+      )}
     </div>
   );
 }

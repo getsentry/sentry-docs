@@ -964,6 +964,10 @@ const userDocsRedirects = [
     destination: '/platforms/javascript/guides/aws-lambda/install/cjs-npm__v9.x/',
   },
   {
+    source: '/platforms/javascript/guides/react-router/features/instrumentation-api/',
+    destination: '/platforms/javascript/guides/react-router/manual-setup/',
+  },
+  {
     source: '/platforms/javascript/guides/nextjs/sourcemaps/uploading/',
     destination: '/platforms/javascript/guides/nextjs/sourcemaps/',
   },
@@ -1868,7 +1872,8 @@ const userDocsRedirects = [
   },
   {
     source: '/product/insights/mobile-vitals/screen-loads/',
-    destination: '/product/dashboards/sentry-dashboards/mobile/mobile-vitals/screen-loads/',
+    destination:
+      '/product/dashboards/sentry-dashboards/mobile/mobile-vitals/screen-loads/',
   },
   {
     source: '/product/insights/mobile-vitals/:path*',

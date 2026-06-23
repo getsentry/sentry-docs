@@ -197,15 +197,22 @@ This option is turned on by default.
 Specifies the types of errors captured as breadcrumbs. Accepts a single value or a bitwise combination of `GodotErrorMask` masks. The default value captures native errors, warnings, script and shader errors (`MASK_ERROR | MASK_WARNING | MASK_SCRIPT | MASK_SHADER`).
 
 `GodotErrorMask` values:
+
 - `MASK_NONE`: No logger errors will be captured.
 - `MASK_ERROR`: Native errors will be captured. These are typically C++ errors, which may also originate from a script.
 - `MASK_WARNING`: Warnings will be captured.
 - `MASK_SCRIPT`: Script errors will be captured.
 - `MASK_SHADER`: Shader errors will be captured.
 
-```GDScript
+```gdscript {tabTitle:GDScript} {mdExpandTabs}
 var mask = SentryOptions.MASK_ERROR | SentryOptions.MASK_SCRIPT
 options.logger_breadcrumb_mask = mask
+```
+
+```csharp {tabTitle:C#}
+var mask = SentryGodotOptions.GodotLoggerEventMask.Error
+    | SentryGodotOptions.GodotLoggerEventMask.Script;
+options.LoggerBreadcrumbMask = mask;
 ```
 
 </SdkOption>
@@ -214,9 +221,15 @@ options.logger_breadcrumb_mask = mask
 
 Specifies the types of errors captured as events. Accepts a single value or a bitwise combination of `GodotErrorMask` masks. The default value captures native, script and shader errors (`MASK_ERROR | MASK_SCRIPT` | `MASK_SHADER`).
 
-```GDScript
+```gdscript {tabTitle:GDScript} {mdExpandTabs}
 var mask = SentryOptions.MASK_ERROR | SentryOptions.MASK_SCRIPT
 options.logger_event_mask = mask
+```
+
+```csharp {tabTitle:C#}
+var mask = SentryGodotOptions.GodotLoggerEventMask.Error
+    | SentryGodotOptions.GodotLoggerEventMask.Script;
+options.LoggerEventMask = mask;
 ```
 
 </SdkOption>
@@ -278,7 +291,7 @@ thread-safe APIs and only use Godot-specific APIs after you've checked that you'
 
 If assigned, this callback runs before an event is sent to Sentry. You can only set it [programmatically](#programmatic-configuration). It takes `SentryEvent` as a parameter and returns either the same event object, with or without modifications, or `null` to skip reporting the event. This can be used, for instance, for stripping PII before sending.
 
-```GDScript
+```gdscript {tabTitle:GDScript} {mdExpandTabs}
 func _before_send(event: SentryEvent) -> SentryEvent:
 	if event.environment.contains("editor"):
 		# Discard event if running from the editor.
@@ -290,6 +303,31 @@ func _before_send(event: SentryEvent) -> SentryEvent:
 		event.set_exception_value(0, redacted_message)
 	return event
 ```
+
+```csharp {tabTitle:C#}
+// The .NET hook filters events captured from your C# code.
+options.SetBeforeSend((sentryEvent, hint) =>
+{
+    if (sentryEvent.Environment?.Contains("editor") == true)
+    {
+        // Discard the event if running from the editor.
+        return null;
+    }
+
+    foreach (var exception in sentryEvent.SentryExceptions ?? [])
+    {
+        if (exception.Value?.Contains("Bruno") == true)
+        {
+            // Remove sensitive information from the event.
+            exception.Value = exception.Value.Replace("Bruno", "REDACTED");
+        }
+    }
+
+    return sentryEvent;
+});
+```
+
+In C#, `options.SetBeforeSend` covers managed events only. To filter native events from C# (such as engine, GDScript, and GDExtension errors), use [`Native.SetBeforeSend`](#Native.SetBeforeSend).
 
 </SdkOption>
 
@@ -304,6 +342,12 @@ func _before_capture_screenshot(event: SentryEvent) -> bool:
 	return true
 ```
 
+<Alert title="Note">
+
+This callback isn't available in the .NET layer yet, so it can only be set from GDScript.
+
+</Alert>
+
 </SdkOption>
 
 <SdkOption name="before_send_log" type="Callable" availableSince="1.2.0">
@@ -311,7 +355,7 @@ func _before_capture_screenshot(event: SentryEvent) -> bool:
 If assigned, this callback will be called before sending a log message to Sentry.
 It can be used to modify the log message or prevent it from being sent.
 
-```GDScript
+```gdscript {tabTitle:GDScript} {mdExpandTabs}
 func _before_send_log(log_entry: SentryLog) -> SentryLog:
 	# Filter junk.
 	if log_entry.body == "Junk message":
@@ -321,6 +365,43 @@ func _before_send_log(log_entry: SentryLog) -> SentryLog:
 	# Add custom attributes.
 	log_entry.set_attribute("current_scene", current_scene.name)
 	return log_entry
+```
+
+```csharp {tabTitle:C#}
+// The .NET hook applies to logs emitted from your C# code.
+options.SetBeforeSendLog(log =>
+{
+    // Filter junk.
+    if (log.Message == "Junk message")
+    {
+        return null;
+    }
+    // Add custom attributes.
+    log.SetAttribute("current_scene", currentScene.Name);
+    return log;
+});
+```
+
+</SdkOption>
+
+## Native Hooks in C#
+
+In C#, hook methods set directly on `options` apply to managed SDK data, such as events and logs from your game's C# code and third-party .NET libraries. However, much of the Godot SDK's processing happens in the native C++ layer, including events and logs captured from the engine, GDScript, and GDExtension code. Native hook methods live under `options.Native`; use these callbacks to inspect, modify, or drop native data before it's sent to Sentry.
+
+<SdkOption name="Native.SetBeforeSend" type="Func<SentryNativeEvent, SentryNativeEvent?>">
+
+Runs before a native event is sent. Return the event, with or without modifications, to send it, or `null` to drop it. This is most useful for engine, GDScript, and GDExtension errors. Native crash events aren't passed to this callback.
+
+```csharp
+options.Native.SetBeforeSend(nativeEvent =>
+{
+    // Drop a noisy error that you can't fix.
+    if (nativeEvent.GetExceptionValue(0)?.Contains("Noisy error") == true)
+    {
+        return null;
+    }
+    return nativeEvent;
+});
 ```
 
 </SdkOption>
