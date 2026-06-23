@@ -592,6 +592,18 @@ const userDocsRedirects = [
     destination: '/api/auth/',
   },
   {
+    source: '/product/codecov/:path*',
+    destination: '/integrations/',
+  },
+  {
+    source: '/product/codecov/',
+    destination: '/integrations/',
+  },
+  {
+    source: '/integrations/code-coverage/:path*',
+    destination: '/integrations/',
+  },
+  {
     source: '/integrations/incidentio/',
     destination: '/integrations/issue-tracking/incidentio/',
   },
@@ -665,15 +677,15 @@ const userDocsRedirects = [
   },
   {
     source: '/integrations/phoebeai/',
-    destination: '/integrations/debugging/phoebeai/',
+    destination: '/integrations/debugging/',
   },
   {
     source: '/integrations/qckfx/',
-    destination: '/integrations/debugging/qckfx/',
+    destination: '/integrations/debugging/',
   },
   {
     source: '/integrations/revisedev/',
-    destination: '/integrations/debugging/revisedev/',
+    destination: '/integrations/debugging/',
   },
   {
     source: '/integrations/rookout/',
@@ -681,7 +693,7 @@ const userDocsRedirects = [
   },
   {
     source: '/integrations/sevvy/',
-    destination: '/integrations/debugging/sevvy/',
+    destination: '/integrations/debugging/corelayer/',
   },
   {
     source: '/integrations/sourcery/',
@@ -950,6 +962,10 @@ const userDocsRedirects = [
   {
     source: '/platforms/javascript/guides/aws-lambda/cjs-npm__v9.x/',
     destination: '/platforms/javascript/guides/aws-lambda/install/cjs-npm__v9.x/',
+  },
+  {
+    source: '/platforms/javascript/guides/react-router/features/instrumentation-api/',
+    destination: '/platforms/javascript/guides/react-router/manual-setup/',
   },
   {
     source: '/platforms/javascript/guides/nextjs/sourcemaps/uploading/',
@@ -1856,7 +1872,8 @@ const userDocsRedirects = [
   },
   {
     source: '/product/insights/mobile-vitals/screen-loads/',
-    destination: '/product/dashboards/sentry-dashboards/mobile/mobile-vitals/screen-loads/',
+    destination:
+      '/product/dashboards/sentry-dashboards/mobile/mobile-vitals/screen-loads/',
   },
   {
     source: '/product/insights/mobile-vitals/:path*',

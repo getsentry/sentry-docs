@@ -9,7 +9,7 @@ The MCP Server module is the instrumentation for the [anthropic MCP](https://www
 
 For your MCP Server data to show up in Sentry, specific spans must be created with well-defined names and data attributes. See below.
 
-We follow the draft [OpenTelemetry MCP Semantic Conventions](https://github.com/open-telemetry/semantic-conventions/pull/2083) as closely as possible, with some opinionated additions for improved MCP observability. We should keep an eye on the conventions and update this guide as needed as they are currently in draft and subject to change.
+Span naming conventions for MCP spans are defined in the [Sentry Conventions](https://getsentry.github.io/sentry-conventions/names/#mcp) repo. Refer to that document for how to construct span names (operation values, naming templates, and examples). Sentry conventions follow OTel conventions closely, but we should keep an eye on how OTel's conventions change. The rest of this page covers the data attributes that **MUST** or **SHOULD** be set on each span type.
 
 ### Common Span Attributes
 
@@ -88,22 +88,19 @@ MCP Server spans use the operation value `"mcp.server"` and fall into these cate
 - **Tool calls** - `tools/call {tool_name}` - Execute client-requested tools
 - **Prompt requests** - `prompts/get {prompt_name}` - Provide prompt templates to clients
 - **Resource access** - `resources/read {resource_uri}` - Serve resources to clients
+- **Initialization** - `initialize` - Handle client connection setup
 
 **Notifications** (op: `"mcp.notification.client_to_server"` or `"mcp.notification.server_to_client"`):
 - One-way messages that don't expect responses (e.g., `notifications/cancelled`)
 
-**Others** (op: `"mcp.server"`):
-- **Initialization** - `initialize` - Handle client connection setup
-
 ### Tool Call Span
 
-Describes MCP tool execution requests from clients.
+Describes MCP tool execution requests from clients. See [Sentry Conventions](https://getsentry.github.io/sentry-conventions/names/#mcp) for the span naming pattern.
 
-- The spans `op` MUST be `"mcp.server"`.
-- The span `name` SHOULD follow the pattern `"tools/call {mcp.tool.name}"`. (e.g. `"tools/call get_weather"`)
-- The `mcp.method.name` attribute MUST be `"tools/call"`.
-- The `mcp.tool.name` attribute SHOULD be set to the tool name. (e.g. `"get_weather"`)
-- All [Common Span Attributes](#common-span-attributes) SHOULD be set (all `required` common attributes MUST be set).
+- The span `op` **MUST** be `"mcp.server"`.
+- The `mcp.method.name` attribute **MUST** be `"tools/call"`.
+- The `mcp.tool.name` attribute **SHOULD** be set to the tool name. (e.g. `"get_weather"`)
+- All [Common Span Attributes](#common-span-attributes) **SHOULD** be set (all `required` common attributes **MUST** be set).
 
 Additional attributes on the span:
 
@@ -119,13 +116,12 @@ Additional attributes on the span:
 
 ### Prompt Span
 
-Describes MCP prompt requests from clients.
+Describes MCP prompt requests from clients. See [Sentry Conventions](https://getsentry.github.io/sentry-conventions/names/#mcp) for the span naming pattern.
 
-- The spans `op` MUST be `"mcp.server"`.
-- The span `name` SHOULD follow the pattern `"prompts/get {mcp.prompt.name}"`. (e.g. `"prompts/get analyze-code"`)
-- The `mcp.method.name` attribute MUST be `"prompts/get"`.
-- The `mcp.prompt.name` attribute SHOULD be set to the prompt name. (e.g. `"analyze-code"`)
-- All [Common Span Attributes](#common-span-attributes) SHOULD be set (all `required` common attributes MUST be set).
+- The span `op` **MUST** be `"mcp.server"`.
+- The `mcp.method.name` attribute **MUST** be `"prompts/get"`.
+- The `mcp.prompt.name` attribute **SHOULD** be set to the prompt name. (e.g. `"analyze-code"`)
+- All [Common Span Attributes](#common-span-attributes) **SHOULD** be set (all `required` common attributes **MUST** be set).
 
 Additional attributes on the span:
 
@@ -135,13 +131,12 @@ Additional attributes on the span:
 
 ### Resource Span
 
-Describes MCP resource access requests from clients.
+Describes MCP resource access requests from clients. See [Sentry Conventions](https://getsentry.github.io/sentry-conventions/names/#mcp) for the span naming pattern.
 
-- The spans `op` MUST be `"mcp.server"`.
-- The span `name` SHOULD follow the pattern `"resources/read {mcp.resource.uri}"`. (e.g. `"resources/read file:///path/to/file"`)
-- The `mcp.method.name` attribute MUST be `"resources/read"`.
-- The `mcp.resource.uri` attribute SHOULD be set to the resource URI. (e.g. `"file:///path/to/file"`)
-- All [Common Span Attributes](#common-span-attributes) SHOULD be set (all `required` common attributes MUST be set).
+- The span `op` **MUST** be `"mcp.server"`.
+- The `mcp.method.name` attribute **MUST** be `"resources/read"`.
+- The `mcp.resource.uri` attribute **SHOULD** be set to the resource URI. (e.g. `"file:///path/to/file"`)
+- All [Common Span Attributes](#common-span-attributes) **SHOULD** be set (all `required` common attributes **MUST** be set).
 
 Additional attributes on the span:
 
@@ -153,10 +148,10 @@ Additional attributes on the span:
 
 Describes MCP initialization requests from clients.
 
-- The spans `op` MUST be `"mcp.server"`.
-- The span `name` SHOULD be `"initialize"`.
-- The `mcp.method.name` attribute MUST be `"initialize"`.
-- All [Common Span Attributes](#common-span-attributes) SHOULD be set (all `required` common attributes MUST be set).
+- The span `op` **MUST** be `"mcp.server"`.
+- The span `name` **SHOULD** be `"initialize"`.
+- The `mcp.method.name` attribute **MUST** be `"initialize"`.
+- All [Common Span Attributes](#common-span-attributes) **SHOULD** be set (all `required` common attributes **MUST** be set).
 
 Additional attributes on the span:
 
@@ -167,9 +162,8 @@ Additional attributes on the span:
 
 ### Notification Span
 
-Describes MCP notification messages (one-way messages that don't expect a response).
+Describes MCP notification messages (one-way messages that don't expect a response). See [Sentry Conventions](https://getsentry.github.io/sentry-conventions/names/#mcp) for the span naming pattern.
 
-- The spans `op` MUST be `"mcp.notification.client_to_server"` or `"mcp.notification.server_to_client"`.
-- The span `name` SHOULD be the notification method name. (e.g. `"notifications/cancelled"`)
-- The `mcp.method.name` attribute MUST be set to the notification method. (e.g. `"notifications/cancelled"`)
-- All [Common Span Attributes](#common-span-attributes) SHOULD be set (all `required` common attributes MUST be set).
+- The span `op` **MUST** be `"mcp.notification.client_to_server"` or `"mcp.notification.server_to_client"`.
+- The `mcp.method.name` attribute **MUST** be set to the notification method. (e.g. `"notifications/cancelled"`)
+- All [Common Span Attributes](#common-span-attributes) **SHOULD** be set (all `required` common attributes **MUST** be set).
