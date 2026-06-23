@@ -129,15 +129,24 @@ In this case, the matching will happen from **top to bottom** and the following 
 
 ### Interpreting the Dynamic Sampling Context
 
-The existence of a dynamic sampling context does not necessarily mean it is valid. Relay differentiates between three cases:
-1. **No dynamic sampling context**: If an envelope received by Relay does not contain a dynamic sampling context it is always sampled, unless the payload requires a DSC to always be present.
+Before sampling, Relay validates the incoming DSC and, in some cases, reconstructs it. Relay differentiates between the following cases:
 
-2. **A dynamic sampling context originating in a project of the same organization**: A dynamic sampling context which originates from either the same project or a project within the same organization is considered valid and Relay will apply the sampling rules from the root project as described in the previous section.
+1. **DSC originating from a project within the same organization**
 
-3. **A dynamic sampling context originating in a project of a different organization or an unknown project**: DSCs originating in different organizations or unknown projects are discarded and Relay will re-compute a DSC based on the data of the payload and scoped to the current project. The computed dynamic sampling context is then used to apply the dynamic sampling rules.
+    - **Transactions and spans**: The DSC is treated as valid and the sampling rules from the root project are applied as described in the previous section.
 
+2. **Missing DSC**
 
-![Interpreting the Dynamic Sampling Context](./images/interpreteDsc.png)
+    - **Transactions**: The DSC is reconstructed using event fields like `release`, `environment`, and `transaction`, and scoped to the transaction's project. If reconstruction fails, for example, due to the public key being missing, the DSC is removed and the item is guaranteed to be sampled.
+
+    - **Spans**: The spans are rejected - unless they are from the OTel integration, in which case a missing DSC is allowed and the sample rate is 100%.
+
+3. **DSC originating from an unknown project or another organization**
+
+    - **Transactions**: The DSC is treated as missing (see point 2 above).
+
+    - **Spans**: The DSC is reconstructed, but minimally so; it only contains public key and trace id. Span attributes like `release`, `environment`, and `segment.name` are not used because there is no guarantee that an envelope's spans all share the same value for these attributes. The reconstructed DSC is scoped to the spans' project.
+
 
 ## Rules Generation in Sentry
 

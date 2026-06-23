@@ -190,6 +190,13 @@ SentrySDK.start { options in
 }];
 ```
 
+```objc {tabTitle:Objective-C (SentryObjC)}
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    [options addInAppInclude:@"MyFramework"];
+}];
+```
+
 </SdkOption>
 
 <SdkOption name="inAppExclude" type="array" removedSince="9.0.0">
@@ -222,6 +229,18 @@ SentrySDK.start { options in
 [SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
     options.dsn = @"___PUBLIC_DSN___";
     options.initialScope = ^(SentryScope *scope) {
+        [scope setTagValue:@"my value" forKey:@"my-tag"];
+        return scope;
+    };
+}];
+```
+
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.initialScope = ^(SentryObjCScope *scope) {
         [scope setTagValue:@"my value" forKey:@"my-tag"];
         return scope;
     };
@@ -431,6 +450,21 @@ SentrySDK.start { options in
 }];
 ```
 
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.beforeSendSpan = ^SentryObjCSpan * _Nullable(SentryObjCSpan * _Nonnull span) {
+        // Filter out spans with certain operations
+        if ([span.operation isEqualToString:@"db.query"]) {
+            return nil;
+        }
+        return span;
+    };
+}];
+```
+
 </SdkOption>
 
 <SdkOption name="beforeSendLog" type="function">
@@ -462,6 +496,22 @@ SentrySDK.start { options in
     options.beforeSendLog = ^SentryLog * _Nullable(SentryLog * _Nonnull log) {
         // Filter out info level logs
         if (log.level == SentryLogLevelInfo) {
+            return nil;
+        }
+        return log;
+    };
+}];
+```
+
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.enableLogs = YES;
+    options.beforeSendLog = ^SentryObjCLog * _Nullable(SentryObjCLog * _Nonnull log) {
+        // Filter out info level logs
+        if (log.level == SentryObjCLogLevelInfo) {
             return nil;
         }
         return log;
@@ -503,6 +553,19 @@ SentrySDK.start { options in
 }];
 ```
 
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.attachScreenshot = YES;
+    options.beforeCaptureScreenshot = ^BOOL(SentryObjCEvent * _Nonnull event) {
+        // Prevent screenshots in certain views
+        return !isSensitiveView();
+    };
+}];
+```
+
 </SdkOption>
 
 <SdkOption name="beforeCaptureViewHierarchy" type="function">
@@ -535,6 +598,19 @@ SentrySDK.start { options in
 }];
 ```
 
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.attachViewHierarchy = YES;
+    options.beforeCaptureViewHierarchy = ^BOOL(SentryObjCEvent * _Nonnull event) {
+        // Prevent view hierarchy capture in certain views
+        return !isSensitiveView();
+    };
+}];
+```
+
 </SdkOption>
 
 <SdkOption name="onCrashedLastRun" type="function">
@@ -561,6 +637,18 @@ SentrySDK.start { options in
 [SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
     options.dsn = @"___PUBLIC_DSN___";
     options.onCrashedLastRun = ^(SentryEvent * _Nonnull event) {
+        // Perform actions when a crash was detected on last run
+        NSLog(@"App crashed on last run");
+    };
+}];
+```
+
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.onCrashedLastRun = ^(SentryObjCEvent * _Nonnull event) {
         // Perform actions when a crash was detected on last run
         NSLog(@"App crashed on last run");
     };
@@ -603,6 +691,21 @@ SentrySDK.start { options in
     options.dsn = @"___PUBLIC_DSN___";
     options.onLastRunStatusDetermined = ^(SentryLastRunStatus status, SentryEvent * _Nullable crashEvent) {
         if (status == SentryLastRunStatusDidCrash) {
+            NSLog(@"App crashed on last run: %@", crashEvent);
+        } else {
+            NSLog(@"App did not crash on last run");
+        }
+    };
+}];
+```
+
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.onLastRunStatusDetermined = ^(SentryObjCLastRunStatus status, SentryObjCEvent * _Nullable crashEvent) {
+        if (status == SentryObjCLastRunStatusDidCrash) {
             NSLog(@"App crashed on last run: %@", crashEvent);
         } else {
             NSLog(@"App did not crash on last run");
@@ -1196,13 +1299,11 @@ When enabled, the SDK captures fatal C++ exceptions using a more reliable mechan
 
 **Note:** The mechanism of hooking into `__cxa_throw` could cause issues with symbolication on iOS due to caching of symbol references.
 
-
 </SdkOption>
 
 <SdkOption name="experimental.enableWatchdogTerminationsV2" type="bool" defaultValue="false">
 
 When enabled, the SDK uses a more efficient mechanism for detecting watchdog terminations.
-
 
 </SdkOption>
 

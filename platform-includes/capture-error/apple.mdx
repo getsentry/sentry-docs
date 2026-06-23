@@ -9,7 +9,7 @@ enum MyCustomError: Error {
 
 func thisFunctionThrows() throws {
     throw MyCustomError.myFirstIssue
-} 
+}
 
 do {
     try thisFunctionThrows()
@@ -36,6 +36,27 @@ NSError *error = nil;
 
 if (error) {
     [SentrySDK captureError:error];
+}
+```
+
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+- (void)thisFunctionReturnsAnError:(NSError **)error {
+    *error = [NSError errorWithDomain:@"com.example.myapp"
+                                 code:1001
+                             userInfo:@{
+      NSLocalizedDescriptionKey: @"Something went wrong."
+    }];
+}
+
+// ... Your code
+
+NSError *error = nil;
+[self thisFunctionReturnsAnError:&error];
+
+if (error) {
+    [SentryObjCSDK captureError:error];
 }
 ```
 
@@ -159,10 +180,20 @@ SentrySDK.start { options in
     options.enableUncaughtNSExceptionReporting = true
 }
 ```
+
 ```objc {tabTitle:Objective-C}
 @import Sentry;
 
 [SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.enableUncaughtNSExceptionReporting = YES;
+}];
+```
+
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
     options.dsn = @"___PUBLIC_DSN___";
     options.enableUncaughtNSExceptionReporting = YES;
 }];

@@ -42,6 +42,23 @@ SentrySDK.start { options in
 }];
 ```
 
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.enableLogs = YES;
+
+    options.beforeSendLog = ^SentryLog* (SentryLog *log) {
+        if (log.level == SentryLogLevelInfo) {
+            // Filter out all info logs
+            return nil;
+        }
+        return log;
+    };
+}];
+```
+
 Before 9.0.0:
 
 ```swift {tabTitle:Swift}
@@ -64,6 +81,22 @@ SentrySDK.start { options in
 @import Sentry;
 
 [SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.experimental.enableLogs = YES;
+
+    options.beforeSendLog = ^SentryLog* (SentryLog *log) {
+        if (log.level == SentryLogLevelInfo) {
+            return nil;
+        }
+        return log;
+    };
+}];
+```
+
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
     options.dsn = @"___PUBLIC_DSN___";
     options.experimental.enableLogs = YES;
 
