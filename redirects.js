@@ -1803,6 +1803,48 @@ const userDocsRedirects = [
     source: '/platforms/react-native/manual-setup/codepush/',
     destination: '/platforms/react-native/sourcemaps/uploading/codepush/',
   },
+  // Expo-specific pages moved under the Expo guide (/guides/expo/)
+  {
+    source: '/platforms/react-native/manual-setup/expo/',
+    destination: '/platforms/react-native/guides/expo/',
+  },
+  {
+    source: '/platforms/react-native/manual-setup/expo/eas-build-hooks/',
+    destination:
+      '/platforms/react-native/guides/expo/manual-setup/expo/eas-build-hooks/',
+  },
+  {
+    source: '/platforms/react-native/manual-setup/expo/expo-updates/',
+    destination:
+      '/platforms/react-native/guides/expo/manual-setup/expo/expo-updates/',
+  },
+  {
+    source: '/platforms/react-native/manual-setup/expo/gradle/',
+    destination: '/platforms/react-native/guides/expo/manual-setup/expo/gradle/',
+  },
+  {
+    source: '/platforms/react-native/migration/sentry-expo/',
+    destination: '/platforms/react-native/guides/expo/migration/sentry-expo/',
+  },
+  {
+    source: '/platforms/react-native/sourcemaps/uploading/expo/',
+    destination: '/platforms/react-native/guides/expo/sourcemaps/uploading/expo/',
+  },
+  {
+    source: '/platforms/react-native/sourcemaps/uploading/expo-advanced/',
+    destination:
+      '/platforms/react-native/guides/expo/sourcemaps/uploading/expo-advanced/',
+  },
+  {
+    source: '/platforms/react-native/tracing/instrumentation/expo-router/',
+    destination:
+      '/platforms/react-native/guides/expo/tracing/instrumentation/expo-router/',
+  },
+  {
+    source: '/platforms/react-native/tracing/instrumentation/expo-resources/',
+    destination:
+      '/platforms/react-native/guides/expo/tracing/instrumentation/expo-resources/',
+  },
   {
     source:
       '/platforms/react-native/data-management/debug-files/source-context/data-management/debug-files/upload/',
