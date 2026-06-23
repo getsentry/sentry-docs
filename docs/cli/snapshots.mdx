@@ -60,26 +60,9 @@ sentry-cli snapshots upload ./snapshots --app-id web-frontend --selective
 
 When an upload is marked as selective, Sentry only diffs the snapshots you uploaded. Any snapshot that exists in the base build but was not included in the upload is treated as unchanged (skipped) rather than removed.
 
-### Detecting Removals and Renames in Selective Mode
+### Detecting Removals and Renames
 
-By default, selective mode cannot detect removals or renames. If you want Sentry to distinguish deliberately deleted snapshots from ones that simply weren't run, pass the full list of image file names from your test suite:
-
-- `--all-image-file-names <NAMES>` — a comma-separated list of all image file names.
-- `--all-image-file-names-file <PATH>` — a path to a file (`.txt`, `.csv`, etc.) containing all image file names, one per line.
-
-Both flags implicitly enable `--selective`.
-
-```bash
-sentry-cli snapshots upload ./snapshots \
-  --app-id web-frontend \
-  --all-image-file-names "homepage.png,settings/profile.png,settings/billing.png"
-```
-
-With the full list provided, Sentry can tell apart three categories of missing images:
-
-- **Skipped** — in the list but not uploaded (part of the test suite, just not run in this CI job).
-- **Removed** — not in the list and not uploaded (deliberately deleted from the test suite).
-- **Renamed** — a new image has the same content hash as a missing one.
+<Include name="snapshots/detecting-removals-renames" />
 
 ## Diff Threshold
 
