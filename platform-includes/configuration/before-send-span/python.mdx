@@ -1,0 +1,20 @@
+```python
+import sentry_sdk
+
+def postprocess_span(span, hint):
+    attributes_to_sanitize = [
+        "http.request.header.custom-auth",
+        "http.request.header.custom-user-id",
+    ]
+    for attribute in attributes_to_sanitize:
+        if span["attributes"].get(attribute):
+            span["attributes"][attribute] = "[Sanitized]"
+    return span
+
+sentry_sdk.init(
+    _experiments={
+        "trace_lifecycle": "stream",
+        "before_send_span": postprocess_span,
+    },
+)
+```
