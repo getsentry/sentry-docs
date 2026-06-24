@@ -149,3 +149,21 @@ This function is called with an SDK-specific log object, and can return a modifi
 Whether calls to `sentry_log_X()` expect an attributes object as the second argument, allowing users to pass in custom log attributes. An example can be found on the [Logs page](/platforms/native/logs/#additional-attributes).
 
 </SdkOption>
+
+## App Hang Options
+
+These options control in-process app-hang detection. See the [App Hangs page](/platforms/native/usage/app-hangs/) for a full explanation and usage example.
+
+<SdkOption name="enable_app_hang_tracking" type="bool" defaultValue="false" availableSince="0.15.2">
+
+Enables or disables in-process app-hang detection. When enabled, a background watchdog thread monitors heartbeats from the watched thread. If no heartbeat is received within `app_hang_timeout`, an app-hang event is captured and sent to Sentry.
+
+Must be combined with regular calls to `sentry_app_hang_heartbeat()` from the thread you want monitored. The first heartbeat latches the calling thread as the monitored thread; heartbeats from any other thread are ignored.
+
+</SdkOption>
+
+<SdkOption name="app_hang_timeout" type="uint64_t" defaultValue="5000" defaultNote="milliseconds" availableSince="0.15.2">
+
+Sets the app-hang detection timeout, in milliseconds. If `enable_app_hang_tracking` is enabled and no heartbeat is received from the monitored thread within this window, an app-hang event is captured.
+
+</SdkOption>
