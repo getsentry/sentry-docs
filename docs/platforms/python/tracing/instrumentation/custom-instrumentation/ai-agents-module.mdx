@@ -10,6 +10,13 @@ With <Link to="/ai/monitoring/agents/dashboards/">Sentry AI Agent Monitoring</Li
 
 As a prerequisite to setting up AI Agent Monitoring with Python, you'll need to first <PlatformLink to="/tracing/">set up tracing</PlatformLink>. Once this is done, the Python SDK will automatically instrument AI agents created with supported libraries. If that doesn't fit your use case, you can use custom instrumentation described below.
 
+<Alert>
+
+This page covers both transaction mode (default) and stream mode. See <PlatformLink to="/tracing/new-spans/">New Spans</PlatformLink> to learn more.
+
+</Alert>
+
+
 ## Automatic Instrumentation
 
 The Python SDK supports automatic instrumentation for some AI libraries. We recommend adding their integrations to your Sentry configuration to automatically capture spans for AI agents.
@@ -27,7 +34,8 @@ The Python SDK supports automatic instrumentation for some AI libraries. We reco
 
 For your AI agents data to show up in the [AI Agents Dashboards](https://sentry.io/orgredirect/organizations/:orgslug/dashboards/?filter=onlyPrebuilt&query=agents&sort=mostPopular), at least one of the AI spans needs to be created and have well-defined names and data attributes. See below.
 
-The [@sentry_sdk.trace()](/platforms/python/tracing/instrumentation/custom-instrumentation/#span-templates) decorator can also be used to create these spans.
+In transaction mode, you can also use the [@sentry_sdk.trace()](/platforms/python/tracing/instrumentation/custom-instrumentation/#span-templates) decorator to create these spans, using its `template` parameter.
+In stream mode, these spans need to be created directly with `sentry_sdk.traces.start_span()`, as shown below.
 
 ## Span Hierarchy
 
@@ -55,7 +63,7 @@ This span represents a request to an LLM model or service that generates a respo
 
 #### Example AI Request span
 
-```python
+```python {tabTitle:Transaction Mode (Default)}
 import json
 import sentry_sdk
 
@@ -78,11 +86,41 @@ with sentry_sdk.start_span(op="gen_ai.chat", name="chat o3-mini") as span:
     span.set_data("gen_ai.usage.output_tokens", result.usage.completion_tokens)
 ```
 
+```python {tabTitle:Stream Mode}
+import json
+import sentry_sdk
+
+messages = [{"role": "user", "parts": [{"type": "text", "content": "Tell me a joke"}]}]
+
+with sentry_sdk.traces.start_span(
+    name="chat o3-mini",
+    attributes={"sentry.op": "gen_ai.chat"},
+) as span:
+    span.set_attributes({
+        "gen_ai.operation.name": "chat",
+        "gen_ai.request.model": "o3-mini",
+        "gen_ai.provider.name": "openai",
+        "gen_ai.input.messages": json.dumps(messages),
+    })
+
+    result = client.chat.completions.create(model="o3-mini", messages=messages)
+
+    span.set_attributes({
+        "gen_ai.response.model": result.model,
+        "gen_ai.output.messages": json.dumps([
+            {"role": "assistant", "parts": [{"type": "text", "content": result.choices[0].message.content}]}
+        ]),
+        "gen_ai.response.finish_reasons": json.dumps([result.choices[0].finish_reason]),
+        "gen_ai.usage.input_tokens": result.usage.prompt_tokens,
+        "gen_ai.usage.output_tokens": result.usage.completion_tokens,
+    })
+```
+
 #### Thinking / reasoning messages
 
 Models with extended thinking (such as Anthropic's `thinking` blocks, Gemini's `thought`, or DeepSeek's `reasoning_content`) produce internal reasoning that isn't part of the user-visible reply. Represent this content as a `reasoning` part inside the assistant message, alongside the user-facing `text` part. Sentry surfaces reasoning parts separately and filters them out of the user-facing <Link to="/ai/monitoring/conversations/">Conversations</Link> view, so don't fold thinking into a `text` part.
 
-```python
+```python {tabTitle:Transaction Mode (Default)}
 import json
 import sentry_sdk
 
@@ -111,6 +149,45 @@ with sentry_sdk.start_span(op="gen_ai.chat", name="chat o3-mini") as span:
     span.set_data("gen_ai.usage.output_tokens.reasoning", result.usage.completion_tokens_details.reasoning_tokens)
 ```
 
+```python {tabTitle:Stream Mode}
+import json
+import sentry_sdk
+
+messages = [{"role": "user", "parts": [{"type": "text", "content": "What is 6 * 7?"}]}]
+
+with sentry_sdk.traces.start_span(
+    name="chat o3-mini",
+    attributes={"sentry.op": "gen_ai.chat"},
+) as span:
+    span.set_attributes({
+        "gen_ai.operation.name": "chat",
+        "gen_ai.request.model": "o3-mini",
+        "gen_ai.provider.name": "openai",
+        "gen_ai.input.messages": json.dumps(messages),
+    })
+
+    result = client.chat.completions.create(model="o3-mini", messages=messages)
+
+    span.set_attributes({
+        "gen_ai.response.model": result.model,
+        "gen_ai.output.messages": json.dumps([
+            {
+                "role": "assistant",
+                "parts": [
+                    {"type": "reasoning", "content": "6 times 7 is 42."},
+                    {"type": "text", "content": "The answer is 42."},
+                ],
+            }
+        ]),
+        "gen_ai.usage.output_tokens": result.usage.completion_tokens,
+    })
+    # If the provider reports reasoning tokens, record them as a subset of output tokens
+    span.set_attribute(
+        "gen_ai.usage.output_tokens.reasoning",
+        result.usage.completion_tokens_details.reasoning_tokens,
+    )
+```
+
 When previous thinking is fed back into a multi-turn request, include the same `reasoning` parts in the assistant messages within `gen_ai.input.messages`.
 
 ### Invoke Agent Span
@@ -129,7 +206,7 @@ For a complete guide on naming agents across all supported frameworks, see [Nami
 
 #### Example of an Invoke Agent Span:
 
-```python
+```python {tabTitle:Transaction Mode (Default)}
 import json
 import sentry_sdk
 
@@ -147,6 +224,31 @@ with sentry_sdk.start_span(op="gen_ai.invoke_agent", name="invoke_agent Weather 
     span.set_data("gen_ai.usage.output_tokens", final_output.usage.output_tokens)
 ```
 
+```python {tabTitle:Stream Mode}
+import json
+import sentry_sdk
+
+with sentry_sdk.traces.start_span(
+    name="invoke_agent Weather Agent",
+    attributes={"sentry.op": "gen_ai.invoke_agent"},
+) as span:
+    span.set_attributes({
+        "gen_ai.operation.name": "invoke_agent",
+        "gen_ai.request.model": "o3-mini",
+        "gen_ai.agent.name": "Weather Agent",
+    })
+
+    final_output = my_agent.run()
+
+    span.set_attributes({
+        "gen_ai.output.messages": json.dumps([
+            {"role": "assistant", "parts": [{"type": "text", "content": str(final_output)}]}
+        ]),
+        "gen_ai.usage.input_tokens": final_output.usage.input_tokens,
+        "gen_ai.usage.output_tokens": final_output.usage.output_tokens,
+    })
+```
+
 ### Execute Tool Span
 
 This span represents the execution of a tool or function that was requested by an AI model, including the input arguments and resulting output.
@@ -157,7 +259,7 @@ This span represents the execution of a tool or function that was requested by a
 
 #### Example Execute Tool span
 
-```python
+```python {tabTitle:Transaction Mode (Default)}
 import json
 import sentry_sdk
 
@@ -171,6 +273,25 @@ with sentry_sdk.start_span(op="gen_ai.execute_tool", name="execute_tool get_weat
     span.set_data("gen_ai.tool.call.result", json.dumps(result))
 ```
 
+```python {tabTitle:Stream Mode}
+import json
+import sentry_sdk
+
+with sentry_sdk.traces.start_span(
+    name="execute_tool get_weather",
+    attributes={"sentry.op": "gen_ai.execute_tool"},
+) as span:
+    span.set_attributes({
+        "gen_ai.operation.name": "execute_tool",
+        "gen_ai.tool.name": "get_weather",
+        "gen_ai.tool.call.arguments": json.dumps({"location": "Paris"}),
+    })
+
+    result = get_weather(location="Paris")
+
+    span.set_attribute("gen_ai.tool.call.result", json.dumps(result))
+```
+
 ### Handoff Span
 
 This span marks the transition of control from one agent to another, typically when the current agent determines another agent is better suited to handle the task.
@@ -181,7 +302,7 @@ This span marks the transition of control from one agent to another, typically w
 
 #### Example of a Handoff Span
 
-```python
+```python {tabTitle:Transaction Mode (Default)}
 import sentry_sdk
 
 with sentry_sdk.start_span(op="gen_ai.handoff", name="handoff from Weather Agent to Travel Agent"):
@@ -192,10 +313,28 @@ with sentry_sdk.start_span(op="gen_ai.invoke_agent", name="invoke_agent Travel A
     pass
 ```
 
+```python {tabTitle:Stream Mode}
+import sentry_sdk
+
+with sentry_sdk.traces.start_span(
+    name="handoff from Weather Agent to Travel Agent",
+    attributes={"sentry.op": "gen_ai.handoff"},
+):
+    pass  # Handoff span just marks the transition
+
+with sentry_sdk.traces.start_span(
+    name="invoke_agent Travel Agent",
+    attributes={"sentry.op": "gen_ai.invoke_agent"},
+):
+    # Run the target agent here
+    pass
+```
+
 ## Tracking Conversations
 
 <Alert>
-  Tracking Conversations has **beta** stability. Configuration options and behavior may change.
+  Tracking Conversations has **beta** stability. Configuration options and
+  behavior may change.
 </Alert>
 
 For AI applications that involve multi-turn conversations, you can use `sentry_sdk.ai.set_conversation_id()` to associate all AI spans from the same conversation. This enables you to track and analyze complete <Link to="/ai/monitoring/conversations/">conversation</Link> flows within Sentry.
