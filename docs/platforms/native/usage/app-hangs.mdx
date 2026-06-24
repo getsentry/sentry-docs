@@ -43,6 +43,12 @@ int main(void) {
 }
 ```
 
+<Alert level="warning">
+
+The minimum `app_hang_timeout` is `1000` ms. Setting a lower value (including `0`) logs a warning and clamps the timeout to `1000` ms; detection still runs.
+
+</Alert>
+
 If the watched thread doesn't send a heartbeat within the configured [`app_hang_timeout`](/platforms/native/configuration/options/#app_hang_timeout), the watchdog samples the hung thread's stack trace and captures an app-hang event.
 
 ## How Heartbeats Work
@@ -54,18 +60,3 @@ The SDK monitors exactly one thread, chosen at runtime by your heartbeats:
 - **Calls are no-ops unless app-hang detection is enabled** via `sentry_options_set_enable_app_hang_tracking()`, so you can leave the heartbeat calls in place even when the feature is turned off.
 
 Because detection relies on heartbeats, place them where they reflect your application's responsiveness, for example, at the top of each iteration of your main loop. A thread that's busy but still ticking the loop will keep sending heartbeats; a thread genuinely stuck past the timeout will not.
-
-## Configuration
-
-Two options control app-hang detection. See the [configuration reference](/platforms/native/configuration/options/) for full details.
-
-| Option                                                                                          | Description                                                                                                                  |
-| ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| [`enable_app_hang_tracking`](/platforms/native/configuration/options/#enable_app_hang_tracking) | Turns the watchdog on or off. Disabled by default.                                                                           |
-| [`app_hang_timeout`](/platforms/native/configuration/options/#app_hang_timeout)                 | How long (in milliseconds) the watched thread can go without a heartbeat before an event is captured. Defaults to `5000` ms. |
-
-<Alert level="warning">
-
-The minimum `app_hang_timeout` is `1000` ms. Setting a lower value (including `0`) logs a warning and clamps the timeout to `1000` ms; detection still runs.
-
-</Alert>
