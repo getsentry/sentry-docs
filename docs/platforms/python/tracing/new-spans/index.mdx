@@ -13,7 +13,7 @@ Stream mode changes this by sending spans to Sentry in batches as they finish. S
 - **No 1,000-span limit.** In transaction mode, transactions are capped at 1,000 spans. Stream mode has no upper limit since spans are sent in batches. This is especially beneficial for complex generative AI pipelines that easily exceed standard span limits.
 - **Lower memory usage.** Spans are flushed periodically and don't need to be held in memory until the root span ends. This is especially useful for long-running processes like queue consumers or cron jobs.
 - **Faster visibility.** Span data arrives in Sentry as your application runs, instead of only after the entire operation completes.
-- **No data loss from crashes.** If your process terminates unexpectedly, spans that were already flushed are preserved. In transaction mode, a crash before the root span ends means all span data is lost.
+- **Spans are emitted in more failure scenarios.** If your process terminates unexpectedly, spans that were already flushed are preserved. In transaction mode, a crash before the transaction ends means all span data is lost.
 
 </Expandable>
 
@@ -142,7 +142,8 @@ with sentry_sdk.traces.start_span(name="parent-operation"):
 <SplitSection>
 <SplitSectionText>
 
-To start a service span (the equivalent of a transaction), set `parent_span=None`:
+A span is automatically promoted to a service span (the equivalent of a transaction) if no other parent is currently active.
+If you want to force a new service span, regardless of whether it has a parent span, set `parent_span=None`:
 
 </SplitSectionText>
 <SplitSectionCode>

@@ -104,6 +104,8 @@ Unlike the old methods, `set_attribute` only accepts primitive types (`str`, `in
 Tags set on the scope with `sentry_sdk.set_tag()` aren't applied to spans in stream mode. Use `sentry_sdk.set_attribute()` to apply data to spans:
 
 ```python
+import sentry_sdk
+
 sentry_sdk.set_tag("region", "Europe")       # applied to errors and other tag-supporting telemetry
 sentry_sdk.set_attribute("region", "Europe")  # applied to spans, logs, metrics
 ```
@@ -113,6 +115,8 @@ sentry_sdk.set_attribute("region", "Europe")  # applied to spans, logs, metrics
 A few ways of referencing the current span or transaction change in stream mode:
 
 ```python diff
+import sentry_sdk
+
 # Getting the current span
 - span = sentry_sdk.get_current_span()
 + span = sentry_sdk.traces.get_current_span()
@@ -139,6 +143,8 @@ If your code reads specific fields off the trace context, access them as direct 
 `sentry_sdk.traces.continue_trace()` replaces the legacy `continue_trace()`. It's no longer a context manager — it sets the propagation context, and the next span you start picks it up automatically:
 
 ```python diff
+import sentry_sdk
+
 headers = {
     "sentry-trace": "...",
     "baggage": "...",
@@ -172,6 +178,8 @@ If you use `traces_sample_rate`, no changes are needed.
 If you use a custom `traces_sampler`, the sampling context has a different structure in stream mode. Span details are available under `sampling_context["span_context"]`, which includes `name`, `trace_id`, `parent_span_id`, `parent_sampled`, and `attributes`:
 
 ```python
+import sentry_sdk
+
 def traces_sampler(sampling_context):
     if sampling_context["span_context"]["name"] in IGNORED_SPAN_NAMES:
         return 0.0
@@ -186,6 +194,8 @@ sentry_sdk.init(
 `custom_sampling_context` is no longer an argument to `start_span`. Set it on the scope instead, after `continue_trace` (which resets the propagation context) and before `start_span` (which is when sampling happens):
 
 ```python diff
+import sentry_sdk
+
 - with sentry_sdk.start_span(
 -     name="handle request",
 -     custom_sampling_context={"asgi_scope": asgi_scope},
