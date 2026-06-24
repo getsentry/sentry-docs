@@ -43,7 +43,7 @@ def make_request(method, url):
     response = requests.request(method=method, url=url)
 
     span.set_data("http.response.status_code", response.status_code)
-    span.set_data("http.response_content_length", response.headers["content-length"])
+    span.set_data("http.response_content_length", response.headers.get("content-length"))
 
     span.finish()
 
@@ -69,10 +69,13 @@ def make_request(method, url):
         "server.port": parsed_url.port,
     })
     response = requests.request(method=method, url=url)
-    span.set_attributes({
-        "http.response.status_code": response.status_code,
-        "http.response_content_length": response.headers["content-length"],
-    })
+
+    span.set_attribute("http.response.status_code", response.status_code)
+
+    content_length = response.headers.get("content-length")
+    if content_length is not None:
+        span.set_attribute("http.response_content_length", content_length)
+
     span.finish()
     return response
 ```
