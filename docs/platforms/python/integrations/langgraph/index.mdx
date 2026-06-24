@@ -7,6 +7,8 @@ This integration connects Sentry with [LangGraph](https://github.com/langchain-a
 
 Once you've installed this SDK, you can use Sentry AI Agents Monitoring, a Sentry dashboard that helps you understand what's going on with your AI requests. Sentry AI Monitoring will automatically collect information about prompts, tools, tokens, and models. Learn more about the [AI Agents Dashboard](/ai/monitoring/agents).
 
+<Include name="python-stream-mode-general-callout.mdx" />
+
 ## Install
 
 Install `sentry-sdk` from PyPI:
@@ -21,7 +23,8 @@ uv add sentry-sdk
 
 ## Configure
 
-If you have the `langgraph` package in your dependencies, the LangGraph integration will be enabled automatically when you initialize the Sentry SDK. 
+If you have the `langgraph` package in your dependencies, the LangGraph integration will be enabled automatically when you initialize the Sentry SDK.
+
 ```python
 import sentry_sdk
 
@@ -66,6 +69,7 @@ def should_continue(state: State) -> Literal["tools", END]:
     last_message = state["messages"][-1]
     return "tools" if getattr(last_message, "tool_calls", None) else END
 
+# or sentry_sdk.traces.start_span(name="your_span_name", parent_span=None) in stream mode
 with sentry_sdk.start_transaction(name="langgraph-openai"):
     graph_builder = StateGraph(State)
     graph_builder.add_node("chatbot", chatbot)
