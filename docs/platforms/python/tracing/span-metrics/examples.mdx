@@ -33,56 +33,59 @@ from pathlib import Path
 import requests
 from contextlib import contextmanager
 
-with sentry_sdk.start_span(op="upload", name="Upload File") as span:
-    try:
-        # Begin upload process with the requests library
-        file_path = Path("/path/to/uploads/user-profile.jpg")
+def upload_file():
+    with sentry_sdk.start_span(op="upload", name="Upload File") as span:
+        try:
+            # Begin upload process with the requests library
+            file_path = Path("/path/to/uploads/user-profile.jpg")
 
-        # Track progress with a context manager
-        @contextmanager
-        def track_progress(total_size):
-            start = time.time()
-            bytes_sent = 0
+            # Track progress with a context manager
+            @contextmanager
+            def track_progress(total_size):
+                start = time.time()
+                bytes_sent = 0
 
-            class ProgressTracker:
-                def __call__(self, monitor):
-                    nonlocal bytes_sent
-                    bytes_sent = monitor.bytes_read
-                    progress_percent = (bytes_sent / total_size) * 100
-                    span.set_data("upload.percent_complete", progress_percent)
-                    span.set_data("upload.bytes_transferred", bytes_sent)
+                class ProgressTracker:
+                    def __call__(self, monitor):
+                        nonlocal bytes_sent
+                        bytes_sent = monitor.bytes_read
+                        progress_percent = (bytes_sent / total_size) * 100
+                        span.set_data("upload.percent_complete", progress_percent)
+                        span.set_data("upload.bytes_transferred", bytes_sent)
 
-            yield ProgressTracker()
+                yield ProgressTracker()
 
-            # Record total time after context exits
-            span.set_data("upload.total_time_ms", (time.time() - start) * 1000)
+                # Record total time after context exits
+                span.set_data("upload.total_time_ms", (time.time() - start) * 1000)
 
-        # Use the progress tracker with requests
-        with track_progress(file_path.stat().st_size) as progress_callback:
-            with open(file_path, "rb") as f:
-                response = requests.post(
-                    "https://api.example.com/upload",
-                    files={"file": f},
-                    headers={"X-Sentry-Trace": sentry_sdk.get_traceparent()},  # Propagate trace context
-                    stream=True,
-                    hooks={"response": progress_callback}
-                )
+            # Use the progress tracker with requests
+            with track_progress(file_path.stat().st_size) as progress_callback:
+                with open(file_path, "rb") as f:
+                    response = requests.post(
+                        "https://api.example.com/upload",
+                        files={"file": f},
+                        headers={"X-Sentry-Trace": sentry_sdk.get_traceparent()},  # Propagate trace context
+                        stream=True,
+                        hooks={"response": progress_callback}
+                    )
 
-            # Set final data after completion
-            span.set_data("upload.success", response.ok)
-            if response.ok:
-                result = response.json()
-                span.set_data("upload.server_file_id", result["file_id"])
+                # Set final data after completion
+                span.set_data("upload.success", response.ok)
+                if response.ok:
+                    result = response.json()
+                    span.set_data("upload.server_file_id", result["file_id"])
 
-            return response
+                return response
 
-    except Exception as error:
-        # Record failure information
-        span.set_data("upload.success", False)
-        span.set_data("upload.error_type", error.__class__.__name__)
-        span.set_data("upload.error_message", str(error))
-        span.set_status(sentry_sdk.consts.SPANSTATUS.INTERNAL_ERROR)
-        raise
+        except Exception as error:
+            # Record failure information
+            span.set_data("upload.success", False)
+            span.set_data("upload.error_type", error.__class__.__name__)
+            span.set_data("upload.error_message", str(error))
+            span.set_status(sentry_sdk.consts.SPANSTATUS.INTERNAL_ERROR)
+            raise
+
+upload_file()
 ```
 
 ```python {tabTitle:Stream Mode}
@@ -93,59 +96,62 @@ from pathlib import Path
 import requests
 from contextlib import contextmanager
 
-with sentry_sdk.traces.start_span(
-    name="Upload File",
-    attributes={"sentry.op": "upload"},
-) as span:
-    try:
-        # Begin upload process with the requests library
-        file_path = Path("/path/to/uploads/user-profile.jpg")
+def upload_file():
+    with sentry_sdk.traces.start_span(
+        name="Upload File",
+        attributes={"sentry.op": "upload"},
+    ) as span:
+        try:
+            # Begin upload process with the requests library
+            file_path = Path("/path/to/uploads/user-profile.jpg")
 
-        # Track progress with a context manager
-        @contextmanager
-        def track_progress(total_size):
-            start = time.time()
-            bytes_sent = 0
+            # Track progress with a context manager
+            @contextmanager
+            def track_progress(total_size):
+                start = time.time()
+                bytes_sent = 0
 
-            class ProgressTracker:
-                def __call__(self, monitor):
-                    nonlocal bytes_sent
-                    bytes_sent = monitor.bytes_read
-                    progress_percent = (bytes_sent / total_size) * 100
-                    span.set_attribute("upload.percent_complete", progress_percent)
-                    span.set_attribute("upload.bytes_transferred", bytes_sent)
+                class ProgressTracker:
+                    def __call__(self, monitor):
+                        nonlocal bytes_sent
+                        bytes_sent = monitor.bytes_read
+                        progress_percent = (bytes_sent / total_size) * 100
+                        span.set_attribute("upload.percent_complete", progress_percent)
+                        span.set_attribute("upload.bytes_transferred", bytes_sent)
 
-            yield ProgressTracker()
+                yield ProgressTracker()
 
-            # Record total time after context exits
-            span.set_attribute("upload.total_time_ms", (time.time() - start) * 1000)
+                # Record total time after context exits
+                span.set_attribute("upload.total_time_ms", (time.time() - start) * 1000)
 
-        # Use the progress tracker with requests
-        with track_progress(file_path.stat().st_size) as progress_callback:
-            with open(file_path, "rb") as f:
-                response = requests.post(
-                    "https://api.example.com/upload",
-                    files={"file": f},
-                    headers={"X-Sentry-Trace": sentry_sdk.get_traceparent()},  # Propagate trace context
-                    stream=True,
-                    hooks={"response": progress_callback}
-                )
+            # Use the progress tracker with requests
+            with track_progress(file_path.stat().st_size) as progress_callback:
+                with open(file_path, "rb") as f:
+                    response = requests.post(
+                        "https://api.example.com/upload",
+                        files={"file": f},
+                        headers={"X-Sentry-Trace": sentry_sdk.get_traceparent()},  # Propagate trace context
+                        stream=True,
+                        hooks={"response": progress_callback}
+                    )
 
-            # Set final data after completion
-            span.set_attribute("upload.success", response.ok)
-            if response.ok:
-                result = response.json()
-                span.set_attribute("upload.server_file_id", result["file_id"])
+                # Set final data after completion
+                span.set_attribute("upload.success", response.ok)
+                if response.ok:
+                    result = response.json()
+                    span.set_attribute("upload.server_file_id", result["file_id"])
 
-            return response
+                return response
 
-    except Exception as error:
-        # Record failure information
-        span.set_attribute("upload.success", False)
-        span.set_attribute("upload.error_type", error.__class__.__name__)
-        span.set_attribute("upload.error_message", str(error))
-        span.status = "error"
-        raise
+        except Exception as error:
+            # Record failure information
+            span.set_attribute("upload.success", False)
+            span.set_attribute("upload.error_type", error.__class__.__name__)
+            span.set_attribute("upload.error_message", str(error))
+            span.status = "error"
+            raise
+
+upload_file()
 ```
 
 **Server Application Instrumentation:**
@@ -154,6 +160,7 @@ with sentry_sdk.traces.start_span(
 # File processing service
 import sentry_sdk
 from pathlib import Path
+import time
 import boto3
 
 with sentry_sdk.start_span(
@@ -193,6 +200,7 @@ with sentry_sdk.start_span(
 # File processing service
 import sentry_sdk
 from pathlib import Path
+import time
 import boto3
 
 with sentry_sdk.traces.start_span(
@@ -252,7 +260,7 @@ The client application span initiates the trace and handles the file upload. It 
 import sentry_sdk
 import time
 import openai
-from flask import jsonify
+from flask import jsonify, request
 
 @app.route("/ask", methods=["POST"])
 def handle_llm_request():
@@ -307,7 +315,7 @@ def handle_llm_request():
 import sentry_sdk
 import time
 import openai
-from flask import jsonify
+from flask import jsonify, request
 
 @app.route("/ask", methods=["POST"])
 def handle_llm_request():
@@ -602,6 +610,7 @@ class CheckoutView(View):
 # Order processing service
 import sentry_sdk
 import stripe
+import time
 from decimal import Decimal
 
 def process_order(order_data):
@@ -663,6 +672,7 @@ def process_order(order_data):
 # Order processing service
 import sentry_sdk
 import stripe
+import time
 from decimal import Decimal
 
 def process_order(order_data):
@@ -744,6 +754,8 @@ The client application span tracks the initial order request, while the server s
 import sentry_sdk
 from celery import shared_task
 import time
+import psutil
+import os
 from datetime import datetime, timedelta
 
 def submit_processing_job(data_file_path, priority="medium"):
@@ -827,6 +839,8 @@ def process_data_file(file_path, priority="medium"):
 import sentry_sdk
 from celery import shared_task
 import time
+import psutil
+import os
 from datetime import datetime, timedelta
 
 def submit_processing_job(data_file_path, priority="medium"):
