@@ -1,6 +1,6 @@
 ---
 title: Expo Updates
-description: "Automatic context and alerts for Expo OTA updates."
+description: "Automatic context, breadcrumbs, and alerts for Expo OTA updates."
 sidebar_order: 20
 ---
 
@@ -38,6 +38,29 @@ The SDK also sets the following tags on every event so you can filter and group 
 
 To find all issues from a specific update channel, use `expo.updates.channel:production` in the Sentry issue search.
 
+## Update Lifecycle Breadcrumbs
+
+The SDK automatically records breadcrumbs as the Expo Updates state machine progresses. These breadcrumbs appear on subsequent error events and help you understand what was happening with updates before a crash or error occurred.
+
+All breadcrumbs use the category `expo.updates` and include the following transitions:
+
+| Breadcrumb Message | Level | Additional Data |
+|---|---|---|
+| `Checking for update` | `info` | — |
+| `Update available` | `info` | `updateId` |
+| `Downloading update` | `info` | — |
+| `Update downloaded` | `info` | `updateId` |
+| `Restarting for update` | `info` | — |
+| `Update check failed` | `error` | `error` |
+| `Update download failed` | `error` | `error` |
+| `Rollback directive received` | `warning` | `commitTime` |
+
+<Alert>
+
+Update lifecycle breadcrumbs only run in native builds, not in Expo Go.
+
+</Alert>
+
 ## Emergency Launch Warnings
 
 Expo Updates performs an _emergency launch_ when it fails to load the latest OTA update and falls back to the embedded bundle. This can silently degrade user experience.
@@ -55,6 +78,36 @@ Emergency launch detection only runs in native builds, not in Expo Go.
 
 </Alert>
 
+## Applying Updates
+
+When your app applies an OTA update at runtime by calling `Updates.reloadAsync()`, the JavaScript bundle is reloaded and `Sentry.init()` runs again. Flush pending events before reloading so anything still queued on the JS side is sent first:
+
+```javascript
+import * as Sentry from "@sentry/react-native";
+import * as Updates from "expo-updates";
+
+async function applyUpdate() {
+  // Send pending events before the JS bundle reloads
+  await Sentry.flush();
+  await Updates.reloadAsync();
+}
+```
+
+### What happens during a reload
+
+`Updates.reloadAsync()` reloads the JavaScript bundle without restarting the native process. This distinction matters for Sentry:
+
+- **Native SDK**: The native (iOS/Android) SDK is not restarted, so it keeps running across the reload. Native crash handling stays active and the native scope is retained.
+- **JavaScript SDK**: The JS runtime restarts, so `Sentry.init()` runs again in the new bundle and the JS-side scope and breadcrumbs start fresh.
+- **Active spans**: Performance spans still in progress on the JS side don't survive the runtime restart, so they aren't sent. Finish and flush any span you care about before reloading.
+- **Updates context**: After re-initialization, the `ota_updates` context and `expo.updates.*` tags reflect the newly applied update.
+
+### Recommended update strategy
+
+By default, Expo Updates applies a downloaded update on the next app launch (cold start) rather than at runtime. We recommend keeping this default: it lets the SDK initialize cleanly against the new bundle and avoids interrupting active sessions or dropping in-progress spans.
+
+If you apply an update immediately with `Updates.reloadAsync()` (for example, for a critical hotfix), call `Sentry.flush()` first.
+
 ## Expo Constants Context
 
 The SDK automatically captures Expo Constants as an `expo_constants` context on every event. This provides metadata about the execution environment and app configuration:
@@ -67,6 +120,7 @@ The SDK automatically captures Expo Constants as an `expo_constants` context on 
 | `expo_version` | Expo client version |
 | `expo_runtime_version` | Runtime version from app config |
 | `session_id` | Current session ID |
+| `status_bar_height` | Height of the status bar (px) |
 | `app_name` | App name from `app.json` |
 | `app_slug` | App slug from `app.json` |
 | `app_version` | App version from `app.json` |

@@ -129,7 +129,7 @@ The App Start Instrumentation provides insight into how long your application ta
 The SDK differentiates between a cold and a warm start, but doesn't track hot starts/resumes.
 
 - **Cold start**: A cold start refers to an app's starting from scratch: the system's process has not, until this start, created the app's process. Cold starts happen in cases such as your app's being launched for the first time since the device booted, or since the system killed the app.
-- **Warm start**: A warm start encompasses some subset of the operations that take place during a cold start; at the same time, it represents more overhead than a hot start. For instance: The system evicts your app from memory, and then the user re-launches it. The process and the activity need to be restarted, but the task can benefit somewhat from the saved instance state bundle passed into `onCreate()`.
+- **Warm start**: Any start that isn't cold. This includes background returns (the app was in the background and the user re-launches it), activity recreation (for example, the system evicts your app from memory and the process and activity need to be restarted), and late launches (the activity is created after the main looper goes idle).
 
 <Alert>
 
@@ -141,7 +141,7 @@ For example, Sentry measures the duration from process start, including the time
 
 The SDK sets the Span operation to `app.start.cold` for _Cold start_ and `app.start.warm` for _Warm start_.
 
-The SDK uses the `SentryPerformanceProvider` (ContentProvider) creation time as the beginning of the app start and the first frame drawn as the end.
+The SDK uses the process fork time as the beginning of the app start (API 24+), with a fallback to the `SentryPerformanceProvider` (ContentProvider) creation time on older API levels. The measurement ends when the first frame is drawn.
 
 <Alert>
 
