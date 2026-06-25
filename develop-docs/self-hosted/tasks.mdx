@@ -71,24 +71,38 @@ services:
     restart: "unless-stopped"
     image: "$TASKBROKER_IMAGE"
     environment:
-      TASKBROKER_KAFKA_CLUSTER: "kafka:9092"
-      TASKBROKER_KAFKA_DEADLETTER_CLUSTER: "kafka:9092"
-      TASKBROKER_DB_PATH: "/opt/sqlite/taskbroker-activations-beta.sqlite"
+      TASKBROKER_KAFKA_CLUSTERS__DEFAULT__ADDRESS: "kafka:9092"
+      TASKBROKER_DB_PATH: "/opt/sqlite/taskbroker-activations.sqlite"
+      TASKBROKER_STATSD_ADDR: ${STATSD_ADDR:-127.0.0.1:8125}
+    command: /opt/taskbroker -c /etc/taskbroker/config.yml
     volumes:
-      - sentry-taskbroker:/opt/sqlite
+      - sentry-taskbroker-beta:/opt/sqlite
+      - type: bind
+        read_only: true
+        source: ./taskbroker
+        target: /etc/taskbroker
     depends_on:
       - kafka
   taskbroker-charlie:
     restart: "unless-stopped"
     image: "$TASKBROKER_IMAGE"
     environment:
-      TASKBROKER_KAFKA_CLUSTER: "kafka:9092"
-      TASKBROKER_KAFKA_DEADLETTER_CLUSTER: "kafka:9092"
-      TASKBROKER_DB_PATH: "/opt/sqlite/taskbroker-activations-charlie.sqlite"
+      TASKBROKER_KAFKA_CLUSTERS__DEFAULT__ADDRESS: "kafka:9092"
+      TASKBROKER_DB_PATH: "/opt/sqlite/taskbroker-activations.sqlite"
+      TASKBROKER_STATSD_ADDR: ${STATSD_ADDR:-127.0.0.1:8125}
+    command: /opt/taskbroker -c /etc/taskbroker/config.yml
     volumes:
-      - sentry-taskbroker:/opt/sqlite
+      - sentry-taskbroker-charlie:/opt/sqlite
+      - type: bind
+        read_only: true
+        source: ./taskbroker
+        target: /etc/taskbroker
     depends_on:
       - kafka
+
+volumes:
+  sentry-taskbroker-beta: {}
+  sentry-taskbroker-charlie: {}
 ```
 
 Note that each `taskbroker` replica needs their own SQLite database per replica, to prevent
@@ -131,9 +145,9 @@ To achieve this work separation we need to make a few changes:
    predefined topics in [`src/sentry/conf/types/kafka_definition.py`](https://github.com/getsentry/sentry/blob/master/src/sentry/conf/types/kafka_definition.py).
    By default, any topics will automatically be created during `./install.sh`
    process.
-2. Deploy the additional broker replicas. You can use the
-   `TASKBROKER_KAFKA_TOPIC` environment variable to define the topic a
-   taskbroker consumes from.
+2. Deploy the additional broker replicas. Give each broker its own config file
+   declaring the topic it consumes under `kafka_topics`, and point the broker at
+   it with the `-c` flag.
 3. Deploy additional workers that use the new brokers in their `rpc-host-list`
    CLI flag.
 4. Find the list of namespaces you want to shift to the new topic. The list of
@@ -151,7 +165,23 @@ To achieve this work separation we need to make a few changes:
 Having separate ingest `taskbroker` and `taskworker` is useful for high-throughput
 installations, therefore you can receive timely alerts and not have to wait for
 ingest-related tasks to finish. As an implementation of the above steps,
-you need to add a few new containers on your `docker-compose.override.yml` file:
+you need to create a config file for the ingest broker that declares the
+`taskworker-ingest` topic. Create `taskbroker/config.ingest.yml`:
+
+```yaml
+kafka_deadletter_topic: taskworker-ingest-dlq
+
+kafka_topics:
+  taskworker-ingest:
+    cluster: default
+    consumer_group: taskworker-ingest
+  taskworker-ingest-dlq:
+    cluster: default
+    consumer_group: taskworker-ingest
+    produce_only: true
+```
+
+Then add a few new containers on your `docker-compose.override.yml` file:
 
 ```yaml
 # Copy `x-sentry_defaults` and `file_healthcheck_defaults` section from
@@ -162,13 +192,16 @@ services:
     restart: "unless-stopped"
     image: "$TASKBROKER_IMAGE"
     environment:
-      TASKBROKER_KAFKA_TOPIC: "taskworker-ingest"
-      TASKBROKER_KAFKA_CONSUMER_GROUP: "taskworker-ingest"
-      TASKBROKER_KAFKA_CLUSTER: "kafka:9092"
-      TASKBROKER_KAFKA_DEADLETTER_CLUSTER: "kafka:9092"
+      TASKBROKER_KAFKA_CLUSTERS__DEFAULT__ADDRESS: "kafka:9092"
       TASKBROKER_DB_PATH: "/opt/sqlite/taskbroker-activations-ingest.sqlite"
+      TASKBROKER_STATSD_ADDR: ${STATSD_ADDR:-127.0.0.1:8125}
+    command: /opt/taskbroker -c /etc/taskbroker/config.ingest.yml
     volumes:
       - sentry-taskbroker-ingest:/opt/sqlite
+      - type: bind
+        read_only: true
+        source: ./taskbroker
+        target: /etc/taskbroker
     depends_on:
       - kafka
   taskworker-ingest:
