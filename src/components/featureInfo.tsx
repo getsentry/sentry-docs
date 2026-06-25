@@ -106,8 +106,7 @@ const FEATURE_DATA: Record<
           <strong>Profiles</strong>
         </ExternalLink>{' '}
         page, select a transaction, and then a profile ID to view its flame graph. For
-        more information, click{' '}
-        <a href="/product/profiling/profile-details/">here</a>.
+        more information, click <a href="/product/profiling/profile-details/">here</a>.
       </Fragment>
     ),
   },
