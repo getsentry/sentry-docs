@@ -115,7 +115,7 @@ if you only want these features enabled in a GitHub Actions CI workflow, you cou
   <SentryUploadSources>true</SentryUploadSources>
 
   <!-- If you are targeting Android, sends proguard mapping file to Sentry. -->
-  <SentryUploadAndroidProguardMapping>true</SentryUploadAndroidProguardMapping>
+  <SentryUploadAndroidProGuardMapping>true</SentryUploadAndroidProGuardMapping>
 
 </PropertyGroup>
 
@@ -140,29 +140,29 @@ file, so that they are shared with all projects automatically.
 
 The following MSBuild properties will pass required information to the Sentry CLI:
 
-<ConfigKey name="SentryOrg">
+<SdkOption name="SentryOrg" type="string">
 
 The organization slug for your Sentry account.
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="SentryProject">
+<SdkOption name="SentryProject" type="string">
 
 The project slug for the specific Sentry project you are using.
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="SentryUrl">
+<SdkOption name="SentryUrl" type="string">
 
 The URL to your Sentry server. Required only if self-hosting Sentry. (Do not use with sentry.io.)
 
-</ConfigKey>
+</SdkOption>
 
 ### Optional MSBuild Properties
 
 There are a few additional properties available to control the Sentry CLI:
 
-<ConfigKey name="SentryCreateRelease">
+<SdkOption name="SentryCreateRelease" type="bool" defaultValue="false">
 
 Enable to automatically create release when building your application. Defaults to `false` (disabled).
 
@@ -172,21 +172,52 @@ Sentry will try to determine the release version automatically by checking the f
 3. The version of the entry assembly for the project
 4. The version suggested by running `sentry-cli releases propose-version`
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="SentrySetCommits">
+<PlatformSection supported={["dotnet.maui"]}>
+<SdkOption name="SentryProGuardUUID" type="string">
 
-Enable `SentrySetCommits` to automatically [associate commits with the release](https://docs.sentry.io/cli/releases/#commit-integration).
+Define the UUID used to link an APK and its ProGuard mapping file.
 
-</ConfigKey>
+If not defined, Sentry will [generate a UUID](#SentryUploadAndroidProGuardMapping) for you.
 
-<ConfigKey name="SentrySetCommitOptions">
+</SdkOption>
+</PlatformSection>
+
+<SdkOption name="SentrySetCommits" type="bool">
+
+Enable `SentrySetCommits` to automatically [associate commits with the release](/cli/releases/#commit-integration).
+
+</SdkOption>
+
+<SdkOption name="SentrySetCommitOptions" type="string">
 
 By default, when `SentrySetCommits` is enabled, the SDK will set commits with the `--auto` flag. The optional `SentrySetCommitOptions` property allows you to override this to provide whatever flags you want to the `set-commits` CLI command.
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="SentryUploadSymbols">
+<PlatformSection supported={["dotnet.maui"]}>
+<SdkOption name="SentryUploadAndroidProGuardMapping" type="bool" defaultValue="false">
+
+Controls whether a ProGuard mapping file is uploaded to Sentry.
+
+Defaults to `false` (disabled).
+
+When set to `true`:
+- A ProGuard UUID is generated automatically, unless you configure your own via [SentryProGuardUUID](#SentryProGuardUUID).
+- This UUID is injected into the APK as manifest metadata under the key `io.sentry.proguard-uuid`.
+- The same UUID is used to associate the uploaded ProGuard mapping file with the build in Sentry.
+
+This ensures that obfuscated stack traces from your Android app can be correctly de-obfuscated in Sentry.
+
+<Alert>
+Do not overwrite the `io.sentry.proguard-uuid` metadata directly. Use [SentryProGuardUUID](#SentryProGuardUUID) if you need to provide a custom UUID.
+</Alert>
+
+</SdkOption>
+</PlatformSection>
+
+<SdkOption name="SentryUploadSymbols" type="bool" defaultValue="false">
 
 Controls uploading symbols to Sentry during the build. Defaults to `false` (disabled).
 
@@ -194,9 +225,9 @@ Set this property to `true` to opt-in to sending symbols to Sentry as [debug inf
 which are used to perform symbolication of stack traces. This will allow you to view file names and line numbers within
 a stack trace, instead of just a function name.
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="SentryUploadSources">
+<SdkOption name="SentryUploadSources" type="bool" defaultValue="false">
 
 Controls whether source code files are uploaded to Sentry during the build. Defaults to `false` (disabled).
 
@@ -210,15 +241,15 @@ you do not need to upload them to Sentry separately. In other words, use _either
 
 </Alert>
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="UseSentryCLI">
+<SdkOption name="UseSentryCLI" type="bool" defaultValue="true">
 
 Controls whether the Sentry CLI is enabled in your build.
 Defaults to `true` if any of the individual features are enabled.
 Set to `false` to disable the Sentry CLI completely, ignoring the settings of each feature.
 
-</ConfigKey>
+</SdkOption>
 
 <Alert title="Important">
 

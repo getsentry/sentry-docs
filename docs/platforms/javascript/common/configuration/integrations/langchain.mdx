@@ -1,0 +1,182 @@
+---
+title: LangChain
+description: "Adds instrumentation for LangChain."
+supported:
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.hono
+  - javascript.koa
+  - javascript.nestjs
+  - javascript.electron
+  - javascript.nextjs
+  - javascript.nuxt
+  - javascript.solidstart
+  - javascript.sveltekit
+  - javascript.react-router
+  - javascript.remix
+  - javascript.astro
+  - javascript.bun
+  - javascript.tanstackstart-react
+  - javascript.cloudflare
+  - javascript
+  - javascript.react
+  - javascript.angular
+  - javascript.vue
+  - javascript.svelte
+  - javascript.solid
+  - javascript.ember
+  - javascript.gatsby
+---
+
+<PlatformSection supported={["javascript.nextjs", "javascript.nuxt", "javascript.solidstart", "javascript.sveltekit", "javascript.react-router", "javascript.remix", "javascript.astro", "javascript.tanstackstart-react"]}>
+  <Alert level="warning">
+    For meta-framework applications running on both client and server, we recommend **setting up the integration manually** using the [`createLangChainCallbackHandler` wrapper](#manual-instrumentation) to ensure consistent instrumentation across all runtimes.
+  </Alert>
+</PlatformSection>
+
+<PlatformSection supported={["javascript.node", "javascript.aws-lambda", "javascript.azure-functions", "javascript.connect", "javascript.express", "javascript.fastify", "javascript.gcp-functions", "javascript.hapi", "javascript.hono", "javascript.koa", "javascript.nestjs", "javascript.nextjs", "javascript.nuxt", "javascript.solidstart", "javascript.sveltekit", "javascript.react-router", "javascript.remix", "javascript.astro", "javascript.tanstackstart-react", "javascript.electron", "javascript.cordova", "javascript.capacitor", "javascript.deno", "javascript.wasm"]}>
+
+  ## Automatic Instrumentation
+
+  _Import name: `Sentry.langChainIntegration`_
+
+  <PlatformSection notSupported={["javascript.node", "javascript.connect", "javascript.hapi", "javascript.koa"]}>
+    <Alert>
+      If you are using a different runtime (like Bun, Cloudflare Workers or a Browser) or experiencing missing spans, you need to use **[Manual Instrumentation](#manual-instrumentation)** to explicitly wrap your AI client instance instead.
+    </Alert>
+  </PlatformSection>
+
+  The `langChainIntegration` adds instrumentation for [`langchain`](https://www.npmjs.com/package/langchain) to capture spans by automatically wrapping LangChain operations and recording AI agent interactions with configurable input/output recording.
+
+  In Node.js runtimes, this integration is enabled by default and automatically captures spans for LangChain SDK calls (requires Sentry SDK version `10.28.0` or higher).
+
+  To customize what data is captured (such as inputs and outputs), see the [Options](#options) in the Configuration section.
+
+</PlatformSection>
+
+<PlatformSection notSupported={["javascript.node", "javascript.connect", "javascript.hapi", "javascript.koa"]}>
+
+  ## Manual Instrumentation
+
+  _Import name: `Sentry.createLangChainCallbackHandler`_
+
+  The `createLangChainCallbackHandler` helper adds instrumentation for [`langchain`](https://www.npmjs.com/package/langchain) to capture spans by creating a callback handler that wraps LangChain operations and records AI agent interactions with configurable input/output recording. You need to manually create and pass this callback handler to your LangChain operations.
+
+  See example below:
+
+  ```javascript
+  import { ChatAnthropic } from "@langchain/anthropic";
+
+  // Create a LangChain callback handler
+  const callbackHandler = Sentry.createLangChainCallbackHandler({
+    recordInputs: true,
+    recordOutputs: true,
+  });
+
+  // Use with chat models
+  const model = new ChatAnthropic({
+    model: "claude-3-5-sonnet-20241022",
+    apiKey: "your-api-key", // Warning: API key will be exposed in browser!
+  });
+
+  await model.invoke("Tell me a joke", {
+    callbacks: [callbackHandler],
+  });
+  ```
+
+  To customize what data is captured (such as inputs and outputs), see the [Options](#options) in the Configuration section.
+
+</PlatformSection>
+
+## Configuration
+
+### Options
+
+The following options control what data is captured from LangChain operations:
+
+#### `recordInputs`
+
+_Type: `boolean` (optional)_
+
+Records inputs to LangChain operations (such as prompts and messages).
+
+Defaults to `true` if `dataCollection.genAI.inputs` is `true` (which is the default when using `dataCollection`), or if the deprecated `sendDefaultPii` is `true`.
+
+#### `recordOutputs`
+
+_Type: `boolean` (optional)_
+
+Records outputs from LangChain operations (such as generated text and responses).
+
+Defaults to `true` if `dataCollection.genAI.outputs` is `true` (which is the default when using `dataCollection`), or if the deprecated `sendDefaultPii` is `true`.
+
+**Usage**
+
+<PlatformSection supported={["javascript.node", "javascript.aws-lambda", "javascript.azure-functions", "javascript.connect", "javascript.express", "javascript.fastify", "javascript.gcp-functions", "javascript.hapi", "javascript.hono", "javascript.koa", "javascript.nestjs", "javascript.nextjs", "javascript.nuxt", "javascript.solidstart", "javascript.sveltekit", "javascript.react-router", "javascript.remix", "javascript.astro", "javascript.tanstackstart-react", "javascript.electron", "javascript.cordova", "javascript.capacitor", "javascript.deno", "javascript.wasm"]}>
+
+Using the `langChainIntegration` integration for **automatic instrumentation**:
+
+```javascript
+Sentry.init({
+  dsn: "____PUBLIC_DSN____",
+  // Tracing must be enabled for agent monitoring to work
+  tracesSampleRate: 1.0,
+  integrations: [
+    Sentry.langChainIntegration({
+      // your options here
+    }),
+  ],
+});
+```
+
+</PlatformSection>
+
+<PlatformSection notSupported={["javascript.node", "javascript.connect", "javascript.hapi", "javascript.koa"]}>
+
+Using the `createLangChainCallbackHandler` wrapper for **manual instrumentation**:
+
+```javascript
+const callbackHandler = Sentry.createLangChainCallbackHandler({
+  // your options here
+});
+```
+
+</PlatformSection>
+
+## Supported Operations
+
+By default, tracing support is added to the following LangChain SDK calls:
+
+- **Chat model invocations** - Captures spans for chat model calls
+- **LLM invocations** - Captures spans for LLM pipeline executions
+- **Chain executions** - Captures spans for chain invocations
+- **Tool executions** - Captures spans for tool calls
+
+### Runnables
+
+The integration automatically instruments the following LangChain runnable methods:
+
+- `invoke()` - Single execution
+- `stream()` - Streaming execution
+- `batch()` - Batch execution
+
+### Providers
+
+The automatic instrumentation supports the following LangChain provider packages:
+
+- `@langchain/anthropic`
+- `@langchain/openai`
+- `@langchain/google-genai`
+- `@langchain/mistralai`
+- `@langchain/google-vertexai`
+- `@langchain/groq`
+
+## Supported Versions
+
+- `langchain`: `>=0.1.0 <2.0.0`

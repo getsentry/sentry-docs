@@ -1,0 +1,89 @@
+---
+title: Building Plugin Dependencies
+sidebar_order: 14
+description: "Learn how to build platform SDK dependencies locally for advanced customization."
+---
+
+The Sentry Unreal plugin ships with pre-built binaries for all supported platforms. In most cases, you don't need to build anything yourself. However, building dependencies locally may be needed when:
+
+- **Testing or debugging** unreleased changes to the underlying platform SDKs
+- **Applying custom patches** to the platform SDKs for your project's specific needs
+
+## Prerequisites
+
+- **[GitHub CLI](https://cli.github.com/)**
+- **PowerShell** 7+ (or Windows PowerShell 5.1)
+- **Git**
+- **CMake** 3.16+
+- **Platform toolchain**: Visual Studio 2019+ on Windows, Clang 13+ on Linux, Xcode on macOS
+- **Android builds**: Java 17, Android SDK (API 33), Android NDK r25b
+- **Crash Reporter builds**: [.NET 9.0 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
+
+## Overview
+
+The plugin depends on platform-specific SDKs and other tools that are pre-built in CI and bundled into the `Source/ThirdParty/` directory:
+
+- **[sentry-native](https://github.com/getsentry/sentry-native)** — Windows and Linux
+- **[sentry-cocoa](https://github.com/getsentry/sentry-cocoa)** — macOS and iOS
+- **[sentry-java](https://github.com/getsentry/sentry-java)** — Android
+- **[sentry-desktop-crash-reporter](https://github.com/getsentry/sentry-desktop-crash-reporter)** — External crash reporter application for desktop platforms
+
+The [sentry-unreal](https://github.com/getsentry/sentry-unreal) repository includes a `build-deps.ps1` script that automates building these SDKs and copying the resulting binaries to the correct locations within the plugin. The `plugin-dev/` directory then serves as the complete plugin package that can be copied into any Unreal project.
+
+## Setup
+
+Clone the [sentry-unreal](https://github.com/getsentry/sentry-unreal) repository, check out the tag that matches your installed plugin version, and run the initialization script:
+
+```bash
+git clone https://github.com/getsentry/sentry-unreal.git
+cd sentry-unreal
+git checkout 1.XX.0  # match your installed plugin version
+```
+
+```powershell
+# Windows
+./scripts/init-win.ps1
+
+# macOS/Linux
+./scripts/init.sh
+```
+
+You also need a local clone of the SDK you want to build (see links in [Overview](#overview)). Each SDK version is pinned as a Git submodule under `modules/` in the sentry-unreal repository — check out the same commit or tag in your local clone. You can find the expected version by looking at the submodule reference for your plugin's release tag on [GitHub](https://github.com/getsentry/sentry-unreal).
+
+## Using the Build Script
+
+Use `scripts/build-deps.ps1` to rebuild specific SDKs:
+
+```powershell
+# Point the script to your local SDK clone via environment variable or parameter
+$env:SENTRY_NATIVE_PATH = "D:\projects\sentry-native"
+
+# Build sentry-native (both Crashpad and Native backends)
+./scripts/build-deps.ps1 -Native
+
+# Or pass the path directly
+./scripts/build-deps.ps1 -Native -NativePath "D:\projects\sentry-native"
+```
+
+The script builds the SDK and copies the output binaries into `plugin-dev/Source/ThirdParty/`, replacing the pre-built ones. After that, copy the contents of `plugin-dev/` to your project's `Plugins/sentry-unreal/` directory — this replaces the plugin with your custom-built version.
+
+Available flags:
+
+| Flag | SDK | Platform |
+|------|-----|----------|
+| `-Native` | sentry-native | Windows |
+| `-Cocoa` | sentry-cocoa | macOS |
+| `-Java` | sentry-java | Any |
+| `-CrashReporter` | sentry-desktop-crash-reporter | Windows, macOS, Linux |
+| `-All` | All SDKs available on current platform | — |
+
+Each flag has a corresponding path parameter (e.g., `-NativePath`, `-CocoaPath`) that overrides the environment variable.
+
+<Alert>
+
+**Windows**: `-All` builds Native + Java + CrashReporter.
+**macOS**: `-All` builds Cocoa + Java + CrashReporter.
+
+</Alert>
+
+The script uses a fixed set of build settings that match the plugin's CI builds. If you need to customize the build (for example, passing additional CMake flags to sentry-native), you can modify the corresponding build function in `scripts/build-deps.ps1` before running it.

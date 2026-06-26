@@ -10,7 +10,7 @@ Around version 25.1.0 to 25.4.0, users which did not have `docker compose` plugi
 
 ## Container Healthcheck
 
-There may be some circumstances which you may want to increase or decrease healthcheck interval, timeout or retries for your custom needs. This can be achieved by editing `HEALTHCHECK_INTERVAL`, `HEALTHCHECK_TIMEOUT`, `HEALTHCHECK_RETRIES` variables' values in `.env`.
+There may be some circumstances where you want to increase or decrease the healthcheck interval, timeout, or retries for your custom needs. You can do this by overriding the `HEALTHCHECK_INTERVAL`, `HEALTHCHECK_TIMEOUT`, and `HEALTHCHECK_RETRIES` values from `.env` in a separate `.env.custom` file and running Docker Compose with both files (for example, `docker compose --env-file .env --env-file .env.custom up`).
 
 Occasionally, you might see an error like this
 ```
@@ -18,6 +18,23 @@ container for service "${servicename}" is unhealthy
 ```
 
 This can usually be resolved by running `docker compose down` and `docker compose up --wait` or rerunning the install script.
+
+<Alert title="Note"> 
+  On slower systems, including systems that only meet the minimum resource requirements for self-hosted Sentry, this issue may still persist even after rerunning `docker compose down` and `docker compose up --wait`.
+
+  In this case, you can override the healthcheck parameters defined in `.env` by setting custom values in `.env.custom`.
+
+  For example, increasing `HEALTHCHECK_RETRIES` may resolve the issue:
+
+```shell
+# .env.custom
+HEALTHCHECK_RETRIES=20
+```
+
+  Then start Docker Compose.
+
+  Depending on your system, you may also need to adjust other `HEALTHCHECK_*` values.
+</Alert>
 
 ## Docker Network Conflicting IP Address
 

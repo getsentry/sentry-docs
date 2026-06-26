@@ -1,7 +1,8 @@
 ---
 title: Migration Guide
-sidebar_order: 8000
 description: "Learn about how to migrate from the deprecated sentry-raven SDK."
+sidebar_order: 17
+sidebar_section: configuration
 ---
 
 ## Table of Content
@@ -17,7 +18,7 @@ description: "Learn about how to migrate from the deprecated sentry-raven SDK."
 
 - **Unified Interfaces With Other SDKs:** The design of `sentry-raven` is outdated compared with our modern Sentry SDKs. If you also use other Sentry SDKs, such as Sentry's JavaScript SDK for your frontend application, you'll notice that their interfaces are quite different from the one provided for `sentry-raven`. The new `sentry-ruby` SDK provides a more consistent user experience across all different platforms.
 
-- **Tracing:** The Sentry Ruby SDK includes [tracing](/product/insights/overview/), which you can enable if you haven't already as ([discussed here](/platforms/ruby/tracing/)).
+- **Tracing:** The Sentry Ruby SDK includes [tracing](/product/dashboards/sentry-dashboards/), which you can enable if you haven't already as ([discussed here](/platforms/ruby/tracing/)).
 
 - **Future Support:** `sentry-raven` has entered maintenance mode, which means it won't receive any new feature supports or aggressive bug fixes.
 
@@ -279,29 +280,15 @@ Sentry.get_current_scope.set_transaction_name("NewTransaction")
 
 ### `Exception#raven_context`
 
-`sentry-ruby` doesn't capture `raven_context` from exceptions anymore. However, you can use `before_send` to replicate the same behavior:
-
-```rb
-config.before_send = lambda do |event, hint|
-  if exception = hint[:exception]
-    exception.raven_context.each do |key, value|
-      # here I assume the event would be a Sentry::Event object
-      # however, it'll be a hash if you use the async callback (which will be removed in version 6.0)
-      event.send("#{key}=", value)
-    end
-  end
-
-  event
-end
-```
+`sentry-ruby` doesn't capture `raven_context` from exceptions anymore. Just use `set_tags` or `set_extra` as above to set contextual data.
 
 ## Example Apps
 
-- [Rails example](https://github.com/getsentry/sentry-ruby/tree/master/sentry-rails/examples/rails-6.0)
-- [Sinatra example](https://github.com/getsentry/sentry-ruby/tree/master/sentry-ruby/examples/sinatra)
+- [Rails example](https://github.com/getsentry/examples/tree/master/ruby/sentry-rails/rails-6.0)
+- [Sinatra example](https://github.com/getsentry/examples/tree/master/ruby/sentry-ruby/sinatra)
 - Sidekiq examples:
-  - [with Rails](https://github.com/getsentry/sentry-ruby/tree/master/sentry-rails/examples/rails-6.0)
-  - [without Rails](https://github.com/getsentry/sentry-ruby/tree/master/sentry-sidekiq/example)
+  - [with Rails](https://github.com/getsentry/examples/tree/master/ruby/sentry-rails/rails-6.0)
+  - [without Rails](https://github.com/getsentry/examples/tree/master/ruby/sentry-sidekiq)
 
 ## Community Fork
 

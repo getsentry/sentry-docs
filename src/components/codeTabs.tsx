@@ -1,5 +1,6 @@
 'use client';
 
+import styled from '@emotion/styled';
 import {
   Children,
   ReactElement,
@@ -9,7 +10,6 @@ import {
   useRef,
   useState,
 } from 'react';
-import styled from '@emotion/styled';
 
 import {CodeBlockProps} from './codeBlock';
 import {CodeContext} from './codeContext';
@@ -40,17 +40,48 @@ interface CodeTabProps {
   children: React.ReactElement<CodeBlockProps> | React.ReactElement<CodeBlockProps>[];
 }
 
-const showSigninNote = (children: ReactNode) => {
+export const showSigninNote = (children: ReactNode) => {
   return Children.toArray(children).some(node => {
     if (typeof node === 'string') {
-      return KEYWORDS_REGEX.test(node) || ORG_AUTH_TOKEN_REGEX.test(node);
+      // reset regex lastIndex before testing to avoid stale state from previous matches
+      KEYWORDS_REGEX.lastIndex = 0;
+      ORG_AUTH_TOKEN_REGEX.lastIndex = 0;
+
+      // it has a project keyword that is not a PRODUCT_OPTION_*
+      const hasProjectKeyword = [...node.matchAll(KEYWORDS_REGEX)].some(
+        match => match[2] !== 'PRODUCT_OPTION_START' && match[2] !== 'PRODUCT_OPTION_END'
+      );
+
+      return hasProjectKeyword || ORG_AUTH_TOKEN_REGEX.test(node);
     }
     return showSigninNote((node as ReactElement).props.children);
   });
 };
 
+// Resolve React lazy elements from RSC serialization (Next.js 15.5+).
+// Client component children serialized through RSC boundaries arrive as
+// lazy elements with _init/_payload instead of the usual type/props shape.
+function resolveElement(child: any): ReactElement<CodeBlockProps> | null {
+  if (child == null || typeof child !== 'object') {
+    return null;
+  }
+  if (child.props) {
+    return child;
+  }
+  if (child._init && child._payload) {
+    try {
+      return child._init(child._payload);
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
 export function CodeTabs({children}: CodeTabProps) {
-  const codeBlocks = Array.isArray(children) ? [...children] : [children];
+  const codeBlocks = (Array.isArray(children) ? [...children] : [children])
+    .map(resolveElement)
+    .filter((child): child is ReactElement<CodeBlockProps> => child !== null);
 
   // The title is what we use for sorting and also for remembering the
   // selection. If there is no title fall back to the title cased language name
@@ -126,28 +157,53 @@ export function CodeTabs({children}: CodeTabProps) {
     <Container ref={containerRef}>
       {showSigninNote(codeBlocks[selectedTabIndex]) && <SignInNote />}
       <TabBar>{buttons}</TabBar>
-      <div className="relative" data-sentry-mask>
-        {codeBlocks[selectedTabIndex]}
-      </div>
+      <CodeBlockWrapper data-sentry-mask>{codeBlocks[selectedTabIndex]}</CodeBlockWrapper>
     </Container>
   );
 }
 
 const Container = styled('div')`
+  position: relative;
+  overflow-y: visible; /* Allow copy button to be visible */
+
   pre[class*='language-'] {
     padding: 10px 12px;
-    border-radius: 0 0 3px 3px;
+    border-radius: 0 0 6px 6px;
+    border: 1px solid var(--accent-11);
+    border-top: none;
+    margin-bottom: 1.5rem;
+  }
+
+  @media (max-width: 768px) {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+`;
+
+const CodeBlockWrapper = styled('div')`
+  position: relative;
+
+  @media (max-width: 768px) {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
   }
 `;
 
 const TabBar = styled('div')`
   background: var(--code-background);
+  border: 1px solid var(--accent-11);
   border-bottom: 1px solid #40364a;
   height: 36px;
   display: flex;
   align-items: center;
   padding: 0 0.5rem;
-  border-radius: 3px 3px 0 0;
+  border-radius: 6px 6px 0 0;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden; /* Prevent any scrollbars */
+  flex-wrap: nowrap; /* Prevent tabs from wrapping */
 `;
 
 const TabButton = styled('button')`
@@ -160,6 +216,8 @@ const TabButton = styled('button')`
   background: none;
   outline: none;
   border-bottom: 3px solid transparent;
+  white-space: nowrap;
+  flex-shrink: 0;
 
   &:focus,
   &[data-active='true'] {

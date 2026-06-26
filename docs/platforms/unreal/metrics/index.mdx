@@ -1,0 +1,164 @@
+---
+title: Set Up Metrics
+sidebar_title: Application Metrics
+description: "Metrics allow you to send, view and query counters, gauges and distributions from your Unreal Engine game to track application health and drill down into related traces, logs, and errors."
+sidebar_order: 5700
+sidebar_section: features
+new: true
+---
+
+With Sentry's [Application Metrics](/product/explore/metrics/), you can send counters, gauges, and distributions from your Unreal Engine game to Sentry. Once in Sentry, these metrics can be viewed alongside relevant errors, and searched using their individual attributes.
+
+## Requirements
+
+<PlatformContent includePath="metrics/requirements" />
+
+## Setup
+
+<PlatformContent includePath="metrics/setup" />
+
+## Usage
+
+<PlatformContent includePath="metrics/usage" />
+
+## Automatic Metrics
+
+<Alert level="warning">
+  Automatic metrics are experimental and may change in future releases.
+</Alert>
+
+The SDK can automatically collect performance metrics from the engine without any manual instrumentation. All automatic metrics are configured under **Project Settings > Plugins > Sentry > Metrics > Experimental** and require **Enable Metrics** to be checked.
+
+All automatic metrics include the following attributes for filtering and grouping in Sentry dashboards:
+
+| Attribute | Description |
+|-----------|-------------|
+| `gpu.name` | GPU model name |
+| `cpu.cores` | Number of physical CPU cores |
+| `ram.gb` | Total physical RAM in GB |
+| `res.x`, `res.y` | Screen resolution |
+| `map` | Current game map/level name |
+
+These attributes make it possible to segment performance data by hardware tier, resolution, or game level.
+
+### Frame Time
+
+When **Collect frame time metrics** is enabled, the SDK registers a performance consumer with Unreal Engine's built-in performance tracking system and emits the following metrics:
+
+| Metric | Type | Description |
+|--------|------|-------------|
+| `game.perf.frame_time` | Distribution (ms) | Total frame time |
+| `game.perf.game_thread` | Distribution (ms) | Game thread work time |
+| `game.perf.render_thread` | Distribution (ms) | Render thread work time |
+| `game.perf.gpu` | Distribution (ms) | GPU frame time |
+| `game.perf.fps` | Gauge | Engine-smoothed average FPS |
+
+To avoid flooding the metrics pipeline, the SDK only emits metrics every Nth frame, controlled by the **Frame time sample interval** setting. The default value of 30 produces approximately 2 samples per second at 60 FPS, which is sufficient for accurate percentile computation while keeping overhead minimal.
+
+```cpp
+SentrySubsystem->InitializeWithSettings(FConfigureSettingsNativeDelegate::CreateLambda([=](USentrySettings* Settings)
+{
+    Settings->EnableMetrics = true;
+    Settings->EnableAutoFrameTimeMetrics = true;
+    Settings->FrameTimeSampleInterval = 30; // Emit every 30th frame (default)
+}));
+```
+
+### GC Pauses
+
+<Alert>
+  GC pause metrics require Unreal Engine 5.5 or later. On older engine versions, this setting has no effect.
+</Alert>
+
+When **Collect GC pause metrics** is enabled, the SDK measures the blocking garbage collection pause and emits it as a metric after each collection cycle.
+
+| Metric | Type | Description |
+|--------|------|-------------|
+| `game.perf.gc_time` | Distribution (ms) | Duration of the blocking GC pause |
+
+GC pauses are a common source of hitches in Unreal Engine games — a single GC pass can freeze the game thread for 10–50ms or more, causing visible stutters. The metric captures the interval between the GC lock being acquired and released. By default, the engine runs GC approximately every 60 seconds, so this metric has negligible impact on metric volume.
+
+```cpp
+SentrySubsystem->InitializeWithSettings(FConfigureSettingsNativeDelegate::CreateLambda([=](USentrySettings* Settings)
+{
+    Settings->EnableMetrics = true;
+    Settings->EnableAutoGCMetrics = true;
+}));
+```
+
+### Game Stats
+
+<Alert>
+  Tracking of active UObjects number requires Unreal Engine 5.3 or later.
+</Alert>
+
+When **Collect game stats metrics** is enabled, the SDK periodically samples system-level statistics and emits them as gauge metrics. Unlike frame time metrics which are collected per-frame, game stats are sampled on a fixed time interval to avoid unnecessary overhead — these values change slowly and don't need per-frame resolution.
+
+| Metric | Type | Description |
+|--------|------|-------------|
+| `game.perf.used_memory` | Gauge (bytes) | Physical memory used by the process |
+| `game.perf.uobject_count` | Gauge | Number of active UObjects |
+
+The **Game stats sample interval** setting controls how often game stats are collected. The default value of 60 seconds provides a good balance between visibility and overhead. Memory usage is read from `FPlatformMemory::GetStats()` and UObject count from the engine's global object array.
+
+```cpp
+SentrySubsystem->InitializeWithSettings(FConfigureSettingsNativeDelegate::CreateLambda([=](USentrySettings* Settings)
+{
+    Settings->EnableMetrics = true;
+    Settings->EnableAutoGameStatsMetrics = true;
+    Settings->GameStatsSampleIntervalSeconds = 60; // Sample every 60 seconds (default)
+}));
+```
+
+### Network
+
+<Alert>
+  Network metrics require Unreal Engine 5.7 or later. On older engine versions, this setting has no effect.
+</Alert>
+
+When **Collect network metrics** is enabled, the SDK periodically polls Unreal Engine's network metrics database (`UNetworkMetricsDatabase`) and emits gauge metrics for the active network session. These metrics are only collected when a `UNetDriver` is present — that is, during multiplayer sessions (client connected to a server, or a server with connected clients). In singleplayer games without networking, no metrics are emitted.
+
+The engine only populates the network metrics database when the `net.EnableNetStats` console variable is set to `true`. Add the following to your `DefaultEngine.ini` to enable it:
+
+```ini
+[SystemSettings]
+net.EnableNetStats=1
+```
+
+| Metric | Type | Description |
+|--------|------|-------------|
+| `game.perf.net.in_rate` | Gauge (bytes/sec) | Incoming bandwidth |
+| `game.perf.net.out_rate` | Gauge (bytes/sec) | Outgoing bandwidth |
+| `game.perf.net.in_packets` | Gauge | Incoming packets per second |
+| `game.perf.net.out_packets` | Gauge | Outgoing packets per second |
+| `game.perf.net.in_packets_lost` | Gauge | Incoming packets lost |
+| `game.perf.net.out_packets_lost` | Gauge | Outgoing packets lost |
+| `game.perf.net.ping` | Gauge (ms) | Client ping to server |
+| `game.perf.net.jitter` | Gauge (ms) | Client connection jitter (latency variation) |
+| `game.perf.net.num_clients` | Gauge | Number of connected clients (server only) |
+| `game.perf.net.ping_client_avg` | Gauge (ms) | Average ping across all clients (server only) |
+| `game.perf.net.ping_client_max` | Gauge (ms) | Maximum ping across all clients (server only) |
+| `game.perf.net.in_rate_client_avg` | Gauge (bytes/sec) | Average incoming bandwidth per client (server only) |
+| `game.perf.net.out_rate_client_avg` | Gauge (bytes/sec) | Average outgoing bandwidth per client (server only) |
+| `game.perf.net.sat_connections` | Gauge | Connections skipped due to bandwidth saturation (server only) |
+
+Not all metrics are available in every context — client-specific metrics (ping, jitter) are only populated on clients, while server-specific metrics (num_clients, per-client stats, saturation) are only populated on servers. Listen servers report both sets.
+
+The **Network metrics sample interval** setting controls how often network stats are polled. The default value of 10 seconds provides good visibility into network health without excessive overhead.
+
+```cpp
+SentrySubsystem->InitializeWithSettings(FConfigureSettingsNativeDelegate::CreateLambda([=](USentrySettings* Settings)
+{
+    Settings->EnableMetrics = true;
+    Settings->EnableAutoNetworkMetrics = true;
+    Settings->NetworkMetricsSampleInterval = 10; // Poll every 10 seconds (default)
+}));
+```
+
+## Options
+
+<PlatformContent includePath="metrics/options" />
+
+## Default Attributes
+
+<PlatformContent includePath="metrics/default-attributes" />

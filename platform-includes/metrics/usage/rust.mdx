@@ -1,0 +1,48 @@
+The SDK's [`sentry::metrics` module](https://docs.rs/sentry/latest/sentry/metrics/index.html) contains functions for capturing each of the [three metric types](/product/explore/metrics/#metric-types) that Sentry supports.
+
+Metrics are automatically associated with the trace and, if applicable, the span they are captured within.
+
+### Capture a Counter
+
+Capture [counter metrics](/product/explore/metrics/#counters) using [`metrics::counter`](https://docs.rs/sentry/latest/sentry/metrics/fn.counter.html).
+
+Counters track occurrences, such as handled HTTP requests, and are always unitless.
+
+```rust {filename:main.rs}
+use sentry::metrics;
+
+metrics::counter("http.requests", 1).capture();
+```
+
+### Capture a Gauge
+
+Capture [gauge metrics](/product/explore/metrics/#gauges) using [`metrics::gauge`](https://docs.rs/sentry/latest/sentry/metrics/fn.gauge.html).
+
+Gauges track current state or level, such as queue depth or active connections, and support [units](https://docs.rs/sentry/latest/sentry/metrics/struct.GaugeMetric.html#method.unit).
+
+```rust {filename:main.rs}
+use sentry::metrics;
+
+metrics::gauge("queue.depth", 42).capture();
+```
+
+### Distribution
+
+Capture [distribution metrics](/product/explore/metrics/#distributions) using [`metrics::distribution`](https://docs.rs/sentry/latest/sentry/metrics/fn.distribution.html).
+
+Distributions track values that vary and need statistical analysis, such as response times or payload sizes, and they support [units](https://docs.rs/sentry/latest/sentry/metrics/struct.DistributionMetric.html#method.unit).
+
+```rust {filename:main.rs}
+use sentry::metrics;
+use sentry::protocol::Unit;
+
+metrics::distribution("http.response_time", 187.5)
+  .unit(Unit::Millisecond)
+  .capture();
+```
+
+### Setting Attributes
+
+Attributes let you filter and group metrics in Sentry. Add them with `.attribute(key, value)` before you call `.capture()`. You can add multiple attributes by chaining calls to `.attribute`.
+
+When possible, use [Sentry Semantic Conventions](https://getsentry.github.io/sentry-conventions/) for attribute keys.

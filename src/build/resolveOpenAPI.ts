@@ -1,6 +1,4 @@
-/* eslint-env node */
 /* eslint import/no-nodejs-modules:0 */
-/* eslint-disable no-console */
 
 import {promises as fs} from 'fs';
 
@@ -8,7 +6,7 @@ import {DeRefedOpenAPI} from './open-api/types';
 
 // SENTRY_API_SCHEMA_SHA is used in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
 // DO NOT change variable name unless you change it in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
-const SENTRY_API_SCHEMA_SHA = '9a9a27fca0b6181ce672c6118d820e81bed73433';
+const SENTRY_API_SCHEMA_SHA = 'ef00c4043c7dd8c0a90301ab0e3e2dbdec9377c6';
 
 const activeEnv = process.env.GATSBY_ENV || process.env.NODE_ENV || 'development';
 
@@ -65,6 +63,7 @@ type APIData = DeRefedOpenAPI['paths'][string][string];
 export type API = {
   apiPath: string;
   bodyParameters: APIParameter[];
+  deprecated: boolean;
   method: string;
   name: string;
   pathParameters: APIParameter[];
@@ -96,6 +95,16 @@ function slugify(s: string): string {
     .toLowerCase();
 }
 
+const DEPRECATED_PREFIX_REGEX = /^\(DEPRECATED\)\s*/;
+
+function isDeprecatedOperationId(operationId: string | undefined): boolean {
+  return operationId ? DEPRECATED_PREFIX_REGEX.test(operationId) : false;
+}
+
+function stripDeprecatedPrefix(operationId: string): string {
+  return operationId.replace(DEPRECATED_PREFIX_REGEX, '');
+}
+
 let apiCategoriesCache: Promise<APICategory[]> | undefined;
 
 export function apiCategories(): Promise<APICategory[]> {
@@ -121,6 +130,14 @@ async function apiCategoriesUncached(): Promise<APICategory[]> {
 
   Object.entries(data.paths).forEach(([apiPath, methods]) => {
     Object.entries(methods).forEach(([method, apiData]) => {
+      // Detect deprecation from either field independently — the (DEPRECATED)
+      // marker may sit on operationId even when a summary is present.
+      const isDeprecated =
+        isDeprecatedOperationId(apiData.operationId) ||
+        isDeprecatedOperationId(apiData.summary);
+      const titleSource = apiData.summary || apiData.operationId || '';
+      const cleanName = stripDeprecatedPrefix(titleSource);
+
       let server = 'https://sentry.io';
       if (apiData.servers && apiData.servers[0]) {
         server = apiData.servers[0].url;
@@ -129,10 +146,13 @@ async function apiCategoriesUncached(): Promise<APICategory[]> {
         categoryMap[tag].apis.push({
           apiPath,
           method,
-          name: apiData.operationId,
+          name: cleanName,
+          deprecated: isDeprecated,
           server,
-          slug: slugify(apiData.operationId),
-          summary: apiData.summary,
+          slug: slugify(cleanName),
+          summary: apiData.summary
+            ? stripDeprecatedPrefix(apiData.summary)
+            : apiData.summary,
           descriptionMarkdown: apiData.description,
           pathParameters: (apiData.parameters || []).filter(
             p => p.in === 'path'

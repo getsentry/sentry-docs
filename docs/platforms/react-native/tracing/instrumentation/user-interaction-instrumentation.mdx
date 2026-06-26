@@ -37,13 +37,39 @@ const App = () => <View>Your App</View>;
 export default Sentry.wrap(App);
 ```
 
-The label by which UI elements are identified is set by the `labelName` option in `Sentry.wrap`. If no value is supplied, `sentry-label` will be used instead. If an element can't be identified, the transaction won't be captured.
+The SDK identifies UI elements by looking for `sentry-label`, then `accessibilityLabel`, `aria-label`, `testID`, and finally text content from children as fallbacks. You can also specify a custom prop name with the `labelName` option in `Sentry.wrap`, which takes priority over `accessibilityLabel`, `aria-label`, `testID`, and text extraction from children. If an element can't be identified, the transaction won't be captured.
 
 ```javascript {2-2}
 export default Sentry.wrap(App, {
   touchEventBoundaryProps: { labelName: "my-label" },
 });
 ```
+
+### Adding Custom Attributes to User Interaction Spans
+
+<Alert level="warning">
+  The `sentry-span-attributes` prop is experimental and may change in future releases.
+</Alert>
+
+You can attach custom attributes to user interaction spans by passing the `sentry-span-attributes` prop to your components. This is useful for adding contextual information like user type, cart value, or feature flags that help you understand user behavior in performance monitoring.
+
+The `sentry-span-attributes` prop accepts an object with string keys and values that are strings, numbers, booleans, or arrays. These attributes will be attached to the user interaction span created when the component is interacted with.
+
+```javascript
+<Pressable
+  sentry-label="checkout"
+  sentry-span-attributes={{
+    'user.type': userType,
+    'cart.value': cartValue,
+    'feature.enabled': true,
+  }}
+  onPress={handleCheckout}
+>
+  <Text>Checkout</Text>
+</Pressable>
+```
+
+The SDK will traverse the component tree to find the `sentry-span-attributes` prop, so you can attach it to parent components if needed. The attributes work alongside `sentry-label` and will be included in the user interaction span.
 
 <Alert>
   If the UI transaction idled, but didn't have any child spans, it'll be

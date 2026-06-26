@@ -1,39 +1,97 @@
 ---
-title: Cloudflare Astro Framework Guide
-description: "Learn how to add Cloudflare instrumentation to your Astro app."
+title: Astro on Cloudflare
+description: "Learn how to instrument your Astro app on Cloudflare Workers and capture your first errors."
 ---
 
-If you're running your Astro app on Cloudflare Pages, you can use the Sentry Astro SDK in combination with the Sentry Cloudflare SDK to add Sentry instrumentation.
+## Prerequisites
 
-First, install the Sentry Astro SDK in your application. We recommend [setting up the Astro SDK manually](/platforms/javascript/guides/astro/manual-setup/) and manually initializing the SDK. Make sure you have a `sentry.client.config.js` file created, but do not add a `sentry.server.config.js` file.
+You need:
 
-After installing the Sentry Astro SDK, you can now install the Sentry Cloudflare SDK. First, install the SDK with your package manager:
+- A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/)
+- Your application up and running
+- Astro `6.0.0` or above
+- `@astrojs/cloudflare` v13 or above
+- `@sentry/astro` v10.40.0 or above
+- `@sentry/cloudflare` v10.40.0 or above
 
-<PlatformContent includePath="getting-started-install" />
+If you're using Cloudflare Pages (not Workers), see the section below for
+setup instructions. We recommend migrating to Cloudflare Workers for better
+Sentry integration and full feature support.
 
-To use the SDK, you'll need to set either the `nodejs_als` or `nodejs_compat` compatibility flags in your `wrangler.jsonc`/`wrangler.toml` config. This is because the SDK
-needs access to the `AsyncLocalStorage` API to work correctly.
+<Expandable level="info" title="Using Astro 3-5 with @astrojs/cloudflare v12?">
 
-```jsonc {tabTitle:JSON} {filename:wrangler.jsonc}
-{
-  "compatibility_flags": [
-    "nodejs_als",
-    // "nodejs_compat"
-  ],
-}
+For Astro 3-5 with `@astrojs/cloudflare` v12, the `@sentry/astro` integration automatically detects the Cloudflare adapter and wraps your Worker with the `@sentry/cloudflare` SDK for proper request isolation and async context.
+
+Follow the standard [Astro setup](/platforms/javascript/guides/astro/#install) without the custom entry point configuration described below. The SDK handles server-side initialization automatically.
+
+<Alert level="warning" title="Server-side configuration via environment variables only">
+
+With Astro 3-5 on Cloudflare, server-side SDK configuration only works via [environment variables](https://developers.cloudflare.com/workers/configuration/environment-variables/). The `sentry.server.config.(ts|js)` file is not supported.
+
+The SDK reads standard Sentry environment variables including `SENTRY_DSN`, `SENTRY_TRACES_SAMPLE_RATE`, `SENTRY_RELEASE`, `SENTRY_ENVIRONMENT`, and others. See the [SDK configuration spec](https://develop.sentry.dev/sdk/foundations/client/configuration/#environment-variables) for the full list.
+
+</Alert>
+
+</Expandable>
+
+<Expandable level="info" title="Using Astro on Cloudflare Pages?">
+
+<SplitLayout>
+
+For Cloudflare Pages, you need to manually set up the `@sentry/cloudflare` SDK using the Pages middleware.
+
+<SplitSection>
+<SplitSectionText>
+
+1. Install both SDKs:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```bash {tabTitle:npm}
+npm install @sentry/astro @sentry/cloudflare
 ```
 
-```toml {tabTitle:Toml} {filename:wrangler.toml}
-compatibility_flags = ["nodejs_als"]
-# compatibility_flags = ["nodejs_compat"]
+```bash {tabTitle:yarn}
+yarn add @sentry/astro @sentry/cloudflare
 ```
 
-```toml {tabTitle:Toml} {filename:wrangler.toml}
-compatibility_flags = ["nodejs_compat"]
-# compatibility_flags = ["nodejs_als"]
+```bash {tabTitle:pnpm}
+pnpm add @sentry/astro @sentry/cloudflare
 ```
 
-Then create a `functions` directory and add a `_middleware.js` file to it with the following code:
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+2. Add the Sentry Astro integration to your `astro.config.mjs`:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript {filename:astro.config.mjs}
+import { defineConfig } from "astro/config";
+import cloudflare from "@astrojs/cloudflare";
+import sentry from "@sentry/astro";
+
+export default defineConfig({
+  adapter: cloudflare(),
+  integrations: [sentry()],
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+3. <Include name="cloudflare-pages-middleware-intro.mdx" />
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```javascript {filename:functions/_middleware.js}
 import * as Sentry from "@sentry/cloudflare";
@@ -42,11 +100,50 @@ export const onRequest = [
   // Make sure Sentry is the first middleware
   Sentry.sentryPagesPlugin((context) => ({
     dsn: "___PUBLIC_DSN___",
-    // Set tracesSampleRate to 1.0 to capture 100% of spans for tracing.
-    // Learn more at
-    // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+    dataCollection: {
+      // To disable sending user data and HTTP bodies, uncomment the lines below. For more info visit:
+      // https://docs.sentry.io/platforms/javascript/guides/nextjs/configuration/options/#dataCollection
+      // userInfo: false,
+      // httpBodies: [],
+    },
     tracesSampleRate: 1.0,
   })),
   // Add more middlewares here
 ];
 ```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+4. Make sure to [configure Cloudflare for Sentry](/platforms/javascript/guides/cloudflare/#wrangler-configuration).
+
+</SplitSectionText>
+</SplitSection>
+</SplitLayout>
+</Expandable>
+
+<StepConnector selector="h2" showNumbers={true}>
+
+## Install
+
+<OnboardingOptionButtons
+  options={[
+    "error-monitoring",
+    "performance",
+    "session-replay",
+    "user-feedback",
+    "logs",
+  ]}
+/>
+
+<Include name="quick-start-features-expandable-cloudflare-frameworks" />
+
+<PlatformContent
+  includePath="getting-started-complete"
+  platform="javascript.astro"
+/>
+
+</StepConnector>

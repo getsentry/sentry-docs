@@ -1,0 +1,205 @@
+---
+title: Set Up Tracing
+sidebar_title: Tracing
+description: "Learn how to enable tracing in your app and discover valuable performance insights of your application."
+sidebar_order: 30
+sidebar_section: features
+---
+
+With [tracing](/product/dashboards/sentry-dashboards/), Sentry tracks your software performance, measuring metrics like throughput and latency, and displaying the impact of errors across multiple systems.
+
+<Alert>
+
+Tracing in Elixir SDK is available starting from 11.0.0 and it's currently in Beta.
+
+</Alert>
+
+## Install Dependencies
+
+Sentry's Elixir SDK uses OpenTelemetry for tracing. Add the required dependencies to your `mix.exs`:
+
+```elixir
+def deps do
+  [
+    # Sentry SDK
+    {:sentry, "~> 12.0"},
+
+    # OpenTelemetry core packages
+    {:opentelemetry, "~> 1.7"},
+    {:opentelemetry_api, "~> 1.5"},
+    {:opentelemetry_exporter, "~> 1.10"},
+    {:opentelemetry_semantic_conventions, "~> 1.27"},
+
+    # Instrumentation libraries (choose what you need)
+    {:opentelemetry_phoenix, "~> 2.0"},      # for Phoenix
+    {:opentelemetry_bandit, "~> 0.3"},       # for Bandit (Phoenix 1.7+)
+    {:opentelemetry_ecto, "~> 1.2"},         # for Ecto
+
+    # ... your other dependencies
+  ]
+end
+```
+
+## Configure Sentry
+
+Enable tracing in your Sentry configuration:
+
+```elixir
+# config/config.exs or config/dev.exs
+config :sentry,
+  dsn: "___PUBLIC_DSN___",
+  traces_sample_rate: 1.0  # Adjust for production
+```
+
+## Configure OpenTelemetry
+
+Set up OpenTelemetry to send traces to Sentry:
+
+```elixir
+# config/config.exs
+config :opentelemetry, span_processor: {Sentry.OpenTelemetry.SpanProcessor, []}
+
+config :opentelemetry, sampler: {Sentry.OpenTelemetry.Sampler, []}
+
+# Enable distributed tracing across services via sentry-trace and baggage headers
+config :opentelemetry,
+  text_map_propagators: [
+    :trace_context,
+    :baggage,
+    Sentry.OpenTelemetry.Propagator
+  ]
+```
+
+## Set Up Phoenix Instrumentation
+
+In your `application.ex`, set up the OpenTelemetry instrumentation.
+
+
+<Alert title="Note">
+
+`OpentelemetryPhoenix` requires your Phoenix endpoint to include `Plug.Telemetry` in order to correctly trace endpoint calls. Make sure your endpoint contains:
+
+```elixir
+plug Plug.Telemetry, event_prefix: [:phoenix, :endpoint]
+```
+
+This is included by default in the Phoenix endpoint template.
+
+</Alert>
+
+```elixir
+# lib/my_app/application.ex
+defmodule MyApp.Application do
+  use Application
+
+  def start(_type, _args) do
+    # Set up LiveView trace propagation (must be BEFORE OpentelemetryPhoenix)
+    Sentry.OpenTelemetry.LiveViewPropagator.setup()
+
+    # Set up OpenTelemetry instrumentation
+    OpentelemetryBandit.setup()           # for Bandit (Phoenix 1.7+)
+    # OR OpentelemetryPhoenix.setup(adapter: :cowboy2)  # for Cowboy
+
+    OpentelemetryPhoenix.setup(adapter: :bandit)
+    OpentelemetryEcto.setup([:my_app, :repo], db_statement: :enabled)
+
+    # Optional: Set up Oban instrumentation
+    # OpentelemetryOban.setup()
+
+    children = [
+      # ... your supervision tree
+    ]
+
+    opts = [strategy: :one_for_one, name: MyApp.Supervisor]
+    Supervisor.start_link(children, opts)
+  end
+end
+```
+
+Then add `Sentry.Plug.LiveViewContext` to your router's browser pipeline, after `:fetch_session`. This stores the trace context in the session so that LiveView processes can restore it during `mount`, `handle_params`, and `handle_event` callbacks.
+
+```elixir {filename:lib/my_app_web/router.ex}
+pipeline :browser do
+  plug :accepts, ["html"]
+  plug :fetch_session
+  plug :fetch_live_flash
+  plug :put_root_layout, html: {MyAppWeb.Layouts, :root}
+  plug :protect_from_forgery
+  plug :put_secure_browser_headers
+  plug Sentry.Plug.LiveViewContext
+end
+```
+
+## Advanced Sampling
+
+For more control over sampling, you can use a sampling function:
+
+```elixir
+config :sentry,
+  dsn: "___PUBLIC_DSN___",
+  traces_sampler: fn sampling_context ->
+    case sampling_context.transaction_context.op do
+      "http.server" -> 0.1  # Sample 10% of HTTP requests
+      _ -> 0.05             # Sample 5% of other operations
+    end
+  end
+```
+
+Learn more about tracing <PlatformLink to="/configuration/options/#tracing-options">options</PlatformLink>.
+
+## Log Correlation
+
+When both tracing and <PlatformLink to="/logs/">structured logs</PlatformLink> are enabled, log events are automatically linked to the active trace. This lets you view logs alongside spans in the Sentry Trace Explorer.
+
+To set up both features together, enable logs and tracing in your Sentry configuration:
+
+```elixir {filename:config/config.exs}
+config :sentry,
+  dsn: "___PUBLIC_DSN___",
+  traces_sample_rate: 1.0,
+  enable_logs: true,
+  logs: [level: :info, metadata: :all]
+
+config :opentelemetry,
+  span_processor: {Sentry.OpenTelemetry.SpanProcessor, []},
+  sampler: {Sentry.OpenTelemetry.Sampler, []}
+```
+
+Then add `opentelemetry_logger_metadata` to your dependencies:
+
+```elixir {filename:mix.exs}
+defp deps do
+  [
+    {:sentry, "~> 12.0"},
+    {:opentelemetry, "~> 1.7"},
+    {:opentelemetry_api, "~> 1.5"},
+    {:opentelemetry_exporter, "~> 1.10"},
+    {:opentelemetry_semantic_conventions, "~> 1.27"},
+    {:opentelemetry_logger_metadata, "~> 0.2"},
+    {:opentelemetry_bandit, "~> 0.3"},
+    {:opentelemetry_phoenix, "~> 2.0"},
+    {:opentelemetry_ecto, "~> 1.2"},
+    # ... your other dependencies
+  ]
+end
+```
+
+Set up the instrumentation in your application's `start/2` callback:
+
+```elixir {filename:lib/my_app/application.ex}
+def start(_type, _args) do
+  OpentelemetryLoggerMetadata.setup()
+  OpentelemetryBandit.setup()
+  OpentelemetryPhoenix.setup(adapter: :bandit)
+  OpentelemetryEcto.setup([:my_app, :repo], db_statement: :enabled)
+
+  children = [
+    # ... your supervision tree
+  ]
+
+  opts = [strategy: :one_for_one, name: MyApp.Supervisor]
+  Supervisor.start_link(children, opts)
+end
+```
+
+With this setup, any `Logger` call made during a traced request will automatically include the trace and span context, linking the log to the request's trace in Sentry.

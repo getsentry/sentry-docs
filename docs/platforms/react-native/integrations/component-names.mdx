@@ -30,7 +30,7 @@ We're working to release more features that will leverage component name capturi
 
 Add the `@sentry/react-native/metro` plugin to your Metro configuration and enable the `annotateReactComponents` option:
 
-```javascript {tabTitle:React Native} {filename:metro.config.js}
+```javascript {tabTitle:React Native} {mdExpandTabs} {filename:metro.config.js}
 const { getDefaultConfig } = require("@react-native/metro-config");
 const { withSentryConfig } = require('@sentry/react-native/metro');
 
@@ -71,11 +71,79 @@ Here's what the resulting node would look like if your bundler had applied the p
 
 The Sentry browser SDK will pick off the value from these `data` attributes and collect them when your components are interacted with.
 
+## Automatic `sentry-label` Injection
+
+<Alert>
+
+Available in SDK version `8.12.0` and above.
+
+</Alert>
+
+When component name capturing is enabled, the Babel plugin also automatically injects `sentry-label` props derived from static text content in your JSX. This provides meaningful labels for [touch event breadcrumbs](/platforms/react-native/configuration/touchevents/#automatic-sentry-label-injection) without any manual annotation.
+
+For example, this component:
+
+```javascript
+function SaveButton() {
+  return (
+    <Pressable>
+      <Text>Save workout</Text>
+    </Pressable>
+  );
+}
+```
+
+will have `sentry-label="Save workout"` added to `Pressable` at build time. The injection only uses static string children, caps the label at 64 characters, and skips components that already have an explicit `sentry-label` prop.
+
+By default, only React Native's `Text` component is recognized as a text source. If your app uses custom text wrapper components, use the `textComponentNames` option:
+
+```javascript {tabTitle:React Native} {mdExpandTabs} {filename:metro.config.js}
+const { getDefaultConfig } = require("@react-native/metro-config");
+const { withSentryConfig } = require('@sentry/react-native/metro');
+
+const config = getDefaultConfig(__dirname);
+module.exports = withSentryConfig(config, {
+  annotateReactComponents: {
+    textComponentNames: ['Text', 'MyText', 'Typography'],
+  },
+});
+```
+
+```javascript {tabTitle:Expo} {filename:metro.config.js}
+const { getSentryExpoConfig } = require("@sentry/react-native/metro");
+
+const config = getSentryExpoConfig(__dirname, {
+  annotateReactComponents: {
+    textComponentNames: ['Text', 'MyText', 'Typography'],
+  },
+});
+```
+
+To disable automatic label injection while keeping component name annotations:
+
+```javascript {tabTitle:React Native} {mdExpandTabs} {filename:metro.config.js}
+const { getDefaultConfig } = require("@react-native/metro-config");
+const { withSentryConfig } = require('@sentry/react-native/metro');
+
+const config = getDefaultConfig(__dirname);
+module.exports = withSentryConfig(config, {
+  annotateReactComponents: { autoInjectSentryLabel: false },
+});
+```
+
+```javascript {tabTitle:Expo} {filename:metro.config.js}
+const { getSentryExpoConfig } = require("@sentry/react-native/metro");
+
+const config = getSentryExpoConfig(__dirname, {
+  annotateReactComponents: { autoInjectSentryLabel: false },
+});
+```
+
 ## Options
 
 By default only components located in your project (outside of `node_modules`) are annotated. To avoid annotating other components, use the `ignoredComponents` option. The ignored components won't have `data-sentry-*` annotations added. 
 
-```javascript {tabTitle:React Native} {filename:metro.config.js}
+```javascript {tabTitle:React Native} {mdExpandTabs} {filename:metro.config.js}
 const { getDefaultConfig } = require("@react-native/metro-config");
 const { withSentryConfig } = require('@sentry/react-native/metro');
 

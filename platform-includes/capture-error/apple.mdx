@@ -9,7 +9,7 @@ enum MyCustomError: Error {
 
 func thisFunctionThrows() throws {
     throw MyCustomError.myFirstIssue
-} 
+}
 
 do {
     try thisFunctionThrows()
@@ -39,6 +39,27 @@ if (error) {
 }
 ```
 
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+- (void)thisFunctionReturnsAnError:(NSError **)error {
+    *error = [NSError errorWithDomain:@"com.example.myapp"
+                                 code:1001
+                             userInfo:@{
+      NSLocalizedDescriptionKey: @"Something went wrong."
+    }];
+}
+
+// ... Your code
+
+NSError *error = nil;
+[self thisFunctionReturnsAnError:&error];
+
+if (error) {
+    [SentryObjCSDK captureError:error];
+}
+```
+
 ### Swift Errors
 
 For Swift Errors conforming to the [Error Protocol](https://developer.apple.com/documentation/swift/error) the SDK sends the domain, code and the description of the Swift error.
@@ -65,6 +86,8 @@ For the Swift error above Sentry displays:
 This feature is available on [sentry-cocoa 7.25.0](https://github.com/getsentry/sentry-cocoa/blob/main/CHANGELOG.md#7250) and above.
 
 You may want to provide a custom description to make identifying the error in the **Issues** page easier. For `NSError` values, you can do this by adding a description to the `userInfo` dictionary with the key `NSDebugDescriptionErrorKey`.
+
+`NSLocalizedDescription` (or `NSLocalizedDescriptionKey`) will not be used for the issue title in Sentry. This is intentional to prevent duplicate issues, as localized descriptions can vary and lead to incorrect grouping. Only `NSDebugDescriptionErrorKey` is used for customizing the issue title.
 
 Sentry will group errors based on the error domain and code, and by enum value for Swift enum types, so customizing error descriptions won’t impact grouping.
 
@@ -157,10 +180,20 @@ SentrySDK.start { options in
     options.enableUncaughtNSExceptionReporting = true
 }
 ```
+
 ```objc {tabTitle:Objective-C}
 @import Sentry;
 
 [SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.enableUncaughtNSExceptionReporting = YES;
+}];
+```
+
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
     options.dsn = @"___PUBLIC_DSN___";
     options.enableUncaughtNSExceptionReporting = YES;
 }];

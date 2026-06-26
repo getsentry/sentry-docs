@@ -1,9 +1,8 @@
 import rehypeStringify from 'rehype-stringify';
 import remarkParse from 'remark-parse';
 import remarkRehype from 'remark-rehype';
-import {unified} from 'unified';
-
 import {type APICategory} from 'sentry-docs/build/resolveOpenAPI';
+import {unified} from 'unified';
 
 import {DocPage} from './docPage';
 import {SmartLink} from './smartLink';

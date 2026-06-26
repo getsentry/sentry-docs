@@ -1,8 +1,7 @@
 'use client';
 
-import {createContext, useEffect, useState} from 'react';
 import Cookies from 'js-cookie';
-
+import {createContext, useEffect, useState} from 'react';
 import {isLocalStorageAvailable} from 'sentry-docs/utils';
 
 import {OnboardingOptionType} from './onboarding';
@@ -10,16 +9,21 @@ import {OnboardingOptionType} from './onboarding';
 type ProjectCodeKeywords = {
   API_URL: string;
   DSN: string;
+  JS_SDK_LOADER_HOST: string;
   MINIDUMP_URL: string;
   ORG_ID: number;
   ORG_INGEST_DOMAIN: string;
   ORG_SLUG: string;
+  OTLP_LOGS_URL: string;
+  OTLP_TRACES_URL: string;
+  OTLP_URL: string;
   PROJECT_ID: number;
   PROJECT_SLUG: string;
   PUBLIC_DSN: string;
   PUBLIC_KEY: string;
   SECRET_KEY: string;
   UNREAL_URL: string;
+  VERCEL_LOG_DRAIN_URL: string;
   title: string;
 };
 
@@ -83,9 +87,14 @@ export const DEFAULTS: CodeKeywords = {
       ORG_ID: 0,
       ORG_SLUG: 'example-org',
       ORG_INGEST_DOMAIN: 'o0.ingest.sentry.io',
+      JS_SDK_LOADER_HOST: 'js.sentry-cdn.com',
       MINIDUMP_URL:
         'https://o0.ingest.sentry.io/api/0/minidump/?sentry_key=examplePublicKey',
       UNREAL_URL: 'https://o0.ingest.sentry.io/api/0/unreal/examplePublicKey/',
+      OTLP_URL: 'https://o0.ingest.sentry.io/api/0/integration/otlp',
+      OTLP_TRACES_URL: 'https://o0.ingest.sentry.io/api/0/integration/otlp/v1/traces',
+      OTLP_LOGS_URL: 'https://o0.ingest.sentry.io/api/0/integration/otlp/v1/logs',
+      VERCEL_LOG_DRAIN_URL: 'https://o0.ingest.sentry.io/api/0/integration/vercel/logs/',
       title: `example-org / example-project`,
     },
   ],
@@ -102,6 +111,7 @@ type CodeContextType = {
   codeKeywords: CodeKeywords;
   isLoading: boolean;
   onboardingOptions: OnboardingOptionType[];
+  sdkPackage: string | null;
   sharedKeywordSelection: [
     Record<string, number>,
     React.Dispatch<Record<string, number>>,
@@ -137,10 +147,34 @@ const formatUnrealEngineURL = ({scheme, host, pathname, publicKey}: Dsn) => {
   return `${scheme}${host}/api${pathname}/unreal/${publicKey}/`;
 };
 
+const formatIntegrationUrl = ({scheme, host, pathname}: Dsn) => {
+  return `${scheme}${host}/api${pathname}/integration/`;
+};
+
+const formatOtlpUrl = (dsn: Dsn) => {
+  return `${formatIntegrationUrl(dsn)}otlp`;
+};
+
+const formatOtlpTracesUrl = (dsn: Dsn) => {
+  return `${formatOtlpUrl(dsn)}/v1/traces`;
+};
+
+const formatOtlpLogsUrl = (dsn: Dsn) => {
+  return `${formatOtlpUrl(dsn)}/v1/logs`;
+};
+
+const formatVercelLogDrainUrl = (dsn: Dsn) => {
+  return `${formatIntegrationUrl(dsn)}vercel/logs/`;
+};
+
 const formatApiUrl = ({scheme, host}: Dsn) => {
   const apiHost = host.indexOf('.ingest.') >= 0 ? host.split('.ingest.')[1] : host;
 
   return `${scheme}${apiHost}/api`;
+};
+
+const getJsSdkLoaderHost = ({host}: Dsn) => {
+  return host.includes('.ingest.de.') ? 'js-de.sentry-cdn.com' : 'js.sentry-cdn.com';
 };
 
 function getHost(): string {
@@ -151,7 +185,6 @@ function getHost(): string {
 }
 
 function makeDefaults() {
-  // eslint-disable-next-line no-console
   console.warn('Unable to fetch codeContext - using defaults.');
   return DEFAULTS;
 }
@@ -177,7 +210,7 @@ export async function fetchCodeKeywords(): Promise<CodeKeywords> {
     if (data.regions) {
       regions = data.regions;
     }
-  } catch (e) {
+  } catch {
     return makeDefaults();
   }
 
@@ -191,7 +224,7 @@ export async function fetchCodeKeywords(): Promise<CodeKeywords> {
           return makeDefaults();
         }
         return resp.json();
-      } catch (e) {
+      } catch {
         return makeDefaults();
       }
     })
@@ -227,8 +260,13 @@ export async function fetchCodeKeywords(): Promise<CodeKeywords> {
         ORG_SLUG: project.organizationSlug,
         ORG_INGEST_DOMAIN:
           parsedDsn.host ?? `o${project.organizationId}.ingest.sentry.io`,
+        JS_SDK_LOADER_HOST: getJsSdkLoaderHost(parsedDsn),
         MINIDUMP_URL: formatMinidumpURL(parsedDsn),
         UNREAL_URL: formatUnrealEngineURL(parsedDsn),
+        OTLP_URL: formatOtlpUrl(parsedDsn),
+        VERCEL_LOG_DRAIN_URL: formatVercelLogDrainUrl(parsedDsn),
+        OTLP_TRACES_URL: formatOtlpTracesUrl(parsedDsn),
+        OTLP_LOGS_URL: formatOtlpLogsUrl(parsedDsn),
         title: `${project.organizationSlug} / ${project.projectSlug}`,
       };
     }),
@@ -297,9 +335,17 @@ const getLocallyStoredSelections = (): SelectedCodeTabs => {
   return {};
 };
 
-export function CodeContextProvider({children}: {children: React.ReactNode}) {
+type CodeContextProviderProps = {
+  children: React.ReactNode;
+  sdkPackage?: string | null;
+};
+
+export function CodeContextProvider({
+  children,
+  sdkPackage = null,
+}: CodeContextProviderProps) {
   const [codeKeywords, setCodeKeywords] = useState(cachedCodeKeywords ?? DEFAULTS);
-  const [isLoading, setIsLoading] = useState<boolean>(cachedCodeKeywords ? false : true);
+  const [isLoading, setIsLoading] = useState<boolean>(!cachedCodeKeywords);
   const [storedCodeSelection, setStoredCodeSelection] = useState<SelectedCodeTabs>({});
   const [onboardingOptions, setOnboardingOptions] = useState<OnboardingOptionType[]>([]);
 
@@ -349,6 +395,7 @@ export function CodeContextProvider({children}: {children: React.ReactNode}) {
     isLoading,
     onboardingOptions,
     updateOnboardingOptions: options => setOnboardingOptions(options),
+    sdkPackage,
   };
 
   return <CodeContext.Provider value={result}>{children}</CodeContext.Provider>;

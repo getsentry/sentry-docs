@@ -53,7 +53,6 @@ export SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
 
 We expose the following configuration values directly in your `app/build.gradle`:
 
-
 ````groovy
 import io.sentry.android.gradle.extensions.InstrumentationFeature
 import io.sentry.android.gradle.instrumentation.logcat.LogcatLevel
@@ -367,6 +366,12 @@ sentry {
 }
 ```
 
+<Alert level="info">
+
+When a variant is excluded via `ignoredVariants`, `ignoredBuildTypes`, or `ignoredFlavors`, most Sentry Gradle plugin tasks are disabled for that variant — including [Size Analysis](/platforms/android/size-analysis/) and [Build Distribution](/platforms/android/build-distribution/) uploads. Snapshot uploads are the exception and will still run for excluded variants. To upload builds for a variant, it must not be excluded by these filters. You can disable specific features individually (such as `autoUploadProguardMapping` or `tracingInstrumentation.enabled`) while keeping uploads enabled.
+
+</Alert>
+
 ## ProGuard/R8 & DexGuard
 
 The plugin will automatically generate appropriate ProGuard mapping files and upload them when you run `gradle assemble{BuildVariant}`. For example, `assembleRelease`. Release is the default, but the plugin works for others as long as you've enabled ProGuard/R8. The credentials for the upload step are defined in the Gradle extension above or loaded from a `sentry.properties` file in your project.
@@ -385,7 +390,7 @@ auth.token=___ORG_AUTH_TOKEN___
 
 <Alert>
 
-You can find your authentication token [on the Organization Auth Tokens](https://sentry.io/orgredirect/organizations/:orgslug/settings/auth-tokens/) settings page. For more information about the available configuration options, check out the [full sentry-cli documentation](/cli/configuration/#configuration-values).
+You can find your authentication token [on the Organization Tokens](https://sentry.io/orgredirect/organizations/:orgslug/settings/auth-tokens/) settings page. For more information about the available configuration options, check out the [full sentry-cli documentation](/cli/configuration/#configuration-values).
 
 </Alert>
 
@@ -488,7 +493,7 @@ Check [Integrations](/platforms/android/integrations/) page for more detailed ex
 
 <Alert>
 
-To learn more about the internals of auto-instrumentation, check out this [blog post](https://blog.sentry.io/2021/12/14/bytecode-transformations-the-android-gradle-plugin).
+To learn more about the internals of auto-instrumentation, check out this [blog post](https://blog.sentry.io/bytecode-transformations-the-android-gradle-plugin/).
 
 </Alert>
 
@@ -511,3 +516,5 @@ The plugin algorithm does the following when defining dependency versions:
    - If no, then automatically add the integration dependency with the version of the Sentry Android SDK inferred from above.
 
 3. If there are transitive dependencies on any of the integrations or the Sentry Android SDK, then their versions are not considered. However, if the versions are higher than those bundled with the Sentry Gradle plugin, Gradle will choose them instead.
+
+To test unreleased versions of the Sentry Android Gradle Plugin, see <PlatformLink to="/configuration/pre-release-versions">Pre-Release Versions</PlatformLink>.

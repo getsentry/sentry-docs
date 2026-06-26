@@ -11,7 +11,7 @@ information, refer to [_Debug Information Files_](/platforms/native/data-managem
 
 ## Permissions
 
-The `sentry-cli` requires an [Organization Auth Token](https://sentry.io/orgredirect/organizations/:orgslug/settings/auth-tokens/) so that Debug Information Files can be uploaded.
+The `sentry-cli` requires an [Organization Token](https://sentry.io/orgredirect/organizations/:orgslug/settings/auth-tokens/) so that Debug Information Files can be uploaded.
 
 <Alert>
 
@@ -91,7 +91,7 @@ sentry-cli debug-files upload --include-sources /path/to/files...
 This feature is supported by build tools that produce debug information files
 supported by Sentry such as DWARF and PDB. This applies to languages such
 as C/C++/C#/Swift/Rust/Zig/etc.
-For Java/Kotlin and other JVM languages, use one of the plugins: [Maven](https://docs.sentry.io/platforms/java/maven/) or [Gradle](https://docs.sentry.io/platforms/java/gradle/).
+For Java/Kotlin and other JVM languages, use one of the plugins: [Maven](/platforms/java/maven/) or [Gradle](/platforms/java/gradle/).
 
 </Alert>
 
@@ -226,24 +226,6 @@ sentry-cli upload-proguard \
     app/build/outputs/mapping/{BuildVariant}/mapping.txt
 ```
 
-Additionally, you can associate the ProGuard mapping file to a specific release:
-
-<Alert>
-
-This step is not required for deobfuscation to work but can help you identify which release a mapping file belongs to when multiple files exist for the same app.
-
-</Alert>
-
-```bash {5-7}
-# Associate the mapping file to the release my.app.id@1.0.0+1
-sentry-cli upload-proguard \
-    --uuid A_VALID_UUID \
-    app/build/outputs/mapping/{BuildVariant}/mapping.txt \
-    --app-id my.app.id \
-    --version 1.0.0 \
-    --version-code 1
-```
-
 After the upload, Sentry deobfuscates future events.
 To make sure that it worked, you can check _Project Settings > ProGuard_ and see if the upload mapping files are listed.
 
@@ -276,14 +258,24 @@ Before you can upload source files, you must configure the Sentry CLI with the o
 
 ### Creating a Source Bundle
 
-Run the `debug-files bundle-jvm` command to create a source bundle for a
-source directory.
+Run the `debug-files bundle-jvm` command to create a source bundle. The path argument can be a single source directory, a module, or a Gradle/Maven project root — `sentry-cli` collects only JVM source files (`.java`, `.kt`, `.scala`, `.groovy`, `.clj`) and automatically skips common build output and IDE directories (`build`, `.gradle`, `.idea`, etc.) as well as anything matched by `.gitignore`.
 
 ```bash
 sentry-cli debug-files bundle-jvm \
     --output some/dir \
     --debug-id A_VALID_UUID \
-    path/to/source/dir
+    path/to/project/root
+```
+
+Use `--exclude '<glob>'` (repeatable) to drop additional paths. This is useful when multiple source sets contribute the same fully-qualified class name — for example, an Android app where `src/main/` and `src/debug/` both define `com.example.Foo`. By default, `bundle-jvm` keeps the first occurrence and prints a warning for the rest; pass `--exclude` to scope the bundle to a single source set:
+
+```bash
+sentry-cli debug-files bundle-jvm \
+    --output some/dir \
+    --debug-id A_VALID_UUID \
+    --exclude '**/src/debug/**' \
+    --exclude '**/src/release/**' \
+    path/to/project/root
 ```
 
 You must provide the UUID of the source bundle for the Java/Android SDK to send.

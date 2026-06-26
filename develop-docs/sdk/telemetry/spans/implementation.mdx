@@ -1,0 +1,229 @@
+---
+title: Implementation Guidelines
+sidebar_order: 10
+---
+
+<Alert level="warning">
+  🚧 This document is work in progress. The steps and suggestions in this
+  document primarily serve as a means to document what SDKs so far have been
+  doing when implementing Span-First. This page also serves as a place to
+  document (temporary) decisions, trade-offs, considerations, etc.
+</Alert>
+
+<Alert>
+  This document uses key words such as "MUST", "SHOULD", and "MAY" as defined in
+  [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt) to indicate requirement
+  levels.
+</Alert>
+
+This document provides guidelines for implementing Span-First in SDKs. This is purposefully NOT a full specification. For exact specifications, refer to the other pages under [Spans](..).
+
+## How To Approach Span-First in SDKs
+
+If you're implementing Span-First (as a PoC) in your SDK, take an iterative approach in which you implement the functionality incrementally. Here's a rough suggestion for iterations.
+
+1. Add the Span v2 Envelope (type), serialization logic and any utilities necessary to support sending a new envelope. See [Span Protocol](../span-protocol) for more details.
+2. Add the top-level `traceLifecycle` (or `trace_lifecycle`) SDK init option which controls if traces should be sent as transactions or as spans (v2).
+   - The allowed values for this option MUST be `'static'` and `'stream'`.
+   - By default, the SDK MUST send traces as transactions (`'static'`). Span-First MUST be an opt-in feature.
+   - Continue with adding Span-First logic which MUST only be applied if `traceLifecycle` is set to `'stream'`.
+3. As an initial PoC, leave your current transaction APIs in place and convert the transaction event to a v2 spans array to be sent in the new envelope.
+   - At this point, you can already start sending spans in batches (i.e. in multiple envelopes) to send more than 1000 spans at once. The maximum number of spans per envelope MUST be limited to 1000 and an envelope MUST only contain spans from one trace (as the trace envelope header is shared).
+4. If applicable to your SDK, add new Span APIs to start spans. See [Span API](../span-api) for more details.
+   - Most importantly, add the simplest possible `start_span` API that leaves much control to users.
+   - Follow up with optional, more convenient APIs later.
+   - This new API MUST only be used in conjunction with the new `traceLifecycle` option and therefore only emit new spans (no transactions).
+   - This new API MUST NOT expose any old transaction properties or concepts like (`op`, `description`, `tags`, etc).
+   - TBD: Some SDKs already have `startSpan` or similar APIs. The migration path is still TBD but a decision can be made at a later stage.
+5. Implement the `captureSpan` [single-span processing pipeline](#single-span-processing-pipeline)
+   - Either reuse existing heuristics (e.g. flush when segment span ends) or build a simple span buffer to flush spans (e.g. similar to the existing buffers for logs or metrics).
+   - Implementing the more complex [Telemetry Processor](/sdk/foundations/processing/telemetry-processor/) buffer and scheduler can happen at a later stage.
+6. Achieve data parity with the existing transaction events.
+   - Ensure that the data added by SDK integrations, event processors, etc. to transaction events is also added to the spans (see [Event Processors](#replacing-event-processors)).
+   - Most additional data MUST only be added to the segment span. See [Common Attributes](../span-protocol/#common-attribute-keys) for attributes that MUST be added to every span.
+   - Mental model: All data our SDKs _automatically_ add to a transaction, MUST also be added to the segment span.
+7. Implement the span telemetry buffer for proper, weighted span flushing. See [Span Buffer](/sdk/telemetry/spans/span-buffer/) for more details.
+8. (Optional) Depending on necessity, drop support for sending traces as transactions in the next major release. From this point on, the SDK will by default send spans (v2) only and therefore will no longer be compatible with current self-hosted Sentry installations.
+
+## Span APIs
+
+To do: This section needs a few guidelines and implementation hints, including:
+
+- languages having to deal with async context management
+
+### `parentSpan` option for `startSpan`
+
+SDKs MUST expose a `parentSpan` option on the `startSpan` API which allows users to explicitly set the parent span of the new span.
+
+The `parentSpan` parameter has three distinct states: `undefined`, `null` and a span instance. See the [Span API documentation](../span-api) for the semantics.
+
+For languages that do not support an `undefined` state, SDKs SHOULD model this three-state behavior using platform-appropriate mechanisms.
+Prefer solutions that preserve the semantic distinction between `undefined` and `null`, such as:
+
+- method/constructor overloading (e.g., an overload without `parentSpan`, and another accepting `parentSpan: Span?`),
+- a default sentinel value/object representing `undefined`,
+- or other idiomatic platform mechanisms (e.g., enum types).
+
+### Edge Cases
+
+- If `parentSpan` references a span that has already ended, the SDK SHOULD still create the new span and send it as a child of `parentSpan`.
+  - Handling and presentation of these relationships is deferred to downstream processing and the frontend/UI.
+
+### Setting a Span as Active
+
+It MUST be possible to attach a span to a scope. In SDKs that implement the three-scope model, the span SHOULD be set on the current scope.
+
+When a span is attached to a scope, a reference to the previous span MUST be stored. The previous span MUST be re-attached to the scope as soon as the currently active span ends.
+
+If a span is started with `active: true`, it MUST be attached to the scope. If a span is started with `active: false`, it SHOULD NOT be attached to the scope so that any spans started while the span is still running don't become its children.
+
+If a span is unsampled (for example, because it has a negative sampling decision or because it matches `ignore_spans`), a [Noop span is created](../span-api#noop-span). If a Noop span would be a segment (i.e., there is no currently running active span, or the user explicitly promoted the span to a segment via `parentSpan: null`), it MAY be set on the scope so that its children easily inherit its negative sampling decision.
+
+## Single-Span Processing Pipeline
+
+SDKs MUST implement a `captureSpan` API that takes a single span once it ends, and then processes and enqueues it into the span buffer. In most cases, this API SHOULD be exposed as a method on the `Client`. SDKs (e.g. JS Browser) MAY chose a different location if necessary.
+
+Here's a rough overview of what `captureSpan` should do in which order:
+
+1. Accept any span that already ended (i.e. has an `end_timestamp`)
+2. Obtain the current, isolation and global scopes and merge the scope data.
+3. Apply [common span attributes](../span-protocol/#common-attribute-keys) from the client and the merged scope data to every span.
+4. Apply [scope attributes](../../scopes/#setting-attributes) from the merged scope data to every span.
+5. Apply `contexts` and `request` data from the merged scopes to the segment span only.
+6. Apply any span processing hooks (i.e. [event processor replacements](#replacing-event-processors)) to the span.
+7. Apply the `before_send_span` callback to the span.
+8. Enqueue the span into the span buffer.
+
+The `captureSpan` pipeline MUST NOT
+
+- drop any span
+- buffer spans before enqueuing them
+- modify span relationships
+
+### Span Filtering
+
+For details and specifications, see [Span Filtering](../filtering).
+
+We settled on `ignore_spans` being applied prior to span start. This means that the `captureSpan` pipeline doesn't have to handle filtering spans. However, there are some drawbacks with this approach, most prominently:
+
+- Not being able to filter on span names or data that is added/updated post span start
+- Not being able to filter entire segments (e.g. `http.server` segments for bot requests resulting in 404 errors)
+
+We might revisit this, which could require changes to the single-span processing pipeline.
+
+### Replacing Event Processors
+
+Given that streamed spans no longer are events (as opposed to transactions), they don't go through SDK event processors, which are extensively used throughout the SDKs (clients, integrations) but also by users.
+Instead, we defined replacement APIs for users and SDK-internal use cases.
+
+For user-facing migration, we should aim to solve every use case with [`ignore_spans`](../filtering/#filter-with-ignorespans) for filtering and [`before_send_span`](../scrubbing-data/#scrubbing-data-with-beforesendspan) for span data enrichment and scrubbing.
+
+For SDK-internal processing, SDKs are free to implement further processing mechanisms as they see fit. 
+It's strongly recommended to implement client [lifecycle hooks](https://github.com/getsentry/rfcs/blob/main/text/0034-sdk-lifecycle-hooks.md). 
+The `captureSpan` pipeline emits a `process_span` message that any consumer (e.g. an integration) can subscribe to. 
+The consumer can then apply its logic to spans, similarly to how it might have applied it in event processors before. 
+SDKs having alternative processing patterns established can also use them. 
+
+```js
+// in captureSpan:
+processed_span = client.emit("process_span", captured_span)
+
+// Somewhere in e.g. an integration:
+client.on("process_span", (span) => {
+   span.attributes["sentry.origin"] = "auto.http.server"
+})
+```
+
+With a few exceptions, event processors for transactions do two things: 
+1. Add and modify transaction and child span data
+2. Drop transaction events or remove child spans
+
+#### Replacing mutating event processors
+
+For event processors mutating data, we need to replace the mutation logic with span processing hooks. 
+SDK-internally, this means configure the integration or call site that registers an event processor, to also register a hook to process that span.
+As written above, this could be realized via a client lifecycle hook, or a similar mechanism.
+
+```js
+// someIntegration:
+
+client.addEventProcessor(event => {
+   event.transaction = parameterizedRouteName;
+   event.context.trace.data["http.route"] = parameterizedRouteName;
+   event.spans.foreach(s => {s.data["http.route"] = parameterizedRouteName});
+})
+
+// for span streaming, add:
+client.on("process_span", (span) => {
+   if (span.is_segment) {
+      span.name = parameterizedRouteName;
+   }
+   span.attributes["http.route"] = parameterizedRouteName;
+})
+```
+
+#### Replacing filtering event processors
+
+Ideally, we can replace retroactive filtering in event processors with configuring an integration to not emit these spans upfront. 
+This should be the first step we try when implementing span streaming.
+
+If this doesn't apply to the use case, we should pre-configure the SDK's `ignore_spans` option and leverage the existing span filtering logic to drop segments or child spans **upfront**.
+
+```js
+// someIntegration:
+
+client.addEventProcessor(event => {
+   if (event.type === "transaction" && event.transaction === "unknown") {
+      return null;
+   }
+   return event;
+})
+
+// for span streaming, add:
+client.options.ignore_spans = [
+   ...client.options.ignore_spans,
+   /^unknown$/
+];
+```
+
+Note that if the SDK implements `ignore_spans` also for transactions, this _might_ allow us to entirely get rid of the event processor.
+
+#### Cases we cannot* replace
+
+- Filtering spans based on data that is unknown prior to child span start.
+  For example, on a span attribute that only gets added to the span after it was started.
+- Filtering entire segments based on data that is unknown prior to segment start.
+  For example, `http.server` segments ending in a 404 response.
+- Use cases where we mutate or make decisions on multiple spans at once (e.g. calculating and setting the total token usage on parent spans of `gen_ai` spans).
+  There's no guarantee anymore that we actually "see" all spans in time to safely aggregate on their data.
+  Previously, this was trivial, by iterating over `event.spans`. 
+  Now, we'd need a guarantee that the child spans finish prior to their parent span, which we often don't have.
+- Scoped event processors: Event processors could be registered on scopes. 
+  For now, we don't see a need to continue supporting scoped processing. 
+  We can re-evaluate if a use case comes up that can't be solved with client-wide processing hooks.
+  
+\* This reflects our current span streaming strategies. We might reconsider cases in the future based on feedback and demand.   
+
+**To sum up**: Spans no longer going through event processors is a behaviour-breaking change. For users, `ignore_spans` and `before_send_span` should be the way forward. Internally, SDKs may use further processing mechanisms.
+
+## Migrating to Span Attributes
+
+All attributes set on a streamed span must be in [Sentry conventions](https://getsentry.github.io/sentry-conventions/) before they're introduced in an SDK.
+
+Implementation guidelines on specific attributes:
+
+- `http.request.body.data`: Attach on best-effort basis, as long as it can be done without side-effects like exhausting the body before the user/app can read it. Decide based on SDK/integration whether this is feasible.
+
+## Span Buffer
+
+See [Span Buffer specification](../span-buffer/) for more details.
+
+## Release
+
+The initial PoC implementation of Span-First SHOULD be released in a minor version of the SDK.
+
+- This feature is entirely opt-in via `traceLifecycle = 'stream'` and therefore does not introduce breaking changes to existing users.
+- The default tracing behavior (transaction-based) MUST remain unchanged until Span-First becomes the default in a future major release.
+- Release notes and user facing documentation SHOULD clearly describe:
+  - the availability of Span-First behind the opt-in flag
+  - any known limitations

@@ -13,6 +13,7 @@ notSupported:
   - javascript.hapi
   - javascript.hono
   - javascript.koa
+  - javascript.nitro
   - javascript.nestjs
 keywords:
   [
@@ -27,7 +28,7 @@ keywords:
 
 <Alert>
 
-We recommend using JavaScript SDK `8.x` and above when using the SDK with shared environments. Check out our [migration docs](https://docs.sentry.io/platforms/javascript/migration/) to upgrade from an older SDK version to `8.x` and above.
+We recommend using JavaScript SDK `8.x` and above when using the SDK with shared environments. Check out our [migration docs](/platforms/javascript/migration/) to upgrade from an older SDK version to `8.x` and above.
 
 </Alert>
 
@@ -49,7 +50,7 @@ When setting up Sentry in a shared environment where multiple Sentry instances m
 ## Shared Environment Setup
 
 For the use cases listed above, set up a client manually as seen in the example below.
-In addition, avoid adding any integrations that use global state, like `Breadcrumbs` or `GlobalHandlers`.
+In addition, avoid adding any integrations that use global state, like `Breadcrumbs` or `GlobalHandlers` (see code snippet below).
 Furthermore, some default integrations that use the global state have to be filtered as in the example below.
 In these scenarios, it's a best practice to avoid using any integrations and to rely on manually capturing errors.
 
@@ -64,7 +65,7 @@ import {
 
 // filter integrations that use the global variable
 const integrations = getDefaultIntegrations({}).filter((defaultIntegration) => {
-  return !["BrowserApiErrors", "Breadcrumbs", "GlobalHandlers"].includes(
+  return !["BrowserApiErrors", "BrowserSession", "Breadcrumbs", "ConversationId", "GlobalHandlers", "FunctionToString"].includes(
     defaultIntegration.name
   );
 });
@@ -97,6 +98,19 @@ try {
 } catch (error) {
   scope.captureException(error);
 }
+```
+
+## Sending logs from shared environments
+
+You can pass the scope directly into the logger API methods to make shared environments work.
+
+```js
+const scope = new Scope();
+scope.setClient(client);
+
+client.init(); // initializing has to be done after setting the client on the scope
+
+Sentry.logger.info("my logger message", {}, { scope });
 ```
 
 ## Browser Extension Filter

@@ -69,6 +69,34 @@ This option will enable automatic measuring of the time to initial display for e
 
 This ensures that transactions that are from routes that've been seen and don't have any spans, are not being sampled. This removes a lot of clutter, making it so that most back navigation transactions are now ignored. The default value is `true`.
 
+## Prefetch Instrumentation
+
+<Alert level="info">
+
+`router.prefetch()` requires **Expo Router v5 (Expo SDK 53) or later**. On older versions the method does not exist; calling it will throw a runtime error.
+
+</Alert>
+
+Expo Router's `router.prefetch()` preloads a route before the user navigates to it. By default, these prefetch calls are invisible in your traces. Wrapping the router with `Sentry.wrapExpoRouter()` adds an automatic `navigation.prefetch` span for each call so you can see prefetch timing alongside your other navigation spans.
+
+```javascript {filename:app/(tabs)/index.tsx}
+import { useRouter } from 'expo-router';
+import * as Sentry from '@sentry/react-native';
+
+function HomeScreen() {
+  const router = Sentry.wrapExpoRouter(useRouter());
+
+  return (
+    <Button
+      title="Go to Details"
+      onPress={() => router.prefetch('/details')}
+    />
+  );
+}
+```
+
+The span name is `Prefetch /details` (or `Prefetch unknown` for unresolvable routes). Span attributes include `route.href` and `route.name`.
+
 ## Notes
 
 - Slow and Frozen frames, Time To Initial Display and Time To Full Display are only available in native builds, not in Expo Go.

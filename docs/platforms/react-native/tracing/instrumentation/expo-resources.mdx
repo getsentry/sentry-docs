@@ -1,0 +1,44 @@
+---
+title: Expo Image and Asset Instrumentation
+description: "Automatic performance spans for expo-image and expo-asset."
+sidebar_order: 70
+---
+
+Image and asset loading times directly affect how quickly your app feels responsive. The SDK can automatically create performance spans for `expo-image` and `expo-asset` operations so you can see exactly how long prefetching and loading takes within your existing traces.
+
+## Expo Image
+
+Wrap the `Image` class from `expo-image` once at app startup to instrument `Image.prefetch()` and `Image.loadAsync()`:
+
+```javascript {filename:App.js}
+import { Image } from 'expo-image';
+import * as Sentry from '@sentry/react-native';
+
+Sentry.wrapExpoImage(Image);
+```
+
+After wrapping, every call to `Image.prefetch()` creates a `resource.image.prefetch` span, and every call to `Image.loadAsync()` creates a `resource.image.load` span. The spans are automatically linked to the active trace.
+
+Span attributes include:
+
+- `image.url` — the image URL (for single-image operations)
+- `image.url_count` — number of URLs (for batch prefetch)
+
+## Expo Asset
+
+Wrap the `Asset` class from `expo-asset` once at app startup to instrument `Asset.loadAsync()`:
+
+```javascript {filename:App.js}
+import { Asset } from 'expo-asset';
+import * as Sentry from '@sentry/react-native';
+
+Sentry.wrapExpoAsset(Asset);
+```
+
+After wrapping, every call to `Asset.loadAsync()` creates a `resource.asset` span with an `asset.count` attribute.
+
+## Notes
+
+- Both `wrapExpoImage` and `wrapExpoAsset` are safe to call multiple times — the SDK guards against double-wrapping.
+- Spans are only created when a trace is active. If you're not using [tracing](/platforms/react-native/tracing/), no spans are created and there's no overhead.
+- `expo-image` and `expo-asset` are peer dependencies — the SDK does not require them to be installed.

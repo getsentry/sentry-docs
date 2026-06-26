@@ -1,0 +1,20 @@
+If you use a third-party SDK to evaluate feature flags, you can enable a Sentry SDK integration to track those evaluations. Integrations are provider specific. Documentation for supported SDKs is listed below.
+
+- [LaunchDarkly](/platforms/python/integrations/launchdarkly/)
+- [OpenFeature](/platforms/python/integrations/openfeature/) (multiple providers supported)
+- [Statsig](/platforms/python/integrations/statsig/)
+- [Unleash](/platforms/python/integrations/unleash/)
+
+### Generic API
+If you use an unsupported solution, you can use the generic API to manually track feature flag evaluations. These evaluations are held in memory and are sent to Sentry on error and transaction events. **At the moment, we only support boolean flag evaluations.**
+
+```python
+import sentry_sdk
+from sentry_sdk.feature_flags import add_feature_flag
+
+add_feature_flag('test-flag', False)  # Records an evaluation and its result.
+
+sentry_sdk.capture_exception(Exception("Something went wrong!"))
+```
+
+Go to your Sentry project and confirm that your error event has recorded the feature flag "test-flag" and its value "false".

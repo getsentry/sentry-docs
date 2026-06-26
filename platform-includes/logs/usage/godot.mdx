@@ -1,0 +1,112 @@
+Once the feature is enabled on the SDK and the SDK is initialized, you can send logs using the `SentrySDK.logger` APIs.
+
+The `SentrySDK.logger` exposes six methods that you can use to log messages at different log levels: `trace`, `debug`,
+`info`, `warn`, `error`, and `fatal`.
+
+```gdscript {tabTitle:GDScript} {mdExpandTabs}
+SentrySDK.logger.trace("Initialized inventory database")
+SentrySDK.logger.debug("Player inventory updated")
+SentrySDK.logger.info("Level loaded successfully")
+SentrySDK.logger.warn("Item configuration not found")
+SentrySDK.logger.error("Failed to save game state")
+SentrySDK.logger.fatal("Inventory data corrupted")
+```
+
+```csharp {tabTitle:C#}
+SentrySdk.Logger.LogTrace("Initialized inventory database");
+SentrySdk.Logger.LogDebug("Player inventory updated");
+SentrySdk.Logger.LogInfo("Level loaded successfully");
+SentrySdk.Logger.LogWarning("Item configuration not found");
+SentrySdk.Logger.LogError("Failed to save game state");
+SentrySdk.Logger.LogFatal("Inventory data corrupted");
+```
+
+The methods also accept a message template with placeholders, plus the values to fill them. GDScript uses Godot's format
+strings (`%s`, `%d`) with a parameters array, while C# uses positional placeholders (`{0}`, `{1}`) with the values
+passed as arguments. In both cases, the template and its parameters are sent to Sentry as separate log attributes, which
+you can search from within the Logs UI.
+
+```gdscript {tabTitle:GDScript} {mdExpandTabs}
+# String interpolation automatically extracts parameters as log attributes
+SentrySDK.logger.info("Spawned %d enemies on level %s", [5, "forest_1"])
+
+# This is equivalent to manually specifying attributes:
+var message := "Spawned %d enemies on level %s" % [5, "forest_1"]
+SentrySDK.logger.info(message, [], {
+	"sentry.message.template": "Spawned %d enemies on level %s",
+	"sentry.message.parameter.0": 5,
+	"sentry.message.parameter.1": "forest_1"
+})
+```
+
+```csharp {tabTitle:C#}
+// Parameters are automatically extracted as log attributes
+SentrySdk.Logger.LogInfo("Spawned {0} enemies on level {1}", 5, "forest_1");
+```
+
+You can also use structured attributes to provide additional context for your logs. For example, you can add a
+`current_scene` attribute to log messages related to currently loaded scene.
+
+```gdscript {tabTitle:GDScript} {mdExpandTabs}
+# Adding custom attributes, which can be searched from within the Logs UI
+SentrySDK.logger.debug("Spawning %s with %d units", ["enemies", 5], {
+	"current_scene": get_tree().current_scene.scene_file_path,
+	"wave_id": "main_wave_3"
+})
+```
+
+```csharp {tabTitle:C#}
+// Adding custom attributes, which can be searched from within the Logs UI
+SentrySdk.Logger.LogDebug(
+    log =>
+    {
+        log.SetAttribute("current_scene", GetTree().CurrentScene.SceneFilePath);
+        log.SetAttribute("wave_id", "main_wave_3");
+    },
+    "Spawning {0} with {1} units", "enemies", 5);
+```
+
+Structured attributes support `bool`, `int`, `float`, and `String` data types. Other types will be converted to strings.
+
+### Global Attributes
+
+You can set global attributes that are automatically included in all log entries and metrics. This is useful for attaching contextual information like player IDs or game state that should appear on every log.
+
+```gdscript {tabTitle:GDScript} {mdExpandTabs}
+# Set global attributes that apply to all logs and metrics
+SentrySDK.set_attribute("level", "castle")
+SentrySDK.set_attribute("difficulty", "hard")
+
+# All subsequent logs will include these attributes
+SentrySDK.logger.info("Level loaded")
+
+# Clear when returning to the main menu
+SentrySDK.remove_attribute("level")
+```
+
+```csharp {tabTitle:C#}
+SentrySdk.Init(options =>
+{
+    options.EnableLogs = true;
+    options.SetBeforeSendLog(log =>
+    {
+        log.SetAttribute("level", "castle");
+        log.SetAttribute("difficulty", "hard");
+        return log;
+    });
+});
+
+// All subsequent logs will include these attributes
+SentrySdk.Logger.LogInfo("Level loaded");
+```
+
+<Alert>
+  The C# SDK doesn't have a scope-level attribute API yet. The before-send hook
+  is the closest equivalent: it applies attributes to every log.
+</Alert>
+
+### Godot Logging Integration
+
+When the feature is enabled, the SDK automatically captures Godot messages, warnings, and errors as logs. You can use
+`print()`, `push_warning()`, and `push_error()` as usual. These show up as `info`, `warning`, and `error` logs. The SDK
+also turns runtime errors and warnings into events based on your configuration.

@@ -1,15 +1,74 @@
 ---
 title: Features
 sidebar_order: 1
+sidebar_hidden: true
 description: "Learn about Sentry's Apple SDK features for watchOS."
 ---
 
-Sentry's Apple SDK for watchOS enables basic reporting of errors and exceptions with limited symbolication support and no crash or app hang detection. The below, is a list of features that are available as part of this SDK.
+Sentry's Apple SDK for watchOS enables basic reporting of errors and exceptions with limited symbolication support and no crash or app hang detection. All features listed below are **enabled by default** unless otherwise noted.
 
-**Features:**
+<Alert level="warning">
 
-- Limited symbolication support and no crash handling
-- Events [enriched](/platforms/apple/enriching-events/context/) with device data
+watchOS has significant limitations compared to other Apple platforms. Crash detection, app hang detection, and many performance monitoring features are not available due to platform restrictions.
+
+</Alert>
+
+For a complete list of all available features, see the <PlatformLink to="/features">main Features page</PlatformLink>. This page highlights watchOS-specific features and limitations.
+
+## watchOS Limitations
+
+watchOS has significant limitations due to platform restrictions:
+
+- Crash detection not available (no crash handling)
+- App hang detection not available
+- Watchdog terminations not available
+- Session Replay not available
+- User Feedback UI not available
+- Screenshot capture not available
+- View Hierarchy capture not available
+- Profiling not available
+- MetricKit integration not available
+- Logs capturing not available
+- Most performance monitoring features not available
+- Limited symbolication support
+
+## Available Features on watchOS
+
+Despite the limitations, watchOS still supports several useful features:
+
+### Error Reporting
+
+- Manual error reporting using <PlatformLink to="/usage">SentrySDK.capture(error:)</PlatformLink> or `SentrySDK.capture(message:)`
+- Handled exceptions can be captured and reported
+
+### Event Enrichment
+
+- Events <PlatformLink to="/enriching-events/context">enriched</PlatformLink> with device data and environment information
+- <PlatformLink to="/enriching-events/attachments">Attachments</PlatformLink> enrich your event by storing additional files, such as config or log files
+- <PlatformLink to="/data-management/debug-files/source-context">Source Context</PlatformLink> shows snippets of code around the location of stack frames (when available)
+
+### Session & User Tracking
+
+- Session tracking for release health metrics (limited functionality)
+- <Link to="/product/releases/health">Release health</Link> tracking (limited by lack of crash detection)
+
+### Data Management
+
 - Offline caching when a device is unable to connect; we send a report once we receive another event
-- [Attachments](/platforms/apple/enriching-events/attachments/) enrich your event by storing additional files, such as config or log files
-- [User Feedback](/platforms/apple/user-feedback/) provides the ability to collect user information when an event occurs
+- Event persistence: events persist to disk and are sent when connectivity is available
+
+### Other Features
+
+- Swift Async/Await support for automatically stitching together stack traces of Swift concurrency code (when applicable)
+- <PlatformLink to="/user-feedback">User Feedback</PlatformLink> via programmatic API (no UI available)
+
+## Best Practices for watchOS
+
+Given the limitations on watchOS:
+
+1. **Use Manual Error Reporting** - Since crash detection is not available, use <PlatformLink to="/usage">SentrySDK.capture(error:)</PlatformLink> to manually report important errors
+2. **Add Context** - Use <PlatformLink to="/enriching-events/scopes">scopes</PlatformLink> to add context and <PlatformLink to="/enriching-events/tags">tags</PlatformLink> to help debug issues
+3. **Test Thoroughly** - Since symbolication is limited, ensure your error messages and context are descriptive
+4. **Consider Companion App** - For critical error tracking, consider implementing error reporting in your companion <Link to="/platforms/apple/guides/ios">iOS app</Link>
+
+For configuration options and detailed documentation, see the <PlatformLink to="/configuration">Configuration</PlatformLink> section.

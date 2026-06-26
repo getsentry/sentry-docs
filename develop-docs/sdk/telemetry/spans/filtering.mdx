@@ -19,16 +19,107 @@ Any APIs exposed to the user to filter spans MUST adhere to the following design
 
 ## Filter with `ignoreSpans`
 
-The `ignoreSpans` option accepts a glob pattern or string.
+The `ignoreSpans` option MUST accept a string, RegExp or glob pattern (whichever of the two the platform supports). These values MUST be matched against the span name.
 
-```js
+Furthermore, `ignoreSpans` SHOULD accept an Object with patterns matching the span name, or span attributes (see type definitions below). 
+
+```ts
+type IgnoreSpanNamePattern = string | RegExp | GlobPattern;
+
+// all allowed values for span attributes (unlikely but could differ by platform)
+type AttributeValueTypes = string | boolean | number | Array<string> | Array<boolean> | Array<number>;
+type EnhancedAttributeValueTypes = AttributeValueTypes | RegExp | GlobPattern;
+
+type IgnoreSpanFilter = {
+  name: IgnoreSpanNamePattern;
+  attributes?: Record<string, EnhancedAttributeValueTypes>;
+} | {
+  name?: IgnoreSpanNamePattern;
+  attributes?: Record<string, EnhancedAttributeValueTypes>;
+}
+
+type IgnoreSpans = Array<IgnoreSpanNamePattern | IgnoreSpanFilter>
+```
+(Note: `GlobPattern` is used as an illustrative type for platforms that support matching glob patterns. It is not a valid TypeScript type.)
+
+Example:
+
+```js {tabTitle:TypeScript}
 Sentry.init({
   ignoreSpans: [
+    // apply on span name
     'GET /about',
     'events.signal *',
+    /api\/\d+/,
+    // ignore health check GET requests
+    {
+      name: /healthz?/,
+      attributes: {
+        'http.method': 'GET',
+      }
+    },
+    // ignore all GET requests to /api/
+    // (i.e. span name doesn't matter)
+    {
+      attributes: {
+        'http.method': /GET \/api\/.*/,
+      }
+    },
+    // ignore all spans with name starting with /imprint-
+    // if glob patterns are supported
+    {
+      name: '/imprint-*'
+    }
   ]
 })
+
+// Note: The glob patterns used in the example serve an illustrative purpose.
+// They are not supported in JavaScript.
 ```
+
+```python {tabTitle:Python}
+sentry_sdk.init(
+    ignore_spans=[
+        # apply on span name
+        "GET /about",
+        "events.signal *",
+        r"api\/\d+",
+        # ignore health check GET requests
+        {
+            "name": r"healthz?",
+            "attributes": {
+                "http.method": "GET",
+            }
+        },
+        # ignore all GET requests to /api/
+        # (i.e. span name doesn't matter)
+        {
+            "attributes": {
+                "http.method": r"GET \/api\/.*",
+            }
+        },
+        # ignore all spans with name starting with /imprint-
+        # if glob patterns are supported
+        {
+            "name": "/imprint-*"
+        },
+    ],
+)
+```
+
+### Implementation Requirements
+
+1. The `ignoreSpans` patterns MUST be evaluated **before** the span is started.
+2. The `ignoreSpans` patterns MUST be applied to all spans, including the root or segment span.
+   - If a pattern matches the root span, the span and all its children MUST be ignored.
+   - If a pattern matches a child span, the span MUST be ignored but any potential child spans MUST be attempted to be reparented to the parent span of the ignored span.
+3. If an SDK accepts `IgnoreSpanFilter` objects, span attributes must be matched by their exact value. This includes attributes whose values are arrays.
+   - String attribute values are matched in the same fashion as span names: If a string is provided, the string MUST match (contains), if a `RegExp` or glob pattern is provided, the value MUST match the pattern.
+   - Any other attribute value type MUST strictly equal the provided value.
+4. If a span is ignored, the SDK **MUST** record a client report with the `ignored` discard reason and `span` category for the span.
+   - For each ignored child span, emit one outcome per span
+   - For each ignored segment span, emit one outcome for the segment and one for each child span (which are all ignored due to the segment being ignored)
+   
 
 ## Filter with `integrations`
 

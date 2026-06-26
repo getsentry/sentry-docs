@@ -1,0 +1,45 @@
+#### before_send_log
+
+To filter logs, or update them before they are sent to Sentry, you can use the `before_send_log` option.
+
+```yaml {filename:config/packages/sentry.yaml}
+sentry:
+  options:
+    before_send_log: "sentry.callback.before_send_log"
+
+services:
+    sentry.callback.before_send_log:
+        class: 'App\Service\Sentry'
+        factory: ['@App\Service\Sentry', 'getBeforeSendLog']
+```
+
+The service needed for the `before_send_log` option can be implemented as follows:
+
+```php {filename:src/Service/Sentry.php}
+<?php
+
+namespace App\Service;
+
+class Sentry
+{
+    public function getBeforeSendLog(): callable
+    {
+        return function (\Sentry\Logs\Log $log): ?\Sentry\Logs\Log {
+            if ($log->getLevel() === \Sentry\Logs\LogLevel::info()) {
+                // Filter out all info logs
+                return null;
+            }
+
+            return $log;
+        };
+    }
+}
+```
+
+<Alert>
+
+  Learn more in [Callables in Symfony Options](/platforms/php/guides/symfony/configuration/symfony-options/#callables).
+
+</Alert>
+
+The `before_send_log` function receives a log object, and should return the log object if you want it to be sent to Sentry, or `null` if you want to discard it.

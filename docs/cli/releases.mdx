@@ -14,24 +14,17 @@ Because releases work on projects you will need to specify the organization and 
 
 ## Creating Releases
 
-Releases are created with the `sentry-cli releases new` command. It takes at the very least a version identifier that uniquely identifies the releases. There are a few restrictions -- the release name cannot:
-
-- contain newlines, tabulator characters, forward slashes(/), or back slashes(\\)
-- be (in their entirety) period (.), double period (..), or space ( )
-- exceed 200 characters
-
-The value can be arbitrary, but for certain platforms, recommendations exist:
-
-- for mobile devices use `package-name@version-number` or `package-name@version-number+build-number`. **Do not** use `VERSION_NUMBER (BUILD_NUMBER)` as the parenthesis are used for display purposes (foo@1.0+2 becomes 1.0 (2)), so invoking them will cause an error.
-- if you use a DVCS we recommend using the identifying hash (eg: the commit SHA, `da39a3ee5e6b4b0d3255bfef95601890afd80709`). You can let sentry-cli automatically determine this hash for supported version control systems with `sentry-cli releases propose-version`.
-- if you tag releases we recommend using the release tag prefixed with a product or package name (for example, `my-project-name@2.3.12`).
+Releases are created with the `sentry-cli releases new` command. It takes at the very least a version identifier that uniquely identifies the releases. 
 
 ```bash
 #!/bin/sh
 sentry-cli releases new "$VERSION"
 ```
 
-Releases can also be auto created by different systems. For instance upon uploading a source map a release is automatically created. Likewise releases are created by some clients when an event for a release comes in.
+There are some release name restrictions and conventions to be aware of. [Learn more about naming releases](/product/releases/naming-releases/).
+
+Releases can also be auto-created by different systems—for instance, upon uploading a source map, or by some clients when an event that is tagged with a release is ingested. Therefore, it's important to set the release name when building and deploying your application. Learn more in our [Releases](/platform-redirect/?next=/configuration/releases/) documentation.
+
 
 ## Finalizing Releases
 
@@ -85,10 +78,10 @@ To see which repos are available for the organization, you can run `sentry-cli r
 
 Note that you need to refer to releases you need to use the actual full commit SHA. If you want to refer to tags or references (like _HEAD_), the repository needs to be checked out and reachable from the path where you invoke _sentry-cli_.
 
-If you also want to set a previous commit instead of letting the server use the previous release as the base point you can do that by setting a commit range:
+If you also want to set a previous commit instead of letting the server use the previous release as the base point you can do that by setting a commit range. Replace `<commit_of_previous_release>` and `<commit_of_current_release>` with the last commit of the previous release and the release you are creating, respectively.
 
 ```bash
-sentry-cli releases set-commits "$VERSION" --commit "repo-owner/repo-name@from..to"
+sentry-cli releases set-commits "$VERSION" --commit "repo-owner/repo-name@<commit_of_previous_release>..<commit_of_current_release>"
 ```
 
 ### Alternatively: Without a Repository Integration
@@ -101,7 +94,7 @@ You can use the `--local` flag to enable this behavior by default.
 sentry-cli releases set-commits "$VERSION" --local
 ```
 
-If you receive an "Unable to Fetch Commits" email, take a look at our [help center article](https://sentry.zendesk.com/hc/en-us/articles/23968845267739-Why-am-I-receiving-the-email-Unable-to-Fetch-Commits).
+If you receive an "Unable to Fetch Commits" email, take a look at our [help center article](https://www.sentry.help/en/articles/13964115-why-am-i-receiving-the-email-unable-to-fetch-commits).
 
 ### Dealing With Missing Commits
 
@@ -124,7 +117,7 @@ You can upload sourcemaps via the `sentry-cli sourcemaps upload` command:
 sentry-cli sourcemaps upload /path/to/sourcemaps
 ```
 
-This command provides several options and attempts as much auto detection as possible. By default, it will scan the provided path for files and upload them named by their path with a `~/` prefix. It will also attempt to figure out references between minified files and source maps based on the filename. So if you have a file named `foo.min.js` which is a minified JavaScript file and a source map named `foo.min.map` for example, it will send a long a `Sourcemap` header to associate them. This works for files the system can detect a relationship of.
+This command provides several options and attempts as much auto detection as possible. By default, it will scan the provided path for files and upload them named by their path with a `~/` prefix. It will also attempt to figure out references between minified files and source maps based on the filename. So if you have a file named `foo.min.js` which is a minified JavaScript file and a source map named `foo.min.map` for example, it will send along a `Sourcemap` header to associate them. This works for files the system can detect a relationship of.
 
 By default, `sentry-cli` rewrites source maps before upload:
 

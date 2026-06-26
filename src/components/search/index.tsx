@@ -1,6 +1,5 @@
 'use client';
 
-import {Fragment, useCallback, useEffect, useRef, useState} from 'react';
 import {ArrowRightIcon} from '@radix-ui/react-icons';
 import {Button} from '@radix-ui/themes';
 import {captureException} from '@sentry/nextjs';
@@ -11,16 +10,15 @@ import {
   standardSDKSlug,
 } from '@sentry-internal/global-search';
 import {usePathname} from 'next/navigation';
+import {Fragment, useCallback, useEffect, useRef, useState} from 'react';
 import algoliaInsights from 'search-insights';
-
 import {useOnClickOutside} from 'sentry-docs/clientUtils';
 import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
-
-import styles from './search.module.scss';
+import {DocMetrics} from 'sentry-docs/metrics';
 
 import {MagicIcon} from '../cutomIcons/magic';
 import {Logo} from '../logo';
-
+import styles from './search.module.scss';
 import {SearchResultItems} from './searchResultItems';
 import {relativizeUrl} from './util';
 
@@ -45,12 +43,7 @@ const randomUserToken = (() => {
 // this type is not exported from the global-search package
 type SentryGlobalSearchConfig = ConstructorParameters<typeof SentryGlobalSearch>[0];
 
-const developerDocsSites: SentryGlobalSearchConfig = [
-  'develop',
-  'zendesk_sentry_articles',
-  'docs',
-  'blog',
-];
+const developerDocsSites: SentryGlobalSearchConfig = ['develop', 'docs', 'blog'];
 
 const userDocsSites: SentryGlobalSearchConfig = [
   {
@@ -59,7 +52,6 @@ const userDocsSites: SentryGlobalSearchConfig = [
     platformBias: true,
     legacyBias: true,
   },
-  'zendesk_sentry_articles',
   'develop',
   'blog',
 ];
@@ -68,6 +60,8 @@ const search = new SentryGlobalSearch(config);
 
 type Props = {
   autoFocus?: boolean;
+  /** Called before the Kapa modal opens, so a parent overlay can close itself first. */
+  onAskAi?: () => void;
   path?: string;
   searchPlatforms?: string[];
   showChatBot?: boolean;
@@ -76,9 +70,22 @@ type Props = {
 
 const STORAGE_KEY = 'sentry-docs-search-platforms';
 
+// Paths outside `/platforms/` whose pages are not about any specific SDK.
+// Restoring the user's last-used SDK on these pages biases query results
+// toward irrelevant SDK pages instead of the product/concept docs they're
+// actually reading. Mirrors PRODUCT_DOC_PREFIXES in scripts/algolia.ts.
+const SDK_AGNOSTIC_PATH_PREFIXES = [
+  '/product/',
+  '/concepts/',
+  '/cli/',
+  '/guides/',
+  '/integrations/',
+];
+
 export function Search({
   path,
   autoFocus,
+  onAskAi,
   searchPlatforms = [],
   useStoredSearchPlatforms = true,
 }: Props) {
@@ -93,6 +100,9 @@ export function Search({
 
   // Load stored platforms on mount
   useEffect(() => {
+    const isSdkAgnosticPath = SDK_AGNOSTIC_PATH_PREFIXES.some(prefix =>
+      pathname?.startsWith(prefix)
+    );
     const storedPlatforms = localStorage.getItem(STORAGE_KEY) ?? '[]';
     if (!storedPlatforms) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(searchPlatforms));
@@ -101,10 +111,14 @@ export function Search({
       searchPlatforms.length === 0 &&
       useStoredSearchPlatforms
     ) {
-      const platforms = JSON.parse(storedPlatforms);
-      setCurrentSearchPlatforms(platforms);
+      if (isSdkAgnosticPath) {
+        setCurrentSearchPlatforms([]);
+      } else {
+        const platforms = JSON.parse(storedPlatforms);
+        setCurrentSearchPlatforms(platforms);
+      }
     }
-  }, [useStoredSearchPlatforms, searchPlatforms]);
+  }, [useStoredSearchPlatforms, searchPlatforms, pathname]);
 
   // Update stored platforms when they change
   useEffect(() => {
@@ -165,7 +179,10 @@ export function Search({
   }, [autoFocus]);
 
   const searchFor = useCallback(
-    async (inputQuery: string, args: Parameters<typeof search.query>[1] = {}) => {
+    async (
+      inputQuery: string,
+      args: Parameters<typeof search.query>[1] & {skipMetrics?: boolean} = {}
+    ) => {
       setQuery(inputQuery);
       if (inputQuery.length === 2) {
         setShowOffsiteResults(false);
@@ -179,6 +196,8 @@ export function Search({
         return;
       }
 
+      const {skipMetrics, ...searchArgs} = args;
+
       const queryResults = await search
         .query(
           inputQuery,
@@ -188,7 +207,7 @@ export function Search({
               platform => standardSDKSlug(platform)?.slug ?? ''
             ),
             searchAllIndexes: showOffsiteResults,
-            ...args,
+            ...searchArgs,
           },
           {clickAnalytics: true, analyticsTags: ['source:documentation']}
         )
@@ -220,9 +239,30 @@ export function Search({
         setLoading(false);
       }
 
+      // Calculate total results and track metrics
+      const totalResults = queryResults.reduce((sum, site) => sum + site.hits.length, 0);
+      const hasResults = totalResults > 0;
+
+      // Track search query metrics (skip on recursive calls to avoid duplicates)
+      if (!skipMetrics) {
+        DocMetrics.searchQuery(hasResults, totalResults, {
+          query_length: inputQuery.length,
+          includes_platform_filter: currentSearchPlatforms.length > 0,
+          search_all_indexes: showOffsiteResults,
+        });
+
+        // Track zero results specifically (indicates content gaps)
+        if (!hasResults) {
+          DocMetrics.searchZeroResults(inputQuery.length, {
+            includes_platform_filter: currentSearchPlatforms.length > 0,
+          });
+        }
+      }
+
       if (queryResults.length === 1 && queryResults[0].hits.length === 0) {
         setShowOffsiteResults(true);
-        searchFor(inputQuery, {searchAllIndexes: true});
+        // Skip metrics on recursive call to avoid duplicate tracking
+        searchFor(inputQuery, {searchAllIndexes: true, skipMetrics: true});
       } else {
         setResults(queryResults);
       }
@@ -319,12 +359,12 @@ export function Search({
             color="gray"
             size="3"
             radius="medium"
-            className="font-medium text-[var(--foreground)] py-2 px-3 uppercase cursor-pointer kapa-ai-class hidden md:flex"
+            className="font-medium text-[var(--foreground)] py-2 px-3 uppercase cursor-pointer kapa-ai-class hidden md:flex mr-4"
           >
-            <div>
+            <button type="button" aria-label="Ask AI">
               <MagicIcon />
               <span>Ask AI</span>
-            </div>
+            </button>
           </Button>
         </Fragment>
       </div>
@@ -336,10 +376,13 @@ export function Search({
               className={styles['sgs-ai-button']}
               onClick={() => {
                 if (window.Kapa?.open) {
-                  // close search results
                   setInputFocus(false);
-                  // open kapa modal
-                  window.Kapa.open({query, submit: true});
+                  onAskAi?.();
+                  // Open next frame, after the overlay's scroll lock is released
+                  // on commit, so Kapa's lock and ours never overlap.
+                  requestAnimationFrame(() => {
+                    window.Kapa?.open({query, submit: true});
+                  });
                 }
               }}
             >
@@ -374,7 +417,9 @@ export function Search({
               <button
                 className={styles['sgs-expand-results-button']}
                 onClick={() => setShowOffsiteResults(true)}
-                onMouseOver={() => searchFor(query, {searchAllIndexes: true})}
+                onMouseOver={() =>
+                  searchFor(query, {searchAllIndexes: true, skipMetrics: true})
+                }
               >
                 Search <em>{query}</em> across all Sentry sites
               </button>

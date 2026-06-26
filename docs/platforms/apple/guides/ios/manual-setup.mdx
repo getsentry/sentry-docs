@@ -8,25 +8,19 @@ If you can't (or prefer not to) run the [automatic setup](/platforms/apple/guide
 
 ## Installation
 
-The minimum required version for iOS is 11.0.
+The minimum required version for iOS is 15.0 with Sentry Cocoa 9.x. If you need to support iOS 11-14, use Sentry Cocoa 8.x.
 
-We recommend installing the SDK with CocoaPods, but we also support alternate [installation methods](/platforms/apple/guides/ios/install/). To integrate Sentry into your Xcode project, specify it in your `Podfile`:
+We recommend installing the SDK with SPM, but we also support alternate [installation methods](/platforms/apple/guides/ios/install/). To integrate Sentry into your Xcode project, add the package using the Github URL:
 
-```ruby {filename:Podfile}
-platform :ios, '11.0'
-use_frameworks! # This is important
-
-target 'YourApp' do
-  pod 'Sentry', :git => 'https://github.com/getsentry/sentry-cocoa.git', :tag => '{{@inject packages.version('sentry.cocoa') }}'
-end
+```
+https://github.com/getsentry/sentry-cocoa.git
 ```
 
-Then run `pod install`.
+The Package has a few products you can depend on, but the recommended one is `Sentry`. For more details see the full docs on using [Swift Package Manager](/platforms/apple/guides/ios/install/swift-package-manager).
 
 ## Configuration
 
 We recommend initializing the SDK on the main thread as soon as possible – in your AppDelegate `application:didFinishLaunchingWithOptions` method, for example:
-
 
 ```swift {tabTitle:Swift}
 import Sentry // Make sure you import Sentry
@@ -67,8 +61,25 @@ func application(_ application: UIApplication,
 }
 ```
 
-If you're using SwiftUI and your app doesn't implement an app delegate, initialize the SDK within the [App conformer's initializer](<https://developer.apple.com/documentation/swiftui/app/main()>):
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
 
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+
+    [SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+        options.dsn = @"___PUBLIC_DSN___";
+        options.debug = YES; // Enabled debug when first installing is always helpful
+
+        // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
+        // We recommend adjusting this value in production.
+        options.tracesSampleRate = @1.0;
+    }];
+
+    return YES;
+}
+```
+
+If you're using SwiftUI and your app doesn't implement an app delegate, initialize the SDK within the [App conformer's initializer](<https://developer.apple.com/documentation/swiftui/app/main()>):
 
 ```swift
 import Sentry

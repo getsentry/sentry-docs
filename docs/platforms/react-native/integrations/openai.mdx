@@ -1,0 +1,75 @@
+---
+title: OpenAI
+description: "Manually instrument the OpenAI SDK in React Native to capture spans and LLM interactions."
+---
+
+_Import name: `Sentry.instrumentOpenAiClient`_
+
+The `instrumentOpenAiClient` helper adds instrumentation for the [`openai`](https://www.npmjs.com/package/openai) SDK by wrapping an OpenAI client instance and recording LLM interactions with configurable input/output capture. The OpenTelemetry-based automatic integration available for Node.js does not work in React Native, so wrapping the client manually is the only supported path.
+
+## Usage
+
+```javascript
+import * as Sentry from "@sentry/react-native";
+import OpenAI from "openai";
+
+const openai = new OpenAI({
+  // Warning: API keys included in your app bundle will be visible to anyone who
+  // inspects the bundle. Proxy LLM calls through your own backend whenever possible.
+  apiKey: "your-api-key",
+});
+
+const client = Sentry.instrumentOpenAiClient(openai, {
+  recordInputs: true,
+  recordOutputs: true,
+});
+
+// Use the wrapped client instead of the original openai instance
+const response = await client.chat.completions.create({
+  model: "gpt-4o",
+  messages: [{ role: "user", content: "Hello!" }],
+});
+```
+
+Make sure <PlatformLink to="/tracing/">tracing is enabled</PlatformLink> for the spans produced by this integration to be captured.
+
+## Configuration
+
+### Options
+
+The following options control what data is captured from OpenAI SDK calls:
+
+#### `recordInputs`
+
+_Type: `boolean` (optional)_
+
+Records inputs to OpenAI SDK calls (such as prompts and messages).
+
+Defaults to `true` if `sendDefaultPii` is `true`.
+
+#### `recordOutputs`
+
+_Type: `boolean` (optional)_
+
+Records outputs from OpenAI SDK calls (such as generated text and responses).
+
+Defaults to `true` if `sendDefaultPii` is `true`.
+
+## Supported Operations
+
+By default, tracing support is added to the following OpenAI SDK calls:
+
+- `chat.completions.create()` - Chat completion requests
+- `responses.create()` - Response SDK requests
+
+Streaming and non-streaming requests are automatically detected and handled appropriately.
+
+<Alert>
+
+When using OpenAI's streaming API, you must also pass `stream_options: { include_usage: true }` to receive token usage data. Without this option, OpenAI does not include `prompt_tokens` or `completion_tokens` in streamed responses, and Sentry will be unable to capture `gen_ai.usage.input_tokens` / `gen_ai.usage.output_tokens` on the resulting span. This is an OpenAI API behavior, not a Sentry limitation. See [OpenAI docs on stream options](https://platform.openai.com/docs/api-reference/chat/create#chat-create-stream_options).
+
+</Alert>
+
+## Supported Versions
+
+- `openai`: `>=4.0.0 <7`

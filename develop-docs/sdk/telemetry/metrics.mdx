@@ -1,375 +1,722 @@
 ---
-title: Metrics (deprecated)
-sidebar_order: 3
+title: Metrics
+description: Counter, gauge, and distribution metrics sent as batched trace_metric envelope items.
+spec_id: sdk/telemetry/metrics
+spec_version: 2.10.0
+spec_status: stable
+spec_depends_on:
+  - id: sdk/foundations/transport/envelopes
+    version: ">=1.0.0"
+  - id: sdk/foundations/state-management/scopes/attributes
+    version: ">=1.0.0"
+spec_changelog:
+  - version: 2.10.0
+    date: 2026-06-22
+    summary: Added client reports requirement (trace_metric count, trace_metric_byte size)
+  - version: 2.9.0
+    date: 2026-05-18
+    summary: Added optional `timestamp` parameter to metrics public API. Changed `sentry.timestamp.sequence` to a continuously incrementing Int64 that never resets on timestamp change.
+  - version: 2.8.0
+    date: 2026-04-07
+    summary: Added `ingest_settings` and `version` to trace_metric envelope item
+  - version: 2.7.0
+    date: 2026-03-10
+    summary: Auto-emitted metrics and third-party metrics bindings MUST be opt-in
+  - version: 2.6.0
+    date: 2026-03-04
+    summary: Add sentry.timestamp.sequence attribute for deterministic metric ordering
+  - version: 2.5.0
+    date: 2026-02-12
+    summary: Clarified sendDefaultPii gating for user attributes — allowed when user manually sets data
+  - version: 2.4.1
+    date: 2026-01-19
+    summary: Fixed example — replaced unsupported set type with gauge
+  - version: 2.4.0
+    date: 2026-01-14
+    summary: SDKs MUST NOT restrict unit values, SHOULD offer constants for supported units
+  - version: 2.3.1
+    date: 2026-01-09
+    summary: Fixed Swift API examples (syntax correction)
+  - version: 2.3.0
+    date: 2025-12-15
+    summary: Added span_id field, added replay association (sentry.replay_id, sentry._internal.replay_is_buffering)
+  - version: 2.2.0
+    date: 2025-11-19
+    summary: Tightened buffering from SHOULD to MUST, added telemetry buffer forwarding scenarios
+  - version: 2.1.0
+    date: 2025-11-17
+    summary: Added backend SDK default attributes (server.address)
+  - version: 2.0.0
+    date: 2025-11-13
+    summary: Breaking — new trace_metric JSON envelope format, attribute system replacing tags
+  - version: 1.0.0
+    date: 2023-12-07
+    summary: Initial metrics spec (statsd-based format, now superseded)
 ---
 
-<Alert title="Note" level="warning">
-The metrics solution based on this documentation has been retired. We're actively developing a new solution that will make tracking and debugging any issues in your application easier. [Learn more.](https://sentry.zendesk.com/hc/en-us/articles/26369339769883-Metrics-Beta-Ended-on-October-7th)
+<SpecRfcAlert />
+
+<SpecMeta />
+
+## Overview
+
+This spec defines the format used by Sentry to ingest metrics, as well as the SDK API and behavior that create and send metrics to Sentry. Metrics are sent as `trace_metric` envelope items containing JSON-encoded payloads.
+
+<Alert title="Note" level="info">
+
+The envelope item type is named `trace_metric` for internal usage to avoid naming collisions with other metric systems within Sentry's infrastructure. From an SDK perspective, these are simply referred to as "metrics".
+
 </Alert>
 
-Sentry supports the emission of pre-aggregated metrics information via the `statsd`
-envelope item.  This emission bypasses relay-side sampling and assumes a client side
-aggregator.  In the product these are referred to as "custom metrics" and internally
-the system sometimes carries the name "DDM". The functionality sits on top of the
-generics metrics platform which is also used for span and transaction level
-metrics.
-
-These metrics are considered "trace seeking" which means that they should attempt to
-establish a relationship to the current span or trace.
-
-## Introduction
-
-Custom metrics are sent into the `custom` namespace in the generic metrics platform.
-The features exposed from the generic metrics platform to the SDKs are all
-metric types (**counters**, **distributions**, **gauges** and **sets**).  SDKs
-are required to perform local aggregation unless they perform on-shot emissions.
-
-## Aggregator Behavior
-
-Metrics are aggregated into a process wide aggregator which is required to flush
-in intervals that are reasonable for the SDK.  These aggregations are lossless
-(unless the metric type is already lossy which for instance applies to sets
-and gauges) and are required to support tags.  The following general guidelines
-exist:
-
-* **10 Second Bucketing:** SDKs are required to bucket into 10 second intervals
-   (**rollup in seconds**) which is the current lower bound of metric accuracy.
-* **Flush Shift:** SDKs are required to shift the flush interval by `random() * rollup_in_seconds`.
-  That shift is determined once per startup to create jittering.
-* **Force flush:** an SDK is required to perform force flushing ahead of scheduled
-  time if the memory pressure is too high.  There is no rule for this other than
-  that SDKs should be tracking abstract aggregation complexity (eg: a counter
-  only carries a single float, whereas a distribution is a float per emission).
-  For Mobile SDKs, where a low memory footprint is crucial, the recommendation is to use a maximum
-  memory footprint of around 10 KiB for metrics, which requires the SDKs to force flush for around
-  every 1000 SetMetric entries, for example.
-* **Background Aggregation:** SDKs are encouraged to defer flushing and aggregation
-  into a background thread.  For SDKs where `fork()` is to be expected, the background
-  thread needs to ensure it restarts after fork (eg: python).
-* **Tagging:** metrics can be tagged with a unique key and an optional value for each key. Both keys and values are limited to strings,
-  but the SDK can expose other types if it has a reasonable way to stringify these.
-
-In abstract terms the aggregator is recommended to look a bit like this:
-
-```python
-class Aggregator:
-    def __init__(self):
-        self.buckets = {}
-    def get_bucket(self, ts):
-        return self.buckets.setdefault(ts // 10, {})
-    def add(self, type, key, value, unit, tags):
-        mri = "%s:%s" % (type, key)
-```
-
-## Normalization
-
-Normalization shall be done for `statsd` envelope items with unicode support if possible:
-* **Metric Name**: Regex `[^a-zA-Z0-9_\-.]+` with replacement character `_`.
-* **Metric Namespace and Unit**: Regex `[^a-zA-Z0-9_]+` with no replacement character.
-* **Metric Tag Key**: Regex `[^a-zA-Z0-9_\-.\/]+` with no replacement character.
-* **Metric Tag Value**: See below.
-
-{/* Internal note: We can't use `\w` instead of `a-zA-Z0-9` because on some Regex engines `\w` includes chars such as `ä`, `ö` or `é`. */}
-
-### Tag Values Replacement Map
-
-Tag Values support the full UTF-8 character range, except for control characters.
-Reserved characters for Tag Values are `\n`, `\r`, `\t`, `\`, `|`, `,`. The replacement map is as follows.
-
-| Character | Replacement |
-|:--|:--|
-| Line Feed (`<LF>`) | `\n` |
-| Carriage Return (`<CR>`) | `\r` |
-| Tab (`<HT>`) | `\t` |
-| Backslash (`\`) | `\\` |
-| Pipe (`\|`) | `\u{7c}` |
-| Comma (`,`) | `\u{2c}` |
-
-### Maximum Lengths
-
-The lengths of the following components of the `statsd` envelope items should be limited:
-- **Metric Name**: 150 characters.
-- **Metric Unit**: 15 characters.
-
-## Units
-
-SDKs should permit any string unit, but some of them are known to the system and
-will in the future permit recalculations.  They are documented as part of
-relay: [`MetricUnit`](https://getsentry.github.io/relay/relay_metrics/enum.MetricUnit.html).
-
-## Span Seeking and Span Creating Mode
-
-When a metric is emitted it shall either determine the current span (span seeking) or
-create a new span (span creating).
-
-In **span seeking** mode, the span is determined based on the current span on the scope.
-APIs such as `.increment()`, `.distribution()`, `.gauge()` and `.set()` operate in span
-seeking mode.
-
-In **span creating** mode a new active span is started.
-The `.timing()` API operates in span creating mode.
-
-In span creating mode the span should be setup the following way:
-* `span.op = "metric.timing"`
-* `span.description = key` (the metric key)
-* the metric tags should be applied to the span as well
-* the span is finished once the timing callback finishes
-
-From there two things shall be happening unless they are disabled:
-* **Common tag attaching:** the tags `transaction`, `release` and `environment`
-  shall be automatically added to the metric.
-* **Span local aggregation:** the metric shall be attached to the determined span
-  as a local summary (a form of gauge).  For more information see below.
-
-## API
-
-API wise the SDKs are required to expose static metric functions which are to be
-defined in a `metrics` module.  This also documents the aggregation state for
-each metric type.  They are constructed with an initial value, have an `add`
-method to add another value and a `serialize` method that returns the values for
-the final emission as array.
-
-### Common Attributes
-
-The following attributes are common for all metrics.  These should be emitted
-via keyword arguments, some configuration struct or whatever is reasonable
-in the target language.
-
-* `key`: the name of the metric.  SDKs are required to normalize this name.
-* `value`: the value to be emitted, this is specific by metric type.
-* `unit`: the unit for the metric, see below.
-* `tags`: a dictionary or list of tuples of tags and their values.
-* `stacklevel`: a utility attribute for SDKs where n stack level shall be
-  ignored for code location recording.  In languages that have better
-  facilities this can be removed.
-
-### Span Aggregation
-
-On a span every metric is aggregated as a gauge.  For each metric the following
-attributes are retained per span:
-
-* `min`: the minimum value observed.
-* `max`: the maximum value observed.
-* `count`: the number of emissions.
-* `sum`: the sum of all values.
-* `tags`: the metric tags and their values.
+Related specs:
+- [Envelopes](/sdk/foundations/transport/envelopes/) — transport format
+- [Attributes](/sdk/foundations/state-management/scopes/attributes) — attribute types and structure
+- [Tracing without Performance](/sdk/foundations/trace-propagation/#default-propagation) — required before adding metrics support
+- [Telemetry Processor](/sdk/foundations/processing/telemetry-processor/) — buffer data forwarding scenarios
 
-The local aggregator behaves as such:
+---
 
-```python
-class LocalAggregator:
-    def add(self, type, value, value, unit, tags):
-        # Assumes sorted tags
-        bucket_key = ("%s:%s@%s" % (ty, key, unit), tags)
-
-        old = self._measurements.get(bucket_key)
-        if old is not None:
-            v_min, v_max, v_count, v_sum = old
-            v_min = min(v_min, value)
-            v_max = max(v_max, value)
-            v_count += 1
-            v_sum += value
-        else:
-            v_min = v_max = v_sum = value
-            v_count = 1
-        self._measurements[bucket_key] = (v_min, v_max, v_count, v_sum)
-```
-
-### Counters
-
-Counters (`c`) have a single method for emission:
-
-* `increment(key, value: int | float = 1.0, unit = "none", ...)`: increments the
-  given key by one in the bucket.
-
-**Aggregation state:**
-
-```python
-class Counter:
-    def __init__(self, initial):
-        self.value = initial
-    def add(self, value):
-        self.value += value
-    def serialize(self):
-        return [self.value]
-```
-
-**Span aggregation:** the value is added to the span local aggregator.
-
-### Distributions
-
-A distribution (`d`) holds all values observed.  There are multiple methods that
-shall exist on an SDK to support common use cases.  The basic way to emit a
-distribution is the low level `distribution` function, higher level methods
-depend on the facilities in the language.
-
-* `distribution(key, value: int | float, unit = "none", ...)`: emits a single
-  value into a distribution.
-
-For languages with context managers (eg: `with` in Python):
-
-* `timing(key, ...)`: this shall measure the time of a code block and emit
-  the measured time as distribution with a time unit (`second`, `millisecond`,
-  etc.).  The default unit shall be `second` in current SDKs as we are not yet
-  normalizing values on the server.
-
-For languages with lambda callback patterns (eg: `timed(() => { ... })`):
-
-* `timing(key, ..., callback)`: this shall measure the time of the invoked lambda and
-  emit the measured time as distribution with a time unit (`second`, `millisecond`,
-  etc.).  The default unit shall be `second` in current SDKs as we are not yet
-  normalizing values on the server.
-
-For languages with decorators:
-
-* `@timing(key, ...)` or `@timed(key, ...)`: Can be used to annotate a function
-  so that every time it is invoked, a timing is emitted.
-
-**Aggregation state:**
-
-```python
-class Distribution:
-    def __init__(self, initial):
-        self.values = [initial]
-    def add(self, value):
-        self.values.append(value)
-    def serialize(self):
-        return self.values
-```
-
-**Span aggregation:** the value is added to the span local aggregator.
-
-### Gauges
-
-Gauges (`g`) are often also called "summaries" as they
-are similar in nature to distributions, but somewhat lossy.  They are however emitted
-per span when metric summaries are enabled.  As they are hard to aggregate across
-different emitters they can be tricky to use properly in practice.
-
-They are emitted by a single function called `gauge`:
-
-* `gauge(key, value: int | float, unit = "none", ...)`: emits a single value into the
-  gauge.
-
-**Aggregation state:**
-
-```python
-class Gauge:
-    def __init__(self, initial):
-        self.last = initial
-        self.min = initial
-        self.max = initial
-        self.sum = initial
-        self.count = 1
-    def add(self, value):
-        self.last = value
-        self.min = min(self.min, value)
-        self.max = max(self.max, value)
-        self.sum += value
-        self.count += 1
-    def serialize(self):
-        return (
-            self.last,
-            self.min,
-            self.max,
-            self.sum,
-            self.count,
-        )
-```
-
-**Span aggregation:** the value is added to the span local aggregator.
-
-### Sets
-
-Sets (`s`) are used to count unique members.  SDKs are supposed to accept integers and
-strings at least, but they are encouraged to use CRC32 to fold them into a 32bit integer.
-As such the aggregation state is partially lossy.
-
-They are emitted with a single method:
-
-* `set(key, value: int | string, unit = "none", ...)`: marks a single value to be in the set.
-
-**Aggregation state:**
-
-```python
-class Set:
-    def __init__(self, initial):
-        self.value = {initial}
-    def add(self, value):
-        self.value.add(value)
-    def serialize(self):
-        def _hash(x):
-            if isinstance(x, str):
-                return crc32(x.encode("utf-8")) & 0xFFFFFFFF
-            return int(x)
-        return [_hash(value) for value in self.value]
-```
-
-**Span aggregation:** the value `1` is added to the span local aggregator for new members.
-
-## Serialization
-
-Metrics are emitted in regular flush intervals (every 5 seconds, with a random offset that
-is determined once per startup) as envelope items.  The item type is `statsd` and the serialization
-format is statsd compatible.  Unlike normal statsd, more than one value can be emitted separated
-by a colon.  These values are the results of calling `serialize` or similar on the aggregation
-state.
-
-The format is documented as part of relay: [relay_metrics](https://getsentry.github.io/relay/relay_metrics/index.html).
-
-Additionally metric summaries retained on the spans shall be emitted as `_metrics_summary`
-on the metrics as documented by this RFC: [RFC-0123](https://github.com/getsentry/rfcs/blob/main/text/0123-metrics-correlation.md).
-
-
-## Hooks
-
-SDKs are encouraged to provide a `before_emit_metric` callback allowing developers to discard a metric from
-being emitted and later aggregated. The provided parameters are the metric key and the tags.
-The callback either returns `True` or `False`, indicating if the metric should be emitted or
-not.
-
-```python
-def before_emit_metric(key, tags):
-    if key in ["metric_a", "metric_b"]:
-        return False
-    return True
-
-sentry_sdk.init(
-    _experiments={
-        "enable_metrics": True,
-        "before_emit_metric": before_emit_metric
-    }
-)
-```
-
-
-## Meta Data
-
-Additionally SDKs are encouraged to capture location information once per metric.  At metric
-emission time the system shall be collecting which code location emitted a metric and retain it.
-For that the same format as for the [`frame`](/sdk/data-model/event-payloads/stacktrace/) on the stacktrace
-shall be used.  `stacklevel` number of frames shall be ignored.
-
-The meta data is emitted in JSON as envelope item called `metric_meta`:
+## Concepts
+
+### Metric Types
+
+A metric has a `type` that determines how its values are interpreted:
+
+- **Counter** — tracks the number of times an event occurs. Only increases. Useful for requests, errors, or any countable event.
+- **Gauge** — tracks a value that can arbitrarily increase or decrease over time, such as memory usage, queue depth, or connection pool size.
+- **Distribution** — tracks the statistical distribution of a set of values. Useful for understanding percentiles, averages, and other statistical properties of measurements like response times or file sizes.
+
+### Attributes
+
+Metrics carry typed key-value pairs called **attributes** for dimensional filtering and grouping. Each attribute declares its type (`string`, `boolean`, `integer`, `double`). See [Attributes](/sdk/foundations/state-management/scopes/attributes/) for the full type specification.
+
+### Batching
+
+Multiple metrics are batched into a single `trace_metric` envelope item for efficient transport. SDKs buffer metrics locally and flush them periodically or when size thresholds are reached.
+
+---
+
+## Behavior
+
+<Alert title="Note" level="warning">
+
+An SDK **SHOULD** implement [Tracing without Performance](/sdk/foundations/trace-propagation/#default-propagation) before adding support for metrics. This is required to ensure that metrics are associated with traces and that the correct trace context is sent to Sentry.
+
+</Alert>
+
+<SpecSection id="processing-pipeline" status="stable" since="2.0.0">
+
+### Processing Pipeline
+
+Metric processing **MUST** follow this order:
+
+1. Capture metric via [Public APIs](#metrics-module) (e.g. `Sentry.metrics.count`).
+2. Check if metrics are disabled as per `enableMetrics`/`enable_metrics` configuration — if so, skip the rest of the steps.
+3. Pass the metric to Hub/Scope via a generic method (e.g., `captureMetric(metric)`).
+4. Pass the metric to the Client via a generic method (e.g., `captureMetric(metric)`).
+5. Process captured metric (attach default attributes as per [Default Attributes](#default-attributes)).
+6. Run `beforeSendMetric`/`before_send_metric` to filter or modify the metric.
+7. Add metric to buffer/batch processor as detailed in [Buffering](#buffering).
+8. At time of flushing buffer, send array of metrics to Sentry via `trace_metric` envelope, apply rate limiting as per [Data Category and Rate Limiting](#data-category-and-rate-limiting).
+
+</SpecSection>
+
+<SpecSection id="default-attributes" status="stable" since="2.0.0">
+
+### Default Attributes
+
+SDKs **MUST** attach the following attributes to every metric by default:
+
+1. `sentry.environment` — the environment set in the SDK, if defined.
+2. `sentry.release` — the release set in the SDK, if defined.
+3. `sentry.sdk.name` — the name of the SDK that sent the metric.
+4. `sentry.sdk.version` — the version of the SDK that sent the metric.
+
+SDKs **SHOULD** minimize the number of default attributes. Metrics cardinality can explode quickly with too many attributes. New default attributes **SHOULD** only be added after significant feedback from users and discussion internally with the SDK and ingest teams.
+
+</SpecSection>
+
+<SpecSection id="user-attributes" status="stable" since="2.0.0">
+
+### User Attributes
+
+SDKs **MAY** attach user information as attributes, guarded by `sendDefaultPii` ([unless manually set by user](/sdk/foundations/data-scrubbing/#sensitive-data), since 2.5.0):
+
+1. `user.id` — the user ID. Maps to `id` in the [User](/sdk/foundations/transport/event-payloads/user/) payload.
+2. `user.name` — the username. Maps to `username` in the [User](/sdk/foundations/transport/event-payloads/user/) payload.
+3. `user.email` — the email address. Maps to `email` in the [User](/sdk/foundations/transport/event-payloads/user/) payload.
+
+</SpecSection>
+
+<SpecSection id="browser-attributes" status="stable" since="2.0.0">
+
+### Browser Attributes (Relay)
+
+By default, Relay parses the user agent attached to an incoming metric envelope to extract `browser` and `os` information. These attributes are attached by Relay, but client-side SDKs **MAY** attach them if they do not forward a user agent when sending metrics to Sentry.
+
+1. `browser.name` — display name of the browser application. Maps to `name` in the [Browser Context](/sdk/foundations/transport/event-payloads/contexts/#browser-context).
+2. `browser.version` — version string of the browser. Maps to `version` in the [Browser Context](/sdk/foundations/transport/event-payloads/contexts/#browser-context).
+
+</SpecSection>
+
+<SpecSection id="backend-attributes" status="stable" since="2.1.0">
+
+### Backend SDK Attributes
+
+Backend SDKs (Node.js, Python, PHP, etc.) **SHOULD** attach the following attribute:
+
+1. `server.address` — the address of the server that sent the metric. Equivalent to [`server_name`](/sdk/foundations/transport/event-payloads/#optional-attributes) attached to errors and transactions.
+
+</SpecSection>
+
+<SpecSection id="buffering" status="stable" since="2.0.0">
+
+### Buffering
+
+SDKs **MUST** buffer metrics before sending them (since 2.2.0, tightened from SHOULD). SDKs **SHOULD** flush the buffer when specific conditions are met. For initial implementation, a simple strategy is fine, for example: flushing if the buffer length exceeds 100 items or if 5 seconds have passed.
+
+To prevent data loss, the buffer **SHOULD** forward metrics to the transport in the scenarios outlined in the [telemetry buffer data forwarding scenarios](/sdk/foundations/processing/telemetry-processor/#data-forwarding-scenarios) (since 2.2.0).
+
+Furthermore:
+- The aggregation window **SHOULD** be time and size based.
+- SDKs **SHOULD** implement safeguards to prevent excessive memory usage from metric buffering.
+
+</SpecSection>
+
+<SpecSection id="tracing-association" status="stable" since="2.0.0">
+
+### Tracing Association
+
+Metrics **SHOULD** be associated with traces if possible. If a metric is recorded during an active span, the SDK **SHOULD** set the `span_id` property of the metric to the span ID of the span that was active when the metric was collected.
+
+The `trace_id` field is **REQUIRED** on every metric payload and **MUST** be taken from the current propagation context.
+
+</SpecSection>
+
+<SpecSection id="replay-association" status="stable" since="2.3.0">
+
+### Replay Association
+
+Whenever possible, metrics **SHOULD** be linked to replays. If a metric is recorded while an active, sampled replay is in progress, the SDK **SHOULD** attach:
+
+1. `sentry.replay_id` — the ID of the replay that was active when the metric was collected. This **MUST NOT** be set if there was no active replay.
+2. `sentry._internal.replay_is_buffering` — indicates that the metric is associated with a replay that is currently buffering. This ensures correct handling of scenarios where a `replay_id` is present but the corresponding replay was never actually sent.
+
+</SpecSection>
+
+### Metric Ordering
+
+<SpecSection id="metric-ordering" status="candidate" since="2.6.0">
+
+Multiple metrics can share the same timestamp in certain cases. This happens when the runtime freezes timer APIs during synchronous execution (notably Cloudflare Workers freeze `Date.now()` and `performance.now()`), or when the caller supplies the same [user-provided timestamp](#metrics-module) for a batch of metrics. SDKs **MUST** attach a `sentry.timestamp.sequence` integer attribute to every metric to allow deterministic ordering within a single SDK instance.
+
+When sent, the sequence integer **MUST**:
+- Be a 64-bit signed integer (`Int64`).
+- Start at `0` when the SDK initializes.
+- Increment by `1` for each metric that is captured.
+- Never reset during the SDK's lifetime. The counter **MUST** increment continuously across all metrics regardless of their timestamps.
+- Reset to `0` only when the SDK is re-initialized, or when the counter reaches the maximum `Int64` value (`2^63 - 1`). Overflow to `0` is acceptable because the probability of reaching this limit within a single SDK lifetime is negligible.
+
+The sequence provides deterministic ordering within a single SDK instance. It does not guarantee ordering across independent processes or workers, which have separate counters.
+
+</SpecSection>
+
+### Data Category and Rate Limiting
+
+<SpecSection id="data-category-rate-limiting" status="stable" since="2.0.0">
+
+### Data Category and Rate Limiting
+
+The data category for metrics is `trace_metric`. Rate limiting applies as usual. SDKs **SHOULD** track client outcomes to monitor how often metrics are dropped. If the SDK receives a rate limit, it **MUST NOT** send any trace metrics until the limit expires (based on the communicated end timestamp).
+
+</SpecSection>
+
+<SpecSection id="debug-logging" status="stable" since="2.0.0">
+
+### Debug Logging
+
+If `debug` is set to `true` in SDK init, calls to the Sentry metrics API **SHOULD** also print to the console with appropriate details. This will help debugging metrics setups.
+
+</SpecSection>
+
+<SpecSection id="auto-emitted-metrics" status="candidate" since="2.7.0">
+
+### Auto-Emitted Metrics
+
+Metrics emitted via the [public API](#metrics-module) are opt-out. The `enableMetrics`/`enable_metrics` option **MUST** act as a general kill switch for all metrics sent to Sentry — when set to `false`, no metrics **MUST** be sent, regardless of whether they originate from the public API, auto-emitting integrations, or third-party bindings.
+
+However, metrics that are **automatically emitted by integrations or libraries** without an explicit user call follow different rules because they can generate unexpected volume and cost.
+
+**Integrations that auto-emit metrics** — An SDK integration that automatically captures metrics (e.g., recording HTTP request durations, database query counts, or runtime resource usage) **MUST** be opt-in. The integration **MUST NOT** emit any metrics unless the user explicitly enables it. The opt-in mechanism **MAY** be a dedicated integration-level option or requiring the user to explicitly add the integration.
+
+**Third-party metrics bindings** — An SDK feature that binds to an external library's metrics API and mirrors those metrics as Sentry metrics in the background (e.g., syncing from a framework's built-in metrics or an OpenTelemetry metrics pipeline) **MUST** also be opt-in. Users **MUST** explicitly enable the binding before any metrics are forwarded to Sentry.
+
+These rules exist because auto-emitted metrics can cause a high volume of telemetry that directly impacts a user's quota. Unlike spans or errors — where users have prior intuition about volume — silently emitting metrics on their behalf could lead to unexpected costs. Requiring opt-in ensures users remain in control of their metrics volume.
+
+</SpecSection>
+
+<SpecSection id="client-reports" status="candidate" since="2.10.0">
+
+### Client Reports
+
+SDKs **MUST** report count (`trace_metric`) and size in bytes (`trace_metric_byte`) of discarded metrics. An approximation of metric size is sufficient (e.g., by counting as if serialized).
+
+</SpecSection>
+
+---
+
+## Wire Format
+
+<SpecSection id="trace-metric-envelope" status="stable" since="2.0.0">
+
+### `trace_metric` Envelope Item
+
+The `trace_metric` envelope item payload is a JSON object that **MUST** include an `items` array of metric entries, allowing multiple metrics per envelope item. The payload **MAY** also include top-level `version` and `ingest_settings` fields as specified in the next section. See the [Examples](#full-trace_metric-envelope) section for a complete envelope.
+
+An envelope **MUST** contain at most one `trace_metric` envelope item — all metrics for a flush are batched into a single item's `items` array. Metrics from different traces **MAY** be mixed into the same `trace_metric` item, but if they are, the envelope **MUST NOT** include a DSC (dynamic sampling context) header.
+
+**Item Headers:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `type` | String | **REQUIRED** | **MUST** be `"trace_metric"`. |
+| `item_count` | Number | **REQUIRED** | Number of metric items in the `items` array. **MUST** match the actual count. |
+| `content_type` | String | **REQUIRED** | **MUST** be `"application/vnd.sentry.items.trace-metric+json"`. |
 
 ```json
 {
-  "timestamp": 1701743645,
-  "mapping": {
-    "encoded_mri": [{
-      "type": "location",
-      "filename": "..."
-    }]
+	"type": "trace_metric",
+	"item_count": 10,
+	"content_type": "application/vnd.sentry.items.trace-metric+json"
+}
+{
+	"version": 2,
+	"ingest_settings": {
+		"infer_ip": "auto",
+		"infer_user_agent": "auto"
+	},
+	"items": [{..metric..}, {..metric..}, {..metric..}]
+}
+```
+
+</SpecSection>
+
+<SpecSection id="trace-metric-envelope-item-ingest-settings" status="candidate" since="2.8.0">
+
+### `version` and `ingest_settings` properties
+
+The `trace_metric` envelope item **SHOULD** include `version` and `ingest_settings` properties to instruct Relay to infer IP address and user agent from the incoming request. See the [Ingest Settings](/sdk/foundations/transport/envelope-items/#ingest-settings) spec for the full definition, field reference, and behavior.
+
+</SpecSection>
+
+<SpecSection id="metric-payload" status="stable" since="2.0.0">
+
+### Metric Payload
+
+Each metric in the `items` array is a JSON object with the following fields:
+
+```json
+{
+  "timestamp": 1544719860.0,
+  "trace_id": "5b8efff798038103d269b633813fc60c",
+  "span_id": "b0e6f15b45c36b12",
+  "name": "api.response_time",
+  "value": 125.5,
+  "unit": "millisecond",
+  "type": "distribution",
+  "attributes": {
+    "endpoint": { "value": "api/users", "type": "string" },
+    "method": { "value": "GET", "type": "string" },
+    "status_code": { "value": 200, "type": "integer" }
   }
 }
 ```
 
-Today only code mappings are supported.  Each key is an encoded MRI (eg: `c:custom/foo@none`), each
-value in the mapping array has a key called `type` which today can only be `"location"`.  All other
-keys are the same format as the [`frame`](/sdk/data-model/event-payloads/stacktrace/) on the stacktrace.  Today
-SDKs should send code locations at least once a day, and they can round the timestamp.
+| Field | Type | Required | Since | Description |
+|-------|------|----------|-------|-------------|
+| `timestamp` | Number or String | **REQUIRED** | 2.0.0 | Timestamp indicating when the metric was recorded. Relay accepts a numeric Unix timestamp in seconds (epoch time) or an RFC 3339 string. |
+| `type` | String | **REQUIRED** | 2.0.0 | The type of metric. One of `counter`, `gauge`, `distribution`. |
+| `name` | String | **REQUIRED** | 2.0.0 | The name of the metric. **SHOULD** follow a hierarchical naming convention using dots as separators (e.g., `api.response_time`, `db.query.duration`). |
+| `value` | Number | **REQUIRED** | 2.0.0 | The numeric value. For `counter`: the count to increment by (default 1). For `gauge`: the current value. For `distribution`: a single measured value. Integers **MUST** be 64-bit signed; doubles **MUST** be 64-bit floating point. |
+| `trace_id` | String | **REQUIRED** | 2.0.0 | 16 random bytes encoded as a hex string (32 characters). Taken from the current propagation context. |
+| `span_id` | String | **OPTIONAL** | 2.3.0 | 8 random bytes encoded as a hex string (16 characters). The span ID of the span that was active when the metric was emitted. |
+| `unit` | String | **OPTIONAL** | 2.0.0 | The unit of measurement for the metric value. |
+| `attributes` | Object | **OPTIONAL** | 2.0.0 | Typed key-value pairs. See [Attributes](/sdk/foundations/state-management/scopes/attributes/) for supported types and structure. |
 
-## Reference Implementation
+</SpecSection>
 
-The Python SDK holds a reference implementation in the `metrics.py` module for the full
-feature set: [metrics.py](https://github.com/getsentry/sentry-python/blob/master/sentry_sdk/metrics.py).
+---
+
+## Public API
+
+<SpecSection id="initialization-options" status="stable" since="2.0.0">
+
+### Initialization Options
+
+SDKs **MUST** expose the following configuration options:
+
+- `enableMetrics`/`enable_metrics` — a boolean flag to control if metric envelopes will be generated and sent to Sentry. If `false`, the SDK **MUST NOT** send metrics. Defaults to `true`.
+
+- `beforeSendMetric`/`before_send_metric` — an **OPTIONAL** function that takes a metric object and returns a metric object. Called before sending the metric to Sentry. Can be used to modify the metric or prevent it from being sent (by returning `null`/`None`).
+
+While metrics functionality is in an experimental state, SDKs **SHOULD** put these options in an experimental namespace to avoid breaking changes:
+
+```
+Sentry.init({
+  // stable
+  enableMetrics: true,
+
+  // experimental
+  _experiments: { enableMetrics: true },
+})
+```
+
+</SpecSection>
+
+<SpecSection id="metrics-module" status="stable" since="2.0.0">
+
+### Metrics Module
+
+SDKs **MUST** expose metrics methods in a `metrics` module or namespace. At minimum, the SDK **MUST** implement the following methods:
+
+- `Sentry.metrics.count(name, value, options)` — increment a counter
+- `Sentry.metrics.gauge(name, value, options)` — set a gauge value
+- `Sentry.metrics.distribution(name, value, options)` — add a distribution value
+
+**Parameters:**
+
+- `name` **String, required** — the name of the metric.
+- `value` **Number, required** — the value of the metric.
+- `options` **Object, optional** — containing:
+  - `unit` **String, optional** — the unit of measurement (only used for `distribution` and `gauge`). SDKs **MUST NOT** restrict what can be sent in (e.g. by using an enum) but **SHOULD** offer constants or similar that help customers send in <Link to="/sdk/foundations/state-management/scopes/attributes/#units">units we support</Link> (since 2.4.0).
+  - `attributes` **Object, optional** — a dictionary of attributes (key-value pairs with type information).
+  - `scope` **Scope, optional** — the scope to capture the metric with.
+  - `timestamp` **Timestamp, optional** — indicates when the metric was recorded (since 2.9.0). SDKs **SHOULD** accept the language's native date/time type (e.g. `Date` in JavaScript/Swift, `datetime` in Python, `Instant` in Java, `DateTimeInterface` in PHP). When provided, the SDK **MUST** convert the value and use it as the `timestamp` field in the [metric payload](#metric-payload). Relay accepts both a numeric Unix timestamp in seconds (epoch time) and an RFC 3339 string, so SDKs **MAY** use either format. When not provided, the SDK **MUST** default to the current time at the moment the metric is captured. If no native date/time type exists, SDKs **MUST** accept a numeric Unix timestamp in seconds (epoch time) as a fallback instead.
+
+The Hub/Scope and Client **MUST** exclusively provide a generic method for capturing metrics (e.g., `captureMetric(metric)`). They **MUST NOT** replicate the static `Sentry.metrics.X` API methods to avoid increasing our API surface. Users utilizing multiple Hub/Scope or Clients will need to rely on the generic method for capturing metrics.
+
+</SpecSection>
+
+### Threading and Concurrency Considerations
+
+The threading and concurrency considerations for metrics are the same as for logs. See the [Threading and Concurrency Considerations section in the Logs documentation](/sdk/telemetry/logs/#threading-and-concurrency-considerations) for more information.
+
+---
+
+## Examples
+
+### Counter metric
+
+```json
+{
+  "name": "api.requests",
+  "value": 1,
+  "type": "counter",
+  "attributes": {
+    "endpoint": { "value": "/api/users", "type": "string" },
+    "method": { "value": "POST", "type": "string" }
+  }
+}
+```
+
+### Gauge metric
+
+```json
+{
+  "name": "db.connection_pool.active",
+  "value": 42,
+  "unit": "connection",
+  "type": "gauge",
+  "attributes": {
+    "pool_name": { "value": "main_db", "type": "string" },
+    "max_size": { "value": 100, "type": "integer" },
+    "database": { "value": "postgres", "type": "string" }
+  }
+}
+```
+
+### Distribution metric
+
+```json
+{
+  "name": "page.load_time",
+  "value": 245.7,
+  "unit": "millisecond",
+  "type": "distribution",
+  "attributes": {
+    "page": { "value": "/dashboard", "type": "string" },
+    "browser": { "value": "chrome", "type": "string" }
+  }
+}
+```
+
+### SDK API usage
+
+```javascript
+// Increment a counter
+Sentry.metrics.count("button.clicks", 1, {
+  attributes: {
+    button_id: "submit",
+    page: "checkout",
+  },
+});
+
+// Set a gauge value
+Sentry.metrics.gauge("db.connection_pool.active", 42, {
+  unit: "connection",
+  attributes: {
+    pool_name: "main_db",
+    database: "postgres",
+  },
+});
+
+// Record a distribution with an explicit timestamp
+const recordedAt = new Date("2024-05-18T16:00:00Z");
+Sentry.metrics.distribution("page.load_time", 245.7, {
+  unit: "millisecond",
+  timestamp: recordedAt,
+  attributes: {
+    page: "/dashboard",
+    browser: "chrome",
+  },
+});
+```
+```python
+# Increment a counter
+Sentry.metrics.count(
+  'button.clicks',
+  1,
+  attributes={'button_id': 'submit', 'page': 'checkout'},
+)
+
+# Set a gauge value
+Sentry.metrics.gauge(
+  'db.connection_pool.active',
+  42,
+  unit='connection',
+  attributes={'pool_name': 'main_db', 'database': 'postgres'},
+)
+
+# Record a distribution with an explicit timestamp
+from datetime import datetime, timezone
+recorded_at = datetime(2024, 5, 18, 16, 0, 0, tzinfo=timezone.utc)
+Sentry.metrics.distribution(
+  'page.load_time',
+  245.7,
+  unit='millisecond',
+  timestamp=recorded_at,
+  attributes={'page': '/dashboard', 'browser': 'chrome'},
+)
+```
+```php
+use function Sentry\metrics;
+
+metrics()->count('button.clicks', 1, [
+  'attributes' => ['button_id' => 'submit', 'page' => 'checkout']
+]);
+
+metrics()->gauge('db.connection_pool.active', 42, [
+  'unit' => 'connection',
+  'attributes' => ['pool_name' => 'main_db', 'database' => 'postgres']
+]);
+
+// Record a distribution with an explicit timestamp
+$recordedAt = new DateTimeImmutable('2024-05-18T16:00:00Z');
+metrics()->distribution('page.load_time', 245.7, [
+  'unit' => 'millisecond',
+  'timestamp' => $recordedAt,
+  'attributes' => ['page' => '/dashboard', 'browser' => 'chrome']
+]);
+```
+```java
+import io.sentry.Sentry;
+
+Sentry.metrics().count("button.clicks", 1,
+  Map.of("attributes", Map.of("button_id", "submit", "page", "checkout"))
+);
+
+Sentry.metrics().gauge("db.connection_pool.active", 42,
+  Map.of(
+    "unit", "connection",
+    "attributes", Map.of("pool_name", "main_db", "database", "postgres")
+  )
+);
+
+// Record a distribution with an explicit timestamp
+Instant recordedAt = Instant.parse("2024-05-18T16:00:00Z");
+Sentry.metrics().distribution("page.load_time", 245.7,
+  Map.of(
+    "unit", "millisecond",
+    "timestamp", recordedAt,
+    "attributes", Map.of("page", "/dashboard", "browser", "chrome")
+  )
+);
+```
+```swift
+SentrySDK.metrics()
+  .count(
+    name: "button.clicks",
+    value: 1,
+    attributes: ["button_id": "submit", "page": "checkout"]
+  )
+
+SentrySDK.metrics()
+  .gauge(
+    name: "db.connection_pool.active",
+    value: 42,
+    unit: "connection",
+    attributes: ["pool_name": "main_db", "database": "postgres"]
+  )
+
+// Record a distribution with an explicit timestamp
+let recordedAt = ISO8601DateFormatter().date(from: "2024-05-18T16:00:00Z")!
+SentrySDK.metrics()
+  .distribution(
+    name: "page.load_time",
+    value: 245.7,
+    unit: "millisecond",
+    timestamp: recordedAt,
+    attributes: ["page": "/dashboard", "browser": "chrome"]
+  )
+```
+
+### Default attributes example
+
+```json
+{
+  "attributes": {
+    "sentry.environment": { "value": "production", "type": "string" },
+    "sentry.release": { "value": "1.0.0", "type": "string" },
+    "sentry.sdk.name": {
+      "value": "sentry.javascript.browser",
+      "type": "string"
+    },
+    "sentry.sdk.version": { "value": "10.17.0", "type": "string" },
+    "sentry.replay_id": {
+      "value": "36b75d9fa11f45459412a96c41bdf691",
+      "type": "string"
+    }
+  }
+}
+```
+
+### User attributes example
+
+```json
+{
+  "attributes": {
+    "user.id": { "value": "123", "type": "string" },
+    "user.name": { "value": "john.doe", "type": "string" },
+    "user.email": { "value": "john.doe@example.com", "type": "string" }
+  }
+}
+```
+
+### Full `trace_metric` envelope
+
+```json
+{ "sdk": { "name": "sentry.javascript.browser", "version": "10.17.0" } }
+{
+  "type": "trace_metric",
+  "item_count": 5,
+  "content_type": "application/vnd.sentry.items.trace-metric+json"
+}
+{
+  "items": [
+    {
+      "timestamp": 1746456149.019,
+      "trace_id": "624f66e93a04469f9992c7e9f1485056",
+      "span_id": "b0e6f15b45c36b12",
+      "name": "api.requests",
+      "value": 1,
+      "type": "counter",
+      "attributes": {
+        "endpoint": { "value": "/api/users", "type": "string" },
+        "method": { "value": "POST", "type": "string" },
+        "status_code": { "value": 201, "type": "integer" },
+        "sentry.sdk.name": { "value": "sentry.javascript.browser", "type": "string" },
+        "sentry.sdk.version": { "value": "10.17.0", "type": "string" },
+        "sentry.environment": { "value": "production", "type": "string" },
+        "sentry.release": { "value": "1.0.0", "type": "string" },
+        "sentry.timestamp.sequence": { "value": 0, "type": "integer" }
+      }
+    },
+    {
+      "timestamp": 1746456149.019,
+      "trace_id": "624f66e93a04469f9992c7e9f1485056",
+      "span_id": "b0e6f15b45c36b12",
+      "name": "api.response_time",
+      "value": 125.5,
+      "unit": "millisecond",
+      "type": "distribution",
+      "attributes": {
+        "endpoint": { "value": "/api/users", "type": "string" },
+        "method": { "value": "POST", "type": "string" },
+        "sentry.sdk.name": { "value": "sentry.javascript.browser", "type": "string" },
+        "sentry.sdk.version": { "value": "10.17.0", "type": "string" },
+        "sentry.timestamp.sequence": { "value": 1, "type": "integer" }
+      }
+    },
+    {
+      "timestamp": 1746456149.02,
+      "trace_id": "624f66e93a04469f9992c7e9f1485056",
+      "span_id": "b0e6f15b45c36b12",
+      "name": "cache.hit_rate",
+      "value": 0.95,
+      "unit": "ratio",
+      "type": "gauge",
+      "attributes": {
+        "cache_name": { "value": "user_sessions", "type": "string" },
+        "region": { "value": "us-west-1", "type": "string" },
+        "sentry.sdk.name": { "value": "sentry.javascript.browser", "type": "string" },
+        "sentry.sdk.version": { "value": "10.17.0", "type": "string" },
+        "sentry.timestamp.sequence": { "value": 2, "type": "integer" }
+      }
+    },
+    {
+      "timestamp": 1746456149.02,
+      "trace_id": "624f66e93a04469f9992c7e9f1485056",
+      "span_id": "b0e6f15b45c36b12",
+      "name": "database.query.duration",
+      "value": 42.3,
+      "unit": "millisecond",
+      "type": "distribution",
+      "attributes": {
+        "query_type": { "value": "SELECT", "type": "string" },
+        "table": { "value": "users", "type": "string" },
+        "sentry.sdk.name": { "value": "sentry.javascript.browser", "type": "string" },
+        "sentry.sdk.version": { "value": "10.17.0", "type": "string" },
+        "sentry.origin": { "value": "auto.db.graphql", "type": "string" },
+        "sentry.timestamp.sequence": { "value": 3, "type": "integer" }
+      }
+    },
+    {
+      "timestamp": 1746456149.021,
+      "trace_id": "624f66e93a04469f9992c7e9f1485056",
+      "span_id": "b0e6f15b45c36b12",
+      "name": "active.users",
+      "value": 12345,
+      "type": "gauge",
+      "attributes": {
+        "cohort": { "value": "beta", "type": "string" },
+        "sentry.sdk.name": { "value": "sentry.javascript.browser", "type": "string" },
+        "sentry.sdk.version": { "value": "10.17.0", "type": "string" },
+        "sentry.replay_id": { "value": "36b75d9fa11f45459412a96c41bdf691", "type": "string" },
+        "sentry.timestamp.sequence": { "value": 4, "type": "integer" }
+      }
+    }
+  ]
+}
+```
+
+### Related Resources
+
+- [Experimental JS SDK PR #17883 - Metrics API Implementation](https://github.com/getsentry/sentry-javascript/pull/17883/files)
+- [Experimental Python SDK PR #4898 - Metrics API Implementation](https://github.com/getsentry/sentry-python/pull/4898)
+- [Batch Processor Specification](/sdk/foundations/processing/batch-processor/)
+
+---
+
+## Changelog
+
+<SpecChangelog />

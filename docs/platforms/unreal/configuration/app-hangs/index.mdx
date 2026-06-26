@@ -1,0 +1,125 @@
+---
+title: App Hangs
+sidebar_order: 11
+description: "Learn how to detect and report application hangs in your Unreal Engine game."
+---
+
+Application hang errors are triggered when a monitored thread becomes unresponsive for longer than a configurable timeout. The Unreal SDK reports hang errors as Sentry events.
+
+Trying to play an unresponsive game is extremely frustrating for users. There are many reasons why an app may become unresponsive, such as long-running computations on the game thread, infinite loops, deadlocks, and so on. With app hang tracking you can detect and fix them.
+
+The SDK can detect hangs in one of two ways:
+
+- **Engine watcher** (default) — hooks into Unreal Engine's built-in `FThreadHeartBeat` system.
+- **Native watchdog** — uses the sentry-native SDK's built-in app-hang detector.
+
+<Alert>
+
+The engine watcher is available on Windows and Linux. The native watchdog is available on Windows, Linux, and macOS (which needs the <PlatformLink to="/configuration/native-backend/">native backend</PlatformLink>). On macOS and iOS, the Cocoa SDK provides its own <PlatformLink to="/configuration/options/#enableAppNotRespondingTracking">app hang detection</PlatformLink>. On Android, the Java SDK provides its own <PlatformLink to="/configuration/options/#enableAppNotRespondingTracking">ANR detection</PlatformLink>.
+
+</Alert>
+
+## How It Works
+
+### Engine Watcher (Default)
+
+The SDK hooks into Unreal Engine's built-in `FThreadHeartBeat` system, which monitors threads that participate in the engine's heartbeat (game thread, render thread, audio thread, etc.):
+
+1. The engine runs a background thread that periodically checks whether monitored threads are still sending heartbeats.
+2. When a thread misses heartbeats for longer than the engine's `StuckDuration` (default 1 second), the engine fires an `OnThreadStuck` delegate.
+3. The SDK's watchdog thread then waits for the remaining time up to the configured hang timeout.
+4. If the thread is still unresponsive when the timeout expires, the SDK captures a hang event with the stuck thread's stack trace and sends it to Sentry.
+5. If the thread recovers before the timeout, the hang is not reported.
+
+This mechanism requires additional engine configuration — see [Engine Watcher Setup](#engine-watcher-setup).
+
+### Native Watchdog
+
+When <PlatformLink to="/configuration/app-hangs/#native-app-hang-detection">UseNativeHangTracking</PlatformLink> is enabled, hangs are detected by the sentry-native SDK's built-in app-hang watchdog instead:
+
+1. After initialization, the SDK registers a lightweight heartbeat on the game thread that fires once per frame (`FCoreDelegates::OnEndFrame`). The first tick latches the game thread as the monitored thread, and each subsequent frame refreshes the heartbeat.
+2. sentry-native runs a watchdog thread that monitors how long it has been since the last heartbeat.
+3. If the game thread doesn't report a heartbeat within the configured hang timeout, the watchdog captures a hang event with the game thread's stack trace and sends it to Sentry.
+4. Detection resumes automatically once the thread becomes responsive again.
+
+Unlike the engine watcher, this mechanism doesn't depend on the engine's heartbeat configuration.
+
+## Configuration
+
+App hang tracking is disabled by default. To enable it, navigate to **Project Settings > Plugins > Sentry > General > Native** and toggle **Enable hang tracking**.
+
+Alternatively, add the following to your project's configuration file:
+
+```ini {filename:DefaultEngine.ini}
+[/Script/Sentry.SentrySettings]
+EnableHangTracking=True
+```
+
+### Engine Watcher Setup
+
+The engine watcher relies on Unreal Engine's heartbeat monitor thread, which is disabled by default — `HangDuration` in `[Core.System]` is set to `0`. Set it to a value greater than `0` in your project's `DefaultEngine.ini` to enable the monitor:
+
+```ini {filename:DefaultEngine.ini}
+[Core.System]
+HangDuration=25
+```
+
+`HangDuration` is the threshold (in seconds) after which the engine reports a hang to the [Crash Reporter Client](/platforms/unreal/configuration/crash-reporter/crash-reporter-client/). The Sentry SDK's hang tracking coexists with the engine's mechanism — the SDK hooks into the heartbeat system independently and captures its own events based on the <PlatformLink to="/configuration/app-hangs/#hang-timeout">hang timeout</PlatformLink> you configure.
+
+This setup isn't required for the native watchdog.
+
+### Native App Hang Detection
+
+To detect hangs with the sentry-native SDK's app-hang watchdog instead of the engine watcher, also toggle **Use native hang tracking** under **Project Settings > Plugins > Sentry > General > Native**, or add it to the configuration file:
+
+```ini {filename:DefaultEngine.ini}
+[/Script/Sentry.SentrySettings]
+EnableHangTracking=True
+UseNativeHangTracking=True
+```
+
+On macOS, this option requires the <PlatformLink to="/configuration/native-backend/">native backend</PlatformLink>.
+
+### Hang Timeout
+
+The hang timeout controls how long the thread must be unresponsive before a hang event is captured. The default is 5 seconds, with a minimum of 1 second.
+
+You can adjust it in **Project Settings > Plugins > Sentry > General > Native > Hang timeout (seconds)**, or via the configuration file:
+
+```ini {filename:DefaultEngine.ini}
+[/Script/Sentry.SentrySettings]
+HangTimeoutDuration=5.0
+```
+
+With the engine watcher, if the configured timeout is shorter than the engine's `StuckDuration`, it will be automatically adjusted upward to match, since the SDK can only start tracking after the engine reports a thread as stuck.
+
+## Filtering Hang Events
+
+You can filter or modify hang events using the `BeforeSend` callback. The `USentryEvent` class provides an `IsAnr()` method that returns `true` for hang events captured by either detection mechanism:
+
+```cpp
+UCLASS()
+class UHangFilterHandler : public USentryBeforeSendHandler
+{
+    GENERATED_BODY()
+
+public:
+    virtual USentryEvent* HandleBeforeSend_Implementation(USentryEvent* Event, USentryHint* Hint) override
+    {
+        if (Event->IsAnr())
+        {
+            // Modify or return nullptr to discard the event
+        }
+        return Event;
+    }
+};
+```
+
+## Limitations
+
+- **Packaged builds only (engine watcher)**: The engine watcher does not work in the editor or in debug build configurations. The engine's `USE_HANG_DETECTION` macro must be enabled, which is only the case in packaged non-debug builds. The native watchdog is not subject to this restriction.
+- **No early-startup detection**: Hangs that occur before `FEngineLoop::Tick()` starts (e.g. during `GameInstance::Init()`) are not detected, because the monitored thread must report at least one heartbeat before it can be watched.
+- **Requires engine configuration (engine watcher)**: The `HangDuration` setting in `[Core.System]` must be set to a value greater than `0`. Without it, the engine's heartbeat monitor thread doesn't run. The native watchdog doesn't require this.
+- **One thread at a time (engine watcher)**: If multiple threads become stuck simultaneously, only one hang is reported per episode. The engine's `FThreadHeartBeat` reports one stuck thread at a time, so additional stuck threads are only detected after the first one recovers.
+- **Game thread only (native watchdog)**: The native watchdog monitors the game thread.
+- **macOS requires the native backend**: On macOS, hang tracking is only available through the native watchdog with the <PlatformLink to="/configuration/native-backend/">native backend</PlatformLink> enabled. The engine watcher is not available on macOS.

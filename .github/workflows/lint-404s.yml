@@ -6,16 +6,25 @@ on:
   pull_request:
     branches: [master]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
-  index:
+  lint-404:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a # v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - uses: pnpm/action-setup@02f6c237bd2518259fed6c71566509edfb3f2b74 # v4
+
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v4
         id: setup-node
         with:
           node-version-file: 'package.json'
-      - uses: dorny/paths-filter@v3
+          cache: 'pnpm'
+
+      - uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4.0.1
         id: filter
         with:
           filters: |
@@ -23,42 +32,40 @@ jobs:
               - 'docs/**'
               - 'includes/**'
               - 'platform-includes/**'
+              - 'scripts/lint-404s/**'
             dev-docs:
               - 'develop-docs/**'
-      - uses: oven-sh/setup-bun@v2
+      - uses: actions/cache@2c8a9bd7457de244a408f35966fab2fb45fda9c8 # v6.0.0
         with:
-          bun-version: latest
+          path: |
+            ${{ github.workspace }}/.next/cache
+          key: nextjs-${{ runner.os }}-${{ steps.setup-node.outputs.node-version }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            nextjs-${{ runner.os }}-${{ steps.setup-node.outputs.node-version }}-
 
-      - uses: actions/cache@v4
-        id: cache
-        with:
-          path: ${{ github.workspace }}/node_modules
-          key: node-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+      - run: pnpm install --frozen-lockfile
 
-      - run: yarn install --frozen-lockfile
-        if: steps.cache.outputs.cache-hit != 'true'
-
-      - run: yarn build
+      - run: pnpm build
         if: steps.filter.outputs.docs == 'true'
         env:
           SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
           NEXT_PUBLIC_SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
 
-      - run: yarn build:developer-docs
+      - run: pnpm build:developer-docs
         if: steps.filter.outputs.dev-docs == 'true'
         env:
           SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
           NEXT_PUBLIC_SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
 
       - name: Start Http Server
-        run: yarn start &
+        run: pnpm start &
         if: steps.filter.outputs.docs == 'true' || steps.filter.outputs.dev-docs == 'true'
         env:
           SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
           NEXT_PUBLIC_SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
 
       - name: Lint 404s
-        run: bun ./scripts/lint-404s/main.ts
+        run: npx tsx ./scripts/lint-404s/main.ts
         if: steps.filter.outputs.docs == 'true' || steps.filter.outputs.dev-docs == 'true'
 
       - name: Kill Http Server

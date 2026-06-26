@@ -1,17 +1,31 @@
 ---
 title: App Not Responding (ANR)
 sidebar_order: 20
-description: "Learn how to turn off or specify ANR."
+description: Learn how to turn off or specify ANR.
+og_image: /og-images/platforms-unity-configuration-app-not-responding.png
 ---
 
 Application Not Responding (ANR) errors are triggered when the Unity thread of the game is blocked for more than five seconds. The Unity SDK reports ANR errors as Sentry events.
 
 ## ANR Implementation Details
 
-The ANR detection in the Unity SDK strictly works within the Unity game, irrespective of the targeted platform and works in two parts. First the SDK starts a coroutine that periodically notes the time it last got called. Second, a background thread checks the time since the last update against the ANR threshold from the options.
-The detection is sensitive of the app losing and regaining focus and gets paused accordingly. It is also using `WaitForSecondsRealtime` so pausing your game by modifying the `Time.timeScale` will not trigger false ANR reports.
+The ANR detection in the Unity SDK works differently depending on whether multithreading is available on the target platform:
 
-On platforms that do no support multithreading the ANR detection falls back to relying on the coroutine itself to report if the last time it executed exceeds the timeout.
+### Platforms with Multi-Threading Support
+
+On platforms that support multithreading, the ANR detection works in two parts:
+1. A coroutine periodically resets a counter
+2. A background thread increments and monitors this counter. It reports an ANR event when the threshold defined on `options.AnrTimeout` is exceeded
+
+### Platforms without Multi-Threading Support - WebGL
+
+On platforms without multi-threading support like WebGL, the ANR detection uses a slightly different approach:
+- A single coroutine using a `Stopwatch` to measure elapsed time
+- When the coroutine detects that more time has passed than the ANR timeout, it reports the ANR event
+
+The drawback here is that the ANR detection relies on the game recovering from the not-responding state to report the event.
+
+Both implementations are sensitive to the app losing and regaining focus and get paused accordingly. They also use `WaitForSecondsRealtime` so pausing your game by modifying the `Time.timeScale` will not trigger false ANR reports.
 
 ### Stack Trace Support
 
@@ -20,6 +34,14 @@ Since the ANR integration creates an exception on a background thread, based on 
 ### Line Number Support
 
 Since the Unity SDKs [line number support](/platforms/unity/configuration/il2cpp) is limited to actually thrown exceptions, the integration does not provide you with line numbers in the captured ANR issues.
+
+### Automatic Disabling of Native ANR Detection
+
+To prevent duplicate ANR events, the Unity SDK automatically disables native ANR detection when initializing on Android and iOS platforms. This happens regardless of your Unity ANR setting. The Unity SDK's ANR detection is designed to work within the Unity runtime environment, where native detection mechanisms may not function correctly or would report duplicate events.
+
+### ANR Mechanism for Event Filtering
+
+Unity ANR events are reported with `MainThreadWatchdog` as the mechanism. You can use this to filter or categorize events in Sentry.
 
 ## Configuration
 

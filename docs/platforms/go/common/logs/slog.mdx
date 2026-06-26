@@ -1,0 +1,101 @@
+---
+title: Slog
+description: "Integrate slog with Sentry to capture and send structured logs."
+sidebar_order: 20
+---
+
+For a quick reference, there is a [complete example](https://github.com/getsentry/sentry-go/tree/master/_examples/slog) at the Go SDK source code repository.
+
+Go API documentation for the [`sentryslog` package](https://pkg.go.dev/github.com/getsentry/sentry-go/slog) is also available.
+
+## Requirements
+
+Slog structured logging is supported in Sentry Go SDK version `0.34.0` and above.
+
+## Install
+
+```bash
+go get github.com/getsentry/sentry-go
+go get github.com/getsentry/sentry-go/slog
+```
+
+## Configure
+
+### Initialize the Sentry SDK
+
+<PlatformContent includePath="getting-started-include-logs-config" />
+
+### Options
+
+`sentryslog` accepts a `sentryslog.Option` struct to control which records are sent to Sentry and how they're enriched before sending.
+
+| Field             | Type                                  | Description                                                 | Default                                                                                                 |
+| ----------------- | ------------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `EventLevel`      | `[]slog.Level`                        | Log levels to capture as Sentry events                      | `[]slog.Level{slog.LevelError, sentryslog.LevelFatal}`                                                  |
+| `LogLevel`        | `[]slog.Level`                        | Log levels to capture as Sentry log entries                 | `[]slog.Level{slog.LevelDebug, slog.LevelInfo, slog.LevelWarn, slog.LevelError, sentryslog.LevelFatal}` |
+| `Hub`             | `*sentry.Hub`                         | Hub to use when capturing events                            | Current hub                                                                                             |
+| `Converter`       | `Converter`                           | Custom converter for turning log records into Sentry events | `sentryslog.DefaultConverter`                                                                           |
+| `AttrFromContext` | `[]func(context.Context) []slog.Attr` | Functions that add attributes from the current context      | None                                                                                                    |
+| `AddSource`       | `bool`                                | Include file and line information in Sentry output          | `false`                                                                                                 |
+| `ReplaceAttr`     | `func([]string, slog.Attr) slog.Attr` | Rewrite or filter attributes before sending                 | None                                                                                                    |
+
+## Verify
+
+This example sends `ERROR` records as events and `INFO`/`WARN` records as structured logs.
+
+```go
+package main
+
+import (
+    "context"
+    "log/slog"
+
+    sentryslog "github.com/getsentry/sentry-go/slog"
+)
+
+func main() {
+    ctx := context.Background()
+    handler := sentryslog.Option{
+        EventLevel: []slog.Level{slog.LevelError, sentryslog.LevelFatal},
+        LogLevel:   []slog.Level{slog.LevelInfo, slog.LevelWarn},
+        AddSource:  true,
+    }.NewSentryHandler(ctx)
+
+    logger := slog.New(handler)
+
+    logger.Info("Application started", "service", "image-processor")
+    logger.Warn("Cache miss", "key", "thumbnail:123")
+    logger.Error("Image processing failed", "image_id", "img_123")
+}
+```
+
+## Send Logs to Sentry and Another Handler
+
+If you also want to keep writing logs somewhere else, Go 1.26+ includes `slog.NewMultiHandler`.
+
+```go
+package main
+
+import (
+    "context"
+    "log/slog"
+    "os"
+
+    sentryslog "github.com/getsentry/sentry-go/slog"
+)
+
+func main() {
+    ctx := context.Background()
+
+    sentryHandler := sentryslog.Option{
+        LogLevel: []slog.Level{slog.LevelInfo, slog.LevelWarn, slog.LevelError},
+    }.NewSentryHandler(ctx)
+
+    textHandler := slog.NewTextHandler(os.Stdout, nil)
+
+    logger := slog.New(slog.NewMultiHandler(sentryHandler, textHandler))
+    logger.Info("Application started", "service", "image-processor")
+}
+```
+
+<Include name="logs/go-ctx-usage-alert.mdx" />

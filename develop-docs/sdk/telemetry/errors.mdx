@@ -1,0 +1,537 @@
+---
+title: Errors
+description: Error monitoring — exception capture, wire format, stack trace enrichment, and crash detection.
+spec_id: sdk/telemetry/errors
+spec_version: 1.8.1
+spec_status: stable
+spec_depends_on:
+  - id: sdk/foundations/transport/envelopes
+    version: ">=1.0.0"
+spec_changelog:
+  - version: 1.8.1
+    date: 2025-10-30
+    summary: Clarified required exception attributes (type or value)
+  - version: 1.8.0
+    date: 2025-09-19
+    summary: Clarified mechanism type naming scheme (Trace Origin convention)
+  - version: 1.7.0
+    date: 2025-03-07
+    summary: Added missing exception mechanism property
+  - version: 1.6.1
+    date: 2024-12-16
+    summary: Clarified synthetic flag usage
+  - version: 1.6.0
+    date: 2024-06-14
+    summary: Added exception group fields from RFC 0079 (exception_id, parent_id, is_exception_group, source)
+  - version: 1.5.0
+    date: 2023-01-19
+    summary: Added includeLocalVariables option
+  - version: 1.4.1
+    date: 2022-10-27
+    summary: Updated start-up crash detection docs
+  - version: 1.4.0
+    date: 2022-10-25
+    summary: Added start-up crash detection
+  - version: 1.3.0
+    date: 2022-01-13
+    summary: Document alternative flat list format for exception payload
+  - version: 1.2.0
+    date: 2021-02-11
+    summary: Added ns_error to mechanism meta
+  - version: 1.1.1
+    date: 2020-10-28
+    summary: Fixed wording on synthetic flag
+  - version: 1.1.0
+    date: 2020-10-28
+    summary: Added synthetic flag on exception mechanism
+  - version: 1.0.0
+    date: 2020-05-04
+    summary: Initial spec — exception interface, uncaught handler, in-app frames, source context, local variables, desymbolication
+---
+
+<SpecRfcAlert />
+
+<SpecMeta />
+
+## Overview
+
+Errors are the core telemetry type for Sentry's error monitoring. This spec is the authoritative source for all error-specific behavior, the exception wire format, exception mechanism, and stack trace enrichment features.
+
+Related specs:
+- [Client](/sdk/foundations/client/) — capture methods (`captureException`, `captureMessage`), event pipeline
+- [Hooks](/sdk/foundations/client/hooks/) — `before_send` filtering
+- [Envelopes](/sdk/foundations/transport/envelopes/) — transport format
+- [Stack Trace Interface](/sdk/foundations/transport/event-payloads/stacktrace/) — frame format and attributes
+- [Threads Interface](/sdk/foundations/transport/event-payloads/threads/) — thread context for crashes
+
+---
+
+## Concepts
+
+**Error event**: An [event](/sdk/foundations/transport/event-payloads/) containing one or more exceptions in an attribute named `exception`.
+
+**Exception mechanism**: Metadata describing how the exception was captured — whether by SDK instrumentation or user code, and whether it was handled.
+
+**Handled vs unhandled**: An exception is _handled_ if the user caught it (e.g. via `try ... catch`). Unhandled exceptions are those caught by global error handlers or crash reporters.
+
+**Chained exceptions**: Multiple exceptions representing a cause chain, ordered oldest to newest in the `values` list.
+
+**Exception groups**: A tree of related exceptions (e.g. `AggregateException`, Python `ExceptionGroup`) flattened into the `values` list with `exception_id` / `parent_id` references.
+
+**In-app frames**: Stack frames identified as part of the user's application, as opposed to library or framework code.
+
+---
+
+## Behavior
+
+<SpecSection id="uncaught-exception-handler" status="stable" since="1.0.0">
+
+### Uncaught Exception Handler
+
+The SDK **MUST** provide the ability to be set as a hook to record uncaught exceptions. At the language level this is typically a global hook provided by the language itself. For framework integrations this **MAY** be part of middleware or another system.
+
+This behavior is typically provided by a default integration that can be disabled.
+
+</SpecSection>
+
+<SpecSection id="in-app-frames" status="stable" since="1.0.0">
+
+### In-App Frames
+
+The SDK **MUST** support identifying which stack frames are part of the user's application (as opposed to library or framework code). This **SHOULD** be done automatically where possible, and **MUST** be configurable by the user at startup, often declared as a package/module prefix.
+
+</SpecSection>
+
+<SpecSection id="source-context" status="stable" since="1.0.0">
+
+### Surrounding Source in Stack Traces
+
+The SDK **SHOULD** include lines of source code to provide context in stack traces. This is easier in interpreted languages, and **MAY** be hard or impossible in compiled ones.
+
+</SpecSection>
+
+<SpecSection id="local-variables" status="stable" since="1.0.0">
+
+### Local Variables
+
+The SDK **SHOULD** capture local variable names and values for each stack frame, where possible. Restrictions apply on some platforms — for example, it **MAY** only be possible to collect the values of parameters passed into each function, or it **MAY** be completely impossible.
+
+This functionality **MUST** be gated behind the `includeLocalVariables` option, which **MUST** default to `true`.
+
+<Expandable title="History">
+
+The `includeLocalVariables` option was formalized in version 1.5.0.
+
+</Expandable>
+
+</SpecSection>
+
+<SpecSection id="desymbolication" status="stable" since="1.0.0">
+
+### Desymbolication
+
+The SDK **SHOULD** support turning compiled or obfuscated code/method names in stack traces back into the original names. Desymbolication always requires Sentry backend support. Not necessary for many languages.
+
+</SpecSection>
+
+<SpecSection id="startup-crash-detection" status="stable" since="1.4.0">
+
+### Start-Up Crash Detection
+
+This feature is **RECOMMENDED** for mobile and desktop SDKs.
+
+If the application crashes shortly after SDK init, the SDK **SHOULD** provide a mechanism to guarantee transmission to Sentry. Ideally, SDKs could send the events in a separate process not impacted by the crashing application. With the limitations on mobile platforms, spawning an extra process only for sending envelopes is hard to achieve or impossible. The SDKs on these platforms send envelopes on a background thread to not block the UI thread or because they forbid network operations on the UI thread. A crash occurring shortly after the SDK init could lead to never reporting such crashes, keeping the users unaware of a critical bug.
+
+When the app crashes, the SDK **MUST** check if it happens within two seconds after SDK init. If it does, the SDK **MUST** store that information on disk. The **RECOMMENDED** approach is using a marker file, which the SDK checks on initialization. If the SDK allows storing this information in another place to avoid creating an additional marker file and causing extra IO, the SDK **MAY** use such an approach.
+
+If the platform allows it, the SDK **MAY** call flush directly after the detected start-up crash occurs and before the application terminates. If the SDK can guarantee transmission to Sentry while crashing, it **MAY** skip creating a marker file and making a blocking flush call on the next initialization.
+
+If the marker file exists upon the next SDK initialization, the SDK **MUST** clear the marker and block the `init` execution up to five seconds in order to flush out pending envelopes. If the timeout of five seconds is exceeded, the SDK **MUST** release the `init` lock and continue flushing on a background thread.
+
+While ideally the SDK **SHOULD** only flush out the crash event envelope, it is acceptable to call flush for all envelopes to reduce complexity, as most of the time there **SHOULD NOT** be too many envelopes in the offline cache.
+
+This feature **MUST NOT** be user-configurable. The only reason to disable it should be if the feature is broken. The crash detection duration (two seconds) and flush duration (five seconds) **MUST NOT** be user-configurable.
+
+#### Example Implementations
+
+- [Java](https://github.com/getsentry/sentry-java/pull/2277)
+- [Objective-C](https://github.com/getsentry/sentry-cocoa/pull/2220)
+
+</SpecSection>
+
+<SpecSection id="exception-mechanism" status="stable" since="1.0.0">
+
+### Exception Mechanism
+
+The exception mechanism is an optional object on each exception describing how it was captured. It carries additional information about the capturing mechanism, including general exception values obtained from the operating system or runtime APIs.
+
+#### Mechanism Attributes
+
+| Attribute | Type | Required | Since | Description |
+|-----------|------|----------|-------|-------------|
+| `type` | `string` | **REQUIRED** | 1.0.0 | Identifier of the capturing mechanism. See [type naming](#mechanism-type-naming). |
+| `handled` | `boolean` | **OPTIONAL** | 1.0.0 | Whether the user handled the exception (e.g. via `try ... catch`). |
+| `description` | `string` | **OPTIONAL** | 1.0.0 | Human-readable description of the error mechanism and a possible hint on how to solve it. |
+| `help_link` | `string` | **OPTIONAL** | 1.0.0 | Fully qualified URL to an online help resource, possibly interpolated with error parameters. |
+| `synthetic` | `boolean` | **OPTIONAL** | 1.1.0 | Flag indicating this error is synthetic. See [synthetic exceptions](#synthetic-exceptions). |
+| `exception_id` | `number` | **OPTIONAL** | 1.6.0 | Numeric ID for the exception relative to this event. See [exception groups](#exception-groups). |
+| `parent_id` | `number` | **OPTIONAL** | 1.6.0 | Points at the `exception_id` of the parent exception. See [exception groups](#exception-groups). |
+| `is_exception_group` | `boolean` | **OPTIONAL** | 1.6.0 | Flag indicating this exception is part of a platform-specific exception group type. |
+| `source` | `string` | **OPTIONAL** | 1.6.0 | Name of the parent exception property this exception was acquired from. See [exception groups](#exception-groups). |
+| `meta` | `object` | **OPTIONAL** | 1.0.0 | OS/runtime error metadata. See [mechanism meta](#mechanism-meta). |
+| `data` | `object` | **OPTIONAL** | 1.0.0 | Arbitrary extra data that might help the user understand the error. |
+
+#### Mechanism Type Naming
+
+The `type` **MUST** help users and Sentry employees determine the responsible mechanism for capturing the exception. It **MUST** be _reasonably unique_ to identify the integration or SDK API that performed the capture.
+
+For user-invoked captures (e.g. via `captureException`), the `type` **MUST** be set to `'generic'`.
+
+For SDK-invoked captures, the `type` **MUST NOT** be `'generic'` and **SHOULD** follow the [Trace Origin](/sdk/performance/trace-origin/) naming scheme whenever applicable. If a span wraps the exception capture logic, `type` **SHOULD** equal that span's `sentry.origin` attribute. If no specific span is present, the `type` **SHOULD** follow the Trace Origin naming scheme as closely as possible.
+
+<Expandable title="Type naming examples">
+
+Exception capture within a span:
+
+```js
+startSpan(
+  {
+    name: 'Middleware',
+    attributes: { 'sentry.origin': 'auto.http.express.middleware' },
+  },
+  () => {
+    captureException(error, {
+      mechanism: { type: 'auto.http.express.middleware', handled: false }
+    });
+  },
+);
+```
+
+Exception capture outside of a span:
+
+```js
+captureException(error, {
+  mechanism: { type: 'auto.browser.global_handlers.onerror', handled: false }
+});
+```
+
+Default for user-invoked captures:
+
+```js
+function captureException(error, context) {
+  const mechanism = {
+    type: 'generic',
+    handled: true,
+    ...context?.mechanism,
+  }
+  // ...
+}
+```
+
+</Expandable>
+
+<Expandable title="Why Trace Origin?">
+
+Historically, there was no naming scheme requirement for the `type` attribute. Different SDKs took different approaches. Choosing [Trace Origin](/sdk/performance/trace-origin/) as the naming scheme means using an already established and accepted convention. Slight deviations to accommodate exceptions are allowed. SDK maintainers are free to migrate existing mechanisms to the new scheme or use it for new mechanisms.
+
+</Expandable>
+
+#### Synthetic Exceptions
+
+Synthetic errors are errors that carry little meaning by themselves — they are often created at a central place (like a crash handler) and share the same title (`Error`, `Segfault`, etc.).
+
+When `synthetic` is set, Sentry will try to use other information (top in-app frame function) rather than the exception type and value for the primary event display. Sentry will also ignore the exception `type` when grouping.
+
+The `synthetic` flag **SHOULD** be set for all "segfaults" and similar low-information errors. Errors the SDK creates to add a stack trace to events that don't have one themselves **SHOULD** also be marked as `synthetic` (e.g. when `attachStackTrace: true` and the user captures a string message via `captureException` or `captureMessage`).
+
+</SpecSection>
+
+<SpecSection id="exception-groups" status="stable" since="1.6.0">
+
+### Exception Groups
+
+Exception groups allow representing a tree of related exceptions (e.g. Python `ExceptionGroup`, .NET `AggregateException`, JavaScript `AggregateError`). The tree is flattened into the `values` list with ID-based parent references.
+
+The SDK **SHOULD** assign simple incrementing integers to each exception, starting with `0` for the root of the tree. When flattened into the `values` list, the last exception **SHOULD** have `exception_id: 0`, the previous one `exception_id: 1`, and so on.
+
+The SDK **SHOULD** assign `parent_id` to all exceptions except the root exception (the last in the `values` list).
+
+The `source` attribute **SHOULD** be populated with the name of the property or attribute of the parent exception that this exception was acquired from. For array properties, it **SHOULD** include the zero-based index.
+
+Platform-specific examples:
+- Python: `"__context__"`, `"__cause__"`, `"exceptions[0]"`, `"exceptions[1]"`
+- .NET: `"InnerException"`, `"InnerExceptions[0]"`, `"InnerExceptions[1]"`
+- JavaScript: `"cause"`, `"errors[0]"`, `"errors[1]"`
+
+</SpecSection>
+
+<SpecSection id="chained-exceptions" status="stable" since="1.0.0">
+
+### Chained Exceptions
+
+Multiple exceptions in the `values` list represent a cause chain and **MUST** be sorted oldest to newest. For example, in Python:
+
+```python
+try:
+    raise Exception
+except Exception as e:
+    raise ValueError from e
+```
+
+`Exception` would appear first in the `values` list, followed by `ValueError`.
+
+The `exception` attribute **SHOULD** be an object with a `values` attribute containing a list of one or more exception objects. Alternatively, the `exception` attribute **MAY** be a flat list of exception objects directly.
+
+</SpecSection>
+
+---
+
+## Wire Format
+
+### Exception Interface
+
+An [event](/sdk/foundations/transport/event-payloads/) **MAY** contain one or more exceptions in an attribute named `exception`.
+
+#### Exception Attributes
+
+| Attribute | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `type` | `string` | See below | The type of exception, e.g. `ValueError`. |
+| `value` | `string` | See below | The value (message) of the exception. |
+| `module` | `string` | **OPTIONAL** | The module or package the exception type lives in. |
+| `thread_id` | `string` or `number` | **OPTIONAL** | References a thread in the [Threads Interface](/sdk/foundations/transport/event-payloads/threads/). |
+| `mechanism` | `object` | **OPTIONAL** | The [exception mechanism](#exception-mechanism). |
+| `stacktrace` | `object` | **OPTIONAL** | A [Stack Trace Interface](/sdk/foundations/transport/event-payloads/stacktrace/) object. |
+
+At least one of `type` or `value` is **REQUIRED**, otherwise the exception is discarded.
+
+#### Mechanism Meta
+
+The mechanism `meta` key carries error codes reported by the runtime or operating system. SDKs **MAY** safely omit code names and descriptions for well-known error codes — Sentry will fill them in. For proprietary or vendor-specific error codes, adding these values will provide additional context.
+
+The `meta` key **MAY** contain one or more of the following:
+
+**`signal`** — POSIX signal information.
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `number` | `number` | **REQUIRED** | The POSIX signal number. |
+| `code` | `number` | **OPTIONAL** | Apple signal code. |
+| `name` | `string` | **OPTIONAL** | Name of the signal based on the signal number. |
+| `code_name` | `string` | **OPTIONAL** | Name of the signal code. |
+
+**`mach_exception`** — Mach Exception on Apple systems.
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `exception` | `number` | **REQUIRED** | Numeric exception number. |
+| `code` | `number` | **REQUIRED** | Numeric exception code. |
+| `subcode` | `number` | **REQUIRED** | Numeric exception subcode. |
+| `name` | `string` | **OPTIONAL** | Name of the exception constant in iOS / macOS. |
+
+**`ns_error`** — `NSError` on Apple systems.
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `code` | `number` | **REQUIRED** | Numeric error code. |
+| `domain` | `string` | **REQUIRED** | Domain of the NSError. |
+
+**`errno`** — Error codes set by Linux system calls and some library functions as specified in ISO C99, POSIX.1-2001, and POSIX.1-2008. See [errno(3)](http://man7.org/linux/man-pages/man3/errno.3.html).
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `number` | `number` | **REQUIRED** | The error number. |
+| `name` | `string` | **OPTIONAL** | Name of the error. |
+
+---
+
+## Public API
+
+### `captureException`
+
+Captures an exception as an error event. The SDK **MUST** populate the `exception` interface from the provided error object, extracting the exception type, value, stack trace, and any chained exceptions.
+
+For user-invoked captures, the mechanism `type` **MUST** default to `'generic'` with `handled: true`.
+
+### `captureMessage`
+
+Captures a message as an error event. If `attachStackTrace` is enabled, the SDK **SHOULD** create a synthetic exception with the stack trace and mark the mechanism as `synthetic`.
+
+### Configuration Options
+
+| Option | Type | Default | Since | Description |
+|--------|------|---------|-------|-------------|
+| `includeLocalVariables` | `boolean` | `true` | 1.5.0 | Whether to capture local variables in stack frames. |
+
+---
+
+## Examples
+
+A single exception:
+
+```json
+{
+  "exception": {
+    "values": [
+      {
+        "type": "ValueError",
+        "value": "my exception value",
+        "module": "__builtins__",
+        "stacktrace": {}
+      }
+    ]
+  }
+}
+```
+
+Chained exceptions:
+
+```json
+{
+  "exception": {
+    "values": [
+      {
+        "type": "Exception",
+        "value": "initial exception",
+        "module": "__builtins__"
+      },
+      {
+        "type": "ValueError",
+        "value": "chained exception",
+        "module": "__builtins__"
+      }
+    ]
+  }
+}
+```
+
+iOS native Mach exception with mechanism:
+
+```json
+{
+  "exception": {
+    "values": [
+      {
+        "type": "EXC_BAD_ACCESS",
+        "value": "Attempted to dereference a null pointer",
+        "mechanism": {
+          "type": "mach",
+          "handled": false,
+          "data": {
+            "relevant_address": "0x1"
+          },
+          "meta": {
+            "signal": {
+              "number": 10,
+              "code": 0,
+              "name": "SIGBUS",
+              "code_name": "BUS_NOOP"
+            },
+            "mach_exception": {
+              "code": 0,
+              "subcode": 8,
+              "exception": 1,
+              "name": "EXC_BAD_ACCESS"
+            }
+          }
+        }
+      }
+    ]
+  }
+}
+```
+
+JavaScript unhandled promise rejection:
+
+```json
+{
+  "exception": {
+    "values": [
+      {
+        "type": "TypeError",
+        "value": "Object [object Object] has no method 'foo'",
+        "mechanism": {
+          "type": "promise",
+          "description": "This error originated either by throwing inside of an ...",
+          "handled": false,
+          "data": {
+            "polyfill": "bluebird"
+          }
+        }
+      }
+    ]
+  }
+}
+```
+
+Generic unhandled crash:
+
+```json
+{
+  "exception": {
+    "values": [
+      {
+        "type": "Error",
+        "value": "An error occurred",
+        "mechanism": {
+          "type": "generic",
+          "handled": false
+        }
+      }
+    ]
+  }
+}
+```
+
+Flat list (omitting `values` wrapper):
+
+```json
+{
+  "exception": [
+    {
+      "type": "Error",
+      "value": "An error occurred",
+      "mechanism": {
+        "type": "generic",
+        "handled": false
+      }
+    }
+  ]
+}
+```
+
+Exception group:
+
+```json
+{
+  "exception": [
+    {
+      "type": "Error",
+      "value": "An error occurred",
+      "mechanism": {
+        "type": "generic",
+        "handled": true,
+        "is_exception_group": true,
+        "exception_id": 0
+      }
+    },
+    {
+      "type": "Error",
+      "value": "Another error occurred",
+      "mechanism": {
+        "type": "generic",
+        "handled": false,
+        "is_exception_group": true,
+        "exception_id": 1,
+        "parent_id": 0
+      }
+    }
+  ]
+}
+```
+
+---
+
+## Changelog
+
+<SpecChangelog />

@@ -2,11 +2,22 @@
 err := sentry.Init(sentry.ClientOptions{
 	// ...
 	TracesSampler: sentry.TracesSampler(func(ctx sentry.SamplingContext) float64 {
-		// Inherit decision from parent.
-		if ctx.Parent != nil && ctx.Parent.Sampled != sentry.SampledUndefined {
-			return 1.0
+		// Inherit decision from a local parent span (same process).
+		if ctx.Parent != nil {
+			if ctx.Parent.Sampled == sentry.SampledTrue {
+				return 1.0
+			}
+			return 0.0
 		}
-		// Or continue with a custom decision...
+		// Inherit decision from a remote parent span (upstream service).
+		if ctx.ParentSampled != sentry.SampledUndefined {
+			if ctx.ParentSampled == sentry.SampledTrue {
+				return 1.0
+			}
+			return 0.0
+		}
+		// No parent — apply a default sample rate.
+		return 0.1
 	}),
 })
 ```

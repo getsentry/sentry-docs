@@ -1,0 +1,95 @@
+---
+title: Inter-Process Communication
+description: "Learn how the Sentry Electron SDK communicates across processes to capture detailed error data."
+---
+
+To provide the most detailed context for all events, including native crashes, the SDK merges context, scope, and breadcrumbs from all processes into the Electron `main` process.
+
+By default, the SDK attempts to establish communication from `renderer` to `main` using Electron's IPC APIs. If that fails, it falls back to a custom HTTP protocol. You can change this behavior using the <PlatformLink to="/configuration/options/#ipcMode">`ipcMode`</PlatformLink> option:
+
+```javascript
+const { init, IPCMode } = require("@sentry/electron/main");
+
+init({
+  dsn: "___PUBLIC_DSN___",
+  debug: true,
+  ipcMode: IPCMode.Protocol, // Options: IPCMode.Classic, IPCMode.Protocol, or IPCMode.Both
+});
+```
+
+## Custom IPC Namespace
+
+If your application uses multiple IPC channels, you can specify a custom namespace to prevent conflicts with Sentry's IPC channels.
+
+Configure the same namespace across all three contexts:
+
+**Main process**
+
+```javascript
+import * as Sentry from "@sentry/electron/main";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  ipcNamespace: "some-app",
+});
+```
+
+**Renderer process**
+
+```javascript
+import * as Sentry from "@sentry/electron/renderer";
+
+Sentry.init({
+  ipcNamespace: "some-app",
+});
+```
+
+**Preload process**
+
+```javascript
+import { hookupIpc } from "@sentry/electron/preload-namespaced";
+
+hookupIpc("some-app");
+```
+
+The SDK will prefix all IPC channels with your specified namespace (for example, `some-app`), helping to avoid conflicts with other channels in your application.
+
+For more configuration options, see the <PlatformLink to="/configuration/options/#ipcNamespace">configuration options documentation</PlatformLink>.
+
+## Preload Injection
+
+The SDK automatically injects a preload script using [`session.setPreloads(preloads)`](https://www.electronjs.org/docs/latest/api/session#sessetpreloadspreloads). By default, this only applies to the `defaultSession`.
+
+If your app uses other sessions, pass them via the `getSessions` option in the `main` process:
+
+```javascript
+import { session } from "electron";
+import * as Sentry from "@sentry/electron/main";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  getSessions: () => [
+    session.defaultSession,
+    session.fromPartition("persist:my-session"),
+  ],
+});
+```
+
+<Alert>
+  If your app bundles the `main` process JavaScript, the SDK can't automatically
+  inject preload scripts because they won't be included in the packaged app. In
+  this case, the SDK will send events and scope updates via a custom HTTP
+  protocol and `window.fetch`.
+</Alert>
+
+## Manual Preload
+
+If you prefer to bundle and configure the preload script manually, import the SDK preload code into your own preload script:
+
+```javascript
+import "@sentry/electron/preload";
+```
+
+This exposes IPC to the isolated renderer via Electron's `contextBridge` API.
+
+Check out our [example apps](https://github.com/getsentry/sentry-electron/tree/master/examples) for implementation details.

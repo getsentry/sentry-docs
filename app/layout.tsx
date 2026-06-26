@@ -5,7 +5,7 @@ import type {Metadata} from 'next';
 import {Rubik} from 'next/font/google';
 import Script from 'next/script';
 import PlausibleProvider from 'next-plausible';
-
+import {SkipToContent} from 'sentry-docs/components/skipToContent';
 import {ThemeProvider} from 'sentry-docs/components/theme-provider';
 
 const rubik = Rubik({
@@ -13,6 +13,7 @@ const rubik = Rubik({
   style: ['normal', 'italic'],
   subsets: ['latin'],
   variable: '--font-rubik',
+  display: 'swap', // Show fallback font immediately, swap when loaded
 });
 
 export const metadata: Metadata = {
@@ -43,11 +44,12 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
           disableTransitionOnChange
         >
           <Theme accentColor="iris" grayColor="sand" radius="large" scaling="95%">
+            <SkipToContent />
             {children}
           </Theme>
         </ThemeProvider>
         <Script
-          async
+          strategy="lazyOnload"
           src="https://widget.kapa.ai/kapa-widget.bundle.js"
           data-website-id="cac7cc70-969e-4bc1-a968-55534a839be4"
           data-button-hide // do not render kapa ai button
@@ -59,6 +61,8 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
           data-modal-disclaimer="Please note: This is a tool that searches publicly available sources. Do not include any sensitive or personal information in your queries. For more on how Sentry handles your data, see our [Privacy Policy](https://sentry.io/privacy/)."
           data-modal-example-questions="How to set up Sentry for Next.js?,What are tracePropagationTargets?"
           data-user-analytics-cookie-enabled="false"
+          data-color-scheme="auto"
+          data-color-scheme-selector=".dark"
         />
       </body>
     </html>

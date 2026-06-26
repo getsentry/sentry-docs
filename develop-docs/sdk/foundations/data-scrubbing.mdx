@@ -1,0 +1,36 @@
+---
+title: Data Scrubbing
+sidebar_order: 6
+---
+
+Data handling is the standardized context in how we want SDKs to help users filter data.
+
+<Alert level="info">
+
+**Data collection and scrubbing:** The canonical spec for what data SDKs collect, default denylists (headers, cookies, query params), request body and cookie scrubbing, user-set data, and `beforeSend` is [Data Collection](/sdk/foundations/client/data-collection/). That spec supersedes the sensitive-data and cookie sections below for SDK behavior. This page retains **Structuring Data** and **Variable Size** and the legacy `send_default_pii` context for reference.
+
+</Alert>
+
+## Sensitive Data
+
+The normative rules for sensitive data, PII, cookies, request bodies, and user-set data are in [Data Collection](/sdk/foundations/client/data-collection/). The following is kept for context:
+
+- SDKs collect rich debugging context — including user identity (`user.*`) and HTTP bodies — by default, while never sending credentials or secrets through automatic instrumentation. The legacy [_send-default-pii_](https://docs.sentry.io/platforms/python/configuration/options/#send-default-pii) toggle is replaced by the structured `dataCollection` configuration; user identity collection is controlled by `dataCollection.userInfo` (default `true`) and can be disabled to opt out (see [Data Collection](/sdk/foundations/client/data-collection/)).
+- Certain sensitive data must never be sent through SDK instrumentation: header/cookie/query values matching the default denylist are replaced with `"[Filtered]"`. User-set data is always attached; only automatically gathered data is scrubbed. Users can use `beforeSend` / event processors to remove or redact any data.
+- For the exact default denylist (partial, case-insensitive match), PII denylist (`x-forwarded-`, `-user`), cookies when unparsable, and raw request bodies, see [Data Collection — Default Denylist](/sdk/foundations/client/data-collection/#default-denylist) and [User-Set Data and Scrubbing](/sdk/foundations/client/data-collection/#user-set-data-scrubbing).
+- For how `queryParams` filtering applies to URL attributes, see [Data Collection — URLs](/sdk/foundations/client/data-collection/#urls).
+
+### Application State
+
+App state can be critical to help developers reproduce bugs. For that reason, SDKs often collect app state and append to events through auto instrumentation.
+
+When attaching data that could potentially include sensitive data or PII, it's important to:
+
+- Add a note on the docs to notify developers.
+- [Mark that part of the protocol on Relay](https://github.com/getsentry/relay/pull/1383) as such. This allows [data scrubbing](https://docs.sentry.io/product/relay/) to run on those fields.
+
+Some examples of auto instrumentation that could attach sensitive data:
+
+- A SQL integration that includes the query. If a user doesn't use parameterized queries, and appends sensitive data to it, the SDK could include that in the event payload.
+- Desktop apps including window title.
+- A Web framework routing instrumentation attaching route `to` and `from`.

@@ -1,0 +1,82 @@
+---
+title: DenoRuntimeMetrics
+description: "Collect Deno runtime health metrics such as memory usage and process uptime."
+supported:
+  - javascript.deno
+---
+
+<Alert>
+
+This integration only works in the Deno runtime.
+
+</Alert>
+
+_Import name: `Sentry.denoRuntimeMetricsIntegration`_
+
+The `denoRuntimeMetricsIntegration` periodically collects Deno runtime health metrics and sends them to Sentry. Metrics include memory usage and process uptime.
+
+```javascript
+import * as Sentry from "@sentry/deno";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [Sentry.denoRuntimeMetricsIntegration()],
+});
+```
+
+## Default Metrics
+
+The following metrics are emitted every 30 seconds by default:
+
+| Metric                         | Type    | Unit   | Description                                          |
+| ------------------------------ | ------- | ------ | ---------------------------------------------------- |
+| `deno.runtime.mem.rss`         | gauge   | byte   | Resident Set Size — actual process memory footprint  |
+| `deno.runtime.mem.heap_used`   | gauge   | byte   | V8 heap currently in use                             |
+| `deno.runtime.mem.heap_total`  | gauge   | byte   | Total V8 heap allocated                              |
+| `deno.runtime.process.uptime`  | counter | second | Cumulative process uptime                            |
+
+<Alert>
+
+Unlike the [Node.js equivalent](/platforms/javascript/guides/node/configuration/integrations/noderuntimemetrics), CPU and event loop metrics are not available because Deno does not expose `process.cpuUsage()`, `performance.eventLoopUtilization()`, or `monitorEventLoopDelay`.
+
+</Alert>
+
+## Options
+
+### `collect`
+
+_Type: `object`_
+
+Configure which metrics to collect. You can enable opt-in metrics or disable default ones.
+
+**Opt-in metrics (off by default):**
+
+```javascript
+Sentry.denoRuntimeMetricsIntegration({
+  collect: {
+    memExternal: true, // deno.runtime.mem.external
+  },
+});
+```
+
+**Disabling default metrics:**
+
+```javascript
+Sentry.denoRuntimeMetricsIntegration({
+  collect: {
+    uptime: false,
+  },
+});
+```
+
+### `collectionIntervalMs`
+
+_Type: `number`_
+
+The interval in milliseconds between metric collections. Defaults to `30000` (30 seconds).
+
+```javascript
+Sentry.denoRuntimeMetricsIntegration({
+  collectionIntervalMs: 60_000,
+});
+```

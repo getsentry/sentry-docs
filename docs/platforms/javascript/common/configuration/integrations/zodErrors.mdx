@@ -1,0 +1,63 @@
+---
+title: ZodErrors
+description: "Adds additional data to Zod validation errors."
+---
+
+_Import name: `Sentry.zodErrorsIntegration`_
+
+The Zod Errors integration enhances error reporting for applications using [Zod](https://zod.dev/) schema validation.
+When Zod validation fails, this integration captures detailed validation errors (`ZodError` instances) and attaches them
+as additional data to Sentry events.
+
+The Zod Errors integration is not enabled by default. You need to add it to your Sentry configuration:
+
+```javascript
+Sentry.init({
+  integrations: [
+    Sentry.zodErrorsIntegration(),
+  ],
+});
+```
+
+## Options
+
+The `zodErrorsIntegration` accepts the following options:
+
+### `limit`
+
+_Type: `number`_
+_Default: `10`_
+
+Limits the number of Zod errors inlined in each Sentry event.
+
+### `saveZodIssuesAsAttachment`
+
+_Type: `boolean`_
+_Default: `false`_
+
+Save full list of Zod issues as a JSON attachment in Sentry.
+
+## Example Additional Error Data
+
+When a Zod validation error occurs, you'll see enhanced error information in Sentry like this:
+
+```json
+[
+  {
+    "code": "too_small",
+    "path": ["name"],
+    "message": "Name is required",
+    "minimum": 1,
+    "type": "string",
+    "inclusive": true,
+    "received": ""
+  },
+  {
+    "code": "invalid_string",
+    "path": ["email"],
+    "message": "Invalid email format",
+    "validation": "email",
+    "received": "invalid-email"
+  }
+]
+```

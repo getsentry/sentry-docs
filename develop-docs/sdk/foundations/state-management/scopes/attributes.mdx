@@ -1,0 +1,281 @@
+---
+title: Attributes
+description: Typed key-value pairs that live on scopes and are applied to telemetry at capture time — structure, types, units, and precedence.
+spec_id: sdk/foundations/state-management/scopes/attributes
+spec_version: 1.6.0
+spec_status: stable
+spec_changelog:
+  - version: 1.6.0
+    date: 2026-02-03
+    summary: Clarified array and unit support
+  - version: 1.5.0
+    date: 2025-12-19
+    summary: Clarified current scope attribute application wording
+  - version: 1.4.0
+    date: 2025-11-18
+    summary: Removed explicit type from user-facing API, SDKs SHOULD infer type at serialization
+  - version: 1.3.0
+    date: 2025-11-11
+    summary: Added scope attribute precedence rules, removeAttribute method, telemetry-level precedence
+  - version: 1.2.0
+    date: 2025-11-03
+    summary: Added scope attribute behavior (setAttributes, setAttribute, per-scope application rules)
+  - version: 1.1.0
+    date: 2025-11-25
+    summary: Extracted from Scopes spec into dedicated Attributes spec
+  - version: 1.0.0
+    date: 2025-10-17
+    summary: Initial spec — attribute object structure, primitive and complex types, units
+sidebar_order: 10
+---
+
+<SpecRfcAlert />
+
+<SpecMeta />
+
+## Overview
+
+Attributes are typed key-value pairs that live on [scopes](/sdk/foundations/state-management/scopes/). When telemetry (spans, logs, metrics) is captured, the SDK merges attributes from the scope chain and applies them to the outgoing event. This spec defines the attribute data model (wire format), the SDK API for setting and removing attributes, and the precedence rules when merging across scopes.
+
+Related specs:
+- [Scopes](/sdk/foundations/state-management/scopes/) — scope propagation and forking
+- [Sentry Conventions](https://github.com/getsentry/sentry-conventions/) — the full attribute registry
+
+---
+
+## Wire Format
+
+<SpecSection id="attribute-structure" status="stable" since="1.0.0">
+
+### Attribute Object Structure
+
+Attributes are stored as key-value pairs where each value is an object with type information.
+
+```json
+{
+  "my_attribute": {
+    "value": "some value",
+    "type": "string"
+  },
+  "response_time": {
+    "value": 123,
+    "unit": "millisecond",
+    "type": "integer"
+  },
+  "my_list": {
+    "value": [1, 2, 3],
+    "type": "array"
+  }
+}
+```
+
+| Property | Type | Required | Description |
+|---|---|---|---|
+| `type` | string | Yes | The data type of the attribute value. |
+| `value` | any | Yes | The actual attribute value, **MUST** match the specified type. |
+| `unit` | string | No | The unit of measurement. See [Units](#units). |
+
+</SpecSection>
+
+<SpecSection id="primitive-types" status="stable" since="1.0.0">
+
+### Primitive Types
+
+The following primitive types are supported:
+
+- `string`
+- `boolean`
+- `integer` (64-bit signed integer)
+- `double` (64-bit floating point number)
+
+**Note on Integers:** Integers should be 64-bit signed integers. For 64-bit unsigned integers, use the `string` type to avoid overflow issues until unsigned integers are natively supported.
+
+</SpecSection>
+
+<SpecSection id="complex-types" status="stable" since="1.6.0">
+
+### Complex Types
+
+Sentry currently only supports ingesting **homogeneous arrays** of **primitive** types as attribute values, using the `array` type.
+
+Objects and mixed/nested arrays are not supported and will be dropped, but will eventually be supported.
+
+<Alert>
+At this time attributes with the 'array' type are not yet visible in the Sentry UI.
+</Alert>
+
+</SpecSection>
+
+<SpecSection id="units" status="stable" since="1.0.0">
+
+### Units
+
+Units are currently not supported and not visible in the product.
+
+#### Duration Units
+
+- `nanosecond`
+- `microsecond`
+- `millisecond`
+- `second`
+- `minute`
+- `hour`
+- `day`
+- `week`
+
+#### Information Units
+
+- `bit`
+- `byte`
+- `kilobyte`
+- `kibibyte`
+- `megabyte`
+- `mebibyte`
+- `gigabyte`
+- `gibibyte`
+- `terabyte`
+- `tebibyte`
+- `petabyte`
+- `pebibyte`
+- `exabyte`
+- `exbibyte`
+
+#### Fraction Units
+
+- `ratio`
+- `percent`
+
+</SpecSection>
+
+---
+
+## Behavior
+
+<SpecSection id="setting-attributes" status="stable" since="1.2.0">
+
+### Setting Attributes
+
+Users **MUST** be able to attach attributes to any [scope](/sdk/foundations/state-management/scopes/) using a dedicated method (e.g., `scope.setAttributes()` or `scope.setAttribute()`).
+
+From the user's perspective, attribute values are either primitives or objects containing:
+
+- `value`: The attribute value, **MUST** match the specified type
+- `unit` *(optional)*: Unit of measurement (see [Units](#units)). SDKs **MAY** delay adding support for units, but **MUST** be able to do so at a later date without a breaking change.
+- `type` *(optional)*: Attribute type. SDKs **SHOULD NOT** expose this to users if type can be reliably inferred from the value. (since 1.4.0)
+
+#### Method Signature
+
+The method **SHOULD** accept a dictionary/map/object where:
+- Keys are attribute names (strings)
+- Values are either directly values or attribute objects/dictionaries with `value`, and optionally `unit` properties
+- The SDK **SHOULD** infer the `type` of the attribute at serialization time to spare users from setting a (potentially incorrect) `type`. Depending on platform or constraints, the SDK **MAY** instead also allow or require users to set the `type` explicitly. (since 1.4.0)
+
+</SpecSection>
+
+<SpecSection id="removing-attributes" status="stable" since="1.3.0">
+
+### Removing Attributes
+
+Users **MUST** be able to remove attributes from any scope using a dedicated method, e.g., `scope.removeAttribute()`.
+
+Calling `scope.clear()` **MUST** remove all attributes from the corresponding scope.
+
+</SpecSection>
+
+<SpecSection id="scope-precedence" status="stable" since="1.3.0">
+
+### Scope Precedence
+
+When the same attribute key exists in multiple scopes, the more specific scope's value takes precedence:
+
+```
+telemetry item > current scope > isolation scope > global scope
+```
+
+- Attributes set on the **global scope** **MUST** be applied to all logs and metrics.
+- Attributes set on the **isolation scope** **MUST** be applied to all logs and metrics in that execution context.
+- Attributes set on the **current scope** **MUST** be applied only while that scope is active.
+- When the same attribute key exists on the telemetry item itself (log, metric), it **MUST** take precedence over scope attributes.
+
+The SDK **SHOULD** keep the attribute format consistent with the user-set format until user-provided processing callbacks (like `before_send_log`) have been called. This ensures compatibility with existing callbacks and avoids unexpected changes to the attribute format. (since 1.5.0)
+
+</SpecSection>
+
+---
+
+## Public API
+
+### Setting Attributes on Scopes
+
+| Function | Target Scope | Description |
+|---|---|---|
+| `Sentry.setAttributes(attributes)` | Isolation scope | Top-level convenience for setting attributes. |
+| `scope.setAttributes(attributes)` | Any scope | Set attributes on a specific scope instance. |
+| `scope.setAttribute(key, value)` | Any scope | Set a single attribute on a specific scope instance. |
+
+### Removing Attributes
+
+| Function | Description |
+|---|---|
+| `scope.removeAttribute(key)` | Remove a single attribute from the scope. |
+| `scope.clear()` | Remove all attributes (and other data) from the scope. |
+
+---
+
+## Examples
+
+### JavaScript
+
+```javascript
+// Set attributes on the global scope — applied to everything
+Sentry.getGlobalScope().setAttributes({
+  "app.feature_flag.enabled": true,
+  "app.session_duration": {
+    value: 3600,
+    unit: "second"
+  }
+});
+
+// Set attributes on the isolation scope via top-level API
+Sentry.setAttributes({
+  "request.id": "abc-123",
+});
+
+// Remove an attribute
+Sentry.getGlobalScope().removeAttribute('app.feature_flag.enabled');
+```
+
+### Python
+
+```python
+import sentry_sdk
+
+# Set attributes on the global scope — applied to everything
+sentry_sdk.get_global_scope().set_attributes({
+    "app.feature_flag.enabled": True,
+    "app.session_duration": {
+        "value": 3600,
+        "unit": "second"
+    }
+})
+
+# Set attributes on the isolation scope via top-level API
+sentry_sdk.set_attributes({
+    "request.id": "abc-123",
+})
+
+# Remove an attribute
+sentry_sdk.get_global_scope().remove_attribute('app.feature_flag.enabled')
+```
+
+---
+
+## Semantic Conventions
+
+See [Sentry Conventions](https://github.com/getsentry/sentry-conventions/) for the full list of supported attribute keys.
+
+---
+
+## Changelog
+
+<SpecChangelog />

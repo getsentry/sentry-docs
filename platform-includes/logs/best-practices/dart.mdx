@@ -1,0 +1,104 @@
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+### Wide Events Over Scattered Logs
+
+Instead of many thin logs that are hard to correlate, emit one comprehensive log per operation with all relevant context.
+
+This makes debugging dramatically faster — one query returns everything about a specific order, user, or request.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```dart
+// ❌ Scattered thin logs
+Sentry.logger.info('Starting checkout');
+Sentry.logger.info('Validating cart');
+Sentry.logger.info('Processing payment');
+Sentry.logger.info('Checkout complete');
+
+// ✅ One wide event with full context
+Sentry.logger.info('Checkout completed', attributes: {
+  'order_id': SentryAttribute.string(order.id),
+  'user_id': SentryAttribute.string(user.id),
+  'user_tier': SentryAttribute.string(user.subscription),
+  'cart_value': SentryAttribute.double(cart.total),
+  'item_count': SentryAttribute.int(cart.items.length),
+  'payment_method': SentryAttribute.string('stripe'),
+  'duration_ms': SentryAttribute.int(
+      DateTime.now().difference(startTime).inMilliseconds),
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Include Business Context
+
+Add attributes that help you prioritize and debug:
+
+- **User context** — tier, account age, lifetime value
+- **Transaction data** — order value, item count
+- **Feature state** — active feature flags
+- **Request metadata** — endpoint, method, duration
+
+This lets you filter logs by high-value customers or specific features.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```dart
+Sentry.logger.info('API request completed', attributes: {
+  // User context
+  'user_id': SentryAttribute.string(user.id),
+  'user_tier': SentryAttribute.string(user.plan),
+  'account_age_days': SentryAttribute.int(user.ageDays),
+
+  // Request data
+  'endpoint': SentryAttribute.string('/api/orders'),
+  'method': SentryAttribute.string('POST'),
+  'duration_ms': SentryAttribute.int(234),
+
+  // Business context
+  'order_value': SentryAttribute.double(149.99),
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Consistent Attribute Naming
+
+Pick a naming convention and stick with it across your codebase. Inconsistent names make queries impossible.
+
+**Recommended:** Use `snake_case` for custom attributes to match Dart conventions.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```dart
+// ❌ Inconsistent naming
+{'user': SentryAttribute.string('123')}
+{'userId': SentryAttribute.string('123')}
+{'user_id': SentryAttribute.string('123')}
+{'UserID': SentryAttribute.string('123')}
+
+// ✅ Consistent snake_case
+{
+  'user_id': SentryAttribute.string('123'),
+  'order_id': SentryAttribute.string('456'),
+  'cart_value': SentryAttribute.double(99.99),
+  'item_count': SentryAttribute.int(3),
+}
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>

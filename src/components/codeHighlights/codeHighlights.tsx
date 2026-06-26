@@ -1,10 +1,11 @@
 'use client';
 
-import {Children, cloneElement, ReactElement, useEffect, useRef, useState} from 'react';
-import {Check, Clipboard} from 'react-feather';
 import styled from '@emotion/styled';
 import * as Sentry from '@sentry/nextjs';
+import {Children, cloneElement, ReactElement, useEffect, useRef, useState} from 'react';
+import {Check, Clipboard} from 'react-feather';
 
+import {DocMetrics} from '../../metrics';
 import {cleanCodeSnippet, useCleanSnippetInClipboard} from '../codeBlock';
 
 type ChildrenItem = ReturnType<typeof Children.toArray>[number] | React.ReactNode;
@@ -101,6 +102,10 @@ export function HighlightBlock({
       setCopied(false);
       await navigator.clipboard.writeText(code);
       setCopied(true);
+
+      // Track highlight block snippet copy
+      DocMetrics.snippetCopy(window.location.pathname, language, undefined);
+
       setTimeout(() => setCopied(false), 1200);
     } catch (error) {
       Sentry.captureException(error);
@@ -133,6 +138,7 @@ const HighlightBlockContainer = styled('div')`
   position: relative;
 
   border-left: 4px solid var(--accent-purple);
+  border-radius: 6px;
 
   .highlight-line {
     padding-left: 8px !important;

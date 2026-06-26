@@ -1,6 +1,4 @@
-/* eslint-env node */
 /* eslint import/no-nodejs-modules:0 */
-/* eslint-disable no-console */
 
 import {visit} from 'unist-util-visit';
 
@@ -15,9 +13,10 @@ function scopedEval(expr, context = {}) {
 }
 
 const matchEach = (text, pattern, callback) => {
-  let match, rv;
+  let match;
+  let rv;
   const promises = [];
-  // eslint-disable-next-line no-cond-assign
+
   while ((match = pattern.exec(text)) !== null) {
     rv = callback(match);
     if (rv instanceof Promise) {

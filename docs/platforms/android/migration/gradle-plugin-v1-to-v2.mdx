@@ -1,0 +1,86 @@
+---
+title: Migrate from sentry-android-gradle-plugin 1.x to 2.0.0
+sidebar_order: 8930
+description: "Learn about migrating from Sentry Android Gradle Plugin 1.x to 2.0.0."
+---
+
+The `io.sentry.android.gradle` >= `2.0.0` requires [Android Gradle Plugin >= 4.0.0](https://developer.android.com/studio/releases/gradle-plugin#4-0-0).
+
+The `io.sentry.android.gradle` >= `2.0.0` must be applied to the `app/build.gradle` module (or the module that has `com.android.application` plugin applied).
+
+The `io.sentry.android.gradle` >= `2.0.0` publishes the Gradle Plugin Marker to Maven Central. As a result, you no longer need to set the `classpath`.
+
+_Old_:
+
+```groovy
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath 'io.sentry:sentry-android-gradle-plugin:{version}'
+    }
+}
+
+apply plugin: 'io.sentry.android.gradle'
+```
+
+_New_:
+
+```groovy
+plugins {
+    id "io.sentry.android.gradle" version "{version}"
+}
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+}
+```
+
+```kotlin
+plugins {
+    id("io.sentry.android.gradle") version "{version}"
+}
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+}
+```
+
+The `io.sentry.android.gradle` has been rewritten in Kotlin. As a result, the Groovy or Kotlin DSL syntax has slightly changed.
+
+The `autoProguardConfig` flag has been removed, the Android SDK >= `2.0.0` version already merges the ProGuard rules automatically.
+
+_Old_:
+
+```groovy
+sentry {
+    autoProguardConfig false
+    autoUpload true
+    uploadNativeSymbols false
+    includeNativeSources false
+}
+```
+
+_New_:
+
+```groovy
+sentry {
+    autoUpload = true
+    uploadNativeSymbols = false
+    includeNativeSources = false
+}
+```
+
+```kotlin
+sentry {
+    autoUpload.set(true)
+    uploadNativeSymbols.set(false)
+    includeNativeSources.set(false)
+}
+```

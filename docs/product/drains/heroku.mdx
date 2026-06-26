@@ -1,0 +1,45 @@
+---
+title: Heroku Telemetry Drains
+sidebar_title: Heroku
+sidebar_order: 30
+description: Learn how to set up Heroku Telemetry Drains to forward logs and traces data to Sentry.
+---
+
+Heroku Telemetry supports [exporting OpenTelemetry (OTEL)-compliant data](https://devcenter.heroku.com/articles/heroku-telemetry) to send logs and traces to Sentry. Sending metrics is not supported yet.
+
+<Alert level="warning">
+
+Heroku telemetry drains are only available to [Fir](https://devcenter.heroku.com/articles/generations#fir)-generation apps and spaces. We are tracking support for Cedar-generation apps and spaces in [this issue](https://github.com/getsentry/sentry/issues/91727).
+
+</Alert>
+
+## Prerequisites
+
+Before you begin, ensure you have:
+
+- A Heroku app that you want to monitor
+- A Sentry project you want to send data to
+
+## Adding a Telemetry Drain
+
+To add a telemetry drain to an app or space, use the `heroku telemetry:add` command. For more details, see the [Heroku Telemetry documentation](https://devcenter.heroku.com/articles/working-with-heroku-telemetry-drains#add-a-telemetry-drain).
+
+When using the `heroku telemetry:add` command, you'll need to provide your Sentry project's OTLP endpoint URL and a `x-sentry-auth` header with the public key. This can be found in your [Sentry Project Settings](https://sentry.io/settings/projects/) under **Client Keys (DSN)** > **OpenTelemetry (OTLP)**.
+
+```bash
+heroku telemetry:add ___OTLP_URL___ --app myapp --signals logs,traces --transport http --headers '{"x-sentry-auth":"sentry sentry_key=___PUBLIC_KEY___"}'
+```
+
+To add a telemetry drain to the entire space:
+
+```bash
+heroku telemetry:add ___OTLP_URL___ --space myspace --signals logs,traces --headers '{"x-sentry-auth":"sentry sentry_key=___PUBLIC_KEY___"}'
+```
+
+You can use the `--signals` flag to specify the signals you want to send to Sentry. Only `logs` and `traces` are supported.
+
+<Alert level="warning">
+
+Sentry only supports the `http` `--transport` flag.
+
+</Alert>

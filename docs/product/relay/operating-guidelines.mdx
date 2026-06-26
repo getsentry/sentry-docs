@@ -8,7 +8,7 @@ This page reviews our guidelines for operation when self-hosting external Relays
 
 ## General Considerations
 
-- We recommend [running Relay](/product/relay/getting-started/) using the officially provided Docker image (`getsentry/relay`) found on [DockerHub](https://hub.docker.com/r/getsentry/relay/) and tagged with its Git revision identifier, rather than building from source.
+- We recommend [running Relay](/product/relay/getting-started/) using the officially provided Docker image (`getsentry/relay`) found on [GitHub Container Registry](https://github.com/getsentry/relay/pkgs/container/relay) and tagged with its Git revision identifier, rather than building from source.
 
 - We recommend running at least two Relay instances (containers) with a reverse proxy (such as [HAProxy](https://www.haproxy.org/) or [Nginx](https://nginx.org)) in front of them for improved availability, simplified Relay updates, and SSL/TLS support.
 
@@ -30,6 +30,24 @@ The following recommendations assume that Relay is run in Docker.
 [[1]](#multi-core-footnote) Relay is a multi-threaded application that tries to leverage all available CPU cores. As a result, Sentry highly recommends running Relay on multi-core CPUs. If your setup is expected to handle more than 100 requests per second, we recommend running Relay on at least four (4) CPU cores. By default, every Relay instance will use the total number of available cores to adjust the sizes of its thread pools. Adjust this behavior by configuring the `limits.max_thread_count`.
 
 </p>
+
+## Relay Binary
+
+Every release of Relay also provides a set of binaries that are built for the Operating Systems listed below.
+
+| Operating System | Version                   |
+|------------------|---------------------------|
+| Ubuntu x64       | 20.04                     |
+| Ubuntu ARM       | 22.04                     |
+| macOS            | macOS Sonoma (version 14) |
+| Windows          | Windows Server 2022       |
+
+We will support Ubuntu binaries 2 years after the official LTS support has ended to allow customers with extended
+support to continue using Relay.
+
+Windows and macOS binaries are built using GitHub Runners. We will support the versions for those Operating Systems
+as long as GitHub supports them.
+
 
 ## Example Configuration
 
@@ -107,7 +125,7 @@ Depending on the SDK or client, requests to these endpoints are performed with c
 
 <Alert>
 
-Proxies often set a default maximum body size for requests. Especially native crash reports and attachments can exceed these limits. We recommend to configure a maximum client body size of _100MB_.
+Proxies often set a default maximum body size for requests. Especially native crash reports and attachments can exceed these limits. We recommend to configure a maximum client body size of _200MB_.
 
 </Alert>
 

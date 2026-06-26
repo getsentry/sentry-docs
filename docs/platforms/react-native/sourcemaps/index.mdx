@@ -1,7 +1,8 @@
 ---
 title: Source Maps
 description: "Learn more about how to upload your source maps to Sentry."
-sidebar_order: 95
+sidebar_order: 5
+sidebar_section: configuration
 ---
 
 <Alert>
@@ -48,6 +49,47 @@ apply from: "../../../sentry.gradle"
 sentry {
     autoUploadProguardMapping = shouldSentryAutoUpload()
     uploadNativeSymbols = shouldSentryAutoUpload()
+}
+```
+
+#### Expo
+
+In Expo managed projects, you can disable uploads directly in the plugin configuration using the `disableAutoUpload` option. This bakes the setting into the native projects during `expo prebuild`, so uploads are disabled even when building from the Xcode GUI where environment variables aren't available.
+
+```javascript
+// app.config.js
+const { withSentry } = require("@sentry/react-native/expo");
+
+const config = {
+  name: "my-app",
+  slug: "my-app",
+};
+
+module.exports = withSentry(config, {
+  project: "my-project",
+  organization: "my-org",
+  disableAutoUpload: true,
+});
+```
+
+You can also set the environment variable when running builds from the CLI:
+
+```bash
+SENTRY_DISABLE_AUTO_UPLOAD=true npx expo run:ios
+SENTRY_DISABLE_AUTO_UPLOAD=true npx expo run:android
+```
+
+Or in `eas.json` for EAS builds:
+
+```json
+{
+  "build": {
+    "development": {
+      "env": {
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
+      }
+    }
+  }
 }
 ```
 

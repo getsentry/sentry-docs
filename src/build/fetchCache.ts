@@ -14,9 +14,8 @@ async function fetchRetry(url: string, opts: RequestInit & {retry?: number}) {
       return await fetch(url, opts);
     } catch (e) {
       if (retry !== 0) {
-        // eslint-disable-next-line no-console
         console.warn(`failed to fetch \`${url}\`. Retrying for ${retry} more times`);
-        retry = retry - 1;
+        retry -= 1;
         continue;
       }
 
@@ -53,14 +52,12 @@ export function makeFetchCache<DataType>({dataUrl, name}: Options) {
 
     async function fetchData() {
       try {
-        // eslint-disable-next-line no-console
         console.log(`Fetching registry ${name} (${dataUrl})`);
         const result = await fetchRetry(dataUrl, {retry: 5});
         data = await result?.json();
-        // eslint-disable-next-line no-console
+
         console.log(`Got data for registry ${name} (${dataUrl})`);
       } catch (err) {
-        // eslint-disable-next-line no-console
         console.error(`Unable to fetch for ${name}: ${err.message}`);
         data = null;
 

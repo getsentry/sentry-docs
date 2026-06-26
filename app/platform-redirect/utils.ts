@@ -3,7 +3,7 @@ export const sanitizeNext = (next: string) => {
   let sanitizedNext: string;
   try {
     sanitizedNext = decodeURIComponent(next);
-  } catch (e) {
+  } catch {
     // Return empty string if decoding fails
     return '';
   }

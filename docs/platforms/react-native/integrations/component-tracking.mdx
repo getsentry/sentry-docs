@@ -1,32 +1,72 @@
 ---
 title: Component Tracking
-description: "Learn how Sentry's React Native SDK allows you to monitor your application's component lifecycle."
+description: "Learn how Sentry's React Native SDK allows you to monitor your application's component lifecycle using the useProfiler hook, withProfiler HOC, or Profiler component."
 sidebar_order: 55
 ---
 
-Sentry's React Native SDK offers component tracking, a feature that lets you monitor the performance of your React components. The SDK exports a `withProfiler` higher-order component that attaches React-related spans to the most current active span on the scope. This allows you to get a drilled-down view into how your components are behaving so you can identify slow mounts or frequent updates, which might be having a negative impact on your app's performance.
+Sentry's React Native SDK offers component tracking, a feature that lets you monitor the performance of your React components. The SDK provides multiple ways to attach React-related spans to the most current active span on the scope: the `withProfiler` higher-order component, the `useProfiler` hook, and the `Profiler` component. This allows you to get a drilled-down view into how your components are behaving so you can identify slow mounts or frequent updates, which might be having a negative impact on your app's performance.
 
 ## Prerequisites
 
 - To set up component tracking, you need to configure tracing. For details on how to do this, check out our [Tracing documentation](/platforms/react-native/tracing/).
 
-## Add `withProfiler`
+## `useProfiler` Hook
 
-In the example below, the `withProfiler` higher-order component is used to instrument an app component.
+The `useProfiler` hook is a lightweight way to track a function component's lifecycle. Call it at the top of your component body with the component name as the first argument — no need to wrap your export.
 
 ```javascript
-import React from "react";
 import * as Sentry from "@sentry/react-native";
 
-class App extends React.Component {
-  render() {
-    return (
-      <FancyComponent>
-        <NestedComponent someProp={2} />
-        <AnotherComponent />
-      </FancyComponent>
-    );
-  }
+function App() {
+  Sentry.useProfiler("App");
+
+  return (
+    <FancyComponent>
+      <NestedComponent someProp={2} />
+      <AnotherComponent />
+    </FancyComponent>
+  );
+}
+
+export default App;
+```
+
+### Hook Options
+
+The `useProfiler` hook accepts an optional second argument with the following options:
+
+```javascript
+Sentry.useProfiler("App", { disabled: false, hasRenderSpan: true });
+```
+
+`disabled` (boolean)
+
+If set to `true`, the profiler will not generate any spans. (Set as `false` by default.)
+
+`hasRenderSpan` (boolean)
+
+Option to have a `ui.react.render` span created by the Profiler. (Set as `true` by default.)
+
+<Alert>
+
+The `useProfiler` hook tracks `ui.react.mount` and `ui.react.render` spans. It does not track `ui.react.update` spans. If you need update tracking, use [`withProfiler`](#withprofiler-higher-order-component) or the [`Profiler` component](#profiler-component) instead.
+
+</Alert>
+
+## `withProfiler` Higher-Order Component
+
+The `withProfiler` HOC wraps a component to instrument it. It supports tracking mounts, renders, and updates.
+
+```javascript
+import * as Sentry from "@sentry/react-native";
+
+function App() {
+  return (
+    <FancyComponent>
+      <NestedComponent someProp={2} />
+      <AnotherComponent />
+    </FancyComponent>
+  );
 }
 
 export default Sentry.withProfiler(App);
@@ -64,13 +104,41 @@ export default Sentry.withProfiler(App, { name: "CustomAppName" });
 
 The name of the component being profiled. By default, the name is taken from the component `displayName` property or the component `name` property.
 
+`disabled` (boolean)
+
+If set to `true`, the profiler will not generate any spans. (Set as `false` by default.)
+
 `includeRender` (boolean)
 
-Option to have a `ui.react.render` span created by the Profiler. (Set as true by default.)
+Option to have a `ui.react.render` span created by the Profiler. (Set as `true` by default.)
 
 `includeUpdates` (boolean)
 
-Option to have `react.update` spans created by the Profiler. (Set as true by default.) We recommend setting this prop as false for components that will be rerendered often, such as text input components. The resulting spans can be very noisy.
+Option to have `ui.react.update` spans created by the Profiler. (Set as `true` by default.) We recommend setting this prop as `false` for components that will be rerendered often, such as text input components. The resulting spans can be very noisy.
+
+## `Profiler` Component
+
+The `Profiler` component can be used as a parent wrapper to profile a child component. This is useful when you want to profile a component without modifying its export.
+
+```javascript
+import * as Sentry from "@sentry/react-native";
+
+function ParentComponent({ data }) {
+  return (
+    <Sentry.Profiler name="SomeChild" updateProps={{ data }}>
+      <SomeChild data={data} />
+    </Sentry.Profiler>
+  );
+}
+```
+
+The `Profiler` component accepts the following props: `name`, `disabled`, `includeRender`, `includeUpdates`, and `updateProps`. Pass `updateProps` to enable `ui.react.update` span tracking — when the values in `updateProps` change between renders, the Profiler will generate update spans. This is the main advantage of using `Profiler` over `useProfiler`, which does not track updates.
+
+<Alert>
+
+`withProfiler` handles `updateProps` automatically by forwarding the wrapped component's props. When using the `Profiler` component directly, you need to pass `updateProps` yourself.
+
+</Alert>
 
 ## Next Steps:
 

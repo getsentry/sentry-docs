@@ -2,7 +2,8 @@
 title: Set Up Crons
 sidebar_title: Crons
 description: "Sentry Crons allows you to monitor the uptime and performance of any scheduled, recurring job in your application."
-sidebar_order: 5750
+sidebar_order: 9
+sidebar_section: features
 ---
 
 Once implemented, it'll allow you to get alerts and metrics to help you solve errors, detect timeouts, and prevent disruptions to your service.
@@ -15,12 +16,12 @@ Once implemented, it'll allow you to get alerts and metrics to help you solve er
 
 ## Configuring Cron Monitors
 
-You can create and update your monitors programmatically with code rather than [creating and configuring them in Sentry.io](https://sentry.io/crons/create/). If the monitor doesn't exist in Sentry yet, it will be created.
+You can create and update your monitors programmatically with code rather than [creating and configuring them in Sentry.io](https://sentry.io/issues/alerts/new/crons/). If the monitor doesn't exist in Sentry yet, it will be created.
 
 To create or update a monitor, use `monitor` as outlined above and pass in your monitor configuration as `monitor_config`. This requires SDK version `1.45.0` or higher.
 
 ```python
-# All keys except `schedule` are optional
+# All keys except `schedule` are optional. If a key is not set, there is no default value set for it.
 monitor_config = {
     "schedule": {"type": "crontab", "value": "0 0 * * *"},
     "timezone": "Europe/Vienna",
@@ -36,11 +37,22 @@ monitor_config = {
     # It'll take `recovery_threshold` OK check-ins to resolve
     # an issue
     "recovery_threshold": 5,
+    # Assign ownership to a team or user (format: "team:6" or "user:51")
+    "owner": "team:6",
 }
 
 @monitor(monitor_slug='<monitor-slug>', monitor_config=monitor_config)
 def tell_the_world():
     print('My scheduled task...')
+```
+
+If you are using an `interval` instead of a `crontab`, note that the `value` must be an integer, not a string.
+
+```python
+monitor_config = {
+    "schedule": {"type": "interval", "value": 1, "unit": "hour"},
+    "timezone": "Europe/Vienna",
+}
 ```
 
 If you're using [manual check-ins](#check-ins), you can pass your `monitor_config` to the `capture_checkin` call:
@@ -92,6 +104,6 @@ Example: `The event's tags match monitor.slug equals my-monitor-slug-here`
 
 <Include name="common-imgs/crons-alerts-example" />
 
-Learn more in [Issue Alert Configuration](/product/alerts/create-alerts/issue-alert-config/).
+Learn more in [Alerts](/product/monitors-and-alerts/alerts/).
 
 <Include name="crons-rate-limits" />

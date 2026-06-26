@@ -22,7 +22,6 @@ graph TD
   snuba --> kafka
   snuba --> redis
   snuba --> clickhouse
-  kafka --> zookeeper
   sentry_web --> sentry_worker["Sentry (worker)"]
   sentry_worker --> memcached
   sentry_worker --> redis
@@ -41,7 +40,7 @@ This graph is extremely simplified mostly due to layout constraints. Missing fro
 * How Relay fetches project configs. Answer: from sentry-web
 * How Relay caches project configs. Answer: In memory, and in Redis
 * How Relay counts events and keeps track of quotas. Answer: more Redis
-* Symbolicator as auxilliary service to symbolicate-event
+* Symbolicator as auxiliary service to symbolicate-event
 * How alerting is triggered. Answer: postprocess-event, a Celery task which is responsible for alerting (spawned by a Kafka consumer in Sentry reading from eventstream)
 * Possibly more
 
@@ -116,12 +115,18 @@ In addition to the siloed modes, there also exists a **Monolith** mode. In monol
 ```mermaid
 flowchart TD
   ui[Frontend UI] --> usr
+  ui --> us2r
   ui --> cs
   ui --> eur
 
   subgraph usr [US Region]
     usapi[US Sentry API] --> uspg[(US Postgres)]
     usapi --> used[(US Event Data)]
+  end
+
+  subgraph us2r [US2 Region]
+    us2api[US2 Sentry API] --> us2pg[(US2 Postgres)]
+    us2api --> us2ed[(US2 Event Data)]
   end
 
   subgraph cs [Control Silo]
@@ -140,7 +145,8 @@ Each region silo can be scaled independently, and is isolated from other regions
 
 Silo modes are defined as environment variables (and django settings). The relevant settings are:
 
-- `SILO_MODE` either `CONTROL`, `REGION` , `MONOLITH` or None.
-- `SENTRY_REGION` The name of the region the application is in (eg. `us` or `de`) or `None`.
-- `SENTRY_REGION_CONFIG` A list of regions that the application has. This list defines names, URLs, and category (multiregion, singletenant) that a region operates as.
-- `SENTRY_MONOLITH_REGION` The region name of the former ‘monolith’ region. For [sentry.io](http://sentry.io) this is the `us` region. The monolith region has special behavior that is required for backwards compatibility.
+- `SILO_MODE` either `CONTROL`, `REGION` , `MONOLITH` or None. Use `SENTRY_SILO_MODE` environment variable to define this setting.
+- `SENTRY_LOCAL_CELL` The name of the region the application is in (eg. `us`, `us2` or `de`) or `None`. Defined by `SENTRY_REGION` environment variable.
+- `SENTRY_LOCALITIES` A list of localities/region that the application has. A locality is composed of multiple cells.
+- `SENTRY_CELLS` A list of cells that the application has. This list defines names, URLs, for each cell/region.
+- `SENTRY_FALLBACK_CELL` The region name of the former ‘monolith’ region. For [sentry.io](http://sentry.io) this is the `us` region. The fallback cell has special behavior that is required for backwards compatibility.

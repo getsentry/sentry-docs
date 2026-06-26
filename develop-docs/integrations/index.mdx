@@ -4,4 +4,70 @@ description: How to setup Sentry integrations. Integrations connect the Sentry s
 sidebar_order: 80
 ---
 
-<PageGrid />
+<PageGrid/>
+
+
+
+## Integration Backup and Restore Scripts
+
+### Overview
+
+When working on integration development locally, your database contains important configuration that makes integrations work properly. If you run `make reset-db` or need to delete your local environment, you lose all this setup and have to configure integrations from scratch.
+There are two scripts that help you backup and restore your local Sentry integration configuration and setup data.
+
+These scripts allow you to:
+- **Backup**: Save your current integration state to a JSON file
+- **Restore**: Load the integration state back into a clean database
+
+### What Data is Backed Up
+
+The scripts handle the following Sentry models in the correct dependency order:
+- `IdentityProvider` - Authentication provider configurations
+- `Integration` - Integration instances and settings  
+- `Identity` - User identity mappings
+- `OrganizationIntegration` - Organization-specific integration configurations
+
+### Prerequisites
+
+- Sentry development environment set up locally
+- Python environment with Sentry dependencies installed
+- Access to your local Sentry database
+
+### Script Files
+
+There are two scripts (exist in `sentry` and `getsentry`):
+
+- `save_integration_data` - Backs up integration data
+- `load_integration_data` - Restores integration data
+
+### Usage Instructions
+
+#### Step 1: Save Your Integration Data
+
+Before running `make reset-db` or making any destructive changes, backup your current integration state:
+
+```bash
+# Navigate to your Sentry project directory
+cd /path/to/sentry # or /path/to/getsentry
+
+# Run the save script
+bin/save_integration_data --output-file integration_backup.json
+```
+
+#### Step 2: Restore Your Integration Data
+
+After your database is reset and ready, restore your integration configuration:
+
+```bash
+# Basic restore (preserves original organization IDs)
+bin/load_integration_data --input-file integration_backup.json
+```
+
+**Or, if you need to change the organization ID:**
+
+```bash
+# Restore and update organization ID for OrganizationIntegration objects
+bin/load_integration_data --input-file integration_backup.json --org-id 123
+```
+
+After restoring, all the previous integration data will be restored and you can start using the integration for local development again.

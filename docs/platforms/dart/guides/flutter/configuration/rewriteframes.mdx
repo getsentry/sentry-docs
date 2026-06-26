@@ -19,14 +19,15 @@ options.beforeSend = (event, hint) async {
           baseUrl,
           '${baseUrl}my_prefix/',
         );
-        return frame.copyWith(absPath: modifiedAbsPath);
+        frame.absPath = modifiedAbsPath;
+        return frame;
       }).toList();
-      return exception.copyWith(
-        stackTrace: SentryStackTrace(frames: frames),
-      );
+      exception.stackTrace = SentryStackTrace(frames: frames);
+      return exception;
     }
     return exception;
   }).toList();
-  return event.copyWith(exceptions: exceptions ?? []);
+  event.exceptions = exceptions ?? [];
+  return event;
 };
 ```

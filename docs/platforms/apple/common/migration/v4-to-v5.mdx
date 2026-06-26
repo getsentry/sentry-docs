@@ -1,0 +1,142 @@
+---
+title: Upgrade from 4.x to 5.x
+sidebar_order: 8940
+description: "Learn about migrating from Sentry Cocoa SDK 4.x to 5.x."
+---
+
+The samples below illustrate how the SDK works:
+
+## Initialization
+
+Example in 4.x:
+
+
+```swift {tabTitle:Swift}
+do {
+    Client.shared = try Client(dsn: "___PUBLIC_DSN___")
+    try Client.shared?.startCrashHandler()
+} catch let error {
+    print("\(error)")
+}
+```
+
+```objc {tabTitle:Objective-C}
+NSError *error = nil;
+SentryClient *client = [[SentryClient alloc] initWithDsn:@"___PUBLIC_DSN___" didFailWithError:&error];
+SentryClient.sharedClient = client;
+[SentryClient.sharedClient startCrashHandlerWithError:&error];
+if (nil != error) {
+    NSLog(@"%@", error);
+}
+```
+
+Example in 5.x:
+
+
+```swift {tabTitle:Swift}
+SentrySDK.start(options: [
+    "dsn": "___PUBLIC_DSN___",
+    "debug": true
+])
+```
+
+```objc {tabTitle:Objective-C}
+[SentrySDK startWithOptions:@{
+    @"dsn": @"___PUBLIC_DSN___",
+    @"debug": @(YES)
+}];
+```
+
+## Add Breadcrumb
+
+Example in 4.x:`
+
+```swift {tabTitle:Swift}
+Client.shared?.breadcrumbs.add(Breadcrumb(level: .info, category: "test"))
+```
+
+```objc {tabTitle:Objective-C}
+[SentryClient.sharedClient.breadcrumbs addBreadcrumb:[[SentryBreadcrumb alloc] initWithLevel:kSentrySeverityInfo category:@"test"]];
+```
+
+Example in 5.x:
+
+```swift {tabTitle:Swift}
+SentrySDK.addBreadcrumb(Breadcrumb(level: .info, category: "test"))
+```
+
+```objc {tabTitle:Objective-C}
+[SentrySDK addBreadcrumb:[[SentryBreadcrumb alloc] initWithLevel:kSentrySeverityInfo category:@"test"]];
+```
+
+## CaptureMessage with tags/environment/extra
+
+Example in 4.x:
+
+```swift {tabTitle:Swift}
+let event = Event(level: .debug)
+event.message = "Test Message"
+event.environment = "staging"
+event.extra = ["ios": true]
+Client.shared?.send(event: event)
+```
+
+```objc {tabTitle:Objective-C}
+SentryEvent *event = [[SentryEvent alloc] initWithLevel:kSentrySeverityDebug];
+event.message = @"Test Message";
+event.environment = @"staging";
+event.extra = @{@"ios": @(YES)};
+[SentryClient.sharedClient sendEvent:event withCompletionHandler:nil];
+```
+
+Example in 5.x:
+
+```swift {tabTitle:Swift}
+SentrySDK.capture(message: "Test Message") { (scope) in
+    scope.setEnvironment("staging")
+    scope.setExtras(["ios": true])
+    let u = Sentry.User(userId: "1")
+    u.email = "tony@example.com"
+    scope.setUser(u)
+}
+```
+
+```objc {tabTitle:Objective-C}
+[SentrySDK captureMessage:@"Test Message" withScopeBlock:^(SentryScope * _Nonnull scope) {
+    [scope setEnvironment:@"staging"];
+    [scope setExtras:@{@"ios": @(YES)}];
+    SentryUser *user = [[SentryUser alloc] initWithUserId:@"1"];
+    user.email = @"tony@example.com";
+    [scope setUser:user];
+}];
+```
+
+## setUser
+
+Example in 4.x:
+
+```swift {tabTitle:Swift}
+let u = User(userId: "1")
+u.email = "tony@example.com"
+Client.shared?.user = user
+```
+
+```objc {tabTitle:Objective-C}
+SentryUser *user = [[SentryUser alloc] initWithUserId:@"1"];
+user.email = @"tony@example.com";
+SentryClient.sharedClient.user = user;
+```
+
+Example in 5.x:
+
+```swift {tabTitle:Swift}
+let u = Sentry.User(userId: "1")
+u.email = "tony@example.com"
+SentrySDK.setUser(u)
+```
+
+```objc {tabTitle:Objective-C}
+SentryUser *user = [[SentryUser alloc] initWithUserId:@"1"];
+user.email = @"tony@example.com";
+[SentrySDK setUser:user];
+```

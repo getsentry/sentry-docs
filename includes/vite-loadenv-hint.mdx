@@ -1,0 +1,24 @@
+<Expandable title="Using environment variables in Vite configs">
+
+Vite doesn't automatically load `.env` files into `process.env` when evaluating the config file. If you store your auth token in a `.env` file and want to access it via `process.env.SENTRY_AUTH_TOKEN`, use Vite's [`loadEnv`](https://vite.dev/guide/api-javascript#loadenv) helper:
+
+```javascript {filename:vite.config.js}
+import { defineConfig, loadEnv } from "vite";
+
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), "");
+
+  return {
+    plugins: [
+      sentryVitePlugin({
+        authToken: env.SENTRY_AUTH_TOKEN,
+        // ...
+      }),
+    ],
+  };
+});
+```
+
+Alternatively, use a `.env.sentry-build-plugin` file, which the Sentry plugin reads automatically.
+
+</Expandable>

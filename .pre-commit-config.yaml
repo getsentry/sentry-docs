@@ -1,5 +1,5 @@
 default_language_version:
-  node: latest
+  node: "22"
 exclude: '\.snap|node_modules$'
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -22,11 +22,35 @@ repos:
       - id: debug-statements
       - id: flake8
       - id: fix-encoding-pragma
-        args: ["--remove"]
-  - repo: https://github.com/getsentry/pre-commit-hooks
-    rev: f3237d2d65af81d435c49dee3593dc8f03d23c2d
+        args: ['--remove']
+  - repo: local
     hooks:
       - id: prettier
-        entry: node_modules/.bin/prettier
+        name: Prettier
+        description: This hook runs Prettier on JavaScript and TypeScript files
+        entry: prettier
+        language: node
+        files: '\.[jt]sx?$'
+        exclude: 'node_modules'
+        types: [text]
+        args: ['--write']
       - id: eslint
-        entry: node_modules/.bin/eslint
+        name: eslint
+        description: This hook runs eslint on JavaScript and TypeScript files
+        entry: eslint
+        language: node
+        files: '\.[jt]sx?$'
+        exclude: 'node_modules'
+        types: [text]
+  - repo: https://github.com/crate-ci/typos
+    rev: v1.39.0
+    hooks:
+      - id: typos
+  - repo: local
+    hooks:
+      - id: lychee
+        name: Check external links (warn only)
+        entry: node scripts/lint-external-links.mjs
+        language: system
+        files: \.(md|mdx)$
+        verbose: true

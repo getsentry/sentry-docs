@@ -1,0 +1,34 @@
+Event processors added to the global scope will run on every event sent after they've been added.
+
+```python
+import sentry_sdk
+from sentry_sdk.types import Event, Hint
+from sentry_sdk.scope import add_global_event_processor
+
+sentry_sdk.init(
+  # ...
+)
+
+def event_processor(event, hint):
+    event["tags"] = {"foo": "42"}
+    return event
+
+global_scope = sentry_sdk.get_global_scope()
+global_scope.add_event_processor(event_processor)
+
+# You can do the same thing using add_global_event_processor
+add_global_event_processor(event_processor)
+```
+
+Event processors added to a local scope using `new_scope` or `isolation_scope` will only apply to events captured inside that scope.
+
+```python
+with sentry_sdk.new_scope() as scope:
+    scope.add_event_processor(event_processor)
+
+    # The processor applies only inside this scope
+    sentry_sdk.capture_message("Test")
+
+# The event processor will NOT apply to this event
+sentry_sdk.capture_message("Test");
+```

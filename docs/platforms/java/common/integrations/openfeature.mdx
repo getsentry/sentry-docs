@@ -1,0 +1,85 @@
+---
+title: OpenFeature
+description: "Learn how to use Sentry with OpenFeature."
+---
+
+The [OpenFeature](https://openfeature.dev/) integration tracks feature flag evaluations produced by the OpenFeature SDK. This SDK is supported by a broad range of feature flagging providers. For the full list, visit [OpenFeature's ecosystem page](https://openfeature.dev/ecosystem?instant_search%5BrefinementList%5D%5Btype%5D%5B0%5D=Provider&instant_search%5BrefinementList%5D%5BallTechnologies%5D%5B0%5D=Java).
+
+The flag evaluations are held in memory and are sent to Sentry on error and transaction events. **At the moment, we only support boolean flag evaluations.**
+
+## Install
+
+To install use:
+
+```groovy {tabTitle:Gradle}
+implementation 'io.sentry:sentry-openfeature:{{@inject packages.version('sentry.java.openfeature', '8.27.0') }}'
+```
+
+```xml {tabTitle:Maven}
+<dependency>
+    <groupId>io.sentry</groupId>
+    <artifactId>sentry-openfeature</artifactId>
+    <version>{{@inject packages.version('sentry.java.openfeature', '8.27.0') }}</version>
+</dependency>
+```
+
+```scala {tabTitle: SBT}
+libraryDependencies += "io.sentry" % "sentry-openfeature" % "{{@inject packages.version('sentry.java.openfeature', '8.27.0') }}"
+```
+
+For other dependency managers, check out the [central Maven repository](https://search.maven.org/artifact/io.sentry/sentry-openfeature).
+
+Before using this integration, you need to install and instrument the [OpenFeature Java SDK](https://openfeature.dev/docs/reference/technologies/server/java) in your app. Learn more by reading OpenFeature's [SDK docs](https://openfeature.dev/docs/reference/technologies/server/java) and [provider docs](https://openfeature.dev/docs/reference/concepts/provider).
+
+## Configure
+
+Add `SentryOpenFeatureHook` to your OpenFeature setup:
+
+```java {5}
+import dev.openfeature.sdk.OpenFeatureAPI;
+import io.sentry.openfeature.SentryOpenFeatureHook;
+
+OpenFeatureAPI api = OpenFeatureAPI.getInstance();
+api.addHooks(new SentryOpenFeatureHook());
+```
+
+```kotlin {5}
+import dev.openfeature.sdk.OpenFeatureAPI
+import io.sentry.openfeature.SentryOpenFeatureHook
+
+val api: OpenFeatureAPI = OpenFeatureAPI.getInstance()
+api.addHooks(SentryOpenFeatureHook())
+```
+
+## Verify
+
+The integration is tested by evaluating a feature flag using your OpenFeature SDK before capturing an exception:
+
+```java
+import dev.openfeature.sdk.OpenFeatureAPI;
+import io.sentry.Sentry;
+
+OpenFeatureAPI api = OpenFeatureAPI.getInstance();
+var client = api.getClient();
+
+boolean flagValue = client.getBooleanValue("test-flag", false);
+
+Sentry.captureException(new Exception("Something went wrong!"));
+```
+
+```kotlin
+import dev.openfeature.sdk.OpenFeatureAPI
+import io.sentry.Sentry
+
+val api: OpenFeatureAPI = OpenFeatureAPI.getInstance()
+val client = api.client
+
+val flagValue: Boolean = client.getBooleanValue("test-flag", false)
+
+Sentry.captureException(Exception("Something went wrong!"))
+```
+
+Open your Sentry project and confirm that your error event has recorded the feature flag "test-flag" and its value "false".
+
+<PlatformContent includePath="feature-flags/next-steps" />
+

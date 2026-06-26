@@ -1,0 +1,106 @@
+---
+title: Release and Versioning
+spec_id: sdk/getting-started/standards/release-versioning
+spec_version: 1.0.0
+spec_status: stable
+spec_platforms:
+  - all
+spec_changelog:
+  - version: 1.0.0
+    date: 2026-02-19
+    summary: Initial Release and Versioning standard
+sidebar_order: 99
+---
+
+<SpecRfcAlert />
+
+<SpecMeta />
+
+These standards define how SDK versions are numbered and how releases are built and published. All SDKs use semantic versioning and shared release tooling to keep the process consistent.
+
+<SpecSection id="versioning" status="stable" since="1.0.0">
+
+## Versioning
+
+All SDK versions **MUST** follow [semantic versioning (SemVer)](https://semver.org/):
+
+```
+<major>.<minor>.<patch>(-<prerelease>)?(+<build>)?
+```
+
+### Pre-release identifiers
+
+Pre-release identifiers **MUST** be one of: `preview`, `pre`, `rc`, `dev`, `alpha`, `beta`, `unstable`, `a`, `b`. Arbitrary strings are not accepted — anything unrecognized (like `-foo` or `-canary.0`) will be treated as a stable release by the release tooling.
+
+Pre-releases don't receive a `latest` tag in package registries and are not inserted into the internal release-registry used by Sentry product, docs, and tooling.
+
+Valid examples: `1.0.0-preview`, `1.0.0-alpha.0`, `1.0.0-beta.1`, `1.0.0-rc.20`
+
+**Python note:** Python post-releases use a numeric-only suffix (e.g., `1.0.0-1`). Since this doesn't match any pre-release identifier, craft treats them as stable releases.
+
+### Build identifiers
+
+Build identifiers are optional and used for platform or architecture variants (e.g., `1.0.0+x86_64`). When combined with pre-release identifiers, the pre-release comes first: `1.0.0-rc.1+x86_64`.
+
+</SpecSection>
+
+---
+
+<SpecSection id="release-tooling" status="stable" since="1.0.0">
+
+## Release tooling
+
+SDKs **MUST** use [craft](https://github.com/getsentry/craft) for release preparation and [publish](https://github.com/getsentry/publish) for release approval. Every SDK repo needs:
+
+- `.craft.yml` — release configuration
+- `scripts/bump-version.sh` — version bump script invoked by craft
+- `.github/workflows/release.yml` — GitHub Actions workflow to trigger releases
+
+Craft targets and bump-version logic are SDK-specific, but the toolchain is the same everywhere. See the [setting up release infrastructure](/sdk/getting-started/playbooks/setup/setting-up-release-infrastructure) playbook for setup instructions.
+
+### Merge target
+
+By default, releases merge to the repository's default branch (usually `main`). To override this, pass the `merge_target` input in the release workflow:
+
+```yaml
+- name: Prepare release
+  uses: getsentry/craft@v2
+  env:
+    GITHUB_TOKEN: ${{ steps.token.outputs.token }}
+  with:
+    version: ${{ github.event.inputs.version }}
+    merge_target: ${{ github.event.inputs.merge_target }}
+```
+
+Add a corresponding `merge_target` input to the workflow's `workflow_dispatch.inputs` block. The same input is available in the [reusable workflow](https://craft.sentry.dev/github-actions/#option-1-reusable-workflow-recommended).
+
+### Multiple craft configs
+
+When a repository maintains multiple major versions (e.g., v7 and v8) with diverging publishing targets, it can use the `.craft.yml` from the merge target branch instead of the default branch. Add `craft_config_from_merge_target: true` to the craft step:
+
+```yaml
+- name: Prepare release
+  uses: getsentry/craft@v2
+  with:
+    craft_config_from_merge_target: true
+```
+
+For the publish side, register the branch in the `publish.yml` workflow in `getsentry/publish`:
+
+```yaml
+- name: Set target repo checkout branch
+  if: |
+    fromJSON(steps.inputs.outputs.result).repo == 'sentry-javascript' && fromJSON(steps.inputs.outputs.result).merge_target == 'v7'
+```
+
+The registered branches **MUST** be protected — disable direct pushing and require PR approvals before merging.
+
+Once a release is out, see [Post-release monitoring and regression handling](/sdk/getting-started/standards/coordination-maintenance#releases) for what to watch and how to respond.
+
+</SpecSection>
+
+---
+
+## Changelog
+
+<SpecChangelog />

@@ -1,0 +1,62 @@
+---
+title: Native
+description: Learn how to configure the experimental native crash backend.
+---
+
+The `native` backend is an experimental out-of-process backend available since
+SDK version [0.13.2](https://github.com/getsentry/sentry-native/releases/tag/0.13.2).
+It is the most actively developed crash backend and is intended to become the
+default backend in the future.
+To use it, configure the CMake build with the `SENTRY_BACKEND=native` option:
+
+```shell
+cmake -B build -D SENTRY_BACKEND=native
+```
+
+This builds the `sentry-crash` executable alongside the `sentry` library. Ship
+the executable with your application so the SDK can start it during
+initialization.
+
+## Crash Reporting Modes
+
+Use `sentry_options_set_crash_reporting_mode` before `sentry_init` to configure
+which crash report format the backend sends when the application crashes.
+
+| Mode | Sends | Stack walking |
+| ---- | ----- | ------------- |
+| `SENTRY_CRASH_REPORTING_MODE_MINIDUMP` | Minidump | Server-side |
+| `SENTRY_CRASH_REPORTING_MODE_NATIVE` | Event | Client-side |
+| `SENTRY_CRASH_REPORTING_MODE_NATIVE_WITH_MINIDUMP` | Event and minidump | Client-side |
+
+`SENTRY_CRASH_REPORTING_MODE_NATIVE_WITH_MINIDUMP` is the default. It sends an
+event with client-side stack traces and attaches a minidump for deeper crash
+analysis. Modes that include a minidump send it as an `event.minidump`
+attachment.
+
+## Minidump Capture Modes
+
+Use `sentry_options_set_minidump_mode` before `sentry_init` to control how much
+memory the backend captures in minidumps. This setting only affects crash
+reporting modes that send a minidump.
+
+| Mode | Captures | Tradeoff |
+| ---- | -------- | -------- |
+| `SENTRY_MINIDUMP_MODE_STACK_ONLY` | Stack memory | Smallest and fastest, about 100 KB-1 MB |
+| `SENTRY_MINIDUMP_MODE_SMART` | Stack memory and heap memory around the crash | Balanced default, about 5-10 MB |
+| `SENTRY_MINIDUMP_MODE_FULL` | Full process memory | Most detail, but largest and slowest, tens to hundreds of MB |
+
+For production builds, use `SENTRY_MINIDUMP_MODE_STACK_ONLY` or
+`SENTRY_MINIDUMP_MODE_SMART`. Use `SENTRY_MINIDUMP_MODE_FULL` only when you need
+the extra memory for development, staging, or a specific crash investigation.
+
+For example, to send only a small minidump for server-side stack walking:
+
+```c
+sentry_options_t *options = sentry_options_new();
+
+sentry_options_set_crash_reporting_mode(
+    options, SENTRY_CRASH_REPORTING_MODE_MINIDUMP);
+sentry_options_set_minidump_mode(options, SENTRY_MINIDUMP_MODE_STACK_ONLY);
+
+sentry_init(options);
+```

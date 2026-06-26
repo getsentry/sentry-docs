@@ -1,0 +1,24 @@
+App Thinning is Apple's technology that automatically optimizes the delivery of iOS apps to reduce their download size for end users. When your app is uploaded to the App Store, Apple creates device-specific variants that only include the resources needed for each device type. For example, an iPhone SE doesn't need images intended for iPads.
+
+Sentry Size Analysis **does not perform any app thinning** as part of the analysis, the underlying app is untouched and results shown as-is.
+
+If you want results targeting a specific device type (recommended), apply app thinning **before** uploading to Sentry. This can be configured via Export Options when building the app. First create an `export_options.plist` file with the desired device type:
+
+```xml {filename:export_options.plist}
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+<key>method</key>
+<string>ad-hoc</string>
+<key>team_id</key>
+<string>your-team-id</string> <!-- set to your ID -->
+<key>thinning</key>
+<string>iPhone17,1</string> <!-- set to your device type -->
+</dict>
+</plist>
+```
+
+And then pass this file to `xcodebuild` via the `-exportOptionsPlist export_options.plist` flag when building the app. This will produce a `app-thinning.plist` file in your build directory with information on the created app variants and where they are located on disk. Pick the appropriate IPA when uploading to Sentry.
+
+If a build is uploaded without first being thinned, you may see multiple copies of your images (ex. different idiom and colorspace values) in your build analysis. We recommend uploading the thinned build to Sentry for the best results.

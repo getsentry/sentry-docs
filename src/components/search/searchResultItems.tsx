@@ -1,13 +1,11 @@
-import {Fragment} from 'react';
 import {Hit, Result} from '@sentry-internal/global-search';
 import DOMPurify from 'dompurify';
 import Link from 'next/link';
 import {useRouter} from 'next/navigation';
-
+import {Fragment} from 'react';
 import {useListKeyboardNavigate} from 'sentry-docs/hooks/useListKeyboardNavigate';
 
 import styles from './search.module.scss';
-
 import {relativizeUrl} from './util';
 
 const MAX_HITS = 10;

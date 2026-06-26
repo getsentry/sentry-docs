@@ -1,13 +1,12 @@
-import {Fragment, ReactElement, useMemo} from 'react';
-import {bundleMDX} from 'mdx-bundler';
-import {getMDXComponent} from 'mdx-bundler/client';
+import './styles.scss';
 
+import {bundleMDX} from 'mdx-bundler';
+import {Fragment, ReactElement, useMemo} from 'react';
 import {type API} from 'sentry-docs/build/resolveOpenAPI';
+import {getMDXComponent} from 'sentry-docs/getMDXComponent';
 import {mdxComponents} from 'sentry-docs/mdxComponents';
 import remarkCodeTabs from 'sentry-docs/remark-code-tabs';
 import remarkCodeTitles from 'sentry-docs/remark-code-title';
-
-import './styles.scss';
 
 import {ApiExamples} from '../apiExamples/apiExamples';
 import {DocPage} from '../docPage';
@@ -21,10 +20,9 @@ function Params({params}) {
           <Fragment key={param.name}>
             <dt>
               <div>
-                <code data-index>{param.name}</code>
+                <code data-index>{param.name}</code>{' '}
                 {!!param.schema?.type && (
                   <em>
-                    {' '}
                     ({param.schema.type}
                     {param.schema.items && `(${param.schema.items.type})`})
                   </em>
@@ -76,14 +74,14 @@ const getScopes = (data, securityScheme) => {
 
 // https://stackoverflow.com/a/38137700
 function cssToObj(css) {
-  const obj = {},
-    s = css
-      .toLowerCase()
-      .replace(/-(.)/g, function (_, g) {
-        return g.toUpperCase();
-      })
-      .replace(/;\s?$/g, '')
-      .split(/:|;/g);
+  const obj = {};
+  const s = css
+    .toLowerCase()
+    .replace(/-(.)/g, function (_, g) {
+      return g.toUpperCase();
+    })
+    .replace(/;\s?$/g, '')
+    .split(/:|;/g);
   for (let i = 0; i < s.length; i += 2) {
     obj[s[i].replace(/\s/g, '')] = s[i + 1].replace(/^\s+|\s+$/g, '');
   }
@@ -139,7 +137,7 @@ export function ApiPage({api}: Props) {
       </div>
       <div className="flex flex-col md:flex-row gap-4">
         <div className="w-full md:w-1/2">
-          {api.summary && <p>{api.summary}</p>}
+          {api.summary && api.summary !== api.name && <p>{api.summary}</p>}
 
           {api.descriptionMarkdown && parseMarkdown(api.descriptionMarkdown)}
 

@@ -53,11 +53,11 @@ export default {
         darkPurple: '#1F1633',
         'accent-purple': '#6A5FC1',
         'accent-md-violet': '#584774',
-        red: '#e1567c',
         gold: '#F1B71C',
       },
       screens: {
         'lg-xl': {min: '1130px'},
+        toc: '1490px',
       },
     },
   },

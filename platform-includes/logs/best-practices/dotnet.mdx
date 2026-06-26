@@ -1,0 +1,106 @@
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+### Wide Events Over Scattered Logs
+
+Instead of many thin logs that are hard to correlate, emit one comprehensive log per operation with all relevant context.
+
+This makes debugging dramatically faster — one query returns everything about a specific order, user, or request.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```csharp
+// ❌ Scattered thin logs
+SentrySdk.Logger.LogInfo("Starting checkout");
+SentrySdk.Logger.LogInfo("Validating cart");
+SentrySdk.Logger.LogInfo("Processing payment");
+SentrySdk.Logger.LogInfo("Checkout complete");
+
+// ✅ One wide event with full context
+SentrySdk.Logger.LogInfo(log =>
+{
+    log.SetAttribute("order_id", order.Id);
+    log.SetAttribute("user_id", user.Id);
+    log.SetAttribute("user_tier", user.Subscription);
+    log.SetAttribute("cart_value", cart.Total);
+    log.SetAttribute("item_count", cart.Items.Count);
+    log.SetAttribute("payment_method", "stripe");
+    log.SetAttribute("duration_ms", stopwatch.ElapsedMilliseconds);
+}, "Checkout completed");
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Include Business Context
+
+Add attributes that help you prioritize and debug:
+
+- **User context** — tier, account age, lifetime value
+- **Transaction data** — order value, item count
+- **Feature state** — active feature flags
+- **Request metadata** — endpoint, method, duration
+
+This lets you filter logs by high-value customers or specific features.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```csharp
+SentrySdk.Logger.LogInfo(log =>
+{
+    // User context
+    log.SetAttribute("user_id", user.Id);
+    log.SetAttribute("user_tier", user.Plan); // "free" | "pro" | "enterprise"
+    log.SetAttribute("account_age_days", user.AgeDays);
+
+    // Request data
+    log.SetAttribute("endpoint", "/api/orders");
+    log.SetAttribute("method", "POST");
+    log.SetAttribute("duration_ms", 234);
+
+    // Business context
+    log.SetAttribute("order_value", 149.99);
+}, "API request completed");
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Consistent Attribute Naming
+
+Pick a naming convention and stick with it across your codebase. Inconsistent names make queries impossible.
+
+**Recommended:** Use `snake_case` for custom attributes to match common conventions.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```csharp
+// ❌ Inconsistent naming
+log.SetAttribute("user", "123");
+log.SetAttribute("userId", "123");
+log.SetAttribute("user_id", "123");
+log.SetAttribute("UserID", "123");
+
+// ✅ Consistent snake_case
+SentrySdk.Logger.LogInfo(log =>
+{
+    log.SetAttribute("user_id", "123");
+    log.SetAttribute("order_id", "456");
+    log.SetAttribute("cart_value", 99.99);
+    log.SetAttribute("item_count", 3);
+}, "Order processed");
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>

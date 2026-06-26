@@ -10,12 +10,14 @@ notSupported:
   - javascript.aws-lambda
   - javascript.azure-functions
   - javascript.connect
+  - javascript.elysia
   - javascript.express
   - javascript.fastify
   - javascript.gcp-functions
   - javascript.hapi
   - javascript.hono
   - javascript.koa
+  - javascript.nitro
   - javascript.nestjs
   - javascript.cloudflare
 description: "Learn about customizing sessions with the Session Replay SDK."
@@ -26,13 +28,22 @@ For more complex cases, it's helpful to understand how sessions work and how to 
 
 ## Default Session Initialization
 
-By default, Replay will immediately start a session when the `replayIntegration()` integration instance is added to the SDK client. The session will be in either `session` or `buffer` mode, depending on your `replaysSessionSampleRate` and `replaysOnErrorSampleRate`.
+With the  `replayIntegration()` enabled in your SDK, a replay session will start capturing based on your sample rate settings:
 
-When Replay is initialized, we check the `replaysSessionSampleRate`. If it's sampled, we'll start recording and sending Replay data immediately.
+| Configuration | What Happens |
+|--------------|-------------|
+| `replaysSessionSampleRate > 0` | Starts in <PlatformLink to="/session-replay/understanding-sessions/#session-mode">**session mode**</PlatformLink> |
+| `replaysOnErrorSampleRate > 0` only | Starts in <PlatformLink to="/session-replay/understanding-sessions/#buffer-mode">**buffer mode**</PlatformLink> |
+| Both rates are `0` | Replay is installed but inactive until you <PlatformLink to="/session-replay/understanding-sessions/#manually-starting-replay">**manually start it**</PlatformLink> |
 
-If `replaysOnErrorSampleRate > 0`, we'll start recording in buffering mode and keep checking `replaysOnErrorSampleRate` whenever an error occurs. Once we see that it's sampled, we'll upload the Replay to Sentry and continue recording normally.
+**Recommended default:**
 
-If both `replaysSessionSampleRate` and `replaysOnErrorSampleRate` are `0`, the recording won't start, but you'll be able to <PlatformLink to="/session-replay/understanding-sessions/#manually-starting-replay">record manually</PlatformLink>.
+```javascript
+replaysSessionSampleRate: 0.1,  // 10% of sessions
+replaysOnErrorSampleRate: 1.0,  // 100% of all errors
+```
+
+This captures 10% of sessions in full, plus every error from the remaining 90%. Think of it like a security camera: some cameras always record, others only save footage when the alarm goes off.
 
 ## Session Mode
 
@@ -40,7 +51,13 @@ In `session` mode, Replay will continuously record and send data to Sentry. Afte
 
 ## Buffer Mode
 
-In `buffer` mode, Replay will continuously record data, but won't send any of it. It will instead keep up to the last 60 seconds in memory. When an error occurs, `replaysOnErrorSampleRate` will be checked and if it's sampled, the replay will be uploaded to Sentry and continue recording normally. After 15 minutes of user inactivity, or a maximum duration of 60 minutes, the session will end and the replay will stop.
+In `buffer` mode, Replay will continuously record data, but won't send any of it. It stores the last 60 seconds of event logs in a memory ring buffer (approximately 2-5MB).
+
+<Alert level="info">
+**What's stored:** Web Session Replay captures lightweight DOM event logs (clicks, scrolls, mutations), not video files. These logs are automatically converted to video-like replays by Sentry's servers.
+</Alert>
+
+When an error occurs, `replaysOnErrorSampleRate` will be checked and if it's sampled, the buffered 60 seconds _before_ the error plus everything _after_ is uploaded to Sentry and recording continues normally. After 15 minutes of user inactivity, or a maximum duration of 60 minutes, the session will end and the replay will stop.
 
 ## Manually Add Replay Integration
 
@@ -110,6 +127,38 @@ await replay.flush();
 In `session` mode, this will upload any pending recording data to Sentry. In `buffer` mode, this will upload any pending recording data to Sentry and then continue recording, the same as when an error is sampled with `replaysOnErrorSampleRate`.
 
 Calling `flush()` while Session Replay is stopped will start a new session recording.
+
+## Listening to Lifecycle Events
+
+<AvailableSince version="10.50.0" />
+
+You can listen to replay lifecycle events on the Sentry client to know when recording starts and stops. This is useful for wrapper libraries or custom UIs that need to stay in sync with replay state.
+
+```javascript
+const client = Sentry.getClient();
+
+client.on('replayStart', ({ sessionId, recordingMode }) => {
+  // recordingMode: 'session' | 'buffer'
+  console.log(`Replay ${sessionId} started in ${recordingMode} mode`);
+});
+
+client.on('replayEnd', ({ sessionId, reason }) => {
+  // reason: 'manual' | 'sessionExpired' | 'sendError' | 'mutationLimit'
+  //       | 'eventBufferError' | 'eventBufferOverflow'
+  console.log(`Replay ${sessionId} ended: ${reason}`);
+});
+```
+
+The `replayEnd` hook includes a typed `reason` so you can distinguish calling `replay.stop()` yourself from an internal stop:
+
+| Reason | Description |
+|--------|-------------|
+| `manual` | You called `replay.stop()` |
+| `sessionExpired` | The session exceeded max duration or idle timeout |
+| `sendError` | The SDK failed to send recording data to Sentry |
+| `mutationLimit` | The DOM mutation limit was exceeded |
+| `eventBufferError` | The event buffer hit an internal error |
+| `eventBufferOverflow` | The event buffer exceeded its size limit |
 
 ## Examples of Custom Sampling
 
@@ -206,7 +255,7 @@ Note that this hook only runs in `buffer` mode, as `session` mode records contin
 
 Replays do not need to be connected to an application error, they can also be used to supplement your support tickets.
 Depending on the level of customization provided by your support widget, it is possible to send a replay to
-Sentry when your users open the support widget. Note that Sentry's [User Feedback](https://docs.sentry.io/product/user-feedback/#user-feedback-widget)
+Sentry when your users open the support widget. Note that Sentry's [User Feedback](/product/user-feedback/#user-feedback-widget)
 provides this functionality by default! You can then send the ID of the replay along with the support ticket that your
 user submits. The ID can be used to reference the replay in Sentry. Alternatively, you can search for
 replays by a user identifier such as email.

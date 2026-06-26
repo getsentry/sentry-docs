@@ -2,7 +2,7 @@
 
 import {MotionProps} from 'framer-motion';
 
-import {KeywordSpan} from './styles.css';
+import {KeywordSpan} from './styles';
 
 export function Keyword({
   initial = {opacity: 0, y: -10, position: 'absolute'},
@@ -17,14 +17,16 @@ export function Keyword({
     opacity: {duration: 0.15},
     y: {duration: 0.25},
   },
+  showPreview: hasPreview = false,
   ...props
-}: MotionProps) {
+}: MotionProps & {showPreview?: boolean}) {
   return (
     <KeywordSpan
       initial={initial}
       animate={animate}
       exit={exit}
       transition={transition}
+      hasPreview={hasPreview}
       {...props}
     />
   );

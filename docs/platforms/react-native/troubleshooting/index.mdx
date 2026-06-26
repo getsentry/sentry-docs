@@ -1,8 +1,17 @@
 ---
 title: Troubleshooting
 description: "Troubleshoot and resolve common issues with the React Native SDK."
-sidebar_order: 9000
+sidebar_order: 12
+sidebar_section: configuration
 ---
+
+## Support 16 KB Page Sizes on Android
+
+Starting with Android 15, AOSP supports devices with a 16 KB page size. If your app uses NDK libraries (directly or via an SDK), you'll need to rebuild it for compatibility with these devices.
+
+Update to Sentry React Native SDK version `6.3.0` and above order to support 16 KB page sizes on Android devices.
+
+Please read the [Android developer documentation](https://developer.android.com/guide/practices/page-sizes) to update and test your app with 16 KB page size support.
 
 ## "Missing API declaration" after App Store review
 
@@ -25,67 +34,7 @@ Otherwise, we will let you know that the handler is attached:
 
 > [Sentry] Unhandled promise rejections will be caught by Sentry.
 
-### Auto Patching (Default Behavior)
-
-By default we will patch the global `Promise` instance to ensure it matches exactly with the version that React Native uses.
-
-#### Using With Other Polyfills
-
-If you use a polyfilling library that patches the global `Promise` instance, you'll need to make sure you run the polyfill **after** `Sentry.init` is called.
-
-
-```javascript
-import allSettled from "promise.allsettled";
-
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-});
-// Any Promise polyfilling must occur AFTER Sentry.init
-// This step globally patches Promise.
-allSettled.shim();
-
-// Separate core-js example
-import "core-js/stable/promise/all-settled";
-```
-
-Your linter might throw some errors here, but this step is necessary.
-
-#### Disable Auto Patching
-
-You can disable the global promise patching by passing `patchGlobalPromise: false` in either `Sentry.init` or the `ReactNativeErrorHandlers` integration. Note that if you disable our auto patching, to ensure that unhandled rejections are still caught, you will need to [manually force a package resolution](#manually-forcing-a-package-resolution).
-
-### Manually Forcing a Package Resolution
-
-You don't need to perform the steps below if you don't disable [auto patching](#auto-patching-default-behavior). You'll need to ensure that the version of `promise` that you use matches exactly with the version that React Native uses.
-
-1. Check the version of `promise` that your version of `react-native` uses. You can do this by going into `node_modules/react-native/package.json` and checking the version there, for example we find that it uses `^8.0.3`:
-
-```json {filename:node_modules/react-native/package.json}
-{
-  "dependencies": {
-    // ...
-    "promise": "^8.0.3"
-  }
-}
-```
-
-2. Add a package resolution with the same version as `react-native`'s' to **your** `package.json` file, this will force this version to be used. You will then need to run a fresh `yarn install` or `npm install` to use the package resolution you just added.
-
-```json {filename:package.json}
-{
-  "resolutions": {
-    "promise": "^8.0.3"
-  }
-}
-```
-
-<Alert>
-
-Package resolutions are currently only supporred by `yarn`. If you use `npm`, you can use a third-party package called [npm-force-resolutions](https://www.npmjs.com/package/npm-force-resolutions) to achieve this.
-
-</Alert>
-
-3. If the fix is successful, our SDK will no longer display the above warning and will indicate that promise rejections will be caught.
+You can read more about how to set up unhandled promise rejections in the [Unhandled Promise Rejections guide](/platforms/react-native/integrations/unhandled-rejections/).
 
 ## Source Maps
 
@@ -120,6 +69,31 @@ If you're using an older version of the SDK (version `3.2.12` or lower) or `sent
 ../node_modules/@sentry/cli/bin/sentry-cli react-native xcode \
   ../node_modules/react-native/scripts/react-native-xcode.sh --force-foreground
 ```
+
+## Different `sentry.properties` Per Scheme or Build Configuration (iOS)
+
+Unlike Android's `flavorAware` option, iOS doesn't auto-select a `sentry.properties` file per configuration. If your app has multiple schemes or build configurations that need to upload to different Sentry projects, select the file at build time with a User-Defined Build Setting.
+
+1. In Xcode, open the **Build Settings** tab, click **+**, and choose **Add User-Defined Setting**. Name it `SENTRY_PROPERTIES_FILE`.
+2. Expand the new setting and set a value per configuration, for example `sentry-staging.properties` for `Staging` and `sentry-production.properties` for `Production`.
+3. Reference the setting from the Sentry build phases by exporting `SENTRY_PROPERTIES`:
+
+```bash {filename:Bundle React Native code and images}
+export SENTRY_PROPERTIES="$SENTRY_PROPERTIES_FILE"
+
+WITH_ENVIRONMENT="../node_modules/react-native/scripts/xcode/with-environment.sh"
+SENTRY_XCODE="../node_modules/@sentry/react-native/scripts/sentry-xcode.sh"
+
+/bin/sh -c "$WITH_ENVIRONMENT $SENTRY_XCODE"
+```
+
+```bash {filename:Upload Debug Symbols to Sentry}
+export SENTRY_PROPERTIES="$SENTRY_PROPERTIES_FILE"
+
+/bin/sh ../node_modules/@sentry/react-native/scripts/sentry-xcode-debug-files.sh
+```
+
+Xcode substitutes the User-Defined Build Setting for the active configuration, so each build uploads to the matching Sentry project. The same pattern works for `SENTRY_RELEASE`, `SENTRY_DIST`, and other per-build environment variables.
 
 ## Release Health
 
@@ -185,9 +159,23 @@ The Xcode integration reads `dist` from `CFBundleVersion` but Xcode Cloud builds
 export SENTRY_DIST=$CI_BUILD_NUMBER
 ```
 
+## iOS: Sentry User Feedback UI cannot be used from app extensions.
+
+If you see an error similar to `'SentryUserFeedbackIntegration' is unavailable: not available on iOS - Sentry User Feedback UI cannot be used from app extensions` during the application build process, please make sure that the `APPLICATION_EXTENSION_API_ONLY` is set to `NO`. You can achieve that with the following in your `Podfile`.
+
+```ruby {filename:ios/Podfile}
+installer.pods_project.targets.each do |target|
+  target.build_configurations.each do |config|
+    if target.name == 'Sentry'
+      config.build_settings['APPLICATION_EXTENSION_API_ONLY'] = 'NO'
+    end
+  end
+end
+```
+
 ## Unknown receiver '\<SomeReceiver\>', Use of undeclared identifier '\<SomeIdentifier\>'
 
-If you see an error like `Unknown receiver 'SwiftDescriptor'` or `Use of undeclared identifier 'SentryLog'` during the application build process, there's a conflict stemming from `APPLICATION_EXTENSION_API_ONLY`. By default, the Sentry Cocoapod is configured with `APPLICATION_EXTENSION_API_ONLY=YES`, but some `post_install` script likely changed it. To fix this error, add the following to the `Podfile`.```
+If you see an error like `Unknown receiver 'SwiftDescriptor'` or `Use of undeclared identifier 'SentryLog'` during the application build process (in SDK versions prior to `6.18.0`), there's a conflict stemming from `APPLICATION_EXTENSION_API_ONLY`. By default, the Sentry Cocoapod is configured with `APPLICATION_EXTENSION_API_ONLY=YES`, but some `post_install` script likely changed it. To fix this error, add the following to the `Podfile`.
 
 ```ruby {filename:ios/Podfile}
 post_install do |installer|
@@ -343,9 +331,39 @@ Note that if the source maps upload fails, you'll have to do it [manually](/plat
 
 When you remove the environmental variable in front of your build command, your build will work as before.
 
+## Conflicts With Other Build-Phase Tools
+
+Sentry wraps the iOS _Bundle React Native code and images_ Xcode build phase to upload source maps. If another tool wraps the same build phase, your iOS build may fail, or your app may crash on launch with `No bundle URL present`. Both wrappers rewrite the same script, so the combined result either drops required arguments or skips generating the JavaScript bundle. The exact symptom depends on the order in which the wrappers run.
+
+<Alert level="warning" title="Multiple Monitoring SDKs">
+
+We don't recommend using multiple monitoring and crash-reporting SDKs at the same time, as it might result in unexpected behavior. Always test your application and verify you're receiving correct data from all the SDKs in use.
+
+</Alert>
+
+To resolve the conflict, use one of the following approaches:
+
+- **Use only one tool to wrap the build phase.** If only one of the SDKs captures errors, only that SDK needs to wrap the build phase. The other SDK, if it's not used for error reporting, doesn't need automatic debug-file upload.
+
+- **Upload debug files manually.** Disable both tools' automatic upload and upload source maps yourself. See [Manual Upload for Hermes Release](/platforms/react-native/sourcemaps/uploading/expo-advanced/).
+
+### Expo
+
+With Expo, config plugins rewrite the build phase during `prebuild`, so the conflict appears automatically. As an unstable workaround, list `@sentry/react-native/expo` _before_ the other build-phase plugin in the `plugins` array of your `app.json`, and add the following to your `ios/.xcode.env`:
+
+```bash
+export SOURCEMAP_FILE=$DERIVED_FILE_DIR/main.jsbundle.map
+```
+
+This currently produces a working build, but it relies on the internal ordering of both plugins and may break with future updates.
+
+### Bare React Native
+
+In a bare React Native project the build phase is edited directly, so the conflict is visible in the _Bundle React Native code and images_ script in Xcode. Edit the script so that only one tool wraps `react-native-xcode.sh`, or chain the wrappers explicitly so each receives the arguments it expects.
+
 ## Expo Transactions Never Finish
 
-If you're using [expo-dev-client](https://docs.expo.dev/development/introduction/#what-is-an-expo-dev-client), you might notice that transactions never finish in your dev builds. This is due to logs that the dev client is continuously sending to the development server. To fix this, you can stop creating spans for the HTTP requests to the log endpoint in your dev builds by adding the following to your `Sentry.init()`:
+If you're using [expo-dev-client](https://docs.expo.dev/develop/development-builds/introduction/), you might notice that transactions never finish in your dev builds. This is due to logs that the dev client is continuously sending to the development server. To fix this, you can stop creating spans for the HTTP requests to the log endpoint in your dev builds by adding the following to your `Sentry.init()`:
 
 ```javascript
 import * as Sentry from "sentry-expo";
@@ -396,14 +414,65 @@ You can also use [Advanced Data Scrubbing](/security-legal-pii/scrubbing/advance
 [Replace] [Anything] from [contexts.trace.data.previousRoute.params]
 ```
 
-## Uninstalling the SDK
+## Android: IllegalStateException Mix of Versions
 
-To remove the SDK from your project, run the following commands:
+If your Android app crashes on startup with:
 
-```bash
-npx @sentry/wizard -i reactNative -p ios android --uninstall
-yarn remove @sentry/react-native
-cd ios && pod install
+```
+IllegalStateException: Sentry SDK has detected a mix of versions
 ```
 
-Once that's done, remove the `ios/sentry.properties` and `android/sentry.properties` files. Finally, remove all the code using `@sentry/react-native` from your project.
+This is caused by the Sentry Android Gradle Plugin (AGP) auto-installing a `sentry-android` version that conflicts with the one shipped by `@sentry/react-native`.
+
+### Solution
+
+Set `autoInstallation.enabled = false` in your `android/app/build.gradle`:
+
+```groovy {filename:android/app/build.gradle}
+sentry {
+    autoInstallation {
+      enabled = false
+    }
+}
+```
+
+The React Native SDK manages its own compatible `sentry-android` dependency, so the Gradle plugin should not auto-install one. See the [manual setup guide](/platforms/react-native/manual-setup/manual-setup/#enable-sentry-agp) for the full configuration.
+
+For more information, see [GitHub issue #5682](https://github.com/getsentry/sentry-react-native/issues/5682).
+
+## Sentry Android Gradle Plugin Circular Dependency
+
+If you encounter a circular dependency error when building your Android app with the Sentry Android Gradle Plugin, this is typically caused by using an older version of the Android Gradle Plugin (AGP).
+
+### Error Example
+
+You might see an error similar to:
+```
+Circular dependency between the following tasks:
+:app:compileReleaseJavaWithJavac
+:app:generateSentryProguardUuidProductionRelease
+```
+
+### Solution
+
+Update your Android Gradle Plugin to version **7.4** or higher. In your `android/build.gradle` (project-level) file:
+
+```groovy {filename:android/build.gradle}
+buildscript {
+    dependencies {
+        classpath("com.android.tools.build:gradle:7.4.0") // or higher
+    }
+}
+```
+
+Or if using the plugins block in your `android/app/build.gradle`:
+
+```groovy {filename:android/app/build.gradle}
+plugins {
+    id "com.android.application" version "7.4.0" // or higher
+}
+```
+
+AGP 7.4+ introduced new APIs for injecting into assets that the Sentry Android Gradle Plugin uses to avoid this circular dependency. Since AGP 7.4 was released in 2023, we recommend upgrading to the latest stable version.
+
+For more information, see [GitHub issue #756](https://github.com/getsentry/sentry-android-gradle-plugin/issues/756).

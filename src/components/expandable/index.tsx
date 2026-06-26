@@ -1,22 +1,25 @@
 'use client';
 
-import {ReactNode, useCallback, useEffect, useRef, useState} from 'react';
-import {ChevronDownIcon, ChevronRightIcon} from '@radix-ui/react-icons';
-import * as Sentry from '@sentry/nextjs';
-
-import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
-
-// explicitly not usig CSS modules here
+// explicitly not using CSS modules here
 // because there's some prerendered content that depends on these exact class names
 import '../callout/styles.scss';
+
+import {ChevronDownIcon, ChevronRightIcon} from '@radix-ui/react-icons';
+import * as Sentry from '@sentry/nextjs';
+import {ReactNode, useCallback, useEffect, useRef, useState} from 'react';
+import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
+
 import styles from './style.module.scss';
 
 type Props = {
   children: ReactNode;
   title: string;
-  copy?: boolean;
+  /** If true, shows "Copy Rules" button. If a string, uses it as the button label. */
+  copy?: boolean | string;
   /** If defined, the expandable will be grouped with other expandables that have the same group. */
   group?: string;
+  // If true, the expandable will not be rendered in the markdown version of the page
+  hideFromMd?: boolean;
   level?: 'info' | 'warning' | 'success';
   permalink?: boolean;
 };
@@ -35,6 +38,7 @@ export function Expandable({
   permalink,
   group,
   copy,
+  hideFromMd = false,
 }: Props) {
   const id = permalink ? slugify(title) : undefined;
 
@@ -43,36 +47,63 @@ export function Expandable({
   const contentRef = useRef<HTMLDivElement>(null);
   const {emit} = usePlausibleEvent();
 
-  // Ensure we scroll to the element if the URL hash matches
+  const detailsRef = useRef<HTMLDetailsElement>(null);
+  const scrollTargetRef = useRef<string | null>(null);
+  const expandedByHashRef = useRef(false);
+
+  // Expand when the URL hash matches this expandable's id
+  // OR any element inside it (e.g. a heading anchor within the content).
   useEffect(() => {
-    if (!id) {
-      return () => {};
-    }
+    const expandIfHashInside = () => {
+      const hash = window.location.hash;
+      if (!hash) {
+        return;
+      }
+      const targetId = hash.slice(1);
+      if (!targetId) {
+        return;
+      }
 
-    if (window.location.hash === `#${id}`) {
-      document.querySelector(`#${id}`)?.scrollIntoView();
-      setIsExpanded(true);
-    }
+      const isOwnId = targetId === id;
+      const targetElement = document.getElementById(targetId);
+      const containsTarget = targetElement && detailsRef.current?.contains(targetElement);
 
-    // When the hash changes (e.g. when the back/forward browser buttons are used),
-    // we want to ensure to jump to the correct section
-    const onHashChange = () => {
-      if (window.location.hash === `#${id}`) {
-        setIsExpanded(true);
-        document.querySelector(`#${id}`)?.scrollIntoView();
+      if (isOwnId || containsTarget) {
+        if (detailsRef.current?.open) {
+          document.getElementById(targetId)?.scrollIntoView();
+        } else {
+          expandedByHashRef.current = true;
+          scrollTargetRef.current = targetId;
+          setIsExpanded(true);
+        }
       }
     };
-    // listen for hash changes and expand the section if the hash matches the title
-    window.addEventListener('hashchange', onHashChange);
+
+    expandIfHashInside();
+    window.addEventListener('hashchange', expandIfHashInside);
     return () => {
-      window.removeEventListener('hashchange', onHashChange);
+      window.removeEventListener('hashchange', expandIfHashInside);
     };
   }, [id]);
+
+  // Scroll after React commits the expanded state and the browser lays out.
+  useEffect(() => {
+    if (isExpanded && scrollTargetRef.current) {
+      const targetId = scrollTargetRef.current;
+      scrollTargetRef.current = null;
+      requestAnimationFrame(() => {
+        document.getElementById(targetId)?.scrollIntoView();
+      });
+    }
+  }, [isExpanded]);
 
   const copyContentOnClick = useCallback(
     async (event: React.MouseEvent<HTMLButtonElement>) => {
       event.stopPropagation(); // Prevent the details element from toggling
       event.preventDefault(); // Prevent default summary click behavior
+
+      // Expand the section so the user can see what was copied
+      setIsExpanded(true);
 
       if (contentRef.current === null) {
         return;
@@ -80,22 +111,40 @@ export function Expandable({
 
       emit('Copy Expandable Content', {props: {page: window.location.pathname, title}});
 
-      // Attempt to get text from markdown code blocks if they exist
-      const codeBlocks = contentRef.current.querySelectorAll('code');
+      // First, try to get text from main code blocks (those inside pre elements)
+      const preCodeBlocks = contentRef.current.querySelectorAll('pre code');
       let contentToCopy = '';
 
-      if (codeBlocks.length > 0) {
-        // If there are code blocks, concatenate their text content
-        codeBlocks.forEach(block => {
-          // Exclude code elements within other code elements (e.g. inline code in a block)
-          if (!block.closest('code')?.parentElement?.closest('code')) {
+      if (preCodeBlocks.length > 0) {
+        if (typeof copy === 'string') {
+          // When using a custom copy label, copy only the first code block (primary install command)
+          contentToCopy = (preCodeBlocks[0].textContent || '').trim();
+        } else {
+          // Default behavior: concatenate all code blocks
+          preCodeBlocks.forEach(block => {
             contentToCopy += (block.textContent || '') + '\n';
-          }
+          });
+          contentToCopy = contentToCopy.trim();
+        }
+      } else {
+        // Fallback: Look for large standalone code blocks (not inline code)
+        const allCodeBlocks = contentRef.current.querySelectorAll('code');
+        const largeCodeBlocks = Array.from(allCodeBlocks).filter((block: Element) => {
+          // Skip inline code (usually short and inside paragraphs)
+          const isInlineCode =
+            block.closest('p') !== null && (block.textContent?.length || 0) < 100;
+          return !isInlineCode;
         });
-        contentToCopy = contentToCopy.trim();
+
+        if (largeCodeBlocks.length > 0) {
+          contentToCopy = largeCodeBlocks
+            .map((block: Element) => block.textContent || '')
+            .join('\n')
+            .trim();
+        }
       }
 
-      // Fallback to the whole content if no code blocks or if they are empty
+      // Final fallback to the whole content if no code blocks or if they are empty
       if (!contentToCopy && contentRef.current.textContent) {
         contentToCopy = contentRef.current.textContent.trim();
       }
@@ -115,33 +164,37 @@ export function Expandable({
         setCopied(false);
       }
     },
-    [emit, title]
+    [copy, emit, title]
   );
 
   function toggleIsExpanded(event: React.MouseEvent<HTMLDetailsElement>) {
     const newVal = event.currentTarget.open;
     setIsExpanded(newVal);
 
-    if (newVal) {
+    // Don't emit analytics or overwrite the hash when triggered by hash navigation
+    if (newVal && !expandedByHashRef.current) {
       emit('Open Expandable', {props: {page: window.location.pathname, title}});
     }
 
-    if (id) {
+    if (id && !expandedByHashRef.current) {
       if (newVal) {
         window.history.pushState({}, '', `#${id}`);
       } else {
         window.history.pushState({}, '', '#');
       }
     }
+    expandedByHashRef.current = false;
   }
 
   return (
     <details
+      ref={detailsRef}
       name={group}
       className={`${styles.expandable} callout !block ${'callout-' + level}`}
       open={isExpanded}
       onToggle={toggleIsExpanded}
       id={id}
+      {...(hideFromMd ? {'data-mdast': 'ignore'} : {})}
     >
       <summary className={`${styles['expandable-header']} callout-header`}>
         <div className={styles['expandable-title-container']}>
@@ -158,7 +211,7 @@ export function Expandable({
             onClick={copyContentOnClick}
             type="button" // Important for buttons in summaries
           >
-            {!copied && 'Copy Rules'}
+            {!copied && (typeof copy === 'string' ? copy : 'Copy Rules')}
             {copied && 'Copied!'}
           </button>
         )}

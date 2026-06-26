@@ -1,17 +1,65 @@
-```gdscript
-extends SentryConfiguration
-## Tip: Assign configuration script in the Project Settings.
+```gdscript {tabTitle:GDScript} {mdExpandTabs}
+class_name ProjectMainLoop
+extends SceneTree
+## Tip: Set "ProjectMainLoop" as your main loop type in the project settings
+##      under `application/run/main_loop_type`.
 
-func _configure(options: SentryOptions):
-	options.before_send = _process_event
-	options.on_crash = _process_event
+func _initialize() -> void:
+	SentrySDK.init(func(options: SentryOptions) -> void:
+		options.before_send = _before_send
+	)
 
-func _process_event(event: SentryEvent) -> SentryEvent:
-	if event.environment == "debug":
-		# Discard event if running in a debug build.
+func _before_send(event: SentryEvent) -> SentryEvent:
+	if event.environment.contains("editor"):
+		# Discard event if running from the editor.
 		return null
-	if event.message.contains("Bruno"):
+	var error_message: String = event.get_exception_value(0)
+	if error_message.contains("Bruno"):
 		# Remove sensitive information from the event.
-		event.message = event.message.replace("Bruno", "REDACTED")
+		var redacted_message := error_message.replace("Bruno", "REDACTED")
+		event.set_exception_value(0, redacted_message)
 	return event
+```
+
+```csharp {tabTitle:C#}
+// The .NET before-send hook filters events captured from your C# code.
+SentrySdk.Init(options =>
+{
+    options.SetBeforeSend((sentryEvent, hint) =>
+    {
+        if (sentryEvent.Environment?.Contains("editor") == true)
+        {
+            // Discard the event if running from the editor.
+            return null;
+        }
+
+        foreach (var exception in sentryEvent.SentryExceptions ?? [])
+        {
+            if (exception.Value?.Contains("Bruno") == true)
+            {
+                // Remove sensitive information from the event.
+                exception.Value = exception.Value.Replace("Bruno", "REDACTED");
+            }
+        }
+
+        return sentryEvent;
+    });
+});
+```
+
+In C#, `options.SetBeforeSend` filters managed events, such as exceptions from your game's C# code and third-party .NET libraries. Native events are captured in the native layer; to filter them from C#, set `options.Native.SetBeforeSend` inside your `SentrySdk.Init`. This is most useful for engine, GDScript, and GDExtension errors. The callback receives a `SentryNativeEvent` that you can inspect, modify, or drop by returning `null`. Native crash events aren't passed to this callback.
+
+```csharp
+SentrySdk.Init(options =>
+{
+    options.Native.SetBeforeSend(nativeEvent =>
+    {
+        // Drop a noisy error that you can't fix.
+        if (nativeEvent.GetExceptionValue(0)?.Contains("Noisy error") == true)
+        {
+            return null;
+        }
+        return nativeEvent;
+    });
+});
 ```

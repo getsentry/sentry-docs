@@ -7,7 +7,7 @@ sidebar_order: 3
 Sentry's React Native SDK package ships with a Sentry Metro Plugin which allows you to automatically generate Debug IDs for your applications' bundles. This is crucial for making source maps work properly with Sentry. The plugin also helps you to annotate React component names so they are available in breadcrumbs and minimize the bundle size by removing unused SDK features.
 This page will guide you through the process of setting up the Metro Plugin for your application.
 
-## Prerequisities
+## Prerequisites
 
 - [Sign up for an account](https://sentry.io/signup/)
 - [Install Sentry React Native SDK](/platforms/react-native) version 5.17.0 or newer
@@ -21,7 +21,7 @@ The Sentry React Native SDK allows multiple ways to configure the Sentry Metro P
 
 The example below shows how to use the Sentry Metro Plugin with the default config.
 
-```javascript {tabTitle:React Native} {filename:metro.config.js}
+```javascript {tabTitle:React Native} {mdExpandTabs} {filename:metro.config.js}
 const { getDefaultConfig } = require("@react-native/metro-config");
 const { withSentryConfig } = require('@sentry/react-native/metro');
 
@@ -41,7 +41,7 @@ const config = getSentryExpoConfig(__dirname);
 
 If you already have a custom transformer, ensure that the Sentry Metro Plugin is applied as the last step. The Sentry Metro Plugin doesn't overwrite the existing configuration, it extends or wraps existing properties.
 
-```javascript {tabTitle:React Native} {filename:metro.config.js}
+```javascript {tabTitle:React Native} {mdExpandTabs} {filename:metro.config.js}
 const { getDefaultConfig } = require("@react-native/metro-config");
 const { withSentryConfig } = require('@sentry/react-native/metro');
 
@@ -69,6 +69,37 @@ const config = getSentryExpoConfig(__dirname, {
     };
     return config;
   },
+});
+```
+
+### Reduce Bundle Size
+
+If you're not targeting React Native for Web, you can exclude web-only packages like Session Replay and User Feedback from the bundle by opting out via the Metro Plugin options. When set to `false`, the Sentry Metro Plugin resolves the matching Sentry sub-packages to an empty module so they're not included in the output bundle.
+
+| Option                | Default | Effect when set to `false`                                               |
+| --------------------- | ------- | ------------------------------------------------------------------------ |
+| `includeWebReplay`    | `true`  | Excludes `@sentry/replay` and `@sentry-internal/replay` from the bundle. |
+| `includeWebFeedback`  | `true`  | Excludes `@sentry-internal/feedback` from the bundle.                    |
+
+Note that these options only affect bundling. They do not disable the corresponding native (Android/iOS) integrations.
+
+```javascript {tabTitle:React Native} {mdExpandTabs} {filename:metro.config.js}
+const { getDefaultConfig } = require("@react-native/metro-config");
+const { withSentryConfig } = require("@sentry/react-native/metro");
+
+const config = getDefaultConfig(__dirname);
+module.exports = withSentryConfig(config, {
+  includeWebReplay: false,
+  includeWebFeedback: false,
+});
+```
+
+```javascript {tabTitle:Expo} {filename:metro.config.js}
+const { getSentryExpoConfig } = require("@sentry/react-native/metro");
+
+const config = getSentryExpoConfig(__dirname, {
+  includeWebReplay: false,
+  includeWebFeedback: false,
 });
 ```
 
