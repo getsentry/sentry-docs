@@ -1646,6 +1646,15 @@ const userDocsRedirects = [
     destination:
       '/platforms/javascript/guides/cloudflare/frameworks/hydrogen-react-router/',
   },
+  // Removed /product/onboarding/ section (content was orphaned and duplicated elsewhere)
+  {
+    source: '/product/onboarding/',
+    destination: '/product/sentry-basics/',
+  },
+  {
+    source: '/product/onboarding/:path*',
+    destination: '/product/sentry-basics/',
+  },
   // Flatten Explore: redirect old /product/explore/* paths to new /product/* paths
   {
     source: '/product/explore/metrics/:path*',
