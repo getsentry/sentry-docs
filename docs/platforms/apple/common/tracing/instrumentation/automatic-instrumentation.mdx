@@ -295,6 +295,12 @@ SentrySDK.start { options in
 }];
 ```
 
+<Alert level="warning">
+
+The SDK must be initialized before the `didFinishLaunchingNotification` is posted for standalone app start tracing to work. In practice, this means calling `SentrySDK.start` inside your `application(_:didFinishLaunchingWithOptions:)` method (UIKit) or your `App` conformer's `init()` (SwiftUI). If the SDK is started later — for example, in a subsequent lifecycle callback — the SDK will miss the notification and the standalone app start transaction may never finish.
+
+</Alert>
+
 Since standalone app start transactions use the `app.start` operation, you can use a custom `tracesSampler` to set a dedicated sample rate for app starts without increasing your overall sample rate:
 
 ```swift {tabTitle:Swift}
