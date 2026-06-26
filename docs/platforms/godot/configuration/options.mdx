@@ -182,6 +182,82 @@ This option is turned off by default.
 
 </SdkOption>
 
+<SdkOption name="before_send_log" type="Callable" availableSince="1.2.0">
+
+If assigned, this callback will be called before sending a log message to Sentry.
+It can be used to modify the log message or prevent it from being sent.
+
+```gdscript {tabTitle:GDScript} {mdExpandTabs}
+func _before_send_log(log_entry: SentryLog) -> SentryLog:
+	# Filter junk.
+	if log_entry.body == "Junk message":
+		return null
+	# Remove sensitive information from log messages.
+	log_entry.body = log_entry.body.replace("Bruno", "REDACTED")
+	# Add custom attributes.
+	log_entry.set_attribute("current_scene", current_scene.name)
+	return log_entry
+```
+
+```csharp {tabTitle:C#}
+// The .NET hook applies to logs emitted from your C# code.
+options.SetBeforeSendLog(log =>
+{
+    // Filter junk.
+    if (log.Message == "Junk message")
+    {
+        return null;
+    }
+    // Add custom attributes.
+    log.SetAttribute("current_scene", currentScene.Name);
+    return log;
+});
+```
+
+</SdkOption>
+
+## Metrics Options
+
+<SdkOption name="enable_metrics" type="bool" defaultValue="true" availableSince="2.0.0">
+
+If `true`, enables [Sentry's Application Metrics](https://docs.sentry.io/product/explore/metrics/) functionality, allowing you to emit custom counters, gauges, and distributions through `SentrySDK.metrics`. See <PlatformLink to="/metrics/">Set Up Metrics</PlatformLink> for usage details.
+
+This option is turned on by default.
+
+</SdkOption>
+
+<SdkOption name="before_send_metric" type="Callable" availableSince="2.0.0">
+
+If assigned, this callback runs before a metric is sent to Sentry.
+It can be used to modify the metric or prevent it from being sent.
+It takes a `SentryMetric` as a parameter and returns either the same metric object, with or without modifications, or `null` to discard it.
+
+```gdscript {tabTitle:GDScript} {mdExpandTabs}
+func _before_send_metric(metric: SentryMetric) -> SentryMetric:
+	# Drop debug-only metrics in release builds.
+	if not OS.is_debug_build() and metric.name.begins_with("debug."):
+		return null
+	# Enrich with runtime context.
+	metric.set_attribute("current_scene", get_tree().current_scene.name)
+	return metric
+```
+
+```csharp {tabTitle:C#}
+options.SetBeforeSendMetric(metric =>
+{
+    // Drop debug-only metrics in release builds.
+    if (!OS.IsDebugBuild() && metric.Name.StartsWith("debug."))
+    {
+        return null;
+    }
+    // Enrich with runtime context.
+    metric.SetAttribute("current_scene", GetTree().CurrentScene.Name);
+    return metric;
+});
+```
+
+</SdkOption>
+
 ## Godot Logger Options
 
 <SdkOption name="logger_enabled" type="bool" defaultValue="true">
@@ -347,40 +423,6 @@ func _before_capture_screenshot(event: SentryEvent) -> bool:
 This callback isn't available in the .NET layer yet, so it can only be set from GDScript.
 
 </Alert>
-
-</SdkOption>
-
-<SdkOption name="before_send_log" type="Callable" availableSince="1.2.0">
-
-If assigned, this callback will be called before sending a log message to Sentry.
-It can be used to modify the log message or prevent it from being sent.
-
-```gdscript {tabTitle:GDScript} {mdExpandTabs}
-func _before_send_log(log_entry: SentryLog) -> SentryLog:
-	# Filter junk.
-	if log_entry.body == "Junk message":
-		return null
-	# Remove sensitive information from log messages.
-	log_entry.body = log_entry.body.replace("Bruno", "REDACTED")
-	# Add custom attributes.
-	log_entry.set_attribute("current_scene", current_scene.name)
-	return log_entry
-```
-
-```csharp {tabTitle:C#}
-// The .NET hook applies to logs emitted from your C# code.
-options.SetBeforeSendLog(log =>
-{
-    // Filter junk.
-    if (log.Message == "Junk message")
-    {
-        return null;
-    }
-    // Add custom attributes.
-    log.SetAttribute("current_scene", currentScene.Name);
-    return log;
-});
-```
 
 </SdkOption>
 
