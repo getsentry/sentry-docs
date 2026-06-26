@@ -8,6 +8,9 @@ spec_depends_on:
   - id: sdk/foundations/client
     version: ">=1.0.0"
 spec_changelog:
+  - version: 0.5.0
+    date: 2026-06-26
+    summary: Include configuration for database queries.
   - version: 0.4.0
     date: 2026-06-12
     summary: Added documentation requirements for default behavior and setup snippet opt-out comment with link to full dataCollection docs.
@@ -70,7 +73,7 @@ Personally Identifiable Information (PII) or user-linked data. Examples include,
 - Contact (email, phone number, address)
 - IP address
 - Cookies and headers that identify the user or session
-- HTTP request data (TBD)
+- HTTP request data or database query parameters (TBD)
 
 For context types that may carry PII fields (e.g. `device_unique_identifier` in [Device Context](/sdk/foundations/transport/event-payloads/contexts/#device-context), or fields in the [User Interface](/sdk/foundations/transport/event-payloads/user/)), see the linked specs.
 
@@ -530,6 +533,9 @@ init({
       inputs?: boolean                              // default: true
       outputs?: boolean                             // default: true
     },
+    database?: {
+      queryParams?: boolean                        // default: true
+    },
     stackFrameVariables?: boolean,                 // default: true
     frameContextLines?: integer,                   // default: 5 (see boolean fallback below)
   },
@@ -544,6 +550,7 @@ init({
 | `httpBodies` | `string[]` (body types) | all valid body types | 0.1.0 | List of body types to collect. Omitted = all body types valid for the platform; empty array (`[]`) = off. Valid values: `"incomingRequest"`, `"outgoingRequest"`, `"incomingResponse"`, `"outgoingResponse"`. Default changed from `[]` (off) to all valid body types in 0.2.0. |
 | `queryParams` | Key-value collection | `{ mode: "denyList" }` | 0.1.0 | Collect URL query parameters. All key names are always included; the SDK scrubs values for keys matching the sensitive denylist or custom allow/deny terms. |
 | `genAI` | `{ inputs?, outputs? }` | Both `true` | 0.1.0 | For `inputs`: Include the content of generative AI inputs (e.g. prompt text, tool call arguments). <br /><br /> For `outputs`: Include the content of generative AI outputs (e.g. completion text, tool call results). Metadata such as model name and token counts is always collected regardless of these settings. |
+| `database` | `{ queryParams? }` | `true` | 0.5.0 | Include parameters/arguments passed to database queries. Setting this to false will either omit the value altogether, or replace the value with '[Filtered]' |
 | `stackFrameVariables` | Boolean | `true` | 0.1.0 | Include local variable values captured within stack frames. |
 | `frameContextLines` | Integer (`Boolean` fallback) | `5` (`true`) | 0.1.0 | Number of source code lines to include above and below each stack frame. <br/> **`Boolean` fallback:** Not all platforms support integer configuration values. SDKs **MAY** accept a boolean, where `true` is equivalent to the platform default (typically `5`) and `false` is equivalent to `0` (no context lines). SDKs **SHOULD** prefer accepting an integer when their platform supports it. |
 
