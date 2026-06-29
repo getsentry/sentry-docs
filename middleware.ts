@@ -3679,10 +3679,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/tracing/instrumentation/automatic-instrumentation',
   },
   {
-    from: '/concepts/key-terms/key-terms/tracing/trace-view/#operations-breakdown/',
-    to: '/product/dashboards/sentry-dashboards/',
-  },
-  {
     from: '/platforms/javascript/guides/aws-lambda/container-image/',
     to: '/platforms/javascript/guides/aws-lambda/install/',
   },
