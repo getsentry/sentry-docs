@@ -4,6 +4,46 @@ description: "Learn more about migrating to the current version."
 sidebar_order: 8000
 ---
 
+## Migrating to 2.0.0
+
+### Breaking changes
+
+`enable_logs` now defaults to `true`, and the Godot logger integration no longer captures Godot's log output as Sentry Logs automatically. See [Changes to logging](#changes-to-logging) below.
+
+App Hang Tracking (Apple platforms) and ANR (Application Not Responding) detection (Android) are now separate features, and both are enabled by default. See [App Hang Tracking and ANR detection](#app-hang-tracking-and-anr-detection) below.
+
+The deprecated `SentryOptions.experimental.enable_logs` and `SentryOptions.experimental.before_send_log` properties have been removed. If you still reference them, use `SentryOptions.enable_logs` and `SentryOptions.before_send_log` instead.
+
+### Changes to logging
+
+The Godot logger options are now grouped under `SentryOptions.godot_logger`. All options that were previously available as `SentryOptions.logger_*` properties have moved there. For example, `logger_event_mask` becomes `godot_logger.event_mask` and `logger_limits` becomes `godot_logger.limits`. The old flat `logger_*` properties still work as deprecated aliases that forward to the new object. As part of the move, `logger_include_source` was renamed to `godot_logger.include_source_context`. Existing **Project Settings** under **Sentry > Logger** are migrated automatically to **Sentry > Godot Logger**.
+
+By default, the Godot logger integration no longer sends Godot log output to [Sentry Logs](/product/explore/logs/). If you want to capture those logs, you must opt in by setting `godot_logger.log_mask` to the event types you want to send:
+
+```gdscript {tabTitle:GDScript} {mdExpandTabs}
+SentrySDK.init(func(options: SentryOptions) -> void:
+	options.godot_logger.log_mask = SentryOptions.MASK_ERROR | SentryOptions.MASK_SCRIPT | SentryOptions.MASK_MESSAGE
+)
+```
+
+```csharp {tabTitle:C#}
+SentrySdk.Init(options =>
+{
+	options.GodotLogger.LogMask =
+		GodotLoggerEventMask.Error | GodotLoggerEventMask.Script | GodotLoggerEventMask.Message;
+});
+```
+
+The `GodotErrorMask` enum was renamed to `GodotLoggerEventMask`, and a new `MASK_MESSAGE` flag captures log messages such as `print()` statements. Update the enum name if you reference these masks in code.
+
+`logger_messages_as_breadcrumbs` is deprecated. Set the `MASK_MESSAGE` flag in `godot_logger.breadcrumb_mask` instead — it's included in the default mask.
+
+### App Hang Tracking and ANR detection
+
+App Hang Tracking now applies to Apple platforms (iOS and macOS) only and is enabled by default; set [`SentryOptions.enable_app_hang_tracking`](/platforms/godot/configuration/options/#enable_app_hang_tracking) to `false` to opt out. Its options were also renamed to align with other SDKs: `app_hang_tracking` is now `enable_app_hang_tracking`, and `app_hang_timeout_sec` is now `app_hang_timeout_ms`, configured in milliseconds. The old names remain as deprecated aliases, and existing **Project Settings** are migrated automatically (converting the timeout from seconds to milliseconds).
+
+On Android, ANR (Application Not Responding) detection is a separate feature, now enabled by default and configured through Android-specific options under `SentryOptions.android`, or in the **Project Settings** under **Sentry > Android > Application Not Responding**. Set [`SentryOptions.android.enable_anr_detection`](/platforms/godot/configuration/options/#android.enable_anr_detection) to `false` to opt out.
+
 ## Migrating to 1.0.0
 
 ### Breaking changes
@@ -18,7 +58,6 @@ The `attach_screenshot` and `screenshot_level` options have moved to the experim
 
 `enabled` and `disabled_in_editor_play` project settings were renamed to `auto_init` and `skip_auto_init_on_editor_play` for clarity.
 
-
 ### Changes to breadcrumbs API
 
 Previously, `add_breadcrumb()` method accepted 5 parameters (3 of which were strings), making it confusing to use. The new approach uses a dedicated `SentryBreadcrumb` class:
@@ -31,6 +70,7 @@ SentrySDK.add_breadcrumb(crumb)
 ```
 
 For simple breadcrumbs, you can use a one-liner:
+
 ```gdscript
 SentrySDK.add_breadcrumb(SentryBreadcrumb.create("Something happened"))
 ```
@@ -41,6 +81,7 @@ Configuration scripts and the `SentryConfiguration` class have been removed. To 
 
 1. Disable **Auto Init** in Godot's **Project Settings** window under **Sentry** category.
 2. Create a main loop script with a `class_name` attribute, and init Sentry inside `_initialize()` method.
+
 ```gdscript
 class_name MyMainLoop
 extends SceneTree
@@ -60,4 +101,5 @@ func _before_send(ev: SentryEvent) -> SentryEvent:
 	# Return the event (with or without modifications) or null to skip reporting.
 	return ev
 ```
+
 3. Assign your main loop type in Godot's **Project Settings** under **Application > Run > Main Loop Type** ("MyMainLoop" in the example code).

@@ -38,7 +38,7 @@ Seer's Issue Autofix flow follows a three step process:
 
 1. [Root Cause Analysis](#root-cause-analysis): Analyze the issue using Sentry's context and your codebases and determine the root cause
 2. [Solution Identification](#solution-identification): Identify a solution based on the analysis
-3. [Code Generation](#code-generation): Generate a code fix and (optionally) open a PR, or hand off to a coding agent
+3. [Code Generation](#code-generation): Generate a code fix and (optionally) open a PR, or [hand off to a coding agent](#handoff-to-coding-agents)
 
 You can always manually trigger the Autofix flow from the Issue Details page.
 
@@ -106,16 +106,17 @@ snippets and examples, and does not affect workflows involving your own coding a
 
 ![Screenshot of Seer showing code it generated =800x](../img/coding-step.png)
 
-### Handoff to Claude Code or Cursor Cloud Agents
+### Handoff to Coding Agents
 
 Seer always performs root cause analysis and solution planning using its own internal tools and Sentry context. At the final code generation step, instead of having Seer generate the code fix directly, you can hand off to an external coding agent for implementation. Seer passes along the root cause and solution plan so the coding agent can act on them. This lets you leverage the strengths of specialized code generation tools while still benefiting from Seer's debugging and analysis.
 
-When your codebase is connected via GitLab, Seer will open a merge request instead of a pull request. Coding agent handoff (Claude Code, Cursor) works the same way regardless of SCM provider.
+Coding agent handoff only works with GitHub.
 
 Supported coding agents for handoff:
 
-- **Claude Code** — Seer passes the root cause and solution as a structured prompt that Claude Code can act on directly in your terminal or CI environment.
-- **Cursor Cloud Agents** — Seer triggers a Cursor Cloud Agent to implement the fix asynchronously, without requiring your local IDE to be open.
+- **Claude Code** — Seer passes the root cause and solution as a structured prompt that [Claude Code](/integrations/coding-agents/claude/) can act on directly in your terminal or CI environment.
+- **Cursor Cloud Agents** — Seer triggers a [Cursor Cloud Agent](/integrations/coding-agents/cursor/) to implement the fix asynchronously, without requiring your local IDE to be open.
+- **GitHub Copilot** — Seer sends its root cause analysis to a [GitHub Copilot cloud agent](/integrations/coding-agents/copilot/), which runs in GitHub Actions to generate a fix and open a pull request.
 
 To enable coding agent handoff, connect a coding agent integration in [Integrations settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/integrations/?category=coding%20agent). Once connected, the handoff option will appear at the Code Generation step of the Autofix flow, alongside the standard "Create PR" and "Checkout locally" options.
 
