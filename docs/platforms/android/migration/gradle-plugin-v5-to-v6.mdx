@@ -1,0 +1,53 @@
+---
+title: Migrate from sentry-android-gradle-plugin 5.x to 6.0.0
+sidebar_order: 8885
+description: "Learn about migrating from Sentry Android Gradle Plugin 5.x to 6.0.0."
+---
+
+## Build Tooling Requirements
+
+`io.sentry.android.gradle` `6.0.0` updates the minimum supported build tooling. Before upgrading, make sure your project meets all of the following:
+
+- **Gradle**: `8.14.2` or later. The plugin is built against Gradle `8.14.2` and requires that version (or later) at runtime. Older Gradle versions (including `8.10.x`) will fail at Gradle configuration with `java.lang.NoSuchMethodError: 'org.gradle.api.tasks.Exec org.gradle.api.tasks.Exec.setIgnoreExitValue(boolean)'`. See the [Android troubleshooting guide](/platforms/android/troubleshooting/#nosuchmethoderror-during-gradle-configuration-with-sentry-android-gradle-plugin-6x) for the underlying cause.
+- **Android Gradle Plugin**: `7.4.0` or later. To stay on AGP `7.3.X` or below, keep using `io.sentry.android.gradle:5.12.x`.
+- **Kotlin**: language version `1.8` or later.
+
+To update your Gradle wrapper, from your Android project root run:
+
+```bash
+./gradlew wrapper --gradle-version=8.14.2 --distribution-type=bin
+./gradlew wrapper --gradle-version=8.14.2 --distribution-type=bin
+```
+
+Running the command twice is intentional so the wrapper regenerates itself with the new version.
+
+## sentry-cli 3.x and Sentry Self-Hosted Compatibility
+
+`io.sentry.android.gradle` `6.0.0` bundles `sentry-cli` `3.0.0`, which officially supports:
+
+- Sentry SaaS, and
+- Sentry self-hosted version `25.11.1` or later.
+
+Many `sentry-cli` features may continue to work against older self-hosted versions, but support is not guaranteed. If you're on an older self-hosted Sentry instance and can't update yet, stay on `io.sentry.android.gradle:5.x` until you can upgrade self-hosted to `25.11.1` or later.
+
+## Sentry Android SDK Compatibility
+
+`io.sentry.android.gradle` `6.x` ships with a recent `8.x` release of the Sentry Android SDK. If you have `autoInstallation` enabled (the default), the plugin will pin `io.sentry:sentry-android-*` to a compatible version automatically.
+
+If you have `autoInstallation { enabled = false }` (common in brownfield apps and React Native setups), you're responsible for keeping `io.sentry:sentry-*` modules aligned across all Gradle modules in your build. Mismatched Sentry SDK versions can cause `IllegalStateException: Sentry SDK has detected a mix of versions` at app startup, or `NoSuchMethodError` at runtime. To pin the SDK version explicitly without enabling auto-installation, configure each `io.sentry:sentry-*` dependency you use to the same version, or enable auto-installation with a fixed version:
+
+```kotlin
+sentry {
+  autoInstallation {
+    enabled.set(true)
+    sentryVersion.set("8.0.0")
+  }
+}
+```
+
+## React Native and Flutter
+
+If you're using `@sentry/react-native` or `sentry_flutter`, the relevant migration guide for your hybrid SDK already pulls in the matching Sentry Android Gradle Plugin version, but you still need to bump your Gradle wrapper to `8.14.2` or later in your Android project before upgrading the hybrid SDK. See:
+
+- [React Native v7 to v8 migration guide](/platforms/react-native/migration/v7-to-v8/)
+- [Flutter migration guide](/platforms/dart/guides/flutter/migration/)
