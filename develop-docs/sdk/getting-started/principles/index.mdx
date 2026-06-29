@@ -4,9 +4,9 @@ description: These working principles govern how SDK teams collaborate, review, 
 sidebar_order: 2
 ---
 
-## Every line has an owner
+## Every line has a human accountable for it
 
-Whether code is written by a human, an AI tool, or a collaboration, a human is accountable for every line that merges. The author's name on the PR is the owner. "The AI suggested it" is never a justification in review.
+Whether code is written by a human, an AI tool, or a collaboration, the person who opens the PR is responsible for understanding and standing behind every line before it merges. "The AI suggested it" is never a justification in review.
 
 ## Raise the floor
 
@@ -26,11 +26,11 @@ Tests exist to verify the SDK does what users expect. A test that asserts nothin
 
 ## Document the why
 
-Code shows what. Commit messages, PR descriptions, and design docs explain why. This context is essential for future humans and AI tools working in the codebase. A commit with no explanation is a debt on every future reader.
+Code shows what. Code comments, PR descriptions, and develop docs explain why. This context is essential for future humans and AI tools working in the codebase. A change with no explanation on why it happened is a debt on every future reader.
 
 ## Consistency across SDKs, idiom within each
 
-Users of multiple Sentry SDKs should recognize the same concepts, behaviors, and terminology. But each SDK should feel native to its language and ecosystem. Cross-SDK standards define the concept, while per-SDK standards define the expression. Deviations from cross-SDK standards require explicit justification.
+Users of multiple Sentry SDKs should recognize the same concepts, behaviors, and terminology. But each SDK should feel native to its language and ecosystem. Cross-SDK standards define the concept, while each SDK expresses that concept in its idiomatic way. Deviations from cross-SDK standards are possible, but require explicit justification.
 
 ## Ship small
 
@@ -42,7 +42,7 @@ Changes must solve a real problem. No speculative refactors, no "improvements" w
 
 ## Never capture your own exceptions
 
-SDKs must never capture Sentry events for exceptions happening within the SDK itself, including within user-defined [callbacks and hooks](/sdk/foundations/client/hooks/) such as `before_send` or `traces_sampler`. We are already in an event capturing flow where the [scope](/sdk/foundations/state-management/scopes/) has been applied - capturing another event at that point would lead to undefined behavior. In the worst case, it creates a busy loop of creating and sending events repeatedly until the system crashes. If the SDK throws, swallow gracefully and emit an error-level log. In mobile SDKs, unhandled crashes will still make it to Sentry via crash handlers. See [SDK Crash Detection](https://github.com/getsentry/sentry/tree/master/src/sentry/utils/sdk_crashes#sdk-crash-detection) for more details.
+SDKs must never capture Sentry events for exceptions happening within the SDK itself, including within user-defined [callbacks and hooks](/sdk/foundations/client/hooks/) such as `before_send` or `traces_sampler`. We are already in an event capturing flow where the [scope](/sdk/foundations/state-management/scopes/) has been applied - capturing another event at that point would lead to undefined behavior. In the worst case, it creates a busy loop of creating and sending events repeatedly until the system crashes. If the SDK throws, swallow gracefully. Be deliberate about any logging — SDK logs have been known to exhaust users' log quotas at their provider. Prefer debug-level logs or mechanisms that deduplicate (e.g. Python's warnings.warn), and avoid error-level logs that would fire repeatedly in production. In mobile SDKs, unhandled crashes will still make it to Sentry via crash handlers. See [SDK Crash Detection](https://github.com/getsentry/sentry/tree/master/src/sentry/utils/sdk_crashes#sdk-crash-detection) for more details.
 
 ## Integrate at the lowest level
 
