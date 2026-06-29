@@ -1,0 +1,165 @@
+---
+title: Activity Alerts
+sidebar_order: 9
+description: "When alerts are set to trigger based on issue activity, these are the webhooks you'll receive."
+---
+
+<Alert>
+  This feature is currently in limited availability. Not all organizations will be able to trigger
+  these alerts just yet, but all integrators can expect their apps to receive these webhooks once
+  available.
+</Alert>
+
+Sentry integrations which have been made available as [alert rule actions](/integrations/integration-platform/#alerts) can receive these activity alert webhooks.
+
+The interactive demo below shows how to set up an internal integration that can receive alerts.
+
+<Arcade src="https://demo.arcade.software/v7uhzmdV6Q5PDzoVPAE6?embed&show_copy_link=true" />
+
+## Sentry-Hook-Resource Header
+
+`'Sentry-Hook-Resource': 'activity_alert'`
+
+## Attributes
+
+### action
+
+- type: string
+- description: will always be `triggered`
+
+### data['issue']
+
+- type: object
+- description: the serialized issue that triggered the alert rule. The contents will vary depending on the type of issue associated with the activity.
+
+### data['activity']
+
+- type: object
+- description: the serialized activity that triggered the alert
+
+### data['activity']['type']
+
+- type: string
+- description: the type of activity that triggered the alert. This will depend on how the user configured the alert, but the available options are:
+  - `seer_root_cause_started`
+  - `seer_root_cause_completed`
+  - `seer_solution_started`
+  - `seer_solution_completed`
+  - `seer_coding_started`
+  - `seer_coding_completed`
+  - `seer_pr_created`
+  - `seer_pr_iteration_started`
+  - `seer_pr_iteration_completed`
+
+### data['activity']['details']
+
+- type: object
+- description: the associated data of the activity that triggered the alert. The contents will vary by the `type` of activity. For example, `seer_pr_created` will have a `details` object with the key `pull_requests`, a list of objects containing `repo_name` (string), and `url` (string)
+
+### data['alert']
+
+- type: object
+- description: a brief summary of the alert itself, which led to this webhook being sent
+
+### data['alert']['title']
+
+- type: string
+- description: the title of the alert
+
+### data['alert']['url']
+
+- type: string
+- description: the API URL to fetch the full details of the alert
+
+### data['alert']['web_url']
+
+- type: string
+- description: the web URL to view the alert in Sentry
+
+<Alert>
+
+The following two fields are for [alert rule action UI components](/integrations/integration-platform/ui-components/alert-rule-action) only.
+
+</Alert>
+
+### data['alert']['settings']
+
+- type: object
+- description: the saved configurations for routing the alert within the external service
+
+## Payload
+
+```json
+{
+  "action": "triggered",
+  "installation": { "uuid": "717a85e5-236c-45c0-8b4e-ba01f5391395" },
+  "data": {
+    "issue": {
+      "url": "https://sentry.io/api/0/organizations/acme/issues/43/",
+      "web_url": "https://sentry.io/organizations/acme/issues/43/",
+      "project_url": "https://sentry.io/organizations/acme/issues/?project=2",
+      "id": "43",
+      "shareId": null,
+      "shortId": "ERROR-GEN-R",
+      "title": "TypeError: you aren't my type",
+      "culprit": "test-transaction-0-6232b23e-e457-4436-aebc-333c53a831c8",
+      "permalink": "https://sentry.io/organizations/acme/issues/43/",
+      "logger": "edge-function",
+      "level": "warning",
+      "status": "unresolved",
+      "statusDetails": {},
+      "substatus": "escalating",
+      "isPublic": false,
+      "platform": "javascript",
+      "project": {
+        "id": "2",
+        "name": "error-gen",
+        "slug": "error-gen",
+        "platform": "javascript-nextjs"
+      },
+      "type": "default",
+      "metadata": {
+        "title": "TypeError: you aren't my type",
+        "sdk": { "name": "edge-function", "name_normalized": "other" },
+        "initial_priority": 50
+      },
+      "numComments": 0,
+      "assignedTo": null,
+      "isBookmarked": false,
+      "isSubscribed": false,
+      "subscriptionDetails": null,
+      "hasSeen": false,
+      "annotations": [],
+      "issueType": "error",
+      "issueCategory": "error",
+      "priority": "high",
+      "priorityLockedAt": null,
+      "seerFixabilityScore": 0.5523562431335449,
+      "seerAutofixLastTriggered": null,
+      "seerExplorerAutofixLastTriggered": "2026-06-29T19:58:21.418074Z",
+      "isUnhandled": false,
+      "count": "1",
+      "userCount": 24,
+      "firstSeen": "2026-06-29T19:51:40.373000Z",
+      "lastSeen": "2026-06-29T19:51:40.373000Z"
+    },
+    "activity": {
+      "type": "seer_root_cause_completed",
+      "details": {
+        "summary": "Synthetic test error deliberately fired by error-generator.sentry.dev in a batch of 24 against the error-gen project"
+      }
+    },
+    "alert": {
+      "id": 10,
+      "title": "I'm keeping an eye on Seer \ud83d\udc40",
+      "sentry_app_id": 2,
+      "url": "https://sentry.io/organizations/acme/monitors/alerts/10/",
+      "settings": [
+        { "name": "title", "value": "A Title" },
+        { "name": "description", "value": "A Description" }
+      ]
+    }
+  },
+  "actor": { "type": "application", "id": "sentry", "name": "Sentry" }
+}
+```
