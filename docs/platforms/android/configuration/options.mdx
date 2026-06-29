@@ -353,9 +353,11 @@ UI Profiling requires SDK versions `8.7.0` or higher. Lower versions can use the
 
 </Alert>
 
-<SdkOption name="useProfilingManager" type="bool" defaultValue="false" availableSince="8.45.0">
+<SdkOption name="enableLegacyProfiling" type="bool" defaultValue="true" availableSince="8.47.0">
 
-When `true`, UI Profiling uses the Android <Link to="https://developer.android.com/reference/android/os/ProfilingManager">ProfilingManager</Link> to capture <Link to="https://perfetto.dev/">Perfetto</Link> traces. This is the preferred profiling implementation and requires Android 15 (API level 35) or higher. On older devices, profiling won't run and there is no fallback to the legacy profiler. When `false`, the SDK uses the <PlatformLink to="/profiling/legacy">legacy `tracer` backend</PlatformLink>.
+On devices running Android 15 (API level 35) or higher, UI Profiling always uses the Android <Link to="https://developer.android.com/reference/android/os/ProfilingManager">ProfilingManager</Link> to capture <Link to="https://perfetto.dev/">Perfetto</Link> traces. On older devices, this option controls whether the SDK falls back to the <PlatformLink to="/profiling/legacy">legacy `tracer` backend</PlatformLink>. When `true` (the default), the legacy profiler runs on devices below API level 35. Set it to `false` to disable profiling on those devices entirely.
+
+This option is deprecated and will be removed in the next major release, when only the ProfilingManager (Perfetto) backend will remain.
 
 </SdkOption>
 
@@ -376,7 +378,7 @@ Whether the UI profiling lifecycle is controlled manually or based on the trace 
 
 <SdkOption name="startProfilerOnAppStart" type="bool" defaultValue="false" availableSince="8.7.0">
 
-A boolean value that determines whether the app start process will be profiled. When true, the startup process, including ContentProviders, Application, and first Activity creation, will be profiled. Note that <PlatformIdentifier name="profileSessionSampleRate" /> must be defined. This option only applies to the <PlatformLink to="/profiling/legacy">legacy profiler</PlatformLink>; it has no effect when <PlatformIdentifier name="useProfilingManager" /> is enabled.
+A boolean value that determines whether the app start process will be profiled. When true, the startup process, including ContentProviders, Application, and first Activity creation, will be profiled. Note that <PlatformIdentifier name="profileSessionSampleRate" /> must be defined. App start profiling is only supported by the <PlatformLink to="/profiling/legacy">legacy profiler</PlatformLink>, which runs on devices below Android 15 (API level 35). It has no effect with the ProfilingManager (Perfetto) backend used on API level 35 and higher.
 
 - If profileLifecycle is set to `manual`: profiling is started automatically on startup and stopProfiler must be called manually whenever the app startup is deemed to be completed
 - If profileLifecycle is set to `trace`: profiling is started automatically on startup, and will automatically be stopped when the root span that is associated with app startup ends

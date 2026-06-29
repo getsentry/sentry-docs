@@ -9,26 +9,26 @@ sidebar_section: features
 <PlatformContent includePath="profiling/index/preface" />
 <PlatformContent includePath="profiling/index/why-profiling" />
 
-Sentry's Android UI Profiling is built on top of the Android <Link to="https://developer.android.com/reference/android/os/ProfilingManager">ProfilingManager APIs</Link>, which capture stack samples as <Link to="https://perfetto.dev/">Perfetto</Link> traces. This is the recommended way to profile your Android app.
+On Android 15 (API level 35) and higher, Sentry's Android UI Profiling is built on top of the Android <Link to="https://developer.android.com/reference/android/os/ProfilingManager">ProfilingManager APIs</Link>, which capture stack samples as <Link to="https://perfetto.dev/">Perfetto</Link> traces. This is the recommended way to profile your Android app.
 
 <Alert level="info" title="Looking for the old profiler?">
-  Earlier SDK versions sampled threads using the Android runtime's `tracer`,
-  which could cause crashes in certain circumstances. That implementation, along
-  with the transaction-based profiler, is now considered legacy. See{" "}
-  <PlatformLink to="/profiling/legacy">Legacy Profiling</PlatformLink> if you
-  need to profile devices running below Android 15, or if you're migrating from
-  an older setup.
+  On devices running below Android 15, the SDK automatically falls back to the
+  legacy profiler, which samples threads using the Android runtime's `tracer`.
+  That implementation, along with the transaction-based profiler, is now
+  considered legacy. See{" "}
+  <PlatformLink to="/profiling/legacy">Legacy Profiling</PlatformLink> for
+  details, including how to disable it.
 </Alert>
 
 ## Prerequisites
 
-UI Profiling with the ProfilingManager (Perfetto) is available starting in SDK version `8.45.0` and requires **Android 15 (API level 35) or higher**.
+UI Profiling is available starting in SDK version `8.7.0`. On **Android 15 (API level 35) or higher**, it uses the ProfilingManager (Perfetto) backend, available starting in SDK version `8.47.0`.
 
-On devices running below Android 15, UI Profiling won't run. There is no automatic fallback to the legacy profiler. If you need to profile a broader range of devices, use <PlatformLink to="/profiling/legacy">Legacy Profiling</PlatformLink> instead.
+On devices running below Android 15, the SDK automatically falls back to the <PlatformLink to="/profiling/legacy">legacy profiler</PlatformLink>. You can turn this fallback off, and disable profiling on those devices entirely, with the <PlatformLink to="/configuration/options/#enableLegacyProfiling">`enableLegacyProfiling`</PlatformLink> option.
 
 ## Enabling UI Profiling
 
-To use the ProfilingManager (Perfetto) backend, enable UI Profiling and set `useProfilingManager` to `true`.
+To enable UI Profiling, set a `profileSessionSampleRate` and choose a profile lifecycle. The SDK automatically uses the ProfilingManager (Perfetto) backend on Android 15 (API level 35) and higher, and the legacy profiler on older devices.
 
 UI Profiling supports two modes: `manual` and `trace`. These modes are mutually exclusive and cannot be used at the same time.
 
@@ -54,8 +54,6 @@ By default, some transactions will be created automatically for common operation
   <!-- Enable UI profiling, adjust in production env. This is evaluated only once per session -->
   <meta-data android:name="io.sentry.traces.profiling.session-sample-rate" android:value="1.0" />
   <meta-data android:name="io.sentry.traces.profiling.lifecycle" android:value="trace" />
-  <!-- Use the Android ProfilingManager (Perfetto) backend. Requires Android 15 (API level 35) or higher -->
-  <meta-data android:name="io.sentry.profiling.use-profiling-manager" android:value="true" />
 </application>
 ```
 
@@ -78,8 +76,6 @@ public class MyApplication extends Application {
           // Enable UI profiling, adjust in production env. This is evaluated only once per session
           options.setProfileSessionSampleRate(1.0);
           options.setProfileLifecycle(ProfileLifecycle.TRACE);
-          // Use the Android ProfilingManager (Perfetto) backend. Requires Android 15 (API level 35) or higher
-          options.setUseProfilingManager(true);
         });
   }
 }
@@ -103,8 +99,6 @@ class MyApplication : Application() {
           // Enable UI profiling, adjust in production env. This is evaluated only once per session
           options.profileSessionSampleRate = 1.0
           options.profileLifecycle = ProfileLifecycle.TRACE
-          // Use the Android ProfilingManager (Perfetto) backend. Requires Android 15 (API level 35) or higher
-          options.isUseProfilingManager = true
          })
   }
 }
@@ -120,8 +114,6 @@ To enable manual profiling, set the lifecycle to `manual`. Manual profiling does
   <!-- Enable UI profiling, adjust in production env. This is evaluated only once per session -->
   <meta-data android:name="io.sentry.traces.profiling.session-sample-rate" android:value="1.0" />
   <meta-data android:name="io.sentry.traces.profiling.lifecycle" android:value="manual" />
-  <!-- Use the Android ProfilingManager (Perfetto) backend. Requires Android 15 (API level 35) or higher -->
-  <meta-data android:name="io.sentry.profiling.use-profiling-manager" android:value="true" />
 </application>
 ```
 
@@ -143,8 +135,6 @@ public class MyApplication extends Application {
           // Enable UI profiling, adjust in production env. This is evaluated only once per session
           options.setProfileSessionSampleRate(1.0);
           options.setProfileLifecycle(ProfileLifecycle.MANUAL);
-          // Use the Android ProfilingManager (Perfetto) backend. Requires Android 15 (API level 35) or higher
-          options.setUseProfilingManager(true);
         });
     // Start profiling
     Sentry.startProfiler();
@@ -172,8 +162,6 @@ class MyApplication : Application() {
           // Enable UI profiling, adjust in production env. This is evaluated only once per session
           options.profileSessionSampleRate = 1.0
           options.profileLifecycle = ProfileLifecycle.MANUAL
-          // Use the Android ProfilingManager (Perfetto) backend. Requires Android 15 (API level 35) or higher
-          options.isUseProfilingManager = true
          })
     // Start profiling
     Sentry.startProfiler()
@@ -186,10 +174,10 @@ class MyApplication : Application() {
 
 ## Limitations
 
-Because UI Profiling relies on the Android ProfilingManager, the following limitations apply:
+On Android 15 (API level 35) and higher, UI Profiling relies on the Android ProfilingManager, so the following limitations apply:
 
-- **Android 15 (API level 35) or higher is required.** Profiling won't run on older devices, and there is no fallback to the legacy profiler. If you need wider device coverage, use <PlatformLink to="/profiling/legacy">Legacy Profiling</PlatformLink>.
-- **App start profiling is not supported.** The `startProfilerOnAppStart` option has no effect when `useProfilingManager` is enabled. If you need to profile the app start process, use <PlatformLink to="/profiling/legacy">Legacy Profiling</PlatformLink>.
+- **Older devices use the legacy profiler.** On devices below Android 15, the SDK automatically falls back to <PlatformLink to="/profiling/legacy">Legacy Profiling</PlatformLink>, which has different characteristics. You can disable this fallback with the <PlatformLink to="/configuration/options/#enableLegacyProfiling">`enableLegacyProfiling`</PlatformLink> option.
+- **App start profiling is not supported.** The `startProfilerOnAppStart` option has no effect with the ProfilingManager (Perfetto) backend. App start profiling is only supported by the legacy profiler used on devices below Android 15. To learn more, see <PlatformLink to="/profiling/legacy">Legacy Profiling</PlatformLink>.
 - **Profiling requests are rate limited and not guaranteed to be filled.** Apart from the SDK sampling rate, the Android Framework also restricts profiling, so not every request results in a profile. These limits are outside the SDK's control. To learn more, see the Android <Link to="https://developer.android.com/reference/android/os/ProfilingManager">ProfilingManager</Link> documentation.
 
 <Alert level="info" title="Disabling Rate Limiting for Local Testing">
