@@ -240,11 +240,11 @@ The SDK exposes the following options on `mobileReplayIntegration`:
 |-----|------|---------|-------------|
 | `networkDetailAllowUrls` | `(string \| RegExp)[]` | `[]` | URL patterns to enable capture of request/response headers (and bodies, when `networkCaptureBodies` is `true`). String patterns use substring matching; `RegExp` is matched via `.test(url)`. |
 | `networkDetailDenyUrls` | `(string \| RegExp)[]` | `[]` | URL patterns to **never** enable capture for, even if an allow pattern matches them. |
-| `networkCaptureBodies` | `boolean` | `false` | Controls whether request and response bodies are captured for allow-listed URLs. Disabled by default since bodies can contain sensitive payloads &mdash; opt in explicitly. |
+| `networkCaptureBodies` | `boolean` | `true` | Controls whether request and response bodies are captured for allow-listed URLs. Set to `false` to capture only headers. URLs only enter the capture path after being explicitly listed in `networkDetailAllowUrls`, so this default does not capture every request body. Aligned with the iOS and Android native SDK defaults. |
 | `networkRequestHeaders` | `string[]` | `[]` | Additional request header names to capture for allow-listed URLs, in addition to the defaults (`Content-Type`, `Content-Length`, `Accept`). |
 | `networkResponseHeaders` | `string[]` | `[]` | Additional response header names to capture for allow-listed URLs, in addition to the defaults (`Content-Type`, `Content-Length`, `Accept`). |
 
-Any URL matching the given pattern(s) will be enriched with headers and (optionally) bodies:
+Any URL matching the given pattern(s) will be enriched with headers and bodies:
 
 ```javascript {tabTitle:Mobile}
 import * as Sentry from "@sentry/react-native";
@@ -256,7 +256,6 @@ Sentry.init({
   integrations: [
     Sentry.mobileReplayIntegration({
       networkDetailAllowUrls: ["https://api.example.com"],
-      networkCaptureBodies: true,
     }),
   ],
 });
@@ -272,12 +271,11 @@ integrations: [
       /^https:\/\/api\.example\.com\/.*/, // regex match
     ],
     networkDetailDenyUrls: [/\/auth\//],  // never capture details for auth endpoints
-    networkCaptureBodies: true,
   }),
 ]
 ```
 
-Requests to a matching URL will include request and response bodies (when `networkCaptureBodies` is `true`) as well as the following default headers:
+Requests to a matching URL will include request and response bodies (unless you opt out with `networkCaptureBodies: false`) as well as the following default headers:
 
 - `Content-Type`
 - `Content-Length`
@@ -289,9 +287,19 @@ To capture additional headers, configure `networkRequestHeaders` and `networkRes
 integrations: [
   Sentry.mobileReplayIntegration({
     networkDetailAllowUrls: ["https://api.example.com"],
-    networkCaptureBodies: true,
     networkRequestHeaders: ["Cache-Control", "X-My-Header"],
     networkResponseHeaders: ["Referrer-Policy", "X-Response-Header"],
+  }),
+]
+```
+
+If you want headers only — e.g. for endpoints where the body is too sensitive to record — disable body capture for the integration as a whole:
+
+```javascript {tabTitle:Mobile}
+integrations: [
+  Sentry.mobileReplayIntegration({
+    networkDetailAllowUrls: ["https://api.example.com"],
+    networkCaptureBodies: false,
   }),
 ]
 ```
