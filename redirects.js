@@ -1685,6 +1685,10 @@ const userDocsRedirects = [
     destination: '/product/trace-explorer/',
   },
   {
+    source: '/product/explore/',
+    destination: '/product/trace-explorer/',
+  },
+  {
     source: '/platforms/javascript/best-practices/browser-extensions/',
     destination: '/platforms/javascript/best-practices/shared-environments/',
   },
