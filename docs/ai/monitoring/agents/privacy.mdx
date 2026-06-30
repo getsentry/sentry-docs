@@ -41,3 +41,73 @@ However, the following AI agent span attributes are not protected by default:
 If you wish to enable Data Scrubbing for any of these fields you can add Organization or Project-level [Advanced Data Scrubbing](/product/data-management-settings/scrubbing/advanced-datascrubbing/) rule in **Security & Privacy** [settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/organization/security-and-privacy) in the following format: `$span.data.'<span attribute>'`.
 
 ![Additional Sensitive Fields](./img/advanced-scrubbing-rule.png)
+
+## Stripping Images and Media from Messages
+
+AI messages can carry inline media: base64-encoded images, audio, or files
+embedded directly in the input and output. This media can hold sensitive
+information, so you might want to keep it out of Sentry while preserving the
+rest of the conversation — roles, text, and tool calls.
+
+The Sentry SDK does not strip media by default. You can remove it yourself in
+[`beforeSendSpan`](/platforms/javascript/configuration/options/#beforeSendSpan),
+which runs on every span before it's sent. The example below walks each AI
+message and replaces any inline media with a placeholder, leaving the
+surrounding structure intact.
+
+```javascript
+const MEDIA_PLACEHOLDER = "[media stripped]";
+
+// Span attributes whose values are JSON-encoded AI messages.
+const AI_MESSAGE_ATTRIBUTES = [
+  "gen_ai.input.messages",
+  "gen_ai.output.messages",
+  "gen_ai.system_instructions",
+];
+
+// We match on the value itself, not the field name, so we don't depend on
+// provider-specific shapes (OpenAI / Anthropic / Google / Vercel AI SDK).
+// Inline media is either a `data:` URI or a large raw base64 blob. Plain text
+// and http(s) URLs contain characters outside the base64 set, so they're left
+// untouched.
+function isInlineMedia(value) {
+  if (typeof value !== "string") return false;
+  if (value.startsWith("data:")) return true;
+  return value.length > 1024 && /^[A-Za-z0-9+/=\s]+$/.test(value);
+}
+
+// Recursively replace any inline media with a placeholder, preserving roles,
+// text, and tool calls.
+function stripInlineMedia(node) {
+  if (typeof node === "string") {
+    return isInlineMedia(node) ? MEDIA_PLACEHOLDER : node;
+  }
+  if (Array.isArray(node)) {
+    return node.map(stripInlineMedia);
+  }
+  if (node && typeof node === "object") {
+    return Object.fromEntries(
+      Object.entries(node).map(([key, value]) => [key, stripInlineMedia(value)])
+    );
+  }
+  return node;
+}
+
+Sentry.init({
+  // ...
+  beforeSendSpan(span) {
+    for (const key of AI_MESSAGE_ATTRIBUTES) {
+      const raw = span.data?.[key];
+      if (typeof raw !== "string") continue;
+
+      try {
+        span.data[key] = JSON.stringify(stripInlineMedia(JSON.parse(raw)));
+      } catch {
+        // Not JSON or an unexpected shape — leave the value as-is.
+      }
+    }
+
+    return span;
+  },
+});
+```
