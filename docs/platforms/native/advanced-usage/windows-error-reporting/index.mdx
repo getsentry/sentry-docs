@@ -20,16 +20,16 @@ The following registry configuration enables local dump collection for your appl
 
 | Name | Type | Value |
 | ---- | ---- | ----- |
-| `DumpFolder` | `REG_EXPAND_SZ` | Path to a local directory (e.g., `<install-dir>\.sentry-native\wer`) |
+| `DumpFolder` | `REG_EXPAND_SZ` | Path to a local directory (e.g., `%LOCALAPPDATA%\YourApp\CrashDumps`) |
 | `DumpType` (optional) | `REG_DWORD` | `0` ([custom dump](https://learn.microsoft.com/en-us/windows/win32/wer/collecting-user-mode-dumps)), `1` (mini dump, default), or `2` (full dump — includes heap, may contain sensitive data) |
 | `DumpCount` (optional) | `REG_DWORD` | Maximum number of dumps to keep (default `10`) |
 
 For example, you could deploy this from an installer by running:
 
 ```shell
-reg add "HKLM\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps\MyApp.exe" /v DumpFolder /t REG_EXPAND_SZ /d "<install-dir>\.sentry-native\wer" /f
-reg add "HKLM\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps\MyApp.exe" /v DumpType /t REG_DWORD /d 1 /f
-reg add "HKLM\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps\MyApp.exe" /v DumpCount /t REG_DWORD /d 10 /f
+reg add "HKLM\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps\YourApp.exe" /v DumpFolder /t REG_EXPAND_SZ /d "%LOCALAPPDATA%\YourApp\CrashDumps" /f
+reg add "HKLM\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps\YourApp.exe" /v DumpType /t REG_DWORD /d 1 /f
+reg add "HKLM\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps\YourApp.exe" /v DumpCount /t REG_DWORD /d 10 /f
 ```
 
 For more details, see [Collecting User-Mode Dumps](https://learn.microsoft.com/en-us/windows/win32/wer/collecting-user-mode-dumps).
@@ -53,7 +53,7 @@ sentry_options_t *options = sentry_options_new();
 sentry_options_set_dsn(options, "___PUBLIC_DSN___");
 sentry_init(options);
 
-/* for each minidump_path in L".sentry-native/wer" */ {
+/* for each minidump_path in L"%LOCALAPPDATA%\\YourApp\\CrashDumps" */ {
     sentry_capture_minidumpw(minidump_path);
 }
 sentry_close();
