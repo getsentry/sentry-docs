@@ -94,16 +94,19 @@ While these [data categories](https://github.com/getsentry/relay/blob/master/rel
   - `security`: Events with event_type `csp`
   - `attachment`: Attachment bytes stored (unused for rate limiting)
   - `session`: Session update events
-  - `profile`: Profiling events (rate limiting: apply to all profiles).
-  - `profile_chunk`: Continuous Profiling chunks (rate limiting: apply to profile chunks).
-  - `profile_chunk_ui`: UI Profiling chunks; counterpart to `profile_chunk` for UI platforms cocoa, android, and javascript (rate limiting: apply to profile chunks).
-  - `profile_backend`: Transaction profiles for backend platforms (rate limiting: optional, apply to backend transaction profiles).
-  - `profile_ui`: Transaction profiles for UI platforms (rate limiting: optional, apply to UI transaction profiles).
   - `replay`: Session Replays
   - `feedback`: User Feedbacks
   - `trace_metric`: Metric type events.
   - `trace_metric_byte`: Metric bytes stored.
   - `internal`: a sentry/system internal event[^internal]
+
+  Relay utilizes various data categories for profiles, allowing separate rate limiting for each. SDKs must implement the same logic applied to other data categories and discard the associated profiling data when a rate limit is active:
+
+  - `profile`: Profiling events for backend platforms.
+  - `profile_chunk`: Continuous Profiling chunks for backend platforms.
+  - `profile_chunk_ui`: Continuous Profiling chunks for UI platforms.
+  - `profile_backend`: Transaction profiles for backend platforms.
+  - `profile_ui`: Transaction profiles for UI platforms.
 
 - **Scope**: The unit / model in Sentry that quotas are enforced for.
   - `organization`
