@@ -54,7 +54,10 @@ sentry_options_set_dsn(options, "___PUBLIC_DSN___");
 sentry_init(options);
 
 /* for each minidump_path in L"%LOCALAPPDATA%\\YourApp\\CrashDumps" */ {
-    sentry_capture_minidumpw(minidump_path);
+    sentry_uuid_t event_id = sentry_capture_minidumpw(minidump_path);
+    if (!sentry_uuid_is_nil(&event_id)) {
+        DeleteFileW(minidump_path);
+    }
 }
 sentry_close();
 ```
