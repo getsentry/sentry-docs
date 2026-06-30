@@ -68,8 +68,10 @@ SentrySdk.Init(options =>
 Under the hood, the OTLP exporter sets up the following parts:
 
 * An OTLP exporter that automatically configures the ingestion endpoint from your Sentry DSN. This enables tracing in Sentry. **Note:** _Do not_ also set up tracing via the Sentry SDK (i.e. do not set `TracesSampleRate`).
-* A `SentryPropagator` that injects `sentry-trace` and `baggage` headers alongside the standard W3C `traceparent`, ensuring [distributed tracing](/concepts/key-terms/tracing/distributed-tracing/) works (see note below)
+* A `SentryPropagator` that injects `sentry-trace` and `baggage` headers alongside the standard W3C `traceparent` for compatibility with services using Sentry's native tracing (see note below)
 * Trace/Span linking for all other Sentry events such as Errors, Logs, and Metrics
+
+Cross-service trace propagation uses OTel's default W3C `traceparent` headers and does not require additional configuration. See [Exporters, Event Linking, and Propagation](/concepts/otlp/sentry-with-otel/#exporters-event-linking-and-propagation) for details.
 
 Calling `UseOtlp()` on `SentryOptions` sets `DisableSentryTracing = true`, which turns off Sentry's automatic span creation from `SentryHttpMessageHandler`, `DiagnosticSource` listener, and Entity Framework interception to avoid duplicate spans.
 
