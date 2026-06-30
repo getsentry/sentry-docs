@@ -22,15 +22,54 @@ Regardless of these options, you can always scrub any data before it's sent to S
 
 ## HTTP Headers
 
-By default, the Sentry SDK sends HTTP request and response headers.
+<PlatformSection notSupported={["javascript.node", "javascript.aws-lambda", "javascript.azure-functions", "javascript.connect", "javascript.express", "javascript.fastify", "javascript.gcp-functions", "javascript.hapi", "javascript.hono", "javascript.koa", "javascript.nitro", "javascript.nestjs", "javascript.deno", "javascript.cloudflare", "javascript.bun"]}>
 
-Use the `dataCollection.httpHeaders` option to control this. For example, set `dataCollection: { httpHeaders: false }` to disable it, or use `{ allow: [...] }` or `{ deny: [...] }` to restrict which header values are sent. Values whose keys match Sentry's built-in sensitive denylist (such as `auth`, `token`, or `password`) are automatically scrubbed, while the keys are kept.
+By default, the Sentry SDK does **not** capture HTTP request or response headers in browser environments.
+
+The <PlatformLink to="/configuration/integrations/httpclient/">HttpClient Integration</PlatformLink> captures headers from outgoing fetch and XHR requests that return a failed status code (500–599 by default). To enable header collection, use `dataCollection: { httpHeaders: true }` (or the deprecated `sendDefaultPii: true`) in your `Sentry.init()` config.
+
+When header collection is enabled:
+
+- **Fetch requests**: All request and response header names are captured. Sensitive values (such as `authorization`, `x-api-key`, and `x-auth-token`) are automatically redacted to `[Filtered]`.
+- **XHR requests**: All request and response header names are captured, with the same automatic redaction of sensitive values. However, request cookies (from the `Cookie` header) cannot be read due to browser XHR API limitations. Only response cookies (from `Set-Cookie`) are available.
+
+<Alert>
+
+Header collection is best-effort due to Fetch and XHR API limitations. Certain headers may be missing even when collection is enabled.
+
+</Alert>
+
+</PlatformSection>
+
+<PlatformSection notSupported={["javascript", "javascript.angular", "javascript.capacitor", "javascript.cordova", "javascript.ember", "javascript.gatsby", "javascript.react", "javascript.solid", "javascript.svelte", "javascript.vue", "javascript.wasm"]}>
+
+On the server-side, incoming request headers (and outgoing response headers) are added as span attributes by the <PlatformLink to="/configuration/integrations/http/">Http Integration</PlatformLink> **by default**.
+Sensitive values (such as auth tokens and secrets) are automatically scrubbed, while the header keys are kept. PII headers (such as forwarding and IP headers) are also filtered by default.
+
+</PlatformSection>
+
+Use the `dataCollection.httpHeaders` option to control header collection. For example, set `dataCollection: { httpHeaders: false }` to disable it, or use `{ allow: [...] }` or `{ deny: [...] }` to restrict which header values are sent.
 
 ## Cookies
 
-By default, the Sentry SDK doesn't send cookies. When using `dataCollection`, however, cookies are collected with sensitive values (like `token` or `key`) scrubbed. Opt out by setting `dataCollection: { cookies: false }`.
+<PlatformSection notSupported={["javascript.node", "javascript.aws-lambda", "javascript.azure-functions", "javascript.connect", "javascript.express", "javascript.fastify", "javascript.gcp-functions", "javascript.hapi", "javascript.hono", "javascript.koa", "javascript.nitro", "javascript.nestjs", "javascript.deno", "javascript.cloudflare", "javascript.bun"]}>
 
-To collect cookies when not using `dataCollection`, set the deprecated `sendDefaultPii: true` in `Sentry.init()`. To disable cookie collection when using `dataCollection`, set `dataCollection: { cookies: false }`. You can also restrict which cookie values are sent using `{ allow: [...] }` or `{ deny: [...] }`.
+By default, the Sentry SDK doesn't send cookies in browser environments. When using `dataCollection`, cookies are collected with sensitive values (like `token` or `key`) scrubbed.
+
+The <PlatformLink to="/configuration/integrations/httpclient/">HttpClient Integration</PlatformLink> captures cookies when collection is enabled:
+
+- **Fetch requests**: Both request cookies (from the `Cookie` header) and response cookies (from `Set-Cookie`).
+- **XHR requests**: Response cookies only (from `Set-Cookie`). Request cookies cannot be read from XHR requests due to browser API limitations.
+
+</PlatformSection>
+
+<PlatformSection notSupported={["javascript", "javascript.angular", "javascript.capacitor", "javascript.cordova", "javascript.ember", "javascript.gatsby", "javascript.react", "javascript.solid", "javascript.svelte", "javascript.vue", "javascript.wasm", "javascript.cloudflare", "javascript.deno"]}>
+
+On the server-side, cookies from incoming requests are collected when using `dataCollection` (or the deprecated `sendDefaultPii: true`) via the <PlatformLink to="/configuration/integrations/http/">Http Integration</PlatformLink>.
+
+</PlatformSection>
+
+Sensitive cookie names are filtered automatically even when cookie collection is enabled. To disable cookie collection, set `dataCollection: { cookies: false }`. You can also restrict which cookie values are sent using `{ allow: [...] }` or `{ deny: [...] }`.
 
 ## Information About Logged-in User
 
