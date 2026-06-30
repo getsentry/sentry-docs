@@ -53,7 +53,8 @@ The Sentry SDK does not strip media by default. You can remove it yourself in
 [`beforeSendSpan`](/platforms/javascript/configuration/options/#beforeSendSpan),
 which runs on every span before it's sent. The example below walks each AI
 message and replaces any inline media with a placeholder, leaving the
-surrounding structure intact.
+surrounding structure intact. Adjust `isInlineMedia` to match how your AI
+provider embeds media.
 
 ```javascript
 const MEDIA_PLACEHOLDER = "[media stripped]";
@@ -65,19 +66,15 @@ const AI_MESSAGE_ATTRIBUTES = [
   "gen_ai.system_instructions",
 ];
 
-// We match on the value itself, not the field name, so we don't depend on
-// provider-specific shapes (OpenAI / Anthropic / Google / Vercel AI SDK).
-// Inline media is either a `data:` URI or a large raw base64 blob. Plain text
-// and http(s) URLs contain characters outside the base64 set, so they're left
-// untouched.
+// Decide what should be treated as media. This default catches `data:` URIs
+// and large base64 blobs; replace it with whatever matches your data best.
 function isInlineMedia(value) {
   if (typeof value !== "string") return false;
   if (value.startsWith("data:")) return true;
   return value.length > 1024 && /^[A-Za-z0-9+/=\s]+$/.test(value);
 }
 
-// Recursively replace any inline media with a placeholder, preserving roles,
-// text, and tool calls.
+// Replace anything isInlineMedia flags, keeping roles, text, and tool calls.
 function stripInlineMedia(node) {
   if (typeof node === "string") {
     return isInlineMedia(node) ? MEDIA_PLACEHOLDER : node;
